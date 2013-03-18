@@ -40,7 +40,7 @@ public:
   virtual ~STCalSkyOtfAlma() {;}
   
 protected:
-  virtual void setupSelector();
+  virtual void setupSelector(const STSelector &sel);
   //virtual void fillCalTable();
 
 private:

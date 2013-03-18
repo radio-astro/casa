@@ -10,11 +10,12 @@ namespace casa
 {
 	class LogIO;
 	class ImageAnalysis;
-        template<class T> class ImageInterface;
-        template<class T> class ImageStatistics;
-        template<class T> class ImageHistograms;
-        template<class T> class SubImage;
-        class ImageRegion;
+	template<class T> class ImageInterface;
+	class ImageStatsCalculator;
+	template<class T> class ImageStatistics;
+	template<class T> class ImageHistograms;
+	template<class T> class SubImage;
+	class ImageRegion;
 	class LatticeExprNode;
 	template<class T> class PtrHolder;
         class String;

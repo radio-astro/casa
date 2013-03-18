@@ -25,15 +25,18 @@
 #include <tables/Tables/TableVector.h>
 
 // asap
+#include "STGrid.h"
+#include "STMath.h"
+#include "MathUtils.h"
 #include "STSideBandSep.h"
 
 using namespace std ;
 using namespace casa ;
 using namespace asap ;
 
-#ifndef KS_DEBUG
-#define KS_DEBUG
-#endif
+// #ifndef KS_DEBUG
+// #define KS_DEBUG
+// #endif
 
 namespace asap {
 
@@ -77,6 +80,7 @@ STSideBandSep::STSideBandSep(const vector<ScantableWrapper> &tables)
   infileList_.resize(0);
 
   init();
+  tp_ = intabList_[0]->table().tableType();
 
   os << ntable_ << " tables are set." << LogIO::POST;
 };
@@ -91,7 +95,7 @@ STSideBandSep::~STSideBandSep()
 void STSideBandSep::init()
 {
   // frequency setup
-  sigIfno_= 0;
+  sigIfno_= -1;
   ftol_ = -1;
   solFrame_ = MFrequency::N_Types;
   // shifts
@@ -108,6 +112,8 @@ void STSideBandSep::init()
   loDir_ = "";
   // Default LO frame is TOPO
   loFrame_ = MFrequency::TOPO;
+  // scantable storage
+  tp_ = Table::Memory;
 };
 
 void STSideBandSep::initshift()
@@ -129,7 +135,7 @@ void STSideBandSep::setFrequency(const unsigned int ifno,
   initshift();
 
   // IFNO
-  sigIfno_ = ifno;
+  sigIfno_ = (int) ifno;
 
   // Frequency tolerance
   Quantum<Double> qftol;
@@ -218,7 +224,7 @@ void STSideBandSep::setShift(const vector<double> &shift)
       os << imgShift_[i];
       if (i != imgShift_.size()-1) os << " , ";
     }
-    os << " ) [channel]" << LogIO::POST;
+    os << " ) [channels]" << LogIO::POST;
   }
 };
 
@@ -226,29 +232,784 @@ void STSideBandSep::setThreshold(const double limit)
 {
   LogIO os(LogOrigin("STSideBandSep","setThreshold()", WHERE));
   if (limit < 0)
-    throw( AipsError("Rejection limit should be positive number.") );
+    throw( AipsError("Rejection limit should be a positive number.") );
 
   rejlimit_ = limit;
-  os << "Rejection limit is set to " << rejlimit_;
+  os << "Rejection limit is set to " << rejlimit_ << LogIO::POST;
 };
 
-// Temporal function to set scantable of image sideband
-void STSideBandSep::setImageTable(const ScantableWrapper &s)
+void STSideBandSep::separate(string outname)
 {
 #ifdef KS_DEBUG
-  cout << "STSideBandSep::setImageTable" << endl;
-  cout << "got image table nrow = " << s.nrow() << endl;
+  cout << "STSideBandSep::separate" << endl;
 #endif
-  imgTab_p = s.getCP();
-  AlwaysAssert(!imgTab_p.null(),AipsError);
+  LogIO os(LogOrigin("STSideBandSep","separate()", WHERE));
+  if (outname.empty())
+    outname = "sbseparated.asap";
+
+  // Set up a goup of IFNOs in the list of scantables within
+  // the frequency tolerance and make them a list.
+  nshift_ = setupShift();
+  if (nshift_ < 2)
+    throw( AipsError("At least 2 IFs are necessary for convolution.") );
+  // Grid scantable and generate output tables
+  ScantableWrapper gridst = gridTable();
+  sigTab_p = gridst.getCP();
+  if (doboth_)
+    imgTab_p = gridst.copy().getCP();
+  vector<unsigned int> remRowIds;
+  remRowIds.resize(0);
+  Matrix<float> specMat(nchan_, nshift_);
+  vector<float> sigSpec(nchan_), imgSpec(nchan_);
+  vector<uInt> tabIdvec;
+
+  //Generate FFTServer
+  fftsf.resize(IPosition(1, nchan_), FFTEnums::REALTOCOMPLEX);
+  fftsi.resize(IPosition(1, nchan_), FFTEnums::COMPLEXTOREAL);
+
+  /// Loop over sigTab_p and separate sideband
+  for (int irow = 0; irow < sigTab_p->nrow(); irow++){
+    tabIdvec.resize(0);
+    const int polId = sigTab_p->getPol(irow);
+    const int beamId = sigTab_p->getBeam(irow);
+    const vector<double> dir = sigTab_p->getDirectionVector(irow);
+    // Get a set of spectra to solve
+    if (!getSpectraToSolve(polId, beamId, dir[0], dir[1],
+			   specMat, tabIdvec)){
+      remRowIds.push_back(irow);
+#ifdef KS_DEBUG
+      cout << "no matching row found. skipping row = " << irow << endl;
+#endif
+      continue;
+    }
+    // Solve signal sideband
+    sigSpec = solve(specMat, tabIdvec, true);
+    sigTab_p->setSpectrum(sigSpec, irow);
+
+    // Solve image sideband
+    if (doboth_) {
+      imgSpec = solve(specMat, tabIdvec, false);
+      imgTab_p->setSpectrum(imgSpec, irow);
+    }
+  } // end of row loop
+
+  // Remove or flag rows without relevant data from gridded tables
+  if (remRowIds.size() > 0) {
+    const size_t nrem = remRowIds.size();
+    if ( sigTab_p->table().canRemoveRow() ) {
+      sigTab_p->table().removeRow(remRowIds);
+      os << "Removing " << nrem << " rows from the signal band table"
+	 << LogIO::POST;
+    } else {
+      sigTab_p->flagRow(remRowIds, false);
+      os << "Cannot remove rows from the signal band table. Flagging "
+	 << nrem << " rows" << LogIO::POST;
+    }
+
+    if (doboth_) {
+      if ( imgTab_p->table().canRemoveRow() ) {
+	imgTab_p->table().removeRow(remRowIds);
+	os << "Removing " << nrem << " rows from the image band table"
+	   << LogIO::POST;
+      } else {
+	imgTab_p->flagRow(remRowIds, false);
+	os << "Cannot remove rows from the image band table. Flagging "
+	   << nrem << " rows" << LogIO::POST;
+      }
+    }
+  }
+
+  // Finally, save tables on disk
+  if (outname.size() ==0)
+    outname = "sbseparated.asap";
+  const string sigName = outname + ".signalband";
+  os << "Saving SIGNAL sideband table: " << sigName << LogIO::POST;
+  sigTab_p->makePersistent(sigName);
+  if (doboth_) {
+    solveImageFrequency();
+    const string imgName = outname + ".imageband";
+    os << "Saving IMAGE sideband table: " << sigName << LogIO::POST;
+    imgTab_p->makePersistent(imgName);
+  }
 
 };
 
-//
-void STSideBandSep::setLO1(const double lo1, const string frame,
+unsigned int STSideBandSep::setupShift()
+{
+  LogIO os(LogOrigin("STSideBandSep","setupShift()", WHERE));
+  if (infileList_.size() == 0 && intabList_.size() == 0)
+    throw( AipsError("No scantable has been set. Set a list of scantables first.") );
+
+  const bool byname = (intabList_.size() == 0);
+  // Make sure sigIfno_ exists in the first table.
+  CountedPtr<Scantable> stab;
+  vector<string> coordsav;
+  vector<string> coordtmp(3);
+  os << "Checking IFNO in the first table." << LogIO::POST;
+  if (byname) {
+    if (!checkFile(infileList_[0], "d"))
+      os << LogIO::SEVERE << "Could not find scantable '" << infileList_[0]
+	 << "'" << LogIO::EXCEPTION;
+    stab = CountedPtr<Scantable>(new Scantable(infileList_[0]));
+  } else {
+    stab = intabList_[0];
+  }
+  if (sigIfno_ < 0) {
+    sigIfno_ = (int) stab->getIF(0);
+    os << "IFNO to process has not been set. Using the first IF = "
+       << sigIfno_ << LogIO::POST;
+  }
+
+  unsigned int basench;
+  double basech0, baseinc, ftolval, inctolval;
+  coordsav = stab->getCoordInfo();
+  const string stfframe = coordsav[1];
+  coordtmp[0] = "Hz";
+  coordtmp[1] = ( (solFrame_ == MFrequency::N_Types) ?
+		  stfframe :
+		  MFrequency::showType(solFrame_) );
+  coordtmp[2] = coordsav[2];
+  stab->setCoordInfo(coordtmp);
+  if (!getFreqInfo(stab, (unsigned int) sigIfno_, basech0, baseinc, basench)) {
+    os << LogIO::SEVERE << "No data with IFNO=" << sigIfno_
+       << " found in the first table." << LogIO::EXCEPTION;
+  }
+  else {
+    os << "Found IFNO = " << sigIfno_
+       << " in the first table." << LogIO::POST;
+  }
+  if (ftol_.getUnit().empty()) {
+    // tolerance in unit of channels
+    ftolval = ftol_.getValue() * baseinc;
+  }
+  else {
+    ftolval = ftol_.getValue("Hz");
+  }
+  inctolval = abs(baseinc/(double) basench);
+  const string poltype0 = stab->getPolType();
+
+  // Initialize shift values
+  initshift();
+
+  const bool setImg = ( doboth_ && (imgShift_.size() == 0) );
+  // Select IFs
+  for (unsigned int itab = 0; itab < ntable_; itab++ ){
+    os << "Table " << itab << LogIO::POST;
+    if (itab > 0) {
+      if (byname) {
+	if (!checkFile(infileList_[itab], "d"))
+	  os << LogIO::SEVERE << "Could not find scantable '"
+	     << infileList_[itab] << "'" << LogIO::EXCEPTION;
+	stab = CountedPtr<Scantable>(new Scantable(infileList_[itab]));
+      } else {
+	stab = intabList_[itab];
+      }
+      //POLTYPE should be the same.
+      if (stab->getPolType() != poltype0 ) {
+	os << LogIO::WARN << "POLTYPE differs from the first table."
+	   << " Skipping the table" << LogIO::POST;
+	continue;
+      }
+      // Multi beam data may not handled properly
+      if (stab->nbeam() > 1)
+	os <<  LogIO::WARN << "Table contains multiple beams. "
+	   << "It may not be handled properly."  << LogIO::POST;
+
+      coordsav = stab->getCoordInfo();
+      coordtmp[2] = coordsav[2];
+      stab->setCoordInfo(coordtmp);
+    }
+    bool selected = false;
+    vector<uint> ifnos = stab->getIFNos();
+    vector<uint>::iterator iter;
+    const STSelector& basesel = stab->getSelection();
+    for (iter = ifnos.begin(); iter != ifnos.end(); iter++){
+      unsigned int nch;
+      double freq0, incr;
+      if ( getFreqInfo(stab, *iter, freq0, incr, nch) ){
+	if ( (nch == basench) && (abs(freq0-basech0) < ftolval)
+	     && (abs(incr-baseinc) < inctolval) ){
+	  //Found
+	  STSelector sel(basesel);
+	  sel.setIFs(vector<int>(1,(int) *iter));
+	  stab->setSelection(sel);
+	  CountedPtr<Scantable> seltab = ( new Scantable(*stab, false) );
+	  stab->setSelection(basesel);
+	  seltab->setCoordInfo(coordsav);
+	  const double chShift = (freq0 - basech0) / baseinc;
+	  tableList_.push_back(seltab);
+	  sigShift_.push_back(chShift);
+	  if (setImg)
+	    imgShift_.push_back(-chShift);
+
+	  selected = true;
+	  os << "- IF" << *iter << " selected: sideband shift = "
+	     << chShift << " channels" << LogIO::POST;
+	}
+      }
+    } // ifno loop
+    stab->setCoordInfo(coordsav);
+    if (!selected)
+      os << LogIO::WARN << "No data selected in Table "
+	 << itab << LogIO::POST;
+  } // table loop
+  nchan_ = basench;
+
+  os << "Total number of IFs selected = " << tableList_.size()
+     << LogIO::POST;
+  if ( setImg && (sigShift_.size() != imgShift_.size()) ){
+      os << LogIO::SEVERE
+	 << "User defined channel shift of image sideband has "
+	 << imgShift_.size()
+	 << " elements, while selected IFNOs are " << sigShift_.size()
+	 << "\nThe frequency tolerance (freqtol) may be too small."
+	 << LogIO::EXCEPTION;
+  }
+
+  return tableList_.size();
+};
+
+bool STSideBandSep::getFreqInfo(const CountedPtr<Scantable> &stab,
+				const unsigned int &ifno,
+				double &freq0, double &incr,
+				unsigned int &nchan)
+{
+    vector<uint> ifnos = stab->getIFNos();
+    bool found = false;
+    vector<uint>::iterator iter;
+    for (iter = ifnos.begin(); iter != ifnos.end(); iter++){
+      if (*iter == ifno) {
+	found = true;
+	break;
+      }
+    }
+    if (!found)
+      return false;
+
+    const STSelector& basesel = stab->getSelection();
+    STSelector sel(basesel);
+    sel.setIFs(vector<int>(1,(int) ifno));
+    stab->setSelection(sel);
+    vector<double> freqs;
+    freqs = stab->getAbcissa(0);
+    freq0 = freqs[0];
+    incr = freqs[1] - freqs[0];
+    nchan = freqs.size();
+    stab->setSelection(basesel);
+    return true;
+};
+
+ScantableWrapper STSideBandSep::gridTable()
+{
+  LogIO os(LogOrigin("STSideBandSep","gridTable()", WHERE));
+  if (tableList_.size() == 0)
+    throw( AipsError("Internal error. No scantable has been set to grid.") );
+  Double xmin, xmax, ymin, ymax;
+  mapExtent(tableList_, xmin, xmax, ymin, ymax);
+  const Double centx = 0.5 * (xmin + xmax);
+  const Double centy = 0.5 * (ymin + ymax);
+  const int nx = max(1, (int) ceil( (xmax - xmin) * cos(centy) /xtol_ ) );
+  const int ny = max(1, (int) ceil( (ymax - ymin) / ytol_ ) );
+
+  string scellx, scelly;
+  {
+    ostringstream oss;
+    oss << xtol_ << "rad" ;
+    scellx = oss.str();
+  }
+  {
+    ostringstream oss;
+    oss << ytol_ << "rad" ;
+    scelly = oss.str();
+  }
+
+  ScantableWrapper stab0;
+  if (intabList_.size() > 0)
+    stab0 = ScantableWrapper(intabList_[0]);
+  else
+    stab0 = ScantableWrapper(infileList_[0]);
+
+  string scenter;
+  {
+    ostringstream oss;
+    oss << stab0.getCP()->getDirectionRefString() << " "
+	<< centx << "rad" << " " << centy << "rad";
+    scenter = oss.str();
+  } 
+  
+  STGrid2 gridder = STGrid2(stab0);
+  gridder.setIF(sigIfno_);
+  gridder.defineImage(nx, ny, scellx, scelly, scenter);
+  gridder.setFunc("box", 1);
+  gridder.setWeight("uniform");
+#ifdef KS_DEBUG
+  cout << "Grid parameter summary: " << endl;
+  cout << "- IF = " << sigIfno_ << endl;
+  cout << "- center = " << scenter << ")\n"
+       << "- npix = (" << nx << ", " << ny << ")\n"
+       << "- cell = (" << scellx << ", " << scelly << endl;
+#endif
+  gridder.grid();
+  const int itp = (tp_ == Table::Memory ? 0 : 1);
+  ScantableWrapper gtab = gridder.getResultAsScantable(itp);
+  return gtab;
+};
+
+void STSideBandSep::mapExtent(vector< CountedPtr<Scantable> > &tablist,
+			      Double &xmin, Double &xmax, 
+			      Double &ymin, Double &ymax)
+{
+  ROArrayColumn<Double> dirCol_;
+  dirCol_.attach( tablist[0]->table(), "DIRECTION" );
+  Matrix<Double> direction = dirCol_.getColumn();
+  Vector<Double> ra( direction.row(0) );
+  mathutil::rotateRA(ra);
+  minMax( xmin, xmax, ra );
+  minMax( ymin, ymax, direction.row(1) );
+  Double amin, amax, bmin, bmax;
+  const uInt ntab = tablist.size();
+  for ( uInt i = 1 ; i < ntab ; i++ ) {
+    dirCol_.attach( tablist[i]->table(), "DIRECTION" );
+    direction.assign( dirCol_.getColumn() );
+    ra.assign( direction.row(0) );
+    mathutil::rotateRA(ra);
+    minMax( amin, amax, ra );
+    minMax( bmin, bmax, direction.row(1) );
+    xmin = min(xmin, amin);
+    xmax = max(xmax, amax);
+    ymin = min(ymin, bmin);
+    ymax = max(ymax, bmax);
+  }
+};
+
+bool STSideBandSep::getSpectraToSolve(const int polId, const int beamId,
+				      const double dirX, const double dirY,
+				      Matrix<float> &specMat, vector<uInt> &tabIdvec)
+{
+  LogIO os(LogOrigin("STSideBandSep","getSpectraToSolve()", WHERE));
+
+  tabIdvec.resize(0);
+  specMat.resize(nchan_, nshift_);
+  Vector<float> spec;
+  uInt nspec = 0;
+  STMath stm(false); // insitu has no effect for average.
+  for (uInt itab = 0 ; itab < nshift_ ; itab++) {
+    CountedPtr<Scantable> currtab_p = tableList_[itab];
+    // Selection by POLNO and BEAMNO
+    const STSelector& basesel = currtab_p->getSelection();
+    STSelector sel(basesel);
+    sel.setPolarizations(vector<int>(1, polId));
+    sel.setBeams(vector<int>(1, beamId));
+    try {
+      currtab_p->setSelection(sel);
+    } catch (...) {
+#ifdef KS_DEBUG
+      cout << "Table " << itab << " - No spectrum found. skipping the table."
+	   << endl;
+#endif
+      continue;
+    }
+    // Selection by direction;
+    vector<int> selrow(0);
+    vector<double> currDir(2, 0.);
+    const int nselrow = currtab_p->nrow();
+    for (int irow = 0 ; irow < nselrow ; irow++) {
+      currDir = currtab_p->getDirectionVector(irow);
+      if ( (abs(currDir[0]-dirX) > xtol_) ||
+	   (abs(currDir[1]-dirY) > ytol_) )
+	continue;
+      // within direction tolerance
+      selrow.push_back(irow);
+    } // end of row loop
+
+    if (selrow.size() < 1) {
+      currtab_p->setSelection(basesel);
+
+#ifdef KS_DEBUG
+      cout << "Table " << itab << " - No spectrum found. skipping the table."
+	   << endl;
+#endif
+
+      continue;
+    }
+
+    // At least a spectrum is selected in this table
+    CountedPtr<Scantable> seltab_p = ( new Scantable(*currtab_p, false) );
+    currtab_p->setSelection(basesel);
+    STSelector sel2(seltab_p->getSelection());
+    sel2.setRows(selrow);
+    seltab_p->setSelection(sel2);
+    CountedPtr<Scantable> avetab_p;
+    vector<bool> mask;
+    if (seltab_p->nrow() > 1) {
+      avetab_p = stm.average(vector< CountedPtr<Scantable> >(1, seltab_p),
+			     vector<bool>(), "TINTSYS", "NONE");
+#ifdef KS_DEBUG
+      cout << "Table " << itab << " - more than a spectrum is selected. averaging rows..."
+	   << endl;
+#endif
+      if (avetab_p->nrow() > 1)
+	throw( AipsError("Averaged table has more than a row. Somethigs went wrong.") );
+    } else {
+      avetab_p = seltab_p;
+    }
+    spec.reference(specMat.column(nspec));
+    spec = avetab_p->getSpectrum(0);
+    tabIdvec.push_back((uInt) itab);
+    nspec++;
+  } // end of table loop
+  if (nspec != nshift_){
+    //shiftSpecmat.resize(nchan_, nspec, true);
+#ifdef KS_DEBUG
+      cout << "Could not find corresponding rows in some tables."
+	   << endl;
+      cout << "Number of spectra selected = " << nspec << endl;
+#endif
+  }
+  if (nspec < 2) {
+#ifdef KS_DEBUG
+      cout << "At least 2 spectra are necessary for convolution"
+	   << endl;
+#endif
+      return false;
+  }
+  return true;
+};
+
+vector<float> STSideBandSep::solve(const Matrix<float> &specmat,
+				   const vector<uInt> &tabIdvec,
+				   const bool signal)
+{
+  LogIO os(LogOrigin("STSideBandSep","solve()", WHERE));
+  if (tabIdvec.size() == 0)
+    throw(AipsError("Internal error. Table index is not defined."));
+  if (specmat.ncolumn() != tabIdvec.size())
+    throw(AipsError("Internal error. The row number of input matrix is not conformant."));
+  if (specmat.nrow() != nchan_)
+    throw(AipsError("Internal error. The channel size of input matrix is not conformant."));
+  
+
+#ifdef KS_DEBUG
+  cout << "Solving " << (signal ? "SIGNAL" : "IMAGE") << " sideband."
+     << endl;
+#endif
+
+  const size_t nspec = tabIdvec.size();
+  vector<double> *thisShift, *otherShift;
+  if (signal == otherside_) {
+    // (solve signal && solveother = T) OR (solve image && solveother = F)
+    thisShift = &imgShift_;
+    otherShift = &sigShift_;
+#ifdef KS_DEBUG
+    cout << "Image sideband will be deconvolved." << endl;
+#endif
+  } else {
+    // (solve signal && solveother = F) OR (solve image && solveother = T)
+    thisShift =  &sigShift_;
+    otherShift = &imgShift_; 
+#ifdef KS_DEBUG
+    cout << "Signal sideband will be deconvolved." << endl;
+#endif
+ }
+
+  vector<double> spshift(nspec);
+  Matrix<float> shiftSpecmat(nchan_, nspec, 0.);
+  double tempshift;
+  Vector<float> shiftspvec;
+  for (uInt i = 0 ; i < nspec; i++) {
+    spshift[i] = otherShift->at(i) - thisShift->at(i);
+    tempshift = - thisShift->at(i);
+    shiftspvec.reference(shiftSpecmat.column(i));
+    shiftSpectrum(specmat.column(i), tempshift, shiftspvec);
+  }
+
+  Matrix<float> convmat(nchan_, nspec*(nspec-1)/2, 0.);
+  vector<float> thisvec(nchan_, 0.);
+
+  float minval, maxval;
+  minMax(minval, maxval, shiftSpecmat);
+#ifdef KS_DEBUG
+  cout << "Max/Min of input Matrix = (max: " << maxval << ", min: " << minval << ")" << endl;
+#endif
+
+#ifdef KS_DEBUG
+  cout << "starting deconvolution" << endl;
+#endif
+  deconvolve(shiftSpecmat, spshift, rejlimit_, convmat);
+#ifdef KS_DEBUG
+  cout << "finished deconvolution" << endl;
+#endif
+
+  minMax(minval, maxval, convmat);
+#ifdef KS_DEBUG
+  cout << "Max/Min of output Matrix = (max: " << maxval << ", min: " << minval << ")" << endl;
+#endif
+
+  aggregateMat(convmat, thisvec);
+
+  if (!otherside_) return thisvec;
+
+  // subtract from the other side band.
+  vector<float> othervec(nchan_, 0.);
+  subtractFromOther(shiftSpecmat, thisvec, spshift, othervec);
+  return othervec;
+};
+
+
+void STSideBandSep::shiftSpectrum(const Vector<float> &invec,
+				  double shift,
+				  Vector<float> &outvec)
+{
+  LogIO os(LogOrigin("STSideBandSep","shiftSpectrum()", WHERE));
+  if (invec.size() != nchan_)
+    throw(AipsError("Internal error. The length of input vector differs from nchan_"));
+  if (outvec.size() != nchan_)
+    throw(AipsError("Internal error. The length of output vector differs from nchan_"));
+
+#ifdef KS_DEBUG
+  cout << "Start shifting spectrum for " << shift << "channels" << endl;
+#endif
+
+  // tweak shift to be in 0 ~ nchan_-1
+  if ( fabs(shift) > nchan_ ) shift = fmod(shift, nchan_);
+  if (shift < 0.) shift += nchan_;
+  double rweight = fmod(shift, 1.);
+  if (rweight < 0.) rweight += 1.;
+  double lweight = 1. - rweight;
+  uInt lchan, rchan;
+
+  outvec = 0;
+  for (uInt i = 0 ; i < nchan_ ; i++) {
+    lchan = uInt( floor( fmod( (i + shift), nchan_ ) ) );
+    if (lchan < 0.) lchan += nchan_;
+    rchan = ( (lchan + 1) % nchan_ );
+    outvec(lchan) += invec(i) * lweight;
+    outvec(rchan) += invec(i) * rweight;
+  }
+};
+
+void STSideBandSep::deconvolve(Matrix<float> &specmat,
+			       const vector<double> shiftvec,
+			       const double threshold,
+			       Matrix<float> &outmat)
+{
+  LogIO os(LogOrigin("STSideBandSep","deconvolve()", WHERE));
+  if (specmat.nrow() != nchan_)
+    throw(AipsError("Internal error. The length of input matrix differs from nchan_"));
+  if (specmat.ncolumn() != shiftvec.size())
+    throw(AipsError("Internal error. The number of input shifts and spectrum  differs."));
+
+  float minval, maxval;
+#ifdef KS_DEBUG
+  minMax(minval, maxval, specmat);
+  cout << "Max/Min of input Matrix = (max: " << maxval << ", min: " << minval << ")" << endl;
+#endif
+
+  uInt ninsp = shiftvec.size();
+  outmat.resize(nchan_, ninsp*(ninsp-1)/2, 0.);
+  Matrix<Complex> fftspmat(nchan_/2+1, ninsp, 0.);
+  Vector<float> rvecref(nchan_, 0.);
+  Vector<Complex> cvecref(nchan_/2+1, 0.);
+  uInt icol = 0;
+  unsigned int nreject = 0;
+
+#ifdef KS_DEBUG
+  cout << "Starting initial FFT. The number of input spectra = " << ninsp << endl;
+  cout << "out matrix has ncolumn = " << outmat.ncolumn() << endl;
+#endif
+
+  for (uInt isp = 0 ; isp < ninsp ; isp++) {
+    rvecref.reference( specmat.column(isp) );
+    cvecref.reference( fftspmat.column(isp) );
+
+#ifdef KS_DEBUG
+    minMax(minval, maxval, rvecref);
+    cout << "Max/Min of inv FFTed Matrix = (max: " << maxval << ", min: " << minval << ")" << endl;
+#endif
+
+    fftsf.fft0(cvecref, rvecref, true);
+
+#ifdef KS_DEBUG
+    double maxr=cvecref[0].real(), minr=cvecref[0].real(),
+      maxi=cvecref[0].imag(), mini=cvecref[0].imag();
+    for (uInt i = 1; i<cvecref.size();i++){
+      maxr = max(maxr, cvecref[i].real());
+      maxi = max(maxi, cvecref[i].imag());
+      minr = min(minr, cvecref[i].real());
+      mini = min(mini, cvecref[i].imag());
+    }
+    cout << "Max/Min of inv FFTed Matrix (size=" << cvecref.size() << ") = (max: " << maxr << " + " << maxi << "j , min: " << minr << " + " << mini << "j)" << endl;
+#endif
+  }
+
+  //Liberate from reference
+  rvecref.unique();
+
+  Vector<Complex> cspec(nchan_/2+1, 0.);
+  const double PI = 6.0 * asin(0.5);
+  const double nchani = 1. / (float) nchan_;
+  const Complex trans(0., 1.);
+#ifdef KS_DEBUG
+  cout << "starting actual deconvolution" << endl;
+#endif
+  for (uInt j = 0 ; j < ninsp ; j++) {
+    for (uInt k = j+1 ; k < ninsp ; k++) {
+      const double dx = (shiftvec[k] - shiftvec[j]) * 2. * PI * nchani;
+
+#ifdef KS_DEBUG
+      cout << "icol = " << icol << endl;
+#endif
+
+      for (uInt ichan = 0 ; ichan < cspec.size() ; ichan++){
+	cspec[ichan] = ( fftspmat(ichan, j) + fftspmat(ichan, k) )*0.5;
+	double phase = dx*ichan;
+	if ( fabs( sin(phase) ) > threshold){
+	  cspec[ichan] += ( fftspmat(ichan, j) - fftspmat(ichan, k) ) * 0.5
+	    * trans * sin(phase) / ( 1. - cos(phase) );
+	} else {
+	  nreject++;
+	}
+      } // end of channel loop
+
+#ifdef KS_DEBUG
+      cout << "done calculation of cspec" << endl;
+#endif
+
+      Vector<Float> rspec;
+      rspec.reference( outmat.column(icol) );
+
+#ifdef KS_DEBUG
+      cout << "Starting inverse FFT. icol = " << icol << endl;
+      //cout << "- size of complex vector = " << cspec.size() << endl;
+      double maxr=cspec[0].real(), minr=cspec[0].real(),
+	maxi=cspec[0].imag(), mini=cspec[0].imag();
+      for (uInt i = 1; i<cspec.size();i++){
+	maxr = max(maxr, cspec[i].real());
+	maxi = max(maxi, cspec[i].imag());
+	minr = min(minr, cspec[i].real());
+	mini = min(mini, cspec[i].imag());
+      }
+      cout << "Max/Min of conv vector (size=" << cspec.size() << ") = (max: " << maxr << " + " << maxi << "j , min: " << minr << " + " << mini << "j)" << endl;
+#endif
+
+      fftsi.fft0(rspec, cspec, false);
+
+#ifdef KS_DEBUG
+      //cout << "- size of inversed real vector = " << rspec.size() << endl;
+      minMax(minval, maxval, rspec);
+      cout << "Max/Min of inv FFTed Vector (size=" << rspec.size() << ") = (max: " << maxval << ", min: " << minval << ")" << endl;
+      //cout << "Done inverse FFT. icol = " << icol << endl;
+#endif
+
+      icol++;
+    }
+  }
+
+#ifdef KS_DEBUG
+  minMax(minval, maxval, outmat);
+  cout << "Max/Min of inv FFTed Matrix = (max: " << maxval << ", min: " << minval << ")" << endl;
+#endif
+
+  os << "Threshold = " << threshold << ", Rejected channels = " << nreject << endl;
+};
+
+////////////////////////////////////////////////////////////////////
+// void STSideBandSep::cpprfft(std::vector<float> invec)
+// {
+//   cout << "c++ method cpprfft" << endl;
+//   const unsigned int len = invec.size();
+//   Vector<Complex> carr(len/2+1, 0.);
+//   Vector<float> inarr = Vector<float>(invec);
+//   Vector <float> outarr(len, 0.);
+//   FFTServer<Float, Complex> fftsf, fftsi;
+//   fftsf.resize(IPosition(1, len), FFTEnums::REALTOCOMPLEX);
+//   fftsi.resize(IPosition(1, invec.size()), FFTEnums::COMPLEXTOREAL);
+//   cout << "Input float array (length = " << len << "):" << endl;
+//   for (uInt i = 0 ; i < len ; i++){
+//     cout << (i == 0 ? "( " : " ") << inarr[i] << (i == len-1 ? ")" : ",");
+//   }
+//   cout << endl;
+//   cout << "R->C transform" << endl;
+//   fftsf.fft0(carr, inarr, true);
+//   cout << "FFTed complex array (length = " << carr.size() << "):" << endl;
+//   for (uInt i = 0 ; i < carr.size() ; i++){
+//     cout << (i == 0 ? "( " : " ") << carr[i] << ( (i == carr.size()-1) ? ")" : "," );
+//   }
+//   cout << endl;
+//   cout << "C->R transform" << endl;
+//   fftsi.fft0(outarr, carr, false);
+//   cout << "invFFTed float array (length = " << outarr.size() << "):" << endl;
+//   for (uInt i = 0 ; i < outarr.size() ; i++){
+//     cout << (i == 0 ? "( " : " ") << outarr[i] << ( (i == outarr.size()-1) ? ")" : "," );
+//   }
+//   cout << endl;
+// };
+////////////////////////////////////////////////////////////////////
+
+
+void STSideBandSep::aggregateMat(Matrix<float> &inmat,
+				 vector<float> &outvec)
+{
+  LogIO os(LogOrigin("STSideBandSep","aggregateMat()", WHERE));
+  if (inmat.nrow() != nchan_)
+    throw(AipsError("Internal error. The row numbers of input matrix differs from nchan_"));
+//   if (outvec.size() != nchan_)
+//     throw(AipsError("Internal error. The size of output vector should be equal to nchan_"));
+
+  os << "Averaging " << inmat.ncolumn() << " spectra in the input matrix."
+     << LogIO::POST;
+
+  const uInt nspec = inmat.ncolumn();
+  const double scale = 1./( (double) nspec );
+  // initialize values with 0
+  outvec.assign(nchan_, 0);
+  for (uInt isp = 0 ; isp < nspec ; isp++) {
+    for (uInt ich = 0 ; ich < nchan_ ; ich++) {
+      outvec[ich] += inmat(ich, isp);
+    }
+  }
+
+  vector<float>::iterator iter;
+  for (iter = outvec.begin(); iter != outvec.end(); iter++){
+    *iter *= scale;
+  }
+};
+
+void STSideBandSep::subtractFromOther(const Matrix<float> &shiftmat,
+				      const vector<float> &invec,
+				      const vector<double> &shift,
+				      vector<float> &outvec)
+{
+  LogIO os(LogOrigin("STSideBandSep","subtractFromOther()", WHERE));
+  if (shiftmat.nrow() != nchan_)
+    throw(AipsError("Internal error. The row numbers of input matrix differs from nchan_"));
+  if (invec.size() != nchan_)
+    throw(AipsError("Internal error. The length of input vector should be nchan_"));
+  if (shift.size() != shiftmat.ncolumn())
+    throw(AipsError("Internal error. The column numbers of input matrix != the number of elements in shift"));
+
+  const uInt nspec = shiftmat.ncolumn();
+  Vector<float> subsp(nchan_, 0.), shiftsub;
+  Matrix<float> submat(nchan_, nspec, 0.);
+  vector<float>::iterator iter;
+  for (uInt isp = 0 ; isp < nspec ; isp++) {
+    for (uInt ich = 0; ich < nchan_ ; ich++) {
+      subsp(ich) = shiftmat(ich, isp) - invec[ich];
+    }
+    shiftsub.reference(submat.column(isp));
+    shiftSpectrum(subsp, shift[isp], shiftsub);
+  }
+
+  aggregateMat(submat, outvec);
+};
+
+
+void STSideBandSep::setLO1(const string lo1, const string frame,
 			   const double reftime, const string refdir)
 {
-  lo1Freq_ = lo1;
+  Quantum<Double> qfreq;
+  readQuantity(qfreq, String(lo1));
+  lo1Freq_ = qfreq.getValue("Hz");
   MFrequency::getType(loFrame_, frame);
   loTime_ = reftime;
   loDir_ = refdir;
@@ -296,17 +1057,9 @@ void STSideBandSep::setLO1Root(string name)
 #endif
 };
 
-///// TEMPORAL FUNCTION!!! /////
-void STSideBandSep::setScanTb0(const ScantableWrapper &s){
-  st0_ = s.getCP();
-};
-////////////////////////////////
 
-void STSideBandSep::solveImageFreqency()
+void STSideBandSep::solveImageFrequency()
 {
-#ifdef KS_DEBUG
-  cout << "STSideBandSep::solveImageFrequency" << endl;
-#endif
   LogIO os(LogOrigin("STSideBandSep","solveImageFreqency()", WHERE));
   os << "Start calculating frequencies of image side band" << LogIO::POST;
 
@@ -382,7 +1135,6 @@ void STSideBandSep::solveImageFreqency()
   else
     sigrefval = toloframe(Quantum<Double>(refval, "Hz")).get("Hz").getValue();
 
-
   // Check for the availability of LO1
   if (lo1Freq_ > 0.) {
     os << "Using user defined LO1 frequency." << LogIO::POST;
@@ -401,7 +1153,7 @@ void STSideBandSep::solveImageFreqency()
   } else {
     // Try getting ASDM name from scantable header
     os << "Try getting information from scantable header" << LogIO::POST;
-    if (!getLo1FromScanTab(st0_, sigrefval, refpix, increment, nChan)) {
+    if (!getLo1FromScanTab(tableList_[0], sigrefval, refpix, increment, nChan)) {
       //throw AipsError("Failed to get LO1 frequency from asis table");
       os << LogIO::WARN << "Failed to get LO1 frequency using information in scantable." << LogIO::POST;
       os << LogIO::WARN << "Could not fill frequency information of IMAGE sideband properly." << LogIO::POST;
@@ -409,30 +1161,34 @@ void STSideBandSep::solveImageFreqency()
       return;
     }
   }
+
   // LO1 should now be ready.
   if (lo1Freq_ < 0.)
     throw(AipsError("Got negative LO1 Frequency"));
 
-  // Print summary (LO1)
-  Vector<Double> dirvec = md.getAngle(Unit(String("rad"))).getValue();
-  os << "[LO1 settings]" << LogIO::POST;
-  os << "- Frequency: " << lo1Freq_ << " [Hz] ("
-     << MFrequency::showType(loFrame_) << ")" << LogIO::POST;
-  os << "- Reference time: " << me.get(Unit(String("d"))).getValue()
-     << " [day]" << LogIO::POST;
-  os << "- Reference direction: [" << dirvec[0] << ", " << dirvec[1]
-     << "] (" << md.getRefString() << ") " << LogIO::POST;
+  // Print summary
+  {
+    // LO1
+    Vector<Double> dirvec = md.getAngle(Unit(String("rad"))).getValue();
+    os << "[LO1 settings]" << LogIO::POST;
+    os << "- Frequency: " << lo1Freq_ << " [Hz] ("
+       << MFrequency::showType(loFrame_) << ")" << LogIO::POST;
+    os << "- Reference time: " << me.get(Unit(String("d"))).getValue()
+       << " [day]" << LogIO::POST;
+    os << "- Reference direction: [" << dirvec[0] << ", " << dirvec[1]
+       << "] (" << md.getRefString() << ") " << LogIO::POST;
 
-  //Print summary (signal)
-  os << "[Signal side band]" << LogIO::POST;
-  os << "- IFNO: " << imgTab_p->getIF(0) << " (FREQ_ID = " << freqid << ")"
-     << LogIO::POST;
-  os << "- Reference value: " << refval << " [Hz] ("
-     << MFrequency::showType(tabframe) << ") = "
-     << sigrefval << " [Hz] (" <<  MFrequency::showType(loFrame_)
-     << ")" << LogIO::POST;
-  os << "- Reference pixel: " << refpix  << LogIO::POST;
-  os << "- Increment: " << increment << " [Hz]" << LogIO::POST;
+    // signal sideband
+    os << "[Signal side band]" << LogIO::POST;
+    os << "- IFNO: " << imgTab_p->getIF(0) << " (FREQ_ID = " << freqid << ")"
+       << LogIO::POST;
+    os << "- Reference value: " << refval << " [Hz] ("
+       << MFrequency::showType(tabframe) << ") = "
+       << sigrefval << " [Hz] (" <<  MFrequency::showType(loFrame_)
+       << ")" << LogIO::POST;
+    os << "- Reference pixel: " << refpix  << LogIO::POST;
+    os << "- Increment: " << increment << " [Hz]" << LogIO::POST;
+  }
 
   // Calculate image band incr and refval in loFrame_
   Double imgincr = -increment;
@@ -446,16 +1202,18 @@ void STSideBandSep::solveImageFreqency()
   // Update FREQ_ID in table.
   freqIdVec = fIDnew;
 
-  // Print summary (Image side band)
-  os << "[Image side band]" << LogIO::POST;
-  os << "- IFNO: " << imgTab_p->getIF(0) << " (FREQ_ID = " << freqIdVec(0)
-     << ")" << LogIO::POST;
-  os << "- Reference value: " << imgrefval << " [Hz] ("
-     << MFrequency::showType(tabframe) << ") = "
-     << imgrefval_tab << " [Hz] (" <<  MFrequency::showType(loFrame_)
-     << ")" << LogIO::POST;
-  os << "- Reference pixel: " << refpix  << LogIO::POST;
-  os << "- Increment: " << imgincr << " [Hz]" << LogIO::POST;
+  // Print summary (Image sideband)
+  {
+    os << "[Image side band]" << LogIO::POST;
+    os << "- IFNO: " << imgTab_p->getIF(0) << " (FREQ_ID = " << freqIdVec(0)
+       << ")" << LogIO::POST;
+    os << "- Reference value: " << imgrefval << " [Hz] ("
+       << MFrequency::showType(tabframe) << ") = "
+       << imgrefval_tab << " [Hz] (" <<  MFrequency::showType(loFrame_)
+       << ")" << LogIO::POST;
+    os << "- Reference pixel: " << refpix  << LogIO::POST;
+    os << "- Increment: " << imgincr << " [Hz]" << LogIO::POST;
+  }
 };
 
 Bool STSideBandSep::checkFile(const string name, string type)
@@ -617,10 +1375,5 @@ bool STSideBandSep::getLo1FromAsisTab(const string msname,
      << LogIO::POST;
   return false;
 };
-
-// String STSideBandSep::()
-// {
-
-// };
 
 } //namespace asap

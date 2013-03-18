@@ -82,6 +82,8 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
                 if(r >= nrows || c >= ncols) disown(r, c);
     }
 
+    itsCanvases_.clear();
+    itsCanvasOwners_.clear();
     itsCanvases_.resize(nrows);
     itsCanvasOwners_.resize(nrows);
     
@@ -96,30 +98,31 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
         itsCanvases_[r].resize(ncols);
         itsCanvasOwners_[r].resize(ncols, NULL);
         for(unsigned int c = 0; c < ncols; c++) {
-            if(r >= oldrows || c >= oldcols) {
+            //if(r >= oldrows || c >= oldcols) {
                 canvas = factory->canvas();
                 itsCanvases_[r][c] = canvas;
-                
+
                 // connect new canvases' tracker to tool tab
                 tools = canvas->standardMouseTools();
                 tools->trackerTool()->addNotifier(toolsTab);
                 tools->selectTool()->setDrawRects(true);
-                
+
                 // register annotator tool
                 canvas->registerMouseTool(
-                        PlotMouseToolPtr(&plotter->getAnnotator(), false),
-                        false, true);
-                
+                    PlotMouseToolPtr(&plotter->getAnnotator(), false),
+                    false, true);
+
                 // add plotmsplotter as draw watcher
                 canvas->registerDrawWatcher(PlotDrawWatcherPtr(plotter,false));
-                
+
                 // watch for keystrokes related to using tracker feature
-                canvas->registerKeyHandler( 
-                   PlotKeyEventHandlerPtr( plotter->getToolsTab()->tracker_key_handler, false) );
-                
+                canvas->registerKeyHandler(
+                    PlotKeyEventHandlerPtr(toolsTab->tracker_key_handler,
+                                           false));
+
                 // set cached image size
                 canvas->setCachedAxesStackImageSize(cimg.first, cimg.second);
-            }
+            //}
         }
     }
 }
@@ -203,6 +206,28 @@ PlotMSPages& PlotMSPages::operator=(const PlotMSPages& copy) {
         itsCurrentPageNum_ = 0;
     }
     return *this;
+}
+
+void PlotMSPages::firstPage() {
+    itsCurrentPageNum_ = 0;
+}
+
+void PlotMSPages::nextPage() {
+    if(itsCurrentPageNum_ < (totalPages() - 1)) {
+        ++itsCurrentPageNum_;
+    }
+}
+
+void PlotMSPages::previousPage() {
+    if(itsCurrentPageNum_ > 0) {
+        --itsCurrentPageNum_;
+    }
+}
+
+void PlotMSPages::lastPage() {
+    if(totalPages() > 0) {
+        itsCurrentPageNum_ = totalPages() - 1;
+    }
 }
 
 

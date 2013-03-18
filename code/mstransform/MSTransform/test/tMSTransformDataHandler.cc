@@ -36,11 +36,17 @@ int main(int argc, char **argv)
 
 	// Data selection parameters
 	String inputMS,outputMS, datacolumn;
-	Bool combinespws, hanning, regridms, freqaverage;
+	Bool combinespws, hanning, regridms, freqaverage, realmodelcol;
 	String timerange,antenna,field,spw,uvrange,correlation,scan,array,intent,observation;
 
-	Int nchan;
-	String start, width;
+	Int nchan,freqbin,ddistart,nspw;
+	String start, width, useweights;
+
+	Bool mergeSpwSubTables = False;
+	vector<String> submslist;
+
+	vector<Int> tileshape;
+	Bool tileshapeON = False;
 
 	// Parse input parameters
 	for (unsigned short i=0;i<argc-1;i++)
@@ -65,6 +71,18 @@ int main(int argc, char **argv)
 			datacolumn = value;
 			configuration.define ("datacolumn", datacolumn);
 			cout << "Data column is: " << datacolumn << endl;
+		}
+		else if (parameter == string("-realmodelcol"))
+		{
+			realmodelcol = Bool(atoi(value.c_str()));
+			configuration.define ("realmodelcol", Bool(realmodelcol));
+			cout << "Real MODEL column is: " << realmodelcol << endl;
+		}
+		else if (parameter == string("-tileshape"))
+		{
+			tileshapeON = True;
+			tileshape.push_back(atoi(value.c_str()));
+			cout << "Tile shape is: " << tileshape.at(tileshape.size()-1) << endl;
 		}
 		else if (parameter == string("-combinespws"))
 		{
@@ -110,9 +128,15 @@ int main(int argc, char **argv)
 		}
 		else if (parameter == string("-freqbin"))
 		{
-			width = value;
-			configuration.define ("freqbin", width);
-			cout << "Frequency bin is: " << width << endl;
+			freqbin = atoi(value.c_str());
+			configuration.define ("freqbin", freqbin);
+			cout << "Frequency bin is: " << freqbin << endl;
+		}
+		else if (parameter == string("-useweights"))
+		{
+			useweights = value;
+			configuration.define ("useweights", useweights);
+			cout << "Weights is: " << useweights << endl;
 		}
 		else if (parameter == string("-spw"))
 		{
@@ -138,29 +162,59 @@ int main(int argc, char **argv)
 			configuration.define ("correlation", correlation);
 			cout << "Correlation selection is: " << correlation << endl;
 		}
-	}
-
-	// Set up data handler
-	MSTransformDataHandler *tvdh = new MSTransformDataHandler(configuration);
-	tvdh->open();
-	tvdh->setup();
-
-	vi::VisibilityIterator2 *visIter = tvdh->getVisIter();
-	vi::VisBuffer2 *vb = visIter->getVisBuffer();
-	visIter->originChunks();
-	while (visIter->moreChunks())
-	{
-		visIter->origin();
-		while (visIter->more())
+		else if (parameter == string("-ddistart"))
 		{
-			tvdh->fillOutputMs(vb);
-			visIter->next();
+			ddistart = atoi(value.c_str());
+			configuration.define ("ddistart", ddistart);
+			cout << "DDI start is: " << ddistart << endl;
 		}
-		visIter->nextChunk();
+		else if (parameter == string("-nspw"))
+		{
+			nspw = atoi(value.c_str());
+			configuration.define ("nspw", nspw);
+			cout << "nspw is: " << nspw << endl;
+		}
+		else if (parameter == string("-subms"))
+		{
+			mergeSpwSubTables = True;
+			submslist.push_back(value);
+			cout << "Adding MS to list of SubMS to merge SPW subtable : " << value << endl;
+		}
 	}
 
-	tvdh->close();
-	delete tvdh;
+	if (mergeSpwSubTables)
+	{
+		MSTransformDataHandler::mergeSpwSubTables(submslist);
+	}
+	else
+	{
+		if (tileshapeON)
+		{
+			Vector<Int> tileShapeCASA = tileshape;
+			configuration.define ("tileshape", tileShapeCASA);
+		}
+		// Set up data handler
+		MSTransformDataHandler *tvdh = new MSTransformDataHandler(configuration);
+		tvdh->open();
+		tvdh->setup();
+
+		vi::VisibilityIterator2 *visIter = tvdh->getVisIter();
+		vi::VisBuffer2 *vb = visIter->getVisBuffer();
+		visIter->originChunks();
+		while (visIter->moreChunks())
+		{
+			visIter->origin();
+			while (visIter->more())
+			{
+				tvdh->fillOutputMs(vb);
+				visIter->next();
+			}
+			visIter->nextChunk();
+		}
+
+		tvdh->close();
+		delete tvdh;
+	}
 
 	exit(0);
 }

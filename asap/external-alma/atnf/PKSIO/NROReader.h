@@ -107,7 +107,7 @@ class NROReader
   void setFreqRefFromVREF( bool fromVREF ) ;
 
   // Read data header
-  virtual Int read() = 0 ;
+  virtual Int read() ;
 
   // Get header information
   virtual int getHeaderInfo( Int &nchan,
@@ -185,6 +185,9 @@ class NROReader
   virtual Int getNumBeam() = 0 ;
 
  protected:
+  // get Dataset object
+  virtual void initDataset() = 0;
+
   // convert time in character representation to MJD representation
   virtual double getMJD( char *time ) ;
   virtual double getMJD( string strStartTime ) ;

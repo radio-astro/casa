@@ -36,6 +36,7 @@
 #include <display/DisplayCanvas/WCAxisLabeller.h>
 #include <display/Display/Attribute.h>
 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 const String WedgeDD::WEDGE_PREFIX = "wedge";
@@ -221,8 +222,20 @@ Bool WedgeDD::setOptions(Record &rec, Record &recOut) {
   Bool localchange = False;
   Bool localchange1 = False;
 
-  localchange = readOptionRecord(itsPowerCycles, error, rec,
-				 "powercycles");
+  if ( rec.isDefined(  WCPowerScaleHandler::POWER_CYCLES) ){
+	  Record powerCycleFloat;
+	  if ( rec.dataType( WCPowerScaleHandler::POWER_CYCLES) == TpRecord ){
+		 Record subRecord = rec.subRecord(WCPowerScaleHandler::POWER_CYCLES );
+		 float pCycles = subRecord.asFloat( "value");
+		 powerCycleFloat.define(WCPowerScaleHandler::POWER_CYCLES, pCycles);
+	  }
+	  else {
+		 powerCycleFloat = rec;
+	  }
+	  localchange = readOptionRecord(itsPowerCycles, error, powerCycleFloat,
+	  				 WCPowerScaleHandler::POWER_CYCLES);
+  }
+
   localchange = (itsPowerScaleHandler->setOptions(rec, recOut) ||
 		 localchange);
 
@@ -230,9 +243,9 @@ Bool WedgeDD::setOptions(Record &rec, Record &recOut) {
 				   "dataunit") || localchange1);  
 
   localchange1 = (readOptionRecord(itsMin, error, rec,
-				  "datamin") || localchange1);
+				  DisplayData::DATA_MIN) || localchange1);
   localchange1 = (readOptionRecord(itsMax, error, rec,
-				   "datamax") || localchange1);  
+				  DisplayData::DATA_MAX) || localchange1);
   localchange1 = (readOptionRecord(itsOptionsMode, error, rec,
 				   "orientation") || localchange1);  
   // distribute options to the axis labeller
@@ -274,11 +287,11 @@ Record WedgeDD::getOptions() {
   Record rec = ActiveCaching2dDD::getOptions();
   Record datamin;
   datamin.define("value", itsMin);
-  rec.defineRecord("datamin", datamin);
+  rec.defineRecord(DisplayData::DATA_MIN, datamin);
 
   Record datamax;
   datamax.define("value", itsMax);
-  rec.defineRecord("datamax", datamax);
+  rec.defineRecord(DisplayData::DATA_MAX, datamax);
 
   Record ori;
   ori.define("value", itsOptionsMode);
@@ -331,9 +344,9 @@ CachingDisplayMethod *WedgeDD::newDisplayMethod(
 AttributeBuffer WedgeDD::optionsAsAttributes() {
   AttributeBuffer buffer = ActiveCaching2dDD::optionsAsAttributes();
   buffer.set("dataunit",itsDataUnit);
-  buffer.set("datamin",itsMin);
-  buffer.set("datamax",itsMax);
-  buffer.set("powercycles",itsPowerCycles);
+  buffer.set(DisplayData::DATA_MIN,itsMin);
+  buffer.set(DisplayData::DATA_MAX,itsMax);
+  buffer.set(WCPowerScaleHandler::POWER_CYCLES,itsPowerCycles);
   buffer.set("orientation",itsOptionsMode);
   return buffer;
 }
@@ -346,9 +359,7 @@ void WedgeDD::notifyUnregister(WorldCanvasHolder &wcHolder,
   ActiveCaching2dDD::notifyUnregister(wcHolder, ignoreRefresh);
 }
 
-WedgeDD::WedgeDD(const WedgeDD &) {
-  // MUST IMPLEMENT
-}
+
 
 void WedgeDD::operator=(const WedgeDD &) {
   // MUST IMPLEMENT

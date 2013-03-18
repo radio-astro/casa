@@ -355,6 +355,17 @@ Bool ImageInfo::toRecord(
     outRecord.define("imagetype", ImageInfo::imageType(itsImageType));
     outRecord.define("objectname", itsObjectName);
     if (_beams.hasMultiBeam()) {
+    	try {
+    		outRecord.defineRecord(
+    			"perplanebeams",
+    			_beams.toRecord(True).asRecord("perplanebeams")
+    		);
+    	}
+    	catch (const AipsError& x) {
+    		error = x.getMesg();
+    		return False;
+    	}
+    	/*
     	Record perPlaneBeams;
     	uInt nChannels, nStokes;
     	_getChansAndStokes(nChannels, nStokes);
@@ -379,6 +390,7 @@ Bool ImageInfo::toRecord(
     		perPlaneBeams.defineRecord("*" + String::toString(count), rec);
     	}
     	outRecord.defineRecord("perplanebeams", perPlaneBeams);
+    	*/
     }
     return ok;
 }
@@ -406,6 +418,8 @@ Bool ImageInfo::fromRecord(String& error, const RecordInterface& inRecord) {
 		setObjectName (objectName);
 	}
 	if (inRecord.isDefined("perplanebeams")) {
+		_beams = ImageBeamSet::fromRecord(inRecord, True);
+		/*
 		Record hpBeams = inRecord.asRecord("perplanebeams");
 		if (! hpBeams.isDefined("nChannels")) {
 			error = "perplanebeams subrecord has no nChannels field";
@@ -431,6 +445,7 @@ Bool ImageInfo::fromRecord(String& error, const RecordInterface& inRecord) {
 			*iter = GaussianBeam::fromRecord(hpBeams.asRecord(field));
 		}
 		_beams.setBeams(beams);
+		*/
 	}
 	return True;
 }

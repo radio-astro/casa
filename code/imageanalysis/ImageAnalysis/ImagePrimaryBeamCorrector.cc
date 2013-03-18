@@ -32,10 +32,9 @@
 #include <casa/OS/SymLink.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <images/Images/ExtendImage.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
-#include <images/Images/SubImage.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/TempImage.h>
 #include <images/Regions/WCBox.h>
 #include <lattices/Lattices/LatticeStatistics.h>
@@ -43,7 +42,6 @@
 
 #include <imageanalysis/ImageAnalysis/ImageInputProcessor.h>
 
-#include <memory>
 #include <unistd.h>
 
 
@@ -102,7 +100,7 @@ ImagePrimaryBeamCorrector::ImagePrimaryBeamCorrector(
 			boxShape[dirAxes[1]] = imShape[dirAxes[1]];
 			LCBox x(IPosition(imShape.size(), 0), boxShape - 1, imShape);
 			std::auto_ptr<ImageInterface<Float> > clone(_getImage()->cloneII());
-			SubImage<Float> sub = SubImage<Float>::createSubImage(
+			SubImage<Float> sub = SubImageFactory<Float>::createSubImage(
 				*clone, x.toRecord(""), "",
 				_getLog().get(), True, AxesSpecifier(False)
 			);
@@ -215,7 +213,7 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 			mask = mask && pbTemplate->pixelMask();
 		}
 		subImage = SubImage<Float>(*_getImage(), LattRegionHolder(LCLELMask(mask)));
-		subImage = SubImage<Float>::createSubImage(
+		subImage = SubImageFactory<Float>::createSubImage(
 		    subImage, *_getRegion(), _getMask(), _getLog().get(), False,
 		    AxesSpecifier(), _getStretch()
 		);
@@ -230,12 +228,12 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 				)
 			)
 			: _getImage()->cloneII());
-		subImage = SubImage<Float>::createSubImage(
+		subImage = SubImageFactory<Float>::createSubImage(
 		    *tmp, *_getRegion(), _getMask(), _getLog().get(),
 		    False, AxesSpecifier(), _getStretch()
 		);
 	}
-	pbSubImage = SubImage<Float>::createSubImage(
+	pbSubImage = SubImageFactory<Float>::createSubImage(
     	*pbTemplate, *_getRegion(), _getMask(), _getLog().get(),
     	False, AxesSpecifier(), _getStretch()
     );
@@ -263,11 +261,15 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 	}
 	else {
 		_removeExistingOutfileIfNecessary();
-		ImageAnalysis ia(&subImage);
 		String mask = "";
 	    Record empty;
+
+
 		outImage.reset(
-			ia.subimage(_getOutname(), empty, mask, False, False)
+			SubImageFactory<Float>::createImage(
+				subImage, _getOutname(), empty,
+				mask, False, False, False, False
+			)
 		);
 	}
 	LatticeExpr<Float> expr = (_mode == DIVIDE)

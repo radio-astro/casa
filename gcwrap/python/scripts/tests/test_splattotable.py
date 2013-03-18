@@ -98,6 +98,7 @@ class splattotable_test(unittest.TestCase):
     def tearDown(self):
         os.remove(good_list)
         os.remove(bad_list)
+        self.assertTrue(len(tb.showcache()) == 0)
 
     def test_exceptions(self):
         """splattotable: Test various exception cases"""
@@ -127,10 +128,12 @@ class splattotable_test(unittest.TestCase):
                 table = table + str(i)
                 if (i==0):
                     newsl = run_sttmethod(filenames, table)
+                    newsl.done()
                 else:
-                    newsl = run_stttask(filenames, table)
+                    self.assertTrue(run_stttask(filenames, table))
+                    
                 self.assertTrue(mytb.open(table))
-            tb.done()
+            mytb.done()
                     
         testit("list1.txt", "good_table")
       

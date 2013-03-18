@@ -76,12 +76,12 @@ class ASTEDataset : public NRODataset
   // data initialization 
   virtual void initialize() ;
 
-  // fill header from file 
-  virtual int fillHeader() ;
-
  protected:
   // fill header information
   virtual int fillHeader( int sameEndian ) ;
+
+  // return ARRAYMAX
+  virtual int arrayMax() { return ASTE_ARYMAX; } ;
 } ;
 
 

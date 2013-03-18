@@ -8,6 +8,7 @@ from taskinit import *
 from simutil import *
 from simobserve import simobserve
 from simanalyze import simanalyze
+from feather import feather
 
 def simalma(
     project=None,
@@ -177,12 +178,16 @@ def simalma(
             msname_bl = pref_bl+".noisy.ms"
             msname_aca = pref_aca+".noisy.ms"
             msname_tp = pref_tp+".noisy.sd.ms"
-            imagename_aca = pref_aca+".noisy.image"
+            #imagename_aca = pref_aca+".noisy.image"
         else:
             msname_bl = pref_bl+".ms"
             msname_aca = pref_aca+".ms"
             msname_tp = pref_tp+".sd.ms"
-            imagename_aca = pref_aca+".image"
+            #imagename_aca = pref_aca+".image"
+            
+        imagename_tp = project+".sd.image"
+        imagename_int = project+".concat.image"
+        combimage = project+".image"
 
         simana_file = project+".simanalyze.last"
 
@@ -233,6 +238,7 @@ def simalma(
         pbval = 0.2997924 / qa.convert(qa.quantity(model_center),'GHz')['value'] \
                 / Dant * 3600. * 180 / numpy.pi # arcsec
         PB12 = qa.quantity(pbval*1.2, "arcsec")
+        PB12ot = qa.quantity(pbval, "arcsec")
         msg("PB size: %s" % (qa.tos(PB12)), origin="simalma", priority='DEBUG2')
         pointingspacing = str(nyquist)+"PB"
 
@@ -409,7 +415,7 @@ def simalma(
                     msg("- Center of poinings: %s" % center, origin="simalma", priority='warn')
                     msg("- Map size: [%s, %s]" % (mapsize_tp[0], mapsize_tp[1]), origin="simalma", priority='warn')
 
-            ptgspacing_tp = str(pbgridratio_tp*PB12ot['value']/PB12sim['value'])+"PB"
+            ptgspacing_tp = str(pbgridratio_tp*PB12ot['value']/PB12['value'])+"PB"
 
             # Scale integration time of TP (assure >= 1 visit per direction)
             tottime_tp = tottime_aca
@@ -465,23 +471,25 @@ def simalma(
             modelimage = ""
             if acaratio > 0:
                 ########################################################
-                # Image ACA-7m + ACA-TP
+                # Image ACA-TP
                 step += 1
                 msg("="*60, origin="simalma", priority="warn")
-                msg(" Step %d: generating ACA 7-m array + total power image. " % step, origin="simalma", priority="warn")
+                #msg(" Step %d: generating ACA 7-m array + total power image. " % step, origin="simalma", priority="warn")
+                msg(" Step %d: generating a total power image. " % step, origin="simalma", priority="warn")
                 msg("="*60, origin="simalma", priority="warn")
-                if os.path.exists(fileroot+"/"+msname_aca):
-                    vis_aca = msname_aca+","
-                else:
-                    msg("ACA is requested but ACA 7-m MS '%s' is not found" \
-                        % msname_aca, origin="simalma", priority="error")
+                #if os.path.exists(fileroot+"/"+msname_aca):
+                #    vis_aca = msname_aca+","
+                #else:
+                #    msg("ACA is requested but ACA 7-m MS '%s' is not found" \
+                #        % msname_aca, origin="simalma", priority="error")
                 if os.path.exists(fileroot+"/"+msname_tp):
-                    vis_aca += msname_tp
+                    #vis_aca += msname_tp
+                    vis_tp = msname_tp
                 else:
                     msg("ACA is requested but total power MS '%s' is not found" \
                         % msname_tp, origin="simalma", priority="error")
 
-                cell_aca = cell
+                cell_tp = cell
 
                 # Define imsize to cover TP map region
                 #imsize_aca = 0
@@ -516,10 +524,10 @@ def simalma(
                         origin="simalma", priority=v_priority)
                     imgcell = model_cell
 
-                imsize_aca = calc_imsize(mapsize=qimgsize_tp, cell=imgcell)
+                imsize_tp = calc_imsize(mapsize=qimgsize_tp, cell=imgcell)
 
                 msg("---> The number of pixels needed to cover the map region: [%d, %d]" % \
-                    (imsize_aca[0], imsize_aca[1]), \
+                    (imsize_tp[0], imsize_tp[1]), \
                     origin="simalma", priority=v_priority)
 
                 msg("Compare with BL imsize and adopt the larger one", \
@@ -543,30 +551,26 @@ def simalma(
                         (imsize_bl[0], imsize_bl[1]), \
                         origin="simalma", priority=v_priority)
 
-                imsize_aca = [max(imsize_aca[0], imsize_bl[0]), \
-                              max(imsize_aca[1], imsize_bl[1])]
+                imsize_tp = [max(imsize_tp[0], imsize_bl[0]), \
+                             max(imsize_tp[1], imsize_bl[1])]
 
-                msg("The image size of ACA: [%d, %d]" % \
-                    (imsize_aca[0], imsize_aca[1]), \
+                msg("The image size of TP: [%d, %d]" % \
+                    (imsize_tp[0], imsize_tp[1]), \
                     origin="simalma", priority=v_priority)
 
-                taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_aca+"', modelimage='', cell='"+str(cell_aca)+"', imsize="+str(imsize_aca)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+                taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_tp+"', modelimage='', cell='"+str(cell_tp)+"', imsize="+str(imsize_tp)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
                 msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
 
                 try:
                     simanalyze(project=project, image=image,
-                               vis=vis_aca, modelimage="",
-                               cell=cell_aca, imsize=imsize_aca,
+                               vis=vis_tp, modelimage="",
+                               cell=cell_tp, imsize=imsize_tp,
                                imdirection=imdirection, niter=niter,
                                threshold=threshold, weighting=weighting,
                                mask=[], outertaper=[], stokes='I',
                                analyze=True,
-                               #showuv=None, showpsf=None, showmodel=None,
-                               #showconvolved=None, showclean=None,
-                               #showresidual=None, showdifference=None,
-                               #showfidelity=None,
                                graphics=graphics, verbose=verbose,
-                               overwrite=overwrite)#, async=False)
+                               overwrite=overwrite)
                 except:
                     raise Exception, simanaerr
                 finally:
@@ -574,51 +578,85 @@ def simalma(
 
                 # Back up simanalyze.last file
                 if os.path.exists(fileroot+"/"+simana_file):
-                    simana_new = imagename_aca.replace(".image",".simanalyze.last")
+                    simana_new = imagename_tp.replace(".image",".simanalyze.last")
                     msg("Back up input parameter set to '%s'" % simana_new, \
                         origin="simalma", priority=v_priority)
                     shutil.move(fileroot+"/"+simana_file, fileroot+"/"+simana_new)
 
-                if not os.path.exists(fileroot+"/"+imagename_aca):
-                    msg("ACA model image '%s' is not found" \
-                        % imagename_aca, origin="simalma", priority="error")
-                modelimage = imagename_aca
+                if not os.path.exists(fileroot+"/"+imagename_tp):
+                    msg("TP image '%s' is not found" \
+                        % imagename_tp, origin="simalma", priority="error")
+                #modelimage = imagename_aca
             ############################################################
-            # Image ALMA-BL
+            # Image ALMA-BL + ACA-7m
             step += 1
             msg("="*60, origin="simalma", priority="warn")
             if acaratio > 0:
-                msg(" Step %d: generating ALMA 12-m + ACA image." % step, origin="simalma", priority="warn")
+                msg(" Step %d: generating ALMA 12-m + ACA-7m image." % step, origin="simalma", priority="warn")
             else:
                 msg(" Step %d: generating ALMA 12-m array image." % step, origin="simalma", priority="warn")
             msg("="*60, origin="simalma", priority="warn")
 
             if os.path.exists(fileroot+"/"+msname_bl):
-                vis_bl = msname_bl
+                vis_int = msname_bl
             else:
                 msg("Could not find MS to image, '%s'" \
                     % msname_bl, origin="simalma", priority="error")
 
-            taskstr = "simanalyze(project='"+ project+"', image="+str(image)+", vis='"+ vis_bl+"', modelimage='"+ modelimage+"', cell='"+str(cell)+"', imsize="+str(imsize)+", imdirection='"+ imdirection+"', niter="+str(niter)+", threshold='"+ threshold+"', weighting='"+ weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+ graphics+"', verbose="+str(verbose)+", overwrite="+ str(overwrite)+")"
+            if acaratio > 0:
+                if os.path.exists(fileroot+"/"+msname_aca):
+                    vis_int += ","+msname_aca
+                else:
+                    msg("ACA is requested but ACA 7-m MS '%s' is not found" \
+                        % msname_aca, origin="simalma", priority="error")
+
+            taskstr = "simanalyze(project='"+ project+"', image="+str(image)+", vis='"+ vis_int+"', modelimage='', cell='"+str(cell)+"', imsize="+str(imsize)+", imdirection='"+ imdirection+"', niter="+str(niter)+", threshold='"+ threshold+"', weighting='"+ weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+ graphics+"', verbose="+str(verbose)+", overwrite="+ str(overwrite)+")"
             msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
 
             try:
                 simanalyze(project=project, image=image,
-                           vis=vis_bl, modelimage=modelimage,
+                           vis=vis_int, modelimage="",
                            cell=cell, imsize=imsize, imdirection=imdirection,
                            niter=niter, threshold=threshold, weighting=weighting,
                            mask=[], outertaper=[], stokes='I',
                            analyze=True,
-                           #showuv=None, showpsf=None, showmodel=None,
-                           #showconvolved=None, showclean=None,
-                           #showresidual=None, showdifference=None,
-                           #showfidelity=None,
                            graphics=graphics, verbose=verbose,
-                           overwrite=overwrite)#, async=False)
+                           overwrite=overwrite)
             except:
                 raise Exception, simanaerr
             finally:
                 casalog.origin('simalma')
+
+            if acaratio > 0:
+                ########################################################
+                # Combine TP + INT image
+                step += 1
+                msg("="*60, origin="simalma", priority="warn")
+                msg(" Step %d: combining a total power and synthesis image. " % step, origin="simalma", priority="warn")
+                msg("="*60, origin="simalma", priority="warn")
+                if os.path.exists(fileroot+"/"+imagename_int):
+                    highimage = fileroot+"/"+imagename_int
+                else:
+                    msg("The synthesized image '%s' is not found" \
+                        % imagename_int, origin="simalma", priority="error")
+                if os.path.exists(fileroot+"/"+imagename_tp):
+                    lowimage = fileroot+"/"+imagename_tp
+                else:
+                    msg("ACA is requested but total power image '%s' is not found" \
+                        % imagename_tp, origin="simalma", priority="error")
+                outimage = fileroot+"/" + combimage
+
+                # TODO: Need to manipulate TP image here
+                
+                taskstr = ("feather(imagename='%s', highres='%s',lowres='%s'" \
+                           % (outimage, highimage, lowimage))
+                msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
+                try:
+                    feather(imagename=outimage, highres=highimage, lowres=lowimage)
+                except:
+                    raise Exception, "simalma caught an exception in task feather"
+                finally:
+                    casalog.origin('simalma')
 
 
     except TypeError, e:

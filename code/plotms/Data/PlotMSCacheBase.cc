@@ -853,7 +853,7 @@ void PlotMSCacheBase::deletePlotMask() {
   plmask_.resize(0,True);
 
   // This indexer is no longer ready for plotting
-  dataLoaded_=False;
+  //dataLoaded_=False;
 
 }
 

@@ -52,27 +52,10 @@ NRO45Reader::~NRO45Reader()
 {
 }
   
-// Read data header
-Int NRO45Reader::read() 
+void NRO45Reader::initDataset()
 {
-  LogIO os( LogOrigin( "NRO45Reader", "read()", WHERE ) ) ;
-
-  // DEBUG
-  //cout << "NRO45Reader::read()" << endl ;
-  //
-  int status = 0 ;
-
-  // create NROOTFDataset
   dataset_ = new NROOTFDataset( filename_ ) ;
-
-  // fill NROOTFDataset
-  status = dataset_->fillHeader() ;
-
-  if ( status != 0 ) {
-    os << LogIO::SEVERE << "Failed to fill data header." << LogIO::EXCEPTION ;
-  }
-
-  return status ;
+  dataset_->initialize() ;
 }
 
 vector<double> NRO45Reader::getAntennaPosition() 

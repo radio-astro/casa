@@ -82,9 +82,6 @@ class NROFITSDataset : public NRODataset
   // data initialization 
   virtual void initialize() ;
 
-  // fill header from file 
-  virtual int fillHeader() ;
-
   // fill data record
   virtual  int fillRecord( int i ) ;
 
@@ -109,19 +106,19 @@ class NROFITSDataset : public NRODataset
   int readColumn( vector<string> &v, char *name, int idx=0 ) ;
 
   // Read int data
-  int readHeader( int &v, char *name, int b ) ;
+  int readHeader( int &v, char *name) ;
   int readTable( int &v, char *name, int b, int idx=0 ) ;
   int readTable( vector<int> &v, char *name, int b, int idx=0 ) ;
   int readColumn( vector<int> &v, char *name, int b, int idx=0 ) ;
 
   // Read float data
-  int readHeader( float &v, char *name, int b ) ;
+  int readHeader( float &v, char *name) ;
   int readTable( float &v, char *name, int b, int idx=0 ) ;
   int readTable( vector<float> &v, char *name, int b, int idx=0 ) ;
   int readColumn( vector<float> &v, char *name, int b, int idx=0 ) ;
 
   // Read double data
-  int readHeader( double &v, char *name, int b ) ;
+  int readHeader( double &v, char *name) ;
   int readTable( double &v, char *name, int b, int idx=0 ) ;
   int readTable( vector<double> &v, char *name, int b, int idx=0 ) ;
   int readColumn( vector<double> &v, char *name, int b, int idx=0 ) ;

@@ -21,6 +21,7 @@ tMSDataDescBuffer
 tMSDerivedValues
 tMSFieldBuffer
 tMSFieldGram
+tMSFieldEphem
 tMSMainBuffer
 tMSMetaData
 tMSPolBuffer

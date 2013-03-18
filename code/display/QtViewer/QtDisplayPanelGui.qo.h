@@ -77,6 +77,8 @@ class BinPlotWidget;
 class HistogramMain;
 class Fit2DTool;
 class SlicerMainWindow;
+class ColorHistogram;
+class FindSourcesDialog;
 
 template <class T> class ImageInterface;
 
@@ -202,7 +204,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   int numFrames( ) const { return qdp_->nFrames( ); }
 
   // load casa (or DS9?) region files...
-  void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+  void loadRegions( const std::string &path, const std::string &datatype );
   // zero length string indicates OK!
   std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file, std::string format, std::string ds9_csys="pixel" );
 
@@ -492,7 +494,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
-      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
+      *profileAct_, *momentsCollapseAct_, *histogramAct_, *findSourcesAct_,*fitAct_,
       *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
   
   QToolBar* mainToolBar_;
@@ -537,8 +539,10 @@ class QtDisplayPanelGui : public QtPanelBase {
   viewer::Preferences *preferences;
   AnimatorHolder* animationHolder;
   HistogramMain* histogrammer;
+  ColorHistogram* colorHistogram;
   Fit2DTool* fitTool;
   SlicerMainWindow* sliceTool;
+  FindSourcesDialog* findSourcesDialog;
 
   // interactive clean...
   void initCleanTool( );
@@ -558,19 +562,21 @@ class QtDisplayPanelGui : public QtPanelBase {
   QString status_bar_stylesheet;
 
  private slots:
+  void loadRegions( const QString &path, const QString &type );
   void incrementMovieChannel();
   void clear_status_bar( );
   void reset_status_bar( );
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
   void showHistogram();
+  void showFindSources();
   void showSlicer();
   void resetListenerImage();
   void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
   void showFitInteractive();
   void showCleanTool( );
   void refreshFit();
-  void addSkyComponentOverlay(String path);
+  void addSkyComponentOverlay(String path, const QString& colorName);
   void removeSkyComponentOverlay( String path );
   void add2DFitOverlay( QList<RegionShape*> fitMarkers );
   void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
@@ -581,6 +587,10 @@ class QtDisplayPanelGui : public QtPanelBase {
   void addSlice( int id, const QString& shape, const QString&, const QList<double>& worldX,
   		const QList<double>& worldY, const QList<int>& pixelX, const QList<int>& pixelY,
   		const QString&, const QString&, const QString&, int, int);
+  void showColorHistogram(QtDisplayData* displayData);
+  void globalColorSettingsChanged( bool global );
+  void globalOptionsChanged( QtDisplayData* originator, Record opts );
+  void updateColorHistogram( const QString& ddName );
 
  public:
  

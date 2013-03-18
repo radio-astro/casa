@@ -101,7 +101,7 @@ INSTALLDIR=`filerealname "$INSTALLDIR"`
 verbose "install directory: $INSTALLDIR"
 if [ ! -d "$INSTALLDIR" ]; then
   verbose "creating $INSTALLDIR ..."
-  amkdir "$INSTALLDIR"
+  mkdir -p "$INSTALLDIR"
 fi
 
 verbose "task file: $OUTPUTFILE"

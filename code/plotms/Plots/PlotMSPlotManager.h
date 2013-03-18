@@ -42,6 +42,7 @@ class PlotMSPlotManagerWatcher;
 class PlotMSPlotParameters;
   //-class PlotMSSinglePlot;
 class PlotMSIterPlot;
+class PlotMSOverPlot;
 
 
 // Class which manages PlotMSPlots for plotms.  Mainly handles adding new plots
@@ -52,6 +53,7 @@ class PlotMSPlotManager {
     
     //# Friend class declarations.
     friend class PlotMSMultiPlot;
+    friend class PlotMSOverPlot;
     
 public:
     // Constructor.  Parent must be set using setParent() before manager can be
@@ -94,15 +96,16 @@ public:
     PlotMSPlotParameters* plotParameters(unsigned int index);
     // </group>
     
-    // Creates a new PlotMSIterPlot, initializes it properly, adds it to the
+    // Creates a new PlotMSOverPlot, initializes it properly, adds it to the
     // plotter, and returns a pointer to it.  If parameters are given, they are
     // used; otherwise the defaults are used.
-    PlotMSIterPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
+    PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
     
     // These are now deprecated and will throw an exception...
     PlotMSPlot* addSinglePlot(const PlotMSPlotParameters* p = NULL);
     PlotMSPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
-    
+    PlotMSPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
+
     // Clears out all plots and canvases.
     void clearPlotsAndCanvases();
     

@@ -21,6 +21,7 @@
 #include <measures/Measures/MDirection.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
+#include <scimath/Mathematics/FFTServer.h>
 // asap
 #include "ScantableWrapper.h"
 #include "Scantable.h"
@@ -39,6 +40,15 @@ public:
   explicit STSideBandSep(const vector<string> &names);
   explicit STSideBandSep(const vector<ScantableWrapper> &tables);
   virtual ~STSideBandSep();
+
+  ///////////// temp functions //////////////////////
+  //void cpprfft(std::vector<float> invec);
+  //////////////////////////////////////////////////
+
+  /**
+   * Separate side bands
+   **/
+  void separate(string outname);
 
   /**
    * Set IFNO and frequency tolerance to select data to process
@@ -82,14 +92,9 @@ public:
   /**
    * Set additional information to fill frequencies of image sideband
    **/
-  void setLO1(const double lo1, const string frame="TOPO",
+  void setLO1(const string lo1, const string frame="TOPO",
 	      const double reftime=-1, string refdir="");
   void setLO1Root(const string name);
-
-  /**
-   * Actual calculation of frequencies of image sideband
-   **/
-  void solveImageFreqency();
 
 private:
   /** Initialize member variables **/
@@ -98,6 +103,22 @@ private:
 
   /** Return if the path exists (optionally, check file type) **/
   Bool checkFile(const string name, string type="");
+
+  /** **/
+  unsigned int setupShift();
+  bool getFreqInfo(const CountedPtr<Scantable> &stab, const unsigned int &ifno,
+		   double &freq0, double &incr, unsigned int &nchan);
+
+  /** Grid scantable **/
+  ScantableWrapper gridTable();
+  void mapExtent(vector< CountedPtr<Scantable> > &tablist,
+		 Double &xmin, Double &xmax,
+		 Double &ymin, Double &ymax);
+
+  /**
+   * Actual calculation of frequencies of image sideband
+   **/
+  void solveImageFrequency();
 
   /** 
    * Get LO1 frequency to solve the frequencies of image side band
@@ -111,6 +132,28 @@ private:
   bool getLo1FromScanTab(casa::CountedPtr< Scantable > &scantab,
 			 const double refval, const double refpix,
 			 const double increment, const int nChan);
+  bool getSpectraToSolve(const int polId, const int beamId,
+			 const double dirX, const double dirY,
+			 Matrix<float> &specmat, vector<uInt> &tabIdvec);
+
+  vector<float> solve(const Matrix<float> &specmat,
+		      const vector<uInt> &tabIdvec,
+		      const bool signal = true);
+
+  void shiftSpectrum(const Vector<float> &invec, double shift,
+		     Vector<float> &outvec);
+
+  void deconvolve(Matrix<float> &specmat, const vector<double> shiftvec,
+		  const double threshold, Matrix<float> &outmat);
+
+  void aggregateMat(Matrix<float> &inmat, vector<float> &outvec);
+
+  void subtractFromOther(const Matrix<float> &shiftmat,
+			 const vector<float> &invec,
+			 const vector<double> &shift,
+			 vector<float> &outvec);
+
+
 
   /** Member variables **/
   // input tables
@@ -118,7 +161,7 @@ private:
   vector< CountedPtr<Scantable> > intabList_;
   unsigned int ntable_;
   // frequency and direction setup to select data.
-  unsigned int sigIfno_;
+  int sigIfno_;
   Quantum<Double> ftol_;
   MFrequency::Types solFrame_;
   vector<double> sigShift_, imgShift_;
@@ -129,13 +172,16 @@ private:
   bool otherside_, doboth_;
   double rejlimit_;
   // LO1
-  double lo1Freq_;
+  double lo1Freq_; // in Hz
   MFrequency::Types loFrame_;
   double loTime_;
   string loDir_;
   string asdmName_, asisName_;
 
+  //CountedPtr<Scantable> imgTab_p, sigTab_p;
   CountedPtr<Scantable> imgTab_p, sigTab_p;
+  Table::TableType tp_;
+  FFTServer<Float, Complex> fftsf, fftsi;
   // TEMPORAL member
   CountedPtr<Scantable> st0_;
 

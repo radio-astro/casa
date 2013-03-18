@@ -118,7 +118,7 @@ class WCPowerScaleHandler  : public WCDataScaleHandler {
   // </group>
 
   Bool histoEqualise(Array<Float> &out, const Array<Float> &in);
-
+  static const String POWER_CYCLES;
 private:
 
   // Scaling power cycles: < 0 => log scaling, > 0 => exp scaling, 

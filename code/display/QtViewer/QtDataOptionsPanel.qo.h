@@ -59,6 +59,8 @@ class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
   
  signals:
   void setAutoApply(bool);
+  void globalColorSettingsChanged( bool );
+  void dataOptionsTabChanged( const QString& name );
 
  protected:
 
@@ -78,6 +80,9 @@ class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
   // </group> 
   virtual void auto_apply_state_change(bool);
   
+  private slots:
+  	  void tabChanged( int index );
+
  private:
   
   QtDataOptionsPanel() {  }	// (not intended for use).

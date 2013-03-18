@@ -61,6 +61,8 @@ namespace casa {
 
 		void status( const std::string &msg, const std::string &type="info" );
 
+		QtDisplayPanelGui *panel( ) { return dpg; }
+
 		/* QStackedWidget *regionStack( ) { return regions; } */
 
 		/* void showStats( const QString &stats ); */
@@ -110,7 +112,7 @@ namespace casa {
 			void regionSelected( int id );
 			void saveRegions( std::list<QtRegionState*>, RegionTextList & );
 			void saveRegions( std::list<QtRegionState*>, ds9writer & );
-			void loadRegions( bool &handled, const QString &path, const QString &type );
+			void loadRegions( const QString &path, const QString &type );
 
 			void region_stack_change(QWidget*);
 

@@ -16,10 +16,7 @@ def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes,
 class sdimaging_worker(sdutil.sdtask_template_imaging):
     def __init__(self, **kwargs):
         super(sdimaging_worker,self).__init__(**kwargs)
-        self.imager_param = sdutil.parameter_registration(self)
-
-    def __register(self, key, attr=None, arg_is_value=False):
-        self.imager_param.register(key,attr,arg_is_value)
+        self.imager_param = {}
 
     def parameter_check(self):
         # outfile check
@@ -39,7 +36,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         if not self.dochannelmap and mode != 'channel':
             casalog.post('Setting imaging mode as \'channel\'','INFO')
             mode = 'channel'
-        self.__register('mode',mode)
+        self.imager_param['mode'] = mode
 
         # scanlist
 
@@ -79,10 +76,10 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
                         break
             self.close_table()
             casalog.post("restfreq set to %s"%self.restfreq, "INFO")
-        self.__register('restfreq')
+        self.imager_param['restfreq'] = self.restfreq
         
         # outframe (force using the current frame)
-        self.__register('outframe', '')
+        self.imager_param['outframe'] = ''
         
         # 
         # spw
@@ -97,7 +94,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             raise ValueError, msg
         self.allchannels=self.table.getcell('NUM_CHAN',self.spwid)
         self.close_table()
-        self.__register('spw','spwid')
+        self.imager_param['spw'] = self.spwid
         
         # antenna
         if type(self.antenna)==int:
@@ -111,7 +108,7 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         # stokes
         if self.stokes == '':
             self.stokes = 'I'
-        self.__register('stokes')
+        self.imager_param['stokes'] = self.stokes
 
         # gridfunction
 
@@ -121,14 +118,14 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
 
         # imsize
         (nx,ny) = sdutil.get_nx_ny(self.imsize)
-        self.__register('nx',nx)
-        self.__register('ny',ny)
+        self.imager_param['nx'] = nx
+        self.imager_param['ny'] = ny
 
         # cell
         (cellx,celly) = sdutil.get_cellx_celly(self.cell,
                                                unit='arcmin')
-        self.__register('cellx',cellx)
-        self.__register('celly',celly)
+        self.imager_param['cellx'] = cellx
+        self.imager_param['celly'] = celly
 
         # channel map
         if self.dochannelmap:
@@ -149,9 +146,9 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             startval = 0
             stepval = self.allchannels
             self.nchan = 1
-        self.__register('start',startval)
-        self.__register('step', stepval)
-        self.__register('nchan')
+        self.imager_param['start'] = startval
+        self.imager_param['step'] = stepval
+        self.imager_param['nchan'] = self.nchan
                 
         # phasecenter
         # if empty, it should be determined here...
@@ -170,10 +167,10 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
             phasecenter = ' '.join([mref,
                                     qa.formxxx(qx,forms[0]),
                                     qa.formxxx(qy,forms[1])])
-            self.__register('phasecenter',phasecenter,arg_is_value=True)
+            self.imager_param['phasecenter'] = phasecenter
         else:
-            self.__register('phasecenter')
-        self.__register('movingsource', 'ephemsrcname')
+            self.imager_param['phasecenter'] = self.phasecenter
+        self.imager_param['movingsource'] = self.ephemsrcname
 
     def execute(self):
         # imaging

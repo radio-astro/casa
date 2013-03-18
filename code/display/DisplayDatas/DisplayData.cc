@@ -57,6 +57,9 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+const String DisplayData::DATA_MIN = "datamin";
+const String DisplayData::DATA_MAX = "datamax";
+
 DisplayData::DisplayData() : 
   activeZIndex_(0), delTmpData_(False),
   rstrsConformed_(False), csConformed_(False), zIndexConformed_(False),

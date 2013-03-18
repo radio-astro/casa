@@ -256,6 +256,9 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
           case TpUInt :
                transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asuInt(i)));
                break;
+          case TpInt64 :
+               transcribedRec->insert(theRec.name(i).c_str(), (long long)(theRec.asInt64(i)));
+               break;
           case TpFloat :
                transcribedRec->insert(theRec.name(i).c_str(), double(theRec.asFloat(i)));
                break;
@@ -302,6 +305,17 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
                std::vector<Int> vecShape;
                tmpShape.tovector(vecShape);
                std::vector<Int> tmpVec;
+               tmpArray.tovector(tmpVec);
+               transcribedRec->insert(theRec.name(i).c_str(), casac::variant(tmpVec, vecShape));
+               }
+               break;
+	  case TpArrayInt64 :
+               {
+               Array<Int64> tmpArray = theRec.asArrayInt64(i);
+               Vector<Int> tmpShape = (tmpArray.shape()).asVector();
+               std::vector<Int> vecShape;
+               tmpShape.tovector(vecShape);
+               std::vector<Int64> tmpVec;
                tmpArray.tovector(tmpVec);
                transcribedRec->insert(theRec.name(i).c_str(), casac::variant(tmpVec, vecShape));
                }
@@ -520,6 +534,9 @@ casac::variant *fromValueHolder(const ValueHolder &theVH){
                  break;
             case TpInt :
 	         theV = new casac::variant(theVH.asInt());
+                 break;
+            case TpInt64 :
+	         theV = new casac::variant(theVH.asInt64());
                  break;
             case TpFloat :
 	         theV = new casac::variant(theVH.asFloat());

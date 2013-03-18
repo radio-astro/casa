@@ -69,7 +69,7 @@ def slsearch(
     qns=None, intensity=None, smu2=None,
     loga=None, el=None, eu=None, rrlinclude=None,
     rrlonly=None, verbose=None, logfile=None, 
-    append=None, wantreturn=None
+    append=None
 ):
     casalog.origin('slsearch')
     newsl = None
@@ -89,13 +89,12 @@ def slsearch(
             
         if (not newsl):
             raise Exception, "Exception when running sl.search()"
+        return True
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
-        newsl = None
-    mysl.done()
-    if (wantreturn):
-        return newsl
-    else:
-        if (newsl):
+        raise
+    finally:
+        if mysl:
+            mysl.done()
+        if newsl:
             newsl.done()
-        return False

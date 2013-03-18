@@ -68,6 +68,10 @@ can be made with this task.
 		<description>Put Stokes axis last in header?</description>
 		<value>True</value>
 	</param>
+	<param type="bool" name="history" >
+		<description>Write history to the FITS image?</description>
+		<value>True</value>
+	</param>
 
 </input>
 <example>
@@ -98,8 +102,8 @@ can be made with this task.
 		default: False; example: dropstokes=True
 	stokeslast -- Put Stokes axis last in header?
 		default: True; example: stokeslast=False
-        async --  Run asynchronously
-                default = False;
+	history -- Write history to fits image?
+		default: True; example: history=False
 </example> 
 
 </task>

@@ -102,6 +102,7 @@ class PlotMSPlotTab : public PlotMSTab, Ui::PlotTab,
     Q_OBJECT
     
     //# Friend class declarations.
+    friend class PlotMSOverPlot;
     friend class PlotMSPlot;
     friend class PlotMSPlotter;
     friend class PlotMSIterPlot;

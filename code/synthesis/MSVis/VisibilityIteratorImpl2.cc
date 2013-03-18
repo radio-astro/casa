@@ -26,11 +26,10 @@
 //# $Id: VisibilityIterator2.cc,v 19.15 2006/02/01 01:25:14 kgolap Exp $
 
 #include <boost/tuple/tuple.hpp>
-#include <casa/Arrays/ArrayMath.h>
-#include <casa/Arrays/Cube.h>
+#include <casa/Arrays.h>
 #include <casa/BasicSL/Constants.h>
 #include <casa/Containers/Record.h>
-#include <casa/Exceptions/Error.h>
+#include <casa/Exceptions.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/Utilities/Sort.h>
@@ -42,6 +41,7 @@
 #include <synthesis/MSVis/MeasurementSet2.h>
 #include <synthesis/MSVis/MSUtil.h>
 #include <synthesis/MSVis/UtilJ.h>
+#include <synthesis/MSVis/SpectralWindow.h>
 #include <synthesis/MSVis/ViFrequencySelection.h>
 #include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/MSVis/VisBufferComponents2.h>
@@ -81,6 +81,196 @@ operator!= (const Slice & a, const Slice & b)
     return result;
 }
 
+class ChannelSubslicer {
+
+public:
+
+    ChannelSubslicer ()
+    : subslicer_p ()
+    {}
+
+    ChannelSubslicer (Int n)
+    : subslicer_p (n)
+    {}
+
+    ChannelSubslicer (const Vector<Slice> & axis)
+    : subslicer_p (axis.nelements())
+    {
+        for (uInt i = 0; i < axis.nelements(); i++){
+            subslicer_p [i] = axis (i);
+        }
+    }
+
+    Bool
+    operator== (const ChannelSubslicer & other) const
+    {
+        if (other.nelements() != nelements()){
+            return False;
+        }
+
+        for (uInt i = 0; i < nelements(); i++){
+
+            if (! slicesEqual (subslicer_p [i], other.subslicer_p [i])){
+                return False;
+            }
+        }
+
+        return True;
+    }
+
+    Bool
+    operator!= (const ChannelSubslicer & other) const
+    {
+        return ! (* this == other);
+    }
+
+    const Slice &
+    getSlice (Int i) const
+    {
+        return subslicer_p [i];
+    }
+
+    size_t nelements () const
+    {
+        return subslicer_p.size();
+    }
+
+    void
+    setSlice (Int i, const Slice & slice)
+    {
+        subslicer_p [i] = slice;
+    }
+
+protected:
+
+    static Bool
+    slicesEqual (const Slice & a, const Slice & b){
+
+        return a.start () == b.start () &&
+               a.length () == b.length () &&
+               a.inc () == b.inc ();
+
+    }
+
+private:
+
+    vector<Slice> subslicer_p;
+};
+
+class ChannelSlicer {
+
+public:
+
+    typedef vector<ChannelSubslicer> Rep;
+    typedef Vector<Vector <Slice> > CoreRep;
+
+    ChannelSlicer ()
+    : slicer_p ()
+    {}
+
+    ChannelSlicer (Int nAxes)
+    : slicer_p (nAxes)
+    {}
+
+    bool
+    operator== (const ChannelSlicer & other) const
+    {
+
+        if (nelements () != other.nelements()){
+            return false;
+        }
+
+
+        for (uInt i = 0; i < nelements(); i++){
+
+            if (slicer_p [i] != other.slicer_p [i]){
+                return false;
+            }
+
+        }
+
+        return true;
+    }
+
+    void
+    appendDimension ()
+    {
+        slicer_p.push_back (ChannelSubslicer());
+    }
+
+    CoreRep
+    getSlicerInCoreRep () const
+    {
+        // Convert to Vector<Vector <Slice> > for use by
+        // casacore methods
+
+        CoreRep rep (nelements());
+
+        for (uInt i = 0; i < nelements(); i ++){
+
+            const ChannelSubslicer & subslicer = slicer_p [i];
+
+            rep [i] = Vector<Slice> (subslicer.nelements());
+
+            for (uInt j = 0; j < subslicer.nelements(); j ++){
+
+                rep [i][j] = subslicer.getSlice (j);
+            }
+        }
+
+        return rep;
+    }
+
+    const ChannelSubslicer &
+    getSubslicer (Int i) const
+    {
+        return slicer_p [i];
+    }
+
+    size_t nelements () const
+    {
+        return slicer_p.size();
+    }
+
+    void
+    setSubslicer (Int i, const ChannelSubslicer & subslice)
+    {
+        slicer_p [i] = subslice;
+    }
+
+
+    String
+    toString () const
+    {
+        String result = "{";
+
+        for (Rep::const_iterator i = slicer_p.begin(); i != slicer_p.end(); i++){
+
+            result += String ((i == slicer_p.begin()) ? "" : ", ") + "{ ";
+
+            const ChannelSubslicer & subslicer = * i;
+
+            for (uInt j = 0; j < subslicer.nelements(); j ++){
+
+                const Slice & slice = subslicer.getSlice (j);
+                result += String::format ("(st=%d, len=%d, inc=%d)",
+                                          slice.start(), slice.length(), slice.inc());
+            }
+
+            result += " }";
+        }
+
+        result += " }";
+
+        return result;
+    }
+
+private:
+
+    Rep slicer_p;
+};
+
+
 class ChannelSelector {
 
 public:
@@ -93,13 +283,13 @@ public:
     {
         // Count up the number of frequencies selected
 
-        Vector<Slice> & frequencySlices = slicer_p [1];
+        const ChannelSubslicer & frequencySlicer = slicer_p.getSubslicer (1);
 
         nFrequencies_p = 0;
 
-        for (Int i = 0; i < (int) frequencySlices.nelements(); i ++){
+        for (Int i = 0; i < (int) frequencySlicer.nelements(); i ++){
 
-            nFrequencies_p += frequencySlices [i].length();
+            nFrequencies_p += frequencySlicer.getSlice(i).length();
         }
 
         // Create the slicer for FlagCategory data which can't use the normal slicer.
@@ -125,20 +315,7 @@ public:
         // They differed on timestamps, but if they select the same channels
         // then they're equivalent.
 
-        if (equal){
-
-            equal = slicer_p.nelements () == other.slicer_p.nelements();
-
-            for (uInt i = 0; i < slicer_p.nelements() && equal; i++){
-
-                equal = slicer_p[i].nelements() == other.slicer_p[i].nelements();
-
-                for (uInt j = 0; j < slicer_p[i].nelements() && equal; j++){
-
-                    equal = slicer_p[i][j] != other.slicer_p[i][j];
-                }
-            }
-        }
+        equal = equal && slicer_p == other.slicer_p;
 
         return equal;
     }
@@ -152,18 +329,8 @@ public:
         // create the flag category slicer.
 
         slicerFlagCategories_p = slicer_p;
+        slicerFlagCategories_p.appendDimension ();
 
-        // Add an extra dimension and keep the values from the original
-        // slicer.
-
-        uInt fcNDims = slicer_p.nelements() + 1;
-
-        slicerFlagCategories_p.resize (fcNDims, True); // stretch it keeping the original values
-
-        // Just to be safe, make sure the last element is empty.  This means that
-        // all elements on this access are to be included in the slice.
-
-        slicerFlagCategories_p (fcNDims - 1) = Vector<Slice> ();
     }
 
     Vector<Int>
@@ -172,7 +339,7 @@ public:
 
         Vector<Int> frequencies (nFrequencies_p); // create result of appropriate size
 
-        const Vector<Slice> & channelSlices = slicer_p (1); // get channel axis of slicer
+        const ChannelSubslicer & channelSlices = slicer_p.getSubslicer (1); // get channel axis of slicer
 
         // Iterator over all of the slices contained in the channel portion of the slicer.
         // For each slice, use each channel number to fill in the appropriate index
@@ -183,9 +350,10 @@ public:
 
         for (int i = 0; i < (int) channelSlices.nelements (); i ++){
 
-            Int channel = channelSlices [i].start();
-            Int increment = channelSlices [i].inc();
-            Int nChannels = channelSlices [i].length();
+            const Slice & slice = channelSlices.getSlice (i);
+            Int channel = slice.start();
+            Int increment = slice.inc();
+            Int nChannels = slice.length();
 
             assert (k + nChannels - 1 <= nFrequencies_p);
 
@@ -203,15 +371,17 @@ public:
     Vector<Int>
     getCorrelations () const {
 
-        const Vector<Slice> & correlationSlices = slicer_p [0];
+        const ChannelSubslicer & correlationAxis = slicer_p.getSubslicer (0);
 
         vector<Int> correlations;
 
-        for (uInt i = 0; i < correlationSlices.nelements(); i ++){
+        for (uInt i = 0; i < correlationAxis.nelements(); i ++){
+
+            const Slice & slice = correlationAxis.getSlice (i);
 
             for (uInt j = 0;
-                 j < correlationSlices [i].length();
-                 j += correlationSlices [i].inc()){
+                 j < slice.length();
+                 j += slice.inc()){
 
                 correlations.push_back (j);
 
@@ -499,8 +669,9 @@ void
 VisibilityIteratorImpl2::getColumnRows (const ROArrayColumn<T> & column,
                                             Array<T> & array) const
 {
+    const ChannelSlicer & slicer = channelSelector_p->getSlicer();
     column.getSliceForRows (rowBounds_p.subchunkRows_p,
-                            channelSelector_p->getSlicer(),
+                            slicer.getSlicerInCoreRep(),
                             array);
 }
 
@@ -528,8 +699,9 @@ VisibilityIteratorImpl2::putColumnRows (ArrayColumn<T> & column, const Array<T> 
 {
     RefRows & rows = rowBounds_p.subchunkRows_p;
 
+    const ChannelSlicer & slicer = channelSelector_p->getSlicer();
     column.putSliceFromRows (rows,
-                             channelSelector_p->getSlicer(),
+                             slicer.getSlicerInCoreRep(),
                              array);
 }
 
@@ -934,17 +1106,18 @@ VisibilityIteratorImpl2::ms () const
     return msIter_p.ms ();
 }
 
-Int
-VisibilityIteratorImpl2::fieldId () const
+void
+VisibilityIteratorImpl2::fieldIds (Vector<Int> & fieldIds) const
 {
-    return msIter_p.fieldId ();
+    getColumnRows (columns_p.field_p, fieldIds);
 }
 
 // Return the current ArrayId
-Int
-VisibilityIteratorImpl2::arrayId () const
+
+void
+VisibilityIteratorImpl2::arrayIds (Vector<Int> & arrayIds) const
 {
-    return msIter_p.arrayId ();
+    getColumnRows (columns_p.array_p, arrayIds);
 }
 
 // Return the current Field Name
@@ -1000,16 +1173,18 @@ VisibilityIteratorImpl2::spectralWindow () const
 void
 VisibilityIteratorImpl2::spectralWindows (Vector<Int> & spws) const
 {
-	Vector<Int> ddis;
-	dataDescriptionIds(ddis);
-	spws.resize(ddis.size());
+    // Get's the list of spectral windows for each row in the VB window
 
-	for (uInt idx=0;idx<ddis.size();idx++)
-	{
-		spws(idx) = subtableColumns_p->dataDescription().spectralWindowId()(ddis(idx));
-	}
+    Vector<Int> ddis;
+    dataDescriptionIds(ddis);
+    spws.resize(ddis.size());
 
-	return;
+    for (uInt idx=0;idx<ddis.size();idx++)
+    {
+        spws(idx) = subtableColumns_p->dataDescription().spectralWindowId()(ddis(idx));
+    }
+
+    return;
 }
 
 // Return current Polarization Id
@@ -1102,7 +1277,7 @@ VisibilityIteratorImpl2::subtableColumns () const
 }
 
 void
-VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & spectralWindows,
+VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & selectedWindows,
                                                      Vector<Int> & nChannels) const
 {
     const FrequencySelectionUsingChannels * selection =
@@ -1111,37 +1286,41 @@ VisibilityIteratorImpl2::allSpectralWindowsSelected (Vector<Int> & spectralWindo
 
     if (selection->empty()){
 
-        this->spectralWindows (spectralWindows);
+        casa::ms::SpectralWindows spectralWindows (& measurementSets_p [msId()]);
 
-        nChannels.resize (spectralWindows.nelements());
+        selectedWindows.resize (spectralWindows.size());
+        nChannels.resize (spectralWindows.size());
 
-        for (Int i = 0; i < (int) spectralWindows.nelements(); i ++){
+        Int i = 0;
 
-            Int spectralWindowId = spectralWindows (i);
+        for (casa::ms::SpectralWindows::const_iterator s = spectralWindows.begin();
+             s != spectralWindows.end();
+             s ++){
 
-            nChannels (i) = getSpectralWindowChannels (msId (), spectralWindowId).size();
+            selectedWindows [i] = i;
+            nChannels [i] = s->nChannels();
+
+            i++;
         }
     }
     else {
 
         set<Int> windows = selection->getSelectedWindows();
 
-        spectralWindows.resize (windows.size());
+        selectedWindows.resize (windows.size());
         nChannels.resize (windows.size());
 
         Int i = 0;
 
         for (set<Int>::iterator j = windows.begin(); j != windows.end(); j++){
 
-            spectralWindows (i) = * j;
+            selectedWindows (i) = * j;
 
             nChannels (i) = selection->getNChannels (* j);
             i++;
-
         }
     }
 }
-
 
 void
 VisibilityIteratorImpl2::useImagingWeight (const VisImagingWeight & imWgt)
@@ -1520,18 +1699,21 @@ VisibilityIteratorImpl2::makeChannelSelectorC (const FrequencySelection & select
         frequencySlices.push_back (Slice (0, nChannels, 1));
     }
 
-    // Convert the Slice collection built above into the needed
-    // Vector<Vector<Slice> > structure.
+    ChannelSlicer slices (2);
 
-    Vector <Vector <Slice> > slices (2);  // Cell array value is 2D: [nC,nF]
+    // Install the polarization selections
 
-    slices [0] = selection.getCorrelationSlices (polarizationId);
+    slices.setSubslicer (0, ChannelSubslicer (selection.getCorrelationSlices (polarizationId)));
 
-    slices [1].resize (frequencySlices.size());
+    // Create and install the frequency selections
+
+    ChannelSubslicer frequencyAxis (frequencySlices.size());
 
     for (Int i = 0; i < (int) frequencySlices.size(); i++){
-        slices [1][i] = frequencySlices [i];
+        frequencyAxis.setSlice (i, frequencySlices [i]);
     }
+
+    slices.setSubslicer (1, frequencyAxis);
 
     // Package up the result and return it.
 
@@ -1586,12 +1768,14 @@ VisibilityIteratorImpl2::makeChannelSelectorF (const FrequencySelection & select
     // correlations axis is desired.  The second element of the outer array specifies
     // different channel intervals along the channel axis.
 
-    Vector <Vector <Slice> > slices (2);  // Cell array value is 2D: [nC,nF]
-    slices [1].resize (frequencySlices.size());
+    ChannelSlicer slices (2);
+    ChannelSubslicer frequencyAxis (frequencySlices.size());
 
     for (Int i = 0; i < (int) frequencySlices.size(); i++){
-        slices [1][i] = frequencySlices [i];
+        frequencyAxis.setSlice (i, frequencySlices [i]);
     }
+
+    slices.setSubslicer (1, frequencyAxis);
 
     // Package up result and return it.
 
@@ -2154,8 +2338,10 @@ VisibilityIteratorImpl2::flagCategory (Array<Bool> & flagCategories) const
         // Since flag category is shaped [nC, nF, nCategories] it requires a
         // slightly different slicer and cannot use the usual getColumns method.
 
+        const ChannelSlicer & channelSlicer = channelSelector_p->getSlicerForFlagCategories();
+
         columns_p.flagCategory_p.getSliceForRows (rowBounds_p.subchunkRows_p,
-                                                  channelSelector_p->getSlicerForFlagCategories(),
+                                                  channelSlicer.getSlicerInCoreRep(),
                                                   flagCategories);
     }
 }
@@ -2849,9 +3035,10 @@ VisibilityIteratorImpl2::writeFlagCategory(const Array<Bool>& flagCategory)
     // different slicer which also prevents use of more usual putColumn method.
 
     RefRows & rows = rowBounds_p.subchunkRows_p;
+    const ChannelSlicer & channelSlicer = channelSelector_p->getSlicerForFlagCategories();
 
     columns_p.flagCategory_p.putSliceFromRows (rows,
-                                               channelSelector_p->getSlicerForFlagCategories(),
+                                               channelSlicer.getSlicerInCoreRep(),
                                                flagCategory);
 }
 
@@ -2963,33 +3150,9 @@ VisibilityIteratorImpl2::writeVisObserved (const Cube<Complex> & vis)
 }
 
 void
-VisibilityIteratorImpl2::writeWeight (const Vector<Float> & weight)
+VisibilityIteratorImpl2::writeWeight (const Matrix<Float> & weight)
 {
-    Int nPolarizations = this->nPolarizations();
-    Int nRows = this->nRows();
-
-    ThrowIf ((int) weight.nelements() != nRows,
-             String::format ("Dimension mismatch: got %d rows but expected %d rows",
-                             weight.nelements(), nRows));
-
-    Matrix<Float> weightMatrix;
-    weightMatrix.resize (nPolarizations, nRows);
-
-    // Weight is stored as a [nC] vector per row but the parameter provides
-    // one value per row.  Spread the provided value acroos all correlations.
-
-    for (Int i = 0; i < nPolarizations; i++) {
-        Vector<Float> r = weightMatrix.row (i);
-        r = weight;
-    }
-
-    writeWeightMat (weightMatrix);
-}
-
-void
-VisibilityIteratorImpl2::writeWeightMat (const Matrix<Float> & weightMat)
-{
-    putColumnRows (columns_p.weight_p, weightMat);
+    putColumnRows (columns_p.weight_p, weight);
 }
 
 void
@@ -3001,33 +3164,9 @@ VisibilityIteratorImpl2::writeWeightSpectrum (const Cube<Float> & weightSpectrum
 }
 
 void
-VisibilityIteratorImpl2::writeSigma (const Vector<Float> & sigma)
+VisibilityIteratorImpl2::writeSigma (const Matrix<Float> & sigma)
 {
-    Int nPolarizations = this->nPolarizations();
-    Int nRows = this->nRows();
-
-    ThrowIf ((int) sigma.nelements() != nRows,
-             String::format ("Dimension mismatch: got %d rows but expected %d rows",
-                             sigma.nelements(), nRows));
-
-    Matrix<Float> sigmaMatrix;
-    sigmaMatrix.resize (nPolarizations, nRows);
-
-    // Sigma is stored as a [nC] vector per row but the parameter provides
-    // one value per row.  Spread the provided value acroos all correlations.
-
-    for (Int i = 0; i < nPolarizations; i++) {
-        Vector<Float> r = sigmaMatrix.row (i);
-        r = sigma;
-    }
-
-    writeSigmaMat (sigmaMatrix);
-}
-
-void
-VisibilityIteratorImpl2::writeSigmaMat (const Matrix<Float> & sigMat)
-{
-    putColumnRows (columns_p.sigma_p, sigMat);
+    putColumnRows (columns_p.sigma_p, sigma);
 }
 
 void
@@ -3096,12 +3235,12 @@ VisibilityIteratorImpl2::initializeBackWriters ()
         makeBackWriter (& VisibilityIteratorImpl2::writeFlagCategory, & VisBuffer2::flagCategory);
     backWriters_p [Sigma] =
         makeBackWriter (& VisibilityIteratorImpl2::writeSigma, & VisBuffer2::sigma);
-    backWriters_p [SigmaMat] =
-        makeBackWriter (& VisibilityIteratorImpl2::writeSigmaMat, & VisBuffer2::sigmaMat);
+//    backWriters_p [SigmaMat] =
+//        makeBackWriter (& VisibilityIteratorImpl2::writeSigmaMat, & VisBuffer2::sigmaMat);
     backWriters_p [Weight] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeight, & VisBuffer2::weight);
-    backWriters_p [WeightMat] =
-        makeBackWriter (& VisibilityIteratorImpl2::writeWeightMat, & VisBuffer2::weightMat);
+//    backWriters_p [WeightMat] =
+//        makeBackWriter (& VisibilityIteratorImpl2::writeWeightMat, & VisBuffer2::weightMat);
     backWriters_p [WeightSpectrum] =
         makeBackWriter (& VisibilityIteratorImpl2::writeWeightSpectrum, & VisBuffer2::weightSpectrum);
 

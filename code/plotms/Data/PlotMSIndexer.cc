@@ -998,7 +998,8 @@ Record PlotMSIndexer::getPointMetaData(Int i) {
 }
 
 Record PlotMSIndexer::locateInfo(const Vector<PlotRegion>& regions,
-                                 Bool showUnflagged, Bool showFlagged) {
+                                 Bool showUnflagged, Bool showFlagged,
+                                 Bool selectAll) {
     int nFound = 0, n = size();
     Int nFoundMasked = 0, nFoundUnmasked = 0;
     Bool m = False;
@@ -1029,7 +1030,8 @@ Record PlotMSIndexer::locateInfo(const Vector<PlotRegion>& regions,
             }
         }
         // If there are no selections, grab all points that are displayed
-        if((regions.size() == 0) && ((m && showFlagged) || (!m && showUnflagged))) {
+        if(selectAll && (regions.size() == 0) &&
+           ((m && showFlagged) || (!m && showUnflagged))) {
             ostringstream ss;
             ss << nFound;
             result.defineRecord(String(ss.str()), getPointMetaData(i));

@@ -88,7 +88,7 @@ class NRODataset
   virtual ~NRODataset() ;
 
   // Data initialization
-  virtual void initialize() ;
+  virtual void initialize() = 0 ;
 
   // open file
   virtual int open() ;
@@ -97,7 +97,7 @@ class NRODataset
   virtual void close() ;
 
   // Fill data header from file
-  virtual int fillHeader() = 0 ;
+  virtual int fillHeader() ;
 
   // Fill data record
   virtual int fillRecord( int i ) ;
@@ -198,11 +198,16 @@ class NRODataset
   virtual std::vector<bool> getIFs() ;
   virtual std::vector<double> getFrequencies( int i ) ;
   virtual uInt getArrayId( std::string type ) ;
+  virtual uInt getSortedArrayId( std::string type ) ;
   virtual uInt getPolNo( int irow ) ;
 
  protected:
+  // initialize common part
+  void initializeCommon() ;
+
   // fill header information
   virtual int fillHeader( int sameEndian ) = 0 ;
+  int fillHeaderCommon( int sameEndian ) ;
 
   // Endian conversion for int variable
   void convertEndian( int &value ) ;
@@ -240,6 +245,15 @@ class NRODataset
   // POLNO from RX
   //uInt polNoFromRX( const char *rx ) ;
   uInt polNoFromRX( const std::string &rx ) ;
+
+  // initialize array information (only for OTF data)
+  void initArray();
+
+  // return ARRYMAX
+  virtual int arrayMax() {return 0;} ; 
+
+  // get scanNum from NSCAN (NSCAN or NSCAN + 1)
+  int getScanNum();
 
   // Type of file record
   std::string LOFIL ;
@@ -516,6 +530,9 @@ class NRODataset
 
   // reference frequency for each array
   std::vector<double> refFreq_ ;
+
+  // list of array names
+  std::vector<std::string> arrayNames_;
 
   // record to store REFPIX, REFVAL, INCREMENT pair for each array
   Record frec_ ;

@@ -11,6 +11,9 @@
 //
 
 #include <vector>
+
+#include <casa/Logging/LogIO.h>
+
 #include "STSelector.h"
 #include "STCalSkyPSAlma.h"
 #include "RowAccumulator.h"
@@ -28,11 +31,24 @@ STCalSkyPSAlma::STCalSkyPSAlma(CountedPtr<Scantable> &s)
   applytable_ = new STCalSkyTable(*s, "PSALMA");
 }
 
-void STCalSkyPSAlma::setupSelector()
+void STCalSkyPSAlma::setupSelector(const STSelector &sel)
 {
-  sel_.reset();
-  vector<int> types(1,SrcType::PSOFF);
-  sel_.setTypes(types);
+  sel_ = sel;
+  vector<int> types = sel_.getTypes();
+  if (types.size() == 0) {
+    types.resize(1);
+    types[0] = SrcType::PSOFF;
+    sel_.setTypes(types);
+  }
+  else if (find(types.begin(), types.end(), SrcType::PSOFF) == types.end()) {
+    LogIO os(LogOrigin("STCalSkyPSAlma", "setupSelector", WHERE));
+    os << LogIO::SEVERE << "Selection contains no data." << LogIO::EXCEPTION;
+  }
+  else {
+    types.resize(1);
+    types[0] = SrcType::PSOFF;
+    sel_.setTypes(types);
+  }
 }
 
 void STCalSkyPSAlma::fillCalTable()

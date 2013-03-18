@@ -58,6 +58,7 @@ namespace casa {
     template <class T> class ImageInterface;
     class ImageRegion;
 	class DisplayData;
+	class BinPlotWidget;
 
     class RegionTextList;
     class AnnotationBase;
@@ -281,9 +282,12 @@ namespace casa {
 				static void creatingRegionEnd( )
 							{ creating_region = memory::nullptr; }
 
-// --------------------==================== from old QtRegion ====================--------------------
+				//Histogram functionality
 				int getId() const { return id_; }
 				ImageRegion *getImageRegion( DisplayData* dd ) const { return get_image_region( dd ); }
+
+// --------------------==================== from old QtRegion ====================--------------------
+
 				// query region type... to avoid dynamic cast ladder...
 				virtual region::RegionTypes type( ) const = 0;
 
@@ -373,6 +377,7 @@ namespace casa {
 			protected:
 				QtRegionDock *dock_;
 				QtRegionState *mystate;
+				BinPlotWidget* histogram;
 
 				bool statistics_update_needed;
 				bool position_visible;
@@ -386,15 +391,18 @@ namespace casa {
 
 				void fetch_details( region::RegionTypes &type, QList<int> &pixelx,
 									QList<int> &pixely, QList<double> &worldx, QList<double> &worldy );
-				virtual void fetch_region_details( region::RegionTypes &/*type*/,
-												   std::vector<std::pair<int,int> > &/*pixel_pts*/,
-												   std::vector<std::pair<double,double> > &/*world_pts*/ ) const = 0;
+				virtual void fetch_region_details( region::RegionTypes &type,
+												   std::vector<std::pair<int,int> > &pixel_pts,
+												   std::vector<std::pair<double,double> > &world_pts ) const
+						{ type = region::NonRegion; pixel_pts.clear( ); world_pts.clear( );
+						  DISPLAY_PURE_VIRTUAL(Region::fetch_region_details,); }
 				
 				void signal_region_change( region::RegionChanges );
 
 				// --------------------==================== from old QtRegion ====================--------------------
 
 			protected:
+				void initHistogram();
 				virtual std::list<RegionInfo> *generate_dds_statistics( );
 
 				// hook to allow generate_dds_statistics( ) to generate statistics
@@ -452,7 +460,9 @@ namespace casa {
 				// Holds a pointer to the region currently being created...
 				static std::tr1::shared_ptr<Region> creating_region;
 
+
 			private:
+				void updateHistogramRegion();
 				void process_held_signals( );
 				void clear_signal_cache( );
 				bool z_index_within_range;

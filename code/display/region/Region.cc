@@ -38,7 +38,7 @@
 
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
-
+#include <guitools/Histogram/BinPlotWidget.qo.h>
 #include <images/Images/ImageStatistics.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ComponentShape.h>
@@ -54,6 +54,7 @@
 #include <QDebug>
 
 #include <display/region/QtRegionDock.qo.h>
+
 
 #define SEXAGPREC 9
 
@@ -85,7 +86,7 @@ static inline AnnotationBase::LineStyle viewer_to_annotation( region::LineStyle 
 std::tr1::shared_ptr<Region> Region::creating_region;
 
 Region::Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *d, bool hold_signals_,
-		QtMouseToolNames::PointRegionSymbols sym ) :  dock_(d),
+		QtMouseToolNames::PointRegionSymbols sym ) :  dock_(d), histogram( NULL ),
 		position_visible(true), /*** it is assumed that the initial ***
 		 *** state for region dock is with  ***
 		 *** position coordinates visible   ***/
@@ -129,6 +130,7 @@ Region::~Region( ){
 	dock_->removeRegion(mystate);
 	signal_region_change( region::RegionChangeDelete );
 	disconnect(mystate, 0, 0, 0);
+	delete histogram;
 }
 
 bool Region::degenerate( ) const {
@@ -497,7 +499,6 @@ void Region::emitUpdate( ) {
 }
 
 void Region::refresh_state_gui( ) {
-
 	std::string mode = mystate->mode( );
 	if ( mode == "position" ) {
 		region::Coord c;
@@ -522,9 +523,13 @@ void Region::refresh_state_gui( ) {
 				QString::fromStdString(y),
 				QString::fromStdString(angle),
 				qwidth, qheight );
-	} else if ( mode == "statistics" ) {
+	} else if ( mode == QtRegionState::STATISTICS_MODE.toStdString() ) {
 		mystate->updateStatistics( );
 	}
+	else if ( mode == QtRegionState::HISTOGRAM_MODE.toStdString() ){
+		this->updateHistogramRegion();
+	}
+
 
 #if 0
 	// update statistics, when needed...
@@ -2252,6 +2257,7 @@ const std::set<Region*> &Region::get_selected_regions( ) {
 
 ImageRegion_state Region::get_image_selected_region( DisplayData *dd ) {
 	if ( dd == 0 ) return ImageRegion_state( );
+
 	const std::set<Region*> &selected_regions = get_selected_regions( );
 	ImageRegion *result = 0;
 	size_t count = 0;
@@ -2302,15 +2308,33 @@ ImageRegion_state Region::get_image_selected_region( DisplayData *dd ) {
 		try {
 			WCUnion compound( rgns );
 			result = new ImageRegion(compound);
+
 		} catch(...) { }
 	}
 	return ImageRegion_state(result,count);
 }
 
+void Region::updateHistogramRegion(){
+	if( wc_==0 ){
+		return;
+	}
+
+	Int zindex = 0;
+	if (wc_->restrictionBuffer()->exists("zIndex")) {
+		wc_->restrictionBuffer()->getValue("zIndex", zindex);
+	}
+	DisplayData* dd = wc_->csMaster();
+	if ( dd != NULL ){
+		ImageInterface<float>* image = dd->imageinterface();
+		histogram->setImage( image );
+		ImageRegion* region = get_image_region( dd );
+		histogram->setImageRegion( region, id_);
+	}
+}
+
 
 std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 	std::list<RegionInfo> *region_statistics = new std::list<RegionInfo>( );
-
 	if( wc_==0 ) return region_statistics;
 
 
@@ -2338,32 +2362,33 @@ std::list<RegionInfo> *Region::generate_dds_statistics(  ) {
 		}
 
 		try {
-			//We should display the region statistics for any
-			//image that is registered.
-			/*if ( ! padd->conformsTo(*wc_) ){
-					continue;
-				}*/
+
 
 			ImageInterface<Float> *image = padd->imageinterface( );
 
 			if ( image == 0 ) continue;
 
-			String full_image_name = image->name(false);
-			std::map<String,bool>::iterator repeat = processed.find(full_image_name);
-			if (repeat != processed.end()) continue;
-			processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+			if ( name_ == "polyline" ){
+				get_image_region( dd );
+				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
+				region_statistics->push_back( SliceRegionInfo( image->name(true), image->name(false), dd_stats));
+			} else if ( name_ == "p/v line" ) {
+				get_image_region( dd );
+				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
+				region_statistics->push_back( PVLineRegionInfo( image->name(true), image->name(false), dd_stats));
+			} else {
+				String full_image_name = image->name(false);
+				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+				if (repeat != processed.end()) continue;
+				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
 
-			if ( imageregion.get( ) == NULL  ) continue;
-			if ( name_ != "polyline" ){
+				if ( imageregion.get( ) == NULL  ) continue;
+
 				RegionInfo::stats_t *dd_stats = getLayerStats(padd,image,*imageregion);
 				if ( dd_stats ) {
 					dd_stats->push_back(std::pair<String,String>("region count",region_component_count));
-					region_statistics->push_back(ImageRegionInfo(image->name(true),dd_stats));
+					region_statistics->push_back(ImageRegionInfo( image->name(true), image->name(false), dd_stats));
 				}
-			}
-			else {
-				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
-				region_statistics->push_back( SliceRegionInfo( image->name(true), dd_stats));
 			}
 		} catch (const casa::AipsError& err) {
 			errMsg_ = err.getMesg();
@@ -2819,6 +2844,11 @@ void Region::clear_signal_cache( ) {
 	held_signals[region::RegionChangeLabel] = false;
 }
 
+void Region::initHistogram(){
+	if ( histogram == NULL ){
+		histogram = new BinPlotWidget( false, false, false, NULL );
+		state()->addHistogram( histogram );
+	}
 }
-
+}
 }

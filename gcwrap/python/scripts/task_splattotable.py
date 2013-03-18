@@ -62,21 +62,23 @@
 ###########################################################################
 from taskinit import *
 
-def splattotable(filenames=None, table=None, wantreturn=None):
+def splattotable(filenames=None, table=None):
     casalog.origin('splattotable')
     newsl = None
+    mysl = sltool()
+
     try:
-        mysl = sltool()
+        if (len(table) == 0):
+            raise Exception("table must be specified.")
         newsl = mysl.splattotable(filenames=filenames, table=table)
-        mysl.done()
         if (not newsl):
             raise Exception, "Exception when running sl.splattotable"
+        return True
     except Exception, instance:
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
-        newsl = None
-    if (wantreturn):
-        return newsl
-    else:
-        if (newsl):
+        raise
+    finally:
+        if newsl:
             newsl.done()
-        return False
+        if mysl:
+            mysl.done()

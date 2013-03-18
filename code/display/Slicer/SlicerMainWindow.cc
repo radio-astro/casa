@@ -66,14 +66,15 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	connect( ui.methodComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(interpolationMethodChanged(const QString&)));
 
 	//Accumulate Slices
-	connect( ui.accumulateCheckBox, SIGNAL(toggled(bool)), &slicePlot, SLOT(setAccumulateSlices(bool)));
+	connect( ui.accumulateCheckBox, SIGNAL(toggled(bool)), this, SLOT(accumulateSlicesChanged(bool)));
+
+	//SegmentMarkerCheckBox
+	connect( ui.segmentCornerCheckBox, SIGNAL(toggled(bool)), &slicePlot, SLOT(segmentMarkerVisibilityChanged(bool)));
 
 	//Add the plot to the widget
 	QHBoxLayout* layout = new QHBoxLayout(ui.plotFrame);
 	layout->setContentsMargins( 0, 0, 0, 0 );
 	layout->addWidget( &slicePlot );
-
-	slicePlot.initAxisFont( QwtPlot::yLeft, "Intensity");
 
 	//QwtPlotPanner* plotPanner = new QwtPlotPanner( slicePlot.canvas() );
 	//plotPanner->setMouseButton( Qt::RightButton, Qt::NoButton);
@@ -84,7 +85,11 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	ui.xAxisComboBox->addItem( SlicePlot::DISTANCE_AXIS );
 	ui.xAxisComboBox->addItem( SlicePlot::POSITION_X_AXIS );
 	ui.xAxisComboBox->addItem( SlicePlot::POSITION_Y_AXIS );
+	ui.unitComboBox->addItem( SlicePlot::UNIT_X_PIXEL );
+	ui.unitComboBox->addItem( SlicePlot::UNIT_X_RADIAN );
+	ui.unitComboBox->addItem( SlicePlot::UNIT_X_ARCSEC );
 	connect(ui.xAxisComboBox, SIGNAL(currentIndexChanged(const QString&)), &slicePlot, SLOT(setXAxis(const QString&)));
+	connect(ui.unitComboBox, SIGNAL(currentIndexChanged(const QString&)), &slicePlot, SLOT(xAxisUnitsChanged( const QString& )));
 
 	//Clear
 	connect( ui.clearButton, SIGNAL(clicked()), this, SLOT(clearCurves()));
@@ -94,6 +99,8 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	connect(ui.actionColor, SIGNAL(triggered()), this, SLOT(showColorDialog()));
 
 	initializeZooming();
+
+	updateStatisticsLayout();
 }
 
 //----------------------------------------------------------------------------------
@@ -151,11 +158,12 @@ void SlicerMainWindow::zoomNeutral(){
 //-----------------------------------------------------------------------
 
 void SlicerMainWindow::resetColors(){
-	QColor sliceCurveColor = colorPreferences->getSliceColor();
 	bool viewerColors = colorPreferences->isViewerColors();
-	slicePlot.resetCurveColors( viewerColors, sliceCurveColor,
+	bool polylineColorUnit = colorPreferences->isPolylineUnit();
+	slicePlot.resetCurveColors( viewerColors, polylineColorUnit,
 			colorPreferences->getAccumulatedSliceColors() );
 }
+
 
 void SlicerMainWindow::showColorDialog(){
 	colorPreferences->show();
@@ -241,9 +249,27 @@ void SlicerMainWindow::sampleCountChanged(){
 	slicePlot.setSampleCount( sampleCount );
 }
 
+void SlicerMainWindow::accumulateSlicesChanged(bool accumulate){
+	slicePlot.setAccumulateSlices( accumulate );
+}
+
+void SlicerMainWindow::clearCurves(){
+	slicePlot.clearCurves();
+}
+
 //--------------------------------------------------------------------------------
 //               Region and image changes
 //--------------------------------------------------------------------------------
+
+void SlicerMainWindow::updateStatisticsLayout(){
+	QWidget* statsWidget = new QWidget( this );
+	ui.statsScrollArea->setWidget( statsWidget );
+	QVBoxLayout* layout = new QVBoxLayout();
+	layout->setSizeConstraint(QLayout::SetMinAndMaxSize );
+	statsWidget->setLayout( layout );
+	slicePlot.setStatisticsLayout( layout  );
+}
+
 
 void SlicerMainWindow::updatePolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
 		const QList<double> & worldX, const QList<double> & worldY,
@@ -251,24 +277,21 @@ void SlicerMainWindow::updatePolyLine(  int regionId, viewer::region::RegionChan
 	slicePlot.updatePolyLine( regionId, regionChanges, worldX, worldY, pixelX, pixelY);
 }
 
+
 void SlicerMainWindow::addPolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
    		const QList<double> & worldX, const QList<double> & worldY,
    		const QList<int> &pixelX, const QList<int> & pixelY, const QString& colorName ){
+
 	if ( regionChanges == viewer::region::RegionChangeCreate ){
-		slicePlot.updatePolyLine( regionId, regionChanges, worldX, worldY, pixelX, pixelY );
+		//Update the plot
+		slicePlot.updatePolyLine( regionId, regionChanges,
+				worldX, worldY, pixelX, pixelY );
 		slicePlot.setViewerCurveColor( regionId, colorName );
 	}
 }
 
-
-
 void SlicerMainWindow::updateChannel( int channel ){
 	slicePlot.updateChannel( channel );
-}
-
-
-void SlicerMainWindow::clearCurves(){
-	slicePlot.clearCurves();
 }
 
 
@@ -279,5 +302,6 @@ void SlicerMainWindow::setImage( ImageInterface<float>* img ){
 
 SlicerMainWindow::~SlicerMainWindow(){
 	delete plotZoomer;
+	delete colorPreferences;
 }
 }

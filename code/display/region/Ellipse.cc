@@ -40,6 +40,17 @@
 namespace casa {
     namespace viewer {
 
+    Ellipse::Ellipse( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2) :
+    			Rectangle( wc, d, x1, y1, x2, y2 ) {
+    	initHistogram();
+    }
+
+    // carry over from QtRegion... hopefully, removed soon...
+    Ellipse::Ellipse( QtRegionSourceKernel *factory, WorldCanvas *wc, double x1, double y1, double x2, double y2, bool hold_signals) :
+    			Rectangle( "ellipse", wc, factory->dock( ), x1, y1, x2, y2, hold_signals ) {
+    	initHistogram();
+    }
+
 	Ellipse::~Ellipse( ) { }
 
 
@@ -254,10 +265,11 @@ namespace casa {
 
 				if ( image == 0 ) continue;
 
-				String full_image_name = image->name(false);
-				std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+				String description = image->name(false);
+				String name = image->name(true);
+				std::map<String,bool>::iterator repeat = processed.find(description);
 				if (repeat != processed.end()) continue;
-				processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+				processed.insert(std::map<String,bool>::value_type(description,true));
 
 				Int nAxes = image->ndim( );
 				IPosition shp = image->shape( );
@@ -323,7 +335,7 @@ namespace casa {
 				WCEllipsoid ellipse( centerq, radiiq, IPosition(dispAxes), cs);
 				ImageRegion *imageregion = new ImageRegion(ellipse);
 
-				region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd,boxImg,*imageregion)));
+				region_centers->push_back(ImageRegionInfo(name,description,getLayerCenter(padd,boxImg,*imageregion)));
 				delete imgbox;
 				delete imageregion;
 				delete boxImg;

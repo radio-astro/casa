@@ -91,6 +91,8 @@ public:
     // call once only during initialization, to populate the gui,
     // if you used the QtAutoGui(QWidget=0) constructor.
     void loadRecord(Record rec);
+    static const QString HISTOGRAM_SHOW_KEY;
+    static const QString HISTOGRAM_RANGE_KEY;
    
 signals:
 
@@ -122,7 +124,7 @@ protected:
 private slots:
 
 public slots:
-   void itemValueChanged(QString name, QString value, int action, bool apply); 
+   void itemValueChanged(QString name, QString value, int action, bool apply);
    //#dk virtual void paintEvent ( QPaintEvent * event );
    void adjustHeight();
    

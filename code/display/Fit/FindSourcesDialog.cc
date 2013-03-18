@@ -36,21 +36,64 @@
 #include <casa/Quanta/MVAngle.h>
 #include <display/Display/Options.h>
 #include <display/Fit/RegionBox.h>
-//#include <display/Fit/FixedEstimateWidget.qo.h>
+#include <display/Fit/ColorComboDelegate.h>
 
 namespace casa {
 
-FindSourcesDialog::FindSourcesDialog(QWidget *parent)
-    : QDialog(parent), SKY_CATALOG("skycatalog"){
+const QStringList FindSourcesDialog::colorNames = QStringList()<<"yellow"<<"white"<<"red"<<
+		"green"<<"blue"<<"cyan"<<"magenta"<<"black";
+
+FindSourcesDialog::FindSourcesDialog(QWidget *parent,
+		bool displayModeFunctionality)
+    : QDialog(parent),  DEFAULT_KEY(-1),
+      SKY_CATALOG("skycatalog"), pixelRangeDialog(this){
 
 	ui.setupUi(this);
+	currentRegionId = DEFAULT_KEY;
+	overlayColorName = "white";
+
+	imageMode = true;
+	ui.imageRadioButton->setVisible( displayModeFunctionality );
+	ui.regionRadioButton->setVisible( displayModeFunctionality );
+	ui.colorLabel->setVisible( displayModeFunctionality );
+	ui.colorCombo->setVisible( displayModeFunctionality );
+
+	if ( displayModeFunctionality ){
+		QButtonGroup* buttonGroup = new QButtonGroup( this );
+		buttonGroup->addButton( ui.imageRadioButton );
+		buttonGroup->addButton( ui.regionRadioButton );
+		ui.imageRadioButton->setChecked( imageMode );
+		connect( ui.imageRadioButton, SIGNAL(toggled(bool)),this, SLOT(setImageMode(bool)));
+
+		colorDelegate = new ColorComboDelegate( this );
+		ui.colorCombo->setItemDelegate(  colorDelegate );
+		colorDelegate->setSupportedColors( FindSourcesDialog::colorNames );
+		for ( int i = 0; i < colorNames.size(); i++ ){
+			ui.colorCombo->addItem(colorNames[i]);
+		}
+		connect( ui.colorCombo, SIGNAL(currentIndexChanged(const QString&)),
+			this, SLOT(setOverlayColor(const QString&)));
+		setOverlayColor( colorNames[0] );
+
+	}
 
 	QTime time = QTime::currentTime();
 	qsrand((uInt)time.msec());
 
-	QDoubleValidator* validator = new QDoubleValidator( 0, std::numeric_limits<double>::max(), 7, this );
+	QDoubleValidator* validator = new QDoubleValidator( std::numeric_limits<double>::min(),
+			std::numeric_limits<double>::max(), 7, this );
 	ui.cutoffLineEdit->setValidator( validator );
 	ui.cutoffLineEdit->setText( QString::number(0.01f));
+	QButtonGroup* cutOffGroup = new QButtonGroup( this );
+	cutOffGroup->addButton( ui.fractionOfPeakRadio );
+	cutOffGroup->addButton( ui.noiseRadio );
+	bool fractionOfPeakMode = true;
+	ui.fractionOfPeakRadio->setChecked( fractionOfPeakMode );
+	cutoffModeChanged(!fractionOfPeakMode );
+	pixelRangeDialog.setWindowTitle( "Find Sources Intensity Cut-Off" );
+	pixelRangeDialog.setRangeMaxEnabled( false );
+	connect( &pixelRangeDialog, SIGNAL(accepted()), this, SLOT(pixelRangeChanged()));
+	connect( ui.noiseRadio, SIGNAL(toggled(bool)), this, SLOT(cutoffModeChanged(bool)));
 
 	QStringList tableHeaders =(QStringList()<< "ID"<<"RA" << "DEC" << "Flux" <<
 			"Major Axis"<<"Minor Axis"<<"Angle"/*<<"Fixed"*/);
@@ -64,14 +107,102 @@ FindSourcesDialog::FindSourcesDialog(QWidget *parent)
 
 	initializeFileManagement();
 
+	connect( ui.graphicalNoiseButton, SIGNAL(clicked()), this, SLOT(showPixelRange()));
 	connect( ui.findSourcesButton, SIGNAL(clicked()), this, SLOT(findSources()));
 	connect( ui.deleteSourceButton, SIGNAL(clicked()), this, SLOT( deleteSelectedSource()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(canceledFindSources()));
 	connect( ui.saveButton, SIGNAL(clicked()), this, SLOT(saveEstimateFile()));
 }
 
+
+//------------------------------------------------------------------
+//              Cut-Off
+//------------------------------------------------------------------
+
+void FindSourcesDialog::cutoffModeChanged( bool noise ){
+	ui.graphicalNoiseButton->setEnabled( noise );
+}
+
+void FindSourcesDialog::pixelRangeChanged(){
+	pair<double,double> range = pixelRangeDialog.getInterval();
+	QString startRange = QString::number( range.first );
+
+	ui.cutoffLineEdit->setText( startRange );
+}
+
+void FindSourcesDialog::showPixelRange(){
+	pixelRangeDialog.setImage( image );
+	pixelRangeDialog.show();
+}
+
+double FindSourcesDialog::populateCutOff(bool* valid) const {
+	QString cutoffStr = ui.cutoffLineEdit->text();
+	double value = cutoffStr.toDouble( valid);
+	if ( *valid ){
+		if ( ui.fractionOfPeakRadio->isChecked() ){
+			if ( value < 0 || value > 1){
+				*valid = false;
+			}
+		}
+		else {
+			std::vector<float> pixelValues = pixelRangeDialog.getXValues();
+			std::vector<float>::iterator maxValuePos = std::max_element( pixelValues.begin(), pixelValues.end());
+			std::vector<float>::iterator minValuePos = std::min_element( pixelValues.begin(), pixelValues.end());
+			if ( value < *minValuePos || value > *maxValuePos ){
+				*valid = false;
+			}
+			else {
+				double span = *maxValuePos - *minValuePos;
+				double dataSpan = value - *minValuePos;
+				value = dataSpan / span;
+			}
+		}
+	}
+	return value;
+}
+
+//----------------------------------------------------------------------
+//                      Properties
+//----------------------------------------------------------------------
+
 void FindSourcesDialog::canceledFindSources(){
 	close();
+}
+
+void FindSourcesDialog::setImageMode( bool enabled ){
+	if ( imageMode != enabled ){
+		imageMode = enabled;
+		resetCurrentId( -1 );
+		populatePixelBox();
+	}
+}
+
+void FindSourcesDialog::setOverlayColor(const QString& colorName){
+	if ( colorName != overlayColorName ){
+		overlayColorName = colorName;
+		if ( skyPath.length() > 0 ){
+			String removeName = getRemoveOverlayPath().toStdString();
+			emit removeOverlay( removeName );
+			emit showOverlay( skyPath.toStdString(), overlayColorName );
+		}
+	}
+}
+
+String FindSourcesDialog::getPixelBox() const {
+	return pixelBox;
+}
+
+void FindSourcesDialog::resetCurrentId( int suggestedId ){
+	if ( !imageMode && regions.contains( suggestedId ) && suggestedId >= 0){
+		currentRegionId  = suggestedId;
+	}
+	else if ( !imageMode && !regions.isEmpty()){
+		QList<int> keys = regions.keys();
+		currentRegionId = keys[0];
+	}
+	else {
+		currentRegionId = DEFAULT_KEY;
+	}
 }
 
 
@@ -86,11 +217,6 @@ void FindSourcesDialog::deleteSelectedSource(){
 	}
 	else {
 		clearSkyOverlay();
-
-		//Store any fixed estimates that the user may have indicated
-		//so that we can later restore them.
-		/*QList<QString> estimateList = populateFixedEstimates();
-		skyList.setFixedEstimates( estimateList );*/
 
 		//Decide which ones we are going to remove
 		int removeCount = selectedItems.size();
@@ -119,7 +245,6 @@ void FindSourcesDialog::deleteSelectedSource(){
 void FindSourcesDialog::resetSourceView() {
 	//Write the data into the columns.
 	int rowCount = skyList.getSize();
-	//ui.sourceTable->clearContents();
 	ui.sourceTable->setRowCount( rowCount );
 
 	bool sourceResultsVisible = false;
@@ -154,12 +279,6 @@ void FindSourcesDialog::resetSourceView() {
 		Quantity angleQuantity = skyList.getAngle( i );
 		String angleStr = String::toString( angleQuantity.getValue());
 		setTableValue( i, ANGLE_COL, angleStr );
-
-		/*FixedEstimateWidget* cellWidget = new FixedEstimateWidget(ui.sourceTable);
-		QString estimateInfo = skyList.getEstimateFixed( i );
-		cellWidget->fromString( estimateInfo );
-		ui.sourceTable->setCellWidget( i, FIXED_COL, cellWidget );
-		ui.sourceTable->setRowHeight( i, 40 );*/
 	}
 	ui.sourceTable->setSortingEnabled( true );
 	ui.sourceTable->resizeColumnsToContents();
@@ -189,8 +308,8 @@ void FindSourcesDialog::setSourceResultsVisible( bool visible ){
 			resultIndex = holderIndex;
 			dialogLayout->removeWidget( ui.sourceResultHolder );
 			ui.sourceResultHolder->setParent( NULL );
-			setMinimumSize(300,150);
-			setMaximumSize(400,200);
+			setMinimumSize(600,150);
+			setMaximumSize(700,200);
 		}
 	}
 	else {
@@ -211,19 +330,23 @@ void FindSourcesDialog::setSourceResultsVisible( bool visible ){
 void FindSourcesDialog::clearSkyOverlay(){
 	//Clean up if we have old results lying around.
 	if ( skyPath.length() > 0 ){
-		//Just get the file name
-		int dirIndex = skyPath.lastIndexOf( QDir::separator() );
-		QString fileName = skyPath;
-		if ( dirIndex >= 0 ){
-			fileName = skyPath.right( skyPath.length() - dirIndex - 1 );
-		}
-		//Add in the -skycatalog suffix
-		fileName = fileName +"-"+ SKY_CATALOG;
-		String removePath( fileName.toStdString() );
+		String removePath = getRemoveOverlayPath().toStdString();
 		//Tell the viewer to remove the previous overlay
 		emit removeOverlay( removePath );
 		skyPath.clear();
 	}
+}
+
+QString FindSourcesDialog::getRemoveOverlayPath() const {
+	//Just get the file name
+	int dirIndex = skyPath.lastIndexOf( QDir::separator() );
+	QString fileName = skyPath;
+	if ( dirIndex >= 0 ){
+		fileName = skyPath.right( skyPath.length() - dirIndex - 1 );
+	}
+	//Add in the -skycatalog suffix
+	fileName = fileName +"-"+ SKY_CATALOG;
+	return fileName;
 }
 
 void FindSourcesDialog::resetSkyOverlay(){
@@ -231,7 +354,7 @@ void FindSourcesDialog::resetSkyOverlay(){
 	resetSourceView();
 	//Now tell the viewer to display this sky catalog
 	String skyPathStr( skyPath.toStdString());
-	emit showOverlay( skyPathStr );
+	emit showOverlay( skyPathStr, overlayColorName );
 }
 
 
@@ -248,7 +371,12 @@ void FindSourcesDialog::findSources(){
 	ImageAnalysis* analysis = new ImageAnalysis( image );
 	Record region = makeRegion();
 	QString cutoffStr = ui.cutoffLineEdit->text();
-	double cutoff = cutoffStr.toDouble();
+	bool cutOffValid = false;
+	double cutoff = populateCutOff( &cutOffValid );
+	if ( !cutOffValid ){
+		QMessageBox::warning( this, "Invalid Cut-Off", "Please specify a valid cut-off value.");
+		return;
+	}
 	int maxEstimates = ui.sourceEstimateCountSpinBox->value();
 	try {
 		Record sources = analysis->findsources(maxEstimates,cutoff,region,"",False );
@@ -357,25 +485,11 @@ void FindSourcesDialog::createTable( ){
 //                Estimate File
 //---------------------------------------------------------------
 
-/*QList<QString> FindSourcesDialog::populateFixedEstimates() const {
-	QList<QString> fixedList;
-	int rowCount = ui.sourceTable->rowCount();
-	for ( int i = 0; i < rowCount; i++ ){
-		QWidget* cellWidget = ui.sourceTable->cellWidget( i, FIXED_COL );
-		FixedEstimateWidget* fixedCellWidget = dynamic_cast<FixedEstimateWidget*>(cellWidget);
-		QString fixedStr = fixedCellWidget->toString();
-		fixedList.append( fixedStr );
-	}
-	return fixedList;
-}*/
-
 bool FindSourcesDialog::writeEstimateFile( QString& filePath,
 		bool screenEstimates, RegionBox* screeningBox ){
 	QFile file( filePath );
 	bool success = file.open( QIODevice::WriteOnly | QIODevice::Text );
 	if ( success ){
-		/*QList<QString> fixedStrs = populateFixedEstimates();
-		skyList.setFixedEstimates( fixedStrs );*/
 		QTextStream out( &file );
 		QString errorMsg;
 		success = skyList.toEstimateFile( out, image, errorMsg, screenEstimates, screeningBox );
@@ -390,6 +504,34 @@ bool FindSourcesDialog::writeEstimateFile( QString& filePath,
 	}
 	return success;
 }
+
+
+String FindSourcesDialog::getScreenedEstimatesFile( const String& estimatesFileName,
+		bool* errorWritingFile ){
+	QString screenedEstimatesFileName(estimatesFileName.c_str());
+	if ( screenedEstimatesFileName.length() > 0 ){
+		if ( !regions.isEmpty() ){
+			RegionBox* screenBox = regions[currentRegionId ];
+			if ( screenBox != NULL ){
+				int separatorIndex = screenedEstimatesFileName.lastIndexOf( QDir::separator());
+				if ( separatorIndex > 0 ){
+					screenedEstimatesFileName = screenedEstimatesFileName.right(screenedEstimatesFileName.length() - separatorIndex-1);
+				}
+				String outName= viewer::options.temporaryPath( screenedEstimatesFileName.toStdString() );
+				QString outNameStr( outName.c_str() );
+				bool success = writeEstimateFile( outNameStr, true, screenBox );
+				if ( success ){
+					screenedEstimatesFileName = outNameStr;
+				}
+				else {
+					*errorWritingFile = true;
+				}
+			}
+		}
+	}
+	return screenedEstimatesFileName.toStdString();
+}
+
 
 void FindSourcesDialog::validateDirectory( const QString& str ){
 	QFile file( str );
@@ -448,12 +590,94 @@ void FindSourcesDialog::initializeFileManagement(){
 //              Image and Region Updates
 //---------------------------------------------------------------
 
+
+void FindSourcesDialog::populatePixelBox(){
+	QString pixelBoxStr("");
+	const QString COMMA_STR( ",");
+	if ( currentRegionId != DEFAULT_KEY ){
+		pixelBoxStr = regions[currentRegionId]->toString();
+	}
+	else {
+		//No regions so just use the image as bounds.
+		const QString ZERO_STR( "0");
+		pixelBoxStr.append( ZERO_STR + COMMA_STR );
+		pixelBoxStr.append( ZERO_STR + COMMA_STR );
+		IPosition imageShape = image->shape();
+		pixelBoxStr.append( QString::number( imageShape(0) - 1) + COMMA_STR);
+		pixelBoxStr.append( QString::number( imageShape(1) - 1));
+	}
+	pixelBox = pixelBoxStr.toStdString();
+}
+
 void FindSourcesDialog::setImage( ImageInterface<Float>* img ){
 	image = img;
 }
 
-void FindSourcesDialog::setPixelBox( const String& box ){
-	pixelBox = box;
+bool FindSourcesDialog::newRegion( int id, const QString & /*shape*/, const QString &/*name*/,
+		const QList<double> & /*world_x*/, const QList<double> & /*world_y*/,
+		const QList<int> &pixel_x, const QList<int> &pixel_y,
+		const QString & /*linecolor*/, const QString & /*text*/, const QString & /*font*/,
+		int /*fontsize*/, int /*fontstyle*/ ) {
+	bool regionChanged = false;
+	if ( pixel_x.size() == 2 && pixel_y.size() == 2 ){
+		RegionBox* regionBox = regions[id];
+		if ( regionBox == NULL ){
+			regionBox = new RegionBox( pixel_x, pixel_y );
+			regions[id] = regionBox;
+		}
+		else {
+			regionBox->update( pixel_x, pixel_y );
+		}
+		resetCurrentId( id );
+
+		populatePixelBox();
+		regionChanged = true;
+	}
+	return regionChanged;
+}
+
+bool FindSourcesDialog::updateRegion( int id, viewer::region::RegionChanges changes,
+		const QList<double> &/*world_x*/, const QList<double> &/*world_y*/,
+		const QList<int> &pixel_x, const QList<int> &pixel_y ){
+	bool regionChanged = false;
+	if ( pixel_x.size() == 2 && pixel_y.size() == 2 ){
+		if ( changes != viewer::region::RegionChangeDelete ){
+			RegionBox* box = regions[id];
+			if ( box != NULL ){
+				box->update( pixel_x, pixel_y );
+				resetCurrentId( id );
+				populatePixelBox();
+				regionChanged = true;
+			}
+			else {
+				qDebug() << "Fit2DTool::updateRegion unrecognized id="<<id;
+			}
+		}
+		else {
+			RegionBox* regionToRemove = regions.take(id);
+			delete regionToRemove;
+			resetCurrentId( -1 );
+			regionChanged = true;
+			populatePixelBox();
+		}
+	}
+	return regionChanged;
+}
+
+QString FindSourcesDialog::getRegionString() const {
+	QString str;
+	if ( regions.contains( currentRegionId)){
+		str = regions[currentRegionId]->toStringLabelled();
+	}
+	return str;
+}
+
+void FindSourcesDialog::clearRegions(){
+	QList<int> keys = regions.keys();
+	for ( int i = 0; i < keys.size(); i++ ){
+		RegionBox* box = regions.take( keys[i] );
+		delete box;
+	}
 }
 
 void FindSourcesDialog::setChannel( int channel ){
@@ -461,5 +685,6 @@ void FindSourcesDialog::setChannel( int channel ){
 }
 
 FindSourcesDialog::~FindSourcesDialog(){
+	clearRegions();
 }
 }

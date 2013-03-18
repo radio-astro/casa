@@ -138,8 +138,8 @@ another visibility file.
 		<value>False</value>
 	</param>
 
-	<param type="bool" name="calwt">
-		<description>Calibrate data weights from all relevant calibrations</description>
+	<param type="boolArray" name="calwt">
+		<description>Calibrate data weights per gaintable.</description>
 		<value>True</value>
 	</param>
 
@@ -333,9 +333,10 @@ another visibility file.
        parang -- If True, apply the parallactic angle correction.  FOR ANY
                POLARIZATION CALIBRATION AND IMAGING, parang = True
                default: False
-       calwt -- Calibrate weights along with data for all
-               relevant calibrations
-               default: True; example: calwt=False
+       calwt -- Calibrate weights along with data for each gaintable
+               default: True  (for all specified gaintables)
+               examples: calwt=False (for all specified gaintables)
+                         calwt=[True,False,True]  (specified per gaintable)
        applymode -- Calibration apply mode:
                ''='calflag' (default) calibrate data and apply flags from solutions
                'trial' report on flags from solutions, dataset entirely unchanged

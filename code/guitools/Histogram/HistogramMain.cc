@@ -46,7 +46,8 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
 		mainLayout = new QHBoxLayout();
 	}
 	mainLayout->setContentsMargins(5,1,1,1);
-	plotWidget = new BinPlotWidget( fitControls, rangeControls, plotModeControls, this );
+	plotWidget = new BinPlotWidget( fitControls, rangeControls,
+			plotModeControls, this );
 	mainLayout->addWidget( plotWidget );
 	ui.centralwidget->setLayout( mainLayout );
 
@@ -72,9 +73,9 @@ HistogramMain::HistogramMain(bool showFileLoader, bool fitControls,
 
 
 	plotWidget->addZoomActions( rangeControls, ui.menuZoom );
-	plotWidget->addDisplayActions( ui.menuDisplay );
+	plotWidget->addDisplayActions( ui.menuDisplay, NULL );
 	if ( plotModeControls ){
-		plotWidget->addPlotModeActions( ui.menuConfigure );
+		plotWidget->addPlotModeActions( ui.menuConfigure, NULL, NULL);
 	}
 	else {
 		preferencesColor->setMultipleHistogramColorsVisible( false );

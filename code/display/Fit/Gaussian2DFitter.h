@@ -50,8 +50,10 @@ public:
 			const Vector<Float>& includeVector, const Vector<Float>& excludeVector);
 	QString getErrorMessage() const;
 	QString getLogFilePath() const;
+	void setWriteLogFile( bool write );
 	QString getResidualImagePath() const;
-	void setLogFilePath( String path );
+	void setFilePath( String path );
+	bool writeRegionFile() const;
 	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName) const;
 	virtual ~Gaussian2DFitter();
 
@@ -60,15 +62,18 @@ private:
 	Gaussian2DFitter operator=( const Gaussian2DFitter& other );
 	QString errorMsg;
 	bool successfulFit;
+	bool logFile;
 	ComponentListWrapper fitResultList;
 	ImageInterface<Float>* image;
 	Vector<Float> includePixs;
 	Vector<Float> excludePixs;
 	String pixelBox;
-	String logPath;
+	String filePath;
 	int channelNumber;
 	String estimateFile;
 	String residualImageFile;
+	const QString LOG_SUFFIX;
+	const QString REGION_SUFFIX;
 };
 
 } /* namespace casa */

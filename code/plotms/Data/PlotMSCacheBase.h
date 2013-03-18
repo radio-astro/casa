@@ -82,7 +82,7 @@ public:
   PMS::Axis metadata(int i) {return METADATA[i];};
   
   // Reference an indexer
-  Int nIter() { return indexer_.nelements(); };
+  Int nIter() const { return indexer_.nelements(); };
   PlotMSIndexer& indexer(uInt i) {return (*indexer_[i]);};
   PlotMSIndexer& indexer0() { return *indexer0_; };
 

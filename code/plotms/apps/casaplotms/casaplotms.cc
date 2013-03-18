@@ -32,6 +32,7 @@
 #include <plotms/Plots/PlotMSIterPlot.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 //-#include <plotms/Plots/PlotMSSinglePlot.h>
+#include <plotms/Plots/PlotMSOverPlot.h>
 #include <casadbus/utilities/Diagnostic.h>
 
 #include <signal.h>
@@ -268,7 +269,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
       plotmsapp.its_want_avoid_popups = true;
     
     // Set up parameters for plot.
-    PlotMSPlotParameters plotparams = PlotMSIterPlot::makeParameters(&plotmsapp);
+    PlotMSPlotParameters plotparams = PlotMSOverPlot::makeParameters(&plotmsapp);
 
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setFilename, ms)
     PMS_PP_CALL(plotparams, PMS_PP_MSData, setSelection, select)
@@ -284,7 +285,7 @@ setbuf(stdout, NULL); /* for debugging - forces all printf() to flush immediatel
     }
     
     // Add the plot to plotms.
-    plotmsapp.addIterPlot(&plotparams);
+    plotmsapp.addOverPlot(&plotparams);
     
     // If we're connected to DBus, don't quite the application when the window
     // is closed.  This is somewhat risky in that if the remote applications

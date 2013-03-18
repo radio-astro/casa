@@ -242,12 +242,12 @@ public:
     virtual void setAntenna1 (const Vector<Int> & value);
     virtual const Vector<Int> & antenna2 () const;
     virtual void setAntenna2 (const Vector<Int> & value);
-    virtual Int arrayId () const;
-    virtual void setArrayId (Int value);
+    virtual const Vector<Int> & arrayId () const;
+    virtual void setArrayId (const Vector<Int> &);
     virtual const Vector<SquareMatrix<Complex, 2> > & cjones () const;
     virtual const Vector<Int> & correlationTypes () const;
-    virtual Int dataDescriptionId () const;
-    virtual void setDataDescriptionId (Int value);
+//    virtual Int dataDescriptionId () const;
+//    virtual void setDataDescriptionId (Int value);
     virtual const Vector<Int> & dataDescriptionIds () const;
     virtual void setDataDescriptionIds (const Vector<Int> & ); // [nR]
     virtual const Vector<MDirection> & direction1 () const;
@@ -260,8 +260,8 @@ public:
     virtual const Vector<Int> & feed2 () const;
     virtual void setFeed2 (const Vector<Int> & value);
     virtual const Vector<Float> & feedPa2 () const;
-    virtual Int fieldId () const;
-    virtual void setFieldId (Int value);
+    virtual const Vector<Int> & fieldId () const;
+    virtual void setFieldId (const Vector<Int> &);
     virtual const Matrix<Bool> & flag () const;
     virtual void setFlag (const Matrix<Bool>&);
     virtual const Array<Bool> & flagCategory () const;
@@ -285,12 +285,12 @@ public:
     virtual const Vector<uInt> & rowIds () const;
     virtual const Vector<Int> & scan () const;
     virtual void setScan (const Vector<Int> & value);
-    virtual const Vector<Float> & sigma () const;
-    virtual void setSigma (const Vector<Float> &);
-    virtual const Matrix<Float> & sigmaMat () const;
-    virtual Int spectralWindow () const;
+    virtual const Matrix<Float> & sigma () const;
+    virtual void setSigma (const Matrix<Float> &);
+    //virtual const Matrix<Float> & sigmaMat () const;
+    //virtual Int spectralWindow () const;
     virtual const Vector<Int> & spectralWindows () const;
-    virtual void setSpectralWindows (const Vector<Int> & spectralWindows);
+    //virtual void setSpectralWindows (const Vector<Int> & spectralWindows);
     virtual const Vector<Int> & stateId () const;
     virtual void setStateId (const Vector<Int> & value);
     virtual const Vector<Double> & time () const;
@@ -318,10 +318,10 @@ public:
     virtual void setVisCube (const Cube<Complex> &);
 //    virtual const Matrix<CStokesVector> & vis () const;
 //    virtual void setVis (Matrix<CStokesVector> &);
-    virtual const Vector<Float> & weight () const;
-    virtual void setWeight (const Vector<Float>&);
-    virtual const Matrix<Float> & weightMat () const;
-    virtual void setWeightMat (const Matrix<Float>&);
+    virtual const Matrix<Float> & weight () const;
+    virtual void setWeight (const Matrix<Float>&);
+//    virtual const Matrix<Float> & weightMat () const;
+//    virtual void setWeightMat (const Matrix<Float>&);
     virtual const Cube<Float> & weightSpectrum () const;
     virtual void setWeightSpectrum (const Cube<Float>&);
 
@@ -394,7 +394,7 @@ protected:
     virtual Cube<Complex> & visCubeRef (); // [nC,nF,nR]
     virtual Cube<Complex> & visCubeCorrectedRef (); // [nC,nF,nR]
     virtual Cube<Complex> & visCubeModelRef (); // [nC,nF,nR]
-//    virtual Cube<Float> & weightSpectrumRef (); // [nC,nF,nR]
+    virtual Cube<Float> & weightSpectrumRef (); // [nC,nF,nR]
 
 private:
 
@@ -422,7 +422,7 @@ private:
 
     virtual void fillAntenna1 (Vector<Int>& value) const;
     virtual void fillAntenna2 (Vector<Int>& value) const;
-    virtual void fillArrayId (Int& value) const;
+    virtual void fillArrayId (Vector<Int>& value) const;
     virtual void fillCorrType (Vector<Int>& value) const;
     virtual void fillCubeCorrected (Cube <Complex> & value) const;
     virtual void fillCubeModel (Cube <Complex> & value) const;
@@ -443,7 +443,7 @@ private:
     virtual void fillFeedPaAux (Vector <Float> & feedPa,
                         const Vector <Int> & antenna,
                         const Vector <Int> & feed) const;
-    virtual void fillFieldId (Int& value) const;
+    virtual void fillFieldId (Vector<Int>& value) const;
     virtual void fillFlag (Matrix<Bool>& value) const;
     virtual void fillFlagCategory (Array<Bool>& value) const;
     virtual void fillFlagCube (Cube<Bool>& value) const;
@@ -462,9 +462,9 @@ private:
     virtual void fillProcessorId (Vector<Int>& value) const;
     virtual void fillRowIds (Vector<uInt>& value) const;
     virtual void fillScan (Vector<Int>& value) const;
-    virtual void fillSigma (Vector<Float>& value) const;
-    virtual void fillSigmaMat (Matrix<Float>& value) const;
-    virtual void fillSpectralWindow (Int& value) const;
+    virtual void fillSigma (Matrix<Float>& value) const;
+    //virtual void fillSigmaMat (Matrix<Float>& value) const;
+    //virtual void fillSpectralWindow (Int& value) const;
     virtual void fillSpectralWindows  (Vector<Int>& value) const;
     virtual void fillStateId (Vector<Int>& value) const;
     virtual void fillTime (Vector<Double>& value) const;
@@ -474,8 +474,8 @@ private:
 //    virtual void fillVisibilityCorrected (Matrix<CStokesVector>& value) const;
 //    virtual void fillVisibilityModel (Matrix<CStokesVector>& value) const;
 //    virtual void fillVisibilityObserved (Matrix<CStokesVector>& value) const;
-    virtual void fillWeight (Vector<Float>& value) const;
-    virtual void fillWeightMat (Matrix<Float>& value) const;
+    virtual void fillWeight (Matrix<Float>& value) const;
+    //virtual void fillWeightMat (Matrix<Float>& value) const;
     virtual void fillWeightSpectrum (Cube<Float>& value) const;
 
     VisBufferCache * cache_p;

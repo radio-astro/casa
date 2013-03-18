@@ -125,7 +125,10 @@ public:
     PlotMSPlot* addMultiPlot(const PlotMSPlotParameters* p = NULL);
 
     // See PlotMSPlotManager::addIterPlot();
-    PlotMSIterPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
+    PlotMSPlot* addIterPlot(const PlotMSPlotParameters* p = NULL);
+
+    // See PlotMSPlotManager::addOverPlot();
+    PlotMSOverPlot* addOverPlot(const PlotMSPlotParameters* p = NULL);
     
     bool isDrawing() const;
     bool isClosed() const;

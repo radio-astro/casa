@@ -1,4 +1,3 @@
-#
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
 #
@@ -35,18 +34,24 @@ Annotations/AnnText.cc
 Annotations/AnnVector.cc
 Annotations/RegionTextList.cc
 
+ImageAnalysis/AntennaResponses.cc
 ImageAnalysis/ComponentImager.cc
 ImageAnalysis/ImageAnalysis.cc
 ImageAnalysis/ImageCollapser.cc
+ImageAnalysis/ImageFFT.cc
 ImageAnalysis/ImageFitter.cc
 ImageAnalysis/ImageInputProcessor.cc
+ImageAnalysis/ImageMomentsProgress.cc
+ImageAnalysis/ImageMomentsProgressMonitor.cc
 ImageAnalysis/ImagePadder.cc
+ImageAnalysis/ImagePolarimetry.cc
 ImageAnalysis/ImagePolProxy.cc
 ImageAnalysis/ImagePrimaryBeamCorrector.cc
 ImageAnalysis/ImageProfileFitter.cc
 ImageAnalysis/ImageStatsCalculator.cc
 ImageAnalysis/ImageTransposer.cc
 ImageAnalysis/ImageTask.cc
+ImageAnalysis/PeakIntensityFluxDensityConverter.cc
 ImageAnalysis/PVGenerator.cc
 ImageAnalysis/SpectralCollapser.cc
 ImageAnalysis/SpectralFitter.cc
@@ -85,18 +90,35 @@ install (FILES
 	DESTINATION include/casacode/imageanalysis/IO
 	)
 install (FILES
+	ImageAnalysis/AntennaResponses.h
 	ImageAnalysis/ComponentImager.h
 	ImageAnalysis/Image2DConvolver.h
 	ImageAnalysis/Image2DConvolver.tcc
 	ImageAnalysis/ImageAnalysis.h
 	ImageAnalysis/ImageCollapser.h
+	ImageAnalysis/ImageConvolver.h
+	ImageAnalysis/ImageConvolver.tcc
 	ImageAnalysis/ImageDecomposer.h
 	ImageAnalysis/ImageDecomposer.tcc
+	ImageAnalysis/ImageFFT.h
 	ImageAnalysis/ImageFitter.h
+	ImageAnalysis/ImageFit1D.h
+	ImageAnalysis/ImageFit1D.tcc
+	ImageAnalysis/ImageHeader.h
+	ImageAnalysis/ImageHeader.tcc
+    ImageAnalysis/ImageHistograms.h
+    ImageAnalysis/ImageHistograms.tcc
 	ImageAnalysis/ImageInputProcessor.h
+	ImageAnalysis/ImageMaskAttacher.h
+    ImageAnalysis/ImageMaskAttacher.tcc
+	ImageAnalysis/ImageMetaData.h
+    ImageAnalysis/ImageMetaData.tcc
 	ImageAnalysis/ImageMoments.h
 	ImageAnalysis/ImageMoments.tcc
+    ImageAnalysis/ImageMomentsProgress.h
+    ImageAnalysis/ImageMomentsProgressMonitor.h
 	ImageAnalysis/ImagePadder.h
+	ImageAnalysis/ImagePolarimetry.h
 	ImageAnalysis/ImagePolProxy.h
 	ImageAnalysis/ImagePrimaryBeamCorrector.h
 	ImageAnalysis/ImageProfileFitter.h
@@ -107,12 +129,17 @@ install (FILES
 	ImageAnalysis/ImageTransposer.h
 	ImageAnalysis/ImageTwoPtCorr.h
 	ImageAnalysis/ImageTwoPtCorr.tcc
+	ImageAnalysis/MomentsBase.h
+	ImageAnalysis/MomentsBase.tcc
 	ImageAnalysis/MomentCalculator.h
 	ImageAnalysis/MomentCalculator.tcc
+	ImageAnalysis/PeakIntensityFluxDensityConverter.h
 	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/SepImageConvolver.h
 	ImageAnalysis/SepImageConvolver.tcc
 	ImageAnalysis/SpectralCollapser.h
+	ImageAnalysis/SubImageFactory.h
+	ImageAnalysis/SubImageFactory.tcc
 	DESTINATION include/casacode/imageanalysis/ImageAnalysis
 	)
 install (FILES
@@ -136,22 +163,31 @@ casa_add_assay( imageanalysis Annotations/test/tAnnText.cc )
 casa_add_assay( imageanalysis Annotations/test/tAnnVector.cc )
 casa_add_assay( imageanalysis Annotations/test/tRegionTextList.cc )
 
+casa_add_assay( imageanalysis ImageAnalysis/test/dImageHistograms.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/dImageMoments.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tAntennaResponses.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tComponentImager.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImage2DConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageAnalysis2.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageCollapser.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageConvolver.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageDecomposer.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageFit1D.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageFFT.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageMetaData.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageMoments.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImagePolarimetry.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageSourceFinder.cc )
-casa_add_assay( imageanalysis ImageAnalysis/test/tSpectralFitter.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageStatsCalculator.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageInputProcessor.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImagePrimaryBeamCorrector.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageProfileFitter.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageTransposer.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tSepImageConvolver.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tSpectralFitter.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tSubImageFactory.cc )
 
 casa_add_assay( imageanalysis IO/test/tFitterEstimatesFileParser.cc )
 casa_add_assay( imageanalysis IO/test/tProfileFitterEstimatesFileParser.cc )

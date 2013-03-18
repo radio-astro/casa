@@ -62,18 +62,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Stretch the mask if necessary and possible? </description>
             <value>False</value>
         </param>
-        <param type="bool"  name="wantreturn">
-            <description>If True, return an image analysis tool associated with the subimage. If False, return nothing. </description>
-            <value>True</value>
-        </param>
         <constraints>
-            <when param="outfile">
-                <notequals type="string" value="">
-                    <default param="overwrite">
-                        <value>False</value>
-                    </default>
-                </notequals>
-            </when>
             <when param="box">
                 <equals type="string" value="">
                     <default param="region">
@@ -94,7 +83,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <example>
 PARAMETER SUMMARY
 imagename        Name of the input image
-outfile          Name of output file. Empty means create a temporary image and return it.
+outfile          Name of output file. Must be specified.
 box              Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
                  may be specified. If not specified, region is used if specified. If region
                  is also not specified, entire directional plane unioned with any chans and
@@ -114,14 +103,7 @@ stretch          Stretch the input mask if necessary and possible. Only used if 
 
 OVERVIEW
 
-This task copies all or part of the image to another on-the-fly Image tool.
-If {\stfaf outfile} is given, the subimage is written to the specified
-disk file.  If {\stfaf outfile} is unset, the returned Image \tool\ actually
-references the input image file (i.e.  that associated with the Image
-\tool\ to which you are applying this function).  So if you deleted the
-input image disk file, it would render this \tool\ useless.  When you destroy this
-\tool\ (with the <link anchor="images:image.done.function">done</link> function)
-the reference connection is broken. 
+This task copies all or part of the image to a new image specified by outfile.
 
 Sometimes it is useful to drop axes of length one (degenerate axes).
 Set {\stfaf dropdeg} equal to True if you want to do this.
@@ -149,16 +131,12 @@ error will result.
 
 EXAMPLES
 
-# create a non-persistent copy of the input image.
-copy = imsubimage(imagename="my.im", wantreturn=True)
-
 # make a subimage containing only channels 4 to 6 of the original image,
-# and do not return an image tool.
-imsubimage(imagename="my.im", outfile="first.im", wantreturn=False, chans="4~6")
+imsubimage(imagename="my.im", outfile="first.im", chans="4~6")
 
 # Same as above command, just specifying chans in an alternate, more verbose
 # way
-imsubimage(imagename="my.im", outfile="second.im", wantreturn=False, chans="range=[4pix,6pix]")
+imsubimage(imagename="my.im", outfile="second.im", chans="range=[4pix,6pix]")
 
 # Same as the above command, but even more verbose way of specifying the spectral
 # selection. Assumes the direction axes are axes numbers 0 and 1.
@@ -169,10 +147,7 @@ ia.done()
 xmax = shape[axes.index("Right Ascension")] - 1
 ymax = shape[axes.index("Declination")] - 1
 reg = "box[[0pix,0pix],[" + str(xmax) + "pix, " + str(ymax) + "pix]] range=[4pix,6pix]"
-imsubimage(imagename="my.im", outfile="third.im",  wantreturn=False, region=reg)
-
-
-
+imsubimage(imagename="my.im", outfile="third.im", region=reg)
 
 </example>
 

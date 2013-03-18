@@ -93,6 +93,7 @@ casa_add_library( synthesis
   MSVis/Reweighter.cc
   MSVis/SelectAverageSpw.cc
   MSVis/SimpleSubMS.cc
+  MSVis/SpectralWindow.cc
   MSVis/StokesVector.cc
   MSVis/StatWT.cc
   MSVis/SubMS.cc
@@ -454,6 +455,7 @@ install (FILES
 	MSVis/Reweighter.h
 	MSVis/SelectAverageSpw.h
 	MSVis/SimpleSubMS.h
+        MSVis/SpectralWindow.h
 	MSVis/StatWT.h
 	MSVis/StokesVector.h
 	MSVis/SubMS.h
@@ -712,7 +714,8 @@ casa_add_assay( synthesis MSVis/test/tUVSub.cc )
 casa_add_assay( synthesis MSVis/test/tVisibilityIterator.cc )
 casa_add_assay( synthesis MSVis/test/tVisibilityIteratorAsync.cc )
 casa_add_assay( synthesis MSVis/test/VisibilityProcessing_Test.cc )
-casa_add_assay( synthesis MSVis/test/AveragingTvi2_Test.cc )
+casa_add_assay( synthesis MSVis/test/AveragingTvi2_Test.cc MSVis/test/MsFactory.cc )
+casa_add_assay( synthesis MSVis/test/VisibilityIterator_Test.cc MsFactory.cc )
 casa_add_assay( synthesis MSVis/test/tVisIter.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )

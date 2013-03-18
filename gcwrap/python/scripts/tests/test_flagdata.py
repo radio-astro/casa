@@ -147,6 +147,21 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         default(flagdata)
         flagdata(vis=self.vis, mode='unflag', savepars=False)
+        
+    def setUp_mwa(self):
+        self.vis = "testmwa.ms"
+        if testmms:
+            self.vis = 'testmwa.mms'
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        default(flagdata)
+        flagdata(vis=self.vis, mode='unflag', savepars=False)        
 
     def setUp_tsys_case(self):
         self.vis = "X7ef.tsys"
@@ -1527,6 +1542,48 @@ class test_CASA_4_0_bug_fix(test_base):
         self.assertEqual(res['spw']['6']['flagged'], 0)
         self.assertEqual(res['flagged'], 1649664)
 
+class test_correlations(test_base):
+    '''Test combinations of correlation products'''
+    def setUp(self):
+        self.setUp_mwa()
+        
+    def test_xx_xy(self):
+        '''flagdata: flag XX,XY'''
+        flagdata(vis=self.vis, mode='manual', flagbackup=False, correlation='XX,XY')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['XX']['flagged'], 429792)
+        self.assertEqual(res['correlation']['XY']['flagged'], 429792)
+        self.assertEqual(res['correlation']['YY']['flagged'], 0)
+        self.assertEqual(res['correlation']['YX']['flagged'], 0)
+
+    def test_xx_yx(self):
+        '''flagdata: flag XX,YX'''
+        flagdata(vis=self.vis, mode='manual', flagbackup=False, correlation='XX,YX')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['XX']['flagged'], 429792)
+        self.assertEqual(res['correlation']['XY']['flagged'], 0)
+        self.assertEqual(res['correlation']['YY']['flagged'], 0)
+        self.assertEqual(res['correlation']['YX']['flagged'], 429792)
+        
+    def test_xx_yx_xy(self):
+        '''flagdata: flag XX,YX, XY with space'''
+        flagdata(vis=self.vis, mode='manual', flagbackup=False, correlation='XX,YX, XY')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['XX']['flagged'], 429792)
+        self.assertEqual(res['correlation']['XY']['flagged'], 429792)
+        self.assertEqual(res['correlation']['YY']['flagged'], 0)
+        self.assertEqual(res['correlation']['YX']['flagged'], 429792)
+        
+    def test_yy_yx(self):
+        '''flagdata: flag YY,YX'''
+        flagdata(vis=self.vis, mode='manual', flagbackup=False, correlation=' YY,YX')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['XX']['flagged'], 0)
+        self.assertEqual(res['correlation']['XY']['flagged'], 0)
+        self.assertEqual(res['correlation']['YY']['flagged'], 429792)
+        self.assertEqual(res['correlation']['YX']['flagged'], 429792)
+        
+        
 class test_tsys(test_base):
     """Flagdata:: Flagging of Tsys-based CalTable """
     
@@ -1997,7 +2054,7 @@ class test_bandpass(test_base):
 class cleanup(test_base):
     
     def tearDown(self):
-        os.system('rm -rf ngc5921.*ms*')
+        os.system('rm -rf ngc5921.*ms* testwma*ms*')
         os.system('rm -rf flagdatatest.*ms*')
         os.system('rm -rf missing-baseline.*ms*')
         os.system('rm -rf multiobs.*ms*')
@@ -2028,6 +2085,7 @@ def suite():
             test_list_file,
             test_clip,
             test_CASA_4_0_bug_fix,
+            test_correlations,
             test_tsys,
             test_bandpass,
             cleanup]

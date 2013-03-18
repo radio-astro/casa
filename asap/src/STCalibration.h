@@ -24,6 +24,7 @@
 #include "Scantable.h"
 #include "STDefs.h"
 #include "STApplyTable.h"
+#include "STSelector.h"
 
 namespace asap {
 
@@ -46,7 +47,7 @@ public:
   void setOption(casa::Record &rec) {options_ = rec;}
 
 protected:
-  virtual void setupSelector() = 0;
+  virtual void setupSelector(const STSelector &sel) = 0;
   virtual void fillCalTable() = 0;
 
   STSelector sel_;

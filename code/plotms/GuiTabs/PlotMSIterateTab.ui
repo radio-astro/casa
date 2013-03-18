@@ -167,7 +167,7 @@ p, li { white-space: pre-wrap; }
          <item>
           <widget class="QSpinBox" name="nRowsSpinBox">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -189,7 +189,7 @@ p, li { white-space: pre-wrap; }
          <item>
           <widget class="QLabel" name="rowsLabel">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="text">
             <string>Rows</string>
@@ -203,7 +203,7 @@ p, li { white-space: pre-wrap; }
          <item>
           <widget class="QSpinBox" name="nColsSpinBox">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="toolTip">
             <string>&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
@@ -225,7 +225,7 @@ p, li { white-space: pre-wrap; }
          <item>
           <widget class="QLabel" name="columnsLabel">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="text">
             <string>Columns</string>

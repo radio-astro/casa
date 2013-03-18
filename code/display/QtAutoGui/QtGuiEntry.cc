@@ -303,17 +303,7 @@ QtMinMaxEditor::QtMinMaxEditor(QDomElement &ele, QWidget *parent)
     radioButton->hide();	//#dk
     itemName = ele.tagName();
     connect(lineEdit, SIGNAL(editingFinished()), this, SLOT(display2()));
-    //connect(lineEdit, SIGNAL(textChanged(QString)),
-    //        this, SLOT(display2(QString)) );
     connect(hist, SIGNAL(clicked()), this, SLOT(setHistogram()) );
-//  connect(tool, SIGNAL(clicked()), tool, SLOT(showMenu()) );
-    
-    hist->hide();	//#dk -- until this button does something...
-
-
-    //#dk double d2 = ele.attribute("pmax").toDouble();
-    //#dk double d1 = ele.attribute("pmin").toDouble();
-
 
     lineEdit->setText(ele.attribute("value"));
     nameLabel->setText(ele.attribute("listname"));
@@ -322,8 +312,7 @@ QtMinMaxEditor::QtMinMaxEditor(QDomElement &ele, QWidget *parent)
     orig = lineEdit->text();	// Save original value (for setOriginal()).
 }
 
-void QtMinMaxEditor::reSet(QString value)
-{
+void QtMinMaxEditor::reSet(QString value){
     lineEdit->setText(value);	//#dk needs more testing (9/12/08)
     validate(value);		//#dk needs more testing (unnec. feedback?)
     repaint();
@@ -332,44 +321,34 @@ void QtMinMaxEditor::reSet(QString value)
 void QtMinMaxEditor::display2(int /*v1*/)
 {  }
 
-void QtMinMaxEditor::display2()
-{
+void QtMinMaxEditor::display2(){
     QString value = lineEdit->text();
     display2(value);
 }
 
-void QtMinMaxEditor::display2(QString value)
-{
+void QtMinMaxEditor::display2(QString value){
     if (!validate(value))
         return;
 }
 
-bool QtMinMaxEditor::validate(QString value)
-{
-
+bool QtMinMaxEditor::validate(QString value){
     bool ok1, ok2;
     QString str = value.replace(QString("["), "");
     str.replace(QString("]"), QString(""));
     QStringList list = str.split(",");
-    if (list.size() != 2)
-    {
-//      labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
+    if (list.size() != 2){
         return false;
     }
     double d1 = list[0].toDouble(&ok1) ;
     double d2 = list[1].toDouble(&ok2);
 
-    if (ok1 == true && ok2 == true && d1 < d2)
-    {
+    if (ok1 == true && ok2 == true && d1 < d2){
         lineEdit->setText("[" + QString::number(d1) + ", "
                           + QString::number(d2) + "]");
         emit  itemValueChanged(itemName, lineEdit->text(),
-                               QtAutoGui::Set, radioButton->isChecked());
-//      labelOk->setPixmap(QPixmap(":/icons/tick.png"));
+                               QtAutoGui::Set, true);
         return true;
     }
-    else
-//      labelOk->setPixmap(QPixmap(QString::fromUtf8(":/icons/cross.png")));
     return false;
 }
 
@@ -379,14 +358,11 @@ void QtMinMaxEditor::setOriginal() {
     validate(orig);  }
 
     
-void QtMinMaxEditor::setDefault()
-{
-    emit  itemValueChanged(itemName, lineEdit->text(), QtAutoGui::Default,
-                           radioButton->isChecked());
+void QtMinMaxEditor::setDefault(){
+    emit  itemValueChanged(itemName, lineEdit->text(), QtAutoGui::Default, true);
 }
 
-void QtMinMaxEditor::setCopy()
-{
+void QtMinMaxEditor::setCopy(){
     //#dk clipBoard =  lineEdit->text();
 }
 
@@ -397,7 +373,7 @@ void QtMinMaxEditor::setPaste()
 
 void QtMinMaxEditor::setHistogram()
 {
-    emit  itemValueChanged(itemName, "Show histogram plot", QtAutoGui::Command,
+    emit  itemValueChanged(itemName, QtAutoGui::HISTOGRAM_SHOW_KEY, QtAutoGui::Command,
                            radioButton->isChecked());
 }
 

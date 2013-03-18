@@ -321,7 +321,9 @@ class PartitionHelper(ParallelTaskHelper):
         spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
 
         # Return a unique sorted list:
-        return list(set(spwList))
+        sorted = list(set(spwList))
+        sorted.sort()
+        return sorted
 
     def _getScanList(self):
         '''

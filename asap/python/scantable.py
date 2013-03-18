@@ -907,6 +907,23 @@ class scantable(Scantable):
         """
         return self._get_column( self._gettsysspectrum, row )
 
+    def set_tsys(self, values, row=-1):
+        """\
+        Set the Tsys value(s) of the given 'row' or the whole scantable 
+        (selection).
+        
+        Parameters:
+
+            values:    a scalar or list (if Tsys is a vector) of Tsys value(s)
+            row:       the row number to apply Tsys values to. 
+                       (default all rows)
+                       
+        """
+            
+        if not hasattr(values, "__len__"):
+            values = [values]
+        self._settsys(values, row)
+
     def get_weather(self, row=-1):
         """\
         Return the weather informations.

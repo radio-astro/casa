@@ -42,7 +42,7 @@ public:
   ~STCalTsys() {;}
   
 private:
-  void setupSelector();
+  void setupSelector(const STSelector &sel);
   void fillCalTable();
 
   vector<int> iflist_;

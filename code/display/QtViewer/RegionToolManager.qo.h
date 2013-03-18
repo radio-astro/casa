@@ -53,7 +53,7 @@ namespace casa {
 			Q_OBJECT
 	    	public:
 
-				enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool, PolylineTool };
+				enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool, PolylineTool, PVTool };
 
 
 				RegionToolManager( QtRegionSourceFactory *rsf, QtDisplayPanelGui *dpg, PanelDisplay *pd );
@@ -68,7 +68,7 @@ namespace casa {
 				void operator()(const WCRefreshEvent& ev);
 				// </group>
 
-				void loadRegions( const std::string &path, const std::string &datatype, const std::string &displaytype );
+				void loadRegions( const std::string &path, const std::string &type );
 
 				// fetch tool for a particular region type...
 				std::tr1::shared_ptr<RegionTool> tool( region::RegionTypes );

@@ -116,9 +116,11 @@ PlotMSPlot* PlotMSApp::addSinglePlot(const PlotMSPlotParameters* p) {
 PlotMSPlot* PlotMSApp::addMultiPlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addMultiPlot(p); }
 
-PlotMSIterPlot* PlotMSApp::addIterPlot(const PlotMSPlotParameters* p) {
+PlotMSPlot* PlotMSApp::addIterPlot(const PlotMSPlotParameters* p) {
     return itsPlotManager_.addIterPlot(p); }
 
+PlotMSOverPlot* PlotMSApp::addOverPlot(const PlotMSPlotParameters* p) {
+    return itsPlotManager_.addOverPlot(p); }
 
 bool PlotMSApp::isDrawing() const {
 	return itsPlotter_->isDrawing();

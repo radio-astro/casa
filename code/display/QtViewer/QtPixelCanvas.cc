@@ -611,29 +611,29 @@ void QtPixelCanvas::drawLines(const Matrix<Float> &verts) {
     }
 }
 
-void QtPixelCanvas::drawLines(const Matrix<Int> &verts) {
+void QtPixelCanvas::drawLines(const Matrix<Int> &/*verts*/) {
   // cerr << "drawLines called i" << endl;  // -- not seen so far
 }
 
-void QtPixelCanvas::drawLines(const Matrix<Double> &verts) {
+void QtPixelCanvas::drawLines(const Matrix<Double> &/*verts*/) {
   // cerr << "drawLine called d" << endl;   // -- not seen so far
 }
 
 
-void QtPixelCanvas::drawLines(const Vector<Int> &x1, const Vector<Int> &y1, 
-                 const Vector<Int> &x2, const Vector<Int> &y2) {  
+void QtPixelCanvas::drawLines(const Vector<Int> &/*x1*/, const Vector<Int> &/*y1*/,
+                 const Vector<Int> &/*x2*/, const Vector<Int> &/*y2*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
 }
 
-void QtPixelCanvas::drawLines(const Vector<Float> &x1, const Vector<Float> &y1, 
-                  const Vector<Float> &x2, 
-                  const Vector<Float> &y2) { 
+void QtPixelCanvas::drawLines(const Vector<Float> &/*x1*/, const Vector<Float> &/*y1*/,
+                  const Vector<Float> &/*x2*/,
+                  const Vector<Float> &/*y2*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
 }
 
-void QtPixelCanvas::drawLines(const Vector<Double> &x1, const Vector<Double> &y1, 
-                  const Vector<Double> &x2, 
-                  const Vector<Double> &y2) { 
+void QtPixelCanvas::drawLines(const Vector<Double> &/*x1*/, const Vector<Double> &/*y1*/,
+                  const Vector<Double> &/*x2*/,
+                  const Vector<Double> &/*y2*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
 }
 
@@ -1069,7 +1069,7 @@ void QtPixelCanvas::resizeEvent(QResizeEvent* ev) {
 
   
 
-void QtPixelCanvas::paintEvent(QPaintEvent* e) {
+void QtPixelCanvas::paintEvent(QPaintEvent* /*e*/) {
   // It was thought best to retain Malte's use essentially of 'triple
   // buffering' (backBuffer and frontBuffer Pixmaps, _plus_ the widget itself),
   // and to use this actual Qt paintEvent only to 'bitBlt' the pre-drawn
@@ -1159,7 +1159,7 @@ uInt QtPixelCanvas::dlKeyMods_(QMouseEvent* e) {
   return kmods;  }
 
   
-void QtPixelCanvas::enterEvent( QEvent* e ) {
+void QtPixelCanvas::enterEvent( QEvent* /*e*/ ) {
   setFocus(Qt::MouseFocusReason);
 }
   
@@ -1324,7 +1324,7 @@ Display::FillRule QtPixelCanvas::getFillRule() const {
 Display::ArcMode QtPixelCanvas::getArcMode() const {
   return Display::AMChord;  }
 
-void QtPixelCanvas::setColorModel(Display::ColorModel colorModel) {
+void QtPixelCanvas::setColorModel(Display::ColorModel /*colorModel*/) {
   // fill in
 }
 
@@ -1405,83 +1405,83 @@ Int QtPixelCanvas::textWidth(const String& text) {
     return QFontMetrics(itsFont).width(text.c_str());
 }
 
-Int QtPixelCanvas::textHeight(const String& text) {
+Int QtPixelCanvas::textHeight(const String& /*text*/) {
     return QFontMetrics(itsFont).height();
 }
 
-void QtPixelCanvas::drawPoint(Int x1, Int y1) {  }
+void QtPixelCanvas::drawPoint(Int /*x1*/, Int /*y1*/) {  }
 
-void QtPixelCanvas::drawPoint(Float x1, Float y1) {  }
+void QtPixelCanvas::drawPoint(Float /*x1*/, Float /*y1*/) {  }
 
-void QtPixelCanvas::drawPoint(Double x1, Double y1) {  }
+void QtPixelCanvas::drawPoint(Double /*x1*/, Double /*y1*/) {  }
 
-void QtPixelCanvas::drawPoints(const Matrix<Int> &verts) {
+void QtPixelCanvas::drawPoints(const Matrix<Int> &/*verts*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
 }
 
-void QtPixelCanvas::drawPoints(const Matrix<Float> &verts) {  }
+void QtPixelCanvas::drawPoints(const Matrix<Float> &/*verts*/) {  }
 
-void QtPixelCanvas::drawPoints(const Matrix<Double> &verts) {  }
+void QtPixelCanvas::drawPoints(const Matrix<Double> &/*verts*/) {  }
 
-void QtPixelCanvas::drawPoints(const Vector<Int> &x1, 
-			       const Vector<Int> &y1) {  }
+void QtPixelCanvas::drawPoints(const Vector<Int> &/*x1*/,
+			       const Vector<Int> &/*y1*/) {  }
 
-void QtPixelCanvas::drawPoints(const Vector<Float> &x1,
-			       const Vector<Float> &y1) {  }
+void QtPixelCanvas::drawPoints(const Vector<Float> &/*x1*/,
+			       const Vector<Float> &/*y1*/) {  }
 
-void QtPixelCanvas::drawPoints(const Vector<Double> &x1,
-			       const Vector<Double> &y1) { 
+void QtPixelCanvas::drawPoints(const Vector<Double> &/*x1*/,
+			       const Vector<Double> &/*y1*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
 }
 
-void QtPixelCanvas::drawFilledRectangle(Float x1, Float y1,
-				       Float x2, Float y2) {
+void QtPixelCanvas::drawFilledRectangle(Float /*x1*/, Float /*y1*/,
+				       Float /*x2*/, Float /*y2*/) {
   //maybe
 }
 
-void QtPixelCanvas::drawFilledRectangle(Double x1, Double y1, 
-					   Double x2, Double y2) {
+void QtPixelCanvas::drawFilledRectangle(Double /*x1*/, Double /*y1*/,
+					   Double /*x2*/, Double /*y2*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   // not used
 }
 
-void QtPixelCanvas::drawColoredLines(const Vector<Int> &x1, 
-				    const Vector<Int> &y1, 
-				    const Vector<Int> &x2, 
-				    const Vector<Int> &y2, 
-				    const Vector<uInt> &colors) {
+void QtPixelCanvas::drawColoredLines(const Vector<Int> &/*x1*/,
+				    const Vector<Int> &/*y1*/,
+				    const Vector<Int> &/*x2*/,
+				    const Vector<Int> &/*y2*/,
+				    const Vector<uInt> &/*colors*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   // not used
 }
 
-void QtPixelCanvas::drawColoredLines(const Vector<Float> &x1, 
-				    const Vector<Float> &y1, 
-				    const Vector<Float> &x2, 
-				    const Vector<Float> &y2, 
-				    const Vector<uInt> &colors) {
+void QtPixelCanvas::drawColoredLines(const Vector<Float> &/*x1*/,
+				    const Vector<Float> &/*y1*/,
+				    const Vector<Float> &/*x2*/,
+				    const Vector<Float> &/*y2*/,
+				    const Vector<uInt> &/*colors*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   // not used
 }
 
-void QtPixelCanvas::drawColoredLines(const Vector<Double> &x1, 
-				    const Vector<Double> &y1, 
-				    const Vector<Double> &x2, 
-				    const Vector<Double> &y2, 
-				    const Vector<uInt> &colors) {
+void QtPixelCanvas::drawColoredLines(const Vector<Double> &/*x1*/,
+				    const Vector<Double> &/*y1*/,
+				    const Vector<Double> &/*x2*/,
+				    const Vector<Double> &/*y2*/,
+				    const Vector<uInt> &/*colors*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   // not used
 }
 
-void QtPixelCanvas::setDrawFunction(Display::DrawFunction function) {
+void QtPixelCanvas::setDrawFunction(Display::DrawFunction /*function*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   }
 
-void QtPixelCanvas::setForeground(uLong color) {
+void QtPixelCanvas::setForeground(uLong /*color*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   // not used
 }
 
-void QtPixelCanvas::setBackground(uLong color) {
+void QtPixelCanvas::setBackground(uLong /*color*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   // not used
 }
@@ -1499,23 +1499,23 @@ void QtPixelCanvas::setLineStyle(Display::LineStyle style) {
     }
   }
 
-void QtPixelCanvas::setCapStyle(Display::CapStyle style) { 
+void QtPixelCanvas::setCapStyle(Display::CapStyle /*style*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
  }
 
-void QtPixelCanvas::setJoinStyle(Display::JoinStyle style) {
+void QtPixelCanvas::setJoinStyle(Display::JoinStyle /*style*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   }
 
-void QtPixelCanvas::setFillStyle(Display::FillStyle style) {
+void QtPixelCanvas::setFillStyle(Display::FillStyle /*style*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   }
 
-void QtPixelCanvas::setFillRule(Display::FillRule rule) { 
+void QtPixelCanvas::setFillRule(Display::FillRule /*rule*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
  }
 
-void QtPixelCanvas::setArcMode(Display::ArcMode mode) { 
+void QtPixelCanvas::setArcMode(Display::ArcMode /*mode*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
  }
 
@@ -1547,16 +1547,16 @@ void QtPixelCanvas::flush() {  }
 
 
 //#dk I _think_ we can no-op these and clear using deviceBackground...
-void QtPixelCanvas::setClearColor(uInt colorIndex) {  }
-void QtPixelCanvas::setClearColor(const String &colorname) {
+void QtPixelCanvas::setClearColor(uInt /*colorIndex*/) {  }
+void QtPixelCanvas::setClearColor(const String &/*colorname*/) {
   //cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   //This function is called when register data. 
   }
-void QtPixelCanvas::setClearColor(float r, float g, float b) {
+void QtPixelCanvas::setClearColor(float /*r*/, float /*g*/, float /*b*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   }
 uInt QtPixelCanvas::clearColor() const { return 0;  }
-void QtPixelCanvas::getClearColor(float &r, float &g, float &b) const { 
+void QtPixelCanvas::getClearColor(float &/*r*/, float &/*g*/, float &/*b*/) const {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
  }
 
@@ -1591,23 +1591,23 @@ void QtPixelCanvas::setColor(uInt colorIndex) {
 
 uInt QtPixelCanvas::color() const { return 0;  }
 
-void QtPixelCanvas::getColor(float &r, float &g, float &b) const {
+void QtPixelCanvas::getColor(float &/*r*/, float &/*g*/, float &/*b*/) const {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
   }
 
-Bool QtPixelCanvas::getColor(Int x, Int y, uInt &color) {
+Bool QtPixelCanvas::getColor(Int /*x*/, Int /*y*/, uInt &/*color*/) {
   return False;  }
 
-Bool QtPixelCanvas::getRGBColor(Int x, Int y, float &r, float &g, float &b) {
+Bool QtPixelCanvas::getRGBColor(Int /*x*/, Int /*y*/, float &/*r*/, float &/*g*/, float &/*b*/) {
   return False;  }
 
-Bool QtPixelCanvas::getHSVColor(Int x, Int y, float &h, float &s, float &v) {
+Bool QtPixelCanvas::getHSVColor(Int /*x*/, Int /*y*/, float &/*h*/, float &/*s*/, float &/*v*/) {
   return False;  }
 
-Bool QtPixelCanvas::resizeColorTable(uInt newSize) {
+Bool QtPixelCanvas::resizeColorTable(uInt /*newSize*/) {
   return False;  }
 
-Bool QtPixelCanvas::resizeColorTable(uInt nReds, uInt nGreens, uInt nBlues) {
+Bool QtPixelCanvas::resizeColorTable(uInt /*nReds*/, uInt /*nGreens*/, uInt /*nBlues*/) {
   return False;  }
   
 }

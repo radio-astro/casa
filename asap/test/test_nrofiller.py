@@ -17,7 +17,7 @@ def tempdir_teardown():
 
 class TestNRO(object):
     def setup(self):
-        s = scantable('data/B68test.nro', average=False)
+        s = scantable('data/B68test.nro', average=False, freqref='VREF')
         sel = selector()
         # make sure this order is always correct - it can be random
         sel.set_order(["SCANNO", "POLNO"])
@@ -51,11 +51,11 @@ class TestNRO(object):
 
 
     def test_frequency(self):
-        raise SkipTest("Currently disabled")
+        #raise SkipTest("Currently disabled")
         rf=self.st.get_restfreqs()
         assert_equal(len(rf),2)
         assert_equal(rf[0][0],85162157000.0)
         assert_equal(rf[1][0],86754330000.0)
         self.st.set_unit('GHz')
         abc=self.st._getabcissa(0)
-        assert_equal(abc[0],85.183349020848283)
+        assert_almost_equal(abc[0],85.182400000256166,places=14)

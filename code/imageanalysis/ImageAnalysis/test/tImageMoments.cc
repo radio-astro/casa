@@ -28,7 +28,7 @@
 //# Includes
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <images/Images/TempImage.h>
-#include <images/Images/Image2DConvolver.h>
+#include <imageanalysis/ImageAnalysis/Image2DConvolver.h>
 #include <imageanalysis/ImageAnalysis/ImageMoments.h>
 #include <casa/Arrays/ArrayLogical.h>
 #include <casa/Logging/LogIO.h>

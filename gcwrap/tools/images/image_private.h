@@ -9,6 +9,7 @@ private:
 
 std::auto_ptr<casa::LogIO> _log;
 std::auto_ptr<casa::ImageAnalysis> _image;
+std::auto_ptr<casa::ImageStatsCalculator> _stats;
 
 static const casa::String _class;
 

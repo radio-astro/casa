@@ -33,6 +33,7 @@
 #include <display/region/Polyline.qo.h>
 #include <display/region/Ellipse.h>
 #include <display/region/Point.h>
+#include <display/region/PVLine.qo.h>
 #include <display/ds9/ds9parser.h>
 #include <display/DisplayDatas/DisplayData.h>
 #include <imageanalysis/Annotations/AnnRectBox.h>
@@ -99,6 +100,36 @@ std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( RegionCreator *
 	return std::tr1::shared_ptr<Rectangle>(result);
 }
 
+// std::tr1::shared_ptr<Rectangle> QtRegionSourceKernel::rectangle( int blc_x, int blc_y, int trc_x, int trc_y ) {
+//     return std::tr1::shared_ptr<Rectangle>(new QtRectangle( this, blc_x, blc_y, trc_x, trc_y ));
+// }
+std::tr1::shared_ptr<PVLine> QtRegionSourceKernel::pvline( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y ) {
+	PVLine *result = new PVLine( this, wc, blc_x, blc_y, trc_x, trc_y, true );
+
+	// save Region to RegionSource mapping for later revocation...
+	creator_of_region[result] = rc;
+
+	// register for dtor callback...
+	register_new_region( result );
+
+	connect( result, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+			const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+			this, SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+					const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
+	connect( result, SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ),
+			this, SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> & ) ) );
+
+	connect( result, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+			const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ),
+			this, SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &, const QList<double> &,
+					const QList<int> &, const QList<int> &, const QString &, const QString &, const QString &, int, int ) ) );
+
+	connect( this, SIGNAL( newCorners( double, double, double, double)),
+			result, SLOT( adjustCorners( double, double, double, double)));
+	result->releaseSignals( );
+	return std::tr1::shared_ptr<PVLine>(result);
+}
+
 void QtRegionSourceKernel::adjustPosition( double blcx, double blcy, double trcx, double trcy ){
 	emit newCorners( blcx, blcy, trcx, trcy );
 }
@@ -157,7 +188,7 @@ std::tr1::shared_ptr<Polyline> QtRegionSourceKernel::polyline( RegionCreator *rc
 
 std::tr1::shared_ptr<Polygon> QtRegionSourceKernel::polygon(
 		RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts ) {
-	Polygon *result = new Polygon( this, wc, pts, false );
+	Polygon *result = new Polygon( this, wc, pts, true );
 
 	// save Region to RegionSource mapping for later revocation...
 	creator_of_region[result] = rc;
@@ -273,7 +304,8 @@ void QtRegionSourceKernel::updateRegionState(QtDisplayData*) {
 	generateExistingRegionUpdates( );
 }
 
-void QtRegionSourceKernel::loadRegions( bool &handled, const QString &path, const QString &type ) {
+void QtRegionSourceKernel::loadRegions( const QString &path, const QString &type ) {
+	bool handled = true;
 	if ( ! handled ) {
 		handled = true;
 		ConstListIter<WorldCanvas*> wcl = panel_->displayPanel()->panelDisplay()->myWCLI;

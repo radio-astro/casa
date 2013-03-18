@@ -29,6 +29,7 @@
 #include <casa/Logging/LogIO.h>
 #include <imager_cmpt.h>
 #include <image_cmpt.h>
+#include <casa/iostream.h>
 //#include <casa/System/PGPlotterNull.h>
 //#include <graphics/Graphics/PGPlotterLocal.h>
 
@@ -1234,13 +1235,35 @@ imager::restore(const std::vector<std::string>& model, const std::string& compli
 
 bool
 imager::sensitivity(const bool async, ::casac::record& pointsource, double& relative,
-                    double& sumweights )
+                    double& sumweights,
+		    ::casac::record& senrec)
 {
    Bool rstat(False);
    if(hasValidMS_p){
       try{ 
         casa::Quantity qpointsource;
-        rstat = itsImager->sensitivity(qpointsource, relative, sumweights);
+	Vector<Vector<Double> > sumwtChan, sumwtsqChan, sumInverseVarianceChan;
+	Vector<Vector<Int> >nData;
+	Matrix<Int> mssChanSel;
+        rstat = itsImager->sensitivity(qpointsource, relative, sumweights,
+				       mssChanSel,
+				       nData,
+				       sumwtChan, sumwtsqChan, sumInverseVarianceChan);
+	Record retrec;
+	Vector<Int> spwIDs(mssChanSel.shape()(0));
+
+	for (Int i=0; i<spwIDs.nelements(); i++)
+	  spwIDs[i]=mssChanSel(i,0);
+	retrec.define("spwid", spwIDs);
+	for (Int i=0;i<sumwtChan.nelements(); i++)
+	  {
+	    ostringstream str;
+	    str << i;
+	    retrec.define("sumwtchan "+ str,sumwtChan[i]);
+	    retrec.define("sumwtsqchan "+ str,sumwtsqChan[i]);
+	    retrec.define("ndata "+str,nData[i]);
+	  }
+	senrec = *fromRecord(retrec);
         pointsource = *recordFromQuantity(qpointsource);
       }
       catch(AipsError x){

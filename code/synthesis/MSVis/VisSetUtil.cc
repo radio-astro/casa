@@ -89,42 +89,103 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <todo asof="">
 // </todo>
 // Calculate sensitivity
-void VisSetUtil::Sensitivity(VisSet &vs, Quantity& pointsourcesens, 
-			     Double& relativesens, Double& sumwt)
+  void VisSetUtil::Sensitivity(VisSet &vs, Matrix<Double>& mssFreqSel,
+			       Matrix<Int>& mssChanSel,
+			       Quantity& pointsourcesens, 
+			       Double& relativesens, 
+			       Double& sumwt,
+			       Vector<Vector<Int> >& nData,
+			       Vector<Vector<Double> >& sumwtChan,
+			       Vector<Vector<Double> >& sumwtsqChan,
+			       Vector<Vector<Double> >& sumInverseVarianceChan)
 {
   ROVisIter& vi(vs.iter());
-   VisSetUtil::Sensitivity(vi, pointsourcesens, relativesens,sumwt);
+  VisSetUtil::Sensitivity(vi, mssFreqSel, mssChanSel, pointsourcesens, relativesens, 
+			  sumwt, nData, sumwtChan, sumwtsqChan, sumInverseVarianceChan);
 
 }
-void VisSetUtil::Sensitivity(ROVisIter &vi, Quantity& pointsourcesens, 
-			     Double& relativesens, Double& sumwt)
+void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
+			     Matrix<Int>& mssChanSel,
+			     Quantity& pointsourcesens, 
+			     Double& relativesens, 
+			     Double& sumwt,
+			     Vector<Vector<Int> >& nData,
+			     Vector<Vector<Double> >& sumwtChan,
+			     Vector<Vector<Double> >& sumwtsqChan,
+			     Vector<Vector<Double> >& sumInverseVarianceChan)
 {
   LogIO os(LogOrigin("VisSetUtil", "Sensitivity()", WHERE));
   
   sumwt=0.0;
   Double sumwtsq=0.0;
   Double sumInverseVariance=0.0;
-  
+  //  Vector<Vector<Double> > sumwtChan, sumwtsqChan, sumInverseVarianceChan;
   VisBuffer vb(vi);
 
-  // Now iterate through the data
-  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
-    for (vi.origin();vi.more();vi++) {
-      Int nRow=vb.nRow();
-      Int nChan=vb.nChannel();
-      for (Int row=0; row<nRow; row++) {
-	// TBD: Should probably use weight() here, which updates with calibration
-        Double variance=square(vb.sigma()(row));
-	for (Int chn=0; chn<nChan; chn++) {
-	  if(!vb.flag()(chn,row)&&variance>0.0) {
-	    sumwt+=vb.imagingWeight()(chn,row);
-	    sumwtsq+=square(vb.imagingWeight()(chn,row))*variance;
-	    sumInverseVariance+=1.0/variance;
-	  }
+  sumwtChan.resize(mssChanSel.shape()(0));
+  sumwtsqChan.resize(mssChanSel.shape()(0));
+  sumInverseVarianceChan.resize(mssChanSel.shape()(0));
+  nData.resize(mssChanSel.shape()(0));
+  for (Int spw=0; spw<mssChanSel.shape()(0); spw++)
+    {
+      Int nc=mssChanSel(spw,2)-mssChanSel(spw,1)+1;
+      for (int c=0; c<nc; c++)
+	{
+	  sumwtChan(spw).resize(nc); sumwtChan(spw)=0.0;
+	  sumwtsqChan(spw).resize(nc); sumwtsqChan(spw) = 0.0;
+	  sumInverseVarianceChan(spw).resize(nc); sumInverseVarianceChan(spw)=0.0;
+	  nData(spw).resize(nc); nData(spw)=0;
 	}
-      }
     }
-  }
+  // sumwtChan=0.0;
+  // sumwtsqChan=0.0;
+  // sumInverseVarianceChan=0.0;
+
+  // Now iterate through the data
+  for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
+    {
+      for (vi.origin();vi.more();vi++) 
+	{
+	  Int nRow=vb.nRow();
+	  Int nChan=vb.nChannel();
+	  Int spw=vb.spectralWindow();
+	  Vector<Bool> rowFlags=vb.flagRow();
+	  Matrix<Bool> flag = vb.flag();
+	  
+	  for (Int row=0; row<nRow; row++) 
+	    {
+	      // TBD: Should probably use weight() here, which updates with calibration
+	      if (!rowFlags(row))
+		{
+		  Double variance=(vb.sigma()(row));
+		  for (Int chn=0; chn<nChan; chn++) 
+		    {
+		      if(!flag(chn,row)&&variance>0.0) 
+			{
+			  sumwt+=vb.imagingWeight()(chn,row);
+			  //sumwtsq+=square(vb.imagingWeight()(chn,row))*variance;
+			  sumwtsq+=square(vb.imagingWeight()(chn,row));
+			  sumInverseVariance+=1.0/variance;
+			  
+			  sumwtChan(spw)(chn) += vb.imagingWeight()(chn,row);
+			  //sumwtsqChan(spw)(chn)+=square(vb.imagingWeight()(chn,row))*variance;
+			  sumwtsqChan(spw)(chn)+=square(vb.imagingWeight()(chn,row));
+			  
+			  (nData(spw)(chn))++;
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+  // for (Int spw=0; spw<mssChanSel.shape()(0); spw++)
+  //   {
+  //     cerr << "Spw: " << spw << " " << sumwtChan(spw)  << " " 
+  // 	   << sumwtsqChan(spw) <<  " "
+  // 	   << sumInverseVarianceChan(spw) << endl;
+  //   }
+
 
   if(sumwt==0.0) {
     os << "Cannot calculate sensitivity: sum of weights is zero" << endl

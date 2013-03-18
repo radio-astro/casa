@@ -19,7 +19,6 @@ typedef enum {
     ArrayId,
     BeamOffsets,         // VisBufferAsync use only
     CorrType,
-    DataDescriptionId,
     DataDescriptionIds,
     Direction1,
     Direction2,
@@ -50,7 +49,6 @@ typedef enum {
     Scan,
     Sigma,
     SigmaMat,
-    SpectralWindow,
     SpectralWindows,
     StateId,
     Time,

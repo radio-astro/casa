@@ -922,7 +922,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	if(path=="" || datatype=="" || displaytype=="") return;
 
-	panel_->loadRegions( path, datatype, displaytype );
+	panel_->loadRegions( path, datatype );
 
 	if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
     }

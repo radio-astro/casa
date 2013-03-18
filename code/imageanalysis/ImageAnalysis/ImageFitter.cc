@@ -44,7 +44,9 @@
 
 #include <imageanalysis/IO/FitterEstimatesFileParser.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
-#include <images/Images/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
+#include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <images/Images/ImageStatistics.h>
 #include <images/Images/FITSImage.h>
 #include <images/Images/MIRIADImage.h>
@@ -78,7 +80,8 @@ ImageFitter::ImageFitter(
 	const String& newEstimatesInp, const String& compListName,
 	const CompListWriteControl writeControl
 ) : ImageTask(
-		image, region, regionRec, box, chanInp, stokes,
+		image, region, regionRec, box,
+		chanInp, stokes,
 		maskInp, "", False
 	), _regionString(region), _residual(residualInp),_model(modelInp),
 	_estimatesString(""), _newEstimatesFileName(newEstimatesInp),
@@ -91,6 +94,15 @@ ImageFitter::ImageFitter(
 	_writeControl(writeControl), _zeroLevelOffsetEstimate(0),
 	_zeroLevelOffsetSolution(0), _zeroLevelOffsetError(0),
 	_stokesPixNumber(-1), _chanPixNumber(-1) {
+	if (
+		stokes.empty() && image->coordinates().hasPolarizationCoordinate()
+		&& regionRec == 0 && region.empty()
+	) {
+		const CoordinateSystem& csys = image->coordinates();
+		Int polAxis = csys.polarizationAxisNumber();
+		Int stokesVal = (Int)csys.toWorld(IPosition(image->ndim(), 0))[polAxis];
+		_setStokes(Stokes::name(Stokes::type(stokesVal)));
+	}
 	_construct();
 	_finishConstruction(estimatesFilename);
 }
@@ -135,13 +147,11 @@ ComponentList ImageFitter::fit() {
 	Bool deconvolve = False;
 	Bool list = True;
 	String errmsg;
-	ImageAnalysis myImage(_getImage());
-	Record region = *_getRegion();
-	myImage.statistics(
-		inputStats, _getImage()->coordinates().directionAxesNumbers(),
-		region, "", Vector<String>(0),
-		Vector<Float>(0), Vector<Float>(0)
+	ImageStatsCalculator myStats(
+		_getImage(), _getRegion(), "", False
 	);
+	myStats.setAxes(_getImage()->coordinates().directionAxesNumbers());
+	inputStats = myStats.statistics();
 	Vector<String> allowFluxUnits(1, "Jy.km/s");
 	FluxRep<Double>::setAllowedUnits(allowFluxUnits);
 	FluxRep<Float>::setAllowedUnits(allowFluxUnits);
@@ -278,7 +288,7 @@ ComponentList ImageFitter::fit() {
 				*_getLog(), completePixelMask->get(False)
 			);
 		}
-		catch (AipsError x) {
+		catch (const AipsError& x) {
 			*_getLog() << LogIO::WARN << "Error writing residual image. The reported error is "
 				<< x.getMesg() << LogIO::POST;
 		}
@@ -621,7 +631,9 @@ void ImageFitter::_setFluxes() {
 				<< LogIO::POST;
 		}
 	}
-	ImageAnalysis ia(_getImage());
+    PeakIntensityFluxDensityConverter converter(_getImage());
+    converter.setVerbosity(ImageTask::NORMAL);
+    converter.setShape(ComponentType::GAUSSIAN);
 	uInt polNum = 0;
 	for(uInt i=0; i<ncomps; i++) {
 		_curResults.getFlux(fluxQuant, i);
@@ -650,10 +662,12 @@ void ImageFitter::_setFluxes() {
 		AlwaysAssert(compShape->type() == ComponentType::GAUSSIAN, AipsError);
 		_majorAxes[i] = (static_cast<const GaussianShape *>(compShape))->majorAxis();
 		_minorAxes[i] = (static_cast<const GaussianShape *>(compShape))->minorAxis();
-		_peakIntensities[i] = ia.convertflux(
-			_noBeam, _fluxDensities[i], _majorAxes[i],
-			_minorAxes[i], "Gaussian", True, True,
-			_chanPixNumber, _stokesPixNumber
+		converter.setBeam(_chanPixNumber, _stokesPixNumber);
+		converter.setSize(
+			Angular2DGaussian(_majorAxes[i], _minorAxes[i], Quantity(0, "deg"))
+		);
+		_peakIntensities[i] = converter.fluxDensityToPeakIntensity(
+			_noBeam, _fluxDensities[i]
 		);
 		rmsPeakError.convert(_peakIntensities[i].getUnit());
 		Double rmsPeakErrorValue = rmsPeakError.getValue();
@@ -714,9 +728,7 @@ void ImageFitter::_setSizes() {
 		paBeam = beam.getPA();
 	}
 	else {
-		ImageMetaData md(*_getImage());
-		Int dirCoordNumber = md.directionCoordinateNumber();
-		Vector<Double> pixInc = _getImage()->coordinates().directionCoordinate(dirCoordNumber).increment();
+		Vector<Double> pixInc = _getImage()->coordinates().directionCoordinate().increment();
 		xBeam = Quantity(pixInc[0], "rad");
 		yBeam = Quantity(pixInc[1], "rad");
 		paBeam = Quantity(0, "rad");
@@ -1117,7 +1129,7 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 	Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
 	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
 	SubImage<Float> subImageTmp(*imageClone, slice, False);
-	SubImage<Float> x = SubImage<Float>::createSubImage(
+	SubImage<Float> x = SubImageFactory<Float>::createSubImage(
 		subImageTmp, *_getRegion(), _getMask(), 0,
 		False, AxesSpecifier(), _getStretch()
 	);
@@ -1231,7 +1243,7 @@ void ImageFitter::_fitsky(
 	SubImage<Float> subImageTmp;
 	{
 		std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
-		subImageTmp = SubImage<Float>::createSubImage(
+		subImageTmp = SubImageFactory<Float>::createSubImage(
 			*imageClone, *_getRegion(), _getMask(),
 			(list ? _getLog().get() : 0), False,
 			AxesSpecifier(True), _getStretch()

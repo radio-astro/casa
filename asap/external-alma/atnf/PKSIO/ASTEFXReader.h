@@ -78,8 +78,9 @@ class ASTEFXReader : public ASTEReader
   // Destructor.
   ~ASTEFXReader() ;
 
-  // Read data header
-  virtual int read() ;
+  protected:
+  // initialize Dataset
+  void initDataset();
 };
 
 #endif /* ASTE_FX_READER_H */

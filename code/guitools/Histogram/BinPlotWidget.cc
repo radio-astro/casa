@@ -28,12 +28,15 @@
 #include <guitools/Histogram/FitWidget.qo.h>
 #include <guitools/Histogram/HistogramMarkerGaussian.h>
 #include <guitools/Histogram/HistogramMarkerPoisson.h>
+#include <guitools/Histogram/InvisibleAxis.h>
 #include <guitools/Histogram/RangeControlsWidget.qo.h>
 #include <guitools/Histogram/RangePicker.h>
 #include <guitools/Histogram/ToolTipPicker.h>
 #include <guitools/Histogram/BinCountWidget.qo.h>
 #include <guitools/Histogram/ChannelRangeWidget.qo.h>
 #include <guitools/Histogram/ZoomWidget.qo.h>
+#include <casa/Arrays/Vector.h>
+#include <synthesis/MSVis/UtilJ.h>
 
 #include <QDebug>
 #include <QMessageBox>
@@ -46,7 +49,10 @@
 #include <qwt_plot_marker.h>
 #include <qwt_text_label.h>
 #include <qwt_scale_div.h>
+#include <qwt_color_map.h>
 #include <qwt_double_interval.h>
+#include <qwt_scale_widget.h>
+#include <qwt_scale_engine.h>
 
 namespace casa {
 
@@ -55,23 +61,22 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 		bool plotModeControls, QWidget* parent ):
     QWidget(parent),
     curveColor( Qt::blue ), selectionColor( 205, 201, 201, 127 ),
-    image( NULL ), binPlot( this ),
+    colorMap( NULL ), colorCurve(NULL),image( NULL ), binPlot( this ),
     NO_DATA( "No Data"), NO_DATA_MESSAGE( "Data is needed in order to zoom."), IMAGE_ID(-1),
-	toolTipPicker(NULL), contextMenuZoom(this),
+	dragLine( NULL ), rectMarker( NULL ),
+    toolTipPicker(NULL), contextMenuZoom(this),
     zoomActionContext(NULL), zoomWidgetContext( NULL ),
     zoomActionMenu(NULL), zoomWidgetMenu( NULL ),
     lambdaAction("Lambda",this), centerPeakAction( "(Center,Peak)",this),
     fwhmAction( "Center +/- FWHM/2", this), contextMenu(this),
-    LOG_COUNT( "Log(Count)"), LOG_INTENSITY( "Log(|Intensity|)"),
+    LOG_COUNT( "Log(Count)"),
     stepFunctionNoneAction("Line",this), stepFunctionAction( "Histogram Outline",this), stepFunctionFilledAction( "Filled Histogram",this),
-    logActionY( LOG_COUNT, this), logActionX( LOG_INTENSITY,this), clearAction( "Clear", this ),
+    logActionY( LOG_COUNT, this), clearAction( "Clear", this ),
     contextMenuDisplay( this ),
-    regionModeAction( "Selected Region", this), imageModeAction("Image", this),
-    regionAllModeAction( "All Regions", this ),
-    binCountActionContext(NULL), channelRangeActionContext(NULL),
-    binCountActionMenu(NULL), channelRangeActionMenu(NULL),
-    binCountWidgetContext(NULL), channelRangeWidgetContext(NULL),
-    binCountWidgetMenu(NULL), channelRangeWidgetMenu(NULL),
+    binCountActionContext(NULL), channelRangeActionContext(NULL), footPrintActionContext(NULL),
+    binCountActionMenu(NULL), channelRangeActionMenu(NULL), footPrintActionMenu(NULL),
+    binCountWidgetContext(NULL), channelRangeWidgetContext(NULL), footPrintWidgetContext(NULL),
+    binCountWidgetMenu(NULL), channelRangeWidgetMenu(NULL), /*footPrintWidgetMenu(NULL),*/
     contextMenuConfigure( this ){
 
 	ui.setupUi(this);
@@ -89,11 +94,12 @@ BinPlotWidget::BinPlotWidget( bool fitControls, bool rangeControls,
 	initializeDisplayActions();
 	initializeFitWidget( fitControls );
 	initializeRangeControls( rangeControls );
-	initializeZoomControls( rangeControls );
-	initializePlotModeControls( plotModeControls );
+	initializeZoomControls( true );
+	initializePlotModeControls( plotModeControls);
 
 	displayPlotTitle = false;
 	displayAxisTitles = false;
+	colorBarVisible = false;
 	selectedId = IMAGE_ID;
 }
 
@@ -116,6 +122,86 @@ void BinPlotWidget::setDisplayAxisTitles( bool display ){
 	resetAxisTitles();
 }
 
+void BinPlotWidget::setColorBarVisible( bool visible ){
+	if ( visible != colorBarVisible ){
+		colorBarVisible = visible;
+		if ( colorBarVisible ){
+			addColorBar();
+		}
+		else {
+			removeColorBar();
+		}
+		binPlot.replot();
+	}
+}
+
+void BinPlotWidget::setColorScaleMax( int scaleCount ){
+	colorScaleMax = scaleCount;
+}
+
+void BinPlotWidget::setColorLookups( const Vector<uInt>& lookups ){
+	int count = lookups.size();
+	colorLookups.resize( count );
+	for ( int i = 0; i < count; i++ ){
+		colorLookups[i] = lookups[i];
+	}
+	clearCurves();
+	resetImage();
+}
+
+void BinPlotWidget::resetColorCurve(){
+	//Add the color curve in.
+	int count = colorLookups.size();
+	if ( count > 0 ){
+		QVector<double> xVals( count );
+		QVector<double> yVals( count );
+		for( int i = 0; i < count; i++ ){
+			xVals[i] = colorLookups[i];
+			bool logScaleY = logActionY.isChecked();
+			yVals[i]= Histogram::computeYValue( i, logScaleY );
+		}
+		if ( colorCurve != NULL ){
+			colorCurve->detach();
+			delete colorCurve;
+			colorCurve = NULL;
+		}
+		colorCurve  = new QwtPlotCurve();
+		colorCurve->setAxis( QwtPlot::xTop, QwtPlot::yRight );
+		colorCurve->setData( xVals, yVals );
+		QPen curvePen( Qt::black );
+		curvePen.setWidth( 2 );
+		colorCurve->setPen(curvePen);
+		colorCurve->attach(&binPlot);
+		binPlot.replot();
+	}
+}
+
+void BinPlotWidget::setColorMap(QwtLinearColorMap* linearMap ){
+	colorMap = linearMap;
+	resetColorBar();
+}
+
+void BinPlotWidget::resetColorBar(){
+	if ( colorMap != NULL ){
+		QwtDoubleInterval range( 0, colorScaleMax);
+		QwtScaleWidget* scale = binPlot.axisWidget( QwtPlot::xTop );
+		scale->setColorBarEnabled( true );
+		scale->setColorMap( range, *colorMap );
+		QwtScaleDraw* axisPaint = new InvisibleAxis();
+		scale->setScaleDraw( axisPaint );
+		binPlot.setAxisScale( QwtPlot::xTop, range.minValue(), range.maxValue() );
+	}
+}
+
+void BinPlotWidget::removeColorBar(){
+	binPlot.enableAxis( QwtPlot::xTop, false );
+}
+
+void BinPlotWidget::addColorBar(){
+	resetColorBar();
+	binPlot.enableAxis(QwtPlot::xTop );
+}
+
 void BinPlotWidget::resetAxisTitles(){
 	if ( displayAxisTitles ){
 		QString yAxisTitle = "Count";
@@ -128,10 +214,14 @@ void BinPlotWidget::resetAxisTitles(){
 		leftTitle.setFont( titleFont );
 		leftTitle.setText( yAxisTitle );
 		binPlot.setAxisTitle( QwtPlot::yLeft, leftTitle );
+
 		QString xAxisTitle = "Intensity";
-		if ( displayLogX ){
-			xAxisTitle = LOG_INTENSITY;
+		if ( image != NULL ){
+			Unit unit = image->units();
+			QString unitStr( unit.getName().c_str());
+			xAxisTitle.append( "("+unitStr+")");
 		}
+
 		leftTitle.setText( xAxisTitle );
 		binPlot.setAxisTitle( QwtPlot::xBottom, leftTitle );
 	}
@@ -199,7 +289,7 @@ void BinPlotWidget::setMultipleHistogramColors( const QList<QColor>& colors ){
 	for (int i = 0; i < colors.size(); i++ ){
 		multipleHistogramColors.append( colors[i]);
 	}
-	if ( plotMode == REGION_ALL_MODE ){
+	if ( plotMode == FootPrintWidget::REGION_ALL_MODE ){
 		clearCurves();
 		this->resetRegion( );
 	}
@@ -218,37 +308,29 @@ bool BinPlotWidget::isEmpty() const {
 //-------------------------------------------------------------------------------
 
 void BinPlotWidget::initializePlotModeControls( bool enable ){
-
 	if ( enable ){
-		QActionGroup* plotControlsGroup = new QActionGroup( this );
-		plotControlsGroup->addAction( &regionModeAction );
-		plotControlsGroup->addAction( &imageModeAction );
-		plotControlsGroup->addAction( &regionAllModeAction );
-
-		regionModeAction.setCheckable( true );
-		imageModeAction.setCheckable( true );
-		regionAllModeAction.setCheckable( true );
-		regionModeAction.setChecked( true );
-		binCountWidgetContext = new BinCountWidget( &contextMenuConfigure );
-		binCountActionContext = new QWidgetAction( &contextMenuConfigure );
-		binCountActionContext->setDefaultWidget( binCountWidgetContext );
 		channelRangeWidgetContext = new ChannelRangeWidget( &contextMenuConfigure );
 		channelRangeActionContext = new QWidgetAction( &contextMenuConfigure );
 		channelRangeActionContext->setDefaultWidget( channelRangeWidgetContext );
-		addPlotModeActions( &contextMenuConfigure, binCountActionContext, channelRangeActionContext );
-		connect( channelRangeWidgetContext, SIGNAL(rangeChanged(int,int,bool,bool)), this, SLOT(channelRangeChanged(int,int,bool,bool)));
-		connect( binCountWidgetContext, SIGNAL(binCountChanged(int)), this, SLOT(binCountChanged(int)));
-		connect( &imageModeAction, SIGNAL(triggered(bool)), this, SLOT(imageModeSelected(bool)));
-		connect( &regionModeAction, SIGNAL(triggered(bool)), this, SLOT(regionModeSelected(bool)));
-		connect( &regionAllModeAction, SIGNAL(triggered(bool)), this, SLOT(regionAllModeSelected(bool)));
+		connect( channelRangeWidgetContext, SIGNAL(rangeChanged(int,int,bool,bool)),
+				this, SLOT(channelRangeChanged(int,int,bool,bool)));
+
+		footPrintWidgetContext = new FootPrintWidget( &contextMenuConfigure);
+		footPrintActionContext = new QWidgetAction( &contextMenuConfigure);
+		footPrintActionContext ->setDefaultWidget( footPrintWidgetContext );
+		connect( footPrintWidgetContext, SIGNAL( plotModeChanged(int)),
+				this, SLOT(plotModeChanged(int)));
+
+		addPlotModeActions( &contextMenuConfigure,
+				channelRangeActionContext, footPrintActionContext );
 	}
-	plotMode = REGION_MODE;
+	plotMode = FootPrintWidget::REGION_MODE;
 }
 
 void BinPlotWidget::imageModeSelected( bool enabled ){
 	if ( enabled ){
-		if ( plotMode != IMAGE_MODE ){
-			plotMode = IMAGE_MODE;
+		if ( plotMode != FootPrintWidget::IMAGE_MODE ){
+			plotMode = FootPrintWidget::IMAGE_MODE;
 			if ( fitWidget != NULL ){
 				fitWidget->clearFit();
 			}
@@ -259,8 +341,8 @@ void BinPlotWidget::imageModeSelected( bool enabled ){
 
 void BinPlotWidget::regionModeSelected( bool enabled ){
 	if ( enabled ){
-		if ( plotMode != REGION_MODE ){
-			plotMode = REGION_MODE;
+		if ( plotMode != FootPrintWidget::REGION_MODE ){
+			plotMode = FootPrintWidget::REGION_MODE;
 			if ( fitWidget != NULL ){
 				fitWidget->clearFit();
 			}
@@ -271,8 +353,8 @@ void BinPlotWidget::regionModeSelected( bool enabled ){
 
 void BinPlotWidget::regionAllModeSelected( bool enabled ){
 	if ( enabled ){
-		if ( plotMode != REGION_ALL_MODE ){
-			plotMode = REGION_ALL_MODE;
+		if ( plotMode != FootPrintWidget::REGION_ALL_MODE ){
+			plotMode = FootPrintWidget::REGION_ALL_MODE;
 			if ( fitWidget != NULL ){
 				fitWidget->clearFit();
 			}
@@ -342,15 +424,8 @@ void BinPlotWidget::setChannelCount( int count ){
 	}
 }
 
-void BinPlotWidget::addPlotModeActions( QMenu* menu, QWidgetAction* binCountAction, QWidgetAction* channelRangeAction ){
+void BinPlotWidget::addPlotModeActions( QMenu* menu, QWidgetAction* channelRangeAction, QWidgetAction* footPrintAction ){
 
-	if ( binCountAction == NULL ){
-		binCountActionMenu = new QWidgetAction( menu );
-		binCountWidgetMenu = new BinCountWidget( menu );
-		binCountActionMenu->setDefaultWidget( binCountWidgetMenu );
-		connect( binCountWidgetMenu, SIGNAL(binCountChanged(int)), this, SLOT(binCountChanged(int)));
-		binCountAction = binCountActionMenu;
-	}
 	if ( channelRangeAction == NULL ){
 		channelRangeActionMenu = new QWidgetAction( menu );
 		channelRangeWidgetMenu = new ChannelRangeWidget( menu );
@@ -358,27 +433,42 @@ void BinPlotWidget::addPlotModeActions( QMenu* menu, QWidgetAction* binCountActi
 		channelRangeActionMenu->setDefaultWidget( channelRangeWidgetMenu );
 		channelRangeAction = channelRangeActionMenu;
 	}
-	menu->addAction( binCountAction );
-	menu->addSeparator();
+
+	if ( footPrintAction == NULL ){
+		footPrintActionMenu = new QWidgetAction( menu );
+		footPrintWidgetMenu = new FootPrintWidget( menu );
+		connect( footPrintWidgetMenu, SIGNAL( plotModeChanged(int)),
+				this, SLOT(plotModeChanged(int)));
+		footPrintActionMenu->setDefaultWidget( footPrintWidgetMenu );
+		footPrintAction = footPrintActionMenu;
+	}
+
 	menu->addAction( channelRangeAction );
 	menu->addSeparator();
-	menu->addAction( &imageModeAction );
-	menu->addAction( &regionModeAction );
-	menu->addAction( &regionAllModeAction );
+	menu->addAction( footPrintAction );
+}
+
+void BinPlotWidget::plotModeChanged( int mode ){
+	//Store the plot mode internally
+	setPlotMode( mode );
+	//Resync the modes between the context and drop down menus.
+	if ( footPrintWidgetContext != NULL ){
+		footPrintWidgetContext->setPlotMode( mode );
+	}
+	if ( footPrintWidgetMenu != NULL ){
+		footPrintWidgetMenu->setPlotMode( mode );
+	}
 }
 
 void BinPlotWidget::setPlotMode( int mode ){
-	if ( mode == REGION_MODE ){
-		plotMode = REGION_MODE;
-		regionModeAction.setChecked( true );
+	if ( mode == FootPrintWidget::REGION_MODE ){
+		plotMode = FootPrintWidget::REGION_MODE;
 	}
-	else if ( mode == IMAGE_MODE ){
-		plotMode = IMAGE_MODE;
-		imageModeAction.setChecked( true );
+	else if ( mode == FootPrintWidget::IMAGE_MODE ){
+		plotMode = FootPrintWidget::IMAGE_MODE;
 	}
-	else if ( mode == REGION_ALL_MODE ){
-		plotMode = REGION_ALL_MODE;
-		regionAllModeAction.setChecked( true );
+	else if ( mode == FootPrintWidget::REGION_ALL_MODE ){
+		plotMode = FootPrintWidget::REGION_ALL_MODE;
 	}
 	else {
 		qWarning() << "Unrecognized plot mode";
@@ -388,11 +478,8 @@ void BinPlotWidget::setPlotMode( int mode ){
 void BinPlotWidget::initializeDisplayActions(){
 
 	displayLogY = false;
-	displayLogX = false;
 	logActionY.setCheckable( true );
 	logActionY.setChecked( displayLogY );
-	logActionX.setCheckable( true );
-	logActionX.setChecked( displayLogX );
 
 	stepFunctionAction.setCheckable( true );
 	stepFunctionAction.setChecked( true );
@@ -404,33 +491,49 @@ void BinPlotWidget::initializeDisplayActions(){
 	histogramGroup->addAction( &stepFunctionNoneAction );
 	histogramGroup->addAction( &stepFunctionAction );
 	histogramGroup->addAction( &stepFunctionFilledAction );
-	addDisplayActions( &contextMenuDisplay );
+
+	binCountWidgetContext = new BinCountWidget( &contextMenuConfigure );
+	binCountActionContext = new QWidgetAction( &contextMenuConfigure );
+	binCountActionContext->setDefaultWidget( binCountWidgetContext );
+	connect( binCountWidgetContext, SIGNAL(binCountChanged(int)), this, SLOT(binCountChanged(int)));
+
+	addDisplayActions( &contextMenuDisplay, binCountActionContext );
+
 	connect( &clearAction, SIGNAL(triggered(bool)), this, SLOT(clearAll()));
 	connect( &logActionY, SIGNAL(triggered(bool)), this, SLOT(setDisplayLogY(bool)));
-	connect( &logActionX, SIGNAL(triggered(bool)), this, SLOT(setDisplayLogX(bool)));
 	connect( &stepFunctionAction, SIGNAL(triggered(bool)), this, SLOT(setDisplayStep(bool)));
 	connect( &stepFunctionNoneAction, SIGNAL(triggered(bool)), this, SLOT(setDisplayStep(bool)));
 	connect( &stepFunctionFilledAction, SIGNAL(triggered(bool)), this, SLOT(setDisplayStep(bool)));
 	if ( toolTipPicker != NULL ){
 		toolTipPicker->setLogScaleY( displayLogY );
-		toolTipPicker->setLogScaleX( displayLogX );
 	}
 }
 
 
-void BinPlotWidget::addDisplayActions( QMenu* menu ){
-	menu->addAction( &clearAction );
-	menu->addSeparator();
+void BinPlotWidget::addDisplayActions( QMenu* menu, QWidgetAction* binCountAction ){
+
 	menu->addAction( &logActionY );
-	//menu->addAction( &logActionX );
 	menu->addSeparator();
 	menu->addAction( &stepFunctionNoneAction );
 	menu->addAction( &stepFunctionAction );
 	menu->addAction( &stepFunctionFilledAction );
+
+	if ( binCountAction == NULL ){
+		binCountActionMenu = new QWidgetAction( menu );
+		binCountWidgetMenu = new BinCountWidget( menu );
+		binCountActionMenu->setDefaultWidget( binCountWidgetMenu );
+		connect( binCountWidgetMenu, SIGNAL(binCountChanged(int)), this, SLOT(binCountChanged(int)));
+		binCountAction = binCountActionMenu;
+	}
+	menu->addSeparator();
+	menu->addAction( binCountAction );
+	menu->addSeparator();
+	menu->addAction( &clearAction );
+
 }
 
 void BinPlotWidget::reset(){
-	if ( plotMode == IMAGE_MODE ){
+	if ( plotMode == FootPrintWidget::IMAGE_MODE ){
 		resetImage();
 	}
 	else {
@@ -442,30 +545,30 @@ void BinPlotWidget::setDisplayStep( bool ){
 	reset();
 }
 
-void BinPlotWidget::setDisplayLogX( bool display ){
-	if ( displayLogX != display ){
-		displayLogX = display;
-	}
-	logActionX.setChecked( display );
-	if ( fitWidget != NULL ){
-		fitWidget->clearFit();
-	}
-	reset();
-	resetAxisTitles();
-	if ( toolTipPicker != NULL ){
-		toolTipPicker->setLogScaleX( display );
-	}
-
-}
 
 void BinPlotWidget::setDisplayLogY( bool display ){
 	if ( displayLogY != display ){
 		displayLogY = display;
 		logActionY.setChecked( displayLogY );
-		if ( fitWidget != NULL ){
-			fitWidget->clearFit();
+		clearGaussianFitMarker();
+		clearPoissonFitMarker();
+
+		if ( displayLogY ){
+			float maxBinCount = 1000;
+			float minBinCount = 1;
+			if ( histogramMap.contains(selectedId)){
+				std::pair<float,float> minMaxBinCount = histogramMap[selectedId]->getMinMaxBinCount();
+				if ( minMaxBinCount.first > minBinCount ){
+					minBinCount = minMaxBinCount.first;
+				}
+				maxBinCount = minMaxBinCount.second;
+			}
+			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLog10ScaleEngine );
+			binPlot.setAxisScale( QwtPlot::yLeft, minBinCount, maxBinCount );
 		}
-		clearFit();
+		else {
+			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLinearScaleEngine );
+		}
 		reset();
 		resetAxisTitles();
 		if ( toolTipPicker != NULL ){
@@ -480,20 +583,20 @@ void BinPlotWidget::setDisplayLogY( bool display ){
 //-------------------------------------------------------------------------------
 
 void BinPlotWidget::initializeRangeControls( bool enable ){
-	//This is what draws the final rectangle.
-	rectMarker = new RangePicker();
-	rectMarker->setHeightSource( this );
-	rectMarker->attach( &binPlot );
-
-	//This is what draws the rectangle while it is being dragged.
-	dragLine = new QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
-					QwtPlotPicker::PointSelection | QwtPlotPicker::DragSelection,
-					QwtPlotPicker::VLineRubberBand, QwtPlotPicker::ActiveOnly, binPlot.canvas() );
-	connect( dragLine, SIGNAL(selected(const QwtDoublePoint &)), this, SLOT(lineSelected()));
-	connect( dragLine, SIGNAL(moved(const QPoint&)), this, SLOT(lineMoved( const QPoint&)));
-
 	//Put the range controls in
 	if ( enable ){
+		//This is what draws the final rectangle.
+		rectMarker = new RangePicker();
+		rectMarker->setHeightSource( this );
+		rectMarker->attach( &binPlot );
+
+		//This is what draws the rectangle while it is being dragged.
+		dragLine = new QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
+					QwtPlotPicker::PointSelection | QwtPlotPicker::DragSelection,
+					QwtPlotPicker::VLineRubberBand, QwtPlotPicker::ActiveOnly, binPlot.canvas() );
+		connect( dragLine, SIGNAL(selected(const QwtDoublePoint &)), this, SLOT(lineSelected()));
+		connect( dragLine, SIGNAL(moved(const QPoint&)), this, SLOT(lineMoved( const QPoint&)));
+
 		QHBoxLayout* layout = new QHBoxLayout();
 		layout->setContentsMargins(1,1,1,1);
 		rangeControlWidget = new RangeControlsWidget( this );
@@ -563,16 +666,18 @@ void BinPlotWidget::initializeZoomControls( bool rangeControls ){
 void BinPlotWidget::zoomRangeMarker( double startValue, double endValue ){
 	clearGaussianFitMarker();
 	clearPoissonFitMarker();
-	pair<double,double> worldRange = rangeControlWidget->getMinMaxValues();
-	double worldMin = qMax( worldRange.first, startValue );
-	double worldMax = qMin( worldRange.second, endValue );
-	if ( worldMin < worldMax ){
-		//Change to plot coordinates
-		int canvasWidth = binPlot.canvas()->width();
-		int lowerBoundPixel = static_cast<int>(qAbs(worldMin - startValue)/qAbs(endValue - startValue)*canvasWidth);
-		int upperBoundPixel = static_cast<int>(qAbs(worldMax - startValue)/qAbs(endValue - startValue)*canvasWidth);
-		rectMarker->setBoundaryValues( lowerBoundPixel, upperBoundPixel );
-		binPlot.replot();
+	if ( rangeControlWidget != NULL && rectMarker != NULL ){
+		pair<double,double> worldRange = rangeControlWidget->getMinMaxValues();
+		double worldMin = qMax( worldRange.first, startValue );
+		double worldMax = qMin( worldRange.second, endValue );
+		if ( worldMin < worldMax ){
+			//Change to plot coordinates
+			int canvasWidth = binPlot.canvas()->width();
+			int lowerBoundPixel = static_cast<int>(qAbs(worldMin - startValue)/qAbs(endValue - startValue)*canvasWidth);
+			int upperBoundPixel = static_cast<int>(qAbs(worldMax - startValue)/qAbs(endValue - startValue)*canvasWidth);
+			rectMarker->setBoundaryValues( lowerBoundPixel, upperBoundPixel );
+			binPlot.replot();
+		}
 	}
 }
 
@@ -580,7 +685,7 @@ int BinPlotWidget::getSelectedId() const {
 	int id = selectedId;
 	//There is not region selected, just grab the first one we
 	//can find.
-	if ( selectedId == IMAGE_ID && plotMode != IMAGE_MODE ){
+	if ( selectedId == IMAGE_ID && plotMode != FootPrintWidget::IMAGE_MODE ){
 		QList<int> keys = histogramMap.keys();
 		if ( keys.size() > 0 ){
 			id = keys[0];
@@ -633,13 +738,19 @@ void BinPlotWidget::addZoomActions( bool rangeControls, QMenu* zoomMenu ){
 	connect( zoomWidgetMenu, SIGNAL(finished()), this, SLOT(zoomMenuFinished()));
 }
 
+void BinPlotWidget::setRangeMaxEnabled( bool enabled ){
+	if ( rangeControlWidget != NULL ){
+		rangeControlWidget->setRangeMaxEnabled( enabled );
+	}
+}
+
 void BinPlotWidget::setMinMaxValues( double minValue, double maxValue,
 		bool updateGraph ){
 	if ( rangeControlWidget != NULL ){
-		rangeControlWidget->setRange( minValue, maxValue );
-	}
-	if ( updateGraph ){
-		minMaxChanged();
+		rangeControlWidget->setRange( minValue, maxValue, updateGraph );
+		if ( fitWidget != NULL ){
+			fitWidget->restrictDomain( minValue, maxValue );
+		}
 	}
 }
 
@@ -726,11 +837,7 @@ void BinPlotWidget::centerPeakSpecified(){
 	int pixelY = fitPosition.y();
 	double xValue = binPlot.invTransform( QwtPlot::xBottom, pixelX );
 	double yValue = binPlot.invTransform( QwtPlot::yLeft, pixelY );
-	if ( displayLogY ){
-		yValue = pow( 10.0, yValue );
-	}
 	fitWidget->setCenterPeak( xValue, yValue );
-
 	fitEstimateMarkerGaussian->setCenterPeak( pixelX, pixelY);
 	fitEstimateMarkerGaussian->show();
 	binPlot.replot();
@@ -882,18 +989,11 @@ void BinPlotWidget::fitDone( const QString& msg ){
 		QVector<double> curveXValues( xVector.size() );
 		QVector<double> curveYValues( xVector.size() );
 		for ( int i = 0; i < static_cast<int>(xVector.size()); i++ ){
-			curveXValues[i] = Histogram::computeXValue( xVector[i], displayLogX);
-			if ( !displayLogY ){
-				curveYValues[i] = yValues[i];
-			}
-			else {
-				//Round to the nearest integer.
-				int yValueInt = qRound( yValues[i] );
-				if ( yValueInt > 0  ){
-					curveYValues[i] = qLn( yValueInt) / qLn(10);
-				}
-				else {
-					curveYValues[i] = 0;
+			curveXValues[i] = xVector[i];
+			curveYValues[i] = yValues[i];
+			if ( displayLogY ){
+				if ( yValues[i] < 1 ){
+					curveYValues[i] = 1;
 				}
 			}
 		}
@@ -933,24 +1033,41 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 	return curve;
 }
 
+QColor BinPlotWidget::getPieceColor( int index, const QColor& defaultColor ) const {
+	QColor pieceColor = defaultColor;
+	int colorLookUpCount = colorLookups.size();
+	if ( colorBarVisible && colorLookUpCount > 0 ){
+		QwtDoubleInterval range(0,colorScaleMax);
+		pieceColor = colorMap->rgb( range, colorLookups[index]);
+		//So the first segment color is assigned.
+		if ( pieceColor == defaultColor && colorLookUpCount > 1 ){
+			pieceColor =colorMap->rgb( range,colorLookups[1] );
+		}
+	}
+	return pieceColor;
+}
+
 void BinPlotWidget::defineCurveHistogram( int id, const QColor& histogramColor ){
 	if ( histogramMap.contains(id)){
 		int pointCount = histogramMap[id]->getDataCount();
 		QVector<double> xValues(2);
 		QVector<double> yValues(2);
+		QColor pieceColor;
 		for ( int i = 0; i < pointCount; i++ ){
+			pieceColor = getPieceColor( i, histogramColor );
+
 			//Draw vertical line
-			histogramMap[id]->defineStepVertical( i, xValues, yValues, displayLogX, displayLogY );
-			addCurve( xValues, yValues, histogramColor );
+			histogramMap[id]->defineStepVertical( i, xValues, yValues, displayLogY );
+			addCurve( xValues, yValues, pieceColor );
 
 			//Draw horizontal line connecting to previous point.
-			histogramMap[id]->defineStepHorizontal(i, xValues, yValues, displayLogX, displayLogY);
-			addCurve( xValues, yValues, histogramColor );
+			histogramMap[id]->defineStepHorizontal(i, xValues, yValues, displayLogY);
+			addCurve( xValues, yValues, pieceColor );
 		}
 		//Add the last vertical line
 		xValues[0] = xValues[1];
-		yValues[0] = 0;
-		addCurve( xValues, yValues, histogramColor);
+		yValues[0] = histogramMap[id]->computeYValue( 0, displayLogY );
+		addCurve( xValues, yValues, pieceColor);
 	}
 }
 
@@ -960,8 +1077,9 @@ void BinPlotWidget::defineCurveLine( int id, const QColor& lineColor ){
 		for ( int i = 0; i < count; i++ ){
 			QVector<double> xValues(2);
 			QVector<double> yValues(2);
-			histogramMap[id]->defineLine( i, xValues, yValues, displayLogX, displayLogY );
-			addCurve( xValues, yValues, lineColor );
+			histogramMap[id]->defineLine( i, xValues, yValues, displayLogY );
+			QColor pieceColor = getPieceColor( i, lineColor );
+			addCurve( xValues, yValues, pieceColor );
 		}
 	}
 }
@@ -1028,7 +1146,7 @@ bool BinPlotWidget::setImageRegion( ImageRegion* region, int id ){
 		Histogram* histogram = findHistogramFor( id );
 		histogram->setRegion( region );
 		success = histogram->reset();
-		if ( plotMode != IMAGE_MODE && success ){
+		if ( plotMode != FootPrintWidget::IMAGE_MODE && success ){
 			selectedId = id;
 			resetRegion();
 		}
@@ -1037,6 +1155,14 @@ bool BinPlotWidget::setImageRegion( ImageRegion* region, int id ){
 		qWarning() << "Please specify an image before specifying an image region";
 	}
 	return success;
+}
+
+std::vector<float> BinPlotWidget::getXValues() const {
+	std::vector<float> values;
+	if ( histogramMap.contains(IMAGE_ID)){
+		values = histogramMap[IMAGE_ID]->getXValues();
+	}
+	return values;
 }
 
 bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
@@ -1048,6 +1174,7 @@ bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 		clearAll();
 		success = resetImage();
 		if ( success ){
+			resetAxisTitles();
 			if ( zoomWidgetContext != NULL ){
 				zoomWidgetContext->setImage( image );
 			}
@@ -1067,11 +1194,11 @@ bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 
 void BinPlotWidget::resetRegion( ){
 	//Make the histogram(s)
-	if ( plotMode == REGION_MODE ){
+	if ( plotMode == FootPrintWidget::REGION_MODE ){
 		int id = getSelectedId();
 		makeHistogram( id, curveColor );
 	}
-	else if ( plotMode == REGION_ALL_MODE ){
+	else if ( plotMode == FootPrintWidget::REGION_ALL_MODE ){
 		clearCurves();
 		QList<int> keys = histogramMap.keys();
 		int keyCount = keys.size();
@@ -1094,12 +1221,12 @@ void BinPlotWidget::resetRegion( ){
 bool BinPlotWidget::resetImage(){
 	bool success = true;
 	if ( image != NULL ){
-		if ( plotMode == IMAGE_MODE ){
+		if ( plotMode == FootPrintWidget::IMAGE_MODE ){
 			Histogram* histogram = findHistogramFor( IMAGE_ID );
 			success = histogram->reset( );
 			if ( success ){
 				makeHistogram( IMAGE_ID, curveColor );
-
+				resetColorCurve();
 			}
 			else {
 				QString msg( "Could not make a histogram from the image.");
@@ -1113,7 +1240,7 @@ bool BinPlotWidget::resetImage(){
 
 bool BinPlotWidget::isPrincipalHistogram( int id ) const {
 	bool principalHistogram = false;
-	if ( plotMode == IMAGE_MODE ){
+	if ( plotMode == FootPrintWidget::IMAGE_MODE ){
 		if ( id == IMAGE_ID ){
 			principalHistogram = true;
 		}
@@ -1167,6 +1294,9 @@ void BinPlotWidget::clearCurves(){
 			curve->detach();
 			delete curve;
 		}
+	}
+	if ( colorCurve != NULL ){
+		colorCurve->detach();
 	}
 }
 
@@ -1245,11 +1375,11 @@ void BinPlotWidget::lineMoved( const QPoint& pt ){
 
 void BinPlotWidget::resetRectangleMarker(){
 	if ( rectMarker != NULL ){
+		double otherSide = rectX+rectWidth;
 		int pixelXStart = static_cast<int>( binPlot.transform( QwtPlot::xBottom, rectX ) );
-		int pixelXEnd = static_cast<int>(binPlot.transform( QwtPlot::xBottom, rectX+rectWidth ));
+		int pixelXEnd = static_cast<int>(binPlot.transform( QwtPlot::xBottom, otherSide ));
 		rectMarker->setBoundaryValues( pixelXStart, pixelXEnd );
 	}
-
 }
 
 
@@ -1260,12 +1390,11 @@ void BinPlotWidget::minMaxChanged(){
 		rectWidth = qAbs( minMaxValues.second - minMaxValues.first );
 		resetRectangleMarker();
 		rectMarker->show();
-		binPlot.replot();
+		if ( fitWidget != NULL ){
+			fitWidget->restrictDomain( minMaxValues.first, minMaxValues.second );
+		}
+		emit rangeChanged();
 	}
-	else {
-		qWarning() << "Range tools need to be enabled for minMaxChanged";
-	}
-	emit rangeChanged();
 }
 
 void BinPlotWidget::clearRange(){
@@ -1273,6 +1402,9 @@ void BinPlotWidget::clearRange(){
 		rectMarker->reset();
 		rectangleSizeChanged();
 		rectMarker->hide();
+		if ( fitWidget != NULL ){
+			fitWidget->clearDomainLimits();
+		}
 		binPlot.replot();
 	}
 }
@@ -1290,17 +1422,17 @@ int BinPlotWidget::getCanvasHeight() {
 
 bool BinPlotWidget::isPrintOut( int id ) const {
 	bool printOut = false;
-	if ( plotMode == IMAGE_MODE ){
+	if ( plotMode == FootPrintWidget::IMAGE_MODE ){
 		if ( id == IMAGE_ID ){
 			printOut = true;
 		}
 	}
-	else if ( plotMode == REGION_MODE ){
+	else if ( plotMode == FootPrintWidget::REGION_MODE ){
 		if ( id == selectedId ){
 			printOut = true;
 		}
 	}
-	else if ( plotMode == REGION_ALL_MODE ){
+	else if ( plotMode == FootPrintWidget::REGION_ALL_MODE ){
 		if ( id != IMAGE_ID ){
 			printOut = true;
 		}
@@ -1318,7 +1450,7 @@ void BinPlotWidget::toAscii( const QString& filePath ){
 		QList<int> keys = histogramMap.keys();
 		int keyCount = keys.size();
 		String imageName = image->name();
-		QString title = "Histogram for "+QString(imageName.c_str());
+		QString title = "#Histogram for "+QString(imageName.c_str());
 		out << title << LINE_END << LINE_END;
 		for ( int i = 0; i < keyCount; i++ ){
 			bool printOut = isPrintOut( keys[i] );
@@ -1326,7 +1458,7 @@ void BinPlotWidget::toAscii( const QString& filePath ){
 				if ( histogramMap[keys[i]]->getDataCount() > 0 ){
 					QString subTitle;
 					if ( keys[i] != IMAGE_ID ){
-						subTitle.append(" Region: "+QString::number(keys[i]));
+						subTitle.append(" #Region: "+QString::number(keys[i]));
 						out << subTitle << LINE_END;
 					}
 
@@ -1366,7 +1498,7 @@ void BinPlotWidget::toPing( const QString& filePath, int width, int height ){
 }
 
 void BinPlotWidget::imageRegionSelected( int id ){
-	if ( plotMode != IMAGE_MODE ){
+	if ( plotMode != FootPrintWidget::IMAGE_MODE ){
 		selectedId = id;
 		resetRegion( );
 	}
@@ -1391,8 +1523,10 @@ void BinPlotWidget::clearAll(){
 }
 
 BinPlotWidget::~BinPlotWidget(){
+	//delete colorMap;
 	clearAll();
 	clearHistograms();
+	delete colorCurve;
 }
 
 }

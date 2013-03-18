@@ -57,7 +57,6 @@ class VisBuffer2;
 
 class ChannelSelector;
 class ChannelSelectorCache;
-typedef Vector<Vector <Slice> > ChannelSlicer;
 class SpectralWindowChannelsCache;
 class SpectralWindowChannels;
 class SubtableColumns;
@@ -323,11 +322,10 @@ public:
     virtual Double hourang (Double time) const;
 
     // Return the current FieldId
-    virtual Int fieldId () const;
-
+    virtual void fieldIds (Vector<Int>&) const;
 
     // Return the current ArrayId
-    virtual Int arrayId () const;
+    virtual void arrayIds (Vector<Int>&) const;
 
     // Return the current Field Name
     virtual String fieldName () const;
@@ -552,19 +550,19 @@ public:
     virtual void writeVisObserved (const Cube<Complex> & vis);
 
     // Write/modify the weights
-    virtual void writeWeight (const Vector<Float> & wt);
+    virtual void writeWeight (const Matrix<Float> & wt);
 
     // Write/modify the weightMat
-    virtual void writeWeightMat (const Matrix<Float> & wtmat);
+    //virtual void writeWeightMat (const Matrix<Float> & wtmat);
 
     // Write/modify the weightSpectrum
     virtual void writeWeightSpectrum (const Cube<Float> & wtsp);
 
     // Write/modify the Sigma
-    virtual void writeSigma (const Vector<Float> & sig);
+    virtual void writeSigma (const Matrix<Float> & sig);
 
     // Write/modify the ncorr x nrow SigmaMat.
-    virtual void writeSigmaMat (const Matrix<Float> & sigmat);
+    //virtual void writeSigmaMat (const Matrix<Float> & sigmat);
 
     virtual void writeModel(const RecordInterface& rec, Bool iscomponentlist=True,
                             Bool incremental=False);

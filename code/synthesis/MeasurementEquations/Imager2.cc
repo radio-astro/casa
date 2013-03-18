@@ -71,7 +71,7 @@
 #include <casa/Arrays/Slice.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageExpr.h>
-#include <images/Images/ImagePolarimetry.h>
+#include <imageanalysis/ImageAnalysis/ImagePolarimetry.h>
 #include <images/Images/ImageBeamSet.h>
 #include <synthesis/MeasurementEquations/ClarkCleanProgress.h>
 #include <lattices/Lattices/LatticeCleanProgress.h>
@@ -157,7 +157,6 @@
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageInfo.h>
 #include <images/Images/SubImage.h>
-#include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageUtilities.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>

@@ -162,7 +162,6 @@ protected:
 
 private:
 	typedef std::list<std::tr1::shared_ptr<viewer::Polyline> > polylinelist;
-
 	void start_new_polyline( WorldCanvas *, int x, int y );
 
 	// Set the polyline vertices. itsNPoints should already be set, and
@@ -213,6 +212,9 @@ private:
 	// use get, set, push, pop instead, which take pixel coordinate arguments.
 	// It's done this way so that zooms work on the figures.
 	Vector<Double> itsX, itsY;
+	// pixel coordinates of the pan vector.  1 = anchor, 2 = new position.
+	Int itsX1, itsY1, itsX2, itsY2, itsX3, itsY3;
+
 
 	// size in pixels of the handles
 	Int itsHandleSize;

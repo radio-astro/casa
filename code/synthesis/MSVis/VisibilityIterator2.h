@@ -188,6 +188,65 @@ private:
 
 };
 
+///////////////////////////////////////////////////////////
+//
+// Code to provide interface to weight function
+
+class WeightFunction {
+public:
+
+    virtual ~WeightFunction () {}
+    Float operator() (Float f) { return apply (f);}
+    virtual Float apply (Float) = 0;
+
+    static WeightFunction * generateUnityWeightFunction ();
+    static WeightFunction * generateIdentityWeightFunction ();
+    static WeightFunction * generateSquareWeightFunction ();
+
+protected:
+
+    static Float unity (Float);
+    static Float identity (Float x);
+    static Float square (Float x);
+
+};
+
+template<typename F>
+class WeightFunctionImpl : public WeightFunction {
+public:
+
+    // Provide either a unary function, Float (*) (Float), or
+    // a functor class having a Float operator() (Float) method.
+
+    WeightFunctionImpl (F f) : function_p (f) {}
+
+    Float apply (Float f) { return function_p (f);}
+
+private:
+
+    F function_p;
+};
+
+template<typename F>
+WeightFunction * generateWeightFunction (F f) { return new WeightFunctionImpl<F> (f);}
+
+class SortColumns {
+public:
+
+    SortColumns (const Block<Int> & columns = Block<Int> (), Bool addDefaultColumns = True);
+
+    Bool addDefaultSortColumns () const;
+    const Block<Int> & getColumns () const;
+
+private:
+
+    Bool addDefaultColumns_p;
+    Block<Int> columns_p;
+
+
+};
+
+
 class VisibilityIterator2;
 
 class ViFactory {
@@ -319,6 +378,7 @@ class VisibilityIterator2 : private boost::noncopyable
     friend class AveragingTvi2Factory;
 
 public:
+
 
   class Factory { // Interface for implementation creation factory
 
@@ -604,11 +664,11 @@ public:
 
   // Write/modify the weights
 
-  void writeWeight(const Vector<Float>& wt);
+  void writeWeight(const Matrix<Float>& wt);
 
   // Write/modify the weightMat
 
-  virtual void writeWeightMat(const Matrix<Float>& wtmat);
+  //virtual void writeWeightMat(const Matrix<Float>& wtmat);
 
   // Write/modify the weightSpectrum
 
@@ -616,11 +676,11 @@ public:
 
   // Write/modify the Sigma
 
-  void writeSigma(const Vector<Float>& sig);
+  void writeSigma(const Matrix<Float>& sig);
 
   // Write/modify the ncorr x nrow SigmaMat.
 
-  void writeSigmaMat(const Matrix<Float>& sigmat);
+  //void writeSigmaMat(const Matrix<Float>& sigmat);
 
   // This puts a model into the descriptor of the current ms in the iterator
   // Set iscomponentlist to True if the record represent a componentlist
@@ -789,11 +849,11 @@ protected:
 
   // Return the current FieldId
 
-  Int fieldId() const;
+  void fieldIds(Vector<Int>&) const;
 
   // Return the current ArrayId
 
-  Int arrayId() const;
+  void arrayIds (Vector<Int>&) const;
 
   // Return the current Field Name
 
@@ -1006,15 +1066,6 @@ private:
 
   ViImplementation2 * impl_p;
 };
-
-class AveragingTvi2Factory {
-
-public:
-
-VisibilityIterator2 * createVi (MeasurementSet * ms, Double interval,
-                                Double chunkInterval, Int averagingFactor);
-};
-
 
 } // end namespace vi
 

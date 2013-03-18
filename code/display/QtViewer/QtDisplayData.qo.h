@@ -245,6 +245,8 @@ class QtDisplayData : public QObject {
   void init();
   void initImage();
   void setImage( ImageInterface<Float>* img);
+  static void setGlobalColorOptions( bool global );
+
 
  public slots:
   
@@ -275,8 +277,9 @@ class QtDisplayData : public QObject {
  
   const String &getColormap( ) { return clrMapName_; }
   void setColormap(const String& clrMapName) { setColormap_(clrMapName); }
+  void setHistogramColorRange( float minValue, float maxValue );
  
- 
+
  signals:
 
   // Signals changes the DD has made internally to option values, limits,
@@ -328,6 +331,8 @@ class QtDisplayData : public QObject {
   void spectrumChanged(String spcTypeUnit, String spcRval, String spcSys);
 
   void statsReady(const String&);
+  void showColorHistogram( QtDisplayData* );
+  void globalOptionsChanged( QtDisplayData*, Record);
 
  protected slots:
   
@@ -378,7 +383,9 @@ class QtDisplayData : public QObject {
  private:
   // Not intended for use.
   QtDisplayData() : panel_(0), im_(0), cim_(0), dd_(0) {  }
-
+  static bool globalColorSettings;
+  bool setColorBarOptions( Record& opts, Record& chgdOpts );
+  void checkGlobalChange( Record& chgdOpts );
 
   //# data
   QtDisplayPanelGui *panel_;
@@ -410,6 +417,7 @@ class QtDisplayData : public QObject {
   //# it is reused -- see PCITFiddler.h (colormap mouse tools)).
   typedef std::map<String, Colormap*> colormapmap;
   colormapmap clrMaps_;
+  const static String COLOR_MAP;
   
   
   // Latest error message, retrievable via errMsg().  (Where possible, errors

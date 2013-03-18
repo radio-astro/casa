@@ -154,7 +154,7 @@ class ImageAnalysis
                                          const String& pol = "", 
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
-
+/*
     // the output <src>fakeBeam</src> indicates if there was no beam in the header and a fake one
     // was assumed to do the conversion. <src>channel</src> and <src>polarization</src> are
     // used only in the case the image has per plane beams.
@@ -167,7 +167,7 @@ class ImageAnalysis
         const Int channel=-1,
         const Int polarization=-1
     ) const;
-
+*/
     ImageInterface<Float>* convolve2d(
     		const String& outfile, const Vector<Int>& axes,
             const String& type, const Quantity& major,
@@ -269,8 +269,10 @@ class ImageAnalysis
 
     Vector<String> history(const Bool list = False, const Bool browse = True);
 
-    ImageInterface<Float> * insert(const String& infile, Record& region, 
-                                   const Vector<double>& locate);
+    Bool insert(
+    	const String& infile, Record& region,
+    	const Vector<double>& locate, Bool verbose
+    );
 
     //    Bool isopen();
 
@@ -421,18 +423,7 @@ class ImageAnalysis
         Int channel=-1, Int polarization=-1
     );
 
-    // if messageStore != 0, log messages, stripped of time stampe and priority, will also be placed in this parameter and
-    // returned to caller for eg logging to file.
-    Bool statistics(
-    	Record& statsout, const Vector<Int>& axes, Record& region,
-        const String& mask, const Vector<String>& plotstats,
-        const Vector<Float>& includepix, const Vector<Float>& excludepix,
-        const String& plotter="/NULL", const Int nx=1,
-        const Int ny=1, const Bool list=True,
-        const Bool force=False, const Bool disk=False,
-        const Bool robust=False, const Bool verbose=True,
-        const Bool extendMask=False, vector<String> *const &messageStore=0
-    );
+
 
     bool twopointcorrelation(
     	const String& outfile, Record& region,
@@ -441,12 +432,13 @@ class ImageAnalysis
         const Bool overwrite=False, const Bool stretch=False
     );
 
+    /*
     ImageInterface<Float> * subimage(const String& outfile, Record& region, 
                                      const String& mask, 
                                      const Bool dropdeg = False, 
                                      const Bool overwrite = False, 
                                      const Bool list = True, const Bool extendMask=False);
-
+*/
     Record summary(
     	const String& doppler = "RADIO",
     	const Bool list = True,
@@ -462,7 +454,8 @@ class ImageAnalysis
         const Bool dropdeg=False, const Bool deglast=False,
         const Bool dropstokes=False, const Bool stokeslast=False,
         const Bool wavelength=False, const Bool airWavelength=False,
-        const String& origin="", Bool stretch=False
+        const String& origin="", Bool stretch=False,
+	const Bool history=True
     );
 
     Bool toASCII(
@@ -557,19 +550,19 @@ class ImageAnalysis
     //if xn == yn == 2, rectangle
     //if (xn == yn) > 2, polygon (could originate from ellipse)
     Bool getFreqProfile(const Vector<Double>& x,
-   		 const Vector<Double>& y,
-   		 Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
-   		 const String& xytype="world",
-   		 const String& specaxis="freq",
-   		 const Int& whichStokes=0,
-   		 const Int& whichTabular=0,
-   		 const Int& whichLinear=0,
-   		 const String& xunits="",
-   		 const String& specframe="",
-   		 const Int &combineType=0,
-   		 const Int& whichQuality=0,
-   		 const String& restValue="",
-   				 int centralChannel = -1);
+			const Vector<Double>& y,
+			Vector<Float>& zxaxisval, Vector<Float>& zyaxisval,
+			const String& xytype="world",
+			const String& specaxis="freq",
+			const Int& whichStokes=0,
+			const Int& whichTabular=0,
+			const Int& whichLinear=0,
+			const String& xunits="",
+			const String& specframe="",
+			const Int &combineType=0,
+			const Int& whichQuality=0,
+			const String& restValue="",
+			Int beamChannel = -1);
 
     // Return a record of the associates ImageInterface 
     Bool toRecord(RecordInterface& rec);
@@ -602,14 +595,12 @@ class ImageAnalysis
     // Having private version of IS and IH means that they will
     // only recreate storage images if they have to
 
-    std::auto_ptr<ImageStatistics<Float> > _statistics;
     std::auto_ptr<ImageHistograms<Float> > _histograms;
     IPosition last_chunk_shape_p;
-    std::auto_ptr<ImageRegion> _oldStatsRegionRegion;
-    casa::ImageRegion* pOldStatsMaskRegion_p;
+
     casa::ImageRegion* pOldHistRegionRegion_p;
     casa::ImageRegion* pOldHistMaskRegion_p;
-    casa::Bool oldStatsStorageForce_p, oldHistStorageForce_p;
+    Bool oldHistStorageForce_p;
     ImageMomentsProgressMonitor* imageMomentsProgressMonitor;
 
    
@@ -621,9 +612,14 @@ class ImageAnalysis
     casa::ComponentType::Shape convertModelType (casa::Fit2D::Types typeIn) const;
    
     // Delete private ImageStatistics and ImageHistograms objects
-    bool deleteHistAndStats();
+    bool deleteHist();
    
-
+    static Bool _haveRegionsChanged (
+    	ImageRegion* pNewRegionRegion,
+    	ImageRegion* pNewMaskRegion,
+    	ImageRegion* pOldRegionRegion,
+    	ImageRegion* pOldMaskRegion
+    );
     // Hanning smooth a vector
     void hanning_smooth (casa::Array<casa::Float>& out,
                          casa::Array<casa::Bool>& maskOut,
@@ -639,6 +635,7 @@ class ImageAnalysis
                           casa::LogIO& os, casa::Bool log=casa::True,
                           casa::Bool overwrite=casa::False);
     
+    /*
 
     // Make a mask and define it in the image.
     static Bool makeMask(casa::ImageInterface<Float>& out,
@@ -646,11 +643,7 @@ class ImageAnalysis
                         Bool init, Bool makeDefault,
                         LogIO& os, Bool list);
 
-// See if the combination of the 'region' and 'mask' ImageRegions have changed
-    casa::Bool haveRegionsChanged (casa::ImageRegion* pNewRegionRegion,
-                                   casa::ImageRegion* pNewMaskRegion,
-                                   casa::ImageRegion* pOldRegionRegion,
-                                   casa::ImageRegion* pOldMaskRegion) const;
+*/
 
 // Convert a Record to a CoordinateSystem
     casa::CoordinateSystem*

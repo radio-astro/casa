@@ -29,9 +29,9 @@ namespace asap {
       israster_(israster)
 {}
 
-void STCalSkyOtfAlma::setupSelector()
+void STCalSkyOtfAlma::setupSelector(const STSelector &sel)
 {
-  sel_.reset();
+  sel_ = sel;
 
   // Detect edges using EdgeMarker
   EdgeMarker marker(israster_); 

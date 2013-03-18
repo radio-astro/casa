@@ -1,4 +1,5 @@
 import os
+import weakref
 import matplotlib, numpy
 from asap.logging import asaplog, asaplog_post_dec
 from matplotlib.patches import Rectangle
@@ -12,8 +13,16 @@ from asap.utils import _n_bools, mask_not, mask_or
 ######################################
 class CustomToolbarCommon:
     def __init__(self,parent):
-        self.plotter = parent
+        self.plotter = weakref.ref(parent)
         #self.figmgr=self.plotter._plotter.figmgr
+
+    def _get_plotter(self):
+        # check for the validity of the plotter and
+        # return the plotter class instance if its valid.
+        if self.plotter() is None:
+            raise RuntimeError, "Internal Error. The plotter has been destroyed."
+        else:
+            return self.plotter()
 
     ### select the nearest spectrum in pick radius
     ###    and display spectral value on the toolbar.
@@ -28,6 +37,9 @@ class CustomToolbarCommon:
         # If not left button
         if event.button != 1:
             return
+
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
 
         xclick = event.xdata
         yclick = event.ydata
@@ -61,7 +73,7 @@ class CustomToolbarCommon:
             return
         del pind, inds, xlin, ylin
         # Spectra are Picked
-        theplot = self.plotter._plotter
+        theplot = theplotter._plotter
         thetoolbar = self.figmgr.toolbar
         thecanvas = self.figmgr.canvas
         # Disconnect the default motion notify event
@@ -153,15 +165,18 @@ class CustomToolbarCommon:
         else:
             return
 
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
         self._thisregion = {'axes': event.inaxes,'xs': event.x,
                             'worldx': [event.xdata,event.xdata],
                             'invert': exclude}
         self.xold = event.x
         self.xdataold = event.xdata
 
-        self.plotter._plotter.register('button_press',None)
-        self.plotter._plotter.register('motion_notify', self._xspan_draw)
-        self.plotter._plotter.register('button_press', self._xspan_end)
+        theplotter._plotter.register('button_press',None)
+        theplotter._plotter.register('motion_notify', self._xspan_draw)
+        theplotter._plotter.register('button_press', self._xspan_end)
 
     def _xspan_draw(self,event):
         if event.inaxes == self._thisregion['axes']:
@@ -202,19 +217,22 @@ class CustomToolbarCommon:
         else:
             xdataend = self.xdataold
 
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
         self._thisregion['worldx'][1] = xdataend
         # print statistics of spectra in subplot
         self._subplot_stats(self._thisregion)
         
         # release event
-        self.plotter._plotter.register('button_press',None)
-        self.plotter._plotter.register('motion_notify',None)
+        theplotter._plotter.register('button_press',None)
+        theplotter._plotter.register('motion_notify',None)
         # Clear up region selection
         self._thisregion = None
         self.xdataold = None
         self.xold = None
         # finally recover region selection event
-        self.plotter._plotter.register('button_press',self._single_mask)
+        theplotter._plotter.register('button_press',self._single_mask)
 
     def _subplot_stats(self,selection):
         statstr = ['max', 'min', 'median', 'mean', 'sum', 'std'] #'rms']
@@ -320,15 +338,18 @@ class CustomToolbarCommon:
 
     ### actual plotting of the new page
     def _new_page(self,goback=False):
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
         top = None
-        header = self.plotter._headtext
+        header = theplotter._headtext
         reset = False
         doheader = (isinstance(header['textobj'],list) and \
                     len(header['textobj']) > 0)
         if doheader:
-            top = self.plotter._plotter.figure.subplotpars.top
+            top = theplotter._plotter.figure.subplotpars.top
             fontsize = header['textobj'][0].get_fontproperties().get_size()
-        if self.plotter._startrow <= 0:
+        if theplotter._startrow <= 0:
             msg = "The page counter is reset due to chages of plot settings. "
             msg += "Plotting from the first page."
             asaplog.push(msg)
@@ -341,55 +362,58 @@ class CustomToolbarCommon:
                     extrastr = header['extrastr']
                 if header.has_key('selstr'):
                     selstr = header['selstr']
-            self.plotter._reset_header()
+            theplotter._reset_header()
 
-        self.plotter._plotter.hold()
+        theplotter._plotter.hold()
         if goback:
             self._set_prevpage_counter()
-        #self.plotter._plotter.clear()
-        self.plotter._plot(self.plotter._data)
+        #theplotter._plotter.clear()
+        theplotter._plot(theplotter._data)
         pagenum = self._get_pagenum()
         self.set_pagecounter(pagenum)
         # Plot header information
         #if header['textobj']:
         if doheader and pagenum == 1:
-            if top and top != self.plotter._margins[3]:
+            if top and top != theplotter._margins[3]:
                 # work around for sdplot in CASA. complete checking in future?
-                self.plotter._plotter.figure.subplots_adjust(top=top)
+                theplotter._plotter.figure.subplots_adjust(top=top)
             if reset:
-                self.plotter.print_header(plot=True,fontsize=fontsize,selstr=selstr, extrastr=extrastr)
+                theplotter.print_header(plot=True,fontsize=fontsize,selstr=selstr, extrastr=extrastr)
             else:
-                self.plotter._header_plot(header['string'],fontsize=fontsize)
-        self.plotter._plotter.release()
-        self.plotter._plotter.tidy()
-        self.plotter._plotter.show(hardrefresh=False)
+                theplotter._header_plot(header['string'],fontsize=fontsize)
+        theplotter._plotter.release()
+        theplotter._plotter.tidy()
+        theplotter._plotter.show(hardrefresh=False)
         del top
 
     ### calculate the panel ID and start row to plot the previous page
     def _set_prevpage_counter(self):
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
         # set row and panel counters to those of the 1st panel of previous page
         maxpanel = 16
         # the ID of the last panel in current plot
-        lastpanel = self.plotter._ipanel
+        lastpanel = theplotter._ipanel
         # the number of current subplots
-        currpnum = len(self.plotter._plotter.subplots)
+        currpnum = len(theplotter._plotter.subplots)
         # the nuber of previous subplots
         prevpnum = None
-        if self.plotter._rows and self.plotter._cols:
+        if theplotter._rows and theplotter._cols:
             # when user set layout
-            prevpnum = self.plotter._rows*self.plotter._cols
+            prevpnum = theplotter._rows*theplotter._cols
         else:
             # no user specification
             prevpnum = maxpanel
 
         start_ipanel = max(lastpanel-currpnum-prevpnum+1, 0)
         # set the pannel ID of the last panel of prev-prev page
-        self.plotter._ipanel = start_ipanel-1
-        if self.plotter._panelling == 'r':
-            self.plotter._startrow = start_ipanel
+        theplotter._ipanel = start_ipanel-1
+        if theplotter._panelling == 'r':
+            theplotter._startrow = start_ipanel
         else:
             # the start row number of the next panel
-            self.plotter._startrow = self.plotter._panelrows[start_ipanel]
+            theplotter._startrow = theplotter._panelrows[start_ipanel]
         del lastpanel,currpnum,prevpnum,start_ipanel
 
     ### refresh the page counter
@@ -404,10 +428,13 @@ class CustomToolbarCommon:
         pass        
 
     def _get_pagenum(self):
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+        
         # get the ID of last panel in the current page
-        idlastpanel = self.plotter._ipanel
+        idlastpanel = theplotter._ipanel
         # max panels in a page
-        ppp = self.plotter._plotter.rows*self.plotter._plotter.cols
+        ppp = theplotter._plotter.rows*theplotter._plotter.cols
         return int(idlastpanel/ppp)+1
 
     # pause buttons for slow operations. implemented at a backend dependent class
@@ -682,13 +709,21 @@ class NotationWindowCommon:
 ###########################################
 class CustomFlagToolbarCommon:
     def __init__(self,parent):
-        self.plotter=parent
+        self.plotter=weakref.ref(parent)
         #self.figmgr=self.plotter._plotter.figmgr
         self._selregions = {}
         self._selpanels = []
         self._polygons = []
         self._thisregion = None
         self.xdataold=None
+
+    def _get_plotter(self):
+        # check for the validity of the plotter and
+        # return the plotter class instance if its valid.
+        if self.plotter() is None:
+            raise RuntimeError, "Internal Error. The plotter has been destroyed."
+        else:
+            return self.plotter()
 
     ### select the nearest spectrum in pick radius
     ###    and display spectral value on the toolbar.
@@ -703,6 +738,9 @@ class CustomFlagToolbarCommon:
         # If not left button
         if event.button != 1:
             return
+
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
 
         xclick = event.xdata
         yclick = event.ydata
@@ -736,7 +774,7 @@ class CustomFlagToolbarCommon:
             return
         del pind, inds, xlin, ylin
         # Spectra are Picked
-        theplot = self.plotter._plotter
+        theplot = theplotter._plotter
         thetoolbar = self.figmgr.toolbar
         thecanvas = self.figmgr.canvas
         # Disconnect the default motion notify event
@@ -818,6 +856,8 @@ class CustomFlagToolbarCommon:
             return
         if event.button != 1 or event.inaxes == None:
             return
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
         # this row resolution assumes row panelling
         irow = int(self._getrownum(event.inaxes))
         if irow in self._selpanels:
@@ -828,11 +868,11 @@ class CustomFlagToolbarCommon:
             return
         self._thisregion = {'axes': event.inaxes,'xs': event.x,
                             'worldx': [event.xdata,event.xdata]}
-        self.plotter._plotter.register('button_press',None)
+        theplotter._plotter.register('button_press',None)
         self.xold = event.x
         self.xdataold = event.xdata
-        self.plotter._plotter.register('motion_notify', self._xspan_draw)
-        self.plotter._plotter.register('button_press', self._xspan_end)
+        theplotter._plotter.register('motion_notify', self._xspan_draw)
+        theplotter._plotter.register('button_press', self._xspan_end)
 
     def _xspan_draw(self,event):
         if event.inaxes == self._thisregion['axes']:
@@ -881,7 +921,10 @@ class CustomFlagToolbarCommon:
                                                    facecolor='0.7')
         self._thisregion['axes'].set_xlim(axlimx)
         
-        self.plotter._plotter.canvas.draw()
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
+        theplotter._plotter.canvas.draw()
         self._polygons.append(pregion)
         srow = self._getrownum(self._thisregion['axes'])
         irow = int(srow)
@@ -894,14 +937,14 @@ class CustomFlagToolbarCommon:
         asaplog.push(sout)
 
         # release event
-        self.plotter._plotter.register('button_press',None)
-        self.plotter._plotter.register('motion_notify',None)
+        theplotter._plotter.register('button_press',None)
+        theplotter._plotter.register('motion_notify',None)
         # Clear up region selection
         self._thisregion = None
         self.xdataold = None
         self.xold = None
         # finally recover region selection event
-        self.plotter._plotter.register('button_press',self._add_region)
+        theplotter._plotter.register('button_press',self._add_region)
 
     ### add panels to selections
     @asaplog_post_dec
@@ -910,6 +953,9 @@ class CustomFlagToolbarCommon:
             return
         if event.button != 1 or event.inaxes == None:
             return
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
         selax = event.inaxes
         # this row resolution assumes row panelling
         srow = self._getrownum(selax)
@@ -918,8 +964,8 @@ class CustomFlagToolbarCommon:
             self._selpanels.append(irow)
         shadow = Rectangle((0,0),1,1,facecolor='0.7',transform=selax.transAxes,visible=True)
         self._polygons.append(selax.add_patch(shadow))
-        #self.plotter._plotter.show(False)
-        self.plotter._plotter.canvas.draw()
+        #theplotter._plotter.show(False)
+        theplotter._plotter.canvas.draw()
         asaplog.push("row "+str(irow)+" is selected")
         ## check for region selection of the spectra and overwrite it.
         ##!!!! currently disabled for consistency with flag tools !!!!
@@ -955,11 +1001,15 @@ class CustomFlagToolbarCommon:
             asaplog.post()
             asaplog.push("Invalid panel specification")
             asaplog.post('ERROR')
-        strow = self._getrownum(self.plotter._plotter.subplots[0]['axes'])
-        enrow = self._getrownum(self.plotter._plotter.subplots[-1]['axes'])
+
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
+        strow = self._getrownum(theplotter._plotter.subplots[0]['axes'])
+        enrow = self._getrownum(theplotter._plotter.subplots[-1]['axes'])
         for irow in range(int(strow),int(enrow)+1):
             if regions.has_key(str(irow)):
-                ax = self.plotter._plotter.subplots[irow - int(strow)]['axes']
+                ax = theplotter._plotter.subplots[irow - int(strow)]['axes']
                 mlist = regions.pop(str(irow))
                 # WORKAROUND for the issue axvspan started to reset xlim.
                 axlimx = ax.get_xlim()
@@ -969,12 +1019,12 @@ class CustomFlagToolbarCommon:
                 ax.set_xlim(axlimx)
                 del ax,mlist,axlimx
             if irow in panels:
-                ax = self.plotter._plotter.subplots[irow - int(strow)]['axes']
+                ax = theplotter._plotter.subplots[irow - int(strow)]['axes']
                 shadow = Rectangle((0,0),1,1,facecolor='0.7',
                                    transform=ax.transAxes,visible=True)
                 self._polygons.append(ax.add_patch(shadow))
                 del ax,shadow
-        self.plotter._plotter.canvas.draw()
+        theplotter._plotter.canvas.draw()
         del regions,panels,strow,enrow
 
     def _clear_selection_plot(self, refresh=True):
@@ -982,7 +1032,10 @@ class CustomFlagToolbarCommon:
         if len(self._polygons) > 0:
             for shadow in self._polygons:
                 shadow.remove()
-            if refresh: self.plotter._plotter.canvas.draw()
+            if refresh:
+                # check for the validity of plotter and get the plotter
+                theplotter = self._get_plotter()
+                theplotter._plotter.canvas.draw()
         self._polygons = []
 
     def _clearup_selections(self, refresh=True):
@@ -1006,6 +1059,7 @@ class CustomFlagToolbarCommon:
             asaplog.push(msg)
             asaplog.post('WARN')
             return
+
         self._pause_buttons(operation="start",msg="Flagging data...")
         self._flag_operation(rows=self._selpanels,
                              regions=self._selregions,unflag=False)
@@ -1014,7 +1068,10 @@ class CustomFlagToolbarCommon:
         sout += "  regions: "+str(self._selregions)
         asaplog.push(sout)
         del sout
-        self.plotter._ismodified = True
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
+        theplotter._ismodified = True
         self._clearup_selections(refresh=False)
         self._plot_page(pagemode="current")
         self._pause_buttons(operation="end")
@@ -1035,7 +1092,10 @@ class CustomFlagToolbarCommon:
         sout += "  regions: "+str(self._selregions)
         asaplog.push(sout)
         del sout
-        self.plotter._ismodified = True
+
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+        theplotter._ismodified = True
         self._clearup_selections(refresh=False)
         self._plot_page(pagemode="current")
         self._pause_buttons(operation="end")
@@ -1043,7 +1103,10 @@ class CustomFlagToolbarCommon:
     ### actual flag operation
     @asaplog_post_dec
     def _flag_operation(self,rows=None,regions=None,unflag=False):
-        scan = self.plotter._data
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
+        scan = theplotter._data
         if not scan:
             asaplog.post()
             asaplog.push("Invalid scantable")
@@ -1078,7 +1141,10 @@ class CustomFlagToolbarCommon:
 
     @asaplog_post_dec
     def _selected_stats(self,rows=None,regions=None):
-        scan = self.plotter._data
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
+        scan = theplotter._data
         if not scan:
             asaplog.post()
             asaplog.push("Invalid scantable")
@@ -1163,7 +1229,9 @@ class CustomFlagToolbarCommon:
 
     ### actual plotting of the new page
     def _plot_page(self,pagemode="next"):
-        if self.plotter._startrow <= 0:
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+        if theplotter._startrow <= 0:
             msg = "The page counter is reset due to chages of plot settings. "
             msg += "Plotting from the first page."
             asaplog.post()
@@ -1171,14 +1239,14 @@ class CustomFlagToolbarCommon:
             asaplog.post('WARN')
             goback = False
 
-        self.plotter._plotter.hold()
-        #self.plotter._plotter.legend(1)
+        theplotter._plotter.hold()
+        #theplotter._plotter.legend(1)
         self._set_plot_counter(pagemode)
-        self.plotter._plot(self.plotter._data)
+        theplotter._plot(theplotter._data)
         self.set_pagecounter(self._get_pagenum())
-        self.plotter._plotter.release()
-        self.plotter._plotter.tidy()
-        self.plotter._plotter.show(hardrefresh=False)
+        theplotter._plotter.release()
+        theplotter._plotter.tidy()
+        theplotter._plotter.show(hardrefresh=False)
 
     ### calculate the panel ID and start row to plot a page
     #def _set_prevpage_counter(self):
@@ -1193,12 +1261,16 @@ class CustomFlagToolbarCommon:
         if pageop == "n":
             # nothing necessary to plot the next page
             return
+
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
+
         # set row and panel counters to those of the 1st panel of previous page
         maxpanel = 25
         # the ID of the last panel in current plot
-        lastpanel = self.plotter._ipanel
+        lastpanel = theplotter._ipanel
         # the number of current subplots
-        currpnum = len(self.plotter._plotter.subplots)
+        currpnum = len(theplotter._plotter.subplots)
 
         # the nuber of previous subplots
         start_ipanel = None
@@ -1207,9 +1279,9 @@ class CustomFlagToolbarCommon:
         else:
             ## previous page
             prevpnum = None
-            if self.plotter._rows and self.plotter._cols:
+            if theplotter._rows and theplotter._cols:
                 # when user set layout
-                prevpnum = self.plotter._rows*self.plotter._cols
+                prevpnum = theplotter._rows*theplotter._cols
             else:
                 # no user specification
                 prevpnum = maxpanel
@@ -1217,12 +1289,12 @@ class CustomFlagToolbarCommon:
             del prevpnum
 
         # set the pannel ID of the last panel of the prev(-prev) page
-        self.plotter._ipanel = start_ipanel-1
-        if self.plotter._panelling == 'r':
-            self.plotter._startrow = start_ipanel
+        theplotter._ipanel = start_ipanel-1
+        if theplotter._panelling == 'r':
+            theplotter._startrow = start_ipanel
         else:
             # the start row number of the next panel
-            self.plotter._startrow = self.plotter._panelrows[start_ipanel]
+            theplotter._startrow = theplotter._panelrows[start_ipanel]
         del lastpanel,currpnum,start_ipanel
 
     ### refresh the page counter
@@ -1237,10 +1309,12 @@ class CustomFlagToolbarCommon:
         pass
 
     def _get_pagenum(self):
+        # check for the validity of plotter and get the plotter
+        theplotter = self._get_plotter()
         # get the ID of last panel in the current page
-        idlastpanel = self.plotter._ipanel
+        idlastpanel = theplotter._ipanel
         # max panels in a page
-        ppp = self.plotter._plotter.rows*self.plotter._plotter.cols
+        ppp = theplotter._plotter.rows*theplotter._plotter.cols
         return int(idlastpanel/ppp)+1
 
     # pause buttons for slow operations. implemented at a backend dependent class

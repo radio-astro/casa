@@ -982,10 +982,9 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
   if ((coordinateType != "") && (list==true)) {
     coordinateType.upcase();
     if (coordinateType.matches(Regex("DI"),-2)) {
-      casa::MDirection md(casa::MDirection::J2000);
       Int nall, nex;
       const uInt *typ;
-      const String *tall = md.allTypes(nall, nex, typ);
+      const String *tall = casa::MDirection::allMyTypes(nall, nex, typ);
       //      Vector<String> tcod(nall-nex);
       //      Vector<String> text(nex);
       rstat.resize(nall);
@@ -997,10 +996,9 @@ coordsys::referencecode(const std::string& cordtype, const bool list)
       //return fromVectorString(tcod);
       return rstat;
     } else if (coordinateType.matches(Regex("SP"),-2)) {
-      MFrequency mf(casa::Quantity(1.0,"Hz"), MFrequency::LSRK);
       Int nall, nex;
       const uInt *typ;
-      const String *tall = mf.allTypes(nall, nex, typ);
+      const String *tall = MFrequency::allMyTypes(nall, nex, typ);
       //      Vector<String> tcod(nall-nex);
       //      Vector<String> text(nex);
       rstat.resize(nall);

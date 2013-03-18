@@ -24,7 +24,7 @@
 //#
 #include "SpecFitSettingsWidgetRadio.qo.h"
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
-#include <images/Images/ImageFit1D.h>
+#include <imageanalysis/ImageAnalysis/ImageFit1D.h>
 #include <components/SpectralComponents/PCFSpectralElement.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <display/QtPlotter/QtCanvas.qo.h>

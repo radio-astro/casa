@@ -73,15 +73,18 @@ using namespace std ;
 
 class NRO45FITSReader : public NRO45Reader
 {
- public:
+public:
   // Constructor 
   NRO45FITSReader( string name ) ;
 
   // Destructor.
   ~NRO45FITSReader() ;
 
-  // Read data header
-  virtual int read() ;
+//   // Read data header
+//   virtual int read() ;
+protected:
+  // initialize Dataset
+  void initDataset();  
 };
 
 #endif /* NRO45_FITS_READER_H */

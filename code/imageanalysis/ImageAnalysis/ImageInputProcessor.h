@@ -87,13 +87,15 @@ public:
 	// rectangular region.
     void process(
     	ImageInterface<Float>*& image, Record& regionRecord,
-    	String& diagnostics, std::vector<OutputStruct> *const outputStruct,
-    	String& stokes,
-    	const String& imagename, const Record* regionPtr,
-    	const String& regionName, const String& box,
-    	const String& chans,
-    	const CasacRegionManager::StokesControl& stokesControl, const Bool& allowMultipleBoxes,
-    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes
+    	String& diagnostics,
+    	std::vector<OutputStruct> *const outputStruct,
+    	String& stokes,	const String& imagename,
+    	const Record* regionPtr, const String& regionName,
+    	const String& box, const String& chans,
+    	const CasacRegionManager::StokesControl& stokesControl,
+    	const Bool& allowMultipleBoxes,
+    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
+    	Bool verbose=True
     );
 
 	// Process the inputs. Use this version if the associated image already exists.
@@ -118,7 +120,8 @@ public:
     	const String& chans,
     	const CasacRegionManager::StokesControl& stokesControl,
     	const Bool& allowMultipleBoxes,
-    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes
+    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
+    	Bool verbose=True
     );
 
     static void checkOutputs(std::vector<OutputStruct> *const output, LogIO& log);
@@ -142,7 +145,7 @@ private:
     	const String& regionName, const String& box,
     	const String& chans, const CasacRegionManager::StokesControl& stokesControl,
         const Bool& allowMultipleBoxes,
-    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes
+    	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes, Bool verbose
     );
 
     // set region given a pointer to a region record.

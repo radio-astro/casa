@@ -45,11 +45,12 @@ public:
 	virtual void clearFit();
 
 private:
-	int factorial( int n ) const;
-	int getFitCount() const;
-	float getRMSE() const;
-	bool isIntegerValue( float val ) const;
-
+	//int factorial( int n ) const;
+	float getFitCount() const;
+	//float getRMSE() const;
+	//bool isIntegerValue( float val ) const;
+	float solutionLambda;
+	float solutionHeight;
 	bool lambdaSpecified;
 	double lambda;
 };

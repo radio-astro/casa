@@ -833,5 +833,156 @@ void QtPolylineToolRegion::doubleClicked(Int x, Int y) {
    emit echoClicked(clickPoint);
 }
   
+void QtPVToolRegion::regionReady() {
+  
+  updateRegion();	// (Useful for profile signalling; will begin
+			// poly profiling with initial poly definition).
+
+  Record mouseRegion;
+  WorldCanvasHolder* wch = 0;
+
+  if(getMouseRegion(mouseRegion, wch)) {
+    emit mouseRegionReady(mouseRegion, wch);  }  }
+  
+
+        
+Bool QtPVToolRegion::getMouseRegion(Record& mouseRegion,
+                                WorldCanvasHolder*& wch) {
+  // Retrieve the current polygon mouse region record and WCH, if any.
+  // Retrieve the current rectangular mouse region record and WCH, if any.
+  // (If nothing is ready, returns False).
+  
+  // Here are fields of a typical mouseRegion record
+  // returned by this routine:
+  //
+  // type: String "box"
+  // zindex: Int 17
+  // pixel: subRecord {
+  //   blc: Double array with shape [2]    [243, 132]
+  //   trc: Double array with shape [2]    [357, 248]  }
+  // linear: subRecord {
+  //   blc: Double array with shape [2]    [155.052, 61.1335]
+  //   trc: Double array with shape [2]    [256.965, 164.749]  }
+  // (-->following field may be missing if undefined)
+  // world: subRecord {
+  //   blc: Double array with shape [2]    [4.66672, 1.22307]
+  //   trc: Double array with shape [2]    [4.6609, 1.22508]
+  //   units: String array with shape [2]  ["rad", "rad"]  }
+
+  mouseRegion = Record();	// Initialize to empty Record.
+
+  
+  if(!rectangleDefined() || itsCurrentWC==0) return False;
+  wch = pd_->wcHolder(itsCurrentWC);
+	// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
+	// locating the important coordinate state 'zindex' on wch
+	// (inaccessible from WC), instead of on WC, was a blunder....
+  if(wch==0) return False;
+
+  
+  mouseRegion.define("type", "box");
+  
+  
+  Int zindex = 0;
+  if (wch->restrictionBuffer()->exists("zIndex")) {
+    wch->restrictionBuffer()->getValue("zIndex", zindex);  }
+  
+  mouseRegion.define("zindex", zindex);
+
+  
+  Record pixel, linear, world;
+  
+  static Vector<Double> pix(2), lin(2), wld(2);
+  Int x1, y1, x2, y2;
+  
+  get(x1, y1, x2, y2);
+
+  pix(0) = min(x1, x2);
+  pix(1) = min(y1, y2);
+  if(!itsCurrentWC->pixToLin(lin, pix)) return False;	// (unlikely)
+  Bool wldOk = itsCurrentWC->linToWorld(wld, lin);
+  
+  pixel.define("blc", pix);
+  linear.define("blc", lin);
+  if(wldOk) world.define("blc", wld);
+
+  pix(0) = max(x1, x2);
+  pix(1) = max(y1, y2);
+  if(!itsCurrentWC->pixToLin(lin, pix)) return False;	// (unlikely)
+  if(wldOk) wldOk = itsCurrentWC->linToWorld(wld, lin);
+  
+  pixel.define("trc", pix);
+  linear.define("trc", lin);
+  if(wldOk) { 
+    world.define("trc", wld);
+    world.define("units", itsCurrentWC->worldAxisUnits());  }
+
+  mouseRegion.defineRecord("pixel", pixel);
+  mouseRegion.defineRecord("linear", linear);
+  if(wldOk) mouseRegion.defineRecord("world", world);
+	// Receiver may be able to use the mouse region even if, e.g.,
+	// it is outside world coordinate boundaries (a modest
+	// handwave toward support of all-sky images).
+  
+  return True;  }    
+
+//void QtPVToolRegion::handleEvent(DisplayEvent& ev) {
+//  cout << "QtPVToolRegion::handleEvent" << endl;
+//}
+
+//void QtPVToolRegion::keyPressed(const WCPositionEvent &ev) {
+//  cout << "QtPVToolRegion pressed======" << endl;
+//}
+
+//void QtPVToolRegion::polygonReady() {
+//  cout << "QtPVToolRegion polygon ready" << endl;
+//}
+
+void QtPVToolRegion::clicked(Int /*x*/, Int /*y*/) { 
+  //this has the same implementation as doubleClicked
+  //we use sigle 'clicked' for activation
+}
+void QtPVToolRegion::doubleClicked(Int x, Int y) {
+   //cout << "QtPVToolRegion polygon " << x << " " << y <<  endl;
+   if (itsCurrentWC==0) 
+      return ;
+   WorldCanvasHolder* wch = pd_->wcHolder(itsCurrentWC);
+   if (wch == 0) 
+     return ;
+
+   Vector<Double> pix(2), lin(2), wld(2);
+   pix(0) = x;
+   pix(1) = y;
+   //cout << "pix=(" << pix(0) << ", " << pix(1) << ")" <<  endl;
+   if (!itsCurrentWC->pixToLin(lin, pix))
+     return ;
+
+   //cout << "lin=(" << lin(0) << ", " << lin(1) << ")" <<  endl;
+   Bool wldOk = itsCurrentWC->linToWorld(wld, lin);
+   //cout << "wldOk=" << wldOk << endl;
+   //cout << "wld=(" << wld(0) << ", " << wld(1) << ")" <<  endl;
+   Vector<String> units;
+   units = itsCurrentWC->worldAxisUnits();
+   //cout << "units=(" << units(0) << ", " << units(1) << ")" <<  endl;
+   units.resize(2, true);
+
+   if (!wldOk) 
+      return;
+
+   Record clickPoint;
+   clickPoint.define("type", "click");
+   clickPoint.define("tool", "Polygon");
+   Record pixel, linear, world;
+   pixel.define("pix", pix);
+   linear.define("lin", lin);
+   world.define("wld", wld);
+   world.define("units", units);  
+   clickPoint.defineRecord("pixel", pixel);
+   clickPoint.defineRecord("linear", linear);
+   clickPoint.defineRecord("world", world);
+  
+   emit echoClicked(clickPoint); 
+}
+
 } //# NAMESPACE CASA - END
     

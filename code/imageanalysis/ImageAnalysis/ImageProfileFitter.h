@@ -31,7 +31,7 @@
 #include <imageanalysis/ImageAnalysis/ImageTask.h>
 
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
-#include <images/Images/ImageFit1D.h>
+#include <imageanalysis/ImageAnalysis/ImageFit1D.h>
 #include <images/Images/TempImage.h>
 
 #include <casa/namespace.h>

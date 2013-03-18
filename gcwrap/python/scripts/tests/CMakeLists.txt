@@ -60,6 +60,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_ia_hanning.py
   test_ia_histograms.py
   test_ia_imageconcat.py
+  test_ia_insert.py
   test_ia_isconform.py
   test_ia_pad.py
   test_ia_pv.py
@@ -101,7 +102,9 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_msmd.py
   test_mstransform.py
   test_mst_cvel.py
+  test_mst_cvelB.py
   test_mst_split.py
+  test_mst_partition.py
   test_partition.py
   test_partitionHelper.py
   test_pcasa.py

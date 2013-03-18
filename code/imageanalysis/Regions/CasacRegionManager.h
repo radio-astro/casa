@@ -81,7 +81,8 @@ public:
 		String& diagnostics, uInt& nSelectedChannels, String& stokes,
 		const Record  * const &regionPtr, const String& regionName,
 		const String& chans, const StokesControl stokesControl,
-		const String& box, const IPosition& imShape, const String& imageName=""
+		const String& box, const IPosition& imShape, const String& imageName="",
+		Bool verbose=True
 	);
 
 	static vector<uInt> consolidateAndOrderRanges(

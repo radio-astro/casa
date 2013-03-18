@@ -45,6 +45,8 @@
 #include <math.h>
 #include <fstream>
 
+#define STRING2CHAR(s) const_cast<char *>((s).c_str())
+
 //#include <casa/namespace.h>
 
 using namespace std ;
@@ -56,39 +58,18 @@ using namespace std ;
 //
 
 // constructor 
-NRODataset::NRODataset( string name ) 
+NRODataset::NRODataset( string name )
+  : scanNum_(0),
+    rowNum_(0),
+    scanLen_(0),
+    dataLen_(0),
+    dataid_(-1),
+    filename_(name),
+    fp_(NULL),
+    same_(-1),
+    frec_()
 {
-  // memory allocation
-  initialize() ;
-
-  filename_ = name ;
-  fp_ = NULL ;
-  scanNum_ = 0 ;
-  rowNum_ = 0 ;
-  scanLen_ = 0 ;
-  dataLen_ = 0 ;
-  dataid_ = -1 ;
-
-  // endian matches
-  same_ = -1 ;
-
-  // Record for frequency setting
-  frec_ = Record() ;
-}
-
-// destructor 
-NRODataset::~NRODataset() 
-{
-  // release memory
-  releaseRecord() ;
-
-  // close file
-  close() ;
-}
-
-// data initialization
-void NRODataset::initialize()
-{
+  // size for common part of data 
   datasize_ = sizeof( char ) * 8   // LOFIL
     + sizeof( char ) * 8           // VER
     + sizeof( char ) * 16          // GROUP
@@ -115,10 +96,755 @@ void NRODataset::initialize()
     + sizeof( double ) * 3         // ALCTM, IPTIM, PA
     + sizeof( int ) * 3            // SCNLEN, SBIND, IBIT
     + sizeof( char ) * 8 ;         // SITE
+}
+
+// destructor 
+NRODataset::~NRODataset() 
+{
+  // release memory
+  releaseRecord() ;
+
+  // close file
+  close() ;
+}
+
+// data initialization
+void NRODataset::initializeCommon()
+{
+  LogIO os( LogOrigin( "NRODataset", "initialize()", WHERE ) ) ;
+
+  int arymax = arrayMax() ;
+
+  // check endian
+  open() ;
+  fseek( fp_, 144, SEEK_SET ) ;
+  int tmp ;
+  if( fread( &tmp, 1, sizeof(int), fp_ ) != sizeof(int) ) {
+    os << LogIO::SEVERE << "Error while checking endian of the file. " << LogIO::EXCEPTION ;
+    return ;
+  }
+  if ( ( 0 < tmp ) && ( tmp <= arymax ) ) {
+    same_ = 1 ;
+    os << LogIO::NORMAL << "same endian " << LogIO::POST ;
+  }
+  else {
+    same_ = 0 ;
+    os << LogIO::NORMAL << "different endian " << LogIO::POST ;
+  }
+  fseek( fp_, 0, SEEK_SET ) ;
+
+  // common part of calculation of data size and memory allocation
+  RX.resize( arymax ) ;
+  HPBW.resize( arymax ) ;
+  EFFA.resize( arymax ) ;
+  EFFB.resize( arymax ) ;
+  EFFL.resize( arymax ) ;
+  EFSS.resize( arymax ) ;
+  GAIN.resize( arymax ) ;
+  HORN.resize( arymax ) ;
+  POLTP.resize( arymax ) ;
+  POLDR.resize( arymax ) ;
+  POLAN.resize( arymax ) ;
+  DFRQ.resize( arymax ) ;
+  SIDBD.resize( arymax ) ;
+  REFN.resize( arymax ) ;
+  IPINT.resize( arymax ) ;
+  MULTN.resize( arymax ) ;
+  MLTSCF.resize( arymax ) ;
+  LAGWIND.resize( arymax ) ;
+  BEBW.resize( arymax ) ;
+  BERES.resize( arymax ) ;
+  CHWID.resize( arymax ) ;
+  ARRY.resize( arymax ) ;
+  NFCAL.resize( arymax ) ;
+  F0CAL.resize( arymax ) ;
+  FQCAL.resize( arymax ) ;
+  CHCAL.resize( arymax ) ;
+  CWCAL.resize( arymax ) ;
+  DSBFC.resize( arymax ) ;
+
+  for ( int i = 0 ; i < arymax ; i++ ) {
+    FQCAL[i].resize( 10 ) ;
+    CHCAL[i].resize( 10 ) ;
+    CWCAL[i].resize( 10 ) ;
+  }
 
   // NRODataRecord
   record_ = new NRODataRecord() ;
   record_->LDATA = NULL ;
+
+  // reference frequency
+  refFreq_.resize( arymax, 0.0 ) ;
+}
+
+// fill data header
+int NRODataset::fillHeader() 
+{
+  LogIO os( LogOrigin( "NRODataset", "fillHeader()", WHERE ) ) ;
+
+  // open file
+  if ( open() ) {
+    os << LogIO::SEVERE << "Error opening file " << filename_ << "." << LogIO::EXCEPTION ;
+    return -1 ;
+  }
+
+  // fill
+  int status = fillHeader( same_ ) ;
+
+  if ( status != 0 ) {
+    os << LogIO::SEVERE << "Error while reading header " << filename_ << "." << LogIO::EXCEPTION ;
+    return status ;
+  }
+
+  initArray();
+
+  show() ;
+
+  return status ;
+}
+
+int NRODataset::fillHeaderCommon( int sameEndian ) 
+{
+  LogIO os( LogOrigin( "NRODataset", "fillHeader()", WHERE ) ) ;
+
+  int arymax = arrayMax() ;
+
+  // make sure file pointer points a beginning of the file
+  fseek( fp_, 0, SEEK_SET ) ;
+
+  // read data header
+  LOFIL.resize(8);
+  if ( readHeader( STRING2CHAR(LOFIL), 8 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data LOFIL." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "LOFIL = " << LOFIL << endl ;
+  //
+  VER.resize(8);
+  if ( readHeader( STRING2CHAR(VER), 8 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data VER." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "VER = " << VER << endl ;
+  //
+  GROUP.resize(16);
+  if ( readHeader( STRING2CHAR(GROUP), 16 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data GROUP." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "GROUP = " << GROUP << endl ;
+  //
+  PROJ.resize(16);
+  if ( readHeader( STRING2CHAR(PROJ), 16 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data PROJ." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "PROJ = " << PROJ << endl ;
+  //
+  SCHED.resize(24);
+  if ( readHeader( STRING2CHAR(SCHED), 24 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SCHED." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SCHED = " << SCHED << endl ;
+  //
+  OBSVR.resize(40);
+  if ( readHeader( STRING2CHAR(OBSVR), 40 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data OBSVR." << LogIO::POST ;
+    return -1 ;
+  }  
+  // DEBUG
+  //cout << "OBSVR = " << OBSVR << endl ;
+  //
+  LOSTM.resize(16);
+  if ( readHeader( STRING2CHAR(LOSTM), 16 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data LOSTM." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "LOSTM = " << LOSTM << endl ;
+  //
+  LOETM.resize(16);
+  if ( readHeader( STRING2CHAR(LOETM), 16 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data LOETM." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "LOETM = " << LOETM << endl ;
+  //
+  if ( readHeader( ARYNM, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data ARYNM." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "ARYNM = " << ARYNM << endl ;
+  //
+  if ( readHeader( NSCAN, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data NSCAN." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "NSCAN = " << NSCAN << endl ;
+  //
+  TITLE.resize(120);
+  if ( readHeader( STRING2CHAR(TITLE), 120 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data TITLE." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "TITLE = " << TITLE << endl ;
+  //
+  OBJ.resize(16);
+  if ( readHeader( STRING2CHAR(OBJ), 16 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data OBJ." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "OBJ = " << OBJ << endl ;
+  //
+  EPOCH.resize(8);
+  if ( readHeader( STRING2CHAR(EPOCH), 8 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data EPOCH." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "EPOCH = " << EPOCH << endl ;
+  //
+  if ( readHeader( RA0, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data RA0." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "RA0 = " << RA0 << endl ;
+  //
+  if ( readHeader( DEC0, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data DEC0." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "DEC0 = " << DEC0 << endl ;
+  //
+  if ( readHeader( GLNG0, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data GLNG0." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "GLNG0 = " << GLNG0 << endl ;
+  //
+  if ( readHeader( GLAT0, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data GLAT0." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "GLAT0 = " << GLAT0 << endl ;
+  //
+  if ( readHeader( NCALB, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data NCALB." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "NCALB = " << NCALB << endl ;
+  //
+  if ( readHeader( SCNCD, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SCNCD." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SCNCD = " << SCNCD << endl ;
+  //
+  SCMOD.resize(120);
+  if ( readHeader( STRING2CHAR(SCMOD), 120 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SCMOD." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SCMOD = " << SCMOD << endl ;
+  //
+  if ( readHeader( URVEL, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data URVEL." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "URVEL = " << URVEL << endl ;
+  //
+  VREF.resize(4);
+  if ( readHeader( STRING2CHAR(VREF), 4 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data VREF." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "VREF = " << VREF << endl ;
+  //
+  VDEF.resize(4);
+  if ( readHeader( STRING2CHAR(VDEF), 4 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data VDEF." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "VDEF = " << VDEF << endl ;
+  //
+  SWMOD.resize(8);
+  if ( readHeader( STRING2CHAR(SWMOD), 8 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SWMOD." << LogIO::POST ;
+    return -1 ;
+  }
+  SWMOD += "::OTF" ;
+  // DEBUG
+  //cout << "SWMOD = " << SWMOD << endl ;
+  //
+  if ( readHeader( FRQSW, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data FRQSW." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "FRQSW = " << FRQSW << endl ;
+  //
+  if ( readHeader( DBEAM, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data DBEAM." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "DBEAM = " << DBEAM << endl ;
+  //
+  if ( readHeader( MLTOF, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data MLTOF." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "MLTOF = " << MLTOF << endl ;
+  //
+  if ( readHeader( CMTQ, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data CMTQ." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "CMTQ = " << CMTQ << endl ;
+  //
+  if ( readHeader( CMTE, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data CMTE." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "CMTE = " << CMTE << endl ;
+  //
+  if ( readHeader( CMTSOM, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data CMTSOM." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "CMTSOM = " << CMTSOM << endl ;
+  //
+  if ( readHeader( CMTNODE, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data CMTNODE." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "CMTNODE = " << CMTNODE << endl ;
+  //
+  if ( readHeader( CMTI, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data CMTI." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "CMTI = " << CMTI << endl ;
+  //
+  CMTTM.resize(24);
+  if ( readHeader( STRING2CHAR(CMTTM), 24 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data CMTTM." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "CMTTM = " << CMTTM << endl ;
+  //
+  if ( readHeader( SBDX, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SBDX." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SBDX = " << SBDX << endl ;
+  //
+  if ( readHeader( SBDY, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SBDY." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SBDY = " << SBDY << endl ;
+  //
+  if ( readHeader( SBDZ1, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SBDZ1." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SBDZ1 = " << SBDZ1 << endl ;
+  //
+  if ( readHeader( SBDZ2, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SBDZ2." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SBDZ2 = " << SBDZ2 << endl ;
+  //
+  if ( readHeader( DAZP, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data DAZP." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "DAZP = " << DAZP << endl ;
+  //
+  if ( readHeader( DELP, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data DELP." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "DELP = " << DELP << endl ;
+  //
+  if ( readHeader( CHBIND, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data CHBIND." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "CHBIND = " << CHBIND << endl ;
+  //
+  if ( readHeader( NUMCH, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data NUMCH." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "NUMCH = " << NUMCH << endl ;
+  //
+  if ( readHeader( CHMIN, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data CHMIN." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "CHMIN = " << CHMIN << endl ;
+  //
+  if ( readHeader( CHMAX, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data CHMAX." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "CHMAX = " << CHMAX << endl ;
+  //
+  if ( readHeader( ALCTM, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data ALCTM." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "ALCTM = " << ALCTM << endl ;
+  //
+  if ( readHeader( IPTIM, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data IPTIM." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "IPTIM = " << IPTIM << endl ;
+  //
+  if ( readHeader( PA, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data PA." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "PA = " << PA << endl ;
+  //
+  for ( int i = 0 ; i < arymax ; i++ ) {
+    RX[i].resize(16);
+    if ( readHeader( STRING2CHAR(RX[i]), 16 ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data RX[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "RX", arymax, RX ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++ ) {
+    if ( readHeader( HPBW[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data HPBW[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "HPBW", arymax, HPBW ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++ ) {
+    if ( readHeader( EFFA[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data EFFA[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "EFFA", arymax, EFFA ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++ ) {
+    if ( readHeader( EFFB[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data EFFB[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "EFFB", arymax, EFFB ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++ ) {
+    if ( readHeader( EFFL[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data EFFL[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "EFFL", arymax, EFFL ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++ ) {
+    if ( readHeader( EFSS[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data EFSS[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "EFSS", arymax, EFSS ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( GAIN[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data GAIN[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "GAIN", arymax, GAIN ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    HORN[i].resize(4);
+    if ( readHeader( STRING2CHAR(HORN[i]), 4 ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data HORN[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "HORN", arymax, HORN ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    POLTP[i].resize(4);
+    if ( readHeader( STRING2CHAR(POLTP[i]), 4 ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data POLTP[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "POLTP", arymax, POLTP ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( POLDR[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data POLDR[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "POLDR", arymax, POLDR ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( POLAN[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data POLAN[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "POLAN", arymax, POLAN ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( DFRQ[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data DFRQ[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "DFRQ", arymax, DFRQ ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    SIDBD[i].resize(4);
+    if ( readHeader( STRING2CHAR(SIDBD[i]), 4 ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data SIDBD[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "SIDBD", arymax, SIDBD ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( REFN[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data REFN[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "REFN", arymax, REFN ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( IPINT[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data IPINT[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "IPINT", arymax, IPINT ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( MULTN[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data MULTN[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "MULTN", arymax, MULTN ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( MLTSCF[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data MLTSCF[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "MLTSCF", arymax, MLTSCF ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    LAGWIND[i].resize(8);
+    if ( readHeader( STRING2CHAR(LAGWIND[i]), 8 ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data LAGWIND[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "LAGWIND", arymax, LAGWIND ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( BEBW[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data BEBW[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "BEBW", arymax, BEBW ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( BERES[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data BERES[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "BERES", arymax, BERES ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( CHWID[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data CHWID[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "CHWID", arymax, CHWID ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( ARRY[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data ARRY[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "ARRY", arymax, ARRY ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( NFCAL[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data NFCAL[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "NFCAL", arymax, NFCAL ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    if ( readHeader( F0CAL[i], sameEndian ) == -1 ) {
+      os << LogIO::WARN << "Error while reading data F0CAL[" << i << "]." << LogIO::POST ;
+      return -1 ;
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "F0CAL", arymax, F0CAL ) ;
+  //
+  for ( int i = 0 ; i < arymax ; i++) {
+    for ( int j = 0 ; j < 10 ; j++ ) {
+      if ( readHeader( FQCAL[i][j], sameEndian ) == -1 ) {
+        os << LogIO::WARN << "Error while reading data FQCAL[" << i << "][" << j << "]." << LogIO::POST ;
+        return -1 ;
+      }
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "FQCAL", arymax, 10, FQCAL ) ;
+  //  
+  for ( int i = 0 ; i < arymax ; i++) {
+    for ( int j = 0 ; j < 10 ; j++ ) {
+      if ( readHeader( CHCAL[i][j], sameEndian ) == -1 ) {
+        os << LogIO::WARN << "Error while reading data CHCAL[" << i << "][" << j << "]." << LogIO::POST ;
+        return -1 ;
+      }
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "CHCAL", arymax, 10, CHCAL ) ;
+  //  
+  for ( int i = 0 ; i < arymax ; i++) {
+    for ( int j = 0 ; j < 10 ; j++ ) {
+      if ( readHeader( CWCAL[i][j], sameEndian ) == -1 ) {
+        os << LogIO::WARN << "Error while reading data CWCAL[" << i << "][" << j << "]." << LogIO::POST ;
+        return -1 ;
+      }
+    }
+  }
+  // DEBUG
+//   nro_debug_output( "CWCAL", arymax, 10, CWCAL ) ;
+  //  
+  if ( readHeader( SCNLEN, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SCNLEN." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SCNLEN = " << SCNLEN << endl ;
+  //
+  if ( readHeader( SBIND, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SBIND." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SBIND = " << SBIND << endl ;
+  //
+  if ( readHeader( IBIT, sameEndian ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data IBIT." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "IBIT = " << IBIT << endl ;
+  //
+  SITE.resize(8);
+  if ( readHeader( STRING2CHAR(SITE), 8 ) == -1 ) {
+    os << LogIO::WARN << "Error while reading data SITE." << LogIO::POST ;
+    return -1 ;
+  }
+  // DEBUG
+  //cout << "SITE = " << SITE << endl ;
+  //
+
+  //scanNum_ = NSCAN + 1 ; // includes ZERO scan
+  scanLen_ = SCNLEN ;
+  dataLen_ = scanLen_ - SCAN_HEADER_SIZE ;
+  scanNum_ = getScanNum();
+  rowNum_ = scanNum_ * ARYNM ;
+  chmax_ = (int) ( dataLen_ * 8 / IBIT ) ;
+  record_->LDATA = new char[dataLen_] ;
+
+  return 0 ;
 }
 
 void NRODataset::convertEndian( int &value )
@@ -261,7 +987,7 @@ NRODataRecord *NRODataset::getRecord( int i )
   else {
     LogIO os( LogOrigin( "NRODataset", "getRecord()", WHERE ) ) ;
     //cerr << "NRODataset::getRecord()  error while reading data " << i << endl ;
-    os << LogIO::SEVERE << "error while reading data " << i << ". return NULL." << LogIO::POST ;
+    os << LogIO::SEVERE << "error while reading data " << i << ". return NULL." << LogIO::EXCEPTION ;
     dataid_ = -1 ;
     return NULL ;
   }
@@ -279,7 +1005,7 @@ int NRODataset::fillRecord( int i )
     
 
   // fill NRODataset
-  int offset = getDataSize() + scanLen_ * i ;
+  long offset = getDataSize() + scanLen_ * i ;
   // DEBUG
   //cout << "NRODataset::fillRecord()  offset (header) = " << offset << endl ;
   //cout << "NRODataset::fillRecord()  sizeof(NRODataRecord) = " << sizeof( NRODataRecord ) << " byte" << endl ;
@@ -467,14 +1193,14 @@ int NRODataset::getIndex( int irow )
   //cout << "NRODataset::getIndex()  start" << endl ;
   //
   const NRODataRecord *record = getRecord( irow ) ;
+
   const string str = record->ARRYT ;
   // DEBUG
   //cout << "NRODataset::getIndex()  str = " << str << endl ;
   //
-  string substr = str.substr( 1, 2 ) ;
-  unsigned int index = (unsigned int)(atoi( substr.c_str() ) - 1) ;
+  int index = (int)getArrayId(str);
   // DEBUG 
-  //cout << "NRODataset::getIndex()  irow = " << irow << " index = " << index << endl ;
+  //cout << "NRODataset::getIndex()  irow = " << irow << "str = " << str << " index = " << index << endl ;
   //
 
   // DEBUG 
@@ -488,39 +1214,25 @@ int NRODataset::getPolarizationNum()
   // DEBUG
   //cout << "NRODataset::getPolarizationNum()  start process" << endl ;
   //
-  int npol = 0 ;
-
-  vector<string> type( 2 ) ;
-  type[0] = "CIRC" ;
-  type[1] = "LINR" ;
-  vector<double> crot ;
-  vector<double> lagl ;
-  //vector<int> ntype( 2, 0 ) ;
-
-  unsigned int imax = rowNum_ ;
-  for ( unsigned int i = 0 ; i < imax ; i++ ) { 
-    int index = getIndex( i ) ;
-    // DEBUG 
-    //cout <<"NRODataset::getPolarizationNum()  index = " << index << endl ;
-    //
-    if ( POLTP[index] == type[0] ) {
-      if( count( crot.begin(), crot.end(), POLDR[index] ) != 0 ) {
-        crot.push_back( POLDR[index] ) ;
-        npol++ ;
-      }
-      //ntype[0] = 1 ;
+  int npol = 1;
+  Regex reRx2("(.*V|H20ch2)$");
+  Regex reRx1("(.*H|H20ch1)$");
+  Bool match1 = false;
+  Bool match2 = false;
+  for (int i = 0; i < arrayMax(); i++) {
+    //cout << "RX[" << i << "]=" << RX[i] << endl;
+    if (!match1) {
+      match1 = (reRx1.match(RX[i].c_str(), RX[i].size()) != String::npos);
     }
-    else if ( POLTP[index] == type[1] ) {
-      if ( count( lagl.begin(), lagl.end(), POLAN[index] ) != 0 ) {
-        lagl.push_back( POLAN[index] ) ;
-        npol++ ;
-      }
-      //ntype[1] = 1 ;
+    if (!match2) {
+      match2 = (reRx2.match(RX[i].c_str(), RX[i].size()) != String::npos);
     }
   }
 
-  if ( npol == 0 )
-    npol = 1 ;
+  if (match1 && match2)
+    npol = 2;  
+
+  //cout << "npol = " << npol << endl;
 
   // DEBUG
   //cout << "NRODataset::getPolarizationNum()  end process" << endl ;
@@ -754,6 +1466,14 @@ uInt NRODataset::getArrayId( string type )
   return ib ;
 }
 
+uInt NRODataset::getSortedArrayId( string type )
+{
+  uInt index = 0;
+  while (arrayNames_[index] != type && index < (uInt)ARYNM)
+    ++index;
+  return index;
+}
+
 void NRODataset::show()
 {
   LogIO os( LogOrigin( "NRODataset", "show()", WHERE ) ) ;
@@ -864,4 +1584,37 @@ uInt NRODataset::polNoFromRX( const string &rx )
     polno = 1;
   }
   return polno ;
+}
+
+void NRODataset::initArray()
+{
+  if (ARYNM <= 0)
+    throw AipsError("ARYNM must be greater than zero.");
+
+  int numArray = 0;
+  arrayNames_.resize(ARYNM);
+  for (int irow = 0; numArray < ARYNM && irow < rowNum_; irow++) {
+    //cout << "irow " << irow << endl;
+    const NRODataRecord *record = getRecord( irow ) ;
+    const string str = record->ARRYT ;
+    if (find(arrayNames_.begin(), arrayNames_.end(), str) == arrayNames_.end()) {
+      arrayNames_[numArray] = str;
+      //cout << "arrayNames_[" << numArray << "]=" << str << endl;
+      ++numArray;
+    }
+  }
+  //cout << "numArray=" << numArray << endl;
+}
+
+int NRODataset::getScanNum()
+{
+  long offset = getDataSize() + scanLen_ * NSCAN * ARYNM ;
+  fseek( fp_, offset, SEEK_SET ) ;
+  // try to read data
+  fgetc( fp_ ) ;
+  int eof = feof( fp_ ) ;
+  //cout << "eof=" << eof << endl;
+  // reset file pointer
+  fseek( fp_, 0, SEEK_SET ) ;
+  return NSCAN + (eof > 0 ? 0 : 1) ;
 }

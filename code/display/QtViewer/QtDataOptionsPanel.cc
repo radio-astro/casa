@@ -40,6 +40,7 @@ QtDataOptionsPanel::QtDataOptionsPanel(QtDisplayPanelGui* panel, QWidget* parent
   setWindowTitle("Viewer Data Options Panel");
   
   setupUi(this);
+  connect( globalColorCheckBox, SIGNAL(toggled(bool)), this, SIGNAL(globalColorSettingsChanged(bool)));
   connect( auto_apply, SIGNAL(clicked(bool)), SLOT(auto_apply_state_change(bool)) );
 
   //#dk tabs_->setFixedWidth(585);
@@ -50,6 +51,7 @@ QtDataOptionsPanel::QtDataOptionsPanel(QtDisplayPanelGui* panel, QWidget* parent
   // setMinimumHeight(200);		//#dk
   tabs_->setMinimumWidth(350);	//#dk
   tabs_->setMinimumHeight(150);	//#dk
+  connect( tabs_, SIGNAL(currentChanged(int)), this, SLOT(tabChanged(int)));
   //#dk with auto-app:    resize(595, 705);		//#dk
   // resize(510, 705);			//#dk
   resize(485, 665);			//#dk
@@ -138,6 +140,11 @@ void QtDataOptionsPanel::removeDDTab_(QtDisplayData* qdd) {
     
       break;  }  }  }
 
+
+void QtDataOptionsPanel::tabChanged( int index ){
+	QString tabName = tabs_->tabText( index );
+	emit dataOptionsTabChanged( tabName );
+}
 
 void QtDataOptionsPanel::auto_apply_state_change(bool) {
     //  green: rgb(20, 227, 67), red: rgb(255, 53, 43)

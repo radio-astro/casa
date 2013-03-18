@@ -58,6 +58,8 @@ public:
     Vector<Float> getFitValuesX() const;
     bool isGaussian() const;
     void toAscii( QTextStream& out) const;
+    void restrictDomain( double xMin, double xMax );
+    void clearDomainLimits();
     ~FitWidget();
 
 signals:

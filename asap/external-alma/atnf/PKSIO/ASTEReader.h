@@ -77,9 +77,6 @@ class ASTEReader : public NROReader
   // Destructor.
   ~ASTEReader() ;
 
-  // Read data header
-  virtual int read() ;
-
   // get number of IF
   virtual Int getNumIF() ;
 
@@ -87,6 +84,9 @@ class ASTEReader : public NROReader
   virtual Int getNumBeam() ;
 
  protected:
+  // initialize Dataset
+  void initDataset();
+
   // Get Antenna Position in ITRF coordinate
   virtual vector<double> getAntennaPosition() ;
 

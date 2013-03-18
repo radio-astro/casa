@@ -1515,7 +1515,7 @@ class asapplotter:
             if self._data.nrow() == 0:
                 self._data.set_selection(basesel)
                 continue
-            print "Plotting direction of %s = %s" % (colorby, str(idx))
+            #print "Plotting direction of %s = %s" % (colorby, str(idx))
             # getting data to plot
             dir = array(self._data.get_directionval()).transpose()
             ra = dir[0]*180./pi

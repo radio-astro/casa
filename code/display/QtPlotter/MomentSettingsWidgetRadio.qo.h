@@ -32,7 +32,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <display/QtPlotter/ProfileTaskFacilitator.h>
 #include <display/QtPlotter/MomentSettingsWidgetRadio.ui.h>
-#include <images/Images/ImageMomentsProgressMonitor.h>
+#include <imageanalysis/ImageAnalysis/ImageMomentsProgressMonitor.h>
 
 namespace casa {
 

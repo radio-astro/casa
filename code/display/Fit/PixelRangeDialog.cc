@@ -69,6 +69,14 @@ void PixelRangeDialog::setInterval( double minValue, double maxValue ){
 	plotWidget->setMinMaxValues( minValue, maxValue );
 }
 
+void PixelRangeDialog::setRangeMaxEnabled( bool enabled ){
+	plotWidget->setRangeMaxEnabled( enabled );
+}
+
+vector<float> PixelRangeDialog::getXValues() const {
+	return plotWidget->getXValues();
+}
+
 PixelRangeDialog::~PixelRangeDialog(){
 }
 

@@ -28,7 +28,7 @@
 #ifndef IMAGES_IMAGEPOL_H
 #define IMAGES_IMAGEPOL_H
 
-#include <images/Images/ImagePolarimetry.h>
+#include <imageanalysis/ImageAnalysis/ImagePolarimetry.h>
 
 namespace casa {
 

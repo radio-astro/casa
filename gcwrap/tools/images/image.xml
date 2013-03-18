@@ -5468,7 +5468,7 @@ ia.history(list=T, browse=F)       # List history to logger
 <input>
   
      <param type="string"  name="infile">
-     <description>Image file name.</description>
+     <description>Name of image to be inserted.</description>
      <value></value>
      </param>
   
@@ -5481,16 +5481,22 @@ ia.history(list=T, browse=F)       # List history to logger
      <description>Location of input image in output image.  Default is centrally located.</description>
      <value>-1</value>
      </param>
+     
+     <param type="bool" name="verbose">
+        <description>Emit informational messages to logger?</description>
+        <value>true</value>
+     </param>
 </input>
-<returns type="image"/>
+<returns type="bool"/>
 
 <description>
 
-This function inserts the specified image (or part of it) into this image.
+This function inserts the specified image (or part of it) into the image
+referenced by this tool.
 The specified image may be given via argument {\stfaf infile}
 as a disk file name (it may be in native \casa, \fits, or Miriad
 format; Look \htmlref{here}{IMAGES:FOREIGNIMAGES}  for more
-information on foreign images). <!-- or directly as an Image tool. -->
+information on foreign images).
 
 If the {\stfaf locate} vector is not given, then the images are
 aligned (to an integer pixel shift) by their reference pixels.
@@ -5500,8 +5506,8 @@ give the absolute pixel in the output (this) image of the bottom left
 corner of the input (sub)image.  For those values that are not given,
 the input image is symmetrically placed in the output image. 
 
-The current image referenced with the image tool is overwritten with
-the inserted image.
+The image referenced by this tool is modified in place; no new image
+is created. The method returns True if successful.
 
 </description>
 <example>
@@ -5512,19 +5518,12 @@ print "\t----\t insert Ex 1 \t----"
 ia.maketestimage('myfile.insert',overwrite=true)
 ia.close()
 ia.fromshape(shape=[200,200])
-im1 = ia.insert(infile='myfile.insert')       # Align by reference pixel
-ia.set(0.0)
-im2 = ia.newimagefromfile('myfile.insert')
-im3 = ia.insert(infile=im2.name(), locate=[]) # Align centrally
-ia.set(0.0)
+ia.insert(infile='myfile.insert')       # Align by reference pixel
+ia.newimagefromfile('myfile.insert')
+ia.insert(infile=im2.name(), locate=[]) # Align centrally
 # This time align axis 0 as given and axis 1 centrally
-im4 =ia.insert(infile='myfile.insert', locate=[20])
+ia.insert(infile='myfile.insert', locate=[20])
 ia.close()                                    # close default tool and
-im1.done()                                    # destroy on-the-fly images
-im2.done()
-im3.done()
-im4.done()
-#
 """
 
 </example>
@@ -9299,6 +9298,11 @@ listed in square brackets.
         <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
         <value>false</value>
      </param>
+
+     <param type="bool"  name="history">
+        <description>Write the image history to the FITS file? Default True</description>
+        <value>true</value>
+     </param>
      
 </input>
 <returns type="bool"/>
@@ -9513,7 +9517,7 @@ a script to make sure this variable is an Image
      <param type="any"  name="value">
 	     <any type="variant"/>
      <description>Absolute world coordinate,
-      Numeric vector, vector of quantities or record.
+      Numeric vector, vector of strings representing quantities, or record of format analogous to that produced by ia.toworld().
       Default is reference value.</description>
      </param>
 </input>
@@ -10181,20 +10185,28 @@ used to create a 2D temporary image.
         Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
         be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
         ending pixel. Then, the pixels within halfwidth of the slice are averaged and the resulting image is
-        written and/or returned. The coordinate system of the resulting image is valid in the sense that the coordinates
-        of the pixels in the output correspond to those along slice in the input image (ie, the direction coordinate
-        will be rotated with respect to the position axis in the output axis in the output image, in general).
+        written and/or returned. The output image has a linear coordinate in place of the direction coordinate of the
+        input image, and the corresponding axis represents angular offset with the center pixel having a value of 0.
+        
+        The equivalent coordinate system, with a (usually) rotated direction coordinate (eg, RA and Dec) is written
+        to the output image as a table record. It can be retrieved using the table tool as shown in the example below.
     </description>
     <example>
         ia.open("my_spectral_cube.im")
         # create a pv image with the position axis running from ra, dec pixel positions of [45, 50] to [100, 120]
         # in the input image
-        mypv = ia.pv(outfile="", start=[45,50], end=[100,120], wantreturn=true)
+        mypv = ia.pv(outfile="pv.im", start=[45,50], end=[100,120], wantreturn=true)
         ia.done()
         # analyze the pv image, such as get statistics
         pvstats = mypv.statistics()
         # when done, close the tool to release system resources
         mypv.done()
+        
+        # get the alternate coordinate system information
+        tb.open("pv.im")
+        alternate_csys_record = tb.getkeyword("misc")["secondary_coordinates"]
+        tb.done()
+        
     </example>
 </method>
   

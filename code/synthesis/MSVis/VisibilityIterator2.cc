@@ -36,6 +36,7 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 
+#include <cstdarg>
 #include <map>
 #include <set>
 #include <utility>
@@ -49,6 +50,48 @@ using namespace std;
 namespace casa {
 
 namespace vi {
+
+SortColumns::SortColumns (const Block<Int> & columns, Bool addDefaultColumns)
+: addDefaultColumns_p (addDefaultColumns),
+  columns_p (columns)
+{}
+
+Bool
+SortColumns::addDefaultSortColumns () const
+{
+    return addDefaultColumns_p;
+}
+
+const Block<Int> &
+SortColumns::getColumns () const
+{
+    return columns_p;
+}
+
+
+WeightFunction *
+WeightFunction::generateUnityWeightFunction ()
+{
+    return generateWeightFunction (WeightFunction::unity);
+}
+
+WeightFunction *
+WeightFunction::generateIdentityWeightFunction ()
+{
+    return  generateWeightFunction (WeightFunction::identity);
+}
+
+WeightFunction *
+WeightFunction::generateSquareWeightFunction ()
+{
+    return  generateWeightFunction (WeightFunction::square);
+}
+
+
+Float WeightFunction::unity (Float) { return 1.0;}
+Float WeightFunction::identity (Float x) { return x;}
+Float WeightFunction::square (Float x) { return x * x;}
+
 
 VisibilityIterator2::VisibilityIterator2()
 : impl_p (0)
@@ -175,11 +218,11 @@ VisibilityIterator2::ms () const
     return impl_p->ms ();
 }
 
-Int
-VisibilityIterator2::arrayId () const
+void
+VisibilityIterator2::arrayIds (Vector<Int>& ids) const
 {
     CheckImplementationPointerR ();
-    return impl_p->arrayId ();
+    return impl_p->arrayIds (ids);
 }
 
 
@@ -312,11 +355,11 @@ VisibilityIterator2::feed_pa (Double time) const
     return impl_p->feed_pa (time);
 }
 
-Int
-VisibilityIterator2::fieldId () const
+void
+VisibilityIterator2::fieldIds (Vector<Int>& ids) const
 {
     CheckImplementationPointerR ();
-    return impl_p->fieldId ();
+    return impl_p->fieldIds (ids);
 }
 
 String
@@ -1008,18 +1051,18 @@ VisibilityIterator2::writeFlagRow (const Vector<Bool>& rowflags)
 }
 
 void
-VisibilityIterator2::writeSigma (const Vector<Float>& sig)
+VisibilityIterator2::writeSigma (const Matrix<Float>& sig)
 {
     CheckImplementationPointerW ();
     impl_p->writeSigma (sig);
 }
 
-void
-VisibilityIterator2::writeSigmaMat (const Matrix<Float>& sigmat)
-{
-    CheckImplementationPointerW ();
-    impl_p->writeSigmaMat (sigmat);
-}
+//void
+//VisibilityIterator2::writeSigmaMat (const Matrix<Float>& sigmat)
+//{
+//    CheckImplementationPointerW ();
+//    impl_p->writeSigmaMat (sigmat);
+//}
 
 //void
 //VisibilityIterator2::writeVisCorrected (const Matrix<CStokesVector>& vis)
@@ -1064,18 +1107,18 @@ VisibilityIterator2::writeVisObserved (const Cube<Complex>& vis)
 }
 
 void
-VisibilityIterator2::writeWeight (const Vector<Float>& wt)
+VisibilityIterator2::writeWeight (const Matrix<Float>& wt)
 {
     CheckImplementationPointerW ();
     impl_p->writeWeight (wt);
 }
 
-void
-VisibilityIterator2::writeWeightMat (const Matrix<Float>& wtmat)
-{
-    CheckImplementationPointerW ();
-    impl_p->writeWeightMat (wtmat);
-}
+//void
+//VisibilityIterator2::writeWeightMat (const Matrix<Float>& wtmat)
+//{
+//    CheckImplementationPointerW ();
+//    impl_p->writeWeightMat (wtmat);
+//}
 
 void
 VisibilityIterator2::writeWeightSpectrum (const Cube<Float>& wtsp)
@@ -1206,33 +1249,7 @@ SubtableColumns::weather() const
     return msIter_p.msColumns().weather();
 }
 
-VisibilityIterator2 *
-AveragingTvi2Factory::createVi (MeasurementSet * ms,
-                                Double interval,
-                                Double chunkInterval,
-                                Int averagingFactor)
-{
-    // Start off with an empty VI
 
-    VisibilityIterator2 * vi2 = new VisibilityIterator2 ();
-
-    // Create a simple VI implementation to perform the reading.
-
-    Block<MeasurementSet> mss (1, * ms);
-    Block<Int> sortColumns;
-    Double averagingInterval = interval * averagingFactor;
-    Int nAveragesPerChunk = (Int) (chunkInterval / averagingInterval * 1.001);
-
-    VisibilityIteratorImpl2 * vii2 = new VisibilityIteratorImpl2 (vi2, mss, sortColumns, True,
-                                                                  chunkInterval, VbPlain, False);
-
-    AveragingTvi2 * averagingTvi2 = new AveragingTvi2 (vii2, averagingInterval, nAveragesPerChunk, 0);
-
-    vi2->impl_p = averagingTvi2;
-
-    return vi2;
-
-}
 
 } // end namespace vi
 
