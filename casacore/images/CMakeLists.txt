@@ -35,7 +35,6 @@ Regions/AipsIOReaderWriter.cc
 Regions/WCComplement.cc
 Regions/RegionHandlerHDF5.cc
 Images/ImageInfo.cc
-Images/ImageMetaData.cc
 Images/ImageExprGram.cc
 Images/MaskSpecifier.cc
 Images/ImageBeamSet.cc
@@ -101,7 +100,6 @@ Images/ImageFITSConverter.tcc
 Images/ImageInfo.h
 Images/ImageInterface.h
 Images/ImageInterface.tcc
-Images/ImageMetaData.h
 Images/ImageOpener.h
 Images/ImageProxy.h
 Images/ImageRegrid.h

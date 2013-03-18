@@ -1,5 +1,4 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Copyright (C) 2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +22,48 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
-
-#include <string>
-
-#define CASACORE_VERSION "1.0.200"
+//# Includes
+#include <scimath/Functionals/PoissonParam.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+template<class T>
+PoissonParam<T>::PoissonParam() :
+  Function<T>(2) {
+  param_p[LAMBDA] = T(1.0);
+  param_p[HEIGHT] = T(1.0);
+}
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+template<class T>
+PoissonParam<T>::PoissonParam(const T &lambda) :
+  Function<T>(2) {
+  param_p[LAMBDA] = lambda;
+  param_p[HEIGHT] = T(1.0);
+}
+
+template<class T>
+PoissonParam<T>::PoissonParam( const T &lambda, const T &height ) :
+Function<T>(2){
+	param_p[LAMBDA] = lambda;
+	param_p[HEIGHT] = height;
+}
+
+template<class T>
+PoissonParam<T>::PoissonParam(const PoissonParam<T> &other) :
+  Function<T>(other) {}
+
+template<class T>
+PoissonParam<T>::~PoissonParam() {}
+
+//# Operators
+template<class T>
+PoissonParam<T> &PoissonParam<T>::operator=(const PoissonParam<T> &other) {
+  if (this != &other) Function<T>::operator=(other);
+  return *this;
+}
+
+
 
 } //# NAMESPACE CASA - END
 
-#endif

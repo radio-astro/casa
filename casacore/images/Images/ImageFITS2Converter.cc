@@ -239,7 +239,8 @@ Bool ImageFITSConverter::ImageToFITS(
 	Bool allowOverwrite, Bool degenerateLast,
 	Bool verbose, Bool stokesLast,
 	Bool preferWavelength, Bool airWavelength,
-	const String& origin
+	const String& origin,
+	Bool history
 ) {
 	LogIO os;
 	os << LogOrigin("ImageFitsConverter", __FUNCTION__, WHERE);
@@ -256,7 +257,7 @@ Bool ImageFITSConverter::ImageToFITS(
 		// put the image to the FITSOut
 		if (!ImageFITSConverter::QualImgToFITSOut(error, os, image, outfile, memoryInMB,
 				preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
-				verbose, stokesLast,	preferWavelength,	airWavelength,	origin)){
+				verbose, stokesLast, preferWavelength, airWavelength, origin, history)){
 			return False;
 		}
 	}
@@ -264,7 +265,7 @@ Bool ImageFITSConverter::ImageToFITS(
 		// put the image to the FITSOut
 		if (!ImageFITSConverter::ImageToFITSOut(error, os, image, outfile, memoryInMB,
 				preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
-				verbose, stokesLast,	preferWavelength,	airWavelength,	True, True, origin)){
+				verbose, stokesLast, preferWavelength, airWavelength, True, True, origin, history)){
 			return False;
 		}
 	}
@@ -717,7 +718,7 @@ Bool ImageFITSConverter::ImageToFITSOut(
 	Bool opticalVelocity, Int BITPIX, Float minPix, Float maxPix,
 	Bool degenerateLast, Bool verbose, Bool stokesLast,
 	Bool preferWavelength, Bool airWavelength, Bool primHead,
-	Bool allowAppend, const String& origin
+	Bool allowAppend, const String& origin, Bool history
 ) {
 	//
 	// Get coordinates and test that axis removal has been
@@ -1142,24 +1143,26 @@ Bool ImageFITSConverter::ImageToFITSOut(
 		return False;
 	}
 
-	//
-	// HISTORY
-	//
-	const LoggerHolder& logger = image.logger();
-	//
-	vector<String> historyChunk;
-	uInt nstrings;
-	Bool aipsppFormat;
-	uInt firstLine = 0;
-	while (1) {
-		firstLine = FITSHistoryUtil::toHISTORY(historyChunk, aipsppFormat,
-				nstrings, firstLine, logger);
-		if (nstrings == 0) {
-			break;
-		}
-		String groupType;
-		if (aipsppFormat) groupType = "LOGTABLE";
-		FITSHistoryUtil::addHistoryGroup(kw, historyChunk, nstrings, groupType);
+	if(history){
+	  //
+	  // HISTORY
+	  //
+	  const LoggerHolder& logger = image.logger();
+	  //
+	  vector<String> historyChunk;
+	  uInt nstrings;
+	  Bool aipsppFormat;
+	  uInt firstLine = 0;
+	  while (1) {
+	      firstLine = FITSHistoryUtil::toHISTORY(historyChunk, aipsppFormat,
+						     nstrings, firstLine, logger);
+	      if (nstrings == 0) {
+		  break;
+	      }
+	      String groupType;
+	      if (aipsppFormat) groupType = "LOGTABLE";
+	      FITSHistoryUtil::addHistoryGroup(kw, historyChunk, nstrings, groupType);
+	  }
 	}
 	//
 	// END
@@ -1466,7 +1469,8 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
 		Bool verbose, Bool stokesLast,
 		Bool preferWavelength,
 		Bool airWavelength,
-		const String& origin)
+		const String& origin,
+		Bool history)
 {
 	// check whether the image is a generic FITS image
    FITSQualityImage *fitsQI=dynamic_cast<FITSQualityImage *>(&image);
@@ -1487,7 +1491,7 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
    	// put the data extension to FITSOut
    	if (!ImageFITSConverter::ImageToFITSOut(error, os, *fitsImg, outfile, memoryInMB,
    			preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
-   			verbose, stokesLast,	preferWavelength,	airWavelength,	True, True, origin)){
+			verbose, stokesLast, preferWavelength, airWavelength, True, True, origin, history)){
    		if (fitsImg)
    			delete fitsImg;
    		return False;
@@ -1501,7 +1505,7 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
    	// put the error extension  to the FITSOut
    	if (!ImageFITSConverter::ImageToFITSOut(error, os, *fitsImg, outfile, memoryInMB,
    			preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
-   			verbose, stokesLast,	preferWavelength,	airWavelength,	False, False, origin)){
+			verbose, stokesLast, preferWavelength, airWavelength, False, False, origin, history)){
    		if (fitsImg)
    			delete fitsImg;
    		return False;
@@ -1543,7 +1547,7 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
    	// put the data sub-image to FITSOut
 		if (!ImageFITSConverter::ImageToFITSOut(error, os, *subData, outfile, memoryInMB,
    			preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
-   			verbose, stokesLast,	preferWavelength,	airWavelength,	True, True, origin)){
+			verbose, stokesLast, preferWavelength, airWavelength, True, True, origin, history)){
    		if (subData)
    			delete subData;
    		return False;
@@ -1565,7 +1569,7 @@ Bool ImageFITSConverter::QualImgToFITSOut(String &error,
    	// put the error sub-image to FITSOut
 	   if (!ImageFITSConverter::ImageToFITSOut(error, os, *subError, outfile, memoryInMB,
 	   		preferVelocity, opticalVelocity, BITPIX, minPix, maxPix, degenerateLast,
-	   		verbose, stokesLast,	preferWavelength,	airWavelength,	False, False, origin)){
+			verbose, stokesLast, preferWavelength, airWavelength, False, False, origin, history)){
 	   	if (subError)
 	   		delete subError;
 	   	return False;

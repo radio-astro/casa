@@ -1,5 +1,4 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# Copyright (C) 2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,27 +22,26 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: version.h 20551 2009-03-25 00:11:33Z Malte.Marquarding $
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
-
-#include <string>
-
-#define CASACORE_VERSION "1.0.200"
+#include <scimath/Functionals/PoissonFunction.h>
+#include <casa/BasicSL/Constants.h>
+#include <casa/BasicMath/Math.h>
+#include <scimath/Mathematics/Combinatorics.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-  // Get the casacore version.
-  const std::string getVersion();
+//# Constructors
 
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
+//# Operators
+template<class T> 
+T PoissonFunction<T>::eval(typename Function<T>::FunctionArg x) const {
+	int xVal = static_cast<int>(x[0]);
+	return param_p[HEIGHT]*(pow( param_p[LAMBDA], xVal ) * exp(-1 * param_p[LAMBDA] ) /
+			Combinatorics::factorial( xVal ));
+
+}
+
+//# Member functions
 
 } //# NAMESPACE CASA - END
 
-#endif

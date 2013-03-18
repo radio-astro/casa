@@ -29,7 +29,6 @@
 
 #include <images/Images/ImageExpr.h>
 #include <images/Images/ExtendImage.h>
-#include <images/Images/ImageMetaData.h>
 #include <images/Regions/WCBox.h>
 #include <images/Regions/WCLELMask.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>

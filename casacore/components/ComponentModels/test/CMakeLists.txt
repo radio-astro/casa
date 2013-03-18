@@ -13,6 +13,7 @@ tFluxStandard3
 tGaussianComponent
 tGaussianShape
 tGaussianBeam
+tLimbDarkenedDiskShape
 tPointComponent
 tPointShape
 tSkyCompRep
