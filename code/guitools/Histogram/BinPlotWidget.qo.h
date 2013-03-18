@@ -29,8 +29,10 @@
 
 #include <guitools/Histogram/BinPlotWidget.ui.h>
 #include <guitools/Histogram/HeightSource.h>
+#include <guitools/Histogram/FootPrintWidget.qo.h>
 #include <images/Regions/ImageRegion.h>
 #include <casa/aips.h>
+#include <casa/aipstype.h>
 #include <qwt_plot.h>
 #include <qwt_plot_picker.h>
 #include <vector>
@@ -41,12 +43,13 @@ using namespace std;
 
 class QwtPlotMarker;
 class QwtPlotCurve;
+class QwtLinearColorMap;
 class QWidgetAction;
 
 namespace casa {
 
 template <class T> class ImageInterface;
-
+template <class T> class Vector;
 class FitWidget;
 class RangePicker;
 class ToolTipPicker;
@@ -57,6 +60,7 @@ class RangeControlsWidget;
 class BinCountWidget;
 class ChannelRangeWidget;
 class ZoomWidget;
+
 
 /**
  * Display a histogram of intensity vs count.  Functionality is pluggable
@@ -83,18 +87,24 @@ public:
      * 		created for an image, a region, or multiple regions.
      */
     BinPlotWidget( bool fitControls, bool rangeControls, bool plotModeControls,
-    		bool controlBinCountOnly, QWidget* parent = 0 );
-    enum PlotMode {REGION_MODE,IMAGE_MODE,REGION_ALL_MODE};
+    	QWidget* parent);
+
     bool setImage( ImageInterface<Float>* img );
     bool setImageRegion( ImageRegion* imageRegion, int id );
     void deleteImageRegion( int id );
     void imageRegionSelected( int id );
     virtual void postMessage( const QString& msg );
 
+    std::vector<float> getXValues() const;
     pair<double,double> getMinMaxValues() const;
     void setMinMaxValues( double minValue, double maxValue, bool updateGraph=true );
+    void setRangeMaxEnabled( bool enabled );
 
     //Customizing the display
+    void setColorLookups( const Vector<uInt> & lookups );
+    void setColorMap( QwtLinearColorMap* colorMap );
+    void setColorBarVisible( bool visible );
+    void setColorScaleMax( int max );
     void setDisplayPlotTitle( bool display );
     void setDisplayAxisTitles( bool display );
     void setHistogramColor( QColor color );
@@ -105,9 +115,9 @@ public:
     void setChannelCount( int count );
     void setChannelValue( int value );
     void addZoomActions( bool rangeControl, QMenu* zoomMenu );
-    void addDisplayActions( QMenu* menu );
-    void addPlotModeActions( QMenu* menu, QWidgetAction* binCountAction=NULL,
-    		QWidgetAction* channelRangeAction = NULL, bool binCountOnly = false );
+    void addDisplayActions( QMenu* menu, QWidgetAction* binCountAction );
+    void addPlotModeActions( QMenu* menu, QWidgetAction* channelRangeAction=NULL,
+    		QWidgetAction* footPrintAction = NULL );
     void setPlotMode( int mode );
     bool isEmpty() const;
     ~BinPlotWidget();
@@ -119,9 +129,9 @@ signals:
 
 public slots:
 	void fitModeChanged();
+	void plotModeChanged( int mode );
 	void setDisplayStep( bool display );
 	void setDisplayLogY( bool display );
-	void setDisplayLogX( bool display );
 	void clearFit();
 	void clearAll();
 
@@ -174,7 +184,7 @@ private:
 	void initializeFitWidget( bool fitControls );
 	void initializeDisplayActions();
 	void initializeZoomControls( bool rangeControls );
-	void initializePlotModeControls( bool enable, bool binCountOnly = false );
+	void initializePlotModeControls( bool enable );
 	void initializeGaussianFitMarker();
 	void initializePoissonFitMarker();
 	void initializeRangeControls( bool rangeControls);
@@ -190,6 +200,7 @@ private:
 	void reset();
 	bool resetImage();
 	void resetRegion();
+	void resetColorCurve();
 	void resetRectangleMarker();
 	void defineCurveLine( int id, const QColor& lineColor );
 	void defineCurveHistogram( int id, const QColor& histogramColor );
@@ -201,6 +212,11 @@ private:
 	virtual int getCanvasHeight();
 	Histogram* findHistogramFor( int id );
 	int getSelectedId() const;
+	void removeColorBar();
+	void addColorBar();
+	void resetColorBar();
+	QColor getPieceColor( int index, const QColor& defaultColor ) const;
+
 	void zoom( float percent );
 	void zoomRangeMarker( double startValue, double endValue );
     Ui::BinPlotWidgetClass ui;
@@ -210,14 +226,19 @@ private:
 
     bool displayPlotTitle;
     bool displayAxisTitles;
+    bool colorBarVisible;
 
     QColor curveColor;
     QColor selectionColor;
     QColor fitEstimateColor;
     QColor fitCurveColor;
     QList<QColor> multipleHistogramColors;
+    QwtLinearColorMap* colorMap;
+    Vector<uInt> colorLookups;
+    int colorScaleMax;
 
     //Histogram & data
+    QwtPlotCurve* colorCurve;
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
     ImageInterface<Float>* image;
@@ -254,37 +275,36 @@ private:
 
     //Plot Display
     const QString LOG_COUNT;
-    const QString LOG_INTENSITY;
     QAction stepFunctionNoneAction;
     QAction stepFunctionAction;
     QAction stepFunctionFilledAction;
     QAction logActionY;
-    QAction logActionX;
     QAction clearAction;
     enum HistogramOptions{HISTOGRAM_FILLED,HISTOGRAM_OUTLINE,HISTOGRAM_LINE};
     bool displayLogY;
-    bool displayLogX;
     QMenu contextMenuDisplay;
 
     //Plot Control
-    QAction regionModeAction;
-    QAction imageModeAction;
-    QAction regionAllModeAction;
     //We should be able to use just one binCountAction and binCountWidget
     //However, to appear, the constructor has to take the appropriate
     //menu as a parent.
     QWidgetAction* binCountActionContext;
     QWidgetAction* channelRangeActionContext;
+    QWidgetAction* footPrintActionContext;
+
     QWidgetAction* binCountActionMenu;
     QWidgetAction* channelRangeActionMenu;
+    QWidgetAction* footPrintActionMenu;
+
     BinCountWidget* binCountWidgetContext;
     ChannelRangeWidget* channelRangeWidgetContext;
+    FootPrintWidget* footPrintWidgetContext;
+
     BinCountWidget* binCountWidgetMenu;
     ChannelRangeWidget* channelRangeWidgetMenu;
+    FootPrintWidget* footPrintWidgetMenu;
     QMenu contextMenuConfigure;
-    PlotMode plotMode;
-
-
+    FootPrintWidget::PlotMode plotMode;
 };
 
 }

@@ -106,17 +106,26 @@ void Polyline::initPlot(){
 	}
 }
 
+
 void Polyline::addPlot(QWidget* parent){
 	slicePlot -> setParent( parent );
 	QLayout* layout = new QHBoxLayout();
 	layout->addWidget( slicePlot );
 	parent->setLayout( layout );
 	connect( this, SIGNAL(regionUpdate( int, viewer::region::RegionChanges, const QList<double> &,
-		const QList<double>&,const QList<int> &, const QList<int> &)), this,
-		SLOT(polyLineRegionUpdate(  int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-						const QList<int> &, const QList<int> & )));
+				const QList<double>&,const QList<int> &, const QList<int> &)), this,
+				SLOT(polyLineRegionUpdate(  int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+								const QList<int> &, const QList<int> & )));
 	connect( this, SIGNAL(regionChange( viewer::Region *, std::string )), this,
-			SLOT(polyLineRegionChanged( viewer::Region*, std::string )));
+					SLOT(polyLineRegionChanged( viewer::Region*, std::string )));
+	QList<int> pixelX;
+	QList<int> pixelY;
+	QList<double> worldX;
+	QList<double> worldY;
+	viewer::region::RegionTypes type;
+	fetch_details( type, pixelX, pixelY, worldX, worldY );
+	polyLineRegionUpdate( type, viewer::region::RegionChangeCreate,
+			worldX, worldY, pixelX, pixelY);
 }
 
 void Polyline::polyLineRegionUpdate(int regionId, viewer::region::RegionChanges change,
@@ -1057,13 +1066,14 @@ std::list<RegionInfo> *Polyline::generate_dds_centers(){
 
 			if ( image == 0 ) continue;
 
-			String full_image_name = image->name(false);
-			std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+			String description = image->name(false);
+			String name = image->name(true);
+			std::map<String,bool>::iterator repeat = processed.find(description);
 			if (repeat != processed.end()) continue;
-			processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+			processed.insert(std::map<String,bool>::value_type(description,true));
 
 			RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
-			region_centers->push_back(SliceRegionInfo(full_image_name,layercenter));
+			region_centers->push_back(SliceRegionInfo(name,description,layercenter));
 		}
 		catch (const casa::AipsError& err) {
 			errMsg_ = err.getMesg();
@@ -1090,6 +1100,7 @@ ImageRegion *Polyline::get_image_region( DisplayData *dd ) const {
 			ImageInterface<float>* sliceImage = padd->imageinterface( );
 			if ( sliceImage != NULL ){
 				slicePlot->setImage( sliceImage );
+
 			}
 		}
 	}

@@ -35,6 +35,7 @@
 #include <display/DisplayEvents/MultiPointToolImpl.h>
 #include <display/DisplayEvents/MultiPolyToolImpl.h>
 #include <display/DisplayEvents/MultiPolylineToolImpl.h>
+#include <display/DisplayEvents/MultiPVToolImpl.h>
 #include <display/DisplayEvents/MWCETRegion.h>
 #include <display/Display/PanelDisplay.h>
 #include <casa/Containers/Record.h>
@@ -318,6 +319,51 @@ class QtPolylineToolRegion: public QtMouseTool, public MultiPolylineToolImpl {
 
 };
 
+// <synopsis>
+// QtPVToolRegion is the Polygon Region mouse tool that sends a signal
+// when a new polygon is ready.
+// </synopsis>
+class QtPVToolRegion: public QtMouseTool, public MultiPVToolImpl {
+  
+  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+		//# implement/.../*.h files; also, makefile must include
+		//# name of this file in 'mocs' section.
+
+ public: 
+ 
+  QtPVToolRegion(viewer::RegionSourceFactory *rf, PanelDisplay* pd) : QtMouseTool(), MultiPVToolImpl(rf, pd), pd_(pd) {  }
+  
+  ~QtPVToolRegion() {  }
+  
+  // Retrieve the current polygon mouse region record and WCH, if any.
+  // (If nothing is ready, returns False -- be sure to check before using
+  // return parameters.  See implementation for mouseRegion Record format).
+  Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+
+ signals:
+ 
+  // See regionReady() implementation for format of the record.  (For some
+  // uses, a connecting slot may be able to do without the WCH* parameter).
+  void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
+  void echoClicked(Record);
+
+ protected:
+  
+  // This callback is invoked by the base when the user double-clicks
+  // inside a polygon defined previously (but see also polygonReady(),
+  // below).  This implementation emits the Qt signal mouseRegionReady()
+  // with an appropriate Record defining the user's polygon mouse selection.
+  // See implementation for format of the record.
+  virtual void regionReady();
+  virtual void clicked(Int x, Int y);
+  virtual void doubleClicked(Int x, Int y); 
+
+  //virtual void handleEvent(DisplayEvent& ev);
+  //virtual void keyPressed(const WCPositionEvent &ev);
+  
+  PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
+
+};
 
 
 } //# NAMESPACE CASA - END

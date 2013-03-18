@@ -48,7 +48,7 @@ int main( int argc, char *argv[] ) {
 	app.setOrganizationName( "CASA");
 	app.setApplicationName( "Histogram");
 	try {
-		HistogramMain histogramApplication(true,true,true,true,false,NULL);
+		HistogramMain histogramApplication(true,true,true,true,NULL);
 		histogramApplication.setPlotMode( 1 );
 		histogramApplication.show();
 

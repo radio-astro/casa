@@ -1,4 +1,3 @@
-#
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
 #
@@ -52,6 +51,7 @@ ImageAnalysis/ImageProfileFitter.cc
 ImageAnalysis/ImageStatsCalculator.cc
 ImageAnalysis/ImageTransposer.cc
 ImageAnalysis/ImageTask.cc
+ImageAnalysis/PeakIntensityFluxDensityConverter.cc
 ImageAnalysis/PVGenerator.cc
 ImageAnalysis/SpectralCollapser.cc
 ImageAnalysis/SpectralFitter.cc
@@ -104,9 +104,15 @@ install (FILES
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageFit1D.h
 	ImageAnalysis/ImageFit1D.tcc
+	ImageAnalysis/ImageHeader.h
+	ImageAnalysis/ImageHeader.tcc
     ImageAnalysis/ImageHistograms.h
     ImageAnalysis/ImageHistograms.tcc
 	ImageAnalysis/ImageInputProcessor.h
+	ImageAnalysis/ImageMaskAttacher.h
+    ImageAnalysis/ImageMaskAttacher.tcc
+	ImageAnalysis/ImageMetaData.h
+    ImageAnalysis/ImageMetaData.tcc
 	ImageAnalysis/ImageMoments.h
 	ImageAnalysis/ImageMoments.tcc
     ImageAnalysis/ImageMomentsProgress.h
@@ -127,6 +133,7 @@ install (FILES
 	ImageAnalysis/MomentsBase.tcc
 	ImageAnalysis/MomentCalculator.h
 	ImageAnalysis/MomentCalculator.tcc
+	ImageAnalysis/PeakIntensityFluxDensityConverter.h
 	ImageAnalysis/PVGenerator.h
 	ImageAnalysis/SepImageConvolver.h
 	ImageAnalysis/SepImageConvolver.tcc
@@ -169,9 +176,11 @@ casa_add_assay( imageanalysis ImageAnalysis/test/tImageDecomposer.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFit1D.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFFT.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageFitter.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageMetaData.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageMoments.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImagePolarimetry.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageSourceFinder.cc )
+casa_add_assay( imageanalysis ImageAnalysis/test/tImageStatsCalculator.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageInputProcessor.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImagePrimaryBeamCorrector.cc )
 casa_add_assay( imageanalysis ImageAnalysis/test/tImageProfileFitter.cc )

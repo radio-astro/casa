@@ -25,6 +25,7 @@
 
 #include "FitterPoisson.h"
 #include <scimath/Fitting/NonLinearFitLM.h>
+#include <scimath/Functionals/PoissonFunction.h>
 #include <QDebug>
 #include <assert.h>
 #include <QtCore/qmath.h>
@@ -38,64 +39,35 @@ FitterPoisson::FitterPoisson() {
 void FitterPoisson::clearFit(){
 	Fitter::clearFit();
 	lambdaSpecified = false;
+
 }
 
-bool FitterPoisson::isIntegerValue( float val ) const {
-	bool valueInt = false;
-	if ( qAbs(val - (int)val) < .0000000001 ){
-		valueInt = true;
-	}
-	return valueInt;
-}
 
-int FitterPoisson::factorial( int n ) const {
-	assert( n >= 0 );
-	int factValue = 1;
-	if ( n > 1 ){
-		factValue = n * factorial( n - 1);
-	}
-	return factValue;
-}
-
-float FitterPoisson::getRMSE() const {
-	float rmse = -1;
-	int dataCount = fitValues.size();
-	if ( dataCount > 0 ){
-		float sumOfSquares = 0;
-		for ( int i = 0; i < dataCount; i++ ){
-			float diff = fitValues[i] - yValues[i];
-			sumOfSquares = sumOfSquares + qPow( diff, 2 );
-		}
-		sumOfSquares = sumOfSquares / dataCount;
-		rmse = qPow( sumOfSquares, 0.5 );
-	}
-	return rmse;
-}
-
-int FitterPoisson::getFitCount() const {
-	int count = 0;
-	for ( int i = 0; i < static_cast<int>(yValues.size()); i++ ){
-		int binCount = static_cast<int>(yValues[i]);
+float FitterPoisson::getFitCount() const {
+	float count = 0;
+	for ( int i = 0; i < static_cast<int>(actualYValues.size()); i++ ){
+		float binCount = actualYValues[i];
 		count = count + binCount;
 	}
 	return count;
 }
 
+
 QString FitterPoisson::getSolutionStatistics() const {
-	float rmse = getRMSE();
 	QString result;
-	if ( rmse >= 0 ){
-		if ( rmse < rmsError ){
-			result.append( "Fit satisfying RMS criterion was found:\n\n");
-		}
-		else {
-			result.append( "Fit did not satisfy RMS criterion:\n");
-		}
-		result.append( formatResultLine( "Lambda:", lambda));
-		result.append( formatResultLine( "RMSE:", rmse));
+	if ( solutionConverged ){
+		result.append( "The following fit was found:\n\n");
+		result.append( formatResultLine( "Lambda:", solutionLambda));
+		result.append( formatResultLine( "Height:", solutionHeight));
+		result.append( formatResultLine( "Chi-square:", solutionChiSquared));
+		result.append( formatResultLine( "RMSE:", solutionRMS));
+	}
+	else {
+		result.append( "Fit did not converge.\n");
 	}
 	return result;
 }
+
 
 bool FitterPoisson::doFit(){
 	if ( !lambdaSpecified ){
@@ -108,31 +80,64 @@ bool FitterPoisson::doFit(){
 		errorMsg = "Could not fit a Poisson distribution because the lambda value: "+lambdaStr+" was not positive.";
 	}
 	else {
-		fitValues.resize( xValues.size());
-		bool allInts = true;
-		bool positiveValues = true;
-		int fitCount = getFitCount();
-		for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
-			if ( !isIntegerValue( xValues[i])){
-				allInts = false;
+		fitValues.resize( actualXValues.size());
+		NonLinearFitLM<Float> fitter(0);
+
+		fitter.setMaxIter(1024);
+		fitter.setCriteria(0.0001);
+		float height = getFitCount();
+		PoissonFunction<Float> poissonFunction(lambda, height);
+		fitter.setFunction(poissonFunction);
+
+		//Initialize the x-data values
+		Matrix<Float> components;
+		int xCount = actualXValues.size();
+		components.resize(xCount,1);
+		for ( int i = 0; i < xCount; i++ ){
+			components(i,0) = actualXValues[i];
+		}
+
+		Vector<Float> sigma(actualYValues.size(), 1);
+
+		try {
+			Matrix<Float> solution = fitter.fit(components, actualYValues, sigma);
+			solutionConverged = fitter.converged();
+			if ( solutionConverged ){
+				solutionChiSquared = fitter.chiSquare();
+				if (solutionChiSquared < 0) {
+					errorMsg= "Unsuccessful Fit: ChiSquare of ";
+					errorMsg.append(QString::number( solutionChiSquared ));
+					errorMsg.append("is negative.");
+				    fitSuccessful = false;
+				}
+				else if (isNaN(solutionChiSquared)){
+				    errorMsg= "Unsuccessful Fit: ChiSquare was a NaN.";
+				    fitSuccessful = false;
+				}
+				else {
+					solutionRMS = solutionChiSquared / actualYValues.size();
+					solutionLambda = solution( 0, 0 );
+					solutionHeight = solution( 1, 0 );
+					PoissonFunction<Float> poissonFit(solutionLambda, solutionHeight );
+					for( int i = 0; i < static_cast<int>(actualXValues.size()); i++ ){
+						fitValues[i] = poissonFit.eval(&actualXValues[i]);
+					}
+				}
 			}
-			int xVal = (int)( xValues[i]);
-			if ( xVal < 0 ){
-				xVal = 0;
-				positiveValues = false;
+			else {
+				fitSuccessful = false;
 			}
-			fitValues[i] = fitCount * qPow( lambda, xVal ) * qExp(-1 * lambda ) / factorial( xVal );
 			dataFitted = true;
 		}
-		if ( !positiveValues ){
-			statusMsg = "Negative domain values were replaced with 0.";
-		}
-		if ( !allInts ){
-			statusMsg = "Floating point domain values were rounded to the nearest integer.";
+
+		catch (AipsError& err) {
+			qDebug() << "ERROR: " << err.what();
+			fitSuccessful = false;
 		}
 	}
 	return fitSuccessful;
 }
+
 
 void FitterPoisson::setLambda( double value ){
 	lambda = value;
@@ -144,10 +149,13 @@ double FitterPoisson::getLambda() const {
 }
 
 void FitterPoisson::toAscii( QTextStream& stream ) const {
-	const QString END_LINE( "\n");
-	stream << "Poisson Fit" << END_LINE;
-	stream << "Lambda: "<<lambda<< END_LINE << END_LINE;
-	Fitter::toAscii(stream);
+	if ( solutionConverged ){
+		const QString END_LINE( "\n");
+		stream << "#Poisson Fit" << END_LINE;
+		stream << "#Lambda: "<<solutionLambda<< END_LINE;
+		stream << "#Height: "<<solutionHeight<< END_LINE;
+		Fitter::toAscii(stream);
+	}
 }
 
 FitterPoisson::~FitterPoisson() {

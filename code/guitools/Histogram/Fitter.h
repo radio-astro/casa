@@ -39,7 +39,8 @@ class Fitter {
 public:
 	Fitter();
 	void setData( Vector<Float> xValues, Vector<Float> yValues );
-	void setRMS( double value );
+	virtual void restrictDomain( double xMin, double xMax );
+	virtual void clearDomainLimits();
 	Vector<Float> getFitValues() const;
 	Vector<Float> getFitValuesX() const;
 	virtual bool doFit() = 0;
@@ -54,14 +55,24 @@ public:
 
 protected:
 	QString formatResultLine( QString label, float value ) const;
-	Vector<Float> xValues;
-	Vector<Float> yValues;
+	float solutionChiSquared;
+	float solutionRMS;
+	bool solutionConverged;
+
+	Vector<Float> actualXValues;
+	Vector<Float> actualYValues;
 	Vector<Float> fitValues;
 	QString errorMsg;
 	QString statusMsg;
 	bool dataFitted;
-	double rmsError;
 	float getMean() const;
+
+private:
+	void resetDataWithLimits();
+	Vector<Float> xValues;
+	Vector<Float> yValues;
+	double domainMin;
+	double domainMax;
 };
 
 } /* namespace casa */

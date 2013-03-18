@@ -1040,7 +1040,7 @@ FlagAgentBase::sanitizeCorrExpression(String corrExpression, std::vector<String>
 			}
 			else
 			{
-				sanitizedExpression += String("XY");
+				sanitizedExpression += String(",XY");
 			}
 		}
 		else

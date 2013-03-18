@@ -70,11 +70,23 @@ class VisSetUtil {
   
 public:
   // Calculate sensitivity
-  static void Sensitivity(VisSet &vs, Quantity& pointsourcesens, Double& relativesens,
-			  Double& sumwt);
-  static void Sensitivity(ROVisibilityIterator &vi, Quantity& pointsourcesens, 
+  static void Sensitivity(VisSet &vs, Matrix<Double>& mssFreqSel,Matrix<Int>& mssChanSel,
+			  Quantity& pointsourcesens, Double& relativesens,
+			  Double& sumwt,
+			  Vector<Vector<Int> >& nData,
+			  Vector<Vector<Double> >& sumwtChan,
+			  Vector<Vector<Double> >& sumwtsqChan,
+			  Vector<Vector<Double> >& sumInverseVarianceChan);
+  static void Sensitivity(ROVisibilityIterator &vi, 
+			  Matrix<Double>& mssFreqSel,
+			  Matrix<Int>& mssChanSel,
+			  Quantity& pointsourcesens, 
 			  Double& relativesens,
-			  Double& sumwt);
+			  Double& sumwt,
+			  Vector<Vector<Int> >& nData,
+			  Vector<Vector<Double> >& sumwtChan,
+			  Vector<Vector<Double> >& sumwtsqChan,
+			  Vector<Vector<Double> >& sumInverseVarianceChan);
   // Hanning smoothing of spectral channels
   static void HanningSmooth(VisSet &vs, const String& dataCol="corrected", 
 			    const Bool& doFlagAndWeight=True);

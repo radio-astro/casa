@@ -33,6 +33,7 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Logging/LogIO.h>
 #include <ms/MeasurementSets/MSSelection.h>
+#include <casa/Arrays/ArrayMath.h>
 
 namespace casa {
 
@@ -41,7 +42,8 @@ StatWT::StatWT(const ROVisibilityIterator& vi,
                const String& fitspw,
                const String& outspw,
                const Bool dorms,
-               const uInt minsamp) :
+               const uInt minsamp,
+               const vector<uInt> selcorrs) :
   GroupWorker(vi),
   datacol_p(datacol),
   fitspw_p(fitspw),
@@ -108,6 +110,7 @@ StatWT::StatWT(const ROVisibilityIterator& vi,
   Matrix<Int> chansel = mssel.getChanList(&(invi_p.ms()), 1);
   Vector<Int> spws(chansel.column(0));
   uInt nselspws = spws.nelements();
+  selcorrs_p = selcorrs;
 
   for(uInt i = 0; i < nselspws; ++i)
     outspws_p.insert(spws[i]);
@@ -255,28 +258,30 @@ Bool StatWT::update_variances(std::map<uInt, Vector<uInt> >& ns,
       uInt hr = hashFunction(a1[r], a2[r], maxAnt);
 
       for(uInt corr = 0; corr < nCorr; ++corr){
-        for(uInt ch = 0; ch < nChan; ++ch){
-          if(!chanmaskedflags(corr, ch, r)){
-            if(!ns.count(hr)){
-              ns[hr] = Vector<uInt>(nCorr, 0);
-              means[hr] = Vector<Complex>(nCorr, 0);
-              variances[hr] = Vector<Double>(nCorr, 0);
-            }
-            ++ns[hr][corr];
-            vis = data(corr, ch, r);
-            vmoldmean = vis - means[hr][corr];
+        if (std::count(selcorrs_p.begin(), selcorrs_p.end(), corr)!=0) {
+	  for(uInt ch = 0; ch < nChan; ++ch){
+	    if(!chanmaskedflags(corr, ch, r)){
+	      if(!ns.count(hr)){
+		ns[hr] = Vector<uInt>(nCorr, 0);
+		means[hr] = Vector<Complex>(nCorr, 0);
+		variances[hr] = Vector<Double>(nCorr, 0);
+	      }
+	      ++ns[hr][corr];
+	      vis = data(corr, ch, r);
+	      vmoldmean = vis - means[hr][corr];
 
-            if(!dorms_p)  // It's not that Complex / Int isn't defined, it's
-                          // that it is, along with Complex / Double, creating
-                          // an ambiguity.
-              means[hr][corr] += vmoldmean / static_cast<Double>(ns[hr][corr]);
+	      if(!dorms_p)  // It's not that Complex / Int isn't defined, it's
+			    // that it is, along with Complex / Double, creating
+			    // an ambiguity.
+		means[hr][corr] += vmoldmean / static_cast<Double>(ns[hr][corr]);
 
-            // This term is guaranteed to have its parts be nonnegative.
-            vmmean = vis - means[hr][corr];
-            variances[hr][corr] += vmmean.real() * vmoldmean.real() +
-                                   vmmean.imag() * vmoldmean.imag();
-          }
-        }
+	      // This term is guaranteed to have its parts be nonnegative.
+	      vmmean = vis - means[hr][corr];
+	      variances[hr][corr] += vmmean.real() * vmoldmean.real() +
+				     vmmean.imag() * vmoldmean.imag();
+	    }
+	  }
+	}//selcorrs_p 
       }
     }
   }
@@ -302,25 +307,27 @@ Bool StatWT::apply_variances(VisBuffer& vb,
     Bool havevar = ns.count(hr) > 0;
 
     for(uInt corr = 0; corr < nCorr; ++corr){
-      if(havevar &&
-         (ns[hr][corr] >= minsamp_p) &&
-         (0.0 < variances[hr][corr])){ // For some reason emacs likes 0 < v,
-                                       // but not v > 0.
-        Double var = variances[hr][corr];
+      if (std::count(selcorrs_p.begin(), selcorrs_p.end(), corr)!=0) {// modify only selected corrs
+	if(havevar &&
+	   (ns[hr][corr] >= minsamp_p) &&
+	   (0.0 < variances[hr][corr])){ // For some reason emacs likes 0 < v,
+					 // but not v > 0.
+	  Double var = variances[hr][corr];
 
-        unflagged = true;
-        vb.sigmaMat()(corr, r) = sqrt(var);
-        vb.weightMat()(corr, r) = 1.0 / var;
+	  unflagged = true;
+	  vb.sigmaMat()(corr, r) = sqrt(var);
+	  vb.weightMat()(corr, r) = 1.0 / var;
+	}
+	else{
+	  vb.sigmaMat()(corr, r) = -1.0;
+	  vb.weightMat()(corr, r) = 0.0;
+	  for(uInt ch = 0; ch < nChan; ++ch){
+	    vb.flagCube()(corr, ch, r) = true;
+	  }
+	}
+        if(!unflagged)
+          vb.flagRow()[r] = true;
       }
-      else{
-        vb.sigmaMat()(corr, r) = -1.0;
-        vb.weightMat()(corr, r) = 0.0;
-        for(uInt ch = 0; ch < nChan; ++ch){
-          vb.flagCube()(corr, ch, r) = true;
-        }
-      }
-      if(!unflagged)
-        vb.flagRow()[r] = true;
     }
   }
   

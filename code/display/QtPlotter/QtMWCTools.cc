@@ -223,6 +223,38 @@ void QtCrossTool::setCoordType(const String& t) {
 }
 
 
+//////////////pv tool//////////////////
+QtPVTool::QtPVTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtPVToolRegion(rf,pd)
+{
+  setObjectName("PVTool"); 
+}
+
+void QtPVTool::updateRegion() {
+  if (!itsCurrentWC) return;
+
+  //qDebug() << "ploy ready" << coordType.chars();
+  Vector<Double> wx;
+  Vector<Double> wy;
+  Vector<Double> px;
+  Vector<Double> py;
+  getWorldCoords(wx, wy);
+  getLinearCoords(px, py);
+  //Int nt;
+  //x.shape(nt);
+  //cout << "nt=" << nt << endl;
+  //for (Int i = 0; i << nt; i++) {
+  //  cout << "x=" << x(i) << " y=" << y(i) << endl;
+  //} 
+
+  emit wcNotify( coordType, px, py, wx, wy, PVPROF);
+}
+
+void QtPVTool::setCoordType(const String& t) {
+    QtMWCTool::setCoordType(t);
+    updateRegion( );
+}
+
+
 }
 
 

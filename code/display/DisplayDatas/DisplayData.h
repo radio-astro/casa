@@ -663,6 +663,8 @@ public:
   virtual void setDelTmpData(Bool delTmpData){delTmpData_ = delTmpData;}
   // </group>
 
+  const static String DATA_MIN;
+  const static String DATA_MAX;
 
 protected:
 

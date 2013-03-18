@@ -510,10 +510,11 @@ namespace casa {
 
 					if ( image == 0 ) continue;
 
-					String full_image_name = image->name(false);
-					std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+					String description = image->name(false);
+					String name = image->name(true);
+					std::map<String,bool>::iterator repeat = processed.find(description);
 					if (repeat != processed.end()) continue;
-					processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+					processed.insert(std::map<String,bool>::value_type(description,true));
 
 					Int nAxes = image->ndim( );
 					IPosition shp = image->shape( );
@@ -569,7 +570,7 @@ namespace casa {
 					WCBox box(blcq, trcq, cs, Vector<Int>());
 					ImageRegion *imageregion = new ImageRegion(box);
 
-					region_centers->push_back(ImageRegionInfo(full_image_name,getLayerCenter(padd, image, *imageregion)));
+					region_centers->push_back(ImageRegionInfo(name,description,getLayerCenter(padd, image, *imageregion)));
 
 					delete imageregion;
 				} catch (const casa::AipsError& err) {
@@ -633,9 +634,9 @@ namespace casa {
 			if ( msar != 0 ) {
 				RegionInfo::stats_t *blc_stats = get_ms_stats( msar, blc_x, blc_y );
 				RegionInfo::stats_t *trc_stats = get_ms_stats( msar, trc_x, trc_y );
-				String full_ms_name = msar->name( );
-				region_statistics->push_back(MsRegionInfo(full_ms_name + " [blc]",blc_stats));
-				region_statistics->push_back(MsRegionInfo(full_ms_name + " [trc]",trc_stats));
+				String name = msar->name( );
+				region_statistics->push_back(MsRegionInfo(name,name + " [blc]",blc_stats));
+				region_statistics->push_back(MsRegionInfo(name,name + " [trc]",trc_stats));
 			}
 		}
 

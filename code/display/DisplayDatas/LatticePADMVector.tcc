@@ -92,7 +92,7 @@ uInt LatticePADMVector<T>::dataDrawSelf(WorldCanvas *wCanvas,
    uInt drawListNumber = wCanvas->newList();
    LatticeAsVector<T>* lav = dynamic_cast<LatticeAsVector<T>*>(parentDisplayData());
    LogIO os(LogOrigin("LatticePADMVector", "drawDataSelf", WHERE));
-   T* dummy;
+   T* dummy = NULL;
    DataType dataType = whatType(dummy);
 
 // Get options

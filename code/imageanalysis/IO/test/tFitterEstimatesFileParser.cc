@@ -31,7 +31,6 @@
 #include <casa/OS/File.h>
 #include <components/ComponentModels/GaussianShape.h>
 #include <images/Images/FITSImage.h>
-#include <images/Images/ImageMetaData.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <casa/OS/EnvVar.h>
 

@@ -13,7 +13,7 @@ class variant {
 
     public:
 
-	enum TYPE { RECORD, BOOL, INT, DOUBLE, COMPLEX, STRING, BOOLVEC, INTVEC, DOUBLEVEC, COMPLEXVEC, STRINGVEC };
+	enum TYPE { RECORD, BOOL, INT, LONG, DOUBLE, COMPLEX, STRING, BOOLVEC, INTVEC, LONGVEC, DOUBLEVEC, COMPLEXVEC, STRINGVEC };
 
 	static TYPE compatible_type( TYPE one, TYPE two );
 
@@ -38,6 +38,7 @@ class variant {
 
 	variant(bool arg) : typev(BOOL), shape_(1,1) { val.b = arg;  }
 	variant(int arg) : typev(INT), shape_(1,1) { val.i = arg; }
+	variant(long long arg) : typev(LONG), shape_(1,1) { val.l = arg; }
 	variant(double arg) : typev(DOUBLE), shape_(1,1) { val.d = arg; }
 	variant(std::complex<double> arg) : typev(COMPLEX) { val.c = new std::complex<double>(arg); }
 	variant(const char *arg) : typev(STRING), shape_(1,1)
@@ -62,6 +63,15 @@ class variant {
                         { val.iv = arg; }
 	variant(std::vector<int> *arg, std::vector<int> &theshape) : typev(INTVEC), shape_(theshape)
 			{ val.iv = arg; }
+//
+	variant(const std::vector<long long> &arg) : typev(LONGVEC), shape_(1,arg.size())
+			{ val.lv = new std::vector<long long>(arg); }
+	variant(const std::vector<long long> &arg, const std::vector<int> &theshape) : typev(LONGVEC), shape_(theshape)
+			{ val.lv = new std::vector<long long>(arg); }
+	variant(std::vector<long long> *arg) : typev(LONGVEC), shape_(1, arg->size())
+                        { val.lv = arg; }
+	variant(std::vector<long long> *arg, std::vector<int> &theshape) : typev(LONGVEC), shape_(theshape)
+			{ val.lv = arg; }
 //
 	variant(const std::vector<double> &arg) : typev(DOUBLEVEC), shape_(1,arg.size())
 			{ val.dv = new std::vector<double>(arg); }
@@ -188,7 +198,9 @@ class variant {
 	  bool b;
 	  std::vector<bool> *bv;
 	  int i;
+	  long long l;
 	  std::vector<int> *iv;
+	  std::vector<long long> *lv;
 	  double d;
 	  std::vector<double> *dv;
 	  std::complex<double> *c;

@@ -26,11 +26,17 @@
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 #include <casa/BasicSL/String.h>
+#include <tables/LogTables/NewFile.h>
 #include <images/Images/ExtendImage.h>
 #include <images/Images/ImageExpr.h>
+#include <images/Images/ImageUtilities.h>
 #include <images/Images/SubImage.h>
+#include <images/Images/PagedImage.h>
 #include <images/Regions/WCLELMask.h>
 #include <lattices/Lattices/LCMask.h>
+#include <lattices/Lattices/LatticeUtilities.h>
+
+#include <imageanalysis/ImageAnalysis/ImageMaskAttacher.h>
 
 namespace casa {
 
@@ -152,6 +158,60 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	delete pMask;
     return mySubim;
 }
+
+
+template<class T> ImageInterface<Float>* SubImageFactory<T>::createImage(
+	ImageInterface<T>& image,
+	const String& outfile, Record& Region,
+	const String& mask, const Bool dropDegenerateAxes,
+	const Bool overwrite, const Bool list, const Bool extendMask
+) {
+	LogIO log;
+	log << LogOrigin("ubImageFactory", __FUNCTION__);
+	// Copy a portion of the image
+	// Verify output file
+	if (!overwrite && !outfile.empty()) {
+		NewFile validfile;
+		String errmsg;
+		if (!validfile.valueOK(outfile, errmsg)) {
+			log << errmsg << LogIO::EXCEPTION;
+		}
+	}
+	AxesSpecifier axesSpecifier(! dropDegenerateAxes);
+	std::auto_ptr<SubImage<Float> > subImage(
+		new SubImage<Float>(
+			SubImageFactory<Float>::createSubImage(
+				image,
+				*(ImageRegion::tweakedRegionRecord(&Region)),
+				mask, list ? &log : 0, True, axesSpecifier, extendMask
+			)
+		)
+	);
+
+	if (outfile.empty()) {
+		return subImage.release();
+	}
+	// Make the output image
+	if (list) {
+		log << LogIO::NORMAL << "Creating image '" << outfile
+			<< "' of shape " << subImage->shape() << LogIO::POST;
+	}
+	std::auto_ptr<PagedImage<Float> > outImage(
+		new PagedImage<Float> (
+			subImage->shape(),
+			subImage->coordinates(), outfile
+		)
+	);
+	ImageUtilities::copyMiscellaneous(*outImage, image);
+	// Make output mask if required
+	if (subImage->isMasked()) {
+		String maskName("");
+		ImageMaskAttacher<T>::makeMask(*outImage, maskName, False, True, log, list);
+	}
+	LatticeUtilities::copyDataAndMask(log, *outImage, *subImage);
+	return outImage.release();
+}
+
 
 } //# NAMESPACE CASA - END
 

@@ -63,10 +63,10 @@ double FitterGaussian::getFWHM() const {
 int FitterGaussian::getPeakIndex() const {
 	int maxIndex = -1;
 	double maxValue = std::numeric_limits<float>::min();
-	int dataCount = yValues.size();
+	int dataCount = actualYValues.size();
 	for ( int i = 0; i < dataCount; i++ ){
-		if ( yValues[i] > maxValue ){
-			maxValue = yValues[i];
+		if ( actualYValues[i] > maxValue ){
+			maxValue = actualYValues[i];
 			maxIndex = i;
 		}
 	}
@@ -81,18 +81,18 @@ bool FitterGaussian::estimateFWHM(){
 		int peakIndex = getPeakIndex();
 		bool foundFwhm = false;
 		if ( peakIndex >= 0 ){
-			float targetValue = yValues[peakIndex] / 2;
+			float targetValue = actualYValues[peakIndex] / 2;
 			int startIndex = peakIndex - 1;
 			int endIndex = peakIndex + 1;
-			int dataCount = xValues.size();
+			int dataCount = actualXValues.size();
 			while ( startIndex >= 0 || endIndex < dataCount ){
-				if ( startIndex >= 0 && yValues[startIndex] < targetValue  ){
-					fwhm = 2 * qAbs( xValues[startIndex] - xValues[peakIndex]);
+				if ( startIndex >= 0 && actualYValues[startIndex] < targetValue  ){
+					fwhm = 2 * qAbs( actualXValues[startIndex] - actualXValues[peakIndex]);
 					foundFwhm = true;
 					break;
 				}
-				if ( endIndex < dataCount && yValues[endIndex] < targetValue ){
-					fwhm = 2 * qAbs( xValues[endIndex] - xValues[peakIndex]);
+				if ( endIndex < dataCount && actualYValues[endIndex] < targetValue ){
+					fwhm = 2 * qAbs( actualXValues[endIndex] - actualXValues[peakIndex]);
 					foundFwhm = true;
 					break;
 				}
@@ -115,10 +115,10 @@ bool FitterGaussian::estimateCenterPeak(){
 		int maxIndex = getPeakIndex();
 		if ( maxIndex >= 0 ){
 			if ( !centerSpecified ){
-				center = xValues[maxIndex];
+				center = actualXValues[maxIndex];
 			}
 			if ( !peakSpecified ){
-				peak = yValues[maxIndex];
+				peak = actualYValues[maxIndex];
 			}
 		}
 		else {
@@ -135,7 +135,7 @@ bool FitterGaussian::doFit(){
 	//Model the fit so that we can give it to the canvas for
 	//drawing.
 	bool fitSuccessful = true;
-	fitValues.resize( xValues.size());
+	fitValues.resize( actualXValues.size());
 	fitSuccessful = estimateCenterPeak();
 	if ( fitSuccessful ){
 		fitSuccessful = estimateFWHM();
@@ -152,10 +152,10 @@ bool FitterGaussian::doFit(){
 
 				//Initialize the x-data values
 				Matrix<Float> components;
-				int xCount = xValues.size();
+				int xCount = actualXValues.size();
 				components.resize(xCount,1);
 				for ( int i = 0; i < xCount; i++ ){
-					components(i,0) = xValues[i];
+					components(i,0) = actualXValues[i];
 				}
 
 				//Initialize the estimate
@@ -167,16 +167,22 @@ bool FitterGaussian::doFit(){
 				fitgauss.setFirstEstimate(estimate);
 
 				try {
-					Matrix<Float> solution = fitgauss.fit(components, yValues, rmsError );
+					Matrix<Float> solution = fitgauss.fit(components, actualYValues);
 					solutionPeak = solution( 0, 0 );
 					solutionCenter = solution( 0, 1 );
 					solutionFWHM= solution( 0, 2 );
 					solutionChiSquared = fitgauss.chisquared();
 					solutionRMS = fitgauss.RMS();
 					solutionConverged = fitgauss.converged();
-					Gaussian1D<Float> gaussFit(solutionPeak, solutionCenter, solutionFWHM );
-					for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
-							fitValues[i] = gaussFit.eval(&xValues[i]);
+					fitSuccessful =fitgauss.converged();
+					if ( fitSuccessful ){
+						Gaussian1D<Float> gaussFit(solutionPeak, solutionCenter, solutionFWHM );
+						for( int i = 0; i < static_cast<int>(actualXValues.size()); i++ ){
+							fitValues[i] = gaussFit.eval(&actualXValues[i]);
+						}
+					}
+					else {
+						errorMsg="An acceptable convergent solution was not found.";
 					}
 					dataFitted = true;
 				}
@@ -193,16 +199,16 @@ bool FitterGaussian::doFit(){
 QString FitterGaussian::getSolutionStatistics() const {
 	QString stats;
 	if ( solutionConverged ){
-		if ( solutionRMS < rmsError ){
-			stats.append( "Fit satisfying RMS criterion was found:\n\n");
-		}
+		//if ( solutionRMS < rmsError ){
+			stats.append( "The following fit was found:\n\n");
+		/*}
 		else {
 			stats.append( "No fit satisfying RMS criterion was found.\nBest available fit:\n\n");
-		}
+		}*/
 		stats.append( formatResultLine( "Center:", solutionCenter));
 		stats.append( formatResultLine( "Peak:", solutionPeak));
 		stats.append( formatResultLine( "FWHM:", solutionFWHM));
-		stats.append( formatResultLine( "Chi-squared:", solutionChiSquared));
+		stats.append( formatResultLine( "Chi-square:", solutionChiSquared));
 		stats.append( formatResultLine( "RMS:", solutionRMS));
 	}
 	else {
@@ -225,12 +231,14 @@ void FitterGaussian::clearFit(){
 }
 
 void FitterGaussian::toAscii( QTextStream& stream ) const {
-	const QString END_LINE( "\n" );
-	stream << "Gaussian Fit" << END_LINE;
-	stream << "Center: "<< center << END_LINE;
-	stream << "Peak: "<< peak << END_LINE;
-	stream << "FWHM: "<< fwhm << END_LINE << END_LINE;
-	Fitter::toAscii( stream );
+	if ( solutionConverged ){
+		const QString END_LINE( "\n" );
+		stream << "#Gaussian Fit" << END_LINE;
+		stream << "#Center: "<< solutionCenter << END_LINE;
+		stream << "#Peak: "<< solutionPeak << END_LINE;
+		stream << "#FWHM: "<< solutionFWHM << END_LINE;
+		Fitter::toAscii( stream );
+	}
 }
 
 FitterGaussian::~FitterGaussian() {

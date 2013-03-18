@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>444</width>
-    <height>312</height>
+    <height>336</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -32,7 +32,7 @@
      </column>
     </widget>
    </item>
-   <item row="1" column="0">
+   <item row="2" column="0">
     <widget class="QWidget" name="button_box" native="true">
      <property name="minimumSize">
       <size>
@@ -94,6 +94,13 @@
        </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>A complete restart is required after saving any changes...</string>
+     </property>
     </widget>
    </item>
   </layout>

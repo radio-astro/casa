@@ -45,10 +45,12 @@ class RangeControlsWidget : public QWidget {
 
 public:
     RangeControlsWidget(QWidget *parent = 0);
-    void setRange( double min, double max );
+    void setRange( double min, double max, bool signal=true );
     void setRangeLimits( double min, double max );
     void setDataLimits( double min, double max );
+    void setRangeMaxEnabled( bool enabled );
     pair<double,double> getMinMaxValues() const;
+
     ~RangeControlsWidget();
 
 signals:

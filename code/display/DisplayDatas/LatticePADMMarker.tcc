@@ -101,7 +101,7 @@ uInt LatticePADMMarker<T>::dataDrawSelf(WorldCanvas *wCanvas,
    wCanvas->setAttribute(dmin);
    wCanvas->setAttribute(dmax);
 //
-   T* dummy;
+   T* dummy = NULL;
    DataType dataType = whatType(dummy);
    if ((dataType == TpComplex) || (dataType == TpDComplex)) {
      wCanvas->setComplexToRealMethod(lam->complexMode());

@@ -30,8 +30,9 @@
 
 namespace casa {
 
-Gaussian2DFitter::Gaussian2DFitter() {
-
+Gaussian2DFitter::Gaussian2DFitter() :
+	LOG_SUFFIX("Log.txt"), REGION_SUFFIX("Region.txt"){
+	logFile = false;
 }
 
 bool Gaussian2DFitter::isFitSuccessful() const {
@@ -43,15 +44,26 @@ QString Gaussian2DFitter::getErrorMessage() const {
 }
 
 QString Gaussian2DFitter::getLogFilePath() const {
-	return logPath.c_str();
+	QString logPath;
+	if ( logFile ){
+		logPath = filePath.c_str()+ LOG_SUFFIX;
+	}
+	else {
+		logPath = viewer::options.temporaryPath( "tmpFitLogFile" ).c_str();
+	}
+	return logPath;
 }
 
 QString Gaussian2DFitter::getResidualImagePath() const {
 	return residualImageFile.c_str();
 }
 
-void Gaussian2DFitter::setLogFilePath( String path ){
-	logPath = path;
+void Gaussian2DFitter::setFilePath( String path ){
+	filePath = path;
+}
+
+void Gaussian2DFitter::setWriteLogFile( bool write ){
+	logFile = write;
 }
 
 void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const String& box,
@@ -74,19 +86,17 @@ void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const Str
 }
 
 QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(ImageInterface<Float>* image, const QString& colorName) const {
-	return fitResultList.toDrawingDisplay( image, colorName );
+	return fitResultList.toDrawingDisplay( image, channelNumber, colorName );
 }
 
 void Gaussian2DFitter::run(){
 	successfulFit = true;
 	String channelStr = String::toString(channelNumber);
-	if ( logPath.length() == 0 ){
-		String fileName( "Fit2DLogFile");
-		logPath = viewer::options.temporaryPath( fileName );
-	}
+
 	ImageFitter fitter(image, "", NULL, pixelBox, channelStr, "", "", includePixs,
 			excludePixs, residualImageFile, "", estimateFile);
-	fitter.setLogfile( logPath );
+	String logFile = getLogFilePath().toStdString();
+	fitter.setLogfile( logFile );
 
 	// do the fit
 	try {
@@ -104,6 +114,12 @@ void Gaussian2DFitter::run(){
 		QString specificProblem( error.what() );
 		errorMsg = "Fit did not converge: "+ specificProblem;
 	}
+}
+
+bool Gaussian2DFitter::writeRegionFile() const {
+	QString regionFile = filePath.c_str() + REGION_SUFFIX;
+	bool successfulWrite = fitResultList.toRegionFile( image, regionFile );
+	return successfulWrite;
 }
 
 Gaussian2DFitter::~Gaussian2DFitter() {

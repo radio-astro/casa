@@ -154,7 +154,7 @@ class ImageAnalysis
                                          const String& pol = "", 
                                          const Int fitorder = 0, 
                                          const Bool overwrite = false);
-
+/*
     // the output <src>fakeBeam</src> indicates if there was no beam in the header and a fake one
     // was assumed to do the conversion. <src>channel</src> and <src>polarization</src> are
     // used only in the case the image has per plane beams.
@@ -167,7 +167,7 @@ class ImageAnalysis
         const Int channel=-1,
         const Int polarization=-1
     ) const;
-
+*/
     ImageInterface<Float>* convolve2d(
     		const String& outfile, const Vector<Int>& axes,
             const String& type, const Quantity& major,
@@ -432,12 +432,13 @@ class ImageAnalysis
         const Bool overwrite=False, const Bool stretch=False
     );
 
+    /*
     ImageInterface<Float> * subimage(const String& outfile, Record& region, 
                                      const String& mask, 
                                      const Bool dropdeg = False, 
                                      const Bool overwrite = False, 
                                      const Bool list = True, const Bool extendMask=False);
-
+*/
     Record summary(
     	const String& doppler = "RADIO",
     	const Bool list = True,
@@ -453,7 +454,8 @@ class ImageAnalysis
         const Bool dropdeg=False, const Bool deglast=False,
         const Bool dropstokes=False, const Bool stokeslast=False,
         const Bool wavelength=False, const Bool airWavelength=False,
-        const String& origin="", Bool stretch=False
+        const String& origin="", Bool stretch=False,
+	const Bool history=True
     );
 
     Bool toASCII(
@@ -633,6 +635,7 @@ class ImageAnalysis
                           casa::LogIO& os, casa::Bool log=casa::True,
                           casa::Bool overwrite=casa::False);
     
+    /*
 
     // Make a mask and define it in the image.
     static Bool makeMask(casa::ImageInterface<Float>& out,
@@ -640,7 +643,7 @@ class ImageAnalysis
                         Bool init, Bool makeDefault,
                         LogIO& os, Bool list);
 
-
+*/
 
 // Convert a Record to a CoordinateSystem
     casa::CoordinateSystem*

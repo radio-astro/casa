@@ -56,11 +56,12 @@ public:
 
 	void setRegion(ImageRegion* region);
 	void defineLine( int index, QVector<double>& xVals, QVector<double>& yVals,
-			bool useLogX, bool useLogY ) const;
+			bool useLogY ) const;
 	void defineStepHorizontal( int index, QVector<double>& xVals, QVector<double>& yVals,
-			bool useLogX, bool useLogY ) const;
+			bool useLogY ) const;
 	void defineStepVertical( int index, QVector<double>& xVals, QVector<double>& yVals,
-			bool useLogX, bool useLogY ) const;
+			bool useLogY ) const;
+	std::pair<float,float> getMinMaxBinCount() const;
 	vector<float> getXValues() const;
 	vector<float> getYValues() const;
 	std::pair<float,float> getDataRange() const;
@@ -75,7 +76,6 @@ public:
 	static void setIntensityRange( float minimumIntensity, float maximumIntensity );
 	static void setImage( ImageInterface<Float>* image );
 	static double computeYValue( double value, bool useLog );
-	static double computeXValue( double value, bool useLog );
 
 signals:
 	void postStatus( const QString& msg );

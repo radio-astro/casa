@@ -41,7 +41,7 @@ namespace casa {
 	class RegionInfo {
 	    public:
 
-		enum InfoTypes { MsInfoType, ImageInfoType, SliceInfoType, InvalidInfoType };
+		enum InfoTypes { MsInfoType, ImageInfoType, SliceInfoType, PVLineInfoType, InvalidInfoType };
 
 		typedef ImageStatistics<Float>::stat_list stats_t;
 		//typedef std::pair<String,String> center_element;
@@ -50,39 +50,48 @@ namespace casa {
 		typedef stats_t center_t;
 
 		RegionInfo( ) : type_(InvalidInfoType) { }
-		RegionInfo( const RegionInfo &other ) : stat_list_(other.stat_list_), label_(other.label_), type_( other.type_) { }
+		RegionInfo( const RegionInfo &other ) : stat_list_(other.stat_list_), label_(other.label_), description_(other.description_), type_( other.type_) { }
 		virtual ~RegionInfo( ) { }
 
 		std::tr1::shared_ptr<stats_t> &list( ) { return stat_list_; }
 		const std::string &label( ) const { return label_; }
+		const std::string &description( ) const { return description_; }
 		InfoTypes type( ) const { return type_; }
 
 	    protected:
-		RegionInfo( const std::string &label, stats_t *si, InfoTypes t ) : stat_list_(si), label_(label), type_(t) { }
+	    RegionInfo( const std::string &label, const std::string &desc, stats_t *si, InfoTypes t ) : stat_list_(si), label_(label), description_(desc), type_(t) { }
 
 	    private:
 		std::tr1::shared_ptr<stats_t>  stat_list_;
 		std::string label_;
+		std::string description_;
 		InfoTypes type_;
 	};
 
 	class MsRegionInfo : public RegionInfo {
 	    public:
-		MsRegionInfo( const std::string &label, stats_t *si ) : RegionInfo(label,si,MsInfoType) { }
+		MsRegionInfo( const std::string &label, const std::string &desc, stats_t *si ) : RegionInfo(label,desc,si,MsInfoType) { }
 		~MsRegionInfo( ) { }
 	};
 
 	class ImageRegionInfo : public RegionInfo {
 	    public:
-		ImageRegionInfo( const std::string &label, stats_t *si ) : RegionInfo(label,si,ImageInfoType) { }
+		ImageRegionInfo( const std::string &label, const std::string &desc, stats_t *si ) : RegionInfo(label,desc,si,ImageInfoType) { }
 		~ImageRegionInfo( ) { }
 	};
 	
 	class SliceRegionInfo : public RegionInfo {
 		public:
-			SliceRegionInfo( const std::string &label, stats_t *si ) : RegionInfo(label,si,SliceInfoType) { }
+			SliceRegionInfo( const std::string &label, const std::string &desc, stats_t *si ) : RegionInfo(label,desc,si,SliceInfoType) { }
 			~SliceRegionInfo( ) { }
-		};
+	};
+
+	class PVLineRegionInfo : public RegionInfo {
+		public:
+			PVLineRegionInfo( const std::string &label, const std::string &desc, stats_t *si ) : RegionInfo(label,desc,si,PVLineInfoType) { }
+			~PVLineRegionInfo( ) { }
+	};
+
 
     }
 }

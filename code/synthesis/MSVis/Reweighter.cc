@@ -369,9 +369,21 @@ Bool Reweighter::reweight(String& colname, const String& combine)
 
     // Make sure it is initialized before any copies are made.
     viIn.originChunks();
-    
+    // Make a list of indices of selected correlations
+    vector<uInt> selcorrs;
+    uInt nSelCorrs=corrSlices_p[0].nelements();
+    if (nSelCorrs>0) {
+     for (uInt i = 0; i < nSelCorrs; i++) {
+         Slice slice=corrSlices_p[0][i];
+         selcorrs.push_back(slice.start());
+     }
+    }
+    else { // no selection == all 
+     for (uInt i = 0; i < viIn.nCorr(); i++) selcorrs.push_back(i);
+    } 
+
     StatWT statwt(viIn, dataColStrToEnum(colname), fitspw_p, outspw_p, dorms_p,
-                  minsamp_p);
+         minsamp_p,selcorrs);
     GroupProcessor gp(viIn, &statwt);
 
     retval = gp.go();

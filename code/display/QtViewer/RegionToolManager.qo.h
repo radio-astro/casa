@@ -53,7 +53,7 @@ namespace casa {
 			Q_OBJECT
 	    	public:
 
-				enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool, PolylineTool };
+				enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool, PolylineTool, PVTool };
 
 
 				RegionToolManager( QtRegionSourceFactory *rsf, QtDisplayPanelGui *dpg, PanelDisplay *pd );

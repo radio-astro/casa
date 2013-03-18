@@ -27,8 +27,8 @@
 
 #include <display/QtPlotter/ThresholdingBinPlotDialog.ui.h>
 #include <casa/aips.h>
-#include <utility>		/***for std::pair***/
-#include <QDialog>
+#include <utility>
+#include <QMainWindow>
 
 using namespace std;
 
@@ -42,7 +42,7 @@ class BinPlotWidget;
 //Intensity is displayed on the x-axis.  The y-axis is a count of
 //the number of pixels at each intensity.
 
-class ThresholdingBinPlotDialog : public QDialog {
+class ThresholdingBinPlotDialog : public QMainWindow {
     Q_OBJECT
 
 public:
@@ -52,8 +52,12 @@ public:
     pair<double,double> getInterval() const;
     ~ThresholdingBinPlotDialog();
 
-protected:
-    void keyPressEvent( QKeyEvent* event );
+signals:
+    void accepted();
+
+private slots:
+	void accept();
+	void postStatusMessage( const QString& warning );
 
 private:
     Ui::ThresholdingBinPlotDialogClass ui;

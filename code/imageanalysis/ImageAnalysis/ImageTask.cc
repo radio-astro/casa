@@ -32,12 +32,13 @@
 #include <casa/OS/RegularFile.h>
 #include <casa/OS/SymLink.h>
 #include <images/Images/FITSImage.h>
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Images/PagedImage.h>
-#include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
+
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+
 
 namespace casa {
 
@@ -51,7 +52,8 @@ ImageTask::ImageTask(
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
-	_logfileSupport(False), _logfileAppend(False), _logFD(0) {
+	_logfileSupport(False), _logfileAppend(False), _logFD(0),
+	_verbosity(NORMAL) {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
 }
@@ -246,7 +248,6 @@ std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 	const IPosition *const outShape,
 	const CoordinateSystem *const coordsys
 ) const {
-
 	IPosition oShape = outShape == 0 ? subImage->shape() : *outShape;
 	CoordinateSystem csys = coordsys == 0 ? subImage->coordinates() : *coordsys;
 	std::auto_ptr<ImageInterface<Float> > outImage(
@@ -254,7 +255,7 @@ std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 			TiledShape(oShape), csys
 		)
 	);
-	std::auto_ptr<ArrayLattice<Bool> >mymask;
+	std::auto_ptr<ArrayLattice<Bool> > mymask;
 	if (mask != 0) {
 		mymask.reset(dynamic_cast<ArrayLattice<Bool> *>(mask->clone()));
 	}
@@ -267,11 +268,13 @@ std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 	ImageUtilities::copyMiscellaneous(*outImage, *subImage);
 	if (! _getOutname().empty()) {
 		_removeExistingOutfileIfNecessary();
-		ImageAnalysis ia(outImage.get());
 		String emptyMask = "";
 		Record empty;
 		outImage.reset(
-			ia.subimage(_getOutname(), empty, emptyMask, False, False)
+			SubImageFactory<Float>::createImage(
+				*outImage, _getOutname(), empty, emptyMask,
+				False, False, True, False
+			)
 		);
 	}
 	outImage->put(values == 0 ? subImage->get() : *values);

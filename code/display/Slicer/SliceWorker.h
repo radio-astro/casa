@@ -58,7 +58,7 @@ public:
 
 
 	int getSegmentCount() const;
-	QVector<double> getDistances( int index ) const;
+	QVector<double> getDistances( int index, double lastX ) const;
 	QVector<double> getXPositions(int index ) const;
 	QVector<double> getYPositions(int index ) const;
 	QVector<double> getPixels(int index) const;

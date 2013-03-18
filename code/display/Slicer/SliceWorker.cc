@@ -156,24 +156,26 @@ QVector<double> SliceWorker::getValues( int index, const QVector<double>& pixels
 					verticesX[nextIndex], verticesY[nextIndex]);
 	QVector<double> values = statistics->interpolate( start, end, pixels );
 
-	//In the case of distance in pixels, we want the distance to increase along
-	//the individual line segments rather than starting over with each line segment.
-	if ( index > 0 ){
-		double prevStart = statistics->getLength( verticesXWorld[index-1],
-				verticesYWorld[index-1], verticesX[index-1], verticesY[index-1]);
-		double prevIncrement = qAbs(prevStart - start);
-		values = statistics->adjustStart( prevIncrement, values );
-	}
+
 	delete statistics;
 	return values;
 }
 
-QVector<double> SliceWorker::getDistances( int index ) const {
+QVector<double> SliceWorker::getDistances( int index, double lastX ) const {
 	QVector<double> distances;
 	if ( sliceResults.size() > index && index >= 0 ){
 		Array<float> distanceArray = sliceResults[index]->asArrayFloat("distance");
 		QVector<double> distancePixels= getFromArray( distanceArray );
 		distances = getValues( index, distancePixels );
+
+		//In the case of distance in pixels, we want the distance to increase along
+		//the individual line segments rather than starting over with each line segment.
+		if ( index > 0 ){
+			int distanceCount = distances.size();
+			for ( int i = 0; i < distanceCount; i++ ){
+				distances[i] = distances[i] + lastX;
+			}
+		}
 	}
 	return distances;
 }
@@ -213,9 +215,17 @@ void SliceWorker::toAscii( QTextStream& stream ) const {
 		stream << "Region: "<< QString::number(id)<< END_OF_LINE;
 		stream << "Distance"<<"X Position"<<"Y Position"<<"Pixel"<<END_OF_LINE;
 		int resultCount = sliceResults.size();
+		double xIncr = 0;
 		for ( int i = 0; i < resultCount; i++ ){
 
-			QVector<double> distances = getDistances( i );
+			QVector<double> distances = getDistances( i, xIncr );
+			int distanceCount = distances.size();
+			if ( distanceCount > 0 ){
+				xIncr = distances[distances.size() - 1] - distances[0];
+			}
+			else {
+				xIncr = 0;
+			}
 			QVector<double> xPositions = getXPositions( i );
 			QVector<double> yPositions = getYPositions( i );
 			QVector<double> pixels = getPixels( i );

@@ -83,7 +83,8 @@ public:
          const String& fitspw="*",
          const String& outspw="*",
          const Bool dorms=false,
-         const uInt minsamp=2);
+         const uInt minsamp=2,
+         const vector<uInt> selcorrs=vector<uInt>());
 
   //// Copy construct
   //StatWT(const StatWT& other) {}
@@ -140,7 +141,7 @@ private:
                                 // Otherwise, use the standard sample variance.
   uInt   minsamp_p;     // Minimum # of unflagged visibilities for calculating
                         // a variance.
-  
+  vector<uInt> selcorrs_p;
   // Not initialized by c'tor:
   //std::set<Int> appliedSpWs_p;
   std::map<Int, Vector<Bool>*> fitmask_p;      // spw -> a list of flags by chan

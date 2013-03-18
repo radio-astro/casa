@@ -7,12 +7,11 @@
 
 #include <imageanalysis/ImageAnalysis/ImageTransposer.h>
 
-#include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 
-#include <memory>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 namespace casa {
 
@@ -143,10 +142,12 @@ ImageInterface<Float>* ImageTransposer::transpose() const {
 	}
 	ImageUtilities::copyMiscellaneous(*output, *_getImage());
 	if (! _getOutname().empty()) {
-		ImageAnalysis ia(output.get());
 		Record empty;
 		output.reset(
-			ia.subimage(_getOutname(), empty, "", False, False)
+			SubImageFactory<Float>::createImage(
+				*output, _getOutname(), empty, "",
+				False, False, True, False
+			)
 		);
 	}
 	return output.release();

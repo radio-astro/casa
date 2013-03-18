@@ -32,6 +32,7 @@
 #include <measures/Measures/MDirection.h>
 
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 
 #include <iomanip>
@@ -254,14 +255,79 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];
 
 	CoordinateSystem collCoords = collapsed->coordinates();
+	/*
+	 * this is the original code for setting of the full direction coordinate
+	 * which was deemed undesirable by the CSSC representative. He wants
+	 * an angular offset coordinate instead.
+
 	collCoords.setReferencePixel(newRefPix);
 	Vector<Double> refVal = collCoords.referenceValue();
 	refVal[xAxis] = startWorld[xAxis];
 	refVal[yAxis] = startWorld[yAxis];
 	collCoords.setReferenceValue(refVal);
-	collapsed->setCoordinateInfo(collCoords);
-	std::auto_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(collapsed.get());
+	*/
 
+	// to determine the pixel increment of the angular offset axis, get the
+	// distance between the end points
+	ImageMetaData<Float> md(collapsed.get());
+	Vector<Int> dirShape = md.directionShape();
+	AlwaysAssert(dirShape[1] == 1, AipsError);
+	const DirectionCoordinate& dc = collCoords.directionCoordinate();
+	Vector<Int> dirAxisNumbers = collCoords.directionAxesNumbers();
+	MVDirection collapsedStart, collapsedEnd;
+	Vector<Double> pixStart(2, 0);
+	dc.toWorld(collapsedStart, pixStart);
+	Vector<Double> pixEnd(2, 0);
+	pixEnd[0] = dirShape[0];
+	dc.toWorld(collapsedEnd, pixEnd);
+	Quantity seperation = collapsedEnd.separation(
+		collapsedStart, dc.worldAxisUnits()[0]
+	);
+	// The new coordinate must have the same number of axes as the coordinate
+	// it replaces, so 2 for the linear coordinate, we will remove the degenerate
+	// axis later
+	Vector<String> axisName(2, "Offset");
+	Vector<String> axisUnit = dc.worldAxisUnits();
+	Vector<Double> crval(2, 0);
+	Vector<Double> cdelt(2, seperation.getValue()/dirShape[0]);
+	Matrix<Double> xform(2, 2, 1);
+	xform(0, 1) = 0;
+	xform(1, 0) = 0;
+	Vector<Double> crpix(2, (dirShape[0] - 1)/2);
+	LinearCoordinate lc(
+		axisName, axisUnit, crval,
+		cdelt, xform, crpix
+	);
+	collCoords.replaceCoordinate(
+		lc, collCoords.directionCoordinateNumber()
+	);
+	TableRecord misc = collapsed->miscInfo();
+	collapsed->coordinates().save(misc, "secondary_coordinates");
+	collapsed->setMiscInfo(misc);
+	collapsed->setCoordinateInfo(collCoords);
+
+
+	IPosition keep;
+	for (uInt i=0; i<collapsed->ndim(); i++) {
+		if ((Int)i != dirAxisNumbers[1]) {
+			keep.append(IPosition(1, i));
+		}
+	}
+	// now remove the degenerate linear axis
+	Record empty;
+	SubImage<Float> cDropped = SubImageFactory<Float>::createSubImage(
+		*collapsed, empty, "", 0, False, AxesSpecifier(keep), False
+	);
+	std::auto_ptr<ArrayLattice<Bool> > newMask;
+	if (dynamic_cast<TempImage<Float> *>(collapsed.get())->hasPixelMask()) {
+		// because the mask doesn't lose its degenerate axis when subimaging.
+		Array<Bool> oldArray = collapsed->pixelMask().get();
+		newMask.reset(new ArrayLattice<Bool>(cDropped.shape()));
+		Array<Bool> newArray = oldArray;
+		newArray.resize(cDropped.shape(), True);
+		newMask->put(newArray);
+	}
+	std::auto_ptr<ImageInterface<Float> > outImage = _prepareOutputImage(&cDropped, 0, newMask.get());
 	if (wantReturn) {
 		return outImage.release();
 	}

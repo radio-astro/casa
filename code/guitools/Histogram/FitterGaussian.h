@@ -62,9 +62,7 @@ private:
 	float solutionPeak;
 	float solutionCenter;
 	float solutionFWHM;
-	float solutionChiSquared;
-	float solutionRMS;
-	bool solutionConverged;
+
 };
 
 } /* namespace casa */

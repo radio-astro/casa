@@ -50,7 +50,9 @@
 #include <display/QtViewer/AnimatorHolder.qo.h>
 #include <display/QtViewer/QtWCBox.h>
 #include <display/QtViewer/Preferences.qo.h>
+#include <display/QtViewer/ColorHistogram.qo.h>
 #include <display/Fit/Fit2DTool.qo.h>
+#include <display/Fit/FindSourcesDialog.qo.h>
 #include <display/Slicer/SlicerMainWindow.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 #include <display/RegionShapes/RegionShapes.h>
@@ -83,7 +85,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
-								   animationHolder( NULL ), histogrammer( NULL ), fitTool( NULL ), sliceTool( NULL ),
+								   animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
+								   fitTool( NULL ), sliceTool( NULL ), findSourcesDialog( NULL ),
 								   clean_tool(0), regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
@@ -111,7 +114,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	}
 
 	qdp_ = new QtDisplayPanel(this,0,args);
-	//  qdo_ = new QtDataOptionsPanel(this);
+
 
 	if ( use_new_regions ) {
 		// -----
@@ -198,6 +201,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
 	}
 	momentsCollapseAct_ = tlMenu_->addAction("Collapes/Moments...");
+	findSourcesAct_ = tlMenu_->addAction("Find Sources...");
 	histogramAct_ = tlMenu_->addAction( "Histogram...");
 	fitAct_ = tlMenu_->addAction( "Fit...");
 	cleanAct_ = tlMenu_->addAction( "Interactive Clean..." );
@@ -225,6 +229,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	mainToolBar_->addAction(profileAct_);
 	mainToolBar_->addAction(momentsCollapseAct_);
 	mainToolBar_->addAction(histogramAct_);
+	mainToolBar_->addAction(findSourcesAct_);
 	mainToolBar_->addAction(fitAct_);
 	//		    mainToolBar_->addAction(rgnMgrAct_);
 	mainToolBar_->addSeparator();
@@ -439,6 +444,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	profileAct_->setIcon(QIcon(":/icons/Spec_Prof.png"));
 	momentsCollapseAct_->setIcon(QIcon(":/icons/profileMomentCollapse.png"));
 	histogramAct_->setIcon( QIcon(":/icons/hist.png"));
+	findSourcesAct_->setIcon( QIcon(":/icons/binoculars.png"));
 	fitAct_->setIcon( QIcon(":/icons/gaussian.png"));
 	// rgnMgrAct_ ->setIcon(QIcon(":/icons/Region_Save.png"));
 	printAct_  ->setIcon(QIcon(":/icons/File_Print.png"));
@@ -459,6 +465,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	profileAct_->setToolTip("Open the Spectrum Profiler");
 	momentsCollapseAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
 	histogramAct_->setToolTip("Histogram Functionality");
+	findSourcesAct_->setToolTip("Find Sources");
 	fitAct_->setToolTip( "Interactive 2D Fitting");
 	dpRstrAct_ ->setToolTip("Restore Display Panel State from File");
 	// rgnMgrAct_ ->setToolTip("Save/Control Regions");
@@ -503,6 +510,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(profileAct_, SIGNAL(triggered()),  SLOT(showSpecFitImageProfile()));
 	connect(momentsCollapseAct_, SIGNAL(triggered()), SLOT(showMomentsCollapseImageProfile()));
 	connect(histogramAct_, SIGNAL(triggered()), SLOT(showHistogram()));
+	connect(findSourcesAct_, SIGNAL(triggered()), SLOT(showFindSources()));
 	connect(fitAct_, SIGNAL(triggered()), SLOT(showFitInteractive()));
 
 	if ( cleanAct_ ) connect(cleanAct_, SIGNAL(triggered()), SLOT(showCleanTool( )));
@@ -669,9 +677,94 @@ void QtDisplayPanelGui::initAnimationHolder(){
 	}
 }
 
+void QtDisplayPanelGui::globalColorSettingsChanged( bool global ){
+	QtDisplayData::setGlobalColorOptions( global );
+}
+
+void QtDisplayPanelGui::globalOptionsChanged( QtDisplayData* originator, Record opts ){
+	for(ListIter<QtDisplayData*> iter(qdds_); !iter.atEnd(); iter++) {
+		QtDisplayData* dd = iter.getRight();
+		if ( dd != originator ){
+			dd->setOptions( opts, true );
+		}
+	}
+}
+
+//---------------------------------------------------------------------------------
+//                 Find Sources
+//---------------------------------------------------------------------------------
+
+void QtDisplayPanelGui::showFindSources(){
+	if ( findSourcesDialog == NULL ){
+		findSourcesDialog = new FindSourcesDialog( this );
+		//Image updates
+		connect( qdp_, SIGNAL(registrationChange()), this,
+				SLOT(resetListenerImage()), Qt::UniqueConnection );
+		connect( findSourcesDialog, SIGNAL(showOverlay(String, const QString&)),
+				this, SLOT(addSkyComponentOverlay(String, const QString&)));
+		connect( findSourcesDialog, SIGNAL(removeOverlay(String)),
+				this, SLOT(removeSkyComponentOverlay(String)));
+		resetListenerImage();
+		findSourcesDialog->setChannel( qdp_->frame());
+
+		//Region information
+		//Connect drawing tools so that regions are updated for the fit.
+		PanelDisplay* panelDisplay = qdp_->panelDisplay();
+		std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(panelDisplay->getTool(QtMouseToolNames::RECTANGLE));
+		// one region source is shared among all of the tools...
+		// so there is no need to connect these signals for all of the tools...
+		if ( rect.get( ) != 0 ){
+			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
+			if ( qrs ) {
+				connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
+						const QList<double> &, const QList<int> &, const QList<int> &,
+						const QString &, const QString &, const QString &, int, int ) ),
+						findSourcesDialog, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+						const QList<double> &, const QList<int> &, const QList<int> &,
+						const QString &, const QString &, const QString &, int, int ) ) );
+				connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> & ) ),
+						findSourcesDialog, SLOT( updateRegion( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+						const QList<int> &, const QList<int> & ) ) );
+				connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
+						const QList<double> &, const QList<int> &, const QList<int> &,
+						const QString &, const QString &, const QString &, int, int ) ),
+						findSourcesDialog, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+						const QList<double> &, const QList<int> &, const QList<int> &,
+						const QString &, const QString &, const QString &, int, int ) ) );
+				qrs->generateExistingRegionUpdates( );
+			}
+		}
+	}
+	findSourcesDialog->show();
+}
+
 //---------------------------------------------------------------------------------
 //                                      Histogram
 //---------------------------------------------------------------------------------
+
+void QtDisplayPanelGui::showColorHistogram(QtDisplayData* displayData ){
+	if ( colorHistogram == NULL ){
+		colorHistogram = new ColorHistogram( this );
+		connect( qdo_, SIGNAL(dataOptionsTabChanged(const QString&)),
+				this, SLOT( updateColorHistogram(const QString&)));
+	}
+	colorHistogram->show();
+	colorHistogram->setDisplayData( displayData );
+}
+
+void QtDisplayPanelGui::updateColorHistogram( const QString& ddName ){
+	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	QtDisplayData* targetDD = NULL;
+	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+		QtDisplayData* pdd = qdds.getRight();
+		if ( pdd->name() == ddName.toStdString() ){
+			targetDD = pdd;
+			break;
+		}
+	}
+	colorHistogram->setDisplayData( targetDD );
+}
 
 void QtDisplayPanelGui::showHistogram(){
 	if ( histogrammer == NULL ){
@@ -749,6 +842,10 @@ void QtDisplayPanelGui::resetListenerImage(){
 								histogrammer->setChannelCount( 1 );
 							}
 						}
+						if ( findSourcesDialog != NULL ){
+							findSourcesDialog->setImage(img);
+						}
+
 
 						imageFound = true;
 						break;
@@ -767,7 +864,7 @@ void QtDisplayPanelGui::resetListenerImage(){
 
 void QtDisplayPanelGui::initHistogramHolder(){
 	if ( histogrammer == NULL ){
-		histogrammer = new HistogramMain(false,true,true,true,false,this);
+		histogrammer = new HistogramMain(false,true,true,true,this);
 		histogrammer->setDisplayPlotTitle( true );
 		histogrammer->setDisplayAxisTitles( true );
 		//So we can disconnect the signals and not chew up bandwidth
@@ -892,7 +989,8 @@ void QtDisplayPanelGui::initFit2DTool(){
 	fitTool = new Fit2DTool( this );
 
 	connect( qdp_, SIGNAL(registrationChange()), SLOT(refreshFit()));
-	connect( fitTool, SIGNAL(showOverlay(String)),this, SLOT(addSkyComponentOverlay(String)));
+	connect( fitTool, SIGNAL(showOverlay(String, const QString&)),
+			this, SLOT(addSkyComponentOverlay(String, const QString&)));
 	connect( fitTool, SIGNAL(addResidualFitImage(String)), this, SLOT(addResidualFitImage(String)));
 	connect( fitTool, SIGNAL(removeOverlay(String)),this, SLOT(removeSkyComponentOverlay(String)));
 	connect( fitTool, SIGNAL(remove2DFitOverlay( QList<RegionShape*>)),this, SLOT( remove2DFitOverlay(QList<RegionShape*>)));
@@ -925,7 +1023,7 @@ void QtDisplayPanelGui::initFit2DTool(){
 				fitTool, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
 				const QList<double> &, const QList<int> &, const QList<int> &,
 				const QString &, const QString &, const QString &, int, int ) ) );
-
+			qrs->generateExistingRegionUpdates( );
 		}
 	}
 }
@@ -964,8 +1062,19 @@ void QtDisplayPanelGui::showCleanTool( ) {
 	if ( clean_tool ) clean_tool->show( );
 }
 
-void QtDisplayPanelGui::addSkyComponentOverlay( String path ){
+void QtDisplayPanelGui::addSkyComponentOverlay( String path, const QString& colorName ){
 	QtDisplayData* dd = createDD( path, "sky cat", "skycatalog" );
+	Record opts = dd->getOptions();
+	//cout << opts << endl;
+	const String MARKER_COLOR( "markercolor");
+	const String LABEL_CHAR_COLOR( "labelcharcolor");
+	Record markerColorRecord = opts.subRecord( MARKER_COLOR );
+	markerColorRecord.define("value", colorName.toStdString());
+	opts.defineRecord( MARKER_COLOR, markerColorRecord);
+	Record labelColorRecord = opts.subRecord( LABEL_CHAR_COLOR );
+	labelColorRecord.define("value", colorName.toStdString());
+	opts.defineRecord( LABEL_CHAR_COLOR, labelColorRecord);
+	dd->setOptions( opts );
 	if ( dd == NULL ){
 		qDebug() << "Could not overlay sky catalog";
 	}
@@ -1043,6 +1152,9 @@ QVariant QtDisplayPanelGui::start_interact( const QVariant &, int ) {
 	return QVariant(QString("*error* unimplemented (by design)"));
 }
 QVariant QtDisplayPanelGui::setoptions( const QMap<QString,QVariant> &, int ) {
+
+
+
 	return QVariant(QString("*error* nothing implemented yet"));
 }
 
@@ -1081,8 +1193,15 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 
 	emit ddCreated(qdd, autoRegister);
 	updateFrameInformation();
-	if ( regionDock_ )
+	if ( regionDock_ ){
 	    regionDock_->updateRegionStats( );
+	}
+
+	connect( qdd, SIGNAL(showColorHistogram(QtDisplayData*)), this, SLOT(showColorHistogram(QtDisplayData*)));
+
+	//Allows dds to synchronize options that are global.
+	connect( qdd, SIGNAL(globalOptionsChanged(QtDisplayData*, Record)),
+			this,	SLOT(globalOptionsChanged(QtDisplayData*, Record)));
 	return qdd;
 }
 
@@ -1140,6 +1259,7 @@ void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, 
 	if (tmpData && dd != NULL ){
 		dd->setDelTmpData(True);
 	}
+
 }
 
 void QtDisplayPanelGui::doSelectChannel( int channelNumber ) {
@@ -1390,6 +1510,9 @@ void QtDisplayPanelGui::updateAnimUi_() {
 	if ( histogrammer != NULL ){
 		histogrammer->setChannelValue( frm );
 	}
+	if ( findSourcesDialog != NULL ){
+		findSourcesDialog->setChannel( frm );
+	}
 }
 // Public slots: may be safely operated programmatically (i.e.,
 // scripted, when available), or via gui actions.
@@ -1413,6 +1536,7 @@ void QtDisplayPanelGui::hideImageMenus() {
 					profileAct_->setEnabled(True);
 					momentsCollapseAct_->setEnabled(True);
 					histogramAct_->setEnabled(True);
+					findSourcesAct_->setEnabled(True);
 					fitAct_->setEnabled( True );
 					if ( shpMgrAct_ ) shpMgrAct_->setEnabled(True);
 					setUseRegion(False);
@@ -1435,6 +1559,7 @@ void QtDisplayPanelGui::hideImageMenus() {
 					if ( annotAct_ ) annotAct_->setEnabled(False);
 					profileAct_->setEnabled(False);
 					momentsCollapseAct_->setEnabled( False );
+					findSourcesAct_->setEnabled( False );
 					histogramAct_->setEnabled( False );
 					fitAct_->setEnabled( False );
 					if ( shpMgrAct_ ) shpMgrAct_->setEnabled(False);
@@ -1510,7 +1635,10 @@ void QtDisplayPanelGui::showDataOptionsPanel() {
 	//  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
 	if ( showdataoptionspanel_enter_count == 0 ) {
 		++showdataoptionspanel_enter_count;
-		if(qdo_==0) qdo_ = new QtDataOptionsPanel(this);
+		if(qdo_==0){
+			qdo_ = new QtDataOptionsPanel(this);
+			connect( qdo_, SIGNAL( globalColorSettingsChanged(bool)), this, SLOT(globalColorSettingsChanged( bool )));
+		}
 		if(qdo_!=0) {  // (should be True, barring exceptions above).
 			qdo_->showNormal();
 			qdo_->raise();

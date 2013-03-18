@@ -305,10 +305,10 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 }
 
 void QtRegionState::statisticsUpdate( QtRegionStats *regionStats, RegionInfo& regionInfo){
-	if ( region_->type() != region::PolylineRegion ){
+	if ( region_->type( ) != region::PolylineRegion &&
+		 region_->type( ) != region::PVLineRegion ) {
 		regionStats->updateStatistics(regionInfo);
-	}
-	else {
+	} else {
 		regionStats->updateStatistics(regionInfo, region_ );
 	}
 }

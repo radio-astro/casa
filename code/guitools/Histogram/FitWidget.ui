@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>370</width>
-    <height>428</height>
+    <height>400</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -80,39 +80,21 @@
       </spacer>
      </item>
      <item>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="1" column="0" colspan="2">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>&lt;font color='black'&gt;Maximum RMS:&lt;/font&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QLineEdit" name="rmsLineEdit">
-         <property name="toolTip">
-          <string>Specify the maximum root mean square error for the fit.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QComboBox" name="fitDistributionComboBox">
-         <property name="toolTip">
-          <string>Select a probability distribution for the fit.</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Distribution:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Distribution:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="fitDistributionComboBox">
+       <property name="toolTip">
+        <string>Select a probability distribution for the fit.</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_13">
@@ -202,81 +184,101 @@ p, li { white-space: pre-wrap; }
        <item>
         <widget class="QStackedWidget" name="fitStackedWidget">
          <property name="currentIndex">
-          <number>0</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="gaussPage">
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
-            <layout class="QGridLayout" name="gridLayout">
-             <item row="0" column="0">
-              <widget class="QLabel" name="label_2">
-               <property name="text">
-                <string>Estimate Center:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLineEdit" name="gaussCenterLineEdit">
-               <property name="toolTip">
-                <string>Specify the center of the Gaussian distribution.</string>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_3">
-               <property name="text">
-                <string>Estimate Peak:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLineEdit" name="gaussPeakLineEdit">
-               <property name="toolTip">
-                <string>Specify the peak of the Gaussian distribution.</string>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="0">
-              <widget class="QLabel" name="label_4">
-               <property name="text">
-                <string>Estimate FWHM:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QLineEdit" name="gaussFWHMLineEdit">
-               <property name="toolTip">
-                <string>Specify the full width a half maximum value of the Gaussian distribution.</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
+            <widget class="QGroupBox" name="groupBox">
+             <property name="title">
+              <string>Estimate</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+             <layout class="QGridLayout" name="gridLayout">
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_2">
+                <property name="text">
+                 <string>Center:</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLineEdit" name="gaussCenterLineEdit">
+                <property name="toolTip">
+                 <string>Specify the center of the Gaussian distribution.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_3">
+                <property name="text">
+                 <string>Peak:</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLineEdit" name="gaussPeakLineEdit">
+                <property name="toolTip">
+                 <string>Specify the peak of the Gaussian distribution.</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_4">
+                <property name="text">
+                 <string>FWHM:</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QLineEdit" name="gaussFWHMLineEdit">
+                <property name="toolTip">
+                 <string>Specify the full width a half maximum value of the Gaussian distribution.</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
            </item>
           </layout>
          </widget>
          <widget class="QWidget" name="poissonPage">
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
-            <widget class="QLabel" name="label_5">
-             <property name="text">
-              <string>Lambda:</string>
+            <widget class="QGroupBox" name="groupBox_2">
+             <property name="title">
+              <string>Estimate</string>
              </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="poissonLambdaLineEdit">
-             <property name="toolTip">
-              <string>Specify the mean number of occurrences for the Poisson distribution.</string>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
              </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_6">
+              <item>
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>Lambda:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="poissonLambdaLineEdit">
+                <property name="toolTip">
+                 <string>Specify the mean number of occurrences for the Poisson distribution.</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </item>
           </layout>

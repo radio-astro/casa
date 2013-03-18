@@ -55,17 +55,17 @@ namespace QtMouseToolNames {
   
   const std::string tools[] = { ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST,
 			   POINT, RECTANGLE, ELLIPSE,  POLYGON, POLYLINE,
-			   RULERLINE, /*POSITIONVELOCITY,*/ MULTICROSSHAIR, ANNOTATIONS, NONE };
+			   RULERLINE, POSITIONVELOCITY, MULTICROSSHAIR, ANNOTATIONS, NONE };
 
   const std::string longnames[] = { "Zooming", "Panning",
     "Colormap fiddling - shift/slope",
     "Colormap fiddling - brightness/contrast",
     "Point marking", "Rectangle drawing", "Ellipse drawing", "Polygon drawing",
-    "Polyline drawing", "Ruler drawing", "Multipanel crosshair", "Annotations",  "" };
+    "Polyline drawing", "Ruler drawing", "P/V tool", "Multipanel crosshair", "Annotations",  "" };
     
   std::string iconnames[] = { "magnifyb", "handb", "arrowcrossb",
    "brightcontrastb", "symdotb", "rectregionb", "ellregionb", "polyregionb",
-   "polylineb", "rulerb",  /*"pvtoolb",*/ "mpcrosshairb", "dontuseb",  "" };
+   "polylineb", "rulerb", "pvtoolb", "mpcrosshairb", "dontuseb",  "" };
     
   const std::string helptexts[] = {
     "Use the assigned mouse button to drag out a rectangle."
@@ -103,7 +103,9 @@ namespace QtMouseToolNames {
     "\nUse handles to rearrange points."
     "\n<Esc> to cancel",
        
-    "Press assigned mouse button and draw ruler line by dragging."
+    "Press assigned mouse button and draw ruler line by dragging.",
+
+	"Draw a line to generate a P/V slice...",
 
     "Select a shape to draw and then click / drag on screen to place it."
     "\nSelect \"more\" to show more options"
@@ -178,7 +180,7 @@ namespace QtMouseToolNames {
 
 
 
-Int QtMouseToolState::mousebtns_[] =  { 1, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0, 0,  0 };
+	Int QtMouseToolState::mousebtns_[] =  { 1, 0, 2, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 QtMouseToolState::QtMouseToolState( ) : rc(viewer::getrc( )) {
     initToolState( );

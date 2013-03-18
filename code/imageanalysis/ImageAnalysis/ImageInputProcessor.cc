@@ -31,10 +31,10 @@
 #include <casa/iostream.h>
 
 #include <images/Images/FITSImage.h>
-#include <images/Images/ImageMetaData.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/MIRIADImage.h>
 #include <images/Regions/WCBox.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 
 #include <measures/Measures/Stokes.h>
 
@@ -123,8 +123,8 @@ void ImageInputProcessor::_process(
     		}
     	}
     }
-	ImageMetaData metaData(*image);
-	_nSelectedChannels = metaData.nChannels();
+	ImageMetaData<Float> md(image);
+	_nSelectedChannels = md.nChannels();
 
 	CasacRegionManager regionMgr(image->coordinates());
 	regionRecord = regionMgr.fromBCS(

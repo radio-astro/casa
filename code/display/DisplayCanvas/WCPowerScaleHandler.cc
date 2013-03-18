@@ -33,6 +33,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+const String WCPowerScaleHandler::POWER_CYCLES="powercycles";
+
 // Default Constructor Required
 WCPowerScaleHandler::WCPowerScaleHandler() :
   WCDataScaleHandler() {
@@ -55,9 +57,31 @@ Bool WCPowerScaleHandler::setOptions(Record &rec, Record &recOut) {
   Bool ret = WCDataScaleHandler::setOptions(rec, recOut);
   Bool localchange = False;
   Bool error;
+  //Make sure the value of power cycles is a float, if it exists as a record
+  //instead.
 
-  localchange = (readOptionRecord(itsOptionsPowerCycles, error, rec,
-					"powercycles") || localchange);
+  /*if ( rec.isDefined( WCPowerScaleHandler::POWER_CYCLES )){
+	  	Record powerCycleRecord;
+  		if ( rec.dataType(WCPowerScaleHandler::POWER_CYCLES) == TpRecord ){
+  			Record powerRecord = rec.subRecord( WCPowerScaleHandler::POWER_CYCLES );
+  			if ( powerRecord.isDefined("value")){
+  				cout << "About to ask for power as float"<<endl;
+  				float powerCycles = powerRecord.asFloat( "value");
+  				cout << "Resetting powerCycles to "<<powerCycles << endl;
+  				//rec.removeField( WCPowerScaleHandler::POWER_CYCLES );
+  				powerCycleRecord.define( WCPowerScaleHandler::POWER_CYCLES, powerCycles );
+  			}
+  		}
+  		else {
+  			cout << "rec dataType="<<rec.dataType(WCPowerScaleHandler::POWER_CYCLES)
+  					<< " float="<<TpFloat<<endl;
+  			powerCycleRecord = rec;
+  		}
+
+  		cout << "WcPowerScalerHandler set power cycles to "<<itsOptionsPowerCycles<<endl;
+  }*/
+
+  localchange = (readOptionRecord(itsOptionsPowerCycles, error, rec ,POWER_CYCLES) || localchange);
   localchange = (readOptionRecord(itsOptionsHistoEqualisation, error,
 					rec, "histoequalisation") ||
 		       localchange);
@@ -80,8 +104,8 @@ Record WCPowerScaleHandler::getOptions() {
   rec.defineRecord("histoequalisation", histoequalisation);
 
   Record powercycles;
-  powercycles.define("dlformat", "powercycles");
-  powercycles.define("listname", "scaling power cycles");
+  powercycles.define("dlformat", POWER_CYCLES);
+  powercycles.define("listname", "Scaling Power Cycles");
   powercycles.define("ptype", "floatrange");
   powercycles.define("pmin", Float(-5.0));
   powercycles.define("pmax", Float(5.0));
@@ -90,7 +114,7 @@ Record WCPowerScaleHandler::getOptions() {
   powercycles.define("value", itsOptionsPowerCycles);
   powercycles.define("provideentry", True);
   powercycles.define("allowunset", False);
-  rec.defineRecord("powercycles", powercycles);
+  rec.defineRecord(POWER_CYCLES, powercycles);
 
   return rec;
 }

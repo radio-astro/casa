@@ -59,6 +59,17 @@ class ImageTask {
 
 public:
 
+	// verbosity levels
+	enum Verbosity {
+		QUIET,
+		WHISPER,
+		LOW,
+		NORMAL,
+		HIGH,
+		NOISY,
+		DEAFENING
+	};
+
     virtual ~ImageTask();
 
     virtual String getClass() const = 0;
@@ -72,6 +83,8 @@ public:
     void setRegion(const Record& region);
 
     void setMask(const String& mask) { _mask = mask; }
+
+    void setVerbosity(Verbosity verbosity) { _verbosity = verbosity; }
 
 protected:
 
@@ -102,12 +115,16 @@ protected:
 
     inline const Record* _getRegion() const {return &_regionRecord;}
 
+    inline void _setStokes(const String& stokes) { _stokesString = stokes; }
+
     inline const String& _getStokes() const {return _stokesString;}
 
     inline const String& _getChans() const {return _chan;}
 
     inline const String& _getOutname() const {return _outname; }
 
+    // Represents the minimum set of coordinates necessary for the
+    // task to function.
     virtual vector<Coordinate::Type> _getNecessaryCoordinates() const = 0;
 
     void _removeExistingOutfileIfNecessary() const;
@@ -115,7 +132,6 @@ protected:
     static void _removeExistingFileIfNecessary(
     	const String& filename, const Bool overwrite
     );
-
 
     String _summaryHeader() const;
 
@@ -151,6 +167,7 @@ protected:
     	const IPosition *const outShape=0, const CoordinateSystem *const coordsys=0
     ) const;
 
+    Verbosity _getVerbosity() const { return _verbosity; }
 
 private:
     const ImageInterface<Float> *const _image;
@@ -161,6 +178,7 @@ private:
     Bool _overwrite, _stretch, _logfileSupport, _logfileAppend;
     Int _logFD;
 	std::auto_ptr<FiledesIO> _logFileIO;
+	Verbosity _verbosity;
 
 
 
