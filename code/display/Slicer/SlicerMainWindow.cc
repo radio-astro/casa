@@ -86,8 +86,9 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	ui.xAxisComboBox->addItem( SlicePlot::POSITION_X_AXIS );
 	ui.xAxisComboBox->addItem( SlicePlot::POSITION_Y_AXIS );
 	ui.unitComboBox->addItem( SlicePlot::UNIT_X_PIXEL );
-	ui.unitComboBox->addItem( SlicePlot::UNIT_X_RADIAN );
 	ui.unitComboBox->addItem( SlicePlot::UNIT_X_ARCSEC );
+	ui.unitComboBox->addItem( SlicePlot::UNIT_X_ARCMIN );
+	ui.unitComboBox->addItem( SlicePlot::UNIT_X_ARCDEG );
 	connect(ui.xAxisComboBox, SIGNAL(currentIndexChanged(const QString&)), &slicePlot, SLOT(setXAxis(const QString&)));
 	connect(ui.unitComboBox, SIGNAL(currentIndexChanged(const QString&)), &slicePlot, SLOT(xAxisUnitsChanged( const QString& )));
 

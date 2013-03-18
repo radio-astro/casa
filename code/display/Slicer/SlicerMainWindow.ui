@@ -25,13 +25,13 @@
      <widget class="QWidget" name="controlWidget" native="true">
       <property name="minimumSize">
        <size>
-        <width>250</width>
+        <width>300</width>
         <height>0</height>
        </size>
       </property>
       <property name="maximumSize">
        <size>
-        <width>250</width>
+        <width>300</width>
         <height>16777215</height>
        </size>
       </property>
@@ -371,7 +371,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>620</width>
+           <width>570</width>
            <height>221</height>
           </rect>
          </property>

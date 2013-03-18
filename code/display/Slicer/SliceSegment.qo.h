@@ -41,6 +41,8 @@ namespace casa {
  * may be just a single SliceSegment.
  */
 
+class SliceStatistics;
+
 class SliceSegment : public QFrame {
     Q_OBJECT
 
@@ -52,7 +54,7 @@ public:
     void setColor( QColor color );
     QColor getCurveColor() const;
     void clearCurve();
-    void updateStatistics();
+    void updateStatistics( SliceStatistics* statistics );
     QwtPlot* getPlot();
     ~SliceSegment();
 

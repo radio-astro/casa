@@ -135,7 +135,7 @@ void Polyline::polyLineRegionUpdate(int regionId, viewer::region::RegionChanges 
 		int channelIndex = zIndex();
 		slicePlot->updateChannel(channelIndex);
 	}
-	slicePlot->updatePolyLine(regionId, change, worldX, worldY, pixelX, pixelY);
+	updatePolyLine(regionId, change, worldX, worldY, pixelX, pixelY);
 }
 
 void Polyline::polyLineRegionChanged( viewer::Region* /*region*/, std::string changeType){
@@ -150,6 +150,8 @@ void Polyline::polyLineRegionChanged( viewer::Region* /*region*/, std::string ch
 void Polyline::updatePolyLine(int regionId, viewer::region::RegionChanges changes,
 		const QList<double> & worldX, const QList<double>& worldY,
 		const QList<int> & pixelX, const QList<int> & pixelY){
+	QList<double> linearX = worldX;
+
 	slicePlot->updatePolyLine( regionId, changes, worldX, worldY, pixelX, pixelY );
 }
 

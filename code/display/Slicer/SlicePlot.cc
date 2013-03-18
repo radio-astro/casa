@@ -39,12 +39,13 @@ const QString SlicePlot::DISTANCE_AXIS = "Distance";
 const QString SlicePlot::POSITION_X_AXIS = "Position X";
 const QString SlicePlot::POSITION_Y_AXIS = "Position Y";
 const QString SlicePlot::UNIT_X_PIXEL = "Pixels";
-const QString SlicePlot::UNIT_X_ARCSEC = "Arcseconds";
-const QString SlicePlot::UNIT_X_RADIAN = "Radians";
+const QString SlicePlot::UNIT_X_ARCSEC = "Arc Seconds";
+const QString SlicePlot::UNIT_X_ARCMIN = "Arc Minutes";
+const QString SlicePlot::UNIT_X_ARCDEG = "Arc Degrees";
 
 SlicePlot::SlicePlot(QWidget *parent, bool allFunctionality ) :QwtPlot(parent),
 		image( NULL ), imageAnalysis( NULL ), AXIS_FONT_SIZE(8),
-		statLayout(NULL) {
+		statLayout(NULL), factory(NULL) {
 	setCanvasBackground( Qt::white );
 
 	accumulateSlices = false;
@@ -57,6 +58,7 @@ SlicePlot::SlicePlot(QWidget *parent, bool allFunctionality ) :QwtPlot(parent),
 	currentRegionId = -1;
 	xAxis = DISTANCE_AXIS;
 	xAxisUnits = UNIT_X_PIXEL;
+	factory = new SliceStatisticsFactory();
 	initAxisFont( QwtPlot::xBottom, getAxisLabel() );
 
 	//Set up the axis
@@ -245,33 +247,32 @@ void SlicePlot::setXAxis( const QString& newAxis ){
 	if ( newAxis != xAxis ){
 		xAxis = newAxis;
 		initAxisFont( QwtPlot::xBottom, getAxisLabel() );
-		this->clearCurves();
-		if ( accumulateSlices ){
-			QList<int> regionIds = this->sliceMap.keys();
-			QList<int>::iterator idIter = regionIds.begin();
-			while ( idIter != regionIds.end() ){
-				sliceFinished( *idIter );
-				idIter++;
-			}
-		}
-		else {
-			if ( currentRegionId >= 0 ){
-				sliceFinished( currentRegionId );
-			}
-		}
 
+		SliceStatisticsFactory::AxisXChoice choice = getXAxis();
+		factory->setAxisXChoice( choice );
+		SliceStatistics* statistics = factory->getStatistics();
+		QList<int> regionIds = this->sliceMap.keys();
+		QList<int>::iterator idIter = regionIds.begin();
+		while ( idIter != regionIds.end() ){
+			sliceMap[ *idIter ]->setStatistics( statistics );
+			idIter++;
+		}
+		replot();
 	}
 }
 
 
 SliceStatisticsFactory::AxisXUnits SlicePlot::getUnitMode() const {
 	SliceStatisticsFactory::AxisXUnits unitMode = SliceStatisticsFactory::PIXEL_UNIT;
-	if ( xAxisUnits == UNIT_X_RADIAN ){
-		unitMode = SliceStatisticsFactory::RADIAN_UNIT;
+	if ( xAxisUnits == UNIT_X_ARCMIN ){
+		unitMode = SliceStatisticsFactory::ARCMIN_UNIT;
 	}
 	else if ( xAxisUnits == UNIT_X_ARCSEC ){
 		//Arcseconds.
 		unitMode = SliceStatisticsFactory::ARCSEC_UNIT;
+	}
+	else if ( xAxisUnits == UNIT_X_ARCDEG ){
+		unitMode = SliceStatisticsFactory::ARCDEG_UNIT;
 	}
 	return unitMode;
 }
@@ -281,8 +282,10 @@ void SlicePlot::xAxisUnitsChanged( const QString& units ){
 		xAxisUnits = units;
 		initAxisFont( QwtPlot::xBottom, getAxisLabel() );
 		SliceStatisticsFactory::AxisXUnits unitMode = getUnitMode();
+		factory->setXUnits( unitMode );
+		SliceStatistics* statistics = factory->getStatistics();
 		for ( QMap<int,ImageSlice*>::iterator it = sliceMap.begin(); it != sliceMap.end(); ++it ){
-			(*it)->setXUnits( unitMode );
+			(*it)->setStatistics( statistics );
 		}
 		replot();
 	}
@@ -328,8 +331,8 @@ ImageSlice* SlicePlot::getSlicerFor( int regionId ){
 		slice->setUseViewerColors( viewerColors );
 		slice->setPolylineColorUnit( polylineColorUnit );
 		slice->setShowCorners( segmentMarkers );
-		SliceStatisticsFactory::AxisXUnits unitMode = getUnitMode();
-		slice->setXUnits( unitMode );
+
+		slice->setStatistics( factory->getStatistics());
 		sliceMap.insert( regionId, slice );
 		if ( !viewerColors ){
 			int colorIndex = getColorIndex( regionId );
@@ -372,17 +375,18 @@ void SlicePlot::updateSelectedRegionId( int selectedRegionId ){
 	}
 }
 
+SliceStatisticsFactory::AxisXChoice SlicePlot::getXAxis() const {
+	SliceStatisticsFactory::AxisXChoice choice = SliceStatisticsFactory::DISTANCE;
+	if ( xAxis == SlicePlot::POSITION_X_AXIS ){
+		choice = SliceStatisticsFactory::X_POSITION;
+	}
+	else if ( xAxis == SlicePlot::POSITION_Y_AXIS ){
+		choice = SliceStatisticsFactory::Y_POSITION;
+	}
+	return choice;
+}
+
 void SlicePlot::sliceFinished( int regionId){
-	ImageSlice* slice = getSlicerFor( regionId );
-	if ( xAxis == SlicePlot::DISTANCE_AXIS ){
-		slice->setAxisXChoice( SliceStatisticsFactory::DISTANCE );
-	}
-	else if ( xAxis == SlicePlot::POSITION_X_AXIS ){
-		slice->setAxisXChoice( SliceStatisticsFactory::X_POSITION );
-	}
-	else {
-		slice->setAxisXChoice( SliceStatisticsFactory::Y_POSITION );
-	}
 
 	if ( !accumulateSlices ){
 		clearCurves( true );
@@ -502,6 +506,7 @@ SlicePlot::~SlicePlot() {
 		ImageSlice* slice = sliceMap.take( sliceKeys[i]);
 		delete slice;
 	}
+	delete factory;
 }
 
 } /* namespace casa */

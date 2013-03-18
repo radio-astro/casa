@@ -73,8 +73,8 @@ void SliceSegment::setEndPointsWorld( double worldX1, double worldY1,
 
 
 
-void SliceSegment::updateStatistics(){
-	SliceStatistics* statistics = SliceStatisticsFactory::getInstance()->getStatistics();
+void SliceSegment::updateStatistics( SliceStatistics* statistics ){
+	//SliceStatistics* statistics = SliceStatisticsFactory::getInstance()->getStatistics();
 	double angle = statistics->getAngle( pixelStart, pixelEnd );
 	double value = statistics->getLength( worldStart, worldEnd, pixelStart, pixelEnd );
 	QString labelText = statistics->getLengthLabel();
@@ -86,7 +86,7 @@ void SliceSegment::updateStatistics(){
 	}
 	ui.distanceLabel->setText( labelText );
 	ui.angleLineEdit->setText( QString::number( angle ));
-	delete statistics;
+	//delete statistics;
 }
 
 

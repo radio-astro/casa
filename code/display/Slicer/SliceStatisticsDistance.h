@@ -40,12 +40,16 @@ public:
 			std::pair<int,int> pixelEnd) const;
 	virtual double getLength( double side1World, double side2World,
 				double side1Pixel, double side2Pixel ) const;
+	virtual double getStart( double value1World, double value2World,
+					double value1Pixel, double value2Pixel ) const;
+	virtual double getEnd( double value1World, double value2World,
+					double value1Pixel, double value2Pixel ) const;
 	virtual QString getLengthLabel() const;
 	virtual QVector<double> interpolate( double start, double end,
 				const QVector<double>& values ) const;
-	virtual QVector<double> adjustStart( double newStart, const QVector<double>& values ) const;
+	virtual void adjustStart( QVector<double>& values, double newStart ) const;
 	virtual ~SliceStatisticsDistance();
-
+	virtual QVector<double> fromResults( Record* record  )const;
 private:
 	double getHypotenuse( double side1, double side2 ) const ;
 	double getHypotenuse( double x1, double x2, double y1, double y2 ) const;

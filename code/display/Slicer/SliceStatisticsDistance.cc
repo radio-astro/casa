@@ -25,6 +25,7 @@
 
 
 #include "SliceStatisticsDistance.h"
+#include <casa/Containers/Record.h>
 #include <QtCore/qmath.h>
 #include <QDebug>
 
@@ -55,78 +56,65 @@ QString SliceStatisticsDistance::getLengthLabel() const {
 	return labelText;
 }
 
-QVector<double> SliceStatisticsDistance::adjustStart( double newStart,
-		const QVector<double>& values ) const {
+void SliceStatisticsDistance::adjustStart( QVector<double>& values, double newStart ) const {
 	int valueCount = values.size();
-	QVector<double> adjustedValues( valueCount );
 	for ( int i = 0; i < valueCount; i++ ){
-		if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
-			adjustedValues[i] = values[i] + newStart;
-		}
-		else {
-			adjustedValues[i] = values[i];
-		}
+		values[i] = values[i] + newStart;
 	}
-	return adjustedValues;
+}
+
+QVector<double> SliceStatisticsDistance::fromResults( Record* record  )const {
+	Array<float> distanceArray = record->asArrayFloat("distance");
+	QVector<double> distancePixels= getFromArray( distanceArray );
+	return distancePixels;
 }
 
 QVector<double> SliceStatisticsDistance::interpolate( double start, double end,
 			const QVector<double>& values ) const{
 	int valueCount = values.size();
 	QVector<double> results( valueCount);
-	if ( xUnits == SliceStatisticsFactory::RADIAN_UNIT ){
-		results = SliceStatistics::interpolate( start, end, values );
-	}
-	else if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
-		results = SliceStatistics::interpolate( start, end, values );
+
+	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
+		results = values;
 	}
 	else {
-		QVector<double> arcSecValues( valueCount );
-		for ( int i = 0; i < valueCount; i++ ){
-			arcSecValues[i] = radiansToArcseconds(values[i]);
-		}
-		double startArc = radiansToArcseconds( start );
-		double endArc = radiansToArcseconds( end );
-		results = SliceStatistics::interpolate( startArc, endArc, arcSecValues );
+		results = SliceStatistics::interpolate( start, end, values );
+		results = convertArcUnits( results );
 	}
 	return results;
 }
 
-double SliceStatisticsDistance::getLength( double side1World, double side2World,
-	double side1Pixel, double side2Pixel ) const {
-	double distance = 0;
-	if ( xUnits == SliceStatisticsFactory::RADIAN_UNIT ){
-		distance = getHypotenuse( side1World, side2World);
-	}
-	else if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
-		distance = getHypotenuse( side1Pixel, side2Pixel );
-	}
-	else {
-		distance = getHypotenuse( radiansToArcseconds( side1World),
-				radiansToArcseconds(side2World));
-	}
+
+
+double SliceStatisticsDistance::getLength( double firstX, double firstY,
+	double secondX, double secondY ) const {
+	double distanceX = qAbs( secondX - firstX );
+	double distanceY = qAbs( secondY - firstY );
+	double distance = getHypotenuse( distanceX, distanceY );
 	return distance;
 }
 
-
+double SliceStatisticsDistance::getStart( double /*value1World*/, double /*value2World*/,
+					double /*value1Pixel*/, double /*value2Pixel*/ ) const{
+	return 0;
+}
+double SliceStatisticsDistance::getEnd( double value1World, double value2World,
+					double value1Pixel, double value2Pixel ) const {
+	return getLength( value1World, value2World, value1Pixel, value2Pixel );
+}
 
 double SliceStatisticsDistance::getLength(std::pair<double,double> worldStart,
 		std::pair<double,double> worldEnd,
 		std::pair<int,int> pixelStart,
 		std::pair<int,int> pixelEnd) const {
 	double distance = 0;
-	if ( xUnits == SliceStatisticsFactory::RADIAN_UNIT ){
-		distance = getHypotenuse( worldStart.first, worldEnd.first, worldStart.second, worldEnd.second );
-	}
-	else if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
+
+	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
 		distance = getHypotenuse( pixelStart.first, pixelEnd.first, pixelStart.second, pixelEnd.second );
 	}
 	else {
-		double x1 = radiansToArcseconds( worldStart.first );
-		double x2 = radiansToArcseconds( worldEnd.first );
-		double y1 = radiansToArcseconds( worldStart.second );
-		double y2 = radiansToArcseconds( worldEnd.second );
-		distance = getHypotenuse( x1, x2, y1, y2 );
+		distance = getHypotenuse( worldStart.first, worldEnd.first, worldStart.second, worldEnd.second );
+		distance = convertArcUnits( distance );
 	}
 	return distance;
 }

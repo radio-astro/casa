@@ -79,11 +79,12 @@ public:
 	const static QString POSITION_Y_AXIS;
 	const static QString UNIT_X_PIXEL;
 	const static QString UNIT_X_ARCSEC;
-	const static QString UNIT_X_RADIAN;
+	const static QString UNIT_X_ARCMIN;
+	const static QString UNIT_X_ARCDEG;
 
 public slots:
 	void updatePolyLine(  int regionId,viewer::region::RegionChanges regionChanges,
-				const QList<double> & worldX, const QList<double> & worldY,
+				const QList<double> & linearX, const QList<double> & linearY,
 				const QList<int> &pixelX, const QList<int> & pixelY);
 	void setXAxis( const QString& newAxis );
 	void xAxisUnitsChanged( const QString& units );
@@ -94,6 +95,7 @@ private:
 	SlicePlot operator=(const SlicePlot& other );
 	ImageSlice* getSlicerFor( int regionId );
 	SliceStatisticsFactory::AxisXUnits getUnitMode() const;
+	SliceStatisticsFactory::AxisXChoice getXAxis() const;
 	void initPlot();
 	void initAxisFont( int axisId, const QString& axisTitle );
 	void sliceFinished( int regionId);
@@ -127,6 +129,7 @@ private:
 	QString xAxisUnits;
 	Vector<Int> axes;
 	QLayout* statLayout;
+	SliceStatisticsFactory* factory;
 };
 
 } /* namespace casa */
