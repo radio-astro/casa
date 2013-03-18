@@ -67,14 +67,14 @@ void PVGenerator::setEndpoints(
 		*_getLog() << "Start and end pixels must be different."
 			<< LogIO::EXCEPTION;
 	}
-	if (startx < 0 || endx < 0 || starty < 0 || endy < 0) {
-		*_getLog() << "Pixel positions cannot fall below image BLC" << LogIO::EXCEPTION;
+	if (startx < 2 || endx < 2 || starty < 2 || endy < 2) {
+		*_getLog() << "Pixel positions must be contained in the image and be farther than two pixels from image BLC" << LogIO::EXCEPTION;
 	}
 	Vector<Int> dirAxes = _getImage()->coordinates().directionAxesNumbers();
 	Int xShape = _getImage()->shape()[dirAxes[0]];
 	Int yShape = _getImage()->shape()[dirAxes[1]];
-	if (startx > xShape-1 || endx > xShape-1 || starty > yShape-1 || endy > yShape-1) {
-		*_getLog() << "pixel positions cannot fall above image TRC" << LogIO::EXCEPTION;
+	if (startx > xShape-3 || endx > xShape-3 || starty > yShape-3 || endy > yShape-3) {
+		*_getLog() << "pixel positions must be contained in the image and must fall farther than two pixels from the image TRC" << LogIO::EXCEPTION;
 	}
 
 	_start.reset(new vector<Double>(2));
@@ -95,11 +95,13 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	if (_start.get() == 0 || _end.get() == 0) {
 		*_getLog() << "Start and/or end points have not been set" << LogIO::EXCEPTION;
 	}
+
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*myClone, *_getRegion(), _getMask(),
 		_getLog().get(), False, AxesSpecifier(), _getStretch()
 	);
+
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	const CoordinateSystem& subCoords = subImage.coordinates();
 	Vector<Int> dirAxes = subCoords.directionAxesNumbers();
@@ -125,11 +127,36 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		: atan2(
 			end[0] - start[0], end[1] - start[1]
 		) - C::pi_2;
+    if (_halfwidth > 0) {
+        // check already done when setting the points if _halfwidth == 0
+        Double angle1 = paInRad + C::pi/2;
+        Double halfx = _halfwidth*cos(angle1);
+        Double halfy = _halfwidth*sin(angle1);
+        Vector<Double> xs(4);
+        xs[0] = start[0] - halfx;
+        xs[1] = start[0] + halfx;
+        xs[2] = end[0] - halfx;
+        xs[3] = end[0] + halfx;
+        Vector<Double> ys(4);
+        ys[0] = start[1] - halfy;
+        ys[1] = start[1] + halfy;
+        ys[2] = end[1] - halfy;
+        ys[3] = end[1] + halfy;
+        if (
+            min(xs) < 2 || max(xs) > subImage.shape()[xAxis] - 3
+            || min(ys) < 2 || max(ys) > subImage.shape()[yAxis] - 3
+        ) {
+            *_getLog() << "Error: specified end points and half width are such "
+                << "that chosen directional region falls outside or within "
+                << "two pixels of the edge of the image." << LogIO::EXCEPTION;
+        }
+    }
 	// rotate the image through this angle, in the opposite direction.
 	*_getLog() << LogIO::NORMAL << "Rotating image by "
 		<< (paInRad*180/C::pi)
 		<< " degrees to align specified slice with the x axis" << LogIO::POST;
 
+	/*
 	// rotation occurs about the reference pixel. Calculate the bounds of the
 	// output image.
 	Vector<Double> refPix = subCoords.referencePixel();
@@ -140,23 +167,43 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	Double endXDiff = end[0] - refX;
 	Double endYDiff = end[1] - refY;
 
+	cout << "*** refPix " << refPix[xAxis] << " " << refPix[yAxis] << endl;
+	cout << "*** startDiff " << startXDiff << " " << startYDiff << endl;
+	cout << "*** endDiff " << endXDiff << " " << endYDiff << endl;
+
 
 	Double startXRot = startXDiff*cos(paInRad) - startYDiff*sin(paInRad) + refX;
 	Double startYRot = startXDiff*sin(paInRad) + startYDiff*cos(paInRad) + refY;
 	Double endXRot = endXDiff*cos(paInRad) - endYDiff*sin(paInRad) + refX;
 	Double endYRot = endXDiff*sin(paInRad) + endYDiff*cos(paInRad) + refY;
+	*/
 
-	AlwaysAssert(abs(startYRot - endYRot) < 1e-6, AipsError);
+	Vector<Double> worldStart, worldEnd;
+	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
+	dc1.toWorld(worldStart, Vector<Double>(start));
+	dc1.toWorld(worldEnd, Vector<Double>(end));
+
+
+	std::auto_ptr<DirectionCoordinate> rotCoord(
+		dynamic_cast<DirectionCoordinate *>(
+			dc1.rotate(Quantity(paInRad, "rad"))
+		)
+	);
+	Vector<Double> startPixRot, endPixRot;
+	rotCoord->toPixel(startPixRot, worldStart);
+	rotCoord->toPixel(endPixRot, worldEnd);
+
+	AlwaysAssert(abs(startPixRot[1] - endPixRot[1]) < 1e-6, AipsError);
 	Double xdiff = fabs(end[0] - start[0]);
 	Double ydiff = fabs(end[1] - start[1]);
 	AlwaysAssert(
 		abs(
-			(endXRot - startXRot)
+			(endPixRot[0] - startPixRot[0])
 			- sqrt(xdiff*xdiff + ydiff*ydiff)
 		) < 1e-6, AipsError
 	);
-	Double padNumber = max(0.0, 1 - startXRot);
-	padNumber = max(padNumber, -(startYRot - _halfwidth - 1));
+	Double padNumber = max(0.0, 1 - startPixRot[0]);
+	padNumber = max(padNumber, -(startPixRot[1] - _halfwidth - 1));
 	ImageInterface<Float> *imageToRotate = &subImage;
 	std::auto_ptr<ImageInterface<Float> > padded;
 	Int nPixels = 0;
@@ -172,32 +219,47 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		imageToRotate = padded.get();
 	}
 	IPosition outShape = subShape;
-	outShape[xAxis] = (Int)(endXRot) + nPixels + 3;
-	outShape[yAxis] = (Int)(startYRot + _halfwidth) + nPixels + 3;
+	outShape[xAxis] = (Int)(endPixRot[0] - startPixRot[0]) + nPixels + 6;
+	outShape[yAxis] = (Int)(startPixRot[1] + _halfwidth) + nPixels + 6;
 
 	IPosition blc(subImage.ndim(), 0);
 	IPosition trc = subShape - 1;
 
 	// ensure we have enough real estate after the rotation
-	blc[xAxis] = (Int)max(min(start[0], end[0]) - 1 - _halfwidth, 0.0);
-	blc[yAxis] = (Int)max(min(start[1], end[1]) - 1 - _halfwidth, 0.0);
-	trc[xAxis] = (Int)min(
+	blc[xAxis] = (Int)min(min(start[0], end[0]) - 1 - _halfwidth, 0.0);
+	blc[yAxis] = (Int)min(min(start[1], end[1]) - 1 - _halfwidth, 0.0);
+	trc[xAxis] = (Int)max(
 		max(start[0], end[0]) + 1 + _halfwidth,
-		(Double)subShape[xAxis] - 1
+		blc[xAxis] + (Double)subShape[xAxis] - 1
 	) + nPixels;
-	trc[yAxis] = (Int)min(
+	trc[yAxis] = (Int)max(
 		max(start[1], end[1]) + 1 + _halfwidth,
 		(Double)subShape[yAxis] - 1
 	) + nPixels;
 
+
 	Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
-	ImageAnalysis ia(imageToRotate);
-	std::auto_ptr<ImageInterface<Float> > rotated(
-		ia.rotate(
-			"", outShape.asVector(), Quantity(paInRad, "rad"),
-			lcbox, ""
-		)
-	);
+	std::auto_ptr<ImageInterface<Float> > rotated;
+	if (paInRad == 0) {
+		*_getLog() << LogIO::NORMAL << "Slice is along x-axis, no rotation necessary.";
+		rotated.reset(
+			new SubImage<Float>(
+				SubImageFactory<Float>::createSubImage(
+					*imageToRotate, lcbox, "", 0, False,
+					AxesSpecifier(), False
+				)
+			)
+		);
+	}
+	else {
+		ImageAnalysis ia(imageToRotate);
+		rotated.reset(
+			ia.rotate(
+				"", outShape.asVector(), Quantity(paInRad, "rad"),
+				lcbox, ""
+			)
+		);
+	}
 	Vector<Double> origStartPixel = Vector<Double>(subShape.size(), 0);
 	origStartPixel[xAxis] = start[0];
 	origStartPixel[yAxis] = start[1];
@@ -287,9 +349,9 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	// it replaces, so 2 for the linear coordinate, we will remove the degenerate
 	// axis later
 	Vector<String> axisName(2, "Offset");
-	Vector<String> axisUnit = dc.worldAxisUnits();
+	Vector<String> axisUnit(2, "arcsec");
 	Vector<Double> crval(2, 0);
-	Vector<Double> cdelt(2, seperation.getValue()/dirShape[0]);
+	Vector<Double> cdelt(2, seperation.getValue(axisUnit[0])/dirShape[0]);
 	Matrix<Double> xform(2, 2, 1);
 	xform(0, 1) = 0;
 	xform(1, 0) = 0;
@@ -305,7 +367,6 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	collapsed->coordinates().save(misc, "secondary_coordinates");
 	collapsed->setMiscInfo(misc);
 	collapsed->setCoordinateInfo(collCoords);
-
 
 	IPosition keep;
 	for (uInt i=0; i<collapsed->ndim(); i++) {

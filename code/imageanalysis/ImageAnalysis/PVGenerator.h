@@ -97,6 +97,11 @@ public:
 		const Double endx, const Double endy
 	);
 
+	// Set the number of pixels perpendicular to the slice for which averaging
+	// should occur. 0 => just use the pixels coincident with the slice
+	// (no averaging). 1 => Average a one pixel width on either side of the slice and the
+	// pixels along the slice (effectively a three pixel wide average), 2 => a 5 pixel-wide
+	// average, n => a 2*n + 1 pixel average.
 	void setHalfWidth(const Double halfwidth);
 
 	String getClass() const;
