@@ -1027,8 +1027,8 @@ void Polyline::update_reference_state(  int transformations, int handle, int new
 
 }
 
-std::list<RegionInfo> *Polyline::generate_dds_centers(){
-	std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
+std::list<std::tr1::shared_ptr<RegionInfo> > *Polyline::generate_dds_centers(){
+	std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 
 	if( wc_==0 ) return region_centers;
 
@@ -1073,7 +1073,7 @@ std::list<RegionInfo> *Polyline::generate_dds_centers(){
 			processed.insert(std::map<String,bool>::value_type(description,true));
 
 			RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
-			region_centers->push_back(SliceRegionInfo(name,description,layercenter));
+			region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new SliceRegionInfo(name,description,layercenter)));
 		}
 		catch (const casa::AipsError& err) {
 			errMsg_ = err.getMesg();

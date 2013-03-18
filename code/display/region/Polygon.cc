@@ -844,8 +844,8 @@ void Polygon::update_reference_state(  int transformations, int handle, int new_
 
 }
 
-std::list<RegionInfo> *Polygon::generate_dds_centers(){
-	std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
+std::list<std::tr1::shared_ptr<RegionInfo> > *Polygon::generate_dds_centers(){
+	std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 
 	if( wc_==0 ) return region_centers;
 
@@ -936,7 +936,7 @@ std::list<RegionInfo> *Polygon::generate_dds_centers(){
 
 			ImageRegion *imageregion = new ImageRegion(poly);
 
-			region_centers->push_back(ImageRegionInfo(name,description,getLayerCenter(padd,boxImg,*imageregion)));
+			region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new ImageRegionInfo(name,description,getLayerCenter(padd,boxImg,*imageregion))));
 
 			delete imgbox;
 			delete imageregion;

@@ -31,6 +31,7 @@ namespace casa {
 			void setLabels( const std::string &label, const std::string &desc );
 		    virtual RegionInfo::InfoTypes type( ) const = 0;
 		    virtual QPushButton *next( ) = 0;
+			virtual bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> ) { return false; }
 		protected:
 			std::string description_;
 			std::string label_;
@@ -69,7 +70,7 @@ namespace casa {
 	   		    pvline_stats_t( QWidget *parent=0 );
 	   		    RegionInfo::InfoTypes type( ) const { return RegionInfo::PVLineInfoType; }
 	   		    virtual QPushButton *next( ) { return next_button; }
-	   		    QWidget* getPlotHolder() { return plotHolderWidget; }
+				bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> );
 			signals:
 				void createPVImage( const std::string &, const std::string & );
 				void updatePVImage( );
@@ -92,11 +93,13 @@ namespace casa {
 		void addstats( std::list<std::pair<String,String> > *stats );
 #endif
 
-		void updateStatistics( RegionInfo &stats, Region* region = NULL );
+		void updateStatistics( std::tr1::shared_ptr<casa::viewer::RegionInfo> stats, Region* region = NULL );
 
 		void setCenterBackground(QString background);
 
 		void setNext( QStackedWidget *, QtRegionStats * );
+
+		bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> );
 
 	    protected slots:
 		void go_next( );

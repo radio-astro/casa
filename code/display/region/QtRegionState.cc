@@ -242,8 +242,7 @@ void QtRegionState::updateStatistics(  ) {
 	updateStatistics( region( )->statistics( ) );
 }
 
-void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
-
+void QtRegionState::updateStatistics( std::list<std::tr1::shared_ptr<RegionInfo> > *stats ) {
 	if ( stats == 0 || stats->size() == 0 ) {
 		if ( pre_dd_change_statistics_count != -1 ) clearStatistics( );
 		pre_dd_change_statistics_count = -1;
@@ -251,12 +250,6 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	}
 	clearStatistics();
 
-	/*while ( (int)stats->size() < statistics_group->count() ) {
-		QtRegionStats *w = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
-		if ( w == 0 ) throw internal_error( );
-		statistics_group->removeWidget(w);
-		freestats->push_back(w);
-	}*/
 	while ( (int)stats->size() > statistics_group->count() ) {
 		QtRegionStats *mystat;
 		// BEGIN - critical section
@@ -274,9 +267,10 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	int num = statistics_group->count( );
 	QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
 	if ( first == 0 ) throw internal_error( );
-	std::list<RegionInfo>::iterator stat_iter = stats->begin();
-	if ( ! memory::nullptr.check(stat_iter->list( )) ) {
-		statisticsUpdate( first, *stat_iter );
+	std::list<std::tr1::shared_ptr<RegionInfo> >::iterator stat_iter = stats->begin();
+	if ( ! memory::nullptr.check((*stat_iter)->list( )) ) {
+		if ( first->updateStatisticsInfo( *stat_iter ) == false )
+			statisticsUpdate( first, *stat_iter );
 	}
 
 	if ( num < 2 ) {
@@ -289,8 +283,9 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	for ( int i=1; i < statistics_group->count() && ++stat_iter != stats->end(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
-		if ( ! memory::nullptr.check(stat_iter->list( )) ) {
-			statisticsUpdate( cur, *stat_iter );
+		if ( ! memory::nullptr.check((*stat_iter)->list( )) ) {
+			if ( first->updateStatisticsInfo( *stat_iter ) == false )
+				statisticsUpdate( cur, *stat_iter );
 		}
 		prev->setNext( statistics_group, cur );
 		prev = cur;
@@ -304,12 +299,12 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	pre_dd_change_statistics_count = -1;
 }
 
-void QtRegionState::statisticsUpdate( QtRegionStats *regionStats, RegionInfo& regionInfo){
+void QtRegionState::statisticsUpdate( QtRegionStats *regionStats, std::tr1::shared_ptr<casa::viewer::RegionInfo> regionInfo ){
 	if ( region_->type( ) != region::PolylineRegion &&
 		 region_->type( ) != region::PVLineRegion ) {
-		regionStats->updateStatistics(regionInfo);
+		regionStats->updateStatistics( regionInfo );
 	} else {
-		regionStats->updateStatistics(regionInfo, region_ );
+		regionStats->updateStatistics( regionInfo, region_ );
 	}
 }
 
@@ -321,7 +316,7 @@ void QtRegionState::reloadStatistics( ) {
 	}
 }
 
-void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
+void QtRegionState::updateCenters( std::list<std::tr1::shared_ptr<RegionInfo> > *centers ) {
 	// check if something can be done at all
 	if ( centers == 0 || centers->size() == 0 ) return;
 
@@ -347,9 +342,10 @@ void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
 	int num = centers_group->count( );
 	QtRegionStats *first = dynamic_cast<QtRegionStats*>(centers_group->widget(0));
 	if ( first == 0 ) throw internal_error( );
-	std::list<RegionInfo>::iterator center_iter = centers->begin();
-	if ( ! memory::nullptr.check(center_iter->list( )) ) {
-		statisticsUpdate( first, *center_iter );
+	std::list<std::tr1::shared_ptr<RegionInfo> >::iterator center_iter = centers->begin();
+	if ( ! memory::nullptr.check((*center_iter)->list( )) ) {
+		if ( first->updateStatisticsInfo( *center_iter ) == false )
+			statisticsUpdate( first, *center_iter );
 	}
 	if ( num < 2 ) return;
 
@@ -357,8 +353,9 @@ void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
 	for ( int i=1; i < centers_group->count() && ++center_iter != centers->end(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
-		if ( ! memory::nullptr.check(center_iter->list( )) ) {
-			statisticsUpdate(cur, *center_iter );
+		if ( ! memory::nullptr.check((*center_iter)->list( )) ) {
+			if ( first->updateStatisticsInfo( *center_iter ) == false )
+				statisticsUpdate(cur, *center_iter );
 		}
 		prev->setNext( centers_group, cur );
 		prev = cur;

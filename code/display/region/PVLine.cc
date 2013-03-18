@@ -394,9 +394,9 @@ namespace casa {
 			return result;
 		}
 
-		std::list<RegionInfo> * PVLine::generate_dds_centers( ){
+		std::list<std::tr1::shared_ptr<RegionInfo> > * PVLine::generate_dds_centers( ){
 
-			std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
+			std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 			if( wc_==0 ) return region_centers;
 
 			Int zindex = 0;
@@ -500,7 +500,7 @@ namespace casa {
 					WCBox box(blcq, trcq, cs, Vector<Int>());
 					ImageRegion *imageregion = new ImageRegion(box);
 
-					region_centers->push_back(PVLineRegionInfo(name,description,getLayerCenter(padd, image, *imageregion)));
+					region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new PVLineRegionInfo(name,description,getLayerCenter(padd, image, *imageregion))));
 
 					delete imageregion;
 				} catch (const casa::AipsError& err) {

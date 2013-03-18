@@ -65,7 +65,7 @@ namespace casa {
 		region::RegionTypes type( ) const { return region::EllipseRegion; }
 
 	    protected:
-		std::list<RegionInfo> *generate_dds_centers(  );
+		std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers(  );
 		ImageRegion *get_image_region( DisplayData* ) const;
 		// Ellipse is derived from Rectangle, but we have no way to generate ellipse
 		// statistics for a measurement set (our only non-image display data)... so
