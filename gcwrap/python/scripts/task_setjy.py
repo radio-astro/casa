@@ -116,7 +116,6 @@ def setjy_core(vis=None, field=None, spw=None,
 
       if type(vis) == str and os.path.isdir(vis):
         n_selected_rows = nselrows(vis, field, spw, observation, timerange, scan)
-
         # jagonzal: When  usescratch=True, creating the MODEL column only on a sub-set of
         # Sub-MSs causes problems because ms::open requires all the tables in ConCatTable 
         # to have the same description (MODEL data column must exist in all Sub-MSs)
@@ -300,7 +299,6 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
   except Exception, instance:
     casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
     raise instance
-
   query = []
   if field:
     query.append("FIELD_ID in " + str(selindices['field'].tolist()))
@@ -318,13 +316,14 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
   mytb = tbtool()
   mytb.open(vis)
 
-  if (len(query)>0):
+  if (len(query)==0):
     retval = mytb.nrows()
     mytb.close()
   else:
     try:
       st = mytb.query(' and '.join(query),style='python')  # Does style matter here?
       retval = st.nrows()
+      st.close() # needed to clear tablecache? 
       mytb.close()
     except Exception, instance:
       casalog.post('nselrowscore exception: %s' % instance,'SEVERE')
