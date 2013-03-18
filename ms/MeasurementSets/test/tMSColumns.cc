@@ -29,13 +29,9 @@
 
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
-#include <measures/Measures/MeasIERS.h>
 #include <casa/Exceptions/Error.h>
 #include <tables/Tables.h>
 #include <casa/iostream.h>
-#include <casa/OS/Directory.h>
-#include <casa/OS/Path.h>
-#include <casa/Utilities/Assert.h>
 
 #include <casa/namespace.h>
 int main() {
@@ -184,172 +180,9 @@ int main() {
       MeasurementSet ms("tMSColumns_table.ms",Table::Old);
       ROMSColumns romsc(ms);
     }
-    /////////////////////////////////////////////
-    // Special tests of MSFieldColumns
-    {
-      MeasurementSet ms("tMSColumns_table.ms",Table::Old);
-      MSFieldColumns msfc(ms.field());
-      msfc.updateMeasComets();
-    }
-    // use VGEO and VTOP as example ephemerides
-    {
-      String tablePathName;
-      Table x; Table* y=0;
-      MeasIERS::findTab(x, y, " ", " ", "VTOP");
-      tablePathName = Path(x.tableName()).absoluteName();
-      // cout << "Found " << tablePathName  << endl;
-      Directory vtop(tablePathName);
-      vtop.copy("tMSColumns_table.ms/FIELD/EPHEM0_Venus.tab");
-    }
-    {
-      String tablePathName;
-      Table x; Table* y=0;
-      MeasIERS::findTab(x, y, " ", " ", "VGEO");
-      tablePathName = Path(x.tableName()).absoluteName();
-      // cout << "Found " << tablePathName  << endl;
-      Directory vgeo(tablePathName);
-      vgeo.copy("tMSColumns_table.ms/FIELD/EPHEM1_Venus.tab");
-    }
-    {
-      MeasurementSet ms("tMSColumns_table.ms",Table::Update);
-      MSFieldColumns msfc(ms.field());
-      Vector<Double> dir(2); dir(0)=0., dir(1)=0.;
-      // add a row with default entries 
-      ms.field().addRow();
-      msfc.delayDir().put(0, dir);
-      msfc.phaseDir().put(0, dir);
-      msfc.referenceDir().put(0, dir);
-      msfc.time().put(0,50802.708334*86400.); // start of the VTOP ephemeris
-      msfc.ephemerisId().put(0,-1); // ephemeris id -1
-      msfc.updateMeasComets();
-      {
-	Int row = 0;
-	Double mjds = 50802.75*86400.;
-	MDirection dDir = msfc.delayDirMeas(row, mjds);
-	// cout << "position for row " << row << ", MJD " << mjds/86400. << ": " << dDir.getAngle(Unit("deg")) << endl;
-      }
-
-      // add one row with ephemeris 
-      ms.field().addRow();
-      msfc.delayDir().put(1, dir);
-      msfc.phaseDir().put(1, dir);
-      msfc.referenceDir().put(1, dir);
-      msfc.time().put(1,50802.708334*86400.); // start of the VTOP ephemeris
-      msfc.ephemerisId().put(1,0); // ephemeris id 0
-      msfc.updateMeasComets();
-      {
-	Int row = 1;
-	Double mjds = 50802.75*86400.;
-	MDirection dDir = msfc.delayDirMeas(row, mjds);
-	// cout << "delaydir for row " << row << ", MJD-50802. " << mjds/86400.-50802. << ": " << dDir.getAngle(Unit("deg")) << endl;
-	MDirection pDir = msfc.phaseDirMeas(row, mjds);
-	// cout << "phasedir for row " << row << ", MJD-50802. " << mjds/86400.-50802. << ": " << pDir.getAngle(Unit("deg")) << endl;
-	MDirection rDir = msfc.referenceDirMeas(row, mjds);
-	// cout << "referencedir for row " << row << ", MJD-50802. " << mjds/86400.-50802. << ": " << rDir.getAngle(Unit("deg")) << endl;
-
-	MDirection expected(Quantity(-54.3855, "deg"), Quantity(-19.8873, "deg"), MDirection::APP);
-	MVDirection expDir(expected.getAngle());
-
-	AlwaysAssertExit(expDir.separation(MVDirection(dDir.getAngle()))<Quantity(1/3600., "deg").getValue("rad"));
-	AlwaysAssertExit(dDir.type()==expected.type());
-	AlwaysAssertExit(expDir.separation(MVDirection(pDir.getAngle()))<Quantity(1/3600., "deg").getValue("rad"));
-	AlwaysAssertExit(pDir.type()==expected.type());
-	AlwaysAssertExit(expDir.separation(MVDirection(rDir.getAngle()))<Quantity(1/3600., "deg").getValue("rad"));
-	AlwaysAssertExit(rDir.type()==expected.type());
-      }      
-
-      Vector<Double> dirb(2); dirb(0)=Quantity(1.,"deg").getValue("rad"), dirb(1)=dirb(0)/2.;
-      // add one row with ephemeris and non-zero offset 
-      ms.field().addRow();
-      msfc.delayDir().put(2, dirb);
-      msfc.phaseDir().put(2, dirb);
-      msfc.referenceDir().put(2, dirb);
-      msfc.time().put(2,50802.708334*86400.); // start of the VTOP ephemeris
-      msfc.ephemerisId().put(2,0); // ephemeris id 0
-      msfc.updateMeasComets();
-      {
-	Int row = 2;
-	Double mjds = 50802.75*86400.;
-	MDirection dDir = msfc.delayDirMeas(row, mjds);
-	// cout << "delaydir for row " << row << ", MJD-50802. " << mjds/86400.-50802. << ": " << dDir.getAngle(Unit("deg")) << endl;
-	MDirection pDir = msfc.phaseDirMeas(row, mjds);
-	// cout << "phasedir for row " << row << ", MJD-50802. " << mjds/86400.-50802. << ": " << pDir.getAngle(Unit("deg")) << endl;
-	MDirection rDir = msfc.referenceDirMeas(row, mjds);
-	// cout << "referencedir for row " << row << ", MJD-50802. " << mjds/86400.-50802. << ": " << rDir.getAngle(Unit("deg")) << endl;
-
-	MVDirection original(Quantity(305.6145129, "deg"),
-			     Quantity(-19.8873316, "deg"));
-	original.shift(dirb(0), dirb(1), True);
-	MDirection expected(original, MDirection::TOPO);
-
- 	// MDirection expected(Quantity(305.6145129 + dirb(0)*180./3.14159265/cos(-19.88733167*3.1415926/180.), "deg"),
- 	//		    Quantity(-19.88733167+dirb(1)*180./3.14159265, "deg"), 
- 	//		    MDirection::TOPO);
-	MVDirection expDir(expected.getAngle());
-
-	// cout << "separation " << expDir.separation(MVDirection(dDir.getAngle()), "deg") << endl;
-
-	AlwaysAssertExit(expDir.separation(MVDirection(dDir.getAngle()))<Quantity(1/3600., "deg").getValue("rad"));
-	AlwaysAssertExit(dDir.type()==expected.type());
-	AlwaysAssertExit(expDir.separation(MVDirection(pDir.getAngle()))<Quantity(1/3600., "deg").getValue("rad"));
-	AlwaysAssertExit(pDir.type()==expected.type());
-	AlwaysAssertExit(expDir.separation(MVDirection(rDir.getAngle()))<Quantity(1/3600., "deg").getValue("rad"));
-
-	// cout << "types " << rDir.getRef() << " " << expected.getRef() << endl;
-
-	AlwaysAssertExit(rDir.getRef().getType()  == expected.getRef().getType() );
-      }      
-      // add one row with GEO ephemeris 
-      ms.field().addRow();
-      msfc.delayDir().put(3, dir);
-      msfc.phaseDir().put(3, dir);
-      msfc.referenceDir().put(3, dir);
-      msfc.time().put(3, 50802.708333*86400.); // start of the VGEO ephemeris
-      msfc.ephemerisId().put(3,1); // ephemeris id 1
-      msfc.updateMeasComets();
-      {
-	Int row = 3;
-	Double mjds = 50802.75*86400.;
-	MDirection dDir = msfc.delayDirMeas(row, mjds);
-	// cout << "delaydir for row " << row << ", MJD-50802. " << mjds/86400.-50802. << ": " << dDir.getAngle(Unit("deg")) << endl;
-	MDirection pDir = msfc.phaseDirMeas(row, mjds);
-	// cout << "phasedir for row " << row << ", MJD-50802. " << mjds/86400.-50802. << ": " << pDir.getAngle(Unit("deg")) << endl;
-	MDirection rDir = msfc.referenceDirMeas(row, mjds);
-	// cout << "referencedir for row " << row << ", MJD-50802. " << mjds/86400.-50802. << ": " << rDir.getAngle(Unit("deg")) << endl;
-
-	MVDirection original(Quantity(305.6095079, "deg"),
-			     Quantity(-19.88256944, "deg"));
-
-	MDirection expected(original, MDirection::APP);
-	MVDirection expDir(expected.getAngle());
-
-	// cout << "separation " << expDir.separation(MVDirection(dDir.getAngle()), "deg") << endl;
-
-	AlwaysAssertExit(expDir.separation(MVDirection(dDir.getAngle()))<Quantity(1/3600., "deg").getValue("rad"));
-	AlwaysAssertExit(dDir.type()==expected.type());
-	AlwaysAssertExit(expDir.separation(MVDirection(pDir.getAngle()))<Quantity(1/3600., "deg").getValue("rad"));
-	AlwaysAssertExit(pDir.type()==expected.type());
-	AlwaysAssertExit(expDir.separation(MVDirection(rDir.getAngle()))<Quantity(1/3600., "deg").getValue("rad"));
-	AlwaysAssertExit(rDir.getRef().getType() == expected.getRef().getType() );
-
-	// Finally test radial velocity and rho access
-
-	MRadialVelocity mradvel = msfc.radVelMeas(row, mjds);
-	// cout << "mradvel " << mradvel.get("AU/d") << endl;
-	AlwaysAssertExit((mradvel.get("AU/d")-Quantity(-0.0057244046, "AU/d")).getValue("km/s")<0.01);
-
-	Quantity rho =  msfc.rho(row, mjds);
-	// cout << "rho " << rho.get("AU") << endl;
-	AlwaysAssertExit((rho.get("AU") - Quantity(0.35214584, "AU")).getValue("km")<10.);
-
-      }      
-    }
-    //////////////////////////////////////
-
     {
       MeasurementSet ms("tMSColumns_table.ms",Table::Update);
       MSColumns msc(ms);
-
       // remove the table
       ms.markForDelete();
     }
