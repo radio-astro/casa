@@ -35,13 +35,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //----------------------------------------------------------------------------
   //
   CTInterface::CTInterface(const Table& table)
-    :MSSelectableTable(table), fakeDDSubTable()
+    :MSSelectableTable(table), fakeDDSubTable(),  ctMainCols_p(NULL) 
   {makeDDSubTable();};
   //
   //----------------------------------------------------------------------------
   //
   CTInterface::~CTInterface() 
-  {};
+  {if (ctMainCols_p) delete ctMainCols_p;};
   //
   //----------------------------------------------------------------------------
   //

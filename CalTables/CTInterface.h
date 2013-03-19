@@ -35,6 +35,7 @@
 #include <ms/MeasurementSets/MSMainEnums.h>
 #include <synthesis/CalTables/NewCalTable.h>
 #include <synthesis/CalTables/CTEnums.h>
+#include <synthesis/CalTables/CTMainColInterface.h>
 //#include <ms/MeasurementSets/MSDataDescription.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableDesc.h>
@@ -43,7 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class CTInterface: public MSSelectableTable
   {
   public:
-    CTInterface():fakeDDSubTable() {};
+    CTInterface():fakeDDSubTable(), ctMainCols_p(NULL) {};
     CTInterface(const Table& table);
 
     virtual ~CTInterface();
@@ -64,9 +65,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return NULL;
     }
     virtual const NewCalTable* asCT();
+    virtual MSSelectableMainColumn* mainColumns()
+    {ctMainCols_p = new CTMainColInterface(*table_p); return ctMainCols_p;};
   private:
     MSDataDescription fakeDDSubTable;
     void makeDDSubTable();
+    CTMainColInterface *ctMainCols_p;
   };
 } //# NAMESPACE CASA - END
 
