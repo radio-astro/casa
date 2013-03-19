@@ -48,6 +48,8 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/region/QtRegionDock.qo.h>
 
+#include <casa/Quanta/MVAngle.h>
+
 namespace casa {
     namespace viewer {
 
@@ -86,6 +88,69 @@ namespace casa {
 		int PVLine::clickHandle( double x, double y ) const {
 			if ( visible_ == false ) return 0;
 			return check_handle( x, y );
+		}
+
+		struct strip_white_space {
+			strip_white_space(size_t s) : size(s+1), off(0), buf(new char[size]) { }
+			strip_white_space( const strip_white_space &other ) : size(other.size), off(other.off),
+																  buf(new char[size])
+					{ strcpy(buf,other.buf); }
+			~strip_white_space( ) { delete [] buf; }
+			void operator( )( char c ) { if ( ! isspace(c) ) buf[off++] = c; };
+			operator std::string( ) { buf[off] = '\0'; return std::string(buf); }
+			operator String( ) { buf[off] = '\0'; return String(buf); }
+			size_t size;
+			size_t off;
+			char *buf;
+		};
+
+		std::string PVLine::worldCoordinateStrings( double x, double y ) {
+			if ( wc_ == 0 || wc_->csMaster() == 0 ) return std::string( );
+
+			double result_x, result_y;
+			const Vector<String> &units = wc_->worldAxisUnits();
+			const Vector<String> &axis_labels = wc_->worldAxisNames( );
+
+			MDirection::Types cccs = current_casa_coordsys( );
+			Quantum<Vector<double> > result = convert_angle( x, units[0], y, units[1], cccs, MDirection::J2000 );
+			result_x = result.getValue("rad")(0);
+			result_y = result.getValue("rad")(1);
+
+			std::string return_value;
+			if ( axis_labels(0) == "Declination" /* || (coord != region::J2000 && coord != region::B1950) */ ) {
+				// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+				// D.M.S
+				// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+				// MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
+				//x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
+				// MVAngle::operator( ) => -pi to +pi
+				std::string s = MVAngle(result_x)( ).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
+				return_value = std::for_each(s.begin(),s.end(),strip_white_space(s.size()));
+			} else {
+				// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+				// H:M:S
+				// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+				std::string s = MVAngle(result_x)(0.0).string(MVAngle::TIME,SEXAGPREC);
+				return_value = std::for_each(s.begin(),s.end(),strip_white_space(s.size()));
+			}
+
+			if ( axis_labels(1) == "Declination" /* || (coord != region::J2000 && coord != region::B1950) */ ) {
+				// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+				// D.M.S
+				// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+				// MVAngle::operator(double norm) => 2*pi*norm to 2pi*norm+2pi
+				//x = MVAngle(result_x)(0.0).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
+				// MVAngle::operator( ) => -pi to +pi
+				std::string s = MVAngle(result_y)( ).string(MVAngle::ANGLE_CLEAN,SEXAGPREC);
+				return_value = return_value + "  " + std::for_each(s.begin(),s.end(),strip_white_space(s.size()));
+			} else {
+				// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+				// H:M:S
+				// ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+				std::string s = MVAngle(result_y)(0.0).string(MVAngle::TIME,SEXAGPREC);
+				return_value = return_value + "  " + std::for_each(s.begin(),s.end(),strip_white_space(s.size()));
+			}
+			return return_value;
 		}
 
 		bool PVLine::doubleClick( double x, double y ) {
@@ -500,7 +565,10 @@ namespace casa {
 					WCBox box(blcq, trcq, cs, Vector<Int>());
 					ImageRegion *imageregion = new ImageRegion(box);
 
-					region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new PVLineRegionInfo(name,description,getLayerCenter(padd, image, *imageregion))));
+					region_centers->push_back( std::tr1::shared_ptr<RegionInfo>( new PVLineRegionInfo( name, description,
+																									   getLayerCenter(padd, image, *imageregion),
+																									   std::vector<std::string>( ),
+																									   std::vector<std::string>( ))) );
 
 					delete imageregion;
 				} catch (const casa::AipsError& err) {
@@ -562,6 +630,32 @@ namespace casa {
 			return result;
 		}
 
+
+		RegionInfo *PVLine::newInfoObject( ImageInterface<Float> *image ) {
+			RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
+
+			double ppt1_x, ppt1_y, ppt2_x, ppt2_y;
+			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
+			try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, ppt1_x, ppt1_y, ppt2_x, ppt2_y ); } catch(...) { return 0; }
+
+			try { linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y ); } catch(...) { return 0; }
+
+			std::vector<std::string> pixel(2);
+			std::vector<std::string> world(2);
+			ostringstream pix_oss;
+			pix_oss << std::fixed << std::setprecision(1) << ppt1_x << " " << ppt1_y;
+			pixel[0] = pix_oss.str( );
+			pix_oss.str("");
+			pix_oss.clear( );
+			pix_oss << std::fixed << std::setprecision(1) << ppt2_x << " " << ppt2_y;
+			pixel[1] = pix_oss.str( );
+
+			world[0] = worldCoordinateStrings(wpt1_x,wpt1_y);
+			world[1] = worldCoordinateStrings(wpt2_x,wpt2_y);
+			
+			return new PVLineRegionInfo( image->name(true), image->name(false), dd_stats, pixel, world );
+		}
+
 		void PVLine::generate_nonimage_statistics( DisplayData *dd, std::list<RegionInfo> *region_statistics ) {
 			double blc_x, blc_y, trc_x, trc_y;
 			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
@@ -585,7 +679,7 @@ namespace casa {
 			trcy = (pt1_y < pt2_y ? pt2_y : pt1_y) + 3;
 		}
 
-		void PVLine::createPVImage( const std::string &name, const std::string &desc ) {
+		void PVLine::createPVImage( const std::string &name,const std::string &desc, int width ) {
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 			const std::list<DisplayData*> &dds = wc_->displaylist( );
@@ -602,7 +696,7 @@ namespace casa {
 					double startx, starty, endx, endy;
 					try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy ); } catch(...) { return; }
 					pvgen.setEndpoints( startx, starty, endx, endy );
-					pvgen.setHalfWidth(0.0);
+					pvgen.setHalfWidth((double)((width-1)/2));
 					dock_->panel( )->status( "generating temporary image: " + output_file );
 					dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
 					dock_->panel( )->logIO( ) << "generating P/V image with pixel points: (" <<
@@ -613,7 +707,7 @@ namespace casa {
 			}
 		}
 
-		void PVLine::updatePVImage( ) {
+		void PVLine::updatePVImage(const std::string&,const std::string&,int) {
 			fprintf( stderr, "UPDATE P/V OUTPUT HERE\n" );
 		}
 		void PVLine::output( ds9writer &out ) const {

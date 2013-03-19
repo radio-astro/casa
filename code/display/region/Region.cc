@@ -56,14 +56,14 @@
 #include <display/region/QtRegionDock.qo.h>
 
 
-#define SEXAGPREC 9
-
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func ) {
 	fprintf( stderr, "%s:%d pure virtual '%s( )' called...\n", file, line, func );
 }
 
 namespace casa {
 namespace viewer {
+
+const int Region::SEXAGPREC = 9;
 
 struct strip_white_space {
 	strip_white_space(size_t s) : size(s+1), off(0), buf(new char[size]) { }
@@ -857,8 +857,9 @@ static inline void convert_units( double &x, const std::string &xunits, region::
 	y = resulty.getValue(as_string(new_y_units));
 }
 
-static inline Quantum<Vector<double> > convert_angle( double x, const std::string &xunits, double y, const std::string &yunits,
-		MDirection::Types original_coordsys, MDirection::Types new_coordsys, const std::string &new_units="rad" ) {
+Quantum<Vector<double> > Region::convert_angle( double x, const std::string &xunits, double y, const std::string &yunits,
+												 MDirection::Types original_coordsys, MDirection::Types new_coordsys,
+												 const std::string &new_units ) {
 	Quantum<double> xq(x,String(xunits));
 	Quantum<double> yq(y,String(yunits));
 	MDirection md = MDirection::Convert(MDirection(xq,yq,original_coordsys), new_coordsys)();
@@ -1669,8 +1670,8 @@ void linear_offset_to_world_offset( WorldCanvas *wc_, double lx, double ly, MDir
 		trc = Quantum<Vector<double> >(pts,units[1]);
 	} else {
 		const Vector<String> &units = wc_->worldAxisUnits();
-		blc = convert_angle( blcx, units[0], blcy, units[1], cccs, coordsys );
-		trc = convert_angle( trcx, units[0], trcy, units[1], cccs, coordsys );
+		blc = Region::convert_angle( blcx, units[0], blcy, units[1], cccs, coordsys );
+		trc = Region::convert_angle( trcx, units[0], trcy, units[1], cccs, coordsys );
 	}
 
 	wx = fabs(trc.getValue(units.c_str( ))(0) - blc.getValue(units.c_str( ))(0));
@@ -1710,8 +1711,8 @@ void world_offset_to_linear_offset( WorldCanvas *wc_, MDirection::Types coordsys
 
 	// convert from the specified coordinate system to the viewer's coordinate system...
 	if ( coordsys != cccs ) {
-		blc = convert_angle( blc.getValue("rad")(0), "rad", blc.getValue("rad")(1), "rad", coordsys, cccs );
-		trc = convert_angle( trc.getValue("rad")(0), "rad", trc.getValue("rad")(1), "rad", coordsys, cccs );
+		blc = Region::convert_angle( blc.getValue("rad")(0), "rad", blc.getValue("rad")(1), "rad", coordsys, cccs );
+		trc = Region::convert_angle( trc.getValue("rad")(0), "rad", trc.getValue("rad")(1), "rad", coordsys, cccs );
 	}
 
 	double blcx, blcy, trcx, trcy;
@@ -2372,8 +2373,7 @@ std::list<std::tr1::shared_ptr<RegionInfo> > *Region::generate_dds_statistics(  
 				region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(new SliceRegionInfo( image->name(true), image->name(false), dd_stats)));
 			} else if ( name_ == "p/v line" ) {
 				get_image_region( dd );
-				RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
-				region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(new PVLineRegionInfo( image->name(true), image->name(false), dd_stats)) );
+				region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(newInfoObject(image)) );
 			} else {
 				String full_image_name = image->name(false);
 				std::map<String,bool>::iterator repeat = processed.find(full_image_name);

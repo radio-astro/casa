@@ -59,7 +59,7 @@ MultiWCTool::~MultiWCTool() {
 
 // (Required) copy constructor.
 MultiWCTool::MultiWCTool(const MultiWCTool &other) :
-  DisplayTool(other) {  }
+	DisplayTool(other), WCPositionEH( ), WCMotionEH( ), WCRefreshEH( ) {  }
 
 // (Required) copy assignment.
 MultiWCTool &MultiWCTool::operator=(const MultiWCTool &other) {

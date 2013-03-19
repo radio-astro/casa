@@ -47,6 +47,8 @@
 #include <display/region/RegionEnums.h>
 #include <casadbus/types/nullptr.h>
 
+#include <casa/Arrays/Vector.h>
+
 extern "C" void casa_viewer_pure_virtual( const char *file, int line, const char *func );
 #define DISPLAY_PURE_VIRTUAL(FUNCTION,RESULT) \
   { casa_viewer_pure_virtual( __FILE__, __LINE__, #FUNCTION ); return RESULT; }
@@ -334,6 +336,9 @@ namespace casa {
 
 				virtual AnnotationBase *annotation( ) const DISPLAY_PURE_VIRTUAL(Region::annotation,0);
 
+				static Quantum< ::casa::Vector<double> > convert_angle( double x, const std::string &xunits, double y, const std::string &yunits,
+															   MDirection::Types original_coordsys, MDirection::Types new_coordsys, const std::string &new_units="rad" );
+
 			signals:
 				void selectionChanged(viewer::Region*,bool);
 
@@ -373,8 +378,9 @@ namespace casa {
 				void output(std::list<QtRegionState*>,RegionTextList&);
 				void output(std::list<QtRegionState*>,ds9writer&);
 
-
 			protected:
+				static const int SEXAGPREC;
+
 				QtRegionDock *dock_;
 				QtRegionState *mystate;
 				BinPlotWidget* histogram;
@@ -408,6 +414,10 @@ namespace casa {
 				// hook to allow generate_dds_statistics( ) to generate statistics
 				// for rectangular measurement set regions...
 				virtual void generate_nonimage_statistics( DisplayData*, std::list<std::tr1::shared_ptr<RegionInfo> > * ) { }
+				// newInfoObject(...) is currently only used for PVLine regions, but it should be used for
+				// other regions to allow for specialized creation of the region info objects for display
+				// in "statistics"...
+				virtual RegionInfo *newInfoObject( ImageInterface<Float> * ) { return 0; }
 
 				virtual ImageRegion *get_image_region( DisplayData* ) const
 					DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);
