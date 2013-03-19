@@ -2923,7 +2923,22 @@ void QtDisplayPanelGui::addSlice( int id, const QString& shape, const QString&, 
 	if ( shape == "polyline"){
 		sliceTool->addPolyLine( id, viewer::region::RegionChangeCreate,
 				worldX, worldY, pixelX, pixelY, lineColor );
+		updateSliceCorners( id, worldX, worldY );
+	}
+}
 
+void QtDisplayPanelGui::updateSliceCorners( int id, const QList<double>& worldX,
+		const QList<double>& worldY ){
+	if ( controlling_dd != NULL ){
+		int cornerCount = worldX.size();
+		QVector<String> positionInformation(cornerCount);
+		for ( int i = 0; i < cornerCount; i++ ){
+			Vector<double> worldCoords(2);
+			worldCoords[0] = worldX[i];
+			worldCoords[1] = worldY[i];
+			positionInformation[i] = controlling_dd->getPositionInformation( worldCoords );
+		}
+		sliceTool->updatePositionInformation( id, positionInformation );
 	}
 }
 
@@ -2946,9 +2961,15 @@ void QtDisplayPanelGui::sliceChanged( int regionId, viewer::region::RegionChange
 					sliceTool->updateChannel( channelIndex );
 					sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
 				}
-
+				else if ( change == viewer::region::RegionChangeSelected ){
+					bool marked= region->marked();
+					sliceTool->setRegionSelected( regionId, marked );
+					sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
+					updateSliceCorners( regionId, worldX, worldY );
+				}
 				else {
 					sliceTool->updatePolyLine( regionId, change, worldX, worldY, pixelX, pixelY );
+					updateSliceCorners( regionId, worldX, worldY);
 				}
 			}
 		}
@@ -2957,6 +2978,8 @@ void QtDisplayPanelGui::sliceChanged( int regionId, viewer::region::RegionChange
 		}
 	}
 }
+
+
 
 void QtDisplayPanelGui::showSlicer(){
 	if ( sliceTool == NULL ){
@@ -2985,6 +3008,7 @@ void QtDisplayPanelGui::showSlicer(){
 										const QList<double>&, const QList<int>&, const QList<int>&,
 										const QString&, const QString&, const QString&, int, int)));
 				qrs->generateExistingRegionUpdates();
+
 			}
 		}
 

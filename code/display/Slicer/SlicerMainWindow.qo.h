@@ -36,6 +36,7 @@ namespace casa {
 
 class SliceZoomer;
 class SliceColorPreferences;
+class SlicePlotPreferences;
 class StatisticsRegion;
 
 class SlicerMainWindow : public QMainWindow {
@@ -52,15 +53,19 @@ public:
     		const QList<double> & worldX, const QList<double> & worldY,
     		const QList<int> &pixelX, const QList<int> & pixelY, const QString& colorName );
     void setImage( ImageInterface<float>* img );
+    void setRegionSelected( int regionId, bool selected );
     void setCurveColor( int id, const QString& color );
+    void updatePositionInformation( int id, const QVector<String>& info );
     ~SlicerMainWindow();
 
 private slots:
 	void clearCurves();
 	void autoCountChanged( bool selected );
 	void sampleCountChanged();
+	void accumulateChanged( bool accumulate );
 	void interpolationMethodChanged( const QString& method );
-	void accumulateSlicesChanged(bool accumulate);
+	void showPlotPreferences();
+	void resetPlotPreferences();
 	void exportSlice();
 	void showColorDialog();
 	void resetColors();
@@ -84,6 +89,7 @@ private:
 	void updateStatisticsLayout();
 
 	SliceColorPreferences* colorPreferences;
+	SlicePlotPreferences* plotPreferences;
     SliceZoomer* plotZoomer;
 
     SlicePlot slicePlot;

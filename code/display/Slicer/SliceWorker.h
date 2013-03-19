@@ -56,18 +56,10 @@ public:
 
 	void toAscii( QTextStream& stream, SliceStatistics* statistics ) const;
 	void compute();
-
-
 	int getSegmentCount() const;
-	//QVector<double> getDistances( int index, double lastX ) const;
-	//QVector<double> getXPositions(int index, double lastX ) const;
-	//QVector<double> getYPositions(int index ) const;
 	QVector<double> getPixels(int index) const;
-	QVector<double> getData( int index, double lastX, SliceStatistics* statistics ) const;
-	//void setXUnits( AxisXUnits unitMode );
+	QVector<double> getData( int index, SliceStatistics* statistics ) const;
 	virtual ~SliceWorker();
-
-
 
 private:
 	SliceWorker( const SliceWorker& other );

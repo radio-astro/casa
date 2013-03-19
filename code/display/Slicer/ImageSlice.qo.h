@@ -28,6 +28,7 @@
 
 #include <display/Slicer/ImageSlice.ui.h>
 #include <display/Slicer/SliceStatisticsFactory.h>
+#include <display/Slicer/SliceStatistics.h>
 #include <display/Slicer/SliceWorker.h>
 #include <casa/Arrays/Vector.h>
 #include <QtGui/QFrame>
@@ -65,13 +66,17 @@ public:
 	void setAxes( const Vector<Int>& axes );
 	void setCoords( const Vector<Int>& coords );
 	void setCurveColor( QList<QColor> colors );
+	bool isSelected() const;
+	void setSelected( bool selected );
 	void setInterpolationMethod( const String& method );
 	void setImageAnalysis( ImageAnalysis* analysis );
 	void setUseViewerColors( bool useViewerColors );
 	void setPolylineColorUnit( bool polyline );
+	void setPlotPreferences( int curveWidth, int markerSize );
 	void setViewerCurveColor( const QString& colorName );
 	void updatePolyLine(  const QList<int> &pixelX, const QList<int> & pixelY,
 			const QList<double>& worldX, const QList<double>& worldY );
+	void updatePositionInformation(const QVector<String>& info );
 	void toAscii( QTextStream& );
 	void clearCurve();
 	void addPlotCurve( QwtPlot* plot);
@@ -100,6 +105,9 @@ private:
 	ImageSlice( const ImageSlice& other );
 	ImageSlice operator=( const ImageSlice& other );
 
+	int markerSize;
+	int curveWidth;
+	bool selected;
 	bool useViewerColors;
 	bool showCorners;
 	bool polylineUnit;

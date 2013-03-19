@@ -149,14 +149,12 @@ QVector<double> SliceWorker::getValues( int index, const QVector<double>& pixels
 	QVector<double> values = statistics->interpolate( start, end, pixels );
 	return values;
 }
-QVector<double> SliceWorker::getData( int index, double lastX, SliceStatistics* statistics ) const{
+QVector<double> SliceWorker::getData( int index, SliceStatistics* statistics ) const{
 	QVector<double> values;
 	if ( sliceResults.size() > index && index >= 0 ){
 		QVector<double> valuesPixels = statistics->fromResults( sliceResults[index]);
 		values = getValues( index, valuesPixels, statistics );
-		if ( index > 0 ){
-			statistics->adjustStart( values, lastX );
-		}
+
 	}
 	return values;
 }
@@ -181,13 +179,17 @@ void SliceWorker::toAscii( QTextStream& stream, SliceStatistics* statistics ) co
 		int resultCount = sliceResults.size();
 		double xIncr = 0;
 		for ( int i = 0; i < resultCount; i++ ){
-			QVector<double> values = getData( i, xIncr, statistics );
-			int count = values.size();
-			if ( count > 0 ){
-				xIncr = values[count - 1] - values[0];
+			QVector<double> values = getData( i, statistics );
+
+			//So that everything is zero based.
+			if ( i == 0 ){
+				statistics->storeIncrement( &xIncr, values, -1  );
 			}
+			statistics->adjustStart( values, xIncr );
+			statistics->storeIncrement( &xIncr, values, i  );
 
 			QVector<double> pixels = getPixels( i );
+			int count = values.size();
 			if ( count > 0 ){
 				stream << END_OF_LINE <<"# Segment: "<< (i+1)<<END_OF_LINE;
 				for ( int j = 0; j < count; j++ ){

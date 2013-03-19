@@ -37,6 +37,13 @@ SliceStatisticsPosition::SliceStatisticsPosition(SliceStatisticsFactory::AxisXUn
 
 }
 
+void SliceStatisticsPosition::storeIncrement( double* incr,
+		QVector<double>& values, int index) const {
+	if ( index < 0 && !values.isEmpty() ){
+		*incr = -1 * values[0];
+	}
+}
+
 double SliceStatisticsPosition::getLength(std::pair<double,double> worldStart,
 	std::pair<double,double> worldEnd,
 	std::pair<int,int> pixelStart,
@@ -75,8 +82,12 @@ QVector<double> SliceStatisticsPosition::fromResults( Record* record  )const {
 	return positionPixels;
 }
 
-void SliceStatisticsPosition::adjustStart( QVector<double>& /*values*/, double /*newStart*/ ) const {
-
+void SliceStatisticsPosition::adjustStart( QVector<double>& values,
+		double newStart ) const {
+	int count = values.size();
+	for ( int i = 0; i < count; i++ ){
+		values[i] = values[i] + newStart;
+	}
 }
 
 QVector<double> SliceStatisticsPosition::interpolate( double start, double end,

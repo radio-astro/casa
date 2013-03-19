@@ -48,6 +48,7 @@ public:
 	virtual QVector<double> interpolate( double start, double end,
 				const QVector<double>& values ) const;
 	virtual void adjustStart( QVector<double>& values, double newStart ) const;
+	virtual void storeIncrement( double* incr, QVector<double>& values, int index) const;
 	virtual ~SliceStatisticsDistance();
 	virtual QVector<double> fromResults( Record* record  )const;
 private:

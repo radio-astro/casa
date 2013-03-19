@@ -103,6 +103,16 @@ double SliceStatisticsDistance::getEnd( double value1World, double value2World,
 	return getLength( value1World, value2World, value1Pixel, value2Pixel );
 }
 
+void SliceStatisticsDistance::storeIncrement( double* incr,
+		QVector<double>& values, int index) const {
+	if ( index >= 0 ){
+		int xCount = values.size();
+		if ( xCount > 0 ){
+			*incr = *incr + (values[xCount - 1] - values[0]);
+		}
+	}
+}
+
 double SliceStatisticsDistance::getLength(std::pair<double,double> worldStart,
 		std::pair<double,double> worldEnd,
 		std::pair<int,int> pixelStart,

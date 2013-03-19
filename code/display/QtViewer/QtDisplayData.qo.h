@@ -76,7 +76,7 @@ class QtDisplayData : public QObject {
 		 const viewer::DisplayDataOptions &ddo = viewer::DisplayDataOptions( ),
 		 const viewer::ImageProperties &props = viewer::ImageProperties( ) );
   ~QtDisplayData();
-  
+  String getPositionInformation( const Vector<double> world);
   virtual std::string name() { return name_;  }
   virtual const char* nameChrs() { return name_.c_str();  }
   virtual void setName(const std::string& name) { name_ = name;  }
