@@ -416,7 +416,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 (stateExpr_p != "")
 	 ))
       throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
-				    "Only field-, spw- and antenna-selection is supported for CalTables")));
+				    "Only field-, spw-, scan-, time- and antenna-selection is supported for CalTables")));
     return ms;
   }
   //----------------------------------------------------------------------------
@@ -605,13 +605,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	const TableExprNode *timeNode = 0x0;
 	TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::TIME));
-	MSSelectableMainColumn *msMainColInterface=msLike->mainColumns();
+	MSSelectableMainColumn *mainColInterface=msLike->mainColumns();
 	// MSMainColInterface msMainColInterface;
 	// msMainColInterface.init(*(msLike->table()));
 
 	if(timeExpr_p != "" &&
 	   //msTimeGramParseCommand(ms, timeExpr_p, condition, selectedTimesList_p) == 0)
-	   msTimeGramParseCommand(ms, timeExpr_p, colAsTEN, *msMainColInterface, condition, selectedTimesList_p) == 0)
+	   msTimeGramParseCommand(ms, timeExpr_p, colAsTEN, *mainColInterface, condition, selectedTimesList_p) == 0)
 	  timeNode = msTimeGramParseNode();
 
 	//

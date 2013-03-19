@@ -44,6 +44,49 @@
 #include <ms/MeasurementSets/MSSelectableMainColumn.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+// <summary> 
+//
+// MSSelectableTable: An interface used by MSSelection module to
+// access the sub-tables and main-table columns of MS-like tables.
+//
+// </summary>
+
+// <use visibility=export>
+
+// <reviewed reviewer="" date="" tests="" demos="">
+
+// <prerequisite>
+// </prerequisite>
+//
+// <etymology>
+// From "msselection" and "table".
+// </etymology>
+//
+//<synopsis> 
+//
+// This is a pure virtual base-class to prodive a table-type agnoistic
+// interface to the MSSelection module to access sub-tables and
+// main-table columns of MS-like tables.
+//
+// </synopsis>
+//
+// <example>
+// <srcblock>
+// </srcblock>
+// </example>
+//
+// <motivation>
+//
+// To all use of the MSSelection module for selection on any table
+// that follows the genral structure of a the MS.  Via this class,
+// minor differences in the database layout can be hidden from the
+// MSSelection module.
+//
+// </motivation>
+//
+// <todo asof="19/03/13">
+// </todo>
+
   class MSSelectableTable
   {
   public:
@@ -70,6 +113,76 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   protected:
     const Table *table_p;
   };
+
+// <summary> 
+//
+// MSInterface: A specialization of MSSelectableTable for accessing
+// MS.
+//
+// </summary>
+
+// <use visibility=export>
+
+// <reviewed reviewer="" date="" tests="" demos="">
+
+// <prerequisite>
+// </prerequisite>
+//
+// <etymology>
+//
+// From "ms" and "interface".
+//
+// </etymology>
+//
+//<synopsis> 
+//
+// A class that can be passed around a MSSelectableTable, with most of
+// the methods overloaded to work with the underlaying MS.
+//
+//</synopsis>
+//
+// <example>
+// <srcblock>
+
+  //
+  // Fill in the expression in the various strings that are passed for
+  // parsing to the MSSelection object later.
+  //
+  String fieldStr,timeStr,spwStr,baselineStr,
+    uvdistStr,taqlStr,scanStr,arrayStr, polnStr,stateObsModeStr,
+    observationStr;
+  baselineStr="1&2";
+  timeStr="*+0:10:0";
+  fieldStr="CygA*";
+  //
+  // Instantiate the MS and the MSInterface objects.
+  //
+  MS ms(MSName),selectedMS(ms);
+  MSInterface msInterface(ms);
+  //
+  // Setup the MSSelection thingi
+  //
+  MSSelection msSelection;
+
+  msSelection.reset(msInterface,MSSelection::PARSE_NOW,
+		    timeStr,baselineStr,fieldStr,spwStr,
+		    uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+		    stateObsModeStr,observationStr);
+  if (msSelection.getSelectedMS(selectedMS))
+    cerr << "Got the selected MS!" << endl;
+  else
+    cerr << "The set of expressions resulted into null-selection";
+// </srcblock>
+// </example>
+//
+// <motivation>
+//
+// To generalize the implementation of the MSSelection parsers.
+//
+// </motivation>
+//
+// <todo asof="19/03/13">
+// </todo>
 
   class MSInterface: public MSSelectableTable
   {
