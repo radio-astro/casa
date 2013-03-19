@@ -41,6 +41,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSMainEnums.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
+#include <ms/MeasurementSets/MSSelectableMainColumn.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   class MSSelectableTable
@@ -63,6 +64,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual String columnName(MSMainEnums::PredefinedColumns nameEnum) = 0;
     virtual const MeasurementSet* asMS() = 0;
+    
+    virtual MSSelectableMainColumn* mainColumns() = 0;
+
   protected:
     const Table *table_p;
   };
@@ -70,9 +74,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MSInterface: public MSSelectableTable
   {
   public:
-    MSInterface()                                      {};
+    MSInterface():msMainCols_p(NULL)                   {};
     MSInterface(const Table& table);
-    virtual ~MSInterface()                             {};
+    virtual ~MSInterface()                             {if (msMainCols_p) delete msMainCols_p;};
     virtual const MSAntenna& antenna()                 {return asMS()->antenna();}
     virtual const MSField& field()                     {return asMS()->field();}
     virtual const MSSpectralWindow& spectralWindow()   {return asMS()->spectralWindow();}
@@ -82,6 +86,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual Bool isMS()                                {return True;};
 
     virtual const MeasurementSet *asMS(){return static_cast<const MeasurementSet *>(table());};
+    virtual MSSelectableMainColumn* mainColumns()
+    {msMainCols_p = new MSMainColInterface(*table_p); return msMainCols_p;};
+  private:
+    MSMainColInterface *msMainCols_p;
   };
 } //# NAMESPACE CASA - END
 
