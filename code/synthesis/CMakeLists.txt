@@ -346,6 +346,7 @@ install (FILES
 	CalTables/CTDesc.h
 	CalTables/CTEnums.h
 	CalTables/CTInterface.h
+	CalTables/CTMainColInterface.h
 	CalTables/CTIter.h
 	CalTables/CTMainColumns.h
 	CalTables/CTMainRecord.h
@@ -719,6 +720,7 @@ casa_add_assay( synthesis MSVis/test/VisibilityIterator_Test.cc MsFactory.cc )
 casa_add_assay( synthesis MSVis/test/tVisIter.cc )
 casa_add_assay( synthesis TransformMachines/test/tVisModelData.cc )
 casa_add_assay( synthesis TransformMachines/test/tStokesImageUtil.cc )
+casa_add_assay( synthesis TransformMachines/test/tCImageRotation.cc )
 casa_add_assay( synthesis DataSampling/test/tPixonProcessor.cc )
 casa_add_assay( synthesis IDL/test/tIDL.cc )
 casa_add_assay( synthesis MeasurementComponents/test/tALMAAperture.cc )
