@@ -184,6 +184,7 @@ class asdm_import1(test_base):
         shutil.rmtree(myms_dataset_name)
         shutil.rmtree(msname,ignore_errors=True)
         shutil.rmtree(msname+'.flagversions',ignore_errors=True)
+        os.system('rm -rf reimported-M51.ms*')
         
                 
     def test1(self):
@@ -356,7 +357,8 @@ class asdm_import1(test_base):
         shutil.rmtree(myms_dataset_name)
         shutil.rmtree(msname,ignore_errors=True)
         shutil.rmtree(msname+'.flagversions',ignore_errors=True)
-        
+        shutil.rmtree('myinput.ms', ignore_errors=True)
+        shutil.rmtree('M51.ms.asdm', ignore_errors=True)
                 
     def test1(self):
         '''Asdm-import: Test good v1.2 input with filler v3 and inverse filler v3 '''
@@ -555,7 +557,7 @@ class asdm_import3(test_base):
     def tearDown(self):
         os.system('rm -rf '+self.asdm)
         os.system('rm -rf x54.ms*')
-        os.system('rm -rf scan3.ms*')
+        os.system('rm -rf scan3.ms* autocorr.ms*')
         
     def test_autocorr(self):
         '''importasdm: auto-correlations should be written to online flags'''
@@ -569,13 +571,27 @@ class asdm_import3(test_base):
         # auto-correlation should have been written to online flags               
         self.assertTrue(cmds[0].__contains__('&&*'))
         
-    def test_flagautocorr(self):
+    def test_flagautocorr1(self):
         '''importasdm: test that auto-correlations from online flags are correctly flagged'''        
         importasdm(asdm=self.asdm, vis='scan3.ms', scans='3', applyflags=True)
         res = flagdata('scan3.ms',mode='summary', basecnt=True)
         self.assertEqual(res['flagged'], 298)
         self.assertEqual(res['baseline']['DA44&&DA44']['flagged'], 76)
         self.assertEqual(res['baseline']['PM03&&PM03']['flagged'], 16)
+
+    # CAS-4698, CSV-2576
+    def test_flagautocorr2(self):
+        '''importasdm: apply auto-correlations from online flags in flagcmd''' 
+        outputms = 'autocorr.ms'       
+        importasdm(asdm=self.asdm, vis=outputms, scans='3', applyflags=False)
+        
+        # Flag with flagcmd
+        flagcmd(vis=outputms, action='apply', flagbackup=False)
+        res = flagdata(vis=outputms, mode='summary', basecnt=True)
+        self.assertEqual(res['flagged'], 298)
+        self.assertEqual(res['baseline']['DA44&&DA44']['flagged'], 76)
+        self.assertEqual(res['baseline']['PM03&&PM03']['flagged'], 16)
+
 
 class asdm_import4(test_base):
     
@@ -587,6 +603,7 @@ class asdm_import4(test_base):
         shutil.rmtree(myms_dataset_name)
         shutil.rmtree(msname,ignore_errors=True)
         shutil.rmtree(msname+'.flagversions',ignore_errors=True)
+        os.system('rm -rf reference.ms* reimported-M51.ms*')
         
                 
     def test1(self):
