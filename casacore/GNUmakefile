@@ -192,7 +192,8 @@ CASALIB_PATH := $(LIBDIR)/libcasa_casa.$(SOV)
 CASALNK_PATH := $(LIBDIR)/libcasa_casa.$(SO)
 CORELIB_PATH := $(LIBDIR)/libcasacore.$(SOV)
 CORELNK_PATH := $(LIBDIR)/libcasacore.$(SO)
-### components   -> tables      -> casa
+### components   -> gsl
+###              -> tables      -> casa
 ###              -> coordinates -> (cfitsio)
 ###                             -> (wcs)
 ###                             -> measures  -> scimath   -> casa
@@ -508,11 +509,11 @@ endef
 
 ifeq "$(ONELIB)" "1"
 define build-app
-	$(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) $1 -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl
+	$(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) $1 -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl -lgsl
 endef
 else
 define build-app
-	$(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) $2 -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl
+	$(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) $2 -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl -lgsl
 endef
 endif
 
@@ -620,11 +621,11 @@ $(INCDIR)/casacore/%.tcc: %.tcc
 
 t% : t%.cc
 	@if test -e "$(LIBDIR)/libcasacore.$(SO)"; then \
-	    echo $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasacore -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl; \
-	    $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasacore -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl; \
+	    echo $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasacore -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl -lgsl; \
+	    $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasacore -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl -lgsl; \
 	else \
-	    echo $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl; \
-	    $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl; \
+	    echo $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl -lgsl; \
+	    $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl -lgsl; \
 	fi
 
 $(BINDIR)/% : fits/apps/fits2table/%.cc
@@ -684,10 +685,10 @@ $(CORELIB_PATH): $(LASTVERSION) $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(
 	@$(call orphan-objects,$(ARCH),.)
 	@$(call orphan-headers,$(INCDIR),.)
 ifeq "$(os)" "darwin"
-	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) $(archlink) -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads
+	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) $(archlink) -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads -lgsl
 endif
 ifeq "$(os)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) $(archlink) -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) $(archlink) -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads -lgsl
 endif
 
 ###
@@ -716,10 +717,10 @@ $(COMPONENTSLIB_PATH): $(LASTVERSION) $(COORDINATESLNK_PATH) $(TABLESLNK_PATH) $
 	@$(call orphan-objects,$(ARCH),components)
 	@$(call orphan-headers,$(INCDIR),components)
 ifeq "$(os)" "darwin"
-	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lgsl
 endif
 ifeq "$(os)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB) 
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lgsl
 endif
 
 ###
@@ -732,10 +733,10 @@ $(COORDINATESLIB_PATH): $(LASTVERSION) $(MEASURESLNK_PATH) $(FITSLNK_PATH) $(COO
 	@$(call orphan-objects,$(ARCH),coordinates)
 	@$(call orphan-headers,$(INCDIR),coordinates)
 ifeq "$(os)" "darwin"
-	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lgsl
 endif
 ifeq "$(os)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_tables -lcasa_casa -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lgsl
 endif
 
 ###
@@ -764,10 +765,10 @@ $(IMAGESLIB_PATH): $(LASTVERSION) $(COMPONENTSLNK_PATH) $(LATTICESLNK_PATH) $(FI
 	@$(call orphan-objects,$(ARCH),images)
 	@$(call orphan-headers,$(INCDIR),images)
 ifeq "$(os)" "darwin"
-	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_components -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio $(FC_LIB)
+	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_components -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio $(FC_LIB) -lgsl
 endif
 ifeq "$(os)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_components -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio $(FC_LIB)
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) -L$(dir $@) $(archlink) -lcasa_components -lcasa_coordinates -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio $(FC_LIB) -lgsl
 endif
 
 ###
