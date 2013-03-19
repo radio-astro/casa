@@ -143,35 +143,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <example>
 // <srcblock>
-
-  //
-  // Fill in the expression in the various strings that are passed for
-  // parsing to the MSSelection object later.
-  //
-  String fieldStr,timeStr,spwStr,baselineStr,
-    uvdistStr,taqlStr,scanStr,arrayStr, polnStr,stateObsModeStr,
-    observationStr;
-  baselineStr="1&2";
-  timeStr="*+0:10:0";
-  fieldStr="CygA*";
-  //
-  // Instantiate the MS and the MSInterface objects.
-  //
-  MS ms(MSName),selectedMS(ms);
-  MSInterface msInterface(ms);
-  //
-  // Setup the MSSelection thingi
-  //
-  MSSelection msSelection;
-
-  msSelection.reset(msInterface,MSSelection::PARSE_NOW,
-		    timeStr,baselineStr,fieldStr,spwStr,
-		    uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
-		    stateObsModeStr,observationStr);
-  if (msSelection.getSelectedMS(selectedMS))
-    cerr << "Got the selected MS!" << endl;
-  else
-    cerr << "The set of expressions resulted into null-selection";
+//
+// //
+// // Fill in the expression in the various strings that are passed for
+// // parsing to the MSSelection object later.
+// //
+// String fieldStr,timeStr,spwStr,baselineStr,
+//   uvdistStr,taqlStr,scanStr,arrayStr, polnStr,stateObsModeStr,
+//   observationStr;
+// baselineStr="1&2";
+// timeStr="*+0:10:0";
+// fieldStr="CygA*";
+// //
+// // Instantiate the MS and the MSInterface objects.
+// //
+// MS ms(MSName),selectedMS(ms);
+// MSInterface msInterface(ms);
+// //
+// // Setup the MSSelection thingi
+// //
+// MSSelection msSelection;
+//
+// msSelection.reset(msInterface,MSSelection::PARSE_NOW,
+// 		    timeStr,baselineStr,fieldStr,spwStr,
+// 		    uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+// 		    stateObsModeStr,observationStr);
+// if (msSelection.getSelectedMS(selectedMS))
+//   cerr << "Got the selected MS!" << endl;
+// else
+//   cerr << "The set of expressions resulted into null-selection";
 // </srcblock>
 // </example>
 //
