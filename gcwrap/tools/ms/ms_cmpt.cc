@@ -3346,5 +3346,92 @@ ms::msselectedindices()
   return selectedIndices;
 }
 
+bool
+ms::addephemeris(const int id,
+		 const std::string& ephemerisname,  
+		 const std::string& comment,
+		 const ::casac::variant& field)
+{
+  Bool rstat(False);
+  try {
+    *itsLog << LogOrigin("ms", "addephemeris");
+    String t_field(m1toBlankCStr_(field));
+    String t_name     = toCasaString(ephemerisname);
+    String t_comment = toCasaString(comment);
+    Record selrec;
+    Vector<Int>fieldids;
+
+    if(detached()){
+      return False;
+    }
+
+    if(t_field.size()>0){
+      try {
+	selrec=itsMS->msseltoindex("*", t_field);
+      }
+      catch (AipsError x) {
+	*itsLog << LogOrigin("ms", "addephemeris") 
+		<< LogIO::SEVERE << x.getMesg() << LogIO::POST;
+	RETHROW(x);
+      }    
+      fieldids=selrec.asArrayInt("field");
+    }
+
+    Double startTime;
+
+    try{
+      MeasComet mc(t_name);
+      startTime = casa::Quantity(mc.getStart(),"d").getValue("s");
+      Double endTime = casa::Quantity(mc.getEnd(),"d").getValue("s");
+      Array<Double> timeRanges = MSObservationColumns(itsMS->observation()).timeRange().getColumn();
+      if(startTime>min(timeRanges)){
+	*itsLog << LogOrigin("ms", "addephemeris") 
+		<< LogIO::WARN << "Ephemeris validity time range starts after start of observation." << LogIO::POST;
+      }
+      if(endTime<max(timeRanges)){
+	*itsLog << LogOrigin("ms", "addephemeris") 
+		<< LogIO::WARN << "Ephemeris validity time range ends before end of observation." << LogIO::POST;
+      }
+    }
+    catch (AipsError x){
+      *itsLog << LogOrigin("ms", "addephemeris") 
+	      << LogIO::SEVERE << "Error reading input ephemeris table. No changes made to MS." << endl
+	      << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+
+    }
+
+    if(!itsMS->field().addEphemeris(id, t_name, t_comment)){
+      *itsLog << LogOrigin("ms", "addephemeris") 
+	      << LogIO::SEVERE << "Error adding ephemeris to MS." << LogIO::POST;
+      return False;
+    }
+
+    MSFieldColumns msfc(itsMS->field());
+
+    for(uInt i=0; i<fieldids.size(); i++){
+      msfc.time().put(i, startTime);
+      msfc.ephemerisId().put(i, id);
+    }
+   
+    {// Update HISTORY table of newly created MS
+      String message= "Added ephemeris to FIELD table.";
+      ostringstream param;
+      param << "field=" << t_field << " id=" << id
+	    << " name='" << t_name << "' coment='" << comment << "'";
+      String paramstr=param.str();
+      writehistory(message, paramstr, "ms::addephemeris()", itsMS->tableName(), "ms");
+    }
+
+    rstat = True;
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return rstat;
+}
+
+
 } // casac namespace
 
