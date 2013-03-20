@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
 //
-// MSSelectableTable: An interface used by MSSelection module to
+// MSSelectableTable: An interface class used by MSSelection module to
 // access the sub-tables and main-table columns of MS-like tables.
 //
 // </summary>
@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 //<synopsis> 
 //
-// This is a pure virtual base-class to prodive a table-type agnoistic
+// This is a pure virtual base-class to provide a table-type agnostic
 // interface to the MSSelection module to access sub-tables and
 // main-table columns of MS-like tables.
 //
@@ -77,10 +77,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <motivation>
 //
-// To all use of the MSSelection module for selection on any table
-// that follows the genral structure of a the MS.  Via this class,
-// minor differences in the database layout can be hidden from the
-// MSSelection module.
+// To allow use of the MSSelection module for selection on any table
+// that follows the genral structure of a the MS database.  Via this
+// class, minor differences in the database layout can be hidden from
+// the MSSelection module.
 //
 // </motivation>
 //
@@ -136,7 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 //<synopsis> 
 //
-// A class that can be passed around a MSSelectableTable, with most of
+// A class that can be passed around as MSSelectableTable, with most of
 // the methods overloaded to work with the underlaying MS.
 //
 //</synopsis>
