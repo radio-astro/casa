@@ -9,7 +9,7 @@ import pipeline.h.cli as cli
 import pipeline.h.heuristics as heuristics
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.argmapper as argmapper
-import pipeline.tasks as tasks
+import pipeline.h.tasks as tasks
 
 LOG = logging.get_logger(__name__)
 
