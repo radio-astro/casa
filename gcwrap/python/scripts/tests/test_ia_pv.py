@@ -72,6 +72,8 @@ from __main__ import *
 import unittest
 import numpy
 
+datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imageanalysis/ImageAnalysis/'
+
 def run_ia_pv(
     imagename, outfile, start, end, halfwidth
 ):
@@ -117,8 +119,16 @@ class ia_pv_test(unittest.TestCase):
         myia.putchunk(bb)
         expeccoord = myia.toworld([1,5,0])['numeric'][2]
         mycsys = myia.coordsys()
+        units = mycsys.units()
         expinc = mycsys.increment()["numeric"]
-        expinc = [abs(expinc[0]), expinc[2]]
+        expinc = [
+            abs(
+                qa.convert(
+                    qa.quantity(expinc[0], units[0]), "arcsec"
+                )["value"]
+            ),
+            expinc[2]
+        ]
         myia.done()
         self.assertTrue(len(tb.showcache())== 0)
         pv = iatool()
@@ -145,7 +155,11 @@ class ia_pv_test(unittest.TestCase):
             got = pv.toworld([0,0,0])['numeric'][1]
             self.assertTrue(abs(got - expeccoord) < 1e-6)
             gotinc = pv.coordsys().increment()["numeric"]
-            self.assertTrue((abs(gotinc - expinc) < 1e-6).all())
+            # the position offset axis always has units of arcsec, the units
+            # in the input image were arcmin
+            print "*** gotinc " + str(gotinc)
+            print "*** expinc " + str(expinc)
+            self.assertTrue((abs(gotinc - expinc) < 1e-5).all())
             # halfwidth
             outfile = "test_pv_1_" + str(code)
             xx = code(
@@ -200,6 +214,31 @@ class ia_pv_test(unittest.TestCase):
                  mask=mymask + ">0", stretch=True
             )
         )
+    
+    def test_CAS_2996(self):
+        """ia.pv(): Test issues raised in CAS-2996"""
+        # the only tests necessary here are to ensure ia.pv() runs 
+        # successfully for the provided inputs
+        myia = self.ia
+        myia.open(datapath + "pv1.im")
+        xx = myia.pv(start = [30, 30], end = [250, 250])
+        xx = myia.pv(start = [30, 250], end = [250, 30])
+        xx = myia.pv(start = [250, 250], end = [30, 30])
+        xx = myia.pv(start = [250, 30], end = [30, 250])
+        
+        myia.open(datapath + "pv2.im")
+        x1 = 264.865854
+        x2 = 166.329268
+        y1 = 142.914634
+        y2 = 232.670732
+        xx = myia.pv(start=[x1, y1], end=[x2, y2])
+        xx = myia.pv(start=[x2, y1], end=[x1, y2])
+        xx = myia.pv(start=[x2, y2], end=[x1, y1])
+        xx = myia.pv(start=[x1, y2], end=[x2, y1])
+
+        myia.done()
+        xx.done()
+        
     
 def suite():
     return [ia_pv_test]
