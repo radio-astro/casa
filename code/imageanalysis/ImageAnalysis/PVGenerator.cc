@@ -44,7 +44,7 @@ namespace casa {
 const String PVGenerator::_class = "PVGenerator";
 
 PVGenerator::PVGenerator(
-	const ImageInterface<Float> *const image,
+	const ImageInterface<Float> *const &image,
 	const Record *const &regionRec,
 	const String& chanInp, const String& stokes,
 	const String& maskInp, const String& outname,
@@ -156,28 +156,6 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		<< (paInRad*180/C::pi)
 		<< " degrees to align specified slice with the x axis" << LogIO::POST;
 
-	/*
-	// rotation occurs about the reference pixel. Calculate the bounds of the
-	// output image.
-	Vector<Double> refPix = subCoords.referencePixel();
-	Double refX = refPix[xAxis];
-	Double refY = refPix[yAxis];
-	Double startXDiff = start[0] - refX;
-	Double startYDiff = start[1] - refY;
-	Double endXDiff = end[0] - refX;
-	Double endYDiff = end[1] - refY;
-
-	cout << "*** refPix " << refPix[xAxis] << " " << refPix[yAxis] << endl;
-	cout << "*** startDiff " << startXDiff << " " << startYDiff << endl;
-	cout << "*** endDiff " << endXDiff << " " << endYDiff << endl;
-
-
-	Double startXRot = startXDiff*cos(paInRad) - startYDiff*sin(paInRad) + refX;
-	Double startYRot = startXDiff*sin(paInRad) + startYDiff*cos(paInRad) + refY;
-	Double endXRot = endXDiff*cos(paInRad) - endYDiff*sin(paInRad) + refX;
-	Double endYRot = endXDiff*sin(paInRad) + endYDiff*cos(paInRad) + refY;
-	*/
-
 	Vector<Double> worldStart, worldEnd;
 	const DirectionCoordinate& dc1 = subCoords.directionCoordinate();
 	dc1.toWorld(worldStart, Vector<Double>(start));
@@ -218,10 +196,11 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		padded.reset(padder.pad(True));
 		imageToRotate = padded.get();
 	}
+	/*
 	IPosition outShape = subShape;
 	outShape[xAxis] = (Int)(endPixRot[0] - startPixRot[0]) + nPixels + 6;
 	outShape[yAxis] = (Int)(startPixRot[1] + _halfwidth) + nPixels + 6;
-
+*/
 	IPosition blc(subImage.ndim(), 0);
 	IPosition trc = subShape - 1;
 
@@ -252,6 +231,9 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		);
 	}
 	else {
+		IPosition outShape = subShape;
+		outShape[xAxis] = (Int)(endPixRot[0] + nPixels + 6);
+		outShape[yAxis] = (Int)(startPixRot[1] + _halfwidth) + nPixels + 6;
 		ImageAnalysis ia(imageToRotate);
 		rotated.reset(
 			ia.rotate(
