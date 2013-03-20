@@ -27,6 +27,7 @@
 #define SLICE_SEGMENT_QO_H
 
 #include <QtGui/QFrame>
+#include <casa/BasicSL/String.h>
 #include <display/Slicer/SliceSegment.ui.h>
 
 class QwtPlot;
@@ -52,6 +53,8 @@ public:
     void setEndPointsWorld( double worldX1, double worldY1, double worldX2, double worldY2 );
     void setEndPointsPixel( int pixelX1, int pixelY1, int pixelX2, int pixelY2 );
     void setColor( QColor color );
+    void setCurveWidth( int width );
+    void updateEnds( const String& start, const String& end);
     QColor getCurveColor() const;
     void clearCurve();
     void updateStatistics( SliceStatistics* statistics );
@@ -62,7 +65,8 @@ signals:
 	void statisticsSelected( int index );
 
 private:
-
+	QString parseEndInfo( const String& info ) const;
+	void resetCurveWidth();
 	void setCurveColor();
 	SliceSegment( const SliceSegment& other );
 	SliceSegment operator=( const SliceSegment& other );
@@ -70,6 +74,7 @@ private:
 	std::pair<double,double> worldEnd;
 	std::pair<int,int> pixelStart;
 	std::pair<int,int> pixelEnd;
+	int curveWidth;
 
     QColor defaultColor;
     QwtPlotCurve* plotCurve;

@@ -51,26 +51,33 @@ public:
 	//Data
 	void setImage( ImageInterface<float>* img );
 	void updateChannel( int channel );
+	void setRegionSelected( int regionId, bool selected );
 
 	//Look and feel
 	void resetCurveColors( bool viewerColors, bool polylineColorUnit,
 			QList<QColor> accumulateCurveColors);
 	void setViewerCurveColor( int regionId, const QString& colorName );
 	void setUseViewerColors( bool viewerColors );
+	void setPlotPreferences( int lineWidth, int markerSize );
 
 	//Setting slice parameters.
 	void setSampleCount( int sampleCount );
 	void setInterpolationMethod( const String& method );
 	void setAccumulateSlices( bool accumulate );
 
-	void clearCurves(bool keepSelected = false);
+	//Wipe out only the curves that shouldn't be displayed under
+	//the current settings.
+	void clearCurves();
+	//Wipe out all curves.
+	void clearCurvesAll();
 	bool toAscii( const QString& fileName );
 
 	//Statistics
 	void addStatistic( int regionId );
-	void removeStatistics( bool keepSelected);
+	void removeStatistics( );
 	void removeStatistic( int regionId);
 	void setStatisticsLayout( QLayout* layout );
+	void updatePositionInformation( int id, const QVector<String>& info );
 
 	virtual ~SlicePlot();
 
@@ -97,6 +104,8 @@ private:
 	SliceStatisticsFactory::AxisXUnits getUnitMode() const;
 	SliceStatisticsFactory::AxisXChoice getXAxis() const;
 	void initPlot();
+	void resetCurves();
+	void addPlotCurve( int regionId );
 	void initAxisFont( int axisId, const QString& axisTitle );
 	void sliceFinished( int regionId);
 	QString getAxisLabel() const;
@@ -116,6 +125,8 @@ private:
 	QMap<int, ImageSlice*> sliceMap;
 
 	Vector<Int> coords;
+	int curveWidth;
+	int markerSize;
 	bool accumulateSlices;
 	bool fullVersion;
 	bool viewerColors;

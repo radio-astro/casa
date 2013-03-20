@@ -2288,6 +2288,9 @@ ImageRegion_state Region::get_image_selected_region( DisplayData *dd ) {
 		//But we need to exclude polyline regions since they don't
 		//have statistics.
 		int imageRegionCount = contains_this ? 0 : 1;
+		if ( type() == region::PolylineRegion ){
+			imageRegionCount = 0;
+		}
 		for ( std::set<Region*>::const_iterator it = selected_regions.begin( );
 				it != selected_regions.end( ); ++it ){
 			ImageRegion* imageRegion = (*it)->get_image_region( dd );
@@ -2297,7 +2300,10 @@ ImageRegion_state Region::get_image_selected_region( DisplayData *dd ) {
 		}
 		PtrBlock<const ImageRegion*> rgns( imageRegionCount );
 		if ( contains_this == false ){
-			rgns[count++] = get_image_region( dd );
+			ImageRegion* reg = get_image_region( dd );
+			if ( reg != NULL ){
+				rgns[count++] = reg;
+			}
 		}
 		for ( std::set<Region*>::const_iterator it = selected_regions.begin( );
 				it != selected_regions.end( ); ++it ){

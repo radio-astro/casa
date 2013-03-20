@@ -8,5 +8,6 @@
     <file>images/zoomCursor.png</file>
     <file>images/statsMaximize.png</file>
     <file>images/statsMinimize.png</file>
+    <file>images/settings.png</file>
 </qresource>
 </RCC>

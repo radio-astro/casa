@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 1994,1995,1996,1997,1998,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,34 +22,45 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef FOOTPRINTWIDGET_QO_H
-#define FOOTPRINTWIDGET_QO_H
+#ifndef SLICEPLOTPREFERENCES_QO_H
+#define SLICEPLOTPREFERENCES_QO_H
 
-#include <QtGui/QWidget>
-#include <guitools/Histogram/FootPrintWidget.ui.h>
+#include <QtGui/QDialog>
+#include <display/Slicer/SlicePlotPreferences.ui.h>
 
 namespace casa {
 
-class FootPrintWidget : public QWidget
+class SlicePlotPreferences : public QDialog
 {
     Q_OBJECT
 
 public:
-    FootPrintWidget(QWidget *parent = 0);
-    ~FootPrintWidget();
-    enum PlotMode {REGION_MODE,IMAGE_MODE,REGION_ALL_MODE};
-public slots:
-	void setPlotMode( int mode );
+    SlicePlotPreferences(QWidget *parent = 0);
+    int getLineWidth() const;
+    int getMarkerSize() const;
+    ~SlicePlotPreferences();
+
 signals:
-	void plotModeChanged( int );
+	void plotPreferencesChanged();
+
 private slots:
-	void imageModeSelected( bool selected );
-	void regionModeSelected( bool selected );
-	void regionAllModeSelected( bool selected );
+	void preferencesAccepted();
+	void preferencesRejected();
 
 private:
-    Ui::FootPrintWidgetClass ui;
-};
-}
+    void initializeCustomSettings();
+    void reset();
+    void persist();
 
-#endif // FOOTPRINTWIDGET_QO_H
+    int lineThickness;
+    int markerSize;
+
+    Ui::SlicePlotPreferencesClass ui;
+    const static QString ORGANIZATION;
+    const static QString APPLICATION;
+    const static QString LINE_THICKNESS;
+    const static QString MARKER_SIZE;
+};
+
+}
+#endif // PLOTPREFERENCES_QO_H

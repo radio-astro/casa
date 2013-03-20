@@ -1977,6 +1977,10 @@ Bool QtDisplayData::printRegionStats(ImageRegion& imgReg) {
 
 }
 
+String QtDisplayData::getPositionInformation( const Vector<double> world){
+	String valueStr =  dd_->showPosition(world);
+	return valueStr;
+}
 
 
 

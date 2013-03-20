@@ -65,6 +65,7 @@ public:
 	QVector<double> convertArcUnits( QVector<double> arcseconds ) const;
 	double convertArcUnits( double value ) const;
 	virtual QVector<double> fromResults( Record* record  )const = 0;
+	virtual void storeIncrement( double* incr, QVector<double>& values, int index) const = 0;
 	static QVector<double> getFromArray( const Array<float>& source );
 	virtual ~SliceStatistics();
 protected:

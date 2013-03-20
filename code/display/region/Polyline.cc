@@ -849,10 +849,11 @@ void Polyline::drawText() {
 					if ( yDistance * xDistance > 0 ){
 						angle = C::pi-angle;
 					}
+					angle = angle * 180 / 3.14159;
 				}
 				ss <<  std::setiosflags(ios::scientific) <<
 						std::setiosflags(ios::fixed) << std::setprecision(4) << "(" <<
-									allDiff << unit <<", "<<angle<<")";
+									allDiff << unit <<", "<<angle<<" deg)";
 				String dText(ss.str());
 				wc_->drawText(textPosition, dText, Display::AlignCenter,  False);
 			}

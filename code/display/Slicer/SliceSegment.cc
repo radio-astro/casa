@@ -26,6 +26,7 @@
 #include "SliceSegment.qo.h"
 #include <display/Slicer/SliceStatistics.h>
 #include <QtCore/qmath.h>
+#include <synthesis/MSVis/UtilJ.h>
 #include <QDebug>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
@@ -37,12 +38,27 @@ SliceSegment::SliceSegment(QWidget *parent)
 	ui.setupUi(this);
 	setAutoFillBackground( true );
 	setColor( Qt::green );
+	curveWidth = 1;
+}
+
+void SliceSegment::setCurveWidth( int width ){
+	curveWidth = width;
+	resetCurveWidth();
+}
+
+void SliceSegment::resetCurveWidth(){
+	if ( plotCurve != NULL ){
+		QPen pen = plotCurve->pen();
+		pen.setWidth( curveWidth );
+		plotCurve->setPen( pen );
+	}
 }
 
 void SliceSegment::addCurve( QwtPlot* plot,
 		const QVector<double>& xValues, const QVector<double>& yValues ){
 	plotCurve = new QwtPlotCurve();
 	plotCurve->attach( plot );
+	resetCurveWidth();
 	plotCurve->setData( xValues, yValues );
 	setCurveColor();
 }
@@ -55,6 +71,28 @@ void SliceSegment::clearCurve(){
 		plotCurve = NULL;
 	}
 }
+
+QString SliceSegment::parseEndInfo( const String& info ) const {
+	QString positionInfo;
+	QString base(info.c_str());
+	QStringList baseParts = base.split("\n", QString::SkipEmptyParts );
+	Assert( baseParts.size() == 2);
+	QStringList secondLineList = baseParts[1].split( " ", QString::SkipEmptyParts );
+	int positionIndex = 0;
+	if ( secondLineList.size() > positionIndex+1){
+		positionInfo = secondLineList[positionIndex]+"  "+secondLineList[positionIndex+1];
+	}
+	return positionInfo;
+}
+
+void SliceSegment::updateEnds( const String& start, const String& end){
+	QString startInfo = parseEndInfo( start );
+	QString endInfo = parseEndInfo( end );
+	ui.startLineEdit->setText( startInfo );
+	ui.endLineEdit->setText( endInfo );
+}
+
+
 void SliceSegment::setEndPointsPixel( int pixelX1, int pixelY1,
 		int pixelX2, int pixelY2 ){
 	pixelStart.first = pixelX1;
@@ -74,8 +112,8 @@ void SliceSegment::setEndPointsWorld( double worldX1, double worldY1,
 
 
 void SliceSegment::updateStatistics( SliceStatistics* statistics ){
-	//SliceStatistics* statistics = SliceStatisticsFactory::getInstance()->getStatistics();
 	double angle = statistics->getAngle( pixelStart, pixelEnd );
+	angle = angle * 180 / 3.14159265;
 	double value = statistics->getLength( worldStart, worldEnd, pixelStart, pixelEnd );
 	QString labelText = statistics->getLengthLabel();
 	if ( value < 100000 ){
@@ -86,7 +124,6 @@ void SliceSegment::updateStatistics( SliceStatistics* statistics ){
 	}
 	ui.distanceLabel->setText( labelText );
 	ui.angleLineEdit->setText( QString::number( angle ));
-	//delete statistics;
 }
 
 

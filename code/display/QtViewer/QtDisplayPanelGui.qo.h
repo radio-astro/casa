@@ -530,6 +530,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   QtDisplayData *controlling_dd;
 
   void updateFrameInformation();
+  void updateSliceCorners( int id, const QList<double>& worldX,
+  		const QList<double>& worldY );
   void initAnimationHolder();
   void initHistogramHolder();
   void hideHistogram();
