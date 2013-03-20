@@ -509,11 +509,11 @@ endef
 
 ifeq "$(ONELIB)" "1"
 define build-app
-	$(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) $1 -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl -lgsl
+	$(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) $1 -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl -lgsl -lblas
 endef
 else
 define build-app
-	$(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) $2 -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl -lgsl
+	$(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) $2 -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl -lgsl -lblas
 endef
 endif
 
@@ -621,11 +621,11 @@ $(INCDIR)/casacore/%.tcc: %.tcc
 
 t% : t%.cc
 	@if test -e "$(LIBDIR)/libcasacore.$(SO)"; then \
-	    echo $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasacore -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl -lgsl; \
-	    $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasacore -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl -lgsl; \
+	    echo $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasacore -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl -lgsl -lblas; \
+	    $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasacore -lcfitsio -lwcs -llapack -lblas -lcfitsio -ldl -lgsl -lblas; \
 	else \
-	    echo $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl -lgsl; \
-	    $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl -lgsl; \
+	    echo $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl -lgsl -lblas; \
+	    $(C++) $(CXXFLAGS) $(archcompile) -I$(dir $<) $(COREINC2) $(INC) -o $@ $< -L$(LIBDIR) $(archlink) -lcasa_images -lcasa_msfits -lcasa_components -lcasa_coordinates -lcasa_ms -lcasa_measures -lcasa_measures_f -lcasa_scimath -lcasa_scimath_f -lcasa_fits -lcasa_lattices -lcasa_tables -lcasa_casa -lcfitsio -lcasa_mirlib -lwcs -llapack -lblas -lcfitsio -ldl -lgsl -lblas; \
 	fi
 
 $(BINDIR)/% : fits/apps/fits2table/%.cc
@@ -685,10 +685,10 @@ $(CORELIB_PATH): $(LASTVERSION) $(CASALIB) $(COMPONENTSLIB) $(COORDINATESLIB) $(
 	@$(call orphan-objects,$(ARCH),.)
 	@$(call orphan-headers,$(INCDIR),.)
 ifeq "$(os)" "darwin"
-	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) $(archlink) -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads -lgsl
+	$(C++) -dynamiclib -install_name $(instlib_path)$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) $(archlink) -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads -lgsl -lblas
 endif
 ifeq "$(os)" "linux"
-	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) $(archlink) -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads -lgsl
+	$(C++) -shared -Wl,-soname,$(notdir $@) -o $@ $(filter %.o,$^) $(EXTRA_LDFLAGS) $(archlink) -lcfitsio -lwcs -llapack -lblas $(FC_LIB) -lfftw3 -lfftw3f -lfftw3_threads -lfftw3f_threads -lgsl -lblas
 endif
 
 ###
