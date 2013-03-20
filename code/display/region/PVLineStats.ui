@@ -65,6 +65,9 @@
          <string>end point coordinates</string>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="margin">
+          <number>8</number>
+         </property>
          <item>
           <widget class="QLabel" name="pixel_label">
            <property name="text">
@@ -73,30 +76,110 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="pixel_coord">
-           <property name="text">
-            <string>some test</string>
+          <widget class="QFrame" name="frame">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
-           <property name="readOnly">
-            <bool>true</bool>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
            </property>
+           <property name="frameShadow">
+            <enum>QFrame::Plain</enum>
+           </property>
+           <property name="lineWidth">
+            <number>0</number>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="margin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLineEdit" name="pixel_pt1">
+              <property name="toolTip">
+               <string>pixel coordinates for first point</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="pixel_pt2">
+              <property name="toolTip">
+               <string>pixel coordinates for second point</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
          <item>
           <widget class="QLabel" name="world_label">
            <property name="text">
-            <string>world</string>
+            <string>J2000</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="world_coord">
-           <property name="text">
-            <string>some other text</string>
+          <widget class="QFrame" name="frame">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
-           <property name="readOnly">
-            <bool>true</bool>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
            </property>
+           <property name="frameShadow">
+            <enum>QFrame::Plain</enum>
+           </property>
+           <property name="lineWidth">
+            <number>0</number>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <property name="margin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLineEdit" name="world_pt1">
+              <property name="toolTip">
+               <string>world coordinates for first point</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="world_pt2">
+              <property name="toolTip">
+               <string>world coordinates for second point</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </widget>
          </item>
         </layout>
@@ -114,6 +197,9 @@
          <number>0</number>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <property name="margin">
+          <number>0</number>
+         </property>
          <item>
           <spacer name="horizontalSpacer_2">
            <property name="orientation">
@@ -129,13 +215,19 @@
          </item>
          <item>
           <widget class="QLabel" name="label">
+           <property name="toolTip">
+            <string>pixel width for P/V slice</string>
+           </property>
            <property name="text">
             <string>averaging width</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="spinBox">
+          <widget class="QSpinBox" name="pvwidth">
+           <property name="toolTip">
+            <string>pixel width for P/V slice</string>
+           </property>
            <property name="suffix">
             <string/>
            </property>
@@ -173,6 +265,9 @@
        <property name="enabled">
         <bool>false</bool>
        </property>
+       <property name="toolTip">
+        <string>update last P/V slice</string>
+       </property>
        <property name="text">
         <string>Update P/V</string>
        </property>
@@ -181,7 +276,7 @@
      <item>
       <widget class="QPushButton" name="create_button">
        <property name="toolTip">
-        <string>Display complete 1D slice functionality.</string>
+        <string>create P/V slice</string>
        </property>
        <property name="text">
         <string>Create P/V</string>

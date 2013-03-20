@@ -99,8 +99,8 @@ namespace casa {
 				region::RegionTypes type( ) const { return region::PVLineRegion; }
 
 			public slots:
-				void createPVImage(const std::string &,const std::string&);
-				void updatePVImage( );
+				void createPVImage(const std::string&,const std::string&,int);
+				void updatePVImage(const std::string&,const std::string&,int);
 
 			protected:
 				PVLine( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1, 
@@ -113,6 +113,7 @@ namespace casa {
 				void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
 				std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
 				ImageRegion *get_image_region( DisplayData* ) const;
+				RegionInfo *newInfoObject( ImageInterface<Float> *image );
 
 				virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
 												   std::vector<std::pair<double,double> > &world_pts ) const;
@@ -131,6 +132,7 @@ namespace casa {
 				std::string output_file;
 				bool within_vertex_handle( double x, double y ) const;
 				unsigned int check_handle( double x, double y ) const;
+				std::string worldCoordinateStrings( double x, double y );
 
 		};
     }

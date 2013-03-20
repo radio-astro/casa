@@ -83,8 +83,8 @@ SliceStats::SliceStats( QWidget *parent ) : stats_t(parent) {
 
 pvline_stats_t::pvline_stats_t( QWidget *parent ) : stats_t(parent) {
 	setupUi(this);
-	coord_box->hide( );
-	averaging_frame->hide( );
+	// coord_box->hide( );
+	// averaging_frame->hide( );
 	connect( create_button, SIGNAL(clicked( )), this, SLOT(create_pv_image( )) );
 	connect( update_button, SIGNAL(clicked( )), this, SLOT(update_pv_image( )) );
 }
@@ -92,19 +92,21 @@ pvline_stats_t::pvline_stats_t( QWidget *parent ) : stats_t(parent) {
 bool pvline_stats_t::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
 	try {
 		std::tr1::shared_ptr<PVLineRegionInfo> pvinfo = std::tr1::dynamic_pointer_cast<PVLineRegionInfo>(info);
-		pixel_coord->setText(QString::fromStdString(pvinfo->pixelString( )));
-		world_coord->setText(QString::fromStdString(pvinfo->worldString( )));
+		pixel_pt1->setText(QString::fromStdString(pvinfo->pixelStrings( )[0]));
+		pixel_pt2->setText(QString::fromStdString(pvinfo->pixelStrings( )[1]));
+		world_pt1->setText(QString::fromStdString(pvinfo->worldStrings( )[0]));
+		world_pt2->setText(QString::fromStdString(pvinfo->worldStrings( )[1]));
 	} catch (...) { /* expect only std::bad_cast */ }
 	return true;
 }
 
 void pvline_stats_t::create_pv_image( ) {
-	emit createPVImage(label_,description_);
+	emit createPVImage(label_,description_,pvwidth->value( ));
 	update_button->setEnabled(true);
 }
 
 void pvline_stats_t::update_pv_image( ) {
-	emit updatePVImage( );
+	emit updatePVImage(label_,description_,pvwidth->value( ));;
 }
 
 }
@@ -255,8 +257,8 @@ qt::stats_t *QtRegionStats::new_stats_box( RegionInfo::InfoTypes type, Region* r
 		stats_box_ = new qt::pvline_stats_t( );
 		layout_->addWidget(stats_box_,0,Qt::AlignLeft);
 		if ( region != NULL ) {
-			connect( stats_box_, SIGNAL(createPVImage(const std::string&,const std::string&)), region, SLOT(createPVImage(const std::string&,const std::string&)) );
-			connect( stats_box_, SIGNAL(updatePVImage( )), region, SLOT(updatePVImage( )) );
+			connect( stats_box_, SIGNAL(createPVImage(const std::string&,const std::string&,int)), region, SLOT(createPVImage(const std::string&,const std::string&,int)) );
+			connect( stats_box_, SIGNAL(updatePVImage(const std::string&,const std::string&,int)), region, SLOT(updatePVImage(const std::string&,const std::string&,int)) );
 		}
 		return stats_box_;
 	} else {
