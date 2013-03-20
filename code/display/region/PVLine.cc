@@ -47,6 +47,7 @@
 #include <imageanalysis/ImageAnalysis/PVGenerator.h>
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/region/QtRegionDock.qo.h>
+#include <casa/Exceptions/Error.h>
 
 #include <casa/Quanta/MVAngle.h>
 
@@ -701,7 +702,17 @@ namespace casa {
 					dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
 					dock_->panel( )->logIO( ) << "generating P/V image with pixel points: (" <<
 						startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
-					pvgen.generate( false );
+					ImageInterface<Float> *image = 0;
+					try {
+						image = pvgen.generate( true );
+						QtDisplayPanelGui *new_panel = dock_->panel( )->createNewPanel( );
+						new_panel->addDD( image->name(false), "image", "raster", True, True, image );
+					} catch( AipsError err ) {
+						dock_->panel( )->logIO( ) << LogIO::SEVERE << err.getMesg( ) << LogIO::POST;
+						// for now create a dummy image... for now... while waiting for fixes...
+						// QtDisplayPanelGui *new_panel = dock_->panel( )->createNewPanel( );
+						// new_panel->addDD( "/Users/drs/develop/casa/testing/cas-4515/SPT041847_IMAGE.image", "image", "raster", True, False );
+					}
 					break;
 				}
 			}
