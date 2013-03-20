@@ -85,7 +85,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.10 2013/03/16 12:13:53 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.11 2013/03/19 16:27:20 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -142,7 +142,6 @@ maxAntennaNamesAcrossTheTop = 17
 maxTimesAcrossTheTop = 17
 antennaVerticalSpacing = 0.018 # 0.016
 antennaHorizontalSpacing = 0.05
-timeHorizontalSpacing = 0.05
 xstartTitle = 0.07
 ystartTitle = 0.95
 xstartPolLabel = 0.05
@@ -523,11 +522,14 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
                 color='k', transform=pb.gcf().transFigure)
         # support multi-fields with overlay='time'
         uTPFPS = []
+        uTPFPStimerange = []
         for f in fieldIndicesToPlot:
             for t in uniqueTimesPerFieldPerSpw[ispwInCalTable][f]:
-                if (sloppyMatch(t, timerangeListTimes, solutionTimeThresholdSeconds,
-                                myprint=debugSloppyMatch)):
+                matched, mymatch = sloppyMatch(t, timerangeListTimes, solutionTimeThresholdSeconds,
+                                               myprint=debugSloppyMatch, whichone=True)
+                if (matched):
                     uTPFPS.append(t)
+                    uTPFPStimerange.append(mymatch)
         uTPFPS = np.sort(uTPFPS)
         for a in range(len(uTPFPS)):
             legendString = utstring(uTPFPS[a],220)
@@ -553,12 +555,9 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
             if (len(fieldsToPlot) > 1 or len(timerangeList) > 1):
                 if (debug):
                     print "len(uTPFPS)=%d, a=%d, len(myUniqueColor)=%d" % (len(uTPFPS),a,len(myUniqueColor))
-# stopgap until I understand why it gets off by one in I16293 Band9 data
-#                if (a >= len(myUniqueColor)):
-#                    myUniqueColor.append(overlayColors[a])
-#                pb.text(x0, y0, legendString,color=myUniqueColor[a],fontsize=mysize,
+#                pb.text(x0, y0, legendString,color=overlayColors[timerangeList[a]],fontsize=mysize,
 #                        transform=pb.gcf().transFigure)
-                pb.text(x0, y0, legendString,color=overlayColors[timerangeList[a]],fontsize=mysize,
+                pb.text(x0, y0, legendString,color=overlayColors[timerangeList[uTPFPStimerange[a]]],fontsize=mysize,
                         transform=pb.gcf().transFigure)
             else:
                 pb.text(x0, y0, legendString,fontsize=mysize, transform=pb.gcf().transFigure)
@@ -922,6 +921,11 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
       print "(with an optional trailing digit that is ignored)."
       return()
   
+    if (subplot == 11):
+        timeHorizontalSpacing = 0.06
+    else:
+        timeHorizontalSpacing = 0.05
+
     if (yaxis.find('both')<0 and yaxis.find('ap')<0 and yaxis.find('tsys')<0 and
         yaxis.find('amp')<0 and yaxis.find('phase')<0):
         print "Invalid yaxis.  Must be 'amp', 'tsys', 'phase' or 'both'."
@@ -1268,6 +1272,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             uniqueTimesPerField.append(timelist)
         uniqueTimesPerFieldPerSpw.append(uniqueTimesPerField)
   
+    if (debug): print "about to call casalogPost"
     casalogPost(debug,displayTimesArray([[uniqueTimes]]))
   
     # Parse the spws to plot from the command line
@@ -4647,13 +4652,16 @@ def SetNewXLimits(newxlimits):
 #        print "Swapping xlimits order"
         pb.xlim(newxlimits[1]-xrange*buffer, newxlimits[0]+xrange*buffer)
 
-def sloppyMatch(newvalue, mylist, threshold, myprint=False):
+def sloppyMatch(newvalue, mylist, threshold, myprint=False, whichone=False):
     matched = False
     if (type(mylist) != list and type(mylist)!=type(np.ndarray(0))):
 	mylist = [mylist]
-    for v in mylist:
+    mymatch = -1
+    for i in range(len(mylist)):
+        v = mylist[i]
         if (abs(newvalue-v) < threshold):
             matched = True
+            mymatch = i
     
     if (matched == False and myprint==True):
         casalogPost(myprint,"sloppyMatch: %.0f is not within %.0f of anything in %s" % (newvalue,threshold, str(mylist)))
@@ -4661,7 +4669,10 @@ def sloppyMatch(newvalue, mylist, threshold, myprint=False):
     elif (myprint==True):
         casalogPost(myprint,"sloppyMatch: %.0f is within %.0f of something in %s" % (newvalue,threshold, str(mylist)))
 #        print "Returning matched = ", matched
-    return(matched)
+    if (whichone == False):
+        return(matched)
+    else:
+        return(matched,mymatch)
 
 def sloppyUnique(t, thresholdSeconds):
     """
