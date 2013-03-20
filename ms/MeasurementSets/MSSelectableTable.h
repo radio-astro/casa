@@ -77,10 +77,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <motivation>
 //
-// To allow use of the MSSelection module for selection on any table
-// that follows the genral structure of a the MS database.  Via this
-// class, minor differences in the database layout can be hidden from
-// the MSSelection module.
+// To allow use of the <linkto
+// module="MeasurementSets:description">MSSelection</linkto> module
+// for selection on any table that follows the genral structure of the
+// MS database.  Via this class, minor differences in the database
+// layout can be hidden from the MSSelection module.  This also keeps
+// MeasurementSet module from depending on other MS-like database
+// implemention which may use the MSSelection module.  Such usage will
+// need to implement a specialization of <linkto
+// module="MeasurementSets:description">MSSelectableTable</linkto> and
+// use it to instantiate the <linkto
+// module="MeasurementSets:description">MSSelection</linkto> object.
 //
 // </motivation>
 //
@@ -96,9 +103,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void setTable(const Table& table) {table_p = &table;}
     const Table* table()                      {return table_p;}
-    virtual Bool isMS()                       = 0;
     TableExprNode col(const String& colName)  {return table()->col(colName);}
 
+    virtual Bool isMS()                       = 0;
     virtual const MSAntenna& antenna()        = 0;
     virtual const MSField& field()            = 0;
     virtual const MSSpectralWindow& spectralWindow() = 0;
