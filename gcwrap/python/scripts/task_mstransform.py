@@ -930,7 +930,7 @@ def mstransform(
         config = {}
         config = mth.setupParameters(inputms=vis, outputms=outputvis, field=field, 
                     spw=spw, array=array, scan=scan, antenna=antenna, correlation=correlation,
-                    uvrange=uvrange,time=timerange, intent=intent, observation=str(observation),
+                    uvrange=uvrange,timerange=timerange, intent=intent, observation=str(observation),
                     feed=feed)
         
         # ddistart will be used in the tool when re-indexing the spw table
