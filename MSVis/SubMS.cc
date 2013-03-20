@@ -47,6 +47,7 @@
 #include <casa/Arrays/Slice.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
+#include <casa/OS/Directory.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/Memory.h>              // Can be commented out along with
 //                                         // Memory:: calls.
@@ -1797,12 +1798,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   Bool SubMS::fillFieldTable() 
   {  
     LogIO os(LogOrigin("SubMS", "fillFieldTable()"));
-    MSFieldColumns& msField(msc_p->field());
     
     //MSField fieldtable= mssel_p.field();
     // optionalCols[0] = "EPHEMERIS_ID";
     uInt nAddedCols = addOptionalColumns(mssel_p.field(), msOut_p.field(),
                                          true);
+
+    MSFieldColumns msField(msOut_p.field());
 
     const ROMSFieldColumns& fieldIn = mscIn_p->field(); 
     ROScalarColumn<String> code(fieldIn.code());
@@ -1919,8 +1921,22 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
         ROScalarColumn<Int> eID(fieldIn.ephemerisId());
 	if(eID.hasContent()){
-	  for(uInt k = 0; k < fieldid_p.nelements(); ++k)
-	    msField.ephemerisId().put(k, eID(fieldid_p[k]));
+	  String destPathName = Path(msOut_p.field().tableName()).absoluteName();
+	  for(uInt k = 0; k < fieldid_p.nelements(); ++k){
+
+	    Int theEphId = eID(fieldid_p[k]);
+
+	    if(theEphId>-1){ // there is an ephemeris attached to this field
+	      Path ephPath = Path(fieldIn.ephemPath(fieldid_p[k]));
+	      if(ephPath.length()>0){ // copy the ephemeris table over to the output FIELD table
+		Directory origEphemDir(ephPath);
+		origEphemDir.copy(destPathName+"/"+ephPath.baseName());
+		os << LogIO::NORMAL << "Transferring ephemeris " << ephPath.baseName() 
+		   << " for output field " << name(fieldid_p[k]) << LogIO::POST;
+	      }
+	    } 
+	    msField.ephemerisId().put(k, theEphId);
+	  }
 	}
 
 	if(!nameVarRefColDelayDir.empty()){ // need to copy the reference column
@@ -4586,13 +4602,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	MDirection theFieldDir;
 	if(regridPhaseCenterFieldId<-1){ // take it from the PHASE_DIR cell
 	                                 // corresponding to theFieldId in the FIELD table)
-	  theFieldDir = FIELDCols.phaseDirMeasCol()(theFieldId)(IPosition(1,0));
+	  theFieldDir = FIELDCols.phaseDirMeas(theFieldId, mainCols.time()(mainTabRow));
 	}
 	else if(regridPhaseCenterFieldId==-1){ // use the given direction
 	  theFieldDir = regridPhaseCenter;
 	}
 	else if((uInt)regridPhaseCenterFieldId < fieldtable.nrow()){ // use this valid field ID
-	  theFieldDir = FIELDCols.phaseDirMeasCol()(regridPhaseCenterFieldId)(IPosition(1,0));
+	  theFieldDir = FIELDCols.phaseDirMeas(regridPhaseCenterFieldId, mainCols.time()(mainTabRow));
 	}
 	else{
 	  os << LogIO::SEVERE << "Field to be used as phase center, id " 
