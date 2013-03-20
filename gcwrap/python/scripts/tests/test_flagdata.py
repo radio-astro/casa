@@ -1547,6 +1547,9 @@ class test_correlations(test_base):
     def setUp(self):
         self.setUp_mwa()
         
+    def tearDown(self):
+        shutil.rmtree(self.vis, ignore_errors=True)
+        
     def test_xx_xy(self):
         '''flagdata: flag XX,XY'''
         flagdata(vis=self.vis, mode='manual', flagbackup=False, correlation='XX,XY')
@@ -2061,6 +2064,7 @@ class cleanup(test_base):
         os.system('rm -rf flagdatatest-alma.*ms*')
         os.system('rm -rf Four_ants_3C286.*ms*')
         os.system('rm -rf shadowtest_part.*ms*')
+        os.system('rm -rf testmwa.*ms*')
         os.system('rm -rf cal.fewscans.bpass*')
         os.system('rm -rf X7ef.tsys*')
         os.system('rm -rf list*txt')
