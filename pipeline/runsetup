@@ -26,4 +26,4 @@ else
 export CASAARCH=$myDir
 fi
 echo $CASAARCH
-python setup.py install --install-lib=$CASAARCH
+python setup.py install --install-lib=$CASAARCH --install-data=$CASAARCH --force

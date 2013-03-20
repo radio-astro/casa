@@ -4,6 +4,7 @@ import sys
 import types
 
 #import pipeline.infrastructure.casatools as casatools
+#from pipeline.infrastructure.casatools import casatools
 from . import casatools
 import pipeline.extern.logutils as logutils
 import pipeline.extern.logutils.colorize as colorize

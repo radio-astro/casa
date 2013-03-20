@@ -1,8 +1,8 @@
 from taskinit import casalog
 
 #import pipeline.cli as cli
-import pipeline.h.cli as cli
-import pipeline.infrastructure.launcher as launcher
+import cli
+import opt.casa.active.pipeline.pipeline.infrastructure.launcher as launcher
 
 
 def h_init(pipelinemode=None, loglevel=None, output_dir=None,
