@@ -764,13 +764,13 @@ if(mystep in thesteps):
     timing()
 
 
-# uvcontsub2
+# uvcontsub
 mystep = 26
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
     
     os.system('rm -rf M100all_lores.ms.c*')
-    uvcontsub2(vis='M100all_lores.ms',field='',fitspw='0:10~205;260~440',
+    uvcontsub(vis='M100all_lores.ms',field='',fitspw='0:10~205;260~440',
                combine='',solint='inf',fitorder=1,spw='0',want_cont=False)
 
     timing()

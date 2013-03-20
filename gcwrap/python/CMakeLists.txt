@@ -181,7 +181,6 @@ scripts/task_statwt.py
 scripts/task_tclean.py
 scripts/task_testconcat.py
 scripts/task_uvcontsub.py
-scripts/task_uvcontsub2.py
 scripts/task_uvcontsub3.py
 scripts/task_uvmodelfit.py
 scripts/task_uvsub.py
