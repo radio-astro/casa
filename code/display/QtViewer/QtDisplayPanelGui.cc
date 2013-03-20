@@ -1592,8 +1592,10 @@ void QtDisplayPanelGui::hideAllSubwindows() {
 	hideStats();
 }
 
-void QtDisplayPanelGui::createNewPanel( ) {
-	v_->createDPG( )->show( );
+QtDisplayPanelGui *QtDisplayPanelGui::createNewPanel( ) {
+	QtDisplayPanelGui *new_panel = v_->createDPG( );
+	new_panel->show( );
+	return new_panel;
 }
 
 void QtDisplayPanelGui::showDataManager() {
