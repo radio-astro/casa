@@ -1318,9 +1318,6 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
 	  // -- calls getImage, getWeightImage, does Stokes conversion, and gS/ggS normalization
 	  //U// cout << "CubeSkyEqn :: calling new finalizeToSky with dopsf " << dopsf << endl;
 	  iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec );
-	  //	  storeImg(String("stokesNormed1.im"), *(gSSliceVec[0]));
-	  tmpWBNormalizeImage(dopsf,ft_->getPBLimit());
-	  //	  storeImg(String("stokesNormed2.im"), *(gSSliceVec[0]));
 	  // Clean up temporary reference images      
 	  for (Int taylor=0; taylor < ntaylors; ++taylor)
 	    {
@@ -1331,6 +1328,11 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
 	      delete fluxScaleVec[taylor];
 	    }
 	}// end of field
+
+      //	  storeImg(String("stokesNormed1.im"), *(gSSliceVec[0]));
+      tmpWBNormalizeImage(dopsf,ft_->getPBLimit());
+      //	  storeImg(String("stokesNormed2.im"), *(gSSliceVec[0]));
+      
       ft_=&(*ftm_p[0]);
       ift_=&(*iftm_p[0]);
       // 4. Finally, we add the statistics
@@ -1475,6 +1477,7 @@ void CubeSkyEquation::newInitializeGetSlice(const VisBuffer& vb,
 	  // weightSlice_p[model] = weightSliceVec[taylor]; // because this is by value...
 	  delete modelSliceVec[taylor];
 	  delete weightSliceVec[taylor];
+	  delete fluxScaleVec[taylor];
 	}
     }//end of field
   ft_=&(*ftm_p[0]);
@@ -1892,8 +1895,6 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
   if (dopsf) return;
 
   
-  SubImage<Float> *gSSliceVec;
-  SubImage<Float> *ggSSliceVec;
   Int nCubeSlice;
   // Number of Taylor terms per field
   Int ntaylors = sm_->numberOfTaylorTerms();
@@ -1905,15 +1906,19 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
   Int nfields = sm_->numberOfModels()/ntaylors;
   
   for (Int cubeSlice=0; cubeSlice<nCubeSlice;cubeSlice++)
+    {
     for (Int field=0; field<nfields; field++)
       {
 	Int baseindex = sm_->getModelIndex(field,0); // field,taylorterm
+
+	SubImage<Float> *ggSSliceVec;
 	sliceCube(ggSSliceVec, sm_->ggS(baseindex), cubeSlice, nCubeSlice);
 	
 	for (Int taylor=0; taylor < ntaylors; ++taylor)
 	  {
 	    Int index = sm_->getModelIndex(field, taylor);
 	    
+	    SubImage<Float> *gSSliceVec;
 	    sliceCube(gSSliceVec, sm_->gS(index), cubeSlice, nCubeSlice);
 	    
 	    //
@@ -1942,7 +1947,13 @@ void CubeSkyEquation::tmpWBNormalizeImage(Bool& dopsf, const Float& pbLimit)
 	    // 	  storeImg(String("thePSF.im"), *gSSliceVec);
 	    // 	  storeImg(String("thePB.im"), *ggSSliceVec);
 	    // 	}		  
+	   delete gSSliceVec;
+	   
 	  }
+	  delete ggSSliceVec;
+
       }
+    }
+
 }
 } //# NAMESPACE CASA - END
