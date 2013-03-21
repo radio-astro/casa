@@ -67,11 +67,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class MSMainColInterface: public MSSelectableMainColumn
   {
   public: 
-    MSMainColInterface():MSSelectableMainColumn() {};
+    MSMainColInterface():MSSelectableMainColumn(), msCols_p(NULL) {};
     MSMainColInterface(const Table& msAsTable): MSSelectableMainColumn(msAsTable)
     {init(msAsTable);}
 
-    virtual ~MSMainColInterface() {delete msCols_p;};
+    virtual ~MSMainColInterface() {if (msCols_p) delete msCols_p;};
 
     virtual void init(const Table& msAsTable)
     {MSSelectableMainColumn::init(msAsTable);ms_p = MeasurementSet(msAsTable); msCols_p=new ROMSMainColumns(ms_p);}
