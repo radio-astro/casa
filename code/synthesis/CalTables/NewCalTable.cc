@@ -647,6 +647,24 @@ void NewCalTable::fillAntBasedMainRows(uInt nrows,
 				       const Cube<Bool>& flag,
 				       const Cube<Float>& paramErr,
 				       const Cube<Float>& snr) {
+
+  // Forward to obsId-capable method with obsID=0
+  this->fillAntBasedMainRows(nrows,
+			     time,interval,
+			     fieldId,spwId,0,scanNo,
+			     ant1list,refant,
+			     cparam,flag,paramErr,snr);
+
+}
+
+void NewCalTable::fillAntBasedMainRows(uInt nrows, 
+				       Double time,Double interval,
+				       Int fieldId,uInt spwId,Int obsId, Int scanNo,
+				       const Vector<Int>& ant1list, Int refant,
+				       const Cube<Complex>& cparam,
+				       const Cube<Bool>& flag,
+				       const Cube<Float>& paramErr,
+				       const Cube<Float>& snr) {
   
   // Verify that we are Complex
   TableRecord keywords=this->keywordSet();
@@ -694,6 +712,7 @@ void NewCalTable::fillAntBasedMainRows(uInt nrows,
   mc.time().putColumnCells(rows,Vector<Double>(nrows,time));
   mc.fieldId().putColumnCells(rows,Vector<Int>(nrows,fieldId));
   mc.spwId().putColumnCells(rows,Vector<Int>(nrows,spwId));
+  mc.obsId().putColumnCells(rows,Vector<Int>(nrows,obsId));
   mc.scanNo().putColumnCells(rows,Vector<Int>(nrows,scanNo));
   mc.interval().putColumnCells(rows,Vector<Double>(nrows,interval));
   
