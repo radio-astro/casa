@@ -253,7 +253,7 @@ def cvel(vis, outputvis,
             tb.open(vis+"/FIELD")
             try:
                 # get the name for later display
-                phasecentername = tb.getcell('NAME', phasecenter) + " (original field " + str(phasecenter) + ")"
+                phasecentername = tb.getcell('NAME', phasecenter) + " (original field " + str(phasecenter)
                 tb.close()
                 # phase center id will change if we select on fields,
                 # the name column is only optionally filled and not necessarily unique.
@@ -341,7 +341,7 @@ def cvel(vis, outputvis,
         # Combine and if necessary regrid it
 	ms.open(outputvis, nomodify=False)
 
-        message = "Using " + phasecentername + " as phase center."
+        message = "Using " + phasecentername + " as common direction for the output reference frame."
         casalog.post(message, 'INFO')
 
 	if not ms.cvel(mode=mode, nchan=nchan, start=start, width=width,
