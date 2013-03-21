@@ -321,6 +321,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
     mLocation_p = obsPosition;
     freqFrameValid_p = True;
   }
+   //Make sure frame conversion is switched off for REST frame data.
+  freqFrameValid_p=freqFrameValid_p && (obsFreqRef !=MFrequency::REST);
+
   // Now find the projection to use: could probably also use
   // max(abs(w))=0.0 as a criterion
   Projection projection(Projection::SIN);
@@ -874,6 +877,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     mLocation_p = obsPosition;
     freqFrameValid_p = True;
   }
+  //Make sure frame conversion is switched off for REST frame data.
+  freqFrameValid_p=freqFrameValid_p && (obsFreqRef !=MFrequency::REST);
   // Now find the projection to use: could probably also use
   // max(abs(w))=0.0 as a criterion
   Projection projection(Projection::SIN);
