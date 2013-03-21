@@ -45,11 +45,13 @@ public:
 	ColorHistogramScale();
 	String getColorMapName() const;
 	void setColorMapName( const String& colorMapName );
+
 	virtual ~ColorHistogramScale();
 private:
 	ColorHistogramScale( ColorHistogramScale& other );
 	ColorHistogramScale operator=(ColorHistogramScale& other);
 	String mapName;
+
 	ColormapDefinition* colorDefinition;
 };
 

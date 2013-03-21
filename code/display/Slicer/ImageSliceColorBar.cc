@@ -48,7 +48,7 @@ void ImageSliceColorBar::paintEvent( QPaintEvent* event ){
 	if ( colorCount > 0 ){
 		QSize barSize = size();
 		int rectWidth = barSize.width() / colorCount;
-		int rectHeight = barSize.height();
+		int rectHeight = barSize.height() / 2;
 		QPainter painter( this );
 		for ( int i = 0; i < colorCount; i++ ){
 			int xLocation = i * rectWidth;

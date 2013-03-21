@@ -1021,16 +1021,22 @@ bool QtDisplayData::setColorBarOptions( Record& opts, Record& chgdOpts ){
 	return cbNeedsRefresh;
 }
 
-void QtDisplayData::setHistogramColorRange( float minValue, float maxValue ){
+void QtDisplayData::setHistogramColorMapping( float minValue, float maxValue, float powerScale  ){
 	Record histRecord;
-	Record valueRecord;
+	Record rangeRecord;
 	Vector<float> values( 2 );
 	values[0] = minValue;
 	values[1] = maxValue;
-	valueRecord.define( "value", values );
-	histRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, valueRecord );
+	rangeRecord.define( "value", values );
+	histRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+
+	Record powerScaleRecord;
+	powerScaleRecord.define( "value", powerScale );
+	histRecord.defineRecord(WCPowerScaleHandler::POWER_CYCLES, powerScaleRecord );
+
 	setOptions( histRecord, true );
 }
+
 
 void QtDisplayData::setColorBarOrientation_() {
 	// Set the color bar orientation option according to the master

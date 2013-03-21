@@ -143,7 +143,7 @@ void SliceSegment::setColor( QColor color ){
 	QString objName = objectName();
 	QString borderStyle("QFrame#");
 	borderStyle.append( objName);
-	borderStyle.append("{ border: 5px solid rgb(");
+	borderStyle.append("{ border: 2px solid rgb(");
 	borderStyle.append(QString::number(red)+",");
 	borderStyle.append(QString::number(green)+",");
 	borderStyle.append(QString::number(blue)+") }");
