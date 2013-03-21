@@ -103,8 +103,8 @@ public:
     //Customizing the display
     void setColorLookups( const Vector<uInt> & lookups );
     void setColorMap( QwtLinearColorMap* colorMap );
-    void setColorBarVisible( bool visible );
     void setColorScaleMax( int max );
+    void setMultiColored( bool multipleColors );
     void setDisplayPlotTitle( bool display );
     void setDisplayAxisTitles( bool display );
     void setHistogramColor( QColor color );
@@ -200,7 +200,6 @@ private:
 	void reset();
 	bool resetImage();
 	void resetRegion();
-	void resetColorCurve();
 	void resetRectangleMarker();
 	void defineCurveLine( int id, const QColor& lineColor );
 	void defineCurveHistogram( int id, const QColor& histogramColor );
@@ -212,9 +211,6 @@ private:
 	virtual int getCanvasHeight();
 	Histogram* findHistogramFor( int id );
 	int getSelectedId() const;
-	void removeColorBar();
-	void addColorBar();
-	void resetColorBar();
 	QColor getPieceColor( int index, const QColor& defaultColor ) const;
 
 	void zoom( float percent );
@@ -226,7 +222,7 @@ private:
 
     bool displayPlotTitle;
     bool displayAxisTitles;
-    bool colorBarVisible;
+    bool multiColored;
 
     QColor curveColor;
     QColor selectionColor;
@@ -238,7 +234,6 @@ private:
     int colorScaleMax;
 
     //Histogram & data
-    QwtPlotCurve* colorCurve;
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
     ImageInterface<Float>* image;

@@ -277,7 +277,7 @@ class QtDisplayData : public QObject {
  
   const String &getColormap( ) { return clrMapName_; }
   void setColormap(const String& clrMapName) { setColormap_(clrMapName); }
-  void setHistogramColorRange( float minValue, float maxValue );
+  void setHistogramColorMapping( float minValue, float maxValue, float powerScale );
  
 
  signals:

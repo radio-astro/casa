@@ -23,43 +23,37 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#include "ColorHistogramScale.qo.h"
-#include <display/Display/ColormapDefinition.h>
-#include <QDebug>
-#include <QtCore/qmath.h>
+#ifndef COLORHISTOGRAMSCALE_H_
+#define COLORHISTOGRAMSCALE_H_
+
+#include <QVector>
+#include <qwt_color_map.h>
+#include <qwt_double_interval.h>
+#include <casa/BasicSL/String.h>
 
 namespace casa {
 
-ColorHistogramScale::ColorHistogramScale():QwtLinearColorMap(),
-		colorDefinition(NULL) {
-}
+class ColormapDefinition;
 
-String ColorHistogramScale::getColorMapName() const {
-	return mapName;
-}
+/**
+ * Overrides QwtLinearColorMap in order to provide QwtPlot color
+ * lookups based on a casa ColormapDefinition.
+ */
 
+class ColorHistogramScale : public QwtLinearColorMap {
+public:
+	ColorHistogramScale();
+	String getColorMapName() const;
+	void setColorMapName( const String& colorMapName );
 
-void ColorHistogramScale::setColorMapName( const String& colorMapName ){
-	mapName = colorMapName;
-	colorDefinition = new ColormapDefinition( colorMapName );
-	for ( int i = 0; i < 100; i++ ){
-		float percent = i / 100.0f;
-		Float red = 0;
-		Float green = 0;
-		Float blue = 0;
-		colorDefinition->getValue( percent, red, green, blue );
-		const int COLOR_MAX = 255;
-		int greenValue = static_cast<int>( green * COLOR_MAX );
-		int redValue = static_cast<int>( red * COLOR_MAX );
-		int blueValue = static_cast<int>( blue * COLOR_MAX );
-		QColor colorStop( redValue, greenValue, blueValue );
-		addColorStop( percent, colorStop );
-	}
-}
+	virtual ~ColorHistogramScale();
+private:
+	ColorHistogramScale( ColorHistogramScale& other );
+	ColorHistogramScale operator=(ColorHistogramScale& other);
+	String mapName;
 
-
-ColorHistogramScale::~ColorHistogramScale() {
-	delete colorDefinition;
-}
+	ColormapDefinition* colorDefinition;
+};
 
 } /* namespace casa */
+#endif /* COLORHISTOGRAMSCALE_H_ */

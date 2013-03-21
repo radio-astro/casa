@@ -100,6 +100,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtViewer/QtViewerPrintGui.qo.h
   QtViewer/QtViewer.qo.h
   QtViewer/Preferences.qo.h
+  QtViewer/ColorTransferWidget.qo.h
   Fit/FindSourcesDialog.qo.h
   Fit/ResidualHistogramDialog.qo.h
   Fit/Fit2DTool.qo.h
@@ -148,6 +149,7 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/QtRegionMgr.ui
   QtViewer/QtDataMgrMsSelect.ui
   QtViewer/Preferences.ui
+  QtViewer/ColorTransferWidget.ui
   QtPlotter/QtProfileGUI.ui
   QtPlotter/QtProfilePrefsGUI.ui
   QtPlotter/CanvasHolder.ui
@@ -487,6 +489,7 @@ casa_add_library( display
   QtViewer/ColorHistogram.cc
   QtViewer/ColorHistogramScale.cc
   QtViewer/FileBox.cc
+  QtViewer/InvisibleAxis.cc
   QtViewer/QtWCBox.cc
   QtViewer/MakeMask.cc
   QtViewer/MakeRegion.cc
@@ -512,6 +515,7 @@ casa_add_library( display
   QtViewer/QtViewer.cc
   QtViewer/QtViewerPrintGui.cc
   QtViewer/Preferences.cc
+  QtViewer/ColorTransferWidget.cc
   RegionShapes/DS9FileReader.cc
   RegionShapes/DS9FileWriter.cc
   RegionShapes/QtNewRegionShape.cc
