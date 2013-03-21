@@ -42,7 +42,7 @@ public:
 
 	MolecularLine( float center, float peak, const QString& name,
 			const QString& chemicalName, const QString& resolvedQNs,
-			const QString& frequencyUnits );
+			const QString& frequencyUnits, float originalFrequency );
 	virtual int rtti() const;
 	void setCenter( float center );
 	float getCenter( ) const;
@@ -63,6 +63,7 @@ private:
 	MolecularLine();
 	static QColor lineColor;
 	float center;
+	float originalFrequency;
 	float peak;
 	QString label;
 	QString resolvedQNs;

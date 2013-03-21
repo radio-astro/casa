@@ -134,7 +134,7 @@ void LineOverlaysTab::addLineToPixelCanvas( float center, float peak, QString mo
 	//Add the line to the pixel canvas.
 	if ( pixelCanvas != NULL ){
 		MolecularLine* line = new MolecularLine( shiftedCenter, peak,
-				molecularName, chemicalName, resolvedQNs, frequencyUnit );
+				molecularName, chemicalName, resolvedQNs, frequencyUnit, center );
 		pixelCanvas->addMolecularLine( line );
 	}
 }

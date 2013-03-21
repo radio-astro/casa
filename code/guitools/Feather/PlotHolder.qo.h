@@ -69,6 +69,7 @@ public:
     void setDisplayOutputSlice( bool visible );
     void setDisplayOriginalSlice( bool visible );
     void setDisplayYGraphs( bool visible );
+    void setDisplayXGraphs( bool visible );
     void setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
     		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
     		const QColor& zoomRectColor );
@@ -104,7 +105,7 @@ private:
 	void initializeActions();
 	void emptyLayout(QLayout* layout );
 	void addPlotAxis( int rowIndex, int columnIndex, QGridLayout* layout, QwtPlot::Axis axis, int basePlotIndex );
-    void addPlots( QGridLayout*& layout, bool displayYGraphs, int rowIndex, int basePlotIndex );
+    void addPlots( QGridLayout*& layout, int rowIndex, int basePlotIndex );
     void adjustLayout( bool scatterPlot );
 
     QList<FeatherPlotWidget*> plots;
@@ -120,6 +121,7 @@ private:
     bool displayScatter;
     bool tempScatterPlot;
     bool displayYGraphs;
+    bool displayXGraphs;
 };
 }
 

@@ -44,7 +44,7 @@ MolecularLine::MolecularLine() : QwtPlotMarker(){
 
 MolecularLine::MolecularLine( float center, float peak, const QString& name,
 		const QString& chemicalName, const QString& resolvedQNs,
-		const QString& frequencyUnits ): QwtPlotMarker() {
+		const QString& frequencyUnits, float originalFrequency ): QwtPlotMarker() {
 	init();
 	this -> center = center;
 	this -> peak = peak;
@@ -52,6 +52,7 @@ MolecularLine::MolecularLine( float center, float peak, const QString& name,
 	this -> chemicalName = chemicalName;
 	this -> resolvedQNs = resolvedQNs;
 	this -> frequencyUnits = frequencyUnits;
+	this -> originalFrequency = originalFrequency;
 }
 
 void MolecularLine::init() {
@@ -155,7 +156,7 @@ bool MolecularLine::equalTo( const MolecularLine* const other ) const {
 void MolecularLine::toStream( QTextStream* stream ) const {
 	*stream << " Species: "<<label<<"\n";
 	*stream << " Chemical Name: "<< chemicalName<<"\n";
-	*stream << " Frequency: "<< center << " "<< frequencyUnits<<"\n";
+	*stream << " Frequency: "<< originalFrequency << " "<< frequencyUnits<<"\n";
 	*stream << " Resolved QNs: "<< resolvedQNs<<"\n";
 	*stream << " Intensity: " << peak<<"\n";
 }

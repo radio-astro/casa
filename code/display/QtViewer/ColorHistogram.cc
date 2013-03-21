@@ -191,23 +191,14 @@ void ColorHistogram::resetColorLookups(){
 Vector<uInt> ColorHistogram::computeScaledIntensities(const std::vector<float>& intensities ){
 
 	//We have to scale the intensities to the interval [0,1].
-	float minValue = std::numeric_limits<float>::max();
-	float maxValue = -1 * minValue;
 	int intensityCount = intensities.size();
 	Vector<uInt> colorValues;
 	if ( intensityCount > 0 ){
 		Vector<Float> scaledIntensities( intensityCount );
 		for ( int i = 0; i < intensityCount; i++ ){
-			if ( intensities[i]<minValue ){
-				minValue = intensities[i];
-			}
-			if ( intensities[i] > maxValue ){
-				maxValue = intensities[i];
-			}
 			scaledIntensities[i] = intensities[i];
 		}
-
-		powerScaler->setDomainMinMax( minValue, maxValue );
+		powerScaler->setDomainMinMax( minIntensity, maxIntensity );
 
 		//IPosition colorValueSizing( intensityCount );
 		colorValues.resize( intensityCount );

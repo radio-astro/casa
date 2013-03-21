@@ -170,7 +170,8 @@ void FeatherMain::preferencesChanged(){
 	plotHolder->setDisplayScatterPlot( preferences.isDisplayOutputScatterPlot());
 	plotHolder->setDisplayOriginalSlice( preferences.isDisplayOriginalFunctions());
 	plotHolder->setDisplayOutputSlice( preferences.isDisplayOutputFunctions());
-	plotHolder->setDisplayYGraphs( !preferences.isDisplayXOnly() );
+	plotHolder->setDisplayYGraphs( preferences.isDisplayY() );
+	plotHolder->setDisplayXGraphs( preferences.isDisplayX() );
 
 	plotHolder->setLogScale( preferences.isLogUV(), preferences.isLogAmplitude() );
 	plotHolder->refreshPlots();
