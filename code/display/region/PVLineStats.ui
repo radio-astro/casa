@@ -261,25 +261,12 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="update_button">
-       <property name="enabled">
-        <bool>false</bool>
-       </property>
-       <property name="toolTip">
-        <string>update last P/V slice</string>
-       </property>
-       <property name="text">
-        <string>Update P/V</string>
-       </property>
-      </widget>
-     </item>
-     <item>
       <widget class="QPushButton" name="create_button">
        <property name="toolTip">
         <string>create P/V slice</string>
        </property>
        <property name="text">
-        <string>Create P/V</string>
+        <string>Generate P/V</string>
        </property>
       </widget>
      </item>

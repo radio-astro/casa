@@ -86,7 +86,6 @@ pvline_stats_t::pvline_stats_t( QWidget *parent ) : stats_t(parent) {
 	// coord_box->hide( );
 	// averaging_frame->hide( );
 	connect( create_button, SIGNAL(clicked( )), this, SLOT(create_pv_image( )) );
-	connect( update_button, SIGNAL(clicked( )), this, SLOT(update_pv_image( )) );
 }
 
 bool pvline_stats_t::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
@@ -102,11 +101,6 @@ bool pvline_stats_t::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::Re
 
 void pvline_stats_t::create_pv_image( ) {
 	emit createPVImage(label_,description_,pvwidth->value( ));
-	update_button->setEnabled(true);
-}
-
-void pvline_stats_t::update_pv_image( ) {
-	emit updatePVImage(label_,description_,pvwidth->value( ));;
 }
 
 }
@@ -258,7 +252,6 @@ qt::stats_t *QtRegionStats::new_stats_box( RegionInfo::InfoTypes type, Region* r
 		layout_->addWidget(stats_box_,0,Qt::AlignLeft);
 		if ( region != NULL ) {
 			connect( stats_box_, SIGNAL(createPVImage(const std::string&,const std::string&,int)), region, SLOT(createPVImage(const std::string&,const std::string&,int)) );
-			connect( stats_box_, SIGNAL(updatePVImage(const std::string&,const std::string&,int)), region, SLOT(updatePVImage(const std::string&,const std::string&,int)) );
 		}
 		return stats_box_;
 	} else {

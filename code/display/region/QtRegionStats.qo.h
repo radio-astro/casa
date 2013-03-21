@@ -73,10 +73,9 @@ namespace casa {
 				bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> );
 			signals:
 				void createPVImage(const std::string&,const std::string&,int);
-				void updatePVImage(const std::string&,const std::string&,int);
+
 			private slots:
 				void create_pv_image( );
-				void update_pv_image( );
 		};
 	}
 

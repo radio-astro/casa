@@ -57,7 +57,7 @@ namespace casa {
 	PVLine::PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
 		bool hold_signals ) :	Region( "p/v line", wc, d, hold_signals ),
 														pt1_x(x1), pt1_y(y1),
-														pt2_x(x2), pt2_y(y2) {
+														pt2_x(x2), pt2_y(y2), sub_dpg(0) {
 		center_x = linear_average(pt1_x,pt2_x);
 		center_y = linear_average(pt1_y,pt2_y);
 		initHistogram();
@@ -68,7 +68,7 @@ namespace casa {
 	PVLine::PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
 		bool hold_signals) :	Region( "p/v line", wc, rs->dock( ), hold_signals ),
 														pt1_x(x1), pt1_y(y1),
-														pt2_x(x2), pt2_y(y2) {
+														pt2_x(x2), pt2_y(y2), sub_dpg(0) {
 		center_x = linear_average(pt1_x,pt2_x);
 		center_y = linear_average(pt1_y,pt2_y);
 		initHistogram();
@@ -680,6 +680,39 @@ namespace casa {
 			trcy = (pt1_y < pt2_y ? pt2_y : pt1_y) + 3;
 		}
 
+		std::string PVLine::display_element::outputPath( ) {
+			if ( path_.size( ) == 0 )
+				path_ = viewer::options.temporaryPath( name_ + ".pvline." );
+			return path_;
+		}
+
+		ImageInterface<Float> *PVLine::generatePVImage( ImageInterface<Float> *input_image, std::string output_file, int width, bool need_result ) {
+			Record dummy;
+			PVGenerator pvgen( input_image, &dummy, "" /*chanInp*/, "" /*stokes*/, "" /*maskInp*/, output_file, true );
+			double startx, starty, endx, endy;
+			try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy ); } catch(...) { return 0; }
+			pvgen.setEndpoints( startx, starty, endx, endy );
+			pvgen.setHalfWidth((double)((width-1)/2));
+			dock_->panel( )->status( "generating temporary image: " + output_file );
+			dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
+			dock_->panel( )->logIO( ) << "generating P/V image with pixel points: (" <<
+				startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
+			ImageInterface<Float> *result = 0;
+			QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+			try {
+				result = pvgen.generate( need_result );
+			} catch( AipsError err ) {
+				dock_->panel( )->logIO( ) << LogIO::SEVERE << err.getMesg( ) << LogIO::POST;
+				// fallback to P/V failure, create dummy image...
+				// QtDisplayPanelGui *new_panel = dock_->panel( )->createNewPanel( );
+				// new_panel->addDD( "/Users/drs/develop/casa/testing/cas-4515/SPT041847_IMAGE.image", "image", "raster", True, False );
+			} catch( ... ) {
+				dock_->panel( )->logIO( ) << LogIO::SEVERE << "unexpected error occurred while generating the P/V image" << LogIO::POST;
+			}
+			QApplication::restoreOverrideCursor();
+			return result;
+		}
+
 		void PVLine::createPVImage( const std::string &name,const std::string &desc, int width ) {
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
@@ -690,37 +723,26 @@ namespace casa {
 				if ( padd == 0 ) continue;
 				ImageInterface<Float> *image = padd->imageinterface( );
 				if ( image->name( ) == casa_desc ) {
-					output_file = viewer::options.temporaryPath( name + ".pvline." );
-					Record dummy;
-					/* PVGenerator(const casa::ImageInterface<float>*, const casa::Record* const&, const casa::String&, const casa::String&, const casa::String&, const casa::String&, casa::Bool) */
-					PVGenerator pvgen( image, &dummy, "" /*chanInp*/, "" /*stokes*/, "" /*maskInp*/, output_file, true );
-					double startx, starty, endx, endy;
-					try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy ); } catch(...) { return; }
-					pvgen.setEndpoints( startx, starty, endx, endy );
-					pvgen.setHalfWidth((double)((width-1)/2));
-					dock_->panel( )->status( "generating temporary image: " + output_file );
-					dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
-					dock_->panel( )->logIO( ) << "generating P/V image with pixel points: (" <<
-						startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
-					ImageInterface<Float> *image = 0;
-					try {
-						image = pvgen.generate( true );
-						QtDisplayPanelGui *new_panel = dock_->panel( )->createNewPanel( );
-						new_panel->addDD( image->name(false), "image", "raster", True, True, image );
-					} catch( AipsError err ) {
-						dock_->panel( )->logIO( ) << LogIO::SEVERE << err.getMesg( ) << LogIO::POST;
-						// for now create a dummy image... for now... while waiting for fixes...
-						// QtDisplayPanelGui *new_panel = dock_->panel( )->createNewPanel( );
-						// new_panel->addDD( "/Users/drs/develop/casa/testing/cas-4515/SPT041847_IMAGE.image", "image", "raster", True, False );
-					}
+					display_element de( name );
+					ImageInterface<Float> *new_image = generatePVImage( image, de.outputPath( ), width, true );
+					if ( sub_dpg == 0 ) {
+						 sub_dpg = dock_->panel( )->createNewPanel( );
+						 connect( sub_dpg, SIGNAL(destroyed(QObject*)), SLOT(dpg_deleted(QObject*)) );
+					}					
+					sub_dpg->unregisterAllDDs( );
+					display_list.push_back(de);
+					sub_dpg->addDD( new_image->name(false), "image", "raster", True, True, new_image );
+					sub_dpg->show( );
+					sub_dpg->raise( );
 					break;
 				}
 			}
 		}
 
-		void PVLine::updatePVImage(const std::string&,const std::string&,int) {
-			fprintf( stderr, "UPDATE P/V OUTPUT HERE\n" );
+		void PVLine::dpg_deleted(QObject*) {
+			sub_dpg = 0;
 		}
+
 		void PVLine::output( ds9writer &out ) const {
 
 			double blc_x, blc_y, trc_x, trc_y;

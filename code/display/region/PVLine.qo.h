@@ -100,14 +100,19 @@ namespace casa {
 
 			public slots:
 				void createPVImage(const std::string&,const std::string&,int);
-				void updatePVImage(const std::string&,const std::string&,int);
+
+			private slots:
+				void dpg_deleted(QObject*);
+
+
 
 			protected:
+
 				PVLine( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1, 
 						   double y1, double x2, double y2, bool hold_signals=false, 
 						   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN ) :
 												Region( name, wc, d, hold_signals, sym ), pt1_x(x1),
-												pt1_y(y1), pt2_x(x2), pt2_y(y2) { complete = true; }
+												pt1_y(y1), pt2_x(x2), pt2_y(y2), sub_dpg(0) { complete = true; }
 
 				RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
 				void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
@@ -128,12 +133,28 @@ namespace casa {
 				double center_x, center_y;
 				double handle_delta_x, handle_delta_y;
 
+				// one display_element is created for each image created from this PVLine...
+				// the resulting display list may be useful in the future...
+				class display_element {
+				    public:
+						display_element( const std::string &n ) : name_(n), path_("") { }
+						std::string name( ) { return name_; }
+						std::string outputPath( );
+					private:
+						std::string name_;
+						std::string path_;
+				};
+
+				typedef std::list<display_element> display_list_t;
+				display_list_t display_list;
+
+				ImageInterface<Float> *generatePVImage( ImageInterface<Float> *, std::string, int, bool );
+
 			private:
-				std::string output_file;
+				QtDisplayPanelGui *sub_dpg;
 				bool within_vertex_handle( double x, double y ) const;
 				unsigned int check_handle( double x, double y ) const;
 				std::string worldCoordinateStrings( double x, double y );
-
 		};
     }
 }
