@@ -2292,6 +2292,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     MSDataDescription ddtable=ms_p.dataDescription();
     MSDataDescColumns DDCols(ddtable);
     ScalarColumn<Int> SPWIdCol = DDCols.spectralWindowId(); 
+    MSFieldColumns fldCols(ms_p.field());
 
     // Loop 3: Apply to MAIN table rows
     
@@ -2301,10 +2302,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     // create time-sorted index for main table access
     Vector<uInt> sortedI(nMainTabRows);
-    {
-      Vector<Double> mainTimesV = mainCols.time().getColumn();
-      GenSortIndirect<Double>::sort(sortedI,mainTimesV);
-    }
+
+    Vector<Double> mainTimesV = mainCols.time().getColumn();
+    GenSortIndirect<Double>::sort(sortedI,mainTimesV);
 
     // prepare progress meter
     Float progress = 0.4;
@@ -2327,8 +2327,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       //}
 
       // For each MAIN table row, the FIELD_ID cell and the DATA_DESC_ID cell are read 
-      Int theFieldId = fieldIdCol(sortedI(mainTabRow));
-      Int theDataDescId = DDIdCol(sortedI(mainTabRow));
+      Int theFieldId = fieldIdCol(mainTabRow);
+      Int theDataDescId = DDIdCol(mainTabRow);
       // and the SPW_ID extracted from the corresponding row in the DATA_DESCRIPTION table.
       Int theSPWId = SPWIdCol(theDataDescId);
 
@@ -2382,7 +2382,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(transform[iDone]){
 
 	  // create frequency machine for this time stamp
-	  MFrequency::Ref fromFrame = MFrequency::Ref(fromFrameTypeV[iDone], MeasFrame(theFieldDirV[iDone], mObsPosV[iDone], theObsTime));
+	  MDirection fldDir = fldCols.phaseDirMeas(theFieldId, mainTimesV(mainTabRow));
+
+	  MFrequency::Ref fromFrame = MFrequency::Ref(fromFrameTypeV[iDone], MeasFrame(fldDir, mObsPosV[iDone], theObsTime));
 	  Unit unit(String("Hz"));
 	  MFrequency::Convert freqTrans2(unit, fromFrame, outFrameV[iDone]);
 	
@@ -4603,12 +4605,36 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(regridPhaseCenterFieldId<-1){ // take it from the PHASE_DIR cell
 	                                 // corresponding to theFieldId in the FIELD table)
 	  theFieldDir = FIELDCols.phaseDirMeas(theFieldId, mainCols.time()(mainTabRow));
+
+	  if(FIELDCols.needInterTime(theFieldId)){
+	    String ephPath = FIELDCols.ephemPath(theFieldId);
+	    os << LogIO::NORMAL << "Note: Field with id " << theFieldId; 
+	    if(ephPath.size()>0){
+	      os << ", uses ephemeris " << ephPath << LogIO::POST;
+	    }
+	    else{
+	      os << ", has a time-dependent position described by a polynomial." << LogIO::POST;
+	    }
+	  }
+
 	}
 	else if(regridPhaseCenterFieldId==-1){ // use the given direction
 	  theFieldDir = regridPhaseCenter;
 	}
 	else if((uInt)regridPhaseCenterFieldId < fieldtable.nrow()){ // use this valid field ID
 	  theFieldDir = FIELDCols.phaseDirMeas(regridPhaseCenterFieldId, mainCols.time()(mainTabRow));
+
+	  if(FIELDCols.needInterTime(regridPhaseCenterFieldId)){
+	    String ephPath = FIELDCols.ephemPath(regridPhaseCenterFieldId);
+	    os << LogIO::NORMAL << "Note: Field to be used as phase center, id " << regridPhaseCenterFieldId; 
+	    if(ephPath.size()>0){
+	      os << ", uses ephemeris " << ephPath << LogIO::POST;
+	    }
+	    else{
+	      os << ", has a time-dependent position described by a polynomial." << LogIO::POST;
+	    }
+	  }
+
 	}
 	else{
 	  os << LogIO::SEVERE << "Field to be used as phase center, id " 
@@ -4616,6 +4642,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	     << ", does not exist." << LogIO::POST;
 	  return False;
 	}
+
 	//	cout << "theFieldId = " << theFieldId << ", theObsTime = " << theObsTime
 	//	     << ", theFieldDir = " << theFieldDir.getAngle() << endl;
 
