@@ -53,6 +53,7 @@ CTMainColumns::CTMainColumns(NewCalTable& calTable)
 //    fieldId_p        ScalarColumn<Int>&           Field id.
 //    spwId_p          ScalarColumn<Int>&           Spectral window id.
 //    scanNo_p         ScalarColumn<Int>&           Scan no.
+//    obsId_p          ScalarColumn<Int>&           Obs Id
 //    param_p          ArrayColumn<Complex>&        Cal solution params.
 //    paramerr_p       ArrayColumn<Float>&          Cal solution error
 //    flag_p           ArrayColumn<Bool>&           Ref. dir. as Measure
@@ -62,6 +63,7 @@ CTMainColumns::CTMainColumns(NewCalTable& calTable)
   // Attach all the column accessors (including required and
   // optional columns)
   attach (calTable, time_p, NCT::TIME);
+  attach (calTable, timeQuant_p, NCT::TIME);
   attach (calTable, timeMeas_p, NCT::TIME);
   attach (calTable, timeEP_p, NCT::TIME_EXTRA_PREC, True);
   attach (calTable, timeEPQuant_p, NCT::TIME_EXTRA_PREC, True);
@@ -72,6 +74,7 @@ CTMainColumns::CTMainColumns(NewCalTable& calTable)
   attach (calTable, antenna1_p, NCT::ANTENNA1);
   attach (calTable, antenna2_p, NCT::ANTENNA2);
   attach (calTable, scanNo_p, NCT::SCAN_NUMBER);
+  attach (calTable, obsId_p, NCT::OBSERVATION_ID,True); // optional for now
 
   // {C,F}PARAM columns are optional, exactly one should
   //   be present
@@ -357,6 +360,7 @@ ROCTMainColumns::ROCTMainColumns(const NewCalTable& calTable)
 //    fieldId_p        ROScalarColumn<Int>&           Field id.
 //    spwId_p          ROScalarColumn<Int>&           Spectral Window id.
 //    scanNo_p         ROScalarColumn<Int>&           Scan no.
+//    obsId_p          ROScalarColumn<Int>&           Obs Id
 //    param_p          ROArrayColumn<Complex>&          Solution params
 //    paramerr_p       ROArrayColumn<Float>&          Solution param error
 //    flag_p           ROArrayColumn<Bool>&           flag
@@ -366,6 +370,7 @@ ROCTMainColumns::ROCTMainColumns(const NewCalTable& calTable)
   // Attach all the column accessors (including required and
   // optional columns)
   attach (calTable, time_p, NCT::TIME);
+  attach (calTable, timeQuant_p, NCT::TIME);
   attach (calTable, timeMeas_p, NCT::TIME);
   attach (calTable, timeEP_p, NCT::TIME_EXTRA_PREC, True);
   attach (calTable, timeEPQuant_p, NCT::TIME_EXTRA_PREC, True);
@@ -376,6 +381,7 @@ ROCTMainColumns::ROCTMainColumns(const NewCalTable& calTable)
   attach (calTable, fieldId_p, NCT::FIELD_ID);
   attach (calTable, spwId_p, NCT::SPECTRAL_WINDOW_ID);
   attach (calTable, scanNo_p, NCT::SCAN_NUMBER);
+  attach (calTable, obsId_p, NCT::OBSERVATION_ID,True);
 
   // {C,F}PARAM columns are optional, exactly one should
   //   be present

@@ -1327,6 +1327,11 @@ Bool Calibrater::genericGatherAndSolve() {
 
     nexp(vi.spectralWindow())+=1;
 
+    // capture obs, scan info so we can set it later 
+    //   (and not rely on what the VB averaging code can't properly do)
+    Vector<Int> scv,obsv;
+    Int solscan=vi.scan(scv)(0),solobs=vi.observationId(obsv)(0);
+
     // Arrange to accumulate 
     //    VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),False); 
     VisBuffGroupAcc vbga(vs_p->numberAnt(),vs_p->numberSpw(),vs_p->numberFld(),svc_p->preavg()); 
@@ -1345,7 +1350,7 @@ Bool Calibrater::genericGatherAndSolve() {
 	  
 	  // Force read of the field Id
 	  vb.fieldId();
-	  
+
 	  // Apply the channel mask (~no-op, if unnecessary)
 	  svc_p->applyChanMask(vb);
 	  
@@ -1405,6 +1410,8 @@ Bool Calibrater::genericGatherAndSolve() {
     //  (some of this may be used _during_ solve)
     //  (this sets currSpw() in the SVC)
     Bool vbOk=(vbga.nBuf()>0 && svc_p->syncSolveMeta(vbga));
+
+    svc_p->overrideObsScan(solobs,solscan);
 
     if (vbOk) {
 

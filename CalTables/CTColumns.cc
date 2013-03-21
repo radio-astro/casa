@@ -32,6 +32,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 ROCTColumns::ROCTColumns(const NewCalTable& caltable):
   ROCTMainColumns(caltable),
+  observation_p(caltable.observation()),
   antenna_p(caltable.antenna()),
   field_p(caltable.field()),
   history_p(caltable.history()),
@@ -43,6 +44,7 @@ ROCTColumns::~ROCTColumns() {}
 
 CTColumns::CTColumns(NewCalTable& caltable):
   CTMainColumns(caltable),
+  observation_p( caltable.observation() ), 
   antenna_p( caltable.antenna() ), 
   field_p( caltable.field() ),
   history_p( caltable.history() ),

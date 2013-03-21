@@ -58,6 +58,7 @@ class ROCTMainColumns
   
   // Read-only column accessors
   const ROScalarColumn<Double>& time() const {return time_p;};
+  const ROScalarQuantColumn<Double>& timeQuant() const {return timeQuant_p;};
   const ROScalarMeasColumn<MEpoch>& timeMeas() const {return timeMeas_p;};
   const ROScalarColumn<Double>& timeEP() const {return timeEP_p;};
   const ROScalarQuantColumn<Double>& timeEPQuant() const 
@@ -70,6 +71,7 @@ class ROCTMainColumns
   const ROScalarColumn<Int>& fieldId() const {return fieldId_p;};
   const ROScalarColumn<Int>& spwId() const {return spwId_p;};
   const ROScalarColumn<Int>& scanNo() const {return scanNo_p;};
+  const ROScalarColumn<Int>& obsId() const {return obsId_p;};
   const ROArrayColumn<Complex>& cparam() const {return cparam_p;};
   const ROArrayColumn<Float>& fparam() const {return fparam_p;};
   const ROArrayColumn<Float>& paramerr() const {return paramerr_p;};
@@ -122,6 +124,7 @@ class ROCTMainColumns
   
   // Private column accessors
   ROScalarColumn<Double> time_p;
+  ROScalarQuantColumn<Double> timeQuant_p;
   ROScalarMeasColumn<MEpoch> timeMeas_p;
   ROScalarColumn<Double> timeEP_p;
   ROScalarQuantColumn<Double> timeEPQuant_p;
@@ -132,6 +135,7 @@ class ROCTMainColumns
   ROScalarColumn<Int> fieldId_p;
   ROScalarColumn<Int> spwId_p;
   ROScalarColumn<Int> scanNo_p;
+  ROScalarColumn<Int> obsId_p;
   ROArrayColumn<Complex> cparam_p;
   ROArrayColumn<Float> fparam_p;
   ROArrayColumn<Float> paramerr_p;
@@ -151,6 +155,7 @@ class CTMainColumns
     
     // Read-write column accessors
     ScalarColumn<Double>& time() {return time_p;};
+    ScalarQuantColumn<Double>& timeQuant() {return timeQuant_p;};
     ScalarMeasColumn<MEpoch>& timeMeas() {return timeMeas_p;};
     ScalarColumn<Double>& timeEP() {return timeEP_p;};
     ScalarQuantColumn<Double>& timeEPQuant() {return timeEPQuant_p;};
@@ -161,6 +166,7 @@ class CTMainColumns
     ScalarColumn<Int>& antenna1() {return antenna1_p;};
     ScalarColumn<Int>& antenna2() {return antenna2_p;};
     ScalarColumn<Int>& scanNo() {return scanNo_p;};
+    ScalarColumn<Int>& obsId() {return obsId_p;};
     ArrayColumn<Complex>& cparam() {return cparam_p;};
     ArrayColumn<Float>& fparam() {return fparam_p;};
     ArrayColumn<Float>& paramerr() {return paramerr_p;};
@@ -198,6 +204,7 @@ class CTMainColumns
     
     // Private column accessors
     ScalarColumn<Double> time_p;
+    ScalarQuantColumn<Double> timeQuant_p;
     ScalarMeasColumn<MEpoch> timeMeas_p;
     ScalarColumn<Double> timeEP_p;
     ScalarQuantColumn<Double> timeEPQuant_p;
@@ -208,6 +215,7 @@ class CTMainColumns
     ScalarColumn<Int> antenna1_p;
     ScalarColumn<Int> antenna2_p;
     ScalarColumn<Int> scanNo_p;
+    ScalarColumn<Int> obsId_p;
     ArrayColumn<Complex> cparam_p;
     ArrayColumn<Float> fparam_p;
     ArrayColumn<Float> paramerr_p;

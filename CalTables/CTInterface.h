@@ -48,6 +48,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CTInterface(const Table& table);
 
     virtual ~CTInterface();
+    virtual const CTObservation& observation()        {return asCT()->observation();}
     virtual const CTAntenna& antenna()                {return asCT()->antenna();}
     virtual const CTField& field()                    {return asCT()->field();}
     virtual const CTSpectralWindow& spectralWindow()  {return asCT()->spectralWindow();}
@@ -55,7 +56,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual const MSDataDescription& dataDescription();
     virtual String columnName(MSMainEnums::PredefinedColumns nameEnum);
-    virtual const MSObservation& observation();
+    //    virtual const MSObservation& observation();
 
     virtual const MeasurementSet* asMS() 
     {

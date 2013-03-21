@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     // For now, return timeEPQuant() even exposureQuant.
     virtual const ROScalarQuantColumn<Double>& exposureQuant() {return ctCols_p->timeEPQuant();};
-    virtual const ROScalarQuantColumn<Double>& timeQuant()     {return ctCols_p->timeEPQuant();}
+    virtual const ROScalarQuantColumn<Double>& timeQuant()     {return ctCols_p->timeQuant();}
 
     // This is not an MS
     virtual const MeasurementSet *asMS(){return NULL;};

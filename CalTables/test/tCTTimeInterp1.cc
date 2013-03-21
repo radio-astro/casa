@@ -48,12 +48,13 @@ void doTest1 (Bool verbose=False) {
   Double tol(2e-7);
 
   // Make a testing NewCalTable (Table::Memory)
-  uInt nFld(1), nAnt(1), nSpw(1), nTime(100);
+  uInt nFld(1), nAnt(1), nSpw(1), nObs(1),nTime(100);
   Vector<Int> nChan(nSpw,1);
   Double refTime(4832568000.0); // 2012 Jan 06 @ noon
   Double tint(60.0);
   Bool disk(False);
-  NewCalTable tnct("tCTTimeInterp1_test1.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
+  NewCalTable tnct("tCTTimeInterp1_test1.ct","T",nFld,nAnt,nSpw,nChan,
+		   nObs,nTime,refTime,tint,disk,False); // verbose);
 
   // some sanity checks on the test NewCalTable
   if (verbose) cout << "Table::Type: " << tnct.tableType() << endl;
