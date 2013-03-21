@@ -200,9 +200,18 @@ class NewCalTable : public Table
    static Complex NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint);
 
    // Fill in antenna-based solutions
+   //  (obsId-less version calls obsId-capable version w/ obsId=0)
    void fillAntBasedMainRows(uInt nrows, 
 			     Double time,Double interval,
 			     Int fieldId,uInt spwId,Int scanNo,
+			     const Vector<Int>& ant1list, Int refant,
+			     const Cube<Complex>& cparam,
+			     const Cube<Bool>& flag,
+			     const Cube<Float>& paramErr,
+			     const Cube<Float>& snr);
+   void fillAntBasedMainRows(uInt nrows, 
+			     Double time,Double interval,
+			     Int fieldId,uInt spwId,Int obsId,Int scanNo,
 			     const Vector<Int>& ant1list, Int refant,
 			     const Cube<Complex>& cparam,
 			     const Cube<Bool>& flag,
