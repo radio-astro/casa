@@ -989,6 +989,7 @@ def mstransform(
 #            if restfreq != '':
             config['restfreq'] = restfreq
 #            if outframe != '':
+            config['phasecenter'] = phasecenter
             config['outframe'] = outframe
             config['veltype'] = veltype
         if timeaverage:
