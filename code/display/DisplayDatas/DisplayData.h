@@ -579,6 +579,7 @@ public:
   // the DD is totally rebuilt, in practice.  This is provided 
   // for higher level control, even explicit control of refresh
   // where necessary.
+  // ..."refresh(True)"... does not seem to work <drs:Mar 21 2013>
   virtual void refresh(Bool clean = False);
 
   // an explicit request to draw the axes and/or labels.  Returns
