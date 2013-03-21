@@ -36,6 +36,7 @@ const QString Preferences::DISPLAY_LEGEND = "Display Legend";
 const QString Preferences::DISPLAY_OUTPUT_FUNCTIONS = "Display Output Functions";
 const QString Preferences::DISPLAY_OUTPUT_SCATTERPLOT = "Display Output Scatter Plot";
 const QString Preferences::DISPLAY_Y_PLOTS = "Display Y Plots";
+const QString Preferences::DISPLAY_X_PLOTS = "Display X Plots";
 const QString Preferences::LOG_AMPLITUDE = "Logarithm of Amplitude";
 const QString Preferences::LOG_UV = "Logarithm of u/v Axis";
 
@@ -47,8 +48,9 @@ Preferences::Preferences(QWidget *parent)
       displayOutputFunctions( true ),
       displayOutputScatterPlot( false ),
       displayYPlots( true ),
+      displayXPlots( true ),
       displayLegend(true),
-      logAmplitude(false),
+      logAmplitude(true),
       logUV(false){
 
 	ui.setupUi(this);
@@ -77,6 +79,7 @@ void Preferences::initializeCustomSettings(){
 	displayOutputFunctions = settings.value( DISPLAY_OUTPUT_FUNCTIONS, displayOutputFunctions ).toBool();
 	displayOutputScatterPlot = settings.value( DISPLAY_OUTPUT_SCATTERPLOT, displayOutputScatterPlot).toBool();
 	displayYPlots = settings.value( DISPLAY_Y_PLOTS, displayYPlots ).toBool();
+	displayXPlots = settings.value( DISPLAY_X_PLOTS, displayXPlots ).toBool();
 	logAmplitude = settings.value( LOG_AMPLITUDE, logAmplitude ).toBool();
 	logUV = settings.value( LOG_UV, logUV ).toBool();
 }
@@ -104,8 +107,12 @@ bool Preferences::isDisplayOutputScatterPlot() const {
 	return displayOutputScatterPlot;
 }
 
-bool Preferences::isDisplayXOnly() const {
-	return !displayYPlots;
+bool Preferences::isDisplayX() const {
+	return displayXPlots;
+}
+
+bool Preferences::isDisplayY() const {
+	return displayYPlots;
 }
 
 int Preferences::getLineThickness() const {
@@ -135,6 +142,7 @@ void Preferences::reset(){
 	ui.outputCheckBox->setChecked( displayOutputFunctions );
 	ui.outputScatterCheckBox->setChecked( displayOutputScatterPlot );
 	ui.yPlotCheckBox->setChecked( displayYPlots );
+	ui.xPlotCheckBox->setChecked( displayXPlots );
 	ui.logAmplitudeCheckBox->setChecked( logAmplitude );
 	ui.logUVCheckBox->setChecked( logUV );
 
@@ -163,6 +171,9 @@ void Preferences::persist(){
 
 	displayYPlots = ui.yPlotCheckBox->isChecked();
 	settings.setValue( DISPLAY_Y_PLOTS, displayYPlots );
+
+	displayXPlots = ui.xPlotCheckBox->isChecked();
+	settings.setValue( DISPLAY_X_PLOTS, displayXPlots );
 
 	logAmplitude = ui.logAmplitudeCheckBox->isChecked();
 	settings.setValue( LOG_AMPLITUDE, logAmplitude );

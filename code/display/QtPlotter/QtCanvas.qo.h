@@ -390,6 +390,7 @@ private:
 	void updateZoomRect( QMouseEvent* event );
 	void endZoomRect( QMouseEvent* event );
 	void resetSelectedAnnotation( QMouseEvent* event );
+	void drawMolecularLines( QPainter& painter );
 
 	//Plot Margins
 	const int MARGIN_LEFT;

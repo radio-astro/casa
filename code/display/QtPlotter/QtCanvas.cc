@@ -684,19 +684,7 @@ void QtCanvas::paintEvent(QPaintEvent *event)
     	annotations[i]->draw( &painter );
     }
 
-    //Paint any molecular lines
-    for ( int i = 0; i < static_cast<int>(molecularLineStack.size()); i++ ){
-    	double centerVal = molecularLineStack[i]->getCenter();
-    	int centerPixel = this->getPixelX( centerVal );
-    	//Use the maximum y value rather than the peak (which needs
-    	//more information in order to be calculated correctly)
-    	QtPlotSettings plotSettings = zoomStack[curZoom];
-    	double maxYVal = plotSettings.getMaxY();
-    	int peakPixel = this->getPixelY( maxYVal );
-    	int zeroPixel = this->getPixelY( 0 );
-    	molecularLineStack[i]->draw( &painter, centerPixel, peakPixel,
-    			zeroPixel, width(), height() );
-    }
+    drawMolecularLines( painter );
 
 	if (hasFocus()){
 		QStyleOptionFocusRect option;
@@ -704,6 +692,22 @@ void QtCanvas::paintEvent(QPaintEvent *event)
 		option.backgroundColor = palette().color(QPalette::Background);
 		style()->drawPrimitive(QStyle::PE_FrameFocusRect, &option, &painter,
 				this);
+	}
+}
+
+void QtCanvas::drawMolecularLines( QPainter& painter ){
+	//Paint any molecular lines
+	for ( int i = 0; i < static_cast<int>(molecularLineStack.size()); i++ ){
+	    double centerVal = molecularLineStack[i]->getCenter();
+	    int centerPixel = this->getPixelX( centerVal );
+	    //Use the maximum y value rather than the peak (which needs
+	    //more information in order to be calculated correctly)
+	    QtPlotSettings plotSettings = zoomStack[curZoom];
+	    double maxYVal = plotSettings.getMaxY();
+	    int peakPixel = this->getPixelY( maxYVal );
+	    int zeroPixel = this->getPixelY( 0 );
+	    molecularLineStack[i]->draw( &painter, centerPixel, peakPixel,
+	    			zeroPixel, width(), height() );
 	}
 }
 
@@ -911,11 +915,11 @@ void QtCanvas::refreshPixmap(){
 	QPainter painter(&pixmap);
 
 	drawLabels(&painter);
-
 	if (!imageMode){
 		drawGrid(&painter);
 		drawCurves(&painter);
 		drawFrameMarker(&painter);
+		drawMolecularLines( painter );
 	}
 	else {
 		drawTicks( &painter );

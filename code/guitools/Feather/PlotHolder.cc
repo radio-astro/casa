@@ -37,7 +37,8 @@ PlotHolder::PlotHolder(QWidget *parent)
       zoomNeutralAction( "Zoom Neutral", this ),contextMenu( this ), legendHolder( NULL ),
       legendVisible( false ),
       displayOutputSlice(false),displayOriginalSlice( false),
-      displayScatter( false ), tempScatterPlot(false), displayYGraphs( false ){
+      displayScatter( false ), tempScatterPlot(false),
+      displayYGraphs( false ), displayXGraphs( true ){
 	ui.setupUi(this);
 
 	initializePlots();
@@ -217,6 +218,10 @@ void PlotHolder::setDisplayYGraphs( bool visible ){
 	displayYGraphs = visible;
 }
 
+void PlotHolder::setDisplayXGraphs( bool visible ){
+	displayXGraphs = visible;
+}
+
 
 void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
 		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
@@ -303,10 +308,14 @@ void PlotHolder::dishDiameterYChanged( double value ){
 //                        Layout
 //----------------------------------------------------------------------
 
-void PlotHolder::addPlots( QGridLayout*& layout, bool displayYGraphs, int rowIndex, int basePlotIndex ){
-	layout->addWidget( plots[basePlotIndex], rowIndex, 1 );
+void PlotHolder::addPlots( QGridLayout*& layout, int rowIndex, int basePlotIndex ){
+	int baseColumn = 1;
+	if ( displayXGraphs ){
+		layout->addWidget( plots[basePlotIndex], rowIndex, baseColumn );
+		baseColumn++;
+	}
 	if ( displayYGraphs ){
-		layout->addWidget( plots[basePlotIndex+1], rowIndex, 2);
+		layout->addWidget( plots[basePlotIndex+1], rowIndex, baseColumn );
 	}
 }
 
@@ -370,85 +379,85 @@ void PlotHolder::layoutPlotWidgets(){
 	int rowCount = 0;
 	int columnCount = 0;
 	if ( displayOriginalSlice || displayOutputSlice || displayScatter ){
-		if ( displayYGraphs ){
+		if ( displayYGraphs && displayXGraphs ){
 			//Two graphs plus the left axis.
 			columnCount = 3;
 		}
-		else {
+		else if ( displayYGraphs || displayXGraphs ){
 			//There is one graph plus the left axis.
 			columnCount = 2;
 		}
 	}
 
-	if ( displayOriginalSlice ){
-		addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_X_ORIGINAL );
-		addPlots( gridLayout, displayYGraphs, rowCount, SLICE_X_ORIGINAL );
-		if ( tempScatterPlot ){
-			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_Y_ORIGINAL );
+	if ( columnCount > 0 ){
+		if ( displayOriginalSlice ){
+			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_X_ORIGINAL );
+			addPlots( gridLayout, rowCount, SLICE_X_ORIGINAL );
+			if ( tempScatterPlot ){
+				addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_Y_ORIGINAL );
+			}
+			rowCount++;
 		}
-		rowCount++;
-	}
 
-	int basePlotIndex = 0;
-	if ( displayOutputSlice ){
-		addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_X );
-		addPlots( gridLayout, displayYGraphs, rowCount, SLICE_X );
-		//if ( !tempScatterPlot ){
-			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_Y );
-		//}
-
-		//Use the original slice axis for the bottom axis if it is present.
-		//That way when the original data is loaded (with the image files)
-		//the bottom axis will be correct.
-		if ( !displayOriginalSlice ){
-			basePlotIndex = 1;
-		}
-		rowCount++;
-	}
-
-	//Add the common shared bottom axis. Note the y-axis is in column 0 so we
-	//start the loop at 1.
-	if ( rowCount > 0 ){
-		for ( int i = 1; i < columnCount; i++ ){
-			int plotIndex = 2 * basePlotIndex +(i-1);
-			addPlotAxis( rowCount, i, gridLayout, QwtPlot::xBottom, plotIndex );
-		}
-		rowCount++;
-	}
-
-	//The scatter plot cannot share the bottom axis of the other plots so
-	//we have to add the scatter plot after putting in the common y-axis
-	//the other plots share.
-	if ( displayScatter && !tempScatterPlot ){
-		addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SCATTER_X );
-		addPlots( gridLayout, displayYGraphs, rowCount, SCATTER_X );
-		if ( displayYGraphs ){
-			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SCATTER_Y);
-		}
-		rowCount++;
-
-		//Add the bottom axis for the scatter plots
-		for ( int i = 1; i < columnCount; i++ ){
-			int plotIndex = SCATTER_X +(i-1);
-			addPlotAxis( rowCount, i, gridLayout, QwtPlot::xBottom, plotIndex );
-		}
-		rowCount++;
-	}
-
-	//Add the legend/remove legend.  We don't need a legend if all we
-	//are looking at is scatter plots.
-	if ( legendVisible && !tempScatterPlot && (displayOutputSlice || displayOriginalSlice) ){
-		if ( legendHolder == NULL ){
-			legendHolder = new QWidget( this);
-			legendHolder->setMinimumSize( 800, 50 );
-			legendHolder->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Preferred );
-		}
-		gridLayout->addWidget(legendHolder,rowCount, 0, 1, columnCount, Qt::AlignHCenter);
+		int basePlotIndex = 0;
 		if ( displayOutputSlice ){
-			plots[SLICE_X]->insertLegend( legendHolder );
+			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_X );
+			addPlots( gridLayout, rowCount, SLICE_X );
+			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_Y );
+
+			//Use the original slice axis for the bottom axis if it is present.
+			//That way when the original data is loaded (with the image files)
+			//the bottom axis will be correct.
+			if ( !displayOriginalSlice ){
+				basePlotIndex = 1;
+			}
+			rowCount++;
 		}
-		else if ( displayOriginalSlice ){
-			plots[SLICE_X_ORIGINAL]->insertLegend( legendHolder );
+
+		//Add the common shared bottom axis. Note the y-axis is in column 0 so we
+		//start the loop at 1.
+		if ( rowCount > 0 ){
+			for ( int i = 1; i < columnCount; i++ ){
+				int plotIndex = 2 * basePlotIndex +(i-1);
+				addPlotAxis( rowCount, i, gridLayout, QwtPlot::xBottom, plotIndex );
+			}
+			rowCount++;
+		}
+
+		//The scatter plot cannot share the bottom axis of the other plots so
+		//we have to add the scatter plot after putting in the common y-axis
+		//the other plots share.
+		if ( displayScatter && !tempScatterPlot ){
+			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SCATTER_X );
+			addPlots( gridLayout, rowCount, SCATTER_X );
+			if ( displayYGraphs ){
+				addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SCATTER_Y);
+			}
+			rowCount++;
+
+			//Add the bottom axis for the scatter plots
+			for ( int i = 1; i < columnCount; i++ ){
+				int plotIndex = SCATTER_X +(i-1);
+				addPlotAxis( rowCount, i, gridLayout, QwtPlot::xBottom, plotIndex );
+			}
+			rowCount++;
+		}
+
+		//Add the legend/remove legend.  We don't need a legend if all we
+		//are looking at is scatter plots.
+		if ( legendVisible && !tempScatterPlot && (displayOutputSlice || displayOriginalSlice) ){
+			if ( legendHolder == NULL ){
+				legendHolder = new QWidget( this);
+				legendHolder->setMinimumSize( 800, 50 );
+				legendHolder->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Preferred );
+			}
+			gridLayout->addWidget(legendHolder,rowCount, 0, 1, columnCount, Qt::AlignHCenter);
+			if ( displayOutputSlice ){
+				plots[SLICE_X]->insertLegend( legendHolder );
+			}
+			else if ( displayOriginalSlice ){
+				plots[SLICE_X_ORIGINAL]->insertLegend( legendHolder );
+			}
 		}
 	}
 

@@ -95,17 +95,35 @@ void FeatherPlot::resetPlotBounds(){
 
 void FeatherPlot::setAxisLabels(){
 	const QString AMPLITUDE = "Amplitude";
-	const QString DISTANCE = "Distance(m)";
+	QString amplitudeStr = AMPLITUDE;
+	if ( isLogAmplitude() ){
+		amplitudeStr = "Log("+amplitudeStr+")";
+	}
+	const QString DISTANCE = "Distance";
+	QString distanceStr = DISTANCE;
+	if ( isLogUV()){
+		distanceStr = "Log("+distanceStr+")";
+	}
+	distanceStr = distanceStr + "(m)";
 	const QString Y_UNITS = " (Jansky/Beam)";
 	if ( plotType==SCATTER_PLOT ){
-		axisLabels[QwtPlot::xBottom] = "Low Resolution " + AMPLITUDE + Y_UNITS;
-		axisLabels[QwtPlot::yLeft] = "High Resolution " + AMPLITUDE + Y_UNITS;
+		axisLabels[QwtPlot::xBottom] = "Low Resolution " + amplitudeStr + Y_UNITS;
+		axisLabels[QwtPlot::yLeft] = "High Resolution " + amplitudeStr + Y_UNITS;
 		axisLabels[QwtPlot::yRight] = axisLabels[QwtPlot::yLeft];
 	}
 	else {
-		axisLabels[QwtPlot::xBottom] = DISTANCE;
-		axisLabels[QwtPlot::yLeft] = "Slice "+AMPLITUDE + Y_UNITS;
+		axisLabels[QwtPlot::xBottom] = distanceStr;
+		axisLabels[QwtPlot::yLeft] = "Slice "+amplitudeStr + Y_UNITS;
 		axisLabels[QwtPlot::yRight] = "Weight "+AMPLITUDE;
+	}
+	if ( axisWidgets[QwtPlot::xBottom] != NULL ){
+		axisWidgets[QwtPlot::xBottom]->setAxisLabel(axisLabels[QwtPlot::xBottom]);
+	}
+	if ( axisWidgets[QwtPlot::yLeft] != NULL ){
+		axisWidgets[QwtPlot::yLeft]->setAxisLabel(axisLabels[QwtPlot::yLeft]);
+	}
+	if ( axisWidgets[QwtPlot::yRight] != NULL ){
+		axisWidgets[QwtPlot::yRight]->setAxisLabel(axisLabels[QwtPlot::yRight]);
 	}
 }
 
@@ -290,6 +308,7 @@ bool FeatherPlot::setLogScale( bool uvLogScale, bool ampLogScale ){
 		}
 		scaleLogUV = uvLogScale;
 		scaleLogAmplitude = ampLogScale;
+		setAxisLabels();
 
 		//Adjust the data in each curve.
 		resetPlotBounds();
