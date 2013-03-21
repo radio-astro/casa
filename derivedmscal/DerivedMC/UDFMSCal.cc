@@ -384,9 +384,11 @@ namespace casa {
       {
         MeasurementSet ms(table);
         Vector<Int> obsid;
-        Int maxObs=1000;
+	//        Int maxObs=1000;
+        TableExprNode colAsTEN = table.col("OBSERVATION_ID");
         itsDataNode = msObservationGramParseCommand(&ms, ms.observation(),
-                                                    selStr, obsid, maxObs);
+						    colAsTEN,
+                                                    selStr, obsid);
       }
       break;
     default:
