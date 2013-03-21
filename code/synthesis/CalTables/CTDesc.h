@@ -88,6 +88,9 @@ class CTDesc
    CTDesc();
    virtual ~CTDesc() {};
 
+   // Alternative ctor that enables OBS_ID opt-out
+   CTDesc(Bool addObsId);
+
    // Construct from some external info
    CTDesc (const String& partype,
 	   const String& msname="none",
@@ -113,11 +116,16 @@ class CTDesc
 			     const String& polbasis="circ");
    //TableDesc defaultCalHistory();
 
+
+   // Support (discouraged) ctor that can opt out of OBSERVATION_ID
+   Bool addObsId_;
+
    // Table descriptors
    TableDesc itsCalMainDesc;
    //TableDesc itsCalHistoryDesc;
    String MSName_p;
    String PolBasis_p;
+
 
  };
 

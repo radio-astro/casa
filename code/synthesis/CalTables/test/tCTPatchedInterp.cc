@@ -47,13 +47,14 @@ void doTest1 (Bool verbose=False) {
   cout << "****----doTest1()----****" << endl;
   
   // Make a testing NewCalTable (Table::Memory)
-  uInt nFld(1), nAnt(3), nSpw(2), nTime(100);
+  uInt nFld(1), nAnt(3), nSpw(2), nObs(1), nTime(100);
   Vector<Int> nChan(nSpw,1);
   Double refTime(4832568000.0); // 2012 Jan 06 @ noon
   Double tint(60.0);
 
   Bool disk(True);
-  NewCalTable tnct("tCTPatchedInterp_test1.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
+  NewCalTable tnct("tCTPatchedInterp_test1.ct","T",nFld,nAnt,nSpw,nChan,
+		   nObs,nTime,refTime,tint,disk,False); // verbose);
 
   // some sanity checks on the test NewCalTable
   AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
@@ -115,12 +116,13 @@ void doTest2 (Bool verbose=False) {
   cout << "****----doTest2()----****" << endl;
 
   // Make a testing NewCalTable (Table::Memory)
-  uInt nFld(1), nAnt(1), nSpw(1), nTime(2);
+  uInt nFld(1), nAnt(1), nSpw(1), nObs(1), nTime(2);
   Vector<Int> nChan(nSpw,10);
   Double refTime(4832568000.0); // 2012 Jan 06 @ noon
   Double tint(60.0);
   Bool disk(True);
-  NewCalTable tnct("tCTPatchedInterp_test2.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
+  NewCalTable tnct("tCTPatchedInterp_test2.ct","T",nFld,nAnt,nSpw,nChan,
+		   nObs,nTime,refTime,tint,disk,False); // verbose);
 
   // some sanity checks on the test NewCalTable
   AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
@@ -164,14 +166,15 @@ void doTest3 (Bool verbose=False) {
   
   // Make a testing NewCalTable (Table::Memory)
   Int nhour=6;
-  uInt nFld(1), nAnt(27), nSpw(16), nTime(61*nhour);
+  uInt nFld(1), nAnt(27), nSpw(16), nObs(1),nTime(61*nhour);
   Vector<Int> nChan(nSpw,128);
   Double refTime(4832568000.0); // 2012 Jan 06 @ noon
   Double tint(60.0);
 
   Bool disk(True);
-  NewCalTable tnct("tCTPatchedInterp_test3.ct","T",nFld,nAnt,nSpw,nChan,nTime,refTime,tint,disk,False); // verbose);
-
+  NewCalTable tnct("tCTPatchedInterp_test3.ct","T",nFld,nAnt,nSpw,nChan,
+		   nObs,nTime,refTime,tint,disk,False); // verbose);
+		   
   cout << "Made NewCalTable in " << timer.real() << endl;
 
   // some sanity checks on the test NewCalTable

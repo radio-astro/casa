@@ -67,6 +67,7 @@ VisCal::VisCal(VisSet& vs) :
   currSpw_(0),
   currTime_(vs.numberSpw(),0.0),
   currScan_(vs.numberSpw(),-1),
+  currObs_(vs.numberSpw(),-1),
   currField_(vs.numberSpw(),-1),
   currFreq_(vs.numberSpw(),-1),
   lastTime_(vs.numberSpw(),0.0),

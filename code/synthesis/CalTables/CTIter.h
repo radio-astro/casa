@@ -116,6 +116,10 @@ public:
   Vector<Int> scan() const;
   void scan(Vector<Int>& v) const;
 
+  Int thisObs() const;
+  Vector<Int> obs() const;
+  void obs(Vector<Int>& v) const;
+
   Int thisAntenna1() const;
   Vector<Int> antenna1() const;
   void antenna1(Vector<Int>& v) const;
@@ -203,6 +207,9 @@ public:
 
   // Set scan number
   void setscan(Int scan);
+
+  // Set obsid
+  void setobs(Int obs);
 
   // Set antenna2 (e.g., used for setting refant)
   void setantenna2(const Vector<Int>& a2);

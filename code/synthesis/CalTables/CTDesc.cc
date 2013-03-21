@@ -46,9 +46,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //----------------------------------------------------------------------------
 
-CTDesc::CTDesc() : itsCalMainDesc(defaultCalMain())
+CTDesc::CTDesc() : 
+  addObsId_(True),
+  itsCalMainDesc(defaultCalMain())
 {
 // Default null constructor for new calibration table description (v1.0)
+// Output to private data:
+//    itsCalMainDesc      TableDesc        Table descriptor (cal_main)
+//    itsCalHistoryDesc   TableDesc        Table descriptor (cal_history)
+//
+};
+
+//----------------------------------------------------------------------------
+
+CTDesc::CTDesc(Bool addObsId) : 
+  addObsId_(addObsId),
+  itsCalMainDesc(defaultCalMain())
+{
+// Alternative ctor to support OBS_ID opt-out
 // Output to private data:
 //    itsCalMainDesc      TableDesc        Table descriptor (cal_main)
 //    itsCalHistoryDesc   TableDesc        Table descriptor (cal_history)
@@ -61,6 +76,7 @@ CTDesc::CTDesc (const String& partype,
 		const String& msname,
 		const String& viscal,
 		const String& polbasis) :
+  addObsId_(True),
   itsCalMainDesc(defaultCalMain(partype,msname,viscal,polbasis))
 {
 // Constructor for new calibration table description (v1.0)
@@ -131,7 +147,7 @@ TableDesc CTDesc::defaultCalMain (const String& partype,
 					ColumnDesc::Direct));
   td.addColumn (ScalarColumnDesc <Int> (NCT::fieldName (NCT::ANTENNA1),
 					ColumnDesc::Direct));
-  // optical? ANTENNA2
+  // ANTENNA2 is refant (when relevant), or 2nd antenna for baseline-based
   td.addColumn (ScalarColumnDesc <Int> (NCT::fieldName (NCT::ANTENNA2),
 					ColumnDesc::Direct));
   //non keys
@@ -140,6 +156,13 @@ TableDesc CTDesc::defaultCalMain (const String& partype,
   td.addColumn (ScalarColumnDesc <Int> (NCT::fieldName (NCT::SCAN_NUMBER),
 					ColumnDesc::Direct));
 
+  // We might be opting out of OBS_ID... (usually not)
+  //   (usually not; this is to maintain support for older existing
+  //    cal tables that don't have this column)
+  if (addObsId_) {
+    td.addColumn (ScalarColumnDesc <Int> (NCT::fieldName (NCT::OBSERVATION_ID),
+					  ColumnDesc::Direct));
+  }
   //Parameter columns
   if (partype=="Complex")
     td.addColumn (ArrayColumnDesc <Complex>  (NCT::fieldName (NCT::CPARAM)));
