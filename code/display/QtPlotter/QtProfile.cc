@@ -933,6 +933,23 @@ void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys
 	if (spcRval != cSysRval){
 		// if necessary, change the rest freq./wavel.
 		cSysRval = spcRval;
+
+		//Put the new rest frequency into the converter.
+		QString restFreqStr( cSysRval.c_str());
+		QRegExp characterExpression("[a-df-zA-Z]" );
+		int unitIndex = restFreqStr.indexOf( characterExpression );
+		if ( unitIndex > 0 ){
+			restFreqStr= restFreqStr.mid( 0, unitIndex);
+		}
+		bool validNumber = false;
+		double restFreq = restFreqStr.toDouble(&validNumber);
+		if ( validNumber ){
+			Converter::setRestFrequency( restFreq );
+		}
+		else {
+			qDebug() << "QtProfiler::rest frequency parse error: "<<restFreqStr;
+		}
+
 		// an immediate replot has to be triggered such that the
 		// new rest frequency is taken into account this COULD be done as such:
 		if(lastPX.nelements() > 0){ // update display with new rest frequency/wavelength
