@@ -47,14 +47,15 @@ namespace casa {
 			// which cannot happen until after the ctor of QtRegionState...
 			void init( );
 
-			QtRegionState( const QString &name, Region *region,
+			QtRegionState( const QString &name, 
 						   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
-						   QWidget *parent=0 );
+						   Region *region=0, QWidget *parent=0 );
 			~QtRegionState( );
 
 			bool statisticsIsVisible( ) { return categories->tabText(categories->currentIndex( )) == "stats"; }
 
 			Region *region( ) { return region_; }
+			void setRegion( Region *r );
 
 			void updateCoord( );
 			void updateStatistics(  );
@@ -133,11 +134,12 @@ namespace casa {
 			// return the current information mode of the region state, e.g. position, statistics, etc.
 			std::string mode( ) const;
 			const std::string LINE_COLOR_CHANGE;
-			const static QString HISTOGRAM_MODE;
-			const static QString STATISTICS_MODE;
-			const static QString FILE_MODE;
-			const static QString FIT_MODE;
-			const static QString PROPERTIES_MODE;
+
+			virtual QString HISTOGRAM_MODE( ) const { return "Histogram"; }
+			virtual QString STATISTICS_MODE( ) const { return "Statistics"; }
+			virtual QString FILE_MODE( ) const { return "File"; }
+			virtual QString FIT_MODE( ) const { return "Fit"; }
+			virtual QString PROPERTIES_MODE( ) const { return "Properties"; }
 
 		signals:
 			void regionChange( viewer::Region *, std::string );
@@ -206,12 +208,24 @@ namespace casa {
 			std::string bounding_index_to_string( int index ) const;
 
 		private:
+			void initRegionState( );
 			void statisticsUpdate( QtRegionStats *regionStats, std::tr1::shared_ptr<casa::viewer::RegionInfo> regionInfo );
 			unsigned int setting_combo_box;
 			int pre_dd_change_statistics_count;
 
 
 	};
+
+	class QtPVLineState : public QtRegionState {
+		Q_OBJECT
+		public:
+			QtPVLineState( const QString &name,
+						   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
+						   Region *region=0, QWidget *parent=0 );
+			QString STATISTICS_MODE( ) const { return "Generate"; }
+
+	};
+
     }
 }
 
