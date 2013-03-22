@@ -164,7 +164,8 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
   if (ttype==Table::Memory) 
     *this = this->copyToMemoryTable(tableName+".tempMemCalTable");
  
-  if (!this->tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID))) 
+  if (!this->tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID)) ||
+      !this->keywordSet().isDefined("OBSERVATION")) 
     addPhoneyObs();
 
   // Attach subtable accessors
@@ -854,26 +855,27 @@ void NewCalTable::makeSpwSingleChan() {
 
 void NewCalTable::addPhoneyObs() {
 
-  cout << "WARNING: Adding phoney (and trivial) OBSERVATION subtable and OBSERVATION_ID column." 
+  cout << "WARNING: Adding fake (and trivial) OBSERVATION subtable and OBSERVATION_ID column." 
        << endl;
 
-  // Add phoney OBSERVATION_ID column
-  ScalarColumnDesc<Int> obscoldesc(NCT::fieldName (NCT::OBSERVATION_ID),ColumnDesc::Direct);
-  this->addColumn(obscoldesc,False);
-
-  // Fill it with zeros
-  CTMainColumns mc(*this);
-  mc.obsId().fillColumn(0);
+  // Add phoney OBSERVATION_ID column and fill with zeros
+  if (!this->tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID))) {
+    ScalarColumnDesc<Int> obscoldesc(NCT::fieldName (NCT::OBSERVATION_ID),ColumnDesc::Direct);
+    this->addColumn(obscoldesc,False);
+    CTMainColumns mc(*this);
+    mc.obsId().fillColumn(0);
+  }
 
   // Add dummy OBSERVATION subtable with 1 row
-  String  calObsName=this->tableName()+"/OBSERVATION";
-  Table::TableOption access(Table::TableOption(this->tableOption()));
-  Table::TableType type(this->tableType());
-  SetupNewTable obstab(calObsName,CTObservation::requiredTableDesc(),access); 
-  this->rwKeywordSet().defineTable("OBSERVATION", Table(obstab,type));
-  observation_p = CTObservation(this->keywordSet().asTable("OBSERVATION"));
-  fillGenericObs(1);
-
+  if (!this->keywordSet().isDefined("OBSERVATION")) {
+    String  calObsName=this->tableName()+"/OBSERVATION";
+    Table::TableOption access(Table::NewNoReplace);
+    Table::TableType type(Table::Plain);
+    SetupNewTable obstab(calObsName,CTObservation::requiredTableDesc(),access); 
+    this->rwKeywordSet().defineTable("OBSERVATION", Table(obstab,type));
+    observation_p = CTObservation(this->keywordSet().asTable("OBSERVATION"));
+    fillGenericObs(1);
+  }
 }
 
 
