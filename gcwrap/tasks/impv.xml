@@ -48,7 +48,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>""</value>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. Channels must be contiguous. Default is to use all channels.</description>
+            <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
             <value/>
         </param>
         <param type="string"  name="stokes">
@@ -106,7 +106,7 @@ overwrite        If output file is specified, this parameter controls if an alre
 region           Region specification. See help par.region. Default is to not use a region. If specified,
                  the entire direction plane must be specified. If specified do not specify chans or stokes.
 chans            Optional contiguous frequency channel number specification. Default is all channels.
-                 If specified, do not specify region.
+                 If specified, do not specify region. See "help par.chans" for examples. 
 stokes           Contiguous stokes planes specification. If specified, do not specify region.
 mask             Mask to use. See help par.mask. Default is none.
 stretch          Stretch the input mask if necessary and possible. Only used if a mask is specified.

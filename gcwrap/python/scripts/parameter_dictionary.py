@@ -386,11 +386,13 @@ class par(str):
 		chans="3~20;50,51"       # channels 3 to 20 and 50 and 51
         chans="<10;>=55"        # channels 0 to 9 and 55 and greater (inclusively)
         
-        Frequency selection using the ASCII region format is also supported. In this
-        case, at least the range parameter is required and optionally the restfreq,
+        Frequency selection using the CASA region text specification is also supported. 
+        See eg, Appendix D of the CASA Cookbook and User Reference Manual for a complete description
+        of this specification. At least the range parameter is required and optionally the restfreq,
         veltype, and frame parameters may be provided.
 
         chans="range=[1110000m/s, 1130km/s], restfreq=1.42040575GHz"
+        chans="range=[20chan, 30chan], restfreq=100GHz, frame=LSRK"
 		
 		"""
 

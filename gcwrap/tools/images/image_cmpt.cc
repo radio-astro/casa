@@ -35,7 +35,6 @@
 #include <images/Images/LELImageCoord.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/RebinImage.h>
-#include <images/Images/SubImage.h>
 #include <images/Images/TempImage.h>
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCLELMask.h>

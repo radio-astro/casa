@@ -48,9 +48,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>region="my.rgn"</example>
     </param>
     <param type="string" name="chans">
-        <description>Optional zero-based contiguous frequency channel specification.</description>
+        <description>Optional zero-based contiguous frequency channel specification. See "help par.chans" for examples.</description>
         <value/>
-        <example>chans="5~20"</example>
     </param>
     <param type="string" name="stokes">
         <description>Optional contiguous stokes planes specification.</description>
@@ -115,7 +114,7 @@ box              Direction plane box specification, "blcx, blcy, trcx, trcy". On
                  stokes specification determines the region.
 region           Region specification. See help par.region. Default is to not use a region.
 chans            Optional contiguous frequency channel number specification. Not used if
-                 region is specified. Default is all channels.
+                 region is specified. Default is all channels. See "help par.chans" for examples.
 stokes           Contiguous stokes planes specification. Not used if region is specified.
                  Default is all stokes.
 mask             Mask to use. See help par.mask. Default is none.
