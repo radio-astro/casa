@@ -49,7 +49,7 @@ namespace casa {
 		//typedef std::list<std::pair<String,String> > center_t;
 		typedef stats_t center_t;
 
-		RegionInfo( ) : type_(InvalidInfoType), stat_list_( ) { }
+		RegionInfo( ) : stat_list_( ), type_(InvalidInfoType) { }
 		RegionInfo( const RegionInfo &other ) : stat_list_(other.stat_list_), label_(other.label_), description_(other.description_), type_( other.type_) { }
 		virtual ~RegionInfo( ) { }
 

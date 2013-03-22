@@ -109,10 +109,8 @@ namespace casa {
 			protected:
 
 				PVLine( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1, 
-						   double y1, double x2, double y2, bool hold_signals=false, 
-						   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN ) :
-												Region( name, wc, d, hold_signals, sym ), pt1_x(x1),
-												pt1_y(y1), pt2_x(x2), pt2_y(y2), sub_dpg(0) { complete = true; }
+						double y1, double x2, double y2, bool hold_signals=false, 
+						QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN );
 
 				RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
 				void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
@@ -130,7 +128,7 @@ namespace casa {
 
 				double pt1_x, pt1_y;
 				double pt2_x, pt2_y;
-				double center_x, center_y;
+				/* double center_x, center_y; */
 				double handle_delta_x, handle_delta_y;
 
 				// one display_element is created for each image created from this PVLine...

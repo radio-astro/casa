@@ -55,26 +55,36 @@ namespace casa {
     namespace viewer {
 
 	PVLine::PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
-		bool hold_signals ) :	Region( "p/v line", wc, d, hold_signals ),
+					bool hold_signals ) :	Region( "p/v line", wc, d,
+													new QtPVLineState(QString("p/v line")),hold_signals ),
 														pt1_x(x1), pt1_y(y1),
 														pt2_x(x2), pt2_y(y2), sub_dpg(0) {
-		center_x = linear_average(pt1_x,pt2_x);
-		center_y = linear_average(pt1_y,pt2_y);
+		// center_x = linear_average(pt1_x,pt2_x);
+		// center_y = linear_average(pt1_y,pt2_y);
 		initHistogram();
 		complete = true;
 	}
 
 	// carry over from QtRegion... hopefully, removed soon...
 	PVLine::PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
-		bool hold_signals) :	Region( "p/v line", wc, rs->dock( ), hold_signals ),
-														pt1_x(x1), pt1_y(y1),
-														pt2_x(x2), pt2_y(y2), sub_dpg(0) {
-		center_x = linear_average(pt1_x,pt2_x);
-		center_y = linear_average(pt1_y,pt2_y);
+					bool hold_signals) : Region( "p/v line", wc, rs->dock( ), new QtPVLineState(QString("p/v line")), hold_signals ),
+										 pt1_x(x1), pt1_y(y1),
+										 pt2_x(x2), pt2_y(y2), sub_dpg(0) {
+		// center_x = linear_average(pt1_x,pt2_x);
+		// center_y = linear_average(pt1_y,pt2_y);
 		initHistogram();
 		complete = true;
 	}
 
+
+	PVLine::PVLine( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1, 
+					double y1, double x2, double y2, bool hold_signals, 
+					QtMouseToolNames::PointRegionSymbols sym ) :
+				Region( name, wc, d, new QtPVLineState(QString("p/v line"), sym ),
+						hold_signals ), pt1_x(x1),
+				pt1_y(y1), pt2_x(x2), pt2_y(y2), sub_dpg(0) {
+		complete = true;
+	}
 
 	PVLine::~PVLine( ) { }
 
@@ -239,8 +249,8 @@ namespace casa {
 					break;
 			}
 
-			center_x = (pt1_x+pt2_x)/2.0;
-			center_y = (pt1_y+pt2_y)/2.0;
+			// center_x = (pt1_x+pt2_x)/2.0;
+			// center_y = (pt1_y+pt2_y)/2.0;
 
 			updateStateInfo( true, region::RegionChangeModified );
 			setDrawCenter(false);
@@ -254,8 +264,8 @@ namespace casa {
 			pt1_y += dy;
 			pt2_y += dy;
 
-			center_x = linear_average(pt1_x,pt2_x);
-			center_y = linear_average(pt1_y,pt2_y);
+			// center_x = linear_average(pt1_x,pt2_x);
+			// center_y = linear_average(pt1_y,pt2_y);
 
 			updateStateInfo( true, region::RegionChangeModified );
 			setDrawCenter(false);
@@ -263,15 +273,15 @@ namespace casa {
 		}
 
 		void PVLine::linearCenter( double &x, double &y ) const {
-			x = center_x;
-			y = center_y;
+			x = linear_average(pt1_x,pt2_x);
+			y = linear_average(pt1_y,pt2_y);
 		}
 
 		void PVLine::pixelCenter( double &x, double &y ) const {
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
-			double lx = center_x;
-			double ly = center_y;
+			double lx = linear_average(pt1_x,pt2_x);
+			double ly = linear_average(pt1_y,pt2_y);
 
 			try { linear_to_pixel( wc_, lx, ly, x, y ); } catch(...) { return; }
 		}
@@ -352,11 +362,11 @@ namespace casa {
 			if(pc==0) return;
 
 			int x1, y1, x2, y2;
-			int cx, cy;
+			// int cx, cy;
 
 			try {
 				linear_to_screen( wc_, pt1_x, pt1_y, pt2_x, pt2_y, x1, y1, x2, y2 );
-				linear_to_screen( wc_, center_x, center_y, cx, cy );
+				// linear_to_screen( wc_, center_x, center_y, cx, cy );
 			} catch(...) { return; }
 
 			pushDrawingEnv( region::SolidLine, 2 );
@@ -397,8 +407,8 @@ namespace casa {
 		bool PVLine::within_vertex_handle( double x, double y ) const {
 			bool pt1 = x >= (pt1_x - handle_delta_x) && x <= (pt1_x + handle_delta_x) && y >= (pt1_y - handle_delta_y) && y <= (pt1_y + handle_delta_y);
 			bool pt2 = x >= (pt2_x - handle_delta_x) && x <= (pt2_x + handle_delta_x) && y >= (pt2_y - handle_delta_y) && y <= (pt2_y + handle_delta_y);
-			bool center = x >= (center_x - handle_delta_x) && x <= (center_x + handle_delta_x) && y >= (center_y - handle_delta_y) && y <= (center_y + handle_delta_y);
-			return pt1 || pt2 || center;
+			// bool center = x >= (center_x - handle_delta_x) && x <= (center_x + handle_delta_x) && y >= (center_y - handle_delta_y) && y <= (center_y + handle_delta_y);
+			return pt1 || pt2;
 		}
 
 		// returns point state (region::PointLocation)

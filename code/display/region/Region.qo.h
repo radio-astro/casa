@@ -188,6 +188,8 @@ namespace casa {
 							mouse_in_region(false), z_index_within_range(true) { }
 				Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *, bool hold_signals_=false,
 						QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN );
+				Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *,
+						QtRegionState *supplied_state, bool hold_signals_=false );
 
 				// is this region degenerate?
 				virtual bool degenerate( ) const;
@@ -379,6 +381,7 @@ namespace casa {
 				void output(std::list<QtRegionState*>,ds9writer&);
 
 			protected:
+
 				static const int SEXAGPREC;
 
 				QtRegionDock *dock_;
@@ -472,6 +475,9 @@ namespace casa {
 
 
 			private:
+				// common state-setup for constructors...
+				void init( );
+
 				void updateHistogramRegion();
 				void process_held_signals( );
 				void clear_signal_cache( );

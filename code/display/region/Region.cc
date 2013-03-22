@@ -85,6 +85,7 @@ static inline AnnotationBase::LineStyle viewer_to_annotation( region::LineStyle 
 
 std::tr1::shared_ptr<Region> Region::creating_region;
 
+
 Region::Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *d, bool hold_signals_,
 		QtMouseToolNames::PointRegionSymbols sym ) :  dock_(d), histogram( NULL ),
 		position_visible(true), /*** it is assumed that the initial ***
@@ -95,13 +96,29 @@ Region::Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *d, bool
 		wc_(wc), selected_(false), visible_(true),
 		complete(false), z_index_within_range(true),
 		draw_center_(false), name_(name) {
+
+	mystate = new QtRegionState( QString::fromStdString(name_), sym, this );
+	init( );
+}
+
+Region::Region( const std::string &name, WorldCanvas *wc,  QtRegionDock *d, QtRegionState *supplied_state,
+				bool hold_signals_ ) :
+		dock_(d), mystate(supplied_state), histogram( NULL ),
+		position_visible(true), /*** it is assumed that the initial ***
+		                         *** state for region dock is with  ***
+		                         *** position coordinates visible   ***/
+		id_(QtId::get_id( )), hold_signals(hold_signals_ ? 1 : 0),
+		wc_(wc), selected_(false), visible_(true), complete(false),
+		z_index_within_range(true), draw_center_(false), name_(name) {
+	mystate->setRegion(this);
+	init( );
+}
+
+void Region::init( ) {
 	last_z_index = wc_ == 0 ? 0 : wc_->zIndex( );
 	// if ( wc_->restrictionBuffer()->exists("zIndex")) {
 	//	wc_->restrictionBuffer()->getValue("zIndex", last_z_index);
 	// }
-
-	mystate = new QtRegionState( QString::fromStdString(name_), this, sym );
-
 	connect( mystate, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)) );
 
 	connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
@@ -523,10 +540,10 @@ void Region::refresh_state_gui( ) {
 				QString::fromStdString(y),
 				QString::fromStdString(angle),
 				qwidth, qheight );
-	} else if ( mode == QtRegionState::STATISTICS_MODE.toStdString() ) {
+	} else if ( mode == mystate->STATISTICS_MODE( ).toStdString() ) {
 		mystate->updateStatistics( );
 	}
-	else if ( mode == QtRegionState::HISTOGRAM_MODE.toStdString() ){
+	else if ( mode == mystate->HISTOGRAM_MODE( ).toStdString() ){
 		this->updateHistogramRegion();
 	}
 
