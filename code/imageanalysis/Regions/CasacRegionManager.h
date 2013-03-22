@@ -53,7 +53,7 @@ public:
 
 	CasacRegionManager();
 	CasacRegionManager(const CoordinateSystem& csys);
-	virtual ~CasacRegionManager();
+	~CasacRegionManager();
 
 
 	// convert to a record a region specified by a rectangular directional <src>box</src>,
@@ -94,9 +94,8 @@ public:
 		const String& imageName, const IPosition& imShape
 	);
 
-	// <src>nChannels</src> is the total number of spectral channels in the image
 	vector<uInt> setSpectralRanges(
-		String specification, uInt& nSelectedChannels, const uInt nChannels,
+		String specification, uInt& nSelectedChannels,
 		const IPosition& imShape=IPosition(0)
 	) const;
 

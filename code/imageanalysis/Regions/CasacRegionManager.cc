@@ -448,10 +448,8 @@ ImageRegion CasacRegionManager::_fromBCS(
 	const IPosition& imShape
 ) const {
 	const CoordinateSystem& csys = getcoordsys();
-	Int specAxisNumber = csys.spectralAxisNumber();
-	uInt nTotalChannels = specAxisNumber >= 0 ? imShape[specAxisNumber] : 0;
 	vector<uInt> chanEndPts = setSpectralRanges(
-		chans, nSelectedChannels, nTotalChannels, imShape
+		chans, nSelectedChannels, imShape
 	);
     Int polAxisNumber = csys.polarizationAxisNumber();
 	uInt nTotalPolarizations = polAxisNumber >= 0 ? imShape[polAxisNumber] : 0;
@@ -780,7 +778,7 @@ String CasacRegionManager::_stokesFromRecord(
 }
 
 vector<uInt> CasacRegionManager::setSpectralRanges(
-	String specification, uInt& nSelectedChannels, const uInt nChannels,
+	String specification, uInt& nSelectedChannels,
 	const IPosition& imShape
 ) const {
 	LogOrigin origin("CasacRegionManager", __FUNCTION__);
@@ -802,6 +800,7 @@ vector<uInt> CasacRegionManager::setSpectralRanges(
 	}
 	specification.trim();
 	specification.upcase();
+	uInt nChannels = imShape[getcoordsys().spectralAxisNumber()];
 
 	if (specification.empty() || specification == ALL) {
 		ranges.push_back(0);
@@ -846,11 +845,18 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRangeFormat(
 	// from which to get the spectral range information
 	String regSpec = "box[[0pix, 0pix], [1pix, 1pix]] " + specification;
 	RegionTextParser parser(csys, imShape, regSpec);
+	vector<uInt> range(2);
+
+	if (parser.getLines().empty()) {
+		*_getLog() << "The specified spectral range " << specification
+			<< " does not intersect the image spectral range."
+			<< LogIO::EXCEPTION;
+	}
 	const AnnRegion *reg = dynamic_cast<const AnnRegion*>(
 		parser.getLines()[0].getAnnotationBase()
 	);
+
 	vector<Double> drange = reg->getSpectralPixelRange();
-	vector<uInt> range(2);
 	range[0] = uInt(max(0.0, floor(drange[0] + 0.5)));
 	range[1] = uInt(floor(drange[1] + 0.5));
 	nSelectedChannels = range[1] - range[0] + 1;
