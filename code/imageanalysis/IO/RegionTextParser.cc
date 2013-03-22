@@ -548,6 +548,7 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 	const String& text, const String& preamble,
 	const CoordinateSystem& csys
 ) {
+	AnnotationBase::unitInit();
 	ParamSet parms;
 	spectralParmsUpdated = False;
 	String consumeMe = text;
