@@ -322,6 +322,49 @@ int main () {
 				near(freqs[1].get("Hz").getValue(), endFreq.getValue("Hz")),
 				AipsError
 			);
+			log << LogIO::NORMAL << "*** Test freq in pixels" << LogIO::POST;
+			beginFreq = Quantity(0, "pix");
+			endFreq = Quantity(100, "pix");
+			box = AnnCenterBox(
+				centerx, centery, widthx, widthy,
+				dirTypeString, csys, shape, beginFreq,
+				endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+			SpectralCoordinate sp = csys.spectralCoordinate();
+			Double expBeg, expEnd;
+			sp.toWorld(expBeg, beginFreq.getValue());
+			sp.toWorld(expEnd, endFreq.getValue());
+
+			freqs = box.getFrequencyLimits();
+			AlwaysAssert(
+				near(freqs[0].get("Hz").getValue(), expBeg),
+				AipsError
+			);
+			AlwaysAssert(
+				near(freqs[1].get("Hz").getValue(), expEnd),
+				AipsError
+			);
+
+			log << LogIO::NORMAL << "*** Test freq in channels" << LogIO::POST;
+			beginFreq = Quantity(0, "channel");
+			endFreq = Quantity(100, "channel");
+			box = AnnCenterBox(
+				centerx, centery, widthx, widthy,
+				dirTypeString, csys, shape, beginFreq,
+				endFreq, freqRefFrameString,
+				dopplerString, restfreq, stokes, False
+			);
+
+			freqs = box.getFrequencyLimits();
+			AlwaysAssert(
+				near(freqs[0].get("Hz").getValue(), expBeg),
+				AipsError
+			);
+			AlwaysAssert(
+				near(freqs[1].get("Hz").getValue(), expEnd),
+				AipsError
+			);
 		}
 		{
 			log << LogIO::NORMAL << "Test frequencies GALACTO -> LSRK" << LogIO::POST;

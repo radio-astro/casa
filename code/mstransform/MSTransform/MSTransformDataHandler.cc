@@ -638,7 +638,7 @@ void MSTransformDataHandler::parseFreqSpecParams(Record &configuration)
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 				<< "Mode is " << mode_p<< LogIO::POST;
 
-		if ((mode_p == "frequency") or (mode_p == "channel"))
+		if ((mode_p == "frequency") or (mode_p == "velocity"))
 		{
 			start_p = String("");
 			width_p = String("");

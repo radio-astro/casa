@@ -548,6 +548,7 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 	const String& text, const String& preamble,
 	const CoordinateSystem& csys
 ) {
+	AnnotationBase::unitInit();
 	ParamSet parms;
 	spectralParmsUpdated = False;
 	String consumeMe = text;
@@ -1200,7 +1201,7 @@ Vector<Quantity> RegionTextParser::_extractSingleQuantityPair(
 		String value = pair[i];
 		if (! readQuantity(quantities[i], value)) {
 			*_log << preamble << "Could not convert "
-				<< " (" << value << ") to quantity.";
+				<< " (" << value << ") to quantity." << LogIO::EXCEPTION;
 		}
 	}
 	return quantities;

@@ -31,6 +31,8 @@
 #include <plotms/PlotMS/PlotMS.h>
 #include <plotms/Plots/PlotMSPlotParameterGroups.h>
 #include <plotms/Data/PlotMSCacheBase.h>
+#include <plotms/Data/MSCache.h>
+#include <plotms/Data/CalCache.h>
 #include <casaqt/QwtPlotter/QPCanvas.qo.h>
 
 #include <algorithm>
@@ -349,6 +351,30 @@ bool PlotMSOverPlot::updateCache() {
                                              PMS::LOG_ORIGIN_LOAD_CACHE,
                                              PMS::LOG_EVENT_LOAD_CACHE);
     itsTCLParams_.endCacheLog = true;
+
+    {
+        if (Table::isReadable(data->filename())) {
+            Table tab(data->filename());
+
+            // Delete existing cache if it doesn't match
+            if (itsCache_ &&
+                (itsCache_->cacheType()==PlotMSCacheBase::CAL &&
+                 tab.tableInfo().type()!="Calibration") ||
+                (itsCache_->cacheType()==PlotMSCacheBase::MS &&
+                 tab.tableInfo().type()=="Calibration")) {
+                delete itsCache_;
+                itsCache_=NULL;
+            }
+
+            // Construct proper empty cache if necessary
+            if (!itsCache_) {
+                if (tab.tableInfo().type()=="Calibration")
+                    itsCache_ = new CalCache(itsParent_);
+                else
+                    itsCache_ = new MSCache(itsParent_);
+            }
+        }
+    }
 
     PlotMSCacheThread *ct = new PlotMSCacheThread(
         this, itsCache_, caxes, cdata, data->filename(), data->selection(),
