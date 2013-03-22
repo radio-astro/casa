@@ -956,41 +956,43 @@ def mstransform(
         if combinespws:
             casalog.post('Combine spws %s into new output spw'%spw)
             config['combinespws'] = True
+            
         if chanaverage:
             casalog.post('Parse channel averaging parameters')
             config['chanaverage'] = True
             # chanbin can be an int or a list of int that will apply one to each spw
-#            if not mth.validateChanBin():
-#                raise ValueError, 'Number of chanbin is different of number of spw'
             mth.validateChanBin()
             config['chanbin'] = chanbin
             config['useweights'] = useweights
+            
         if hanning:
             casalog.post('Apply Hanning smoothing')
             config['hanning'] = True
-        if regridms:
-            casalog.post('Parse regridding parameters')
             
+        if regridms:
+            casalog.post('Parse regridding parameters')            
             config['regridms'] = True
             # Reset the defaults depending on the mode
             # Only add non-empty string parameters to config dictionary
             start, width = mth.defaultRegridParams()
             config['mode'] = mode
             config['nchan'] = nchan
-#            if start != '':
-            config['start'] = start
-#            if width != '':
-            config['width'] = width
+            if start != '':
+                config['start'] = start
+            if width != '':
+                config['width'] = width
             if nspw > 1:
                 casalog.post('Separate MS into %s spws'%nspw)
-
             config['nspw'] = nspw
             config['interpolation'] = interpolation
-#            if restfreq != '':
-            config['restfreq'] = restfreq
-#            if outframe != '':
-            config['outframe'] = outframe
+            if restfreq != '':
+                config['restfreq'] = restfreq
+            if outframe != '':
+                config['outframe'] = outframe
+            if phasecenter != '':
+                config['phasecenter'] = phasecenter
             config['veltype'] = veltype
+            
         if timeaverage:
             casalog.post('Time averaging is not yet implemented', 'WARN')
 #            config['timebin'] = timebin
