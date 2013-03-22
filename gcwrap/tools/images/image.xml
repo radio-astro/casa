@@ -1265,7 +1265,7 @@ myim.done()
             <value></value>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. Channels must be contiguous. Default is to use all channels.</description>
+            <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
             <value></value>
         </param>
         <param type="string"  name="stokes">
@@ -4006,7 +4006,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value type="string"/>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. Channels must be contigous. Default: all channels ("").</description>
+            <description>Channels to use. See "help par.chans" for examples. Channels must be contigous. Default: all channels ("").</description>
             <value></value>
         </param>
         <param type="string"  name="stokes">
@@ -4470,7 +4470,7 @@ res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
         
         <param type="any"  name="chans">
             <any type="variant"/>
-            <description>The frequency planes to use in the fit. Default is 0 (first plane).</description>
+            <description>Channels to use in the fit. See "help par.chans" for examples. Default is 0 (first plane).</description>
             <value></value>
         </param>
         
@@ -6608,7 +6608,7 @@ The {\stff open} function first closes the old \imagefile.
             <description>Rectangular region in the directional plane to select. Default is to use the entire directional plane.</description>
         </param>
         <param type="string" name="chans">
-            <description>Spectral selection. Default is the entire spectral range.</description>
+            <description>Spectral selection. See "help par.chans" for examples.  Default is the entire spectral range.</description>
             <value></value>
         </param>
         
@@ -10066,7 +10066,7 @@ used to create a 2D temporary image.
             <value></value>
         </param>
         <param type="string"  name="chans">
-            <description>The frequency planes to correct. Default is all frequencies.</description>
+            <description>The frequency planes to correct. See "help par.chans" for examples. Default is all frequencies.</description>
             <value></value>
         </param>
         
@@ -10149,7 +10149,7 @@ used to create a 2D temporary image.
             <value></value>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. Channels must be contiguous. Default is to use all channels.</description>
+            <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
             <value/>
         </param>
         <param type="string"  name="stokes">

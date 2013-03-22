@@ -35,10 +35,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="any" name="chans">
-        <description>Spectral channels on which to perform fit.</description>
+        <description>Spectral channels on which to perform fit. See "help par.chans" for examples.</description>
         <any type='variant' limittype='string int'/>
         <value type="string"/>
-        <example>chan="14~21"</example>
     </param>
     
     <param type="string" name="stokes">
@@ -167,6 +166,7 @@ box              One or more box regions to use for fitting,
                  to use two boxes. If both box and region
                  parameters are specified, box is used.
 region           Region of interest. See help par.region for specification options.
+chans            Spectral channels on which to perform fit. See "help par.chans" for examples.
 stokes           Stokes parameter to fit. If blank, first polarization plane is used.
 mask             Mask to use. See help par.mask. Default is none.
 includepix       Range of pixel values to include for fitting. Array of two numeric

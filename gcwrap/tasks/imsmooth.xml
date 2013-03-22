@@ -73,11 +73,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="chans" >
-	<description>Select the spectral channel range</description>
+	<description>Select the spectral channel range. See "help par.chans" for examples.</description>
     	<value></value>
-	<example>1.4126GHz~1.428GHz  # between 2 frequency</example>
-	<example>1.4km/s             # above the given velocity</example>
-        <example>!1~5                # Select all but the range of channel numbers</example>
     </param>
 
     <param type="string" name="stokes">
@@ -194,8 +191,8 @@ an image.
 	        ONLY pixel values acceptable at this time.
 		Default: none (whole 2-D plane); Example: box='10,10,50,50'
 	chans -- channel numbers to select for the continuum,
-	        ONLY channel numbers accepted at this time.
-		Default: none (all); 
+             See "help par.chans" for examples. 	
+	         Default: all; 
                   Example: chans='3~6;>40'
 	stokes -- Stokes parameters to image
                 Example: 'I'

@@ -91,7 +91,7 @@ box              Direction plane box specification, "blcx, blcy, trcx, trcy". On
 region           Region specification. See help par.region. Default is to not use a region. Do not
                  specify both region and box/chans/stokes as that will result in an error.
 chans            Optional contiguous frequency channel number specification. Not used if
-                 region is specified. Default is all channels.
+                 region is specified. See "help par.chans" for examples.  Default is all channels.
 stokes           Contiguous stokes planes specification. Not used if region is specified.
                  Default is all stokes.
 mask             Mask to use. See help par.mask. Default ("") is none.

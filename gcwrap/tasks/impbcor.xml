@@ -43,7 +43,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>""</value>
         </param>
         <param type="string" direction="in" name="chans">
-            <description>The frequency planes to correct. Default is all frequencies.</description>
+            <description>The frequency planes to correct. See "help par.chans" for examples. Default is all frequencies.</description>
             <value></value>
         </param>
         
@@ -104,7 +104,7 @@ box              Direction plane box specification, "blcx, blcy, trcx, trcy". On
                  stokes specification determines the region.
 region           Optional region file to use.
 chans            Optional contiguous frequency channel number specification. Not used if
-                 region is specified. Default is all channels.
+                 region is specified. See "help par.chans" for examples. Default is all channels.
 stokes           Contiguous stokes planes specification. Not used if region is specified.
                  Default is all stokes.
 mask             Mask to use. See help par.mask. Default is none.
