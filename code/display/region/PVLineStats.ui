@@ -133,7 +133,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QFrame" name="frame">
+          <widget class="QFrame" name="frame1">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -149,7 +149,7 @@
            <property name="lineWidth">
             <number>0</number>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_2">
+           <layout class="QVBoxLayout" name="verticalLayout_3">
             <property name="margin">
              <number>0</number>
             </property>
