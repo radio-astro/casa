@@ -205,7 +205,6 @@ void AnnotationBase::_initParams() {
 
 void AnnotationBase::unitInit() {
 	if (! _doneUnitInit) {
-		cout << "*** setting user units " << endl;
 		UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
 		UnitMap::putUser("channel",UnitVal(1.0), "channel number");
         UnitMap::putUser("chan",UnitVal(1.0), "channel number");
