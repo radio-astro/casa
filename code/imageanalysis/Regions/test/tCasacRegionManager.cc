@@ -293,14 +293,25 @@ int main() {
 			  stokesControl = CasacRegionManager::USE_ALL_STOKES;
 			  box = "";
 			  writeTestString("Test setting multiple continuous channels");
-			  for (uInt i=0; i<4; i++) {
-				  chans = i == 0
-				      ? "5~10"
-				      : i == 1
-				        ? "5, 6, 7, 8, 9,10"
-				        : i == 2
-				          ? "range=[5pix, 10pix]"
-				          : "range=[6.73510000e+09Hz, 8.73510GHz]";
+			  for (uInt i=0; i<5; i++) {
+				  switch (i) {
+				  case 0:
+					  chans = "5~10";
+					  break;
+				  case 1:
+					  chans = "5, 6, 7, 8, 9,10";
+					  break;
+				  case 2:
+					  chans = "range=[5pix, 10pix]";
+					  break;
+				  case 3:
+					  chans = "range=[6.73510000e+09Hz, 8.73510GHz]";
+					  break;
+				  case 4:
+					  chans = "range=[5channel, 10channel]";
+					  break;
+
+				  }
 				  regRec = rm.fromBCS(
 					  diagnostics, nSelectedChannels, stokes,
 					  0, "", chans, stokesControl, box,
@@ -831,8 +842,22 @@ int main() {
 			  );
 			  // the verification is just to make sure this call doesn't segfault
 		  }
+		  {
+			  writeTestString("Test setSpectralRanges throws exception if range is outside image");
+			  uInt nSelChans = 0;
+			  Bool thrown = True;
+			  try {
+				  vector<uInt> range = rm.setSpectralRanges("range=[300pix, 400pix]", nSelChans, imShape);
+				  thrown = False;
+			  }
+			  catch (const AipsError& x) {
+				  // caught as expected
+			  }
+			  AlwaysAssert(thrown == True, AipsError);
+
+		  }
 	  }
-	  catch (AipsError x) {
+	  catch (const AipsError& x) {
 		  cerr << "Unexpected exception: " << x.getMesg() << endl;
 		  return 1;
 	  }

@@ -200,9 +200,11 @@ void RegionTextParser::_determineVersion(
 
 void RegionTextParser::_parse(const String& contents, const String& fileDesc) {
 	_log->origin(LogOrigin("AsciiRegionFileParser", __FUNCTION__));
-	const Regex startAnn("^ann[[:space:]]+");
-	const Regex startDiff("^-[[:space:]]+");
-	const Regex startGlobal("^global[[:space:]]+");
+	static const Regex startAnn("^ann[[:space:]]+");
+	static const Regex startDiff("^-[[:space:]]+");
+	static const Regex startGlobal("^global[[:space:]]+");
+	AnnotationBase::unitInit();
+
 	Vector<String> lines = stringToVector(contents, '\n');
 	uInt lineCount = 0;
 	Vector<Quantity> qFreqs(2, Quantity(0));
@@ -548,7 +550,6 @@ RegionTextParser::ParamSet RegionTextParser::getParamSet(
 	const String& text, const String& preamble,
 	const CoordinateSystem& csys
 ) {
-	AnnotationBase::unitInit();
 	ParamSet parms;
 	spectralParmsUpdated = False;
 	String consumeMe = text;

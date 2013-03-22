@@ -473,10 +473,10 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	}
 	CasacRegionManager rm(_getImage()->coordinates());
 	uInt nSelectedChannels;
-	Int specAxisNumber = _getImage()->coordinates().spectralAxisNumber();
-	uInt nChannels = specAxisNumber >= 0 ? _getImage()->shape()[specAxisNumber] : 0;
+	// Int specAxisNumber = _getImage()->coordinates().spectralAxisNumber();
+	// uInt nChannels = specAxisNumber >= 0 ? _getImage()->shape()[specAxisNumber] : 0;
 
-	_chanVec = rm.setSpectralRanges(_getChans(), nSelectedChannels, nChannels);
+	_chanVec = rm.setSpectralRanges(_getChans(), nSelectedChannels, _getImage()->shape());
 	if (_chanVec.size() == 0) {
 		_chanVec.resize(2);
 		_chanVec.set(0);
