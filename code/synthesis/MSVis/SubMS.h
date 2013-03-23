@@ -408,7 +408,9 @@ class SubMS
 			    const String& restfreq, 
 			    const String& outframe,
 			    const String& veltype,
-			    Bool verbose=False);
+			    Bool verbose=False,
+			    MRadialVelocity mRV=MRadialVelocity() // only used when outframe=="OBJECT"
+			    );
 
   // Support method for regridSpw():
   // if writeTables is False, the (const) input parameters are only verified, nothing is written;
