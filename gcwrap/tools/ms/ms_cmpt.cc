@@ -1884,45 +1884,7 @@ ms::cvelfreqs(const std::vector<int>& spwids,
       	*itsLog << LogIO::NORMAL << "Zero SPWs selected." << LogIO::POST;
 	return rval;
       }
-      
-      // determine phase center
-      casa::MDirection phaseCenter;
-      Int phasec_fieldid = -1;
-      String t_phasec = toCasaString(phasec);
-      
-      //If phasecenter is a simple numeric value then it's taken as a fieldid 
-      //otherwise its converted to a MDirection
-      if(phasec.type()==::casac::variant::DOUBLEVEC 
-	 || phasec.type()==::casac::variant::DOUBLE
-	 || phasec.type()==::casac::variant::INTVEC
-	 || phasec.type()==::casac::variant::INT){
-	phasec_fieldid = phasec.toInt();	
-	if(phasec_fieldid >= (Int)itsMS->field().nrow() || phasec_fieldid < 0){
-	  *itsLog << LogIO::SEVERE << "Field id " << phasec_fieldid
-		  << " selected to be used as phasecenter does not exist." << LogIO::POST;
-	  return rval;
-	}
-	else{
-	  phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
-	}
-      }
-      else{
-	if(t_phasec.empty()){
-	  phasec_fieldid = 0;
-	  phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
-	}
-	else{
-	  if(!casaMDirection(phasec, phaseCenter)){
-	    *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
-		    << t_phasec << LogIO::POST;
-	    return rval;
-	  }
-	  else{
-	    *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
-	  }
-	}
-      }
-      
+            
       // determine old reference frame
       casa::MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
       
@@ -1989,6 +1951,48 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 		<< " (" << theObsTime.getRefString() << ")" << LogIO::POST;
       }
       
+      // determine phase center
+      casa::MDirection phaseCenter;
+      casa::MRadialVelocity mRV; // needed when using outframe "OBJECT"
+      Int phasec_fieldid = -1;
+      String t_phasec = toCasaString(phasec);
+      
+      //If phasecenter is a simple numeric value then it's taken as a fieldid 
+      //otherwise its converted to a MDirection
+      if(phasec.type()==::casac::variant::DOUBLEVEC 
+	 || phasec.type()==::casac::variant::DOUBLE
+	 || phasec.type()==::casac::variant::INTVEC
+	 || phasec.type()==::casac::variant::INT){
+	phasec_fieldid = phasec.toInt();	
+	if(phasec_fieldid >= (Int)itsMS->field().nrow() || phasec_fieldid < 0){
+	  *itsLog << LogIO::SEVERE << "Field id " << phasec_fieldid
+		  << " selected to be used as phasecenter does not exist." << LogIO::POST;
+	  return rval;
+	}
+	else{
+	  phaseCenter = FIELDCols.phaseDirMeas(phasec_fieldid, theObsTime.get("s").getValue());
+	  mRV = FIELDCols.radVelMeas(phasec_fieldid, theObsTime.get("s").getValue());
+	}
+      }
+      else{
+	if(t_phasec.empty()){
+	  phasec_fieldid = 0;
+	  phaseCenter = FIELDCols.phaseDirMeas(phasec_fieldid, theObsTime.get("s").getValue());
+	  mRV = FIELDCols.radVelMeas(phasec_fieldid, theObsTime.get("s").getValue());
+	}
+	else{
+	  if(!casaMDirection(phasec, phaseCenter)){
+	    *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
+		    << t_phasec << LogIO::POST;
+	    return rval;
+	  }
+	  else{
+	    *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
+	  }
+	}
+      }
+
+
       // determine observatory position
       // use a tabulated version if available
       casa::MPosition mObsPos;
@@ -2034,7 +2038,8 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 			   restfreq.toString(), 
 			   outframe,
 			   veltype,
-			   True // verbose
+			   True, // verbose
+			   mRV
 			   );
       
       newCHAN_FREQ.tovector(rval);

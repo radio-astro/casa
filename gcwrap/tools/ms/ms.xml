@@ -2146,7 +2146,9 @@ Date/Time:                         RR:                      RL:                 
     
      <param type="string" direction="in" name="outframe">
      <description>Name of the reference frame to transform to (LSRK, LSRD, BARY, GALACTO,  
-      LGROUP, CMB, GEO, or TOPO). If no reference frame is given, the present reference frame  
+      LGROUP, CMB, GEO, TOPO, or OBJECT). OBJECT is meant for solar system work and
+      corresponds to GEO + a radial velocity correction (only available for ephemeris objects). 
+      If no reference frame is given, the present reference frame  
       given by the data is used, i.e. the reference frame is not changed. The observatory
       position is taken as the average of all antenna positions.
       </description>
@@ -2244,7 +2246,7 @@ Date/Time:                         RR:                      RL:                 
   The input parameters are verified before any modification is made to the MS.
 
   The target reference frame can be set by providing the name of a standard reference 
-  frame (LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, TOPO, or GEO, default = no change of 
+  frame (LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, TOPO, GEO, or OBJECT, default = no change of 
   frame) in parameter "outframe".
   For each field in the MS, the channel frequencies are transformed from their present 
   reference frame to the one given by parameter "outframe".
@@ -2341,7 +2343,7 @@ Date/Time:                         RR:                      RL:                 
      </param>
 
      <param type="string" direction="in" name="outframe">
-     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO, default = "" = keep reference frame.</description>
+     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, TOPO, or OBJECT default = "" = keep reference frame.</description>
      <value/>
      </param>
 
@@ -2435,7 +2437,7 @@ Date/Time:                         RR:                      RL:                 
      </param>
 
      <param type="string" direction="in" name="outframe">
-     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO, default = keep reference frame = </description>
+     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, TOPO, or OBJECT default = keep reference frame = </description>
      <value></value>
      </param>
 
