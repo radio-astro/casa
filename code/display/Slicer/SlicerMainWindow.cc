@@ -46,6 +46,9 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 
 	setWindowTitle( "1D Slice Tool");
 
+	connect( &slicePlot, SIGNAL(markerPositionChanged(int,int,float)), this, SLOT(markPositionChanged(int,int,float)));
+	connect( &slicePlot, SIGNAL(markerVisibilityChanged(int,bool)), this, SLOT( markVisibilityChanged(int,bool)));
+
 	//Sample Size
 	connect( ui.autoCountCheckBox, SIGNAL(toggled(bool)), this, SLOT(autoCountChanged(bool)));
 	ui.autoCountCheckBox->setChecked( true );
@@ -276,6 +279,13 @@ void SlicerMainWindow::sampleCountChanged(){
 
 void SlicerMainWindow::clearCurves(){
 	slicePlot.clearCurvesAll();
+}
+
+void SlicerMainWindow::markPositionChanged(int regionId,int segmentIndex,float percentage){
+	emit markerPositionChanged(regionId,segmentIndex,percentage);
+}
+void SlicerMainWindow::markVisibilityChanged(int regionId,bool showMarker){
+	emit markerVisibilityChanged(regionId, showMarker);
 }
 
 //--------------------------------------------------------------------------------

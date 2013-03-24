@@ -29,6 +29,7 @@
 #include <QtGui/QFrame>
 #include <casa/BasicSL/String.h>
 #include <display/Slicer/SliceSegment.ui.h>
+#include <qwt_double_rect.h>
 
 class QwtPlot;
 class QwtPlotCurve;
@@ -43,12 +44,13 @@ namespace casa {
  */
 
 class SliceStatistics;
+class SegmentTracer;
 
 class SliceSegment : public QFrame {
     Q_OBJECT
 
 public:
-    SliceSegment(QWidget *parent = 0);
+    SliceSegment(int regionId, int index, QWidget *parent = 0);
     void addCurve( QwtPlot* plot, const QVector<double>& xValues, const QVector<double>& yValues );
     void setEndPointsWorld( double worldX1, double worldY1, double worldX2, double worldY2 );
     void setEndPointsPixel( int pixelX1, int pixelY1, int pixelX2, int pixelY2 );
@@ -75,9 +77,12 @@ private:
 	std::pair<int,int> pixelStart;
 	std::pair<int,int> pixelEnd;
 	int curveWidth;
+	int regionId;
+	int index;
 
     QColor defaultColor;
     QwtPlotCurve* plotCurve;
+    SegmentTracer* segmentTracer;
     Ui::SliceSegmentClass ui;
 };
 

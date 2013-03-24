@@ -541,6 +541,7 @@ casa_add_library( display
   Slicer/SliceStatisticsDistance.cc
   Slicer/SliceStatisticsPosition.cc
   Slicer/SlicePlotPreferences.cc
+  Slicer/SegmentTracer.cc
   Utilities/DisplayOptions.cc
   Utilities/DlHandle.cc
   Utilities/DlTarget.cc

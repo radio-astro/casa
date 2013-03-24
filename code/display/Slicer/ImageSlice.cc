@@ -41,7 +41,7 @@ namespace casa {
 ImageSlice::ImageSlice( int id, QWidget* parent ): QFrame(parent){
 
 	ui.setupUi(this);
-
+    regionId = id;
 	sliceWorker = new SliceWorker( id );
 	useViewerColors = true;
 	showCorners = false;
@@ -129,7 +129,7 @@ void ImageSlice::runSliceWorker(){
 
 	//Add segments until we have the right number
 	while ( currentSegmentCount < segmentCount ){
-		SliceSegment* sliceSegment = new SliceSegment(this );
+		SliceSegment* sliceSegment = new SliceSegment(regionId, currentSegmentCount, this );
 		sliceSegment->setCurveWidth( curveWidth );
 		addSegment( sliceSegment );
 		segments.append( sliceSegment );

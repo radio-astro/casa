@@ -40,7 +40,6 @@ namespace casa {
 template <class T> class ImageInterface;
 class ImageAnalysis;
 
-
 class SlicePlot : public QwtPlot {
 
 Q_OBJECT
@@ -78,6 +77,9 @@ public:
 	void removeStatistic( int regionId);
 	void setStatisticsLayout( QLayout* layout );
 	void updatePositionInformation( int id, const QVector<String>& info );
+	void markPositionChanged(int regionId,int segmentIndex,float percentage);
+	void markVisibilityChanged(int regionId,bool showMarker);
+	bool isFullVersion() const;
 
 	virtual ~SlicePlot();
 
@@ -88,6 +90,10 @@ public:
 	const static QString UNIT_X_ARCSEC;
 	const static QString UNIT_X_ARCMIN;
 	const static QString UNIT_X_ARCDEG;
+
+signals:
+	void markerPositionChanged(int regionId,int segmentIndex,float percentage);
+	void markerVisibilityChanged(int regionId,bool showMarker);
 
 public slots:
 	void updatePolyLine(  int regionId,viewer::region::RegionChanges regionChanges,

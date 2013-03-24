@@ -93,8 +93,15 @@ public:
 
 	void addPlot( QWidget* parent );
 
+
+
 signals:
 	void show1DSliceTool();
+
+public slots:
+	//Position marker
+	void setMarkerPosition( int regionId, int segmentIndex, float percentage );
+	void setShowMarkerPosition( int regionId, bool show );
 
 protected:
 	unsigned int check_handle( double x, double y ) const;
@@ -121,10 +128,11 @@ private slots:
 	void polyLineRegionUpdate(int regionId, viewer::region::RegionChanges change,
 			const QList<double> & worldX, const QList<double>& worldY,
 			const QList<int> & pixelX, const QList<int> & pixelY);
+
+
+
 private:
-
 	bool within_vertex_handle( double x, double y ) const;
-
 	int move_sizing_rectangle_handle( int handle, double x, double y );
 	int move_vertex( int handle, double x, double y );
 
@@ -156,7 +164,12 @@ private:
 	XScaleTo _x_origin_;
 	YScaleTo _y_origin_;
 
+	//Slice functionality
+	void drawPositionMarker();
 	SlicePlot* slicePlot;
+	int markerSegmentIndex;
+	float markerPercentage;
+	bool showPositionMarker;
 };
 }
 }
