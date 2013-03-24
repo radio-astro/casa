@@ -58,6 +58,10 @@ public:
     void updatePositionInformation( int id, const QVector<String>& info );
     ~SlicerMainWindow();
 
+signals:
+	void markerPositionChanged(int regionId,int segmentIndex,float percentage);
+	void markerVisibilityChanged(int regionId,bool showMarker);
+
 private slots:
 	void clearCurves();
 	void autoCountChanged( bool selected );
@@ -73,6 +77,8 @@ private slots:
 	void zoomNeutral();
 	void zoomOut();
 	bool checkZoom();
+	void markPositionChanged(int regionId,int segmentIndex,float percentage);
+	void markVisibilityChanged(int regionId,bool showMarker);
 
 private:
 	void initializeZooming();

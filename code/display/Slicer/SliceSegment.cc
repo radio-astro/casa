@@ -25,6 +25,7 @@
 
 #include "SliceSegment.qo.h"
 #include <display/Slicer/SliceStatistics.h>
+#include <display/Slicer/SegmentTracer.h>
 #include <QtCore/qmath.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <QDebug>
@@ -33,12 +34,14 @@
 
 namespace casa {
 
-SliceSegment::SliceSegment(QWidget *parent)
-    : QFrame(parent), plotCurve( NULL ){
+SliceSegment::SliceSegment(int regionId, int index, QWidget *parent)
+    : QFrame(parent), plotCurve( NULL ), segmentTracer(NULL){
 	ui.setupUi(this);
 	setAutoFillBackground( true );
 	setColor( Qt::green );
 	curveWidth = 1;
+	this->regionId = regionId;
+	this->index = index;
 }
 
 void SliceSegment::setCurveWidth( int width ){
@@ -61,6 +64,8 @@ void SliceSegment::addCurve( QwtPlot* plot,
 	resetCurveWidth();
 	plotCurve->setData( xValues, yValues );
 	setCurveColor();
+	segmentTracer = new SegmentTracer(regionId, index, plot);
+	segmentTracer->setData( xValues, yValues );
 }
 
 
@@ -124,6 +129,7 @@ void SliceSegment::updateStatistics( SliceStatistics* statistics ){
 	}
 	ui.distanceLabel->setText( labelText );
 	ui.angleLineEdit->setText( QString::number( angle ));
+
 }
 
 
@@ -171,6 +177,7 @@ QwtPlot* SliceSegment::getPlot(){
 }
 
 SliceSegment::~SliceSegment(){
+	delete segmentTracer;
 	clearCurve();
 }
 }

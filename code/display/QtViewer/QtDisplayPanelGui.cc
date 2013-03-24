@@ -56,6 +56,7 @@
 #include <display/Fit/FindSourcesDialog.qo.h>
 #include <display/Slicer/SlicerMainWindow.qo.h>
 #include <display/region/QtRegionSource.qo.h>
+#include <display/region/Polyline.qo.h>
 #include <display/RegionShapes/RegionShapes.h>
 #include <guitools/Histogram/HistogramMain.qo.h>
 #include <display/Clean/CleanGui.qo.h>
@@ -2944,6 +2945,34 @@ void QtDisplayPanelGui::updateSliceCorners( int id, const QList<double>& worldX,
 	}
 }
 
+void QtDisplayPanelGui::sliceMarkerPositionChanged(int regionId,int segmentIndex,float percentage){
+	if ( sliceTool != NULL ){
+		viewer::Region* region = findRegion( regionId );
+		viewer::region::RegionTypes defaultType = viewer::region::PolylineRegion;
+		if ( region != NULL ){
+			viewer::region::RegionTypes regionType = region->type();
+			if ( regionType == defaultType ){
+				viewer::Polyline* polyline = dynamic_cast<viewer::Polyline*>(region);
+				polyline->setMarkerPosition( regionId, segmentIndex,percentage);
+			}
+		}
+	}
+}
+
+void QtDisplayPanelGui::sliceMarkerVisibilityChanged(int regionId,bool showMarker){
+	if ( sliceTool != NULL ){
+		viewer::Region* region = findRegion( regionId );
+		viewer::region::RegionTypes defaultType = viewer::region::PolylineRegion;
+		if ( region != NULL ){
+			viewer::region::RegionTypes regionType = region->type();
+			if ( regionType == defaultType ){
+				viewer::Polyline* polyline = dynamic_cast<viewer::Polyline*>(region);
+				polyline->setShowMarkerPosition( regionId, showMarker);
+			}
+		}
+	}
+}
+
 void QtDisplayPanelGui::sliceChanged( int regionId, viewer::region::RegionChanges change,
 		const QList<double> & worldX, const QList<double> & worldY,
 		const QList<int> &pixelX, const QList<int> & pixelY ){
@@ -2990,6 +3019,10 @@ void QtDisplayPanelGui::showSlicer(){
 		//Image updates
 		connect( qdp_, SIGNAL(registrationChange()), this, SLOT(resetListenerImage()), Qt::UniqueConnection );
 		resetListenerImage();
+
+		//Update the polyline with the new slice position
+		connect(sliceTool, SIGNAL(markerPositionChanged(int,int,float)), this, SLOT(sliceMarkerPositionChanged(int,int,float)));;
+		connect(sliceTool, SIGNAL(markerVisibilityChanged(int,bool)), this, SLOT(sliceMarkerVisibilityChanged(int,bool)));
 
 		//Region updates
 		PanelDisplay* panelDisplay = qdp_->panelDisplay();

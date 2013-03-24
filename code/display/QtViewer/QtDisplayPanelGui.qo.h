@@ -597,6 +597,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   void globalOptionsChanged( QtDisplayData* originator, Record opts );
   void updateColorHistogram( const QString& ddName );
   void showImageManager();
+  void sliceMarkerVisibilityChanged(int regionId, bool visible);
+  void sliceMarkerPositionChanged(int regionId, int segmentIndex, float percentage);
 
  public:
  

@@ -76,6 +76,8 @@ SlicePlot::SlicePlot(QWidget *parent, bool allFunctionality ) :QwtPlot(parent),
 	axes.resize( 2 );
 	axes[0] = 0;
 	axes[1] = 1;
+
+	setMouseTracking( true );
 }
 
 void SlicePlot::initAxisFont( int axisId, const QString& axisTitle ){
@@ -559,6 +561,18 @@ void SlicePlot::updatePositionInformation( int id, const QVector<String>& info )
 	if ( sliceMap.contains( id )){
 		sliceMap[id]->updatePositionInformation( info );
 	}
+}
+
+void SlicePlot::markPositionChanged(int regionId,int segmentIndex,float percentage){
+	emit markerPositionChanged( regionId, segmentIndex, percentage );
+}
+
+void SlicePlot::markVisibilityChanged(int regionId,bool showMarker){
+	emit markerVisibilityChanged( regionId, showMarker );
+}
+
+bool SlicePlot::isFullVersion() const {
+	return fullVersion;
 }
 
 SlicePlot::~SlicePlot() {

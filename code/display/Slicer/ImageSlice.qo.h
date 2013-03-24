@@ -107,6 +107,7 @@ private:
 
 	int markerSize;
 	int curveWidth;
+	int regionId;
 	bool selected;
 	bool useViewerColors;
 	bool showCorners;
