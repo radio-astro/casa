@@ -63,6 +63,7 @@ namespace casa {
 		// center_y = linear_average(pt1_y,pt2_y);
 		initHistogram();
 		complete = true;
+		refresh_state_gui( );	/*** update position info ***/
 	}
 
 	// carry over from QtRegion... hopefully, removed soon...
@@ -74,6 +75,7 @@ namespace casa {
 		// center_y = linear_average(pt1_y,pt2_y);
 		initHistogram();
 		complete = true;
+		refresh_state_gui( );	/*** update position info ***/
 	}
 
 
@@ -84,6 +86,7 @@ namespace casa {
 						hold_signals ), pt1_x(x1),
 				pt1_y(y1), pt2_x(x2), pt2_y(y2), sub_dpg(0) {
 		complete = true;
+		refresh_state_gui( );	/*** update position info ***/
 	}
 
 	PVLine::~PVLine( ) { }
@@ -375,7 +378,7 @@ namespace casa {
 
 			if ( selected && memory::nullptr.check( creating_region ) ) {
 
-				int s = 3;
+				int s = 4;
 
 				double xdx, ydy;
 				screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy );
@@ -386,18 +389,26 @@ namespace casa {
 					pushDrawingEnv( region::SolidLine);
 					if ( weaklySelected( ) ) {
 						if ( marked_region_count( ) > 0 && mouse_in_region ) {
-							pc->drawRectangle( x1-s, y1-s, x1+s, y1+s );
-							pc->drawRectangle( x2-s, y2-s, x2+s, y2+s );
+							// pc->drawRectangle( x1-s, y1-s, x1+s, y1+s );
+							// pc->drawRectangle( x2-s, y2-s, x2+s, y2+s );
+							pc->drawEllipse( x1, y1, s * 2.0 + 1, s * 2.0 + 1, 0.0 );
+							pc->drawEllipse( x2, y2, s * 2.0 + 1, s * 2.0 + 1, 0.0 );
 						} else {
-							pc->drawFilledRectangle( x1-s, y1-s, x1+s, y1+s );
-							pc->drawFilledRectangle( x2-s, y2-s, x2+s, y2+s );
+							// pc->drawFilledRectangle( x1-s, y1-s, x1+s, y1+s );
+							// pc->drawFilledRectangle( x2-s, y2-s, x2+s, y2+s );
+							pc->drawEllipse( x1, y1, s * 2.0 + 1, s * 2.0 + 1, 0.0 );
+							pc->drawEllipse( x2, y2, s * 2.0 + 1, s * 2.0 + 1, 0.0 );
 						}
 					} else if ( marked( ) ) {
-						pc->drawRectangle( x1-s, y1-s, x1+s, y1+s );
-						pc->drawRectangle( x2-s, y2-s, x2+s, y2+s );
+						// pc->drawRectangle( x1-s, y1-s, x1+s, y1+s );
+						// pc->drawRectangle( x2-s, y2-s, x2+s, y2+s );
+						pc->drawEllipse( x1, y1, s * 2.0 + 1, s * 2.0 + 1, 0.0 );
+						pc->drawEllipse( x2, y2, s * 2.0 + 1, s * 2.0 + 1, 0.0 );
 					} else {
-						pc->drawFilledRectangle( x1-s, y1-s, x1+s, y1+s );
-						pc->drawFilledRectangle( x2-s, y2-s, x2+s, y2+s );
+						// pc->drawFilledRectangle( x1-s, y1-s, x1+s, y1+s );
+						// pc->drawFilledRectangle( x2-s, y2-s, x2+s, y2+s );
+						pc->drawEllipse( x1, y1, s * 2.0 + 1, s * 2.0 + 1, 0.0 );
+						pc->drawEllipse( x2, y2, s * 2.0 + 1, s * 2.0 + 1, 0.0 );
 					}
 					popDrawingEnv( );
 				}
