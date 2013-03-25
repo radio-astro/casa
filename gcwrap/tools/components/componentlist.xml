@@ -25,15 +25,22 @@ file:///opt/casa/code/tools/xml/casa.xsd">
   <link anchor="componentmodels">this module</link>.
   
   The simplest way to make a componentlist tool is to use the
-  <link anchor="componentmodels:componentlist.emptycomponentlist.constructor">emptycomponentlist</link>
+  <link anchor="componentmodels:componentlist.addcomponent.function">addcomponent</link>
+  Thies creates a componentlist tool with a specified component but not associated with any file.
+  <!--<link anchor="componentmodels:componentlist.emptycomponentlist.constructor">emptycomponentlist</link>
   constructor. This creates a componentlist tool that does not contain
-  any components and is not associated with any file.
+  any components and is not associated with any file.-->
   
+  <!--
   The alternative is to use either the
   <link anchor="componentmodels:componentlist.componentlist.constructor">componentlist</link>
   or <link anchor="componentmodels:componentlist.asciitocomponentlist.constructor">asciitocomponentlist</link>
   constructors. These create a componentlist tool by reading the data
   from an \aipspp\ table or a properly formatted ascii file.
+  -->
+  The alternative is to use the
+  <link anchor="componentmodels:componentlist.open.function">open</link>. This creates a componentlist
+  tool by reading the data form an \aipspp\ table.
   
   The simplest way to add components to a list is to use the
   <link anchor="componentmodels:componentlist.simulate.function">simulate</link>
@@ -48,7 +55,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
 
 
- 
+<!-- this method is not implemented at all 
    <method type="constructor" name="emptycomponentlist">
    <shortdescription>Construct an empty componentlist</shortdescription>
    
@@ -80,7 +87,7 @@ cl := emptycomponentlist();
 
 </example>
 </method>
-
+-->
  
 <method type="function" name="open">
    <shortdescription>Construct an componentlist
@@ -132,7 +139,7 @@ cl.open('crux.cl');
 
  
    <method type="function" name="asciitocomponentlist">
-   <shortdescription>Create a componentlist from an ascii file</shortdescription>
+   <shortdescription>Create a componentlist from an ascii file {\bf (Not implemented yet)}</shortdescription>
    
 
 <description>
@@ -400,7 +407,7 @@ and available in Glish as mycl.
        cl.addcomponent(flux=1.0, dir='J2000 19h00m00 -40d00m00')
        cl.addcomponent(flux=2.0, dir='J2000 19h10m00 -40d00m00')
        cl.addcomponent(flux=3.0, dir='J2000 19h00m00 -40d00m00')
-       cl2 = cltool.create();
+       cl2 = cltool();
        cl2.concatenate(cl.torecord(), [0,2]);
        cl.done()
        cl2.rename('part_list.cl');
@@ -452,10 +459,10 @@ and available in Glish as mycl.
   <example>
     
       
-      cl2 = cltool.create();
+      cl2 = cltool()
      
       cl2.fromrecord(ia.findsources())
-      cl2.rename('sourcesfound.cl');
+      cl2.rename('sourcesfound.cl')
       cl2.done()
     
   </example>
@@ -483,11 +490,11 @@ and available in Glish as mycl.
   <returns type="record">Componentlist tool </returns>
   <example>
     
-      cl2=cltool.create()
-      cl.open('mycomp.cl');
+      cl2=cltool()
+      cl.open('mycomp.cl')
      
       cl2.fromrecord(ia.deconvolvecomponentlist(cl.torecord()))
-      cl2.rename('deconvolved_sources.cl');
+      cl2.rename('deconvolved_sources.cl')
       cl2.done()
     
   </example>
@@ -541,9 +548,8 @@ and available in Glish as mycl.
   <returns type="bool"/>
   <example>
     
-      include 'componentlist.g'
-      cl := componentlist('crux.cl');
-      cl.remove(1);
+      cl.open('crux.cl')
+      cl.remove(1)
     
   </example>
   <comments>
@@ -571,10 +577,9 @@ and available in Glish as mycl.
   <returns type="bool"/>
   <example>
     
-      include 'componentlist.g'
-      cl := componentlist('crux.cl');
-      cl.remove(1);
-      cl.purge();
+      cl.open('crux.cl')
+      cl.remove(1)
+      cl.purge()
     
   </example>
   <comments>
@@ -607,10 +612,9 @@ and available in Glish as mycl.
   <returns type="bool"/>
   <example>
     
-      include 'componentlist.g'
-      cl := componentlist('crux.cl');
-      cl.remove(1);
-      cl.recover();
+      cl.open('crux.cl')
+      cl.remove(1)
+      cl.recover()
     
   </example>
   <comments> 
@@ -633,9 +637,8 @@ and available in Glish as mycl.
   <returns type="int"/>
   <example>
     
-      include 'componentlist.g'
-      cl := emptycomponentlist();
-      n := cl.length();
+      cl.open('crux.cl')
+      n = cl.length()
     
   </example>
   <comments>
@@ -646,7 +649,7 @@ and available in Glish as mycl.
 
  
    <method type="function" name="indices">
-   <shortdescription>Return a vector of indices.</shortdescription>
+   <shortdescription>Return a vector of indices. {\bf (Not implemented yet)}</shortdescription>
    
   <keyword>indices</keyword>
   <description>
@@ -719,9 +722,8 @@ and available in Glish as mycl.
   <returns type="bool"/>
   <example>
     
-      include 'componentlist.g'
-      cl := componentlist('crux.cl');
-      cl.sort('Polarization');
+      cl.open('crux.cl')
+      cl.sort('Polarization')
     
   </example>
   <comments>
@@ -768,11 +770,10 @@ and available in Glish as mycl.
   <returns type="bool"/>
   <example>
     
-      include 'componentlist.g'
-      cl := emptycomponentlist();
-      cl.simulate(2);
-      cl.setflux(1, [10, 1+3i, 1-4i, 0]print cl.isphysical(1:2), polarization='linear');
-      print cl.isphysical(1:2)
+      cl2 = cltool()
+      cl2.simulate(2)
+      cl2.setflux(1, value=[10, 1+3j, 1-4j, 0], polarization="linear");
+      print cl2.isphysical([0,1])
     
   </example>
   <comments>
@@ -783,7 +784,7 @@ and available in Glish as mycl.
 
  
    <method type="function" name="sample">
-   <shortdescription>Sample the flux of the list in a specified direction.</shortdescription>
+   <shortdescription>Sample the flux of the list in a specified direction. {\bf (Not implemented yet)}</shortdescription>
    
   <keyword>sample</keyword>
   <description>
@@ -1049,8 +1050,9 @@ and available in Glish as mycl.
     
      <param type="string" name="shape">
      <description>The new shape type.
-     A string that is either 'point', 'Gaussian' or 'disk'</description>
+     A string that is either 'point', 'Gaussian', 'disk', or 'limbdarkeneddisk'</description>
      <value>disk</value>
+     <value>limbdarkeneddisk</value>
      <value>Gaussian</value>
      <value>point</value>
      </param>
@@ -1094,7 +1096,7 @@ and available in Glish as mycl.
      </param>
     
      <param type="doubleArray" name="optionalparms">
-     <description>optional parameters in vector</description>
+     <description>optional parameters in vector (currently only used for limbdarkeneddisk)</description>
      <value>0.0</value>
      </param>
 
@@ -2020,8 +2022,8 @@ specified component</shortdescription>
     The shapetype function returns the current shape of the specified
     component. The shape defines how the flux of the component varies
     with direction on the sky. Currently there are three shapes
-    available. These are 'Point', 'Gaussian', and 'Disk'. This
-    function returns one of these three strings.
+    available. These are 'Point', 'Gaussian', 'Disk', and 'Limbdarkeneddisk' (experimental). This
+    function returns one of these four strings.
 
   </description>
   <input>
@@ -2102,16 +2104,20 @@ specified component</shortdescription>
     to the user specified shape.
 
     The type argument defines what the sort of new shape to use. This
-    can be either 'point', 'Gaussian' or 'disk'. The parsing of this
-    string is case insensitive.
+    can be either 'point', 'Gaussian', 'disk', or 'limbdarkeneddisk'. 
+    The parsing of this string is case insensitive. The 'limbdarkeneddisk'
+    is an experimental disk model with the limb-darkening effect, where 
+    the sky brigtness is described as {${I=I_o (1-(r/R)^2)^{n/2}}$} with 
+    R being apparent body radius. The n can be set in optionalparms (if it is
+    not set, the default value, 0.05 will be used).
 
     If the shape type is 'point' then the remaining arguments in this
     function are ignored. There are no other parameters needed to
     specify a point shape. 
 
-    But if the shape is 'Gaussian' or 'disk', the remaining arguments
-    are needed to fully specify the shape. The majoraxis, minoraxis
-    and positionangle arguments are quantities (see the
+    But if the shape is 'Gaussian', 'disk', or 'limbdarkeneddisk', 
+    the remaining arguments are needed to fully specify the shape. 
+    The majoraxis, minoraxis and positionangle arguments are quantities (see the
     <link anchor="quanta">quanta</link> module for a definition of a
     quantity). Hence they can be specified either as with string eg.,
     '1arcsec' or with a record eg., [value=1, unit='deg'].
@@ -2134,7 +2140,7 @@ specified component</shortdescription>
     
      <param type="string" name="type">
      <description>The new shape type.
-     A string that is either 'point', 'Gaussian' or 'disk'</description>
+     A string that is either 'point', 'Gaussian', 'disk'i, or 'limbdarkeneddisk'</description>
      <value>disk</value>
      <value>limbdarkeneddisk</value>
      <value>Gaussian</value>
@@ -2180,7 +2186,7 @@ specified component</shortdescription>
      </param>
     
      <param type="doubleArray" name="optionalparms">
-     <description>optional parameters in a vector 
+     <description>optional parameters in a vector (for limbdarkeneddisk) 
      </description>
      <value>0.0</value>
      </param>
@@ -2193,10 +2199,9 @@ specified component</shortdescription>
   <returns type="bool"/>
   <example>
     
-      include 'componentlist.g'
-      cl := componentlist('crux.cl', readonly=F);
-      cl.setshape(3, 'disk',  '45mas', '45mas');
-      print cl.getshape(3).majoraxis;
+      cl.open('crux.cl', nomodify=False)
+      cl.setshape(3, 'disk',  '45mas', '45mas')
+      print cl.getshape(3)['majoraxis']
     
   </example>
   <comments>
