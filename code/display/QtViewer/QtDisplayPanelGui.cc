@@ -164,7 +164,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	ddRegAct_->setMenu(ddRegMenu_);
 	ddCloseAct_   = ddMenu_->addAction("&Close");
 	ddCloseMenu_  = new QMenu; ddCloseAct_->setMenu(ddCloseMenu_);
-	ddAdjAct_     = ddMenu_->addAction("&Adjust...");
+	ddAdjAct_     = ddMenu_->addAction("&Adjust Data...");
 	ddSaveAct_    = ddMenu_->addAction("Sa&ve as...");
 	ddMenu_->addSeparator();
 	printAct_     = ddMenu_->addAction("&Print...");
@@ -205,7 +205,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		shpMgrAct_    = tlMenu_->addAction("Shape Manager...");
 		connect(shpMgrAct_,  SIGNAL(triggered()),  SLOT(showShapeManager()));
 	}
-	momentsCollapseAct_ = tlMenu_->addAction("Collapes/Moments...");
+	momentsCollapseAct_ = tlMenu_->addAction("Collapse/Moments...");
 	findSourcesAct_ = tlMenu_->addAction("Find Sources...");
 	histogramAct_ = tlMenu_->addAction( "Histogram...");
 	fitAct_ = tlMenu_->addAction( "Fit...");
@@ -467,7 +467,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	dpNewAct_  ->setToolTip("New Display Panel");
 	dpOptsAct_ ->setToolTip("Panel Display Options");
 	dpSaveAct_ ->setToolTip("Save Display Panel State to File");
-	profileAct_->setToolTip("Open the Spectrum Profiler");
+	profileAct_->setToolTip("Open the Spectral Profile Tool");
 	momentsCollapseAct_->setToolTip("Calculate Moments/Collapse the Image Cube along the Spectral Axis.");
 	histogramAct_->setToolTip("Histogram Functionality");
 	findSourcesAct_->setToolTip("Find Sources");
