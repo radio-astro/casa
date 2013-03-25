@@ -209,7 +209,7 @@ FlagAgentSummary::computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &f
 		polarizationsBreakdownFlags.push_back(0);
 	}
 
-	// Iterate trough channels
+	// Iterate through channels
 	Bool flag;
 	Int channel_i = 0;
 	uInt64 rowFlags = 0;

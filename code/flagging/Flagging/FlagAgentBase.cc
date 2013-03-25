@@ -822,6 +822,9 @@ FlagAgentBase::setDataSelection(Record config)
 					*logger_p << LogIO::DEBUG1 << " correlation selection is " << polarizationSelection_p << LogIO::POST;
 					*logger_p << LogIO::DEBUG1 << " correlation ids are " << polarizationListToPrint.str() << LogIO::POST;
 				}
+				else {
+					*logger_p << LogIO::DEBUG1 << " solution selection is " << polarizationSelection_p << LogIO::POST;
+				}
 
 			}
 			else

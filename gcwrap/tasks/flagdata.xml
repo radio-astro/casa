@@ -603,8 +603,11 @@
             
             When the input is a calibration table, the modes 'elevation' and 'shadow'
             will be disabled. Data selection for calibration tables is limited to field,
-            antenna and spw at the moment. It is only possible to save the parameters 
-            to an external file. 
+            scan, time, antenna, spw  and observation. It is only possible to save the 
+            parameters to an external file. If the calibration table was created before
+            CASA 4.1, this task will create a dummy OBSERVATION column and OBSERVATION
+            sub-table in the input calibration table to adapt it to the new cal table
+            format.
             
 The task will flag a subset of data based on the following modes of operation:
 
@@ -689,11 +692,9 @@ The task will flag a subset of data based on the following modes of operation:
                     timerange='09:44:00' # data within one integration of time
                     timerange='&gt;10:24:00' # data after this time
                     timerange='09:44:00+00:13:00' #data 13 minutes after time
-                  -->timerange selection is not supported for cal tables.      
 
               scan -- Select data based on scan number
                     default: '' (all); example: scan='&gt;3'
-                  -->scan selection is not supported for cal tables.                          
 
               intent -- Select data based on observation intent
                     default: '' (all); example: intent='*CAL*,*BAND*'
@@ -705,7 +706,6 @@ The task will flag a subset of data based on the following modes of operation:
 
               observation -- Selection based on the observation ID
                     default: '' (all); example: observation='1' or observation=1
-                  -->observation selection is not supported for cal tables.                          
 
               feed -- Selection based on the feed - NOT IMPLEMENTED YET
 
@@ -1305,8 +1305,8 @@ The task will flag a subset of data based on the following modes of operation:
     
 ---- EXAMPLES ----
 
-    NOTE: The vector mode of the previous flagdata task can be achieved with this task by using it
-          with mode='list' and the commands given in a list in inpmode=[]. Example:
+    NOTE: The vector mode of the flagdata task (pre-dating CASA 3.4) can be achieved with this task 
+          by using it with mode='list' and the commands given in a list in inpmode=[]. Example:
     
        flagdata('my.ms', inpmode='list', inpfile=["mode='clip' clipzeros=True","mode='shadow'])
         

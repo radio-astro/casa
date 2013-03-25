@@ -187,7 +187,10 @@
     be used if an MS is given in the inpfile parameter so that flags from the MS are applied to 
     the cal table. Otherwise, the flag commands must be given using inpmode='list', either from a 
     file or from a list of strings. See below for more information about these parameters. 
-    Data selection for calibration tables is limited to field, antenna and spw at the moment. 
+    Data selection for calibration tables is limited to field, scan, antenna, time, spw and
+    observation. If the calibration table was created before CASA 4.1, this task will create 
+    a dummy OBSERVATION column and OBSERVATION sub-table in the input calibration table to
+    adapt it to the new cal table format.
 
 
     Keyword arguments:

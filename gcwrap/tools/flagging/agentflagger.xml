@@ -280,7 +280,7 @@ All data selection parameters follow the MS Selection syntax.
      <value></value>
      </param>
     
-     <param type="string" name="time">
+     <param type="string" name="timerange">
      <description>Time range, as MJDs or date strings : example : 'xx.x.x.x.x~yy.y.y.y.y'</description>
      <value></value>
      </param>

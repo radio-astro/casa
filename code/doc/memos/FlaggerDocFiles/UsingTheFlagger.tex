@@ -586,8 +586,13 @@ data.
 
 The new Calibration Table format can be handled by the tasks flagdata, flagcmd and the
 AgentFlagger tool in a
-transparent way, just like a Measurement Set Table. There is an open-time check
-that inspects the table type and uses the appropriate FlagDataHandler
+transparent way, just like a Measurement Set Table. If the calibration table was created before
+CASA 4.1, the cal table handler will create a dummy OBSERVATION column and OBSERVATION
+sub-table in the input calibration table to adapt it to the new cal table format. There is
+a limited support for older cal tables, therefore we recommend the user to re-create his/her
+calibrations using CASA 4.1 before flagging them.
+
+There is an open-time check that inspects the table type and uses the appropriate FlagDataHandler
 implementation for all the I/O operations:
 
 
@@ -766,8 +771,8 @@ INFO    Clip::setAgentParameters     Visibility expression is ABS SOL1,SOL2,SOL3
 \subsubsection{Meta-Data selection}
 
 As far as meta-data selection is concerned, we are bounded to what MSSelection
-interface for Calibration Tables offers (currently only field, spw and antenna
-selections). There are two ways to apply meta-data selections that can be used
+interface for Calibration Tables offers (currently field, scan, time, spw, antenna
+and observation selections). There are two ways to apply meta-data selections that can be used
 independently or combined together:
 
 \begin{enumerate}
@@ -1039,7 +1044,7 @@ of " , totalcount ;
 See section \ref{Sec:FlagCmdLists}
 
 
-\subsection{Will batch modes make the flagging faster ?}
+\subsection{Will batch modes make the flagging faster?}
 
 Batch operations will help only if data and flag I/O is shared between the flag commands.  
 If commands touch different data-selections, running them together will not help.
