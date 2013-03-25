@@ -58,11 +58,13 @@ private slots:
 	void acceptRange();
 	void cancelRange();
 	void colorsChanged();
+	void invertColorMap( bool invert );
 	void powerCyclesChangedSlider(int value );
 	void powerCyclesChangedLineEdit( const QString& str );
 	void histogramColorModeChanged( bool useColors );
 
 private:
+	void updateColorMap( bool invertChanged = false);
 	void resetColorLookups();
 	void resetPowerCycles( float powerCycles);
 	Vector<uInt> computeScaledIntensities(const std::vector<float>& intensities );

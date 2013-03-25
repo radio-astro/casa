@@ -135,6 +135,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 	viewer::guiwait wait_cursor;
 
 	QtDisplayData *regrid_to = 0;
+	invertColorMap = false;
 	std::string method = "";
 
 	if(dataType=="lel") {
@@ -922,6 +923,10 @@ void QtDisplayData::checkGlobalChange( Record& opts ){
 	}
 }
 
+void QtDisplayData::setInvertColorMap( bool invert ){
+	invertColorMap = invert;
+	setColormap_(clrMapName_, true);
+}
 
 bool QtDisplayData::setColorBarOptions( Record& opts, Record& chgdOpts ){
 	Bool cbNeedsRefresh = False;
@@ -1053,7 +1058,7 @@ void QtDisplayData::emitOptionsChanged( Record changedOpts ) {
 	emit optionsChanged(changedOpts);
 }
 
-void QtDisplayData::setColormap_(const String& clrMapName) {
+void QtDisplayData::setColormap_(const String& clrMapName, bool invertChanged ) {
 	// Set named colormap onto underlying dd (done publicly via setOptions).
 	// Pass "" to remove/delete any existing colormap for the QDD.
 	// In the case that no colormap is set on a dd that needs one (raster dds,
@@ -1066,7 +1071,7 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 
 	if(dd_==0) return;	// (safety)
 
-	if(clrMapName==clrMapName_) return;	// (already there)
+	if(clrMapName==clrMapName_ && !invertChanged) return;	// (already there)
 
 	if(clrMapName=="") {
 
@@ -1079,7 +1084,8 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 		clrMap_ = 0;
 		clrMapName_ = "";
 		// emit qddOK();
-		return;  }
+		return;
+	}
 
 	colormapmap::iterator cmiter = clrMaps_.find(clrMapName);
 	Colormap* clrMap = (cmiter == clrMaps_.end() ? 0 : cmiter->second);
@@ -1100,7 +1106,10 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 			errMsg_ = "Invalid colormap name: "+clrMapName;
 			// cerr<<"qddErr:"<<errMsg_<<endl;	//#dg
 			emit qddError(errMsg_);
-			return;  }  }
+			return;
+		}
+	}
+	clrMap->setInvertFlags( invertColorMap, invertColorMap, invertColorMap );
 
 	// clrmap is ok to use.
 

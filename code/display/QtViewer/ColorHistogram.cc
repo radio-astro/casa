@@ -69,6 +69,9 @@ ColorHistogram::ColorHistogram(QWidget *parent)
 	ui.coloredHistogramCheckBox->setChecked( true );
 	connect( ui.coloredHistogramCheckBox, SIGNAL(toggled(bool)), this, SLOT(histogramColorModeChanged(bool)));
 
+	//Invert the color map
+	connect( ui.invertMapCheckBox, SIGNAL(toggled(bool)), this, SLOT(invertColorMap(bool)));
+
 	//Histogram plot
 	histogram = new BinPlotWidget( false, true, false, this );
 	histogram->setPlotMode( FootPrintWidget::IMAGE_MODE );
@@ -127,6 +130,7 @@ void ColorHistogram::acceptRange(){
 		QString powerCycleText = ui.powerCyclesLineEdit->text();
 		float powerCycles = powerCycleText.toFloat();
 		displayData->setHistogramColorMapping( minValue, maxValue, powerCycles );
+		displayData->setInvertColorMap( ui.invertMapCheckBox->isChecked() );
 	}
 }
 
@@ -152,6 +156,11 @@ void ColorHistogram::setDisplayData( QtDisplayData* dd ){
 	}
 }
 
+void ColorHistogram::invertColorMap( bool /*invert*/ ){
+	updateColorMap( true );
+	resetColorLookups();
+}
+
 void ColorHistogram::resetColorLookups(){
 	//Have to change the colors used to draw the
 	//histogram.
@@ -163,7 +172,7 @@ void ColorHistogram::resetColorLookups(){
 	histogram->setColorLookups( colorValues );
 
 
-	//For the transfer function, we only want to use intensities withen
+	//For the transfer function, we only want to use intensities within
 	//a given range.
 	std::vector<float> colorIntensities;
 	std::vector<float>::iterator intensityIter = intensities.begin();
@@ -199,30 +208,28 @@ Vector<uInt> ColorHistogram::computeScaledIntensities(const std::vector<float>& 
 			scaledIntensities[i] = intensities[i];
 		}
 		powerScaler->setDomainMinMax( minIntensity, maxIntensity );
-
-		//IPosition colorValueSizing( intensityCount );
 		colorValues.resize( intensityCount );
 		(*powerScaler)( colorValues, scaledIntensities );
 	}
 	return colorValues;
 }
 
-void ColorHistogram::colorsChanged(){
-
+void ColorHistogram::updateColorMap(bool invertChanged){
 	//Update the color map
 	String colorMapName = displayData->getColormap();
 	bool reset = false;
+	bool invertedMap = ui.invertMapCheckBox->isChecked();
 	if ( colorScale != NULL ){
 		String existingMapName = colorScale->getColorMapName();
-		if (existingMapName != colorMapName ){
+		if (existingMapName != colorMapName || invertChanged ){
 			delete colorScale;
 			reset = true;
-			colorScale = new ColorHistogramScale();
+			colorScale = new ColorHistogramScale( invertedMap );
 		}
 	}
 	else {
 		reset = true;
-		colorScale = new ColorHistogramScale();
+		colorScale = new ColorHistogramScale( invertedMap );
 	}
 
 	if ( reset ){
@@ -230,6 +237,12 @@ void ColorHistogram::colorsChanged(){
 		histogram->setColorMap( colorScale );
 		colorTransferWidget->setColorMap( colorScale );
 	}
+
+}
+
+void ColorHistogram::colorsChanged(){
+
+	updateColorMap();
 
 	//Look to see if the power cycles have changed.
 	Record dataOptionsRecord = displayData->getOptions();

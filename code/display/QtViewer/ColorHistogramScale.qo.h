@@ -42,7 +42,7 @@ class ColormapDefinition;
 
 class ColorHistogramScale : public QwtLinearColorMap {
 public:
-	ColorHistogramScale();
+	ColorHistogramScale( bool invert );
 	String getColorMapName() const;
 	void setColorMapName( const String& colorMapName );
 
@@ -51,7 +51,7 @@ private:
 	ColorHistogramScale( ColorHistogramScale& other );
 	ColorHistogramScale operator=(ColorHistogramScale& other);
 	String mapName;
-
+	bool invertMap;
 	ColormapDefinition* colorDefinition;
 };
 
