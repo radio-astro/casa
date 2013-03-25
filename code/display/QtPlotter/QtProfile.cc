@@ -1509,16 +1509,46 @@ bool QtProfile::exportFITSSpectrum(QString &fn)
 	return true;
 }
 
-bool QtProfile::exportASCIISpectrum(QString &fn)
-{
+bool QtProfile::exportASCIISpectrum(QString &fn){
 	QFile file(fn);
 	if (!file.open(QFile::WriteOnly | QIODevice::Text))
 		return false;
 	QTextStream ts(&file);
 
-	ts << "#title: Spectral profile - " << fileName << " "
-			<< region << "(" << position << ")\n";
-	ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
+	//There should be a space separating the ra from the dec.
+	int coordinateCount = lastWX.size();
+	QList<QString> cornerCoordinatesWorld;
+	QList<QString> cornerCoordinatesPixel;
+	for ( int i = 0; i < coordinateCount; i++ ){
+		QString raDecStr = getRaDec( lastWX[i], lastWY[i]);
+		int decIndex = raDecStr.indexOf("+");
+		if ( decIndex == -1 ){
+			decIndex = raDecStr.indexOf( "-");
+		}
+		raDecStr.insert(decIndex, ", ");
+		cornerCoordinatesWorld.append("["+raDecStr+"]");
+		cornerCoordinatesPixel.append("["+ QString::number(lastPX[i])+
+				", "+QString::number(lastPY[i])+"]");
+	}
+
+	ts << "#title: Spectral profile - " << fileName << "\n";
+	ts << "#region (world): "<< region << "[";
+	for ( int i = 0; i < coordinateCount; i++ ){
+		ts << cornerCoordinatesWorld[i];
+		if ( i != coordinateCount - 1 ){
+			ts << ", ";
+		}
+	}
+	ts << "]\n";
+	ts << "#region (pixel): "<< region << "[";
+	for ( int i = 0; i < coordinateCount; i++ ){
+		ts << cornerCoordinatesPixel[i];
+		if ( i != coordinateCount - 1 ){
+			ts << ", ";
+		}
+	}
+	ts << "]\n";
+	ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
 	ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
 	ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
 	if (z_eval.size() > 0)
