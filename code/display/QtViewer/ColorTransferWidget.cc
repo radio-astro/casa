@@ -29,6 +29,7 @@
 #include <qwt_color_map.h>
 #include <qwt_scale_widget.h>
 #include <qwt_double_interval.h>
+#include <QDebug>
 
 namespace casa {
 
@@ -104,6 +105,7 @@ void ColorTransferWidget::resetColorBar(){
 void ColorTransferWidget::setColorMap(QwtLinearColorMap* linearMap ){
 	colorMap = linearMap;
 	resetColorBar();
+	plot->replot();
 }
 
 ColorTransferWidget::~ColorTransferWidget()

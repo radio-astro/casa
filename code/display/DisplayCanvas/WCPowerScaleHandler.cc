@@ -57,29 +57,6 @@ Bool WCPowerScaleHandler::setOptions(Record &rec, Record &recOut) {
   Bool ret = WCDataScaleHandler::setOptions(rec, recOut);
   Bool localchange = False;
   Bool error;
-  //Make sure the value of power cycles is a float, if it exists as a record
-  //instead.
-
-  /*if ( rec.isDefined( WCPowerScaleHandler::POWER_CYCLES )){
-	  	Record powerCycleRecord;
-  		if ( rec.dataType(WCPowerScaleHandler::POWER_CYCLES) == TpRecord ){
-  			Record powerRecord = rec.subRecord( WCPowerScaleHandler::POWER_CYCLES );
-  			if ( powerRecord.isDefined("value")){
-  				cout << "About to ask for power as float"<<endl;
-  				float powerCycles = powerRecord.asFloat( "value");
-  				cout << "Resetting powerCycles to "<<powerCycles << endl;
-  				//rec.removeField( WCPowerScaleHandler::POWER_CYCLES );
-  				powerCycleRecord.define( WCPowerScaleHandler::POWER_CYCLES, powerCycles );
-  			}
-  		}
-  		else {
-  			cout << "rec dataType="<<rec.dataType(WCPowerScaleHandler::POWER_CYCLES)
-  					<< " float="<<TpFloat<<endl;
-  			powerCycleRecord = rec;
-  		}
-
-  		cout << "WcPowerScalerHandler set power cycles to "<<itsOptionsPowerCycles<<endl;
-  }*/
 
   localchange = (readOptionRecord(itsOptionsPowerCycles, error, rec ,POWER_CYCLES) || localchange);
   localchange = (readOptionRecord(itsOptionsHistoEqualisation, error,

@@ -246,7 +246,7 @@ class QtDisplayData : public QObject {
   void initImage();
   void setImage( ImageInterface<Float>* img);
   static void setGlobalColorOptions( bool global );
-
+  void setInvertColorMap( bool invert );
 
  public slots:
   
@@ -332,6 +332,7 @@ class QtDisplayData : public QObject {
 
   void statsReady(const String&);
   void showColorHistogram( QtDisplayData* );
+
   void globalOptionsChanged( QtDisplayData*, Record);
 
  protected slots:
@@ -364,8 +365,9 @@ class QtDisplayData : public QObject {
   // information on creating/installing custom ones).  If an invalid name is
   // passed, an (ignorable) error message is signalled, and the dd's colormap
   // will remain unchanged.
-  virtual void setColormap_(const String& clrMapName);
+  virtual void setColormap_(const String& clrMapName, bool invertChanged = false);
   virtual void removeColormap_() { setColormap_("");  }
+
 
   //# (could be exposed publicly, if useful).
   //  Does this DD use/need a public colormap?
@@ -396,6 +398,7 @@ class QtDisplayData : public QObject {
 
   std::string name_;
   
+  bool invertColorMap;
   // Name of colormap used by dd_  ("" if none)
   String clrMapName_;
   
