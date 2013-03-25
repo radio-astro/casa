@@ -589,8 +589,8 @@ AgentFlagger tool in a
 transparent way, just like a Measurement Set Table. If the calibration table was created before
 CASA 4.1, the cal table handler will create a dummy OBSERVATION column and OBSERVATION
 sub-table in the input calibration table to adapt it to the new cal table format. There is
-a limited support for older cal tables, therefore we recommend the user to re-create his/her
-calibrations using CASA 4.1 before flagging them.
+limited support for older cal tables, therefore we recommend the user to re-create his/her
+calibrations using CASA 4.1 before running flagdata.
 
 There is an open-time check that inspects the table type and uses the appropriate FlagDataHandler
 implementation for all the I/O operations:
@@ -721,7 +721,7 @@ INFO    AgentFlagger::parseAgentParameters  Will use data column CPARAM
 ...
 \end{verbatim}
 
-\item And it is also possible to choose the element of interest to inspect for
+\item Only for the autoflagging modes, it is also possible to choose the element of interest to inspect for
 flagging, through the correlation parameter, specifying a list of comma-separated
 elements or '' to select all the elements (which is also the default). If the CPARAM
 datacolumn is used, the default correlation will be ABS\_ALL because this column contains 
@@ -1123,7 +1123,8 @@ These quick tests and summaries show that from the point of view of RFI-identifi
 
 
 \subsection{Comparison of autoflag methods}
-What are the advantages and disadvantages ?  What types of RFI are the defaults of tfcrop and rflag optimized for ?  
+What are the advantages and disadvantages?  What types of RFI are the defaults of tfcrop and 
+rflag optimized for?  
 
 \begin{figure}
 \includegraphics[scale=0.7]{rflag.before.after.png}
@@ -1135,7 +1136,7 @@ What are the advantages and disadvantages ?  What types of RFI are the defaults 
 \subsection{Effect of Hanning-smoothing on RFI}
 When does it help, when does it hurt.... 
 
-\subsection{Is auto-flagging good-enough for imaging ?}
+\subsection{Is auto-flagging good-enough for imaging?}
 A comparison of images and flag-summary counts,  with only autoflag runs, and with more careful hand-flagging. 
 
 
