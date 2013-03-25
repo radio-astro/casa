@@ -164,7 +164,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	ddRegAct_->setMenu(ddRegMenu_);
 	ddCloseAct_   = ddMenu_->addAction("&Close");
 	ddCloseMenu_  = new QMenu; ddCloseAct_->setMenu(ddCloseMenu_);
-	ddAdjAct_     = ddMenu_->addAction("&Adjust Data...");
+	ddAdjAct_     = ddMenu_->addAction("&Adjust Data Display...");
 	ddSaveAct_    = ddMenu_->addAction("Sa&ve as...");
 	ddMenu_->addSeparator();
 	printAct_     = ddMenu_->addAction("&Print...");
