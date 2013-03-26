@@ -555,8 +555,11 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
 	if (exists >= 0)
 	{
 		configuration.get (exists, restFrequency_p);
-		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-				<< "Rest frequency is " << restFrequency_p << LogIO::POST;
+		if (!restFrequency_p.empty())
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Rest frequency is " << restFrequency_p << LogIO::POST;
+		}
 	}
 
 	exists = configuration.fieldNumber ("outframe");
@@ -679,7 +682,7 @@ void MSTransformDataHandler::parseFreqSpecParams(Record &configuration)
 	}
 
 	exists = configuration.fieldNumber ("veltype");
-	if (exists >= 0)
+	if ((exists >= 0) and (mode_p == "velocity"))
 	{
 		configuration.get (exists, velocityType_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
@@ -1740,7 +1743,7 @@ void MSTransformDataHandler::reindexFeedSubTable()
     }
     else
     {
-    	logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
     			 "No FEED sub-table found " << LogIO::POST;
     }
 
@@ -2523,8 +2526,17 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		writeVector(tmpVectorBool,outputMsCols_p->flagRow(),rowRef,nspws_p);
 
 		// Averaged matrix columns
-		mapScaleAndAverageMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
+		// mapScaleAndAverageMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
+		// writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
+
+		// jagonzal: According to dpetry we have to copy weights from the first SPW
+		// This is justified since the rows to be combined _must_ be from the
+		// same baseline and therefore have the same UVW coordinates in the MS (in meters).
+		// They could therefore be regarded to also have the same WEIGHT, at least to
+		// a good approximation.
+		mapMatrix(vb->weight(),tmpMatrixFloat);
 		writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
+
 
 		// Sigma must be redefined to 1/weight when corrected data becomes data
 		if (correctedToData_p)
@@ -2535,8 +2547,16 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		}
 		else
 		{
-			mapScaleAndAverageMatrix(vb->sigma(),tmpMatrixFloat,sigmaFactorMap_p,vb->spectralWindows());
-			outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
+			// mapScaleAndAverageMatrix(vb->sigma(),tmpMatrixFloat,sigmaFactorMap_p,vb->spectralWindows());
+			// outputMsCols_p->sigma().putColumnCells(rowRef, tmpMatrixFloat);
+			// writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
+
+			// jagonzal: According to dpetry we have to copy weights from the first SPW
+			// This is justified since the rows to be combined _must_ be from the
+			// same baseline and therefore have the same UVW coordinates in the MS (in meters).
+			// They could therefore be regarded to also have the same WEIGHT, at least to
+			// a good approximation.
+			mapMatrix(vb->sigma(),tmpMatrixFloat);
 			writeMatrix(tmpMatrixFloat,outputMsCols_p->sigma(),rowRef,nspws_p);
 		}
 	}
@@ -2626,7 +2646,9 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		writeVector(vb->flagRow(),outputMsCols_p->flagRow(),rowRef,nspws_p);
 
 		Matrix<Float> weights = vb->weight();
-		if (weightFactorMap_p[vb->spectralWindows()(0)] != 1)
+
+		if ( (weightFactorMap_p.find(vb->spectralWindows()(0))  != weightFactorMap_p.end()) and
+				(weightFactorMap_p[vb->spectralWindows()(0)] != 1) )
 		{
 			weights *= weightFactorMap_p[vb->spectralWindows()(0)];
 		}
@@ -2641,7 +2663,8 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		else
 		{
 			Matrix<Float> sigma = vb->sigma();
-			if (sigmaFactorMap_p[vb->spectralWindows()(0)] != 1)
+			if ( (sigmaFactorMap_p.find(vb->spectralWindows()(0)) != sigmaFactorMap_p.end()) and
+					(sigmaFactorMap_p[vb->spectralWindows()(0)] != 1) )
 			{
 				sigma *= sigmaFactorMap_p[vb->spectralWindows()(0)];
 			}
@@ -2890,7 +2913,15 @@ template <class T> void MSTransformDataHandler::mapScaleAndAverageMatrix(	const 
 		{
 			row = *iter;
 			spw = spws(row);
-			contributionFactor = scaleMap[spw];
+			if (scaleMap.find(spw) != scaleMap.end())
+			{
+				contributionFactor = scaleMap[spw];
+			}
+			else
+			{
+				contributionFactor = 1;
+			}
+
 
 			for (uInt col = 0; col < nCols; col++)
 			{
