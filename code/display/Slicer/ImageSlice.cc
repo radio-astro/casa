@@ -58,12 +58,8 @@ ImageSlice::ImageSlice( int id, QWidget* parent ): QFrame(parent){
 	layout->setContentsMargins(0,0,0,0);
 	ui.colorBarHolder->setLayout( layout );
 
-	QButtonGroup* sizeButtons = new QButtonGroup( this );
-	sizeButtons->addButton( ui.minimizeButton );
-	sizeButtons->addButton( ui.maximizeButton );
-	ui.maximizeButton->setChecked( true );
-	connect( ui.minimizeButton, SIGNAL(clicked()), this, SLOT(minimizeDisplay()));
-	connect( ui.maximizeButton, SIGNAL(clicked()), this, SLOT(maximizeDisplay()));
+	maximizeDisplay();
+	connect( ui.openCloseButton, SIGNAL(clicked()), this, SLOT(openCloseDisplay()));
 }
 
 //------------------------------------------------------------------------
@@ -398,22 +394,37 @@ void ImageSlice::removeSegment( SliceSegment* segment ){
 	}
 }
 
+void ImageSlice::openCloseDisplay(){
+	if ( minimized ){
+		maximizeDisplay();
+	}
+	else {
+		minimizeDisplay();
+	}
+}
+
 
 void ImageSlice::minimizeDisplay(){
 	QLayout* statLayout = this->layout();
 	statLayout->removeWidget( ui.regionInfoWidget );
 	ui.regionInfoWidget->setParent( NULL );
+	minimized = true;
+	QIcon icon( ":/images/statsMaximize.png");
+	ui.openCloseButton->setIcon( icon );
 }
 
 void ImageSlice::maximizeDisplay(){
 	QLayout* statLayout = this->layout();
 	statLayout->addWidget( ui.regionInfoWidget );
+	minimized = false;
+	QIcon icon( ":/images/statsMinimize.png");
+	ui.openCloseButton->setIcon( icon );
 }
 
 
 
 ImageSlice::~ImageSlice() {
-	if ( ui.minimizeButton->isChecked()){
+	if ( minimized ){
 		delete ui.regionInfoWidget;
 	}
 	delete sliceWorker;
