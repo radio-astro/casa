@@ -33,6 +33,7 @@ namespace casa {
 const QString ConverterIntensity::FRACTION_OF_PEAK = "Fraction of Peak";
 const QString ConverterIntensity::JY_BEAM = "Jy/beam";
 const QString ConverterIntensity::JY_SR = "MJy/sr";
+//const QString ConverterIntensity::JY_SR = "Jy/sr";
 const QString ConverterIntensity::JY_ARCSEC = "Jy/arcsec^2";
 const QString ConverterIntensity::JY = "Jy";
 const QString ConverterIntensity::KELVIN = "Kelvin";
@@ -62,6 +63,17 @@ const QList<QString> ConverterIntensity::JY_UNITS =
 		"MJy"<<"10MJy"<<"100MJy"<<
 		"GJy";
 
+const QList<QString> ConverterIntensity::JY_SR_UNITS =
+	QList<QString>() << "pMJy" <<"10pMJy"<<"100pMJy"<<
+		"nMJy"<<"10nMJy"<<"100nMJy"<<
+		"uMJy"<<"10uMJy"<<"100uMJy"<<
+		"mMJy"<<"10mMJy"<<"100mMJy"<<
+		"MJy"<<"10MJy"<<"100MJy"<<
+		"kMJy"<<"10kMJy"<<"100kMJy"<<
+		"MMJy"<<"10MMJy"<<"100MMJy"<<
+		"GMJy";
+
+
 
 ConverterIntensity::ConverterIntensity() {
 }
@@ -73,8 +85,8 @@ void ConverterIntensity::setSolidAngle( double angleMeasure ){
 bool ConverterIntensity::isSupportedUnits( const QString& yUnit ){
 	bool acceptable = false;
 	if ( yUnit.contains( "Jy") || yUnit.contains( KELVIN )||
-			yUnit.contains( FRACTION_OF_PEAK) || yUnit.contains("Jy/arcsec^2") ||
-			yUnit.contains( "MJy/sr" ) ){
+			yUnit.contains( FRACTION_OF_PEAK) || yUnit.contains(JY_ARCSEC) ||
+			yUnit.contains( JY_SR ) ){
 		acceptable = true;
 	}
 	return acceptable;
@@ -133,7 +145,7 @@ void ConverterIntensity::convert( Vector<float>& values, const Vector<float> her
 	}
 	else {
 		//If the original units are in JY or JY_BEAM, strip off a prefix such as
-		//mJy and adjust the data.
+		//m, k, etc and adjust the data.
 		QString strippedBase = baseConvertUnits;
 		if ( isJansky( baseConvertUnits ) ){
 			strippedBase = getJanskyBaseUnits( baseConvertUnits );
@@ -154,14 +166,19 @@ void ConverterIntensity::convert( Vector<float>& values, const Vector<float> her
 			convertJansky( values, strippedNew, newUnitsBase );
 		}
 	}
-
 }
 
 QString ConverterIntensity::getJanskyBaseUnits( const QString& units ){
 	QString baseUnits = units;
 	int jyIndex = units.indexOf( JY );
 	if ( jyIndex > 0 ){
-		baseUnits = units.mid( jyIndex, units.length() - jyIndex );
+		int mJyIndex = units.indexOf( JY_SR );
+		if ( mJyIndex > 0 ){
+			baseUnits = units.mid( mJyIndex, units.length() - mJyIndex );
+		}
+		else {
+			baseUnits = units.mid( jyIndex, units.length() - jyIndex );
+		}
 	}
 	return baseUnits;
 }
@@ -169,9 +186,9 @@ QString ConverterIntensity::getJanskyBaseUnits( const QString& units ){
 bool ConverterIntensity::isJansky( const QString& units ){
 	bool janskyUnits = false;
 	if ( units.indexOf( JY ) > 0 ){
-		if ( units.indexOf( JY_ARCSEC) < 0 && units.indexOf( JY_SR) < 0 ){
+		//if ( units.indexOf( JY_ARCSEC) < 0 && units.indexOf( JY_SR) < 0 ){
 			janskyUnits = true;
-		}
+		//}
 	}
 	return janskyUnits;
 }
@@ -181,6 +198,9 @@ void ConverterIntensity::convertJansky( Vector<float>& values, const QString& ol
 	for ( int i = 0; i < static_cast<int>(values.size()); i++ ){
 		if ( oldUnits.indexOf( JY_BEAM) > 0 && newUnits.indexOf( JY_BEAM) > 0 ){
 			values[i] = convertJyBeams( oldUnits, newUnits, values[i]);
+		}
+		else if ( oldUnits.indexOf( JY_SR) > 0 && newUnits.indexOf( JY_SR) > 0){
+			values[i] = convertJYSR( oldUnits, newUnits, values[i]);
 		}
 		else {
 			values[i] = convertJY( oldUnits, newUnits, values[i]);
@@ -257,6 +277,16 @@ double ConverterIntensity::convertJY( const QString& oldUnits,
 		const QString& newUnits, double value ){
 	int sourceIndex = JY_UNITS.indexOf( oldUnits );
 	int destIndex = JY_UNITS.indexOf( newUnits );
+	Vector<double> resultValues(1);
+	resultValues[0] = value;
+	Converter::convert( resultValues, sourceIndex, destIndex );
+	return resultValues[0];
+}
+
+double ConverterIntensity::convertJYSR( const QString& oldUnits,
+		const QString& newUnits, double value ){
+	int sourceIndex = JY_SR_UNITS.indexOf( oldUnits );
+	int destIndex = JY_SR_UNITS.indexOf( newUnits );
 	Vector<double> resultValues(1);
 	resultValues[0] = value;
 	Converter::convert( resultValues, sourceIndex, destIndex );

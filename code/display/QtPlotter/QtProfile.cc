@@ -105,6 +105,11 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 {
 	setupUi(this);
 	initPlotterResource();
+
+	//Remove the setPosition tab because duplicate functionality exists in the viewer.
+	functionTabs->removeTab(0);
+
+
 	current_region_id = NO_REGION_ID;
 
 	setBackgroundRole(QPalette::Dark);
@@ -642,11 +647,13 @@ void QtProfile::adjustPlotUnits(){
 		}
 		yUnitsList[0] = "Jy";
 	}
-	//Add *pixels in case of sum
+	//Add   in case of sum
 	else if ( itsPlotType==QtProfile::PSUM ){
 		Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
 		if(pos>-1){
-			yUnit = yUnit + ConverterIntensity::TIMES_PIXELS;
+			if ( yUnit.indexOf( ConverterIntensity::TIMES_PIXELS) == -1 ){
+				yUnit = yUnit + ConverterIntensity::TIMES_PIXELS;
+			}
 			for ( int i = 0; i < yUnitsList.size(); i++ ){
 				if ( yUnitsList[i] != ConverterIntensity::FRACTION_OF_PEAK ){
 					yUnitsList[i] = yUnitsList[i] + ConverterIntensity::TIMES_PIXELS;
