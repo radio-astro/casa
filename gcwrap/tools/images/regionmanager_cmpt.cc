@@ -10,7 +10,6 @@
  ***/
 
 #include <iostream>
-#include <memory>
 #include <math.h>
 
 #include <regionmanager_cmpt.h>
@@ -889,7 +888,7 @@ regionmanager::setcoordinates(const ::casac::record& csys)
 	retval=true;
 
 
-    } catch (AipsError x) {
+    } catch (const AipsError& x) {
 	*itsLog << LogIO::SEVERE << "Exception Reported: " 
 		<< x.getMesg() << LogIO::POST;
 	RETHROW(x);
@@ -925,13 +924,59 @@ regionmanager::makeunion(const ::casac::variant& regions, const std::string& com
 	retval=fromRecord(unionrec); 
 	if(unionReg !=0)
 	    delete unionReg;
-    } catch (AipsError x) {
+    } catch (const AipsError& x) {
 	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
 	RETHROW(x);
     }
 
     return retval;
 }
+
+vector<int> regionmanager::selectedchannels(
+	const string& specification, const vector<int>& shape
+) {
+	*itsLog << LogOrigin("regionmanager", __FUNCTION__);
+	if ( !itsIsSetup ) {
+		setup();
+	}
+	try {
+		const CoordinateSystem& csys = itsRegMan->getcoordsys();
+
+		if (! csys.hasSpectralAxis()) {
+			*itsLog << "Associated coordinate system has no spectral axis"
+				<< LogIO::EXCEPTION;
+		}
+		uInt nChannels = shape[csys.spectralAxisNumber()];
+		uInt nSelectedChannels;
+		vector<uInt> ranges = itsRegMan->setSpectralRanges(
+			specification, nSelectedChannels,
+			IPosition(shape)
+		);
+		vector<Int> chans(0);
+		vector<uInt>::const_iterator end = ranges.end();
+		vector<uInt>::const_iterator iter = ranges.begin();
+
+		while (iter!=end && *iter < nChannels) {
+			uInt rBegin = *iter;
+			iter++;
+			uInt rEnd = *iter;
+			iter++;
+			for (uInt i=rBegin; i<=rEnd; i++) {
+				if (i >= nChannels) {
+					break;
+				}
+				chans.push_back(i);
+			}
+		}
+		AlwaysAssert(chans.size() <= nSelectedChannels, AipsError);
+		return chans;
+	}
+	catch (const AipsError& x) {
+		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
 
 // Implementation courtesy of Honglin (https://bugs.aoc.nrao.edu/browse/CAS-1666, 2009dec16)
 casa::ImageRegion* regionmanager::dounion(casa::Record*& regions) {

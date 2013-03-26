@@ -103,6 +103,7 @@ test_po_totpolint               dmehring@nrao.edu
 test_report                     jkern@nrao.edu
 test_rg_frombcs                 dmehring@nrao.edu
 test_rg_fromtextfile            dmehring@nrao.edu
+test_rg_selectedchannels        dmehring@nrao.edu
 test_slsearch                   dmehring@nrao.edu
 test_sdbaseline			kana.sugi@nao.ac.jp
 test_sdcal                      takeshi.nakazato@nao.ac.jp
