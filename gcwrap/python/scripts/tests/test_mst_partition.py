@@ -71,20 +71,20 @@ class partition_test1(test_base):
         shutil.rmtree(self.msfile+'.flagversions', ignore_errors=True)        
         shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True)        
 
-    def test_nomms(self):
-        '''mstransform: Create a normal MS with createmms=False'''
-        mstransform(vis=self.msfile, outputvis=self.mmsfile, createmms=False,
-                    datacolumn='data', separationaxis='scan')
-        time.sleep(10)
-        
-        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
-        
-        # Compare both tables. Ignore the DATA column and compare it in next line
-        self.assertTrue(th.compTables(self.msfile, self.mmsfile, 
-                                      ['FLAG_CATEGORY','FLAG','WEIGHT_SPECTRUM', 'DATA']))
-        
-        # Compare the DATA column
-        self.assertTrue(th.compVarColTables(self.msfile,self.mmsfile,'DATA'))
+#    def test_nomms(self):
+#        '''mstransform: Create a normal MS with createmms=False'''
+#        mstransform(vis=self.msfile, outputvis=self.mmsfile, createmms=False,
+#                    datacolumn='data', separationaxis='scan')
+#        time.sleep(10)
+#        
+#        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
+#        
+#        # Compare both tables. Ignore the DATA column and compare it in next line
+#        self.assertTrue(th.compTables(self.msfile, self.mmsfile, 
+#                                      ['FLAG_CATEGORY','FLAG','WEIGHT_SPECTRUM', 'DATA']))
+#        
+#        # Compare the DATA column
+#        self.assertTrue(th.compVarColTables(self.msfile,self.mmsfile,'DATA'))
 
     def test_default(self):
         '''mstransform: create an MMS with default values'''
