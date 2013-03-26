@@ -469,19 +469,20 @@ deconvolver::restore(const std::string& model, const std::string& image, const :
 {
   try {
 
-    casa::Quantity maj(1, "arcsec");
-    casa::Quantity min(1, "arcsec");
-    casa::Quantity pa(0, "deg");
-    if(String(bmaj.toString()) != String("")){
-      maj=casaQuantity(bmaj);
-    }
-    if(String(bmin.toString()) != String("")){
-      min=casaQuantity(bmin);
-    }
-    if(String(bpa.toString()) != String("")){
-      pa=casaQuantity(bpa);
-    }
-    GaussianBeam beam(maj, min, pa);
+    GaussianBeam beam;
+    if(toVectorString(bmaj.toStringVec()).nelements() != 0){
+      casa::Quantity bMaj(1, "arcsec");
+      casa::Quantity bMin(1, "arcsec");
+      casa::Quantity pa(0, "deg");
+      bMaj=casaQuantity(bmaj);
+      if(toVectorString(bmin.toStringVec()).nelements() != 0){
+	bMin=casaQuantity(bmin);
+      }
+      if(toVectorString(bpa.toStringVec()).nelements() != 0){
+	pa=casaQuantity(bpa);
+      }
+      beam=GaussianBeam(bMaj, bMin, pa); 
+    } 
     return itsDeconv->restore(String(model), String(image), beam);
   } catch  (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
