@@ -42,21 +42,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="minimizeButton">
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>:/images/statsMinimize.png</normaloff>:/images/statsMinimize.png</iconset>
-       </property>
-       <property name="checkable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QToolButton" name="maximizeButton">
+      <widget class="QToolButton" name="openCloseButton">
        <property name="text">
         <string/>
        </property>

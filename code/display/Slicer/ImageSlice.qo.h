@@ -87,11 +87,11 @@ public:
 	void setStatistics( SliceStatistics* statistics );
 
 private slots:
-	void minimizeDisplay();
-	void maximizeDisplay();
-
+	void openCloseDisplay();
 
 private:
+	void minimizeDisplay();
+	void maximizeDisplay();
 	void resetPlotCurve();
 	void updateSliceStatistics();
 	void clearCorners();
@@ -112,6 +112,7 @@ private:
 	bool useViewerColors;
 	bool showCorners;
 	bool polylineUnit;
+	bool minimized;
 	QColor viewerColor;
 	QList<QColor> segmentColors;
 	SliceWorker* sliceWorker;
