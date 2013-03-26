@@ -61,6 +61,7 @@ public:
 	//Converts between Jy/Beam units.  For example, MJy/Beam <-> Jy/Beam
 	static double convertJyBeams( const QString& sourceUnits, const QString& destUnits, double value );
 	static double convertJY( const QString& oldUnits, const QString& newUnits, double value );
+	static double convertJYSR( const QString& oldUnits,const QString& newUnits, double value );
 	virtual ~ConverterIntensity();
 
 private:
@@ -71,11 +72,13 @@ private:
 			const QString& oldUnits, const QString& newUnits );
 	static void convertJansky( Vector<float>& values, const QString& oldUnits,
 			const QString& newUnits );
+
 	static bool isJansky( const QString& units );
 	static QString getJanskyBaseUnits( const QString& units );
 	static QString stripPixels( const QString& units );
 	static const QList<QString> BEAM_UNITS;
 	static const QList<QString> JY_UNITS;
+	static const QList<QString> JY_SR_UNITS;
 	static double beamSolidAngle;
 	static const double SPEED_LIGHT_FACTOR;
 	static const double FREQUENCY_FACTOR;
