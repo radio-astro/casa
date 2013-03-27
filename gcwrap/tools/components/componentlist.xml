@@ -1116,10 +1116,10 @@ and available in Glish as mycl.
   <description>
     The close function resets the componentlist to its default state. In
     this state it contains no components and is not associated with
-    any table. This is the same state as a componentlist that has been
+    any table. <!--This is the same state as a componentlist that has been
     newly created using the
     <link anchor="componentmodels:componentlist.emptycomponentlist.constructor">emptycomponentlist</link>
-    constructor.
+    constructor.-->
     
     This function flushes all the components in memory to disk if the
     componentlist is associated with a table. The table is then
@@ -1144,7 +1144,7 @@ and available in Glish as mycl.
 
  
    <method type="function" name="edit">
-   <shortdescription>Start up the component editor gui</shortdescription>
+   <shortdescription>Start up the component editor gui {\bf Not implemented yet}</shortdescription>
    
   <keyword>edit</keyword>
   <description>
@@ -2109,7 +2109,7 @@ specified component</shortdescription>
     is an experimental disk model with the limb-darkening effect, where 
     the sky brigtness is described as {${I=I_o (1-(r/R)^2)^{n/2}}$} with 
     R being apparent body radius. The n can be set in optionalparms (if it is
-    not set, the default value, 0.05 will be used).
+    not set, the default value, 0.0 will be used).
 
     If the shape type is 'point' then the remaining arguments in this
     function are ignored. There are no other parameters needed to
