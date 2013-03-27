@@ -57,11 +57,11 @@ SubImage<T>::SubImage()
 template<class T>
 SubImage<T>::SubImage (
 	ImageInterface<T>& image,
-	AxesSpecifier axesSpec
+	AxesSpecifier axesSpec, Bool preserveAxesOrder
 )
 : itsImagePtr(image.cloneII()),
   itsSubLatPtr(new SubLattice<T> (image, axesSpec)) {
-	setCoords (image.coordinates());
+	setCoords (image.coordinates(), preserveAxesOrder);
 
 	setMembers (image.imageInfo().getBeamSet());
 }
@@ -69,12 +69,12 @@ SubImage<T>::SubImage (
 template<class T>
 SubImage<T>::SubImage (ImageInterface<T>& image,
 		       Bool writableIfPossible,
-		       AxesSpecifier axesSpec)
+		       AxesSpecifier axesSpec, Bool preserveAxesOrder)
 : itsImagePtr (image.cloneII()),
   itsSubLatPtr(
 		  new SubLattice<T> (image, writableIfPossible, axesSpec)
 ) {
-	setCoords (image.coordinates());
+	setCoords (image.coordinates(), preserveAxesOrder);
 	setMembers (image.imageInfo().getBeamSet());
 }
 
@@ -82,7 +82,7 @@ template<class T>
 SubImage<T>::SubImage (
 	const ImageInterface<T>& image,
 	const LattRegionHolder& region,
-	AxesSpecifier axesSpec
+	AxesSpecifier axesSpec, Bool preserveAxesOrder
 )
 : itsImagePtr (image.cloneII()),
   itsSubLatPtr(
@@ -101,7 +101,7 @@ SubImage<T>::SubImage (
 	convertIPosition(inc, slicer.stride());
 
 	CoordinateSystem subCoords = image.coordinates().subImage (blc, inc, slicer.length().asVector());
-	setCoords (subCoords);
+	setCoords (subCoords, preserveAxesOrder);
 	SubLattice<T> tmp(
 		image,
 		region.toLatticeRegion(
@@ -119,8 +119,8 @@ SubImage<T>::SubImage (
 	ImageInterface<T>& image,
 	const LattRegionHolder& region,
 	Bool writableIfPossible,
-	AxesSpecifier axesSpec)
-: itsImagePtr (image.cloneII())
+	AxesSpecifier axesSpec, Bool preserveAxesOrder
+) : itsImagePtr (image.cloneII())
 {
     LatticeRegion latReg = region.toLatticeRegion(
 		image.coordinates(), image.shape()
@@ -139,8 +139,10 @@ SubImage<T>::SubImage (
 	Vector<Float> blc, inc;
 	convertIPosition(blc, slicer.start());
 	convertIPosition(inc, slicer.stride());
+
 	CoordinateSystem subCoords = image.coordinates().subImage (blc, inc, slicer.length().asVector());
-	setCoords (subCoords);
+
+	setCoords (subCoords, preserveAxesOrder);
 	SubLattice<T> tmp(
     	image,
     	latReg
@@ -155,7 +157,7 @@ template<class T>
 SubImage<T>::SubImage (
 	const ImageInterface<T>& image,
 	const Slicer& slicer,
-	AxesSpecifier axesSpec
+	AxesSpecifier axesSpec, Bool preserveAxesOrder
 )
 	: itsImagePtr (image.cloneII()),
 	itsSubLatPtr(new SubLattice<T> (image, slicer, axesSpec)) {
@@ -166,7 +168,7 @@ SubImage<T>::SubImage (
 	CoordinateSystem subCoords = image.coordinates().subImage(
 			blc, inc, refslicer.length().asVector()
 		);
-	setCoords (subCoords);
+	setCoords (subCoords, preserveAxesOrder);
 	SubLattice<T> tmp(image, slicer);
 	ImageBeamSet hpBeams = _beamsForSubImage(
 			tmp.shape(), subCoords
@@ -179,7 +181,7 @@ SubImage<T>::SubImage (
 	ImageInterface<T>& image,
 	const Slicer& slicer,
 	Bool writableIfPossible,
-	AxesSpecifier axesSpec
+	AxesSpecifier axesSpec, Bool preserveAxesOrder
 )
 	: itsImagePtr (image.cloneII()),
 	  itsSubLatPtr(
@@ -195,7 +197,7 @@ SubImage<T>::SubImage (
 	CoordinateSystem subCoords = image.coordinates().subImage(
 			blc, inc, refslicer.length().asVector()
 		);
-	setCoords(subCoords);
+	setCoords(subCoords, preserveAxesOrder);
 	SubLattice<T> tmp(image, slicer);
 	ImageBeamSet hpBeams = _beamsForSubImage(
 		tmp.shape(), subCoords
@@ -263,7 +265,7 @@ String SubImage<T>::imageType() const
 }
 
 template<class T>
-void SubImage<T>::setCoords (const CoordinateSystem& coords)
+void SubImage<T>::setCoords (const CoordinateSystem& coords, Bool preserveAxesOrder)
 {
   const AxesMapping& axesMap = itsSubLatPtr->getAxesMap();
   AlwaysAssert (!axesMap.isReordered(), AipsError);
@@ -286,7 +288,7 @@ void SubImage<T>::setCoords (const CoordinateSystem& coords)
 // Actually drop any coordinates which have their axes fully removed
 
     CoordinateSystem crdOut;
-    CoordinateUtil::dropRemovedAxes(crdOut, crd);
+    CoordinateUtil::dropRemovedAxes(crdOut, crd, preserveAxesOrder);
     this->setCoordsMember (crdOut);
   }
 }
