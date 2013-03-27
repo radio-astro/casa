@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-#import sys, os
+import os,sys
 #sys.path.insert(1, os.path.dirname(__file__))
 #import pipeline.infrastructure.api as api
 #import pipeline.infrastructure as infrastructure
@@ -16,3 +16,12 @@ def show_weblog(context):
     import webbrowser
     index_html = os.path.join(context.report_dir, 't1-1.html')
     webbrowser.open(index_html)
+
+print "Initializing cli..."
+mypath = os.path.dirname(__file__);
+hifpath = mypath+"/hif/cli/hif.py"
+hpath = mypath+"/h/cli/h.py"
+hsdpath = mypath+"/hsd/cli/hsd.py"
+execfile(hpath)
+execfile(hifpath)
+execfile(hsdpath)
