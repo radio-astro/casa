@@ -64,10 +64,6 @@ for i in ['h', 'hif', 'hsd']:
 	command = '(cd '+casasrc+'/'+i+'/cli; buildmytasks -i='+casaarch+'/pipeline/'+i+'/cli -o='+i+'.py)'
 	print command
 	os.system( command)
-for i in ['recipes'] :
-	command = '(cd '+casasrc+'/'+i+'; buildmytasks -i='+casaarch+'/pipeline/'+i+" -o="+i+'.py)'
-	print command
-	os.system( command)
 command = 'cp '+casasrc+'/extern/Mako-0.7.0-py2.6.egg '+casaarch+'/pipeline/extern'
 print command
 os.system( command)
