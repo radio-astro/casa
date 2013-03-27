@@ -26,4 +26,13 @@ else
 export CASAARCH=$myDir
 fi
 echo $CASAARCH
-python setup.py install --install-lib=$CASAARCH --install-data=$CASAARCH --force
+OSNAME=`uname -s`
+if [[ $OSNAME = "Linux" ]]; then
+CASAPY=`which casapy`
+TOPLEVEL=`dirname $CASAPY`
+PYTHONEXEC=$TOPLEVEL/lib64/casapy/bin/python
+echo $PYTHONEXEC
+else
+PYTHONEXEC=python
+fi
+$PYTHONEXEC setup.py install --install-lib=$CASAARCH --install-data=$CASAARCH --force
