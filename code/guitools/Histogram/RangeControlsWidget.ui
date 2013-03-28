@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>429</width>
-    <height>126</height>
+    <height>149</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -35,11 +35,11 @@
       <set>Qt::AlignCenter</set>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout">
-      <property name="topMargin">
-       <number>1</number>
+      <property name="spacing">
+       <number>2</number>
       </property>
-      <property name="bottomMargin">
-       <number>4</number>
+      <property name="topMargin">
+       <number>3</number>
       </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_3">
@@ -165,6 +165,53 @@
         </item>
         <item>
          <spacer name="horizontalSpacer_6">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_6">
+        <item>
+         <spacer name="horizontalSpacer_9">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="percentileCheckBox">
+          <property name="toolTip">
+           <string>Set the data range based on a percentile.</string>
+          </property>
+          <property name="text">
+           <string>Percentile</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="percentileComboBox">
+          <property name="toolTip">
+           <string>Specify the percentage of data to include in the range.</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_10">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>

@@ -28,6 +28,8 @@
     <file>icons/Zoom0_OutExt.png</file>
     <file>icons/Zoom1_In.png</file>
     <file>icons/Zoom2_Out.png</file>
+    <file>icons/imageMinimize.png</file>
+    <file>icons/imageMaximize.png</file>
     <file>icons/arrowcrossb0.png</file>
     <file>icons/arrowcrossb1.png</file>
     <file>icons/arrowcrossb2.png</file>

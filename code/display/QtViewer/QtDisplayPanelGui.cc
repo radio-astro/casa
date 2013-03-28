@@ -51,7 +51,7 @@
 #include <display/QtViewer/QtWCBox.h>
 #include <display/QtViewer/Preferences.qo.h>
 #include <display/QtViewer/ColorHistogram.qo.h>
-//#include <display/QtViewer/ImageManagerDialog.qo.h>
+#include <display/QtViewer/ImageManagerDialog.qo.h>
 #include <display/Fit/Fit2DTool.qo.h>
 #include <display/Fit/FindSourcesDialog.qo.h>
 #include <display/Slicer/SlicerMainWindow.qo.h>
@@ -88,7 +88,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								   showdataoptionspanel_enter_count(0),
 								   controlling_dd(0), preferences(0),
 								   animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
-								   fitTool( NULL ), sliceTool( NULL ), findSourcesDialog( NULL ), /*imageManagerDialog(NULL),*/
+								   fitTool( NULL ), sliceTool( NULL ), findSourcesDialog( NULL ), imageManagerDialog(NULL),
 								   clean_tool(0), regionDock_(0),
 								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
@@ -517,7 +517,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	connect(histogramAct_, SIGNAL(triggered()), SLOT(showHistogram()));
 	connect(findSourcesAct_, SIGNAL(triggered()), SLOT(showFindSources()));
 	connect(fitAct_, SIGNAL(triggered()), SLOT(showFitInteractive()));
-	//connect(manageImagesAct_, SIGNAL(triggered()), SLOT(showImageManager()));
+	if ( manageImages ){
+		connect(manageImagesAct_, SIGNAL(triggered()), SLOT(showImageManager()));
+	}
 	if ( cleanAct_ ) connect(cleanAct_, SIGNAL(triggered()), SLOT(showCleanTool( )));
 
 	// connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
@@ -3053,12 +3055,12 @@ void QtDisplayPanelGui::showSlicer(){
 }
 
 void QtDisplayPanelGui::showImageManager(){
-	/*if ( manageImages ){
+	if ( manageImages ){
 		if ( imageManagerDialog == NULL ){
 			imageManagerDialog = new ImageManagerDialog( this );
 		}
 		imageManagerDialog->show();
-	}*/
+	}
 }
 
 }

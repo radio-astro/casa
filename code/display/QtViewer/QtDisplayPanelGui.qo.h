@@ -79,7 +79,7 @@ class Fit2DTool;
 class SlicerMainWindow;
 class ColorHistogram;
 class FindSourcesDialog;
-//class ImageManagerDialog;
+class ImageManagerDialog;
 
 template <class T> class ImageInterface;
 
@@ -547,7 +547,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   Fit2DTool* fitTool;
   SlicerMainWindow* sliceTool;
   FindSourcesDialog* findSourcesDialog;
-  //ImageManagerDialog* imageManagerDialog;
+  ImageManagerDialog* imageManagerDialog;
 
   // interactive clean...
   void initCleanTool( );

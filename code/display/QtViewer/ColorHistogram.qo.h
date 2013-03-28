@@ -58,7 +58,7 @@ private slots:
 	void acceptRange();
 	void cancelRange();
 	void colorsChanged();
-	void invertColorMap( bool invert );
+	void invertColorMap( int invert );
 	void powerCyclesChangedSlider(int value );
 	void powerCyclesChangedLineEdit( const QString& str );
 	void histogramColorModeChanged( bool useColors );

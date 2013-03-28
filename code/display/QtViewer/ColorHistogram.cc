@@ -33,6 +33,7 @@
 #include <images/Images/ImageInterface.h>
 #include <casa/Arrays/Array.h>
 #include <QDoubleValidator>
+#include <synthesis/MSVis/UtilJ.h>
 
 namespace casa {
 
@@ -70,7 +71,7 @@ ColorHistogram::ColorHistogram(QWidget *parent)
 	connect( ui.coloredHistogramCheckBox, SIGNAL(toggled(bool)), this, SLOT(histogramColorModeChanged(bool)));
 
 	//Invert the color map
-	connect( ui.invertMapCheckBox, SIGNAL(toggled(bool)), this, SLOT(invertColorMap(bool)));
+	connect( ui.invertMapCheckBox, SIGNAL(stateChanged(int)), this, SLOT(invertColorMap(int)));
 
 	//Histogram plot
 	histogram = new BinPlotWidget( false, true, false, this );
@@ -107,19 +108,24 @@ void ColorHistogram::powerCyclesChangedLineEdit( const QString& str ){
 }
 
 void ColorHistogram::powerCyclesChangedSlider(int value ){
+	casa::utilj::ThreadTimes t1;
 	float valueDistance = value - SLIDER_MIN;
 	float valueRange = SLIDER_MAX - SLIDER_MIN;
 	float powerRange = SCALE_LIMIT * 2;
 	float powerMin = -1 * SCALE_LIMIT;
 	float cycleValue = powerRange * valueDistance / valueRange+powerMin;
 	resetPowerCycles( cycleValue);
+	casa::utilj::ThreadTimes t2;
+	casa::utilj::DeltaThreadTimes dt = t2 - t1;
 }
 
 void ColorHistogram::resetIntensityRange(){
 	std::pair<double,double> minMaxValues = histogram->getMinMaxValues();
-	minIntensity = minMaxValues.first;
-	maxIntensity = minMaxValues.second;
-	resetColorLookups();
+	if ( minIntensity != minMaxValues.first || maxIntensity != minMaxValues.second ){
+		minIntensity = minMaxValues.first;
+		maxIntensity = minMaxValues.second;
+		resetColorLookups();
+	}
 }
 
 void ColorHistogram::acceptRange(){
@@ -156,12 +162,18 @@ void ColorHistogram::setDisplayData( QtDisplayData* dd ){
 	}
 }
 
-void ColorHistogram::invertColorMap( bool /*invert*/ ){
-	updateColorMap( true );
+void ColorHistogram::invertColorMap( int invert ){
+	bool invertMap = false;
+	if ( invert == Qt::Checked ){
+		invertMap = true;
+	}
+	updateColorMap( invertMap );
 	resetColorLookups();
 }
 
 void ColorHistogram::resetColorLookups(){
+	//casa::utilj::ThreadTimes t1;
+
 	//Have to change the colors used to draw the
 	//histogram.
 	std::vector<float> intensities = histogram->getXValues();
@@ -170,7 +182,8 @@ void ColorHistogram::resetColorLookups(){
 	//Scale.
 	Vector<uInt> colorValues = computeScaledIntensities( intensities );
 	histogram->setColorLookups( colorValues );
-
+	//casa::utilj::ThreadTimes t2;
+	//casa::utilj::DeltaThreadTimes dt = t2 - t1;
 
 	//For the transfer function, we only want to use intensities within
 	//a given range.
@@ -195,10 +208,17 @@ void ColorHistogram::resetColorLookups(){
 	}
 	colorTransferWidget->setIntensities( colorIntensities );
 	colorTransferWidget->setColorLookups( colorLookups );
+
+	//casa::utilj::ThreadTimes t3;
+	//casa::utilj::DeltaThreadTimes dt2 = t3 - t2;
+	//qDebug() << "resetcolor lookups color transfer elapsed="<<dt2.elapsed()<<" cpu="<<dt2.cpu();
+
+	//casa::utilj::DeltaThreadTimes dt3 = t3 - t1;
+	//qDebug() << "resetcolor lookups  total elapsed="<<dt3.elapsed()<<" cpu="<<dt3.cpu();
 }
 
 Vector<uInt> ColorHistogram::computeScaledIntensities(const std::vector<float>& intensities ){
-
+	//casa::utilj::ThreadTimes t1;
 	//We have to scale the intensities to the interval [0,1].
 	int intensityCount = intensities.size();
 	Vector<uInt> colorValues;
@@ -211,6 +231,9 @@ Vector<uInt> ColorHistogram::computeScaledIntensities(const std::vector<float>& 
 		colorValues.resize( intensityCount );
 		(*powerScaler)( colorValues, scaledIntensities );
 	}
+	//casa::utilj::ThreadTimes t3;
+	//casa::utilj::DeltaThreadTimes dt2 = t3 - t1;
+	//qDebug() << "computerScaledIntensities elapsed="<<dt2.elapsed()<<" cpu="<<dt2.cpu();
 	return colorValues;
 }
 
@@ -261,17 +284,20 @@ void ColorHistogram::colorsChanged(){
 }
 
 void ColorHistogram::resetPowerCycles( float powerCycles ){
-	powerScaler->setCycles( powerCycles );
-	blockSignals( true );
-	ui.powerCyclesLineEdit->setText( QString::number(powerCycles) );
-	float powerDistance = powerCycles + SCALE_LIMIT;
-	float powerRange = 2 * SCALE_LIMIT;
-	float sliderRange = SLIDER_MAX - SLIDER_MIN;
-	int sliderValue = SLIDER_MIN +
+	float oldCycles = powerScaler->cycles();
+	if ( oldCycles != powerCycles ){
+		powerScaler->setCycles( powerCycles );
+		blockSignals( true );
+		ui.powerCyclesLineEdit->setText( QString::number(powerCycles) );
+		float powerDistance = powerCycles + SCALE_LIMIT;
+		float powerRange = 2 * SCALE_LIMIT;
+		float sliderRange = SLIDER_MAX - SLIDER_MIN;
+		int sliderValue = SLIDER_MIN +
 			static_cast<int>(powerDistance / powerRange * sliderRange);
-	ui.powerCyclesSlider->setValue( sliderValue );
-	blockSignals( false );
-	resetColorLookups();
+		ui.powerCyclesSlider->setValue( sliderValue );
+		blockSignals( false );
+		resetColorLookups();
+	}
 }
 
 ColorHistogram::~ColorHistogram(){
