@@ -99,9 +99,8 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	std::auto_ptr<ImageInterface<Float> > myClone(_getImage()->cloneII());
 	SubImage<Float> subImage = SubImageFactory<Float>::createSubImage(
 		*myClone, *_getRegion(), _getMask(),
-		_getLog().get(), False, AxesSpecifier(), _getStretch()
+		_getLog().get(), False, AxesSpecifier(), _getStretch(), True
 	);
-
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	const CoordinateSystem& subCoords = subImage.coordinates();
 	Vector<Int> dirAxes = subCoords.directionAxesNumbers();
@@ -161,7 +160,6 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	dc1.toWorld(worldStart, Vector<Double>(start));
 	dc1.toWorld(worldEnd, Vector<Double>(end));
 
-
 	std::auto_ptr<DirectionCoordinate> rotCoord(
 		dynamic_cast<DirectionCoordinate *>(
 			dc1.rotate(Quantity(paInRad, "rad"))
@@ -196,11 +194,6 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		padded.reset(padder.pad(True));
 		imageToRotate = padded.get();
 	}
-	/*
-	IPosition outShape = subShape;
-	outShape[xAxis] = (Int)(endPixRot[0] - startPixRot[0]) + nPixels + 6;
-	outShape[yAxis] = (Int)(startPixRot[1] + _halfwidth) + nPixels + 6;
-*/
 	IPosition blc(subImage.ndim(), 0);
 	IPosition trc = subShape - 1;
 
@@ -216,7 +209,6 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		(Double)subShape[yAxis] - 1
 	) + nPixels;
 
-
 	Record lcbox = LCBox(blc, trc, imageToRotate->shape()).toRecord("");
 	std::auto_ptr<ImageInterface<Float> > rotated;
 	if (paInRad == 0) {
@@ -225,7 +217,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 			new SubImage<Float>(
 				SubImageFactory<Float>::createSubImage(
 					*imageToRotate, lcbox, "", 0, False,
-					AxesSpecifier(), False
+					AxesSpecifier(), False, True
 				)
 			)
 		);
@@ -265,6 +257,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 			AipsError
 		);
 	}
+
 	// We've rotated to make the slice coincident with the x axis, therefore, the y axis
 	// values of the endpoints should be equal
 	AlwaysAssert(abs(rotPixStart[yAxis] - rotPixEnd[yAxis]) < 1e-6, AipsError);
@@ -297,7 +290,6 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	Vector<Double > newRefPix = rotCoords.referencePixel();
 	newRefPix[xAxis] = rotPixStart[xAxis] - blc[xAxis];
 	newRefPix[yAxis] = rotPixStart[yAxis] - blc[yAxis];
-
 	CoordinateSystem collCoords = collapsed->coordinates();
 	/*
 	 * this is the original code for setting of the full direction coordinate
@@ -310,7 +302,6 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	refVal[yAxis] = startWorld[yAxis];
 	collCoords.setReferenceValue(refVal);
 	*/
-
 	// to determine the pixel increment of the angular offset axis, get the
 	// distance between the end points
 	ImageMetaData<Float> md(collapsed.get());
@@ -349,17 +340,22 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	collapsed->coordinates().save(misc, "secondary_coordinates");
 	collapsed->setMiscInfo(misc);
 	collapsed->setCoordinateInfo(collCoords);
-
-	IPosition keep;
+	IPosition keep, axisPath;
+	uInt j = 0;
 	for (uInt i=0; i<collapsed->ndim(); i++) {
 		if ((Int)i != dirAxisNumbers[1]) {
-			keep.append(IPosition(1, i));
+			axisPath.append(IPosition(1, j));
+			j++;
+			if (collapsed->shape()[i] == 1) {
+				keep.append(IPosition(1, i));
+			}
 		}
 	}
 	// now remove the degenerate linear axis
 	Record empty;
 	SubImage<Float> cDropped = SubImageFactory<Float>::createSubImage(
-		*collapsed, empty, "", 0, False, AxesSpecifier(keep), False
+		*collapsed, empty, "", 0, False, AxesSpecifier(keep, axisPath),
+		False, True
 	);
 	std::auto_ptr<ArrayLattice<Bool> > newMask;
 	if (dynamic_cast<TempImage<Float> *>(collapsed.get())->hasPixelMask()) {

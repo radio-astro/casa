@@ -47,7 +47,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	ImageInterface<T>& inImage, const Record& region,
 	const String& mask, LogIO *const &os,
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
-	const Bool extendMask
+	Bool extendMask, Bool preserveAxesOrder
 ) {
 	// The ImageRegion pointers must be null on entry
 	// either pointer may be null on exit
@@ -107,10 +107,10 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	// is empty and the user is not dropping degenerate axes
 	if (region.nfields() == 0 && axesSpecifier.keep()) {
 		subImage = (outMaskMgr.get() == 0)
-			? SubImage<T>(inImage, True)
+			? SubImage<T>(inImage, writableIfPossible, axesSpecifier, preserveAxesOrder)
 			: SubImage<T>(
 				inImage, *outMaskMgr,
-				writableIfPossible
+				writableIfPossible, axesSpecifier, preserveAxesOrder
 			);
 	}
 	else {
@@ -123,16 +123,20 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 		if (outMaskMgr.get() == 0) {
             subImage = SubImage<T>(
 				inImage, *outRegionMgr,
-				writableIfPossible, axesSpecifier
+				writableIfPossible, axesSpecifier,
+				preserveAxesOrder
 			);
 		}
 		else {
             SubImage<T> subImage0(
-				inImage, *outMaskMgr, writableIfPossible
+				inImage, *outMaskMgr, writableIfPossible,
+				axesSpecifier,
+				preserveAxesOrder
 			);
 			subImage = SubImage<T>(
 				subImage0, *outRegionMgr,
-				writableIfPossible, axesSpecifier
+				writableIfPossible, axesSpecifier,
+				preserveAxesOrder
 			);
 		}
 		outRegion = outRegionMgr.release();
@@ -145,20 +149,19 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	ImageInterface<T>& inImage, const Record& region,
 	const String& mask, LogIO *const &os,
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
-	const Bool extendMask
+	Bool extendMask, Bool preserveAxesOrder
 ) {
 	ImageRegion *pRegion = 0;
 	ImageRegion *pMask = 0;
 	SubImage<T> mySubim = createSubImage(
 		pRegion, pMask, inImage, region,
 		mask, os, writableIfPossible, axesSpecifier,
-		extendMask
+		extendMask, preserveAxesOrder
 	);
 	delete pRegion;
 	delete pMask;
     return mySubim;
 }
-
 
 template<class T> ImageInterface<Float>* SubImageFactory<T>::createImage(
 	ImageInterface<T>& image,
