@@ -53,7 +53,7 @@ try {
    test4();
    test5();
 }
-catch (AipsError x) {
+catch (const AipsError& x) {
 	cerr << "aipserror: error " << x.getMesg() << endl;
 	return 1;
 }
@@ -599,6 +599,60 @@ void test3 ()
       AlwaysAssert(coord==-1, AipsError);
       AlwaysAssert(worldAxes.nelements()==0, AipsError);
       AlwaysAssert(pixelAxes.nelements()==0, AipsError);
+   }
+
+   {
+	   // axis order is preserved when dropping an axis.
+	   CoordinateSystem cSysIn = CoordinateUtil::defaultCoords4D();
+	   Vector<Int> order(4);
+	   order[0] = 0;
+	   order[1] = 1;
+	   order[2] = 3;
+	   order[3] = 2;
+	   cSysIn.transpose(order, order);
+	   cSysIn.removePixelAxis(0, 0.0);
+	   CoordinateSystem cSysOut;
+	   Bool dropped = CoordinateUtil::dropRemovedAxes(cSysOut, cSysIn, False);
+	   AlwaysAssert(dropped==False, AipsError);
+	   AlwaysAssert(
+	       cSysOut.spectralAxisNumber() != cSysIn.spectralAxisNumber(),
+	       AipsError
+	   );
+	   AlwaysAssert(
+           cSysOut.polarizationAxisNumber() != cSysIn.polarizationAxisNumber(),
+           AipsError
+       );
+	   AlwaysAssert(
+		   cSysOut.worldAxes(cSysOut.spectralCoordinateNumber())[0]
+		   != cSysIn.worldAxes(cSysIn.spectralCoordinateNumber())[0],
+		   AipsError
+	   );
+	   AlwaysAssert(
+	       cSysOut.worldAxes(cSysOut.polarizationCoordinateNumber())[0]
+	       != cSysIn.worldAxes(cSysIn.polarizationCoordinateNumber())[0],
+	   	   AipsError
+	   );
+	   cSysOut = CoordinateSystem();
+	   dropped = CoordinateUtil::dropRemovedAxes(cSysOut, cSysIn, True);
+
+	   AlwaysAssert(
+	       cSysOut.spectralAxisNumber() == cSysIn.spectralAxisNumber(),
+	   	   AipsError
+	   );
+	   AlwaysAssert(
+	       cSysOut.polarizationAxisNumber() == cSysIn.polarizationAxisNumber(),
+	       AipsError
+	   );
+	   AlwaysAssert(
+	       cSysOut.worldAxes(cSysOut.spectralCoordinateNumber())[0]
+	   	   == cSysIn.worldAxes(cSysIn.spectralCoordinateNumber())[0],
+	   	   AipsError
+	   );
+	   AlwaysAssert(
+	       cSysOut.worldAxes(cSysOut.polarizationCoordinateNumber())[0]
+	       == cSysIn.worldAxes(cSysIn.polarizationCoordinateNumber())[0],
+	       AipsError
+	   );
    }
 }
 
