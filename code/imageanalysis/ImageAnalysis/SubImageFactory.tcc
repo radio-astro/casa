@@ -107,7 +107,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	// is empty and the user is not dropping degenerate axes
 	if (region.nfields() == 0 && axesSpecifier.keep()) {
 		subImage = (outMaskMgr.get() == 0)
-			? SubImage<T>(inImage, axesSpecifier, preserveAxesOrder)
+			? SubImage<T>(inImage, writableIfPossible, axesSpecifier, preserveAxesOrder)
 			: SubImage<T>(
 				inImage, *outMaskMgr,
 				writableIfPossible, axesSpecifier, preserveAxesOrder
