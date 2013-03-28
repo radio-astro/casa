@@ -48,19 +48,26 @@ void doTest1 (Bool verbose=False) {
   Double tol(2e-7);
 
   // Make a testing NewCalTable (Table::Memory)
-  uInt nFld(1), nAnt(1), nSpw(1), nObs(1),nTime(100);
+  uInt nFld(1), nAnt(1), nSpw(1), nObs(1),nScan(1), nTime(100);
   Vector<Int> nChan(nSpw,1);
   Double refTime(4832568000.0); // 2012 Jan 06 @ noon
   Double tint(60.0);
-  Bool disk(False);
-  NewCalTable tnct("tCTTimeInterp1_test1.ct","T",nFld,nAnt,nSpw,nChan,
-		   nObs,nTime,refTime,tint,disk,False); // verbose);
+  Bool disk(verbose);
+  NewCalTable tnct("tCTTimeInterp1_test1.ct","Complex",
+		   nObs,nScan,nTime,
+		   nAnt,nSpw,nChan,
+		   nFld,
+                   refTime,tint,disk,False); 
 
   // some sanity checks on the test NewCalTable
-  if (verbose) cout << "Table::Type: " << tnct.tableType() << endl;
+  if (verbose) cout << "Table::Type: " << tnct.tableType() 
+                    << " (should be " << Table::Memory << ")"
+                    << endl;
   AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
-  if (verbose) cout << "nrow = " << tnct.nrow() << endl;
-  AlwaysAssert( (tnct.nrow()==nFld*nAnt*nSpw*nTime), AipsError);
+  if (verbose) cout << "nrow = " << tnct.nrow() 
+                    << " (should be " << nObs*nScan*nTime*nSpw*nAnt << ")"
+                    << endl;
+  AlwaysAssert( (tnct.nrow()==nObs*nScan*nTime*nSpw*nAnt), AipsError);
 
   // Make a CTInterp
   Matrix<Float> result(2,1);

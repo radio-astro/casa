@@ -335,8 +335,7 @@ void SolvableVisCal::setApply(const Record& apply) {
 
   // Make the interpolation engine
   MeasurementSet ms(msName());
-  ROMSColumns mscol(ms);
-  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType,fieldtype,mscol,spwMap());
+  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType,fieldtype,ms,spwMap());
 
   // Channel counting info 
   //  (soon will deprecate, I think, because there will be no need
@@ -817,8 +816,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
       delete ci_;
 
     MeasurementSet ms(msName());
-    ROMSColumns mscol(ms);
-    ci_=new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),"linear","",mscol,spwMap());
+    ci_=new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),"linear","",ms,spwMap());
 
   }
 
@@ -2719,7 +2717,7 @@ void SolvableVisCal::calcPar() {
   if (freqDepPar()) {
     //    cout << "currFreq() = " << currFreq().shape() << " " << currFreq() << endl;
     // Call w/ freq-dep
-    newcal=ci_->interpolate(currField(),currSpw(),currTime(),currFreq());
+    newcal=ci_->interpolate(currObs(),currField(),currSpw(),currTime(),currFreq());
     //    cout.precision(12);
     //    cout << typeName() << " t="<< currTime() << " newcal=" << boolalpha << newcal << endl;
   }
@@ -2727,10 +2725,10 @@ void SolvableVisCal::calcPar() {
     if (parType()==VisCalEnum::COMPLEX)
       // Call w/ fiducial freq for phase-delay correction
       // TBD: improve freq spec
-      newcal=ci_->interpolate(currField(),currSpw(),currTime(),1.0e9*currFreq()(currFreq().nelements()/2));
+      newcal=ci_->interpolate(currObs(),currField(),currSpw(),currTime(),1.0e9*currFreq()(currFreq().nelements()/2));
     else
       // No freq info at all
-      newcal=ci_->interpolate(currField(),currSpw(),currTime());
+      newcal=ci_->interpolate(currObs(),currField(),currSpw(),currTime());
   }
 
   // TBD: signal failure to find calibration??  (e.g., for a spw?)
@@ -2745,14 +2743,14 @@ void SolvableVisCal::calcPar() {
     
     // Reference result
     if (parType()==VisCalEnum::COMPLEX) 
-      currCPar().reference(ci_->resultC(currField(),currSpw()));
+      currCPar().reference(ci_->resultC(currObs(),currField(),currSpw()));
     else if (parType()==VisCalEnum::REAL) 
-      currRPar().reference(ci_->resultF(currField(),currSpw()));
+      currRPar().reference(ci_->resultF(currObs(),currField(),currSpw()));
     else
       throw(AipsError("Bad parType() in SVC::calcPar"));
 
     // Assign _inverse_ of parameter flags
-    currParOK().reference(!ci_->rflag(currField(),currSpw()));
+    currParOK().reference(!ci_->rflag(currObs(),currField(),currSpw()));
 
     // Ensure shapes recorded correctly
     // (New interpolation generates cal samples for all data channels...revisit?

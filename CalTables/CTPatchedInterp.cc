@@ -47,6 +47,251 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
 				 const String& timetype,
 				 const String& freqtype,
 				 const String& fieldtype,
+				 Vector<Int> spwmap) :
+  ct_(ct),
+  mtype_(mtype),
+  isCmplx_(False),
+  nPar_(nPar),
+  nFPar_(nPar),
+  timeType_(timetype),
+  freqType_(freqtype),
+  byObs_(timetype.contains("perobs")), // detect slicing by obs
+  byField_(fieldtype=="nearest"),     // for now we are NOT slicing by field
+  nChanIn_(),
+  freqIn_(),
+  nMSObs_(byObs_?ct.observation().nrow():1),  // assume CT shapes for MS shapes
+  nMSFld_(ct.field().nrow()),                 
+  nMSSpw_(ct.spectralWindow().nrow()),
+  nMSAnt_(ct.antenna().nrow()),
+  altFld_(),
+  nCTObs_(byObs_?ct.observation().nrow():1),
+  nCTFld_(byField_?ct.field().nrow():1),
+  nCTSpw_(ct.spectralWindow().nrow()),
+  nCTAnt_(ct.antenna().nrow()),
+  nCTElem_(0),
+  spwInOK_(),
+  fldMap_(),
+  spwMap_(),
+  antMap_(),
+  elemMap_(),
+  conjTab_(),
+  result_(),
+  resFlag_(),
+  tI_(),
+  tIdel_()
+{
+  if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp(<no MS>)" << endl;
+
+
+  ia1dmethod_=ftype(freqType_);
+
+  //  cout << "ia1dmethod_ = " << ia1dmethod_ << endl;
+
+  switch(mtype_) {
+  case VisCalEnum::GLOBAL: {
+
+    throw(AipsError("CTPatchedInterp::ctor: No non-Mueller/Jones yet."));
+
+    nCTElem_=1;
+    nMSElem_=1;
+    break;
+  }
+  case VisCalEnum::MUELLER: {
+    nCTElem_=nCTAnt_*(nCTAnt_+1)/2;
+    nMSElem_=nMSAnt_*(nMSAnt_+1)/2;
+    break;
+  }
+  case VisCalEnum::JONES: {
+    nCTElem_=nCTAnt_;
+    nMSElem_=nMSAnt_;
+    break;
+  }
+  }
+
+  // How many _Float_ parameters?
+  if (isCmplx_=ct_.keywordSet().asString("ParType")=="Complex")  // Complex input
+    nFPar_*=2;  // interpolating 2X as many Float values
+
+  // Set channel/freq info
+  CTSpWindowColumns ctspw(ct_.spectralWindow());
+  ctspw.numChan().getColumn(nChanIn_);
+  freqIn_.resize(nCTSpw_);
+  for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
+    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
+
+  // Initialize caltable slices
+  sliceTable();
+
+  // Set spwmap
+  setSpwMap(spwmap);
+
+  // Set fldmap
+  if (byField_)
+    setFldMap(ct.field());  // Use CalTable's fields
+  else
+    setDefFldMap();
+
+  // Set defaultmaps
+  setDefAntMap();
+  setElemMap();
+
+  // Resize working arrays
+  result_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  resFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  timeResult_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  timeResFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  freqResult_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  freqResFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
+
+  // Figure out where we can duplicate field interpolators
+  altFld_.resize(nMSFld_);
+  for (Int iMSFld=0;iMSFld<nMSFld_;++iMSFld) {
+     altFld_(iMSFld)=iMSFld;  // nominally
+     for (Int ifld=0;ifld<iMSFld;++ifld) 
+       if (fldMap_(ifld)==fldMap_(iMSFld))
+         altFld_(iMSFld)=ifld;  
+  }
+  //  cout << "------------" << endl;
+  //  cout << "fldMap_ = " << fldMap_ << "  altFld_ = " << altFld_ << endl;
+
+  // Setup mapped interpolators
+  // TBD: defer this to later, so that spwmap, etc. can be revised
+  //   before committing to the interpolation engines
+  makeInterpolators();
+
+  //  state();
+}
+
+CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
+				 VisCalEnum::MatrixType mtype,
+				 Int nPar,
+				 const String& timetype,
+				 const String& freqtype,
+				 const String& fieldtype,
+				 const MeasurementSet& ms,
+				 Vector<Int> spwmap) :
+  ct_(ct),
+  mtype_(mtype),
+  isCmplx_(False),
+  nPar_(nPar),
+  nFPar_(nPar),
+  timeType_(timetype),
+  freqType_(freqtype),
+  byObs_(timetype.contains("perobs")), // detect slicing by obs
+  byField_(fieldtype=="nearest"),  // for now we are NOT slicing by field
+  nChanIn_(),
+  freqIn_(),
+  nMSObs_(byObs_?ms.observation().nrow():1),
+  nMSFld_(ms.field().nrow()),  
+  nMSSpw_(ms.spectralWindow().nrow()),
+  nMSAnt_(ms.antenna().nrow()),
+  altFld_(),
+  nCTObs_(byObs_?ct.observation().nrow():1),
+  nCTFld_(byField_?ct.field().nrow():1),
+  nCTSpw_(ct.spectralWindow().nrow()),
+  nCTAnt_(ct.antenna().nrow()),
+  nCTElem_(0),
+  spwInOK_(),
+  fldMap_(),
+  spwMap_(),
+  antMap_(),
+  elemMap_(),
+  conjTab_(),
+  result_(),
+  resFlag_(),
+  tI_(),
+  tIdel_()
+{
+
+  if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp()" << endl;
+
+  ia1dmethod_=ftype(freqType_);
+
+  //  cout << "ia1dmethod_ = " << ia1dmethod_ << endl;
+
+  switch(mtype_) {
+  case VisCalEnum::GLOBAL: {
+
+    throw(AipsError("CTPatchedInterp::ctor: No non-Mueller/Jones yet."));
+
+    nCTElem_=1;
+    nMSElem_=1;
+    break;
+  }
+  case VisCalEnum::MUELLER: {
+    nCTElem_=nCTAnt_*(nCTAnt_+1)/2;
+    nMSElem_=nMSAnt_*(nMSAnt_+1)/2;
+    break;
+  }
+  case VisCalEnum::JONES: {
+    nCTElem_=nCTAnt_;
+    nMSElem_=nMSAnt_;
+    break;
+  }
+  }
+
+  // How many _Float_ parameters?
+  if (isCmplx_=ct_.keywordSet().asString("ParType")=="Complex")  // Complex input
+    nFPar_*=2;  // interpolating 2X as many Float values
+
+  // Set channel/freq info
+  CTSpWindowColumns ctspw(ct_.spectralWindow());
+  ctspw.numChan().getColumn(nChanIn_);
+  freqIn_.resize(nCTSpw_);
+  for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
+    ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
+
+  // Initialize caltable slices
+  sliceTable();
+
+  // Set spwmap
+  setSpwMap(spwmap);
+
+  // Set fldmap
+  if (byField_)
+    setFldMap(ms.field());  // on a trial basis
+  else
+    setDefFldMap();
+
+
+  // Set defaultmaps
+  setDefAntMap();
+  setElemMap();
+
+  // Resize working arrays
+  result_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  resFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  timeResult_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  timeResFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  freqResult_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  freqResFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
+
+  // Figure out where we can duplicate field interpolators
+  altFld_.resize(nMSFld_);
+  for (Int iMSFld=0;iMSFld<nMSFld_;++iMSFld) {
+     altFld_(iMSFld)=iMSFld;  // nominally
+     for (Int ifld=0;ifld<iMSFld;++ifld) 
+       if (fldMap_(ifld)==fldMap_(iMSFld))
+         altFld_(iMSFld)=ifld;  
+  }
+  //  cout << "------------" << endl;
+  //  cout << "fldMap_ = " << fldMap_ << "  altFld_ = " << altFld_ << endl;
+
+  // Setup mapped interpolators
+  // TBD: defer this to later, so that spwmap, etc. can be revised
+  //   before committing to the interpolation engines
+  makeInterpolators();
+
+  //  state();
+
+}
+
+CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
+				 VisCalEnum::MatrixType mtype,
+				 Int nPar,
+				 const String& timetype,
+				 const String& freqtype,
+				 const String& fieldtype,
 				 const ROMSColumns& mscol,
 				 Vector<Int> spwmap) :
   ct_(ct),
@@ -56,12 +301,13 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   nFPar_(nPar),
   timeType_(timetype),
   freqType_(freqtype),
+  byObs_(False),                // turn off for old-fashioned
+  byField_(fieldtype=="nearest"),  // for now we are NOT slicing by field
   nChanIn_(),
   freqIn_(),
   nMSFld_(mscol.field().nrow()),  
   nMSSpw_(mscol.spectralWindow().nrow()),
   nMSAnt_(mscol.antenna().nrow()),
-  byField_(fieldtype=="nearest"),  // for now we are NOT slicing by field
   altFld_(),
   nCTFld_(byField_?ct.field().nrow():1),
   nCTSpw_(ct.spectralWindow().nrow()),
@@ -73,7 +319,6 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   antMap_(),
   elemMap_(),
   conjTab_(),
-  currTime_(),
   result_(),
   resFlag_(),
   tI_(),
@@ -135,12 +380,12 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   setElemMap();
 
   // Resize working arrays
-  result_.resize(nMSSpw_,nMSFld_);
-  resFlag_.resize(nMSSpw_,nMSFld_);
-  timeResult_.resize(nMSSpw_,nMSFld_);
-  timeResFlag_.resize(nMSSpw_,nMSFld_);
-  freqResult_.resize(nMSSpw_,nMSFld_);
-  freqResFlag_.resize(nMSSpw_,nMSFld_);
+  result_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  resFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  timeResult_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  timeResFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  freqResult_.resize(nMSSpw_,nMSFld_,nMSObs_);
+  freqResFlag_.resize(nMSSpw_,nMSFld_,nMSObs_);
 
   // Figure out where we can duplicate field interpolators
   altFld_.resize(nMSFld_);
@@ -168,72 +413,79 @@ CTPatchedInterp::~CTPatchedInterp() {
 
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::~CTPatchedInterp()" << endl;
 
-  IPosition ip(tI_.shape());
-  for (Int k=0;k<ip(2);++k)
-    for (Int j=0;j<ip(1);++j)
-      for (Int i=0;i<ip(0);++i) 
-	if (tIdel_(i,j,k))
-	  delete tI_(i,j,k);
-  tI_.set(NULL);
+  IPosition sh(tI_.shape());
+  for (Int l=0;l<sh(3);++l)
+    for (Int k=0;k<sh(2);++k)
+      for (Int j=0;j<sh(1);++j)
+	for (Int i=0;i<sh(0);++i) {
+	  IPosition ip(4,i,j,k,l);
+	  if (tIdel_(ip))
+	    delete tI_(ip);
+	}
+  tI_.resize();
 }
 
-Bool CTPatchedInterp::interpolate(Int msfld, Int msspw, Double time, Double freq) {
+Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, Double freq) {
 
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::interpolate(...)" << endl;
 
-  // TBD: set currTime (also in freq-dep version)
-
   Bool newcal(False);
+  IPosition ip(4,0,msspw,msfld,thisobs(msobs));
+
   // Loop over _output_ elements
   for (Int iMSElem=0;iMSElem<nMSElem_;++iMSElem) {
     // Call fully _patched_ time-interpolator, keeping track of 'newness'
     //  fills timeResult_/timeResFlag_ implicitly
+    ip(0)=iMSElem;
     if (freq>0.0)
-      newcal|=tI_(iMSElem,msspw,msfld)->interpolate(time,freq);
+      newcal|=tI_(ip)->interpolate(time,freq);
     else
-      newcal|=tI_(iMSElem,msspw,msfld)->interpolate(time);
+      newcal|=tI_(ip)->interpolate(time);
   }
 
   // Whole result referred to time result:
-  result_(msspw,msfld).reference(timeResult_(msspw,msfld));
-  resFlag_(msspw,msfld).reference(timeResFlag_(msspw,msfld));
+  result_(msspw,msfld,thisobs(msobs)).reference(timeResult_(msspw,msfld,thisobs(msobs)));
+  resFlag_(msspw,msfld,thisobs(msobs)).reference(timeResFlag_(msspw,msfld,thisobs(msobs)));
 
   return newcal;
 }
 
-
-Bool CTPatchedInterp::interpolate(Int msfld, Int msspw, Double time, const Vector<Double>& freq) {
+Bool CTPatchedInterp::interpolate(Int msobs, Int msfld, Int msspw, Double time, const Vector<Double>& freq) {
 
   if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::interpolate(...,freq)" << endl;
+
+  // obsid non-degenerate only if byObs_
 
   // The number of requested channels
   uInt nMSChan=freq.nelements();
 
   // Ensure freq result Array is properly sized
-  if (freqResult_(msspw,msfld).nelements()!=nMSChan) {
+  if (freqResult_(msspw,msfld,thisobs(msobs)).nelements()!=nMSChan) {
      Int thisAltFld=altFld_(msfld);
-     if (freqResult_(msspw,thisAltFld).nelements()!=nMSChan) {
-       freqResult_(msspw,thisAltFld).resize(nFPar_,nMSChan,nMSElem_);
-       freqResFlag_(msspw,thisAltFld).resize(nPar_,nMSChan,nMSElem_);
+     if (freqResult_(msspw,thisAltFld,thisobs(msobs)).nelements()!=nMSChan) {
+       freqResult_(msspw,thisAltFld,thisobs(msobs)).resize(nFPar_,nMSChan,nMSElem_);
+       freqResFlag_(msspw,thisAltFld,thisobs(msobs)).resize(nPar_,nMSChan,nMSElem_);
      }
      if (thisAltFld!=msfld) {
-       freqResult_(msspw,msfld).reference(freqResult_(msspw,thisAltFld));
-       freqResFlag_(msspw,msfld).reference(freqResFlag_(msspw,thisAltFld));
+       freqResult_(msspw,msfld,thisobs(msobs)).reference(freqResult_(msspw,thisAltFld,thisobs(msobs)));
+       freqResFlag_(msspw,msfld,thisobs(msobs)).reference(freqResFlag_(msspw,thisAltFld,thisobs(msobs)));
      }
   }
 
   Bool newcal(False);
+  IPosition ip(4,0,msspw,msfld,thisobs(msobs));
   // Loop over _output_ antennas
   for (Int iMSElem=0;iMSElem<nMSElem_;++iMSElem) {
     // Call time interpolation calculation; resample in freq if new
     //   (fills timeResult_/timeResFlag_ implicitly)
-    if (tI_(iMSElem,msspw,msfld)->interpolate(time)) {
+    ip(0)=iMSElem;
+    if (tI_(ip)->interpolate(time)) {
 
       // Resample in frequency
-      Matrix<Float> fR(freqResult_(msspw,msfld).xyPlane(iMSElem));
-      Matrix<Bool> fRflg(freqResFlag_(msspw,msfld).xyPlane(iMSElem));
-      Matrix<Float> tR(timeResult_(msspw,msfld).xyPlane(iMSElem));
-      Matrix<Bool> tRflg(timeResFlag_(msspw,msfld).xyPlane(iMSElem));
+      Matrix<Float> fR(freqResult_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
+      Matrix<Bool> fRflg(freqResFlag_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
+      Matrix<Float> tR(timeResult_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
+      Matrix<Bool> tRflg(timeResFlag_(msspw,msfld,thisobs(msobs)).xyPlane(iMSElem));
       resampleInFreq(fR,fRflg,freq,tR,tRflg,freqIn_(spwMap_(msspw)));
 
       // Calibration is new
@@ -242,8 +494,8 @@ Bool CTPatchedInterp::interpolate(Int msfld, Int msspw, Double time, const Vecto
   }
 
   // Whole result referred to freq result:
-  result_(msspw,msfld).reference(freqResult_(msspw,msfld));
-  resFlag_(msspw,msfld).reference(freqResFlag_(msspw,msfld));
+  result_(msspw,msfld,thisobs(msobs)).reference(freqResult_(msspw,msfld,thisobs(msobs)));
+  resFlag_(msspw,msfld,thisobs(msobs)).reference(freqResFlag_(msspw,msfld,thisobs(msobs)));
 
   return newcal;
 }
@@ -280,10 +532,12 @@ void CTPatchedInterp::state() {
   cout << " isCmplx_ = " << isCmplx_ << endl;
   cout << " nPar_    = " << nPar_ << endl;
   cout << " nFPar_   = " << nFPar_ << endl;
+  cout << " nMSObs_  = " << nMSObs_ << endl;
   cout << " nMSFld_  = " << nMSFld_ << endl;
   cout << " nMSSpw_  = " << nMSSpw_ << endl;
   cout << " nMSAnt_  = " << nMSAnt_ << endl;
   cout << " nMSElem_ = " << nMSElem_ << endl;
+  cout << " nCTObs_  = " << nCTObs_ << endl;
   cout << " nCTFld_  = " << nCTFld_ << endl;
   cout << " nCTSpw_  = " << nCTSpw_ << endl;
   cout << " nCTAnt_  = " << nCTAnt_ << endl;
@@ -291,8 +545,11 @@ void CTPatchedInterp::state() {
   cout << " fldMap_  = " << fldMap_ << endl;
   cout << " spwMap_  = " << spwMap_ << endl;
   cout << " antMap_  = " << antMap_ << endl;
+  cout << " byObs_   = " << byObs_ << endl;
   cout << " byField_ = " << byField_ << endl;
   cout << " altFld_  = " << altFld_ << endl;
+  cout << " timeType_ = " << timeType_ << endl;
+  cout << " freqType_ = " << freqType_ << endl;
 }
 
 void CTPatchedInterp::sliceTable() {
@@ -306,7 +563,7 @@ void CTPatchedInterp::sliceTable() {
   //  TBD (here or inside loop?)
 
   // Indexed by the fields, spws, ants in the cal table (pre-mapped)
-  ctSlices_.resize(nCTElem_,nCTSpw_,nCTFld_);
+  ctSlices_.resize(IPosition(4,nCTElem_,nCTSpw_,nCTFld_,nCTObs_));
 
   // Initialize spwInOK_
   spwInOK_.resize(nCTSpw_);
@@ -315,6 +572,7 @@ void CTPatchedInterp::sliceTable() {
   // Set up iterator
   //  TBD: handle baseline-based case!
   Block<String> sortcol;
+  Int addobs( (byObs_ ? 1 : 0) ); // slicing by obs?
   Int addfld( (byField_ ? 1 : 0) ); // slicing by field?
 
   switch(mtype_) {
@@ -322,25 +580,29 @@ void CTPatchedInterp::sliceTable() {
 
     throw(AipsError("CTPatchedInterp::sliceTable: No non-Mueller/Jones yet."));
 
-    sortcol.resize(1+addfld);
-    if (byField_) sortcol[0]="FIELD_ID";  // slicing by field
-    sortcol[0+addfld]="SPECTRAL_WINDOW_ID";
+    sortcol.resize(1+addobs+addfld);
+    if (byObs_) sortcol[0]="OBSERVATION_ID";  // slicing by obs
+    if (byField_) sortcol[0+addobs]="FIELD_ID";  // slicing by field
+    sortcol[0+addobs+addfld]="SPECTRAL_WINDOW_ID";
     ROCTIter ctiter(ct_,sortcol);
     while (!ctiter.pastEnd()) {
       Int ispw=ctiter.thisSpw();
       Int ifld = (byField_ ? ctiter.thisField() : 0); // use 0 if not slicing by field
-      ctSlices_(0,ispw,ifld)=ctiter.table();
-      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(0,ispw,ifld).nrow()>0);
+      Int iobs = (byObs_ ? ctiter.thisObs() : 0); // use 0 if not slicing by obs
+      IPosition ip(4,0,ispw,ifld,iobs);
+      ctSlices_(ip)=ctiter.table();
+      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ip).nrow()>0);
       ctiter.next();
     }
     break;
   }
   case VisCalEnum::MUELLER: {
-    sortcol.resize(3+addfld);
-    if (byField_) sortcol[0]="FIELD_ID";  // slicing by field
-    sortcol[0+addfld]="SPECTRAL_WINDOW_ID";
-    sortcol[1+addfld]="ANTENNA1";
-    sortcol[2+addfld]="ANTENNA2";
+    sortcol.resize(3+addobs+addfld);
+    if (byObs_) sortcol[0]="OBSERVATION_ID";  // slicing by obs
+    if (byField_) sortcol[0+addobs]="FIELD_ID";  // slicing by field
+    sortcol[0+addobs+addfld]="SPECTRAL_WINDOW_ID";
+    sortcol[1+addobs+addfld]="ANTENNA1";
+    sortcol[2+addobs+addfld]="ANTENNA2";
     ROCTIter ctiter(ct_,sortcol);
     while (!ctiter.pastEnd()) {
       Int ispw=ctiter.thisSpw();
@@ -348,24 +610,29 @@ void CTPatchedInterp::sliceTable() {
       Int iant2=ctiter.thisAntenna2();
       Int ibln=blnidx(iant1,iant2,nCTAnt_);
       Int ifld = (byField_ ? ctiter.thisField() : 0); // use 0 if not slicing by field
-      ctSlices_(ibln,ispw,ifld)=ctiter.table();
-      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ibln,ispw,ifld).nrow()>0);
+      Int iobs = (byObs_ ? ctiter.thisObs() : 0); // use 0 if not slicing by obs
+      IPosition ip(4,ibln,ispw,ifld,iobs);
+      ctSlices_(ip)=ctiter.table();
+      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ip).nrow()>0);
       ctiter.next();
     }    
     break;
   }
   case VisCalEnum::JONES: {
-    sortcol.resize(2+addfld);
-    if (byField_) sortcol[0]="FIELD_ID";  // slicing by field
-    sortcol[0+addfld]="SPECTRAL_WINDOW_ID";
-    sortcol[1+addfld]="ANTENNA1";
+    sortcol.resize(2+addobs+addfld);
+    if (byObs_) sortcol[0]="OBSERVATION_ID";  // slicing by obs
+    if (byField_) sortcol[0+addobs]="FIELD_ID";  // slicing by field
+    sortcol[0+addobs+addfld]="SPECTRAL_WINDOW_ID";
+    sortcol[1+addobs+addfld]="ANTENNA1";
     ROCTIter ctiter(ct_,sortcol);
     while (!ctiter.pastEnd()) {
-      Int iCTspw=ctiter.thisSpw();
+      Int ispw=ctiter.thisSpw();
       Int iant=ctiter.thisAntenna1();
       Int ifld = (byField_ ? ctiter.thisField() : 0); // use 0 if not slicing by field
-      ctSlices_(iant,iCTspw,ifld)=ctiter.table();
-      spwInOK_(iCTspw)=(spwInOK_(iCTspw) || ctSlices_(iant,iCTspw,ifld).nrow()>0);
+      Int iobs = (byObs_ ? ctiter.thisObs() : 0); // use 0 if not slicing by obs
+      IPosition ip(4,iant,ispw,ifld,iobs);
+      ctSlices_(ip)=ctiter.table();
+      spwInOK_(ispw)=(spwInOK_(ispw) || ctSlices_(ip).nrow()>0);
       ctiter.next();
     }    
     break;
@@ -380,12 +647,14 @@ void CTPatchedInterp::makeInterpolators() {
   if (CTPATCHEDINTERPVERB) cout << "  CTPatchedInterp::initialize()" << endl;
 
   // Size/initialize interpolation engines
-  tI_.resize(nMSElem_,nMSSpw_,nMSFld_);
+  IPosition tIsize(4,nMSElem_,nMSSpw_,nMSFld_,nMSObs_);
+  tI_.resize(tIsize);
   tI_.set(NULL);
-  tIdel_.resize(nMSElem_,nMSSpw_,nMSFld_);
+  tIdel_.resize(tIsize);
   tIdel_.set(False);
 
   Bool reportBadSpw(False);
+  for (Int iMSObs=0;iMSObs<nMSObs_;++iMSObs) {
   for (Int iMSFld=0;iMSFld<nMSFld_;++iMSFld) {
 
     if (altFld_(iMSFld)==iMSFld) {
@@ -396,18 +665,20 @@ void CTPatchedInterp::makeInterpolators() {
 	if (this->spwOK(spwMap_(iMSSpw))) {
 	  
 	  // Size up the timeResult_ Cube (NB: channel shape matches Cal Table)
-	  if (timeResult_(iMSSpw,iMSFld).nelements()==0) {
-	    timeResult_(iMSSpw,iMSFld).resize(nFPar_,nChanIn_(spwMap_(iMSSpw)),nMSElem_);
-	    timeResFlag_(iMSSpw,iMSFld).resize(nPar_,nChanIn_(spwMap_(iMSSpw)),nMSElem_);
+	  if (timeResult_(iMSSpw,iMSFld,iMSObs).nelements()==0) {
+	    timeResult_(iMSSpw,iMSFld,iMSObs).resize(nFPar_,nChanIn_(spwMap_(iMSSpw)),nMSElem_);
+	    timeResFlag_(iMSSpw,iMSFld,iMSObs).resize(nPar_,nChanIn_(spwMap_(iMSSpw)),nMSElem_);
 	  }
 	  for (Int iMSElem=0;iMSElem<nMSElem_;++iMSElem) {
-	    // Realize the mapping (no field mapping yet!)
-	    NewCalTable& ict(ctSlices_(elemMap_(iMSElem),spwMap_(iMSSpw),fldMap_(iMSFld)));
+	    // Realize the mapping 
+	    IPosition ictip(4,elemMap_(iMSElem),spwMap_(iMSSpw),fldMap_(iMSFld),iMSObs);
+	    NewCalTable& ict(ctSlices_(ictip));
 	    if (!ict.isNull()) {
-	      Matrix<Float> tR(timeResult_(iMSSpw,iMSFld).xyPlane(iMSElem));
-	      Matrix<Bool> tRf(timeResFlag_(iMSSpw,iMSFld).xyPlane(iMSElem));
-	      tI_(iMSElem,iMSSpw,iMSFld)=new CTTimeInterp1(ict,timeType_,tR,tRf);
-	      tIdel_(iMSElem,iMSSpw,iMSFld)=True;
+	      Matrix<Float> tR(timeResult_(iMSSpw,iMSFld,iMSObs).xyPlane(iMSElem));
+	      Matrix<Bool> tRf(timeResFlag_(iMSSpw,iMSFld,iMSObs).xyPlane(iMSElem));
+	      IPosition tIip(4,iMSElem,iMSSpw,iMSFld,iMSObs);
+	      tI_(tIip)=new CTTimeInterp1(ict,timeType_,tR,tRf);
+	      tIdel_(tIip)=True;
 	    }
 	    else
 	      cout << "Elem,Spw="<<iMSElem<<","<<iMSSpw<<" have no calibration mapping!!" << endl; 
@@ -423,13 +694,17 @@ void CTPatchedInterp::makeInterpolators() {
       // Point to an existing interpolator group
       Int thisAltFld=altFld_(iMSFld);
       for (Int iMSSpw=0;iMSSpw<nMSSpw_;++iMSSpw) { 
-	timeResult_(iMSSpw,iMSFld).reference(timeResult_(iMSSpw,thisAltFld));
-	timeResFlag_(iMSSpw,iMSFld).reference(timeResFlag_(iMSSpw,thisAltFld));
-	for (Int iMSElem=0;iMSElem<nMSElem_;++iMSElem)
-	  tI_(iMSElem,iMSSpw,iMSFld)=tI_(iMSElem,iMSSpw,thisAltFld);
+	timeResult_(iMSSpw,iMSFld,iMSObs).reference(timeResult_(iMSSpw,thisAltFld,iMSObs));
+	timeResFlag_(iMSSpw,iMSFld,iMSObs).reference(timeResFlag_(iMSSpw,thisAltFld,iMSObs));
+	for (Int iMSElem=0;iMSElem<nMSElem_;++iMSElem) {
+	  IPosition tIip0(4,iMSElem,iMSSpw,iMSFld,iMSObs),tIip1(4,iMSElem,iMSSpw,thisAltFld,iMSObs);
+	  tI_(tIip0)=tI_(tIip1);
+	}
       }
     }
   } // iMSFld
+  } // iMSObs
+
 
   if (reportBadSpw) {
     cout << "The following MS spws have no corresponding cal spws: ";
@@ -437,6 +712,15 @@ void CTPatchedInterp::makeInterpolators() {
       if (!this->spwOK(spwMap_(iMSSpw))) cout << iMSSpw << " ";
     cout << endl;
   }
+
+}
+
+
+
+void CTPatchedInterp::setFldMap(const MSField& msfld) {
+  
+  ROMSFieldColumns fcol(msfld);
+  setFldMap(fcol);
 
 }
 
@@ -722,7 +1006,7 @@ InterpolateArray1D<Double,Float>::InterpolationMethod CTPatchedInterp::ftype(Str
   if (strtype=="spline")
     return InterpolateArray1D<Double,Float>::spline;
 
-  cout << "Using linear for freq interpolation as last resort." << endl;
+  //  cout << "Using linear for freq interpolation as last resort." << endl;
   return InterpolateArray1D<Double,Float>::linear;
 
 

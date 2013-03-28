@@ -963,9 +963,9 @@ void BJones::syncWtScale() {
   //  cout << "currWtScale() = " << currWtScale() << endl;
 
   Cube<Float> amps;
-  amps=Cube<Float>(ci_->tresultF(currField(),currSpw()))(Slice(0,2,2),Slice(),Slice());
+  amps=Cube<Float>(ci_->tresultF(currObs(),currField(),currSpw()))(Slice(0,2,2),Slice(),Slice());
   Cube<Bool> ampfl;
-  ampfl=ci_->tresultFlag(currField(),currSpw());
+  ampfl=ci_->tresultFlag(currObs(),currField(),currSpw());
   IPosition ash=amps.shape();
 
   // Calculate 1/square(mean(1/amp(ch))) for all B channels
