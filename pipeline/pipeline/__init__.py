@@ -17,14 +17,15 @@ def show_weblog(context):
     index_html = os.path.join(context.report_dir, 't1-1.html')
     webbrowser.open(index_html)
 
-print "Initializing cli..."
-mypath = os.path.dirname(__file__);
-hifpath = mypath+"/hif/cli/hif.py"
-hpath = mypath+"/h/cli/h.py"
-hsdpath = mypath+"/hsd/cli/hsd.py"
-print hifpath
-print hpath
-print hsdpath
-execfile(hpath)
-execfile(hifpath)
-execfile(hsdpath)
+def initcli() :
+   print "Initializing cli..."
+   mypath = os.path.dirname(__file__);
+   hifpath = mypath+"/hif/cli/hif.py"
+   hpath = mypath+"/h/cli/h.py"
+   hsdpath = mypath+"/hsd/cli/hsd.py"
+   import inspect
+   myglobals = sys._getframe(len(inspect.stack())-1).f_globals
+
+   execfile(hpath, myglobals)
+   execfile(hifpath, myglobals)
+   execfile(hsdpath, myglobals)
