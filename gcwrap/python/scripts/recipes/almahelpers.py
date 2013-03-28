@@ -4,6 +4,7 @@
 #
 # History:
 #  v1.0 (scorder, gmoellen, jkern; 2012Apr26) == initial version
+#  v1.1 (gmoellen; 2013Mar07) Lots of improvements from Eric Villard
 #
 # This script defines a function that takes the Caltable you wish
 # to apply to a MeasurementSet and generates a "apply-cal-ready"
@@ -12,7 +13,7 @@
 # FDM spectral windows.  To import this function, type (at
 # the CASA prompt):
 #
-# from recipies.almahelpers import tsysspwmap
+# from recipes.almahelpers import tsysspwmap
 #
 # and then execute the function:
 #
@@ -83,7 +84,7 @@ def trimSpwmap(spwMap) :
     return spwMap[:i]
         
         
-def tsysspwmap(vis,tsystable,trim=True,relax=False) :
+def tsysspwmap(vis,tsystable,trim=True,relax=False, tsysChanTol=0):
     """
     Generate default spwmap for ALMA Tsys, including TDM->FDM associations
     Input:
@@ -98,6 +99,7 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False) :
      spw list to use in applycal spwmap parameter for the Tsys caltable
     
     """
+
     localTb = taskinit.tbtool()
     spwMaps = []
     # Get the spectral windows with entries in the solution table
@@ -110,6 +112,7 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False) :
         spwMap = SpwMap(i)
         chanFreqs = localTb.getcell("CHAN_FREQ",i)
         chanWidth = abs(chanFreqs[1]-chanFreqs[0])
+        spwMap.chanWidth = chanWidth
         spwMap.validFreqRange = [chanFreqs.min()-0.5*chanWidth,\
                                  chanFreqs.max()+0.5*chanWidth]
         spwMaps.append(spwMap)
@@ -120,6 +123,9 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False) :
     it = localTb.nrows()
     localTb.close()
     for j in spwMaps :
+        localTb.open("%s/SPECTRAL_WINDOW" % vis)
+        j.bbNo = localTb.getcell("BBC_NO",j.calSpwId)
+        localTb.close()
         for i in range(it) :
             localTb.open("%s/SPECTRAL_WINDOW" % vis)
             chanFreqs = localTb.getcell("CHAN_FREQ",i)
@@ -131,15 +137,14 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False) :
                 chanWidth = localTb.getcell("CHAN_WIDTH",i)
                 freqMin = chanFreqs-0.5*chanWidth
                 freqMax = chanFreqs+0.5*chanWidth
-            if freqMin >= j.validFreqRange[0] and \
-               freqMax <= j.validFreqRange[1] :
-                  j.mapsToSpw.append(i)
-            localTb.close()
-            calSpw = SpwInfo(tsystable,j.calSpwId)
             msSpw  = SpwInfo(vis,i)
-            if areIdentical(calSpw,msSpw) :
-                j.bbNo = msSpw.values['BBC_NO']
+            if j.bbNo == msSpw.values['BBC_NO']:
+                if freqMin >= j.validFreqRange[0]-tsysChanTol*j.chanWidth and \
+                   freqMax <= j.validFreqRange[1]+tsysChanTol*j.chanWidth :
+                    j.mapsToSpw.append(i)
+            localTb.close()
     applyCalSpwMap = []
+    spwWithoutMatch = []
     localTb.open("%s/SPECTRAL_WINDOW" % vis)
     for i in range(it) :
         useSpw = None
@@ -150,12 +155,13 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False) :
                         useSpw = j.calSpwId
                 else :
                     useSpw = j.calSpwId
-        if useSpw == None : useSpw = i
+        if useSpw == None :
+            useSpw = i
+            spwWithoutMatch.append(i)
         applyCalSpwMap.append(int(useSpw))        
+    if len(spwWithoutMatch) != 0:
+        taskinit.casalog.post('Found no match for following spw ids: '+str(spwWithoutMatch))
     if trim :
         return trimSpwmap(applyCalSpwMap)
     else :
         return applyCalSpwMap
-            
-    
-    
