@@ -36,6 +36,8 @@
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Cube.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MeasurementSets/MSField.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <casa/aips.h>
 
@@ -51,11 +53,26 @@ class CTPatchedInterp
 {
 public:
 
-  // From NewCalTable
-  //  Currently assumes MS's Field, Spw and Ant are in common
-  //  TBD: Feed in MS's actual F,S,A ranges
-  //  TBD: Provide default param/flag
-  //  TBD: CalLib syntax (a Record?)
+  // From NewCalTable only 
+  CTPatchedInterp(NewCalTable& ct,
+		  VisCalEnum::MatrixType mtype,
+		  Int nPar,
+		  const String& timetype,
+		  const String& freqtype,
+		  const String& fieldtype,
+		  Vector<Int> spwmap=Vector<Int>());
+
+  // From NewCalTable and MS 
+  CTPatchedInterp(NewCalTable& ct,
+		  VisCalEnum::MatrixType mtype,
+		  Int nPar,
+		  const String& timetype,
+		  const String& freqtype,
+		  const String& fieldtype,
+		  const MeasurementSet& ms,
+		  Vector<Int> spwmap=Vector<Int>());
+
+  // From NewCalTable and MSColumns 
   CTPatchedInterp(NewCalTable& ct,
 		  VisCalEnum::MatrixType mtype,
 		  Int nPar,
@@ -65,23 +82,23 @@ public:
 		  const ROMSColumns& mscol,
 		  Vector<Int> spwmap=Vector<Int>());
 
+
   // Destructor
   virtual ~CTPatchedInterp();
 
   // Interpolate, given input field, spw, timestamp, & (optionally) freq list
   //    returns T if new result (anywhere)
-  Bool interpolate(Int fld, Int spw, Double time, Double freq=-1.0);
-  Bool interpolate(Int fld, Int spw, Double time, const Vector<Double>& freq);
+  Bool interpolate(Int obs, Int fld, Int spw, Double time, Double freq=-1.0);
+  Bool interpolate(Int obs, Int fld, Int spw, Double time, const Vector<Double>& freq);
 
   // Access to the result
-  Array<Float>& resultF(Int fld, Int spw) { return result_(spw,fld); };
-  Array<Complex> resultC(Int fld, Int spw) { return RIorAPArray(result_(spw,fld)).c(); };
-  Array<Bool>& rflag(Int fld, Int spw) { return resFlag_(spw,fld); };
+  Array<Float>& resultF(Int obs, Int fld, Int spw) { return result_(spw,fld,thisobs(obs)); };
+  Array<Complex> resultC(Int obs, Int fld, Int spw) { return RIorAPArray(result_(spw,fld,thisobs(obs))).c(); };
+  Array<Bool>& rflag(Int obs, Int fld, Int spw) { return resFlag_(spw,fld,thisobs(obs)); };
 
   // Temporary public function for testing
-  Array<Float>& tresultF(Int fld, Int spw) { return timeResult_(spw,fld); };
-  Array<Bool>& tresultFlag(Int fld, Int spw) { return timeResFlag_(spw,fld); };
-
+  Array<Float>& tresultF(Int obs, Int fld, Int spw) { return timeResult_(spw,fld,thisobs(obs)); };
+  Array<Bool>& tresultFlag(Int obs, Int fld, Int spw) { return timeResFlag_(spw,fld,thisobs(obs)); };
 
   // spwOK info for users
   Bool spwOK(Int spw) const;
@@ -102,11 +119,14 @@ private:
   void sliceTable();
   void makeInterpolators();
 
+  Int thisobs(Int obs) { return (byObs_?obs:0); };
+
   // Methods to set up 1:1 patch-panel maps
   //  Private for now as not yet ready to control from outside
   // Field
   // default: all 0 (no field-dep yet)
   void setDefFldMap() {fldMap_.resize(nMSFld_); fldMap_.set(0);};
+  void setFldMap(const MSField& msfld);           // via nearest on-sky
   void setFldMap(const ROMSFieldColumns& fcol);  // via nearest on-sky
   //void setFldMap(Vector<Int>& field);        // via ordered index list
   //void setFldMap(Vector<String>& field);     // via name matching
@@ -159,24 +179,24 @@ private:
 
   InterpolateArray1D<Double,Float>::InterpolationMethod ia1dmethod_;
 
+  // Are we slicing caltable by field?
+  Bool byObs_,byField_;
+
   // CalTable freq axis info
   Vector<Int> nChanIn_;
   Vector<Vector<Double> > freqIn_;
 
 
-  // Field, Spw, Ant _output_ (MS) sizes (eventually from MS)
+  // Obs, Field, Spw, Ant _output_ (MS) sizes 
   //   calibration required for up to this many
-  Int nMSFld_, nMSSpw_, nMSAnt_, nMSElem_;
-
-  // Are we slicing caltable by field?
-  Bool byField_;
+  Int nMSObs_, nMSFld_, nMSSpw_, nMSAnt_, nMSElem_;
 
   // Alternate field indices
   Vector<Int> altFld_;
 
-  // Field, Spw, Ant _input_ (CalTable) sizes
+  // Obs, Field, Spw, Ant _input_ (CalTable) sizes
   //  patch panels should not violate these (point to larger indices)
-  Int nCTFld_, nCTSpw_, nCTAnt_, nCTElem_;
+  Int nCTObs_, nCTFld_, nCTSpw_, nCTAnt_, nCTElem_;
 
   // OK flag
   Vector<Bool> spwInOK_;
@@ -188,27 +208,23 @@ private:
   // Control conjugation of baseline-based solutions when mapping requires
   Vector<Bool> conjTab_;
 
-  // Current state of interpolation
-  Matrix<Double> currTime_;   // [nSpwOut,nMSFld_=1]
-  // Vector<Int> currField_;  // [nMSSpw_]  ---> Is this ever needed?
-
   // Internal result Arrays
-  Matrix<Cube<Float> > timeResult_,freqResult_;   // [nMSSpw_,nMSFld_=1][nFpar,nChan,nAnt]
-  Matrix<Cube<Bool> >  timeResFlag_,freqResFlag_; // [nMSSpw_,nMSFld_=1][nFpar,nChan,nAnt]
+  Cube<Cube<Float> > timeResult_,freqResult_;   // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
+  Cube<Cube<Bool> >  timeResFlag_,freqResFlag_; // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
 
   // Current interpolation result Arrays
   //  These will reference time or freq result, depending on context,
   //  and may be referenced by external code
-  Matrix<Cube<Float> > result_;        // [nMSSpw_,nMSFld_=1][nFpar,nChan,nAnt]
-  Matrix<Cube<Bool> >  resFlag_;    // [nMSSpw_,nMSFld_=1][nFpar,nChan,nAnt]
+  Cube<Cube<Float> > result_;     // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
+  Cube<Cube<Bool> >  resFlag_;    // [nMSSpw_,nMSFld_,nMSObs_][nFpar,nChan,nAnt]
 
   // The CalTable slices
-  Cube<NewCalTable> ctSlices_;  // [nCTElem_,nCTSpw_,nCTFld_]
+  Array<NewCalTable> ctSlices_;  // [nCTElem_,nCTSpw_,nCTFld_,nCTObs_]
 
   // The pre-patched Time interpolation engines
   //   These are populated by the available caltables slices
-  Cube<CTTimeInterp1*> tI_;  // [nMSElem_,nMSSpw_,nMSFld_]
-  Cube<Bool> tIdel_;         // [nMSElem_,nMSSpw_,nMSFld_]
+  Array<CTTimeInterp1*> tI_;  // [nMSElem_,nMSSpw_,nMSFld_,nMSObs_]
+  Array<Bool> tIdel_;         // [nMSElem_,nMSSpw_,nMSFld_,mMSObs_]
 
 };
 

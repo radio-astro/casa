@@ -398,6 +398,9 @@ void VisCal::syncMeta(const VisBuffer& vb) {
 	   vb.frequency(),
 	   vb.nChannel());
 
+  currObs()=vb.observationId()(0);
+
+
   // Ensure VisVector for data acces has correct form
   Int ncorr(vb.corrType().nelements());
   if (V().type() != ncorr)
@@ -415,6 +418,8 @@ void VisCal::syncMeta(VisCal& vc) {
 	   vc.currField(),
 	   vc.currFreq(),
 	   vc.nChanMat());  // the number of channels to be applied to
+
+  currObs()=vc.currObs();
 
 
   // TBD: Ensure nElem matches (here?)

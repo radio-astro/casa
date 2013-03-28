@@ -140,8 +140,10 @@ class NewCalTable : public Table
 
    // Create a vanilla NewCalTable from shapes (for testing purposes)
    //  Default rTime is 2012/01/06/12:00:00
-   NewCalTable(String tableName,String caltype,Int nFld=1, Int nAnt=1, Int nSpw=1, 
-	       Vector<Int> nChan=Vector<Int>(1,1), Int nObs=1, Int nTime=1,
+   NewCalTable(String tableName,String CorF,
+	       Int nObs=1, Int nScanPerObs=1,Int nTimePerScan=1,
+	       Int nAnt=1, Int nSpw=1, Vector<Int> nChan=Vector<Int>(1,1), 
+	       Int nFld=1, 
 	       Double rTime=0.0, Double tint=0.0,
 	       Bool disk=False, Bool verbose=False);
 
@@ -198,6 +200,7 @@ class NewCalTable : public Table
    //   inline ROCTMainColumns mcols() const {return ROCTMainColumns(*this);};
 
    static Complex NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint);
+   static Float NCTtestvalueF(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint);
 
    // Fill in antenna-based solutions
    //  (obsId-less version calls obsId-capable version w/ obsId=0)
@@ -229,8 +232,9 @@ class NewCalTable : public Table
 
    // Services for generic test table ctor
    //  Default rTime is 2012/01/06/12:00:00
-   void fillGenericContents(Int nFld=1, Int nAnt=1, Int nSpw=1, 
-			    Vector<Int> nChan=Vector<Int>(1,1), Int nObs=1, Int nTime=1,
+   void fillGenericContents(Int nObs=1, Int nScanPerObs=1, Int nTimePerScan=1,
+			    Int nAnt=1, Int nSpw=1, Vector<Int> nChan=Vector<Int>(1,1), 
+			    Int nFld=1, 
 			    Double rTime=0.0, Double tint=0.0,
 			    Bool verbose=False);
    void fillGenericObs(Int nObs);

@@ -39,23 +39,34 @@
 // </summary>
 
 // Control verbosity
-#define CTITERTEST_VERBOSE True
+#define CTITERTEST_VERBOSE False
 
 Bool foundError = False;
 
 void doTest1 (Bool verbose=False) {
+
+  cout << "****----tCTIter doTest1()----****" << endl;
   
   // Make a testing NewCalTable (Table::Memory)
-  uInt nFld(1), nAnt(10), nSpw(1), nObs(1), nTime(3);
+  uInt nFld(1), nAnt(10), nSpw(2), nObs(1), nScan(1),nTime(3);
   Vector<Int> nChan(nSpw,1);
-  Bool disk(True);
-  NewCalTable tnct("test.ct","T",nFld,nAnt,nSpw,nChan,nObs,nTime,disk,verbose);
+  Bool disk(verbose);
+  NewCalTable tnct("tCTIter1.ct","Complex",
+		   nObs,nScan,nTime,
+		   nAnt,nSpw,nChan,
+		   nFld,
+		   0.0,0.0,   // rtime,tint defaults
+		   disk,False);
 
   // some sanity checks on the test NewCalTable
+  if (verbose) cout << "Table::Type: " << tnct.tableType() 
+		    << " (should be " << Table::Memory << ")"
+		    << endl;
   AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
-  if (verbose) cout << "Table::Type: " << tnct.tableType() << endl;
-  AlwaysAssert( (tnct.nrow()==nFld*nAnt*nSpw*nTime*nObs), AipsError);
-  if (verbose) cout << "nrow = " << tnct.nrow() << endl;
+  if (verbose) cout << "nrow = " << tnct.nrow() 
+		    << "  (should be " << nObs*nScan*nTime*nSpw*nAnt << ")"
+		    << endl;
+  AlwaysAssert( (tnct.nrow()==nObs*nScan*nTime*nSpw*nAnt), AipsError);
   
   // Set up iteration
   Block<String> sortcol(2);
@@ -70,13 +81,17 @@ void doTest1 (Bool verbose=False) {
     niter+=1;
     nctiter.next();
   }
-  AlwaysAssert( (niter==nAnt*nSpw), AipsError)
-  if (verbose) cout << "niter = " << niter << endl;
+
+  if (verbose) cout << "niter = " << niter 
+		    << " (should be " << nAnt*nSpw << ")"
+		    << endl;
+  AlwaysAssert( (niter==nAnt*nSpw), AipsError);
   
   // Test individual iterations
   nctiter.reset();
   Vector<NewCalTable> tablist(niter);
   Int iter=0;
+  if (verbose) cout << "Testing iteration." << endl;
   while (!nctiter.pastEnd()) {
     Int expectSpw(iter/nAnt);
     Int expectAnt(iter%nAnt);    
@@ -87,13 +102,13 @@ void doTest1 (Bool verbose=False) {
     tablist(iter)=tab;
 
     if (verbose) {
-      cout << iter // << ": name = " << tab.tableName() << " / " << tablist(iter).tableName()
-	   << " nrow=" << nctiter.nrow(); // << flush;
-      cout << " spw="<<thisspw;
-      cout << " ant1="<<thisant;
-      //cout << " row #s: " << tab.rowNumbers(); 
-      //      cout << " " << tab.rowNumbers(nct); 
-      cout << endl;
+      cout << iter 
+	   << " nrow=" << nctiter.nrow()
+	   << " spw="<<thisspw
+	   << " (should be " << expectSpw << ")"
+	   << " ant1="<<thisant
+	   << " (should be " << expectAnt << ")"
+	   << endl;
     }
 
     AlwaysAssert( (thisspw==expectSpw) , AipsError);
@@ -105,6 +120,7 @@ void doTest1 (Bool verbose=False) {
   
 
   // Test recorded reference table contents
+  if (verbose) cout << "Testing iteration reference table contents:" << endl;
   for (uInt i=0;i<niter;++i) {
     Int expectSpw(i/nAnt);
     Int expectAnt(i%nAnt);
@@ -116,17 +132,18 @@ void doTest1 (Bool verbose=False) {
 
     if (verbose) {
       cout << i << " "
-	//	   << tablist(i).tableName() << " "
 	   << "nrow=" << tablist(i).nrow() << " "
-	   << "ant1=" << mc.antenna1()(0) << " "
-	//	     << " row #s: " << tablist(i).rowNumbers(tablist(i))
-	   << "paramshape= " << mc.cparam().shape(0) << " "
-	   << "param= " << mc.cparam()(0) << " "
+	   << "spw=" << thisspw(0) 
+	   << " (should be " << expectSpw << ")"
+	   << " ant1=" << thisant(0) 
+	   << " (should be " << expectAnt << ")"
+	//	   << "paramshape= " << mc.cparam().shape(0) << " "
+	//	   << "param= " << mc.cparam()(0) << " "
 	   << endl;
     }
 
     // Tests
-    AlwaysAssert( (tablist(i).nrow()==nFld*nTime*nObs) , AipsError);
+    AlwaysAssert( (tablist(i).nrow()==nObs*nScan*nTime) , AipsError);
     AlwaysAssert( allEQ(thisspw,expectSpw) , AipsError);
     AlwaysAssert( allEQ(thisant,expectAnt) , AipsError);
 
@@ -136,29 +153,44 @@ void doTest1 (Bool verbose=False) {
 }
 void doTest2 (Bool verbose=False) {
   
+  cout << "****----tCTIter doTest2()----****" << endl;
+
+
   // Test (the writable) CTIter
 
   // Make a testing NewCalTable (Table::Memory)
-  uInt nFld(1), nAnt(10), nSpw(1), nObs(2), nTime(3);
+  uInt nFld(2), nAnt(10), nSpw(3), nObs(4), nScan(2), nTime(3);
   Vector<Int> nChan(nSpw,1);
   Double rtime(0.0), tint(60.0);  // trigger default times
-  Bool disk(True);
-  NewCalTable tnct("test.ct","T",nFld,nAnt,nSpw,nChan,
-		   nObs,nTime,rtime,tint,disk,verbose);
+  Bool disk(verbose);
+  NewCalTable tnct("tCTIter2.ct","Complex",
+		   nObs,nScan,nTime,
+		   nAnt,nSpw,nChan,
+		   nFld,
+		   rtime,tint,
+		   disk,False);
 
 
-  cout << "OBS_ID col ok? " << boolalpha << tnct.tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID)) << endl;
+  if (verbose)
+    cout << "OBS_ID col ok? " << boolalpha << tnct.tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID)) << endl;
+  AlwaysAssert( tnct.tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID)), AipsError);
 
   // some sanity checks on the test NewCalTable
+  if (verbose) cout << "Table::Type: " << tnct.tableType() 
+		    << " (should be " << Table::Memory << ")" << endl;
   AlwaysAssert( (tnct.tableType() == Table::Memory), AipsError);
-  if (verbose) cout << "Table::Type: " << tnct.tableType() << endl;
-  AlwaysAssert( (tnct.nrow()==nFld*nAnt*nSpw*nTime*nObs), AipsError);
-  if (verbose) cout << "nrow = " << tnct.nrow() << endl;
+
+  Int nTotRow(tnct.nrow());
+  if (verbose) cout << "nrow = " << nTotRow
+		    << " (should be " << nObs*nScan*nTime*nSpw*nAnt << ")"
+		    << endl;
+  AlwaysAssert( (tnct.nrow()==nObs*nScan*nTime*nSpw*nAnt), AipsError);
   
   // Set up iteration
-  Block<String> sortcol(2);
-  sortcol[0]="SPECTRAL_WINDOW_ID";
-  sortcol[1]="ANTENNA1";
+  Block<String> sortcol(3);
+  sortcol[0]="OBSERVATION_ID";
+  sortcol[1]="SPECTRAL_WINDOW_ID";
+  sortcol[2]="ANTENNA1";
   CTIter nctiter(tnct,sortcol);
 
   // Count iterations
@@ -168,16 +200,21 @@ void doTest2 (Bool verbose=False) {
     niter+=1;
     nctiter.next();
   }
-  AlwaysAssert( (niter==nAnt*nSpw), AipsError)
-  if (verbose) cout << "niter = " << niter << endl;
+  if (verbose) cout << "niter = " << niter 
+		    << " (should be " << nObs*nSpw*nAnt << ")"
+		    << endl;
+  AlwaysAssert( (niter==nObs*nSpw*nAnt), AipsError)
   
   // Test individual iterations
   nctiter.reset();
   Vector<NewCalTable> tablist(niter);
   Int iter=0;
+  if (verbose) cout << "Testing iteration." << endl;
   while (!nctiter.pastEnd()) {
-    Int expectSpw(iter/nAnt);
+    Int expectObs(iter/(nAnt*nSpw));
+    Int expectSpw((iter%(nAnt*nSpw))/nAnt);
     Int expectAnt(iter%nAnt);    
+    Int thisobs(nctiter.thisObs());
     Int thisspw(nctiter.thisSpw());
     Int thisant(nctiter.thisAntenna1());
 
@@ -188,17 +225,20 @@ void doTest2 (Bool verbose=False) {
     tablist(iter)=tab;
 
     if (verbose) {
-      cout << iter // << ": name = " << tab.tableName() << " / " << tablist(iter).tableName()
-	   << " nrow=" << nctiter.nrow(); // << flush;
-      cout << " spw="<<thisspw;
-      cout << " ant1="<<thisant;
-      cout << " obs="<<obsv;
-      cout << " scan="<<scanv;
-      //cout << " row #s: " << tab.rowNumbers(); 
-      //      cout << " " << tab.rowNumbers(nct); 
-      cout << endl;
+      cout << iter 
+	   << " nrow=" << nctiter.nrow()
+	   << " (should be " << nTotRow/niter << ")"
+	   << " obs="<<thisobs
+	   << " (should be " << expectObs << ")"
+	   << " spw="<<thisspw
+	   << " (should be " << expectSpw << ")"
+	   << " ant1="<<thisant
+	   << " (should be " << expectAnt << ")"
+	   << endl;
     }
 
+    AlwaysAssert( (nctiter.nrow()==Int(nTotRow/niter)) , AipsError);
+    AlwaysAssert( (thisobs==expectObs) , AipsError);
     AlwaysAssert( (thisspw==expectSpw) , AipsError);
     AlwaysAssert( (thisant==expectAnt) , AipsError);
 
@@ -215,40 +255,44 @@ void doTest2 (Bool verbose=False) {
   
 
   // Test recorded reference table contents
+  if (verbose) cout << "Testing iteration reference table contents:" << endl;
   for (uInt i=0;i<niter;++i) {
-    Int expectSpw(i/nAnt);
+    Int expectObs(i/(nAnt*nSpw));
+    Int expectSpw((i%(nAnt*nSpw))/nAnt);
     Int expectAnt(i%nAnt);
     
     CTMainColumns mc(tablist(i));
     
+    Vector<Int> thisobs=mc.obsId().getColumn();
     Vector<Int> thisspw=mc.spwId().getColumn();
     Vector<Int> thisant=mc.antenna1().getColumn();
 
     if (verbose) {
       cout.precision(15);
       cout << i << " "
-	//	   << tablist(i).tableName() << " "
 	   << "nrow=" << tablist(i).nrow() << " "
-	   << "ant1=" << mc.antenna1()(0) << " "
-	   << "time=" << mc.time()(0) << " "
-	   << "timeQ=" << mc.timeQuant()(0) << " "
-	   << "timeM=" << mc.timeMeas()(0) << " "
-	//	     << " row #s: " << tablist(i).rowNumbers(tablist(i))
-	   << "paramshape= " << mc.cparam().shape(0) << " "
-	   << "param= " << mc.cparam()(0) << " "
+	   << " (should be " << nScan*nTime << ")"
+	   << " obs=" << thisobs(0) 
+	   << " (should be " << expectObs << ")"
+	   << " spw=" << thisspw(0) 
+	   << " (should be " << expectSpw << ")"
+	   << " ant1=" << thisant(0) 
+	   << " (should be " << expectAnt << ")"
 	   << endl;
     }
 
+    // Tests
+    AlwaysAssert( (tablist(i).nrow()==nScan*nTime) , AipsError);
+    AlwaysAssert( allEQ(thisobs,expectObs) , AipsError);
+    AlwaysAssert( allEQ(thisspw,expectSpw) , AipsError);
+    AlwaysAssert( allEQ(thisant,expectAnt) , AipsError);
 
+    // Test the flags we wrote
     if (thisant(0)==Int(nAnt/2)) {
       Bool f(Cube<Bool>(mc.flag().getColumn())(0,0,0));
       AlwaysAssert( (f), AipsError);
     }
 
-    // Tests
-    AlwaysAssert( (tablist(i).nrow()==nFld*nTime*nObs) , AipsError);
-    AlwaysAssert( allEQ(thisspw,expectSpw) , AipsError);
-    AlwaysAssert( allEQ(thisant,expectAnt) , AipsError);
 
     // TBD: Add param value tests here...
 
@@ -260,7 +304,7 @@ int main ()
 {
   try {
 
-    //    doTest1(CTITERTEST_VERBOSE);
+    doTest1(CTITERTEST_VERBOSE);
     doTest2(CTITERTEST_VERBOSE);
 
   } catch (AipsError x) {

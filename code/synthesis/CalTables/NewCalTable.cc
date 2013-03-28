@@ -174,15 +174,24 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
 };
 
 //----------------------------------------------------------------------------
-NewCalTable::NewCalTable(String tableName, String caltype,
-			 Int nFld, Int nAnt, Int nSpw, 
-			 Vector<Int> nChan, Int nObs, Int nTime,
+NewCalTable::NewCalTable(String tableName, String CorF,
+			 Int nObs, Int nScanPerObs, Int nTimePerScan,
+			 Int nAnt, Int nSpw, Vector<Int> nChan, 
+			 Int nFld, 
 			 Double rTime, Double tint,
 			 Bool disk, Bool verbose) :
   Table()
 {
 
-  CTDesc nctd("Complex","none",caltype,"circ");
+  String caltype("");
+  if (CorF=="Complex")
+    caltype="T";
+  else if (CorF=="Float")
+    caltype="K";
+  else
+    throw(AipsError("CorF must be 'Complex' or 'Float'"));
+
+  CTDesc nctd(CorF,"none",caltype,"circ");
 
   // Form underlying generic Table according to the supplied desc
   SetupNewTable calMainTab(tableName+".tempMemCalTable",nctd.calMainDesc(),Table::New);
@@ -196,7 +205,9 @@ NewCalTable::NewCalTable(String tableName, String caltype,
   this->createSubTables();
 
   // Fill it generically
-  this->fillGenericContents(nFld,nAnt,nSpw,nChan,nObs,nTime,rTime,tint,verbose);
+  this->fillGenericContents(nObs,nScanPerObs,nTimePerScan,
+			    nAnt,nSpw,nChan,
+			    nFld,rTime,tint,verbose);
 
   if (disk) {
     // Write it out to disk
@@ -474,9 +485,19 @@ Complex NewCalTable::NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double 
 
 }
 
+Float NewCalTable::NCTtestvalueF(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint) {
+
+  Double dt=(time-refTime)/tint;
+  Double a=dt + Double(iant)/10.0 + Double(ispw)/100.0 +Double(ich)/10000.0;
+  return Float(a);
+
+}
+
+
 //----------------------------------------------------------------------------
-void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw, 
-				      Vector<Int> nChan, Int nObs, Int nTime,
+void NewCalTable::fillGenericContents(Int nObs, Int nScanPerObs,Int nTimePerScan,
+				      Int nAnt, Int nSpw, Vector<Int> nChan, 
+				      Int nFld, 
 				      Double rTime, Double tint,
 				      Bool verbose) {
 
@@ -484,14 +505,17 @@ void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw,
   if (rTime==0.0) rTime=4832568000.0;
   if (tint==0.0) tint=60.0;
 
-  if (verbose)
+  if (verbose) {
     cout << nFld << " "
 	 << nAnt << " "
 	 << nSpw << " "
 	 << nChan << " "
 	 << nObs << " "
-	 << nTime << " "
+	 << nScanPerObs << " "
+	 << nTimePerScan << " "
 	 << endl;
+    cout.precision(15);
+  }
   
   // fill subtables
   fillGenericObs(nObs);
@@ -508,59 +532,80 @@ void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw,
   Int nPar(1);
 
   Double thistime(rTime-tint);  // first sample will be at rTime
-  Int thisscan(0);
 
   CTMainColumns ncmc(*this);
 
+  Int thisscan(0);
   for (Int iobs=0;iobs<nObs;++iobs) {
-  for (Int itime=0;itime<nTime;++itime) {
-    for (Int ifld=0;ifld<nFld;++ifld) {
-      thistime+=tint; // every minute
+    if (verbose) cout << "Obs=" << iobs << endl;
+    Int thisfield(-1);
+    for (Int iscan=0;iscan<nScanPerObs;++iscan) {
       thisscan+=1;    //  unique scans
-      for (Int ispw=0;ispw<nSpw;++ispw) {
+      thisfield+=1;   // each scan is a new field
+      thisfield=thisfield%nFld;   // never more than nFld-1
+      if (verbose) cout << " Scan=" << thisscan << "  Field=" <<thisfield << endl; 
+      for (Int itime=0;itime<nTimePerScan;++itime) {
+	thistime+=tint; // every tint
+	if (verbose) cout << "  Time="<< thistime << endl;
 
-	if (verbose)
-	  cout << itime << " " << ifld << " " << ispw << " " << this->nrow() << endl;
+	for (Int ispw=0;ispw<nSpw;++ispw) {
 
-	// add rows
-	Int nAddRows=nAnt;
-	RefRows rows(this->nrow(),this->nrow()+nAddRows-1,1); 
-	this->addRow(nAddRows);
+	  if (verbose) cout << "   Spw=" << ispw << endl;
+	  
+	  // add rows
+	  Int nAddRows=nAnt;
+	  RefRows rows(this->nrow(),this->nrow()+nAddRows-1,1); 
+	  this->addRow(nAddRows);
 
-	// fill columns in new rows
-	ncmc.time().putColumnCells(rows,Vector<Double>(nAddRows,thistime));
-	ncmc.interval().putColumnCells(rows,Vector<Double>(nAddRows,tint));
-	ncmc.fieldId().putColumnCells(rows,Vector<Int>(nAddRows,ifld));
-	ncmc.spwId().putColumnCells(rows,Vector<Int>(nAddRows,ispw));
-	ncmc.antenna1().putColumnCells(rows,antlist);
-	ncmc.antenna2().putColumnCells(rows,Vector<Int>(nAddRows,refant));
-	ncmc.obsId().putColumnCells(rows,Vector<Int>(nAddRows,iobs));
-	ncmc.scanNo().putColumnCells(rows,Vector<Int>(nAddRows,thisscan));
+	  if (verbose) cout << "    Adding " << nAnt << " rows; total=" << this->nrow() << endl;
+	  
+	  // fill columns in new rows
+	  ncmc.time().putColumnCells(rows,Vector<Double>(nAddRows,thistime));
+	  ncmc.interval().putColumnCells(rows,Vector<Double>(nAddRows,tint));
+	  ncmc.fieldId().putColumnCells(rows,Vector<Int>(nAddRows,thisfield));
+	  ncmc.spwId().putColumnCells(rows,Vector<Int>(nAddRows,ispw));
+	  ncmc.antenna1().putColumnCells(rows,antlist);
+	  ncmc.antenna2().putColumnCells(rows,Vector<Int>(nAddRows,refant));
+	  ncmc.obsId().putColumnCells(rows,Vector<Int>(nAddRows,iobs));
+	  ncmc.scanNo().putColumnCells(rows,Vector<Int>(nAddRows,thisscan));
 
-	Cube<Complex> par(nPar,nChan(ispw),nAddRows);
-	for (Int iant=0;iant<nAnt;++iant) {
-	  for (Int ich=0;ich<nChan(ispw);++ich) {
-	    par.xyPlane(iant).column(ich)=NCTtestvalueC(iant,ispw,ich,thistime,rTime,tint);
+
+	  if (isComplex()) {
+	    Cube<Complex> par(nPar,nChan(ispw),nAddRows);
+	    for (Int iant=0;iant<nAnt;++iant) {
+	      for (Int ich=0;ich<nChan(ispw);++ich) {
+		par.xyPlane(iant).column(ich)=NCTtestvalueC(iant,ispw,ich,thistime,rTime,tint);
+	      }
+	    }
+	    ncmc.cparam().putColumnCells(rows,par);
 	  }
+	  else {
+	    Cube<Float> par(nPar,nChan(ispw),nAddRows);
+	    for (Int iant=0;iant<nAnt;++iant) {
+	      for (Int ich=0;ich<nChan(ispw);++ich) {
+		par.xyPlane(iant).column(ich)=NCTtestvalueF(iant,ispw,ich,thistime,rTime,tint);
+	      }
+	    }
+	    ncmc.fparam().putColumnCells(rows,par);
+	  }
+
+	  Cube<Float> parerr(nPar,nChan(ispw),nAddRows);
+	  parerr=0.001;
+	  ncmc.paramerr().putColumnCells(rows,parerr);
+	  Cube<Float> snr(nPar,nChan(ispw),nAddRows);
+	  snr=999.0;
+	  ncmc.snr().putColumnCells(rows,snr);
+	  Cube<Float> wt(nPar,nChan(ispw),nAddRows);
+	  wt=1.0;
+	  ncmc.weight().putColumnCells(rows,wt);
+	  Cube<Bool> flag(nPar,nChan(ispw),nAddRows);
+	  flag=False;
+	  ncmc.flag().putColumnCells(rows,flag);
 	}
-	ncmc.cparam().putColumnCells(rows,par);
-	Cube<Float> parerr(nPar,nChan(ispw),nAddRows);
-	parerr=0.001;
-	ncmc.paramerr().putColumnCells(rows,parerr);
-	Cube<Float> snr(nPar,nChan(ispw),nAddRows);
-	snr=999.0;
-	ncmc.snr().putColumnCells(rows,snr);
-	Cube<Float> wt(nPar,nChan(ispw),nAddRows);
-	wt=1.0;
-	ncmc.weight().putColumnCells(rows,wt);
-	Cube<Bool> flag(nPar,nChan(ispw),nAddRows);
-	flag=False;
-	ncmc.flag().putColumnCells(rows,flag);
       }
     }
   }
-  }
-
+  
 }
 
 //----------------------------------------------------------------------------
