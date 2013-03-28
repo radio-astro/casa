@@ -74,7 +74,7 @@ class ZoomWidget;
  * this class and a subclass that needs to know the height of the plot in
  * order to correctly draw a marker.
  */
-class BinPlotWidget : public QWidget, public HeightSource {
+class BinPlotWidget : public QWidget, public HeightSource{
     Q_OBJECT
 
 friend class RangePicker;

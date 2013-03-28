@@ -147,9 +147,6 @@ void Polyline::polyLineRegionChanged( viewer::Region* /*region*/, std::string ch
 	if ( changeType == this->state()->LINE_COLOR_CHANGE ){
 		setPlotLineColor();
 	}
-	else {
-		qDebug() << "Change type="<<changeType.c_str();
-	}
 }
 
 void Polyline::updatePolyLine(int regionId, viewer::region::RegionChanges changes,

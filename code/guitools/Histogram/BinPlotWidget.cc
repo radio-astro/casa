@@ -141,7 +141,7 @@ void BinPlotWidget::setColorLookups( const Vector<uInt>& lookups ){
 		colorLookups[i] = lookups[i];
 	}
 	clearCurves();
-	resetImage();
+	makeHistogram( IMAGE_ID, curveColor );
 }
 
 
@@ -596,7 +596,6 @@ void BinPlotWidget::zoomPercentage( float minValue, float maxValue ){
 
 
 void BinPlotWidget::connectZoomActions( ZoomWidget* zoomWidget ){
-
 	connect( zoomWidget, SIGNAL(zoomRange(float,float)), this, SLOT(zoomPercentage(float,float)));
 	connect( zoomWidget, SIGNAL( zoomNeutral()), this, SLOT(zoomNeutral()));
 	connect( zoomWidget, SIGNAL( zoomGraphicalRange()), this, SLOT(zoomRange()));
@@ -987,7 +986,7 @@ QwtPlotCurve* BinPlotWidget::addCurve( QVector<double>& xValues,
 QColor BinPlotWidget::getPieceColor( int index, const QColor& defaultColor ) const {
 	QColor pieceColor = defaultColor;
 	int colorLookUpCount = colorLookups.size();
-	if ( colorLookUpCount > 0 && multiColored){
+	if ( colorLookUpCount > 0 && multiColored && colorMap != NULL){
 		QwtDoubleInterval range(0,colorScaleMax);
 		pieceColor = colorMap->rgb( range, colorLookups[index]);
 		//So the first segment color is assigned.
@@ -1110,8 +1109,8 @@ bool BinPlotWidget::setImageRegion( ImageRegion* region, int id ){
 
 std::vector<float> BinPlotWidget::getXValues() const {
 	std::vector<float> values;
-	if ( histogramMap.contains(IMAGE_ID)){
-		values = histogramMap[IMAGE_ID]->getXValues();
+	if ( histogramMap.contains(selectedId)){
+		values = histogramMap[selectedId]->getXValues();
 	}
 	return values;
 }
@@ -1134,6 +1133,9 @@ bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 			}
 			if ( fitWidget != NULL ){
 				fitWidget->clearFit();
+			}
+			if ( rangeControlWidget != NULL ){
+				rangeControlWidget->setImage( image );
 			}
 		}
 	}
@@ -1330,7 +1332,6 @@ void BinPlotWidget::resetRectangleMarker(){
 		int pixelXStart = static_cast<int>( binPlot.transform( QwtPlot::xBottom, rectX ) );
 		int pixelXEnd = static_cast<int>(binPlot.transform( QwtPlot::xBottom, otherSide ));
 		rectMarker->setBoundaryValues( pixelXStart, pixelXEnd );
-
 	}
 }
 
@@ -1345,6 +1346,7 @@ void BinPlotWidget::minMaxChanged(){
 		if ( fitWidget != NULL ){
 			fitWidget->restrictDomain( minMaxValues.first, minMaxValues.second );
 		}
+		binPlot.replot();
 		emit rangeChanged();
 	}
 }
