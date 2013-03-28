@@ -185,6 +185,9 @@ echo >> $OUTFILE
 echo "if not globals().has_key('task_location') :" >>$OUTFILE
 echo "  task_location = odict()" >> $OUTFILE
 echo >> $OUTFILE
+echo "import inspect" >> $OUTFILE
+echo "myglobals = sys._getframe(len(inspect.stack())-1).f_globals" >> $OUTFILE
+echo "tasksum = myglobals['tasksum'] " >> $OUTFILE
 echo "for key in mytasks.keys() :" >> $OUTFILE
 echo "  task_location[key] = '$INSTALLDIR'" >> $OUTFILE
 echo "  tasksum[key] = mytasks[key]" >> $OUTFILE
