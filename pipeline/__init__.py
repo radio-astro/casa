@@ -22,6 +22,9 @@ mypath = os.path.dirname(__file__);
 hifpath = mypath+"/hif/cli/hif.py"
 hpath = mypath+"/h/cli/h.py"
 hsdpath = mypath+"/hsd/cli/hsd.py"
+print hifpath
+print hpath
+print hsdpath
 execfile(hpath)
 execfile(hifpath)
 execfile(hsdpath)
