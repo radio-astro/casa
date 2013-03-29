@@ -30,7 +30,7 @@
 #include <ostream>
 namespace casa{
   //
-  void AzElAperture::rotate(const VisBuffer& vb, CFCell& cfc) 
+  void AzElAperture::rotate(const VisBuffer& vb, CFCell& cfc, const Double& rotAngleIncr) 
     {
       LogIO log_l(LogOrigin("AzElAperture", "rotate"));
       // If the A-Term is a No-Op, the resulting CF is rotationally
@@ -39,7 +39,7 @@ namespace casa{
 
       Double actualPA = getPA(vb), currentCFPA = cfc.pa_p.getValue("rad");
       Double dPA = currentCFPA-actualPA;
-      if (fabs(dPA) > 0.1)
+      if (fabs(dPA) > fabs(rotAngleIncr))
 	//      if (fabs(actualPA-currentCFPA) > 0.0)
 	{
 	  Array<TT> inData;

@@ -1311,7 +1311,7 @@ namespace casa{
     CFBuffer *cfb, *cbPtr=0;
     ATerm *aTerm_l=&*aTerm_p;
 
-    // Int Nth=1;
+//     Int Nth=1;
 // #ifdef HAS_OMP
 //     Nth=max(omp_get_max_threads()-2,1);
 // #endif
@@ -1337,8 +1337,8 @@ namespace casa{
 		    // Call this for every VB.  Any optimization
 		    // (e.g. rotating at some increment only) is
 		    // implemented in the ATerm::rotate().
-
-		    aTerm_l->rotate(vb,*cfc);
+		    //		    if (rotateCF_p) 
+		    aTerm_l->rotate(vb,*cfc,rotateCFAngleRad_p);
 		  }
     }
 	  }

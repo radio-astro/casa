@@ -2900,7 +2900,9 @@ Bool Imager::createFTMachine()
     // this
     //
     // os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
-    ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+
+    //    ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+    ((AWProjectFT *)ft_p)->setPAIncrement(Quantity(paStep_p,"deg"));
 
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();

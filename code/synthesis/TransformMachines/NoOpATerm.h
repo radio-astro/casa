@@ -89,7 +89,8 @@ namespace casa{
     {return 0;};
     
     virtual void rotate(const VisBuffer& ,//vb, 
-			CFCell& // cfs
+			CFCell&, // cfs
+			const Double& // rotAngle
 			) 
     {};
     //

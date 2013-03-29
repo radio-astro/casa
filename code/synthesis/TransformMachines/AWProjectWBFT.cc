@@ -1368,8 +1368,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	 << " " << visResampler_p->runTimeG5_p 
     	 << " " << visResampler_p->runTimeG6_p 
     	 << " " << visResampler_p->runTimeG7_p 
+	 << " C " << runTime1_p 
     	 << endl;
     visResampler_p->runTimeG_p=visResampler_p->runTimeG1_p=visResampler_p->runTimeG2_p=visResampler_p->runTimeG3_p=visResampler_p->runTimeG4_p=visResampler_p->runTimeG5_p=visResampler_p->runTimeG6_p=visResampler_p->runTimeG7_p=0.0;
+    runTime1_p=0;
   }
   //
   //---------------------------------------------------------------
@@ -1388,6 +1390,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     //	makeWBCFWt(*cfwts2_p, imRefFreq_p);
     
+    timer_p.mark();
     visResamplerWt_p->copy(*visResampler_p);
     
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(*image, vb));
@@ -1396,6 +1399,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				      chanMap,polMap,pointingOffset);
     VBRow2CFBMapType& theMap=visResamplerWt_p->getVBRow2CFBMap();
     convFuncCtor_p->prepareConvFunction(vb,theMap);
+    runTime1_p += timer_p.real();
     //
     // Set the uvw array to zero-sized array and dopsf=True.
     // uvw.nelements()==0 is a hint to the re-sampler to put the
