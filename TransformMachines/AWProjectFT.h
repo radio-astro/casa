@@ -58,6 +58,8 @@
 #include <images/Images/ImageInterface.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
+#include <casa/OS/Timer.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   // <summary>  An FTMachine for Gridded Fourier transforms including effects of primary beam and pointing offsets and the w-term</summary>
@@ -517,6 +519,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFStore rotatedConvFunc_p;
     CountedPtr<CFStore2> cfs2_p, cfwts2_p;
     Vector<Int> ConjCFMap_p, CFMap_p;
+
+    Timer timer_p;
+    Double runTime1_p;
 
 #include "AWProjectFT.FORTRANSTUFF.INC"
   };

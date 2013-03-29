@@ -178,7 +178,7 @@ namespace casa{
     convFuncV = &(*cfcell->getStorage());
     Complex *tt=convFuncV->getStorage(Dummy);
     //    cfShape = convFuncV->shape().asVector();
-#warning "Figure out why cfShape.reference() does not always work (seg. fault)"
+
     cfShape.reference(cfcell->cfShape_p);
     //    cfShape.assign(cfcell->cfShape_p);
     runTimeG1_p += timer_p.real();
@@ -265,18 +265,22 @@ namespace casa{
     //
     // !!!!! Compute cfArea for high precision work
     //
-     cfArea = getCFArea(convFuncV, wVal, scaledSupport, scaledSampling,
-     		       off, convOrigin, cfShape, sinDPA,cosDPA);
+
+     // cfArea = getCFArea(convFuncV, wVal, scaledSupport, scaledSampling,
+     // 		       off, convOrigin, cfShape, sinDPA,cosDPA);
+
+
     // cerr << "Cfarea = " << cfArea << endl;
      IPosition phaseGradOrigin_l; 
      phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
 
-#pragma omp parallel default(none) \
-  firstprivate(scaledSupport_ptr,scaledSampling_ptr,off_ptr,loc_ptr,cfArea,iGrdPosPtr, \
-	       convFuncV_l, convOrigin_ptr, nvalue_l, wVal_l, finitePointingOffset_l, doPSFOnly_l, \
-	       gridStore, iloc_ptr, norm,igrdpos_ptr) num_threads(Nth)
+// #pragma omp parallel default(none) \
+//   shared(gridStore) \
+//   firstprivate(scaledSupport_ptr,scaledSampling_ptr,off_ptr,loc_ptr,cfArea,iGrdPosPtr, \
+// 	       convFuncV_l, convOrigin_ptr, nvalue_l, wVal_l, finitePointingOffset_l, doPSFOnly_l, \
+// 	       iloc_ptr, norm,igrdpos_ptr) num_threads(Nth)
      {
-#pragma omp for
+// #pragma omp for
     for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
       {
 	iloc_ptr[1]=(Int)((scaledSampling[1]*iy+off[1])-1)+convOrigin[1];
@@ -394,7 +398,7 @@ namespace casa{
   {
     LogIO log_l(LogOrigin("AWVisResampler[R&D]","DataToGridImpl_p"));
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny, nw, nCFFreq;
-    Int targetIMChan, targetIMPol, rbeg, rend, PolnPlane, ConjPlane;
+    Int targetIMChan, targetIMPol, rbeg, rend;//, PolnPlane, ConjPlane;
     Int startChan, endChan;
     
     Vector<Float> sampling(2),scaledSampling(2);
@@ -478,7 +482,6 @@ namespace casa{
 
    //   Double conjRefFreq = vbs.imRefFreq();
    Int vbSpw = (vbs.vb_p)->spectralWindow();
-   //    runTimeG2_p += timer.real();   
 
     for(Int irow=rbeg; irow< rend; irow++){   
       //      if ((vbs.uvw_p.nelements() == 0)) 
@@ -500,7 +503,12 @@ namespace casa{
 		      // Double conjFreq=sqrt(2*conjRefFreq*conjRefFreq - freq[ichan]*freq[ichan]);
 		      // Int fndx = cfb.nearestFreqNdx(freq[ichan]),
 		      // 	conjFNdx =cfb.nearestFreqNdx(conjFreq);
-		      Int fndx=cfb.nearestFreqNdx(vbSpw,ichan), conjFNdx=cfb.nearestFreqNdx(vbSpw,ichan,True);
+
+		      // Int fndx=cfb.nearestFreqNdx(vbSpw,ichan), conjFNdx=cfb.nearestFreqNdx(vbSpw,ichan,True);
+		      Int cfFreqNdx;
+		      if (vbs.conjBeams_p) cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan,True);// Get the conj. freq. index
+		      else  cfFreqNdx = cfb.nearestFreqNdx(vbSpw,ichan);
+
 		      runTimeG3_p += timer_p.real();
 		      
 		      Float s;
@@ -512,14 +520,18 @@ namespace casa{
 		      //
 		      //------------------------------------------------------------------------------
 		      //
-		      if (vbs.conjBeams_p)
-			{
-			  timer_p.mark();
-			  cfb.getParams(cfRefFreq, s, support(0), support(1),conjFNdx,wndx,0);
-			  runTimeG4_p += timer_p.real();
-			}
-		      else
-			cfb.getParams(cfRefFreq, s, support(0), support(1),fndx,wndx,0);
+		      // if (vbs.conjBeams_p)
+		      // 	{
+		      // 	  timer_p.mark();
+		      // 	  cfb.getParams(cfRefFreq, s, support(0), support(1),conjFNdx,wndx,0);
+		      // 	  runTimeG4_p += timer_p.real();
+		      // 	}
+		      // else
+		      // 	cfb.getParams(cfRefFreq, s, support(0), support(1),fndx,wndx,0);
+
+		      timer_p.mark();
+		      cfb.getParams(cfRefFreq, s, support(0), support(1),cfFreqNdx,wndx,0);
+		      runTimeG4_p += timer_p.real();
 
 		      sampling(0) = sampling(1) = SynthesisUtils::nint(s);
 		      // sampling[0] = SynthesisUtils::nint(sampling[0]*cfScale);
@@ -546,8 +558,8 @@ namespace casa{
 				      
 				      if(accumCFs)     allPolNChanDone_l(ipol,ichan,irow)=True;
 				      
-				      ConjPlane = cfMap_p[ipol];
-				      PolnPlane = conjCFMap_p[ipol];
+				      // ConjPlane = cfMap_p[ipol];
+				      // PolnPlane = conjCFMap_p[ipol];
 				      
 				      if(dopsf) nvalue=Complex(*(imgWts_ptr + ichan + irow*nDataChan));
 				      else      nvalue= *(imgWts_ptr+ichan+irow*nDataChan)*
@@ -560,11 +572,14 @@ namespace casa{
 					{
 					  Complex* convFuncV;
 					  timer_p.mark();
-					  if (vbs.conjBeams_p) convFuncV=getConvFunc_p(cfShape, cfb, dataWVal, conjFNdx, 
-										       wndx, mNdx, conjMNdx, ipol,  mRow);
-					  else                 convFuncV=getConvFunc_p(cfShape, cfb, dataWVal, fndx, 
-										       wndx, mNdx, conjMNdx, ipol,  mRow);
+					  // if (vbs.conjBeams_p) convFuncV=getConvFunc_p(cfShape, cfb, dataWVal, conjFNdx, 
+					  // 					       wndx, mNdx, conjMNdx, ipol,  mRow);
+					  // else                 convFuncV=getConvFunc_p(cfShape, cfb, dataWVal, fndx, 
+					  // 					       wndx, mNdx, conjMNdx, ipol,  mRow);
 
+					  convFuncV=getConvFunc_p(cfShape, cfb, dataWVal, cfFreqNdx,
+								  wndx, mNdx, conjMNdx, ipol,  mRow);
+					  
 					  runTimeG6_p += timer_p.real();
 					  // support.assign(scaledSupport);
 					  // sampling.assign(scaledSampling);
@@ -612,7 +627,7 @@ runTimeG7_p += timer_p.real();
   void AWVisResampler::GridToData(VBStore& vbs, const Array<Complex>& grid)
   {
     Int nDataChan, nDataPol, nGridPol, nGridChan, nx, ny,nw, nCFFreq;
-    Int achan, apol, rbeg, rend, PolnPlane, ConjPlane;
+    Int achan, apol, rbeg, rend;//, PolnPlane, ConjPlane;
     Vector<Float> sampling(2);//scaledSampling(2);
     Vector<Int> support(2),loc(3), iloc(4),tiloc(4);// scaledSupport(2);
     Vector<Double> pos(2), off(3);
@@ -724,8 +739,8 @@ runTimeG7_p += timer_p.real();
 		    igrdpos[2]=apol; igrdpos[3]=achan;
 		    nvalue=0.0;      norm(apol)=0.0;
 		    
-		    ConjPlane = cfMap_p(ipol);
-		    PolnPlane = conjCFMap_p(ipol);
+		    // ConjPlane = cfMap_p(ipol);
+		    // PolnPlane = conjCFMap_p(ipol);
 		    
 		    // With VBRow2CFMap in use, CF for each pol. plane is a separate 2D Array.  
 		    //		    iloc[3]=0;

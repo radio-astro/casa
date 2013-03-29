@@ -2160,12 +2160,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void AWProjectFT::setPAIncrement(const Quantity& paIncrement)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "setPAIncrement[R&D]"));
-    paChangeDetector.setTolerance(paIncrement);
-    rotateAperture_p = True;
+    Quantity tmp(abs(paIncrement.getValue("deg")), "deg");
     if (paIncrement.getValue("rad") < 0)
-      rotateAperture_p = False;
+      {
+	rotateAperture_p = False;
+	convFuncCtor_p->setRotateCF(tmp.getValue("rad"));
+      }
+    else
+      {
+	rotateAperture_p = True;
+	convFuncCtor_p->setRotateCF(0.1);
+      }
+	
+
+    paChangeDetector.setTolerance(tmp);
     log_l << LogIO::NORMAL <<"Setting PA increment to " 
-	  << paIncrement.getValue("deg") << " deg" << endl;
+	  << tmp.getValue("deg") << " deg" << endl;
     cfCache_p->setPAChangeDetector(paChangeDetector);
   }
   //
@@ -2240,6 +2250,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vbs.flagCube_p.resize(flagCube.shape());  vbs.flagCube_p = False; vbs.flagCube_p(flagCube!=0) = True;
     vbs.conjBeams_p=conjBeams_p;
 
+    timer_p.mark();
+
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(*image, vb));
     if (makingPSF)
       visResampler_p->makeVBRow2CFMap(*cfwts2_p,*convFuncCtor_p, vb,
@@ -2255,6 +2267,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // For AzElApertures, this rotates the CFs.
     //
     convFuncCtor_p->prepareConvFunction(vb,theMap);
+    runTime1_p += timer_p.real();
     //    visResampler_p->setConvFunc(cfs_p);
   }
 
