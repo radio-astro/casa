@@ -157,8 +157,6 @@ class ia_pv_test(unittest.TestCase):
             gotinc = pv.coordsys().increment()["numeric"]
             # the position offset axis always has units of arcsec, the units
             # in the input image were arcmin
-            print "*** gotinc " + str(gotinc)
-            print "*** expinc " + str(expinc)
             self.assertTrue((abs(gotinc - expinc) < 1e-5).all())
             # halfwidth
             outfile = "test_pv_1_" + str(code)
@@ -231,10 +229,15 @@ class ia_pv_test(unittest.TestCase):
         x2 = 166.329268
         y1 = 142.914634
         y2 = 232.670732
+        # success or failure should not depend on the end pixel's location relative to the start pixel.
         xx = myia.pv(start=[x1, y1], end=[x2, y2])
+        # test units while we're at it
+        self.assertTrue(xx.coordsys().units()[0] == "arcsec")
         xx = myia.pv(start=[x2, y1], end=[x1, y2])
         xx = myia.pv(start=[x2, y2], end=[x1, y1])
-        xx = myia.pv(start=[x1, y2], end=[x2, y1])
+        xx = myia.pv(start=[x1, y2], end=[x2, y1], unit="rad")
+        self.assertTrue(xx.coordsys().units()[0] == "rad")
+
 
         myia.done()
         xx.done()

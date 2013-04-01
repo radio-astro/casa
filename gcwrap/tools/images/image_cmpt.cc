@@ -185,8 +185,8 @@ bool image::addnoise(const std::string& type, const std::vector<double>& pars,
 		}
 
 		Record *pRegion = toRecord(region);
-
 		_image->addnoise(type, pars, *pRegion, zeroIt);
+
 		_stats.reset(0);
 		return True;
 	} catch (const AipsError& x) {
@@ -2500,9 +2500,10 @@ bool image::putregion(const ::casac::variant& v_pixels,
 
 image* image::pv(
 	const string& outfile, const vector<double>& start,
-	const vector<double>& end, const int halfwidth, const bool overwrite,
-	const variant& region, const string& chans, const string& stokes,
-	const string& mask, const bool stretch, const bool wantreturn
+	const vector<double>& end, const int halfwidth, const string& unit,
+	const bool overwrite, const variant& region, const string& chans,
+	const string& stokes, const string& mask, const bool stretch,
+	const bool wantreturn
 ) {
 	if (detached()) {
 		return 0;
@@ -2530,6 +2531,7 @@ image* image::pv(
 		pv.setEndpoints(start[0], start[1], end[0], end[1]);
 		pv.setStretch(stretch);
 		pv.setHalfWidth(halfwidth);
+		pv.setOffsetUnit(unit);
 		std::auto_ptr<ImageInterface<Float> > resImage(pv.generate(wantreturn));
 		image *ret = wantreturn ? new image(resImage.get()) : 0;
 		return ret;

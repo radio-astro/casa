@@ -10139,6 +10139,10 @@ used to create a 2D temporary image.
             <description>Half width for averaging expressed in pixels perpendicular to the slice. Pixels within one half width perpendicular to the slice will be averaged along the slice</description>
             <value>0</value>
         </param>
+        <param type="string" name="unit">
+            <description>Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
+            <value>arcsec</value>
+        </param>
         <param type="bool"  name="overwrite">
             <description>Overwrite the output if it exists?</description>
             <value>false</value>
@@ -10178,9 +10182,10 @@ used to create a 2D temporary image.
         in direction space; that is accomplished by specifying the start and end points of the slice. One may
         specify an optional half width, which is the number of pixels on either side and perpendicular to the
         direction slice that are used for averaging along the slice (0, the default, represents no averaging).
+        One may specify the unit for the angular offset axis.
         A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
-        image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified (unless
-        perhaps you are debugging).
+        image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified
+        (unless perhaps you are debugging).
         
         Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
         be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
