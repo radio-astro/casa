@@ -52,7 +52,7 @@ PVGenerator::PVGenerator(
 ) : ImageTask(
 		image, "", regionRec, "", chanInp, stokes,
 		maskInp, outname, overwrite
-	), _start(0), _end(0), _halfwidth(0) {
+	), _start(0), _end(0), _halfwidth(0), _unit("arcsec") {
 	_construct();
 }
 
@@ -315,16 +315,16 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	Vector<Double> pixEnd(2, 0);
 	pixEnd[0] = dirShape[0];
 	dc.toWorld(collapsedEnd, pixEnd);
-	Quantity seperation = collapsedEnd.separation(
+	Quantity separation = collapsedEnd.separation(
 		collapsedStart, dc.worldAxisUnits()[0]
 	);
 	// The new coordinate must have the same number of axes as the coordinate
 	// it replaces, so 2 for the linear coordinate, we will remove the degenerate
 	// axis later
 	Vector<String> axisName(2, "Offset");
-	Vector<String> axisUnit(2, "arcsec");
+	Vector<String> axisUnit(2, _unit);
 	Vector<Double> crval(2, 0);
-	Vector<Double> cdelt(2, seperation.getValue(axisUnit[0])/dirShape[0]);
+	Vector<Double> cdelt(2, separation.getValue(axisUnit[0])/dirShape[0]);
 	Matrix<Double> xform(2, 2, 1);
 	xform(0, 1) = 0;
 	xform(1, 0) = 0;
@@ -374,6 +374,17 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		return 0;
 	}
 }
+
+void PVGenerator::setOffsetUnit(const String& s) {
+	Quantity q(1, s);
+	if (! q.isConform("rad")) {
+		*_getLog() << LogOrigin("PVGenerator", __FUNCTION__);
+		*_getLog() << s << " is not a unit of angular measure" << LogIO::EXCEPTION;
+	}
+	_unit = s;
+}
+
+
 
 String PVGenerator::getClass() const {
 	return _class;
