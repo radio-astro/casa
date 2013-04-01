@@ -257,7 +257,10 @@ Bool toCasaVectorQuantity(const ::casac::variant& theval, casa::Vector<casa::Qua
                transcribedRec->insert(theRec.name(i).c_str(), int(theRec.asuInt(i)));
                break;
           case TpInt64 :
-               transcribedRec->insert(theRec.name(i).c_str(), (long long)(theRec.asInt64(i)));
+	       {
+	       casac::variant val(theRec.asInt64(i));
+               transcribedRec->insert(theRec.name(i).c_str(), val);
+	       }
                break;
           case TpFloat :
                transcribedRec->insert(theRec.name(i).c_str(), double(theRec.asFloat(i)));
@@ -430,6 +433,9 @@ Record *toRecord(const ::casac::record &theRec){
             case ::casac::variant::BOOL :
               {transcribedRec->define(RecordFieldId((*rec_it).first), (*rec_it).second.toBool());}
                break;
+            case ::casac::variant::LONG :
+              {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getInt()));}
+               break;
             case ::casac::variant::INT :
               {transcribedRec->define(RecordFieldId((*rec_it).first), Int((*rec_it).second.getInt()));}
                break;
@@ -467,6 +473,20 @@ Record *toRecord(const ::casac::record &theRec){
                for(Array<Int>::iterator iter = intArr.begin();
                                          iter != intArrend; ++iter)
                    *iter = intVec[i++];
+               transcribedRec->define(RecordFieldId((*rec_it).first), intArr);
+               }
+               break;
+            case ::casac::variant::LONGVEC :
+               {
+               Vector<Int> shapeVec((*rec_it).second.arrayshape());
+               Vector<Int64> longVec((*rec_it).second.getLongVec());
+               IPosition tshape(shapeVec);
+               Array<Int64> intArr(tshape);
+               int i(0);
+	       Array<Int64>::iterator intArrend = intArr.end();
+               for(Array<Int64>::iterator iter = intArr.begin();
+                                         iter != intArrend; ++iter)
+                   *iter = longVec[i++];
                transcribedRec->define(RecordFieldId((*rec_it).first), intArr);
                }
                break;
