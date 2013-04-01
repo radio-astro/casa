@@ -255,6 +255,7 @@ MeasurementSets/MSSelUtil2.h
 MeasurementSets/MSSelUtil2.tcc
 MeasurementSets/MSSelection.h
 MeasurementSets/MSSelectableTable.h
+MeasurementSets/MSSelectableMainColumn.h
 MeasurementSets/MSSelectionError.h
 MeasurementSets/MSSelectionErrorHandler.h
 MeasurementSets/MSSelectionKeywords.h
