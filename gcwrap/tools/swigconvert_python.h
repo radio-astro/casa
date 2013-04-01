@@ -77,8 +77,8 @@ int pylist2vector( PyObject *array, std::vector<TYPE> &vec, std::vector<int> &sh
 AMAP_ARRAY(std::string)
 AMAP_ARRAY(bool)
 AMAP_ARRAY(int)
+AMAP_ARRAY(long long)
 AMAP_ARRAY(double)
-struct casac::complex;
 AMAP_ARRAY(casac::complex)
 AMAP_ARRAY(std::complex<double>)
 
