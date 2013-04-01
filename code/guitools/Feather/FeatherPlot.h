@@ -117,6 +117,8 @@ private:
     double maxX;
     double minY;
     double maxY;
+    double minYRight;
+    double maxYRight;
 };
 
 } /* namespace casa */

@@ -75,18 +75,18 @@ void PlotHolder::initializePlots(){
 	connect( origYWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
 	connect( origYWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( origYWidget );
-	FeatherPlotWidget* xWidget = new FeatherPlotWidget( "Average Visibility Slice U", FeatherPlot::SLICE_CUT);
+	FeatherPlotWidget* xWidget = new FeatherPlotWidget( "Feathered Data Slice U", FeatherPlot::SLICE_CUT);
 	connect( xWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
 	connect( xWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( xWidget );
-	FeatherPlotWidget* yWidget = new FeatherPlotWidget( "Average Visibility Slice V", FeatherPlot::SLICE_CUT);
+	FeatherPlotWidget* yWidget = new FeatherPlotWidget( "Feathered Data Slice V", FeatherPlot::SLICE_CUT);
 	connect( yWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
 	connect( yWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( yWidget );
-	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter U", FeatherPlot::SCATTER_PLOT);
+	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidget( "Feathered Data Scatter U", FeatherPlot::SCATTER_PLOT);
 	xWidgetScatter->setPermanentScatter( true );
 	plots.append( xWidgetScatter );
-	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidget( "Average Visibility Scatter V", FeatherPlot::SCATTER_PLOT);
+	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidget( "Feathered Data Scatter V", FeatherPlot::SCATTER_PLOT);
 	yWidgetScatter->setPermanentScatter( true );
 	plots.append( yWidgetScatter );
 }

@@ -41,9 +41,7 @@ FeatherCurve::FeatherCurve(FeatherPlot* plot, QwtPlot::Axis xAxis,
 
 	scatterPlot = false;
 	scaleLogUV = false;
-	scaleLogAmplitude = false;;
-
-	resetDataBounds();
+	scaleLogAmplitude = false;
 }
 
 
@@ -133,35 +131,28 @@ bool FeatherCurve::isWeightCurve() const {
 	return weightCurve;
 }
 
+QVector<double> FeatherCurve::getXValues() const{
+	return xValues;
+}
+QVector<double> FeatherCurve::getYValues() const {
+	return yValues;
+}
 
 void FeatherCurve::setCurveData( const QVector<double>& xVals, const QVector<double>& yVals ){
 	xValues.resize( xVals.size());
 	yValues.resize( yVals.size());
-	resetDataBounds();
 	for ( int i = 0; i < xVals.size(); i++ ){
 		xValues[i] = xVals[i];
-		if ( xValues[i] < minX ){
-			minX = xValues[i];
-		}
-		if ( xValues[i] > maxX ){
-			maxX = xValues[i];
-		}
 	}
 	for ( int j = 0; j < yVals.size(); j++ ){
 		yValues[j] = yVals[j];
-		if ( yValues[j] < minY ){
-			minY = yValues[j];
-		}
-		if ( yValues[j] > maxY ){
-			maxY = yValues[j];
-		}
 	}
+	resetDataBounds();
 }
 
 
 void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 	if ( uvLog != scaleLogUV || ampLog != scaleLogAmplitude ){
-		//plotCurve->detach();
 		double* scaledXValues = new double[ xValues.size() ];
 		for ( int i = 0; i < xValues.size(); i++ ){
 			scaledXValues[i] = xValues[i];
@@ -171,23 +162,21 @@ void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 			scaledYValues[i] = yValues[i];
 		}
 		//Decide whether to use a log scale or not.
-		if ( uvLog != scaleLogUV ){
-			scaleLogUV = uvLog;
-			if ( scaleLogUV && !scatterPlot ){
+		scaleLogUV = uvLog;
+		if ( scaleLogUV && !scatterPlot ){
+			doLogs( scaledXValues, xValues.size() );
+		}
+
+		scaleLogAmplitude = ampLog;
+		if ( scaleLogAmplitude ){
+			if ( !isWeightCurve()){
+				doLogs( scaledYValues, yValues.size() );
+			}
+			if ( scatterPlot ){
 				doLogs( scaledXValues, xValues.size() );
 			}
 		}
-		if ( ampLog != scaleLogAmplitude ){
-			scaleLogAmplitude = ampLog;
-			if ( scaleLogAmplitude ){
-				if ( !isWeightCurve()){
-					doLogs( scaledYValues, yValues.size() );
-				}
-				if ( scatterPlot ){
-					doLogs( scaledXValues, xValues.size() );
-				}
-			}
-		}
+
 		plotCurve->setData( scaledXValues, scaledYValues, xValues.size() );
 		delete[] scaledXValues;
 		delete[] scaledYValues;
@@ -217,9 +206,27 @@ void FeatherCurve::doLogs( double* values, int count ) const {
 
 void FeatherCurve::resetDataBounds(){
 	minX = std::numeric_limits<float>::max();
-	maxX = std::numeric_limits<float>::min();
+	maxX = -1 * minX;
 	minY = std::numeric_limits<float>::max();
-	maxY = std::numeric_limits<float>::min();
+	maxY = -1 * minY;
+	for ( int i = 0; i < xValues.size(); i++ ){
+		float testValue = xValues[i];
+		if ( testValue < minX ){
+			minX = testValue;
+		}
+		if ( testValue > maxX ){
+			maxX = testValue;
+		}
+	}
+	for ( int j = 0; j < yValues.size(); j++ ){
+		float testValue = yValues[j];
+		if ( testValue < minY ){
+			minY = testValue;
+		}
+		if ( testValue > maxY ){
+			maxY = testValue;
+		}
+	}
 }
 
 

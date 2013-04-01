@@ -87,9 +87,11 @@ void FeatherPlot::initAxes(){
 
 void FeatherPlot::resetPlotBounds(){
 	minX = std::numeric_limits<double>::max();
-	maxX = std::numeric_limits<double>::min();
+	maxX = -minX;
 	minY = std::numeric_limits<double>::max();
-	maxY = std::numeric_limits<double>::min();
+	maxY = -minY;
+	minYRight = std::numeric_limits<double>::max();
+	maxYRight = -minYRight;
 }
 
 
@@ -317,6 +319,7 @@ bool FeatherPlot::setLogScale( bool uvLogScale, bool ampLogScale ){
 			QwtPlot::Axis verticalAxis = curves[i]->getVerticalAxis();
 			setCurveData( curves[i], verticalAxis );
 		}
+		//replot();
 	}
 	return uvScaleChanged;
 }
@@ -385,9 +388,13 @@ void FeatherPlot::adjustPlotBounds( std::pair<double,double> curveBounds, QwtPlo
 	//Decide if we are finding x or y bounds
 	double* min = &minX;
 	double* max = &maxX;
-	if ( axis != QwtPlot::xBottom ){
+	if ( axis == QwtPlot::yLeft){
 		min = &minY;
 		max = &maxY;
+	}
+	else if ( axis == QwtPlot::yRight){
+		min = &minYRight;
+		max = &maxYRight;
 	}
 
 	//See if the new bounds result in changes to the current ones.

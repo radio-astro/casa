@@ -41,6 +41,10 @@ void ExternalAxisWidget::setPlot( QwtPlot* plotOwner ){
 	plot = plotOwner;
 }
 
+int ExternalAxisWidget::getStartY() const {
+	return 0;
+}
+
 double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 	//Figure out where to start the first tick.  There will be a small distance
 	//between the first tick and the start of the axis do to the difference between
@@ -55,14 +59,14 @@ double ExternalAxisWidget::getTickStartPixel( QwtPlot::Axis axis ){
 		double lowerBoundDistance = qAbs(lowerBound - axisTicks[0]);
 		endDistancePercentage = lowerBoundDistance / axisExtent;
 	}
-	QwtPlotCanvas* plotCanvas = plot->canvas();
-	int canvasBound = plotCanvas->width();
+
+	int canvasBound = width();
 	if ( axis != QwtPlot::xBottom ){
-		canvasBound = plotCanvas->height();
+		canvasBound = height() - getStartY();
 	}
 	double startPixel = canvasBound * endDistancePercentage;
 	if ( axis != QwtPlot::xBottom ){
-		startPixel = height() - plotCanvas->height() + startPixel;
+		startPixel = getStartY() + startPixel;
 	}
 	return startPixel;
 }
@@ -84,11 +88,12 @@ double ExternalAxisWidget::getTickIncrement( double tickDistance, QwtPlot::Axis 
 	QwtScaleDiv* scaleDiv = plot->axisScaleDiv( axis );
 	double axisExtent = scaleDiv->upperBound() - scaleDiv->lowerBound();
 	double tickPercentage = tickDistance / axisExtent;
-	QwtPlotCanvas* plotCanvas = plot->canvas();
-	int canvasLimit = plotCanvas->width();
+
+	int canvasLimit = width();
 	if ( axis != QwtPlot::xBottom ){
-		canvasLimit = plotCanvas->height();
+		canvasLimit = height();
 	}
+
 	double xIncrement = canvasLimit * tickPercentage;
 	return xIncrement;
 }

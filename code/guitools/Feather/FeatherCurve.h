@@ -47,6 +47,9 @@ public:
 
 	//Change the data the curve contains.
 	void setCurveData( const QVector<double>& xVals, const QVector<double>& yVals );
+	QVector<double> getXValues() const;
+	QVector<double> getYValues() const;
+
 	//Change the scale of existing data (Log<-->No Log)
 	void adjustData( bool uvLog, bool ampLog );
 

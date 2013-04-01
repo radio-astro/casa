@@ -95,8 +95,7 @@ void ExternalAxisWidgetBottom::drawAxisLabel( QPainter* painter ){
 	 QFont font = painter->font();
 	 QRect fontBoundingRect = QFontMetrics(font).boundingRect( axisLabel );
 	 int yPosition = height() / 2;
-	 QwtPlotCanvas* plotCanvas = plot->canvas();
-	 int xPosition = plotCanvas->width()/2 - fontBoundingRect.width() / 2;
+	 int xPosition = width()/2 - fontBoundingRect.width() / 2;
 	 painter->drawText( xPosition, yPosition, fontBoundingRect.width(), height(),
 					  Qt::AlignHCenter|Qt::AlignTop, axisLabel);
 		 painter->rotate(-90);
