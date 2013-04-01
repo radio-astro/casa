@@ -35,16 +35,7 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 //
 //---------------------------------------------------------------------
-//---------------------------------------------------------------------
-// TEMPS The following #defines should REALLLLAY GO!
-//---------------------------------------------------------------------
-//---------------------------------------------------------------------
 //
-#define CONVSIZE (1024*2)
-#define CONVWTSIZEFACTOR 1
-#define OVERSAMPLING 20
-#define THRESHOLD 1E-4
-
 namespace casa { //# NAMESPACE CASA - BEGIN
   template<class T> class ImageInterface;
   template<class T> class Matrix;
@@ -77,10 +68,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {Vector<Int> tmp; tmp.resize(vb.nRow()); tmp=0; nUnique=1; return tmp;}
 
     virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0);polMap=polMap_p;};
-    virtual Int getConvSize() {return CONVSIZE;};
-    virtual Int getOversampling() {return OVERSAMPLING;}
-    virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
-    virtual Float getSupportThreshold() {return THRESHOLD;};
+
+    // For this class, these will be served from the base classs (ATerm.h)
+    // virtual Int getConvSize() {return CONVSIZE;};
+    // virtual Int getOversampling() {return OVERSAMPLING;}
+    // virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
+    // virtual Float getSupportThreshold() {return THRESHOLD;};
 
   protected:
     int getVisParams(const VisBuffer& vb,const CoordinateSystem& skyCoord=CoordinateSystem());
