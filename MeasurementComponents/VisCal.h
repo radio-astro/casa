@@ -351,7 +351,7 @@ private:
   PtrBlock<Matrix<Float>*> currWtScale_;  // [nSpw](nPar,nElm)
 
   // Flag counting
-  Int ndataIn_, nflagIn_, nflagOut_;
+  Int64 ndataIn_, nflagIn_, nflagOut_;
 
   // Print level
   Int prtlev_;

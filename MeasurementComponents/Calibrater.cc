@@ -1319,7 +1319,7 @@ Bool Calibrater::genericGatherAndSolve() {
   // Manage verbosity of partial channel averaging
   Vector<Bool> verb(vi.numberSpw(),True);
 
-  Vector<Int> nexp(vi.numberSpw(),0), natt(vi.numberSpw(),0),nsuc(vi.numberSpw(),0);
+  Vector<Int64> nexp(vi.numberSpw(),0), natt(vi.numberSpw(),0),nsuc(vi.numberSpw(),0);
 
   Int nGood(0);
   vi.originChunks();
