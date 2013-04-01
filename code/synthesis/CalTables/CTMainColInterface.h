@@ -49,11 +49,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class CTMainColInterface: public MSSelectableMainColumn
   {
   public: 
-    CTMainColInterface():MSSelectableMainColumn() {};
+    CTMainColInterface():MSSelectableMainColumn(), ctCols_p(NULL) {};
     CTMainColInterface(const Table& ctAsTable): MSSelectableMainColumn(ctAsTable)
     {init(ctAsTable);}
 
-    virtual ~CTMainColInterface() {delete ctCols_p;};
+    virtual ~CTMainColInterface() {if (ctCols_p) delete ctCols_p;};
 
     virtual void init(const Table& ctAsTable)
     {MSSelectableMainColumn::init(ctAsTable);ct_p = NewCalTable(ctAsTable); ctCols_p=new ROCTMainColumns(ct_p);}
@@ -61,9 +61,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     virtual const ROArrayColumn<Bool>& flag() {return ctCols_p->flag();}
 
     virtual const Bool flagRow(const Int& i) {return allTrue(ctCols_p->flag()(i));}
-    //virtual const Bool flagRow(const Int& i) {return msCols_p->flagRow()(i);}
     
-    // For now, return timeEPQuant() even exposureQuant.
+    // For now, return timeEPQuant() even for exposureQuant.
     virtual const ROScalarQuantColumn<Double>& exposureQuant() {return ctCols_p->timeEPQuant();};
     virtual const ROScalarQuantColumn<Double>& timeQuant()     {return ctCols_p->timeQuant();}
 
