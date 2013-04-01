@@ -151,7 +151,7 @@ for FILE in $XMLFILES; do
  else
 	  verbose "generating `basename -- "$XMLFILE"` task ... "
 	  xmlgenpy "$XMLFILE"
-	  $SAXON "$XMLFILE.xml" "$CASAROOT/share/xml/casa2tsum2.xsl" >> $INFOFILE
+	  $SAXON "$XMLFILE.xml" "$CASAROOT/share/xml/casa2tsum3.xsl" >> $INFOFILE
 	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "$XMLFILE.py"
 	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_cli.py"
 	  [ -e "${XMLFILE}_pg.py" ] && sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_pg.py"
@@ -167,6 +167,7 @@ done
 
 verbose "generating `basename -- "$OUTFILE"` file ... "
 sed -i -e 's/^tasksum/mytasks/g' "$INFOFILE"
+sed -i -e "s^\(task_location.*\) \(\'\'\)^\1 \'${INSTALLDIR}\'^g" "$INFOFILE"
 
 cat /dev/null > $OUTFILE
 echo "#" >> $OUTFILE
@@ -185,11 +186,11 @@ echo >> $OUTFILE
 echo "if not globals().has_key('task_location') :" >>$OUTFILE
 echo "  task_location = odict()" >> $OUTFILE
 echo >> $OUTFILE
+grep "^task_location" $INFOFILE >> $OUTFILE
 echo "import inspect" >> $OUTFILE
 echo "myglobals = sys._getframe(len(inspect.stack())-1).f_globals" >> $OUTFILE
 echo "tasksum = myglobals['tasksum'] " >> $OUTFILE
 echo "for key in mytasks.keys() :" >> $OUTFILE
-echo "  task_location[key] = '$INSTALLDIR'" >> $OUTFILE
 echo "  tasksum[key] = mytasks[key]" >> $OUTFILE
 echo >> $OUTFILE
 grep "^from" $INFOFILE >> $OUTFILE
