@@ -99,11 +99,13 @@ def uvcontsub(vis, field, fitspw, excludechans, combine, solint, fitorder, spw, 
         # This one is redundant - it is already checked at the XML level.
         if not os.path.isdir(vis):
             raise Exception, 'Visibility data set not found - please verify the name'
-
+        
         #
         if excludechans:
-            locfitspw=_exclude_channels(vis,field,fitspw)
+            locfitspw=_quantityRangesToChannels(vis,field,fitspw,excludechans)
             casalog.post("Exclude channels in fitspw: spws:channels will be used in the fit are:%s" % locfitspw)
+        elif fitspw.count('Hz'):
+            locfitspw=_quantityRangesToChannels(vis,field,fitspw,excludechans)
         else:
             locfitspw=fitspw
         #print "locfitspw=",locfitspw
@@ -268,9 +270,11 @@ def uvcontsub(vis, field, fitspw, excludechans, combine, solint, fitorder, spw, 
         raise Exception
 
 
-def _exclude_channels(vis,field,infitspw):
+def _quantityRangesToChannels(vis,field,infitspw,excludechans):
     """
-    private function for select channels outside given by infitspw
+    private function to convert frequnecy (in the future, velocity
+    as well) ranges in fitspw to channel indexes.
+    For excludeechans=True, it will select channels outside given by infitspw
     returns: list containing new channel ranges
     """
     mytb.open(vis+'/SPECTRAL_WINDOW')
@@ -297,62 +301,66 @@ def _exclude_channels(vis,field,infitspw):
     newchanlist=[]
     nsels=len(usersels)
     #print "Usersels=",usersels
-    for isel in range(nsels):
-        prevspwid = spwid
-        spwid=usersels[isel][0] 
-        lochan=usersels[isel][1]
-        hichan=usersels[isel][2]
-        stp=usersels[isel][3]
-        maxchanid=allsels['channel'][spwid][2]
-        # find left and right side ranges of the selected range
-        if spwid != prevspwid:
-            # first line in the selected spw
-            if lochan > 0:
-                outloL=0
-                outhiL=lochan-1
-                outloR= (0 if hichan+1>=maxchanid else hichan+1)
-                if outloR:
-                    if isel<nsels-1 and usersels[isel+1][0]==spwid:
-                        outhiR=usersels[isel+1][1]-1
-                    else:
-                        outhiR=maxchanid
-                else:
-                    outhiR=0 # higher end of the user selected range reaches maxchanid
-                             # so no right hand side range
-                #print "outloL,outhiL,outloR,outhiR==", outloL,outhiL,outloR,outhiR
-            else:
-                # no left hand side range
-                outloL=0
-                outhiL=0
-                outloR=hichan+1
-                if isel<nsels-1 and usersels[isel+1][0]==spwid:
-                    outhiR=usersels[isel+1][1]-1
-                else:
-                    outhiR=maxchanid
-        else:
-            #expect the left side range is already taken care of
-            outloL=0
-            outhiL=0
-            outloR=hichan+1
-            if outloR>=maxchanid:
-                #No more boundaries to consider
-                outloR=0
-                outhiR=0
-            else:
-                if isel<nsels-1 and usersels[isel+1][0]==spwid:
-                    outhiR=min(usersels[isel+1][1]-1,maxchanid)
-                else:
-                    outhiR=maxchanid
-                if outloR > outhiR:
-                    outloR = 0
-                    outhiR = 0
+    if excludechans:
+	for isel in range(nsels):
+	    prevspwid = spwid
+	    spwid=usersels[isel][0] 
+	    lochan=usersels[isel][1]
+	    hichan=usersels[isel][2]
+	    stp=usersels[isel][3]
+	    maxchanid=allsels['channel'][spwid][2]
+	    # find left and right side ranges of the selected range
+	    if spwid != prevspwid:
+		# first line in the selected spw
+		if lochan > 0:
+		    outloL=0
+		    outhiL=lochan-1
+		    outloR= (0 if hichan+1>=maxchanid else hichan+1)
+		    if outloR:
+			if isel<nsels-1 and usersels[isel+1][0]==spwid:
+			    outhiR=usersels[isel+1][1]-1
+			else:
+			    outhiR=maxchanid
+		    else:
+			outhiR=0 # higher end of the user selected range reaches maxchanid
+				 # so no right hand side range
+		    #print "outloL,outhiL,outloR,outhiR==", outloL,outhiL,outloR,outhiR
+		else:
+		    # no left hand side range
+		    outloL=0
+		    outhiL=0
+		    outloR=hichan+1
+		    if isel<nsels-1 and usersels[isel+1][0]==spwid:
+			outhiR=usersels[isel+1][1]-1
+		    else:
+			outhiR=maxchanid
+	    else:
+		#expect the left side range is already taken care of
+		outloL=0
+		outhiL=0
+		outloR=hichan+1
+		if outloR>=maxchanid:
+		    #No more boundaries to consider
+		    outloR=0
+		    outhiR=0
+		else:
+		    if isel<nsels-1 and usersels[isel+1][0]==spwid:
+			outhiR=min(usersels[isel+1][1]-1,maxchanid)
+		    else:
+			outhiR=maxchanid
+		    if outloR > outhiR:
+			outloR = 0
+			outhiR = 0
 
-    #
-        if (not(outloL == 0 and outhiL == 0)) and outloL <= outhiL:
-            newchanlist.append([spwid,outloL,outhiL,stp])
-        if (not(outloR == 0 and outhiR == 0)) and outloR <= outhiR:
-            newchanlist.append([spwid,outloR,outhiR,stp])
-    #print "newchanlist=",newchanlist
+	#
+	    if (not(outloL == 0 and outhiL == 0)) and outloL <= outhiL:
+		newchanlist.append([spwid,outloL,outhiL,stp])
+	    if (not(outloR == 0 and outhiR == 0)) and outloR <= outhiR:
+		newchanlist.append([spwid,outloR,outhiR,stp])
+	#print "newchanlist=",newchanlist
+    else:
+        # excludechans=False
+        newchanlist=usersels
 
     #return newchanlist
     # create spw selection string from newchanlist
