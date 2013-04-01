@@ -1050,12 +1050,14 @@ private:
     TableRow tr( spwtab ) ;
     TableRecord &r = tr.record() ;
     Int mfr = 1 ;
+    Int oneChan = 1 ;
     Vector<Double> dummy( 1, 0.0 ) ;
     putField( "MEAS_FREQ_REF", r, mfr ) ;
     defineField( "CHAN_FREQ", r, dummy ) ;
     defineField( "CHAN_WIDTH", r, dummy ) ;
     defineField( "EFFECTIVE_BW", r, dummy ) ;
     defineField( "RESOLUTION", r, dummy ) ;
+    putField( "NUM_CHAN", r, oneChan ) ;
 
     for ( uInt i = 0 ; i < spwtab.nrow() ; i++ ) {
       if ( nchan[i] == 0 )
