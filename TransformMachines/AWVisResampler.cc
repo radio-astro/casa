@@ -785,15 +785,15 @@ runTimeG7_p += timer_p.real();
 
 			 // //--------------------------------------------------------------------------------
 			 // IPosition phaseGradOrigin_l = cached_phaseGrad_p.shape()/2;
-			 // for(Int iy=-scaledSupport[1]; iy <= scaledSupport[1]; iy++) 
+			 // for(Int iy=-support[1]; iy <= support[1]; iy++) 
 			 //   {
 			 //     //			    iloc(1)=(Int)(scaledSampling[1]*iy+off[1]-1);//+convOrigin[1];
-			 //     iloc(1)=(scaledSampling[1]*iy+off[1]);//+convOrigin[1];
+			 //     iloc(1)=(sampling[1]*iy+off[1]);//+convOrigin[1];
 			 //     igrdpos[1]=loc[1]+iy;
-			 //     for(Int ix=-scaledSupport[0]; ix <= scaledSupport[0]; ix++) 
+			 //     for(Int ix=-support[0]; ix <= support[0]; ix++) 
 			 //       {
 			 // 	 //				iloc(0)=(Int)(scaledSampling[0]*ix+off[0]-1);//+convOrigin[0];
-			 // 	 iloc(0)=(scaledSampling[0]*ix+off[0]);//+convOrigin[0];
+			 // 	 iloc(0)=(sampling[0]*ix+off[0]);//+convOrigin[0];
 			 // 	 igrdpos[0]=loc[0]+ix;
 			 // 	 tiloc=iloc;
 			 // 	 if (reindex(iloc,tiloc,sinDPA, cosDPA, convOrigin, cfShape))
