@@ -685,6 +685,14 @@ if($1){
    $result = casac::map_vector($1);
 }
 
+%typemap(out) std::vector<long long> {
+   $result = casac::map_vector($1);
+}
+
+%typemap(out) std::vector<long long>& {
+   $result = casac::map_vector($1);
+}
+
 %typemap(out) std::vector<double> {
    $result = casac::map_vector($1);
 }
