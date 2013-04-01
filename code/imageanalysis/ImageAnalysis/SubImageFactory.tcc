@@ -49,7 +49,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 	Bool writableIfPossible, const AxesSpecifier& axesSpecifier,
 	Bool extendMask, Bool preserveAxesOrder
 ) {
-	// The ImageRegion pointers must be null on entry
+    // The ImageRegion pointers must be null on entry
 	// either pointer may be null on exit
 	std::auto_ptr<ImageRegion> outMaskMgr(0);
     if (! mask.empty()) {
@@ -76,7 +76,7 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
     				<< x.getMesg() << LogIO::EXCEPTION;
     		}
     	}
-	}
+    }
     if (
 		extendMask && outMaskMgr.get() != 0
 		&& outMaskMgr->asWCRegionPtr()->type() == "WCLELMask"
@@ -128,9 +128,12 @@ template<class T> SubImage<T> SubImageFactory<T>::createSubImage(
 			);
 		}
 		else {
+            // on the first pass, we need to keep all axes, the second
+            // SubImage construction after this one will properly account
+            // for the axes specifer
             SubImage<T> subImage0(
 				inImage, *outMaskMgr, writableIfPossible,
-				axesSpecifier,
+				AxesSpecifier(),
 				preserveAxesOrder
 			);
 			subImage = SubImage<T>(
