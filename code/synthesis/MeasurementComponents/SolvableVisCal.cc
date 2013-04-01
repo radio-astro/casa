@@ -335,8 +335,7 @@ void SolvableVisCal::setApply(const Record& apply) {
 
   // Make the interpolation engine
   MeasurementSet ms(msName());
-  ROMSColumns mscol(ms);
-  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType,fieldtype,mscol,spwMap());
+  ci_ = new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),fInterpType,fieldtype,ms,spwMap());
 
   // Channel counting info 
   //  (soon will deprecate, I think, because there will be no need
@@ -776,6 +775,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
 	solveAllParErr().reference(solveParErr());
 	solveAllParSNR().reference(solveParSNR());
 	currScan()=-1;
+	currObs()=0;
 
 	keepNCT();
 
@@ -816,8 +816,7 @@ void SolvableVisCal::setSimulate(VisSet& vs, Record& simpar, Vector<Double>& sol
       delete ci_;
 
     MeasurementSet ms(msName());
-    ROMSColumns mscol(ms);
-    ci_=new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),"linear","",mscol,spwMap());
+    ci_=new CTPatchedInterp(*ct_,matrixType(),nPar(),tInterpType(),"linear","",ms,spwMap());
 
   }
 
@@ -1218,6 +1217,7 @@ void SolvableVisCal::setSpecify(const Record& specify) {
       refTime()=0.0;
       currField()=-1;
       currScan()=-1;
+      currObs()=0;
 
       switch(parType()) {
       case VisCalEnum::COMPLEX: {
@@ -1506,6 +1506,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   Double time0(86400.0*floor(vb.time()(0)/86400.0));
   Double time1(0.0),time(0.0);
 
+  Int thisobs(-1),lastobs(-1);
   Int thisscan(-1),lastscan(-1);
   Int thisfld(-1),lastfld(-1);
   Int thisspw(-1),lastspw(-1);
@@ -1515,6 +1516,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
   for (vi.originChunks(); vi.moreChunks(); vi.nextChunk(),chunk++) {
     vi.origin();
     time1=vb.time()(0);  // first time in this chunk
+    thisscan=vb.observationId()(0);
     thisscan=vb.scan()(0);
     thisfld=vb.fieldId();
     thisspw=vb.spectralWindow();
@@ -1525,6 +1527,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
     if ( (!combfld() && !combspw()) ||              // not combing fld nor spw, OR
 	 ((time1-soltime1)>interval()) ||           // (combing fld and/or spw) and solint exceeded, OR
 	 ((time1-soltime1)<0.0) ||                  // a negative time step occurs, OR
+	 (!combobs() && (thisobs!=lastobs)) ||      // not combing obs, and new obs encountered OR
 	 (!combscan() && (thisscan!=lastscan)) ||   // not combing scans, and new scan encountered OR
 	 (!combspw() && (thisspw!=lastspw)) ||      // not combing spws, and new spw encountered  OR
 	 (!combfld() && (thisfld!=lastfld)) ||      // not combing fields, and new field encountered OR 
@@ -1566,6 +1569,7 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
       }
     }
     
+    lastobs=thisobs;
     lastscan=thisscan;
     lastfld=thisfld;
     lastspw=thisspw;
@@ -1617,6 +1621,8 @@ Int SolvableVisCal::sizeUpSolve(VisSet& vs, Vector<Int>& nChunkPerSol) {
     cout << "nChunkPerSol = " << nChunkPerSol << endl;
   }
 
+  if (combobs())
+    logSink() << "Combining observation Ids." << LogIO::POST;
   if (combscan())
     logSink() << "Combining scans." << LogIO::POST;
   if (combspw()) 
@@ -1650,15 +1656,17 @@ void SolvableVisCal::sortVisSet(VisSet& vs, const Bool verbose)
 
   if (verbose) {
     cout << "   interval() = " << interval() ;
+    cout << boolalpha << "   combobs()  = " << combobs();
     cout << boolalpha << "   combscan() = " << combscan();
     cout << boolalpha << "   combfld()  = " << combfld() ;
     cout << boolalpha << "   combspw()  = " << combspw() ;
   }
 
-  Int nsortcol(4+Int(!combscan()));  // include room for scan
+  Int nsortcol(4+(combscan()?0:1)+(combobs()?0:1) );  // include room for scan,obs
   Block<Int> columns(nsortcol);
   Int i(0);
   columns[i++]=MS::ARRAY_ID;
+  if (!combobs()) columns[i++]=MS::OBSERVATION_ID;  // force obsid boundaries
   if (!combscan()) columns[i++]=MS::SCAN_NUMBER;  // force scan boundaries
   if (!combfld()) columns[i++]=MS::FIELD_ID;      // force field boundaries
   if (!combspw()) columns[i++]=MS::DATA_DESC_ID;  // force spw boundaries
@@ -2109,6 +2117,7 @@ void SolvableVisCal::inflateNCTwithMetaData(VisSet& vs) {
     currSpw()=vi.spectralWindow();
     currField()=vi.fieldId();
     currScan()=vb.scan0();
+    currObs()=vb.observationId()(0);
     
     // Derive average time info
     Double timeStamp(0.0);
@@ -2158,7 +2167,6 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffGroupAcc& vbga) {
   // Adopt meta data from FIRST CalVisBuffer in the VBGA, for now
   currSpw()=spwMap()(vbga(0).spectralWindow());
   currField()=vbga(0).fieldId();
-  //  currScan()=vbga(0).scan0();
 
   // The timestamp really is global, in any case
   Double& rTime(vbga.globalTimeStamp());
@@ -2184,6 +2192,7 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
   currSpw()=spwMap()(vb.spectralWindow());
   currField()=vb.fieldId();
   currScan()=vb.scan0();
+  currObs()=vb.observationId()(0);
 
   // Row weights as a Doubles
   Vector<Double> dWts;
@@ -2211,6 +2220,11 @@ Bool SolvableVisCal::syncSolveMeta(VisBuffer& vb,
   else
     return False;
 
+}
+
+void SolvableVisCal::overrideObsScan(Int obs,Int scan) {
+  currObs()=obs;
+  currScan()=scan;
 }
 
 void SolvableVisCal::enforceAPonData(VisBuffer& vb) {
@@ -2703,7 +2717,7 @@ void SolvableVisCal::calcPar() {
   if (freqDepPar()) {
     //    cout << "currFreq() = " << currFreq().shape() << " " << currFreq() << endl;
     // Call w/ freq-dep
-    newcal=ci_->interpolate(currField(),currSpw(),currTime(),currFreq());
+    newcal=ci_->interpolate(currObs(),currField(),currSpw(),currTime(),currFreq());
     //    cout.precision(12);
     //    cout << typeName() << " t="<< currTime() << " newcal=" << boolalpha << newcal << endl;
   }
@@ -2711,10 +2725,10 @@ void SolvableVisCal::calcPar() {
     if (parType()==VisCalEnum::COMPLEX)
       // Call w/ fiducial freq for phase-delay correction
       // TBD: improve freq spec
-      newcal=ci_->interpolate(currField(),currSpw(),currTime(),1.0e9*currFreq()(currFreq().nelements()/2));
+      newcal=ci_->interpolate(currObs(),currField(),currSpw(),currTime(),1.0e9*currFreq()(currFreq().nelements()/2));
     else
       // No freq info at all
-      newcal=ci_->interpolate(currField(),currSpw(),currTime());
+      newcal=ci_->interpolate(currObs(),currField(),currSpw(),currTime());
   }
 
   // TBD: signal failure to find calibration??  (e.g., for a spw?)
@@ -2729,14 +2743,14 @@ void SolvableVisCal::calcPar() {
     
     // Reference result
     if (parType()==VisCalEnum::COMPLEX) 
-      currCPar().reference(ci_->resultC(currField(),currSpw()));
+      currCPar().reference(ci_->resultC(currObs(),currField(),currSpw()));
     else if (parType()==VisCalEnum::REAL) 
-      currRPar().reference(ci_->resultF(currField(),currSpw()));
+      currRPar().reference(ci_->resultF(currObs(),currField(),currSpw()));
     else
       throw(AipsError("Bad parType() in SVC::calcPar"));
 
     // Assign _inverse_ of parameter flags
-    currParOK().reference(!ci_->rflag(currField(),currSpw()));
+    currParOK().reference(!ci_->rflag(currObs(),currField(),currSpw()));
 
     // Ensure shapes recorded correctly
     // (New interpolation generates cal samples for all data channels...revisit?
@@ -2931,6 +2945,7 @@ void SolvableVisCal::keepNCT() {
   ncmc.fieldId().putColumnCells(rows,Vector<Int>(nElem(),currField()));
   ncmc.spwId().putColumnCells(rows,Vector<Int>(nElem(),currSpw()));
   ncmc.scanNo().putColumnCells(rows,Vector<Int>(nElem(),currScan()));
+  ncmc.obsId().putColumnCells(rows,Vector<Int>(nElem(),currObs()));
   ncmc.interval().putColumnCells(rows,Vector<Double>(nElem(),0.0));
 
   // Params

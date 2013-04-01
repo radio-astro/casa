@@ -35,14 +35,12 @@
 #include <casa/Containers/Record.h>
 #include <casa/OS/Path.h>
 #include <casa/Utilities/Sort.h>
+#include <ms/MeasurementSets/MSObservation.h>
 #include <ms/MeasurementSets/MSAntenna.h>
 #include <ms/MeasurementSets/MSField.h>
 #include <ms/MeasurementSets/MSSpectralWindow.h>
 #include <ms/MeasurementSets/MSHistory.h>
-#include <ms/MeasurementSets/MSAntennaColumns.h>
-#include <ms/MeasurementSets/MSFieldColumns.h>
-#include <ms/MeasurementSets/MSSpWindowColumns.h>
-#include <ms/MeasurementSets/MSHistoryColumns.h>
+#include <ms/MeasurementSets/MSObsColumns.h>
 #include <ms/MeasurementSets/MSAntennaColumns.h>
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
@@ -93,14 +91,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Typedefs for subtable objects
 typedef MSField CTField;
+typedef MSObservation CTObservation;
 typedef MSAntenna CTAntenna;
 typedef MSSpectralWindow CTSpectralWindow;
 typedef MSHistory CTHistory;
 typedef MSFieldColumns CTFieldColumns;
+typedef MSObservationColumns CTObservationColumns;
 typedef MSAntennaColumns CTAntennaColumns;
 typedef MSSpWindowColumns CTSpWindowColumns;
 typedef MSHistoryColumns CTHistoryColumns;
 typedef ROMSFieldColumns ROCTFieldColumns;
+typedef ROMSObservationColumns ROCTObservationColumns;
 typedef ROMSAntennaColumns ROCTAntennaColumns;
 typedef ROMSSpWindowColumns ROCTSpWindowColumns;
 typedef ROMSHistoryColumns ROCTHistoryColumns;
@@ -139,9 +140,11 @@ class NewCalTable : public Table
 
    // Create a vanilla NewCalTable from shapes (for testing purposes)
    //  Default rTime is 2012/01/06/12:00:00
-   NewCalTable(String tableName,String caltype,Int nFld=1, Int nAnt=1, Int nSpw=1, 
-	       Vector<Int> nChan=Vector<Int>(1,1), Int nTime=1,
-	       Double rTime=4832568000.0, Double tint=60.0,
+   NewCalTable(String tableName,String CorF,
+	       Int nObs=1, Int nScanPerObs=1,Int nTimePerScan=1,
+	       Int nAnt=1, Int nSpw=1, Vector<Int> nChan=Vector<Int>(1,1), 
+	       Int nFld=1, 
+	       Double rTime=0.0, Double tint=0.0,
 	       Bool disk=False, Bool verbose=False);
 
    // Assignment operator
@@ -182,10 +185,12 @@ class NewCalTable : public Table
    // save to disk
    void writeToDisk(const String& tableName); 
 
+   CTObservation& observation() {return observation_p;}
    CTAntenna& antenna() {return antenna_p;}
    CTField& field() {return field_p;}
    CTSpectralWindow& spectralWindow() {return spectralWindow_p;}
    CTHistory& history() {return history_p;}
+   const CTObservation& observation() const {return observation_p;}
    const CTAntenna& antenna() const {return antenna_p;}
    const CTField& field() const {return field_p;}
    const CTSpectralWindow& spectralWindow() const {return spectralWindow_p;}
@@ -195,11 +200,21 @@ class NewCalTable : public Table
    //   inline ROCTMainColumns mcols() const {return ROCTMainColumns(*this);};
 
    static Complex NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint);
+   static Float NCTtestvalueF(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint);
 
    // Fill in antenna-based solutions
+   //  (obsId-less version calls obsId-capable version w/ obsId=0)
    void fillAntBasedMainRows(uInt nrows, 
 			     Double time,Double interval,
 			     Int fieldId,uInt spwId,Int scanNo,
+			     const Vector<Int>& ant1list, Int refant,
+			     const Cube<Complex>& cparam,
+			     const Cube<Bool>& flag,
+			     const Cube<Float>& paramErr,
+			     const Cube<Float>& snr);
+   void fillAntBasedMainRows(uInt nrows, 
+			     Double time,Double interval,
+			     Int fieldId,uInt spwId,Int obsId,Int scanNo,
 			     const Vector<Int>& ant1list, Int refant,
 			     const Cube<Complex>& cparam,
 			     const Cube<Bool>& flag,
@@ -217,10 +232,12 @@ class NewCalTable : public Table
 
    // Services for generic test table ctor
    //  Default rTime is 2012/01/06/12:00:00
-   void fillGenericContents(Int nFld=1, Int nAnt=1, Int nSpw=1, 
-			    Vector<Int> nChan=Vector<Int>(1,1), Int nTime=1,
-			    Double rTime=4832568000.0, Double tint=60.0,
+   void fillGenericContents(Int nObs=1, Int nScanPerObs=1, Int nTimePerScan=1,
+			    Int nAnt=1, Int nSpw=1, Vector<Int> nChan=Vector<Int>(1,1), 
+			    Int nFld=1, 
+			    Double rTime=0.0, Double tint=0.0,
 			    Bool verbose=False);
+   void fillGenericObs(Int nObs);
    void fillGenericField(Int nFld);
    void fillGenericAntenna(Int nAnt);
    void fillGenericSpw(Int nSpw,Vector<Int>& nChan);
@@ -229,7 +246,12 @@ class NewCalTable : public Table
    //  (very basic; uses chan n/2 freq)
    void makeSpwSingleChan();
 
+   // Handle pre-4.1 caltables that don't have OBS_ID
+   //  (by adding a phoney one with a single OBS_ID
+   void addPhoneyObs();
+
    // The subtables
+   CTObservation observation_p;
    CTAntenna antenna_p;
    CTField field_p;
    CTSpectralWindow spectralWindow_p;

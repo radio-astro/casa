@@ -201,6 +201,7 @@ protected:
   inline Double& lastTime()                { return lastTime_(currSpw()); };
   inline Double& currTime()                { return currTime_(currSpw()); };
   inline Int&    currScan()                { return currScan_(currSpw()); };
+  inline Int&    currObs()                 { return currObs_(currSpw()); };
   inline Int&    currField()               { return currField_(currSpw()); };
   inline Vector<Double>& currFreq()        { return currFreq_; };
 
@@ -312,6 +313,7 @@ private:
   // Current indices
   Vector<Double> currTime_;
   Vector<Int> currScan_;
+  Vector<Int> currObs_;
   Vector<Int> currField_;
   Vector<Double> currFreq_;
   Vector<Double> lastTime_;

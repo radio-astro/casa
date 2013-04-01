@@ -154,8 +154,8 @@ FlagCalTableHandler::selectData()
 
 	if (selectedCalTable_p) delete selectedCalTable_p;
 
-	try
-	{
+//	try
+//	{
 		TableExprNode ten = measurementSetSelection_p->toTableExprNode(calTableInterface_p);
 		selectedCalTable_p = new NewCalTable();
 		Bool madeSelection = getSelectedTable(*selectedCalTable_p,*originalCalTable_p,ten,String(""));
@@ -166,13 +166,13 @@ FlagCalTableHandler::selectData()
 			delete selectedCalTable_p;
 			selectedCalTable_p = new NewCalTable(*originalCalTable_p);
 		}
-	}
-	catch (MSSelectionError &ex)
-	{
-		*logger_p << LogIO::WARN << "Selection not supported, using entire MS (" << ex.getMesg() << ")" << LogIO::POST;
-		delete selectedCalTable_p;
-		selectedCalTable_p = new NewCalTable(*originalCalTable_p);
-	}
+//	}
+//	catch (MSSelectionError &ex)
+//	{
+//		*logger_p << LogIO::WARN << "Selection not supported, using entire MS (" << ex.getMesg() << ")" << LogIO::POST;
+//		delete selectedCalTable_p;
+//		selectedCalTable_p = new NewCalTable(*originalCalTable_p);
+//	}
 
 	// Check if selected CalTable has rows...
 	if (selectedCalTable_p->nrow() == 0)
@@ -272,9 +272,11 @@ FlagCalTableHandler::generateIterator()
 Block<String>
 FlagCalTableHandler::getSortColumns(Block<Int> /*intCols*/)
 {
-	Block<String> strCols(2);
-	strCols[0] = "FIELD_ID";
-	strCols[1] = "SPECTRAL_WINDOW_ID";
+	Block<String> strCols(4);
+	strCols[0] = "OBSERVATION_ID";
+	strCols[1] = "SCAN_NUMBER";
+	strCols[2] = "FIELD_ID";
+	strCols[3] = "SPECTRAL_WINDOW_ID";
 
 	return strCols;
 }
@@ -393,6 +395,7 @@ FlagCalTableHandler::nextBuffer()
 			{
 				logger_p->origin(LogOrigin("FlagCalTableHandler",""));
 				Vector<Int> scan = visibilityBuffer_p->scan();
+				Vector<Int> observation = visibilityBuffer_p->observationId();
 				String corrs = "[ ";
 				for (uInt corr_i=0;corr_i<(uInt) visibilityBuffer_p->nCorrelations();corr_i++)
 				{
@@ -406,6 +409,7 @@ FlagCalTableHandler::nextBuffer()
 						"------------------------------------------------------------------------------------ " << LogIO::POST;
 				*logger_p << LogIO::NORMAL <<
 						"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
+						", Observation = " << observation[0] << "~" << observation[observation.size()-1] <<
 						", Scan = " << scan[0] << "~" << scan[scan.size()-1] <<
 						", Field = " << visibilityBuffer_p->fieldId()(0) << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
 						", Spw = " << visibilityBuffer_p->spectralWindows()(0) <<
@@ -713,9 +717,9 @@ Vector<Int>& CTCache::observationId()
 {
 	if (!CTobservationIdOK_p)
 	{
-		if (!CTflagCubeOk_p) flagCube();
-		observationId_p.resize(flagCube_p.shape()[2]);
-		observationId_p[0] = 0;
+		Vector<Int> tmp = calIter_p->obs();
+		observationId_p.resize(tmp.size(),False);
+		observationId_p = tmp;
 		CTobservationIdOK_p = True;
 	}
 

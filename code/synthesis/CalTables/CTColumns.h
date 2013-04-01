@@ -100,6 +100,7 @@ public:
 
   // Access to required subtables
   // <group>
+  const ROCTObservationColumns& observation() const {return observation_p;}
   const ROCTAntennaColumns& antenna() const {return antenna_p;}
   const ROCTFieldColumns& field() const {return field_p;}
   const ROCTHistoryColumns& history() const {return history_p;}
@@ -115,6 +116,7 @@ protected:
   friend class NewCalTable; 
 private:
   // Access to subtables
+  ROCTObservationColumns observation_p;
   ROCTAntennaColumns antenna_p;
   ROCTFieldColumns field_p;
   ROCTHistoryColumns history_p;
@@ -185,6 +187,7 @@ public:
 
   // Read-write access to required subtables
   // <group>
+  CTObservationColumns& observation() {return observation_p;}
   CTAntennaColumns& antenna() {return antenna_p;}
   CTFieldColumns& field() {return field_p;}
   CTHistoryColumns& history() {return history_p;}
@@ -198,6 +201,7 @@ public:
 
   // Read-only access to required subtables
   // <group>
+  const ROCTObservationColumns& observation() const {return observation_p;}
   const ROCTAntennaColumns& antenna() const {return antenna_p;}
   const ROCTFieldColumns& field() const {return field_p;}
   const ROCTHistoryColumns& history() const {return history_p;}
@@ -209,6 +213,7 @@ public:
 
 private:
   // Access to subtables
+  CTObservationColumns observation_p;
   CTAntennaColumns antenna_p;
   CTFieldColumns field_p;
   CTHistoryColumns history_p;
