@@ -859,6 +859,30 @@ class test_cmdbandpass(test_base):
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 246315)
 
+    def test_cal_time_field(self):
+        '''Flagcmd: clip a timerange from a field'''
+        # this timerange corresponds to field 3C286_D
+        flags = "mode='clip' timerange='>14:58:33.6' clipzeros=True clipminmax=[0.,0.4]"
+        
+        # Apply the flags
+        flagcmd(vis=self.vis, inpmode='list', inpfile=[flags], flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['field']['3C286_A']['flagged'],0)
+        self.assertEqual(res['field']['3C286_B']['flagged'],0)
+        self.assertEqual(res['field']['3C286_C']['flagged'],0)
+        self.assertEqual(res['field']['3C286_D']['flagged'],2221)
+        self.assertEqual(res['flagged'],2221)
+
+    def test_cal_observation(self):
+        '''Flagcmd: flag an observation from an old cal table format'''
+        # Note: this cal table does not have an observation column. 
+        # The column and sub-table should be added and the flagging
+        # should happen after this.
+        flagcmd(vis=self.vis, inpmode='list', inpfile=["observation='0'"], flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'],1248000)
+        self.assertEqual(res['total'],1248000)
+
         
 # Dummy class which cleans up created files
 class cleanup(test_base):

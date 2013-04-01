@@ -538,7 +538,7 @@ def flagdata(vis,
         # Select the data and parse the agent's parameters
         if mode != 'list':
             aflocal.selectdata(field=field, spw=spw, array=array, feed=feed, scan=scan, \
-                               antenna=antenna, uvrange=uvrange, time=timerange, \
+                               antenna=antenna, uvrange=uvrange, timerange=timerange, \
                                intent=intent, observation=str(observation))   
 
             # CAS-3959 Handle channel selection at the FlagAgent level
