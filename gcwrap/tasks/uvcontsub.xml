@@ -12,7 +12,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Name of input MS.  Output goes to vis + ".contsub"</description>
+		<description>Name of input MS.  Output goes to vis + ".contsub" (will be overwritten if already exists)</description>
 		<value></value>
 	</param>
 
@@ -79,13 +79,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	
         The fitted continuum spectrum is subtracted from all channels 
         selected in spw, and the result (presumably only line emission)
-        is stored in a <em>new</em> MS (vis + ".contsub").
+        is stored in a <em>new</em> MS (vis + ".contsub"). If an MS  
+        with the output name already exists, it will be overwritten.
 	It will read from the CORRECTED_DATA column of vis if it is present,
 	or DATA if it is not.  Whichever column is read is presumed to have
 	already been calibrated.
 
         If want_cont is True, the continuum fit is placed in a second new MS
-        (vis + '.cont').  N.B. because the continuum model is necessarily a
+        (vis + '.cont', also overwritten if it is already exists).  
+        N.B. because the continuum model is necessarily a
         smoothed fit, images made with it are liable to have their field of
         view reduced in some strange way.  Images of the continuum should be
         made by simply excluding the line channels (and probably averaging the
