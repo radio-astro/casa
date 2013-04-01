@@ -1105,6 +1105,7 @@ install( FILES
          install/casa2summary.xsl
 	 install/casa2swigxml.xsl
          install/casa2tsum2.xsl
+         install/casa2tsum3.xsl
          install/casa2latex.xsl
          install/casa2pycli.xsl
          install/casa2pypg.xsl
