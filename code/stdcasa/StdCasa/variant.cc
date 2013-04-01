@@ -3,6 +3,7 @@
 #include <stdcasa/variant.h>
 #include <stdcasa/record.h>
 #include <cstring>
+#include <iostream>
 
 namespace casac {
 
@@ -88,6 +89,9 @@ variant::variant(const variant &other) : typev(other.typev), shape_(other.shape_
 	case INT:
 	    val.i = other.val.i;
 	    break;
+	case LONG:
+	    val.l = other.val.l;
+	    break;
 	case DOUBLE:
 	    val.d = other.val.d;
 	    break;
@@ -99,6 +103,9 @@ variant::variant(const variant &other) : typev(other.typev), shape_(other.shape_
 	    break;
 	case INTVEC:
 	    val.iv = new std::vector<int>(*other.val.iv);
+	    break;
+	case LONGVEC:
+	    val.lv = new std::vector<long long>(*other.val.lv);
 	    break;
 	case DOUBLEVEC:
 	    val.dv = new std::vector<double>(*other.val.dv);
@@ -130,6 +137,9 @@ variant::~variant( ) {
 	case INTVEC:
 	    delete val.iv;
 	    break;
+	case LONGVEC:
+	    delete val.lv;
+	    break;
 	case DOUBLEVEC:
 	    delete val.dv;
 	    break;
@@ -158,6 +168,8 @@ const std::string &variant::typeString( ) const {
     static std::string bvs("boolvec");
     static std::string is("int");
     static std::string ivs("intvec");
+    static std::string ls("long");
+    static std::string lvs("longvec");
     static std::string ds("double");
     static std::string dvs("doublevec");
     static std::string cs("complex");
@@ -171,7 +183,9 @@ const std::string &variant::typeString( ) const {
 	case BOOL:		return bs;
 	case BOOLVEC:		return bvs;
 	case INT:		return is;
+	case LONG:		return ls;
 	case INTVEC:		return ivs;
+	case LONGVEC:		return lvs;
 	case DOUBLE:		return ds;
 	case DOUBLEVEC:		return dvs;
 	case COMPLEX:		return cs;
@@ -322,6 +336,8 @@ std::string variant::toString( bool no_brackets ) const {
 	    return booltostring(val.b);
 	case INT:
 	    return inttostring(val.i);
+	case LONG:
+	    return longtostring(val.l);
 	case DOUBLE:
 	    return doubletostring(val.d);
 	case COMPLEX:
@@ -330,6 +346,8 @@ std::string variant::toString( bool no_brackets ) const {
 	    VECTOSTRING(bool,bool,bv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
 	case INTVEC:
 	    VECTOSTRING(int,int,iv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
+	case LONGVEC:
+	    VECTOSTRING(long long,long ,lv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
 	case DOUBLEVEC:
 	    VECTOSTRING(double,double,dv,,(no_brackets?"":"["),(no_brackets?"":"]"),",",(no_brackets?"":"[]"))
 	case COMPLEXVEC:
@@ -351,6 +369,8 @@ std::vector<std::string> variant::toStringVec( ) const {
 	    return std::vector<std::string>(1,booltostring(val.b));
 	case INT:
 	    return std::vector<std::string>(1,inttostring(val.i));
+	case LONG:
+	    return std::vector<std::string>(1,longtostring(val.l));
 	case DOUBLE:
 	    return std::vector<std::string>(1,doubletostring(val.d));
 	case COMPLEX:
@@ -359,6 +379,8 @@ std::vector<std::string> variant::toStringVec( ) const {
 	    VECTOSTRINGVEC(bool,bool,bv,)
 	case INTVEC:
 	    VECTOSTRINGVEC(int,int,iv,)
+	case LONGVEC:
+	    VECTOSTRINGVEC(long long ,long,lv,)
 	case DOUBLEVEC:
 	    VECTOSTRINGVEC(double,double,dv,)
 	case COMPLEXVEC:
@@ -406,6 +428,10 @@ TYPE variant::NAME( ) const {							\
 
 TONUMERIC(toInt,int,int)
 TONUMERIC(toDouble,double,double)
+
+long long variant::toLong() const {
+   return (long long) (val.l);
+}
 
 std::complex<double> variant::toComplex( ) const {
     switch( typev ) {
@@ -493,6 +519,17 @@ std::vector<TYPE> variant::NAME( ) const {					\
 
 TONUMERICVEC(toIntVec,   int,   int,   INTVEC,   iv,double,DOUBLEVEC,dv)
 TONUMERICVEC(toDoubleVec,double,double,DOUBLEVEC,dv,int,   INTVEC,   iv)
+
+std::vector<long long> variant::toLongVec() const {
+   switch(typev) {
+      case LONG:
+	    return std::vector<long long>(1, val.l );
+	 break;
+      case LONGVEC :
+	    return *val.lv;
+	 break;
+   }
+}
 
 std::vector<std::complex<double> > variant::toComplexVec( ) const {
     switch( typev ) {
@@ -817,6 +854,7 @@ std::vector<TYPE> &variant::NAME( int size ) {					\
 }
 
 ASNUMERICVEC(asIntVec,int,int,INTVEC,iv)
+ASNUMERICVEC(asLongVec,long long,long,INTVEC,lv)
 ASNUMERICVEC(asDoubleVec,double,double,DOUBLEVEC,dv)
 
 std::vector<std::complex<double> > &variant::asComplexVec( int size ) {
@@ -1234,6 +1272,7 @@ record &variant::asRecord( ) {
 	case RECORD:
 	    return *val.recordv;
 	case INT:
+	case LONG:
 	case BOOL:
 	case DOUBLE:
 	    break;
@@ -1242,6 +1281,9 @@ record &variant::asRecord( ) {
 	    break;
 	case INTVEC:
 	    delete val.iv;
+	    break;
+	case LONGVEC:
+	    delete val.lv;
 	    break;
 	case DOUBLEVEC:
 	    delete val.dv;
@@ -1281,6 +1323,9 @@ void variant::as( TYPE t, int size ) {
 	case INT:
 	    asInt();
 	    break;
+	case LONG:
+	    asInt();
+	    break;
 	case DOUBLE:
 	    asDouble();
 	    break;
@@ -1295,6 +1340,9 @@ void variant::as( TYPE t, int size ) {
 	    break;
         case INTVEC:
 	    asIntVec(size);
+	    break;
+        case LONGVEC:
+	    asLongVec(size);
 	    break;
 	case DOUBLEVEC:
 	    asDoubleVec(size);
@@ -1319,11 +1367,13 @@ CONST RET_TYPE variant::NAME( ) CONST throw(error) {		\
 }
 
 GETIT(const, int,getInt,INT,i,)
+GETIT(const, long long,getLong,LONG,l,)
 GETIT(const, bool,getBool,BOOL,b,)
 GETIT(const, double,getDouble,DOUBLE,d,)
 GETIT(const, std::complex<double>&,getComplex,COMPLEX,c,*)
 GETIT(const, std::string&,getString,STRING,s,*)
 GETIT(const, std::vector<int>&,getIntVec,INTVEC,iv,*)
+GETIT(const, std::vector<long long>&,getLongVec,LONGVEC,lv,*)
 GETIT(const, std::vector<bool>&,getBoolVec,BOOLVEC,bv,*)
 GETIT(const, std::vector<double>&,getDoubleVec,DOUBLEVEC,dv,*)
 GETIT(const, std::vector<std::complex<double> >&,getComplexVec,COMPLEXVEC,cv,*)
@@ -1342,7 +1392,7 @@ GETIT(,std::vector<std::complex<double> >&,getComplexVecMod,COMPLEXVEC,cv,*)
 GETIT(,std::vector<std::string>&,getStringVecMod,STRINGVEC,sv,*)
 GETIT(,record&,getRecordMod,RECORD,recordv,*)
 
-#define PUSHIMPL(TYPEX,TYPETAG,TYPETOSTRING,NUMTWEAK,BOOLTWEAK,BOOLCPX,STRBOOL, STRINT,STRDBL,STRCPX) \
+#define PUSHIMPL(TYPEX,TYPETAG,TYPETOSTRING,NUMTWEAK,BOOLTWEAK,BOOLCPX,STRBOOL, STRINT,STRLONG,STRDBL,STRCPX) \
 void variant::push(TYPEX v, bool conform ) {					\
 										\
     if ( conform == true ) {							\
@@ -1356,6 +1406,9 @@ void variant::push(TYPEX v, bool conform ) {					\
 	    break;								\
 	case INT:								\
 	    asIntVec().push_back((int) STRINT(v BOOLTWEAK));			\
+	    break;								\
+	case LONG:								\
+	    asLongVec().push_back((long long) STRLONG(v BOOLTWEAK));			\
 	    break;								\
 	case DOUBLE:								\
 	    asDoubleVec().push_back((double) STRDBL(v BOOLTWEAK));		\
@@ -1371,6 +1424,9 @@ void variant::push(TYPEX v, bool conform ) {					\
 	    break;								\
 	case INTVEC:								\
 	    (*val.iv).push_back((int) STRINT(v BOOLTWEAK));			\
+	    break;								\
+	case LONGVEC:								\
+	    (*val.lv).push_back((long long) STRLONG(v BOOLTWEAK));			\
 	    break;								\
 	case DOUBLEVEC:								\
 	    (*val.dv).push_back((double) STRDBL(v BOOLTWEAK));       		\
@@ -1398,13 +1454,14 @@ void variant::push(TYPEX v, bool conform ) {					\
 	shape_ = std::vector<int>(1,size());					\
 }
 
-PUSHIMPL(bool                ,BOOL    ,tostring ,                                             ,== true ? 1 : 0      ,== true ? 1 : 0, , , , )
-PUSHIMPL(std::complex<double>,COMPLEX ,tostring ,.real() == 0 && v.imag() == 0 ? false : true ,.real()              ,               , , , , )
-PUSHIMPL(int                ,INT     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , )
-PUSHIMPL(double              ,DOUBLE  ,tostring ,== 0 ? false : true                          ,                     ,               , , , , )
-PUSHIMPL(const std::string&  ,STRING  ,         , , , ,stringtobool ,stringtoint,stringtodouble ,stringtocomplex )
+PUSHIMPL(bool                ,BOOL    ,tostring ,                                             ,== true ? 1 : 0      ,== true ? 1 : 0, , , , , )
+PUSHIMPL(std::complex<double>,COMPLEX ,tostring ,.real() == 0 && v.imag() == 0 ? false : true ,.real()              ,               , , , , , )
+PUSHIMPL(int                ,INT     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
+PUSHIMPL(long long          ,LONG     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
+PUSHIMPL(double              ,DOUBLE  ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
+PUSHIMPL(const std::string&  ,STRING  ,         , , , ,stringtobool ,stringtoint,stringtolong, stringtodouble ,stringtocomplex )
 
-#define PLACEIMPL(TYPEX,TYPETAG,TYPETOSTRING,NUMTWEAK,BOOLTWEAK,BOOLCPX,STRBOOL, STRINT,STRDBL,STRCPX) \
+#define PLACEIMPL(TYPEX,TYPETAG,TYPETOSTRING,NUMTWEAK,BOOLTWEAK,BOOLCPX,STRBOOL, STRINT, STRLONG ,STRDBL,STRCPX) \
 void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
 										\
     if ( conform == true ) {							\
@@ -1425,6 +1482,12 @@ void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
 	    else								\
 		val.i = (int) (STRINT(v BOOLTWEAK));				\
 	    break;								\
+	case LONG:								\
+	    if ( index > 0 )							\
+		asLongVec(index+1)[index] = (long long) (STRLONG(v BOOLTWEAK));		\
+	    else								\
+		val.l = (long long) (STRLONG(v BOOLTWEAK));				\
+	    break;								\
 	case DOUBLE:								\
 	    if ( index > 0 )							\
 		asDoubleVec(index+1).push_back((double) STRDBL(v BOOLTWEAK));	\
@@ -1444,6 +1507,11 @@ void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
 	    if ( index+1 > (*val.iv).size() )					\
 		(*val.iv).resize(index+1);					\
 	    (*val.iv)[index] = (int) (STRINT(v BOOLTWEAK));			\
+	    break;								\
+	case LONGVEC:								\
+	    if ( index+1 > (*val.lv).size() )					\
+		(*val.lv).resize(index+1);					\
+	    (*val.lv)[index] = (long long) (STRLONG(v BOOLTWEAK));			\
 	    break;								\
 	case DOUBLEVEC:								\
 	    if ( index+1 > (*val.dv).size() )					\
@@ -1477,11 +1545,12 @@ void variant::place(TYPEX v, unsigned int index, bool conform ) {			\
     }										\
 }
 
-PLACEIMPL(bool                ,BOOL    ,tostring ,                                             ,== true ? 1 : 0      ,== true ? 1 : 0, , , , )
-PLACEIMPL(std::complex<double>,COMPLEX ,tostring ,.real() == 0.0 && v.imag() == 0.0 ? false : true ,.real()              ,               , , , , )
-PLACEIMPL(int                ,INT     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , )
-PLACEIMPL(double              ,DOUBLE  ,tostring ,== 0 ? false : true                          ,                     ,               , , , , )
-PLACEIMPL(const std::string&  ,STRING  ,         , , , ,stringtobool ,stringtoint,stringtodouble ,stringtocomplex )
+PLACEIMPL(bool                ,BOOL    ,tostring ,                                             ,== true ? 1 : 0      ,== true ? 1 : 0, , , , , )
+PLACEIMPL(std::complex<double>,COMPLEX ,tostring ,.real() == 0.0 && v.imag() == 0.0 ? false : true ,.real()              ,               , , , , , )
+PLACEIMPL(int                ,INT     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
+PLACEIMPL(long long                ,LONG     ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
+PLACEIMPL(double              ,DOUBLE  ,tostring ,== 0 ? false : true                          ,                     ,               , , , , , )
+PLACEIMPL(const std::string&  ,STRING  ,         , , , ,stringtobool ,stringtoint, stringtolong, stringtodouble ,stringtocomplex )
 
 
 std::string variant::create_message( const std::string s ) const {
@@ -1580,6 +1649,18 @@ void variant::resize( int size ) {
 
 variant initialize_variant( const std::string & ) {
 	    return variant();
+}
+
+void variant::dump() const {
+	std::cerr << "Variant type: " << typev << std::endl;
+	switch (typev) {
+	    case LONG :
+		    std::cerr << val.l << std::endl;
+		    break;
+	    case LONGVEC :
+		    std::cerr << (*val.lv)[0] << std::endl;
+		    break;
+	}
 }
 
 }	// casac namespace

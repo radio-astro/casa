@@ -107,11 +107,13 @@ class variant {
 
 	bool toBool( ) const;
 	int toInt( ) const;
+	long long toLong( ) const;
 	double toDouble( ) const;
 	std::complex<double> toComplex( ) const;
 	std::string toString( bool no_brackets=false ) const;
 	std::vector<bool> toBoolVec( ) const;
 	std::vector<int> toIntVec( ) const;
+	std::vector<long long> toLongVec( ) const;
 	std::vector<double> toDoubleVec( ) const;
 	std::vector<std::complex<double> > toComplexVec( ) const;
 	std::vector<std::string> toStringVec( ) const;
@@ -122,10 +124,12 @@ class variant {
 //      ---------------------------------------------------
 	bool &asBool( );
 	int &asInt( );
+	long long &asLong( );
 	double &asDouble( );
 	std::complex<double> &asComplex( );
 	std::string &asString( );
 	std::vector<int> &asIntVec( int size=-1 );
+	std::vector<long long> &asLongVec( int size=-1 );
 	std::vector<bool> &asBoolVec( int size=-1 );
 	std::vector<double> &asDoubleVec( int size=-1 );
 	std::vector<std::complex<double> > &asComplexVec( int size=-1 );
@@ -138,10 +142,12 @@ class variant {
 //      ---------------------------------------------------
 	const bool getBool( ) const throw(error);
 	const int getInt( ) const  throw(error);
+	const long long  getLong( ) const  throw(error);
 	const double getDouble( ) const throw(error);
 	const std::complex<double> &getComplex( ) const throw(error);
 	const std::string &getString( ) const throw(error);
 	const std::vector<int> &getIntVec( ) const throw(error);
+	const std::vector<long long> &getLongVec( ) const throw(error);
 	const std::vector<bool> &getBoolVec( ) const throw(error);
 	const std::vector<double> &getDoubleVec( ) const throw(error);
 	const std::vector<std::complex<double> > &getComplexVec( ) const throw(error);
@@ -171,18 +177,23 @@ class variant {
 
 	void push(bool, bool conform = true);
 	void push(int, bool conform = true);
+	void push(long long, bool conform = true);
 	void push(double, bool conform = true);
+	void push(std::vector<long long>, bool conform = true);
 	void push(std::complex<double>, bool conform = true);
 	void push(const std::string&, bool conform = true);
 
 	void place(bool, unsigned int index, bool conform = true);
 	void place(int, unsigned int index, bool conform = true);
+	void place(long long, unsigned int index, bool conform = true);
 	void place(double, unsigned int index, bool conform = true);
+	void place(std::vector<long long>, unsigned int index, bool conform = true);
 	void place(std::complex<double>, unsigned int index, bool conform = true);
 	void place(const std::string&, unsigned int index, bool conform = true);
 
 	int size( ) const { return typev >= BOOLVEC ? vec_size() : 1; }
 	void resize( int size );
+	void dump() const;
 
     private:
 
