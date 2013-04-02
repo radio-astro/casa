@@ -23,20 +23,20 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	<value></value>
         <example>output='newframed.image</example>
     </param>
-    <param type="string" name="outframe">
+    <param type="string" name="outframe"  ignorecase="true">
         <description>Spectral frame in which the frequency or velocity values will be reported by default</description>
         <value>lsrk</value>
-        <allowed kind="enum">
-            <value>lsrk</value>
-            <value>lsrd</value>
-            <value>bary</value>
-            <value>geo</value>
-            <value>topo</value>
-            <value>galacto</value>
-            <value>lgroup</value>
-            <value>cmb</value>
-            <value></value>
-    </allowed>
+	<allowed kind="enum">
+	  <value>lsrk</value>
+	  <value>lsrd</value>
+	  <value>bary</value>
+	  <value>geo</value>
+	  <value>topo</value>
+	  <value>galacto</value>
+	  <value>lgroup</value>
+	  <value>cmb</value>
+	  <value></value>
+	</allowed>
     </param>
     <param type="string" name="epoch" subparam="true">
         <description>Epoch to be associated with this image e.g \'2000/12/25/18:30:00.10\'</description>
@@ -52,10 +52,16 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <constraints>
         <when param="outframe">
 	  <equals type="string" value="lsrk"/>
-            <equals type="string" value="topo">
+            <equals type="string" value="topo" >
                 <default param="epoch"><value type="string"></value></default>
             </equals>
-	    <equals type="string" value="geo">
+	    <equals type="string" value="TOPO" >
+                <default param="epoch"><value type="string"></value></default>
+            </equals>
+	    <equals type="string" value="geo" >
+                <default param="epoch"><value type="string"></value></default>
+            </equals>
+	    <equals type="string" value="GEO" >
                 <default param="epoch"><value type="string"></value></default>
             </equals>
         </when>
