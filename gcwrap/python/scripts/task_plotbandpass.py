@@ -85,7 +85,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.11 2013/03/19 16:27:20 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.12 2013/04/02 13:21:29 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -510,7 +510,7 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
                            timerangeListTimes, solutionTimeThresholdSeconds,debugSloppyMatch,
                            ystartOverlayLegend,debug,mysize, fieldsToPlot,myUniqueColor,
                            timeHorizontalSpacing, fieldIndex,overlayColors,
-                           antennaVerticalSpacing, overlayAntennas, timerangeList):
+                           antennaVerticalSpacing, overlayAntennas, timerangeList, caltableTitle):
     """
     Draws the legend at the top of the page, if it is the correct time to do so,
     including the overlayTimes, the 'UT' label, and the caltable name.
@@ -518,7 +518,7 @@ def drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,ti
     if (xframe == firstFrame):
 #      if (overlayAntennas == False):
         # draw title including caltable name
-        pb.text(xstartTitle, ystartTitle, caltable, size=titlesize,
+        pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize,
                 color='k', transform=pb.gcf().transFigure)
         # support multi-fields with overlay='time'
         uTPFPS = []
@@ -566,7 +566,8 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
                          TebbSkyImage,plotrange, xaxis, atmchan, atmfreq, transmission,
                          subplotCols, showatmPoints,xframe, channels,LO1,atmchanImage,
                          atmfreqImage,transmissionImage, firstFrame,showfdm,nChannels,tableFormat,
-                         originalSpw_casa33, chanFreqGHz_casa33,originalSpw,chanFreqGHz):
+                         originalSpw_casa33, chanFreqGHz_casa33,originalSpw,chanFreqGHz,
+                         overlayTimes, overlayAntennas, xant, antennasToPlot):
     """
     If requested by the user at the command line, draw the atmospheric curve
     and the FDM window locations.
@@ -582,11 +583,14 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
                 mysize, TebbSkyImage, plotrange, xaxis,
                 atmchanImage, atmfreqImage, transmissionImage,
                 subplotCols, LO1, xframe, firstFrame, showatmPoints, channels=channels)
-    if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
-        if (tableFormat == 33):
-            showFDM(originalSpw_casa33, chanFreqGHz_casa33)
-        else:
-            showFDM(originalSpw, chanFreqGHz)
+    # The following case is needed for the case that overlay='antenna,time' and
+    # the final timerange is flagged on the final antenna.
+    if (overlayTimes==False or overlayAntennas==False or xant==antennasToPlot[-1]):
+        if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
+            if (tableFormat == 33):
+                showFDM(originalSpw_casa33, chanFreqGHz_casa33)
+            else:
+                showFDM(originalSpw, chanFreqGHz)
 
 def DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
                                          channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
@@ -1080,6 +1084,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     except:
         print "Could not open the caltable = %s" % (caltable)
         return()
+    if (len(caltable) > 100):
+        caltableTitle = '...' + caltable[-100:]
+    else:
+        caltableTitle = caltable
     names = mytb.colnames()
     ant = mytb.getcol('ANTENNA1')
     fields = mytb.getcol('FIELD_ID')
@@ -1904,7 +1912,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                     if (xframe == firstFrame):
                         DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
                         pb.text(xstartTitle, ystartTitle,
-                                '%s (degamp=%d, degphase=%d)'%(caltable,nPolyAmp[index]-1,
+                                '%s (degamp=%d, degphase=%d)'%(caltableTitle,nPolyAmp[index]-1,
                                 nPolyPhase[index]-1),size=mysize,
                                 transform=pb.gcf().transFigure) 
                     # draw polarization labels
@@ -2600,12 +2608,13 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                              fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,timerangeListTimes,
                              solutionTimeThresholdSeconds,debugSloppyMatch,ystartOverlayLegend,debug,mysize,
                              fieldsToPlot,myUniqueColor,timeHorizontalSpacing,fieldIndex,overlayColors,
-                             antennaVerticalSpacing, overlayAntennas, timerangeList)
+                             antennaVerticalSpacing, overlayAntennas, timerangeList, caltableTitle)
                           drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,TebbSky,TebbSkyImage,
                                                plotrange, xaxis,atmchan,atmfreq,transmission,subplotCols,
                                                showatmPoints,xframe, channels,LO1,atmchanImage,atmfreqImage,
                                                transmissionImage, firstFrame,showfdm,nChannels,tableFormat,
-                                               originalSpw_casa33, chanFreqGHz_casa33,originalSpw,chanFreqGHz)
+                                               originalSpw_casa33, chanFreqGHz_casa33,originalSpw,chanFreqGHz,
+                                               overlayTimes, overlayAntennas, xant, antennasToPlot)
                           DrawPolarizationLabelsForOverlayTime(xstartPolLabel,ystartPolLabel,corr_type,polsToPlot,
                                                                channeldiff,ystartMadLabel,subplotRows,gamp_mad,mysize,
                                                                ampmarkstyle,markersize,ampmarkstyle2)
@@ -3151,7 +3160,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                     color=pcolor[p],size=mysize, transform=pb.gca().transAxes)
                   if (xframe == firstFrame):
                         # draw title including caltable name
-                        caltableList = caltable 
+                        caltableList = caltableTitle
                         if (bpolyOverlay):
                               caltableList += ', ' + caltable2 + ' (degamp=%d, degphase=%d)'%(nPolyAmp[index]-1,nPolyPhase[index]-1)
                               if (bpolyOverlay2):
@@ -3194,7 +3203,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                           markersize=markersize, scalex=False,scaley=False)
                       if (xframe == firstFrame):
                           # draw title including caltable name
-                          pb.text(xstartTitle, ystartTitle, caltable, size=titlesize, color='k',
+                          pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
                                   transform=pb.gcf().transFigure)
                           DrawAntennaNames(msAnt, antennasToPlot, msFound, mysize)
               elif (overlayTimes==True and bOverlay == False
@@ -3222,7 +3231,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                            ampmarkstyle,markersize,ampmarkstyle2)
                       if (xframe == firstFrame):
                           # draw title including caltable name
-                          pb.text(xstartTitle, ystartTitle, caltable, size=titlesize,
+                          pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize,
                                   color='k', transform=pb.gcf().transFigure)
                           drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
                                                  caltable,titlesize,fieldIndicesToPlot,
@@ -3231,14 +3240,36 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                  debugSloppyMatch,ystartOverlayLegend,debug,mysize,
                                                  fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
                                                  fieldIndex,overlayColors, antennaVerticalSpacing,
-                                                 overlayAntennas, timerangeList)
+                                                 overlayAntennas, timerangeList, caltableTitle)
               elif (overlayAntennas and overlayTimes):  # Oct 23, 2012
                   # This will only happen for overlay='antenna,time'
                   if (xframe == firstFrame and mytime == 0 and xctr==firstUnflaggedAntennaToPlot and bOverlay==False):
                       # draw title including caltable name
-                      pb.text(xstartTitle, ystartTitle, caltable, size=titlesize, color='k',
+                      pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
                               transform=pb.gcf().transFigure)
                       DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
+                  # Adding the following 'for' loop on Mar 13, 2013 to support the case of
+                  # single time range with overlay='antenna,time'
+                  if (xant==antennasToPlot[-1]):
+                    doneOverlayTime = True  # assumed until proven otherwise in the 'for' loop
+                    for f in fieldIndicesToPlot:
+                        if (len(uniqueTimesPerFieldPerSpw[ispwInCalTable][f]) > 0):
+                            if ((uniqueTimes[mytime] < uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1]-solutionTimeThresholdSeconds) and
+                                (uniqueTimes[mytime] < timerangeListTimes[-1])):
+                                if (debug):
+                                    print "-----------Not done because %.0f < %.0f-%d for fieldIndex=%d and <%.0f" % (uniqueTimes[mytime], uniqueTimesPerFieldPerSpw[ispwInCalTable][f][-1], solutionTimeThresholdSeconds, f, timerangeListTimes[-1])
+                                    print "-----------ispwInCalTable=%d, mytime=%d, len(uniqueTimes) = %d" % (ispwInCalTable, mytime, len(uniqueTimes))
+                                doneOverlayTime = False
+                    if (doneOverlayTime):
+                        # This is necessary for the case that no antennas were flagged for the single timerange selected
+                        drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
+                                               fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,
+                                               timerangeListTimes, solutionTimeThresholdSeconds,
+                                               debugSloppyMatch,ystartOverlayLegend,debug,mysize,
+                                               fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
+                                               fieldIndex,overlayColors, antennaVerticalSpacing,
+                                               overlayAntennas, timerangeList, caltableTitle)
+
   
               # Here is 2nd place where we eliminate any white space on the right and left edge of the plots: 'amp'
               # 
@@ -3266,8 +3297,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
   
               # Finally, draw the atmosphere and FDM windows, if requested.
               if ((overlayAntennas==False and overlayTimes==False) or
-                      (overlayAntennas==True and xant==antennasToPlot[-1]) or
-                      (overlayTimes==True and doneOverlayTime)):
+                  (overlayAntennas==True and overlayTimes==False and xant==antennasToPlot[-1]) or
+                  (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
+                  (xant==antennasToPlot[-1] and doneOverlayTime)
+                  ):
                   if ((showatm or showtsky) and len(atmString) > 0): 
                       DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
                                      mysize, TebbSky, plotrange, xaxis, atmchan,
@@ -3843,7 +3876,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                         color=pcolor[p],size=mysize, transform=pb.gca().transAxes)
                   if (xframe == firstFrame):
                         # draw title including caltable name
-                        caltableList = caltable
+                        caltableList = caltableTitle
                         if (bpolyOverlay):
                               caltableList += ', ' + caltable2 + ' (degamp=%d, degphase=%d)'%(nPolyAmp[index]-1,nPolyPhase[index]-1)
                               if (bpolyOverlay2):
@@ -3884,7 +3917,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                           scalex=False,scaley=False, transform=pb.gca().transAxes)
                   if (xframe == firstFrame):
                       # draw title including caltable name
-                      pb.text(xstartTitle, ystartTitle, caltable, size=titlesize, color='k',
+                      pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
                               transform=pb.gcf().transFigure)
                       DrawAntennaNames(msAnt, antennasToPlot, msFound, mysize)
               elif (overlayTimes==True and bOverlay == False 
@@ -3931,7 +3964,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                               markersize=markersize, scalex=False,scaley=False, transform=pb.gca().transAxes)
                       if (xframe == firstFrame):
                           # draw title including caltable name
-                          pb.text(xstartTitle, ystartTitle, caltable, size=titlesize, color='k',
+                          pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
                                   transform=pb.gcf().transFigure)
                           drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,
                                                  caltable,titlesize,fieldIndicesToPlot,
@@ -3940,13 +3973,13 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                                  debugSloppyMatch,ystartOverlayLegend,debug,mysize,
                                                  fieldsToPlot,myUniqueColor,timeHorizontalSpacing,
                                                  fieldIndex,overlayColors, antennaVerticalSpacing,
-                                                 overlayAntennas, timerangeList)
+                                                 overlayAntennas, timerangeList, caltableTitle)
               elif (overlayAntennas and overlayTimes):  # Oct 23, 2012
 # #            else:
                   # This will only happen for: try to support overlay='antenna,time'
                   if (xframe == firstFrame and mytime==0 and xctr==firstUnflaggedAntennaToPlot and bOverlay==False):
                       # draw title including caltable name
-                      pb.text(xstartTitle, ystartTitle, caltable, size=titlesize, color='k',
+                      pb.text(xstartTitle, ystartTitle, caltableTitle, size=titlesize, color='k',
                               transform=pb.gcf().transFigure)
                       DrawBottomLegendPageCoords(msName, uniqueTimes[mytime], mysize)
                   
@@ -3980,8 +4013,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
   
               # Finally, draw the atmosphere and FDM windows, if requested.
               if ((overlayAntennas==False and overlayTimes==False) or
-                      (overlayAntennas==True and xant==antennasToPlot[-1]) or
-                      (overlayTimes==True and doneOverlayTime)):
+                  (overlayAntennas==True and overlayTimes==False and xant==antennasToPlot[-1]) or
+                  (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
+                  (xant==antennasToPlot[-1] and doneOverlayTime)
+                  ):
                   if ((showatm or showtsky) and len(atmString)>0):
                       DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
                                      mysize, TebbSky, plotrange, xaxis, atmchan,
