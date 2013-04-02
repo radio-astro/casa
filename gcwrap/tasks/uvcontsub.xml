@@ -12,7 +12,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 </description>
 <input>
 	<param type="string" name="vis" mustexist="true">
-		<description>Name of input MS.  Output goes to vis + ".contsub"</description>
+		<description>Name of input MS.  Output goes to vis + ".contsub" (will be overwritten if already exists)</description>
 		<value></value>
 	</param>
 
@@ -79,13 +79,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	
         The fitted continuum spectrum is subtracted from all channels 
         selected in spw, and the result (presumably only line emission)
-        is stored in a <em>new</em> MS (vis + ".contsub").
+        is stored in a <em>new</em> MS (vis + ".contsub"). If an MS  
+        with the output name already exists, it will be overwritten.
 	It will read from the CORRECTED_DATA column of vis if it is present,
 	or DATA if it is not.  Whichever column is read is presumed to have
 	already been calibrated.
 
         If want_cont is True, the continuum fit is placed in a second new MS
-        (vis + '.cont').  N.B. because the continuum model is necessarily a
+        (vis + '.cont', also overwritten if it already exists).  
+        N.B. because the continuum model is necessarily a
         smoothed fit, images made with it are liable to have their field of
         view reduced in some strange way.  Images of the continuum should be
         made by simply excluding the line channels (and probably averaging the
@@ -106,11 +108,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	fitspw -- Selection of spectral windows and channels to use in the
 	          fit for the continuum, using general spw:chan syntax.
                   The ranges of channels also can be specified by frequencies as in
-                  the MS selection syntax.
+                  the MS selection syntax (spw ids are required but '*' can be 
+                  used, see the example below).
 	          See the note under combine.
 		default: '' (all)
                 example: fitspw='0:5~30;40~55'
-                         fitspw='0:113.767GHz~114.528GHz;114.744GHz~115.447GHz;
+                         fitspw='0:113.767~114.528GHz;114.744~115.447GHz'
+                         fitspw='*:113.767~114.528GHz;114.744~115.447GHz'
+                                 --&gt; to unsure the range selection applied to all relevant spws
          &gt;&gt;&gt; expandable parameter for fitspw 
           excludechans - if Ture, it will exclude the spws:channels specified in fitspw
                          for the fit

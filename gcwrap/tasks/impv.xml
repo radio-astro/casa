@@ -38,6 +38,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>0</value>
             <example>2.5</example>
         </param>
+        <param type="string" name="unit">
+            <description>Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
+            <value>arcsec</value>
+        </param>
         <param type="bool"  name="overwrite" subparam="true">
             <description>Overwrite the output if it exists?</description>
             <value>False</value>
@@ -100,6 +104,8 @@ halfwidth        Half width for averaging expressed in pixels perpendicular to t
                  within one half width perpendicular to the slice will be averaged along the slice.
                  This value can be non-integral and is determined after rotating the image so the slice
                  lies horizontally.
+unit             Allows the user to set the unit for the angular offset axis. Must be a unit of angular
+                 measure.
 overwrite        If output file is specified, this parameter controls if an already existing file by the
                  same name can be overwritten. If true, the user is not prompted, the file
                  if it exists is automatically overwritten.
@@ -118,7 +124,11 @@ or the entire spectral range of the input image if no region is specified. One m
 in direction space; that is accomplished by specifying the start and end points of the slice. One may
 specify an optional half width, which is the number of pixels on either side and perpendicular to the
 direction slice that are used for averaging along the slice (0, the default, represents no averaging).
-
+One may specify the unit for the angular offset axis.
+A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
+image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified
+(unless perhaps you are debugging).
+        
 The start and end values represent direction pixel coordinates. They both must fail within the input
 image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).
 
@@ -131,18 +141,14 @@ input image, and the corresponding axis represents angular offset with the cente
 The equivalent coordinate system, with a (usually) rotated direction coordinate (eg, RA and Dec) is written
 to the output image as a table record. It can be retrieved using the table tool as shown in the example below.
 
-ia.open("my_spectral_cube.im")
 # create a pv image with the position axis running from ra, dec pixel positions of [45, 50] to [100, 120]
 # in the input image
-mypv = ia.pv(outfile="pv.im", start=[45,50], end=[100,120], wantreturn=true)
-ia.done()
+impv(imagename="my_spectral_cube.im", outfile="mypv.im", start=[45,50], end=[100,120])
 # analyze the pv image, such as get statistics
-pvstats = mypv.statistics()
-# when done, close the tool to release system resources
-mypv.done()
-        
+pvstats = imstat("mypv.im")
+#
 # get the alternate coordinate system information
-tb.open("pv.im")
+tb.open("mypv.im")
 alternate_csys_record = tb.getkeyword("misc")["secondary_coordinates"]
 tb.done()
 

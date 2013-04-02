@@ -303,6 +303,126 @@ class combspw(UVContsubUnitTestBase):
 
         print "combspw fitorder=1 line estimate"
         self.check_eq(record[1]['contsub'], -6.2533+17.6584j, 0.001)
-        
+    
+
+class excludechans(UVContsubUnitTestBase):
+    """Test excludechans """
+    # test excludechans=True, otherwise the result should be identical
+    # with zeroth test.
+    def setUp(self):
+        self.initialize('known0.ms')
+
+    def tearDown(self):
+        self.cleanup()
+
+    def test_excludechans(self):
+
+        record = {}
+        pnrows = {}
+        try:
+            print "\nRunning uvcontsub"
+           
+            uvran = uvcontsub(self.inpms, fitspw='0:6~17', #'0:0~5;18~23'
+                               excludechans=True, fitorder=0, 
+                               want_cont=True, async=False)
+        except Exception, e:
+            print "Error running uvcontsub"
+            raise e
+
+
+        for spec in ('cont', 'contsub'):
+            specms = self.inpms + '.' + spec
+            tb.open(specms)
+            record[spec] = tb.getcell('DATA', 52)
+            tb.close()
+            tb.open(self.inpms+'.'+spec+'/POINTING')
+            pnrows[spec] = tb.nrows()
+            tb.close()
+            shutil.rmtree(specms)
+        #self.__class__.records[corrsel] = record
+        #return uvran
+        self.assertEqual(uvran,True)
+
+        print "Continuum estimate in line-free region"
+        self.check_eq(record['cont'][:,3],   # RR, LL
+                 numpy.array([ 2.+3.j,  4.+5.j]), 0.0001)
+
+        print "Continuum estimate in line region"
+        self.check_eq(record['cont'][:,13],
+                 numpy.array([ 2.+3.j,  4.+5.j]), 0.0001)
+
+        print "Continuum-subtracted data in line-free region"
+        self.check_eq(record['contsub'][:,21],   # RR, LL
+                 numpy.array([ 0.+0.j,  0.+0.j]), 0.0001)
+
+        print "Continuum-subtracted data in line region"
+        self.check_eq(record['contsub'][:,9],   # RR, LL
+                 numpy.array([87.+26.j, 31.+20.j]), 0.0001)
+
+        print "Non-empty pointing table (for MMS case)"
+        self.assertEqual(pnrows['cont'], 1)
+        self.assertEqual(pnrows['contsub'], 1)
+
+class freqrangeselection(UVContsubUnitTestBase):
+    """Test frequency range fitspw """
+    # test excludechans=True, otherwise the result should be identical
+    # with zeroth test.
+    def setUp(self):
+        self.initialize('known0.ms')
+
+    def tearDown(self):
+        self.cleanup()
+
+    def test_freqrangeselection(self):
+
+        record = {}
+        pnrows = {}
+        try:
+            print "\nRunning uvcontsub"
+
+            uvran = uvcontsub(self.inpms, 
+                               fitspw='*:1412665073.7687755~1412787144.0812755Hz;1413104526.8937755~1413226597.2062755Hz',
+                               fitorder=0,
+                               want_cont=True, async=False)
+        except Exception, e:
+            print "Error running uvcontsub"
+            raise e
+
+
+        for spec in ('cont', 'contsub'):
+            specms = self.inpms + '.' + spec
+            tb.open(specms)
+            record[spec] = tb.getcell('DATA', 52)
+            tb.close()
+            tb.open(self.inpms+'.'+spec+'/POINTING')
+            pnrows[spec] = tb.nrows()
+            tb.close()
+            shutil.rmtree(specms)
+        #self.__class__.records[corrsel] = record
+        #return uvran
+        self.assertEqual(uvran,True)
+
+        print "Continuum estimate in line-free region"
+        self.check_eq(record['cont'][:,3],   # RR, LL
+                 numpy.array([ 2.+3.j,  4.+5.j]), 0.0001)
+
+        print "Continuum estimate in line region"
+        self.check_eq(record['cont'][:,13],
+                 numpy.array([ 2.+3.j,  4.+5.j]), 0.0001)
+
+        print "Continuum-subtracted data in line-free region"
+        self.check_eq(record['contsub'][:,21],   # RR, LL
+                 numpy.array([ 0.+0.j,  0.+0.j]), 0.0001)
+
+        print "Continuum-subtracted data in line region"
+        self.check_eq(record['contsub'][:,9],   # RR, LL
+                 numpy.array([87.+26.j, 31.+20.j]), 0.0001)
+
+        print "Non-empty pointing table (for MMS case)"
+        self.assertEqual(pnrows['cont'], 1)
+        self.assertEqual(pnrows['contsub'], 1)
+
+
+    
 def suite():
-    return [zeroth, fourth, combspw]
+    return [zeroth, fourth, combspw, excludechans, freqrangeselection]

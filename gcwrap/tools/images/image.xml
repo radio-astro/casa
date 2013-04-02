@@ -7428,6 +7428,11 @@ specifying reorder="1032" or reorder=1032 for a four axes image maps input axes
 and the zeroth axis in the input being mapped to zeroth axis in the output, the zeroth
 digit is implicitly understood to be 0 so that to transpose an image where one would
 use a string order="0321", one could equivalently specify an int order=321.
+IMPORTANT: When specifying a non-negative integer and mapping the zeroth axis of
+the input to the zeroth axis of the output, do *not* explicitly specify the leading
+0; eg, specify order=321 rather than order=0321. Python interprets an integer with
+a leading 0 as an octal number.
+
 Because of ambiguity for axes numbers greater than nine, using string or integer order
 specifications cannot handle images containing more than 10 axes.
 The order parameter can also be specified as a list of strings which uniquely minimally match,
@@ -10139,6 +10144,10 @@ used to create a 2D temporary image.
             <description>Half width for averaging expressed in pixels perpendicular to the slice. Pixels within one half width perpendicular to the slice will be averaged along the slice</description>
             <value>0</value>
         </param>
+        <param type="string" name="unit">
+            <description>Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
+            <value>arcsec</value>
+        </param>
         <param type="bool"  name="overwrite">
             <description>Overwrite the output if it exists?</description>
             <value>false</value>
@@ -10178,9 +10187,10 @@ used to create a 2D temporary image.
         in direction space; that is accomplished by specifying the start and end points of the slice. One may
         specify an optional half width, which is the number of pixels on either side and perpendicular to the
         direction slice that are used for averaging along the slice (0, the default, represents no averaging).
+        One may specify the unit for the angular offset axis.
         A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
-        image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified (unless
-        perhaps you are debugging).
+        image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified
+        (unless perhaps you are debugging).
         
         The start and end values represent direction pixel coordinates. They both must fail within the input
         image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).
