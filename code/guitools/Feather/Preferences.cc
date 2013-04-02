@@ -66,6 +66,10 @@ Preferences::Preferences(QWidget *parent)
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(preferencesAccepted()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(preferencesRejected()));
+
+	ui.outputScatterCheckBox->setVisible( false );
+	ui.markerLabel->setVisible( false );
+	ui.dotSizeSpinBox->setVisible( false );
 }
 
 void Preferences::initializeCustomSettings(){
@@ -73,11 +77,11 @@ void Preferences::initializeCustomSettings(){
 	//any preferences.
 	QSettings settings( ORGANIZATION, APPLICATION );
 	lineThickness = settings.value( LINE_THICKNESS, lineThickness).toInt();
-	dotSize = settings.value( DOT_SIZE, dotSize).toInt();
+	//dotSize = settings.value( DOT_SIZE, dotSize).toInt();
 	displayOriginalFunctions = settings.value( DISPLAY_ORIGINAL_FUNCTIONS, displayOriginalFunctions).toBool();
 	displayLegend = settings.value( DISPLAY_LEGEND, displayLegend ).toBool();
 	displayOutputFunctions = settings.value( DISPLAY_OUTPUT_FUNCTIONS, displayOutputFunctions ).toBool();
-	displayOutputScatterPlot = settings.value( DISPLAY_OUTPUT_SCATTERPLOT, displayOutputScatterPlot).toBool();
+	//displayOutputScatterPlot = settings.value( DISPLAY_OUTPUT_SCATTERPLOT, displayOutputScatterPlot).toBool();
 	displayYPlots = settings.value( DISPLAY_Y_PLOTS, displayYPlots ).toBool();
 	displayXPlots = settings.value( DISPLAY_X_PLOTS, displayXPlots ).toBool();
 	logAmplitude = settings.value( LOG_AMPLITUDE, logAmplitude ).toBool();

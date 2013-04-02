@@ -197,7 +197,7 @@
              <string>A plot of the feather output functions will be shown if this box is checked.</string>
             </property>
             <property name="text">
-             <string>Average Visibility Slice Plot</string>
+             <string>Feathered Slice Plot</string>
             </property>
             <property name="checked">
              <bool>true</bool>
@@ -227,7 +227,7 @@
              <string>Display a separate scatter plot of the average visibility amplitudes.</string>
             </property>
             <property name="text">
-             <string>Average Visibility Scatter Plot</string>
+             <string>Feathered Scatter Plot</string>
             </property>
            </widget>
           </item>
@@ -342,7 +342,7 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
-             <widget class="QLabel" name="label">
+             <widget class="QLabel" name="markerLabel">
               <property name="toolTip">
                <string>Select a size for point markers on scatter plots.</string>
               </property>

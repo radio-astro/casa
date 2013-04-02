@@ -40,7 +40,12 @@ ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent):
 
 int ExternalAxisWidgetLeft::getStartY() const {
 	QwtPlotCanvas* canvas = plot->canvas();
-	return height() - canvas->height();
+	int canvasHeight = canvas->height();
+	int heightDiff =  height() - canvas->height();
+	if ( canvasHeight == 0 ){
+		heightDiff = 22;
+	}
+	return heightDiff;
 }
 
 void ExternalAxisWidgetLeft::defineAxis( QLine& line ){

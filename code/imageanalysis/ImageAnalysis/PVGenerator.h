@@ -37,7 +37,7 @@ namespace casa {
 
 class PVGenerator : public ImageTask {
 	// <summary>
-	// Top level interface for generatting position-velocity images
+	// Top level interface for generating position-velocity images
 	// </summary>
 
 	// <reviewed reviewer="" date="" tests="" demos="">
@@ -51,7 +51,7 @@ class PVGenerator : public ImageTask {
 	// </etymology>
 
 	// <synopsis>
-	// High level interface for collapsing an image along a single axis.
+	// High level interface for generating position-velocity images.
 	// </synopsis>
 
 	// <example>
@@ -63,7 +63,7 @@ class PVGenerator : public ImageTask {
 
 public:
 
-	// The region selection in the constructor only applies to the non-direction coordinate.
+	// The region selection in the constructor only applies to the non-direction coordinates.
 	// The direction coordinate limits are effectively set by calling setEndPoints()
 	// after construction. The region selection in the constructor is only for things like
 	// spectral selection and polarization selection. In addition at most one of <src>regionRec</src>
@@ -106,6 +106,10 @@ public:
 
 	String getClass() const;
 
+	// set the unit to be used for the offset axis in the resulting image (from calling
+	// generate()). Must conform to angular units
+	void setOffsetUnit(const String& s);
+
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
 		return CasacRegionManager::USE_ALL_STOKES;
@@ -121,6 +125,7 @@ protected:
 private:
 	std::auto_ptr<vector<Double> > _start, _end;
 	Double _halfwidth;
+	String _unit;
 	static const String _class;
 
 
