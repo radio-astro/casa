@@ -181,6 +181,7 @@ void STApplyCal::apply(Bool insitu, Bool filltsys)
 
   // select data
   sel_.reset();
+  sel_ = target_->getSelection();
   if (caltype_ == STCalEnum::CalPSAlma ||
       caltype_ == STCalEnum::CalPS) {
     sel_.setTypes(vector<int>(1,(int)SrcType::PSON));
@@ -261,6 +262,11 @@ void STApplyCal::doapply(uInt beamno, uInt ifno, uInt polno,
     nrowSky += skytable_[skylist[i]]->nrow();
     os_ << "nrowSky=" << nrowSky << LogIO::POST;
   }
+
+  // Skip IFNO without sky data
+  if (nrowSky == 0)
+    return;
+
   uInt nchanTsys = 0;
   Vector<Double> ftsys;
   uInt tsysifno = getIFForTsys(ifno);
