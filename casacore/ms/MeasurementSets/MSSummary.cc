@@ -526,13 +526,21 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 							os << intToScanMap[*iter];
 						}
 						os << "] ";
+						/*
 						// The Obsmode column can be empty only report them if it is not
 						String obsMode = "";
 						if (obsModes.size() > (unsigned int) 0) {
 							obsMode=obsModes(laststids(0));
 						}
-						os << obsMode;
+						//os << obsMode;
 
+						// os << endl;
+
+						 */
+						std::set<String> intents = _msmd->getIntentsForScan(lastscan);
+						if (intents.size() > 0) {
+							os << intents;
+						}
 						os << endl;
 					}
 					if(fillRecord && (recLength < maxRecLength))  {
@@ -679,6 +687,7 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				os << intToScanMap[*iter];
 			}
 			os << "] ";
+			/*
 			// The Obsmode column can be empty only report them if it is not
 			String obsMode = "";
 			if (obsModes.size() > (unsigned int) 0) {
@@ -686,6 +695,13 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			}
 			os << obsMode;
 			os << endl;
+			*/
+			set<String> intents = _msmd->getIntentsForScan(lastscan);
+			if (intents.size() > 0) {
+				os << intents;
+			}
+			os << endl;
+
 		}
 		if(fillRecord  && (recLength < maxRecLength)){
 			Record scanRecord;
