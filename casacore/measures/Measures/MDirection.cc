@@ -150,14 +150,17 @@ void MDirection::assure(const Measure &in) {
 
 MDirection::Types MDirection::castType(uInt tp) {
   MDirection::checkMyTypes();
-  if ((tp & MDirection::EXTRA) == 0) {
-    AlwaysAssert(tp < MDirection::N_Types, AipsError);
-  } else {
-    AlwaysAssert((tp & ~MDirection::EXTRA) < 
-		 (MDirection::N_Planets - MDirection::MERCURY), AipsError);
+  if (tp!=static_cast<uInt>(MDirection::INVALID)){
+    if ((tp & MDirection::EXTRA) == 0) {
+      AlwaysAssert(tp < MDirection::N_Types, AipsError);
+    } else {
+      AlwaysAssert((tp & ~MDirection::EXTRA) < 
+		   (MDirection::N_Planets - MDirection::MERCURY), AipsError);
+    }
   }
   return static_cast<MDirection::Types>(tp);
 }
+
 
 const String &MDirection::showType(MDirection::Types tp) {
   static const String tname[MDirection::N_Types] = {
@@ -195,9 +198,11 @@ const String &MDirection::showType(MDirection::Types tp) {
     "SUN",
     "MOON",
     "COMET" };
+  const String inval = "INVALID";
   
   MDirection::checkMyTypes();
   if ((tp & MDirection::EXTRA) == 0) return tname[tp];
+  if (tp==static_cast<uInt>(MDirection::INVALID)) return inval; 
   return pname[tp & ~MDirection::EXTRA];
 }
 
