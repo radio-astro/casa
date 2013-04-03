@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os.path
 
 import pipeline.infrastructure.casatools as casatools
+import pipeline.heuristics.fluxscale as hfluxscale
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from .. import gaincal
@@ -12,7 +13,6 @@ from pipeline.hif.tasks.setmodel import setjy
 
 LOG = logging.get_logger(__name__)
 
-from pipeline.hif.heuristics import fluxscale as heufluxscale
 
 class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
     def __init__(self, context, output_dir=None, vis=None, caltable=None,
@@ -124,24 +124,38 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         LOG.info('refant:%s' % refant)
 
         hm_resolvedcals = inputs.hm_resolvedcals
+	allantenna = inputs.antenna
         if hm_resolvedcals == 'automatic':
             # get the antennas to be used in the gaincals, limiting
             # the range if the reference calibrator is resolved.
-            antenna = heufluxscale.antenna(ms=ms,
+            resantenna = hfluxscale.antenna(ms=ms,
               refsource=inputs.reference, refant=refant,
               peak_frac=inputs.peak_fraction)
 	else:
-            antenna = inputs.antenna
+            resantenna = allantenna
 
-        # do a phase-only gaincal
-        self._do_gaincal(calmode='p', solint=inputs.phaseupsolint, 
-          antenna=antenna, refant=refant)
+        # do a phase-only gaincal on the flux calibrator using a restricted
+	# set of antennas
+        r = self._do_gaincal(field=inputs.reference, intent=inputs.refintent,
+	    calmode='p', solint=inputs.phaseupsolint, antenna=resantenna,
+	    refant=refant, append=False, merge=False)
+        caltable = r.final.pop().gaintable
+
+        # do a phase-only gaincal on the remaining calibrators using the full
+	# set of antennas
+        self._do_gaincal(caltable=caltable, field=inputs.transfer,
+	  intent=inputs.transintent, calmode='p', solint=inputs.phaseupsolint,
+	  antenna=allantenna, refant=refant, append=True, merge=True)
 
         # now do the amplitude-only gaincal. This will produce the caltable
         # that fluxscale will analyse
-        r = self._do_gaincal(calmode='a', solint=inputs.solint,
-          antenna=antenna, refant=refant)
+        r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
+	    intent=inputs.transintent + ',' + inputs.refintent, calmode='a',
+	    solint=inputs.solint, antenna=allantenna, refant=refant, append=False,
+	    merge=True)
+
         # get the gaincal caltable from the results
+	# this is the table that will be fluxscaled
         caltable = r.final.pop().gaintable
 
         # To make the following fluxscale reliable the caltable
@@ -164,10 +178,12 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
             except:
                 # something has gone wrong, return an empty result
+	        LOG.error ('Unable to complete flux scaling operation')
                 result = commonfluxresults.FluxCalibrationResults(fields={},
                   fields_setjy={})
 
         else:
+	    LOG.error ('Unable to complete flux scaling operation')
             result = commonfluxresults.FluxCalibrationResults(fields={}, fields_setjy={})
 
         return result
@@ -216,48 +232,19 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                   os.path.basename(caltable))
                 return False
 
-            common_antennas = {}
-            for spwid in spwids:
-                common_antennas[spwid] = None
-                for fieldid in fieldids:
-                    subtable = table.query('''SPECTRAL_WINDOW_ID==%s &&
-                      FIELD_ID==%s && not(all(FLAG))''' % (spwid, fieldid))
-                    antennas = subtable.getcol('ANTENNA1')
-		    subtable.close()
-                    if common_antennas[spwid] is None:
-                        common_antennas[spwid] = set(antennas)
-                    else:
-                        common_antennas[spwid].intersection_update(
-                          set(antennas))
-
-            # flag antennas in caltable that do not belong to the 
-            # common_antennas set
-            for spwid in spwids:
-                if common_antennas[spwid] is None or \
-                  common_antennas[spwid] == []:
-                    LOG.error(
-                      'No antennas in common between AMPLITUDE and PHASE calibrators for SpW %s'
-                       % spwid)
-                    return False
-                else:
-                    subtable = table.query('''SPECTRAL_WINDOW_ID==%s &&
-                      ANTENNA1 not in %s && not(all(FLAG))''' % (spwid,
-                      list(common_antennas[spwid])))
-                    flag = subtable.getcol('FLAG')
-                    flag[:] = True
-                    subtable.putcol('FLAG', flag)
-                    fluxscale_spwids.append(spwid)
-
         return True
                                 
-    def _do_gaincal(self, calmode=None, solint=None, antenna=None,
-      refant=None):
+    def _do_gaincal(self, caltable=None, field=None, intent=None, calmode=None,
+        solint=None, antenna=None, refant=None, append=None, merge=True):
+
         inputs = self.inputs
 
         task_args = {
           'output_dir'  : inputs.output_dir,
           'vis'         : inputs.vis,
-          'intent'      : inputs.transintent + ',' + inputs.refintent,
+	  'caltable'    : caltable,
+	  'field'       : field,
+	  'intent'      : intent,
           'solint'      : solint,
           'calmode'     : calmode,
           'minsnr'      : inputs.minsnr,
@@ -266,12 +253,16 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
           'antenna'     : antenna,
           'minblperant' : 2,
           'solnorm'     : False,
+	  'append'      : append,
         }
 
+	# Note that field and antenna taske there defaut values for the
+	# purpose of setting up the calto object.
         task_inputs = gaincal.GTypeGaincal.Inputs(inputs.context, **task_args)
+
         task = gaincal.GTypeGaincal(task_inputs)
 
-        return self._executor.execute(task, merge=True)
+        return self._executor.execute(task, merge=merge)
 
     def _do_fluxscale(self, caltable=None):
         inputs = self.inputs

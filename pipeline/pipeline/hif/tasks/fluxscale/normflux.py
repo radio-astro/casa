@@ -3,12 +3,10 @@ import collections
 import itertools
 import string
 
-import pipeline.infrastructure.api as api
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
-#from . import common
 from pipeline.hif.tasks.common import commonfluxresults as commonfluxresults
 
 from pipeline.hif.heuristics import fieldnames as fieldnames
