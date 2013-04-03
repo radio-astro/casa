@@ -3,14 +3,53 @@
 <%block name="title">OUS Splash Page</%block>
 
 <h1>OUS Splash Page</h1>
-<ul>
-<li>Project ID, PI</li>
-<li>PPR ID, PL run date, PL version</li>
+<h2>Observation Summary</h2>
+<table class="one-column-emphasis" summary="Data Details">
+	<colgroup>
+		<col class="oce-first" />
+	</colgroup>
+	<tbody>
+% if project_id is not None:
+		<tr>
+			<td>Project ID</td>
+			<td>${project_ids}</td>
+		</tr>
+% endif
+% if schedblock_id is not None:
+		<tr>
+			<td>SchedBlock ID</td>
+			<td>${schedblock_ids}</td>
+		</tr>
+% endif
+% if execblock_id is not None:
+		<tr>
+			<td>ExecBlock ID</td>
+			<td>${execblock_ids}</td>
+		</tr>
+% endif
+% if observer is not None:
+		<tr>
+			<td>Observer</td>
+			<td>${observers}</td>
+		</tr>
+% endif
+		<tr>
+			<td>Observation Start</td>
+			<td>${obs_start}</td>
+		</tr>
+		<tr>
+			<td>Observation End</td>
+			<td>${obs_end}</td>
+		</tr>
+	</tbody>
+</table>
+
+<h2>Pipeline Execution Summary</h2>
+<li>PPR ID, PL version</li>
 <li>Pipeline run commenced ${exec_start} (duration=${exec_duration})</li>
 <li>CASA version ${casa_version} (${casa_revision})
 <li>QA2 Score (% red/yellow/green)</li>
 <li>Antenna arrays: ${array_names}</li>
-<li>Observing dates: ${obs_start} to ${obs_end}</li>
 % if pcontext.logtype == 'GOUS':
 <li>GOUS ID</li>
 <ul>
