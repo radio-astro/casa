@@ -1,53 +1,22 @@
 from __future__ import absolute_import
-import os
 import types
 
-import pipeline.infrastructure.api as api
+from pipeline.hif.heuristics import caltable as tcaltable
+from pipeline.hif.heuristics.tsysspwmap import tsysspwmap as tsysspwmap
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.jobrequest import casa_tasks
-
-from pipeline.hif.heuristics.tsysspwmap import tsysspwmap as tsysspwmap
-from pipeline.hif.heuristics import caltable as tcaltable
+from . import resultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class TsyscalResults(api.Results):
-    def __init__(self, final=[], pool=[], preceding=[]):
-        self.vis = None
-        self.pool = pool[:]
-        self.final = final[:]
-        self.preceding = preceding[:]
-        self.error = set()
-
-    def merge_with_context(self, context):
-        if not self.final:
-            LOG.error('No results to merge')
-            return
-
-        for calapp in self.final:
-            LOG.debug('Adding calibration to callibrary:\n'
-                      '%s\n%s' % (calapp.calto, calapp.calfrom))
-            context.callibrary.add(calapp.calto, calapp.calfrom)
-
-    def __repr__(self):
-
-	# Format the Tsyscal results.
-        s = 'TsyscalResults:\n'
-        for calapplication in self.final:
-            s += '\tBest caltable for spw #{spw} in {vis} is {name}\n'.format(
-                spw=calapplication.spw, vis=os.path.basename(calapplication.vis),
-                name=calapplication.gaintable)
-	return s
-
-
 class TsyscalInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, caltable=None):
-	# set the properties to the values given as input arguments
+        # set the properties to the values given as input arguments
         self._init_properties(vars())
-	setattr(self, 'caltype', 'tsys')
+        setattr(self, 'caltype', 'tsys')
 
     @property
     def caltable(self):
@@ -56,9 +25,9 @@ class TsyscalInputs(basetask.StandardInputs):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('caltable')
         
-	# Get the name.
+        # Get the name.
         if callable(self._caltable):
-	    casa_args = self._get_partial_task_args()
+            casa_args = self._get_partial_task_args()
             return self._caltable(output_dir=self.output_dir,
                                   stage=self.context.stage,
                                   **casa_args)
@@ -71,15 +40,15 @@ class TsyscalInputs(basetask.StandardInputs):
         self._caltable = value
 
     # Avoids circular dependency on caltable.
-    # NOT SURE WHY THIS IS NECCESARY.
     def _get_partial_task_args(self):
-	return {'vis': self.vis, 'caltype': self.caltype}
+        return {'vis'     : self.vis, 
+                'caltype' : self.caltype}
 
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
-	return {'vis': self.vis,
-	        'caltable': self.caltable,
-		'caltype': self.caltype}
+        return {'vis'      : self.vis,
+                'caltable' : self.caltable,
+                'caltype'  : self.caltype}
 
 
 class Tsyscal(basetask.StandardTaskTemplate):
@@ -92,7 +61,6 @@ class Tsyscal(basetask.StandardTaskTemplate):
         gencal_job = casa_tasks.gencal(**gencal_args)
         self._executor.execute(gencal_job)
 
-        result = TsyscalResults()
         LOG.warning('TODO: tsysspwmap heuristic re-reads measurement set!')
         LOG.warning("TODO: tsysspwmap heuristic won't handle missing file")
         #spwmap = tsysspwmap.tsysspwmap(vis=inputs.vis,
@@ -125,7 +93,7 @@ class Tsyscal(basetask.StandardTaskTemplate):
         calapp = callibrary.CalApplication(calto, calfrom)
         callist.append(calapp)
 
-        return TsyscalResults(pool=callist)
+        return resultobjects.TsyscalResults(pool=callist)
 
 
     def analyse(self, result):
