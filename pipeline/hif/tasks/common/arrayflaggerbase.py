@@ -21,7 +21,7 @@ class FlagOp(object):
         Added detailed docs here.
     """
     def __init__(self, filename, rulename, spw, axisnames, flagcoords, 
-      cell_index, ruleaxis=None):
+      cell_index=None, ruleaxis=None, flagchannels=None):
         self.filename = filename
         self.rulename = rulename
         self.spw = spw
@@ -29,6 +29,7 @@ class FlagOp(object):
         self.flagcoords = flagcoords
         self.cell_index = cell_index
         self.ruleaxis = ruleaxis
+        self.flagchannels = flagchannels
 
     def __repr__(self):
         # Format the FlagOp for the terminal.
@@ -36,9 +37,9 @@ class FlagOp(object):
             basename = os.path.basename(self.filename)
         else:
             basename = None
-        s = 'FlagOp: filename-%s rule-%s axis-%s spw-%s axisnames-%s flagcoords-%s cell_index-%s' % (
+        s = 'FlagOp: filename-%s rule-%s axis-%s spw-%s axisnames-%s flagcoords-%s cell_index-%s flagchannels-%s' % (
           basename, self.rulename, self.ruleaxis, self.spw, self.axisnames,
-          self.flagcoords, self.cell_index) 
+          self.flagcoords, self.cell_index, self.flagchannels) 
 
         return s
 

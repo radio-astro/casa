@@ -6,7 +6,6 @@ import pipeline.domain as domain
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.taskreport as taskreport
-
 from pipeline.hif.heuristics import fieldnames as fieldnames
 
 # create the pipeline logger for this module
@@ -147,7 +146,22 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         precedence.
         """
         self._refant = value
-        
+
+    @property
+    def selectdata(self):
+        return self._selectdata
+
+    @selectdata.setter
+    def selectdata(self, value):
+        if value is None:
+            # set selectdata True if antenna is specified so that CASA gaincal 
+            # task will check that parameter
+            if self.antenna != '':
+                value = True
+            else:
+                value = False
+        self._selectdata = value
+
     @property
     def spw(self):
         if self._spw is not None:
@@ -172,13 +186,12 @@ class CommonCalibrationInputs(basetask.StandardInputs,
             return self._handle_multiple_vis('to_field')
 
         # this will give something like '0542+3243,0343+242'
-        intent_fields = self._to_field(self.ms, self.to_intent)
+        fields_with_intent = self._to_field(self.ms, self.to_intent)
 
         # run the answer through a set, just in case there are duplicates
-        fields = set()
-        fields.update(intent_fields.split(','))
+        unique_fields = set(fields_with_intent.split(','))
         
-        return ','.join(fields)
+        return ','.join(unique_fields)
 
     @to_field.setter
     def to_field(self, value):
@@ -191,10 +204,13 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('to_intent')
         
+        # if to_intent was manually specified as a list for multi-vis 
+        # application, get the appropriate intent to use from that list  
         if not isinstance(self.vis, list) and isinstance(self._to_intent, list):
             idx = self._my_vislist.index(self.vis)
             return self._to_intent[idx]
 
+        # if to_intent was manually specified as a single value, return it
         if type(self.vis) is types.StringType and type(self._to_intent) is types.StringType:
             return self._to_intent
         

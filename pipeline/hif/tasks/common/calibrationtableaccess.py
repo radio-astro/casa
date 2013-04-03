@@ -2,9 +2,9 @@ from __future__ import absolute_import
 
 import collections
 import copy 
+import os
 import numpy as np
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
@@ -76,8 +76,13 @@ class CalibrationTableDataFiller(object):
     @staticmethod
     def _readvis(caltable):
         with casatools.TableReader(caltable) as table:
-            vis = table.getkeyword('MSName')        
-            return vis
+            vis = table.getkeyword('MSName')
+            # return the absolute rather than the base filename as the vis may
+            # not be visible from the current path, such as when the context 
+            # working directory is set. This makes the assumption that the
+            # caltable is in the same directory as the measurement set.
+            return os.path.join(os.path.dirname(caltable),
+                                vis)
 
     @staticmethod
     def _read_table(caltable, columns):
@@ -106,9 +111,14 @@ class CalibrationTableFlagSetterInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None):
         self._init_properties(vars())
 
-class CalibrationTableFlagSetterResult(api.Results):
+
+class CalibrationTableFlagSetterResult(basetask.Results):
+    def __init__(self):
+        super(CalibrationTableFlagSetterResult, self).__init__()
+
     def merge_with_context(self, context):
-        pass
+        pass    
+
 
 class CalibrationTableFlagSetter(basetask.StandardTaskTemplate):
     Inputs = CalibrationTableFlagSetterInputs
@@ -133,17 +143,22 @@ class CalibrationTableFlagSetter(basetask.StandardTaskTemplate):
                 if row.get('SPECTRAL_WINDOW_ID') != f.spw:
                     continue
 
-                for flagcoord in f.flagcoords:
-                    setflag = True
-                    for i,axisname in enumerate(f.axisnames):
-                        if row.get(axisname) != flagcoord[i]:
-                            setflag = False
-                            break
+                # do the column values for this row match the flagop?
+                # All rows satisfy this condition if f.axisnames is empty.
+                rowcoords = []
+                for axis in f.axisnames:
+                    rowcoords.append(row.get(axis))
+                rowcoords=tuple(rowcoords)
 
-                    if setflag:
+                if f.axisnames==[] or rowcoords in f.flagcoords:
+                    if f.flagchannels is None:
+                        # set all the flags for this rownumber
                         setflags[f.filename].append(
-                          (f.cell_index, rownumber))
-                        break
+                          (f.cell_index, None, rownumber))
+                    else:
+                        setflags[f.filename].append(
+                          (f.cell_index, f.flagchannels, rownumber))
+                
 
         # modify tables
         for caltable in tabledata.keys():
@@ -151,7 +166,17 @@ class CalibrationTableFlagSetter(basetask.StandardTaskTemplate):
                 with casatools.TableReader(caltable, nomodify=False) as table:
                     flag = table.getcol('FLAG')
                     for sf in setflags[caltable]:
-                        flag[sf[0],:,sf[1]] = True
+                        if sf[0] is None:
+                            if sf[1] is None:
+                                flag[:,:,sf[2]] = True
+                            else:
+                                flag[:,sf[1],sf[2]] = True
+                        else:
+                            if sf[1] is None:
+                                flag[sf[0],:,sf[2]] = True
+                            else:
+                                flag[sf[0],sf[1],sf[2]] = True
+
                     flag = table.putcol('FLAG', flag)
 
         self._flags_to_set = []
