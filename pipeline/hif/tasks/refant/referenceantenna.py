@@ -29,10 +29,9 @@
 import os
 import string
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
-from pipeline.hif.heuristics import findrefant as findrefant
+import pipeline.hif.heuristics.findrefant as findrefant
 
 # ------------------------------------------------------------------------------
 
@@ -301,7 +300,7 @@ class RefAntInputs(basetask.StandardInputs):
 
 # ------------------------------------------------------------------------------
 
-class RefAntResults( api.Results ):
+class RefAntResults( basetask.Results ):
 
 # ------------------------------------------------------------------------------
 
@@ -329,12 +328,12 @@ class RefAntResults( api.Results ):
 
 # ------------------------------------------------------------------------------
 
-	def __init__( self, vis, refant ):
+    def __init__( self, vis, refant ):
+        super(RefAntResults, self).__init__()
 
-		# Initialize the private member variables
-
-		self._vis = vis
-		self._refant = ','.join([str(ant) for ant in refant])
+        # Initialize the private member variables
+        self._vis = vis
+        self._refant = ','.join([str(ant) for ant in refant])
 
 
 # ------------------------------------------------------------------------------
@@ -361,21 +360,21 @@ class RefAntResults( api.Results ):
 
 # ------------------------------------------------------------------------------
 
-	def merge_with_context( self, context ):
-		if self._vis is None or self._refant is None:
-			LOG.error ( 'No results to merge' )
-			return
+    def merge_with_context( self, context ):
+        if self._vis is None or self._refant is None:
+            LOG.error ( 'No results to merge' )
+            return
 
-		# Do we also need to locate the antenna in the measurement set?
-		# This might become necessary when using different sessions
+        # Do we also need to locate the antenna in the measurement set?
+        # This might become necessary when using different sessions
 
-		ms = context.observing_run.get_ms( name=self._vis )
+        ms = context.observing_run.get_ms( name=self._vis )
 
-		if ms:
-			LOG.debug('Setting refant for {0} to \'{1}\''
-			    ''.format(ms.basename, self._refant))
-			    #''.format(self._refant.identifier, ms.name))
-			ms.reference_antenna = self._refant
+        if ms:
+            LOG.debug('Setting refant for {0} to \'{1}\''
+                ''.format(ms.basename, self._refant))
+                #''.format(self._refant.identifier, ms.name))
+            ms.reference_antenna = self._refant
 
 # ------------------------------------------------------------------------------
 
@@ -383,17 +382,16 @@ class RefAntResults( api.Results ):
 
 # ------------------------------------------------------------------------------
 
-        def __repr__( self ):
-
-		if self._vis is None or self._refant is None:
-			return ('Reference antenna results:\n'
-			    '\tNo reference antenna selected')
-		else:
-			return ('Reference antenna results:\n'
-			    '{ms}: refant=\'{refant}\''
-			    ''.format(ms=os.path.basename(self._vis),
-			    refant=self._refant))
-			    #refant=self._refant.identifier))
+    def __repr__( self ):
+        if self._vis is None or self._refant is None:
+            return ('Reference antenna results:\n'
+                '\tNo reference antenna selected')
+        else:
+            return ('Reference antenna results:\n'
+                '{ms}: refant=\'{refant}\''
+                ''.format(ms=os.path.basename(self._vis),
+                refant=self._refant))
+                #refant=self._refant.identifier))
 
 # ------------------------------------------------------------------------------
 # class RefAnt
