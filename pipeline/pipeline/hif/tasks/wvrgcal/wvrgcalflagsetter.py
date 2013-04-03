@@ -3,15 +3,15 @@ from __future__ import absolute_import
 import numpy as np
 import re
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 
 LOG = logging.get_logger(__name__)
 
 
-class WvrgcalFlagSetterResult(api.Results):
+class WvrgcalFlagSetterResult(basetask.Results):
+    def __init__(self):
+        super(WvrgcalFlagSetterResult, self).__init__()
 
     def merge_with_context(self, context):
         pass
@@ -43,20 +43,14 @@ class WvrgcalFlagSetter(basetask.StandardTaskTemplate):
 
     def prepare(self):
         result = WvrgcalFlagSetterResult()
-        wvrflag = set()
-        vis = {}
+        # get current wvrflag value
+        wvrflag = set(self.wvrgcaltask.inputs.wvrflag)
+        new_wvrflag = set()
         for f in self._flags_to_set:
-            # ensure we know which ms the wvr table is derived from - we
-            # need to know this to be able map antenna ID to antenna name
+            # map antenna ID to antenna name
             # (need to find out if wvrgcal accepts antenna IDs in wvrflag
             # parameter, which would make this step unnecessary).
-            if f.filename not in vis.keys():
-                with casatools.TableReader(f.filename) as table:
-                    visname = table.getkeyword('MSName')
-                    vis[f.filename] = visname
-
-            ms = self.inputs.context.observing_run.get_ms(
-              name=vis[f.filename])
+            ms = self.inputs.context.observing_run.get_ms(name=f.filename)
             antennas = ms.antennas
            
             axisnames = np.array(f.axisnames)
@@ -67,18 +61,19 @@ class WvrgcalFlagSetter(basetask.StandardTaskTemplate):
 
             # update the set of wvrflag antennas that have attracted flagging
             for flagcoord in f.flagcoords:
-                wvrflag.update([antenna.name for antenna in antennas 
+                new_wvrflag.update([antenna.name for antenna in antennas 
                   if antenna.id==flagcoord[antindex]])
 
-        wvrflag = list(wvrflag)
-        wvrflag = map(str, wvrflag)
+        new_wvrflag = list(new_wvrflag)
+        new_wvrflag = map(str, new_wvrflag)
 
         # set parameter of wvrgcal task for next calculation
-        if wvrflag:
-            LOG.info('antennas to be flagged: %s' % wvrflag)
+        if new_wvrflag:
+            LOG.info('additional antennas to be flagged: %s' % new_wvrflag)
+            wvrflag.update(new_wvrflag)
+            self.wvrgcaltask.inputs.wvrflag = list(wvrflag)
         else:
-            LOG.info('no antennas need be flagged')
-        self.wvrgcaltask.inputs.wvrflag = wvrflag
+            LOG.info('no additional antennas need be flagged')
 
         return result
 

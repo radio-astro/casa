@@ -2,12 +2,12 @@ from __future__ import absolute_import
 import types
 import os
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.jobrequest import casa_tasks
+from pipeline.hif.heuristics import caltable as wcaltable
+from pipeline.hif.heuristics import wvrgcal as heuwvrgcal
 
 from .. import bandpass
 from .. import gaincal
@@ -15,25 +15,32 @@ from pipeline.hif.tasks.common import arrayflaggerbase
 from . import resultobjects 
 from . import wvrg_qa2
 
-from pipeline.hif.heuristics import wvrgcal as heuwvrgcal
-from pipeline.hif.heuristics import caltable as wcaltable
-
 LOG = logging.get_logger(__name__)
 
 
 class WvrgcalInputs(basetask.StandardInputs):
     
-    def __init__(self, context, output_dir=None,
-      vis=None, caltable=None, toffset=None, segsource=None, 
+    def __init__(self, context, output_dir=None, vis=None,
+      caltable=None, hm_toffset=None, toffset=None, segsource=None, 
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
       scale=None, qa2_intent=None, qa2_bandpass_intent=None):
-	self._init_properties(vars())
+        self._init_properties(vars())
+
+    @property
+    def hm_toffset(self):
+        if self._hm_toffset is None:
+            return 'automatic'
+        return self._hm_toffset
+
+    @hm_toffset.setter
+    def hm_toffset(self, value):
+        self._hm_toffset = value
 
     @property
     def toffset(self):
         if self._toffset is None:
-            return -1
+            return 0
         return self._toffset
 
     @toffset.setter
@@ -102,18 +109,28 @@ class WvrgcalInputs(basetask.StandardInputs):
 
     @property
     def wvrflag(self):
-        if self._wvrflag is None:
-            return []
         return self._wvrflag
 
     @wvrflag.setter
     def wvrflag(self, value):
-        self._wvrflag = value
+        if value is None:
+            self._wvrflag = []
+        elif type(value) is types.StringType:
+            if value == '':
+                self._wvrflag = []
+            else:
+                if value[0] == '[':
+                    strvalue=value.replace('[','').replace(']','').replace("'","")
+                else:
+                    strvalue = value
+                self._wvrflag = list(strvalue.split(','))
+        else:
+            self._wvrflag = value
 
     @property
     def hm_smooth(self):
         if self._hm_smooth is None:
-            return 'manual'
+            return 'automatic'
         return self._hm_smooth
 
     @hm_smooth.setter
@@ -123,7 +140,7 @@ class WvrgcalInputs(basetask.StandardInputs):
     @property
     def smooth(self):
         if self._smooth is None:
-            return 1
+            return '1s'
         return self._smooth
 
     @smooth.setter
@@ -179,7 +196,12 @@ class Wvrgcal(basetask.StandardTaskTemplate):
           sourceflag=inputs.sourceflag, nsol=inputs.nsol,
           segsource=inputs.segsource)
 
-        if inputs.toffset is None:
+        # return an empty results object if no WVR data available
+        if not wvrheuristics.wvr_available():
+            LOG.warning('WVR data not available')
+            return resultobjects.WvrgcalflagResult()
+
+        if inputs.hm_toffset == 'automatic':
             toffset = wvrheuristics.toffset()
         else:
             toffset = inputs.toffset
@@ -214,7 +236,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         ms = inputs.context.observing_run.get_ms(name=inputs.vis)
         spws = ms.spectral_windows
         science_spwids = [spw.id for spw in spws
-          if spw.channels not in (1,4) and not spw.intents.isdisjoint(
+          if spw.num_channels not in (1,4) and not spw.intents.isdisjoint(
           ['BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET'])]
 
         smooths_done = set()
@@ -226,12 +248,12 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 smooth = inputs.smooth
 
             # prepare to run the wvrgcal task if necessary
+            caltable = wcaltable.WvrgCaltable()
+            caltable = caltable(output_dir=inputs.output_dir,
+              stage=inputs.context.stage,
+              vis=inputs.vis, smooth=smooth)
             if smooth not in smooths_done:
                 # different caltable for each smoothing, remove old versions
-                caltable = wcaltable.WvrgCaltable()
-                caltable = caltable(output_dir=inputs.output_dir,
-                  stage=inputs.context.stage,
-                  vis=inputs.vis, smooth=smooth)
                 os.system('rm -fr %s' % caltable)
 
                 jobs.append(casa_tasks.wvrgcal(vis=inputs.vis,
@@ -276,7 +298,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             bandpassinputs = bandpass.PhcorBandpass.Inputs(
               context=inputs.context, output_dir=inputs.output_dir,
               vis=inputs.vis, mode='channel', intent=inputs.qa2_bandpass_intent,
-              qa2_intent='')
+              qa2_intent='', run_qa2=False)
             bandpasstask = bandpass.PhcorBandpass(bandpassinputs)
             self.bp_results = self._executor.execute(bandpasstask, merge=True)
 
@@ -285,13 +307,20 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             LOG.info('qa2: calculating phase calibration with B applied')
             gaincalinputs = gaincal.GTypeGaincal.Inputs(context=inputs.context,
               output_dir=inputs.output_dir, vis=inputs.vis,
-              intent=inputs.qa2_intent, solint='int', minsnr=0.0)
+              intent=inputs.qa2_intent, solint='int', calmode='p', minsnr=0.0)
+            caltable = gaincalinputs.caltable
+            # give the qa2 gain table a 'nowvr' component
+            caltable = caltable.replace('.tbl', '.nowvr.tbl')
+            gaincalinputs.caltable = caltable
+            LOG.info('qa2: wvr-not-corrected phase rms gain table is %s' %
+              os.path.basename(caltable))
+
             gaincaltask = gaincal.GTypeGaincal(gaincalinputs)
             self.gresults_nowvr = self._executor.execute(gaincaltask, merge=False)
 
             LOG.info('qa2: calculate phase rms')
-            calapplication = self.gresults_nowvr.final[0]
-            wvrg_qa2.calculate_view(inputs.context, calapplication.gaintable,
+            result.qa2.gaintable_nowvr = caltable
+            wvrg_qa2.calculate_view(inputs.context, caltable,
               result.qa2)
 
             LOG.info('qa2: accept wvr results into copy of context')
@@ -304,14 +333,23 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             LOG.info('qa2: calculating phase calibration with B and wvr applied')
             gaincalinputs = gaincal.GTypeGaincal.Inputs(context=inputs.context,
               output_dir=inputs.output_dir, vis=inputs.vis,
-              intent=inputs.qa2_intent, solint='int', minsnr=0.0)
+              intent=inputs.qa2_intent, solint='int', calmode='p', minsnr=0.0)
+            caltable = gaincalinputs.caltable
+            # give the qa2 gain table name a flag and 'wvr' component
+            flagname = '_'.join(inputs.wvrflag)
+            if flagname:
+                flagname = '.flag%s' % flagname
+            caltable = caltable.replace('.tbl', '%s.wvr.tbl' % flagname)
+            gaincalinputs.caltable = caltable
+            LOG.info('qa2: wvr-corrected phase rms gain table is %s' %
+              os.path.basename(caltable))
+
             gaincaltask = gaincal.GTypeGaincal(gaincalinputs)
             self.gresults_wvr = self._executor.execute(gaincaltask, merge=False)
 
             LOG.info('qa2: calculate phase rms')
-            calapplication = self.gresults_wvr.final[0]
-            wvrg_qa2.calculate_view(inputs.context, calapplication.gaintable,
-              result.qa2)
+            result.qa2.gaintable_wvr = caltable
+            wvrg_qa2.calculate_view(inputs.context, caltable, result.qa2)
 
             wvrg_qa2.calculate_qa2_numbers(result.qa2)
 

@@ -2,14 +2,14 @@ from __future__ import absolute_import
 import math
 import numpy as np
 
-import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 
 from pipeline.hif.tasks.common import commonresultobjects
+from pipeline.hif.tasks.common import calibrationtableaccess
+
 from . import resultobjects
 
-from pipeline.hif.tasks.common import calibrationtableaccess
 
 LOG = logging.get_logger(__name__)
 
@@ -31,8 +31,8 @@ def calculate_qa2_numbers(result):
 
         qa2_data = before.data / after.data 
         qa2_flag = np.logical_or(before.flag, after.flag)
-        qa2_flag[qa2_data==np.inf] = True
-        qa2_flag[qa2_data==np.nan] = True
+        qa2_flag[np.isinf(qa2_data)] = True
+        qa2_flag[np.isnan(qa2_data)] = True
 
         qa2_per_view[description] = np.median(qa2_data[qa2_flag==False])
     
@@ -81,15 +81,56 @@ def calculate_view(context, gaintable, result):
             # 'gap' larger than this.
             time_chunks = findchunks(times, gap_time=30.0)
 
-#            print 'fieldid', fieldid
-#            print time_chunks
-#            print len(time_chunks)
-
             cparam = sb.getcol('CPARAM')
             flag = sb.getcol('FLAG')
-
             rows = np.arange(sb.nrows())
 
+            # to eliminate the effect of the refant on the results 
+            # (i.e. phase rms of refant is always 0) we first
+            # construct 8 versions of the gain table with the entries
+            # corresponding to 8 different values for the refant.
+            cparam_refant = {}
+            flag_refant = {}
+            refants = list(antennas)[:8]
+            for refant in refants:
+                cparam_refant[refant] = np.array(cparam)
+                flag_refant[refant] = np.array(flag)
+ 
+                for spwid in spwids:
+                    for t in times:
+                        # gains for all antennas at time t
+                        selected_rows = rows[(spectral_window_id==spwid) & 
+                          (timecol==t)]
+                        gain = cparam_refant[refant][0,0,selected_rows]
+                        gain_flag = flag_refant[refant][0,0,selected_rows]
+
+                        # gain for refant at time t
+                        refant_row = rows[(spectral_window_id==spwid) & 
+                          (timecol==t) & (antenna1==refant)]
+                        refant_gain = cparam_refant[refant][0,0,refant_row][0]
+                        refant_gain_flag = \
+                          flag_refant[refant][0,0,refant_row][0]
+                        
+                        # now modify entries to make refant the reference
+                        if not refant_gain_flag:
+                            # use a.b = ab cos(theta) axb = ab sin(theta) to 
+                            # calculate theta
+                            dot_product = gain.real * refant_gain.real + \
+                              gain.imag * refant_gain.imag
+                            cross_product = gain.real * refant_gain.imag - \
+                              gain.imag * refant_gain.real
+
+                            complex_rel_phase = np.zeros([len(dot_product)],
+                              np.complex)
+                            complex_rel_phase.imag = np.arctan2(cross_product,
+                              dot_product)
+
+                            cparam_refant[refant][0,0,selected_rows] = \
+                              np.abs(gain) * np.exp(-complex_rel_phase)
+                        else:
+                            flag_refant[refant][0,0,selected_rows] = True
+
+            # now calculate the phase rms views
             for spwid in spwids:
                 data = np.zeros([max(antennas)+1, len(time_chunks)])
                 data_flag = np.ones([max(antennas)+1, len(time_chunks)],
@@ -99,10 +140,7 @@ def calculate_view(context, gaintable, result):
                     selected_rows = rows[(spectral_window_id==spwid) & 
                       (antenna1==antenna)]
 
-                    gain = cparam[0,0,selected_rows]
-                    gain_flag = flag[0,0,selected_rows]
                     gain_times = timecol[selected_rows]
-
                     chunk_base_times = np.zeros([len(time_chunks)])
 
                     for i,chunk in enumerate(time_chunks):
@@ -110,52 +148,58 @@ def calculate_view(context, gaintable, result):
                         chunk_end = times[chunk[-1]] + 0.1
                         chunk_select = (gain_times >= chunk_start) & \
                           (gain_times <= chunk_end)
-                        gain_chunk = gain[chunk_select]
-                        gain_flag_chunk = gain_flag[chunk_select]
+
                         gain_times_chunk = gain_times[chunk_select]
-
                         chunk_base_times[i] = gain_times_chunk[0]
-                        try:
-                            valid = np.logical_not(gain_flag_chunk)
 
-                            # complex median: median(reals) + i*median(imags)
-                            cmedian = complex(
-                              np.median(gain_chunk.real[valid]),
-                              np.median(gain_chunk.imag[valid]))
+                        rms_refant = np.zeros([8])
+                        rms_refant_flag = np.ones([8], np.bool)
 
-                            # use a.b = ab cos(theta) to calculate theta
-                            dot_product = gain_chunk.real * cmedian.real + \
-                              gain_chunk.imag * cmedian.imag
-                            dot_product = dot_product[valid]
-                            scalar_product = np.abs(gain_chunk) * \
-                              np.abs(cmedian)
-                            scalar_product = scalar_product[valid]
-                            phases = dot_product/scalar_product
+                        for refant in refants:
+                            gain = cparam_refant[refant][0,0,selected_rows]
+                            gain_chunk = gain[chunk_select]
+                            gain_flag = flag_refant[refant][0,0,selected_rows]
+                            gain_flag_chunk = gain_flag[chunk_select]
+                                 
+                            try:
+                                valid = np.logical_not(gain_flag_chunk)
+                                if not np.any(valid):
+                                    continue
 
-                            phases[phases > 1] = 1.0
-                            phases[phases < -1] = -1.0
-                            phases = np.arccos(phases) * 180.0 / math.pi
+                                # complex median: median(reals) + 
+                                # i*median(imags)
+                                cmedian = complex(
+                                  np.median(gain_chunk.real[valid]),
+                                  np.median(gain_chunk.imag[valid]))
 
-                            # calculate phase rms
-                            phases *= phases
-                            phase_rms = np.sum(phases) / float(len(phases))
-                            phase_rms = math.sqrt(phase_rms)
+                                # use a.b = ab cos(theta) and 
+                                # axb = ab sin(theta) to calculate theta
+                                dot_product = \
+                                  gain_chunk.real[valid] * cmedian.real + \
+                                  gain_chunk.imag[valid] * cmedian.imag
+                                cross_product = \
+                                  gain_chunk.real[valid] * cmedian.imag - \
+                                  gain_chunk.imag[valid] * cmedian.real
 
-                            # set view
-                            data[antenna,i] = phase_rms
+                                phases = \
+                                  np.arctan2(cross_product, dot_product) * \
+                                  180.0 / math.pi
+
+                                # calculate phase rms
+                                phases *= phases
+                                phase_rms = np.sum(phases) / float(len(phases))
+                                phase_rms = math.sqrt(phase_rms)
+                                rms_refant[refant] = phase_rms
+                                rms_refant_flag[refant] = False
+                            except:
+                                pass
+
+                        # set view
+                        valid_data = rms_refant[
+                          np.logical_not(rms_refant_flag)]
+                        if len(valid_data) > 0:
+                            data[antenna,i] = np.median(valid_data)
                             data_flag[antenna,i] = False
-                        except:
-#                            print 'exception'
-#                            print 'antenna', antenna
-#                            print cmedian
-#                            print gain.real[np.logical_not(gain_flag)]
-#                            print gain.imag[np.logical_not(gain_flag)]
-#                            print gain_flag
-#                            print dot_product/scalar_product
-#                            print phases
-#                            print phase_rms
-#                            print data_flag[antenna,i]
-                            pass
 
                 axes = [commonresultobjects.ResultAxis(name='Antenna',
                   units='id', data=np.arange(max(antennas)+1)),
@@ -163,9 +207,9 @@ def calculate_view(context, gaintable, result):
                   data=chunk_base_times)]
 
                 phase_rms_result = commonresultobjects.ImageResult(
-                  filename=gaintable, data=data, datatype='r.m.s. phase',
+                  filename=result.vis, data=data, datatype='r.m.s. phase',
                   axes=axes, flag=data_flag, field_id=fieldid, 
-                  field_name = fieldname, spw=spwid, units='degrees')                
+                  field_name = fieldname, spw=spwid, units='degrees')
 
                 result.addview(phase_rms_result.description, phase_rms_result)
 

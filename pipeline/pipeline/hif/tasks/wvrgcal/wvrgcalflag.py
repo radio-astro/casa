@@ -1,34 +1,25 @@
 from __future__ import absolute_import
 import copy
-import math
-import numpy as np
-import os
 import re
+import types
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
-#from pipeline.infrastructure.jobrequest import casa_tasks
-#import pipeline.hif.heuristics as heuristics
 
-from .. import bandpass
-from .. import gaincal
 from . import wvrgcal
 from . import resultobjects
 from . import wvrgcalflagsetter
 
-#from pipeline.hif.tasks.common import calibrationtableaccess
-from pipeline.hif.tasks.common import viewflaggers
+from pipeline.hif.tasks.common import calibrationtableaccess
+from pipeline.hif.tasks.common  import viewflaggers
 
 LOG = logging.get_logger(__name__)
 
 
 class WvrgcalflagInputs(basetask.StandardInputs):
     
-    def __init__(self, context, output_dir=None,
-      vis=None, caltable=None, toffset=None, segsource=None, 
+    def __init__(self, context, output_dir=None, vis=None,
+      caltable=None, hm_toffset=None, toffset=None, segsource=None, 
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
       scale=None, flag_intent=None, qa2_intent=None,
@@ -37,9 +28,19 @@ class WvrgcalflagInputs(basetask.StandardInputs):
 	self._init_properties(vars())
 
     @property
+    def hm_toffset(self):
+        if self._hm_toffset is None:
+            return 'automatic'
+        return self._hm_toffset
+
+    @hm_toffset.setter
+    def hm_toffset(self, value):
+        self._hm_toffset = value
+
+    @property
     def toffset(self):
         if self._toffset is None:
-            return -1
+            return 0
         return self._toffset
 
     @toffset.setter
@@ -108,13 +109,23 @@ class WvrgcalflagInputs(basetask.StandardInputs):
 
     @property
     def wvrflag(self):
-        if self._wvrflag is None:
-            return []
         return self._wvrflag
 
     @wvrflag.setter
     def wvrflag(self, value):
-        self._wvrflag = value
+        if value is None:
+            self._wvrflag = []
+        elif type(value) is types.StringType:
+            if value == '':
+                self._wvrflag = []
+            else:
+                if value[0] == '[':
+                    strvalue=value.replace('[','').replace(']','').replace("'","")
+                else:
+                    strvalue = value
+                self._wvrflag = list(strvalue.split(','))
+        else:
+            self._wvrflag = value
 
     @property
     def hm_smooth(self):
@@ -159,7 +170,7 @@ class WvrgcalflagInputs(basetask.StandardInputs):
 
     def qa2_intent(self):
         if self._qa2_intent is None:
-            return '*PHASE*'
+            return '*PHASE*,*BANDPASS*'
         return self._qa2_intent
 
     @qa2_intent.setter
@@ -219,7 +230,8 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
         # view of the data that is the basis for flagging.
         datainputs = WvrgcalflagWorker.Inputs(context=inputs.context,
           output_dir=inputs.output_dir, vis=inputs.vis,
-          caltable=inputs.caltable, toffset=inputs.toffset,
+          caltable=inputs.caltable, hm_toffset=inputs.hm_toffset,
+          toffset=inputs.toffset,
           segsource=inputs.segsource, hm_tie=inputs.hm_tie,
           tie=inputs.tie, sourceflag=inputs.sourceflag, nsol=inputs.nsol,
           disperse=inputs.disperse, wvrflag=inputs.wvrflag, 
@@ -266,8 +278,8 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
 
 class WvrgcalflagWorkerInputs(basetask.StandardInputs):
     
-    def __init__(self, context, output_dir=None,
-      vis=None, caltable=None, toffset=None, segsource=None, 
+    def __init__(self, context, output_dir=None, vis=None,
+      caltable=None, hm_toffset=None, toffset=None, segsource=None, 
       hm_tie=None, tie=None, sourceflag=None, nsol=None,
       disperse=None, wvrflag=None, hm_smooth=None, smooth=None,
       scale=None, flag_intent=None, qa2_intent=None,
@@ -290,8 +302,10 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
 
         # calculate the wvrgcal
         wvrgcalinputs = wvrgcal.Wvrgcal.Inputs(context=inputs.context,
-          output_dir=inputs.output_dir, vis=inputs.vis, hm_tie=inputs.hm_tie,
-          tie=inputs.tie, sourceflag=inputs.sourceflag, nsol=inputs.nsol,
+          output_dir=inputs.output_dir, vis=inputs.vis,
+          hm_toffset=inputs.hm_toffset, toffset=inputs.toffset,
+          hm_tie=inputs.hm_tie, tie=inputs.tie,
+          sourceflag=inputs.sourceflag, nsol=inputs.nsol,
           disperse=inputs.disperse, wvrflag=inputs.wvrflag,
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth, scale=inputs.scale,
           qa2_intent=inputs.qa2_intent,
