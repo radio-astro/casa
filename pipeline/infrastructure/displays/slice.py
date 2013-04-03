@@ -10,7 +10,7 @@ from numpy import ma
 import pylab as plt
 
 #import pipeline.infrastructure.casatools as casatools
-from pipeline.infrastructure.jobrequest import casa_tasks
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.renderer.logger as logger
 
 _valid_chars = "_.%s%s" % (string.ascii_letters, string.digits)
@@ -26,11 +26,17 @@ def sanitize(text):
     filename = ''.join(_char_replacer(c) for c in text)
     return filename
 
+flag_color = {'outlier': 'red',
+              'high outlier':'orange',
+              'low outlier':'yellow',
+              'edges':'lightblue',
+              'max abs':'pink',
+              'min abs':'darkpink'}
 
 class SliceDisplay(object):
 
     def plot(self, context, results, reportdir, description_to_plot=None,
-      overplot_spectrum=None):
+      overplot_spectrum=None, plotbad=True):
 
         if not results:
             return []
@@ -39,7 +45,7 @@ class SliceDisplay(object):
 
         plots = []        
 
-        if description_to_plot==None:
+        if description_to_plot is None:
             # plot all results
             descriptionlist = results.descriptions()
             descriptionlist.sort()
@@ -47,23 +53,30 @@ class SliceDisplay(object):
             # plot just this one
             descriptionlist = [description_to_plot]
 
+        flagops = results.flagops()
+
         for description in descriptionlist:
             if results.flagging:
                 nsubplots = 3
+                # plot 'before flagging' result
                 ignore = self._plot_panel(nsubplots, 1,
                   description, results.first(description),
                   'Before Flagging', stagenumber,
-                  overplot_spectrum=overplot_spectrum)
+                  overplot_spectrum=overplot_spectrum,
+                  plotbad=plotbad)
 
+                # and 'after flagging'
                 flagsSet = self._plot_panel(nsubplots, 2,
                   description, results.last(description),
-                  'After', stagenumber)
+                  'After', stagenumber, plotbad=plotbad,
+                  flagops=flagops)
             else:
                 nsubplots = 2
                 ignore = self._plot_panel(nsubplots, 1,
                   description, results.first(description),
                   '', stagenumber,
-                  overplot_spectrum=overplot_spectrum)
+                  overplot_spectrum=overplot_spectrum,
+                  plotbad=plotbad, flagops=flagops)
 
             # plot the titles and key
             plt.subplot(nsubplots, 1, nsubplots)
@@ -89,40 +102,44 @@ class SliceDisplay(object):
                   ny_subplot=nsubplots, mult=1.6)
 
             # flagging
-            plt.plot([xoff], [yoff], marker='^', markerfacecolor='indigo',
+            plt.plot([xoff], [yoff], marker='o', markerfacecolor='indigo',
               markeredgecolor='indigo', clip_on=False)
             yoff = self.plottext(xoff+0.05, yoff, 'no data', 35,
               ny_subplot=nsubplots, mult=1.6)
 
-            plt.plot([xoff], [yoff], marker='^', markerfacecolor='blue',
+            plt.plot([xoff], [yoff], marker='o', markerfacecolor='blue',
               markeredgecolor='blue', clip_on=False)
             yoff = self.plottext(xoff+0.05, yoff, 'already flagged', 35,
               ny_subplot=nsubplots, mult=1.6)
 
-            # flagged during this stage
+            # key for data flagged during this stage
+            if len(flagops) > 0:
+                ax = plt.gca()
+                rulesplotted = set()
+                
+                for flagop in flagops:
+                    if flagop.rulename == 'ignore':
+                        continue
 
-#            for row,flagReason in enumerate(stage_flaggingReason[-1]):
-#                stageName = flagReason['stageDescription']['name']
-#                if stageName == stageDescription['name']:
-#                    if not(stage_flaggingApplied[-1][row]):
-#                        continue
-#                    if len(flagReason['rules']) == 0:
-#                        continue
+                    if (flagop.rulename, flagop.ruleaxis,
+                      flag_color[flagop.rulename]) not in rulesplotted:
 
-#                    yoff = self.plottext(0.1, yoff, 'Flagged here:', 35,
-#                     mult=1.8)
-#                    yoff = self.plottext(0.1, yoff, 'rules:', 45, mult=1.6)
-#                    for rule in flagReason['rules']:
-#                        ax.fill([0.1, 0.2, 0.2, 0.1], [yoff, yoff,
-#                         yoff+1.0/80.0, yoff+1.0/80.0],
-#                         facecolor=rule['colour'], edgecolor=rule['colour'])
-#                        if rule.has_key('axis'):
-#                            yoff = self.plottext(0.25, yoff, '%s axis - %s' %
-#                             (rule['axis'], rule['rule']), 45, mult=1.6)
-#                        else:
-#                            yoff = self.plottext(0.25, yoff, rule['rule'], 45,
-#                             mult=1.6)
-#                    break
+                        plt.plot([xoff], [yoff], linestyle='None', marker='o',
+                          markersize=5,
+                          markerfacecolor=flag_color[flagop.rulename],
+                          markeredgecolor=flag_color[flagop.rulename],
+                          clip_on=False)
+
+                        if flagop.ruleaxis is not None:
+                            yoff = self.plottext(xoff+0.05, yoff,
+                              '%s axis - %s' %
+                              (flagop.ruleaxis, flagop.rulename), 45, mult=1.6)
+                        else:
+                            yoff = self.plottext(xoff+0.05, yoff,
+                              flagop.rulename, 45, mult=1.6)
+
+                        rulesplotted.update([(flagop.rulename, flagop.ruleaxis,
+                          flag_color[flagop.rulename])])
 
             # do not print axes, turn off autoscaling
             plt.axis([0, 1, 0, 1])
@@ -136,7 +153,8 @@ class SliceDisplay(object):
               results.first(description).datatype, ytitle, xtitle,
               description)
             plotfile = sanitize(plotfile)
-            plt.savefig(os.path.join(reportdir, plotfile))
+            plotfile = os.path.join(reportdir, plotfile)
+            plt.savefig(plotfile)
 
             plt.clf()
             plt.close(1)
@@ -159,7 +177,8 @@ class SliceDisplay(object):
     def _plot_panel(self, nplots, plotnumber, description,
       spectrum, subtitle, stagenumber, layout='landscape',
       lineregions=None, spectrumlineregions=None,
-      plotbad=True, overplot_description=None, overplot_spectrum=None):
+      plotbad=True, overplot_description=None, overplot_spectrum=None,
+      flagops=[]):
         """Plot the 2d data into one panel.
 
         Keyword arguments:
@@ -171,6 +190,8 @@ class SliceDisplay(object):
         stagenumber        -- The number of the recipe stage using the object.
         plotbad            -- True to plot flagged data, False to 
                               plot a 'floating' symbol at the x position.
+        flagops            -- List of FlagOp flagging operations done
+                              to the data in this stage.
         """  
 
         data = spectrum.data
@@ -182,6 +203,7 @@ class SliceDisplay(object):
         x = spectrum.axis.data
         dataunits = spectrum.units
         datatype = spectrum.datatype
+        spw = spectrum.spw
 
         if overplot_spectrum is not None:
             overplot_data = overplot_spectrum.data
@@ -343,109 +365,17 @@ class SliceDisplay(object):
             plt.broken_barh(lineRanges, (ymin, (ymax-ymin)/20.0),
               facecolors='blue', edgecolors='blue')  
 
-        # ..overplot 'flagging'.
-
-        # look at the flags in reverse so that the first time a point is
-        # flagged is what appears on the plot - work on local copies to
-        # avoid undesired effects on global data.
-
-#        flagging = list(flagging_in)
-#        flagReason = list(flagReason_in)
-#        flaggingApplied = list(flaggingApplied_in)
-#        flagging.reverse()
-#        flagReason.reverse()
-#        flaggingApplied.reverse()
-#        x_range = np.arange(len(x))
-#        spw = int(description['SPECTRAL_WINDOW_ID'])
-#        if description.has_key('FIELD_ID'):
-#            field_id = description['FIELD_ID']
-#            if type(field_id) != types.ListType:
-#                field_id = int(field_id)
-#        else:
-#            field_id = None
-#        if description.has_key('ANTENNA1'):
-#            plot_antenna = int(description['ANTENNA1'])
-#        else:
-#            plot_antenna = None
-
-        pointsflagged = False
-#        for i,val in enumerate(flagging):
-
-#            # ignore if there was no flagging
-
-#            if val is None:
-#                break
-
-            # ignore the flags if they are not currently applied to the data
-
-#            if not(flaggingApplied[i]):
-#                continue
-#            for rule, flag_list in val.iteritems():
-
-                # do these flags apply to this source, spw?
-
-#                for flag_cmd in flag_list:
-#                    if flag_cmd['stageName'] != stageDescription['name']:
-#                        continue
-
-#                    if flag_cmd.has_key('FIELD_ID'):
-#                        if not(flag_cmd['FIELD_ID'].count(field_id)):
-#                            continue
-
-#                    if flag_cmd.has_key('SPECTRAL_WINDOW_ID'):
-#                        if flag_cmd['SPECTRAL_WINDOW_ID'] != spw:
-#                            continue
-
-#                    if not(flag_cmd.has_key('colour')):
-#                        continue
-#                    colour = flag_cmd['colour']
-
-#                    flag_x = []
-#                    if xtitle.upper().find('ANTENNA') > -1:  
-
-                        # flag all data for antennas
-
-#                        if flag_cmd.has_key('ANTENNA'):
-#                            if list(flag_cmd['ANTENNA']).count(plot_antenna):
-#                                flag_x = list(x)
-#                            else:
-#                                flag_x = list(flag_cmd['ANTENNA'])
-#                        else:
-
-                            # flag baselines
-
-#                            if flag_cmd.has_key('ANTENNA1') and \
-#                             list(flag_cmd['ANTENNA1']).count(plot_antenna):
-#                                flag_x = list(flag_cmd['ANTENNA2'])
-#                            if flag.has_key('ANTENNA2') and \
-#                             list(flag_cmd['ANTENNA2']).count(plot_antenna):
-#                                flag_x += list(flag_cmd['ANTENNA1'])
-
-#                    elif xtitle.upper().find('CHANNEL') > -1:
-#                        if flag_cmd.has_key('CHANNEL'):
-#                            flag_x = list(flag_cmd['CHANNEL'])
-
-#                    elif xtitle.upper().find('TIME') > -1:
-#                        if flag_cmd.has_key('TIME'):
-#                            flag_x = list(flag_cmd['TIME'])
-
-#                    for xval in flag_x:
-#                        xf = x_range[abs(xval-x) < 0.001]
-#                        yf = np.array(xf, float)
-#                        yf[:] = yflag
-#                        if xtitle == 'TIME':
-#                            temp = []
-#                            for item in xf:
-#                                day = np.floor(x[item]/86400.0)
-#                                xutc = x[item] - day * 86400.0
-#                                temp.append(
-#                                 datetime.datetime.utcfromtimestamp(xutc))
-#                            xf = temp
-#                        plt.errorbar(xf, yf, linestyle='None', marker='^',
-#                         markerfacecolor=colour, markeredgecolor=colour,
-#                         markersize=5)
-#                        if len(yf) > 0:
-#                            flagsPlotted = True
+        # overplot points flagged in this stage
+        pointsflagged = bool(len(flagops))
+        for flagop in flagops:
+            if flagop.spw==spw and flagop.filename==spectrum.filename:
+                bad_data = data[flagop.flagchannels]
+                if len(bad_data) and not plotbad:
+                    bad_data[:] = yflag 
+                bad_x = xaxis[flagop.flagchannels]
+                plt.errorbar(bad_x, bad_data, linestyle='None', marker='o',
+                  markersize=5, markerfacecolor=flag_color[flagop.rulename],
+                  markeredgecolor=flag_color[flagop.rulename])
 
         # overplot points with no data in indigo
         bad_data = data[nodata==True]
@@ -457,7 +387,7 @@ class SliceDisplay(object):
                     temp.append(datetime.datetime.utcfromtimestamp(item))
                 bad_x = temp
             bad_data[:] = yflag
-            plt.errorbar(bad_x, bad_data, linestyle='None', marker='^',
+            plt.errorbar(bad_x, bad_data, linestyle='None', marker='o',
               markerfacecolor='indigo', markeredgecolor='indigo',
               markersize=5)
 
