@@ -3,11 +3,12 @@ from __future__ import absolute_import
 import copy
 import os.path
 
-import pipeline.infrastructure.api as api
+import pipeline.infrastructure.basetask as basetask
 
 
-class MakeCleanListResult(api.Results):
+class MakeCleanListResult(basetask.Results):
     def __init__(self):
+        super(MakeCleanListResult, self).__init__()
         self.targets = []
 
     def add_target(self, target):

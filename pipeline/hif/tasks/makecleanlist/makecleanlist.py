@@ -6,7 +6,6 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from pipeline.hif.tasks.makecleanlist.resultobjects import MakeCleanListResult
 
-#import pipeline.hif.heuristics as heuristics
 from pipeline.hif.heuristics import makecleanlist 
 from pipeline.hif.heuristics import clean
 
@@ -38,7 +37,7 @@ class MakeCleanListInputs(basetask.StandardInputs):
     @property
     def intent(self):
         if self._intent is None:
-            return '*TARGET*'
+            return 'TARGET'
         return self._intent
 
     @intent.setter
