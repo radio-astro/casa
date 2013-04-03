@@ -1,8 +1,10 @@
 from taskinit import casalog
 
-#import pipeline.cli.utils as utils
 import pipeline.h.cli.utils as utils
 
-def hif_export_calstate(filename=None):
+def hif_export_calstate(filename=None, state=None):
     context = utils.get_context()
-    context.callibrary.export(filename)
+    if state == 'applied':
+        context.callibrary.export_applied(filename)
+    else:
+        context.callibrary.export(filename)

@@ -2,11 +2,11 @@ import sys
 
 from taskinit import casalog
 
-#import pipeline.cli.utils as utils
 import pipeline.h.cli.utils as utils
 
 
-def hif_wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
+def hif_wvrgcal(vis=None, caltable=None, hm_toffset=None, toffset=None,
+                 segsource=None,
                  sourceflag=None, hm_tie=None, tie=None, nsol=None,
 		 disperse=None, wvrflag=None, hm_smooth=None, 
                  smooth=None, scale=None, qa2_intent=None,
