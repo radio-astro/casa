@@ -12,4 +12,6 @@ from .source import Source
 from .spectralwindow import SpectralWindow, SpectralWindowWithChannelSelection
 from .state import State
 #from .singledish import ScantableList
+#from .singledish import ScantableRep
+#from .datatable import DataTableImpl as DataTable
 #from .virtualms import VirtualMeasurementSet
