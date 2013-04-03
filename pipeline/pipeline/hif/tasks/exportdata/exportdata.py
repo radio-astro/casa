@@ -40,7 +40,6 @@ import copy
 import string
 import re
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.imagelibrary as imagelibrary
 from pipeline.infrastructure.jobrequest import casa_tasks
@@ -201,12 +200,13 @@ class ExportDataInputs(basetask.StandardInputs):
     def targetimages(self, value):
         self._targetimages = value
 
-class ExportDataResults(api.Results):
+class ExportDataResults(basetask.Results):
     def __init__(self, jobs=[]):
 	"""
 	Initialise the results object with the given list of JobRequests.
 	"""
-	self.jobs = jobs
+        super(ExportDataResults, self).__init__()
+        self.jobs = jobs
 
     def __repr__(self):
 	s = 'ExportData results:\n'
