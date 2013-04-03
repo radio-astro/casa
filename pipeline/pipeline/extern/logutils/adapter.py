@@ -16,7 +16,7 @@
 #
 
 import logging
-import pipeline.infrastructure.logutils as logutils
+
 
 class LoggerAdapter(object):
     """
