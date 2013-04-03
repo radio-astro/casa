@@ -62,6 +62,7 @@
 #include <casa/BasicSL/String.h>
 #include <casa/iostream.h>
 #include <casa/OS/Path.h>
+#include <casa/OS/Directory.h>
 
 namespace casa {
 
@@ -294,7 +295,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   // FIELD
   oldRows = itsMS.field().nrow();
-  const Block<uInt> newFldIndices = copyField(otherMS.field());
+  const Block<uInt> newFldIndices = copyField(otherMS);
   {
     const uInt addedRows = itsMS.field().nrow() - oldRows;
     const uInt matchedRows = otherMS.field().nrow() - addedRows;
@@ -944,7 +945,7 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 
   // FIELD
   oldRows = itsMS.field().nrow();
-  const Block<uInt> newFldIndices = copyField(otherMS.field());
+  const Block<uInt> newFldIndices = copyField(otherMS);
   {
     const uInt addedRows = itsMS.field().nrow() - oldRows;
     const uInt matchedRows = otherMS.field().nrow() - addedRows;
@@ -1930,7 +1931,8 @@ Block<uInt> MSConcat::copyState(const MSState& otherState) {
   return stateMap;
 }
 
-Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
+Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
+  const MSField otherFld = otherms.field();
   const uInt nFlds = otherFld.nrow();
   Block<uInt> fldMap(nFlds);
   const Quantum<Double> tolerance=itsDirTol;
@@ -1951,11 +1953,42 @@ Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
   const ROTableRow otherFldRow(otherFld);
   RecordFieldId sourceIdId(MSSource::columnName(MSSource::SOURCE_ID));
 
+  // find max ephemeris id
+  Int maxThisEphId = -1;
+  String destPathName;
+  Vector<Double> validityRange;
+
+  for(uInt i=0; i<fieldCols.nrow(); i++){
+    if(!fieldCols.ephemPath(i).empty() && fieldCols.ephemerisId()(i)>maxThisEphId){
+      maxThisEphId = fieldCols.ephemerisId()(i);
+    }
+  }
+  if(maxThisEphId>-1){ // this MS has at least one field using an ephemeris
+    destPathName = Path(fld.tableName()).absoluteName();
+    // find first and last obs time
+    Vector<uInt> sortedI(otherms.nrow());
+    ROMSMainColumns msmc(otherms);
+    Vector<Double> mainTimesV = msmc.time().getColumn();
+    GenSortIndirect<Double>::sort(sortedI,mainTimesV);
+    validityRange.resize(2);
+    validityRange(0) = mainTimesV(sortedI(0));
+    validityRange(1) = mainTimesV(sortedI(otherms.nrow()-1));
+  }
+
+
   TableRow fldRow(fld);
   for (uInt f = 0; f < nFlds; f++) {
     delayDir = otherFieldCols.delayDirMeas(f);
     phaseDir = otherFieldCols.phaseDirMeas(f);
     refDir = otherFieldCols.referenceDirMeas(f);
+
+    if(MDirection::castType(phaseDir.getRef().getType()) == MDirection::INVALID){
+      LogIO os(LogOrigin("MSConcat", "copyField"));
+      os << LogIO::WARN << "Field " << f << " (" << otherFieldCols.name()(f) << ", to be appended)"
+	 << " is using an ephemeris with incorrect time origin setup: the time origin (" << otherFieldCols.time()(f)
+	 << " s) in the FIELD table is outside the validity range of the ephemeris." << LogIO::POST;
+    }
+
     if (dirType != otherDirType) {
       delayDir = dirCtr(delayDir.getValue());
       phaseDir = dirCtr(phaseDir.getValue());
@@ -1963,7 +1996,43 @@ Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
     }
     
     const Int newFld = fieldCols.matchDirection(refDir, delayDir, phaseDir, tolerance);
-    if ( newFld >= 0  
+
+    String ephPath = otherFieldCols.ephemPath(f);
+
+    Bool canUseThisEntry = (newFld>=0);
+    if(canUseThisEntry){
+      String thisEphPath = fieldCols.ephemPath(newFld);
+      if(!thisEphPath.empty()){ // this field uses an ephemeris
+	if(ephPath.empty()){ // the other field does not 
+	  canUseThisEntry = False;
+	}
+	else{ // both use an ephemeris
+	  // is the time coverage of this ephem sufficient to be also used for the other field?
+	  stringstream ss;
+	  for(uInt i=0; i<2; i++){
+	    if(MDirection::castType(fieldCols.phaseDirMeas(newFld, validityRange(i)).getRef().getType()) == MDirection::INVALID){
+	      canUseThisEntry = False;
+	      ss << validityRange(i) << ", ";
+	    }	  
+	  }
+	  if(!canUseThisEntry){
+	    LogIO os(LogOrigin("MSConcat", "copyField"));
+	    os << LogIO::NORMAL << "Ephemeris " << thisEphPath << endl
+	       << " from field " << newFld << " (" << fieldCols.name()(newFld) << ") "
+	       << " cannot be used for data from field " << f << " (" << otherFieldCols.name()(f) << ", to be appended)"
+	       << " because it does not cover time(s) " << ss.str() << endl
+	       << " creating separate FIELD table entry." << LogIO::POST;
+	  }
+	}
+      }
+      else{ // this field does not use an ephemeris
+	if(!ephPath.empty()){ // the other field does
+	  canUseThisEntry = False;
+	}
+      }
+    }
+
+    if ( canUseThisEntry
 	 && (!itsRespectForFieldName
 	     || (itsRespectForFieldName && fieldCols.name()(newFld) == otherFieldCols.name()(f))
 	     )
@@ -1983,6 +2052,19 @@ Block<uInt>  MSConcat::copyField(const MSField& otherFld) {
  	vdir(0) = phaseDir;
  	fieldCols.phaseDirMeasCol().put(fldMap[f], vdir);
       }
+
+      if(!ephPath.empty() && otherFieldCols.ephemerisId()(f)>-1){ // f has a non-trivial ephemeris id
+	maxThisEphId++;
+	fieldCols.ephemerisId().put(fldMap[f], maxThisEphId);
+	// construct new name for other ephemeris table and copy it over 
+	Directory origEphemDir(ephPath);
+	String ephName = Path(ephPath).baseName();
+	stringstream ss;
+	ss << maxThisEphId;
+	String newName = String("EPHEM"+ss.str())+ephName.substr(ephName.find("_"));
+	origEphemDir.copy(destPathName+"/"+newName);
+      }
+
       //source table has been concatenated; use new index reference
       if(doSource_p){
 	Int oldIndex=fieldCols.sourceId()(fldMap[f]);

@@ -127,7 +127,7 @@ private:
   Block<uInt> copyAntennaAndFeed(const MSAntenna& otherAnt,
 				 const MSFeed& otherFeed);
   Block<uInt> copyState(const MSState& otherState);
-  Block<uInt> copyField(const MSField& otherFld);
+  Block<uInt> copyField(const MeasurementSet& otherms);
   Block<uInt> copySpwAndPol(const MSSpectralWindow& otherSpw,
 			    const MSPolarization& otherPol,
 			    const MSDataDescription& otherDD);
