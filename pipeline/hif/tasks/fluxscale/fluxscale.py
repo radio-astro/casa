@@ -1,21 +1,15 @@
 from __future__ import absolute_import
-import collections
-import os
 import re
-import string
 import types
 
 from pipeline.hif.tasks.common import commonfluxresults
-import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
-import pipeline.domain.measures as measures
+from pipeline.hif.heuristics import fieldnames as fieldnames
+from pipeline.hif.heuristics import caltable as fcaltable
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure.jobrequest import casa_tasks
 import pipeline.infrastructure.logging as logging
 from .. import gaincal
-
-from pipeline.hif.heuristics import fieldnames as fieldnames
-from pipeline.hif.heuristics import caltable as fcaltable
 
 LOG = logging.get_logger(__name__)
 
@@ -107,12 +101,12 @@ class FluxscaleInputs(basetask.StandardInputs):
 
     @property
     def refintent(self):
-        if self._refintent is None:
-            return 'AMPLITUDE'
         return self._refintent
     
     @refintent.setter
     def refintent(self, value):
+        if value is None:
+            value = 'AMPLITUDE'
         self._refintent = value
 
     @property
@@ -157,18 +151,18 @@ class FluxscaleInputs(basetask.StandardInputs):
 
     @property
     def transintent(self):
-        if self._transintent is None:
-            return 'PHASE'
         return self._transintent
     
     @transintent.setter
     def transintent(self, value):
+        if value is None:
+            value = 'PHASE,BANDPASS'
         self._transintent = value
         
         
 class Fluxscale(basetask.StandardTaskTemplate):
     Inputs = FluxscaleInputs
-    
+
     def _do_gaincal(self):
         inputs = self.inputs
         gaincal_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
@@ -180,71 +174,42 @@ class Fluxscale(basetask.StandardTaskTemplate):
 
     def prepare(self):
         inputs = self.inputs
+        ms = inputs.ms
+        result = commonfluxresults.FluxCalibrationResults(inputs.vis)
+        
+        if inputs.transfer == '' or inputs.reference == '':
+            LOG.warning('Fluxscale invoked with no transfer and/or reference '
+                        'field. Bypassing fluxscale for %s' % ms.basename)
+            return result
         
         # if the user didn't specify a caltable to analyse, generate it now
         if inputs.caltable is None:
-            LOG.info('Input caltable for fluxscale not set. '
+            LOG.info('No caltable specified in fluxscale inputs. '
                      'Generating new gaincal table...')
             gaincal_results = self._do_gaincal()
             inputs.caltable = gaincal_results.final[0].gaintable
 
         fluxscale_job = casa_tasks.fluxscale(**inputs.to_casa_args())
-        self._executor.execute(fluxscale_job)
-        
-        # look at the logger for the last fluxscale results - this because
-        # CASA fluxscale does not return any information on the fluxes of the
-        # sources.
+        output = self._executor.execute(fluxscale_job)
 
-        # want to look for latest fluxscale results but don't want to read
-        # through the whole file -> read in last section of file and search
-        # that
-        logfile = casatools.log.logfile()
-        fsize = os.path.getsize(logfile)
-        bufsize = min(100000, fsize)
-        
-        # construct regexes used to match log sections that read flux, check
-        # for a bad fluxscale, and finally one to terminate reading of the
-        # CASA log
-        readpattern = re.compile(
-            '.*Flux density for (.*) in SpW=(.*) is: (.*) \+/- (.*) \(.*')
-        checkpattern = re.compile(
-            '.*Flux density for (.*) in (.*) is:(?!.*INSUFFICIENT DATA.*)')
-        endpattern = re.compile('.*Beginning fluxscale--.*')
+        if output is None:
+            LOG.warning('No results returned from fluxscale job: missing '
+                        'fields in caltable?')
+            return result
 
-        results = collections.defaultdict(list)        
-        with open(logfile) as flog:
-            # read last bufsize section of file
-            flog.seek(-bufsize, 2)
+        # fields in the fluxscale output dictionary are identified by a 
+        # numeric field ID  
+        for field_id in [key for key in output if re.match('\d+', key)]:
+            spw_flux = [(ms.get_spectral_window(spw), flux) 
+                        for spw,flux in zip(output['spwID'], 
+                                            output[field_id]['fluxd'])
+                        if flux != -1]            
 
-            for line in reversed(flog.readlines()):
-                if checkpattern.match(line):
-                    r = readpattern.match(line)
+            for (spw, flux_i) in spw_flux:
+                flux = domain.FluxMeasurement(spw=spw, I=flux_i)
+                result.measurements[field_id].append(flux)
 
-                    field = r.group(1)
-                    if field != field.translate(string.maketrans(
-                      '() ;', '____')):
-                        field = '"{0}"'.format(field)
-                    
-                    spw_id = int(r.group(2))
-                    spw = self.inputs.ms.get_spectral_window(spw_id)
-
-                    flux_density = measures.FluxDensity(
-                      value=float(r.group(3)), 
-                      units=measures.FluxDensityUnits.JANSKY)
-
-                    flux = domain.FluxMeasurement(spw=spw, I=flux_density)
-                    results[field].append(flux)
-                if endpattern.match(line):
-                    break
-            else:
-                LOG.error('Could not find start of fluxscale task in CASA log. '
-                          'Too many sources, or operating in dry-run mode?')
-
-        # we don't use the output caltable, but if we needed it we could pass
-        # it to the results like so:
-        # caltable = domain.CalibrationTable(fluxscale_jobs[0])
-        return commonfluxresults.FluxCalibrationResults(vis=self.inputs.vis,
-          fields=results)
+        return result
 
     def analyse(self, result):
         return result
