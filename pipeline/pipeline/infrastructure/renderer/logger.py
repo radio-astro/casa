@@ -19,12 +19,53 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 #*******************************************************************************
 import collections
+import distutils.spawn as spawn
 import itertools
 import os
+import platform
 import re
 import string
 import subprocess
 
+import pipeline.infrastructure as infrastructure
+
+LOG = infrastructure.get_logger(__name__)
+
+
+# Set the command used to shrink plots down to thumbnails. If set to None, no
+# thumbnails will be generated 
+THUMBNAIL_CMD = None 
+
+if platform.system() == 'Darwin':
+    # Look for sips rather than ImageMagick on OS X. sips is a system
+    # executable that should be available on all OS X systems.
+    sips_path = spawn.find_executable('sips')
+    if sips_path:
+        LOG.trace('Using sips executable at \'%s\' to generate thumbnails' 
+                  % sips_path)
+        THUMBNAIL_CMD = lambda full, thumb : (sips_path, '-z', '188', '250',
+                                              '--out', thumb, full)
+else:
+    # .. otherwise try to find ImageMagick's 'mogrify' command. We assume that
+    # ImageMagick's 'convert' commnand can be found in the same directory. We
+    # do not search for 'convert' directly as some utilities also provide a
+    # 'convert' command which may come earlier on the PATH.      
+    mogrify_path = spawn.find_executable('mogrify')
+    if mogrify_path:
+        bin_dir = os.path.dirname(mogrify_path)
+        convert_path = os.path.join(bin_dir, 'convert')
+        if os.path.exists(convert_path):
+            LOG.trace('Using convert executable at \'%s\' to generate '
+                      'thumbnails' % convert_path)
+            THUMBNAIL_CMD = lambda full, thumb : (convert_path, full, 
+                    '-thumbnail', '250x188', thumb)
+        else:
+            LOG.warning('Could not find ImageMagick \'convert\' command. '
+                        'Thumbnails will not be generated, leading to slower '
+                        'web logs.')
+    else:
+        LOG.warning('ImageMagick is not installed. Thumbnails will not be '
+                    'generated, leading to slower web logs.')
 
 def getPath(filename):
     path = os.path.join(os.path.dirname(__file__), filename)
@@ -226,17 +267,10 @@ class Selector(object):
 
 
 class Plot(object):
-    # the HTML template used for each thumbnail image
-    thumbnail_template = string.Template('<li class="$css_class">'
-            + '<a rel="selected" href="$filename">'
-            + '<img src="$thumb_filename" title="$title" alt="$title"/></a></li>')
-    
-    # the template used to generate the plot title and alternate title
-    title_template = string.Template('$field$y_axis vs $x_axis$params')
-
     def __init__(self, filename, x_axis='Unknown', y_axis='Unknown', 
                  field=None, parameters={}):
-        """Plot(filename, x_axis, y_axis, field, parameters)
+        """
+        Plot(filename, x_axis, y_axis, field, parameters)
 
         filename - the filename of the plot
         x_axis - what the X axis of this plot measures
@@ -245,7 +279,8 @@ class Plot(object):
         parameters - a dictionary of parameters, eg. { 'ant' : 1, 'spw' : 2 }. These
             parameters should be known to the logging.Parameters class.
         """
-        self.filename = os.path.basename(filename)
+        self.basename = os.path.basename(filename)
+        self.abspath = os.path.abspath(filename)
         self.field = field
         self.x_axis = x_axis
         self.y_axis = y_axis
@@ -255,9 +290,8 @@ class Plot(object):
 
     @property
     def css_class(self):
-        """css_class -> string
-
-        Return the CSS class to be used for this plot.
+        """
+        The CSS class to be used for this plot.
         """
         regex = re.compile('\W')
         css_classes = [Parameters.getCssId(parameter) + ''.join(regex.split(str(val)))
@@ -293,61 +327,52 @@ class Plot(object):
         # eg. 'M31: Phase vs Time for Antenna 1, Spectral Window 2'
         return title
 
-    def _mogrify(self, image):        
-        try:
-            fullsize = os.path.join('html',image)
-            thumbnail = os.path.join('html','thumbs',image)
-            # we call mogrify rather than convert as it seems a more certain
-            # indicator of whether ImageMagick has been installed
-            with open(os.devnull, 'w') as dev_null:
-                retcode = subprocess.call(['mogrify', 
-                                           '-thumbnail', '250x188', 
-                                           '-write', thumbnail,
-                                           fullsize],
-                                           stdout=dev_null,
-                                           stderr=dev_null)
-            if retcode == 0:
-                return os.path.join('thumbs', image)
-            else:
-                return image   
-        except OSError:
-            # ImageMagick is not installed, mogrify not available. Return
-            # the full-sized image filename
-            return image
-        
-        
-    def getThumbnailHtml(self):
-        """getThumbnailHtml() -> string
-                
-        Returns the HTML representation of this plot. 
+    @property
+    def thumbnail(self):
+        thumb_dir = os.path.join(os.path.dirname(self.abspath), 'thumbs')
+        thumb_file = os.path.join(thumb_dir, os.path.basename(self.abspath))
+
+        if os.path.exists(thumb_file):
+            return thumb_file
+
+        return self._create_thumbnail()
+    
+    def _create_thumbnail(self):
         """
-        return Plot.thumbnail_template.substitute(css_class=self.css_class,
-                                                  title=self.title,
-                                                  thumb_filename=self._mogrify(self.filename),
-                                                  filename=self.filename) 
+        Create a scaled-down copy of the plot, returning the filename to be
+        used as a thumbnail.
 
-if __name__ == '__main__':
-    s = ReductionStep('some description')
-    s.add_plot(Plot('1.png', 'time', 'amplitude', 'm31', { 'ant' : 1, 'spw' : 1, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'amplitude', 'm31', { 'ant' : 2, 'spw' : 1, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'amplitude', 'm31', { 'ant' : 3, 'spw' : 1, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'amplitude', 'm31', { 'ant' : 1, 'spw' : 2, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'amplitude', 'm31', { 'ant' : 2, 'spw' : 2, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'amplitude', 'm31', { 'ant' : 3, 'spw' : 2, 'pol' : 'X' }))
+        :rtype: string
+        """
+        if THUMBNAIL_CMD is None:
+            return self.abspath
 
-    s.add_plot(Plot('1.png', 'time', 'phase', 'm31', { 'ant' : 1, 'spw' : 1, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', 'm31', { 'ant' : 2, 'spw' : 1, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', 'm31', { 'ant' : 3, 'spw' : 1, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', 'm31', { 'ant' : 1, 'spw' : 2, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', 'm31', { 'ant' : 2, 'spw' : 2, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', 'm31', { 'ant' : 3, 'spw' : 2, 'pol' : 'X' }))
+        thumb_dir = os.path.join(os.path.dirname(self.abspath), 'thumbs')
+        thumb_file = os.path.join(thumb_dir, os.path.basename(self.abspath))
 
-    s.add_plot(Plot('1.png', 'time', 'phase', '0539-057', { 'ant' : 1, 'spw' : 1, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', '0539-057', { 'ant' : 2, 'spw' : 1, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', '0539-057', { 'ant' : 3, 'spw' : 1, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', '0539-057', { 'ant' : 1, 'spw' : 2, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', '0539-057', { 'ant' : 2, 'spw' : 2, 'pol' : 'X' }))
-    s.add_plot(Plot('1.png', 'time', 'phase', '0539-057', { 'ant' : 3, 'spw' : 2, 'pol' : 'X' }))
+        if not os.path.exists(thumb_dir):
+            os.mkdir(thumb_dir) 
 
-    p = Plot('1.png', 'x', 'y', 'field', { 'map' : 'Pilot integrated clean image' })
-    print p.css_class
+        # Set the command to perform. The module defines whether to use sips
+        # or ImageMagick; all that remains is to append, in order, the output
+        # and input files
+        cmd = THUMBNAIL_CMD(self.abspath, thumb_file)
+
+        try:
+            with open(os.devnull, 'w') as dev_null:
+                ret = subprocess.call(cmd, stdout=dev_null, stderr=dev_null)
+            if ret is 0:
+                # return code is 0: thumbnail file successfully created
+                return thumb_file
+            else:
+                LOG.warning('Error creating thumbnail for %s' % 
+                            os.path.basename(self.abspath))
+                return self.basename   
+        except OSError, e:
+            # command not available. Return the full-sized image filename
+            LOG.warning('Error creating thumbnail for %s: %s' % 
+                        (os.path.basename(self.abspath), e))
+            return self.basename
+
+    def __repr__(self):
+        return '<Plot(\'%s\')>' % self.abspath 
