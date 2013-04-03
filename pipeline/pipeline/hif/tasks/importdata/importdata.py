@@ -6,7 +6,6 @@ import string
 import tarfile
 import types
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure.jobrequest import casa_tasks
 import pipeline.infrastructure.logging as logging
@@ -67,8 +66,9 @@ class ImportDataInputs(basetask.StandardInputs):
         self._vis = value
 
 
-class ImportDataResults(api.Results):
+class ImportDataResults(basetask.Results):
     def __init__(self, mses=[]):
+        super(ImportDataResults, self).__init__()
         self.mses = mses
         
     def merge_with_context(self, context):
