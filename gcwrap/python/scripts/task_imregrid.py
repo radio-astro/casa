@@ -3,6 +3,8 @@ import shutil
 from taskinit import *
 
 def imregrid(imagename, template, output, asvelocity, axes, shape):
+    _myia = None
+    _tmp = None
     try:
         casalog.origin('imregrid')
         if hasattr(template, 'lower') and not template.lower() == "get":
@@ -17,7 +19,6 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
             raise Exception, 'Output destination ' + output + \
               " exists.\nPlease remove it or change the output file name."
         _myia = iatool()
-
         # Figure out what the user wants.
         if not isinstance(template, dict):
             if template.lower() == 'get':
@@ -74,13 +75,19 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
 
         # The actual regridding.
         _myia.open(imagename)
+
         _tmp = _myia.regrid(outfile=output, shape=shape, csys=csys, axes=axes, overwrite=True, asvelocity=asvelocity)
         _myia.done()
         _tmp.done()
         return True
         
     except Exception, instance:
-        _myia.close()
+        casalog.post(str(instance), "SEVERE")
         raise instance
+    finally:
+        if (_myia):
+            _myia.done()
+        if (_tmp):
+            _tmp.done()
         
         
