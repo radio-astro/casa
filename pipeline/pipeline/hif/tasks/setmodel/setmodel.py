@@ -132,6 +132,7 @@ class SetModel(basetask.StandardTaskTemplate):
         inputs = setjy.Setjy.Inputs(self.inputs.context,
             vis=self.inputs.vis,
             fluxdensity=fluxdensity,
-            field=field)
+            field=field,
+	    intent='')
         task = setjy.Setjy(inputs)
         return self._executor.execute(task, True)
