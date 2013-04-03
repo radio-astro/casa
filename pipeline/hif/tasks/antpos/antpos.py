@@ -2,26 +2,25 @@ from __future__ import absolute_import
 import os
 import types
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.jobrequest import casa_tasks
 
-#import pipeline.hif.heuristics as heuristics
 from pipeline.hif.heuristics import caltable as acaltable
 
 LOG = logging.get_logger(__name__)
 
 
-class AntposResults(api.Results):
+class AntposResults(basetask.Results):
     def __init__(self, final=[], pool=[], preceding=[]):
+        super(AntposResults, self).__init__()
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
 
-    def merge_with_context(self, context, replace=False):
+    def merge_with_context(self, context):
         """
         See :method:`~pipeline.api.Results.merge_with_context`
         """
