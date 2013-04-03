@@ -1,4 +1,6 @@
 <%!
+rsc_path = "../"
+
 import os.path
 import pydoc
 import numpy as np
@@ -9,7 +11,7 @@ import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<%inherit file="base.html"/>
+<%inherit file="t2-4m_details-base.html"/>
 <%block name="header" />
 
 <%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
@@ -26,7 +28,10 @@ try:
         os.mkdir(plots_dir)
 
     plots = []
+    flagops = []
     for r in result:
+        flagops += r.flagops()
+
         if r.view:
             # display the view first
             # plot() returns the list of Plots it has generated
@@ -76,17 +81,6 @@ try:
                                       overplot_spectrum=medians.first(median_desc),
                                       reportdir=plots_dir))
 
-#                            # plot best Tsys spectra
-#                            if (tsysspectrum.ant, tsysspectrum.time) == \
-#                              (minpos[0], ydata[minpos[1]]):
-
-#                                plots.append(displays.SliceDisplay().plot(
-#                                  context=pcontext, results=tsysspectra,
-#                                  description_to_plot=tsys_desc,
-#                                  overplot_spectrum=medians.first(median_desc),
-#                                  reportdir=plots_dir))
-
-
     # Group the Plots by axes and plot types; each logical grouping will
     # be contained in a PlotGroup
     plot_groups = logger.PlotGroup.create_plot_groups(plots)
@@ -97,87 +91,71 @@ try:
         with renderer.get_file() as fileobj:
             fileobj.write(renderer.render())
 
+    # extract the relevant data from the flagging operations, and sort
+    # them
+    temp = []
+    for flagop in flagops:
+        temp.append((os.path.basename(flagop.filename), flagop.rulename, 
+          flagop.spw, flagop.cell_index, flagop.axisnames, flagop.flagcoords))
+    temp.sort()
+    flagops = temp
+
 except Exception, e:
     print 'hif_tsysflag html template exception:', e
     raise e
 %>
  
+% if plot_groups:
+<h2>Plots</h2>
 <ul>
-       <li>Plots:</li>
-            % if plot_groups:
-	        <ul>
-                % for plot_group in plot_groups:
-                    % if plot_group.title == 'Time vs Antenna1':
-                        <li><a href=${plot_group.filename}>${plot_group.title}</a>
-                            shows the images used for flagging.</li>
-                    % endif
-                % endfor
-
-                % for plot_group in plot_groups:
-                    % if 'Tsys vs Channel' in plot_group.title:
-                        <li><a href=${plot_group.filename}>${plot_group.title}</a>
-                            shows the Tsys spectra flagged in each image.</li>
-                    % endif
-                % endfor
-                </ul>
-            % endif
-
-## Write help information to a file and link to it. Probably a better
-## way of writing the file but I can't find it.
-
-<%
-try:
-    filename = os.path.join(stage_dir, 'taskhelp.txt')
-    f = open(filename, 'w')
-    sys.stdout = f
-    pydoc.help('hif_tsysflag')
-
-except Exception, e:
-    print 'html template exception in help information:', e
-    raise e
-
-finally:
-    sys.stdout = sys.__stdout__
-    f.close()
-%>
-
-       <li>A listing of the 'help' information for this task can be found
-           <a href='taskhelp.txt'>here</a>.
+	% for plot_group in plot_groups:
+		% if plot_group.title == 'Time vs Antenna1':
+			<li><a href=${plot_group.filename}>${plot_group.title}</a>
+                   shows the images used for flagging.</li>
+		% elif 'Tsys vs Channel' in plot_group.title:
+			<li><a href=${plot_group.filename}>${plot_group.title}</a>
+                   shows the Tsys spectra flagged in each image.</li>
+       	% endif
+	% endfor
 </ul>
+% endif
 
-
-<p><table class="one-column-emphasis" summary="Input parameters">
-	<caption>Input parameters</caption>
-    <colgroup>
-    	<col class="oce-first" />
-    </colgroup>
-	<tbody>
-		% for k, v in result.inputs.iteritems():
-		<tr>
-		  <td>${str(k)}</th>
-		  <td>${str(v)}</td>
-		</tr>
-		% endfor
-	</tbody>
+% if flagops:
+<h2>Flags</h2>
+<table border="1">
+ <tr>
+  <td>File</td>
+  <td>Rule</td>
+  <td>SpW</td>
+  <td>Pol</td>
+  <td>
+   <table border="1">
+    <tr>
+    % for axis in flagops[0][4]:
+         <td>${axis}</td>
+    %endfor 
+    </tr>
+   </table>
+  </td>
+ </tr>
+    % for flagop in flagops:
+        <tr>
+         <td>${flagop[0]}</td>
+         <td>${flagop[1]}</td>
+         <td>${flagop[2]}</td>
+         <td>${flagop[3]}</td>
+         <td>
+          <table border="1">
+        % for coords in flagop[5]:
+            <tr>
+            % for coord in coords:
+                <td>${coord}</td>
+            % endfor
+            </tr>
+        %endfor
+          </table>
+         </td> 
+        </tr>
+    % endfor
 </table>
-
-<p><table class="one-column-emphasis" summary="Input parameters">
-	<caption>Timing details</caption>
-    <colgroup>
-    	<col class="oce-first" />
-    </colgroup>
-	<tbody>
-		<tr>
-		  <td>Start time</th>
-		  <td>${result.timestamps.start}</td>
-		</tr>
-		<tr>
-		  <td>End</th>
-		  <td>${result.timestamps.end}</td>
-		</tr>
-		<tr>
-		  <td>Duration</th>
-		  <td>${str(result.timestamps.end - result.timestamps.start)}</td>
-		</tr>
-	</tbody>
-</table>
+% endif
