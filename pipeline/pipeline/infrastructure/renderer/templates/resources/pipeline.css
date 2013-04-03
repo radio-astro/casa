@@ -176,8 +176,8 @@ table.one-column-emphasis
 {
 	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
 	font-size: 12px;
-	margin: 45px;
-	width: 480px;
+#	margin: 45px;
+#	width: 480px;
 	text-align: left;
 	border-collapse: collapse;
 }
@@ -190,7 +190,7 @@ table.one-column-emphasis th
 }
 table.one-column-emphasis td
 {
-	padding: 10px 15px;
+	padding: 4px 6px;
 	color: #669;
 	border-top: 1px solid #e8edff;
 }
@@ -204,6 +204,12 @@ table.one-column-emphasis tr:hover td
 {
 	color: #339;
 	background: #eff2ff;
+}
+
+table.one-column-emphasis caption 
+{
+	caption-side:bottom;
+	padding: 8px;
 }
 
 table.minimalist
@@ -313,4 +319,19 @@ table.box tr:hover td
 .gallery ul p {
 	text-align:center;
 	padding:2px 0 2px 0;
+}
+
+pre {
+	line-height: 1.1em;
+	font-size: 10px;
+	padding: 1em;
+	border: 1px dashed #2f6fab;
+	color: black;
+	background-color: #f9f9f9;
+	font-family: monospace,Courier;
+	overflow: auto;
+}
+
+#taskdetails {
+	margin: 10px;
 }
