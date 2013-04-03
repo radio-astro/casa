@@ -3,20 +3,21 @@ import collections
 import copy
 import os
 
-import pipeline.infrastructure.api as api
-import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from pipeline.hif.tasks.common import commonresultobjects
 
 LOG = logging.get_logger(__name__)
 
 
-class WvrgcalflagResult(api.Results):
+class WvrgcalflagResult(basetask.Results):
 
     def __init__(self, final=[], pool=[], preceding=[], wvrflag=[]):
         """
         Construct and return a new WvrgcalflagResult.
         """
+        super(WvrgcalflagResult, self).__init__()
+
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
