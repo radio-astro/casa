@@ -1,19 +1,14 @@
 from __future__ import absolute_import
 import collections
 import copy
-import os.path
+from pipeline.hif.tasks.tsyscal import resultobjects 
 
-import numpy as np 
-
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.logging as logging
-# This is shared. Move at some point.
-from pipeline.hif.tasks.tsyscal.tsyscal import TsyscalResults
 
 LOG = logging.get_logger(__name__)
 
 
-class TsysflagResults(TsyscalResults):
+class TsysflagResults(resultobjects.TsyscalResults):
     def __init__(self, final=[], pool=[], preceding=[]):
         """
         Construct and return a new TsysflagResults.
@@ -31,7 +26,7 @@ class TsysflagResults(TsyscalResults):
     def merge_with_context(self, context):
         # do nothing, the tsys cal files should already be in the context
         # and we don't want to insert them twice.
-        return
+        pass
 
     def addview(self, description, viewresult):
         self.view[description].append(viewresult)
