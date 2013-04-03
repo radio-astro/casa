@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import collections
+import contextlib
 import itertools
 import os
 import string
@@ -8,12 +9,13 @@ import types
 
 import numpy
 
-import pipeline.infrastructure.casatools as casatools
+from . import spectralwindow
 import pipeline.extern.pyparsing as pyparsing
-import pipeline.infrastructure.logging as logging
-from . import spectralwindow as spectralwindow
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.casatools as casatools
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 def _parse_spw(task_arg, all_spw_ids=[]):
@@ -478,11 +480,10 @@ class MeasurementSet(object):
         if not state_ids:
             state_ids = [-1] 
         
-        with casatools.TableReader(self.name) as table:
+        with utils.open_table(self.name) as table:
             taql = '(STATE_ID IN %s AND FIELD_ID IN %s)' % (state_ids, field_ids)
-            subtable = table.query(taql)
-            integration = subtable.getcol('INTERVAL')          
-            subtable.close()
+            with contextlib.closing(table.query(taql)) as subtable:
+                integration = subtable.getcol('INTERVAL')          
             return numpy.median(integration)
         
     @property

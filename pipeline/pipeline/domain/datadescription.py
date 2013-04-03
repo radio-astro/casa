@@ -7,10 +7,10 @@ class DataDescription(object):
         self.id = dd_id
         self.spw = spw
         self.pol_id = pol_id
-	self.obs_time = None
-	self.chan_freq = []
-	self.corr_axis = []
-	self.group_name = ''
+        self.obs_time = None
+        self.chan_freq = []
+        self.corr_axis = []
+        self.group_name = ''
 
     def __repr__(self):
         args = map(str, (self.id, self.spw.id, self.pol_id))

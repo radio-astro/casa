@@ -3,16 +3,18 @@ import string
 
 import pipeline.infrastructure.casatools as casatools
 
+
 class Field(object):
     def __init__(self, field_id, name, source_id, time, phase_dir_ref_type,
-     phase_dir_quanta):
+                 phase_dir_quanta):
         self.id = field_id
         self.source_id = source_id
         self.time = time
         self.name = name
 
-        self._mdirection = casatools.measures.direction(
-                phase_dir_ref_type, phase_dir_quanta[0], phase_dir_quanta[1])
+        self._mdirection = casatools.measures.direction(phase_dir_ref_type,
+                                                        phase_dir_quanta[0], 
+                                                        phase_dir_quanta[1])
 
         self.intents = set()
         self.states = set()
@@ -21,7 +23,15 @@ class Field(object):
 
     @property
     def clean_name(self):
-        return self._name.translate(string.maketrans('() ;', '____'))
+        '''
+        Get the field name with illegal characters replaced with underscores.
+        
+        This property is used to determine whether the field name, when given
+        as a CASA argument, should be enclosed in quotes. 
+        '''
+        allowed = string.ascii_letters + string.digits + '+-'
+        fn = lambda c : c if c in allowed else '_'
+        return ''.join(map(fn, self._name))
 
     @property
     def dec(self):

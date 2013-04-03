@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import copy
 import datetime
 import decimal
@@ -89,6 +90,8 @@ class LinearVelocityUnits(object):
     Z                     = { 'name' : 'Z'                     , 'symbol' : 'Z'    , 'kmps' : decimal.Decimal('299792.458') }
 
 class ComparableUnit(object):
+    __slots__ = ('value', 'units')
+
     def __init__(self):
         raise Exception, 'Must override __init__ of ComparableUnit'
     
@@ -458,6 +461,8 @@ class Frequency(ComparableUnit):
 
 
 class FrequencyRange(object):
+    __slots__ = ('low', 'high')
+    
     def __init__(self, frequency1=None, frequency2=None):
         """Creates a new instance with the given endpoints.
 
@@ -853,7 +858,6 @@ class Longitude(EquatorialArc):
             return Longitude(x, ArcUnits.DEGREE)
         except AttributeError:
             raise ValueError
-
     
     def isOpposite(self, other):
         """Returns True if this longitude and other are separated by one half
@@ -960,6 +964,8 @@ class TemporalCollection(object):
 
 
 class TimeInterval(object):
+    __slots__ = ('start', 'end')
+
     def __init__(self, start=None, end=None):
         self.start = start
         self.end = end

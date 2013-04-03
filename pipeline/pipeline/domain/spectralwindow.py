@@ -1,8 +1,8 @@
 from __future__ import absolute_import
-import pipeline.infrastructure.logging as logging
 from . import measures
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class SpectralWindow(object):
@@ -39,6 +39,10 @@ class SpectralWindow(object):
         the observing intents that have been observed using this spectral
         window
     """
+    
+    __slots__ = ('id', 'band', 'bandwidth', 'channels', 'group', 'intents',
+                 'ref_frequency')
+    
     def __init__(self, spw_id, bandwidth, ref_frequency, chan_widths, 
                  chan_freqs, group=None, band='Unknown'):
         self.id = spw_id
@@ -64,78 +68,48 @@ class SpectralWindow(object):
         return (self.min_frequency + self.max_frequency) / 2.0
 
     def channel_range(self, minfreq, maxfreq):
-
-	'''
-	    # More work on this in future 
-	    minfreq -- measures.Frequency object in HERTZ
-	    maxfreq -- measures.Frequency object in HERTZ
-	'''
-	freqmin = minfreq
-	freqmax = maxfreq
-
-	# Check for the no overlap case.
-	nchan = len (self.channels)
-	if freqmax < self.min_frequency:
-	    return (None, None)
-	if freqmin > self.max_frequency:
-	    return (None, None)
-
-	# Find the minimum channel
+        '''
+    	    # More work on this in future 
+    	    minfreq -- measures.Frequency object in HERTZ
+    	    maxfreq -- measures.Frequency object in HERTZ
+    	'''
+        freqmin = minfreq
+        freqmax = maxfreq
+    
+        # Check for the no overlap case.
+        nchan = len(self.channels)
+        if freqmax < self.min_frequency:
+            return (None, None)
+        if freqmin > self.max_frequency:
+            return (None, None)
+    
+        # Find the minimum channel
         chanmin = 0
-	if self.channels[0].low < self.channels[nchan-1].low:
-	    for i in range (nchan):
-	        if self.channels[i].low > freqmin:
-	            break
-	        chanmin = i
-	else:
-	    for i in range (nchan):
-	        if self.channels[i].high < freqmax:
-	            break
-	        chanmin = i
-
-	# Find the maximum channel
-	chanmax = nchan - 1
-	if self.channels[0].low < self.channels[nchan-1].low:
-	    for i in range (nchan - 1, -1, -1):
-	        if self.channels[i].high < freqmax:
-	            break
-	        chanmax = i
-	else:
-	    for i in range (nchan - 1, -1, -1):
-	        if self.channels[i].low > freqmin:
-	            break
-	        chanmax = i
-
-	return (chanmin, chanmax)
-
-    def get_caltable(self, name):
-        match = [t for t in self.caltables if t.name == name]
-        if match:
-            return match[0]
-
-    def get_gaintable(self, field=None):
-        """
-        The gaintable for this spectral window.
-        """
-        return [caltable.name for caltable in self.caltables
-                if caltable.applied is False
-                and (field in caltable.to_field or not caltable.to_field)]
-
-    def get_spwmap(self, field=None):
-        """
-        The spectral window maps for caltables assigned to this spectral
-        window.
-        """
-        if not self.caltables:
-            return []
-
-        # if the caltable was created by a job operating on a specific spw,
-        # use that specific spw in the spwmap, otherwise apply solutions from
-        # each spw to that spw only 
-        return [caltable.spwmap if caltable.spwmap else [int(self.id)]
-                for caltable in self.caltables 
-                if caltable.applied is False
-                and (field in caltable.to_field or not caltable.to_field)]
+        if self.channels[0].low < self.channels[nchan-1].low:
+            for i in range(nchan):
+                if self.channels[i].low > freqmin:
+                    break
+                chanmin = i
+        else:
+            for i in range(nchan):
+                if self.channels[i].high < freqmax:
+                    break
+                chanmin = i
+    
+        # Find the maximum channel
+        chanmax = nchan - 1
+        if self.channels[0].low < self.channels[nchan-1].low:
+            for i in range(nchan-1, -1, -1):
+                if self.channels[i].high < freqmax:
+                    break
+                chanmax = i
+        else:
+            for i in range(nchan-1, -1, -1):
+                if self.channels[i].low > freqmin:
+                    break
+                chanmax = i
+    
+        return (chanmin, chanmax)
 
     @property
     def min_frequency(self):
