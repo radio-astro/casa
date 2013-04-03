@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from . import common
 from . import bandpassworker
@@ -8,7 +9,13 @@ LOG = logging.get_logger(__name__)
 
 
 class ChannelBandpassInputs(common.CommonBandpassInputs):
-    def __init__(self, context, output_dir=None,
+    minsnr = basetask.property_with_default('minsnr', 3.0)
+
+    @property
+    def bandtype(self):
+        return 'B'
+
+    def __init__(self, context, output_dir=None, run_qa2=None,
                  #
                  vis=None, caltable=None, 
                  # data selection arguments
@@ -21,20 +28,6 @@ class ChannelBandpassInputs(common.CommonBandpassInputs):
                  # calibration target
                  to_intent=None, to_field=None):
         self._init_properties(vars())
-
-    @property
-    def bandtype(self):
-        return 'B'
-
-    @property
-    def minsnr(self):
-        return self._minsnr
-
-    @minsnr.setter
-    def minsnr(self, value):
-        if value is None:
-            value = 3.0
-        self._minsnr = value
 
 
 class ChannelBandpass(bandpassworker.BandpassWorker):

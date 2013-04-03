@@ -1,11 +1,14 @@
 from __future__ import absolute_import
 
+import os
+import shutil
+
+import pipeline.qa2.bpcal as bpcal
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.jobrequest import casa_tasks
-#from . import common
-from pipeline.hif.tasks.bandpass import common as common
+from . import common
 
 LOG = logging.get_logger(__name__)
 
@@ -16,7 +19,7 @@ class BandpassWorkerInputs(common.CommonBandpassInputs):
     task.
     """
     
-    def __init__(self, context, output_dir=None,
+    def __init__(self, context, output_dir=None, run_qa2=None,
                  # 
                  vis=None, caltable=None, 
                  # data selection arguments
@@ -67,6 +70,7 @@ class BandpassWorker(basetask.StandardTaskTemplate):
             # arrange a bandpass job for the data selection
             inputs.spw = calto.spw
             inputs.field = calto.field
+#            inputs.intent = calto.intent
             inputs.antenna = calto.antenna
 
             args = inputs.to_casa_args()
@@ -91,13 +95,14 @@ class BandpassWorker(basetask.StandardTaskTemplate):
         # should calibrate 
         calto = callibrary.CalTo(vis=inputs.vis,
                                  field=inputs.to_field,
+                                 intent=inputs.to_intent,
                                  spw=orig_spw,
                                  antenna=orig_antenna)
 
         # create the calfrom object describing which data should be selected
         # from this caltable when applied to other data. Just set the table
         # name, leaving spwmap, interp, etc. at their default values.
-        calfrom = callibrary.CalFrom(job.kw['caltable'], caltype='bandpass')
+        calfrom = callibrary.CalFrom(inputs.caltable, caltype='bandpass')
 
         calapp = callibrary.CalApplication(calto, calfrom)
 
@@ -118,5 +123,38 @@ class BandpassWorker(basetask.StandardTaskTemplate):
                    if ca not in on_disk and not self._executor._dry_run]        
         result.error.clear()
         result.error.update(missing)
+
+        if self.inputs.context.subtask_counter is 0: 
+            stage_number = self.inputs.context.task_counter - 1
+        else:
+            stage_number = self.inputs.context.task_counter   
+                         
+        LOG.trace('Setting stage number to %s for bandpass' % stage_number)
+
+        qa2_dir = os.path.join(self.inputs.context.report_dir,
+                               'stage%s' % stage_number,
+                               'qa2')
+
+        if self.inputs.run_qa2 is True:
+            if not os.path.exists(qa2_dir):
+                os.makedirs(qa2_dir)
+    
+            for calapp in on_disk:
+                (root, _) = os.path.splitext(os.path.basename(calapp.gaintable))
+                qa2_file = os.path.join(qa2_dir, root + '.bpcal.stats')
+                if os.path.exists(qa2_file):
+#                    LOG.info('QA2 statistics table exists. Assuming QA2 has '
+#                             'been done before')
+                    LOG.info('Removing existing QA2 statistics table from %s'
+                             % qa2_file)
+                    shutil.rmtree(qa2_file)
+
+                try:
+                    qa2_results = bpcal.bpcal(calapp.gaintable, qa2_dir)
+                    result.qa2.update(qa2_results)
+                except Exception as e:
+                    LOG.error('Problem occurred running QA2 analysis. QA2 '
+                              'results will not be available for this task')
+                    LOG.exception(e)
 
         return result
