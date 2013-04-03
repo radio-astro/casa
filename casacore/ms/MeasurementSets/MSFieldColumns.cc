@@ -446,7 +446,7 @@ MDirection ROMSFieldColumns::extractDirMeas(const MDirection& offsetDir,
     MVPosition xmvpos;
     if(!measCometsV_p(index)->get(xmvpos, interMJD)){
       cerr << "No valid ephemeris entry for MJD " << interMJD << endl;
-      return MDirection(Quantity(0.,"deg"), Quantity(0., "deg"), offsetDir.getRef());
+      return MDirection(Quantity(0.,"deg"), Quantity(0., "deg"), MDirection::INVALID);
     }
 
     MVDirection mvxdir(xmvpos.getAngle());
