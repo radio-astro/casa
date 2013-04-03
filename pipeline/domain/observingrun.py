@@ -3,10 +3,10 @@ import datetime
 import itertools
 import types
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class ObservingRun(object):
@@ -126,3 +126,19 @@ class ObservingRun(object):
         s = qt.time(mt.getvalue(self.end_time)['m0'], form=['fits'])
         #return datetime.datetime.strptime(s, '%Y-%m-%dT%H:%M:%S')
         return datetime.datetime.strptime(s[0], '%Y-%m-%dT%H:%M:%S')
+
+    @property
+    def project_ids(self):
+        return set([ms.project_id for ms in self.measurement_sets])
+    
+    @property
+    def schedblock_ids(self):
+        return set([ms.schedblock_id for ms in self.measurement_sets])
+    
+    @property
+    def execblock_ids(self):
+        return set([ms.execblock_id for ms in self.measurement_sets])
+        
+    @property
+    def observers(self):
+        return set([ms.observer for ms in self.measurement_sets])

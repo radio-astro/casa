@@ -2,22 +2,32 @@ from __future__ import absolute_import
 import decimal
 
 from . import measures
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class FluxMeasurement():
     def __init__(self, spw, I, Q=measures.FluxDensity(0),
                  U=measures.FluxDensity(0), V=measures.FluxDensity(0)):
         self.spw = spw
-        # create defensive copies of the flux arguments so they're not shared
-        # between instances 
-        self.I = measures.FluxDensity(I.value, I.units)
-        self.Q = measures.FluxDensity(Q.value, Q.units)
-        self.U = measures.FluxDensity(U.value, U.units)
-        self.V = measures.FluxDensity(V.value, V.units)
+        self.I = self._to_flux_density(I)
+        self.Q = self._to_flux_density(Q)
+        self.U = self._to_flux_density(U)
+        self.V = self._to_flux_density(V)
         
+    def _to_flux_density(self, arg):
+        """
+        Return arg as a new FluxDensity. If arg is a number, it is assumed to
+        be the flux density in Jy.
+        """
+        if isinstance(arg, measures.FluxDensity):
+            # create defensive copies of the flux arguments so they're not
+            # shared between instances 
+            return measures.FluxDensity(arg.value, arg.units)
+        
+        return measures.FluxDensity(arg, measures.FluxDensityUnits.JANSKY)
+    
     @property
     def casa_flux_density(self):
         iquv = [self.I.to_units(measures.FluxDensityUnits.JANSKY),
@@ -32,7 +42,8 @@ class FluxMeasurement():
 
     def __repr__(self):
         return '<FluxMeasurement(Spw #{spw}, IQUV=({iquv})>'.format(
-            spw=self.spw.id, 
+#            spw=self.spw.id,
+            spw='spw', 
             iquv=','.join(map(str, (self.I, self.Q, self.U, self.V))))
 
     def __add__(self, other):

@@ -1,6 +1,7 @@
 """The antenna module defines the Antenna class.
 """
 from __future__ import absolute_import
+
 import pipeline.infrastructure.casatools as casatools
 
     
@@ -65,7 +66,8 @@ class Antenna(object):
 
     @property
     def identifier(self):
-        """
+        '''
         A human-readable identifier for this Antenna.
-        """ 
+        '''
         return self.name if self.name else '#{0}'.format(self.id)
+    

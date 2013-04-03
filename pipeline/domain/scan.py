@@ -1,8 +1,9 @@
+from __future__ import absolute_import
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.utils as utils
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class Scan(object):
