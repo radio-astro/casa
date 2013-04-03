@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import os
 import types
 
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.logging as logging
@@ -97,6 +96,16 @@ class ApplycalInputs(basetask.StandardInputs,
         self._field = value
 
     @property
+    def intent(self):
+        return self._intent
+
+    @intent.setter
+    def intent(self, value):
+        if value is None:
+            value = 'TARGET,PHASE,BANDPASS,AMPLITUDE'
+        self._intent = value.replace('*', '')
+
+    @property
     def spw(self):
         if self._spw is not None:
             return self._spw
@@ -110,9 +119,9 @@ class ApplycalInputs(basetask.StandardInputs,
     @spw.setter
     def spw(self, value):
         self._spw = value
-        
 
-class ApplycalResults(api.Results):
+
+class ApplycalResults(basetask.Results):
     """
     ApplycalResults is the results class for the pipeline Applycal task.     
     """
@@ -127,16 +136,17 @@ class ApplycalResults(api.Results):
         :param applied: caltables applied by this task
         :type applied: list of :class:`~pipeline.domain.caltable.CalibrationTable`
         """
+        super(ApplycalResults, self).__init__()
         self.applied = set()
         self.applied.update(applied)
 
-    def merge_with_context(self, context, replace=False):
+    def merge_with_context(self, context):
         """
         Merges these results with the given context by examining the context
         and marking any applied caltables, so removing them from subsequent
         on-the-fly calibration calculations.
 
-        See :method:`~pipeline.api.Results.merge_with_context`
+        See :method:`~pipeline.Results.merge_with_context`
         """
         if not self.applied:
             LOG.error('No results to merge')
@@ -174,15 +184,15 @@ class Applycal(basetask.StandardTaskTemplate):
     
     def prepare(self):
         inputs = self.inputs
-        
         calstate = inputs.calstate
         
         merged = calstate.merged()
         jobs = []
         for calto, calfroms in merged.items():
-            # arrange a bandpass job for the data selection
+            # arrange a calibration job for the data selection
             inputs.spw = calto.spw
             inputs.field = calto.field
+            inputs.intent = calto.intent
             # patience, grasshopper..
 #            inputs.antenna = calto.antenna
 
