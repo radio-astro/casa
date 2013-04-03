@@ -2,35 +2,43 @@ import numpy as np
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 
-LOG = logging.get_logger('pipeline.hif.heuristics.wvrgcal')
+LOG = logging.get_logger('pipeline.heuristics.wvrgcal')
 
 class WvrgcalHeuristics(object):
     def __init__(self, context, vis, hm_tie, tie, hm_smooth, smooth,
       sourceflag, nsol, segsource):
+        self.context = context
         self.vis = vis
         self.hm_smooth = hm_smooth
         self._smooth = smooth
+        self._wvr_available = True
 
         ms = context.observing_run.get_ms(name=vis)
 
         # get info on all spectral windows
         self.spws = ms.spectral_windows
         for spw in self.spws:
-            LOG.debug('SpW id:%s nchan:%s intents:%s' % (spw.id, spw.channels,
-              spw.intents))
+            LOG.debug('SpW id:%s nchan:%s intents:%s' % (spw.id,
+              spw.num_channels, spw.intents))
 
         # Get the data_desc_ids of the wvr data.
         wvr_spw = [spw for spw in self.spws
-          if spw.channels==4 and spw.intents != set()]
+          if spw.num_channels==4 and 'WVR' in spw.intents]
+
         if wvr_spw == []:
-            LOG.info('assuming WVR spw.id=0')
             wvr_spw = [spw for spw in self.spws if spw.id==0]
+            if wvr_spw[0].num_channels != 4:
+                # EARLY RETURN HERE
+                self._wvr_available = False
+                return
+            LOG.info('assuming WVR spw.id=0')
+
         wvr_dd_ids = [ms.get_data_description(spw).id for spw in wvr_spw]
         LOG.info('WVR data_desc_id is %s' % wvr_dd_ids)
 
         # now get the science spws, those used for scientific intent
         science_spws = [spw for spw in self.spws if 
-          spw.channels not in (1,4) and not spw.intents.isdisjoint(
+          spw.num_channels not in [1,4] and not spw.intents.isdisjoint(
           ['BANDPASS', 'AMPLITUDE', 'PHASE', 'TARGET'])]
         LOG.info('science spws are: %s' % [spw.id for spw in science_spws])
 
@@ -75,16 +83,16 @@ class WvrgcalHeuristics(object):
                 self.science_integration[spw.id] = np.median(integration)
                 science_max_integration[spw.id] = np.max(integration)
                 science_min_integration[spw.id] = np.min(integration)
-                LOG.info('SpW %s median WVR integration time: %s' %
+                LOG.info('SpW %s median integration time: %s' %
                   (spw.id, self.science_integration[spw.id]))
 
                 if self.science_integration[spw.id] != \
                   science_max_integration[spw.id]:
-                    LOG.warning('max WVR integration time is different: %s' %
+                    LOG.warning('max integration time is different: %s' %
                       science_max_integration[spw.id])
                 if self.science_integration[spw.id] != \
                   science_min_integration[spw.id]:
-                    LOG.warning('min WVR integration time is different: %s' %
+                    LOG.warning('min integration time is different: %s' %
                       science_max_integration[spw.id])
 
                 # free the resources held by the sub-table
@@ -95,8 +103,7 @@ class WvrgcalHeuristics(object):
         else:
             # get target names and directions
             targets = [(field.name, field.mdirection) for field in ms.fields if
-              'TARGET' in field.intents and 
-              'WVR' in field.intents]
+              'TARGET' in field.intents]
 
             # tie all target fields as assume they are close to each other
             tied_targets = [target[0] for target in targets]
@@ -104,7 +111,6 @@ class WvrgcalHeuristics(object):
             # get names and directions of phase calibrators
             phases = [(field.name, field.mdirection) for field in ms.fields if
               'PHASE' in field.intents and 
-              'WVR' in field.intents and 
               'BANDPASS' not in field.intents and
               'AMPLITUDE' not in field.intents]
 
@@ -172,10 +178,9 @@ class WvrgcalHeuristics(object):
 
     def smooth(self, spw):
         if self.hm_smooth == 'automatic':
-            temp = int(self.science_integration[spw] / self.wvr_integration)
-            # 1 is the minimum sensible value for smooth
-            temp = max(temp, 1)
-            return temp        
+            # the wvr integration time is the minimum sensible value for smooth
+            temp = max(self.science_integration[spw], self.wvr_integration)
+            return '%ss' % temp        
         else:
             return self._smooth
 
@@ -186,4 +191,24 @@ class WvrgcalHeuristics(object):
         return self._tie
 
     def toffset(self):
-        return -1
+        ms = self.context.observing_run.get_ms(name=self.vis)
+        start_time = casatools.quanta.quantity(
+          ms.start_time['m0']['value'], ms.start_time['m0']['unit'])
+
+        cut = casatools.quanta.quantity(56313, 'd')
+        if casatools.quanta.gt(start_time, cut):
+            LOG.info('MS taken after %s: toffset = 0' %
+              casatools.quanta.time(cut, form=['fits']))
+            return 0
+        else:
+            LOG.info('MS taken before %s: toffset = -1' %
+              casatools.quanta.time(cut, form=['fits']))
+            return -1
+
+    def wvr_available(self):
+        return self._wvr_available
+
+
+
+
+

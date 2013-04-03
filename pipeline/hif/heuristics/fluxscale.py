@@ -38,7 +38,7 @@ def antenna(ms, refsource, refant, peak_frac=0.7):
 
     if calibrator_size is None:
         # assume calibrator unresolved, set antenna='' so that all antennas
-        # will be sued in gaincals
+        # will be used in gaincals
         antenna = ''
     else:
         antenna = set()
@@ -86,7 +86,8 @@ def antenna(ms, refsource, refant, peak_frac=0.7):
 
         # crudely find baseline at which transform drops to 'peak_frac' of
         # peak
-        for baseline in np.arange(500) + shortest_baseline:
+        limit_baseline = 10000.0 + shortest_baseline
+        for baseline in np.arange(10000) + shortest_baseline:
             arg = math.pi * baseline * calibrator_size / (
               206265.0 * max_lambda)
             if scipy.jn(1,arg) / arg < peak_frac * peak_vis:
