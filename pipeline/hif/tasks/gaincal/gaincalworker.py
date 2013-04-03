@@ -15,6 +15,7 @@ class GaincalWorkerInputs(common.CommonGaincalInputs):
                  vis=None, caltable=None, 
                  # data selection arguments
                  field=None, spw=None, antenna=None, intent=None,
+                 selectdata=None,
                  # solution parameters
                  gaintype=None, smodel=None, calmode=None, solint=None,
                  combine=None, refant=None, minblperant=None, minsnr=None,
@@ -29,12 +30,12 @@ class GaincalWorkerInputs(common.CommonGaincalInputs):
 
 class GaincalWorker(basetask.StandardTaskTemplate):
     """
-    BandpassWorker performs a simple bandpass calibration exactly as specified
-    by the inputs, with no analysis or parameter refinement.
+    GaincalWorker performs a simple gain calibration exactly as specified by
+    the inputs, with no analysis or parameter refinement.
     
     As this task has no analysis, it is not expected to be used in an
-    interactive session. The expected use-case for this task is as a worker
-    task for higher-level tasks.
+    interactive session. The use-case for this task is as a worker task for 
+    higher-level tasks.
     """
     Inputs = GaincalWorkerInputs
     
@@ -61,7 +62,7 @@ class GaincalWorker(basetask.StandardTaskTemplate):
             # arrange a gaincal job for the data selection
             if ':' in inputs.spw or '~' in inputs.spw:
                 inputs.spw = orig_spw
-	    else:
+            else:
                 inputs.spw = calto.spw
             inputs.field = calto.field
             # kludge to handle more esoteric 'antenna syntax' 
@@ -73,13 +74,6 @@ class GaincalWorker(basetask.StandardTaskTemplate):
 
             args = inputs.to_casa_args()
 
-            # set selectdata True if antenna is specified so that CASA 
-            # gaincal task will check that parameter
-            if inputs.antenna != '':
-                args['selectdata'] = True
-            else:
-                args['selectdata'] = False
-
             # set the on-the-fly calibration state for the data selection 
             calapp = callibrary.CalApplication(calto, calfroms)
             args['gaintable'] = calapp.gaintable
@@ -89,7 +83,7 @@ class GaincalWorker(basetask.StandardTaskTemplate):
 
             jobs.append(casa_tasks.gaincal(**args))
 
-            # append subsequent bandpass output to the same caltable 
+            # append subsequent output to the same caltable 
             inputs.append = True
 
         # execute the jobs
@@ -100,13 +94,17 @@ class GaincalWorker(basetask.StandardTaskTemplate):
         # should calibrate 
         calto = callibrary.CalTo(vis=inputs.vis,
                                  field=inputs.to_field,
+                                 intent=inputs.to_intent,
                                  spw=orig_spw,
                                  antenna=orig_antenna)
 
         # create the calfrom object describing which data should be selected
-        # from this caltable when applied to other data. Just set the table
-        # name, leaving spwmap, interp, etc. at their default values.
-        calfrom = callibrary.CalFrom(job.kw['caltable'], caltype='gaincal')
+        # from this caltable when applied to other data. Set the table name
+        # name (mandatory) and gainfield (to conform to suggested script 
+        # standard), leaving spwmap, interp, etc. at their default values.
+        calfrom = callibrary.CalFrom(inputs.caltable, 
+                                     caltype='gaincal',
+                                     gainfield='nearest')
 
         calapp = callibrary.CalApplication(calto, calfrom)
 

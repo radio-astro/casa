@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from . import common
 from . import gaincalworker
@@ -8,6 +9,15 @@ LOG = logging.get_logger(__name__)
 
 
 class GSplineGaincalInputs(common.CommonGaincalInputs):
+    # simple vis-independent properties with default values
+    npointaver = basetask.property_with_default('npointaver', 3)
+    phasewrap  = basetask.property_with_default('phasewrap', 180)
+    splinetime = basetask.property_with_default('splinetime', 3600)
+
+    @property
+    def gaintype(self):
+        return 'GSPLINE' 
+
     def __init__(self, context, output_dir=None,
                  # 
                  vis=None, caltable=None, 
@@ -22,39 +32,6 @@ class GSplineGaincalInputs(common.CommonGaincalInputs):
                  to_intent=None, to_field=None):
         self._init_properties(vars())
 
-    @property
-    def gaintype(self):
-        return 'GSPLINE' 
-
-    @property
-    def splinetime(self):
-        if self._splinetime is not None:
-            return self._splinetime
-        return 3600
-
-    @splinetime.setter
-    def splinetime(self, value):
-        self._splinetime = value
-
-    @property
-    def npointaver(self):
-        if self._npointaver is not None:
-            return self._npointaver
-        return 3
-
-    @npointaver.setter
-    def npointaver(self, value):
-        self._npointaver = value
-
-    @property
-    def phasewrap(self):
-        if self._phasewrap is not None:
-            return self._phasewrap
-        return 180
-
-    @phasewrap.setter
-    def phasewrap(self, value):
-        self._phasewrap = value
 
 
 class GSplineGaincal(gaincalworker.GaincalWorker):
