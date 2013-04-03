@@ -1,6 +1,7 @@
 import unittest
 
-from pipeline.domain import State
+import pipeline.domain.State as State
+
 
 class TestState(unittest.TestCase):
     def test_intents_from_single_obsmode(self):

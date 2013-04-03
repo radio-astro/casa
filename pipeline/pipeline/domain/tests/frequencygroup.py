@@ -1,7 +1,8 @@
 import unittest
 
-from pipeline.domain import FrequencyGroup
-from pipeline.domain import SpectralWindow
+import pipeline.domain.FrequencyGroup as FrequencyGroup
+import pipeline.domain.SpectralWindow as SpectralWindow
+
 
 class TestFrequencyGroup(unittest.TestCase):
     def setUp(self):
