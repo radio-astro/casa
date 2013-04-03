@@ -3,31 +3,160 @@ import pipeline.domain.measures as measures
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="base.html"/>
+<%block name="head">
+	${parent.head()}
+
+	<!-- Add jQueryUI tabs -->
+	<script src="resources/ui/jquery.ui.core.js"></script>
+	<script src="resources/ui/jquery.ui.widget.js"></script>
+	<script src="resources/ui/jquery.ui.tabs.js"></script>
+	<link rel="stylesheet" type="text/css" href="resources/ui/themes/smoothness/jquery-ui.css">
+	
+	<script>
+	$(function() {
+		<% 					
+			subtab_names = ', '.join(['#subtabs-%s' % i for i in range(len(mses))])
+		%>
+		$("#tabs, ${subtab_names}").tabs();
+	});
+
+	$(document).ready(function(){
+		$("a.grouped_elements").fancybox();
+	});
+	</script>
+</%block>
 
 <%block name="title">Antenna Setup Details</%block>
 
-<script>
-$(document).ready(function(){
-	$("a.grouped_elements").fancybox();
-});
-</script>
-
 <h1>Antenna Setup Details</h1>
 
-<h2>Antenna Positions per Measurement Set</h2>	
-<div class="gallery">
+<div id="tabs">
 	<ul>
-		% for (ms, plot) in plot_ants:
-		<li>
-		<a class="grouped_elements" rel="plotant" href="session${ms.session}/${ms.basename}/plotants.png">
-			<img src="session${ms.session}/${ms.basename}/plotants.png"
-				 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
-				 alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}" />
-			<p>${ms.basename}</p>
-		</a>
-		</li>
-		% endfor
+	% for ms in mses:
+		<li><a href="#tabs-${loop.index}">${ms.basename}</a></li>		
+	% endfor	
 	</ul>
+	% for ms in mses:
+	<div id="tabs-${loop.index}">
+		<div id="subtabs-${loop.index}">
+			<ul>
+				<li><a href="#subtabs-${loop.index}-offsets">Antennas</a></li>
+				<li><a href="#subtabs-${loop.index}-baselines">Baselines</a></li>
+			</ul>
+			<div id="subtabs-${loop.index}-offsets">		
+				<h3>Antenna Positions</h3>	
+				
+				<div class="gallery">
+					<ul>
+						<li>
+							<a class="grouped_elements" rel="plotant" href="session${ms.session}/${ms.basename}/plotants.png">
+								<img   src="session${ms.session}/${ms.basename}/plotants.png"
+									 title="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"
+									   alt="Antenna Latitude vs. Antenna Longitude for ${ms.basename}"/>
+							</a>
+						</li>
+					</ul>
+				</div>
+
+				<h3>Antenna Details</h3>
+				<div>
+					<table class="minimalist" summary="Antenna Details for ${ms.basename}">
+						<caption>Antenna Details and Offsets for ${ms.basename}</caption>
+					    <thead>
+					        <tr>
+					            <th scope="col" rowspan="2">ID</th>
+					            <th scope="col" rowspan="2">Name</th>
+					            <th scope="col" rowspan="2">Pad</th>
+					            <th scope="col" rowspan="2">Diameter (m)</th>
+					            <th scope="col" colspan="2">Offset from Array Centre</th>
+					        </tr>
+							<tr>
+					            <th scope="col">Longitude (m)</th>
+					            <th scope="col">Latitude (m)</th>			
+							</tr>
+					    </thead>
+						<tbody>
+							% for antenna in ms.antennas:
+							<%
+								(offset_x, offset_y) = ms.antenna_array.get_offset(antenna)
+							%>
+							<tr>
+							  <td>${antenna.id}</td>
+							  <td>${antenna.name}</td>
+							  <td>${antenna.station}</td>
+							  <td>${antenna.diameter}</td>
+							  <td>${round(offset_x, 2)}</td>
+							  <td>${round(offset_y, 2)}</td>
+							</tr>
+							% endfor
+						</tbody>
+					</table>
+				</div>	
+			</div>
+			<div id="subtabs-${loop.index}-baselines">		
+				<h3>Baseline Summary</h3>
+
+				<%
+				baselines = sorted(ms.antenna_array.baselines, key=lambda b: b.length)
+				min_baseline = baselines[0]
+				max_baseline = baselines[-1]
+				num_baselines = len(baselines)
+				%>
+				
+				<table class="minimalist" summary="Antenna and Baseline Summary">
+					<caption>Summary of Baselines in ${ms.basename}</caption>
+				    <thead>
+				        <tr>
+				            <th scope="col" colspan="2">Minimum Baseline</th>
+				            <th scope="col" colspan="2">Maximum Baseline</th>
+				        </tr>
+						<tr>
+				            <th scope="col">Length (m)</th>
+				            <th scope="col">Antenna Pairing</th>			
+				            <th scope="col">Length (m)</th>
+				            <th scope="col">Antenna Pairing</th>			
+						</tr>
+				    </thead>
+					<tbody>
+						<tr>
+						  <td>${round(min_baseline.length, 2)}</td>
+						  <td>${min_baseline.antenna1.name} - ${min_baseline.antenna2.name}</td>
+						  <td>${round(max_baseline.length, 2)}</td>
+						  <td>${max_baseline.antenna1.name} - ${max_baseline.antenna2.name}</td>
+						</tr>
+					</tbody>
+				</table>
+				
+				<h3>Baseline Details</h3>
+				<p>In the table below, the 'percentile' column defines in which percentile the baseline length falls, where the longest baseline is 100%.</p>
+
+				<table class="minimalist" summary="Antenna Details for ${ms.basename}">
+					<caption>
+						Baselines for ${ms.basename}
+					</caption>
+					<thead>
+						<tr>
+							<th scope="col" rowspan="1">Antenna 1</th>
+							<th scope="col" rowspan="1">Antenna 2</th>
+							<th scope="col" rowspan="1">Baseline Length (m)</th>
+							<th scope="col" rowspan="1">Percentile (%)</th>
+						</tr>
+					</thead>
+					<tbody>
+						% for (i, baseline) in enumerate(baselines, start=1):
+						<tr>
+							<td>${baseline.antenna1.name}</td>
+							<td>${baseline.antenna2.name}</td>
+							<td>${round(baseline.length, 2)}</td>
+							<td>${round(100.0*i/num_baselines, 1)}</td>
+						</tr>
+						% endfor
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+	% endfor
 </div>
 
 <%block name="footer"><a href="t1-2.html">Back to Observation Summary</a></%block>

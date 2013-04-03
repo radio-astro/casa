@@ -1,0 +1,114 @@
+<%!
+	rsc_path = "../"
+	import os
+	import pipeline.infrastructure.renderer.htmlrenderer as hr
+	
+	def get_antenna(pcontext, vis, spw_id, qa2_id):
+		ms = pcontext.observing_run.get_ms(vis)
+		spw = ms.get_spectral_window(spw_id)
+		dd = ms.get_data_description(spw=spw)
+                
+		ant_id = int(qa2_id) / dd.num_polarizations
+		antenna = ms.get_antenna(ant_id)[0]
+		
+		return antenna.identifier
+		
+	def get_feed(pcontext, vis, spw_id, qa2_id):
+		ms = pcontext.observing_run.get_ms(vis)
+		spw = ms.get_spectral_window(spw_id)
+		dd = ms.get_data_description(spw=spw)
+                
+		feed_id = int(qa2_id) % dd.num_polarizations
+
+		return dd.polarizations[feed_id]
+		
+%>
+<%inherit file="base.html"/>
+<%block name="head">
+	${parent.head()}
+
+	<!-- Add jQueryUI accordion -->
+	<script src="../resources/jquery-ui-1.10.0.custom.js"></script>
+	<link rel="stylesheet" type="text/css" href="../resources/jquery-ui-1.10.0.custom.css">
+	
+	<script>
+	$(function() {
+	  $( "#accordion" ).accordion({
+	    collapsible: true,
+	    active: false,
+	    heightStyle: "content",
+	    animate: 200
+	   	});
+	});
+	</script>
+</%block>
+
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} QA2 Details</%block>
+
+<h1>QA2 analysis for stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+
+<h2>Flagging</h2>
+% if flagged:
+<p>${num_flagged_feeds} antenna feeds were completely flagged as a result of QA2 analysis:</p>
+
+<table class="minimalist" summary="Flagged Antenna Feeds">
+	<caption>Flagged Antenna Feeds</caption>
+	<tr>
+		<td>Measurement Set</td>
+		<td>Antenna</td>
+		<td>Feed</td>
+	</tr>
+%for f in flagged:
+	<tr>
+		<td>${f[0]}</td>
+		<td>${f[1]}</td>
+		<td>${f[2]}</td>
+	</tr>
+%endfor
+</table>
+
+% else:
+<p>No antenna feeds were flagged.</p>
+% endif
+
+<h2>Tables</h2>
+<div id="accordion">
+% for r in result:
+	<h3>Amplitude SNR Scores for ${os.path.basename(r.inputs['vis'])}</h3>
+	<div>
+		<table class="minimalist" summary="Amplitude SNR Scores for ${os.path.basename(r.inputs['vis'])}">
+			<tr>
+				<td>Spectral Window</td>
+				<td>Antenna</td>
+				<td>Feed</td>
+				<td>Score</td>
+			</tr>
+	% for spw, qa2_feeds in r.qa2['QA2SCORES']['AMPLITUDE_SCORE_SN'].items():
+		% for qa2_feed_id, score in qa2_feeds.items():
+			<tr>
+				<td>${spw}</td>
+				<td>${get_antenna(pcontext, r.inputs['vis'], spw, qa2_feed_id)}</td>
+				<td>${get_feed(pcontext, r.inputs['vis'], spw, qa2_feed_id)}</td>
+				<td>${score}</td>
+			</tr>
+		% endfor
+	% endfor
+		</table>
+	</div>
+</div>
+% endfor
+
+<h2>Plots</h2>
+% if plot_groups:
+<ul>
+	% for plot_group in plot_groups:
+		<li>
+			<a href=${plot_group.filename}>${plot_group.title}</a>
+		</li>
+	% endfor
+</ul>
+% else:
+<p>No QA2 plots were generated for this task.</p>
+% endif
