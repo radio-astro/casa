@@ -1,4 +1,6 @@
 <%!
+rsc_path = "../"
+
 import os.path
 import pydoc
 import numpy as np
@@ -9,7 +11,7 @@ import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<%inherit file="base.html"/>
+<%inherit file="t2-4m_details-base.html"/>
 <%block name="header" />
 
 <%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
@@ -65,7 +67,6 @@ except Exception, e:
                     <td>Vis</td>
                     <td>Score</td>
                 </tr>
-
             % for r in result:
                 <tr>
                     <td>${r.qa2.vis}</td>
@@ -74,32 +75,6 @@ except Exception, e:
             % endfor
             </table>
         </li>
-
-
-##        <li>
-##            <table border="1">
-##                <tr>
-##                    <td>Vis</td>
-##                    <td>Description</td>
-##                    <td>Score</td>
-##                </tr>
-
-##            % for r in result:
-##                <% 
-##                descriptions = r.qa2.view_score.keys()
-##                descriptions.sort()
-##                %>
- 
-##                %for description in descriptions:
-##                    <tr>
-##                        <td>${r.qa2.vis}</td>
-##                        <td>${description}</td>
-##                        <td>${r.qa2.view_score[description]}</td>
-##                    </tr>
-##                % endfor
-##            % endfor
-##            </table>
-##        </li>
     </ul>
 
     <li>QA2 Plots:</li>
@@ -113,62 +88,4 @@ except Exception, e:
 
 % endif
 
-## Write help information to a file and link to it. Probably a better
-## way of writing the file but I can't find it.
-
-<%
-try:
-    filename = os.path.join(stage_dir, 'taskhelp.txt')
-    f = open(filename, 'w')
-    sys.stdout = f
-    pydoc.help('hif_wvrgcal')
-
-except Exception, e:
-    print 'html template exception in help information:', e
-    raise e
-
-finally:
-    sys.stdout = sys.__stdout__
-    f.close()
-%>
-
-    <li>A listing of the 'help' information for this task can be found
-        <a href='taskhelp.txt'>here</a>.
 </ul>
-
-
-<p><table class="one-column-emphasis" summary="Input parameters">
-	<caption>Input parameters</caption>
-    <colgroup>
-    	<col class="oce-first" />
-    </colgroup>
-	<tbody>
-		% for k, v in result.inputs.iteritems():
-		<tr>
-		  <td>${str(k)}</th>
-		  <td>${str(v)}</td>
-		</tr>
-		% endfor
-	</tbody>
-</table>
-
-<p><table class="one-column-emphasis" summary="Input parameters">
-	<caption>Timing details</caption>
-    <colgroup>
-    	<col class="oce-first" />
-    </colgroup>
-	<tbody>
-		<tr>
-		  <td>Start time</th>
-		  <td>${result.timestamps.start}</td>
-		</tr>
-		<tr>
-		  <td>End</th>
-		  <td>${result.timestamps.end}</td>
-		</tr>
-		<tr>
-		  <td>Duration</th>
-		  <td>${str(result.timestamps.end - result.timestamps.start)}</td>
-		</tr>
-	</tbody>
-</table>

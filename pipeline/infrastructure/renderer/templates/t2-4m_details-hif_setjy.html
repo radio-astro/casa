@@ -1,150 +1,50 @@
 <%!
-import os.path
-import pydoc
-import sys
+rsc_path = "../"
+import os
 
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<%inherit file="base.html"/>
+<%inherit file="t2-4m_details-base.html"/>
+
 <%block name="header" />
 
 <%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
 
-<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+<h1>Stage ${hr.get_stage_number(result)}: Fluxscale</h1>
 
-<ul>
-    <li>Results:
-    <ul>
-        <li>These fluxes have been stored in the context.
-        <table border="1">
-            <tr>
-                <td>Measurement Set</td>
-                <td>Field</td>
-                <td>SpW</td>
-                <td>I</td>
-                <td>Q</td>
-                <td>U</td>
-                <td>V</td>
-            </tr>
-
-        %for setjy_result in result:
-            %for vis, fields in setjy_result.results.items():
-                %for field, field_fluxes in fields.items():
-                    <%
-                    flux_by_spw = sorted(field_fluxes, key=lambda g: g.spw.id)
-                    %>
-                    %for flux in flux_by_spw:
-                        <tr>
-                            <td>${os.path.basename(vis)}</td>
-                            <td>${field}</td>
-                            <td>${flux.spw.id}</td>
-                            <td>${str(flux.I)}</td>
-                            <td>${str(flux.Q)}</td>
-                            <td>${str(flux.U)}</td>
-                            <td>${str(flux.V)}</td>
-                        </tr>
-                    %endfor
-                %endfor
-            %endfor
-        %endfor
-        </table>
-
-
-        <li>Using 'setjy' these fluxes have been set in the model data columns of the
-        measurement sets.
-        <table border="1">
-            <tr>
-                <td>Measurement Set</td>
-                <td>Field</td>
-                <td>SpW</td>
-                <td>I</td>
-                <td>Q</td>
-                <td>U</td>
-                <td>V</td>
-            </tr>
-
-        %for setjy_result in result:
-            %for vis, fields in setjy_result.setjy_settings.items():
-                %for field, field_fluxes in fields.items():
-                    <%
-                    flux_by_spw = sorted(field_fluxes, key=lambda g: g.spw.id) 
-                    %>
-                    %for flux in flux_by_spw:
-                        <tr>
-                            <td>${os.path.basename(vis)}</td>
-                            <td>${field}</td>
-                            <td>${flux.spw.id}</td>
-                            <td>${str(flux.I)}</td>
-                            <td>${str(flux.Q)}</td>
-                            <td>${str(flux.U)}</td>
-                            <td>${str(flux.V)}</td>
-                        </tr>
-                    %endfor
-                %endfor
-            %endfor
-        %endfor
-        </table>
-    </ul>
-
-## Write help information to a file and link to it. Probably a better
-## way of writing the file but I can't find it.
-
-<%
-try:
-    r = result[0]
-    stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
-    filename = os.path.join(stage_dir, 'taskhelp.txt')
-    f = open(filename, 'w')
-    sys.stdout = f
-    pydoc.help('hif_setjy')
-
-except Exception, e:
-    print 'html template exception in help information:', e
-    raise e
-
-finally:
-    sys.stdout = sys.__stdout__
-    f.close()
-%>
-
-    <li>A listing of the 'help' information for this task can be found
-        <a href='taskhelp.txt'>here</a>.
-</ul>
-
-
-<p><table class="one-column-emphasis" summary="Input parameters">
-	<caption>Input parameters</caption>
-    <colgroup>
-    	<col class="oce-first" />
-    </colgroup>
+<h2>Results</h2>
+<p>The following flux densities were set in the measurement set model column and recorded in the pipeline context:</p>
+<table class="minimalist" summary="Flux density results">
+	<caption>Setjy Results</caption>
+    <thead>
+	    <tr>
+	        <th scope="col" rowspan="2">Measurement Set</th>
+	        <th scope="col" rowspan="2">Field</th>
+	        <th scope="col" rowspan="2">SpW</th>
+	        <th scope="col" colspan="4">Flux Density</th>
+		</tr>
+		<tr>
+	        <th scope="col">I</th>
+	        <th scope="col">Q</th>
+	        <th scope="col">U</th>
+	        <th scope="col">V</th>
+	    </tr>
+	</thead>
 	<tbody>
-		% for k, v in result.inputs.iteritems():
+%for single_result in result:
+	%for field in single_result.measurements:
+		%for flux in sorted(single_result.measurements[field], key=lambda m: m.spw.id):
 		<tr>
-		  <td>${str(k)}</th>
-		  <td>${str(v)}</td>
+			<td>${os.path.basename(single_result.vis)}</td>
+			<td>${field}</td>
+			<td>${flux.spw.id}</td>
+			<td>${str(flux.I)}</td>
+			<td>${str(flux.Q)}</td>
+			<td>${str(flux.U)}</td>
+			<td>${str(flux.V)}</td>
 		</tr>
-		% endfor
-	</tbody>
-</table>
-
-
-<p><table class="one-column-emphasis" summary="Timing details">
-	<caption>Timing details</caption>
-    <colgroup>
-    	<col class="oce-first" />
-    </colgroup>
-	<tbody>
-		<tr>
-		  <td>Start time</th>
-		  <td>${result.timestamps.start}</td>
-		</tr>
-		<tr>
-		  <td>End</th>
-		  <td>${result.timestamps.end}</td>
-		</tr>
-		<tr>
-		  <td>Duration</th>
-		  <td>${str(result.timestamps.end - result.timestamps.start)}</td>
-		</tr>
+		%endfor
+	%endfor
+%endfor
 	</tbody>
 </table>

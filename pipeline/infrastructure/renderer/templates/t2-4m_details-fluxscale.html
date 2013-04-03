@@ -1,6 +1,7 @@
 <%!
 rsc_path = "../"
 import os
+
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.html"/>
@@ -9,14 +10,12 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
 
-<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+<h1>Stage ${hr.get_stage_number(result)}: Fluxscale</h1>
 
 <h2>Results</h2>
-
-<p>The following flux densities were set in the measurement set model column and recorded in the pipeline context:</p>
-
+<p>The following flux densities were recorded in the pipeline context:</p>
 <table class="minimalist" summary="Flux density results">
-	<caption>Phased-up Fluxscale Results</caption>
+	<caption>Fluxscale Results</caption>
     <thead>
 	    <tr>
 	        <th scope="col" rowspan="2">Measurement Set</th>

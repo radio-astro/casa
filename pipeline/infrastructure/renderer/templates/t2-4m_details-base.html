@@ -1,0 +1,84 @@
+<%!
+rsc_path = "../"
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+<%block name="head">
+	${parent.head()}
+
+	<!-- Add jQueryUI accordion -->
+	<script src="../resources/ui/jquery.ui.core.js"></script>
+	<script src="../resources/ui/jquery.ui.widget.js"></script>
+	<script src="../resources/ui/jquery.ui.accordion.js"></script>
+	<link rel="stylesheet" type="text/css" href="../resources/ui/themes/smoothness/jquery-ui.css">
+	<link rel="stylesheet" type="text/css" href="../resources/ui/themes/smoothness/jquery.ui.accordion.css">
+	
+	<script>
+	$(function() {
+	  $( "#accordion" ).accordion({
+	    collapsible: true,
+	    active: false,
+	    heightStyle: "content",
+	    animate: 200
+	   	});
+	});
+	</script>
+</%block>
+
+<%block name="header"/>
+
+<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
+
+${next.body()}
+
+<div id="accordion">
+%if taskhelp: 
+	<h3>Task Help</h3>
+	<div>
+		${taskhelp}
+	</div>
+%endif
+	<h3>CASA Logs</h3>
+	<div>
+		<p>CASA output from the time of execution:</p>	
+		<pre style="background-color: #fffacd;"><code>${stagelog}</code></pre>
+	</div>	
+	<h3>Input Parameters</h3>
+	<div>
+	<table class="one-column-emphasis" summary="Input parameters">
+	    <colgroup>
+	    	<col class="oce-first" />
+	    </colgroup>
+		<tbody>
+			% for k, v in result.inputs.iteritems():
+			<tr>
+			  <td>${str(k)}</td>
+			  <td>${str(v)}</td>
+			</tr>
+			% endfor
+		</tbody>
+	</table>
+	</div>	
+	<h3>Task Execution Times</h3>
+	<div>
+	<table class="one-column-emphasis" summary="Timing details">
+	    <colgroup>
+	    	<col class="oce-first" />
+	    </colgroup>
+		<tbody>
+			<tr>
+			  <td>Start time</td>
+			  <td>${result.timestamps.start}</td>
+			</tr>
+			<tr>
+			  <td>End</td>
+			  <td>${result.timestamps.end}</td>
+			</tr>
+			<tr>
+			  <td>Duration</td>
+			  <td>${str(result.timestamps.end - result.timestamps.start)}</td>
+			</tr>
+		</tbody>
+	</table>
+	</div>
+</div>

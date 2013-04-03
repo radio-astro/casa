@@ -1,99 +1,34 @@
 <%!
-import os.path
-import pydoc
-import sys
-
+rsc_path = "../"
+import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
-<%inherit file="base.html"/>
+<%inherit file="t2-4m_details-base.html"/>
+
 <%block name="header" />
 
 <%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
 
 <h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
 
-<ul>
+<p>Each antenna was ranked according to a geometric score, based on the distance from the centre of the array, and a flagging score.</p>  
 
-    <li>Results:</li>
-    <ul>
-        <table border="1">
-            <tr>
-                <td>Measurement Set</td>
-                <td>Ref Ant</td>
-            </tr>
-
-        %for r in result:
-            <tr>
-                <td>${os.path.basename(r._vis)}</td>
-                ## insert spaces in refant list to allow browser to break string
-                ## if it wants
-                <%
-                refant = r._refant.replace(',', ', ')
-                %>
-                <td>${refant}</td>
-            </tr>
-        %endfor
-        </table>
-
-    </ul>
-
-## Write help information to a file and link to it. Probably a better
-## way of writing the file but I can't find it.
-
-<%
-try:
-    r = result[0]
-    stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
-    filename = os.path.join(stage_dir, 'taskhelp.txt')
-    f = open(filename, 'w')
-    sys.stdout = f
-    pydoc.help('hif_refant')
-
-except Exception, e:
-    print 'html template exception in help information:', e
-    raise e
-
-finally:
-    sys.stdout = sys.__stdout__
-    f.close()
-%>
-
-    <li>A listing of the 'help' information for this task can be found
-        <a href='taskhelp.txt'>here</a>.
-</ul>
-
-<p><table class="one-column-emphasis" summary="Input parameters">
-	<caption>Input parameters</caption>
-    <colgroup>
-    	<col class="oce-first" />
-    </colgroup>
+<table class="minimalist" summary="Reference Antennas">
+	<caption>Reference Antennas</caption>
+	<thead>
+		<tr>
+			<th>Measurement Set</th>
+			<th>Reference Antenna Priority</th>
+		</tr>
+	</thead>
 	<tbody>
-		% for k, v in result.inputs.iteritems():
+%for r in result:
 		<tr>
-		  <td>${str(k)}</th>
-		  <td>${str(v)}</td>
+			<td>${os.path.basename(r._vis)}</td>
+			## insert spaces in refant list to allow browser to break string
+			## if it wants
+			<td>${r._refant.replace(',', ', ')}</td>
 		</tr>
-		% endfor
-	</tbody>
-</table>
-
-<p><table class="one-column-emphasis" summary="Timing details">
-	<caption>Timing details</caption>
-    <colgroup>
-    	<col class="oce-first" />
-    </colgroup>
-	<tbody>
-		<tr>
-		  <td>Start time</th>
-		  <td>${result.timestamps.start}</td>
-		</tr>
-		<tr>
-		  <td>End</th>
-		  <td>${result.timestamps.end}</td>
-		</tr>
-		<tr>
-		  <td>Duration</th>
-		  <td>${str(result.timestamps.end - result.timestamps.start)}</td>
-		</tr>
+%endfor
 	</tbody>
 </table>
