@@ -1,6 +1,7 @@
 import unittest
 
-from pipeline.domain import Field
+import pipeline.domain.Field as Field
+
 
 class TestField(unittest.TestCase):
     def test_set_source_type(self):

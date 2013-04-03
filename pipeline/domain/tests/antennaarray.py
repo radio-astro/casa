@@ -1,8 +1,9 @@
 import unittest
 
-from pipeline.domain import Antenna
-from pipeline.domain import AntennaArray
-import pipeline.casatools as casatools
+import pipeline.domain.Antenna as Antenna
+import pipeline.domain.AntennaArray as AntennaArray
+import pipeline.infrastructure.casatools as casatools
+
 
 class CasaTestCase(unittest.TestCase):
     def assertQuantitiesEqual(self, x, y, num_places=5):
