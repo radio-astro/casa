@@ -5,8 +5,6 @@ import os.path
 import sys
 import traceback
 
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.displays.sky import SkyDisplay
 import pipeline.infrastructure.taskreport as taskreport
