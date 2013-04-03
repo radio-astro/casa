@@ -1,35 +1,34 @@
 from __future__ import absolute_import
 
 import collections
-import copy
-import numpy as np 
 import os.path
 
-import pipeline.infrastructure.api as api
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.logging as logging
 
 
 LOG = logging.get_logger('pipeline.hif.tasks.clean.cleanresults')
 
 
-class BoxResult(api.Results):
+class BoxResult(basetask.Results):
     def __init__(self):
+        super(BoxResult, self).__init__()        
         self.threshold = None
         self.cleanmask = None
         self.island_peaks = None
 
     def merge_with_context(self, context):
         pass
-
+    
     def __repr__(self):
         return 'BoxResult <threshold=%s cleanmask=%s>' % (
          self.threshold, self.cleanmask)
 
 
-class CleanResult(api.Results):
+class CleanResult(basetask.Results):
     def __init__(self, sourcename=None, intent=None, spw=None, plotdir=None):
+        super(CleanResult, self).__init__()
         self.sourcename = sourcename
         self.intent = intent
         self.spw = spw
