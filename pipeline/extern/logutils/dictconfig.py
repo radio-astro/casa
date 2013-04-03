@@ -17,7 +17,6 @@
 import logging.handlers
 import re
 import sys
-import types
 
 try:
     basestring
