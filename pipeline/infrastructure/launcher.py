@@ -12,13 +12,20 @@ except:
     import pickle
 import pprint
 
-import pipeline.domain as domain
-import pipeline.infrastructure.project as project
-import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.imagelibrary as imagelibrary
-import pipeline.infrastructure.logging as logging
+import casadef
+
+from . import callibrary
+from . import imagelibrary
+from . import logging
 
 LOG = logging.get_logger(__name__)
+
+
+# minimum allowed CASA revision. Set to 0 or None to disable
+MIN_CASA_REVISION = 22854
+# maximum allowed CASA revision. Set to 0 or None to disable
+MAX_CASA_REVISION = None
+
 
 class Context(object):
     """
@@ -102,13 +109,17 @@ class Context(object):
         self.calimlist = imagelibrary.ImageLibrary()
         self.sciimlist = imagelibrary.ImageLibrary()
         self.project_summary = None
-        self.project_structure = None
-        self.observing_run = domain.ObservingRun()
+        self.project_structure = None        
         self.output_dir = output_dir 
         self.products_dir = None
         self.task_counter = 0
         self.subtask_counter = 0
         self.results = []
+
+        # domain depends on infrastructure.casatools, so infrastructure cannot
+        # depend on domain hence the run-time import
+        import pipeline.domain as domain
+        self.observing_run = domain.ObservingRun()
 
         try:
             LOG.trace('Creating report directory \'%s\'' % self.report_dir)
@@ -119,7 +130,7 @@ class Context(object):
             else: raise
 
         try:
-            LOG.trace('Creating procuts directory \'%s\'' % self.products_dir)
+            LOG.trace('Creating products directory \'%s\'' % self.products_dir)
             os.makedirs(self.products_dir)
         except OSError as exc:
             if exc.errno == errno.EEXIST:
@@ -171,9 +182,9 @@ class Context(object):
     @products_dir.setter
     def products_dir(self, value):
         if value is None:
-            value = os.path.join (self.output_dir, '..', 'products')
-	else:
-	    value = os.path.abspath(value)
+            value = os.path.join(self.output_dir, '..', 'products')
+        else:
+            value = os.path.abspath(value)
         self._products_dir = value
         LOG.trace('Setting products_dir to %s' % self.products_dir)
         
@@ -183,7 +194,7 @@ class Context(object):
 
         with open(filename, 'wb') as context_file:
             LOG.info('Saving context to \'{0}\''.format(filename))          
-            pickle.dump(self, context_file)
+            pickle.dump(self, context_file, protocol=-1)
 
     def __repr__(self):
         ms_names = [ms.name 
@@ -195,9 +206,54 @@ class Context(object):
 
 
 class Pipeline(object):
-    def __init__(self, context=None, output_dir='./', loglevel='info'):
+    """
+    Pipeline is the entry point for initialising the pipeline. It is
+    responsible for the creation of new ~Context objects and for loading 
+    saved Contexts from disk.
+
+    TODO replace this class with a static factory method on Context? 
+    """
+
+    def __init__(self, context=None, output_dir='./', loglevel='info',
+                 casa_version_check=True):
+        """
+        Initialise the pipeline, creating a new ~Context or loading a saved
+        ~Context from disk.
+    
+        :param context: filename of the pickled Context to load from disk.
+            Specifying 'last' loads the last-saved Context, while passing None
+            creates a new Context.
+        :type context: string
+        :param output_dir: root directory to which all output will be written
+        :type output_dir: string
+        :param loglevel: pipeline log level
+        :type loglevel: string
+        :param casa_version_check: enable (True) or bypass (False) the CASA
+            version check. Default is True.
+        :type ignore_casa_version: boolean
+        """
         # configure logging with the preferred log level
         logging.set_logging_level(loglevel)
+
+        # Prevent users from running the pipeline on old or incompatible
+        # versions of CASA by comparing the CASA subversion revision against
+        # our expected minimum and maximum
+        if casa_version_check is True:
+            revision = int(casadef.subversion_revision)
+            if MIN_CASA_REVISION and MIN_CASA_REVISION > revision:
+                msg = ('Minimum CASA revision for the pipeline is r%s, '
+                       'got CASA %s (r%s).' % (MIN_CASA_REVISION, 
+                                               casadef.casa_version,
+                                               casadef.subversion_revision))
+                LOG.critical(msg)
+                raise EnvironmentError, msg
+            if MAX_CASA_REVISION and MAX_CASA_REVISION < revision:
+                msg = ('Maximum CASA revision for the pipeline is r%s, '
+                       'got CASA %s (r%s).' % (MAX_CASA_REVISION, 
+                                               casadef.casa_version,
+                                               casadef.subversion_revision))
+                LOG.critical(msg)
+                raise EnvironmentError, msg
 
         # if no previous context was specified, create a new context for the
         # given measurement set

@@ -7,8 +7,8 @@ import types
 import applycal_cli
 import bandpass_cli
 import clean_cli
+import clearcal_cli
 import exportfits_cli
-#import flagautocorr_cli
 import flagmanager_cli
 import fluxscale_cli
 import gaincal_cli
@@ -19,16 +19,18 @@ import plotants_cli
 import plotcal_cli
 import plotms_cli
 import plotxy_cli
-#import tflagdata_cli
 import flagdata_cli
 import wvrgcal_cli
-import sdcal_cli
+try:
+    import sdcal2_cli
+except:
+    import sdcal_cli as sdcal2_cli
 
-#import pipeline.infrastructure.casatools as casatools
 from . import casatools
 from . import logging
 
 LOG = logging.get_logger(__name__)
+
 
 
 class JobRequest(object):
@@ -249,6 +251,9 @@ class CASATaskJobGenerator(object):
     def clean(self, *v, **k):
         return self._get_job(clean_cli.clean_cli, *v, **k)
 
+    def clearcal(self, *v, **k):
+        return self._get_job(clearcal_cli.clearcal_cli, *v, **k)
+
     def exportfits(self, *v, **k):
         return self._get_job(exportfits_cli.exportfits_cli, *v, **k)
 
@@ -285,17 +290,14 @@ class CASATaskJobGenerator(object):
     def setjy(self, *v, **k):
         return self._get_job(setjy_cli.setjy_cli, *v, **k)
 
-    #def tflagdata(self, *v, **k):
-        #return self._get_job(tflagdata_cli.tflagdata_cli, *v, **k)
-
     def flagdata(self, *v, **k):
         return self._get_job(flagdata_cli.flagdata_cli, *v, **k)
 
     def wvrgcal(self, *v, **k):
         return self._get_job(wvrgcal_cli.wvrgcal_cli, *v, **k)
 
-    def sdcal(self, *v, **k):
-        return self._get_job(sdcal_cli.sdcal_cli, *v, **k)
+    def sdcal2(self, *v, **k):
+        return self._get_job(sdcal2_cli.sdcal2_cli, *v, **k)
 
     def _get_job(self, task, *v, **k):
         job = JobRequest(task, *v, **k)

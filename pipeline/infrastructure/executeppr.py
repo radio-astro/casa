@@ -433,7 +433,10 @@ def _getIntents (pprObject, requestId, numRequests):
     numIntents = 0
     try:
         intentName = ppr_intents.Intents.Keyword.getValue()
-	intentValue = ppr_intents.Intents.Value.getValue()
+	try:
+	    intentValue = ppr_intents.Intents.Value.getValue()
+	except Exception, e:
+	    intentValue = ""
 	numIntents = 1
 	intentsDict[intentName] = intentValue
     except Exception, e:
@@ -589,7 +592,10 @@ def _getParameters (ppsetObject):
 
     try:
         paramName = ppsetObject.Parameter.Keyword.getValue()
-        paramValue = ppsetObject.Parameter.Value.getValue()
+	try:
+            paramValue = ppsetObject.Parameter.Value.getValue()
+	except Exception, e:
+	    paramValue = ""
 	numParams = 1
 	paramsDict[paramName] = paramValue
     except Exception, e:
@@ -597,7 +603,10 @@ def _getParameters (ppsetObject):
 	while (search):
 	    try:
                 paramName = ppsetObject.Parameter[numParams].Keyword.getValue()
-                paramValue = ppsetObject.Parameter[numParams].Value.getValue()
+	        try:
+                    paramValue = ppsetObject.Parameter[numParams].Value.getValue()
+	        except Exception, e:
+	            paramValue = ""
 		numParams = numParams + 1
 	        paramsDict[paramName] = paramValue
 	    except Exception, e:

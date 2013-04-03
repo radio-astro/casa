@@ -3,11 +3,9 @@ import logging
 import sys
 import types
 
-#import pipeline.infrastructure.casatools as casatools
-#from pipeline.infrastructure.casatools import casatools
-from . import casatools
 import pipeline.extern.logutils as logutils
 import pipeline.extern.logutils.colorize as colorize
+from . import casatools
 
 TRACE = 5
 logging.addLevelName(TRACE, 'TRACE')
@@ -27,6 +25,10 @@ LOGGING_LEVELS = {'critical' : logging.CRITICAL,
 
 logging_level = logging.NOTSET
 _loggers = []
+
+# initialise the root logger to INFO, so that module-level logging messages
+# can be logged
+logging.getLogger().setLevel(logging.INFO)
 
 
 class CASALogHandler(logging.Handler):

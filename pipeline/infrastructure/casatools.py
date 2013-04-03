@@ -2,14 +2,8 @@ from __future__ import absolute_import
 import copy_reg
 import sys
 
-# The casac library cannot be resolved in Eclipse, so to avoid distracting
-# compilation errors we substitute it with a casac stub on ImportErrors 
-try:
-    from taskinit import casalog
-    from casac import casac
-except ImportError:
-    # Not sure this means anything anymore
-    import pipeline.infrastructure.casac_stub as casac
+from casac import casac
+from taskinit import casalog
 
 imager = casac.imager()
 measures = casac.measures()
@@ -36,9 +30,6 @@ vlafillertask = casac.vlafillertask()
 atmosphere = casac.atmosphere()
 utils = casac.utils()
 
-# singledish stuff
-import asap as sd
-
 # Unless we set the log file, output will be sent to casapy.log rather than the
 # timestamped log file, which is where standard CASA output is sent.
 #log =  casac.homefinder.find_home_by_name('logsinkHome').create()
@@ -55,10 +46,13 @@ def set_log_origin(fromwhere=''):
 
 
 class TableReader(object):
-    """Uses the CASA table tool to open the given table, closing the table
-    automatically once this object is out of scope or if an exception is 
-    raised.""" 
+    '''
+    TableReader is a context manager for CASA tables.
     
+    TableReader uses the CASA table tool to open the given table, closing the
+    table automatically once this object is out of scope or if an exception is 
+    raised.
+    '''   
     num_instances = 0
 
     def __init__(self, table_name, nomodify=True):
@@ -81,9 +75,13 @@ class TableReader(object):
 
 
 class MSReader(object):
-    """Uses the CASA measurement set tool to open the given measurement set,
-    closing it automatically once this object is out of scope or if an
-    exception is raised.""" 
+    '''
+    MSReader is a context manager for measurement sets.
+    
+    MSReader uses the CASA measurement set tool to open the given measurement
+    set, closing it automatically once this object is out of scope or if an
+    exception is raised.
+    ''' 
     
     num_instances = 0
 
@@ -123,7 +121,7 @@ class ImageReader(object):
         image.close()
         ImageReader.num_instances -= 1
 
-
+import contextlib
 
 # C extensions cannot be pickled, so ignore the CASA logger on pickle and
 # replace with it with the current CASA logger on unpickle
@@ -136,5 +134,5 @@ __tools = ['imager', 'measures', 'quanta', 'table', 'ms', 'tableplot',
 for tool in __tools:
     tool_type = type(globals()[tool])
     unpickler = lambda data: globals()[tool]
-    pickler = lambda object: (unpickler, (tool, ))
+    pickler = lambda _: (unpickler, (tool, ))
     copy_reg.pickle(tool_type, pickler, unpickler)
