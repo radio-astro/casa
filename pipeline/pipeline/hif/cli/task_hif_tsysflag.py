@@ -2,13 +2,14 @@ import sys
 
 from taskinit import casalog
 
-#import pipeline.cli.utils as utils
 import pipeline.h.cli.utils as utils
 
 
 def hif_tsysflag(vis=None, caltable=None, metric=None,
-  intentgroups=None, flag_nmedian=None, fnm_limit=None, 
+  intentgroups=None,
   flag_hi=None, fhi_limit=None, fhi_minsample=None,
+  flag_maxabs=None, fmax_limit=None, flag_minabs=None, fmin_limit=None,
+  flag_nmedian=None, fnm_limit=None, 
   flag_tmf1=None, tmf1_axis=None, tmf1_limit=None,
   niter=None,
   pipelinemode=None, dryrun=None, acceptresults=None):

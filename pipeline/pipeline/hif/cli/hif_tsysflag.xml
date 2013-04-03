@@ -27,22 +27,13 @@ Flag deviant system temperature measurements.
         <allowed kind="enum">
             <value>median</value>
             <value>shape</value>
+            <value>derivative</value>
         </allowed>
     </param>
 
-    <param type="stringArray" name="intentgroups">
+    <param type="string" name="intentgroups">
         <description>List of groups of intents whose data are to be compared together</description>
-        <value>*AMPLITUDE*</value><value>*BANDPASS*</value><value>*PHASE*+*TARGET*</value>
-    </param>
-
-    <param type="bool" name="flag_nmedian">
-        <description>True to flag figure of merit values higher than a multiple of the median</description>
-        <value>True</value>
-    </param>
-
-    <param type="double" name="fnm_limit" subparam="true">
-        <description>Flag figure of merit values higher than limit * median</description>
-        <value>2.0</value>
+        <value>"*AMPLITUDE*", "BANDPASS*", "*PHASE*+*TARGET*"</value>
     </param>
 
     <param type="bool" name="flag_hi">
@@ -51,7 +42,7 @@ Flag deviant system temperature measurements.
     </param>
 
     <param type="double" name="fhi_limit" subparam="true">
-        <description>Flag figure of merit values higher than limit * MAD</description>
+        <description>Flag figure of merit values higher than fhi_limit * MAD</description>
         <value>5.0</value>
     </param>
 
@@ -60,13 +51,43 @@ Flag deviant system temperature measurements.
         <value>5</value>
     </param>
 
+    <param type="bool" name="flag_maxabs">
+        <description>True to flag pixels with absolute value higher than fmax_limit</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="fmax_limit" subparam="true">
+        <description>Flag pixels whose absolute value is higher than this limit</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="bool" name="flag_minabs">
+        <description>True to flag pixels with absolute value lower than fmin_limit</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="fmin_limit" subparam="true">
+        <description>Flag pixels whose absolute value is lower than this limit</description>
+        <value>5.0</value>
+    </param>
+
+    <param type="bool" name="flag_nmedian">
+        <description>True to flag figure of merit values higher than fnm_limit * median</description>
+        <value>True</value>
+    </param>
+
+    <param type="double" name="fnm_limit" subparam="true">
+        <description>Flag figure of merit values higher than fnm_limit * median</description>
+        <value>2.0</value>
+    </param>
+
     <param type="bool" name="flag_tmf1">
         <description>True to flag data with too many flagged samples</description>
         <value>False</value>
     </param>
 
     <param type="string" name="tmf1_axis" subparam="true">
-        <description>Name of flagging samples axis (Fixed) </description>
+        <description>Name of flagging samples axis</description>
         <value type='string'>Time</value>
     </param>
 
@@ -115,20 +136,36 @@ Flag deviant system temperature measurements.
             </equals>
         </when>
 
-        <when param="flag_nmedian">
-            <equals type="bool" value="True">
-                <default param="fnm_limit"><value>2.0</value></default>
-            </equals>
-            <equals type="bool" value="False">
-            </equals>
-        </when>
-
         <when param="flag_hi">
             <equals type="bool" value="False">
             </equals>
             <equals type="bool" value="True">
                 <default param="fhi_limit"><value>5.0</value></default>
                 <default param="fhi_minsample"><value>5</value></default>
+            </equals>
+        </when>
+
+        <when param="flag_maxabs">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="fmax_limit"><value>5.0</value></default>
+            </equals>
+        </when>
+
+        <when param="flag_minabs">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="fmin_limit"><value>5.0</value></default>
+            </equals>
+        </when>
+
+        <when param="flag_nmedian">
+            <equals type="bool" value="True">
+                <default param="fnm_limit"><value>2.0</value></default>
+            </equals>
+            <equals type="bool" value="False">
             </equals>
         </when>
 
@@ -179,7 +216,7 @@ fnm_limit -- Points greater than fnm_limit * median of samples are flagged.
 flag_hi -- True to flag high figure of merit outliers.
     default: False
 
-fhi_limit -- Sample points beyond fhi_limit * mean absolute deviation (MAD)
+fhi_limit -- Sample points beyond fhi_limit * median absolute deviation (MAD)
     of the figure of merit are flagged.
     default: 5.0
 
@@ -187,6 +224,18 @@ fhi_minsample -- If there are too few points in the sample the statistics
     are assumed to be unreliable and no flagging is done.
     default: 5
 
+flag_maxabs -- True to flag figures of merit with absolute value above fmax_limit.
+    default: False
+
+fmax_limit -- Figures of merit with absolute value above fmax_limit are flagged.
+    default: 5.0
+
+flag_minabs -- True to flag figures of merit with absolute value below fmin_limit.
+    default: False
+
+fmin_limit -- Figures of merit with absolute value below fmin_limit are flagged.
+    default: 5.0
+ 
 flag_tmf1 -- True to flag antennas that have too many flagged points as a
     function of time.
     default: False
@@ -202,20 +251,40 @@ tmf1_limit -- Fraction of flagged antennas points that triggers flagging
 'interactive mode'
 
 caltable -- List of input Tsys calibration tables
-    default: The table currently stored in the pipeline context. 
+    default: [] - Use the table currently stored in the pipeline context. 
     example: caltable=['X132.ms.tsys.s2.tbl']
 
-metric -- Method to use as a measure of the Tsys quality.
+metric -- Method to use as a measure of the Tsys quality. Possible values are:
+    'median' -     Each pixel in each flagging image is the median value of
+                   the unflagged channels in the associated Tsys spectrum.
+    'shape'  -     Each pixel in each flagging image is a measure of the
+                   difference in shape of the unflagged part of the 
+                   associated normalised Tsys spectrum from the median of
+                   the normalised Tsys spectra contributing to the image. 
+                   The shape metric is computed as:
+
+                   shape = 100 * mean(abs(normalized Tsys - median normalized Tsys))
+
+                   where a normalized array is:
+
+                   normalized = array / median (array)
+
+    'derivative' - Each pixel in each flagging image is 100 * the MAD
+                   (median absolute deviation) of the channel by channel
+                   derivative of the associated normalised Tsys spectrum.
+
     default: 'median'
 
 intentgroups -- How the data from various intents are to be combined in
-    the flagging views. 
-    default: ['*AMPLITUDE*', '*BANDPASS*', '*PHASE* + *TARGET*']
+    the flagging views. Internally the intentgroups are stored in a 
+    list of strings but, because of interface limitations, this list 
+    must be input as a single string.
+    default: "['*AMPLITUDE*', '*BANDPASS*', '*PHASE* + *TARGET*']"
              For each spw/pol the default creates a separate 2d
              (ANTENNA v TIME) array of the Tsys metric for AMPLITUDE intent
              and BANDPASS intent. A third 2d array will combine the Tsys metric
              results for PHASE and TARGET data.
-    example: ['*AMPLITUDE* + *BANDPASS* + *PHASE* + *TARGET*']
+    example: "['*AMPLITUDE* + *BANDPASS* + *PHASE* + *TARGET*']"
              For each spw/pol this would create a 2d array of the Tsys metric
              using data for all the listed intents combined - useful if you
              are looking for changes that depend on intent.
@@ -252,43 +321,57 @@ Tsys spectrum obtained at that point.
 If metric = 'shape' then each pixel in each image is a measure of the
 difference in the shape of the Tsys spectrum there from the shape of the
 median of all the Tsys spectra contributing to the image. The shape metric 
-is computed as
+is computed as:
 
      shape = 100 * mean(abs(normalized Tsys - median normalized Tsys))
 
-and a normalized array is
+and a normalized array is:
 
      normalized = array / median (array)
 
-The first 10 and last 10 channels in each Tsys spectrum are assumed to be 
-noisy and are not included in the calculation of the metric.
+If metric = 'derivative' then each pixel in each image is 100 * the MAD
+(median absolute deviation) of the channel by channel derivative
+of the Tsys spectrum.
+
 
 Flags are generated by running the following rules on each image:
 
 If flag_nmedian = True then pixels greater than fnm_limit * median
 of all the pixels in the image are flagged.
 
-If flag_hi = True then the pixels are flagged  if they are greater
+If flag_hi = True then pixels are flagged if they are greater
 than median + fhi_limit * MAD where median and MAD are computed for all
 the pixels in the image. No flags are set if there are fewer than
 fhi_minsample pixels in the sample.
 
+If flag_maxabs = True then pixels are flagged if they have an absolute
+value greater than fmax_limit. 
+
+If flag_minabs = True then pixels are flagged if they have an absolute
+value less than fmin_limit. 
+
 If flag_tmf1 = True then antennas with too many flagged points as defined
-by tmf1_limit are flagged entirely. 
+by tmf1_limit are flagged entirely.
 
 
 Examples:
 
-1. Flag antennas where the Tsys is greater than 2 * median Tsys. This
-   is currently the default algorithm.
+1. Flag Tsys measurements where the Tsys median is greater than 
+   2 * the median of this metric over the flagging image.
+   This is currently the default.
 
    hif_tsysflag()
 
-2. Flag antennas with deviant shapes where the deviation is greater than
-   5 * MAD above the figure of merit.
+2. Flag Tsys measurements whose 'shape' metric lies more than
+   5 * MAD above the median of this metric over the flagging image.
  
    hif_tsysflag(metric='shape', flag_hi=True, fhi_limit=5, flag_nmedian=False)
 
+3. Flag Tsys measurements whose 'derivative' metric is greater
+   than 2.
+
+   hif_tsysflag(metric='derivative', flag_maxabs=True, fmax_limit=2,
+     flag_nmedian=False)
 
 </example> 
 

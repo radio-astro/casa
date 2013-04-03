@@ -1,7 +1,6 @@
 from taskinit import casalog
 
 import sys
-#import pipeline.cli.utils as utils
 import pipeline.h.cli.utils as utils
 
 def hif_show_calstate():

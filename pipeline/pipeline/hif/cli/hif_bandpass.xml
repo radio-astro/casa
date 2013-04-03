@@ -55,7 +55,7 @@ window in each measurement set.
 
   <param type="string" name="phaseupbw" subparam="true">
     <description>Bandwidth to use for phaseup</description>
-    <value></value>
+    <value>500MHz</value>
   </param>
 
   <param type="string" name="hm_bandtype">
@@ -70,7 +70,7 @@ window in each measurement set.
   <param type="any" name="solint">
     <description>Solution intervals</description>
     <any type="variant"/>
-    <value type="string">inf</value>
+    <value type="string">inf,7.8125MHz</value>
   </param>
 
   <param type="string" name="combine">
@@ -134,7 +134,7 @@ window in each measurement set.
     <when param="phaseup">
       <equals type="bool" value="True">
         <default param="phaseupsolint"><value type="string">int</value></default>
-        <default param="phaseupbw"><value type="string"></value></default>
+        <default param="phaseupbw"><value type="string">500MHz</value></default>
       </equals>
       <equals type="bool" value="False">
       </equals>
@@ -216,17 +216,17 @@ phaseupsolint -- The phase correction solution interval in CASA syntax.
     default: 'int'
     example: 300
 
-phaseupbw -- Bandwidth to be used for phaseup. Defaults to entire bandwidth
+phaseupbw -- Bandwidth to be used for phaseup. Defaults to 500MHz.
     Used when phaseup is True.
-    default: ''
-    example: 400.0MHz
+    default: '500MHz'
+    example: '' default to entire bandpass
 
 hm_bandtype -- The type of bandpass. The options are 'channel' and
     'polynomial' for CASA bandpass types = 'B' and 'BPOLY' respectively.
 
 solint --  Time and channel solution intervals in CASA syntax.
-    default: 'inf'
-    example: 'inf,10ch'
+    default: 'inf,7.8125MHz'
+    example: 'inf,10ch', 'inf'
 
 combine -- Data axes to combine for solving. Axes are '', 'scan','spw','field'
     or any comma-separated combination.
