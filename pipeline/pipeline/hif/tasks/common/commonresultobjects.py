@@ -40,7 +40,11 @@ class ResultBase(object):
             s = int(np.floor(t))
             tstring = '%sh%sm%ss' % (h,m,s)
 
-        fields = [('File',os.path.basename(self.filename)), 
+        temp = self.filename
+        if self.filename is not None:
+            temp = os.path.basename(self.filename)
+
+        fields = [('File',temp), 
                   ('Intent',self.intent),
                   ('Field',self.fieldname),
                   ('Spw',self.spw),

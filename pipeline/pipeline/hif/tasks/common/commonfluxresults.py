@@ -2,92 +2,141 @@ from __future__ import absolute_import
 import collections
 import os
 
-import pipeline.infrastructure.api as api
 import pipeline.domain.fluxmeasurement as fluxmeasurement
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 
 LOG = logging.get_logger(__name__)
 
 
-class FluxCalibrationResults(api.Results):
+class FluxCalibrationResults(basetask.Results):
     """
     TODO: refactor this results structure. We're falling into the dictionaries
     of dictionaries trap again.. 
     """
-    def __init__(self, vis=None, fields={}, fields_setjy={}):
-        self.results = collections.defaultdict(dict)
-        self.setjy_settings = collections.defaultdict(dict)
-        if vis:
-            self.results[vis] = fields
-            self.setjy_settings[vis] = fields_setjy
+    def __init__(self, vis, measurements=None):
+        super(FluxCalibrationResults, self).__init__()
 
-    def set_result(self, vis, fields):
-        if vis in self.results:
-            current = self.results[vis]
-            for field, measurements in fields.items():
-                current[field] = measurements
-        else:
-            self.results[vis] = fields
+        if measurements is None:
+            measurements = collections.defaultdict(list)
 
-    def set_setjy_result(self, vis, fields):
-        if vis in self.setjy_settings:
-            current = self.setjy_settings[vis]
-            for field, measurements in fields.items():
-                current[field] = measurements
-        else:
-            self.setjy_settings[vis] = fields
+        self.vis = vis
+        self.measurements = measurements
 
-    def merge_with_context(self, context, replace=False):
-        for vis, fields in self.results.items():
-            ms = context.observing_run.get_ms(vis)
-            for field_name, foreign_measurements in fields.items():
-                # the measurements may refer to spectral windows in other
-                # measurement sets, so we replace them with spectral 
-                # windows from this measurement set with the same ID
-                measurements = []
-                for m in foreign_measurements:
-                    ms_spw = ms.get_spectral_window(m.spw.id)
-                    clone = fluxmeasurement.FluxMeasurement(ms_spw,
-                      I=m.I, Q=m.Q, U=m.U, V=m.V)                
-                    measurements.append(clone)
+    def merge_with_context(self, context):
+        ms = context.observing_run.get_ms(self.vis)
+        
+        for foreign_field in self.measurements:
+            # resolve the potentially foreign fields to native fields
+            # contained in our target measurement set
+            fields = ms.get_fields(foreign_field)
+            if not fields:
+                msg = ('Could not find field \'%s\' in %s' % 
+                       (foreign_field, ms.basename))
+                LOG.error(msg)
+                continue
+
+            # recreate the measurements on each iteration so that each field
+            # has independent measurements objects. Otherwise, subsequently 
+            # changing the flux value for one field would change it for all 
+            # fields.
+            measurements = self._adopt_measurements(ms, foreign_field)
+
+            # TODO this prints twice - fix it
+            LOG.info('Setting flux density measurements for {field} '
+                     'in {vis}:\n\t{measurements}'.format(
+                field=','.join([f.identifier for f in fields]),
+                vis=ms.basename,
+                measurements='\n\t'.join([str(m) for m in measurements])))
+
+            # Start the measurement addition process by first collecting the
+            # spw IDs to which these measurements apply..
+            spw_ids = sorted([m.spw.id for m in measurements])
+
+            # A single field identifier could map to multiple field objects,
+            # but the flux should be the same for all, hence we iterate..
+            for field in fields:
+                # .. removing any existing measurements in these spws from
+                # these native fields..
+                map(field.flux_densities.remove,
+                    [m for m in field.flux_densities if m.spw.id in spw_ids])    
                 
-                spw_ids = sorted([m.spw.id for m in measurements])
+                # .. and then updating with our new values
+                field.flux_densities.update(measurements)
 
-                # one field name may resolve to multiple fields
-                fields = ms.get_fields(task_arg=field_name)
-                for field in fields:
-                    # remove any existing measurements in these spws
-                    existing = [m for m in field.flux_densities 
-                                if m.spw.id in spw_ids]
-                    if existing:
-                        map(field.flux_densities.remove, existing)
-    
-                    LOG.info('Setting flux density measurements for {field} '
-                             'in {vis}:\n\t{measurements}'.format(
-                        field=field.identifier, 
-                        vis=ms.name,
-                        measurements='\n\t'.join([str(m) for m in measurements])))
-                    field.flux_densities.update(measurements)
+    def _adopt_measurements(self, ms, foreign_field):
+        # when adding results to a resumed context, we should resolve each
+        # potentially foreign target entity in the result to a native
+        # entity within our target context
+        
+        native_measurements = []
+        for fm in self.measurements[foreign_field]:
+            # the measurements may refer to spectral windows in other
+            # measurement sets, so we replace them with spectral windows from 
+            # this measurement set, identified by the same ID
+            spw = ms.get_spectral_window(fm.spw.id)
+            m = fluxmeasurement.FluxMeasurement(spw, I=fm.I, Q=fm.Q, U=fm.U, 
+                                                V=fm.V)                
+            native_measurements.append(m)
+                
+        return native_measurements
 
     def __repr__(self):
-        s = 'Flux calibration results:\n'
-        for vis, fields in self.results.items():
-            for field, field_fluxes in fields.items():
-                flux_by_spw = sorted(field_fluxes, key=lambda g: g.spw.id)                    
-                # rather complicated string format to display something like:
-                # 0841+708 spw #0: I=3.2899 Jy; Q=0 Jy; U=0 Jy; V=0 Jy
-                lines = ['{vis} {field} spw #{spw}: '
-                         'I={I}; Q={Q}; U={U}; V={V}\n'.format(
-                    vis=os.path.basename(vis), field=field, spw=flux.spw.id, 
-                    I=str(flux.I), Q=str(flux.Q), U=str(flux.U), 
-                    V=str(flux.V)) for flux in flux_by_spw]
-                for line in lines:
-                    s += line
+        s = 'Flux calibration results for %s:\n' % os.path.basename(self.vis)
+        for field, flux_densities in self.measurements.items():
+            flux_by_spw = sorted(flux_densities, key=lambda f: f.spw.id)                    
+            # rather complicated string format to display something like:
+            # 0841+708 spw #0: I=3.2899 Jy; Q=0 Jy; U=0 Jy; V=0 Jy
+            lines = ['\t{field} spw #{spw}: I={I}; Q={Q}; U={U}; V={V}\n'.format(
+                    field=field, spw=flux.spw.id, 
+                    I=str(flux.I), Q=str(flux.Q), U=str(flux.U), V=str(flux.V)) 
+                    for flux in flux_by_spw]
+            s += ''.join(lines)
 
         return s
 
-    def merge_result(self, toAdd):
-        for vis, fields in toAdd.results.items():
-            for field, field_fluxes in fields.items():
-                self.results[vis][field] = field_fluxes[:]
 
+class File(file):
+    def __init__(self, *args, **kwargs):
+        super(File, self).__init__(*args, **kwargs)
+        self.BLOCKSIZE = 4096
+
+    def head(self, lines_2find=1):
+        self.seek(0)                            #Rewind file
+        return [super(File, self).next() for _ in xrange(lines_2find)]
+
+    def tail(self, lines_2find=1):  
+        self.seek(0, 2)                         #Go to end of file
+        bytes_in_file = self.tell()
+        lines_found, total_bytes_scanned = 0, 0
+        while (lines_2find + 1 > lines_found and
+               bytes_in_file > total_bytes_scanned): 
+            byte_block = min(
+                self.BLOCKSIZE,
+                bytes_in_file - total_bytes_scanned)
+            self.seek( -(byte_block + total_bytes_scanned), 2)
+            total_bytes_scanned += byte_block
+            lines_found += self.read(self.BLOCKSIZE).count('\n')
+        self.seek(-total_bytes_scanned, 2)
+        line_list = list(self.readlines())
+        return line_list[-lines_2find:]
+
+    def backward(self):
+        self.seek(0, 2)                         #Go to end of file
+        blocksize = self.BLOCKSIZE
+        last_row = ''
+        while self.tell() != 0:
+            try:
+                self.seek(-blocksize, 1)
+            except IOError:
+                blocksize = self.tell()
+                self.seek(-blocksize, 1)
+            block = self.read(blocksize)
+            self.seek(-blocksize, 1)
+            rows = block.split('\n')
+            rows[-1] = rows[-1] + last_row
+            while rows:
+                last_row = rows.pop(-1)
+                if rows and last_row:
+                    yield last_row
+        yield last_row
