@@ -3,11 +3,8 @@ from __future__ import absolute_import
 import os.path
 import types
 
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.tablereader as tablereader
-#import pipeline.hif.heuristics as heuristics
 from pipeline.hif.tasks.clean.clean import Clean
 from pipeline.hif.tasks.cleanlist.resultobjects import CleanListResult
 from pipeline.hif.tasks.clean.resultobjects import CleanResult
@@ -77,8 +74,9 @@ class CleanList(basetask.StandardTaskTemplate):
                 clean_result = self._executor.execute(datatask)
                 result.add_result(clean_result, image_target,
                   outcome='success')
-            except:
+            except Exception, e:
                 LOG.error('clean failed')
+                LOG.exception(e)
                 result.add_result(CleanResult(), image_target,
                   outcome='failure')
 

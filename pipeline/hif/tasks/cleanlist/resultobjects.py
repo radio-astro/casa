@@ -2,11 +2,13 @@ from __future__ import absolute_import
 
 import os.path
 
-import pipeline.infrastructure.api as api
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.imagelibrary as imagelibrary
 
-class CleanListResult(api.Results):
+
+class CleanListResult(basetask.Results):
     def __init__(self):
+        super(CleanListResult, self).__init__()
         self.targets = []
         self.results = []
         self.plot_path = None
