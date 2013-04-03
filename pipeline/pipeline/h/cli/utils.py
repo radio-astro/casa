@@ -3,13 +3,13 @@ import pprint
 import types
 
 import pipeline.infrastructure.api as api
-#import pipeline.cli as cli
-import pipeline.h.cli as cli
-#import pipeline.heuristics as heuristics
-import pipeline.h.heuristics as heuristics
-import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.argmapper as argmapper
-import pipeline.h.tasks as tasks
+import pipeline.infrastructure.logging as logging
+
+import pipeline.h.cli.cli as cli
+import pipeline.h.heuristics as heuristics
+
+import pipeline.tasks as tasks
 
 LOG = logging.get_logger(__name__)
 
@@ -69,6 +69,11 @@ def execute_task(context, taskname, casa_args, fn_name):
 
     # Execute the class, collecting the results
     results = _execute_task(taskname, fn_name, task_inputs, dry_run)
+
+    # write the command invoked (eg. hif_setjy) to the result so that the
+    # weblog can print help from the XML task definition rather than the
+    # python class
+    results.taskname = fn_name
     
     # accept the results if desired
     if accept_results and not dry_run:
