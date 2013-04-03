@@ -2,11 +2,10 @@ from __future__ import absolute_import
 import os
 import types
 
-#from .. import common
-from pipeline.hif.tasks.common import commoncalinputs
-import pipeline.infrastructure.api as api
-from  pipeline.hif.heuristics import caltable as bcaltable
+from pipeline.hif.tasks.common import commoncalinputs as commoncalinputs
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
+from pipeline.hif.heuristics import caltable as bcaltable
 
 LOG = logging.get_logger(__name__)
 
@@ -20,6 +19,11 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
     specializations that inherit from CommonBandpassInputs for concrete
     implementations.
     """
+    
+    combine = basetask.property_with_default('combine', 'scan')
+    run_qa2 = basetask.property_with_default('run_qa2', True, 'Perform QA2 analysis')
+    solint  = basetask.property_with_default('solint', 'inf')
+    solnorm = basetask.property_with_default('solnorm', True)
 
     @property
     def caltable(self):
@@ -34,16 +38,6 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
         if value is None:
             value = bcaltable.BandpassCaltable()
         self._caltable = value
-    
-    @property
-    def combine(self):
-        return self._combine 
-
-    @combine.setter
-    def combine(self, value):
-        if value is None:
-            value = 'scan'
-        self._combine = value
 
     @property
     def intent(self):
@@ -84,28 +78,8 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
             value = str(value).replace('*', '')
         self._intent = value
 
-    @property
-    def solint(self):
-        return self._solint
-
-    @solint.setter
-    def solint(self, value):
-        if value is None:
-            value = 'inf'
-        self._solint = value
-
-    @property
-    def solnorm(self):
-        return self._solnorm  
         
-    @solnorm.setter
-    def solnorm(self, value):
-        if value is None:
-            value = True
-        self._solnorm = value
-
-        
-class BandpassResults(api.Results):
+class BandpassResults(basetask.Results):
     """
     BandpassResults is the results class common to all pipeline bandpass
     calibration tasks.
@@ -128,12 +102,14 @@ class BandpassResults(api.Results):
         :param tasks: the caltables on which the parameters were determined
         :type tasks: list of :class:`~pipeline.domain.caltable.CalibrationTable`
         """
+        super(BandpassResults, self).__init__()
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
         self.error = set()
+        self.qa2 = {}
 
-    def merge_with_context(self, context, replace=False):
+    def merge_with_context(self, context):
         """
         See :method:`~pipeline.api.Results.merge_with_context`
         """

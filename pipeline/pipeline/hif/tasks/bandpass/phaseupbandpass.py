@@ -8,8 +8,7 @@ from . import adapters
 from . import common
 from . import channelbandpass
 from .. import gaincal
-
-from  pipeline.hif.heuristics import caltable as caltable
+from pipeline.hif.heuristics import caltable as bcaltable
 
 
 class PhaseUpBandpassInputs(channelbandpass.ChannelBandpassInputs):
@@ -23,7 +22,7 @@ class PhaseUpBandpassInputs(channelbandpass.ChannelBandpassInputs):
     but does not extend - ChannelBandpassInputs.
 
     """
-    def __init__(self, context, output_dir=None,
+    def __init__(self, context, output_dir=None, run_qa2=None,
                  #
                  vis=None, caltable=None, 
                  # data selection arguments
@@ -108,7 +107,7 @@ class PhaseUpBandpass(basetask.StandardTaskTemplate):
             bandpass_inputs.spwmap = spwmap
             
             # need to append solution interval to filename
-            bandpass_inputs.caltable = caltable.BandpassCaltable()(
+            bandpass_inputs.caltable = bcaltable.BandpassCaltable()(
                 output_dir=inputs.output_dir, 
                 method='phaseup{0}'.format(solint), 
                 **bandpass_inputs.to_casa_args())
