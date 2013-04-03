@@ -5,16 +5,18 @@ import itertools
 import os
 import string
 import types
+import re
 
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.utils as utils
+import asap
+
+from . import logging
+from . import utils
 
 LOG = logging.get_logger(__name__)
 
 
 CalToArgs = collections.namedtuple('CalToArgs',
-                                   ['vis','spw','field','antenna'])
+                                   ['vis','spw','field','intent','antenna'])
 
 
 class CalApplication(object):
@@ -48,7 +50,7 @@ class CalApplication(object):
 
         calfroms = []
         for (gaintable, gainfield, interp, spwmap) in zipped:
-            with casatools.TableReader(gaintable) as caltable:
+            with utils.open_table(gaintable) as caltable:
                 viscal = caltable.getkeyword('VisCal')
             
             calfrom = CalFrom(gaintable, gainfield=gainfield, interp=interp, 
@@ -64,6 +66,7 @@ class CalApplication(object):
     def as_applycal(self):
         args = {'vis'       : self.vis,
                 'field'     : self.field,
+                'intent'    : self.intent,
                 'spw'       : self.spw,
                 'antenna'   : self.antenna,
                 'gaintable' : self.gaintable,
@@ -75,9 +78,10 @@ class CalApplication(object):
             if type(args[key]) is types.StringType:
                 args[key] = '\'%s\'' % args[key]
         
-        return ('applycal(vis=\'{vis}\', field=\'{field}\', spw=\'{spw}\', '
-                'antenna=\'{antenna}\', gaintable={gaintable}, '
-                'gainfield={gainfield}, spwmap={spwmap}, interp={interp})'
+        return ('applycal(vis=\'{vis}\', field=\'{field}\', '
+                'intent=\'{intent}\', spw=\'{spw}\', antenna=\'{antenna}\', '
+                'gaintable={gaintable}, gainfield={gainfield}, '
+                'spwmap={spwmap}, interp={interp})'
                 ''.format(**args))
 
     @property
@@ -105,6 +109,10 @@ class CalApplication(object):
         return l[0] if len(l) is 1 else l
     
     @property
+    def intent(self):
+        return self.calto.intent
+
+    @property
     def interp(self):
         l = [cf.interp for cf in self.calfrom]
         return l[0] if len(l) is 1 else l
@@ -130,20 +138,21 @@ class CalApplication(object):
 
 
 class CalTo(object):
-    def __init__(self, vis=None, field='', spw='', antenna='', obs_id=None):
+    def __init__(self, vis=None, field='', spw='', antenna='', intent=''):
         self.vis = vis
         self.field = field
         self.spw = spw
         self.antenna = antenna
-        self.obs_id = obs_id
+        self.intent = intent
 
     @property
     def antenna(self):
         return self._antenna
     
     @antenna.setter
-    def antenna(self, value=''):
-        value = value if value is not None else ''
+    def antenna(self, value):
+        if value is None:
+            value = ''
         self._antenna = utils.find_ranges(str(value))
 
     @property
@@ -151,17 +160,29 @@ class CalTo(object):
         return self._field
     
     @field.setter
-    def field(self, value=''):
-        value = value if value is not None else ''
+    def field(self, value):
+        if value is None:
+            value = ''
         self._field = str(value)
+
+    @property
+    def intent(self):
+        return self._intent
+    
+    @intent.setter
+    def intent(self, value):
+        if value is None:
+            value = ''
+        self._intent = str(value)
 
     @property
     def spw(self):
         return self._spw
     
     @spw.setter
-    def spw(self, value=''):
-        value = value if value is not None else ''
+    def spw(self, value):
+        if value is None:
+            value = ''
         self._spw = utils.find_ranges(str(value))
 
     @property
@@ -174,8 +195,8 @@ class CalTo(object):
 
     def __repr__(self):
         return ('CalTo(vis=\'%s\', field=\'%s\', spw=\'%s\', antenna=\'%s\','
-                'obs_id=%s)' % (self.vis, self.field, self.spw, self.antenna,
-                                self.obs_id))
+                'intent=\'%s\')' % (self.vis, self.field, self.spw, self.antenna, 
+                                    self.intent))
 
 
 class CalFrom(object):
@@ -326,6 +347,24 @@ class CalToIdAdapter(object):
             return [f.id for f in fields]
 
     @property
+    def intent(self):
+        # return the intents present in the CalTo
+        return self._calto.intent
+
+    def get_field_intents(self, field_id, spw_id):
+        field = self._get_field(field_id)
+        field_intents = field.intents
+
+        spw = self._get_spw(spw_id)
+        spw_intents = spw.intents
+        
+        user_intents = frozenset(self._calto.intent.split(','))
+        if self._calto.intent == '':
+            user_intents = field.intents
+
+        return user_intents & field_intents & spw_intents
+
+    @property
     def ms(self):
         return self._context.observing_run.get_ms(self._calto.vis)
 
@@ -334,21 +373,37 @@ class CalToIdAdapter(object):
         return [spw.id for spw in self.ms.get_spectral_windows(
                 self._calto.spw, science_windows_only=False)]
 
-    @property
-    def obs_id(self):
-        return self._calto.obs_id
+    def _get_field(self, field_id):
+        fields = self.ms.get_fields(task_arg=field_id)
+        if len(fields) != 1:
+            msg = 'Illegal field ID \'%s\' for vis \'%s\'' % (field_id, 
+                                                              self._calto.vis)
+            LOG.error(msg)
+            raise ValueError, msg        
+        return fields[0]
+
+    def _get_spw(self, spw_id):
+        spws = self.ms.get_spectral_windows(spw_id, 
+                                            science_windows_only=False)
+        if len(spws) != 1:
+            msg = 'Illegal spw ID \'%s\' for vis \'%s\'' % (spw_id, 
+                                                            self._calto.vis)
+            LOG.error(msg)
+            raise ValueError, msg        
+        return spws[0]
 
     def __repr__(self):
-        return ('CalToIdAdapter(ms=\'%s\', field=\'%s\', spw=\'%s\', ' 
-                'antenna=\'%s\', obs_id=%s)' % (self.ms.name, self.field,
-                                                self.spw, self.antenna, 
-                                                self.obs_id))
+        return ('CalToIdAdapter(ms=\'%s\', field=\'%s\', intent=\'%s\', ' 
+                'spw=\'%s\', antenna=\'%s\')' % (self.ms.name, self.field,
+                                                 self.intent, self.spw, 
+                                                 self.antenna))
 
 
 # CalState extends defaultdict. For defaultdicts to be pickleable, their 
 # default factories must be defined at the module level.
 def _antenna_dim(): return []
-def _field_dim(): return collections.defaultdict(_antenna_dim)
+def _intent_dim(): return collections.defaultdict(_antenna_dim)
+def _field_dim(): return collections.defaultdict(_intent_dim)
 def _spw_dim(): return collections.defaultdict(_field_dim)
 def _ms_dim(): return collections.defaultdict(_spw_dim)
 
@@ -379,9 +434,9 @@ class CalState(collections.defaultdict):
         return dict([(k, (CalState.dictify(v) if isinstance(v, dict) else v))
                      for (k, v) in dd.items()])
 
-    def merged(self):
+    def merged(self, hide_empty=False):
         hashes = {}
-        flattened = self._flattened()
+        flattened = self._flattened(hide_empty=hide_empty)
         for (calto_tup, calfrom) in flattened.iteritems():
             # create a tuple, as lists are not hashable
             calfrom_hash = tuple([hash(cf) for cf in calfrom])
@@ -405,7 +460,8 @@ class CalState(collections.defaultdict):
             for vis in calto_args.vis:
                 calto = CalTo(vis=vis,
                               spw=self._commafy(calto_args.spw), 
-                              field=self._commafy(calto_args.field), 
+                              field=self._commafy(calto_args.field),
+                              intent=self._commafy(calto_args.intent), 
                               antenna=self._commafy(calto_args.antenna))
                 result[calto] = calfrom
 
@@ -434,11 +490,13 @@ class CalState(collections.defaultdict):
         flat = dict(_flattenIter(self.items()))
         
         if hide_empty:
-            return dict([(k, v) for (k, v) in flat.items() if v is not []])
+            return dict([(k, v) for (k, v) in flat.items() 
+                         if len(v) is not 0])
         return flat 
 
     def as_applycal(self):
-        calapps = [CalApplication(k,v) for k,v in self.merged().items()]
+        calapps = [CalApplication(k,v) 
+                   for k,v in self.merged(hide_empty=True).items()]
         return '\n'.join([str(c) for c in calapps])
 
     def __str__(self):
@@ -464,10 +522,11 @@ class CalLibrary(object):
         
         for spw_id in calto.spw:
             for field_id in calto.field:
-                for antenna_id in calto.antenna:
-                    for cf in calfroms:
-                        cf_copy = copy.deepcopy(cf)
-                        calstate[ms_name][spw_id][field_id][antenna_id].append(cf_copy)
+                for intent in calto.get_field_intents(field_id, spw_id):
+                    for antenna_id in calto.antenna:
+                        for cf in calfroms:
+                            cf_copy = copy.deepcopy(cf)
+                            calstate[ms_name][spw_id][field_id][intent][antenna_id].append(cf_copy)
 
         LOG.trace('Calstate after _add:\n'
                   '%s' % calstate.as_applycal())
@@ -497,13 +556,14 @@ class CalLibrary(object):
         
         for spw_id in calto.spw:
             for field_id in calto.field:
-                for antenna_id in calto.antenna:
-                    current = calstate[ms_name][spw_id][field_id][antenna_id]
-                    for c in calfrom:
-                        try:
-                            current.remove(c)
-                        except ValueError, _:
-                            LOG.debug('%s not found in calstate' % c)
+                for intent in calto.get_field_intents(field_id, spw_id):
+                    for antenna_id in calto.antenna:
+                        current = calstate[ms_name][spw_id][field_id][intent][antenna_id]
+                        for c in calfrom:
+                            try:
+                                current.remove(c)
+                            except ValueError, _:
+                                LOG.debug('%s not found in calstate' % c)
 
         LOG.trace('Calstate after _remove:\n'
                   '%s' % calstate.as_applycal())
@@ -539,11 +599,12 @@ class CalLibrary(object):
         result = CalState()
         for spw_id in id_resolver.spw:
             for field_id in id_resolver.field:
-                for antenna_id in id_resolver.antenna:
-                    # perhaps this should be deepcopied. Do we trust all 
-                    # clients using this method?
-                    v = self._active[ms_name][spw_id][field_id][antenna_id][:]
-                    result[ms_name][spw_id][field_id][antenna_id] = v
+                for intent in id_resolver.get_field_intents(field_id, spw_id):
+                    for antenna_id in id_resolver.antenna:
+                        # perhaps this should be deepcopied. Do we trust all 
+                        # clients using this method?
+                        v = self._active[ms_name][spw_id][field_id][intent][antenna_id][:]
+                        result[ms_name][spw_id][field_id][intent][antenna_id] = v
 
         return result
 
@@ -596,3 +657,322 @@ def _gen_hash(o):
         new_o[k] = _gen_hash(v)
     
     return hash(tuple(frozenset(new_o.items())))
+
+### single dish specific
+
+class SDCalApplication(object):
+    def __init__(self, calto, calfrom):
+        self.calto = calto
+        if type(calfrom) is not types.ListType:
+            calfrom = [calfrom]
+        self.calfrom = calfrom
+
+    @staticmethod
+    def from_export(s):
+        d = eval(string.replace(s, 'sdcal2(', 'dict('))
+        calto = CalTo(vis=d['infile'])
+        
+        # wrap these values in a list if they are single valued, 
+        # eg. 'm31' -> ['m31']
+        for key in ('applytable',):
+            if type(d[key]) is types.StringType:
+                d[key] = [d[key]]
+
+        calfroms = []
+        for tab in d['applytable']:
+            with utils.open_table(tab) as applytable:
+                caltype = applytable.getkeyword('ApplyType')
+
+            if caltype == 'CALTSYS':
+                calfrom = SDCalFrom(tab, interp=d['interp'], spwmap=d['ifmap'])
+                calfrom.caltype = 'tsys'
+            else:
+                calfrom = SDCalFrom(tab, interp=d['interp'])
+                calfrom.caltype = 'sky'
+            LOG.trace('Marking caltable \'%s\' as caltype \'%s\''
+                      '' % (tab, calfrom.caltype))
+
+            calfroms.append(calfrom)
+        
+        return SDCalApplication(calto, calfroms)
+
+    @staticmethod
+    def iflist_to_spw(iflist):
+        if isinstance(iflist, int):
+            spw = str(iflist)
+        else:
+            # assume list or numpy.array 
+            spw = str(list(iflist))[1:-1].replace(' ','')
+        return spw
+
+    @staticmethod
+    def spw_to_iflist(spw):
+        # currently only supports simple spw specification
+        # using , and ~
+        elements = spw.split(',')
+        iflist = []
+        for elem in elements:
+            if elem.isdigit():
+                iflist.append(int(elem))
+            elif re.match('^[0-9]+~[0-9]+$', elem):
+                s = [int(e) for e in elem.split('~')]
+                iflist.extend(range(s[0],s[1]+1))
+        return iflist
+    
+    def as_applycal(self):
+        args = {'infile'    : self.infile,
+                'calmode'   : 'apply',
+                'field'     : self.field,
+                'scanlist'  : self.scanlist,
+                'iflist'    : self.iflist,
+                'pollist'   : self.pollist,
+                'applytable': self.applytable,
+                'ifmap'     : self.ifmap,
+                'interp'    : self.interp,
+                'overwrite' : True            }
+        
+        for key in ('applytable', 'interp'):
+            if type(args[key]) is types.StringType:
+                args[key] = '\'%s\'' % args[key]
+        
+        return ('sdcal2(infile=\'{infile}\', calmode=\'{calmode}\', applytable={applytable},  '
+                'ifmap={ifmap}, interp={interp}, '
+                'scanlist={scanlist}, field=\'{field}\', iflist={iflist}, pollist={pollist}) '
+                ''.format(**args))
+
+    @property
+    def infile(self):
+        vis = self.calto.vis
+        antenna = self.calto.antenna
+        from asap.scantable import is_scantable
+        if is_scantable(vis):
+            return vis
+        else:
+            # must be MS
+            # scantable name is <MS_prefix>.<antenna_name>.asap
+            s = vis.split('.')
+            return '.'.join(s[:-1]+[antenna,'asap'])
+
+    def exists(self):
+        for cf in self.calfrom: 
+            if not os.path.exists(cf.gaintable):
+                return False
+        return True
+
+    @property
+    def field(self):
+        return self.calto.field
+
+    @property
+    def scanlist(self):
+        return []
+
+    @property
+    def iflist(self):
+        return SDCalApplication.spw_to_iflist(self.calto.spw)
+
+    @property
+    def pollist(self):
+        return []
+
+    @property
+    def applytable(self):
+        l = [cf.gaintable for cf in self.calfrom]
+        return l[0] if len(l) is 1 else l
+
+    @property
+    def ifmap(self):
+        ifmap_ = {}
+        for cf in self.calfrom:
+            if cf.spwmap is not None:
+                for (k,v) in cf.spwmap.items():
+                    if ifmap_.has_key(k):
+                        ifmap_[k] = ifmap_[k] + v
+                    else:
+                        ifmap_[k] = v
+        return ifmap_
+    
+    @property
+    def interp(self):
+        # temporal
+        return 'linear,cspline'
+        
+    def __str__(self):
+        return self.as_applycal()
+    
+    def __repr__(self):
+        return 'SDCalApplication(%s, %s)' % (self.calto, self.calfrom)
+
+class SDCalToAdapter(CalToIdAdapter):
+    def __init__(self, context, calto):
+        super(SDCalToAdapter, self).__init__(context, calto)
+
+    @property
+    def antenna(self):
+        # return name instead of id
+        return [a.name for a in self.ms.get_antenna(self._calto.antenna)]
+            
+class SDCalFrom(CalFrom):
+    CALTYPES = {
+        'unknown'      : 0,
+        'sky'          : 1,
+        'tsys'         : 2
+    }
+    
+    def __init__(self, gaintable, gainfield=None, interp=None, spwmap=None,
+                 caltype=None):
+        super(SDCalFrom,self).__init__(gaintable, gainfield, interp, spwmap)
+        self.caltype = caltype
+
+    @property
+    def caltype(self):
+        return self._caltype
+    
+    @caltype.setter
+    def caltype(self, value):
+        if value is None:
+            value = 'unknown'
+        value = string.lower(value)
+        assert value in SDCalFrom.CALTYPES
+        self._caltype = value
+
+    @property
+    def spwmap(self):
+        return self._spwmap
+    
+    @spwmap.setter
+    def spwmap(self, value):
+        if value is None:
+            value = {}
+        if not isinstance(value, dict):
+            raise ValueError, 'spwmap must be a list'
+        self._spwmap = value.copy()
+
+    def __repr__(self):
+        return ('SDCalFrom(\'%s\', gainfield=\'%s\', interp=\'%s\', '
+                'spwmap=\'%s\', caltype=\'%s\')' % (self.gaintable, 
+                self.gainfield, self.interp, self.spwmap, self.caltype))
+
+class SDCalState(CalState):
+    def __init__(self, default_factory=_ms_dim):
+        super(SDCalState, self).__init__(default_factory)
+
+    def get_caltable(self, caltypes=None):
+        if caltypes is None:
+            caltypes = SDCalFrom.CALTYPES.keys()
+
+        if type(caltypes) is types.StringType:
+            caltypes = (caltypes,)
+            
+        for c in caltypes:
+            assert c in SDCalFrom.CALTYPES
+
+        calfroms = (itertools.chain(*self.merged().values()))
+        return set([cf.gaintable for cf in calfroms
+                    if cf.caltype in caltypes])
+
+    def as_applycal(self):
+        calapps = [SDCalApplication(k,v) for k,v in self.merged().items()]
+        return '\n'.join([str(c) for c in calapps])
+
+class SDCalLibrary(CalLibrary):
+    def __init__(self, context):
+        self._context = context
+        self._active = SDCalState()
+        self._applied = SDCalState()
+
+    def _add(self, calto, calfroms, calstate):
+        if type(calfroms) is not types.ListType:
+            calfroms = [calfroms]
+        
+        calto = SDCalToAdapter(self._context, calto)
+        ms_name = calto.ms.name
+        
+        for spw_id in calto.spw:
+            for field_id in calto.field:
+                for intent in calto.get_field_intents(field_id, spw_id):
+                    for antenna_id in calto.antenna:
+                        for cf in calfroms:
+                            cf_copy = copy.deepcopy(cf)
+                            calstate[ms_name][spw_id][field_id][intent][antenna_id].append(cf_copy)
+
+        LOG.trace('Calstate after _add:\n'
+                  '%s' % calstate.as_applycal())
+
+    def _export(self, calstate, filename=None):
+        filename = self._calc_filename(filename)
+
+        calapps = [SDCalApplication(k,v) for k,v in calstate.merged().items()]
+                   
+        with open(filename, 'w') as export_file:
+            for ca in calapps: 
+                export_file.write(ca.as_applycal())
+                export_file.write('\n')
+
+    def _remove(self, calto, calfrom, calstate):
+        if type(calfrom) is not types.ListType:
+            calfrom = [calfrom]
+        
+        calto = SDCalToAdapter(self._context, calto)
+        ms_name = calto.ms.name
+        
+        for spw_id in calto.spw:
+            for field_id in calto.field:
+                for intent in calto.get_field_intents(field_id, spw_id):
+                    for antenna_id in calto.antenna:
+                        current = calstate[ms_name][spw_id][field_id][intent][antenna_id]
+                        for c in calfrom:
+                            try:
+                                current.remove(c)
+                            except ValueError, _:
+                                LOG.debug('%s not found in calstate' % c)
+
+        LOG.trace('Calstate after _remove:\n'
+                  '%s' % calstate.as_applycal())
+
+    def get_calstate(self, calto, hide_null=True):
+        # wrap the text-only CalTo in a CalToIdAdapter, which will parse the
+        # CalTo properties and give us the appropriate subtable IDs to iterate
+        # over 
+        id_resolver = SDCalToAdapter(self._context, calto)        
+        ms_name = id_resolver.ms.name
+
+        result = SDCalState()
+        for spw_id in id_resolver.spw:
+            for field_id in id_resolver.field:
+                for intent in id_resolver.get_field_intents(field_id, spw_id):
+                    for antenna_id in id_resolver.antenna:
+                        # perhaps this should be deepcopied. Do we trust all 
+                        # clients using this method?
+                        v = self._active[ms_name][spw_id][field_id][intent][antenna_id][:]
+                        result[ms_name][spw_id][field_id][intent][antenna_id] = v
+
+        return result
+
+    def import_state(self, filename=None):
+        filename = self._calc_filename(filename)
+
+        calapps = []
+        with open(filename, 'r') as import_file:
+            for line in [l for l in import_file if l.startswith('sdcal2(')]:
+                calapp = SDCalApplication.from_export(line)
+                calapp.calto = self._edit_calto(calapp.calto)
+                calapps.append(calapp)
+
+        self._active = SDCalState()
+        for calapp in calapps:
+            LOG.debug('Adding %s' % calapp)        
+            self.add(calapp.calto, calapp.calfrom)
+
+        LOG.info('Calibration state after import:\n'
+                 '%s' % self.active.as_applycal())
+
+    def _edit_calto(self, calto):
+        from asap.scantable import is_scantable
+        if is_scantable(calto.vis):
+            s = asap.scantable(calto.vis,average=False)
+            antenna_name = s.get_antennaname()
+            vis = calto.vis.replace(antenna_name+'.asap','ms')
+            return CalTo(vis,antenna=antenna_name)
+        else:
+            return calto

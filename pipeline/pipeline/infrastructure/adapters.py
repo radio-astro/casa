@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-import pipeline.infrastructure.api as api
+from . import api
 import pipeline.h.heuristics as heuristics
 
 

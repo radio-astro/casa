@@ -16,19 +16,24 @@ try:
 except:
     import StringIO
 import types
+import uuid
 
-import pipeline.infrastructure.api as api
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.adapters as adapters
-import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.filenamer as filenamer
-import pipeline.infrastructure.jobrequest as jobrequest
-import pipeline.infrastructure.launcher as launcher
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.ordereddict as ordereddict
-import pipeline.infrastructure.gaincurve as gaincurve
+from . import api
+from . import adapters
+from . import casatools
+from . import callibrary
+from . import filenamer
+from . import jobrequest
+from . import launcher
+from . import logging
+import pipeline.extern.ordereddict as ordereddict
 
 LOG = logging.get_logger(__name__)
+
+
+# control generation of the weblog
+DISABLE_WEBLOG = False
+
 
 def timestamp(method):
     def timed(self, *args, **kw):
@@ -49,6 +54,29 @@ def timestamp(method):
         return result
 
     return timed
+
+def capture_log(method):
+    def capture(self, *args, **kw):
+        # get the size of the CASA log before task execution
+        logfile = casatools.log.logfile()
+        size_before = os.path.getsize(logfile)
+
+        # execute the task
+        result = method(self, *args, **kw)
+        
+        # copy the CASA log entries written since task execution to the result 
+        with open(logfile, 'r') as casalog:
+            casalog.seek(size_before)
+            
+            # sometimes we can't write properties, such as for flagdeteralma
+            # when the result is a dict
+            try:
+                result.casalog = casalog.read()
+            except:
+                LOG.trace('Could not set casalog property on result of type '
+                          '%s' % result.__class__)
+        return result
+    return capture
 
 
 class MandatoryInputsMixin(object):
@@ -144,6 +172,7 @@ class OnTheFlyCalibrationMixin(object):
         return callibrary.CalTo(vis=self.vis,
                                 field=self.field, 
                                 spw=self.spw,
+                                intent=self.intent,
                                 antenna=self.antenna)
 
     @property
@@ -184,7 +213,8 @@ class OnTheFlyCalibrationMixin(object):
         if value not in (None, True, False):
             raise TypeError, 'gaincurve must be one of None, True or False'
         if value is None:
-            value = gaincurve.Gaincurve()
+            import pipeline.hif
+            value = pipeline.hif.heuristics.Gaincurve()
         self._gaincurve = value
 
     @property
@@ -231,8 +261,9 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         """
         # get the signature of this Inputs class. We want to return a 
         # of dictionary of all kw argument names except self, the 
-        # pipeline-specific arguments (context and output_dir) and caltable.
-        skip = ['self', 'context', 'output_dir']
+        # pipeline-specific arguments (context, output_dir and run_qa2) and
+        # caltable.
+        skip = ['self', 'context', 'output_dir', 'run_qa2']
         skip.extend(ignore)
         kw_names = [a for a in inspect.getargspec(self.__init__).args
                     if a not in skip]
@@ -381,7 +412,15 @@ class ModeInputs(api.Inputs):
                 LOG.trace('Getter/setter found on {0}. Setting \'{1}\' '
                           'attribute to \'{2}\''.format(self.__class__.__name__,
                                                         name, val))
-                return super(ModeInputs, self).__setattr__(name, val)
+                super(ModeInputs, self).__setattr__(name, val)
+                
+                # overriding defaults of wrapped classes requires us to re-get
+                # the value after setting it, as the property setter of this 
+                # superclass has probably transformed it, eg. None => 'inf'.
+                # Furthermore, we do not return early, giving this function a
+                # chance to set the parameter - with this new value - on the
+                # wrapped classes too.
+                val = getattr(self, name)
 
         # otherwise, set the said attribute on all of our delegate Inputs. In
         # doing so, the user can switch mode at any time and have the new
@@ -500,13 +539,110 @@ class ModeTask(api.Task):
 Timestamps = collections.namedtuple('Timestamps', ['start', 'end'])
 
 
-class ResultsList(list, api.Results):
+class Results(api.Results):
+    """
+    Results is the base implementation of the Results API. 
+    
+    In practice, all results objects should subclass this object to take 
+    advantage of the shared functionality.
+    """    
+    def __init__(self):
+        super(Results, self).__init__()
+        
+        # set the value used to uniquely identify this object. This value will
+        # be used to determine whether this results has already been merged 
+        # with the context 
+        self._uuid = uuid.uuid4()
+
+    @property
+    def uuid(self):
+        """
+        The unique identifier for this results object.
+        """
+        return self._uuid
+
+    def merge_with_context(self, context):
+        """
+        Merge these results with the given context.
+        
+        This method will be called during the execution of accept(). For 
+        calibration tasks, a typical implementation will register caltables
+        with the pipeline callibrary.  
+
+        At this point the result is deemed safe to merge, so no further checks
+        on the context need be performed. 
+                
+        :param context: the target
+            :class:`~pipeline.infrastructure.launcher.Context`
+        :type context: :class:`~pipeline.infrastructure.launcher.Context`
+        """
+        LOG.debug('Null implementation of merge_with_context used for %s'
+                  '' % self.__class__.__name__)
+
+    def accept(self, context=None, **other_parameters):
+        """
+        Accept these results, registering objects with the context and incrementing
+        stage counters as necessary in preparation for the next task.
+        """
+        if context is None:
+            # context will be none when called from a CASA interactive 
+            # session. When this happens, we need to locate the global context
+            # from the             
+            import pipeline.h.cli.utils
+            context = pipeline.h.cli.utils.get_context()
+
+        self._check_for_remerge(context)
+
+        # execute our template function
+        self.merge_with_context(context, **other_parameters)
+
+        # with no exceptions thrown by this point, we can safely add this 
+        # results object to the results list
+        context.results.append(self)
+
+        if context.subtask_counter is 0 and not DISABLE_WEBLOG:
+            # cannot import at initial import time due to cyclic dependency
+            import pipeline.infrastructure.renderer.htmlrenderer as htmlrenderer
+            htmlrenderer.WebLogGenerator.render(context)
+
+    def _check_for_remerge(self, context):
+        """
+        Check whether this result has already been added to the given context. 
+        """
+        # context.results contains the list of results that have been merged 
+        # with the context. Check whether the UUID of any result or sub-result
+        # in that list matches the UUID of this result.
+        for result in context.results:
+            if self._is_uuid_in_result(result):    
+                msg = 'This result has already been added to the context'
+                LOG.error(msg)
+                raise ValueError(msg)
+        
+    def _is_uuid_in_result(self, result):
+        """
+        Return True if the UUID of this result matches the UUID of the given
+        result or any sub-result contained within. 
+        """
+        for subtask_result in getattr(result, 'subtask_results', ()):
+            if self._is_uuid_in_result(subtask_result):
+                return True
+
+        if result.uuid == self.uuid:
+            return True
+        
+        return False
+
+
+class ResultsList(Results, list):
+    def __init__(self):
+        super(ResultsList, self).__init__()
+
     def merge_with_context(self, context):
         for result in self:
             result.merge_with_context(context)
     
     def accept(self, context):
-        return api.Results.accept(self, context)
+        return super(ResultsList, self).accept(context)
 
 
 class StandardTaskTemplate(api.Task):
@@ -630,6 +766,7 @@ class StandardTaskTemplate(api.Task):
         return hashes.values()
     
     @timestamp
+    @capture_log
     def execute(self, dry_run=True, **parameters):
         # The filenamer deletes any identically named file when constructing
         # the filename, which is desired when really executing a task but not
@@ -764,8 +901,9 @@ class Executor(object):
     def __init__(self, context, dry_run=True):
         self._dry_run = dry_run
         self._context = context
-        self._cmdfile = os.path.join(context.report_dir, 'casa_commands.log') 
+        self._cmdfile = os.path.join(context.report_dir, 'casa_commands.log')
 
+    @capture_log
     def execute(self, job, merge=False):
         """
         Execute the given job or subtask, returning its output.
@@ -790,3 +928,21 @@ class Executor(object):
             result.accept(self._context)
 
         return result
+
+def property_with_default(name, default, doc=None):
+    """
+    Return a property whose value is reset to a default value when setting the
+    property value to None.
+    """
+    # our standard name for the private property backing the public property 
+    # is a prefix of one underscore
+    varname = '_' + name 
+    def getx(self):
+        return object.__getattribute__(self, varname)
+    def setx(self, value):
+        if value is None:
+            value = default
+        object.__setattr__(self, varname, value)
+#    def delx(self):
+#        object.__delattr__(self, varname)
+    return property(getx, setx, None, doc)

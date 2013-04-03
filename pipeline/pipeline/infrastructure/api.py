@@ -21,7 +21,7 @@ If a user desires more than to simply override a Heuristic-derived value with
 a Task parameter, it is anticipated that they will edit the appropriate
 Heuristic in order to tweak the existing implementation or introduce a new
 algorithm into the pipeline. Concrete |Heuristic| implementations can be found
-in the :mod:`pipeline.[h/hif/hsd/heuristics` package. 
+in the :mod:`pipeline.heuristics` package. 
 
 |Inputs|, in a general sense, are considered as the mandatory arguments for a
 pipeline |Task|. Tasks and Inputs are closely aligned, and just as Tasks
@@ -139,47 +139,19 @@ class Results(object):
     """
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, task=None):        
-        self.task_class = task.__class__
-
-    def merge_with_context(self, context):
+    @abc.abstractproperty
+    def uuid(self):
         """
-        Merge these results with the given context.
-        
-        This method will be called during the execution of accept(). For 
-        calibration tasks, a typical implementation will register caltables
-        with the pipeline callibrary.  
-                
-        :param context: the target
-            :class:`~pipeline.infrastructure.launcher.Context`
-        :type context: :class:`~pipeline.infrastructure.launcher.Context`
+        The unique identifier for this results object.
         """
-        pass
+        raise NotImplementedError
 
-    def accept(self, context=None):
+    @abc.abstractmethod
+    def accept(self, context):
         """
         Accept these results, registering objects with the context and incrementing
         stage counters as necessary in preparation for the next task.
         """
-        if context is None:
-            # context will be none when called from a CASA interactive 
-            # session. When this happens, we need to locate the global context
-            # from the 
-            
-            #import pipeline.cli.utils
-            import pipeline.h.cli.utils
-            #context = pipeline.cli.utils.get_context()
-            context = pipeline.h.cli.utils.get_context()
-
-        self.merge_with_context(context)
-
-        # add this results object to the results list
-        context.results.append(self)
-
-        if context.subtask_counter is 0:
-            # cannot import at initial import time due to cyclic dependency
-            import pipeline.infrastructure.renderer.htmlrenderer as htmlrenderer
-            htmlrenderer.WebLogGenerator.render(context)
 
 
 class Task(object):
