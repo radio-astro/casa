@@ -5,8 +5,7 @@ import os
 import matplotlib.ticker as ticker
 import pylab
 
-from pipeline.infrastructure.jobrequest import casa_tasks
-#import heuristics.hif.logger as logger
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.renderer.logger as logger
         
 

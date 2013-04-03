@@ -9,17 +9,17 @@ import matplotlib.pyplot as pyplot
 import matplotlib.ticker as ticker
 import pylab
 
-#import heuristics.hif.logger as logger
 import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.extern.analysis_scripts.analysisUtils as analysisUtils
-import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure.jobrequest import casa_tasks
-import pipeline.infrastructure.utils as utils
-from .. import logging
 from pipeline.extern import analysis_scripts
+from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.utils as utils
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class SummaryDisplayInputs(basetask.StandardInputs):
@@ -140,6 +140,36 @@ class AzElChart(object):
         return logger.Plot(self.figfile,
                            x_axis='Azimuth',
                            y_axis='Elevation',
+                           parameters={'vis' : self.ms.basename})
+
+
+
+class WeatherChart(object):
+    def __init__(self, context, ms):
+        self.context = context
+        self.ms = ms
+        self.figfile = self._get_figfile()
+
+    def plot(self):
+        if os.path.exists(self.figfile):
+            return self._get_plot_object()
+
+        analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name, 
+                                                   figfile=self.figfile)
+
+        return self._get_plot_object()
+
+    def _get_figfile(self):
+        session_part = self.ms.session
+        ms_part = self.ms.basename
+        return os.path.join(self.context.report_dir, 
+                            'session%s' % session_part, 
+                            ms_part, 'weather.png')
+
+    def _get_plot_object(self):
+        return logger.Plot(self.figfile,
+                           x_axis='Time',
+                           y_axis='Weather',
                            parameters={'vis' : self.ms.basename})
 
 

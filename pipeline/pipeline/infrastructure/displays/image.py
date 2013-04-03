@@ -9,7 +9,7 @@ import numpy as np
 from numpy import ma
 import pylab as plt
 
-from pipeline.infrastructure.jobrequest import casa_tasks
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.renderer.logger as logger
 
 _valid_chars = "_.%s%s" % (string.ascii_letters, string.digits)
@@ -29,7 +29,9 @@ flag_color = {'outlier': 'red',
               'high outlier':'orange',
               'low outlier':'yellow',
               'too many flags':'lightblue',
-              'nmedian':'darkred'}
+              'nmedian':'darkred',
+              'max abs':'pink',
+              'min abs':'darkpink'}
               
 
 class ImageDisplay(object):
@@ -135,7 +137,8 @@ class ImageDisplay(object):
             plotfile = '%s_%s_%s_v_%s_%s.png' % (prefix,
               results.first(description).datatype, ytitle, xtitle, description)
             plotfile = sanitize(plotfile)
-            plt.savefig(os.path.join(reportdir, plotfile))
+            plotfile = os.path.join(reportdir, plotfile)
+            plt.savefig(plotfile)
 
             plt.clf()
             plt.close(1)
@@ -249,6 +252,8 @@ class ImageDisplay(object):
         for sentinel in sentinels.keys():
             sentinel_mask += (data==sentinel)
         actual_data = data[np.logical_not(sentinel_mask)]
+        # watch out for nans which mess up vmin, vmax
+        actual_data = actual_data[np.logical_not(np.isnan(actual_data))]
         if len(actual_data):
             vmin = actual_data.min()
             vmax = actual_data.max()
@@ -267,7 +272,7 @@ class ImageDisplay(object):
         # plot data - data transpose to get [x,y] into [row,column] expected by
         # matplotlib
         plt.subplot(1, nplots, plotnumber)
-    
+
         plt.imshow(np.transpose(data), cmap=cmap, norm=norm, vmin=vmin,
           vmax=vmax, interpolation='nearest', origin='lower', aspect=aspect)
         lims = plt.axis()
