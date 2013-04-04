@@ -111,11 +111,7 @@ template <class M> class ScalarMeasColumn;
 //  <li>MDirection::DEFAULT = J2000
 // </ul>
 // <p>
-// In addition, an MDirection::INVALID is defined to be used internally
-// to mark directions which could not be determined, e.g. when trying
-// to use an ephemeris outside its validity range.  
-// <p>
-// Conversion between the different valid types is done with the standard
+// Conversion between the different types is done with the standard
 // <linkto class=MeasConvert>MeasConvert</linkto> class 
 // (<src>MDirection::Convert</src> in this case).<br>
 // For some conversion additional <linkto class=MeasFrame>MeasFrame</linkto>
@@ -233,10 +229,7 @@ public:
       DEFAULT=J2000,
       // Synonyms
       AZELNE=AZEL,
-      AZELNEGEO=AZELGEO,
-      // Invalid direction
-      INVALID = 255
-    };
+      AZELNEGEO=AZELGEO };
   // Global types
   enum GlobalTypes {
     GRADEC,
