@@ -1978,15 +1978,22 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
 
   TableRow fldRow(fld);
   for (uInt f = 0; f < nFlds; f++) {
-    delayDir = otherFieldCols.delayDirMeas(f);
-    phaseDir = otherFieldCols.phaseDirMeas(f);
-    refDir = otherFieldCols.referenceDirMeas(f);
 
-    if(MDirection::castType(phaseDir.getRef().getType()) == MDirection::INVALID){
-      LogIO os(LogOrigin("MSConcat", "copyField"));
-      os << LogIO::WARN << "Field " << f << " (" << otherFieldCols.name()(f) << ", to be appended)"
-	 << " is using an ephemeris with incorrect time origin setup: the time origin (" << otherFieldCols.time()(f)
-	 << " s) in the FIELD table is outside the validity range of the ephemeris." << LogIO::POST;
+    String ephPath = otherFieldCols.ephemPath(f);
+
+    try{
+      delayDir = otherFieldCols.delayDirMeas(f);
+      phaseDir = otherFieldCols.phaseDirMeas(f);
+      refDir = otherFieldCols.referenceDirMeas(f);
+    }
+    catch(AipsError x){
+      if(!ephPath.empty()){
+	LogIO os(LogOrigin("MSConcat", "copyField"));
+	os << LogIO::SEVERE << "Field " << f << " (" << otherFieldCols.name()(f) << ", to be appended)"
+	   << " is using an ephemeris with incorrect time origin setup: the time origin (" << otherFieldCols.time()(f)
+	   << " s) in the FIELD table is outside the validity range of the ephemeris." << LogIO::POST;
+      }
+      throw(x);
     }
 
     if (dirType != otherDirType) {
@@ -1996,8 +2003,6 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
     }
     
     const Int newFld = fieldCols.matchDirection(refDir, delayDir, phaseDir, tolerance);
-
-    String ephPath = otherFieldCols.ephemPath(f);
 
     Bool canUseThisEntry = (newFld>=0);
     if(canUseThisEntry){
@@ -2010,7 +2015,10 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
 	  // is the time coverage of this ephem sufficient to be also used for the other field?
 	  stringstream ss;
 	  for(uInt i=0; i<2; i++){
-	    if(MDirection::castType(fieldCols.phaseDirMeas(newFld, validityRange(i)).getRef().getType()) == MDirection::INVALID){
+	    try{
+	      MDirection tMDir = fieldCols.phaseDirMeas(newFld, validityRange(i));
+	    }
+	    catch(AipsError x){
 	      canUseThisEntry = False;
 	      ss << validityRange(i) << ", ";
 	    }	  
