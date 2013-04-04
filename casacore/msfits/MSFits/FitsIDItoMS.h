@@ -255,7 +255,8 @@ protected:
   Matrix<Int> corrProduct_p;
   Vector<String> coordType_p;
   Vector<Double> refVal_p, refPix_p, delta_p; 
-  String array_p,object_p,timsys_p;
+  static String array_p;
+  String object_p,timsys_p;
   Double epoch_p;
   static Double rdate;
   Int nAnt_p;
