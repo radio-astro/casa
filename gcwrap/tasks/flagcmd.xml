@@ -241,12 +241,16 @@
                and reason = 'FOCUS_ERROR,SUBREFLECTOR_ERROR'
                matches this compound reason string only
 
-          useapplied -- select the flag commands of rows that have APPLIED=True
+          useapplied -- select the flag commands of rows that have column APPLIED=True
                options: True,False
                default: False   
 
                If useapplied=True it will read in both applied and
-               unapplied flags
+               unapplied flags.
+
+               IMPORTANT: The APPLIED column is set to True after a flag command is applied
+                          to the MS. In order to re-apply the same flag command, this
+                          parameter should be set to True. 
 
 
        inpmode "list" -- input commands from an ASCII file, a list of files or via a list of strings.
@@ -423,13 +427,21 @@
           action = 'list'
 
        * To apply the flags stored in the FLAG_CMD table in the MS,
-        simply set inpmode='table' and action='apply', e.g.
+        simply set inpmode='table' and action='apply'. This is the default setup 
+        of flagcmd. Note that when a flag command is applied, the corresponding APPLIED 
+        column cell will be updated to True.
 
           inpmode = 'table'
           action = 'apply'
           useapplied = False
 
-        This is the default setup of flagcmd.
+       * To re-apply the flags stored in the FLAG_CMD table in the MS,
+        inpmode='table', action='apply' and useapplied=True. 
+
+          inpmode = 'table'
+          action = 'apply'
+          useapplied = True
+        
 
        * To merely save to FLAG_CMD but not apply, then
         
