@@ -1946,6 +1946,16 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
     nAnt_p = max(nAnt_p,ant1+1);
     nAnt_p = max(nAnt_p,ant2+1);
 
+    Bool doConjugateVis = False;
+
+    if(ant1>ant2){ // swap indices and multiply UVW by -1
+      Int tant = ant1;
+      ant1 = ant2;
+      ant2 = tant;
+      uvw *= -1.;
+      doConjugateVis = True;
+    }
+
     // Convert U,V,W from units of seconds to meters
     uvw *= C::c;
 
@@ -2016,9 +2026,13 @@ void FITSIDItoMS1::fillMSMainTable(const String& MSFileName, Int& nField, Int& n
 	    flag(p, chan) = False;
 	  }
 
-	  vis(p, chan) = Complex(visReal, -visImag); // NOTE: conjugation of visibility!
-                                                     // FITS-IDI convention is conjugate of AIPS and CASA convention!
-
+	  if(doConjugateVis){ // need a conjugation to follow the ant1<=ant2 rule
+	    vis(p, chan) = Complex(visReal, visImag); // NOTE: this means no conjugation of visibility because of FITS-IDI convention!
+	  }
+	  else{
+	    vis(p, chan) = Complex(visReal, -visImag); // NOTE: conjugation of visibility!
+	                                               // FITS-IDI convention is conjugate of AIPS and CASA convention!
+	  }
  	}
       }
 
