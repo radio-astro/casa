@@ -116,11 +116,11 @@ def get_task_description(result_obj):
         names = datatable.getkeyword('FILENAMES')
         return 'Inspect %s'%(utils.commafy(names))
 
-    if task_cls is hsd.tasks.SDCalTsys:
-        return 'Generage Tsys calibration table'
+    #if task_cls is hsd.tasks.SDCalTsys:
+        #return 'Generage Tsys calibration table'
 
-    if task_cls is hsd.tasks.SDCalSky:
-        return 'Generage Sky calibration table'
+    #if task_cls is hsd.tasks.SDCalSky:
+        #return 'Generage Sky calibration table'
 
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
