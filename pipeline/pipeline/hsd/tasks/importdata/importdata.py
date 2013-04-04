@@ -7,19 +7,15 @@ import tarfile
 import types
 import re
 
-import pipeline.infrastructure.api as api
+import pipeline.infrastructure as infrastructure
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure.jobrequest import casa_tasks
-import pipeline.infrastructure.logging as logging
-#import pipeline.infrastructure.tablereader as tablereader
-import pipeline.infrastructure.sdtablereader as sdtablereader
-import pipeline.domain.singledish as singledish
-#import pipeline.hsd.heuristics as heuristics
-from pipeline.hsd.heuristics import sddatatype as sddatatype
+import pipeline.infrastructure.callibrary as callibrary
+from ... import heuristics
 
 import asap as sd
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class SDImportDataInputs(basetask.StandardInputs):
@@ -87,14 +83,24 @@ class SDImportDataInputs(basetask.StandardInputs):
         return properties
 
 
-class SDImportDataResults(api.Results):
+class SDImportDataResults(basetask.Results):
     def __init__(self, mses=[], scantables=[]):
+        super(SDImportDataResults, self).__init__()
         self.mses = mses
         self.scantables = scantables
         
     def merge_with_context(self, context):
-        if not isinstance(context.observing_run, singledish.ScantableList):
-            context.observing_run = singledish.ScantableList()
+        # There's a circular dependency between the SD domain objects and the
+        # SD tasks. Work around the circular dependency (listed below) by 
+        # importing at runtime.
+        # 
+        # domain -> domain.singledish -> hsd -> hsd.tasks -> hsd.tasks.importdata -> domain
+        LOG.todo('Remove circular dependency between tasks and domain objects?')
+        import pipeline.domain as domain
+
+        if not isinstance(context.observing_run, domain.ScantableList):
+            context.observing_run = domain.ScantableList()
+            context.callibrary = callibrary.SDCalLibrary(context)
         target = context.observing_run
         for ms in self.mses:
             LOG.info('Adding {0} to context'.format(ms.name))
@@ -191,7 +197,7 @@ class SDImportData(basetask.StandardTaskTemplate):
         # imported, or in the case of an ASDM, converted then imported.
         else:
             # get a list of all the files in the given directory
-            h = sddatatype.DataTypeHeuristics()
+            h = heuristics.DataTypeHeuristics()
             if not isinstance(vis, list):
                 vis = [vis]
             for v in vis:
@@ -246,6 +252,11 @@ class SDImportData(basetask.StandardTaskTemplate):
         if self._executor._dry_run:
             return SDImportDataResults()
 
+        # Work around the circular dependency (listed below) by importing at runtime.
+        # 
+        # domain.singledish -> hsd.tasks.importdata -> domain.tablereader
+        import pipeline.infrastructure.sdtablereader as sdtablereader
+        LOG.todo('Remove circular dependency between tasks and domain objects?')
         ms_reader = sdtablereader.ObservingRunReader
         
         to_import = [os.path.abspath(f) for f in to_import]

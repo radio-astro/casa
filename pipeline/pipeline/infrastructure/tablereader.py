@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import datetime
 import itertools
 import os
 import string
@@ -26,6 +27,7 @@ class ObservingRunReader(object):
             ms = MeasurementSetReader.get_measurement_set(ms_file)
             observing_run.add_measurement_set(ms)
         return observing_run
+
 
 class MeasurementSetReader(object):
     @staticmethod
@@ -147,7 +149,7 @@ class MeasurementSetReader(object):
                     
                     if subTable.nrows() > 0:
                         spw.intents.update(obj.intents)
-		    subTable.close()
+                    subTable.close()
         
         for spw in ms.spectral_windows:
             LOG.trace('Intents for spw #{0}: {1}'
@@ -225,6 +227,12 @@ class MeasurementSetReader(object):
         MeasurementSetReader.add_valid_spws_to_fields(ms)
         MeasurementSetReader.link_intents_to_spws(ms)
         MeasurementSetReader.add_band_to_spws(ms)
+
+        (observer, project_id, schedblock_id, execblock_id) = ObservationTable.get_project_info(ms)
+        ms.observer = observer
+        ms.project_id = project_id
+        ms.schedblock_id = schedblock_id
+        ms.execblock_id = execblock_id
         
 #        # ..and main table properties too
 #        ms.all_field_ids = map(int, 
@@ -316,6 +324,60 @@ class ObservationTable(object):
             telescope_name = table.getcol('TELESCOPE_NAME')[0]
             return telescope_name
 
+    @staticmethod
+    def get_project_info(ms):
+        ms = _get_ms_name(ms)
+        table_filename = os.path.join(ms, 'OBSERVATION')
+        with utils.open_table(table_filename) as table:
+            telescope_name = table.getcol('TELESCOPE_NAME')[0]
+            project_id = table.getcol('PROJECT')[0]
+            observer = table.getcol('OBSERVER')[0]
+
+            schedblock_id = 'N/A'
+            execblock_id = 'N/A'
+
+            if telescope_name == 'ALMA':
+                schedule = table.getcol('SCHEDULE')[0]
+            
+                d = {}
+                for cell in schedule:
+                    key, val = string.split(cell)
+                    d[key] = val
+                                    
+                schedblock_id = d.get('SchedulingBlock', 'N/A')
+                execblock_id = d.get('ExecBlock', 'N/A')
+
+            return observer, project_id, schedblock_id, execblock_id
+
+    @staticmethod
+    def get_time_range(ms):
+        ms = _get_ms_name(ms)
+
+        with utils.open_table(ms) as openms:
+            # get columns and tools needed to create scan times
+            time_colkeywords = openms.getcolkeywords('TIME')
+            time_unit = time_colkeywords['QuantumUnits'][0]
+            time_ref = time_colkeywords['MEASINFO']['Ref']    
+            me = casatools.measures
+            qa = casatools.quanta
+                
+        table_filename = os.path.join(ms, 'OBSERVATION')
+        with utils.open_table(table_filename) as table:
+            start_s, end_s = table.getcol('TIME_RANGE')
+
+            epoch_start = me.epoch(time_ref, qa.quantity(start_s, time_unit))
+            epoch_end = me.epoch(time_ref, qa.quantity(end_s, time_unit))
+
+            str_start = qa.time(epoch_start['m0'], form=['fits'])[0]
+            str_end = qa.time(epoch_end['m0'], form=['fits'])[0]
+
+            dt_start = datetime.datetime.strptime(str_start, 
+                                                  '%Y-%m-%dT%H:%M:%S')
+            dt_end = datetime.datetime.strptime(str_end, 
+                                                '%Y-%m-%dT%H:%M:%S')
+    
+            return (dt_start, dt_end)
+
 
 class AntennaTable(object):
     @staticmethod
@@ -327,7 +389,7 @@ class AntennaTable(object):
         for antenna in AntennaTable.get_antennas(ms):
             array.add_antenna(antenna)
         return array
-    
+
     @staticmethod
     def get_antennas(ms):
         return [AntennaTable._create_antenna(*row) 
@@ -516,9 +578,19 @@ class StateTable(object):
         return states            
         
     @staticmethod
-    def _create_state(state_id, obs_mode):
-        # find the SpectralWindow matching the given spectral window ID
-        return domain.State(state_id, obs_mode)
+    def _create_state(state_id, obs_mode, is_cycle0):
+        return domain.State(state_id, obs_mode, is_cycle0)
+    
+    @staticmethod
+    def _is_cycle0(ms):
+        telescope = ObservationTable.get_telescope_name(ms)
+        if telescope != 'ALMA':
+            return False
+
+        # casa time quantity corresponding to 2013-01-21T00:00:00
+        cutoff = datetime.datetime(2013,01,21)
+        start, _ = ObservationTable.get_time_range(ms)
+        return start < cutoff
     
     @staticmethod
     def _read_table(ms):
@@ -526,11 +598,16 @@ class StateTable(object):
         """
         LOG.debug('Analysing STATE table')
         ms = _get_ms_name(ms)
-        state_table = os.path.join(ms, 'STATE')      
+        state_table = os.path.join(ms, 'STATE')
+
+        # Cycle 0 data are labelled with PHASE
+        is_cycle0 = StateTable._is_cycle0(ms)
+        
         with utils.open_table(state_table) as table:
             obs_modes = table.getcol('OBS_MODE')
             state_ids = range(len(obs_modes))
-            return zip(state_ids, obs_modes)
+            cycle0 = [is_cycle0] * len(state_ids)
+            return zip(state_ids, obs_modes, cycle0)
 
 
 class FieldTable(object):
@@ -651,5 +728,3 @@ class BandDescriber(object):
                 return description
         
         return 'Unknown'
-
-

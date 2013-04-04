@@ -1,11 +1,11 @@
 from __future__ import absolute_import
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
 from . import gsplinegaincal
 from . import gtypegaincal
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class GaincalModeInputs(basetask.ModeInputs):

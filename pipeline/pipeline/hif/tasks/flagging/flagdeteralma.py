@@ -64,7 +64,7 @@ from __future__ import absolute_import
 
 #import casac
 
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 from . import flagdeterbase 
 
 #import pipeline.tasks.flagging.FlagDeterBase as gronk
@@ -74,7 +74,7 @@ from . import flagdeterbase
 # Initialize a logger
 # -------------------
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 # ------------------------------------------------------------------------------
 # class FlagDeterALMAInputs

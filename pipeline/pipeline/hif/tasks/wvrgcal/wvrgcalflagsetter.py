@@ -3,10 +3,11 @@ from __future__ import absolute_import
 import numpy as np
 import re
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class WvrgcalFlagSetterResult(basetask.Results):

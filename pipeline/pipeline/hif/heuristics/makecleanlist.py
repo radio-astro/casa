@@ -6,9 +6,10 @@ import re
 
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 class MakeCleanListHeuristics(object):
 

@@ -2,11 +2,11 @@ import os
 
 import numpy
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.adapters as adapters 
-import pipeline.infrastructure.logging as logging
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class PhaseUpSolIntAdapter(adapters.Adapter):

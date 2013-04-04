@@ -1,44 +1,28 @@
 from __future__ import absolute_import
-import collections
-import string
 
-from . import antpos
-from . import applycal
-from . import bandpass
-from . import clean
-from . import cleanlist
-from . import exportdata
-from . import flagging
-from . import fluxscale
-from . import gaincal
-from . import importdata
-from . import makecleanlist
-from . import refant
-from . import setmodel
-from . import tsyscal
-from . import tsysflag
-from . import wvrgcal
+from .antpos import Antpos
+from .applycal import Applycal
+from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
+from .clean import Clean
+from .cleanlist import CleanList
+from .exportdata import ExportData
+from .flagging import FlagDeterALMA
+from .fluxscale import Fluxcal
+from .fluxscale import Fluxscale
+from .fluxscale import GcorFluxscale
+from .fluxscale import NormaliseFlux
+from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal
+from .importdata import ImportData
+from .makecleanlist import MakeCleanList
+from .refant import RefAnt
+from .setmodel import Setjy
+from .setmodel import SetModel
+from .tsyscal import Tsyscal
+from .tsysflag import Tsysflag, Tsysflagedges
+from .wvrgcal import Wvrgcal
+from .wvrgcal import Wvrgcalflag
 
-from pipeline.hif.tasks.antpos import Antpos as Antpos
-from pipeline.hif.tasks.applycal import Applycal as Applycal
-from pipeline.hif.tasks.bandpass import PhcorBandpass as Bandpass
-from pipeline.hif.tasks.clean import Clean as Clean
-from pipeline.hif.tasks.cleanlist import CleanList as CleanList
-from pipeline.hif.tasks.exportdata import ExportData as ExportData
-from pipeline.hif.tasks.flagging.flagdeteralma import FlagDeterALMA
-from pipeline.hif.tasks.fluxscale import Fluxcal
-from pipeline.hif.tasks.fluxscale import Fluxscale
-from pipeline.hif.tasks.fluxscale import GcorFluxscale
-from pipeline.hif.tasks.fluxscale import NormaliseFlux
-from pipeline.hif.tasks.gaincal import GaincalMode as Gaincal
-from pipeline.hif.tasks.importdata import ImportData as ImportData
-from pipeline.hif.tasks.makecleanlist import MakeCleanList as MakeCleanList
-from pipeline.hif.tasks.refant.referenceantenna import RefAnt
-from pipeline.hif.tasks.setmodel import Setjy
-from pipeline.hif.tasks.setmodel import SetModel
-from pipeline.hif.tasks.tsyscal import Tsyscal as Tsyscal
-from pipeline.hif.tasks.tsysflag import Tsysflag as Tsysflag
-from pipeline.hif.tasks.wvrgcal import Wvrgcal as Wvrgcal
-from pipeline.hif.tasks.wvrgcal import Wvrgcalflag as Wvrgcalflag
-
-
+# set default tasks for tasks with several implementations to our desired
+# specific implementation
+Bandpass = PhcorBandpass
+Gaincal = GaincalMode

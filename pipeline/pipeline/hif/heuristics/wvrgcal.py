@@ -1,8 +1,9 @@
 import numpy as np
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
 
-LOG = logging.get_logger('pipeline.heuristics.wvrgcal')
+LOG = infrastructure.get_logger(__name__)
+
 
 class WvrgcalHeuristics(object):
     def __init__(self, context, vis, hm_tie, tie, hm_smooth, smooth,

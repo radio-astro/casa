@@ -3,12 +3,13 @@ from __future__ import absolute_import
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 from . import bandpassworker
 from . import bandpassmode
 from .. import gaincal
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class PhcorBandpassInputs(bandpassmode.BandpassModeInputs):

@@ -20,9 +20,10 @@ import numpy
 import pipeline.infrastructure.casatools as casatools
 from pipeline.h.heuristics import echoheuristic as echoheuristic
 import pipeline.infrastructure.adapters as adapters 
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class PhaseUpSolIntAdapter(adapters.Adapter):

@@ -1,21 +1,20 @@
 from __future__ import absolute_import
-
-import collections
 import numpy as np 
 import re
 
 from pipeline.hif.heuristics.tsysspwmap import tsysspwmap as tsysspwmap
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.logging as logging
 
-from pipeline.tasks.tsyscalflag.resultobjects import TsysflagResults
+from .resultobjects import TsysflagResults
 
-from pipeline.hif.tasks.common import commonresultobjects as commonresultobjects
+from pipeline.hif.tasks.common import commonresultobjects
 from pipeline.hif.tasks.common import calibrationtableaccess as caltableaccess
 from pipeline.hif.tasks.common import viewflaggers
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class TsysflagedgesInputs(basetask.StandardInputs):

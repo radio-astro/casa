@@ -4,15 +4,13 @@ import types
 
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.argmapper as argmapper
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
 import pipeline.h.cli.cli as cli
 import pipeline.h.heuristics as heuristics
+import pipeline
 
-import pipeline.tasks as tasks
-
-LOG = logging.get_logger(__name__)
-
+LOG = infrastructure.get_logger(__name__)
 
 def get_context():
     return cli.stack[cli.PIPELINE_NAME].context
@@ -89,7 +87,7 @@ def _get_task_inputs(context, taskname, casa_args):
     task_args = argmapper.convert_args(taskname, casa_args) 
     
     # get the inputs class for this task
-    inputs_cls = tasks.__dict__[taskname].Inputs
+    inputs_cls = pipeline.tasks.__dict__[taskname].Inputs
     
     inputs = inputs_cls(context, **task_args)
 
@@ -100,7 +98,7 @@ def _execute_task(taskname, stagename, task_inputs, dry_run):
     # of stage arguments, compute and return the results.
 
     # Find the task and run it
-    task_cls = getattr(tasks, taskname)
+    task_cls = getattr(pipeline.tasks, taskname)
     task = task_cls(task_inputs) 
 
     # Reporting stuff goes here

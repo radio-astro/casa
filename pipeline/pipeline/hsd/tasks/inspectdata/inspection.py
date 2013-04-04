@@ -1,17 +1,12 @@
 from __future__ import absolute_import
 
-import re
-
-import pipeline.infrastructure.api as api
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
-from pipeline.infrastructure.jobrequest import casa_tasks
 from pipeline.domain.datatable import DataTableImpl as DataTable
-#from . import common
 from pipeline.hsd.tasks.common import common
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 import os
 import asap as sd

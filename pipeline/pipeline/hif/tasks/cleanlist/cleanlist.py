@@ -3,15 +3,13 @@ from __future__ import absolute_import
 import os.path
 import types
 
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.hif.tasks.clean.clean import Clean
-from pipeline.hif.tasks.cleanlist.resultobjects import CleanListResult
-from pipeline.hif.tasks.clean.resultobjects import CleanResult
+from ..clean import Clean
+from ..clean.resultobjects import CleanResult
+from .resultobjects import CleanListResult
 
-from pipeline.infrastructure.displays.sky import SkyDisplay
-
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class CleanListInputs(basetask.StandardInputs):

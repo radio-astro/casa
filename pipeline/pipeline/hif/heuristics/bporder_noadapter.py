@@ -1,5 +1,5 @@
 import numpy as np
-from pipeline.infrastructure.jobrequest import casa_tasks
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 
 class BPOrder:

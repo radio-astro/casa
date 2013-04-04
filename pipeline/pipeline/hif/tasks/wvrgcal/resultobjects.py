@@ -3,11 +3,11 @@ import collections
 import copy
 import os
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
 from pipeline.hif.tasks.common import commonresultobjects
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class WvrgcalflagResult(basetask.Results):

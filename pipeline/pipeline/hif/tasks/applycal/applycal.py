@@ -2,14 +2,14 @@ from __future__ import absolute_import
 import os
 import types
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.logging as logging
-from pipeline.infrastructure.jobrequest import casa_tasks
 
-from pipeline.hif.heuristics import fieldnames as fieldnames
+from pipeline.hif.heuristics import fieldnames
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class ApplycalInputs(basetask.StandardInputs,

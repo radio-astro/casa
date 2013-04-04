@@ -12,11 +12,11 @@ from __future__ import absolute_import
 import inspect
 import types
 
-import pipeline.infrastructure.logging as logging
-#import pipeline.tasks as tasks
-from pipeline import tasks as tasks
+from . import logging
+import pipeline
 
 LOG = logging.get_logger(__name__)
+
 
 # _altmapping holds the mapping for CASA arguments that should be given as a 
 # task input argument of a different name.
@@ -43,7 +43,7 @@ def convert_args(taskname, casa_args, convert_nulls=True):
     :rtype: dict
     """
     # Get the task class, and from that the Inputs class 
-    task_cls = getattr(tasks, taskname)
+    task_cls = getattr(pipeline.tasks, taskname)
     inputs_cls = task_cls.Inputs
 
     # If required, rename CASA pipeline arguments to their pipeline equivalent

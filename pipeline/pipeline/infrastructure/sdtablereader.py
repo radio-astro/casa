@@ -1,19 +1,15 @@
 from __future__ import absolute_import
-import itertools
-import os
 import string
 
+import asap
 import numpy
 
-import pipeline.infrastructure.casatools as casatools
+from . import casatools
+from . import logging
+from . import utils
+from . import tablereader
 import pipeline.domain as domain
-import pipeline.domain.measures as measures
-import pipeline.domain.virtualms as virtualms
-import pipeline.infrastructure.logging as logging
-from pipeline.infrastructure.tablereader import MeasurementSetReader
-
-#import pipeline.hsd.heuristics as sdheuristics
-from pipeline.hsd.heuristics import sdbeamsize as sdbeamsize
+import pipeline.hsd as hsd
 
 LOG = logging.get_logger(__name__)
 
@@ -23,7 +19,6 @@ def _get_ms_name(ms):
 
 
 class ObservingRunReader(object):
-
     @staticmethod
     def get_observing_run_for_sd(st_files, ms_files=[], st_ms_map=[]):
         observing_run = domain.singledish.ScantableList()
@@ -35,14 +30,16 @@ class ObservingRunReader(object):
                 observing_run.add_measurement_set(ms)
         else:
             for ms_file in ms_files:
-                ms = MeasurementSetReader.get_measurement_set(ms_file)
+                ms = tablereader.MeasurementSetReader.get_measurement_set(ms_file)
                 observing_run.add_measurement_set(ms)
             LOG.info('measurement_sets=%s'%(observing_run.measurement_sets))
-            for (st_file,id) in zip(st_files,st_ms_map):
-                ms = observing_run.measurement_sets[id] if id >= 0 else None
+            LOG.info('st_ms_map=%s'%(st_ms_map))
+            for (st_file,index) in zip(st_files,st_ms_map):
+                ms = observing_run.measurement_sets[index] if index >= 0 else None
                 st = ScantableReaderFromMS.get_scantable(st_file, ms)
                 observing_run.append(st)
         return observing_run
+
 
 ### single dish specific
 class ScantableReader(object):
@@ -61,7 +58,7 @@ class ScantableReader(object):
     def configure_observation(st):
         me = casatools.measures
         qa = casatools.quanta
-        with casatools.TableReader(st.name) as tb:
+        with utils.open_table(st.name) as tb:
             st.observer = tb.getkeyword('Observer')
             # start/end time in MJD [day]
             timecol = tb.getcol('TIME')
@@ -72,7 +69,7 @@ class ScantableReader(object):
 
     @staticmethod
     def get_antenna(st):
-        with casatools.TableReader(st.name) as tb:
+        with utils.open_table(st.name) as tb:
             name = tb.getkeyword('AntennaName')
             position = tb.getkeyword('AntennaPosition')
             
@@ -98,7 +95,7 @@ class ScantableReader(object):
                                  v2=qa.quantity(position[2],'m'))
         rad_position = me.measure(m_position,
                                   rf='WGS84')
-        h = sdbeamsize.AntennaDiameter()
+        h = hsd.heuristics.AntennaDiameter()
         diameter = h.calculate(name=name)
         antenna = domain.Antenna(0, name, m_position, rad_position, diameter, station)
 
@@ -111,7 +108,7 @@ class ScantableReader(object):
         me = casatools.measures
         qa = casatools.quanta
         source = {}
-        with casatools.TableReader(st.name) as tb:
+        with utils.open_table(st.name) as tb:
             source_names = numpy.unique(tb.getcol('SRCNAME'))
             for idx in xrange(len(source_names)):
                 name = source_names[idx]
@@ -134,10 +131,10 @@ class ScantableReader(object):
         spectral_window = {}
         frequencies_dict = {}
                     
-        with casatools.TableReader(st.name) as tb:
+        with utils.open_table(st.name) as tb:
             frequencies = tb.getkeyword('FREQUENCIES').lstrip('Table: ')
 
-        with casatools.TableReader(frequencies) as tb:
+        with utils.open_table(frequencies) as tb:
             id = tb.getcol('ID')
             refpix = tb.getcol('REFPIX')
             refval = tb.getcol('REFVAL')
@@ -151,7 +148,7 @@ class ScantableReader(object):
                 d['frame'] = frame
                 frequencies_dict[id[i]] = d
 
-        with casatools.TableReader(st.name) as tb:
+        with utils.open_table(st.name) as tb:
             spw_ids = numpy.unique(tb.getcol('IFNO'))
             for spw in spw_ids:
                 ts = tb.query('IFNO==%s'%(spw))
@@ -171,7 +168,7 @@ class ScantableReader(object):
                             ('WVR' if nchan == 4 else 'SP'))
 
                 # intents
-                from asap import srctype as st
+                import asap.srctype as st
                 srctype = numpy.unique(ts.getcol('SRCTYPE'))
                 intents = set()
                 for stype in srctype:
@@ -205,7 +202,7 @@ class ScantableReader(object):
     def get_polarization(st):
         polarization = {}
         polmap = domain.singledish.Polarization.polarization_map
-        with casatools.TableReader(st.name) as tb:
+        with utils.open_table(st.name) as tb:
             poltype = tb.getkeyword('POLTYPE')
             for spw in st.spectral_window.keys():
                 ts = tb.query('IFNO==%s'%(spw))
@@ -278,8 +275,7 @@ class ScantableReaderFromMS(ScantableReader):
     @staticmethod
     def get_antenna(st, ms):
         # get antenna name
-        sd = casatools.sd
-        s = sd.scantable(st.name,False)
+        s = asap.scantable(st.name,False)
         antenna_name = s.get_antennaname()
         del s
 
@@ -290,7 +286,7 @@ class ScantableReaderFromMS(ScantableReader):
 
     @staticmethod
     def get_source(st, ms):
-        with casatools.TableReader(st.name) as tb:
+        with utils.open_table(st.name) as tb:
 ##             source_names = map((lambda s: s.replace(' ','_')),
 ##                                numpy.unique(tb.getcol('SRCNAME')))
             source_names = numpy.unique(tb.getcol('SRCNAME'))
@@ -311,7 +307,7 @@ class ScantableReaderFromMS(ScantableReader):
                                 
 
         name = ms.name
-        with casatools.TableReader(name) as tb:
+        with utils.open_table(name) as tb:
             for spw in spectral_window.keys():
                 datadesc = ms.get_data_description(spw)
                 if datadesc is None:
@@ -335,7 +331,7 @@ class ScantableReaderFromMS(ScantableReader):
 
             subtable_name = tb.getkeyword('SPECTRAL_WINDOW').lstrip('Table: ')
 
-        with casatools.TableReader(subtable_name) as tb:
+        with utils.open_table(subtable_name) as tb:
             for spw in spectral_window.keys():
                 frame_id = tb.getcell('MEAS_FREQ_REF')
                 spectral_window[spw].frame = domain.singledish.Frequencies.frame_map[frame_id]
@@ -377,10 +373,10 @@ class ScantableReaderFromMS(ScantableReader):
         
     @staticmethod
     def configure_calibration(st, ms):
-        with casatools.TableReader(ms.name) as tb:
+        with utils.open_table(ms.name) as tb:
             spw_table = tb.getkeyword('SPECTRAL_WINDOW').lstrip('Table: ')
 
-        with casatools.TableReader(spw_table) as tb:
+        with utils.open_table(spw_table) as tb:
             if 'BBC_NO' in tb.colnames():
                 bbc_no = tb.getcol('BBC_NO')
             else:
@@ -417,13 +413,14 @@ class ScantableReaderFromMS(ScantableReader):
 
 
 class VirtualMeasurementSetFiller(object):
-
     @staticmethod
     def get_measurement_set(scantables):
         if isinstance(scantables, domain.singledish.ScantableRep):
             st = [scantables]
         else:
             st = scantables
+            
+        import pipeline.domain.virtualms as virtualms
         ms = virtualms.VirtualMeasurementSet(st)
         ms.antenna_array = VirtualMeasurementSetFiller.get_antenna_array(st)
         ms.sources = VirtualMeasurementSetFiller.get_source(st)
@@ -435,7 +432,7 @@ class VirtualMeasurementSetFiller(object):
 
     @staticmethod
     def get_antenna_array(st):
-        with casatools.TableReader(st[0].name) as tb:
+        with utils.open_table(st[0].name) as tb:
             antenna_name = tb.getkeyword('AntennaName')
             site_name = antenna_name.split('//')[0]
             
@@ -464,7 +461,7 @@ class VirtualMeasurementSetFiller(object):
         me = casatools.measures
         qa = casatools.quanta
         fields = []
-        with casatools.TableReader(st[0].name) as tb:
+        with utils.open_table(st[0].name) as tb:
             # start/end time in MJD [day]
             source_names = numpy.unique(tb.getcol('SRCNAME'))
             field_names = numpy.unique(tb.getcol('FIELDNAME'))
@@ -519,7 +516,7 @@ class VirtualMeasurementSetFiller(object):
         # assume all scantables have same scan sequence
         me = casatools.measures
         qa = casatools.quanta
-        with casatools.TableReader(st[0].name) as tb:
+        with utils.open_table(st[0].name) as tb:
             scannos = numpy.unique(tb.getcol('SCANNO'))
             for s in scannos:
                 tsel = tb.query('SCANNO==%s'%(s))

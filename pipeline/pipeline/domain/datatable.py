@@ -18,20 +18,19 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 #
-# $Revision: 1.1.2.4 $
-# $Date: 2012/12/04 14:51:19 $
+# $Revision: 1.1.2.6 $
+# $Date: 2013/03/01 05:07:45 $
 # $Author: tnakazat $
 #
-
-from taskinit import gentools
 import os
-import re
-import string
 import time
 import numpy
 
-import pipeline.infrastructure.logging as logging
-LOG = logging.get_logger(__name__)
+from taskinit import gentools
+
+import pipeline.infrastructure as infrastructure
+
+LOG = infrastructure.get_logger(__name__)
 
 def __coldesc( vtype, option, maxlen,
              ndim, comment, unit=None ):
@@ -122,39 +121,39 @@ TABLEDESC_RW = __tabledescrw()
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 
-def cast_type_get( v ):
-    t = type(v)
-    st = str(t)
-    #print 'input type: %s'%(st)
-    tmp = string.Template('<type \'numpy.${base}${n}\'>')
-    if re.match(tmp.safe_substitute(base='int',n='[0-9]+'),st):
-        val = int(v)
-    elif re.match(tmp.safe_substitute(base='float',n='[0-9]+'),st) \
-         or re.match(tmp.safe_substitute(base='double',n='.*'),st):
-        val = float(v)
-    elif re.match(tmp.safe_substitute(base='ndarray',n='.*'),st):
-        val = v.tolist()
-    else:
-        val = v
-    #print 'output type: %s'%(type(val))
-    return val
+#def cast_type_get( v ):
+#    t = type(v)
+#    st = str(t)
+#    #print 'input type: %s'%(st)
+#    tmp = string.Template('<type \'numpy.${base}${n}\'>')
+#    if re.match(tmp.safe_substitute(base='int',n='[0-9]+'),st):
+#        val = int(v)
+#    elif re.match(tmp.safe_substitute(base='float',n='[0-9]+'),st) \
+#         or re.match(tmp.safe_substitute(base='double',n='.*'),st):
+#        val = float(v)
+#    elif re.match(tmp.safe_substitute(base='ndarray',n='.*'),st):
+#        val = v.tolist()
+#    else:
+#        val = v
+#    #print 'output type: %s'%(type(val))
+#    return val
 
-def cast_type_put( v ):
-    t = type(v)
-    st = str(t)
-    #print 'input type: %s'%(st)
-    tmp = string.Template('<type \'numpy.${base}${n}\'>')
-    if re.match(tmp.safe_substitute(base='int',n='[0-9]+'),st):
-        val = int(v)
-    elif re.match(tmp.safe_substitute(base='float',n='[0-9]+'),st) \
-         or re.match(tmp.safe_substitute(base='double',n='.*'),st):
-        val = float(v)
-    elif re.match('<type \'list\'>',st):
-        val = numpy.array(v)
-    else:
-        val = v
-    #print 'output type: %s'%(type(val))
-    return val
+#def cast_type_put( v ):
+#    t = type(v)
+#    st = str(t)
+#    #print 'input type: %s'%(st)
+#    tmp = string.Template('<type \'numpy.${base}${n}\'>')
+#    if re.match(tmp.safe_substitute(base='int',n='[0-9]+'),st):
+#        val = int(v)
+#    elif re.match(tmp.safe_substitute(base='float',n='[0-9]+'),st) \
+#         or re.match(tmp.safe_substitute(base='double',n='.*'),st):
+#        val = float(v)
+#    elif re.match('<type \'list\'>',st):
+#        val = numpy.array(v)
+#    else:
+#        val = v
+#    #print 'output type: %s'%(type(val))
+#    return val
 
 class DataTableImpl( object ):
     def __init__( self, name=None, nrow=0 ):
@@ -188,6 +187,33 @@ class DataTableImpl( object ):
 
     def __len__( self ):
         return self.tb1.nrows()
+
+    def get_row_index_simple(self, col, val):
+        vals = self.getcol(col)
+        nrow = self.nrows()
+        r = []
+        for i in xrange(nrow):
+            if vals[i] == val:
+                r.append(i)
+        return r
+
+    def get_row_index(self, antenna, ifno, polno=None):
+        ants = self.getcol('ANTENNA')
+        ifs = self.getcol('IF')
+        nrow = self.nrows()
+        if polno is None:
+            r = []
+            for i in xrange(nrow):
+                if ants[i] == antenna and ifs[i] == ifno:
+                    r.append(i)
+            return r
+        else:
+            pols = self.getcol('POL')
+            r = []
+            for i in xrange(nrow):
+                if ants[i] == antenna and ifs[i] == ifno and pols[i] == polno:
+                    r.append(i)
+            return r
 
     def nrows( self ):
         return self.tb1.nrows()
@@ -299,67 +325,67 @@ class DataTableImpl( object ):
     def _initcols( self ):
         self.cols.clear()
         self.cols = {
-            'ROW': RWDataTableColumn(self.tb1,'ROW'),
-            'SCAN': RWDataTableColumn(self.tb1,'SCAN'),
-            'IF': RWDataTableColumn(self.tb1,'IF'),
-            'POL': RWDataTableColumn(self.tb1,'POL'),
-            'BEAM': RWDataTableColumn(self.tb1,'BEAM'),
-            'DATE': RWDataTableColumn(self.tb1,'DATE'),
-            'TIME': RWDataTableColumn(self.tb1,'TIME'),
-            'ELAPSED': RWDataTableColumn(self.tb1,'ELAPSED'),
-            'EXPOSURE': RWDataTableColumn(self.tb1,'EXPOSURE'),
-            'RA': RWDataTableColumn(self.tb1,'RA'),
-            'DEC': RWDataTableColumn(self.tb1,'DEC'),
-            'AZ': RWDataTableColumn(self.tb1,'AZ'),
-            'EL': RWDataTableColumn(self.tb1,'EL'),
-            'NCHAN': RWDataTableColumn(self.tb1,'NCHAN'),
-            'TSYS': RWDataTableColumn(self.tb1,'TSYS'),
-            'TARGET': RWDataTableColumn(self.tb1,'TARGET'),
-            'STATISTICS': RWDataTableColumn(self.tb2,'STATISTICS'),
-            'FLAG': RWDataTableColumn(self.tb2,'FLAG'),
-            'FLAG_PERMANENT': RWDataTableColumn(self.tb2,'FLAG_PERMANENT'),
-            'FLAG_SUMMARY': RWDataTableColumn(self.tb2,'FLAG_SUMMARY'),
-            'NMASK': RWDataTableColumn(self.tb2,'NMASK'),
+            'ROW': RWDataTableColumn(self.tb1,'ROW',int),
+            'SCAN': RWDataTableColumn(self.tb1,'SCAN',int),
+            'IF': RWDataTableColumn(self.tb1,'IF',int),
+            'POL': RWDataTableColumn(self.tb1,'POL',int),
+            'BEAM': RWDataTableColumn(self.tb1,'BEAM',int),
+            'DATE': RWDataTableColumn(self.tb1,'DATE',str),
+            'TIME': RWDataTableColumn(self.tb1,'TIME',float),
+            'ELAPSED': RWDataTableColumn(self.tb1,'ELAPSED',float),
+            'EXPOSURE': RWDataTableColumn(self.tb1,'EXPOSURE',float),
+            'RA': RWDataTableColumn(self.tb1,'RA',float),
+            'DEC': RWDataTableColumn(self.tb1,'DEC',float),
+            'AZ': RWDataTableColumn(self.tb1,'AZ',float),
+            'EL': RWDataTableColumn(self.tb1,'EL',float),
+            'NCHAN': RWDataTableColumn(self.tb1,'NCHAN',int),
+            'TSYS': RWDataTableColumn(self.tb1,'TSYS',float),
+            'TARGET': RWDataTableColumn(self.tb1,'TARGET',str),
+            'STATISTICS': RWDataTableColumn(self.tb2,'STATISTICS',list),
+            'FLAG': RWDataTableColumn(self.tb2,'FLAG',list),
+            'FLAG_PERMANENT': RWDataTableColumn(self.tb2,'FLAG_PERMANENT',list),
+            'FLAG_SUMMARY': RWDataTableColumn(self.tb2,'FLAG_SUMMARY',int),
+            'NMASK': RWDataTableColumn(self.tb2,'NMASK',int),
             'MASKLIST': DataTableColumnMaskList(self.tb2),
             'NOCHANGE': DataTableColumnNoChange(self.tb2),
-            'ANTENNA': RWDataTableColumn(self.tb1,'ANTENNA'),
-            'SRCTYPE': RWDataTableColumn(self.tb1,'SRCTYPE'),
-            'POSGRP': RWDataTableColumn(self.tb2, 'POSGRP'),
-            'TIMEGRP_S': RWDataTableColumn(self.tb2, 'TIMEGRP_S'),
-            'TIMEGRP_L': RWDataTableColumn(self.tb2, 'TIMEGRP_L')
+            'ANTENNA': RWDataTableColumn(self.tb1,'ANTENNA',int),
+            'SRCTYPE': RWDataTableColumn(self.tb1,'SRCTYPE',int),
+            'POSGRP': RWDataTableColumn(self.tb2, 'POSGRP',int),
+            'TIMEGRP_S': RWDataTableColumn(self.tb2, 'TIMEGRP_S',int),
+            'TIMEGRP_L': RWDataTableColumn(self.tb2, 'TIMEGRP_L',int)
             }
 
     def _initcols2( self ):
         self.cols.clear()
         self.cols = {
-            'ROW': RODataTableColumn(self.tb1,'ROW'),
-            'SCAN': RODataTableColumn(self.tb1,'SCAN'),
-            'IF': RODataTableColumn(self.tb1,'IF'),
-            'POL': RODataTableColumn(self.tb1,'POL'),
-            'BEAM': RODataTableColumn(self.tb1,'BEAM'),
-            'DATE': RODataTableColumn(self.tb1,'DATE'),
-            'TIME': RODataTableColumn(self.tb1,'TIME'),
-            'ELAPSED': RODataTableColumn(self.tb1,'ELAPSED'),
-            'EXPOSURE': RODataTableColumn(self.tb1,'EXPOSURE'),
-            'RA': RODataTableColumn(self.tb1,'RA'),
-            'DEC': RODataTableColumn(self.tb1,'DEC'),
-            'AZ': RODataTableColumn(self.tb1,'AZ'),
-            'EL': RODataTableColumn(self.tb1,'EL'),
-            'NCHAN': RODataTableColumn(self.tb1,'NCHAN'),
-            'TSYS': RODataTableColumn(self.tb1,'TSYS'),
-            'TARGET': RODataTableColumn(self.tb1,'TARGET'),
-            'STATISTICS': RWDataTableColumn(self.tb2,'STATISTICS'),
-            'FLAG': RWDataTableColumn(self.tb2,'FLAG'),
-            'FLAG_PERMANENT': RWDataTableColumn(self.tb2,'FLAG_PERMANENT'),
-            'FLAG_SUMMARY': RWDataTableColumn(self.tb2,'FLAG_SUMMARY'),
-            'NMASK': RWDataTableColumn(self.tb2,'NMASK'),
+            'ROW': RODataTableColumn(self.tb1,'ROW',int),
+            'SCAN': RODataTableColumn(self.tb1,'SCAN',int),
+            'IF': RODataTableColumn(self.tb1,'IF',int),
+            'POL': RODataTableColumn(self.tb1,'POL',int),
+            'BEAM': RODataTableColumn(self.tb1,'BEAM',int),
+            'DATE': RODataTableColumn(self.tb1,'DATE',str),
+            'TIME': RODataTableColumn(self.tb1,'TIME',float),
+            'ELAPSED': RODataTableColumn(self.tb1,'ELAPSED',float),
+            'EXPOSURE': RODataTableColumn(self.tb1,'EXPOSURE',float),
+            'RA': RODataTableColumn(self.tb1,'RA',float),
+            'DEC': RODataTableColumn(self.tb1,'DEC',float),
+            'AZ': RODataTableColumn(self.tb1,'AZ',float),
+            'EL': RODataTableColumn(self.tb1,'EL',float),
+            'NCHAN': RODataTableColumn(self.tb1,'NCHAN',int),
+            'TSYS': RODataTableColumn(self.tb1,'TSYS',float),
+            'TARGET': RODataTableColumn(self.tb1,'TARGET',str),
+            'STATISTICS': RWDataTableColumn(self.tb2,'STATISTICS',list),
+            'FLAG': RWDataTableColumn(self.tb2,'FLAG',list),
+            'FLAG_PERMANENT': RWDataTableColumn(self.tb2,'FLAG_PERMANENT',list),
+            'FLAG_SUMMARY': RWDataTableColumn(self.tb2,'FLAG_SUMMARY',int),
+            'NMASK': RWDataTableColumn(self.tb2,'NMASK',int),
             'MASKLIST': DataTableColumnMaskList(self.tb2),
             'NOCHANGE': DataTableColumnNoChange(self.tb2),
-            'ANTENNA': RODataTableColumn(self.tb1,'ANTENNA'),
-            'SRCTYPE': RODataTableColumn(self.tb1,'SRCTYPE'),
-            'POSGRP': RWDataTableColumn(self.tb2, 'POSGRP'),
-            'TIMEGRP_S': RWDataTableColumn(self.tb2, 'TIMEGRP_S'),
-            'TIMEGRP_L': RWDataTableColumn(self.tb2, 'TIMEGRP_L')
+            'ANTENNA': RODataTableColumn(self.tb1,'ANTENNA',int),
+            'SRCTYPE': RODataTableColumn(self.tb1,'SRCTYPE',int),
+            'POSGRP': RWDataTableColumn(self.tb2, 'POSGRP',int),
+            'TIMEGRP_S': RWDataTableColumn(self.tb2, 'TIMEGRP_S',int),
+            'TIMEGRP_L': RWDataTableColumn(self.tb2, 'TIMEGRP_L',int)
             }
 
     def _close( self ):
@@ -464,7 +490,7 @@ class DataTableImpl( object ):
 
         return timetable
             
-    def get_timegap(self, ant, spw, pol):
+    def get_timegap(self, ant, spw, pol, asrow=True):
         timegap_s = self.getkeyword('TIMEGAP_S')
         timegap_l = self.getkeyword('TIMEGAP_L')
         try:
@@ -475,26 +501,29 @@ class DataTableImpl( object ):
         except Exception, e:
             raise e
 
-        rows = self.getcol('ROW')
-        timegap = [[],[]]
-        for idx in mygap_s:
-            timegap[0].append(rows[idx])
-        for idx in mygap_l:
-            timegap[1].append(rows[idx])
-
+        if asrow:
+            rows = self.getcol('ROW')
+            timegap = [[],[]]
+            for idx in mygap_s:
+                timegap[0].append(rows[idx])
+            for idx in mygap_l:
+                timegap[1].append(rows[idx])
+        else:
+            timegap = [mygap_s, mygap_l]
         return timegap
     
 
 class RODataTableColumn( object ):
-    def __init__( self, table, name ):
+    def __init__( self, table, name, dtype ):
         self.tb = table
         self.name = name
+        self.caster = dtype
 
     def getcell( self, idx ):
-        return cast_type_get(self.tb.getcell(self.name, idx))
+        return self.caster_get(self.tb.getcell(self.name, idx))
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
-        return cast_type_get(self.tb.getcol(self.name, startrow, nrow, rowincr))
+        return self.tb.getcol(self.name, startrow, nrow, rowincr).tolist()
 
     def putcell( self, idx, val ):
         self.__raise()
@@ -506,25 +535,29 @@ class RODataTableColumn( object ):
         raise NotImplementedError( 'column %s is read-only'%(self.name) )
     
 class RWDataTableColumn( RODataTableColumn ):
-    def __init__( self, table, name ):
-        super(RWDataTableColumn,self).__init__(table, name)
+    def __init__( self, table, name, dtype ):
+        super(RWDataTableColumn,self).__init__(table, name, dtype)
+        if dtype == list:
+            self.caster_put = numpy.array
+        else:
+            self.caster_put = dtype
 
     def putcell( self, idx, val ):
-        self.tb.putcell(self.name,int(idx),cast_type_put(val))
+        self.tb.putcell(self.name, int(idx), self.caster_put(val))
 
     def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
-        self.tb.putcol(self.name,cast_type_put(val),int(startrow),int(nrow),int(rowincr))
+        self.tb.putcol(self.name,numpy.array(val),int(startrow),int(nrow),int(rowincr))
         
 class DataTableColumnNoChange( RWDataTableColumn ):
-    def __init__( self, table ):
-        super(RWDataTableColumn,self).__init__(table, "NOCHANGE")
+    def __init__( self, table):
+        super(RWDataTableColumn,self).__init__(table, "NOCHANGE", int)
 
     def getcell( self, idx ):
         v = self.tb.getcell(self.name, int(idx))
         if v < 0:
             return False
         else:
-            return cast_type_get(v)
+            return int(v)
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
         if nrow < 0:
@@ -542,7 +575,7 @@ class DataTableColumnNoChange( RWDataTableColumn ):
             v = -1
         else:
             v = val
-        self.tb.putcell(self.name,int(idx),cast_type_put(v))
+        self.tb.putcell(self.name, int(idx), int(v))
 
     def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
         if nrow < 0:
@@ -553,15 +586,17 @@ class DataTableColumnNoChange( RWDataTableColumn ):
             idx += 1
 
 class DataTableColumnMaskList( RWDataTableColumn ):
+    NoMask = [[-1,-1]]
+
     def __init__( self, table ):
-        super(RWDataTableColumn,self).__init__(table, "MASKLIST")
+        super(RWDataTableColumn,self).__init__(table, "MASKLIST", list)
 
     def getcell( self, idx ):
         v = self.tb.getcell(self.name, int(idx))
-        if len(v)==1 and v[0][0]==0 and v[0][1]==0:
+        if sum(v[0]) < 0:
             return []
         else:
-            return cast_type_get(v)
+            return list(v)
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
         """
@@ -583,10 +618,10 @@ class DataTableColumnMaskList( RWDataTableColumn ):
 
     def putcell( self, idx, val ):
         if len(val)==0:
-            v = [[0,0]]
+            v = self.NoMask
         else:
             v = val
-        self.tb.putcell(self.name,int(idx),cast_type_put(v))
+        self.tb.putcell(self.name, int(idx), numpy.array(v))
 
     def putcol( self, val, startrow=0, nrow=-1, rowincr=1 ):
         """
@@ -597,5 +632,5 @@ class DataTableColumnMaskList( RWDataTableColumn ):
             nrow = min(startrow+len(val)*rowincr,self.tb.nrows())
         idx = 0
         for i in xrange(startrow,nrow,rowincr):
-            self.putcell(i,val[idx])
+            self.putcell(i,numpy.array(val[idx]))
             idx += 1

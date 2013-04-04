@@ -5,9 +5,10 @@ from . import common
 from . import gaincalworker
 from . import gaincalmode
 from pipeline.hif.heuristics import caltable as gcaltable
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class NewGaincalInputs(gaincalmode.GaincalModeInputs):

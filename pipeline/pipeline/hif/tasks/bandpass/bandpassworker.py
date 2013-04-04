@@ -6,11 +6,12 @@ import shutil
 import pipeline.qa2.bpcal as bpcal
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.logging as logging
-from pipeline.infrastructure.jobrequest import casa_tasks
+import pipeline.infrastructure as infrastructure
+from pipeline.infrastructure import casa_tasks
 from . import common
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class BandpassWorkerInputs(common.CommonBandpassInputs):

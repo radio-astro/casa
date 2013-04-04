@@ -5,16 +5,17 @@ import re
 import string
 import types
 
-from pipeline.hif.tasks.common import commonfluxresults
+from ..common import commonfluxresults
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
 from pipeline.hif.heuristics import standard as standard
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure.jobrequest import casa_tasks
-import pipeline.infrastructure.logging as logging
+from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class SetjyInputs(basetask.StandardInputs):
@@ -270,7 +271,7 @@ class Setjy(basetask.StandardTaskTemplate):
         end_pattern = re.compile('.*%s.*' % start_marker)
         start_pattern = re.compile('.*%s.*' % end_marker)
 
-        with common.fluxresults.File(casatools.log.logfile()) as casa_log:
+        with commonfluxresults.File(casatools.log.logfile()) as casa_log:
             # CASA has a bug whereby setting spw='0,1' logs results for spw #0
             # twice, thus giving us two measurements. We get round this by
             # noting previously recorded spws in this set

@@ -25,13 +25,13 @@ results = task.execute(dry_run=dry_run)
 from __future__ import absolute_import
 import types
 
+from ...heuristics import fieldnames
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
 from . import setjy
 
-from pipeline.hif.heuristics import fieldnames as fieldnames
+LOG = infrastructure.get_logger(__name__)
 
-LOG = logging.get_logger(__name__)
 
 
 class SetModelInputs(basetask.StandardInputs):
@@ -91,7 +91,7 @@ class SetModelInputs(basetask.StandardInputs):
     @transfer.setter
     def transfer(self, value):
         if value is None:
-            value = heuristics.IntentFieldnames()
+            value = fieldnames.IntentFieldnames()
         self._transfer = value
 
     @property

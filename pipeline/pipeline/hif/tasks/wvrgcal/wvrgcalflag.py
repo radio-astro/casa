@@ -3,8 +3,8 @@ import copy
 import re
 import types
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
 
 from . import wvrgcal
 from . import resultobjects
@@ -13,7 +13,8 @@ from . import wvrgcalflagsetter
 from pipeline.hif.tasks.common import calibrationtableaccess
 from pipeline.hif.tasks.common  import viewflaggers
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class WvrgcalflagInputs(basetask.StandardInputs):
