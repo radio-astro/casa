@@ -42,6 +42,7 @@
 #include <casa/Utilities/Assert.h>
 #include <casa/OS/Path.h>
 #include <casa/OS/Directory.h>
+#include <casa/iomanip.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -141,7 +142,10 @@ MRadialVelocity ROMSFieldColumns::radVelMeas(Int row, Double interTime) const
       MVRadialVelocity mvradvel;
     
       if(!measCometsV_p(index)->getRadVel(mvradvel, interMJD)){
- 	cerr << "No valid ephemeris entry for MJD " << interMJD << endl;
+	stringstream ss;
+	ss << "ROMSFieldColumns::radVelMeas(...) - No valid ephemeris entry for MJD " 
+	   << setprecision(11) << interMJD << " for field " << row;
+	throw(AipsError(ss.str()));
       }
 
       MRadialVelocity::Types mType = MRadialVelocity::TOPO;
@@ -177,7 +181,10 @@ Quantity ROMSFieldColumns::rho(Int row, Double interTime) const
     
       MVPosition mvpos;
       if(!measCometsV_p(index)->get(mvpos, interMJD)){
-	cerr << "No valid ephemeris entry for MJD " << interMJD << endl;
+	stringstream ss;
+	ss << "ROMSFieldColumns::rho(...) - No valid ephemeris entry for MJD " 
+	   << setprecision(11) << interMJD << " for field " << row;
+	throw(AipsError(ss.str()));
       }
       rval = Quantity(mvpos.get()(0), "m");
     }
@@ -445,8 +452,10 @@ MDirection ROMSFieldColumns::extractDirMeas(const MDirection& offsetDir,
     
     MVPosition xmvpos;
     if(!measCometsV_p(index)->get(xmvpos, interMJD)){
-      cerr << "No valid ephemeris entry for MJD " << interMJD << endl;
-      return MDirection(Quantity(0.,"deg"), Quantity(0., "deg"), MDirection::INVALID);
+      stringstream ss;
+      ss << "ROMSFieldColumns::extractDirMeas(...) - No valid ephemeris entry for MJD " 
+	 << setprecision(11) << interMJD << " in ephemeris " << measCometsV_p(index)->getTablePath();
+      throw(AipsError(ss.str()));
     }
 
     MVDirection mvxdir(xmvpos.getAngle());
