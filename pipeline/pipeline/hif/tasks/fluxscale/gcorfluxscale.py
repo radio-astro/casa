@@ -99,15 +99,16 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
     def prepare(self, **parameters):
         inputs = self.inputs
-        ms = inputs.context.observing_run.get_ms(name=inputs.vis)
+        #ms = inputs.context.observing_run.get_ms(name=inputs.vis)
+        ms = inputs.ms
+	result = commonfluxresults.FluxCalibrationResults(inputs.vis)
 
         # check that the measurement set does have an amplitude calibrator.
         if inputs.reference == '':
             # No point carrying on if not.
-            LOG.error(
-              '%s contains no data for AMPLITUDE calibrator' % 
-              os.path.basename(inputs.vis))
-            result = commonfluxresults.FluxCalibrationResults(fields={}, fields_setjy={})
+            # No point carrying on if not.
+            LOG.error('%s has no data with reference intent %s'
+                      '' % (ms.basename, inputs.refintent))
             return result
 
         refant = inputs.refant
@@ -117,9 +118,10 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # list of antenna names, choose the first one.
             refant = ms.reference_antenna
             if refant is None:
-                LOG.error('no reference antenna specified and none in context')
-                raise Exception,\
-                  'no reference antenna specified and none in context'
+                msg = ('No reference antenna specified and none found in context '
+                   'for %s' % ms.basename)
+                LOG.error(msg)
+                raise Exception(msg)
             refant = refant.split(',')
             refant = refant[0]
         LOG.info('refant:%s' % refant)
@@ -170,22 +172,21 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # Schedule a fluxscale job using this caltable. This is the result
             # that contains the flux measurements for the context.
             try:
-                result = self._do_fluxscale(caltable)
+                self._do_fluxscale(caltable)
 
                 # and finally, do a setjy, add its setjy_settings
                 # to the main result
                 setjy_result = self._do_setjy()
-                result.setjy_settings = setjy_result.setjy_settings
+                result.measurements.update(setjy_result.measurements)
 
             except:
                 # something has gone wrong, return an empty result
 	        LOG.error ('Unable to complete flux scaling operation')
-                result = commonfluxresults.FluxCalibrationResults(fields={},
-                  fields_setjy={})
+                return result
 
         else:
 	    LOG.error ('Unable to complete flux scaling operation')
-            result = commonfluxresults.FluxCalibrationResults(fields={}, fields_setjy={})
+            return result 
 
         return result
 
