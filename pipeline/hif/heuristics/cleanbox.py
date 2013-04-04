@@ -5,9 +5,10 @@ import types
 
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.filenamer as filenamer
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 class CleanBoxHeuristics(object):
 

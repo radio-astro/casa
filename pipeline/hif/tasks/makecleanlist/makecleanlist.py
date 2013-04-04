@@ -1,16 +1,14 @@
 from __future__ import absolute_import
-
 import types
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
-from pipeline.hif.tasks.makecleanlist.resultobjects import MakeCleanListResult
-
+from .resultobjects import MakeCleanListResult
 from pipeline.hif.heuristics import makecleanlist 
 from pipeline.hif.heuristics import clean
 
+LOG = infrastructure.get_logger(__name__)
 
-LOG = logging.get_logger(__name__)
 
 
 class MakeCleanListInputs(basetask.StandardInputs):

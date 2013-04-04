@@ -1,11 +1,12 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 from . import channelbandpass
 from . import polynomialbandpass
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class BandpassModeInputs(basetask.ModeInputs):

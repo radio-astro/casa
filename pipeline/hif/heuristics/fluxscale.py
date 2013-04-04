@@ -5,9 +5,9 @@ import scipy.special as scipy
 import solar_system_setjy as ss_setjy
 
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 def antenna(ms, refsource, refant, peak_frac=0.7):

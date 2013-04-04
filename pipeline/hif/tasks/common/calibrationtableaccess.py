@@ -5,11 +5,11 @@ import copy
 import os
 import numpy as np
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class CalibrationTableData(object):

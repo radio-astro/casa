@@ -1,31 +1,67 @@
 from __future__ import absolute_import
+import inspect
+import imp
+import os
+import sys
+import types
+import webbrowser
 
-import os,sys
-#sys.path.insert(1, os.path.dirname(__file__))
-#import pipeline.infrastructure.api as api
-#import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.tasks as tasks
+from . import infrastructure
+from . import domain
 
-from pipeline.infrastructure.launcher import Pipeline
+from . import h
+from . import hco
+from . import hif
+
+from .infrastructure import Pipeline, Context
+
+LOG = infrastructure.get_logger(__name__)
+
+# create a fake module containing all the tasks defined in 
+
+def _all_subclasses(cls):
+    '''
+    Return a list of all subclasses that inherit directly or indirectly from
+    the given class.
+    '''
+    return cls.__subclasses__() + [g for s in cls.__subclasses__()
+                                    for g in _all_subclasses(s)]
+    
+def _get_unified_task_module(packages):
+    '''
+    Create a new module containing all tasks in the given packages.
+    '''
+    module = imp.new_module('pipeline.tasks')
+
+    task_classes = _all_subclasses(infrastructure.api.Task)
+    for pkg in packages:            
+        tasks = dict((k, v) for k, v in pkg.__dict__.items()
+                     if v in task_classes)
+        for k, v in tasks.items():
+            LOG.trace('Importing %s from %s' % (k, pkg.__name__))
+            module.__dict__[k] = v
+    return module
+
+LOG.warn('Don\'t forget to add hsd.tasks to pipeline.__init__.py once the SD '
+         'tasks are working!')
+tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks])
+
 
 def show_weblog(context):
     if context is None:
         return
     
-    import os
-    import webbrowser
     index_html = os.path.join(context.report_dir, 't1-1.html')
     webbrowser.open(index_html)
 
 def initcli() :
-   print "Initializing cli..."
-   mypath = os.path.dirname(__file__);
-   hifpath = mypath+"/hif/cli/hif.py"
-   hpath = mypath+"/h/cli/h.py"
-   hsdpath = mypath+"/hsd/cli/hsd.py"
-   import inspect
-   myglobals = sys._getframe(len(inspect.stack())-1).f_globals
+    print "Initializing cli..."
+    mypath = os.path.dirname(__file__);
+    hifpath = mypath+"/hif/cli/hif.py"
+    hpath = mypath+"/h/cli/h.py"
+    hsdpath = mypath+"/hsd/cli/hsd.py"
+    myglobals = sys._getframe(len(inspect.stack())-1).f_globals
 
-   execfile(hpath, myglobals)
-   execfile(hifpath, myglobals)
-   execfile(hsdpath, myglobals)
+    execfile(hpath, myglobals)
+    execfile(hifpath, myglobals)
+    execfile(hsdpath, myglobals)

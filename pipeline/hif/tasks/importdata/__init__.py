@@ -1,2 +1,3 @@
 from __future__ import absolute_import
-from pipeline.hif.tasks.importdata.importdata import ImportData
+
+from .importdata import ImportData

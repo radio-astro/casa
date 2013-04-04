@@ -2,9 +2,10 @@ import os
 import numpy
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class MedianSNRNoAdapter(api.Heuristic):

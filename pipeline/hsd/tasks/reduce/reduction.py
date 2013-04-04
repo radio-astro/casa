@@ -4,8 +4,6 @@ import os
 import re
 
 import pipeline.infrastructure.api as api
-#import pipeline.heuristics as heuristics
-import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.basetask import timestamp
 

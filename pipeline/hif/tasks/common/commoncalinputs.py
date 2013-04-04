@@ -1,15 +1,13 @@
 from __future__ import absolute_import
-import os
 import types
 
 import pipeline.domain as domain
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.taskreport as taskreport
 from pipeline.hif.heuristics import fieldnames as fieldnames
 
 # create the pipeline logger for this module
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class CommonCalibrationInputs(basetask.StandardInputs,
@@ -224,31 +222,3 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         if type(value) is types.StringType:    
             value = str(value).replace('*', '')
         self._to_intent = value
-
-
-class NullReportInputs(taskreport.TaskReportInputs):
-    def __init__(self, context, task, description='', stage_name=None, 
-                 plot=True):
-        if stage_name is None:
-            stage_name = task.__class__.__name__
-            if hasattr(task.inputs, 'vis'):
-                i = task.inputs.vis
-                if type(i) is types.StringType:
-                    stage_name += ' ({0})'.format(os.path.basename(task.inputs.vis))
-        
-        super(NullReportInputs, self).__init__(
-            context, task, description, stage_name, plot)
-
-        self.display = taskreport.NullDisplay(context)
-
-
-class NullReport(taskreport.TaskReport):
-    Inputs = NullReportInputs
-    
-    def createGeneralHTMLDescription(self, stageName):
-        return ''
-    
-    def createDetailedHTMLDescription(self, stageName, **kw):
-        description = 'TBD'
-
-        return description

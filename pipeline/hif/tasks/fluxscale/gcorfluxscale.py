@@ -2,16 +2,17 @@ from __future__ import absolute_import
 
 import os.path
 
-import pipeline.infrastructure.casatools as casatools
-import pipeline.heuristics.fluxscale as hfluxscale
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.casatools as casatools
+
 from .. import gaincal
-from pipeline.hif.tasks.common import commonfluxresults
+from ... import heuristics
+from ..common import commonfluxresults
 from . import fluxscale
 from pipeline.hif.tasks.setmodel import setjy
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
@@ -128,7 +129,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if hm_resolvedcals == 'automatic':
             # get the antennas to be used in the gaincals, limiting
             # the range if the reference calibrator is resolved.
-            resantenna = hfluxscale.antenna(ms=ms,
+            resantenna = heuristics.fluxscale.antenna(ms=ms,
               refsource=inputs.reference, refant=refant,
               peak_frac=inputs.peak_fraction)
 	else:

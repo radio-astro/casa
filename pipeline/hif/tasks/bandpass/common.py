@@ -4,10 +4,11 @@ import types
 
 from pipeline.hif.tasks.common import commoncalinputs as commoncalinputs
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 from pipeline.hif.heuristics import caltable as bcaltable
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):

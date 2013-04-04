@@ -1,8 +1,9 @@
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 from pipeline.hsd.heuristics import DataTypeHeuristics
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 class CalibrationTypeHeuristics(api.Heuristic):
     """

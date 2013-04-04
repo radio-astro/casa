@@ -1,15 +1,15 @@
 from __future__ import absolute_import
 import types
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
 from . import fluxscale
 from pipeline.hif.tasks.setmodel import setmodel
 from pipeline.hif.tasks.setmodel import setjy
 
 from pipeline.hif.heuristics import fieldnames as fieldnames
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class FluxcalInputs(basetask.StandardInputs):

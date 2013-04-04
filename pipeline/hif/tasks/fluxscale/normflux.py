@@ -5,13 +5,13 @@ import string
 
 import pipeline.domain as domain
 import pipeline.domain.measures as measures
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
-from pipeline.hif.tasks.common import commonfluxresults as commonfluxresults
+from ..common import commonfluxresults
 
 from pipeline.hif.heuristics import fieldnames as fieldnames
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class NormaliseFluxInputs(basetask.StandardInputs):

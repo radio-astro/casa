@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 import string
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.api as api
-import pipeline.infrastructure.logging as logging
 from . import adapters
 from . import bandpassworker
 from . import channelbandpass
@@ -11,7 +11,8 @@ from . import common
 from pipeline.h.heuristics import echoheuristic as echoheuristic
 from pipeline.hif.heuristics import bporder as bporder
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class PolynomialBandpassInputs(common.CommonBandpassInputs):
@@ -77,7 +78,7 @@ class PolynomialBandpass(bandpassworker.BandpassWorker):
         # supplied both values, then we don't need to generate a channel
         # bandpass for analysis.
         if not isinstance(inputs.degamp, echoheuristic.EchoHeuristic)\
-            and not isinstance(inputs.degphase, echohuristic.EchoHeuristic):
+            and not isinstance(inputs.degphase, echoheuristic.EchoHeuristic):
             pass
             # TODO: optimise this!
 

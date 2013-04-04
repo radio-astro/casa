@@ -4,8 +4,9 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.api as api
 import math
 
-import pipeline.infrastructure.logging as logging
-LOG = logging.get_logger(__name__)
+import pipeline.infrastructure as infrastructure
+LOG = infrastructure.get_logger(__name__)
+
 
 class ObservingPattern(api.Heuristic):
     """

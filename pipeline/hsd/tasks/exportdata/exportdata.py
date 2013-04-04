@@ -19,21 +19,17 @@ results = task.execute (dry_run = False)
 from __future__ import absolute_import
 import os
 import tarfile
-import shutil
 import fnmatch
-import types
-import StringIO
 
 import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure.jobrequest import casa_tasks
-import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.callibrary as callibrary
-#import heuristics.hsd.SDDataProductName as SDDataProductName
+from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure as infrastructure
 from pipeline.hsd.tasks.common import SDDataProductName as SDDataProductName
 
 # the logger for this module
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 class SDExportDataInputs(basetask.StandardInputs):
     """

@@ -2,11 +2,11 @@ from __future__ import absolute_import
 import collections
 import os
 
-import pipeline.domain.fluxmeasurement as fluxmeasurement
+import pipeline.domain as domain
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class FluxCalibrationResults(basetask.Results):
@@ -75,8 +75,7 @@ class FluxCalibrationResults(basetask.Results):
             # measurement sets, so we replace them with spectral windows from 
             # this measurement set, identified by the same ID
             spw = ms.get_spectral_window(fm.spw.id)
-            m = fluxmeasurement.FluxMeasurement(spw, I=fm.I, Q=fm.Q, U=fm.U, 
-                                                V=fm.V)                
+            m = domain.FluxMeasurement(spw, I=fm.I, Q=fm.Q, U=fm.U, V=fm.V)                
             native_measurements.append(m)
                 
         return native_measurements

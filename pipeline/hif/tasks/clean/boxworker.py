@@ -1,13 +1,12 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-
-from pipeline.hif.tasks.clean.resultobjects import BoxResult
+from .resultobjects import BoxResult
 
 from pipeline.hif.heuristics import cleanbox 
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class BoxWorkerInputs(basetask.StandardInputs):

@@ -1,3 +1,4 @@
 from __future__ import absolute_import
 
-from pipeline.hif.tasks.tsysflag.tsysflag import Tsysflag
+from .tsysflag import Tsysflag
+from .tsysflagedges import Tsysflagedges

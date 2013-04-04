@@ -33,12 +33,12 @@ from __future__ import absolute_import
 import os
 import types
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure.jobrequest import casa_tasks
-import pipeline.infrastructure.logging as logging
+from pipeline.infrastructure import casa_tasks
 
 # the logger for this module
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class FlagDeterBaseInputs(basetask.StandardInputs):

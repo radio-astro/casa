@@ -3,9 +3,9 @@ import collections
 import copy
 from pipeline.hif.tasks.tsyscal import resultobjects 
 
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class TsysflagResults(resultobjects.TsyscalResults):

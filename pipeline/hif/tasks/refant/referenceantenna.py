@@ -29,16 +29,17 @@
 import os
 import string
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
-import pipeline.hif.heuristics.findrefant as findrefant
+from ...heuristics import findrefant
 
 # ------------------------------------------------------------------------------
 
 # Initialize a logger
 # -------------------
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 # ------------------------------------------------------------------------------
 # class RefAntInputs

@@ -2,10 +2,10 @@ from __future__ import absolute_import
 import types
 import os
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.logging as logging
-from pipeline.infrastructure.jobrequest import casa_tasks
+from pipeline.infrastructure import casa_tasks
 from pipeline.hif.heuristics import caltable as wcaltable
 from pipeline.hif.heuristics import wvrgcal as heuwvrgcal
 
@@ -15,7 +15,7 @@ from pipeline.hif.tasks.common import arrayflaggerbase
 from . import resultobjects 
 from . import wvrg_qa2
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class WvrgcalInputs(basetask.StandardInputs):

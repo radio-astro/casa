@@ -3,13 +3,14 @@ import types
 
 from pipeline.hif.heuristics import caltable as tcaltable
 from pipeline.hif.heuristics.tsysspwmap import tsysspwmap as tsysspwmap
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.logging as logging
-from pipeline.infrastructure.jobrequest import casa_tasks
+from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 class TsyscalInputs(basetask.StandardInputs):

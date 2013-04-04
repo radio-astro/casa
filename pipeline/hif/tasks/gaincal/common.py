@@ -5,10 +5,10 @@ import types
 
 from pipeline.hif.tasks.common import commoncalinputs
 from pipeline.hif.heuristics import caltable as gcaltable
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class CommonGaincalInputs(commoncalinputs.CommonCalibrationInputs):

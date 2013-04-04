@@ -2,16 +2,16 @@ from __future__ import absolute_import
 import re
 import types
 
-from pipeline.hif.tasks.common import commonfluxresults
 import pipeline.domain as domain
+from pipeline.hif.tasks.common import commonfluxresults
 from pipeline.hif.heuristics import fieldnames as fieldnames
 from pipeline.hif.heuristics import caltable as fcaltable
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure.jobrequest import casa_tasks
-import pipeline.infrastructure.logging as logging
+from pipeline.infrastructure import casa_tasks
 from .. import gaincal
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class FluxscaleInputs(basetask.StandardInputs):

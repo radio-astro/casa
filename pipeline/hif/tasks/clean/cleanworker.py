@@ -2,24 +2,18 @@ from __future__ import absolute_import
 
 import os
 
-#import pipeline.infrastructure.api as api
-#from .. import common as tasks_common
-import pipeline.infrastructure.casatools as casatools
-#import pipeline.domain as domain
-#import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure.jobrequest import casa_tasks
-#import pipeline.infrastructure.tablereader as tablereader
-from pipeline.hif.tasks.clean.boxworker import BoxWorker
-from pipeline.hif.tasks.clean.resultobjects import CleanResult
+import pipeline.infrastructure.casatools as casatools
+from pipeline.infrastructure import casa_tasks
+from .boxworker import BoxWorker
+from .resultobjects import CleanResult
 import pipeline.infrastructure.renderer as renderer
 
 #import pipeline.hif.heuristics as heuristics
 from pipeline.hif.heuristics import cleanbox
 
-
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 def purge(name):

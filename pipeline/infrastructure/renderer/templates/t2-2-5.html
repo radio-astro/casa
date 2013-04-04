@@ -1,0 +1,33 @@
+<%inherit file="base.html"/>
+
+<%block name="title">Weather Details</%block>
+
+<script>
+$(document).ready(function(){
+	$("a.grouped_elements").fancybox();
+});
+</script>
+
+<h1>Weather Details</h1>
+
+<h2>Weather</h2>
+% if weather_plots:
+<div class="gallery">
+	<ul>
+		% for (ms, plot) in weather_plots:
+		<li>
+		<a class="grouped_elements" rel="weather" href="session${ms.session}/${ms.basename}/weather.png">
+			<img src="session${ms.session}/${ms.basename}/weather.png"
+				 title="Weather Details for ${ms.basename}"
+				 alt="Weather Details for ${ms.basename}" />
+			<p>${ms.basename}</p>
+		</a>
+		</li>
+		% endfor
+	</ul>
+</div>
+% else:
+<p>No plots available.</p>
+% endif
+
+<%block name="footer"><a href="t1-2.html">Back to Observation Summary</a></%block>

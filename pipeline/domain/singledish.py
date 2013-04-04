@@ -1,32 +1,22 @@
 from __future__ import absolute_import
-
 import numpy
-import string
 import os
 import re
 
-#import pipeline.heuristics as heuristics
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
 from . import antenna
-from . import measures
-from . import source
-from . import observingrun
-from . import antennaarray
-from . import spectralwindow
-from . import scan
-from . import field
-from . import datadescription
 from . import frequencygroup
-from pipeline.domain.datatable import DataTableImpl as DataTable
+from . import measures
+from . import observingrun
+from . import source
+from . import spectralwindow
+from .datatable import DataTableImpl as DataTable
 
-#import pipeline.hsd.heuristics as sdheuristics
-from pipeline.hsd.heuristics import sdcaltype as sdcaltype
-from pipeline.hsd.heuristics import sdbeamsize as sdbeamsize
-from pipeline.hsd.heuristics import observingpattern2 as observingpattern2
-from pipeline.hsd.heuristics import gridding as gridding
+import pipeline.hsd.heuristics as heuristics
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 def to_numeric_freq(m, unit=measures.FrequencyUnits.HERTZ):
     return float(m.convert_to(unit).value)
@@ -99,6 +89,15 @@ class ScantableList(observingrun.ObservingRun, list):
                 ms.scantables.append(s)
             else:
                 ms.scantables = [s]
+
+    def get_spw_for_wvr(self, name):
+        st = self.get_scantable(name)
+        spw = st.spectral_window
+        returned_list = []
+        for (k,v) in spw.items():
+            if v.type == 'WVR':
+                returned_list.append(k)
+        return returned_list
 
     def get_spw_without_wvr(self, name):
         st = self.get_scantable(name)
@@ -201,7 +200,7 @@ class ScantableList(observingrun.ObservingRun, list):
                 tsys_strategy = None
 
             # strategy for off-position calibration
-            h = sdcaltype.CalibrationTypeHeuristics()
+            h = heuristics.CalibrationTypeHeuristics()
             calmode = h(item.name)
             
             entry = {
@@ -222,7 +221,7 @@ class ScantableList(observingrun.ObservingRun, list):
     def set_beam_size(self):
         qa = casatools.quanta
 
-        h = sdbeamsize.SingleDishBeamSizeFromName()
+        h = heuristics.SingleDishBeamSizeFromName()
         for item in self:
             antenna = item.antenna.name
             entry = {}
@@ -272,10 +271,10 @@ class ScantableList(observingrun.ObservingRun, list):
     def group_data(self, datatable):
         qa = casatools.quanta
 
-        pos_heuristic2 = observingpattern2.GroupByPosition2()
-        obs_heuristic2 = observingpattern2.ObservingPattern2()
-        time_heuristic2 = observingpattern2.GroupByTime2()
-        merge_heuristic2 = observingpattern2.MergeGapTables2()
+        pos_heuristic2 = heuristics.GroupByPosition2()
+        obs_heuristic2 = heuristics.ObservingPattern2()
+        time_heuristic2 = heuristics.GroupByTime2()
+        merge_heuristic2 = heuristics.MergeGapTables2()
         ra = datatable.getcol('RA')
         dec = datatable.getcol('DEC')
         row = datatable.getcol('ROW')
@@ -412,7 +411,7 @@ class ScantableList(observingrun.ObservingRun, list):
 
         ra = datatable.getcol('RA')
         dec = datatable.getcol('DEC')
-        h = gridding.GenerateGrid()
+        h = heuristics.GenerateGrid()
         self.grid_position.clear()
         last_ra = None
         last_dec = None
@@ -623,7 +622,8 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
 
     @property
     def is_target(self):
-        return (self.type == 'SP' and self.intent.find('TARGET') != -1) 
+        #return (self.type == 'SP' and self.intent.find('TARGET') != -1)
+        return (self.intent.find('TARGET') != -1)
 
     @property
     def is_atmcal(self):

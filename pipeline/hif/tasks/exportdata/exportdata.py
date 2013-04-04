@@ -40,14 +40,14 @@ import copy
 import string
 import re
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.imagelibrary as imagelibrary
-from pipeline.infrastructure.jobrequest import casa_tasks
-import pipeline.infrastructure.logging as logging
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.imagelibrary as imagelibrary
 
 # the logger for this module
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class ExportDataInputs(basetask.StandardInputs):

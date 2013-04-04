@@ -5,9 +5,9 @@ import os.path
 
 import numpy as np 
 
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class ResultAxis(object):

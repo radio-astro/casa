@@ -1,16 +1,13 @@
 from __future__ import absolute_import
-
 import types
 
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-
-from pipeline.hif.tasks.clean.cleanworker import CleanWorker
-
+import pipeline.infrastructure.casatools as casatools
+from .cleanworker import CleanWorker
 from pipeline.hif.heuristics import clean
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
 
 
 class CleanInputs(basetask.StandardInputs):

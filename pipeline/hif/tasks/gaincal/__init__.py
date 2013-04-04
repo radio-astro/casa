@@ -1,6 +1,7 @@
 from __future__ import absolute_import
-from pipeline.hif.tasks.gaincal.gaincalworker import GaincalWorker
-from pipeline.hif.tasks.gaincal.gtypegaincal import GTypeGaincal
-from pipeline.hif.tasks.gaincal.gsplinegaincal import GSplineGaincal
-from pipeline.hif.tasks.gaincal.gaincalmode import GaincalMode
-#from pipeline.hif.tasks.gaincal.phaseupgaincal import PhaseUpGaincal
+
+from .gaincalworker import GaincalWorker
+from .gtypegaincal import GTypeGaincal
+from .gsplinegaincal import GSplineGaincal
+from .gaincalmode import GaincalMode
+#from .phaseupgaincal import PhaseUpGaincal

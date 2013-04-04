@@ -2,16 +2,16 @@ from __future__ import absolute_import
 import math
 import numpy as np
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
 
 from pipeline.hif.tasks.common import commonresultobjects
-from pipeline.hif.tasks.common import calibrationtableaccess
 
 from . import resultobjects
 
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+
 
 
 def calculate_qa2_numbers(result):
