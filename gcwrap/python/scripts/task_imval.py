@@ -53,11 +53,11 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
             retValue = _imval_process_pixel( results, point )
             retValue['axes']=axes
             casalog.post( 'imval task complete for point'+str(point), 'NORMAL1' )
-            myia.done()
             return retValue
         except Exception, instance:
-            myia.done()
             raise Exception, instance
+        finally:
+            myia.done()
 
     # If the box parameter only has two value then we copy
     # them.  
@@ -75,13 +75,13 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
             myia.open( imagename )
             results = myia.pixelvalue( singlePt )
             retValue = _imval_process_pixel( results, singlePt )
-            myia.done()
             retValue['axes']=axes
             casalog.post( 'imval task complete for point '+str(singlePt), 'NORMAL1' )
             return retValue
         except Exception, instance:
-            myia.done()
             raise Exception, instance
+        finally:
+            myia.done()
         
         
     # If we've made it here then we are finding the stats
@@ -136,6 +136,14 @@ def imval(imagename=None,region=None,box=None,chans=None,stokes=None):
         reg=reg['regions']['*1']
 
     # Make sure they are sorted first.
+    if (not reg.has_key("blc")):
+        print "*** in if"
+        try:
+            msg = "Specified region is not rectangular"
+            raise Exception, msg
+        except Exception, instance:
+            casalog.post("An error occurred: " + str(instance))
+            raise
     reg['blc'].keys().sort()
     reg['trc'].keys().sort()        
 

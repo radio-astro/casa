@@ -99,7 +99,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
      The data point(s) to be retrieved are those found in the specified
      region, which may be:
-        1. A region file from the viewer (region parameter)
+        1. A region file or text string (see help par.region), with the following caveats:
+           * The region must be rectangular (eg, not circular, elliptical, or polyagonal)
+           * If the specified region is complex (eg, a union or intersection of multiple regions,
+             only the first simple region in this set is used.
         2. A region specified by a set of rectangular
            pixel coordinates, the channel ranges and/or the Stokes.
 
