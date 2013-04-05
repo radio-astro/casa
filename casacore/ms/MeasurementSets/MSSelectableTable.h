@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary> 
 //
-// MSSelectableTable: An interface used by MSSelection module to
+// MSSelectableTable: An interface class used by MSSelection module to
 // access the sub-tables and main-table columns of MS-like tables.
 //
 // </summary>
@@ -64,9 +64,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 //<synopsis> 
 //
-// This is a pure virtual base-class to prodive a table-type agnoistic
-// interface to the MSSelection module to access sub-tables and
-// main-table columns of MS-like tables.
+// This is a pure virtual base-class to provide a table-type agnostic
+// interface to the <linkto
+// module="MeasurementSets:description">MSSelection</linkto> module to
+// access sub-tables and main-table columns of MS-like tables.
 //
 // </synopsis>
 //
@@ -77,10 +78,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <motivation>
 //
-// To all use of the MSSelection module for selection on any table
-// that follows the genral structure of a the MS.  Via this class,
-// minor differences in the database layout can be hidden from the
-// MSSelection module.
+// To allow use of the <linkto
+// module="MeasurementSets:description">MSSelection</linkto> module
+// for selection on any table that follows the general structure of the
+// MS database.  Via this class, minor differences in the database
+// layout can be hidden from the MSSelection module.  This also keeps
+// MeasurementSet module from depending on other MS-like database
+// implemention which may use the MSSelection module.  Such usage will
+// need to implement a specialization of <linkto
+// module="MeasurementSets:description">MSSelectableTable</linkto> and
+// use it to instantiate the <linkto
+// module="MeasurementSets:description">MSSelection</linkto> object.
 //
 // </motivation>
 //
@@ -96,9 +104,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     virtual void setTable(const Table& table) {table_p = &table;}
     const Table* table()                      {return table_p;}
-    virtual Bool isMS()                       = 0;
     TableExprNode col(const String& colName)  {return table()->col(colName);}
 
+    virtual Bool isMS()                       = 0;
     virtual const MSAntenna& antenna()        = 0;
     virtual const MSField& field()            = 0;
     virtual const MSSpectralWindow& spectralWindow() = 0;
@@ -136,7 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 //<synopsis> 
 //
-// A class that can be passed around a MSSelectableTable, with most of
+// A class that can be passed around as MSSelectableTable, with most of
 // the methods overloaded to work with the underlaying MS.
 //
 //</synopsis>
