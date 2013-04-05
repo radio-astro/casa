@@ -129,6 +129,7 @@ def flagdata(vis,
         
     
     iscal = False
+    summary_stats={};
     
     # Check if vis is a cal table:
     # typevis = 1 --> cal table
@@ -200,7 +201,7 @@ def flagdata(vis,
     
     # Create local tools
     aflocal = casac.agentflagger()
-    mslocal = casac.ms()
+    mslocal = mstool()
 
     try: 
         # Verify the ntime value
@@ -513,7 +514,8 @@ def flagdata(vis,
         ##########  Only save the parameters and exit; action = ''     
         if (action == '' or action == 'none') and savepars == False:
             casalog.post('Parameter action=\'\' is only meaningful with savepars=True.', 'WARN')
-            return 0
+            aflocal.done()
+            return summary_stats
         
         if (action == '' or action == 'none') and savepars == True:
             if iscal:
@@ -530,7 +532,8 @@ def flagdata(vis,
                 
                 fh.writeFlagCmd(vis, flagcmd, vrows, False, cmdreason, outfile) 
                      
-            return 0
+            aflocal.done()
+            return summary_stats
 
         
         ######### From now on it is assumed that action = apply or calculate
@@ -575,9 +578,7 @@ def flagdata(vis,
                         
                    else:
                         casalog.post('Iterating through the entire MS');
-                        
-    #               mslocal.close()
-                        
+                                                
                 # Get all the selection parameters, but set correlation to ''
                 elif vrows.__len__() == 1:
                     cmd0 = flagcmd[vrows[0]]['command']
@@ -675,11 +676,24 @@ def flagdata(vis,
         # Destroy the tool
         aflocal.done()
 
+        retval = True
+        # Write history to the MS. Only for modes that write to the MS
+        if not iscal:
+            if mode != 'summary' and action == 'apply':
+                try:
+                    param_names = flagdata.func_code.co_varnames[:flagdata.func_code.co_argcount]
+                    param_vals = [eval(p) for p in param_names]
+                    retval &= write_history(mslocal, vis, 'flagdata', param_names,
+                                            param_vals, casalog)
+                    
+                except Exception, instance:
+                    casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                                 'WARN')
+
         # Pull out the 'summary' part of summary_stats_list.
         # (This is the task, and there will be only one such dictionary.)
         # After this step, the only thing left in summary_stats_list are the
         # list of reports/views, if any.  Return it, if the user wants it.
-        summary_stats={};
         if mode == 'summary':
            if type(summary_stats_list) is dict:
                nreps = summary_stats_list['nreport'];
@@ -698,33 +712,14 @@ def flagdata(vis,
         #      return summary_stats , summary_stats_list;
         # else :
         #      return summary_stats;
-        return summary_stats;
+        return summary_stats
     
     except Exception, instance:
         aflocal.done()
         casalog.post('%s'%instance,'ERROR')
-        raise
-        
-    # Write history to the MS
-    if not iscal:
-        try:
-            mslocal.open(vis, nomodify=False)
-            mslocal.writehistory(message='taskname = flagdata', origin='flagdata')
-            param_names = flagdata.func_code.co_varnames[:flagdata.func_code.co_argcount]
-            param_vals = [eval(p) for p in param_names]
-            retval &= write_history(mslocal, vis, 'flagdata', param_names,
-                                    param_vals, casalog)
-            
-            mslocal.close()
-        except Exception, instance:
-            mslocal.close()
-            casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
-                             'WARN')
-        
-    return
 
 
-
+# Helper functions
 def delspace(word, replace):
     '''Replace the white space of a string with another character'''
     
