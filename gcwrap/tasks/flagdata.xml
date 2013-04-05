@@ -1297,7 +1297,7 @@ The task will flag a subset of data based on the following modes of operation:
                              contains any reason, they will be replaced with this one. At the 
                              moment it is not possible to add more than one reason. 
 
-                             Blanks are not allowed in the reasons when saving to a file. 
+                             Whitespaces are not allowed in the reasons when saving to a file. 
                              They will be replaced by underscores and a warning will be issued.
                     default: ' '; no reason will be added to output.
                     example: cmdreason='CLIP_ZEROS'
