@@ -258,7 +258,7 @@ class ImportData(basetask.StandardTaskTemplate):
     def _do_importasdm(self, asdm):
         vis = self._asdm_to_vis_filename(asdm)
         outfile = os.path.join(self.inputs.output_dir,
-                               os.path.basename(asdm) + "_flagcmds.txt")
+                               os.path.basename(asdm) + "_flagonline.txt")
 
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
