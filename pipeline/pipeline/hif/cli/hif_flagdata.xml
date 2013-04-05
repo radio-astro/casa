@@ -202,14 +202,15 @@ online -- Apply the online flags.
 
 fileonline -- File containing the online flags. These are computed by the
     h_init or hif_importdata data tasks. If the online flags files
-    are undefined a name of the form 'msname_flagcmds.txt' is assumed.
+    are undefined a name of the form 'msname_flagonline.txt' is assumed.
     default: ''
 
 template -- Apply flagging templates
     default: False
 
 filetemplate -- The name of an text file that contains the flagging template
-    for RFI, birdies, telluric lines, etc.
+    for RFI, birdies, telluric lines, etc.  If the template flags files
+    is undefined a name of the form 'msname_flagtemplate.txt' is assumed.
     default: ''
 
 
