@@ -85,7 +85,7 @@ namespace casa{
     void makeConvFunction(const casa::ImageInterface<std::complex<float> >&, 
 			  const casa::VisBuffer&, casa::Int, 
 			  const CountedPtr<PolOuterProduct>& ,//pop,
-			  casa::Float, 
+			  casa::Float, casa::Float,
 			  const Vector<Double>& /*uvScale*/, const Vector<Double>& /*uvOffset*/,
 			  const Matrix<Double>& /*freqSelection*/,
 			  casa::CFStore2&, casa::CFStore2&) {};

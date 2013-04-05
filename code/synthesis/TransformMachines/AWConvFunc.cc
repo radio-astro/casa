@@ -188,9 +188,12 @@ namespace casa{
 		//		Bool doSquint=False; Complex tt;
 		ftATerm_l.set(Complex(1.0,0.0));   ftATermSq_l.set(Complex(1.0,0.0));
 		aTerm.applySky(ftATerm_l, vb, doSquint, 0);
-
+		// {
+		//   ostringstream name;
+		//   name << "ftTerm" << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
+		//   storeImg(name,ftATerm_l);
+		// }
 		//tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
-
 		
 		aTerm.applySky(ftATermSq_l, vb, doSquint, 0,conjFreq);
 
@@ -198,8 +201,6 @@ namespace casa{
 
 		{
 		  // ostringstream name;
-		  // name << "ftTerm" << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
-		  // storeImg(name,ftATerm_l);
 		  // name << "ftTermSq" << "_" << muellerElements(imx)(imy) <<".im";
 		  // storeImg(name,ftATermSq_l);
 		}
@@ -613,6 +614,7 @@ namespace casa{
 				    const Int wConvSize,
 				    const CountedPtr<PolOuterProduct>& pop,
 				    const Float pa,
+				    const Float dpa,
 				    const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 				    const Matrix<Double>& vbFreqSelection,
 				    CFStore2& cfs2,
@@ -787,7 +789,8 @@ namespace casa{
     // types).
     //
     Matrix<Int> uniqueBaselineTypeList=makeBaselineList(aTerm_p->getAntTypeList());
-    Quantity dPA(360.0,"deg");
+    //Quantity dPA(360.0,"deg");
+    Quantity dPA(dpa,"rad");
     
     for(Int ib=0;ib<uniqueBaselineTypeList.shape()(0);ib++)
       {

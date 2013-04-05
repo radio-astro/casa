@@ -57,6 +57,7 @@ namespace casa{
 				  const VisBuffer& vb,
 				  const Int wConvSize,
 				  const Float pa,
+				  const Float dpa,
 				  CFStore& cfs,
 				  CFStore& cfwts) {};
     virtual void setPolMap(const Vector<Int>& polMap) {(void)polMap;};

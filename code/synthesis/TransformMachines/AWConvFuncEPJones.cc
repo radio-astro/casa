@@ -97,13 +97,14 @@ namespace casa{
 					   const Int wConvSize,
 					   const CountedPtr<PolOuterProduct>& pop,
 					   const Float pa,
+					   const Float dpa,
 					   const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 					   const Matrix<Double>& spwFreqSel,
 					   CFStore2& cfs,
 					   CFStore2& cfwts)
   {
     findPointingOffset(image,vb);
-    AWConvFunc::makeConvFunction(image,vb,wConvSize,pop,pa,uvScale,uvOffset,spwFreqSel,cfs,cfwts);
+    AWConvFunc::makeConvFunction(image,vb,wConvSize,pop,pa,dpa,uvScale,uvOffset,spwFreqSel,cfs,cfwts);
     
   }
   //

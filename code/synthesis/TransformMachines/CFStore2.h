@@ -153,16 +153,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       return nearestPA(pa, paTol);
     }
 
-    virtual Int nearestPA(const Quantity& pa, const Quantity& paTol)
-    {
-      Int n=pa_p.nelements();
-      Float dpa=paTol.getValue("rad"),
-	paVal = pa.getValue("rad");
-      for(Int i=0;i<n;i++)
-	if (fabs(pa_p(i).getValue("rad") - paVal) < dpa)
-	  return i;
-      return -1;
-    }
+    virtual Int nearestPA(const Quantity& pa, const Quantity& paTol);
   };
 } //# NAMESPACE CASA - END
 

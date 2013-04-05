@@ -106,6 +106,7 @@ namespace casa{
 				  const Int wConvSize,
 				  const CountedPtr<PolOuterProduct>& pop,
 				  const Float pa, 
+				  const Float dpa, 
 				  const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
 				  const Matrix<Double>& vbFreqSelection,
 				  CFStore2& cfs,
