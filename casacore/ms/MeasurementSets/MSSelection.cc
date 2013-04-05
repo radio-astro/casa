@@ -54,6 +54,7 @@
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
 #include <ms/MeasurementSets/MSSelectableTable.h>
+#include <ms/MeasurementSets/MSSelectableMainColumn.h>
 #include <ms/MeasurementSets/MSAntennaParse.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Exceptions/Error.h>
@@ -406,10 +407,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	(
 	 // (fieldExpr_p != "")     ||     
 	 // (antennaExpr_p != "")     || 
-	 (timeExpr_p != "") ||         // Will be opened-up for CalTables in the future
+	 // (timeExpr_p != "") ||         // Will be opened-up for CalTables in the future
 	 // (spwExpr_p != "")  ||         // Will be opened-up for CalTables in the future
-	 (scanExpr_p != "") || (observationExpr_p != "") || (arrayExpr_p != "") || (uvDistExpr_p != "") ||
-	 (taqlExpr_p != "") || (polnExpr_p != "")        || (stateExpr_p != "")
+	 //(scanExpr_p != "")  ||
+	 (observationExpr_p != "") || 
+	 (arrayExpr_p != "") || (uvDistExpr_p != "")      ||
+	 (taqlExpr_p != "")  || (polnExpr_p != "")        || 
+	 (stateExpr_p != "")
 	 ))
       throw(MSSelectionError(String("MSSelection::toTableExprNode(MSSelectableTable*): "
 				    "Only field-, spw- and antenna-selection is supported for CalTables")));
@@ -511,9 +515,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	      case SCAN_EXPR:
 		{
+		  TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::SCAN_NUMBER));
 		  scanIDs_p.resize(0);
 		  if(scanExpr_p != "")
-		    node = msScanGramParseCommand(ms, scanExpr_p, scanIDs_p, maxScans_p);
+		    node = msScanGramParseCommand(ms, colAsTEN, scanExpr_p, scanIDs_p, maxScans_p);
+		    //node = msScanGramParseCommand(ms, scanExpr_p, scanIDs_p, maxScans_p);
 		  //		node = *(msScanGramParseNode());
 		  break;
 		}
@@ -595,12 +601,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// generated so far to find the first logical row to use to get
 	// value of the wild-card fields in the time expression. 
 	//
+	selectedTimesList_p.resize(2,0);
+
 	const TableExprNode *timeNode = 0x0;
 	TableExprNode colAsTEN = msLike->col(msLike->columnName(MS::TIME));
-	selectedTimesList_p.resize(2,0);
+	MSSelectableMainColumn *msMainColInterface=msLike->mainColumns();
+	// MSMainColInterface msMainColInterface;
+	// msMainColInterface.init(*(msLike->table()));
+
 	if(timeExpr_p != "" &&
-	   msTimeGramParseCommand(ms, timeExpr_p, condition, selectedTimesList_p) == 0)
+	   //msTimeGramParseCommand(ms, timeExpr_p, condition, selectedTimesList_p) == 0)
+	   msTimeGramParseCommand(ms, timeExpr_p, colAsTEN, *msMainColInterface, condition, selectedTimesList_p) == 0)
 	  timeNode = msTimeGramParseNode();
+
 	//
 	// Add the time-expression TEN to the condition
 	//

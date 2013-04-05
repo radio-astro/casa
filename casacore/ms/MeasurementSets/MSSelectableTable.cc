@@ -34,7 +34,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   MSInterface::MSInterface(const Table& table)
-    :MSSelectableTable(table) 
+    :MSSelectableTable(table), msMainCols_p(NULL)
   {}
 
   // MSInterface::MSInterface(const MeasurementSet& ms)
