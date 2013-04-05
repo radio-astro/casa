@@ -178,7 +178,7 @@ void smoothCT(NewCalTable ct,
 }
 
 void assignCTScanField(NewCalTable& ct, String msName, 
-		       Bool doField, Bool doScan) {
+		       Bool doField, Bool doScan, Bool doObs) {
 
   // TBD: verify msName is present and is an MS
 
@@ -197,6 +197,7 @@ void assignCTScanField(NewCalTable& ct, String msName,
   Vector<Double> timelo(nScan,DBL_MIN);
   Vector<Double> timehi(nScan,DBL_MAX);
   Vector<Int> fieldlist(nScan,-1);
+  Vector<Int> obslist(nScan,-1);
   Vector<uInt> ord;
   {
     Block<String> cols(1);
@@ -212,6 +213,7 @@ void assignCTScanField(NewCalTable& ct, String msName,
       scanlist(iscan)=scan;
       
       fieldlist(iscan)=ROTableVector<Int>(thistab,"FIELD_ID")(0);
+      obslist(iscan)=ROTableVector<Int>(thistab,"OBSERVATION_ID")(0);
       
       Vector<Double> times=ROTableVector<Double>(thistab,"TIME").makeVector();
       timelo(iscan)=min(times)-1e-5;
@@ -244,6 +246,7 @@ void assignCTScanField(NewCalTable& ct, String msName,
   CTIter ctiter(ct,cols);
 
   Int itime(0);
+  Int thisObs(0);
   Int thisScan(0);
   Int thisField(0);
   while (!ctiter.pastEnd()) {
@@ -274,6 +277,7 @@ void assignCTScanField(NewCalTable& ct, String msName,
     //else 
       //      cout << " Still: ";
 
+    thisObs=obslist(ord(itime));
     thisScan=scanlist(ord(itime));
     thisField=fieldlist(ord(itime));
 
@@ -290,6 +294,8 @@ void assignCTScanField(NewCalTable& ct, String msName,
       ctiter.setfield(thisField);
     if (doScan) 
       ctiter.setscan(thisScan);
+    if (doObs) 
+      ctiter.setobs(thisObs);
     
     ctiter.next();
   }
