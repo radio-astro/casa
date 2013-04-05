@@ -89,6 +89,8 @@ multiplane_image = "gauss_multiplane.fits"
 multibeam_image = "gauss_multibeam.im"
 two_gauss_multiplane_estimates="estimates_2gauss_multiplane.txt"
 msgs = ''
+twogim = "2g.im"
+twogest = "2g_estimates.txt"
 
 # are the two specified numeric values relatively close to each other? 
 def near (first, second, epsilon):
@@ -130,7 +132,8 @@ class imfit_test(unittest.TestCase):
             noisy_image, noisy_image_xx, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
             expected_new_estimates, stokes_image, gauss_no_pol, jyperbeamkms,
-            masked_image, multiplane_image, multibeam_image, two_gauss_multiplane_estimates
+            masked_image, multiplane_image, multibeam_image, two_gauss_multiplane_estimates,
+            twogim, twogest
         ] :
             if not os.path.exists(f):
                 if (os.path.isdir(datapath + f)):
@@ -1419,6 +1422,17 @@ class imfit_test(unittest.TestCase):
                 code = run_imfit
                 method += test + "imfit: "
             self._check_results(code())
+            
+    def test_multiple_boxes(self):
+        """Test support for multiple boxes (CAS-4978)"""
+        myia = iatool()
+        myia.open(twogim)
+        # just that it runs successfully is test enough
+        myia.fitcomponents(box="37,43,59,56,143,142,157,159", estimates=twogest)
+        myia.done()
+        imfit(imagename=twogim, box="37,43,59,56,143,142,157,159", estimates=twogest)
+        
+        
 
 def suite():
     return [imfit_test]
