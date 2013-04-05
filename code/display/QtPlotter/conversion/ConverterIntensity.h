@@ -58,10 +58,14 @@ public:
 	//A solid angle in sr units is needed in order to do Kelvin conversions.
 	static void setSolidAngle( double angle );
 
+	//Beam area in "sr".  Needed for Jy/beam <-> Jy/arcsec^2 and Jy/sr conversions.
+	static void setBeamArea( double beamArea );
+
 	//Converts between Jy/Beam units.  For example, MJy/Beam <-> Jy/Beam
 	static double convertJyBeams( const QString& sourceUnits, const QString& destUnits, double value );
 	static double convertJY( const QString& oldUnits, const QString& newUnits, double value );
 	static double convertJYSR( const QString& oldUnits,const QString& newUnits, double value );
+	static double convertKelvin( const QString& oldUnits,const QString& newUnits, double value );
 	virtual ~ConverterIntensity();
 
 private:
@@ -72,17 +76,28 @@ private:
 			const QString& oldUnits, const QString& newUnits );
 	static void convertJansky( Vector<float>& values, const QString& oldUnits,
 			const QString& newUnits );
-
+	static void convertKelvin( Vector<float>& values, const QString& oldUnits,
+			const QString& newUnits );
 	static bool isJansky( const QString& units );
+	static bool isKelvin( const QString& units );
+	static double convertNonKelvinUnits( double yValue,
+			const QString& oldUnits, const QString& newUnits );
 	static QString getJanskyBaseUnits( const QString& units );
+	static QString getKelvinBaseUnits( const QString& units );
 	static QString stripPixels( const QString& units );
+	static double beamToArcseconds( double yValue );
+	static double arcsecondsToBeam( double yValue );
+	static double srToArcseconds( double yValue );
+	static double arcsecondsToSr( double yValue );
 	static const QList<QString> BEAM_UNITS;
 	static const QList<QString> JY_UNITS;
 	static const QList<QString> JY_SR_UNITS;
+	static const QList<QString> KELVIN_UNITS;
 	static double beamSolidAngle;
 	static const double SPEED_LIGHT_FACTOR;
 	static const double FREQUENCY_FACTOR;
-
+	static const double ARCSECONDS_PER_STERADIAN;
+	static double beamArea;
 };
 
 } /* namespace casa */

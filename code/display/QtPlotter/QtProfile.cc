@@ -2470,8 +2470,11 @@ void QtProfile::initializeSolidAngle() const {
 	else {
 		beam = information.restoringBeam( 0, -1 );
 	}
+
 	Quantity majorQuantity = beam.getMajor();
 	Quantity minorQuantity = beam.getMinor();
+	double arcsecArea = beam.getArea( "arcsec2");
+	ConverterIntensity::setBeamArea( arcsecArea );
 
 	//Calculate: PI * (half power width)^2 * ARCSEC^2_SR_CONVERSIONFACTOR / 4 ln 2
 	double halfPowerWidthSquared = (majorQuantity.getValue() * minorQuantity.getValue() );
@@ -2521,7 +2524,11 @@ void QtProfile::postConversionWarning( QString unitStr ){
 
 pair<double,double> QtProfile::getMaximumTemperature(){
 	//Convert xValues to Hz
-	Vector<float> xValues = z_xval;
+	int zxCount = z_xval.size();
+	Vector<float> xValues(zxCount);
+	for ( int i = 0; i < zxCount; i++ ){
+		xValues[i] = z_xval[i];
+	}
 	const QString HERTZ = "Hz";
 	QString xAxisUnit(xaxisUnit.c_str());
 	if ( xAxisUnit != HERTZ ){
