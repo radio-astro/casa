@@ -599,6 +599,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   void showImageManager();
   void sliceMarkerVisibilityChanged(int regionId, bool visible);
   void sliceMarkerPositionChanged(int regionId, int segmentIndex, float percentage);
+  void updateMultiSpectralFitLocation( Record trackingRec);
+
 
  public:
  

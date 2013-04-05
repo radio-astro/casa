@@ -546,7 +546,8 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	connect( qdp_, SIGNAL(trackingInfo(Record)),
 			SLOT(displayTrackingData_(Record)) );
-
+	connect( qdp_, SIGNAL(trackingInfo(Record)),
+			SLOT(updateMultiSpectralFitLocation( Record)));
 	connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
 			SLOT(deleteTrackBox_(QtDisplayData*)) );
 
@@ -2227,19 +2228,15 @@ TrackBox* QtDisplayPanelGui::showTrackBox_(QtDisplayData* qdd) {
 	// (trkBox will be added to the _bottom_ of trkgWidget_, assuring
 	// that track boxes are displayed in registration order).
 
-	return trkBox;  }
-
-
-
+	return trkBox;
+}
 
 void QtDisplayPanelGui::deleteTrackBox_(QtDisplayData* qdd) {
 	// Deletes the TrackBox for the given QDD if it exists.  Deletion
 	// automatically removes it from the gui (trkgWidget_ and its layout).
 	// Connected to the ddRemoved() signal of QtViewerBase.
-	if(hasTrackBox_(qdd)) delete trkBox_(qdd);  }
-
-
-
+	if(hasTrackBox_(qdd)) delete trkBox_(qdd);
+}
 
 void QtDisplayPanelGui::displayTrackingData_(Record trackingRec) {
 	// Display tracking data gathered by underlying panel.
@@ -2247,6 +2244,16 @@ void QtDisplayPanelGui::displayTrackingData_(Record trackingRec) {
 		TrackBox* trkBox = trkBox_(trackingRec.name(i));
 		if(trkBox!=0){
 			trkBox->setText(trackingRec.asString(i));
+		}
+	}
+}
+
+void QtDisplayPanelGui::updateMultiSpectralFitLocation( Record trackingRec){
+	//The profiler needs to know the location of the mouse so it can update
+	//the multi-pixel spectral fit if it has one.
+	if ( profile_!= NULL && profile_->isVisible() ){
+		for(uInt i=0; i<trackingRec.nfields(); i++) {
+			profile_->processTrackRecord( trackingRec.name(i), trackingRec.asString(i) );
 		}
 	}
 }
