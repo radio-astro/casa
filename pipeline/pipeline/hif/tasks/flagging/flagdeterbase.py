@@ -238,7 +238,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
     @intents.setter
     def intents(self, value):
         if value is None:
-            value = '*POINTING*,*ATMOSPHERE*,*SIDEBAND_RATIO*'
+            value = '*POINTING*,*FOCUS*,*ATMOSPHERE*,*SIDEBAND_RATIO*'
         self._intents = value
         
     @property
@@ -415,8 +415,15 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             
         # Flag according to scan numbers and intents?
         if inputs.scan:
-            flag_cmds.append('mode=manual scan={0} intent={1}'
-                             ''.format(inputs.scannumber, inputs.intents))
+	    if inputs.scannumber != '':
+                flag_cmds.append('mode=manual scan={0}'
+                             ''.format(inputs.scannumber))
+	    # These must be separated due to the way agent flagging works
+	    if inputs.intents != '':
+	        intentslist = inputs.intents.split(',')
+	        for item in intentslist:
+                    flag_cmds.append('mode=manual intent={0}'
+                             ''.format(item))
 
         # Flag spectral window edge channels?
         if inputs.edgespw: 
