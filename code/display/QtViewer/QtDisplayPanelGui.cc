@@ -27,7 +27,7 @@
 //# $Id: QtDisplayPanelGui.cc,v 1.12 2006/10/10 21:59:19 dking Exp $
 
 #include <algorithm>
-#include <string> 
+#include <string>
 #include <QSet>
 #include <casa/BasicSL/String.h>
 #include <display/Utilities/StringUtil.h>
@@ -124,7 +124,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 		// (b) creates a QtRegionCreatorSource, which (c) uses the constructed QtDisplayPanel, to
 		// (d) retrieve the QToolBox which is part of this QtRegionDock... should fix... <drs>
 		regionDock_  = new viewer::QtRegionDock(this, qdp_);
-		connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)));	
+		connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)));
 		connect( regionDock_, SIGNAL(loadRegions(const QString&, const QString &)), SLOT(loadRegions(const QString&, const QString &)) );
 		connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
 		std::string shown = getrc("visible.regiondock");
@@ -316,7 +316,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	// ..._and_ explicitly add trkgWidget_'s children to it as needed.
 	// Note that parenting a TrackBox with trkgWidget_ does _not_
 	// automatically do this....  For generic widgets (which don't have
-	// methods like 'setWidget()' above, whose layout you create yourself) 
+	// methods like 'setWidget()' above, whose layout you create yourself)
 	// doing genericWidget->layout()->addWidget(childWidget) automatically
 	// makes genericWidget the parent of childWidget, but _not_ vice
 	// versa.  Also note: technically, the _layout_ is not the child
@@ -334,7 +334,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 								Qt::BottomDockWidgetArea, regionDock_, Qt::Vertical );
 	}
 
-#if 0   
+#if 0
 	if ( trackloc == "right" && animloc == "right" && rc.get("viewer." + rcid() + ".rightdock") == "tabbed" ) {
 		tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
 	} else if ( trackloc == "left" && animloc == "left" && rc.get("viewer." + rcid() + ".leftdock") == "tabbed" ) {
@@ -1349,16 +1349,15 @@ void QtDisplayPanelGui::movieStop(){
 void QtDisplayPanelGui::removeAllDDs() {
 	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
 		QtDisplayData* qdd = qdds.getRight();
-
+		if ( qdd == controlling_dd ){
+			controlling_dd = NULL;
+		}
 		qdds.removeRight();
 		emit ddRemoved(qdd);
 		if ( regionDock_ )
 		    regionDock_->updateRegionStats( );
 		qdd->done();
 		delete qdd;
-	}
-	if ( qdds_.len() == 0 ){
-		this->controlling_dd = NULL;
 	}
 	updateFrameInformation();
 }
@@ -1368,7 +1367,9 @@ void QtDisplayPanelGui::removeAllDDs() {
 Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
 	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 		if(qdd == qdds.getRight()) {
-
+			if ( qdd == controlling_dd ){
+				controlling_dd = NULL;
+			}
 			qdds.removeRight();
 			emit ddRemoved(qdd);
 			if ( regionDock_ )
@@ -1377,9 +1378,6 @@ Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
 			delete qdd;
 			return True;
 		}
-	}
-	if ( qdds_.len() == 0 ){
-		this->controlling_dd = NULL;
 	}
 	updateFrameInformation();
 	return False;
@@ -1704,14 +1702,14 @@ void QtDisplayPanelGui::showStats(const String& stats) {
   int last = s.lastIndexOf('\n', len - 3);
   //cout << "length=" << len << " last=" << last << endl;
   QString lastLine=s.right(max(len - last,0));
-  //cout << "lastLine=" << lastLine.toStdString() 
+  //cout << "lastLine=" << lastLine.toStdString()
   //     << "<<<==========\n" << endl;
   int width=fm.width(lastLine);
   //cout << "width=" << width << endl;
   qst_->resize(width, qst_->size().height());
   qst_->append(s);
   qst_->showNormal();
-  qst_->raise();  
+  qst_->raise();
 	 */
 }
 
@@ -2384,7 +2382,7 @@ void QtDisplayPanelGui::quit( ) {
 // void QtDisplayPanelGui::toggleAnimExtras_() {
 
 //   if(animAuxButton_->text()=="Full") animAuxButton_->setText("Compact");
-//   else				     animAuxButton_->setText("Full");  
+//   else				     animAuxButton_->setText("Full");
 //   setAnimExtrasVisibility_();  }
 
 
@@ -2396,15 +2394,15 @@ void QtDisplayPanelGui::quit( ) {
 // // (Leave these until promised Qt fixes arrive...).
 
 // /*  //#dg
-// cerr<<"anMSzHb:"<<animWidget_->minimumSizeHint().width()	    
+// cerr<<"anMSzHb:"<<animWidget_->minimumSizeHint().width()
 //           <<","<<animWidget_->minimumSizeHint().height()
-//     <<"   SzHb:"<<animWidget_->sizeHint().width()	    
-//           <<","<<animWidget_->sizeHint().height()<<endl; 
-// cerr<<"trMSzHb:"<<trkgWidget_->minimumSizeHint().width()	    
+//     <<"   SzHb:"<<animWidget_->sizeHint().width()
+//           <<","<<animWidget_->sizeHint().height()<<endl;
+// cerr<<"trMSzHb:"<<trkgWidget_->minimumSizeHint().width()
 //           <<","<<trkgWidget_->minimumSizeHint().height()
-//     <<"   SzHb:"<<trkgWidget_->sizeHint().width()	    
-//           <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-// //*/  //#dg  
+//     <<"   SzHb:"<<trkgWidget_->sizeHint().width()
+//           <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+// //*/  //#dg
 
 
 
@@ -2412,59 +2410,59 @@ void QtDisplayPanelGui::quit( ) {
 //     animAuxFrame_->hide(); modeGB_->hide();  }
 //   else {
 //     animAuxFrame_->show(); modeGB_->show();
-//     animAuxButton_->setText("Compact");  }  
+//     animAuxButton_->setText("Compact");  }
 
 
 /*  //#dg
-cerr<<"anMSzHa:"<<animWidget_->minimumSizeHint().width()	    
+cerr<<"anMSzHa:"<<animWidget_->minimumSizeHint().width()
           <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHa:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHa:"<<trkgWidget_->minimumSizeHint().width()	    
+    <<"   SzHa:"<<animWidget_->sizeHint().width()
+          <<","<<animWidget_->sizeHint().height()<<endl;
+cerr<<"trMSzHa:"<<trkgWidget_->minimumSizeHint().width()
           <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHa:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+    <<"   SzHa:"<<trkgWidget_->sizeHint().width()
+          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+//*/  //#dg
 
 
 /*  //#dg
-  repaint();    //#dg 
-cerr<<"anMSzHr:"<<animWidget_->minimumSizeHint().width()	    
+  repaint();    //#dg
+cerr<<"anMSzHr:"<<animWidget_->minimumSizeHint().width()
           <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHr:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHr:"<<trkgWidget_->minimumSizeHint().width()	    
+    <<"   SzHr:"<<animWidget_->sizeHint().width()
+          <<","<<animWidget_->sizeHint().height()<<endl;
+cerr<<"trMSzHr:"<<trkgWidget_->minimumSizeHint().width()
           <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHr:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+    <<"   SzHr:"<<trkgWidget_->sizeHint().width()
+          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+//*/  //#dg
 
 
 /*  //#dg
-  update();    //#dg 
-cerr<<"anMSzHu:"<<animWidget_->minimumSizeHint().width()	    
+  update();    //#dg
+cerr<<"anMSzHu:"<<animWidget_->minimumSizeHint().width()
           <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHu:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHu:"<<trkgWidget_->minimumSizeHint().width()	    
+    <<"   SzHu:"<<animWidget_->sizeHint().width()
+          <<","<<animWidget_->sizeHint().height()<<endl;
+cerr<<"trMSzHu:"<<trkgWidget_->minimumSizeHint().width()
           <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHu:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+    <<"   SzHu:"<<trkgWidget_->sizeHint().width()
+          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+//*/  //#dg
 
 
 /*  //#dg
   QtApp::app()->processEvents();  //#dg
 	// (NB: anSzH's don't usually decrease until this point(?!)...)
-cerr<<"anMSzHp:"<<animWidget_->minimumSizeHint().width()	    
+cerr<<"anMSzHp:"<<animWidget_->minimumSizeHint().width()
           <<","<<animWidget_->minimumSizeHint().height()
-    <<"   SzHp:"<<animWidget_->sizeHint().width()	    
-          <<","<<animWidget_->sizeHint().height()<<endl; 
-cerr<<"trMSzHp:"<<trkgWidget_->minimumSizeHint().width()	    
+    <<"   SzHp:"<<animWidget_->sizeHint().width()
+          <<","<<animWidget_->sizeHint().height()<<endl;
+cerr<<"trMSzHp:"<<trkgWidget_->minimumSizeHint().width()
           <<","<<trkgWidget_->minimumSizeHint().height()
-    <<"   SzHp:"<<trkgWidget_->sizeHint().width()	    
-          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl; 
-//*/  //#dg  
+    <<"   SzHp:"<<trkgWidget_->sizeHint().width()
+          <<","<<trkgWidget_->sizeHint().height()<<endl<<endl;
+//*/  //#dg
 
 
 // }
@@ -2589,7 +2587,7 @@ void QtDisplayPanelGui::addGuiState_(QDomDocument* restoredoc) {
 
 
 
-void QtDisplayPanelGui::restoreGuiState_(QDomDocument* restoredoc) { 
+void QtDisplayPanelGui::restoreGuiState_(QDomDocument* restoredoc) {
 	// Responds to qdp_->creatingRstrDoc(QDomDocument*) signal.
 	// Sets gui-specific state (most notably, overall window size).
 
@@ -2859,7 +2857,7 @@ void QtDisplayPanelGui::ddCloseClicked_() {
 	removeDD(dd);  }
 
 
-void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {    
+void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
 	// At least for now, colorbars can only be placed horizontally or vertically,
 	// identically for all display panels.  This sets that state for everyone.
 	// Sends out colorBarOrientationChange signal when the state changes.
