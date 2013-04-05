@@ -182,7 +182,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         
         if self._fileonline is None:
             vis_root = os.path.splitext(self.vis)[0]
-            return vis_root + '_flagcmds.txt'
+            return vis_root + '_flagonline.txt'
         return self._fileonline
     
     @fileonline.setter
@@ -229,7 +229,7 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
             return self._handle_multiple_vis('inpfile')
 
         vis_root = os.path.splitext(self.vis)[0]
-        return os.path.join(self.output_dir, vis_root + '_flagcmds.inp')
+        return os.path.join(self.output_dir, vis_root + '_flagcmds.txt')
 
     @property
     def intents(self):
@@ -299,10 +299,20 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
         
         :rtype: dict        
         """
+
+	# Generate file list.
+	filelist = []
+	if self.online:
+	    filelist.append(self.fileonline)
+	filelist.append(self.inpfile)
+	if self.template:
+	    filelist.append(self.filetemplate)
+
         return {'vis'        : self.vis,
                 'mode'       : 'list',
                 'action'     : 'apply',                     
-                'inpfile'    : self.inpfile,
+                #'inpfile'    : self.inpfile,
+                'inpfile'    : filelist,
                 'savepars'   : False,
                 'flagbackup' : self.flagbackup}
 
@@ -430,12 +440,14 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
             flag_cmds.append(self._get_edgespw_cmds())
 
         # Apply the online flags? 
-        if inputs.online:
-            flag_cmds.append(self._add_file(inputs.fileonline))
+	#    Keep in separate file
+        #if inputs.online:
+            #flag_cmds.append(self._add_file(inputs.fileonline))
 
         # Apply flags from a template (RFI, birdies, telluric lines, etc.)?
-        if inputs.template:
-            flag_cmds.append(self._add_file(inputs.filetemplate))
+	#    Keep in separate file
+        #if inputs.template:
+            #flag_cmds.append(self._add_file(inputs.filetemplate))
 
         return '\n'.join(flag_cmds)
 
