@@ -3384,11 +3384,12 @@ ms::addephemeris(const int id,
 
     Double startTime;
 
+    Array<Double> timeRanges = MSObservationColumns(itsMS->observation()).timeRange().getColumn();
+
     try{
       MeasComet mc(t_name);
       startTime = casa::Quantity(mc.getStart(),"d").getValue("s");
       Double endTime = casa::Quantity(mc.getEnd(),"d").getValue("s");
-      Array<Double> timeRanges = MSObservationColumns(itsMS->observation()).timeRange().getColumn();
       if(startTime>min(timeRanges)){
 	*itsLog << LogOrigin("ms", "addephemeris") 
 		<< LogIO::WARN << "Ephemeris validity time range starts after start of observation." << LogIO::POST;
@@ -3415,8 +3416,19 @@ ms::addephemeris(const int id,
     MSFieldColumns msfc(itsMS->field());
 
     for(uInt i=0; i<fieldids.size(); i++){
-      msfc.time().put(i, startTime);
-      msfc.ephemerisId().put(i, id);
+      Double presentStartTime = msfc.time()(fieldids(i));
+      if(presentStartTime<min(timeRanges) || presentStartTime>max(timeRanges)){ 
+	// present start time is inconsistent with values of observation table
+	*itsLog << LogOrigin("ms", "addephemeris") 
+		<< LogIO::WARN << "The TIME column entry for field " << fieldids(i) 
+		<< "is outside the observation time range given by the OBSERVATION table." << LogIO::POST;
+	if(min(timeRanges)<=startTime || startTime<=max(timeRanges)){
+	  // start time of ephemeris is OK, use it as new time column entry
+	  msfc.time().put(fieldids(i), startTime);
+	  *itsLog << LogIO::WARN << "   Will replace it by the start time of the added ephemeris." << LogIO::POST;
+	}
+      }
+      msfc.ephemerisId().put(fieldids(i), id);
     }
    
     {// Update HISTORY table of newly created MS
