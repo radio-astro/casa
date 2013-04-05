@@ -1430,8 +1430,7 @@ class test_list_list(test_base):
         self.assertEqual(res['scan']['2']['flagged'], 238140)
         self.assertEqual(res['scan']['3']['flagged'], 762048)
         self.assertEqual(res['scan']['4']['flagged'], 95256)
-        self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')
-        
+        self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')        
                 
     def test_reason_list(self):
         '''flagdata: replace input reason from list with cmdreason'''
@@ -1450,8 +1449,46 @@ class test_list_list(test_base):
         
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1663578)
-                
-       
+              
+    # CAS-4974  
+    def test_cmdreason1(self):
+        '''flagdata: detect blank space in cmdreason. Catch exception'''
+        outtxt = 'badreason.txt'
+        flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, outfile=outtxt, 
+                 cmdreason='ODD SCANS')
+        flagdata(vis=self.vis, scan='2,4', action='calculate', savepars=True, outfile=outtxt, 
+                 cmdreason='EVEN SCANS')
+        
+        # Apply the cmd with blanks in reason. Catch the error.
+        try:
+            flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD SCANS')
+        except Exception, instance:
+            print '*** Expected exception. \"%s\"'%instance
+            res = flagdata(vis=self.vis, mode='summary')
+            self.assertEqual(res['flagged'], 0)
+    
+        # Now apply the corrected version with underscores
+        flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD_SCANS')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['flagged'], 568134+762048)
+
+    
+    def test_cmdreason2(self):
+        '''flagdata: Blanks in reason are only allowed in FLAG_CMD table'''
+        outtxt = 'goodreason.txt'
+        flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, 
+                 cmdreason='ODD SCANS')
+        flagdata(vis=self.vis, scan='2,4', action='calculate', savepars=True,
+                 cmdreason='EVEN SCANS')
+        
+        flagcmd(vis=self.vis, reason='ODD SCANS')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['flagged'], 568134+762048)
+    
 class test_clip(test_base):
     """flagdata:: Test of mode = 'clip'"""
     

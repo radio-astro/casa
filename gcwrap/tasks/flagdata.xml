@@ -1287,14 +1287,18 @@ The task will flag a subset of data based on the following modes of operation:
                 Note that when display is set to anything other than 'none', savepars
                 will be disabled. This is done because in an interactive mode, the user
                 may skip data which may invalidate the initial input parameters and there
-                is no way to save the interactive commands.
+                is no way to save the interactive commands. When the input is a calibration
+                table it is only possible to save the parameters to a file.
                 default: False
                 options: True/False
 
                 cmdreason -- A string containing a reason to save to the FLAG_CMD table or to an 
                              output text file given by the outfile sub-parameter. If the input 
                              contains any reason, they will be replaced with this one. At the 
-                             moment it is not possible to add more than one reason.
+                             moment it is not possible to add more than one reason. 
+
+                             Blanks are not allowed in the reasons when saving to a file. 
+                             They will be replaced by underscores and a warning will be issued.
                     default: ' '; no reason will be added to output.
                     example: cmdreason='CLIP_ZEROS'
                 
