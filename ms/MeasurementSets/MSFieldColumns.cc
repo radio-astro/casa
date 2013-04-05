@@ -29,7 +29,6 @@
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Vector.h>
-#include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/IPosition.h>
 #include <casa/Exceptions/Error.h>
 #include <casa/BasicMath/Math.h>
@@ -228,10 +227,9 @@ String ROMSFieldColumns::ephemPath(Int row) const
 
 Bool ROMSFieldColumns::
 matchReferenceDir(uInt row, const MVDirection& dirVal, const Double& sepInRad, 
-		  Matrix<Double>& mdir, MVDirection& mvdir) const 
+		  MVDirection& mvdir) const 
 {
-  referenceDir().get(row, mdir);
-  mvdir.setAngle(mdir(0, 0), mdir(1, 0));
+  mvdir = referenceDirMeas(row).getAngle();
   if (dirVal.separation(mvdir) < sepInRad) {
     return True;
   } else {
@@ -241,10 +239,9 @@ matchReferenceDir(uInt row, const MVDirection& dirVal, const Double& sepInRad,
 
 Bool ROMSFieldColumns::
 matchDelayDir(uInt row, const MVDirection& dirVal, const Double& sepInRad, 
-	      Matrix<Double>& mdir, MVDirection& mvdir) const 
+	      MVDirection& mvdir) const 
 {
-  delayDir().get(row, mdir);
-  mvdir.setAngle(mdir(0, 0), mdir(1, 0));
+  mvdir = delayDirMeas(row).getAngle();
   if (dirVal.separation(mvdir) < sepInRad) {
     return True;
   } else {
@@ -254,10 +251,9 @@ matchDelayDir(uInt row, const MVDirection& dirVal, const Double& sepInRad,
 
 Bool ROMSFieldColumns::
 matchPhaseDir(uInt row, const MVDirection& dirVal, const Double& sepInRad, 
-	      Matrix<Double>& mdir, MVDirection& mvdir) const 
+	      MVDirection& mvdir) const 
 {
-  phaseDir().get(row, mdir);
-  mvdir.setAngle(mdir(0, 0), mdir(1, 0));
+  mvdir = phaseDirMeas(row).getAngle();
   if (dirVal.separation(mvdir) < sepInRad) {
     return True;
   } else {
@@ -266,10 +262,10 @@ matchPhaseDir(uInt row, const MVDirection& dirVal, const Double& sepInRad,
 }
 
 Int ROMSFieldColumns::matchDirection(const MDirection& referenceDirection,
-					const MDirection& delayDirection,
-					const MDirection& phaseDirection,
-					const Quantum<Double>& maxSeparation,
-					Int tryRow) {
+				     const MDirection& delayDirection,
+				     const MDirection& phaseDirection,
+				     const Quantum<Double>& maxSeparation,
+				     Int tryRow) {
   uInt r = nrow();
   if (r == 0) return -1;
   const MVDirection& referenceDirVal = referenceDirection.getValue();
@@ -282,7 +278,6 @@ Int ROMSFieldColumns::matchDirection(const MDirection& referenceDirection,
 
   // Main matching loop
   MVDirection mvdir;
-  Matrix<Double> mdir(2, 1);
   if (tryRow >= 0) {
     const uInt tr = tryRow;
     if (tr >= r) {
@@ -296,9 +291,9 @@ Int ROMSFieldColumns::matchDirection(const MDirection& referenceDirection,
 	MDirection::castType(referenceDirMeas(tr).getRef().getType());
       // for a solar system object only the frame has to match
       if((refType>=MDirection::MERCURY && refType<MDirection::N_Planets) ||
-	 (matchReferenceDir(tr, referenceDirVal, tolInRad, mdir, mvdir) &&
-	  matchDelayDir(tr, delayDirVal, tolInRad, mdir, mvdir) &&
-	  matchPhaseDir(tr, phaseDirVal, tolInRad, mdir, mvdir))
+	 (matchReferenceDir(tr, referenceDirVal, tolInRad, mvdir) &&
+	  matchDelayDir(tr, delayDirVal, tolInRad, mvdir) &&
+	  matchPhaseDir(tr, phaseDirVal, tolInRad, mvdir))
 	 ) {
 	if ((MDirection::castType(referenceDirection.getRef().getType())==refType) &&
 	    (MDirection::castType(delayDirection.getRef().getType()) == refType) &&
@@ -318,9 +313,9 @@ Int ROMSFieldColumns::matchDirection(const MDirection& referenceDirection,
 	MDirection::castType(referenceDirMeas(r).getRef().getType());
       // for a solar system object only the frame has to match
       if((refType>=MDirection::MERCURY && refType<MDirection::N_Planets) ||
-	 (matchReferenceDir(r, referenceDirVal, tolInRad, mdir, mvdir) &&
-	  matchDelayDir(r, delayDirVal, tolInRad, mdir, mvdir) &&
-	  matchPhaseDir(r, phaseDirVal, tolInRad, mdir, mvdir))
+	 (matchReferenceDir(r, referenceDirVal, tolInRad, mvdir) &&
+	  matchDelayDir(r, delayDirVal, tolInRad, mvdir) &&
+	  matchPhaseDir(r, phaseDirVal, tolInRad, mvdir))
 	  ) {
 	if ((MDirection::castType(referenceDirection.getRef().getType())==refType) &&
 	    (MDirection::castType(delayDirection.getRef().getType()) == refType) &&
