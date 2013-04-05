@@ -255,6 +255,7 @@ namespace casa{
 				      const Int wConvSize,
 				      //				      const Vector<Int>& polMap,
 				      Float pa,
+				      Float dpa,
 				      //				      Vector<Int>& cfStokes,
 				      CFStore& cfs,
 				      CFStore& cfwts)
@@ -263,6 +264,8 @@ namespace casa{
     Int convSize, convSampling, polInUse;
     Double wScale=1;
     Array<Complex> convFunc_l, convWeights_l;
+
+    (void)dpa;
     
     Int nx=image.shape()(0);
     if (bandID_p == -1) bandID_p=getVisParams(vb);

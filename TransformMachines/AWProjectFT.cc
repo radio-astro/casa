@@ -1069,6 +1069,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     lastPAUsedForWtImg = currentCFPA = pa;
 
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(image,vb));
+    Float dPA = paChangeDetector.getParAngleTolerance().getValue("rad");
     cfSource = visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,
 					       paChangeDetector.getParAngleTolerance(),
 					       chanMap,polMap,pointingOffset);
@@ -1093,7 +1094,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
-					 pop_p, pa, uvScale, uvOffset,spwFreqSel_p,
+					 pop_p, pa, dPA, uvScale, uvOffset,spwFreqSel_p,
 					 *cfs2_p, *cfwts2_p);
 	//	log_l << "Converting WTCFs to wide-band versions" << LogIO::POST;
 	//	makeWBCFWt(*cfwts2_p, imRefFreq_p);
@@ -2169,7 +2170,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else
       {
 	rotateAperture_p = True;
-	convFuncCtor_p->setRotateCF(0.1);
+	convFuncCtor_p->setRotateCF(360.0*M_PI/180.0);
       }
 	
 

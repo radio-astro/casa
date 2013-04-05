@@ -115,7 +115,8 @@ namespace casa{
   {
     Int paNdx, antNdx;
     getIndex(pa,paTol,ant1,ant2,paNdx, antNdx);
-    if ((paNdx < 0) || (antNdx < 0)) throw(CFNotCached("CFStore2::getIndex: Index not found"));
+    if ((paNdx < 0) || (antNdx < 0)) 
+	throw(CFNotCached("CFStore2::getIndex: Index not found"));
       
     return getCFBuffer(paNdx, antNdx);
   }
@@ -143,10 +144,10 @@ namespace casa{
   //
   void CFStore2::makePersistent(const char *dir,const char *qualifier)
   {
-    ostringstream name;
     for (Int i=0;i<storage_p.shape()(0);i++)
       for (Int j=0;j<storage_p.shape()(1);j++)
 	{
+	  ostringstream name;
 	  name << dir << "/" << qualifier << "CFS_" << i << "_" << j;
 	  storage_p(i,j)->makePersistent(name.str().c_str());
 	}
@@ -179,6 +180,21 @@ namespace casa{
 	}
     return memUsed;
   }
+  //
+  //---------------------------------------------------------------
+  //
+  Int CFStore2::nearestPA(const Quantity& pa, const Quantity& paTol)
+    {
+      Int n=pa_p.nelements();
+      Float dpa=paTol.getValue("rad"),
+	paVal = pa.getValue("rad");
+      for(Int i=0;i<n;i++)
+	{
+	  if (fabs(pa_p(i).getValue("rad") - paVal) < dpa)
+	  return i;
+	}
+      return -1;
+    }
 }; // end casa namespace
 
 
