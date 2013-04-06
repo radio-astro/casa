@@ -1216,7 +1216,7 @@ void QtDisplayPanelGui::updateFrameInformation(){
 	int displayDataCount = rdds.len();
 	ListIter<QtDisplayData*> iter(rdds );
 	int i = 0;
-	int maxChannels = -1;
+	int maxChannels = qdp_->nZFrames();
 	QSet<QString> uniqueImages;
 	while ( i < displayDataCount ){
 		QtDisplayData* rdd = iter.getRight();
@@ -1239,12 +1239,12 @@ void QtDisplayPanelGui::updateFrameInformation(){
 		iter++;
 		i++;
 	}
-	if ( maxChannels > 0 ){
+	if ( maxChannels > 1 ){
 		animationHolder->setChannelModeEnabled( maxChannels );
-
 	}
 	animationHolder->setModeEnabled( uniqueImages.size() );
 	//qdp_->setBlen_(uniqueImages.size() );
+
 }
 
 void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {

@@ -369,12 +369,14 @@ void QtRegionState::updateCenters( std::list<std::tr1::shared_ptr<RegionInfo> > 
 }
 
 void QtRegionState::setCenterBackground(QString background){
-	//void QtRegionState::invalidate() {
 	for ( int i=0; i < centers_group->count(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
-		if ( cur == 0 ) throw internal_error( );
+		if ( cur == 0 ){
+			throw internal_error( );
+		}
 		cur->setCenterBackground(background);
 	}
+	centers_group->update();
 }
 
 void QtRegionState::clearStatistics( ) {
