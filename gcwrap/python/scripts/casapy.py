@@ -688,12 +688,12 @@ def update_params(func, printtext=True, ipython_globals=None):
 	   if (has_task) :
 		pathname=myf['task_location'][myf['taskname']]
 	   else :
-	        pathname = os.environ.get('CASAPATH').split()[0]+'/share/xml'
+	        pathname = os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml'
                 if not os.path.exists(pathname) :
                    pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
                 
 	else :
-	   pathname = os.environ.get('CASAPATH').split()[0]+'/share/xml'
+	   pathname = os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml'
            if not os.path.exists(pathname) :
               pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
         xmlfile=pathname+'/'+myf['taskname']+'.xml'

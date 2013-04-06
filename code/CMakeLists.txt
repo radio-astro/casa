@@ -90,9 +90,7 @@ if( INTERACTIVE_ITERATION )
 endif()
 
 include( UsePrivatePath )
-if( NOT RE_CMAKE )
-    string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
-endif()
+string( REGEX REPLACE /[^/]+/?$ "" casaroot ${CMAKE_SOURCE_DIR} )
 #string ( REGEX REPLACE /\\/\\.\\./ "" casaroot ${casaroot} )
 
 #
@@ -299,15 +297,11 @@ if( NOT CMAKE_C_FLAGS )
 endif()
 
 
-if( NOT RE_CMAKE )
-    if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-        set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} CACHE PATH "casa architecture directory" FORCE )
-	set( casaroot ${casaroot} CACHE PATH "toplevel casa directory" FORCE )
-    else()
-        set( CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "casa architecture directory" FORCE )
-	set( casaroot ${CMAKE_INSTALL_PREFIX}/.. CACHE PATH "toplevel casa directory" FORCE )
-   endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-endif()
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set( CMAKE_INSTALL_PREFIX ${casaroot}/${arch} CACHE PATH "casa architecture directory" FORCE )
+else()
+    set( CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "casa architecture directory" FORCE )
+endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 dump( casaroot )
 dump( CMAKE_INSTALL_PREFIX )

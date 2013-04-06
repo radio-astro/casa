@@ -151,7 +151,7 @@ for FILE in $XMLFILES; do
  else
 	  verbose "generating `basename -- "$XMLFILE"` task ... "
 	  xmlgenpy "$XMLFILE"
-	  $SAXON "$XMLFILE.xml" "$CASAROOT/share/xml/casa2tsum3.xsl" >> $INFOFILE
+	  $SAXON "$XMLFILE.xml" "$CASAARCH/xml/casa2tsum3.xsl" >> $INFOFILE
 	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "$XMLFILE.py"
 	  sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_cli.py"
 	  [ -e "${XMLFILE}_pg.py" ] && sed -i -e 's+pathname=.*$+pathname="file://'${INSTALLDIR}'/"+' "${XMLFILE}_pg.py"
@@ -167,7 +167,7 @@ done
 
 verbose "generating `basename -- "$OUTFILE"` file ... "
 sed -i -e 's/^tasksum/mytasks/g' "$INFOFILE"
-sed -i -e "s^\(task_location.*\) \(\'\'\)^\1 \'${INSTALLDIR}\'^g" "$INFOFILE"
+sed -i -e "s^\(task_location.*\) \(''\)^\1 \'${INSTALLDIR}\'^g" "$INFOFILE"
 
 cat /dev/null > $OUTFILE
 echo "#" >> $OUTFILE

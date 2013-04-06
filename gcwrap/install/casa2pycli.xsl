@@ -204,7 +204,7 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_cli_:</xsl:text>
 </xsl:when>
 </xsl:choose>
 <xsl:text disable-output-escaping="yes">
-        pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/'
+	pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/'
         trec = casac.casac.utils().torecord(pathname+</xsl:text>&apos;<xsl:value-of select="$taskname"></xsl:value-of><xsl:text disable-output-escaping="yes">.xml&apos;)
 </xsl:text>
 
