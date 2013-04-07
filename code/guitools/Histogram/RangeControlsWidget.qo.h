@@ -76,6 +76,7 @@ public:
     void setRangeLimits( double min, double max );
     void setDataLimits( double min, double max );
     void setRangeMaxEnabled( bool enabled );
+    void setIgnoreRange( bool ignore );
     pair<double,double> getMinMaxValues() const;
 
     ~RangeControlsWidget();
@@ -105,6 +106,7 @@ private:
     QString percentage;
     double rangeMin;
     double rangeMax;
+    bool ignoreRange;
 };
 }
 #endif // RANGECONTROLSWIDGET_QO_H

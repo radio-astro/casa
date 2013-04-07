@@ -36,6 +36,7 @@ namespace casa {
 RangeControlsWidget::RangeControlsWidget(QWidget *parent)
     : QWidget(parent), percentCalculator(NULL) {
 	ui.setupUi(this);
+	ignoreRange = false;
 
 	//Min & max bounds
 	minMaxValidator = new QDoubleValidator( std::numeric_limits<double>::min(),
@@ -67,10 +68,12 @@ void RangeControlsWidget::setRangeMaxEnabled( bool enabled ){
 void RangeControlsWidget::setRange( double min, double max, bool signalChange ){
 	//Note:  because range changes can result in time intensive calculations,
 	//we only want to send at most one range change signal.
-	ui.minLineEdit->setText( QString::number( min ));
-	ui.maxLineEdit->setText( QString::number( max ));
-	if ( signalChange ){
-		emit minMaxChanged();
+	if ( !ignoreRange ){
+		ui.minLineEdit->setText( QString::number( min ));
+		ui.maxLineEdit->setText( QString::number( max ));
+		if ( signalChange ){
+			emit minMaxChanged();
+		}
 	}
 }
 
@@ -119,8 +122,6 @@ void RangeControlsWidget::setRangeLimits( double min, double max ){
 }
 
 void RangeControlsWidget::clearRange(){
-	/*ui.minLineEdit->setText( QString::number( rangeMin ) );
-	ui.maxLineEdit->setText( QString::number( rangeMax ) );*/
 	setRange( rangeMin, rangeMax, true );
 	emit rangeCleared();
 }
@@ -139,17 +140,25 @@ pair<double,double> RangeControlsWidget::getMinMaxValues() const {
 	return maxMinValues;
 }
 
+void RangeControlsWidget::setIgnoreRange( bool ignore ){
+	ignoreRange = ignore;
+}
+
 void RangeControlsWidget::rangeModeChanged( bool percentile ){
 	ui.percentileComboBox->setEnabled( percentile );
 	ui.minLineEdit->setEnabled( !percentile );
 	ui.maxLineEdit->setEnabled( !percentile );
+	if ( percentile ){
+		QString newPercentage = ui.percentileComboBox->currentText();
+		percentageChanged( newPercentage );
+	}
 }
 
 void RangeControlsWidget::keyPressEvent( QKeyEvent* event ){
 	if ( event->key() == Qt::Key_Enter ){
 		QString newPercentage = ui.percentileComboBox->currentText();
-		if ( newPercentage != percentage ){
-			percentageChanged( percentage );
+		if ( percentage != newPercentage ){
+			percentageChanged( newPercentage );
 		}
 	}
 	QWidget::keyPressEvent( event );
@@ -157,20 +166,19 @@ void RangeControlsWidget::keyPressEvent( QKeyEvent* event ){
 
 
 void RangeControlsWidget::setDataLimits( double min, double max ){
+	if ( ignoreRange ){
+		return;
+	}
 	rangeMin = min;
 	rangeMax = max;
-	if ( ui.minLineEdit->text().length() == 0 &&
+	/*if ( ui.minLineEdit->text().length() == 0 &&
 			ui.maxLineEdit->text().length() == 0 ){
-		//We don't have a range so we don't want to send signals
-		//about the range changing, but we do want to update the
-		//text boxes displaying the range.
-		/*blockSignals( true );
-		ui.minLineEdit->setText( QString::number( rangeMin ));
-		ui.maxLineEdit->setText( QString::number( rangeMax ));
-		blockSignals( false );*/
-		setRange( rangeMin, rangeMax, true );
+
+
+		setRange( rangeMin, rangeMax, false );
 	}
-	else {
+	else {*/
+	if ( ui.minLineEdit->text().length() != 0 ){
 		//Reset the range limits if they don't make sense for the
 		//new data.
 		pair<double, double> minMaxRange = this->getMinMaxValues();
