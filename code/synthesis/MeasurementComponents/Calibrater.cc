@@ -439,6 +439,13 @@ Bool Calibrater::setapply(const String& type,
   Record applypar(applyparDesc);
   applypar.define ("t", t);
   applypar.define ("table", table);
+
+  /*
+  String cinterp=interp;
+  //  cinterp.erase(remove_if(cinterp.begin(), cinterp.end(), isspace), cinterp.end());
+  cinterp.erase( remove( cinterp.begin(), cinterp.end(), ' ' ), cinterp.end() );
+  */
+ 
   applypar.define ("interp", interp);
   applypar.define ("spw",getSpwIdx(spw));
   //  applypar.define ("field",getFieldIdx(field));
@@ -2194,6 +2201,15 @@ Bool Calibrater::listCal(const String& infile,
     return False;
     
 }
+
+Bool Calibrater::updateCalTable(const String& caltable) {
+
+  // Call the SVC method that knows how
+  return NewCalTable::CTBackCompat(caltable);
+
+}
+
+
 
 void Calibrater::selectChannel(const String& spw) {
 

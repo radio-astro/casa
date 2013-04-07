@@ -1049,6 +1049,23 @@ calibrater::modelfit(const std::vector<bool>& vary,
   return rstat;
 }
 
+bool
+calibrater::updatecaltable(const std::string& caltable)
+{
+
+  Bool ok(False);
+  try
+    {
+      ok=Calibrater::updateCalTable(caltable);
+    }
+  catch (AipsError x)
+    {
+      *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+    }
+  return ok;
+}
+
 
 bool
 calibrater::close()

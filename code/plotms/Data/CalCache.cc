@@ -84,7 +84,7 @@ void CalCache::loadIt(vector<PMS::Axis>& loadAxes,
   // Get various names, properties
   { 	 
 
-    NewCalTable ct(filename_,Table::Old,Table::Plain);
+    NewCalTable ct(NewCalTable::createCT(filename_,Table::Old,Table::Plain));
 
     parsAreComplex_ = ct.isComplex();
     basis_=ct.polBasis();

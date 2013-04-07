@@ -132,6 +132,18 @@ class NewCalTable : public Table
 		Table::TableOption access = Table::Old, 
 		Table::TableType ttype = Table::Memory);
 
+   static NewCalTable createCT(const String& tableName, 
+			       Table::TableOption access, 
+			       Table::TableType ttype, 
+			       Bool doBackCompat=True);
+
+   static NewCalTable* createCTptr(const String& tableName, 
+				   Table::TableOption access, 
+				   Table::TableType ttype, 
+				   Bool doBackCompat=True);
+
+
+
    // Construct from an existing table object
    NewCalTable (const Table& table);
 
@@ -149,6 +161,9 @@ class NewCalTable : public Table
 
    // Assignment operator
    NewCalTable& operator= (const NewCalTable& other);
+
+   // Handle backward compatibility
+   static Bool CTBackCompat(const String& caltable);
 
    // Set the TableInfo record
    void setTableInfo();
