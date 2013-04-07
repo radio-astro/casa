@@ -123,6 +123,25 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
   return fixedShape;
 }
 
+  Bool MSConcat::checkEphIdInField(const ROMSFieldColumns& otherFldCol) const {
+  // test if this MS FIELD table has an ephID column
+  if(!itsMS.field().actualTableDesc().isColumn(MSField::columnName(MSField::EPHEMERIS_ID))){
+    // if not, test if the other MS uses ephem objects
+    Bool usesEphems = False;
+    for(uInt i=0; i<otherFldCol.nrow(); i++){
+      if(!otherFldCol.ephemPath(i).empty()){
+	usesEphems = True;
+	break;
+      }
+    }
+    if(usesEphems){ // if yes, the ephID column needs to be added to this MS FIELD table
+      return False;
+    }
+  }
+  return True;
+}
+
+
   void MSConcat::virtualconcat(MeasurementSet& otherMS, 
 			       const Bool checkShapeAndCateg,
 			       const String& obsidAndScanTableName) 
@@ -169,6 +188,13 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
 	<<" has CORRECTED_DATA column but not " << otherMS.tableName()
 	<< LogIO::EXCEPTION;
 
+  {
+    const ROMSFieldColumns otherMSFCols(otherMS.field());
+    if(!checkEphIdInField(otherMSFCols)){
+      log << "EPHEMERIS_ID column missing in FIELD table of MS " << itsMS.tableName()
+	  << LogIO::EXCEPTION;
+    }
+  }
 
   if(checkShapeAndCateg){
     // verify that shape of the two MSs as described in POLARISATION, SPW, and DATA_DESCR
@@ -818,6 +844,14 @@ IPosition MSConcat::isFixedShape(const TableDesc& td) {
       log << itsMS.tableName() 
 	  <<" has CORRECTED_DATA column but not " << otherMS.tableName()
 	  << LogIO::EXCEPTION;
+  }
+
+  {
+    const ROMSFieldColumns otherMSFCols(otherMS.field());
+    if(!checkEphIdInField(otherMSFCols)){
+      log << "EPHEMERIS_ID column missing in FIELD table of MS " << itsMS.tableName()
+	  << LogIO::EXCEPTION;
+    }
   }
 
   // verify that shape of the two MSs as described in POLARISATION, SPW, and DATA_DESCR
@@ -1955,7 +1989,6 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
 
   // find max ephemeris id
   Int maxThisEphId = -1;
-  String destPathName;
   Vector<Double> validityRange;
 
   for(uInt i=0; i<fieldCols.nrow(); i++){
@@ -1964,7 +1997,6 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
     }
   }
   if(maxThisEphId>-1){ // this MS has at least one field using an ephemeris
-    destPathName = Path(fld.tableName()).absoluteName();
     // find first and last obs time
     Vector<uInt> sortedI(otherms.nrow());
     ROMSMainColumns msmc(otherms);
@@ -2063,14 +2095,14 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
 
       if(!ephPath.empty() && otherFieldCols.ephemerisId()(f)>-1){ // f has a non-trivial ephemeris id
 	maxThisEphId++;
-	fieldCols.ephemerisId().put(fldMap[f], maxThisEphId);
-	// construct new name for other ephemeris table and copy it over 
-	Directory origEphemDir(ephPath);
 	String ephName = Path(ephPath).baseName();
-	stringstream ss;
-	ss << maxThisEphId;
-	String newName = String("EPHEM"+ss.str())+ephName.substr(ephName.find("_"));
-	origEphemDir.copy(destPathName+"/"+newName);
+	if(!fld.addEphemeris(maxThisEphId, ephPath, 
+			     ephName.substr(ephName.find("_")+1, ephName.size()-4-ephName.find("_")-1)) // extract comment from name
+	   ){
+	  LogIO os(LogOrigin("MSConcat", "copyField"));
+	  os << LogIO::SEVERE << "Error transferring ephemeris " << ephPath << " to concatvis." << LogIO::POST;
+	}
+	fieldCols.ephemerisId().put(fldMap[f], maxThisEphId);
       }
 
       //source table has been concatenated; use new index reference
