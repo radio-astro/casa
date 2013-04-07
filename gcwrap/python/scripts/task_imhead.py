@@ -515,7 +515,7 @@ def imhead(
         myimd = imdtool()
         try:
             myimd.open(imagename)
-            return myimd.list(verbose)
+            return myimd.list(True)
         except Exception, instance:
             casalog.post(str('*** Error ***') + str(instance), 'SEVERE')
             casalog.post(str('              Python error: ')
