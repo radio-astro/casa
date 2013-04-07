@@ -2131,8 +2131,11 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    }
 
 	    const MeasurementSet appendedMS(msfile);
-	    
+
+	    addephemcol(appendedMS); // add EPHEMERIS_ID column to FIELD table of itsMS if necessary
+
 	    MSConcat mscat(*itsMS);
+
 	    Quantum<Double> dirtolerance;
 	    Quantum<Double> freqtolerance;
 	    if(freqtol.toString().empty()){
@@ -2194,6 +2197,8 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 
 	    const MeasurementSet appendedMS(msfile);
 	    
+	    addephemcol(appendedMS); // add EPHEMERIS_ID column to FIELD table of itsMS if necessary
+
 	    MSConcat mscat(*itsMS);
 	    Quantum<Double> dirtolerance;
 	    Quantum<Double> freqtolerance;
@@ -2254,6 +2259,8 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 		*itsLog << "Cannot write to the measurement set called " << msfile
 			<< LogIO::EXCEPTION;
 	    }                   
+
+	    addephemcol(appendedMS); // add EPHEMERIS_ID to FIELD table of itsMS if necessary
 
 	    MSConcat mscat(*itsMS);
 	    Quantum<Double> dirtolerance;
@@ -3360,11 +3367,12 @@ ms::addephemeris(const int id,
   Bool rstat(False);
   try {
     *itsLog << LogOrigin("ms", "addephemeris");
+
     String t_field(m1toBlankCStr_(field));
     String t_name     = toCasaString(ephemerisname);
     String t_comment = toCasaString(comment);
     Record selrec;
-    Vector<Int>fieldids;
+    Vector<Int> fieldids;
 
     if(detached()){
       return False;
@@ -3447,6 +3455,34 @@ ms::addephemeris(const int id,
   }
 
   return rstat;
+}
+
+void
+ms::addephemcol(const casa::MeasurementSet& appendedMS)
+{
+  if(!itsMS->field().actualTableDesc().isColumn(MSField::columnName(MSField::EPHEMERIS_ID))){
+    // if not, test if the other MS uses ephem objects
+    Bool usesEphems = False;
+    const ROMSFieldColumns otherFldCol(appendedMS.field());
+    for(uInt i=0; i<otherFldCol.nrow(); i++){
+      if(!otherFldCol.ephemPath(i).empty()){
+	usesEphems = True;
+	break;
+      }
+    }
+    if(usesEphems){ // if yes, the ephID column needs to be added to this MS FIELD table
+      String thisMSName = Path(itsMS->tableName()).absoluteName(); 
+      *itsLog << LogIO::NORMAL << "Adding the EPHEMERIS_ID column to the FIELD table of first MS. " 
+	      << LogIO::POST;
+      if(!itsMS->field().addEphemeris(0,"","")){
+	*itsLog << "Cannot add the EPHEMERIS_ID column to the FIELD table of MS " << thisMSName
+		<< LogIO::EXCEPTION;
+      }
+      // reopen this MS
+      close();
+      open(thisMSName, False, False);
+    }
+  }
 }
 
 
