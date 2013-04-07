@@ -39,6 +39,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <casa/Arrays.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Logging/LogIO.h>
 #include <synthesis/CalTables/CTEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -173,6 +174,33 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
 
 };
 
+// Factory method that has Back Compat option
+NewCalTable NewCalTable::createCT(const String& tableName, 
+				  Table::TableOption access, 
+				  Table::TableType ttype, 
+				  Bool doBackCompat) {
+  // Handle back compat
+  if (doBackCompat)
+    NewCalTable::CTBackCompat(tableName);
+
+  // Ordinary ctor
+  return NewCalTable(tableName,access,ttype);
+
+}
+// Factory method that has Back Compat option
+NewCalTable* NewCalTable::createCTptr(const String& tableName, 
+				     Table::TableOption access, 
+				     Table::TableType ttype, 
+				     Bool doBackCompat) {
+  // Handle back compat
+  if (doBackCompat)
+    NewCalTable::CTBackCompat(tableName);
+
+  // Ordinary ctor
+  return new NewCalTable(tableName,access,ttype);
+
+}
+
 //----------------------------------------------------------------------------
 NewCalTable::NewCalTable(String tableName, String CorF,
 			 Int nObs, Int nScanPerObs, Int nTimePerScan,
@@ -258,6 +286,28 @@ NewCalTable& NewCalTable::operator= (const NewCalTable& other)
   }
   return *this;
 };
+
+
+//----------------------------------------------------------------------------
+
+// Handle backward compatibility
+Bool NewCalTable::CTBackCompat(const String& caltable) {
+  
+  Bool doBC(False);
+
+  // Detect backward compatibility issues 
+  Table tab(caltable,Table::Old);
+
+  // pre-v41 had no OBSERVATION/OBSERVATION_ID
+  doBC=(!tab.tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID)) ||
+	!tab.keywordSet().isDefined("OBSERVATION"));
+
+  if (doBC)
+    NewCalTable backcompat(caltable,Table::Update,Table::Plain);
+
+  return True;
+
+}
 
 
 //----------------------------------------------------------------------------
@@ -900,27 +950,47 @@ void NewCalTable::makeSpwSingleChan() {
 
 void NewCalTable::addPhoneyObs() {
 
-  cout << "WARNING: Adding fake (and trivial) OBSERVATION subtable and OBSERVATION_ID column." 
-       << endl;
+  TableType ntype(this->tableType());
 
-  // Add phoney OBSERVATION_ID column and fill with zeros
-  if (!this->tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID))) {
-    ScalarColumnDesc<Int> obscoldesc(NCT::fieldName (NCT::OBSERVATION_ID),ColumnDesc::Direct);
-    this->addColumn(obscoldesc,False);
-    CTMainColumns mc(*this);
-    mc.obsId().fillColumn(0);
+  ostringstream msg;
+  msg << "Found pre-v4.1 caltable (" << this->tableName() << "); attempting to update..." << endl;
+
+  // If absent, add OBSERVATION_ID column and OBSERVATION
+  //  ONLY if caltable is writable (on disk) or a Memory table
+  if ( (ntype==Table::Plain && this->isWritable()) ||
+       (ntype==Table::Memory) ) {
+
+    // Add phoney OBSERVATION_ID column and fill with zeros
+    if (!this->tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID))) {
+      ScalarColumnDesc<Int> obscoldesc(NCT::fieldName (NCT::OBSERVATION_ID),ColumnDesc::Direct);
+      this->addColumn(obscoldesc,False);
+      CTMainColumns mc(*this);
+      mc.obsId().fillColumn(0);
+    }
+
+    // Add dummy OBSERVATION subtable with 1 row
+    if (!this->keywordSet().isDefined("OBSERVATION")) {
+      String  calObsName=this->tableName()+"/OBSERVATION";
+      Table::TableOption access(Table::NewNoReplace);
+      SetupNewTable obstab(calObsName,CTObservation::requiredTableDesc(),access);
+      this->rwKeywordSet().defineTable("OBSERVATION", Table(obstab,ntype));  // same type as parent table
+      observation_p = CTObservation(this->keywordSet().asTable("OBSERVATION"));
+      fillGenericObs(1);
+    }
+
+    msg << "SUCCEEDED: trivial OBSERVATION/OBSERVATION_ID have been added.";
+
+    LogIO log;
+    log << msg.str() << LogIO::WARN;
+
+  }
+  else {
+    msg << "FAILED: caltable is not writable.";
+    msg << " Please run cb.updatecaltable on this caltable, OR";
+    msg << "  regenerate this caltable in v4.1 or later.";
+    throw(AipsError(msg.str()));
   }
 
-  // Add dummy OBSERVATION subtable with 1 row
-  if (!this->keywordSet().isDefined("OBSERVATION")) {
-    String  calObsName=this->tableName()+"/OBSERVATION";
-    Table::TableOption access(Table::NewNoReplace);
-    Table::TableType type(Table::Plain);
-    SetupNewTable obstab(calObsName,CTObservation::requiredTableDesc(),access); 
-    this->rwKeywordSet().defineTable("OBSERVATION", Table(obstab,type));
-    observation_p = CTObservation(this->keywordSet().asTable("OBSERVATION"));
-    fillGenericObs(1);
-  }
 }
 
 

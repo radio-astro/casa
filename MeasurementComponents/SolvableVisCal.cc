@@ -1,5 +1,4 @@
 //# SolvableVisCal.cc: Implementation of SolvableVisCal classes
-//        nt
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -3133,7 +3132,7 @@ void SolvableVisCal::storeNCT(const String& table,const Bool& append) {
 void SolvableVisCal::loadMemCalTable(String ctname,String field) {
   if (field.length()>0) {
     // Open whole table (on disk);
-    NewCalTable wholect(ctname,Table::Old,Table::Memory); // , selct(wholect);
+    NewCalTable wholect(NewCalTable::createCT(ctname,Table::Old,Table::Memory)); 
     ct_ = new NewCalTable(wholect);  // Make sure ct_ contains a real object
 
     // Prepare to select on it
@@ -3147,11 +3146,6 @@ void SolvableVisCal::loadMemCalTable(String ctname,String field) {
     // Apply selection to table
     try {
       getSelectedTable(*ct_,wholect,ten,"");
-      //    getSelectedTable(selct,wholect,ten,"");
-      //    cout << " selct.tableName() = " << selct.tableName() << endl;
-      //    cout << " selct.nrow()      = " << selct.nrow() << endl;
-      //    cout << " selct.tableType() = " << selct.tableType() << endl;
-      //    ct_ = new NewCalTable(selct.tableName(),Table::Old,Table::Memory);
     } catch (AipsError x) {
       logSink() << x.getMesg() << LogIO::SEVERE;
       throw(AipsError("Error selecting on caltable: "+ctname+"... "));
@@ -3160,7 +3154,8 @@ void SolvableVisCal::loadMemCalTable(String ctname,String field) {
   }
   else
     // No selection
-    ct_ = new NewCalTable(ctname,Table::Old,Table::Memory);
+    ct_ = new NewCalTable(NewCalTable::createCT(ctname,Table::Old,Table::Memory)); 
+
 
 
   // Fill nChanParList from the Caltable
@@ -3249,7 +3244,6 @@ void SolvableVisCal::currMetaNote() {
        << endl;
 
 }
-
 
 void SolvableVisCal::initSVC() {
 
@@ -6341,5 +6335,6 @@ String calTableType(const String& tablename) {
   return ti.subType();
 
 }
+
 
 } //# NAMESPACE CASA - END
