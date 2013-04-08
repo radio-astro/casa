@@ -120,7 +120,7 @@ class sbseparator:
             asaplog.push("Expert mode: solution are obtained by subtraction of the other sideband.")
 
 
-    def set_lo1(self,lo1, frame="TOPO", reftime=-1, refdir=""):
+    def set_lo1(self, lo1, frame="TOPO", reftime=-1, refdir=""):
         """
         Set LO1 frequency to calculate frequency of image sideband.
 
@@ -129,7 +129,7 @@ class sbseparator:
         reftime : the reference time used in frequency frame conversion.
         refdir  : the reference direction used in frequency frame conversion.
         """
-        self._separator.set_lo1(lo1val, frame, reftime, refdir)
+        self._separator.set_lo1(lo1, frame, reftime, refdir)
 
 
     def set_lo1root(self, name):
