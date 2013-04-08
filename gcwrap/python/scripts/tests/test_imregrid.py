@@ -67,6 +67,7 @@ out2 = 'bigger_image'
 out3 = 'shifted_image'
 out4 = 'back_to_image'
 out5 = 'template'
+out6 = 'gal_coords.im'
 
 class imregrid_test(unittest.TestCase):
 
@@ -75,14 +76,11 @@ class imregrid_test(unittest.TestCase):
     
     def tearDown(self):
         self._myia.done()
-
-        os.system('rm -rf ' +IMAGE)
-        os.system('rm -rf ' +out1)
-        os.system('rm -rf ' +out2)
-        os.system('rm -rf ' +out3)
-        os.system('rm -rf ' +out4)
-        os.system('rm -rf ' +out5)
-
+        
+        for i in (IMAGE, out1, out2, out3, out4, out5, out6):
+            os.system('rm -rf ' + i)
+        
+        self.assertTrue(len(tb.showcache()) == 0)
         
     def test1(self):    
         myia = self._myia  
@@ -432,6 +430,17 @@ class imregrid_test(unittest.TestCase):
              == myia.coordsys().referencevalue()["numeric"]
             ).all()
         )
+        
+    def test_ref_code(self):
+        """Test regridding to a new reference frame"""
+        imregrid(imagename=datapath + "myim.im", template="GALACTIC", output=out6)
+        myia = self._myia
+        myia.open(out6)
+        got = myia.getchunk()
+        myia.open(datapath + "mygal.im")
+        expec = myia.getchunk()
+        self.assertTrue((got == expec).all())
+        
         
         
             
