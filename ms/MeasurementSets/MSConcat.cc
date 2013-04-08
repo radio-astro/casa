@@ -1988,7 +1988,7 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
   RecordFieldId sourceIdId(MSSource::columnName(MSSource::SOURCE_ID));
 
   // find max ephemeris id
-  Int maxThisEphId = -1;
+  Int maxThisEphId = -2; // meaning there is no EPHEMERIS_ID column in the field table
   Vector<Double> validityRange;
 
   for(uInt i=0; i<fieldCols.nrow(); i++){
@@ -1996,7 +1996,8 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
       maxThisEphId = fieldCols.ephemerisId()(i);
     }
   }
-  if(maxThisEphId>-1){ // this MS has at least one field using an ephemeris
+  if(maxThisEphId>-1){ // this MS has at least one field using an ephemeris.
+                       // maxThisEphId==-1 would mean there is an EPHEMERIS_ID column but there are no entries
     // find first and last obs time
     Vector<uInt> sortedI(otherms.nrow());
     ROMSMainColumns msmc(otherms);
@@ -2083,6 +2084,7 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
       fldMap[f] = fld.nrow();
       fld.addRow();
       fldRow.putMatchingFields(fldMap[f], otherFldRow.get(f));
+
       if (dirType != otherDirType) {
  	DebugAssert(fieldCols.numPoly()(fldMap[f]) == 0, AipsError);
  	Vector<MDirection> vdir(1, refDir);
@@ -2103,6 +2105,10 @@ Block<uInt>  MSConcat::copyField(const MeasurementSet& otherms) {
 	  os << LogIO::SEVERE << "Error transferring ephemeris " << ephPath << " to concatvis." << LogIO::POST;
 	}
 	fieldCols.ephemerisId().put(fldMap[f], maxThisEphId);
+      }
+      else if(maxThisEphId>-2){ // this MS has an ephemeris id column 
+	// for the case the appended MS has no ephemeris column, need to set the default explicitly
+	fieldCols.ephemerisId().put(fldMap[f], -1);
       }
 
       //source table has been concatenated; use new index reference
