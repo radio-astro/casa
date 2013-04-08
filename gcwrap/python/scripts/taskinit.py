@@ -225,7 +225,7 @@ if not os.environ.has_key('CASA_ENGINE'):
 
 defaultsdir = {}
 defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/almadefaults.xml'
-defaultsdir['evla'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split(){1}+'/xml/evladefaults.xml'
+defaultsdir['evla'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/evladefaults.xml'
 
 
 def selectfield(vis,minstring):
