@@ -100,7 +100,6 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                 _myia.open(template)
                 templatenames = _myia.coordsys().names()
                 namestoregrid = []
-                print "*** to regrid " + str(axestoregrid)
                 for axis in axestoregrid:
                     if (
                         axesnames[axis].upper() != "STOKES"
