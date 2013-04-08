@@ -65,6 +65,7 @@ struct spwInfo;
 typedef map<MS::PredefinedColumns,MS::PredefinedColumns> dataColMap;
 typedef map< pair< pair<Int,Int> , pair<Int,Int> >,vector<uInt> > baselineMap;
 typedef map<Int,map<uInt, uInt > > inputSpwChanMap;
+typedef map<Int,map<uInt, vector < pair<uInt,Double> > > > inputOutputChanFactorMap;
 typedef map<Int,pair < spwInfo, spwInfo > > inputOutputSpwMap;
 
 // Struct definition
@@ -109,32 +110,34 @@ struct channelInfo {
 
 	Double lowerBound() const
 	{
-		return CHAN_FREQ+0.5*CHAN_WIDTH;
+		return CHAN_FREQ-0.5*CHAN_WIDTH;
 	}
 
-	bool overlap(const channelInfo& other) const
+	Double overlap(const channelInfo& other) const
 	{
-		if (CHAN_FREQ<other.CHAN_FREQ)
+		// The other channel completely covers this channel
+		if ((other.lowerBound() <= lowerBound()) and (other.upperBound() >= upperBound()))
 		{
-			if (upperBound() > other.lowerBound())
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return 1.0;
+		}
+		// The other channel is completely covered by this channel
+		else if ((other.lowerBound() >= lowerBound()) and (other.upperBound() <= upperBound()))
+		{
+			return other.CHAN_WIDTH/this->CHAN_WIDTH;
+		}
+		// Lower end of this channel is overlapping with the other channel
+		else if (other.lowerBound() < lowerBound() && lowerBound() < other.upperBound() && other.upperBound() < upperBound())
+		{
+			return (other.upperBound()-lowerBound())/this->CHAN_WIDTH;
+		}
+		// Upper end of this channel is overlapping with the other channel
+		else if (lowerBound() < other.lowerBound() && other.lowerBound() < upperBound() && upperBound() < other.upperBound())
+		{
+			return (upperBound()-other.lowerBound())/this->CHAN_WIDTH;
 		}
 		else
 		{
-			if (other.upperBound() > lowerBound())
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return 0.0;
 		}
 	}
 };
@@ -357,19 +360,22 @@ protected:
 							uInt outputChannel,
 							uInt inputRow,
 							const Cube<Float> &inputWeightsCube,
-							Matrix<Float> &inputWeightsPlane);
+							Matrix<Float> &inputWeightsPlane,
+							Double weight);
 	void dontfillWeightsPlane(	uInt pol,
 								uInt inputChannel,
 								uInt outputChannel,
 								uInt inputRow,
 								const Cube<Float> &inputWeightsCube,
-								Matrix<Float> &inputWeightsPlane) {return;}
+								Matrix<Float> &inputWeightsPlane,
+								Double weight) {return;}
 	void (casa::MSTransformDataHandler::*fillWeightsPlane_p)(	uInt pol,
 																uInt inputChannel,
 																uInt outputChannel,
 																uInt inputRow,
 																const Cube<Float> &inputWeightsCube,
-																Matrix<Float> &inputWeightsPlane);
+																Matrix<Float> &inputWeightsPlane,
+																Double weight);
 
 	template <class T> void averageCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
@@ -726,11 +732,12 @@ protected:
 	// Frequency transformation members
 	uInt chansPerOutputSpw_p;
 	uInt tailOfChansforLastSpw_p;
+	uInt interpolationMethod_p;
 	baselineMap baselineMap_p;
 	vector<uInt> rowIndex_p;
 	inputSpwChanMap spwChannelMap_p;
-	uInt interpolationMethod_p;
 	inputOutputSpwMap inputOutputSpwMap_p;
+	inputOutputChanFactorMap inputOutputChanFactorMap_p;
 	map<Int,Int> freqbinMap_p;
 	map<Int,Int> numOfInpChanMap_p;
 	map<Int,Int> numOfSelChanMap_p;

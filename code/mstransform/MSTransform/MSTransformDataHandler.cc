@@ -181,16 +181,22 @@ void MSTransformDataHandler::initialize()
 	// Frequency transformation members
 	chansPerOutputSpw_p = 0;
 	tailOfChansforLastSpw_p = 0;
+	interpolationMethod_p = MSTransformations::linear;
 	baselineMap_p.clear();
 	rowIndex_p.clear();
 	spwChannelMap_p.clear();
 	inputOutputSpwMap_p.clear();
+	inputOutputChanFactorMap_p.clear();
 	freqbinMap_p.clear();
 	numOfInpChanMap_p.clear();
 	numOfSelChanMap_p.clear();
 	numOfOutChanMap_p.clear();
 	numOfCombInputChanMap_p.clear();
 	numOfCombInterChanMap_p.clear();
+	weightFactorMap_p.clear();
+	sigmaFactorMap_p.clear();
+
+	// Frequency transformation function pointers
 	transformCubeOfDataComplex_p = NULL;
 	transformCubeOfDataFloat_p = NULL;
 	fillWeightsPlane_p = NULL;
@@ -1395,42 +1401,132 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     // Sort input channels
     sort (inputChannels.begin(), inputChannels.end());
 
-    // Map unsorted input channels
-    spwChannelMap_p.clear();
-    Vector<Double> inputFrequencies(inputChannels.size(),0);
-    Vector<Double> inputWidths(inputChannels.size(),0);
-    for (uInt inputChannels_idx=0; inputChannels_idx<inputChannels.size(); inputChannels_idx++)
-    {
-    	inputChannels.at(inputChannels_idx).outChannel = inputChannels_idx;
-    	spwChannelMap_p[inputChannels.at(inputChannels_idx).SPW_id]
-    	                [inputChannels.at(inputChannels_idx).inpChannel] = inputChannels_idx;
-    	inputFrequencies(inputChannels_idx) = inputChannels.at(inputChannels_idx).CHAN_FREQ;
-    	inputWidths(inputChannels_idx) = inputChannels.at(inputChannels_idx).CHAN_WIDTH;
-    }
+    /// Determine combined SPW structure ///////////////////
 
-    // Print characteristics of input SPW
+	// Determine combined SPWs
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+			<< "Calculate combined SPW frequencies" << LogIO::POST;
+	SubMS combiner(*outputMs_p);
+    Vector<Double> combinedCHAN_FREQ;
+    Vector<Double> combinedCHAN_WIDTH;
+	combiner.combineSpws(Vector<Int>(1,-1),True,combinedCHAN_FREQ,combinedCHAN_WIDTH,True);
+
+    // Print characteristics of combined SPW
     ostringstream oss;
-    oss 	<< "Input SPW: " << std::setw(5) << inputFrequencies.size()
+    oss 	<< "Combined SPW: " << std::setw(5) << combinedCHAN_FREQ.size()
     		<< " channels, first channel = "
     		<< std::setprecision(9) << std::setw(14) << std::scientific
-    		<< inputFrequencies(0) << " Hz"
+    		<< combinedCHAN_FREQ(0) << " Hz"
     		<< ", last channel = "
     		<< std::setprecision(9) << std::setw(14) << std::scientific
-    		<< inputFrequencies(inputFrequencies.size()-1) << " Hz";
+    		<< combinedCHAN_FREQ(combinedCHAN_FREQ.size()-1) << " Hz";
     logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
 
-    // Create input SPW structure
-    spwInfo inputSpw;
+	// Create list of combined channels
+	vector<channelInfo> combinedChannels;
+	uInt nCombinedChannels = combinedCHAN_FREQ.size();
+	for (uInt chan_idx=0;chan_idx<nCombinedChannels;chan_idx++)
+	{
+		channelInfo channelInfo_idx;
+		channelInfo_idx.SPW_id = 0;
+		channelInfo_idx.inpChannel = chan_idx;
+		channelInfo_idx.CHAN_FREQ = combinedCHAN_FREQ(chan_idx);
+		channelInfo_idx.CHAN_WIDTH = combinedCHAN_WIDTH(chan_idx);
+		channelInfo_idx.EFFECTIVE_BW = combinedCHAN_WIDTH(chan_idx);
+		channelInfo_idx.RESOLUTION = combinedCHAN_WIDTH(chan_idx);
+		combinedChannels.push_back(channelInfo_idx);
+	}
+
+	// Find list of input overlapping channels per combined channel
+	Double overlap = 0;
+	inputOutputChanFactorMap_p.clear();
+	vector<channelInfo>::iterator inputChanIter;
+	vector<channelInfo>::iterator combChanIter;
+	map<uInt,vector< pair<Int,uInt> > > outputInputChannelMap;
+	for (combChanIter = combinedChannels.begin(); combChanIter != combinedChannels.end(); combChanIter++)
+	{
+		for (inputChanIter = inputChannels.begin(); inputChanIter != inputChannels.end(); inputChanIter++)
+		{
+			overlap = combChanIter->overlap(*inputChanIter);
+			if (overlap)
+			{
+				inputChanIter->outChannel = combChanIter->inpChannel;
+				outputInputChannelMap[combChanIter->inpChannel].push_back(std::make_pair(inputChanIter->SPW_id,inputChanIter->inpChannel));
+				inputOutputChanFactorMap_p[inputChanIter->SPW_id][inputChanIter->inpChannel].push_back(std::make_pair(inputChanIter->outChannel,overlap));
+			}
+		}
+	}
+
+/*
+	// Go trough output-input channel and detect channels with more than one input channel contribution
+	Int spw;
+	uInt channel;
+	Double factor;
+	ostringstream combined_chan_oss;
+	map<uInt,vector< pair<Int,uInt> > >::iterator outputInputChanIter;
+	for (outputInputChanIter = outputInputChannelMap.begin(); outputInputChanIter != outputInputChannelMap.end(); outputInputChanIter++)
+	{
+		if (outputInputChanIter->second.size()>1)
+		{
+			// Calculate normalizing factor
+			Double normFactor = 0;
+			vector< pair<Int,uInt> >::iterator contributingInpChanIier;
+			for (contributingInpChanIier=outputInputChanIter->second.begin();
+					contributingInpChanIier!=outputInputChanIter->second.end();contributingInpChanIier++)
+			{
+				normFactor += inputOutputChanFactorMap_p[contributingInpChanIier->first][contributingInpChanIier->second].second;
+			}
+
+			// Apply normalizing factor
+			for (contributingInpChanIier=outputInputChanIter->second.begin();
+					contributingInpChanIier!=outputInputChanIter->second.end();contributingInpChanIier++)
+			{
+				inputOutputChanFactorMap_p[contributingInpChanIier->first][contributingInpChanIier->second].second /= normFactor;
+			}
+
+			// Print log info about contributing channels
+			uInt inpChanListIndex = 0;
+			combined_chan_oss.str("");
+			combined_chan_oss.clear();
+			combined_chan_oss << "Combined channel " << outputInputChanIter->first << " has contribution from the following input channels: " << endl;
+			for (inpChanListIndex=0;inpChanListIndex<outputInputChanIter->second.size();inpChanListIndex++)
+			{
+				spw = outputInputChanIter->second.at(inpChanListIndex).first;
+				channel = outputInputChanIter->second.at(inpChanListIndex).second;
+				factor = inputOutputChanFactorMap_p[spw][channel].second;
+				combined_chan_oss << "spw=" << spw << " ";
+				combined_chan_oss << "channel=" << channel << " ";
+				combined_chan_oss << "weight=" << factor << endl;
+			}
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << combined_chan_oss.str() << LogIO::POST;
+		}
+		else
+		{
+			combined_chan_oss.str("");
+			combined_chan_oss.clear();
+			combined_chan_oss << "Combined channel " << outputInputChanIter->first << " has contribution only from the following input channel: " << endl;
+			spw = outputInputChanIter->second.at(0).first;
+			channel = outputInputChanIter->second.at(0).second;
+			factor = inputOutputChanFactorMap_p[spw][channel].second;
+			combined_chan_oss << "spw=" << spw << " ";
+			combined_chan_oss << "channel=" << channel << " ";
+			combined_chan_oss << "weight=" << factor << endl;
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << combined_chan_oss.str() << LogIO::POST;
+		}
+	}
+*/
+    // Create combined SPW structure
+    spwInfo combinedSpw;
 	if (channelAverage_p)
 	{
 		Vector<Double> intermediateChanFreq;
 		Vector<Double> intermediateChanWidth;
-		calculateIntermediateFrequencies(0,inputFrequencies,inputWidths,intermediateChanFreq,intermediateChanWidth);
-    	inputSpw = spwInfo(intermediateChanFreq,intermediateChanWidth);
+		calculateIntermediateFrequencies(0,combinedCHAN_FREQ,combinedCHAN_WIDTH,intermediateChanFreq,intermediateChanWidth);
+		combinedSpw = spwInfo(intermediateChanFreq,intermediateChanWidth);
 
         oss.str("");
         oss.clear();
-        oss 	<< "Averaged SPW: " << std::setw(5) << intermediateChanWidth.size()
+        oss 	<< "Combined and averaged SPW: " << std::setw(5) << intermediateChanWidth.size()
         		<< " channels, first channel = "
         		<< std::setprecision(9) << std::setw(14) << std::scientific
         		<< intermediateChanFreq(0) << " Hz"
@@ -1442,19 +1538,9 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 	}
 	else
 	{
-		numOfCombInputChanMap_p[0] = inputFrequencies.size();
-		inputSpw = spwInfo(inputFrequencies,inputWidths);
+		numOfCombInputChanMap_p[0] = combinedCHAN_FREQ.size();
+		combinedSpw = spwInfo(combinedCHAN_FREQ,combinedCHAN_WIDTH);
 	}
-
-    /// Determine output SPW structure ///////////////////
-
-	// Determine combined SPWs
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-			<< "Calculate combined SPW frequencies" << LogIO::POST;
-	SubMS combiner(*outputMs_p);
-    Vector<Double> combinedCHAN_FREQ;
-    Vector<Double> combinedCHAN_WIDTH;
-	combiner.combineSpws(Vector<Int>(1,-1),True,combinedCHAN_FREQ,combinedCHAN_WIDTH,True);
 
 	/*
 	// Debugging info
@@ -1473,6 +1559,8 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 	<< debug_oss.str() << LogIO::POST;
 	*/
+
+	/// Determine output SPW structure ///////////////////
 
 	// Re-grid the output SPW to be uniform and change reference frame
 	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
@@ -1514,10 +1602,6 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     		<< oss.str() << LogIO::POST;
 
-    /// Determine output SPW structure ///////////////////
-
-    // Add input-output SPW pair to map
-	inputOutputSpwMap_p[0] = std::make_pair(inputSpw,outputSpw);
 
     /// Modify SPW subtable ///////////////////
 
@@ -1542,6 +1626,10 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 
     // Flush changes
     outputMs_p->flush(True);
+
+
+    /// Add input-output SPW pair to map ///////////////////
+	inputOutputSpwMap_p[0] = std::make_pair(combinedSpw,outputSpw);
 
 	return;
 }
@@ -3276,8 +3364,9 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 
 	// Initialize input planes
 	IPosition inputPlaneShape(2,nInputCorrelations, numOfCombInputChanMap_p[0]);
+	Matrix<Double> normalizingFactorPlane(inputPlaneShape);
 	Matrix<T> inputPlaneData(inputPlaneShape);
-	Matrix<Bool> inputPlaneFlags(inputPlaneShape);
+	Matrix<Bool> inputPlaneFlags(inputPlaneShape,False);
 	Matrix<Float> inputPlaneWeights(inputPlaneShape);
 
 	// Initialize output planes
@@ -3286,27 +3375,84 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 	Matrix<Bool> outputPlaneFlags(outputPlaneShape);
 
 	Int spw = 0;
-	uInt row = 0, baseline_index = 0, outputChannel = 0;
+	Double weight;
+	uInt outputChannel;
+	Bool inputChanelFlag;
+	Double normalizingFactor;
+	uInt row = 0, baseline_index = 0;
 	vector<uInt> baselineRows;
+	vector< pair<uInt,Double> > contributions;
+	vector< pair<uInt,Double> >::iterator contributionsIter;
+	map < Int , map < uInt, Bool > > removeContributionsMap;
+
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
 	{
+		// Initialize input plane
+		inputPlaneData = 0.0;
+
+		// Initialize weights plane
+		// inputPlaneWeights = 0.0
+
+		// Initialize normalizing factor plane
+		normalizingFactorPlane = 0.0;
+
 		// Fill input plane to benefit from contiguous access to the input cube
 		baselineRows = iter->second;
+
 		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
 		{
 			row = *iter;
 			spw = spws(row);
 
+			// Initialize output plane flags (used to track the contributions from each SPW)
+			inputPlaneFlags = False;
+
 			// Fill input planes
-			uInt outputChannel;
 			for (uInt inputChannel = 0; inputChannel < inputDataCube.shape()(1); inputChannel++)
 			{
-				outputChannel = spwChannelMap_p[spw][inputChannel];
-				for (uInt pol = 0; pol < inputDataCube.shape()(0); pol++)
+				contributions = inputOutputChanFactorMap_p[spw][inputChannel];
+				for (contributionsIter = contributions.begin(); contributionsIter != contributions.end(); contributionsIter++)
 				{
-					inputPlaneData(pol,outputChannel) = inputDataCube(pol,inputChannel,row);
-					inputPlaneFlags(pol,outputChannel) = inputFlagCube(pol,inputChannel,row);
-					(*this.*fillWeightsPlane_p)(pol,inputChannel,outputChannel,row,inputWeightsCube,inputPlaneWeights);
+					outputChannel = contributionsIter->first;
+					weight = contributionsIter->second;
+
+					for (uInt pol = 0; pol < inputDataCube.shape()(0); pol++)
+					{
+						inputChanelFlag = inputFlagCube(pol,inputChannel,row);
+						// If one channel is flag we remove the non-unitary contributions from this SPW to this output channel
+						if ((!inputChanelFlag) and (!inputPlaneFlags(pol,outputChannel) or weight >= 1.0))
+						{
+							inputPlaneData(pol,outputChannel) += weight*inputDataCube(pol,inputChannel,row);
+							normalizingFactorPlane(pol,outputChannel) += weight;
+							(*this.*fillWeightsPlane_p)(pol,inputChannel,outputChannel,row,inputWeightsCube,inputPlaneWeights,weight);
+						}
+						else
+						{
+							inputPlaneFlags(pol,outputChannel) = True;
+
+						}
+					}
+				}
+			}
+		}
+
+		// Normalize combined data and determine input plane flags
+		inputPlaneFlags = False;
+		for (uInt outputChannel = 0; outputChannel < numOfCombInputChanMap_p[0]; outputChannel++)
+		{
+			for (uInt pol = 0; pol < nInputCorrelations; pol++)
+			{
+				normalizingFactor = normalizingFactorPlane(pol,outputChannel);
+				if (normalizingFactor > 0)
+				{
+					inputPlaneData(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
+
+					// Normalize weights plane
+					// inputPlaneWeights(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
+				}
+				else
+				{
+					inputPlaneFlags(pol,outputChannel) = True;
 				}
 			}
 		}
@@ -3321,6 +3467,8 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 
 		baseline_index += 1;
 	}
+
+	return;
 }
 
 // -----------------------------------------------------------------------
@@ -3331,9 +3479,10 @@ void MSTransformDataHandler::fillWeightsPlane(	uInt pol,
 												uInt outputChannel,
 												uInt inputRow,
 												const Cube<Float> &inputWeightsCube,
-												Matrix<Float> &inputWeightsPlane)
+												Matrix<Float> &inputWeightsPlane,
+												Double factor)
 {
-	inputWeightsPlane(pol,outputChannel) = inputWeightsCube(pol,inputChannel,inputRow);
+	inputWeightsPlane(pol,outputChannel) += factor*inputWeightsCube(pol,inputChannel,inputRow);
 
 	return;
 }
@@ -4013,7 +4162,6 @@ template <class T> void MSTransformDataHandler::regrid(	Int inputSpw,
     											False, // A good data point has its flag set to False
     											False // If False extrapolated data points are set flagged
 						    					);
-
 	return;
 }
 
