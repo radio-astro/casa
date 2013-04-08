@@ -2628,7 +2628,7 @@ Bool Imager::createFTMachine()
     ft_p = new nPBWProjectFT(//*ms_p, 
 			     wprojPlanes_p, cache_p/2,
                             cfCacheDirName_p, doPointing, doPBCorr,
-                             tile_p, paStep_p, pbLimit_p, True);
+                             tile_p, computePAStep_p, pbLimit_p, True);
     //
     // Explicit type casting of ft_p does not look good.  It does not
     // pick up the setPAIncrement() method of PBWProjectFT without
@@ -2696,7 +2696,7 @@ Bool Imager::createFTMachine()
       }
     ft_p = new PBMosaicFT(*ms_p, wprojPlanes_p, cache_p/2, 
 			  cfCacheDirName_p, /*True */doPointing, doPBCorr, 
-			  tile_p, paStep_p, pbLimit_p, True);
+			  tile_p, computePAStep_p, pbLimit_p, True);
     ((PBMosaicFT *)ft_p)->setObservatoryLocation(mLocation_p);
     //
     // Explicit type casting of ft_p does not look good.  It does not
@@ -2890,7 +2890,7 @@ Bool Imager::createFTMachine()
 			     //			     mthVisResampler,
 			     visResampler,
 			     /*True */doPointing, doPBCorr, 
-			     tile_p, paStep_p, pbLimit_p, True,conjBeams_p,
+			     tile_p, computePAStep_p, pbLimit_p, True,conjBeams_p,
 			     useDoublePrecGrid);
       
     ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
@@ -2902,7 +2902,8 @@ Bool Imager::createFTMachine()
     // os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
 
     //    ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
-    ((AWProjectFT *)ft_p)->setPAIncrement(Quantity(paStep_p,"deg"));
+    Quantity rotateOTF(rotPAStep_p,"deg");
+    ((AWProjectFT *)ft_p)->setPAIncrement(Quantity(computePAStep_p,"deg"),rotateOTF);
 
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();

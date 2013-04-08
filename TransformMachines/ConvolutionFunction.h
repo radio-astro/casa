@@ -76,8 +76,8 @@ namespace casa{
   class ConvolutionFunction
   {
   public:
-    ConvolutionFunction():logIO_p(), rotateCFAngleRad_p(0.1) {};
-    ConvolutionFunction(Int dim): rotateCFAngleRad_p(0.1) {nDim=dim;};
+    ConvolutionFunction():logIO_p(), computeCFAngleRad_p(360.0*M_PI/180.0), rotateCFOTFAngleRad_p(0.1) {};
+    ConvolutionFunction(Int dim): computeCFAngleRad_p(360.0*M_PI/180.0), rotateCFOTFAngleRad_p(0.1) {nDim=dim;};
     virtual ~ConvolutionFunction();
     
     // Set the dimention of the convolution function.
@@ -128,7 +128,8 @@ namespace casa{
     virtual void setPolMap(const Vector<Int>& polMap) = 0;
     virtual void setSpwSelection(const Cube<Int>& spwChanSelFlag) {spwChanSelFlag_p.assign(spwChanSelFlag);}
     virtual void setSpwFreqSelection(const Matrix<Double>& spwFreqSel) {spwFreqSelection_p.assign(spwFreqSel);}
-    virtual void setRotateCF(const Double& rotateCFAngleRad) {rotateCFAngleRad_p=rotateCFAngleRad;};
+    virtual void setRotateCF(const Double& computeCFAngleRad, const Double& rotateOTF) 
+    {computeCFAngleRad_p=computeCFAngleRad; rotateCFOTFAngleRad_p = rotateOTF;};
 
     //    virtual void setFeedStokes(const Vector<Int>& feedStokes) = 0;
     virtual Bool findSupport(Array<Complex>& func, Float& threshold,Int& origin, Int& R)=0;
@@ -150,7 +151,7 @@ namespace casa{
     LogIO logIO_p;
     Cube<Int> spwChanSelFlag_p;
     Matrix<Double> spwFreqSelection_p;
-    Double rotateCFAngleRad_p;
+    Double computeCFAngleRad_p, rotateCFOTFAngleRad_p;
   };
 
 };

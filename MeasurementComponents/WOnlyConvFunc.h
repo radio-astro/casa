@@ -61,6 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			  const VisBuffer& vb,
 			  const Int wConvSize,
 			  const Float pa,
+			  const Float dpa,
 			  CFStore& cfs,
 			  CFStore& cfwts);
 
