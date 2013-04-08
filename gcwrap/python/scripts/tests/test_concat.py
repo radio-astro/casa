@@ -109,9 +109,9 @@ class test_concat(unittest.TestCase):
 
         # create MSs with ephemeris use
         
-        print "Creating MSs with ephemeris table use ..."
-
         if not 'xy1.ms' in filespresent:
+            print "Creating MSs with ephemeris table use ..."
+
             split(vis='part1.ms', outputvis='xy1.ms', scan="1~30", datacolumn='data')
 
             tb.open('xy1.ms', nomodify=False)
@@ -169,11 +169,15 @@ class test_concat(unittest.TestCase):
                             'Uranus_54708-55437dUTC', 13)
             ms.close()
 
+        if not 'xy2-jup-ur.ms' in filespresent:
+            split(vis='xy2.ms', outputvis='xy2-jup-ur.ms', field = 'jupiter, uranus', datacolumn='data')
+
         if not 'xya.ms' in filespresent:
             split(vis='xy1.ms', outputvis='xya.ms', spw='0:0~63', datacolumn='data')
             
         if not 'xyb.ms' in filespresent:
             split(vis='xy1.ms', outputvis='xyb.ms', spw='0:64~127', datacolumn='data')
+
 
         default(concat)
         
@@ -1379,14 +1383,41 @@ class test_concat(unittest.TestCase):
 
         self.assertTrue(retValue['success'])
 
+    def test14(self):
+        '''Concat 14: 2 parts of same MS split in time,  use of ephemerides only in first part'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        self.res = concat(vis=['xy2-jup-ur.ms','xy1-noephem.ms'],concatvis=msname, copypointing=False)
+        self.assertEqual(self.res,True)
+        
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test14.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test14.ms',ignore_errors=True)
+            shutil.copytree(msname,'test14.ms')
+            print myname, ": OK. Checking tables in detail ..."
+            tb.open('test14.ms/FIELD')
+            a = tb.getcol('EPHEMERIS_ID')
+            retValue['success']=True
+            for i in range(0,15):
+                if(a[i]!=-1 and i!=1):
+                    print "Only field 1 should have ephemeneris id > -1."
+                    retValue['success']=False
+
+        self.assertTrue(retValue['success'])
+
 
 class concat_cleanup(unittest.TestCase):           
     def setUp(self):
         pass
     
     def tearDown(self):
-        #os.system('rm -rf *.ms')
-        pass
+        os.system('rm -rf *.ms')
 
     def testrun(self):
         '''Concat: Cleanup'''
