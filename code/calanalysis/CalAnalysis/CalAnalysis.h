@@ -661,8 +661,8 @@ Vector<CalAnalysis::OUTPUT<T> >& CalAnalysis::stats(
 
 
   // Create an instance of the new format calibration table class
-
-  NewCalTable oNCT =  NewCalTable( oCalName, Table::Old, Table::Memory );
+  // Use createCT to enforce backward compatibility
+  NewCalTable oNCT =  NewCalTable::createCT( oCalName, Table::Old, Table::Memory );
 
 
   // Get the cubes for each group

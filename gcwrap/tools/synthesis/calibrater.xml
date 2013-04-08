@@ -2322,6 +2322,36 @@ guess of 15 Jy at the phase center (0,0), with 2.0 arcsec major axis,
 </method>
 
 
+<method type="function" name="updatecaltable">
+   <shortdescription>Caltable modernizer.</shortdescription>
+
+<input>
+   <param type="string" direction="in" name="caltable">
+   <description>Name of the caltable.</description>
+   </param>
+</input>
+<returns type="bool"/>
+
+<description>
+This method can be used to update a caltable (from v3.4 or later)
+to the current version of CASA.
+
+The following updates are currently supported.
+
+o At CASA v4.1.0, the OBSERVATION subtable and OBSERVATION_ID column
+were added to caltables.  This method adds trivial versions of
+these elements to pre-v4.1 caltables.
+
+</description>
+
+<example>
+cb.updatecaltable("mycaltable");
+</example>
+
+</method>
+
+
+
  
 <method type="function" name="close">
    <shortdescription>Close the calibrater tool</shortdescription>

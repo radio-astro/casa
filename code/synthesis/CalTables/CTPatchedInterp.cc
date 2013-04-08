@@ -59,12 +59,12 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   byField_(fieldtype=="nearest"),     // for now we are NOT slicing by field
   nChanIn_(),
   freqIn_(),
-  nMSObs_(byObs_?ct.observation().nrow():1),  // assume CT shapes for MS shapes
+  nMSObs_(1), // byObs_?ct.observation().nrow():1),  // assume CT shapes for MS shapes
   nMSFld_(ct.field().nrow()),                 
   nMSSpw_(ct.spectralWindow().nrow()),
   nMSAnt_(ct.antenna().nrow()),
   altFld_(),
-  nCTObs_(byObs_?ct.observation().nrow():1),
+  nCTObs_(1), // byObs_?ct.observation().nrow():1),
   nCTFld_(byField_?ct.field().nrow():1),
   nCTSpw_(ct.spectralWindow().nrow()),
   nCTAnt_(ct.antenna().nrow()),
@@ -118,6 +118,52 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   freqIn_.resize(nCTSpw_);
   for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
     ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
+
+  // Manage 'byObs_' carefully
+  if (byObs_) {
+
+    Int nMSObs=ct_.observation().nrow(); // assume CT shapes for MS shapes
+    Int nCTObs=ct_.observation().nrow();
+
+    // Count _available_ obsids in caltable
+    ROCTMainColumns ctmc(ct_);
+    Vector<Int> obsid;
+    ctmc.obsId().getColumn(obsid);
+    Int nctobsavail=genSort(obsid,
+			    (Sort::QuickSort | Sort::NoDuplicates));
+
+
+    LogIO log;
+    ostringstream msg;
+    
+    if (nctobsavail==1) {
+      byObs_=False;
+      msg << "Only one ObsId found in "
+	  << ct_.tableName()
+	  << "; ignoring 'perobs' interpolation.";
+      log << msg.str() << LogIO::WARN;
+    }
+    else {
+
+      // Verify consistency between CT and MS
+      if (nctobsavail==nCTObs &&
+	  nctobsavail==nMSObs) {
+	// Everything ok
+	nCTObs_=nCTObs;
+	nMSObs_=nMSObs;
+      }
+      else {
+	// only 1 obs, or available nobs doesn't match MS
+	byObs_=False;
+	msg << "Multiple ObsIds found in "
+	    << ct_.tableName()
+	    << ", but they do not match the MS ObsIds;"
+	    << " turning off 'perobs'.";
+	log << msg.str() << LogIO::WARN;
+      }
+    }
+
+  }
 
   // Initialize caltable slices
   sliceTable();
@@ -181,12 +227,12 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   byField_(fieldtype=="nearest"),  // for now we are NOT slicing by field
   nChanIn_(),
   freqIn_(),
-  nMSObs_(byObs_?ms.observation().nrow():1),
+  nMSObs_(1), // byObs_?ms.observation().nrow():1),
   nMSFld_(ms.field().nrow()),  
   nMSSpw_(ms.spectralWindow().nrow()),
   nMSAnt_(ms.antenna().nrow()),
   altFld_(),
-  nCTObs_(byObs_?ct.observation().nrow():1),
+  nCTObs_(1),  // byObs_?ct.observation().nrow():1),
   nCTFld_(byField_?ct.field().nrow():1),
   nCTSpw_(ct.spectralWindow().nrow()),
   nCTAnt_(ct.antenna().nrow()),
@@ -203,7 +249,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   tIdel_()
 {
 
-  if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp()" << endl;
+  if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp(CT,MS)" << endl;
 
   ia1dmethod_=ftype(freqType_);
 
@@ -240,6 +286,52 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   freqIn_.resize(nCTSpw_);
   for (uInt iCTspw=0;iCTspw<ctspw.nrow();++iCTspw) 
     ctspw.chanFreq().get(iCTspw,freqIn_(iCTspw),True);
+
+
+  // Manage 'byObs_' carefully
+  if (byObs_) {
+    Int nMSObs=ms.observation().nrow();
+    Int nCTObs=ct_.observation().nrow();
+
+    // Count _available_ obsids in caltable
+    ROCTMainColumns ctmc(ct_);
+    Vector<Int> obsid;
+    ctmc.obsId().getColumn(obsid);
+    Int nctobsavail=genSort(obsid,
+			    (Sort::QuickSort | Sort::NoDuplicates));
+
+
+    LogIO log;
+    ostringstream msg;
+    
+    if (nctobsavail==1) {
+      byObs_=False;
+      msg << "Only one ObsId found in "
+	  << ct_.tableName()
+	  << "; ignoring 'perobs' interpolation.";
+      log << msg.str() << LogIO::WARN;
+    }
+    else {
+
+      // Verify consistency between CT and MS
+      if (nctobsavail==nCTObs &&
+	  nctobsavail==nMSObs) {
+	// Everything ok
+	nCTObs_=nCTObs;
+	nMSObs_=nMSObs;
+      }
+      else {
+	// only 1 obs, or available nobs doesn't match MS
+	byObs_=False;
+	msg << "Multiple ObsIds found in "
+	    << ct_.tableName()
+	    << ", but they do not match the MS ObsIds;"
+	    << " turning off 'perobs'.";
+	log << msg.str() << LogIO::WARN;
+      }
+    }
+  }
+
 
   // Initialize caltable slices
   sliceTable();
@@ -324,7 +416,7 @@ CTPatchedInterp::CTPatchedInterp(NewCalTable& ct,
   tI_(),
   tIdel_()
 {
-  if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp()" << endl;
+  if (CTPATCHEDINTERPVERB) cout << "CTPatchedInterp::CTPatchedInterp(mscol)" << endl;
 
   ia1dmethod_=ftype(freqType_);
 
