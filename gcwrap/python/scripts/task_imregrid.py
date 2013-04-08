@@ -91,7 +91,30 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                                                                 os.R_OK):
                     raise TypeError, 'Cannot read template image ' + template
 
+                
+                _myia.open(imagename)
+                axestoregrid = axes
+                if (axes[0] < 0):
+                    axestoregrid = range(len(_myia.shape()))
+                axesnames = _myia.coordsys().names()
                 _myia.open(template)
+                templatenames = _myia.coordsys().names()
+                namestoregrid = []
+                print "*** to regrid " + str(axestoregrid)
+                for axis in axestoregrid:
+                    if (
+                        axesnames[axis].upper() != "STOKES"
+                        and axesnames[axis] != templatenames[axis]
+                    ):
+                        raise Exception(
+                            "ERROR: Axis number " + str(axis) + " mismatch between "
+                            + "input (" + axesnames[axis] + ") and template ("
+                            + templatenames[axis] + "). The imregrid task currently "
+                            + "requires that the ordering of the axes for the input "
+                            + "and template images be the same. Please check this "
+                            + "using the imhead task with mode='list', and correct as "
+                            + "necessary using the imtrans task."
+                    )
                 csys = _myia.coordsys()
                 if (len(shape) == 1 and shape[0] == -1):
                     _myia.open(imagename)
