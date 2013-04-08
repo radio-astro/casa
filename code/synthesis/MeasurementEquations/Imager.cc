@@ -1825,7 +1825,9 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
 			const String& epJTableName,
 			const Bool applyPointingOffsets,
 			const Bool doPointingCorrection,
-			const String& cfCacheDirName,const Float& paStep, 
+			const String& cfCacheDirName,
+			const Float& rotPAStep, 
+			const Float& computePAStep, 
 			const Float& pbLimit, const String& interpMeth, const Int imageTileVol,
 			const Bool singprec,
 			const Int numthreads,
@@ -1878,7 +1880,8 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   wprojPlanes_p=wprojplanes;
   epJTableName_p = epJTableName;
   cfCacheDirName_p = cfCacheDirName;
-  paStep_p = paStep;
+  rotPAStep_p = rotPAStep;
+  computePAStep_p = computePAStep;
   pbLimit_p = pbLimit;
   psTermOn_p=psTermOn;
   aTermOn_p=aTermOn;

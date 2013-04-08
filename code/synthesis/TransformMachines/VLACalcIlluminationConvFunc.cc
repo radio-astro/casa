@@ -138,7 +138,15 @@ namespace casa{
     //    regridAperture(skyCS, skyShape, uvGrid, vb, True, bandID);
     regridAperture(skyCS, skyShape, uvGrid, vb, doSquint, bandID,freqVal);
     pbImage.setCoordinateInfo(skyCS);
+    // {
+    //   string name("aperture.im");
+    //   storeImg(name,*(ap.aperture));
+    // }
     fillPB(*(ap.aperture),pbImage);
+    // {
+    //   string name("apb.im");
+    //   storeImg(name,pbImage);
+    // }
   }
   //--------------------------------------------------------------------------
   // Write PB^2 to the pbImage
@@ -361,20 +369,20 @@ namespace casa{
 	ap.aperture->setCoordinateInfo(uvCoords);
 
 	// if (doSquint==True)
-	//   {
-	//     String name("apperture.im");
-	//     storeImg(name,*(ap.aperture));
-	//   }
+	  // {
+	  //   String name("apperture.im");
+	  //   storeImg(name,*(ap.aperture));
+	  // }
 
 	//
 	// Now FT the re-gridded Fourier plane to get the primary beam.
 	//
 	ftAperture(*(ap.aperture));
 	// if (doSquint==True)
-	//   {
-	//     String name("ftapperture.im");
-	//     storeImg(name,*(ap.aperture));
-	//   }
+	  // {
+	  //   String name("ftapperture.im");
+	  //   storeImg(name,*(ap.aperture));
+	  // }
       }
   }
   void VLACalcIlluminationConvFunc::regridAperture(CoordinateSystem& skyCS,
@@ -497,10 +505,10 @@ namespace casa{
 
     ap.aperture->setCoordinateInfo(uvCoords);
     // if (doSquint==False)
-    //   {
-    // 	String name("apperture.im");
-    // 	storeImg(name,*(ap.aperture));
-    //   }
+      // {
+      // 	String name("apperture.im");
+      // 	storeImg(name,*(ap.aperture));
+      // }
     
     ftAperture(*(ap.aperture));
   }
@@ -660,7 +668,15 @@ namespace casa{
     //
     // Make SkyJones
     //
+    // {
+    //   String name("uvgrid.im");
+    //   storeImg(name,uvgrid);
+    // }
     LatticeFFT::cfft2d(uvgrid);
+    // {
+    //   String name("ftuvgrid.im");
+    //   storeImg(name,uvgrid);
+    // }
     //
     // Now make SkyMuller
     //
@@ -674,6 +690,11 @@ namespace casa{
 
   void VLACalcIlluminationConvFunc::skyMuller(ImageInterface<Complex>& skyJones)
   {
+    // {
+    //   skyJones.put(buf);
+    //   String name("skyjones.im");
+    //   storeImg(name,skyJones);
+    // }
     Array<Complex> buf=skyJones.get(),tmp;
 
     IPosition shape(buf.shape());
@@ -699,6 +720,12 @@ namespace casa{
 	  for(t(1)=0;t(1)<shape(1);t(1)++)   // y axis
 	    for(t(0)=0;t(0)<shape(0);t(0)++) // X axis
 	      buf(t) = buf(t)/peak;
+
+    // {
+    //   skyJones.put(buf);
+    //   String name("skyjones.im");
+    //   storeImg(name,skyJones);
+    // }
 
     tmp = buf;
 

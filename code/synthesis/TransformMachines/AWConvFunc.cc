@@ -791,7 +791,7 @@ namespace casa{
     Matrix<Int> uniqueBaselineTypeList=makeBaselineList(aTerm_p->getAntTypeList());
     //Quantity dPA(360.0,"deg");
     Quantity dPA(dpa,"rad");
-    
+
     for(Int ib=0;ib<uniqueBaselineTypeList.shape()(0);ib++)
       {
 	Vector<Int> pos;
@@ -833,6 +833,7 @@ namespace casa{
 	// psScale when using SynthesisUtils::libreSpheroidal() is
 	// 2.0/nSupport.  nSupport is in pixels and the 2.0 is due to
 	// the center being at Nx/2.  Here the nSupport is determined
+
 	// by the sky-image and is equal to convSize/convSampling.
 	psScale = 2.0/(innerQuaterFraction*convSize/convSampling);// nx*image.coordinates().increment()(0)*convSampling/2;
 	psTerm_p->init(IPosition(2,inner,inner), uvScale, uvOffset,psScale);
@@ -1341,7 +1342,7 @@ namespace casa{
 		    // (e.g. rotating at some increment only) is
 		    // implemented in the ATerm::rotate().
 		    //		    if (rotateCF_p) 
-		    aTerm_l->rotate(vb,*cfc,rotateCFAngleRad_p);
+		    aTerm_l->rotate(vb,*cfc,rotateCFOTFAngleRad_p);
 		  }
     }
 	  }
