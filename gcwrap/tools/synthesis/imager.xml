@@ -3643,13 +3643,16 @@ are being ) cached on the disk.  </description>
      <value></value>
      </param>
 
+     <param type="double" name="rotpastep">
+     <description>The PA increment in degree used for on-the-fly (OTF)
+     rotation of the A-term in A-Projection.</description>
+     <value>5.0</value>
+     </param>
+
      <param type="double" name="pastep">
-     <description>The number of steps in Parallactic Angle used to
-compute the average power pattern.  Since a linear interpolation is
-used to interpolate convolution functions during gridding, this can be different from PA
-increment to compute new convolution functions.  This parameter is
-however not used yet.</description>
-     <value>1.0</value>
+     <description>The PA increment in degree used to compute the
+     PA-rotated A-term in A-Projection.</description>
+     <value>360.0</value>
      </param>
 
      <param type="double" name="pblimit">

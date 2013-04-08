@@ -1621,7 +1621,7 @@ imager::setmfcontrol(const double cyclefactor, const double cyclespeedup, const 
 }
 
 bool
-imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double pastep, const double pblimit, const int imagetilevol, const bool singprec, const int numthreads,const bool psterm, const bool aterm, const bool mterm, const bool wbawp, const bool conjbeams)
+imager::setoptions(const std::string& ftmachine, const int cache, const int tile, const std::string& gridfunction, const ::casac::variant& location, const double padding, const std::string& freqinterp, const int wprojplanes, const std::string& epjtablename, const bool applypointingoffsets, const bool dopbgriddingcorrections, const std::string& cfcachedirname, const double rotpastep, const double pastep, const double pblimit, const int imagetilevol, const bool singprec, const int numthreads,const bool psterm, const bool aterm, const bool mterm, const bool wbawp, const bool conjbeams)
 {
 
    Bool rstat(False);
@@ -1638,7 +1638,7 @@ imager::setoptions(const std::string& ftmachine, const int cache, const int tile
 					wprojplanes, String(epjtablename), 
 					applypointingoffsets, 
 					dopbgriddingcorrections, 
-					String(cfcachedirname), Float(pastep), 
+					String(cfcachedirname), Float(rotpastep), Float(pastep),
 					Float(pblimit), String(freqinterp), imagetilevol, singprec, numthreads,
 					psterm, aterm, mterm, wbawp,conjbeams);
        } catch  (AipsError x) {
