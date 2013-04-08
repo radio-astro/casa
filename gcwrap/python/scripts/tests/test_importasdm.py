@@ -592,6 +592,24 @@ class asdm_import3(test_base):
         self.assertEqual(res['baseline']['DA44&&DA44']['flagged'], 76)
         self.assertEqual(res['baseline']['PM03&&PM03']['flagged'], 16)
 
+    def test_flagbackup(self):
+        '''importasdm: Create a flagbackup by default''' 
+        outputms = 'fbackup1.ms'
+        fbackup = outputms+'.flagversions' 
+        
+        # Do not create a flagbackup
+        importasdm(asdm=self.asdm, vis=outputms, scans='3', flagbackup=False)
+        self.assertFalse(os.path.exists(fbackup))
+
+        # Create a backup by default
+        importasdm(asdm=self.asdm, vis=outputms, scans='3', overwrite=True)
+        self.assertTrue(os.path.exists(fbackup))
+        
+        # Delete it and create again using the parameter
+        os.system('rm -rf '+outputms+'*')
+        importasdm(asdm=self.asdm, vis=outputms, scans='3', flagbackup=True)
+        self.assertTrue(os.path.exists(fbackup))
+        
 
 class asdm_import4(test_base):
     
