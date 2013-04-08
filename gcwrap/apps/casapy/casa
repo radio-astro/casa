@@ -252,7 +252,18 @@ function set_CASA_INSTALLATION_DIRECTORY {
         if [ "$OS_TYPE" = "Darwin" ]; then
             result="${casa_root%/*/*}/${casa_os}"
         elif [ "$CASA_INSTALLATION_TYPE" = "developer-environment" ]; then
-            result="${casa_root}/${casa_os}"
+            #
+            # Deal with likely variations.
+            if [ -d "${casa_root}/casa/${casa_os}" ]; then
+                result="${casa_root}/casa/${casa_os}"
+            elif [ -d "${casa_root}/CASA/${casa_os}" ]; then
+                result="${casa_root}/CASA/${casa_os}"
+            elif [ -d "${casa_root}/build/${casa_os}" ]; then
+                result="${casa_root}/build/${casa_os}"
+            elif [ -d "${casa_root}/${casa_os}" ]; then
+                result="${casa_root}/${casa_os}"
+            else echo "ERROR: casa script failed to find CASA_INSTALLATION_DIRECTORY!"
+            fi
         else
             result="$casa_root"
         fi
@@ -493,6 +504,7 @@ ensure_dbus_is_running
 display_startup_time_warning
 
 display_debugging_message "Remaining command line options: $*"
+
 #
 # GDB will complain about excess command line options.
 if [ "$DEBUG_CASA" = "T" ]; then
@@ -505,3 +517,4 @@ exit $?
 
 #
 # O_o
+
