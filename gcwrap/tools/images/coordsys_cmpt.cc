@@ -21,7 +21,6 @@
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
 #include <casa/Quanta/QuantumHolder.h>
-//#include <casa/Utilities/DataType.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
@@ -32,6 +31,8 @@
 #include <coordsys_cmpt.h>
 #include <measures/Measures/MCFrequency.h>
 #include <measures/Measures/MCDirection.h>
+
+#include <measures/Measures/MDirection.h>
 #include <measures/Measures/MeasTable.h>
 #include <measures/Measures/MeasureHolder.h>
 
@@ -411,6 +412,34 @@ coordsys::convert(const std::vector<double>& coordin,
   }
   coordOut.tovector(rstat);
   return rstat;
+}
+
+record* coordsys::convertdirection(const string& frame) {
+	*itsLog << LogOrigin("coordsys", __FUNCTION__);
+	try {
+		if (! itsCoordSys->hasDirectionCoordinate()) {
+			throw AipsError("The coordinate system does not have a direction coordinate.");
+		}
+		String myframe(frame);
+		myframe.upcase();
+		casa::MDirection::Types tp;
+
+		if (! casa::MDirection::getType(tp, myframe)) {
+			throw AipsError("Unknown frame specifier " + frame);
+		}
+		const DirectionCoordinate& dc = itsCoordSys->directionCoordinate();
+		casa::Quantity angle;
+		DirectionCoordinate converted = dc.convert(angle, tp);
+		Int dcNumber = itsCoordSys->directionCoordinateNumber();
+		itsCoordSys->replaceCoordinate(converted, dcNumber);
+		return fromRecord(QuantumHolder(angle).toRecord());
+
+	}
+	catch (const AipsError& x) {
+		*itsLog << "Error occurred: " << x.getMesg() << LogIO::SEVERE;
+		RETHROW(x);
+	}
+
 }
 
 ::casac::variant*

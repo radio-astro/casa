@@ -785,6 +785,36 @@ print cout
 
 </method>
 
+<method type="function" name="convertdirection">
+    <shortdescription>Convert the direction coordinate to the specified frame by rotating as necessary about the reference pixel so the axes line up with the cardinal directions.</shortdescription>
+    <input>
+        <param type="string" direction="in" name="frame">
+            <description>Reference frame to convert to.</description>
+        </param>
+    </input>
+    <returns type="record"/>
+    <description>
+        Convert the direction coordinate in the coordinate system to the specified frame by
+        rotating about the reference pixel so that the resulting coordinate axes are parallel
+        to the cardinal directions. The resulting coordinate will not have a conversion layer,
+        even if the input direction coordinate does. A conversion layer can be set after by
+        running cs.setconversiontype(). Be aware that if you attach the resulting coordinate
+        system to an image whose pixels have not been rotated around the reference pixel in
+        the same manner, you will likely get an image for which the pixels do not match
+        up to world coordinate values. This method should only be used by experienced users who
+        know what they are doing. It was written originally to facilitate rotating the
+        direction coordinate since the implementation of imregrid requires this in certain
+        circumstances. The conversion is done in place; a new coordinate system tool is not
+        created. The returned record represents an angular quantity through which the old
+        direction coordinate was rotated to create the new coordinate.
+    </description>
+    
+    <example>
+        
+    </example>
+        
+
+</method>    
  
    <method type="function" name="convertmany">
    <shortdescription>Convert many numeric mixed coordinates</shortdescription>

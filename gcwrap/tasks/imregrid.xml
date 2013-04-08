@@ -75,7 +75,14 @@ async       Run task in a separate process (return CASA prompt)
                 
 The new coordinate system is defined by the template parameter,
 which can be:
-    * a recognized reference code string (see below),
+    * a recognized reference frame string. This will rotate the image and the coordinate system so that
+      the new reference frame's axes are aligned to the cardinal directions (left-right, up-down).
+      Rotation occurs about the center direction pixel. If this pixel is not the reference pixel,
+      a temporary copy of the original image is created and the coordinate system is adjusted so
+      the center direction pixel is the reference pixel. The coordinate system of the input image
+      is not modified and the output image's reference direction pixel is the center pixel.
+      Note that the conversion between one frame and another in general becomes less accurate
+      as distance from the output image's reference pixel increases.
     * a {'csys': csys_record, 'shap': shape} dictionary,
     * 'get', which does not regrid but returns the template dictionary
       for imagename, suitable for modification and reuse, or
@@ -91,6 +98,11 @@ output axis.
 
 If an image has per-plane beams and one attempts to regrid the spectral axis,
 an exception is thrown.
+
+# convert an input image that has GALACTIC coordinates to an image with J2000 coordinates
+
+imregrid(imagename="mygal.im", template="J2000", output="myj2000.im")
+
 
 
 </example> 
