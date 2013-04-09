@@ -25,7 +25,8 @@ import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
-from pipeline.hsd.tasks.common import SDDataProductName as SDDataProductName
+#from pipeline.hsd.tasks.common import SDDataProductName as SDDataProductName
+from pipeline.hsd.tasks.reduce import SDDataProductName as SDDataProductName
 
 # the logger for this module
 LOG = infrastructure.get_logger(__name__)
