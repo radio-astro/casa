@@ -478,7 +478,7 @@ void ROMSFieldColumns::getMJDs(Double& originMJD, Double& interMJD,
     MEpoch interEpoch(Quantity(interTime, "s"), assumedType);
     interMJD = MEpoch::Convert(interEpoch, MEpoch::UTC)().get(days).getValue();
   }
-  if(interMJD<1){
+  if(interTime==0.){
     interMJD = originMJD;
   }
 }
