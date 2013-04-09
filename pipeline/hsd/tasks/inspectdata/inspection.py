@@ -9,7 +9,7 @@ import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.jobrequest as jobrequest
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from pipeline.domain.datatable import DataTableColumnMaskList as ColMaskList
-from ..common import common
+from .. import common
 from . import reader
 from . import analyser
 
