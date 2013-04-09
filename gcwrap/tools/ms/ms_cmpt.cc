@@ -218,6 +218,7 @@ bool ms::ismultims()
   return rstat;
 }
 
+
 std::vector<std::string> ms::getreferencedtables()
 {
 
@@ -698,6 +699,50 @@ ms::getspectralwindowinfo()
   return spwSummary;
 }
 
+::casac::record*
+ms::getfielddirmeas(const std::string& dircolname, int fieldid, double time)
+{
+  ::casac::record *retval = 0;
+  try{
+    if(!detached()){
+       *itsLog << LogOrigin("ms", "getfielddirmeas");
+      String error;       
+      String colname(dircolname);
+      colname.upcase();
+      
+      casa::MSFieldColumns msfc(itsMS->field());
+      casa::MDirection d;
+      if(colname=="DELAY_DIR"){
+	d = msfc.delayDirMeas(fieldid, time);
+      }
+      else if(colname=="PHASE_DIR"){
+	d = msfc.phaseDirMeas(fieldid, time);
+      }
+      else if(colname=="REFERENCE_DIR"){
+	d = msfc.referenceDirMeas(fieldid, time);
+      }
+      else{
+	*itsLog << LogIO::SEVERE
+		<< "Illegal FIELD direction column name: " << dircolname
+		<< LogIO::POST;
+      }
+      
+      MeasureHolder out(d);
+      
+      Record outRec;
+      if (out.toRecord(error, outRec)) {
+	retval = fromRecord(outRec);
+      } else {
+	error += String("Failed to generate direction return value.\n");
+	*itsLog << LogIO::SEVERE << error << LogIO::POST;
+      };
+    }
+  } catch (AipsError(x)) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+  }
+
+  return retval;
+}
 
 bool
 ms::listhistory()

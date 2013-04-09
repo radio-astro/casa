@@ -767,6 +767,48 @@ the ms definition itself. -->
         </example>
 </method>
 
+   <method type="function" name="getfielddirmeas">
+   <shortdescription>Returns the direction measure from the given FIELD table column and row</shortdescription>
+   
+  <keyword>getfielddirmeas</keyword>
+  <input>  
+       <param type="string" direction="in" name="dircolname">
+	 <description>Name of the direction column in the FIELD table</description>
+	 <value>PHASE_DIR</value>
+         <allowed type="enum">
+	     <value>PHASE_DIR</value>
+	     <value>DELAY_DIR</value>
+	     <value>REFERENCE_DIR</value>
+         </allowed>
+       </param>
+
+       <param type="int" name="fieldid">
+       <description>Field ID, starting at 0</description>
+       <value>0</value>
+       </param>
+
+       <param type="double" name="time">
+       <description>(optional) time for ephemeris access (in seconds, as in Main table TIME column)</description>
+       <value>0</value>
+       </param>
+
+  </input>
+  <returns type="record">
+  <shortdescription>direction measure</shortdescription>
+  </returns>
+  <description>
+    This function returns the direction measures from the
+    given direction column of the MS FIELD table as a list.
+  </description>
+  <example>
+    
+      ms.open('3C273XC1.MS')
+      print "Delay direction from FIELD table row 3 =", ms.getfielddirmeas("DELAY_DIR", 3)
+    
+  </example>
+</method>
+
+
    <method type="function" name="nrow">
    <shortdescription>Returns the number of rows in the measurement set</shortdescription>
    
