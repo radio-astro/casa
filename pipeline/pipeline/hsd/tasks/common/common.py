@@ -1,12 +1,11 @@
-import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.logging as logging
+#import pipeline.infrastructure.singledish as singledish
 from pipeline.domain.datatable import DataTableImpl as DataTable
 
 import os
 
-LOG = infrastructure.get_logger(__name__)
-
+LOG = logging.get_logger(__name__)
 
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
@@ -64,8 +63,10 @@ class SingleDishInputs(basetask.StandardInputs):
     def vis(self):
         return None
 
-class SingleDishResults(api.Results):
+class SingleDishResults(basetask.Results):
     def __init__(self, task=None, success=None, outcome=None):
+        super(SingleDishResults, self).__init__()
+        self.task = task
         self.success = success
         self.outcome = outcome
         self.error = set()
@@ -78,7 +79,8 @@ class SingleDishResults(api.Results):
         return absolute_path(self.outcome)
 
     def __repr__(self):
-        s = '%s:\n\toutcome is %s'%(self.task,self._outcome_name())
+        #taskname = self.task if hasattr(self,'task') else 'none'
+        s = 'SingleDishResults:\n\toutcome is %s'%(self._outcome_name())
         return s
 
 class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
