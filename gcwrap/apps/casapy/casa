@@ -164,6 +164,8 @@ function set_A_ARCH {
 
 
 function set_A_ROOT {
+    display_debugging_message "in set_A_ROOT at entry, A_ROOT = $A_ROOT"
+    display_debugging_message "in set_A_ROOT at entry, CASAPATH = $CASAPATH"
     # Ignore any previous values.
     local result="`echo ${CASAPATH} | awk '{print $1}'`"
     if [ "x$result" = "x" ]; then
@@ -180,6 +182,7 @@ function set_A_ROOT {
         readonly A_ROOT="$result"
     fi
     ensure_directory_exists "$A_ROOT" "A_ROOT"
+    display_debugging_message "in set_A_ROOT at exit, A_ROOT = $A_ROOT"
 }
 
 
