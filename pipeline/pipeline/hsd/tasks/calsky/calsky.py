@@ -6,7 +6,7 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.jobrequest import casa_tasks
-from ..common import common
+from .. import common
 
 LOG = logging.get_logger(__name__)
 
