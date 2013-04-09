@@ -587,7 +587,7 @@ msmetadata* ms::metadata(const bool preload, const float cachesize) {
 }
 
 ::casac::record*
-ms::summary(bool verbose, const std::string& listfile)
+ms::summary(bool verbose, const string& listfile, bool listunfl)
 {
   ::casac::record *header;
   try {
@@ -596,6 +596,7 @@ ms::summary(bool verbose, const std::string& listfile)
        // pass the original MS name to the constructor
        // so that it is correctly printed in the output
        MSSummary mss(itsMS, itsOriginalMS->tableName());
+       mss.setListUnflaggedRowCount(listunfl);
        casa::Record outRec;
        if (listfile != ""){
     	   File diskfile(listfile);

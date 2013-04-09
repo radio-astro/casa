@@ -53,13 +53,13 @@ class listobs_test1(unittest.TestCase):
             
     def test1(self):
         '''Listobs 1: Input MS'''
-        self.res = listobs(vis=msfile1)
+        self.res = listobs(vis=msfile1, listunfl=True)
         self.assertEqual(self.res, None, "Return value should be None")
 
     def test2(self):
         '''Listobs 2: CSV-591. Check if long field names are fully displayed'''
         ms.open(msfile1)
-        res = ms.summary(True)
+        res = ms.summary(True, listunfl=True)
         ms.close()
         name = res['field_0']['name']
         self.assertFalse(name.__contains__('*'), "Field name contains a *")
@@ -69,7 +69,7 @@ class listobs_test1(unittest.TestCase):
     def test3(self):
         '''Listobs 3: CAS-2751. Check that ALMA MS displays one row per scan'''
         ms.open(msfile2)
-        res = ms.summary(True)
+        res = ms.summary(True, listunfl=True)
         ms.close()
         # Begin and end times should be different
         btime = res['scan_1']['0']['BeginTime']
@@ -82,7 +82,7 @@ class listobs_test1(unittest.TestCase):
         reference = reffile+'4'
         diff = "difflistobs4"
         
-        listobs(vis=msfile2, verbose=True, listfile=output)
+        listobs(vis=msfile2, verbose=True, listfile=output, listunfl=True)
 #        # Remove the name of the MS from output before comparison
         os.system("sed '1,3d' "+ output+ ' > '+ out)    
         os.system("diff "+reference+" "+out+" > "+diff)    
@@ -99,7 +99,7 @@ class listobs_test1(unittest.TestCase):
         diff2 = "diff2listobs5"
         
 #        # Run it twice to check for the precision change
-        self.res = listobs(vis=msfile1, verbose = False, listfile=output)
+        self.res = listobs(vis=msfile1, verbose = False, listfile=output, listunfl=True)
 #        # Remove the name of the MS from output before comparison
         os.system("sed '1,3d' "+ output+ ' > '+ out)    
         os.system("diff "+reference+" "+out+" > "+diff1)    
@@ -108,7 +108,7 @@ class listobs_test1(unittest.TestCase):
                         'See the diff file %s.'%(out,reference, diff1))
         
         os.system('rm -rf '+output+ " "+out)
-        self.res = listobs(vis=msfile1, verbose = False, listfile=output)
+        self.res = listobs(vis=msfile1, verbose = False, listfile=output, listunfl=True)
 #        # Remove the name of the MS from output before comparison
         os.system("sed '1,3d' "+ output+ ' > '+ out)        
         os.system("diff "+reference+" "+out+" > "+diff2)    
@@ -122,7 +122,7 @@ class listobs_test1(unittest.TestCase):
         out = "newobs6.txt"
         diff = "difflistobs6"
         reference = reffile+'6'
-        self.res = listobs(vis=msfile1, listfile=output, verbose = True)
+        self.res = listobs(vis=msfile1, listfile=output, verbose = True, listunfl=True)
 #        # Remove the name of the MS from output before comparison
         os.system("sed '1,3d' "+ output+ ' > '+ out)        
         os.system("diff "+reference+" "+out+" > "+diff)    
@@ -137,7 +137,7 @@ class listobs_test1(unittest.TestCase):
         out = "newobs7.txt"
         diff = "difflistobs7"
         reference = reffile+'7'
-        self.res = listobs(vis=msfile1, scan='2', listfile=output, verbose=True)
+        self.res = listobs(vis=msfile1, scan='2', listfile=output, verbose=True, listunfl=True)
 #        # Remove the name of the MS from output before comparison
         os.system("sed '1,3d' "+ output+ ' > '+ out)        
         os.system("diff "+reference+" "+out+" > "+diff)    
@@ -151,7 +151,7 @@ class listobs_test1(unittest.TestCase):
         out = "newobs8.txt"
         diff = "difflistobs8"
         reference = reffile+'8'
-        self.res = listobs(vis=msfile1, antenna='3&&4', listfile=output, verbose=True)
+        self.res = listobs(vis=msfile1, antenna='3&&4', listfile=output, verbose=True, listunfl=True)
 #        # Remove the name of the MS from output before comparison
         os.system("sed '1,3d' "+ output+ ' > '+ out)        
         os.system("diff "+reference+" "+out+" > "+diff)    

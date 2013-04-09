@@ -91,7 +91,10 @@
 			<description>Name of disk file to write output: \'\'==>to terminal</description>
 			<value></value>
 		</param>
-
+        <param type="bool" direction="in" name="listunfl">
+            <description>List unflagged row counts? If true, it can have significant negative performance impact.</description>
+            <value>False</value>
+        </param>
             <constraints>      
                 <when param="selectdata">
                     <equals type="bool" value="True">
@@ -183,6 +186,8 @@
              
        listfile -- name of disk file to write output.
                default: None. Example: listfile='list.txt'
+               
+       listunfl -- List unflagged row counts? If true, it can have significant negative performance impact.
 
 
       The 'Int (s)' column is the average of the MS's INTERVAL column
@@ -191,6 +196,8 @@
       9.83s integrations. 
       
     DESCRIPTION OF ALGORITHM TO CALCULATE THE NUMBER OF UNFLAGGED ROWS
+    The number of unflagged rows are only computed if listunfl=True. Computing these quantity
+    can have a negative performance impact, especially for large datasets.
     The number of unflagged rows (the nUnflRows columns in the scans and fields portions of the listing) is
     calculated by summing the fractional unflagged bandwidth for each row (and hence why the number of unflagged
     rows, in general, is not an integer). Thus a row which has half of its
