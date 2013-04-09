@@ -29,6 +29,7 @@
 #include <iostream>
 #include <sstream>
 
+
 using namespace std;
 
 namespace casa {
@@ -106,7 +107,18 @@ SearcherSQLite::SearcherSQLite( const string& databasePath):
 		filterNames[FILTER_AGB_PPN_PN] = FILTER_AGB_PPN_PN_COLUMN;
 		filterNames[FILTER_EXTRAGALACTIC] = FILTER_EXTRAGALACTIC_COLUMN;
 	}
+	else {
+		cout << "Could not open database from path "<<databasePath.c_str()<<endl;
+	}
 	reset();
+}
+
+bool SearcherSQLite::isConnected() const {
+	bool connected = false;
+	if ( db != NULL ){
+		connected = true;
+	}
+	return connected;
 }
 
 void SearcherSQLite::setSearchResultLimit( int limit ){

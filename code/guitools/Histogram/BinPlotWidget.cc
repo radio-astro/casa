@@ -514,7 +514,6 @@ void BinPlotWidget::setDisplayLogY( bool display ){
 				maxBinCount = minMaxBinCount.second;
 			}
 			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLog10ScaleEngine );
-			binPlot.setAxisScale( QwtPlot::yLeft, minBinCount, maxBinCount );
 		}
 		else {
 			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLinearScaleEngine );
@@ -1238,7 +1237,7 @@ void BinPlotWidget::makeHistogram( int id, const QColor& curveColor,
 		bool clearCurves ){
 	defineCurve( id, curveColor, clearCurves );
 	if ( isPrincipalHistogram( id ) ){
-		setValidatorLimits();
+
 		vector<float> xVector = histogramMap[id]->getXValues();
 		vector<float> yVector = histogramMap[id]->getYValues();
 		if ( fitWidget != NULL ){
@@ -1250,19 +1249,15 @@ void BinPlotWidget::makeHistogram( int id, const QColor& curveColor,
 		if ( rangeControlWidget != NULL ){
 			pair<float,float> limits = histogramMap[id]->getDataRange();
 			rangeControlWidget->setDataLimits( limits.first, limits.second );
+			//We have to redraw the rectangle range marker if the histogram data has
+			//changed.
+			minMaxChanged();
 		}
 	}
 	update();
 }
 
-void BinPlotWidget::setValidatorLimits(){
-	if ( rangeControlWidget != NULL ){
-		if ( histogramMap.contains(selectedId)){
-			pair<float,float> rangeLimits = histogramMap[selectedId]->getDataRange();
-			rangeControlWidget->setDataLimits( rangeLimits.first, rangeLimits.second);
-		}
-	}
-}
+
 
 void BinPlotWidget::clearCurves(){
 	while( ! curves.isEmpty() ){
