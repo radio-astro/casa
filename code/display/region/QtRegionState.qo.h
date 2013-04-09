@@ -222,7 +222,7 @@ namespace casa {
 			QtPVLineState( const QString &name,
 						   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
 						   Region *region=0, QWidget *parent=0 );
-			QString STATISTICS_MODE( ) const { return "Generate"; }
+			QString STATISTICS_MODE( ) const { return "pV"; }
 
 	};
 
