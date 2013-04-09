@@ -136,6 +136,7 @@ casa = { 'build': {
 if os.environ.has_key('CASAPATH') :
     __casapath__ = os.environ['CASAPATH'].split(' ')[0]
     if not os.path.exists(__casapath__ + "/data") :
+        print "DEBUG: CASAPATH = %s" % (__casapath__)
         raise RuntimeError, "Unable to find the data repository directory in your CASAPATH. Please fix."
     else :
         casa['dirs']['root'] = __casapath__
