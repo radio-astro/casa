@@ -8,9 +8,10 @@ import types
 import re
 
 import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.domain as domain
+from pipeline.infrastructure import casa_tasks
 from ... import heuristics
 
 import asap as sd
@@ -90,14 +91,6 @@ class SDImportDataResults(basetask.Results):
         self.scantables = scantables
         
     def merge_with_context(self, context):
-        # There's a circular dependency between the SD domain objects and the
-        # SD tasks. Work around the circular dependency (listed below) by 
-        # importing at runtime.
-        # 
-        # domain -> domain.singledish -> hsd -> hsd.tasks -> hsd.tasks.importdata -> domain
-        LOG.todo('Remove circular dependency between tasks and domain objects?')
-        import pipeline.domain as domain
-
         if not isinstance(context.observing_run, domain.ScantableList):
             context.observing_run = domain.ScantableList()
             context.callibrary = callibrary.SDCalLibrary(context)
