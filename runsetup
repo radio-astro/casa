@@ -39,4 +39,5 @@ fi
 else
 PYTHONEXEC=python
 fi
+export PYTHONPATH=$CASAARCH
 $PYTHONEXEC setup.py install --install-lib=$CASAARCH --install-data=$CASAARCH --force
