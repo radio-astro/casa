@@ -10,7 +10,7 @@ from . import common
 from . import gaincal
 from . import gtypegaincal
 
-form pipeline.h.heuristics import echoheuristic as echoheuristic
+from pipeline.h.heuristics import echoheuristic as echoheuristic
 from pipeline.hif.heuristics import solint as phaseupsolint
 from pipeline.hif.heuristics import bandpass as mediansnr
 
