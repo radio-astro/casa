@@ -2,18 +2,18 @@ import sys
 
 from taskinit import casalog
 
-#import pipeline.cli.utils as utils
 import pipeline.h.cli.utils as utils
 
 
-def hsd_calsky(pipelinemode=None, infiles=None, scanlist=None, iflist=None,
-               pollist=None, dryrun=None, acceptresults=None):
+def hsd_calsky(pipelinemode=None, infiles=None, calmode=None, field=None,
+               scanlist=None, iflist=None, pollist=None,
+               dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDCalibration'
+    task_name = 'SDCalSky'
     
     ##########################################################################
     #                                                                        #
