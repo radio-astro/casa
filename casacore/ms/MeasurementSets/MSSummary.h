@@ -155,7 +155,7 @@ public:
 // List table size summary
    void listTables (LogIO& os, Bool verbose=False) const;
 
-
+   void setListUnflaggedRowCount(Bool v) { _listUnflaggedRowCount = v; }
 private:
 // Pointer to MS
    const MeasurementSet* pMS;
@@ -172,6 +172,8 @@ private:
 
    // Name of the MS used in the constructor
    String msname_p;
+
+   Bool _listUnflaggedRowCount;
 
 
 };
