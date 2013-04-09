@@ -11,6 +11,7 @@
 # NOTE: This script is NOT used to start CASA from a Mac app.  It is used for
 # All Linux environments, and developer environments on OS X.
 
+echo "JENKINS DEBUG: PWD=$PWD"
 echo "JENKINS DEBUG: CASAPATH=$CASAPATH"
 
 #
