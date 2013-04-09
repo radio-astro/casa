@@ -12,6 +12,7 @@ from . import domain
 from . import h
 from . import hco
 from . import hif
+from . import hsd
 
 from .infrastructure import Pipeline, Context
 
@@ -42,9 +43,9 @@ def _get_unified_task_module(packages):
             module.__dict__[k] = v
     return module
 
-LOG.warn('Don\'t forget to add hsd.tasks to pipeline.__init__.py once the SD '
-         'tasks are working!')
-tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks])
+#LOG.warn('Don\'t forget to add hsd.tasks to pipeline.__init__.py once the SD '
+#         'tasks are working!')
+tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks])
 
 
 def show_weblog(context):
