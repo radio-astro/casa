@@ -289,7 +289,7 @@ void QtRegionState::updateStatistics( std::list<std::tr1::shared_ptr<RegionInfo>
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
 		if ( ! memory::nullptr.check((*stat_iter)->list( )) ) {
-			if ( first->updateStatisticsInfo( *stat_iter ) == false )
+			if ( cur->updateStatisticsInfo( *stat_iter ) == false )
 				statisticsUpdate( cur, *stat_iter );
 		}
 		prev->setNext( statistics_group, cur );
