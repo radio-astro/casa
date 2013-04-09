@@ -118,7 +118,7 @@ def plotweather(vis='', seasonal_weight=0.5, doPlot=True, plotName = ''):
         mytemp=tb.getcol('TEMPERATURE') - 273.15
         mydew=tb.getcol('DEW_POINT') - 273.15
         mywinds=tb.getcol('WIND_SPEED')
-        mywindd=tb.getcol('WIND_DIRECTION')*(180.0/pi)
+        mywindd=tb.getcol('WIND_DIRECTION')*(180.0/pi) - 90
         mypres=tb.getcol('PRESSURE')
         myhum=tb.getcol('REL_HUMIDITY')
         tb.close()
