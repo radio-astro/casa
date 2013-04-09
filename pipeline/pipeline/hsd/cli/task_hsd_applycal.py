@@ -2,14 +2,15 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_inspectdata(pipelinemode=None, infiles=None, dryrun=None,
-                   acceptresults=None):
+def hsd_applycal(pipelinemode=None, infiles=None, field=None,
+                 scanlist=None, iflist=None, pollist=None,
+                 dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'SDInspectData'
+    task_name = 'SDApplyCal'
     
     ##########################################################################
     #                                                                        #

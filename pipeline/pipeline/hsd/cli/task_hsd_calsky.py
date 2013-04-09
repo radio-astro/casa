@@ -1,9 +1,6 @@
 import sys
 
-from taskinit import casalog
-
 import pipeline.h.cli.utils as utils
-
 
 def hsd_calsky(pipelinemode=None, infiles=None, calmode=None, field=None,
                scanlist=None, iflist=None, pollist=None,
