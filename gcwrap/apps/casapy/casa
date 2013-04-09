@@ -274,6 +274,7 @@ function set_CASA_INSTALLATION_DIRECTORY {
 
 
 function set_CASAPATH {
+    display_debugging_message "in set_CASAPATH at entry, CASAPATH = $CASAPATH"
     if [ "x${CASAPATH}" = "x" ]; then
         export readonly CASAPATH="$A_ROOT $A_ARCH $A_SITE $HOSTNAME"
     else
@@ -284,7 +285,7 @@ function set_CASAPATH {
             export readonly CASAPATH="${CASAPATH} $A_SITE $HOSTNAME"
         fi
     fi
-    display_debugging_message "in set_CASAPATH, CASAPATH = $CASAPATH"
+    display_debugging_message "in set_CASAPATH at exit, CASAPATH = $CASAPATH"
 }
 
 
