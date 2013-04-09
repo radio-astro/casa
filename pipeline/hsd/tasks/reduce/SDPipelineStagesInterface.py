@@ -686,7 +686,8 @@ class SDPipelineStagesInterface( SDLogger ):
         # UnPack meta data created at initial stage
         if self.engine.USE_CASA_TABLE:
             #import heuristics.hsd.SDDataTable as SDDataTable
-            import pipeline.hsd.heuristics.SDDataTable as SDDataTable
+            #import pipeline.hsd.heuristics.SDDataTable as SDDataTable
+            import SDDataTable
             # load path to DataTable
             dtname = pickle.load(M_file)
             (self.ROW, self.ROWbase, self.SCAN, self.SCANbase, self.IF, self.POL, \

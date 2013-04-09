@@ -4,6 +4,7 @@ import os
 import re
 
 import pipeline.infrastructure.api as api
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.basetask import timestamp
 
@@ -265,8 +266,9 @@ class SDReductionInputs(api.Inputs):
         return ret
         
 
-class SDReductionResults(api.Results):
+class SDReductionResults(basetask.Results):
     def __init__(self, success):
+        super(SDReductionResults,self).__init__()
         self.success = success
         self.error = set()
         # TODO: relative path must be obtained in some way
@@ -340,7 +342,8 @@ class SDReduction(api.Task):
         html_dir = os.path.join( inputs.context.report_dir, 'sd' )
         
         #import heuristics.hsd.SDPipelineStagesInterface as SI
-        from pipeline.hsd.tasks.common import SDPipelineStagesInterface as SI
+        #from pipeline.hsd.tasks.common import SDPipelineStagesInterface as SI
+        from . import SDPipelineStagesInterface as SI
         si = SI.SDPipelineStagesInterface(rawDir=inputs.input_dir,
                                           outDir=inputs.output_dir,
                                           htmlDir=html_dir,
