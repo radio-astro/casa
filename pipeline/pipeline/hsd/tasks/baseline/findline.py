@@ -9,6 +9,7 @@ import pipeline.infrastructure.api as api
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.logging as logging
+import pipeline.h.heuristics as heuristics
 from .. import common
 from . import utils
 from . import rules
