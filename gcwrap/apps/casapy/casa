@@ -274,17 +274,17 @@ function set_CASA_INSTALLATION_DIRECTORY {
 
 
 function set_CASAPATH {
-    # In most cases, CASAPATH will be set before this script starts, but it will
-    # only contain the first two fields.
     if [ "x${CASAPATH}" = "x" ]; then
         export readonly CASAPATH="$A_ROOT $A_ARCH $A_SITE $HOSTNAME"
     else
-        # CASAPATH is already set.  Don't break it, just append missing items.
-        if [ "$((`echo $CASAPATH | sed 's/[^ ]//g' | wc -c`-1))" = 1 ]; then
+        # In most cases, CASAPATH will be set before this script starts, but it will
+        # only contain the first two fields.  Don't break it, just append new data.
+        spaces=`grep -o " " <<< "${CASAPATH}" | wc -l`
+        if [ "${spaces}" = "1" ]; then
             export readonly CASAPATH="${CASAPATH} $A_SITE $HOSTNAME"
         fi
     fi
-    display_debugging_message "CASAPATH = $CASAPATH"
+    display_debugging_message "in set_CASAPATH, CASAPATH = $CASAPATH"
 }
 
 
