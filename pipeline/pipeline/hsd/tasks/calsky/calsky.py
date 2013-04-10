@@ -4,9 +4,9 @@ import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.basetask as basetas
+import pipeline.infrastructure.basetask as basetask
 #import pipeline.infrastructure.logging as logging
-from pipeline.infrastructure.jobrequest import casa_tasks
+from pipeline.infrastructure import casa_tasks
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)

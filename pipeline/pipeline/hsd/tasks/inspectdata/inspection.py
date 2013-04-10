@@ -4,7 +4,7 @@ import re
 
 import pipeline.infrastructure as infrastructure
 #import pipeline.infrastructure.logging as logging
-import pipeline.infrastructure.jobrequest as jobrequest
+from pipeline.infrastructure import JobRequest
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
 from . import reader
@@ -98,10 +98,10 @@ class SDInspectData(common.SingleDishTaskTemplate):
         infiles = inputs.infiles
         if isinstance(infiles, list):
             for f in infiles:
-                job = jobrequest.JobRequest(worker.execute, name=f)
+                job = JobRequest(worker.execute, name=f)
                 self._executor.execute(job)
         else:
-            job = jobrequest.JobRequest(worker.execute, name=infiles)
+            job = JobRequest(worker.execute, name=infiles)
             self._executor.execute(job)
 
         # finally, export DataTable
@@ -134,7 +134,7 @@ class SDInspectData(common.SingleDishTaskTemplate):
                                             datatable)
 
         # analyse datatable with observing_run
-        job = jobrequest.JobRequest(worker.execute)
+        job = JobRequest(worker.execute)
         self._executor.execute(job)
 
         # update result
