@@ -1,17 +1,16 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.api as api
+import os
+
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.basetask as basetas
+#import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.jobrequest import casa_tasks
 from .. import common
 
-LOG = logging.get_logger(__name__)
-
-import os
-import asap as sd
+LOG = infrastructure.get_logger(__name__)
+#logging.set_logging_level('trace')
 
 class SDCalSkyInputs(common.SingleDishInputs):
     """

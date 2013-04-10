@@ -1,11 +1,14 @@
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
-#import pipeline.infrastructure.singledish as singledish
-from pipeline.domain.datatable import DataTableImpl as DataTable
+from __future__ import absolute_import
 
 import os
 
-LOG = logging.get_logger(__name__)
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+#import pipeline.infrastructure.logging as logging
+from pipeline.domain.datatable import DataTableImpl as DataTable
+
+LOG = infrastructure.get_logger(__name__)
+#logging.set_logging_level('trace')
 
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))

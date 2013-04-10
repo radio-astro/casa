@@ -5,20 +5,17 @@ import os
 from math import cos, sqrt
 import numpy
 
-import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.jobrequest as jobrequest
-import pipeline.infrastructure.logging as logging
+#import pipeline.infrastructure.logging as logging
 from .. import common
 from . import utils
-#from . import constants
 
-LOG = logging.get_logger(__name__)
-logging.set_logging_level('trace')
+LOG = infrastructure.get_logger(__name__)
+#logging.set_logging_level('trace')
 
 subsqr = lambda x, y: (x - y) * (x - y)
-#NoData = constants.NoData
 NoData = -32767.0
 
 class SDSimpleGridInputs(common.SingleDishInputs):
