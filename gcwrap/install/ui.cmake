@@ -120,7 +120,7 @@ macro( casa_add_tasks module _target )
 
   install( 
     FILES ${_xmls}
-    DESTINATION ${CMAKE_INSTALL_PREFIX}/xml
+    DESTINATION ${casaroot}/share/xml
     )
 
   install( 

@@ -136,7 +136,6 @@ casa = { 'build': {
 if os.environ.has_key('CASAPATH') :
     __casapath__ = os.environ['CASAPATH'].split(' ')[0]
     if not os.path.exists(__casapath__ + "/data") :
-        print "DEBUG: CASAPATH = %s" % (__casapath__)
         raise RuntimeError, "Unable to find the data repository directory in your CASAPATH. Please fix."
     else :
         casa['dirs']['root'] = __casapath__
@@ -689,12 +688,12 @@ def update_params(func, printtext=True, ipython_globals=None):
 	   if (has_task) :
 		pathname=myf['task_location'][myf['taskname']]
 	   else :
-	        pathname = os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml'
+	        pathname = os.environ.get('CASAPATH').split()[0]+'/share/xml'
                 if not os.path.exists(pathname) :
                    pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
                 
 	else :
-	   pathname = os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml'
+	   pathname = os.environ.get('CASAPATH').split()[0]+'/share/xml'
            if not os.path.exists(pathname) :
               pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
         xmlfile=pathname+'/'+myf['taskname']+'.xml'
