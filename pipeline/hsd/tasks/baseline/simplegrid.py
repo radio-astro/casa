@@ -7,8 +7,8 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.jobrequest as jobrequest
 #import pipeline.infrastructure.logging as logging
+from pipeline.infrastructure import JobRequest
 from .. import common
 from . import utils
 
@@ -92,7 +92,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
             worker = SimpleGridding(datatable, spw, srctype, grid_size, file_index)
             
             # create job
-            job = jobrequest.JobRequest(worker.execute) 
+            job = JobRequest(worker.execute) 
             
             # execute job
             results = self._executor.execute(job)
