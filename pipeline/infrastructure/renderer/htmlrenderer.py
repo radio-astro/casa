@@ -116,11 +116,11 @@ def get_task_description(result_obj):
         names = datatable.getkeyword('FILENAMES')
         return 'Inspect %s'%(utils.commafy(names))
 
-    #if task_cls is hsd.tasks.SDCalTsys:
-        #return 'Generage Tsys calibration table'
+    if task_cls is hsd.tasks.SDCalTsys:
+        return 'Generage Tsys calibration table'
 
-    #if task_cls is hsd.tasks.SDCalSky:
-        #return 'Generage Sky calibration table'
+    if task_cls is hsd.tasks.SDCalSky:
+        return 'Generage Sky calibration table'
 
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
@@ -1427,8 +1427,8 @@ renderer_map = {
         hif.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
         hsd.tasks.SDInspectData  : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_inspectdata.html'),
-#         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
-#         hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html')
+        hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
+        hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html')
     }
 }                
 
