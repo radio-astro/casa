@@ -47,17 +47,6 @@ def __coldesc( vtype, option, maxlen,
         d['keywords'] = {'UNIT': unit }
     return d
 
-# List of table columns
-TD_NAME = [
-    #'ID',
-    'ROW', 'SCAN', 'IF', 'POL', 'BEAM', 'DATE',
-    'TIME', 'ELAPSED', 'EXPOSURE', 'RA', 'DEC',
-    'AZ', 'EL', 'NCHAN', 'TSYS', 'TARGET', 'STATISTICS',
-    'FLAG', 'FLAG_PERMANENT', 'FLAG_SUMMARY',
-    'NMASK', 'MASKLIST', 'NOCHANGE', 'ANTENNA', 'SRCTYPE',
-    'POSGRP', 'TIMEGRP_S', 'TIMEGRP_L'
-    ]
-
 # Description for data table columns as dictionary.
 # Each value is a tuple containing:
 #
@@ -239,7 +228,7 @@ class DataTableImpl( object ):
         # copy input table to memory
         self._copyfrom( name, minimal )
         self.plaintable = absolute_path(name)
-        self._initcols2()
+        self.__init_cols(readonly=True)
 
     def exportdata( self, name=None, minimal=True, overwrite=False ):
         """
@@ -288,73 +277,30 @@ class DataTableImpl( object ):
                          memtype='memory',
                          nrow=self.nrow )
         self.isopened = True
-        self._initcols()
+        self.__init_cols(readonly=False)
 
-    def _initcols( self ):
+    def __init_cols(self, readonly=True):
         self.cols.clear()
-        self.cols = {
-            'ROW': RWDataTableColumn(self.tb1,'ROW',int),
-            'SCAN': RWDataTableColumn(self.tb1,'SCAN',int),
-            'IF': RWDataTableColumn(self.tb1,'IF',int),
-            'POL': RWDataTableColumn(self.tb1,'POL',int),
-            'BEAM': RWDataTableColumn(self.tb1,'BEAM',int),
-            'DATE': RWDataTableColumn(self.tb1,'DATE',str),
-            'TIME': RWDataTableColumn(self.tb1,'TIME',float),
-            'ELAPSED': RWDataTableColumn(self.tb1,'ELAPSED',float),
-            'EXPOSURE': RWDataTableColumn(self.tb1,'EXPOSURE',float),
-            'RA': RWDataTableColumn(self.tb1,'RA',float),
-            'DEC': RWDataTableColumn(self.tb1,'DEC',float),
-            'AZ': RWDataTableColumn(self.tb1,'AZ',float),
-            'EL': RWDataTableColumn(self.tb1,'EL',float),
-            'NCHAN': RWDataTableColumn(self.tb1,'NCHAN',int),
-            'TSYS': RWDataTableColumn(self.tb1,'TSYS',float),
-            'TARGET': RWDataTableColumn(self.tb1,'TARGET',str),
-            'STATISTICS': RWDataTableColumn(self.tb2,'STATISTICS',list),
-            'FLAG': RWDataTableColumn(self.tb2,'FLAG',list),
-            'FLAG_PERMANENT': RWDataTableColumn(self.tb2,'FLAG_PERMANENT',list),
-            'FLAG_SUMMARY': RWDataTableColumn(self.tb2,'FLAG_SUMMARY',int),
-            'NMASK': RWDataTableColumn(self.tb2,'NMASK',int),
-            'MASKLIST': DataTableColumnMaskList(self.tb2),
-            'NOCHANGE': DataTableColumnNoChange(self.tb2),
-            'ANTENNA': RWDataTableColumn(self.tb1,'ANTENNA',int),
-            'SRCTYPE': RWDataTableColumn(self.tb1,'SRCTYPE',int),
-            'POSGRP': RWDataTableColumn(self.tb2, 'POSGRP',int),
-            'TIMEGRP_S': RWDataTableColumn(self.tb2, 'TIMEGRP_S',int),
-            'TIMEGRP_L': RWDataTableColumn(self.tb2, 'TIMEGRP_L',int)
-            }
-
-    def _initcols2( self ):
-        self.cols.clear()
-        self.cols = {
-            'ROW': RODataTableColumn(self.tb1,'ROW',int),
-            'SCAN': RODataTableColumn(self.tb1,'SCAN',int),
-            'IF': RODataTableColumn(self.tb1,'IF',int),
-            'POL': RODataTableColumn(self.tb1,'POL',int),
-            'BEAM': RODataTableColumn(self.tb1,'BEAM',int),
-            'DATE': RODataTableColumn(self.tb1,'DATE',str),
-            'TIME': RODataTableColumn(self.tb1,'TIME',float),
-            'ELAPSED': RODataTableColumn(self.tb1,'ELAPSED',float),
-            'EXPOSURE': RODataTableColumn(self.tb1,'EXPOSURE',float),
-            'RA': RODataTableColumn(self.tb1,'RA',float),
-            'DEC': RODataTableColumn(self.tb1,'DEC',float),
-            'AZ': RODataTableColumn(self.tb1,'AZ',float),
-            'EL': RODataTableColumn(self.tb1,'EL',float),
-            'NCHAN': RODataTableColumn(self.tb1,'NCHAN',int),
-            'TSYS': RODataTableColumn(self.tb1,'TSYS',float),
-            'TARGET': RODataTableColumn(self.tb1,'TARGET',str),
-            'STATISTICS': RWDataTableColumn(self.tb2,'STATISTICS',list),
-            'FLAG': RWDataTableColumn(self.tb2,'FLAG',list),
-            'FLAG_PERMANENT': RWDataTableColumn(self.tb2,'FLAG_PERMANENT',list),
-            'FLAG_SUMMARY': RWDataTableColumn(self.tb2,'FLAG_SUMMARY',int),
-            'NMASK': RWDataTableColumn(self.tb2,'NMASK',int),
-            'MASKLIST': DataTableColumnMaskList(self.tb2),
-            'NOCHANGE': DataTableColumnNoChange(self.tb2),
-            'ANTENNA': RODataTableColumn(self.tb1,'ANTENNA',int),
-            'SRCTYPE': RODataTableColumn(self.tb1,'SRCTYPE',int),
-            'POSGRP': RWDataTableColumn(self.tb2, 'POSGRP',int),
-            'TIMEGRP_S': RWDataTableColumn(self.tb2, 'TIMEGRP_S',int),
-            'TIMEGRP_L': RWDataTableColumn(self.tb2, 'TIMEGRP_L',int)
-            }
+        if readonly:
+            RO_COLUMN = RODataTableColumn
+            RW_COLUMN = RWDataTableColumn
+        else:
+            RO_COLUMN = RWDataTableColumn
+            RW_COLUMN = RWDataTableColumn
+        type_map = {'integer': int,
+                    'double': float,
+                    'string': str}
+        dtype = lambda desc: list if desc.has_key('ndim') and desc['ndim'] > 0 \
+                                  else type_map[desc['valueType']]
+        for (k,v) in TABLEDESC_RO.items():
+            self.cols[k] = RO_COLUMN(self.tb1,k,dtype(v))
+        for (k,v) in TABLEDESC_RW.items():
+            if k == 'MASKLIST':
+                self.cols[k] = DataTableColumnMaskList(self.tb2)
+            elif k == 'NOCHANGE':
+                self.cols[k] = DataTableColumnNoChange(self.tb2)
+            else:
+                self.cols[k] = RW_COLUMN(self.tb2,k,dtype(v))
 
     def _close( self ):
         if self.isopened:
@@ -380,7 +326,6 @@ class DataTableImpl( object ):
         tbloc.close()
         del tbloc
         self.isopened = True
-        #self.nrow = self.tb1.nrows()
 
     def get_posdict(self, ant, spw, pol):
         posgrp_list = self.getkeyword('POSGRP_LIST')
@@ -651,3 +596,4 @@ def __interpolate(v, t, tref):
         t1 = t[idx+1] - tref
         t0 = tref - t[idx]
         return (v[idx+1] * t0 - v[idx] * t1) / (t[idx+1] - t[idx]) 
+
