@@ -10141,7 +10141,7 @@ used to create a 2D temporary image.
             <value/>
         </param>
         <param type="int" name="width">
-            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be >= 1 (1 means only use the pixels along the slice).</description>
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer >= 1 (1 means only use the pixels along the slice).</description>
             <value>1</value>
         </param>
         <param type="string" name="unit">
@@ -10186,8 +10186,9 @@ used to create a 2D temporary image.
         or the entire spectral range of the input image if no region is specified. One may not specify a region
         in direction space; that is accomplished by specifying the start and end points of the slice.
         
-        One may specify a width (must be >= 1), which is the number of pixels centered along and perpendicular
-        to the direction slice that are used for averaging along the slice (1, the default, represents no averaging).
+        One may specify a width (must be an odd integer >= 1), which is the number of pixels centered along and perpendicular
+        to the direction slice that are used for averaging along the slice. The default value of 1 represents no averaging).
+        A value of 3 means average one pixel on each side of the slice and the pixel on the slice. 
         Note that this width is applied to pixels in the image after it has been rotated (see below for a description
         of the algorithm used).
         

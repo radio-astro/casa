@@ -2516,8 +2516,8 @@ image* image::pv(
 		if (end.size() != 2) {
 			*_log << "end must have exactly two elements" << LogIO::EXCEPTION;
 		}
-		if (width < 1) {
-			*_log << "width must be >= 1." << LogIO::EXCEPTION;
+		if (width % 2 == 0) {
+			*_log << "width must be an odd integer >= 1." << LogIO::EXCEPTION;
 		}
 		if (outfile.empty() && ! wantreturn) {
 			*_log << LogIO::WARN << "outfile was not specified and wantreturn is false. "

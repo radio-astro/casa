@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <example>[200,300]</example>
         </param>
         <param type="int" name="width">
-            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be >= 1 (1 means only use the pixels along the slice).</description>
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer >= 1 (1 means only use the pixels along the slice).</description>
             <value>1</value>
         </param>
         <param type="string" name="unit">
@@ -100,6 +100,9 @@ start            The starting pixel in the direction plane (array of two values)
 end              The ending pixel in the direction plane (array of two values), such as [200, 300].
 width            Width, in pixels, for averaging pixels perpendicular to the slice.
                  This value is determined after rotating the image so the slice lies horizontally.
+                 A value of one means no averaging. A value of 3 means average one pixel on each
+                 side of the slice and the pixel on the slice. A value of 5 means average 2 pixels
+                 on each side of the slice and the pixel on the slice, etc.
 unit             Allows the user to set the unit for the angular offset axis. Must be a unit of angular
                  measure.
 overwrite        If output file is specified, this parameter controls if an already existing file by the
@@ -119,8 +122,9 @@ stretch          Stretch the input mask if necessary and possible. Only used if 
         or the entire spectral range of the input image if no region is specified. One may not specify a region
         in direction space; that is accomplished by specifying the start and end points of the slice.
         
-        One may specify a width (must be >= 1), which is the number of pixels centered along and perpendicular
-        to the direction slice that are used for averaging along the slice (1, the default, represents no averaging).
+        One may specify a width (must be an odd integer >= 1), which is the number of pixels centered along and perpendicular
+        to the direction slice that are used for averaging along the slice. The default value of 1 represents no averaging).
+        A value of 3 means average one pixel on each side of the slice and the pixel on the slice. 
         Note that this width is applied to pixels in the image after it has been rotated (see below for a description
         of the algorithm used).
         
