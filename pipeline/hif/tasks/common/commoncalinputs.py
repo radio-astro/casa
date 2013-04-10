@@ -206,7 +206,9 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         # application, get the appropriate intent to use from that list  
         if not isinstance(self.vis, list) and isinstance(self._to_intent, list):
             idx = self._my_vislist.index(self.vis)
-            return self._to_intent[idx]
+	    # Not sure why we need this logic.
+            #return self._to_intent[idx]
+            return self._to_intent
 
         # if to_intent was manually specified as a single value, return it
         if type(self.vis) is types.StringType and type(self._to_intent) is types.StringType:
