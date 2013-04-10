@@ -127,7 +127,14 @@ class MandatoryInputsMixin(object):
 
         ms_names = [ms.name 
                     for ms in self.context.observing_run.measurement_sets]
-        return ms_names[0] if len(ms_names) == 1 else ms_names
+	if len(ms_names) == 1:
+            return ms_names[0]
+	else:
+	    if not hasattr (self, '_my_vislist'):
+                LOG.trace('Setting Inputs._my_vislist to %s' % ms_names)
+                print 'Setting Inputs._my_vislist to ',  ms_names
+                self._my_vislist = ms_names
+	    return ms_names
 
     @vis.setter    
     def vis(self, value):
@@ -136,8 +143,10 @@ class MandatoryInputsMixin(object):
             for vis in value:
                 # get_ms throws a KeyError if the ms is not in the context 
                 self.context.observing_run.get_ms(name=vis)
-            LOG.trace('Setting Inputs._my_vislist to %s' % value)
-            self._my_vislist = value 
+	    if not hasattr (self, '_my_vislist'):
+                LOG.trace('Setting Inputs._my_vislist to %s' % value)
+                print 'Setting Inputs._my_vislist to ', value 
+                self._my_vislist = value 
 
         self._vis = value
 
