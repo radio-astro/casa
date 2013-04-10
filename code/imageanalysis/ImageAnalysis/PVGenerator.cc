@@ -85,10 +85,10 @@ void PVGenerator::setEndpoints(
 	(*_end)[1] = endy;
 }
 
-void PVGenerator::setWidth(const Double width) {
-	if (width < 1) {
+void PVGenerator::setWidth(uInt width) {
+	if (width % 2 == 0) {
 		*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE)
-			<< "width must be >= 1" << LogIO::EXCEPTION;
+			<< "width must be odd." << LogIO::EXCEPTION;
 	}
 	_width = width;
 }

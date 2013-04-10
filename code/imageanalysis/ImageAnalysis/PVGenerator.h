@@ -98,15 +98,11 @@ public:
 	);
 
 	// Set the number of pixels perpendicular to the slice for which averaging
-	// should occur. Must be >= 1. 1 => just use the pixels coincident with the slice
+	// should occur. Must be odd and >= 1. 1 => just use the pixels coincident with the slice
 	// (no averaging). 3 => Average three pixels, one pixel on either side of the slice and the
 	// pixel lying on the slice.
-	// Note this average is done after the image has been rotated, so <src>width</src> is
-	// a Double rather than an Int because in some cases increasing or decreasing width by
-	// < 1 can cause inclusion or exclusion of more of the pixels in the original image, although
-	// it is not a trivial calculation to figure out exactly what pixels will be included, since
-	// those pixels are based on the angle of the slice.
-	void setWidth(const Double width);
+	// Note this average is done after the image has been rotated.
+	void setWidth(uInt width);
 
 	String getClass() const;
 
@@ -128,7 +124,7 @@ protected:
 
 private:
 	std::auto_ptr<vector<Double> > _start, _end;
-	Double _width;
+	uInt _width;
 	String _unit;
 	static const String _class;
 
