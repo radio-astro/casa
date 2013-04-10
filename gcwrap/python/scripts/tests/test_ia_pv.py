@@ -75,7 +75,7 @@ import numpy
 datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imageanalysis/ImageAnalysis/'
 
 def run_ia_pv(
-    imagename, outfile, start, end, halfwidth
+    imagename, outfile, start, end, width
 ):
     myia = iatool()
     myia.open(imagename)
@@ -83,17 +83,17 @@ def run_ia_pv(
         myia.done()
         raise Exception
     res = myia.pv(
-        outfile=outfile, start=start, end=end, halfwidth=halfwidth
+        outfile=outfile, start=start, end=end, width=width
     )
     myia.done()
     return res
 
 def run_impv(
-    imagename, outfile, start, end, halfwidth
+    imagename, outfile, start, end, width
 ):
     return impv(
         imagename=imagename, outfile=outfile, start=start,
-        end=end, halfwidth=halfwidth
+        end=end, width=width
     )
 
 
@@ -134,11 +134,11 @@ class ia_pv_test(unittest.TestCase):
         self.assertTrue(len(tb.showcache())== 0)
         pv = iatool()
         for code in [run_ia_pv, run_impv]:
-            # no halfwidth
+            # no width
             outfile = "test_pv_" + str(code)
             xx = code(
                 imagename=imagename, outfile=outfile, start=[2, 5],
-                end=[7, 5], halfwidth=0
+                end=[7, 5], width=1
             )
             if (type(xx) == type(ia)):
                 xx.done()
@@ -159,11 +159,11 @@ class ia_pv_test(unittest.TestCase):
             # the position offset axis always has units of arcsec, the units
             # in the input image were arcmin
             self.assertTrue((abs(gotinc - expinc) < 1e-5).all())
-            # halfwidth
+            # width > 1
             outfile = "test_pv_1_" + str(code)
             xx = code(
                 imagename=imagename, outfile=outfile, start=[2, 5],
-                end=[7, 5], halfwidth=1
+                end=[7, 5], width=3
             )
             if (type(xx) == type(ia)):
                 xx.done()
