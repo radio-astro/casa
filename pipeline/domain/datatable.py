@@ -29,6 +29,7 @@ import numpy
 from taskinit import gentools
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -121,42 +122,8 @@ TABLEDESC_RW = __tabledescrw()
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 
-#def cast_type_get( v ):
-#    t = type(v)
-#    st = str(t)
-#    #print 'input type: %s'%(st)
-#    tmp = string.Template('<type \'numpy.${base}${n}\'>')
-#    if re.match(tmp.safe_substitute(base='int',n='[0-9]+'),st):
-#        val = int(v)
-#    elif re.match(tmp.safe_substitute(base='float',n='[0-9]+'),st) \
-#         or re.match(tmp.safe_substitute(base='double',n='.*'),st):
-#        val = float(v)
-#    elif re.match(tmp.safe_substitute(base='ndarray',n='.*'),st):
-#        val = v.tolist()
-#    else:
-#        val = v
-#    #print 'output type: %s'%(type(val))
-#    return val
-
-#def cast_type_put( v ):
-#    t = type(v)
-#    st = str(t)
-#    #print 'input type: %s'%(st)
-#    tmp = string.Template('<type \'numpy.${base}${n}\'>')
-#    if re.match(tmp.safe_substitute(base='int',n='[0-9]+'),st):
-#        val = int(v)
-#    elif re.match(tmp.safe_substitute(base='float',n='[0-9]+'),st) \
-#         or re.match(tmp.safe_substitute(base='double',n='.*'),st):
-#        val = float(v)
-#    elif re.match('<type \'list\'>',st):
-#        val = numpy.array(v)
-#    else:
-#        val = v
-#    #print 'output type: %s'%(type(val))
-#    return val
-
 class DataTableImpl( object ):
-    def __init__( self, name=None, nrow=0 ):
+    def __init__(self, name=None):
         """
         nrow -- number of rows
         """
@@ -170,7 +137,6 @@ class DataTableImpl( object ):
         (self.tb1,self.tb2) = gentools( ['tb','tb'] )
         self.isopened = False
         self.isselected = False
-        self.nrow = nrow
         if name is None or len(name) == 0:
             self._create()
         elif not os.path.exists(name):
@@ -186,13 +152,19 @@ class DataTableImpl( object ):
         self._close()
 
     def __len__( self ):
-        return self.tb1.nrows()
+        return self.nrow
+
+    @property
+    def nrow(self):
+        if self.isopened:
+            return self.tb1.nrows()
+        else:
+            return 0
 
     def get_row_index_simple(self, col, val):
         vals = self.getcol(col)
-        nrow = self.nrows()
         r = []
-        for i in xrange(nrow):
+        for i in xrange(self.nrow):
             if vals[i] == val:
                 r.append(i)
         return r
@@ -200,23 +172,19 @@ class DataTableImpl( object ):
     def get_row_index(self, antenna, ifno, polno=None):
         ants = self.getcol('ANTENNA')
         ifs = self.getcol('IF')
-        nrow = self.nrows()
         if polno is None:
             r = []
-            for i in xrange(nrow):
+            for i in xrange(self.nrow):
                 if ants[i] == antenna and ifs[i] == ifno:
                     r.append(i)
             return r
         else:
             pols = self.getcol('POL')
             r = []
-            for i in xrange(nrow):
+            for i in xrange(self.nrow):
                 if ants[i] == antenna and ifs[i] == ifno and pols[i] == polno:
                     r.append(i)
             return r
-
-    def nrows( self ):
-        return self.tb1.nrows()
 
     def has_key(self, name):
         return (name in self.tb2.keywordnames())
@@ -412,7 +380,7 @@ class DataTableImpl( object ):
         tbloc.close()
         del tbloc
         self.isopened = True
-        self.nrow = self.tb1.nrows()
+        #self.nrow = self.tb1.nrows()
 
     def get_posdict(self, ant, spw, pol):
         posgrp_list = self.getkeyword('POSGRP_LIST')
@@ -512,12 +480,45 @@ class DataTableImpl( object ):
             timegap = [mygap_s, mygap_l]
         return timegap
     
+    def _update_tsys(self, infile, tsystable, ifmap):
+        with casatools.TableReader(tsystable) as tb:
+            ifnos = tb.getcol('IFNO')
+            polnos = tb.getcol('POLNO')
+            times = tb.getcol('TIME')
+            tsys = {}
+            for i in xrange(tb.nrows()):
+                tsys[i] = tb.getcell('TSYS',i)
+        if_from = ifmap.keys()
+        pollist = numpy.unique(polnos)
+        file_list = self.getkeyword('FILENAMES').tolist()
+        ant = file_list.index(os.path.basename(infile.rstrip('/')))
+        for ifno_from in if_from:
+            for polno in pollist:
+                indices = numpy.where(numpy.logical_and(ifnos==ifno_from,polnos==polno))[0]
+                if len(indices) == 0:
+                    continue
+
+                for ifno_to in ifmap[ifno_from]:
+                    atsys = [tsys[i].mean() for i in indices]
+                    rows = self.get_row_index(ant, ifno_to, polno)
+                    if len(atsys) == 1:
+                        for row in rows:
+                            self.tb1.putcell('TSYS', row, atsys[0])
+                    else:
+                        tsys_time = times.take(indices)
+                        for row in rows:
+                            tref = self.tb1.getcell('TIME', row)
+                            itsys = __interpolate(atsys, tsys_time, tref)
+                            self.tb1.putcell('TSYS', row, itsys)                
 
 class RODataTableColumn( object ):
     def __init__( self, table, name, dtype ):
         self.tb = table
         self.name = name
-        self.caster = dtype
+        self.caster_get = dtype
+
+    def __repr__(self):
+        return '%s("%s","%s")'%(self.__class__.__name__,self.name,self.caster_get)
 
     def getcell( self, idx ):
         return self.caster_get(self.tb.getcell(self.name, idx))
@@ -634,3 +635,19 @@ class DataTableColumnMaskList( RWDataTableColumn ):
         for i in xrange(startrow,nrow,rowincr):
             self.putcell(i,numpy.array(val[idx]))
             idx += 1
+
+def __interpolate(v, t, tref):
+    n = len(t)
+    idx = -1
+    for i in xrange(n):
+        if t[i] >= tref:
+            break
+        idx += 1
+    if idx < 0:
+        return v[0]
+    elif idx >= n-1:
+        return v[-1]
+    else:
+        t1 = t[idx+1] - tref
+        t0 = tref - t[idx]
+        return (v[idx+1] * t0 - v[idx] * t1) / (t[idx+1] - t[idx]) 
