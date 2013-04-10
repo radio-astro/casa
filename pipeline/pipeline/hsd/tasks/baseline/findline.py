@@ -5,18 +5,17 @@ import time
 from math import sqrt
 import numpy
 
-import pipeline.infrastructure.api as api
-import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.jobrequest as jobrequest
-import pipeline.infrastructure.logging as logging
+#import pipeline.infrastructure.logging as logging
 import pipeline.h.heuristics as heuristics
 from .. import common
 from . import utils
 from . import rules
 
-LOG = logging.get_logger(__name__)
-LogLevel='trace'
-logging.set_logging_level(LogLevel)
+LOG = infrastructure.get_logger(__name__)
+#LogLevel='trace'
+#logging.set_logging_level(LogLevel)
 
 class DetectLine(object):
     LineFinder = 'HEURISTICS' #'ASAP'

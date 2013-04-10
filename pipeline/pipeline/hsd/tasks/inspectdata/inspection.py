@@ -2,18 +2,16 @@ from __future__ import absolute_import
 
 import re
 
-import pipeline.infrastructure.api as api
-import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
+#import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.jobrequest as jobrequest
 from pipeline.domain.datatable import DataTableImpl as DataTable
-from pipeline.domain.datatable import DataTableColumnMaskList as ColMaskList
 from .. import common
 from . import reader
 from . import analyser
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+#logging.set_logging_level('trace')
 
 import os
 import asap as sd

@@ -5,12 +5,13 @@ import numpy
 
 from asap import srctype as st
 
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure as infrastructure
+#import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casatools as casatools
-#import pipeline.hsd.heuristics as heuristics
 from ... import heuristics
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+#logging.set_logging_level('trace')
 
 class DataTableAnalyser(object):
     def __init__(self, scantablelist, datatable):

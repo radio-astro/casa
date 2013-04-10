@@ -1,14 +1,14 @@
 from __future__ import absolute_import
 
-import pipeline.infrastructure.api as api
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
-import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
-import pipeline.infrastructure.logging as logging
+#import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure.jobrequest import casa_tasks
 from .. import common
 
-LOG = logging.get_logger(__name__)
+LOG = infrastructure.get_logger(__name__)
+#logging.set_logging_level('trace')
 
 import os
 import asap as sd
