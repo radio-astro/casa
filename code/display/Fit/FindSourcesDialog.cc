@@ -308,15 +308,13 @@ void FindSourcesDialog::setSourceResultsVisible( bool visible ){
 			resultIndex = holderIndex;
 			dialogLayout->removeWidget( ui.sourceResultHolder );
 			ui.sourceResultHolder->setParent( NULL );
-			setMinimumSize(600,150);
-			setMaximumSize(700,200);
+			setMaximumSize(600,400);
 		}
 	}
 	else {
 		if ( holderIndex < 0 ){
 			dialogLayout->insertWidget( resultIndex, ui.sourceResultHolder );
-			setMinimumSize( 950, 400 );
-			setMaximumSize( 1200, 600);
+			setMaximumSize( 3000, 3000 );
 		}
 	}
 	ui.saveButton->setVisible( visible );
