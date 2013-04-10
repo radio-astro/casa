@@ -64,7 +64,7 @@
 	    <value>False</value>
 	</param>
 
-	<param type="string" name="filetemplate" subparam="true">
+	<param type="stringArray" name="filetemplate" subparam="true">
 	    <description>File that contains the flagging template</description>
 	    <value></value>
 	</param>
@@ -138,7 +138,7 @@
 	    <when param="template">
 	        <equals type="bool" value="False" />
 	        <equals type="bool" value="True">
-		    <default param="filetemplate"><value type="string"></value></default>
+		    <default param="filetemplate"><value type="stringArray"></value></default>
 	        </equals>
 	    </when>
 
