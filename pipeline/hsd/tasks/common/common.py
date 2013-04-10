@@ -83,7 +83,7 @@ class SingleDishResults(basetask.Results):
 
     def __repr__(self):
         #taskname = self.task if hasattr(self,'task') else 'none'
-        s = 'SingleDishResults:\n\toutcome is %s'%(self._outcome_name())
+        s = '%s:\n\toutcome is %s'%(self.__class__.__name__,self._outcome_name())
         return s
 
 class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
