@@ -47,7 +47,8 @@ class CommonBandpassInputs(commoncalinputs.CommonCalibrationInputs):
         
         if not isinstance(self.vis, list) and isinstance(self._intent, list):
             idx = self._my_vislist.index(self.vis)
-            return self._intent[idx]
+            #return self._intent[idx]
+            return self._intent
 
         if type(self.vis) is types.StringType and type(self._intent) is types.StringType:
             return self._intent        
