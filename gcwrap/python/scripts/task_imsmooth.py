@@ -101,6 +101,7 @@ def imsmooth(
                       +" smoothed image will be\nsaved on disk in file, " \
                       + outfile, 'WARN')
     _myia = iatool()
+    retia = iatool()
     _myia.open(imagename)
     mycsys = _myia.coordsys()
     reg = rg.frombcs(
@@ -110,12 +111,25 @@ def imsmooth(
     _myia.done()
     # If the values given are integers we assume they are given in
     # arcsecs and alter appropriately
-    if type( major ) == int:
+    if isinstance(major, (int, long, float)):
         major=str(major)+'arcsec'
-    if type( minor ) == int:
-        minor=str(minor)+'arcsec'                
+    if isinstance(minor, (int, long, float)):
+        minor=str(minor)+'arcsec'
+    if isinstance(pa, (int, long, float)):
+        pa=str(pa)+'deg'
+        
     try:       
         if ( kernel.startswith( "gaus" ) ):
+            if (beam and (major or minor or pa)):
+                raise Exception, "You may specify only beam or the set of major/minor/pa"
+            if not beam:
+                if not major:
+                    raise Exception, "Major axis must be specified"
+                if not minor:
+                    raise Exception, "Minor axis must be specified"
+                if not pa:
+                    raise Exception, "Position angle must be specified"
+
             # GAUSSIAN KERNEL
             casalog.post( "Calling convolve2d with Gaussian kernel", 'NORMAL3' )
             _myia.open( imagename )
@@ -125,11 +139,11 @@ def imsmooth(
                 mask=mask, stretch=stretch, targetres=targetres,
                 overwrite=overwrite, beam=beam
             )
-            _myia.done()
-            retia.done()
-            retValue = True
+            return True
 
         elif (kernel.startswith( "box" ) ):
+            if not major or not minor:
+                raise Exception, "Both major and minor must be specified."
             # BOXCAR KERNEL
             #
             # Until convolve2d supports boxcar we will need to
@@ -157,16 +171,15 @@ def imsmooth(
                 mask=mask, stretch=stretch,
                 overwrite=overwrite
             )
-            _myia.done()
-            retia.done()
-            retValue = True
+            return True
         else:
             casalog.post( 'Unrecognized kernel type: ' + kernel, 'SEVERE' )
-            retValue = False
+            return False
         
     except Exception, instance:
+        casalog.post("Exception: " + str(instance), 'SEVERE')
+        raise
+    finally:
         _myia.done()
         retia.done()
-        casalog.post("Exception: " + str(instance), 'SEVERE')
-        raise instance
-    return retValue
+    
