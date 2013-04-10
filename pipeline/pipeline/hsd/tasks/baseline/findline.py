@@ -15,6 +15,7 @@ from . import rules
 
 LOG = infrastructure.get_logger(__name__)
 #LogLevel='trace'
+LogLevel='info'
 #logging.set_logging_level(LogLevel)
 
 class DetectLine(object):

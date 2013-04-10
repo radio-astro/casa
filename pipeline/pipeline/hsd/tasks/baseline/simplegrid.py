@@ -13,7 +13,9 @@ from .. import common
 from . import utils
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
+#LogLevel='trace'
+LogLevel='info'
+#logging.set_logging_level(LogLevel)
 
 subsqr = lambda x, y: (x - y) * (x - y)
 NoData = -32767.0
