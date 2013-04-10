@@ -103,8 +103,8 @@ class ia_pv_test(unittest.TestCase):
         self.ia = iatool()
     
     def tearDown(self):
-        pass
-       #  self.assertTrue(len(tb.showcache()) == 0)
+        #pass
+        self.assertTrue(len(tb.showcache()) == 0)
     
     def test_pv(self):
         """ ia.pv(): Test pv()"""
@@ -247,6 +247,26 @@ class ia_pv_test(unittest.TestCase):
 
         myia.done()
         xx.done()
+        
+    def test_fits(self):
+        """ia.pv(): Test exporting and importing to/from FITS"""
+        myia = self.ia
+        myia.open(datapath + "pv1.im")
+        xx = myia.pv(start = [30, 30], end = [250, 250])
+        expec = ["OFFSET", "Frequency", "Stokes"]
+        outfile = "zz.fits"
+        xx.tofits(outfile)
+        myia.open(outfile)
+        got = myia.coordsys().names()
+        print "got " + str(got)
+        self.assertTrue(got == expec)
+        xx.tofits(outfile, velocity=True, overwrite=True)
+        xx.done()
+        myia.open(outfile)
+        got = myia.coordsys().names()
+        myia.done()
+        self.assertTrue(got == expec)
+        
         
     
 def suite():
