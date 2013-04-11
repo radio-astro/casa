@@ -94,10 +94,10 @@ class GaincalWorker(basetask.StandardTaskTemplate):
         # create the data selection target defining which data this caltable 
         # should calibrate 
         calto = callibrary.CalTo(vis=inputs.vis,
-                                 field=inputs.to_field,
-                                 intent=inputs.to_intent,
-                                 spw=orig_spw,
-                                 antenna=orig_antenna)
+                                 spw=orig_spw)
+                                 #field=inputs.to_field,
+                                 #intent=inputs.to_intent,
+                                 #antenna=orig_antenna)
 
         # create the calfrom object describing which data should be selected
         # from this caltable when applied to other data. Set the table name
