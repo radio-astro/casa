@@ -134,7 +134,7 @@ class DataTableAnalyser(object):
         srt = self.datatable.getcol('SRCTYPE')
         spw = self.datatable.getcol('IF')
         pol = self.datatable.getcol('POL')
-        for i in xrange(self.datatable.nrows()):
+        for i in xrange(self.datatable.nrow):
             thisant = ant[i]
             thisspw = spw[i]
             thispol = pol[i]
