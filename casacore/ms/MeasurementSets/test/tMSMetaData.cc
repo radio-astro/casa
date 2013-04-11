@@ -29,7 +29,6 @@
 #include <casa/aips.h>
 
 #include <ms/MeasurementSets/MSMetaDataOnDemand.h>
-#include <ms/MeasurementSets/MSMetaDataPreload.h>
 
 #include <casa/BasicMath/StdLogical.h>
 #include <casa/OS/Directory.h>
@@ -1143,9 +1142,9 @@ int main() {
     	split(EnvironmentVariable::get("CASAPATH"), parts, 2, String(" "));
     	String datadir = parts[0] + "/data/";
     	casa::MeasurementSet ms(datadir + "regression/unittest/MSMetaData/MSMetaData.ms");
-    	cout << "*** test preload constructor" << endl;
-    	MSMetaDataPreload md(ms);
-    	testIt(md);
+    	//cout << "*** test preload constructor" << endl;
+    	//MSMetaDataPreload md(ms);
+    	//testIt(md);
     	cout << "*** test on-demand constructor" << endl;
     	MSMetaDataOnDemand md1(&ms, 100);
 		cout << "*** cache size " << md1.getCache() << endl;
