@@ -96,14 +96,14 @@ Generate a gain table based on Water Vapour Radiometer data and flag bad antenna
 	<value>1.</value>
     </param>
 
-    <param type="string" name="flag_intent" subparam="true">
+    <param type="string" name="flag_intent">
         <description>Data intents to use in detecting and flagging bad wvr antennas</description>
         <value>*BANDPASS*</value>
     </param>
 
     <param type="string" name="qa2_intent">
         <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
-        <value>*PHASE*</value>
+        <value>*PHASE*,*BANDPASS*</value>
     </param>
 
     <param type="string" name="qa2_bandpass_intent">
