@@ -67,20 +67,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 MSSummary::MSSummary (const MeasurementSet& ms)
 : pMS(&ms), _msmd(new MSMetaDataOnDemand(&ms, 50.0)),
   dashlin1(replicate("-",80)),
-  dashlin2(replicate("=",80))
+  dashlin2(replicate("=",80)),
+  _listUnflaggedRowCount(False)
 {}
 
 MSSummary::MSSummary (const MeasurementSet* ms)
 : pMS(ms), _msmd(new MSMetaDataOnDemand(ms, 50.0)),
   dashlin1(replicate("-",80)),
-  dashlin2(replicate("=",80))
+  dashlin2(replicate("=",80)),
+  _listUnflaggedRowCount(False)
 {}
 
 MSSummary::MSSummary (const MeasurementSet* ms, const String msname)
 : pMS(ms), _msmd(new MSMetaDataOnDemand(ms, 50)),
   dashlin1(replicate("-",80)),
   dashlin2(replicate("=",80)),
-  msname_p(msname)
+  msname_p(msname),
+  _listUnflaggedRowCount(False)
 {}
 //
 // Destructor does nothing
@@ -140,7 +143,6 @@ void MSSummary::list (LogIO& os, Record& outRec, Bool verbose, Bool fillRecord) 
 {
 	// List a title for the Summary
 	listTitle (os);
-
 	// List the main table as well as the subtables in a useful order and format
 	listWhere (os,verbose);
 	listWhat (os,outRec, verbose, fillRecord);
@@ -237,7 +239,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	Double exposTime = stopTime - startTime;
 	//    Double exposTime = sum(msc.exposure().getColumn());
 	MVTime startMVT(startTime/86400.0), stopMVT(stopTime/86400.0);
-
 	ROMSMainColumns msmc(*pMS);
 	String timeref=msmc.time().keywordSet().subRecord("MEASINFO").asString("Ref");
 
@@ -249,7 +250,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			<< " (" << timeref << ")"
 			<< endl << endl;
 	os << LogIO::POST;
-
 	if(fillRecord){
 		outRec.define("numrecords", nrow());
 		outRec.define("IntegrationTime", exposTime);
@@ -282,7 +282,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	mssel.setMS(const_cast<MeasurementSet&>(*pMS));
 	mssel.initSelection(True);
 	Table mstab(mssel.selectedTable());
-
 	// Field names:
 	ROMSFieldColumns field(pMS->field());
 	Vector<String> fieldnames(field.name().getColumn());
@@ -307,7 +306,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	Int widthnrow = 10;
 	Int widthNUnflaggedRow = 13;
 	//Int widthInttim = 7;
-
 	// Set up iteration over OBSID and ARRID:
 	Block<String> icols(2);
 	icols[0] = "OBSERVATION_ID";
@@ -318,7 +316,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 	const Int maxRecLength=10000; //limiting for speed and size sake
 	// Iterate:
 	while (!obsarriter.pastEnd()) {
-
 		// Table containing this iteration:
 		Table obsarrtab(obsarriter.table());
 		// Extract (zero-based) OBSID and ARRID for this iteration:
@@ -326,7 +323,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		Int obsid(obsidcol(0));
 		ROTableVector<Int> arridcol(obsarrtab,"ARRAY_ID");
 		Int arrid(arridcol(0));
-
 		if (verbose) {
 			// Report OBSID and ARRID, and header for listing:
 			os << endl << "   ObservationID = " << obsid;
@@ -337,7 +333,12 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			datetime.replace(25+timeref.length(),1,")");
 			os << datetime;
 			os << "Scan  FldId FieldName "
-					<<"            nRows     nUnflRows   SpwIds   Average Interval(s)    ScanIntent" << endl;
+					<<"            nRows     ";
+			if (_listUnflaggedRowCount) {
+				os << "nUnflRows   ";
+			}
+			os << "SpwIds   Average Interval(s)    ScanIntent" << endl;
+
 		}
 
 		/* CAS-2751. Sort the table by scan then field (not timestamp)
@@ -348,7 +349,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		jcols[0] = "SCAN_NUMBER";
 		jcols[1] = "FIELD_ID";
 		TableIterator stiter(obsarrtab,jcols);
-
 		// Vars for keeping track of time, fields, and ddis
 		Int lastscan(-1);
 		Vector<Int> lastfldids;
@@ -367,7 +367,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 		Int thisnrow(0);
 		Double meanIntTim(0.0);
 
-
 		os.output().precision(3);
 		Int subsetscan=0;
 		// Iterate over scans/fields:
@@ -377,7 +376,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			// ms table at this scan
 			Table t(stiter.table());
 			Int nrow=t.nrow();
-
 			// relevant columns
 			ROTableVector<Double> timecol(t,"TIME");
 			ROTableVector<Double> inttim(t,"EXPOSURE");
@@ -406,7 +404,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			nst=1;
 
 			nVisPerField_(fldids(0))+=nrow;
-
 			// fill field and ddi lists for this scan
 			for (Int i=1; i < nrow; i++) {
 				if ( !anyEQ(fldids,fldcol(i)) ) {
@@ -428,7 +425,6 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 				}
 
 			}
-
 			// If not first timestamp, check if scan changed, etc.
 			if (!firsttime) {
 				// Has state changed?
@@ -495,13 +491,15 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 						os.output().width(widthnrow);
 						os.output().setf(ios::right, ios::adjustfield);
 						os <<  _msmd->nRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
-						ostringstream xx;
-						xx << std::fixed << setprecision(2)
-							<< _msmd->nUnflaggedRows(
-								MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0)
-							);
-						os.output().width(widthNUnflaggedRow);
-						os << xx.str();
+						if (_listUnflaggedRowCount) {
+							ostringstream xx;
+							xx << std::fixed << setprecision(2)
+								<< _msmd->nUnflaggedRows(
+									MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0)
+								);
+							os.output().width(widthNUnflaggedRow);
+							os << xx.str();
+						}
 
 						//os.output().width(widthInttim); os << meanIntTim;
 						os.output().width(widthLead); os << "  ";
@@ -654,11 +652,13 @@ void MSSummary::listMain (LogIO& os, Record& outRec, Bool verbose,
 			os.output().width(widthnrow);
 			os.output().setf(ios::right, ios::adjustfield);
 			os << _msmd->nRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
-			ostringstream xx;
-			xx << std::fixed << setprecision(2)
-				<< _msmd->nUnflaggedRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
-			os.output().width(widthNUnflaggedRow);
-			os << xx.str();
+			if (_listUnflaggedRowCount) {
+				ostringstream xx;
+				xx << std::fixed << setprecision(2)
+					<< _msmd->nUnflaggedRows(MSMetaData::BOTH, arrid, obsid, lastscan, lastfldids(0));
+				os.output().width(widthNUnflaggedRow);
+				os << xx.str();
+			}
 //			os.output().width(widthInttim); os << meanIntTim;
 			os.output().width(widthLead);  os << "  ";
 			ostringstream oss;
@@ -1288,7 +1288,6 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 		Int widthSrc   =  6;
 		Int widthnVis  =  10;
 		Int widthNUnflaggedRows = 13;
-
 		outrec.define("nfields", Int(fieldId.nelements()));
 		if (verbose) {}  // null, always same output
 
@@ -1306,8 +1305,10 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 			os.output().setf(ios::right, ios::adjustfield);
 			os.output().width(widthnVis);
 			os << "nRows";
-			os.output().width(widthNUnflaggedRows);
-			os << "nUnflRows";
+			if (_listUnflaggedRowCount) {
+				os.output().width(widthNUnflaggedRows);
+				os << "nUnflRows";
+			}
 		}
 		os << endl;
 		// loop through fields
@@ -1333,11 +1334,13 @@ void MSSummary::listField (LogIO& os, Record& outrec,  Bool verbose, Bool fillRe
 					os.output().setf(ios::right, ios::adjustfield);
 					os.output().width(widthnVis);
 					os << _msmd->nRows(MSMetaData::BOTH, fld);
-					os.output().width(widthNUnflaggedRows);
-					ostringstream xx;
-					xx << std::fixed << setprecision(2) << std::right
-						<< _msmd->nUnflaggedRows(MSMetaData::BOTH, fld);
-					os << xx.str();
+					if (_listUnflaggedRowCount) {
+						os.output().width(widthNUnflaggedRows);
+						ostringstream xx;
+						xx << std::fixed << setprecision(2) << std::right
+							<< _msmd->nUnflaggedRows(MSMetaData::BOTH, fld);
+						os << xx.str();
+					}
 				}
 				os << endl;
 				if(fillRecord){
