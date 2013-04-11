@@ -144,6 +144,10 @@ public:
 	// an exception if the zero level was not fit for.
 	void getZeroLevelSolution(vector<Double>& solution, vector<Double>& error);
 
+protected:
+    virtual inline Bool _supportsMultipleRegions() {return True;}
+
+
 private:
 	String _regionString, _residual, _model,
 		_estimatesString, _newEstimatesFileName, _compListName, _bUnit;

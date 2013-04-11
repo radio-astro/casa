@@ -206,7 +206,6 @@ private:
 	QwtPlotCurve* addCurve( QVector<double>& xValues, QVector<double>& yValues, const QColor& curveColor );
 	bool isPrintOut( int id ) const;
 	bool isPrincipalHistogram( int id ) const;
-	void setValidatorLimits();
 	bool isPlotContains( int x, int y );
 	virtual int getCanvasHeight();
 	Histogram* findHistogramFor( int id );

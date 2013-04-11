@@ -514,7 +514,6 @@ void BinPlotWidget::setDisplayLogY( bool display ){
 				maxBinCount = minMaxBinCount.second;
 			}
 			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLog10ScaleEngine );
-			binPlot.setAxisScale( QwtPlot::yLeft, minBinCount, maxBinCount );
 		}
 		else {
 			binPlot.setAxisScaleEngine( QwtPlot::yLeft, new QwtLinearScaleEngine );
@@ -585,8 +584,17 @@ void BinPlotWidget::zoomPercentage( float minValue, float maxValue ){
 		int selectedId = getSelectedId();
 		if ( histogramMap.contains( selectedId )){
 			histogramMap[selectedId]->compute();
+			//The range should not change with a zoom.  We have
+			//to reset the range marker with the zoom, but we don't
+			//want the reset to trigger a change to the actual range.
+			if ( rangeControlWidget != NULL ){
+				rangeControlWidget->setIgnoreRange(true );
+			}
 			reset();
 			zoomRangeMarker( minValue, maxValue );
+			if ( rangeControlWidget != NULL ){
+				rangeControlWidget->setIgnoreRange(false);
+			}
 		}
 	}
 	else {
@@ -612,9 +620,16 @@ void BinPlotWidget::initializeZoomControls( bool rangeControls ){
 	contextMenuMode = ZOOM_CONTEXT;
 }
 
-void BinPlotWidget::zoomRangeMarker( double startValue, double endValue ){
+void BinPlotWidget::zoomRangeMarker( double /*sValue*/, double /*eValue*/ ){
 	clearGaussianFitMarker();
 	clearPoissonFitMarker();
+	//We are ignoring the actual zoom range passed in and instead using the
+	//scale div to get a range.  This is because the plot automatically makes
+	//an adjustment so that the axis numbers come out well when you specify
+	//a zoom range.
+	QwtScaleDiv* scaleDiv = binPlot.axisScaleDiv( QwtPlot::xBottom );
+	double startValue = scaleDiv->lowerBound();
+	double endValue = scaleDiv->upperBound();
 	if ( rangeControlWidget != NULL && rectMarker != NULL ){
 		pair<double,double> worldRange = rangeControlWidget->getMinMaxValues();
 		double worldMin = qMax( worldRange.first, startValue );
@@ -622,6 +637,7 @@ void BinPlotWidget::zoomRangeMarker( double startValue, double endValue ){
 		if ( worldMin < worldMax ){
 			//Change to plot coordinates
 			int canvasWidth = binPlot.canvas()->width();
+
 			int lowerBoundPixel = static_cast<int>(qAbs(worldMin - startValue)/qAbs(endValue - startValue)*canvasWidth);
 			int upperBoundPixel = static_cast<int>(qAbs(worldMax - startValue)/qAbs(endValue - startValue)*canvasWidth);
 			rectMarker->setBoundaryValues( lowerBoundPixel, upperBoundPixel );
@@ -651,8 +667,15 @@ void BinPlotWidget::zoomRange( ){
 			int id = getSelectedId();
 			if ( histogramMap.contains(id)){
 				histogramMap[id]->compute();
+				if ( rangeControlWidget != NULL ){
+					rangeControlWidget->setIgnoreRange( true );
+				}
 				reset();
+
 				zoomRangeMarker( bounds.first, bounds.second );
+				if ( rangeControlWidget != NULL ){
+					rangeControlWidget->setIgnoreRange( false );
+				}
 			}
 		}
 		else {
@@ -1214,7 +1237,7 @@ void BinPlotWidget::makeHistogram( int id, const QColor& curveColor,
 		bool clearCurves ){
 	defineCurve( id, curveColor, clearCurves );
 	if ( isPrincipalHistogram( id ) ){
-		setValidatorLimits();
+
 		vector<float> xVector = histogramMap[id]->getXValues();
 		vector<float> yVector = histogramMap[id]->getYValues();
 		if ( fitWidget != NULL ){
@@ -1226,19 +1249,15 @@ void BinPlotWidget::makeHistogram( int id, const QColor& curveColor,
 		if ( rangeControlWidget != NULL ){
 			pair<float,float> limits = histogramMap[id]->getDataRange();
 			rangeControlWidget->setDataLimits( limits.first, limits.second );
+			//We have to redraw the rectangle range marker if the histogram data has
+			//changed.
+			minMaxChanged();
 		}
 	}
 	update();
 }
 
-void BinPlotWidget::setValidatorLimits(){
-	if ( rangeControlWidget != NULL ){
-		if ( histogramMap.contains(selectedId)){
-			pair<float,float> rangeLimits = histogramMap[selectedId]->getDataRange();
-			rangeControlWidget->setDataLimits( rangeLimits.first, rangeLimits.second);
-		}
-	}
-}
+
 
 void BinPlotWidget::clearCurves(){
 	while( ! curves.isEmpty() ){

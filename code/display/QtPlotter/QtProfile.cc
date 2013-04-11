@@ -2420,6 +2420,27 @@ void QtProfile::pixelsChanged( int pixX, int pixY ){
 	specFitSettingsWidget->pixelsChanged( pixX, pixY );
 }
 
+void QtProfile::processTrackRecord( const String& dataName, const String& positionInfo ){
+	QString imageName( image->name().c_str());
+	if ( image != NULL && imageName.indexOf( dataName.c_str()) >= 0 ){
+		QString posStr( positionInfo.c_str());
+		int pixelIndex = posStr.indexOf("Pixel:");
+		posStr = posStr.mid( pixelIndex );
+		QStringList parts = posStr.split( " ");
+		if ( parts.size() > 2 ){
+			QString pixelX = parts[1];
+			QString pixelY = parts[2];
+			bool validX = false;
+			int pixX = pixelX.toInt(&validX);
+			bool validY = false;
+			int pixY = pixelY.toInt( &validY);
+			if ( validX && validY ){
+				pixelsChanged( pixX, pixY );
+			}
+		}
+	}
+}
+
 void QtProfile::curveColorPreferences(){
 	colorSummaryWidget->show();
 }

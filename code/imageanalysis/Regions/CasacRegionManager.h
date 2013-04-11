@@ -145,6 +145,11 @@ private:
 		uInt& nSelectedChannels, const String& specification,
 		const IPosition& imShape
 	) const;
+
+	// does the image support the setting of a two dimensional box(es).
+	// If except is True, an exception will be thrown if this image does not
+	// support it. If not, False is returned in that case.
+	Bool _supports2DBox(Bool except) const;
 };
 
 } // casa namespace
