@@ -20,49 +20,50 @@ class NewGaincalInputs(gaincalmode.GaincalModeInputs):
             calphasetable=calphasetable, amptable=amptable,
             targetphasetable=targetphasetable,
             calsolint=calsolint, targetsolint=targetsolint,
-            calminsnr=calminsnr, targetminsnr=targetminsnr, **parameters)
+            calminsnr=calminsnr, targetminsnr=targetminsnr,
+	    **parameters)
 
     @property
     def calphasetable(self):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
+	if self._calphasetable is None:
+	    return gcaltable.GaincalCaltable()
+
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('calphasetable')
         return self._calphasetable
 
     @calphasetable.setter
     def calphasetable(self, value):
-        if value is None:
-            value = gcaltable.GaincalCaltable()
         self._calphasetable = value
 
     @property
     def targetphasetable(self):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
+	if self._targetphasetable is None:
+            return gcaltable.GaincalCaltable()
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('targetphasetable')
         return self._targetphasetable
 
-
     @targetphasetable.setter
     def targetphasetable(self, value):
-        if value is None:
-            value = gcaltable.GaincalCaltable()
         self._targetphasetable = value
 
     @property
     def amptable(self):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
+	if self._amptable is None:
+            return gcaltable.GaincalCaltable()
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('amptable')
         return self._amptable
 
     @amptable.setter
     def amptable(self, value):
-        if value is None:
-            value = gcaltable.GaincalCaltable()
         self._amptable = value
 
     @property
