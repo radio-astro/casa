@@ -4,7 +4,7 @@ import collections
 import numpy as np 
 import re
 
-from pipeline.hif.heuristics.tsysspwmap import tsysspwmap as tsysspwmap
+from pipeline.hif.heuristics.tsysspwmap import tsysspwmap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
@@ -15,7 +15,6 @@ from ..common import calibrationtableaccess as caltableaccess
 from ..common import viewflaggers
 
 LOG = infrastructure.get_logger(__name__)
-
 
 
 class TsysflagInputs(basetask.StandardInputs):
@@ -306,7 +305,6 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
             # Construct a callibrary entry for the results that are to be
             # merged back into the context.
             calto = callibrary.CalTo(vis=tsystable.vis)
-            #spwmap = tsysspwmap.tsysspwmap(vis=tsystable.vis, tsystable=name)
             spwmap = tsysspwmap(vis=tsystable.vis, tsystable=name)
             calfrom = callibrary.CalFrom(name, caltype='tsys', spwmap=spwmap)
             calapp = callibrary.CalApplication(calto, calfrom)
