@@ -256,7 +256,7 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
                             freq_max=to_numeric_freq(spw.max_frequency))
         return entry
         
-    def __init__(self, id=None, type=None, frame=None, nchan=None, refpix=None, refval=None, increment=None, bandwidth=None, intent=None, freq_min=None, freq_max=None, pol_association=None):
+    def __init__(self, id=None, type=None, frame=None, nchan=None, refpix=None, refval=None, increment=None, bandwidth=None, intent=None, freq_min=None, freq_max=None, pol_association=None, rest_frequencies=None):
         if increment is not None and nchan is not None:
             chan_widths = [[increment]] * nchan
         else:
