@@ -4,7 +4,8 @@ std::auto_ptr<casa::LogIO> _log;
 
 std::vector<std::string> _fieldNames(const std::set<uint>& ids);
 
-msmetadata(const casa::MeasurementSet * const & s, const bool preload, const float maxcache);
+msmetadata(const casa::MeasurementSet *const &ms, const float maxcache);
+friend msmetadata* ms::metadata(const float maxcache);
 
 bool _isAttached(const bool throwExceptionIfNotAttached=true) const;
 
@@ -22,7 +23,6 @@ static std::vector<int> _vectorUIntToVectorInt(const std::vector<casa::uInt>& in
 
 static std::vector<uint> _vectorIntToVectorUInt(const std::vector<casa::Int>& inset);
 
-friend msmetadata* ms::metadata(const bool preload, const float maxcache);
 
-void _init(const casa::MeasurementSet *const &ms, const bool preload, const float maxcache);
+void _init(const casa::MeasurementSet *const &ms, const float maxcache);
 

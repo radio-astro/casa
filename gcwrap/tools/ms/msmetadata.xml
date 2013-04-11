@@ -784,17 +784,13 @@ windows in the dataset and close the tool.
                     <description>Name of the existing measurement set</description>
                     <value/>
                 </param>
-                <param type="bool" direction="in" name="preload">
-                    <description>Preload metadata into cache? If False, ms is interrogated on demand and optionally metadata is cached. </description>
-                    <value>false</value>
-                </param>
                 <param type="float" direction="in" name="maxcache">
                     <descrition>Maximum cache size, in megabytes, to use. Only used if preload=False. </descrition>
                     <value>50</value>
                 </param>
             </input>
             <returns type="bool"/>
-            <description>Attach this tool to the specified MS</description>
+            <description>Attach this tool to the specified MS.</description>
             <example>
                 msmd.open("my.ms")
                 # do stuff and close it

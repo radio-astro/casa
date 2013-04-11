@@ -1758,10 +1758,6 @@ Date/Time:                         RR:                      RL:                 
     <returns type="msmetadata"/>
     <description>Get the MS metadata associated with this MS.</description>
     <input>
-        <param type="bool" direction="in" name="preload">
-            <description>Preload metadata into cache? If False, ms is interrogated on demand and optionally metadata is cached. </description>
-            <value>false</value>
-        </param>
         <param type="float" direction="in" name="cachesize">
             <descrition>Maximum cache size, in megabytes, to use. Only used if preload=False. </descrition>
             <value>50</value>

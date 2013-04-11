@@ -38,7 +38,6 @@
 #include <measures/Measures/MeasureHolder.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <ms/MeasurementSets/MSMetaDataOnDemand.h>
-#include <ms/MeasurementSets/MSMetaDataPreload.h>
 
 #include <casa/namespace.h>
 
@@ -526,41 +525,15 @@ record* msmetadata::observatoryposition(const int which) {
 	return 0;
 }
 
-void msmetadata::_init(const casa::MeasurementSet *const &ms, const bool preload, const float cachesize) {
-	if (preload) {
-		_msmd.reset(new MSMetaDataPreload(*ms));
-		uInt nACRows = _msmd->nRows(MSMetaData::AUTO);
-		uInt nXCRows = _msmd->nRows(MSMetaData::CROSS);
-		Double unflaggedACRows = _msmd->nUnflaggedRows(MSMetaData::AUTO);
-		Double unflaggedXCRows = _msmd->nUnflaggedRows(MSMetaData::CROSS);
-
-		*_log << LogIO::NORMAL << "Read metadata from "
-			<< _msmd->nRows() << " rows ("
-			<< (unflaggedACRows + unflaggedXCRows) << " unflagged)." << LogIO::POST;
-		*_log << LogIO::NORMAL << "  Number of cross correlation rows: "
-			<< nXCRows << " (" << unflaggedXCRows << " unflagged)"
-			<< LogIO::POST;
-		*_log << LogIO::NORMAL << "  Number of autocorrelation rows: "
-			<< nACRows << " (" << unflaggedACRows << " unflagged)"
-			<< LogIO::POST;
-	}
-	else {
-		_msmd.reset(new MSMetaDataOnDemand(ms, cachesize));
-	}
-
+void msmetadata::_init(const casa::MeasurementSet *const &ms, const float cachesize) {
+    _msmd.reset(new MSMetaDataOnDemand(ms, cachesize));
 }
 
 
-bool msmetadata::open(const string& msname, const bool preload, const float cachesize) {
+bool msmetadata::open(const string& msname, const float cachesize) {
 	_FUNC2(
-		if (preload) {
-			MeasurementSet ms(msname);
-			_init(&ms, preload, cachesize);
-		}
-		else {
-			_ms.reset(new MeasurementSet(msname));
-			_init(_ms.get(), preload, cachesize);
-		}
+    	_ms.reset(new MeasurementSet(msname));
+		_init(_ms.get(), cachesize);
 		return true;
 	)
 	return false;
@@ -735,9 +708,9 @@ msmetadata::msmetadata(const MeasurementSet& ms) : _msmd(new MSMetaDataPreload(m
 */
 
 msmetadata::msmetadata(
-	const MeasurementSet *const &ms, const bool preload, const float cachesize
+	const MeasurementSet *const &ms, const float cachesize
 ) : _msmd(0), _ms(0), _log(new LogIO()) {
-	_init(ms, preload, cachesize);
+	_init(ms, cachesize);
 }
 
 
