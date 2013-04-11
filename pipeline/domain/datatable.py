@@ -125,7 +125,6 @@ class DataTableImpl( object ):
         
         (self.tb1,self.tb2) = gentools( ['tb','tb'] )
         self.isopened = False
-        self.isselected = False
         if name is None or len(name) == 0:
             self._create()
         elif not os.path.exists(name):
@@ -136,7 +135,7 @@ class DataTableImpl( object ):
 
     def __del__( self ):
         # make sure that table is closed
-        #print '__del__ close CASA table...'
+        #LOG.debug('__del__ close CASA table...')
         self.cols.clear()
         self._close()
 
@@ -152,28 +151,18 @@ class DataTableImpl( object ):
 
     def get_row_index_simple(self, col, val):
         vals = self.getcol(col)
-        r = []
-        for i in xrange(self.nrow):
-            if vals[i] == val:
-                r.append(i)
-        return r
+        return [i for i in xrange(self.nrow) if vals[i] == val]
 
     def get_row_index(self, antenna, ifno, polno=None):
         ants = self.getcol('ANTENNA')
         ifs = self.getcol('IF')
         if polno is None:
-            r = []
-            for i in xrange(self.nrow):
-                if ants[i] == antenna and ifs[i] == ifno:
-                    r.append(i)
-            return r
+            ref = [antenna, ifno]
+            return [i for i in xrange(self.nrow) if [ants[i], ifs[i]] == ref]
         else:
             pols = self.getcol('POL')
-            r = []
-            for i in xrange(self.nrow):
-                if ants[i] == antenna and ifs[i] == ifno and pols[i] == polno:
-                    r.append(i)
-            return r
+            ref = [antenna, ifno, polno]
+            return [i for i in xrange(self.nrow) if [ants[i], ifs[i], pols[i]] == ref]
 
     def has_key(self, name):
         return (name in self.tb2.keywordnames())
@@ -223,7 +212,7 @@ class DataTableImpl( object ):
         """
         name -- name of DataTable to be imported
         """
-        print 'Importing DataTable from %s...'%(name)
+        LOG.debug('Importing DataTable from %s...'%(name))
 
         # copy input table to memory
         self._copyfrom( name, minimal )
@@ -242,25 +231,25 @@ class DataTableImpl( object ):
                 name = self.plaintable
                 overwrite = True
         
-        print 'Exporting DataTable to %s...'%(name)
+        LOG.debug('Exporting DataTable to %s...'%(name))
         # overwrite check
         abspath = absolute_path(name)
         basename = os.path.basename(abspath)
         if not os.path.exists(abspath):
             os.mkdir(abspath)
         elif overwrite:
-            print 'Overwrite existing DataTable %s...'%(name)
+            LOG.debug('Overwrite existing DataTable %s...'%(name))
             #os.system( 'rm -rf %s/*'%(abspath) )
         else:
             raise IOError('The file %s exists.'%(name))
 
         # save
         if not minimal or not os.path.exists( os.path.join(abspath,'RO') ):
-            #print 'Exporting RO table'
+            #LOG.trace('Exporting RO table')
             tbloc = self.tb1.copy( os.path.join(abspath,'RO'), deep=True,
                                    valuecopy=True, returnobject=True )
             tbloc.close()
-        #print 'Exporting RW table'
+        #LOG.trace('Exporting RW table')
         tbloc = self.tb2.copy( os.path.join(abspath,'RW'), deep=True,
                                valuecopy=True, returnobject=True )
         tbloc.close()
@@ -311,20 +300,15 @@ class DataTableImpl( object ):
     def _copyfrom( self, name, minimal=True ):
         self._close()
         abspath = absolute_path(name)
-        tbloc = gentools( ['tb'] )[0]
         if not minimal or abspath != self.plaintable:
-            tbloc.open( os.path.join(name,'RO') )
-            self.tb1 = tbloc.copy( self.memtable1, deep=True,
-                                   valuecopy=True, memorytable=True,
-                                   returnobject=True )
-            tbloc.close()
-        tbloc.open( os.path.join(name,'RW') )
-        self.tb2 = tbloc.copy( self.memtable2, deep=True,
-                              valuecopy=True, memorytable=True,
-                              returnobject=True )
-
-        tbloc.close()
-        del tbloc
+            with casatools.TableReader(os.path.join(name,'RO')) as tb:
+                self.tb1 = tb.copy( self.memtable1, deep=True,
+                                    valuecopy=True, memorytable=True,
+                                    returnobject=True )
+        with casatools.TableReader(os.path.join(name,'RW')) as tb:
+            self.tb2 = tb.copy( self.memtable2, deep=True,
+                                valuecopy=True, memorytable=True,
+                                returnobject=True )
         self.isopened = True
 
     def get_posdict(self, ant, spw, pol):
