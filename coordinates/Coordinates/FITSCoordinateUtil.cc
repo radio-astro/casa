@@ -524,8 +524,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		   << "Header\n"<< header[i] << "\nwas interpreted as\n" << tmp << LogIO::POST;
 	    }
 	    else if (
-	    	! header[i].contains("FREQ") && hsize >= 19
-	    	&& (
+            // adding the first condition (FEEQ, VRAD, VOPT) is necessary to avoid incorrect munging
+            // of position-velocity image axes.
+	    	! (header[i].contains("FREQ") || header[i].contains("VRAD") || header[i].contains("VOPT"))
+            && hsize >= 19 && (
 	    		header[i].startsWith("CTYPE1")
 	    		|| header[i].startsWith("CTYPE2")
 	    	)
