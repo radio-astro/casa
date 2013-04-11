@@ -636,10 +636,27 @@ ALMA simulation task:
     simalma is a task to simulate ALMA observation with simple interface. 
     It simulates ALMA 12m observation and optionally ACA 7m and Total power
     observations when acaratio > 0. 
-    When image=True, simulated data are imaged and analyzed. CLEAN is used
-    to generate image(s) from simulated data. ALMA 12m and ACA data are
-    combined (if both geneareted) by taking ACA image as an initial model
-    in CLEAN of ALMA 12m data.
+    When image=True, simulated data set(s) are imaged and analyzed.
+    ALMA 12m and ACA 7m data sets are concatenated (if both generated)
+    before imaging, and CLEAN is used to generate a synthesized image from
+    the concatenated data set. Interferometer and total power images (if both
+    simulated) are combined by feathering.
+    NOTE the task combines the total power image without adjusting it's
+    sensitivity to those of interferometer arrays.
+    Although this process is necessary to get reasonable images, it will be
+    done outside of CASA 4.1, and the details of the procedure are yet to
+    be established at the time of CASA 4.1 release. Once the procedure is
+    finalized, it would be described on CASA Guides, 
+    http://casaguides.nrao.edu/index.php?title=ALMAguides .
+    In case you want to process the total power image as it will be done in
+    Cycle-1, you can do so by the following 3 steps:
+    (1) run simalma once and generate images, but discard combined image,
+    '${project}.image',
+    (2) follow the steps described in CASA Guides to manipulate the total
+    power image, '${project}.sd.image', and
+    (3) run feather manually to combine '${project}.concat.image' and
+    '${project}.sd.image' (manipulated).
+
     NOTE this task is very experimental and may not exactly reproduce
     actual ALMA products.
 
