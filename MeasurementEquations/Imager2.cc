@@ -2185,27 +2185,29 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresidual
 	    if(ft_p->name()=="MosaicFT")	      
 	      cutoffval=minPB_p*minPB_p;
 	    
+	    ImageInterface<Float> * diviseur= nomemory ? &(*tempfluximage[thismodel]) : &(sm_p->fluxScale(thismodel));
+
 	    if (dofluxscale(thismodel)) {
 	      TempImage<Float> cover(modelIm.shape(),modelIm.coordinates());
 	      if(ft_p->name()=="MosaicFT")
 		se_p->getCoverageImage(thismodel, cover);
               else
-		cover.copyData(nomemory ? (*tempfluximage[thismodel]) : sm_p->fluxScale(thismodel));
+		cover.copyData(*diviseur);
 	     
 	      if(scaleType_p=="NONE"){
 		if(dorestore){
-		  LatticeExpr<Float> le(iif(cover < minPB_p, 
-					    0.0,(restored/(nomemory ?  (*tempfluximage[thismodel]) :  sm_p->fluxScale(thismodel)))));
+		  LatticeExpr<Float> le(iif(((cover > minPB_p) && ((*diviseur) >0.0)) , 
+					    (restored/(*diviseur)), 0.0));
 		  restored.copyData(le);
 		}
-		LatticeExpr<Float> le1(iif(cover < minPB_p, 
-					   0,(residIm/(nomemory ?  (*tempfluximage[thismodel]) : sm_p->fluxScale(thismodel)))));
+		    LatticeExpr<Float> le1(iif(((cover > minPB_p) && ((*diviseur) >0.0)), 
+					       (residIm/(*diviseur)), 0.0));
 		residIm.copyData(le1);
 		
 	      }
 	      
 	      //Setting the bit-mask for mosaic image
-	      LatticeExpr<Bool> lemask(iif((cover < cutoffval) , 
+	      LatticeExpr<Bool> lemask(iif((cover < minPB_p) , 
 					   False, True));
 	      if(dorestore){
 		ImageRegion outreg=restored.makeMask("mask0", False, True);
@@ -2328,8 +2330,8 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 	    coverimage.defineRegion("mask0", outreg,RegionHandler::Masks, True); 
 	    coverimage.setDefaultMask("mask0");
 	  }
-	  LatticeExpr<Bool> lemask(iif((*cover) < minPB_p, 
-				       False, True));
+	  LatticeExpr<Bool> lemask(iif(((*cover) > minPB_p) && (fluxScale > 0.0), 
+				       True, False));
 	  ImageRegion outreg=fluxScale.makeMask("mask0", False, True);
 	  LCRegion& outmask=outreg.asMask();
 	  outmask.copyData(lemask);
