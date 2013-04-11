@@ -11,10 +11,9 @@ from . import resultobjects
 from . import wvrgcalflagsetter
 
 from pipeline.hif.tasks.common import calibrationtableaccess
-from pipeline.hif.tasks.common  import viewflaggers
+from pipeline.hif.tasks.common import viewflaggers
 
 LOG = infrastructure.get_logger(__name__)
-
 
 
 class WvrgcalflagInputs(basetask.StandardInputs):
@@ -171,8 +170,16 @@ class WvrgcalflagInputs(basetask.StandardInputs):
 
     def qa2_intent(self):
         if self._qa2_intent is None:
-            return '*PHASE*,*BANDPASS*'
-        return self._qa2_intent
+            value = '*PHASE*,*BANDPASS*'
+        else:
+            value = self._qa2_intent
+        # ensure that qa2_intent includes flag_intent otherwise 
+        # the results for flag_intent will not be calculated
+        value_set = set(value.split(','))
+        value_set.update(self.flag_intent.split(','))
+        value = ','.join(value_set)
+
+        return value
 
     @qa2_intent.setter
     def qa2_intent(self, value):
@@ -343,7 +350,13 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         intent_fields = list(intent_fields)
 
         for description in result.qa2.descriptions():
-            if 'Field:%s' % intent_fields[0] in description:
+            add = False
+            for intent_field in intent_fields:
+                if 'Field:%s' % intent_field in description:
+                    add = True
+                    break
+                
+            if add:
                 self.result.addview(description, result.qa2.last(description))
  
         # copy over other info from wvrgcal result
