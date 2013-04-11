@@ -10,7 +10,6 @@ import pipeline.infrastructure.casatools as casatools
 #import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure import JobRequest
 from .. import common
-from . import utils
 
 LOG = infrastructure.get_logger(__name__)
 #LogLevel='trace'
@@ -18,7 +17,7 @@ LogLevel='info'
 #logging.set_logging_level(LogLevel)
 
 subsqr = lambda x, y: (x - y) * (x - y)
-NoData = -32767.0
+NoData = common.NoData
 
 class SDSimpleGridInputs(common.SingleDishInputs):
     """
@@ -311,7 +310,7 @@ class SimpleGridding(object):
                     else: Weight = 1.0
                     bind_to_grid[ant].append([tROW[index], ROW, Weight, tSFLAG[index]])
         # Create progress timer
-        Timer = utils.ProgressTimer(80, sum(map(len,bind_to_grid.values())), LogLevel)
+        Timer = common.ProgressTimer(80, sum(map(len,bind_to_grid.values())), LogLevel)
 
         # loop for antennas
         for AntID in data_in.keys():

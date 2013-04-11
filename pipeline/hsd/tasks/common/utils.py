@@ -45,9 +45,15 @@ class ProgressTimer(object):
 
 # parse edge parameter to tuple
 def parseEdge(edge):
-    if len(edge) == 2:
-        (EdgeL, EdgeR) = edge
-    else:
+    if isinstance(edge,int) or isinstance(edge,float):
+        EdgeL = edge
+        EdgeR = edge
+    elif len(edge) == 0:
+        EdgeL = 0
+        EdgeR = 0
+    elif len(edge) == 1:
         EdgeL = edge[0]
         EdgeR = edge[0]
+    else:
+        (EdgeL, EdgeR) = edge[:2]
     return(EdgeL, EdgeR)
