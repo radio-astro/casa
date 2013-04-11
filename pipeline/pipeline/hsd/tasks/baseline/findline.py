@@ -10,7 +10,6 @@ import pipeline.infrastructure.jobrequest as jobrequest
 #import pipeline.infrastructure.logging as logging
 import pipeline.h.heuristics as heuristics
 from .. import common
-from . import utils
 from . import rules
 
 LOG = infrastructure.get_logger(__name__)
@@ -55,7 +54,7 @@ class DetectLine(object):
         LOG.info('Processing %d spectra...' % nrow)
 
         # Set edge mask region
-        (EdgeL, EdgeR) = utils.parseEdge(edge)
+        (EdgeL, EdgeR) = common.parseEdge(edge)
         Nedge = EdgeR + EdgeL
         if Nedge >= nchan:
             LOG.error('Error: Edge masked region too large...')
@@ -102,7 +101,7 @@ class DetectLine(object):
         AvgLimit = [MinFWHM * 16, MinFWHM * 4, MinFWHM]
 
         # Create progress timer
-        Timer = utils.ProgressTimer(80, nrow, LogLevel)
+        Timer = common.ProgressTimer(80, nrow, LogLevel)
 
         for row in xrange(nrow):
             # Countup progress timer
