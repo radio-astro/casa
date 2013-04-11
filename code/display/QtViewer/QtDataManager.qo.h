@@ -35,6 +35,7 @@
 #include <casa/BasicSL/String.h>
 #include <display/QtViewer/QtLELEdit.qo.h>
 #include <display/Utilities/ImageProperties.h>
+#include <display/QtViewer/SlicerGen.qo.h>
 
 #include <graphics/X11/X_enter.h>
 #include <QDir>
@@ -144,6 +145,7 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
 
   void leaveopenButtonClicked( bool checked );
   void showlelButtonClicked( bool checked );
+  void showSliceButtonClicked( bool checked );
  
   void changeTabContext(int);
 
@@ -241,9 +243,11 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
 	    QTreeWidget *dtree_;
 	    QLineEdit *output_name_line_;
 	    notify_func_t error_func_;
+
   };
   
   void update_regrid_options( );
+  void update_slice_options( int ddtp,const QString &name );
   void fill_image_info( const std::string &/*path*/ );
 
   QWidget *parent_;
@@ -274,6 +278,8 @@ class QtDataManager : public QWidget, private Ui::QtDataManager {
   bool export_to_fits(ImageInterface<Float> *img, std::string outFile);
   bool export_to_casa(ImageInterface<Float> *img, String outFile);
   void getSpectralCoordFlags(const ImageInterface<Float>* img, Bool &preferVelocity, Bool &opticalVelocity, Bool &preferWavelength, Bool &preferAirWavelength);
+
+  viewer::SlicerGen *slice_gen;
 
 };
 

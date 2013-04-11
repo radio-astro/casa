@@ -104,6 +104,7 @@ qt4_wrap_cpp( outfiles_qoh
   QtViewer/ImageScroll.qo.h
   QtViewer/ImageManagerDialog.qo.h
   QtViewer/ImageView.qo.h
+  QtViewer/SlicerGen.qo.h
   Fit/FindSourcesDialog.qo.h
   Fit/ResidualHistogramDialog.qo.h
   Fit/Fit2DTool.qo.h
@@ -146,6 +147,7 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/printControl.ui
   QtViewer/QtAnnotatorGui.ui
   QtViewer/QtDataManager.ui
+  QtViewer/SlicerGen.ui
   QtViewer/QtExportManager.ui
   QtViewer/QtExportBrowser.ui
   QtViewer/QtDataOptionsPanel.ui
@@ -525,6 +527,7 @@ casa_add_library( display
   QtViewer/ImageScroll.cc
   QtViewer/ImageManagerDialog.cc
   QtViewer/ImageView.cc
+  QtViewer/SlicerGen.cc
   RegionShapes/DS9FileReader.cc
   RegionShapes/DS9FileWriter.cc
   RegionShapes/QtNewRegionShape.cc

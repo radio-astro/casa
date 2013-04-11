@@ -31,6 +31,7 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayDatas/MSAsRaster.h>
+#include <images/Images/SubImage.h>
 #include <images/Images/ImageInterface.h>
 #include <display/DisplayDatas/LatticeAsRaster.h>
 #include <display/DisplayDatas/LatticeAsContour.h>
@@ -110,6 +111,79 @@ void QtDisplayData::setGlobalColorOptions( bool global ){
 	QtDisplayData::globalColorSettings = global;
 }
 
+struct split_str {
+		split_str( char c ) : split_char(c) { }
+
+		operator std::vector<std::string>( ) {
+			if ( accum.size( ) > 0 ) {
+				values.push_back(accum);
+				accum.clear( );
+			}
+			return values;
+		}
+
+		void operator( )( char c ) {
+			if ( c == split_char ) {
+				if ( accum.size( ) > 0 )
+					values.push_back(accum);
+				accum.clear( );
+			} else {
+				accum.push_back(c);
+			}
+		}
+
+	private:
+		char split_char;
+		std::string accum;
+		std::vector<std::string> values;
+};
+
+struct check_str {
+
+		check_str( ) : accum(true) { }
+		operator bool( ) { return accum; }
+
+		void operator( )( const std::string &s ) {
+			std::string::const_iterator offset = std::find(s.begin(),s.end(),':');
+			if ( offset != s.end( ) &&
+				 for_each(s.begin( ),offset,check_digit( )) &&
+				 for_each(++offset,s.end( ),check_digit( )) )
+				accum = accum && true;
+			else
+				accum = false;
+		}
+
+	private:
+		struct check_digit {
+				check_digit( ) : accum(true) { }
+				operator bool( ) { return accum; }
+				void operator( )( char c ) { accum = accum && isdigit(c); }
+			private:
+				bool accum;
+		};
+		bool accum;
+};
+
+struct str_to_slicer {
+		str_to_slicer( ) { }
+		operator Slicer( ) { return Slicer( IPosition(begin), IPosition(end) ); }
+		void operator( )( const std::string &s ) {
+			std::string::const_iterator offset = std::find(s.begin(),s.end(),':');
+			begin.push_back(for_each(s.begin( ),offset,digit( )));
+			end.push_back(for_each(++offset,s.end( ),digit( )));
+		}
+	private:
+		struct digit {
+				digit( ) { }
+				operator int( ) { return atoi(accum.c_str( )); }
+				void operator ( )( char c ) { accum.push_back(c); }
+			private:
+				std::string accum;
+		};
+		
+		std::vector<int> begin;
+		std::vector<int> end;
+};
 
 QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
 		String displayType, const viewer::DisplayDataOptions &ddo,
@@ -243,6 +317,26 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 						ImageInterface<Float> *newim = ia.regrid( String(outpath), regrid_to->imageInterface( ), method, true );
 						std::auto_ptr<ImageInterface<Float> > imptr(im_);
 						im_ = newim;
+					}
+					std::string slice_description = ddo["slice"];
+					if ( slice_description != "" && slice_description != "none" ) {
+						size_t openp = slice_description.find('(');
+						size_t closep = slice_description.rfind(')');
+						if ( openp != string::npos && closep != string::npos && openp+1 < closep-1 ) {
+							try {
+								std::string str = slice_description.substr(openp+1,closep-openp-1);
+								std::vector<std::string> vec = for_each(str.begin( ),str.end( ),split_str(','));
+								if ( for_each(vec.begin( ),vec.end( ),check_str( )) ) {
+									Slicer slicer = for_each(vec.begin( ),vec.end( ),str_to_slicer( ));
+									SubImage<Float> *subim = new SubImage<Float>( (const ImageInterface<Float>&) *im_, slicer );
+									std::auto_ptr<ImageInterface<Float> > imptr(im_);
+									im_ = subim;
+								}
+							} catch( const AipsError &err ) {
+								panel_->status( "unnable to generate sub-image: " + err.getMesg( ) );
+								panel_->logIO( ) << LogIO::WARN << "unnable to generate sub-image: " << err.getMesg( ) << LogIO::POST;
+							}
+						}
 					}
 				} else if ( cim_ == 0 ) {
 					throw AipsError("Couldn't create image.");

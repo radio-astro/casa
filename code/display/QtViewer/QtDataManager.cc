@@ -34,6 +34,7 @@
 #include <tables/Tables/Table.h>
 #include <tables/Tables/TableInfo.h>
 #include <images/Images/FITSImgParser.h>
+#include <display/QtViewer/SlicerGen.qo.h>
 #include "fitsio.h"
 #include <casa/BasicSL/String.h>
 #include <casa/OS/File.h>
@@ -72,6 +73,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	setWindowTitle(name);
 
 	setupUi(this);
+
+	slice_gen = new viewer::SlicerGen( );
+	slice_gen->initialize(slice_frame);
+	slice_frame->setFrameStyle(QFrame::NoFrame);
+
 	ms_selection->setupUi(ms_selection_scroll_widget);
 	connect(cancelButton_, SIGNAL(clicked( )), SLOT(close( )));
 	connect(tabs, SIGNAL(currentChanged(int)), SLOT(changeTabContext(int)));
@@ -119,6 +125,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "false" );
 	    show_lel = "false";
 	}
+	std::string do_show_slice = rc.get("viewer." + panel_->rcid() + ".datamgr.show_slice");
+	if ( do_show_slice != "true" && do_show_slice != "false" ) {
+	    rc.put( "viewer." + panel_->rcid() + ".datamgr.show_slice", "false" );
+	    do_show_slice = "false";
+	}
+
 	std::string leave_up = rc.get("viewer." + panel_->rcid() + ".datamgr.leave_up");
 	if ( leave_up != "true" && leave_up != "false" ) {
 	    rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "true" );
@@ -139,8 +151,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    showLEL_->setChecked( true );
 	}
 
+	if ( do_show_slice == "false" ) {
+		slice_frame->hide( );
+		show_slice->setChecked( false );
+	} else {
+		show_slice->setChecked( true );
+	}
 
 	connect(showLEL_, SIGNAL(clicked(bool)), SLOT(showlelButtonClicked(bool)));
+	connect(show_slice, SIGNAL(clicked(bool)), SLOT(showSliceButtonClicked(bool)));
 
 
 	//updateButton_->setEnabled(false);	//#dk until this works.
@@ -415,6 +434,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		showDisplayButtons(uiDataType_[item->text(1)],item->text(0));
 		lelEdit_->deactivate();
 		update_regrid_options( );
+		update_slice_options(uiDataType_[item->text(1)],item->text(0));
 	    }
 	}
     }
@@ -893,6 +913,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	if ( load_tree_widget_ != 0 && load_tree_widget_->currentItem( ) != 0 &&
 	     dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]) == "image" ) {
 	    ddo.insert( "regrid", guimethod_to_iamethod(regrid_method->currentText( )) );
+		if ( slice_gen->sliceReady( ) )
+			ddo.insert( "slice", slice_gen->getSliceRep( ) );
+		else
+			ddo.insert( "slice", "none" );
 	}
 
 	panel_->createDD( path, datatype, displaytype, True, ddo, image_properties );
@@ -1064,6 +1088,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
     }
 
+	void QtDataManager::showSliceButtonClicked( bool clicked ) {
+		if ( clicked ) {
+			slice_frame->show( );
+			rc.put( "viewer." + panel_->rcid() + ".datamgr.show_slice", "true" );
+		} else {
+			slice_frame->hide( );
+			rc.put( "viewer." + panel_->rcid() + ".datamgr.show_slice", "false" );
+		}
+	}
+
     void QtDataManager::leaveopenButtonClicked( bool clicked ) {
 	if ( clicked ) {
 	    rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "true" );
@@ -1110,6 +1144,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
     }
+
+	void QtDataManager::update_slice_options( int ddtp,const QString &name ) {
+		if ( tab_info.size( ) == 0 ) init_tab_info( );
+		tab_state ts = tab_info[tabs->currentIndex( )];
+
+		if ( ddtp == IMAGE ) {
+		    std::string path = (ts.dir( )->path( ) + "/" + name).toStdString( );
+		    slice_gen->enable( path );
+		} else {
+			slice_gen->disable( );
+		}
+	}
 
     void QtDataManager::fill_image_info( const std::string &path ) {
 
