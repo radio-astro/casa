@@ -9,7 +9,6 @@ import pipeline.infrastructure.basetask as basetask
 LOG = infrastructure.get_logger(__name__)
 
 
-
 class WvrgcalFlagSetterResult(basetask.Results):
     def __init__(self):
         super(WvrgcalFlagSetterResult, self).__init__()
