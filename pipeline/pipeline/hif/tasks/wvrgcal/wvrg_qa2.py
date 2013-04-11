@@ -6,12 +6,10 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 
 from pipeline.hif.tasks.common import commonresultobjects
-
 from . import resultobjects
 
 
 LOG = infrastructure.get_logger(__name__)
-
 
 
 def calculate_qa2_numbers(result):
