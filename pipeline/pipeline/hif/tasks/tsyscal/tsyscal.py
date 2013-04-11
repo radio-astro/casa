@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 import types
 
-from pipeline.hif.heuristics import caltable as tcaltable
-from pipeline.hif.heuristics.tsysspwmap import tsysspwmap as tsysspwmap
+from pipeline.hif.heuristics import caltable as caltable_heuristic
+from pipeline.hif.heuristics.tsysspwmap import tsysspwmap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
@@ -10,7 +10,6 @@ from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 
 LOG = infrastructure.get_logger(__name__)
-
 
 
 class TsyscalInputs(basetask.StandardInputs):
@@ -37,7 +36,7 @@ class TsyscalInputs(basetask.StandardInputs):
     @caltable.setter
     def caltable(self, value):
         if value is None:
-            value = tcaltable.TsysCaltable()
+            value = caltable_heuristic.TsysCaltable()
         self._caltable = value
 
     # Avoids circular dependency on caltable.
@@ -64,33 +63,12 @@ class Tsyscal(basetask.StandardTaskTemplate):
 
         LOG.warning('TODO: tsysspwmap heuristic re-reads measurement set!')
         LOG.warning("TODO: tsysspwmap heuristic won't handle missing file")
-        #spwmap = tsysspwmap.tsysspwmap(vis=inputs.vis,
         spwmap = tsysspwmap(vis=inputs.vis, tsystable=gencal_args['caltable'])
-
-        # assuming this task handles a single ms
-	#fields = inputs.ms.get_fields()
-	#calapplist = []
-	#for f in fields:
-	    #LOG.warning('TODO: Replace loop over fields with nearest option')
-	    #LOG.warning('    Field %s  id %s' % (f.name, f.id))
-            #calto = callibrary.CalTo(vis=inputs.vis, field=f.id)
-
-            ## careful now! Calling inputs.caltable mid-task will remove the
-            ## newly-created caltable, so we must look at the task arguments
-            ## instead
-	    ## Note not sure about the frequency spline interpolation
-            #calfrom = callibrary.CalFrom(gencal_args['caltable'],
-	        ##caltype='tsys', gainfield='nearest', spwmap=spwmap,
-	        #caltype='tsys', gainfield=str(f.id), spwmap=spwmap,
-	    	#interp='nearest,spline')
-            #calapplist.append (callibrary.CalApplication(calto, calfrom))
-
-        #return TsyscalResults(pool=calapplist)
 
         callist = []
         calto = callibrary.CalTo(vis=inputs.vis)
         calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='tsys',
-            gainfield='nearest', spwmap=spwmap, interp='linear,linear')
+          gainfield='nearest', spwmap=spwmap, interp='linear,linear')
         calapp = callibrary.CalApplication(calto, calfrom)
         callist.append(calapp)
 
