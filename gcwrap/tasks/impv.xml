@@ -33,7 +33,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <example>[200,300]</example>
         </param>
         <param type="int" name="width">
-            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer >= 1 (1 means only use the pixels along the slice).</description>
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer &gt;= 1 (1 means only use the pixels along the slice).</description>
             <value>1</value>
         </param>
         <param type="string" name="unit">
@@ -102,7 +102,7 @@ width            Width, in pixels, for averaging pixels perpendicular to the sli
                  This value is determined after rotating the image so the slice lies horizontally.
                  A value of one means no averaging. A value of 3 means average one pixel on each
                  side of the slice and the pixel on the slice. A value of 5 means average 2 pixels
-                 on each side of the slice and the pixel on the slice, etc.
+                 on each side of the slice and the pixel on the slice, etc. Must be an odd integer >= 1.
 unit             Allows the user to set the unit for the angular offset axis. Must be a unit of angular
                  measure.
 overwrite        If output file is specified, this parameter controls if an already existing file by the
