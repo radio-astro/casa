@@ -52,7 +52,6 @@ public:
 	 * Returns the date the database file was installed.
 	 */
 	string getCreatedDate() const;
-	virtual bool isConnected() const;
 
 	//Set all the search parameters back to their defaults.
 	virtual void reset();

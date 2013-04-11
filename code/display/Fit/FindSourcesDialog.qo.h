@@ -56,7 +56,7 @@ public:
     FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
     void setImage( ImageInterface<Float>* image );
     void setChannel( int channel );
-
+    void setOverlayColor(const QString& colorName);
     QString getRegionString() const;
     String getPixelBox() const;
     String getScreenedEstimatesFile( const String& estimatesFileName,
@@ -79,7 +79,6 @@ public slots:
 	bool updateRegion( int id, viewer::region::RegionChanges changes,
 	    		const QList<double> & world_x, const QList<double> & world_y,
 	    		const QList<int> &pixel_x, const QList<int> &pixel_y );
-	void setOverlayColor(const QString& colorName);
 
 private slots:
 	void findSources();

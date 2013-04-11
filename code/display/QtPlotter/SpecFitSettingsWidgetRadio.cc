@@ -610,17 +610,14 @@ QString SpecFitSettingsWidgetRadio::settingsToString() const {
 }
 
 int SpecFitSettingsWidgetRadio::getFitCount(Int& startChannelIndex, Int& endChannelIndex ){
-	int includeCount = 0;
-	if ( specFitThread != NULL ){
-		float startVal = specFitThread->getStartValue();
-		float endVal = specFitThread->getEndValue();
-		QString curveName = ui.curveComboBox->currentText();
-		CanvasCurve curve = pixelCanvas->getCurve( curveName );
-		Vector<float> curveXValues = curve.getXValues();
-		findChannelRange( startVal, endVal, curveXValues, startChannelIndex, endChannelIndex );
-		int multiplier = ui.fitRatioSpinBox->value();
-		includeCount = (endChannelIndex - startChannelIndex) * multiplier + 1;
-	}
+	float startVal = specFitThread->getStartValue();
+	float endVal = specFitThread->getEndValue();
+	QString curveName = ui.curveComboBox->currentText();
+	CanvasCurve curve = pixelCanvas->getCurve( curveName );
+	Vector<float> curveXValues = curve.getXValues();
+	findChannelRange( startVal, endVal, curveXValues, startChannelIndex, endChannelIndex );
+	int multiplier = ui.fitRatioSpinBox->value();
+	int includeCount = (endChannelIndex - startChannelIndex) * multiplier + 1;
 	return includeCount;
 }
 
@@ -696,13 +693,7 @@ void SpecFitSettingsWidgetRadio::fitDone( bool newData ){
 				//The fit succeeded.
 				if ( successVector[i] ){
 					//Initialize a SpecFit curve for the fit.
-					bool success = processFitResults( xValues, xValuesPix );
-					if ( !success ){
-						QString msg( "Fit returned invalid value(s).");
-						Util::showUserMessage( msg, this );
-						//In the case of a multi-fit, we exit if one doesn't work.
-						fitCancelled = true;
-					}
+					processFitResults( xValues, xValuesPix );
 				}
 
 				if ( newData ){
@@ -751,69 +742,61 @@ void SpecFitSettingsWidgetRadio::fitDone( bool newData ){
 void SpecFitSettingsWidgetRadio::drawCurves( int pixelX, int pixelY ){
 	//Make sure we are in our selected rectangular region before
 	//going to the trouble of trying to find the curves to draw.
-	if ( curveList.size() > 0 ){
-		if ( pixelX != SUM_FIT_INDEX  && pixelY != SUM_FIT_INDEX ){
-			Vector<double> xPixels;
-			Vector<double> yPixels;
-			taskMonitor->getPixelBounds( xPixels, yPixels );
-			if ( xPixels.size() < 2 || yPixels.size() < 2 ){
-				return;
-			}
-			if ( pixelX < xPixels[0] || pixelX > xPixels[1] ){
-				return;
-			}
-			if ( pixelY < yPixels[0] || pixelY > yPixels[1] ){
-				return;
-			}
+	if ( pixelX != SUM_FIT_INDEX  && pixelY != SUM_FIT_INDEX ){
+		Vector<double> xPixels;
+		Vector<double> yPixels;
+		taskMonitor->getPixelBounds( xPixels, yPixels );
+		if ( xPixels.size() < 2 || yPixels.size() < 2 ){
+			return;
 		}
+		if ( pixelX < xPixels[0] || pixelX > xPixels[1] ){
+			return;
+		}
+		if ( pixelY < yPixels[0] || pixelY > yPixels[1] ){
+			return;
+		}
+	}
 
-		//Compute the yValues for the fit.
-		Int startIndex = -1;
-		Int endIndex = -1;
-		int count = getFitCount( startIndex, endIndex );
-		Vector<Float> yCumValues(count, 0);
+	//Compute the yValues for the fit.
+	Int startIndex = -1;
+	Int endIndex = -1;
+	int count = getFitCount( startIndex, endIndex );
+	Vector<Float> yCumValues(count, 0);
 
-		for ( int k = 0; k < curveList.size(); k++ ){
+	for ( int k = 0; k < curveList.size(); k++ ){
 
-			QList<SpecFit*> curves = curveList[k];
-			if ( curves.size() > 0 ){
-				Vector<Float> xValues = curves[0]->getXValues();
-				bool curveAdded = false;
-				for ( int i = 0; i < curves.size(); i++ ){
-					if ( !ui.multiFitCheckBox->isChecked() ||
-							curves[i]->isSpecFitFor( pixelX,pixelY)){
-						curves[i]->evaluate( xValues );
+		QList<SpecFit*> curves = curveList[k];
+		if ( curves.size() > 0 ){
+			Vector<Float> xValues = curves[0]->getXValues();
+			for ( int i = 0; i < curves.size(); i++ ){
+				curves[i]->evaluate( xValues );
 
-						Vector<Float> yValues = curves[i]->getYValues();
-						QString curveName = curves[i]->getCurveName();
+				Vector<Float> yValues = curves[i]->getYValues();
+				QString curveName = curves[i]->getCurveName();
 
-						//Send the curve to the canvas for plotting.
-						pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
-						for ( int i = 0; i < count; i++ ){
-							yCumValues[i] = yCumValues[i]+yValues[i];
-						}
-						curveAdded = true;
-					}
+				//Send the curve to the canvas for plotting.
+				pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
+				for ( int i = 0; i < count; i++ ){
+					yCumValues[i] = yCumValues[i]+yValues[i];
 				}
+			}
 
-				//Add a curve that represents the sum of all the individual fits
-				if ( curves.size() > 1 && curveAdded ){
-					QString curveName = taskMonitor->getFileName() +"_Sum_FIT";
-					pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
-				}
+			//Add a curve that represents the sum of all the individual fits
+			if ( curves.size() > 1 ){
+				QString curveName = taskMonitor->getFileName() +"_Sum_FIT";
+				pixelCanvas->addPolyLine( xValues, yCumValues, curveName, QtCanvas::CURVE_COLOR_SECONDARY);
 			}
 		}
 	}
 }
 
-bool SpecFitSettingsWidgetRadio::processFitResults(
+void SpecFitSettingsWidgetRadio::processFitResults(
 		Vector<float>& xValues, Vector<float>& xValuesPix){
 
 	//Iterate through all the fits and post the results
 	Array<ImageFit1D<Float> > image1DFitters = fitter-> getFitters();
 	Array<ImageFit1D<Float> >::iterator iterend( image1DFitters.end());
 	uint fitIndex = 0;
-	bool successfulFit = false;
 	for ( Array<ImageFit1D<Float> >::iterator iter = image1DFitters.begin(); iter != iterend; ++iter ){
 		ImageFit1D<Float> image1DFitter = *iter;
 
@@ -859,20 +842,16 @@ bool SpecFitSettingsWidgetRadio::processFitResults(
 				curves[successCount]->setFitCenter( centerX, centerY );
 				successCount++;
 			}
-
-
 		}
-		if ( successCount > 0 ){
-			//store the curves in the curve map
-			curveList.append( curves );
-		}
+		//store the curves in the curve map
+		curveList.append( curves );
 
-	}
-	if ( curveList.size() > 0 ){
-		successfulFit = true;
+		if ( successCount == 0 ){
+			QString msg( "Fit returned invalid value(s).");
+			Util::showUserMessage( msg, this );
+		}
 	}
     ui.viewButton->setEnabled( !ui.multiFitCheckBox->isChecked() );
-    return successfulFit;
 }
 
 
@@ -902,7 +881,6 @@ bool SpecFitSettingsWidgetRadio::processFitResultGaussian( const SpectralElement
 	Double centerValPix = pcf->getCenter();
 	double fwhmValPix = pcf->getFWHM();
 	float peakVal = static_cast<float>(pcf->getAmpl());
-
 	if ( isnan( fwhmValPix) || isnan( centerValPix ) || isnan( peakVal ) ||
 			isinf( fwhmValPix) || isinf( centerValPix) || isinf( peakVal)){
 		return false;
@@ -1097,9 +1075,7 @@ void SpecFitSettingsWidgetRadio::clearEstimates(){
 }
 
 void SpecFitSettingsWidgetRadio::pixelsChanged( int pixX, int pixY ){
-	if ( ui.multiFitCheckBox->isChecked()){
-		drawCurves( pixX, pixY);
-	}
+	drawCurves( pixX, pixY);
 }
 
 //Called when the Gauss Estimate dialog is shown.  We populate it with the

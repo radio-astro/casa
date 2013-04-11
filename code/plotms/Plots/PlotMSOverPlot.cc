@@ -152,23 +152,22 @@ void PlotMSOverPlot::setupPlotSubtabs(PlotMSPlotTab &tab) const {
 void PlotMSOverPlot::attachToCanvases() {
     Int iter = iter_;
     Int nIter = itsCache_->nIter();
-    for(uInt r = 0; (r < itsCanvases_.size()); ++r) {
-        for(uInt c = 0; (c < itsCanvases_[r].size()); ++c) {
+    for(uInt r = 0; (iter < nIter) && (r < itsPlots_.size()); ++r) {
+        for(uInt c = 0; (iter < nIter) && (c < itsPlots_[r].size()); ++c) {
             if(!itsCanvases_[r][c].null()) {
-                if(!itsPlots_[r][c].null() && (iter < nIter)) {
+                if(!itsPlots_[r][c].null()) {
                     itsCanvases_[r][c]->plotItem(itsPlots_[r][c]);
                     ++iter;
                 }
                 ((QPCanvas*)(&*itsCanvases_[r][c]))->show();
-                ((QPCanvas*)(&*itsCanvases_[r][c]))->setMinimumSize(5,5);
             }
         }
     }
 }
 
 void PlotMSOverPlot::detachFromCanvases() {
-    for(uInt r = 0; r < itsCanvases_.size(); ++r) {
-        for(uInt c = 0; c < itsCanvases_[r].size(); ++c) {
+    for(uInt r = 0; r < itsPlots_.size(); ++r) {
+        for(uInt c = 0; c < itsPlots_[r].size(); ++c) {
             if(!itsCanvases_[r][c].null()) {
                 if(itsCanvases_[r][c]->numPlotItems() > 0) {
                     itsCanvases_[r][c]->removePlotItem(itsPlots_[r][c]);
@@ -689,8 +688,10 @@ bool PlotMSOverPlot::lastIter() {
     if((nIter > 0) && (iter_ < (nIter - iterStep_))) {
         PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
         pages.lastPage();
-        iter_ = int(double(nIter-1) / iterStep_) * iterStep_;
-        if(iterStep_ == 1) iter_ = nIter - 1;
+        iter_ = 0;
+        while(iter_ < (nIter - iterStep_)) {
+            iter_ += iterStep_;
+        }
         recalculateIteration();
         return true;
     }
@@ -700,13 +701,11 @@ bool PlotMSOverPlot::lastIter() {
 bool PlotMSOverPlot::resetIter() {
     Int nIter = itsCache_->nIter();
     if(nIter > 0) {
-        PlotMSPages &pages = itsParent_->getPlotManager().itsPages_;
-        pages.firstPage();
         iter_ = 0;
-        recalculateIteration();
-        return true;
     }
-    return false;
+    recalculateIteration();
+    updatePlots();
+    return true;
 }
 
 void PlotMSOverPlot::recalculateIteration() {
@@ -784,7 +783,7 @@ void PlotMSOverPlot::logPoints() {
 void PlotMSOverPlot::logIter(Int iter, Int nIter) {
     if(nIter > 1) {
         stringstream ss;
-        ss << "Stepping to iteration = " << iter+1
+        ss << "Stepping to iteration = " << iter
            << " (of " << nIter << "): "
            << itsCache_->indexer(iter).iterLabel();
         itsParent_->getLogger()->postMessage(PMS::LOG_ORIGIN,

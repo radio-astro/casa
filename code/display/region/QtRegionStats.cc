@@ -147,11 +147,15 @@ void QtRegionStats::updateStatistics( std::tr1::shared_ptr<casa::viewer::RegionI
 }
 
 void QtRegionStats::setCenterBackground(QString background){
-	qt::statfield_list_t::iterator fitter = fields.begin( );
-	while ( fitter != fields.end( )) {
-		QString labelStyle( "QLabel{background-color: "+background +";}");
-		(*fitter).second->setStyleSheet( labelStyle );
-		++fitter;
+	//QPalette palette;
+	//palette.setColor(widget->backgroundRole(), color);
+	//widget->setPalette(palette);
+	QPalette palette;
+	qt::statfield_list_t::iterator fiter = fields.begin( );
+	while ( fiter != fields.end( )) {
+		palette.setColor((*fiter).second->backgroundRole(), QColor(background));
+		(*fiter).second->setPalette(palette);
+		++fiter;
 	}
 }
 

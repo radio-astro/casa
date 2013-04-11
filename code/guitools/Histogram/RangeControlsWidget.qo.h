@@ -27,6 +27,7 @@
 #define RANGECONTROLSWIDGET_QO_H
 
 #include <QtGui/QWidget>
+#include <QThread>
 #include <guitools/Histogram/RangeControlsWidget.ui.h>
 
 using namespace std;
@@ -38,16 +39,18 @@ namespace casa {
 template <class T> class ImageInterface;
 
 /**
- * Designed as a separaclass so if it needs to go into a different thread,
- * it can be put there.
+ * Percentage calculations can take a bit on a large image so
+ * we need to put this in a separate thread.
  */
-class PercentageCalculator {
+class PercentageCalculator : public QThread {
 public:
 	PercentageCalculator( float minValue, float maxValue, ImageInterface<float>* image );
-	void work();
 	float getRangeMin() const;
 	float getRangeMax() const;
 	virtual ~PercentageCalculator();
+
+protected:
+	virtual void run();
 
 private:
 	float minValue;
@@ -70,9 +73,9 @@ public:
     RangeControlsWidget(QWidget *parent = 0);
     void setImage( ImageInterface<float>* image );
     void setRange( double min, double max, bool signal=true );
+    void setRangeLimits( double min, double max );
     void setDataLimits( double min, double max );
     void setRangeMaxEnabled( bool enabled );
-    void setIgnoreRange( bool ignore );
     pair<double,double> getMinMaxValues() const;
 
     ~RangeControlsWidget();
@@ -102,7 +105,6 @@ private:
     QString percentage;
     double rangeMin;
     double rangeMax;
-    bool ignoreRange;
 };
 }
 #endif // RANGECONTROLSWIDGET_QO_H

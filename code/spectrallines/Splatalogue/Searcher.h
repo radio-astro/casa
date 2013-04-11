@@ -39,10 +39,6 @@ public:
 	//Set all search parameters back to their defaults.
 	virtual void reset() = 0;
 
-	//Returns whether or not a connection has been established to the database
-	//provider.
-	virtual bool isConnected() const = 0;
-
 	//Search Parameters
 	virtual void setChemicalNames( const vector<string>& chemNames ) = 0;
 	virtual void setSpeciesNames( const vector<string>& speciesNames ) = 0;

@@ -31,7 +31,6 @@ using namespace std;
 namespace casa {
 
 DatabaseConnector* DatabaseConnector::connection = NULL;
-bool DatabaseConnector::successfulOpen = true;
 
 string DatabaseConnector::databasePath = "";
 
@@ -39,8 +38,7 @@ DatabaseConnector::DatabaseConnector( const string& path ) {
 	databasePath = path;
 	int rc = sqlite3_open( databasePath.c_str(), &db );
 	if ( rc != SQLITE_OK ){
-		successfulOpen = false;
-		cout << "Problem opening database: "<<sqlite3_errmsg(db) << endl;
+		cout << "Can't open database: "<<sqlite3_errmsg(db) << endl;
 		sqlite3_close( db );
 	}
 }
@@ -59,11 +57,7 @@ sqlite3* DatabaseConnector::getDatabase( const string& path){
 	if ( connection == NULL ){
 		connection = new DatabaseConnector( path );
 	}
-	sqlite3* dbConnection = NULL;
-	if ( successfulOpen ){
-		dbConnection =connection->db;
-	}
-	return dbConnection;
+	return connection->db;
 }
 
 DatabaseConnector::~DatabaseConnector() {

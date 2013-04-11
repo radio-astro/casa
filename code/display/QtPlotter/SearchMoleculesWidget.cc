@@ -364,7 +364,7 @@ void SearchMoleculesWidget::search(){
 			searcher->setSearchResultLimit( searchResultLimit );
 		}
 		else {
-			QString msg( "Searches are not supported because the database was not found.");
+			QString msg( "Searches are not supported because the database is missing.");
 			Util::showUserMessage( msg, this );
 			return;
 		}

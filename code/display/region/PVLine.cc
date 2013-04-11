@@ -713,7 +713,7 @@ namespace casa {
 			double startx, starty, endx, endy;
 			try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy ); } catch(...) { return 0; }
 			pvgen.setEndpoints( startx, starty, endx, endy );
-			pvgen.setWidth(width);
+			pvgen.setHalfWidth((double)((width-1)/2));
 			dock_->panel( )->status( "generating temporary image: " + output_file );
 			dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
 			dock_->panel( )->logIO( ) << "generating P/V image with pixel points: (" <<

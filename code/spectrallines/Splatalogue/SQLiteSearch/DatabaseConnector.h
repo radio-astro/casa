@@ -47,7 +47,6 @@ private:
 	static DatabaseConnector* connection;
 	static string databasePath;
 	sqlite3* db;
-	static bool successfulOpen;
 };
 
 }

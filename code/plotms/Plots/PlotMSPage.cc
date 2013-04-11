@@ -74,13 +74,13 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
     if(nrows == oldrows && ncols == oldcols) return;
     
     bool moreRows = nrows > oldrows, moreCols = ncols > oldcols;
-    //if(!moreRows || !moreCols) {
+    if(!moreRows || !moreCols) {
         // we're shrinking in rows or columns, so disown those that will be
         // deleted
         for(unsigned int r = 0; r < itsCanvases_.size(); r++)
             for(unsigned int c = 0; c < itsCanvases_[r].size(); c++)
                 if(r >= nrows || c >= ncols) disown(r, c);
-    //}
+    }
 
     itsCanvases_.clear();
     itsCanvasOwners_.clear();

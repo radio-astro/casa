@@ -54,7 +54,7 @@ void SearchMoleculesResultsWidget::initializeTable(){
 void SearchMoleculesResultsWidget::displaySearchResults( const vector<SplatResult>& results,
 		int /*offset*/, int /*countTotal*/ ){
 	int resultCount = results.size();
-	 if ( resultCount == 0 ){
+	if ( resultCount == 0 ){
 		QString msg( "There were no search results matching the given criteria.");
 		Util::showUserMessage( msg, this );
 	}

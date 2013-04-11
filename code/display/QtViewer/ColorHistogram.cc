@@ -162,8 +162,12 @@ void ColorHistogram::setDisplayData( QtDisplayData* dd ){
 	}
 }
 
-void ColorHistogram::invertColorMap( int /*invert*/ ){
-	updateColorMap( true);
+void ColorHistogram::invertColorMap( int invert ){
+	bool invertMap = false;
+	if ( invert == Qt::Checked ){
+		invertMap = true;
+	}
+	updateColorMap( invertMap );
 	resetColorLookups();
 }
 

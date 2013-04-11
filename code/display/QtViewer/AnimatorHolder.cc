@@ -206,9 +206,9 @@ void AnimatorHolder::setChannelModeEnabled( int frameCount){
 	if ( channelAdded ){
 		ui.channelGroupBox->setCheckable(true);
 		animatorChannel->setEnabled(true);
+		animatorChannel->setFrameInformation(0, frameCount );
 		ui.channelGroupBox->setChecked( false );
 	}
-	animatorChannel->setFrameInformation(0, frameCount );
 }
 
 void AnimatorHolder::setModeEnabled( int imageCount ){
@@ -287,7 +287,6 @@ void AnimatorHolder::setFrameInformation( bool mode, int frm, int len ){
 
 
 void AnimatorHolder::setRateInformation( bool mode, int minr, int maxr, int rate ){
-
 	if ( previousMode != CHANNEL_IMAGES_MODE ){
 		if ( mode == NORMAL_MODE ){
 	 		animatorChannel->setRateInformation( minr, maxr, rate );

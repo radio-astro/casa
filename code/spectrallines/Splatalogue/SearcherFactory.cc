@@ -57,10 +57,6 @@ Searcher* SearcherFactory::getSearcher( bool local ){
 		String defaultDatabasePath = getLocation( local );
 		if ( ! defaultDatabasePath.length() == 0 ){
 			searcher = new SearcherSQLite(defaultDatabasePath.c_str() );
-			if ( !searcher->isConnected()){
-				delete searcher;
-				searcher = NULL;
-			}
 		}
 	}
 	else {

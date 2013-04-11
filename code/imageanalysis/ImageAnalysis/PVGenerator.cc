@@ -52,7 +52,7 @@ PVGenerator::PVGenerator(
 ) : ImageTask(
 		image, "", regionRec, "", chanInp, stokes,
 		maskInp, outname, overwrite
-	), _start(0), _end(0), _width(1), _unit("arcsec") {
+	), _start(0), _end(0), _halfwidth(0), _unit("arcsec") {
 	_construct();
 }
 
@@ -85,12 +85,8 @@ void PVGenerator::setEndpoints(
 	(*_end)[1] = endy;
 }
 
-void PVGenerator::setWidth(uInt width) {
-	if (width % 2 == 0) {
-		*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE)
-			<< "width must be odd." << LogIO::EXCEPTION;
-	}
-	_width = width;
+void PVGenerator::setHalfWidth(const Double halfwidth) {
+	_halfwidth = halfwidth;
 }
 
 ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
@@ -130,12 +126,11 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		: atan2(
 			end[0] - start[0], end[1] - start[1]
 		) - C::pi_2;
-	Double halfwidth = (_width - 1)/2;
-    if (_width > 1) {
-        // check already done when setting the points if _width == 1
+    if (_halfwidth > 0) {
+        // check already done when setting the points if _halfwidth == 0
         Double angle1 = paInRad + C::pi/2;
-        Double halfx = halfwidth*cos(angle1);
-        Double halfy = halfwidth*sin(angle1);
+        Double halfx = _halfwidth*cos(angle1);
+        Double halfy = _halfwidth*sin(angle1);
         Vector<Double> xs(4);
         xs[0] = start[0] - halfx;
         xs[1] = start[0] + halfx;
@@ -184,7 +179,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 		) < 1e-6, AipsError
 	);
 	Double padNumber = max(0.0, 1 - startPixRot[0]);
-	padNumber = max(padNumber, -(startPixRot[1] - halfwidth - 1));
+	padNumber = max(padNumber, -(startPixRot[1] - _halfwidth - 1));
 	ImageInterface<Float> *imageToRotate = &subImage;
 	std::auto_ptr<ImageInterface<Float> > padded;
 	Int nPixels = 0;
@@ -203,14 +198,14 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	IPosition trc = subShape - 1;
 
 	// ensure we have enough real estate after the rotation
-	blc[xAxis] = (Int)min(min(start[0], end[0]) - 1 - halfwidth, 0.0);
-	blc[yAxis] = (Int)min(min(start[1], end[1]) - 1 - halfwidth, 0.0);
+	blc[xAxis] = (Int)min(min(start[0], end[0]) - 1 - _halfwidth, 0.0);
+	blc[yAxis] = (Int)min(min(start[1], end[1]) - 1 - _halfwidth, 0.0);
 	trc[xAxis] = (Int)max(
-		max(start[0], end[0]) + 1 + halfwidth,
+		max(start[0], end[0]) + 1 + _halfwidth,
 		blc[xAxis] + (Double)subShape[xAxis] - 1
 	) + nPixels;
 	trc[yAxis] = (Int)max(
-		max(start[1], end[1]) + 1 + halfwidth,
+		max(start[1], end[1]) + 1 + _halfwidth,
 		(Double)subShape[yAxis] - 1
 	) + nPixels;
 
@@ -230,7 +225,7 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	else {
 		IPosition outShape = subShape;
 		outShape[xAxis] = (Int)(endPixRot[0] + nPixels + 6);
-		outShape[yAxis] = (Int)(startPixRot[1] + halfwidth) + nPixels + 6;
+		outShape[yAxis] = (Int)(startPixRot[1] + _halfwidth) + nPixels + 6;
 		ImageAnalysis ia(imageToRotate);
 		rotated.reset(
 			ia.rotate(
@@ -281,9 +276,9 @@ ImageInterface<Float>* PVGenerator::generate(const Bool wantReturn) const {
 	blc = IPosition(rotated->ndim(), 0);
 	trc = rotated->shape() - 1;
 	blc[xAxis] = (Int)(rotPixStart[xAxis] + 0.5);
-	blc[yAxis] = (Int)(rotPixStart[yAxis] + 0.5 - halfwidth);
+	blc[yAxis] = (Int)(rotPixStart[yAxis] + 0.5 - _halfwidth);
 	trc[xAxis] = (Int)(rotPixEnd[xAxis] + 0.5);
-	trc[yAxis] = (Int)(rotPixEnd[yAxis] + 0.5 + halfwidth);
+	trc[yAxis] = (Int)(rotPixEnd[yAxis] + 0.5 + _halfwidth);
 
 	lcbox = LCBox(blc, trc, rotated->shape()).toRecord("");
 	IPosition axes(1, yAxis);
@@ -397,7 +392,7 @@ String PVGenerator::getClass() const {
 
 void PVGenerator::_checkWidth(const Int64 xShape, const Int64 yShape) const {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
-	if (_width == 1) {
+	if (_halfwidth == 0) {
 		return;
 	}
 	vector<Double> start = *_start;
@@ -405,10 +400,8 @@ void PVGenerator::_checkWidth(const Int64 xShape, const Int64 yShape) const {
 
 	Double angle = (start[0] == end[0])
 		? 0 : atan2((end[1] - start[1]),(end[0] - start[0])) + C::pi_2;
-	Double halfwidth = (_width - 1)/2;
-
-	Double delX = halfwidth * cos(angle);
-	Double delY = halfwidth * sin(angle);
+	Double delX = _halfwidth * cos(angle);
+	Double delY = _halfwidth * sin(angle);
 	if (
 		start[0] - delX < 0 || start[0] + delX > xShape
 		|| start[1] - delY < 0 || start[1] + delY > yShape

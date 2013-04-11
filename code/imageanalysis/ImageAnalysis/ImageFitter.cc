@@ -1138,17 +1138,15 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 
 void ImageFitter::_writeNewEstimatesFile() const {
 	ostringstream out;
-	uInt ndim = _getImage()->ndim();
-	Vector<Int> dirAxesNumbers = _getImage()->coordinates().directionAxesNumbers();
-	Vector<Double> world(ndim,0), pixel(ndim,0);
-	_getImage()->coordinates().toWorld(world, pixel);
-
 	for (uInt i=0; i<_curResults.nelements(); i++) {
+
 		MDirection mdir = _curResults.getRefDirection(i);
 		Quantity lat = mdir.getValue().getLat("rad");
 		Quantity longitude = mdir.getValue().getLong("rad");
-		world[dirAxesNumbers[0]] = longitude.getValue();
-		world[dirAxesNumbers[1]] = lat.getValue();
+		Vector<Double> world(4,0), pixel(4,0);
+		_getImage()->coordinates().toWorld(world, pixel);
+		world[0] = longitude.getValue();
+		world[1] = lat.getValue();
 		if (_getImage()->coordinates().toPixel(pixel, world)) {
 			out << _peakIntensities[i].getValue() << ", "
 					<< pixel[0] << ", " << pixel[1] << ", "
