@@ -133,6 +133,7 @@ class ScantableReader(object):
                     
         with utils.open_table(st.name) as tb:
             frequencies = tb.getkeyword('FREQUENCIES').lstrip('Table: ')
+            molecules = tb.getkeyword('MOLECULES').lstrip('Table: ')
 
         with utils.open_table(frequencies) as tb:
             id = tb.getcol('ID')
@@ -148,6 +149,15 @@ class ScantableReader(object):
                 d['frame'] = frame
                 frequencies_dict[id[i]] = d
 
+        with utils.open_table(molecules) as tb:
+            rest_frequencies = {}
+            for i in xrange(tb.nrows()):
+                mid = tb.getcell('ID',i)
+                if tb.iscelldefined('RESTFREQUENCY',i):
+                    rest_frequencies[mid] = tb.getcell('RESTFREQUENCY',i)
+                else:
+                    rest_frequencies[mid] = []
+
         with utils.open_table(st.name) as tb:
             spw_ids = numpy.unique(tb.getcol('IFNO'))
             for spw in spw_ids:
@@ -155,6 +165,7 @@ class ScantableReader(object):
 
                 # spectral setup
                 freq_id = ts.getcell('FREQ_ID',0)
+                mol_id = ts.getcell('MOLECULE_ID',0)
                 frequencies = frequencies_dict[freq_id]
                 nchan = len(ts.getcell('FLAGTRA',0))
                 tsyschan = len(ts.getcell('TSYS',0))
@@ -191,7 +202,8 @@ class ScantableReader(object):
                                                       refpix=refpix,
                                                       refval=refval,
                                                       increment=incr,
-                                                      intent=string.join(intents,':'))
+                                                      intent=string.join(intents,':'),
+                                                      rest_frequencies=rest_frequencies[moi_id])
                 spectral_window[spw] = entry
                                     
                 ts.close()
@@ -329,13 +341,23 @@ class ScantableReaderFromMS(ScantableReader):
                 spectral_window[spw].intent = string.join(intents,':')
                 ts.close()
 
-            subtable_name = tb.getkeyword('SPECTRAL_WINDOW').lstrip('Table: ')
+            spw_name = tb.getkeyword('SPECTRAL_WINDOW').lstrip('Table: ')
+            source_name = tb.getkeyword('SOURCE').lstrip('Table: ')
 
-        with utils.open_table(subtable_name) as tb:
+        with utils.open_table(spw_name) as tb:
             for spw in spectral_window.keys():
                 frame_id = tb.getcell('MEAS_FREQ_REF')
                 spectral_window[spw].frame = domain.singledish.Frequencies.frame_map[frame_id]
- 
+
+        with utils.open_table(source_name) as tb:
+            for spw in spectral_window.keys():
+                ts = tb.query('SPECTRAL_WINDOW_ID==%s'%(spw))
+                rest_frequencies = []
+                for i in xrange(ts.nrows()):
+                    if ts.iscelldefined('REST_FREQUENCY',i):
+                        rest_frequencies.extend(ts.getcell('REST_FREQUENCY',i))
+                rest_frequencies = numpy.unique(rest_frequencies)
+                spectral_window[spw].rest_frequencies = rest_frequencies
 
         keys = spectral_window.keys()
         for spw in keys:
