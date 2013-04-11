@@ -234,10 +234,10 @@ Note: Using pixel units allows you to convolve axes with different units.
 EXAMPLES
 
 # smoothing with a gaussian kernel 20arseconds by 10 arseconds
-imsmooth( imagename='my.image', kernel='gauss', major='10arcsec', minor='10arcsec', pa="0deg")
+imsmooth( imagename='my.image', kernel='gauss', major='20arcsec', minor='10arcsec', pa="0deg")
 
 # the same as before, just a different way of specifying the kernel parameters
-mybeam = {'major': '10arcsec', 'minor': '10arcsec', 'pa': '0deg'}
+mybeam = {'major': '20arcsec', 'minor': '10arcsec', 'pa': '0deg'}
 imsmooth( imagename='my.image', kernel='gauss', beam=mybeam)
 
 # Smoothing using pixel coordinates and a boxcar kernel.
