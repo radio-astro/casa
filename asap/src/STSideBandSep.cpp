@@ -438,9 +438,9 @@ unsigned int STSideBandSep::setupShift()
 	  seltab->setCoordInfo(coordsav);
 	  const double chShift = (freq0 - basech0) / baseinc;
 	  tableList_.push_back(seltab);
-	  sigShift_.push_back(chShift);
+	  sigShift_.push_back(-chShift);
 	  if (setImg)
-	    imgShift_.push_back(-chShift);
+	    imgShift_.push_back(chShift);
 
 	  selected = true;
 	  os << "- IF" << *iter << " selected: sideband shift = "
