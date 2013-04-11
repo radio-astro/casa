@@ -6,8 +6,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
-from pipeline.hif.heuristics import caltable as wcaltable
-from pipeline.hif.heuristics import wvrgcal as heuwvrgcal
+from pipeline.hif.heuristics import caltable as caltable_heuristic
+from pipeline.hif.heuristics import wvrgcal as wvrgcal_heuristic
 
 from .. import bandpass
 from .. import gaincal
@@ -190,7 +190,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
 
         # get parameters that can be set from outside or which will be derived
         # from heuristics otherwise
-        wvrheuristics = heuwvrgcal.WvrgcalHeuristics(
+        wvrheuristics = wvrgcal_heuristic.WvrgcalHeuristics(
           context=inputs.context, vis=inputs.vis, hm_tie=inputs.hm_tie, 
           tie=inputs.tie, hm_smooth = inputs.hm_smooth, smooth=inputs.smooth,
           sourceflag=inputs.sourceflag, nsol=inputs.nsol,
@@ -248,7 +248,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
                 smooth = inputs.smooth
 
             # prepare to run the wvrgcal task if necessary
-            caltable = wcaltable.WvrgCaltable()
+            caltable = caltable_heuristic.WvrgCaltable()
             caltable = caltable(output_dir=inputs.output_dir,
               stage=inputs.context.stage,
               vis=inputs.vis, smooth=smooth)
