@@ -595,29 +595,30 @@ class VirtualMeasurementSetFiller(object):
 
         return data_descriptions
 
+ANTENNA_LIST = { 'DV[0-5][0-9]': 12.0,
+                 'DA[0-5][0-9]': 12.0,
+                 'PM0[1-4]': 12.0,
+                 'CM[0-1][0-9]': 7.0,
+                 'APEX': 12.0,
+                 'AP-': 12.0,
+                 'NRO': 45.0,
+                 'ASTE': 10.0,
+                 'MRT': 30.0,
+                 'IRAM30m': 30.0,
+                 'Effelsberg': 100.0,
+                 'GBT': 104.9,
+                 'SMT': 10.0,
+                 'HHT': 10.0,
+                 # from asap/src/STAttr.cpp
+                 'MOPRA': 22.0,
+                 'PKS': 64.0,
+                 'TIDBINBILLA': 70.0,
+                 'CEDUNA': 30.0,
+                 'HOBART': 26.0 }
+
 def _antenna_diameter(name):
-    lookuptable = { 'DV[0-5][0-9]': 12.0,
-                    'DA[0-5][0-9]': 12.0,
-                    'PM0[1-4]': 12.0,
-                    'CM[0-1][0-9]': 7.0,
-                    'APEX': 12.0,
-                    'AP-': 12.0,
-                    'NRO': 45.0,
-                    'ASTE': 10.0,
-                    'MRT': 30.0,
-                    'IRAM30m': 30.0,
-                    'Effelsberg': 100.0,
-                    'GBT': 104.9,
-                    'SMT': 10.0,
-                    'HHT': 10.0,
-                    # from asap/src/STAttr.cpp
-                    'MOPRA': 22.0,
-                    'PKS': 64.0,
-                    'TIDBINBILLA': 70.0,
-                    'CEDUNA': 30.0,
-                    'HOBART': 26.0 }
     d = None
-    for (key,item) in lookuptable.items():
+    for (key,item) in ANTENNA_LIST.items():
         if re.match(key, name) is not None:
             #print 'matched %s'%(key)
             d = item
