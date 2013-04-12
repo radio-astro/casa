@@ -557,7 +557,7 @@ MDoppler SearchMoleculesWidget::getRedShiftAdjustment( bool reverseDirection ) c
 //-----------------------------------------------------------------------------
 
 QString SearchMoleculesWidget::getUnit() const {
-	return unitStr;
+	return SPLATALOGUE_UNITS;
 }
 
 vector<SplatResult> SearchMoleculesWidget::getSearchResults() const {
