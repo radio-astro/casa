@@ -11,7 +11,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.domain as domain
-from pipeline.infrastructure import casa_tasks
+from pipeline.infrastructure import casa_tasks, sdtablereader
 from ... import heuristics
 
 import asap as sd
@@ -245,11 +245,6 @@ class SDImportData(basetask.StandardTaskTemplate):
         if self._executor._dry_run:
             return SDImportDataResults()
 
-        # Work around the circular dependency (listed below) by importing at runtime.
-        # 
-        # domain.singledish -> hsd.tasks.importdata -> domain.tablereader
-        import pipeline.infrastructure.sdtablereader as sdtablereader
-        LOG.todo('Remove circular dependency between tasks and domain objects?')
         ms_reader = sdtablereader.ObservingRunReader
         
         to_import = [os.path.abspath(f) for f in to_import]

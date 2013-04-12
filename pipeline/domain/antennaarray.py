@@ -95,6 +95,9 @@ class AntennaArray(object):
                                diff(ant1, ant2, 'm2')**2)
             baselines.append(Baseline(ant1, ant2, length))
 
+        if len(baselines) == 0:
+            baselines.append(Baseline(self.antennas[0], self.antennas[0], 0.0))
+
         return baselines
 
     def get_offset(self, antenna):
