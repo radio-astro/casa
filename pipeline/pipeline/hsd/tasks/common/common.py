@@ -47,7 +47,7 @@ class SingleDishInputs(basetask.StandardInputs):
         elif isinstance(value, str):
             self.context.observing_run.st_names.index(value)
             
-        LOG.info('Setting Input._infiles to %s'%(value))
+        LOG.debug('Setting Input._infiles to %s'%(value))
         self._infiles = value
 
     @property
