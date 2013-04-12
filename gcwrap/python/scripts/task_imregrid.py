@@ -35,6 +35,16 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                                       'SUPERGAL'):       
                 _myia.open(imagename)
                 csys = _myia.coordsys()
+                if len(shape) > 0 and shape != [-1]:
+                    casalog.post(
+                        "Specified shape parameter will be ignored when regridding to a new reference frame",
+                        "WARN"
+                    )
+                if len(axes) > 0 and axes != [-1]:
+                    casalog.post(
+                        "Specified axes parameter will be ignored when regridding to a new reference frame",
+                        "WARN"
+                    )
                 dirinfo = csys.findcoordinate("direction")
                 if not dirinfo[0]:
                     raise (Exception, "Image does not have a direction coordinate.")
