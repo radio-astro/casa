@@ -179,44 +179,30 @@ class ScantableRep(SingleDishBase):
         
 
 class Polarization(SingleDishBase):
-    polarization_map = { 'linear': { 0: ['XX',  9],
-                                     1: ['YY', 12],
-                                     2: ['XY', 10],
-                                     3: ['YX', 11] },
-                         'circular': { 0: ['RR', 5],
-                                       1: ['LL', 8],
-                                       2: ['RL', 6],
-                                       3: ['LR', 7] },
-                         'stokes': { 0: ['I', 1],
-                                     1: ['Q', 2],
-                                     2: ['U', 3],
-                                     3: ['V', 4] },
-                         'linpol': { 0: ['Ptotal',   28],
-                                     1: ['Plinear',  29],
-                                     2: ['PFtotal',  30],
-                                     3: ['PFlinear', 31],
-                                     4: ['Pangle',   32] } }
-
+    to_polid = {'XX': 0, 'YY': 1, 'XY': 2, 'YX': 3, 
+                'RR': 0, 'LL': 1, 'RL': 2, 'LR': 3,
+                'I' : 0,  'Q': 1, 'U' : 2, 'V' : 3} 
+    to_polenum = {'XX':  9, 'YY': 12, 'XY': 10, 'YX': 11, 
+                  'RR':  5, 'LL':  8, 'RL':  6, 'LR':  7,
+                  'I' :  1,  'Q':  2, 'U' :  3, 'V' :  4} 
     @staticmethod
     def from_data_desc(datadesc):
         npol = datadesc.num_polarizations
-        polno = numpy.arange(npol, dtype=int)
-        corrs = datadesc.polarizations
-        if 'X' in corrs:
-            ptype = 'linear'
-        elif 'R' in corrs:
-            ptype = 'circular'
+        corr_axis = datadesc.corr_axis
+        corr_type = datadesc.polarizations
+        if 'X' in corr_type or 'Y' in corr_type:
+            poltype = 'linear'
+        elif 'R' in corr_type or 'L' in corr_type:
+            poltype = 'circular'
         else:
-            ptype = 'stokes'
-        corrstr = ['%s%s'%(corrs[i],corrs[i]) for i in xrange(min(2,npol))]
-        if npol > 2:
-            corrstr = corrstr + ['%s%s'%(corrs[i],corrs[j]) for (i,j) in [(0,1),(1,0)]]
-        polmap = Polarization.polarization_map[ptype]
-        entry = Polarization(type=ptype,
+            poltype = 'stokes'
+        polno = [Polarization.to_polid[x] for x in corr_axis]
+        corr_enum = [Polarization.to_polenum[x] for x in corr_axis]
+        entry = Polarization(type=poltype,
                              polno=polno,
                              spw_association=[datadesc.spw.id],
-                             corr_string=corrstr,
-                             corr_index=[polmap[i][0] for i in xrange(npol)])
+                             corr_string=corr_axis,
+                             corr_index=corr_enum)
         return entry
         
 
