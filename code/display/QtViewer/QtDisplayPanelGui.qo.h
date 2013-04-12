@@ -202,7 +202,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   virtual std::string rcid( ) const { return rcid_; }
 
   viewer::QtRegionDock *regionDock( ) { return regionDock_; }
-  int numFrames( ) const { return qdp_->nFrames( ); }
+  int numFrames( ) const {
+	  return qdp_->nZFrames( );
+  }
 
   // load casa (or DS9?) region files...
   void loadRegions( const std::string &path, const std::string &datatype );
