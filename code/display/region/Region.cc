@@ -1017,10 +1017,11 @@ bool Region::translateX( const std::string &x, const std::string &x_units, const
 	double cur_center_x = linear_average(blc_x,trc_x);
 	double cur_center_y = linear_average(blc_y,trc_y);
 
-	double new_center_x, new_center_y;
+	double new_center_x, new_center_y = cur_center_y;
 	if ( x_units == "pixel" ) {
 		try {
-			pixel_to_linear( wc_, atof(x.c_str( )), 0, new_center_x, new_center_y );
+			double dummy;
+			pixel_to_linear( wc_, atof(x.c_str( )), 0, new_center_x, dummy );
 		} catch( const casa::AipsError &err) {
 			status( "coordinate conversion failed: " + err.getMesg( ), "error" );
 			return false;
@@ -1111,10 +1112,11 @@ bool Region::translateY( const std::string &y, const std::string &y_units, const
 	double cur_center_x = linear_average(blc_x,trc_x);
 	double cur_center_y = linear_average(blc_y,trc_y);
 
-	double new_center_x, new_center_y;
+	double new_center_x=cur_center_x, new_center_y;
 	if ( y_units == "pixel" ) {
 		try {
-			pixel_to_linear( wc_, 0, atof(y.c_str( )), new_center_x, new_center_y );
+			double dummy;
+			pixel_to_linear( wc_, 0, atof(y.c_str( )), dummy, new_center_y );
 		} catch( const casa::AipsError &err) {
 			status( "coordinate conversion failed: " + err.getMesg( ), "error" );
 			return false;
