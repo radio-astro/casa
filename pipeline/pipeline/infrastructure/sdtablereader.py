@@ -1,15 +1,17 @@
 from __future__ import absolute_import
+
 import string
+import numpy
+import re
 
 import asap
-import numpy
 
 from . import casatools
 from . import logging
 from . import utils
 from . import tablereader
 import pipeline.domain as domain
-import pipeline.hsd as hsd
+#import pipeline.hsd as hsd
 
 LOG = logging.get_logger(__name__)
 
@@ -95,8 +97,9 @@ class ScantableReader(object):
                                  v2=qa.quantity(position[2],'m'))
         rad_position = me.measure(m_position,
                                   rf='WGS84')
-        h = hsd.heuristics.AntennaDiameter()
-        diameter = h.calculate(name=name)
+        #h = hsd.heuristics.AntennaDiameter()
+        #diameter = h.calculate(name=name)
+        diameter = _antenna_diameter(name=name)
         antenna = domain.Antenna(0, name, m_position, rad_position, diameter, station)
 
         LOG.trace('created Antenna object\n%s'%(antenna))
@@ -179,7 +182,8 @@ class ScantableReader(object):
                             ('WVR' if nchan == 4 else 'SP'))
 
                 # intents
-                import asap.srctype as st
+                #import asap.srctype as st
+                st = asap.srctype
                 srctype = numpy.unique(ts.getcol('SRCTYPE'))
                 intents = set()
                 for stype in srctype:
@@ -203,7 +207,7 @@ class ScantableReader(object):
                                                       refval=refval,
                                                       increment=incr,
                                                       intent=string.join(intents,':'),
-                                                      rest_frequencies=rest_frequencies[moi_id])
+                                                      rest_frequencies=rest_frequencies[mol_id])
                 spectral_window[spw] = entry
                                     
                 ts.close()
@@ -442,8 +446,8 @@ class VirtualMeasurementSetFiller(object):
         else:
             st = scantables
             
-        import pipeline.domain.virtualms as virtualms
-        ms = virtualms.VirtualMeasurementSet(st)
+        #import pipeline.domain.virtualms as virtualms
+        ms = domain.virtualms.VirtualMeasurementSet(st)
         ms.antenna_array = VirtualMeasurementSetFiller.get_antenna_array(st)
         ms.sources = VirtualMeasurementSetFiller.get_source(st)
         ms.frequency_groups = VirtualMeasurementSetFiller.get_frequency_group(st)
@@ -590,3 +594,36 @@ class VirtualMeasurementSetFiller(object):
             data_descriptions.append(dd)
 
         return data_descriptions
+
+def _antenna_diameter(name):
+    lookuptable = { 'DV[0-5][0-9]': 12.0,
+                    'DA[0-5][0-9]': 12.0,
+                    'PM0[1-4]': 12.0,
+                    'CM[0-1][0-9]': 7.0,
+                    'APEX': 12.0,
+                    'AP-': 12.0,
+                    'NRO': 45.0,
+                    'ASTE': 10.0,
+                    'MRT': 30.0,
+                    'IRAM30m': 30.0,
+                    'Effelsberg': 100.0,
+                    'GBT': 104.9,
+                    'SMT': 10.0,
+                    'HHT': 10.0,
+                    # from asap/src/STAttr.cpp
+                    'MOPRA': 22.0,
+                    'PKS': 64.0,
+                    'TIDBINBILLA': 70.0,
+                    'CEDUNA': 30.0,
+                    'HOBART': 26.0 }
+    d = None
+    for (key,item) in lookuptable.items():
+        if re.match(key, name) is not None:
+            #print 'matched %s'%(key)
+            d = item
+            break
+    if d is None:
+        #raise Exception('No data in lookup table: %s'%(name))
+        LOG.warn('%s: No data in lookup table. Set diameter to zero.'%(name))
+        d = 0.0
+    return d

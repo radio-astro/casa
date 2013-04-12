@@ -33,7 +33,6 @@ class AntennaDiameter(api.Heuristic):
                         'TIDBINBILLA': 70.0,
                         'CEDUNA': 30.0,
                         'HOBART': 26.0 }
-        import re
         d = None
         for (key,item) in lookuptable.items():
             if re.match(key, name) is not None:
