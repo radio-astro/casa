@@ -33,6 +33,11 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
+class MDirection;
+class MVAngle;
+template <class Qtype> class Quantum;
+template <class T> class Matrix;
+template <class T> class Vector;
 
 // <summary>A limb-darkened disk model for the spatial distribution of emission</summary>
 
@@ -62,7 +67,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // incorperates the flux and spectral variation of the emission, or through the
 // <linkto class=ComponentList>ComponentList</linkto> class, which handles
 // groups of SkyComponent objects.
-//
+// 
+// The functionality of this class is similar to that of <linkto class=DiskShape>
+// DiskShape</linkto> with an additional parameter to describe the exponent in 
+// the limb darkened disk model (\f$I=I_{0}(1-(r/R)^{2})^{n/2}\f$). 
 //
 // </synopsis>
 //
@@ -78,38 +86,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //#! them here.
 // </motivation>
 //
-// <templating arg=T>
-//#! A list of member functions that must be provided by classes that
-//#! appear as actual template arguments.  For example:  imagine that you
-//#! are writing a templated sort class, which does a quicksort on a
-//#! list of arbitrary objects.  Anybody who uses your templated class
-//#! must make sure that the actual argument class (say, Int or
-//#! String or Matrix) has comparison operators defined.
-//#! This tag must be repeated for each template formal argument in the
-//#! template class definition -- that's why this tag has the "arg" attribute.
-//#! (Most templated classes, however, are templated on only a single
-//#! argument.)
-//    <li>
-//    <li>
-// </templating>
-//
-// <thrown>
-//#! A list of exceptions thrown if errors are discovered in the function.
-//#! This tag will appear in the body of the header file, preceding the
-//#! declaration of each function which throws an exception.
-//    <li>
-//    <li>
-// </thrown>
-//
 // <todo asof="yyyy/mm/dd">
 //#! A List of bugs, limitations, extensions or planned refinements.
 //#! The programmer should fill in a date in the "asof" field, which
 //#! will usually be the date at which the class is submitted for review.
 //#! If, during the review, new "todo" items come up, then the "asof"
 //#! date should be changed to the end of the review period.
-//   <li> add this feature
-//   <li> fix this bug
-//   <li> start discussion of this possible extension
+//#   <li> add this feature
+//#   <li> fix this bug
+//#   <li> start discussion of this possible extension
 // </todo>
 
 class LimbDarkenedDiskShape: public TwoSidedShape
@@ -129,6 +114,7 @@ public:
   //Default constsructor
   LimbDarkenedDiskShape();
 
+  //<group>
   LimbDarkenedDiskShape(const MDirection& direction,
             const Quantum<Double>& majorAxis,
             const Quantum<Double>& minorAxis,
@@ -155,6 +141,7 @@ public:
   virtual ComponentType::Shape type() const;
 
   // use diskshape ones?
+  //<group>
   virtual void setWidthInRad(const Double majorAxis,
                              const Double minorAxis,
                              const Double positionAngle);
@@ -162,10 +149,11 @@ public:
   virtual Double minorAxisInRad() const;
   virtual Double positionAngleInRad() const;
   virtual Float getAttnFactor() const;
-  //set n factor in darkening equation, I=I0(1-rho^2)^n/2
+  //set n factor in darkening equation, \f$I=I_{0}(1-(\frac{r}{R})^{2})^{\frac{n}{2}}\f$
   virtual void setAttnFactor(const Float attnFactor);  
   virtual Vector<Double> optParameters() const;
   virtual void setOptParameters(const Vector<Double>& newOptParms);
+  //</group>
 
   // Calculate the proportion of the flux that is in a pixel of specified size
   // centered in the specified direction. The returned value will always be
