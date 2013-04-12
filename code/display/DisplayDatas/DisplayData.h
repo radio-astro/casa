@@ -727,7 +727,12 @@ protected:
   // to call conformsTo(wch) directly when needed, rather than querying this.
   Bool conformed() {
     return rstrsConformed_ && csConformed_ && zIndexConformed_;  }
-  
+  //Added so that when two images are loaded with no velocity
+  //alignment, they can still show their position coordinates without
+  //having to be rstrsConformed.
+  Bool isCsAndZIndexConformed(){
+	  return csConformed_ && zIndexConformed_;
+  }
   // Set (coordinate) state of WCH's WC.  Called by WCH::executeSizeControl().
   // (See important notes on interface and implementation of this function
   // in the class synopsis above).

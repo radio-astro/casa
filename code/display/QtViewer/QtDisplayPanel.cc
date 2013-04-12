@@ -532,7 +532,7 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 		// (Tracking information is not provided for these dd types).
 		Record trackingRec;
 		pair<String,String> trackInfo;
-		if ( bLen_ > 1 && pd_->isBlinkDD(dd) && ! dd->conformsTo(wc) ){
+		if ( bLen_ > 1 && !pd_->isBlinkDD(dd) ){
 			trackInfo = qdd->trackingInfo( ev );
 			trackingRec.define( qdd->name(), trackInfo.first + principalTrackInfo.second );
 		}
