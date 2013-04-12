@@ -174,7 +174,7 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 	QSettings settings("CASA", "Viewer");
 	QString pName = settings.value("Print/printer").toString();
 
-	connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setCollapseRange(float, float)));
+	connect(pixelCanvas, SIGNAL(xRangeChanged(double,double)), this, SLOT(setCollapseRange(double,double)));
 	connect(pixelCanvas, SIGNAL(channelSelect(float)), this, SLOT(channelSelect(float)));
 	connect(pixelCanvas, SIGNAL(channelRangeSelect(float,float)), this, SLOT( channelRangeSelect(float,float)));
 
@@ -1079,7 +1079,7 @@ void QtProfile::channelRangeSelect( float channelStart, float channelEnd ){
 }
 
 
-void QtProfile::setCollapseRange(float xmin, float xmax){
+void QtProfile::setCollapseRange(double xmin, double xmax){
 	momentSettingsWidget->setRange( xmin, xmax );
 	specFitSettingsWidget->setRange( xmin, xmax );
 	lineOverlaysHolder->setRange( xmin, xmax, xaxisUnit );
@@ -2477,7 +2477,6 @@ void QtProfile::setPurpose( ProfileTaskMonitor::PURPOSE purpose ){
 		int tabIndex = functionTabs->currentIndex();
 		pixelCanvas->changeTaskMode( tabIndex );
 	}
-
 }
 
 void QtProfile::initializeSolidAngle() const {

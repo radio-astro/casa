@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>797</width>
-    <height>140</height>
+    <width>810</width>
+    <height>142</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -68,7 +68,7 @@
            <property name="toolTip">
             <string>Enter an (optional) chemical name for the search
 such as Ammonia, Carbon Monoxide, Methane,
-water, etc.  Names are case sensitive.</string>
+water, etc.  </string>
            </property>
            <property name="text">
             <string/>

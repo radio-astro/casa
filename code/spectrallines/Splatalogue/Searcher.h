@@ -43,6 +43,9 @@ public:
 	//provider.
 	virtual bool isConnected() const = 0;
 
+	//Provide a way to interrupt long searches.
+	virtual void stopSearch() = 0;
+
 	//Search Parameters
 	virtual void setChemicalNames( const vector<string>& chemNames ) = 0;
 	virtual void setSpeciesNames( const vector<string>& speciesNames ) = 0;

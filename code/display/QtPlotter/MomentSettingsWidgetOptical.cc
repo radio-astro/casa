@@ -149,7 +149,7 @@ void MomentSettingsWidgetOptical::setUnits( QString unitStr ){
 	ui.collapseUnits->setText( unitStr );
 }
 
-void MomentSettingsWidgetOptical::setRange( float xmin, float xmax ){
+void MomentSettingsWidgetOptical::setRange( double xmin, double xmax ){
 	if (xmax < xmin){
 		ui.startValue->clear();
 		ui.endValue->clear();

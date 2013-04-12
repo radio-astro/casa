@@ -325,7 +325,7 @@ void SpecFitSettingsWidgetRadio::gaussCountChanged( int count ){
 	gaussEstimateDialog.setGaussCount( ui.gaussCountSpinBox->value() );
 }
 
-void SpecFitSettingsWidgetRadio::setRange(float xmin, float xmax ){
+void SpecFitSettingsWidgetRadio::setRange(double xmin, double xmax ){
 	if (xmax < xmin){
 		ui.minLineEdit->clear();
 		ui.maxLineEdit->clear();

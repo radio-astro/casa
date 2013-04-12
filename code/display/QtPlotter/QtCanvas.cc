@@ -78,7 +78,7 @@ QtCanvas::QtCanvas(QWidget *parent)
     autoScaleY = true;
     plotError  = 2;
     showGrid   = 2;
-    taskMode = UNKNOWN_MODE;
+    taskMode = LINE_OVERLAY_MODE;
 
     initContextMenu();
 
@@ -1724,7 +1724,7 @@ void QtCanvas::changeTaskMode( int mode ){
 		taskMode = static_cast<TaskMode>(mode);
 	}
 	else {
-		taskMode = UNKNOWN_MODE;
+		qDebug()<<"Changing task mode to an unsupported mode: "<< mode;
 	}
 }
 
@@ -1850,6 +1850,20 @@ void QtCanvas::startRangeX( QMouseEvent* event ){
 	updatexRangeBandRegion();
 }
 
+void QtCanvas::getCanvasDomain( double* minValue, double* maxValue,
+		QString& units) {
+
+	QtPlotSettings currSettings = zoomStack[curZoom];
+	*minValue = currSettings.getMinX( QtPlotSettings::xBottom );
+	*maxValue = currSettings.getMaxX( QtPlotSettings::xBottom );
+	if ( *minValue > *maxValue ){
+		double tmp = *minValue;
+		*minValue = *maxValue;
+		*maxValue = tmp;
+	}
+	units = this->getUnits();
+}
+
 void QtCanvas::updateRangeX( QMouseEvent* event ){
 	if (xRangeIsShown){
 		updatexRangeBandRegion();
@@ -1857,8 +1871,8 @@ void QtCanvas::updateRangeX( QMouseEvent* event ){
 		QtPlotSettings currSettings = zoomStack[curZoom];
 		double dx = currSettings.spanX(QtPlotSettings::xBottom) / static_cast<double>(getRectWidth());
 		double currMinX = currSettings.getMinX(QtPlotSettings::xBottom);
-		xRangeStart = currMinX + dx * double( xRectStart - MARGIN_LEFT);
-		xRangeEnd = currMinX + dx * double( xRectEnd - MARGIN_LEFT );
+		xRangeStart = currMinX + dx * ( xRectStart - MARGIN_LEFT);
+		xRangeEnd = currMinX + dx * ( xRectEnd - MARGIN_LEFT );
 		if ( xRangeStart < xRangeEnd ){
 			emit xRangeChanged( xRangeStart, xRangeEnd);
 		}
@@ -1886,7 +1900,7 @@ void QtCanvas::endRangeX( QMouseEvent* /*event*/ ){
 	QtPlotSettings currSettings = zoomStack[curZoom];
 	double dx = currSettings.spanX(QtPlotSettings::xBottom) / getRectWidth();
 	double currMinX = currSettings.getMinX( QtPlotSettings::xBottom );
-	xRangeStart = currMinX + dx * (xRectStart - MARGIN_LEFT );
+	xRangeStart = currMinX + dx * (xRectStart - MARGIN_LEFT);
 	xRangeEnd = currMinX + dx * (xRectEnd - MARGIN_LEFT );
 	if ( xRangeStart< xRangeEnd ){
 		emit xRangeChanged( xRangeStart, xRangeEnd);

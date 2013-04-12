@@ -53,6 +53,7 @@ public:
 	 */
 	string getCreatedDate() const;
 	virtual bool isConnected() const;
+	virtual void stopSearch();
 
 	//Set all the search parameters back to their defaults.
 	virtual void reset();

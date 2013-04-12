@@ -77,7 +77,7 @@ const int SearcherSQLite::DEFAULT_VALUE = -1;
 
 SearcherSQLite::SearcherSQLite( const string& databasePath):
 		filters(END_FILTERS),
-		rowLimit(500){
+		rowLimit(25){
 	db = DatabaseConnector::getDatabase(databasePath);
 	if ( db != NULL ){
 		/*string errorMsg;
@@ -305,22 +305,24 @@ string SearcherSQLite::getCreatedDate() const {
 //                    Querying the Database
 //************************************************************************
 
+void SearcherSQLite::stopSearch(){
+	sqlite3_interrupt( db );
+}
+
 long SearcherSQLite::doSearchCount( string& errorMsg ){
 	string query = prepareQuery( true, 0 );
 	sqlite3_stmt* statement;
 	long resultCount = 0;
 	bool success =  executeQuery( statement, query, errorMsg );
 	if ( success ){
-		if( sqlite3_step( statement ) == SQLITE_ROW ){
+		int result = sqlite3_step( statement );
+		if( result == SQLITE_ROW ){
 			resultCount = sqlite3_column_int( statement, 0 );
-		}
-		else {
-			cout << "Could not find a row with the count: "<<resultCount << endl;
 		}
 	}
 	else {
 		errorMsg = sqlite3_errmsg( db );
-		//cout << "Error was " << errorMsg << endl;
+		cout << "Error was " << errorMsg << endl;
 	}
 	//cout << "Result count="<<resultCount<<endl;
 	sqlite3_finalize(statement);
@@ -404,9 +406,11 @@ string SearcherSQLite::prepareQuery( bool countOnly, int offset ) const {
 	query.append( SPECIES_ID_COLUMN );
 
 	//Frequency
-	if ( minValueFreq >= 0 && maxValueFreq >= 0 && minValueFreq < maxValueFreq ){
+	if ( minValueFreq >= 0 && maxValueFreq >= 0 && minValueFreq <= maxValueFreq ){
 		query.append( getBetweenClause( FREQUENCY_COLUMN, minValueFreq, maxValueFreq ) );
 	}
+
+
 
 	//Species
 	if (speciesNames.size() > 0) {
@@ -513,6 +517,8 @@ string SearcherSQLite::getBetweenClause( const string& columnName,
 	betweenClause.append( CLOSE_PAREN );
 	return betweenClause;
 }
+
+
 
 string SearcherSQLite::getInClause( const string& columnName, const vector<string>& values ) const {
 	string inClause;

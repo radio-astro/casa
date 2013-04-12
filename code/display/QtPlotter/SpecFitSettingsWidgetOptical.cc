@@ -184,7 +184,7 @@ void SpecFitSettingsWidgetOptical::clean(){
 	plotMainCurve();
 }
 
-void SpecFitSettingsWidgetOptical::setRange(float xmin, float xmax ){
+void SpecFitSettingsWidgetOptical::setRange(double xmin, double xmax ){
 	if (xmax < xmin){
 		ui.startValueFit->clear();
 		ui.endValueFit->clear();

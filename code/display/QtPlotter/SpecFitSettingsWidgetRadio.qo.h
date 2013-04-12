@@ -53,7 +53,7 @@ public:
     void setImageYUnits( const QString& units );
     void setCurveName( const QString& curveName );
     void addCurveName( const QString& curveName );
-    void setRange(float start, float end );
+    void setRange(double start, double end );
     void reset();
     void pixelsChanged( int pixX, int pixY );
 

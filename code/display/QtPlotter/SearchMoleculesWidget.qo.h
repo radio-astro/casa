@@ -37,9 +37,13 @@
 #include <spectrallines/Splatalogue/Searcher.h>
 #include <spectrallines/Splatalogue/SearcherFactory.h>
 #include <display/QtPlotter/SearchMoleculesResultDisplayer.h>
+#include <QDebug>
+
+class QTimer;
 
 namespace casa {
 
+class QtCanvas;
 
 /**
  * Responsible for running the search algorithm in
@@ -66,9 +70,15 @@ public:
 	long getResultsCount() const {
 		return searchResultsCount;
 	}
+
 	vector<SplatResult> getResults() const {
 		return searchResults;
 	}
+
+	void stopSearch(){
+		searcher->stopSearch();
+	}
+
 	void run(){
 		if ( offset == 0 && countNeeded ){
 			searchResultsCount = searcher->doSearchCount( errorMsgCount );
@@ -99,16 +109,16 @@ class SearchMoleculesWidget : public QWidget
 
 public:
     SearchMoleculesWidget(QWidget *parent = 0);
+    void setCanvas( QtCanvas* drawCanvas );
     QString getUnit() const;
     bool isLocal() const;
-    //bool isPrevResults() const;
-    //bool isNextResults() const;
-    void setRange( float min, float max, QString units );
+
+    void setRange( double min, double max, QString units );
     void updateReferenceFrame();
     static void setInitialReferenceFrame( QString initialReferenceStr );
     void setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay );
     double getRedShiftedValue( bool reverseRedshift, double value ) const;
-    //String getDatabasePath() const;
+
     vector<SplatResult> getSearchResults() const;
     MDoppler::Types getDopplerType() const;
     MRadialVelocity::Types getReferenceFrame() const;
@@ -126,6 +136,7 @@ private slots:
     void searchFinished();
     void prevResults();
     void nextResults();
+    void stopSearch();
 
 private:
 
@@ -136,6 +147,8 @@ private:
     void initializeSearchRange( QLineEdit* lineEdit, Double& value );
     vector<string> initializeChemicalNames();
     void startSearchThread();
+    void setSearchRangeDefault();
+    void setRangeValue( double value, QString units, QLineEdit* lineEdit );
 
     MDoppler getRedShiftAdjustment( bool reverseRedshift) const;
 
@@ -143,8 +156,7 @@ private:
 		DARK_CLOUDS,DIFFUSE_CLOUDS,COMETS, AGB_PPN_PN,EXTRAGALACTIC };
 
     Ui::SearchMoleculesWidget ui;
-    //String defaultDatabasePath;
-    //String databasePath;
+
     QString unitStr;
     QString dopplerVelocityUnitStr;
     vector<SplatResult> searchResults;
@@ -152,9 +164,12 @@ private:
     QMap<QString, MRadialVelocity::Types> radialVelocityTypeMap;
     QMap<QString, MDoppler::Types> dopplerTypeMap;
     bool dopplerInVelocity;
+    bool searchInterrupted;
     SearchThread* searchThread;
     Searcher* searcher;
+    QtCanvas* canvas;
     QProgressDialog progressBar;
+
 
     //Scrolling support
     int searchResultCount;
