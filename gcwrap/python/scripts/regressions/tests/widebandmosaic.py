@@ -24,7 +24,7 @@ def doCopy():
 # Input data
 def data():
     ### return the data files that is needed by the regression script
-    return ['wbmos_awproject.ms']
+    return ['reg_mawproject_apr13.ms']
 
 # Run the test
 def run(fetch=False):

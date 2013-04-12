@@ -16,7 +16,7 @@
 import time
 import os
 
-# Data : wbmos_awproject.ms   in  regression/wideband/
+# Data : reg_mawproject_apr13.ms   in  regression/wideband/
 pathname=os.environ.get('CASAPATH').split()[0]
 tempdir="./"
 
@@ -43,7 +43,6 @@ imname2= tempdir+'reg_widebandmosaic_mtmfs.wbT.atT.mtT.psF'
 npix=512
 
 msname = tempdir+'reg_mawproject_apr13.ms'
-#msname = 'Flat/reg_mawproject_apr13_mawproject.ms'
 
 phasecenter = 'J2000 19h58m53.883s +40d44m02.323s'
 
@@ -77,7 +76,7 @@ print >>logfile,'**************** Regression-test for wide-band mosaicing ******
 print >>logfile,''
 
 if(not regstate):
-   print >>logfile,'* Data file wbmos_awproject.ms cannot be found';
+   print >>logfile,'* Data file reg_mawproject_apr13.ms cannot be found';
 else:
 
 #####################################################
