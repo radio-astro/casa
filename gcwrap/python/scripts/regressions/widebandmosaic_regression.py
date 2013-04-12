@@ -42,16 +42,21 @@ imname1=tempdir+'reg_widebandmosaic_cs.wbT.atT.mtT.psF'
 imname2= tempdir+'reg_widebandmosaic_mtmfs.wbT.atT.mtT.psF'
 npix=512
 
+msname = tempdir+'reg_mawproject_apr13.ms'
+#msname = 'Flat/reg_mawproject_apr13_mawproject.ms'
+
+phasecenter = 'J2000 19h58m53.883s +40d44m02.323s'
+
 if(regstate):
    # Test (1) : CS clean with wideband A-Projection with freq-conjugate beams.
    print '-- CS Clean with Wideband AProjection and Mosaicing --'
    default('clean')
-   clean( vis=tempdir+'wbmos_awproject.ms', imagename=imname1, field='0,1', spw='', phasecenter='0', nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, cfcache=imname1+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
+   clean( vis=msname, imagename=imname1, field='0,1', spw='', phasecenter=phasecenter, nterms=1, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=5.0, cfcache=imname1+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
 
    # Test (2) : MTMFS clean with wideband A-Projection with freq-conjugate beams.
    print '-- MTMFS Clean with Wideband AProjection and Mosaicing --'
    default('clean')
-   clean( vis=tempdir+'wbmos_awproject.ms', imagename=imname2, field='0,1', spw='', phasecenter='0', nterms=2, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, cfcache=imname2+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
+   clean( vis=msname, imagename=imname2, field='0,1', spw='', phasecenter=phasecenter, nterms=2, reffreq='1.5GHz', gridmode='advancedaprojection', wbawp=True, aterm=True, mterm=True, psterm=False, conjbeams=True, painc=360, rotpainc=5.0, cfcache=imname2+'.cfcache.dir', imsize=npix, cell='10.0arcsec', niter=10, gain=0.5, minpb=1e-04, usescratch=True)
 
    # Test (3) Mosaic with wbawp=False, and post-deconvolution PB-correction
    #print '-- MTMFS Clean with Reference-Frequency AProjection and Mosaicing + Post Deconv PB-Correction --'
@@ -83,13 +88,25 @@ else:
    #   Changeing correct_cs_intensity from 0.721199 to 0.80432087183.  code rev.  22329.
    #   AWProjectWBFT::pbFunc() returns 1.0 since division by avgPB in AWProjectFT::init2Vis()
    #   is not necessary (the normalization is done via the vectorized version of initi2Vis())
-   correct_cs_intensity = 0.804321
-   correct_cs_avgpb = 0.803946
+   #correct_cs_intensity = 0.804321
+   #correct_cs_avgpb = 0.803946
    # Test 2
-   correct_mtmfs_intensity = 0.908331
-   correct_mtmfs_alpha = 0.00341234
-   correct_mtmfs_coeffpb_0 = 0.910124
-   correct_mtmfs_coeffpb_1 = 0.321995
+   #correct_mtmfs_intensity = 0.908331
+   #correct_mtmfs_alpha = 0.00341234
+   #correct_mtmfs_coeffpb_0 = 0.910124
+   #correct_mtmfs_coeffpb_1 = 0.321995
+
+   # 11 Apr 2011 (UR). Changed the simulated MS, with both pointings off-source.
+   # These are pixel values at the center of the source, pixel 256, 315
+   # Test 1
+   correct_cs_intensity = 0.692243
+   correct_cs_avgpb = 0.705166
+   # Test 2
+   correct_mtmfs_intensity = 0.908868
+   correct_mtmfs_alpha = -0.0037804
+   correct_mtmfs_coeffpb_0 = 0.999975
+   correct_mtmfs_coeffpb_1 = 0.705602
+
 
 ###################################################
 ###################################################
@@ -103,6 +120,7 @@ else:
    if(os.path.exists(imname1+'.image')):
       ia.open(imname1+'.image');
       midpix = ia.pixelvalue([npix/2,npix/2])
+      midpix = ia.pixelvalue([256,315])
       ia.close();
       diff_cs_intensity = abs( midpix['value']['value'] - correct_cs_intensity )/ abs(correct_cs_intensity);
       if(diff_cs_intensity<0.02): 
@@ -121,6 +139,7 @@ else:
    if(os.path.exists(imname1+'.cfcache.dir/avgPB')):
       ia.open(imname1+'.cfcache.dir/avgPB');
       midpix = ia.pixelvalue([npix/2,npix/2])
+      midpix = ia.pixelvalue([256,315])
       ia.close();
       diff_cs_avgpb = abs( midpix['value']['value'] - correct_cs_avgpb )/ abs(correct_cs_avgpb);
       if(diff_cs_avgpb<0.02): 
@@ -146,6 +165,7 @@ else:
    if(os.path.exists(imname2+'.image.tt0')):
       ia.open(imname2+'.image.tt0');
       midpix = ia.pixelvalue([npix/2,npix/2])
+      midpix = ia.pixelvalue([256,315])
       ia.close();
       diff_mtmfs_intensity = abs( midpix['value']['value'] - correct_mtmfs_intensity )/ abs(correct_mtmfs_intensity);
       if(diff_mtmfs_intensity<0.02): 
@@ -164,6 +184,7 @@ else:
    if(os.path.exists(imname2+'.image.alpha')):
       ia.open(imname2+'.image.alpha');
       midpix = ia.pixelvalue([npix/2,npix/2])
+      midpix = ia.pixelvalue([256,315])
       ia.close();
       diff_mtmfs_alpha = abs( midpix['value']['value'] - correct_mtmfs_alpha )/ abs(correct_mtmfs_alpha);
       if(diff_mtmfs_alpha<0.02): 
@@ -182,6 +203,7 @@ else:
    if(os.path.exists(imname2+'.cfcache.dir/coeffPB_0')):
       ia.open(imname2+'.cfcache.dir/coeffPB_0');
       midpix = ia.pixelvalue([npix/2,npix/2])
+      midpix = ia.pixelvalue([256,315])
       ia.close();
       diff_mtmfs_coeffpb_0 = abs( midpix['value']['value'] - correct_mtmfs_coeffpb_0 )/ abs(correct_mtmfs_coeffpb_0);
       if(diff_mtmfs_coeffpb_0<0.02): 
@@ -200,6 +222,7 @@ else:
    if(os.path.exists(imname2+'.cfcache.dir/coeffPB_1')):
       ia.open(imname2+'.cfcache.dir/coeffPB_1');
       midpix = ia.pixelvalue([npix/2,npix/2])
+      midpix = ia.pixelvalue([256,315])
       ia.close();
       diff_mtmfs_coeffpb_1 = abs( midpix['value']['value'] - correct_mtmfs_coeffpb_1 )/ abs(correct_mtmfs_coeffpb_1);
       if(diff_mtmfs_coeffpb_1<0.02): 
