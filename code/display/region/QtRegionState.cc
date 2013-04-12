@@ -753,6 +753,7 @@ void QtRegionState::save_region( bool ) {
 // this gets called for each mouse movement as the mouse crosses the region...
 // it would be nice if there were a better way to update the tab state...
 void QtRegionState::nowVisible( ) {
+	if ( region_ == 0 ) return;
 	std::pair<int,int> &tab_state = region_->tabState( );
 	categories->setCurrentIndex(tab_state.first);
 	if ( tab_state.second >= 0 ) {
