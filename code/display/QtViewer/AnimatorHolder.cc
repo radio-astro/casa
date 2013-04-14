@@ -285,7 +285,12 @@ void AnimatorHolder::setFrameInformation( bool mode, int frm, int len ){
 	}
 }
 
-
+int AnimatorHolder::getLowerBoundChannel() const {
+	return animatorChannel->getFrameStart();
+}
+int AnimatorHolder::getUpperBoundChannel() const {
+	return animatorChannel->getFrameEnd();
+}
 void AnimatorHolder::setRateInformation( bool mode, int minr, int maxr, int rate ){
 
 	if ( previousMode != CHANNEL_IMAGES_MODE ){

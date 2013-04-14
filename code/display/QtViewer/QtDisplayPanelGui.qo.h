@@ -522,6 +522,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   int movieStep;
   QTimer movieTimer;
   void setAnimationRate();
+  int getBoundedChannel( int channel) const;
 
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  

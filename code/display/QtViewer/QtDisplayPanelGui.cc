@@ -1274,11 +1274,27 @@ void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, 
 
 }
 
+int QtDisplayPanelGui::getBoundedChannel( int channelNumber ) const{
+	int boundedChannel = channelNumber;
+	int lowerBoundChannel = animationHolder->getLowerBoundChannel();
+	if ( boundedChannel < lowerBoundChannel ){
+		boundedChannel = lowerBoundChannel;
+	}
+	int upperBoundChannel = animationHolder->getUpperBoundChannel();
+	if ( boundedChannel > upperBoundChannel ){
+		boundedChannel = upperBoundChannel;
+	}
+	return boundedChannel;
+}
+
 void QtDisplayPanelGui::doSelectChannel( int channelNumber ) {
-	qdp_->goTo( channelNumber, true );
+	//Make sure the channel number is not outside the min/max bounds
+	//of the animator.
+	int boundedChannel = getBoundedChannel( channelNumber );
+	qdp_->goTo( boundedChannel, true );
 	int frameCount = qdp_->nFrames();
-	animationHolder->setFrameInformation( AnimatorHolder::NORMAL_MODE, channelNumber, frameCount );
-	emit frameChanged( channelNumber );
+	animationHolder->setFrameInformation( AnimatorHolder::NORMAL_MODE, boundedChannel, frameCount );
+	emit frameChanged( boundedChannel );
 }
 
 void QtDisplayPanelGui::incrementMovieChannel(){
@@ -1307,9 +1323,12 @@ void QtDisplayPanelGui::movieChannels( int startChannel, int endChannel ){
 	//Make sure it is not currently playing
 	//before we start a new one.
 	movieTimer.stop();
-	movieLast = endChannel + 1;
-	movieStart = startChannel - 1;
-	if ( startChannel < endChannel ){
+	//Make sure the range of the move falls withen the animation range.
+	int boundedChannelStart = getBoundedChannel( startChannel );
+	int boundedChannelEnd = getBoundedChannel( endChannel );
+	movieLast = boundedChannelEnd + 1;
+	movieStart = boundedChannelStart - 1;
+	if ( boundedChannelStart < boundedChannelEnd ){
 		movieStep = 1;
 	}
 	else {
@@ -1318,8 +1337,8 @@ void QtDisplayPanelGui::movieChannels( int startChannel, int endChannel ){
 
 	//Start a new movie.
 	setAnimationRate();
-	movieChannel = startChannel;
-	movieChannelEnd = endChannel;
+	movieChannel = boundedChannelStart;
+	movieChannelEnd = boundedChannelEnd;
 	movieTimer.start();
 }
 
