@@ -1154,14 +1154,13 @@ Polyline::~Polyline(){
 	delete slicePlot;
 }
 
-ImageRegion *Polyline::get_image_region( DisplayData *dd ) const {
+ImageRegion *Polyline::get_image_region( DisplayData */*dd*/ ) const {
 	if ( wc_ != NULL  ){
-		PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
-		if ( padd != NULL ){
-			ImageInterface<float>* sliceImage = padd->imageinterface( );
-			if ( sliceImage != NULL ){
-				slicePlot->setImage( sliceImage );
-
+		DisplayData* dd = wc_->csMaster();
+		if ( dd != NULL ){
+			ImageInterface<float>* masterImage = dd->imageinterface();
+			if ( masterImage != NULL ){
+				slicePlot->setImage( masterImage );
 			}
 		}
 	}

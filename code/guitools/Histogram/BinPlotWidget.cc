@@ -423,6 +423,7 @@ void BinPlotWidget::setPlotMode( int mode ){
 	else {
 		qWarning() << "Unrecognized plot mode";
 	}
+	reset();
 }
 
 void BinPlotWidget::initializeDisplayActions(){
@@ -1140,13 +1141,18 @@ std::vector<float> BinPlotWidget::getXValues() const {
 
 bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 	bool success = true;
-	if ( image != img && img != NULL ){
+	if ( img != NULL && image != img ){
 		image = img;
 		Histogram::setImage( image );
 		clearHistograms();
 		clearAll();
-		success = resetImage();
-		if ( success ){
+		//If the image changes, we don't know whether we
+		//have to recompute either the histogram for the region
+		//or the histogram for the image depending on the mode.
+		reset();
+		resetPlotTitle();
+
+		//if ( success ){
 			resetAxisTitles();
 			if ( zoomWidgetContext != NULL ){
 				zoomWidgetContext->setImage( image );
@@ -1160,7 +1166,8 @@ bool BinPlotWidget::setImage( ImageInterface<Float>* img ){
 			if ( rangeControlWidget != NULL ){
 				rangeControlWidget->setImage( image );
 			}
-		}
+		//}
+		binPlot.replot();
 	}
 	else {
 		success = false;
@@ -1236,7 +1243,7 @@ bool BinPlotWidget::isPrincipalHistogram( int id ) const {
 void BinPlotWidget::makeHistogram( int id, const QColor& curveColor,
 		bool clearCurves ){
 	defineCurve( id, curveColor, clearCurves );
-	if ( isPrincipalHistogram( id ) ){
+	if ( isPrincipalHistogram( id ) && histogramMap.contains(id) ){
 
 		vector<float> xVector = histogramMap[id]->getXValues();
 		vector<float> yVector = histogramMap[id]->getYValues();

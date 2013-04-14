@@ -78,6 +78,7 @@ ms_stats_t::ms_stats_t( statfield_list_t &fields, QWidget *parent ) : stats_t(pa
 
 SliceStats::SliceStats( QWidget *parent ) : stats_t(parent) {
 	setupUi(this);
+	next_button->setEnabled( false );
 	connect( sliceToolButton, SIGNAL(clicked()), this, SIGNAL(show1DSliceTool()));
 }
 
@@ -241,6 +242,7 @@ qt::stats_t *QtRegionStats::new_stats_box( RegionInfo::InfoTypes type, Region* r
 			polylineRegion->addPlot( sliceBox->getPlotHolder() );
 			connect( stats_box_, SIGNAL(show1DSliceTool()), region, SIGNAL(show1DSliceTool()));
 		}
+
 		layout_->addWidget(stats_box_,0,Qt::AlignLeft);
 		return stats_box_;
 	} if ( type == RegionInfo::PVLineInfoType ) {

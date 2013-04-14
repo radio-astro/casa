@@ -825,8 +825,15 @@ void QtDisplayPanelGui::resetListenerImage(){
 	bool imageFound = false;
 	int registeredCount = rdds.len();
 	if ( registeredCount > 0 ){
+		Vector<QtDisplayData*> ddVector(registeredCount);
+		int j = 0;
 		for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 			QtDisplayData* pdd = qdds.getRight();
+			ddVector[j] = pdd;
+			j++;
+		}
+		for ( int i = registeredCount - 1; i >= 0; i--){
+			QtDisplayData* pdd = ddVector[i];
 			if(pdd != 0 && pdd->dataType() == "image") {
 				ImageInterface<float>* img = pdd->imageInterface();
 				PanelDisplay* ppd = qdp_->panelDisplay();
@@ -851,7 +858,6 @@ void QtDisplayPanelGui::resetListenerImage(){
 						if ( findSourcesDialog != NULL ){
 							findSourcesDialog->setImage(img);
 						}
-
 
 						imageFound = true;
 						break;
@@ -1512,10 +1518,14 @@ void QtDisplayPanelGui::updateAnimUi_() {
 		animationHolder->setPlaying( modez, play );
 	}
 	if ( histogrammer != NULL ){
-		histogrammer->setChannelValue( frm );
+		if ( modez ){
+			histogrammer->setChannelValue( frm );
+		}
 	}
 	if ( findSourcesDialog != NULL ){
-		findSourcesDialog->setChannel( frm );
+		if ( modez ){
+			findSourcesDialog->setChannel( frm );
+		}
 	}
 }
 // Public slots: may be safely operated programmatically (i.e.,
