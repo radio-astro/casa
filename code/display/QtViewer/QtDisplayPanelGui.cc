@@ -1534,7 +1534,6 @@ void QtDisplayPanelGui::updateAnimUi_() {
 	if ( animationHolder != NULL ){
 		animationHolder->setFrameInformation( modez, frm, len );
 		animationHolder->setRateInformation( modez, minr, maxr, rate );
-		animationHolder->setPlaying( modez, play );
 	}
 	if ( histogrammer != NULL ){
 		if ( modez ){

@@ -31,21 +31,22 @@ AnimatorWidget::AnimatorWidget(QWidget *parent)
 	ui.setupUi(this);
 
 	ui.revTB_ ->setCheckable(true);
-	ui.stopTB_->setCheckable(true);
+	//ui.stopTB_->setCheckable(true);
 	ui.playTB_->setCheckable(true);
+
 
 	ui.frameEdit_->setValidator(new QIntValidator(ui.frameEdit_));
 
 	connect(ui.frameSlider_, SIGNAL(valueChanged(int)), this, SIGNAL(goTo(int)));
 	connect(ui.frameEdit_, SIGNAL(editingFinished()), this, SLOT(frameNumberEdited()));
 	connect(ui.rateEdit_,  SIGNAL(valueChanged(int)), this, SIGNAL(setRate(int)));
-	connect(ui.toStartTB_, SIGNAL(clicked()), this, SIGNAL(toStart()));
-	connect(ui.revStepTB_, SIGNAL(clicked()), this, SIGNAL(revStep()));
-	connect(ui.revTB_, SIGNAL(clicked()), this, SIGNAL(revPlay()));
-	connect(ui.stopTB_, SIGNAL(clicked()), this, SIGNAL(stop()));
-	connect(ui.playTB_, SIGNAL(clicked()), this, SIGNAL(fwdPlay()));
-	connect(ui.fwdStep_, SIGNAL(clicked()), this, SIGNAL(fwdStep()));
-	connect(ui.toEndTB_, SIGNAL(clicked()), this, SIGNAL(toEnd()));
+	connect(ui.toStartTB_, SIGNAL(clicked()), this, SLOT(starting()));
+	connect(ui.revStepTB_, SIGNAL(clicked()), this, SLOT(revStepping()));
+	connect(ui.revTB_, SIGNAL(clicked()), this, SLOT(revPlaying()));
+	connect(ui.stopTB_, SIGNAL(clicked()), this, SLOT(stopping()));
+	connect(ui.playTB_, SIGNAL(clicked()), this, SLOT(fwdPlaying()));
+	connect(ui.fwdStep_, SIGNAL(clicked()), this, SLOT(fwdStepping()));
+	connect(ui.toEndTB_, SIGNAL(clicked()), this, SLOT(ending()));
 
 	rateNotSet = true;
 
@@ -159,11 +160,61 @@ int AnimatorWidget::getStepSize() const {
 	return stepSize;
 }
 
+void AnimatorWidget::disableAll() {
+	play = 0;
+	blockSignals( true );
+	ui.revTB_->setChecked( false );
+	ui.playTB_->setChecked( false );
+	blockSignals( false );
+}
+
+void AnimatorWidget::starting(){
+	disableAll();
+	emit toStart();
+}
+
+void AnimatorWidget::revStepping(){
+	disableAll();
+	emit revStep();
+}
+
+void AnimatorWidget::stopping(){
+	disableAll();
+	emit stop();
+}
+
+void AnimatorWidget::fwdStepping(){
+	disableAll();
+	emit fwdStep();
+}
+
+void AnimatorWidget::ending(){
+	disableAll();
+	emit toEnd();
+}
+
+void AnimatorWidget::revPlaying(){
+	play = -1;
+	blockSignals( true );
+	ui.playTB_->setChecked( false );
+	ui.revTB_->setChecked( true );
+	blockSignals( false );
+	emit revPlay();
+}
+
+void AnimatorWidget::fwdPlaying(){
+	play = 1;
+	blockSignals( true );
+	ui.revTB_->setChecked( false );
+	ui.playTB_->setChecked( true );
+	blockSignals( false );
+	emit fwdPlay();
+}
+
 void AnimatorWidget::setPlaying( int play ){
 	blockSignals( true );
 	this->play = play;
 	ui.revTB_ ->setChecked(play<0);
-	ui.stopTB_->setChecked(play==0);
 	ui.playTB_->setChecked(play>0);
 	blockSignals( false );
 }
@@ -175,6 +226,8 @@ bool AnimatorWidget::isPlaying() const{
 	}
 	return playing;
 }
+
+
 
 void AnimatorWidget::frameNumberEdited(){
 	int frameNumber = ui.frameEdit_->text().toInt();
