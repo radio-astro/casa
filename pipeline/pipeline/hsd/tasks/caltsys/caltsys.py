@@ -126,7 +126,9 @@ class SDCalTsys(common.SingleDishTaskTemplate):
 
             # create CalTo object
             # CalTo object is created using associating MS name
+            spw = callibrary.SDCalApplication.iflist_to_spw(args['iflist'])
             calto = callibrary.CalTo(vis=scantable.ms_name,
+                                     spw=spw,
                                      antenna=scantable.antenna.name)
 
             # create SDCalFrom object
