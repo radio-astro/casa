@@ -11,7 +11,7 @@ import simple_cluster
 
 class PartitionHelper(ParallelTaskHelper):
     def __init__(self, args = {}):
-        ParallelTaskHelper.__init__(self,'partition', args)
+        ParallelTaskHelper.__init__(self,'oldpartition', args)
         self._calScanList = None
         self._selectionScanList = None
         self._msTool = None
@@ -481,7 +481,7 @@ class PartitionHelper(ParallelTaskHelper):
                      int(round(division * (i+1)))] for i in xrange(int(n))]
 
 
-def partition(vis,
+def oldpartition(vis,
            outputvis,
            createmms,
            separationaxis,
@@ -653,9 +653,9 @@ def partition(vis,
 
     # Write history to output MS, not the input ms.
     try:
-        param_names = partition.func_code.co_varnames[:partition.func_code.co_argcount]
+        param_names = oldpartition.func_code.co_varnames[:oldpartition.func_code.co_argcount]
         param_vals = [eval(p) for p in param_names]
-        write_history(msTool, outputvis, 'partition', param_names,
+        write_history(msTool, outputvis, 'oldpartition', param_names,
                       param_vals, casalog)
     except Exception, instance:
         casalog.post("*** Error \'%s\' updating HISTORY" % (instance),

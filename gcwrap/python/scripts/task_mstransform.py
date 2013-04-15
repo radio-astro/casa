@@ -47,7 +47,7 @@ class MSTHelper(ParallelTaskHelper):
     def setupIO(self):
         '''Validate input and output parameters'''
         
-        for k,v in self.__origpars.items():
+        for k,v in self.__args.items():
             if k == 'vis' and isinstance(v, str):
                 # only one input MS
                 if not os.path.exists(v):
@@ -113,9 +113,9 @@ class MSTHelper(ParallelTaskHelper):
         return retval
         
 #    @dump_args
-    def setupCluster(self):
+    def setupCluster(self, taskname='mstransform'):
         '''Get a simple_cluster'''
-        ParallelTaskHelper.__init__(self,'mstransform', self.__args)
+        ParallelTaskHelper.__init__(self, taskname, self.__args)
             
     
 #    @dump_args
@@ -147,6 +147,9 @@ class MSTHelper(ParallelTaskHelper):
             # outputBase must not have a trailing .
             pass
 
+        if self.outputBase == '.' or self.outputBase == './':
+            raise ValueError, 'Error dealing with outputvis'
+        
         self.dataDir = outputPath + '/' + self.outputBase+'.data'
 #        if self._arg['createmms']:
         if os.path.exists(self.dataDir): 
@@ -213,26 +216,7 @@ class MSTHelper(ParallelTaskHelper):
 #            else:
 #                self.swriteaccess = False
             
-    
-#    @dump_args
-    def makeInputLists(self):
-        '''Make data selection parameters lists if
-        they are not, when a list of input MSs is requested'''
-        
-        # input is a list of MSs
-        if (isinstance(self.__origpars['vis'], list)):
-            lsize = self.__origpars['vis'].__len__()
-            # Check data selection parameters
-            for k,v in self.__selpars.items():
-                if not isinstance(v, list):                    
-                    # make it a list
-                    listvalue = []
-                    for i in range(lsize):
-                        listvalue.append(v)
-                        self.__selpars[k] = listvalue
-                        
-        return self.__selpars
-     
+         
 #    @dump_args
     def generateJobs(self):
         '''This is the method which generates all of the actual jobs to be done.'''
@@ -311,10 +295,11 @@ class MSTHelper(ParallelTaskHelper):
         
         # Validate the chanbin parameter
         validbin = False
-        if self.__origpars['chanaverage'] and self.validateChanBin():
-            # Partition chanbin in the same way
-            freqbinlist = self.__partition1(self.__origpars['chanbin'],numSubMS)
-            validbin = True
+        if self.__origpars.has_key('chanaverage'):
+            if self.__origpars['chanaverage'] and self.validateChanBin():
+                # Partition chanbin in the same way
+                freqbinlist = self.__partition1(self.__origpars['chanbin'],numSubMS)
+                validbin = True
         
         self.__ddistart = 0
         for output in xrange(numSubMS):
@@ -375,10 +360,11 @@ class MSTHelper(ParallelTaskHelper):
 
         # Validate the chanbin parameter when it is a list
         validbin = False
-        if self.__origpars['chanaverage'] and self.validateChanBin():
-            # Partition chanbin in the same way
-            freqbinlist = self.__partition1(self.__origpars['chanbin'],numSpwPartitions)
-            validbin = True
+        if self.__origpars.has_key('chanaverage'):
+            if self.__origpars['chanaverage'] and self.validateChanBin():
+                # Partition chanbin in the same way
+                freqbinlist = self.__partition1(self.__origpars['chanbin'],numSpwPartitions)
+                validbin = True
 
         # Add the channel selections back to the spw expressions
         newspwsel = self.createSPWExpression(partitionedSpws)
@@ -755,24 +741,25 @@ class MSTHelper(ParallelTaskHelper):
            same size as the number of spws in selection.'''
         
         retval = True
-        fblist = self.__origpars['chanbin']
-        if isinstance(fblist,list) and fblist.__len__() > 1: 
-            if self.__spwList == None:           
-                msTool = mstool()
-                msTool.open(self.__origpars['vis'])
-                spwsel = self.__origpars['spw'] 
-                msTool.msselect({'spw':spwsel})
-                ddInfo = msTool.getspectralwindowinfo()
-                self.__spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
-                msTool.close()
+        if self.__origpars.has_key('chanaverage'):
+            fblist = self.__origpars['chanbin']
+            if isinstance(fblist,list) and fblist.__len__() > 1: 
+                if self.__spwList == None:           
+                    msTool = mstool()
+                    msTool.open(self.__origpars['vis'])
+                    spwsel = self.__origpars['spw'] 
+                    msTool.msselect({'spw':spwsel})
+                    ddInfo = msTool.getspectralwindowinfo()
+                    self.__spwList = [info['SpectralWindowId'] for info in ddInfo.values()]
+                    msTool.close()
+                        
+                if self.__spwList.__len__() != fblist.__len__():
+                    retval = False
+    #                casalog.post('Number of chanbin is different of number of spw','ERROR')
+                    raise ValueError, 'Number of chanbin is different of number of spw'                
                     
-            if self.__spwList.__len__() != fblist.__len__():
+            else:
                 retval = False
-#                casalog.post('Number of chanbin is different of number of spw','ERROR')
-                raise ValueError, 'Number of chanbin is different of number of spw'                
-                
-        else:
-            retval = False
 
         return retval
     
@@ -866,7 +853,7 @@ def mstransform(
              minbaselines              
              ):
 
-    ''' This task can replace applycal, concat, cvel, partition and split '''
+    ''' This task can replace split, cvel, partition and hanningsmooth '''
     
     casalog.origin('mstransform')
        
@@ -881,7 +868,7 @@ def mstransform(
         return False
     
 
-    # Process in parallel
+    # Create an output multi-MS
     if createmms:
         
         # Validate the combination of some parameters
@@ -1019,6 +1006,7 @@ def mstransform(
         casalog.post('%s'%instance,'ERROR')
         return False
 
+
     # Update the FLAG_CMD sub-table to reflect any spw/channels selection
     if ((spw != '') and (spw != '*')) or chanaverage == True:
         isopen = False
@@ -1097,102 +1085,22 @@ def mstransform(
                          'SEVERE')
             return False
 
-    mslocal = None
     mytb = None
+
+    # Write history to output MS, not the input ms.
+    try:
+        param_names = mstransform.func_code.co_varnames[:mstransform.func_code.co_argcount]
+        param_vals = [eval(p) for p in param_names]
+        write_history(mslocal, outputvis, 'mstransform', param_names,
+                      param_vals, casalog)
+    except Exception, instance:
+        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                     'WARN')
+        return False
+
+    mslocal = None
     
     return True
     
-    # Write history 
-#    try:
-#        mslocal = mstool()
-#        mslocal.open(vis, nomodify=False)
-#        mslocal.writehistory(message='taskname = mstransform', origin='mstransform')
-#        param_names = mstransform.func_code.co_varnames[:mstransform.func_code.co_argcount]
-#        param_vals = [eval(p) for p in param_names]
-#        rval = None
-#        rval &= write_history(mslocal, vis, 'mstransform', param_names,
-#                               param_vals, casalog)
-#       
-#        mslocal.close()
-#       
-#    except Exception, instance:
-#        mslocal.close()
-#        casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
-#                        'WARN')
-
-
-# TODO:
-# 1) allow chanbin to be a list to apply to each spw selection. DONE
-# 2) Modify the separatespws transformation. DONE
-# 3) Check realmodelcol and tileshape parameters
-# 4) Parallelism
-# 5) Check if partition can run on MMS. YES, DONE
-# 6) Review the pointing table move!
-# 7) Partition does not re-index the spw table, while split does it.
-#    This needs to be solved. Maybe the tool needs to get a dictionary
-#    that contains the informations: createmms=True, and a list of the
-#    outputvis names (sub-Mss) associated with the spwIDs that will go
-#    to each sub-MS.
-#   
-# HEURISTICS for the parallelization
-#
-# WE only process in parallel when:
-#    1) there are multiple input MSs and createmms = True
-#
-# If there are multiple input MSs and createmms=False,
-# loop through the input MS list and call the tool
-# multiple times. We need to have an internal parameter
-# to tell the DataHandler that there is more than one
-# MS to be concatenated as the output.
-
-# Parallel heuristics:
-# 1) Do the data selection based on the partition parameters;
-#    separationaxis and numsubms! DONE!
-
-# Some constraints will have to be applied depending on the combination given 
-# for separationaxis and the requested transformations. See the table below, 
-# which shows with which transformation the separation axis can run.
-# Catch these cases inside MSTHelper.
-
-#separation   combinespws  separatespws  regridms  chanaverage  timespan  hanning
-#axis
-#---------------------------------------------------------------------------------------
-#spw            NO           YES*         YES        YES          YES       YES
-#scan           YES          YES          YES        YES          YES**     YES
-#both           NO           YES*         YES        YES          NO        YES
-
-# 2) Differences between partition and mstransform/split bahaviors:
-#  Partition: when spw selection is 4,5,6,7 and numsubms=4,
-#            each subms will have a spw that is not re-indexed; meaning
-#            DDI in main table are 4,5,6,7 and spw table has all spws 0~15.
-
-#  Split: it re-index all DDIs to 0,1,2,3 and splits the spw subtable to 0~3 rows.
-
-#  in mstransform we want:
-#  DDIs should be re-index when there is an spw selection, but consolidated
-#  in the final MMS structure such that each subMS will have a different DDI (0,1,2,3)
-#  and the spw subtable should have only the spws selected, not all of the original ones.
-#  This should be done in the _createSPWSeparationCommand method. Add a new internal
-#  parameter called DDIstart with the start DDI for each subMS. DONE, pending tests!
-#
-#  3) Patition does not allow channels selections!!! Try:
-#  * save the original spw selection in a member of MTHelper
-#  * once the spws are wprked out to be partitioned, re-edit it to include the channels,
-#    before adding the to the job list
-#  * [ass tje edited parameter to each engine
-
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+ 
     
