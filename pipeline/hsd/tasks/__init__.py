@@ -6,5 +6,7 @@ from .calsky import SDCalSky
 from .caltsys import SDCalTsys
 from .applycal import SDApplyCal
 from .inspectdata import SDInspectData
+from .imaging import SDImaging
+
 from .reduce import SDReduction
 
