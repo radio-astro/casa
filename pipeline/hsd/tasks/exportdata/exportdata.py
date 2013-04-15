@@ -114,6 +114,7 @@ class SDExportDataInputs(basetask.StandardInputs):
  
 class SDExportDataResults(api.Results):
     def __init__(self, jobs=[]):
+        super(SDExportDataResults,self).__init__()
         """
         Initialise the results object with the given list of JobRequests.
         """
