@@ -824,9 +824,9 @@ SimplePBConvFunc::SimplePBConvFunc(): nchan_p(-1),
   }
   void SimplePBConvFunc::addPBToFlux(const VisBuffer& vb){
     if(calcFluxScale_p){
-      Vector<Int> pixdepoint(2);
-       convertArray(pixdepoint, thePix_p);
-       if(!pointingPix_p(pixdepoint(0), pixdepoint(1))){
+      Vector<Int> pixdepoint(2, -100000);
+      convertArray(pixdepoint, thePix_p);
+      if((pixdepoint(0) >=0) && (pixdepoint(0) < pointingPix_p.shape()[0]) && (pixdepoint(1) >=0) && (pixdepoint(1) < pointingPix_p.shape()[1])  && !pointingPix_p(pixdepoint(0), pixdepoint(1))){
 	 TempImage<Float> thispb(fluxScale_p.shape(), fluxScale_p.coordinates());
 	 thispb.set(1.0);
 	 sj_p->applySquare(thispb, thispb, vb, 0);
