@@ -48,20 +48,21 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	: _ms(ms), _cacheMB(0), _maxCacheMB(maxCacheSizeMB), _nStates(0),
 	  _nACRows(0), _nXCRows(0), _nSpw(0), _nFields(0),
 	  _nAntennas(0), _nObservations(0), _nScans(0), _nArrays(0),
-	  _uniqueIntents(),
-	  _scanToStatesMap(), _scanToSpwsMap(), _scanToFieldsMap(),
-	  _uniqueScanNumbers(), _avgSpw(), _tdmSpw(),
+	  _nrows(0), _uniqueIntents(), _scanToSpwsMap(),
+	  _uniqueScanNumbers(),_uniqueFieldIDs(), _uniqueStateIDs(),
+	  _avgSpw(), _tdmSpw(),
 	  _fdmSpw(), _wvrSpw(),_antenna1(), _antenna2(),
 	  _scans(), _fieldIDs(), _stateIDs(), _dataDescIDs(),
 	  _observationIDs(),
 	  _scanToNACRowsMap(), _scanToNXCRowsMap(),
-	  _fieldToNACRowsMap(0), _fieldToNXCRowsMap(0),
-	  _dataDescIDToSpwMap(0),
+	  _fieldToNACRowsMap(), _fieldToNXCRowsMap(),
+	  _dataDescIDToSpwMap(),
 	  _scanToIntentsMap(), _stateToIntentsMap(),
 	  _spwToIntentsMap(),
-	  _spwInfo(0), _fieldToSpwMap(0),
+	  _spwInfo(0), _fieldToSpwMap(),
 	  _spwToFieldIDsMap(0), _spwToScansMap(0),
-	  _fieldToScansMap(0),
+	  _scanToStatesMap(), _scanToFieldsMap(),
+	  _fieldToScansMap(),
 	  _fieldNames(0),
 	  _antennaNames(0), _observatoryNames(0),
 	  _antennaNameToIDMap(), _times(),
@@ -69,8 +70,8 @@ MSMetaDataOnDemand::MSMetaDataOnDemand(const MeasurementSet *const &ms, const Fl
 	  _fieldToTimesMap(), _observatoryPositions(0),
 	  _antennaOffsets(0), _uniqueBaselines(0, 0),
 	  _exposureTime(0), _nUnflaggedACRows(0),
-	  _nUnflaggedXCRows(0), _unflaggedFieldNACRows(0),
-	  _unflaggedFieldNXCRows(0), _unflaggedScanNACRows(),
+	  _nUnflaggedXCRows(0), _unflaggedFieldNACRows(),
+	  _unflaggedFieldNXCRows(), _unflaggedScanNACRows(),
 	  _unflaggedScanNXCRows(),
 	  _taqlTableName(
 		File(ms->tableName()).exists() ? ms->tableName() : "$1"
@@ -115,6 +116,7 @@ void MSMetaDataOnDemand::_getStateToIntentsMap(
 		stateToIntentsMap,
 		uniqueIntents, *_ms
 	);
+
 	std::set<String>::const_iterator lastIntent = uniqueIntents.end();
 	uInt mysize = 0;
 	for (
@@ -142,7 +144,7 @@ void MSMetaDataOnDemand::_getStateToIntentsMap(
 	}
 }
 
-std::set<uInt> MSMetaDataOnDemand::getScanNumbers() {
+std::set<Int> MSMetaDataOnDemand::getScanNumbers() {
 	if (_uniqueScanNumbers.size() > 0) {
 		return _uniqueScanNumbers;
 	}
@@ -150,8 +152,8 @@ std::set<uInt> MSMetaDataOnDemand::getScanNumbers() {
 	Table result(tableCommand(taql, _taqlTempTable));
 	ROScalarColumn<Int> scanCol(result, "SCAN_NUMBER");
 	Vector<Int> scans = scanCol.getColumn();
-	std::set<uInt> myUniqueScans(scans.begin(), scans.end());
-	Float mysize = _cacheMB + sizeof(uInt)*scans.size()/1e6;
+	std::set<Int> myUniqueScans(scans.begin(), scans.end());
+	Float mysize = _cacheMB + sizeof(Int)*scans.size()/1e6;
 	if (mysize < _maxCacheMB) {
 		_cacheMB = mysize;
 		_uniqueScanNumbers = myUniqueScans;
@@ -181,11 +183,14 @@ uInt MSMetaDataOnDemand::nArrays() {
 	return _nArrays;
 }
 
-uInt MSMetaDataOnDemand::nRows() const {
-	if (_nACRows > 0 || _nXCRows > 0) {
-		return _nACRows + _nXCRows;
-	}
+uInt MSMetaDataOnDemand::nRows() {
 	return _ms->nrow();
+	/*
+    if (_nrows == 0) {
+        _nrows = _ms->nrow();
+    }
+	return _nrows;
+	*/
 }
 uInt MSMetaDataOnDemand::nRows(CorrelationType cType) {
 
@@ -193,8 +198,8 @@ uInt MSMetaDataOnDemand::nRows(CorrelationType cType) {
 		return nRows();
 	}
 	uInt nACRows, nXCRows;
-	AOSFMapI scanToNACRowsMap, scanToNXCRowsMap;
-	vector<uInt> fieldToNACRowsMap, fieldToNXCRowsMap;
+	std::tr1::shared_ptr<AOSFMapI> scanToNACRowsMap, scanToNXCRowsMap;
+	std::tr1::shared_ptr<std::map<Int, uInt> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -209,53 +214,54 @@ uInt MSMetaDataOnDemand::nRows(CorrelationType cType) {
 }
 
 uInt MSMetaDataOnDemand::nRows(
-	CorrelationType cType, uInt arrayID, uInt observationID,
-	uInt scanNumber, uInt fieldID
+	CorrelationType cType, Int arrayID, Int observationID,
+	Int scanNumber, Int fieldID
 ) {
 	uInt nACRows, nXCRows;
-	AOSFMapI scanToNACRowsMap, scanToNXCRowsMap;
-	vector<uInt> fieldToNACRowsMap, fieldToNXCRowsMap;
-	_getRowStats(
+	std::tr1::shared_ptr<AOSFMapI> scanToNACRowsMap, scanToNXCRowsMap;
+	std::tr1::shared_ptr<std::map<Int, uInt> > fieldToNACRowsMap, fieldToNXCRowsMap;
+    _getRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
 		fieldToNXCRowsMap
 	);
 	if (cType == AUTO) {
-		return scanToNACRowsMap[arrayID][observationID][scanNumber][fieldID];
+		return (*scanToNACRowsMap)[arrayID][observationID][scanNumber][fieldID];
 	}
 	else if (cType == CROSS) {
-		return scanToNXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+		return (*scanToNXCRowsMap)[arrayID][observationID][scanNumber][fieldID];
 	}
 	else {
-		return scanToNACRowsMap[arrayID][observationID][scanNumber][fieldID]
-		    + scanToNXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+		return (*scanToNACRowsMap)[arrayID][observationID][scanNumber][fieldID]
+		    + (*scanToNXCRowsMap)[arrayID][observationID][scanNumber][fieldID];
 	}
+
 }
 
-uInt MSMetaDataOnDemand::nRows(CorrelationType cType, uInt fieldID) {
+uInt MSMetaDataOnDemand::nRows(CorrelationType cType, Int fieldID) {
 	uInt nACRows, nXCRows;
-	AOSFMapI scanToNACRowsMap, scanToNXCRowsMap;
-	vector<uInt> fieldToNACRowsMap, fieldToNXCRowsMap;
+	std::tr1::shared_ptr<AOSFMapI> scanToNACRowsMap, scanToNXCRowsMap;
+	std::tr1::shared_ptr<std::map<Int, uInt> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
 		fieldToNXCRowsMap
 	);
 	if (cType == AUTO) {
-		return fieldToNACRowsMap[fieldID];
+		return (*fieldToNACRowsMap)[fieldID];
 	}
 	else if (cType == CROSS) {
-		return fieldToNXCRowsMap[fieldID];
+		return (*fieldToNXCRowsMap)[fieldID];
 	}
 	else {
-		return fieldToNACRowsMap[fieldID] + fieldToNXCRowsMap[fieldID];
+		return (*fieldToNACRowsMap)[fieldID] + (*fieldToNXCRowsMap)[fieldID];
 	}
 }
 
 Double MSMetaDataOnDemand::nUnflaggedRows() {
 	Double nACRows, nXCRows;
-	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
-	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	std::tr1::shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
+	std::tr1::shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -268,8 +274,8 @@ Double MSMetaDataOnDemand::nUnflaggedRows(CorrelationType cType) {
 		return nUnflaggedRows();
 	}
 	Double nACRows, nXCRows;
-	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
-	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	std::tr1::shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
+	std::tr1::shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
@@ -284,62 +290,60 @@ Double MSMetaDataOnDemand::nUnflaggedRows(CorrelationType cType) {
 }
 
 Double MSMetaDataOnDemand::nUnflaggedRows(
-	CorrelationType cType, uInt arrayID, uInt observationID,
-	uInt scanNumber, uInt fieldID
+	CorrelationType cType, Int arrayID, Int observationID,
+	Int scanNumber, Int fieldID
 ) {
 	Double nACRows, nXCRows;
-	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
-	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	std::tr1::shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
+	std::tr1::shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
 		fieldToNXCRowsMap
 	);
 	if (cType == AUTO) {
-		return scanToNACRowsMap[arrayID][observationID][scanNumber][fieldID];
+		return (*scanToNACRowsMap)[arrayID][observationID][scanNumber][fieldID];
 	}
 	else if (cType == CROSS) {
-		return scanToNXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+		return (*scanToNXCRowsMap)[arrayID][observationID][scanNumber][fieldID];
 	}
 	else {
-		return scanToNACRowsMap[arrayID][observationID][scanNumber][fieldID]
-		    + scanToNXCRowsMap[arrayID][observationID][scanNumber][fieldID];
+		return (*scanToNACRowsMap)[arrayID][observationID][scanNumber][fieldID]
+		    + (*scanToNXCRowsMap)[arrayID][observationID][scanNumber][fieldID];
 	}
 }
 
-Double MSMetaDataOnDemand::nUnflaggedRows(CorrelationType cType, uInt fieldID) {
+Double MSMetaDataOnDemand::nUnflaggedRows(CorrelationType cType, Int fieldID) {
 	Double nACRows, nXCRows;
-	AOSFMapD scanToNACRowsMap, scanToNXCRowsMap;
-	vector<Double> fieldToNACRowsMap, fieldToNXCRowsMap;
+	std::tr1::shared_ptr<AOSFMapD> scanToNACRowsMap, scanToNXCRowsMap;
+	std::tr1::shared_ptr<std::map<Int, Double> > fieldToNACRowsMap, fieldToNXCRowsMap;
 	_getUnflaggedRowStats(
 		nACRows, nXCRows, scanToNACRowsMap,
 		scanToNXCRowsMap, fieldToNACRowsMap,
 		fieldToNXCRowsMap
 	);
 	if (cType == AUTO) {
-		return fieldToNACRowsMap[fieldID];
+		return (*fieldToNACRowsMap)[fieldID];
 	}
 	else if (cType == CROSS) {
-		return fieldToNXCRowsMap[fieldID];
+		return (*fieldToNXCRowsMap)[fieldID];
 	}
 	else {
-		return fieldToNACRowsMap[fieldID] + fieldToNXCRowsMap[fieldID];
+		return (*fieldToNACRowsMap)[fieldID] + (*fieldToNXCRowsMap)[fieldID];
 	}
 }
 
 void MSMetaDataOnDemand::_getRowStats(
 	uInt& nACRows, uInt& nXCRows,
-	AOSFMapI& scanToNACRowsMap,
-	AOSFMapI& scanToNXCRowsMap,
-	vector<uInt>& fieldToNACRowsMap,
-	vector<uInt>& fieldToNXCRowsMap
+	std::tr1::shared_ptr<AOSFMapI>& scanToNACRowsMap,
+	std::tr1::shared_ptr<AOSFMapI>& scanToNXCRowsMap,
+	std::tr1::shared_ptr<std::map<Int, uInt> >& fieldToNACRowsMap,
+	std::tr1::shared_ptr<std::map<Int, uInt> >& fieldToNXCRowsMap
 ) {
+	// this method is responsible for setting _nACRows, _nXCRows, _scanToNACRowsMap,
+	// _scanToNXCRowsMap, _fieldToNACRowsMap, _fieldToNXCRowsMap
 	if (
-		_nACRows > 0 && _nXCRows > 0
-		&& _scanToNACRowsMap.size() > 0
-		&& _scanToNXCRowsMap.size() > 0
-		&& _fieldToNACRowsMap.size() > 0
-		&& _fieldToNXCRowsMap.size() > 0
+		_nACRows > 0 || _nXCRows > 0
 	) {
 		nACRows = _nACRows;
 		nXCRows = _nXCRows;
@@ -351,21 +355,29 @@ void MSMetaDataOnDemand::_getRowStats(
 	}
 	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
 	_getAntennas(ant1, ant2);
+	AOSFMapI *myScanToNACRowsMap, *myScanToNXCRowsMap;
+	std::map<Int, uInt> *myFieldToNACRowsMap, *myFieldToNXCRowsMap;
 	MSMetaData::_getRowStats(
-		nACRows, nXCRows, scanToNACRowsMap,
-		scanToNXCRowsMap, fieldToNACRowsMap,
-		fieldToNXCRowsMap, *ant1, *ant2,
+		nACRows, nXCRows, myScanToNACRowsMap,
+		myScanToNXCRowsMap, myFieldToNACRowsMap,
+		myFieldToNXCRowsMap, *ant1, *ant2,
 		*(_getScans()), *(_getFieldIDs()),
 		*(_getObservationIDs()), *(_getArrayIDs())
 	);
+	scanToNACRowsMap.reset(myScanToNACRowsMap);
+	scanToNXCRowsMap.reset(myScanToNXCRowsMap);
+	fieldToNACRowsMap.reset(myFieldToNACRowsMap);
+	fieldToNXCRowsMap.reset(myFieldToNXCRowsMap);
+
 	Float newSize = _cacheMB + sizeof(Int)*(
-		2 + 2*scanToNACRowsMap.size()
-		+ 2*scanToNXCRowsMap.size()
-		+ 2*fieldToNACRowsMap.size()
-		+ fieldToNACRowsMap.size()
-		+ fieldToNXCRowsMap.size()
-	)/1e6;
-	if (newSize <= _maxCacheMB) {
+		2 + 2*scanToNACRowsMap->size()
+		+ 2*scanToNXCRowsMap->size()
+		+ 2*fieldToNACRowsMap->size()
+		+ fieldToNACRowsMap->size()
+		+ fieldToNXCRowsMap->size()
+	);
+
+	if (_cacheUpdated(newSize)) {
 		_nACRows = nACRows;
 		_nXCRows = nXCRows;
 		_scanToNACRowsMap = scanToNACRowsMap;
@@ -473,23 +485,19 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaDataOnDemand::_getDataDescIDs() {
 	return dataDescIDs;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getScansForState(const uInt stateID) {
-	if (stateID >= nStates()) {
-		throw AipsError(
-			_ORIGIN + "Specified stateID exceeds the number of states for this dataset."
-		);
-	}
-	std::set<uInt> uniqueScans;
-	std::map<uInt, std::set<uInt> > myScanToStatesMap = _getScanToStatesMap();
+std::set<Int> MSMetaDataOnDemand::getScansForState(const Int stateID) {
+	_checkStateID(stateID);
+	std::set<Int> uniqueScans;
+	std::map<Int, std::set<Int> > myScanToStatesMap = _getScanToStatesMap();
 	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
 	uniqueScans.insert(scans->begin(), scans->end());
-	std::set<uInt>::const_iterator lastScan = uniqueScans.end();
-	std::set<uInt> scansForState;
+	std::set<Int>::const_iterator lastScan = uniqueScans.end();
+	std::set<Int> scansForState;
 	for (
-		std::set<uInt>::const_iterator scanNum=uniqueScans.begin();
+		std::set<Int>::const_iterator scanNum=uniqueScans.begin();
 		scanNum!=lastScan; scanNum++
 	) {
-		std::set<uInt> statesSet = myScanToStatesMap.find(*scanNum)->second;
+		std::set<Int> statesSet = myScanToStatesMap.find(*scanNum)->second;
 		if (statesSet.find(stateID) != statesSet.end()) {
 			scansForState.insert(*scanNum);
 		}
@@ -497,17 +505,32 @@ std::set<uInt> MSMetaDataOnDemand::getScansForState(const uInt stateID) {
 	return scansForState;
 }
 
-std::map<uInt, std::set<uInt> > MSMetaDataOnDemand::_getScanToStatesMap() {
+std::map<Int, std::set<Int> > MSMetaDataOnDemand::_getScanToStatesMap() {
 	if (! _scanToStatesMap.empty()) {
 		return _scanToStatesMap;
 	}
-	std::map<uInt, std::set<uInt> > myScanToStatesMap = MSMetaData::_getScanToStatesMap(
-		*(_getScans()), *(_getStateIDs())
-	);
-	std::map<uInt, std::set<uInt> >::const_iterator end = myScanToStatesMap.end();
+	std::map<Int, std::set<Int> > myScanToStatesMap;
 	uInt mySize = 0;
+
+	if (_ms->state().nrow() == 0) {
+		std::set<Int> empty;
+		std::set<Int> uniqueScans = getScanNumbers();
+		std::set<Int>::const_iterator end = uniqueScans.end();
+		for (
+			std::set<Int>::const_iterator scanNum=uniqueScans.begin();
+			scanNum!=end; scanNum++
+		) {
+			myScanToStatesMap[*scanNum] = empty;
+		}
+	}
+	else {
+		myScanToStatesMap = MSMetaData::_getScanToStatesMap(
+			*(_getScans()), *(_getStateIDs())
+		);
+	}
+	std::map<Int, std::set<Int> >::const_iterator end = myScanToStatesMap.end();
 	for (
-		std::map<uInt, std::set<uInt> >::const_iterator iter=myScanToStatesMap.begin();
+		std::map<Int, std::set<Int> >::const_iterator iter=myScanToStatesMap.begin();
 		iter!=end; iter++
 	) {
 		mySize += iter->second.size() + 1;
@@ -517,7 +540,7 @@ std::map<uInt, std::set<uInt> > MSMetaDataOnDemand::_getScanToStatesMap() {
 	}
 	return myScanToStatesMap;
 }
-
+/*
 std::set<String> MSMetaDataOnDemand::getIntentsForScan(const uInt scan) {
 	if (_scanToIntentsMap.find(scan) != _scanToIntentsMap.end()) {
 		return _scanToIntentsMap.find(scan)->second;
@@ -551,6 +574,79 @@ std::set<String> MSMetaDataOnDemand::getIntentsForScan(const uInt scan) {
 	}
 	return intentsForScan;
 }
+*/
+
+std::set<String> MSMetaDataOnDemand::getIntentsForScan(const Int scan) {
+	if (_scanToIntentsMap.find(scan) != _scanToIntentsMap.end()) {
+		return _scanToIntentsMap.find(scan)->second;
+	}
+	_checkScan(scan, getScanNumbers());
+	vector<std::set<String> > stateToIntentsMap;
+	std::set<String> uniqueIntents;
+	_getStateToIntentsMap(
+		stateToIntentsMap, uniqueIntents
+	);
+	std::map<Int, std::set<Int> > scanToStatesMap = _getScanToStatesMap();
+	/*
+	std::tr1::shared_ptr<Vector<Int> > stateIDs = _getStateIDs();
+	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
+	Vector<Int>::const_iterator end = stateIDs->end();
+	Vector<Int>::const_iterator curScan = scans->begin();
+	*/
+	std::map<Int, std::set<Int> >::const_iterator end = scanToStatesMap.end();
+	std::map<Int, std::set<String> > myScanToIntentsMap;
+	std::set<Int> states;
+	std::set<String> intents;
+	for (
+		std::map<Int, std::set<Int> >::const_iterator iter=scanToStatesMap.begin();
+		iter!=end; iter++
+	) {
+		states = iter->second;
+		if (myScanToIntentsMap.find(iter->first) == myScanToIntentsMap.end()) {
+			myScanToIntentsMap[iter->first] = std::set<String>();
+		}
+		std::set<Int>::const_iterator endState = states.end();
+		for (
+			std::set<Int>::const_iterator myState=states.begin();
+			myState!=endState; myState++
+		) {
+			intents = stateToIntentsMap[*myState];
+			myScanToIntentsMap[iter->first].insert(intents.begin(), intents.end());
+		}
+	}
+	/*
+	for (
+		Vector<Int>::const_iterator curState=stateIDs->begin();
+		curState!=end; curState++, curScan++
+	) {
+		if (myScanToIntentsMap.find(*curScan) == myScanToIntentsMap.end()) {
+			myScanToIntentsMap[*curScan] = std::set<String>();
+		}
+		intents = stateToIntentsMap[*curState];
+		myScanToIntentsMap[*curScan].insert(intents.begin(), intents.end());
+	}
+	*/
+	std::map<Int, std::set<String> >::const_iterator end2 = myScanToIntentsMap.end();
+	uInt mysize = myScanToIntentsMap.size()*sizeof(Int);
+	for (
+		std::map<Int, std::set<String> >::const_iterator iter=myScanToIntentsMap.begin();
+		iter!=end2; iter++
+	) {
+		intents = iter->second;
+		std::set<String>::const_iterator end3 = intents.end();
+		for (
+			std::set<String>::const_iterator intent=intents.begin();
+			intent!=end3; intent++
+		) {
+			mysize += intent->size();
+		}
+	}
+	if (_cacheUpdated(mysize)) {
+		_scanToIntentsMap = myScanToIntentsMap;
+	}
+	return myScanToIntentsMap[scan];
+}
+
 
 Bool MSMetaDataOnDemand::_cacheUpdated(const Float incrementInBytes) {
 	Float newSize = _cacheMB + incrementInBytes/1e6;
@@ -599,7 +695,7 @@ std::set<String> MSMetaDataOnDemand::getIntentsForSpw(const uInt spw) {
 	return _getSpwToIntentsMap()[spw];
 }
 
-std::set<String> MSMetaDataOnDemand::getIntentsForField(uInt fieldID) {
+std::set<String> MSMetaDataOnDemand::getIntentsForField(Int fieldID) {
 	_checkFieldID(fieldID);
 	if (! _fieldToIntentsMap.empty()) {
 		return _fieldToIntentsMap[fieldID];
@@ -617,10 +713,18 @@ uInt MSMetaDataOnDemand::nFields() {
 	return nFields;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const uInt fieldID) {
+std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const Int fieldID) {
 	_checkFieldID(fieldID);
 	if (_fieldToSpwMap.empty()) {
-		_fieldToSpwMap.resize(nFields());
+		_fieldToSpwMap.clear();
+		std::set<Int> uniqueFields = _getUniqueFiedIDs();
+		std::set<Int>::const_iterator end = uniqueFields.end();
+		for (
+			std::set<Int>::const_iterator f=uniqueFields.begin();
+			f!=end; f++
+		) {
+			_fieldToSpwMap[*f] = std::set<uInt>();
+		}
 	}
 	else if (! _fieldToSpwMap[fieldID].empty()) {
 		return _fieldToSpwMap[fieldID];
@@ -681,7 +785,7 @@ vector<String> MSMetaDataOnDemand::_getFieldNames() {
 	return fieldNames;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getFieldIDsForSpw(const uInt spw) {
+std::set<Int> MSMetaDataOnDemand::getFieldIDsForSpw(const uInt spw) {
 	uInt myNSpw = nSpw(True);
 	if (spw >= myNSpw) {
 		throw AipsError(_ORIGIN + "spectral window out of range");
@@ -699,19 +803,19 @@ std::set<uInt> MSMetaDataOnDemand::getFieldIDsForSpw(const uInt spw) {
 	Table result(tableCommand(taql, _taqlTempTable ));
 	ROScalarColumn<Int> fieldCol(result, "FIELD_ID");
 	Vector<Int> fields = fieldCol.getColumn().tovector();
-	std::set<uInt> fieldIds(fields.begin(), fields.end());
-	if (_cacheUpdated(sizeof(uInt)*fieldIds.size())) {
+	std::set<Int> fieldIds(fields.begin(), fields.end());
+	if (_cacheUpdated(sizeof(Int)*fieldIds.size())) {
 		_spwToFieldIDsMap[spw] = fieldIds;
 	}
 	return fieldIds;
 }
 
 std::set<String> MSMetaDataOnDemand::getFieldNamesForSpw(const uInt spw) {
-	std::set<uInt> fieldIDs = getFieldIDsForSpw(spw);
+	std::set<Int> fieldIDs = getFieldIDsForSpw(spw);
 	std::set<String> fieldNames;
 	vector<String> allFieldNames = _getFieldNames();
 	for (
-		std::set<uInt>::const_iterator fieldID = fieldIDs.begin();
+		std::set<Int>::const_iterator fieldID = fieldIDs.begin();
 		fieldID!=fieldIDs.end(); fieldID++
 	) {
 		fieldNames.insert(allFieldNames[*fieldID]);
@@ -719,6 +823,7 @@ std::set<String> MSMetaDataOnDemand::getFieldNamesForSpw(const uInt spw) {
 	return fieldNames;
 }
 
+/*
 std::set<uInt> MSMetaDataOnDemand::getSpwsForScan(const uInt scan) {
 	if (_scanToSpwsMap.find(scan) != _scanToSpwsMap.end()) {
 		return _scanToSpwsMap[scan];
@@ -743,8 +848,34 @@ std::set<uInt> MSMetaDataOnDemand::getSpwsForScan(const uInt scan) {
 	}
 	return spwIds;
 }
+*/
 
-std::set<uInt> MSMetaDataOnDemand::getScansForSpw(const uInt spw) {
+std::set<uInt> MSMetaDataOnDemand::getSpwsForScan(const Int scan) {
+    _checkScan(scan, getScanNumbers());
+    if (_scanToSpwsMap.find(scan) != _scanToSpwsMap.end()) {
+        return _scanToSpwsMap[scan];
+    }
+    std::tr1::shared_ptr<Vector<Int> > ddIDs = _getDataDescIDs();
+    std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
+    std::map<Int, uInt> ddToSpw = _getDataDescIDToSpwMap();
+    Vector<Int>::const_iterator end = ddIDs->end();
+    Vector<Int>::const_iterator myscan = scans->begin();
+    std::map<Int, std::set<uInt> > scanToSpwMap;
+    for (
+        Vector<Int>::const_iterator ddID=ddIDs->begin();
+        ddID!=end; ddID++, myscan++
+    ) {
+        if (scanToSpwMap.find(*myscan) == scanToSpwMap.end()) {
+            scanToSpwMap[*myscan] = std::set<uInt>();
+        }
+        scanToSpwMap[*myscan].insert(ddToSpw[*ddID]);
+    }
+    // FIXME do caching
+    _scanToSpwsMap = scanToSpwMap;
+    return scanToSpwMap[scan];
+}
+
+std::set<Int> MSMetaDataOnDemand::getScansForSpw(const uInt spw) {
 	uInt myNSpw = nSpw(True);
 	if (spw >= myNSpw) {
 		throw AipsError(
@@ -763,9 +894,9 @@ std::set<uInt> MSMetaDataOnDemand::getScansForSpw(const uInt spw) {
 		+ String::toString(spw) + "]";
 	Table result(tableCommand(taql, _taqlTempTable));
 	ROScalarColumn<Int> scanCol(result, "SCAN_NUMBER");
-	vector<uInt> scans = _toUIntVector(scanCol.getColumn().tovector());
-	std::set<uInt> scanIds(scans.begin(), scans.end());
-	if (_cacheUpdated(sizeof(uInt)*scanIds.size())) {
+	vector<Int> scans = scanCol.getColumn().tovector();
+	std::set<Int> scanIds(scans.begin(), scans.end());
+	if (_cacheUpdated(sizeof(Int)*scanIds.size())) {
 		_spwToScansMap[spw] = scanIds;
 	}
 	return scanIds;
@@ -1049,18 +1180,18 @@ std::set<uInt> MSMetaDataOnDemand::getWVRSpw() {
 	return wvrSpw;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getScansForTimes(
+std::set<Int> MSMetaDataOnDemand::getScansForTimes(
 	const Double center, const Double tol
 ) {
 	_checkTolerance(tol);
-	std::set<uInt> uniqueScans = getScanNumbers();
-	std::tr1::shared_ptr<std::map<uInt, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
+	std::set<Int> uniqueScans = getScanNumbers();
+	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
 	Double minTime = center - tol;
 	Double maxTime = center + tol;
-	std::set<uInt> scans;
-	std::set<uInt>::const_iterator end = uniqueScans.end();
+	std::set<Int> scans;
+	std::set<Int>::const_iterator end = uniqueScans.end();
 	for (
-		std::set<uInt>::const_iterator scan=uniqueScans.begin();
+		std::set<Int>::const_iterator scan=uniqueScans.begin();
 		scan!=end; scan++
 	) {
 		std::set<Double> times = scanToTimesMap->find(*scan)->second;
@@ -1071,27 +1202,27 @@ std::set<uInt> MSMetaDataOnDemand::getScansForTimes(
 	return scans;
 }
 
-std::tr1::shared_ptr<std::map<uInt, std::set<Double> > > MSMetaDataOnDemand::_getScanToTimesMap() {
+std::tr1::shared_ptr<std::map<Int, std::set<Double> > > MSMetaDataOnDemand::_getScanToTimesMap() {
 	if (_scanToTimesMap && ! _scanToTimesMap->empty()) {
 		return _scanToTimesMap;
 	}
-	std::tr1::shared_ptr<std::map<uInt, std::set<Double> > > scanToTimesMap(
-		new std::map<uInt, std::set<Double> >(
+	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap(
+		new std::map<Int, std::set<Double> >(
 			MSMetaData::_getScanToTimesMap(
 				*_getScans(), *_getTimes()
 			)
 		)
 	);
 	uInt mysize = 0;
-	std::map<uInt, std::set<Double> >::const_iterator end = scanToTimesMap->end();
+	std::map<Int, std::set<Double> >::const_iterator end = scanToTimesMap->end();
 	for (
-		std::map<uInt, std::set<Double> >::const_iterator iter=scanToTimesMap->begin();
+		std::map<Int, std::set<Double> >::const_iterator iter=scanToTimesMap->begin();
 		iter!=end; iter++
 	) {
 		mysize += iter->second.size();
 	}
 	mysize *= sizeof(Double);
-	mysize += sizeof(uInt)*scanToTimesMap->size();
+	mysize += sizeof(Int)*scanToTimesMap->size();
 	if (_cacheUpdated(mysize)) {
 		_scanToTimesMap = scanToTimesMap;
 	}
@@ -1130,13 +1261,13 @@ std::tr1::shared_ptr<ArrayColumn<Bool> > MSMetaDataOnDemand::_getFlags() {
 
 
 std::set<Double> MSMetaDataOnDemand::getTimesForScans(
-	const std::set<uInt>& scans
+	const std::set<Int>& scans
 ) {
 	std::set<Double> times;
-	std::tr1::shared_ptr<std::map<uInt, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
-	std::set<uInt> scanNumbers = getScanNumbers();
+	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > scanToTimesMap = _getScanToTimesMap();
+	std::set<Int> scanNumbers = getScanNumbers();
 	for (
-		std::set<uInt>::const_iterator scan=scans.begin();
+		std::set<Int>::const_iterator scan=scans.begin();
 		scan!=scans.end(); scan++
 	) {
 		_checkScan(*scan, scanNumbers);
@@ -1153,9 +1284,9 @@ void MSMetaDataOnDemand::_getTimesAndInvervals(
 	std::map<Int, std::map<uInt, Double> >& scanSpwToIntervalMap
 ) {
 
-	scanToTimeRangeMap = _getScanToTimeRangeMap(
+	scanToTimeRangeMap = MSMetaData::_getScanToTimeRangeMap(
 		scanSpwToIntervalMap,
-		*_getScans(), _getTimeCentroids(*_ms), _getIntervals(*_ms),
+		*_getScans(), MSMetaData::_getTimeCentroids(*_ms), _getIntervals(*_ms),
 		*_getDataDescIDs(), _getDataDescIDToSpwMap(), getScanNumbers()
 	);
 	uInt mysize = scanToTimeRangeMap.size()*(sizeof(Int)+2*sizeof(Double));
@@ -1168,7 +1299,7 @@ void MSMetaDataOnDemand::_getTimesAndInvervals(
 	}
 }
 
-vector<Double> MSMetaDataOnDemand::getTimeRangeForScan(uInt scan) {
+vector<Double> MSMetaDataOnDemand::getTimeRangeForScan(Int scan) {
 	_checkScan(scan, getScanNumbers());
 	if (! _scanToTimeRangeMap.empty()) {
 		return _scanToTimeRangeMap[scan];
@@ -1182,7 +1313,7 @@ vector<Double> MSMetaDataOnDemand::getTimeRangeForScan(uInt scan) {
 	return scanToTimeRangeMap[scan];
 }
 
-std::map<uInt, Double> MSMetaDataOnDemand::getAverageIntervalsForScan(uInt scan) {
+std::map<uInt, Double> MSMetaDataOnDemand::getAverageIntervalsForScan(Int scan) {
 	_checkScan(scan, getScanNumbers());
 	if (! _scanSpwToIntervalMap.empty()) {
 		return _scanSpwToIntervalMap[scan];
@@ -1197,12 +1328,12 @@ std::map<uInt, Double> MSMetaDataOnDemand::getAverageIntervalsForScan(uInt scan)
 
 }
 
-std::set<uInt> MSMetaDataOnDemand::getStatesForScan(const uInt scan) {
+std::set<Int> MSMetaDataOnDemand::getStatesForScan(const Int scan) {
 	_checkScan(scan, getScanNumbers());
 	return _getScanToStatesMap().find(scan)->second;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getScansForIntent(const String& intent) {
+std::set<Int> MSMetaDataOnDemand::getScansForIntent(const String& intent) {
 	if (_intentToScansMap.find(intent) != _intentToScansMap.end()) {
 		return _intentToScansMap[intent];
 	}
@@ -1212,7 +1343,7 @@ std::set<uInt> MSMetaDataOnDemand::getScansForIntent(const String& intent) {
 	Table result(tableCommand(taql, _taqlTempTable));
 	ROScalarColumn<Int> scanCol(result, "SCAN_NUMBER");
 	Vector<Int> scans = scanCol.getColumn();
-	std::set<uInt> myscans(scans.begin(), scans.end());
+	std::set<Int> myscans(scans.begin(), scans.end());
 	uInt mysize = intent.size() + sizeof(uInt)*myscans.size();
 	if (_cacheUpdated(mysize)) {
 		_intentToScansMap[intent] = myscans;
@@ -1220,23 +1351,19 @@ std::set<uInt> MSMetaDataOnDemand::getScansForIntent(const String& intent) {
 	return myscans;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getScansForFieldID(const uInt fieldID) {
+std::set<Int> MSMetaDataOnDemand::getScansForFieldID(const Int fieldID) {
 	_checkFieldID(fieldID);
-	if (_fieldToScansMap.empty()) {
-		_fieldToScansMap.resize(nFields());
-	}
-	else if (! _fieldToScansMap[fieldID].empty()) {
+	if (! _fieldToScansMap.empty() && ! _fieldToScansMap[fieldID].empty()) {
 		return _fieldToScansMap[fieldID];
 	}
-	std::set<uInt> scans;
+	std::set<Int> scans;
 	std::tr1::shared_ptr<Vector<Int> > fieldIds = _getFieldIDs();
 	Vector<Int>::const_iterator curFieldID = fieldIds->begin();
 	Vector<Int>::const_iterator end = fieldIds->end();
 	std::tr1::shared_ptr<Vector<Int> > allScans = _getScans();
 	Vector<Int>::const_iterator curScan = allScans->begin();
-	Int iField = (Int)fieldID;
 	while (curFieldID != end) {
-		if (iField == *curFieldID) {
+		if (fieldID == *curFieldID) {
 			scans.insert(*curScan);
 		}
 		curFieldID++;
@@ -1248,10 +1375,10 @@ std::set<uInt> MSMetaDataOnDemand::getScansForFieldID(const uInt fieldID) {
 	return scans;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getFieldIDsForField(
+std::set<Int> MSMetaDataOnDemand::getFieldIDsForField(
 	const String& field
 ) {
-	std::set<uInt> fieldIDs;
+	std::set<Int> fieldIDs;
 	String name = field;
 	vector<String> fieldNames = _getFieldNames();
 	uInt nNames = fieldNames.size();
@@ -1271,7 +1398,7 @@ std::set<uInt> MSMetaDataOnDemand::getFieldIDsForField(
 	return fieldIDs;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getFieldsForScan(const uInt scan) {
+std::set<Int> MSMetaDataOnDemand::getFieldsForScan(const Int scan) {
 	_checkScan(scan, getScanNumbers());
 	if (_scanToFieldsMap.find(scan) != _scanToFieldsMap.end()) {
 		return _scanToFieldsMap[scan];
@@ -1281,24 +1408,24 @@ std::set<uInt> MSMetaDataOnDemand::getFieldsForScan(const uInt scan) {
 	Table result(tableCommand(taql, _taqlTempTable));
 	ROScalarColumn<Int> fieldCol(result, "FIELD_ID");
 	Vector<Int> fields = fieldCol.getColumn();
-	std::set<uInt> myfields (fields.begin(), fields.end());
+	std::set<Int> myfields (fields.begin(), fields.end());
 	if (_cacheUpdated(sizeof(uInt)*(1 + myfields.size()))) {
 		_scanToFieldsMap[scan] = myfields;
 	}
 	return myfields;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getFieldsForScans(const std::set<uInt>& scans) {
+std::set<Int> MSMetaDataOnDemand::getFieldsForScans(const std::set<Int>& scans) {
 	_checkScan(*(++scans.rend()), getScanNumbers());
 	String scanString;
-	std::set<uInt>::const_iterator end = scans.end();
-	std::set<uInt> myfields;
+	std::set<Int>::const_iterator end = scans.end();
+	std::set<Int> myfields;
 	for (
-		std::set<uInt>::const_iterator iter=scans.begin();
+		std::set<Int>::const_iterator iter=scans.begin();
 		iter!=end; iter++
 	) {
 		if (_scanToFieldsMap.find(*iter) != _scanToFieldsMap.end()) {
-			std::set<uInt> newfields = _scanToFieldsMap[*iter];
+			std::set<Int> newfields = _scanToFieldsMap[*iter];
 			myfields.insert(newfields.begin(), newfields.end());
 		}
 		else {
@@ -1319,7 +1446,7 @@ std::set<uInt> MSMetaDataOnDemand::getFieldsForScans(const std::set<uInt>& scans
 	return myfields;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
+std::set<Int> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
 	if (_intentToFieldIDMap.find(intent) != _intentToFieldIDMap.end()) {
 		return _intentToFieldIDMap[intent];
 	}
@@ -1330,25 +1457,25 @@ std::set<uInt> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
 	Table result(tableCommand(taql, _taqlTempTable));
 	ROScalarColumn<Int> fieldCol(result, "FIELD_ID");
 	Vector<Int> fields = fieldCol.getColumn().tovector();
-	std::set<uInt> myfields(fields.begin(), fields.end());
-	if (_cacheUpdated(intent.size() + sizeof(uInt)*myfields.size())) {
+	std::set<Int> myfields(fields.begin(), fields.end());
+	if (_cacheUpdated(intent.size() + sizeof(Int)*myfields.size())) {
 		_intentToFieldIDMap[intent] = myfields;
 	}
 	return myfields;
 }
 
 vector<String> MSMetaDataOnDemand::getFieldNamesForFieldIDs(
-	const vector<uInt>& fieldIDs
+	const vector<Int>& fieldIDs
 ) {
-	_checkFieldIDs(fieldIDs);
 	if (fieldIDs.size() == 0) {
 		return _getFieldNames();
 	}
+	_checkFieldIDs(fieldIDs);
 	vector<String> allNames = _getFieldNames();
 	vector<String> names;
-	vector<uInt>::const_iterator end = fieldIDs.end();
+	vector<Int>::const_iterator end = fieldIDs.end();
 	for (
-		vector<uInt>::const_iterator iter=fieldIDs.begin();
+		vector<Int>::const_iterator iter=fieldIDs.begin();
 		iter!=end; iter++
 	) {
 		names.push_back(allNames[*iter]);
@@ -1356,7 +1483,7 @@ vector<String> MSMetaDataOnDemand::getFieldNamesForFieldIDs(
 	return names;
 }
 
-std::set<uInt> MSMetaDataOnDemand::getFieldsForTimes(
+std::set<Int> MSMetaDataOnDemand::getFieldsForTimes(
 	const Double center, const Double tol
 ) const {
 	_checkTolerance(tol);
@@ -1369,18 +1496,19 @@ std::set<uInt> MSMetaDataOnDemand::getFieldsForTimes(
 	Table result(tableCommand(taql, _taqlTempTable));
 	ROScalarColumn<Int> fieldCol(result, "FIELD_ID");
 	Vector<Int> fields = fieldCol.getColumn().tovector();
-	return std::set<uInt>(fields.begin(), fields.end());
+	return std::set<Int>(fields.begin(), fields.end());
 }
 
-std::set<Double> MSMetaDataOnDemand::getTimesForField(const uInt fieldID) {
+std::set<Double> MSMetaDataOnDemand::getTimesForField(const Int fieldID) {
 	_checkFieldID(fieldID);
-	if (! _fieldToTimesMap) {
-		_fieldToTimesMap.reset(
-			new vector<std::set<Double> >(nFields())
-		);
+	if (_fieldToTimesMap) {
+		std::map<Int, std::set<Double> >::const_iterator iter = _fieldToTimesMap->find(fieldID);
+		if (iter != _fieldToTimesMap->end() && ! iter->second.empty()) {
+			return _fieldToTimesMap->find(fieldID)->second;
+		}
 	}
-	else if (! _fieldToTimesMap->at(fieldID).empty()) {
-		return _fieldToTimesMap->at(fieldID);
+	else {
+		_fieldToTimesMap.reset(new std::map<Int, std::set<Double> >());
 	}
 	String taql = "select unique(TIME) from " + _taqlTableName
 		+ " where FIELD_ID=" + String::toString(fieldID);
@@ -1389,7 +1517,7 @@ std::set<Double> MSMetaDataOnDemand::getTimesForField(const uInt fieldID) {
 	Vector<Double> times = timeCol.getColumn();
 	std::set<Double> mytimes(times.begin(), times.end());
 	if (_cacheUpdated(sizeof(Double)*mytimes.size())) {
-		_fieldToTimesMap->at(fieldID) = mytimes;
+		(*_fieldToTimesMap)[fieldID] = mytimes;
 	}
 	return mytimes;
 }
@@ -1557,10 +1685,15 @@ Quantity MSMetaDataOnDemand::getEffectiveTotalExposureTime() {
 
 void MSMetaDataOnDemand::_getUnflaggedRowStats(
 	Double& nACRows, Double& nXCRows,
-	AOSFMapD& scanNACRows, AOSFMapD& scanNXCRows,
-	vector<Double>& fieldNACRows, vector<Double>& fieldNXCRows
+	std::tr1::shared_ptr<AOSFMapD>& scanNACRows,
+	std::tr1::shared_ptr<AOSFMapD>& scanNXCRows,
+	std::tr1::shared_ptr<std::map<Int, Double> >& fieldNACRows,
+	std::tr1::shared_ptr<std::map<Int, Double> >& fieldNXCRows
 ) {
-	if (! _unflaggedFieldNACRows.empty()) {
+	// This method is responsible for setting _nUnflaggedACRows, _nUnflaggedXCRows,
+	// _unflaggedFieldNACRows, _unflaggedFieldNXCRows, _unflaggedScanNACRows,
+	// _unflaggedScanNXCRows
+	if (_unflaggedFieldNACRows && ! _unflaggedFieldNACRows->empty()) {
 		nACRows = _nUnflaggedACRows;
 		nXCRows = _nUnflaggedXCRows;
 		fieldNACRows = _unflaggedFieldNACRows;
@@ -1569,19 +1702,27 @@ void MSMetaDataOnDemand::_getUnflaggedRowStats(
 		scanNXCRows = _unflaggedScanNXCRows;
 		return;
 	}
+	AOSFMapD *myScanNACRows, *myScanNXCRows;
+	std::map<Int, Double> *myFieldNACRows, *myFieldNXCRows;
+
 	std::tr1::shared_ptr<Vector<Int> > ant1, ant2;
 	_getAntennas(ant1, ant2);
 	std::set<uInt> a, b, c, d;
 	MSMetaData::_getUnflaggedRowStats(
-		nACRows, nXCRows, fieldNACRows,
-		fieldNXCRows, scanNACRows, scanNXCRows, *ant1,
+		nACRows, nXCRows, myFieldNACRows,
+		myFieldNXCRows, myScanNACRows, myScanNXCRows, *ant1,
 		*ant2, _getFlagRows(*_ms), *_getDataDescIDs(),
 		_getDataDescIDToSpwMap(),
 		_getSpwInfo(a, b, c, d), *MSMetaData::_getFlags(*_ms), *_getFieldIDs(),
 		*_getScans(), *_getObservationIDs(), *_getArrayIDs()
 	);
-	uInt mysize = fieldNACRows.size() + fieldNXCRows.size()
-		+ scanNACRows.size() + scanNXCRows.size();
+	fieldNACRows.reset(myFieldNACRows);
+	fieldNXCRows.reset(myFieldNXCRows);
+	scanNACRows.reset(myScanNACRows);
+	scanNXCRows.reset(myScanNXCRows);
+
+	uInt mysize = fieldNACRows->size() + fieldNXCRows->size()
+		+ scanNACRows->size() + scanNXCRows->size();
 	mysize *= sizeof(Double);
 	if (_cacheUpdated(mysize)) {
 		_nUnflaggedACRows = nACRows;
@@ -1621,7 +1762,7 @@ vector<std::set<String> > MSMetaDataOnDemand::_getSpwToIntentsMap() {
 	Vector<Int>::const_iterator endDDID = dataDescIDs->end();
 	std::tr1::shared_ptr<Vector<Int> > states = _getStateIDs();
 	Vector<Int>::const_iterator curState = states->begin();
-	vector<uInt> dataDescToSpwMap = _getDataDescIDToSpwMap();
+	std::map<Int, uInt> dataDescToSpwMap = _getDataDescIDToSpwMap();
 	uInt mysize = 0;
 	while (curDDID!=endDDID) {
 		uInt spw = dataDescToSpwMap[*curDDID];
@@ -1663,10 +1804,10 @@ vector<std::set<String> > MSMetaDataOnDemand::_getFieldToIntentsMap() {
 		std::set<String>::const_iterator iter=uniqueIntents.begin();
 		iter!=end; iter++
 	) {
-		std::set<uInt> fieldIDs = getFieldsForIntent(*iter);
-		std::set<uInt>::const_iterator fEnd = fieldIDs.end();
+		std::set<Int> fieldIDs = getFieldsForIntent(*iter);
+		std::set<Int>::const_iterator fEnd = fieldIDs.end();
 		for (
-			std::set<uInt>::const_iterator fiter=fieldIDs.begin();
+			std::set<Int>::const_iterator fiter=fieldIDs.begin();
 			fiter!=fEnd; fiter++
 		) {
 			fieldToIntentsMap[*fiter].insert(*iter);
@@ -1679,11 +1820,11 @@ vector<std::set<String> > MSMetaDataOnDemand::_getFieldToIntentsMap() {
 	return fieldToIntentsMap;
 }
 
-vector<uInt> MSMetaDataOnDemand::_getDataDescIDToSpwMap() {
+std::map<Int, uInt> MSMetaDataOnDemand::_getDataDescIDToSpwMap() {
 	if (! _dataDescIDToSpwMap.empty()) {
 		return _dataDescIDToSpwMap;
 	}
-	vector<uInt> dataDescToSpwMap = MSMetaData::_getDataDescIDToSpwMap(*_ms);
+	std::map<Int, uInt> dataDescToSpwMap = MSMetaData::_getDataDescIDToSpwMap(*_ms);
 	uInt mysize = sizeof(Int) * dataDescToSpwMap.size();
 	if (_cacheUpdated(mysize)) {
 		_dataDescIDToSpwMap = dataDescToSpwMap;
@@ -1730,7 +1871,7 @@ vector<MSMetaData::SpwProperties> MSMetaDataOnDemand::_getSpwInfo(
 	return spwInfo;
 }
 
-void MSMetaDataOnDemand::_checkScan(const uInt scan, const std::set<uInt> uniqueScans) {
+void MSMetaDataOnDemand::_checkScan(const Int scan, const std::set<Int> uniqueScans) {
 	if (uniqueScans.find(scan) == uniqueScans.end()) {
 		throw AipsError(
 			_ORIGIN + "Unknown scan number " + String::toString(scan)
@@ -1738,23 +1879,45 @@ void MSMetaDataOnDemand::_checkScan(const uInt scan, const std::set<uInt> unique
 	}
 }
 
-void MSMetaDataOnDemand::_checkFieldID(const uInt fieldID) {
-	if (fieldID >= this->nFields()) {
+void MSMetaDataOnDemand::_checkFieldID(const Int fieldID) {
+	std::set<Int> uniqueFields = _getUniqueFiedIDs();
+	if (uniqueFields.find(fieldID) == uniqueFields.end() ) {
 		throw AipsError(
 			_ORIGIN + "field ID ("
-			+ String::toString(fieldID) + ") out of range"
+			+ String::toString(fieldID) + ") is not present in this dataset."
 		);
 	}
 }
 
-void MSMetaDataOnDemand::_checkFieldIDs(const vector<uInt>& fieldIDs) {
-	if (fieldIDs.size() > 0) {
-		if (uInt myMax = max(Vector<uInt>(fieldIDs)) >= nFields()) {
-			throw AipsError(
-				_ORIGIN + "At least one field ID (" + String::toString(myMax)
-					+ ") is out of range"
-			);
-		}
+void MSMetaDataOnDemand::_checkFieldIDs(const vector<Int>& fieldIDs) {
+	vector<Int>::const_iterator end = fieldIDs.end();
+	for (
+		vector<Int>::const_iterator f=fieldIDs.begin();
+		f!=end; f++
+	) {
+		_checkFieldID(*f);
+	}
+}
+
+std::set<Int> MSMetaDataOnDemand::_getUniqueFiedIDs() {
+	if (_uniqueFieldIDs.empty()) {
+		std::tr1::shared_ptr<Vector<Int> > allFieldIDs = _getFieldIDs();
+		_uniqueFieldIDs.insert(allFieldIDs->begin(), allFieldIDs->end());
+	}
+	return _uniqueFieldIDs;
+}
+
+
+void MSMetaDataOnDemand::_checkStateID(const Int stateID) {
+	if (_uniqueStateIDs.empty()) {
+		std::tr1::shared_ptr<Vector<Int> > allStateIDs = _getStateIDs();
+		_uniqueStateIDs.insert(allStateIDs->begin(), allStateIDs->end());
+	}
+	if (_uniqueStateIDs.find(stateID) == _uniqueStateIDs.end() ) {
+		throw AipsError(
+			_ORIGIN + "state ID ("
+			+ String::toString(stateID) + ") is not present in this dataset."
+		);
 	}
 }
 
