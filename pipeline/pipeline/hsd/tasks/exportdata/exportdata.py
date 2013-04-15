@@ -112,7 +112,7 @@ class SDExportDataInputs(basetask.StandardInputs):
     def flag_bl_coeff(self, value):
         self._flag_bl_coeff = value
  
-class SDExportDataResults(api.Results):
+class SDExportDataResults(basetask.Results):
     def __init__(self, jobs=[]):
         super(SDExportDataResults,self).__init__()
         """
