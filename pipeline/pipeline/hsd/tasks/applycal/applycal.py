@@ -150,7 +150,8 @@ class SDApplyCal(common.SingleDishTaskTemplate):
             args['infile'] = os.path.join(inputs.output_dir, args['infile'])
 
             # output file
-            args['outfile'] = os.path.join(inputs.output_dir, args['outfile'])
+            #args['outfile'] = os.path.join(inputs.output_dir, args['outfile'])
+            args['outfile'] = ''
 
             # print calmode
             LOG.info('calibration type is \'%s\' (type=%s)'%(args['calmode'],type(args['calmode'])))
