@@ -223,7 +223,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         parallel -- Create a multi-MS in parallel, using the simple_cluster
                     infrastructure. It will run the tool several times in parallel,
                     one instance for each subMS. Note that for small MSs, we
-                    recommend to not change this parameter as the overhead of creating
+                    recommend to set this parameter to False as the overhead of creating
                     a cluster may be larger than the gain to run in parallel. (bool)
             default: True
 
