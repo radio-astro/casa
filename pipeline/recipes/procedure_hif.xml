@@ -13,6 +13,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hif_refant</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hif_wvrgcal</Command>
         <ParameterSet>
         </ParameterSet>
@@ -62,11 +68,6 @@
         </ParameterSet>
     </ProcessingCommand>
 
-    <ProcessingCommand>
-        <Command xmlns="">hif_refant</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
 
     <ProcessingCommand>
         <Command xmlns="">hif_bandpass</Command>
