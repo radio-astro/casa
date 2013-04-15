@@ -187,7 +187,7 @@ def simalma(
             
         imagename_tp = project+".sd.image"
         imagename_int = project+".concat.image"
-        combimage = project+".image"
+        combimage = project+".feather.image"
 
         simana_file = project+".simanalyze.last"
 
@@ -657,6 +657,74 @@ def simalma(
                     raise Exception, "simalma caught an exception in task feather"
                 finally:
                     casalog.origin('simalma')
+
+                ########################################################
+                # Generate Summary Plot
+                grscreen = False
+                grfile = False
+                if graphics == "both":
+                    grscreen = True
+                    grfile = True
+                if graphics == "screen":
+                    grscreen = True
+                if graphics == "file":
+                    grfile = True
+                if grscreen or grfile:
+                    if grfile:
+                        file = fileroot + "/" + project + ".combine.png"
+                    else:
+                        file = ""
+
+                    # check for image pathes
+                    if os.path.exists(skymodel):
+                        flatsky = pref_bl + ".skymodel.flat"
+                    else:
+                        flatsky = pref_bl + ".compskymodel.flat"
+                    if not os.path.exists(fileroot+"/"+flatsky):
+                        raise Exception, "Coud not find a skymodel image '%s'" % flatsky
+
+                    if not os.path.exists(fileroot+"/"+combimage):
+                        raise Exception, "Coud not find the combined image '%s'" % combimage
+
+                    if not os.path.exists(fileroot+"/"+imagename_int):
+                        raise Exception, "Coud not find the synthesized image '%s'" % imagename_int
+
+                    if not os.path.exists(fileroot+"/"+imagename_tp):
+                        raise Exception, "Coud not find the total power image '%s'" % (imagename_tp)
+                    # Now the actual plotting
+                    disprange = None
+                    myutil.newfig(multi=[2,2,1],show=grscreen)
+                    # skymodel
+                    discard = myutil.statim(fileroot+"/"+flatsky,disprange=disprange)
+
+                    #disprange = []
+                    # synthesized image
+                    flatint = fileroot + "/" + imagename_int + ".flat"
+                    myutil.flatimage(fileroot+"/"+imagename_int,verbose=verbose)
+                    if not os.path.exists(flatint):
+                        raise Exception, "Failed to generate '%s'" % (flatint)
+                    myutil.nextfig()
+                    discard = myutil.statim(flatint,disprange=disprange)
+                    shutil.rmtree(flatint)
+
+                    # total power image
+                    flattp = fileroot + "/" + imagename_tp + ".flat"
+                    myutil.flatimage(fileroot+"/"+imagename_tp,verbose=verbose)
+                    if not os.path.exists(flattp):
+                        raise Exception, "Failed to generate '%s'" % (flattp)
+                    myutil.nextfig()
+                    discard = myutil.statim(flattp,disprange=disprange)
+                    shutil.rmtree(flattp)
+
+                    # combined image
+                    flatcomb = fileroot + "/" + combimage + ".flat"
+                    myutil.flatimage(fileroot+"/"+combimage,verbose=verbose)
+                    if not os.path.exists(flatcomb):
+                        raise Exception, "Failed to generate '%s'" % (flatcomb)
+                    myutil.nextfig()
+                    discard = myutil.statim(flatcomb,disprange=disprange)
+                    myutil.endfig(show=grscreen,filename=file)
+                    shutil.rmtree(flatcomb)
 
 
     except TypeError, e:
