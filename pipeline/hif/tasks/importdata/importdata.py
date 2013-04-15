@@ -22,10 +22,11 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImportDataInputs(basetask.StandardInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
-                 session=None, overwrite=None):
+                 session=None, overwrite=None, save_flagonline=None):
         self._init_properties(vars())
 
     overwrite = basetask.property_with_default('overwrite', False)
+    save_flagonline = basetask.property_with_default('save_flagonline', True)
 
     @property
     def session(self):
@@ -265,7 +266,8 @@ class ImportData(basetask.StandardTaskTemplate):
                                      savecmds=True,
                                      outfile=outfile,
                                      process_caldevice=False,
-                                     overwrite=self.inputs.overwrite)        
+                                     overwrite=self.inputs.overwrite,
+				     save_flagonline=self.inputs.save_flagonline)        
         
         self._executor.execute(task)
 
