@@ -273,6 +273,8 @@ protected:
   static Bool firstMain;
   Bool uv_data_hasWeights_p;
   Bool weightKwPresent_p;
+  Bool weightypKwPresent_p;
+  String weightyp_p;
   Matrix<Float> weightsFromKW_p;
   static SimpleOrderedMap<Int,Int> antIdFromNo;
 
