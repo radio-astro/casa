@@ -846,6 +846,8 @@ void FITSIDItoMS1::describeColumns()
         uInt ctr=0;
 
 	weightKwPresent_p = False;
+	weightypKwPresent_p = False;
+	weightyp_p = "";
 
         while((kw = kwl.next())){
 	    kwname = kw->name();
@@ -853,6 +855,17 @@ void FITSIDItoMS1::describeColumns()
 		maxis.resize(++ctr,True);
 		maxis(ctr-1)=kw->asInt();
 //		cout << "**maxis=" << maxis << endl;
+	    }
+	    else if(kwname.at(0,8)=="WEIGHTYP"){
+	        weightypKwPresent_p = True;
+		weightyp_p = kw->asString();
+		weightyp_p.upcase();
+		weightyp_p.trim();
+		if(weightyp_p!="NORMAL"){
+		  *itsLog << LogIO::WARN << "Found WEIGHTYP keyword with value \"" << weightyp_p
+			  << "\" in UV_DATA table. Presently this keyword is ignored."
+			  << LogIO::POST;
+		}
 	    }
 	    else if(kwname.at(0,6)=="WEIGHT"){
 	        weightKwPresent_p = True;
