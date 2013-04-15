@@ -867,10 +867,14 @@ void QtDisplayPanelGui::resetListenerImage(){
 		}
 	}
 	else {
-		histogrammer->hide();
+		if ( histogrammer!=NULL){
+			histogrammer->hide();
+		}
 	}
 	if ( !imageFound ){
-		histogrammer->setImage( NULL );
+		if ( histogrammer != NULL ){
+			histogrammer->setImage( NULL );
+		}
 	}
 }
 
