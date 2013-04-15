@@ -79,6 +79,8 @@ namespace casa {
 		// fetch region type...
 		region::RegionTypes type( ) const { return region::PointRegion; }
 
+		void releaseSignals( );
+
 	    protected:
 
 		static const int radius;

@@ -46,6 +46,11 @@ namespace casa {
 	Point::~Point( ) { }
 
 
+	void Point::releaseSignals( ) {
+		Region::releaseSignals( );
+		refresh_state_gui( );
+	}
+
 	AnnotationBase *Point::annotation( ) const {
 
 	    if ( wc_ == 0 || wc_->csMaster() == 0 ) return 0;

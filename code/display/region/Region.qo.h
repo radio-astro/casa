@@ -271,7 +271,7 @@ namespace casa {
 
 				// postpone signal processing (important for signals generated during construction)...
 				void holdSignals( ) { hold_signals++; }
-				void releaseSignals( ) {
+				virtual void releaseSignals( ) {
 					if ( --hold_signals == 0 ) process_held_signals( );
 					if ( hold_signals < 0 ) hold_signals = 0;
 				}
