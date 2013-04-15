@@ -411,11 +411,9 @@ class msmd_test(unittest.TestCase):
             got = self.md.namesforfields(i)
             self.assertTrue(got == [names[i]])
         self.assertTrue(self.md.namesforfields() == names)
-        self.assertTrue(
-            self.md.namesforfields([4, 0, 2])
-            == ["V866 Sco", "3C279", "Titan"]
-        )
-
+        got = self.md.namesforfields([4, 0, 2])
+        print "*** got " + str(got)
+        self.assertTrue(got == ["V866 Sco", "3C279", "Titan"])
 
     def test_nantennas(self):
         """ Test nantennas()"""
