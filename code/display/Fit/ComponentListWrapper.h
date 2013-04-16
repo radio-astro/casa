@@ -59,8 +59,8 @@ public:
 	bool toEstimateFile( QTextStream& stream,
 			ImageInterface<Float>* image, QString& errorMsg,
 			bool screenEstimates = false, RegionBox* screenBox = NULL) const;
-	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, int channelIndex, const QString& colorName ) const;
-	bool toRegionFile( ImageInterface<float>* image, const QString& filePath ) const;
+	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName) const;
+	bool toRegionFile( ImageInterface<float>* image, int channelIndex, const QString& filePath ) const;
 	virtual ~ComponentListWrapper();
 
 private:

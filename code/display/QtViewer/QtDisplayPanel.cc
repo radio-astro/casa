@@ -696,7 +696,7 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd) {
 	// Reset animator in accordance with new set of registered DDs
 	// (This code comes mostly from GTkPD::add()).
 	Record animrec;
-	if(pd_->isCSmaster(dd) && ddHasPreferredZIndex) {
+	if(pd_->isCSmaster(dd) && ddHasPreferredZIndex ) {
 		// New dd has become CS master: pass along its opinions
 		// on animator frame number setting, if any.
 		animrec.define("zindex", preferredZIndex);

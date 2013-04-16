@@ -69,9 +69,9 @@ class RangeControlsWidget : public QWidget {
 public:
     RangeControlsWidget(QWidget *parent = 0);
     void setImage( ImageInterface<float>* image );
+    void hideMaximum();
     void setRange( double min, double max, bool signal=true );
     void setDataLimits( double min, double max );
-    void setRangeMaxEnabled( bool enabled );
     void setIgnoreRange( bool ignore );
     pair<double,double> getMinMaxValues() const;
 

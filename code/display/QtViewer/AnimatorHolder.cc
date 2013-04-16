@@ -208,7 +208,10 @@ void AnimatorHolder::setChannelModeEnabled( int frameCount){
 		animatorChannel->setEnabled(true);
 		ui.channelGroupBox->setChecked( false );
 	}
-	animatorChannel->setFrameInformation(0, frameCount );
+	int oldFrameCount = animatorChannel->getFrameCount();
+	if ( oldFrameCount != frameCount ){
+		animatorChannel->setFrameInformation(0, frameCount );
+	}
 }
 
 void AnimatorHolder::setModeEnabled( int imageCount ){

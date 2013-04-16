@@ -91,6 +91,7 @@ private slots:
 	void cutoffModeChanged( bool noise );
 	void showPixelRange();
 	void pixelRangeChanged();
+	void viewerDisplayChanged();
 
 private:
 	FindSourcesDialog( const FindSourcesDialog& other );

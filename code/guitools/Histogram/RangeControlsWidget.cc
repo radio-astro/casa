@@ -60,8 +60,11 @@ RangeControlsWidget::RangeControlsWidget(QWidget *parent)
 	connect( ui.clearRangeButton, SIGNAL(clicked()), this, SLOT(clearRange()));
 }
 
-void RangeControlsWidget::setRangeMaxEnabled( bool enabled ){
-	ui.maxLineEdit->setEnabled( enabled );
+void RangeControlsWidget::hideMaximum(){
+	ui.rangeLayout->removeItem( ui.maxLayout );
+	ui.maxLayout->setParent( NULL );
+	ui.maxLineEdit->setParent( NULL );
+	ui.maxLabel->setParent( NULL );
 }
 
 void RangeControlsWidget::setRange( double min, double max, bool signalChange ){
@@ -176,7 +179,11 @@ void RangeControlsWidget::setDataLimits( double min, double max ){
 }
 
 RangeControlsWidget::~RangeControlsWidget(){
-
+	if ( ui.maxLayout->parent() == NULL ){
+		delete ui.maxLineEdit;
+		delete ui.maxLabel;
+		delete ui.maxLayout;
+	}
 }
 
 //*************************************************************************

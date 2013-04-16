@@ -109,6 +109,12 @@ void BinPlotWidget::setAxisLabelFont( int size ){
 	binPlot.setAxisFont( QwtPlot::yLeft, font );
 }
 
+void BinPlotWidget::hideMaximumRange( ){
+	if ( rangeControlWidget != NULL ){
+		rangeControlWidget->hideMaximum();
+	}
+}
+
 void BinPlotWidget::setDisplayPlotTitle( bool display ){
 	if ( displayPlotTitle != display ){
 		displayPlotTitle = display;
@@ -709,12 +715,6 @@ void BinPlotWidget::addZoomActions( bool rangeControls, QMenu* zoomMenu ){
 	zoomMenu->addAction( zoomActionMenu );
 	connectZoomActions( zoomWidgetMenu );
 	connect( zoomWidgetMenu, SIGNAL(finished()), this, SLOT(zoomMenuFinished()));
-}
-
-void BinPlotWidget::setRangeMaxEnabled( bool enabled ){
-	if ( rangeControlWidget != NULL ){
-		rangeControlWidget->setRangeMaxEnabled( enabled );
-	}
 }
 
 void BinPlotWidget::setMinMaxValues( double minValue, double maxValue,

@@ -331,7 +331,7 @@ void ComponentListWrapper::toRecord( Record& record, const Quantity& quantity ) 
 }
 
 QList<RegionShape*> ComponentListWrapper::toDrawingDisplay(ImageInterface<Float>* image,
-		int channelIndex, const QString& colorName) const {
+		const QString& colorName) const {
 	int sourceCount = getSize();
 	QList<RegionShape*> fitList;
 	CoordinateSystem coordSystem = image->coordinates();
@@ -352,9 +352,8 @@ QList<RegionShape*> ComponentListWrapper::toDrawingDisplay(ImageInterface<Float>
 			Quantity minorAxisValue = getMinorAxis( index );
 			Quantity posValue = getAngle( index );
 
-			//The deconvolved fit must be graphed because it is scaled
+			//The convolved fit must be graphed because it is scaled
 			//to match the image.
-			deconvolve( image, channelIndex, majorAxisValue, minorAxisValue, posValue );
 			double angleValue = rotateAngle( posValue.getValue());
 			if ( majorAxisValue.getValue() > 0 && minorAxisValue.getValue() > 0 ){
 				RSEllipse* ellipse = new RSEllipse( pixelCoordinates[0], pixelCoordinates[1],
@@ -368,7 +367,7 @@ QList<RegionShape*> ComponentListWrapper::toDrawingDisplay(ImageInterface<Float>
 }
 
 bool ComponentListWrapper::toRegionFile( ImageInterface<float>* image,
-		const QString& filePath ) const {
+		int channelIndex, const QString& filePath ) const {
 	bool success = false;
 	int sourceCount = getSize();
 	CoordinateSystem coordSystem = image->coordinates();
@@ -394,6 +393,8 @@ bool ComponentListWrapper::toRegionFile( ImageInterface<float>* image,
 				Quantity minorAxisValue = getMinorAxis( index );
 				Quantity posValue = getAngle( index );
 
+				//The deconvolved fit should be reported in the region file.
+				deconvolve( image, channelIndex, majorAxisValue, minorAxisValue, posValue );
 				AnnEllipse ellipse(xCenter, yCenter, majorAxisValue,
 					minorAxisValue, posValue,
 					coordSystem, imageShape, stokes);
