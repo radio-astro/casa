@@ -42,8 +42,7 @@ class FluxMeasurement():
 
     def __repr__(self):
         return '<FluxMeasurement(Spw #{spw}, IQUV=({iquv})>'.format(
-#            spw=self.spw.id,
-            spw='spw', 
+            spw=self.spw.id,
             iquv=','.join(map(str, (self.I, self.Q, self.U, self.V))))
 
     def __add__(self, other):
