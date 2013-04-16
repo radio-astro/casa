@@ -68,8 +68,7 @@ namespace casa {
 		struct strip_white_space {
 			strip_white_space(size_t s) : size(s+1), off(0), buf(new char[size]) { }
 			strip_white_space( const strip_white_space &other ) : size(other.size), off(other.off),
-				buf(new char[size])
-			{
+				               buf(new char[size]) {
 				strcpy(buf,other.buf);
 			}
 			~strip_white_space( ) {
