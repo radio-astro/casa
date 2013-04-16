@@ -7,6 +7,8 @@ import numpy
 import pipeline.infrastructure.utils as utils
 
 DPISummary = 90
+#DPIDetail = 120
+DPIDetail = 130
 
 class SingleDishDisplayInputs(object):
     def __init__(self, context, result):
