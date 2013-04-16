@@ -284,12 +284,13 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         # double-check that the caltable was actually generated
         on_disk = [ca for ca in result.pool
                    if ca.exists() or self._executor._dry_run]
-        result.final[:] = on_disk
-
         missing = [ca for ca in result.pool
                    if ca not in on_disk and not self._executor._dry_run]
         result.error.clear()
         result.error.update(missing)
+
+        # wvrcal files to be applied
+        result.final[:] = on_disk
 
         # calculate the qa2 results if required
         if inputs.qa2_intent.replace(' ','') != '':
