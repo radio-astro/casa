@@ -214,7 +214,7 @@ public:
 	virtual vector<String> getFieldNamesForFieldIDs(const vector<Int>& fieldIDs) = 0;
 
 	// Get the fields which fail into the specified time range (center-tol to center+tol)
-	virtual std::set<Int> getFieldsForTimes(Double center, Double tol) const = 0;
+	virtual std::set<Int> getFieldsForTimes(Double center, Double tol) = 0;
 
 	// get the times for which the specified field was observed
 	virtual std::set<Double> getTimesForField(Int fieldID) = 0;
@@ -392,8 +392,6 @@ protected:
 		const MPosition& observatoryPosition
 	);
 
-	static vector<uInt> _toUIntVector(const Vector<Int>& v);
-
 	static std::map<Int, uInt> _toUIntMap(const Vector<Int>& v);
 
 
@@ -432,7 +430,6 @@ protected:
 		const Vector<Int>& obsIDs, const Vector<Int>& arIDs
 	);
 
-	// this version iterates through the rows
 	void _getUnflaggedRowStats(
 		Double& nACRows, Double& nXCRows,
 		std::map<Int, Double>*& fieldNACRows, std::map<Int, Double>*& fieldNXCRows,
@@ -445,17 +442,6 @@ protected:
 		const ArrayColumn<Bool>& flags,
 		const Vector<Int>& fieldIDs, const Vector<Int>& scan,
 		const Vector<Int>& obsIDs, const Vector<Int>& arIDs
-	);
-
-	// this version does a TAQL query to call the number of possible rows
-	void _getUnflaggedRowStats(
-		Double& nACRows, Double& nXCRows,
-		std::map<Int, Double>*& fieldNACRows, std::map<Int, Double>*& fieldNXCRows,
-		AOSFMapD*& scanNACRows,
-		AOSFMapD*& scanNXCRows,
-		const std::map<Int, uInt>& dataDescIDToSpwMap,
-		const vector<SpwProperties>& spwInfo,
-		const MeasurementSet& ms
 	);
 
 	static std::map<Int, vector<Double> > _getScanToTimeRangeMap(

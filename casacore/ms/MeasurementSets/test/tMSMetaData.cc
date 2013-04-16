@@ -338,6 +338,7 @@ void testIt(MSMetaData& md) {
 				};
 				exp.insert(myints, myints+17);
 			}
+            cout << "*** i " << i << " " << md.getSpwsForField(i) << endl;
 			AlwaysAssert(md.getSpwsForField(i) == exp, AipsError);
 			AlwaysAssert(md.getSpwsForField(names[i]) == exp, AipsError);
 			cout << "*** cache size " << md.getCache() << endl;

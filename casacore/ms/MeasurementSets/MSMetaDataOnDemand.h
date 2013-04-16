@@ -192,7 +192,7 @@ public:
 	vector<String> getFieldNamesForFieldIDs(const vector<Int>& fieldIDs);
 
 	// Get the fields which fail into the specified time range (center-tol to center+tol)
-	std::set<Int> getFieldsForTimes(Double center, Double tol) const;
+	std::set<Int> getFieldsForTimes(Double center, Double tol);
 
 	// get the times for which the specified field was observed
 	std::set<Double> getTimesForField(Int fieldID);
@@ -294,13 +294,16 @@ private:
 	vector<SpwProperties> _spwInfo;
 	std::map<Int, std::set<uInt> > _fieldToSpwMap;
 	vector<std::set<Int> > _spwToFieldIDsMap, _spwToScansMap;
-	std::map<Int, std::set<Int> > _scanToStatesMap, _scanToFieldsMap, _fieldToScansMap;
+	std::map<Int, std::set<Int> > _scanToStatesMap, _scanToFieldsMap, _fieldToScansMap,
+		_fieldToStatesMap, _stateToFieldsMap;
 	vector<String> _fieldNames, _antennaNames, _observatoryNames;
 	std::map<String, uInt> _antennaNameToIDMap;
 	std::tr1::shared_ptr<Vector<Double> > _times;
 	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _scanToTimesMap;
 	std::map<String, std::set<Int> > _intentToFieldIDMap, _intentToScansMap;
 	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > _fieldToTimesMap;
+	std::tr1::shared_ptr<std::map<Double, std::set<Int> > > _timeToFieldsMap;
+
 	vector<MPosition> _observatoryPositions, _antennaPositions;
 	vector<Quantum<Vector<Double> > > _antennaOffsets;
 	Matrix<Bool> _uniqueBaselines;
@@ -336,16 +339,15 @@ private:
 
 	static void _checkScan(const Int scan, const std::set<Int> allScans);
 
+	void _checkIntent(const String& intent);
+
 	void _checkFieldID(const Int fieldID);
 
 	void _checkFieldIDs(const vector<Int>& fieldIDs);
 
 	void _checkStateID(const Int stateID);
 
-
 	vector<std::set<String> > _getSpwToIntentsMap();
-
-	vector<std::set<String> > _getFieldToIntentsMap();
 
 	void _getAntennas(
 		std::tr1::shared_ptr<Vector<Int> >& ant1,
@@ -382,6 +384,57 @@ private:
 	vector<SpwProperties> _getSpwInfo(
 			std::set<uInt>& avgSpw, std::set<uInt>& tdmSpw,
 			std::set<uInt>& fdmSpw, std::set<uInt>& wvrSpw
+	);
+
+	static uInt _sizeof(std::map<Int, std::set<uInt> >& map);
+
+	static uInt _sizeof(std::map<Int, std::set<Int> >& map);
+
+	static uInt _sizeof(vector<std::set<Int> >& v);
+
+	void _getFieldsAndSpwMaps(
+		std::map<Int, std::set<uInt> >& fieldToSpwMap,
+		vector<std::set<Int> >& spwToFieldMap
+	);
+
+	void _getScansAndSpwMaps(
+		std::map<Int, std::set<uInt> >& scanToSpwMap,
+		vector<std::set<Int> >& spwToScanMap
+	);
+
+	void _getFieldsAndIntentsMaps(
+		vector<std::set<String> >& fieldToIntentsMap,
+		std::map<String, std::set<Int> >& intentToFieldsMap
+	);
+
+	static uInt _sizeof(std::map<Int, std::set<String> >& m);
+
+	static uInt _sizeof(std::map<String, std::set<Int> >& m);
+
+	static uInt _sizeof(vector<std::set<String> >& m);
+
+	static uInt _sizeof(std::map<Int, std::set<Double> >& m);
+
+	static uInt _sizeof(std::map<Double, std::set<Int> >& m);
+
+	void _getScansAndIntentsMaps(
+		std::map<Int, std::set<String> >& scanToIntentsMap,
+		std::map<String, std::set<Int> >& intentToScansMap
+	);
+
+	void _getFieldsAndScansMaps(
+		std::map<Int, std::set<Int> >& fieldToScansMap,
+		std::map<Int, std::set<Int> >& scanToFieldsMap
+	);
+
+	void _getFieldsAndStatesMaps(
+		std::map<Int, std::set<Int> >& fieldToStatesMap,
+		std::map<Int, std::set<Int> >& stateToFieldsMap
+	);
+
+	void _getFieldsAndTimesMaps(
+		std::tr1::shared_ptr<std::map<Int, std::set<Double> > >& fieldToTimesMap,
+		std::tr1::shared_ptr<std::map<Double, std::set<Int> > >& timesToFieldMap
 	);
 
 	std::map<Int, uInt> _getDataDescIDToSpwMap();

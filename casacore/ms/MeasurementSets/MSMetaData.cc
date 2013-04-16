@@ -431,7 +431,7 @@ Quantity MSMetaData::_getTotalExposureTime(
 	uInt maxNBaselines = nAnts*(nAnts-1)/2;
 	Double totalExposure = 0;
 	String taql = "select FLAG, DATA_DESC_ID, EXPOSURE, TIME from "
-		+ ms.tableName() + " where ANTENNA1 != ANTENNA2 and FLAG_ROW==True";
+		+ ms.tableName() + " where ANTENNA1 != ANTENNA2 and FLAG_ROW==False";
 	Table result(tableCommand(taql));
 	Vector<Int> ddIDs = ScalarColumn<Int>(result, "DATA_DESC_ID").getColumn();
 	Vector<Double> exposures = ScalarColumn<Double>(result, "EXPOSURE").getColumn();
@@ -449,7 +449,7 @@ Quantity MSMetaData::_getTotalExposureTime(
 		Double denom = (timeToBWMap.find(times[i])->second)*maxNBaselines*nCorrelations;
 		for (uInt corr=0; corr<nCorrelations; corr++) {
 			MaskedArray<Double> flaggedChannelWidths(
-				channelWidths, flagsMatrix.row(corr), True
+				channelWidths, ! flagsMatrix.row(corr), True
 			);
 			Double effectiveBW = sum(flaggedChannelWidths);
 			totalExposure += exposures[i]*effectiveBW/denom;
@@ -803,49 +803,6 @@ void MSMetaData::_getUnflaggedRowStats(
 	) {
 		nXCRows += x->second;
 	}
-}
-
-void MSMetaData::_getUnflaggedRowStats(
-	Double& nACRows, Double& nXCRows,
-	std::map<Int, Double>*& fieldNACRows,
-	std::map<Int, Double>*& fieldNXCRows,
-	AOSFMapD*& scanNACRows,
-	AOSFMapD*& scanNXCRows,
-	const std::map<Int, uInt>& dataDescIDToSpwMap,
-	const vector<SpwProperties>& spwInfo,
-	const MeasurementSet& ms
-) {
-	String taql = "select FLAG, ARRAY_ID, OBSERVATION_ID, DATA_DESC_ID, ANTENNA1, ANTENNA2, SCAN_NUMBER, FIELD_ID, FLAG_ROW from "
-		+ ms.tableName() + " where FLAG_ROW==True";
-
-	Table result(tableCommand(taql));
-	std::auto_ptr<ArrayColumn<Bool> > flags(
-		new ArrayColumn<Bool>(result, "FLAG")
-	);
-	_getUnflaggedRowStats(
-		nACRows, nXCRows, fieldNACRows, fieldNXCRows,
-		scanNACRows, scanNXCRows,
-		ScalarColumn<Int>(result, "ANTENNA1").getColumn(),
-		ScalarColumn<Int>(result, "ANTENNA2").getColumn(),
-		ScalarColumn<Bool>(result, "FLAG_ROW").getColumn(),
-		ScalarColumn<Int>(result, "DATA_DESC_ID").getColumn(),
-		dataDescIDToSpwMap, spwInfo, *flags,
-		ScalarColumn<Int>(result, "FIELD_ID").getColumn(),
-		ScalarColumn<Int>(result, "SCAN_NUMBER").getColumn(),
-		ScalarColumn<Int>(result, "OBSERVATION_ID").getColumn(),
-		ScalarColumn<Int>(result, "ARRAY_ID").getColumn()
-	);
-}
-
-vector<uInt> MSMetaData::_toUIntVector(const Vector<Int>& v) {
-	if (anyLT(v, 0)) {
-		throw AipsError("Column that should contain nonnegative ints has a negative int");
-	}
-	vector<uInt> u;
-	for (Vector<Int>::const_iterator iter=v.begin(); iter!=v.end(); iter++) {
-		u.push_back(*iter);
-	}
-	return u;
 }
 
 std::map<Int, uInt> MSMetaData::_toUIntMap(const Vector<Int>& v) {

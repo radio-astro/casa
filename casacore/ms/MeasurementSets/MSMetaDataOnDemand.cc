@@ -31,12 +31,12 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableParse.h>
 #include <tables/Tables/TableProxy.h>
-
-#include <iomanip>
-
 // DEBUG ONLY
+
 /*
+#include <iomanip>
 #include <casa/Arrays/ArrayIO.h>
+
 #include <casa/OS/PrecTimer.h>
 */
 
@@ -145,17 +145,13 @@ void MSMetaDataOnDemand::_getStateToIntentsMap(
 }
 
 std::set<Int> MSMetaDataOnDemand::getScanNumbers() {
+	// This method is responsible for setting _uniqueScanNumbers
 	if (_uniqueScanNumbers.size() > 0) {
 		return _uniqueScanNumbers;
 	}
-	String taql = "select unique(SCAN_NUMBER) from " + _taqlTableName;
-	Table result(tableCommand(taql, _taqlTempTable));
-	ROScalarColumn<Int> scanCol(result, "SCAN_NUMBER");
-	Vector<Int> scans = scanCol.getColumn();
-	std::set<Int> myUniqueScans(scans.begin(), scans.end());
-	Float mysize = _cacheMB + sizeof(Int)*scans.size()/1e6;
-	if (mysize < _maxCacheMB) {
-		_cacheMB = mysize;
+	std::tr1::shared_ptr<Vector<Int> > allScans = _getScans();
+	std::set<Int> myUniqueScans(allScans->begin(), allScans->end());
+	if (_cacheUpdated(sizeof(Int)*myUniqueScans.size())) {
 		_uniqueScanNumbers = myUniqueScans;
 	}
 	return myUniqueScans;
@@ -540,113 +536,143 @@ std::map<Int, std::set<Int> > MSMetaDataOnDemand::_getScanToStatesMap() {
 	}
 	return myScanToStatesMap;
 }
-/*
-std::set<String> MSMetaDataOnDemand::getIntentsForScan(const uInt scan) {
-	if (_scanToIntentsMap.find(scan) != _scanToIntentsMap.end()) {
-		return _scanToIntentsMap.find(scan)->second;
-	}
-	_checkScan(scan, getScanNumbers());
-	String stateTable = _ms->tableName() + "/STATE";
-	vector<const Table *> tempTables = _taqlTempTable;
-	if (_taqlTempTable.size() > 0) {
-		stateTable = "$2";
-		tempTables.push_back(&_ms->state());
-	}
-	String taql = "select OBS_MODE from " + stateTable + " where "
-		+ "ROWID() in [select unique(STATE_ID) from " + _taqlTableName
-		+ " where SCAN_NUMBER==" + String::toString(scan) + "]";
-	Table result(tableCommand(taql, tempTables));
-	ROScalarColumn<String> intentsCol(result, "OBS_MODE");
-	Vector<String> intents = intentsCol.getColumn();
-	Vector<String>::const_iterator end = intents.end();
-	std::set<String> intentsForScan;
-	uInt mysize = sizeof(uInt);
-	for (
-		Vector<String>::const_iterator iter=intents.begin();
-		iter!=end; iter++
-	) {
-		Vector<String> intentSet = casa::stringToVector(*iter, ',');
-		intentsForScan.insert(intentSet.begin(), intentSet.end());
-		mysize += iter->size();
-	}
-	if (_cacheUpdated(mysize)) {
-		_scanToIntentsMap[scan] = intentsForScan;
-	}
-	return intentsForScan;
-}
-*/
 
-std::set<String> MSMetaDataOnDemand::getIntentsForScan(const Int scan) {
-	if (_scanToIntentsMap.find(scan) != _scanToIntentsMap.end()) {
-		return _scanToIntentsMap.find(scan)->second;
+void MSMetaDataOnDemand::_getScansAndIntentsMaps(
+	std::map<Int, std::set<String> >& scanToIntentsMap,
+	std::map<String, std::set<Int> >& intentToScansMap
+) {
+	// This method is responsible for setting _scanToIntentsMap and _intentToScansMap
+	if (! _scanToIntentsMap.empty() && ! _intentToScansMap.empty()) {
+		scanToIntentsMap = _scanToIntentsMap;
+		intentToScansMap = _intentToScansMap;
+		return;
 	}
-	_checkScan(scan, getScanNumbers());
 	vector<std::set<String> > stateToIntentsMap;
 	std::set<String> uniqueIntents;
 	_getStateToIntentsMap(
 		stateToIntentsMap, uniqueIntents
 	);
 	std::map<Int, std::set<Int> > scanToStatesMap = _getScanToStatesMap();
-	/*
-	std::tr1::shared_ptr<Vector<Int> > stateIDs = _getStateIDs();
-	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
-	Vector<Int>::const_iterator end = stateIDs->end();
-	Vector<Int>::const_iterator curScan = scans->begin();
-	*/
 	std::map<Int, std::set<Int> >::const_iterator end = scanToStatesMap.end();
-	std::map<Int, std::set<String> > myScanToIntentsMap;
 	std::set<Int> states;
 	std::set<String> intents;
 	for (
 		std::map<Int, std::set<Int> >::const_iterator iter=scanToStatesMap.begin();
 		iter!=end; iter++
 	) {
+		uInt scan = iter->first;
 		states = iter->second;
-		if (myScanToIntentsMap.find(iter->first) == myScanToIntentsMap.end()) {
-			myScanToIntentsMap[iter->first] = std::set<String>();
-		}
 		std::set<Int>::const_iterator endState = states.end();
 		for (
 			std::set<Int>::const_iterator myState=states.begin();
 			myState!=endState; myState++
 		) {
 			intents = stateToIntentsMap[*myState];
-			myScanToIntentsMap[iter->first].insert(intents.begin(), intents.end());
+			scanToIntentsMap[scan].insert(intents.begin(), intents.end());
+			std::set<String>::const_iterator endIntent = intents.end();
+			for (
+				std::set<String>::const_iterator myIntent=intents.begin();
+				myIntent!=endIntent; myIntent++
+			) {
+				intentToScansMap[*myIntent].insert(scan);
+			}
 		}
 	}
-	/*
-	for (
-		Vector<Int>::const_iterator curState=stateIDs->begin();
-		curState!=end; curState++, curScan++
-	) {
-		if (myScanToIntentsMap.find(*curScan) == myScanToIntentsMap.end()) {
-			myScanToIntentsMap[*curScan] = std::set<String>();
-		}
-		intents = stateToIntentsMap[*curState];
-		myScanToIntentsMap[*curScan].insert(intents.begin(), intents.end());
+	if (_cacheUpdated(_sizeof(scanToIntentsMap) + _sizeof(intentToScansMap))) {
+		_scanToIntentsMap = scanToIntentsMap;
+		_intentToScansMap = intentToScansMap;
 	}
-	*/
-	std::map<Int, std::set<String> >::const_iterator end2 = myScanToIntentsMap.end();
-	uInt mysize = myScanToIntentsMap.size()*sizeof(Int);
-	for (
-		std::map<Int, std::set<String> >::const_iterator iter=myScanToIntentsMap.begin();
-		iter!=end2; iter++
-	) {
-		intents = iter->second;
-		std::set<String>::const_iterator end3 = intents.end();
-		for (
-			std::set<String>::const_iterator intent=intents.begin();
-			intent!=end3; intent++
-		) {
-			mysize += intent->size();
-		}
-	}
-	if (_cacheUpdated(mysize)) {
-		_scanToIntentsMap = myScanToIntentsMap;
-	}
-	return myScanToIntentsMap[scan];
 }
 
+uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<String> >& m) {
+	uInt size = sizeof(Int) * m.size();
+	std::map<Int, std::set<String> >::const_iterator end = m.end();
+	for (
+		std::map<Int, std::set<String> >::const_iterator iter=m.begin();
+		iter!=end; iter++
+	) {
+		std::set<String>::const_iterator end2 = iter->second.end();
+		for (
+			std::set<String>::const_iterator iter2=iter->second.begin();
+			iter2!=end2; iter2++
+		) {
+			size += iter2->size();
+		}
+	}
+	return size;
+}
+
+uInt MSMetaDataOnDemand::_sizeof(vector<std::set<String> >& m) {
+	uInt size = sizeof(Int) * m.size();
+	vector<std::set<String> >::const_iterator end = m.end();
+	for (
+		vector<std::set<String> >::const_iterator iter=m.begin();
+		iter!=end; iter++
+	) {
+		std::set<String>::const_iterator end2 = iter->end();
+		for (
+			std::set<String>::const_iterator iter2=iter->begin();
+			iter2!=end2; iter2++
+		) {
+			size += iter2->size();
+		}
+	}
+	return size;
+}
+
+uInt MSMetaDataOnDemand::_sizeof(std::map<String, std::set<Int> >& m) {
+	uInt setssize = 0;
+	uInt size = 0;
+	std::map<String, std::set<Int> >::const_iterator end = m.end();
+	for (
+		std::map<String, std::set<Int> >::const_iterator iter=m.begin();
+		iter!=end; iter++
+	) {
+		size += iter->first.size();
+		setssize += iter->second.size();
+	}
+	size += sizeof(Int) * setssize;
+	return size;
+}
+
+uInt MSMetaDataOnDemand::_sizeof(std::map<Double, std::set<Int> >& m) {
+	uInt setssize = 0;
+	uInt size = sizeof(Double) * m.size();
+	std::map<Double, std::set<Int> >::const_iterator end = m.end();
+	for (
+		std::map<Double, std::set<Int> >::const_iterator iter=m.begin();
+		iter!=end; iter++
+	) {
+		setssize += iter->second.size();
+	}
+	size += sizeof(Int) * setssize;
+	return size;
+}
+
+uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<Double> >& m) {
+	uInt setssize = 0;
+	uInt size = sizeof(Int) * m.size();
+	std::map<Int, std::set<Double> >::const_iterator end = m.end();
+	for (
+		std::map<Int, std::set<Double> >::const_iterator iter=m.begin();
+		iter!=end; iter++
+	) {
+		setssize += iter->second.size();
+	}
+	size += sizeof(Double) * setssize;
+	return size;
+}
+
+std::set<String> MSMetaDataOnDemand::getIntentsForScan(const Int scan) {
+	_checkScan(scan, getScanNumbers());
+	std::map<Int, std::set<String> > scanToIntentsMap;
+	std::map<String, std::set<Int> > intentToScansMap;
+	_getScansAndIntentsMaps(
+		scanToIntentsMap,
+		intentToScansMap
+	);
+	return scanToIntentsMap[scan];
+}
 
 Bool MSMetaDataOnDemand::_cacheUpdated(const Float incrementInBytes) {
 	Float newSize = _cacheMB + incrementInBytes/1e6;
@@ -658,13 +684,7 @@ Bool MSMetaDataOnDemand::_cacheUpdated(const Float incrementInBytes) {
 }
 
 std::set<uInt> MSMetaDataOnDemand::getSpwsForIntent(const String& intent) {
-	std::set<String> uniqueIntents = getIntents();
-	if (uniqueIntents.find(intent) == uniqueIntents.end()) {
-		throw AipsError(
-			_ORIGIN + "Unknown intent "
-			+ intent + " for this dataset"
-		);
-	}
+	_checkIntent(intent);
 	vector<std::set<String> > spwToIntentsMap = _getSpwToIntentsMap();
 	std::set<uInt> spws;
 	for (uInt i=0; i<spwToIntentsMap.size(); i++) {
@@ -697,10 +717,12 @@ std::set<String> MSMetaDataOnDemand::getIntentsForSpw(const uInt spw) {
 
 std::set<String> MSMetaDataOnDemand::getIntentsForField(Int fieldID) {
 	_checkFieldID(fieldID);
-	if (! _fieldToIntentsMap.empty()) {
-		return _fieldToIntentsMap[fieldID];
-	}
-	return _getFieldToIntentsMap()[fieldID];
+	vector<std::set<String> > fieldToIntentsMap;
+	std::map<String, std::set<Int> > intentToFieldsMap;
+	_getFieldsAndIntentsMaps(
+		fieldToIntentsMap, intentToFieldsMap
+	);
+	return fieldToIntentsMap[fieldID];
 }
 
 
@@ -713,43 +735,62 @@ uInt MSMetaDataOnDemand::nFields() {
 	return nFields;
 }
 
+void MSMetaDataOnDemand::_getFieldsAndSpwMaps(
+	std::map<Int, std::set<uInt> >& fieldToSpwMap,
+	vector<std::set<Int> >& spwToFieldMap
+) {
+	// This method has the responsibility of setting _fieldToSpwMap and _spwToFieldIDMap
+	if (! _fieldToSpwMap.empty() && ! _spwToFieldIDsMap.empty()) {
+		fieldToSpwMap = _fieldToSpwMap;
+		spwToFieldMap = _spwToFieldIDsMap;
+		return;
+	}
+	std::tr1::shared_ptr<Vector<Int> >  allDDIDs = _getDataDescIDs();
+	std::tr1::shared_ptr<Vector<Int> >  allFieldIDs = _getFieldIDs();
+	Vector<Int>::const_iterator endDDID = allDDIDs->end();
+	Vector<Int>::const_iterator curField = allFieldIDs->begin();
+	fieldToSpwMap.clear();
+	spwToFieldMap.resize(nSpw(True));
+	std::map<Int, uInt> ddidToSpwMap = _getDataDescIDToSpwMap();
+	for (
+		Vector<Int>::const_iterator curDDID=allDDIDs->begin();
+		curDDID!=endDDID; curDDID++, curField++
+	) {
+		uInt spw = ddidToSpwMap[*curDDID];
+		fieldToSpwMap[*curField].insert(spw);
+		spwToFieldMap[spw].insert(*curField);
+	}
+	std::map<Int, std::set<uInt> >::const_iterator mapEnd = fieldToSpwMap.end();
+	uInt mySize = 0;
+	for (
+		std::map<Int, std::set<uInt> >::const_iterator curMap = fieldToSpwMap.begin();
+		curMap != mapEnd; curMap++
+	) {
+		mySize += curMap->second.size();
+	}
+	mySize *= sizeof(uInt);
+	mySize += sizeof(Int) * fieldToSpwMap.size() + sizeof(uInt)*spwToFieldMap.size();
+	vector<std::set<Int> >::const_iterator map2End = spwToFieldMap.end();
+	uInt count = 0;
+	for (
+		vector<std::set<Int> >::const_iterator curMap = spwToFieldMap.begin();
+		curMap != map2End; curMap++
+	) {
+		count += curMap->size();
+	}
+	mySize += sizeof(Int)*count;
+	if (_cacheUpdated(mySize)) {
+		_fieldToSpwMap = fieldToSpwMap;
+		_spwToFieldIDsMap = spwToFieldMap;
+	}
+}
+
 std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const Int fieldID) {
 	_checkFieldID(fieldID);
-	if (_fieldToSpwMap.empty()) {
-		_fieldToSpwMap.clear();
-		std::set<Int> uniqueFields = _getUniqueFiedIDs();
-		std::set<Int>::const_iterator end = uniqueFields.end();
-		for (
-			std::set<Int>::const_iterator f=uniqueFields.begin();
-			f!=end; f++
-		) {
-			_fieldToSpwMap[*f] = std::set<uInt>();
-		}
-	}
-	else if (! _fieldToSpwMap[fieldID].empty()) {
-		return _fieldToSpwMap[fieldID];
-	}
-	String ddIDTable = _ms->tableName() + "/DATA_DESCRIPTION";
-	vector<const Table *> tempTables = _taqlTempTable;
-	if (_taqlTempTable.size() > 0) {
-		ddIDTable = "$2";
-		tempTables.push_back(&_ms->dataDescription());
-	}
-
-
-	String taql = "select unique(SPECTRAL_WINDOW_ID) from " + ddIDTable
-		+ " where ROWID() in "
-		+ "[select unique(DATA_DESC_ID) from " + _taqlTableName
-		+ " where FIELD_ID == " + String::toString(fieldID) + "]";
-	Table result(tableCommand(taql, tempTables));
-	ROScalarColumn<Int> spwCol(result, "SPECTRAL_WINDOW_ID");
-	vector<uInt> spws = _toUIntVector(spwCol.getColumn().tovector());
-	std::set<uInt> spwIds(spws.begin(), spws.end());
-	uInt mysize = sizeof(uInt) * spwIds.size();
-	if (_cacheUpdated(mysize)) {
-		_fieldToSpwMap[fieldID] = spwIds;
-	}
-	return spwIds;
+	std::map<Int, std::set<uInt> > myFieldToSpwMap;
+	vector<std::set<Int> > mySpwToFieldMap;
+	_getFieldsAndSpwMaps(myFieldToSpwMap, mySpwToFieldMap);
+    return myFieldToSpwMap[fieldID];
 }
 
 std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const String& fieldName) {
@@ -790,24 +831,10 @@ std::set<Int> MSMetaDataOnDemand::getFieldIDsForSpw(const uInt spw) {
 	if (spw >= myNSpw) {
 		throw AipsError(_ORIGIN + "spectral window out of range");
 	}
-	if (_spwToFieldIDsMap.empty()) {
-		_spwToFieldIDsMap.resize(myNSpw);
-	}
-	else if (! _spwToFieldIDsMap[spw].empty()) {
-		return _spwToFieldIDsMap[spw];
-	}
-	String taql = "select unique(FIELD_ID) from " + _taqlTableName
-		+ " where DATA_DESC_ID in " +
-		"[select ROWID() from ::DATA_DESCRIPTION where SPECTRAL_WINDOW_ID=="
-		+ String::toString(spw) + "]";
-	Table result(tableCommand(taql, _taqlTempTable ));
-	ROScalarColumn<Int> fieldCol(result, "FIELD_ID");
-	Vector<Int> fields = fieldCol.getColumn().tovector();
-	std::set<Int> fieldIds(fields.begin(), fields.end());
-	if (_cacheUpdated(sizeof(Int)*fieldIds.size())) {
-		_spwToFieldIDsMap[spw] = fieldIds;
-	}
-	return fieldIds;
+	std::map<Int, std::set<uInt> > myFieldToSpwMap;
+	vector<std::set<Int> > mySpwToFieldMap;
+	_getFieldsAndSpwMaps(myFieldToSpwMap, mySpwToFieldMap);
+	return mySpwToFieldMap[spw];
 }
 
 std::set<String> MSMetaDataOnDemand::getFieldNamesForSpw(const uInt spw) {
@@ -823,55 +850,85 @@ std::set<String> MSMetaDataOnDemand::getFieldNamesForSpw(const uInt spw) {
 	return fieldNames;
 }
 
-/*
-std::set<uInt> MSMetaDataOnDemand::getSpwsForScan(const uInt scan) {
-	if (_scanToSpwsMap.find(scan) != _scanToSpwsMap.end()) {
-		return _scanToSpwsMap[scan];
+
+void MSMetaDataOnDemand::_getScansAndSpwMaps(
+	std::map<Int, std::set<uInt> >& scanToSpwMap,
+	vector<std::set<Int> >& spwToScanMap
+) {
+	// This method is responsible for setting _scanToSpwsMap and _spwToScansMap
+	if (! _scanToSpwsMap.empty() && ! _spwToScansMap.empty()) {
+		scanToSpwMap = _scanToSpwsMap;
+		spwToScanMap = _spwToScansMap;
+		return;
 	}
-	_checkScan(scan, getScanNumbers());
-	String ddIDTable = _ms->tableName() + "/DATA_DESCRIPTION";
-	vector<const Table *> tempTables = _taqlTempTable;
-	if (_taqlTempTable.size() > 0) {
-		ddIDTable = "$2";
-		tempTables.push_back(&_ms->dataDescription());
+	std::tr1::shared_ptr<Vector<Int> > allDDIDs = _getDataDescIDs();
+	std::tr1::shared_ptr<Vector<Int> > allScans = _getScans();
+	std::map<Int, uInt> ddToSpw = _getDataDescIDToSpwMap();
+	Vector<Int>::const_iterator end = allDDIDs->end();
+	Vector<Int>::const_iterator myscan = allScans->begin();
+	spwToScanMap.resize(this->nSpw(True));
+	for (
+		Vector<Int>::const_iterator ddID=allDDIDs->begin();
+		ddID!=end; ddID++, myscan++
+	) {
+		uInt spw = ddToSpw[*ddID];
+		scanToSpwMap[*myscan].insert(spw);
+		spwToScanMap[spw].insert(*myscan);
 	}
-	String taql = "select unique(SPECTRAL_WINDOW_ID) from " + ddIDTable
-		+ " where ROWID() in "
-		+ "[select unique(DATA_DESC_ID) from " + _taqlTableName
-		+ " where SCAN_NUMBER == " + String::toString(scan) + "]";
-	Table result(tableCommand(taql, tempTables));
-	ROScalarColumn<Int> spwCol(result, "SPECTRAL_WINDOW_ID");
-	vector<uInt> spws = _toUIntVector(spwCol.getColumn().tovector());
-	std::set<uInt> spwIds(spws.begin(), spws.end());
-	if (_cacheUpdated(sizeof(uInt)*spwIds.size())) {
-		_scanToSpwsMap[scan] = spwIds;
+	if (_cacheUpdated(_sizeof(scanToSpwMap)) + _sizeof(spwToScanMap)) {
+		_scanToSpwsMap = scanToSpwMap;
+		_spwToScansMap = spwToScanMap;
 	}
-	return spwIds;
 }
-*/
+
+uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<uInt> >& map) {
+	uInt size = 0;
+	std::map<Int, std::set<uInt> >::const_iterator end = map.end();
+	for (
+		std::map<Int, std::set<uInt> >::const_iterator iter=map.begin();
+		iter!=end; iter++
+	) {
+		size += iter->second.size();
+	}
+	size *= sizeof(uInt);
+	size += map.size()*sizeof(Int);
+	return size;
+}
+
+uInt MSMetaDataOnDemand::_sizeof(std::map<Int, std::set<Int> >& map) {
+	uInt size = 0;
+	std::map<Int, std::set<Int> >::const_iterator end = map.end();
+	for (
+		std::map<Int, std::set<Int> >::const_iterator iter=map.begin();
+		iter!=end; iter++
+	) {
+		size += iter->second.size();
+	}
+	size *= sizeof(Int);
+	size += map.size()*sizeof(Int);
+	return size;
+}
+
+uInt MSMetaDataOnDemand::_sizeof(vector<std::set<Int> >& v) {
+	uInt size = 0;
+	vector<std::set<Int> >::const_iterator end = v.end();
+	for (
+		vector<std::set<Int> >::const_iterator iter=v.begin();
+		iter!=end; iter++
+	) {
+		size = iter->size();
+	}
+	size *= sizeof(Int);
+	return size;
+}
 
 std::set<uInt> MSMetaDataOnDemand::getSpwsForScan(const Int scan) {
     _checkScan(scan, getScanNumbers());
-    if (_scanToSpwsMap.find(scan) != _scanToSpwsMap.end()) {
-        return _scanToSpwsMap[scan];
-    }
-    std::tr1::shared_ptr<Vector<Int> > ddIDs = _getDataDescIDs();
-    std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
-    std::map<Int, uInt> ddToSpw = _getDataDescIDToSpwMap();
-    Vector<Int>::const_iterator end = ddIDs->end();
-    Vector<Int>::const_iterator myscan = scans->begin();
     std::map<Int, std::set<uInt> > scanToSpwMap;
-    for (
-        Vector<Int>::const_iterator ddID=ddIDs->begin();
-        ddID!=end; ddID++, myscan++
-    ) {
-        if (scanToSpwMap.find(*myscan) == scanToSpwMap.end()) {
-            scanToSpwMap[*myscan] = std::set<uInt>();
-        }
-        scanToSpwMap[*myscan].insert(ddToSpw[*ddID]);
-    }
-    // FIXME do caching
-    _scanToSpwsMap = scanToSpwMap;
+    vector<std::set<Int> > spwToScanMap;
+    _getScansAndSpwMaps(
+    	scanToSpwMap, spwToScanMap
+    );
     return scanToSpwMap[scan];
 }
 
@@ -882,24 +939,12 @@ std::set<Int> MSMetaDataOnDemand::getScansForSpw(const uInt spw) {
 			_ORIGIN + "spectral window out of range"
 		);
 	}
-	if (_spwToScansMap.empty()) {
-		_spwToScansMap.resize(myNSpw);
-	}
-	else if (! _spwToScansMap[spw].empty()) {
-		return _spwToScansMap[spw];
-	}
-	String taql = "select unique(SCAN_NUMBER) from " + _taqlTableName
-		+ " where DATA_DESC_ID in " +
-		"[select ROWID() from ::DATA_DESCRIPTION where SPECTRAL_WINDOW_ID=="
-		+ String::toString(spw) + "]";
-	Table result(tableCommand(taql, _taqlTempTable));
-	ROScalarColumn<Int> scanCol(result, "SCAN_NUMBER");
-	vector<Int> scans = scanCol.getColumn().tovector();
-	std::set<Int> scanIds(scans.begin(), scans.end());
-	if (_cacheUpdated(sizeof(Int)*scanIds.size())) {
-		_spwToScansMap[spw] = scanIds;
-	}
-	return scanIds;
+	std::map<Int, std::set<uInt> > scanToSpwMap;
+	vector<std::set<Int> > spwToScanMap;
+	_getScansAndSpwMaps(
+		scanToSpwMap, spwToScanMap
+	);
+	return spwToScanMap[spw];
 }
 
 uInt MSMetaDataOnDemand::nAntennas() {
@@ -1334,28 +1379,34 @@ std::set<Int> MSMetaDataOnDemand::getStatesForScan(const Int scan) {
 }
 
 std::set<Int> MSMetaDataOnDemand::getScansForIntent(const String& intent) {
-	if (_intentToScansMap.find(intent) != _intentToScansMap.end()) {
-		return _intentToScansMap[intent];
+	std::set<String> uniqueIntents = getIntents();
+	if (uniqueIntents.find(intent) == uniqueIntents.end()) {
+		ostringstream oss;
+		oss << "MSMetaDataOnDemand::" << __FUNCTION__ << ": Intent " << intent
+			<< " is not present in this dataset";
+		throw AipsError(oss.str());
 	}
-	String taql = "select unique(SCAN_NUMBER) from " + _taqlTableName
-		+ " where STATE_ID in "
-		+ "[select ROWID() from ::STATE where OBS_MODE=pattern('*" + intent + "*')]";
-	Table result(tableCommand(taql, _taqlTempTable));
-	ROScalarColumn<Int> scanCol(result, "SCAN_NUMBER");
-	Vector<Int> scans = scanCol.getColumn();
-	std::set<Int> myscans(scans.begin(), scans.end());
-	uInt mysize = intent.size() + sizeof(uInt)*myscans.size();
-	if (_cacheUpdated(mysize)) {
-		_intentToScansMap[intent] = myscans;
-	}
-	return myscans;
+	std::map<Int, std::set<String> > scanToIntentsMap;
+	std::map<String, std::set<Int> > intentToScansMap;
+	_getScansAndIntentsMaps(
+		scanToIntentsMap,
+		intentToScansMap
+	);
+	return intentToScansMap[intent];
 }
 
-std::set<Int> MSMetaDataOnDemand::getScansForFieldID(const Int fieldID) {
-	_checkFieldID(fieldID);
-	if (! _fieldToScansMap.empty() && ! _fieldToScansMap[fieldID].empty()) {
-		return _fieldToScansMap[fieldID];
+void MSMetaDataOnDemand::_getFieldsAndScansMaps(
+	std::map<Int, std::set<Int> >& fieldToScansMap,
+	std::map<Int, std::set<Int> >& scanToFieldsMap
+) {
+	// This method is responsible for setting _fieldToScansMap and _scanToFieldsMap
+	if (! _fieldToScansMap.empty() && ! _scanToFieldsMap.empty()) {
+		fieldToScansMap = _fieldToScansMap;
+		scanToFieldsMap = _scanToFieldsMap;
+		return;
 	}
+	fieldToScansMap.clear();
+	scanToFieldsMap.clear();
 	std::set<Int> scans;
 	std::tr1::shared_ptr<Vector<Int> > fieldIds = _getFieldIDs();
 	Vector<Int>::const_iterator curFieldID = fieldIds->begin();
@@ -1363,16 +1414,25 @@ std::set<Int> MSMetaDataOnDemand::getScansForFieldID(const Int fieldID) {
 	std::tr1::shared_ptr<Vector<Int> > allScans = _getScans();
 	Vector<Int>::const_iterator curScan = allScans->begin();
 	while (curFieldID != end) {
-		if (fieldID == *curFieldID) {
-			scans.insert(*curScan);
-		}
+		fieldToScansMap[*curFieldID].insert(*curScan);
+		scanToFieldsMap[*curScan].insert(*curFieldID);
 		curFieldID++;
 		curScan++;
 	}
-	if (_cacheUpdated(sizeof(uInt)*scans.size())) {
-		_fieldToScansMap[fieldID] = scans;
+	if (_cacheUpdated(_sizeof(fieldToScansMap) + _sizeof(scanToFieldsMap))) {
+		_fieldToScansMap = fieldToScansMap;
+		_scanToFieldsMap = scanToFieldsMap;
 	}
-	return scans;
+}
+
+std::set<Int> MSMetaDataOnDemand::getScansForFieldID(const Int fieldID) {
+	_checkFieldID(fieldID);
+	std::map<Int, std::set<Int> > fieldToScansMap;
+	std::map<Int, std::set<Int> > scanToFieldsMap;
+	_getFieldsAndScansMaps(
+		fieldToScansMap,  scanToFieldsMap
+	);
+	return fieldToScansMap[fieldID];
 }
 
 std::set<Int> MSMetaDataOnDemand::getFieldIDsForField(
@@ -1400,69 +1460,48 @@ std::set<Int> MSMetaDataOnDemand::getFieldIDsForField(
 
 std::set<Int> MSMetaDataOnDemand::getFieldsForScan(const Int scan) {
 	_checkScan(scan, getScanNumbers());
-	if (_scanToFieldsMap.find(scan) != _scanToFieldsMap.end()) {
-		return _scanToFieldsMap[scan];
-	}
-	String taql = "select unique(FIELD_ID) from " + _taqlTableName
-		+ " where SCAN_NUMBER == " + String::toString(scan);
-	Table result(tableCommand(taql, _taqlTempTable));
-	ROScalarColumn<Int> fieldCol(result, "FIELD_ID");
-	Vector<Int> fields = fieldCol.getColumn();
-	std::set<Int> myfields (fields.begin(), fields.end());
-	if (_cacheUpdated(sizeof(uInt)*(1 + myfields.size()))) {
-		_scanToFieldsMap[scan] = myfields;
-	}
-	return myfields;
+	std::map<Int, std::set<Int> > fieldToScansMap;
+	std::map<Int, std::set<Int> > scanToFieldsMap;
+	_getFieldsAndScansMaps(
+		fieldToScansMap,  scanToFieldsMap
+	);
+	return scanToFieldsMap[scan];
 }
 
 std::set<Int> MSMetaDataOnDemand::getFieldsForScans(const std::set<Int>& scans) {
 	_checkScan(*(++scans.rend()), getScanNumbers());
-	String scanString;
 	std::set<Int>::const_iterator end = scans.end();
-	std::set<Int> myfields;
+	std::set<Int> fields;
 	for (
 		std::set<Int>::const_iterator iter=scans.begin();
 		iter!=end; iter++
 	) {
-		if (_scanToFieldsMap.find(*iter) != _scanToFieldsMap.end()) {
-			std::set<Int> newfields = _scanToFieldsMap[*iter];
-			myfields.insert(newfields.begin(), newfields.end());
-		}
-		else {
-			if (! scanString.empty()) {
-				scanString += ", ";
-			}
-			scanString += String::toString(*iter);
-		}
+		std::set<Int> myfields = getFieldsForScan(*iter);
+		fields.insert(myfields.begin(), myfields.end());
 	}
-	if (! scanString.empty()) {
-		String taql = "select unique(FIELD_ID) from " + _taqlTableName
-			+ " where SCAN_NUMBER in [" + scanString + "]";
-		Table result(tableCommand(taql, _taqlTempTable));
-		ROScalarColumn<Int> fieldCol(result, "FIELD_ID");
-		Vector<Int> fields = fieldCol.getColumn();
-		myfields.insert(fields.begin(), fields.end());
-	}
-	return myfields;
+	return fields;
 }
 
 std::set<Int> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
-	if (_intentToFieldIDMap.find(intent) != _intentToFieldIDMap.end()) {
-		return _intentToFieldIDMap[intent];
-	}
-	String taql = "select unique(FIELD_ID) from " + _taqlTableName
-		+ " where STATE_ID in "
-		+ "[select ROWID() from ::STATE "
-		+ "where OBS_MODE=pattern('*" + intent + "*')]";
-	Table result(tableCommand(taql, _taqlTempTable));
-	ROScalarColumn<Int> fieldCol(result, "FIELD_ID");
-	Vector<Int> fields = fieldCol.getColumn().tovector();
-	std::set<Int> myfields(fields.begin(), fields.end());
-	if (_cacheUpdated(intent.size() + sizeof(Int)*myfields.size())) {
-		_intentToFieldIDMap[intent] = myfields;
-	}
-	return myfields;
+	_checkIntent(intent);
+	vector<std::set<String> > fieldToIntentsMap;
+	std::map<String, std::set<Int> > intentToFieldsMap;
+	_getFieldsAndIntentsMaps(
+		fieldToIntentsMap, intentToFieldsMap
+	);
+	return intentToFieldsMap[intent];
 }
+
+void MSMetaDataOnDemand::_checkIntent(const String& intent) {
+	std::set<String> uniqueIntents = getIntents();
+	if (uniqueIntents.find(intent) == uniqueIntents.end()) {
+		throw AipsError(
+			_ORIGIN + "Unknown intent "
+			+ intent + " for this dataset"
+		);
+	}
+}
+
 
 vector<String> MSMetaDataOnDemand::getFieldNamesForFieldIDs(
 	const vector<Int>& fieldIDs
@@ -1485,41 +1524,77 @@ vector<String> MSMetaDataOnDemand::getFieldNamesForFieldIDs(
 
 std::set<Int> MSMetaDataOnDemand::getFieldsForTimes(
 	const Double center, const Double tol
-) const {
+) {
 	_checkTolerance(tol);
 	Double minTime = center - tol;
 	Double maxTime = center + tol;
-	ostringstream timeString;
-	timeString << std::setprecision(12) << minTime << " and " << maxTime;
-	String taql = "select FIELD_ID from " + _taqlTableName
-		+ " where TIME BETWEEN " + String(timeString.str());
-	Table result(tableCommand(taql, _taqlTempTable));
-	ROScalarColumn<Int> fieldCol(result, "FIELD_ID");
-	Vector<Int> fields = fieldCol.getColumn().tovector();
-	return std::set<Int>(fields.begin(), fields.end());
+	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > fieldToTimesMap;
+	std::tr1::shared_ptr<std::map<Double, std::set<Int> > > timeToFieldsMap;
+	_getFieldsAndTimesMaps(
+		fieldToTimesMap, timeToFieldsMap
+	);
+	std::set<Int> fields;
+	std::map<Double, std::set<Int> >::const_iterator end = timeToFieldsMap->end();
+	// A std::set is always ordered.
+	// FIXME could do a binary search to make this faster
+	for (
+		std::map<Double, std::set<Int> >::const_iterator iter=timeToFieldsMap->begin();
+		iter!=end; iter++
+	) {
+		Double curTime = iter->first;
+		if (curTime >= minTime) {
+			std::set<Int> curFields = iter->second;
+			fields.insert(curFields.begin(), curFields.end());
+		}
+		if (curTime > maxTime) {
+			break;
+		}
+	}
+	return fields;
+}
+
+void MSMetaDataOnDemand::_getFieldsAndTimesMaps(
+		std::tr1::shared_ptr<std::map<Int, std::set<Double> > >& fieldToTimesMap,
+		std::tr1::shared_ptr<std::map<Double, std::set<Int> > >& timeToFieldsMap
+) {
+	// This method is responsible for setting _fieldToTimesMap and _timeToFieldMap
+	if (
+		_fieldToTimesMap && ! _fieldToTimesMap->empty()
+		&& _timeToFieldsMap && ! _timeToFieldsMap->empty()
+	) {
+		fieldToTimesMap = _fieldToTimesMap;
+		timeToFieldsMap = _timeToFieldsMap;
+		return;
+	}
+	fieldToTimesMap.reset(new std::map<Int, std::set<Double> >());
+	timeToFieldsMap.reset(new std::map<Double, std::set<Int> >());
+	std::tr1::shared_ptr<Vector<Int> > allFields = _getFieldIDs();
+	std::tr1::shared_ptr<Vector<Double> > allTimes = this->_getTimes();
+	Vector<Int>::const_iterator lastField = allFields->end();
+	Vector<Double>::const_iterator curTime = allTimes->begin();
+	for (
+		Vector<Int>::const_iterator curField=allFields->begin();
+		curField!=lastField; curField++, curTime++
+	) {
+		(*fieldToTimesMap)[*curField].insert(*curTime);
+		(*timeToFieldsMap)[*curTime].insert(*curField);
+	}
+	if (
+		_cacheUpdated(_sizeof(*fieldToTimesMap) + _sizeof(*timeToFieldsMap))
+	) {
+		_fieldToTimesMap = fieldToTimesMap;
+		_timeToFieldsMap = timeToFieldsMap;
+	}
 }
 
 std::set<Double> MSMetaDataOnDemand::getTimesForField(const Int fieldID) {
 	_checkFieldID(fieldID);
-	if (_fieldToTimesMap) {
-		std::map<Int, std::set<Double> >::const_iterator iter = _fieldToTimesMap->find(fieldID);
-		if (iter != _fieldToTimesMap->end() && ! iter->second.empty()) {
-			return _fieldToTimesMap->find(fieldID)->second;
-		}
-	}
-	else {
-		_fieldToTimesMap.reset(new std::map<Int, std::set<Double> >());
-	}
-	String taql = "select unique(TIME) from " + _taqlTableName
-		+ " where FIELD_ID=" + String::toString(fieldID);
-	Table result(tableCommand(taql, _taqlTempTable));
-	ROScalarColumn<Double> timeCol(result, "TIME");
-	Vector<Double> times = timeCol.getColumn();
-	std::set<Double> mytimes(times.begin(), times.end());
-	if (_cacheUpdated(sizeof(Double)*mytimes.size())) {
-		(*_fieldToTimesMap)[fieldID] = mytimes;
-	}
-	return mytimes;
+	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > fieldToTimesMap;
+	std::tr1::shared_ptr<std::map<Double, std::set<Int> > > timeToFieldsMap;
+	_getFieldsAndTimesMaps(
+		fieldToTimesMap, timeToFieldsMap
+	);
+	return (*fieldToTimesMap)[fieldID];
 }
 
 vector<String> MSMetaDataOnDemand::getObservatoryNames() {
@@ -1637,12 +1712,6 @@ vector<Quantum<Vector<Double> > > MSMetaDataOnDemand::getAntennaOffsets(
 	return offsets;
 }
 
-/*
-std::map<Double, Double> MSMetaDataOnDemand::getExposuresForTimes() const {
-	return _getTimeToAggregateExposureMap(_getTimes(_ms), _getExposures(_ms));
-}
-*/
-
 Matrix<Bool> MSMetaDataOnDemand::getUniqueBaselines() {
 	if (! _uniqueBaselines.empty()) {
 		return _uniqueBaselines;
@@ -1665,17 +1734,19 @@ Quantum<Vector<Double> > MSMetaDataOnDemand::getAntennaOffset(
 }
 
 Quantity MSMetaDataOnDemand::getEffectiveTotalExposureTime() {
+	// This method has the responsibility of setting _exposureTime.
 	if (_exposureTime.getValue() > 0) {
 		return _exposureTime;
 	}
 	std::tr1::shared_ptr<Vector<Double> > times = _getTimes();
 	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
 	vector<SpwProperties> spwInfo = _getSpwInfo(avgSpw, tdmSpw, fdmSpw, wvrSpw);
+	std::map<Int, uInt> dataDescIDToSpwMap = _getDataDescIDToSpwMap();
 	std::map<Double, Double> timeToBWMap = _getTimeToTotalBWMap(
-		*times, *_getDataDescIDs(), _getDataDescIDToSpwMap(), spwInfo
+		*times, *_getDataDescIDs(), dataDescIDToSpwMap, spwInfo
 	);
-	Quantity eTime = _getTotalExposureTime(
-		*_ms, timeToBWMap, spwInfo, _getDataDescIDToSpwMap()
+	Quantity eTime = MSMetaData::_getTotalExposureTime(
+		*_ms, timeToBWMap, spwInfo, dataDescIDToSpwMap
 	);
 	if (_cacheUpdated(10)) {
 		_exposureTime = eTime;
@@ -1763,61 +1834,107 @@ vector<std::set<String> > MSMetaDataOnDemand::_getSpwToIntentsMap() {
 	std::tr1::shared_ptr<Vector<Int> > states = _getStateIDs();
 	Vector<Int>::const_iterator curState = states->begin();
 	std::map<Int, uInt> dataDescToSpwMap = _getDataDescIDToSpwMap();
-	uInt mysize = 0;
 	while (curDDID!=endDDID) {
 		uInt spw = dataDescToSpwMap[*curDDID];
 		std::set<String> intents = stateToIntentsMap[*curState];
 		std::set<String>::const_iterator endIntent = intents.end();
-		for (
-			std::set<String>::const_iterator curIntent=intents.begin();
-			curIntent!=endIntent; curIntent++
-		) {
-			mysize += curIntent->size();
-		}
 		spwToIntentsMap[spw].insert(intents.begin(), endIntent);
-		//checkedMap[*curDDID].insert(curState);
 		curDDID++;
 		curState++;
 	}
-	if (_cacheUpdated(mysize)) {
+	if (_cacheUpdated(_sizeof(spwToIntentsMap))) {
 		_spwToIntentsMap = spwToIntentsMap;
 	}
 	return spwToIntentsMap;
 }
 
-vector<std::set<String> > MSMetaDataOnDemand::_getFieldToIntentsMap() {
-	if (! _fieldToIntentsMap.empty()) {
-		return _fieldToIntentsMap;
+void MSMetaDataOnDemand::_getFieldsAndStatesMaps(
+	std::map<Int, std::set<Int> >& fieldToStatesMap,
+	std::map<Int, std::set<Int> >& stateToFieldsMap
+) {
+	// This method is responsible for setting _fieldToStatesMap and _stateToFieldMap.
+	if (! _fieldToStatesMap.empty() && ! _stateToFieldsMap.empty()) {
+		fieldToStatesMap = _fieldToStatesMap;
+		stateToFieldsMap = _stateToFieldsMap;
+		return;
 	}
-	std::set<String> emptySet;
-	vector<std::set<String> > fieldToIntentsMap;
-	fieldToIntentsMap.assign(nFields(), emptySet);
-	std::set<String> uniqueIntents = getIntents();
-
-	if (uniqueIntents.empty()) {
-		_fieldToIntentsMap = fieldToIntentsMap;
-		return fieldToIntentsMap;
-	}
-	std::set<String>::const_iterator end = uniqueIntents.end();
-	uInt mysize = 0;
+	std::tr1::shared_ptr<Vector<Int> > allStates = _getStateIDs();
+	std::tr1::shared_ptr<Vector<Int> > allFields = _getFieldIDs();
+	Vector<Int>::const_iterator endState = allStates->end();
+	Vector<Int>::const_iterator curField = allFields->begin();
+	fieldToStatesMap.clear();
+	stateToFieldsMap.clear();
 	for (
-		std::set<String>::const_iterator iter=uniqueIntents.begin();
+		Vector<Int>::const_iterator curState=allStates->begin();
+		curState!=endState; curState++, curField++
+	) {
+		fieldToStatesMap[*curField].insert(*curState);
+		stateToFieldsMap[*curState].insert(*curField);
+	}
+	if (
+		_cacheUpdated(
+			_sizeof(fieldToStatesMap)
+			+ _sizeof(stateToFieldsMap)
+		)
+	) {
+		_fieldToStatesMap = fieldToStatesMap;
+		_stateToFieldsMap = stateToFieldsMap;
+	}
+}
+
+void MSMetaDataOnDemand::_getFieldsAndIntentsMaps(
+	vector<std::set<String> >& fieldToIntentsMap,
+	std::map<String, std::set<Int> >& intentToFieldsMap
+) {
+	// This method is responsible for setting _intentToFieldIDMap and _fieldToIntentsMap
+	if (! _intentToFieldIDMap.empty() && ! _fieldToIntentsMap.empty()) {
+		fieldToIntentsMap = _fieldToIntentsMap;
+		intentToFieldsMap = _intentToFieldIDMap;
+		return;
+	}
+	fieldToIntentsMap.resize(nFields());
+	vector<std::set<String> > stateToIntentsMap;
+	std::set<String> uniqueIntents;
+	_getStateToIntentsMap(
+		stateToIntentsMap,
+		uniqueIntents
+	);
+	std::map<Int, std::set<Int> > fieldToStatesMap;
+	std::map<Int, std::set<Int> > stateToFieldsMap;
+	_getFieldsAndStatesMaps(
+		fieldToStatesMap, stateToFieldsMap
+	);
+	std::map<Int, std::set<Int> >::const_iterator end = stateToFieldsMap.end();
+	for (
+		std::map<Int, std::set<Int> >::const_iterator iter=stateToFieldsMap.begin();
 		iter!=end; iter++
 	) {
-		std::set<Int> fieldIDs = getFieldsForIntent(*iter);
-		std::set<Int>::const_iterator fEnd = fieldIDs.end();
+		Int state = iter->first;
+		std::set<Int> fields = iter->second;
+		std::set<String> intents = stateToIntentsMap[state];
+		std::set<Int>::const_iterator endField = fields.end();
 		for (
-			std::set<Int>::const_iterator fiter=fieldIDs.begin();
-			fiter!=fEnd; fiter++
+			std::set<Int>::const_iterator curField=fields.begin();
+			curField!=endField; curField++
 		) {
-			fieldToIntentsMap[*fiter].insert(*iter);
-			mysize += iter->size();
+			fieldToIntentsMap[*curField].insert(intents.begin(), intents.end());
+		}
+		std::set<String>::const_iterator endIntent = intents.end();
+		for (
+			std::set<String>::const_iterator curIntent=intents.begin();
+			curIntent!=endIntent; curIntent++
+		) {
+			intentToFieldsMap[*curIntent].insert(fields.begin(), fields.end());
 		}
 	}
-	if (_cacheUpdated(mysize)) {
+	if (
+		_cacheUpdated(
+			_sizeof(fieldToIntentsMap) + _sizeof(intentToFieldsMap)
+		)
+	) {
 		_fieldToIntentsMap = fieldToIntentsMap;
+		_intentToFieldIDMap = intentToFieldsMap;
 	}
-	return fieldToIntentsMap;
 }
 
 std::map<Int, uInt> MSMetaDataOnDemand::_getDataDescIDToSpwMap() {
@@ -1920,14 +2037,6 @@ void MSMetaDataOnDemand::_checkStateID(const Int stateID) {
 		);
 	}
 }
-
-/*
-std::set<uInt> MSMetaDataOnDemand::_getUnique(const vector<uInt>& v) {
-	std::set<uInt> ret;
-	ret.insert(v.begin(), v.end());
-	return ret;
-}
-*/
 
 }
 
