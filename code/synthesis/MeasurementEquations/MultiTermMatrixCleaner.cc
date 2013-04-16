@@ -1337,7 +1337,9 @@ Int MultiTermMatrixCleaner::checkConvergence(Int /*criterion*/, Float &fluxlimit
     if( fabs(rmaxval) < MAX(userthreshold_p,fluxlimit) ) 
     {
       LogIO os(LogOrigin("MultiTermMatrixCleaner", "mtclean()", WHERE));
-      os << "Reached stopping threshold at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) << LogIO::POST;
+      os << "Reached stopping threshold at iteration " << totalIters_p << ". Peak residual " << fabs(rmaxval) ;
+      if( ! itsMask.null() ){os << " (within mask) " ;}
+	os << LogIO::POST;
        convergedflag=1; 
     }
 
@@ -1404,7 +1406,9 @@ Int MultiTermMatrixCleaner::checkConvergence(Int /*criterion*/, Float &fluxlimit
          fluxlimit = rmaxval * stopfraction_p;
 	 //        os << "Peak convolved residual : " << rmaxval << "    Minor cycle stopping threshold : " << itsThreshold.getValue("Jy")  << LogIO::POST;
 	 LogIO os(LogOrigin("MultiTermMatrixCleaner", "mtclean()", WHERE));
-        os << "Peak convolved residual : " << rmaxval << "    Minor cycle stopping threshold : " << fluxlimit  << LogIO::POST;
+	 os << "Peak convolved residual" ;
+	 if( ! itsMask.null() ){os << " (within mask) " ;}
+	 os << " : " << rmaxval << "    Minor cycle stopping threshold : " << fluxlimit  << LogIO::POST;
     }
     else
     {
