@@ -50,111 +50,116 @@ namespace casa {
 		// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
 		// this means that coordinate transformation is required each time the region is drawn.
 		class PVLine : public Region {
-				Q_OBJECT
+			Q_OBJECT
+		public:
+			~PVLine( );
+			PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
+			        bool hold_signals=false );
+
+			// carry over from QtRegion... hopefully, removed soon...
+			PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
+			        bool hold_signals=false);
+
+			bool clickWithin( double x, double y ) const
+			{	double blc_x, blc_y, trc_x, trc_y;
+				boundingRectangle( blc_x, blc_y, trc_x, trc_y );
+				return x > blc_x && x < trc_x && y > blc_y && y < trc_y;
+			}
+
+			int clickHandle( double x, double y ) const;
+
+			bool doubleClick( double /*x*/, double /*y*/ );
+
+			// returns point state (Region::PointLocation)
+			region::PointInfo checkPoint( double x, double y ) const;
+
+			// returns mouse state (Region::MouseState)
+			unsigned int mouseMovement( double x, double y, bool other_selected );
+
+			// for rectangles, resizing can change the handle...
+			// for rectangles, moving a handle is resizing...
+			int moveHandle( int handle, double x, double y );
+			void move( double dx, double dy );
+
+			void resize( double /*width_delta*/, double /*height_delta*/ );
+			bool valid_translation( double dx, double dy, double width_delta, double height_delta );
+
+			void linearCenter( double &x, double &y ) const;
+			void pixelCenter( double &x, double &y ) const;
+
+			AnnotationBase *annotation( ) const;
+
+			virtual bool flag( MSAsRaster *msar );
+
+			// in "linear" coordinates...
+			void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
+
+			void output( ds9writer &out ) const;
+
+			// fetch region type...
+			region::RegionTypes type( ) const {
+				return region::PVLineRegion;
+			}
+
+		public slots:
+			void createPVImage(const std::string&,const std::string&,int);
+
+		private slots:
+			void dpg_deleted(QObject*);
+
+
+
+		protected:
+
+			PVLine( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1,
+			        double y1, double x2, double y2, bool hold_signals=false,
+			        QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN );
+
+			RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
+			void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
+			std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
+			ImageRegion *get_image_region( DisplayData* ) const;
+			RegionInfo *newInfoObject( ImageInterface<Float> *image );
+
+			virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
+			                                   std::vector<std::pair<double,double> > &world_pts ) const;
+
+			void drawRegion( bool );
+			/* void drawHandles( ); */
+
+			/* virtual void setCenter(double &x, double &y, double &deltx, double &delty) {center_x_=x; center_y_=y; center_delta_x_=deltx; center_delta_y_=delty;}; */
+
+			double pt1_x, pt1_y;
+			double pt2_x, pt2_y;
+			/* double center_x, center_y; */
+			double handle_delta_x, handle_delta_y;
+
+			// one display_element is created for each image created from this PVLine...
+			// the resulting display list may be useful in the future...
+			class display_element {
 			public:
-				~PVLine( );
-				PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2, 
-						   bool hold_signals=false );
-
-				// carry over from QtRegion... hopefully, removed soon...
-				PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
-						   bool hold_signals=false);
-
-				bool clickWithin( double x, double y ) const
-					{ double blc_x, blc_y, trc_x, trc_y;
-					  boundingRectangle( blc_x, blc_y, trc_x, trc_y );
-					  return x > blc_x && x < trc_x && y > blc_y && y < trc_y; }
-
-				int clickHandle( double x, double y ) const;
-
-				bool doubleClick( double /*x*/, double /*y*/ );
-
-				// returns point state (Region::PointLocation)
-				region::PointInfo checkPoint( double x, double y ) const;
-
-				// returns mouse state (Region::MouseState)
-				unsigned int mouseMovement( double x, double y, bool other_selected );
-
-				// for rectangles, resizing can change the handle...
-				// for rectangles, moving a handle is resizing...
-				int moveHandle( int handle, double x, double y );
-				void move( double dx, double dy );
-
-				void resize( double /*width_delta*/, double /*height_delta*/ );
-				bool valid_translation( double dx, double dy, double width_delta, double height_delta );
-
-				void linearCenter( double &x, double &y ) const;
-				void pixelCenter( double &x, double &y ) const;
-
-				AnnotationBase *annotation( ) const;
-
-				virtual bool flag( MSAsRaster *msar );
-
-				// in "linear" coordinates...
-				void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
-
-				void output( ds9writer &out ) const;
-
-				// fetch region type...
-				region::RegionTypes type( ) const { return region::PVLineRegion; }
-
-			public slots:
-				void createPVImage(const std::string&,const std::string&,int);
-
-			private slots:
-				void dpg_deleted(QObject*);
-
-
-
-			protected:
-
-				PVLine( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1, 
-						double y1, double x2, double y2, bool hold_signals=false, 
-						QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN );
-
-				RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
-				void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
-				std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
-				ImageRegion *get_image_region( DisplayData* ) const;
-				RegionInfo *newInfoObject( ImageInterface<Float> *image );
-
-				virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
-												   std::vector<std::pair<double,double> > &world_pts ) const;
-
-				void drawRegion( bool );
-				/* void drawHandles( ); */
-
-				/* virtual void setCenter(double &x, double &y, double &deltx, double &delty) {center_x_=x; center_y_=y; center_delta_x_=deltx; center_delta_y_=delty;}; */
-
-				double pt1_x, pt1_y;
-				double pt2_x, pt2_y;
-				/* double center_x, center_y; */
-				double handle_delta_x, handle_delta_y;
-
-				// one display_element is created for each image created from this PVLine...
-				// the resulting display list may be useful in the future...
-				class display_element {
-				    public:
-						display_element( const std::string &n ) : name_(n), path_("") { }
-						std::string name( ) { return name_; }
-						std::string outputPath( );
-					private:
-						std::string name_;
-						std::string path_;
-				};
-
-				typedef std::list<display_element> display_list_t;
-				display_list_t display_list;
-
-				ImageInterface<Float> *generatePVImage( ImageInterface<Float> *, std::string, int, bool );
-
+				display_element( const std::string &n ) : name_(n), path_("") { }
+				std::string name( ) {
+					return name_;
+				}
+				std::string outputPath( );
 			private:
-				QtDisplayPanelGui *sub_dpg;
-				bool within_vertex_handle( double x, double y ) const;
-				unsigned int check_handle( double x, double y ) const;
-				std::string worldCoordinateStrings( double x, double y );
+				std::string name_;
+				std::string path_;
+			};
+
+			typedef std::list<display_element> display_list_t;
+			display_list_t display_list;
+
+			ImageInterface<Float> *generatePVImage( ImageInterface<Float> *, std::string, int, bool );
+
+		private:
+			QtDisplayPanelGui *sub_dpg;
+			bool within_vertex_handle( double x, double y ) const;
+			unsigned int check_handle( double x, double y ) const;
+			std::string worldCoordinateStrings( double x, double y );
 		};
-    }
+	}
 }
 
 #endif

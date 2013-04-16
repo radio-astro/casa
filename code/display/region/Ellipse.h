@@ -35,52 +35,56 @@
 
 namespace casa {
 
-    class PanelDisplay;
-    class AnnRegion;
+	class PanelDisplay;
+	class AnnRegion;
 
-    namespace viewer {
-
-	// carry over from QtRegion... hopefully, removed soon...
-	class QtRegionSourceKernel;
-
-	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
-	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
-	// this means that coordinate transformation is required each time the region is drawn.
-	class Ellipse : public Rectangle {
-	    public:
-		~Ellipse( );
-		Ellipse( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2);
+	namespace viewer {
 
 		// carry over from QtRegion... hopefully, removed soon...
-		Ellipse( QtRegionSourceKernel *factory, WorldCanvas *wc, double x1, double y1, double x2, double y2, bool hold_signals=false );
+		class QtRegionSourceKernel;
 
-		// returns mouse movement state
-		unsigned int mouseMovement( double x, double y, bool other_selected );
+		// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
+		// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
+		// this means that coordinate transformation is required each time the region is drawn.
+		class Ellipse : public Rectangle {
+		public:
+			~Ellipse( );
+			Ellipse( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2);
 
-		AnnotationBase *annotation( ) const;
+			// carry over from QtRegion... hopefully, removed soon...
+			Ellipse( QtRegionSourceKernel *factory, WorldCanvas *wc, double x1, double y1, double x2, double y2, bool hold_signals=false );
 
-		bool flag( MSAsRaster * ) { return false; }
+			// returns mouse movement state
+			unsigned int mouseMovement( double x, double y, bool other_selected );
 
-		// fetch region type...
-		region::RegionTypes type( ) const { return region::EllipseRegion; }
+			AnnotationBase *annotation( ) const;
 
-	    protected:
-		std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers(  );
-		ImageRegion *get_image_region( DisplayData* ) const;
-		// Ellipse is derived from Rectangle, but we have no way to generate ellipse
-		// statistics for a measurement set (our only non-image display data)... so
-		// we have to define this to prevent MS info being reported for the bounding
-		// rectangle of an Ellipse...
-		void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * ) { }
+			bool flag( MSAsRaster * ) {
+				return false;
+			}
 
-		virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
-						   std::vector<std::pair<double,double> > &world_pts ) const;
+			// fetch region type...
+			region::RegionTypes type( ) const {
+				return region::EllipseRegion;
+			}
 
-		void drawRegion( bool );
-		/* void drawHandles( ); */
+		protected:
+			std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers(  );
+			ImageRegion *get_image_region( DisplayData* ) const;
+			// Ellipse is derived from Rectangle, but we have no way to generate ellipse
+			// statistics for a measurement set (our only non-image display data)... so
+			// we have to define this to prevent MS info being reported for the bounding
+			// rectangle of an Ellipse...
+			void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * ) { }
 
-	};
-    }
+			virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
+			                                   std::vector<std::pair<double,double> > &world_pts ) const;
+
+			void drawRegion( bool );
+			/* void drawHandles( ); */
+
+		};
+	}
 }
 
 #endif

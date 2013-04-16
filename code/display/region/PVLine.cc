@@ -52,44 +52,44 @@
 #include <casa/Quanta/MVAngle.h>
 
 namespace casa {
-    namespace viewer {
+	namespace viewer {
 
-	PVLine::PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
-					bool hold_signals ) :	Region( "p/v line", wc, d,
-													new QtPVLineState(QString("p/v line")),hold_signals ),
-														pt1_x(x1), pt1_y(y1),
-														pt2_x(x2), pt2_y(y2), sub_dpg(0) {
-		// center_x = linear_average(pt1_x,pt2_x);
-		// center_y = linear_average(pt1_y,pt2_y);
-		initHistogram();
-		complete = true;
-		refresh_state_gui( );	/*** update position info ***/
-	}
+		PVLine::PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
+		                bool hold_signals ) :	Region( "p/v line", wc, d,
+			                        new QtPVLineState(QString("p/v line")),hold_signals ),
+			pt1_x(x1), pt1_y(y1),
+			pt2_x(x2), pt2_y(y2), sub_dpg(0) {
+			// center_x = linear_average(pt1_x,pt2_x);
+			// center_y = linear_average(pt1_y,pt2_y);
+			initHistogram();
+			complete = true;
+			refresh_state_gui( );	/*** update position info ***/
+		}
 
-	// carry over from QtRegion... hopefully, removed soon...
-	PVLine::PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
-					bool hold_signals) : Region( "p/v line", wc, rs->dock( ), new QtPVLineState(QString("p/v line")), hold_signals ),
-										 pt1_x(x1), pt1_y(y1),
-										 pt2_x(x2), pt2_y(y2), sub_dpg(0) {
-		// center_x = linear_average(pt1_x,pt2_x);
-		// center_y = linear_average(pt1_y,pt2_y);
-		initHistogram();
-		complete = true;
-		refresh_state_gui( );	/*** update position info ***/
-	}
+		// carry over from QtRegion... hopefully, removed soon...
+		PVLine::PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
+		                bool hold_signals) : Region( "p/v line", wc, rs->dock( ), new QtPVLineState(QString("p/v line")), hold_signals ),
+			pt1_x(x1), pt1_y(y1),
+			pt2_x(x2), pt2_y(y2), sub_dpg(0) {
+			// center_x = linear_average(pt1_x,pt2_x);
+			// center_y = linear_average(pt1_y,pt2_y);
+			initHistogram();
+			complete = true;
+			refresh_state_gui( );	/*** update position info ***/
+		}
 
 
-	PVLine::PVLine( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1, 
-					double y1, double x2, double y2, bool hold_signals, 
-					QtMouseToolNames::PointRegionSymbols sym ) :
-				Region( name, wc, d, new QtPVLineState(QString("p/v line"), sym ),
-						hold_signals ), pt1_x(x1),
-				pt1_y(y1), pt2_x(x2), pt2_y(y2), sub_dpg(0) {
-		complete = true;
-		refresh_state_gui( );	/*** update position info ***/
-	}
+		PVLine::PVLine( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1,
+		                double y1, double x2, double y2, bool hold_signals,
+		                QtMouseToolNames::PointRegionSymbols sym ) :
+			Region( name, wc, d, new QtPVLineState(QString("p/v line"), sym ),
+			        hold_signals ), pt1_x(x1),
+			pt1_y(y1), pt2_x(x2), pt2_y(y2), sub_dpg(0) {
+			complete = true;
+			refresh_state_gui( );	/*** update position info ***/
+		}
 
-	PVLine::~PVLine( ) { }
+		PVLine::~PVLine( ) { }
 
 
 		unsigned int PVLine::check_handle( double x, double y ) const {
@@ -107,12 +107,24 @@ namespace casa {
 		struct strip_white_space {
 			strip_white_space(size_t s) : size(s+1), off(0), buf(new char[size]) { }
 			strip_white_space( const strip_white_space &other ) : size(other.size), off(other.off),
-																  buf(new char[size])
-					{ strcpy(buf,other.buf); }
-			~strip_white_space( ) { delete [] buf; }
-			void operator( )( char c ) { if ( ! isspace(c) ) buf[off++] = c; };
-			operator std::string( ) { buf[off] = '\0'; return std::string(buf); }
-			operator String( ) { buf[off] = '\0'; return String(buf); }
+				buf(new char[size])
+			{
+				strcpy(buf,other.buf);
+			}
+			~strip_white_space( ) {
+				delete [] buf;
+			}
+			void operator( )( char c ) {
+				if ( ! isspace(c) ) buf[off++] = c;
+			};
+			operator std::string( ) {
+				buf[off] = '\0';
+				return std::string(buf);
+			}
+			operator String( ) {
+				buf[off] = '\0';
+				return String(buf);
+			}
 			size_t size;
 			size_t off;
 			char *buf;
@@ -232,14 +244,14 @@ namespace casa {
 
 		int PVLine::moveHandle( int handle, double x, double y ) {
 			switch ( handle ) {
-				case 1:		// end #1
-					pt1_x = x;
-					pt1_y = y;
-					break;
-				case 2:		// end #2
-					pt2_x = x;
-					pt2_y = y;
-					break;
+			case 1:		// end #1
+				pt1_x = x;
+				pt1_y = y;
+				break;
+			case 2:		// end #2
+				pt2_x = x;
+				pt2_y = y;
+				break;
 				// case 3:		// center handle
 				// 	{
 				// 		double delta_x = x - center_x;
@@ -249,7 +261,7 @@ namespace casa {
 				// 		pt2_x += delta_x;
 				// 		pt2_y += delta_y;
 				// 	}
-					break;
+				break;
 			}
 
 			// center_x = (pt1_x+pt2_x)/2.0;
@@ -286,7 +298,12 @@ namespace casa {
 			double lx = linear_average(pt1_x,pt2_x);
 			double ly = linear_average(pt1_y,pt2_y);
 
-			try { linear_to_pixel( wc_, lx, ly, x, y ); } catch(...) { return; }
+			try {
+				linear_to_pixel( wc_, lx, ly, x, y );
+			}
+			catch(...) {
+				return;
+			}
 		}
 
 		AnnotationBase *PVLine::annotation( ) const {
@@ -296,7 +313,12 @@ namespace casa {
 			const CoordinateSystem &cs = wc_->coordinateSystem( );
 
 			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
-			try { linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y ); } catch(...) { return 0; }
+			try {
+				linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y );
+			}
+			catch(...) {
+				return 0;
+			}
 			const Vector<String> &units = wc_->worldAxisUnits( );
 
 			Quantity qpt1_x( wpt1_x, units[0] );
@@ -332,17 +354,27 @@ namespace casa {
 		}
 
 		void PVLine::fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
-											  std::vector<std::pair<double,double> > &world_pts ) const {
+		                                   std::vector<std::pair<double,double> > &world_pts ) const {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 			type = region::PVLineRegion;
 
 			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
-			try { linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y ); } catch(...) { return; }
+			try {
+				linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y );
+			}
+			catch(...) {
+				return;
+			}
 
 			double ppt1_x, ppt1_y, ppt2_x, ppt2_y;
-			try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, ppt1_x, ppt1_y, ppt2_x, ppt2_y ); } catch(...) { return; }
+			try {
+				linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, ppt1_x, ppt1_y, ppt2_x, ppt2_y );
+			}
+			catch(...) {
+				return;
+			}
 
 			pixel_pts.resize(2);
 			pixel_pts[0].first = static_cast<int>(ppt1_x);
@@ -370,7 +402,9 @@ namespace casa {
 			try {
 				linear_to_screen( wc_, pt1_x, pt1_y, pt2_x, pt2_y, x1, y1, x2, y2 );
 				// linear_to_screen( wc_, center_x, center_y, cx, cy );
-			} catch(...) { return; }
+			} catch(...) {
+				return;
+			}
 
 			pushDrawingEnv( region::SolidLine, 2 );
 			pc->drawLine( x1, y1, x2, y2 );
@@ -475,13 +509,18 @@ namespace casa {
 			RegionInfo::stats_t *result = new RegionInfo::stats_t( );
 
 			Vector<Double> pos(2);
-			try { linear_to_world( wc_, x, y, pos[0], pos[1] ); } catch(...) { return result; }
+			try {
+				linear_to_world( wc_, x, y, pos[0], pos[1] );
+			}
+			catch(...) {
+				return result;
+			}
 
 			msar->showPosition( *result, pos );
 			return result;
 		}
 
-		std::list<std::tr1::shared_ptr<RegionInfo> > * PVLine::generate_dds_centers( ){
+		std::list<std::tr1::shared_ptr<RegionInfo> > * PVLine::generate_dds_centers( ) {
 
 			std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 			if( wc_==0 ) return region_centers;
@@ -544,8 +583,8 @@ namespace casa {
 					if ( nAxes == 2 ) dispAxes.resize(2,True);
 
 					if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
-						 Int(pos.nelements()) != nAxes ||
-						 anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
+					        Int(pos.nelements()) != nAxes ||
+					        anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
 						continue;
 
 					if ( dispAxes.nelements() > 2u )
@@ -588,9 +627,9 @@ namespace casa {
 					ImageRegion *imageregion = new ImageRegion(box);
 
 					region_centers->push_back( std::tr1::shared_ptr<RegionInfo>( new PVLineRegionInfo( name, description,
-																									   getLayerCenter(padd, image, *imageregion),
-																									   std::vector<std::string>( ),
-																									   std::vector<std::string>( ))) );
+					                           getLayerCenter(padd, image, *imageregion),
+					                           std::vector<std::string>( ),
+					                           std::vector<std::string>( ))) );
 
 					delete imageregion;
 				} catch (const casa::AipsError& err) {
@@ -658,9 +697,19 @@ namespace casa {
 
 			double ppt1_x, ppt1_y, ppt2_x, ppt2_y;
 			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
-			try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, ppt1_x, ppt1_y, ppt2_x, ppt2_y ); } catch(...) { return 0; }
+			try {
+				linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, ppt1_x, ppt1_y, ppt2_x, ppt2_y );
+			}
+			catch(...) {
+				return 0;
+			}
 
-			try { linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y ); } catch(...) { return 0; }
+			try {
+				linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y );
+			}
+			catch(...) {
+				return 0;
+			}
 
 			std::vector<std::string> pixel(2);
 			std::vector<std::string> world(2);
@@ -674,7 +723,7 @@ namespace casa {
 
 			world[0] = worldCoordinateStrings(wpt1_x,wpt1_y);
 			world[1] = worldCoordinateStrings(wpt2_x,wpt2_y);
-			
+
 			return new PVLineRegionInfo( image->name(true), image->name(false), dd_stats, pixel, world );
 		}
 
@@ -711,13 +760,18 @@ namespace casa {
 			Record dummy;
 			PVGenerator pvgen( input_image, &dummy, "" /*chanInp*/, "" /*stokes*/, "" /*maskInp*/, output_file, true );
 			double startx, starty, endx, endy;
-			try { linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy ); } catch(...) { return 0; }
+			try {
+				linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy );
+			}
+			catch(...) {
+				return 0;
+			}
 			pvgen.setEndpoints( startx, starty, endx, endy );
 			pvgen.setHalfWidth((double)((width-1)/2));
 			dock_->panel( )->status( "generating temporary image: " + output_file );
 			dock_->panel( )->logIO( ) << "generating temporary image \'" << output_file  << "'" << LogIO::POST;
 			dock_->panel( )->logIO( ) << "generating P/V image with pixel points: (" <<
-				startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
+			                          startx << "," << starty << ") (" << endx << "," << endy << ")" << LogIO::POST;
 			ImageInterface<Float> *result = 0;
 			QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
 			try {
@@ -747,9 +801,9 @@ namespace casa {
 					display_element de( name );
 					ImageInterface<Float> *new_image = generatePVImage( image, de.outputPath( ), width, true );
 					if ( sub_dpg == 0 ) {
-						 sub_dpg = dock_->panel( )->createNewPanel( );
-						 connect( sub_dpg, SIGNAL(destroyed(QObject*)), SLOT(dpg_deleted(QObject*)) );
-					}					
+						sub_dpg = dock_->panel( )->createNewPanel( );
+						connect( sub_dpg, SIGNAL(destroyed(QObject*)), SLOT(dpg_deleted(QObject*)) );
+					}
 					sub_dpg->unregisterAllDDs( );
 					display_list.push_back(de);
 					sub_dpg->addDD( new_image->name(false), "image", "raster", True, True, new_image );
@@ -780,6 +834,6 @@ namespace casa {
 			out.rectangle(wc_,pts);
 		}
 
-    }
+	}
 
 }
