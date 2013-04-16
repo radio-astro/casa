@@ -130,7 +130,7 @@ def partition(vis,
             casalog.post('Will process the MS in parallel')
 
         # Get a cluster
-        msth.setupCluster(taskname='partition')
+        msth.setupCluster(thistask='partition')
         
         # Execute the jobs using simple_cluster
         try:

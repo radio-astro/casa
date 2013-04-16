@@ -113,9 +113,12 @@ class MSTHelper(ParallelTaskHelper):
         return retval
         
 #    @dump_args
-    def setupCluster(self, taskname='mstransform'):
+    def setupCluster(self, thistask=''):
         '''Get a simple_cluster'''
-        ParallelTaskHelper.__init__(self, taskname, self.__args)
+        if thistask == '':
+            thistask = 'mstransform'
+        print thistask
+        ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
             
     
 #    @dump_args
@@ -280,6 +283,7 @@ class MSTHelper(ParallelTaskHelper):
         # This method is to generate a list of commands to partition
         # the data based on SPW.
 
+        print 'in spw separation'
         # Get a unique list of selected spws        
         self._selectMS()
         spwList = self._getSPWList()
@@ -894,7 +898,7 @@ def mstransform(
             casalog.post('Will process the MS in parallel')
 
         # Get a cluster
-        mth.setupCluster()
+        mth.setupCluster(thistask='mstransform')
         
         # Do the processing.
         try: 
