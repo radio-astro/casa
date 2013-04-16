@@ -78,7 +78,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 
 						panel_(panel),
 						pd_(0), pc_(0),
-						qdds_(),
+						//qdds_(),
 						toolmgr(0),
 						zoom_(0), panner_(0),
 						ocrosshair_(0), ortregion_(0), oelregion_(0), optregion_(0),
@@ -189,8 +189,9 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 
 	panel_->viewer()->dpCreated( panel_, this ); // Inform supervisory object of DP creation.
 
+	displayDataHolder = new DisplayDataHolder();
+	displayDataHolder->setImageDisplayer( this );
 }
-
 
 
 QtDisplayPanel::~QtDisplayPanel() { 
@@ -203,7 +204,9 @@ QtDisplayPanel::~QtDisplayPanel() {
 	delete bncFidd_;
 	delete bkgdClrOpt_;
 	if(lastMotionEvent_!=0) delete lastMotionEvent_;
-	delete pc_;  }
+	delete pc_;
+	delete displayDataHolder;
+}
 
 
 
@@ -342,10 +345,12 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 	emit mouseRegionReady(mouseRegion, wch);  // echo mouseTool signal.
 	Bool rgnSaved = False;
 
-	for(ListIter<QtDisplayData*> qdds(qdds_);
+	/*for(ListIter<QtDisplayData*> qdds(qdds_);
 			!qdds.atEnd(); qdds++) {
-		QtDisplayData* qdd = qdds.getRight();
-
+		QtDisplayData* qdd = qdds.getRight();*/
+	DisplayDataHolder::DisplayDataIterator iter = beginRegistered();
+	while( iter != endRegistered()){
+		QtDisplayData* qdd = (*iter );
 		//cout << "extChan_=" << extChan_
 		//     << " extPol_=" << extPol_ << endl;
 		ImageRegion* imReg = qdd->mouseToImageRegion(
@@ -395,7 +400,10 @@ void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 			resetPTRegion();
 
 
-		delete imReg;  } }
+		delete imReg;
+		iter++;
+	}
+}
 
 
 
@@ -501,13 +509,18 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 	//First go through and get the information from the
 	//conforming dd.
 	pair<String,String> principalTrackInfo;
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 
-		QtDisplayData* qdd = qdds.getRight();
+		QtDisplayData* qdd = qdds.getRight();*/
+	for ( DisplayDataHolder::DisplayDataIterator iter = beginRegistered();
+			iter != endRegistered(); iter++){
+		QtDisplayData* qdd = (*iter);
 		DisplayData*    dd = qdd->dd();
 
 		if ( dd->classType()==Display::Annotation ||
-				dd->classType()==Display::CanvasAnnotation) continue;
+				dd->classType()==Display::CanvasAnnotation){
+			continue;
+		}
 		// (Tracking information is not provided for these dd types).
 
 		if ( bLen_ > 1 && pd_->isBlinkDD(dd) && ! dd->conformsTo(wc) ){
@@ -522,11 +535,13 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 	}
 
 	//Now go through and do all the tracking records.
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 
-		QtDisplayData* qdd = qdds.getRight();
+		QtDisplayData* qdd = qdds.getRight();*/
+	for ( DisplayDataHolder::DisplayDataIterator iter2 = beginRegistered();
+			iter2 != endRegistered(); iter2++){
+		QtDisplayData* qdd = (*iter2);
 		DisplayData*    dd = qdd->dd();
-
 		if ( dd->classType()==Display::Annotation ||
 				dd->classType()==Display::CanvasAnnotation) continue;
 		// (Tracking information is not provided for these dd types).
@@ -562,7 +577,10 @@ void  QtDisplayPanel::refreshTracking_(QtDisplayData* qdd) {
 
 	// Else, if qdd is specified, tracking data is refreshed only for that dd.
 
-	if(!isRegistered(qdd)) return;
+	if ( !displayDataHolder->exists( qdd )){
+		return;
+	}
+	//if(!isRegistered(qdd)) return;
 
 	WorldCanvas* wc = ev.worldCanvas();
 	if(!myWC_(wc)) return;	// (safety; ev could be obsolete)
@@ -641,7 +659,8 @@ void QtDisplayPanel::ddCreated_(QtDisplayData* qdd, Bool autoRegister) {
 
 	if(autoRegister) {
 		registerDD_(qdd);
-		emit newRegisteredDD(qdd);  }
+		emit newRegisteredDD(qdd);
+	}
 
 	else emit newUnregisteredDD(qdd);
 
@@ -651,31 +670,39 @@ void QtDisplayPanel::ddCreated_(QtDisplayData* qdd, Bool autoRegister) {
 
 void QtDisplayPanel::ddRemoved_(QtDisplayData* qdd) {
 	// DP actions to take when viewer signals DD removal.
-
-	if(isRegistered(qdd)) {
+	//if(isRegistered(qdd)) {
+	if ( displayDataHolder->exists( qdd )){
 		unregisterDD_(qdd);
-		emit RegisteredDDRemoved(qdd);  }
-	else emit UnregisteredDDRemoved(qdd);  }
+		emit RegisteredDDRemoved(qdd);
+	}
+	else emit UnregisteredDDRemoved(qdd);
+}
 
 
 
-void QtDisplayPanel::registerDD(QtDisplayData* qdd) {
+void QtDisplayPanel::registerDD(QtDisplayData* qdd, int position ) {
 	// Called externally (by gui, e.g.) to register pre-existing DDs.
+	if ( displayDataHolder->exists( qdd) ){
+	//if(!isUnregistered(qdd)){
+		return;  //  Nothing to do.
+	}
+	registerDD_(qdd, position);
+	emit oldDDRegistered(qdd);
+}
 
-	if(!isUnregistered(qdd)) return;  //  Nothing to do.
-	registerDD_(qdd);
-	emit oldDDRegistered(qdd);  }
+DisplayDataHolder* QtDisplayPanel::getDataHolder() const {
+	return displayDataHolder;
+}
 
-
-
-void QtDisplayPanel::registerDD_(QtDisplayData* qdd) {
+void QtDisplayPanel::registerDD_(QtDisplayData* qdd, int position ) {
 	// Internal method, called by public register method above,
 	// or in reaction to new DD creation (ddCreated_() slot).
 	// Precondition: isUnregistered(qdd) should be True before this is called.
 
-	ListIter<QtDisplayData*> qdds(qdds_);
+	/*ListIter<QtDisplayData*> qdds(qdds_);
 	qdds.toEnd();
-	qdds.addRight(qdd);
+	qdds.addRight(qdd);*/
+	displayDataHolder->addDD( qdd, position );
 
 	DisplayData* dd = qdd->dd();
 
@@ -688,7 +715,7 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd) {
 	// pd_, for obscure reasons: sometimes a frame setting may be
 	// used from another Panel where dd is registered).
 
-	pd_->addDisplayData(*dd);
+	pd_->addDisplayData(*dd, position);
 	// Maintain registration relation between the
 	// wrapped classes.
 
@@ -728,36 +755,41 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd) {
 	rgnImgPath_ = qdd->path();
 	qdd->registerNotice(this);	// Let QDD know.
 
-	release();  }
+	release();
+}
 
 
 
 
 void QtDisplayPanel::unregisterDD(QtDisplayData* qdd) {
 	// Called externally (by gui, e.g.) to unregister pre-existing DDs.
-
-	if(!isRegistered(qdd)) return;  //  Nothing to do.
+	if ( !displayDataHolder->exists( qdd )){
+		return;
+	}
+	//if(!isRegistered(qdd)) return;  //  Nothing to do.
 	unregisterDD_(qdd);
-	emit oldDDUnregistered(qdd);  }
+	emit oldDDUnregistered(qdd);
+}
 
 
 void QtDisplayPanel::unregisterDD_(QtDisplayData* qdd) {
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-		if(qdd == qdds.getRight()) {
+	bool removed = displayDataHolder->removeDD( qdd );
+	//for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+		//if(qdd == qdds.getRight()) {
+	if ( removed ){
+		qdd->unregisterNotice(this);	// Let QDD know.
 
-			qdd->unregisterNotice(this);	// Let QDD know.
+			//qdds.removeRight();
+		DisplayData* dd = qdd->dd();
 
-			qdds.removeRight();
-			DisplayData* dd = qdd->dd();
-
-			hold();
+		hold();
 
 
-			if(pd_->isCSmaster(dd)) resetTools();
+		if(pd_->isCSmaster(dd)) resetTools();
 			// CS master change means it's better to erase mouse tools;
 			// their internal coordinates may not be relevant anymore.
 
-			pd_->removeDisplayData(*dd);
+		pd_->removeDisplayData(*dd);
 
 
 			// Signal animator to reset number of (Z) frames according to
@@ -765,84 +797,93 @@ void QtDisplayPanel::unregisterDD_(QtDisplayData* qdd) {
 			// still in range.  Blink index or length may also change when
 			// DD is removed.  (This code comes mostly from GTkPD::remove()).
 
-			Record animrec;
+		Record animrec;
 
-			if(pd_->isBlinkDD(dd)) {
-				animrec.define("blength", pd_->bLength());
-				animrec.define("bindex",  pd_->bIndex());  }
+		if(pd_->isBlinkDD(dd)) {
+			animrec.define("blength", pd_->bLength());
+			animrec.define("bindex",  pd_->bIndex());
+		}
 
-			setAnimator_(animrec);
+		setAnimator_(animrec);
 
 			// Ignore further animation change-request signals from dd,
 			// since it is no longer registered.
-			disconnect( qdd, SIGNAL(optionsChanged(Record)),
+		disconnect( qdd, SIGNAL(optionsChanged(Record)),
 					this,  SLOT(setAnimatorOptions_(Record)) );
 
 			// Likewise, colorbar rearrangement via this signal won't be
 			// necessary if qdd is not registered.
-			disconnect( qdd, SIGNAL(colorBarChange()),
+		disconnect( qdd, SIGNAL(colorBarChange()),
 					this,  SLOT(checkColorBars_()) );
 
 			// ditto dd tracking refresh from signal.
-			disconnect( qdd, SIGNAL(trackingChange(QtDisplayData*)),
+		disconnect( qdd, SIGNAL(trackingChange(QtDisplayData*)),
 					this,  SLOT(refreshTracking_(QtDisplayData*)) );
-
-
-			release();
-
-			break;  }
+		release();
 	}
 }
 
 
 
-
-void QtDisplayPanel::registerAll() {
+void QtDisplayPanel::registerAll( List<QtDisplayData*> registerDatas ){
+//void QtDisplayPanel::registerAll() {
 	// Called externally (by gui, e.g.) to register all DDs created
 	// by user through QtViewer.
 
-	List<QtDisplayData*> unregdDDs(unregisteredDDs());
-	if(unregdDDs.len()==0) return;
+	//List<QtDisplayData*> unregdDDs(unregisteredDDs());
+	//if(unregdDDs.len()==0) return;
+	if ( registerDatas.len() == 0 ){
+		return;
+	}
 
 	hold();
-
-	for(ListIter<QtDisplayData*> udds(unregdDDs); !udds.atEnd(); udds++) {
+	for(ListIter<QtDisplayData*> udds(registerDatas); !udds.atEnd(); udds++) {
+	//for(ListIter<QtDisplayData*> udds(unregdDDs); !udds.atEnd(); udds++) {
 		QtDisplayData* dd = udds.getRight();
-		registerDD_(dd);  }
+		registerDD_(dd);
+	}
 
 	emit allDDsRegistered();
 	//# do animator resetting, ala GTkPD
 
-	release();  }
+	release();
+}
 
 
 
 void QtDisplayPanel::unregisterAll() {
 	// Called externally (by gui, e.g.) to unregister all DDs.
-	List<QtDisplayData*> regdDDs(registeredDDs());
-	if(regdDDs.len()==0) return;
+	//List<QtDisplayData*> regdDDs(registeredDDs());
+	//if(regdDDs.len()==0) return;
+	if ( displayDataHolder->isEmpty()){
+		return;
+	}
 
 	hold();
 
-	for(ListIter<QtDisplayData*> rdds(regdDDs); !rdds.atEnd(); rdds++) {
+	/*for(ListIter<QtDisplayData*> rdds(regdDDs); !rdds.atEnd(); rdds++) {
 		QtDisplayData* dd = rdds.getRight();
-		unregisterDD_(dd);  }
+		unregisterDD_(dd);  }*/
+	displayDataHolder->removeDDAll();
 
 	if(qsm_!=0) qsm_->deleteAll();
 
 	emit allDDsUnregistered();
 	//# do animator resetting, ala GTkPD.
 
-	release();  }
+	release();
+}
 
 
 
 Bool QtDisplayPanel::isRegistered(QtDisplayData* qdd) {
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 		if(qdd == qdds.getRight()) return True;  }
-	return False;  }
+	return False;*/
+	return displayDataHolder->exists( qdd );
+}
 
-Bool QtDisplayPanel::isRegistered(const std::string &ddname) {
+/*Bool QtDisplayPanel::isRegistered(const std::string &ddname) {
 	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 		if(ddname == qdds.getRight()->name()) return True;  }
 	return False;  }
@@ -865,9 +906,10 @@ List<QtDisplayData*> QtDisplayPanel::unregisteredDDs() {
 		if(isRegistered(udds.getRight())) udds.removeRight();
 		else udds++;  }
 
-	return unregdDDs;  }
+	return unregdDDs;
+}
 
-
+*/
 
 
 void QtDisplayPanel::registerRegionShape(RegionShape* rs) {
@@ -961,10 +1003,13 @@ String QtDisplayPanel::saveRegionInImage(String regname,
 
 		//RegionManager regMan;
 		//retval=regMan.imageRegionToTable(rgnImgPath_, imreg, regname);
-		ListIter<QtDisplayData*> qdds(qdds_);
+		/*ListIter<QtDisplayData*> qdds(qdds_);
 		qdds.toEnd();
 		qdds--;
-		QtDisplayData* qdd = qdds.getRight();
+		QtDisplayData* qdd = qdds.getRight();*/
+		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->endDD();
+		iter--;
+		QtDisplayData* qdd = (*iter);
 		if( (qdd->imageInterface()) && ((qdd->imageInterface())->canDefineRegion())){
 
 			(qdd->imageInterface())->defineRegion(regname, imreg, RegionHandler::Regions, True);
@@ -985,10 +1030,13 @@ void QtDisplayPanel::removeRegionInImage(String regname) {
 
 		//RegionManager regMan;
 		//retval=regMan.imageRegionToTable(rgnImgPath_, imreg, regname);
-		ListIter<QtDisplayData*> qdds(qdds_);
+		/*ListIter<QtDisplayData*> qdds(qdds_);
 		qdds.toEnd();
 		qdds--;
-		QtDisplayData* qdd = qdds.getRight();
+		QtDisplayData* qdd = qdds.getRight();*/
+		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->endDD();
+		iter--;
+		QtDisplayData* qdd = (*iter);
 		if( (qdd->imageInterface()) && ((qdd->imageInterface())->canDefineRegion())){
 
 			(qdd->imageInterface())->removeRegion(regname, RegionHandler::Any, False);
@@ -1024,10 +1072,13 @@ Vector<String> QtDisplayPanel::listRegionsInImage(){
 
 
 		retval.resize();
-		ListIter<QtDisplayData*> qdds(qdds_);
+		/*ListIter<QtDisplayData*> qdds(qdds_);
 		qdds.toEnd();
 		qdds--;
-		QtDisplayData* qdd = qdds.getRight();
+		QtDisplayData* qdd = qdds.getRight();*/
+		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->endDD();
+		iter--;
+		QtDisplayData* qdd = (*iter);
 		if( qdd->imageInterface()){
 
 			//retval=regMan.namesInTable(rgnImgPath_);
@@ -1051,18 +1102,19 @@ ImageRegion QtDisplayPanel::getRegion(const String& name){
 	ImageRegion reg;
 
 	try{
-
-
-		ListIter<QtDisplayData*> qdds(qdds_);
+		/*ListIter<QtDisplayData*> qdds(qdds_);
 		qdds.toEnd();
 		qdds--;
-		QtDisplayData* qdd = qdds.getRight();
+		QtDisplayData* qdd = qdds.getRight();*/
+		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->endDD();
+		iter--;
+		QtDisplayData* qdd = (*iter);
 		if( qdd->imageInterface()){
 			reg=(qdd->imageInterface())->getRegion(name);
 		}
 	}
-	catch(...)
-	{ return ImageRegion();
+	catch(...){
+		return ImageRegion();
 	}
 
 	return reg;
@@ -1198,7 +1250,15 @@ void QtDisplayPanel::updateColorBarDDLists_() {
 
 
 	// Create new allColorBarDDs_ List (paring down from all registered DDs).
-	allColorBarDDs_ = registeredDDs();
+	//allColorBarDDs_ = registeredDDs();
+	List<QtDisplayData*> otherList;
+	ListIter<QtDisplayData*> otherIter(otherList);
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+		otherIter.addRight( *iter );
+		iter++;
+	}
+	allColorBarDDs_= otherList;
 	for(ListIter<QtDisplayData*> acbdds(allColorBarDDs_); !acbdds.atEnd(); ) {
 		QtDisplayData* cbdd = acbdds.getRight();
 
@@ -1646,9 +1706,12 @@ void QtDisplayPanel::plotCountChangeAdjustment(){
 	oldColumnCount = newColumnCount;
 	//If the number number of plots decreases
 	if ( oldCount > newCount ){
-		for (ListIter<QtDisplayData*> qtDisplayDataIterator(qdds_); !qtDisplayDataIterator.atEnd(); qtDisplayDataIterator++) {
+		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+		while( iter != displayDataHolder->endDD()){
+		//for (ListIter<QtDisplayData*> qtDisplayDataIterator(qdds_); !qtDisplayDataIterator.atEnd(); qtDisplayDataIterator++) {
 			//Determine if we are supposed to be displaying a color bar
-			QtDisplayData* qtDisplayData = qtDisplayDataIterator.getRight();
+			//QtDisplayData* qtDisplayData = qtDisplayDataIterator.getRight();
+			QtDisplayData* qtDisplayData = (*iter);
 			Record record = qtDisplayData->getOptions();
 			String wedgeDisplayStr = record.subRecord(WedgeDD::WEDGE_PREFIX).asString("value");
 			if ( wedgeDisplayStr == QtDisplayData::WEDGE_YES ){
@@ -1657,6 +1720,7 @@ void QtDisplayPanel::plotCountChangeAdjustment(){
 				DisplayData* displayData = qtDisplayData->dd();
 				displayData->setDisplayState( DisplayData::DISPLAYED);
 			}
+			iter++;
 		}
 	}
 }
@@ -2152,10 +2216,13 @@ String QtDisplayPanel::dpState(String restorefilename) {
 
 	// For each registered dd...
 
-	List<QtDisplayData*> DDs = registeredDDs();
+	/*List<QtDisplayData*> DDs = registeredDDs();
 	for(ListIter<QtDisplayData*> dds(DDs); !dds.atEnd(); dds++) {
-		QtDisplayData* dd = dds.getRight();
-
+		QtDisplayData* dd = dds.getRight();*/
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while( iter != displayDataHolder->endDD()){
+		QtDisplayData* dd = (*iter);
+		iter++;
 		// ...Create element for the dd's options (ddelem - tagName "dd")
 
 		Record ddrec = dd->getOptions();
@@ -2546,13 +2613,17 @@ QtDisplayPanel::panel_state QtDisplayPanel::getPanelState( ) const {
 
 	panel_state::colormap_map colormapstate;
 	Vector<Float> shiftSlope, brtCont;
-	for ( ConstListIter<QtDisplayData*> dds = registeredDDs(); ! dds.atEnd(); dds++ ) {
-		QtDisplayData* dd = dds.getRight();
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+	//for ( ConstListIter<QtDisplayData*> dds = registeredDDs(); ! dds.atEnd(); dds++ ) {
+		//QtDisplayData* dd = dds.getRight();
+		QtDisplayData* dd = (*iter);
 		if ( dd->hasColormap( ) ) {
 			dd->getCMShiftSlope(shiftSlope);
 			dd->getCMBrtCont(brtCont);
 			colormapstate.insert( panel_state::colormap_map::value_type(dd->path( ), panel_state::colormap_state(dd->getColormap( ),shiftSlope,brtCont)) );
 		}
+		iter++;
 	}
 
 	return panel_state( panel_state::zoom_state(blc,trc),
@@ -2602,10 +2673,13 @@ void QtDisplayPanel::setPanelState( const panel_state &state ) {
 	zoom_->zoom( state.blc( ), state.trc( ) );
 
 	Vector<Float> shiftSlope, brtCont;
-	ListIter<QtDisplayData*> iter(qdds_);
-	iter.toStart( );
-	while ( ! iter.atEnd( ) ) {
-		QtDisplayData* dd = iter.getRight();
+	//ListIter<QtDisplayData*> iter(qdds_);
+	//iter.toStart( );
+	//while ( ! iter.atEnd( ) ) {
+		//QtDisplayData* dd = iter.getRight();
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while( iter != displayDataHolder->endDD()){
+		QtDisplayData* dd = (*iter);
 		const QtDisplayPanel::panel_state::colormap_state *colormap = state.colormap(dd->path());
 		if ( colormap ) {
 			dd->setColormap(colormap->name( ));
@@ -2740,17 +2814,22 @@ String QtDisplayPanel::suggestedRestoreFilename() {
 	// Suggest name for restore file (based on first-registered DD).
 
 	String filename = "viewer";
-	List<QtDisplayData*> DDs(registeredDDs());
+	if ( !isEmptyRegistered()){
+		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+		QtDisplayData* dd = (*iter);
+	/*List<QtDisplayData*> DDs(registeredDDs());
 	if(DDs.len()>0) {
 		ListIter<QtDisplayData*> dds(DDs);
-		QtDisplayData* dd = dds.getRight();
+		QtDisplayData* dd = dds.getRight();*/
 		if(dd->dataType()=="lel") filename = "lel";
 		else {
 			QFileInfo fi(dd->path().c_str());
 			String nm = fi.fileName().toStdString();
-			if(nm!="") filename = nm;  }  }
-
-	return filename+"."+panel_->viewer()->cvRestoreFileExt;  }
+			if(nm!="") filename = nm;
+		}
+	}
+	return filename+"."+panel_->viewer()->cvRestoreFileExt;
+}
 
 
 
@@ -2770,9 +2849,13 @@ void QtDisplayPanel::setLineWidthPS(Float &w) {
 			break;
 		}
 	}
-	List<QtDisplayData*> rdds = registeredDDs();
+	/*List<QtDisplayData*> rdds = registeredDDs();
 	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-		QtDisplayData* pdd = qdds.getRight();
+		QtDisplayData* pdd = qdds.getRight();*/
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+		QtDisplayData* pdd = (*iter);
+		iter++;
 		PanelDisplay* ppd = panelDisplay();
 		if (ppd != 0 && pdd != 0 && ppd->isCSmaster(pdd->dd())) {
 			Float lw = 2.;
@@ -2822,6 +2905,22 @@ void QtDisplayPanel::extendRegion(
 
 void QtDisplayPanel::clicked(Record rec) {
 	emit activate(rec);
+}
+
+Bool QtDisplayPanel::isEmptyRegistered() const {
+	return displayDataHolder->isEmpty();
+}
+
+DisplayDataHolder::DisplayDataIterator QtDisplayPanel::beginRegistered() const {
+	return displayDataHolder->beginDD();
+}
+
+DisplayDataHolder::DisplayDataIterator QtDisplayPanel::endRegistered() const {
+	return displayDataHolder->endDD();
+}
+
+QtDisplayData* QtDisplayPanel::getDD( const std::string& name ) const {
+	return displayDataHolder->getDD( name );
 }
 
 

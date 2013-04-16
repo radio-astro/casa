@@ -84,6 +84,12 @@ class QtDisplayData : public QObject {
   virtual std::string dataType() const { return dataType_;  }
   virtual std::string displayType() { return displayType_;  }
 
+  //Display Type
+   Bool isRaster() const;
+   Bool isContour() const;
+   Bool isVector() const;
+   Bool isMarker() const;
+
   //virtual Bool delTmpData() const;
   virtual void delTmpData() const;
   virtual void setDelTmpData(Bool delTmpData);
@@ -104,7 +110,9 @@ class QtDisplayData : public QObject {
   virtual DisplayData* dd() { return dd_;  }
   
   // Did creation of wrapped DD fail?
-  virtual Bool isEmpty() { return dd_==0;  }  
+  virtual Bool isEmpty() { return dd_==0;  }
+
+
   
   // Possible valuse: Raster, Vector, Annotation, CanvasAnnotation
   virtual Display::DisplayDataType ddType();
@@ -216,6 +224,7 @@ class QtDisplayData : public QObject {
   // Different DisplayDatas *could* have different colormap palettes
   // thus this is non-static and specific to a display data
   virtual bool isValidColormap( const QString &name ) const;
+  void setColorMap( Colormap* colorMap );
 
   // Get/set colormap shift/slope ('fiddle') and brightness/contrast
   // settings.  (At present this is usually set for the PC's current
@@ -372,12 +381,12 @@ class QtDisplayData : public QObject {
   //# (could be exposed publicly, if useful).
   //  Does this DD use/need a public colormap?
   virtual Bool usesClrMap_() {
-    return (displayType_=="raster" || displayType_=="pksmultibeam");  }
+    return (isRaster() || displayType_=="pksmultibeam");  }
 	//# These are the only DD types currently needing a colormap and
 	//# supporting the selection option; add more if/when needed....
   
   // Can this QDD use a color bar?
-  virtual Bool usesColorBar_() { return displayType_=="raster";  }
+  virtual Bool usesColorBar_() { return isRaster();  }
 
   typedef std::map<const DisplayData*,QtDisplayData*> data_to_qtdata_map_type;
   static data_to_qtdata_map_type dd_source_map;
@@ -392,6 +401,10 @@ class QtDisplayData : public QObject {
   //# data
   QtDisplayPanelGui *panel_;
   std::string path_, dataType_, displayType_;
+  const std::string DISPLAY_RASTER;
+  const std::string DISPLAY_CONTOUR;
+  const std::string DISPLAY_VECTOR;
+  const std::string DISPLAY_MARKER;
   ImageInterface<Float>* im_;
   ImageInterface<Complex>* cim_;
   DisplayData* dd_;

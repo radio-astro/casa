@@ -316,7 +316,7 @@ int main( int argc, const char *argv[] ) {
 
 	    dpg->show();
 
-	    if(dpg->nDDs()==0) dpg->showDataManager();
+	    if(!dpg->isEmptyDD()) dpg->showDataManager();
 
 	}
 

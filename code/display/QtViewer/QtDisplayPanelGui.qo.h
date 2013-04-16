@@ -43,6 +43,7 @@
 #include <graphics/X11/X_exit.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <display/QtViewer/DisplayDataHolder.h>
 #include <display/region/QtRegionDock.qo.h>
 #include <display/Utilities/Lowlevel.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
@@ -160,13 +161,15 @@ class QtDisplayPanelGui : public QtPanelBase {
   virtual Bool removeDD(QtDisplayData* qdd);
   
   // retrieve a copy of the current DD list.
-  List<QtDisplayData*> dds() { return qdds_;  }
-  
+  //List<QtDisplayData*> dds() { return qdds_;  }
+  DisplayDataHolder::DisplayDataIterator beginDD() const;
+  DisplayDataHolder::DisplayDataIterator endDD() const;
+  Bool isEmptyDD() const;
   // return the number of user DDs.
-  Int nDDs() { return qdds_.len();  }
+  //Int nDDs() { return qdds_.len();  }
   
   // return a list of DDs that are registered on some panel.
-  List<QtDisplayData*> registeredDDs();
+  //List<QtDisplayData*> registeredDDs();
   
   // return a list of DDs that exist but are not registered on any panel.
   List<QtDisplayData*> unregisteredDDs();
@@ -179,7 +182,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   // Check that a given DD is on the list.  Use qdd pointer or its name.
   //<group>
   Bool ddExists(QtDisplayData* qdd);
-  Bool ddExists(const String& name) { return dd(name)!=0;  }
+  //Bool ddExists(const String& name) { return dd(name)!=0;  }
   //</group>
   
   // Latest error (in createDD, etc.) 
@@ -295,6 +298,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   void showMomentsCollapseImageProfile();
   void showSpecFitImageProfile();
   void disconnectHistogram();
+  void ddClose( QtDisplayData* removeDD);
+  void ddOpen( const String& path, const String& dataType, const String& displayType );
 
  signals:
 
@@ -366,7 +371,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   //<group>
   virtual void ddRegClicked_();  
   virtual void ddUnregClicked_();  
-  virtual void ddCloseClicked_();  
+  virtual void ddCloseClicked_();
   //</group>
  
   // Reflect animator state [changes] in gui.
@@ -424,7 +429,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   static bool logger_did_region_warning;
     
   // Existing user-visible QDDs
-  List<QtDisplayData*> qdds_;
+  //List<QtDisplayData*> qdds_;
+  DisplayDataHolder* displayDataHolder;
   String errMsg_;
   
   
@@ -527,7 +533,7 @@ class QtDisplayPanelGui : public QtPanelBase {
 		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
   void connectRegionSignals(PanelDisplay* ppd);
   // used to manage generation of the updateAxes( ) signal...
-  QtDisplayData *controlling_dd;
+  //QtDisplayData *controlling_dd;
 
   void updateFrameInformation();
   void updateSliceCorners( int id, const QList<double>& worldX,

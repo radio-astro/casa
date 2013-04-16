@@ -51,7 +51,7 @@
 #include <display/QtViewer/QtWCBox.h>
 #include <display/QtViewer/Preferences.qo.h>
 #include <display/QtViewer/ColorHistogram.qo.h>
-#include <display/QtViewer/ImageManagerDialog.qo.h>
+#include <display/QtViewer/ImageManager/ImageManagerDialog.qo.h>
 #include <display/Fit/Fit2DTool.qo.h>
 #include <display/Fit/FindSourcesDialog.qo.h>
 #include <display/Slicer/SlicerMainWindow.qo.h>
@@ -63,34 +63,34 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	namespace viewer {
-		namespace hidden {
-			void display_panel_gui_status::enterEvent( QEvent * ) {
-				emit enter( );
-			}
-			void display_panel_gui_status::leaveEvent( QEvent * ) {
-				emit leave( );
-			}
-		}
-	}
+namespace viewer {
+namespace hidden {
+void display_panel_gui_status::enterEvent( QEvent * ) {
+	emit enter( );
+}
+void display_panel_gui_status::leaveEvent( QEvent * ) {
+	emit leave( );
+}
+}
+}
 
 
 bool QtDisplayPanelGui::logger_did_region_warning = false;;
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
-								   QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
-								   colorBarsVertical_(True), v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
-								   qsm_(0), qst_(0),
-								   profile_(0), savedTool_(QtMouseToolNames::NONE),
-								   profileDD_(0),
-								   annotAct_(0), mkRgnAct_(0), fboxAct_(0), cleanAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
-								   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
-								   showdataoptionspanel_enter_count(0),
-								   controlling_dd(0), preferences(0),
-								   animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
-								   fitTool( NULL ), sliceTool( NULL ), findSourcesDialog( NULL ), imageManagerDialog(NULL),
-								   clean_tool(0), regionDock_(0),
-								   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
+										   QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
+										   colorBarsVertical_(True), v_(v), qdp_(0), qpm_(0), qcm_(0), qap_(0), qfb_(0), qmr_(0), qrm_(0),
+										   qsm_(0), qst_(0),
+										   profile_(0), savedTool_(QtMouseToolNames::NONE),
+										   profileDD_(0),
+										   annotAct_(0), mkRgnAct_(0), fboxAct_(0), cleanAct_(0), rgnMgrAct_(0), shpMgrAct_(0),
+										   rc(viewer::getrc()), rcid_(rcstr), use_new_regions(true),
+										   showdataoptionspanel_enter_count(0),
+										   /*controlling_dd(0),*/ preferences(0),
+										   animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
+										   fitTool( NULL ), sliceTool( NULL ), findSourcesDialog( NULL ), imageManagerDialog(NULL),
+										   clean_tool(0), regionDock_(0),
+										   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
 
 	// initialize the "pix" unit, et al...
 	QtWCBox::unitInit( );
@@ -116,6 +116,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	}
 
 	qdp_ = new QtDisplayPanel(this,0,args);
+	displayDataHolder = new DisplayDataHolder();
 
 
 	if ( use_new_regions ) {
@@ -157,13 +158,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	ddMenu_       = menuBar()->addMenu("&Data");
 	ddOpenAct_    = ddMenu_->addAction("&Open...");
 	ddRegAct_     = ddMenu_->addAction("&Register");
-	if ( manageImages ){
-		manageImagesAct_ = ddMenu_->addAction( "&Manage Images");
-	}
 	ddRegMenu_    = new QMenu;
 	ddRegAct_->setMenu(ddRegMenu_);
 	ddCloseAct_   = ddMenu_->addAction("&Close");
 	ddCloseMenu_  = new QMenu; ddCloseAct_->setMenu(ddCloseMenu_);
+	if ( manageImages ){
+		manageImagesAct_ = ddMenu_->addAction( "&Manage Images...");
+	}
 	ddAdjAct_     = ddMenu_->addAction("&Adjust Data Display...");
 	ddSaveAct_    = ddMenu_->addAction("Sa&ve as...");
 	ddMenu_->addSeparator();
@@ -648,9 +649,9 @@ string QtDisplayPanelGui::addAnimationDockWidget(){
 	std::string animloc = rc.get("viewer." + rcid() + ".position.animator");
 	std::transform(animloc.begin(), animloc.end(), animloc.begin(), ::tolower);
 	addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
-		animloc == "left" ? Qt::LeftDockWidgetArea :
-		animloc == "top" ? Qt::TopDockWidgetArea :
-		Qt::BottomDockWidgetArea, animDockWidget_, Qt::Vertical );
+			animloc == "left" ? Qt::LeftDockWidgetArea :
+					animloc == "top" ? Qt::TopDockWidgetArea :
+							Qt::BottomDockWidgetArea, animDockWidget_, Qt::Vertical );
 	animDockWidget_->setWidget(animationHolder);
 	return animloc;
 }
@@ -689,11 +690,18 @@ void QtDisplayPanelGui::globalColorSettingsChanged( bool global ){
 }
 
 void QtDisplayPanelGui::globalOptionsChanged( QtDisplayData* originator, Record opts ){
-	for(ListIter<QtDisplayData*> iter(qdds_); !iter.atEnd(); iter++) {
+	/*for(ListIter<QtDisplayData*> iter(qdds_); !iter.atEnd(); iter++) {
 		QtDisplayData* dd = iter.getRight();
 		if ( dd != originator ){
 			dd->setOptions( opts, true );
 		}
+	}*/
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+		if ( originator != (*iter)){
+			(*iter)->setOptions( opts, true );
+		}
+		iter++;
 	}
 }
 
@@ -727,18 +735,18 @@ void QtDisplayPanelGui::showFindSources(){
 						const QList<double> &, const QList<int> &, const QList<int> &,
 						const QString &, const QString &, const QString &, int, int ) ),
 						findSourcesDialog, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-						const QList<double> &, const QList<int> &, const QList<int> &,
-						const QString &, const QString &, const QString &, int, int ) ) );
+								const QList<double> &, const QList<int> &, const QList<int> &,
+								const QString &, const QString &, const QString &, int, int ) ) );
 				connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
 						const QList<int> &, const QList<int> & ) ),
 						findSourcesDialog, SLOT( updateRegion( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-						const QList<int> &, const QList<int> & ) ) );
+								const QList<int> &, const QList<int> & ) ) );
 				connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
 						const QList<double> &, const QList<int> &, const QList<int> &,
 						const QString &, const QString &, const QString &, int, int ) ),
 						findSourcesDialog, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-						const QList<double> &, const QList<int> &, const QList<int> &,
-						const QString &, const QString &, const QString &, int, int ) ) );
+								const QList<double> &, const QList<int> &, const QList<int> &,
+								const QString &, const QString &, const QString &, int, int ) ) );
 				qrs->generateExistingRegionUpdates( );
 			}
 		}
@@ -761,15 +769,7 @@ void QtDisplayPanelGui::showColorHistogram(QtDisplayData* displayData ){
 }
 
 void QtDisplayPanelGui::updateColorHistogram( const QString& ddName ){
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
-	QtDisplayData* targetDD = NULL;
-	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-		QtDisplayData* pdd = qdds.getRight();
-		if ( pdd->name() == ddName.toStdString() ){
-			targetDD = pdd;
-			break;
-		}
-	}
+	QtDisplayData* targetDD = qdp_->getDD( ddName.toStdString() );
 	colorHistogram->setDisplayData( targetDD );
 }
 
@@ -789,8 +789,8 @@ void QtDisplayPanelGui::showHistogram(){
 		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 		if ( qrs ) {
 			connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-						const QList<int> &, const QList<int> & ) ),
-						this, SLOT( histogramRegionChange( int, viewer::region::RegionChanges) ));
+					const QList<int> &, const QList<int> & ) ),
+					this, SLOT( histogramRegionChange( int, viewer::region::RegionChanges) ));
 			//So the histogram has the latest in regions
 			histogramRegionChange( -1, viewer::region::RegionChangeUpdate );
 		}
@@ -815,14 +815,14 @@ void QtDisplayPanelGui::disconnectHistogram(){
 		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 		if ( qrs ) {
 			disconnect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-						const QList<int> &, const QList<int> & ) ),
-						this, SLOT( histogramRegionChange( int, viewer::region::RegionChanges) ));
+					const QList<int> &, const QList<int> & ) ),
+					this, SLOT( histogramRegionChange( int, viewer::region::RegionChanges) ));
 		}
 	}
 }
 
 void QtDisplayPanelGui::resetListenerImage(){
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	bool imageFound = false;
 	int registeredCount = rdds.len();
 	if ( registeredCount > 0 ){
@@ -832,40 +832,34 @@ void QtDisplayPanelGui::resetListenerImage(){
 				ImageInterface<float>* img = pdd->imageInterface();
 				PanelDisplay* ppd = qdp_->panelDisplay();
 				if (ppd != 0 && img != 0) {
-					if (ppd->isCSmaster(pdd->dd())) {
-						if ( sliceTool != NULL ){
-							sliceTool->setImage( img );
-						}
-						if ( histogrammer != NULL ){
-							histogrammer->setImage( img );
-							const viewer::ImageProperties & imgProperties = pdd->imageProperties( );
-							if ( imgProperties.hasSpectralAxis() ){
-								int spectralAxisNum = imgProperties.spectralAxisNumber();
-								const Vector<int> imgShape = imgProperties.shape();
-								int channelCount = imgShape[spectralAxisNum];
-								histogrammer->setChannelCount( channelCount );
-							}
-							else {
-								histogrammer->setChannelCount( 1 );
-							}
-						}
-						if ( findSourcesDialog != NULL ){
-							findSourcesDialog->setImage(img);
-						}
-
-
-						imageFound = true;
-						break;
-					}
-				}
+					if (ppd->isCSmaster(pdd->dd())) {*/
+	QtDisplayData* controllingDD = dd();
+	if ( controllingDD != NULL ){
+		ImageInterface<float>* img = /*pdd*/controllingDD->imageInterface();
+		if ( sliceTool != NULL ){
+			sliceTool->setImage( img );
+		}
+		if ( histogrammer != NULL ){
+			histogrammer->setImage( img );
+			const viewer::ImageProperties & imgProperties = /*pdd*/controllingDD->imageProperties( );
+			if ( imgProperties.hasSpectralAxis() ){
+				int spectralAxisNum = imgProperties.spectralAxisNumber();
+				const Vector<int> imgShape = imgProperties.shape();
+				int channelCount = imgShape[spectralAxisNum];
+				histogrammer->setChannelCount( channelCount );
 			}
+			else {
+				histogrammer->setChannelCount( 1 );
+			}
+		}
+		if ( findSourcesDialog != NULL ){
+			findSourcesDialog->setImage(img);
 		}
 	}
 	else {
-		histogrammer->hide();
-	}
-	if ( !imageFound ){
-		histogrammer->setImage( NULL );
+		if ( histogrammer != NULL ){
+			histogrammer->setImage( NULL );
+		}
 	}
 }
 
@@ -907,8 +901,8 @@ void QtDisplayPanelGui::histogramRegionChange( int id, viewer::region::RegionCha
 		}
 	}
 	if ( change == viewer::region::RegionChangeCreate ||
-					change == viewer::region::RegionChangeUpdate ||
-					change == viewer::region::RegionChangeModified ){
+			change == viewer::region::RegionChangeUpdate ||
+			change == viewer::region::RegionChangeModified ){
 		if ( id != -1 ){
 			if ( region != NULL ){
 				resetHistogram( region );
@@ -935,8 +929,8 @@ void QtDisplayPanelGui::histogramRegionChange( int id, viewer::region::RegionCha
 
 
 void QtDisplayPanelGui::resetHistogram( viewer::Region* region ){
-	if ( region != NULL ){
-		List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	if ( region != NULL && histogrammer != NULL ){
+		/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 		for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 			QtDisplayData* pdd = qdds.getRight();
 			if(pdd != 0 && pdd->dataType() == "image") {
@@ -944,14 +938,13 @@ void QtDisplayPanelGui::resetHistogram( viewer::Region* region ){
 				PanelDisplay* ppd = qdp_->panelDisplay();
 				if (ppd != 0 && img != 0) {
 					DisplayData* displayData = pdd->dd();
-					if (ppd->isCSmaster(displayData)) {
-						ImageRegion* imageRegion = region->getImageRegion(displayData);
-						if ( imageRegion != NULL ){
-							int regionId = region->getId();
-							histogrammer->setImageRegion( imageRegion, regionId );
-						}
-					}
-				}
+					if (ppd->isCSmaster(displayData)) {*/
+		QtDisplayData* controllingDD = dd();
+		if ( controllingDD != NULL ){
+			ImageRegion* imageRegion = region->getImageRegion(/*displayData*/controllingDD->dd());
+			if ( imageRegion != NULL ){
+				int regionId = region->getId();
+				histogrammer->setImageRegion( imageRegion, regionId );
 			}
 		}
 	}
@@ -962,7 +955,7 @@ void QtDisplayPanelGui::resetHistogram( viewer::Region* region ){
 
 void QtDisplayPanelGui::refreshFit(){
 	if ( fitTool != NULL ){
-		List<QtDisplayData*> rdds = qdp_->registeredDDs();
+		/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 		bool foundImage = false;
 		if ( rdds.len() > 0 ){
 			for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
@@ -971,20 +964,11 @@ void QtDisplayPanelGui::refreshFit(){
 					ImageInterface<float>* img = pdd->imageInterface();
 					PanelDisplay* ppd = qdp_->panelDisplay();
 					if (ppd != 0 && img != 0) {
-						if (ppd->isCSmaster(pdd->dd())) {
-							fitTool->setImage( img );
-							foundImage = true;
-							break;
-						}
-					}
-				}
-			}
-		}
-		else {
-			fitTool->hide();
-		}
-		if ( !foundImage ){
-			fitTool->setImage( NULL );
+						if (ppd->isCSmaster(pdd->dd())) {*/
+		QtDisplayData* controllingDD = dd();
+		if ( controllingDD != NULL ){
+			ImageInterface<float>* img = controllingDD->imageInterface();
+			fitTool->setImage( img );
 		}
 	}
 }
@@ -1015,21 +999,21 @@ void QtDisplayPanelGui::initFit2DTool(){
 		std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(rect->getRegionSource( )->kernel( ));
 		if ( qrs ) {
 			connect( qrs.get( ), SIGNAL( regionCreated( int, const QString &, const QString &, const QList<double> &,
-				const QList<double> &, const QList<int> &, const QList<int> &,
-				const QString &, const QString &, const QString &, int, int ) ),
-				fitTool, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-				const QList<double> &, const QList<int> &, const QList<int> &,
-				const QString &, const QString &, const QString &, int, int ) ) );
+					const QList<double> &, const QList<int> &, const QList<int> &,
+					const QString &, const QString &, const QString &, int, int ) ),
+					fitTool, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+							const QList<double> &, const QList<int> &, const QList<int> &,
+							const QString &, const QString &, const QString &, int, int ) ) );
 			connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-				const QList<int> &, const QList<int> & ) ),
-				fitTool, SLOT( updateRegion( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-				const QList<int> &, const QList<int> & ) ) );
+					const QList<int> &, const QList<int> & ) ),
+					fitTool, SLOT( updateRegion( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+							const QList<int> &, const QList<int> & ) ) );
 			connect( qrs.get( ), SIGNAL( regionUpdateResponse( int, const QString &, const QString &, const QList<double> &,
-				const QList<double> &, const QList<int> &, const QList<int> &,
-				const QString &, const QString &, const QString &, int, int ) ),
-				fitTool, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
-				const QList<double> &, const QList<int> &, const QList<int> &,
-				const QString &, const QString &, const QString &, int, int ) ) );
+					const QList<double> &, const QList<int> &, const QList<int> &,
+					const QString &, const QString &, const QString &, int, int ) ),
+					fitTool, SLOT( newRegion( int, const QString &, const QString &, const QList<double> &,
+							const QList<double> &, const QList<int> &, const QList<int> &,
+							const QString &, const QString &, const QString &, int, int ) ) );
 			qrs->generateExistingRegionUpdates( );
 		}
 	}
@@ -1088,7 +1072,7 @@ void QtDisplayPanelGui::addSkyComponentOverlay( String path, const QString& colo
 }
 
 void QtDisplayPanelGui::removeSkyComponentOverlay( String path ){
-	QtDisplayData* displayDataToRemove = NULL;
+	/*QtDisplayData* displayDataToRemove = NULL;
 	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 		QtDisplayData* displayData = qdds.getRight();
 		String ddPath = displayData->name();
@@ -1096,7 +1080,8 @@ void QtDisplayPanelGui::removeSkyComponentOverlay( String path ){
 			displayDataToRemove = displayData;
 			break;
 		}
-	}
+	}*/
+	QtDisplayData* displayDataToRemove = displayDataHolder->getDD( path.c_str());
 	if ( displayDataToRemove != NULL ){
 		removeDD( displayDataToRemove );
 	}
@@ -1119,6 +1104,7 @@ void QtDisplayPanelGui::remove2DFitOverlay( QList<RegionShape*> fitMarkers ){
 QtDisplayPanelGui::~QtDisplayPanelGui() {
 
 	removeAllDDs();
+	delete displayDataHolder;
 	delete qdp_;	// (probably unnecessary because of Qt parenting...)
 	// (possibly wrong, for same reason?...).
 	// (indeed was wrong as the last deletion [at least] because the display panel also reference the qsm_)
@@ -1172,9 +1158,7 @@ QVariant QtDisplayPanelGui::setoptions( const QMap<QString,QVariant> &, int ) {
 QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String displayType,
 		Bool autoRegister, const viewer::DisplayDataOptions &ddo,
 		const viewer::ImageProperties &props ) {
-
 	QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo, props );
-
 	return processDD( path, dataType, displayType, autoRegister, qdd, ddo  );
 }
 QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, String displayType,
@@ -1187,21 +1171,22 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 	}
 
 	// Be sure name is unique by adding numerical suffix if necessary.
-
 	String name=qdd->name();
 	for(Int i=2; dd(name)!=0; i++) {
-		name=qdd->name() + " <" + viewer::to_string( i ) + ">";  }
+		name=qdd->name() + " <" + viewer::to_string( i ) + ">";
+	}
 	qdd->setName(name);
 	status( "loaded: " + qdd->path( ) );
 
-	ListIter<QtDisplayData* > qdds(qdds_);
+	/*ListIter<QtDisplayData* > qdds(qdds_);
 	qdds.toEnd();
-	qdds.addRight(qdd);
+	qdds.addRight(qdd);*/
+	displayDataHolder->addDD( qdd );
 
 	emit ddCreated(qdd, autoRegister);
 	updateFrameInformation();
 	if ( regionDock_ ){
-	    regionDock_->updateRegionStats( );
+		regionDock_->updateRegionStats( );
 	}
 
 	connect( qdd, SIGNAL(showColorHistogram(QtDisplayData*)), this, SLOT(showColorHistogram(QtDisplayData*)));
@@ -1213,14 +1198,18 @@ QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, Strin
 }
 
 void QtDisplayPanelGui::updateFrameInformation(){
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
-	int displayDataCount = rdds.len();
-	ListIter<QtDisplayData*> iter(rdds );
-	int i = 0;
+	//List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	//int displayDataCount = rdds.len();
+	//ListIter<QtDisplayData*> iter(rdds );
 	int maxChannels = -1;
 	QSet<QString> uniqueImages;
-	while ( i < displayDataCount ){
-		QtDisplayData* rdd = iter.getRight();
+
+	DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
+	while ( iter != qdp_->endRegistered()){
+
+		//while ( i < displayDataCount ){
+		//QtDisplayData* rdd = iter.getRight();
+		QtDisplayData* rdd = (*iter);
 		const viewer::ImageProperties & imgProperties = rdd->imageProperties( );
 		const string imagePath = imgProperties.path();
 		//In the image animator, don't cycle over contours, markers,
@@ -1238,14 +1227,11 @@ void QtDisplayPanelGui::updateFrameInformation(){
 			}
 		}
 		iter++;
-		i++;
 	}
 	if ( maxChannels > 0 ){
 		animationHolder->setChannelModeEnabled( maxChannels );
-
 	}
 	animationHolder->setModeEnabled( uniqueImages.size() );
-	//qdp_->setBlen_(uniqueImages.size() );
 }
 
 void QtDisplayPanelGui::addDD(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img) {
@@ -1347,48 +1333,73 @@ void QtDisplayPanelGui::movieStop(){
 }
 
 void QtDisplayPanelGui::removeAllDDs() {
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
+	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
 		QtDisplayData* qdd = qdds.getRight();
 		if ( qdd == controlling_dd ){
 			controlling_dd = NULL;
 		}
-		qdds.removeRight();
+		qdds.removeRight();*/
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+		QtDisplayData* qdd = (*iter);
 		emit ddRemoved(qdd);
-		if ( regionDock_ )
-		    regionDock_->updateRegionStats( );
 		qdd->done();
 		delete qdd;
+		iter++;
+	}
+	displayDataHolder->removeDDAll();
+	if ( regionDock_ ){
+		regionDock_->updateRegionStats( );
 	}
 	updateFrameInformation();
 }
 
+Bool QtDisplayPanelGui::isEmptyDD() const{
+	return displayDataHolder->isEmpty();
+}
 
+DisplayDataHolder::DisplayDataIterator QtDisplayPanelGui::beginDD() const{
+	return displayDataHolder->beginDD();
+}
+
+DisplayDataHolder::DisplayDataIterator QtDisplayPanelGui::endDD() const {
+	return displayDataHolder->endDD();
+}
 
 Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 		if(qdd == qdds.getRight()) {
 			if ( qdd == controlling_dd ){
 				controlling_dd = NULL;
 			}
-			qdds.removeRight();
-			emit ddRemoved(qdd);
-			if ( regionDock_ )
-			    regionDock_->updateRegionStats( );
-			qdd->done();
-			delete qdd;
-			return True;
-		}
+			qdds.removeRight();*/
+	bool removed = displayDataHolder->removeDD( qdd );
+	if ( removed ){
+		emit ddRemoved(qdd);
+
+		if ( regionDock_ )
+			regionDock_->updateRegionStats( );
+		qdd->done();
+		delete qdd;
+		updateFrameInformation();
 	}
-	updateFrameInformation();
-	return False;
+
+	/*if ( qdds_.len() == 0 ){
+		this->controlling_dd = NULL;
+	}*/
+
+	return removed;
+
 }
 
 
 
 Bool QtDisplayPanelGui::ddExists(QtDisplayData* qdd) {
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 		if(qdd == qdds.getRight()) return True;  }
-	return False;  }
+	return False;  }*/
+	return displayDataHolder->exists( qdd );
+}
 
 void QtDisplayPanelGui::loadRegions( const QString &path, const QString &type ) {
 	loadRegions( path.toStdString( ), type.toStdString( ) );
@@ -1415,36 +1426,48 @@ std::string QtDisplayPanelGui::outputRegions( std::list<viewer::QtRegionState*> 
 
 QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
 	// retrieve DD with given name (0 if none).
-	QtDisplayData* qdd;
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+	QtDisplayData* qdd = displayDataHolder->getDD(name);
+	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
 		if( (qdd=qdds.getRight())->name() == name ) return qdd;  }
-	return 0;  }
+	return 0;*/
+	return qdd;
+}
+
 
 QtDisplayData* QtDisplayPanelGui::dd( ) {
 	// retrieve the "controlling" DD...
+	QtDisplayData* controlling_dd = displayDataHolder->getDDControlling();
 	if ( controlling_dd == 0 ) {
 		QtDisplayData *ctrld = 0;
-		List<QtDisplayData*> rdds = qdp_->registeredDDs();
-		for ( ListIter<QtDisplayData*> iter(&rdds); ! iter.atEnd(); ++iter ) {
-			QtDisplayData* pdd = iter.getRight();
+		//List<QtDisplayData*> rdds = qdp_->registeredDDs();
+		//for ( ListIter<QtDisplayData*> iter(&rdds); ! iter.atEnd(); ++iter ) {
+		//QtDisplayData* pdd = iter.getRight();
+		DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
+		while( iter != qdp_->endRegistered()){
+			QtDisplayData* pdd = (*iter);
+			iter++;
 			if ( pdd != 0 && pdd->dataType() == "image" ) {
 				ImageInterface<float>* img = pdd->imageInterface( );
 				PanelDisplay* ppd = qdp_->panelDisplay( );
-				if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) { ctrld = pdd; }
+				if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) {
+					ctrld = pdd;
+				}
 			}
 		}
 
 		controlling_dd = ctrld;
+
 		emit axisToolUpdate( controlling_dd );
-		if ( controlling_dd != 0 )
+		if ( controlling_dd != 0 ){
+			displayDataHolder->setDDControlling( controlling_dd );
 			connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
 					SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+		}
 	}
-
 	return controlling_dd;
 }
 
-List<QtDisplayData*> QtDisplayPanelGui::registeredDDs() {
+/*List<QtDisplayData*> QtDisplayPanelGui::registeredDDs() {
 	// return a list of DDs that are registered on some panel.
 	List<QtDisplayData*> rDDs(qdds_);
 #if 0
@@ -1462,25 +1485,41 @@ List<QtDisplayData*> QtDisplayPanelGui::registeredDDs() {
 		else rdds.removeRight();  }
 #endif
 	return rDDs;  }
-
+ */
 
 List<QtDisplayData*> QtDisplayPanelGui::unregisteredDDs(){
 	// return a list of DDs that exist but are not registered on any panel.
-	List<QtDisplayData*> uDDs(qdds_);
+	//List<QtDisplayData*> uDDs(qdds_);
 	List<QtDisplayPanelGui*> DPs(viewer()->openDPs());
-
-	for(ListIter<QtDisplayData*> udds(uDDs); !udds.atEnd(); ) {
-		QtDisplayData* dd = udds.getRight();
+	List<QtDisplayData*> uDDs;
+	ListIter<QtDisplayData*> uDDsIter( uDDs );
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+		QtDisplayData* dd = (*iter);
+		iter++;
+		//for(ListIter<QtDisplayData*> udds(uDDs); !udds.atEnd(); ) {
+		//QtDisplayData* dd = udds.getRight();
 		Bool regd = False;
-
 		for(ListIter<QtDisplayPanelGui*> dps(DPs); !dps.atEnd(); dps++) {
 			QtDisplayPanelGui* dp = dps.getRight();
-			if(dp->displayPanel()->isRegistered(dd)) { regd = True; break;  }  }
+			if(dp->displayPanel()->isRegistered(dd)) {
+				regd = True;
+				break;
+			}
+		}
 
-		if(regd) udds.removeRight();
-		else udds++;  }
+		/*if(regd){
+			//udds.removeRight();
+		}
+		else {*/
+		if ( !regd ){
+			//udds++;
+			uDDsIter.addRight( dd );
+		}
+	}
 
-	return uDDs;  }
+	return uDDs;
+}
 
 //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 //# DisplayData functionality brought down from QtViewerBase
@@ -1523,9 +1562,13 @@ void QtDisplayPanelGui::updateAnimUi_() {
 // scripted, when available), or via gui actions.
 
 void QtDisplayPanelGui::hideImageMenus() {
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-		QtDisplayData* pdd = qdds.getRight();
+		QtDisplayData* pdd = qdds.getRight();*/
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+		QtDisplayData* pdd = (*iter);
+		iter++;
 		if(pdd != 0){
 			ImageInterface<float>* img = pdd->imageInterface();
 			//cout << "img=" << img << endl;
@@ -1775,23 +1818,24 @@ void QtDisplayPanelGui::hideStats() {
 
 void QtDisplayPanelGui::showRegionManager() {
 	if(qrm_==0) return;
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 		QtDisplayData* pdd = qdds.getRight();
 		if(pdd != 0 && pdd->dataType() == "image") {
 
 			ImageInterface<float>* img = pdd->imageInterface();
 			PanelDisplay* ppd = qdp_->panelDisplay();
-			if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
-				connect(pdd,
-						SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-						qrm_,
-						SLOT(changeAxis(String, String, String, std::vector<int> )));
-			}
-		}
+			if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {*/
+	QtDisplayData* pdd = dd();
+	if ( pdd != NULL ){
+		connect(pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+				qrm_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+		//	}
+		//	}
 	}
 	qrm_->showNormal();
-	qrm_->raise();  }
+	qrm_->raise();
+}
 
 void QtDisplayPanelGui::hideRegionManager() {
 	if(qrm_==0) return;
@@ -1801,18 +1845,18 @@ void QtDisplayPanelGui::hideRegionManager() {
 
 void QtDisplayPanelGui::showShapeManager() {
 	if(qsm_==0) qsm_ = new QtRegionShapeManager(qdp_);
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 		QtDisplayData* pdd = qdds.getRight();
 		if(pdd != 0 && pdd->dataType() == "image") {
 
 			ImageInterface<float>* img = pdd->imageInterface();
 			PanelDisplay* ppd = qdp_->panelDisplay();
-			if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
-				qsm_->showNormal();
-				qsm_->raise();
-			}
-		}
+			if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {*/
+	QtDisplayData* ppd = dd();
+	if ( ppd != NULL ){
+		qsm_->showNormal();
+		qsm_->raise();
 	}
 }
 
@@ -1825,29 +1869,26 @@ void QtDisplayPanelGui::showFileBoxPanel() {
 	if (qfb_ == 0)
 		qfb_ = new FileBox(qdp_);
 
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 		QtDisplayData* pdd = qdds.getRight();
 		if(pdd != 0 && pdd->dataType() == "image") {
 
 			ImageInterface<float>* img = pdd->imageInterface();
 			PanelDisplay* ppd = qdp_->panelDisplay();
-			if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
-				connect(qfb_,  SIGNAL(hideFileBox()),
-						SLOT(hideFileBoxPanel()));
-				connect(pdd,
-						SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-						qfb_,
-						SLOT(changeAxis(String, String, String, std::vector<int> )));
-			}
-		}
+			if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {*/
+	QtDisplayData* ppd = dd();
+	if ( ppd != NULL ){
+		connect(qfb_,  SIGNAL(hideFileBox()),
+				SLOT(hideFileBoxPanel()));
+		connect(ppd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+				qfb_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 	}
 	qfb_->showNormal();
 	qfb_->raise();
 	if ( annotAct_ ) annotAct_->setEnabled(False);
 	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
 	setUseRegion(True);
-
 }
 
 void QtDisplayPanelGui::hideFileBoxPanel() {
@@ -1864,29 +1905,25 @@ void QtDisplayPanelGui::showAnnotatorPanel() {
 	if (qap_ == 0)
 		qap_ = new MakeMask(qdp_);
 
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 		QtDisplayData* pdd = qdds.getRight();
 		if(pdd != 0 && pdd->dataType() == "image") {
 
 			ImageInterface<float>* img = pdd->imageInterface();
 			PanelDisplay* ppd = qdp_->panelDisplay();
-			if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {
-				connect(qap_,  SIGNAL(hideRegionInFile()),
-						SLOT(hideAnnotatorPanel()));
-				connect(pdd,
-						SIGNAL(axisChanged(String, String, String, std::vector<int> )),
-						qap_,
-						SLOT(changeAxis(String, String, String, std::vector<int> )));
-			}
-		}
+			if (ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0) {*/
+	QtDisplayData* pdd = dd();
+	if ( pdd != NULL ){
+		connect(qap_,  SIGNAL(hideRegionInFile()), SLOT(hideAnnotatorPanel()));
+		connect(pdd, SIGNAL(axisChanged(String, String, String, std::vector<int> )),
+				qap_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 	}
 	qap_->showNormal();
 	qap_->raise();
 	if ( fboxAct_ ) fboxAct_->setEnabled(False);
 	if ( mkRgnAct_ ) mkRgnAct_->setEnabled(False);
 	setUseRegion(True);
-
 }
 
 void QtDisplayPanelGui::hideAnnotatorPanel() {
@@ -1904,9 +1941,13 @@ void QtDisplayPanelGui::showMakeRegionPanel() {
 	if (qmr_ == 0)
 		qmr_ = new MakeRegion(qdp_);
 
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-		QtDisplayData* pdd = qdds.getRight();
+		QtDisplayData* pdd = qdds.getRight();*/
+	DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
+	while ( iter != qdp_->endRegistered()){
+		QtDisplayData* pdd = (*iter);
+		iter++;
 		if(pdd != 0 && pdd->dataType() == "image") {
 
 			ImageInterface<float>* img = pdd->imageInterface();
@@ -1938,15 +1979,19 @@ void QtDisplayPanelGui::hideMakeRegionPanel() {
 
 void QtDisplayPanelGui::showImageProfile() {
 
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
+	//List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	QHash<QString, ImageInterface<float>*> overlap;
 	bool profileVisible = false;
 	if ( profile_ && profile_->isVisible()){
 		profileVisible = true;
 	}
-	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+		//for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 
-		QtDisplayData* pdd = qdds.getRight();
+		//QtDisplayData* pdd = qdds.getRight();
+		QtDisplayData* pdd = (*iter);
+		iter++;
 		if(pdd != 0 && pdd->dataType() == "image") {
 
 			ImageInterface<float>* img = pdd->imageInterface();
@@ -1981,14 +2026,14 @@ void QtDisplayPanelGui::showImageProfile() {
 							// [Re-]orient pre-existing profiler to pdd
 							profile_->resetProfile(img, pdd->name().c_str());
 							disconnect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-																						profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 							disconnect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-																						profile_, SLOT(changeSpectrum(String, String, String )));
+									profile_, SLOT(changeSpectrum(String, String, String )));
 							profileDD_ = pdd;
 							connect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-															profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+									profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 							connect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-															profile_, SLOT(changeSpectrum(String, String, String )));
+									profile_, SLOT(changeSpectrum(String, String, String )));
 						}
 						else {
 							pdd->checkAxis();
@@ -2039,11 +2084,11 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ){
 	std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(ppd->getTool(QtMouseToolNames::POINT));
 	if ( pos.get( ) != 0 ) {
 		connect( pos.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-											  const Vector<Double>, const Vector<Double>, const ProfileType)),
-				 profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-										   const Vector<Double>, const Vector<Double>, const ProfileType)));
+				const Vector<Double>, const Vector<Double>, const ProfileType)),
+				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+						const Vector<Double>, const Vector<Double>, const ProfileType)));
 		connect( profile_, SIGNAL(coordinateChange(const String&)),
-				 pos.get( ), SLOT(setCoordType(const String&)));
+				pos.get( ), SLOT(setCoordType(const String&)));
 
 		// one region source is shared among all of the tools...
 		// so there is no need to connect these signals for all of the tools...
@@ -2074,75 +2119,75 @@ void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ){
 	else {
 		std::tr1::shared_ptr<QtOldCrossTool> pos = std::tr1::dynamic_pointer_cast<QtOldCrossTool>(ppd->getTool(QtMouseToolNames::POINT));
 		if ( pos.get( ) != 0 ) {
-				connect( pos.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+			connect( pos.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType)),
 					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 							const Vector<Double>, const Vector<Double>, const ProfileType)));
 			connect( profile_, SIGNAL(coordinateChange(const String&)),
-					 pos.get( ), SLOT(setCoordType(const String&)));
+					pos.get( ), SLOT(setCoordType(const String&)));
 		}
 	}
 
 	std::tr1::shared_ptr<QtRectTool> rect = std::tr1::dynamic_pointer_cast<QtRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 	if ( rect.get( ) != 0 ) {
-			connect( rect.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+		connect( rect.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType)),
 				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 						const Vector<Double>, const Vector<Double>, const ProfileType )));
 		connect( profile_, SIGNAL(coordinateChange(const String&)),
-				 rect.get( ), SLOT(setCoordType(const String&)));
+				rect.get( ), SLOT(setCoordType(const String&)));
 	}
 	else {
 		std::tr1::shared_ptr<QtOldRectTool> rect = std::tr1::dynamic_pointer_cast<QtOldRectTool>(ppd->getTool(QtMouseToolNames::RECTANGLE));
 		if ( rect.get( ) != 0 ) {
-				connect( rect.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+			connect( rect.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType)),
 					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 							const Vector<Double>, const Vector<Double>, const ProfileType )));
 			connect( profile_, SIGNAL(coordinateChange(const String&)),
-					 rect.get( ), SLOT(setCoordType(const String&)));
+					rect.get( ), SLOT(setCoordType(const String&)));
 		}
 	}
 
 	std::tr1::shared_ptr<QtEllipseTool> ellipse = std::tr1::dynamic_pointer_cast<QtEllipseTool>(ppd->getTool(QtMouseToolNames::ELLIPSE));
 	if ( ellipse.get( ) != 0 ) {
-			connect( ellipse.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+		connect( ellipse.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType )),
 				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 						const Vector<Double>, const Vector<Double>, const ProfileType )));
 		connect( profile_, SIGNAL(coordinateChange(const String&)),
-				 ellipse.get( ), SLOT(setCoordType(const String&)));
+				ellipse.get( ), SLOT(setCoordType(const String&)));
 	}
 	else {
 		std::tr1::shared_ptr<QtOldEllipseTool> ellipse = std::tr1::dynamic_pointer_cast<QtOldEllipseTool>(ppd->getTool(QtMouseToolNames::ELLIPSE));
 		if ( ellipse.get( ) != 0 ) {
-				connect( ellipse.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+			connect( ellipse.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 					const Vector<Double>, const Vector<Double>, const ProfileType )),
 					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 							const Vector<Double>, const Vector<Double>, const ProfileType )));
 			connect( profile_, SIGNAL(coordinateChange(const String&)),
-					 ellipse.get( ), SLOT(setCoordType(const String&)));
+					ellipse.get( ), SLOT(setCoordType(const String&)));
 		}
 	}
 
 	std::tr1::shared_ptr<QtPolyTool> poly = std::tr1::dynamic_pointer_cast<QtPolyTool>(ppd->getTool(QtMouseToolNames::POLYGON));
 	if ( poly.get( ) != 0 ) {
-			connect( poly.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
+		connect( poly.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
 				const Vector<Double>, const Vector<Double>, const ProfileType )),
 				profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
 						const Vector<Double>, const Vector<Double>, const ProfileType )));
 		connect( profile_, SIGNAL(coordinateChange(const String&)),
-				 poly.get( ), SLOT(setCoordType(const String&)));
+				poly.get( ), SLOT(setCoordType(const String&)));
 	}
 	else {
 		std::tr1::shared_ptr<QtOldPolyTool> poly = std::tr1::dynamic_pointer_cast<QtOldPolyTool>(ppd->getTool(QtMouseToolNames::POLYGON));
 		if ( poly.get( ) != 0 ) {
 			connect( poly.get( ), SIGNAL(wcNotify( const String, const Vector<Double>, const Vector<Double>,
-												   const Vector<Double>, const Vector<Double>, const ProfileType )),
-					 profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
-											   const Vector<Double>, const Vector<Double>, const ProfileType )));
+					const Vector<Double>, const Vector<Double>, const ProfileType )),
+					profile_, SLOT(wcChanged( const String, const Vector<Double>, const Vector<Double>,
+							const Vector<Double>, const Vector<Double>, const ProfileType )));
 			connect( profile_, SIGNAL(coordinateChange(const String&)),
-					 poly.get( ), SLOT(setCoordType(const String&)));
+					poly.get( ), SLOT(setCoordType(const String&)));
 		}
 	}
 }
@@ -2162,8 +2207,9 @@ void QtDisplayPanelGui::hideImageProfile() {
 
 void QtDisplayPanelGui::refreshImageProfile() {
 	if(profile_) {
-		List<QtDisplayData*> rdds = qdp_->registeredDDs();
-		if ( rdds.len() > 0 ) {
+		//List<QtDisplayData*> rdds = qdp_->registeredDDs();
+		//if ( rdds.len() > 0 ) {
+		if ( !qdp_->isEmptyRegistered()){
 			showImageProfile( );
 			if ( profile_ ) profile_->redraw( );
 		} else {
@@ -2203,9 +2249,16 @@ void QtDisplayPanelGui::arrangeTrackBoxes_() {
 			trkBox->hide();  }  }
 
 	// Assure that all applicable registered QDDs are showing track boxes.
-	List<QtDisplayData*> rDDs = qdp_->registeredDDs();
+	/*List<QtDisplayData*> rDDs = qdp_->registeredDDs();
 	for(ListIter<QtDisplayData*> rdds(&rDDs); !rdds.atEnd(); rdds++) {
-		showTrackBox_(rdds.getRight());  }  }
+		showTrackBox_(rdds.getRight());
+	} */
+	DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
+	while ( iter != qdp_->endRegistered()){
+		showTrackBox_(*iter);
+		iter++;
+	}
+}
 
 
 
@@ -2262,7 +2315,7 @@ TrackBox* QtDisplayPanelGui::trkBox_(String ddname) {
 
 
 TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
-                						   QGroupBox(parent), qdd_(qdd) {
+                								   QGroupBox(parent), qdd_(qdd) {
 
 	trkgEdit_ = new QTextEdit;
 
@@ -2644,11 +2697,16 @@ void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {
 
 	ddRegMenu_->clear();  ddCloseMenu_->clear();
 
-	List<QtDisplayData*> regdDDs   = qdp_->registeredDDs();
-	List<QtDisplayData*> unregdDDs = qdp_->unregisteredDDs();
+	//List<QtDisplayData*> regdDDs   = qdp_->registeredDDs();
+	//List<QtDisplayData*> unregdDDs = qdp_->unregisteredDDs();
 
-	Bool anyRdds = regdDDs.len()>0u,   anyUdds = unregdDDs.len()>0u,
-			manydds = regdDDs.len() + unregdDDs.len() > 1u;
+	Bool anyRdds = /*regdDDs.len()>0u;*/!qdp_->isEmptyRegistered();
+	Bool anyUdds = /*unregdDDs.len()>0u;*/!displayDataHolder->isEmpty();
+	int count = displayDataHolder->getCount();
+	Bool manydds = /*regdDDs.len() + unregdDDs.len() > 1u;*/false;
+	if ( count > 1 ){
+		manydds = true;
+	}
 
 	QAction* action = 0;
 
@@ -2659,75 +2717,86 @@ void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {
 	// QtDisplayData* to be a QVariant's value.
 	QVariant ddv;		// QVariant wrapper for a QtDisplayData pointer.
 
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+		//for(ListIter<QtDisplayData*> rdds(regdDDs); !rdds.atEnd(); rdds++) {
+		//QtDisplayData* rdd = rdds.getRight();
+		QtDisplayData* dd = (*iter);
+		iter++;
+		// For registered DDs:...
+		if ( qdp_->isRegistered( dd )){
 
-	// For registered DDs:...
-
-	for(ListIter<QtDisplayData*> rdds(regdDDs); !rdds.atEnd(); rdds++) {
-		QtDisplayData* rdd = rdds.getRight();
-
-		ddv.setValue(rdd);
-
-
-		// 'Unregister' menu item for dd.
-
-		// Note: the explicit parenting means that the Action will
-		// be deleted on the next ddRegMenu_->clear().
-
-		action = new QAction(rdd->name().c_str(), ddRegMenu_);
-
-		action->setCheckable(True);
-		action->setChecked(True);
-		action->setData(ddv);	// Associate the dd with the action.
-		ddRegMenu_->addAction(action);
-		connect(action, SIGNAL(triggered()), SLOT(ddUnregClicked_()));
+			ddv.setValue(dd);
 
 
-		// 'Close' menu item.
+			// 'Unregister' menu item for dd.
 
-		action = new QAction( ("Close "+rdd->name()).c_str(), ddCloseMenu_ );
-		action->setData(ddv);
-		ddCloseMenu_->addAction(action);
-		connect(action, SIGNAL(triggered()), SLOT(ddCloseClicked_()));  }
+			// Note: the explicit parenting means that the Action will
+			// be deleted on the next ddRegMenu_->clear().
 
+			action = new QAction(dd->name().c_str(), ddRegMenu_);
+
+			action->setCheckable(True);
+			action->setChecked(True);
+			action->setData(ddv);	// Associate the dd with the action.
+			ddRegMenu_->addAction(action);
+			connect(action, SIGNAL(triggered()), SLOT(ddUnregClicked_()));
+
+
+			// 'Close' menu item.
+
+			action = new QAction( ("Close "+dd->name()).c_str(), ddCloseMenu_ );
+			action->setData(ddv);
+			ddCloseMenu_->addAction(action);
+			connect(action, SIGNAL(triggered()), SLOT(ddCloseClicked_()));
+		}
+	}
 
 	if(anyRdds && anyUdds) {
 		ddRegMenu_->addSeparator();
-		ddCloseMenu_->addSeparator();  }
+		ddCloseMenu_->addSeparator();
+	}
 
-	// Enable/disable shape manager
-	// That is not right, if dd is ms, crashes!
-	//shpMgrAct_->setEnabled(anyRdds);
-	//if(qsm_->isVisible() && !anyRdds) qsm_->close();
-
-
-	// For unregistered DDs:...
-
-	for(ListIter<QtDisplayData*> udds(unregdDDs); !udds.atEnd(); udds++) {
-		QtDisplayData* udd = udds.getRight();
-
-		ddv.setValue(udd);
+		// Enable/disable shape manager
+		// That is not right, if dd is ms, crashes!
+		//shpMgrAct_->setEnabled(anyRdds);
+		//if(qsm_->isVisible() && !anyRdds) qsm_->close();
 
 
-		// 'Unregister' menu item.
+		// For unregistered DDs:...
 
-		action = new QAction(udd->name().c_str(), ddRegMenu_);
-		action->setCheckable(True);
-		action->setChecked(False);
-		action->setData(ddv);
-		ddRegMenu_->addAction(action);
-		connect(action, SIGNAL(triggered()), SLOT(ddRegClicked_()));
+		//for(ListIter<QtDisplayData*> udds(unregdDDs); !udds.atEnd(); udds++) {
+		//QtDisplayData* udd = udds.getRight();
+	iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+
+		QtDisplayData* dd = (*iter);
+		iter++;
+		if ( ! qdp_->isRegistered( dd )){
+			ddv.setValue(dd);
 
 
-		// 'Close' menu item.
+			// 'Unregister' menu item.
 
-		action = new QAction(("Close "+udd->name()).c_str(), ddCloseMenu_);
-		action->setData(ddv);
-		ddCloseMenu_->addAction(action);
-		connect(action, SIGNAL(triggered()), SLOT(ddCloseClicked_()));  }
+			action = new QAction(dd->name().c_str(), ddRegMenu_);
+			action->setCheckable(True);
+			action->setChecked(False);
+			action->setData(ddv);
+			ddRegMenu_->addAction(action);
+			connect(action, SIGNAL(triggered()), SLOT(ddRegClicked_()));
+
+
+			// 'Close' menu item.
+
+			action = new QAction(("Close "+dd->name()).c_str(), ddCloseMenu_);
+			action->setData(ddv);
+			ddCloseMenu_->addAction(action);
+			connect(action, SIGNAL(triggered()), SLOT(ddCloseClicked_()));
+		}
+	}
 
 
 	// '[Un]Register All' / 'Close All'  menu items.
-
 	if(manydds) {
 
 		ddRegMenu_->addSeparator();
@@ -2752,7 +2821,12 @@ void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {
 }
 
 void QtDisplayPanelGui::registerAllDDs(){
-	qdp_->registerAll();
+	//qdp_->registerAll();
+	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	while ( iter != displayDataHolder->endDD()){
+		qdp_->registerDD( (*iter));
+		iter++;
+	}
 	updateFrameInformation();
 }
 
@@ -2833,7 +2907,7 @@ void QtDisplayPanelGui::ddRegClicked_() {
 	qdp_->registerDD(dd);
 	updateFrameInformation();
 	if ( regionDock_ )
-	    regionDock_->updateRegionStats( );
+		regionDock_->updateRegionStats( );
 }
 
 
@@ -2845,9 +2919,8 @@ void QtDisplayPanelGui::ddUnregClicked_() {
 	qdp_->unregisterDD(dd);
 	updateFrameInformation();
 	if ( regionDock_ )
-	    regionDock_->updateRegionStats( );
+		regionDock_->updateRegionStats( );
 }
-
 
 void QtDisplayPanelGui::ddCloseClicked_() {
 	QAction* action = dynamic_cast<QAction*>(sender());
@@ -2856,8 +2929,19 @@ void QtDisplayPanelGui::ddCloseClicked_() {
 
 	removeDD(dd);  }
 
+void QtDisplayPanelGui::ddClose(QtDisplayData* ddRemove ) {
+	if ( ddRemove != NULL ){
+		removeDD(ddRemove);
+	}
+}
+
+void QtDisplayPanelGui::ddOpen( const String& path, const String& dataType, const String& displayType ){
+	createDD( path, dataType, displayType );
+}
+
 
 void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
+
 	// At least for now, colorbars can only be placed horizontally or vertically,
 	// identically for all display panels.  This sets that state for everyone.
 	// Sends out colorBarOrientationChange signal when the state changes.
@@ -2872,22 +2956,31 @@ void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
 	emit colorBarOrientationChange();
 	v_->release();  }
 
-void QtDisplayPanelGui::controlling_dd_update(QtDisplayData*) {
+void QtDisplayPanelGui::controlling_dd_update(QtDisplayData* newControllingDD) {
 	// manage controlling_dd so that we can generate updateAxis( ) events
 	// in response to user visible axis changes...
 
-	QtDisplayData *ctrld = 0;
+	//Store the old one
+	QtDisplayData* oldControllingDD = displayDataHolder->getDDControlling();
+
+	//Get a new one by going through the list if one wasn't specified.
+	if ( newControllingDD == NULL ){
+		newControllingDD = dd();
+	}
+	/*QtDisplayData *ctrld = 0;
 	List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	for ( ListIter<QtDisplayData*> iter(&rdds); ! iter.atEnd(); ++iter ) {
 		QtDisplayData* pdd = iter.getRight();
 		if ( pdd != 0 && pdd->dataType() == "image" ) {
 			ImageInterface<float>* img = pdd->imageInterface( );
 			PanelDisplay* ppd = qdp_->panelDisplay( );
-			if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) { ctrld = pdd; }
+			if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) {
+				ctrld = pdd;
+			}
 		}
-	}
+	}*/
 
-	if ( ctrld != controlling_dd ) {
+	/*if ( ctrld != controlling_dd ) {
 		if ( controlling_dd != 0 )
 			disconnect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
 					this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
@@ -2897,11 +2990,17 @@ void QtDisplayPanelGui::controlling_dd_update(QtDisplayData*) {
 			connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
 					SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
 
+	}*/
+	if ( newControllingDD != oldControllingDD ) {
+		if ( oldControllingDD != 0 ){
+			disconnect( oldControllingDD, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
+					this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+		}
 	}
-
 }
 
 void QtDisplayPanelGui::controlling_dd_axis_change(String, String, String, std::vector<int> ) {
+	QtDisplayData* controlling_dd = dd();
 	emit axisToolUpdate( controlling_dd );
 }
 
@@ -2921,8 +3020,8 @@ void QtDisplayPanelGui::showSpecFitImageProfile(){
 }
 
 void QtDisplayPanelGui::addSlice( int id, const QString& shape, const QString&, const QList<double>& worldX,
-										const QList<double>& worldY, const QList<int>& pixelX, const QList<int>& pixelY,
-										const QString& lineColor, const QString&, const QString&, int, int){
+		const QList<double>& worldY, const QList<int>& pixelX, const QList<int>& pixelY,
+		const QString& lineColor, const QString&, const QString&, int, int){
 	if ( shape == "polyline"){
 		sliceTool->addPolyLine( id, viewer::region::RegionChangeCreate,
 				worldX, worldY, pixelX, pixelY, lineColor );
@@ -2932,14 +3031,15 @@ void QtDisplayPanelGui::addSlice( int id, const QString& shape, const QString&, 
 
 void QtDisplayPanelGui::updateSliceCorners( int id, const QList<double>& worldX,
 		const QList<double>& worldY ){
-	if ( controlling_dd != NULL ){
+	QtDisplayData* controllingDD = dd();
+	if ( controllingDD != NULL && sliceTool != NULL ){
 		int cornerCount = worldX.size();
 		QVector<String> positionInformation(cornerCount);
 		for ( int i = 0; i < cornerCount; i++ ){
 			Vector<double> worldCoords(2);
 			worldCoords[0] = worldX[i];
 			worldCoords[1] = worldY[i];
-			positionInformation[i] = controlling_dd->getPositionInformation( worldCoords );
+			positionInformation[i] = controllingDD->getPositionInformation( worldCoords );
 		}
 		sliceTool->updatePositionInformation( id, positionInformation );
 	}
@@ -3031,17 +3131,17 @@ void QtDisplayPanelGui::showSlicer(){
 			std::tr1::shared_ptr<viewer::QtRegionSourceKernel> qrs = std::tr1::dynamic_pointer_cast<viewer::QtRegionSourceKernel>(pos->getRegionSource( )->kernel( ));
 			if ( qrs ) {
 				connect( qrs.get( ), SIGNAL( regionUpdate( int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-								const QList<int> &, const QList<int> & ) ),
-								this, SLOT( sliceChanged( int, viewer::region::RegionChanges, const QList<double>&, const QList<double>&,
-										const QList<int>&, const QList<int> &) ));
+						const QList<int> &, const QList<int> & ) ),
+						this, SLOT( sliceChanged( int, viewer::region::RegionChanges, const QList<double>&, const QList<double>&,
+								const QList<int>&, const QList<int> &) ));
 				//So that the slicer knows about regions that were generated
 				//before it was created.
 				connect( qrs.get(), SIGNAL(regionUpdateResponse( int, const QString &, const QString &,
-								const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> &,
-								const QString &, const QString &, const QString &, int, int)),
-								this, SLOT(addSlice( int, const QString&, const QString&, const QList<double>&,
-										const QList<double>&, const QList<int>&, const QList<int>&,
-										const QString&, const QString&, const QString&, int, int)));
+						const QList<double> &, const QList<double> &, const QList<int> &, const QList<int> &,
+						const QString &, const QString &, const QString &, int, int)),
+						this, SLOT(addSlice( int, const QString&, const QString&, const QList<double>&,
+								const QList<double>&, const QList<int>&, const QList<int>&,
+								const QString&, const QString&, const QString&, int, int)));
 				qrs->generateExistingRegionUpdates();
 
 			}
@@ -3056,6 +3156,10 @@ void QtDisplayPanelGui::showImageManager(){
 	if ( manageImages ){
 		if ( imageManagerDialog == NULL ){
 			imageManagerDialog = new ImageManagerDialog( this );
+			imageManagerDialog->setImageHolders( qdp_->getDataHolder(), displayDataHolder );
+			connect( imageManagerDialog, SIGNAL(ddClosed(QtDisplayData*)), this, SLOT(ddClose(QtDisplayData*)));
+			connect( imageManagerDialog, SIGNAL(ddOpened(const String&, const String&, const String&)),
+					this, SLOT(ddOpen(const String&, const String&, const String&)));
 		}
 		imageManagerDialog->show();
 	}

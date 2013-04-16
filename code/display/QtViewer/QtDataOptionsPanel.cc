@@ -67,9 +67,14 @@ QtDataOptionsPanel::QtDataOptionsPanel(QtDisplayPanelGui* panel, QWidget* parent
 	// (Qt designer insists on putting some tabs in my
 	// TabWidget, whether I want them there yet or not...).
   
-  List<QtDisplayData*> ddlist(panel_->dds());
-  for (ListIter<QtDisplayData*> qdds(ddlist); !qdds.atEnd(); qdds++) {
-    createDDTab_(qdds.getRight());  }
+  //List<QtDisplayData*> ddlist(panel_->dds());
+  //for (ListIter<QtDisplayData*> qdds(ddlist); !qdds.atEnd(); qdds++) {
+    //createDDTab_(qdds.getRight());
+  DisplayDataHolder::DisplayDataIterator iter = panel_->beginDD();
+  while ( iter != panel_->endDD() ){
+	  createDDTab_(*iter);
+	  iter++;
+  }
 	// These are the tabs I _really_ want....
   
   

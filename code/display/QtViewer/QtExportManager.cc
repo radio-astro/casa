@@ -146,12 +146,16 @@ void QtExportManager::buildFileList() {
   QtDisplayData* qdd;
 
   // retrieve a copy of the current DD list.
-  List<QtDisplayData*> qdds_ = panel_->dds();
+  //List<QtDisplayData*> qdds_ = panel_->dds();
 
   // iterate over all list members
   int type, dtype, qdd_index=0;
-  for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-	  qdd=qdds.getRight();
+  //for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+	  //qdd=qdds.getRight();
+  DisplayDataHolder::DisplayDataIterator iter = panel_->beginDD();
+  while ( iter != panel_->endDD()){
+	  qdd = (*iter);
+	  iter++;
 
 	  type    = dataType_.key(qdd->dataType());
 	  if (exportTypes_.contains(type)){

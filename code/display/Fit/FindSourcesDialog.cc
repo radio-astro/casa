@@ -603,8 +603,10 @@ void FindSourcesDialog::populatePixelBox(){
 		pixelBoxStr.append( ZERO_STR + COMMA_STR );
 		pixelBoxStr.append( ZERO_STR + COMMA_STR );
 		IPosition imageShape = image->shape();
-		pixelBoxStr.append( QString::number( imageShape(0) - 1) + COMMA_STR);
-		pixelBoxStr.append( QString::number( imageShape(1) - 1));
+		if ( imageShape.nelements() >= 2 ){
+			pixelBoxStr.append( QString::number( imageShape(0) - 1) + COMMA_STR);
+			pixelBoxStr.append( QString::number( imageShape(1) - 1));
+		}
 	}
 	pixelBox = pixelBoxStr.toStdString();
 }

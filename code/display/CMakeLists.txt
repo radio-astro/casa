@@ -101,9 +101,10 @@ qt4_wrap_cpp( outfiles_qoh
   QtViewer/QtViewer.qo.h
   QtViewer/Preferences.qo.h
   QtViewer/ColorTransferWidget.qo.h
-  QtViewer/ImageScroll.qo.h
-  QtViewer/ImageManagerDialog.qo.h
-  QtViewer/ImageView.qo.h
+  QtViewer/ImageManager/ImageScrollWidget.qo.h
+  QtViewer/ImageManager/ImageManagerDialog.qo.h
+  QtViewer/ImageManager/ImageScroll.qo.h
+  QtViewer/ImageManager/ImageView.qo.h
   QtViewer/SlicerGen.qo.h
   Fit/FindSourcesDialog.qo.h
   Fit/ResidualHistogramDialog.qo.h
@@ -155,9 +156,10 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/QtDataMgrMsSelect.ui
   QtViewer/Preferences.ui
   QtViewer/ColorTransferWidget.ui
-  QtViewer/ImageScroll.ui
-  QtViewer/ImageManagerDialog.ui
-  QtViewer/ImageView.ui
+  QtViewer/ImageManager/ImageScrollWidget.ui
+  QtViewer/ImageManager/ImageManagerDialog.ui
+  QtViewer/ImageManager/ImageScroll.ui
+  QtViewer/ImageManager/ImageView.ui
   QtPlotter/QtProfileGUI.ui
   QtPlotter/QtProfilePrefsGUI.ui
   QtPlotter/CanvasHolder.ui
@@ -524,9 +526,11 @@ casa_add_library( display
   QtViewer/QtViewerPrintGui.cc
   QtViewer/Preferences.cc
   QtViewer/ColorTransferWidget.cc
-  QtViewer/ImageScroll.cc
-  QtViewer/ImageManagerDialog.cc
-  QtViewer/ImageView.cc
+  QtViewer/DisplayDataHolder.cc
+  QtViewer/ImageManager/ImageScroll.cc
+  QtViewer/ImageManager/ImageScrollWidget.cc
+  QtViewer/ImageManager/ImageManagerDialog.cc
+  QtViewer/ImageManager/ImageView.cc
   QtViewer/SlicerGen.cc
   RegionShapes/DS9FileReader.cc
   RegionShapes/DS9FileWriter.cc

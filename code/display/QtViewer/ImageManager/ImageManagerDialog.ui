@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>628</width>
-    <height>391</height>
+    <width>1004</width>
+    <height>437</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>ImageManagerDialog</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_4">
+  <layout class="QVBoxLayout" name="verticalLayout_6">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -37,7 +37,11 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="masterImageComboBox"/>
+      <widget class="QComboBox" name="masterImageComboBox">
+       <property name="toolTip">
+        <string>Select the master image used to set the field of view.</string>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_2">
@@ -94,6 +98,9 @@
        </item>
        <item>
         <widget class="QToolButton" name="openToRegisteredButton">
+         <property name="toolTip">
+          <string>Move selected open (undisplayed) image(s) to registered (displayed) status.</string>
+         </property>
          <property name="text">
           <string>&gt;&gt;</string>
          </property>
@@ -101,6 +108,9 @@
        </item>
        <item>
         <widget class="QToolButton" name="registerToOpenButton">
+         <property name="toolTip">
+          <string>Move selected registered (displayed) images to open (undisplayed) status.</string>
+         </property>
          <property name="text">
           <string>&lt;&lt;</string>
          </property>
@@ -126,7 +136,7 @@
        <item>
         <widget class="QLabel" name="label">
          <property name="text">
-          <string>&lt;font color='black'&gt;Displayed Image(s):&lt;/font&gt;</string>
+          <string>&lt;font color='black'&gt;Registered Image(s):&lt;/font&gt;</string>
          </property>
         </widget>
        </item>
@@ -161,8 +171,11 @@
      </item>
      <item>
       <widget class="QPushButton" name="closeImageButton">
+       <property name="toolTip">
+        <string>Close selected image(s).</string>
+       </property>
        <property name="text">
-        <string>Close Image</string>
+        <string>Close Selected Image(s)</string>
        </property>
       </widget>
      </item>
@@ -180,6 +193,137 @@
       </spacer>
      </item>
     </layout>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="colorRestrictionsGroupBox">
+     <property name="title">
+      <string>Color Restrictions</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_5">
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_7">
+        <item>
+         <widget class="QRadioButton" name="noneRadio">
+          <property name="text">
+           <string>None</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="singleColorRadio">
+          <property name="text">
+           <string>Color/Saturation per Image</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="singleColorSaturationRadio">
+          <property name="text">
+           <string>Master Color/Saturation:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <layout class="QVBoxLayout" name="verticalLayout_4">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_4">
+            <item>
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>Color Image:</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="colorImageCombo"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <item>
+             <widget class="QLabel" name="label_5">
+              <property name="text">
+               <string>Saturation Image::</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="saturationImageCombo"/>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_8">
+        <item>
+         <spacer name="horizontalSpacer_5">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="applyButton">
+          <property name="text">
+           <string>Apply</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer_6">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_6"/>
+   </item>
+   <item>
+    <spacer name="horizontalSpacer_7">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>983</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
    </item>
   </layout>
  </widget>

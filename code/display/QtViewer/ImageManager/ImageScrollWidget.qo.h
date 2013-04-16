@@ -22,42 +22,52 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef IMAGEMANAGERDIALOG_QO_H
-#define IMAGEMANAGERDIALOG_QO_H
+#ifndef IMAGESCROLLWIDGET_QO_H
+#define IMAGESCROLLWIDGET_QO_H
 
-#include <QtGui/QDialog>
-#include <display/QtViewer/ImageManagerDialog.ui.h>
+#include <QtGui/QWidget>
+#include <display/QtViewer/ImageManager/ImageScrollWidget.ui.h>
 
 namespace casa {
 
-class QtDisplayData;
-class ImageView;
 class ImageScroll;
+class ImageView;
+class QtDisplayData;
+class DisplayDataHolder;
 
-class ImageManagerDialog : public QDialog
+/**
+ * Wraps a scroll list of images with the ability to select/deselect them.
+ */
+
+class ImageScrollWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    ImageManagerDialog(QWidget *parent = 0);
-    void addImage( QtDisplayData* dd );
-    ~ImageManagerDialog();
-
+    ImageScrollWidget(QWidget *parent = 0);
+    void setImageHolder( DisplayDataHolder* holder );
+    QList<ImageView*> getSelectedViews();
+    bool isManaged( QtDisplayData* displayData ) const;
+    void closeImages();
+    void addImageViews( QList<ImageView*>& views );
+    void removeImageViews( QList<ImageView*>& view );
+    void setImageColorsEnabled( bool enabled );
+    ~ImageScrollWidget();
+signals:
+    void displayDataRemoved( QtDisplayData* imageData );
+    void displayDataAdded( QtDisplayData* imageData );
+    void displayTypeChanged( ImageView* imageData );
+    void displayColorsChanged( ImageView* imageData );
 private slots:
-	void openToDisplayed();
-	void displayedToOpen();
-	void closeImage();
-
+	void clearSelections();
+	void selectAll();
 private:
-	void removeImageFromList( QList<ImageView*>& imageList );
-	void initializeScrollArea( QWidget* holder, ImageScroll*& scrollArea );
-
-
-    Ui::ImageManagerDialogClass ui;
-    ImageScroll* openScroll;
-    ImageScroll* displayedScroll;
+	ImageScrollWidget( const ImageScrollWidget& other );
+	ImageScrollWidget operator=( const ImageScrollWidget& other );
+    ImageScroll* imageScroll;
+    Ui::ImageScrollWidgetClass ui;
 };
 
 }
 
-#endif // IMAGEMANAGERDIALOG_QO_H
+#endif // IMAGESCROLLWIDGET_QO_H

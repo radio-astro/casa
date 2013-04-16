@@ -278,12 +278,17 @@ void FileBox::activate(Record rcd) {
       Vector<Double> wld = world.asArrayDouble("wld");
       Vector<String> units = world.asArrayString("units");
 
-      List<QtDisplayData*> DDs = qdp_->registeredDDs();
+      /*List<QtDisplayData*> DDs = qdp_->registeredDDs();
       ListIter<QtDisplayData*> qdds(DDs);
       if (qdds.len() > 0) {
          qdds.toEnd();
          qdds--;
-         QtDisplayData* qdd = qdds.getRight();
+         QtDisplayData* qdd = qdds.getRight();*/
+      if ( !qdp_->isEmptyRegistered() ){
+    	 DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+    	 iter--;
+
+    	 QtDisplayData* qdd = (*iter);
          zIndex = qdd->dd()->activeZIndex();
 
          if ((qdd->imageInterface())){
@@ -484,12 +489,17 @@ void FileBox::loadRegionFromFile() {
    }
    
    QtDisplayData* qdd = 0;
-   List<QtDisplayData*> DDs = qdp_->registeredDDs();
+   /*List<QtDisplayData*> DDs = qdp_->registeredDDs();
    ListIter<QtDisplayData*> qdds(DDs);
    if (qdds.len() > 0) {
       qdds.toEnd();
       qdds--;
       qdd = qdds.getRight();
+   }*/
+   if ( !qdp_->isEmptyRegistered()){
+	   DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+	   iter--;
+	   qdd = (*iter );
    }
   
    if (!qdd || !(qdd->imageInterface())){
@@ -674,15 +684,21 @@ void FileBox::deleteAll() {
 }
 
 void FileBox::reDraw() {
-   List<QtDisplayData*> DDs = qdp_->registeredDDs();
-   ListIter<QtDisplayData*> qdds(DDs);
-   if (qdds.len() == 0)
-      return ;
+	 /*List<QtDisplayData*> DDs = qdp_->registeredDDs();
+	   ListIter<QtDisplayData*> qdds(DDs);
+	   if (qdds.len() == 0)
+	      return ;
 
-   qdds.toEnd();
-   qdds--;
-   QtDisplayData* qdd = qdds.getRight();
-
+	   qdds.toEnd();
+	   qdds--;
+	   QtDisplayData* qdd = qdds.getRight();
+	*/
+   if ( qdp_->isEmptyRegistered()){
+	   return;
+   }
+   DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+   iter--;
+   QtDisplayData* qdd = (*iter);
    qdp_->hold();
    qdp_->panelDisplay()->removeDisplayData(*regData);
    //if (regData) {
@@ -1155,13 +1171,17 @@ bool FileBox::planeAllowed(String xa, String ya) {
 }
 
 void FileBox::zPlaneChanged(){
-   List<QtDisplayData*> DDs = qdp_->registeredDDs();
+   /*List<QtDisplayData*> DDs = qdp_->registeredDDs();
 
    ListIter<QtDisplayData*> qdds(DDs);
    if (qdds.len() > 0) {
       qdds.toEnd();
       qdds--;
-      QtDisplayData* qdd = qdds.getRight();
+      QtDisplayData* qdd = qdds.getRight();*/
+	if ( ! qdp_->isEmptyRegistered()){
+	  DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+	  iter--;
+	  QtDisplayData* qdd = (*iter);
       //cout << "img=" << qdd->imageInterface() << endl;
       if (qdd->imageInterface()==0)
          return;

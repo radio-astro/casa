@@ -61,20 +61,20 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    // forward declare...
-    namespace viewer {
-	std::string canonical_path( const std::string & );
-    }
+// forward declare...
+namespace viewer {
+std::string canonical_path( const std::string & );
+}
 
-    QtDataManager::QtDataManager(QtDisplayPanelGui* panel, const char *name, QWidget *parent ) :
-					QWidget(parent), parent_(parent), panel_(panel),
-					ms_selection(new Ui::QtDataMgrMsSelect), rc(viewer::getrc()) {
+QtDataManager::QtDataManager(QtDisplayPanelGui* panel, const char *name, QWidget *parent ) :
+							QWidget(parent), parent_(parent), panel_(panel),
+							ms_selection(new Ui::QtDataMgrMsSelect), rc(viewer::getrc()) {
 
 	setWindowTitle(name);
 
 	setupUi(this);
 
-	slice_gen = new viewer::SlicerGen( );
+slice_gen = new viewer::SlicerGen( );
 	slice_gen->initialize(slice_frame);
 	slice_frame->setFrameStyle(QFrame::NoFrame);
 
@@ -94,14 +94,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	load_ifields.push_back(infofield_list_t::value_type(load_ibox41,load_itext41));
 	load_ifields.push_back(infofield_list_t::value_type(load_ibox42,load_itext42));
 
-// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox11,img_itext11));
-// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox12,img_itext12));
-// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox21,img_itext21));
-// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox22,img_itext22));
-// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox31,img_itext31));
-// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox32,img_itext32));
-// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox41,img_itext41));
-// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox42,img_itext42));
+	// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox11,img_itext11));
+	// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox12,img_itext12));
+	// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox21,img_itext21));
+	// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox22,img_itext22));
+	// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox31,img_itext31));
+	// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox32,img_itext32));
+	// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox41,img_itext41));
+	// 	img_ifields.push_back(infofield_list_t::value_type(img_ibox42,img_itext42));
 
 #if defined(__APPLE__)
 	QFont field_font( "Lucida Grande", 10 );
@@ -109,21 +109,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	QFont field_font( "Sans Serif", 7 );
 #endif
 	for ( infofield_list_t::iterator it = load_ifields.begin( ); it != load_ifields.end( ); ++it ) {
-	    (*it).first->setTitle(" ");
-	    (*it).second->clear( );
-	    (*it).second->setFont( field_font );
+		(*it).first->setTitle(" ");
+		(*it).second->clear( );
+		(*it).second->setFont( field_font );
 	}
 
-// 	for ( infofield_list_t::iterator it = img_ifields.begin( ); it != img_ifields.end( ); ++it ) {
-// 	    (*it).first->setTitle(" ");
-// 	    (*it).second->clear( );
-// 	    (*it).second->setFont( field_font );
-// 	}
+	// 	for ( infofield_list_t::iterator it = img_ifields.begin( ); it != img_ifields.end( ); ++it ) {
+	// 	    (*it).first->setTitle(" ");
+	// 	    (*it).second->clear( );
+	// 	    (*it).second->setFont( field_font );
+	// 	}
 
 	std::string show_lel = rc.get("viewer." + panel_->rcid() + ".datamgr.show_lel");
 	if ( show_lel != "true" && show_lel != "false" ) {
-	    rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "false" );
-	    show_lel = "false";
+		rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "false" );
+		show_lel = "false";
 	}
 	std::string do_show_slice = rc.get("viewer." + panel_->rcid() + ".datamgr.show_slice");
 	if ( do_show_slice != "true" && do_show_slice != "false" ) {
@@ -133,8 +133,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	std::string leave_up = rc.get("viewer." + panel_->rcid() + ".datamgr.leave_up");
 	if ( leave_up != "true" && leave_up != "false" ) {
-	    rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "true" );
-	    leave_up = "true";
+		rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "true" );
+		leave_up = "true";
 	}
 
 	// Tue Sep  6 12:17:21 EDT 2011
@@ -145,10 +145,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// Fri Nov 18 22:39:26 UTC 2011
 	// some complaints make it reasonable to re-enable it as an option <drs>...
 	if ( show_lel == "false" ) {
-	    lelGB_->hide( );
-	    showLEL_->setChecked( false );
+		lelGB_->hide( );
+		showLEL_->setChecked( false );
 	} else {
-	    showLEL_->setChecked( true );
+		showLEL_->setChecked( true );
 	}
 
 	if ( do_show_slice == "false" ) {
@@ -161,12 +161,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	connect(showLEL_, SIGNAL(clicked(bool)), SLOT(showlelButtonClicked(bool)));
 	connect(show_slice, SIGNAL(clicked(bool)), SLOT(showSliceButtonClicked(bool)));
 
-
 	//updateButton_->setEnabled(false);	//#dk until this works.
 
 	lelEdit_->setToolTip( "Enter an image expression, such as\n"
-			      "'clean.im' - 'dirty.im'.  For details, see:\n"
-			      "aips2.nrao.edu/docs/notes/223/223.html" );
+			"'clean.im' - 'dirty.im'.  For details, see:\n"
+			"aips2.nrao.edu/docs/notes/223/223.html" );
 
 	hideDisplayButtons();
 
@@ -213,13 +212,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	exportTypes_ = QVector<int>(1, IMAGE);
 
 	leaveOpen_->setToolTip( "Uncheck to close this window after "
-				"data and display type selection.\n"
-				"Use 'Open' button/menu on Display Panel to show it again." );
+			"data and display type selection.\n"
+			"Use 'Open' button/menu on Display Panel to show it again." );
 
 	if ( leave_up == "true" ) {
-	    leaveOpen_->setChecked(true);
+		leaveOpen_->setChecked(true);
 	} else {
-	    leaveOpen_->setChecked(false);
+		leaveOpen_->setChecked(false);
 	}
 	connect(leaveOpen_, SIGNAL(clicked(bool)), SLOT(leaveopenButtonClicked(bool)));
 
@@ -235,7 +234,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	connect(updateButton_,      SIGNAL(clicked()), SLOT(buildDirTree()));
 	connect(regionButton_,      SIGNAL(clicked()), SLOT(load_regions_clicked()));
 
-    //  connect(registerCheck,      SIGNAL(clicked()), SLOT(registerClicked()));
+	//  connect(registerCheck,      SIGNAL(clicked()), SLOT(registerClicked()));
 
 	connect(load_directory,     SIGNAL(returnPressed()), SLOT(returnPressed()));
 	connect(image_directory,    SIGNAL(returnPressed()), SLOT(returnPressed()));
@@ -271,140 +270,140 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	save_ds9_csys->setDisabled(true);
 	connect(save_ds9_region,    SIGNAL(toggled(bool)),                 SLOT(region_ds9_csys_disable(bool)));
-    }
+}
 
-    QtDataManager::~QtDataManager(){ }
+QtDataManager::~QtDataManager(){ }
 
 
-    void QtDataManager::showTab( std::string tab ) {
+void QtDataManager::showTab( std::string tab ) {
 	QString qtab = QString::fromStdString(tab);
 	for ( int i=0; i < tabs->count( ); ++i ) {
-	    if ( tabs->tabText(i) == qtab ) {
-		tabs->setCurrentIndex(i);
-		break;
-	    }
+		if ( tabs->tabText(i) == qtab ) {
+			tabs->setCurrentIndex(i);
+			break;
+		}
 	}
-    }
+}
 
 
-    void QtDataManager::clickItem(QTreeWidgetItem* item){
+void QtDataManager::clickItem(QTreeWidgetItem* item){
 	// make sure a directory was clicked
 	if(item!=0 && item->text(1)=="Directory"){
 
-	    // get the text
-	    QString iText = item->text(0);
+		// get the text
+		QString iText = item->text(0);
 
-	    // if there is a text go to that directory
-	    if (iText.size()>0){
-		updateDirectory(item->text(0).toStdString( ));
-	    } else if (iText.size()==0){
-		// if there is no text
-		// get the top-level index
-		int index = load_tree_widget_->indexOfTopLevelItem (item );
+		// if there is a text go to that directory
+		if (iText.size()>0){
+			updateDirectory(item->text(0).toStdString( ));
+		} else if (iText.size()==0){
+			// if there is no text
+			// get the top-level index
+			int index = load_tree_widget_->indexOfTopLevelItem (item );
 
-		// go to "home" or "root"
-		if (index == 0)
-		    updateDirectory(QDir::homePath( ).toStdString( ));
-		else if (index == 1)
-		    updateDirectory(QDir::rootPath( ).toStdString( ));
-	    }
+			// go to "home" or "root"
+			if (index == 0)
+				updateDirectory(QDir::homePath( ).toStdString( ));
+			else if (index == 1)
+				updateDirectory(QDir::rootPath( ).toStdString( ));
+		}
 	}
-    }
+}
 
 
-    static int findNumberOfFITSImageExt( QString path ) {
+static int findNumberOfFITSImageExt( QString path ) {
 	fitsfile *fptr;
 	int status = 0;
 	fits_open_file( &fptr, path.toAscii( ).constData( ), READONLY, &status );
 	if ( status != 0 ) {
-	    fits_report_error(stderr, status);
-	    return -1;
+		fits_report_error(stderr, status);
+		return -1;
 	}
 	int number_hdus = 0;
 	fits_get_num_hdus( fptr, &number_hdus, &status );
 	if ( status != 0 ) {
-	    fits_report_error(stderr, status);
-	    fits_close_file( fptr, &status );
-	    return -1;
-	}
-	int number_images = 0;
-	if ( number_hdus > 0 ) {
-	    int type = 0;
-	    fits_movabs_hdu( fptr, 1, &type, &status );
-	    if ( status != 0 ) {
 		fits_report_error(stderr, status);
 		fits_close_file( fptr, &status );
 		return -1;
-	    }
-	    if ( type == IMAGE_HDU ) ++number_images;
-	    for ( int i=2; i <= number_hdus; ++i ) {
-		type = 0;
-		fits_movrel_hdu(fptr, 1, &type, &status);
+	}
+	int number_images = 0;
+	if ( number_hdus > 0 ) {
+		int type = 0;
+		fits_movabs_hdu( fptr, 1, &type, &status );
 		if ( status != 0 ) {
-		    fits_report_error(stderr, status);
-		    fits_close_file( fptr, &status );
-		    return -1;
+			fits_report_error(stderr, status);
+			fits_close_file( fptr, &status );
+			return -1;
 		}
 		if ( type == IMAGE_HDU ) ++number_images;
-	    }
+		for ( int i=2; i <= number_hdus; ++i ) {
+			type = 0;
+			fits_movrel_hdu(fptr, 1, &type, &status);
+			if ( status != 0 ) {
+				fits_report_error(stderr, status);
+				fits_close_file( fptr, &status );
+				return -1;
+			}
+			if ( type == IMAGE_HDU ) ++number_images;
+		}
 	}
 
 	fits_close_file( fptr, &status );
 	if ( status != 0 ) {
-	    fits_report_error(stderr, status);
-	    return -1;
+		fits_report_error(stderr, status);
+		return -1;
 	}
 	return number_images;
-    }
+}
 
 
-    void QtDataManager::expandItem(QTreeWidgetItem* item) {
+void QtDataManager::expandItem(QTreeWidgetItem* item) {
 	if ( item->text(1) == "FITS Image" && item->childCount( ) == 1 ) {
-	    // check whether its a FITS image and prevent second generation children
-	    if(item!=0 && item->text(1)=="FITS Image" && !item->text(0).endsWith("]")){
-		delete item->takeChild(0);
+		// check whether its a FITS image and prevent second generation children
+		if(item!=0 && item->text(1)=="FITS Image" && !item->text(0).endsWith("]")){
+			delete item->takeChild(0);
 
-		if ( tab_info.size( ) == 0 ) init_tab_info( );
-		tab_state ts = tab_info[tabs->currentIndex( )];
+			if ( tab_info.size( ) == 0 ) init_tab_info( );
+			tab_state ts = tab_info[tabs->currentIndex( )];
 
-		QString path = ts.dir( )->path( ) + "/" +  item->text(0);
+			QString path = ts.dir( )->path( ) + "/" +  item->text(0);
 
-		// get a list of all extensions with data
-		QStringList extList = analyseFITSImage(path);
+			// get a list of all extensions with data
+			QStringList extList = analyseFITSImage(path);
 
-		// if there is more than one extension
-		if (extList.size()>1) {
-		    QTreeWidgetItem *childItem;
-		    int dType = uiDataType_[item->text(1)];
+			// if there is more than one extension
+			if (extList.size()>1) {
+				QTreeWidgetItem *childItem;
+				int dType = uiDataType_[item->text(1)];
 
-		    // add the extensions as child items
-		    for (int j = 0; j < extList.size(); j+=2) {
-			childItem = new QTreeWidgetItem(item);
-			childItem->setText(0, extList.at(j));
-			childItem->setText(1, extList.at(j+1));
-			dType = uiDataType_[childItem->text(1)];
-			childItem->setTextColor(1, getDirColor(dType));
-		    }
+				// add the extensions as child items
+				for (int j = 0; j < extList.size(); j+=2) {
+					childItem = new QTreeWidgetItem(item);
+					childItem->setText(0, extList.at(j));
+					childItem->setText(1, extList.at(j+1));
+					dType = uiDataType_[childItem->text(1)];
+					childItem->setTextColor(1, getDirColor(dType));
+				}
+			}
+			load_tree_widget_->resizeColumnToContents(0);
 		}
-		load_tree_widget_->resizeColumnToContents(0);
-	    }
 	}
-    }
+}
 
 
-    void QtDataManager::updateDirectory(const std::string &str){
+void QtDataManager::updateDirectory(const std::string &str){
 	if ( tab_info.size( ) == 0 ) init_tab_info( );
 	tab_state ts = tab_info[tabs->currentIndex( )];
 
 	QString qstr = QString::fromStdString(str);
 	QDir saved = *ts.dir( );
 	if( ! ts.dir( )->cd(qstr)) {
-	    QMessageBox::warning( this, tr("QtDataManager"), tr("No such directory:\n %1").arg(qstr));
-	    *ts.dir( ) = saved;
+		QMessageBox::warning( this, tr("QtDataManager"), tr("No such directory:\n %1").arg(qstr));
+		*ts.dir( ) = saved;
 	}
 	if(ts.dir( )->entryList( ).size( ) == 0) {
-	    QMessageBox::warning(this, tr("QtDataManager"), tr("Could not enter the directory:\n %1").arg(ts.dir( )->path( )));
-	    *ts.dir( ) = saved;
+		QMessageBox::warning(this, tr("QtDataManager"), tr("Could not enter the directory:\n %1").arg(ts.dir( )->path( )));
+		*ts.dir( ) = saved;
 	}
 	ts.dir( )->makeAbsolute( );
 	ts.dirline( )->setText(ts.dir( )->cleanPath(ts.dir( )->path( )));
@@ -412,40 +411,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	std::string newpath = ts.dirline( )->text().toStdString();
 	panel_->selectedDMDir = newpath;
 	buildDirTree( newpath );
-    }
+}
 
 
-    void QtDataManager::load_tab_notify( const std::string &value, tab_state &ts ) {
+void QtDataManager::load_tab_notify( const std::string &value, tab_state &ts ) {
 	if ( value == "building" ) {
-	    if ( ts.tree( )->columnCount( ) == 1 ) {
-		ts.updateDir( );
-		QStringList lbl;
-	    	lbl << "input file" << "type";
-		ts.tree( )->setColumnCount(2);
-		ts.tree( )->setHeaderLabels(lbl);
-	    }
-	    lelEdit_->deactivate();
-	    hideDisplayButtons();
-	    ts.tree( )->setFocus(Qt::OtherFocusReason);
-	} else if ( value == "selection" ) {
-	    QList<QTreeWidgetItem *> lst = load_tree_widget_->selectedItems();
-	    if (!lst.empty()) {
-		QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
-		showDisplayButtons(uiDataType_[item->text(1)],item->text(0));
+		if ( ts.tree( )->columnCount( ) == 1 ) {
+			ts.updateDir( );
+			QStringList lbl;
+			lbl << "input file" << "type";
+			ts.tree( )->setColumnCount(2);
+			ts.tree( )->setHeaderLabels(lbl);
+		}
 		lelEdit_->deactivate();
-		update_regrid_options( );
-		update_slice_options(uiDataType_[item->text(1)],item->text(0));
-	    }
-	}
-    }
+		hideDisplayButtons();
+		ts.tree( )->setFocus(Qt::OtherFocusReason);
+	} else if ( value == "selection" ) {
+		QList<QTreeWidgetItem *> lst = load_tree_widget_->selectedItems();
+		if (!lst.empty()) {
+			QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
+			showDisplayButtons(uiDataType_[item->text(1)],item->text(0));
+			lelEdit_->deactivate();
+			update_regrid_options( );
+			update_slice_options(uiDataType_[item->text(1)], item->text(0));
+		}
 
-    void QtDataManager::update_region_list( tab_state &ts ) {
+	}
+}
+
+void QtDataManager::update_region_list( tab_state &ts ) {
 	typedef QtDisplayPanelGui::region_list_t region_list_t;
 	region_list_t regions = panel_->regions( );
 
-	
+
 	for ( region_map_t::iterator it=region_to_treeitem.begin( ); it != region_to_treeitem.end( ); ++it )
-	    disconnect( it->first, 0, this, 0 );
+		disconnect( it->first, 0, this, 0 );
 
 	treeitem_to_region.clear( );
 	region_to_treeitem.clear( );
@@ -453,200 +453,205 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	ostringstream oss;
 	oss << fixed << setprecision(0);
 	for ( region_list_t::iterator it=regions.begin( ); it != regions.end( ); ++it ) {
-	    QTreeWidgetItem *item = new QTreeWidgetItem(ts.dtree( ));
-	    item->setText( 0, QString::fromStdString((*it)->name( )) );
-	    item->setText( 1, QString::fromStdString((*it)->lineColor( )) );
-	    double x,y;
-	    (*it)->pixelCenter(x,y);
-	    oss.str("");
-	    oss << x << "," << y;
-	    item->setText( 2, QString::fromStdString(oss.str( )) );
-	    if ( (*it)->marked( ) )
-		item->setCheckState(0,Qt::Checked);
-	    else
-		item->setCheckState(0,Qt::Unchecked);
+		QTreeWidgetItem *item = new QTreeWidgetItem(ts.dtree( ));
+		item->setText( 0, QString::fromStdString((*it)->name( )) );
+		item->setText( 1, QString::fromStdString((*it)->lineColor( )) );
+		double x,y;
+		(*it)->pixelCenter(x,y);
+		oss.str("");
+		oss << x << "," << y;
+		item->setText( 2, QString::fromStdString(oss.str( )) );
+		if ( (*it)->marked( ) )
+			item->setCheckState(0,Qt::Checked);
+		else
+			item->setCheckState(0,Qt::Unchecked);
 
-	    treeitem_to_region.insert(treeitem_map_t::value_type(item,*it));
-	    region_to_treeitem.insert(region_map_t::value_type(*it,item));
-	    // connect(*it,        SIGNAL(selectionChanged(viewer::Region*,bool)),  this, SLOT(region_selection_change(viewer::Region*,bool)));
+		treeitem_to_region.insert(treeitem_map_t::value_type(item,*it));
+		region_to_treeitem.insert(region_map_t::value_type(*it,item));
+		// connect(*it,        SIGNAL(selectionChanged(viewer::Region*,bool)),  this, SLOT(region_selection_change(viewer::Region*,bool)));
 	}
 	ts.dtree( )->resizeColumnToContents(0);
-    }
+}
 
-    void QtDataManager::region_selection_change( viewer::Region *rgn, bool selected ) {
+void QtDataManager::region_selection_change( viewer::Region *rgn, bool selected ) {
 	region_map_t::iterator it = region_to_treeitem.find(rgn);
 	if ( it != region_to_treeitem.end( ) ) {
-	    if ( selected )
-		it->second->setCheckState(0,Qt::Checked);
-	    else
-		it->second->setCheckState(0,Qt::Unchecked);
+		if ( selected )
+			it->second->setCheckState(0,Qt::Checked);
+		else
+			it->second->setCheckState(0,Qt::Unchecked);
 	}
-    }
+}
 
-    void QtDataManager::region_item_state_change( QTreeWidgetItem *item, int /*col*/ ) {
+void QtDataManager::region_item_state_change( QTreeWidgetItem *item, int /*col*/ ) {
 #if 0
 	if ( item && col > 0 && item->isSelected( ) ) {
-	    item->setSelected(false);
-	    if ( item->checkState(0) == Qt::Checked )
-		item->setCheckState(0,Qt::Unchecked);
-	    else
-		item->setCheckState(0,Qt::Checked);
-// 	    return;
+		item->setSelected(false);
+		if ( item->checkState(0) == Qt::Checked )
+			item->setCheckState(0,Qt::Unchecked);
+		else
+			item->setCheckState(0,Qt::Checked);
+		// 	    return;
 	}
 #endif
 	treeitem_map_t::iterator it = treeitem_to_region.find(item);
 	if ( it != treeitem_to_region.end( ) ) {
-	    if ( item->checkState(0) == Qt::Checked )
-		it->second->mark( true );
-	    else
-		it->second->mark( false );
+		if ( item->checkState(0) == Qt::Checked )
+			it->second->mark( true );
+		else
+			it->second->mark( false );
 	}
 #if 0
- 	region_output_target_changed( );
+	region_output_target_changed( );
 #endif
-    }
+}
 
 
-    void QtDataManager::update_dd_list( tab_state &ts ) {
+void QtDataManager::update_dd_list( tab_state &ts ) {
 	// retrieve a copy of the current DD list.
-	List<QtDisplayData*> qdds_ = panel_->dds();
-	if ( qdds_.len( ) == 0 ) {
-	    ts.notifyErr(this,"no data to save");
-	    return;
+	//List<QtDisplayData*> qdds_ = panel_->dds();
+	//if ( qdds_.len( ) == 0 ) {
+	if ( panel_->isEmptyDD()){
+		ts.notifyErr(this,"no data to save");
+		return;
 	}
 
 	// iterate over all list members
 	display_datas.clear( );
 	ts.dtree( )->clear( );
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-	    QtDisplayData* qdd = qdds.getRight();
-	    int type    = dataType_.key(QString::fromStdString(qdd->dataType( )));
-	    if (exportTypes_.contains(type)){
-// 		dtype  = displayType_.key(QString::fromStdString(qdd->displayType()));
+	//for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
+	//QtDisplayData* qdd = qdds.getRight();
+	DisplayDataHolder::DisplayDataIterator iter = panel_->beginDD();
+	while ( iter != panel_->endDD()){
+		QtDisplayData* qdd = (*iter);
+		iter++;
+		int type    = dataType_.key(QString::fromStdString(qdd->dataType( )));
+		if (exportTypes_.contains(type)){
+			// 		dtype  = displayType_.key(QString::fromStdString(qdd->displayType()));
 
-		QString fileName    = QString((qdd->name()).c_str());
-		QString filePath    = QString((qdd->path()).c_str());
+			QString fileName    = QString((qdd->name()).c_str());
+			QString filePath    = QString((qdd->path()).c_str());
 
-		if (filePath.endsWith("]") && filePath.lastIndexOf(".fits[") >0){
-		    int lIndex=filePath.lastIndexOf(".fits[");
-		    filePath.replace(lIndex, filePath.size()-lIndex, ".fits");
+			if (filePath.endsWith("]") && filePath.lastIndexOf(".fits[") >0){
+				int lIndex=filePath.lastIndexOf(".fits[");
+				filePath.replace(lIndex, filePath.size()-lIndex, ".fits");
+			}
+
+
+			QTreeWidgetItem *fileItem = new QTreeWidgetItem(ts.dtree( ));
+			fileItem->setText(0, fileName);
+			fileItem->setToolTip(0, filePath);
+			// 		fileItem->setText(1, uiDataType_.key(type));
+			fileItem->setText(1, QString::fromStdString(qdd->displayType( )));
+			fileItem->setTextColor(1, getDirColor(type));
+			display_datas.insert(display_data_map_t::value_type(fileName,qdd));
 		}
-
-
-		QTreeWidgetItem *fileItem = new QTreeWidgetItem(ts.dtree( ));
-		fileItem->setText(0, fileName);
-		fileItem->setToolTip(0, filePath);
-// 		fileItem->setText(1, uiDataType_.key(type));
-		fileItem->setText(1, QString::fromStdString(qdd->displayType( )));
-		fileItem->setTextColor(1, getDirColor(type));
-		display_datas.insert(display_data_map_t::value_type(fileName,qdd));
-	    }
 	}
 	ts.dtree( )->resizeColumnToContents(0);
 
 	// activate the last entry
 	if (ts.dtree( )->topLevelItemCount()>0){
-	    ts.dtree( )->setCurrentItem (ts.dtree( )->topLevelItem(ts.dtree( )->topLevelItemCount()-1));
+		ts.dtree( )->setCurrentItem (ts.dtree( )->topLevelItem(ts.dtree( )->topLevelItemCount()-1));
 	}
-    }
+}
 
 
-    void QtDataManager::image_tab_error( const std::string &value, tab_state & ) {
+void QtDataManager::image_tab_error( const std::string &value, tab_state & ) {
 	img_output_error->setText(QString::fromStdString(value));
 	img_do_save->setEnabled(false);
-    }
+}
 
-    void QtDataManager::image_tab_notify( const std::string &value, tab_state &ts ) {
+void QtDataManager::image_tab_notify( const std::string &value, tab_state &ts ) {
 	if ( value == "building" ) {
-	    if ( ts.tree( )->columnCount( ) == 1 ) {
-		ts.updateDir( );
-		QStringList lbl;
-		lbl << "output file" << "type";
-		ts.tree( )->setColumnCount(2);
-		ts.tree( )->setHeaderLabels(lbl);
-	    }
-	    if ( ts.dtree( )->columnCount( ) == 1 ) {
-		QStringList lbl;
-	    	lbl << "image name" << "type";
-		ts.dtree( )->setColumnCount(2);
-		ts.dtree( )->setHeaderLabels(lbl);
-		update_dd_list( ts );
-	    }
-	} else if ( value == "selection" ) {
-	    QList<QTreeWidgetItem *> lst = ts.tree( )->selectedItems();
-	    if (!lst.empty()) {
-		QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
-		if ( item->text(1) == "Directory" ) {
-		    ts.updateDir( );
-		} else {
-		    ts.outFileLine( )->setText( item->text(0) );
+		if ( ts.tree( )->columnCount( ) == 1 ) {
+			ts.updateDir( );
+			QStringList lbl;
+			lbl << "output file" << "type";
+			ts.tree( )->setColumnCount(2);
+			ts.tree( )->setHeaderLabels(lbl);
 		}
-	    }
+		if ( ts.dtree( )->columnCount( ) == 1 ) {
+			QStringList lbl;
+			lbl << "image name" << "type";
+			ts.dtree( )->setColumnCount(2);
+			ts.dtree( )->setHeaderLabels(lbl);
+			update_dd_list( ts );
+		}
+	} else if ( value == "selection" ) {
+		QList<QTreeWidgetItem *> lst = ts.tree( )->selectedItems();
+		if (!lst.empty()) {
+			QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
+			if ( item->text(1) == "Directory" ) {
+				ts.updateDir( );
+			} else {
+				ts.outFileLine( )->setText( item->text(0) );
+			}
+		}
 	} else if ( value == "update data" ) {
-	    update_dd_list( ts );
-	    img_output_target_changed( );
+		update_dd_list( ts );
+		img_output_target_changed( );
 	}
-    }
+}
 
-    void QtDataManager::region_tab_error( const std::string &value, tab_state & ) {
+void QtDataManager::region_tab_error( const std::string &value, tab_state & ) {
 	region_output_error->setText(QString::fromStdString(value));
 	region_do_save->setEnabled(false);
-    }
+}
 
-    void QtDataManager::handle_region_update(viewer::Region*,std::string) {
+void QtDataManager::handle_region_update(viewer::Region*,std::string) {
 	for ( int i=0; i < tabs->count( ); ++i ) {
-	    if ( tabs->tabText(i) == "save region" ) {
-		update_region_list( tab_info[i] );
-		break;
-	    }
-	}
-    }
-
-    void QtDataManager::region_tab_notify( const std::string &value, tab_state &ts ) {
-	if ( value == "building" ) {
-	    if ( ts.tree( )->columnCount( ) == 1 ) {
-		ts.updateDir( );
-		QStringList lbl;
-		lbl << "output file" << "type";
-		ts.tree( )->setColumnCount(2);
-		ts.tree( )->setHeaderLabels(lbl);
-		connect( panel_, SIGNAL(regionChange(viewer::Region*,std::string )), SLOT(handle_region_update(viewer::Region*,std::string)));
-	    }
-	    if ( ts.dtree( )->columnCount( ) == 1 ) {
-		QStringList lbl;
-	    	lbl << "region type" << "color" << "pixel center";
-		ts.dtree( )->setColumnCount(3);
-		ts.dtree( )->setHeaderLabels(lbl);
-		update_region_list( ts );
-		connect(ts.dtree( ),SIGNAL(itemClicked(QTreeWidgetItem*,int)), SLOT(region_item_state_change(QTreeWidgetItem*,int)));
-	    }
-	} else if ( value == "selection" ) {
-	    QList<QTreeWidgetItem *> lst = ts.tree( )->selectedItems();
-	    if (!lst.empty()) {
-		QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
-		if ( item->text(1) == "Directory" ) {
-		    ts.updateDir( );
-		} else {
-		    if ( item->text(1) == "CASA Region File" )
-			save_casa_region->setChecked(true);
-		    else if ( item->text(1) == "DS9 Region File" )
-			save_ds9_region->setChecked(true);
-		    ts.outFileLine( )->setText( item->text(0) );
+		if ( tabs->tabText(i) == "save region" ) {
+			update_region_list( tab_info[i] );
+			break;
 		}
-	    }
+	}
+}
+
+void QtDataManager::region_tab_notify( const std::string &value, tab_state &ts ) {
+	if ( value == "building" ) {
+		if ( ts.tree( )->columnCount( ) == 1 ) {
+			ts.updateDir( );
+			QStringList lbl;
+			lbl << "output file" << "type";
+			ts.tree( )->setColumnCount(2);
+			ts.tree( )->setHeaderLabels(lbl);
+			connect( panel_, SIGNAL(regionChange(viewer::Region*,std::string )), SLOT(handle_region_update(viewer::Region*,std::string)));
+		}
+		if ( ts.dtree( )->columnCount( ) == 1 ) {
+			QStringList lbl;
+			lbl << "region type" << "color" << "pixel center";
+			ts.dtree( )->setColumnCount(3);
+			ts.dtree( )->setHeaderLabels(lbl);
+			update_region_list( ts );
+			connect(ts.dtree( ),SIGNAL(itemClicked(QTreeWidgetItem*,int)), SLOT(region_item_state_change(QTreeWidgetItem*,int)));
+		}
+	} else if ( value == "selection" ) {
+		QList<QTreeWidgetItem *> lst = ts.tree( )->selectedItems();
+		if (!lst.empty()) {
+			QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
+			if ( item->text(1) == "Directory" ) {
+				ts.updateDir( );
+			} else {
+				if ( item->text(1) == "CASA Region File" )
+					save_casa_region->setChecked(true);
+				else if ( item->text(1) == "DS9 Region File" )
+					save_ds9_region->setChecked(true);
+				ts.outFileLine( )->setText( item->text(0) );
+			}
+		}
 	} else if ( value == "update data" ) {
-	    update_region_list( ts );
-	    //img_output_target_changed( );
+		update_region_list( ts );
+		//img_output_target_changed( );
 	}
-    }
+}
 
-    void QtDataManager::updateDisplayDatas(QtDisplayData*, Bool ) {
+void QtDataManager::updateDisplayDatas(QtDisplayData*, Bool ) {
 	for ( tab_info_map_t::iterator it=tab_info.begin( ); it != tab_info.end( ); ++it ) {
-	  it->second.notify(this,"update data");
+		it->second.notify(this,"update data");
 	}
-    }
+}
 
-    void QtDataManager::buildDirTree( std::string /*newpath*/ ) {
+void QtDataManager::buildDirTree( std::string /*newpath*/ ) {
 
 	if ( tab_info.size( ) == 0 ) init_tab_info( );
 	tab_state ts = tab_info[tabs->currentIndex( )];
@@ -686,34 +691,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	QtDisplayData *dd = panel_->dd( );
 	QString ddpath;
 	if ( dd ) {
-	    QFileInfo path(QString::fromStdString(dd->path( )));
-	    ddpath = path.canonicalFilePath( );
+		QFileInfo path(QString::fromStdString(dd->path( )));
+		ddpath = path.canonicalFilePath( );
 	}
 
 	for (int i = 0; i < entryList.size(); i++) {
-	    QString it = entryList.at(i);
-	    if (it.compare(".") > 0) {
-		QString path = ts.dir( )->path( ) + "/" +  entryList.at(i);
-		type = panel_->viewer( )->fileType(path.toStdString()).chars();
-		dType = uiDataType_[type];
+		QString it = entryList.at(i);
+		if (it.compare(".") > 0) {
+			QString path = ts.dir( )->path( ) + "/" +  entryList.at(i);
+			type = panel_->viewer( )->fileType(path.toStdString()).chars();
+			dType = uiDataType_[type];
 
-		if (dType!=UNKNOWN) {
-		    if ( ts.filter( ).find(dType) != ts.filter( ).end( ) )
-			continue;
-		    dirItem = new QTreeWidgetItem(ts.tree( ));
-		    dirItem->setText(0, it);
-		    dirItem->setText(1, type);
-		    dirItem->setTextColor(1, getDirColor(dType));
-		    if ( type == "FITS Image" && findNumberOfFITSImageExt( path ) > 1 ) {
-			QTreeWidgetItem *childItem = new QTreeWidgetItem(dirItem);
-			childItem->setText(0, "");
-			childItem->setText(1, "");
-			childItem->setTextColor(1, getDirColor(dType));
-		    }
-		    if ( selection == 0 && dd && ddpath == QFileInfo(path).canonicalFilePath( ) )
-			selection = dirItem;
+			if (dType!=UNKNOWN) {
+				if ( ts.filter( ).find(dType) != ts.filter( ).end( ) )
+					continue;
+				dirItem = new QTreeWidgetItem(ts.tree( ));
+				dirItem->setText(0, it);
+				dirItem->setText(1, type);
+				dirItem->setTextColor(1, getDirColor(dType));
+				if ( type == "FITS Image" && findNumberOfFITSImageExt( path ) > 1 ) {
+					QTreeWidgetItem *childItem = new QTreeWidgetItem(dirItem);
+					childItem->setText(0, "");
+					childItem->setText(1, "");
+					childItem->setTextColor(1, getDirColor(dType));
+				}
+				if ( selection == 0 && dd && ddpath == QFileInfo(path).canonicalFilePath( ) )
+					selection = dirItem;
+			}
 		}
-	    }
 	}
 
 	// QSettings settings("NRAO", "casa");
@@ -724,123 +729,129 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// load_tree_widget_->setColumnWidth(0, 200);   // (only suppotted in Qt 4.2+)
 
 	if ( selection ) {
-	    ts.tree( )->setCurrentItem(selection);
-	    changeItemSelection( );
-	    ts.tree( )->scrollToItem(selection,QAbstractItemView::PositionAtCenter);
+		ts.tree( )->setCurrentItem(selection);
+		changeItemSelection( );
+		ts.tree( )->scrollToItem(selection,QAbstractItemView::PositionAtCenter);
 	}
 
-    }
+}
 
 
-    void QtDataManager::changeItemSelection(){
+void QtDataManager::changeItemSelection(){
 	if ( tab_info.size( ) == 0 ) init_tab_info( );
 	tab_state ts = tab_info[tabs->currentIndex( )];
 	ts.notify(this,"selection");
-    }
+}
 
-    struct strip_chars {
+struct strip_chars {
 	// should generalize to strip 'chars'...
 	strip_chars( const char */*chars*/ ) { }
 	strip_chars(const strip_chars &other) : str(other.str) { }
 	operator std::string( ) const { return str; }
 	void operator( )( const char &c ) { if ( c != '[' && c != ']' ) str += c; }
-    private:
+private:
 	std::string str;
-    };
+};
 
-    struct max_ftor {
+struct max_ftor {
 	max_ftor( ) : max(-FLT_MAX) { }
 	max_ftor( const max_ftor &other ) : max(other.max) { }
 	operator float( ) const { return max; }
 	void operator( )( float f ) { if ( f > max ) max = f; }
-    private:
+private:
 	float max;
-    };
+};
 
-    struct min_ftor {
+struct min_ftor {
 	min_ftor( ) : min(FLT_MAX) { }
 	min_ftor( const min_ftor &other ) : min(other.min) { }
 	operator float( ) const { return min; }
 	void operator( )( float f ) { if ( f < min ) min = f; }
-    private:
+private:
 	float min;
-    };
+};
 
-    void QtDataManager::showDisplayButtons(int ddtp,const QString &name) {
+void QtDataManager::showDisplayButtons(int ddtp,const QString &name) {
 	hideDisplayButtons();
 
 	if ( tab_info.size( ) == 0 ) init_tab_info( );
 	tab_state ts = tab_info[tabs->currentIndex( )];
 
 	switch (ddtp) {
-	    case IMAGE :
+	case IMAGE :
 		rasterButton_->show();
 		contourButton_->show();
 		vectorButton_->show();
 		markerButton_->show();
 		if ( load_tree_widget_->currentItem() && dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]) == "image" )
-		    load_info_box->show();
+			load_info_box->show();
 		if ( ! name.isNull( ) ) {
-		    std::string path = (ts.dir( )->path( ) + "/" + name).toStdString( );
-		    fill_image_info( path );
+			std::string path = (ts.dir( )->path( ) + "/" + name).toStdString( );
+			fill_image_info( path );
 		}
 		break;
-	    case MEASUREMENT_SET :
+	case MEASUREMENT_SET :
 		rasterButton_->show();
 		ms_selection_box->show();
 		break;
-	    case SKY_CATALOG:
+	case SKY_CATALOG:
 		catalogButton_->show();
 		break;
-	    case RESTORE:
+	case RESTORE:
 		oldPanelButton_->show();
 		newPanelButton_->show();
 		break;
-	    case QUALIMG:
+	case QUALIMG:
 		rasterButton_->show();
 		contourButton_->show();
 		vectorButton_->show();
 		markerButton_->show();
 		break;
-	    case CASAREGION:
+	case CASAREGION:
 		if ( panel_->useNewRegions( ) ) {
-		    if ( panel_->nDDs( ) == 0 )
-			regionButton_->setDisabled(true);
-		    else
-			regionButton_->setDisabled(false);
-		    regionButton_->show( );
+			if ( panel_->isEmptyDD()){
+				//if ( panel_->nDDs( ) == 0 )
+				regionButton_->setDisabled(true);
+			}
+			else {
+				regionButton_->setDisabled(false);
+			}
+			regionButton_->show( );
 		}
 		break;
-	    case DS9REGION:
+	case DS9REGION:
 		if ( panel_->useNewRegions( ) ) {
-		    if ( panel_->nDDs( ) == 0 )
-			regionButton_->setDisabled(true);
-		    else
-			regionButton_->setDisabled(false);
-		    regionButton_->show( );
+			//if ( panel_->nDDs( ) == 0 )
+			if ( panel_->isEmptyDD() ){
+				regionButton_->setDisabled(true);
+			}
+			else {
+				regionButton_->setDisabled(false);
+			}
+			regionButton_->show( );
 		}
 		break;
 	}
-    }
+}
 
-    QColor QtDataManager::getDirColor(int ddtp) {
+QColor QtDataManager::getDirColor(int ddtp) {
 	QColor clr;
 	switch (ddtp) {
-	    case IMAGE:            clr = Qt::darkGreen;        break;
-	    case MEASUREMENT_SET:  clr = Qt::darkBlue;         break;
-	    case SKY_CATALOG:      clr = Qt::darkCyan;         break;
-	    case RESTORE:          clr = QColor(255,43,45);    break;
-	    case DIRECTORY:        clr = Qt::black;            break;
-	    case QUALIMG:          clr = Qt::darkRed;          break;
-	    case CASAREGION:       clr = Qt::darkYellow;       break;
-	    case DS9REGION:        clr = QColor(255,153,51);   break;
-	    case UNKNOWN: default: clr = Qt::darkMagenta;
+	case IMAGE:            clr = Qt::darkGreen;        break;
+	case MEASUREMENT_SET:  clr = Qt::darkBlue;         break;
+	case SKY_CATALOG:      clr = Qt::darkCyan;         break;
+	case RESTORE:          clr = QColor(255,43,45);    break;
+	case DIRECTORY:        clr = Qt::black;            break;
+	case QUALIMG:          clr = Qt::darkRed;          break;
+	case CASAREGION:       clr = Qt::darkYellow;       break;
+	case DS9REGION:        clr = QColor(255,153,51);   break;
+	case UNKNOWN: default: clr = Qt::darkMagenta;
 	}
 
 	return clr;
-    }
+}
 
-    void QtDataManager::hideDisplayButtons(){
+void QtDataManager::hideDisplayButtons(){
 	rasterButton_->hide();
 	contourButton_->hide();
 	vectorButton_->hide();
@@ -851,18 +862,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	regionButton_->hide();
 	ms_selection_box->hide();
 	load_info_box->hide();
-// 	img_info_box->hide();
-    }
+	// 	img_info_box->hide();
+}
 
 
-    void QtDataManager::returnPressed(){
+void QtDataManager::returnPressed(){
 	if ( tab_info.size( ) == 0 ) init_tab_info( );
 	tab_state ts = tab_info[tabs->currentIndex( )];
 	updateDirectory(ts.dirStr( ));
-    }
+}
 
 
-    void QtDataManager::createButtonClicked() {
+void QtDataManager::createButtonClicked() {
 
 	if ( tab_info.size( ) == 0 ) init_tab_info( );
 	tab_state ts = tab_info[tabs->currentIndex( )];
@@ -876,43 +887,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	displaytype = (displayType_.key(uiDisplayType_[button->text()])).toStdString();
 
 	if(lelEdit_->isActive()) {
-	    // Display LEL expression.
-	    path = lelEdit_->text().trimmed().toStdString();
-	    datatype = "lel";
+		// Display LEL expression.
+		path = lelEdit_->text().trimmed().toStdString();
+		datatype = "lel";
 	} else if (load_tree_widget_->currentItem() > 0) {
-	    // Display selected file.
-	    path = (ts.dir( )->path( ) + "/" + load_tree_widget_->currentItem()->text(0)).toStdString( );
-	    datatype = dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]).toStdString();
+		// Display selected file.
+		path = (ts.dir( )->path( ) + "/" + load_tree_widget_->currentItem()->text(0)).toStdString( );
+		datatype = dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]).toStdString();
 	}
 
 	if(path=="" || datatype=="" || displaytype=="") return;
 
 	viewer::DisplayDataOptions ddo;
 	if ( datatype == "ms" ) {
-	    if ( ms_selection->select_field->text( ) != "" )
-		ddo.insert( "field", ms_selection->select_field->text( ).toStdString( ) );
-	    if ( ms_selection->select_spw->text( ) != "" )
-		ddo.insert( "spw", ms_selection->select_spw->text( ).toStdString( ) );
-	    if ( ms_selection->select_time->text( ) != "" )
-		ddo.insert( "time", ms_selection->select_time->text( ).toStdString( ) );
-	    if ( ms_selection->select_uvrange->text( ) != "" )
-		ddo.insert( "uvrange", ms_selection->select_uvrange->text( ).toStdString( ) );
-	    if ( ms_selection->select_antenna->text( ) != "" )
-		ddo.insert( "antenna", ms_selection->select_antenna->text( ).toStdString( ) );
-	    if ( ms_selection->select_scan->text( ) != "" )
-		ddo.insert( "scan", ms_selection->select_scan->text( ).toStdString( ) );
-	    if ( ms_selection->select_corr->text( ) != "" )
-		ddo.insert( "corr", ms_selection->select_corr->text( ).toStdString( ) );
-	    if ( ms_selection->select_array->text( ) != "" )
-		ddo.insert( "array", ms_selection->select_array->text( ).toStdString( ) );
-	    if ( ms_selection->select_msexpr->text( ) != "" )
-		ddo.insert( "msexpr", ms_selection->select_msexpr->text( ).toStdString( ) );
+		if ( ms_selection->select_field->text( ) != "" )
+			ddo.insert( "field", ms_selection->select_field->text( ).toStdString( ) );
+		if ( ms_selection->select_spw->text( ) != "" )
+			ddo.insert( "spw", ms_selection->select_spw->text( ).toStdString( ) );
+		if ( ms_selection->select_time->text( ) != "" )
+			ddo.insert( "time", ms_selection->select_time->text( ).toStdString( ) );
+		if ( ms_selection->select_uvrange->text( ) != "" )
+			ddo.insert( "uvrange", ms_selection->select_uvrange->text( ).toStdString( ) );
+		if ( ms_selection->select_antenna->text( ) != "" )
+			ddo.insert( "antenna", ms_selection->select_antenna->text( ).toStdString( ) );
+		if ( ms_selection->select_scan->text( ) != "" )
+			ddo.insert( "scan", ms_selection->select_scan->text( ).toStdString( ) );
+		if ( ms_selection->select_corr->text( ) != "" )
+			ddo.insert( "corr", ms_selection->select_corr->text( ).toStdString( ) );
+		if ( ms_selection->select_array->text( ) != "" )
+			ddo.insert( "array", ms_selection->select_array->text( ).toStdString( ) );
+		if ( ms_selection->select_msexpr->text( ) != "" )
+			ddo.insert( "msexpr", ms_selection->select_msexpr->text( ).toStdString( ) );
 	}
 
 	// pass along regridding information to QtDisplayPanelGui...
 	if ( load_tree_widget_ != 0 && load_tree_widget_->currentItem( ) != 0 &&
-	     dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]) == "image" ) {
-	    ddo.insert( "regrid", guimethod_to_iamethod(regrid_method->currentText( )) );
+			dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]) == "image" ) {
+		ddo.insert( "regrid", guimethod_to_iamethod(regrid_method->currentText( )) );
 		if ( slice_gen->sliceReady( ) )
 			ddo.insert( "slice", slice_gen->getSliceRep( ) );
 		else
@@ -922,10 +933,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	panel_->createDD( path, datatype, displaytype, True, ddo, image_properties );
 
 	if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
-    }
+}
 
 
-    void QtDataManager::load_regions_clicked( ) {
+void QtDataManager::load_regions_clicked( ) {
 	QPushButton* button = dynamic_cast<QPushButton*>(sender());
 
 	if(panel_==0 || button==0) return;
@@ -939,9 +950,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	if (load_tree_widget_->currentItem() > 0) {
 
-	    // Display selected file.
-	    path = (ts.dir( )->path( ) + "/" + load_tree_widget_->currentItem()->text(0)).toStdString( );
-	    datatype = dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]).toStdString();
+		// Display selected file.
+		path = (ts.dir( )->path( ) + "/" + load_tree_widget_->currentItem()->text(0)).toStdString( );
+		datatype = dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]).toStdString();
 	}
 
 	if(path=="" || datatype=="" || displaytype=="") return;
@@ -949,59 +960,60 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	panel_->loadRegions( path, datatype );
 
 	if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
-    }
+}
 
-    //<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
-    //      should try to find a way to make this available from QtViewer
-    void QtDataManager::restoreToOld_() {
+//<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
+//      should try to find a way to make this available from QtViewer
+void QtDataManager::restoreToOld_() {
 	// Restore viewer state to existing panel.
 	// Use the first empty panel, or if none, the first panel.
 	List<QtDisplayPanelGui*> DPs = panel_->viewer()->openDPs();
 	ListIter<QtDisplayPanelGui*> dps(DPs);
 
 	for(dps.toStart(); !dps.atEnd(); dps++) {
-	    QtDisplayPanelGui* dp = dps.getRight();
-	    if(dp->displayPanel()->registeredDDs().len()==0) {
-		restoreTo_(dp->displayPanel());		// restore to first empty panel, if any...
-		return;
-	    }
+		QtDisplayPanelGui* dp = dps.getRight();
+		//if(dp->displayPanel()->registeredDDs().len()==0) {
+		if ( dp->displayPanel()->isEmptyRegistered()){
+			restoreTo_(dp->displayPanel());		// restore to first empty panel, if any...
+			return;
+		}
 	}
 
 	dps.toStart();
 	if(!dps.atEnd()) {
-	    QtDisplayPanelGui* dp = dps.getRight();
-	    restoreTo_(dp->displayPanel());		// ...else, restore to first panel, if any...
-	    return;
+		QtDisplayPanelGui* dp = dps.getRight();
+		restoreTo_(dp->displayPanel());		// ...else, restore to first panel, if any...
+		return;
 	}
 
 	restoreToNew_();		// ...else, restore to a new panel.
-    }
+}
 
 
 
-    //<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
-    //      should try to find a way to make this available from QtViewer
-    void QtDataManager::restoreToNew_() {
+//<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
+//      should try to find a way to make this available from QtViewer
+void QtDataManager::restoreToNew_() {
 	// Create new display panel, restore viewer state to it.
 	panel_->viewer()->createDPG();
 
 	List<QtDisplayPanelGui*> DPs = panel_->viewer()->openDPs();
 	if(DPs.len()>0) {				// (Safety: should be True)
-	    ListIter<QtDisplayPanelGui*> dps(DPs);
-	    dps.toEnd();
-	    dps--;					// Newly-created dp should be
-	    QtDisplayPanelGui* dp = dps.getRight();	// the last one on the list.
+		ListIter<QtDisplayPanelGui*> dps(DPs);
+		dps.toEnd();
+		dps--;					// Newly-created dp should be
+		QtDisplayPanelGui* dp = dps.getRight();	// the last one on the list.
 
-	    restoreTo_(dp->displayPanel());
+		restoreTo_(dp->displayPanel());
 	}
-    }
+}
 
 
 
 
-    //<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
-    //      should try to find a way to make this available from QtViewer
-    void QtDataManager::restoreTo_(QtDisplayPanel* dp) {
+//<drs> Duplicate code for this functionality in QtDBusViewerAdaptor::restore(...)
+//      should try to find a way to make this available from QtViewer
+void QtDataManager::restoreTo_(QtDisplayPanel* dp) {
 	if ( tab_info.size( ) == 0 ) init_tab_info( );
 	tab_state ts = tab_info[tabs->currentIndex( )];
 
@@ -1015,21 +1027,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// (will hide open dialog for now, if requested).
 	if(ok && !leaveOpen_->isChecked()) close();
 
-    }
+}
 
 
-    void QtDataManager::lelGotFocus_() {
+void QtDataManager::lelGotFocus_() {
 	load_tree_widget_->clearSelection();
 	load_info_box->hide( );
 	showDisplayButtons(IMAGE);
-    }
+}
 
-    void QtDataManager::showDDCreateError_(String errMsg) {
+void QtDataManager::showDDCreateError_(String errMsg) {
 	// For now, just send to cerr.  (To do: put this on a status line).
 	cerr<<endl<<errMsg<<endl;
-    }
+}
 
-    QStringList QtDataManager::analyseFITSImage(QString path){
+QStringList QtDataManager::analyseFITSImage(QString path){
 	QString qdelim="<delim>";
 	QString qualMark="<qualimg>";
 	QString fitsMark="<fitsimg>";
@@ -1049,45 +1061,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	// create a list with the type plus
 	// the extension name
 	for (int j = 0; j < extlist.size(); j++) {
-	    QString ext = extlist.at(j);
-	    if (ext.contains(qualMark)){
-		typedExtlist << ext.remove(qualMark);
-		typedExtlist << "Quality Ext.";
-	    } else if (ext.contains(fitsMark)){
-		typedExtlist << ext.remove(fitsMark);
-		typedExtlist << "FITS Ext.";
-	    } else {
-		typedExtlist << ext;
-	    }
+		QString ext = extlist.at(j);
+		if (ext.contains(qualMark)){
+			typedExtlist << ext.remove(qualMark);
+			typedExtlist << "Quality Ext.";
+		} else if (ext.contains(fitsMark)){
+			typedExtlist << ext.remove(fitsMark);
+			typedExtlist << "FITS Ext.";
+		} else {
+			typedExtlist << ext;
+		}
 	}
 
 	// return the QString list
 	return typedExtlist;
-    }
+}
 
-    Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
+Bool QtDataManager::isQualImg(const QString &/*extexpr*/){
 	return True;
-    }
+}
 
-    // finally, this string is examined by LatticeSlice1D<T>::stringToMethod,
-    // which only looks at the first letter...
-    std::string QtDataManager::guimethod_to_iamethod( const QString &type ) {
+// finally, this string is examined by LatticeSlice1D<T>::stringToMethod,
+// which only looks at the first letter...
+std::string QtDataManager::guimethod_to_iamethod( const QString &type ) {
 	if ( type == "bicubic" ) return "C";
 	if ( type == "bilinear" ) return "L";
 	if ( type == "nearest" ) return "N";
 	return "";
-    }
+}
 
-    void QtDataManager::showlelButtonClicked( bool clicked ) {
+void QtDataManager::showlelButtonClicked( bool clicked ) {
 	if ( clicked ) {
-	    lelGB_->show( );
-	    rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "true" );
+		lelGB_->show( );
+		rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "true" );
 	} else {
-	    lelGB_->hide( );
-	    rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "false" );
+		lelGB_->hide( );
+		rc.put( "viewer." + panel_->rcid() + ".datamgr.show_lel", "false" );
 	}
-    }
-
+}
 	void QtDataManager::showSliceButtonClicked( bool clicked ) {
 		if ( clicked ) {
 			slice_frame->show( );
@@ -1097,28 +1108,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			rc.put( "viewer." + panel_->rcid() + ".datamgr.show_slice", "false" );
 		}
 	}
-
-    void QtDataManager::leaveopenButtonClicked( bool clicked ) {
+void QtDataManager::leaveopenButtonClicked( bool clicked ) {
 	if ( clicked ) {
-	    rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "true" );
+		rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "true" );
 	} else {
-	    rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "false" );
+		rc.put( "viewer." + panel_->rcid() + ".datamgr.leave_up", "false" );
 	}
-    }
+}
 
 
-    void QtDataManager::update_regrid_options( ) {
+void QtDataManager::update_regrid_options( ) {
 
 	// start out with the regrid combo-box hidden...
 	regrid->hide( );
 
 	// hide regrid option unless an image file is selected...
 	if ( load_tree_widget_ == 0 || load_tree_widget_->currentItem( ) == 0 ||
-	     dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]) != "image" )
-	    return;
+			dataType_.value(uiDataType_[load_tree_widget_->currentItem()->text(1)]) != "image" )
+		return;
 
 	QtDisplayData *cdd = 0;
-	if ( panel_->nDDs( ) == 0 || (cdd = panel_->dd( )) == 0 ) return;
+	//if ( panel_->nDDs( ) == 0 || (cdd = panel_->dd( )) == 0 ) return;
+	if ( panel_->isEmptyDD() || (cdd = panel_->dd()) == 0 ) return;
 
 	const viewer::ImageProperties &cproperties = cdd->imageProperties( );
 	if ( cproperties.ok( ) == false || cproperties.hasSpectralAxis( ) == false ) return;
@@ -1138,24 +1149,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	GenSort<double>::sort(new_velo_range);
 	GenSort<double>::sort(controlling_velo_range);
 	if ( (new_velo_range[0] <= controlling_velo_range[0] && new_velo_range[1] >= controlling_velo_range[0]) ||
-	     (new_velo_range[0] <= controlling_velo_range[1] && new_velo_range[1] >= controlling_velo_range[1]) ||
-	     (new_velo_range[0] >= controlling_velo_range[0] && new_velo_range[1] <= controlling_velo_range[1]) ) {
-	    regrid->setDisabled(false);
+			(new_velo_range[0] <= controlling_velo_range[1] && new_velo_range[1] >= controlling_velo_range[1]) ||
+			(new_velo_range[0] >= controlling_velo_range[0] && new_velo_range[1] <= controlling_velo_range[1]) ) {
+		regrid->setDisabled(false);
 	}
 
-    }
+}
 
-	void QtDataManager::update_slice_options( int ddtp,const QString &name ) {
-		if ( tab_info.size( ) == 0 ) init_tab_info( );
-		tab_state ts = tab_info[tabs->currentIndex( )];
-
-		if ( ddtp == IMAGE ) {
-		    std::string path = (ts.dir( )->path( ) + "/" + name).toStdString( );
-		    slice_gen->enable( path );
-		} else {
-			slice_gen->disable( );
-		}
+void QtDataManager::update_slice_options( int ddtp, const QString & name ){
+	if ( tab_info.size() == 0 ) init_tab_info();
+	tab_state ts = tab_info[tabs->currentIndex()];
+	if ( ddtp == IMAGE ){
+		std::string path = (ts.dir()->path()+"/"+name).toStdString();
+		slice_gen->enable(path);
 	}
+	else {
+		slice_gen->disable();
+	}
+}
+
+
 
     void QtDataManager::fill_image_info( const std::string &path ) {
 
@@ -1163,7 +1176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	tab_state ts = tab_info[tabs->currentIndex( )];
 
 	for ( infofield_list_t::iterator it = ts.infoFields( )->begin( ); it != ts.infoFields( )->end( ); ++it ) {
-	    (*it).first->hide( );
+		(*it).first->hide( );
 	}
 
 	image_properties = path;
@@ -1182,193 +1195,193 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	std::vector<std::string> beamvec = image_properties.medianRestoringBeamAsStr( );
 	if ( beamvec.size( ) == 3 ) {
-	    (*it).first->show( );
-	    if ( image_properties.nBeams( ) > 1 )
-		(*it).first->setTitle("median restoring beam");
-	    else
-		(*it).first->setTitle("restoring beam");
-	    std::string beam = beamvec[0] + ", " + beamvec[1] + ", " + beamvec[2];
-	    (*it).second->setText(QString::fromStdString(beam));
-	    (*it).second->setCursorPosition(0);
-	    ++it;
+		(*it).first->show( );
+		if ( image_properties.nBeams( ) > 1 )
+			(*it).first->setTitle("median restoring beam");
+		else
+			(*it).first->setTitle("restoring beam");
+		std::string beam = beamvec[0] + ", " + beamvec[1] + ", " + beamvec[2];
+		(*it).second->setText(QString::fromStdString(beam));
+		(*it).second->setCursorPosition(0);
+		++it;
 	} else {
-	    ++it;	// align ra/dec & freq/velo (may need to be made smarter)
+		++it;	// align ra/dec & freq/velo (may need to be made smarter)
 	}
 
 	if ( image_properties.hasDirectionAxis( ) ) {
-	    std::vector<std::string> ra_range = image_properties.raRangeAsStr( );
-	    std::vector<std::string> dec_range = image_properties.decRangeAsStr( );
-	    if ( ra_range.size( ) == 2 && dec_range.size( ) == 2 ) {
-		(*it).first->show( );
-		(*it).first->setTitle(QString::fromStdString(image_properties.directionType( )) + " right ascension" );
-		std::string ra_str = ra_range[0] + ", " + ra_range[1];
-		(*it).second->setText(QString::fromStdString(ra_str));
-		(*it).second->setCursorPosition(0);
-		++it;
-		(*it).first->show( );
-		(*it).first->setTitle(QString::fromStdString(image_properties.directionType( )) + " declination" );
-		std::string dec_str = dec_range[0] + ", " + dec_range[1];
-		(*it).second->setText(QString::fromStdString(dec_str));
-		(*it).second->setCursorPosition(0);
-		++it;
-	    } else {
-		(*it).first->show( );
-		(*it).first->setTitle("direction type");
-		(*it).second->setText(QString::fromStdString(image_properties.directionType( )));
-		(*it).second->setCursorPosition(0);
-		++it;
-	    }
+		std::vector<std::string> ra_range = image_properties.raRangeAsStr( );
+		std::vector<std::string> dec_range = image_properties.decRangeAsStr( );
+		if ( ra_range.size( ) == 2 && dec_range.size( ) == 2 ) {
+			(*it).first->show( );
+			(*it).first->setTitle(QString::fromStdString(image_properties.directionType( )) + " right ascension" );
+			std::string ra_str = ra_range[0] + ", " + ra_range[1];
+			(*it).second->setText(QString::fromStdString(ra_str));
+			(*it).second->setCursorPosition(0);
+			++it;
+			(*it).first->show( );
+			(*it).first->setTitle(QString::fromStdString(image_properties.directionType( )) + " declination" );
+			std::string dec_str = dec_range[0] + ", " + dec_range[1];
+			(*it).second->setText(QString::fromStdString(dec_str));
+			(*it).second->setCursorPosition(0);
+			++it;
+		} else {
+			(*it).first->show( );
+			(*it).first->setTitle("direction type");
+			(*it).second->setText(QString::fromStdString(image_properties.directionType( )));
+			(*it).second->setCursorPosition(0);
+			++it;
+		}
 
 	}
 
 	if ( image_properties.hasSpectralAxis( ) ) {
-	    if ( image_properties.freqRange().size( ) == 2 ) {
-		(*it).first->show( );
-		(*it).first->setTitle("frequency range");
-		buf.str("");
-		buf << image_properties.freqRange()[0] << ", " << image_properties.freqRange()[1] << " " << image_properties.freqUnits( );
-		(*it).second->setText(QString::fromStdString(buf.str( )));
-		(*it).second->setCursorPosition(0);
-		++it;
-	    }
+		if ( image_properties.freqRange().size( ) == 2 ) {
+			(*it).first->show( );
+			(*it).first->setTitle("frequency range");
+			buf.str("");
+			buf << image_properties.freqRange()[0] << ", " << image_properties.freqRange()[1] << " " << image_properties.freqUnits( );
+			(*it).second->setText(QString::fromStdString(buf.str( )));
+			(*it).second->setCursorPosition(0);
+			++it;
+		}
 
-	    if ( image_properties.veloRange().size( ) == 2 ) {
-		(*it).first->show( );
-		(*it).first->setTitle("velocity range");
-		buf.str("");
-		buf << image_properties.veloRange()[0] << ", " << image_properties.veloRange()[1] << " km/s" ;
-		(*it).second->setText(QString::fromStdString(buf.str( )));
-		(*it).second->setCursorPosition(0);
-		++it;
-	    }
+		if ( image_properties.veloRange().size( ) == 2 ) {
+			(*it).first->show( );
+			(*it).first->setTitle("velocity range");
+			buf.str("");
+			buf << image_properties.veloRange()[0] << ", " << image_properties.veloRange()[1] << " km/s" ;
+			(*it).second->setText(QString::fromStdString(buf.str( )));
+			(*it).second->setCursorPosition(0);
+			++it;
+		}
 	}
-    }
+}
 
-    void QtDataManager::changeTabContext( int index ) {
+void QtDataManager::changeTabContext( int index ) {
 	if ( tabs->tabText(index) == "load" ) {
-	    save_options->show( );
+		save_options->show( );
 	} else {
-	    save_options->hide( );
+		save_options->hide( );
 	}
 
 	buildDirTree();
-    }
+}
 
-    void QtDataManager::init_tab_info( ) {
+void QtDataManager::init_tab_info( ) {
 	if ( tab_info.size( ) != 0 ) return;
 	for ( int i=0; i < tabs->count( ); ++i ) {
-	    if ( tabs->tabText(i) == "load" ) {
-		tab_info.insert(tab_info_map_t::value_type(i,tab_state( load_directory, load_tree_widget_, std::set<int>( ),
-									load_info_box, &load_ifields, &QtDataManager::load_tab_notify )));
-	    } else if ( tabs->tabText(i) == "save image" ) {
-		std::set<int> filter;
-		filter.insert(CASAREGION);
-		filter.insert(DS9REGION);
-		filter.insert(MEASUREMENT_SET);
-		filter.insert(SKY_CATALOG);
-		filter.insert(RESTORE);
-		tab_info.insert(tab_info_map_t::value_type(i,tab_state( image_directory, image_file_list_, filter,
-									0, 0, &QtDataManager::image_tab_notify,
-									image_data_list_, img_output_name,
-									&QtDataManager::image_tab_error )));
-	    } else if ( tabs->tabText(i) == "save region" ) {
-		std::set<int> filter;
-		filter.insert(IMAGE);
-		filter.insert(MEASUREMENT_SET);
-		filter.insert(SKY_CATALOG);
-		filter.insert(IMAGE);
-		filter.insert(QUALIMG);
-		filter.insert(RESTORE);
-		tab_info.insert(tab_info_map_t::value_type(i,tab_state( region_directory, region_file_list, filter,
-									0, 0, &QtDataManager::region_tab_notify,
-									region_data_list, region_output_name,
-									&QtDataManager::region_tab_error )));
-	    }
+		if ( tabs->tabText(i) == "load" ) {
+			tab_info.insert(tab_info_map_t::value_type(i,tab_state( load_directory, load_tree_widget_, std::set<int>( ),
+					load_info_box, &load_ifields, &QtDataManager::load_tab_notify )));
+		} else if ( tabs->tabText(i) == "save image" ) {
+			std::set<int> filter;
+			filter.insert(CASAREGION);
+			filter.insert(DS9REGION);
+			filter.insert(MEASUREMENT_SET);
+			filter.insert(SKY_CATALOG);
+			filter.insert(RESTORE);
+			tab_info.insert(tab_info_map_t::value_type(i,tab_state( image_directory, image_file_list_, filter,
+					0, 0, &QtDataManager::image_tab_notify,
+					image_data_list_, img_output_name,
+					&QtDataManager::image_tab_error )));
+		} else if ( tabs->tabText(i) == "save region" ) {
+			std::set<int> filter;
+			filter.insert(IMAGE);
+			filter.insert(MEASUREMENT_SET);
+			filter.insert(SKY_CATALOG);
+			filter.insert(IMAGE);
+			filter.insert(QUALIMG);
+			filter.insert(RESTORE);
+			tab_info.insert(tab_info_map_t::value_type(i,tab_state( region_directory, region_file_list, filter,
+					0, 0, &QtDataManager::region_tab_notify,
+					region_data_list, region_output_name,
+					&QtDataManager::region_tab_error )));
+		}
 	}
-    }
+}
 
-    void QtDataManager::img_output_target_changed( const QString &txt ) {
+void QtDataManager::img_output_target_changed( const QString &txt ) {
 
 	if ( img_output_name->text( ) != last_image_extension_tweak_string ) {
-	    if ( txt.endsWith(".fits") && save_fits_img->isChecked( ) == false ) {
-		last_image_extension_tweak_string = img_output_name->text( );
-		save_fits_img->setChecked(true);
-		return;
-	    } else if ( txt.endsWith(".image") && save_casa_img->isChecked( ) == false ) {
-		last_image_extension_tweak_string = img_output_name->text( );
-		save_casa_img->setChecked(true);
-		return;
-	    }
+		if ( txt.endsWith(".fits") && save_fits_img->isChecked( ) == false ) {
+			last_image_extension_tweak_string = img_output_name->text( );
+			save_fits_img->setChecked(true);
+			return;
+		} else if ( txt.endsWith(".image") && save_casa_img->isChecked( ) == false ) {
+			last_image_extension_tweak_string = img_output_name->text( );
+			save_casa_img->setChecked(true);
+			return;
+		}
 	}
 
 	validation_msg msg( output_validation( image_directory->text( ).trimmed( ), img_output_name->text( ).trimmed( ),
-					       save_fits_img->isChecked( ) ? validation_msg::FITS : validation_msg::CASA ) );
+			save_fits_img->isChecked( ) ? validation_msg::FITS : validation_msg::CASA ) );
 	switch (msg.valid) {
-	    case validation_msg::VALID:
+	case validation_msg::VALID:
 		img_output_error->setStyleSheet("color: green");
 		img_do_save->setEnabled(true);
 		break;
-	    case validation_msg::INVALID:
+	case validation_msg::INVALID:
 		img_output_error->setStyleSheet("color: red");
 		img_do_save->setEnabled(false);
 		break;
-	    case validation_msg::WARN:
+	case validation_msg::WARN:
 		img_output_error->setStyleSheet("color: orange");
 		img_do_save->setEnabled(true);
 		break;
 	}
 	img_output_error->setText( msg.msg + msg.path );
-    }
+}
 
 
-    void QtDataManager::img_do_output( ){
+void QtDataManager::img_do_output( ){
 
 	// insures that we have an acceptable output path and data to save...
 	validation_msg msg( output_validation( image_directory->text( ).trimmed( ), img_output_name->text( ).trimmed( ),
-					       save_fits_img->isChecked( ) ? validation_msg::FITS : validation_msg::CASA ) );
+			save_fits_img->isChecked( ) ? validation_msg::FITS : validation_msg::CASA ) );
 
 	if ( msg.valid == validation_msg::INVALID ) {
-	    img_output_error->setStyleSheet("color: red");
-	    img_output_error->setText( msg.msg + msg.path );
-	    img_do_save->setEnabled(false);
-	    return;
+		img_output_error->setStyleSheet("color: red");
+		img_output_error->setText( msg.msg + msg.path );
+		img_do_save->setEnabled(false);
+		return;
 	}
 
 	QTreeWidgetItem *item = image_data_list_->currentItem( );
 	if ( item == 0 ) {
-	    img_output_error->setStyleSheet("color: red");
-	    img_output_error->setText( "no data to save" );
-	    img_do_save->setEnabled(false);
-	    return;
+		img_output_error->setStyleSheet("color: red");
+		img_output_error->setText( "no data to save" );
+		img_do_save->setEnabled(false);
+		return;
 	}
 
 	QtDisplayData *qdd = display_datas[item->text(0)];
 
 	ImageInterface<Float>* img = qdd->imageInterface();
 	if (!img){
-	    img_output_error->setStyleSheet("color: red");
-	    img_output_error->setText( "cannot export data, complex images cannot be exported" );
-	    img_do_save->setEnabled(false);
-	    return;
+		img_output_error->setStyleSheet("color: red");
+		img_output_error->setText( "cannot export data, complex images cannot be exported" );
+		img_do_save->setEnabled(false);
+		return;
 	}
 
 	if ( msg.path.toStdString( ) == viewer::canonical_path(qdd->path( )) ) {
-	    img_output_error->setStyleSheet("color: red");
-	    img_output_error->setText( "error: input and output are the same" );
-	    img_do_save->setEnabled(false);
-	    return;
+		img_output_error->setStyleSheet("color: red");
+		img_output_error->setText( "error: input and output are the same" );
+		img_do_save->setEnabled(false);
+		return;
 	}
 
 	bool OK = false;
 	switch ( msg.output_format ) {
-	    case validation_msg::CASA:
+	case validation_msg::CASA:
 		OK = export_to_casa(img,msg.path.toStdString( ));
 		break;
-	    case validation_msg::FITS:
+	case validation_msg::FITS:
 		OK = export_to_fits(img,msg.path.toStdString( ));
 		break;
-	    default:
-	        img_output_error->setStyleSheet("color: red");
+	default:
+		img_output_error->setStyleSheet("color: red");
 		img_output_error->setText( "export failed" );
 		img_do_save->setEnabled(false);
 		OK = false;
@@ -1376,349 +1389,349 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	if( OK && ! leaveOpen_->isChecked() ) close();  // (will hide dialog for now).
-    }
+}
 
 
-    void QtDataManager::region_ds9_csys_disable( bool checked ) {
+void QtDataManager::region_ds9_csys_disable( bool checked ) {
 	if ( checked )
-	    save_ds9_csys->setDisabled(false);
+		save_ds9_csys->setDisabled(false);
 	else
-	    save_ds9_csys->setDisabled(true);
-    }
+		save_ds9_csys->setDisabled(true);
+}
 
 
-    void QtDataManager::region_output_target_changed( const QString &txt ) {
+void QtDataManager::region_output_target_changed( const QString &txt ) {
 
 	if ( QObject::sender( ) == save_casa_region ) {
-	    if ( save_casa_region->isChecked( ) && save_ds9_region->isChecked( ) )
-		save_ds9_region->setChecked(false);
+		if ( save_casa_region->isChecked( ) && save_ds9_region->isChecked( ) )
+			save_ds9_region->setChecked(false);
 	} else if ( QObject::sender( ) == save_ds9_region ) {
-	    if ( save_casa_region->isChecked( ) && save_ds9_region->isChecked( ) )
-		save_casa_region->setChecked(false);
+		if ( save_casa_region->isChecked( ) && save_ds9_region->isChecked( ) )
+			save_casa_region->setChecked(false);
 	}
-	  
+
 
 	if ( region_output_name->text( ) != last_region_extension_tweak_string ) {
-	    if ( txt.endsWith(".crtf") && save_casa_region->isChecked( ) == false ) {
-		last_region_extension_tweak_string = region_output_name->text( );
-		save_casa_region->setChecked(true);
-		return;
-	    }
+		if ( txt.endsWith(".crtf") && save_casa_region->isChecked( ) == false ) {
+			last_region_extension_tweak_string = region_output_name->text( );
+			save_casa_region->setChecked(true);
+			return;
+		}
 	}
 
 	validation_msg msg( output_validation( region_directory->text( ).trimmed( ), region_output_name->text( ).trimmed( ),
-					       save_ds9_region->isChecked( ) ? validation_msg::DS9 : validation_msg::CRTF ) );
+			save_ds9_region->isChecked( ) ? validation_msg::DS9 : validation_msg::CRTF ) );
 	switch (msg.valid) {
-	    case validation_msg::VALID:
+	case validation_msg::VALID:
 		region_output_error->setStyleSheet("color: green");
 		region_do_save->setEnabled(true);
 		break;
-	    case validation_msg::INVALID:
+	case validation_msg::INVALID:
 		region_output_error->setStyleSheet("color: red");
 		region_do_save->setEnabled(false);
 		break;
-	    case validation_msg::WARN:
+	case validation_msg::WARN:
 		region_output_error->setStyleSheet("color: orange");
 		region_do_save->setEnabled(true);
 		break;
 	}
 	region_output_error->setText( msg.msg + msg.path );
-    }
+}
 
-    void QtDataManager::region_do_output( ){
+void QtDataManager::region_do_output( ){
 
 	// insures that we have an acceptable output path and data to save...
 	validation_msg msg( output_validation( region_directory->text( ).trimmed( ), region_output_name->text( ).trimmed( ),
-					       save_ds9_region->isChecked( ) ? validation_msg::DS9 : validation_msg::CRTF ) );
+			save_ds9_region->isChecked( ) ? validation_msg::DS9 : validation_msg::CRTF ) );
 
 	if ( msg.valid == validation_msg::INVALID ) {
-	    region_output_error->setStyleSheet("color: red");
-	    region_output_error->setText( msg.msg + msg.path );
-	    region_do_save->setEnabled(false);
-	    return;
+		region_output_error->setStyleSheet("color: red");
+		region_output_error->setText( msg.msg + msg.path );
+		region_do_save->setEnabled(false);
+		return;
 	}
 
 	std::list<viewer::QtRegionState*> region_list;
 	for ( int i=0; i < region_data_list->topLevelItemCount( );  ++i) {
-	    QTreeWidgetItem *item = region_data_list->topLevelItem(i);
-	    if ( item->checkState(0) == Qt::Checked ) {
-		region_list.push_back(treeitem_to_region[item]->state( ));
-	    }
+		QTreeWidgetItem *item = region_data_list->topLevelItem(i);
+		if ( item->checkState(0) == Qt::Checked ) {
+			region_list.push_back(treeitem_to_region[item]->state( ));
+		}
 	}
 
 	if ( region_list.size( ) == 0 ) {
-	    region_output_error->setStyleSheet("color: red");
-	    region_output_error->setText( "no regions for output" );
-	    region_do_save->setEnabled(false);
-	    return;
+		region_output_error->setStyleSheet("color: red");
+		region_output_error->setText( "no regions for output" );
+		region_do_save->setEnabled(false);
+		return;
 	}
 
 	if ( msg.output_format != validation_msg::CRTF &&
-	     msg.output_format != validation_msg::DS9 ) {
-	    region_output_error->setStyleSheet("color: red");
-	    region_output_error->setText( "bad region output format" );
-	    region_do_save->setEnabled(false);
-	    return;
+			msg.output_format != validation_msg::DS9 ) {
+		region_output_error->setStyleSheet("color: red");
+		region_output_error->setText( "bad region output format" );
+		region_do_save->setEnabled(false);
+		return;
 	}
 
 	std::string err = panel_->outputRegions( region_list, msg.path.toStdString( ),
-						 msg.output_format == validation_msg::DS9 ? "ds9" : "crtf",
-						 save_ds9_csys->currentText( ).toStdString( ) );
+			msg.output_format == validation_msg::DS9 ? "ds9" : "crtf",
+					save_ds9_csys->currentText( ).toStdString( ) );
 	if ( err.size( ) == 0 ) {
-	    region_output_error->setStyleSheet("color: blue");
-	    region_output_error->setText("success...");
-	    region_do_save->setEnabled(false);
+		region_output_error->setStyleSheet("color: blue");
+		region_output_error->setText("success...");
+		region_do_save->setEnabled(false);
 
-	    if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
+		if(!leaveOpen_->isChecked()) close();  // (will hide dialog for now).
 
 	} else {
-	    region_output_error->setStyleSheet("color: red");
-	    region_output_error->setText( QString::fromStdString(err) );
-	    region_do_save->setEnabled(false);
+		region_output_error->setStyleSheet("color: red");
+		region_output_error->setText( QString::fromStdString(err) );
+		region_do_save->setEnabled(false);
 	}
 
-    }
+}
 
-    namespace viewer {
-	template <typename T>
-	struct join {
-	    join( ) : dosep(false) { }
-	    join( const T &s ) : dosep(true), sep(s) { }
-	    join( const join<T> &o ) : dosep(o.dosep), sep(o.sep), accum(o.accum) { }
-	    ~join( ) { }
-	    void operator( )( const T &c ) {
+namespace viewer {
+template <typename T>
+struct join {
+	join( ) : dosep(false) { }
+	join( const T &s ) : dosep(true), sep(s) { }
+	join( const join<T> &o ) : dosep(o.dosep), sep(o.sep), accum(o.accum) { }
+	~join( ) { }
+	void operator( )( const T &c ) {
 		if ( accum.size( ) > 0 ) {
-		    if ( dosep )
-			accum = accum + sep + c;
-		    else
-			accum = accum + c;
+			if ( dosep )
+				accum = accum + sep + c;
+			else
+				accum = accum + c;
 		} else {
-		    accum = c;
+			accum = c;
 		}
-	    }
+	}
 
-	    operator T( ) { return accum; }
+	operator T( ) { return accum; }
 
-	private:
-	    bool dosep;
-	    T sep;
-	    T accum;
-	};
+private:
+	bool dosep;
+	T sep;
+	T accum;
+};
 
 
-	// this should be expanded with another functor to resolve internal
-	// symlinks in a separated path... but for now (in the QtDataManager)
-	// I'll just use the Qt canonical path function...
-	struct split_path {
-	    std::string prefix( ) const { return root == IS_ROOT ? std::string(1,sep) : std::string( ); }
-	    std::string separator( ) const { return std::string(1,sep); }
-	    split_path( bool strip_dotdot=true ) : strip(strip_dotdot), root(UNINITIALIZED), size(128), off(0),
-						   buf((char*) malloc(size*sizeof(char)))
-					{ buf[off] = '\0'; }
-	    split_path( const split_path &o ) : strip(o.strip), root(o.root), size(o.size),
-						off(o.off), buf((char*) malloc(size*sizeof(char))),
-						separated(o.separated)
-					{ memcpy(buf,o.buf,off); }
-	    ~split_path( ) { free(buf); }
-	    void operator( )( char c ) throw (std::invalid_argument) {
+// this should be expanded with another functor to resolve internal
+// symlinks in a separated path... but for now (in the QtDataManager)
+// I'll just use the Qt canonical path function...
+struct split_path {
+	std::string prefix( ) const { return root == IS_ROOT ? std::string(1,sep) : std::string( ); }
+	std::string separator( ) const { return std::string(1,sep); }
+	split_path( bool strip_dotdot=true ) : strip(strip_dotdot), root(UNINITIALIZED), size(128), off(0),
+			buf((char*) malloc(size*sizeof(char)))
+	{ buf[off] = '\0'; }
+	split_path( const split_path &o ) : strip(o.strip), root(o.root), size(o.size),
+			off(o.off), buf((char*) malloc(size*sizeof(char))),
+			separated(o.separated)
+	{ memcpy(buf,o.buf,off); }
+	~split_path( ) { free(buf); }
+	void operator( )( char c ) throw (std::invalid_argument) {
 		if ( root == UNINITIALIZED )
-		    root = (c == sep ? IS_ROOT : NOT_ROOT);
+			root = (c == sep ? IS_ROOT : NOT_ROOT);
 		if ( c == sep ) {
-		    if ( off > 0 ) {
+			if ( off > 0 ) {
+				buf[off] = '\0';
+				if ( strip ) {
+					if ( *buf == '.' ) {
+						if ( *(buf+1) == '\0' ) {
+							off = 0;
+							return;
+						} else if ( *(buf+1) == '.' && *(buf+2) == '\0' ) {
+							if ( separated.size( ) > 0 && separated.back() != ".." ) {
+								off = 0;
+								separated.pop_back( );
+								return;
+							} else if ( root == IS_ROOT ) {
+								throw std::invalid_argument("stripping '..' goes above root directory");
+							}
+						}
+					}
+				}
+				separated.push_back(buf);
+				off = 0;
+			}
+		} else {		/******* may strip out embeded '\0' here *******/
+			if ( off >= size - 1 ) {
+				size *= 2;
+				buf = (char*) realloc( buf, size*sizeof(char) );
+			}
+			buf[off++] = c;
+		}
+	}
+	operator std::list<std::string>( ) throw (std::invalid_argument) {
+		if ( off != 0 ) {
 			buf[off] = '\0';
 			if ( strip ) {
-			    if ( *buf == '.' ) {
-				if ( *(buf+1) == '\0' ) {
-				    off = 0;
-				    return;
-				} else if ( *(buf+1) == '.' && *(buf+2) == '\0' ) {
-				    if ( separated.size( ) > 0 && separated.back() != ".." ) {
-					off = 0;
-					separated.pop_back( );
-					return;
-				    } else if ( root == IS_ROOT ) {
-					throw std::invalid_argument("stripping '..' goes above root directory");
-				    }
+				if ( *buf == '.' ) {
+					if ( *(buf+1) == '\0' ) {
+						off = 0;
+					} else if ( *(buf+1) == '.' && *(buf+2) == '\0' ) {
+						if ( separated.size( ) > 0 ) {
+							off = 0;
+							separated.pop_back( );
+						} else if ( root == IS_ROOT ) {
+							throw std::invalid_argument("stripping '..' goes above root directory");
+						}
+					}
 				}
-			    }
 			}
-			separated.push_back(buf);
-			off = 0;
-		    }
-		} else {		/******* may strip out embeded '\0' here *******/
-		    if ( off >= size - 1 ) {
-			size *= 2;
-			buf = (char*) realloc( buf, size*sizeof(char) );
-		    }
-		    buf[off++] = c;
-		}
-	    }
-	    operator std::list<std::string>( ) throw (std::invalid_argument) {
-		if ( off != 0 ) {
-		    buf[off] = '\0';
-		    if ( strip ) {
-			if ( *buf == '.' ) {
-			    if ( *(buf+1) == '\0' ) {
+			if ( off != 0 ) {
 				off = 0;
-			    } else if ( *(buf+1) == '.' && *(buf+2) == '\0' ) {
-				if ( separated.size( ) > 0 ) {
-				    off = 0;
-				    separated.pop_back( );
-				} else if ( root == IS_ROOT ) {
-				    throw std::invalid_argument("stripping '..' goes above root directory");
-				}
-			    }
+				separated.push_back(buf);
 			}
-		    }
-		    if ( off != 0 ) {
-			off = 0;
-			separated.push_back(buf);
-		    }
 		}
 		return separated;
-	    }
+	}
 
-	    operator std::string( ) throw (std::invalid_argument) {
+	operator std::string( ) throw (std::invalid_argument) {
 		if ( off != 0 ) {
-		    buf[off] = '\0';
-		    if ( strip ) {
-			if ( *buf == '.' ) {
-			    if ( *(buf+1) == '\0' ) {
-				off = 0;
-			    } else if ( *(buf+1) == '.' && *(buf+2) == '\0' ) {
-				if ( separated.size( ) > 0 ) {
-				    off = 0;
-				    separated.pop_back( );
-				} else if ( root == IS_ROOT ) {
-				    throw std::invalid_argument("stripping '..' goes above root directory");
+			buf[off] = '\0';
+			if ( strip ) {
+				if ( *buf == '.' ) {
+					if ( *(buf+1) == '\0' ) {
+						off = 0;
+					} else if ( *(buf+1) == '.' && *(buf+2) == '\0' ) {
+						if ( separated.size( ) > 0 ) {
+							off = 0;
+							separated.pop_back( );
+						} else if ( root == IS_ROOT ) {
+							throw std::invalid_argument("stripping '..' goes above root directory");
+						}
+					}
 				}
-			    }
 			}
-		    }
-		    if ( off != 0 ) {
-			off = 0;
-			separated.push_back(buf);
-		    }
+			if ( off != 0 ) {
+				off = 0;
+				separated.push_back(buf);
+			}
 		}
 		if ( root == IS_ROOT )
-		    return std::string(1,sep) + (std::string) (std::for_each(separated.begin(), separated.end( ), join<std::string>(std::string(1,sep))));
+			return std::string(1,sep) + (std::string) (std::for_each(separated.begin(), separated.end( ), join<std::string>(std::string(1,sep))));
 		else
-		    return std::for_each(separated.begin(), separated.end( ), join<std::string>(std::string(1,sep)));
-	    }
+			return std::for_each(separated.begin(), separated.end( ), join<std::string>(std::string(1,sep)));
+	}
 
-	private:
-	    static const char sep = '/';
-	    bool strip;
-	    enum { UNINITIALIZED, IS_ROOT, NOT_ROOT } root;		// path starts at root?
-	    size_t size;
-	    size_t off;
-	    char *buf;
-	    std::list<std::string> separated;
-	};
+private:
+	static const char sep = '/';
+	bool strip;
+	enum { UNINITIALIZED, IS_ROOT, NOT_ROOT } root;		// path starts at root?
+	size_t size;
+	size_t off;
+	char *buf;
+	std::list<std::string> separated;
+};
 
 
-	std::string readlink( const std::string &path ) {
-	    int buffer_size = 128;
-	    char *buffer = new char[buffer_size+1];
-	    int nchars = ::readlink( path.c_str( ), buffer, buffer_size );
-	    while ( nchars == buffer_size ) {
+std::string readlink( const std::string &path ) {
+	int buffer_size = 128;
+	char *buffer = new char[buffer_size+1];
+	int nchars = ::readlink( path.c_str( ), buffer, buffer_size );
+	while ( nchars == buffer_size ) {
 		buffer_size *= 2;
 		delete [] buffer;
 		buffer = new char[buffer_size+1];
 		nchars = ::readlink( path.c_str( ), buffer, buffer_size );
-	    }
-	    std::string result;
-	    if ( nchars > 0 ) {
+	}
+	std::string result;
+	if ( nchars > 0 ) {
 		buffer[nchars] = '\0';
 		result = buffer;
-	    }
-	    delete [] buffer;
-	    return result;
 	}
+	delete [] buffer;
+	return result;
+}
 
-	std::string canonical_path( const std::string &path ) {
-	    split_path split = std::for_each(path.begin(),path.end(),split_path( ));
-	    if ( split.prefix( ) != split.separator( ) ) {
+std::string canonical_path( const std::string &path ) {
+	split_path split = std::for_each(path.begin(),path.end(),split_path( ));
+	if ( split.prefix( ) != split.separator( ) ) {
 		char wd[PATH_MAX+1];
 		if ( getcwd(wd,PATH_MAX+1) != NULL ) {
-		    // split already has '.' and '..' stripped out...
-		    // if new path == old path, probably things have run off the rails...
-		    std::string recurse = wd + split.separator( ) + (std::string) split;
-		    if ( recurse != path )
-			return canonical_path( recurse );
+			// split already has '.' and '..' stripped out...
+			// if new path == old path, probably things have run off the rails...
+			std::string recurse = wd + split.separator( ) + (std::string) split;
+			if ( recurse != path )
+				return canonical_path( recurse );
 		}
-	    }
-	    std::list<std::string> sep = split;
-	    std::string prefix = split.prefix( );
-	    std::string accum;
-	    struct stat statbuf;
-	    for ( std::list<std::string>::iterator it = sep.begin( ); it != sep.end( ); ++it ) {
+	}
+	std::list<std::string> sep = split;
+	std::string prefix = split.prefix( );
+	std::string accum;
+	struct stat statbuf;
+	for ( std::list<std::string>::iterator it = sep.begin( ); it != sep.end( ); ++it ) {
 		std::string cur = accum + split.separator( ) + *it;
 		if ( lstat( cur.c_str( ), &statbuf ) == 0 && S_ISLNK(statbuf.st_mode) ) {
-		    std::string lnk = readlink( cur );
-		    if ( lnk[0] == split.separator( )[0] ) {
-			return canonical_path(lnk + split.separator( ) + (std::string) std::for_each( ++it, sep.end( ), join<std::string>(split.separator( ))));
-		    } else {
-			return canonical_path(accum + split.separator( ) + lnk + split.separator( ) + (std::string) std::for_each( ++it, sep.end( ), join<std::string>(split.separator( ))));
-		    }
+			std::string lnk = readlink( cur );
+			if ( lnk[0] == split.separator( )[0] ) {
+				return canonical_path(lnk + split.separator( ) + (std::string) std::for_each( ++it, sep.end( ), join<std::string>(split.separator( ))));
+			} else {
+				return canonical_path(accum + split.separator( ) + lnk + split.separator( ) + (std::string) std::for_each( ++it, sep.end( ), join<std::string>(split.separator( ))));
+			}
 		}
 		accum = cur;
-	    }
-	    return accum;
 	}
-    }
+	return accum;
+}
+}
 
 
-    QString canonical_path( const QString &qs ) {
+QString canonical_path( const QString &qs ) {
 	return QString::fromStdString(viewer::canonical_path(qs.toStdString( )));
-    }
+}
 
-    QtDataManager::validation_msg QtDataManager::output_validation( const QString &dir, const QString &path, validation_msg::output_format_t format) const {
+QtDataManager::validation_msg QtDataManager::output_validation( const QString &dir, const QString &path, validation_msg::output_format_t format) const {
 
 	if ( format == validation_msg::CASA || format == validation_msg::FITS ) {
-	    if ( image_data_list_->currentItem( ) == 0 )
-		return validation_msg("",format,validation_msg::INVALID,"no data to save");
+		if ( image_data_list_->currentItem( ) == 0 )
+			return validation_msg("",format,validation_msg::INVALID,"no data to save");
 	} else if ( format == validation_msg::CRTF || format == validation_msg::DS9 ) {
-	    int regions_selected = 0;
-	    for ( int i=0; i < region_data_list->topLevelItemCount( );  ++i) {
-		if ( region_data_list->topLevelItem(i)->checkState(0) == Qt::Checked ) {
-		    regions_selected += 1;
+		int regions_selected = 0;
+		for ( int i=0; i < region_data_list->topLevelItemCount( );  ++i) {
+			if ( region_data_list->topLevelItem(i)->checkState(0) == Qt::Checked ) {
+				regions_selected += 1;
+			}
 		}
-	    }
-	    if ( regions_selected == 0 )
-		return validation_msg("",format,validation_msg::INVALID,"no data to save");
+		if ( regions_selected == 0 )
+			return validation_msg("",format,validation_msg::INVALID,"no data to save");
 	}
 
 	if ( path.isEmpty( ) )
-	    return validation_msg("",format,validation_msg::INVALID,"no file specified");
+		return validation_msg("",format,validation_msg::INVALID,"no file specified");
 
 	QString combined_path = (path.startsWith("/") ? path : (dir + "/" + path));
 	QFileInfo f(combined_path);
 
 	if ( f.exists( ) ) {
-	    if ( ! f.isWritable( ) ) {
-		return validation_msg(canonical_path(combined_path),format,validation_msg::INVALID,"not writable: ");
-	    } else if ( format == validation_msg::CASA && ! f.isDir( ) ) {
-		return validation_msg(canonical_path(combined_path),format,validation_msg::INVALID,"exists & not a dir: ");
-	    } else if ( ( format == validation_msg::CRTF || format == validation_msg::DS9 ||
-			  format == validation_msg::FITS ) && ! f.isFile( ) ) {
-		return validation_msg(canonical_path(combined_path),format,validation_msg::INVALID,"exists & not a file: ");
-	    } else {
-		return validation_msg(canonical_path(combined_path),format,validation_msg::WARN,"will overwrite: ");
-	    }
+		if ( ! f.isWritable( ) ) {
+			return validation_msg(canonical_path(combined_path),format,validation_msg::INVALID,"not writable: ");
+		} else if ( format == validation_msg::CASA && ! f.isDir( ) ) {
+			return validation_msg(canonical_path(combined_path),format,validation_msg::INVALID,"exists & not a dir: ");
+		} else if ( ( format == validation_msg::CRTF || format == validation_msg::DS9 ||
+				format == validation_msg::FITS ) && ! f.isFile( ) ) {
+			return validation_msg(canonical_path(combined_path),format,validation_msg::INVALID,"exists & not a file: ");
+		} else {
+			return validation_msg(canonical_path(combined_path),format,validation_msg::WARN,"will overwrite: ");
+		}
 	} else {
-	    QFileInfo dir(f.dir( ).path( ));
-	    if ( ! dir.isWritable( ) ) {
-		return validation_msg(canonical_path(combined_path),format,validation_msg::INVALID,"not writable: ");
-	    } else {
-		return validation_msg(canonical_path(combined_path),format,validation_msg::VALID,"writing to: ");
-	    }
+		QFileInfo dir(f.dir( ).path( ));
+		if ( ! dir.isWritable( ) ) {
+			return validation_msg(canonical_path(combined_path),format,validation_msg::INVALID,"not writable: ");
+		} else {
+			return validation_msg(canonical_path(combined_path),format,validation_msg::VALID,"writing to: ");
+		}
 	}
 	return validation_msg(canonical_path(combined_path),format,validation_msg::INVALID,"internal error: ");
-    }
+}
 
 
-    bool QtDataManager::export_to_fits(ImageInterface<Float>* img, std::string outFile){
+bool QtDataManager::export_to_fits(ImageInterface<Float>* img, std::string outFile){
 
 	// thats the default values for the call "ImageFITSConverter::ImageToFITS"
 	String error; uInt memoryInMB(64); Bool preferVelocity(True);
@@ -1760,17 +1773,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	//
 	if (error.size()>0){
-	    img_output_error->setStyleSheet("color: red");
-	    img_output_error->setText( "error: \""+ QString(error.c_str()) );
-	    img_do_save->setEnabled(false);
-	    return false;
+		img_output_error->setStyleSheet("color: red");
+		img_output_error->setText( "error: \""+ QString(error.c_str()) );
+		img_do_save->setEnabled(false);
+		return false;
 	} else {
-	    img_output_error->setStyleSheet("color: blue");
-	    img_output_error->setText("success...");
-	    img_do_save->setEnabled(false);
-	    return true;
+		img_output_error->setStyleSheet("color: blue");
+		img_output_error->setText("success...");
+		img_do_save->setEnabled(false);
+		return true;
 	}
-    }
+}
 
 void QtDataManager::getSpectralCoordFlags(const ImageInterface<Float>* img, Bool &preferVelocity, Bool &opticalVelocity, Bool &preferWavelength, Bool &preferAirWavelength){
 	// check for a spectral axis
@@ -1827,45 +1840,45 @@ void QtDataManager::getSpectralCoordFlags(const ImageInterface<Float>* img, Bool
 }
 
 bool QtDataManager::export_to_casa(ImageInterface<Float> *img, String outFile){
-   try{
-	// from: synthesis/TransformMachines/Utils.h
-   	// still to be copied over:
-   	// regions, history??
-   	PagedImage<Float> newPagedImage(img->shape(), img->coordinates(), outFile);
-   	LatticeExpr<Float> le(*img);
-   	newPagedImage.copyData(le);
+	try{
+		// from: synthesis/TransformMachines/Utils.h
+		// still to be copied over:
+		// regions, history??
+		PagedImage<Float> newPagedImage(img->shape(), img->coordinates(), outFile);
+		LatticeExpr<Float> le(*img);
+		newPagedImage.copyData(le);
 
-   	// check for a mask
-   	if (img->isMasked()){
-   		// get the default mask name
-   		const String maskName = img->getDefaultMask();
+		// check for a mask
+		if (img->isMasked()){
+			// get the default mask name
+			const String maskName = img->getDefaultMask();
 
-   		// create a mask in the output image
-   		if (maskName.size()>0)
-   			newPagedImage.makeMask(maskName, True, True);
-   		else
-   			newPagedImage.makeMask("default", True, True);
+			// create a mask in the output image
+			if (maskName.size()>0)
+				newPagedImage.makeMask(maskName, True, True);
+			else
+				newPagedImage.makeMask("default", True, True);
 
-   		// copy the mask over
-   		(newPagedImage.pixelMask()).copyData(img->pixelMask());
-   		//img->pixelMask().copyDataTo(newPagedImage.pixelMask());
-   	}
+			// copy the mask over
+			(newPagedImage.pixelMask()).copyData(img->pixelMask());
+			//img->pixelMask().copyDataTo(newPagedImage.pixelMask());
+		}
 
-   	// copy ImageInfo and MiscInfo
-   	newPagedImage.setImageInfo(img->imageInfo());
-   	newPagedImage.setMiscInfo(img->miscInfo());
+		// copy ImageInfo and MiscInfo
+		newPagedImage.setImageInfo(img->imageInfo());
+		newPagedImage.setMiscInfo(img->miscInfo());
 
-	img_output_error->setStyleSheet("color: blue");
-	img_output_error->setText("success...");
-	img_do_save->setEnabled(false);
-	return true;
+		img_output_error->setStyleSheet("color: blue");
+		img_output_error->setText("success...");
+		img_do_save->setEnabled(false);
+		return true;
 
-    } catch (AipsError x) {
-	img_output_error->setStyleSheet("color: red");
-	img_output_error->setText( "error: \""+ QString((x.getMesg()).c_str()) );
-	img_do_save->setEnabled(false);
-	return false;
-    }
+	} catch (AipsError x) {
+		img_output_error->setStyleSheet("color: red");
+		img_output_error->setText( "error: \""+ QString((x.getMesg()).c_str()) );
+		img_do_save->setEnabled(false);
+		return false;
+	}
 }
 
 

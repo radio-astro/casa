@@ -23,54 +23,41 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef IMAGEVIEW_QO_H
-#define IMAGEVIEW_QO_H
-
-#include <QtGui/QFrame>
-#include <display/QtViewer/ImageView.ui.h>
-
-
+#ifndef IMAGETRACKER_H_
+#define IMAGETRACKER_H_
 
 namespace casa {
 
 class QtDisplayData;
 
-class ImageView : public QFrame
-{
-    Q_OBJECT
+/**
+ * Interface class designed to reduce the coupling between the GUI class,
+ * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
+ * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
+ */
 
+class ImageTracker {
 public:
-    ImageView(QtDisplayData* data, QWidget *parent = 0);
-    QString getName() const;
-    bool isImageSelected() const;
-    void setImageSelected( bool selected );
-    void makeDrag();
-    ~ImageView();
+	virtual void imageAdded( QtDisplayData* image ) = 0;
+	virtual void imageRemoved( QtDisplayData* image ) = 0;
+	virtual void masterImageSelected( QtDisplayData* image ) =0;
+	ImageTracker(){}
+	virtual ~ImageTracker(){}
 
-signals:
-	void imageSelected(ImageView*);
+};
 
-protected:
-    virtual void mousePressEvent( QMouseEvent* event );
-    virtual void mouseMoveEvent( QMouseEvent* event );
-
-private slots:
-	void openCloseDisplay();
-
-private:
-	void setBackgroundColor( QColor color );
-	void minimizeDisplay();
-	void maximizeDisplay();
-    enum ImageState { IMAGE_OPEN, IMAGE_REGISTERED, IMAGE_CLOSED };
-    ImageState state;
-    bool selected;
-    bool minimized;
-    QColor selectedColor;
-    QColor normalColor;
-    QtDisplayData* imageData;
-    Ui::ImageViewClass ui;
+/**
+ * Interface implemented by GUI panels (QtDisplayPanel) that can add/remove
+ * QtDisplayData's.  Called by the DisplayDataHolder to make
+ * changes through the existing infrastructure.
+ */
+class ImageDisplayer {
+public:
+	ImageDisplayer(){}
+	virtual ~ImageDisplayer(){}
+	virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
+	virtual void unregisterDD( QtDisplayData* dd ) = 0;
 };
 
 }
-
-#endif // IMAGEVIEW_QO_H
+#endif /* IMAGETRACKER_H_ */

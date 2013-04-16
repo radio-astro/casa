@@ -192,6 +192,8 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 		path_(path),
 		dataType_(dataType),
 		displayType_(displayType),
+		DISPLAY_RASTER("raster"), DISPLAY_CONTOUR("contour"),
+		DISPLAY_VECTOR("vector"), DISPLAY_MARKER( "marker"),
 		im_(0),
 		cim_(0),
 		dd_(0),
@@ -217,18 +219,24 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 		if( name_.length() > 25 )
 			name_ =  path_.substr(0,15) + "..." + path_.substr(path_.length()-7,path_.length());
 	} else {
-		List<QtDisplayData*> dds_ = panel_->registeredDDs();
+		//List<QtDisplayData*> dds_ = panel_->registeredDDs();
+
 		method = ddo["regrid"];
 		name_ = Path(path_).baseName();
-		if ( dds_.len( ) > 0 && method != "" &&
+		QtDisplayPanel* displayPanel = panel_->displayPanel();
+		if ( !displayPanel->isEmptyRegistered()){
+			if ( /*dds_.len( ) > 0 &&*/ method != "" &&
 				(method == "N" || method == "L" || method == "C") ) {
-			ListIter<QtDisplayData*> dds(dds_);
-			dds.toStart( );
-			regrid_to = dds.getRight( );
+				//ListIter<QtDisplayData*> dds(dds_);
+				//dds.toStart( );
+				//regrid_to = dds.getRight( );
+				DisplayDataHolder::DisplayDataIterator iter = displayPanel->beginRegistered();
+				regrid_to = (*iter);
+			}
 		}
 	}
 
-	if(displayType!="raster") name_ += "-"+displayType_;
+	if(isRaster()) name_ += "-"+displayType_;
 	// Default; can be changed with setName()
 	// (and should, if it duplicates another name).
 
@@ -243,7 +251,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 			dd_ = new SkyCatOverlayDD(path);
 			if (dd_==0) throw(AipsError("Couldn't create skycatalog"));
 		}
-		else if(dataType_=="ms" && displayType_=="raster") {
+		else if(dataType_=="ms" && isRaster() ) {
 			dd_ = new MSAsRaster( path_, ddo );
 		}
 		else if(dataType_=="image" || dataType_=="lel") {
@@ -426,7 +434,7 @@ void QtDisplayData::initImage(){
 	IPosition fixedPos(ndim);
 	fixedPos = 0;
 
-	if(displayType_=="raster") {
+	if( isRaster()) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
 			else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
@@ -436,7 +444,7 @@ void QtDisplayData::initImage(){
 			else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
 		}
 	}
-	else if(displayType_=="contour") {
+	else if( isContour() ) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_, 0, 1);
 			else dd_ = new LatticeAsContour<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
@@ -446,7 +454,7 @@ void QtDisplayData::initImage(){
 			else dd_ = new LatticeAsContour<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
 		}
 	}
-	else if(displayType_=="vector") {
+	else if( isVector() ) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_, 0, 1);
 			else dd_ = new LatticeAsVector<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
@@ -456,7 +464,7 @@ void QtDisplayData::initImage(){
 			else dd_ = new LatticeAsVector<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
 		}
 	}
-	else if(displayType_=="marker") {
+	else if( isMarker()) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsMarker<Float>(im_, 0, 1);
 			else dd_ = new LatticeAsMarker<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
@@ -660,6 +668,36 @@ QtDisplayData::~QtDisplayData() {
 std::string QtDisplayData::description( ) const {
 	return name_ + " (" + path_ + ") " + dataType_ + "/" + displayType_;
 }
+
+//Display Type
+Bool QtDisplayData::isRaster() const {
+	bool rasterData = false;
+	if ( displayType_== DISPLAY_RASTER){
+		rasterData = true;
+	}
+	return rasterData;
+}
+ Bool QtDisplayData::isContour() const {
+	 bool contourData = false;
+	 if ( displayType_==DISPLAY_CONTOUR){
+		 contourData = true;
+	 }
+	 return contourData;
+ }
+ Bool QtDisplayData::isVector() const {
+	 bool vectorData = false;
+	 if ( displayType_==DISPLAY_VECTOR){
+		 vectorData = true;
+	 }
+	 return vectorData;
+ }
+ Bool QtDisplayData::isMarker() const {
+	 bool markerData = false;
+	 if ( displayType_==DISPLAY_MARKER){
+		 markerData = true;
+	 }
+	 return markerData;
+ }
 
 //Bool QtDisplayData::delTmpData() const {
 void QtDisplayData::delTmpData() const {
@@ -1241,7 +1279,21 @@ void QtDisplayData::setColormap_(const String& clrMapName, bool invertChanged ) 
 	// emit qddOK();
 }
 
+void QtDisplayData::setColorMap( Colormap* colorMap ){
+	if ( colorMap != NULL ){
+		//Put it into the map, replacing it if it already
+		//exists.
+		String mapName = colorMap->name();
+		std::map<String, Colormap*>::iterator iter = clrMaps_.find( mapName );
+		if ( iter != clrMaps_.end() ){
+			clrMaps_.erase( iter );
+		}
+		clrMaps_[mapName] = colorMap;
 
+		//Adopt this as our new colormap.
+		setColormap_( mapName, false );
+	}
+}
 
 bool QtDisplayData::isValidColormap( const QString &name ) const {
 	colormapnamemap::const_iterator iter = clrMapNames_.find(name.toAscii().constData());
@@ -1638,7 +1690,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
 	//(4) pass layer index to LatticeStatistcis
 	//(5) do single plane statistic right here
 
-	if (displayType_!="raster") return False;
+	if (!isRaster()) return False;
 
 	if(im_==0) return False;
 

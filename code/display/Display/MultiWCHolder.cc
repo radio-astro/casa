@@ -99,13 +99,22 @@ void MultiWCHolder::removeWCHolders() {
 }
 
 // Add/remove DisplayData/s.
-void MultiWCHolder::addDisplayData(DisplayData &displaydata) {
+void MultiWCHolder::addDisplayData(DisplayData &displaydata, int position) {
   if (isAlreadyRegistered(displaydata)) {
     return;
   }
   hold();
   ListIter<DisplayData *> localDDLI(itsDDList);
-  localDDLI.toEnd();
+  if ( position < 0 ){
+	  localDDLI.toEnd();
+  }
+  else {
+	  int i = 0;
+	  while ( i < position ){
+		  localDDLI++;
+		  i++;
+	  }
+  }
   localDDLI.addRight(&displaydata);
   addToAllWorldCanvasHolders(displaydata);
 

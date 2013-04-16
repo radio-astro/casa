@@ -1,6 +1,6 @@
 <ui version="4.0" >
  <class>ImageScrollClass</class>
- <widget class="QScrollArea" name="ImageScrollClass" >
+ <widget class="QWidget" name="ImageScrollClass" >
   <property name="geometry" >
    <rect>
     <x>0</x>
@@ -10,7 +10,7 @@
    </rect>
   </property>
   <property name="windowTitle" >
-   <string>ImageScroll</string>
+   <string>ImageScrollers</string>
   </property>
  </widget>
  <layoutdefault spacing="6" margin="11" />
