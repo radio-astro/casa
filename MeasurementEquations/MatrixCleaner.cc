@@ -517,8 +517,9 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
     if(ii==itsStartingIter ) {
       itsMaximumResidual=abs(itsStrengthOptimum);
       tmpMaximumResidual=itsMaximumResidual;
-      os << "Initial maximum residual is " << itsMaximumResidual
-	 << LogIO::POST;
+      os << "Initial maximum residual is " << itsMaximumResidual;
+      if( !itsMask.null() ) { os << " within the mask "; }
+      os << LogIO::POST;
     }
 
     // Various ways of stopping:

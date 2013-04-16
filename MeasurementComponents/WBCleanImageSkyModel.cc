@@ -513,7 +513,7 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
   
   /* Pick the peak residual across all fields */
   maxres = max(fmaxres);
-  if(adbg) cout << "Peak Residual across fields : " << maxres << endl;
+  if(adbg) cout << "Peak Residual across fields (over all pixels) : " << maxres << endl;
   
   /* If we've already converged, return */
   if(maxres < threshold()) 
@@ -553,7 +553,7 @@ Float WBCleanImageSkyModel::computeFluxLimit(Float &fractionOfPsf)
   
   // if(adbg) 
   {
-    os << "Peak Residual : " << maxres  << "  User Threshold : " << threshold() << "  Max PSF Sidelobe : " << abs(minval) <<  " User maxPsfFraction : " << cycleMaxPsfFraction_p  << "  User cyclefactor : " << cycleFactor_p << "  fractionOfPsf = min(maxPsfFraction, PSFsidelobe x cyclefactor) : " << fractionOfPsf << LogIO::POST;
+    os << "Peak Residual (all pixels) : " << maxres  << "  User Threshold : " << threshold() << "  Max PSF Sidelobe : " << abs(minval) <<  " User maxPsfFraction : " << cycleMaxPsfFraction_p  << "  User cyclefactor : " << cycleFactor_p << "  fractionOfPsf = min(maxPsfFraction, PSFsidelobe x cyclefactor) : " << fractionOfPsf << LogIO::POST;
     //    os << "Stopping threshold for this major cycle min(user threshold , fractionOfPsf x Max Residual) : " <<  cyclethreshold  << endl;
   }
   
@@ -1153,10 +1153,10 @@ Bool WBCleanImageSkyModel::checkParameters()
 	  speccoord.toWorld(startfreq,startpixel);
 	  speccoord.toWorld(endfreq,endpixel);
 	  Float fbw = (endfreq - startfreq)/refFrequency_p;
-	  //cout << "Freq range of the mfs channel : " << startfreq << " -> " << endfreq << endl;
+	  //os << "Freq range of the mfs channel : " << startfreq << " -> " << endfreq << endl;
 	  //cout << "Fractional bandwidth : " << fbw << endl;
 	  
-	  os << "Fractional Bandwidth : " << fbw*100 << " %." << endl;
+	  os << "Fractional Bandwidth : " << fbw*100 << " %." << LogIO::POST;
 	  
 	  /*
 	    if(fbw < 0.1 && ntaylor_p == 2 )
