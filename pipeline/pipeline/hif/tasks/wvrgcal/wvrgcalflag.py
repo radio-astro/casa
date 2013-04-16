@@ -326,16 +326,6 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
     def analyse(self, result):
         inputs = self.inputs
 
-        # double-check that the caltable was actually generated
-        on_disk = [ca for ca in result.pool
-                   if ca.exists() or self._executor._dry_run]
-        result.final[:] = on_disk
-
-        missing = [ca for ca in result.pool
-                   if ca not in on_disk and not self._executor._dry_run]
-        result.error.clear()
-        result.error.update(missing)
-
         # copy the views for the flag_intent from the QA2 section of the
         # wvrgcal result
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
