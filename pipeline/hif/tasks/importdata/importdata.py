@@ -263,11 +263,10 @@ class ImportData(basetask.StandardTaskTemplate):
 
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
-                                     savecmds=True,
+				     savecmds=self.inputs.save_flagonline, 
                                      outfile=outfile,
                                      process_caldevice=False,
-                                     overwrite=self.inputs.overwrite,
-				     save_flagonline=self.inputs.save_flagonline)        
+                                     overwrite=self.inputs.overwrite)
         
         self._executor.execute(task)
 
