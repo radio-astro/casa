@@ -587,7 +587,7 @@ msmetadata* ms::metadata(const float cachesize) {
 }
 
 ::casac::record*
-ms::summary(bool verbose, const string& listfile, bool listunfl)
+ms::summary(bool verbose, const string& listfile, bool listunfl, double cachesize)
 {
   ::casac::record *header;
   try {
@@ -597,6 +597,7 @@ ms::summary(bool verbose, const string& listfile, bool listunfl)
        // so that it is correctly printed in the output
        MSSummary mss(itsMS, itsOriginalMS->tableName());
        mss.setListUnflaggedRowCount(listunfl);
+       mss.setMetaDataCacheSizeInMB(cachesize);
        casa::Record outRec;
        if (listfile != ""){
     	   File diskfile(listfile);

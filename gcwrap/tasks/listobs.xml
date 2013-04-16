@@ -95,6 +95,10 @@
             <description>List unflagged row counts? If true, it can have significant negative performance impact.</description>
             <value>False</value>
         </param>
+        <param type="double" direction="in" name="cachesize">
+            <description>EXPERIMENTAL. Maximum size in megabytes of cache in which data structures can be held.</description>
+            <value>50</value>
+        </param>
             <constraints>      
                 <when param="selectdata">
                     <equals type="bool" value="True">
@@ -188,6 +192,11 @@
                default: None. Example: listfile='list.txt'
                
        listunfl -- List unflagged row counts? If true, it can have significant negative performance impact.
+ 
+       cachesize -- maximum size of the memory cache in megabytes in which data structures can be
+                    stored. For very large datasets this can be increased for possibly better performance.
+                    THIS IS ONLY EXPERIEMENTAL FOR NOW, AND INCREASING THE VALUE OF THIS PARAMETER DOES NOT GUARANTEE INCREASED
+                    SPEED. DEPENDING ON ITS (LACK OF) USEFULNESS, IT MAY BE REMOVED IN THE FUTURE.
 
 
       The 'Int (s)' column is the average of the MS's INTERVAL column

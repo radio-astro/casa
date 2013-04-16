@@ -785,7 +785,7 @@ windows in the dataset and close the tool.
                     <value/>
                 </param>
                 <param type="float" direction="in" name="maxcache">
-                    <descrition>Maximum cache size, in megabytes, to use. Only used if preload=False. </descrition>
+                    <descrition>Maximum cache size, in megabytes, to use.</descrition>
                     <value>50</value>
                 </param>
             </input>
