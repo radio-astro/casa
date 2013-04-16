@@ -199,45 +199,49 @@ namespace casa {
 			double blc_x, blc_y, trc_x, trc_y;
 			boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 
-			Vector<Double> linear(2);
-			Vector<Double> blc(2);
-			Vector<Double> trc(2);
+			// calculate the width
+			Vector<Double> left_linearv(2);
+			Vector<Double> right_linearv(2);
+			Vector<Double> left_worldv(2);
+			Vector<Double> right_worldv(2);
 
-			linear(0) = blc_x;
-			linear(1) = blc_y;
-			if ( wc_->linToWorld(blc,linear) == false ) return false;
-
-			linear(0) = trc_x;
-			linear(1) = trc_y;
-			if ( wc_->linToWorld(trc,linear) == false ) return false;
-
-			Vector<String> unit_names=wc_->worldAxisUnits();
-			Vector<Quantum<Double> > qblc(2);
-			qblc(0) = Quantum<Double>(fmin(blc(0),trc(0)),unit_names(0));
-			qblc(1) = Quantum<Double>(fmin(blc(1),trc(1)),unit_names(1));
-
-			Vector<Quantum<Double> > qtrc(2);
-			qtrc(0) = Quantum<Double>(fmax(blc(0),trc(0)),unit_names(0));
-			qtrc(1) = Quantum<Double>(fmax(blc(1),trc(1)),unit_names(1));
-
-			Vector<String> axis_names=wc_->worldAxisNames();
-
-			// find ra and dec axis...
-			int ra_index = -1;
-			int dec_index = -1;
-			int stop = axis_names.size() >= 2 ? 2 : 0;
-			for ( int i=0; i < stop; i++ ) {
-				if ( axis_names(i).contains("scension") ) ra_index = i;
-				if ( axis_names(i).contains("eclination") ) dec_index = i;
+			left_linearv(0) = blc_x;
+			left_linearv(1) = (trc_y + blc_y) / 2.0;
+			right_linearv(0) = trc_x;
+			right_linearv(1) = left_linearv(1);
+			if ( ! wc_->linToWorld( left_worldv, left_linearv ) ||
+				 ! wc_->linToWorld( right_worldv, right_linearv ) ) {
+				return false;
 			}
 
-			Vector<Double> cosine_correct(2,1.0);
-			if ( ra_index >= 0 && dec_index >= 0 ) {
-				cosine_correct(ra_index) = cos((qblc(dec_index)+qtrc(dec_index)).getValue("rad")/2.0);
+			MDirection::Types cccs = current_casa_coordsys( );
+			MDirection left( Quantum<Vector<Double> > (left_worldv,"rad"), cccs );
+			MDirection right( Quantum<Vector<Double> > (right_worldv,"rad"), cccs );
+
+			Quantity widthq = left.getValue( ).separation(right.getValue( ),units.c_str( ));
+			width = widthq.getValue( );
+
+			// calculate the height
+			Vector<Double> top_linearv(2);
+			Vector<Double> bottom_linearv(2);
+			Vector<Double> top_worldv(2);
+			Vector<Double> bottom_worldv(2);
+
+			top_linearv(0) = (trc_x + blc_x) / 2.0;
+			top_linearv(1) = trc_y;
+			bottom_linearv(0) = top_linearv(0);
+			bottom_linearv(1) = blc_y;
+			if ( ! wc_->linToWorld( top_worldv, top_linearv ) ||
+				 ! wc_->linToWorld( bottom_worldv, bottom_linearv ) ) {
+				return false;
 			}
 
-			width = ((qtrc(0) - qblc(0)) * cosine_correct(0)).getValue(units.c_str());
-			height = ((qtrc(1) - qblc(1)) * cosine_correct(1)).getValue(units.c_str());
+			MDirection top( Quantum<Vector<Double> > (top_worldv,"rad"), cccs );
+			MDirection bottom( Quantum<Vector<Double> > (bottom_worldv,"rad"), cccs );
+
+			Quantity heightq = top.getValue( ).separation(bottom.getValue( ),units.c_str( ));
+			height = heightq.getValue( );
+
 			return true;
 		}
 
