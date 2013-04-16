@@ -82,8 +82,8 @@ calibrations can be applied on the fly.
                 <value type="string">inf</value>
         </param>
 
-        <param type="string" name="combine">
-                <description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+        <param type="string" name="combine"> 
+                <description>Data axes which to combine for solve (obs, scan, spw, and/or field)</description>
                 <value>obs,scan</value>
         </param>
 
@@ -322,11 +322,12 @@ calibrations can be applied on the fly.
                         solint-'-1s'; solint='inf' --&gt; ~infinite, up to boundaries
                         enforced by combine
       combine -- Data axes to combine for solving
-              default: 'obs,scan' --&gt; solutions will break at field and spw boundaries,
-                        but may extend over multiple obsId and scans (per field and spw) up
-                        to solint.
-              Options: '','obs','scan','spw',field', or any comma-separated combination
-              example: combine='scan,spw'  --&gt; extend solutions over scan boundaries
+              default: 'obs,scan' --&gt; solutions will break at field and spw
+                      boundaries but may extend over multiple obs and scans
+                      (per field and spw) up to solint.
+              Options: '','obs','scan','spw',field', or any comma-separated 
+                       combination in a single string
+              example: combine='scan,spw' --&gt; extend solutions over scan boundaries
                        (up to the solint), and combine spws for solving
       preavg -- Pre-averaging interval (sec)
               default=300
