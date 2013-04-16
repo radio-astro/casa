@@ -36,70 +36,80 @@
 
 namespace casa {
 
-    class PanelDisplay;
-    class AnnRegion;
-    class PixelCanvas;
+	class PanelDisplay;
+	class AnnRegion;
+	class PixelCanvas;
 
-    namespace viewer {
-
-	// carry over from QtRegion... hopefully, removed soon...
-	class QtRegionSourceKernel;
-
-	// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
-	// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
-	// this means that coordinate transformation is required each time the region is drawn.
-	class Point : public Rectangle {
-	    public:
-		~Point( );
-		Point( WorldCanvas *wc, QtRegionDock *d, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) :
-					Rectangle( wc, d, x, y, x, y ), marker_(sym){ /***updateStatistics***/ }
+	namespace viewer {
 
 		// carry over from QtRegion... hopefully, removed soon...
-	Point( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, bool hold_signals=false, QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_DOT ) :
-					Rectangle( "point", wc, factory->dock( ), x, y, x, y, hold_signals, sym ), marker_(sym){ /***updateStatistics***/ }
+		class QtRegionSourceKernel;
 
-		bool setMarker( QtMouseToolNames::PointRegionSymbols sym );
+		// All regions are specified in "linear coordinates", not "pixel coordinates". This is necessary
+		// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
+		// this means that coordinate transformation is required each time the region is drawn.
+		class Point : public Rectangle {
+		public:
+			~Point( );
+			Point( WorldCanvas *wc, QtRegionDock *d, double x, double y, QtMouseToolNames::PointRegionSymbols sym ) :
+				Rectangle( wc, d, x, y, x, y ), marker_(sym) {
+				/***updateStatistics***/
+			}
 
-		int clickHandle( double /*x*/, double /*y*/ ) const { return 0; }
+			// carry over from QtRegion... hopefully, removed soon...
+			Point( QtRegionSourceKernel *factory, WorldCanvas *wc, double x, double y, bool hold_signals=false, QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_DOT ) :
+				Rectangle( "point", wc, factory->dock( ), x, y, x, y, hold_signals, sym ), marker_(sym) {
+				/***updateStatistics***/
+			}
 
-		bool clickWithin( double x, double y ) const;
+			bool setMarker( QtMouseToolNames::PointRegionSymbols sym );
 
-		// returns point state (Region::PointLocation)
-		region::PointInfo checkPoint( double x, double y ) const;
+			int clickHandle( double /*x*/, double /*y*/ ) const {
+				return 0;
+			}
 
-		// returns mouse movement state
-		unsigned int mouseMovement( double x, double y, bool other_selected );
-		void resize( double, double ) { }
+			bool clickWithin( double x, double y ) const;
 
-		AnnotationBase *annotation( ) const;
+			// returns point state (Region::PointLocation)
+			region::PointInfo checkPoint( double x, double y ) const;
 
-		// points cannot be degenerate...
-		bool degenerate( ) const { return false; }
+			// returns mouse movement state
+			unsigned int mouseMovement( double x, double y, bool other_selected );
+			void resize( double, double ) { }
 
-		// fetch region type...
-		region::RegionTypes type( ) const { return region::PointRegion; }
+			AnnotationBase *annotation( ) const;
 
-		void releaseSignals( );
+			// points cannot be degenerate...
+			bool degenerate( ) const {
+				return false;
+			}
 
-	    protected:
+			// fetch region type...
+			region::RegionTypes type( ) const {
+				return region::PointRegion;
+			}
 
-		static const int radius;
+			void releaseSignals( );
 
-		virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
-						   std::vector<std::pair<double,double> > &world_pts ) const;
+		protected:
 
-		void drawRegion( bool );
+			static const int radius;
 
-		std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
+			virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
+			                                   std::vector<std::pair<double,double> > &world_pts ) const;
 
-		QtMouseToolNames::PointRegionSymbols marker_;
+			void drawRegion( bool );
 
-	    private:
-		void draw_arrow( PixelCanvas *, int /*x*/, int /*y*/, int /*xsign*/, int /*ysign*/,
-				 int /*scale_unit*/, int /*scale*/ );
+			std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
 
-	};
-    }
+			QtMouseToolNames::PointRegionSymbols marker_;
+
+		private:
+			void draw_arrow( PixelCanvas *, int /*x*/, int /*y*/, int /*xsign*/, int /*ysign*/,
+			                 int /*scale_unit*/, int /*scale*/ );
+
+		};
+	}
 }
 
 #endif
