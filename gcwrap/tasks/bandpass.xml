@@ -86,7 +86,7 @@ is recommended in most applications.
         </param>
 
         <param type="string" name="combine">
-                <description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+                <description>Data axes which to combine for solve (obs, scan, spw, and/or field)</description>
                 <value>scan</value>
         </param>
 
@@ -319,10 +319,11 @@ is recommended in most applications.
                                                   with 32-channel pre-average
                                                   in freq
        combine -- Data axes to combine for solving
-              default: 'scan' --&gt; solutions will break at field and spw boundaries,
-                        but may extend over multiple scans (per field and spw) up
-                        to solint.
-              Options: '','scan','spw',field', or any comma-separated combination
+              default: 'scan' --&gt; solutions will break at obs, field, and spw
+                      boundaries but may extend over multiple scans
+                      (per obs, field and spw) up to solint.
+              Options: '','obs','scan','spw',field', or any comma-separated 
+                       combination in a single string
               example: combine='scan,spw'  --&gt; extend solutions over scan boundaries
                        (up to the solint), and combine spws for solving
        refant -- Reference antenna name(s); a prioritized list may be specified

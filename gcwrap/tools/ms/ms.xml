@@ -1280,6 +1280,14 @@ the ms definition itself. -->
      <description>Output file</description>
      <value/>
      </param>     
+     <param type="bool" direction="in" name="listunfl">
+        <description>List unflagged row counts? If true, it can have significant negative performance impact.</description>
+        <value>false</value>
+     </param>
+     <param type="double" direction="in" name="cachesize">
+        <description>EXPERIMENTAL. Maximum size in megabytes of cache in which data structures can be held.</description>
+        <value>50</value>
+     </param>
   </input>
   <returns type="record">
      <description>Header information (PARAMETER IGNORED..its an output)</description>
@@ -1290,6 +1298,8 @@ the ms definition itself. -->
     system logger. The verbose argument provides some control on how
     much information is displayed.
 
+    For especially large datasets, the cachesize parameter can be increased for possibly better
+    performance.
 
     This method can also return, in the header argument, a record
     containing the following fields.
@@ -1299,6 +1309,7 @@ the ms definition itself. -->
     \end{description}
     
     DESCRIPTION OF ALGORITHM TO CALCULATE THE NUMBER OF UNFLAGGED ROWS
+    The number of unflagged rows will only be computed if listunflis True.
     The number of unflagged rows (the nUnflRows columns in the scans and fields portions of the listing) is
     calculated by summing the fractional unflagged bandwidth for each row (and hence why the number of unflagged
     rows, in general, is not an integer). Thus a row which has half of its
@@ -1759,7 +1770,7 @@ Date/Time:                         RR:                      RL:                 
     <description>Get the MS metadata associated with this MS.</description>
     <input>
         <param type="float" direction="in" name="cachesize">
-            <descrition>Maximum cache size, in megabytes, to use. Only used if preload=False. </descrition>
+            <descrition>Maximum cache size, in megabytes, to use. </descrition>
             <value>50</value>
         </param>
     </input>

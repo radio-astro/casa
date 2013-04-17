@@ -549,8 +549,17 @@ class test_applycal_mms(test_simplecluster):
     def test1_applycal_fluxscale_gcal_bcal(self):
         """Test 1: Apply calibration using fluxscal gcal and bcal tables"""
 
+        # Repository caltables are pre-v4.1, and we
+        # must update them _before_ applycal to avoid contention
+        print 'Updating pre-v4.1 caltables, FIRST:'
+        cblocal = cbtool()
+        for oldct in self.aux:
+            cblocal.updatecaltable(oldct)
+        print 'Now it is safe to run applycal.'
+
         applycal(vis=self.vis,field='',spw='',selectdata=False,gaintable=self.aux,
-                 gainfield=['nearest','nearest','0'],interp=['linear', 'linear','nearest'],spwmap=[],gaincurve=False,opacity=0.0)
+                 gainfield=['nearest','nearest','0'],
+                 interp=['linear', 'linear','nearest'],spwmap=[],gaincurve=False,opacity=0.0)
         
         compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
         

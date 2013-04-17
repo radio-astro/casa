@@ -2,21 +2,11 @@ import os
 from taskinit import *
 
 
-def listobs(vis=None, 
-            selectdata=None,
-            spw=None,           
-            field=None,
-            antenna=None,
-            uvrange=None,
-            timerange=None,
-            correlation=None,
-            scan=None,
-            intent=None,
-            feed=None,
-            array=None,
-            observation=None,
-            verbose=None, 
-            listfile=None):
+def listobs(
+    vis, selectdata, spw, field, antenna, uvrange,
+    timerange, correlation, scan, intent, feed,
+    array, observation, verbose, listfile, listunfl, cachesize
+):
     
     """List data set summary in the logger:
 
@@ -64,7 +54,7 @@ def listobs(vis=None,
         # Select the data. Only-parse is set to false.
         ms.msselect(sel, False)
             
-        ms.summary(verbose=verbose, listfile=listfile)
+        ms.summary(verbose=verbose, listfile=listfile, listunfl=listunfl, cachesize=cachesize)
 
         ms.close()
     except Exception, instance:

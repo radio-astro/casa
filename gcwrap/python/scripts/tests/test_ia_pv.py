@@ -75,7 +75,7 @@ import numpy
 datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imageanalysis/ImageAnalysis/'
 
 def run_ia_pv(
-    imagename, outfile, start, end, halfwidth
+    imagename, outfile, start, end, width
 ):
     myia = iatool()
     myia.open(imagename)
@@ -83,17 +83,17 @@ def run_ia_pv(
         myia.done()
         raise Exception
     res = myia.pv(
-        outfile=outfile, start=start, end=end, halfwidth=halfwidth
+        outfile=outfile, start=start, end=end, width=width
     )
     myia.done()
     return res
 
 def run_impv(
-    imagename, outfile, start, end, halfwidth
+    imagename, outfile, start, end, width
 ):
     return impv(
         imagename=imagename, outfile=outfile, start=start,
-        end=end, halfwidth=halfwidth
+        end=end, width=width
     )
 
 
@@ -103,6 +103,7 @@ class ia_pv_test(unittest.TestCase):
         self.ia = iatool()
     
     def tearDown(self):
+        #pass
         self.assertTrue(len(tb.showcache()) == 0)
     
     def test_pv(self):
@@ -133,11 +134,11 @@ class ia_pv_test(unittest.TestCase):
         self.assertTrue(len(tb.showcache())== 0)
         pv = iatool()
         for code in [run_ia_pv, run_impv]:
-            # no halfwidth
+            # no width
             outfile = "test_pv_" + str(code)
             xx = code(
                 imagename=imagename, outfile=outfile, start=[2, 5],
-                end=[7, 5], halfwidth=0
+                end=[7, 5], width=1
             )
             if (type(xx) == type(ia)):
                 xx.done()
@@ -158,11 +159,11 @@ class ia_pv_test(unittest.TestCase):
             # the position offset axis always has units of arcsec, the units
             # in the input image were arcmin
             self.assertTrue((abs(gotinc - expinc) < 1e-5).all())
-            # halfwidth
+            # width > 1
             outfile = "test_pv_1_" + str(code)
             xx = code(
                 imagename=imagename, outfile=outfile, start=[2, 5],
-                end=[7, 5], halfwidth=1
+                end=[7, 5], width=3
             )
             if (type(xx) == type(ia)):
                 xx.done()
@@ -217,13 +218,18 @@ class ia_pv_test(unittest.TestCase):
         """ia.pv(): Test issues raised in CAS-2996"""
         # the only tests necessary here are to ensure ia.pv() runs 
         # successfully for the provided inputs
+        # calculate stats to make sure region determination code doesn't segfault (CAS-4881)
         myia = self.ia
         myia.open(datapath + "pv1.im")
         xx = myia.pv(start = [30, 30], end = [250, 250])
+        xx.statistics()
         xx = myia.pv(start = [30, 250], end = [250, 30])
+        xx.statistics()
         xx = myia.pv(start = [250, 250], end = [30, 30])
+        xx.statistics()
         xx = myia.pv(start = [250, 30], end = [30, 250])
-        
+        xx.statistics()
+  
         myia.open(datapath + "pv2.im")
         x1 = 264.865854
         x2 = 166.329268
@@ -241,6 +247,26 @@ class ia_pv_test(unittest.TestCase):
 
         myia.done()
         xx.done()
+        
+    def test_fits(self):
+        """ia.pv(): Test exporting and importing to/from FITS"""
+        myia = self.ia
+        myia.open(datapath + "pv1.im")
+        xx = myia.pv(start = [30, 30], end = [250, 250])
+        expec = ["OFFSET", "Frequency", "Stokes"]
+        outfile = "zz.fits"
+        xx.tofits(outfile)
+        myia.open(outfile)
+        got = myia.coordsys().names()
+        print "got " + str(got)
+        self.assertTrue(got == expec)
+        xx.tofits(outfile, velocity=True, overwrite=True)
+        xx.done()
+        myia.open(outfile)
+        got = myia.coordsys().names()
+        myia.done()
+        self.assertTrue(got == expec)
+        
         
     
 def suite():

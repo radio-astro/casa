@@ -10140,9 +10140,9 @@ used to create a 2D temporary image.
             <description>The ending pixel in the direction plane (array of two values)</description>
             <value/>
         </param>
-        <param type="int" name="halfwidth">
-            <description>Half width for averaging expressed in pixels perpendicular to the slice. Pixels within one half width perpendicular to the slice will be averaged along the slice</description>
-            <value>0</value>
+        <param type="int" name="width">
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer >= 1 (1 means only use the pixels along the slice).</description>
+            <value>1</value>
         </param>
         <param type="string" name="unit">
             <description>Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
@@ -10184,10 +10184,16 @@ used to create a 2D temporary image.
         Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
         coordinate. The spectral extent of the resulting image will be that provided by the region specification
         or the entire spectral range of the input image if no region is specified. One may not specify a region
-        in direction space; that is accomplished by specifying the start and end points of the slice. One may
-        specify an optional half width, which is the number of pixels on either side and perpendicular to the
-        direction slice that are used for averaging along the slice (0, the default, represents no averaging).
+        in direction space; that is accomplished by specifying the start and end points of the slice.
+        
+        One may specify a width (must be an odd integer >= 1), which is the number of pixels centered along and perpendicular
+        to the direction slice that are used for averaging along the slice. The default value of 1 represents no averaging).
+        A value of 3 means average one pixel on each side of the slice and the pixel on the slice. 
+        Note that this width is applied to pixels in the image after it has been rotated (see below for a description
+        of the algorithm used).
+        
         One may specify the unit for the angular offset axis.
+        
         A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
         image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified
         (unless perhaps you are debugging).
@@ -10197,7 +10203,7 @@ used to create a 2D temporary image.
         
         Internally, the image is first rotated, padding first if necessary to include relevant pixels that would otherwise
         be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
-        ending pixel. Then, the pixels within halfwidth of the slice are averaged and the resulting image is
+        ending pixel. Then, the pixels within the specified width of the slice are averaged and the resulting image is
         written and/or returned. The output image has a linear coordinate in place of the direction coordinate of the
         input image, and the corresponding axis represents angular offset with the center pixel having a value of 0.
         

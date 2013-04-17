@@ -17,7 +17,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <param type="string" name="imagename" mustexist="true">
             <description>Name of the input image</description>
             <value/>
-            <example>imagenam='ngc5921.im'</example>
         </param>
         <param type="string" name="outfile">
             <description>Output image name. If empty, no image is written.</description>
@@ -33,10 +32,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value/>
             <example>[200,300]</example>
         </param>
-        <param type="int" name="halfwidth">
-            <description>Half width for averaging expressed in pixels perpendicular to the slice. Pixels within one half width perpendicular to the slice will be averaged along the slice</description>
-            <value>0</value>
-            <example>2.5</example>
+        <param type="int" name="width">
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer &gt;= 1 (1 means only use the pixels along the slice).</description>
+            <value>1</value>
         </param>
         <param type="string" name="unit">
             <description>Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
@@ -100,10 +98,11 @@ imagename        Name of the input (CASA, FITS, MIRIAD) image
 outfile          Name of output CASA image. Must be specified.
 start            The starting pixel in the direction plane (array of two values), such as [20, 5].
 end              The ending pixel in the direction plane (array of two values), such as [200, 300].
-halfwidth        Half width for averaging expressed in pixels perpendicular to the slice. Pixels
-                 within one half width perpendicular to the slice will be averaged along the slice.
-                 This value can be non-integral and is determined after rotating the image so the slice
-                 lies horizontally.
+width            Width, in pixels, for averaging pixels perpendicular to the slice.
+                 This value is determined after rotating the image so the slice lies horizontally.
+                 A value of one means no averaging. A value of 3 means average one pixel on each
+                 side of the slice and the pixel on the slice. A value of 5 means average 2 pixels
+                 on each side of the slice and the pixel on the slice, etc. Must be an odd integer >= 1.
 unit             Allows the user to set the unit for the angular offset axis. Must be a unit of angular
                  measure.
 overwrite        If output file is specified, this parameter controls if an already existing file by the
@@ -121,26 +120,28 @@ stretch          Stretch the input mask if necessary and possible. Only used if 
 Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
 coordinate. The spectral extent of the resulting image will be that provided by the region specification
 or the entire spectral range of the input image if no region is specified. One may not specify a region
-in direction space; that is accomplished by specifying the start and end points of the slice. One may
-specify an optional half width, which is the number of pixels on either side and perpendicular to the
-direction slice that are used for averaging along the slice (0, the default, represents no averaging).
-One may specify the unit for the angular offset axis.
-A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
-image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified
-(unless perhaps you are debugging).
+in direction space; that is accomplished by specifying the start and end points of the slice.
         
 The start and end values represent direction pixel coordinates. They both must fail within the input
 image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).
 
-Internally, the image is first rotated, first padding if necessary to include relevant pixels that would otherwise
+One may specify a width (must be an odd integer >= 1), which is the number of pixels centered along and perpendicular
+to the direction slice that are used for averaging along the slice. The default value of 1 represents no averaging).
+A value of 3 means average one pixel on each side of the slice and the pixel on the slice. 
+Note that this width is applied to pixels in the image after it has been rotated (see below for a description
+of the algorithm used).
+ 
+One may specify the unit for the angular offset axis.
+        
+Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
 be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
-ending pixel. Then, the pixels within halfwidth of the slice are averaged and the resulting image is
+ending pixel. Then, the pixels within the specified width of the slice are averaged and the resulting image is
 written and/or returned. The output image has a linear coordinate in place of the direction coordinate of the
 input image, and the corresponding axis represents angular offset with the center pixel having a value of 0.
         
 The equivalent coordinate system, with a (usually) rotated direction coordinate (eg, RA and Dec) is written
 to the output image as a table record. It can be retrieved using the table tool as shown in the example below.
-
+        
 # create a pv image with the position axis running from ra, dec pixel positions of [45, 50] to [100, 120]
 # in the input image
 impv(imagename="my_spectral_cube.im", outfile="mypv.im", start=[45,50], end=[100,120])
@@ -151,9 +152,6 @@ pvstats = imstat("mypv.im")
 tb.open("mypv.im")
 alternate_csys_record = tb.getkeyword("misc")["secondary_coordinates"]
 tb.done()
-
     </example>
-
 </task>
-
 </casaxml>

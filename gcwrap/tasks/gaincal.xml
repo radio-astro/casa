@@ -87,7 +87,7 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
 	</param>
 
 	<param type="string" name="combine">
-		<description>Data axes which to combine for solve (scan, spw, and/or field)</description>
+                <description>Data axes which to combine for solve (obs, scan, spw, and/or field)</description>
 		<value></value>
 	</param>
 
@@ -339,10 +339,11 @@ Previous calibrations (egs. bandpass) should be applied on the fly.
                         solint-'-1s'; solint='inf' --> ~infinite, up to boundaries
                         interacts with combine
       combine -- Data axes to combine for solving
-              default: '' --> solutions will break at scan, field, and spw
+              default: '' --&gt; solutions will break at obs, scan, field, and spw
                       boundaries
-              Options: '','scan','spw',field', or any comma-separated combination
-              example: combine='scan,spw'  --> extend solutions over scan boundaries
+              Options: '','obs','scan','spw',field', or any comma-separated 
+                       combination in a single string
+              example: combine='scan,spw'  --&gt; extend solutions over scan boundaries
                        (up to the solint), and combine spws for solving
       refant -- Reference antenna name(s); a prioritized list may be specified
               default: '' =&gt; no refant applied

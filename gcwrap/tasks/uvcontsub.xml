@@ -113,9 +113,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	          See the note under combine.
 		default: '' (all)
                 example: fitspw='0:5~30;40~55'
+                                 --&gt; select the ranges by channels in spw=0 
                          fitspw='0:113.767~114.528GHz;114.744~115.447GHz'
+                                 --&gt; select the ranges by frequencies in spw=0 
                          fitspw='*:113.767~114.528GHz;114.744~115.447GHz'
-                                 --&gt; to unsure the range selection applied to all relevant spws
+                                 --&gt; select the frequency ranges for all the relevant spws
          &gt;&gt;&gt; expandable parameter for fitspw 
           excludechans - if Ture, it will exclude the spws:channels specified in fitspw
                          for the fit

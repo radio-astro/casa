@@ -260,12 +260,12 @@ vector<int> msmetadata::fdmspws() {
 
 variant* msmetadata::fieldsforintent(const string& intent, const bool asnames) {
 	_FUNC(
-		std::set<uInt> ids = _msmd->getFieldsForIntent(intent);
+		std::set<Int> ids = _msmd->getFieldsForIntent(intent);
 		if (asnames) {
 			return new variant(_fieldNames(ids));
 		}
 		else {
-			return new variant(_setUIntToVectorInt(ids));
+			return new variant(_setIntToVectorInt(ids));
 		}
 	)
 	return 0;
@@ -273,7 +273,7 @@ variant* msmetadata::fieldsforintent(const string& intent, const bool asnames) {
 
 vector<int> msmetadata::fieldsforname(const string& name) {
 	_FUNC(
-		return _setUIntToVectorInt(_msmd->getFieldIDsForField(name));
+		return _setIntToVectorInt(_msmd->getFieldIDsForField(name));
 	)
 	return vector<int>();
 }
@@ -283,13 +283,13 @@ variant* msmetadata::fieldsforscan(const int scan, const bool asnames) {
 		if (scan < 0) {
 			throw AipsError("Scan number must be nonnegative.");
 		}
-		std::set<uInt> ids = _msmd->getFieldsForScan(scan);
+		std::set<Int> ids = _msmd->getFieldsForScan(scan);
 		if (asnames) {
 			return new variant(_fieldNames(ids));
 		}
 		else {
 			return new variant(
-				_setUIntToVectorInt(ids)
+				_setIntToVectorInt(ids)
 			);
 		}
 	)
@@ -298,7 +298,7 @@ variant* msmetadata::fieldsforscan(const int scan, const bool asnames) {
 
 variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames) {
 	_FUNC(
-		std::set<uInt> uscans;
+		std::set<Int> uscans;
 		for (
 			vector<int>::const_iterator scan=scans.begin();
 			scan!=scans.end(); scan++
@@ -308,13 +308,13 @@ variant* msmetadata::fieldsforscans(const vector<int>& scans, const bool asnames
 			}
 			uscans.insert(*scan);
 		}
-		std::set<uInt> ids = _msmd->getFieldsForScans(uscans);
+		std::set<Int> ids = _msmd->getFieldsForScans(uscans);
 		if (asnames) {
 			return new variant(_fieldNames(ids));
 		}
 		else {
 			return new variant(
-				_setUIntToVectorInt(ids)
+				_setIntToVectorInt(ids)
 			);
 		}
 	)
@@ -333,7 +333,7 @@ variant* msmetadata::fieldsforspw(const int spw, const bool asnames) {
 		}
 		else {
 			return new variant(
-				_setUIntToVectorInt(_msmd->getFieldIDsForSpw(spw))
+				_setIntToVectorInt(_msmd->getFieldIDsForSpw(spw))
 			);
 		}
 	)
@@ -342,7 +342,7 @@ variant* msmetadata::fieldsforspw(const int spw, const bool asnames) {
 
 vector<int> msmetadata::fieldsfortimes(const double center, const double tol) {
 	_FUNC(
-		return _setUIntToVectorInt(_msmd->getFieldsForTimes(center, tol));
+		return _setIntToVectorInt(_msmd->getFieldsForTimes(center, tol));
 	)
 	return vector<int>();
 }
@@ -409,7 +409,7 @@ double msmetadata::meanfreq(int spw, const string& unit) {
 vector<string> msmetadata::namesforfields(const variant& fieldids) {
 	_FUNC(
 		variant::TYPE myType = fieldids.type();
-		vector<uInt> fieldIDs;
+		vector<Int> fieldIDs;
 		if (myType == variant::INT) {
 			Int id = fieldids.toInt();
 			if (id < 0) {
@@ -418,11 +418,10 @@ vector<string> msmetadata::namesforfields(const variant& fieldids) {
 			fieldIDs.push_back(id);
 		}
 		else if (myType == variant::INTVEC) {
+			fieldIDs = fieldids.toIntVec();
 			if (min(Vector<Int>(fieldids.toIntVec())) < 0 ) {
 				throw AipsError("All field IDs must be nonnegative.");
 			}
-
-			fieldIDs = _vectorIntToVectorUInt(fieldids.toIntVec());
 		}
 		else if (fieldids.size() != 0) {
 			throw AipsError(
@@ -532,16 +531,16 @@ void msmetadata::_init(const casa::MeasurementSet *const &ms, const float caches
 
 bool msmetadata::open(const string& msname, const float cachesize) {
 	_FUNC2(
-    	_ms.reset(new MeasurementSet(msname));
-		_init(_ms.get(), cachesize);
-		return true;
+	       _ms.reset(new MeasurementSet(msname));
+	       _init(_ms.get(), cachesize);
+	       return true;
 	)
 	return false;
 }
 
 vector<int> msmetadata::scannumbers() {
 	_FUNC(
-		return _setUIntToVectorInt(_msmd->getScanNumbers());
+		return _setIntToVectorInt(_msmd->getScanNumbers());
 	)
 	return vector<int>();
 }
@@ -550,10 +549,10 @@ vector<int> msmetadata::scansforfield(const variant& field) {
 	_FUNC(
 		switch (field.type()) {
 		case variant::INT:
-			return _setUIntToVectorInt(_msmd->getScansForFieldID(field.toInt()));
+			return _setIntToVectorInt(_msmd->getScansForFieldID(field.toInt()));
 			break;
 		case variant::STRING:
-			return _setUIntToVectorInt(_msmd->getScansForField(field.toString()));
+			return _setIntToVectorInt(_msmd->getScansForField(field.toString()));
 			break;
 		default:
 			throw AipsError("Unacceptable type for field parameter.");
@@ -564,7 +563,7 @@ vector<int> msmetadata::scansforfield(const variant& field) {
 
 vector<int> msmetadata::scansforintent(const string& intent) {
 	_FUNC(
-		return _setUIntToVectorInt(_msmd->getScansForIntent(intent));
+		return _setIntToVectorInt(_msmd->getScansForIntent(intent));
 	)
 	return vector<int>();
 }
@@ -574,14 +573,14 @@ vector<int> msmetadata::scansforspw(const int spw) {
 		if (spw < 0) {
 			throw AipsError("spw must be nonnegative");
 		}
-		return _setUIntToVectorInt(_msmd->getScansForSpw(spw));
+		return _setIntToVectorInt(_msmd->getScansForSpw(spw));
 	)
 	return vector<int>();
 }
 
 vector<int> msmetadata::scansfortimes(const double center, const double tol) {
 	_FUNC(
-		return _setUIntToVectorInt(_msmd->getScansForTimes(center, tol));
+		return _setIntToVectorInt(_msmd->getScansForTimes(center, tol));
 	)
 	return vector<int>();
 }
@@ -591,7 +590,7 @@ vector<int> msmetadata::scansforstate(const int state) {
 		if (state < 0) {
 			throw AipsError("State ID must be nonnegative.");
 		}
-		return _setUIntToVectorInt(_msmd->getScansForState(state));
+		return _setIntToVectorInt(_msmd->getScansForState(state));
 	)
 	return vector<int>();
 }
@@ -645,7 +644,7 @@ vector<int> msmetadata::statesforscan(const int scan) {
 		if (scan < 0) {
 			throw AipsError("Scan number must be nonnegative");
 		}
-		return _setUIntToVectorInt(_msmd->getStatesForScan(scan));
+		return _setIntToVectorInt(_msmd->getStatesForScan(scan));
 	)
 	return vector<int>();
 }
@@ -680,7 +679,7 @@ vector<double> msmetadata::timesforscans(const vector<int>& scans) {
 				throw AipsError("All scan numbers must be nonnegative");
 			}
 		}
-		std::set<uInt> scanSet(scans.begin(), scans.end());
+		std::set<Int> scanSet(scans.begin(), scans.end());
 		return _setDoubleToVectorDouble(_msmd->getTimesForScans(scanSet));
 	)
 	return vector<double>();
@@ -714,9 +713,9 @@ msmetadata::msmetadata(
 }
 
 
-vector<string> msmetadata::_fieldNames(const set<uint>& ids) {
+vector<string> msmetadata::_fieldNames(const set<int>& ids) {
 	return _vectorStringToStdVectorString(
-		_msmd->getFieldNamesForFieldIDs(vector<uInt>(ids.begin(), ids.end()))
+		_msmd->getFieldNamesForFieldIDs(vector<Int>(ids.begin(), ids.end()))
 	);
 }
 
@@ -748,21 +747,18 @@ std::vector<std::string> msmetadata::_setStringToVectorString(
 ) {
 	vector<string> output;
 	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
-	return output;
+    return output;
 }
 
 std::vector<int> msmetadata::_setUIntToVectorInt(const std::set<casa::uInt>& inset) {
 	vector<int> output;
-	/*
-	for (
-		std::set<uInt>::const_iterator iter=inset.begin();
-		iter!=inset.end();iter++
-	) {
-		x.push_back(*iter);
-	}
-	*/
-	std::copy(inset.begin(), inset.end(), std::back_inserter(output));
+    std::copy(inset.begin(), inset.end(), std::back_inserter(output));
+	return output;
+}
 
+std::vector<int> msmetadata::_setIntToVectorInt(const std::set<casa::Int>& inset) {
+	vector<int> output;
+    std::copy(inset.begin(), inset.end(), std::back_inserter(output));
 	return output;
 }
 

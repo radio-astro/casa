@@ -2,10 +2,9 @@ std::auto_ptr<casa::MSMetaData> _msmd;
 std::auto_ptr<casa::MeasurementSet> _ms;
 std::auto_ptr<casa::LogIO> _log;
 
-std::vector<std::string> _fieldNames(const std::set<uint>& ids);
+std::vector<std::string> _fieldNames(const std::set<int>& ids);
 
-msmetadata(const casa::MeasurementSet *const &ms, const float maxcache);
-friend msmetadata* ms::metadata(const float maxcache);
+msmetadata(const casa::MeasurementSet * const & s, const float maxcache);
 
 bool _isAttached(const bool throwExceptionIfNotAttached=true) const;
 
@@ -15,6 +14,8 @@ static std::vector<double> _setDoubleToVectorDouble(const std::set<casa::Double>
 
 static std::vector<int> _setUIntToVectorInt(const std::set<casa::uInt>& inset);
 
+static std::vector<int> _setIntToVectorInt(const std::set<casa::Int>& inset);
+
 static std::vector<std::string> _setStringToVectorString(const std::set<casa::String>& inset);
 
 static std::vector<std::string> _vectorStringToStdVectorString(const std::vector<casa::String>& inset);
@@ -23,6 +24,7 @@ static std::vector<int> _vectorUIntToVectorInt(const std::vector<casa::uInt>& in
 
 static std::vector<uint> _vectorIntToVectorUInt(const std::vector<casa::Int>& inset);
 
+friend msmetadata* ms::metadata(const float maxcache);
 
 void _init(const casa::MeasurementSet *const &ms, const float maxcache);
 

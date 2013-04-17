@@ -328,7 +328,7 @@ another visibility file.
                ''='calflag' (default) calibrate data and apply flags from solutions
                'trial' report on flags from solutions, dataset entirely unchanged
                'flagonly' apply flags from solutions only, data not calibrated
-               'calonly' calibrate data only (by unflagged solutions), flags from solutions NOT applied (use with extreme caution!)
+               'calonly' calibrate data only, flags from solutions NOT applied (use with extreme caution!)
        flagbackup -- Back up the state of the flags before applying calibration
                      default: True
        async -- Run task in a separate process 
