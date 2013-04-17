@@ -211,8 +211,11 @@ void AnimatorHolder::setChannelModeEnabled( int frameCount){
 	if ( channelAdded ){
 		ui.channelGroupBox->setCheckable(true);
 		animatorChannel->setEnabled(true);
-		animatorChannel->setFrameInformation(0, frameCount );
 		ui.channelGroupBox->setChecked( false );
+	}
+	int oldFrameCount = animatorChannel->getFrameCount();
+	if ( oldFrameCount != frameCount ){
+		animatorChannel->setFrameInformation(0, frameCount );
 	}
 }
 
@@ -290,8 +293,8 @@ void AnimatorHolder::setFrameInformation( bool mode, int frm, int len ){
 	}
 }
 
-
 void AnimatorHolder::setRateInformation( bool mode, int minr, int maxr, int rate ){
+
 	if ( previousMode != CHANNEL_IMAGES_MODE ){
 		if ( mode == NORMAL_MODE ){
 	 		animatorChannel->setRateInformation( minr, maxr, rate );
@@ -302,16 +305,7 @@ void AnimatorHolder::setRateInformation( bool mode, int minr, int maxr, int rate
 	}
 }
 
-void AnimatorHolder::setPlaying( bool mode, int play ){
-	if ( mode == BLINK_MODE ){
-		if ( previousMode != CHANNEL_IMAGES_MODE ){
-			animatorImage->setPlaying( play );
-		}
-	}
-	else {
-		animatorChannel->setPlaying( play );
-	}
-}
+
 
 //--------------------------------------------------------------------------
 //                       Accessors
@@ -484,14 +478,17 @@ void AnimatorHolder::revStepImage(){
 }
 void AnimatorHolder::revPlayImage(){
 	stopChannelPlay();
+	animatorImage->setPlaying( -1 );
 	emit revPlay();
 }
 
 void AnimatorHolder::fwdPlayImage(){
 	stopChannelPlay();
+	animatorImage->setPlaying( 1 );
 	emit fwdPlay();
 }
 void AnimatorHolder::stopImage(){
+	animatorImage->setPlaying( 0 );
 	emit stop();
 }
 void AnimatorHolder::fwdStepImage(){
@@ -513,15 +510,13 @@ void AnimatorHolder::emitMovieChannels( bool direction ){
 
 void AnimatorHolder::stopImagePlay(){
 	if ( animatorImage->isPlaying()){
-		emit stop();
-		animatorImage->setPlaying( 0 );
+		animatorImage->stopping();
 	}
 }
 
 void AnimatorHolder::stopChannelPlay(){
 	if ( animatorChannel->isPlaying()){
-		emit stop();
-		animatorChannel->setPlaying( 0 );
+		animatorChannel->stopping();
 	}
 }
 

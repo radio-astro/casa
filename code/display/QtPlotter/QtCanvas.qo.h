@@ -92,6 +92,9 @@ public:
 	void setTopAxisRange(const Vector<Float> &xValues, bool topAxisDescending );
 	void setFrameMarker( float framePositionX );
 	void setZoomRectColor( QColor color );
+	//Returns the spectrum as it is currently displayed in the canvas (with
+	//possible zooming).
+	void getCanvasDomain( double* minValue, double* maxValue, QString& units);
 
 	CurveData getCurveData(int);
 	ErrorData getCurveError(int id);
@@ -198,7 +201,7 @@ public:
 	void setImageYUnits( const QString& imageUnits );
 
 
-	enum TaskMode {UNKNOWN_MODE, SPECTRAL_LINE_MODE, LINE_OVERLAY_MODE, MODE_COUNT };
+	enum TaskMode {/*UNKNOWN_MODE,*/ SPECTRAL_LINE_MODE, LINE_OVERLAY_MODE, MODE_COUNT };
 
 
 	//Units we will be displaying the y-axis in which may be different
@@ -219,7 +222,7 @@ public slots:
 	void channelPositioningMode();
 
 signals:
-	void xRangeChanged(float xmin, float xmax);
+	void xRangeChanged(double xmin, double xmax);
 	void channelSelect(float xvalue);
 	void specFitEstimateSpecified( double xValue, double yValue, bool centerPeak );
 	void findRedshiftAt( double center, double peak );

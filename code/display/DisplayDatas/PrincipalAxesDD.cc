@@ -269,8 +269,10 @@ String PrincipalAxesDD::showPosition(const Vector<Double> &world,
 {
 // The returned full coordinates are in 'normal' transpose
 // order suitable for itsPosTrackCoordSys
-
-  if (!conformed() || 
+//The condition here was loosened from conformed() so that when two display
+	//datas were loaded where velocities were not aligned, they
+	//could still show the correct position information (CAS-5029)
+  if (/*!conformed()*/!isCsAndZIndexConformed() ||
       !getFullCoord(itsFullWorldTmp4, itsFullPixelTmp4, world)) {
     return "\n";
 	// Return two lines in these cases.  This will happen

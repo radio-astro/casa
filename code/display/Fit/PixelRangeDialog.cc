@@ -40,6 +40,7 @@ PixelRangeDialog::PixelRangeDialog( QWidget *parent)
 	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
 	plotWidget = new BinPlotWidget( false, true, false, this );
 	plotWidget->setPlotMode( 1 );
+	plotWidget->hideMaximumRange();
 	layout->addWidget( plotWidget );
 	ui.plotWidgetHolder->setLayout( layout );
 
@@ -69,9 +70,9 @@ void PixelRangeDialog::setInterval( double minValue, double maxValue ){
 	plotWidget->setMinMaxValues( minValue, maxValue );
 }
 
-void PixelRangeDialog::setRangeMaxEnabled( bool enabled ){
+/*void PixelRangeDialog::setRangeMaxEnabled( bool enabled ){
 	plotWidget->setRangeMaxEnabled( enabled );
-}
+}*/
 
 vector<float> PixelRangeDialog::getXValues() const {
 	return plotWidget->getXValues();

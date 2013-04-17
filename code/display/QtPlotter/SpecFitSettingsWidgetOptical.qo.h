@@ -40,7 +40,7 @@ class SpecFitSettingsWidgetOptical : public QWidget, public ProfileTaskFacilitat
 public:
     SpecFitSettingsWidgetOptical(QWidget *parent = 0);
     ~SpecFitSettingsWidgetOptical();
-    void setRange(float start, float end );
+    void setRange(double start, double end );
     void setUnits( QString units );
     void reset();
     void clear();

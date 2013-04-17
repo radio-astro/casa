@@ -558,7 +558,7 @@ void MomentSettingsWidgetRadio::setTableValue(int row, int col, float val ){
 	ui.channelTable->setItem( row, col, peakItem );
 }
 
-void MomentSettingsWidgetRadio::setRange( float min, float max ){
+void MomentSettingsWidgetRadio::setRange( double min, double max ){
 	if (max < min){
 		ui.channelIntervalCountSpinBox->setValue( 0 );
 		ui.channelTable->setRowCount( 0 );

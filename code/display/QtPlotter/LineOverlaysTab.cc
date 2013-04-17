@@ -54,6 +54,7 @@ LineOverlaysTab::LineOverlaysTab(QWidget *parent)
 void LineOverlaysTab::setCanvas( QtCanvas* canvas ){
 	pixelCanvas = canvas;
 	connect( pixelCanvas, SIGNAL(findRedshiftAt(double,double)), this, SLOT(findRedshift(double,double)));
+	searchWidget->setCanvas( pixelCanvas );
 }
 
 void LineOverlaysTab::searchCompleted(){
@@ -64,7 +65,7 @@ void LineOverlaysTab::searchCompleted(){
 }
 
 
-void LineOverlaysTab::setRange( float min, float max, String units  ){
+void LineOverlaysTab::setRange( double min, double max, String units  ){
 	searchWidget->setRange( min, max, units.c_str() );
 }
 

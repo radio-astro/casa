@@ -547,7 +547,7 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 		// (Tracking information is not provided for these dd types).
 		Record trackingRec;
 		pair<String,String> trackInfo;
-		if ( bLen_ > 1 && pd_->isBlinkDD(dd) && ! dd->conformsTo(wc) ){
+		if ( bLen_ > 1 && !pd_->isBlinkDD(dd) ){
 			trackInfo = qdd->trackingInfo( ev );
 			trackingRec.define( qdd->name(), trackInfo.first + principalTrackInfo.second );
 		}
@@ -723,7 +723,7 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd, int position ) {
 	// Reset animator in accordance with new set of registered DDs
 	// (This code comes mostly from GTkPD::add()).
 	Record animrec;
-	if(pd_->isCSmaster(dd) && ddHasPreferredZIndex) {
+	if(pd_->isCSmaster(dd) && ddHasPreferredZIndex ) {
 		// New dd has become CS master: pass along its opinions
 		// on animator frame number setting, if any.
 		animrec.define("zindex", preferredZIndex);

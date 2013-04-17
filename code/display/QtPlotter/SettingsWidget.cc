@@ -131,7 +131,7 @@ void SettingsWidget::setCanvas( QtCanvas* pCanvas ){
 	//can respond to range change requests without reconnecting if
 	//the specFitter changes.
 	pixelCanvas = pCanvas;
-	connect(pixelCanvas, SIGNAL(xRangeChanged(float, float)), this, SLOT(setFitRange(float,float)));
+	connect(pixelCanvas, SIGNAL(xRangeChanged(double, double)), this, SLOT(setFitRange(double,double)));
 
 	//We give the current spec fitter a copy of the canvas for drawing purposes.
 	if ( taskHelper != NULL ){
@@ -192,13 +192,13 @@ void SettingsWidget::addCurveName( const QString& curveName ){
 	}
 }
 
-void SettingsWidget::setRange( float start, float end ){
+void SettingsWidget::setRange( double start, double end ){
 	if ( taskHelper != NULL ){
 		taskHelper ->setRange(start, end );
 	}
 }
 
-void SettingsWidget::setFitRange( float start, float end ){
+void SettingsWidget::setFitRange( double start, double end ){
 	setRange( start, end );
 }
 

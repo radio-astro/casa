@@ -58,6 +58,11 @@ FindSourcesDialog::FindSourcesDialog(QWidget *parent,
 	ui.colorLabel->setVisible( displayModeFunctionality );
 	ui.colorCombo->setVisible( displayModeFunctionality );
 
+
+	//Whether or not to display the sources on the viewer.
+	connect( ui.displayViewerCheckBox, SIGNAL(stateChanged(int)), this, SLOT(viewerDisplayChanged()));
+
+
 	if ( displayModeFunctionality ){
 		QButtonGroup* buttonGroup = new QButtonGroup( this );
 		buttonGroup->addButton( ui.imageRadioButton );
@@ -91,7 +96,7 @@ FindSourcesDialog::FindSourcesDialog(QWidget *parent,
 	ui.fractionOfPeakRadio->setChecked( fractionOfPeakMode );
 	cutoffModeChanged(!fractionOfPeakMode );
 	pixelRangeDialog.setWindowTitle( "Find Sources Intensity Cut-Off" );
-	pixelRangeDialog.setRangeMaxEnabled( false );
+	//pixelRangeDialog.setRangeMaxEnabled( false );
 	connect( &pixelRangeDialog, SIGNAL(accepted()), this, SLOT(pixelRangeChanged()));
 	connect( ui.noiseRadio, SIGNAL(toggled(bool)), this, SLOT(cutoffModeChanged(bool)));
 
@@ -112,6 +117,18 @@ FindSourcesDialog::FindSourcesDialog(QWidget *parent,
 	connect( ui.deleteSourceButton, SIGNAL(clicked()), this, SLOT( deleteSelectedSource()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(canceledFindSources()));
 	connect( ui.saveButton, SIGNAL(clicked()), this, SLOT(saveEstimateFile()));
+}
+
+void FindSourcesDialog::viewerDisplayChanged(){
+	if ( ui.displayViewerCheckBox->isChecked() ){
+		if ( skyPath.trimmed().length() > 0 ){
+			String skyPathStr( skyPath.toStdString());
+			emit showOverlay( skyPathStr, overlayColorName );
+		}
+	}
+	else {
+		emit removeOverlay( getRemoveOverlayPath().toStdString());
+	}
 }
 
 
@@ -148,14 +165,15 @@ double FindSourcesDialog::populateCutOff(bool* valid) const {
 			std::vector<float> pixelValues = pixelRangeDialog.getXValues();
 			std::vector<float>::iterator maxValuePos = std::max_element( pixelValues.begin(), pixelValues.end());
 			std::vector<float>::iterator minValuePos = std::min_element( pixelValues.begin(), pixelValues.end());
-			if ( value < *minValuePos || value > *maxValuePos ){
-				*valid = false;
+			if ( value < *minValuePos ){
+				value = *minValuePos;
 			}
-			else {
-				double span = *maxValuePos - *minValuePos;
-				double dataSpan = value - *minValuePos;
-				value = dataSpan / span;
+			else if ( value > *maxValuePos ){
+				value = *maxValuePos;
 			}
+			double span = *maxValuePos - *minValuePos;
+			double dataSpan = value - *minValuePos;
+			value = dataSpan / span;
 		}
 	}
 	return value;
@@ -183,7 +201,9 @@ void FindSourcesDialog::setOverlayColor(const QString& colorName){
 		if ( skyPath.length() > 0 ){
 			String removeName = getRemoveOverlayPath().toStdString();
 			emit removeOverlay( removeName );
-			emit showOverlay( skyPath.toStdString(), overlayColorName );
+			if ( ui.displayViewerCheckBox->isChecked()){
+				emit showOverlay( skyPath.toStdString(), overlayColorName );
+			}
 		}
 	}
 }
@@ -265,19 +285,28 @@ void FindSourcesDialog::resetSourceView() {
 		setTableValue( i, DEC_COL, decStr );
 
 		//Flux
-		double fluxVal = skyList.getFlux( i ).getValue();
+		Quantity fluxQuantity = skyList.getFlux(i);
+		double fluxVal = fluxQuantity.getValue();
 		String fluxStr = String::toString( fluxVal );
+		Unit fluxUnit = fluxQuantity.getUnit();
+		fluxStr = fluxStr + " "+fluxUnit.getName();
 		setTableValue( i, FLUX_COL, fluxStr );
 
 		//Major & minor axis and position angle
 		Quantity majorAxisQuantity = skyList.getMajorAxis( i );
 		String majorAxisStr = String::toString(majorAxisQuantity.getValue());
+		Unit majorUnit = majorAxisQuantity.getUnit();
+		majorAxisStr = majorAxisStr + " " + majorUnit.getName();
 		setTableValue( i, MAJOR_AXIS_COL, majorAxisStr );
 		Quantity minorAxisQuantity = skyList.getMinorAxis( i );
 		String minorAxisStr = String::toString( minorAxisQuantity.getValue());
+		Unit minorUnit= minorAxisQuantity.getUnit();
+		minorAxisStr = minorAxisStr + " " + minorUnit.getName();
 		setTableValue( i, MINOR_AXIS_COL, minorAxisStr );
 		Quantity angleQuantity = skyList.getAngle( i );
 		String angleStr = String::toString( angleQuantity.getValue());
+		Unit angleUnit = angleQuantity.getUnit();
+		angleStr = angleStr + " "+angleUnit.getName();
 		setTableValue( i, ANGLE_COL, angleStr );
 	}
 	ui.sourceTable->setSortingEnabled( true );
@@ -308,15 +337,13 @@ void FindSourcesDialog::setSourceResultsVisible( bool visible ){
 			resultIndex = holderIndex;
 			dialogLayout->removeWidget( ui.sourceResultHolder );
 			ui.sourceResultHolder->setParent( NULL );
-			setMinimumSize(600,150);
-			setMaximumSize(700,200);
+			setMaximumSize(600,300);
 		}
 	}
 	else {
 		if ( holderIndex < 0 ){
 			dialogLayout->insertWidget( resultIndex, ui.sourceResultHolder );
-			setMinimumSize( 950, 400 );
-			setMaximumSize( 1200, 600);
+			setMaximumSize( 3000, 3000 );
 		}
 	}
 	ui.saveButton->setVisible( visible );
@@ -352,9 +379,11 @@ QString FindSourcesDialog::getRemoveOverlayPath() const {
 void FindSourcesDialog::resetSkyOverlay(){
 	createTable( );
 	resetSourceView();
-	//Now tell the viewer to display this sky catalog
-	String skyPathStr( skyPath.toStdString());
-	emit showOverlay( skyPathStr, overlayColorName );
+	if ( ui.displayViewerCheckBox->isChecked()){
+		//Now tell the viewer to display this sky catalog
+		String skyPathStr( skyPath.toStdString());
+		emit showOverlay( skyPathStr, overlayColorName );
+	}
 }
 
 
@@ -613,6 +642,16 @@ void FindSourcesDialog::populatePixelBox(){
 
 void FindSourcesDialog::setImage( ImageInterface<Float>* img ){
 	image = img;
+	if ( image != NULL ){
+		const CoordinateSystem cSys = image->coordinates();
+		Vector<String> axisNames = cSys.worldAxisNames();
+		if ( axisNames.size() >= 2 ){
+			QTableWidgetItem* raHeaderItem = new QTableWidgetItem(axisNames[0].c_str());
+			ui.sourceTable->setHorizontalHeaderItem( static_cast<int>(RA_COL), raHeaderItem);
+			QTableWidgetItem* decHeaderItem = new QTableWidgetItem( axisNames[1].c_str());
+			ui.sourceTable->setHorizontalHeaderItem( static_cast<int>(DEC_COL), decHeaderItem);
+		}
+	}
 }
 
 bool FindSourcesDialog::newRegion( int id, const QString & /*shape*/, const QString &/*name*/,

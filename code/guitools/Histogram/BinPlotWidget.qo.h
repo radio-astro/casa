@@ -98,9 +98,9 @@ public:
     std::vector<float> getXValues() const;
     pair<double,double> getMinMaxValues() const;
     void setMinMaxValues( double minValue, double maxValue, bool updateGraph=true );
-    void setRangeMaxEnabled( bool enabled );
 
     //Customizing the display
+    void hideMaximumRange();
     void setColorLookups( const Vector<uInt> & lookups );
     void setColorMap( QwtLinearColorMap* colorMap );
     void setColorScaleMax( int max );
@@ -206,7 +206,6 @@ private:
 	QwtPlotCurve* addCurve( QVector<double>& xValues, QVector<double>& yValues, const QColor& curveColor );
 	bool isPrintOut( int id ) const;
 	bool isPrincipalHistogram( int id ) const;
-	void setValidatorLimits();
 	bool isPlotContains( int x, int y );
 	virtual int getCanvasHeight();
 	Histogram* findHistogramFor( int id );

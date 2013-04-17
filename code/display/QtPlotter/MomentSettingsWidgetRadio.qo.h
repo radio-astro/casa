@@ -136,7 +136,7 @@ public:
     MomentSettingsWidgetRadio(QWidget *parent = 0);
 
     void setUnits( QString units );
-    void setRange( float min, float max );
+    void setRange( double min, double max );
     void reset();
     ~MomentSettingsWidgetRadio();
 

@@ -204,7 +204,41 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 	return consolidateAndOrderRanges(ranges);
 }
 
+Bool CasacRegionManager::_supports2DBox(Bool except) const {
+	Bool ok = True;
+	const CoordinateSystem& csys = getcoordsys();
+	Vector<Int> axes;
+	if (csys.hasDirectionCoordinate()) {
+		axes = csys.directionAxesNumbers();
+	}
+	else if (csys.hasLinearCoordinate()) {
+		axes = csys.linearAxesNumbers();
+	}
+	else {
+		ok = False;
+	}
+	if (ok) {
+		uInt nGood = 0;
+		for (uInt i=0; i<axes.size(); i++) {
+			if (axes[i] >= 0) {
+				nGood++;
+			}
+		}
+		if (nGood != 2) {
+			ok = False;
+		}
+	}
+	if (except && ! ok) {
+		*_getLog() << LogOrigin("CasacRegionManager", __FUNCTION__)
+			<< "This image does not have a 2-D direction or linear coordinate";
+	}
+	return ok;
+}
+
 vector<Double> CasacRegionManager::_setBoxCorners(const String& box) const {
+	if (! box.empty()) {
+		_supports2DBox(True);
+	}
 	Vector<String> boxParts = stringToVector(box);
 	AlwaysAssert(boxParts.size() % 4 == 0, AipsError);
 	vector<Double> corners(boxParts.size());
@@ -460,25 +494,27 @@ ImageRegion CasacRegionManager::_fromBCS(
 	);
 	vector<Double> boxCorners;
 	if (box.empty()) {
-		if (
-			csys.hasDirectionCoordinate()
-			|| csys.hasLinearCoordinate()
-		) {
-			Vector<Int> dirAxesNumbers;
-			if (csys.hasDirectionCoordinate()) {
-				dirAxesNumbers = csys.directionAxesNumbers();
+		if (_supports2DBox(False)) {
+			if (
+				csys.hasDirectionCoordinate()
+				|| csys.hasLinearCoordinate()
+			) {
+				Vector<Int> dirAxesNumbers;
+				if (csys.hasDirectionCoordinate()) {
+					dirAxesNumbers = csys.directionAxesNumbers();
+				}
+				else {
+					dirAxesNumbers = csys.linearAxesNumbers();
+				}
+				Vector<Int> dirShape(2);
+				dirShape[0] = imShape[dirAxesNumbers[0]];
+				dirShape[1] = imShape[dirAxesNumbers[1]];
+				boxCorners.resize(4);
+				boxCorners[0] = 0;
+				boxCorners[1] = 0;
+				boxCorners[2] = dirShape[0] - 1;
+				boxCorners[3] = dirShape[1] - 1;
 			}
-			else {
-				dirAxesNumbers = csys.linearAxesNumbers();
-			}
-			Vector<Int> dirShape(2);
-			dirShape[0] = imShape[dirAxesNumbers[0]];
-			dirShape[1] = imShape[dirAxesNumbers[1]];
-			boxCorners.resize(4);
-			boxCorners[0] = 0;
-			boxCorners[1] = 0;
-			boxCorners[2] = dirShape[0] - 1;
-			boxCorners[3] = dirShape[1] - 1;
 		}
 	}
 	else {
@@ -544,12 +580,15 @@ ImageRegion CasacRegionManager::_fromBCS(
 		polEndPtsDouble[i] = (Double)polEndPts[i];
 	}
 
+	Bool csysSupports2DBox = _supports2DBox(False);
 	uInt nRegions = 1;
-	if (csys.hasDirectionCoordinate())  {
-		nRegions *= boxCorners.size()/4;
-	}
-	if (csys.hasLinearCoordinate())  {
-		nRegions *= boxCorners.size()/4;
+	if (csysSupports2DBox) {
+		if (csys.hasDirectionCoordinate())  {
+			nRegions *= boxCorners.size()/4;
+		}
+		if (csys.hasLinearCoordinate())  {
+			nRegions *= boxCorners.size()/4;
+		}
 	}
 	if (csys.hasPolarizationCoordinate()) {
 		nRegions *= polEndPts.size()/2;
@@ -563,18 +602,39 @@ ImageRegion CasacRegionManager::_fromBCS(
 	Vector<Double> extChanEndPts(2*nRegions);
 
 	uInt count = 0;
-	for (uInt i=0; i<max(uInt(1), xCorners.size()/2); i++) {
+
+	if (csysSupports2DBox) {
+		for (uInt i=0; i<max(uInt(1), xCorners.size()/2); i++) {
+			for (uInt j=0; j<max((uInt)1, polEndPts.size()/2); j++) {
+				for (uInt k=0; k<max(uInt(1), chanEndPts.size()/2); k++) {
+					if (
+						csys.hasDirectionCoordinate()
+						|| csys.hasLinearCoordinate()
+					) {
+						extXCorners[2*count] = xCorners[2*i];
+						extXCorners[2*count + 1] = xCorners[2*i + 1];
+						extYCorners[2*count] = yCorners[2*i];
+						extYCorners[2*count + 1] = yCorners[2*i + 1];
+					}
+					if (csys.hasPolarizationCoordinate()) {
+						extPolEndPts[2*count] = polEndPtsDouble[2*j];
+						extPolEndPts[2*count + 1] = polEndPtsDouble[2*j + 1];
+
+					}
+					if (csys.hasSpectralAxis()) {
+						extChanEndPts[2*count] = chanEndPts[2*k];
+						extChanEndPts[2*count + 1] = chanEndPts[2*k + 1];
+					}
+					count++;
+				}
+			}
+		}
+	}
+	else {
+		// here we have neither a direction nor linear coordinate with two
+		// pixel axes which are greater than 0
 		for (uInt j=0; j<max((uInt)1, polEndPts.size()/2); j++) {
 			for (uInt k=0; k<max(uInt(1), chanEndPts.size()/2); k++) {
-				if (
-					csys.hasDirectionCoordinate()
-					|| csys.hasLinearCoordinate()
-				) {
-					extXCorners[2*count] = xCorners[2*i];
-					extXCorners[2*count + 1] = xCorners[2*i + 1];
-					extYCorners[2*count] = yCorners[2*i];
-					extYCorners[2*count + 1] = yCorners[2*i + 1];
-				}
 				if (csys.hasPolarizationCoordinate()) {
 					extPolEndPts[2*count] = polEndPtsDouble[2*j];
 					extPolEndPts[2*count + 1] = polEndPtsDouble[2*j + 1];

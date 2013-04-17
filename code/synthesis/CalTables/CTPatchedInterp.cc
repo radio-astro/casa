@@ -1028,7 +1028,7 @@ void CTPatchedInterp::resampleInFreq(Matrix<Float>& fres,Matrix<Bool>& fflg,cons
 
     //    cout << "lo, hi = " << lo << ","<<hi << endl;
 
-    if (lo>hi) return; // Frequencies didn't overlap, nearest was used
+    if (lo>hi) continue; // Frequencies didn't overlap, nearest was used
 
     // Use InterpolateArray1D to fill in the middle
     IPosition blc(1,lo), trc(1,hi);

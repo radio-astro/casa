@@ -52,7 +52,7 @@ public:
     void setUnits( QString units );
     void setDisplayYUnits( const QString& units );
     void setImageYUnits( const QString& units );
-    void setRange( float start, float end );
+    void setRange( double start, double end );
     static bool isOptical();
     static void setOptical( bool optical );
     void setTaskSpecLineFitting( bool specLineFitting );
@@ -64,7 +64,7 @@ public:
 
 private slots:
 	void clear();
-    void setFitRange(float start, float end );
+    void setFitRange(double start, double end );
 
 private:
     QtCanvas* pixelCanvas;
