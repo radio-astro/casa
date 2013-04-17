@@ -9,17 +9,21 @@ import pylab as PL
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation
 from .common import DPISummary, DPIDetail
 
 LOG = infrastructure.get_logger(__name__)
 
 class SDChannelAveragedImageDisplayInputs(object):
-    def __init__(self, context, imagename, spw, antenna):
+    def __init__(self, context, result):
         self.context = context
-        self.imagename = imagename
-        self.spw = spw
-        self.antenna = antenna
+        self.imagename = result.outcome.imagename
+        self.spw = result.outcome.spwlist
+        self.antenna = result.outcome.antenna
+        self.stage = result.stage_number
+        self.source = result.outcome.sourcename
+        LOG.info('inpus object created')
 
 class SDChannelAveragedImageDisplay(object):
     Inputs = SDChannelAveragedImageDisplayInputs
@@ -28,8 +32,13 @@ class SDChannelAveragedImageDisplay(object):
     def __init__(self, inputs):
         self.inputs = inputs
         self.context = self.inputs.context
+        LOG.info('task class created')
+
+    def execute(self, dry_run=False, **parameters):
+        return self.plot()
 
     def plot(self):
+        LOG.info('START PLOT')
         ShowPlot = True
         qa = casatools.quanta
         to_deg = lambda q: qa.convert(q,'deg')['value']
@@ -46,6 +55,8 @@ class SDChannelAveragedImageDisplay(object):
     ##     del _tbtool, _tb
         #(NCHAN,data,Abcissa,Velocity) = GetDataFromFile( DataIn, NROW, False )
         NCHAN = 1
+        stage_dir = os.path.join(self.context.report_dir,
+                                 'stage%d'%(self.inputs.stage))
         antenna_names = [st.antenna.name for st in self.context.observing_run]
         try:
             idx = antenna_names.index(self.inputs.antenna)
@@ -119,6 +130,9 @@ class SDChannelAveragedImageDisplay(object):
         (x0, x1, y0, y1) = (0.25, 0.5, 0.25, 0.5)
 
         colormap = 'color'
+
+        plot_list = []
+
         for pol in xrange(npol):
             Total = data[:,:,0,pol]
             Total = numpy.flipud(Total.transpose())
@@ -177,20 +191,36 @@ class SDChannelAveragedImageDisplay(object):
             PL.title('Total Power', size=TickSize)
 
             if ShowPlot != False: PL.draw()
-            FigFileDir = './'
+            FigFileDir = stage_dir
             FigFileRoot = self.inputs.imagename+'.pol%s'%(pol)
+            plotfile = os.path.join(FigFileDir,FigFileRoot+'_TP.png')
             if FigFileDir != False:
-                PL.savefig(FigFileDir+FigFileRoot+'_TP.png', format='png', dpi=DPIDetail)
-                if os.access(FigFileDir+'listofplots.txt', os.F_OK):
-                    BrowserFile = open(FigFileDir+'listofplots.txt', 'a')
-                else:
-                    BrowserFile = open(FigFileDir+'listofplots.txt', 'w')
-                    print >> BrowserFile, 'TITLE: Gridding'
-                    print >> BrowserFile, 'FIELDS: Result IF POL Iteration Page'
-                    print >> BrowserFile, 'COMMENT: Combined spectra by spatial Gridding'
-                    print >> BrowserFile, FigFileRoot+'_TP.png'
-                BrowserFile.close()
+                PL.savefig(plotfile, format='png', dpi=DPIDetail)
+                #if os.access(FigFileDir+'listofplots.txt', os.F_OK):
+                #    BrowserFile = open(FigFileDir+'listofplots.txt', 'a')
+                #else:
+                #    BrowserFile = open(FigFileDir+'listofplots.txt', 'w')
+                #    print >> BrowserFile, 'TITLE: Gridding'
+                #    print >> BrowserFile, 'FIELDS: Result IF POL Iteration Page'
+                #    print >> BrowserFile, 'COMMENT: Combined spectra by spatial Gridding'
+                #    print >> BrowserFile, FigFileRoot+'_TP.png'
+                #BrowserFile.close()
 
-        return
+            parameters = {}
+            parameters['intent'] = 'TARGET'
+            parameters['spw'] = self.inputs.spw
+            parameters['pol'] = pol
+            parameters['ant'] = self.inputs.antenna
+            parameters['type'] = 'sd_channel-averaged'
+            parameters['file'] = self.inputs.imagename
+
+            plot = logger.Plot(plotfile,
+                               x_axis='R.A.',
+                               y_axis='Dec.',
+                               field=self.inputs.source,
+                               parameters=parameters)
+            plot_list.append(plot)
+
+        return plot_list
 
 
