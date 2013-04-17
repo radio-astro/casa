@@ -32,11 +32,6 @@ import shutil
 import fnmatch
 import types
 
-#import StringIO
-#import copy
-#import string
-#import re
-
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from .. import importdata
@@ -114,7 +109,7 @@ class RestoreDataInputs(basetask.StandardInputs):
     def products_dir(self):
         if self._products_dir is None:
             if self.context.products_dir is None:
-                self._products_dir = os.path.abspath('./')
+                self._products_dir = os.path.abspath('../products')
             else:
                 self._products_dir = self.context.products_dir
             return self._products_dir
@@ -127,11 +122,9 @@ class RestoreDataInputs(basetask.StandardInputs):
     @property
     def rawdata_dir(self):
         if self._rawdata_dir is None:
-            if self.context.output_dir is None:
-                self._rawdata_dir = os.path.abspath('./rawdata')
-	    else:
-                self._rawdata_dir = os.path.join(context.output_dir, '..', 'rawdata')
-            return self._rawdata_dir
+            self._rawdata_dir = os.path.abspath('../rawdata')
+	elif not self._rawdata_dir:
+            self._rawdata_dir = os.path.abspath('../rawdata')
         return self._rawdata_dir
 
     @rawdata_dir.setter
@@ -147,6 +140,21 @@ class RestoreDataInputs(basetask.StandardInputs):
     @session.setter
     def session (self, value):
         self._session = value
+
+    # MandatoryPipelineInputs raises an exception if vis has not been
+    # registered with the context. For an import task, the vis is never
+    # registered; to avoid the exception, we override the vis getter and
+    # setter.
+    @property
+    def vis(self):
+        return self._vis
+
+    @vis.setter
+    def vis(self, value):
+        if type(value) is types.ListType:
+            self._my_vislist = value
+        self._vis = value
+
 
 class RestoreDataResults(basetask.Results):
     def __init__(self, jobs=[]):
@@ -168,7 +176,7 @@ class RestoreData(basetask.StandardTaskTemplate):
     data produced during a previous pipeline run and archived on disk.
 	
     - Imports the selected ASDMs from rawdata
-    - Imports the flagging for the selected ASDMs from ../rawdata
+    - Imports the flagversions for the selected ASDMs from ../rawdata
     - Imports the calibration data for the selected ASDMs from ../rawdata
     - Restores the final set of pipeline flags
     - Restores the final calibration state
@@ -179,6 +187,8 @@ class RestoreData(basetask.StandardTaskTemplate):
     Inputs = RestoreDataInputs
 
     # Override the default behavior for multi-vis tasks
+    # Does this interfere with multi-vis behavior of
+    # called tasks.
     def is_multi_vis_task(self):
         return True
 
@@ -195,9 +205,15 @@ class RestoreData(basetask.StandardTaskTemplate):
 	sessionlist = inputs.session
 	if type(sessionlist) is types.StringType:
 	    sesionlist = [sessionlist,]
-	vislist = inputs.vis
-	if type(vislist) is types.StringType:
-	    vislist = [vislist,]
+	tmpvislist = inputs.vis
+	if type(tmpvislist) is types.StringType:
+	    tmpvislist = [tmpvislist,]
+	vislist = []
+	for vis in tmpvislist:
+	    if os.path.dirname(vis) == '':
+	        vislist.append(os.path.join(inputs.rawdata_dir, vis))
+	    else:
+	        vislist.append(vis)
 
 	# Download ASDMs
 	#   Download ASDMs from the archive or products_dir to rawdata_dir.
@@ -217,7 +233,21 @@ class RestoreData(basetask.StandardTaskTemplate):
 	
 	# Restore final MS.flagversions and flags
 	flag_version_name = 'Pipeline_Final'
-	flag_version_list = self.__do_restore_flags(flag_version_name=flag_version_name)
+	flag_version_list = self._do_restore_flags(flag_version_name=flag_version_name)
+
+	# Get the session list and the visibility files associated with
+	# each session.
+	session_names, session_vislists= self._get_sessions (inputs.context,
+	    sessionlist, vislist)
+
+
+	# Download calibration tables
+	#   Download calibration files from the archive or products_dir to rawdata_dir.
+	#   TBD: Currently assumed done somehow
+
+	# Restore calibration tables
+	self._do_restore_caltables(session_names=session_names,
+	    session_vislists=session_vislists)
 
 	# Download calibration apply lists
 	#   Download from the archive or products_dir to rawdata_dir.
@@ -225,19 +255,6 @@ class RestoreData(basetask.StandardTaskTemplate):
 
 	# Import calibration apply lists
 	self._do_restore_calstate()
-
-	# Get the session list and the visibility files associated with
-	# each session.
-	session_names, session_vislists= self._get_sessions (inputs.context,
-	    sessionlist, vislist)
-
-	# Download calibration tables
-	#   Download calibration files from the archive or products_dir to rawdata_dir.
-	#   TBD: Currently assumed done somehow
-
-	# Restore calibration tables
-	self._do_restore_caltables(sessions_names=session_names,
-	    session_vislists=session_vislists)
 
 	# Apply the calibrations.
 	results = self._do_applycal()
@@ -263,7 +280,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
 	    vis=vislist, session=sessionlist, save_flagonline=False)
 	importdata_task = importdata.ImportData(importdata_inputs)
-	return self.executor.execute(importdata_task)
+	return self._executor.execute(importdata_task)
 
     def  _do_restore_flags(self, flag_version_name='Pipeline_Final'):
 	inputs = self.inputs
@@ -273,17 +290,20 @@ class RestoreData(basetask.StandardTaskTemplate):
 	for ms in inputs.context.observing_run.measurement_sets:
 
 	    # Remove imported MS.flagversions from working directory
-	    flagversionpath = os.path.join (inputs.output_dir, ms.basename,
-	        '.flagversions')
+	    flagversion = ms.basename + '.flagversions'
+	    flagversionpath = os.path.join (inputs.output_dir, flagversion)
 	    if os.path.exists(flagversionpath):
 	        LOG.info('Removing default flagversion for %s' % (ms.basename))
 	        if not self._executor._dry_run:
 	            shutil.rmtree (flagversionpath)
 
 	    # Untar MS.flagversions file in rawdata_dir to output_dir
-	    tarfile = os.path.join (inputs.rawdata_dir, ms.basename, '.flagversions.tar.gz')
-	    LOG.info('Extracting %s from %s to %s' % (flagversionpath, tarfile, inputs.output_dir))
-	    tar = tarfile.open(tarfile, 'r:gz')
+	    tarfilename = os.path.join (inputs.rawdata_dir,
+	        ms.basename + '.flagversions.tar.gz')
+	    LOG.info('Extracting %s' % (flagversion))
+	    LOG.info('    From %s' % (tarfilename))
+	    LOG.info('    Into %s' % (inputs.output_dir))
+	    tar = tarfile.open(tarfilename, 'r:gz')
 	    if not self._executor._dry_run:
 		tar.extractall (path=inputs.output_dir)
 	    tar.close()
@@ -292,7 +312,8 @@ class RestoreData(basetask.StandardTaskTemplate):
 	    LOG.info('Restoring final flags for %s from flag version %s' % \
 		     (ms.basename, flag_version_name))
 	    if not self._executor._dry_run:
-		task = casa_tasks.flagmanager(vis=ms.name. mode='restore', versionname=flag_version_name)
+		task = casa_tasks.flagmanager(vis=ms.name, mode='restore',
+		    versionname=flag_version_name)
 	        self._executor.execute (task)
 
 	    flagversionlist.append(flagversionpath)
@@ -304,29 +325,33 @@ class RestoreData(basetask.StandardTaskTemplate):
 
         # Loop over MS list in working directory
 	for ms in inputs.context.observing_run.measurement_sets:
-	    applyfile_name = os.path.join (inputs.rawdata_dir, ms.basename, '.calapply.txt')
+	    applyfile_name = os.path.join (inputs.rawdata_dir,
+	        ms.basename + '.calapply.txt')
 	    LOG.info('Restoring calibration state for %s from  %s' % \
 	        (ms.basename, applyfile_name))
 	    if not self._executor._dry_run:
-		inputs.context.callibrary.import_state(applyfile_name
+		inputs.context.callibrary.import_state(applyfile_name)
 
     def _do_restore_caltables(self, session_names=None, session_vislists=None):
 	inputs = self.inputs
 	for session in session_names and vislist in session_vislists:
 
 	    # open the tarfile and get the names
-	    tarfile = os.path.join (inputs.rawdata_dir, session, '.caltables.tar.gz')
+	    tarfile = os.path.join (inputs.rawdata_dir, session +
+	        '.caltables.tar.gz')
 	    tar = tarfile.open(tarfile, 'r:gz')
 	    tarmembers = tar.getmembers()
 
 	    # Loop over the visibilities associated with that session
 	    for vis in vislist:
 		vistemplate = os.path.basename(vis) + '*.tbl'
+	        LOG.info('Restoring caltables for %s' % \
+	            (os.path.basename(vis)))
 	        LOG.info('Restoring caltables for %s from  %s' % \
-	            (os.path.basename(vis), tarfile))
+	            (os.path.basename(vis)))
 		extractlist = []
 		for member in tarmembers:
-		    if fnmatch.fnmatch(member.name, vistemplate) 
+		    if fnmatch.fnmatch(member.name, vistemplate): 
 	                LOG.info('    Extracting caltable  %s' % (member.name))
 		        extractlist.append(member)
 		if not self._executor._dry_run:
@@ -338,7 +363,7 @@ class RestoreData(basetask.StandardTaskTemplate):
 	inputs = self.inputs
         applycal_inputs = applycal.Applycal.Inputs(inputs.context)
 	applycal_task = applycal.Applycal(applycal_inputs)
-	return self.executor.execute(applycal_task)
+	return self._executor.execute(applycal_task)
 
     def _get_sessions (self, context, sessions, vis):
 
