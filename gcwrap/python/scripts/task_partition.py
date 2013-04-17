@@ -4,30 +4,8 @@ import string
 import copy
 import math
 from taskinit import *
-from parallel.parallel_task_helper import ParallelTaskHelper
 from task_mstransform import MSTHelper
-import partitionhelper as ph
 import flaghelper as fh
-import simple_cluster
-
-## Decorator function to print the arguments of a function
-#def dump_args(func):
-#    "This decorator dumps out the arguments passed to a function before calling it"
-#    argnames = func.func_code.co_varnames[:func.func_code.co_argcount]
-#    fname = func.func_name
-#   
-#    def echo_func(*args,**kwargs):
-#        print fname, ":", ', '.join('%s=%r' % entry for entry in zip(argnames,args) + kwargs.items())
-#        return func(*args, **kwargs)
-#   
-#    return echo_func
-#
-#class PartitionHelper(MSTHelper):
-##    @dump_args
-#    def __init__(self, _args = {}):
-#        MSTHelper.__init__(self, args=_args)
-        
-
 
 def partition(vis,
            outputvis,
@@ -60,7 +38,7 @@ def partition(vis,
     createmms -- Boolean flag if we're creating Multi MS
                   default: True
         separationaxis -- what axis do we intend to split on.
-                   default = 'scan'
+                   default = 'both'
                    Options: 'scan','spw','both'
         numsubms -- Number of sub-MSs to create.
                     default: 64

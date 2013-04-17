@@ -34,11 +34,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </param>
         <param type="string" name="separationaxis" ignorecase="true" subparam="true">
             <description>Axis to do parallelization across(scan,spw,both)</description>
-            <value>scan</value>
+            <value>both</value>
             <allowed kind="enum" ignorecase="true">
+                <value>both</value>
                 <value>scan</value>
                 <value>spw</value>
-                <value>both</value>
             </allowed>
         </param>
         <param type="int" name="numsubms" subparam="true">
@@ -144,7 +144,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     <constraints>
       <when param="createmms">
         <equals type="bool" value="True">
-          <default param="separationaxis"><value type="string">scan</value></default>
+          <default param="separationaxis"><value type="string">both</value></default>
           <default param="numsubms"><value type="int">64</value></default>
           <default param="parallel"><value type="bool">True</value></default>
           <default param="flagbackup"><value type="bool">True</value></default>
@@ -213,7 +213,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         will not be created.
 
         separationaxis -- Axis to do parallelization across. 
-            default: 'scan'
+            default: 'both'
             Options: 'scan', 'spw', 'both'
             The 'both' option will try to partition in both scan and spw axes.
 

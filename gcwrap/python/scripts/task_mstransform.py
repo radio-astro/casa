@@ -35,6 +35,8 @@ class MSTHelper(ParallelTaskHelper):
         self._selectionScanList = None
         self.__spwSelection = self.__args['spw']
         self.__spwList = None
+        # __ddidict contains the names of the subMSs to consolidate
+        # the keys are the ddistart and the values the subMSs names
         self.__ddidict = {}
         self._msTool = None
         self._tbTool = None
@@ -117,7 +119,7 @@ class MSTHelper(ParallelTaskHelper):
         '''Get a simple_cluster'''
         if thistask == '':
             thistask = 'mstransform'
-        print thistask
+            
         ParallelTaskHelper.__init__(self, task_name=thistask, args=self.__args)
             
     
@@ -229,7 +231,7 @@ class MSTHelper(ParallelTaskHelper):
         if self._arg['outputvis'] != '':
             casalog.post("Analyzing MS for partitioning")
             self._createPrimarySplitCommand()
-                         
+                                     
         return True
      
 #    @dump_args
@@ -283,7 +285,6 @@ class MSTHelper(ParallelTaskHelper):
         # This method is to generate a list of commands to partition
         # the data based on SPW.
 
-        print 'in spw separation'
         # Get a unique list of selected spws        
         self._selectMS()
         spwList = self._getSPWList()
@@ -332,17 +333,14 @@ class MSTHelper(ParallelTaskHelper):
 
 #    @dump_args
     def _createDefaultSeparationCommands(self):
-        # This method is similar to the SPW Separation mode above, except
-        # that if there are not enough SPW to satisfy the numSubMS it uses
-        #
+        # Separates in scan and spw axes
         self._selectMS()
             
         # Get the list of spectral windows as strings
         spwList = self._getSPWList() 
         spwList = map(str,spwList)
 
-        # Check if we can just divide on SPW or if we need to do SPW and
-        # scan
+        # Check if we can just divide on SPW or if we need to do SPW and scan
         numSubMS = self._arg['numsubms']
         numSpwPartitions = min(len(spwList),numSubMS)
         numScanPartitions = int(math.ceil(numSubMS/float(numSpwPartitions)))
@@ -372,36 +370,83 @@ class MSTHelper(ParallelTaskHelper):
 
         # Add the channel selections back to the spw expressions
         newspwsel = self.createSPWExpression(partitionedSpws)
-
-        # Dictionary for the spw/ddi consolidation later
-        self.__ddidict[0] = self.dataDir+'/%s.%04d.ms' \
-                                  % (self.outputBase, 0)
-                                  
-        # Get the first spw ID from the dictionary
+        
+        # Initial ddistart for sub-table consolidation
         self.__ddistart = 0
+
+        # Set the first spw ID for the sub-table consolidation
         spwid0 = newspwsel[0/numScanPartitions]
+        
+        # index that composes the subms names (0000, 0001, etc.)
+        sindex = 0
         for output in xrange(numSpwPartitions*numScanPartitions):
-            spwid = newspwsel[output/numScanPartitions]
-            if spwid == spwid0:
-                self.__ddistart = self.__ddistart
-            else:
-                self.__ddistart = self.__ddistart + partitionedSpws[output/numScanPartitions].__len__()
-                spwid0 = newspwsel[output/numScanPartitions]
-                self.__ddidict[self.__ddistart] = self.dataDir+'/%s.%04d.ms' \
-                                  % (self.outputBase, output)
+            
+            # Avoid the NULL MS selections by verifying that the
+            # combination scan-spw exist.
+            scansellist = map(str, partitionedScans[output%numScanPartitions])
+            selscan = ''
+            for ss in scansellist:
+                selscan = selscan + ',' + ss
+            selscan = selscan.lstrip(',')
+#            selscan = partitionedScans[output%numScanPartitions][0]
+            if not self._scanspwSelection(selscan,
+                                 str(newspwsel[output/numScanPartitions])):
+                continue
+
+            # The first valid subMS must have DDI 0
+            if sindex == 0:
+                self.__ddidict[0] = self.dataDir+'/%s.%04d.ms'%\
+                                    (self.outputBase, sindex)
+            else:                                           
+                spwid = newspwsel[output/numScanPartitions]
+                    
+                if spwid == spwid0:
+                    self.__ddistart = self.__ddistart
+                else:
+                    self.__ddistart = self.__ddistart + partitionedSpws[output/numScanPartitions].__len__()
+                    spwid0 = newspwsel[output/numScanPartitions]                
+                    # Dictionaries for sub-table consolidation
+                    self.__ddidict[self.__ddistart] = self.dataDir+'/%s.%04d.ms'% \
+                                                    (self.outputBase, sindex)
                 
             mmsCmd = copy.copy(self._arg)
             mmsCmd['createmms'] = False           
             mmsCmd['scan'] = ParallelTaskHelper.listToCasaString \
                              (partitionedScans[output%numScanPartitions])
+            
             mmsCmd['spw'] = newspwsel[output/numScanPartitions]
             if validbin:
                 mmsCmd['chanbin'] = freqbinlist[output/numScanPartitions]
             mmsCmd['ddistart'] = self.__ddistart
             mmsCmd['outputvis'] = self.dataDir+'/%s.%04d.ms' \
-                                  % (self.outputBase, output)
+                                  % (self.outputBase, sindex)
             self._executionList.append(
                 simple_cluster.JobData(self._taskName, mmsCmd))
+            
+            sindex += 1 # index of subMS name
+
+    def _scanspwSelection(self, scan, spw):
+        '''Return True if the selection is True or False otherwise'''
+        isSelected = False
+        mysel = {}
+        mysel['scan'] = scan
+        mysel['spw'] = spw
+        
+        if self._msTool is None:
+            # Open up the msTool
+            self._msTool = mstool()
+            self._msTool.open(self._arg['vis'])    
+        else:
+            self._msTool.reset()
+
+        try:
+            isSelected = self._msTool.msselect(mysel)
+        except:
+            isSelected = False
+            casalog.post('Ignoring NULL combination of scan=%s and spw=%s'% \
+                             (scan,spw),'WARN')
+        
+        return isSelected
             
  
 #    @dump_args
@@ -440,6 +485,7 @@ class MSTHelper(ParallelTaskHelper):
         if len(scanList) == 0:
             raise ValueError, "No Scans present in the created MS."
 
+        scanList.sort()
         return scanList
 
 #    @dump_args
@@ -592,16 +638,14 @@ class MSTHelper(ParallelTaskHelper):
 #                os.system('rm -rf '+self.stab) # remove empty copy
 #                os.system('mv '+self.dataDir+'/SYSCAL '+self.stab)
             
-            # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel 
-            # processing for MMSs as requested 
             if (ParallelTaskHelper.getBypassParallelProcessing()==1):
                 outputList = self._sequential_return_list
                 self._sequential_return_list = {}
             else:
                 outputList = self._jobQueue.getOutputJobs()
+                
             # We created a data directory and many SubMSs,
-            # now build the reference MS
-            
+            # now build the reference MS            
             subMSList = []
             if (ParallelTaskHelper.getBypassParallelProcessing()==1):
                 for subMS in outputList:
@@ -616,7 +660,35 @@ class MSTHelper(ParallelTaskHelper):
             if len(subMSList) == 0:
                 casalog.post("Error: no subMSs were created.", 'WARN')
                 return False
-
+            
+            # When separationaxis='scan' there is no need to give ddistart. 
+            # The tool looks at the whole spw selection and
+            # creates the indices from it. After the indices are worked out, 
+            # it applys MS selection. We do not need to consolidate either.
+                                           
+            # If axis is spw or both, give a list of the subMSs
+            # that need to be consolidated. This list is pre-organized
+            # inside the separation functions above.
+            if (self.__origpars['separationaxis'] == 'spw' or 
+                self.__origpars['separationaxis'] == 'both'):                
+                toUpdateList = self.__ddidict.values()
+                                
+                toUpdateList.sort()
+                casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
+                
+                # Consolidate the spw sub-tables to take channel selection
+                # or averages into account.
+                mtTool = casac.mstransformer()
+                try:                        
+                    mtTool.mergespwtables(toUpdateList)
+                    mtTool.done()
+                except Exception, instance:
+                    mtTool.done()
+                    casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
+                    raise
+                  
+            # Get the first subMS to be as a reference when
+            # copying the sub-tables to the other subMSs  
             mastersubms = subMSList[0]
             subtabs_to_omit = []
 
@@ -647,33 +719,6 @@ class MSTHelper(ParallelTaskHelper):
                     os.symlink('../'+os.path.basename(mastersubms)+'/SYSCAL', thestab)
                     # (link in target will be created my makeMMS)
                 subtabs_to_omit.append('SYSCAL')
-
-
-            # When separationaxis='scan' there is no need to give ddistart. 
-            # The tool looks at the whole spw selection and
-            # creates the indices from it. After the indices are worked out, 
-            # it applys MS selection. We do not need to consolidate either.
-                               
-            
-            # If axis is spw or both, give a list of the subMSs
-            # that need to be consolidated. This list is pre-organized
-            # inside the separation functions above.
-            if (self.__origpars['separationaxis'] == 'spw' or
-                self.__origpars['separationaxis'] == 'both'):
-                toUpdateList = self.__ddidict.values()
-                casalog.post('List to consolidate %s'%toUpdateList,'DEBUG')
-                
-                # Consolidate the spw sub-tables to take channel selection
-                # or averages into account.
-                mtTool = casac.mstransformer()
-                try:                        
-                    mtTool.mergespwtables(toUpdateList)
-                    mtTool.done()
-                except Exception, instance:
-                    mtTool.done()
-                    casalog.post('Cannot consolidate spw sub-tables in MMS','SEVERE')
-                    raise
-                    
                 
             # Copy sub-tables from first subMS to the others.
             ph.makeMMS(self._arg['outputvis'], subMSList,
