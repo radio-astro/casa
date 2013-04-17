@@ -589,7 +589,7 @@ msmetadata* ms::metadata(const float cachesize) {
 ::casac::record*
 ms::summary(bool verbose, const string& listfile, bool listunfl, double cachesize)
 {
-  ::casac::record *header;
+  ::casac::record *header = 0;
   try {
      if(!detached()){
        *itsLog << LogOrigin("ms", "summary");
