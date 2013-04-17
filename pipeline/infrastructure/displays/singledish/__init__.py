@@ -6,3 +6,5 @@ from .weather import SDWeatherDisplay
 from .wvr import SDWvrDisplay
 from .tsys import SDTsysDisplay
 from .sky import SDSkyDisplay
+from .tpimage import SDChannelAveragedImageDisplay
+from .imaging import SDImageDisplayFactory
