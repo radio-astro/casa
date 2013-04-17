@@ -183,7 +183,7 @@ def executeppr (pprXmlFile, dry_run=False, loglevel='info', interactive=True):
 	try:
 
 	    cInputs = pipeline.tasks.__dict__[taskname].Inputs
-            if taskname == 'ImportData':
+            if taskname == 'ImportData' or taskname == 'RestoreData':
 	        task_args['vis'] = files
 	        task_args['session'] = sessions
             elif taskname == 'SDImportData':
@@ -464,7 +464,8 @@ def _getSessions (intentsDict):
     while searching: 
 	key = 'SESSION_' + str (ptr)
         if intentsDict.has_key(key):
-	    asdmList = intentsDict[key].split(',')
+	    #asdmList = intentsDict[key].split(',')
+	    asdmList = intentsDict[key].split(' | ')
 	    asdmList = [asdm.translate(string.maketrans(':/', '__')) for asdm in asdmList]
 	    sessionsDict[key] = asdmList
 	    ptr = ptr + 1
