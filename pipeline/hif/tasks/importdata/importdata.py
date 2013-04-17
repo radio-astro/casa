@@ -1,5 +1,7 @@
 from __future__ import absolute_import
+import collections
 import contextlib
+import csv
 import itertools
 import operator
 import os
@@ -78,7 +80,6 @@ class ImportDataResults(basetask.Results):
             target.add_measurement_set(ms)
 
         if self.setjy_results:
-            LOG.info('Importing flux')
             for result in self.setjy_results:
                 result.merge_with_context(context)
             
@@ -218,11 +219,16 @@ class ImportData(basetask.StandardTaskTemplate):
                                                         ms.basename))
             ms.session = inputs.session
 
-        results = ImportDataResults(observing_run.measurement_sets)
-#        if True: # read flux densities from SOURCE table
-#            setjy_results = self._get_setjy_results(observing_run.measurement_sets)
-#            results.append(setjy_results)
-            
+        setjy_results = get_setjy_results(observing_run.measurement_sets)
+
+        results = ImportDataResults(observing_run.measurement_sets, 
+                                    setjy_results)
+    
+        # write flux results to a CSV. I'm not sure what these values will be
+        # used for now as we can import all flux values into the context with
+        # no ill effects.
+        export_flux_from_result(results, inputs.context)
+
         return results
     
     def analyse(self, results):
@@ -257,128 +263,238 @@ class ImportData(basetask.StandardTaskTemplate):
         self._executor.execute(task)
         
     def _do_importasdm(self, asdm):
+        inputs = self.inputs        
         vis = self._asdm_to_vis_filename(asdm)
-        outfile = os.path.join(self.inputs.output_dir,
+        outfile = os.path.join(inputs.output_dir,
                                os.path.basename(asdm) + "_flagonline.txt")
-
+        
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
-				     savecmds=self.inputs.save_flagonline, 
+                                     savecmds=inputs.save_flagonline,
                                      outfile=outfile,
                                      process_caldevice=False,
-                                     overwrite=self.inputs.overwrite)
+                                     overwrite=inputs.overwrite)
         
         self._executor.execute(task)
 
+        asdm_source = os.path.join(asdm, 'Source.xml')
+        if os.path.exists(asdm_source):
+            vis_source = os.path.join(vis, 'Source.xml')            
+            LOG.info('Copying Source.xml from ASDM to measurement set')
+            LOG.trace('Copying Source.xml: %s to %s' % (asdm_source,
+                                                        vis_source))
+            shutil.copy(asdm_source, vis_source)
 
-class SourceFluxImporter(object):
-    @staticmethod
-    def get_setjy_result(mses):
-        results = []
-        for ms in mses:
-            result = commonfluxresults.FluxCalibrationResults(ms.name)
 
-            for field in ms.fields:
-                measurements = []
-                for spw in field.valid_spws:
-                    if 'AMPLITUDE' in field.intents:
-                        flux = measures.FluxDensity(10)
-                    else:
-                        flux = 1
-                    measurements.append(domain.FluxMeasurement(spw, flux))
-
-                result.measurements[field.id].extend(measurements)
+def get_setjy_results(mses):
+    results = []
+    for ms in mses:
+        result = commonfluxresults.FluxCalibrationResults(ms.name)
+        science_spws = ms.get_spectral_windows(science_windows_only=True)
+        
+        for source, measurements in read_fluxes(ms).items():
+            m = [m for m in measurements if m.spw in science_spws]
             
-            results.append(result)
-        return results
+            # import flux values for all fields and intents so that we can 
+            # compare them to the fluxscale-derived values later in the run
+#        for field in [f for f in source.fields if 'AMPLITUDE' in f.intents]:
+            for field in source.fields:
+                result.measurements[field.id].extend(m)
+        
+        results.append(result)
+        
+    return results
 
-    @staticmethod
-    def getsource(filename):
-#        tree = ElementTree.parse(filename)
-#        root = tree.getroot()
+def read_fluxes(ms):
+    result = collections.defaultdict(list)
+        
+    source_table = os.path.join(ms.name, 'Source.xml')
+    if not os.path.exists(source_table):
+        LOG.info('No Source XML found at %s. No flux import performed.'
+                 % source_table)
+        return result
 
-        for (event, ele) in ElementTree.iterparse(filename):
-            if ele.tag == 'row':
-                freq_element = ele.find('frequency')
-                flux_element = ele.find('flux')
-                if freq_element and flux_element:
-                    flux_entries = string.split(flux_element.text)
-                    flux = map(lambda f: measures.FluxDensity(f, measures.FluxDensityUnits.JANSKY),
-                               flux_entries)
-                    num_stokes = int(ele.find('numStokes').text)
-                    flux_I = flux[0::num_stokes]
-                    flux_Q = flux[1::num_stokes]
-                    flux_U = flux[2::num_stokes]
-                    flux_V = flux[3::num_stokes]
+    source_element = ElementTree.parse(source_table)
+    if not source_element:
+        LOG.info('Could not parse Source XML at %s. No flux import performed' 
+                 % source_table)
+        return result
 
-                    freq = map(lambda f: measures.Frequency(f, measures.FrequencyUnits.HERTZ),
-                               string.split(freq_element.text))
-                    
-                    # SpectralWindow_14
-                    spw_id = int(string.split(ele.find('spectralWindowId').text, '_')[-1])
-                    spw = itertools.repeat('Spw %s' % spw_id)
+    for row in source_element.findall('row'):
+        flux_text = row.findtext('flux')
+        frequency_text = row.findtext('frequency')
+        source_id = row.findtext('sourceId')
+        spw_id = row.findtext('spectralWindowId')
 
-                    def grouper(n, iterable, fillvalue=None):
-                        "grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx"
-                        args = [iter(iterable)] * n
-                        return itertools.izip_longest(fillvalue=fillvalue, *args)
+        # all elements must contain data to proceed
+        if None in (flux_text, frequency_text, source_id, spw_id):
+            continue
+        
+        # spws can overlap, so rather than looking up spw by frequency,
+        # extract the spw id from the element text. I assume the format uses
+        # underscores, eg. 'SpectralWindow_13'
+        spw_id = string.split(spw_id, '_')[1]
+        spw = ms.get_spectral_window(spw_id)
 
-                    print list(grouper(num_stokes, flux))
-#                    print 'Spw %s: num flux=%s num freq=%s' % (spw_id, len(flux), len(freq))
-#                    print zip(spw, freq, flux_I, flux_Q, flux_U, flux_V)
-                ele.clear()
+        source = ms.sources[int(source_id)]
 
-def get_flux_element(row):
-    flux_text = row.findtext('flux')
-    frequency_text = row.findtext('frequency')
-    
-    # we know that flux is a 2D value (frequency + flux)    
-    if flux_entries and freq_entries:        
-        num_dimensions = int(flux_entries[0])
-        dimension_sizes = map(int, flux_entries[1:num_dimensions+1])
-        start_idx = len(dimension_sizes)
-        step_size = reduce(operator.mul, dimension_sizes)
+        # we are mapping to spw rather than frequency, so should only take 
+        # one flux density. 
+        iquv = to_jansky(flux_text)[0]
+        m = domain.FluxMeasurement(spw, *iquv)
+        result[source].append(m)
 
-        yield flux_entries[start_idx::step_size]
+    return result
 
 def get_flux_density(frequency_text, flux_text):
-    frequency_atoms = get_atoms(frequency_text)
-    frequencies = to_hertz(frequency_atoms)
-
-    flux_atoms = get_atoms(flux_text)
-    fluxes = to_jansky(flux_atoms)
+    frequencies = to_hertz(frequency_text)
+    fluxes = to_jansky(flux_text)
 
     for freq, flux in zip(frequencies, fluxes):
-        yield domain.FluxMeasurement(freq, *flux)
+        yield (freq, flux)
 
-def get_atoms(text):
+def to_jansky(flux_text):
+    '''
+    Convert a string extracted from an ASDM XML element to FluxDensity domain 
+    objects.
+    '''
+    flux_fn = lambda f : measures.FluxDensity(float(f), 
+                                              measures.FluxDensityUnits.JANSKY)
+    return get_atoms(flux_text, flux_fn)
+
+def to_hertz(flux_text):
+    '''
+    Convert a string extracted from an ASDM XML element to Frequency domain 
+    objects.
+    '''
+    freq_fn = lambda f : measures.Frequency(float(f), 
+                                            measures.FrequencyUnits.HERTZ)
+    return get_atoms(flux_text, freq_fn)
+
+def get_atoms(text, conv_fn=lambda x: x):
     '''
     Get the individual measurements from an ASDM element.
     
-    This function reads the number and size of each dimension, splitting the
-    subsequent values on the appropriate indices for the dimensions to give a
-    list of values.
+    This function converts a CASA record from a linear space-separated string
+    into a multidimensional list, using the dimension headers given at the
+    start of the CASA record to determine the number and size of each
+    dimension.
     
     text - text from an ASDM element, with space-separated values
+    fn - optional function converting a string to a user-defined type
     '''
     values = string.split(text)
     # syntax is <num dimensions> <size dimension 1> <size dimension 2> etc.
     num_dimensions = int(values[0])
     dimension_sizes = map(int, values[1:num_dimensions+1])
-    # idx holds the index of the first value for each row    
-    idx = len(dimension_sizes)+1
+
+    # find how may values are needed to form one complete 'entity'
     step_size = reduce(operator.mul, dimension_sizes)
+    # idx holds the index of the first value for each entity    
+    idx = len(dimension_sizes)+1
 
+    results = []
     while idx < len(values):
-        yield values[idx:idx+step_size]
-        idx += step_size
+        # get our complete entity as a linear list of strings, ready to be 
+        # parcelled up into dimensions
+        data = values[idx:idx+step_size]
+        # convert the values using the given function, eg. from string to Jy
+        data = map(conv_fn, data)
+        # group the values into dimensions using the sizes in the header
+        for s in dimension_sizes[-1:0:-1]:
+            data = list(grouper(s, data))        
+        results.extend(data)
+        idx = idx + step_size
 
-def to_jansky(values):
-    for v in values:
-        yield [measures.FluxDensity(f, measures.FluxDensityUnits.JANSKY)
-               for f in map(float, v)]
+    return results
 
-def to_hertz(values):
-    for v in values:
-        yield [measures.Frequency(f, measures.FrequencyUnits.HERTZ)
-               for f in map(float, v)]
+def grouper(n, iterable, fillvalue=None):
+    '''
+    grouper(3, 'ABCDEFG', 'x') --> ABC DEF Gxx
+    '''
+    args = [iter(iterable)] * n
+    return itertools.izip_longest(fillvalue=fillvalue, *args)
+
+def export_flux_from_context(context, filename=None):
+    '''
+    Export flux densities stored in the given context to a CSV file.
+    '''
+    if not filename:
+        filename = os.path.join(context.output_dir, 'flux.csv')
+        
+    with open(filename, 'wt') as f:
+        writer = csv.writer(f)
+        writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V'))
+    
+        counter = 0
+        for ms in context.observing_run.measurement_sets:
+            for field in ms.fields:
+                for flux in field.flux_densities:
+                    (I, Q, U, V) = flux.casa_flux_density
+                    writer.writerow((ms.basename, field.id, flux.spw.id, 
+                                     I, Q, U, V))
+                    counter += 1
+
+        LOG.info('Exported %s flux measurements to %s' % (counter, filename))
+
+def export_flux_from_result(results, context):
+    '''
+    Export flux densities from a set of results to a CSV file.
+    '''
+    filename = os.path.join(context.output_dir, 'flux.csv')
+        
+    with open(filename, 'wt') as f:
+        writer = csv.writer(f)
+        writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V'))
+    
+        counter = 0
+        for importdata_result in results:
+            for setjy_result in importdata_result.setjy_results:
+                ms_name = setjy_result.vis
+                ms_basename = os.path.basename(ms_name)
+                for field_id, measurements in setjy_result.measurements.items():
+                    for m in measurements:
+                        (I, Q, U, V) = m.casa_flux_density
+                        writer.writerow((ms_basename, field_id, m.spw.id, 
+                                         I, Q, U, V))
+                        counter += 1
+
+        LOG.info('Exported %s flux measurements to %s' % (counter, filename))
+
+
+def import_flux(context, filename=None):
+    '''
+    Read flux densities from a CSV file and import them into the context.
+    ''' 
+    if not filename:
+        filename = os.path.join(context.output_dir, 'flux.csv')
+
+    with open(filename, 'rt') as f:
+        reader = csv.reader(f)
+
+        # first row is header row
+        reader.next()
+
+        counter = 0
+        for row in reader:
+            (ms_name, field_id, spw_id, I, Q, U, V) = row
+            spw_id = int(spw_id)
+            ms = context.observing_run.get_ms(ms_name)
+            fields = ms.get_fields(field_id)
+            spw = ms.get_spectral_window(spw_id)
+            measurement = domain.FluxMeasurement(spw, I, Q, U, V)
+
+            # A single field identifier could map to multiple field objects,
+            # but the flux should be the same for all, so we iterate..
+            for field in fields:
+                # .. removing any existing measurements in these spws from
+                # these fields..
+                map(field.flux_densities.remove,
+                    [m for m in field.flux_densities if m.spw.id is spw_id])    
+                 
+                # .. and then updating with our new values
+                LOG.trace('Adding %s to %s' % (measurement, spw))
+                field.flux_densities.add(measurement)
+                counter += 1
+                
+        LOG.info('Imported %s flux measurements from %s' % (counter, filename))

@@ -3,6 +3,7 @@ import atexit
 import collections
 import contextlib
 import datetime
+import operator
 import os
 import pydoc
 import re
@@ -1079,6 +1080,33 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
         return ctx
 
 
+class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hif_importdata.html', 
+                 always_rerender=True):
+        super(T2_4MDetailsImportDataRenderer, self).__init__(template,
+                                                             always_rerender)
+        
+    def get_display_context(self, context, result):
+        super_cls = super(T2_4MDetailsImportDataRenderer, self)        
+        ctx = super_cls.get_display_context(context, result)
+
+        setjy_results = []
+        for r in result:
+            setjy_results.extend(r.setjy_results)
+
+        measurements = []        
+        for r in setjy_results:
+            measurements.extend(r.measurements)
+
+        num_mses = reduce(operator.add, [len(r.mses) for r in result])
+
+        ctx.update({'flux_imported' : True if measurements else False,
+                    'setjy_results' : setjy_results,
+                    'num_mses'      : num_mses})
+
+        return ctx
+
+
 class T2_4MDetailsRenderer(object):
     # the filename component of the output file. While this is the same for
     # all results, the directory is stage-specific, so there's no risk of
@@ -1423,6 +1451,7 @@ renderer_map = {
         hif.tasks.CleanList      : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_cleanlist.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
+        hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
