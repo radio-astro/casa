@@ -399,6 +399,10 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 	setPlotTitle();
 }
 
+bool QtDisplayData::isSkyCatalog() const {
+	return displayType_=="skycatalog";
+}
+
 void QtDisplayData::setPlotTitle(){
 	Record record;
 	Record outRecord;

@@ -48,6 +48,8 @@ public:
     void setModeEnabled( int count );
     void setChannelModeEnabled( int count);
     int getRate( bool mode ) const;
+    int getLowerBoundChannel() const;
+    int getUpperBoundChannel() const;
     ~AnimatorHolder();
 
 signals:

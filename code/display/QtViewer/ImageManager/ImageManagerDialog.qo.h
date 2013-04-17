@@ -74,6 +74,7 @@ private slots:
 	void unDisplayImage( QtDisplayData* image );
 	void displayImage( QtDisplayData* image );
 	void colorRestrictionsChanged();
+	void masterImageChanged( const QString& imageName );
 
 private:
 	ImageManagerDialog( const ImageManagerDialog& other );

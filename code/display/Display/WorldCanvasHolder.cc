@@ -314,6 +314,24 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
 
 	return masterFound;  }
 
+bool WorldCanvasHolder::setCSMaster( DisplayData* dd ){
+	bool acceptedPosition = false;
+	if ( dd != NULL && dd->isDisplayable()){
+		DisplayData* currentCSMaster = worldCanvas()->csMaster();
+		acceptedPosition = dd->isCSmaster( this );
+		cout << "DD accepted position is "<<acceptedPosition<<endl;
+		if ( acceptedPosition ){
+			//Make it the cs master
+			worldCanvas()->csMaster() = dd;
+			//Store the old one
+			itsLastCSmaster = currentCSMaster;
+			//Execute size control
+			acceptedPosition = executeSizeControl( worldCanvas());
+			cout << "After executing size control result was "<<acceptedPosition<<endl;
+		}
+	}
+	return acceptedPosition;
+}
 
 Bool WorldCanvasHolder::syncCSmaster(const WorldCanvasHolder* wch) {
 	// used by PanelDisplay on new WCHs to keep a consistent CS master on

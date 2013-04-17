@@ -127,7 +127,12 @@ bool AnimatorHolder::removeImageGroupBox(){
 	}
 	return removed;
 }
-
+int AnimatorHolder::getLowerBoundChannel() const {
+	return animatorChannel->getFrameStart();
+}
+int AnimatorHolder::getUpperBoundChannel() const {
+	return animatorChannel->getFrameEnd();
+}
 void AnimatorHolder::initChannel(){
 	if ( animatorChannel == NULL ){
 		animatorChannel = new AnimatorWidget( ui.channelGroupBox );

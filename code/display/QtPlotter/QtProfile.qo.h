@@ -155,7 +155,7 @@ public:
 	QString read( const QString & key ) const;
 	void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
 	void setPosition( const QList<double>& xValues, const QList<double>& yValues );
-
+	void processTrackRecord( const String& dataName, const String& positionInfo );
 public slots:
 	void zoomIn();
 	void zoomOut();

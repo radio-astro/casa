@@ -253,7 +253,7 @@
             <item>
              <widget class="QLabel" name="label_5">
               <property name="text">
-               <string>Saturation Image::</string>
+               <string>Saturation Image:</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

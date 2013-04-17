@@ -33,6 +33,10 @@ class QtDisplayData;
 class ImageTracker;
 class ImageDisplayer;
 
+/**
+ * Manages and controls access to a lit of QtDisplayDatas.
+ */
+
 class DisplayDataHolder {
 public:
 	DisplayDataHolder();
@@ -73,6 +77,8 @@ public:
 	void setImageDisplayer( ImageDisplayer* displayer );
 	virtual ~DisplayDataHolder();
 private:
+	DisplayDataHolder( const DisplayDataHolder& displayDataHolder );
+	DisplayDataHolder operator=( const DisplayDataHolder& displayDataHolder );
 	ImageTracker* imageTracker;
 	ImageDisplayer* imageDisplayer;
 	QtDisplayData *controlling_dd;

@@ -48,6 +48,9 @@ ImageManagerDialog::ImageManagerDialog(QWidget *parent)
 	connect( displayedScroll, SIGNAL(displayDataAdded( QtDisplayData*)),
 				this, SLOT( displayImage( QtDisplayData*)));
 
+	//Master image
+	connect( ui.masterImageComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(masterImageChanged(const QString&)));
+
 	//Color Restrictions
 	QButtonGroup* colorRestrictionGroup = new QButtonGroup( this );
 	colorRestrictionGroup->addButton( ui.noneRadio);
@@ -61,6 +64,18 @@ ImageManagerDialog::ImageManagerDialog(QWidget *parent)
 	connect( ui.openToRegisteredButton, SIGNAL(clicked()), this, SLOT(openToDisplayed()));
 	connect( ui.registerToOpenButton, SIGNAL(clicked()), this, SLOT(displayedToOpen()));
 	connect( ui.closeImageButton, SIGNAL(clicked()), this, SLOT(closeImage()));
+}
+
+//----------------------------------------------------------------
+//                 Master Image
+//----------------------------------------------------------------
+
+void ImageManagerDialog::masterImageChanged(const QString& imageName){
+	QtDisplayData* newMaster = allImages->getDD( imageName.toStdString());
+	if ( newMaster != NULL ){
+		/*allImages->setControllingDD( newMaster );
+		qDebug() << "Made dd="<<newMaster->name().c_str()<<" the new controlling dd";*/
+	}
 }
 
 void ImageManagerDialog::updateSelectedMaster(){

@@ -116,6 +116,7 @@ class QtDisplayData : public QObject {
   
   // Possible valuse: Raster, Vector, Annotation, CanvasAnnotation
   virtual Display::DisplayDataType ddType();
+  bool isSkyCatalog() const;
   
   // Can the QDD display tracking information?
   virtual Bool usesTracking() { return !isEmpty() &&

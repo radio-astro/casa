@@ -79,7 +79,6 @@ class HistogramMain;
 class Fit2DTool;
 class SlicerMainWindow;
 class ColorHistogram;
-class FindSourcesDialog;
 class ImageManagerDialog;
 
 template <class T> class ImageInterface;
@@ -501,7 +500,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
-      *profileAct_, *momentsCollapseAct_, *histogramAct_, *findSourcesAct_,*fitAct_,
+      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
       *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_, *manageImagesAct_;
   
   QToolBar* mainToolBar_;
@@ -526,7 +525,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   int movieStep;
   QTimer movieTimer;
   void setAnimationRate();
-
+  int getBoundedChannel( int channelNumber ) const;
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
@@ -552,7 +551,6 @@ class QtDisplayPanelGui : public QtPanelBase {
   ColorHistogram* colorHistogram;
   Fit2DTool* fitTool;
   SlicerMainWindow* sliceTool;
-  FindSourcesDialog* findSourcesDialog;
   ImageManagerDialog* imageManagerDialog;
 
   // interactive clean...
@@ -580,7 +578,6 @@ class QtDisplayPanelGui : public QtPanelBase {
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
   void showHistogram();
-  void showFindSources();
   void showSlicer();
   void resetListenerImage();
   void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
@@ -605,7 +602,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   void showImageManager();
   void sliceMarkerVisibilityChanged(int regionId, bool visible);
   void sliceMarkerPositionChanged(int regionId, int segmentIndex, float percentage);
-
+  void updateMultiSpectralFitLocation( Record trackingRec);
  public:
  
   // True by default.  Set False to disable auto-raise of the Data
