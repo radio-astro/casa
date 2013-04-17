@@ -441,6 +441,8 @@ def export_flux_from_result(results, context):
     '''
     Export flux densities from a set of results to a CSV file.
     '''
+    if type(results) is not types.ListType:
+        results = [results,]        
     filename = os.path.join(context.output_dir, 'flux.csv')
         
     with open(filename, 'wt') as f:
