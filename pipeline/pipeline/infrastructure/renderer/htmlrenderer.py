@@ -122,6 +122,12 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDCalSky:
         return 'Generage Sky calibration table'
 
+    if task_cls is hsd.tasks.SDApplyCal:
+        return 'Apply calibration tables'
+
+    if task_cls is hsd.tasks.SDImaging:
+        return 'Image single dish data'
+
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
         return ('\'%s\' (developers should add a task description)'
@@ -1428,7 +1434,8 @@ renderer_map = {
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
         hsd.tasks.SDInspectData  : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_inspectdata.html'),
         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
-        hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html')
+        hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html'),
+        hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html')
     }
 }                
 
