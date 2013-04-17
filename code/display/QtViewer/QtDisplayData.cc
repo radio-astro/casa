@@ -1029,8 +1029,19 @@ void QtDisplayData::checkGlobalChange( Record& opts ){
 		//Remove all but the global options from the chgdOpts.
 		int histFieldId = opts.fieldNumber( PrincipalAxesDD::HISTOGRAM_RANGE );
 		if ( histFieldId != -1 ){
-			Record rangeRecord = opts.subRecord( PrincipalAxesDD::HISTOGRAM_RANGE );
-			globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+			if ( opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpRecord ){
+				Record rangeRecord = opts.subRecord( PrincipalAxesDD::HISTOGRAM_RANGE );
+				globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+			}
+			else if (opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpArrayFloat) {
+				Vector<Float> minMaxVector(opts.toArrayFloat(PrincipalAxesDD::HISTOGRAM_RANGE));
+				Record rangeRecord;
+				rangeRecord.define("value", minMaxVector);
+				globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+			}
+			else {
+				qDebug() <<"QtDisplayData::checkGlobalChange - unrecognized opts.dataType="<<opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE);
+			}
 		}
 
 		int colorMapId = opts.fieldNumber( COLOR_MAP );
