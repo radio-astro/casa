@@ -2523,18 +2523,21 @@ namespace casa {
 
 					if ( image == 0 ) continue;
 
+					String full_image_name = image->name(false);
+					std::map<String,bool>::iterator repeat = processed.find(full_image_name);
+					if (repeat != processed.end()) continue;
+					processed.insert(std::map<String,bool>::value_type(full_image_name,true));
+
 					if ( name_ == "polyline" ) {
 						get_image_region( dd );
 						RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
 						region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(new SliceRegionInfo( image->name(true), image->name(false), dd_stats)));
 					} else if ( name_ == "p/v line" ) {
-						get_image_region( dd );
-						region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(newInfoObject(image)) );
+						if ( wc_->isCSmaster(dd) ) {
+							get_image_region( dd );
+							region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(newInfoObject(image)) );
+						}
 					} else {
-						String full_image_name = image->name(false);
-						std::map<String,bool>::iterator repeat = processed.find(full_image_name);
-						if (repeat != processed.end()) continue;
-						processed.insert(std::map<String,bool>::value_type(full_image_name,true));
 
 						if ( imageregion.get( ) == NULL  ) continue;
 
@@ -3003,6 +3006,7 @@ namespace casa {
 		void Region::initHistogram() {
 			if ( histogram == NULL ) {
 				histogram = new BinPlotWidget( false, false, false, NULL );
+				histogram->setDisplayPlotTitle( true );
 				state()->addHistogram( histogram );
 			}
 		}
