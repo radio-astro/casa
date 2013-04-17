@@ -633,6 +633,8 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 }
 
 void QtProfile::adjustPlotUnits(){
+	//Try to keep the same units if possible.
+	QString currentUnits = yAxisCombo->currentText();
 	yAxisCombo->clear();
 	QStringList yUnitsList =(QStringList()<< ConverterIntensity::JY_BEAM <<
 				ConverterIntensity::JY_ARCSEC << ConverterIntensity::JY_SR <<
@@ -672,6 +674,8 @@ void QtProfile::adjustPlotUnits(){
 			yAxisCombo->addItem( yUnitsList[i]);
 		}
 	}
+	//Try to maintain old units.
+	resetYUnits( currentUnits );
 }
 
 void QtProfile::wcChanged( const String c,
@@ -682,6 +686,10 @@ void QtProfile::wcChanged( const String c,
 	if (!isVisible()) return;
 	if (!analysis) return;
 	*itsLog << LogOrigin("QtProfile", "wcChanged");
+
+	//Since we are going to reset the data, we need to store the
+	//current units so that we can attempt to set them back later.
+	QString currentYUnits = yAxisCombo->currentText();
 
 	bool cubeZero = checkCube();
 	if (cubeZero){
@@ -756,6 +764,7 @@ void QtProfile::wcChanged( const String c,
 
 	momentSettingsWidget->setCollapseVals( z_xval );
 	specFitSettingsWidget->setCollapseVals( z_xval );
+	resetYUnits( currentYUnits );
 }
 
 
@@ -1125,6 +1134,12 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 	if ( occurances >= 1 && !newOverplots ){
 		return;
 	}
+
+	//Okay, we are committed to doing something.  Try to store the
+	//y-axis units since the routine is going to munge them, then
+	//we will attempt to reset them at the end.
+	QString currentYUnits = yAxisCombo->currentText();
+
 	spectra_info_map[id_] = shape;
 	String c(WORLD_COORDINATES);
 
@@ -1193,8 +1208,17 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 	specFitSettingsWidget->setCollapseVals( z_xval );
 	positioningWidget->updateRegion( pxv, pyv, wxv, wyv );
 	newOverplots = false;
+
+	//Okay, now we try to reset the y-Axis units.
+	resetYUnits( currentYUnits );
 }
 
+void QtProfile::resetYUnits( const QString& units ){
+	int unitIndex = yAxisCombo->findText( units );
+	if ( unitIndex >= 0 ){
+		yAxisCombo->setCurrentIndex( unitIndex );
+	}
+}
 
 void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const QList<double> &world_x, const QList<double> &world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y ) {
@@ -1216,9 +1240,15 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 	//Normally we go off the region selected event because the focus event is called
 	//both when a region loses(bad) or gains focus(good).  However, in the case we
 	//don't have a current_region_id, we'll take anything.
-	else if ( type == viewer::region::RegionChangeSelected ||
+	else if ( (type == viewer::region::RegionChangeSelected && current_region_id == id_)){
+			return;
+	}
+	else if ( (type == viewer::region::RegionChangeSelected && current_region_id != id_) ||
 			(type == viewer::region::RegionChangeFocus && current_region_id == NO_REGION_ID )){
 		current_region_id = id_;			// viewer region focus has changed
+	}
+	else if ( type == viewer::region::RegionChangeFocus ){
+		return;
 	}
 	else if ( type == viewer::region::RegionChangeNewChannel ){
 		return;						// viewer moving to new channel
@@ -1226,6 +1256,12 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 	else if ( id_ != current_region_id ){
 		return;						// some other region
 	}
+
+	//Okay we have eliminated the easy ones where we don't need to deal with
+	//it.
+	//Try to preserve the current y units after all is said and done, if
+	//possible.
+	QString currentUnits = yAxisCombo->currentText();
 
 	SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 	if ( it == spectra_info_map.end( ) ) return;
@@ -1296,6 +1332,8 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 
 	momentSettingsWidget->setCollapseVals(z_xval );
 	specFitSettingsWidget->setCollapseVals( z_xval );
+
+	resetYUnits( currentUnits );
 }
 
 
