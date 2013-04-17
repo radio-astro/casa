@@ -120,6 +120,7 @@ private:
 			    uInt whichShape);
   void checkShape(const IPosition& otherShape) const;
   void checkCategories(const ROMSMainColumns& otherCols) const;
+  Bool checkEphIdInField(const ROMSFieldColumns& otherFldCol) const;
   Bool copyPointing(const MSPointing& otherPoint, const Block<uInt>& newAntIndices);
   Bool copyPointingB(MSPointing& otherPoint, const Block<uInt>& newAntIndices);
   Int copyObservation(const MSObservation& otherObs, const Bool remRedunObsId=True);
@@ -127,7 +128,7 @@ private:
   Block<uInt> copyAntennaAndFeed(const MSAntenna& otherAnt,
 				 const MSFeed& otherFeed);
   Block<uInt> copyState(const MSState& otherState);
-  Block<uInt> copyField(const MSField& otherFld);
+  Block<uInt> copyField(const MeasurementSet& otherms);
   Block<uInt> copySpwAndPol(const MSSpectralWindow& otherSpw,
 			    const MSPolarization& otherPol,
 			    const MSDataDescription& otherDD);

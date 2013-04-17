@@ -155,7 +155,10 @@ public:
 // List table size summary
    void listTables (LogIO& os, Bool verbose=False) const;
 
+   void setListUnflaggedRowCount(Bool v) { _listUnflaggedRowCount = v; }
 
+   // set the cache size, in MB, for the MSMetaData object.
+   void setMetaDataCacheSizeInMB(Float cacheSize) { _cacheSizeMB = cacheSize; }
 private:
 // Pointer to MS
    const MeasurementSet* pMS;
@@ -172,6 +175,10 @@ private:
 
    // Name of the MS used in the constructor
    String msname_p;
+
+   Bool _listUnflaggedRowCount;
+
+   Float _cacheSizeMB;
 
 
 };

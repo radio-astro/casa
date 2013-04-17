@@ -281,9 +281,14 @@ Bool PagedImage<T>::isWritable() const
 }
 
 template<class T>
-void PagedImage<T>::doReopenRW()
+void PagedImage<T>::reopenRW()
 {
-  table().reopenRW();
+  //# First reopen if needed.
+  map_p.reopen();
+  //# Open for write if not done yet and if writable.
+  if (!table().isWritable()  &&  isWritable()) {
+    table().reopenRW();
+  }
 }
 
 template<class T>
@@ -511,8 +516,8 @@ template<class T>
 Bool PagedImage<T>::setMiscInfo (const RecordInterface& newInfo)
 {
   this->setMiscInfoMember (newInfo);
-  Table& tab = table();
   reopenRW();
+  Table& tab = table();
   if (! tab.isWritable()) {
     return False;
   }

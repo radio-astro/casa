@@ -201,7 +201,7 @@ Int ROMSFeedColumns::matchFeed(Quantum<Double>& newTimeQ,
 	 && fLengthMatches
 	 ){
 	Bool matches=True;
-	for(uInt i=0; i<numRec; i++){ // compare all receptors
+	for(Int i=0; i<numRec; i++){ // compare all receptors
 	  if(!(beamOffsetQuant()(r)(IPosition(2,0,i)).getValue(d) == beamOffsetQ(IPosition(2,0,i)).getValue(d)
 	       && beamOffsetQuant()(r)(IPosition(2,1,i)).getValue(d) == beamOffsetQ(IPosition(2,1,i)).getValue(d)
 	       && polarizationType()(r)(IPosition(1,i)) == polType(IPosition(1,i))
