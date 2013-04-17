@@ -417,7 +417,8 @@ class ExportData(basetask.StandardTaskTemplate):
 	flag_version_list = os.path.join (visname + '.flagversions',
 	    'FLAG_VERSION_LIST')
 	ti = tarfile.TarInfo(flag_version_list)
-	line = "Pipeline_Flags : Final pipeline flags\n"
+	#line = "Pipeline_Final : Final pipeline flags\n"
+	line = "%s : Final pipeline flags\n" % flag_version_name
 	ti.size = len (line)
 	LOG.info('Saving flag version list')
 
