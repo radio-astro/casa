@@ -15,6 +15,7 @@ from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal, NewGaincal
 from .importdata import ImportData
 from .makecleanlist import MakeCleanList
 from .refant import RefAnt
+from .restoredata import RestoreData
 from .setmodel import Setjy
 from .setmodel import SetModel
 from .tsyscal import Tsyscal
