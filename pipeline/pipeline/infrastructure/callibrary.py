@@ -608,7 +608,7 @@ class CalLibrary(object):
 
         return result
 
-    def import_state(self, filename=None):
+    def import_state(self, filename=None, append=False):
         filename = self._calc_filename(filename)
 
         LOG.info('Importing calibration state from %s' % filename)
@@ -618,7 +618,8 @@ class CalLibrary(object):
                 calapp = CalApplication.from_export(line)                
                 calapps.append(calapp)
 
-        self._active = CalState()
+	if not append:
+            self._active = CalState()
         for calapp in calapps:
             LOG.debug('Adding %s' % calapp)        
             self.add(calapp.calto, calapp.calfrom)
