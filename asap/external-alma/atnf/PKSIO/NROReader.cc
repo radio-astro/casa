@@ -514,7 +514,7 @@ int NROReader::getHeaderInfo( Int &nchan,
   //cout << "epoch = " << epoch << endl ;
   string poltp = dataset_->getPOLTP()[0] ;
   //cout << "poltp = '" << poltp << "'" << endl ;
-  if ( poltp == "" || poltp[0] == ' ' ) 
+  if ( poltp.empty() || poltp[0] == ' ' || poltp[0] == '\0' ) 
     //poltp = "None" ;
     poltp = "linear" ;   // if no polarization type specified, set to "linear"
   //else if ( strcmp( poltp, "LINR" ) == 0 )
@@ -524,7 +524,7 @@ int NROReader::getHeaderInfo( Int &nchan,
   else if ( poltp.compare( 0, 1, "CIRL", 0, 1 ) == 0 )
     poltp = "circular" ;
   poltype = poltp ;
-  //cout << "poltype = " << poltype << endl ;
+  //cout << "poltype = '" << poltype << "'" << endl ;
 
   //vector<Bool> ifs = getIFs() ;
   //nif = ifs.size() ;

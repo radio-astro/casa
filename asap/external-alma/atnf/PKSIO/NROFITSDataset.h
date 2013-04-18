@@ -38,6 +38,7 @@
 #include <atnf/PKSIO/NRODataset.h>
 
 #include <string>
+#include <map>
 
 using namespace std ;
 
@@ -96,32 +97,40 @@ class NROFITSDataset : public NRODataset
   virtual uInt getPolNo( int irow ) ;
 
  protected:
+  // stracture representing property of fields
+  struct FieldProperty {
+    //string name;    // field name
+    int size;         // data size [byte]
+    //string unit;    // unit of the field
+    long offset;      // offset from the head of scan record [byte]
+  };
+
   // fill header information
   int fillHeader( int sameEndian ) ;
 
   // Read char data
-  int readHeader( string &v, char *name ) ;
-  int readTable( char *v, char *name, int clen, int idx=0 ) ;
-  int readTable( vector<char *> &v, char *name, int idx=0 ) ;
-  int readColumn( vector<string> &v, char *name, int idx=0 ) ;
+  int readHeader( string &v, const char *name ) ;
+  int readTable( char *v, const char *name, int clen, int idx=0 ) ;
+  int readTable( vector<char *> &v, const char *name, int idx=0 ) ;
+  int readColumn( vector<string> &v, const char *name, int idx=0 ) ;
 
   // Read int data
-  int readHeader( int &v, char *name) ;
-  int readTable( int &v, char *name, int b, int idx=0 ) ;
-  int readTable( vector<int> &v, char *name, int b, int idx=0 ) ;
-  int readColumn( vector<int> &v, char *name, int b, int idx=0 ) ;
+  int readHeader( int &v, const char *name) ;
+  int readTable( int &v, const char *name, int b, int idx=0 ) ;
+  int readTable( vector<int> &v, const char *name, int b, int idx=0 ) ;
+  int readColumn( vector<int> &v, const char *name, int b, int idx=0 ) ;
 
   // Read float data
-  int readHeader( float &v, char *name) ;
-  int readTable( float &v, char *name, int b, int idx=0 ) ;
-  int readTable( vector<float> &v, char *name, int b, int idx=0 ) ;
-  int readColumn( vector<float> &v, char *name, int b, int idx=0 ) ;
+  int readHeader( float &v, const char *name) ;
+  int readTable( float &v, const char *name, int b, int idx=0 ) ;
+  int readTable( vector<float> &v, const char *name, int b, int idx=0 ) ;
+  int readColumn( vector<float> &v, const char *name, int b, int idx=0 ) ;
 
   // Read double data
-  int readHeader( double &v, char *name) ;
-  int readTable( double &v, char *name, int b, int idx=0 ) ;
-  int readTable( vector<double> &v, char *name, int b, int idx=0 ) ;
-  int readColumn( vector<double> &v, char *name, int b, int idx=0 ) ;
+  int readHeader( double &v, const char *name) ;
+  int readTable( double &v, const char *name, int b, int idx=0 ) ;
+  int readTable( vector<double> &v, const char *name, int b, int idx=0 ) ;
+  int readColumn( vector<double> &v, const char *name, int b, int idx=0 ) ;
 
   // read ARRY
   int readARRY() ;
@@ -142,13 +151,10 @@ class NROFITSDataset : public NRODataset
   void findData() ;
 
   // get offset bytes for attributes
-  long getOffset( char *name ) ;
+  long getOffset( const char *name ) ;
 
   // move pointer to target position
-  int movePointer( char *name, int idx=0 ) ;
-
-  // convert frequency frame
-//   virtual double toLSR( double v, double t, double x, double y ) ;
+  int movePointer( const char *name, int idx=0 ) ;
 
   // number of column for scan header
   int numField_ ;
@@ -162,17 +168,10 @@ class NROFITSDataset : public NRODataset
   // reference index
   vector<int> arrayid_ ;
 
-  // field names
-  vector<string> names_ ;
-
-  // field units
-  vector<string> units_ ;
-
-  // sizes of each field
-  vector<int> sizes_ ;  
-
-  // offsets from the beginning of the file
-  vector<long> offsets_ ;
+  // field properties
+  // Key   = field name
+  // Value = field properties 
+  map<string, FieldProperty> properties_ ;
 
   // spectral data
   vector<int> JDATA ;

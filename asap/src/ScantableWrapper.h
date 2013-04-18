@@ -280,10 +280,10 @@ public:
   void regridSpecChannel( double dnu, int nchan )
   { table_->regridSpecChannel( dnu, nchan ); }
 
-  std::vector<std::string> applyBaselineTable(const std::string& bltable, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
-  { return table_->applyBaselineTable(bltable, outbltable, outbltableexists, overwrite); }
-  std::vector<std::string> subBaseline(const std::vector<std::string>& blinfo, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
-  { return table_->subBaseline(blinfo, outbltable, outbltableexists, overwrite); }
+  std::vector<std::string> applyBaselineTable(const std::string& bltable, const bool returnfitresult, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
+  { return table_->applyBaselineTable(bltable, returnfitresult, outbltable, outbltableexists, overwrite); }
+  std::vector<std::string> subBaseline(const std::vector<std::string>& blinfo, const bool returnfitresult, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
+  { return table_->subBaseline(blinfo, returnfitresult, outbltable, outbltableexists, overwrite); }
   void polyBaseline(const std::vector<bool>& mask, int order, float clipthresh, int clipniter, bool getresidual=true, const std::string& showprogress="true,1000", const bool outlog=false, const std::string& blfile="", const std::string& bltable="")
   { table_->polyBaseline(mask, order, clipthresh, clipniter, getresidual, showprogress, outlog, blfile, bltable); }
 

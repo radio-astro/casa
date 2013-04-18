@@ -1113,8 +1113,8 @@ void Scantable::summary( const std::string& filename )
   TableIterator iter(table_, "SCANNO");
 
   // Vars for keeping track of time, freqids, molIds in a SCANNO
-  Vector<uInt> freqids;
-  Vector<uInt> molids;
+  //Vector<uInt> freqids;
+  //Vector<uInt> molids;
   Vector<uInt> beamids(1,0);
   Vector<MDirection> beamDirs;
   Vector<Int> stypeids(1,0);
@@ -1156,10 +1156,10 @@ void Scantable::summary( const std::string& filename )
     etime += meanIntTim/C::day;
 
     // MOLECULE_ID and FREQ_ID
-    molids = getNumbers(molIdCol);
+    Vector<uInt> molids(getNumbers(molIdCol));
     molids.shape(nmol);
 
-    freqids = getNumbers(freqIdCol);
+    Vector<uInt> freqids(getNumbers(freqIdCol));
     freqids.shape(nfreq);
 
     // Add first beamid, and srcNames
@@ -2489,7 +2489,7 @@ bool Scantable::getFlagtraFast(uInt whichrow)
   return ((flag >> 7) == 1);
 }
 
-std::vector<std::string> Scantable::applyBaselineTable(const std::string& bltable, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
+std::vector<std::string> Scantable::applyBaselineTable(const std::string& bltable, const bool returnfitresult, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
 {
   STBaselineTable btin = STBaselineTable(bltable);
 
@@ -2519,10 +2519,11 @@ std::vector<std::string> Scantable::applyBaselineTable(const std::string& bltabl
       std::vector<float> params;
       float rms;
       std::vector<float> resfit = doApplyBaselineTable(spec, mask, ftype, fpar, params, rms);
-
       setSpectrum(resfit, whichrow);
 
-      res.push_back(packFittingResults(whichrow, params, rms));
+      if (returnfitresult) {
+	res.push_back(packFittingResults(whichrow, params, rms));
+      }
 
       if (outBaselineTable) {
 	if (outbltableexists) {
@@ -2555,7 +2556,7 @@ std::vector<std::string> Scantable::applyBaselineTable(const std::string& bltabl
   return res;
 }
 
-std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& blInfoList, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
+std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& blInfoList, const bool returnfitresult, const std::string& outbltable, const bool outbltableexists, const bool overwrite)
 {
   int nRowBl = blInfoList.size();
   int nRowSt = nrow();
@@ -2601,7 +2602,10 @@ std::vector<std::string> Scantable::subBaseline(const std::vector<std::string>& 
 
       std::vector<float> resfit = doSubtractBaseline(spec, mask, ftype, fpar, params, rms, finalmask, clipth, clipn, uself, irow, lfth, lfedge, lfavg);
       setSpectrum(resfit, irow);
-      res.push_back(packFittingResults(irow, params, rms));
+
+      if (returnfitresult) {
+	res.push_back(packFittingResults(irow, params, rms));
+      }
 
       if (outBaselineTable) {
 	Vector<Int> fparam(fpar.size());

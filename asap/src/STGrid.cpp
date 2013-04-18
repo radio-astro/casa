@@ -1967,10 +1967,13 @@ void STGrid::fillTable( Table &tab )
   Vector<Double> pix( 2 );
   ArrayColumn<Double> directionCol( tab, "DIRECTION" ) ;
   ArrayColumn<Float> spectraCol( tab, "SPECTRA" ) ;
+  ArrayColumn<uChar> flagtraCol( tab, "FLAGTRA" ) ;
   ScalarColumn<uInt> polnoCol( tab, "POLNO" ) ;
   ScalarColumn<uInt> scannoCol( tab, "SCANNO" ) ;
   Int irow = 0 ;
   Vector<Float> sp( nchan_ ) ;
+  Vector<uChar> flag( nchan_, (uChar)1 ) ;
+  Vector<uChar> unflag( nchan_, (uChar)0 ) ;
   Bool bsp, bdata ;
   const Float *data_p = data_.getStorage( bdata ) ;
   Float *wsp_p, *sp_p ;
@@ -1997,6 +2000,12 @@ void STGrid::fillTable( Table &tab )
         }
         sp.putStorage( sp_p, bsp ) ;
         spectraCol.put( irow, sp ) ;
+        if ( allEQ( sp, (Float)0.0 ) ) {
+          flagtraCol.put( irow, flag ) ;
+        }
+        else {
+          flagtraCol.put( irow, unflag ) ;
+        }
         directionCol.put( irow, dir ) ;
         polnoCol.put( irow, pollist_[ipol] ) ;
         scannoCol.put( irow, scanno ) ;
@@ -2071,7 +2080,7 @@ void STGrid::fillMainColumns( Table &tab )
     fitidCol.put( i, -1 ) ;
     focusidCol.put( i, focusId ) ;
     weatheridCol.put( i, weatherId ) ;
-    flagtraCol.put( i, flagtra ) ;
+    //flagtraCol.put( i, flagtra ) ;
     rflagCol.put( i, 0 ) ;
     tsysCol.put( i, defaultTsys ) ;
     srcnameCol.put( i, srcname ) ;

@@ -66,10 +66,6 @@ void NROFITSDataset::initialize()
 
   // field names, units, and sizes
   readHeader( numField_, "TFIELDS" ) ;
-  names_.resize( numField_ ) ;
-  units_.resize( numField_ ) ;
-  sizes_.resize( numField_ ) ;
-  offsets_.resize( numField_ ) ;
   getField() ;
 
   // check endian
@@ -1493,11 +1489,10 @@ void NROFITSDataset::getField()
       cerr << "Error while reading field type for scan header." << endl ;
       return ;
     }
-    //names_[i] = string( tmp ) ;
-    names_[i] = tmp ;
-    spos = names_[i].find( " " ) ;
+    string name = tmp ;
+    spos = tmp.find( " " ) ;
     if ( spos != string::npos )
-      names_[i] = names_[i].substr( 0, spos ) ;
+      name = tmp.substr( 0, spos ) ;
     //strcpy( tmp, "         " ) ;
     if ( form.find( "A" ) != string::npos ) {
       //cout << "skip to get unit: name = " << form << endl ;
@@ -1511,14 +1506,13 @@ void NROFITSDataset::getField()
         tmp = "none" ;
       }
     }
-    //units_[i] = string( tmp ) ;
-    units_[i] = tmp ;
-    spos = units_[i].find( " " ) ;
-    if ( spos != string::npos )
-      units_[i] = units_[i].substr( 0, spos ) ;
-    //cout << "i = " << i << ": name=" << form << " type=" << names_[i] << " unit=" << units_[i] << endl ;
+    //string unit = string( tmp ) ;
+    //unit = tmp ;
+    //spos = tmp.find( " " ) ;
+    //if ( spos != string::npos )
+    //  unit = unit.substr( 0, spos ) ;
+    //cout << "i = " << i << ": name=" << form << " type=" << name << " unit=" << unit << endl ;
 
-    offsets_[i] = offset ;
     string substr1 = form.substr( 0, form.size()-1 ) ;
     string substr2 = form.substr( form.size()-1, 1 ) ;
     //cout << "substr1 = " << substr1 << ", substr2 = " << substr2 << endl ;
@@ -1532,8 +1526,13 @@ void NROFITSDataset::getField()
       o2 = sizeof(float) ;
     else if ( substr2 == "D" )
       o2 = sizeof(double) ;
-    sizes_[i] = o1 * o2 ;
-    offset += sizes_[i] ;
+
+    FieldProperty property;
+    property.offset = offset;
+    property.size = o1 * o2;
+    properties_[name] = property;
+
+    offset += property.size ;
   }  
 }
 
@@ -1713,21 +1712,10 @@ void NROFITSDataset::findData()
 //     //cout << "arrayid_[" << i << "] = " << arrayid_[i] << endl ;
   }
 
-long NROFITSDataset::getOffset( char *name ) 
+long NROFITSDataset::getOffset( const char *name ) 
 {
-  long offset = 0 ;
-  string sname( name ) ;
-  long j = -1 ;
-  for ( long i = 0 ; i < numField_ ; i++ ) {
-    // escape if name is found
-    //cout << "names_[" << i << "] = " << names_[i] << "  sname = " << sname << endl ;
-    if ( names_[i] == sname ) {
-      j = i ;
-      break ;
-    }
-  }
-
-  offset = (j >= 0) ? offsets_[j] : j ;
+  map<string, FieldProperty>::iterator iter = properties_.find(string(name));
+  long offset = (iter != properties_.end()) ? iter->second.offset : -1;
 
   return offset ;
 }
@@ -1766,7 +1754,7 @@ int NROFITSDataset::getPolarizationNum()
   return npol ;
 }
 
-int NROFITSDataset::readHeader( string &v, char *name ) 
+int NROFITSDataset::readHeader( string &v, const char *name ) 
 {
   //
   // Read 'name' attribute defined as char from the FITS Header
@@ -1801,7 +1789,7 @@ int NROFITSDataset::readHeader( string &v, char *name )
   return status ;
 }
 
-int NROFITSDataset::readHeader( int &v, char *name ) 
+int NROFITSDataset::readHeader( int &v, const char *name ) 
 {
   //
   // Read 'name' attribute defined as int from the FITS Header
@@ -1837,7 +1825,7 @@ int NROFITSDataset::readHeader( int &v, char *name )
 }
 
 
-int NROFITSDataset::readHeader( float &v, char *name ) 
+int NROFITSDataset::readHeader( float &v, const char *name ) 
 {
   //
   // Read 'name' attribute defined as float from the FITS Header
@@ -1871,7 +1859,7 @@ int NROFITSDataset::readHeader( float &v, char *name )
   return status ;
 }
 
-int NROFITSDataset::readHeader( double &v, char *name ) 
+int NROFITSDataset::readHeader( double &v, const char *name ) 
 {
   //
   // Read 'name' attribute defined as double from the FITS Header
@@ -1906,7 +1894,7 @@ int NROFITSDataset::readHeader( double &v, char *name )
   return status ;
 }
 
-int NROFITSDataset::readTable( char *v, char *name, int clen, int idx ) 
+int NROFITSDataset::readTable( char *v, const char *name, int clen, int idx ) 
 {
   //
   // Read 'name' attribute defined as char from the idx-th row 
@@ -1916,16 +1904,11 @@ int NROFITSDataset::readTable( char *v, char *name, int clen, int idx )
   if ( status < 0 )
     return status ;
 
-  // get length of char
-  int index = -1 ;
-  for ( int i = 0 ; i < numField_ ; i++ ) {
-    if ( names_[i] == name ) {
-      index = i ;
-      break ;
-    }
-  }
+  map<string, FieldProperty>::iterator iter = properties_.find(string(name));
+  if (iter == properties_.end())
+    return -1;
 
-  int xsize = sizes_[index] ;
+  int xsize = iter->second.size;
 
   // read data
   if ( xsize < clen ) {
@@ -1940,7 +1923,7 @@ int NROFITSDataset::readTable( char *v, char *name, int clen, int idx )
   return status ;
 }
 
-int NROFITSDataset::readTable( int &v, char *name, int b, int idx ) 
+int NROFITSDataset::readTable( int &v, const char *name, int b, int idx ) 
 {
   //
   // Read 'name' attribute defined as int from the idx-th row 
@@ -1958,7 +1941,7 @@ int NROFITSDataset::readTable( int &v, char *name, int b, int idx )
   return status ;
 }
 
-int NROFITSDataset::readTable( float &v, char *name, int b, int idx ) 
+int NROFITSDataset::readTable( float &v, const char *name, int b, int idx ) 
 {
   //
   // Read 'name' attribute defined as float from the idx-th row 
@@ -1976,7 +1959,7 @@ int NROFITSDataset::readTable( float &v, char *name, int b, int idx )
   return status ;
 }
 
-int NROFITSDataset::readTable( double &v, char *name, int b, int idx ) 
+int NROFITSDataset::readTable( double &v, const char *name, int b, int idx ) 
 {
   //
   // Read 'name' attribute defined as double from the idx-th row 
@@ -1994,7 +1977,7 @@ int NROFITSDataset::readTable( double &v, char *name, int b, int idx )
   return status ;
 }
 
-int NROFITSDataset::readTable( vector<char *> &v, char *name, int idx ) 
+int NROFITSDataset::readTable( vector<char *> &v, const char *name, int idx ) 
 {
   //
   // Read 'name' attribute defined as char array from the FITS Scan Record
@@ -2003,16 +1986,11 @@ int NROFITSDataset::readTable( vector<char *> &v, char *name, int idx )
   if ( status < 0 )
     return status ;
 
-  // get length of char
-  int index = -1 ;
-  for ( int i = 0 ; i < numField_ ; i++ ) {
-    if ( names_[i] == name ) {
-      index = i ;
-      break ;
-    }
-  }
+  map<string, FieldProperty>::iterator iter = properties_.find(string(name));
+  if (iter == properties_.end())
+    return -1;
 
-  int xsize = sizes_[index] ;
+  int xsize = iter->second.size;
 
   for ( unsigned int i = 0 ; i < v.size() ; i++ ) {
     int clen = strlen( v[i] ) ;
@@ -2030,7 +2008,7 @@ int NROFITSDataset::readTable( vector<char *> &v, char *name, int idx )
   return status ;
 }
 
-int NROFITSDataset::readTable( vector<int> &v, char *name, int b, int idx ) 
+int NROFITSDataset::readTable( vector<int> &v, const char *name, int b, int idx ) 
 {
   //
   // Read 'name' attribute defined as int array from the FITS Scan Record
@@ -2049,7 +2027,7 @@ int NROFITSDataset::readTable( vector<int> &v, char *name, int b, int idx )
   return status ;
 }
 
-int NROFITSDataset::readTable( vector<float> &v, char *name, int b, int idx ) 
+int NROFITSDataset::readTable( vector<float> &v, const char *name, int b, int idx ) 
 {
   //
   // Read 'name' attribute defined as float array from the FITS Scan Record
@@ -2068,7 +2046,7 @@ int NROFITSDataset::readTable( vector<float> &v, char *name, int b, int idx )
   return status ;
 }
 
-int NROFITSDataset::readTable( vector<double> &v, char *name, int b, int idx ) 
+int NROFITSDataset::readTable( vector<double> &v, const char *name, int b, int idx ) 
 {
   //
   // Read 'name' attribute defined as double array from the FITS Scan Record
@@ -2087,7 +2065,7 @@ int NROFITSDataset::readTable( vector<double> &v, char *name, int b, int idx )
   return status ;
 }
 
-int NROFITSDataset::readColumn( vector<string> &v, char *name, int idx )
+int NROFITSDataset::readColumn( vector<string> &v, const char *name, int idx )
 {
   // 
   // Read idx-th column of ARRYTP-dependent 'name' attributes 
@@ -2097,16 +2075,11 @@ int NROFITSDataset::readColumn( vector<string> &v, char *name, int idx )
   if ( status < 0 )
     return status ;
 
-  // get length of char
-  int index = -1 ;
-  for ( int i = 0 ; i < numField_ ; i++ ) {
-    if ( names_[i] == name ) {
-      index = i ;
-      break ;
-    }
-  }
+  map<string, FieldProperty>::iterator iter = properties_.find(string(name));
+  if (iter == properties_.end())
+    return -1;
 
-  int xsize = sizes_[index] ;
+  int xsize = iter->second.size;
 
   for ( unsigned int i = 0 ; i < v.size() ; i++ ) {
     int offset = scanLen_ * arrayid_[i] + xsize * idx ;
@@ -2131,7 +2104,7 @@ int NROFITSDataset::readColumn( vector<string> &v, char *name, int idx )
   return status ;
 }
 
-int NROFITSDataset::readColumn( vector<int> &v, char *name, int b, int idx )
+int NROFITSDataset::readColumn( vector<int> &v, const char *name, int b, int idx )
 {
   // 
   // Read idx-th column of ARRYTP-dependent 'name' attributes 
@@ -2154,7 +2127,7 @@ int NROFITSDataset::readColumn( vector<int> &v, char *name, int b, int idx )
   return status ;
 }
 
-int NROFITSDataset::readColumn( vector<float> &v, char *name, int b, int idx ) 
+int NROFITSDataset::readColumn( vector<float> &v, const char *name, int b, int idx ) 
 {
   // 
   // Read idx-th column of ARRYTP-dependent 'name' attributes 
@@ -2177,7 +2150,7 @@ int NROFITSDataset::readColumn( vector<float> &v, char *name, int b, int idx )
   return status ;
 }
 
-int NROFITSDataset::readColumn( vector<double> &v, char *name, int b, int idx ) 
+int NROFITSDataset::readColumn( vector<double> &v, const char *name, int b, int idx ) 
 {
   // 
   // Read idx-th column of ARRYTP-dependent 'name' attributes 
@@ -2243,7 +2216,7 @@ uInt NROFITSDataset::getPolNo( int irow )
   return polNoFromRX( rx ) ;
 }
 
-int NROFITSDataset::movePointer( char *name, int idx ) 
+int NROFITSDataset::movePointer( const char *name, int idx ) 
 {
   // find offset
   long offset = getOffset( name ) ;
@@ -2259,8 +2232,3 @@ int NROFITSDataset::movePointer( char *name, int idx )
 
   return 0 ;
 }
-
-// double NROFITSDataset::toLSR( double v, double t, double x, double y ) 
-// {
-//   return v ;
-// }

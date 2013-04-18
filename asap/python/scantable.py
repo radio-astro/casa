@@ -265,7 +265,7 @@ def do_pack_blinfo(blinfo, maxirow):
 
     if lf_params_n == 3:
         dinfo['use_linefinder'] = 'true'
-    elif lf_params_n == 1:
+    elif lf_params_n == 0:
         dinfo['use_linefinder'] = 'false'
         dinfo['thresh']         = ''
         dinfo['edge']           = ''
@@ -2699,27 +2699,47 @@ class scantable(Scantable):
             raise RuntimeError(msg)
 
     @asaplog_post_dec
-    def apply_bltable(self, insitu=None, inbltable=None, outbltable=None, overwrite=None):
+    def apply_bltable(self, insitu=None, retfitres=None, inbltable=None, outbltable=None, overwrite=None):
         """\
         Subtract baseline based on parameters written in Baseline Table.
 
         Parameters:
-            insitu:        if False a new scantable is returned.
-                           Otherwise, the scaling is done in-situ
+            insitu:        if True, baseline fitting/subtraction is done
+                           in-situ. If False, a new scantable with
+                           baseline subtracted is returned. Actually,
+                           format of the returned value depends on both 
+                           insitu and retfitres (see below). 
                            The default is taken from .asaprc (False)
+            retfitres:     if True, the results of baseline fitting (i.e.,
+                           coefficients and rms) are returned.
+                           default is False.
+                           The format of the returned value of this
+                           function varies as follows:
+                           (1) in case insitu=True and retfitres=True:
+                               fitting result.
+                           (2) in case insitu=True and retfitres=False:
+                               None.
+                           (3) in case insitu=False and retfitres=True:
+                               a dictionary containing a new scantable
+                               (with baseline subtracted) and the fitting
+                               results.
+                           (4) in case insitu=False and retfitres=False:
+                               a new scantable (with baseline subtracted).
             inbltable:     name of input baseline table. The row number of
                            scantable and that of inbltable must be
                            identical.
             outbltable:    name of output baseline table where baseline 
                            parameters and fitting results recorded.
                            default is ''(no output).
-            overwrite:     if True, overwrites the existing baseline table
-                           specified in outbltable.
+            overwrite:     if True when an existing baseline table is
+                           specified for outbltable, overwrites it. 
+                           Otherwise there is no harm.
                            default is False.
         """
 
         try:
             varlist = vars()
+            if retfitres      is None: retfitres      = False
             if inbltable      is None: raise ValueError("bltable missing.")
             if outbltable     is None: outbltable     = ''
             if overwrite      is None: overwrite      = False
@@ -2731,31 +2751,56 @@ class scantable(Scantable):
                 workscan = self.copy()
 
             sres = workscan._apply_bltable(inbltable,
+                                           retfitres,
                                            outbltable,
                                            os.path.exists(outbltable),
                                            overwrite)
-            res = parse_fitresult(sres)
+            if retfitres: res = parse_fitresult(sres)
 
             workscan._add_history('apply_bltable', varlist)
 
             if insitu:
                 self._assign(workscan)
-                return res
+                if retfitres:
+                    return res
+                else:
+                    return None
             else:
-                return {'scantable': workscan, 'fitresults': res}
+                if retfitres:
+                    return {'scantable': workscan, 'fitresults': res}
+                else:
+                    return workscan
         
         except RuntimeError, e:
             raise_fitting_failure_exception(e)
 
     @asaplog_post_dec
-    def sub_baseline(self, insitu=None, blinfo=None, bltable=None, overwrite=None):
+    def sub_baseline(self, insitu=None, retfitres=None, blinfo=None, bltable=None, overwrite=None):
         """\
         Subtract baseline based on parameters written in the input list. 
 
         Parameters:
-            insitu:        if False a new scantable is returned.
-                           Otherwise, the scaling is done in-situ
+            insitu:        if True, baseline fitting/subtraction is done
+                           in-situ. If False, a new scantable with
+                           baseline subtracted is returned. Actually,
+                           format of the returned value depends on both 
+                           insitu and retfitres (see below). 
                            The default is taken from .asaprc (False)
+            retfitres:     if True, the results of baseline fitting (i.e.,
+                           coefficients and rms) are returned.
+                           default is False.
+                           The format of the returned value of this
+                           function varies as follows:
+                           (1) in case insitu=True and retfitres=True:
+                               fitting result.
+                           (2) in case insitu=True and retfitres=False:
+                               None.
+                           (3) in case insitu=False and retfitres=True:
+                               a dictionary containing a new scantable
+                               (with baseline subtracted) and the fitting
+                               results.
+                           (4) in case insitu=False and retfitres=False:
+                               a new scantable (with baseline subtracted).
             blinfo:        baseline parameter set stored in a dictionary
                            or a list of dictionary. Each dictionary 
                            corresponds to each spectrum and must contain
@@ -2776,8 +2821,9 @@ class scantable(Scantable):
             bltable:       name of output baseline table where baseline
                            parameters and fitting results recorded.
                            default is ''(no output).
-            overwrite:     if True, overwrites the existing baseline table
-                           specified in bltable.
+            overwrite:     if True when an existing baseline table is
+                           specified for bltable, overwrites it. 
+                           Otherwise there is no harm.
                            default is False.
                            
         Example:
@@ -2794,6 +2840,7 @@ class scantable(Scantable):
 
         try:
             varlist = vars()
+            if retfitres      is None: retfitres      = False
             if blinfo         is None: blinfo         = []
             if bltable        is None: bltable        = ''
             if overwrite      is None: overwrite      = False
@@ -2811,18 +2858,25 @@ class scantable(Scantable):
             print "in_blinfo=< "+ str(in_blinfo)+" >"
 
             sres = workscan._sub_baseline(in_blinfo,
+                                          retfitres,
                                           bltable,
                                           os.path.exists(bltable),
                                           overwrite)
-            res = parse_fitresult(sres)
+            if retfitres: res = parse_fitresult(sres)
             
             workscan._add_history('sub_baseline', varlist)
 
             if insitu:
                 self._assign(workscan)
-                return res
+                if retfitres:
+                    return res
+                else:
+                    return None
             else:
-                return {'scantable': workscan, 'fitresults': res}
+                if retfitres:
+                    return {'scantable': workscan, 'fitresults': res}
+                else:
+                    return workscan
 
         except RuntimeError, e:
             raise_fitting_failure_exception(e)

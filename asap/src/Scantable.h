@@ -510,8 +510,16 @@ public:
 
   bool getFlagtraFast(casa::uInt whichrow);
 
-  std::vector<std::string> applyBaselineTable(const std::string& bltable, const std::string& outbltable, const bool outbltableexists, const bool overwrite);
-  std::vector<std::string> subBaseline(const std::vector<std::string>& blInfoList, const std::string& outbltable, const bool outbltableexists, const bool overwrite);
+  std::vector<std::string> applyBaselineTable(const std::string& bltable, 
+					      const bool returnfitresult, 
+					      const std::string& outbltable, 
+					      const bool outbltableexists, 
+					      const bool overwrite);
+  std::vector<std::string> subBaseline(const std::vector<std::string>& blInfoList, 
+				       const bool returnfitresult, 
+				       const std::string& outbltable, 
+				       const bool outbltableexists, 
+				       const bool overwrite);
   void polyBaseline(const std::vector<bool>& mask,
 		    int order,
 		    float thresClip, 
