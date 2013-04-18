@@ -130,7 +130,8 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                     shape = _myia.shape()
                 _myia.done()
         else:
-            csys = cstool()
+            # because there is no cstool()
+            csys = coordsystool()
             csys.fromrecord(template['csys'])
             shape = template['shap']
 
