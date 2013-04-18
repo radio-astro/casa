@@ -128,8 +128,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 <default param="fraction"><value type="string">10%</value></default>
                 <default param="noff"><value type="int">-1</value></default>
             </equals>
-            <equals value="tsys"/>
+            <equals value="tsys">
                 <default param="tsysiflist"><value type="intArray"/></default>
+            </equals>
             <equals value="apply">
                 <default param="applytable"><value type="string"></value></default>
                 <default param="interp"><value type="string"></value></default>

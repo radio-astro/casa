@@ -115,7 +115,6 @@ statwt.xml
 tclean.xml
 testconcat.xml
 uvcontsub.xml
-uvcontsub2.xml
 uvcontsub3.xml
 uvmodelfit.xml
 uvsub.xml

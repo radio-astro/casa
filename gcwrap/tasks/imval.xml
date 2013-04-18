@@ -42,11 +42,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="chans" >
-	<description>Select the channel(spectral) range</description>
+	<description>Select the spectral range. See "help par.chans" for examples. </description>
     	<value></value>
-	<example>1.4126GHz~1.428GHz  # between 2 frequency</example>
-	<example>1.4km/s             # above the given velocity</example>
-        <example>!1~5                # Select all but the ange of channel numbers</example>
     </param>
 
     <param type="string" name="stokes">
@@ -102,7 +99,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <example>
      The data point(s) to be retrieved are those found in the specified
      region, which may be:
-        1. A region file from the viewer (region parameter)
+        1. A region file or text string (see help par.region), with the following caveats:
+           * The region must be rectangular (eg, not circular, elliptical, or polyagonal)
+           * If the specified region is complex (eg, a union or intersection of multiple regions,
+             only the first simple region in this set is used.
         2. A region specified by a set of rectangular
            pixel coordinates, the channel ranges and/or the Stokes.
 
@@ -128,10 +128,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 Example: box='10,10,50,50'
                          box = '10,10,30,30,35,35,50,50' (two boxes)
                          box = '-1,-1'                   (all points)
-	chans -- channel numbers
-	        Range of channel numbers to include in statistics
-                  All spectral windows are included
-		Default:''= all;  Example: chans='3~20'; 
+	chans -- Spectral range. See "help par.chans" for examples. 
                                            chans='-1' (all channels)
 	stokes -- Stokes parameters to analyze.
                 Default: none (all); Example: stokes='IQUV';  

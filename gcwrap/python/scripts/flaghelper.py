@@ -1124,11 +1124,19 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
     except ImportError, e:
         print 'failed to load pylab:\n', e
         exit(1)
+        
     
     # append to a file   
     if outfile != '':                          
         ffout = open(outfile, 'a')
-        
+
+        # Replace blanks from reason and cmdreason with underscores
+        # and warn the user.
+        if add_reason != '':
+            tempreason = add_reason
+            add_reason = tempreason.replace(' ','_')
+            casalog.post('Replaced blanks with underscores in cmdreason', 'WARN')
+           
         try:                            
             
             for key in myflags.keys():
@@ -1141,9 +1149,10 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
                     cmdline = cmdline + ' addantenna=' + str(addantenna)
                                                         
                 reason = myflags[key]['reason']
-                
+                                                    
                 # There is no reason in input
                 if reason == '':
+                    
                     # Add new reason to output
                     if add_reason != '':
                         print >> ffout, '%s reason=\'%s\'' %(cmdline, add_reason)
@@ -1154,6 +1163,9 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
                 else:
                     # Output reason is empty
                     if add_reason == '':
+                        tempreason = reason
+                        reason = tempreason.replace(' ','_')
+                        casalog.post('Replaced blanks with underscores in reason', 'WARN')
                         print >> ffout, '%s reason=\'%s\'' %(cmdline, reason)
                         
                     else:

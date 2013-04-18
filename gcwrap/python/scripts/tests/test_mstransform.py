@@ -200,15 +200,36 @@ class test_Regridms3(test_base):
         self.setUp_jupiter()
         
     def tearDown(self):
-        pass
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf reg*.ms')
+        os.system('rm -rf reg*.*ms cvel31.*ms')
+
+#    def test_regrid3_1(self):
+#        '''Cvel 12: Check that output columns are the same when using cvel'''
+#        outputms = 'reg31.ms'
+#        
+#        mstransform(vis=self.vis, outputvis=outputms, field='6',
+#                    combinespws=True, regridms=True, datacolumn='data',
+#                    mode='frequency', nchan=2, start='4.8101 GHz', width='50 MHz',
+#                    outframe='')
+#
+#        ret = th.verifyMS(outputms, 1, 2, 0)
+#        self.assertTrue(ret[0],ret[1])
+#        
+#        # Now run with cvel to compare the columns, CAS-4940
+#        outputms = 'cvel31.ms'
+#        cvel(vis=self.vis, outputvis=outputms, field='6',
+#            passall=False,mode='frequency',nchan=2,start='4.8101 GHz',
+#            width='50 MHz',outframe='')
+#        
+#        self.assertTrue(th.compVarColTables('cvel31.ms','reg31.ms', 'WEIGHT'))
+#        self.assertTrue(th.compVarColTables('cvel31.ms','reg31.ms', 'SIGMA'))
+#        self.assertTrue(th.compVarColTables('cvel31.ms','reg31.ms', 'DATA'))
 
 # Uncomment after seg fault is fixed
-#    def test_regrid3_1(self):
+#    def test_regrid3_2(self):
 #        '''mstransform: Combine spw and regrid MS with two spws, select one field and 2 spws'''
 #        # cvel: test8
-#        outputms = "reg31a.ms"
+#        outputms = "reg32a.ms"
 #        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, regridms=True, 
 #                    spw='0,1',field = '11',nchan=1, width=2, datacolumn='DATA')
 #        self.assertTrue(os.path.exists(outputms))
@@ -217,7 +238,7 @@ class test_Regridms3(test_base):
 #        self.assertTrue(ret[0],ret[1])  
 #        
 #        # Now, do only the regridding and do not combine spws
-#        outputms = "reg31b.ms"
+#        outputms = "reg32b.ms"
 #        mstransform(vis=self.vis, outputvis=outputms, combinespws=False, regridms=True, 
 #                    spw='0,1',field = '11',nchan=1, width=2, datacolumn='DATA')
 #        self.assertTrue(os.path.exists(outputms))
@@ -501,7 +522,6 @@ class test_FreqAvg(test_base):
         ret = th.verifyMS(outputms, 3, 2, 2, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
 
-
 class test_Shape(test_base):
     '''Test the tileshape parameter'''
     def setUp(self):
@@ -577,7 +597,7 @@ class test_Columns(test_base):
         self.setUp_4ants()
 
     def tearDown(self):
-        os.system('rm -rf '+ self.vis)
+#        os.system('rm -rf '+ self.vis)
         os.system('rm -rf col*.*ms')
         
     def test_col1(self):
@@ -602,6 +622,20 @@ class test_Columns(test_base):
         mkeys = mcol.keys()
         self.assertTrue(mkeys.__len__() > 0, 'Should add MODEL_DATA column')
         
+
+    def test_col3(self):
+        '''mstransform: split out the MODEL column'''
+        outputms = 'col3.ms'
+        mstransform(vis=self.vis, outputvis=outputms,field='1',spw='0:0~61', 
+                    datacolumn='model')
+
+        # Compare with split. CAS-4940
+        outputms = 'split3.ms'
+        split(vis=self.vis, outputvis=outputms,field='1',spw='0:0~61', 
+                    datacolumn='model')
+        
+        th.compVarColTables('split3.ms','col3.ms','DATA')        
+
         
 class test_SeparateSPWs(test_base):
     '''Test the nspw parameter to separate spws'''

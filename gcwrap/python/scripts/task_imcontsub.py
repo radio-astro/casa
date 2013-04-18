@@ -41,67 +41,32 @@ def imcontsub(imagename=None,linefile=None,contfile=None,fitorder=None,region=No
 
     # Don't mix chans up with reg!  reg selects a subset for output, and chans
     # selects a subset to define the line-free channels.
-    reg = rg.frombcs(csys=mycsys.torecord(), shape=_myia.shape(),
+    myrg = rgtool()
+    reg = myrg.frombcs(csys=mycsys.torecord(), shape=_myia.shape(),
                      box=box, stokes=stokes, stokescontrol="f",
                      region=region)
-
-    channels=[]
-
-    try:
-        # Find the max and min channel.
-        axes=getimaxes(imagename)
-        fullSize = _myia.boundingbox(_myia.setboxregion())
-        minChan=int(fullSize['blc'][axes[2][0]])
-        maxChan=int(fullSize['trc'][axes[2][0]])
-
-
-        # Parse the channel information.
-        tmpChan=[]
-        if ( len(chans) > 0 ):
-            tmpChans = re.split(r'[,;]', chans)
-        else:
-            tmpChans=[str(minChan)+"~"+str(maxChan)]
-
-                        
-        # Now make our list of strings into a list of integers.
-        # In case someone has used ',' as the main separator we
-        # split each element up on ','
-        for tcs in tmpChans:
-            channels.extend(_parse_chans(tcs, minChan, maxChan))
-
-    except Exception, err:
-        casalog.post( 'Error: Unable to parse the channel information. '+str(err),'SEVERE' )
-        # Cleanup
-        if ( reg != None ):
-            del reg
-        _myia.done()
-        return  False
-
-
+    channels = []
+    if chans != None and len(chans) > 0:
+        channels = myrg.selectedchannels(chans, _myia.shape())
+    
     try:
         # Now do the continuum subtraction.
-        #ia.continuumsub( outline=linefile, outcont=contfile, region=reg, fitorder=fitorder, overwrite=False )
         _myia.continuumsub(outline=linefile, outcont=contfile, region=reg,
                            channels=channels, fitorder=fitorder, overwrite=False)
-    
-        # Cleanup
-        if ( reg != None ):
-            del reg
-        _myia.done()
         return True
-        #return retValue
                 
     except Exception, err:
         casalog.post( 'Error: Unable to perform continuum subtraction'+str(err), 'SEVERE' )
-        # Cleanup
+        raise
+    finally:
+        _myia.done()
         if ( reg != None ):
             del reg
-        _myia.done()
-        return  False
         
     return True
 
 #
+"""
 #TODO add a try/catch block or type checking to make
 #sure all channel values are ints.
 def _parse_chans( chanString='', min=0, max=0 ):
@@ -146,3 +111,4 @@ def _parse_chans( chanString='', min=0, max=0 ):
         raise Exception, "Invalid channel specification: "+str(values)
     
     return retValue
+"""

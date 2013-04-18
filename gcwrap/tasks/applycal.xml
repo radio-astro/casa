@@ -98,25 +98,6 @@ another visibility file.
 	<param type="stringArray" name="interp">
 		<description>Interp type in time[,freq], per gaintable.  default=linear,linear</description>
 		<value></value>
-		<allowed kind="enum">
-			<value>nearest</value>
-			<value>linear</value>
-			<value>nearestPD</value>
-			<value>linearPD</value>
-			<value>nearest,nearest</value>
-			<value>linear,nearest</value>
-			<value>nearest,linear</value>
-			<value>linear,linear</value>
-			<value>nearest,cubic</value>
-			<value>linear,cubic</value>
-			<value>nearest,spline</value>
-			<value>linear,spline</value>
-			<value>,nearest</value>
-			<value>,linear</value>
-			<value>,cubic</value>
-			<value>,spline</value>
-			<value></value>
-		</allowed>
 	</param>
 
 	<param type="intArray" name="spwmap">
@@ -281,11 +262,17 @@ another visibility file.
                 Time-dependent interp options ending in 'PD' enable a
                 "phase delay" correction per spw for non-channel-dependent
                 calibration types.
+                For multi-obsId datasets, 'perobs' can be appended to
+                the time-dependent interpolation specification to
+                enforce obsId boundaries when interpolating in time.
                 default: '' --&gt; 'linear,linear' for all gaintable(s)
                 example: interp='nearest'   (in time, freq-dep will be
                                              linear, if relevant)
                          interp='linear,cubic'  (linear in time, cubic
                                                  in freq)
+                         interp='linearperobs,spline' (linear in time
+                                                       per obsId,
+                                                       spline in freq)
                          interp=',spline'  (spline in freq; linear in
                                             time by default)
                          interp=['nearest,spline','linear']  (for multiple gaintables)
@@ -341,7 +328,7 @@ another visibility file.
                ''='calflag' (default) calibrate data and apply flags from solutions
                'trial' report on flags from solutions, dataset entirely unchanged
                'flagonly' apply flags from solutions only, data not calibrated
-               'calonly' calibrate data only (by unflagged solutions), flags from solutions NOT applied (use with extreme caution!)
+               'calonly' calibrate data only, flags from solutions NOT applied (use with extreme caution!)
        flagbackup -- Back up the state of the flags before applying calibration
                      default: True
        async -- Run task in a separate process 

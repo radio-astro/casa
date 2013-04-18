@@ -282,6 +282,59 @@ class UnitTest:
             
         return False
 
+    def copyTest(self, copyto='/tmp'):
+        """Copy the test script to the given directory
+           It will search for the test script defined in
+           self.testname from the location defined in
+           self.scriptdir. It raises an exception if it 
+           cannot copy to destination."""
+        
+        TestName = self.testname
+
+        theScript=''
+        numOfScript=0
+
+        if os.path.isdir(self.scriptdir):
+            allScripts=os.listdir(self.scriptdir)
+        else:
+            allScripts=[]
+            
+        for scr in allScripts:
+            if (scr == TestName + '.py'):                
+                fscript = os.path.join(self.scriptdir, scr)
+                numOfScript += 1  
+                      
+        if numOfScript == 0:
+            print 'ERROR: Could not find test %s' %TestName
+            return False  
+            
+        if( numOfScript > 1) :
+            print 'More than 1 scripts found for name '+TestName
+            print 'Copying the following one '+ fscript
+                    
+        try:
+            shutil.copy(fscript, copyto)
+        except:
+            raise
+        
+        return True
+
+    def getTestClasses(self, atest=''):
+        '''Return the classes contained in a test script.
+           It will return only the classes returned by the
+           suite() function. If atest is not given it will
+           get the classes from the self.testname script.
+           atest --> a test name (without the .py extension)'''
+        
+        if atest == '':
+            atest = self.testname
+        # import the test
+        mytest = __import__(atest)
+        reload(mytest)
+        
+        # get the classes from the suite function
+        classes = mytest.suite()
+        return classes
 
 class ExecTest(unittest.TestCase,UnitTest):
     """Wraps scripts to run with execfile"""

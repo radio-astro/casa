@@ -129,8 +129,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <description>Convolution function cache directory</description>
       <value>cfcache.dir</value>
     </param>
+    <param type="double" name="rotpainc" subparam="true">
+      <description>Parallactic angle increment (degrees) for OTF A-term rotation</description>
+      <value>5.0</value>
+    </param>
     <param type="double" name="painc" subparam="true">
-      <description>Parallactic angle bin increment (degrees)</description>
+      <description>Parallactic angle increment (degrees) for computing A-term</description>
       <value>360.0</value>
     </param>
     <param type="bool" name="aterm" subparam="true">
@@ -503,12 +507,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		 <default param="wprojplanes"><value>1</value></default> 
 		 <!-- <default param="facets"><value>1</value></default>  -->
 		 <default param="cfcache"><value type="string">cfcache.dir</value></default>
+		 <default param="rotpainc"><value>5.0</value></default>
 		 <default param="painc"><value>360.0</value></default>
 		 <!-- <default param="epjtable"><value type="string"></value></default>  -->
               </equals>
 	      <equals value="advancedaprojection">
 		<default param="wprojplanes"><value>1</value></default>
 		<default param="cfcache"><value type="string">cfcache.dir</value></default>
+		<default param="rotpainc"><value>5.0</value></default>
 		<default param="painc"><value>360.0</value></default>
 		<default param="wbawp"><value>False</value></default>
 		<default param="conjbeams"><value>True</value></default>
@@ -994,6 +1000,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                <!-- image parameters are unchanged.  If the image -->
                <!-- parameters change, a new cache must be created (or the -->
                <!-- existing one removed). -->
+
+               rotpainc (in degrees) is the Parallactic Angle increment
+               used for OTF rotation of the convolution function.
 
                painc (in degrees) is the Parallactic Angle increment
                used to compute the convolution functions.

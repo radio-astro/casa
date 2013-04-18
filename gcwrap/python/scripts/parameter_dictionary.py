@@ -386,12 +386,22 @@ class par(str):
 		chans="3~20;50,51"       # channels 3 to 20 and 50 and 51
         chans="<10;>=55"        # channels 0 to 9 and 55 and greater (inclusively)
         
-        Frequency selection using the ASCII region format is also supported. In this
-        case, at least the range parameter is required and optionally the restfreq,
-        veltype, and frame parameters may be provided.
+        Frequency selection using the CASA region text specification is also supported. 
+        See eg, Appendix D of the CASA Cookbook and User Reference Manual for a complete description
+        of this specification. At least the range parameter is required and optionally the restfreq,
+        veltype, and frame parameters may be provided. Note that for the casapy interpreter to
+        parse strings with "range=" in them, they must be surrounded by parentheses. This is only
+        necessary when setting the chans parameter on the command line; it it is set as part of
+        a method or task call, the parentheses are not necessary.
 
-        chans="range=[1110000m/s, 1130km/s], restfreq=1.42040575GHz"
+        chans=("range=[4444MHz, 4445MHz]")
+        chans=("range=[1110000m/s, 1130km/s], restfreq=1.42040575GHz")
+        chans=("range=[20chan, 30chan], restfreq=100GHz, frame=LSRK")
 		
+        Example in a task call. Parentheses not required around chans string.
+ 
+        imsubimage(imagename="myin.im", outfile="myout.im", chans="range=[20chan, 30chan], restfreq=100GHz, frame=LSRK")
+
 		"""
 
 	@staticmethod

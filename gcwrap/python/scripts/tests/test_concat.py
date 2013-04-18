@@ -107,6 +107,78 @@ class test_concat(unittest.TestCase):
                     
         os.chdir(cpath)
 
+        # create MSs with ephemeris use
+        
+        if not 'xy1.ms' in filespresent:
+            print "Creating MSs with ephemeris table use ..."
+
+            split(vis='part1.ms', outputvis='xy1.ms', scan="1~30", datacolumn='data')
+
+            tb.open('xy1.ms', nomodify=False)
+            a = tb.getcol('TIME')
+            delta = (54709.*86400-a[0])
+            a = a + delta
+            tb.putcol('TIME', a)
+            a = tb.getcol('TIME_CENTROID')
+            a = a + delta
+            tb.putcol('TIME_CENTROID', a)
+            tb.close()
+            tb.open('xy1.ms/FIELD', nomodify=False)
+            a = tb.getcol('TIME')
+            a = a + delta
+            tb.putcol('TIME', a)
+            tb.close()
+            tb.open('xy1.ms/OBSERVATION', nomodify=False)
+            a = tb.getcol('TIME_RANGE')
+            a = a + delta
+            tb.putcol('TIME_RANGE', a)
+            tb.close()
+
+            shutil.copytree('xy1.ms', 'xy1-noephem.ms')
+
+            ms.open('xy1.ms', nomodify=False)
+            ms.addephemeris(0,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Uranus_54708-55437dUTC.tab',
+                            'Uranus_54708-55437dUTC', 13) 
+            ms.addephemeris(1,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Jupiter_54708-55437dUTC.tab',
+                            'Jupiter_54708-55437dUTC', 0)
+            ms.close()
+
+        if not 'xy2.ms' in filespresent:
+            split(vis='part1.ms', outputvis='xy2.ms', scan="31~65", datacolumn='data')
+            tb.open('xy2.ms', nomodify=False)
+            a = tb.getcol('TIME')
+            a = a + delta
+            tb.putcol('TIME', a)
+            a = tb.getcol('TIME_CENTROID')
+            a = a + delta
+            tb.putcol('TIME_CENTROID', a)
+            tb.close()
+            tb.open('xy2.ms/FIELD', nomodify=False)
+            a = tb.getcol('TIME')
+            a = a + delta
+            tb.putcol('TIME', a)
+            tb.close()
+            tb.open('xy2.ms/OBSERVATION', nomodify=False)
+            a = tb.getcol('TIME_RANGE')
+            a = a + delta
+            tb.putcol('TIME_RANGE', a)
+            tb.close()
+
+            ms.open('xy2.ms', nomodify=False)
+            ms.addephemeris(0,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Uranus_54708-55437dUTC.tab',
+                            'Uranus_54708-55437dUTC', 13)
+            ms.close()
+
+        if not 'xy2-jup-ur.ms' in filespresent:
+            split(vis='xy2.ms', outputvis='xy2-jup-ur.ms', field = 'jupiter, uranus', datacolumn='data')
+
+        if not 'xya.ms' in filespresent:
+            split(vis='xy1.ms', outputvis='xya.ms', spw='0:0~63', datacolumn='data')
+            
+        if not 'xyb.ms' in filespresent:
+            split(vis='xy1.ms', outputvis='xyb.ms', spw='0:64~127', datacolumn='data')
+
+
         default(concat)
         
     def tearDown(self):
@@ -121,7 +193,6 @@ class test_concat(unittest.TestCase):
 
         print myname, ": Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -212,7 +283,6 @@ class test_concat(unittest.TestCase):
         
         print myname, ": Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -332,7 +402,6 @@ class test_concat(unittest.TestCase):
 
         print myname, ": Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -425,7 +494,6 @@ class test_concat(unittest.TestCase):
 
         print myname, ": Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -556,7 +624,6 @@ class test_concat(unittest.TestCase):
 
         print myname, ": Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -640,7 +707,6 @@ class test_concat(unittest.TestCase):
 
         print myname, ": Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -725,7 +791,6 @@ class test_concat(unittest.TestCase):
 
         print myname, ": Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -813,7 +878,6 @@ class test_concat(unittest.TestCase):
 
         print myname, ": Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -914,7 +978,6 @@ class test_concat(unittest.TestCase):
 
             print myname, ": Now checking output ..."
             mscomponents = set(["table.dat",
-                                "table.f0",
                                 "table.f1",
                                 "table.f2",
                                 "table.f3",
@@ -1015,7 +1078,6 @@ class test_concat(unittest.TestCase):
 
             print myname, ": Now checking output ..."
             mscomponents = set(["table.dat",
-                                "table.f0",
                                 "table.f1",
                                 "table.f2",
                                 "table.f3",
@@ -1097,6 +1159,257 @@ class test_concat(unittest.TestCase):
 
             self.assertTrue(retValue['success'])
         # endif
+
+    def test11(self):
+        '''Concat 11: 2 parts of same MS split in time,  use of ephemerides'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        
+        self.res = concat(vis=['xy1.ms','xy2.ms'],concatvis=msname, copypointing=False)
+        self.assertEqual(self.res,True)
+        
+        print myname, ": Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FIELD/EPHEM0_Uranus_54708-55437dUTC.tab",
+                            "FIELD/EPHEM1_Jupiter_54708-55437dUTC.tab",
+                            "FIELD/EPHEM2_Uranus_54708-55437dUTC.tab",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test11.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test11.ms',ignore_errors=True)
+            shutil.copytree(msname,'test11.ms')
+            #print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
+
+        self.assertTrue(retValue['success'])
+
+    def test12(self):
+        '''Concat 12: 2 parts of same MS split in spw,  use of ephemerides'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        
+        self.res = concat(vis=['xya.ms','xyb.ms'],concatvis=msname, copypointing=False)
+        self.assertEqual(self.res,True)
+        
+        print myname, ": Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FIELD/EPHEM0_Uranus_54708-55437dUTC.tab",
+                            "FIELD/EPHEM1_Jupiter_54708-55437dUTC.tab",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        nonames = set(["FIELD/EPHEM2_Uranus_54708-55437dUTC.tab",
+                       "FIELD/EPHEM3_Uranus_54708-55437dUTC.tab",
+                       "FIELD/EPHEM2_Jupiter_54708-55437dUTC.tab",
+                       "FIELD/EPHEM3_Jupiter_54708-55437dUTC.tab"])
+        for name in nonames:
+            if os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "should not exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' should not exist'
+            else:
+                print myname, ": ", name, " not present as expected."
+
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test12.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test12.ms',ignore_errors=True)
+            shutil.copytree(msname,'test12.ms')
+            #print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
+
+        self.assertTrue(retValue['success'])
+
+
+    def test13(self):
+        '''Concat 13: 2 parts of same MS split in time,  use of ephemerides only in second part'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        
+        self.res = concat(vis=['xy1-noephem.ms','xy2.ms'],concatvis=msname, copypointing=False)
+        self.assertEqual(self.res,True)
+        
+        print myname, ": Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FIELD/EPHEM0_Uranus_54708-55437dUTC.tab",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test13.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test13.ms',ignore_errors=True)
+            shutil.copytree(msname,'test13.ms')
+            #print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
+
+        self.assertTrue(retValue['success'])
+
+    def test14(self):
+        '''Concat 14: 2 parts of same MS split in time,  use of ephemerides only in first part'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        self.res = concat(vis=['xy2-jup-ur.ms','xy1-noephem.ms'],concatvis=msname, copypointing=False)
+        self.assertEqual(self.res,True)
+        
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test14.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test14.ms',ignore_errors=True)
+            shutil.copytree(msname,'test14.ms')
+            print myname, ": OK. Checking tables in detail ..."
+            tb.open('test14.ms/FIELD')
+            a = tb.getcol('EPHEMERIS_ID')
+            retValue['success']=True
+            for i in range(0,15):
+                if(a[i]!=-1 and i!=1):
+                    print "Only field 1 should have ephemeneris id > -1."
+                    retValue['success']=False
+
+        self.assertTrue(retValue['success'])
 
 
 class concat_cleanup(unittest.TestCase):           

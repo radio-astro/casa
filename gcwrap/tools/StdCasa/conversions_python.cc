@@ -642,6 +642,7 @@ static PyObject *map_vector_pylist( const std::vector<TYPE> &vec );
 FWD_DECL_map_array_pylist(int)
 FWD_DECL_map_array_pylist(bool)
 FWD_DECL_map_array_pylist(double)
+FWD_DECL_map_array_pylist(long long)
 FWD_DECL_map_array_pylist(std::complex<double>)
 FWD_DECL_map_array_pylist(casac::complex)
 FWD_DECL_map_array_pylist(std::string)
@@ -694,6 +695,7 @@ PyObject *map_array_numpy( const std::vector<TYPE> &vec, const std::vector<int> 
 }
 
 MAP_ARRAY_NUMPY(int, npy_int32, NPY_INT,*to = (npy_int32) *from)
+MAP_ARRAY_NUMPY(long long, npy_int64, NPY_INT64,*to = (npy_int64) *from)
 MAP_ARRAY_NUMPY(double, npy_double,NPY_DOUBLE,*to = (npy_double) *from)
 MAP_ARRAY_NUMPY(std::complex<double>, npy_cdouble, NPY_CDOUBLE,(*to).real = (*from).real(); (*to).imag = (*from).imag())
 MAP_ARRAY_NUMPY(casac::complex, npy_cdouble, NPY_CDOUBLE,(*to).real = (*from).re; (*to).imag = (*from).im)
@@ -1174,6 +1176,9 @@ ARRAY2PYOBJ(std::string,PyString_FromString(val.c_str()),PyString_FromString((*i
 	    case variant::INT:												\
 		result = PyInt_FromLong(val.toInt());									\
 		break;													\
+	    case variant::LONG:												\
+		result = PyInt_FromLong(val.toLong());									\
+		break;													\
 	    case variant::DOUBLE:											\
 		result = PyFloat_FromDouble(val.toDouble());								\
 		break;													\
@@ -1192,6 +1197,9 @@ ARRAY2PYOBJ(std::string,PyString_FromString(val.c_str()),PyString_FromString((*i
 															\
 	    case variant::INTVEC:											\
 		HANDLEVEC2(int,getIntVec)										\
+															\
+	    case variant::LONGVEC:											\
+		HANDLEVEC2(long long,getLongVec)										\
 															\
 	    case variant::DOUBLEVEC:											\
 		HANDLEVEC2(double,getDoubleVec)										\

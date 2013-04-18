@@ -5,6 +5,7 @@ import filecmp
 from tasks import *
 from taskinit import *
 from __main__ import default
+import exceptions
 from parallel.parallel_task_helper import ParallelTaskHelper
 
 #
@@ -193,6 +194,22 @@ class test_base(unittest.TestCase):
         os.system('rm -rf ' + self.vis + '.flagversions')
         
         flagdata(vis=self.vis, mode='unflag', savepars=False)
+
+    def setUp_newcal(self):
+        '''New cal table format from 4.1 onwards'''
+        self.vis = "ap314.gcal"
+
+        if os.path.exists(self.vis):
+            print "The CalTable is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r ' + \
+                        os.environ.get('CASAPATH').split()[0] +
+                        "/data/regression/unittest/flagdata/" + self.vis + ' ' + self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
 
 
 class test_tfcrop(test_base):
@@ -1413,8 +1430,7 @@ class test_list_list(test_base):
         self.assertEqual(res['scan']['2']['flagged'], 238140)
         self.assertEqual(res['scan']['3']['flagged'], 762048)
         self.assertEqual(res['scan']['4']['flagged'], 95256)
-        self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')
-        
+        self.assertEqual(res['flagged'],568134+238140+762048+95256, 'Total flagged')        
                 
     def test_reason_list(self):
         '''flagdata: replace input reason from list with cmdreason'''
@@ -1433,8 +1449,46 @@ class test_list_list(test_base):
         
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1663578)
-                
-       
+              
+    # CAS-4974  
+    def test_cmdreason1(self):
+        '''flagdata: detect blank space in cmdreason. Catch exception'''
+        outtxt = 'badreason.txt'
+        flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, outfile=outtxt, 
+                 cmdreason='ODD SCANS')
+        flagdata(vis=self.vis, scan='2,4', action='calculate', savepars=True, outfile=outtxt, 
+                 cmdreason='EVEN SCANS')
+        
+        # Apply the cmd with blanks in reason. Catch the error.
+        try:
+            flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD SCANS')
+        except Exception, instance:
+            print '*** Expected exception. \"%s\"'%instance
+            res = flagdata(vis=self.vis, mode='summary')
+            self.assertEqual(res['flagged'], 0)
+    
+        # Now apply the corrected version with underscores
+        flagdata(vis=self.vis, mode='list', inpfile=outtxt, reason='ODD_SCANS')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['flagged'], 568134+762048)
+
+    
+    def test_cmdreason2(self):
+        '''flagdata: Blanks in reason are only allowed in FLAG_CMD table'''
+        outtxt = 'goodreason.txt'
+        flagdata(vis=self.vis, scan='1,3', action='calculate', savepars=True, 
+                 cmdreason='ODD SCANS')
+        flagdata(vis=self.vis, scan='2,4', action='calculate', savepars=True,
+                 cmdreason='EVEN SCANS')
+        
+        flagcmd(vis=self.vis, reason='ODD SCANS')
+        res = flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'], 568134)
+        self.assertEqual(res['scan']['3']['flagged'], 762048)
+        self.assertEqual(res['flagged'], 568134+762048)
+    
 class test_clip(test_base):
     """flagdata:: Test of mode = 'clip'"""
     
@@ -1547,6 +1601,9 @@ class test_correlations(test_base):
     def setUp(self):
         self.setUp_mwa()
         
+    def tearDown(self):
+        shutil.rmtree(self.vis, ignore_errors=True)
+        
     def test_xx_xy(self):
         '''flagdata: flag XX,XY'''
         flagdata(vis=self.vis, mode='manual', flagbackup=False, correlation='XX,XY')
@@ -1614,11 +1671,12 @@ class test_tsys(test_base):
         self.assertEqual(res['spw']['5']['flagged'], 32256)
         self.assertEqual(res['flagged'], 32256*2)
         
-
     def test_invalid_scan(self):
         '''Flagdata: unsupported scan selection'''
-        res = flagdata(vis=self.vis, scan='1,2', flagbackup=False)
-        self.assertEqual(res, {})
+        try:
+            flagdata(vis=self.vis, scan='2', flagbackup=False)
+        except exceptions.RuntimeError, instance:
+            print 'Expected error: %s'%instance
 
     def test_default_fparam(self):
         '''Flagdata: default data column FPARAM'''
@@ -1731,7 +1789,6 @@ class test_tsys(test_base):
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 1192.0)
                 
-
     def test_clip_fparm_all(self):
         """Flagdata:: Test cliping all calibration solution products of FPARAM 
         column using a minmax range """
@@ -1761,7 +1818,6 @@ class test_tsys(test_base):
         self.assertEqual(res['correlation']['Sol2']['flagged'], 70.0)
         self.assertEqual(res['correlation']['Sol2']['total'], 64512.0)
 
-
     def test_clip_nans_fparm_all(self):
         """Flagdata:: Test cliping only NaNs/Infs in all calibration solution products of FPARAM column"""
 
@@ -1775,7 +1831,6 @@ class test_tsys(test_base):
         self.assertEqual(res['correlation']['Sol1']['total'], 64512.0)
         self.assertEqual(res['correlation']['Sol2']['flagged'], 0.0)
         self.assertEqual(res['correlation']['Sol2']['total'], 64512.0)
-
 
     def test_clip_fparm_error_absall(self):
         """Flagdata:: Error case test when a complex operator is used with CalTables """
@@ -1851,7 +1906,69 @@ class test_tsys(test_base):
         self.assertEqual(res['spw:channel']['5:120']['flagged'],252)
         self.assertEqual(res['spw:channel']['5:127']['flagged'],252)
         self.assertEqual(res['flagged'],4284*4)
-                 
+
+    def test_tsys_scan1(self):
+        '''Flagdata: select valid scans'''
+        flagdata(vis=self.vis, mode='manual', scan='1,10,14,30', flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'],9216)
+        self.assertEqual(res['scan']['3']['flagged'],0)
+        self.assertEqual(res['scan']['10']['flagged'],9216)
+        self.assertEqual(res['scan']['14']['flagged'],9216)
+        self.assertEqual(res['scan']['30']['flagged'],9216)
+        self.assertEqual(res['flagged'],9216*4)
+        
+    def test_tsys_scan2(self):
+        '''Flagdata: select valid and invalid scans'''
+        # scan=2 does not exist. It should not raise an error
+        flagdata(vis=self.vis, mode='manual', scan='1~3', flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'],9216)
+        self.assertEqual(res['scan']['3']['flagged'],9216)
+        self.assertEqual(res['flagged'],9216*2)
+
+    def test_tsys_time1(self):
+        '''Flagdata: select a timerange'''
+        flagdata(vis=self.vis, mode='clip', clipminmax=[-2000.,2000.], timerange="<03:50:00", 
+                 flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')['flagged']
+        self.assertEqual(res, 5)
+
+    def test_tsys_time2(self):
+        '''Flagdata: select a timerange for one spw'''
+        # timerange=03:50:00~04:10:00 covers scans 14 17 only
+        flagdata(vis=self.vis, mode='manual', timerange="03:50:00~04:10:00",
+                 flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['14']['flagged'],9216)
+        self.assertEqual(res['scan']['17']['flagged'],9216)
+        self.assertEqual(res['spw']['1']['flagged'],4608)
+        self.assertEqual(res['spw']['3']['flagged'],4608)
+        self.assertEqual(res['flagged'],18432)
+        
+        # Run for one spw only
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        flagdata(vis=self.vis, mode='manual', timerange="03:50:00~04:10:00", spw='1',
+                 flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['14']['flagged'],2304)
+        self.assertEqual(res['scan']['17']['flagged'],2304)
+        self.assertEqual(res['spw']['1']['flagged'],4608)
+        self.assertEqual(res['spw']['3']['flagged'],0)
+        self.assertEqual(res['flagged'],4608)
+         
+        # Now check that the same is flagged using scan selection
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        flagdata(vis=self.vis, mode='manual', scan='14,17', spw='1',
+                 flagbackup=False)
+        res1=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res1['scan']['14']['flagged'],2304)
+        self.assertEqual(res1['scan']['17']['flagged'],2304)
+        self.assertEqual(res1['spw']['1']['flagged'],4608)
+        self.assertEqual(res1['spw']['3']['flagged'],0)
+        self.assertEqual(res1['flagged'],4608)
+        self.assertEqual(res1['flagged'], res['flagged'])
+               
 class test_bandpass(test_base):
     """Flagdata:: Test flagging task with Bpass-based CalTable """
     
@@ -1866,9 +1983,11 @@ class test_bandpass(test_base):
         self.assertEqual(res, {})
 
     def test_nullselections(self):
-        '''Flagdata: unsupported selections in cal tables'''
-        res = flagdata(vis=self.vis, scan='1')
-        self.assertEqual(res, {})        
+        '''Flagdata: unkonwn scan selection in cal tables'''
+        try:
+            flagdata(vis=self.vis, scan='1', flagbackup=False)
+        except exceptions.RuntimeError, instance:
+            print 'Expected error: %s'%instance
 
     def test_default_cparam(self):
         '''Flagdata: flag CPARAM as the default column'''
@@ -1877,13 +1996,12 @@ class test_bandpass(test_base):
         self.assertEqual(res['flagged'], 11078.0, 'Should use CPARAM as the default column')
 
     def test_invalid_datacol(self):
-        '''Flagdata: invalida data column should fall back to default'''
+        '''Flagdata: invalid data column should fall back to default'''
         flagdata(vis=self.vis, mode='clip', clipzeros=True, datacolumn='PARAMERR',
                  flagbackup=False)
         res=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 11078.0)
-                
-        
+                        
     def test_manual_field_selection_for_bpass(self):
         """Flagdata:: Manually flag a bpass-based CalTable using field selection"""
         
@@ -2046,10 +2164,135 @@ class test_bandpass(test_base):
         aflocal.done()
         
         self.assertTrue(os.path.exists(self.vis+'.flagversions/flags.'+newname),
-                        'Flagversion file does not exist: flags.'+newname)
+                        'Flagversion file does not exist: flags.'+newname)        
+
+    def test_cal_time1(self):
+        '''Flagdata: clip a timerange from one field'''
+        # this timerange corresponds to field 3C286_A
+        flagdata(vis=self.vis, mode='clip', timerange='<14:12:52',clipzeros=True,
+                 clipminmax=[0.,0.35], flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['field']['3C286_A']['flagged'],2230)
+        self.assertEqual(res['field']['3C286_B']['flagged'],0)
+        self.assertEqual(res['field']['3C286_C']['flagged'],0)
+        self.assertEqual(res['field']['3C286_D']['flagged'],0)
+        self.assertEqual(res['flagged'],2230)
+
+    def test_cal_time_field(self):
+        '''Flagdata: clip a timerange from another field'''
+        # this timerange corresponds to field 3C286_D
+        flagdata(vis=self.vis, mode='clip', timerange='>14:58:33.6',clipzeros=True,
+                 clipminmax=[0.,0.4], flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['field']['3C286_A']['flagged'],0)
+        self.assertEqual(res['field']['3C286_B']['flagged'],0)
+        self.assertEqual(res['field']['3C286_C']['flagged'],0)
+        self.assertEqual(res['field']['3C286_D']['flagged'],2221)
+        self.assertEqual(res['flagged'],2221)
+        
+    def test_cal_time_corr(self):
+        '''Flagdata: select a timerange for one solution'''
+        flagdata(vis=self.vis, mode='clip', clipminmax=[0.,0.4], timerange='14:23:50~14:48:40.8',
+                 correlation='Sol2',flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['Sol1']['flagged'], 0)
+        self.assertEqual(res['correlation']['Sol2']['flagged'], 17)
+        self.assertEqual(res['flagged'],17)
+        
+        # Check that the timerange selection was taken. Flag only the solution
+        flagdata(vis=self.vis, mode='unflag', flagbackup=True)
+        flagdata(vis=self.vis, mode='clip', clipminmax=[0.,0.4], correlation='Sol2', 
+                 flagbackup=False)
+        res1=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res1['correlation']['Sol1']['flagged'], 0)
+        self.assertEqual(res1['correlation']['Sol2']['flagged'], 22)
+        self.assertEqual(res1['flagged'],22)
+        self.assertEqual(res1['flagged']-res['flagged'], 5)
+
+    def test_observation(self):
+        '''flagdata: flag an observation from an old cal table format'''
+        # Note: this cal table does not have an observation column. 
+        # The column and sub-table should be added and the flagging
+        # should happen after this.
+        flagdata(vis=self.vis, observation='0', flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['flagged'],1248000)
+        self.assertEqual(res['total'],1248000)
         
 
-     
+class test_newcal(test_base):
+    """Flagdata:: Test flagging task with new CalTable format"""
+    
+    def setUp(self):
+        self.setUp_newcal()
+        
+    def test_newcal_selection1(self):
+        '''Flagdata: select one solution for one scan and spw'''
+        flagdata(vis=self.vis, mode='clip', clipminmax=[0,0.1], correlation='Sol1', spw='0',
+                 scan='46', flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['Sol2']['flagged'], 0)
+        self.assertEqual(res['correlation']['Sol1']['flagged'], 27)
+        self.assertEqual(res['spw']['0']['flagged'], 27)
+        self.assertEqual(res['scan']['46']['flagged'], 27)
+        self.assertEqual(res['flagged'],27)
+        
+    def test_newcal_time1(self):
+        '''Flagdata: select a timerange in a new cal table'''
+        flagdata(vis=self.vis, mode='manual', timerange="09:36:00~16:48:00", flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['field']['1328+307']['flagged'],0)
+        self.assertEqual(res['field']['2229+695']['flagged'],2052)
+        self.assertEqual(res['flagged'],2052)
+        
+    def test_newcal_time2(self):
+        '''Flagdata: select a timerange for half the scans'''
+        flagdata(vis=self.vis, mode='manual', timerange="09:20:00~14:12:00", flagbackup=False)
+        
+        # It should flag scans 1~25
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['scan']['1']['flagged'],108)
+        self.assertEqual(res['scan']['2']['flagged'],108)
+        self.assertEqual(res['scan']['25']['flagged'],108)
+        self.assertEqual(res['scan']['27']['flagged'],0)
+        # NOTE: data DOES not have all scans
+        self.assertEqual(res['flagged'],108*14)
+        
+    def test_newcal_clip(self):
+        '''Flagdata: clip zeros in one solution'''
+        flagdata(vis=self.vis, mode='clip', clipzeros=True, correlation='Sol2', flagbackup=False)
+        
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['correlation']['Sol1']['flagged'],0)
+        self.assertEqual(res['correlation']['Sol2']['flagged'],1398)
+        self.assertEqual(res['flagged'],1398)
+
+    def test_newcal_obs1(self):
+        '''flagdata: flag an observation from a new cal table format'''
+        flagdata(vis=self.vis, observation='1', flagbackup=False)
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['observation']['0']['flagged'],0)
+        self.assertEqual(res['observation']['1']['flagged'],2052)
+        self.assertEqual(res['flagged'],2052)
+        self.assertEqual(res['total'],2916)
+
+    def test_newcal_obs2(self):
+        '''flagdata: flag an observation and a scan from a new cal table format'''
+        # observation=0 has only scan=1
+        flagdata(vis=self.vis, observation='0', flagbackup=False)                
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['observation']['0']['flagged'],108)
+        self.assertEqual(res['scan']['1']['flagged'],108)
+        self.assertEqual(res['flagged'],108)
+        
+        # Check that obs=0 is scan=1
+        res=flagdata(vis=self.vis, mode='unflag')
+        flagdata(vis=self.vis, scan='1', flagbackup=False)                
+        res=flagdata(vis=self.vis, mode='summary')
+        self.assertEqual(res['observation']['0']['flagged'],108)
+        self.assertEqual(res['scan']['1']['flagged'],108)
+        self.assertEqual(res['flagged'],108)
+
 # Cleanup class 
 class cleanup(test_base):
     
@@ -2061,8 +2304,9 @@ class cleanup(test_base):
         os.system('rm -rf flagdatatest-alma.*ms*')
         os.system('rm -rf Four_ants_3C286.*ms*')
         os.system('rm -rf shadowtest_part.*ms*')
+        os.system('rm -rf testmwa.*ms*')
         os.system('rm -rf cal.fewscans.bpass*')
-        os.system('rm -rf X7ef.tsys*')
+        os.system('rm -rf X7ef.tsys* ap314.gcal*')
         os.system('rm -rf list*txt')
 
     def test_runTest(self):
@@ -2088,4 +2332,5 @@ def suite():
             test_correlations,
             test_tsys,
             test_bandpass,
+            test_newcal,
             cleanup]

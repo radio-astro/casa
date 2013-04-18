@@ -32,9 +32,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <example>region="myregion.rgn"</example>
     </param>
     <param type="string" direction="in" name="chans">
-        <description>Channels to use. Channels must be contiguous. Default: all channels ("").</description>
+        <description>Channels to use. Channels must be contiguous. See "help par.chans" for examples. Default: all channels ("").</description>
         <value></value>
-        <example>chans="4-11"</example>
     </param>
     <param type="string" direction="in" name="stokes">
         <description>Stokes planes to use. Planes must be contiguous. Default: all stokes ("").</description>
@@ -337,8 +336,8 @@ box             Direction plane box specification, "blcx, blcy, trcx, trcy". Onl
                 is also not specified, entire directional plane unioned with any chans and
                 stokes specification determines the region.
 region          Region of interest. See help par.region for possible specifications.
-chans           Optional contiguous frequency channel number specification. Not used if
-                region is specified. Default is all channels.
+chans           Optional contiguous frequency specification. Not used if
+                region is specified. See "help par.chans" for examples. Default is all channels.
 stokes          Contiguous stokes planes specification. Not used if region is specified.
                 Default is all stokes.     
 axis            Axis along which to do the fit(s). &lt;0 means use the spectral axis or the

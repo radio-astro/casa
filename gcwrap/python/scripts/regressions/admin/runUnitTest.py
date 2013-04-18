@@ -6,6 +6,7 @@
     casapy [casa-options] -c runUnitTest.py --list
     casapy [casa-options] -c runUnitTest.py --list
     casapy [casa-options] -c runUnitTest.py --file Tests.txt
+    casapy [casa-options] -c runUnitTest.py --classes test_listobs
     
     or from inside casapy:
     runUnitTest.main(['testname']) 
@@ -29,6 +30,7 @@ import unittest
 import string
 import re
 import shutil
+import pprint
 import nose
 from taskinit import casalog
 
@@ -82,6 +84,7 @@ def usage():
     print '  -g or --debug          set casalog.filter to DEBUG.'
     print '  -l or --list           print the list of tests from '
     print '                         active/gcwrap/python/scripts/tests/unittests_list.txt.'
+    print '  -s or --classes        print the classes from a test script (those returned by suite()).'
     print '  -H or --Help           print this message and exit.\n'
     print 'NOTE: it will look for tests in the install directory, which usually is \r'
     print '      <casa_install_dir>/python/2.6/tests'
@@ -147,6 +150,35 @@ def settestdir(datadir):
     os.environ.__setitem__('TEST_DATADIR',absdatadir)
     return
 
+def getclasses(testnames):
+    '''Get the classes of a test script
+       It will copy the test script to /tmp
+       and remove it afterwards'''
+
+    here = os.getcwd()
+    tmpdir = '/tmp'
+    try:
+        os.chdir(tmpdir)
+        
+        for filename in testnames:
+            tt = UnitTest(filename)
+            tt.copyTest(copyto=tmpdir)
+
+            classes = tt.getTestClasses(filename)
+            for c in classes:
+                pprint.pprint('Class '+c.__name__)       
+                for attr, value in c.__dict__.iteritems():
+                    if len(attr) >= len("test") and attr[:len("test")] == "test":
+                        print '\t%s'%c(attr)
+                  
+            os.remove(filename+'.py')       
+            os.remove(filename+'.pyc')       
+        
+        os.chdir(here)
+    except:
+        print '--> ERROR: Cannot copy script to %s'%tmpdir
+        return
+    
 
 # Define which tests to run    
 whichtests = 0
@@ -186,7 +218,7 @@ def main(testnames=[]):
     else:
         # run specific tests
         whichtests = 1
-           
+
 
     # Directories
     PWD = os.getcwd()
@@ -230,9 +262,10 @@ def main(testnames=[]):
         '''Run specific tests'''
         list = []
         for f in listtests:
-            if not haslist(f):
+            if not haslist(f):                
                 testcases = UnitTest(f).getUnitTest()
                 list = list+testcases
+
             else:
                 ff = getname(f)
                 tests = gettests(f)
@@ -279,8 +312,9 @@ if __name__ == "__main__":
         
             try:
                 # Get only this script options
-                opts,args=getopt.getopt(sys.argv[i+2:], "Hlmgf:d:", ["Help","list","mem",
-                                                                     "debug","file=","datadir="])
+                opts,args=getopt.getopt(sys.argv[i+2:], "Hlmgs:f:d:", ["Help","list","mem",
+                                                                     "debug","classes=","file=",
+                                                                     "datadir="])
                 
             except getopt.GetoptError, err:
                 # Print help information and exit:
@@ -316,6 +350,10 @@ if __name__ == "__main__":
                     if o in ("-l", "--list"):
                         list_tests()
                         os._exit(0)
+                    if o in ("-s", "--classes"): 
+                        testnames.append(a)
+                        getclasses(testnames)
+                        os._exit(0)
                     if o in ("-m", "--mem"):
                         # run specific tests in mem mode            
                         MEM = 1
@@ -343,11 +381,12 @@ if __name__ == "__main__":
                         
                     else:
                         assert False, "unhandled option"
-                
+
+
                 # Deal with other arguments
                 if args != [] and not hasfile:
                     testnames = args
-                    
+                                        
         else:
             testnames = []
         

@@ -115,6 +115,7 @@ class ss_setjy_helper:
           if not status:
             continue 
 
+ 
           validfids.append(fid)
 	  trange=myms.range('time')
 	  if not inparams.has_key(srcnames[fid]):
@@ -192,7 +193,7 @@ class ss_setjy_helper:
           if scalebychan:
             maxnf=0
             for ispw in range(nspwused):
-              nf = inparams[src]['freqlist'][ispw]
+              nf = len(inparams[src]['freqlist'][ispw])
               maxnf = max(nf,maxnf)
             if maxnf >= 3840 and src.upper()!="MARS": # mars shoulde be ok
               self._casalog.post("Processing %s spw(s) with at least some of them are a few 1000 channels or more. This may takes \
@@ -309,6 +310,18 @@ class ss_setjy_helper:
 	      clrecs[clabel] = mycl.torecord()
               mycl.close(False) # False for not to send a warning message
 	      mycl.done()
+
+              # if scratch=F check if the virtual model already exist
+              # for the field if it is clear it.
+              if j==0: 
+                mytb.open(self.vis, nomodify=False)
+                kwds = mytb.getkeywords()
+                modelkwd='definedmodel_field_'+str(vfid)
+                if kwds.has_key(modelkwd):
+                  clmodname=kwds[modelkwd]
+                  mytb.removekeyword(clmodname)
+                  mytb.removekeyword(modelkwd)
+                mytb.close()
 
 	      # finally, put the componentlist as model
 	      self.im.selectvis(spw=spwids[j],field=field,observation=observation,time=timerange)

@@ -75,7 +75,7 @@ class gencal_antpostest(unittest.TestCase):
         
         # Compare with reference file from the repository
         reference = self.reffile1
-        self.assertTrue(th.compTables(self.caltable, reference, ['WEIGHT']))
+        self.assertTrue(th.compTables(self.caltable, reference, ['WEIGHT','OBSERVATION_ID']))
 
     def test_antpos_auto(self):
         """
@@ -99,7 +99,7 @@ class gencal_antpostest(unittest.TestCase):
           
           # Compare with reference file from the repository
           reference = self.reffile2
-          self.assertTrue(th.compTables(self.caltable, reference, ['WEIGHT']))
+          self.assertTrue(th.compTables(self.caltable, reference, ['WEIGHT','OBSERVATION_ID']))
 
         except urllib2.URLError, err:
           print "Cannot access %s , skip this test" % evlabslncorrURL

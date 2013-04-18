@@ -1265,7 +1265,7 @@ myim.done()
             <value></value>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. Channels must be contiguous. Default is to use all channels.</description>
+            <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
             <value></value>
         </param>
         <param type="string"  name="stokes">
@@ -4006,7 +4006,7 @@ We use the Componentlist GUI to look at the strongest component.
             <value type="string"/>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. Channels must be contigous. Default: all channels ("").</description>
+            <description>Channels to use. See "help par.chans" for examples. Channels must be contigous. Default: all channels ("").</description>
             <value></value>
         </param>
         <param type="string"  name="stokes">
@@ -4470,7 +4470,7 @@ res = ia.fitprofile(ngauss=2, box="3,3,4,5", poly=2, multifit=true)
         
         <param type="any"  name="chans">
             <any type="variant"/>
-            <description>The frequency planes to use in the fit. Default is 0 (first plane).</description>
+            <description>Channels to use in the fit. See "help par.chans" for examples. Default is 0 (first plane).</description>
             <value></value>
         </param>
         
@@ -6608,7 +6608,7 @@ The {\stff open} function first closes the old \imagefile.
             <description>Rectangular region in the directional plane to select. Default is to use the entire directional plane.</description>
         </param>
         <param type="string" name="chans">
-            <description>Spectral selection. Default is the entire spectral range.</description>
+            <description>Spectral selection. See "help par.chans" for examples.  Default is the entire spectral range.</description>
             <value></value>
         </param>
         
@@ -7428,6 +7428,11 @@ specifying reorder="1032" or reorder=1032 for a four axes image maps input axes
 and the zeroth axis in the input being mapped to zeroth axis in the output, the zeroth
 digit is implicitly understood to be 0 so that to transpose an image where one would
 use a string order="0321", one could equivalently specify an int order=321.
+IMPORTANT: When specifying a non-negative integer and mapping the zeroth axis of
+the input to the zeroth axis of the output, do *not* explicitly specify the leading
+0; eg, specify order=321 rather than order=0321. Python interprets an integer with
+a leading 0 as an octal number.
+
 Because of ambiguity for axes numbers greater than nine, using string or integer order
 specifications cannot handle images containing more than 10 axes.
 The order parameter can also be specified as a list of strings which uniquely minimally match,
@@ -10066,7 +10071,7 @@ used to create a 2D temporary image.
             <value></value>
         </param>
         <param type="string"  name="chans">
-            <description>The frequency planes to correct. Default is all frequencies.</description>
+            <description>The frequency planes to correct. See "help par.chans" for examples. Default is all frequencies.</description>
             <value></value>
         </param>
         
@@ -10135,9 +10140,13 @@ used to create a 2D temporary image.
             <description>The ending pixel in the direction plane (array of two values)</description>
             <value/>
         </param>
-        <param type="int" name="halfwidth">
-            <description>Half width for averaging expressed in pixels perpendicular to the slice. Pixels within one half width perpendicular to the slice will be averaged along the slice</description>
-            <value>0</value>
+        <param type="int" name="width">
+            <description>Width in pixels for averaging pixels perpendicular to the slice. Must be an odd integer >= 1 (1 means only use the pixels along the slice).</description>
+            <value>1</value>
+        </param>
+        <param type="string" name="unit">
+            <description>Unit for the offset axis in the resulting image. Must be a unit of angular measure.</description>
+            <value>arcsec</value>
         </param>
         <param type="bool"  name="overwrite">
             <description>Overwrite the output if it exists?</description>
@@ -10149,7 +10158,7 @@ used to create a 2D temporary image.
             <value></value>
         </param>
         <param type="string"  name="chans">
-            <description>Channels to use. Channels must be contiguous. Default is to use all channels.</description>
+            <description>Channels to use. See "help par.chans" for examples. Channels must be contiguous. Default is to use all channels.</description>
             <value/>
         </param>
         <param type="string"  name="stokes">
@@ -10175,16 +10184,26 @@ used to create a 2D temporary image.
         Create a position-velocity image by specifying two pixels between which a slice is taken in the direction
         coordinate. The spectral extent of the resulting image will be that provided by the region specification
         or the entire spectral range of the input image if no region is specified. One may not specify a region
-        in direction space; that is accomplished by specifying the start and end points of the slice. One may
-        specify an optional half width, which is the number of pixels on either side and perpendicular to the
-        direction slice that are used for averaging along the slice (0, the default, represents no averaging).
-        A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
-        image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified (unless
-        perhaps you are debugging).
+        in direction space; that is accomplished by specifying the start and end points of the slice.
         
-        Internally, the image is first rotated, padding if necessary to include relevant pixels that would otherwise
+        One may specify a width (must be an odd integer >= 1), which is the number of pixels centered along and perpendicular
+        to the direction slice that are used for averaging along the slice. The default value of 1 represents no averaging).
+        A value of 3 means average one pixel on each side of the slice and the pixel on the slice. 
+        Note that this width is applied to pixels in the image after it has been rotated (see below for a description
+        of the algorithm used).
+        
+        One may specify the unit for the angular offset axis.
+        
+        A true value for the wantreturn parameter indicates that an image analysis tool attached to the created
+        image should be returned. Nothing is returned if wantreturn is false, but then outfile should be specified
+        (unless perhaps you are debugging).
+        
+        The start and end values represent direction pixel coordinates. They both must fail within the input
+        image, and they both must be at least 2 pixels from the edge of the input image to facilite rotation (see below).
+        
+        Internally, the image is first rotated, padding first if necessary to include relevant pixels that would otherwise
         be excluded by the rotation operation, so that the slice is horizontal, with the starting pixel left of the
-        ending pixel. Then, the pixels within halfwidth of the slice are averaged and the resulting image is
+        ending pixel. Then, the pixels within the specified width of the slice are averaged and the resulting image is
         written and/or returned. The output image has a linear coordinate in place of the direction coordinate of the
         input image, and the corresponding axis represents angular offset with the center pixel having a value of 0.
         

@@ -323,14 +323,15 @@ if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
     os.system('rm -rf cal-ngc3256.B1')
-    bandpass(vis = 'ngc3256_line.ms', caltable = 'cal-ngc3256.B1', 
-             gaintable = 'cal-ngc3256.G1', timerange='<2011/04/16/15:00:00',
-             field = '1037*', minblperant=3, minsnr=2, solint='inf', combine='scan',
-             bandtype='B', fillgaps=1, refant = therefant, solnorm = T)
 
     bandpass(vis = 'ngc3256_line.ms', caltable = 'cal-ngc3256.B1', 
+             gaintable = 'cal-ngc3256.G1', timerange='<2011/04/16/15:00:00',
+             field = '1037*', minblperant=3, minsnr=2, solint='inf', combine='scan,obs',
+             bandtype='B', fillgaps=1, refant = therefant, solnorm = T)
+    
+    bandpass(vis = 'ngc3256_line.ms', caltable = 'cal-ngc3256.B1', 
              gaintable = 'cal-ngc3256.G1', timerange='>2011/04/16/15:00:00',
-             field = '1037*', minblperant=3, minsnr=2, solint='inf', combine='scan',
+             field = '1037*', minblperant=3, minsnr=2, solint='inf', combine='scan,obs',
              bandtype='B', fillgaps=1, refant = therefant, solnorm = T, append=True)
     
     if makeplots:
@@ -345,7 +346,7 @@ mystep = 10
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    setjy(vis='ngc3256_line.ms', field='Titan', standard='Butler-JPL-Horizons 2010', 
+    setjy(vis='ngc3256_line.ms', field='Titan', standard='Butler-JPL-Horizons 2012', 
           spw='0,1,2,3', scalebychan=False, usescratch=False)
 
     timing()
@@ -396,7 +397,7 @@ if(mystep in thesteps):
              interp=['nearest','nearest'], gainfield = ['1037*', '1037*'],
              gaintable=['cal-ngc3256.G2.flux', 'cal-ngc3256.B1'])
 
-    flagmanager(vis = name+'.ms', mode = 'save', versionname = 'step12')
+    flagmanager(vis = 'ngc3256_line.ms', mode = 'save', versionname = 'step12')
 
     timing()
 
@@ -405,7 +406,7 @@ mystep = 14
 if(mystep in thesteps):
     print 'Step ', mystep, step_title[mystep]
 
-    flagmanager(vis = name+'.ms', mode = 'restore', versionname = 'step12')
+    flagmanager(vis = 'ngc3256_line.ms', mode = 'restore', versionname = 'step12')
     
     flagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/04:13:35~04:13:45', flagbackup = T)
@@ -422,7 +423,7 @@ if(mystep in thesteps):
     flagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/17/00:35:30~01:20:20', antenna='DV04', spw='3', flagbackup = T)
 
-    flagmanager(vis = name+'.ms', mode = 'save', versionname = 'step13')
+    flagmanager(vis = 'ngc3256_line.ms', mode = 'save', versionname = 'step13')
 
     timing()
 
@@ -433,20 +434,23 @@ if(mystep in thesteps):
 
     delmod('ngc3256_line.ms')
 
+    os.system('rm -rf cal-ngc3256.G1n cal-ngc3256.B1n')
+    
     gaincal(vis='ngc3256_line.ms', caltable='cal-ngc3256.G1n', spw='*:40~80', field='1037*',
             selectdata=T, solint='int', refant=therefant, calmode='p')
 
+
     bandpass(vis = 'ngc3256_line.ms', caltable = 'cal-ngc3256.B1n', 
              gaintable = 'cal-ngc3256.G1n', timerange='<2011/04/16/15:00:00',
-             field = '1037*', minblperant=3, minsnr=2, solint='inf', combine='scan',
+             field = '1037*', minblperant=3, minsnr=2, solint='inf', combine='scan,obs',
              bandtype='B', fillgaps=1, refant = therefant, solnorm = T)
-
+    
     bandpass(vis = 'ngc3256_line.ms', caltable = 'cal-ngc3256.B1n', 
              gaintable = 'cal-ngc3256.G1n', timerange='>2011/04/16/15:00:00',
-             field = '1037*', minblperant=3, minsnr=2, solint='inf', combine='scan',
+             field = '1037*', minblperant=3, minsnr=2, solint='inf', combine='scan,obs',
              bandtype='B', fillgaps=1, refant = therefant, solnorm = T, append=True)
 
-    setjy(vis='ngc3256_line.ms', field='Titan', standard='Butler-JPL-Horizons 2010', 
+    setjy(vis='ngc3256_line.ms', field='Titan', standard='Butler-JPL-Horizons 2012', 
           spw='0,1,2,3', usescratch=False)
 
     gaincal(vis = 'ngc3256_line.ms', caltable = 'cal-ngc3256.G2n', spw =
@@ -474,8 +478,7 @@ if(mystep in thesteps):
           spw='*:20~120', selectdata=T, mode='mfs', niter=500,
           gain=0.1, threshold='0.75mJy', psfmode='hogbom',
           interactive=False, mask=[62, 62, 67, 67], imsize=128,
-          cell='1arcsec', weighting='briggs', robust=0.0, nterms=2,
-          usescratch=False)
+          cell='1arcsec', weighting='briggs', robust=0.0, nterms=2)
     
     calstat=imstat(imagename='result-phasecal_cont.image.tt0', region='', box='85,8,120,120')
     rmspcal=(calstat['rms'][0])
@@ -516,8 +519,7 @@ if(mystep in thesteps):
     clean(vis='ngc3256_line.ms', imagename='result-ampcal_cont', 
           field='Titan', spw='0:20~120,1:20~120', mode='mfs', niter=200, 
           threshold='5mJy', psfmode='hogbom', mask=[62, 62, 67, 67], imsize=128,
-          cell='1arcsec', weighting='briggs', robust=0.0,
-          usescratch=False)
+          cell='1arcsec', weighting='briggs', robust=0.0)
 
     calstat=imstat(imagename="result-ampcal_cont.image",region="",box="85,8,120,120")
     rmstitan=(calstat['rms'][0])
@@ -627,7 +629,7 @@ if(mystep in thesteps):
 
     if makeplots:
         imview(raster={'file': 'result-ngc3256_cont_sc1.image', 'colorwedge':T,
-                       'range':[-0.001, 0.009], 'scaling':0, 'colormap':'Rainbow 2'},
+                       'range':[-0.001, 0.010], 'scaling':0, 'colormap':'Rainbow 2'},
                out='result-ngc3256_cont_sc1.png', zoom=2)
 
     timing()
@@ -654,8 +656,7 @@ if(mystep in thesteps):
           spw='0:38~87', mode='channel', start='', nchan=50, width='', 
           psfmode='hogbom', outframe='LSRK', restfreq='115.271201800GHz', 
           mask=[53,50,87,83], niter=500, interactive=False, imsize=128, cell='1arcsec', 
-          weighting='briggs', robust=0.0, threshold='5mJy',
-          usescratch=False)
+          weighting='briggs', robust=0.0, threshold='5mJy')
 
     timing()
 
@@ -810,14 +811,34 @@ if(mystep in thesteps):
     #refpeakcontsc = 0.00983608141541 
 
     # reference values obtained with this script using CASA stable r21621 (15 Oct 2012, DP)
-    refrmspcal    =  0.000963084050454
-    refpeakpcal   =  1.87274956703    
-    refrmstitan   =  0.00491269072518 
-    refpeaktitan  =  0.361274719238   
-    refrmscont    =  0.000305994151859
-    refpeakcont   =  0.00709502119571 
-    refrmscontsc  =  7.5960662798e-05 
-    refpeakcontsc =  0.00963686406612 
+    #refrmspcal    =  0.000963084050454
+    #refpeakpcal   =  1.87274956703    
+    #refrmstitan   =  0.00491269072518 
+    #refpeaktitan  =  0.361274719238   
+    #refrmscont    =  0.000305994151859
+    #refpeakcont   =  0.00709502119571 
+    #refrmscontsc  =  7.5960662798e-05 
+    #refpeakcontsc =  0.00963686406612 
+
+    # reference values obtained with this script using CASA 4.0.1 (12 Feb 2013, DP)
+    #refrmspcal    =  0.000967486877926
+    #refpeakpcal   =  1.87324357033
+    #refrmstitan   =  0.00491303578019
+    #refpeaktitan  =  0.361277967691
+    #refrmscont    =  0.000327011366608
+    #refpeakcont   =  0.00702479109168
+    #refrmscontsc  =  7.84753283369e-05
+    #refpeakcontsc =  0.00987098459154
+
+    # reference values obtained with this script using CASA 4.1 prerelease 2, Butler 2012 (17 Apr 2013, DP)
+    refrmspcal    = 0.00101008242927
+    refpeakpcal   = 1.9241631031
+    refrmstitan   = 0.0050711822696
+    refpeaktitan  = 0.372662633657 
+    refrmscont    = 0.000336007156875
+    refpeakcont   = 0.00723568536341 
+    refrmscontsc  = 8.06680545793e-05
+    refpeakcontsc = 0.0101557951421 
 
     devrmspcal = abs(rmspcal-refrmspcal)/refrmspcal*100.
     devpeakpcal = abs(peakpcal-refpeakpcal)/refpeakpcal*100.

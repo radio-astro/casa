@@ -673,6 +673,7 @@ class pimager():
                 minfreq=0.0
             freq='"%s"'%(str((minfreq+band/2.0))+'Hz')
             band='"%s"'%(str((band*1.1))+'Hz')
+            casalog.post('Using a reference frequency of '+freq+' and bandwidth of '+band)
             ###define image names
             imlist=[]
             char_set = string.ascii_letters
@@ -869,6 +870,11 @@ class pimager():
             ia.calc(cmd);
             ia.done();
 
+    def resetimage(self, imname=""):
+        ia.open(imname)
+        ia.set(0.0)
+        ia.close()
+
     def combineimages(self, rootnames=[], nterms=2, outputrootname='',dopbcorr=True,pblimit=0.1):
         casalog.filter("ERROR")
         combmodels=[]
@@ -891,6 +897,11 @@ class pimager():
                 self.copyimage(inimage=rootnames[0]+'.sumwt.tt'+ str(tt), outimage=combwts[tt], init=True)
             if not os.path.exists( combimages[tt] ):
                 self.copyimage(inimage=rootnames[0]+'.image.tt'+ str(tt), outimage=combimages[tt], init=True)
+
+            # Reset combined residuals, psfs, wts to zero. Ideally, don't need to keep recomputing psfs, wts
+            self.resetimage( combresiduals[tt] )
+            self.resetimage( combwts[tt] )
+
             for chunk in range(0,ncpu):
                 chunkresidual=rootnames[chunk]+'.residual.tt'+str(tt)
                 if (dopbcorr==True):
@@ -909,10 +920,6 @@ class pimager():
                 ia.open(combwts[tt])
                 ia.calc( '"'+combwts[tt] + '"+"' + rootnames[chunk]+'.sumwt.tt'+str(tt)+'"')
                 ia.close()
-            ## Normalize residuals by number of chunks.
-            # ia.open( combresiduals[tt] )
-            # ia.calc( '"'+combresiduals[tt] + '"/"' + combwts[0]+'"' )
-            # ia.done()
 
         self.normalizeresiduals_mt(nterms, combresiduals, combwts, dopbcorr,pblimit);
 
@@ -920,6 +927,7 @@ class pimager():
             combpsfs.append(outputrootname+'.psf.tt'+str(tt));
             if not os.path.exists( combpsfs[tt] ):
                 self.copyimage(inimage=rootnames[0]+'.psf.tt'+ str(tt), outimage=combpsfs[tt], init=True)
+            self.resetimage( combpsfs[tt] )
             ## Add together all chan-chunk images.
             for chunk in range(0,ncpu):
                 chunkpsf=rootnames[chunk]+'.psf.tt'+str(tt)

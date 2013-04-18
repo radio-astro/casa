@@ -98,7 +98,7 @@ default('gaincal')
 gaincal(vis='n4826_22apr.ms',caltable='n4826_22apr.gcal',
 	field='0,1',spw='0', gaintype='G',
 	minsnr=2.0,
-	refant='ANT5',gaincurve=False,opacity=0.0,solint='inf',combine='')
+	refant='ANT5',gaincurve=False,opacity=0.0,solint='inf',combine='obsid')
 gaincal1time=time.time()
 ## Transfer the flux density scale:
 print '--fluxscale - 22apr98--'
@@ -198,7 +198,7 @@ default('gaincal')
 gaincal(vis='n4826_16apr.ms',caltable='n4826_16apr.gcal',
 	field='0,1',spw='0,1', gaintype='G',
 	minsnr=2.0,
-	refant='ANT5',gaincurve=False,opacity=0.0,solint='inf',combine='')
+	refant='ANT5',gaincurve=False,opacity=0.0,solint='inf',combine='obsid')
 gaincal2time=time.time()
  #     Found 14 good G Jones solutions.
 ## Transfer the flux density scale:

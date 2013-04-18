@@ -218,6 +218,7 @@ bool ms::ismultims()
   return rstat;
 }
 
+
 std::vector<std::string> ms::getreferencedtables()
 {
 
@@ -573,12 +574,12 @@ ms::tofits(const std::string& fitsfile, const std::string& column,
    return rstat;
 }
 
-msmetadata* ms::metadata(const bool preload, const float cachesize) {
+msmetadata* ms::metadata(const float cachesize) {
 	try {
 		if (detached()) {
 			return 0;
 		}
-		return new msmetadata(itsMS, preload, cachesize);
+		return new msmetadata(itsMS, cachesize);
 	}
 	catch(const AipsError& x) {
 		*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -587,15 +588,17 @@ msmetadata* ms::metadata(const bool preload, const float cachesize) {
 }
 
 ::casac::record*
-ms::summary(bool verbose, const std::string& listfile)
+ms::summary(bool verbose, const string& listfile, bool listunfl, double cachesize)
 {
-  ::casac::record *header;
+  ::casac::record *header = 0;
   try {
      if(!detached()){
        *itsLog << LogOrigin("ms", "summary");
        // pass the original MS name to the constructor
        // so that it is correctly printed in the output
        MSSummary mss(itsMS, itsOriginalMS->tableName());
+       mss.setListUnflaggedRowCount(listunfl);
+       mss.setMetaDataCacheSizeInMB(cachesize);
        casa::Record outRec;
        if (listfile != ""){
     	   File diskfile(listfile);
@@ -698,6 +701,50 @@ ms::getspectralwindowinfo()
   return spwSummary;
 }
 
+::casac::record*
+ms::getfielddirmeas(const std::string& dircolname, int fieldid, double time)
+{
+  ::casac::record *retval = 0;
+  try{
+    if(!detached()){
+       *itsLog << LogOrigin("ms", "getfielddirmeas");
+      String error;       
+      String colname(dircolname);
+      colname.upcase();
+      
+      casa::MSFieldColumns msfc(itsMS->field());
+      casa::MDirection d;
+      if(colname=="DELAY_DIR"){
+	d = msfc.delayDirMeas(fieldid, time);
+      }
+      else if(colname=="PHASE_DIR"){
+	d = msfc.phaseDirMeas(fieldid, time);
+      }
+      else if(colname=="REFERENCE_DIR"){
+	d = msfc.referenceDirMeas(fieldid, time);
+      }
+      else{
+	*itsLog << LogIO::SEVERE
+		<< "Illegal FIELD direction column name: " << dircolname
+		<< LogIO::POST;
+      }
+      
+      MeasureHolder out(d);
+      
+      Record outRec;
+      if (out.toRecord(error, outRec)) {
+	retval = fromRecord(outRec);
+      } else {
+	error += String("Failed to generate direction return value.\n");
+	*itsLog << LogIO::SEVERE << error << LogIO::POST;
+      };
+    }
+  } catch (AipsError(x)) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+  }
+
+  return retval;
+}
 
 bool
 ms::listhistory()
@@ -1884,45 +1931,7 @@ ms::cvelfreqs(const std::vector<int>& spwids,
       	*itsLog << LogIO::NORMAL << "Zero SPWs selected." << LogIO::POST;
 	return rval;
       }
-      
-      // determine phase center
-      casa::MDirection phaseCenter;
-      Int phasec_fieldid = -1;
-      String t_phasec = toCasaString(phasec);
-      
-      //If phasecenter is a simple numeric value then it's taken as a fieldid 
-      //otherwise its converted to a MDirection
-      if(phasec.type()==::casac::variant::DOUBLEVEC 
-	 || phasec.type()==::casac::variant::DOUBLE
-	 || phasec.type()==::casac::variant::INTVEC
-	 || phasec.type()==::casac::variant::INT){
-	phasec_fieldid = phasec.toInt();	
-	if(phasec_fieldid >= (Int)itsMS->field().nrow() || phasec_fieldid < 0){
-	  *itsLog << LogIO::SEVERE << "Field id " << phasec_fieldid
-		  << " selected to be used as phasecenter does not exist." << LogIO::POST;
-	  return rval;
-	}
-	else{
-	  phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
-	}
-      }
-      else{
-	if(t_phasec.empty()){
-	  phasec_fieldid = 0;
-	  phaseCenter = FIELDCols.phaseDirMeasCol()(phasec_fieldid)(IPosition(1,0));
-	}
-	else{
-	  if(!casaMDirection(phasec, phaseCenter)){
-	    *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
-		    << t_phasec << LogIO::POST;
-	    return rval;
-	  }
-	  else{
-	    *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
-	  }
-	}
-      }
-      
+            
       // determine old reference frame
       casa::MFrequency::Types theOldRefFrame = MFrequency::castType(SPWCols.measFreqRef()(spwids[0]));
       
@@ -1989,6 +1998,48 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 		<< " (" << theObsTime.getRefString() << ")" << LogIO::POST;
       }
       
+      // determine phase center
+      casa::MDirection phaseCenter;
+      casa::MRadialVelocity mRV; // needed when using outframe "OBJECT"
+      Int phasec_fieldid = -1;
+      String t_phasec = toCasaString(phasec);
+      
+      //If phasecenter is a simple numeric value then it's taken as a fieldid 
+      //otherwise its converted to a MDirection
+      if(phasec.type()==::casac::variant::DOUBLEVEC 
+	 || phasec.type()==::casac::variant::DOUBLE
+	 || phasec.type()==::casac::variant::INTVEC
+	 || phasec.type()==::casac::variant::INT){
+	phasec_fieldid = phasec.toInt();	
+	if(phasec_fieldid >= (Int)itsMS->field().nrow() || phasec_fieldid < 0){
+	  *itsLog << LogIO::SEVERE << "Field id " << phasec_fieldid
+		  << " selected to be used as phasecenter does not exist." << LogIO::POST;
+	  return rval;
+	}
+	else{
+	  phaseCenter = FIELDCols.phaseDirMeas(phasec_fieldid, theObsTime.get("s").getValue());
+	  mRV = FIELDCols.radVelMeas(phasec_fieldid, theObsTime.get("s").getValue());
+	}
+      }
+      else{
+	if(t_phasec.empty()){
+	  phasec_fieldid = 0;
+	  phaseCenter = FIELDCols.phaseDirMeas(phasec_fieldid, theObsTime.get("s").getValue());
+	  mRV = FIELDCols.radVelMeas(phasec_fieldid, theObsTime.get("s").getValue());
+	}
+	else{
+	  if(!casaMDirection(phasec, phaseCenter)){
+	    *itsLog << LogIO::SEVERE << "Could not interprete phasecenter parameter "
+		    << t_phasec << LogIO::POST;
+	    return rval;
+	  }
+	  else{
+	    *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
+	  }
+	}
+      }
+
+
       // determine observatory position
       // use a tabulated version if available
       casa::MPosition mObsPos;
@@ -2034,7 +2085,8 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 			   restfreq.toString(), 
 			   outframe,
 			   veltype,
-			   True // verbose
+			   True, // verbose
+			   mRV
 			   );
       
       newCHAN_FREQ.tovector(rval);
@@ -2126,8 +2178,11 @@ ms::concatenate(const std::string& msfile, const ::casac::variant& freqtol, cons
 	    }
 
 	    const MeasurementSet appendedMS(msfile);
-	    
+
+	    addephemcol(appendedMS); // add EPHEMERIS_ID column to FIELD table of itsMS if necessary
+
 	    MSConcat mscat(*itsMS);
+
 	    Quantum<Double> dirtolerance;
 	    Quantum<Double> freqtolerance;
 	    if(freqtol.toString().empty()){
@@ -2189,6 +2244,8 @@ ms::testconcatenate(const std::string& msfile, const ::casac::variant& freqtol, 
 
 	    const MeasurementSet appendedMS(msfile);
 	    
+	    addephemcol(appendedMS); // add EPHEMERIS_ID column to FIELD table of itsMS if necessary
+
 	    MSConcat mscat(*itsMS);
 	    Quantum<Double> dirtolerance;
 	    Quantum<Double> freqtolerance;
@@ -2249,6 +2306,8 @@ ms::virtconcatenate(const std::string& msfile, const std::string& auxfile, const
 		*itsLog << "Cannot write to the measurement set called " << msfile
 			<< LogIO::EXCEPTION;
 	    }                   
+
+	    addephemcol(appendedMS); // add EPHEMERIS_ID to FIELD table of itsMS if necessary
 
 	    MSConcat mscat(*itsMS);
 	    Quantum<Double> dirtolerance;
@@ -3345,6 +3404,134 @@ ms::msselectedindices()
     }
   return selectedIndices;
 }
+
+bool
+ms::addephemeris(const int id,
+		 const std::string& ephemerisname,  
+		 const std::string& comment,
+		 const ::casac::variant& field)
+{
+  Bool rstat(False);
+  try {
+    *itsLog << LogOrigin("ms", "addephemeris");
+
+    String t_field(m1toBlankCStr_(field));
+    String t_name     = toCasaString(ephemerisname);
+    String t_comment = toCasaString(comment);
+    Record selrec;
+    Vector<Int> fieldids;
+
+    if(detached()){
+      return False;
+    }
+
+    if(t_field.size()>0){
+      try {
+	selrec=itsMS->msseltoindex("*", t_field);
+      }
+      catch (AipsError x) {
+	*itsLog << LogOrigin("ms", "addephemeris") 
+		<< LogIO::SEVERE << x.getMesg() << LogIO::POST;
+	RETHROW(x);
+      }    
+      fieldids=selrec.asArrayInt("field");
+    }
+
+    Double startTime;
+
+    Array<Double> timeRanges = MSObservationColumns(itsMS->observation()).timeRange().getColumn();
+
+    try{
+      MeasComet mc(t_name);
+      startTime = casa::Quantity(mc.getStart(),"d").getValue("s");
+      Double endTime = casa::Quantity(mc.getEnd(),"d").getValue("s");
+      if(startTime>min(timeRanges)){
+	*itsLog << LogOrigin("ms", "addephemeris") 
+		<< LogIO::WARN << "Ephemeris validity time range starts after start of observation." << LogIO::POST;
+      }
+      if(endTime<max(timeRanges)){
+	*itsLog << LogOrigin("ms", "addephemeris") 
+		<< LogIO::WARN << "Ephemeris validity time range ends before end of observation." << LogIO::POST;
+      }
+    }
+    catch (AipsError x){
+      *itsLog << LogOrigin("ms", "addephemeris") 
+	      << LogIO::SEVERE << "Error reading input ephemeris table. No changes made to MS." << endl
+	      << x.getMesg() << LogIO::POST;
+      RETHROW(x);
+
+    }
+
+    if(!itsMS->field().addEphemeris(id, t_name, t_comment)){
+      *itsLog << LogOrigin("ms", "addephemeris") 
+	      << LogIO::SEVERE << "Error adding ephemeris to MS." << LogIO::POST;
+      return False;
+    }
+
+    MSFieldColumns msfc(itsMS->field());
+
+    for(uInt i=0; i<fieldids.size(); i++){
+      Double presentStartTime = msfc.time()(fieldids(i));
+      if(presentStartTime<min(timeRanges) || presentStartTime>max(timeRanges)){ 
+	// present start time is inconsistent with values of observation table
+	*itsLog << LogOrigin("ms", "addephemeris") 
+		<< LogIO::WARN << "The TIME column entry for field " << fieldids(i) 
+		<< "is outside the observation time range given by the OBSERVATION table." << LogIO::POST;
+	if(min(timeRanges)<=startTime || startTime<=max(timeRanges)){
+	  // start time of ephemeris is OK, use it as new time column entry
+	  msfc.time().put(fieldids(i), startTime);
+	  *itsLog << LogIO::WARN << "   Will replace it by the start time of the added ephemeris." << LogIO::POST;
+	}
+      }
+      msfc.ephemerisId().put(fieldids(i), id);
+    }
+   
+    {// Update HISTORY table of newly created MS
+      String message= "Added ephemeris to FIELD table.";
+      ostringstream param;
+      param << "field=" << t_field << " id=" << id
+	    << " name='" << t_name << "' coment='" << comment << "'";
+      String paramstr=param.str();
+      writehistory(message, paramstr, "ms::addephemeris()", itsMS->tableName(), "ms");
+    }
+
+    rstat = True;
+  } catch (AipsError x) {
+    *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+    RETHROW(x);
+  }
+
+  return rstat;
+}
+
+void
+ms::addephemcol(const casa::MeasurementSet& appendedMS)
+{
+  if(!itsMS->field().actualTableDesc().isColumn(MSField::columnName(MSField::EPHEMERIS_ID))){
+    // if not, test if the other MS uses ephem objects
+    Bool usesEphems = False;
+    const ROMSFieldColumns otherFldCol(appendedMS.field());
+    for(uInt i=0; i<otherFldCol.nrow(); i++){
+      if(!otherFldCol.ephemPath(i).empty()){
+	usesEphems = True;
+	break;
+      }
+    }
+    if(usesEphems){ // if yes, the ephID column needs to be added to this MS FIELD table
+      String thisMSName = Path(itsMS->tableName()).absoluteName(); 
+      *itsLog << LogIO::NORMAL << "Adding the EPHEMERIS_ID column to the FIELD table of first MS. " 
+	      << LogIO::POST;
+      if(!itsMS->field().addEphemeris(0,"","")){
+	*itsLog << "Cannot add the EPHEMERIS_ID column to the FIELD table of MS " << thisMSName
+		<< LogIO::EXCEPTION;
+      }
+      // reopen this MS
+      close();
+      open(thisMSName, False, False);
+    }
+  }
+}
+
 
 } // casac namespace
 

@@ -620,7 +620,7 @@ bool componentlist::done()
   return rstat;
 }
 
-bool componentlist::select(const int which)
+bool componentlist::select(const std::vector<int>& which)
 {
   itsLog->origin(LogOrigin("componentlist", "select"));
 
@@ -630,6 +630,7 @@ bool componentlist::select(const int which)
       const Vector<Int> intVec = checkIndices(which, "select",
                                               "No components selected");
       itsList->select(intVec);
+      rstat=true;
     }
     else{
       *itsLog << LogIO::WARN
@@ -643,7 +644,7 @@ bool componentlist::select(const int which)
   return rstat;
 }
 
-bool componentlist::deselect(const int which)
+bool componentlist::deselect(const std::vector<int>& which)
 {
   itsLog->origin(LogOrigin("componentlist", "deselect"));
 
@@ -653,7 +654,7 @@ bool componentlist::deselect(const int which)
       const Vector<Int> intVec = checkIndices(which, "deselect",
                                               "No components deselected");
       itsList->deselect(intVec);
-      *itsLog << LogIO::WARN << "deselect not implemented yet" << LogIO::POST;
+       rstat=true;
     } else {
       *itsLog << LogIO::WARN
               << "componentlist is not opened, please open first" << LogIO::POST;
@@ -675,7 +676,6 @@ std::vector<int> componentlist::selected()
     if(itsList && itsBin){
       Vector<Int> theChosen = itsList->selected();
       theChosen.tovector(rstat);
-      *itsLog << LogIO::WARN << "selected not implemented yet" << LogIO::POST;
     } else {
       *itsLog << LogIO::WARN
               << "componentlist is not opened, please open first" << LogIO::POST;
@@ -718,6 +718,7 @@ bool componentlist::setlabel(const int which, const std::string& value,
   try{
     if(itsList && itsBin){
       itsList->setLabel(Vector<Int>(1, which) , value);
+      rstat=true;
     } else {
       *itsLog << LogIO::WARN
               << "componentlist is not opened, please open first" << LogIO::POST;
@@ -930,6 +931,7 @@ bool componentlist::convertfluxpol(const int which, const std::string& polarizat
                                               "Flux not changed on any components");
       itsList->convertFluxPol(intVec,
                        (ComponentType::Polarisation)checkFluxPol(polarization));
+      rstat=true;
     }
     else{
       *itsLog << LogIO::WARN

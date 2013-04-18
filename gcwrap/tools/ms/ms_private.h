@@ -7,3 +7,4 @@ casa::LogIO *itsLog;
 casa::MSSelector *itsSel;
 casa::MSFlagger *itsFlag;
 
+void addephemcol(const casa::MeasurementSet& appendedMS);

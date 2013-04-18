@@ -72,8 +72,10 @@ from __main__ import *
 import unittest
 import numpy
 
+datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imageanalysis/ImageAnalysis/'
+
 def run_ia_pv(
-    imagename, outfile, start, end, halfwidth
+    imagename, outfile, start, end, width
 ):
     myia = iatool()
     myia.open(imagename)
@@ -81,17 +83,17 @@ def run_ia_pv(
         myia.done()
         raise Exception
     res = myia.pv(
-        outfile=outfile, start=start, end=end, halfwidth=halfwidth
+        outfile=outfile, start=start, end=end, width=width
     )
     myia.done()
     return res
 
 def run_impv(
-    imagename, outfile, start, end, halfwidth
+    imagename, outfile, start, end, width
 ):
     return impv(
         imagename=imagename, outfile=outfile, start=start,
-        end=end, halfwidth=halfwidth
+        end=end, width=width
     )
 
 
@@ -101,6 +103,7 @@ class ia_pv_test(unittest.TestCase):
         self.ia = iatool()
     
     def tearDown(self):
+        #pass
         self.assertTrue(len(tb.showcache()) == 0)
     
     def test_pv(self):
@@ -117,59 +120,67 @@ class ia_pv_test(unittest.TestCase):
         myia.putchunk(bb)
         expeccoord = myia.toworld([1,5,0])['numeric'][2]
         mycsys = myia.coordsys()
+        units = mycsys.units()
         expinc = mycsys.increment()["numeric"]
-        expinc = [abs(expinc[0]), expinc[2]]
+        expinc = [
+            abs(
+                qa.convert(
+                    qa.quantity(expinc[0], units[0]), "arcsec"
+                )["value"]
+            ),
+            expinc[2]
+        ]
         myia.done()
         self.assertTrue(len(tb.showcache())== 0)
         pv = iatool()
         for code in [run_ia_pv, run_impv]:
-            # no halfwidth
+            # no width
             outfile = "test_pv_" + str(code)
             xx = code(
-                imagename=imagename, outfile=outfile, start=[1, 5],
-                end=[9, 5], halfwidth=0
+                imagename=imagename, outfile=outfile, start=[2, 5],
+                end=[7, 5], width=1
             )
             if (type(xx) == type(ia)):
                 xx.done()
             self.assertTrue(len(tb.showcache())== 0)
             pv.open(outfile)
-            expec = [9, 10]
+            expec = [6, 10]
             got = pv.shape()
-            print "*** got " + str(got)
             self.assertTrue((got == expec).all())
             expec = numpy.zeros(got)
             for i in range(10):
-                expec[:,i] = range(1,10)
+                expec[:,i] = range(2,8)
             got = pv.getchunk()
             self.assertTrue((got == expec).all())
+            self.assertTrue(pv.getchunk(getmask=T).all())
             got = pv.toworld([0,0,0])['numeric'][1]
             self.assertTrue(abs(got - expeccoord) < 1e-6)
             gotinc = pv.coordsys().increment()["numeric"]
-            print "*** got " + str(gotinc)
-            print "*** exp " + str(expinc)
-            print "*** dif " + str(abs(gotinc - expinc))
-            self.assertTrue((abs(gotinc - expinc) < 1e-6).all())
-            # halfwidth
+            # the position offset axis always has units of arcsec, the units
+            # in the input image were arcmin
+            self.assertTrue((abs(gotinc - expinc) < 1e-5).all())
+            # width > 1
             outfile = "test_pv_1_" + str(code)
             xx = code(
-                imagename=imagename, outfile=outfile, start=[1, 5],
-                end=[9, 5], halfwidth=1
+                imagename=imagename, outfile=outfile, start=[2, 5],
+                end=[7, 5], width=3
             )
             if (type(xx) == type(ia)):
                 xx.done()
             pv.open(outfile)
-            expec = [9, 10]
+            expec = [6, 10]
             got = pv.shape()
             self.assertTrue((got == expec).all())
             expec = numpy.zeros(got)
             for i in range(10):
-                expec[:,i] = range(2,11)
+                expec[:,i] = range(3,9)
             got = pv.getchunk()
             self.assertTrue((got == expec).all())
+            self.assertTrue(pv.getchunk(getmask=T).all())
             pv.done()
         
     def test_stretch(self):
-        """ ia.pv(): Test stretch parameter"""
+        """ia.pv(): Test stretch parameter"""
         yy = iatool()
         mymask = "maskim"
         yy.fromshape(mymask, [200, 200, 1, 1])
@@ -180,11 +191,11 @@ class ia_pv_test(unittest.TestCase):
         yy.addnoise()
         self.assertRaises(
             Exception,
-            yy.pv, start=[0,0], end=[20,0],
+            yy.pv, start=[2,2], end=[20,2],
             mask=mymask + ">0", stretch=False
         )
         zz = yy.pv(
-            start=[0,0], end=[20,0], mask=mymask + ">0", stretch=True
+            start=[2,2], end=[20,2], mask=mymask + ">0", stretch=True
         )
         mytype = type(yy)
         self.assertTrue(zz and type(zz) == mytype)
@@ -192,15 +203,71 @@ class ia_pv_test(unittest.TestCase):
         zz.done()
         self.assertFalse(
             impv(
-                 imagename="kk", outfile="x1.im", start=[0,0], end=[20,0],
+                 imagename="kk", outfile="x1.im", start=[2,2], end=[20,2],
                  mask=mymask + ">0", stretch=False
             )
         )
         self.assertTrue(
             impv(
-                 imagename="kk", outfile="xyz", start=[0,0], end=[20,0], mask=mymask + ">0", stretch=True
+                 imagename="kk", outfile="xyz", start=[2,2], end=[20,2],
+                 mask=mymask + ">0", stretch=True
             )
         )
+    
+    def test_CAS_2996(self):
+        """ia.pv(): Test issues raised in CAS-2996"""
+        # the only tests necessary here are to ensure ia.pv() runs 
+        # successfully for the provided inputs
+        # calculate stats to make sure region determination code doesn't segfault (CAS-4881)
+        myia = self.ia
+        myia.open(datapath + "pv1.im")
+        xx = myia.pv(start = [30, 30], end = [250, 250])
+        xx.statistics()
+        xx = myia.pv(start = [30, 250], end = [250, 30])
+        xx.statistics()
+        xx = myia.pv(start = [250, 250], end = [30, 30])
+        xx.statistics()
+        xx = myia.pv(start = [250, 30], end = [30, 250])
+        xx.statistics()
+  
+        myia.open(datapath + "pv2.im")
+        x1 = 264.865854
+        x2 = 166.329268
+        y1 = 142.914634
+        y2 = 232.670732
+        # success or failure should not depend on the end pixel's location relative to the start pixel.
+        xx = myia.pv(start=[x1, y1], end=[x2, y2])
+        # test units while we're at it
+        self.assertTrue(xx.coordsys().units()[0] == "arcsec")
+        xx = myia.pv(start=[x2, y1], end=[x1, y2])
+        xx = myia.pv(start=[x2, y2], end=[x1, y1])
+        xx = myia.pv(start=[x1, y2], end=[x2, y1], unit="rad")
+        self.assertTrue(xx.coordsys().units()[0] == "rad")
+
+
+        myia.done()
+        xx.done()
+        
+    def test_fits(self):
+        """ia.pv(): Test exporting and importing to/from FITS"""
+        myia = self.ia
+        myia.open(datapath + "pv1.im")
+        xx = myia.pv(start = [30, 30], end = [250, 250])
+        expec = ["OFFSET", "Frequency", "Stokes"]
+        outfile = "zz.fits"
+        xx.tofits(outfile)
+        myia.open(outfile)
+        got = myia.coordsys().names()
+        print "got " + str(got)
+        self.assertTrue(got == expec)
+        xx.tofits(outfile, velocity=True, overwrite=True)
+        xx.done()
+        myia.open(outfile)
+        got = myia.coordsys().names()
+        myia.done()
+        self.assertTrue(got == expec)
+        
+        
     
 def suite():
     return [ia_pv_test]

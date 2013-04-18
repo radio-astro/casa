@@ -92,9 +92,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     	</param>
 
     	<param type="string" name="chans" >
-		<description>Select the channel(spectral) range</description>
+		<description>Select the channel(spectral) range. See "help par.chans" for examples.</description>
     		<value></value>
-        	<example>!1~5                # Select all but the ange of channel numbers</example>
     	</param >
 
     	<param type="string" name="stokes">
@@ -218,7 +217,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     region     Name of region file, region text description, or region dictionary.
     box        A rectangular region on the directional plane expressed in pixels.
                Example: box='10,10,50,50'
-    chans      Channel ranges to use, expressed in pixels. Example: chans='3~20'   
+    chans      Channel ranges to use, expressed in pixels. See "help par.chans" for examples.   
     stokes     Stokes parameters. Example: stokes='IQUV';
                Options: 'I','Q','U','V','RR','RL','LR','LL','XX','YX','XY','YY', ... 
                Not used in for cases of mode='poli' or mode='pola'

@@ -28,6 +28,7 @@ def importasdm(
     applyflags=None,
     savecmds=None,
     outfile=None,
+    flagbackup=None,
     verbose=None,
     overwrite=None,
     showversion=None,
@@ -130,6 +131,9 @@ def importasdm(
                     
                  outfile -- Filename to save the online flags.
                     default: ''
+
+....   flagbackup -- Backup the FLAG column in the .flagversions.
+....          default: True
 
 ....   verbose     -- produce log output as asdm2MS is being run.
 
@@ -296,18 +300,19 @@ def importasdm(
         #
         # If viso+".flagversions" then process differently depending on the value of overwrite..
         #
-        dotFlagversion = viso + '.flagversions'
-        if os.path.exists(dotFlagversion):
-            if overwrite:
-                casalog.post("Found '" + dotFlagversion
-                             + "' . It'll be deleted before running the filler."
-                             )
-                os.system('rm -rf %s' % dotFlagversion)
-            else:
-                casalog.post("Found '%s' but can't overwrite it."
-                             % dotFlagversion)
-                raise Exception, "Found '%s' but can't overwrite it." \
-                    % dotFlagversion
+        if flagbackup:
+            dotFlagversion = viso + '.flagversions'
+            if os.path.exists(dotFlagversion):
+                if overwrite:
+                    casalog.post("Found '" + dotFlagversion
+                                 + "' . It'll be deleted before running the filler."
+                                 )
+                    os.system('rm -rf %s' % dotFlagversion)
+                else:
+                    casalog.post("Found '%s' but can't overwrite it."
+                                 % dotFlagversion)
+                    raise Exception, "Found '%s' but can't overwrite it." \
+                        % dotFlagversion
 
         execute_string = execute_string + ' ' + asdm + ' ' + viso
 
@@ -334,7 +339,7 @@ def importasdm(
             visoc = visoc.rstrip('.ms') + '.compressed.ms'
 
         if wvr_corrected_data == 'no' or wvr_corrected_data == 'both':
-            if os.path.exists(viso):
+            if os.path.exists(viso) and flagbackup==True:
                 aflocal.open(viso)
                 aflocal.saveflagversion('Original',
                         comment='Original flags at import into CASA',
@@ -342,7 +347,7 @@ def importasdm(
                 aflocal.done()
         elif wvr_corrected_data == 'yes' or wvr_corrected_data \
             == 'both':
-            if os.path.exists(visoc):
+            if os.path.exists(visoc) and flagbackup==True:
                 aflocal.open(visoc)
                 aflocal.saveflagversion('Original',
                         comment='Original flags at import into CASA',

@@ -1455,6 +1455,39 @@ to plot all of the simple regions that made up a compound region.
 
 -->
 
+<method type="function" name="selectedchannels">
+    <shortdescription>Get an array of zero-based selected channel numbers from an input string specificaiton.</shortdescription>
+   
+    <input>  
+        <param type="string" direction="in" name="specification">
+            <description>Valid channel specification. See help par.chans for examples.</description>
+            <value></value>
+        </param>
+
+        <param type="intArray" direction="in" name="shape">
+            <description>Image shape. Used to determine if the specificaiton lies outside the image.</description>
+            <value>0</value>
+        </param>
+    </input>
+
+    <returns type="intArray"/>
+
+    <description>
+This method returns all the selected zero-based channel numbers from the specified string within the image.
+
+
+
+    </description>
+    
+    <example>
+        ia.fromshape("",[20,20,20])
+        rg.setcoordinates(ia.coordsys().torecord())
+        selected_channels = rg.selectedchannels(specification="range=[40km/s,50km/s]", shape=ia.shape())
+        ia.done()
+    </example>
+
+</method>
+
 <method type="function" name="fromtextfile">
     <shortdescription>Create a region dictionary from a region text file.</shortdescription>
    

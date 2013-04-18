@@ -560,8 +560,6 @@ the ms definition itself. -->
     
   </example>
 </method>
--->
- 
    <method type="function" name="fromfitsidi">
    <shortdescription>Create a measurement set from a fits-idi file</shortdescription>
    
@@ -768,6 +766,48 @@ the ms definition itself. -->
         <example>
         </example>
 </method>
+
+   <method type="function" name="getfielddirmeas">
+   <shortdescription>Returns the direction measure from the given FIELD table column and row</shortdescription>
+   
+  <keyword>getfielddirmeas</keyword>
+  <input>  
+       <param type="string" direction="in" name="dircolname">
+	 <description>Name of the direction column in the FIELD table</description>
+	 <value>PHASE_DIR</value>
+         <allowed type="enum">
+	     <value>PHASE_DIR</value>
+	     <value>DELAY_DIR</value>
+	     <value>REFERENCE_DIR</value>
+         </allowed>
+       </param>
+
+       <param type="int" name="fieldid">
+       <description>Field ID, starting at 0</description>
+       <value>0</value>
+       </param>
+
+       <param type="double" name="time">
+       <description>(optional) time for ephemeris access (in seconds, as in Main table TIME column)</description>
+       <value>0</value>
+       </param>
+
+  </input>
+  <returns type="record">
+  <shortdescription>direction measure</shortdescription>
+  </returns>
+  <description>
+    This function returns the direction measures from the
+    given direction column of the MS FIELD table as a list.
+  </description>
+  <example>
+    
+      ms.open('3C273XC1.MS')
+      print "Delay direction from FIELD table row 3 =", ms.getfielddirmeas("DELAY_DIR", 3)
+    
+  </example>
+</method>
+
 
    <method type="function" name="nrow">
    <shortdescription>Returns the number of rows in the measurement set</shortdescription>
@@ -1240,6 +1280,14 @@ the ms definition itself. -->
      <description>Output file</description>
      <value/>
      </param>     
+     <param type="bool" direction="in" name="listunfl">
+        <description>List unflagged row counts? If true, it can have significant negative performance impact.</description>
+        <value>false</value>
+     </param>
+     <param type="double" direction="in" name="cachesize">
+        <description>EXPERIMENTAL. Maximum size in megabytes of cache in which data structures can be held.</description>
+        <value>50</value>
+     </param>
   </input>
   <returns type="record">
      <description>Header information (PARAMETER IGNORED..its an output)</description>
@@ -1250,6 +1298,8 @@ the ms definition itself. -->
     system logger. The verbose argument provides some control on how
     much information is displayed.
 
+    For especially large datasets, the cachesize parameter can be increased for possibly better
+    performance.
 
     This method can also return, in the header argument, a record
     containing the following fields.
@@ -1259,6 +1309,7 @@ the ms definition itself. -->
     \end{description}
     
     DESCRIPTION OF ALGORITHM TO CALCULATE THE NUMBER OF UNFLAGGED ROWS
+    The number of unflagged rows will only be computed if listunflis True.
     The number of unflagged rows (the nUnflRows columns in the scans and fields portions of the listing) is
     calculated by summing the fractional unflagged bandwidth for each row (and hence why the number of unflagged
     rows, in general, is not an integer). Thus a row which has half of its
@@ -1718,12 +1769,8 @@ Date/Time:                         RR:                      RL:                 
     <returns type="msmetadata"/>
     <description>Get the MS metadata associated with this MS.</description>
     <input>
-        <param type="bool" direction="in" name="preload">
-            <description>Preload metadata into cache? If False, ms is interrogated on demand and optionally metadata is cached. </description>
-            <value>false</value>
-        </param>
         <param type="float" direction="in" name="cachesize">
-            <descrition>Maximum cache size, in megabytes, to use. Only used if preload=False. </descrition>
+            <descrition>Maximum cache size, in megabytes, to use. </descrition>
             <value>50</value>
         </param>
     </input>
@@ -2148,7 +2195,9 @@ Date/Time:                         RR:                      RL:                 
     
      <param type="string" direction="in" name="outframe">
      <description>Name of the reference frame to transform to (LSRK, LSRD, BARY, GALACTO,  
-      LGROUP, CMB, GEO, or TOPO). If no reference frame is given, the present reference frame  
+      LGROUP, CMB, GEO, TOPO, or OBJECT). OBJECT is meant for solar system work and
+      corresponds to GEO + a radial velocity correction (only available for ephemeris objects). 
+      If no reference frame is given, the present reference frame  
       given by the data is used, i.e. the reference frame is not changed. The observatory
       position is taken as the average of all antenna positions.
       </description>
@@ -2246,7 +2295,7 @@ Date/Time:                         RR:                      RL:                 
   The input parameters are verified before any modification is made to the MS.
 
   The target reference frame can be set by providing the name of a standard reference 
-  frame (LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, TOPO, or GEO, default = no change of 
+  frame (LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, TOPO, GEO, or OBJECT, default = no change of 
   frame) in parameter "outframe".
   For each field in the MS, the channel frequencies are transformed from their present 
   reference frame to the one given by parameter "outframe".
@@ -2343,7 +2392,7 @@ Date/Time:                         RR:                      RL:                 
      </param>
 
      <param type="string" direction="in" name="outframe">
-     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO, default = "" = keep reference frame.</description>
+     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, TOPO, or OBJECT default = "" = keep reference frame.</description>
      <value/>
      </param>
 
@@ -2437,7 +2486,7 @@ Date/Time:                         RR:                      RL:                 
      </param>
 
      <param type="string" direction="in" name="outframe">
-     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO, default = keep reference frame = </description>
+     <description>LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, TOPO, or OBJECT default = keep reference frame = </description>
      <value></value>
      </param>
 
@@ -4624,6 +4673,49 @@ in spectral window 1.
   </description>
 
   </method>
+
+-->
+ 
+   <method type="function" name="addephemeris">
+   <shortdescription>Connect an ephemeris table with the MS FIELD table</shortdescription>
+   
+  <keyword>addephemeris</keyword>
+  <input>
+    
+     <param type="int" direction="in" name="id">
+     <description>The unique id number to give to this ephemeris (will overwrite pre-existing ephemeris of same id)</description>
+     <value>0</value>
+     </param>
+
+     <param type="string" direction="in" name="ephemerisname">
+     <description>The name of the ephemeris table which is to be copied into the MS</description>
+     <value></value>
+     </param>
+    
+     <param type="string" direction="in" name="comment">
+     <description>Comment string (no spaces, will be part of a file name)</description>
+     <value></value>
+     </param>
+    
+     <param type="any" direction="in" name="field">
+     <description>Field id(s) (0-based) or fieldname(s) to connect this ephemeris to</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
+  </input>
+  <returns type="bool"/>
+
+  <description>
+
+  </description>
+  <example>
+    
+      ms.addephemeris(id=0, ephemerisname="Titan_55002-55003dUTC.tab", comment="JPLTitan", field="Titan")
+    
+  </example>
+</method>
+
 
 </tool>
 
