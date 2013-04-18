@@ -1113,8 +1113,8 @@ void Scantable::summary( const std::string& filename )
   TableIterator iter(table_, "SCANNO");
 
   // Vars for keeping track of time, freqids, molIds in a SCANNO
-  Vector<uInt> freqids;
-  Vector<uInt> molids;
+  //Vector<uInt> freqids;
+  //Vector<uInt> molids;
   Vector<uInt> beamids(1,0);
   Vector<MDirection> beamDirs;
   Vector<Int> stypeids(1,0);
@@ -1156,10 +1156,10 @@ void Scantable::summary( const std::string& filename )
     etime += meanIntTim/C::day;
 
     // MOLECULE_ID and FREQ_ID
-    molids = getNumbers(molIdCol);
+    Vector<uInt> molids(getNumbers(molIdCol));
     molids.shape(nmol);
 
-    freqids = getNumbers(freqIdCol);
+    Vector<uInt> freqids(getNumbers(freqIdCol));
     freqids.shape(nfreq);
 
     // Add first beamid, and srcNames
