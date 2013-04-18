@@ -842,7 +842,7 @@ class T2_3MDetailsBandpassRenderer(T2_3MDetailsDefaultRenderer):
         plot_groups = logger.PlotGroup.create_plot_groups(plots)
         # Write the thumbnail pages for each plot grouping to disk 
         for plot_group in plot_groups:
-            renderer = PlotGroupRenderer(context, results, plot_group, 'qa2')
+            renderer = QA2PlotRenderer(context, results, plot_group, 'qa2')
             plot_group.filename = renderer.filename 
             with renderer.get_file() as fileobj:
                 fileobj.write(renderer.render())
@@ -960,6 +960,28 @@ class PlotGroupRenderer(object):
         display_context = self._get_display_context()
         t = TemplateFinder.get_template(self.template)
         return t.render(**display_context)
+
+
+class QA2PlotRenderer(PlotGroupRenderer):
+    template = 'qa2.html'
+
+    def __init__(self, context, result, plot_group, prefix=''):
+        super(QA2PlotRenderer, self).__init__(context, result, plot_group, 
+                                                   prefix)
+        json_path = os.path.join(context.report_dir, 
+                                 'stage%s' % result.stage_number, 
+                                 'qa2.json')
+        
+        if os.path.exists(json_path):
+            with open(json_path, 'r') as json_file:
+                self.json = json_file.readlines()[0]
+        else:
+            self.json = '{}'
+         
+    def _get_display_context(self):
+        ctx = super(QA2PlotRenderer, self)._get_display_context()
+        ctx.update({'json' : self.json});
+        return ctx
 
 
 class T2_4MDetailsWvrgcalflagRenderer(T2_4MDetailsDefaultRenderer):
