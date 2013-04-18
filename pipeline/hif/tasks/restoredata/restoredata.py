@@ -31,6 +31,7 @@ import tarfile
 import shutil
 import fnmatch
 import types
+import string
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -233,16 +234,16 @@ class RestoreData(basetask.StandardTaskTemplate):
 	
 	# Restore final MS.flagversions and flags
 	flag_version_name = 'Pipeline_Final'
-	flag_version_list = self._do_restore_flags(flag_version_name=flag_version_name)
+	flag_version_list = self._do_restore_flags( \
+	    flag_version_name=flag_version_name)
 
 	# Get the session list and the visibility files associated with
 	# each session.
-	session_names, session_vislists= self._get_sessions (inputs.context,
-	    sessionlist, vislist)
-
+	session_names, session_vislists= self._get_sessions()
 
 	# Download calibration tables
-	#   Download calibration files from the archive or products_dir to rawdata_dir.
+	#   Download calibration files from the archive or products_dir to
+	# rawdata_dir.
 	#   TBD: Currently assumed done somehow
 
 	# Restore calibration tables
@@ -324,38 +325,58 @@ class RestoreData(basetask.StandardTaskTemplate):
 	inputs = self.inputs
 
         # Loop over MS list in working directory
+	append = False
 	for ms in inputs.context.observing_run.measurement_sets:
 	    applyfile_name = os.path.join (inputs.rawdata_dir,
 	        ms.basename + '.calapply.txt')
 	    LOG.info('Restoring calibration state for %s from  %s' % \
 	        (ms.basename, applyfile_name))
 	    if not self._executor._dry_run:
-		inputs.context.callibrary.import_state(applyfile_name)
+		inputs.context.callibrary.import_state(applyfile_name,
+		    append=append)
+	    append = True
 
     def _do_restore_caltables(self, session_names=None, session_vislists=None):
 	inputs = self.inputs
-	for session in session_names and vislist in session_vislists:
 
-	    # open the tarfile and get the names
-	    tarfile = os.path.join (inputs.rawdata_dir, session +
+        # Determine the OUS uid
+        ps = inputs.context.project_structure
+        if ps is None:
+            ousid = ''
+        elif ps.ousstatus_entity_id == 'unknown':
+            ousid = ''
+        else:
+            ousid = ps.ousstatus_entity_id.translate( \
+	        string.maketrans(':/', '__')) + '.'
+
+        # Loop over sessions
+	for index, session in enumerate(session_names):
+
+            # Get the visibility list for that session.
+	    vislist = session_vislists[index]
+
+	    # Open the tarfile and get the names
+	    tarfilename = os.path.join (inputs.rawdata_dir, ousid + session +
 	        '.caltables.tar.gz')
-	    tar = tarfile.open(tarfile, 'r:gz')
+	    tar = tarfile.open(tarfilename, 'r:gz')
 	    tarmembers = tar.getmembers()
 
 	    # Loop over the visibilities associated with that session
 	    for vis in vislist:
-		vistemplate = os.path.basename(vis) + '*.tbl'
 	        LOG.info('Restoring caltables for %s' % \
-	            (os.path.basename(vis)))
-	        LOG.info('Restoring caltables for %s from  %s' % \
-	            (os.path.basename(vis)))
+                    (os.path.basename(vis)))
+	        LOG.info('    From  %s' % (tarfilename))
 		extractlist = []
 		for member in tarmembers:
-		    if fnmatch.fnmatch(member.name, vistemplate): 
+		    if member.name.startswith(os.path.basename(vis)):
 	                LOG.info('    Extracting caltable  %s' % (member.name))
 		        extractlist.append(member)
 		if not self._executor._dry_run:
-		    tar.extractall(path=inputs.rawdata_dir, members=extractlist)
+		    if len(extractlist) == len(tarmembers):
+		        tar.extractall(path=inputs.output_dir)
+		    else:
+		        tar.extractall(path=inputs.output_dir,
+			    members=extractlist)
 
 	    tar.close()
        
@@ -365,7 +386,7 @@ class RestoreData(basetask.StandardTaskTemplate):
 	applycal_task = applycal.Applycal(applycal_inputs)
 	return self._executor.execute(applycal_task)
 
-    def _get_sessions (self, context, sessions, vis):
+    def _get_sessions (self, sessions=[], vis=[]):
 
         """
 	Return a list of sessions where each element of the list contains
@@ -373,12 +394,22 @@ class RestoreData(basetask.StandardTaskTemplate):
 	undefined the context is searched for session information
 	"""
 
+	inputs = self.inputs
+
+	# Get the MS list from the context by default.
+	if len(vis) == 0:
+	    wkvis = []
+	    for ms in inputs.context.observing_run.measurement_sets:
+	        wkvis.append(ms.name)
+	else:
+	    wkvis = vis
+
 	# If the input session list is empty determine the sessions from 
 	# the context.
 	if len(sessions) == 0:
 	    wksessions = [] 
-	    for visname in vis:
-	        session = context.observing_run.get_ms(name=visname).session
+	    for visname in wkvis:
+	        session = inputs.context.observing_run.get_ms(name=visname).session
 		wksessions.append(session)
 	else:
 	    wksessions = sessions
@@ -399,15 +430,15 @@ class RestoreData(basetask.StandardTaskTemplate):
 	    session_vis_list.append([])
 
 	# Assign the visibility files to the correct session
-	for j in range(len(vis)): 
+	for j in range(len(wkvis)): 
 	    # Match the session names if possible 
 	    if j < len(wksessions):
 		for i in range(len(session_names)):
 		    if wksessions[j] == session_names[i]:
-		         session_vis_list[i].append(vis[j])
+		         session_vis_list[i].append(wkvis[j])
 	    # Assign to the last session
 	    else:
-		session_vis_list[len(session_names)-1].append(vis[j])
+		session_vis_list[len(session_names)-1].append(wkvis[j])
 
 	# Log the sessions
 	for i in range(len(session_vis_list)):
