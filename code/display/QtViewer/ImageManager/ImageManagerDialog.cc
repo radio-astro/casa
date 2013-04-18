@@ -73,9 +73,21 @@ ImageManagerDialog::ImageManagerDialog(QWidget *parent)
 void ImageManagerDialog::masterImageChanged(const QString& imageName){
 	QtDisplayData* newMaster = allImages->getDD( imageName.toStdString());
 	if ( newMaster != NULL ){
-		/*allImages->setControllingDD( newMaster );
-		qDebug() << "Made dd="<<newMaster->name().c_str()<<" the new controlling dd";*/
+		openHolder->setDDControlling( newMaster );
+		qDebug() << "Made dd="<<newMaster->name().c_str()<<" the new controlling dd";
 	}
+}
+
+bool ImageManagerDialog::isControlEligible( QtDisplayData* qdd ) const {
+	bool controlEligible = false;
+	if ( qdd != NULL ){
+		if ( qdd->isImage() ){
+			if ( qdd->dd()->isDisplayable() && qdd->imageInterface() != NULL ){
+				controlEligible = true;
+			}
+		}
+	}
+	return controlEligible;
 }
 
 void ImageManagerDialog::updateSelectedMaster(){
@@ -106,12 +118,14 @@ void ImageManagerDialog::updateColorList(){
 	updateImageList( ui.colorImageCombo );
 }
 
-void ImageManagerDialog::updateImageList(QComboBox* combo ){
+void ImageManagerDialog::updateImageList(QComboBox* combo){
 	combo->clear();
 	for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
 		iter != allImages->endDD(); iter++ ){
-		QString imageName( (*iter)->name().c_str());
-		combo->addItem( imageName );
+		if ( isControlEligible( *iter) ){
+			QString imageName( (*iter)->name().c_str());
+			combo->addItem( imageName );
+		}
 	}
 }
 

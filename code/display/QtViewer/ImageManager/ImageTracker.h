@@ -55,6 +55,8 @@ class ImageDisplayer {
 public:
 	ImageDisplayer(){}
 	virtual ~ImageDisplayer(){}
+	virtual void setControllingDD( QtDisplayData* /*controlDD*/ ){
+	}
 	virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
 	virtual void unregisterDD( QtDisplayData* dd ) = 0;
 };

@@ -1309,21 +1309,27 @@ void QtDisplayPanelGui::movieStop(){
 }
 
 void QtDisplayPanelGui::removeAllDDs() {
-	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); ) {
-		QtDisplayData* qdd = qdds.getRight();
-		if ( qdd == controlling_dd ){
-			controlling_dd = NULL;
-		}
-		qdds.removeRight();*/
+	//Order is important.
+	//First get a list of everything going down.
 	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+	QList<QtDisplayData*>  removeDDs;
 	while ( iter != displayDataHolder->endDD()){
 		QtDisplayData* qdd = (*iter);
-		emit ddRemoved(qdd);
-		qdd->done();
-		delete qdd;
+		removeDDs.append( qdd );
 		iter++;
 	}
+	//Remove them all from the master list
 	displayDataHolder->removeDDAll();
+	
+	//Clean up for each one.
+	for ( int i = 0; i < removeDDs.size(); i++ ){
+		emit ddRemoved( removeDDs[i] );
+		removeDDs[i]->done();
+		delete removeDDs[i];
+		removeDDs[i] = NULL;
+	}
+	
+	//Tell other widgets to update.
 	if ( regionDock_ ){
 		regionDock_->updateRegionStats( );
 	}
@@ -1409,29 +1415,30 @@ QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
 	return qdd;
 }
 
+QtDisplayData* QtDisplayPanelGui::lookForExistingController(){
+	QtDisplayData *ctrld = 0;
+	DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
+	while( iter != qdp_->endRegistered()){
+		QtDisplayData* pdd = (*iter);
+		iter++;
+		if ( pdd != 0 && pdd->dataType() == "image" ) {
+			ImageInterface<float>* img = pdd->imageInterface( );
+			PanelDisplay* ppd = qdp_->panelDisplay( );
+			if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) {
+				ctrld = pdd;
+			}
+		}
+	}
+	return ctrld;
+}
+
 
 QtDisplayData* QtDisplayPanelGui::dd( ) {
 	// retrieve the "controlling" DD...
 	QtDisplayData* controlling_dd = displayDataHolder->getDDControlling();
 	if ( controlling_dd == 0 ) {
-		QtDisplayData *ctrld = 0;
-		//List<QtDisplayData*> rdds = qdp_->registeredDDs();
-		//for ( ListIter<QtDisplayData*> iter(&rdds); ! iter.atEnd(); ++iter ) {
-		//QtDisplayData* pdd = iter.getRight();
-		DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
-		while( iter != qdp_->endRegistered()){
-			QtDisplayData* pdd = (*iter);
-			iter++;
-			if ( pdd != 0 && pdd->dataType() == "image" ) {
-				ImageInterface<float>* img = pdd->imageInterface( );
-				PanelDisplay* ppd = qdp_->panelDisplay( );
-				if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) {
-					ctrld = pdd;
-				}
-			}
-		}
 
-		controlling_dd = ctrld;
+		controlling_dd = lookForExistingController();
 
 		emit axisToolUpdate( controlling_dd );
 		if ( controlling_dd != 0 ){
@@ -1541,19 +1548,19 @@ void QtDisplayPanelGui::hideImageMenus() {
 	/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
 	for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 		QtDisplayData* pdd = qdds.getRight();*/
-	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
-	while ( iter != displayDataHolder->endDD()){
+	DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
+	while ( iter != qdp_->endRegistered()){
 		QtDisplayData* pdd = (*iter);
+
 		iter++;
 		if(pdd != 0){
 			ImageInterface<float>* img = pdd->imageInterface();
-			//cout << "img=" << img << endl;
-			//cout << "dataType=" << pdd->dataType() << endl;
+
 			PanelDisplay* ppd = qdp_->panelDisplay();
 			//cout << "ppd->isCSmaster="
 			//      << ppd->isCSmaster(pdd->dd()) << endl;
 			if (ppd != 0 && ppd->isCSmaster(pdd->dd())) {
-				if (pdd->dataType() == "image" && img !=0) {
+				if (pdd->isImage() && img !=0) {
 					if ( fboxAct_ ) fboxAct_->setEnabled(True);
 					if ( mkRgnAct_ ) mkRgnAct_->setEnabled(True);
 					if ( annotAct_ ) annotAct_->setEnabled(True);
@@ -2939,47 +2946,42 @@ void QtDisplayPanelGui::setColorBarOrientation(Bool vertical) {
 	emit colorBarOrientationChange();
 	v_->release();  }
 
-void QtDisplayPanelGui::controlling_dd_update(QtDisplayData* newControllingDD) {
-	// manage controlling_dd so that we can generate updateAxis( ) events
-	// in response to user visible axis changes...
-
-	//Store the old one
-	QtDisplayData* oldControllingDD = displayDataHolder->getDDControlling();
-
-	//Get a new one by going through the list if one wasn't specified.
-	if ( newControllingDD == NULL ){
-		newControllingDD = dd();
+void QtDisplayPanelGui::setControllingDD( QtDisplayData* controlDD ){
+	//Officially replaces one controlling DD with another.
+	if ( controlDD != NULL ){
+		QtDisplayData* oldController = displayDataHolder->getDDControlling();
+		replaceControllingDD( oldController, controlDD );
 	}
-	/*QtDisplayData *ctrld = 0;
-	List<QtDisplayData*> rdds = qdp_->registeredDDs();
-	for ( ListIter<QtDisplayData*> iter(&rdds); ! iter.atEnd(); ++iter ) {
-		QtDisplayData* pdd = iter.getRight();
-		if ( pdd != 0 && pdd->dataType() == "image" ) {
-			ImageInterface<float>* img = pdd->imageInterface( );
-			PanelDisplay* ppd = qdp_->panelDisplay( );
-			if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) {
-				ctrld = pdd;
-			}
-		}
-	}*/
+}
 
-	/*if ( ctrld != controlling_dd ) {
-		if ( controlling_dd != 0 )
-			disconnect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
-					this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
-		controlling_dd = ctrld;
-		emit axisToolUpdate( controlling_dd );
-		if ( controlling_dd != 0 )
-			connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
-					SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
-
-	}*/
+void QtDisplayPanelGui::replaceControllingDD( QtDisplayData* oldControllingDD, QtDisplayData* newControllingDD){
 	if ( newControllingDD != oldControllingDD ) {
 		if ( oldControllingDD != 0 ){
 			disconnect( oldControllingDD, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
-					this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+						this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
+		}
+
+		displayDataHolder->setDDControlling ( newControllingDD );
+		emit axisToolUpdate( newControllingDD );
+		if ( newControllingDD != 0 ){
+			connect( newControllingDD, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
+						SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
 		}
 	}
+}
+
+void QtDisplayPanelGui::controlling_dd_update(QtDisplayData* /*updateDD*/) {
+	// manage controlling_dd so that we can generate updateAxis( ) events
+	// in response to user visible axis changes...
+
+	//Get the previous controllingDD (it may no longer exist if it was removed.
+	QtDisplayData* oldControllingDD = displayDataHolder->getDDControlling();
+
+	//See if there is a new controllingDD.
+	QtDisplayData* newControllingDD = lookForExistingController();
+
+	//Replace the controllingDD officially
+	replaceControllingDD( oldControllingDD, newControllingDD );
 }
 
 void QtDisplayPanelGui::controlling_dd_axis_change(String, String, String, std::vector<int> ) {

@@ -531,6 +531,11 @@ class QtDisplayPanelGui : public QtPanelBase {
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
 		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
   void connectRegionSignals(PanelDisplay* ppd);
+
+  //Management of the controlling DD
+  QtDisplayData* lookForExistingController();
+  void setControllingDD( QtDisplayData* controlDD );
+  void replaceControllingDD( QtDisplayData* oldControllingDD, QtDisplayData* newControllingDD);
   // used to manage generation of the updateAxes( ) signal...
   //QtDisplayData *controlling_dd;
 
@@ -603,6 +608,9 @@ class QtDisplayPanelGui : public QtPanelBase {
   void sliceMarkerVisibilityChanged(int regionId, bool visible);
   void sliceMarkerPositionChanged(int regionId, int segmentIndex, float percentage);
   void updateMultiSpectralFitLocation( Record trackingRec);
+
+
+
  public:
  
   // True by default.  Set False to disable auto-raise of the Data

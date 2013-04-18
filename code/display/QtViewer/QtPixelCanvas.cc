@@ -1585,7 +1585,7 @@ Bool QtPixelCanvas::setFont(const String& fontName, const Int fontSize,
 }
 
 
-void QtPixelCanvas::setColor(uInt colorIndex) { 
+void QtPixelCanvas::setColor(uInt /*colorIndex*/) {
   // cout << "WYSISWYN " << __FILE__ << " " << __LINE__ << endl;
  }
 

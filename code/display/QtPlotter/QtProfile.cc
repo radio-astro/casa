@@ -633,8 +633,10 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 }
 
 void QtProfile::adjustPlotUnits(){
-	//Try to keep the same units if possible.
-	QString currentUnits = yAxisCombo->currentText();
+	//Store the old units so we can try to reset them
+	QString currentYUnits = yAxisCombo->currentText();
+
+
 	yAxisCombo->clear();
 	QStringList yUnitsList =(QStringList()<< ConverterIntensity::JY_BEAM <<
 				ConverterIntensity::JY_ARCSEC << ConverterIntensity::JY_SR <<
@@ -674,8 +676,9 @@ void QtProfile::adjustPlotUnits(){
 			yAxisCombo->addItem( yUnitsList[i]);
 		}
 	}
-	//Try to maintain old units.
-	resetYUnits( currentUnits );
+
+	resetYUnits( currentYUnits );
+
 }
 
 void QtProfile::wcChanged( const String c,
@@ -764,6 +767,7 @@ void QtProfile::wcChanged( const String c,
 
 	momentSettingsWidget->setCollapseVals( z_xval );
 	specFitSettingsWidget->setCollapseVals( z_xval );
+
 	resetYUnits( currentYUnits );
 }
 
@@ -1209,6 +1213,7 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 	positioningWidget->updateRegion( pxv, pyv, wxv, wyv );
 	newOverplots = false;
 
+
 	//Okay, now we try to reset the y-Axis units.
 	resetYUnits( currentYUnits );
 }
@@ -1240,6 +1245,7 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 	//Normally we go off the region selected event because the focus event is called
 	//both when a region loses(bad) or gains focus(good).  However, in the case we
 	//don't have a current_region_id, we'll take anything.
+
 	else if ( (type == viewer::region::RegionChangeSelected && current_region_id == id_)){
 			return;
 	}
@@ -1247,6 +1253,7 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 			(type == viewer::region::RegionChangeFocus && current_region_id == NO_REGION_ID )){
 		current_region_id = id_;			// viewer region focus has changed
 	}
+
 	else if ( type == viewer::region::RegionChangeFocus ){
 		return;
 	}
@@ -1257,11 +1264,10 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 		return;						// some other region
 	}
 
-	//Okay we have eliminated the easy ones where we don't need to deal with
-	//it.
-	//Try to preserve the current y units after all is said and done, if
-	//possible.
-	QString currentUnits = yAxisCombo->currentText();
+	//Since we are now committed to changing the data, we need to store the
+	//current yUnits so we can try to reset them later.
+	QString currentYUnits = yAxisCombo->currentText();
+
 
 	SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 	if ( it == spectra_info_map.end( ) ) return;
@@ -1333,7 +1339,7 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 	momentSettingsWidget->setCollapseVals(z_xval );
 	specFitSettingsWidget->setCollapseVals( z_xval );
 
-	resetYUnits( currentUnits );
+	resetYUnits( currentYUnits );
 }
 
 

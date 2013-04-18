@@ -194,6 +194,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 		displayType_(displayType),
 		DISPLAY_RASTER("raster"), DISPLAY_CONTOUR("contour"),
 		DISPLAY_VECTOR("vector"), DISPLAY_MARKER( "marker"),
+		TYPE_IMAGE( "image"),
 		im_(0),
 		cim_(0),
 		dd_(0),
@@ -254,9 +255,9 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 		else if(dataType_=="ms" && isRaster() ) {
 			dd_ = new MSAsRaster( path_, ddo );
 		}
-		else if(dataType_=="image" || dataType_=="lel") {
+		else if(dataType_==TYPE_IMAGE || dataType_=="lel") {
 
-			if(dataType_=="image") {
+			if(dataType_==TYPE_IMAGE) {
 
 				// check for a FITS extension in the path name
 				File fin(path);
@@ -701,6 +702,14 @@ Bool QtDisplayData::isRaster() const {
 		 markerData = true;
 	 }
 	 return markerData;
+ }
+
+ Bool QtDisplayData::isImage() const {
+	 bool typeImage = false;
+	 if ( dataType_==TYPE_IMAGE ){
+		 typeImage = true;
+	 }
+	 return typeImage;
  }
 
 //Bool QtDisplayData::delTmpData() const {

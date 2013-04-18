@@ -79,6 +79,7 @@ private slots:
 private:
 	ImageManagerDialog( const ImageManagerDialog& other );
 	ImageManagerDialog operator=( const ImageManagerDialog& other );
+
 	void updateSelectedMaster();
 	void updateMasterList();
 	void updateColorList();
@@ -87,7 +88,7 @@ private:
 	void initializeScrollArea( QWidget* holder, ImageScrollWidget*& scrollArea );
 	bool getIntensityMinMax( ImageInterface<float>* img,
 			double* intensityMin, double* intensityMax );
-
+	bool isControlEligible( QtDisplayData* qdd ) const;
 	ColormapDefinition* generateSaturationMap( double minIntensity, double maxIntensity,
 			QColor baseColor );
 	void updateImageList(QComboBox* combo );

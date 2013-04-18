@@ -547,7 +547,8 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 		// (Tracking information is not provided for these dd types).
 		Record trackingRec;
 		pair<String,String> trackInfo;
-		if ( bLen_ > 1 && !pd_->isBlinkDD(dd) ){
+
+		if ( bLen_ > 1 && !pd_->isBlinkDD(dd) /*&& ! dd->conformsTo(wc)*/ ){
 			trackInfo = qdd->trackingInfo( ev );
 			trackingRec.define( qdd->name(), trackInfo.first + principalTrackInfo.second );
 		}
@@ -864,6 +865,10 @@ void QtDisplayPanel::unregisterAll() {
 	/*for(ListIter<QtDisplayData*> rdds(regdDDs); !rdds.atEnd(); rdds++) {
 		QtDisplayData* dd = rdds.getRight();
 		unregisterDD_(dd);  }*/
+	for ( DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+			iter != displayDataHolder->endDD(); iter++ ){
+		unregisterDD_(*iter);
+	}
 	displayDataHolder->removeDDAll();
 
 	if(qsm_!=0) qsm_->deleteAll();
