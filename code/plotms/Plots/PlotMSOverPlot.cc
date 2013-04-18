@@ -38,6 +38,8 @@
 #include <algorithm>
 #include <cmath>
 
+#define THREADLOAD True
+
 namespace casa {
 
 ////////////////////////////////
@@ -254,10 +256,8 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
     if(&p != &itsParams_) return false;
 
     const PMS_PP_MSData *data = itsParams_.typedGroup<PMS_PP_MSData>();
-    const PMS_PP_Cache *cache = itsParams_.typedGroup<PMS_PP_Cache>();
-    const PMS_PP_Axes *axes = itsParams_.typedGroup<PMS_PP_Axes>();
     const PMS_PP_Iteration *iter = itsParams_.typedGroup<PMS_PP_Iteration>();
-    if(data == NULL || cache == NULL || axes == NULL || iter == NULL)
+    if(data == NULL || iter == NULL)
         return true;
 
     itsTCLParams_.releaseWhenDone = releaseWhenDone;
@@ -377,12 +377,17 @@ bool PlotMSOverPlot::updateCache() {
         }
     }
 
-    PlotMSCacheThread *ct = new PlotMSCacheThread(
-        this, itsCache_, caxes, cdata, data->filename(), data->selection(),
-        data->averaging(), data->transformations(), true,
-        &PlotMSOverPlot::cacheLoaded, this);
-
-    itsParent_->getPlotter()->doThreadedOperation(ct);
+    if(THREADLOAD) {
+        PlotMSCacheThread *ct = new PlotMSCacheThread(
+            this, itsCache_, caxes, cdata, data->filename(), data->selection(),
+            data->averaging(), data->transformations(), true,
+            &PlotMSOverPlot::cacheLoaded, this);
+        itsParent_->getPlotter()->doThreadedOperation(ct);
+    } else {
+        itsCache_->load(caxes, cdata, data->filename(), data->selection(),
+                        data->averaging(), data->transformations());
+        this->cacheLoaded_(false);
+    }
     return true;
 }
 
@@ -736,6 +741,7 @@ void PlotMSOverPlot::recalculateIteration() {
     updatePlots();
     updateCanvas();
     updateDisplay();
+    releaseDrawing();
     logPoints();
 }
 
