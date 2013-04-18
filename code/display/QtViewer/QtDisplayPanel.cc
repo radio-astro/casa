@@ -862,12 +862,20 @@ void QtDisplayPanel::unregisterAll() {
 
 	hold();
 
-	/*for(ListIter<QtDisplayData*> rdds(regdDDs); !rdds.atEnd(); rdds++) {
-		QtDisplayData* dd = rdds.getRight();
-		unregisterDD_(dd);  }*/
+	//We don't want to remove as we iterate through the list, so we instead accumulate
+	//a list of ones to unreqister, then do it.
+	int registeredCount = displayDataHolder->getCount();
+	QVector<QtDisplayData*> allRegistered( registeredCount );
+	int i = 0;
 	for ( DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
 			iter != displayDataHolder->endDD(); iter++ ){
-		unregisterDD_(*iter);
+		allRegistered[i] = ( *iter);
+		i++;
+	}
+
+	//Now we unregister them.
+	for ( int i = 0; i < registeredCount; i++ ){
+		unregisterDD_( allRegistered[i]);
 	}
 	displayDataHolder->removeDDAll();
 
