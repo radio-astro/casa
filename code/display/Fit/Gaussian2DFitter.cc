@@ -86,7 +86,7 @@ void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const Str
 }
 
 QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(ImageInterface<Float>* image, const QString& colorName) const {
-	return fitResultList.toDrawingDisplay( image, channelNumber, colorName );
+	return fitResultList.toDrawingDisplay( image, colorName );
 }
 
 void Gaussian2DFitter::run(){
@@ -118,7 +118,7 @@ void Gaussian2DFitter::run(){
 
 bool Gaussian2DFitter::writeRegionFile() const {
 	QString regionFile = filePath.c_str() + REGION_SUFFIX;
-	bool successfulWrite = fitResultList.toRegionFile( image, regionFile );
+	bool successfulWrite = fitResultList.toRegionFile( image, channelNumber, regionFile );
 	return successfulWrite;
 }
 

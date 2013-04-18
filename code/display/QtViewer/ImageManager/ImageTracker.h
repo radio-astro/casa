@@ -23,35 +23,41 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef COLORHISTOGRAMSCALE_H_
-#define COLORHISTOGRAMSCALE_H_
-
-#include <QVector>
-#include <qwt_color_map.h>
-#include <qwt_double_interval.h>
-#include <casa/BasicSL/String.h>
+#ifndef IMAGETRACKER_H_
+#define IMAGETRACKER_H_
 
 namespace casa {
 
-class ColormapDefinition;
+class QtDisplayData;
 
 /**
- * Overrides QwtLinearColorMap in order to provide QwtPlot color
- * lookups based on a casa ColormapDefinition.
+ * Interface class designed to reduce the coupling between the GUI class,
+ * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
+ * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
  */
 
-class ColorHistogramScale : public QwtLinearColorMap {
+class ImageTracker {
 public:
-	ColorHistogramScale();
-	String getColorMapName() const;
-	void setColorMapName( const String& colorMapName );
-	virtual ~ColorHistogramScale();
-private:
-	ColorHistogramScale( ColorHistogramScale& other );
-	ColorHistogramScale operator=(ColorHistogramScale& other);
-	String mapName;
-	ColormapDefinition* colorDefinition;
+	virtual void imageAdded( QtDisplayData* image ) = 0;
+	virtual void imageRemoved( QtDisplayData* image ) = 0;
+	virtual void masterImageSelected( QtDisplayData* image ) =0;
+	ImageTracker(){}
+	virtual ~ImageTracker(){}
+
 };
 
-} /* namespace casa */
-#endif /* COLORHISTOGRAMSCALE_H_ */
+/**
+ * Interface implemented by GUI panels (QtDisplayPanel) that can add/remove
+ * QtDisplayData's.  Called by the DisplayDataHolder to make
+ * changes through the existing infrastructure.
+ */
+class ImageDisplayer {
+public:
+	ImageDisplayer(){}
+	virtual ~ImageDisplayer(){}
+	virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
+	virtual void unregisterDD( QtDisplayData* dd ) = 0;
+};
+
+}
+#endif /* IMAGETRACKER_H_ */

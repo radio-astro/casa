@@ -69,7 +69,7 @@ namespace QtMouseToolNames {
     
   const std::string helptexts[] = {
     "Use the assigned mouse button to drag out a rectangle."
-    "\nUsehandles to resize."
+    "\nUse handles to resize."
     "\nDouble click inside rectangle-> zoom in"
     "\nDouble click outside rectangle -> zoom out"
     "\n<Esc> to cancel",

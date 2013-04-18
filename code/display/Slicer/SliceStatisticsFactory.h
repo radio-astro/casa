@@ -38,22 +38,22 @@ class SliceStatistics;
 
 class SliceStatisticsFactory {
 public:
-	enum AxisXUnits {PIXEL_UNIT, RADIAN_UNIT, ARCSEC_UNIT };
+	enum AxisXUnits {PIXEL_UNIT, ARCSEC_UNIT, ARCMIN_UNIT, ARCDEG_UNIT };
 	enum AxisXChoice {DISTANCE,X_POSITION, Y_POSITION};
 	void setAxisXChoice( AxisXChoice choice );
 	void setXUnits( AxisXUnits unitMode );
-	/**
-	 * User is responsible for deleting the statistics when
-	 * they are done.
-	 */
-	SliceStatistics* getStatistics() const;
+	bool isDistance() const;
+	bool isPositionX() const;
+	bool isPositionY() const;
 
-	static SliceStatisticsFactory* getInstance();
+	SliceStatistics* getStatistics();
+	SliceStatisticsFactory();
+
 
 	virtual ~SliceStatisticsFactory();
 private:
-	SliceStatisticsFactory();
-	static SliceStatisticsFactory* factory;
+	SliceStatistics* statisticsDistance;
+	SliceStatistics* statisticsPosition;
 	AxisXUnits xUnits;
 	AxisXChoice xAxis;
 

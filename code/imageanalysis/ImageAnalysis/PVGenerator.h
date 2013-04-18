@@ -37,7 +37,7 @@ namespace casa {
 
 class PVGenerator : public ImageTask {
 	// <summary>
-	// Top level interface for generatting position-velocity images
+	// Top level interface for generating position-velocity images
 	// </summary>
 
 	// <reviewed reviewer="" date="" tests="" demos="">
@@ -51,7 +51,7 @@ class PVGenerator : public ImageTask {
 	// </etymology>
 
 	// <synopsis>
-	// High level interface for collapsing an image along a single axis.
+	// High level interface for generating position-velocity images.
 	// </synopsis>
 
 	// <example>
@@ -63,7 +63,7 @@ class PVGenerator : public ImageTask {
 
 public:
 
-	// The region selection in the constructor only applies to the non-direction coordinate.
+	// The region selection in the constructor only applies to the non-direction coordinates.
 	// The direction coordinate limits are effectively set by calling setEndPoints()
 	// after construction. The region selection in the constructor is only for things like
 	// spectral selection and polarization selection. In addition at most one of <src>regionRec</src>
@@ -75,7 +75,7 @@ public:
 	// and <src>stokes</src>="", and <src>chanInp</src>="", that implies you want to use all
 	// spectral channels and all polarization planes in the input image.
 	PVGenerator(
-		const ImageInterface<Float> *const image,
+		const ImageInterface<Float> *const &image,
 		const Record *const &regionRec, const String& chanInp,
 		const String& stokes, const String& maskInp,
 		const String& outname, const Bool overwrite
@@ -97,9 +97,18 @@ public:
 		const Double endx, const Double endy
 	);
 
-	void setHalfWidth(const Double halfwidth);
+	// Set the number of pixels perpendicular to the slice for which averaging
+	// should occur. Must be odd and >= 1. 1 => just use the pixels coincident with the slice
+	// (no averaging). 3 => Average three pixels, one pixel on either side of the slice and the
+	// pixel lying on the slice.
+	// Note this average is done after the image has been rotated.
+	void setWidth(uInt width);
 
 	String getClass() const;
+
+	// set the unit to be used for the offset axis in the resulting image (from calling
+	// generate()). Must conform to angular units
+	void setOffsetUnit(const String& s);
 
 protected:
 	inline  CasacRegionManager::StokesControl _getStokesControl() const {
@@ -115,7 +124,8 @@ protected:
 
 private:
 	std::auto_ptr<vector<Double> > _start, _end;
-	Double _halfwidth;
+	uInt _width;
+	String _unit;
 	static const String _class;
 
 

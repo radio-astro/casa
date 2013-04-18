@@ -38,8 +38,9 @@ protected:
 	virtual void defineAxis( QLine& axisLine );
 	virtual void drawTicks( QPainter* painter, int tickLength );
 	virtual void drawAxisLabel( QPainter* painter );
+	virtual int getStartY() const;
 private:
-	int getStartY() const;
+
 	void drawTick( QPainter* painter, float yPixel, double value,
 			int tickLength );
 };

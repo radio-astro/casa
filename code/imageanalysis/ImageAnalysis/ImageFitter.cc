@@ -473,10 +473,10 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	}
 	CasacRegionManager rm(_getImage()->coordinates());
 	uInt nSelectedChannels;
-	Int specAxisNumber = _getImage()->coordinates().spectralAxisNumber();
-	uInt nChannels = specAxisNumber >= 0 ? _getImage()->shape()[specAxisNumber] : 0;
+	// Int specAxisNumber = _getImage()->coordinates().spectralAxisNumber();
+	// uInt nChannels = specAxisNumber >= 0 ? _getImage()->shape()[specAxisNumber] : 0;
 
-	_chanVec = rm.setSpectralRanges(_getChans(), nSelectedChannels, nChannels);
+	_chanVec = rm.setSpectralRanges(_getChans(), nSelectedChannels, _getImage()->shape());
 	if (_chanVec.size() == 0) {
 		_chanVec.resize(2);
 		_chanVec.set(0);
@@ -1138,15 +1138,17 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 
 void ImageFitter::_writeNewEstimatesFile() const {
 	ostringstream out;
-	for (uInt i=0; i<_curResults.nelements(); i++) {
+	uInt ndim = _getImage()->ndim();
+	Vector<Int> dirAxesNumbers = _getImage()->coordinates().directionAxesNumbers();
+	Vector<Double> world(ndim,0), pixel(ndim,0);
+	_getImage()->coordinates().toWorld(world, pixel);
 
+	for (uInt i=0; i<_curResults.nelements(); i++) {
 		MDirection mdir = _curResults.getRefDirection(i);
 		Quantity lat = mdir.getValue().getLat("rad");
 		Quantity longitude = mdir.getValue().getLong("rad");
-		Vector<Double> world(4,0), pixel(4,0);
-		_getImage()->coordinates().toWorld(world, pixel);
-		world[0] = longitude.getValue();
-		world[1] = lat.getValue();
+		world[dirAxesNumbers[0]] = longitude.getValue();
+		world[dirAxesNumbers[1]] = lat.getValue();
 		if (_getImage()->coordinates().toPixel(pixel, world)) {
 			out << _peakIntensities[i].getValue() << ", "
 					<< pixel[0] << ", " << pixel[1] << ", "

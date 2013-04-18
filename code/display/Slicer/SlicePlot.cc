@@ -39,12 +39,13 @@ const QString SlicePlot::DISTANCE_AXIS = "Distance";
 const QString SlicePlot::POSITION_X_AXIS = "Position X";
 const QString SlicePlot::POSITION_Y_AXIS = "Position Y";
 const QString SlicePlot::UNIT_X_PIXEL = "Pixels";
-const QString SlicePlot::UNIT_X_ARCSEC = "Arcseconds";
-const QString SlicePlot::UNIT_X_RADIAN = "Radians";
+const QString SlicePlot::UNIT_X_ARCSEC = "Arc Seconds";
+const QString SlicePlot::UNIT_X_ARCMIN = "Arc Minutes";
+const QString SlicePlot::UNIT_X_ARCDEG = "Arc Degrees";
 
 SlicePlot::SlicePlot(QWidget *parent, bool allFunctionality ) :QwtPlot(parent),
 		image( NULL ), imageAnalysis( NULL ), AXIS_FONT_SIZE(8),
-		statLayout(NULL) {
+		statLayout(NULL), factory(NULL) {
 	setCanvasBackground( Qt::white );
 
 	accumulateSlices = false;
@@ -52,11 +53,14 @@ SlicePlot::SlicePlot(QWidget *parent, bool allFunctionality ) :QwtPlot(parent),
 	segmentMarkers = false;
 	polylineColorUnit = true;
 	sampleCount = 0;
+	curveWidth = 1;
+	markerSize = 5;
 	fullVersion = allFunctionality;
 	interpolationMethod = "";
 	currentRegionId = -1;
 	xAxis = DISTANCE_AXIS;
 	xAxisUnits = UNIT_X_PIXEL;
+	factory = new SliceStatisticsFactory();
 	initAxisFont( QwtPlot::xBottom, getAxisLabel() );
 
 	//Set up the axis
@@ -72,6 +76,8 @@ SlicePlot::SlicePlot(QWidget *parent, bool allFunctionality ) :QwtPlot(parent),
 	axes.resize( 2 );
 	axes[0] = 0;
 	axes[1] = 1;
+
+	setMouseTracking( true );
 }
 
 void SlicePlot::initAxisFont( int axisId, const QString& axisTitle ){
@@ -188,9 +194,8 @@ int SlicePlot::getColorIndex( int regionId ) const {
 void SlicePlot::setAccumulateSlices( bool accumulate ){
 	if ( accumulateSlices != accumulate ){
 		accumulateSlices = accumulate;
-		if ( !accumulate ){
-			clearCurves();
-		}
+		clearCurvesAll();
+		resetCurves();
 	}
 }
 
@@ -202,13 +207,34 @@ void SlicePlot::segmentMarkerVisibilityChanged( bool visible ){
 	replot();
 }
 
-void SlicePlot::clearCurves( bool keepSelected ){
+void SlicePlot::clearCurvesAll(){
 	QList<int> keys = sliceMap.keys();
 	int keyCount = keys.size();
 	for( int i = 0; i < keyCount; i++ ){
 		sliceMap[keys[i]]->clearCurve();
+		removeStatistic( keys[i]);
 	}
-	removeStatistics( keepSelected );
+	replot();
+}
+
+void SlicePlot::clearCurves( ){
+	QList<int> keys = sliceMap.keys();
+	int keyCount = keys.size();
+	for( int i = 0; i < keyCount; i++ ){
+		if ( ! accumulateSlices || !sliceMap[keys[i]]->isSelected()){
+			sliceMap[keys[i]]->clearCurve();
+			removeStatistic( keys[i]);
+		}
+	}
+	replot();
+}
+
+void SlicePlot::setPlotPreferences( int lineWidth, int markerSize ){
+	this->curveWidth = lineWidth;
+	this->markerSize = markerSize;
+	for ( QMap<int,ImageSlice*>::iterator it = sliceMap.begin(); it != sliceMap.end(); ++it ){
+		(*it)->setPlotPreferences( lineWidth, markerSize );
+	}
 	replot();
 }
 
@@ -245,33 +271,32 @@ void SlicePlot::setXAxis( const QString& newAxis ){
 	if ( newAxis != xAxis ){
 		xAxis = newAxis;
 		initAxisFont( QwtPlot::xBottom, getAxisLabel() );
-		this->clearCurves();
-		if ( accumulateSlices ){
-			QList<int> regionIds = this->sliceMap.keys();
-			QList<int>::iterator idIter = regionIds.begin();
-			while ( idIter != regionIds.end() ){
-				sliceFinished( *idIter );
-				idIter++;
-			}
-		}
-		else {
-			if ( currentRegionId >= 0 ){
-				sliceFinished( currentRegionId );
-			}
-		}
 
+		SliceStatisticsFactory::AxisXChoice choice = getXAxis();
+		factory->setAxisXChoice( choice );
+		SliceStatistics* statistics = factory->getStatistics();
+		QList<int> regionIds = this->sliceMap.keys();
+		QList<int>::iterator idIter = regionIds.begin();
+		while ( idIter != regionIds.end() ){
+			sliceMap[ *idIter ]->setStatistics( statistics );
+			idIter++;
+		}
+		replot();
 	}
 }
 
 
 SliceStatisticsFactory::AxisXUnits SlicePlot::getUnitMode() const {
 	SliceStatisticsFactory::AxisXUnits unitMode = SliceStatisticsFactory::PIXEL_UNIT;
-	if ( xAxisUnits == UNIT_X_RADIAN ){
-		unitMode = SliceStatisticsFactory::RADIAN_UNIT;
+	if ( xAxisUnits == UNIT_X_ARCMIN ){
+		unitMode = SliceStatisticsFactory::ARCMIN_UNIT;
 	}
 	else if ( xAxisUnits == UNIT_X_ARCSEC ){
 		//Arcseconds.
 		unitMode = SliceStatisticsFactory::ARCSEC_UNIT;
+	}
+	else if ( xAxisUnits == UNIT_X_ARCDEG ){
+		unitMode = SliceStatisticsFactory::ARCDEG_UNIT;
 	}
 	return unitMode;
 }
@@ -281,8 +306,10 @@ void SlicePlot::xAxisUnitsChanged( const QString& units ){
 		xAxisUnits = units;
 		initAxisFont( QwtPlot::xBottom, getAxisLabel() );
 		SliceStatisticsFactory::AxisXUnits unitMode = getUnitMode();
+		factory->setXUnits( unitMode );
+		SliceStatistics* statistics = factory->getStatistics();
 		for ( QMap<int,ImageSlice*>::iterator it = sliceMap.begin(); it != sliceMap.end(); ++it ){
-			(*it)->setXUnits( unitMode );
+			(*it)->setStatistics( statistics );
 		}
 		replot();
 	}
@@ -325,11 +352,12 @@ ImageSlice* SlicePlot::getSlicerFor( int regionId ){
 		slice->setSampleCount( sampleCount );
 		slice->setAxes( axes );
 		slice->setCoords( coords );
+		slice->setPlotPreferences( curveWidth, markerSize );
 		slice->setUseViewerColors( viewerColors );
 		slice->setPolylineColorUnit( polylineColorUnit );
 		slice->setShowCorners( segmentMarkers );
-		SliceStatisticsFactory::AxisXUnits unitMode = getUnitMode();
-		slice->setXUnits( unitMode );
+
+		slice->setStatistics( factory->getStatistics());
 		sliceMap.insert( regionId, slice );
 		if ( !viewerColors ){
 			int colorIndex = getColorIndex( regionId );
@@ -366,34 +394,60 @@ void SlicePlot::updatePolyLine(  int regionId, const QList<double>& worldX,
 	}
 }
 
+void SlicePlot::setRegionSelected( int regionId, bool selected ){
+	if ( sliceMap.contains( regionId )){
+		bool oldSelected = sliceMap[regionId]->isSelected();
+		if (oldSelected != selected  ){
+			sliceMap[regionId]->setSelected( selected );
+			if ( accumulateSlices  ){
+				resetCurves();
+			}
+		}
+	}
+}
+
 void SlicePlot::updateSelectedRegionId( int selectedRegionId ){
 	if ( currentRegionId != selectedRegionId ){
 		currentRegionId = selectedRegionId;
 	}
 }
 
-void SlicePlot::sliceFinished( int regionId){
-	ImageSlice* slice = getSlicerFor( regionId );
-	if ( xAxis == SlicePlot::DISTANCE_AXIS ){
-		slice->setAxisXChoice( SliceStatisticsFactory::DISTANCE );
+SliceStatisticsFactory::AxisXChoice SlicePlot::getXAxis() const {
+	SliceStatisticsFactory::AxisXChoice choice = SliceStatisticsFactory::DISTANCE;
+	if ( xAxis == SlicePlot::POSITION_X_AXIS ){
+		choice = SliceStatisticsFactory::X_POSITION;
 	}
-	else if ( xAxis == SlicePlot::POSITION_X_AXIS ){
-		slice->setAxisXChoice( SliceStatisticsFactory::X_POSITION );
+	else if ( xAxis == SlicePlot::POSITION_Y_AXIS ){
+		choice = SliceStatisticsFactory::Y_POSITION;
 	}
-	else {
-		slice->setAxisXChoice( SliceStatisticsFactory::Y_POSITION );
-	}
+	return choice;
+}
 
-	if ( !accumulateSlices ){
-		clearCurves( true );
+void SlicePlot::resetCurves(){
+	clearCurvesAll( );
+	QList<int> keys = sliceMap.keys();
+	int keyCount = keys.count();
+	for ( int i = 0; i < keyCount; i++ ){
+		addPlotCurve( keys[i]);
 	}
+	replot();
+}
 
-	sliceMap[regionId]->addPlotCurve( this );
-	if ( accumulateSlices || regionId==currentRegionId ){
+void SlicePlot::addPlotCurve( int regionId ){
+	if ( ( accumulateSlices && sliceMap[regionId]->isSelected() ) ||
+		(!accumulateSlices)){
+		sliceMap[regionId]->addPlotCurve( this );
 		addStatistic( regionId );
+		int colorIndex = getColorIndex ( regionId );
+		assignCurveColors( colorIndex, regionId );
 	}
-	int colorIndex = getColorIndex ( regionId );
-	assignCurveColors( colorIndex, regionId );
+}
+
+void SlicePlot::sliceFinished( int regionId){
+
+	clearCurves(  );
+	addPlotCurve( regionId );
+
 	replot();
 }
 
@@ -442,7 +496,8 @@ bool SlicePlot::toAscii( const QString& fileName ){
 		QString title = "1-D Slice(s) for "+QString(imageName.c_str());
 		out << title << LINE_END << LINE_END;
 		for ( int i = 0; i < keyCount; i++ ){
-			if ( keys[i] == currentRegionId || accumulateSlices ){
+			if ( keys[i] == currentRegionId ||
+					(accumulateSlices && sliceMap[keys[i]]->isSelected()) ){
 				sliceMap[keys[i]]->toAscii( out );
 				out << LINE_END;
 				out.flush();
@@ -457,12 +512,13 @@ bool SlicePlot::toAscii( const QString& fileName ){
 //             Statistics
 //------------------------------------------------------------------------------
 
-void SlicePlot::removeStatistics( bool keepSelected ){
+void SlicePlot::removeStatistics( ){
 	if ( statLayout != NULL ){
 		QList<int> keyList = sliceMap.keys();
 		QList<int>::iterator iter = keyList.begin();
 		while( iter != keyList.end()){
-			if ( !keepSelected || (*iter)!=currentRegionId){
+			if ( (!accumulateSlices)||
+					( accumulateSlices && !sliceMap[*iter]->isSelected() )){
 				removeStatistic(*iter);
 			}
 			iter++;
@@ -474,11 +530,15 @@ void SlicePlot::removeStatistic( int regionId ){
 	if ( statLayout != NULL ){
 		if ( sliceMap.contains(regionId)){
 			statLayout->removeWidget( sliceMap[regionId] );
+			//sliceMap[regionId]->setParent( NULL );
+			sliceMap[regionId]->hide();
 			statLayout->update();
-			sliceMap[regionId]->setParent( NULL );
+
 		}
 	}
 }
+
+
 
 void SlicePlot::addStatistic( int regionId ){
 	if ( statLayout != NULL ){
@@ -486,6 +546,7 @@ void SlicePlot::addStatistic( int regionId ){
 			int widgetIndex = statLayout->indexOf( sliceMap[regionId]);
 			if ( widgetIndex < 0 ){
 				statLayout->addWidget( sliceMap[regionId] );
+				sliceMap[regionId]->show();
 				statLayout->update();
 			}
 		}
@@ -496,12 +557,31 @@ void SlicePlot::setStatisticsLayout( QLayout* layout ){
 	statLayout = layout;
 }
 
+void SlicePlot::updatePositionInformation( int id, const QVector<String>& info ){
+	if ( sliceMap.contains( id )){
+		sliceMap[id]->updatePositionInformation( info );
+	}
+}
+
+void SlicePlot::markPositionChanged(int regionId,int segmentIndex,float percentage){
+	emit markerPositionChanged( regionId, segmentIndex, percentage );
+}
+
+void SlicePlot::markVisibilityChanged(int regionId,bool showMarker){
+	emit markerVisibilityChanged( regionId, showMarker );
+}
+
+bool SlicePlot::isFullVersion() const {
+	return fullVersion;
+}
+
 SlicePlot::~SlicePlot() {
 	QList<int> sliceKeys = sliceMap.keys();
 	for ( int i = 0; i < sliceKeys.size(); i++ ){
 		ImageSlice* slice = sliceMap.take( sliceKeys[i]);
 		delete slice;
 	}
+	delete factory;
 }
 
 } /* namespace casa */

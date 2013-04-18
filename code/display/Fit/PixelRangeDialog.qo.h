@@ -47,7 +47,7 @@ public:
     PixelRangeDialog(QWidget *parent = 0);
     void setImage( ImageInterface<Float>* img );
     void setInterval( double minValue, double maxValue );
-    void setRangeMaxEnabled( bool enabled );
+    //void setRangeMaxEnabled( bool enabled );
     pair<double,double> getInterval() const;
     vector<float> getXValues() const;
     ~PixelRangeDialog();

@@ -40,6 +40,7 @@ public:
 	//Note:  user is responsible for deleting the converter.
 	static Converter* getConverter( const QString& oldUnits,const QString& newUnits );
 	static void setSpectralCoordinate( SpectralCoordinate coordinate );
+	static void setRestFrequency( double restFrequency );
 	static void convert( Vector<double> &resultValues, int sourceIndex, int destIndex);
 
 	bool setVelocityUnits( const QString& units );

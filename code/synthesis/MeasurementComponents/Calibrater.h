@@ -261,6 +261,8 @@ class Calibrater
 
   CorrectorVp * getCorrectorVp ();
 
+  // Handle caltable backward compatibility
+  static Bool updateCalTable(const String& caltable);
   
  private:
   // Log functions and variables
@@ -380,6 +382,8 @@ private:
     Vector<Bool> uncalibratedSpectralWindows_p;
     VisibilityIterator::DataColumn  whichOutputColumn_p;
 };
+
+
 
 
 } //# NAMESPACE CASA - END

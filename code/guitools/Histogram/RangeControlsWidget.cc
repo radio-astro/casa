@@ -24,48 +24,103 @@
 //#
 
 #include "RangeControlsWidget.qo.h"
+#include <images/Images/ImageInterface.h>
+#include <lattices/Lattices/LatticeFractile.h>
 #include <QDoubleValidator>
+#include <QMessageBox>
+#include <QKeyEvent>
 #include <QDebug>
 
 namespace casa {
 
 RangeControlsWidget::RangeControlsWidget(QWidget *parent)
-    : QWidget(parent) {
+    : QWidget(parent), percentCalculator(NULL) {
 	ui.setupUi(this);
+	ignoreRange = false;
 
-	minMaxValidator = new QDoubleValidator( std::numeric_limits<double>::min(),
-		std::numeric_limits<double>::max(), 10, this );
+	//Min & max bounds
+	float maxFloat = std::numeric_limits<double>::max();
+	minMaxValidator = new QDoubleValidator( -1 * maxFloat, maxFloat, 10, this );
 	ui.minLineEdit->setValidator( minMaxValidator );
 	ui.maxLineEdit->setValidator( minMaxValidator );
-	connect( ui.minLineEdit, SIGNAL(textChanged(const QString&)), this, SIGNAL(minMaxChanged()));
-	connect( ui.maxLineEdit, SIGNAL(textChanged(const QString&)), this, SIGNAL(minMaxChanged()));
+	connect( ui.minLineEdit, SIGNAL(returnPressed()), this, SIGNAL(minMaxChanged()));
+	connect( ui.maxLineEdit, SIGNAL(returnPressed()), this, SIGNAL(minMaxChanged()));
+
+	//Percentile
+	QStringList percentages = QStringList()<<"90"<<"95"<<"98"<<"99.5"<<"99.9";
+	percentage = percentages[0];
+	ui.percentileComboBox->addItems( percentages );
+	ui.percentileComboBox->setEditable( true );
+	QDoubleValidator* percentValidator = new QDoubleValidator( 0, 100, 2, this );
+	ui.percentileComboBox->setValidator(percentValidator);
+	connect( ui.percentileCheckBox, SIGNAL(toggled(bool)), this, SLOT(rangeModeChanged(bool)));
+	connect( ui.percentileComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(percentageChanged(const QString&)));
+	rangeModeChanged( ui.percentileCheckBox->isChecked());
+
 	connect( ui.clearRangeButton, SIGNAL(clicked()), this, SLOT(clearRange()));
 }
 
-void RangeControlsWidget::setRangeMaxEnabled( bool enabled ){
-	ui.maxLineEdit->setEnabled( enabled );
+void RangeControlsWidget::hideMaximum(){
+	ui.rangeLayout->removeItem( ui.maxLayout );
+	ui.maxLayout->setParent( NULL );
+	ui.maxLineEdit->setParent( NULL );
+	ui.maxLabel->setParent( NULL );
 }
 
 void RangeControlsWidget::setRange( double min, double max, bool signalChange ){
-	if ( !signalChange ){
-		blockSignals(true);
-	}
-	ui.minLineEdit->setText( QString::number( min ));
-	ui.maxLineEdit->setText( QString::number( max ));
-	if ( !signalChange ){
-		blockSignals(false);
+	//Note:  because range changes can result in time intensive calculations,
+	//we only want to send at most one range change signal.
+	if ( !ignoreRange ){
+		ui.minLineEdit->setText( QString::number( min ));
+		ui.maxLineEdit->setText( QString::number( max ));
+		if ( signalChange ){
+			emit minMaxChanged();
+		}
 	}
 }
 
-void RangeControlsWidget::setRangeLimits( double min, double max ){
+void RangeControlsWidget::setImage( ImageInterface<float>* image ){
+	this->image = image;
+}
 
-	minMaxValidator->setBottom( min );
-	minMaxValidator->setTop( max );
+void RangeControlsWidget::percentageChanged( const QString& newPercentage ){
+	bool validPercentage = false;
+	float percent = newPercentage.toFloat(&validPercentage );
+	int TOTAL_PERCENT = 100;
+	if ( validPercentage && 0 < percent && percent < TOTAL_PERCENT ){
+		percentage = newPercentage;
+		float leftPercent = TOTAL_PERCENT - percent;
+		//Generate a symmetric interval.
+		float minValue = leftPercent / 2;
+		float maxValue = TOTAL_PERCENT - leftPercent / 2;
+		minValue = minValue / TOTAL_PERCENT;
+		maxValue = maxValue / TOTAL_PERCENT;
+		if ( image != NULL ){
+			if ( percentCalculator != NULL ){
+				delete percentCalculator;
+				percentCalculator = NULL;
+			}
+			percentCalculator = new PercentageCalculator( minValue, maxValue, image );
+			percentCalculator->work();
+			percentilesDone();
+		}
+		else {
+			QMessageBox::warning( this, "Missing Image", "An image must be loaded in order to calculate a range based on a percentage.");
+		}
+	}
+}
+
+void RangeControlsWidget::percentilesDone(){
+	if ( percentCalculator != NULL ){
+		float minRange = percentCalculator->getRangeMin();
+		float maxRange = percentCalculator->getRangeMax();
+		setRange( minRange, maxRange );
+	}
 }
 
 void RangeControlsWidget::clearRange(){
-	ui.minLineEdit->setText( QString::number( rangeMin ) );
-	ui.maxLineEdit->setText( QString::number( rangeMax ) );
+	ui.minLineEdit->setText("");
+	ui.maxLineEdit->setText("");
 	emit rangeCleared();
 }
 
@@ -83,47 +138,84 @@ pair<double,double> RangeControlsWidget::getMinMaxValues() const {
 	return maxMinValues;
 }
 
+void RangeControlsWidget::setIgnoreRange( bool ignore ){
+	ignoreRange = ignore;
+}
+
+void RangeControlsWidget::rangeModeChanged( bool percentile ){
+	ui.percentileComboBox->setEnabled( percentile );
+	ui.minLineEdit->setEnabled( !percentile );
+	ui.maxLineEdit->setEnabled( !percentile );
+	if ( percentile ){
+		QString newPercentage = ui.percentileComboBox->currentText();
+		percentageChanged( newPercentage );
+	}
+}
+
+void RangeControlsWidget::keyPressEvent( QKeyEvent* event ){
+	if ( event->key() == Qt::Key_Enter ){
+		QString newPercentage = ui.percentileComboBox->currentText();
+		if ( percentage != newPercentage ){
+			percentageChanged( newPercentage );
+		}
+	}
+	QWidget::keyPressEvent( event );
+}
 
 
 void RangeControlsWidget::setDataLimits( double min, double max ){
-
-
+	//If we are zooming, we don't want to change the actual data range.
+	if ( ignoreRange ){
+		return;
+	}
 	rangeMin = min;
 	rangeMax = max;
-	if ( ui.minLineEdit->text().length() == 0 &&
-			ui.maxLineEdit->text().length() == 0 ){
-		//We don't have a range so we don't want to send signals
-		//about the range changing, but we do want to update the
-		//text boxes displaying the range.
-		blockSignals( true );
-		ui.minLineEdit->setText( QString::number( rangeMin ));
-		ui.maxLineEdit->setText( QString::number( rangeMax ));
-		blockSignals( false );
-	}
-	else {
-		//Reset the range limits if they don't make sense for the
-		//new data.
-		pair<double, double> minMaxRange = this->getMinMaxValues();
-		double rangeLimitMin = minMaxRange.first;
-		double rangeLimitMax = minMaxRange.second;
-		if ( rangeLimitMin < min || rangeLimitMin > max ){
-			rangeLimitMin = min;
-		}
-		if ( rangeLimitMax < min || rangeLimitMax > max ){
-			rangeLimitMax = max;
-		}
 
-		//If we have a range, we should reset it.
-		pair<double,double> oldRange = getMinMaxValues();
-		if ( oldRange.first != 0 && oldRange.second != 0  ){
-			double newLow = qMax( oldRange.first, rangeLimitMin );
-			double newHigh = qMin( oldRange.second, rangeLimitMax );
-			this->setRange( newLow, newHigh );
-		}
+	//If we are calculating a percentage based range, we need to update
+	//the percentage based on the new data limits.
+	if ( ui.percentileCheckBox->isChecked()){
+		percentageChanged( percentage );
 	}
 }
 
 RangeControlsWidget::~RangeControlsWidget(){
+	if ( ui.maxLayout->parent() == NULL ){
+		delete ui.maxLineEdit;
+		delete ui.maxLabel;
+		delete ui.maxLayout;
+	}
+}
+
+//*************************************************************************
+//                       Percentage Calculator
+//*************************************************************************
+
+PercentageCalculator::PercentageCalculator( float minValue, float maxValue, ImageInterface<float>* image ){
+	this->minValue = minValue;
+	this->maxValue = maxValue;
+	this->image = image;
+}
+
+
+
+void PercentageCalculator::work(){
+	Vector<Float> intensities = LatticeFractile<Float>::maskedFractiles (*image, minValue, maxValue);
+	int intensityCount = intensities.nelements();
+	if ( intensityCount == 2 ){
+		rangeMin = intensities[0];
+		rangeMax = intensities[1];
+	}
+}
+
+float PercentageCalculator::getRangeMin() const {
+	return rangeMin;
+}
+
+float PercentageCalculator::getRangeMax() const {
+	return rangeMax;
+}
+
+PercentageCalculator::~PercentageCalculator() {
 
 }
 }

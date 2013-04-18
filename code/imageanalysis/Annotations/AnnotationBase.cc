@@ -206,6 +206,8 @@ void AnnotationBase::_initParams() {
 void AnnotationBase::unitInit() {
 	if (! _doneUnitInit) {
 		UnitMap::putUser("pix",UnitVal(1.0), "pixel units");
+		UnitMap::putUser("channel",UnitVal(1.0), "channel number");
+        UnitMap::putUser("chan",UnitVal(1.0), "channel number");
 		_doneUnitInit = True;
 	}
 }

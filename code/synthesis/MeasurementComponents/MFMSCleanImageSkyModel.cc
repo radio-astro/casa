@@ -246,7 +246,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
 
     for (model=0;model<numberOfModels();model++) {
       os << LogIO::NORMAL    // Loglevel INFO
-         << "Model " << model+1 << ": max, min residuals = "
+         << "Model " << model+1 << ": max, min residuals (over all pixels) = "
 	 << resmax(model) << ", " << resmin(model) << endl;
     }
     os << LogIO::POST;
@@ -446,7 +446,7 @@ Bool MFMSCleanImageSkyModel::solve(SkyEquation& se) {
       
     for (model=0;model<numberOfModels();model++) {
       os << LogIO::NORMAL    // Loglevel INFO
-         << "Model " << model+1 << ": max, min residuals = "
+         << "Model " << model+1 << ": max, min residuals (over all pixels) = "
 	 << resmax(model) << ", " << resmin(model) << endl;
     }
     os << LogIO::POST;

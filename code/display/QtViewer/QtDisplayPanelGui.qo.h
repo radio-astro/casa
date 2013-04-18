@@ -43,6 +43,7 @@
 #include <graphics/X11/X_exit.h>
 #include <casaqt/QtUtilities/QtPanelBase.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <display/QtViewer/DisplayDataHolder.h>
 #include <display/region/QtRegionDock.qo.h>
 #include <display/Utilities/Lowlevel.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
@@ -78,7 +79,7 @@ class HistogramMain;
 class Fit2DTool;
 class SlicerMainWindow;
 class ColorHistogram;
-class FindSourcesDialog;
+class ImageManagerDialog;
 
 template <class T> class ImageInterface;
 
@@ -159,13 +160,15 @@ class QtDisplayPanelGui : public QtPanelBase {
   virtual Bool removeDD(QtDisplayData* qdd);
   
   // retrieve a copy of the current DD list.
-  List<QtDisplayData*> dds() { return qdds_;  }
-  
+  //List<QtDisplayData*> dds() { return qdds_;  }
+  DisplayDataHolder::DisplayDataIterator beginDD() const;
+  DisplayDataHolder::DisplayDataIterator endDD() const;
+  Bool isEmptyDD() const;
   // return the number of user DDs.
-  Int nDDs() { return qdds_.len();  }
+  //Int nDDs() { return qdds_.len();  }
   
   // return a list of DDs that are registered on some panel.
-  List<QtDisplayData*> registeredDDs();
+  //List<QtDisplayData*> registeredDDs();
   
   // return a list of DDs that exist but are not registered on any panel.
   List<QtDisplayData*> unregisteredDDs();
@@ -178,7 +181,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   // Check that a given DD is on the list.  Use qdd pointer or its name.
   //<group>
   Bool ddExists(QtDisplayData* qdd);
-  Bool ddExists(const String& name) { return dd(name)!=0;  }
+  //Bool ddExists(const String& name) { return dd(name)!=0;  }
   //</group>
   
   // Latest error (in createDD, etc.) 
@@ -218,7 +221,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   // Sends out colorBarOrientationChange signal when the state changes.
   virtual void setColorBarOrientation(Bool vertical);    
 
-  virtual void createNewPanel( );
+  virtual QtDisplayPanelGui *createNewPanel( );
 
   virtual void showDataManager();
   virtual void hideDataManager();
@@ -294,6 +297,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   void showMomentsCollapseImageProfile();
   void showSpecFitImageProfile();
   void disconnectHistogram();
+  void ddClose( QtDisplayData* removeDD);
+  void ddOpen( const String& path, const String& dataType, const String& displayType );
 
  signals:
 
@@ -365,7 +370,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   //<group>
   virtual void ddRegClicked_();  
   virtual void ddUnregClicked_();  
-  virtual void ddCloseClicked_();  
+  virtual void ddCloseClicked_();
   //</group>
  
   // Reflect animator state [changes] in gui.
@@ -423,7 +428,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   static bool logger_did_region_warning;
     
   // Existing user-visible QDDs
-  List<QtDisplayData*> qdds_;
+  //List<QtDisplayData*> qdds_;
+  DisplayDataHolder* displayDataHolder;
   String errMsg_;
   
   
@@ -494,8 +500,8 @@ class QtDisplayPanelGui : public QtPanelBase {
   QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
 	  *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
 	  *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
-      *profileAct_, *momentsCollapseAct_, *histogramAct_, *findSourcesAct_,*fitAct_,
-      *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_;
+      *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
+      *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_, *manageImagesAct_;
   
   QToolBar* mainToolBar_;
   QToolButton *ddRegBtn_, *ddCloseBtn_;
@@ -509,6 +515,7 @@ class QtDisplayPanelGui : public QtPanelBase {
 
  private:
   bool use_new_regions;
+  bool manageImages;
 
   //Animating the channel
   int movieChannel;
@@ -518,16 +525,18 @@ class QtDisplayPanelGui : public QtPanelBase {
   int movieStep;
   QTimer movieTimer;
   void setAnimationRate();
-
+  int getBoundedChannel( int channelNumber ) const;
   unsigned int showdataoptionspanel_enter_count;
   QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
 		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
   void connectRegionSignals(PanelDisplay* ppd);
   // used to manage generation of the updateAxes( ) signal...
-  QtDisplayData *controlling_dd;
+  //QtDisplayData *controlling_dd;
 
   void updateFrameInformation();
+  void updateSliceCorners( int id, const QList<double>& worldX,
+  		const QList<double>& worldY );
   void initAnimationHolder();
   void initHistogramHolder();
   void hideHistogram();
@@ -542,7 +551,7 @@ class QtDisplayPanelGui : public QtPanelBase {
   ColorHistogram* colorHistogram;
   Fit2DTool* fitTool;
   SlicerMainWindow* sliceTool;
-  FindSourcesDialog* findSourcesDialog;
+  ImageManagerDialog* imageManagerDialog;
 
   // interactive clean...
   void initCleanTool( );
@@ -569,7 +578,6 @@ class QtDisplayPanelGui : public QtPanelBase {
   void controlling_dd_axis_change(String, String, String, std::vector<int> );
   void controlling_dd_update(QtDisplayData*);
   void showHistogram();
-  void showFindSources();
   void showSlicer();
   void resetListenerImage();
   void histogramRegionChange( int, viewer::region::RegionChanges change = viewer::region::RegionChangeLabel );
@@ -591,7 +599,10 @@ class QtDisplayPanelGui : public QtPanelBase {
   void globalColorSettingsChanged( bool global );
   void globalOptionsChanged( QtDisplayData* originator, Record opts );
   void updateColorHistogram( const QString& ddName );
-
+  void showImageManager();
+  void sliceMarkerVisibilityChanged(int regionId, bool visible);
+  void sliceMarkerPositionChanged(int regionId, int segmentIndex, float percentage);
+  void updateMultiSpectralFitLocation( Record trackingRec);
  public:
  
   // True by default.  Set False to disable auto-raise of the Data

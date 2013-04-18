@@ -31,6 +31,7 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/DisplayDatas/DisplayData.h>
 #include <display/DisplayDatas/MSAsRaster.h>
+#include <images/Images/SubImage.h>
 #include <images/Images/ImageInterface.h>
 #include <display/DisplayDatas/LatticeAsRaster.h>
 #include <display/DisplayDatas/LatticeAsContour.h>
@@ -110,6 +111,79 @@ void QtDisplayData::setGlobalColorOptions( bool global ){
 	QtDisplayData::globalColorSettings = global;
 }
 
+struct split_str {
+		split_str( char c ) : split_char(c) { }
+
+		operator std::vector<std::string>( ) {
+			if ( accum.size( ) > 0 ) {
+				values.push_back(accum);
+				accum.clear( );
+			}
+			return values;
+		}
+
+		void operator( )( char c ) {
+			if ( c == split_char ) {
+				if ( accum.size( ) > 0 )
+					values.push_back(accum);
+				accum.clear( );
+			} else {
+				accum.push_back(c);
+			}
+		}
+
+	private:
+		char split_char;
+		std::string accum;
+		std::vector<std::string> values;
+};
+
+struct check_str {
+
+		check_str( ) : accum(true) { }
+		operator bool( ) { return accum; }
+
+		void operator( )( const std::string &s ) {
+			std::string::const_iterator offset = std::find(s.begin(),s.end(),':');
+			if ( offset != s.end( ) &&
+				 for_each(s.begin( ),offset,check_digit( )) &&
+				 for_each(++offset,s.end( ),check_digit( )) )
+				accum = accum && true;
+			else
+				accum = false;
+		}
+
+	private:
+		struct check_digit {
+				check_digit( ) : accum(true) { }
+				operator bool( ) { return accum; }
+				void operator( )( char c ) { accum = accum && isdigit(c); }
+			private:
+				bool accum;
+		};
+		bool accum;
+};
+
+struct str_to_slicer {
+		str_to_slicer( ) { }
+		operator Slicer( ) { return Slicer( IPosition(begin), IPosition(end) ); }
+		void operator( )( const std::string &s ) {
+			std::string::const_iterator offset = std::find(s.begin(),s.end(),':');
+			begin.push_back(for_each(s.begin( ),offset,digit( )));
+			end.push_back(for_each(++offset,s.end( ),digit( )));
+		}
+	private:
+		struct digit {
+				digit( ) { }
+				operator int( ) { return atoi(accum.c_str( )); }
+				void operator ( )( char c ) { accum.push_back(c); }
+			private:
+				std::string accum;
+		};
+		
+		std::vector<int> begin;
+		std::vector<int> end;
+};
 
 QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
 		String displayType, const viewer::DisplayDataOptions &ddo,
@@ -118,6 +192,8 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 		path_(path),
 		dataType_(dataType),
 		displayType_(displayType),
+		DISPLAY_RASTER("raster"), DISPLAY_CONTOUR("contour"),
+		DISPLAY_VECTOR("vector"), DISPLAY_MARKER( "marker"),
 		im_(0),
 		cim_(0),
 		dd_(0),
@@ -135,6 +211,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 	viewer::guiwait wait_cursor;
 
 	QtDisplayData *regrid_to = 0;
+	invertColorMap = false;
 	std::string method = "";
 
 	if(dataType=="lel") {
@@ -142,18 +219,24 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 		if( name_.length() > 25 )
 			name_ =  path_.substr(0,15) + "..." + path_.substr(path_.length()-7,path_.length());
 	} else {
-		List<QtDisplayData*> dds_ = panel_->registeredDDs();
+		//List<QtDisplayData*> dds_ = panel_->registeredDDs();
+
 		method = ddo["regrid"];
 		name_ = Path(path_).baseName();
-		if ( dds_.len( ) > 0 && method != "" &&
+		QtDisplayPanel* displayPanel = panel_->displayPanel();
+		if ( !displayPanel->isEmptyRegistered()){
+			if ( /*dds_.len( ) > 0 &&*/ method != "" &&
 				(method == "N" || method == "L" || method == "C") ) {
-			ListIter<QtDisplayData*> dds(dds_);
-			dds.toStart( );
-			regrid_to = dds.getRight( );
+				//ListIter<QtDisplayData*> dds(dds_);
+				//dds.toStart( );
+				//regrid_to = dds.getRight( );
+				DisplayDataHolder::DisplayDataIterator iter = displayPanel->beginRegistered();
+				regrid_to = (*iter);
+			}
 		}
 	}
 
-	if(displayType!="raster") name_ += "-"+displayType_;
+	if(isRaster()) name_ += "-"+displayType_;
 	// Default; can be changed with setName()
 	// (and should, if it duplicates another name).
 
@@ -168,7 +251,7 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 			dd_ = new SkyCatOverlayDD(path);
 			if (dd_==0) throw(AipsError("Couldn't create skycatalog"));
 		}
-		else if(dataType_=="ms" && displayType_=="raster") {
+		else if(dataType_=="ms" && isRaster() ) {
 			dd_ = new MSAsRaster( path_, ddo );
 		}
 		else if(dataType_=="image" || dataType_=="lel") {
@@ -243,6 +326,26 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 						std::auto_ptr<ImageInterface<Float> > imptr(im_);
 						im_ = newim;
 					}
+					std::string slice_description = ddo["slice"];
+					if ( slice_description != "" && slice_description != "none" ) {
+						size_t openp = slice_description.find('(');
+						size_t closep = slice_description.rfind(')');
+						if ( openp != string::npos && closep != string::npos && openp+1 < closep-1 ) {
+							try {
+								std::string str = slice_description.substr(openp+1,closep-openp-1);
+								std::vector<std::string> vec = for_each(str.begin( ),str.end( ),split_str(','));
+								if ( for_each(vec.begin( ),vec.end( ),check_str( )) ) {
+									Slicer slicer = for_each(vec.begin( ),vec.end( ),str_to_slicer( ));
+									SubImage<Float> *subim = new SubImage<Float>( (const ImageInterface<Float>&) *im_, slicer );
+									std::auto_ptr<ImageInterface<Float> > imptr(im_);
+									im_ = subim;
+								}
+							} catch( const AipsError &err ) {
+								panel_->status( "unnable to generate sub-image: " + err.getMesg( ) );
+								panel_->logIO( ) << LogIO::WARN << "unnable to generate sub-image: " << err.getMesg( ) << LogIO::POST;
+							}
+						}
+					}
 				} else if ( cim_ == 0 ) {
 					throw AipsError("Couldn't create image.");
 				}
@@ -296,6 +399,10 @@ QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String data
 	setPlotTitle();
 }
 
+bool QtDisplayData::isSkyCatalog() const {
+	return displayType_=="skycatalog";
+}
+
 void QtDisplayData::setPlotTitle(){
 	Record record;
 	Record outRecord;
@@ -331,7 +438,7 @@ void QtDisplayData::initImage(){
 	IPosition fixedPos(ndim);
 	fixedPos = 0;
 
-	if(displayType_=="raster") {
+	if( isRaster()) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
 			else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
@@ -341,7 +448,7 @@ void QtDisplayData::initImage(){
 			else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
 		}
 	}
-	else if(displayType_=="contour") {
+	else if( isContour() ) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_, 0, 1);
 			else dd_ = new LatticeAsContour<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
@@ -351,7 +458,7 @@ void QtDisplayData::initImage(){
 			else dd_ = new LatticeAsContour<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
 		}
 	}
-	else if(displayType_=="vector") {
+	else if( isVector() ) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsVector<Float>(im_, 0, 1);
 			else dd_ = new LatticeAsVector<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
@@ -361,7 +468,7 @@ void QtDisplayData::initImage(){
 			else dd_ = new LatticeAsVector<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
 		}
 	}
-	else if(displayType_=="marker") {
+	else if( isMarker()) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsMarker<Float>(im_, 0, 1);
 			else dd_ = new LatticeAsMarker<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
@@ -565,6 +672,36 @@ QtDisplayData::~QtDisplayData() {
 std::string QtDisplayData::description( ) const {
 	return name_ + " (" + path_ + ") " + dataType_ + "/" + displayType_;
 }
+
+//Display Type
+Bool QtDisplayData::isRaster() const {
+	bool rasterData = false;
+	if ( displayType_== DISPLAY_RASTER){
+		rasterData = true;
+	}
+	return rasterData;
+}
+ Bool QtDisplayData::isContour() const {
+	 bool contourData = false;
+	 if ( displayType_==DISPLAY_CONTOUR){
+		 contourData = true;
+	 }
+	 return contourData;
+ }
+ Bool QtDisplayData::isVector() const {
+	 bool vectorData = false;
+	 if ( displayType_==DISPLAY_VECTOR){
+		 vectorData = true;
+	 }
+	 return vectorData;
+ }
+ Bool QtDisplayData::isMarker() const {
+	 bool markerData = false;
+	 if ( displayType_==DISPLAY_MARKER){
+		 markerData = true;
+	 }
+	 return markerData;
+ }
 
 //Bool QtDisplayData::delTmpData() const {
 void QtDisplayData::delTmpData() const {
@@ -892,8 +1029,19 @@ void QtDisplayData::checkGlobalChange( Record& opts ){
 		//Remove all but the global options from the chgdOpts.
 		int histFieldId = opts.fieldNumber( PrincipalAxesDD::HISTOGRAM_RANGE );
 		if ( histFieldId != -1 ){
-			Record rangeRecord = opts.subRecord( PrincipalAxesDD::HISTOGRAM_RANGE );
-			globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+			if ( opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpRecord ){
+				Record rangeRecord = opts.subRecord( PrincipalAxesDD::HISTOGRAM_RANGE );
+				globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+			}
+			else if (opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE) == TpArrayFloat) {
+				Vector<Float> minMaxVector(opts.toArrayFloat(PrincipalAxesDD::HISTOGRAM_RANGE));
+				Record rangeRecord;
+				rangeRecord.define("value", minMaxVector);
+				globalChangeRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+			}
+			else {
+				qDebug() <<"QtDisplayData::checkGlobalChange - unrecognized opts.dataType="<<opts.dataType(PrincipalAxesDD::HISTOGRAM_RANGE);
+			}
 		}
 
 		int colorMapId = opts.fieldNumber( COLOR_MAP );
@@ -922,6 +1070,10 @@ void QtDisplayData::checkGlobalChange( Record& opts ){
 	}
 }
 
+void QtDisplayData::setInvertColorMap( bool invert ){
+	invertColorMap = invert;
+	setColormap_(clrMapName_, true);
+}
 
 bool QtDisplayData::setColorBarOptions( Record& opts, Record& chgdOpts ){
 	Bool cbNeedsRefresh = False;
@@ -1021,16 +1173,22 @@ bool QtDisplayData::setColorBarOptions( Record& opts, Record& chgdOpts ){
 	return cbNeedsRefresh;
 }
 
-void QtDisplayData::setHistogramColorRange( float minValue, float maxValue ){
+void QtDisplayData::setHistogramColorMapping( float minValue, float maxValue, float powerScale  ){
 	Record histRecord;
-	Record valueRecord;
+	Record rangeRecord;
 	Vector<float> values( 2 );
 	values[0] = minValue;
 	values[1] = maxValue;
-	valueRecord.define( "value", values );
-	histRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, valueRecord );
+	rangeRecord.define( "value", values );
+	histRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+
+	Record powerScaleRecord;
+	powerScaleRecord.define( "value", powerScale );
+	histRecord.defineRecord(WCPowerScaleHandler::POWER_CYCLES, powerScaleRecord );
+
 	setOptions( histRecord, true );
 }
+
 
 void QtDisplayData::setColorBarOrientation_() {
 	// Set the color bar orientation option according to the master
@@ -1047,7 +1205,7 @@ void QtDisplayData::emitOptionsChanged( Record changedOpts ) {
 	emit optionsChanged(changedOpts);
 }
 
-void QtDisplayData::setColormap_(const String& clrMapName) {
+void QtDisplayData::setColormap_(const String& clrMapName, bool invertChanged ) {
 	// Set named colormap onto underlying dd (done publicly via setOptions).
 	// Pass "" to remove/delete any existing colormap for the QDD.
 	// In the case that no colormap is set on a dd that needs one (raster dds,
@@ -1060,7 +1218,7 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 
 	if(dd_==0) return;	// (safety)
 
-	if(clrMapName==clrMapName_) return;	// (already there)
+	if(clrMapName==clrMapName_ && !invertChanged) return;	// (already there)
 
 	if(clrMapName=="") {
 
@@ -1073,7 +1231,8 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 		clrMap_ = 0;
 		clrMapName_ = "";
 		// emit qddOK();
-		return;  }
+		return;
+	}
 
 	colormapmap::iterator cmiter = clrMaps_.find(clrMapName);
 	Colormap* clrMap = (cmiter == clrMaps_.end() ? 0 : cmiter->second);
@@ -1094,7 +1253,10 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 			errMsg_ = "Invalid colormap name: "+clrMapName;
 			// cerr<<"qddErr:"<<errMsg_<<endl;	//#dg
 			emit qddError(errMsg_);
-			return;  }  }
+			return;
+		}
+	}
+	clrMap->setInvertFlags( invertColorMap, invertColorMap, invertColorMap );
 
 	// clrmap is ok to use.
 
@@ -1132,7 +1294,21 @@ void QtDisplayData::setColormap_(const String& clrMapName) {
 	// emit qddOK();
 }
 
+void QtDisplayData::setColorMap( Colormap* colorMap ){
+	if ( colorMap != NULL ){
+		//Put it into the map, replacing it if it already
+		//exists.
+		String mapName = colorMap->name();
+		std::map<String, Colormap*>::iterator iter = clrMaps_.find( mapName );
+		if ( iter != clrMaps_.end() ){
+			clrMaps_.erase( iter );
+		}
+		clrMaps_[mapName] = colorMap;
 
+		//Adopt this as our new colormap.
+		setColormap_( mapName, false );
+	}
+}
 
 bool QtDisplayData::isValidColormap( const QString &name ) const {
 	colormapnamemap::const_iterator iter = clrMapNames_.find(name.toAscii().constData());
@@ -1529,7 +1705,7 @@ Bool QtDisplayData::printLayerStats(ImageRegion& imgReg) {
 	//(4) pass layer index to LatticeStatistcis
 	//(5) do single plane statistic right here
 
-	if (displayType_!="raster") return False;
+	if (!isRaster()) return False;
 
 	if(im_==0) return False;
 
@@ -1977,6 +2153,10 @@ Bool QtDisplayData::printRegionStats(ImageRegion& imgReg) {
 
 }
 
+String QtDisplayData::getPositionInformation( const Vector<double> world){
+	String valueStr =  dd_->showPosition(world);
+	return valueStr;
+}
 
 
 

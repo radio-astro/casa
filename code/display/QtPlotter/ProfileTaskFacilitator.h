@@ -53,7 +53,7 @@ public:
 	virtual ~ProfileTaskFacilitator();
 
 	virtual void setUnits( QString units ) = 0;
-	virtual void setRange(float start, float end )=0;
+	virtual void setRange(double start, double end )=0;
 	virtual void reset() = 0;
 
 	virtual void setCanvas( QtCanvas* pixelCanvas );

@@ -55,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public:
     AzElAperture(): ATerm(){};
     ~AzElAperture() {};
-    virtual void rotate(const VisBuffer& vb, CFCell& cfs);
+    virtual void rotate(const VisBuffer& vb, CFCell& cfs, const Double& rotAngleIncrement=5.0);
   };
 };
 #endif

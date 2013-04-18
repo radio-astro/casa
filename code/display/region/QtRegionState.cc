@@ -50,23 +50,18 @@ QtRegionState::freestat_list *QtRegionState::freecenters = 0;
 
 void QtRegionState::init( ) {
 	QString cat = categories->tabText(categories->currentIndex( ));
-	if ( cat == STATISTICS_MODE )
+	if ( cat == STATISTICS_MODE( ) )
 		emit statisticsVisible( true );
-	else if ( cat == PROPERTIES_MODE ) {
+	else if ( cat == PROPERTIES_MODE( ) ) {
 		QString state = states->tabText(categories->currentIndex( ));
 		if ( state == "coordinates" )
 			emit positionVisible( true );
 	}
 }
 
-const QString QtRegionState::HISTOGRAM_MODE = "Histogram";
-const QString QtRegionState::STATISTICS_MODE = "Statistics";;
-const QString QtRegionState::FILE_MODE = "File";
-const QString QtRegionState::FIT_MODE = "Fit";
-const QString QtRegionState::PROPERTIES_MODE = "Properties";
 
-QtRegionState::QtRegionState( const QString &n, Region *r,
-		QtMouseToolNames::PointRegionSymbols sym, QWidget *parent ) :
+QtRegionState::QtRegionState( const QString &n,
+		QtMouseToolNames::PointRegionSymbols sym, Region *r, QWidget *parent ) :
 			QFrame(parent), LINE_COLOR_CHANGE("state: line color"),
 			selected_statistics(-1), region_(r), setting_combo_box(0),
 			pre_dd_change_statistics_count(-1) {
@@ -85,10 +80,6 @@ QtRegionState::QtRegionState( const QString &n, Region *r,
 	region_mark->setFont(fontp);
 	region_annotation->setFont(fontp);
 
-	int current_color_index = region_->colorIndex( );
-	line_color->setCurrentIndex(current_color_index);
-	text_color->setCurrentIndex(current_color_index);
-
 	if (  sym == QtMouseToolNames::SYM_UNKNOWN || sym == QtMouseToolNames::SYM_POINT_REGION_COUNT )
 		marker_group->hide( );
 	else {
@@ -106,40 +97,7 @@ QtRegionState::QtRegionState( const QString &n, Region *r,
 	}
 
 
-	// use common tab state from dock...
-	std::pair<int,int> &tab_state = region_->tabState( );
-	if ( tab_state.first < 0 ) {
-		QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
-		tab_state.first = categories->currentIndex( );
-		if ( tabs.size( ) > 0 )
-			tab_state.second = tabs.first( )->currentIndex( );
-		else
-			tab_state.second = -1;
-	} else {
-		categories->setCurrentIndex(tab_state.first);
-		if ( tab_state.second >= 0 ) {
-			QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
-			if ( tabs.size( ) > 0 )
-				tabs.first( )->setCurrentIndex(tab_state.second);
-		}
-	}
-
-	// use common coordinate state from dock...
-	std::map<std::string,int> &coordinate_state = region_->coordState( );
-	QList<QComboBox*> combos = coordinateTab->findChildren<QComboBox*>( );
-	if ( coordinate_state.size( ) == 0 ) {
-		for (int i = 0; i < combos.size(); ++i) {
-			const QComboBox *combo = combos.at(i);
-			coordinate_state.insert( std::map<std::string,int>::value_type(combo->objectName( ).toStdString( ), combo->currentIndex( ) ) );
-		}
-	} else {
-		for (int i = 0; i < combos.size(); ++i) {
-			QComboBox *combo = combos[i];
-			std::map<std::string,int>::iterator it = coordinate_state.find(combo->objectName( ).toStdString( ));
-			if ( it == coordinate_state.end( ) ) continue;
-			combo->setCurrentIndex(it->second);
-		}
-	}
+	if ( region_ ) initRegionState( );
 
 	//setLineWidth(0);
 	setFrameShape(QFrame::NoFrame);
@@ -191,17 +149,11 @@ QtRegionState::QtRegionState( const QString &n, Region *r,
 	connect( load_now, SIGNAL(clicked(bool)), SLOT(load_regions(bool)) );
 	connect( load_filename, SIGNAL(textChanged(const QString&)), SLOT(update_load_type(const QString &)) );
 
-	int z_max = region_->numFrames( );
-	frame_min->setMaximum(z_max);
-	frame_max->setMaximum(z_max);
-	frame_max->setValue(z_max);
-
 	connect( frame_min, SIGNAL(valueChanged(int)), SLOT(frame_min_change(int)) );
 	connect( frame_max, SIGNAL(valueChanged(int)), SLOT(frame_max_change(int)) );
 
 	connect( text, SIGNAL(textChanged(const QString&)), SLOT(state_change(const QString&)) );
 
-	connect( categories, SIGNAL(currentChanged(int)), SLOT(category_change(int)) );
 	connect( states, SIGNAL(currentChanged(int)), SLOT(states_change(int)) );
 	connect( file_tab, SIGNAL(currentChanged(int)), SLOT(filetab_change(int)) );
 
@@ -216,6 +168,54 @@ QtRegionState::QtRegionState( const QString &n, Region *r,
 	connect( marker, SIGNAL(currentIndexChanged(int)), SLOT(set_point_region_marker(int)) );
 
 
+}
+
+void QtRegionState::initRegionState( ) {
+	int current_color_index = region_->colorIndex( );
+	line_color->setCurrentIndex(current_color_index);
+	text_color->setCurrentIndex(current_color_index);
+
+	// use common tab state from dock...
+	std::pair<int,int> &tab_state = region_->tabState( );
+	if ( tab_state.first < 0 ) {
+		QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
+		tab_state.first = categories->currentIndex( );
+		if ( tabs.size( ) > 0 )
+			tab_state.second = tabs.first( )->currentIndex( );
+		else
+			tab_state.second = -1;
+	} else {
+		categories->setCurrentIndex(tab_state.first);
+		if ( tab_state.second >= 0 ) {
+			QList<QTabWidget*> tabs = categories->currentWidget( )->findChildren<QTabWidget*>( );
+			if ( tabs.size( ) > 0 )
+				tabs.first( )->setCurrentIndex(tab_state.second);
+		}
+	}
+
+	// use common coordinate state from dock...
+	std::map<std::string,int> &coordinate_state = region_->coordState( );
+	QList<QComboBox*> combos = coordinateTab->findChildren<QComboBox*>( );
+	if ( coordinate_state.size( ) == 0 ) {
+		for (int i = 0; i < combos.size(); ++i) {
+			const QComboBox *combo = combos.at(i);
+			coordinate_state.insert( std::map<std::string,int>::value_type(combo->objectName( ).toStdString( ), combo->currentIndex( ) ) );
+		}
+	} else {
+		for (int i = 0; i < combos.size(); ++i) {
+			QComboBox *combo = combos[i];
+			std::map<std::string,int>::iterator it = coordinate_state.find(combo->objectName( ).toStdString( ));
+			if ( it == coordinate_state.end( ) ) continue;
+			combo->setCurrentIndex(it->second);
+		}
+	}
+
+	int z_max = region_->numFrames( );
+	frame_min->setMaximum(z_max);
+	frame_max->setMaximum(z_max);
+	frame_max->setValue(z_max);
+
+	connect( categories, SIGNAL(currentChanged(int)), SLOT(category_change(int)) );
 }
 
 	QtRegionState::~QtRegionState( ) {
@@ -233,7 +233,12 @@ void QtRegionState::reset( const QString &n, Region *r ) {
 }
 
 void QtRegionState::addHistogram(QWidget* histogram ){
-	categories->addTab( histogram, HISTOGRAM_MODE);
+	categories->addTab( histogram, HISTOGRAM_MODE( ));
+}
+
+void QtRegionState::setRegion( Region *r ) { 
+	region_ = r;
+	initRegionState( );
 }
 
 void QtRegionState::updateCoord( ) { emit positionVisible(true); }
@@ -242,8 +247,7 @@ void QtRegionState::updateStatistics(  ) {
 	updateStatistics( region( )->statistics( ) );
 }
 
-void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
-
+void QtRegionState::updateStatistics( std::list<std::tr1::shared_ptr<RegionInfo> > *stats ) {
 	if ( stats == 0 || stats->size() == 0 ) {
 		if ( pre_dd_change_statistics_count != -1 ) clearStatistics( );
 		pre_dd_change_statistics_count = -1;
@@ -251,12 +255,6 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	}
 	clearStatistics();
 
-	/*while ( (int)stats->size() < statistics_group->count() ) {
-		QtRegionStats *w = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
-		if ( w == 0 ) throw internal_error( );
-		statistics_group->removeWidget(w);
-		freestats->push_back(w);
-	}*/
 	while ( (int)stats->size() > statistics_group->count() ) {
 		QtRegionStats *mystat;
 		// BEGIN - critical section
@@ -274,9 +272,10 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	int num = statistics_group->count( );
 	QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
 	if ( first == 0 ) throw internal_error( );
-	std::list<RegionInfo>::iterator stat_iter = stats->begin();
-	if ( ! memory::nullptr.check(stat_iter->list( )) ) {
-		statisticsUpdate( first, *stat_iter );
+	std::list<std::tr1::shared_ptr<RegionInfo> >::iterator stat_iter = stats->begin();
+	if ( ! memory::nullptr.check((*stat_iter)->list( )) ) {
+		if ( first->updateStatisticsInfo( *stat_iter ) == false )
+			statisticsUpdate( first, *stat_iter );
 	}
 
 	if ( num < 2 ) {
@@ -289,8 +288,9 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	for ( int i=1; i < statistics_group->count() && ++stat_iter != stats->end(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(statistics_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
-		if ( ! memory::nullptr.check(stat_iter->list( )) ) {
-			statisticsUpdate( cur, *stat_iter );
+		if ( ! memory::nullptr.check((*stat_iter)->list( )) ) {
+			if ( cur->updateStatisticsInfo( *stat_iter ) == false )
+				statisticsUpdate( cur, *stat_iter );
 		}
 		prev->setNext( statistics_group, cur );
 		prev = cur;
@@ -304,24 +304,24 @@ void QtRegionState::updateStatistics( std::list<RegionInfo> *stats ) {
 	pre_dd_change_statistics_count = -1;
 }
 
-void QtRegionState::statisticsUpdate( QtRegionStats *regionStats, RegionInfo& regionInfo){
+void QtRegionState::statisticsUpdate( QtRegionStats *regionStats, std::tr1::shared_ptr<casa::viewer::RegionInfo> regionInfo ){
 	if ( region_->type( ) != region::PolylineRegion &&
 		 region_->type( ) != region::PVLineRegion ) {
-		regionStats->updateStatistics(regionInfo);
+		regionStats->updateStatistics( regionInfo );
 	} else {
-		regionStats->updateStatistics(regionInfo, region_ );
+		regionStats->updateStatistics( regionInfo, region_ );
 	}
 }
 
 void QtRegionState::reloadStatistics( ) {
 	QString cat = categories->tabText(categories->currentIndex( ));
-	if ( cat == STATISTICS_MODE ) {
+	if ( cat == STATISTICS_MODE( ) ) {
 		pre_dd_change_statistics_count = statistics_group->count( );
 		emit collectStatistics( );
 	}
 }
 
-void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
+void QtRegionState::updateCenters( std::list<std::tr1::shared_ptr<RegionInfo> > *centers ) {
 	// check if something can be done at all
 	if ( centers == 0 || centers->size() == 0 ) return;
 
@@ -347,9 +347,10 @@ void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
 	int num = centers_group->count( );
 	QtRegionStats *first = dynamic_cast<QtRegionStats*>(centers_group->widget(0));
 	if ( first == 0 ) throw internal_error( );
-	std::list<RegionInfo>::iterator center_iter = centers->begin();
-	if ( ! memory::nullptr.check(center_iter->list( )) ) {
-		statisticsUpdate( first, *center_iter );
+	std::list<std::tr1::shared_ptr<RegionInfo> >::iterator center_iter = centers->begin();
+	if ( ! memory::nullptr.check((*center_iter)->list( )) ) {
+		if ( first->updateStatisticsInfo( *center_iter ) == false )
+			statisticsUpdate( first, *center_iter );
 	}
 	if ( num < 2 ) return;
 
@@ -357,8 +358,9 @@ void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
 	for ( int i=1; i < centers_group->count() && ++center_iter != centers->end(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
 		if ( cur == 0 ) throw internal_error( );
-		if ( ! memory::nullptr.check(center_iter->list( )) ) {
-			statisticsUpdate(cur, *center_iter );
+		if ( ! memory::nullptr.check((*center_iter)->list( )) ) {
+			if ( first->updateStatisticsInfo( *center_iter ) == false )
+				statisticsUpdate(cur, *center_iter );
 		}
 		prev->setNext( centers_group, cur );
 		prev = cur;
@@ -367,12 +369,14 @@ void QtRegionState::updateCenters( std::list<RegionInfo> *centers ) {
 }
 
 void QtRegionState::setCenterBackground(QString background){
-	//void QtRegionState::invalidate() {
 	for ( int i=0; i < centers_group->count(); ++i ) {
 		QtRegionStats *cur = dynamic_cast<QtRegionStats*>(centers_group->widget(i));
-		if ( cur == 0 ) throw internal_error( );
+		if ( cur == 0 ){
+			throw internal_error( );
+		}
 		cur->setCenterBackground(background);
 	}
+	centers_group->update();
 }
 
 void QtRegionState::clearStatistics( ) {
@@ -751,6 +755,7 @@ void QtRegionState::save_region( bool ) {
 // this gets called for each mouse movement as the mouse crosses the region...
 // it would be nice if there were a better way to update the tab state...
 void QtRegionState::nowVisible( ) {
+	if ( region_ == 0 ) return;
 	std::pair<int,int> &tab_state = region_->tabState( );
 	categories->setCurrentIndex(tab_state.first);
 	if ( tab_state.second >= 0 ) {
@@ -762,20 +767,20 @@ void QtRegionState::nowVisible( ) {
 
 	std::string QtRegionState::mode( ) const {
 		QString cat = categories->tabText(categories->currentIndex( ));
-		if ( cat == PROPERTIES_MODE ) {
+		if ( cat == PROPERTIES_MODE( ) ) {
 			QString state = states->tabText(categories->currentIndex( ));
 			if ( state == "coordinates" ) return "position";
 			if ( state == "line" ) return "line";
 			if ( state == "text" ) return "text";
-		} else if ( cat == STATISTICS_MODE ) {
-			return STATISTICS_MODE.toStdString();
-		} else if ( cat == FIT_MODE ) {
-			return FIT_MODE.toStdString();
-		} else if ( cat == FILE_MODE ) {
+		} else if ( cat == STATISTICS_MODE( ) ) {
+			return STATISTICS_MODE( ).toStdString();
+		} else if ( cat == FIT_MODE( ) ) {
+			return FIT_MODE( ).toStdString();
+		} else if ( cat == FILE_MODE( ) ) {
 			return "output";
 		}
-		else if ( cat == HISTOGRAM_MODE){
-			return HISTOGRAM_MODE.toStdString();
+		else if ( cat == HISTOGRAM_MODE( )){
+			return HISTOGRAM_MODE( ).toStdString();
 		}
 		return "";
 	}
@@ -1032,6 +1037,19 @@ void QtRegionState::set_point_region_marker( int index ) {
 		emit refreshCanvas( );
 }
 
+
+QtPVLineState::QtPVLineState( const QString &name,
+							  QtMouseToolNames::PointRegionSymbols sym, Region *region, QWidget *parent ) :
+				QtRegionState(name,sym,region,parent) {
+	QString old_label = QtRegionState::STATISTICS_MODE( );
+	QString new_label = STATISTICS_MODE( );
+	for ( int i=0; i < categories->count( ); ++i )
+		if ( categories->tabText(i) == old_label ) {
+			categories->setTabText(i,new_label);
+			categories->setCurrentIndex(i);
+			break;
+		}
+}
 
 }
 }

@@ -363,7 +363,9 @@ void AnnRegion::_checkAndConvertFrequencies() {
 	_convertedFreqLimits.resize(2);
     for (Int i=0; i<2; i++) {
 		Quantity qFreq = i == 0 ? _beginFreq : _endFreq;
-		if (qFreq.getUnit() == "pix") {
+		String unit = qFreq.getUnit();
+
+		if (qFreq.isConform("pix")) {
 			Int spectralAxisNumber = getCsys().spectralAxisNumber();
 			Vector<Double> pixel = getCsys().referencePixel();
 			pixel[spectralAxisNumber] = qFreq.getValue();
@@ -402,7 +404,7 @@ void AnnRegion::_checkAndConvertFrequencies() {
 			MDoppler::Ref velRef(_dopplerType);
 			VelocityMachine vm(freqRef, Unit("GHz"),
 				MVFrequency(_restFreq),
-				velRef, qFreq.getUnit()
+				velRef, unit
 			);
 			qFreq = vm(qFreq);
 			_convertedFreqLimits[i] = MFrequency(qFreq, _freqRefFrame);
@@ -419,7 +421,7 @@ void AnnRegion::_checkAndConvertFrequencies() {
 		}
 		else {
 			throw AipsError("Logic error. Bad spectral unit "
-				+ qFreq.getUnit()
+				+ unit
 				+ " somehow made it to a place where it shouldn't have"
 			);
 		}
@@ -474,7 +476,7 @@ String AnnRegion::_printFreqRange() const {
 }
 
 String AnnRegion::_printFreq(const Quantity& freq) {
-	if (freq.getUnit() == "pix") {
+	if (freq.isConform("pix")) {
 		return _printPixel(freq.getValue());
 	}
 	ostringstream os;

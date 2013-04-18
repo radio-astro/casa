@@ -54,6 +54,9 @@ SpectralCoordinate Converter::spectralCoordinate;
 void Converter::setSpectralCoordinate( SpectralCoordinate coordinate ){
 	spectralCoordinate = coordinate;
 }
+void Converter::setRestFrequency( double restFrequency ){
+	spectralCoordinate.setRestFrequency( restFrequency );
+}
 
 Converter* Converter::getConverter( const QString& oldUnits,
 				const QString& newUnits){

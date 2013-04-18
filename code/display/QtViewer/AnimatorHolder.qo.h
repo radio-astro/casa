@@ -43,11 +43,12 @@ public:
     const static bool NORMAL_MODE;
     AnimatorHolder(QWidget *parent = 0);
     void setFrameInformation( bool mode, int frm, int len );
-    void setPlaying( bool mode, int play );
     void setRateInformation( bool mode, int minr, int maxr, int rate );
     void setModeEnabled( int count );
     void setChannelModeEnabled( int count);
     int getRate( bool mode ) const;
+    int getLowerBoundChannel() const;
+    int getUpperBoundChannel() const;
     ~AnimatorHolder();
 
 signals:

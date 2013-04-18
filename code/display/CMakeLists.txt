@@ -100,6 +100,12 @@ qt4_wrap_cpp( outfiles_qoh
   QtViewer/QtViewerPrintGui.qo.h
   QtViewer/QtViewer.qo.h
   QtViewer/Preferences.qo.h
+  QtViewer/ColorTransferWidget.qo.h
+  QtViewer/ImageManager/ImageScrollWidget.qo.h
+  QtViewer/ImageManager/ImageManagerDialog.qo.h
+  QtViewer/ImageManager/ImageScroll.qo.h
+  QtViewer/ImageManager/ImageView.qo.h
+  QtViewer/SlicerGen.qo.h
   Fit/FindSourcesDialog.qo.h
   Fit/ResidualHistogramDialog.qo.h
   Fit/Fit2DTool.qo.h
@@ -123,6 +129,7 @@ qt4_wrap_cpp( outfiles_qoh
   Slicer/SliceSegment.qo.h
   Slicer/SlicerMainWindow.qo.h
   Slicer/SliceColorPreferences.qo.h
+  Slicer/SlicePlotPreferences.qo.h
   )
 
 casa_qt4_wrap_ui( outfiles_ui
@@ -141,12 +148,18 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/printControl.ui
   QtViewer/QtAnnotatorGui.ui
   QtViewer/QtDataManager.ui
+  QtViewer/SlicerGen.ui
   QtViewer/QtExportManager.ui
   QtViewer/QtExportBrowser.ui
   QtViewer/QtDataOptionsPanel.ui
   QtViewer/QtRegionMgr.ui
   QtViewer/QtDataMgrMsSelect.ui
   QtViewer/Preferences.ui
+  QtViewer/ColorTransferWidget.ui
+  QtViewer/ImageManager/ImageScrollWidget.ui
+  QtViewer/ImageManager/ImageManagerDialog.ui
+  QtViewer/ImageManager/ImageScroll.ui
+  QtViewer/ImageManager/ImageView.ui
   QtPlotter/QtProfileGUI.ui
   QtPlotter/QtProfilePrefsGUI.ui
   QtPlotter/CanvasHolder.ui
@@ -193,6 +206,7 @@ casa_qt4_wrap_ui( outfiles_ui
   Slicer/ImageSlice.ui
   Slicer/SliceSegment.ui
   Slicer/SliceColorPreferences.ui
+  Slicer/SlicePlotPreferences.ui
   Clean/CleanGui.ui
   Clean/ConfirmStop.ui
   )
@@ -485,6 +499,7 @@ casa_add_library( display
   QtViewer/ColorHistogram.cc
   QtViewer/ColorHistogramScale.cc
   QtViewer/FileBox.cc
+  QtViewer/InvisibleAxis.cc
   QtViewer/QtWCBox.cc
   QtViewer/MakeMask.cc
   QtViewer/MakeRegion.cc
@@ -510,6 +525,13 @@ casa_add_library( display
   QtViewer/QtViewer.cc
   QtViewer/QtViewerPrintGui.cc
   QtViewer/Preferences.cc
+  QtViewer/ColorTransferWidget.cc
+  QtViewer/DisplayDataHolder.cc
+  QtViewer/ImageManager/ImageScroll.cc
+  QtViewer/ImageManager/ImageScrollWidget.cc
+  QtViewer/ImageManager/ImageManagerDialog.cc
+  QtViewer/ImageManager/ImageView.cc
+  QtViewer/SlicerGen.cc
   RegionShapes/DS9FileReader.cc
   RegionShapes/DS9FileWriter.cc
   RegionShapes/QtNewRegionShape.cc
@@ -534,6 +556,8 @@ casa_add_library( display
   Slicer/SliceStatisticsFactory.cc
   Slicer/SliceStatisticsDistance.cc
   Slicer/SliceStatisticsPosition.cc
+  Slicer/SlicePlotPreferences.cc
+  Slicer/SegmentTracer.cc
   Utilities/DisplayOptions.cc
   Utilities/DlHandle.cc
   Utilities/DlTarget.cc

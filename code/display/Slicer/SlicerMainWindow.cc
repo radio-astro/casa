@@ -26,6 +26,7 @@
 
 #include <display/Slicer/SliceZoomer.h>
 #include <display/Slicer/SliceColorPreferences.qo.h>
+#include <display/Slicer/SlicePlotPreferences.qo.h>
 
 #include <QDebug>
 #include <QMessageBox>
@@ -34,7 +35,6 @@
 #include <QFile>
 #include <QIntValidator>
 
-//#include <qwt_plot_panner.h>
 #include <qwt_plot_zoomer.h>
 
 namespace casa {
@@ -45,6 +45,9 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	ui.setupUi(this);
 
 	setWindowTitle( "1D Slice Tool");
+
+	connect( &slicePlot, SIGNAL(markerPositionChanged(int,int,float)), this, SLOT(markPositionChanged(int,int,float)));
+	connect( &slicePlot, SIGNAL(markerVisibilityChanged(int,bool)), this, SLOT( markVisibilityChanged(int,bool)));
 
 	//Sample Size
 	connect( ui.autoCountCheckBox, SIGNAL(toggled(bool)), this, SLOT(autoCountChanged(bool)));
@@ -58,15 +61,17 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	connect( colorPreferences, SIGNAL( colorsChanged()), this, SLOT(resetColors()));
 	resetColors();
 
+	//PlotPreferences
+	plotPreferences = new SlicePlotPreferences( this );
+	connect( plotPreferences, SIGNAL( plotPreferencesChanged()), this, SLOT(resetPlotPreferences()));
+	resetPlotPreferences();
+
 	//Interpolation Method
 	methodList = QStringList() << "Nearest" << "Linear" << "Cubic";
 	for ( int i = 0; i < methodList.size(); i++ ){
 		ui.methodComboBox->addItem( methodList[i] );
 	}
 	connect( ui.methodComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(interpolationMethodChanged(const QString&)));
-
-	//Accumulate Slices
-	connect( ui.accumulateCheckBox, SIGNAL(toggled(bool)), this, SLOT(accumulateSlicesChanged(bool)));
 
 	//SegmentMarkerCheckBox
 	connect( ui.segmentCornerCheckBox, SIGNAL(toggled(bool)), &slicePlot, SLOT(segmentMarkerVisibilityChanged(bool)));
@@ -75,6 +80,8 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	QHBoxLayout* layout = new QHBoxLayout(ui.plotFrame);
 	layout->setContentsMargins( 0, 0, 0, 0 );
 	layout->addWidget( &slicePlot );
+
+	connect( ui.markedRegionCheckBox, SIGNAL(toggled(bool)), this, SLOT(accumulateChanged(bool)));
 
 	//QwtPlotPanner* plotPanner = new QwtPlotPanner( slicePlot.canvas() );
 	//plotPanner->setMouseButton( Qt::RightButton, Qt::NoButton);
@@ -86,8 +93,9 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 	ui.xAxisComboBox->addItem( SlicePlot::POSITION_X_AXIS );
 	ui.xAxisComboBox->addItem( SlicePlot::POSITION_Y_AXIS );
 	ui.unitComboBox->addItem( SlicePlot::UNIT_X_PIXEL );
-	ui.unitComboBox->addItem( SlicePlot::UNIT_X_RADIAN );
 	ui.unitComboBox->addItem( SlicePlot::UNIT_X_ARCSEC );
+	ui.unitComboBox->addItem( SlicePlot::UNIT_X_ARCMIN );
+	ui.unitComboBox->addItem( SlicePlot::UNIT_X_ARCDEG );
 	connect(ui.xAxisComboBox, SIGNAL(currentIndexChanged(const QString&)), &slicePlot, SLOT(setXAxis(const QString&)));
 	connect(ui.unitComboBox, SIGNAL(currentIndexChanged(const QString&)), &slicePlot, SLOT(xAxisUnitsChanged( const QString& )));
 
@@ -96,6 +104,7 @@ SlicerMainWindow::SlicerMainWindow(QWidget *parent)
 
 	//Actions
 	connect(ui.actionExport, SIGNAL(triggered()), this, SLOT(exportSlice()));
+	connect(ui.actionPreferences, SIGNAL(triggered()), this, SLOT(showPlotPreferences()));
 	connect(ui.actionColor, SIGNAL(triggered()), this, SLOT(showColorDialog()));
 
 	initializeZooming();
@@ -173,6 +182,20 @@ void SlicerMainWindow::setCurveColor( int regionId, const QString& colorName ){
 	slicePlot.setViewerCurveColor( regionId, colorName );
 }
 
+//-------------------------------------------------------------------------
+//           Plot Preferences
+//------------------------------------------------------------------------
+
+void SlicerMainWindow::showPlotPreferences(){
+	plotPreferences->show();
+}
+
+void SlicerMainWindow::resetPlotPreferences(){
+	int curveWidth = plotPreferences->getLineWidth();
+	int markerSize = plotPreferences->getMarkerSize();
+	slicePlot.setPlotPreferences( curveWidth, markerSize );
+}
+
 //---------------------------------------------------------------------------------
 //                   Export
 //---------------------------------------------------------------------------------
@@ -226,6 +249,10 @@ void SlicerMainWindow::interpolationMethodChanged( const QString& method ){
 	slicePlot.setInterpolationMethod( methodQ.toStdString() );
 }
 
+void SlicerMainWindow::accumulateChanged( bool accumulate ){
+	slicePlot.setAccumulateSlices( accumulate );
+}
+
 void SlicerMainWindow::autoCountChanged( bool selected ){
 	ui.pointCountLineEdit->setEnabled( !selected );
 	if ( !selected ){
@@ -249,17 +276,25 @@ void SlicerMainWindow::sampleCountChanged(){
 	slicePlot.setSampleCount( sampleCount );
 }
 
-void SlicerMainWindow::accumulateSlicesChanged(bool accumulate){
-	slicePlot.setAccumulateSlices( accumulate );
-}
 
 void SlicerMainWindow::clearCurves(){
-	slicePlot.clearCurves();
+	slicePlot.clearCurvesAll();
+}
+
+void SlicerMainWindow::markPositionChanged(int regionId,int segmentIndex,float percentage){
+	emit markerPositionChanged(regionId,segmentIndex,percentage);
+}
+void SlicerMainWindow::markVisibilityChanged(int regionId,bool showMarker){
+	emit markerVisibilityChanged(regionId, showMarker);
 }
 
 //--------------------------------------------------------------------------------
 //               Region and image changes
 //--------------------------------------------------------------------------------
+
+void SlicerMainWindow::setRegionSelected( int regionId, bool selected ){
+	slicePlot.setRegionSelected( regionId, selected );
+}
 
 void SlicerMainWindow::updateStatisticsLayout(){
 	QWidget* statsWidget = new QWidget( this );
@@ -270,6 +305,9 @@ void SlicerMainWindow::updateStatisticsLayout(){
 	slicePlot.setStatisticsLayout( layout  );
 }
 
+void SlicerMainWindow::updatePositionInformation( int id, const QVector<String>& info ){
+	slicePlot.updatePositionInformation( id, info );
+}
 
 void SlicerMainWindow::updatePolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
 		const QList<double> & worldX, const QList<double> & worldY,

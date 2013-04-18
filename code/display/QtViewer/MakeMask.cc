@@ -280,12 +280,16 @@ void MakeMask::activate(Record rcd) {
       Vector<Double> wld = world.asArrayDouble("wld");
       Vector<String> units = world.asArrayString("units");
 
-      List<QtDisplayData*> DDs = qdp_->registeredDDs();
+      /*List<QtDisplayData*> DDs = qdp_->registeredDDs();
       ListIter<QtDisplayData*> qdds(DDs);
       if (qdds.len() > 0) {
          qdds.toEnd();
          qdds--;
-         QtDisplayData* qdd = qdds.getRight();
+         QtDisplayData* qdd = qdds.getRight();*/
+      if (!qdp_->isEmptyRegistered()){
+    	 DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+    	 iter--;
+    	 QtDisplayData* qdd = (*iter);
          zIndex = qdd->dd()->activeZIndex();
 
          if ((qdd->imageInterface())){
@@ -592,31 +596,34 @@ void MakeMask::deleteAll() {
 
 void MakeMask::reDraw() {
 
-   List<QtDisplayData*> DDs = qdp_->registeredDDs();
+   /*List<QtDisplayData*> DDs = qdp_->registeredDDs();
    ListIter<QtDisplayData*> qdds(DDs);
    if (qdds.len() == 0)
       return ;
 
    qdds.toEnd();
    qdds--;
-   QtDisplayData* qdd = qdds.getRight();
-   
-   qdp_->hold();
-   qdp_->panelDisplay()->removeDisplayData(*regData);
+   QtDisplayData* qdd = qdds.getRight();*/
+   if ( ! qdp_->isEmptyRegistered()){
+	   DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+	   iter--;
+	   QtDisplayData* qdd = (*iter);
+	   qdp_->hold();
+	   qdp_->panelDisplay()->removeDisplayData(*regData);
 
-   //qDebug() << "showHide=" << showHide->text();
-   if (unionRegions_p.nelements() > 0 &&
-      showHide->text() == "Hide" && cb != 0) {
-      WCUnion leUnion(unionRegions_p);
-      ImageRegion* reg = new ImageRegion(leUnion);
-      //cout << "to be draw ImageRegion:\n"
-      //     << reg->toRecord("arbitrary") << endl;
-      regData = regionToShape(qdd, reg);
+	   //qDebug() << "showHide=" << showHide->text();
+	   if (unionRegions_p.nelements() > 0 &&
+			   showHide->text() == "Hide" && cb != 0) {
+		   WCUnion leUnion(unionRegions_p);
+		   ImageRegion* reg = new ImageRegion(leUnion);
+		   //cout << "to be draw ImageRegion:\n"
+		   //     << reg->toRecord("arbitrary") << endl;
+		   regData = regionToShape(qdd, reg);
 
-      qdp_->panelDisplay()->addDisplayData(*regData);
+		   qdp_->panelDisplay()->addDisplayData(*regData);
+	   }
+	   qdp_->release();
    }
-   qdp_->release();
-
 }
 
 RSComposite* MakeMask::regionToShape(
@@ -996,12 +1003,16 @@ bool MakeMask::planeAllowed(String xa, String ya) {
 }
 
 void MakeMask::zPlaneChanged(){
-   List<QtDisplayData*> DDs = qdp_->registeredDDs();
+   /*List<QtDisplayData*> DDs = qdp_->registeredDDs();
    ListIter<QtDisplayData*> qdds(DDs);
    if (qdds.len() > 0) {
       qdds.toEnd();
       qdds--;
-      QtDisplayData* qdd = qdds.getRight();
+      QtDisplayData* qdd = qdds.getRight();*/
+	if ( !qdp_->isEmptyRegistered()){
+		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+		iter--;
+		QtDisplayData* qdd = (*iter);
       //cout << "img=" << qdd->imageInterface() << endl;
       if (qdd->imageInterface()==0)
          return;

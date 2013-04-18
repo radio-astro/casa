@@ -105,6 +105,11 @@ QtProfile::QtProfile(ImageInterface<Float>* img, const char *name, QWidget *pare
 {
 	setupUi(this);
 	initPlotterResource();
+
+	//Remove the setPosition tab because duplicate functionality exists in the viewer.
+	functionTabs->removeTab(0);
+
+
 	current_region_id = NO_REGION_ID;
 
 	setBackgroundRole(QPalette::Dark);
@@ -628,6 +633,8 @@ void QtProfile::resetProfile(ImageInterface<Float>* img, const char *name)
 }
 
 void QtProfile::adjustPlotUnits(){
+	//Try to keep the same units if possible.
+	QString currentUnits = yAxisCombo->currentText();
 	yAxisCombo->clear();
 	QStringList yUnitsList =(QStringList()<< ConverterIntensity::JY_BEAM <<
 				ConverterIntensity::JY_ARCSEC << ConverterIntensity::JY_SR <<
@@ -642,11 +649,13 @@ void QtProfile::adjustPlotUnits(){
 		}
 		yUnitsList[0] = "Jy";
 	}
-	//Add *pixels in case of sum
+	//Add   in case of sum
 	else if ( itsPlotType==QtProfile::PSUM ){
 		Int pos = yUnit.indexOf(PER_BEAM,0,Qt::CaseInsensitive);
 		if(pos>-1){
-			yUnit = yUnit + ConverterIntensity::TIMES_PIXELS;
+			if ( yUnit.indexOf( ConverterIntensity::TIMES_PIXELS) == -1 ){
+				yUnit = yUnit + ConverterIntensity::TIMES_PIXELS;
+			}
 			for ( int i = 0; i < yUnitsList.size(); i++ ){
 				if ( yUnitsList[i] != ConverterIntensity::FRACTION_OF_PEAK ){
 					yUnitsList[i] = yUnitsList[i] + ConverterIntensity::TIMES_PIXELS;
@@ -665,6 +674,8 @@ void QtProfile::adjustPlotUnits(){
 			yAxisCombo->addItem( yUnitsList[i]);
 		}
 	}
+	//Try to maintain old units.
+	resetYUnits( currentUnits );
 }
 
 void QtProfile::wcChanged( const String c,
@@ -675,6 +686,10 @@ void QtProfile::wcChanged( const String c,
 	if (!isVisible()) return;
 	if (!analysis) return;
 	*itsLog << LogOrigin("QtProfile", "wcChanged");
+
+	//Since we are going to reset the data, we need to store the
+	//current units so that we can attempt to set them back later.
+	QString currentYUnits = yAxisCombo->currentText();
 
 	bool cubeZero = checkCube();
 	if (cubeZero){
@@ -749,6 +764,7 @@ void QtProfile::wcChanged( const String c,
 
 	momentSettingsWidget->setCollapseVals( z_xval );
 	specFitSettingsWidget->setCollapseVals( z_xval );
+	resetYUnits( currentYUnits );
 }
 
 
@@ -933,6 +949,23 @@ void QtProfile::changeSpectrum(String spcTypeUnit, String spcRval, String spcSys
 	if (spcRval != cSysRval){
 		// if necessary, change the rest freq./wavel.
 		cSysRval = spcRval;
+
+		//Put the new rest frequency into the converter.
+		QString restFreqStr( cSysRval.c_str());
+		QRegExp characterExpression("[a-df-zA-Z]" );
+		int unitIndex = restFreqStr.indexOf( characterExpression );
+		if ( unitIndex > 0 ){
+			restFreqStr= restFreqStr.mid( 0, unitIndex);
+		}
+		bool validNumber = false;
+		double restFreq = restFreqStr.toDouble(&validNumber);
+		if ( validNumber ){
+			Converter::setRestFrequency( restFreq );
+		}
+		else {
+			qDebug() << "QtProfiler::rest frequency parse error: "<<restFreqStr;
+		}
+
 		// an immediate replot has to be triggered such that the
 		// new rest frequency is taken into account this COULD be done as such:
 		if(lastPX.nelements() > 0){ // update display with new rest frequency/wavelength
@@ -1101,6 +1134,12 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 	if ( occurances >= 1 && !newOverplots ){
 		return;
 	}
+
+	//Okay, we are committed to doing something.  Try to store the
+	//y-axis units since the routine is going to munge them, then
+	//we will attempt to reset them at the end.
+	QString currentYUnits = yAxisCombo->currentText();
+
 	spectra_info_map[id_] = shape;
 	String c(WORLD_COORDINATES);
 
@@ -1169,8 +1208,17 @@ void QtProfile::newRegion( int id_, const QString &shape, const QString &/*name*
 	specFitSettingsWidget->setCollapseVals( z_xval );
 	positioningWidget->updateRegion( pxv, pyv, wxv, wyv );
 	newOverplots = false;
+
+	//Okay, now we try to reset the y-Axis units.
+	resetYUnits( currentYUnits );
 }
 
+void QtProfile::resetYUnits( const QString& units ){
+	int unitIndex = yAxisCombo->findText( units );
+	if ( unitIndex >= 0 ){
+		yAxisCombo->setCurrentIndex( unitIndex );
+	}
+}
 
 void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const QList<double> &world_x, const QList<double> &world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y ) {
@@ -1192,9 +1240,15 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 	//Normally we go off the region selected event because the focus event is called
 	//both when a region loses(bad) or gains focus(good).  However, in the case we
 	//don't have a current_region_id, we'll take anything.
-	else if ( type == viewer::region::RegionChangeSelected ||
+	else if ( (type == viewer::region::RegionChangeSelected && current_region_id == id_)){
+			return;
+	}
+	else if ( (type == viewer::region::RegionChangeSelected && current_region_id != id_) ||
 			(type == viewer::region::RegionChangeFocus && current_region_id == NO_REGION_ID )){
 		current_region_id = id_;			// viewer region focus has changed
+	}
+	else if ( type == viewer::region::RegionChangeFocus ){
+		return;
 	}
 	else if ( type == viewer::region::RegionChangeNewChannel ){
 		return;						// viewer moving to new channel
@@ -1202,6 +1256,12 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 	else if ( id_ != current_region_id ){
 		return;						// some other region
 	}
+
+	//Okay we have eliminated the easy ones where we don't need to deal with
+	//it.
+	//Try to preserve the current y units after all is said and done, if
+	//possible.
+	QString currentUnits = yAxisCombo->currentText();
 
 	SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 	if ( it == spectra_info_map.end( ) ) return;
@@ -1272,6 +1332,8 @@ void QtProfile::updateRegion( int id_, viewer::region::RegionChanges type, const
 
 	momentSettingsWidget->setCollapseVals(z_xval );
 	specFitSettingsWidget->setCollapseVals( z_xval );
+
+	resetYUnits( currentUnits );
 }
 
 
@@ -1492,16 +1554,46 @@ bool QtProfile::exportFITSSpectrum(QString &fn)
 	return true;
 }
 
-bool QtProfile::exportASCIISpectrum(QString &fn)
-{
+bool QtProfile::exportASCIISpectrum(QString &fn){
 	QFile file(fn);
 	if (!file.open(QFile::WriteOnly | QIODevice::Text))
 		return false;
 	QTextStream ts(&file);
 
-	ts << "#title: Spectral profile - " << fileName << " "
-			<< region << "(" << position << ")\n";
-	ts << "#coordintate: " << QString(coordinate.chars()) << "\n";
+	//There should be a space separating the ra from the dec.
+	int coordinateCount = lastWX.size();
+	QList<QString> cornerCoordinatesWorld;
+	QList<QString> cornerCoordinatesPixel;
+	for ( int i = 0; i < coordinateCount; i++ ){
+		QString raDecStr = getRaDec( lastWX[i], lastWY[i]);
+		int decIndex = raDecStr.indexOf("+");
+		if ( decIndex == -1 ){
+			decIndex = raDecStr.indexOf( "-");
+		}
+		raDecStr.insert(decIndex, ", ");
+		cornerCoordinatesWorld.append("["+raDecStr+"]");
+		cornerCoordinatesPixel.append("["+ QString::number(lastPX[i])+
+				", "+QString::number(lastPY[i])+"]");
+	}
+
+	ts << "#title: Spectral profile - " << fileName << "\n";
+	ts << "#region (world): "<< region << "[";
+	for ( int i = 0; i < coordinateCount; i++ ){
+		ts << cornerCoordinatesWorld[i];
+		if ( i != coordinateCount - 1 ){
+			ts << ", ";
+		}
+	}
+	ts << "]\n";
+	ts << "#region (pixel): "<< region << "[";
+	for ( int i = 0; i < coordinateCount; i++ ){
+		ts << cornerCoordinatesPixel[i];
+		if ( i != coordinateCount - 1 ){
+			ts << ", ";
+		}
+	}
+	ts << "]\n";
+	ts << "#coordinate: " << QString(coordinate.chars()) << "\n";
 	ts << "#xLabel: " << QString(ctypeUnit.chars()) << "\n";
 	ts << "#yLabel: " << "[" << yUnit << "] "<< plotMode->currentText() << "\n";
 	if (z_eval.size() > 0)
@@ -2366,6 +2458,28 @@ void QtProfile::pixelsChanged( int pixX, int pixY ){
 	specFitSettingsWidget->pixelsChanged( pixX, pixY );
 }
 
+void QtProfile::processTrackRecord( const String& dataName, const String& positionInfo ){
+	QString imageName( image->name().c_str());
+	if ( image != NULL && imageName.indexOf( dataName.c_str()) >= 0 ){
+		QString posStr( positionInfo.c_str());
+		int pixelIndex = posStr.indexOf("Pixel:");
+		posStr = posStr.mid( pixelIndex );
+		QStringList parts = posStr.split( " ");
+		if ( parts.size() > 2 ){
+			QString pixelX = parts[1];
+			QString pixelY = parts[2];
+			bool validX = false;
+			int pixX = pixelX.toInt(&validX);
+			bool validY = false;
+			int pixY = pixelY.toInt( &validY);
+			if ( validX && validY ){
+				pixelsChanged( pixX, pixY );
+			}
+		}
+	}
+}
+
+
 void QtProfile::curveColorPreferences(){
 	colorSummaryWidget->show();
 }
@@ -2416,8 +2530,11 @@ void QtProfile::initializeSolidAngle() const {
 	else {
 		beam = information.restoringBeam( 0, -1 );
 	}
+
 	Quantity majorQuantity = beam.getMajor();
 	Quantity minorQuantity = beam.getMinor();
+	double arcsecArea = beam.getArea( "arcsec2");
+	ConverterIntensity::setBeamArea( arcsecArea );
 
 	//Calculate: PI * (half power width)^2 * ARCSEC^2_SR_CONVERSIONFACTOR / 4 ln 2
 	double halfPowerWidthSquared = (majorQuantity.getValue() * minorQuantity.getValue() );
@@ -2467,7 +2584,11 @@ void QtProfile::postConversionWarning( QString unitStr ){
 
 pair<double,double> QtProfile::getMaximumTemperature(){
 	//Convert xValues to Hz
-	Vector<float> xValues = z_xval;
+	int zxCount = z_xval.size();
+	Vector<float> xValues(zxCount);
+	for ( int i = 0; i < zxCount; i++ ){
+		xValues[i] = z_xval[i];
+	}
 	const QString HERTZ = "Hz";
 	QString xAxisUnit(xaxisUnit.c_str());
 	if ( xAxisUnit != HERTZ ){

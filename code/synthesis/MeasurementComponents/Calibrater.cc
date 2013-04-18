@@ -439,6 +439,13 @@ Bool Calibrater::setapply(const String& type,
   Record applypar(applyparDesc);
   applypar.define ("t", t);
   applypar.define ("table", table);
+
+  /*
+  String cinterp=interp;
+  //  cinterp.erase(remove_if(cinterp.begin(), cinterp.end(), isspace), cinterp.end());
+  cinterp.erase( remove( cinterp.begin(), cinterp.end(), ' ' ), cinterp.end() );
+  */
+ 
   applypar.define ("interp", interp);
   applypar.define ("spw",getSpwIdx(spw));
   //  applypar.define ("field",getFieldIdx(field));
@@ -1319,13 +1326,18 @@ Bool Calibrater::genericGatherAndSolve() {
   // Manage verbosity of partial channel averaging
   Vector<Bool> verb(vi.numberSpw(),True);
 
-  Vector<Int> nexp(vi.numberSpw(),0), natt(vi.numberSpw(),0),nsuc(vi.numberSpw(),0);
+  Vector<Int64> nexp(vi.numberSpw(),0), natt(vi.numberSpw(),0),nsuc(vi.numberSpw(),0);
 
   Int nGood(0);
   vi.originChunks();
   for (Int isol=0;isol<nSol && vi.moreChunks();++isol) {
 
     nexp(vi.spectralWindow())+=1;
+
+    // capture obs, scan info so we can set it later 
+    //   (and not rely on what the VB averaging code can't properly do)
+    Vector<Int> scv,obsv;
+    Int solscan=vi.scan(scv)(0),solobs=vi.observationId(obsv)(0);
 
     // Arrange to accumulate 
     //    VisBuffAccumulator vba(vs_p->numberAnt(),svc_p->preavg(),False); 
@@ -1345,7 +1357,7 @@ Bool Calibrater::genericGatherAndSolve() {
 	  
 	  // Force read of the field Id
 	  vb.fieldId();
-	  
+
 	  // Apply the channel mask (~no-op, if unnecessary)
 	  svc_p->applyChanMask(vb);
 	  
@@ -1405,6 +1417,8 @@ Bool Calibrater::genericGatherAndSolve() {
     //  (some of this may be used _during_ solve)
     //  (this sets currSpw() in the SVC)
     Bool vbOk=(vbga.nBuf()>0 && svc_p->syncSolveMeta(vbga));
+
+    svc_p->overrideObsScan(solobs,solscan);
 
     if (vbOk) {
 
@@ -2187,6 +2201,15 @@ Bool Calibrater::listCal(const String& infile,
     return False;
     
 }
+
+Bool Calibrater::updateCalTable(const String& caltable) {
+
+  // Call the SVC method that knows how
+  return NewCalTable::CTBackCompat(caltable);
+
+}
+
+
 
 void Calibrater::selectChannel(const String& spw) {
 

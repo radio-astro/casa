@@ -404,7 +404,7 @@ void GaussianEstimateWidget::molecularLineChanged( float peak, float center,
 	QString key = label + QString::number(center);
 	if ( ! molecularLineMap.contains( key )){
 		MolecularLine* molecularLine = new MolecularLine(center, peak, label,
-				chemicalName, resolvedQNs, frequencyUnits );
+				chemicalName, resolvedQNs, frequencyUnits, center );
 		molecularLine->attach( plot );
 		plot->replot();
 		molecularLineMap.insert( key, molecularLine );

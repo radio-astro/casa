@@ -26,6 +26,7 @@
 
 
 #include <display/QtPlotter/Util.h>
+#include <display/QtPlotter/QtCanvas.qo.h>
 #include <display/Display/Options.h>
 #include <spectrallines/Splatalogue/SplatalogueTable.h>
 #include <measures/Measures/MeasConvert.h>
@@ -33,6 +34,7 @@
 #include <casa/Quanta/MVDoppler.h>
 #include <QFileDialog>
 #include <QTemporaryFile>
+#include <QTimer>
 #include <QDebug>
 #include <assert.h>
 #include <iostream>
@@ -41,8 +43,8 @@ using namespace std;
 namespace casa {
 
 const QString SearchMoleculesWidget::SPLATALOGUE_UNITS="MHz";
-const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = /*84000*/-1;
-const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = /*90000*/-1;
+const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MIN = -1;
+const double SearchMoleculesWidget::SPLATALOGUE_DEFAULT_MAX = -1;
 
 QString SearchMoleculesWidget::initialReferenceStr = "LSRK";
 
@@ -54,7 +56,7 @@ void SearchMoleculesWidget::setInitialReferenceFrame( QString frameStr ){
 
 SearchMoleculesWidget::SearchMoleculesWidget(QWidget *parent)
     : QWidget(parent), unitStr( SPLATALOGUE_UNITS ),
-      searchThread( NULL ), searcher( NULL ),
+      searchThread( NULL ), searcher( NULL ), canvas(NULL),
       progressBar( this ), searchResultCount(0),
       searchResultOffset(0), searchResultLimit(500),
       resultDisplay( NULL )
@@ -62,12 +64,21 @@ SearchMoleculesWidget::SearchMoleculesWidget(QWidget *parent)
 	ui.setupUi(this);
 
 	//Progress Bar
+	//We need the user to be able to cancel the thread through a provided
+	//cancel button, but not be able to close a parent window while the
+	//search thread is working causing the windowing system to take over
+	//and making the program terminate.
 	progressBar.setWindowTitle( "Line Search");
 	progressBar.setLabelText( "Searching for molecular lines ...");
 	progressBar.setWindowModality( Qt::WindowModal );
-	progressBar.setCancelButton( 0 );
+	//Qt::WindowFlags flags = progressBar.windowFlags();
+	//flags = flags & ~Qt::WindowCloseButtonHint;
+	Qt::WindowFlags flags = Qt::Dialog;
+	flags |= Qt::FramelessWindowHint;
+	progressBar.setWindowFlags( flags/*(Qt::CustomizeWindowHint | Qt::WindowTitleHint) & ~Qt::WindowCloseButtonHint*/);
 	progressBar.setMinimum(0);
 	progressBar.setMaximum(0);
+	connect( &progressBar, SIGNAL(canceled()), this, SLOT(stopSearch()));
 
 	//Range initialization
 	QList<QString> frequencyUnitList;
@@ -138,19 +149,28 @@ SearchMoleculesWidget::SearchMoleculesWidget(QWidget *parent)
 //-------------------------------------------------------------------------------------
 
 
-void SearchMoleculesWidget::setRange( float min, float max, QString units ){
+void SearchMoleculesWidget::setRange( double min, double max, QString units ){
+	setRangeValue( min, units, ui.rangeMinLineEdit );
+	setRangeValue( max, units, ui.rangeMaxLineEdit );
+}
+
+void SearchMoleculesWidget::setRangeValue( double value, QString units,
+		QLineEdit* lineEdit ){
 	if ( unitStr != units ){
 		Converter* converter = Converter::getConverter( units, unitStr );
-		min = converter->convert( min );
-		max = converter->convert( max );
+		value = converter->convert( value );
 		delete converter;
 	}
-	ui.rangeMinLineEdit->setText( QString::number( min ));
-	ui.rangeMaxLineEdit->setText( QString::number( max ));
+	lineEdit->setText( QString::number( value, 'f', 6 ));
 }
 
 void SearchMoleculesWidget::setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay ){
 	this->resultDisplay = resultDisplay;
+}
+
+void SearchMoleculesWidget::setCanvas( QtCanvas* drawCanvas ){
+	canvas = drawCanvas;
+	//setSearchRangeDefault();
 }
 
 void SearchMoleculesWidget::updateReferenceFrame(){
@@ -260,6 +280,8 @@ void SearchMoleculesWidget::dopplerVelocityUnitsChanged(){
 //                 Performing the search and displaying the results
 //-----------------------------------------------------------------------------------
 
+
+
 void SearchMoleculesWidget::initializeSearchRange( QLineEdit* lineEdit, Double& value/*, MDoppler redShift*/ ){
 	QString valueStr = lineEdit->text();
 	if ( !valueStr.isEmpty() ){
@@ -297,7 +319,6 @@ vector<string> SearchMoleculesWidget::initializeChemicalNames(){
 	int masterListCount = moleculeMasterList.size();
 	vector<string> chemNames( masterListCount );
 	for ( int i = 0; i < masterListCount; i++ ){
-		qDebug() << "Searching for "<<moleculeMasterList[i];
 		chemNames[i] = moleculeMasterList[i].trimmed().toStdString();
 	}
 	return chemNames;
@@ -349,6 +370,34 @@ void SearchMoleculesWidget::setAstronomicalFilters( Searcher* searcher ){
 	}
 }
 
+void SearchMoleculesWidget::setSearchRangeDefault(){
+	bool minEmpty = false;
+	if ( ui.rangeMinLineEdit->text().trimmed().length() == 0){
+		minEmpty = true;
+	}
+	bool maxEmpty = false;
+	if ( ui.rangeMaxLineEdit->text().trimmed().length() == 0){
+		maxEmpty = true;
+	}
+
+	if ( (minEmpty || maxEmpty) && canvas != NULL ){
+		//One or more of them has not been set so we ask the pixel
+		//canvas what the full spectrum range is for the current zoom.
+		QString searchUnits;
+		double minValue;
+		double maxValue;
+		canvas->getCanvasDomain( &minValue, &maxValue, searchUnits );
+
+		//Only replace the empty ones, not the ones the user has specified.
+		if (  minEmpty ){
+			setRangeValue( minValue, searchUnits, ui.rangeMinLineEdit );
+		}
+		if ( maxEmpty ){
+			setRangeValue( maxValue, searchUnits, ui.rangeMaxLineEdit );
+		}
+	}
+}
+
 void SearchMoleculesWidget::search(){
 
 	bool localSearcher = isLocal();
@@ -364,7 +413,7 @@ void SearchMoleculesWidget::search(){
 			searcher->setSearchResultLimit( searchResultLimit );
 		}
 		else {
-			QString msg( "Searches are not supported because the database is missing.");
+			QString msg( "Searches are not supported because the database was not found.");
 			Util::showUserMessage( msg, this );
 			return;
 		}
@@ -380,6 +429,10 @@ void SearchMoleculesWidget::search(){
 	//Set the range for the search
 	Double minValue = SPLATALOGUE_DEFAULT_MIN;
 	Double maxValue = SPLATALOGUE_DEFAULT_MAX;
+	//Make sure the range has been specified otherwise, we need
+	//to use the min/max range of the canvas.  Apparently searches
+	//using the splatalogue default min and max are not useful.
+	setSearchRangeDefault();
 	initializeSearchRange( ui.rangeMinLineEdit, minValue );
 	initializeSearchRange( ui.rangeMaxLineEdit, maxValue );
 	if ( minValue > maxValue ){
@@ -393,19 +446,26 @@ void SearchMoleculesWidget::search(){
 	setAstronomicalFilters( searcher );
 
 	//Start the background thread that will do the search
-	delete searchThread;
-	searchThread = NULL;
+	if ( searchThread != NULL ){
+		if ( searchThread->isRunning()){
+			stopSearch();
+		}
+		delete searchThread;
+		searchThread = NULL;
+	}
 	startSearchThread();
 	//searchFinished();
 }
 
 void SearchMoleculesWidget::startSearchThread(){
+	searchInterrupted = false;
 	searchThread = new SearchThread( searcher, searchResultOffset );
 	connect( searchThread, SIGNAL( finished() ), this, SLOT(searchFinished()));
 	searchThread->start();
-	//searchThread->run();
 	progressBar.show();
 }
+
+
 
 
 
@@ -433,25 +493,26 @@ void SearchMoleculesWidget::prevResults(){
 	}
 }
 void SearchMoleculesWidget::searchFinished(){
-
-	String errorMsg = searchThread->getErrorMessage();
-	if ( errorMsg.length() == 0 ){
-		if (searchResultOffset == 0 ){
-			searchResultCount = searchThread->getResultsCount();
-		}
-		searchResults = searchThread->getResults();
-		bool noResults = searchResults.empty();
-		if ( noResults ){
-			progressBar.hide();
-		}
-		resultDisplay ->displaySearchResults( searchResults,
+	if ( !searchInterrupted ){
+		String errorMsg = searchThread->getErrorMessage();
+		if ( errorMsg.length() == 0 ){
+			if (searchResultOffset == 0 ){
+				searchResultCount = searchThread->getResultsCount();
+			}
+			searchResults = searchThread->getResults();
+			bool noResults = searchResults.empty();
+			if ( noResults ){
+				progressBar.hide();
+			}
+			resultDisplay ->displaySearchResults( searchResults,
 				searchResultOffset, searchResultCount);
-		emit searchCompleted();
-	}
-	else {
-		progressBar.hide();
-		QString errorMessage = errorMsg.c_str();
-		Util::showUserMessage( errorMessage, this );
+			emit searchCompleted();
+		}
+		else {
+			progressBar.hide();
+			QString errorMessage = errorMsg.c_str();
+			Util::showUserMessage( errorMessage, this );
+		}
 	}
 	progressBar.hide();
 }
@@ -496,7 +557,7 @@ MDoppler SearchMoleculesWidget::getRedShiftAdjustment( bool reverseDirection ) c
 //-----------------------------------------------------------------------------
 
 QString SearchMoleculesWidget::getUnit() const {
-	return unitStr;
+	return SPLATALOGUE_UNITS;
 }
 
 vector<SplatResult> SearchMoleculesWidget::getSearchResults() const {
@@ -522,8 +583,14 @@ MRadialVelocity::Types SearchMoleculesWidget::getReferenceFrame() const{
 	return velocityType;
 }
 
-SearchMoleculesWidget::~SearchMoleculesWidget()
-{
+void SearchMoleculesWidget::stopSearch(){
+	if ( searchThread != NULL && searchThread->isRunning()){
+		searchInterrupted = true;
+		searchThread->stopSearch();
+	}
+}
+
+SearchMoleculesWidget::~SearchMoleculesWidget(){
 	delete searcher;
 	delete searchThread;
 }

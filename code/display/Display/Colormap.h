@@ -136,6 +136,9 @@ class Colormap {
   // return the name of the map
   const String & name() const 
     { return itsName; }
+  void setName( const String& mapName ){
+	  itsName = mapName;
+  }
 
   // Register/Unregister a PixelCanvasColorTable that uses this Colormap
   // <group>
@@ -194,6 +197,7 @@ class Colormap {
 
   // Provide access to the colormap definition.
   ColormapDefinition *definition() { return itsColormapDefinition;  }
+  void setColormapDefinition( ColormapDefinition* definition );
 
 protected:
 

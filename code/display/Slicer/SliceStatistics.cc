@@ -61,14 +61,10 @@ QVector<double> SliceStatistics::interpolate( double start, double end,
 		const QVector<double>& values ) const {
 	double min = start;
 	double max = end;
-	if ( min > max ){
-		min = end;
-		max = start;
-	}
 
 	//Find the data min and max;
-	double minValue = std::numeric_limits<double>::max();
-	double maxValue = std::numeric_limits<double>::min();
+	double minValue = std::numeric_limits<float>::max();
+	double maxValue = -1 * std::numeric_limits<float>::max();
 	int valueCount = values.size();
 	for ( int i = 0; i < valueCount; i++ ){
 		if ( values[i] < minValue ){
@@ -89,22 +85,63 @@ QVector<double> SliceStatistics::interpolate( double start, double end,
 	return results;
 }
 
-QVector<double> SliceStatistics::adjustStart( double /*newStart*/, const QVector<double>& values ) const {
-	return values;
-}
+
 
 QString SliceStatistics::getUnitText() const {
 	QString unitText;
-	if ( xUnits == SliceStatisticsFactory::RADIAN_UNIT ){
-		unitText.append( "Radians");
-	}
-	else if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
+	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
 		unitText.append( "Pixels");
 	}
 	else if ( xUnits == SliceStatisticsFactory::ARCSEC_UNIT ){
-		unitText.append( "Arcseconds");
+		unitText.append( "Arc Seconds");
+	}
+	else if ( xUnits == SliceStatisticsFactory::ARCMIN_UNIT ){
+		unitText.append( "Arc Minutes");
+	}
+	else {
+		unitText.append( "Arc Degrees");
 	}
 	return unitText;
+}
+
+void SliceStatistics::setXUnits( SliceStatisticsFactory::AxisXUnits units ){
+	xUnits = units;
+}
+
+QVector<double> SliceStatistics::getFromArray( const Array<float>& source ){
+	int count = source.size();
+	QVector<double> result( count );
+	std::vector<float> distanceVector = source.tovector();
+	for ( int i = 0; i < count; i++ ){
+		result[i] = distanceVector[i];
+	}
+	return result;
+}
+
+
+QVector<double> SliceStatistics::convertArcUnits( QVector<double> arcseconds ) const {
+	int count = arcseconds.size();
+	QVector<double> converted(count);
+	for ( int i = 0; i < count; i++ ){
+		converted[i] = convertArcUnits(arcseconds[i]);
+	}
+	return converted;
+}
+
+double SliceStatistics::convertArcUnits( double value ) const {
+	//First change radians to arcseconds.
+	value = value *180 / 3.14159 * 3600;
+
+	//Now change arcseconds to appropriate units.
+	int divisor = 1;
+	if ( xUnits == SliceStatisticsFactory::ARCMIN_UNIT ){
+		divisor = 60;
+	}
+	else if ( xUnits == SliceStatisticsFactory::ARCDEG_UNIT ){
+		divisor = 3600;
+	}
+	double converted = value / divisor;
+	return converted;
 }
 
 SliceStatistics::~SliceStatistics() {

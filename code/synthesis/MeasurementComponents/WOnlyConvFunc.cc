@@ -44,6 +44,7 @@ namespace casa{
 				       const VisBuffer& vb,
 				       const Int wConvSize,
 				       const Float pa,
+				       const Float dpa,
 				       CFStore& cfs,
 				       CFStore& cfwts)
   {
@@ -54,6 +55,7 @@ namespace casa{
     Double cfRefFreq;
     
     Int nx=image.shape()(0);
+    (void)dpa;
     
     if(wConvSize>0) 
       {

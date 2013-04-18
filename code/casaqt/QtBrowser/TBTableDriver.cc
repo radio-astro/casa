@@ -312,7 +312,8 @@ Result TBTableDriverDirect::loadRows(int start, int num, bool full,
         else if(t == TpArrayString)
             fieldPtrs[i] = new RORecordFieldPtr<Array<String> >(row.record(),
                                                                 colNames(i));
-        else valid = false;
+        else {valid = false;
+	}
                 
         if(updateFields && t == TpDouble) { // Check if it's a date.
           String comment = cdesc.comment(); // Wouldn't it be better to look
@@ -799,10 +800,18 @@ vector<TBKeyword*>* TBTableDriverDirect::getKeywords(RecordInterface& kws) {
         else if(t == TpDComplex) d = new TBDataDComplex(kws.asDComplex(rfid));
         else if(t == TpTable) {
             TableRecord* tr = static_cast<TableRecord*>(&kws);
-            if(tr != NULL) d = new TBDataTable(tr->asTable(rfid).tableName());
-            else valid = false;
+            if(tr != NULL){
+		    d = new TBDataTable(tr->asTable(rfid).tableName());
+	    }else{ valid = false;
+	    }
         }
-        else if(t == TpRecord) d = new TBDataRecord(kws.asRecord(rfid));
+        else if(t == TpRecord){ 
+		try {
+		d = new TBDataRecord(kws.asRecord(rfid));
+		} catch (...) {
+		
+		}
+	}
         else if(t == TpArrayBool) {
             Array<Bool> arr = kws.asArrayBool(rfid);
             d = new TBArrayDataBool(arr);
@@ -843,7 +852,8 @@ vector<TBKeyword*>* TBTableDriverDirect::getKeywords(RecordInterface& kws) {
             Array<String> arr = kws.asArrayString(rfid);
             d = new TBArrayDataString(arr);
             ((TBArrayDataString*)d)->load(arr);
-        } else valid = false;
+        } else { valid = false;
+	}
         
         if(!valid)
             TBConstants::dprint(TBConstants::DEBUG_HIGH,

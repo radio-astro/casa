@@ -40,7 +40,12 @@ ExternalAxisWidgetLeft::ExternalAxisWidgetLeft(QWidget* parent):
 
 int ExternalAxisWidgetLeft::getStartY() const {
 	QwtPlotCanvas* canvas = plot->canvas();
-	return height() - canvas->height();
+	int canvasHeight = canvas->height();
+	int heightDiff =  height() - canvas->height();
+	if ( canvasHeight == 0 ){
+		heightDiff = 22;
+	}
+	return heightDiff;
 }
 
 void ExternalAxisWidgetLeft::defineAxis( QLine& line ){
@@ -100,10 +105,16 @@ void ExternalAxisWidgetLeft::drawTicks( QPainter* painter, int tickLength ){
 
 void ExternalAxisWidgetLeft::drawAxisLabel( QPainter* painter ){
 	  QFont font = painter->font();
+	  bool logScale = false;
+	  if ( axisLabel.indexOf( "Log") != -1 ){
+		  logScale = true;
+	  }
 	  int unitIndex = axisLabel.indexOf( "(");
+	  if ( logScale ){
+		  unitIndex = axisLabel.indexOf( ")")+1;
+	  }
 	  QString mainLabel = axisLabel.left( unitIndex ).trimmed();
 	  QString unitLabel = axisLabel.right( axisLabel.size() - unitIndex );
-
 	  painter->rotate(-90);
 
 	  //Draw the main label

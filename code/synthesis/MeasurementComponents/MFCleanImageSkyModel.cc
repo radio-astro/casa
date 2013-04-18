@@ -392,7 +392,7 @@ Bool MFCleanImageSkyModel::solve(SkyEquation& se) {
 
     os << LogIO::NORMAL1; // Loglevel INFO
     for (model=0;model<numberOfModels();model++) {
-      os << "Model " << model << ": max, min (weighted) residuals = "
+      os << "Model " << model << ": max, min (weighted) residuals (over all pixels) = "
 	 << resmax(model) << ", " << resmin(model) << endl;
     }
     os << LogIO::POST;

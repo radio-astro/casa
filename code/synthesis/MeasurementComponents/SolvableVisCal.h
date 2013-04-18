@@ -104,6 +104,7 @@ public:
   inline Bool         combspw()        { return upcase(combine_).contains("SPW"); };
   inline Bool         combfld()        { return upcase(combine_).contains("FIELD"); };
   inline Bool         combscan()       { return upcase(combine_).contains("SCAN"); };
+  inline Bool         combobs()        { return upcase(combine_).contains("OBS"); };
 
   // Total number of (complex) parameters per solve
   //  (specialize to jive with ant- or bln-basedness, etc.)
@@ -223,6 +224,9 @@ public:
   //   (returns False if VisBuffer has no valid data)
   Bool syncSolveMeta(VisBuffer& vb, const Int& fieldId);
   Bool syncSolveMeta(VisBuffGroupAcc& vbga);
+
+  // Provide for override of currScan and currObs
+  void overrideObsScan(Int obs, Int scan);
 
   // If apmode() is "A", convert vb's visibilities to amp + 0i.
   // If it is "P", convert them to phase + 0i.

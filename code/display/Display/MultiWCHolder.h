@@ -120,7 +120,7 @@ class MultiWCHolder {
   // Add or remove a DisplayData, or remove all DisplayDatas on this
   // MultiWCHolder.  
   // <group>
-  virtual void addDisplayData(DisplayData& displaydata);
+  virtual void addDisplayData(DisplayData& displaydata, int position = -1);
   virtual void removeDisplayData(DisplayData& displaydata);
   virtual void removeDisplayDatas();
   // </group>

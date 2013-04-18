@@ -42,7 +42,8 @@ public:
     bool isDisplayOutputFunctions() const;
     bool isDisplayLegend() const;
     bool isDisplayOutputScatterPlot() const;
-    bool isDisplayXOnly() const;
+    bool isDisplayX() const;
+    bool isDisplayY() const;
     bool isLogAmplitude() const;
     bool isLogUV() const;
     int getLineThickness() const;
@@ -68,6 +69,7 @@ private:
 	const static QString DISPLAY_LEGEND;
 	const static QString DISPLAY_OUTPUT_SCATTERPLOT;
 	const static QString DISPLAY_Y_PLOTS;
+	const static QString DISPLAY_X_PLOTS;
 	const static QString DOT_SIZE;
 	const static QString LOG_AMPLITUDE;
 	const static QString LOG_UV;
@@ -79,6 +81,7 @@ private:
     bool displayOutputFunctions;
     bool displayOutputScatterPlot;
     bool displayYPlots;
+    bool displayXPlots;
     bool displayLegend;
     bool logAmplitude;
     bool logUV;

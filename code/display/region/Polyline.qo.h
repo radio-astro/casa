@@ -93,8 +93,15 @@ public:
 
 	void addPlot( QWidget* parent );
 
+
+
 signals:
 	void show1DSliceTool();
+
+public slots:
+	//Position marker
+	void setMarkerPosition( int regionId, int segmentIndex, float percentage );
+	void setShowMarkerPosition( int regionId, bool show );
 
 protected:
 	unsigned int check_handle( double x, double y ) const;
@@ -102,7 +109,7 @@ protected:
 	enum YScaleTo { ScaleTop, ScaleBottom };
 	enum XScaleTo { ScaleLeft, ScaleRight };
 	enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
-	std::list<RegionInfo> *generate_dds_centers( );
+	std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
 	ImageRegion *get_image_region( DisplayData* ) const;
 
 	void drawRegion( bool );
@@ -121,10 +128,11 @@ private slots:
 	void polyLineRegionUpdate(int regionId, viewer::region::RegionChanges change,
 			const QList<double> & worldX, const QList<double>& worldY,
 			const QList<int> & pixelX, const QList<int> & pixelY);
+
+
+
 private:
-
 	bool within_vertex_handle( double x, double y ) const;
-
 	int move_sizing_rectangle_handle( int handle, double x, double y );
 	int move_vertex( int handle, double x, double y );
 
@@ -156,7 +164,12 @@ private:
 	XScaleTo _x_origin_;
 	YScaleTo _y_origin_;
 
+	//Slice functionality
+	void drawPositionMarker();
 	SlicePlot* slicePlot;
+	int markerSegmentIndex;
+	float markerPercentage;
+	bool showPositionMarker;
 };
 }
 }

@@ -34,6 +34,8 @@
 #include <display/QtViewer/QtPixelCanvas.qo.h>
 #include <display/QtViewer/QtMouseTools.qo.h>
 #include <display/QtViewer/QtOldMouseTools.qo.h>
+#include <display/QtViewer/DisplayDataHolder.h>
+#include <display/QtViewer/ImageManager/ImageTracker.h>
 #include <display/Display/PanelDisplay.h>
 #include <images/Regions/ImageRegion.h>
 #include <display/DisplayEvents/MWCRTZoomer.h>
@@ -74,7 +76,7 @@ namespace viewer {
 }
 
 class QtDisplayPanel : public QWidget,
-                       public WCMotionEH,  public PCPositionEH {
+                       public WCMotionEH,  public PCPositionEH, public ImageDisplayer {
 
   Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
@@ -121,29 +123,34 @@ public:
 		  const std::list<std::string> &args = std::list<std::string>( ) );
   ~QtDisplayPanel();
   
+  Bool isEmptyRegistered() const;
+  DisplayDataHolder::DisplayDataIterator beginRegistered() const;
+  DisplayDataHolder::DisplayDataIterator endRegistered() const;
+  QtDisplayData* getDD( const std::string& name ) const;
+  DisplayDataHolder* getDataHolder() const;
   // True if DD is on our list.  (It may _not_ be on viewer's list
   // any longer, in particular when reacting to ddRemoved signal).
   // Either qdd pointer or its name can be given.
   //<group>
   virtual Bool isRegistered(QtDisplayData*);
-  virtual Bool isRegistered(const std::string &);
+  //virtual Bool isRegistered(const std::string &);
   //</group>
   
   // True only if DD is not on our registered List, but _is_
   // on QtViewer's list.  Either qdd pointer or its name can be given.
   //<group>
-  virtual Bool isUnregistered(QtDisplayData*);
-  virtual Bool isUnregistered(String);
+  //virtual Bool isUnregistered(QtDisplayData*);
+  //virtual Bool isUnregistered(String);
   //</group>
   
   // retrieve an (ordered) list of currently-registered DDs.
   // (This is a copy, not a reference).
-  List<QtDisplayData*> registeredDDs() { return qdds_;  }
-  ConstListIter<QtDisplayData*> registeredDDs() const { return ConstListIter<QtDisplayData*>(qdds_); }
+  //List<QtDisplayData*> registeredDDs();/* { return qdds_;  }*/
+  //ConstListIter<QtDisplayData*> registeredDDs() const { return ConstListIter<QtDisplayData*>(qdds_); }
   
   // retrieve an (ordered) list of QtViewer's created DDs which
   // are _not_ currently registered.
-  List<QtDisplayData*> unregisteredDDs();
+  //List<QtDisplayData*> unregisteredDDs();
   
   
   // Return Options record (of margins and no.-of-panels settings, e.g.)
@@ -360,10 +367,10 @@ public:
   
   // Register / unregister [all] DDs created by user through QtViewer.
   //<group>
-  virtual void registerDD(QtDisplayData*);
+  virtual void registerDD(QtDisplayData*, int postion = -1);
   virtual void unregisterDD(QtDisplayData*);
   virtual void unregisterAll();
-  virtual void registerAll();
+  virtual void registerAll(List<QtDisplayData*> registerDatas);
   //</group>
 
   // Set display panel options such as margins or number of panels.  The
@@ -639,7 +646,7 @@ public:
   // Called internally when the DD is new or being removed, or from
   // corresponding public methods.
   // <group>
-  virtual void registerDD_(QtDisplayData* qdd);
+  virtual void registerDD_(QtDisplayData* qdd, int position = -1);
   virtual void unregisterDD_(QtDisplayData* qdd);
   // </group>
 
@@ -738,8 +745,8 @@ public:
   
   // QDDs registered on this QDP, in registration order.
   // (List of _all_ (user-loaded) QDDs is v_->dds()).
-  List<QtDisplayData*> qdds_;
-  
+  //List<QtDisplayData*> qdds_;
+  DisplayDataHolder* displayDataHolder;
   
   //# mouse tools.
   viewer::RegionToolManager *toolmgr;

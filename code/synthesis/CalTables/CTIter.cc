@@ -106,6 +106,10 @@ Int ROCTIter::thisScan() const { return iROCTMainCols_->scanNo()(0); };
 Vector<Int> ROCTIter::scan() const { return iROCTMainCols_->scanNo().getColumn(); };
 void ROCTIter::scan(Vector<Int>& v) const { iROCTMainCols_->scanNo().getColumn(v); };
 
+Int ROCTIter::thisObs() const { return iROCTMainCols_->obsId()(0); };
+Vector<Int> ROCTIter::obs() const { return iROCTMainCols_->obsId().getColumn(); };
+void ROCTIter::obs(Vector<Int>& v) const { iROCTMainCols_->obsId().getColumn(v); };
+
 Int ROCTIter::thisAntenna1() const { return iROCTMainCols_->antenna1()(0); };
 Vector<Int> ROCTIter::antenna1() const { return iROCTMainCols_->antenna1().getColumn(); };
 void ROCTIter::antenna1(Vector<Int>& v) const { iROCTMainCols_->antenna1().getColumn(v); };
@@ -207,6 +211,11 @@ void CTIter::setfield(Int fieldid) {
 // Set scan number
 void CTIter::setscan(Int scan) {
   iRWCTMainCols_->scanNo().fillColumn(scan); 
+}
+
+// Set obsid
+void CTIter::setobs(Int obs) {
+  iRWCTMainCols_->obsId().fillColumn(obs); 
 }
 
 // Set antenna2 (e.g., used for setting refant)

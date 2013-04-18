@@ -47,6 +47,7 @@
 #include <casa/Arrays/Slice.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/OS/File.h>
+#include <casa/OS/Directory.h>
 #include <casa/OS/HostInfo.h>
 #include <casa/OS/Memory.h>              // Can be commented out along with
 //                                         // Memory:: calls.
@@ -1797,12 +1798,13 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
   Bool SubMS::fillFieldTable() 
   {  
     LogIO os(LogOrigin("SubMS", "fillFieldTable()"));
-    MSFieldColumns& msField(msc_p->field());
     
     //MSField fieldtable= mssel_p.field();
     // optionalCols[0] = "EPHEMERIS_ID";
     uInt nAddedCols = addOptionalColumns(mssel_p.field(), msOut_p.field(),
                                          true);
+
+    MSFieldColumns msField(msOut_p.field());
 
     const ROMSFieldColumns& fieldIn = mscIn_p->field(); 
     ROScalarColumn<String> code(fieldIn.code());
@@ -1919,8 +1921,22 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
         ROScalarColumn<Int> eID(fieldIn.ephemerisId());
 	if(eID.hasContent()){
-	  for(uInt k = 0; k < fieldid_p.nelements(); ++k)
-	    msField.ephemerisId().put(k, eID(fieldid_p[k]));
+	  String destPathName = Path(msOut_p.field().tableName()).absoluteName();
+	  for(uInt k = 0; k < fieldid_p.nelements(); ++k){
+
+	    Int theEphId = eID(fieldid_p[k]);
+
+	    if(theEphId>-1){ // there is an ephemeris attached to this field
+	      Path ephPath = Path(fieldIn.ephemPath(fieldid_p[k]));
+	      if(ephPath.length()>0){ // copy the ephemeris table over to the output FIELD table
+		Directory origEphemDir(ephPath);
+		origEphemDir.copy(destPathName+"/"+ephPath.baseName());
+		os << LogIO::NORMAL << "Transferring ephemeris " << ephPath.baseName() 
+		   << " for output field " << name(fieldid_p[k]) << LogIO::POST;
+	      }
+	    } 
+	    msField.ephemerisId().put(k, theEphId);
+	  }
 	}
 
 	if(!nameVarRefColDelayDir.empty()){ // need to copy the reference column
@@ -2071,6 +2087,10 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     
 
     Bool msModified = False;
+
+    String oframe = outframe;
+    oframe.upcase();
+    Bool doRadVelCorr = (oframe=="OBJECT");
 
     // Loop 1: Verify the input parameters, no modification of the MS
     if(!setRegridParameters(oldSpwId,
@@ -2276,6 +2296,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     MSDataDescription ddtable=ms_p.dataDescription();
     MSDataDescColumns DDCols(ddtable);
     ScalarColumn<Int> SPWIdCol = DDCols.spectralWindowId(); 
+    MSFieldColumns fldCols(ms_p.field());
 
     // Loop 3: Apply to MAIN table rows
     
@@ -2285,10 +2306,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     // create time-sorted index for main table access
     Vector<uInt> sortedI(nMainTabRows);
-    {
-      Vector<Double> mainTimesV = mainCols.time().getColumn();
-      GenSortIndirect<Double>::sort(sortedI,mainTimesV);
-    }
+
+    Vector<Double> mainTimesV = mainCols.time().getColumn();
+    GenSortIndirect<Double>::sort(sortedI,mainTimesV);
 
     // prepare progress meter
     Float progress = 0.4;
@@ -2311,8 +2331,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       //}
 
       // For each MAIN table row, the FIELD_ID cell and the DATA_DESC_ID cell are read 
-      Int theFieldId = fieldIdCol(sortedI(mainTabRow));
-      Int theDataDescId = DDIdCol(sortedI(mainTabRow));
+      Int theFieldId = fieldIdCol(mainTabRow);
+      Int theDataDescId = DDIdCol(mainTabRow);
       // and the SPW_ID extracted from the corresponding row in the DATA_DESCRIPTION table.
       Int theSPWId = SPWIdCol(theDataDescId);
 
@@ -2366,13 +2386,35 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	if(transform[iDone]){
 
 	  // create frequency machine for this time stamp
-	  MFrequency::Ref fromFrame = MFrequency::Ref(fromFrameTypeV[iDone], MeasFrame(theFieldDirV[iDone], mObsPosV[iDone], theObsTime));
+	  MDirection fldDir = fldCols.phaseDirMeas(theFieldId, mainTimesV(mainTabRow));
+
+	  MFrequency::Ref fromFrame = MFrequency::Ref(fromFrameTypeV[iDone], MeasFrame(fldDir, mObsPosV[iDone], theObsTime));
 	  Unit unit(String("Hz"));
 	  MFrequency::Convert freqTrans2(unit, fromFrame, outFrameV[iDone]);
+
+	  MDoppler radVelCorr; // no correction
+	  Bool radVelSignificant = False; // is the radial velocity large enough to warrant a shift?
+
+	  // prepare correction for radial velocity if requested and possible
+	  if(doRadVelCorr && fldCols.needInterTime(theFieldId)){
+	    MRadialVelocity mrv = fldCols.radVelMeas(theFieldId, mainTimesV(mainTabRow));
+	    radVelCorr = mrv.toDoppler();
+	    if(fabs(mrv.get("m/s").getValue())>1E-2){
+	      radVelSignificant = True;
+	    }
+	  } 
 	
+	  // prepare fftshift if necessary
 	  if(method[iDone]==(Int)useFFTShift || method[iDone]==(Int)useLinIntThenFFTShift){
 	    uInt centerChan = xold[iDone].size()/2;
-	    theShift = freqTrans2(xold[iDone][centerChan]).get(unit).getValue() - xin[iDone][centerChan];
+	    Vector<Double> newFreq(1);
+	    newFreq[0] = freqTrans2(xold[iDone][centerChan]).get(unit).getValue();
+	    if(radVelSignificant){
+	      newFreq = radVelCorr.shiftFrequency(newFreq);
+	    }
+
+	    theShift = newFreq[0] - xin[iDone][centerChan];
+
 	    //cout << "the shift " << theShift << endl;
 	    for(uInt i=0; i<xin[iDone].size(); i++){ // cannot use assign due to different data type
 	      xindd[i] = xin[iDone][i];
@@ -2382,6 +2424,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    // transform from this timestamp to the one of the output SPW
 	    for(uInt i=0; i<xindd.size(); i++){
 	      xindd[i] = freqTrans2(xold[iDone][i]).get(unit).getValue();
+	    }
+	    if(radVelSignificant){
+	      xindd = radVelCorr.shiftFrequency(xindd);
 	    }
 	    // 	  if(mainTabRow==0){ // debug output
 	    // 	    Int i = 25;
@@ -4178,7 +4223,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    const String& restfreq, 
 			    const String& outframe,
 			    const String& veltype,
-			    Bool verbose
+			    Bool verbose,
+			    MRadialVelocity mRV // only used for outframe=="OBJECT"
 			    ){
 
     Vector<Double> newChanLoBound; 
@@ -4230,11 +4276,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 
     // reference frame transformation
     Bool needTransform = True;
+    Bool doRadVelCorr = False;
     MFrequency::Types theFrame;
+    String oframe = outframe;
+    oframe.upcase();
     if(outframe==""){ // no ref frame given 
       // keep the reference frame as is
       theFrame = theOldRefFrame;
       needTransform = False;
+    }
+    else if(oframe=="OBJECT"){ // GEO trafo + radial velocity correction
+      theFrame = MFrequency::GEO;
+      doRadVelCorr = True;
     }
     else if(!MFrequency::getType(theFrame, outframe)){
       os << LogIO::SEVERE
@@ -4288,6 +4341,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       MFrequency::Ref toFrame = MFrequency::Ref(theFrame, MeasFrame(phaseCenter, mObsPos, theObsTime));
       MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
       
+      MDoppler radVelCorr; // no correction
+      Bool radVelSignificant = False; // is the radial velocity large enough to warrant a shift?
+      // prepare correction for radial velocity if requested and possible
+      if(doRadVelCorr){
+	radVelCorr = mRV.toDoppler();
+	if(fabs(mRV.get("m/s").getValue())>1E-2){
+	  radVelSignificant = True;
+	}
+      } 
+
       for(uInt i=0; i<oldNUM_CHAN; i++){
 	transNewXin[i] = freqTrans(oldCHAN_FREQ[i]).get(unit).getValue();
 	transCHAN_WIDTH[i] = freqTrans(oldCHAN_FREQ[i] +
@@ -4295,6 +4358,12 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  - freqTrans(oldCHAN_FREQ[i] -
 		      absOldCHAN_WIDTH[i]/2.).get(unit).getValue(); // eliminate possible offsets
       }
+
+      if(radVelSignificant){ // correct in addition for radial velocity
+	transNewXin  = radVelCorr.shiftFrequency(transNewXin);
+	transCHAN_WIDTH = radVelCorr.shiftFrequency(transCHAN_WIDTH); //shiftFrequency is a scaling, so chan widths scale as well
+      }
+
     }
     else {
       // just copy
@@ -4582,41 +4651,22 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  ////      (taken uniformly for the whole MS from the first row of the MS
 	  ////      which is also the earliest row because it is time-sorted)
        	  //MEpoch theObsTime = mainTimeMeasCol(0);
-	//   4) direction of the field, i.e. the phase center
-	MDirection theFieldDir;
-	if(regridPhaseCenterFieldId<-1){ // take it from the PHASE_DIR cell
-	                                 // corresponding to theFieldId in the FIELD table)
-	  theFieldDir = FIELDCols.phaseDirMeasCol()(theFieldId)(IPosition(1,0));
-	}
-	else if(regridPhaseCenterFieldId==-1){ // use the given direction
-	  theFieldDir = regridPhaseCenter;
-	}
-	else if((uInt)regridPhaseCenterFieldId < fieldtable.nrow()){ // use this valid field ID
-	  theFieldDir = FIELDCols.phaseDirMeasCol()(regridPhaseCenterFieldId)(IPosition(1,0));
-	}
-	else{
-	  os << LogIO::SEVERE << "Field to be used as phase center, id " 
-	     << regridPhaseCenterFieldId 
-	     << ", does not exist." << LogIO::POST;
-	  return False;
-	}
-	//	cout << "theFieldId = " << theFieldId << ", theObsTime = " << theObsTime
-	//	     << ", theFieldDir = " << theFieldDir.getAngle() << endl;
-
-	//      -> store in fieldDir[numNewDataDesc] (further below)
-	//   5) in case either the original or the destination reference frame
-	//      (but not both) are TOPO, we need the observatory position
-	//      (from the mean antenna position calculated above) 
-	//      -> store in obsPos[numNewDataDesc] (further below)
 
 	// Determine if a reference frame transformation is necessary
 	// Bool 	getType (MFrequency::Types &tp, const String &in)
 	needTransform = True;
+	Bool doRadVelCorr = False;
 	MFrequency::Types theFrame;
+	String oframe = outframe;
+	oframe.upcase();
 	if(outframe==""){ // no ref frame given 
 	  // keep the reference frame as is
 	  theFrame = theOldRefFrame;
 	  needTransform = False;
+	}
+	else if(oframe=="OBJECT"){ // GEO trafo + radial velocity correction
+	  theFrame = MFrequency::GEO;
+	  doRadVelCorr = True;
 	}
 	else if(!MFrequency::getType(theFrame, outframe)){
 	  os << LogIO::SEVERE
@@ -4627,6 +4677,60 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	else if (theFrame == theOldRefFrame){
 	  needTransform = False;
 	}
+
+	//   4) direction of the field, i.e. the phase center
+	MDirection theFieldDir;
+	uInt theFieldIdToUse = theFieldId;
+	if(regridPhaseCenterFieldId<-1){ // take it from the PHASE_DIR cell
+	                                 // corresponding to theFieldId in the FIELD table)
+	  theFieldDir = FIELDCols.phaseDirMeas(theFieldId, mainCols.time()(mainTabRow));
+
+	  if(FIELDCols.needInterTime(theFieldId)){
+	    String ephPath = FIELDCols.ephemPath(theFieldId);
+	    os << LogIO::NORMAL << "Note: Field with id " << theFieldId; 
+	    if(ephPath.size()>0){
+	      os << ", uses ephemeris " << ephPath << LogIO::POST;
+	    }
+	    else{
+	      os << ", has a time-dependent position described by a polynomial." << LogIO::POST;
+	    }
+	  }
+
+	}
+	else if(regridPhaseCenterFieldId==-1){ // use the given direction
+	  theFieldDir = regridPhaseCenter;
+	  doRadVelCorr = False;
+	}
+	else if((uInt)regridPhaseCenterFieldId < fieldtable.nrow()){ // use this valid field ID
+	  theFieldDir = FIELDCols.phaseDirMeas(regridPhaseCenterFieldId, mainCols.time()(mainTabRow));
+	  theFieldIdToUse = regridPhaseCenterFieldId;
+	  if(FIELDCols.needInterTime(regridPhaseCenterFieldId)){
+	    String ephPath = FIELDCols.ephemPath(regridPhaseCenterFieldId);
+	    os << LogIO::NORMAL << "Note: Field to be used as phase center, id " << regridPhaseCenterFieldId; 
+	    if(ephPath.size()>0){
+	      os << ", uses ephemeris " << ephPath << LogIO::POST;
+	    }
+	    else{
+	      os << ", has a time-dependent position described by a polynomial." << LogIO::POST;
+	    }
+	  }
+
+	}
+	else{
+	  os << LogIO::SEVERE << "Field to be used as phase center, id " 
+	     << regridPhaseCenterFieldId 
+	     << ", does not exist." << LogIO::POST;
+	  return False;
+	}
+
+	//	cout << "theFieldId = " << theFieldId << ", theObsTime = " << theObsTime
+	//	     << ", theFieldDir = " << theFieldDir.getAngle() << endl;
+
+	//      -> store in fieldDir[numNewDataDesc] (further below)
+	//   5) in case either the original or the destination reference frame
+	//      (but not both) are TOPO, we need the observatory position
+	//      (from the mean antenna position calculated above) 
+	//      -> store in obsPos[numNewDataDesc] (further below)
 
 	// Perform the pure frequency transformation (no regridding yet)
 	Vector<Double> transNewXin;
@@ -4667,10 +4771,21 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  MFrequency::Ref toFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
 	  MFrequency::Convert freqTrans(unit, fromFrame, toFrame);
 	  
+	  MDoppler radVelCorr; // no correction
+	  Bool radVelSignificant = False; // is the radial velocity large enough to warrant a shift?
+	  // prepare correction for radial velocity if requested and possible
+	  if(doRadVelCorr && FIELDCols.needInterTime(theFieldIdToUse)){
+	    MRadialVelocity mrv = FIELDCols.radVelMeas(theFieldIdToUse, mainCols.time()(mainTabRow));
+	    radVelCorr = mrv.toDoppler();
+	    if(fabs(mrv.get("m/s").getValue())>1E-2){
+	      radVelSignificant = True;
+	    }
+	  } 
+
 	  // also create the reference for storage in the "Done" table
 	  outFrame = MFrequency::Ref(theFrame, MeasFrame(theFieldDir, mObsPos, theObsTime));
 
-	  for(Int i=0; i<oldNUM_CHAN; i++){
+	  for(uInt i=0; i<oldNUM_CHAN; i++){
 	    transNewXin[i] = freqTrans(newXin[i]).get(unit).getValue();
 	    transCHAN_WIDTH[i] = freqTrans(newXin[i] +
 					   oldCHAN_WIDTH[i]/2.).get(unit).getValue()
@@ -4684,6 +4799,18 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  transREF_FREQUENCY = freqTrans(oldREF_FREQUENCY);
 	  transTOTAL_BANDWIDTH = transNewXin[oldNUM_CHAN-1] +
             transCHAN_WIDTH[oldNUM_CHAN-1]/2. - transNewXin[0] + transCHAN_WIDTH[0]/2.;
+
+	  if(radVelSignificant){ // correct in addition for radial velocity
+	    transNewXin  = radVelCorr.shiftFrequency(transNewXin);
+	    transCHAN_WIDTH = radVelCorr.shiftFrequency(transCHAN_WIDTH); //shiftFrequency is a scaling, so chan widths scale as well
+	    transRESOLUTION = radVelCorr.shiftFrequency(transRESOLUTION);
+	    Vector<Double> tmpV(1);
+	    tmpV(0) = transREF_FREQUENCY.get("Hz").getValue();
+	    transREF_FREQUENCY.set( MVFrequency( radVelCorr.shiftFrequency(tmpV)(0) ) );
+	    tmpV(0) = transTOTAL_BANDWIDTH;
+	    transTOTAL_BANDWIDTH = radVelCorr.shiftFrequency(tmpV)(0);
+	  }
+
 	}
 	else {
 	  // just copy

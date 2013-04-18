@@ -35,7 +35,7 @@ namespace casa {
 ExternalAxisWidgetRight::ExternalAxisWidgetRight(QWidget* parent ) :
 	ExternalAxisWidget( parent ){
 	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::MinimumExpanding );
-	setFixedWidth( AXIS_SMALL_SIDE );
+	setFixedWidth( AXIS_SMALL_SIDE);
 	useLeftScale = false;
 }
 
@@ -44,8 +44,13 @@ void ExternalAxisWidgetRight::setUseLeftScale( bool b ){
 }
 
 int ExternalAxisWidgetRight::getStartY() const {
-	QwtPlotCanvas* plotCanvas = plot->canvas();
-	return height() - plotCanvas->height();
+	QwtPlotCanvas* canvas = plot->canvas();
+	int canvasHeight = canvas->height();
+	int heightDiff =  height() - canvas->height();
+	if ( canvasHeight == 0 ){
+		heightDiff = 22;
+	}
+	return heightDiff;
 }
 
 void ExternalAxisWidgetRight::defineAxis( QLine& axisLine ){

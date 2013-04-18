@@ -69,32 +69,37 @@ public:
   // <src>inImage</src> input image for which a subimage is desired.
   // <src>region</src> Input region record from which to make the subimage.
   // <src>mask</src> LEL mask description.
-  // <src>os</src> Pointer to logger to which to log messages. If 0, no logging (except exceptions).
+  // <src>os</src> Pointer to logger to which to log messages. If null, no logging (except exceptions).
   // <src>writableIfPossible</src> make the subimage writable. If input image is not writable, this
   // will always be False.
-  // <src>axesSpecifier</src> Specifier for output axes (duh).
+  // <src>axesSpecifier</src> Specifier for output axes.
   // <src>extendMask</src> If the mask has one
   // or more of degenerate axes whereas the corresponding axes of <src>inImage</src> are
   // not, extend the mask to match the shape of the input image.
+  // <src>preserveAxesOrder</src>. Only used when dropping degenerate axes and coordinate order
+  // and axes order are not the same. In that case, if False, the pixel/world axes order of the
+  // returned image will be different from the input, if True it will be the same. If not
+  // dropping degenerate axes or if coordinate order and axes order are the same in the input
+  // image's coordinate system, the output axex order will always be preserved.
 
   static SubImage<T> createSubImage(
 	  ImageRegion*& outRegion, ImageRegion*& outMask,
       ImageInterface<T>& inImage, const Record& region,
       const String& mask, LogIO *const &os, Bool writableIfPossible,
       const AxesSpecifier& axesSpecifier=casa::AxesSpecifier(),
-      const Bool extendMask=False
+      Bool extendMask=False, Bool preserveAxesOrder=False
   );
 
-  // variant on previous methods where caller doesn't have to worry
+  // variant on previous method where caller doesn't have to worry
   // about creating pointers it does not need returned.
   static SubImage<T> createSubImage(
       ImageInterface<T>& inImage, const Record& region,
       const String& mask, LogIO *const &os, Bool writableIfPossible,
       const AxesSpecifier& axesSpecifier=casa::AxesSpecifier(),
-      const Bool extendMask=False
+      Bool extendMask=False, Bool preserveAxesOrder=False
   );
 
-  // create a PagedImage is outfile is not blank or a SubImage if it is.
+  // return a PagedImage if outfile is not blank or a SubImage if it is.
   static ImageInterface<Float>* createImage(
 	  ImageInterface<T>& image,
 	  const String& outfile, Record& Region,

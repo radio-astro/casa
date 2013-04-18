@@ -102,8 +102,13 @@ void Polyline::setPlotLineColor(){
 void Polyline::initPlot(){
 	if ( slicePlot == NULL ){
 		slicePlot = new SlicePlot();
+		//connect( slicePlot, SIGNAL( markerPositionChanged(int,int,float)), this, SLOT(setMarkerPosition(int,int,float)));
+		//connect( slicePlot, SIGNAL( markerVisibilityChanged(int,bool)), this, SLOT(setShowMarkerPosition(int,bool)));
 		setPlotLineColor();
 	}
+	markerSegmentIndex = 0;
+	markerPercentage = 0;
+	showPositionMarker = false;
 }
 
 
@@ -135,21 +140,20 @@ void Polyline::polyLineRegionUpdate(int regionId, viewer::region::RegionChanges 
 		int channelIndex = zIndex();
 		slicePlot->updateChannel(channelIndex);
 	}
-	slicePlot->updatePolyLine(regionId, change, worldX, worldY, pixelX, pixelY);
+	updatePolyLine(regionId, change, worldX, worldY, pixelX, pixelY);
 }
 
 void Polyline::polyLineRegionChanged( viewer::Region* /*region*/, std::string changeType){
 	if ( changeType == this->state()->LINE_COLOR_CHANGE ){
 		setPlotLineColor();
 	}
-	else {
-		qDebug() << "Change type="<<changeType.c_str();
-	}
 }
 
 void Polyline::updatePolyLine(int regionId, viewer::region::RegionChanges changes,
 		const QList<double> & worldX, const QList<double>& worldY,
 		const QList<int> & pixelX, const QList<int> & pixelY){
+	QList<double> linearX = worldX;
+
 	slicePlot->updatePolyLine( regionId, changes, worldX, worldY, pixelX, pixelY );
 }
 
@@ -768,93 +772,150 @@ void Polyline::drawText() {
 	Region::drawText();
 
 	int drawCount = _drawing_points_.size();
-	if ( drawCount >= 2  && !this->complete ){
+	if ( drawCount >= 2 ){
+		if (!this->complete ){
 
-		Vector<Double> world1(2), world2(2);
-		Vector<Double> pix1(2),   pix2(2);
-		Vector<Double> diff(2);
-		Double allDiff = 0;
-		String unit("");
+			Vector<Double> world1(2), world2(2);
+			Vector<Double> pix1(2),   pix2(2);
+			Vector<Double> diff(2);
+			Double allDiff = 0;
+			String unit("");
 
-		// get the position of the start- and end-points
-		pix1(0) = (Double)_drawing_points_[drawCount-2].first;
-		pix1(1) = (Double)_drawing_points_[drawCount-2].second;
-		pix2(0) = (Double)_drawing_points_[drawCount-1].first;
-		pix2(1) = (Double)_drawing_points_[drawCount-1].second;
+			// get the position of the start- and end-points
+			pix1(0) = (Double)_drawing_points_[drawCount-2].first;
+			pix1(1) = (Double)_drawing_points_[drawCount-2].second;
+			pix2(0) = (Double)_drawing_points_[drawCount-1].first;
+			pix2(1) = (Double)_drawing_points_[drawCount-1].second;
 
-		// determine the positions in world coordinates,
-		// we will skip drawing any text if we can't do this.
+			// determine the positions in world coordinates,
+			// we will skip drawing any text if we can't do this.
 
-		if ( wc_->linToWorld( world1, pix1 ) && wc_ ->linToWorld( world2, pix2) ){
+			if ( wc_->linToWorld( world1, pix1 ) && wc_ ->linToWorld( world2, pix2) ){
 
-			// pixToWorld sometimes seems to add a dimension
-			Vector<Double> world3(world2.size(), 0.0);
-			Vector<Double>   pix3(world2.size(), 0.0);
+				// pixToWorld sometimes seems to add a dimension
+				Vector<Double> world3(world2.size(), 0.0);
+				Vector<Double>   pix3(world2.size(), 0.0);
 
-			// get the corner point in world-coordinates
-			world3(0) = world1(0);
-			world3(1) = world2(1);
-			for (Int index=2; index<(Int)world2.size(); index++){
-				world3(index) = world2(index);
-			}
-
-			// get the corner point in pixel-coordinates
-			if (wc_->worldToPix(pix3, world3)){
-
-				// extract the axis names and units
-				Vector<String> aXisNames=wc_->worldAxisNames();
-				Vector<String> unitNames=wc_->worldAxisUnits();
-
-				// identify RA and DEC axis
-				int itsRaIndex = -1;
-				int itsDecIndex = -1;
-				for (Int index=0; index < (Int)aXisNames.size(); index++){
-					if (aXisNames(index).contains("scension") && (index < 2))
-						itsRaIndex=index;
-					if (aXisNames(index).contains("eclination") && (index < 2))
-						itsDecIndex=index;
+				// get the corner point in world-coordinates
+				world3(0) = world1(0);
+				world3(1) = world2(1);
+				for (Int index=2; index<(Int)world2.size(); index++){
+					world3(index) = world2(index);
 				}
 
-				diff(0) = fabs(world1(0)-world2(0));
-				diff(1) = fabs(world1(1)-world2(1));
-				if (itsRaIndex > -1 && itsDecIndex > -1){
-					diff(0) = diff(0)*3600.0*180.0/C::pi;
-					diff(1) = diff(1)*3600.0*180.0/C::pi;
-					diff(itsRaIndex) = diff(itsRaIndex) * cos(world3(itsDecIndex));
-					unit = "\"";
-				}
-				allDiff = sqrt(diff(0)*diff(0) + diff(1)*diff(1));
+				// get the corner point in pixel-coordinates
+				if (wc_->worldToPix(pix3, world3)){
 
-				ostringstream ss;
-				Vector<double> textPosition(2);
-				try {
-					double x1;
-					double y1;
-					viewer::linear_to_world( wc_, _drawing_points_[drawCount-1].first,
-							_drawing_points_[drawCount-1].second, x1, y1 );
-					textPosition[0] = x1;
-					textPosition[1] = y1;
-				}
-				catch(...) {
-					return;
-				}
+					// extract the axis names and units
+					Vector<String> aXisNames=wc_->worldAxisNames();
+					Vector<String> unitNames=wc_->worldAxisUnits();
 
-				double angle = 0.0;
-				if ( allDiff > 0 ) {
-					double xDistance = pix2(0) - pix1(0);
-					double yDistance = pix2(1) - pix1(1);
-					angle = qAsin( diff(0) / allDiff );
-					if ( yDistance * xDistance > 0 ){
-						angle = C::pi-angle;
+					// identify RA and DEC axis
+					int itsRaIndex = -1;
+					int itsDecIndex = -1;
+					for (Int index=0; index < (Int)aXisNames.size(); index++){
+						if (aXisNames(index).contains("scension") && (index < 2))
+							itsRaIndex=index;
+						if (aXisNames(index).contains("eclination") && (index < 2))
+							itsDecIndex=index;
 					}
-				}
-				ss <<  std::setiosflags(ios::scientific) <<
+
+					diff(0) = fabs(world1(0)-world2(0));
+					diff(1) = fabs(world1(1)-world2(1));
+					if (itsRaIndex > -1 && itsDecIndex > -1){
+						diff(0) = diff(0)*3600.0*180.0/C::pi;
+						diff(1) = diff(1)*3600.0*180.0/C::pi;
+						diff(itsRaIndex) = diff(itsRaIndex) * cos(world3(itsDecIndex));
+						unit = "\"";
+					}
+					allDiff = sqrt(diff(0)*diff(0) + diff(1)*diff(1));
+
+					ostringstream ss;
+					Vector<double> textPosition(2);
+					try {
+						double x1;
+						double y1;
+						viewer::linear_to_world( wc_, _drawing_points_[drawCount-1].first,
+							_drawing_points_[drawCount-1].second, x1, y1 );
+						textPosition[0] = x1;
+						textPosition[1] = y1;
+					}
+					catch(...) {
+						return;
+					}
+
+					double angle = 0.0;
+					if ( allDiff > 0 ) {
+						double xDistance = pix2(0) - pix1(0);
+						double yDistance = pix2(1) - pix1(1);
+						angle = qAsin( diff(0) / allDiff );
+						if ( yDistance * xDistance > 0 ){
+							angle = C::pi-angle;
+						}
+						angle = angle * 180 / 3.14159;
+					}
+					ss <<  std::setiosflags(ios::scientific) <<
 						std::setiosflags(ios::fixed) << std::setprecision(4) << "(" <<
-									allDiff << unit <<", "<<angle<<")";
-				String dText(ss.str());
-				wc_->drawText(textPosition, dText, Display::AlignCenter,  False);
+									allDiff << unit <<", "<<angle<<" deg)";
+					String dText(ss.str());
+					wc_->drawText(textPosition, dText, Display::AlignCenter,  False);
+				}
 			}
 		}
+		else {
+			drawPositionMarker();
+		}
+	}
+}
+
+
+void Polyline::drawPositionMarker(){
+	if ( showPositionMarker ){
+		try {
+			int segmentCount = _drawing_points_.size() - 1;
+			if ( markerSegmentIndex < segmentCount ){
+				double x0 = _drawing_points_[markerSegmentIndex].first;
+				double y0 = _drawing_points_[markerSegmentIndex].second;
+				double pixX0;
+				double pixY0;
+				viewer::linear_to_pixel( wc_, x0, y0, pixX0, pixY0 );
+
+				double x1 = _drawing_points_[markerSegmentIndex+1].first;
+				double y1 = _drawing_points_[markerSegmentIndex+1].second;
+				double pixX1;
+				double pixY1;
+				viewer::linear_to_pixel( wc_, x1, y1, pixX1, pixY1 );
+
+				double xDistance = pixX1 - pixX0;
+				double x = pixX0 + markerPercentage * xDistance;
+				double yDistance = pixY1 - pixY0;
+				double y = pixY0 + markerPercentage * yDistance;
+				double markerX = 0;
+				double markerY = 0;
+				viewer::pixel_to_world( wc_, x, y, markerX, markerY );
+				Vector<Float> px(1);
+				px[0] = markerX;
+				Vector<Float> py(1);
+				py[0] = markerY;
+				wc_->drawMarkers( px, py, Display::Cross, 10  );
+			}
+		}
+		catch(...) {
+			return;
+		}
+	}
+}
+
+void Polyline::setMarkerPosition( int /*regionId*/, int segmentIndex, float percentage ){
+	markerSegmentIndex = segmentIndex;
+	markerPercentage = percentage;
+	this->refresh();
+}
+
+void Polyline::setShowMarkerPosition( int /*regionId*/, bool show ){
+	if ( show != showPositionMarker ){
+		showPositionMarker = show;
+		refresh();
 	}
 }
 
@@ -1027,8 +1088,8 @@ void Polyline::update_reference_state(  int transformations, int handle, int new
 
 }
 
-std::list<RegionInfo> *Polyline::generate_dds_centers(){
-	std::list<RegionInfo> *region_centers = new std::list<RegionInfo>( );
+std::list<std::tr1::shared_ptr<RegionInfo> > *Polyline::generate_dds_centers(){
+	std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 
 	if( wc_==0 ) return region_centers;
 
@@ -1073,7 +1134,7 @@ std::list<RegionInfo> *Polyline::generate_dds_centers(){
 			processed.insert(std::map<String,bool>::value_type(description,true));
 
 			RegionInfo::center_t *layercenter = new RegionInfo::center_t( );
-			region_centers->push_back(SliceRegionInfo(name,description,layercenter));
+			region_centers->push_back(std::tr1::shared_ptr<RegionInfo>(new SliceRegionInfo(name,description,layercenter)));
 		}
 		catch (const casa::AipsError& err) {
 			errMsg_ = err.getMesg();

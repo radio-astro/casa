@@ -97,8 +97,6 @@ void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
     throw(AipsError("Selection by corr not supported for NewCalTable"));
   if (array().length()>0)
     throw(AipsError("Selection by array not supported for NewCalTable"));
-  if (observation().length()>0)
-    throw(AipsError("Selection by observation not supported for NewCalTable"));
 
   // Set the selected NewCalTable to be the same initially as the input
   // NewCalTable
@@ -108,8 +106,9 @@ void PlotMSSelection::apply(NewCalTable& ct, NewCalTable& selCT,
 
   CTInterface cti(ct);
   MSSelection mss;
-  //mss.setTimeExpr(timerange());
-  //mss.setScanExpr(scan());
+  mss.setTimeExpr(timerange());
+  mss.setObservationExpr(observation());
+  mss.setScanExpr(scan());
   mss.setSpwExpr(spw());
   mss.setFieldExpr(field());
   mss.setAntennaExpr(antenna());

@@ -70,15 +70,26 @@ signals:
 	void upperBoundChanged( int );
 	void stepSizeChanged( int );
 
+public slots:
+	void stopping();
+
 private slots:
 	void frameNumberEdited();
 	void movieLimitLowerChanged( int value );
 	void movieLimitUpperChanged( int value );
 	void sliderControl( int action );
 	void endToEndMode( bool mode );
+	void starting();
+	void revStepping();
+
+	void fwdStepping();
+	void ending();
+	void revPlaying();
+	void fwdPlaying();
 
 private:
 	int resetFrameBounded( int frameNumber ) const;
+	void disableAll();
 	void blockSignals( bool block );
 	int frameCount;
 	int play;

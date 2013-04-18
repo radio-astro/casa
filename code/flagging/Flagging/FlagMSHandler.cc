@@ -634,7 +634,7 @@ FlagMSHandler::nextBuffer()
 				*logger_p << LogIO::NORMAL <<
 						"Chunk = " << chunkNo << " [progress: " << (Int)progress << "%]"
 						", Observation = " << visibilityBuffer_p->observationId()[0] <<
-						", Array = " << visibilityBuffer_p->arrayId() <<
+						", Array = " << visibilityBuffer_p->arrayId()[0] <<
 						", Scan = " << visibilityBuffer_p->scan()[0] <<
 						", Field = " << visibilityBuffer_p->fieldId()(0) << " (" << fieldNames_p->operator()(visibilityBuffer_p->fieldId()) << ")"
 						", Spw = " << visibilityBuffer_p->spectralWindows()(0) <<

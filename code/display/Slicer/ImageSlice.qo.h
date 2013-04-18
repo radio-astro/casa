@@ -28,6 +28,7 @@
 
 #include <display/Slicer/ImageSlice.ui.h>
 #include <display/Slicer/SliceStatisticsFactory.h>
+#include <display/Slicer/SliceStatistics.h>
 #include <display/Slicer/SliceWorker.h>
 #include <casa/Arrays/Vector.h>
 #include <QtGui/QFrame>
@@ -45,6 +46,7 @@ namespace casa {
 class ImageAnalysis;
 class SliceSegment;
 class ImageSliceColorBar;
+class SliceStatistics;
 
 /**
  * Represents a slice cut of an image.  The slice cut may be
@@ -64,13 +66,17 @@ public:
 	void setAxes( const Vector<Int>& axes );
 	void setCoords( const Vector<Int>& coords );
 	void setCurveColor( QList<QColor> colors );
+	bool isSelected() const;
+	void setSelected( bool selected );
 	void setInterpolationMethod( const String& method );
 	void setImageAnalysis( ImageAnalysis* analysis );
 	void setUseViewerColors( bool useViewerColors );
 	void setPolylineColorUnit( bool polyline );
+	void setPlotPreferences( int curveWidth, int markerSize );
 	void setViewerCurveColor( const QString& colorName );
 	void updatePolyLine(  const QList<int> &pixelX, const QList<int> & pixelY,
 			const QList<double>& worldX, const QList<double>& worldY );
+	void updatePositionInformation(const QVector<String>& info );
 	void toAscii( QTextStream& );
 	void clearCurve();
 	void addPlotCurve( QwtPlot* plot);
@@ -78,16 +84,14 @@ public:
 	virtual ~ImageSlice();
 
 	//X-Axis
-	void setAxisXChoice( SliceStatisticsFactory::AxisXChoice choice );
-	void setXUnits( SliceStatisticsFactory::AxisXUnits unitMode );
-
+	void setStatistics( SliceStatistics* statistics );
 
 private slots:
-	void minimizeDisplay();
-	void maximizeDisplay();
-
+	void openCloseDisplay();
 
 private:
+	void minimizeDisplay();
+	void maximizeDisplay();
 	void resetPlotCurve();
 	void updateSliceStatistics();
 	void clearCorners();
@@ -96,14 +100,19 @@ private:
 	void removeSegment( SliceSegment* segment );
 	void resetSegmentColors();
 	void runSliceWorker();
-	SliceStatisticsFactory::AxisXChoice xAxisChoice;
 
+	SliceStatistics* statistics;
 	ImageSlice( const ImageSlice& other );
 	ImageSlice operator=( const ImageSlice& other );
 
+	int markerSize;
+	int curveWidth;
+	int regionId;
+	bool selected;
 	bool useViewerColors;
 	bool showCorners;
 	bool polylineUnit;
+	bool minimized;
 	QColor viewerColor;
 	QList<QColor> segmentColors;
 	SliceWorker* sliceWorker;

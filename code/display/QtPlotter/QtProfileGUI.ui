@@ -668,7 +668,7 @@
     <string>zoomIn</string>
    </property>
    <property name="toolTip">
-    <string>Zoom in.  (ctrl +)</string>
+    <string>Zoom in (+)</string>
    </property>
   </action>
   <action name="actionZoomOut">
@@ -680,7 +680,7 @@
     <string>zoomOut</string>
    </property>
    <property name="toolTip">
-    <string>Zoom out.  (ctrl -)</string>
+    <string>Zoom out (-)</string>
    </property>
   </action>
   <action name="actionSaveGraphic">
@@ -704,7 +704,7 @@
     <string>zoomNeutral</string>
    </property>
    <property name="toolTip">
-    <string>Zoom neutral (ctr space)</string>
+    <string>Zoom neutral</string>
    </property>
   </action>
  </widget>

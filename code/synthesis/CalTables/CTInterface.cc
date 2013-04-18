@@ -35,13 +35,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //----------------------------------------------------------------------------
   //
   CTInterface::CTInterface(const Table& table)
-    :MSSelectableTable(table), fakeDDSubTable()
+    :MSSelectableTable(table), fakeDDSubTable(),  ctMainCols_p(NULL) 
   {makeDDSubTable();};
   //
   //----------------------------------------------------------------------------
   //
   CTInterface::~CTInterface() 
-  {};
+  {if (ctMainCols_p) delete ctMainCols_p;};
   //
   //----------------------------------------------------------------------------
   //
@@ -101,10 +101,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // CalTables have no OBSERVATION sub-table.  So throw a tantrum if
   // it is asked for.
   //
-  const MSObservation& CTInterface::observation()
-  {
-    throw(AipsError("Internal error: OBSERVATION sub-table for CalTables requested"));
-  };
+  //  const MSObservation& CTInterface::observation()
+  //  {
+  //    throw(AipsError("Internal error: OBSERVATION sub-table for CalTables requested"));
+  //  };
   //----------------------------------------------------------------------------
 } //# NAMESPACE CASA - END
 

@@ -115,10 +115,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // convFunc_p(), convWeights_p(),
       epJ_p(),
       doPBCorrection(True), conjBeams_p(True),/*cfCache_p(cfcache),*/ paChangeDetector(),
-      rotateAperture_p(True),
+      rotateOTFPAIncr_p(0.1),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False), paNdxProcessed_p(),
       visResampler_p(), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
-      rotatedConvFunc_p(),cfs2_p(), cfwts2_p()
+      rotatedConvFunc_p(),cfs2_p(), cfwts2_p(), runTime1_p(0.0)
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -171,10 +171,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       epJ_p(),
       doPBCorrection(doPBCorr), conjBeams_p(conjBeams), 
       /*cfCache_p(cfcache),*/ paChangeDetector(),
-      rotateAperture_p(True),
+      rotateOTFPAIncr_p(0.1),
       Second("s"),Radian("rad"),Day("d"), pbNormalized_p(False),
       visResampler_p(visResampler), sensitivityPatternQualifier_p(-1),sensitivityPatternQualifierStr_p(""),
-      rotatedConvFunc_p()
+      rotatedConvFunc_p(), runTime1_p(0.0)
   {
     convSize=0;
     tangentSpecified_p=False;
@@ -336,6 +336,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	paNdxProcessed_p = other.paNdxProcessed_p;
 	imRefFreq_p = other.imRefFreq_p;
 	conjBeams_p = other.conjBeams_p;
+	rotateOTFPAIncr_p=other.rotateOTFPAIncr_p;
+	computePAIncr_p=other.computePAIncr_p;
+	runTime1_p = other.runTime1_p;
       };
     return *this;
   };
@@ -1069,8 +1072,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     lastPAUsedForWtImg = currentCFPA = pa;
 
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(image,vb));
+    Float dPA = paChangeDetector.getParAngleTolerance().getValue("rad");
+    Quantity dPAQuant = Quantity(paChangeDetector.getParAngleTolerance());
     cfSource = visResampler_p->makeVBRow2CFMap(*cfs2_p,*convFuncCtor_p, vb,
-					       paChangeDetector.getParAngleTolerance(),
+					       dPAQuant,
 					       chanMap,polMap,pointingOffset);
     if (cfSource == CFDefs::NOTCACHED)
       {
@@ -1093,7 +1098,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	//	cerr << "Freq. selection: " << expandedSpwFreqSel_p << endl << expandedSpwConjFreqSel_p << endl;
 
 	convFuncCtor_p->makeConvFunction(image,vb,wConvSize, 
-					 pop_p, pa, uvScale, uvOffset,spwFreqSel_p,
+					 pop_p, pa, dPA, uvScale, uvOffset,spwFreqSel_p,
 					 *cfs2_p, *cfwts2_p);
 	//	log_l << "Converting WTCFs to wide-band versions" << LogIO::POST;
 	//	makeWBCFWt(*cfwts2_p, imRefFreq_p);
@@ -2157,15 +2162,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------------
   //  
-  void AWProjectFT::setPAIncrement(const Quantity& paIncrement)
+  void AWProjectFT::setPAIncrement(const Quantity& computePAIncrement,
+				   const Quantity& rotateOTFPAIncrement)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "setPAIncrement[R&D]"));
-    paChangeDetector.setTolerance(paIncrement);
-    rotateAperture_p = True;
-    if (paIncrement.getValue("rad") < 0)
-      rotateAperture_p = False;
+
+    // Quantity tmp(abs(paIncrement.getValue("deg")), "deg");
+    // if (paIncrement.getValue("rad") < 0)
+    //   {
+    // 	rotateApertureOTF_p = False;
+    // 	convFuncCtor_p->setRotateCF(tmp.getValue("rad"), rotateApertureOTF_p);
+    //   }
+    // else
+    //   {
+    // 	rotateApertureOTF_p = True;
+    // 	convFuncCtor_p->setRotateCF(360.0*M_PI/180.0, rotateApertureOTF_p);
+    //   }
+	
+
+    rotateOTFPAIncr_p = rotateOTFPAIncrement.getValue("rad");
+    computePAIncr_p = computePAIncrement.getValue("rad");
+    convFuncCtor_p->setRotateCF(computePAIncr_p, rotateOTFPAIncr_p);
+
+    paChangeDetector.setTolerance(computePAIncrement);
     log_l << LogIO::NORMAL <<"Setting PA increment to " 
-	  << paIncrement.getValue("deg") << " deg" << endl;
+	  << computePAIncrement.getValue("deg") << " deg" << endl;
     cfCache_p->setPAChangeDetector(paChangeDetector);
   }
   //
@@ -2240,6 +2261,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     vbs.flagCube_p.resize(flagCube.shape());  vbs.flagCube_p = False; vbs.flagCube_p(flagCube!=0) = True;
     vbs.conjBeams_p=conjBeams_p;
 
+    timer_p.mark();
+
     Vector<Double> pointingOffset(convFuncCtor_p->findPointingOffset(*image, vb));
     if (makingPSF)
       visResampler_p->makeVBRow2CFMap(*cfwts2_p,*convFuncCtor_p, vb,
@@ -2255,6 +2278,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // For AzElApertures, this rotates the CFs.
     //
     convFuncCtor_p->prepareConvFunction(vb,theMap);
+    runTime1_p += timer_p.real();
     //    visResampler_p->setConvFunc(cfs_p);
   }
 

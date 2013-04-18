@@ -74,7 +74,7 @@ class ZoomWidget;
  * this class and a subclass that needs to know the height of the plot in
  * order to correctly draw a marker.
  */
-class BinPlotWidget : public QWidget, public HeightSource {
+class BinPlotWidget : public QWidget, public HeightSource{
     Q_OBJECT
 
 friend class RangePicker;
@@ -98,13 +98,13 @@ public:
     std::vector<float> getXValues() const;
     pair<double,double> getMinMaxValues() const;
     void setMinMaxValues( double minValue, double maxValue, bool updateGraph=true );
-    void setRangeMaxEnabled( bool enabled );
 
     //Customizing the display
+    void hideMaximumRange();
     void setColorLookups( const Vector<uInt> & lookups );
     void setColorMap( QwtLinearColorMap* colorMap );
-    void setColorBarVisible( bool visible );
     void setColorScaleMax( int max );
+    void setMultiColored( bool multipleColors );
     void setDisplayPlotTitle( bool display );
     void setDisplayAxisTitles( bool display );
     void setHistogramColor( QColor color );
@@ -200,21 +200,16 @@ private:
 	void reset();
 	bool resetImage();
 	void resetRegion();
-	void resetColorCurve();
 	void resetRectangleMarker();
 	void defineCurveLine( int id, const QColor& lineColor );
 	void defineCurveHistogram( int id, const QColor& histogramColor );
 	QwtPlotCurve* addCurve( QVector<double>& xValues, QVector<double>& yValues, const QColor& curveColor );
 	bool isPrintOut( int id ) const;
 	bool isPrincipalHistogram( int id ) const;
-	void setValidatorLimits();
 	bool isPlotContains( int x, int y );
 	virtual int getCanvasHeight();
 	Histogram* findHistogramFor( int id );
 	int getSelectedId() const;
-	void removeColorBar();
-	void addColorBar();
-	void resetColorBar();
 	QColor getPieceColor( int index, const QColor& defaultColor ) const;
 
 	void zoom( float percent );
@@ -226,7 +221,7 @@ private:
 
     bool displayPlotTitle;
     bool displayAxisTitles;
-    bool colorBarVisible;
+    bool multiColored;
 
     QColor curveColor;
     QColor selectionColor;
@@ -238,7 +233,6 @@ private:
     int colorScaleMax;
 
     //Histogram & data
-    QwtPlotCurve* colorCurve;
     QList<QwtPlotCurve*> curves;
     QMap<int,Histogram*> histogramMap;
     ImageInterface<Float>* image;

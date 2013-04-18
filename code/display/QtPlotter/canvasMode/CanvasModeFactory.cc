@@ -45,13 +45,17 @@ CanvasModeFactory::CanvasModeFactory() {
 }
 
 CanvasMode* CanvasModeFactory::getModeForEvent( QMouseEvent* event ){
-
+#if defined(__APPLE__)
+	const Qt::KeyboardModifier control_modifier = Qt::MetaModifier;
+#else
+	const Qt::KeyboardModifier control_modifier = Qt::ControlModifier;
+#endif
 	CanvasMode* canvasMode = NULL;
 	if (event->button() == Qt::LeftButton){
 		if ( event->modifiers() == Qt::ShiftModifier ){
 			canvasMode = fact.canvasModes[CanvasMode::MODE_RANGESELECTION];
 		}
-		else if ( event->modifiers() == Qt::ControlModifier ){
+		else if ( event->modifiers() == control_modifier ){
 			canvasMode = fact.canvasModes[CanvasMode::MODE_ANNOTATION];
 		}
 		else {
@@ -62,7 +66,7 @@ CanvasMode* CanvasModeFactory::getModeForEvent( QMouseEvent* event ){
 		if ( event->modifiers() == Qt::ShiftModifier ){
 
 		}
-		else if ( event->modifiers() == Qt::ControlModifier ){
+		else if ( event->modifiers() == control_modifier ){
 			canvasMode = fact.canvasModes[CanvasMode::MODE_CHANNEL];
 		}
 		else {

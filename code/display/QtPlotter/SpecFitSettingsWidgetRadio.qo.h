@@ -53,7 +53,7 @@ public:
     void setImageYUnits( const QString& units );
     void setCurveName( const QString& curveName );
     void addCurveName( const QString& curveName );
-    void setRange(float start, float end );
+    void setRange(double start, double end );
     void reset();
     void pixelsChanged( int pixX, int pixY );
 
@@ -95,8 +95,8 @@ private:
 	/**
 				 * Decides if the units represent velocity, wavelength, or frequency.
 				 */
-				void getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const ;
-	void processFitResults(Vector<float>& xValues, Vector<float>& xValuesPix);
+	void getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const ;
+	bool processFitResults(Vector<float>& xValues, Vector<float>& xValuesPix);
 	void getEstimateStrings( int index, QString& peakStr, QString& centerStr, QString& fwhmStr ) const;
 	bool processFitResultGaussian( const SpectralElement* solution,
 			int index, QList<SpecFit*>& curves);

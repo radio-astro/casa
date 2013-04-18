@@ -321,6 +321,9 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
     mLocation_p = obsPosition;
     freqFrameValid_p = True;
   }
+   //Make sure frame conversion is switched off for REST frame data.
+  freqFrameValid_p=freqFrameValid_p && (obsFreqRef !=MFrequency::REST);
+
   // Now find the projection to use: could probably also use
   // max(abs(w))=0.0 as a criterion
   Projection projection(Projection::SIN);
@@ -874,6 +877,8 @@ Bool Imager::imagecoordinates(CoordinateSystem& coordInfo, const Bool verbose)
     mLocation_p = obsPosition;
     freqFrameValid_p = True;
   }
+  //Make sure frame conversion is switched off for REST frame data.
+  freqFrameValid_p=freqFrameValid_p && (obsFreqRef !=MFrequency::REST);
   // Now find the projection to use: could probably also use
   // max(abs(w))=0.0 as a criterion
   Projection projection(Projection::SIN);
@@ -2180,27 +2185,29 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresidual
 	    if(ft_p->name()=="MosaicFT")	      
 	      cutoffval=minPB_p*minPB_p;
 	    
+	    ImageInterface<Float> * diviseur= nomemory ? &(*tempfluximage[thismodel]) : &(sm_p->fluxScale(thismodel));
+
 	    if (dofluxscale(thismodel)) {
 	      TempImage<Float> cover(modelIm.shape(),modelIm.coordinates());
 	      if(ft_p->name()=="MosaicFT")
 		se_p->getCoverageImage(thismodel, cover);
               else
-		cover.copyData(nomemory ? (*tempfluximage[thismodel]) : sm_p->fluxScale(thismodel));
+		cover.copyData(*diviseur);
 	     
 	      if(scaleType_p=="NONE"){
 		if(dorestore){
-		  LatticeExpr<Float> le(iif(cover < minPB_p, 
-					    0.0,(restored/(nomemory ?  (*tempfluximage[thismodel]) :  sm_p->fluxScale(thismodel)))));
+		  LatticeExpr<Float> le(iif(((cover > minPB_p) && ((*diviseur) >0.0)) , 
+					    (restored/(*diviseur)), 0.0));
 		  restored.copyData(le);
 		}
-		LatticeExpr<Float> le1(iif(cover < minPB_p, 
-					   0,(residIm/(nomemory ?  (*tempfluximage[thismodel]) : sm_p->fluxScale(thismodel)))));
+		    LatticeExpr<Float> le1(iif(((cover > minPB_p) && ((*diviseur) >0.0)), 
+					       (residIm/(*diviseur)), 0.0));
 		residIm.copyData(le1);
 		
 	      }
 	      
 	      //Setting the bit-mask for mosaic image
-	      LatticeExpr<Bool> lemask(iif((cover < cutoffval) , 
+	      LatticeExpr<Bool> lemask(iif((cover < minPB_p) , 
 					   False, True));
 	      if(dorestore){
 		ImageRegion outreg=restored.makeMask("mask0", False, True);
@@ -2323,8 +2330,8 @@ Bool Imager::writeFluxScales(const Vector<String>& fluxScaleNames)
 	    coverimage.defineRegion("mask0", outreg,RegionHandler::Masks, True); 
 	    coverimage.setDefaultMask("mask0");
 	  }
-	  LatticeExpr<Bool> lemask(iif((*cover) < minPB_p, 
-				       False, True));
+	  LatticeExpr<Bool> lemask(iif(((*cover) > minPB_p) && (fluxScale > 0.0), 
+				       True, False));
 	  ImageRegion outreg=fluxScale.makeMask("mask0", False, True);
 	  LCRegion& outmask=outreg.asMask();
 	  outmask.copyData(lemask);
@@ -2623,7 +2630,7 @@ Bool Imager::createFTMachine()
     ft_p = new nPBWProjectFT(//*ms_p, 
 			     wprojPlanes_p, cache_p/2,
                             cfCacheDirName_p, doPointing, doPBCorr,
-                             tile_p, paStep_p, pbLimit_p, True);
+                             tile_p, computePAStep_p, pbLimit_p, True);
     //
     // Explicit type casting of ft_p does not look good.  It does not
     // pick up the setPAIncrement() method of PBWProjectFT without
@@ -2691,7 +2698,7 @@ Bool Imager::createFTMachine()
       }
     ft_p = new PBMosaicFT(*ms_p, wprojPlanes_p, cache_p/2, 
 			  cfCacheDirName_p, /*True */doPointing, doPBCorr, 
-			  tile_p, paStep_p, pbLimit_p, True);
+			  tile_p, computePAStep_p, pbLimit_p, True);
     ((PBMosaicFT *)ft_p)->setObservatoryLocation(mLocation_p);
     //
     // Explicit type casting of ft_p does not look good.  It does not
@@ -2885,7 +2892,7 @@ Bool Imager::createFTMachine()
 			     //			     mthVisResampler,
 			     visResampler,
 			     /*True */doPointing, doPBCorr, 
-			     tile_p, paStep_p, pbLimit_p, True,conjBeams_p,
+			     tile_p, computePAStep_p, pbLimit_p, True,conjBeams_p,
 			     useDoublePrecGrid);
       
     ((AWProjectWBFT *)ft_p)->setObservatoryLocation(mLocation_p);
@@ -2895,7 +2902,10 @@ Bool Imager::createFTMachine()
     // this
     //
     // os << LogIO::NORMAL << "Setting PA increment to " << parAngleInc_p.getValue("deg") << " deg" << endl;
-    ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+
+    //    ((AWProjectFT *)ft_p)->setPAIncrement(parAngleInc_p);
+    Quantity rotateOTF(rotPAStep_p,"deg");
+    ((AWProjectFT *)ft_p)->setPAIncrement(Quantity(computePAStep_p,"deg"),rotateOTF);
 
     AlwaysAssert(ft_p, AipsError);
     cft_p = new SimpleComponentFTMachine();

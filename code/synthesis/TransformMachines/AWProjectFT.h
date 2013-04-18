@@ -58,6 +58,8 @@
 #include <images/Images/ImageInterface.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 
+#include <casa/OS/Timer.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
   
   // <summary>  An FTMachine for Gridded Fourier transforms including effects of primary beam and pointing offsets and the w-term</summary>
@@ -303,7 +305,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    Bool Evaluate=True);
     virtual Double getVBPA(const VisBuffer& vb) 
     {
-      // if (!rotateAperture_p) return currentCFPA;
+      // if (!rotateApertureOTP_p) return currentCFPA;
       // else return getPA(vb);
       return getPA(vb);
     };
@@ -359,7 +361,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //    void reset() {vpSJ->reset();}
     void reset() {paChangeDetector.reset();}
 
-    void setPAIncrement(const Quantity &paIncrement);
+    void setPAIncrement(const Quantity &computePAIncr, const Quantity &rotateOTFPAIncr);
 
     Vector<Int>& getPolMap() {return polMap;};
     virtual String name() const { return "AWProjectFT";};
@@ -479,7 +481,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     //    CountedPtr<CFCache> cfCache_p;
     ParAngleChangeDetector paChangeDetector;
-    Bool rotateAperture_p;
+    Double rotateOTFPAIncr_p, computePAIncr_p;
 
     Unit Second, Radian, Day;
     Array<Float> l_offsets,m_offsets;
@@ -517,6 +519,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     CFStore rotatedConvFunc_p;
     CountedPtr<CFStore2> cfs2_p, cfwts2_p;
     Vector<Int> ConjCFMap_p, CFMap_p;
+
+    Timer timer_p;
+    Double runTime1_p;
 
 #include "AWProjectFT.FORTRANSTUFF.INC"
   };

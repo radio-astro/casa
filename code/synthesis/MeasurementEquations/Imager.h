@@ -245,7 +245,8 @@ class Imager
 		  const Bool applyPointingOffsets=True,
 		  const Bool doPointingCorrection=True,
 		  const String& cfCacheDirName="", 
-		  const Float& pastep=5.0,
+		  const Float& rotpastep=5.0,
+		  const Float& computepastep=360.0,
 		  const Float& pbLimit=5.0e-2,
 		  const String& freqinterpmethod="linear",
 		  const Int imageTileSizeInPix=0,
@@ -656,7 +657,7 @@ protected:
   Bool setimaged_p, nullSelect_p;
   Bool redoSkyModel_p;   // if clean is run multiply ..use this to check
                          // if setimage was changed hence redo the skyModel.
-  Float paStep_p, pbLimit_p;
+  Float rotPAStep_p, computePAStep_p, pbLimit_p;
   Int facets_p;
   Int wprojPlanes_p;
   Quantity mcellx_p, mcelly_p;

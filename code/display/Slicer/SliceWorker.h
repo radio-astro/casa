@@ -34,6 +34,7 @@ namespace casa {
 
 class ImageAnalysis;
 class Record;
+class SliceStatistics;
 
 /**
  * Responsible for computing the (x,y)-values that represent a
@@ -53,30 +54,23 @@ public:
 
 	void setMethod( const String& method );
 
-	void toAscii( QTextStream& stream ) const;
+	void toAscii( QTextStream& stream, SliceStatistics* statistics ) const;
 	void compute();
-
-
 	int getSegmentCount() const;
-	QVector<double> getDistances( int index, double lastX ) const;
-	QVector<double> getXPositions(int index ) const;
-	QVector<double> getYPositions(int index ) const;
 	QVector<double> getPixels(int index) const;
-
-	//void setXUnits( AxisXUnits unitMode );
+	QVector<double> getData( int index, SliceStatistics* statistics ) const;
 	virtual ~SliceWorker();
-
-
 
 private:
 	SliceWorker( const SliceWorker& other );
 	SliceWorker& operator=( const SliceWorker other );
+
 	double getDistance( double x, double y ) const;
 	QVector<double> interpolate( double start, double end,
 			const QVector<double>& values ) const;
 	void clearResults();
-	QVector<double> getFromArray( const Array<float>& source ) const;
-	QVector<double> getValues( int index, const QVector<double>& pixels ) const;
+
+	QVector<double> getValues( int index, const QVector<double>& pixels, SliceStatistics* statistic ) const;
 	void computeSlice( const Vector<double>& xValues,
 			const Vector<double>& yValues );
 	ImageAnalysis* imageAnalysis;
@@ -85,9 +79,10 @@ private:
 	Vector<Double> verticesY;
 	Vector<Double> verticesXWorld;
 	Vector<Double> verticesYWorld;
-	//AxisXUnits xAxisUnits;
+
 	Vector<Int> axes;
 	Vector<Int> coords;
+
 	int sampleCount;
 	int id;
 	String method;

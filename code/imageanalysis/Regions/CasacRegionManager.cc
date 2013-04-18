@@ -204,7 +204,41 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 	return consolidateAndOrderRanges(ranges);
 }
 
+Bool CasacRegionManager::_supports2DBox(Bool except) const {
+	Bool ok = True;
+	const CoordinateSystem& csys = getcoordsys();
+	Vector<Int> axes;
+	if (csys.hasDirectionCoordinate()) {
+		axes = csys.directionAxesNumbers();
+	}
+	else if (csys.hasLinearCoordinate()) {
+		axes = csys.linearAxesNumbers();
+	}
+	else {
+		ok = False;
+	}
+	if (ok) {
+		uInt nGood = 0;
+		for (uInt i=0; i<axes.size(); i++) {
+			if (axes[i] >= 0) {
+				nGood++;
+			}
+		}
+		if (nGood != 2) {
+			ok = False;
+		}
+	}
+	if (except && ! ok) {
+		*_getLog() << LogOrigin("CasacRegionManager", __FUNCTION__)
+			<< "This image does not have a 2-D direction or linear coordinate";
+	}
+	return ok;
+}
+
 vector<Double> CasacRegionManager::_setBoxCorners(const String& box) const {
+	if (! box.empty()) {
+		_supports2DBox(True);
+	}
 	Vector<String> boxParts = stringToVector(box);
 	AlwaysAssert(boxParts.size() % 4 == 0, AipsError);
 	vector<Double> corners(boxParts.size());
@@ -448,10 +482,8 @@ ImageRegion CasacRegionManager::_fromBCS(
 	const IPosition& imShape
 ) const {
 	const CoordinateSystem& csys = getcoordsys();
-	Int specAxisNumber = csys.spectralAxisNumber();
-	uInt nTotalChannels = specAxisNumber >= 0 ? imShape[specAxisNumber] : 0;
 	vector<uInt> chanEndPts = setSpectralRanges(
-		chans, nSelectedChannels, nTotalChannels, imShape
+		chans, nSelectedChannels, imShape
 	);
     Int polAxisNumber = csys.polarizationAxisNumber();
 	uInt nTotalPolarizations = polAxisNumber >= 0 ? imShape[polAxisNumber] : 0;
@@ -462,25 +494,27 @@ ImageRegion CasacRegionManager::_fromBCS(
 	);
 	vector<Double> boxCorners;
 	if (box.empty()) {
-		if (
-			csys.hasDirectionCoordinate()
-			|| csys.hasLinearCoordinate()
-		) {
-			Vector<Int> dirAxesNumbers;
-			if (csys.hasDirectionCoordinate()) {
-				dirAxesNumbers = csys.directionAxesNumbers();
+		if (_supports2DBox(False)) {
+			if (
+				csys.hasDirectionCoordinate()
+				|| csys.hasLinearCoordinate()
+			) {
+				Vector<Int> dirAxesNumbers;
+				if (csys.hasDirectionCoordinate()) {
+					dirAxesNumbers = csys.directionAxesNumbers();
+				}
+				else {
+					dirAxesNumbers = csys.linearAxesNumbers();
+				}
+				Vector<Int> dirShape(2);
+				dirShape[0] = imShape[dirAxesNumbers[0]];
+				dirShape[1] = imShape[dirAxesNumbers[1]];
+				boxCorners.resize(4);
+				boxCorners[0] = 0;
+				boxCorners[1] = 0;
+				boxCorners[2] = dirShape[0] - 1;
+				boxCorners[3] = dirShape[1] - 1;
 			}
-			else {
-				dirAxesNumbers = csys.linearAxesNumbers();
-			}
-			Vector<Int> dirShape(2);
-			dirShape[0] = imShape[dirAxesNumbers[0]];
-			dirShape[1] = imShape[dirAxesNumbers[1]];
-			boxCorners.resize(4);
-			boxCorners[0] = 0;
-			boxCorners[1] = 0;
-			boxCorners[2] = dirShape[0] - 1;
-			boxCorners[3] = dirShape[1] - 1;
 		}
 	}
 	else {
@@ -546,12 +580,15 @@ ImageRegion CasacRegionManager::_fromBCS(
 		polEndPtsDouble[i] = (Double)polEndPts[i];
 	}
 
+	Bool csysSupports2DBox = _supports2DBox(False);
 	uInt nRegions = 1;
-	if (csys.hasDirectionCoordinate())  {
-		nRegions *= boxCorners.size()/4;
-	}
-	if (csys.hasLinearCoordinate())  {
-		nRegions *= boxCorners.size()/4;
+	if (csysSupports2DBox) {
+		if (csys.hasDirectionCoordinate())  {
+			nRegions *= boxCorners.size()/4;
+		}
+		if (csys.hasLinearCoordinate())  {
+			nRegions *= boxCorners.size()/4;
+		}
 	}
 	if (csys.hasPolarizationCoordinate()) {
 		nRegions *= polEndPts.size()/2;
@@ -565,18 +602,39 @@ ImageRegion CasacRegionManager::_fromBCS(
 	Vector<Double> extChanEndPts(2*nRegions);
 
 	uInt count = 0;
-	for (uInt i=0; i<max(uInt(1), xCorners.size()/2); i++) {
+
+	if (csysSupports2DBox) {
+		for (uInt i=0; i<max(uInt(1), xCorners.size()/2); i++) {
+			for (uInt j=0; j<max((uInt)1, polEndPts.size()/2); j++) {
+				for (uInt k=0; k<max(uInt(1), chanEndPts.size()/2); k++) {
+					if (
+						csys.hasDirectionCoordinate()
+						|| csys.hasLinearCoordinate()
+					) {
+						extXCorners[2*count] = xCorners[2*i];
+						extXCorners[2*count + 1] = xCorners[2*i + 1];
+						extYCorners[2*count] = yCorners[2*i];
+						extYCorners[2*count + 1] = yCorners[2*i + 1];
+					}
+					if (csys.hasPolarizationCoordinate()) {
+						extPolEndPts[2*count] = polEndPtsDouble[2*j];
+						extPolEndPts[2*count + 1] = polEndPtsDouble[2*j + 1];
+
+					}
+					if (csys.hasSpectralAxis()) {
+						extChanEndPts[2*count] = chanEndPts[2*k];
+						extChanEndPts[2*count + 1] = chanEndPts[2*k + 1];
+					}
+					count++;
+				}
+			}
+		}
+	}
+	else {
+		// here we have neither a direction nor linear coordinate with two
+		// pixel axes which are greater than 0
 		for (uInt j=0; j<max((uInt)1, polEndPts.size()/2); j++) {
 			for (uInt k=0; k<max(uInt(1), chanEndPts.size()/2); k++) {
-				if (
-					csys.hasDirectionCoordinate()
-					|| csys.hasLinearCoordinate()
-				) {
-					extXCorners[2*count] = xCorners[2*i];
-					extXCorners[2*count + 1] = xCorners[2*i + 1];
-					extYCorners[2*count] = yCorners[2*i];
-					extYCorners[2*count + 1] = yCorners[2*i + 1];
-				}
 				if (csys.hasPolarizationCoordinate()) {
 					extPolEndPts[2*count] = polEndPtsDouble[2*j];
 					extPolEndPts[2*count + 1] = polEndPtsDouble[2*j + 1];
@@ -780,7 +838,7 @@ String CasacRegionManager::_stokesFromRecord(
 }
 
 vector<uInt> CasacRegionManager::setSpectralRanges(
-	String specification, uInt& nSelectedChannels, const uInt nChannels,
+	String specification, uInt& nSelectedChannels,
 	const IPosition& imShape
 ) const {
 	LogOrigin origin("CasacRegionManager", __FUNCTION__);
@@ -802,6 +860,7 @@ vector<uInt> CasacRegionManager::setSpectralRanges(
 	}
 	specification.trim();
 	specification.upcase();
+	uInt nChannels = imShape[getcoordsys().spectralAxisNumber()];
 
 	if (specification.empty() || specification == ALL) {
 		ranges.push_back(0);
@@ -846,11 +905,18 @@ vector<uInt> CasacRegionManager::_spectralRangeFromRangeFormat(
 	// from which to get the spectral range information
 	String regSpec = "box[[0pix, 0pix], [1pix, 1pix]] " + specification;
 	RegionTextParser parser(csys, imShape, regSpec);
+	vector<uInt> range(2);
+
+	if (parser.getLines().empty()) {
+		*_getLog() << "The specified spectral range " << specification
+			<< " does not intersect the image spectral range."
+			<< LogIO::EXCEPTION;
+	}
 	const AnnRegion *reg = dynamic_cast<const AnnRegion*>(
 		parser.getLines()[0].getAnnotationBase()
 	);
+
 	vector<Double> drange = reg->getSpectralPixelRange();
-	vector<uInt> range(2);
 	range[0] = uInt(max(0.0, floor(drange[0] + 0.5)));
 	range[1] = uInt(floor(drange[1] + 0.5));
 	nSelectedChannels = range[1] - range[0] + 1;

@@ -76,13 +76,19 @@ class QtDisplayData : public QObject {
 		 const viewer::DisplayDataOptions &ddo = viewer::DisplayDataOptions( ),
 		 const viewer::ImageProperties &props = viewer::ImageProperties( ) );
   ~QtDisplayData();
-  
+  String getPositionInformation( const Vector<double> world);
   virtual std::string name() { return name_;  }
   virtual const char* nameChrs() { return name_.c_str();  }
   virtual void setName(const std::string& name) { name_ = name;  }
  
   virtual std::string dataType() const { return dataType_;  }
   virtual std::string displayType() { return displayType_;  }
+
+  //Display Type
+   Bool isRaster() const;
+   Bool isContour() const;
+   Bool isVector() const;
+   Bool isMarker() const;
 
   //virtual Bool delTmpData() const;
   virtual void delTmpData() const;
@@ -104,10 +110,13 @@ class QtDisplayData : public QObject {
   virtual DisplayData* dd() { return dd_;  }
   
   // Did creation of wrapped DD fail?
-  virtual Bool isEmpty() { return dd_==0;  }  
+  virtual Bool isEmpty() { return dd_==0;  }
+
+
   
   // Possible valuse: Raster, Vector, Annotation, CanvasAnnotation
   virtual Display::DisplayDataType ddType();
+  bool isSkyCatalog() const;
   
   // Can the QDD display tracking information?
   virtual Bool usesTracking() { return !isEmpty() &&
@@ -216,6 +225,7 @@ class QtDisplayData : public QObject {
   // Different DisplayDatas *could* have different colormap palettes
   // thus this is non-static and specific to a display data
   virtual bool isValidColormap( const QString &name ) const;
+  void setColorMap( Colormap* colorMap );
 
   // Get/set colormap shift/slope ('fiddle') and brightness/contrast
   // settings.  (At present this is usually set for the PC's current
@@ -246,7 +256,7 @@ class QtDisplayData : public QObject {
   void initImage();
   void setImage( ImageInterface<Float>* img);
   static void setGlobalColorOptions( bool global );
-
+  void setInvertColorMap( bool invert );
 
  public slots:
   
@@ -277,7 +287,7 @@ class QtDisplayData : public QObject {
  
   const String &getColormap( ) { return clrMapName_; }
   void setColormap(const String& clrMapName) { setColormap_(clrMapName); }
-  void setHistogramColorRange( float minValue, float maxValue );
+  void setHistogramColorMapping( float minValue, float maxValue, float powerScale );
  
 
  signals:
@@ -332,6 +342,7 @@ class QtDisplayData : public QObject {
 
   void statsReady(const String&);
   void showColorHistogram( QtDisplayData* );
+
   void globalOptionsChanged( QtDisplayData*, Record);
 
  protected slots:
@@ -364,18 +375,19 @@ class QtDisplayData : public QObject {
   // information on creating/installing custom ones).  If an invalid name is
   // passed, an (ignorable) error message is signalled, and the dd's colormap
   // will remain unchanged.
-  virtual void setColormap_(const String& clrMapName);
+  virtual void setColormap_(const String& clrMapName, bool invertChanged = false);
   virtual void removeColormap_() { setColormap_("");  }
+
 
   //# (could be exposed publicly, if useful).
   //  Does this DD use/need a public colormap?
   virtual Bool usesClrMap_() {
-    return (displayType_=="raster" || displayType_=="pksmultibeam");  }
+    return (isRaster() || displayType_=="pksmultibeam");  }
 	//# These are the only DD types currently needing a colormap and
 	//# supporting the selection option; add more if/when needed....
   
   // Can this QDD use a color bar?
-  virtual Bool usesColorBar_() { return displayType_=="raster";  }
+  virtual Bool usesColorBar_() { return isRaster();  }
 
   typedef std::map<const DisplayData*,QtDisplayData*> data_to_qtdata_map_type;
   static data_to_qtdata_map_type dd_source_map;
@@ -390,12 +402,17 @@ class QtDisplayData : public QObject {
   //# data
   QtDisplayPanelGui *panel_;
   std::string path_, dataType_, displayType_;
+  const std::string DISPLAY_RASTER;
+  const std::string DISPLAY_CONTOUR;
+  const std::string DISPLAY_VECTOR;
+  const std::string DISPLAY_MARKER;
   ImageInterface<Float>* im_;
   ImageInterface<Complex>* cim_;
   DisplayData* dd_;
 
   std::string name_;
   
+  bool invertColorMap;
   // Name of colormap used by dd_  ("" if none)
   String clrMapName_;
   

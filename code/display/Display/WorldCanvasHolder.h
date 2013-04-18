@@ -233,6 +233,7 @@ class WorldCanvasHolder : public WCRefreshEH,
   // passed wch (if that dd is registered here), and gets it to reset WC
   // coordinate state.
   virtual Bool syncCSmaster(const WorldCanvasHolder* wch);
+  bool setCSMaster( DisplayData* dd );
 
   const std::list<DisplayData*> &displaylist( ) const
 	{ return itsDisplayList; }
@@ -242,7 +243,6 @@ class WorldCanvasHolder : public WCRefreshEH,
    * of the data currently being displayed.
    */
   Float getDrawUnit() const;
-
 
   const static String BLINK_MODE;
 

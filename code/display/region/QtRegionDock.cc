@@ -384,6 +384,7 @@ namespace casa {
 	}
 
 	void QtRegionDock::delete_all_regions(bool) {
+		weakly_selected_region_set_.clear( );
 	    emit deleteAllRegions( );
 	}
 

@@ -53,7 +53,7 @@ public:
 
 	CasacRegionManager();
 	CasacRegionManager(const CoordinateSystem& csys);
-	virtual ~CasacRegionManager();
+	~CasacRegionManager();
 
 
 	// convert to a record a region specified by a rectangular directional <src>box</src>,
@@ -94,9 +94,8 @@ public:
 		const String& imageName, const IPosition& imShape
 	);
 
-	// <src>nChannels</src> is the total number of spectral channels in the image
 	vector<uInt> setSpectralRanges(
-		String specification, uInt& nSelectedChannels, const uInt nChannels,
+		String specification, uInt& nSelectedChannels,
 		const IPosition& imShape=IPosition(0)
 	) const;
 
@@ -146,6 +145,11 @@ private:
 		uInt& nSelectedChannels, const String& specification,
 		const IPosition& imShape
 	) const;
+
+	// does the image support the setting of a two dimensional box(es).
+	// If except is True, an exception will be thrown if this image does not
+	// support it. If not, False is returned in that case.
+	Bool _supports2DBox(Bool except) const;
 };
 
 } // casa namespace

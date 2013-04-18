@@ -30,6 +30,7 @@
 #include <synthesis/CalTables/CTMainColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <tables/Tables/ScalarColumn.h>
+#include <tables/Tables/ScaColDesc.h>
 #include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/TableCopy.h>
 #include <tables/Tables/TableRow.h>
@@ -38,6 +39,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <casa/Arrays.h>
 #include <casa/Arrays/ArrayMath.h>
+#include <casa/Logging/LogIO.h>
 #include <synthesis/CalTables/CTEnums.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -163,22 +165,61 @@ NewCalTable::NewCalTable (const String& tableName, Table::TableOption access,
   if (ttype==Table::Memory) 
     *this = this->copyToMemoryTable(tableName+".tempMemCalTable");
  
+  if (!this->tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID)) ||
+      !this->keywordSet().isDefined("OBSERVATION")) 
+    addPhoneyObs();
+
   // Attach subtable accessors
   attachSubTables();
 
-
 };
 
+// Factory method that has Back Compat option
+NewCalTable NewCalTable::createCT(const String& tableName, 
+				  Table::TableOption access, 
+				  Table::TableType ttype, 
+				  Bool doBackCompat) {
+  // Handle back compat
+  if (doBackCompat)
+    NewCalTable::CTBackCompat(tableName);
+
+  // Ordinary ctor
+  return NewCalTable(tableName,access,ttype);
+
+}
+// Factory method that has Back Compat option
+NewCalTable* NewCalTable::createCTptr(const String& tableName, 
+				     Table::TableOption access, 
+				     Table::TableType ttype, 
+				     Bool doBackCompat) {
+  // Handle back compat
+  if (doBackCompat)
+    NewCalTable::CTBackCompat(tableName);
+
+  // Ordinary ctor
+  return new NewCalTable(tableName,access,ttype);
+
+}
+
 //----------------------------------------------------------------------------
-NewCalTable::NewCalTable(String tableName, String caltype,
-			 Int nFld, Int nAnt, Int nSpw, 
-			 Vector<Int> nChan, Int nTime,
+NewCalTable::NewCalTable(String tableName, String CorF,
+			 Int nObs, Int nScanPerObs, Int nTimePerScan,
+			 Int nAnt, Int nSpw, Vector<Int> nChan, 
+			 Int nFld, 
 			 Double rTime, Double tint,
 			 Bool disk, Bool verbose) :
   Table()
 {
 
-  CTDesc nctd("Complex","none",caltype,"circ");
+  String caltype("");
+  if (CorF=="Complex")
+    caltype="T";
+  else if (CorF=="Float")
+    caltype="K";
+  else
+    throw(AipsError("CorF must be 'Complex' or 'Float'"));
+
+  CTDesc nctd(CorF,"none",caltype,"circ");
 
   // Form underlying generic Table according to the supplied desc
   SetupNewTable calMainTab(tableName+".tempMemCalTable",nctd.calMainDesc(),Table::New);
@@ -192,7 +233,9 @@ NewCalTable::NewCalTable(String tableName, String caltype,
   this->createSubTables();
 
   // Fill it generically
-  this->fillGenericContents(nFld,nAnt,nSpw,nChan,nTime,rTime,tint,verbose);
+  this->fillGenericContents(nObs,nScanPerObs,nTimePerScan,
+			    nAnt,nSpw,nChan,
+			    nFld,rTime,tint,verbose);
 
   if (disk) {
     // Write it out to disk
@@ -246,6 +289,28 @@ NewCalTable& NewCalTable::operator= (const NewCalTable& other)
 
 
 //----------------------------------------------------------------------------
+
+// Handle backward compatibility
+Bool NewCalTable::CTBackCompat(const String& caltable) {
+  
+  Bool doBC(False);
+
+  // Detect backward compatibility issues 
+  Table tab(caltable,Table::Old);
+
+  // pre-v41 had no OBSERVATION/OBSERVATION_ID
+  doBC=(!tab.tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID)) ||
+	!tab.keywordSet().isDefined("OBSERVATION"));
+
+  if (doBC)
+    NewCalTable backcompat(caltable,Table::Update,Table::Plain);
+
+  return True;
+
+}
+
+
+//----------------------------------------------------------------------------
 void NewCalTable::setTableInfo() {
       this->tableInfo().setType(TableInfo::type(TableInfo::ME_CALIBRATION));
       this->tableInfo().setSubType(this->tableDesc().getType());
@@ -255,6 +320,7 @@ void NewCalTable::setTableInfo() {
 void NewCalTable::createSubTables() {
       
   // Names
+  String  calObsName=this->tableName()+"/OBSERVATION";
   String  calAntennaName=this->tableName()+"/ANTENNA";
   String  calFieldName=this->tableName()+"/FIELD";
   String  calSpectralWindowName=this->tableName()+"/SPECTRAL_WINDOW";
@@ -264,6 +330,10 @@ void NewCalTable::createSubTables() {
   Table::TableType type(this->tableType());
 
   // Assign them to keywords
+  SetupNewTable obstab(calObsName,CTObservation::requiredTableDesc(),access); 
+  this->rwKeywordSet().defineTable("OBSERVATION", Table(obstab,type));
+  observation_p = CTObservation(this->keywordSet().asTable("OBSERVATION"));
+
   SetupNewTable antennatab(calAntennaName,CTAntenna::requiredTableDesc(),access); 
   this->rwKeywordSet().defineTable("ANTENNA", Table(antennatab,type));
   antenna_p = CTAntenna(this->keywordSet().asTable("ANTENNA"));
@@ -286,6 +356,9 @@ void NewCalTable::createSubTables() {
 void NewCalTable::attachSubTables()
 {
 
+  if (this->keywordSet().isDefined("OBSERVATION"))
+    observation_p = CTObservation(this->keywordSet().asTable("OBSERVATION"));
+
   if (this->keywordSet().isDefined("ANTENNA"))
     antenna_p = CTAntenna(this->keywordSet().asTable("ANTENNA"));
 
@@ -303,6 +376,7 @@ void NewCalTable::attachSubTables()
 //----------------------------------------------------------------------------
 void NewCalTable::clearSubtables()
 {
+   observation_p=CTObservation();
    antenna_p=CTAntenna();
    field_p=CTField();
    spectralWindow_p=CTSpectralWindow();
@@ -311,6 +385,7 @@ void NewCalTable::clearSubtables()
 //----------------------------------------------------------------------------
 void NewCalTable::copyMemCalSubtables(const NewCalTable & other)
 {
+   copyMemCalSubtable(other.observation_p, observation_p);
    copyMemCalSubtable(other.antenna_p, antenna_p);
    copyMemCalSubtable(other.field_p, field_p);
    copyMemCalSubtable(other.spectralWindow_p, spectralWindow_p);
@@ -377,12 +452,16 @@ void NewCalTable::setMetaInfo(const String& msName)
 // put parent MS name and (for now) make copy of Antenna, Field, and SpW 
 // sub-tables.
   MeasurementSet inms(msName);
+  const MSObservation msobstab = inms.observation();
   const MSAntenna msantab = inms.antenna();
   const MSField msfldtab = inms.field();
   const MSSpectralWindow msspwtab = inms.spectralWindow();
 
   // deep copy subtables from an MS to NCT 
   // by TableCopy::copyRows
+  //copy obs table
+  CTObservation calobstab(this->observation());
+  TableCopy::copyRows(calobstab,msobstab);
   //copy antenna table
   CTAntenna calantab(this->antenna());
   TableCopy::copyRows(calantab,msantab);
@@ -403,11 +482,11 @@ Bool NewCalTable::conformant(const TableDesc& tabDesc)
 // the new caltable format (or should I named this "validate" ...as 
 // in MS case...)
   Bool eqDType=False;
-  CTDesc calTD = CTDesc();
+  CTDesc calTD = CTDesc(False);  // opt out of OBS_ID, because we aren't insisting on it yet
   TableDesc requiredCalTD = calTD.calMainDesc();
   Bool isCalTableDesc = tabDesc.columnDescSet().isSuperset(requiredCalTD.columnDescSet(), eqDType);
   if (!isCalTableDesc) {
-    cerr<<"NewCalTable::confomant tabDesc is not superset of requiredCalMain"<<endl;
+    cerr<<"NewCalTable::conformant: tabDesc is not superset of requiredCalMain"<<endl;
   };
   Vector<String> colNames(requiredCalTD.columnNames());
   Vector<String> incolNames(tabDesc.columnNames());
@@ -421,7 +500,7 @@ Bool NewCalTable::conformant(const TableDesc& tabDesc)
     if (reqKeySet.isDefined("QuantumUnits")) {
       check = keySet.isDefined("QuantumUnits");
       if (!check) {
-        cerr<<"NewCalTable::confomant column:"<<colNames(i)<<" does not have a unit"<<endl;
+        cerr<<"NewCalTable::conformant: column:"<<colNames(i)<<" does not have a unit"<<endl;
       }
       else {
         check =  allEQ(keySet.asArrayString("QuantumUnits"), reqKeySet.asArrayString("QuantumUnits"));
@@ -456,20 +535,40 @@ Complex NewCalTable::NCTtestvalueC(Int iant,Int ispw,Int ich,Double time,Double 
 
 }
 
+Float NewCalTable::NCTtestvalueF(Int iant,Int ispw,Int ich,Double time,Double refTime,Double tint) {
+
+  Double dt=(time-refTime)/tint;
+  Double a=dt + Double(iant)/10.0 + Double(ispw)/100.0 +Double(ich)/10000.0;
+  return Float(a);
+
+}
+
+
 //----------------------------------------------------------------------------
-void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw, 
-				      Vector<Int> nChan, Int nTime,
+void NewCalTable::fillGenericContents(Int nObs, Int nScanPerObs,Int nTimePerScan,
+				      Int nAnt, Int nSpw, Vector<Int> nChan, 
+				      Int nFld, 
 				      Double rTime, Double tint,
 				      Bool verbose) {
-  if (verbose)
+
+  // Cope with unspecified time info
+  if (rTime==0.0) rTime=4832568000.0;
+  if (tint==0.0) tint=60.0;
+
+  if (verbose) {
     cout << nFld << " "
 	 << nAnt << " "
 	 << nSpw << " "
 	 << nChan << " "
-	 << nTime << " "
+	 << nObs << " "
+	 << nScanPerObs << " "
+	 << nTimePerScan << " "
 	 << endl;
+    cout.precision(15);
+  }
   
   // fill subtables
+  fillGenericObs(nObs);
   fillGenericField(nFld);
   fillGenericAntenna(nAnt);
   fillGenericSpw(nSpw,nChan);
@@ -483,56 +582,96 @@ void NewCalTable::fillGenericContents(Int nFld, Int nAnt, Int nSpw,
   Int nPar(1);
 
   Double thistime(rTime-tint);  // first sample will be at rTime
-  Int thisscan(0);
 
   CTMainColumns ncmc(*this);
 
-  for (Int itime=0;itime<nTime;++itime) {
-    for (Int ifld=0;ifld<nFld;++ifld) {
-      thistime+=tint; // every minute
+  Int thisscan(0);
+  for (Int iobs=0;iobs<nObs;++iobs) {
+    if (verbose) cout << "Obs=" << iobs << endl;
+    Int thisfield(-1);
+    for (Int iscan=0;iscan<nScanPerObs;++iscan) {
       thisscan+=1;    //  unique scans
-      for (Int ispw=0;ispw<nSpw;++ispw) {
+      thisfield+=1;   // each scan is a new field
+      thisfield=thisfield%nFld;   // never more than nFld-1
+      if (verbose) cout << " Scan=" << thisscan << "  Field=" <<thisfield << endl; 
+      for (Int itime=0;itime<nTimePerScan;++itime) {
+	thistime+=tint; // every tint
+	if (verbose) cout << "  Time="<< thistime << endl;
 
-	if (verbose)
-	  cout << itime << " " << ifld << " " << ispw << " " << this->nrow() << endl;
+	for (Int ispw=0;ispw<nSpw;++ispw) {
 
-	// add rows
-	Int nAddRows=nAnt;
-	RefRows rows(this->nrow(),this->nrow()+nAddRows-1,1); 
-	this->addRow(nAddRows);
+	  if (verbose) cout << "   Spw=" << ispw << endl;
+	  
+	  // add rows
+	  Int nAddRows=nAnt;
+	  RefRows rows(this->nrow(),this->nrow()+nAddRows-1,1); 
+	  this->addRow(nAddRows);
 
-	// fill columns in new rows
-	ncmc.time().putColumnCells(rows,Vector<Double>(nAddRows,thistime));
-	ncmc.interval().putColumnCells(rows,Vector<Double>(nAddRows,tint));
-	ncmc.fieldId().putColumnCells(rows,Vector<Int>(nAddRows,ifld));
-	ncmc.spwId().putColumnCells(rows,Vector<Int>(nAddRows,ispw));
-	ncmc.antenna1().putColumnCells(rows,antlist);
-	ncmc.antenna2().putColumnCells(rows,Vector<Int>(nAddRows,refant));
-	ncmc.scanNo().putColumnCells(rows,Vector<Int>(nAddRows,thisscan));
+	  if (verbose) cout << "    Adding " << nAnt << " rows; total=" << this->nrow() << endl;
+	  
+	  // fill columns in new rows
+	  ncmc.time().putColumnCells(rows,Vector<Double>(nAddRows,thistime));
+	  ncmc.interval().putColumnCells(rows,Vector<Double>(nAddRows,tint));
+	  ncmc.fieldId().putColumnCells(rows,Vector<Int>(nAddRows,thisfield));
+	  ncmc.spwId().putColumnCells(rows,Vector<Int>(nAddRows,ispw));
+	  ncmc.antenna1().putColumnCells(rows,antlist);
+	  ncmc.antenna2().putColumnCells(rows,Vector<Int>(nAddRows,refant));
+	  ncmc.obsId().putColumnCells(rows,Vector<Int>(nAddRows,iobs));
+	  ncmc.scanNo().putColumnCells(rows,Vector<Int>(nAddRows,thisscan));
 
-	Cube<Complex> par(nPar,nChan(ispw),nAddRows);
-	for (Int iant=0;iant<nAnt;++iant) {
-	  for (Int ich=0;ich<nChan(ispw);++ich) {
-	    par.xyPlane(iant).column(ich)=NCTtestvalueC(iant,ispw,ich,thistime,rTime,tint);
+
+	  if (isComplex()) {
+	    Cube<Complex> par(nPar,nChan(ispw),nAddRows);
+	    for (Int iant=0;iant<nAnt;++iant) {
+	      for (Int ich=0;ich<nChan(ispw);++ich) {
+		par.xyPlane(iant).column(ich)=NCTtestvalueC(iant,ispw,ich,thistime,rTime,tint);
+	      }
+	    }
+	    ncmc.cparam().putColumnCells(rows,par);
 	  }
+	  else {
+	    Cube<Float> par(nPar,nChan(ispw),nAddRows);
+	    for (Int iant=0;iant<nAnt;++iant) {
+	      for (Int ich=0;ich<nChan(ispw);++ich) {
+		par.xyPlane(iant).column(ich)=NCTtestvalueF(iant,ispw,ich,thistime,rTime,tint);
+	      }
+	    }
+	    ncmc.fparam().putColumnCells(rows,par);
+	  }
+
+	  Cube<Float> parerr(nPar,nChan(ispw),nAddRows);
+	  parerr=0.001;
+	  ncmc.paramerr().putColumnCells(rows,parerr);
+	  Cube<Float> snr(nPar,nChan(ispw),nAddRows);
+	  snr=999.0;
+	  ncmc.snr().putColumnCells(rows,snr);
+	  Cube<Float> wt(nPar,nChan(ispw),nAddRows);
+	  wt=1.0;
+	  ncmc.weight().putColumnCells(rows,wt);
+	  Cube<Bool> flag(nPar,nChan(ispw),nAddRows);
+	  flag=False;
+	  ncmc.flag().putColumnCells(rows,flag);
 	}
-	ncmc.cparam().putColumnCells(rows,par);
-	Cube<Float> parerr(nPar,nChan(ispw),nAddRows);
-	parerr=0.001;
-	ncmc.paramerr().putColumnCells(rows,parerr);
-	Cube<Float> snr(nPar,nChan(ispw),nAddRows);
-	snr=999.0;
-	ncmc.snr().putColumnCells(rows,snr);
-	Cube<Float> wt(nPar,nChan(ispw),nAddRows);
-	wt=1.0;
-	ncmc.weight().putColumnCells(rows,wt);
-	Cube<Bool> flag(nPar,nChan(ispw),nAddRows);
-	flag=False;
-	ncmc.flag().putColumnCells(rows,flag);
       }
     }
   }
+  
+}
 
+//----------------------------------------------------------------------------
+void NewCalTable::fillGenericObs(Int nObs) { 
+
+  this->observation().addRow(nObs);
+  MSObservationColumns oc(this->observation());
+  Vector<Double> tr(2,0.0);
+  tr(1)=7609161600.0;  // the year 2100 (forever-ish)
+  for (Int iobs=0;iobs<nObs;++iobs) {
+    oc.timeRange().put(iobs,tr);
+    oc.observer().put(iobs,String("unknown"));
+    oc.project().put(iobs,String("unknown"));
+    oc.telescopeName().put(iobs,String("unknown"));
+    oc.flagRow().put(iobs,False);
+  }
 }
 
 //----------------------------------------------------------------------------
@@ -604,6 +743,24 @@ void NewCalTable::fillAntBasedMainRows(uInt nrows,
 				       const Cube<Bool>& flag,
 				       const Cube<Float>& paramErr,
 				       const Cube<Float>& snr) {
+
+  // Forward to obsId-capable method with obsID=0
+  this->fillAntBasedMainRows(nrows,
+			     time,interval,
+			     fieldId,spwId,0,scanNo,
+			     ant1list,refant,
+			     cparam,flag,paramErr,snr);
+
+}
+
+void NewCalTable::fillAntBasedMainRows(uInt nrows, 
+				       Double time,Double interval,
+				       Int fieldId,uInt spwId,Int obsId, Int scanNo,
+				       const Vector<Int>& ant1list, Int refant,
+				       const Cube<Complex>& cparam,
+				       const Cube<Bool>& flag,
+				       const Cube<Float>& paramErr,
+				       const Cube<Float>& snr) {
   
   // Verify that we are Complex
   TableRecord keywords=this->keywordSet();
@@ -651,6 +808,7 @@ void NewCalTable::fillAntBasedMainRows(uInt nrows,
   mc.time().putColumnCells(rows,Vector<Double>(nrows,time));
   mc.fieldId().putColumnCells(rows,Vector<Int>(nrows,fieldId));
   mc.spwId().putColumnCells(rows,Vector<Int>(nrows,spwId));
+  mc.obsId().putColumnCells(rows,Vector<Int>(nrows,obsId));
   mc.scanNo().putColumnCells(rows,Vector<Int>(nrows,scanNo));
   mc.interval().putColumnCells(rows,Vector<Double>(nrows,interval));
   
@@ -789,6 +947,52 @@ void NewCalTable::makeSpwSingleChan() {
     }
   }
 }
+
+void NewCalTable::addPhoneyObs() {
+
+  TableType ntype(this->tableType());
+
+  ostringstream msg;
+  msg << "Found pre-v4.1 caltable (" << this->tableName() << "); attempting to update..." << endl;
+
+  // If absent, add OBSERVATION_ID column and OBSERVATION
+  //  ONLY if caltable is writable (on disk) or a Memory table
+  if ( (ntype==Table::Plain && this->isWritable()) ||
+       (ntype==Table::Memory) ) {
+
+    // Add phoney OBSERVATION_ID column and fill with zeros
+    if (!this->tableDesc().isColumn(NCT::fieldName(NCT::OBSERVATION_ID))) {
+      ScalarColumnDesc<Int> obscoldesc(NCT::fieldName (NCT::OBSERVATION_ID),ColumnDesc::Direct);
+      this->addColumn(obscoldesc,False);
+      CTMainColumns mc(*this);
+      mc.obsId().fillColumn(0);
+    }
+
+    // Add dummy OBSERVATION subtable with 1 row
+    if (!this->keywordSet().isDefined("OBSERVATION")) {
+      String  calObsName=this->tableName()+"/OBSERVATION";
+      Table::TableOption access(Table::NewNoReplace);
+      SetupNewTable obstab(calObsName,CTObservation::requiredTableDesc(),access);
+      this->rwKeywordSet().defineTable("OBSERVATION", Table(obstab,ntype));  // same type as parent table
+      observation_p = CTObservation(this->keywordSet().asTable("OBSERVATION"));
+      fillGenericObs(1);
+    }
+
+    msg << "SUCCEEDED: trivial OBSERVATION/OBSERVATION_ID have been added.";
+
+    LogIO log;
+    log << msg.str() << LogIO::WARN;
+
+  }
+  else {
+    msg << "FAILED: caltable is not writable.";
+    msg << " Please run cb.updatecaltable on this caltable, OR";
+    msg << "  regenerate this caltable in v4.1 or later.";
+    throw(AipsError(msg.str()));
+  }
+
+}
+
 
 
 } //# NAMESPACE CASA - END

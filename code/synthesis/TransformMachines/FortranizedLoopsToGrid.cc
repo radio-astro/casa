@@ -28,6 +28,7 @@
 //# $Id$
 
 {
+  timer_p.mark();
   //  T *gridPtr;
   Complex *cfPtr, *phaseGradPtr,typeComplex;
   Int *supportPtr, *cfShapePtr,
@@ -54,6 +55,8 @@
   Int cf0=cfShape(0), cf1=cfShape(1), cf2=cfShape(2), cf3=cfShape(3);
   Int gnx = nx, gny = ny, gnp = nGridPol, gnc=nGridChan;
   Int phx=cached_phaseGrad_p.shape()[0], phy=cached_phaseGrad_p.shape()[1];
+
+  runTimeG2_p += timer_p.real();   
 
   //
   // Call the FORTRAN function with the gridding inner-loops (in synthesis/fortran/faccumulateToGrid.f)

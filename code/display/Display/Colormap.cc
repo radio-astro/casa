@@ -238,6 +238,10 @@ void Colormap::setShapingCoefficients(const Vector<Float> &params,
   }
 }
 
+void Colormap::setColormapDefinition( ColormapDefinition* definition ){
+	  itsColormapDefinition = definition;
+}
+
 const Vector<Float> Colormap::getShapingCoefficients() const {
   return itsShapingFunction->parameters().getParameters();
 }

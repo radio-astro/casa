@@ -472,12 +472,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     PagedImage<Float> featherImage(highIm_p->shape(), highIm_p->coordinates(), imagename );
     StokesImageUtil::To(featherImage, cimagelow);
     ImageUtilities::copyMiscellaneous(featherImage, *highIm_p);
-    
-    
-      
-    
-
-
     return true;
   }
 

@@ -44,7 +44,7 @@ class LineOverlaysTab : public QWidget
 
 public:
     LineOverlaysTab(QWidget *parent = 0);
-    void setRange( float min, float max, String units );
+    void setRange( double min, double max, String units );
     void setInitialReferenceFrame( QString referenceStr );
     void setCanvas( QtCanvas* canvas );
     ~LineOverlaysTab();

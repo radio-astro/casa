@@ -29,6 +29,7 @@
 //#include <stdio.h>
 //#include <complex.h>
 #include <casa/math.h>
+#include <math.h>
 //#include <stdlib.h>
 //#include <string.h>
 #include <images/Images/TempImage.h>
@@ -43,6 +44,7 @@
 #ifdef HAS_OMP
 #include <omp.h>
 #endif
+using namespace std;
 namespace casa{
 
   const Double BeamCalc::METER_INCH  = 39.37008;
@@ -362,7 +364,7 @@ namespace casa{
     a->feed[0] = feed_x;
     a->feed[1] = feed_y;
     a->feed[2] = feed_z;
-    d = sqrt(feed_x*feed_x + feed_y*feed_y + z*z);
+    d = std::sqrt((double)(feed_x*feed_x + feed_y*feed_y + z*z));
     if(z > 0.0)
       {
 	a->K = sub_h + d;
@@ -372,7 +374,7 @@ namespace casa{
       }
     else
       {
-	a->K = sqrt(feed_x*feed_x + feed_y*feed_y + feed_z*feed_z);
+	a->K = std::sqrt((double(feed_x*feed_x + feed_y*feed_y + feed_z*feed_z)));
 	a->feeddir[0] = -feed_x/d;
 	a->feeddir[1] = -feed_y/d;
 	a->feeddir[2] = (sub_h-feed_z)/d;
@@ -380,7 +382,7 @@ namespace casa{
     for(i = 0; i < 3; i++) a->pfeeddir[i] = a->feeddir[i];
     a->ftaper = fabs(ftaper);
     a->thmax = thmax;
-    a->fa2pi = 2.0*M_PI*sqrt(ftaper)*0.1874/sin(thmax*M_PI/180.0);
+    a->fa2pi = 2.0*M_PI*std::sqrt((double)ftaper)*0.1874/sin(thmax*M_PI/180.0);
     a->legwidth = 0.0;
     a->legfoot = a->radius/2.0;
     a->legapex = sub_h*1.2;
@@ -603,7 +605,7 @@ namespace casa{
     ftaper = 0.0;
     for(i = 0; i < geom->ntaperpoly; i++)
     {	
-    	ftaper += geom->taperpoly[0]*x;
+    	ftaper += geom->taperpoly[i]*x;
 	x *= df;
     }
     sprintf(geomfile, "%s.surface", geom->name);
@@ -1153,7 +1155,11 @@ namespace casa{
     for(i = 0; i < 3; i++) v[i] = ray->sub[i] - ray->feed[i];
     norm3(v);
     
-    for(i = 0; i < 3; i++) costheta += a->pfeeddir[i]*v[i];
+    for(i = 0; i < 3; i++) 
+      {
+	costheta += a->pfeeddir[i]*v[i];
+      }
+
     
     return exp(2.0*(-0.083)*a->fa2pi*a->fa2pi*(1.0-costheta*costheta));
   }
@@ -1564,7 +1570,7 @@ namespace casa{
       x = pac*(x0 + i*dx) - pas*(y0 + j*dy);
       y = pas*(x0 + i*dx) + pac*(y0 + j*dy);
       x = -x;
-      
+
       if(fabs(x) > Rant) goto nextpoint;
       if(fabs(y) > Rant) goto nextpoint;
       r2 = x*x + y*y;
@@ -1585,7 +1591,7 @@ namespace casa{
 	  deleteRay(ray);
 	  ray = 0;
 	}
-      
+
       ray = trace(a, x1, y1, p);
       
       /* check for leg blockage */
@@ -1629,6 +1635,7 @@ namespace casa{
       tracepol(Er, ray, E1);
       Exr = fp*amp*E1[0];
       Eyr = fp*amp*E1[1];
+      
       // 	    rr = Exr - 1.0i*Eyr;
       // 	    rl = Exr + 1.0i*Eyr;
       rr = Exr - Iota*Eyr;
@@ -1641,7 +1648,6 @@ namespace casa{
       // 	    ll = Exl + 1.0i*Eyl;
       lr = Exl - Iota*Eyl;
       ll = Exl + Iota*Eyl;
-      
       // 	    pos(0)=(Int)((j/os) - (25.0/dy/os)/2 + shape(0)/2 - 0.5);
       // 	    pos(1)=(Int)((i/os) - (25.0/dx/os)/2 + shape(1)/2 - 0.5);
       // Following 3 lines go with ANT tag in VLACalc.....
@@ -1652,7 +1658,7 @@ namespace casa{
       pos(0)=(Int)((j/os));
       pos(1)=(Int)((i/os));
       pos(3)=0;
-      
+
       pos(2)=0;tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+rr,pos);
       pos(2)=1;tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+rl,pos);
       pos(2)=2;tmp=ap->aperture->getAt(pos);ap->aperture->putAt(tmp+lr,pos);
