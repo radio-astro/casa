@@ -28,6 +28,10 @@ class SDCalSkyInputs(common.SingleDishInputs):
         if len(args['iflist']) == 0:
             # filter out WVR
             args['iflist'] = self.context.observing_run.get_spw_without_wvr(args['infile'])
+        else:
+            spw_list = set(self.context.observing_run.get_spw_without_wvr(args['infile']))
+            args['iflist'] = list(spw_list.intersection(args['iflist']))
+            
 
         # take calmode
         if args['calmode'] is None or args['calmode'].lower() == 'auto':
