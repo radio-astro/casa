@@ -61,10 +61,10 @@ class GriddingBase(object):
 
     def execute(self):
         start = time.time()
-        combine_radius = self.grid_ra
+        combine_size = self.grid_ra
         allowance = self.grid_ra * 0.1
         spacing = self.grid_ra / 3.0
-        index_list, grid_table = self.GroupForGrid(combine_radius, allowance, spacing, 'RASTER')
+        index_list, grid_table = self.GroupForGrid(combine_size, allowance, spacing, 'RASTER')
         #return index_list, grid_table
         work_dir = os.path.join('/',*(self.datatable.plaintable.split('/')[:-2]))
         filenames = [os.path.join(work_dir,f) for f in self.datatable.getkeyword('FILENAMES')]
@@ -76,7 +76,7 @@ class GriddingBase(object):
         ###################
         LOG.info('DataIn=%s'%(DataIn))
         LOG.info('index_list.shape=%s'%(list(index_list.shape)))
-        spstorage, grid_table2 = self.Process8(DataIn, index_list, self.nchan, grid_table, 0.5 * combine_radius, self.rule)
+        spstorage, grid_table2 = self.Process8(DataIn, index_list, self.nchan, grid_table, 0.5 * combine_size, self.rule)
         end = time.time()
         LOG.info('execute: elapsed time %s sec'%(end-start))
         return spstorage, grid_table2
