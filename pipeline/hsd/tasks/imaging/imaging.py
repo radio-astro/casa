@@ -9,23 +9,34 @@ import time
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.jobrequest as jobrequest
-import pipeline.infrastructure.logging as logging
+import pipeline.infrastructure.imagelibrary as imagelibrary
+import pipeline.infrastructure.basetask as basetask
+#import pipeline.infrastructure.logging as logging
 from .. import common
 from .gridding import gridding_factory
 from .imagegenerator import SDImageGenerator
 
 LOG = infrastructure.get_logger(__name__)
 #logging.set_logging_level('trace')
-logging.set_logging_level('info')
+#logging.set_logging_level('info')
 
 NoData = common.NoData
 
 class SDImagingInputs(common.SingleDishInputs):
     """
-    Inputs for simple gridding
+    Inputs for imaging
     """
-    def __init__(self, context, infiles=None, antennalist=None, iflist=None):
+    def __init__(self, context, infiles=None, iflist=None, pollist=None):
         self._init_properties(vars())
+
+    @property
+    def antennalist(self):
+        if type(self.infiles) == list:
+            antennas = [self.context.observing_run.get_scantable(f).antenna.name 
+                        for f in self.infiles]
+            return list(set(antennas))
+        else:
+            return [self.context.observing_run.get_scantable(self.infiles).antenna.name]
 
 class SDImagingResults(common.SingleDishResults):
     def __init__(self, task=None, success=None, outcome=None):
@@ -36,7 +47,8 @@ class SDImagingResults(common.SingleDishResults):
         LOG.todo('need to decide what is done in SDImagingResults.merge_with_context')
 
     def _outcome_name(self):
-        return self.outcome.__str__()
+        #return [image.imagename for image in self.outcome]
+        return self.outcome.imagename
 
 class SDImaging(common.SingleDishTaskTemplate):
     Inputs = SDImagingInputs
@@ -52,15 +64,19 @@ class SDImaging(common.SingleDishTaskTemplate):
         infiles = self.inputs.infiles
         iflist = self.inputs.iflist
         antennalist = self.inputs.antennalist
+        pollist = self.inputs.pollist
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
 
         image_list = []
+        results = basetask.ResultsList()
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
             spwid = group_desc['member'][0][1]
             LOG.debug('spwid=%s'%(spwid))
-            pollist = group_desc['member'][0][2]
+            pols = group_desc['member'][0][2]
+            if pollist is not None:
+                pols = list(set(pollist).intersection(pols))
 
             # skip spw not included in iflist
             if iflist is not None and spwid not in iflist:
@@ -88,6 +104,9 @@ class SDImaging(common.SingleDishTaskTemplate):
                 ant = indices[0]#group_desc['member'][0][0]
                 st = context.observing_run[ant]
 
+                # source name
+                source_name = st.source[0].name.replace(' ','_')
+
                 # get working class
                 obs_pattern = st.pattern[spwid].values()[0]
                 gridding_class = gridding_factory(obs_pattern)
@@ -110,7 +129,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                 # loop over pol
                 grid_table = None
                 data_array = []
-                for pol in pollist:
+                for pol in pols:                        
                     worker = gridding_class(datatable, indices, spwid, pol, srctype, nchan, grid_size)
             
                     ## create job for gridding
@@ -138,11 +157,11 @@ class SDImaging(common.SingleDishTaskTemplate):
                 
                 # create job for full channel image
                 LOG.info('create full channel image')
-                if pollist == [0,1]:
+                if pols == [0,1]:
                     polstr = 'XXYY'
-                elif pollist == [0] or pollist == 0:
+                elif pols == [0] or pols == 0:
                     polstr = 'XX'
-                elif pollist == [1] or pollist == 1:
+                elif pols == [1] or pols == 1:
                     polstr = 'YY'
                 else:
                     polstr = 'I'
@@ -154,14 +173,29 @@ class SDImaging(common.SingleDishTaskTemplate):
                 self._executor.execute(job)
                 
                 if imagename is not None:
-                    image_list.append(imagename)
-                
+                    #image_list.append(imagename)
+                    image_item = imagelibrary.ImageItem(imagename=imagename,
+                                                        sourcename=source_name,
+                                                        spwlist=spwid,
+                                                        sourcetype='TARGET')
+                    image_item.antenna = name
+                    #image_list.append(image_item)
 
-        result = SDImagingResults(task = self.__class__,
-                                     success = True, 
-                                     outcome = image_list)
-        result.task = self.__class__
-        return result
+                    result = SDImagingResults(task = self.__class__,
+                                              success = True, 
+                                              outcome = image_item)
+                    result.task = self.__class__
+                    results.append(result)
+
+                    if self.inputs.context.subtask_counter is 0: 
+                        result.stage_number = self.inputs.context.task_counter - 1
+                    else:
+                        result.stage_number = self.inputs.context.task_counter 
+                    LOG.info('task class is %s'%(result.task.__name__))
+
+        #result.task = self.__class__
+        #return result
+        return results
 
     def analyse(self, result):
         return result

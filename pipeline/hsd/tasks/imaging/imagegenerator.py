@@ -47,8 +47,7 @@ class SDImageGenerator(object):
         self.data = numpy.array(spectral_data) #(npol,nrow,nchan)
         self.nchan = self.data.shape[-1]
         # Check if channel averaged data
-        if self.nchan == 1:
-            self.isaveraged = True
+        self.isaveraged = (self.nchan == 1)
         
         self.edge = list(common.parseEdge(edge))
         
