@@ -104,8 +104,6 @@ install (FILES
 	ImageAnalysis/ImageFitter.h
 	ImageAnalysis/ImageFit1D.h
 	ImageAnalysis/ImageFit1D.tcc
-	ImageAnalysis/ImageHeader.h
-	ImageAnalysis/ImageHeader.tcc
     ImageAnalysis/ImageHistograms.h
     ImageAnalysis/ImageHistograms.tcc
 	ImageAnalysis/ImageInputProcessor.h
