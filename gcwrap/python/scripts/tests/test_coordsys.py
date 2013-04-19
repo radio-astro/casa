@@ -84,6 +84,7 @@ class coordsys_test(unittest.TestCase):
         
     def tearDown(self):
         os.remove(myim)
+        self.assertTrue(len(tb.showcache()) == 0)
         
     def test_CAS_2724(self):
         myia = iatool()
@@ -91,6 +92,10 @@ class coordsys_test(unittest.TestCase):
         mycsys = myia.coordsys()
         self.assertRaises(Exception, mycsys.toworldmany, [1])
 
+    def test_constructor(self):
+        """Test constructors"""
+        x = coordsystool()
+        x = cstool()
 
 def suite():
     return [coordsys_test]
