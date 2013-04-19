@@ -2850,7 +2850,7 @@ class simutil:
         modelflatcs=ia.coordsys()
         modelflatshape=ia.shape()
         tmpxx=ia.regrid(outfile=modelregrid+'.tmp', overwrite=True,
-                  csys=outflatcs.torecord(),shape=outflatshape)
+                  csys=outflatcs.torecord(),shape=outflatshape, asvelocity=False)
         # im.regrid assumes a surface brightness, or more accurately doesnt
         # pay attention to units at all, so we now have to scale 
         # by the pixel size to have the right values in jy/pixel, 

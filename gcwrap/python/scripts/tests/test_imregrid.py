@@ -409,7 +409,7 @@ class imregrid_test(unittest.TestCase):
         refvals = csys.referencevalue()["numeric"]
         refvals[3] *= 10
         csys.setreferencevalue(refvals)
-        regridded = myia.regrid("", myia.shape(), csys.torecord())
+        regridded = myia.regrid("", myia.shape(), csys.torecord(), asvelocity=False)
         self.assertTrue((regridded.getchunk(getmask=True) == False).all())
         self.assertTrue(
             (
@@ -422,7 +422,7 @@ class imregrid_test(unittest.TestCase):
         refvals = csys.referencevalue()["numeric"]
         refvals[3] *= 10
         csys.setreferencevalue(refvals)
-        regridded = myia.regrid("", myia.shape(), csys.torecord())
+        regridded = myia.regrid("", myia.shape(), csys.torecord(), asvelocity=False)
         self.assertTrue(regridded.getchunk(getmask=True).all())
         self.assertTrue(
             (

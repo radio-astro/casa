@@ -8,9 +8,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <task type="function" name="imregrid" category="analysis">
 <shortdescription>regrid an image onto a template image</shortdescription>
 <description>
-Imregrid will regrid an input image onto a template image
-coordinate system.  The input and template images must have
-the same coordinate structure.
+Imregrid will regrid an input image onto a new coordinate system from a template image
+or to a new directional reference frame. If a template image is used, then the input and
+template images must have the same coordinate structure.
 </description>
 <input>
 	<param type="string" name="imagename" mustexist="true">
@@ -30,7 +30,7 @@ the same coordinate structure.
 
      <param type="bool" direction="in" name="asvelocity">
         <description>Regrid spectral axis in velocity space rather than frequency space?</description>
-        <value>False</value>
+        <value>True</value>
      </param>
      <param type="intArray" direction="in" name="axes">
         <description>The pixel axes to regrid. -1 => all.</description>
@@ -49,33 +49,42 @@ the same coordinate structure.
      </constraints>
 </input>
 <example>
-
-imregrid: regrid an image to a new coordinate system.
+Imregrid will regrid an input image onto a new coordinate system from a template image
+or to a new directional reference frame. If a template image is used, then the input and
+template images must have the same coordinate structure.
 
 Keyword arguments:
-imagename   Name of the image that needs to be regridded
-            default: none; example: imagename='orion.image'
-template    Dictionary, reference code, or imagename defining the new
+
+imagename   Name of the source image that needs to be regridded. Must be specified.
+            example: imagename='orion.image'
+template    Dictionary, directional reference code, or imagename defining the new
             shape and coordinate system, or 'get' to return the template
-            dictionary for imagename.  Recognized reference codes are:
+            dictionary for imagename.  Recognized directional reference codes are:
             'J2000', 'B1950', 'B1950_VLA', 'GALACTIC', 'HADEC', 'AZEL',
             'AZELSW', 'AZELNE', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC',
             and 'SUPERGAL'.
-            default: 'get'; example: template='orion_j2000.im'
+            default: 'get'; example: template='orion_j2000.im' (for a template image),
+            template='J2000' (to regrid the input image to J2000 coordinates).
 shape       Shape of the output image. Only used if template is an image.
             If not specified (-1), the output image shape is set equal to
-            the input image shape.
-output      Name for the regridded image
-            default: imagename + '.regridded'; example: imagename='orion_shifted.im'
-asvelocity  Regrid spectral axis with respect to velocity, not frequency?
-            default: False
-axes        The pixel axes to regrid. -1 => all.
+            the input image shape. Ignored if template is set equal to a
+            reference code. If template is a dictionary, the output shape is
+            retrieved from the dictionary so the shape input parameter is ignored.
+output      Name for the regridded image.  Must be specified.
+            example: imagename='orion_shifted.im'
+asvelocity  If True, regrid spectral axis with respect to velocity, not frequency. If False,
+            regrid with respect to frequency. default: True
+axes        The pixel axes to regrid. Default value [-1] => all except Stokes. Ignored
+            if template is set equal to a reference code (in which case only the directional
+            axes are regridded). If specified, this should
+            be provided as an array. example axes=[0,1] (only regrid the first two axes, which
+            are normally the directional axes).
 async       Run task in a separate process (return CASA prompt)
             default: False; example: async=True
                 
-The new coordinate system is defined by the template parameter,
-which can be:
-    * a recognized reference frame string. This will rotate the image and the coordinate system so that
+The new coordinate system is defined by the template parameter, which can be:
+
+    * a recognized directional reference frame string. This will rotate the image and the coordinate system so that
       the new reference frame's axes are aligned to the cardinal directions (left-right, up-down).
       Rotation occurs about the center direction pixel. If this pixel is not the reference pixel,
       a temporary copy of the original image is created and the coordinate system is adjusted so
@@ -83,26 +92,113 @@ which can be:
       is not modified and the output image's reference direction pixel is the center pixel.
       Note that the conversion between one frame and another in general becomes less accurate
       as distance from the output image's reference pixel increases.
-    * a {'csys': csys_record, 'shap': shape} dictionary,
+    * a {'csys': [valid coordinate system dictionary], 'shap': [int array describing the output shape]} dictionary.
+      This is normally obtained by first running regrid with template='get'. In this case imregrid returns the
+      necessary dictionary.
     * 'get', which does not regrid but returns the template dictionary
-      for imagename, suitable for modification and reuse, or
-    * the name of an image to get the coordinate system and shape
-      from.  The input and template images must have the same
+      for imagename, suitable for modification and reuse (see the point immediately above), or
+    * the name of an image from which to get the coordinate system and shape.
+      The input and template images must have the same
       coordinate structure.
       
 If one of the axes to be regridded is a spectral axis and asvelocity=T,
 the axis will be regridded to match the velocity, not the frequency,
-description of the template coordinate system. Thus the output pixel
+coordinate of the template coordinate system. Thus the output pixel
 values will correspond only to the velocity, not the frequency, of the
 output axis.
 
 If an image has per-plane beams and one attempts to regrid the spectral axis,
 an exception is thrown.
 
-# convert an input image that has GALACTIC coordinates to an image with J2000 coordinates
 
-imregrid(imagename="mygal.im", template="J2000", output="myj2000.im")
+Basic Examples
 
+# Regrid an image to the "B1950" or "GALACTIC" coordinate systems
+
+   imregrid(imagename="input.image", output="output.image", template="B1950")
+   imregrid(imagename="input.image", output="output.image", template="GALACTIC")
+
+Note that when regridding to another coordinate system in the manner above, if the
+input image's direction coordinate is already in the frame specified by template,
+a straight copy of the image is made. No regridding is actually done.
+
+# Obtain a template dictionary from an image and then use it to regrid another image
+
+   temp_dict = imregrid(imagename="target.image", template="get")
+   imregrid(imagename="input.image", output="output.image", template=temp_dict)
+
+In this example, the template="get" option is used in the first command in order to
+characterize the desired shape and coordinate system used, and a new dictionary,
+temp_dict, is generated accordingly. This is then used when performing the actual
+regridding of input.image in the second command. 
+
+
+More Advanced Examples
+
+It is also possible to directly use a template image for regridding with imregrid.
+For this to work reliably and predictably, the dimensionality (i.e. which
+dimensions are present in an image) and the axis ordering of the input image must
+be the same. The type and ordering of the axes of both the input and template
+images can (and should) first be examined using the CASA imhead task. Any
+necessary reordering of axes can be performed using the CASA imtrans task.
+
+Unless the user explicitly specifies which dimensions to regrid using the axes
+parameter (see the following example), imregrid will also attempt to regrid
+degenerate axes (i.e. image axes of length one pixel). Stokes axes are never
+regridded.
+
+In light of the current default behavior, whenever a template image is used
+directly in imregrid, it is *strongly* recommended that the shape parameter is
+used to explicitly specify the desired shape of the output dataset (usually
+likely to be the shape of the template image), and that the axes parameter is explicitly
+set to specify the axes are to be regridded. The default behavior will be
+modified to be more intuitive in a future release.
+
+
+# Regrid input.image by directly using target.image as a template
+
+   imregrid(imagename="input.image", output="output.image", template="target.image", shape=[500,500,40,1])
+
+In this example, it is assumed that the axis order of the input image is of the
+form (position_x, position_y, spectral, Stokes), where 'position_x' and 'position_y'
+are the directional coordinates on the sky (in some reference frame),
+'spectral' is a velocity/frequency axis, and 'Stokes' contains polarization
+information.  In this example, input.image might typically be a data cube of
+shape [100, 100, 40, 1]. Note that the default value of asvelocity (True) will be used so that
+the spectral axis will be regridded to the same velocity system as that of the template image.
+
+
+# Regrid only the first two axes of an image
+
+Firstly, the user should inspect the type and ordering of the axes with imhead,
+and then correct with imtrans if necessary.
+
+   imregrid(imagename="input.image", output="output.image", template="target.image", axes=[0,1])
+
+The above command should regrid only the first two axes (normally the directional axes)  of input.image and
+leave all other axes unchanged. The output image will have the shape of the input image since the shape
+parameter was not explicitly specified.
+
+
+# Regrid the third axis, considering velocity rather than frequency units
+
+   imregrid(imagename="input.image", output="output.image", template="target.image", axes=[2], asvelocity=True)
+
+This example regrids the spectral axis (zero-based axis number 2)  with respect to velocity because the asvelocity parameter
+has been set to True (rather than its default value of False). This is useful when eg, regridding
+a cube containing one spectral line to match the velocity coordinate of another cube containing a different
+spectral line.
+
+
+# Regrid the third axis, considering velocity rather than frequency units but first set the rest frequency
+
+   imhead("input.image", mode="put", hdkey="restfreq", hdvalue="110GHz")
+   imregrid(imagename="input.image", output="output.image", template="target.image", axes=[2], asvelocity=True)
+
+The first command in this example uses the imhead task to set the value of the
+image rest frequency to a value of 110GHz in input.image. The following
+imregrid command then performs a frequency units regridding only of the third
+axis listed (zero-based axis) (2), taking account of the input.image rest frequency in the input file.
 
 
 </example> 

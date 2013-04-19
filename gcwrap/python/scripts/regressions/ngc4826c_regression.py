@@ -123,7 +123,7 @@ csys=ia.coordsys()
 ia.close()
 #### regrid SD image so that shape and coordinate parameters match
 ia.open('n4826_t12mchan.im')
-out_ia = ia.regrid(outfile='n4826_t12motf.chregrid.im',shape=[256,256,1,30],csys=csys.torecord())
+out_ia = ia.regrid(outfile='n4826_t12motf.chregrid.im',shape=[256,256,1,30],csys=csys.torecord(), asvelocity=False)
 ia.close()
 out_ia.close()
 #### deconvolve SD image with a guess of PB with msclean

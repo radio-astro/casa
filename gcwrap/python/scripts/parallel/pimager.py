@@ -518,7 +518,7 @@ class pimager():
             shp=ia.shape()
             
         ia.open(inimage)
-        ia.regrid(outfile=outimage, shape=shp, csys=csys.torecord(), axes=[0,1], overwrite=True)
+        ia.regrid(outfile=outimage, shape=shp, csys=csys.torecord(), axes=[0,1], overwrite=True, asvelocity=False)
         ia.done()
         casalog.filter("INFO")
     def setupcommonparams(self, spw='*', field='*', phasecenter='', 
