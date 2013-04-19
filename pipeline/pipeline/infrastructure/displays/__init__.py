@@ -7,4 +7,4 @@ from __future__ import absolute_import
 from .image import ImageDisplay
 from .sky import SkyDisplay
 from .slice import SliceDisplay
-from .singledish import SDPointingDisplay, SDAzElDisplay, SDWeatherDisplay, SDWvrDisplay, SDTsysDisplay, SDSkyDisplay, SDChannelAveragedImageDisplay, SDImageDisplayFactory
+from .singledish import SDPointingDisplay, SDAzElDisplay, SDWeatherDisplay, SDWvrDisplay, SDTsysDisplay, SDSkyDisplay, SDImageDisplayFactory
