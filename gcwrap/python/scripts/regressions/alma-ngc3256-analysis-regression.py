@@ -419,6 +419,9 @@ if(mystep in thesteps):
     
     flagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/16/04:14:00~04:17:10', antenna='PM03', flagbackup = T)
+
+    flagdata(vis='ngc3256_line.ms', mode='manual',
+	timerange='2011/04/17/01:52:20~01:53:10', antenna='DV10', flagbackup = T)
     
     flagdata(vis='ngc3256_line.ms', mode='manual',
 	timerange='2011/04/17/00:35:30~01:20:20', antenna='DV04', spw='3', flagbackup = T)
@@ -490,7 +493,7 @@ if(mystep in thesteps):
 
     if makeplots:
         imview(raster={'file': 'result-phasecal_cont.image.tt0', 'colorwedge':T,
-                       'range':[-0.004, 0.250], 'scaling':-2.5, 'colormap':'Rainbow 2'},
+                       'range':[-0.004, 0.250], 'scaling':-1.5, 'colormap':'Rainbow 2'},
                out='result-phasecal_map.png', zoom=1)
 
         imview(raster={'file': 'result-phasecal_cont.image.tt0', 'colorwedge':T,
