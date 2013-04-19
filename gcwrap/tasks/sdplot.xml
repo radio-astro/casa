@@ -561,6 +561,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 histogram -- plot histogram
                         options: (bool) True, False
                         default: False
+                scanpattern -- plot additional lines on the plot to indicate scan patterns
+                               when plottype='pointing'
+                        options: (bool) True, False
+                        default: False
         header -- print header information on the plot
                 options: (bool) True, False
                 default: True
