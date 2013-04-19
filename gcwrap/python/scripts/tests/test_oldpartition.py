@@ -13,7 +13,7 @@ from parallel.parallel_task_helper import ParallelTaskHelper
 ''' Unit Tests for task partition'''
 
 # jagonzal (CAS-4287): Add a cluster-less mode to by-pass parallel processing for MMSs as requested 
-if os.environ.has_key('BYPASS_PARALLEL_PROCESSING'):
+if os.environ.has_key('BYPASS_SEQUENTIAL_PROCESSING'):
     ParallelTaskHelper.bypassParallelProcessing(1)
 
     
@@ -74,6 +74,7 @@ class partition_test1(test_base):
     def test_nomms(self):
         '''Partition: Create a normal MS with createmms=False'''
         partition(vis=self.msfile, outputvis=self.mmsfile, createmms=False)
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -81,47 +82,13 @@ class partition_test1(test_base):
         self.assertTrue(th.compTables(self.msfile, self.mmsfile, 
                                       ['FLAG_CATEGORY','FLAG','WEIGHT_SPECTRUM','DATA']))
         
-        # TODO: verify why the DATA column differs
         # Compare the DATA column
-#        self.assertTrue(th.compVarColTables(self.msfile,self.mmsfile,'DATA'))
+        self.assertTrue(th.compVarColTables(self.msfile,self.mmsfile,'DATA'))
 
     def test_default(self):
         '''Partition: create an MMS with default values'''
         partition(vis=self.msfile, outputvis=self.mmsfile)
-        
-        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
-        
-        # Take the dictionary and compare with original MS
-        thisdict = listpartition(vis=self.mmsfile, createdict=True)
-        
-        # Compare nrows of all scans
-        slist = ph.getMMSScans(thisdict)
-        
-        # CAS-5053 contains a bug when calling ms.getscansummary()
-        # that wrongly calculates the nrows of a scan in a MS
-#         for s in slist:
-#             mmsN = ph.getMMSScanNrows(thisdict, s)
-#             msN = ph.getScanNrows(self.msfile, s)
-#             self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
-#                              %(s, mmsN, msN))
- 
-        # Compare spw IDs
-        for s in slist:
-            mms_spw = ph.getSpwIds(self.mmsfile, s)
-            ms_spw = ph.getSpwIds(self.msfile, s)
-#             self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
-#                              'mms_spw=%s <--> ms_spw=%s' %(s, mmsN, msN))
-            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '%(s))
-        
-#         TO DO: Compare both table using compTables when sorting in partition is fixed
-        self.assertTrue(th.compTables(self.msfile, self.mmsfile, 
-                                      ['FLAG','FLAG_CATEGORY','TIME_CENTROID',
-                                       'WEIGHT_SPECTRUM','DATA']))
-
-
-    def test_default_scan(self):
-        '''Partition: create an MMS with default values ans axis=scan'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -155,8 +122,8 @@ class partition_test1(test_base):
 
     def test_scan_selection(self):
         '''Partition: create an MMS using scan selection'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan', scan='1,2,3,11',
-                  flagbackup=False, parallel=False)
+        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan', scan='1,2,3,11')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -184,8 +151,8 @@ class partition_test1(test_base):
         '''Partition: create an MMS separated by spws with observation selection'''
         # NOTE: ms.getscansummary() used in ph.getScanNrows does not honour several observation
         #       IDs, therefore I need to selection by obs id in partition
-        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', observation='2',
-                  flagbackup=False, parallel=False)
+        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', observation='2')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -203,20 +170,18 @@ class partition_test1(test_base):
             self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
                              %(s, mmsN, msN))
  
-        # spwids are re-indexed. The expected IDs are:
-        # ms_spw = 2 --> mms_spw = 0
-        # ms_spw = 3 --> mms_spw = 1, etc.
-        # Check that MMS spw IDs have been re-indexed properly
-        indexed_ids = range(4)
+        # Compare spw IDs
         for s in slist:
             mms_spw = ph.getSpwIds(self.mmsfile, s)
-            self.assertEqual(mms_spw, indexed_ids, 'spw IDs were not properly re-indexed')
+            ms_spw = ph.getSpwIds(self.msfile, s, selection=mysel)
+            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
+                             'mms_spw=%s <--> ms_spw=%s' %(s, mmsN, msN))
 
 
     def test_spw_selection(self):
         '''Partition: create an MMS separated by spws with spw=2,4 selection'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', spw='2,4',
-                  flagbackup=False, parallel=False)
+        partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw', spw='2,4')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -234,15 +199,14 @@ class partition_test1(test_base):
             self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
                              %(s, mmsN, msN))
  
-        # spwids are re-indexed. The expected IDs are:
-        # ms_spw = 2 --> mms_spw = 0
-        # ms_spw = 4 --> mms_spw = 1
-        # Check that MMS spw IDs have been re-indexed properly
-        indexed_ids = range(2)
+        # Compare spw IDs
         for s in slist:
             mms_spw = ph.getSpwIds(self.mmsfile, s)
-            self.assertEqual(mms_spw, indexed_ids, 'spw IDs were not properly re-indexed')
+            ms_spw = ph.getSpwIds(self.msfile, s, selection=mysel)
+            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
+                             'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
 
+#    def addCleanup(self, function, *args, **kwargs):
     
 class partition_test2(test_base):
     
@@ -255,46 +219,14 @@ class partition_test2(test_base):
         shutil.rmtree(self.msfile+'.flagversions', ignore_errors=True)        
         shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True)        
 
-    def test_default_sequential(self):
-        '''Partition: create an MMS with default values'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, parallel=False)
-        
-        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
-        
-        # Take the dictionary and compare with original MS
-        thisdict = listpartition(vis=self.mmsfile, createdict=True)
-        
-        # Get scans of MMS
-        slist = ph.getMMSScans(thisdict)
-         
-        for s in slist:
-            mmsN = ph.getMMSScanNrows(thisdict, s)
-            msN = ph.getScanNrows(self.msfile, s)
-            self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
-                             %(s, mmsN, msN))
- 
-        # Compare spw IDs of MS and MMS
-        for s in slist:
-            mms_spw = ph.getSpwIds(self.mmsfile, s)
-            ms_spw = ph.getSpwIds(self.msfile, s)
-            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
-                             'mms_spw=%s <--> ms_spw=%s' %(s, mmsN, msN))
-        
-#         TO DO: Compare both table using compTables when sorting in partition is fixed
-        self.assertTrue(th.compTables(self.msfile, self.mmsfile, 
-                                      ['FLAG','FLAG_CATEGORY','TIME_CENTROID',
-                                       'WEIGHT_SPECTRUM','MODEL_DATA','DATA',
-                                       'CORRECTED_DATA']))
-
-
-    # The following test fails in the OSX platforms if the full MS is used to
+    # The followin test fails in the OSX platforms if the full MS is used to
     # create the MMS. It does not fail in partition, but in the ms.getscansummary()
     # methods. Check this soon
     def test_sepaxis(self):
         '''Partition: separationaxis=both'''        
-        partition(vis=self.msfile, outputvis=self.mmsfile, spw='0~11',separationaxis='both',
-                  flagbackup=False, parallel=False)
+        partition(vis=self.msfile, outputvis=self.mmsfile, spw='0~11',separationaxis='both')
 #        partition(vis=self.msfile, outputvis=self.mmsfile,separationaxis='both')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
 
@@ -325,8 +257,8 @@ class partition_test2(test_base):
         
     def test_all_columns(self):
         '''Partition: datacolumn=all'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all',
-                  flagbackup=False, parallel=False)
+        partition(vis=self.msfile, outputvis=self.mmsfile, datacolumn='all')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -352,7 +284,8 @@ class partition_test2(test_base):
     def test_scan_spw(self):
         '''Partition: separationaxis=scan with spw selection'''
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='scan',
-                  spw='1~4,10,11', flagbackup=False)
+                  spw='1~4,10,11')
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -370,21 +303,20 @@ class partition_test2(test_base):
             self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
                              %(s, mmsN, msN))
 
-        # The comparison should be
-        # ms_spw = 1 --> mms_spw = 0
-        # ms_spw = 2 --> mms_spw = 1, etc.
-        # Check that MMS spw IDs have been re-indexed properly
-        indexed_ids = range(6)
+        # Compare spw IDs
         for s in slist:
             mms_spw = ph.getSpwIds(self.mmsfile, s)
-            self.assertEqual(mms_spw, indexed_ids, 'spw IDs were not properly re-indexed')
+            ms_spw = ph.getSpwIds(self.msfile, s, selection=mysel)
+            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
+                             'mms_spw=%s <--> ms_spw=%s' %(s, mms_spw, ms_spw))
  
         
     def test_numsubms(self):
         '''Partition: small numsubms value'''
         # There are 16 spws; we want only 6 sub-MSs.
         partition(vis=self.msfile, outputvis=self.mmsfile, separationaxis='spw',
-                  numsubms=6, flagbackup=False, parallel=False)
+                  numsubms=6)
+        time.sleep(10)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
@@ -417,8 +349,7 @@ class partition_test2(test_base):
         '''Partition: check that the .flagversions is created'''
                 
         # Run partition and create the .flagversions
-        partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True,
-                  parallel=False)
+        partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True)
         self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
  
          # Check that the number of backups in MMS is correct
@@ -448,8 +379,7 @@ class partition_test2(test_base):
         flagdata(vis=self.msfile, mode='unflag', flagbackup=False)
         
         # Run partition and create the .flagversions
-        partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True,
-                  parallel=False)
+        partition(vis=self.msfile, outputvis=self.mmsfile, createmms=True)
         self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
         
         # Flag spw=9 and then spw=7 in the MMS
@@ -465,41 +395,6 @@ class partition_test2(test_base):
         res = flagdata(vis=self.mmsfile, mode='summary')
         self.assertEqual(res['flagged'],0)
         
-    def test_channels1(self):
-        '''partition: create MMS with spw separation and channel selections'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, spw='0~4,5:1~10',createmms=True,
-                    separationaxis='spw', parallel=False, flagbackup=False)
-                            
-        self.assertTrue(os.path.exists(self.mmsfile))
-        
-        # It should create 6 subMS, with spw=0~5
-        # spw=5 should have only 10 channels
-        ret = th.verifyMS(self.mmsfile, 6, 10, 5,ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])        
-
-    def test_channels2(self):
-        '''partition: create MMS with spw/scan separation and channel selections'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, spw='0:0~10,1:60~63',createmms=True,
-                    separationaxis='both', parallel=False, flagbackup=False)
-                            
-        self.assertTrue(os.path.exists(self.mmsfile))
-        
-        # It should create 4 subMS, with spw=0~1
-        # spw=0 has 11 channels, spw=1 has 4 channels
-        ret = th.verifyMS(self.mmsfile, 2, 11, 0, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])        
-        ret = th.verifyMS(self.mmsfile, 2, 4, 1, ignoreflags=True)
-        self.assertTrue(ret[0],ret[1])        
-
-    def test_channels3(self):
-        '''partition: verify spw sub-table consolidation'''
-        partition(vis=self.msfile, outputvis=self.mmsfile, spw='3,5:10~20,7,9,11,13,15',
-                    createmms=True,separationaxis='spw', flagbackup=False)       
-                             
-        self.assertTrue(os.path.exists(self.mmsfile))
-        
-        # spw=5 should be spw=1 after consolidation, with 10 channels
-        ret = th.verifyMS(self.mmsfile, 7, 10, 1, ignoreflags=True)
           
 def suite():
     return [partition_test1, partition_test2]

@@ -330,8 +330,8 @@ def getMMSScans(mmsdict):
     slist = set(scanlist)
     for k in tkeys:
         skeys = mmsdict[k]['scanId'].keys()
-        for k in skeys:
-            slist.add(k)
+        for j in skeys:
+            slist.add(j)
     
     return list(slist)
     
