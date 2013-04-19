@@ -158,18 +158,25 @@ class RestoreDataInputs(basetask.StandardInputs):
 
 
 class RestoreDataResults(basetask.Results):
-    def __init__(self, jobs=[]):
+    def __init__(self, importdata_results=None):
 	"""
 	Initialise the results object with the given list of JobRequests.
 	"""
         super(RestoreDataResults, self).__init__()
-        self.jobs = jobs
+	self.importdata_results = importdata_results
+        self.mses=[]
+
+    def merge_with_context(self, context):
+        if self.importdata_results:
+            for result in self.importdata_results:
+                result.merge_with_context(context)
+        for ms in context.observing_run.measurement_sets:
+            self.mses.append(ms)
 
     def __repr__(self):
-	s = 'RestoreData results:\n'
-	for job in self.jobs:
-	    s += '%s performed.' % str(job)
-	return s 
+        return 'RestoreDataResults:\n\t{0}'.format(
+                '\n\t'.join([ms.name for ms in self.mses]))
+
 
 class RestoreData(basetask.StandardTaskTemplate):
     """
@@ -225,8 +232,9 @@ class RestoreData(basetask.StandardTaskTemplate):
 	# and MS,flagversions will contain a copy of the original MS flags,
 	# Flags.Original.
 	#    TBD: Add error handling
-	results = self._do_importasdm(sessionlist=sessionlist, vislist=vislist)
-	results.accept(inputs.context)
+	import_results = self._do_importasdm(sessionlist=sessionlist,
+	    vislist=vislist)
+	#import_results.accept(inputs.context)
 
 	# Download flag versions
 	#   Download from the archive or products_dir to rawdata_dir.
@@ -258,11 +266,11 @@ class RestoreData(basetask.StandardTaskTemplate):
 	self._do_restore_calstate()
 
 	# Apply the calibrations.
-	results = self._do_applycal()
-	results.accept(inputs.context)
+	apply_results = self._do_applycal()
+	#apply_results.accept(inputs.context)
 
 	# Return the results object, which will be used for the weblog
-	return RestoreDataResults(jobs=[])
+	return RestoreDataResults(import_results)
 
     def analyse(self, results):
 	"""
@@ -281,7 +289,7 @@ class RestoreData(basetask.StandardTaskTemplate):
         importdata_inputs = importdata.ImportData.Inputs(inputs.context,
 	    vis=vislist, session=sessionlist, save_flagonline=False)
 	importdata_task = importdata.ImportData(importdata_inputs)
-	return self._executor.execute(importdata_task)
+	return self._executor.execute(importdata_task, merge=True)
 
     def  _do_restore_flags(self, flag_version_name='Pipeline_Final'):
 	inputs = self.inputs
@@ -369,8 +377,9 @@ class RestoreData(basetask.StandardTaskTemplate):
 		extractlist = []
 		for member in tarmembers:
 		    if member.name.startswith(os.path.basename(vis)):
-	                LOG.info('    Extracting caltable  %s' % (member.name))
 		        extractlist.append(member)
+		        if member.name.endswith('.tbl/'):
+	                    LOG.info('    Extracting caltable  %s' % (member.name))
 		if not self._executor._dry_run:
 		    if len(extractlist) == len(tarmembers):
 		        tar.extractall(path=inputs.output_dir)
@@ -384,7 +393,7 @@ class RestoreData(basetask.StandardTaskTemplate):
 	inputs = self.inputs
         applycal_inputs = applycal.Applycal.Inputs(inputs.context)
 	applycal_task = applycal.Applycal(applycal_inputs)
-	return self._executor.execute(applycal_task)
+	return self._executor.execute(applycal_task, merge=True)
 
     def _get_sessions (self, sessions=[], vis=[]):
 
