@@ -95,6 +95,8 @@ bool pvline_stats_t::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::Re
 		pixel_pt2->setText(QString::fromStdString(pvinfo->pixelStrings( )[1]));
 		world_pt1->setText(QString::fromStdString(pvinfo->worldStrings( )[0]));
 		world_pt2->setText(QString::fromStdString(pvinfo->worldStrings( )[1]));
+		position_angle->setText(QString::fromStdString(pvinfo->positionAngle( )) + QString::fromUtf8("˚"));
+		separation->setText(QString::fromStdString(pvinfo->separation( )));
 	} catch (...) { /* expect only std::bad_cast */ }
 	return true;
 }
