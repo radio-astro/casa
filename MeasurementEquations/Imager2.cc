@@ -573,25 +573,15 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	 << imageStart_p << " stepped by " << imageStep_p << LogIO::POST;
      
       Double finc;
-      if(imageNchan_p > 1){
+      {
 	// Now use outframe (instead of data frame) as the rest of
 	// the modes do
 	//
-	finc=chanFreq(1)-chanFreq(0);
+       
+	finc= (chanFreq.shape().nelements()==1) ? freqResolution(0) : chanFreq(1)-chanFreq(0);
+	
 	mySpectral = new SpectralCoordinate(freqFrame_p,
       					  chanFreq(0),
-					    finc,  
-					    refChan, restFreq);
-      }
-      else if(imageNchan_p==1) {
-	//Single channel ...do it like mfs setting
-	//finc=freqResolution(IPosition(1,0));
-	Double fmin; 
-	Double fmax;
-	rvi_p->getFreqInSpwRange(fmin, fmax, freqFrameValid_p ? MFrequency::LSRK : freqFrame_p);
-	finc=(fmax-fmin); 
-	mySpectral = new SpectralCoordinate(freqFrameValid_p ? MFrequency::LSRK : freqFrame_p,
-					    (fmax+fmin)/2.0,
 					    finc,  
 					    refChan, restFreq);
       }
