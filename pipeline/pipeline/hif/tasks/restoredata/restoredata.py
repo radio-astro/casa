@@ -160,7 +160,7 @@ class RestoreDataInputs(basetask.StandardInputs):
 class RestoreDataResults(basetask.Results):
     def __init__(self, importdata_results=None):
 	"""
-	Initialise the results object with the given list of JobRequests.
+	Initialise the results objects.
 	"""
         super(RestoreDataResults, self).__init__()
 	self.importdata_results = importdata_results
