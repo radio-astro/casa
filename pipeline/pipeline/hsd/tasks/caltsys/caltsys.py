@@ -25,7 +25,9 @@ class SDCalTsysInputs(common.SingleDishInputs):
         args = super(SDCalTsysInputs,self).to_casa_args()
 
         # iflist for tsys calibration
-        if args['iflist'] is None or len(args['iflist']) == 0:
+        # inputs.iflist is mapped to tsysiflist
+        # iflist is taken from observing_run
+        if len(args['iflist']) == 0:
             ifset = set()
             for st in self.context.observing_run:
                 if st.tsys_transfer == False:
@@ -36,8 +38,6 @@ class SDCalTsysInputs(common.SingleDishInputs):
         else:
             args['tsysiflist'] = args['iflist'][:]
 
-        # take iflist from observing_run (shouldbe ScantableList object)
-        #if len(args['iflist']) == 0:
         # filter out WVR
         args['iflist'] = self.context.observing_run.get_spw_without_wvr(args['infile'])
 
