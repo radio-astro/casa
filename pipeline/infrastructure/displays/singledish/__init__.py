@@ -7,4 +7,5 @@ from .wvr import SDWvrDisplay
 from .tsys import SDTsysDisplay
 from .sky import SDSkyDisplay
 from .tpimage import SDChannelAveragedImageDisplay
+from .spimage import SDSpectralImageDisplay
 from .imaging import SDImageDisplayFactory

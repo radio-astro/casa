@@ -15,6 +15,33 @@ class SingleDishDisplayInputs(object):
         self.context = context
         self.result = result
 
+class SDImageDisplayInputs(SingleDishDisplayInputs):
+    @property
+    def imagename(self):
+        return self.result.outcome.imagename
+
+    @property
+    def spw(self):
+        return self.result.outcome.spwlist
+
+    @property
+    def antenna(self):
+        return self.result.outcome.antenna
+
+    @property
+    def stage_number(self):
+        return self.result.stage_number
+
+    @property
+    def stage_dir(self):
+        return os.path.join(self.context.report_dir,
+                            'stage%d'%(self.stage_number))
+
+    @property
+    def source(self):
+        return self.result.outcome.sourcename
+
+
 class SDInspectionDisplay(object):
     __metaclass__ = abc.ABCMeta
     Inputs = SingleDishDisplayInputs

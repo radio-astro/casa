@@ -11,52 +11,24 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation
-from .common import DPISummary, DPIDetail
+from .common import DPISummary, DPIDetail, SDImageDisplayInputs
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDChannelAveragedImageDisplayInputs(object):
-    def __init__(self, context, result):
-        self.context = context
-        self.imagename = result.outcome.imagename
-        self.spw = result.outcome.spwlist
-        self.antenna = result.outcome.antenna
-        self.stage = result.stage_number
-        self.source = result.outcome.sourcename
-        LOG.info('inpus object created')
-
 class SDChannelAveragedImageDisplay(object):
-    Inputs = SDChannelAveragedImageDisplayInputs
+    Inputs = SDImageDisplayInputs
     MATPLOTLIB_FIGURE_ID = 8911
     
     def __init__(self, inputs):
         self.inputs = inputs
         self.context = self.inputs.context
-        LOG.info('task class created')
-
-    def execute(self, dry_run=False, **parameters):
-        return self.plot()
 
     def plot(self):
-        LOG.info('START PLOT')
         ShowPlot = True
         qa = casatools.quanta
         to_deg = lambda q: qa.convert(q,'deg')['value']
-        # Read data
-        #NROW = len(Table)
-    ##     NCHAN = 1
-    ##     data = NP.zeros((NROW, NCHAN), dtype=NP.float32)
-    ##     _tbtool = casac.homefinder.find_home_by_name('tableHome')
-    ##     _tb = _tbtool.create()
-    ##     _tb.open(DataIn)
-    ##     for x in range(NROW):
-    ##         data[x] = _tb.getcell('SPECTRA', x)
-    ##     _tb.close()
-    ##     del _tbtool, _tb
-        #(NCHAN,data,Abcissa,Velocity) = GetDataFromFile( DataIn, NROW, False )
-        NCHAN = 1
-        stage_dir = os.path.join(self.context.report_dir,
-                                 'stage%d'%(self.inputs.stage))
+
+        stage_dir = self.inputs.stage_dir
         antenna_names = [st.antenna.name for st in self.context.observing_run]
         try:
             idx = antenna_names.index(self.inputs.antenna)
@@ -66,7 +38,6 @@ class SDChannelAveragedImageDisplay(object):
         beamsize = to_deg(beam_size)
         gridsize = beamsize / 3.0
         #gridsize = 0.5 * beamsize 
-        LOG.info('imagename=%s (%s)'%(self.inputs.imagename,type(self.inputs.imagename)))
         with utils.open_image(self.inputs.imagename) as ia:
             image_shape = ia.shape()
             coordsys = ia.coordsys()
@@ -79,6 +50,7 @@ class SDChannelAveragedImageDisplay(object):
             nchan = image_shape[id_spectral] # should be 1
             npol = image_shape[id_stokes]
             data = ia.getchunk()
+            mask = ia.getchunk(getmask=True)
             bottom = ia.toworld(numpy.zeros(len(image_shape),dtype=int), 'q')['quantity']
             top = ia.toworld(image_shape-1, 'q')['quantity']
             key = lambda x: '*%s'%(x+1)
@@ -88,28 +60,7 @@ class SDChannelAveragedImageDisplay(object):
                 ra_min,ra_max = ra_max,ra_min
             dec_min = bottom[key(id_direction[1])]
             dec_max = top[key(id_direction[1])]
-            LOG.todo('mask must be properly handled')
 
-        # Determine Plotting Area Size
-        #(Xmin, Xmax, Ymin, Ymax) = (Table[0][2], Table[0][2], Table[0][3], Table[0][3])
-        #(RAmin, RAmax, DECmin, DECmax) = (Table[0][4], Table[0][4], Table[0][5], Table[0][5])
-        #for row in range(1, NROW):
-        #    if   Xmin > Table[row][2]: (Xmin, RAmin) = (Table[row][2], Table[row][4])
-        #    elif Xmax < Table[row][2]: (Xmax, RAmax) = (Table[row][2], Table[row][4])
-        #    if   Ymin > Table[row][3]: (Ymin, DECmin) = (Table[row][3], Table[row][5])
-        #    elif Ymax < Table[row][3]: (Ymax, DECmax) = (Table[row][3], Table[row][5])
-
-        # Set data
-        #Total = NP.zeros((Ymax - Ymin + 1, Xmax - Xmin + 1), dtype=NP.float32)
-        ## If the data is valid, set the value. Otherwise set Zero
-        #for row in range(NROW):
-        #    if Table[row][6] > 0:
-        #        Total[int(Ymax-(Table[row][3]-Ymin))][int(Xmax-(Table[row][2]-Xmin))] = data[row][0]
-        #    else:
-        #        Total[int(Ymax-1-(Table[row][3]-Ymin))][int(Xmax-1-(Table[row][2]-Xmin))] = 0.0
-
-        # Swap (x,y) to match the clustering result
-        #ExtentCM = ((Xmax+0.5)*gridsize*3600., (Xmin-0.5)*gridsize*3600., (Ymin-0.5)*gridsize*3600., (Ymax+0.5)*gridsize*3600.)
         RAmax = to_deg(ra_max)
         RAmin = to_deg(ra_min)
         DECmax = to_deg(dec_max)
@@ -133,8 +84,9 @@ class SDChannelAveragedImageDisplay(object):
 
         plot_list = []
 
+        masked_data = data * mask
         for pol in xrange(npol):
-            Total = data[:,:,0,pol]
+            Total = masked_data[:,:,0,pol]
             Total = numpy.flipud(Total.transpose())
 
             PL.cla()
@@ -196,15 +148,6 @@ class SDChannelAveragedImageDisplay(object):
             plotfile = os.path.join(FigFileDir,FigFileRoot+'_TP.png')
             if FigFileDir != False:
                 PL.savefig(plotfile, format='png', dpi=DPIDetail)
-                #if os.access(FigFileDir+'listofplots.txt', os.F_OK):
-                #    BrowserFile = open(FigFileDir+'listofplots.txt', 'a')
-                #else:
-                #    BrowserFile = open(FigFileDir+'listofplots.txt', 'w')
-                #    print >> BrowserFile, 'TITLE: Gridding'
-                #    print >> BrowserFile, 'FIELDS: Result IF POL Iteration Page'
-                #    print >> BrowserFile, 'COMMENT: Combined spectra by spatial Gridding'
-                #    print >> BrowserFile, FigFileRoot+'_TP.png'
-                #BrowserFile.close()
 
             parameters = {}
             parameters['intent'] = 'TARGET'
