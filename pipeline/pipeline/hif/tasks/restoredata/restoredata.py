@@ -234,7 +234,6 @@ class RestoreData(basetask.StandardTaskTemplate):
 	#    TBD: Add error handling
 	import_results = self._do_importasdm(sessionlist=sessionlist,
 	    vislist=vislist)
-	#import_results.accept(inputs.context)
 
 	# Download flag versions
 	#   Download from the archive or products_dir to rawdata_dir.
@@ -267,7 +266,6 @@ class RestoreData(basetask.StandardTaskTemplate):
 
 	# Apply the calibrations.
 	apply_results = self._do_applycal()
-	#apply_results.accept(inputs.context)
 
 	# Return the results object, which will be used for the weblog
 	return RestoreDataResults(import_results)
