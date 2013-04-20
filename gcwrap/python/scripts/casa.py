@@ -131,7 +131,6 @@ from msmoments import msmoments
 from mstransform import mstransform
 from msview import msview
 from partition import partition
-from peel import  peel
 from plotants import  plotants
 from plotcal import  plotcal
 from plotms import  plotms

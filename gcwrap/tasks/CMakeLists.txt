@@ -69,7 +69,6 @@ mosaic.xml
 msview.xml
 msmoments.xml 
 mstransform.xml
-peel.xml
 plotants.xml
 plotbandpass.xml
 plotcal.xml
