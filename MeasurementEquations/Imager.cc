@@ -4808,7 +4808,18 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                                                             String::toString(selspw) +
                                                             "_");
         }
+        // clear existing model for the selected field and for all selected spws 
+        if (!useModelCol_p && selspw==0) {
+          String tmpspwstring=spwstring;
+          if (tmpspwstring=="") tmpspwstring="*";
+          os << LogIO::NORMAL
+             << "Will clear any existing model with matching field="
+             << fieldName
+             << " and spw=" << tmpspwstring
+             << LogIO::POST;
 
+          VisModelData::clearModel(*mssel_p, fieldName, spwstring);
+        }
         sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw],
                               timerange, scanstr, obsidstr, freqsOfScale, freqscaling);
 	
