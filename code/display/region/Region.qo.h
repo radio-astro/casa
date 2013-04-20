@@ -60,7 +60,7 @@ namespace casa {
 	template <class T> class ImageInterface;
 	class ImageRegion;
 	class DisplayData;
-	class BinPlotWidget;
+	class HistogramTab;
 
 	class RegionTextList;
 	class AnnotationBase;
@@ -458,7 +458,7 @@ namespace casa {
 
 			QtRegionDock *dock_;
 			QtRegionState *mystate;
-			BinPlotWidget* histogram;
+			HistogramTab* histogram;
 
 			bool statistics_update_needed;
 			bool position_visible;
@@ -552,12 +552,17 @@ namespace casa {
 			// Holds a pointer to the region currently being created...
 			static std::tr1::shared_ptr<Region> creating_region;
 
+		private slots:
+						//Called when the histogram stack needs to be changed due
+						//to the add/removal of an image.
+						void update_histogram_event();
 
 		private:
 			// common state-setup for constructors...
 			void init( );
 
 			void updateHistogramRegion();
+			void clearHistograms();
 			void process_held_signals( );
 			void clear_signal_cache( );
 			bool z_index_within_range;

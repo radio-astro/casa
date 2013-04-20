@@ -146,6 +146,7 @@ namespace casa {
 			void refreshCanvas( );
 			void statisticsVisible( bool );
 			void collectStatistics( );
+			void updateHistogram();
 			void positionVisible( bool );
 			void translateX( const QString &/*x*/, const QString &/*x_units*/, const QString &/*coordsys*/ );
 			void translateY( const QString &/*y*/, const QString &/*y_units*/, const QString &/*coordsys*/ );
@@ -225,6 +226,16 @@ namespace casa {
 			QString STATISTICS_MODE( ) const { return "pV"; }
 
 	};
+
+	class QtSliceCutState : public QtRegionState {
+				Q_OBJECT
+				public:
+					QtSliceCutState( const QString &name,
+								   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
+								   Region *region=0, QWidget *parent=0 );
+					QString STATISTICS_MODE( ) const { return "Slice Cut"; }
+
+			};
 
     }
 }

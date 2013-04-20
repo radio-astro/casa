@@ -72,7 +72,7 @@ ImageManagerDialog::ImageManagerDialog(QWidget *parent)
 
 void ImageManagerDialog::masterImageChanged(const QString& imageName){
 	QtDisplayData* newMaster = allImages->getDD( imageName.toStdString());
-	if ( newMaster != NULL ){
+	if ( newMaster != NULL && openHolder != NULL ){
 		openHolder->setDDControlling( newMaster );
 		qDebug() << "Made dd="<<newMaster->name().c_str()<<" the new controlling dd";
 	}

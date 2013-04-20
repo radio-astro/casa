@@ -767,7 +767,6 @@ void QtDisplayPanel::unregisterDD(QtDisplayData* qdd) {
 	if ( !displayDataHolder->exists( qdd )){
 		return;
 	}
-	//if(!isRegistered(qdd)) return;  //  Nothing to do.
 	unregisterDD_(qdd);
 	emit oldDDUnregistered(qdd);
 }
@@ -775,14 +774,9 @@ void QtDisplayPanel::unregisterDD(QtDisplayData* qdd) {
 
 void QtDisplayPanel::unregisterDD_(QtDisplayData* qdd) {
 	bool removed = displayDataHolder->removeDD( qdd );
-	//for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-		//if(qdd == qdds.getRight()) {
 	if ( removed ){
 		qdd->unregisterNotice(this);	// Let QDD know.
-
-			//qdds.removeRight();
 		DisplayData* dd = qdd->dd();
-
 		hold();
 
 
@@ -827,7 +821,6 @@ void QtDisplayPanel::unregisterDD_(QtDisplayData* qdd) {
 
 
 void QtDisplayPanel::registerAll( List<QtDisplayData*> registerDatas ){
-//void QtDisplayPanel::registerAll() {
 	// Called externally (by gui, e.g.) to register all DDs created
 	// by user through QtViewer.
 
@@ -839,7 +832,6 @@ void QtDisplayPanel::registerAll( List<QtDisplayData*> registerDatas ){
 
 	hold();
 	for(ListIter<QtDisplayData*> udds(registerDatas); !udds.atEnd(); udds++) {
-	//for(ListIter<QtDisplayData*> udds(unregdDDs); !udds.atEnd(); udds++) {
 		QtDisplayData* dd = udds.getRight();
 		registerDD_(dd);
 	}
