@@ -234,6 +234,7 @@ void QtRegionState::reset( const QString &n, Region *r ) {
 
 void QtRegionState::addHistogram(QWidget* histogram ){
 	categories->addTab( histogram, HISTOGRAM_MODE( ));
+
 }
 
 void QtRegionState::setRegion( Region *r ) { 
@@ -318,6 +319,9 @@ void QtRegionState::reloadStatistics( ) {
 	if ( cat == STATISTICS_MODE( ) ) {
 		pre_dd_change_statistics_count = statistics_group->count( );
 		emit collectStatistics( );
+	}
+	if ( cat == HISTOGRAM_MODE() ){
+		emit updateHistogram();
 	}
 }
 
@@ -1039,6 +1043,19 @@ void QtRegionState::set_point_region_marker( int index ) {
 
 
 QtPVLineState::QtPVLineState( const QString &name,
+							  QtMouseToolNames::PointRegionSymbols sym, Region *region, QWidget *parent ) :
+				QtRegionState(name,sym,region,parent) {
+	QString old_label = QtRegionState::STATISTICS_MODE( );
+	QString new_label = STATISTICS_MODE( );
+	for ( int i=0; i < categories->count( ); ++i )
+		if ( categories->tabText(i) == old_label ) {
+			categories->setTabText(i,new_label);
+			categories->setCurrentIndex(i);
+			break;
+		}
+}
+
+QtSliceCutState::QtSliceCutState( const QString &name,
 							  QtMouseToolNames::PointRegionSymbols sym, Region *region, QWidget *parent ) :
 				QtRegionState(name,sym,region,parent) {
 	QString old_label = QtRegionState::STATISTICS_MODE( );

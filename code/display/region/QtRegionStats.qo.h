@@ -111,7 +111,7 @@ namespace casa {
 
 	    private:
 		QVBoxLayout *layout_;
-		qt::stats_t *new_stats_box( RegionInfo::InfoTypes type, Region* region );
+		qt::stats_t *new_stats_box( RegionInfo::InfoTypes type, Region* region, const string& label );
 		qt::stats_t *stats_box_;
 		std::string description_;
 		std::string label_;

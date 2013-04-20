@@ -38,13 +38,14 @@
 
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
-#include <guitools/Histogram/BinPlotWidget.qo.h>
+#include <display/region/HistogramTab.qo.h>
 #include <images/Images/ImageStatistics.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <components/ComponentModels/ComponentShape.h>
 #include <components/ComponentModels/SkyCompRep.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
+#include <display/region/Polyline.qo.h>
 #include <casadbus/types/nullptr.h>
 #include <math.h>
 #include <algorithm>
@@ -124,6 +125,7 @@ void Region::init( ) {
 	connect( mystate, SIGNAL(refreshCanvas( )), SLOT(refresh_canvas_event( )) );
 	connect( mystate, SIGNAL(statisticsVisible(bool)), SLOT(refresh_statistics_event(bool)) );
 	connect( mystate, SIGNAL(collectStatistics( )), SLOT(reload_statistics_event( )) );
+	connect( mystate, SIGNAL(updateHistogram()), SLOT(update_histogram_event()));
 	connect( mystate, SIGNAL(positionVisible(bool)), SLOT(refresh_position_event(bool)) );
 
 	connect( mystate, SIGNAL(translateX(const QString &, const QString &, const QString &)), SLOT(translate_x(const QString&,const QString&, const QString &)) );
@@ -147,7 +149,6 @@ Region::~Region( ){
 	dock_->removeRegion(mystate);
 	signal_region_change( region::RegionChangeDelete );
 	disconnect(mystate, 0, 0, 0);
-	delete histogram;
 }
 
 bool Region::degenerate( ) const {
@@ -549,6 +550,7 @@ void Region::refresh_state_gui( ) {
 	}
 	else if ( mode == mystate->HISTOGRAM_MODE( ).toStdString() ){
 		this->updateHistogramRegion();
+
 	}
 
 
@@ -673,7 +675,9 @@ void Region::revoke_region( ) {
 }
 
 void Region::revoke_region( QtRegionState *redacted_state ) {
-	if ( redacted_state == mystate ) { revoke_region( ); }
+	if ( redacted_state == mystate ) {
+		revoke_region( );
+	}
 }
 
 void Region::reload_statistics_event( ) {
@@ -2344,21 +2348,40 @@ ImageRegion_state Region::get_image_selected_region( DisplayData *dd ) {
 	return ImageRegion_state(result,count);
 }
 
+void Region::update_histogram_event(){
+
+	//Clear out the old histograms.
+	clearHistograms();
+
+	//Add in the new histograms
+	updateHistogramRegion();
+}
+
 void Region::updateHistogramRegion(){
 	if( wc_==0 ){
 		return;
 	}
 
-	Int zindex = 0;
-	if (wc_->restrictionBuffer()->exists("zIndex")) {
-		wc_->restrictionBuffer()->getValue("zIndex", zindex);
-	}
-	DisplayData* dd = wc_->csMaster();
-	if ( dd != NULL ){
-		ImageInterface<float>* image = dd->imageinterface();
-		histogram->setImage( image );
-		ImageRegion* region = get_image_region( dd );
-		histogram->setImageRegion( region, id_);
+
+	//Put the updated regions into the histogram.
+	DisplayData* masterDD = wc_->csMaster();
+	if ( masterDD != NULL ){
+		ImageRegion* region = get_image_region( masterDD );
+		const std::list<DisplayData*> &dds = wc_->displaylist( );
+		for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
+			DisplayData* dd = *ddi;
+			if ( dd != NULL ){
+				PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
+				if (padd==0) {
+					continue;
+				}
+				ImageInterface<float>* image = dd->imageinterface();
+				if ( image != NULL ){
+					histogram->addImage( image );
+					histogram->setImageRegion( image->name(true).c_str(),region, id_);
+				}
+			}
+		}
 	}
 }
 
@@ -2400,17 +2423,11 @@ std::list<std::tr1::shared_ptr<RegionInfo> > *Region::generate_dds_statistics(  
 			if (repeat != processed.end()) continue;
 			processed.insert(std::map<String,bool>::value_type(full_image_name,true));
 			if ( name_ == "polyline" ){
-				if ( wc_->isCSmaster( dd )){
-					get_image_region( dd );
-					RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
-					region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(new SliceRegionInfo( image->name(true), image->name(false), dd_stats)));
-				}
+				region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(newInfoObject( image )));
 			}
 			else if ( name_ == "p/v line" ) {
-				if ( wc_->isCSmaster(dd)){
-					get_image_region( dd );
-					region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(newInfoObject(image)) );
-				}
+				get_image_region( dd );
+				region_statistics->push_back( std::tr1::shared_ptr<RegionInfo>(newInfoObject(image)) );
 			} else {
 
 				if ( imageregion.get( ) == NULL  ) continue;
@@ -2877,10 +2894,18 @@ void Region::clear_signal_cache( ) {
 
 void Region::initHistogram(){
 	if ( histogram == NULL ){
-		histogram = new BinPlotWidget( false, false, false, NULL );
-		histogram->setDisplayPlotTitle( true );
+		histogram = new HistogramTab(state());
 		state()->addHistogram( histogram );
 	}
 }
+
+
+void Region::clearHistograms(){
+	if ( histogram != NULL ){
+		histogram->clear();
+	}
+}
+
+
 }
 }

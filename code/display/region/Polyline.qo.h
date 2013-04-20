@@ -91,7 +91,7 @@ public:
 	// fetch region type...
 	region::RegionTypes type( ) const { return region::PolylineRegion; }
 
-	void addPlot( QWidget* parent );
+	void addPlot( QWidget* parent, string label );
 
 
 
@@ -104,6 +104,7 @@ public slots:
 	void setShowMarkerPosition( int regionId, bool show );
 
 protected:
+	virtual RegionInfo *newInfoObject( ImageInterface<Float> *image );
 	unsigned int check_handle( double x, double y ) const;
 
 	enum YScaleTo { ScaleTop, ScaleBottom };
@@ -144,8 +145,8 @@ private:
 
 	virtual void setCenter(double &x, double &y, double &deltx, double &delty);
 	void initPlot( );
+	void setPlotLineColor( SlicePlot* plot);
 	void setPlotLineColor();
-
 	double handle_delta_x, handle_delta_y;
 
 	point_list _ref_points_;
@@ -166,7 +167,8 @@ private:
 
 	//Slice functionality
 	void drawPositionMarker();
-	SlicePlot* slicePlot;
+	//SlicePlot* slicePlot;
+	QMap<QString,SlicePlot*> slicePlots;
 	int markerSegmentIndex;
 	float markerPercentage;
 	bool showPositionMarker;
