@@ -1,6 +1,6 @@
 #include <imagemetadata_cmpt.h>
 
-#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/ImageHeader.h>
 
 #include <stdcasa/version.h>
 
@@ -31,7 +31,6 @@ bool imagemetadata::close() {
 	try {
 		*_log << _ORIGIN;
 		_header.reset(0);
-		_image.reset(0);
 		return True;
 	}
 	catch (const AipsError& x) {
@@ -62,10 +61,10 @@ bool imagemetadata::open(const std::string& infile) {
 		if (_log.get() == 0) {
 			_log.reset(new LogIO());
 		}
-		ImageInterface<Float> *x;
-		ImageUtilities::openImage(x, infile, *_log);
-		_image.reset(x);
-		_header.reset(new ImageMetaData<Float>(x));
+		std::auto_ptr<ImageInterface<Float> > image;
+		ImageUtilities::openImage(image, infile, *_log);
+		std::tr1::shared_ptr<ImageInterface<Float> > image2(image.release());
+		_header.reset(new ImageHeader<Float>(image2));
 		*_log << _ORIGIN;
 		return True;
 
