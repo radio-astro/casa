@@ -4818,7 +4818,10 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
              << " and spw=" << tmpspwstring
              << LogIO::POST;
 
-          VisModelData::clearModel(*mssel_p, fieldName, spwstring);
+          String fldidstr = String::toString(fldid); 
+          // use field id due to possible MSSelection bug for handing field name with blanks
+          //VisModelData::clearModel(*mssel_p, fieldName, spwstring);
+          VisModelData::clearModel(*mssel_p, fldidstr, spwstring);
         }
         sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw],
                               timerange, scanstr, obsidstr, freqsOfScale, freqscaling);
