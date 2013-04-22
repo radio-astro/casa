@@ -125,7 +125,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 
 
 }
-void VisModelData::clearModel(const MeasurementSet& thems, const String field){
+  void VisModelData::clearModel(const MeasurementSet& thems, const String field, const String specwindows){
  
   Table newTab(thems);
   if(!newTab.isWritable())
@@ -133,41 +133,191 @@ void VisModelData::clearModel(const MeasurementSet& thems, const String field){
 
   ROMSColumns msc(thems);
   Vector<String> fldnames=msc.field().name().getColumn();
+  Int nfields=0;
+  Vector<Int> fields(0);
+  {
+    // Parse field specification
+    MSSelection mss;
+    mss.setFieldExpr(field);
+    TableExprNode ten=mss.toTableExprNode(&thems);
+    fields=mss.getFieldList();
+    nfields=fields.nelements();
+  }
 
-  // Parse field specification
-  MSSelection mss;
-  mss.setFieldExpr(field);
-  TableExprNode ten=mss.toTableExprNode(&thems);
-  Vector<Int> fields=mss.getFieldList();
-  Int nfields=fields.nelements();
 
   if (nfields==0)
     // Call the method that deletes them all
     VisModelData::clearModel(thems);
   else {
-    // only delete the specified ones
 
+    //Now we have the two cases the whole field or specific spws
+    // only delete the specified ones
+    Vector<Int> spws(0);
+    Int nspws=0;
+    {
+      // Parse field specification
+      MSSelection mss;
+      mss.setFieldExpr(field);
+      mss.setSpwExpr(specwindows);
+      TableExprNode ten=mss.toTableExprNode(&thems);
+      spws=mss.getSpwList();
+      nspws=spws.nelements();
+    }
+
+   
     LogIO logio;
     logio << "Clearing model records in MS header for selected fields." 
 	  << LogIO::POST;
-
+    
     for (Int k=0; k< nfields; ++k){
       if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
 	
 	{
-	  logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") deleted." << LogIO::POST;
+	  
 	  String elkey=newTab.rwKeywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
-	  if(newTab.rwKeywordSet().isDefined(elkey))
-	    newTab.rwKeywordSet().removeField(elkey);
-	  newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+	  if(nspws==0){
+	    logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") deleted." << LogIO::POST;
+	    
+	    if(newTab.rwKeywordSet().isDefined(elkey))
+	      newTab.rwKeywordSet().removeField(elkey);
+	    newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+	  }
+	  else{
+	    if(newTab.rwKeywordSet().isDefined(elkey)){
+	      Record conteneur=newTab.rwKeywordSet().asRecord(elkey);
+	      removeSpw(conteneur, spws);
+	      newTab.rwKeywordSet().removeField(elkey);
+	      newTab.rwKeywordSet().defineRecord(elkey, conteneur);
+	      
+	      /*
+	      Vector<Int> defspws=conteneur.asArrayInt("spws");
+	      Vector<Int> newdefspw(defspws.nelements(), -1);
+	      Int counter=0;
+	      for(uInt k=0; k < defspws.nelements(); ++k){
+		for (Int j=0; j < nspws; ++j){
+		  if(defspws[k] != spws[j]){
+		    newdefspw[counter]=defspws[k];
+		    ++counter;
+		  }
+		}
+	      }
+	      if(counter==0){
+		//Now we have to remove this ftm or cft
+		newTab.rwKeywordSet().removeField(elkey);
+	      }
+	      else{
+		conteneur.define("spws", newdefspw);
+		updatespw(conteneur, 
+	      }
+	      */
+	    }
+	      
+	  }
+	    
 	}
       else
 	logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") not found." << LogIO::POST;
     }
+    
+  }
   
+  
+
   }
 
-}
+  Bool VisModelData::removeSpw(Record& therec, const Vector<Int>& spws){
+     Int numft=0;
+     Int numcl=0;
+     Vector<String> numtype(2);
+     Vector<String> keyval(2);
+     numtype[0]=String("numft");
+     numtype[1]=String("numcl");
+     keyval[0]="ft_";
+     keyval[1]="cl_";
+     
+     for (Int j=0; j< 2; ++j){
+       
+       if(therec.isDefined(numtype[j])){
+	 numft=therec.asInt(numtype[j]);
+	 Vector<String> toberemoved(numft);
+	 Int numrem=0;
+	 for (Int k=0; k < numft; ++k){
+	   RecordInterface& ftrec=therec.asrwRecord(keyval[j]+String::toString(k));
+	   if(!removeSpwFromMachineRec(ftrec, spws)){
+	     toberemoved[numrem]=String(keyval[j]+String::toString(k));
+	     ++numrem;
+	   }
+	 }
+	 if(numrem > 0){
+	   for (Int k=0; k < numrem; ++k)
+	     removeFTFromRec(therec, toberemoved[k]);
+	 }
+       }
+
+     }
+     return True;
+  }
+
+  Bool VisModelData::removeFTFromRec(Record& therec, const String& keyval){
+
+    String *splitkey=new String[2];
+    Int nsep=split(keyval, splitkey, 2, String("_"));
+    if (nsep <1 || !therec.isDefined(keyval)) 
+      return False;
+    String eltype=splitkey[0];
+    //Int modInd=String::toInt(splitkey[1]);
+    Int numcomp= (eltype==String("ft")) ? therec.asInt("numft"): therec.asInt("numcl");
+    therec.removeField(keyval);
+    
+    numcomp=numcomp-1;
+    if(eltype=="ft")
+      therec.define("numft", numcomp);
+    else
+      therec.define("numcl", numcomp);
+    
+    eltype=eltype+String("_");
+    Int id=0;
+    for(uInt k=0; k < therec.nfields(); ++k){
+      if(therec.name(k).contains(eltype)){
+	therec.renameField(eltype+String::toString(id), k);
+	++id;
+      }
+    }
+
+    delete [] splitkey;
+    return True;
+  } 
+
+  Bool VisModelData::removeSpwFromMachineRec(RecordInterface& ftclrec, const Vector<Int>& spws){
+    Vector<Int> defspws=ftclrec.asArrayInt("spws");
+    Vector<Int> newdefspw(defspws.nelements(), -1);
+    Int counter=0;
+    for(uInt k=0; k < defspws.nelements(); ++k){
+      for (uInt j=0; j < spws.nelements(); ++j){
+	if(defspws[k] == spws[j]){
+	  defspws[k]=-1;
+	  ++counter;
+	}
+      }
+    }
+    if(defspws.nelements() == uInt(counter)){
+      //Now we have to remove this ft or cl model
+
+      return False;
+
+    }    
+    newdefspw.resize(defspws.nelements()-counter);
+    counter=0;
+    for (uInt k=0; k < defspws.nelements(); ++k){
+      if(defspws[k] != -1){
+	newdefspw[counter]=defspws[k];
+	++counter;
+      }
+    }
+    
+    ftclrec.define("spws", newdefspw);
+    return True;
+  }
 
   Bool VisModelData::addToRec(Record& therec, const Vector<Int>& spws){
 

@@ -32,11 +32,15 @@
 #include <images/Images/ImageSummary.h>
 #include <images/Images/ImageStatistics.h>
 
+#include <iostream>
+#include <iomanip>
+
 namespace casa {
 
 template<class T> const String ImageMetaData<T>::_BEAMMAJOR = "beammajor";
 template<class T> const String ImageMetaData<T>::_BEAMMINOR = "beamminor";
 template<class T> const String ImageMetaData<T>::_BEAMPA = "beampa";
+template<class T> const String ImageMetaData<T>::_BUNIT = "bunit";
 template<class T> const String ImageMetaData<T>::_CTYPE = "ctype";
 template<class T> const String ImageMetaData<T>::_DATAMAX = "datamax";
 template<class T> const String ImageMetaData<T>::_DATAMIN = "datamin";
@@ -48,10 +52,10 @@ template<class T> const String ImageMetaData<T>::_MAXPOS = "maxpos";
 template<class T> const String ImageMetaData<T>::_MINPIXPOS = "minpixpos";
 template<class T> const String ImageMetaData<T>::_MINPOS = "minpos";
 template<class T> const String ImageMetaData<T>::_OBJECT = "object";
-template<class T> const String ImageMetaData<T>::_OBSDATE = "obs-date";
+template<class T> const String ImageMetaData<T>::_OBSDATE = "date-obs";
 template<class T> const String ImageMetaData<T>::_OBSERVER = "observer";
 template<class T> const String ImageMetaData<T>::_PROJECTION = "projection";
-template<class T> const String ImageMetaData<T>::_RESTFREQ = "reffreq";
+template<class T> const String ImageMetaData<T>::_RESTFREQ = "restfreq";
 template<class T> const String ImageMetaData<T>::_REFFREQTYPE = "reffreqtype";
 template<class T> const String ImageMetaData<T>::_SHAPE = "shape";
 template<class T> const String ImageMetaData<T>::_TELESCOPE = "telescope";
@@ -61,10 +65,10 @@ template<class T> ImageMetaData<T>::ImageMetaData(
 ) : _image(image), _log(new LogIO()) {}
 
 template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
-	ImageSummary<T> summary(*_image);
-
-	_header.define(_IMTYPE, summary.imageType());
 	const ImageInfo& info = _image->imageInfo();
+	_header.define(_IMTYPE, ImageInfo::imageType(info.imageType()));
+
+	ImageSummary<T> summary(*_image);
 
 	_header.define(_OBJECT, info.objectName());
 
@@ -84,6 +88,7 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
 	_header.define(_OBSERVER, summary.observer());
 	_header.define(_SHAPE, _image->shape().asVector());
 	_header.define(_TELESCOPE, summary.telescope());
+	_header.define(_BUNIT, summary.units().getName());
 
 	if (csys.hasSpectralAxis()) {
 		const SpectralCoordinate& sc = csys.spectralCoordinate();
@@ -117,7 +122,7 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
 	}
  	Vector<Double> cdelt = summary.axisIncrements(True);
 	Vector<String> units = summary.axisUnits(True);
-	Vector<Double> crpix = summary.referencePixels(True);
+	Vector<Double> crpix = summary.referencePixels(False);
 	Vector<Double> crval = summary.referenceValues(True);
 	Vector<String> types = summary.axisNames(True);
 	ImageStatistics<T> stats(*_image);
@@ -177,10 +182,13 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
 	return _header;
 }
 
-template<class T> void ImageMetaData<T>::_fieldToLog(const String& field) const {
+template<class T> void ImageMetaData<T>::_fieldToLog(const String& field, Int precision) const {
 	*_log << "        -- " << field << ": ";
 	if (_header.isDefined(field)) {
 		DataType type = _header.type(_header.idToNumber(field));
+		if (precision >= 0) {
+			_log->output() << setprecision(precision);
+		}
 		switch (type) {
 			case TpArrayDouble: {
 				*_log << _header.asArrayDouble(field);
@@ -239,12 +247,15 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 	_fieldToLog(_OBSDATE);
 	_fieldToLog(_OBSERVER);
 	_fieldToLog(_PROJECTION);
-	_fieldToLog(_RESTFREQ);
+	*_log << "        -- " << _RESTFREQ << ": ";
+	_log->output() << std::fixed << std::setprecision(1);
+	*_log <<  _header.asArrayDouble(_RESTFREQ) << LogIO::POST;
 	_fieldToLog(_REFFREQTYPE);
 	_fieldToLog(_TELESCOPE);
-	_fieldToLog(_BEAMMAJOR);
-	_fieldToLog(_BEAMMINOR);
-	_fieldToLog(_BEAMPA);
+	_fieldToLog(_BEAMMAJOR, 12);
+	_fieldToLog(_BEAMMINOR, 12);
+	_fieldToLog(_BEAMPA, 12);
+	_fieldToLog(_BUNIT);
 	_fieldToLog(_MASKS);
 	_fieldToLog(_SHAPE);
 	_fieldToLog(_DATAMIN);
@@ -275,6 +286,7 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 		if (! _header.isDefined(key)) {
 			break;
 		}
+		_log->output() << std::fixed << std::setprecision(1);
 		*_log << "        -- " << key << ": " << _header.asDouble(key)
 			<< LogIO::POST;
 		i++;
@@ -287,12 +299,34 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 		if (! _header.isDefined(key)) {
 			break;
 		}
-		*_log << "        -- " << key << ": " << _header.asDouble(key);
+		*_log << "        -- " << key << ": ";
+		ostringstream x;
+		Double val = _header.asDouble(key);
+		x << val;
 		String unit = "cunit" + iString;
 		if (_header.isDefined(unit)) {
-			*_log << _header.asString(unit);
+			x << _header.asString(unit);
 		}
-		*_log << LogIO::POST;
+		String valunit = x.str();
+		if (_header.isDefined(unit)) {
+			String myunit = _header.asString(unit);
+			if (_header.asString(unit).empty()) {
+				String ctype = _CTYPE + iString;
+				if (
+					_header.isDefined(ctype)
+					&& _header.asString(ctype) == "Stokes"
+				) {
+					valunit = "['" + Stokes::name((Stokes::StokesTypes)((Int)val)) + "']";
+				}
+			}
+			else {
+				String tmp = _doStandardFormat(val, myunit);
+				if (! tmp.empty()) {
+					valunit = tmp;
+				}
+			}
+		}
+		*_log << valunit << LogIO::POST;
 		i++;
 	}
 	i = 1;
@@ -303,12 +337,26 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 		if (! _header.isDefined(key)) {
 			break;
 		}
-		*_log << "        -- " << key << ": " << _header.asDouble(key);
+		*_log << "        -- " << key << ": ";
+		Double val = _header.asDouble(key);
 		String unit = "cunit" + iString;
+		String myunit;
 		if (_header.isDefined(unit)) {
-			*_log << _header.asString(unit);
+			myunit = _header.asString(unit);
 		}
-		*_log << LogIO::POST;
+		ostringstream x;
+		x << val << myunit;
+		String valunit = x.str();
+		if (_header.isDefined(unit)) {
+			String myunit = _header.asString(unit);
+			if (! _header.asString(unit).empty()) {
+				String tmp = _doStandardFormat(val, myunit);
+				if (! tmp.empty()) {
+					valunit = tmp;
+				}
+			}
+		}
+		*_log << valunit << LogIO::POST;
 		i++;
 	}
 	i = 1;
@@ -326,6 +374,28 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 	}
 
 }
+
+template <class T>  String ImageMetaData<T>::_doStandardFormat(
+	Double value, const String& unit
+) const {
+	String valunit;
+	try {
+		Quantity q(1, unit);
+		if (q.isConform(Quantity(1, "rad"))) {
+			// to dms
+			valunit = MVAngle(Quantity(value, unit)).string(MVAngle::CLEAN, 9) + "deg.min.sec";
+		}
+		else if (unit == "Hz") {
+			ostringstream x;
+			x << std::fixed << std::setprecision(1);
+			x << value << "Hz";
+			valunit = x.str();
+		}
+	}
+	catch (const AipsError& x) {}
+	return valunit;
+}
+
 
 template <class T> uInt ImageMetaData<T>::nChannels() const {
 	const CoordinateSystem& csys = _image->coordinates();

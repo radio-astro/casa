@@ -89,6 +89,7 @@ class QtDisplayData : public QObject {
    Bool isContour() const;
    Bool isVector() const;
    Bool isMarker() const;
+   Bool isImage() const;
 
   //virtual Bool delTmpData() const;
   virtual void delTmpData() const;
@@ -406,6 +407,7 @@ class QtDisplayData : public QObject {
   const std::string DISPLAY_CONTOUR;
   const std::string DISPLAY_VECTOR;
   const std::string DISPLAY_MARKER;
+  const std::string TYPE_IMAGE;
   ImageInterface<Float>* im_;
   ImageInterface<Complex>* cim_;
   DisplayData* dd_;

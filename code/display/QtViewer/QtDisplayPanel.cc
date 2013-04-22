@@ -547,7 +547,8 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 		// (Tracking information is not provided for these dd types).
 		Record trackingRec;
 		pair<String,String> trackInfo;
-		if ( bLen_ > 1 && !pd_->isBlinkDD(dd) ){
+
+		if ( bLen_ > 1 && !pd_->isBlinkDD(dd) /*&& ! dd->conformsTo(wc)*/ ){
 			trackInfo = qdd->trackingInfo( ev );
 			trackingRec.define( qdd->name(), trackInfo.first + principalTrackInfo.second );
 		}
@@ -766,7 +767,6 @@ void QtDisplayPanel::unregisterDD(QtDisplayData* qdd) {
 	if ( !displayDataHolder->exists( qdd )){
 		return;
 	}
-	//if(!isRegistered(qdd)) return;  //  Nothing to do.
 	unregisterDD_(qdd);
 	emit oldDDUnregistered(qdd);
 }
@@ -774,14 +774,9 @@ void QtDisplayPanel::unregisterDD(QtDisplayData* qdd) {
 
 void QtDisplayPanel::unregisterDD_(QtDisplayData* qdd) {
 	bool removed = displayDataHolder->removeDD( qdd );
-	//for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-		//if(qdd == qdds.getRight()) {
 	if ( removed ){
 		qdd->unregisterNotice(this);	// Let QDD know.
-
-			//qdds.removeRight();
 		DisplayData* dd = qdd->dd();
-
 		hold();
 
 
@@ -826,7 +821,6 @@ void QtDisplayPanel::unregisterDD_(QtDisplayData* qdd) {
 
 
 void QtDisplayPanel::registerAll( List<QtDisplayData*> registerDatas ){
-//void QtDisplayPanel::registerAll() {
 	// Called externally (by gui, e.g.) to register all DDs created
 	// by user through QtViewer.
 
@@ -838,7 +832,6 @@ void QtDisplayPanel::registerAll( List<QtDisplayData*> registerDatas ){
 
 	hold();
 	for(ListIter<QtDisplayData*> udds(registerDatas); !udds.atEnd(); udds++) {
-	//for(ListIter<QtDisplayData*> udds(unregdDDs); !udds.atEnd(); udds++) {
 		QtDisplayData* dd = udds.getRight();
 		registerDD_(dd);
 	}
@@ -861,9 +854,21 @@ void QtDisplayPanel::unregisterAll() {
 
 	hold();
 
-	/*for(ListIter<QtDisplayData*> rdds(regdDDs); !rdds.atEnd(); rdds++) {
-		QtDisplayData* dd = rdds.getRight();
-		unregisterDD_(dd);  }*/
+	//We don't want to remove as we iterate through the list, so we instead accumulate
+	//a list of ones to unreqister, then do it.
+	int registeredCount = displayDataHolder->getCount();
+	QVector<QtDisplayData*> allRegistered( registeredCount );
+	int i = 0;
+	for ( DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
+			iter != displayDataHolder->endDD(); iter++ ){
+		allRegistered[i] = ( *iter);
+		i++;
+	}
+
+	//Now we unregister them.
+	for ( int i = 0; i < registeredCount; i++ ){
+		unregisterDD_( allRegistered[i]);
+	}
 	displayDataHolder->removeDDAll();
 
 	if(qsm_!=0) qsm_->deleteAll();

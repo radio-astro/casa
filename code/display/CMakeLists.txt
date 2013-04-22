@@ -123,6 +123,8 @@ qt4_wrap_cpp( outfiles_qoh
   region/QtRegionDock.qo.h
   region/QtRegionState.qo.h
   region/QtRegionStats.qo.h
+  region/HistogramTab.qo.h
+  region/HistogramGraph.qo.h
   Clean/CleanGui.qo.h
   Slicer/SlicePlot.qo.h
   Slicer/ImageSlice.qo.h
@@ -200,6 +202,8 @@ casa_qt4_wrap_ui( outfiles_ui
   region/QtRegionState.ui
   region/QtImageRegionStats.ui
   region/QtMsRegionStats.ui
+  region/HistogramTab.ui
+  region/HistogramGraph.ui
   region/SlicerStats.ui
   region/PVLineStats.ui
   Slicer/SlicerMainWindow.ui
@@ -571,6 +575,8 @@ casa_add_library( display
   region/QtRegionDock.cc
   region/QtRegionState.cc
   region/QtRegionStats.cc
+  region/HistogramTab.cc
+  region/HistogramGraph.cc
   region/Rectangle.cc
   region/PVLine.cc
   region/Ellipse.cc

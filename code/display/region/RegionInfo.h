@@ -89,14 +89,20 @@ namespace casa {
 	class PVLineRegionInfo : public RegionInfo {
 		public:
 			PVLineRegionInfo( const std::string &label, const std::string &desc, stats_t *si,
-							  const std::vector<std::string> &ps, const std::vector<std::string> &ws ) :
-					RegionInfo(label,desc,si,PVLineInfoType), pixel_strings_(ps), world_strings_(ws) { }
+							  const std::vector<std::string> &ps, const std::vector<std::string> &ws,
+							  const std::string &pa, const std::string &sep ) :
+					RegionInfo(label,desc,si,PVLineInfoType), pixel_strings_(ps), world_strings_(ws),
+					position_angle(pa), point_separation(sep) { }
 			~PVLineRegionInfo( ) { }
 			std::vector<std::string> pixelStrings( ) const { return pixel_strings_; }
 			std::vector<std::string> worldStrings( ) const { return world_strings_; }
+			const std::string &positionAngle( ) const { return position_angle; }
+			const std::string &separation( ) const { return point_separation; }
 		private:
 			std::vector<std::string> pixel_strings_;
 			std::vector<std::string> world_strings_;
+			std::string position_angle;
+			std::string point_separation;
 	};
 
 

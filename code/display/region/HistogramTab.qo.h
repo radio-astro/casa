@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,44 +22,42 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id$
+#ifndef HISTOGRAMTAB_QO_H
+#define HISTOGRAMTAB_QO_H
 
-#ifndef IMAGETRACKER_H_
-#define IMAGETRACKER_H_
+#include <QtGui/QWidget>
+#include <display/region/HistogramTab.ui.h>
 
 namespace casa {
 
-class QtDisplayData;
+template <class T> class ImageInterface;
+class ImageRegion;
+class HistogramGraph;
 
 /**
- * Interface class designed to reduce the coupling between the GUI class,
- * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
- * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
+ * Manages a stack widget that displays histograms for a single region
+ * but multiple images.
  */
 
-class ImageTracker {
+class HistogramTab : public QWidget
+{
+    Q_OBJECT
+
 public:
-	virtual void imageAdded( QtDisplayData* image ) = 0;
-	virtual void imageRemoved( QtDisplayData* image ) = 0;
-	virtual void masterImageSelected( QtDisplayData* image ) =0;
-	ImageTracker(){}
-	virtual ~ImageTracker(){}
-
+    HistogramTab(QWidget *parent = 0);
+    void addImage( ImageInterface<float>* image );
+    void setImageRegion( const std::string& imageName, ImageRegion* region, int regionId);
+    void clear();
+    ~HistogramTab();
+private slots:
+	void showNextGraph( int nextIndex );
+private:
+	int initialStackIndex;
+	void resetNextEnabled();
+    QMap<QString,HistogramGraph*> graphs;
+    Ui::HistogramTabClass ui;
 };
-
-/**
- * Interface implemented by GUI panels (QtDisplayPanel) that can add/remove
- * QtDisplayData's.  Called by the DisplayDataHolder to make
- * changes through the existing infrastructure.
- */
-class ImageDisplayer {
-public:
-	ImageDisplayer(){}
-	virtual ~ImageDisplayer(){}
-	virtual void setControllingDD( QtDisplayData* /*controlDD*/ ){
-	}
-	virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
-	virtual void unregisterDD( QtDisplayData* dd ) = 0;
-};
-
 }
-#endif /* IMAGETRACKER_H_ */
+
+#endif // HISTOGRAMTAB_QO_H

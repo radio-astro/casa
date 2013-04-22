@@ -30,7 +30,6 @@
 
 #include <images/Images/ImageInterface.h>
 #include <casa/aips.h>
-#include <tr1/memory>
 
 namespace casa {
 
@@ -121,12 +120,16 @@ public:
 
 private:
 	const static String _BEAMMAJOR, _BEAMMINOR, _BEAMPA,
-		_CTYPE, _DATAMAX, _DATAMIN, _EQUINOX, _IMTYPE,
+		_BUNIT, _CTYPE, _DATAMAX, _DATAMIN, _EQUINOX, _IMTYPE,
 		_MASKS, _MAXPIXPOS, _MAXPOS, _MINPIXPOS, _MINPOS,
 		_OBJECT, _OBSDATE, _OBSERVER, _PROJECTION,
 		_RESTFREQ, _REFFREQTYPE, _SHAPE, _TELESCOPE;
 
-	const ImageInterface<Float> *const _image;
+	// I really would like this to be a shared pointer, but that
+	// currently causes some major issues for classes that depend on
+	// this. If I can move ImageAnalysis::setRestoringBeam() into a class
+	// of its own that will mitigate some difficulties
+	const ImageInterface<Float> * const _image;
 	std::auto_ptr<LogIO> _log;
 	Record _header;
 
@@ -134,7 +137,10 @@ private:
 
 	void _toLog() const;
 
-	void _fieldToLog(const String& field) const;
+	// precision < 0 => use default precision when printing numbers
+	void _fieldToLog(const String& field, Int precision=-1) const;
+
+	String _doStandardFormat(Double value, const String& unit) const;
 };
 
 

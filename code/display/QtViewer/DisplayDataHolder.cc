@@ -73,6 +73,9 @@ void DisplayDataHolder::setDDControlling( QtDisplayData* controlDD ){
 	if ( imageTracker != NULL ){
 		imageTracker->masterImageSelected( controlling_dd );
 	}
+	if ( imageDisplayer != NULL ){
+		imageDisplayer->setControllingDD( controlling_dd );
+	}
 }
 
 QtDisplayData* DisplayDataHolder::getDDControlling( ) const {
@@ -137,10 +140,6 @@ void DisplayDataHolder::insertDD( QtDisplayData* dd, int position ){
 		}
 		else {
 			addDD( dd, position );
-			qDebug() << "After insert order is ";
-			for( DisplayDataIterator iter2 = dataList.begin(); iter2 != dataList.end(); iter2++){
-				qDebug() << (*iter2)->name().c_str();
-			}
 		}
 	}
 }

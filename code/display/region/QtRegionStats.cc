@@ -95,6 +95,8 @@ bool pvline_stats_t::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::Re
 		pixel_pt2->setText(QString::fromStdString(pvinfo->pixelStrings( )[1]));
 		world_pt1->setText(QString::fromStdString(pvinfo->worldStrings( )[0]));
 		world_pt2->setText(QString::fromStdString(pvinfo->worldStrings( )[1]));
+		position_angle->setText(QString::fromStdString(pvinfo->positionAngle( )) + QString::fromUtf8("˚"));
+		separation->setText(QString::fromStdString(pvinfo->separation( )));
 	} catch (...) { /* expect only std::bad_cast */ }
 	return true;
 }
@@ -114,7 +116,7 @@ QtRegionStats::~QtRegionStats( ) { }
 
 void QtRegionStats::updateStatistics( std::tr1::shared_ptr<casa::viewer::RegionInfo> stats, Region* region ) {
 
-	new_stats_box(stats->type(), region )->setLabels( stats->label( ), stats->description( ) );
+	new_stats_box(stats->type(), region, stats->label() )->setLabels( stats->label( ), stats->description( ) );
 
 	qt::statfield_list_t::iterator fiter = fields.begin( );
 	std::list<std::pair<String,String> >::iterator siter = (*stats->list()).begin( );
@@ -211,7 +213,7 @@ void QtRegionStats::go_next( ) {
 	container_->setCurrentWidget(next_);
 }
 
-qt::stats_t *QtRegionStats::new_stats_box( RegionInfo::InfoTypes type, Region* region ) {
+qt::stats_t *QtRegionStats::new_stats_box( RegionInfo::InfoTypes type, Region* region, const string& label ) {
 
 	if ( stats_box_ && stats_box_->type() == type ) return stats_box_;
 
@@ -238,7 +240,7 @@ qt::stats_t *QtRegionStats::new_stats_box( RegionInfo::InfoTypes type, Region* r
 			//Add the plot in place of the normal statistics
 			Polyline* polylineRegion = dynamic_cast<Polyline*>(region);
 			qt::SliceStats* sliceBox = dynamic_cast<qt::SliceStats*>(stats_box_);
-			polylineRegion->addPlot( sliceBox->getPlotHolder() );
+			polylineRegion->addPlot( sliceBox->getPlotHolder(), label );
 			connect( stats_box_, SIGNAL(show1DSliceTool()), region, SIGNAL(show1DSliceTool()));
 		}
 		layout_->addWidget(stats_box_,0,Qt::AlignLeft);

@@ -52,12 +52,12 @@ main(int argc, char **argv){
   }
   try{
     
-    MeasurementSet myms(argv[1],Table::Old);
+    MeasurementSet myms(argv[1],Table::Update);
    
     cerr << "ISWritable " << myms.isWritable() << endl;
     
     TableExprNode condition;
-    Vector<Int> field(1); field(0)=0; //field(1)=1;
+    Vector<Int> field(1); field(0)=1; //field(1)=1;
     condition=myms.col("FIELD_ID").in(field);
     MeasurementSet mssel(myms(condition));
 
@@ -66,7 +66,7 @@ main(int argc, char **argv){
     VisBuffer vb(vi);
     
 
-    /*   MDirection myDir=vi.msColumns().field().phaseDirMeas(0);
+    MDirection myDir=vi.msColumns().field().phaseDirMeas(0);
     ComponentList cl;
     SkyComponent otherPoint(ComponentType::POINT);
     otherPoint.flux() = Flux<Double>(0.00001, 0.0, 0.0, 0.00000);
@@ -77,20 +77,26 @@ main(int argc, char **argv){
     cl.toRecord(err, container);
     Record clrec;
     clrec.define("type", "componentlist");
-    clrec.define("fields", Vector<Int>(1, 0));
+    clrec.define("fields", field);
     clrec.define("spws", Vector<Int>(1, 0));
     clrec.defineRecord("container", container);
     Record outRec;
     outRec.define("numcl", 1);
     outRec.defineRecord("cl_0", clrec);
     VisModelData vm;
-    vm.addModel(outRec, Vector<Int>(1, 0));
+    //vm.addModel(outRec, Vector<Int>(1, 0), vb);
+    Vector<Int>spws(4);
+    indgen(spws);
+    vm.putModel(myms, container, field, spws, Vector<Int>(1,0), Vector<Int>(1,63), Vector<Int>(1,1), True, False);
+    vm.clearModel(myms, "1", "2");
     if(argc>2){
       PagedImage<Float> modim(argv[2]);
+      TempImage<Complex> cmod(modim.shape(), modim.coordinates());
+      StokesImageUtil::From(cmod, modim);
       MPosition loc;
       MeasTable::Observatory(loc, vi.msColumns().observation().telescopeName()(0));
       GridFT ftm(1000000, 16, "SF", loc, 1.0, False, False);
-      ftm.initToVis(modim, vb);
+      ftm.initializeToVis(cmod, vb);
       Record elrec;
       String err;
       ftm.toRecord(err, elrec, True);
@@ -103,22 +109,22 @@ main(int argc, char **argv){
       outRec1.define("numft", 1);
       outRec1.defineRecord("ft_0", ftrec);
       cerr << "Error string for Record " << err << endl;
-      vm.addModel(outRec1, Vector<Int>(1, 0) );
+     
 		 
     } 
 
 
-    */
+    
     Timer tm;
     tm.mark();
     vi.origin();
     for (vi.originChunks();vi.moreChunks(); vi.nextChunk()){
       for (vi.origin(); vi.more(); vi++){
-
+	
 	//vm.getModelVis(vb);
-	cerr << "field " << vb.fieldId() << "  spw " << vb.spectralWindow() << " stddev " << stddev(vb.modelVisCube()) << "   mean " << mean(vb.modelVisCube()) <<" max " <<  max(vb.modelVisCube()) << "  min " << max(vb.modelVisCube()) << endl;
+	cerr << "field " << vb.fieldId() << "  spw " << vb.spectralWindow() << " stddev " << stddev(vb.modelVisCube()) << "   mean " << mean(vb.modelVisCube()) <<" max " <<  max(amplitude(vb.modelVisCube())) << "  min " << min(vb.modelVisCube()) << endl;
 	//vb.visCube();
-    }
+      }
     }
     tm.show("End of iter");
     //VisModelData::clearModel(myms);

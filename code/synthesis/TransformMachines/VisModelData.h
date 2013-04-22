@@ -100,8 +100,8 @@ class VisModelData {
   //helper function to clear the keywordSet of the ms of the model  for the fields 
   //in that ms
   static void clearModel(const MeasurementSet& thems);
-  // ...with field selection
-  static void clearModel(const MeasurementSet& thems, const String field);
+  // ...with field selection and optionally spw
+  static void clearModel(const MeasurementSet& thems, const String field, const String spws=String(""));
 
   // List the fields
   static void listModel(const MeasurementSet& thems);
@@ -119,6 +119,10 @@ class VisModelData {
   Vector<CountedPtr<ComponentList> >getCL(const Int msId, const Int fieldId, Int spw);
   Vector<CountedPtr<FTMachine> >getFT(const Int msId, const Int fieldId, Int spw);
   static Bool addToRec(Record& therec, const Vector<Int>& spws);
+  static Bool removeSpwFromMachineRec(RecordInterface& ftclrec, const Vector<Int>& spws);
+  static Bool removeFTFromRec(Record& therec, const String& keyval);
+  static Bool removeSpw(Record& therec, const Vector<Int>& spws);
+
   Block<Vector<CountedPtr<ComponentList> > > clholder_p;
   Block<Vector<CountedPtr<FTMachine> > > ftholder_p;
   Block<Vector<Double> > flatholder_p;

@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,44 +22,53 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id$
 
-#ifndef IMAGETRACKER_H_
-#define IMAGETRACKER_H_
+#ifndef HISTOGRAMGRAPH_QO_H
+#define HISTOGRAMGRAPH_QO_H
+
+#include <QtGui/QWidget>
+#include <display/region/HistogramGraph.ui.h>
 
 namespace casa {
 
-class QtDisplayData;
+template <class T> class ImageInterface;
+class BinPlotWidget;
+class ImageRegion;
 
 /**
- * Interface class designed to reduce the coupling between the GUI class,
- * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
- * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
+ * Displays a histogram specific to a region and an image; contains
+ * a "Next" button that toggles to a histogram displaying the same
+ * region, but a different image.
  */
 
-class ImageTracker {
+
+class HistogramGraph : public QWidget
+{
+    Q_OBJECT
+
 public:
-	virtual void imageAdded( QtDisplayData* image ) = 0;
-	virtual void imageRemoved( QtDisplayData* image ) = 0;
-	virtual void masterImageSelected( QtDisplayData* image ) =0;
-	ImageTracker(){}
-	virtual ~ImageTracker(){}
+    HistogramGraph(QWidget *parent = 0);
+    ~HistogramGraph();
+    void initPlot();
+    void setIndex( int stackIndex );
+    void setNextEnabled( bool enabled );
+    void setImage( ImageInterface<float>* image );
+    void setImageRegion( ImageRegion* region, int id );
 
+signals:
+	void showGraph( int nextIndex );
+
+private slots:
+	void nextGraph();
+
+private:
+	HistogramGraph( const HistogramGraph& other );
+	HistogramGraph operator=( const HistogramGraph& other );
+    int index;
+    Ui::HistogramGraphClass ui;
+    BinPlotWidget* histogram;
 };
-
-/**
- * Interface implemented by GUI panels (QtDisplayPanel) that can add/remove
- * QtDisplayData's.  Called by the DisplayDataHolder to make
- * changes through the existing infrastructure.
- */
-class ImageDisplayer {
-public:
-	ImageDisplayer(){}
-	virtual ~ImageDisplayer(){}
-	virtual void setControllingDD( QtDisplayData* /*controlDD*/ ){
-	}
-	virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
-	virtual void unregisterDD( QtDisplayData* dd ) = 0;
-};
-
 }
-#endif /* IMAGETRACKER_H_ */
+
+#endif // HISTOGRAMGRAPH_QO_H

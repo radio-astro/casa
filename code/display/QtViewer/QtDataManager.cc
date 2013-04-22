@@ -525,26 +525,28 @@ void QtDataManager::update_dd_list( tab_state &ts ) {
 	while ( iter != panel_->endDD()){
 		QtDisplayData* qdd = (*iter);
 		iter++;
-		int type    = dataType_.key(QString::fromStdString(qdd->dataType( )));
-		if (exportTypes_.contains(type)){
-			// 		dtype  = displayType_.key(QString::fromStdString(qdd->displayType()));
+		if ( qdd != NULL ){
+			int type    = dataType_.key(QString::fromStdString(qdd->dataType( )));
+			if (exportTypes_.contains(type)){
+				// 		dtype  = displayType_.key(QString::fromStdString(qdd->displayType()));
 
-			QString fileName    = QString((qdd->name()).c_str());
-			QString filePath    = QString((qdd->path()).c_str());
+				QString fileName    = QString((qdd->name()).c_str());
+				QString filePath    = QString((qdd->path()).c_str());
 
-			if (filePath.endsWith("]") && filePath.lastIndexOf(".fits[") >0){
-				int lIndex=filePath.lastIndexOf(".fits[");
-				filePath.replace(lIndex, filePath.size()-lIndex, ".fits");
+				if (filePath.endsWith("]") && filePath.lastIndexOf(".fits[") >0){
+					int lIndex=filePath.lastIndexOf(".fits[");
+					filePath.replace(lIndex, filePath.size()-lIndex, ".fits");
+				}
+
+
+				QTreeWidgetItem *fileItem = new QTreeWidgetItem(ts.dtree( ));
+				fileItem->setText(0, fileName);
+				fileItem->setToolTip(0, filePath);
+				// 		fileItem->setText(1, uiDataType_.key(type));
+				fileItem->setText(1, QString::fromStdString(qdd->displayType( )));
+				fileItem->setTextColor(1, getDirColor(type));
+				display_datas.insert(display_data_map_t::value_type(fileName,qdd));
 			}
-
-
-			QTreeWidgetItem *fileItem = new QTreeWidgetItem(ts.dtree( ));
-			fileItem->setText(0, fileName);
-			fileItem->setToolTip(0, filePath);
-			// 		fileItem->setText(1, uiDataType_.key(type));
-			fileItem->setText(1, QString::fromStdString(qdd->displayType( )));
-			fileItem->setTextColor(1, getDirColor(type));
-			display_datas.insert(display_data_map_t::value_type(fileName,qdd));
 		}
 	}
 	ts.dtree( )->resizeColumnToContents(0);

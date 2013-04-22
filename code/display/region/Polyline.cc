@@ -45,9 +45,9 @@ namespace casa {
 namespace viewer {
 
 Polyline::Polyline( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts) :
-								Region( "polyline", wc, d ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
-								_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1),
-								slicePlot(NULL){
+				Region( "polyline", wc, d, new QtSliceCutState(QString("polyline") )),
+						_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+						_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1){
 	for ( size_t i=0; i < pts.size(); ++i ) {
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
 		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
@@ -60,8 +60,7 @@ Polyline::Polyline( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pai
 // carry over from QtRegion... hopefully, removed soon...
 Polyline::Polyline( QtRegionSourceKernel *rs, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals ) :
 				Region( "polyline", wc, rs->dock( ), hold_signals ), _ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
-				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1),
-				slicePlot(NULL){
+				_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1){
 	for ( size_t i=0; i < pts.size(); ++i ) {
 		_ref_points_.push_back(pt(pts[i].first,pts[i].second));
 		_drawing_points_.push_back(pt(pts[i].first,pts[i].second));
@@ -72,10 +71,9 @@ Polyline::Polyline( QtRegionSourceKernel *rs, WorldCanvas *wc, const std::vector
 
 
 Polyline::Polyline( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 ) :
-	Region( "polyline", wc, d ),
-	_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
-	_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1),
-	slicePlot(NULL){
+		Region( "polyline", wc, d, new QtSliceCutState(QString("polyline"))),
+			_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+			_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1){
 	_ref_points_.push_back(pt(x1,y1));
 	_drawing_points_.push_back(pt(x1,y1));
 	initPlot();
@@ -83,62 +81,109 @@ Polyline::Polyline( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 ) :
 
 
 Polyline::Polyline( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, bool hold_signals) :
-	Region( "polyline", wc, rs->dock( ), hold_signals ),
-	_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
-	_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1),
-	slicePlot(NULL){
+	Region( "polyline", wc, rs->dock( ), new QtSliceCutState(QString("polyline")), hold_signals ),
+		_ref_blc_x_(-1), _ref_blc_y_(-1), _ref_trc_x_(-1), _ref_trc_y_(-1),
+		_drawing_blc_x_(-1), _drawing_blc_y_(-1), _drawing_trc_x_(-1), _drawing_trc_y_(-1){
 	_ref_points_.push_back(pt(x1,y1));
 	_drawing_points_.push_back(pt(x1,y1));
 	initPlot();
 }
 
-void Polyline::setPlotLineColor(){
+RegionInfo * Polyline::newInfoObject( ImageInterface<Float> *image ) {
+	SliceRegionInfo* sliceRegion = NULL;
+	if ( image != NULL ){
+		RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
+		QString key( image->name(true).c_str());
+		SlicePlot* slicePlot = NULL;
+		if ( !slicePlots.contains(key)){
+			slicePlot = new SlicePlot();
+			slicePlot->setImage( image );
+			setPlotLineColor( slicePlot );
+			slicePlots.insert( key , slicePlot );
+		}
+		sliceRegion = new SliceRegionInfo( image->name(true), image->name(false), dd_stats );
+	}
+	return sliceRegion;
+}
+
+
+
+void Polyline::setPlotLineColor(SlicePlot* slicePlot ){
 	std::string sliceLineColor = lineColor();
 	QString qtLineColor( sliceLineColor.c_str());
 	slicePlot->setViewerCurveColor( this->id_, qtLineColor );
+}
+
+
+void Polyline::setPlotLineColor(){
+	QList<QString> plotKeys = slicePlots.keys();
+	for ( QList<QString>::iterator iter = plotKeys.begin(); iter != plotKeys.end(); iter++ ){
+		setPlotLineColor( slicePlots[*iter] );
+	}
 	emitUpdate();
 }
 
 void Polyline::initPlot(){
-	if ( slicePlot == NULL ){
-		slicePlot = new SlicePlot();
-		//connect( slicePlot, SIGNAL( markerPositionChanged(int,int,float)), this, SLOT(setMarkerPosition(int,int,float)));
-		//connect( slicePlot, SIGNAL( markerVisibilityChanged(int,bool)), this, SLOT(setShowMarkerPosition(int,bool)));
-		setPlotLineColor();
-	}
-	markerSegmentIndex = 0;
-	markerPercentage = 0;
-	showPositionMarker = false;
+	SlicePlot* slicePlot = new SlicePlot();
+		QString imageName;
+		if ( wc_ != NULL  ){
+			DisplayData* dd = wc_->csMaster();
+			if ( dd != NULL ){
+				ImageInterface<float>* masterImage = dd->imageinterface();
+				if ( masterImage != NULL ){
+					slicePlot->setImage( masterImage );
+					imageName = masterImage->name(true).c_str();
+				}
+			}
+		}
+		slicePlots.insert( imageName, slicePlot );
+		setPlotLineColor( slicePlot );
+		connect( this, SIGNAL(regionUpdate( int, viewer::region::RegionChanges, const QList<double> &,
+							const QList<double>&,const QList<int> &, const QList<int> &)), this,
+							SLOT(polyLineRegionUpdate(  int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
+											const QList<int> &, const QList<int> & )));
+		connect( this, SIGNAL(regionChange( viewer::Region *, std::string )), this,
+								SLOT(polyLineRegionChanged( viewer::Region*, std::string )));
+		markerSegmentIndex = 0;
+		markerPercentage = 0;
+		showPositionMarker = false;
 }
 
+void Polyline::addPlot(QWidget* parent, string label){
+	QString imageLabel( label.c_str());
+	SlicePlot* slicePlot = NULL;
+	if ( slicePlots.contains( imageLabel )){
+		slicePlot = slicePlots[imageLabel];
 
-void Polyline::addPlot(QWidget* parent){
-	slicePlot -> setParent( parent );
-	QLayout* layout = new QHBoxLayout();
-	layout->addWidget( slicePlot );
-	parent->setLayout( layout );
-	connect( this, SIGNAL(regionUpdate( int, viewer::region::RegionChanges, const QList<double> &,
-				const QList<double>&,const QList<int> &, const QList<int> &)), this,
-				SLOT(polyLineRegionUpdate(  int, viewer::region::RegionChanges, const QList<double> &, const QList<double> &,
-								const QList<int> &, const QList<int> & )));
-	connect( this, SIGNAL(regionChange( viewer::Region *, std::string )), this,
-					SLOT(polyLineRegionChanged( viewer::Region*, std::string )));
-	QList<int> pixelX;
-	QList<int> pixelY;
-	QList<double> worldX;
-	QList<double> worldY;
-	viewer::region::RegionTypes type;
-	fetch_details( type, pixelX, pixelY, worldX, worldY );
-	polyLineRegionUpdate( type, viewer::region::RegionChangeCreate,
+		slicePlot->setParent( parent );
+		QLayout* layout = new QHBoxLayout();
+		layout->addWidget( slicePlot );
+		parent->setLayout( layout );
+
+		QList<int> pixelX;
+		QList<int> pixelY;
+		QList<double> worldX;
+		QList<double> worldY;
+		viewer::region::RegionTypes type;
+		fetch_details( type, pixelX, pixelY, worldX, worldY );
+		polyLineRegionUpdate( type, viewer::region::RegionChangeCreate,
 			worldX, worldY, pixelX, pixelY);
+	}
+
 }
+
 
 void Polyline::polyLineRegionUpdate(int regionId, viewer::region::RegionChanges change,
 		const QList<double> & worldX, const QList<double>& worldY,
 		const QList<int> & pixelX, const QList<int> & pixelY){
 	if ( change == viewer::region::RegionChangeNewChannel ){
 		int channelIndex = zIndex();
-		slicePlot->updateChannel(channelIndex);
+		QList<QString> keys = slicePlots.keys();
+				for ( QList<QString>::iterator iter = keys.begin(); iter != keys.end();
+						iter++ ){
+					SlicePlot* slicePlot = slicePlots[*iter];
+					slicePlot->updateChannel(channelIndex);
+				}
 	}
 	updatePolyLine(regionId, change, worldX, worldY, pixelX, pixelY);
 }
@@ -153,8 +198,12 @@ void Polyline::updatePolyLine(int regionId, viewer::region::RegionChanges change
 		const QList<double> & worldX, const QList<double>& worldY,
 		const QList<int> & pixelX, const QList<int> & pixelY){
 	QList<double> linearX = worldX;
+	QList<QString> keys = slicePlots.keys();
+		for ( QList<QString>::iterator iter = keys.begin(); iter != keys.end();
+						iter++ ){
+			slicePlots[*iter]->updatePolyLine( regionId, changes, worldX, worldY, pixelX, pixelY );
 
-	slicePlot->updatePolyLine( regionId, changes, worldX, worldY, pixelX, pixelY );
+		}
 }
 
 void Polyline::addVertex( double x, double y, bool rewrite_last_point ) {
@@ -1151,20 +1200,16 @@ std::list<std::tr1::shared_ptr<RegionInfo> > *Polyline::generate_dds_centers(){
 }
 
 Polyline::~Polyline(){
-	delete slicePlot;
+	QList<QString> keys = slicePlots.keys();
+		for ( QList<QString>::iterator iter = keys.begin(); iter != keys.end();
+					iter++ ){
+			delete slicePlots[*iter];
+			slicePlots[*iter] = NULL;
+		}
 }
 
-ImageRegion *Polyline::get_image_region( DisplayData *dd ) const {
-	if ( wc_ != NULL  ){
-		PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
-		if ( padd != NULL ){
-			ImageInterface<float>* sliceImage = padd->imageinterface( );
-			if ( sliceImage != NULL ){
-				slicePlot->setImage( sliceImage );
+ImageRegion *Polyline::get_image_region( DisplayData */*dd*/ ) const {
 
-			}
-		}
-	}
 	return NULL;
 }
 

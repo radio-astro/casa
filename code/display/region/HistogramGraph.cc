@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,44 +22,54 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-
-#ifndef IMAGETRACKER_H_
-#define IMAGETRACKER_H_
+//# $Id$
+#include "HistogramGraph.qo.h"
+#include <guitools/Histogram/BinPlotWidget.qo.h>
+#include <images/Images/ImageInterface.h>
+#include <images/Regions/ImageRegion.h>
 
 namespace casa {
 
-class QtDisplayData;
 
-/**
- * Interface class designed to reduce the coupling between the GUI class,
- * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
- * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
- */
+HistogramGraph::HistogramGraph(QWidget *parent )
+    : QWidget(parent)
+{
+	ui.setupUi(this);
+	initPlot();
+	connect( ui.nextButton, SIGNAL(clicked()), this, SLOT(nextGraph()));
+}
 
-class ImageTracker {
-public:
-	virtual void imageAdded( QtDisplayData* image ) = 0;
-	virtual void imageRemoved( QtDisplayData* image ) = 0;
-	virtual void masterImageSelected( QtDisplayData* image ) =0;
-	ImageTracker(){}
-	virtual ~ImageTracker(){}
+void HistogramGraph::setIndex( int stackIndex ){
+	index = stackIndex;
+}
 
-};
+void HistogramGraph::nextGraph(){
+	emit showGraph( index+1);
+}
 
-/**
- * Interface implemented by GUI panels (QtDisplayPanel) that can add/remove
- * QtDisplayData's.  Called by the DisplayDataHolder to make
- * changes through the existing infrastructure.
- */
-class ImageDisplayer {
-public:
-	ImageDisplayer(){}
-	virtual ~ImageDisplayer(){}
-	virtual void setControllingDD( QtDisplayData* /*controlDD*/ ){
-	}
-	virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
-	virtual void unregisterDD( QtDisplayData* dd ) = 0;
-};
+void HistogramGraph::initPlot(){
+	histogram = new BinPlotWidget( false, false, false, NULL );
+	histogram->setDisplayPlotTitle( true );
+
+	QHBoxLayout* boxLayout = new QHBoxLayout();
+	boxLayout->addWidget( histogram );
+	ui.histogramHolder->setLayout( boxLayout );
+}
+
+void HistogramGraph::setNextEnabled( bool enabled ){
+	ui.nextButton->setEnabled( enabled );
+}
+
+void HistogramGraph::setImageRegion( ImageRegion* region, int id ){
+	histogram->setImageRegion( region, id );
+}
+
+void HistogramGraph::setImage( ImageInterface<float>* image ){
+	histogram->setImage( image );
+}
+
+HistogramGraph::~HistogramGraph()
+{
 
 }
-#endif /* IMAGETRACKER_H_ */
+}

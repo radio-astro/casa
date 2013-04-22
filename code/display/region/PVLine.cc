@@ -629,7 +629,8 @@ namespace casa {
 					region_centers->push_back( std::tr1::shared_ptr<RegionInfo>( new PVLineRegionInfo( name, description,
 					                           getLayerCenter(padd, image, *imageregion),
 					                           std::vector<std::string>( ),
-					                           std::vector<std::string>( ))) );
+					                           std::vector<std::string>( ),
+					                           std::string( ), std::string( ))) );
 
 					delete imageregion;
 				} catch (const casa::AipsError& err) {
@@ -713,18 +714,52 @@ namespace casa {
 
 			std::vector<std::string> pixel(2);
 			std::vector<std::string> world(2);
-			ostringstream pix_oss;
-			pix_oss << std::fixed << std::setprecision(1) << ppt1_x << " " << ppt1_y;
-			pixel[0] = pix_oss.str( );
-			pix_oss.str("");
-			pix_oss.clear( );
-			pix_oss << std::fixed << std::setprecision(1) << ppt2_x << " " << ppt2_y;
-			pixel[1] = pix_oss.str( );
+			ostringstream oss;
+			oss << std::fixed << std::setprecision(1) << ppt1_x << " " << ppt1_y;
+			pixel[0] = oss.str( );
+			oss.str("");
+			oss.clear( );
+			oss << std::fixed << std::setprecision(1) << ppt2_x << " " << ppt2_y;
+			pixel[1] = oss.str( );
 
 			world[0] = worldCoordinateStrings(wpt1_x,wpt1_y);
 			world[1] = worldCoordinateStrings(wpt2_x,wpt2_y);
 
-			return new PVLineRegionInfo( image->name(true), image->name(false), dd_stats, pixel, world );
+			Vector<Double> pt1_worldv(2);
+			Vector<Double> pt2_worldv(2);
+
+			pt1_worldv(0) = wpt1_x;
+			pt1_worldv(1) = wpt1_y;
+
+			pt2_worldv(0) = wpt2_x;
+			pt2_worldv(1) = wpt2_y;
+
+			// calculate separation
+			MDirection::Types cccs = current_casa_coordsys( );
+			MDirection pt1( Quantum<Vector<Double> > (pt1_worldv,"rad"), cccs );
+			MDirection pt2( Quantum<Vector<Double> > (pt2_worldv,"rad"), cccs );
+			Quantity sep = pt1.getValue( ).separation(pt2.getValue( ),"arcsec");
+			if ( sep > Quantity(60,"arcsec") )
+				sep = pt1.getValue( ).separation(pt2.getValue( ),"arcmin");
+			oss.str("");
+			oss.clear( );
+			oss << std::setprecision(3) << sep;
+			std::string separation = oss.str( );
+
+			// calculate position angle
+			MVDirection ptdv1(pt1.getAngle( ));
+			MVDirection ptdv2(pt2.getAngle( ));
+			oss.str("");
+			oss.clear( );
+			if ( pt1.getAngle( ) < pt2.getAngle( ) ) {
+				oss << std::setprecision(2) << ptdv1.positionAngle(ptdv2,"deg").getValue( );
+			} else {
+				oss << std::setprecision(2) << ptdv2.positionAngle(ptdv1,"deg").getValue( );
+			}
+			std::string posangle = oss.str( );
+
+			return new PVLineRegionInfo( image->name(true), image->name(false), dd_stats, pixel, world,
+										 posangle, separation );
 		}
 
 		void PVLine::generate_nonimage_statistics( DisplayData *dd, std::list<RegionInfo> *region_statistics ) {
