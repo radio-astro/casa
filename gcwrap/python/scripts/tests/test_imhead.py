@@ -162,6 +162,7 @@ class imhead_test(unittest.TestCase):
 
     def test_mode(self):
         '''Imhead: Test list,summary,history,get,put,del,add,empty,bad modes'''
+        self.assertTrue(len(tb.showcache()) == 0)
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
         casalog.post( "Staring imhead mode tests!", "NORMAL2" )
     
@@ -172,11 +173,12 @@ class imhead_test(unittest.TestCase):
         results=None
         try:
             results = imhead( input_file, 'list' )
+            self.assertTrue(len(tb.showcache()) == 0)
         except:
             retValue['success']=False
             retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: list mode test has failed on image "+input_file
-    
+
         if ( results==None \
              or (isinstance(results,bool) and results==False )\
              or (isinstance(results,dict) and results=={} ) ):
@@ -184,7 +186,6 @@ class imhead_test(unittest.TestCase):
             retValue['error_msgs']=retValue['error_msgs']\
                      +"\nError: list mode test has failed on image "+input_file\
                      +"\nThe results are: "+str(results)
-    
         ################################################################
         # Summary mode
         casalog.post( "Testing SUMMARY mode", "NORMAL4" );
@@ -209,6 +210,7 @@ class imhead_test(unittest.TestCase):
         # History mode
         casalog.post( "Testing HISTORY mode", "NORMAL4" );
         results=None
+        self.assertTrue(len(tb.showcache()) == 0)
         try:
             results = imhead( input_file, 'history' )
         except:
@@ -251,6 +253,7 @@ class imhead_test(unittest.TestCase):
         # Get mode
         casalog.post( "Testing GET  mode", "NORMAL4" );
         results=None
+        self.assertTrue(len(tb.showcache()) == 0)
         try:
             results = imhead( input_file, 'get', 'telescope' )
         except:
@@ -290,6 +293,7 @@ class imhead_test(unittest.TestCase):
         # Del mode
         casalog.post( "Testing DEL mode", "NORMAL4" );
         results=None
+        self.assertTrue(len(tb.showcache()) == 0)
         try:
             results = imhead( input_file, 'del', 'lastupdated')
         except:
@@ -329,6 +333,7 @@ class imhead_test(unittest.TestCase):
         ################################################################
         # Empty mode
         results=None
+        self.assertTrue(len(tb.showcache()) == 0)
         try:
             results = imhead( input_file, '' )
         except:
@@ -361,6 +366,7 @@ class imhead_test(unittest.TestCase):
         ################################################################
         # bad mode
         results=None
+        self.assertTrue(len(tb.showcache()) == 0)
         try:
             results = imhead( input_file, 'bad' )
         except:
@@ -917,62 +923,28 @@ class imhead_test(unittest.TestCase):
     #
                 
     def test_values_restored(self):
-        '''Imhead: test if original values are restored'''
-        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
-        casalog.post( "Starting imhead restored values test!", "NORMAL2" )
-    
+        '''Imhead: test if original values are restored'''    
         if(os.path.exists(input_file_copy)):
             os.system('rm -rf ' +input_file_copy)
-            
         shutil.copytree(input_file, input_file_copy)
-        
-        try:
-            cur_hdr=imhead( input_file, 'list' )
-            orig_hdr=imhead( input_file_copy, 'list' )
-        except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: Unable to get values from files: "\
-              +"\n\t"+input_file\
-              +", and\n\t"+input_file_copy
-        else:
-            for key in orig_hdr.keys() :
-                #print "CHECKING IF "+key+" has CHANGED VALUE."
-                #print "has key: ", cur_hdr.has_key(key)
-                #print "ORIG value: ", orig_hdr[key]
-                #print "CURRENT value: ", cur_hdr[key]
-    
-                match = False
-                if ( cur_hdr.has_key(key) ):
-                    if ( isinstance( orig_hdr[key], numpy.ndarray ) ):
-                        if ( not isinstance( cur_hdr[key], numpy.ndarray ) ):
-                            match = False
-                        else:
-                            results = orig_hdr[key] == orig_hdr[key]
-                            if ( results.all() ):
-                                match = True
-                    else:
-                        if( isinstance( cur_hdr[key], float )\
-                            and abs(cur_hdr[key]-orig_hdr[key]) < 0.00000001 ):
-                            # Allow for rounding errors when changing values.
-                            match = True
-                        elif ( cur_hdr[key]==orig_hdr[key] ):
-                            match = True
-                        
-    
-                if ( not match ):
-                    retValue['success']=False
-                    retValue['error_msgs']=retValue['error_msgs']\
-                         +"\nError: "+str(key)+" has not been restored!"\
-                         +"\n         Current value:   "+str(cur_hdr[key])\
-                         +"\n         Expected value:  "+str(orig_hdr[key])
-    
-        ## LIST values again.  They should be the same as at the start of the test
-        #imhead( input_file, 'list' )
-        #print "\nCheck that the values listed are the same as at the"
-        #print "beginning of the test"
-        
-        self.assertTrue(retValue['success'],retValue['error_msgs'])
+        cur_hdr = imhead( input_file, 'list' )
+        orig_hdr = imhead( input_file_copy, 'list' )
+        gotkeys = cur_hdr.keys()
+        gotkeys.sort()
+        expkeys = orig_hdr.keys()
+        expkeys.sort()
+        self.assertTrue(expkeys == gotkeys)
+        for key in expkeys:
+            got = cur_hdr[key]
+            expec = orig_hdr[key]
+            exptype = type(expec)
+            self.assertTrue(isinstance(got, exptype))
+            if ( isinstance(exptype, numpy.ndarray ) ):
+                self.assertTrue((got == expec).all())
+            elif isinstance(exptype, str):
+                self.assertTrue(got == expec)
+            elif  isinstance(exptype, float ):
+                self.assertTrue(abs(got - expec) < 0.00000001 )
 
     def test_types(self):
         '''Imhead: CAS-3285 Test types of keys'''

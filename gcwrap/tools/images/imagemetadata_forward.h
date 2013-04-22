@@ -8,5 +8,6 @@
 namespace casa 
 {
 	class LogIO;
-	template<class T> class ImageHeader;
+	template<class T> class ImageMetaData;
+	template<class T> class ImageInterface;
 }
