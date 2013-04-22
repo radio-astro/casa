@@ -317,6 +317,9 @@ namespace casa {
 	QWidget *polyline_button = mouseToolBar_->button(QtMouseToolNames::POLYLINE);
 	if ( polyline_button ) polyline_button->setEnabled(false);
 
+	QWidget *pv_button = mouseToolBar_->button(QtMouseToolNames::POSITIONVELOCITY);
+	if ( pv_button ) pv_button->setEnabled(false);
+
 	show( );
 	autoDDOptionsShow = true;
     }
