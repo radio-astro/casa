@@ -577,7 +577,7 @@ Bool Imager::imagecoordinates2(CoordinateSystem& coordInfo, const Bool verbose)
 	// Now use outframe (instead of data frame) as the rest of
 	// the modes do
 	//
-	finc= (chanFreq.shape().nelements()==1) ? freqResolution(0) : chanFreq(1)-chanFreq(0);
+	finc= ((chanFreq.shape().nelements()==1) && (chanFreq.shape()[0] > 1)) ? chanFreq(1)-chanFreq(0) : freqResolution(0);
 	mySpectral = new SpectralCoordinate(freqFrame_p,
       					  chanFreq(0),
 					    finc,  
