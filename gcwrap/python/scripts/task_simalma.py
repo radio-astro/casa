@@ -728,7 +728,6 @@ def simalma(
                     # total power image
                     #flattp = fileroot + "/" + imagename_tp + ".flat"
                     #myutil.flatimage(fileroot+"/"+imagename_tp,verbose=verbose)
-                    disprange = []
                     flattp = scaledimg + ".flat"
                     myutil.flatimage(scaledimg,verbose=verbose)
                     if not os.path.exists(flattp):
@@ -737,6 +736,7 @@ def simalma(
                     discard = myutil.statim(flattp,disprange=disprange)
                     shutil.rmtree(flattp)
 
+                    disprange = []
                     # display flat synthesized (7m+12m) image
                     myutil.nextfig()
                     discard = myutil.statim(flatint,disprange=disprange)
