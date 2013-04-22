@@ -102,7 +102,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		pix1(0) = (Double)itsX1; pix1(1) = (Double)itsY1;
 		pix2(0) = (Double)itsX2; pix2(1) = (Double)itsY2;
 
-		std::cout << "draw\t\t" << pix1 << ", " << pix2 << std::endl;
+		//std::cout << "draw\t\t" << pix1 << ", " << pix2 << std::endl;
 
 		// determine the positions in world coordinates
 		if ( ! itsCurrentWC->pixToWorld(world1, pix1) || !itsCurrentWC->pixToWorld(world2, pix2)){
