@@ -344,7 +344,7 @@ def csvclean(vis, imagename,field, spw, advise, mode, nchan, width, imsize, cell
                 shp=ia.shape()
                 ia.done()
                 ia.open(maskname)
-                ia.regrid(outfile='__tmpmask__', shape=shp, csys=csys.torecord(), axes=[0,1])
+                ia.regrid(outfile='__tmpmask__', shape=shp, csys=csys.torecord(), axes=[0,1], asvelocity=False)
                 ia.remove(True)
                 ia.done()
                 shutil.move('__tmpmask__', maskname)

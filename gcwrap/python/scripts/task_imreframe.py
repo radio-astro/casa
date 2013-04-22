@@ -44,7 +44,7 @@ def imreframe(imagename=None, output=None, outframe=None, epoch=None, restfreq=N
             outname='_temp_regrid_image' if(output=='') else output
             shp=myia.shape()             
             ib=myia.regrid(outfile=outname, shape=shp, csys=c.torecord(), 
-                           axes=pixax, overwrite=True)
+                           axes=pixax, overwrite=True, asvelocity=False)
             ib.setcoordsys(c.torecord())
             if(output==''):
                 myia.done()

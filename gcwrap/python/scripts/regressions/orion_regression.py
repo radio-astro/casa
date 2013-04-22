@@ -148,7 +148,7 @@ def joint_deconvolve(datapath):
 	ia.close()
 	ia.open(datapath+'orion.gbt.im')
 	ib=ia.regrid(outfile='orion_tgbt_regrid.im',shape=[300,300,1,1], axes=[0,1],
-		  csys=csys.torecord(),overwrite=True)
+		  csys=csys.torecord(),overwrite=True, asvelocity=False)
 	ib.setcoordsys(csys.torecord())
 	ia.close()
 	ib.done()

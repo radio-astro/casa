@@ -662,16 +662,17 @@ ms::summary(bool verbose, const string& listfile, bool listunfl, double cachesiz
 ::casac::record*
 ms::getscansummary()
 {
-  ::casac::record *scansummary;
+  ::casac::record *scansummary = 0;
   try {
     if(!detached()){
-      //*itsLog << LogOrigin("ms", "summary");
       MSSummary mss(itsMS);
       casa::Record outRec;
       mss.getScanSummary(outRec);
       scansummary=fromRecord(outRec);
     }
-  } catch (AipsError x) {
+  }
+  catch (const AipsError& x) {
+    *itsLog << LogOrigin("ms", "getscansummary");
     *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
     Table::relinquishAutoLocks(True);
     RETHROW(x);

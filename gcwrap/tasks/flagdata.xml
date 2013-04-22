@@ -592,7 +592,8 @@
             will be appended to the given file.
             
             The available flagging modes are: manual, clip, shadow, quack, elevation, 
-            tfcrop, rflag, extend, unflag and summary.
+            tfcrop, rflag, extend, unflag and summary. For automatic flagging, it is 
+            recommended to combine auto-flag modes with extend, via the list mode.
 
             The current flags can be automatically backed up before applying new 
             flags if the parameter flagbackup is set. Previous flag versions can be 
@@ -883,8 +884,7 @@ The task will flag a subset of data based on the following modes of operation:
                              (as function of time), will be flagged.
                    default: 90.0
 
-        tfcrop -- Flag using the TFCrop autoflag algorithm. The polarization
-                  expression is given by the correlation parameter.
+        tfcrop -- Flag using the TFCrop autoflag algorithm. 
 
                  For each field, spw, timerange (specified by ntime), and baseline, 
                  (1) Average visibility amplitudes along time dimension to 
@@ -895,8 +895,17 @@ The task will flag a subset of data based on the following modes of operation:
                  (4) Repeat (1-3) along the other dimension.
 
                  This algorithm is designed to operate on un-calibrated data (step (2)), 
-                 as well as calibrated data.  It is usually helpful to extend the flags along
-                 time, frequency, and correlation in a second step (via mode='extend)
+                 as well as calibrated data.  
+
+                 It is usually helpful to extend the flags along time, frequency, and correlation 
+                 in a second step (via mode='extend') within the same flagging run.
+                 Example : 
+                     cmd=["mode='tfcrop' freqcutoff=3.0 usewindowstats='sum' ", 
+                           "mode='extend' extendpols=True growtime=50.0 growaround=True"]
+                     flagdata(vis,mode='list',inpfile=cmd)                    
+
+                 Note : The data-expression on which to apply the flagging algorithm
+                            is given by the correlation parameter.
 
                ntime -- Timerange (in seconds or minutes) over which to buffer data before 
                         running the algorithm. 
@@ -1069,6 +1078,15 @@ The task will flag a subset of data based on the following modes of operation:
                           correlations (or sols) on which to run one instance of RFlag. 
                           For example, correlation='RR,LL' or correlation='ABS sol1,sol2'.
 
+
+                  (4) It is usually helpful to extend the flags along time, frequency, and correlation 
+                       in a second step (via mode='extend') within the same flagging run.
+                       Example : 
+                           cmd=["mode='rflag' freqdevscale=3.0 ", 
+                                 "mode='extend' extendpols=True growtime=50.0 growaround=True"]
+                           flagdata(vis,mode='list',inpfile=cmd)                    
+
+
                ntime -- Timerange (in seconds or minutes) over which to buffer data before running 
                         the algorithm.
                      options: 'scan' or any other float value or string containing the units.
@@ -1134,6 +1152,9 @@ The task will flag a subset of data based on the following modes of operation:
         extend -- Extend and/or grow flags beyond what the basic algorithms detect.
                         This mode will extend the accumulated flags available in the MS,
                         regardless of which algorithm created them.
+
+                        It is recommended that any autoflag algorithm be followed up by a
+                        flag extension.
                          
                         Extensions will apply only within the selected data, according to the settings 
                         of extendpols,growtime,growfreq,growaround, flagneartime,flagnearfreq.

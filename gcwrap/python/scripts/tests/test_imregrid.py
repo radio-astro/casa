@@ -409,7 +409,7 @@ class imregrid_test(unittest.TestCase):
         refvals = csys.referencevalue()["numeric"]
         refvals[3] *= 10
         csys.setreferencevalue(refvals)
-        regridded = myia.regrid("", myia.shape(), csys.torecord())
+        regridded = myia.regrid("", myia.shape(), csys.torecord(), asvelocity=False)
         self.assertTrue((regridded.getchunk(getmask=True) == False).all())
         self.assertTrue(
             (
@@ -422,7 +422,7 @@ class imregrid_test(unittest.TestCase):
         refvals = csys.referencevalue()["numeric"]
         refvals[3] *= 10
         csys.setreferencevalue(refvals)
-        regridded = myia.regrid("", myia.shape(), csys.torecord())
+        regridded = myia.regrid("", myia.shape(), csys.torecord(), asvelocity=False)
         self.assertTrue(regridded.getchunk(getmask=True).all())
         self.assertTrue(
             (
@@ -441,7 +441,15 @@ class imregrid_test(unittest.TestCase):
         expec = myia.getchunk()
         self.assertTrue((got == expec).all())
         
-        
+    def test_get(self):
+        """Test using template='get' works"""
+        tempfile = "xyz.im"
+        myia = self._myia 
+        myia.fromshape(tempfile,[20,20,20])
+        dicttemp = imregrid(tempfile, template="get")
+        dicttemp['csys']['direction0']['crpix'] = [2.5, 2.5]
+        output = "out.im"
+        imregrid (tempfile, template=dicttemp, output=output) 
         
             
 def suite():

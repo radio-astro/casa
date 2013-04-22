@@ -837,7 +837,7 @@ class cleanhelper:
             ia.close()
             ia.removefile('__temp_mask')
             ia.open(outputmask)
-            outim = ia.regrid(outfile='__temp_mask',shape=shp,axes=[0,1], csys=self.csys,overwrite=True)
+            outim = ia.regrid(outfile='__temp_mask',shape=shp,axes=[0,1], csys=self.csys,overwrite=True, asvelocity=False)
             outim.done(verbose=False)
             ia.done(verbose=False)
             ia.removefile(outputmask)
@@ -1236,7 +1236,7 @@ class cleanhelper:
                 newcsys=ia.coordsys()
                 newshape=ia.shape()
                 ia.open(modim)
-                ib=ia.regrid(outfile=modelos[k], shape=newshape, axes=[0,1,3], csys=newcsys.torecord(), overwrite=True)
+                ib=ia.regrid(outfile=modelos[k], shape=newshape, axes=[0,1,3], csys=newcsys.torecord(), overwrite=True, asvelocity=False)
                 ib.done(verbose=False)
                 
             k=k+1
@@ -1767,9 +1767,9 @@ class cleanhelper:
             tmpshp[1]=shp[1]
             if len(oldshp)==4: # include spectral axis for regrid
               tmpshp[3]=shp[3]
-              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1,3], csys=self.csys, overwrite=True)
+              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1,3], csys=self.csys, overwrite=True, asvelocity=False)
             else:
-              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1], csys=self.csys, overwrite=True)
+              ib=ia.regrid(outfile='__looloo', shape=tmpshp, axes=[0,1], csys=self.csys, overwrite=True, asvelocity=False)
 
             #dat=ib.getchunk()
             ib.done(verbose=False)
@@ -1791,7 +1791,7 @@ class cleanhelper:
             ia.done(verbose=False)
             ia.removefile('__looloo')
         else:
-            ib=ia.regrid(outfile=outfile ,shape=shp, axes=[0,1], csys=self.csys, overwrite=True)
+            ib=ia.regrid(outfile=outfile ,shape=shp, axes=[0,1], csys=self.csys, overwrite=True, asvelocity=False)
             ia.done(verbose=False)
             ib.done(verbose=False)
 

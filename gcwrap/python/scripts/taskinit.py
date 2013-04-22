@@ -70,6 +70,7 @@ potool = casac.imagepol
 smtool = casac.simulator
 cltool = casac.componentlist
 coordsystool = casac.coordsys
+cstool = casac.coordsys
 rgtool = casac.regionmanager
 sltool = casac.spectralline
 dctool = casac.deconvolver
@@ -103,7 +104,7 @@ def gentools(tools=None):
 	tooldic={'im':'imager()', 'cb' :'calibrater()', 'ms':'mstool()',
 		 'tb':'tbtool()', 'fg':'fgtool()', 'me' :'metool()', 
 		 'ia': 'iatool()', 'po':'potool()', 'sm' :'smtool()', 
-		 'cl': 'cltool()', 'cs' :'coordsystool()', 'rg':'rgtool()',
+		 'cl': 'cltool()', 'cs' :'cstool()', 'rg':'rgtool()',
 		 'sl':'sltool()', 'dc':'dctool()', 'vp':'vptool()',
          'msmd':'msmdtool()','fi':'fitool()','fn':'fntool()', 'imd': 'imdtool()'}
 	reqtools=[]
