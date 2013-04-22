@@ -156,7 +156,8 @@ def compVarColTables(referencetab, testtab, varcol, tolerance=0.):
                     rdata = tb.getcell(col,therow)
                     tdata = tb2.getcell(col,therow)
 
-                    if not (rdata==tdata).all():
+#                    if not (rdata==tdata).all():
+                    if not rdata.all()==tdata.all():
                         if (tolerance>0.):
                             differs=False
                             for j in range(0,len(rdata)):
