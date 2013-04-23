@@ -9,9 +9,6 @@ from simutil import *
 from simobserve import simobserve
 from simanalyze import simanalyze
 from feather import feather
-from concat import concat
-from imregrid import imregrid
-from immath import immath
 
 def simalma(
     project=None,
@@ -22,17 +19,33 @@ def simalma(
     setpointings=None,
     ptgfile=None,
     integration=None, direction=None, mapsize=None, 
+    #maptype=None,
+    #pointingspacing=None,
+    #caldirection=None, calflux=None, 
+    #observe=None, 
+    #refdate=None,
     antennalist=None,
     hourangle=None, 
     totaltime=None,
+    #sdantlist=None, sdant=None,
     ###
     acaratio = None,
     acaconfig = None,
     ###
+    #thermalnoise=None,
+    #user_pwv=None, t_ground=None, t_sky=None, tau0=None,
     pwv=None,
+    #seed=None,
+    #leakage=None,
     image=None,
+    #vis=None, modelimage=None,
     imsize=None, imdirection=None,cell=None,
     niter=None, threshold=None,
+    #weighting=None, mask=None, outertaper=None, stokes=None,     
+    #analyze=None, 
+    #showarray=None, showuv=None, showpsf=None, showmodel=None, 
+    #showconvolved=None, showclean=None, showresidual=None, showdifference=None, 
+    #showfidelity=None,
     graphics=None,
     verbose=None, 
     overwrite=None,
@@ -171,11 +184,10 @@ def simalma(
             msname_aca = pref_aca+".ms"
             msname_tp = pref_tp+".sd.ms"
             #imagename_aca = pref_aca+".image"
-        
+            
         imagename_tp = project+".sd.image"
         imagename_int = project+".concat.image"
         combimage = project+".feather.image"
-        msname_concat = project+".concat.ms"
 
         simana_file = project+".simanalyze.last"
 
@@ -593,20 +605,10 @@ def simalma(
 
             if acaratio > 0:
                 if os.path.exists(fileroot+"/"+msname_aca):
-                    #vis_int += ","+msname_aca
-                    vis = [fileroot+"/"+msname_bl, fileroot+"/"+msname_aca]
-                    vis_int = msname_concat
+                    vis_int += ","+msname_aca
                 else:
                     msg("ACA is requested but ACA 7-m MS '%s' is not found" \
                         % msname_aca, origin="simalma", priority="error")
-                # Do concat manually
-                vis = [fileroot+"/"+msname_bl, fileroot+"/"+msname_aca]
-                concatvis = fileroot + "/" + vis_int
-                visweightscale = [1., (3.5/6.)**2]
-                msg("Concatenating interferometer visibilities: %s" % str(vis), origin="simalma", priority=v_priority)
-                msg("Visibility weights of each MS: %s" % str(visweightscale), origin="simalma", priority=v_priority)
-                concat(vis=vis, concatvis=concatvis,
-                       visweightscale=visweightscale)
 
             taskstr = "simanalyze(project='"+ project+"', image="+str(image)+", vis='"+ vis_int+"', modelimage='', cell='"+str(cell)+"', imsize="+str(imsize)+", imdirection='"+ imdirection+"', niter="+str(niter)+", threshold='"+ threshold+"', weighting='"+ weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+ graphics+"', verbose="+str(verbose)+", overwrite="+ str(overwrite)+")"
             msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
@@ -637,30 +639,15 @@ def simalma(
                 else:
                     msg("The synthesized image '%s' is not found" \
                         % imagename_int, origin="simalma", priority="error")
-                if not os.path.exists(fileroot+"/"+imagename_tp):
+                if os.path.exists(fileroot+"/"+imagename_tp):
+                    lowimage = fileroot+"/"+imagename_tp
+                else:
                     msg("ACA is requested but total power image '%s' is not found" \
                         % imagename_tp, origin="simalma", priority="error")
-                #lowimage = fileroot+"/"+imagename_tp
-
-                # Need to manipulate TP image here
                 outimage = fileroot+"/" + combimage
-                pbcov = highimage.rstrip("image") + "flux.pbcoverage"
-                regridimg = fileroot + "/" + imagename_tp + ".regrid"
-                scaledimg = fileroot + "/" + imagename_tp + ".pbscaled"
-                lowimage = scaledimg
 
-                # regrid TP image
-                inttemplate = imregrid(imagename = highimage, template='get')
-                imregrid(imagename = fileroot+"/"+imagename_tp,
-                         template = inttemplate, output = regridimg)
-                # multiply SD image with INT PB coverage
-                if not os.path.exists(pbcov):
-                    msg("The flux image '%s' is not found" \
-                        % pbcov, origin="simalma", priority="error")
-                immath(imagename=[regridimg, pbcov],
-                       expr='IM1*IM0',outfile=scaledimg)
-
-                # Feathering
+                # TODO: Need to manipulate TP image here
+                
                 taskstr = ("feather(imagename='%s', highres='%s',lowres='%s'" \
                            % (outimage, highimage, lowimage))
                 msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
@@ -669,8 +656,6 @@ def simalma(
                 except:
                     raise Exception, "simalma caught an exception in task feather"
                 finally:
-                    shutil.rmtree(regridimg)
-                    #shutil.rmtree(scaledimg)
                     casalog.origin('simalma')
 
                 ########################################################
@@ -710,37 +695,26 @@ def simalma(
                     disprange = None
                     myutil.newfig(multi=[2,2,1],show=grscreen)
                     # skymodel
-                    #discard = myutil.statim(fileroot+"/"+flatsky,disprange=disprange)
+                    discard = myutil.statim(fileroot+"/"+flatsky,disprange=disprange)
 
                     #disprange = []
-                    # generate flat synthesized (7m+12m) image
+                    # synthesized image
                     flatint = fileroot + "/" + imagename_int + ".flat"
                     myutil.flatimage(fileroot+"/"+imagename_int,verbose=verbose)
                     if not os.path.exists(flatint):
                         raise Exception, "Failed to generate '%s'" % (flatint)
+                    myutil.nextfig()
+                    discard = myutil.statim(flatint,disprange=disprange)
+                    shutil.rmtree(flatint)
 
-                    # generate convolved sky model image
-                    myutil.convimage(fileroot+"/"+flatsky, flatint)
-                    discard = myutil.statim(fileroot+"/"+flatsky+".regrid.conv",disprange=disprange)
-                    shutil.rmtree(fileroot+"/"+flatsky+".regrid")
-                    shutil.rmtree(fileroot+"/"+flatsky+".regrid.conv")
-                    
                     # total power image
-                    #flattp = fileroot + "/" + imagename_tp + ".flat"
-                    #myutil.flatimage(fileroot+"/"+imagename_tp,verbose=verbose)
-                    flattp = scaledimg + ".flat"
-                    myutil.flatimage(scaledimg,verbose=verbose)
+                    flattp = fileroot + "/" + imagename_tp + ".flat"
+                    myutil.flatimage(fileroot+"/"+imagename_tp,verbose=verbose)
                     if not os.path.exists(flattp):
                         raise Exception, "Failed to generate '%s'" % (flattp)
                     myutil.nextfig()
                     discard = myutil.statim(flattp,disprange=disprange)
                     shutil.rmtree(flattp)
-
-                    disprange = []
-                    # display flat synthesized (7m+12m) image
-                    myutil.nextfig()
-                    discard = myutil.statim(flatint,disprange=disprange)
-                    shutil.rmtree(flatint)
 
                     # combined image
                     flatcomb = fileroot + "/" + combimage + ".flat"
