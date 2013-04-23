@@ -149,6 +149,7 @@ Hanning smoothing may not be necessary.
                         <value>galacto</value>
                         <value>lgroup</value>
                         <value>cmb</value>
+                        <value>object</value>
 			<value></value>
 		</allowed>
 	</param>

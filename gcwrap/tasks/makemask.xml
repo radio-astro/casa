@@ -301,8 +301,12 @@ Usage examples :
 
 (9) (expand mode):
      Expand a boolean mask from a range of channels in the input image to another range
-     of channels in a  different image with a different spectral-coordinate system.
+     of channels in a different image with a different spectral-coordinate system.
      Save the mask as ones/zeros so that it can be used as an input mask in the clean task. 
+     As the inpimage is used as a template for the CoordinateSystem of the output cube, it is
+     a prerequisite to have the cube image (a dirty image, etc). In this particular example, 
+     it is assumed that bigmask.im is a working copy made from the cube image of a previous clean 
+     execution. It is used as an input template and the resultant mask is overwitten to the same image.
 
      makemask(mode='expand', inpimage='bigmask.im', inpmask='smallmask.im:mask0', 
               inpfreqs='1.5MHz~1.6MHz', outfreqs='1.2MHz~1.8MHz', output='bigmask.im', overwrite=True)
