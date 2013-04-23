@@ -218,6 +218,8 @@ output : Name of output image.
 
 overwrite : overwrite the mask specified in output? (see also the output rules above)
             default: False
+            * Note that for a cube mask, overwrite=True generally overwrites in the specified channel planes only and 
+            so any pre-existed masks in other channels  will be remain untouched.
 
 Additional expandable parameters for mode='expand':
   inpfreqs : input channel/frequency/velocity range

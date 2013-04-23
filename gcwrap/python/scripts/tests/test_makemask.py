@@ -203,6 +203,7 @@ class test_expand(makemaskTestBase):
     refimage2=datapath+'reference/ngc5921.expandtest2.ref.mask'
     refimage3=datapath+'reference/ngc5921.expandtest5.ref.mask'
     refimage4=datapath+'reference/ngc5921.expandtest6.ref.mask'
+    refimage5=datapath+'reference/ngc5921.expandtest2b.ref.mask'
 
     def setUp(self):
         #for img in [self.inimage,self.outimage1,self.outimage2, self.outimage3]:
@@ -218,6 +219,7 @@ class test_expand(makemaskTestBase):
                         self.outimage,self.outimage2,self.outimage3]:
                 if os.path.isdir(img):
                     shutil.rmtree(img)
+                    #pass
         else:
             print "debugging mode: clean-up did not performed"
 
@@ -233,18 +235,35 @@ class test_expand(makemaskTestBase):
         self.assertTrue(os.path.exists(self.outimage))
         self.assertTrue(self.compareimpix(self.refimage1,self.outimage))
 
+    #def test2_expandmask(self):
+    #    """ (expand mode) test2: an image mask from continuum clean to a cube mask with outfreqs by channel indices with existing ouput image(over-written)"""
+    #    # this is probably not recommended the resultant mask is added to the existing outimage which already have mask in some channels.
+    #    # this works while inpimage here is a continuum mask image and not a correct template, since the output image exist it will use
+    #    # as is when inpmask is a continuum image. 
+    #    try:
+    #        shutil.copytree(self.inimage2,self.outimage)
+    #        makemask(mode='expand',inpimage=self.inimage,inpmask=self.inimage, output=self.outimage, outfreqs=[4,5,6,7],overwrite=True)
+    #        shutil.copytree(self.outimage,'test2result.im')
+    #    except Exception, e:
+    #        print "\nError running makemask"
+    #        raise e
+    #
+    #    self.assertTrue(os.path.exists(self.outimage))
+    #    self.assertTrue(self.compareimpix(self.refimage2,self.outimage))
+
+    # replacing with this
     def test2_expandmask(self):
         """ (expand mode) test2: an image mask from continuum clean to a cube mask with outfreqs by channel indices"""
         try:
-            shutil.copytree(self.inimage2,self.outimage)
-            makemask(mode='expand',inpimage=self.inimage,inpmask=self.inimage, output=self.outimage, outfreqs=[4,5,6,7],overwrite=True)
-            #shutil.copytree(self.outimage,'test2result.im')
+            makemask(mode='expand',inpimage=self.inimage2,inpmask=self.inimage, output=self.outimage, outfreqs=[4,5,6,7],overwrite=False)
+            #shutil.copytree(self.outimage,'test2bresult.im')
         except Exception, e:
             print "\nError running makemask"
             raise e
 
         self.assertTrue(os.path.exists(self.outimage))
-        self.assertTrue(self.compareimpix(self.refimage2,self.outimage))
+        self.assertTrue(self.compareimpix(self.refimage5,self.outimage))
+
 
     def test3_expandmask(self):
         """ (expand mode) test3: an image mask from continuum clean to a cube mask with outfreqs by a frequency range"""

@@ -155,6 +155,8 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 
         #elif mode != 'merge':
         else:
+           #DEBUG
+           #print "mode=",mode
            import commands
            # copy can have multiple input masks, expand has only one.
            # check inpimage, inpmask, output, overwrite
@@ -226,7 +228,6 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                     raise Exception, "output=%s exists. If you want to overwrite it, please set overwrite=True" % output
            else:
                (outparentim, outbmask)=extractmaskname(output)
-               #print "extractmaskname::: outparentim=",outparentim, "outbmask=",outbmask
                if outbmask!='':
                    (parentimexist,maskexist)=checkinmask(outparentim,outbmask)    
                    if parentimexist and maskexist and not overwrite:
@@ -293,20 +294,23 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 	    bychanindx=False
 
 	    try: 
-		#print "expand mode..."
+		#print "expand mode main processing blocks..."
 		# do not allow list in this mode (for inpimage and inpmask) - maybe this is redundant now
 		if type(inpmask)==list:
 		    raise TypeError, 'A list for inpmask is not allowed for mode=expand'
 
 		# input image info, actually this will be output coordinates
-                #print "inpimage=",inpimage," is exist?=",os.path.isdir(inpimage)
 		ia.open(inpimage)
 		inshp = ia.shape()
 		incsys = ia.coordsys()
 		ia.close() 
+                #print "inpimage=",inpimage," is exist?=",os.path.isdir(inpimage)
+                #print " inshp for inpimage=",inshp
+
                 # prepare working input image (tmp_maskiamge)
 		if inpmask!='': # inpmask is either image mask or T/F mask now
 		  # need to extract the mask and put in tmp_maskimage
+                  # ==> tmp_maskiamge is an input mask image
                     (parentimage,bmask)=extractmaskname(inpmask)
                     if bmask!='':
 		        pixelmask2cleanmask(imagename=parentimage, maskname=bmask, maskimage=tmp_maskimage, usemasked=True)    
@@ -340,8 +344,11 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
 		# 2. if inpfreqs and outfreqs are integers (= channel indices), regrid only in
 		#    first and second axes (e.g. ra,dec) and no regridding along spectral axis
                 # 3. if inpfreqs and outfreqs are ranges in freq or vel, make subimage and regrid
-		
-		if inshp[3]!=1 and ((inpfreqs==[] and outfreqs==[]) \
+                ia.open(tmp_maskimage)
+                inmaskshp = ia.shape()
+                inmaskcsys = ia.coordsys()
+                ia.close()
+		if inmaskshp[3]!=1 and ((inpfreqs==[] and outfreqs==[]) \
                     or (inpfreqs=='' and outfreqs=='')):
 		    # unless inpimage is continuum, skip chan selection part and regrid 
 		    needtoregrid=True
@@ -355,27 +362,31 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                 #    else:
                 #        ia.open(tmp_maskimage)
 
-                    if inshp[3]!=1: casalog.post("inpmask is continuum..","INFO")
+                    #if inshp[3]!=1: casalog.post("inpmask is continuum..","INFO")
+                    if inmaskshp[3]==1: casalog.post("inpmask is continuum..","INFO")
 		    # selection by channel indices (number) 
 		    # if both inpfreqs and outfreqs are int skip regridding
 		    # if outfreqs is vel or freq ranges, try regridding 
 		    if inpfreqs==[[]] or inpfreqs==[]: 
                         # select all channels for input
-			inpfreqs=range(inshp[3])
+			inpfreqs=range(inmaskshp[3])
 
                     # check inpfreqs and outfreqs types
+                    # index based
                     selmode='bychan'
                     if type(inpfreqs)==list:
                         if type(inpfreqs[0])==int:
                             if type(outfreqs)==list and (len(outfreqs)==0 or type(outfreqs[0])==int):
                                 selmode='bychan'
                             elif type(outfreqs)==str:
-                                if inpfreqs[0]==0: #contintuum -allow index-type specification
+                                #if inpfreqs[0]==0: #contintuum -allow index-type specification
+                                if len(inpfreqs)==1: #contintuum -allow index-type specification
                                     selmode='byvf'
                                 else:
                                     raise TypeError, "Mixed types in infreqs and outfreqs are not allowed" 
                         else:
                             raise TypeError, "Non-integer in inpfreq is not supported" 
+                    # by velocity or frequency
                     elif type(inpfreqs)==str:
                         if type(outfreqs)!=str:
                             raise TypeError, "Mixed types in infreqs and outfreqs" 
@@ -395,13 +406,13 @@ def makemask(mode,inpimage, inpmask, output, overwrite, inpfreqs, outfreqs):
                         else:
                             outchans=outfreqs
                         expandchanmask(tmp_maskimage,inpfreqs,tmp_outmaskimage,outchans)
-                        #print "done expandchanmask tmp_outmaskimge=",tmp_outmaskimage, " is exist?", os.path.isdir(tmp_outmaskimage)
                         ia.open(tmp_outmaskimage)
 
                     elif selmode=='byvf': # outfreqs are quantities (freq or vel)
                         casalog.post("selection of input/output ranges by frequencies/velocities")
                         
-                        inpfreqlist = translatefreqrange(inpfreqs,incsys)
+                        # do it for input mask image (not the template )
+                        inpfreqlist = translatefreqrange(inpfreqs,inmaskcsys)
                         # close input image
                         if ia.isopen():
                             ia.close()
@@ -867,6 +878,7 @@ def expandchanmask(inimage,inchans,outimage,outchans):
     inshp=ia.shape()
     refchanst=inchans[0]
     refchanen=inchans[-1]
+    #print "refchanst=",refchanst," refchanen=",refchanen," inshp=",inshp," inchans=",inchans
     slst = [0,0,0,refchanst]
     slen = [inshp[0]-1,inshp[1]-1,0,refchanen]
     casalog.post("getting chunk at blc="+str(slst)+" trc="+str(slen),'DEBUG1')
@@ -886,6 +898,7 @@ def expandchanmask(inimage,inchans,outimage,outchans):
     for i in outchans:
         nearestch = findnearest(inchans,i)
         usechanims[i]=nearestch
+    #print "usechanims=",usechanims
     casalog.post("Mapping of channels: usechanims="+str(usechanims),'DEBUG1')
     for j in outchans:
         pix = refchanchunk[usechanims[j]-refchanst]
