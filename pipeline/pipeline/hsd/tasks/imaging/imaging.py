@@ -52,15 +52,11 @@ class SDImagingResults(common.SingleDishResults):
 
 class SDImaging(common.SingleDishTaskTemplate):
     Inputs = SDImagingInputs
-    SRCTYPE = {'ps': 0,
-               'otf': 0,
-               'otfraster': 0}
 
     def prepare(self):
         context = self.inputs.context
         datatable = context.observing_run.datatable_instance
         reduction_group = context.observing_run.reduction_group
-        grid_tables = []
         infiles = self.inputs.infiles
         iflist = self.inputs.iflist
         antennalist = self.inputs.antennalist
@@ -68,8 +64,10 @@ class SDImaging(common.SingleDishTaskTemplate):
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
 
-        image_list = []
+        # task returns ResultsList
         results = basetask.ResultsList()
+
+        # loop over reduction group
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
             spwid = group_desc['member'][0][1]
@@ -100,60 +98,23 @@ class SDImaging(common.SingleDishTaskTemplate):
                     LOG.debug('Skip antenna %s'%(name))
                     continue
 
-                # first scantable 
-                ant = indices[0]#group_desc['member'][0][0]
-                st = context.observing_run[ant]
+                # reference data is first scantable 
+                st = context.observing_run[indices[0]]
 
                 # source name
                 source_name = st.source[0].name.replace(' ','_')
 
-                # get working class
-                obs_pattern = st.pattern[spwid].values()[0]
-                gridding_class = gridding_factory(obs_pattern)
+                worker = SDImagingWorker()
+                parameters = {'datatable': datatable,
+                              'reference_data': st,
+                              'source_name': source_name,
+                              'antenna_name': name,
+                              'antenna_indices': indices,
+                              'spwid': spwid,
+                              'polids': pols}
 
-                # assume all members have same calmode
-                calmode = st.calibration_strategy['calmode']
-                srctype = self.SRCTYPE[calmode] if self.SRCTYPE.has_key(calmode) else None
-
-                # beam size
-                grid_size = casatools.quanta.convert(st.beam_size[spwid], 'deg')['value']
-
-                # information for spectral coordinate
-                spw = st.spectral_window[spwid]
-                refpix = spw.refpix
-                refval = spw.refval
-                increment = spw.increment
-                rest_freqs = spw.rest_frequencies
-                nchan = spw.nchan
-
-                # loop over pol
-                grid_table = None
-                data_array = []
-                for pol in pols:                        
-                    worker = gridding_class(datatable, indices, spwid, pol, srctype, nchan, grid_size)
-            
-                    ## create job for gridding
-                    #job = jobrequest.JobRequest(worker.execute) 
-                    #
-                    ## execute job
-                    #(spectra,grid_table) = self._executor.execute(job)
-                    (spectra,grid_table) = worker.execute()
-
-                    data_array.append(spectra)
-
-                # imaging
-                LOG.todo('How to set edge parameter? Is it local? or global?')
-                edge = []
-                worker = SDImageGenerator(data_array, edge)
-                antenna = st.ms.antenna_array.name
-                observer = st.observer
-                obs_date = st.start_time
-                worker.define_image(grid_table, 
-                                    freq_refpix=refpix, freq_refval=refval,
-                                    freq_increment=increment,
-                                    rest_frequency=rest_freqs,
-                                    antenna=antenna, observer=observer, 
-                                    obs_date=obs_date)
+                # create job for imaging
+                job = jobrequest.JobRequest(worker.execute, **parameters)
                 
                 # create job for full channel image
                 LOG.info('create full channel image')
@@ -167,19 +128,16 @@ class SDImaging(common.SingleDishTaskTemplate):
                     polstr = 'I'
                 imagename = '%s.spw%s.%s.image'%(name,spwid,polstr)
                 kwargs = {'imagename':imagename}
-                job = jobrequest.JobRequest(worker.full_channel_image,**kwargs)
 
                 # execute job
                 self._executor.execute(job)
                 
                 if imagename is not None:
-                    #image_list.append(imagename)
                     image_item = imagelibrary.ImageItem(imagename=imagename,
                                                         sourcename=source_name,
                                                         spwlist=spwid,
                                                         sourcetype='TARGET')
                     image_item.antenna = name
-                    #image_list.append(image_item)
 
                     result = SDImagingResults(task = self.__class__,
                                               success = True, 
@@ -191,12 +149,76 @@ class SDImaging(common.SingleDishTaskTemplate):
                         result.stage_number = self.inputs.context.task_counter - 1
                     else:
                         result.stage_number = self.inputs.context.task_counter 
-                    LOG.info('task class is %s'%(result.task.__name__))
 
-        #result.task = self.__class__
-        #return result
         return results
 
     def analyse(self, result):
         return result
+
+
+class SDImagingWorker(object):
+    SRCTYPE = {'ps': 0,
+               'otf': 0,
+               'otfraster': 0}
+
+    def __init__(self):
+        pass
+
+    def execute(self, datatable, reference_data, source_name, antenna_name, antenna_indices, spwid, polids):
+        # spectral window
+        spw = reference_data.spectral_window[spwid]
+        refpix = spw.refpix
+        refval = spw.refval
+        increment = spw.increment
+        rest_freqs = spw.rest_frequencies
+        nchan = spw.nchan
+        
+        # beam size
+        grid_size = casatools.quanta.convert(reference_data.beam_size[spwid], 'deg')['value']
+
+        # gridding engine
+        observing_pattern = reference_data.pattern[spwid].values()[0]
+        gridding_class = gridding_factory(observing_pattern)
+
+        # assume all members have same calmode
+        calmode = reference_data.calibration_strategy['calmode']
+        srctype = self.SRCTYPE[calmode] if self.SRCTYPE.has_key(calmode) else None
+        
+        data_array = []
+        for pol in polids:                        
+            worker = gridding_class(datatable, antenna_indices, spwid, pol, srctype, nchan, grid_size)
+
+            (spectra,grid_table) = worker.execute()
+
+            data_array.append(spectra)
+
+        # imaging
+        LOG.todo('How to set edge parameter? Is it local? or global?')
+        edge = []
+        worker = SDImageGenerator(data_array, edge)
+        antenna = reference_data.ms.antenna_array.name
+        observer = reference_data.observer
+        obs_date = reference_data.start_time
+        worker.define_image(grid_table, 
+                            freq_refpix=refpix, freq_refval=refval,
+                            freq_increment=increment,
+                            rest_frequency=rest_freqs,
+                            antenna=antenna, observer=observer, 
+                            obs_date=obs_date)
+
+        # create image from gridded data
+        LOG.info('create full channel image')
+        if polids == [0,1]:
+            polstr = 'XXYY'
+        elif polids == [0] or polids == 0:
+            polstr = 'XX'
+        elif polids == [1] or polids == 1:
+            polstr = 'YY'
+        else:
+            polstr = 'I'
+        imagename = '%s.%s.spw%s.%s.image'%(source_name.replace(' ','_'),antenna_name,spwid,polstr)
+        kwargs = {'imagename':imagename}
+        worker.full_channel_image(imagename=imagename)
+
+        
 
