@@ -155,7 +155,7 @@ class PrincipalAxesDD : public DisplayData {
   // True means a refresh is needed...
   virtual Bool setOptions(Record &rec, Record &recOut);
 
-  void setPlotTitle( const String& name );
+  
   // retrieve the current and default options and parameter types.
   virtual Record getOptions();
 

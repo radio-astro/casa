@@ -1790,16 +1790,6 @@ Bool PrincipalAxesDD::setLabellerOptions(Record &rec, Record &recout)
   }
   return axisUpdated;
 }
-void PrincipalAxesDD::setPlotTitle( const String& name ){
-	if ( !itsUsesAxisLabels) return;
-	WCCSNLAxisLabeller* tLab =
-	  		      static_cast<WCCSNLAxisLabeller*>(itsAxisLabellers[0]);
-	cout << "Setting titles in image count="<<itsNumImages << endl;
-	for (uInt i = 1; i < itsNumImages; i++) {
-	    tLab = static_cast<WCCSNLAxisLabeller*>(itsAxisLabellers[i]);
-	    tLab->setTitleText( name );
-	}
-}
 
 //*
 //* called, e.g., when Z/iteration axis changes... <drs>

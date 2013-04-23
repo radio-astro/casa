@@ -64,6 +64,12 @@ void ImageScroll::setImageHolder( DisplayDataHolder* holder ){
 	}
 }
 
+void ImageScroll::setControllingDD( QtDisplayData* dd ){
+	if ( managedImages != NULL ){
+		managedImages->setDDControlling( dd );
+	}
+}
+
 //**************************************************************
 //         Gui Methods for manipulating images
 //**************************************************************

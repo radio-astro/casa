@@ -509,9 +509,6 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 	//First go through and get the information from the
 	//conforming dd.
 	pair<String,String> principalTrackInfo;
-	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-
-		QtDisplayData* qdd = qdds.getRight();*/
 	for ( DisplayDataHolder::DisplayDataIterator iter = beginRegistered();
 			iter != endRegistered(); iter++){
 		QtDisplayData* qdd = (*iter);
@@ -535,9 +532,6 @@ void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 	}
 
 	//Now go through and do all the tracking records.
-	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-
-		QtDisplayData* qdd = qdds.getRight();*/
 	for ( DisplayDataHolder::DisplayDataIterator iter2 = beginRegistered();
 			iter2 != endRegistered(); iter2++){
 		QtDisplayData* qdd = (*iter2);
@@ -581,7 +575,6 @@ void  QtDisplayPanel::refreshTracking_(QtDisplayData* qdd) {
 	if ( !displayDataHolder->exists( qdd )){
 		return;
 	}
-	//if(!isRegistered(qdd)) return;
 
 	WorldCanvas* wc = ev.worldCanvas();
 	if(!myWC_(wc)) return;	// (safety; ev could be obsolete)
@@ -601,20 +594,6 @@ void  QtDisplayPanel::refreshTracking_(QtDisplayData* qdd) {
 }
 
 void QtDisplayPanel::processTracking( const Record& trackingRec, const WCMotionEvent& /*ev*/ ) {
-	/*WorldCanvas* worldCanvas = ev.worldCanvas();
-	int sizeY = worldCanvas -> canvasYSize();
-	//uInt offsetY;
-	//String const attributeName( "canvasYAttribute");
-	//worldCanvas -> getAttributeValue( attributeName, offsetY );
-	QPoint loc( ev.pixX(), sizeY - ev.pixY());
-	String displayText;
-
-	for(uInt i=0; i<trackingRec.nfields(); i++) {
-
-	    String recordField = trackingRec.asString(i);
-	    displayText.append( recordField );
-	}
-	QToolTip::showText( loc, displayText.c_str() );*/
 	emit trackingInfo(trackingRec);
 }
 
@@ -671,7 +650,6 @@ void QtDisplayPanel::ddCreated_(QtDisplayData* qdd, Bool autoRegister) {
 
 void QtDisplayPanel::ddRemoved_(QtDisplayData* qdd) {
 	// DP actions to take when viewer signals DD removal.
-	//if(isRegistered(qdd)) {
 	if ( displayDataHolder->exists( qdd )){
 		unregisterDD_(qdd);
 		emit RegisteredDDRemoved(qdd);
@@ -684,7 +662,6 @@ void QtDisplayPanel::ddRemoved_(QtDisplayData* qdd) {
 void QtDisplayPanel::registerDD(QtDisplayData* qdd, int position ) {
 	// Called externally (by gui, e.g.) to register pre-existing DDs.
 	if ( displayDataHolder->exists( qdd) ){
-	//if(!isUnregistered(qdd)){
 		return;  //  Nothing to do.
 	}
 	registerDD_(qdd, position);
@@ -700,9 +677,6 @@ void QtDisplayPanel::registerDD_(QtDisplayData* qdd, int position ) {
 	// or in reaction to new DD creation (ddCreated_() slot).
 	// Precondition: isUnregistered(qdd) should be True before this is called.
 
-	/*ListIter<QtDisplayData*> qdds(qdds_);
-	qdds.toEnd();
-	qdds.addRight(qdd);*/
 	displayDataHolder->addDD( qdd, position );
 
 	DisplayData* dd = qdd->dd();
@@ -819,6 +793,12 @@ void QtDisplayPanel::unregisterDD_(QtDisplayData* qdd) {
 }
 
 
+void QtDisplayPanel::setControllingDD( QtDisplayData* controllingDD ){
+	if ( controllingDD != NULL ){
+		pd_->setCSmaster( controllingDD->dd());
+	}
+}
+
 
 void QtDisplayPanel::registerAll( List<QtDisplayData*> registerDatas ){
 	// Called externally (by gui, e.g.) to register all DDs created
@@ -843,11 +823,8 @@ void QtDisplayPanel::registerAll( List<QtDisplayData*> registerDatas ){
 }
 
 
-
 void QtDisplayPanel::unregisterAll() {
 	// Called externally (by gui, e.g.) to unregister all DDs.
-	//List<QtDisplayData*> regdDDs(registeredDDs());
-	//if(regdDDs.len()==0) return;
 	if ( displayDataHolder->isEmpty()){
 		return;
 	}
@@ -880,41 +857,9 @@ void QtDisplayPanel::unregisterAll() {
 }
 
 
-
 Bool QtDisplayPanel::isRegistered(QtDisplayData* qdd) {
-	/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-		if(qdd == qdds.getRight()) return True;  }
-	return False;*/
 	return displayDataHolder->exists( qdd );
 }
-
-/*Bool QtDisplayPanel::isRegistered(const std::string &ddname) {
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-		if(ddname == qdds.getRight()->name()) return True;  }
-	return False;  }
-
-Bool QtDisplayPanel::isUnregistered(QtDisplayData* qdd) {
-	return !isRegistered(qdd) && panel_->ddExists(qdd);  }
-
-Bool QtDisplayPanel::isUnregistered(String ddname) {
-	return !isRegistered(ddname) && panel_->ddExists(ddname);  }
-
-
-
-List<QtDisplayData*> QtDisplayPanel::unregisteredDDs() {
-	// retrieve an (ordered) list of DDs (created on QtViewer) which
-	// are _not_ currently registered.
-
-	List<QtDisplayData*> unregdDDs(panel_->dds());
-
-	for(ListIter<QtDisplayData*> udds(unregdDDs); !udds.atEnd(); ) {
-		if(isRegistered(udds.getRight())) udds.removeRight();
-		else udds++;  }
-
-	return unregdDDs;
-}
-
-*/
 
 
 void QtDisplayPanel::registerRegionShape(RegionShape* rs) {
@@ -2307,13 +2252,13 @@ String QtDisplayPanel::dpState(String restorefilename) {
 	// knows what obsolete rubbishy state that may be in).  (Zoomer will
 	// be used to _restore_ zoom state though...).
 
-	ListIter<WorldCanvas* >* wcs = pd_->wcs();
+	ListIter<WorldCanvas* > wcs = pd_->wcs();
 	// (Who exposed this?  Convenient
 	// here, certainly, (but wtf?...)).
-	wcs->toStart();
-	if(!wcs->atEnd()) {	// (Shouldn't be at end...).
+	wcs.toStart();
+	if(!wcs.atEnd()) {	// (Shouldn't be at end...).
 
-		WorldCanvas* wc = wcs->getRight();
+		WorldCanvas* wc = wcs.getRight();
 
 		// Save Zoom
 
@@ -2347,7 +2292,8 @@ String QtDisplayPanel::dpState(String restorefilename) {
 	emit creatingRstrDoc(&restoredoc);
 
 
-	return restoredoc.toString().toStdString();  }
+	return restoredoc.toString().toStdString();
+}
 
 
 
@@ -2608,10 +2554,10 @@ QtDisplayPanel::panel_state QtDisplayPanel::getPanelState( ) const {
 	// knows what obsolete rubbishy state that may be in).  (Zoomer will
 	// be used to _restore_ zoom state though...).
 	Vector<Double> blc(2), trc(2);
-	ListIter<WorldCanvas* >* wcs = pd_->wcs();
-	wcs->toStart();
-	if ( ! wcs->atEnd() ) {
-		WorldCanvas* wc = wcs->getRight();
+	ConstListIter<WorldCanvas* > wcs = pd_->wcs();
+	wcs.toStart();
+	if ( ! wcs.atEnd() ) {
+		WorldCanvas* wc = wcs.getRight();
 		blc[0] = wc->linXMin(); blc[1] = wc->linYMin();
 		trc[0] = wc->linXMax(); trc[1] = wc->linYMax();
 	}

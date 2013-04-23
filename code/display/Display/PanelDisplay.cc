@@ -54,12 +54,12 @@ PanelDisplay::PanelDisplay(PixelCanvas* pixelcanvas,
   myWCLI(0),
   itsPixelCanvas(pixelcanvas),
   itsGeometrySet(False),
-  itsWCLI(0),
-  itsWCHLI(0),
+  //itsWCLI(0),
+  //itsWCHLI(0),
   itsMWCTools( std::tr1::shared_ptr<MultiWCTool>( ), uInt(10) ) {
   myWCLI = new ConstListIter<WorldCanvas* >(itsWCList);
-  itsWCLI = new ListIter<WorldCanvas* >(itsWCList);
-  itsWCHLI = new ListIter<WorldCanvasHolder* >(itsWCHList);
+  //itsWCLI = new ListIter<WorldCanvas* >(itsWCList);
+  //itsWCHLI = new ListIter<WorldCanvasHolder* >(itsWCHList);
   itslpgm =10;
   itsrpgm = 1; //4
   itstpgm = 1; //4
@@ -76,33 +76,35 @@ PanelDisplay::~PanelDisplay() {
     removeTool(key);
   }
   itsMWCTools.clear();
-  if (itsWCLI) {
+  /*if (itsWCLI) {
     delete itsWCLI;
   }
   if (itsWCHLI) {
     delete itsWCHLI;
-  }
+  }*/
   if (myWCLI) {
     delete myWCLI;
   }
 }
 
 void PanelDisplay::setAttributes(AttributeBuffer& at) {
-  itsWCLI->toStart();
-  while (!itsWCLI->atEnd()) {
-    WorldCanvas* wc = itsWCLI->getRight();
+	ListIter<WorldCanvas* >itsWCLI( itsWCList );
+  itsWCLI.toStart();
+  while (!itsWCLI.atEnd()) {
+    WorldCanvas* wc = itsWCLI.getRight();
     wc->setAttributes(at);
-    (*itsWCLI)++;
+    (itsWCLI)++;
   }
 }
 
 void PanelDisplay::getAttributeValue(const String& name, Int& newValue) const {
-  itsWCLI->toStart();
-  while (!itsWCLI->atEnd()) {
-    WorldCanvas* wc = itsWCLI->getRight();
+	ConstListIter<WorldCanvas* > itsWCLI( itsWCList );
+	itsWCLI.toStart();
+  while (!itsWCLI.atEnd()) {
+    WorldCanvas* wc = itsWCLI.getRight();
     wc->getAttributeValue(name, newValue);
     //get only the fisrt one - they should all be the same (for now)
-    itsWCLI->toEnd();
+    itsWCLI.toEnd();
   }
 }
 
@@ -394,8 +396,10 @@ void PanelDisplay::setGeometry(const Int nx, const Int ny,
     static_cast<Float>(itsNX);
   Float yPanelSize = (itsYSize - static_cast<Float>(itsNY - 1) * itsDY) /
     static_cast<Float>(itsNY);
-  itsWCHLI->toStart();
-  itsWCLI->toStart();
+  ListIter<WorldCanvas* > itsWCLI( itsWCList );
+  ListIter<WorldCanvasHolder* > itsWCHLI( itsWCHList );
+  itsWCHLI.toStart();
+  itsWCLI.toStart();
 
   // Prepare to synchornize zoom windows and CS master of any new WCs with
   // existing ones.
@@ -405,11 +409,11 @@ void PanelDisplay::setGeometry(const Int nx, const Int ny,
   WorldCanvas* wc0 = 0;
   WorldCanvasHolder* wch0 = 0;
   
-  Bool oldWCexists=(!itsWCLI->atEnd());
+  Bool oldWCexists=(!itsWCLI.atEnd());
   if(oldWCexists) {
   
-    wc0 = itsWCLI->getRight();
-    wch0 = itsWCHLI->getRight();
+    wc0 = itsWCLI.getRight();
+    wch0 = itsWCHLI.getRight();
 
     Vector<Double> zoomBlc(2), zoomTrc(2);
     zoomBlc[0]=wc0->linXMin(); zoomBlc[1]=wc0->linYMin();
@@ -425,7 +429,7 @@ void PanelDisplay::setGeometry(const Int nx, const Int ny,
     Float x = itsXOrigin;
     for (Int j = 0; j < itsNX; j++) {
 
-      if(itsWCLI->atEnd()) {
+      if(itsWCLI.atEnd()) {
 
         // out of WC[H]s--create new ones
 
@@ -433,8 +437,8 @@ void PanelDisplay::setGeometry(const Int nx, const Int ny,
 					  x,y, xPanelSize,yPanelSize);
         WorldCanvasHolder* wch = new WorldCanvasHolder(wc);
         
-	itsWCLI->addRight(wc);
-        itsWCHLI->addRight(wch);
+	itsWCLI.addRight(wc);
+        itsWCHLI.addRight(wch);
 	
 	// (To be fixed): _two identical WCH lists_ are maintained
 	// (an oversight, no doubt).
@@ -457,12 +461,12 @@ void PanelDisplay::setGeometry(const Int nx, const Int ny,
 
         // just recycle / reposition old ones.
 
-        WorldCanvas* wc = itsWCLI->getRight();
+        WorldCanvas* wc = itsWCLI.getRight();
 	wc->setWorldCanvasPosition(x,y, xPanelSize,yPanelSize);
       }
 
-      (*itsWCLI)++;
-      (*itsWCHLI)++;
+      (itsWCLI)++;
+      (itsWCHLI)++;
       x += xPanelSize + itsDX;
     }
     y -= yPanelSize + itsDY;
@@ -470,15 +474,15 @@ void PanelDisplay::setGeometry(const Int nx, const Int ny,
 
   // remove any leftover WC{H}s
 
-  while (!itsWCHLI->atEnd()) {
-    WorldCanvasHolder* wch = itsWCHLI->getRight();
+  while (!itsWCHLI.atEnd()) {
+    WorldCanvasHolder* wch = itsWCHLI.getRight();
     removeWCHolder(*wch);
-    itsWCHLI->removeRight();
+    itsWCHLI.removeRight();
     delete wch;wch=0;
   }
-  while (!itsWCLI->atEnd()) {
-    WorldCanvas* wc = itsWCLI->getRight();
-    itsWCLI->removeRight();
+  while (!itsWCLI.atEnd()) {
+    WorldCanvas* wc = itsWCLI.getRight();
+    itsWCLI.removeRight();
     delete wc;wc=0;
   }
 
@@ -499,19 +503,21 @@ void PanelDisplay::unSetupGeometry() {
   }
   updateTools(True,False);
   // 1. remove the WorldCanvasHolders
-  itsWCHLI->toStart();
-  while (!itsWCHLI->atEnd()) {
-    WorldCanvasHolder* wch = itsWCHLI->getRight();
+  ListIter<WorldCanvasHolder* >itsWCHLI( itsWCHList );
+  itsWCHLI.toStart();
+  while (!itsWCHLI.atEnd()) {
+    WorldCanvasHolder* wch = itsWCHLI.getRight();
     removeWCHolder(*wch);
-    itsWCHLI->removeRight();
+    itsWCHLI.removeRight();
     delete wch;wch=0;
     // don't increment iterator - removeRight() has that effect!
   }
   // 2. delete WorldCanvases.
-  itsWCLI->toStart();
-  while (!itsWCLI->atEnd()) {
-    WorldCanvas* wc = itsWCLI->getRight();
-    itsWCLI->removeRight();
+  ListIter<WorldCanvas* >itsWCLI( itsWCList );
+  itsWCLI.toStart();
+  while (!itsWCLI.atEnd()) {
+    WorldCanvas* wc = itsWCLI.getRight();
+    itsWCLI.removeRight();
     delete wc;wc=0;
     // don't increment iterator - removeRight() has that effect!
   }
@@ -523,15 +529,27 @@ void PanelDisplay::unSetupGeometry() {
 }
 
 WorldCanvasHolder* PanelDisplay::wcHolder(WorldCanvas* wcanvas) const {
-  itsWCHLI->toStart();
-  while (!itsWCHLI->atEnd()) {
-    WorldCanvasHolder* wch = itsWCHLI->getRight();
+	ConstListIter<WorldCanvasHolder* >itsWCHLI( itsWCHList );
+  itsWCHLI.toStart();
+  while (!itsWCHLI.atEnd()) {
+    WorldCanvasHolder* wch = itsWCHLI.getRight();
     if (wch->worldCanvas() == wcanvas) {
       return wch;
     }
-    (*itsWCHLI)++;
+    (itsWCHLI)++;
   }
   return 0;
+}
+
+void PanelDisplay::setCSmaster( DisplayData* dd ){
+	ListIter<WorldCanvasHolder*> wchIter (itsWCHList);
+	wchIter.toStart();
+	while ( !wchIter.atEnd()){
+		WorldCanvasHolder* worldCanvasHolder = wchIter.getRight();
+		worldCanvasHolder->setCSMaster(dd);
+		wchIter++;
+	}
+	itsPixelCanvas->refresh(Display::WorldCoordinateChange, true);
 }
   
 Bool PanelDisplay::isCSmaster(const DisplayData *dd) const {
@@ -627,9 +645,10 @@ const std::tr1::shared_ptr<MultiWCTool> PanelDisplay::getTool(const String& key)
 
  float PanelDisplay::getDrawUnit(  ) const {
 	 float drawUnit = 0;
-	 itsWCHLI->toStart();
-	 if (!itsWCHLI->atEnd()) {
-		 WorldCanvasHolder* wch = itsWCHLI->getRight();
+	 ConstListIter<WorldCanvasHolder* >itsWCHLI( itsWCHList );
+	 itsWCHLI.toStart();
+	 if (!itsWCHLI.atEnd()) {
+		 WorldCanvasHolder* wch = itsWCHLI.getRight();
 		 drawUnit = wch->getDrawUnit();
 	 }
 	 return drawUnit;

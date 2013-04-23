@@ -35,7 +35,7 @@
 namespace casa {
 
 ImageManagerDialog::ImageManagerDialog(QWidget *parent)
-    : QDialog(parent)
+    : QDialog(parent), openHolder( NULL ), allImages( NULL )
 {
 	ui.setupUi(this);
 	setWindowTitle( "Manage Images");
@@ -72,9 +72,15 @@ ImageManagerDialog::ImageManagerDialog(QWidget *parent)
 
 void ImageManagerDialog::masterImageChanged(const QString& imageName){
 	QtDisplayData* newMaster = allImages->getDD( imageName.toStdString());
-	if ( newMaster != NULL && openHolder != NULL ){
-		openHolder->setDDControlling( newMaster );
-		qDebug() << "Made dd="<<newMaster->name().c_str()<<" the new controlling dd";
+	if ( newMaster != NULL && allImages != NULL ){
+
+		//So the QtDisplayPanelGui is updated.
+		allImages->setDDControlling( newMaster );
+
+		//So the QtDisplayPanel gets notified (does the real work)
+		displayedScroll->setControllingDD( newMaster );
+
+
 	}
 }
 
@@ -90,23 +96,46 @@ bool ImageManagerDialog::isControlEligible( QtDisplayData* qdd ) const {
 	return controlEligible;
 }
 
-void ImageManagerDialog::updateSelectedMaster(){
+void ImageManagerDialog::updateSelectedMaster( const QString& previousMaster ){
 	//Now select the one that is the master image.
 	if ( allImages != NULL ){
+		bool selectionMade = false;
+		//First see if a controlling dd exists
 		QtDisplayData* display = allImages->getDDControlling();
 		if ( display != NULL ){
 			QString controlName(display->name().c_str());
 			int masterIndex = ui.masterImageComboBox->findText(controlName);
 			if ( masterIndex >= 0 ){
-				ui.masterImageComboBox->setCurrentIndex( masterIndex );
+				setComboIndex( ui.masterImageComboBox, masterIndex );
+				selectionMade = true;
 			}
+		}
+		//Okay, no controlling DD.  Try to use the previous master if there was one.
+		if ( !selectionMade && previousMaster.length() > 0 ){
+			int previousMasterIndex = ui.masterImageComboBox->findText( previousMaster );
+			if ( previousMasterIndex >= 0 ){
+				setComboIndex( ui.masterImageComboBox, previousMasterIndex );
+				selectionMade = true;
+			}
+		}
+
+		//Just use the first one
+		if ( !selectionMade ){
+			setComboIndex( ui.masterImageComboBox, 0 );
 		}
 	}
 }
 
+void ImageManagerDialog::setComboIndex( QComboBox* combo, int index ){
+	combo->blockSignals( true );
+	combo->setCurrentIndex( index );
+	combo->blockSignals( false );
+}
+
 void ImageManagerDialog::updateMasterList(){
+	QString oldMaster = ui.masterImageComboBox->currentText();
 	updateImageList( ui.masterImageComboBox );
-	updateSelectedMaster();
+	updateSelectedMaster( oldMaster );
 }
 
 void ImageManagerDialog::updateSaturationList(){
@@ -339,8 +368,16 @@ void ImageManagerDialog::imageRemoved( QtDisplayData* image ){
 }
 
 void ImageManagerDialog::masterImageSelected( QtDisplayData* image ){
+	//Called by the displayDataHolder if we have a new master image.
+	//Update the combo box to display the new master.
 	if ( image != NULL ){
-		updateSelectedMaster();
+		QString imageName = image->name().c_str();
+		QString selectedImageName = ui.masterImageComboBox->currentText();
+		if ( imageName != selectedImageName ){
+			//We are supposed to feed it the previous master, but it should
+			//select the new one from the underlying data.
+			updateSelectedMaster( selectedImageName);
+		}
 	}
 }
 

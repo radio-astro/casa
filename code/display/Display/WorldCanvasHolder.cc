@@ -46,6 +46,7 @@
 #include <display/Display/PixelCanvas.h>
 #include <display/Display/WorldCanvasHolder.h> 
 
+
 #include <cpgplot.h>
 
 
@@ -55,7 +56,7 @@ const String WorldCanvasHolder::BLINK_MODE = "bIndex";
 
 // Constructors and destructors:
 WorldCanvasHolder::WorldCanvasHolder(WorldCanvas *wCanvas) :
-		  itsWorldCanvas(wCanvas), itsLastCSmaster(0) {
+				  itsWorldCanvas(wCanvas), controllingDD(NULL), itsLastCSmaster(0){
 	// Register this as an event handler for the WorldCanvas.
 	itsWorldCanvas->addRefreshEventHandler(*this);
 	itsWorldCanvas->addMotionEventHandler(*this);
@@ -100,14 +101,15 @@ void WorldCanvasHolder::addDisplayData(DisplayData *dData) {
 	// and add the new displayData
 	itsDisplayList.push_back(dData);
 
-	if(worldCanvas()->csMaster()==0) executeSizeControl(worldCanvas());
+	if(worldCanvas()->csMaster()==0){
+		executeSizeControl(worldCanvas());
+	}
 	// If the new DD can assume the CS master role, let it set up
 	// WC state immediately, since there is no master at present.
 	worldCanvas()->release();
 }
 void WorldCanvasHolder::removeDisplayData(DisplayData &dData,
 		Bool ignoreRefresh) {
-
 	worldCanvas()->hold();
 	std::list <DisplayData*>::iterator pos = find( itsDisplayList.begin(), itsDisplayList.end(), &dData );
 	if ( pos != itsDisplayList.end() ) {
@@ -267,21 +269,29 @@ Bool WorldCanvasHolder::executeSizeControl(WorldCanvas *wCanvas) {
 	// (it will probably do so).
 	Bool masterFound = worldCanvas()->csMaster() !=0 &&
 			worldCanvas()->csMaster()->sizeControl(*this, sizeControlAtts);
-
 	// Even if master role is already taken, all sizeControl routines are still
 	// executed, to give give the DDs a chance to do minor adjustments (to
 	// maximum zoom extents, for example).  (At present (6/04), no non-master
 	// DD is making any such adjustments, however).
 	for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
 			iter != itsDisplayList.end(); ++iter ) {
-		if ( ! (*iter)->isDisplayable( ) ) continue;	// not displayable
-		if ( worldCanvas()->isCSmaster(*iter) ) continue;	// (already given the chance).
-		if ( ! masterFound ) worldCanvas()->csMaster() = *iter;	// (This assignment does not
-		// yet confirm the CS master; it only indicates an offer
-		// at this stage.  But setting itsCSmaster here also puts the
-		// dd in charge, at least temporarily, of any WC coordinate
-		// conversions it needs to do during sizeControl execution).
-		if ( (*iter)->sizeControl(*this, sizeControlAtts)) masterFound=True;
+		if ( ! (*iter)->isDisplayable( ) ){
+			continue;	// not displayable
+		}
+		if ( worldCanvas()->isCSmaster(*iter) ){
+			continue;	// (already given the chance).
+		}
+		if ( ! masterFound ){
+			worldCanvas()->csMaster() = *iter;	// (This assignment does not
+			// yet confirm the CS master; it only indicates an offer
+			// at this stage.  But setting itsCSmaster here also puts the
+			// dd in charge, at least temporarily, of any WC coordinate
+			// conversions it needs to do during sizeControl execution).
+
+		}
+		if ( (*iter)->sizeControl(*this, sizeControlAtts)){
+			masterFound=True;
+		}
 		// CS master confirmed.
 	}
 
@@ -318,16 +328,20 @@ bool WorldCanvasHolder::setCSMaster( DisplayData* dd ){
 	bool acceptedPosition = false;
 	if ( dd != NULL && dd->isDisplayable()){
 		DisplayData* currentCSMaster = worldCanvas()->csMaster();
+
+		//Make it the cs master
+		worldCanvas()->csMaster() = dd;
+
+		//See if it accepted the position
 		acceptedPosition = dd->isCSmaster( this );
-		cout << "DD accepted position is "<<acceptedPosition<<endl;
 		if ( acceptedPosition ){
 			//Make it the cs master
 			worldCanvas()->csMaster() = dd;
+			controllingDD = dd;
 			//Store the old one
 			itsLastCSmaster = currentCSMaster;
 			//Execute size control
 			acceptedPosition = executeSizeControl( worldCanvas());
-			cout << "After executing size control result was "<<acceptedPosition<<endl;
 		}
 	}
 	return acceptedPosition;
@@ -485,7 +499,6 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 	// DDs now use WC CS for labelling, though still (wastefully) using a
 	// private CS as well sometimes....
 	dd = 0;
-
 	//Normal mode
 	if ( !blinkMode ){
 	  for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
@@ -500,35 +513,67 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
   //blink mode
   else {
 	int displayCount = 0;
-	for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-			iter != itsDisplayList.end(); ++iter, ++dd ) {
-		if ( conforms[dd] && (*iter)->isDisplayable( )){
-			String className = (*iter)->className();
-			if ( className.find("Raster")!=String::npos ){
-				if ( (*iter)->labelAxes(ev)){
-					displayCount = 1;
-					break;
-				}
+
+	//First try to label the axes using the controllingDD.
+	if ( controllingDD != NULL ){
+		if ( controllingDD->isDisplayable()){
+			if ( controllingDD->labelAxes(ev)){
+				displayCount = 1;
 			}
 		}
 	}
 
+
 	if ( displayCount == 0 ){
-		dd = 0;
-		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-			iter != itsDisplayList.end(); ++iter, ++dd ) {
-			if ( conforms[dd] && (*iter)->isDisplayable( )){
-				String className = (*iter)->className();
-				//In blink mode, we don't show contours, vectors, or markers
-				//separately unless they are the only ones.
-				if ( className.find("Raster")==String::npos ){
-					if ( (*iter)->labelAxes(ev)){
+
+		//The order is different depending on whether we are in channel mode
+		//or image(blink mode).
+		if ( !blinkMode ){
+			for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
+					iter != itsDisplayList.rend(); ++iter, ++dd ) {
+				if ( conforms[dd] && (*iter)->isDisplayable( )){
+					if ((*iter)->labelAxes(ev) ){
 						break;
 					}
 				}
 			}
 		}
+		else {
+			//If we did not have a preset controllingDD, go through and try to label
+			//the axes using the first rasterDD we can find.
+			for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+					iter != itsDisplayList.end(); ++iter, ++dd ) {
+				if ( conforms[dd] && (*iter)->isDisplayable( )){
+					if ( (*iter)->classType() == Display::Raster ){
+						if ( (*iter)->labelAxes(ev)){
+							displayCount = 1;
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		//We could not find a raster to label the axes so we just take the first one
+		//that works.
+		if ( displayCount == 0 ){
+			dd = 0;
+			for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+					iter != itsDisplayList.end(); ++iter, ++dd ) {
+				if ( conforms[dd] && (*iter)->isDisplayable( )){
+					String className = (*iter)->className();
+					//In blink mode, we don't show contours, vectors, or markers
+					//separately unless they are the only ones.
+					if ( className.find("Raster")==String::npos ){
+						if ( (*iter)->labelAxes(ev)){
+							break;
+						}
+					}
+				}
+			}
+		}
 	}
+
 
   }
 

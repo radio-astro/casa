@@ -92,6 +92,7 @@ public:
 
   static void pixelToWorldPoints(Record& inHere, const String& fieldname,
 				 WorldCanvas* wc);
+  virtual ~DisplayShapeWithCoords(){}
   
 };
 

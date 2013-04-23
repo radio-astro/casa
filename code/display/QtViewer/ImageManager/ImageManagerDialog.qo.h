@@ -80,10 +80,11 @@ private:
 	ImageManagerDialog( const ImageManagerDialog& other );
 	ImageManagerDialog operator=( const ImageManagerDialog& other );
 
-	void updateSelectedMaster();
+	void updateSelectedMaster( const QString& previousSelection);
 	void updateMasterList();
 	void updateColorList();
 	void updateSaturationList();
+	void setComboIndex( QComboBox* combo, int index );
 	void removeImageFromList( QList<ImageView*>& imageList );
 	void initializeScrollArea( QWidget* holder, ImageScrollWidget*& scrollArea );
 	bool getIntensityMinMax( ImageInterface<float>* img,

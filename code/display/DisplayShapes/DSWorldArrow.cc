@@ -389,46 +389,46 @@ WorldCanvas* DSWorldArrow::chooseWC(const Float& startXPos,
   WorldCanvas* toReturn(0);
   
   // Look for ones where the point is in WC and in draw area
-  ListIter<WorldCanvas* >* wcs = pd->wcs();
+  ListIter<WorldCanvas* > wcs = pd->wcs();
 
-  wcs->toStart();
+  wcs.toStart();
   
-  while( !wcs->atEnd() && !success) {
-    if (wcs->getRight()->inWC(Int(startXPos+0.5), Int(startYPos+0.5)) &&
-	wcs->getRight()->inWC(Int(endXPos+0.5), Int(endYPos+0.5)) &&
-	wcs->getRight()->inDrawArea(Int(startXPos+0.5), Int(startYPos+0.5)) &&
-	wcs->getRight()->inDrawArea(Int(endXPos+0.5), Int(endYPos+0.5))) {
+  while( !wcs.atEnd() && !success) {
+    if (wcs.getRight()->inWC(Int(startXPos+0.5), Int(startYPos+0.5)) &&
+	wcs.getRight()->inWC(Int(endXPos+0.5), Int(endYPos+0.5)) &&
+	wcs.getRight()->inDrawArea(Int(startXPos+0.5), Int(startYPos+0.5)) &&
+	wcs.getRight()->inDrawArea(Int(endXPos+0.5), Int(endYPos+0.5))) {
 
       
-      const CoordinateSystem* test = &(wcs->getRight()->coordinateSystem());
+      const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 
 
       if (test) {
-	toReturn = wcs->getRight();
+	toReturn = wcs.getRight();
 	success = True;
       } else {
-	wcs->step();
+	wcs.step();
       }
       
     } else {
-      wcs->step();
+      wcs.step();
     }
   }
 
   // if that returns nothing, look for one just in WC..
   if (!success) {
-    wcs->toStart();
+    wcs.toStart();
 
-    while(!wcs->atEnd() && !success) {
-      if (wcs->getRight()->inWC(Int(startXPos+0.5), Int(startYPos+0.5)) &&
-	  wcs->getRight()->inWC(Int(endXPos+0.5), Int(endYPos+0.5))) {
+    while(!wcs.atEnd() && !success) {
+      if (wcs.getRight()->inWC(Int(startXPos+0.5), Int(startYPos+0.5)) &&
+	  wcs.getRight()->inWC(Int(endXPos+0.5), Int(endYPos+0.5))) {
 	
-	const CoordinateSystem* test = &(wcs->getRight()->coordinateSystem());
+	const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 	if (test) {
-	  toReturn = wcs->getRight();
+	  toReturn = wcs.getRight();
 	  success = True;
 	} else {
-	  wcs->step();
+	  wcs.step();
 	}
 	
       } else {

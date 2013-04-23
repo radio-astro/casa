@@ -69,13 +69,15 @@ bool DisplayDataHolder::exists(QtDisplayData* qdd) const {
 }
 
 void DisplayDataHolder::setDDControlling( QtDisplayData* controlDD ){
+	if ( controlDD != NULL ){
+		if ( imageTracker != NULL ){
+			imageTracker->masterImageSelected( controlDD );
+		}
+		if ( imageDisplayer != NULL ){
+			imageDisplayer->setControllingDD( controlDD );
+		}
+	}
 	controlling_dd = controlDD;
-	if ( imageTracker != NULL ){
-		imageTracker->masterImageSelected( controlling_dd );
-	}
-	if ( imageDisplayer != NULL ){
-		imageDisplayer->setControllingDD( controlling_dd );
-	}
 }
 
 QtDisplayData* DisplayDataHolder::getDDControlling( ) const {

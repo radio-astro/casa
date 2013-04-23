@@ -53,6 +53,10 @@ void ImageScrollWidget::setImageHolder( DisplayDataHolder* holder ){
 	imageScroll->setImageHolder( holder );
 }
 
+void ImageScrollWidget::setControllingDD( QtDisplayData* dd ){
+	imageScroll->setControllingDD( dd );
+}
+
 void ImageScrollWidget::setImageColorsEnabled( bool enabled ){
 	imageScroll->setImageColorsEnabled( enabled );
 }

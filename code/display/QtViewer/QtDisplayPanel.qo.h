@@ -124,33 +124,21 @@ public:
   ~QtDisplayPanel();
   
   Bool isEmptyRegistered() const;
+
+  //Manipulation of the QtDisplayData's.
   DisplayDataHolder::DisplayDataIterator beginRegistered() const;
   DisplayDataHolder::DisplayDataIterator endRegistered() const;
   QtDisplayData* getDD( const std::string& name ) const;
   DisplayDataHolder* getDataHolder() const;
+  void setControllingDD( QtDisplayData* controllingDD );
   // True if DD is on our list.  (It may _not_ be on viewer's list
   // any longer, in particular when reacting to ddRemoved signal).
   // Either qdd pointer or its name can be given.
   //<group>
   virtual Bool isRegistered(QtDisplayData*);
-  //virtual Bool isRegistered(const std::string &);
   //</group>
   
-  // True only if DD is not on our registered List, but _is_
-  // on QtViewer's list.  Either qdd pointer or its name can be given.
-  //<group>
-  //virtual Bool isUnregistered(QtDisplayData*);
-  //virtual Bool isUnregistered(String);
-  //</group>
-  
-  // retrieve an (ordered) list of currently-registered DDs.
-  // (This is a copy, not a reference).
-  //List<QtDisplayData*> registeredDDs();/* { return qdds_;  }*/
-  //ConstListIter<QtDisplayData*> registeredDDs() const { return ConstListIter<QtDisplayData*>(qdds_); }
-  
-  // retrieve an (ordered) list of QtViewer's created DDs which
-  // are _not_ currently registered.
-  //List<QtDisplayData*> unregisteredDDs();
+
   
   
   // Return Options record (of margins and no.-of-panels settings, e.g.)

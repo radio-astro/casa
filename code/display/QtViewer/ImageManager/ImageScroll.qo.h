@@ -50,6 +50,7 @@ class ImageScroll : public QWidget, public ImageTracker {
 public:
     ImageScroll(QWidget *parent = 0);
     void setImageHolder( DisplayDataHolder* holder );
+    void setControllingDD( QtDisplayData* dd );
     QList<ImageView*> getSelectedViews();
 
     bool isManaged( QtDisplayData* displayData ) const;
