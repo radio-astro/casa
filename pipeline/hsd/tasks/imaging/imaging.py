@@ -126,7 +126,7 @@ class SDImaging(common.SingleDishTaskTemplate):
                     polstr = 'YY'
                 else:
                     polstr = 'I'
-                imagename = '%s.spw%s.%s.image'%(name,spwid,polstr)
+                imagename = '%s.%s.spw%s.%s.image'%(source_name,name,spwid,polstr)
                 kwargs = {'imagename':imagename}
 
                 # execute job
