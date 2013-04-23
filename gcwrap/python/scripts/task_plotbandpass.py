@@ -85,7 +85,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.12 2013/04/02 13:21:29 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.13 2013/04/23 12:14:32 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
