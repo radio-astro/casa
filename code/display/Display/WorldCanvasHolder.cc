@@ -469,8 +469,7 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 	dd = 0;
 
 	//Normal mode
-	/*if ( !blinkMode ){
-	  cout << "Normal mode"<<endl;
+	if ( !blinkMode ){
 	  for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
 			  iter != itsDisplayList.rend(); ++iter, ++dd ) {
 		  if ( conforms[dd] && (*iter)->isDisplayable( )){
@@ -481,7 +480,7 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 	  }
   }
   //blink mode
-  else {*/
+  else {
 	int displayCount = 0;
 	for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 			iter != itsDisplayList.end(); ++iter, ++dd ) {
@@ -513,7 +512,7 @@ void WorldCanvasHolder::operator()(const WCRefreshEvent &ev) {
 		}
 	}
 
-
+  }
 
 	wc->releasePGPLOTdevice();
 	// disable the clip window
