@@ -633,7 +633,7 @@ def simalma(
                 msg(" Step %d: combining a total power and synthesis image. " % step, origin="simalma", priority="warn")
                 msg("="*60, origin="simalma", priority="warn")
                 if os.path.exists(fileroot+"/"+imagename_int):
-                    highimage = fileroot+"/"+imagename_int
+                    highimage0 = fileroot+"/"+imagename_int
                 else:
                     msg("The synthesized image '%s' is not found" \
                         % imagename_int, origin="simalma", priority="error")
@@ -643,14 +643,15 @@ def simalma(
                 #lowimage = fileroot+"/"+imagename_tp
 
                 # Need to manipulate TP image here
+                outimage0 = fileroot+"/" + combimage+"0"
                 outimage = fileroot+"/" + combimage
-                pbcov = highimage.rstrip("image") + "flux.pbcoverage"
+                pbcov = highimage0.rstrip("image") + "flux.pbcoverage"
                 regridimg = fileroot + "/" + imagename_tp + ".regrid"
                 scaledimg = fileroot + "/" + imagename_tp + ".pbscaled"
                 lowimage = scaledimg
 
                 # regrid TP image
-                inttemplate = imregrid(imagename = highimage, template='get')
+                inttemplate = imregrid(imagename = highimage0, template='get')
                 imregrid(imagename = fileroot+"/"+imagename_tp,
                          template = inttemplate, output = regridimg)
                 # multiply SD image with INT PB coverage
@@ -659,19 +660,49 @@ def simalma(
                         % pbcov, origin="simalma", priority="error")
                 immath(imagename=[regridimg, pbcov],
                        expr='IM1*IM0',outfile=scaledimg)
+                # restore TP beam and brightness unit
+                ia.open(fileroot+"/"+imagename_tp)
+                beam_tp = ia.restoringbeam()
+                bunit_tp = ia.brightnessunit()
+                ia.close()
+                ia.open(scaledimg)
+                ia.setrestoringbeam(beam=beam_tp)
+                ia.setbrightnessunit(bunit_tp)
+                ia.close()
+
+                # de-pbcor the INT image
+                highimage = fileroot+"/"+imagename_int+".pbscaled"
+                #immath(imagename=[highimage0, pbcov],
+                #       expr='IM1/IM0',outfile=highimage)        
+                immath(imagename=[highimage0, pbcov],
+                       expr='IM1*IM0',outfile=highimage)
+                # restore INT beam and brightness unit
+                ia.open(highimage0)
+                beam_int = ia.restoringbeam()
+                bunit_int = ia.brightnessunit()
+                ia.close()
+                ia.open(highimage)
+                ia.setrestoringbeam(beam=beam_int)
+                ia.setbrightnessunit(bunit_int)
+                ia.close()
 
                 # Feathering
                 taskstr = ("feather(imagename='%s', highres='%s',lowres='%s'" \
-                           % (outimage, highimage, lowimage))
+                           % (outimage0, highimage, lowimage))
                 msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
                 try:
-                    feather(imagename=outimage, highres=highimage, lowres=lowimage)
+                    feather(imagename=outimage0, highres=highimage, lowres=lowimage)
                 except:
                     raise Exception, "simalma caught an exception in task feather"
                 finally:
                     shutil.rmtree(regridimg)
                     #shutil.rmtree(scaledimg)
                     casalog.origin('simalma')
+
+                # re-pbcor the result
+                immath(imagename=[outimage0, pbcov],
+                       expr='IM0/IM1',outfile=outimage)
+
 
                 ########################################################
                 # Generate Summary Plot
@@ -726,17 +757,17 @@ def simalma(
                     shutil.rmtree(fileroot+"/"+flatsky+".regrid.conv")
                     
                     # total power image
-                    #flattp = fileroot + "/" + imagename_tp + ".flat"
-                    #myutil.flatimage(fileroot+"/"+imagename_tp,verbose=verbose)
-                    flattp = scaledimg + ".flat"
-                    myutil.flatimage(scaledimg,verbose=verbose)
+                    flattp = fileroot + "/" + imagename_tp + ".flat"
+                    myutil.flatimage(fileroot+"/"+imagename_tp,verbose=verbose)
+                    #flattp = scaledimg + ".flat"
+                    #myutil.flatimage(scaledimg,verbose=verbose)
                     if not os.path.exists(flattp):
                         raise Exception, "Failed to generate '%s'" % (flattp)
                     myutil.nextfig()
                     discard = myutil.statim(flattp,disprange=disprange)
                     shutil.rmtree(flattp)
 
-                    disprange = []
+                    #disprange = []
                     # display flat synthesized (7m+12m) image
                     myutil.nextfig()
                     discard = myutil.statim(flatint,disprange=disprange)
