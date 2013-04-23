@@ -1635,16 +1635,18 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     else:
         # It's a single, integer entry
         antlist = [antenna]
-
+    casalogPost(debug,"antlist = %s" % (str(antlist)))
     if (len(antlist) > 0):
        antennasToPlot = np.intersect1d(uniqueAntennaIds,antlist)
     else:
        antennasToPlot = uniqueAntennaIds
+    casalogPost(debug,"antennasToPlot = %s" % (str(antennasToPlot)))
   
     # Parse the field string to emulate plotms
     removeField = []
     if (type(field) == str):
        if (len(field) == sum([m in myValidCharacterListWithBang for m in field])):
+           casalogPost(debug,"a list of field numbers was given")
            # a list of field numbers was given
            tokens = field.split(',')
            fieldlist = []
@@ -1669,6 +1671,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                print "Too many negated fields -- there are no fields left to plot."
                return()
        else:
+           casalogPost(debug,"The field name, or list of names was given")
            # The field name (or list of names, or wildcard) was specified
            tokens = field.split(',')
            if (msFound):
@@ -1676,7 +1679,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                removeField = []
                for token in tokens:
                    myloc = token.find('*')
+                   casalogPost(debug,"token=%s, myloc=%d" % (token,myloc))
                    if (myloc > 0):
+                       casalogPost(debug,"Saw wildcard in the name")
                        for u in uniqueFields:
                            if (token[0:myloc]==mymsmd.namesforfields(u)[0:myloc]):
                                if (DEBUG):
@@ -1686,20 +1691,22 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                if (DEBUG):
                                    print "No wildcard match with = %s" % mymsmd.namesforfields(u)
                    elif (myloc==0):
+                       casalogPost(debug,"Saw wildcard at start of name")
                        for u in uniqueFields:
                            fieldlist.append(u)
-                   elif (token in range(mymsmd.nfields)):
+                   elif (token in mymsmd.namesforfields()):
                        fieldlist = list(fieldlist)  # needed in case preceding field had ! modifier
                        fieldlist.append(mymsmd.fieldsforname(token))
                    elif (token[0] == '!'):
-                       if (token[1:] in range(mymsmd.nfields)):
-                           fieldlist = range(mymsmd.nfields)
+                       if (token[1:] in range(mymsmd.nfields())):
+                           fieldlist = range(mymsmd.nfields())
                            removeField.append(mymsmd.fieldsforname(token[1:]))
                        else:
-                           print "Field %s is not in the ms. It contains: %s" % (token, str(range(mymsmd.nfields)))
+                           print "Field %s is not in the ms. It contains: %s" % (token, str(range(mymsmd.nfields())))
                            return()
                    else:
-                       print "Field %s is not in the ms. It contains: %s" % (token, str(range(mymsmd.nfields)))
+                       casalogPost(debug,"Field not in ms")
+                       print "Field %s is not in the ms. It contains: %s" % (token, str(range(mymsmd.nfields())))
                        return()
                fieldlist = np.array(fieldlist)
                for rm in removeField:
@@ -1718,6 +1725,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         # It's a single, integer entry
         fieldlist = [field]
   
+    casalogPost(debug,"fieldlist = %s" % (str(fieldlist)))
+
     if (len(fieldlist) > 0):
         if (DEBUG):
             print "Finding intersection of %s with %s" % (str(uniqueFields), str(fieldlist))
@@ -1735,6 +1744,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             print "bOverlay = %s" % (bOverlay)
             print "set fieldsToPlot to uniqueFields = %s" % (str(fieldsToPlot))
     fieldIndicesToPlot = []
+    casalogPost(debug,"fieldsToPlot = %s" % (str(fieldsToPlot)))
   
     if (showatmfield == ''):
         showatmfield = fieldsToPlot[0]
