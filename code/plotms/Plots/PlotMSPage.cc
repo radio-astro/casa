@@ -79,7 +79,8 @@ void PlotMSPage::resize(unsigned int nrows, unsigned int ncols) {
         // deleted
         for(unsigned int r = 0; r < itsCanvases_.size(); r++)
             for(unsigned int c = 0; c < itsCanvases_[r].size(); c++)
-                if(r >= nrows || c >= ncols) disown(r, c);
+                //if(r >= nrows || c >= ncols)
+                    disown(r, c);
     //}
 
     itsCanvases_.clear();
