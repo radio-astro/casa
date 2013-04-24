@@ -206,9 +206,9 @@ void FeatherCurve::doLogs( double* values, int count ) const {
 
 void FeatherCurve::resetDataBounds(){
 	minX = std::numeric_limits<float>::max();
-	maxX = -1 * minX;
+	maxX = std::numeric_limits<float>::min();
 	minY = std::numeric_limits<float>::max();
-	maxY = -1 * minY;
+	maxY = std::numeric_limits<float>::min();
 	for ( int i = 0; i < xValues.size(); i++ ){
 		float testValue = xValues[i];
 		if ( testValue < minX ){
