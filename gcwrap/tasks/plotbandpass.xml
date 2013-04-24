@@ -376,7 +376,7 @@ on the yaxis selection.
  plotrange: define axis limits: [x0,x1,y0,y1] where 0,0 means auto
  poln: polarizations to plot (e.g. 'XX','YY','RR','LL' or '' for both)
  pwv: define the pwv to use for the showatm option: 'auto' or value in mm
- showatm: compute and overlay the atmospheric transmission curve
+ showatm: compute and overlay the atmospheric transmission curve (on B or Tsys solutions)
  showatmfield: use first observation of this fieldID or name
  showatmPoints: draw atmospheric curve with points instead of a line
  showfdm: when showing TDM spws with xaxis='freq', draw locations of FDM spws
