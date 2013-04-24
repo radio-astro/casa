@@ -59,6 +59,7 @@ public:
     void setInterferometerDataOriginal( const Vector<Float>& intx, const Vector<Float>& intxAmp,
     		const Vector<Float>& inty, const Vector<Float>& intyAmp );
     void updateScatterData( );
+    void addSumData();
     void clearPlots();
 
     //Preference changes
@@ -72,7 +73,7 @@ public:
     void setDisplayXGraphs( bool visible );
     void setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
     		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
-    		const QColor& zoomRectColor );
+    		const QColor& zoomRectColor, const QColor& sumColor );
     void setLogScale( bool uvScale, bool logScale );
     void refreshPlots();
     void layoutPlotWidgets();

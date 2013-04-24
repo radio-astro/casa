@@ -184,7 +184,8 @@ void FeatherMain::functionColorsChanged(){
 	QColor scatterPlotColor = preferencesColor.getScatterPlotColor();
 	QColor dishDiameterLineColor = preferencesColor.getDishDiameterLineColor();
 	QColor zoomRectColor = preferencesColor.getZoomRectColor();
-	plotHolder->setColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor );
+	QColor sumColor = preferencesColor.getSumColor();
+	plotHolder->setColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor, sumColor );
 }
 
 void FeatherMain::imageFilesChanged(){
@@ -301,6 +302,7 @@ void FeatherMain::addOriginalDataToPlots(){
 	Vector<Float> intyAmpOrig;
 	featherWorker.getFTCutIntImage(intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
 	plotHolder->setInterferometerDataOriginal( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
+
 }
 
 void FeatherMain::clearPlots(){
@@ -359,6 +361,8 @@ void FeatherMain::featheringDone(){
 	plotHolder->setInterferometerWeight( thread->intxWeight, thread->intxAmpWeight, thread->intyWeight, thread->intyAmpWeight );
 	plotHolder->setSingleDishData( thread->sDxCut, thread->sDxAmpCut, thread->sDyCut, thread->sDyAmpCut );
 	plotHolder->setInterferometerData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut );
+	plotHolder->addSumData();
+
 	//In case we are zoomed on the original data, this will reload it, unzoomed.
 	addOriginalDataToPlots();
 	plotHolder->updateScatterData();

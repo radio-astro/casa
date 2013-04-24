@@ -190,9 +190,6 @@ double FeatherCurve::logarithm( double value ) const {
 	if ( value != 0 ){
 		logValue = qLn( value ) / qLn( 10 );
 	}
-	/*else {
-		qDebug() << "Got a zero data value";
-	}*/
 	return logValue;
 }
 
@@ -205,10 +202,16 @@ void FeatherCurve::doLogs( double* values, int count ) const {
 
 
 void FeatherCurve::resetDataBounds(){
+	//x and y values represent distance and amplitude.
+	//As such, they should always be positive.  That is
+	//why we are using std::numeric_limits<float>::min()
+	//As the largest possible initial value.  It is important
+	//Not to let them be negative, because we will be taking
+	//logs.
 	minX = std::numeric_limits<float>::max();
-	maxX = -1 * minX;
+	maxX = std::numeric_limits<float>::min();
 	minY = std::numeric_limits<float>::max();
-	maxY = -1 * minY;
+	maxY = std::numeric_limits<float>::min();
 	for ( int i = 0; i < xValues.size(); i++ ){
 		float testValue = xValues[i];
 		if ( testValue < minX ){

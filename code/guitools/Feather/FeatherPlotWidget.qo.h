@@ -55,13 +55,14 @@ public:
     void setSingleDishData( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void addScatterData();
+    void addSumData();
     void clearPlot();
     void clearLegend();
 
     //Preferences
     void setPlotColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
     		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
-    		const QColor& zoomRectColor );
+    		const QColor& zoomRectColor, const QColor& sumColor );
     void setLineThickness( int thickness );
     void setLegendVisibility( bool v );
     void setDotSize( int size );
@@ -119,6 +120,9 @@ private:
     void initializeDomainLimitedData( double minValue, double maxValue,
         		QVector<double>& xValues, QVector<double>& yValues,
         		const QVector<double>& originalXValues, const QVector<double>& originalYValues) const;
+    void initializeSumData( const QVector<double>& singleDishX, const QVector<double>& singleDishY,
+    		const QVector<double>& interferometerX, const QVector<double>& interferometerY,
+    		QVector<double>& sumX, QVector<double>& sumY );
     pair<double,double> getMaxMin( QVector<double> values ) const;
     void zoomRectangleWeight( double minX, double maxX );
     void addZoomNeutralCurves();
@@ -128,6 +132,7 @@ private:
 
     QColor singleDishWeightColor;
     QColor singleDishDataColor;
+    QColor sumDataColor;
     QColor interferometerWeightColor;
     QColor interferometerDataColor;
     QColor scatterPlotColor;
@@ -147,6 +152,7 @@ private:
     QString interferometerFunction;
     QString singleDishWeightFunction;
     QString interferometerWeightFunction;
+    QString sumFunction;
 
     bool permanentScatter;
     QString plotTitle;

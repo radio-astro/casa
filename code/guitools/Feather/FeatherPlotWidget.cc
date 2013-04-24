@@ -36,10 +36,11 @@ namespace casa {
 
 FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent)
     : QWidget(parent), plot( NULL ),
-      singleDishWeightColor(Qt::cyan), singleDishDataColor(Qt::green),
+      singleDishWeightColor(Qt::darkYellow), singleDishDataColor(Qt::green), sumDataColor( Qt::cyan ),
       interferometerWeightColor( Qt::magenta), interferometerDataColor(Qt::blue),
       singleDishFunction( "Low Resolution Slice"), interferometerFunction( "High Resolution Slice"),
       singleDishWeightFunction("Low Resolution Weight"), interferometerWeightFunction( "High Resolution Weight"),
+      sumFunction( "Sum Slice"),
       permanentScatter( false ),
       plotTitle(title), MARKER_WIDTH(2){
 
@@ -162,7 +163,7 @@ void FeatherPlotWidget::setPermanentScatter( bool scatter ){
 
 void FeatherPlotWidget::setPlotColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
 		const QColor& scatterColor, const QColor& dishDiameterColor,
-		const QColor& zoomRectangleColor ){
+		const QColor& zoomRectangleColor, const QColor& sumSliceColor ){
 	singleDishDataColor = colorMap[PreferencesColor::SD_SLICE_COLOR];
 	interferometerDataColor = colorMap[PreferencesColor::INT_SLICE_COLOR];
 	singleDishWeightColor = colorMap[PreferencesColor::SD_WEIGHT_COLOR];
@@ -170,6 +171,7 @@ void FeatherPlotWidget::setPlotColors( const QMap<PreferencesColor::FunctionColo
 	scatterPlotColor = scatterColor;
 	dishDiameterLineColor = dishDiameterColor;
 	zoomRectColor = zoomRectangleColor;
+	sumDataColor = sumSliceColor;
 	resetColors();
 }
 
@@ -202,6 +204,7 @@ void FeatherPlotWidget::resetColors(){
 		plot->setFunctionColor( interferometerFunction, interferometerDataColor );
 		plot->setFunctionColor( singleDishWeightFunction, singleDishWeightColor );
 		plot->setFunctionColor( interferometerWeightFunction, interferometerWeightColor );
+		plot->setFunctionColor( sumFunction, sumDataColor );
 	}
 	else if ( plot->isScatterPlot() ){
 		plot->setFunctionColor( "", scatterPlotColor );
@@ -417,7 +420,15 @@ void FeatherPlotWidget::zoomRectangle( double minX, double maxX, double /*minY*/
 	QVector<double> interferometerY;
 	initializeDomainLimitedData( minX, maxX, interferometerX, interferometerY, interferometerDataXValues, interferometerDataYValues );
 	plot->addCurve( interferometerX, interferometerY, interferometerDataColor, interferometerFunction, sliceAxis );
+
+	//Sum curve
+	QVector<double> sumX;
+	QVector<double> sumY;
+	initializeSumData( singleDishX, singleDishY, interferometerX, interferometerY, sumX, sumY );
+	plot->addCurve( sumX, sumY, sumDataColor, sumFunction, sliceAxis );
 	plot->replot();
+
+
 }
 
 void FeatherPlotWidget::zoomRectangleScatter( double minX, double maxX, double minY, double maxY ){
@@ -514,6 +525,13 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 		if ( !plot->isScatterPlot() ){
 			plot->addCurve( singleDishZoomDataX, singleDishZoomDataY, singleDishDataColor, singleDishFunction, sliceAxis );
 			plot->addCurve( interferometerZoomDataX, interferometerZoomDataY, interferometerDataColor, interferometerFunction, sliceAxis );
+
+			//Sum curve
+			QVector<double> sumX;
+			QVector<double> sumY;
+			initializeSumData( singleDishZoomDataX, singleDishZoomDataY,
+						interferometerZoomDataX, interferometerZoomDataY, sumX, sumY );
+			plot->addCurve( sumX, sumY, sumDataColor, sumFunction, sliceAxis );
 		}
 		else {
 			//The plot needs to have the same values in both directions.
@@ -562,6 +580,10 @@ void FeatherPlotWidget::addZoomNeutralCurves(){
 	}
 	plot->addCurve( singleDishDataXValues, singleDishDataYValues, singleDishDataColor, singleDishFunction, sliceAxis );
 	plot->addCurve( interferometerDataXValues, interferometerDataYValues, interferometerDataColor, interferometerFunction, sliceAxis );
+
+	//Sum curve
+	addSumData();
+
 	initializeMarkers();
 	plot->replot();
 }
@@ -585,6 +607,18 @@ void FeatherPlotWidget::initializeMarkers(){
 		diameterMarker->attach( plot );
 	}
 	this->changeLeftMouseMode();
+}
+
+void FeatherPlotWidget::initializeSumData( const QVector<double>& singleDishX, const QVector<double>& singleDishY,
+		const QVector<double>& interferometerX, const QVector<double>& interferometerY,
+		QVector<double>& sumX, QVector<double>& sumY ){
+	int countX = qMin( singleDishX.size(), interferometerX.size() );
+	sumX.resize( countX );
+	sumY.resize( countX );
+	for ( int i = 0; i < countX; i++ ){
+		sumX[i] = singleDishX[i];
+		sumY[i] = singleDishY[i] + interferometerY[i];
+	}
 }
 
 
@@ -669,6 +703,16 @@ void FeatherPlotWidget::setInterferometerWeight( const Vector<Float>& xValues, c
 	if ( plot->isSliceCut() ){
 		plot->addCurve( interferometerWeightXValues, interferometerWeightYValues, interferometerWeightColor, interferometerWeightFunction, weightAxis );
 		plot->replot();
+	}
+}
+
+void FeatherPlotWidget::addSumData(){
+	QVector<double> sumX;
+	QVector<double> sumY;
+	initializeSumData( singleDishDataXValues, singleDishDataYValues,
+			interferometerDataXValues, interferometerDataYValues, sumX, sumY );
+	if ( sumX.size() > 0 ){
+		plot->addCurve( sumX, sumY, sumDataColor, sumFunction, sliceAxis );
 	}
 }
 

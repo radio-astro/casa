@@ -145,6 +145,10 @@ void ImageView::showColorDialog(){
 	}
 }
 
+void ImageView::emitDisplayColorsChanged(){
+	emit displayColorsChanged( this );
+}
+
 ImageView::DisplayType ImageView::getDataDisplayType() const {
 	DisplayType ddDisplay = DISPLAY_MARKER;
 	if ( imageData->isRaster()){

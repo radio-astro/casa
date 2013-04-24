@@ -68,6 +68,7 @@ public slots:
 	void displayColorsChanged(ImageView* changedView );
 
 private slots:
+	void applyColorChanges();
 	void openToDisplayed();
 	void displayedToOpen();
 	void closeImage();

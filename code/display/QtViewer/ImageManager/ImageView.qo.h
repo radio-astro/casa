@@ -53,6 +53,7 @@ public:
     void setImageSelected( bool selected );
     void setImageColorsEnabled( bool enabled );
     void setDisplayedColor( QColor imageColor );
+    void emitDisplayColorsChanged();
     QColor getDisplayedColor() const;
     void makeDrag();
     ~ImageView();

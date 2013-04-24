@@ -59,6 +59,7 @@ public:
     void removeImageViews( QList<ImageView*>& view );
     void setSelectAll( bool selectAll);
     void setImageColorsEnabled( bool enabled );
+    void applyColorChangesIndividually();
     virtual ~ImageScroll();
 
     //Image Tracker Interface

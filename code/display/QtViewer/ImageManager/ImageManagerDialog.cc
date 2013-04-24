@@ -64,6 +64,8 @@ ImageManagerDialog::ImageManagerDialog(QWidget *parent)
 	connect( ui.openToRegisteredButton, SIGNAL(clicked()), this, SLOT(openToDisplayed()));
 	connect( ui.registerToOpenButton, SIGNAL(clicked()), this, SLOT(displayedToOpen()));
 	connect( ui.closeImageButton, SIGNAL(clicked()), this, SLOT(closeImage()));
+
+	connect( ui.applyButton, SIGNAL(clicked()), this, SLOT(applyColorChanges()));
 }
 
 //----------------------------------------------------------------
@@ -225,6 +227,16 @@ void ImageManagerDialog::displayTypeChanged( ImageView* imageView ){
 }
 
 
+//----------------------------------------------------------------------
+//                             Color Changes
+//----------------------------------------------------------------------
+
+void ImageManagerDialog::applyColorChanges(){
+	if ( ui.singleColorRadio->isChecked()){
+		displayedScroll->applyColorChangesIndividually();
+	}
+}
+
 void ImageManagerDialog::displayColorsChanged( ImageView* imageView ){
 	if ( ui.singleColorRadio->isChecked()){
 
@@ -312,6 +324,10 @@ bool ImageManagerDialog::getIntensityMinMax( ImageInterface<float>* img,
 	}
 	return success;
 }
+
+//-------------------------------------------------------------------
+//                   Image Changing Locations
+//------------------------------------------------------------------
 
 void ImageManagerDialog::openToDisplayed(){
 	QList<ImageView*> movedImages = openScroll->getSelectedViews();

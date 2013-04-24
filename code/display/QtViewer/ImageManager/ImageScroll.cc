@@ -148,6 +148,12 @@ void ImageScroll::setImageColorsEnabled( bool enabled ){
 	}
 }
 
+void ImageScroll::applyColorChangesIndividually(){
+	for ( QList<ImageView*>::iterator iter = images.begin(); iter != images.end(); iter++ ){
+		(*iter)->emitDisplayColorsChanged();
+	}
+}
+
 //**************************************************************************
 //                Drag and Drop
 //**************************************************************************

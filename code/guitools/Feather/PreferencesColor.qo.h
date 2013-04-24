@@ -44,6 +44,7 @@ public:
     QColor getScatterPlotColor() const;
     QColor getDishDiameterLineColor() const;
     QColor getZoomRectColor() const;
+    QColor getSumColor() const;
     ~PreferencesColor();
 
 signals:
@@ -57,6 +58,7 @@ private slots:
 	void selectScatterPlotColor();
 	void selectDishDiameterLineColor();
 	void selectZoomRectColor();
+	void selectSumColor();
 	void colorsAccepted();
 	void colorsRejected();
 
@@ -74,9 +76,11 @@ private:
     Ui::PreferencesColorClass ui;
     QMap<FunctionColor,QColor> colorMap;
     QColor scatterPlotColor;
+    QColor sumColor;
     QColor dishDiameterLineColor;
     QColor zoomRectColor;
     const int SCATTER_INDEX;
+    const int SUM_INDEX;
     const int DISH_DIAMETER_INDEX;
     const int ZOOM_INDEX;
 

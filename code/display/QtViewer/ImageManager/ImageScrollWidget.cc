@@ -61,6 +61,10 @@ void ImageScrollWidget::setImageColorsEnabled( bool enabled ){
 	imageScroll->setImageColorsEnabled( enabled );
 }
 
+void ImageScrollWidget::applyColorChangesIndividually(){
+	imageScroll->applyColorChangesIndividually();
+}
+
 void ImageScrollWidget::clearSelections(){
 	imageScroll->setSelectAll( false );
 }

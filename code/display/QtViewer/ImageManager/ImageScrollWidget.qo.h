@@ -53,6 +53,7 @@ public:
     void addImageViews( QList<ImageView*>& views );
     void removeImageViews( QList<ImageView*>& view );
     void setImageColorsEnabled( bool enabled );
+    void applyColorChangesIndividually();
     ~ImageScrollWidget();
 signals:
     void displayDataRemoved( QtDisplayData* imageData );
