@@ -585,8 +585,8 @@ CHANGEAXIS( changeMaskAxis, "mask", "image", imagedd_ )
 		// When the "image animator" is used to change the registered image, the region
 		// may be defined in a different display data...
 		if ( ! imagereg ) {
-			for( ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++ ) {
-				QtDisplayData *dd = qdds.getRight( );
+			for( DisplayDataHolder::DisplayDataIterator iter = beginDD( ); iter != endDD( ); ++iter ) {
+				QtDisplayData *dd = *iter;
 				if ( (imagereg=dd->mouseToImageRegion( mouseRegion, wch, allchan, allpol, allra, alldec ) ) ) {
 					imagedd_ = dd;
 					break;
