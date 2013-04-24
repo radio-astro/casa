@@ -73,6 +73,14 @@
 # au.plotbandpass(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='phase',chanrange='', showatm=True)
 # au.plotbandpass(caltable='bandpass_all_b_odd_dv04',xaxis='freq',yaxis='phase',chanrange='', channeldiff=5)
 #
+# ALMA 1-pol data:
+# cd /lustre/naasc/thunter/singlePol
+# au.plotbandpass('uid___A002_X494155_X23a.ms.split.bandpass',xaxis='freq')
+#
+# ALMA 4-pol data:
+# cd /lustre/naasc/nmarceli/pipeline/root/2011.0.00054.CSV_2013_04_18T17_19_00.609/MOUS_uid___A002_X576a5e_X1e/SBS_uid___A002_X576a5e_X21/working
+# au.plotbandpass('uid___A002_X61068c_Xc3.ms.spw1_3_5_7.solintinf_7_8125MHz.bcal.s9_2.tbl',xaxis='freq')
+#
 # EVLA dual-pol data:
 #  cd /lustre/naasc/thunter/evla/10C-186/K_BnA_cont
 #  au.plotbandpass('bandpasspcal.bcal',poln='',yaxis='both')
@@ -85,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.13 2013/04/23 12:14:32 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.15 2013/04/24 16:40:45 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -309,9 +317,6 @@ def openBpolyFile(caltable, debug):
           spwBP.append(spws[0][c])
       if (debug): casalog.post("Calling mytb.done 0")
       mytb.done()
-      # nPolarizations = len(polynomialAmplitude[0]) / nPolyAmp[0]
-      # This value is overridden by the new function doPolarizations in ValueMapping.
-      # print "Inferring %d polarizations from size of polynomial array" % (nPolarizations)
       return([polyMode, polyType, nPolyAmp, nPolyPhase, scaleFactor, nRows, nSpws, nUniqueTimesBP,
               uniqueTimesBP, frequencyLimits, increments, frequenciesGHz,
               polynomialPhase, polynomialAmplitude, times, antenna1, cal_desc_id, spwBP])
@@ -376,23 +381,32 @@ def checkPolsToPlot(polsToPlot, corr_type_string, debug):
                 return([])
     return(polsToPlot)
 
-def getCorrType(msName,debug):
+def getCorrType(msName, spwsToPlot, mymsmd, debug=False):
+    """
+    Open the DATA_DESCRIPTION_ID table.  Find the polarization_id of the first
+    spw in the list of spwsToPlot, then read the CORR_TYPE from the POLARIZATION
+    table.
+    """
     mytb = createCasaTool(tbtool)
-    mytb.open(msName+'/POLARIZATION')
-    i = 0
-    num_corr = mytb.getcol('NUM_CORR')
-    corr_type = mytb.getcell('CORR_TYPE',i)
-#      print "len(corr_type) = %d" % (len(corr_type))
-    while (len(corr_type) > 2 and i+1 < len(num_corr)):
-        i += 1;
-        try:
-            corr_type = mytb.getcell('CORR_TYPE',i)
-            if (debug):
-                casalogPost(debug,"len(corr_type) = %d" % (len(corr_type)))
-        except:
-            # We have reached the final row, and have only seen 4-pol data.
-            break
+    mytb.open(msName+'/DATA_DESCRIPTION')
+    spws = mytb.getcol('SPECTRAL_WINDOW_ID')
+    polarization_id = mytb.getcol('POLARIZATION_ID')
     mytb.close()
+    pol_id = 0
+    telescopeName = mymsmd.observatorynames()[0]
+    mytb.open(msName+'/POLARIZATION')
+    for myspw in spwsToPlot:
+#        print "looking for %d in %s" % (myspw, str(spws))
+        row = list(spws).index(myspw)
+        if (row >= 0):
+            pol_id = polarization_id[row]
+            corr_type = mytb.getcell('CORR_TYPE',pol_id)
+            if (corr_type[0] >= 5 or (telescopeName.find('ALMA')<0 and telescopeName.find('VLA')<0)):
+                # Undefined, I, Q, U, V, which ALMA and VLA never use
+                # Need to allow non-VLA, non-ALMA to stop here
+                break
+    mytb.close()
+    mytb.done()
     corr_type_string = []
     if (len(corr_type) == 4):
         casalogPost(debug,"This is a 4-polarization dataset.")
@@ -401,15 +415,14 @@ def getCorrType(msName,debug):
         elif (corr_type[0] in [9,10,11,12]):
             corr_type = [9,12]
         else:
-            casalogPost(debug,"Unsupported polarization types = %s" % (str(corr_type)))
+            print "Unsupported polarization types = ", corr_type
             return(corr_type, corr_type_string)
     # This overrides the len(gain_table) because it can have length=2 even when only 1 pol present
     nPolarizations = len(corr_type)
-#      print "(2)Set nPolarizations = %d" % nPolarizations
     for ct in corr_type:
         corr_type_string.append(corrTypeToString(ct))
-    casalogPost(debug,"corr_types = %s = %s" % (str(corr_type),str(corr_type_string)))
-#    mytb.done()  # Causes "No table opened." message in the log
+    if (debug):
+        print "corr_types = ", corr_type,  " = ", corr_type_string
     return(corr_type, corr_type_string, nPolarizations)
 
 def writeArgument(f,name,arg):
@@ -458,6 +471,7 @@ def getDataColumnName(inputMs, debug):
     return(dataColumnName)
 
 def doPolarizations(mymsmd, inputMs, debug=False) :
+    # This function is obsolete. There may be no OBSERVE_TARGET intents in a dataset!
     # Determine the number of polarizations for the first OBSERVE_TARGET intent.
     # Used by plotbandpass for BPOLY plots since the number of pols cannot be inferred
     # correctly from the caltable alone.  You cannot not simply use the first row, because
@@ -1140,27 +1154,6 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             originalChannelRange = mytb.getcol('CHAN_RANGE')
             originalChannelStart = originalChannelRange[0][0][:][0]
         mytb.close()
-        try:
-            mytb.open(msName+'/SPECTRAL_WINDOW')
-            refFreq = mytb.getcol('REF_FREQUENCY')
-            net_sideband = mytb.getcol('NET_SIDEBAND')
-            measFreqRef = mytb.getcol('MEAS_FREQ_REF')
-            originalSpw_casa33 = range(len(measFreqRef))
-            chanFreqGHz_casa33 = []     # used by showFDM
-            for i in originalSpw_casa33:
-                # They array shapes can vary.
-                chanFreqGHz_casa33.append(1e-9 * mytb.getcell('CHAN_FREQ',i))
-            mytb.close()
-            if (debug): print "Calling getCorrType(%s)" % (msName)
-            (corr_type, corr_type_string, nPolarizations) = getCorrType(msName,debug)
-            if (debug): print "Done getCorrType(%s)" % (msName)
-            if (corr_type_string == []):
-                return()
-        except:
-            print "2) Could not open the associated measurement set tables (%s). Will not translate antenna names." % (msName)
-            print "I will assume ALMA data: XX, YY, and refFreq=first channel."
-            corr_type_string = ['XX','YY']
-            corr_type = [9,12]
     else:  # 3.4
         tableFormat = 34
         cal_desc_id = mytb.getcol('SPECTRAL_WINDOW_ID')
@@ -1209,7 +1202,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     else:
         if (vis==''):
             print "Could not find the associated measurement set (%s). Will not translate antenna names or frequencies." % (msName)
-        else:
+        elif (os.path.exists(vis)):
             # Use the ms name passed in from the command line
             msName = vis
 # #          print "************* 2) Set msName to %s" % (msName)
@@ -1223,6 +1216,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
             except:
                 print "1b) Could not open the associated measurement set tables (%s). Will not translate antenna names or channels to frequencies." % (msName)
+        else:
+            print "1b) Could not open the associated measurement set tables (%s). Will not translate antenna names or channels to frequencies." % (msName)
     msFound =  False
     if (len(msAnt) > 0):
           msFound = True
@@ -1807,10 +1802,16 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
       # the GAIN column in the caltable.  Must use the shape of the DATA column 
       # in the ms.
       if (debug): print "in bpoly"
-      nPolarizations = doPolarizations(mymsmd, msName, debug)
+      if (msFound):
+          (corr_type, corr_type_string, nPolarizations) = getCorrType(msName, spwsToPlot, mymsmd, debug)
+          casalogPost(debug,"nPolarizations in first spw to plot = %s" % (str(nPolarizations)))
+      else:
+          print "With no ms available, I will assume ALMA data: XX, YY, and refFreq=first channel."
+#          chanFreqGHz = []
+          corr_type_string = ['XX','YY']
+          corr_type = [9,12]
+          nPolarizations = 2
       nPolarizations2 = nPolarizations
-      casalogPost(debug,"nPolarizations = %s" % (str(nPolarizations)))
-      (corr_type, corr_type_string, nPolarizations) = getCorrType(msName,debug)
       if (corr_type_string == []):
           return()
       polsToPlot = checkPolsToPlot(polsToPlot, corr_type_string, debug)
@@ -2170,7 +2171,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         measFreqRef = mytb.getcol('MEAS_FREQ_REF')
         mytb.close()
         
-        (corr_type, corr_type_string, nPolarizations) = getCorrType(msName,debug)
+        (corr_type, corr_type_string, nPolarizations) = getCorrType(msName, spwsToPlot, mymsmd, debug)
         if (corr_type_string == []):
             return()
     except:
@@ -2425,7 +2426,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               sideband = -1
               xlabelString = "Frequency (GHz)"
           if ((len(frequencies)>0) and (chanrange[1] > len(frequencies))):
-              print "Invalid chanrange (%d-%d) for spw%d in caltable1. Valid range = 0-%d" % (chanrange[0],chanrange[1],ispw,len(frequencies))
+              print "Invalid chanrange (%d-%d) for spw%d in caltable1. Valid range = 0-%d" % (chanrange[0],chanrange[1],ispw,len(frequencies)-1)
               return()
           pchannels = [xchannels,ychannels]
           pfrequencies = [xfrequencies,yfrequencies]
@@ -5851,7 +5852,7 @@ def ComputeSolarRADec(mjdsec):
     
 def angularSeparation(ra0,dec0,ra1,dec1, returnComponents=False):
     """
-    Usage:  au.angularSeparation(ra0,dec0,ra1,dec1)
+    Usage:  angularSeparation(ra0,dec0,ra1,dec1)
     Computes the great circle angle between two celestial coordinates.
     using the Vincenty formula (from wikipedia) which is correct for all
     angles, as long as you use atan2() to handle a zero denominator.  
