@@ -1029,7 +1029,7 @@ print "Canonical regression from "+canonical['version']+" on "+canonical['date']
 
 canonical_results = {}
 canonical_results['dirty_image_rms'] = {}
-canonical_results['dirty_image_rms']['value'] = 0.000342
+canonical_results['dirty_image_rms']['value'] = 0.000570
 
 canonical_results['clean_image_max'] = {}
 canonical_results['clean_image_max']['value'] = 0.0231359191239
