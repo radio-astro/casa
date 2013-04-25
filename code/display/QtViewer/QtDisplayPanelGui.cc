@@ -1420,8 +1420,8 @@ QtDisplayData* QtDisplayPanelGui::lookForExistingController(){
 	QtDisplayData *ctrld = 0;
 	DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
 	while( iter != qdp_->beginRegistered()){
-		QtDisplayData* pdd = (*iter);
 		iter--;
+		QtDisplayData* pdd = (*iter);
 		if ( pdd != 0 && pdd->dataType() == "image" ) {
 			ImageInterface<float>* img = pdd->imageInterface( );
 			PanelDisplay* ppd = qdp_->panelDisplay( );
