@@ -44,18 +44,9 @@ namespace casa {
 
       // this is a SINGLETON class
       static VPManager* Instance();
-      static void reset();
 
-      // call before anything else (returns False if already locked)
-      Bool lock();
-      // or if you are ready to wait for the lock (returns True if successful)
-      Bool acquireLock(Double timeoutSecs, 
-		       Bool verbose=False);
-      // verbose check for lock
-      Bool isLocked();
-      // call when you are done
-      void release();
-            
+      void reset(Bool verbose=False);
+
       Bool saveastable(const String& tablename);
 
       Bool loadfromtable(const String& tablename);
@@ -192,7 +183,7 @@ namespace casa {
     private:
       static VPManager* instance_p;
 
-      Bool isLocked_p; // only to be modified by the dedicated methods
+      static Mutex mutex_p;
 
       Record vplist_p; 
       SimpleOrderedMap<String, Int > vplistdefaults_p; 
