@@ -1834,7 +1834,7 @@ void MSSummary::listSpectralAndPolInfo (LogIO& os, Bool verbose) const
 		os.output().width(widthNumChan);	os << " #Chans" << " ";
 		os.output().setf(ios::left, ios::adjustfield);
 		os.output().width(widthFrame);      os << "  Frame";
-		os.output().width(widthFreq);	os << "   Ch1(MHz)";
+		os.output().width(widthFreq);	os << "   Ch0(MHz)";
 		os.output().width(widthFreq);	os << " ChanWid(kHz) ";
 		os.output().width(widthFreq);	os << " TotBW(kHz)";
 		//		os.output().width(widthFreq);	os << "Ref(MHz)";
