@@ -22,7 +22,7 @@ LOG = logging.get_logger(__name__)
 
 
 # minimum allowed CASA revision. Set to 0 or None to disable
-MIN_CASA_REVISION = 22854
+MIN_CASA_REVISION = 22971
 # maximum allowed CASA revision. Set to 0 or None to disable
 MAX_CASA_REVISION = None
 
