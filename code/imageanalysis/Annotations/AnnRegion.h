@@ -23,8 +23,6 @@
 #include <images/Regions/ImageRegion.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MFrequency.h>
-#include <measures/Measures/Stokes.h>
-#include <memory>
 
 namespace casa {
 
@@ -63,12 +61,6 @@ public:
 	// is this region an annotation only? ie just for graphical rendering?
 	Bool isAnnotationOnly() const;
 
-	// get the frequency limits converted to the spectral frame of the coordinate
-	// system of this object.
-	Vector<MFrequency> getFrequencyLimits() const;
-
-	Vector<Stokes::StokesTypes> getStokes() const;
-
 	virtual TableRecord asRecord() const;
 
 	virtual ImageRegion asImageRegion() const;
@@ -87,6 +79,8 @@ public:
 	// a vector of two values is returned. The zeroth value will always be less
 	// than or equal to the first.
 	vector<Double> getSpectralPixelRange() const;
+
+
 
 protected:
 
@@ -153,27 +147,7 @@ protected:
 	// defined in the direction plane
 	void _setDirectionRegion(const ImageRegion& region);
 
-	//void _printPairs(ostream& os) const;
-
-private:
-
-	Bool _isAnnotationOnly;
-	Vector<MFrequency> _convertedFreqLimits;
-	ImageRegion _imageRegion, _directionRegion;
-	Quantity _beginFreq, _endFreq, _restFreq;
-	Vector<Stokes::StokesTypes> _stokes;
-	MFrequency::Types _freqRefFrame;
-	MDoppler::Types _dopplerType;
-	Bool _isDifference, _constructing;
-	IPosition _imShape;
-	static const String _class;
-	vector<Double> _spectralPixelRange;
-
-	// if freqRefFrame=="" -> use the reference frame of the coordinate system
-	// if dopplerString=="" -> use the doppler system associated with the coordinate system
-	// if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
-	// Tacitly does nothing if the coordinate system has no spectral axis
-	void _setFrequencyLimits(
+	Bool _setFrequencyLimits(
 		const Quantity& beginFreq,
 		const Quantity& endFreq,
 		const String& freqRefFrame,
@@ -181,19 +155,26 @@ private:
 		const Quantity& restfreq
 	);
 
+
+private:
+
+	Bool _isAnnotationOnly;
+	Bool _isDifference, _constructing;
+	ImageRegion _imageRegion, _directionRegion;
+	IPosition _imShape;
+	vector<Double> _spectralPixelRange;
+
+	static const String _class;
+
+
 	WCBox _makeExtensionBox(
 		const Vector<Quantity>& freqRange,
 		const Vector<Stokes::StokesTypes>& stokesRange,
 		const IPosition& pixelAxes
 	) const;
 
-	void _checkAndConvertFrequencies();
-
 	void _init();
 
-	String _printFreqRange() const;
-
-	static String _printFreq(const Quantity& freq);
 };
 
 // Just need a identifable expection class, compiler can generate implementation implicitly

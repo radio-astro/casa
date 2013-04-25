@@ -54,7 +54,13 @@ public:
 		const Quantity& xEnd,
 		const Quantity& yEnd,
 		const String& dirRefFrameString,
-		const CoordinateSystem& csys
+		const CoordinateSystem& csys,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	AnnVector(
@@ -62,7 +68,8 @@ public:
 		const Quantity& yStart,
 		const Quantity& xEnd,
 		const Quantity& yEnd,
-		const CoordinateSystem& csys
+		const CoordinateSystem& csys,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 

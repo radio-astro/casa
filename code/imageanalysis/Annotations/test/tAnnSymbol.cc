@@ -51,11 +51,11 @@ int main () {
 			);
 			try {
 				AnnSymbol symbol(
-					x, y, dirTypeString,
-					csys, s
+					x, y,
+					csys, AnnSymbol::charToSymbol(s), Vector<Stokes::StokesTypes>(0)
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
 					<< LogIO::POST;
@@ -77,11 +77,11 @@ int main () {
 			);
 			try {
 				AnnSymbol symbol(
-					x, y, dirTypeString,
-					csys, s
+					x, y, csys, AnnSymbol::charToSymbol(s),
+					Vector<Stokes::StokesTypes>(0)
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
 					<< x.getMesg() << LogIO::POST;
@@ -102,8 +102,8 @@ int main () {
 			);
 			try {
 				AnnSymbol symbol(
-					x, y, dirTypeString,
-					csys, c
+					x, y, csys, AnnSymbol::charToSymbol(c),
+					Vector<Stokes::StokesTypes>(0)
 				);
 				thrown = False;
 			} catch (AipsError x) {
@@ -125,8 +125,9 @@ int main () {
 				csys.directionCoordinate().directionType(False)
 			);
 			AnnSymbol symbol(
-				x, y, dirTypeString,
-				csys, s
+				x, y,
+				csys, AnnSymbol::charToSymbol(s),
+				Vector<Stokes::StokesTypes>(0)
 			);
 
 			MDirection point = symbol.getDirection();
@@ -151,10 +152,13 @@ int main () {
 			Quantity y(0, "deg");
 			Char s = 'o';
 
-			String dirTypeString = "B1950";
+			String refFrame = "B1950";
 			AnnSymbol symbol(
-				x, y, dirTypeString,
-				csys, s
+				x, y, refFrame,
+				csys, s,
+				Quantity(0, "Hz"), Quantity(0, "Hz"),
+				"", "", Quantity(0, "Hz"),
+				Vector<Stokes::StokesTypes>(0)
 			);
 			cout << symbol << endl;
 			MDirection point = symbol.getDirection();
@@ -183,8 +187,9 @@ int main () {
 				csys.directionCoordinate().directionType(False)
 			);
 			AnnSymbol symbol(
-				x, y, dirTypeString,
-				csys, s
+				x, y,
+				csys, AnnSymbol::charToSymbol(s),
+				Vector<Stokes::StokesTypes>(0)
 			);
 			String label = "mylabel";
 			symbol.setLabel(label);

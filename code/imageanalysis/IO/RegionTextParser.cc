@@ -881,25 +881,32 @@ void RegionTextParser::_createAnnotation(
 		case AnnotationBase::LINE:
 			annotation = new AnnLine(
 				qDirs[0], qDirs[1], qDirs[2],
-				qDirs[3], dirRefFrame,  _csys
+				qDirs[3], dirRefFrame,  _csys,
+				qFreqs[0], qFreqs[1],
+				freqRefFrame, doppler, restfreq,  stokes
 			);
 			break;
 		case AnnotationBase::VECTOR:
 			annotation = new AnnVector(
 				qDirs[0], qDirs[1], qDirs[2],
-				qDirs[3], dirRefFrame,  _csys
+				qDirs[3], dirRefFrame,  _csys,
+				qFreqs[0], qFreqs[1],
+				freqRefFrame, doppler, restfreq,  stokes
 			);
 			break;
 		case AnnotationBase::TEXT:
 			annotation = new AnnText(
 				qDirs[0], qDirs[1], dirRefFrame,
-				_csys, textString
+				_csys, textString, qFreqs[0], qFreqs[1],
+				freqRefFrame, doppler, restfreq,  stokes
 			);
 			break;
 		case AnnotationBase::SYMBOL:
 			annotation = new AnnSymbol(
 				qDirs[0], qDirs[1], dirRefFrame,
-				_csys, textString.firstchar()
+				_csys, textString.firstchar(),
+				qFreqs[0], qFreqs[1], freqRefFrame,
+				doppler, restfreq,  stokes
 			);
 			break;
 		default:
@@ -909,7 +916,7 @@ void RegionTextParser::_createAnnotation(
 			);
 	}
 	}
-	catch (WorldToPixelConversionError x) {
+	catch (const WorldToPixelConversionError& x) {
 		*_log << LogIO::WARN << preamble
 			<< "Error converting one or more world coordinates to pixel coordinates. "
 			<< "This could mean, among other things, that (part of) the region or "

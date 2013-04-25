@@ -34,8 +34,17 @@ AnnLine::AnnLine(
 	const Quantity& xPoint2,
 	const Quantity& yPoint2,
 	const String& dirRefFrameString,
-	const CoordinateSystem& csys
-) : AnnotationBase(LINE, dirRefFrameString, csys),
+	const CoordinateSystem& csys,
+	const Quantity& beginFreq,
+	const Quantity& endFreq,
+	const String& freqRefFrame,
+	const String& dopplerString,
+	const Quantity& restfreq,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnotationBase(
+		LINE, dirRefFrameString, csys, beginFreq, endFreq,
+		freqRefFrame, dopplerString, restfreq, stokes
+	),
 	_inputPoints(AnnotationBase::Direction(2)) {
 
 	_inputPoints(0).first = xPoint1;
@@ -50,8 +59,10 @@ AnnLine::AnnLine(
 	const Quantity& yPoint1,
 	const Quantity& xPoint2,
 	const Quantity& yPoint2,
-	const CoordinateSystem& csys
-) : AnnotationBase(LINE, csys),
+	const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
+
+) : AnnotationBase(LINE, csys, stokes),
 	_inputPoints(AnnotationBase::Direction(2)) {
 
 	_inputPoints(0).first = xPoint1;

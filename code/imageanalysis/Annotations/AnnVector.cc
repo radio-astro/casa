@@ -33,8 +33,17 @@ AnnVector::AnnVector(
 	const Quantity& xEnd,
 	const Quantity& yEnd,
 	const String& dirRefFrameString,
-	const CoordinateSystem& csys
-) : AnnotationBase(VECTOR, dirRefFrameString, csys),
+	const CoordinateSystem& csys,
+	const Quantity& beginFreq,
+	const Quantity& endFreq,
+	const String& freqRefFrame,
+	const String& dopplerString,
+	const Quantity& restfreq,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnotationBase(
+		VECTOR, dirRefFrameString, csys, beginFreq, endFreq,
+		freqRefFrame, dopplerString, restfreq, stokes
+	),
 	_inputPoints(AnnotationBase::Direction(2)) {
 	_init(xStart, yStart, xEnd, yEnd);
 }
@@ -44,8 +53,9 @@ AnnVector::AnnVector(
 	const Quantity& yStart,
 	const Quantity& xEnd,
 	const Quantity& yEnd,
-	const CoordinateSystem& csys
-) : AnnotationBase(VECTOR, csys),
+	const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnotationBase(VECTOR, csys, stokes),
 	_inputPoints(AnnotationBase::Direction(2)) {
 	_init(xStart, yStart, xEnd, yEnd);
 }

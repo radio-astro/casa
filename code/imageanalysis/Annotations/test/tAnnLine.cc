@@ -69,10 +69,10 @@ int main () {
 			try {
 				AnnLine line(
 					blcx, blcy, trcx, trcy,
-					dirTypeString, csys
+					csys, Vector<Stokes::StokesTypes>(0)
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
 					<< x.getMesg() << LogIO::POST;
@@ -95,10 +95,10 @@ int main () {
 			try {
 				AnnLine line(
 					blcx, blcy, trcx, trcy,
-					dirTypeString, csys
+					csys, Vector<Stokes::StokesTypes>(0)
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 						<< "Exception thrown as expected: "
 						<< x.getMesg() << LogIO::POST;
@@ -118,7 +118,7 @@ int main () {
 			);
 			AnnLine line(
 				blcx, blcy, trcx, trcy,
-				dirTypeString, csys
+				csys, Vector<Stokes::StokesTypes>(0)
 			);
 
 			Vector<MDirection> points = line.getEndPoints();
@@ -155,10 +155,11 @@ int main () {
 			Quantity blcy(0, "deg");
 			Quantity trcx(0.015, "deg");
 			Quantity trcy(0.01, "deg");
-			String dirTypeString = "B1950";
+			String refFrame = "B1950";
 			AnnLine line(
-				blcx, blcy, trcx, trcy, dirTypeString,
-				csys
+				blcx, blcy, trcx, trcy, refFrame,
+				csys, Quantity(0,"Hz"), Quantity(0, "Hz"),
+				"", "", Quantity(0, "Hz"), Vector<Stokes::StokesTypes>(0)
 			);
 			cout << line << endl;
 			Vector<MDirection> points = line.getEndPoints();

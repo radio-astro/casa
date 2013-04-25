@@ -78,13 +78,20 @@ public:
 		const Quantity& x, const Quantity& y,
 		const String& dirRefFrameString,
 		const CoordinateSystem& csys,
-		const Char symbolChar
+		const Char symbolChar,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	AnnSymbol(
 		const Quantity& x, const Quantity& y,
 		const CoordinateSystem& csys,
-		const Symbol symbol
+		const Symbol symbol,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine

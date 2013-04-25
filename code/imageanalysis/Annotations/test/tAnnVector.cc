@@ -64,10 +64,10 @@ int main () {
 			try {
 				AnnVector vector(
 					blcx, blcy, trcx, trcy,
-					dirTypeString, csys
+					csys, Vector<Stokes::StokesTypes>(0)
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
 					<< x.getMesg() << LogIO::POST;
@@ -90,10 +90,10 @@ int main () {
 			try {
 				AnnVector vector(
 					blcx, blcy, trcx, trcy,
-					dirTypeString, csys
+					csys, Vector<Stokes::StokesTypes>(0)
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
 					<< x.getMesg() << LogIO::POST;
@@ -112,8 +112,8 @@ int main () {
 				csys.directionCoordinate().directionType(False)
 			);
 			AnnVector vector(
-				blcx, blcy, trcx, trcy,
-				dirTypeString, csys
+				blcx, blcy, trcx, trcy, csys,
+				Vector<Stokes::StokesTypes>(0)
 			);
 
 			Vector<MDirection> points = vector.getEndPoints();
@@ -153,7 +153,8 @@ int main () {
 			String dirTypeString = "B1950";
 			AnnVector vector(
 				blcx, blcy, trcx, trcy, dirTypeString,
-				csys
+				csys, Quantity(0, "Hz"), Quantity(0, "Hz"),
+				"", "", Quantity(0, "Hz"), Vector<Stokes::StokesTypes>(0)
 			);
 			cout << vector << endl;
 			Vector<MDirection> points = vector.getEndPoints();
