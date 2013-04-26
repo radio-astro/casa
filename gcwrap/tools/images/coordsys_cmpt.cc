@@ -645,6 +645,18 @@ coordsys::epoch()
   return rstat;
 }
 
+int coordsys::findaxisbyname(const string& name, bool allowfriendlynames) {
+	*itsLog << LogOrigin("coordsys", __FUNCTION__);
+	try {
+		Vector<String> names(1, name);
+		return itsCoordSys->getWorldAxesOrder(names, False, allowfriendlynames)[0];
+	}
+	catch (const AipsError& x) {
+		*itsLog << LogIO::SEVERE << "Error: " << x.getMesg() << LogIO::POST;
+		RETHROW(x);
+	}
+}
+
 bool
 coordsys::findaxis( const bool isWorld, const int axis,
 		int& coordinate, int& axisInCoordinate)

@@ -90,82 +90,38 @@ def immoments(
     imagename, moments, axis, region, box, chans, stokes,
     mask, includepix, excludepix, outfile, stretch
 ):
-    
     retValue=None
     casalog.origin('immoments')
-
-    # First check to see if the output file exists.  If it
-    # does then we abort.  CASA doesn't allow files to be
-    # over-written, just a policy.
-    if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
-        raise Exception, 'Output file, '+outfile+\
-              ' exists. immoment can not proceed, please\n'\
-              'remove it or change the output file name.'
-    elif ( len( outfile ) ==  1 ):
-        raise Exception, 'outfile is not specified but must be'
-        
     _myia = iatool()
     try:
-        # Translate the string value into an index value.
-        axis=_immoments_parse_axis( imagename, axis )
-        casalog.post( 'Axis information for '+imagename+' is: '+str(axis),\
-                      'DEBUG2' )
+        # First check to see if the output file exists.  If it
+        # does then we abort.  CASA doesn't allow files to be
+        # over-written, just a policy.
+        if ( len( outfile ) > 0 and os.path.exists( outfile ) ):
+            raise Exception, 'Output file, '+outfile+\
+              ' exists. immoment can not proceed, please\n'\
+              'remove it or change the output file name.'
+        elif ( len( outfile ) ==  1 ):
+            raise Exception, 'outfile is not specified but must be'
         _myia.open(imagename) 
-
         reg = rg.frombcs(csys=_myia.coordsys().torecord(),
             shape=_myia.shape(), box=box, chans=chans, stokes=stokes,
             stokescontrol="a", region=region
         )
+        if isinstance( axis, str ):
+             axis = _myia.coordsys().findaxisbyname(axis)
         retValue = _myia.moments(
             moments=moments, axis=int(axis), mask=mask,
             region=reg, includepix=includepix,
             excludepix=excludepix, outfile=outfile, drop=False,
             stretch=stretch
         )
-        _myia.done()
         retValue.done()
         return True
-    except Exception, instance:
+    except Exception, x:
         _myia.done()
-        print '*** Error ***',instance
-        raise Exception, instance
+        print '*** Error ***: ' + str(x)
+        raise
+    finally:
+        _myia.done()
             
-
-def _immoments_parse_axis( imagename='', axis='' ):
-    # We already have an integer value nothing to do.
-    if ( isinstance( axis, int ) ):
-        return axis
-    
-    # Find out what we have in each axis of this image.
-    # of a particular region in the image. This function
-    # returns the following list:
-    #    [ DirectionalIndex, Directional1Index, spectralIndex, stokesIndex ]
-    axes=getimaxes(imagename)
-
-    # Default is spectral axis
-    retValue=axes[2]
-
-
-    # Ignore case and remove extra spaces
-    axis = axis.replace( ' ', '' )
-    axis = axis.lower()
-
-
-    if ( axis=='ra' or axis.startswith( 'long' ) ):
-        # First Directional axis
-        retValue=axes[0][0]
-    elif ( axis=='dec' or axis.startswith( 'lat' ) ):
-        # Second  Directional axis
-        retValue=axes[1][0]
-    elif ( axis.startswith( 'spec' ) ):
-        # Spectral axis
-        retValue=axes[2][0]        
-    elif ( axis.startswith( 'sto') ):
-        # Spectral axis
-        retValue=axes[3][0]        
-    else:
-        raise Exception, "Invalid axis specified: "+str(axis) \
-              + ". Expected one of ra, dec, lat, long, spec, or stokes"
-
-    return retValue
-    
