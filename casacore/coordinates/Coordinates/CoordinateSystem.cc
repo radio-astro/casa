@@ -61,10 +61,12 @@
 #include <casa/iomanip.h>
 #include <casa/iostream.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 const String CoordinateSystem::_class = "CoordinateSystem";
+
+map<String, String> CoordinateSystem::_friendlyAxisMap = map<String, String>();
+
 
 CoordinateSystem::CoordinateSystem()
 : coordinates_p(0), 
@@ -2611,7 +2613,6 @@ Bool CoordinateSystem::save(RecordInterface &container,
        return True;
     }
 
-//
     for (uInt i=0; i<nc; i++)
     {
 	// Write each string into a field it's type plus coordinate
@@ -4587,8 +4588,22 @@ Vector<Int> CoordinateSystem::linearAxesNumbers() const {
     return pixelAxes(linearCoordinateNumber());
 }
 
-Vector<Int> CoordinateSystem::getWorldAxesOrder(Vector<String>& myNames, const Bool requireAll) const {
+void CoordinateSystem::_initFriendlyAxisMap() {
+	if (_friendlyAxisMap.size() == 0) {
+		_friendlyAxisMap["velocity"] = "spectral";
+		_friendlyAxisMap["frequency"] = "spectral";
+		_friendlyAxisMap["right ascension"] = "ra";
+	}
+}
+
+Vector<Int> CoordinateSystem::getWorldAxesOrder(
+	Vector<String>& myNames, Bool requireAll,
+	Bool allowFriendlyNames
+) const {
 	LogIO os(LogOrigin(_class, __FUNCTION__, WHERE));
+	if (allowFriendlyNames) {
+		_initFriendlyAxisMap();
+	}
 	uInt naxes = nWorldAxes();
 	uInt raxes = myNames.size();
 	if (requireAll && raxes != naxes) {
@@ -4601,38 +4616,41 @@ Vector<Int> CoordinateSystem::getWorldAxesOrder(Vector<String>& myNames, const B
 	_downcase(myNames);
 	Vector<Int> myorder(raxes);
 
-	Vector<String> matchMap(naxes,"");
+	Vector<String> matchMap(naxes, "");
 	for (uInt i=0; i<myNames.size(); i++) {
-		String spec = myNames[i];
-		Regex orderRE("^" + spec + ".*");
-		Vector<String> matchedNames(0);
-		Vector<uInt> matchedNumbers(0);
+		String name = myNames[i];
+		vector<String> matchedNames(0);
+		vector<uInt> matchedNumbers(0);
 		for (uInt j=0; j<axisNames.size(); j++) {
-			if (axisNames[j].matches(orderRE)) {
-				uInt oldSize = matchedNames.size();
-				matchedNames.resize(oldSize + 1, True);
-				matchedNames[oldSize] = axisNames[j];
-				matchedNumbers.resize(oldSize + 1, True);
-				matchedNumbers[oldSize] = j;
+			if (
+				axisNames[j].startsWith(name)
+				|| (
+					allowFriendlyNames
+					&& _friendlyAxisMap.find(axisNames[j]) != _friendlyAxisMap.end()
+					&& _friendlyAxisMap[axisNames[j]].startsWith(name)
+				)
+			) {
+				matchedNames.push_back(axisNames[j]);
+				matchedNumbers.push_back(j);
 			}
 		}
 		if(matchedNames.size() == 0) {
-			os << "No axis matches requested axis " << spec
+			os << "No axis matches requested axis " << name
 				<< ". Image axis names are " << axisNames
 				<< LogIO::EXCEPTION;
 		}
 		else if (matchedNames.size() > 1) {
 			os << "Multiple axes " << matchedNames << " match requested axis "
-				<< spec << LogIO::EXCEPTION;
+				<< name << LogIO::EXCEPTION;
 		}
 		uInt axisIndex = matchedNumbers[0];
 		if (matchMap[axisIndex].empty()) {
 			myorder[i] = axisIndex;
-			matchMap[axisIndex] = spec;
+			matchMap[axisIndex] = name;
 		}
 		else {
 			os << "Ambiguous axis specification. Both " << matchMap[axisIndex]
-			    << " and " << spec << " match image axis name "
+			    << " and " << name << " match image axis name "
 			    << matchedNames[0] << LogIO::EXCEPTION;
 		}
 	}
