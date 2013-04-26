@@ -6,6 +6,7 @@ from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .clean import Clean
 from .cleanlist import CleanList
 from .exportdata import ExportData
+from .fluxcalflag import FluxcalFlag
 from .flagging import FlagDeterALMA
 from .fluxscale import Fluxcal
 from .fluxscale import Fluxscale
