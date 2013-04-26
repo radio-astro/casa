@@ -419,7 +419,8 @@ void AtmosCorruptor::initAtm() {
     // ATMchanMap(spw) is a vector, Nelements= fnChan()[spw] - here spw=0
     // and nChan is set above
     ATMchanMap(0).resize(nChan);
-    for (uInt ichan=1;ichan<nChan;ichan++) {
+    //for (uInt ichan=1;ichan<nChan;ichan++) {
+    for (uInt ichan=0;ichan<nChan;ichan++) {
       ATMchanMap(0)[ichan]=ichan;
     }
   }
@@ -463,7 +464,8 @@ void AtmosCorruptor::initAtm() {
       // ATMchanMap(spw) is a vector, Nelements= fnChan()[spw] - here spw=0
       // and nChan is set above
       ATMchanMap(ispw).resize(nChan);
-      for (uInt ichan=1;ichan<nChan;ichan++) {
+      //for (uInt ichan=1;ichan<nChan;ichan++) {
+      for (uInt ichan=0;ichan<nChan;ichan++) {
 	ATMchanMap(ispw)[ichan]=ichan;
       }
     }
