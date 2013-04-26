@@ -227,6 +227,7 @@ class QtDisplayData : public QObject {
   // thus this is non-static and specific to a display data
   virtual bool isValidColormap( const QString &name ) const;
   void setColorMap( Colormap* colorMap );
+  void removeColorMap( const String& name );
 
   // Get/set colormap shift/slope ('fiddle') and brightness/contrast
   // settings.  (At present this is usually set for the PC's current
@@ -289,7 +290,9 @@ class QtDisplayData : public QObject {
   const String &getColormap( ) { return clrMapName_; }
   void setColormap(const String& clrMapName) { setColormap_(clrMapName); }
   void setHistogramColorMapping( float minValue, float maxValue, float powerScale );
- 
+  //  This is used to get the display data to set a saturation range
+  //  from another image.
+  void setSaturationRange( double min, double max );
 
  signals:
 
@@ -380,6 +383,7 @@ class QtDisplayData : public QObject {
   virtual void removeColormap_() { setColormap_("");  }
 
 
+
   //# (could be exposed publicly, if useful).
   //  Does this DD use/need a public colormap?
   virtual Bool usesClrMap_() {
@@ -417,6 +421,10 @@ class QtDisplayData : public QObject {
   bool invertColorMap;
   // Name of colormap used by dd_  ("" if none)
   String clrMapName_;
+  // Color maps can be removed.  In such a case, the restoreColorMapName
+  //holds the previous one so we can reset to that in case the one we
+  //are using is removed.
+  String restoreColorMapName;
   
   // Will be set onto underlying dd_ if needed (0 if none)
   Colormap* clrMap_;

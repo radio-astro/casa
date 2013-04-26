@@ -35,8 +35,9 @@
 namespace casa {
 
 ImageManagerDialog::ImageManagerDialog(QWidget *parent)
-    : QDialog(parent), openHolder( NULL ), allImages( NULL )
-{
+    : QDialog(parent), openHolder( NULL ), allImages( NULL ),
+      SINGLE_COLOR_MAP( "Color Saturation Map"),
+      MASTER_COLOR_MAP( "Master Color Saturation Map"){
 	ui.setupUi(this);
 	setWindowTitle( "Manage Images");
 
@@ -54,12 +55,12 @@ ImageManagerDialog::ImageManagerDialog(QWidget *parent)
 	//Color Restrictions
 	QButtonGroup* colorRestrictionGroup = new QButtonGroup( this );
 	colorRestrictionGroup->addButton( ui.noneRadio);
-	colorRestrictionGroup->addButton( ui.singleColorRadio );
-	colorRestrictionGroup->addButton( ui.singleColorSaturationRadio );
+	colorRestrictionGroup->addButton( ui.colorPerImageRadio );
+	colorRestrictionGroup->addButton( ui.colorMasterImageRadio );
 	colorRestrictionsChanged();
 	connect( ui.noneRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
-	connect( ui.singleColorRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
-	connect( ui.singleColorSaturationRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
+	connect( ui.colorPerImageRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
+	connect( ui.colorMasterImageRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
 
 	connect( ui.openToRegisteredButton, SIGNAL(clicked()), this, SLOT(openToDisplayed()));
 	connect( ui.registerToOpenButton, SIGNAL(clicked()), this, SLOT(displayedToOpen()));
@@ -232,35 +233,99 @@ void ImageManagerDialog::displayTypeChanged( ImageView* imageView ){
 //----------------------------------------------------------------------
 
 void ImageManagerDialog::applyColorChanges(){
-	if ( ui.singleColorRadio->isChecked()){
+	if ( ui.colorPerImageRadio->isChecked()){
 		displayedScroll->applyColorChangesIndividually();
+	}
+	else if ( ui.noneRadio->isChecked()){
+		//Revert the color changes
+		for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
+				iter !=allImages->endDD(); iter++ ){
+			(*iter)->removeColorMap( SINGLE_COLOR_MAP );
+			(*iter)->removeColorMap( MASTER_COLOR_MAP );
+		}
+	}
+	else if ( ui.colorMasterImageRadio->isChecked()){
+		applyMasterColorMap();
+		applyMasterIntensityRange();
 	}
 }
 
-void ImageManagerDialog::displayColorsChanged( ImageView* imageView ){
-	if ( ui.singleColorRadio->isChecked()){
+void ImageManagerDialog::applyMasterIntensityRange(){
+	QString intensityImageName = ui.saturationImageCombo->currentText();
+	QtDisplayData* intensityDD = allImages->getDD( intensityImageName.toStdString() );
+	if ( intensityDD != NULL ){
+		ImageInterface<float>* img = intensityDD->imageInterface();
+		if ( img != NULL ){
+			double intensityMin = 0;
+			double intensityMax = 0;
+			bool intensityRangeFound = getIntensityMinMax( img, &intensityMin, & intensityMax );
+			if ( intensityRangeFound ){
+				for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
+						iter != allImages->endDD(); iter++ ){
+					(*iter)->setSaturationRange( intensityMin, intensityMax );
+				}
+			}
+		}
+	}
+}
 
-		//Find the min and max intensity
+void ImageManagerDialog::applyMasterColorMap(){
+	QString colorImageName = ui.colorImageCombo->currentText();
+	QtDisplayData* colorDD = allImages->getDD( colorImageName.toStdString());
+	if ( colorDD != NULL ){
+		QColor masterColor;
+		bool colorFound = displayedScroll->findColor( colorImageName, &masterColor );
+		if ( !colorFound ){
+			colorFound = openScroll->findColor( colorImageName, &masterColor );
+		}
+		if ( colorFound ){
+			ImageInterface<float>* colorImage = colorDD->imageInterface();
+			for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
+									iter != allImages->endDD(); iter++ ){
+				Colormap* saturationMap = generateColorMap( colorImage, masterColor,false );
+				if ( saturationMap != NULL ){
+					(*iter)->setColorMap( saturationMap );
+				}
+			}
+		}
+	}
+}
+
+Colormap* ImageManagerDialog::generateColorMap( ImageInterface<float>* img, QColor baseColor,
+		bool individualMap ) {
+	Colormap* saturationMap = NULL;
+	if ( img != NULL ){
 		double intensityMin = 0;
 		double intensityMax = 0;
-		QtDisplayData* imageData = imageView->getData();
-		ImageInterface<float>* img = imageData->imageInterface();
 		bool intensityRangeFound = getIntensityMinMax( img, &intensityMin, & intensityMax );
 		if ( intensityRangeFound ){
 			//Generate a color definition.
-			QColor baseColor = imageView->getDisplayedColor();
-			ColormapDefinition* saturationDefinition = generateSaturationMap( intensityMin, intensityMax,
-					baseColor );
+			ColormapDefinition* saturationDefinition = generateSaturationMap( intensityMin, intensityMax, baseColor );
 
 			//Make it into a color map.
-			Colormap* saturationMap = new Colormap();
-			saturationMap->setName( "saturationMap");
+			saturationMap = new Colormap();
+			String title( SINGLE_COLOR_MAP );
+			if ( !individualMap ){
+				title = MASTER_COLOR_MAP;
+			}
+			saturationMap->setName( title );
 			saturationMap->setColormapDefinition( saturationDefinition );
+		}
+	}
+	return saturationMap;
+}
 
+void ImageManagerDialog::displayColorsChanged( ImageView* imageView ){
+	if ( ui.colorPerImageRadio->isChecked()){
+
+		//Find the min and max intensity
+		QtDisplayData* imageData = imageView->getData();
+		ImageInterface<float>* img = imageData->imageInterface();
+		QColor baseColor = imageView->getDisplayedColor();
+		Colormap* saturationMap = generateColorMap( img, baseColor, true );
+		if ( saturationMap != NULL ){
 			//Add it to the QtDisplayData and tell it to use it.
 			imageData->setColorMap( saturationMap );
-
-
 		}
 	}
 }
@@ -405,8 +470,8 @@ void ImageManagerDialog::colorRestrictionsChanged(){
 
 	//Enable/Disable the color buttons on individual images
 	bool masterColorEnabled = false;
-	if ( ui.singleColorRadio->isChecked() ||
-			ui.singleColorSaturationRadio->isChecked()){
+	if ( ui.colorPerImageRadio->isChecked() ||
+			ui.colorMasterImageRadio->isChecked()){
 		masterColorEnabled = true;
 	}
 	openScroll->setImageColorsEnabled( masterColorEnabled );
@@ -415,7 +480,7 @@ void ImageManagerDialog::colorRestrictionsChanged(){
 	//Enable/Disable the saturation/color image selection
 	//combos.
 	bool masterImages = false;
-	if ( ui.singleColorSaturationRadio->isChecked()){
+	if ( ui.colorMasterImageRadio->isChecked()){
 		masterImages = true;
 	}
 	ui.colorImageCombo->setEnabled( masterImages );

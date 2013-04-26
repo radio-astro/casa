@@ -148,6 +148,17 @@ void ImageScroll::setImageColorsEnabled( bool enabled ){
 	}
 }
 
+bool ImageScroll::findColor( const QString& lookup, QColor* foundColor ){
+	bool colorLocated = false;
+	for ( QList<ImageView*>::iterator iter = images.begin(); iter != images.end(); iter++ ){
+		if ( (*iter)->getName() == lookup ){
+			*foundColor = (*iter)->getDisplayedColor();
+			colorLocated = true;
+		}
+	}
+	return colorLocated;
+}
+
 void ImageScroll::applyColorChangesIndividually(){
 	for ( QList<ImageView*>::iterator iter = images.begin(); iter != images.end(); iter++ ){
 		(*iter)->emitDisplayColorsChanged();

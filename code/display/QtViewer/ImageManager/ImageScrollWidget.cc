@@ -65,6 +65,10 @@ void ImageScrollWidget::applyColorChangesIndividually(){
 	imageScroll->applyColorChangesIndividually();
 }
 
+bool ImageScrollWidget::findColor( const QString& lookup, QColor* foundColor ){
+	return imageScroll->findColor( lookup, foundColor );
+}
+
 void ImageScrollWidget::clearSelections(){
 	imageScroll->setSelectAll( false );
 }

@@ -60,6 +60,7 @@ public:
     void setSelectAll( bool selectAll);
     void setImageColorsEnabled( bool enabled );
     void applyColorChangesIndividually();
+    bool findColor( const QString& lookup, QColor* foundColor );
     virtual ~ImageScroll();
 
     //Image Tracker Interface

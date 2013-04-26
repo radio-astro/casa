@@ -54,6 +54,7 @@ public:
     void removeImageViews( QList<ImageView*>& view );
     void setImageColorsEnabled( bool enabled );
     void applyColorChangesIndividually();
+    bool findColor( const QString& lookup, QColor* foundColor );
     ~ImageScrollWidget();
 signals:
     void displayDataRemoved( QtDisplayData* imageData );

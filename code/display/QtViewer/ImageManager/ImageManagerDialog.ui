@@ -276,14 +276,14 @@
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="singleColorRadio">
+         <widget class="QRadioButton" name="colorPerImageRadio">
           <property name="text">
            <string>Color/Saturation per Image</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="singleColorSaturationRadio">
+         <widget class="QRadioButton" name="colorMasterImageRadio">
           <property name="text">
            <string>Master Color/Saturation:</string>
           </property>
