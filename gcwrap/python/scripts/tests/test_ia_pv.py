@@ -244,9 +244,20 @@ class ia_pv_test(unittest.TestCase):
         xx = myia.pv(start=[x1, y2], end=[x2, y1], unit="rad")
         self.assertTrue(xx.coordsys().units()[0] == "rad")
 
-
         myia.done()
         xx.done()
+        # test units from task level
+        outfile = "unittest.im"
+        unit="arcmin"
+        impv(
+             imagename=datapath + "pv1.im", unit=unit,
+             outfile="unittest.im", start=[3,3], end=[6,6]
+        )
+        myia.open(outfile)
+        self.assertTrue(myia.coordsys().units()[0] == unit)
+        myia.done()
+        
+             
         
     def test_fits(self):
         """ia.pv(): Test exporting and importing to/from FITS"""
