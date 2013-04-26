@@ -86,6 +86,12 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="maximumSize">
+            <size>
+             <width>110</width>
+             <height>16777215</height>
+            </size>
+           </property>
            <property name="frameShape">
             <enum>QFrame::NoFrame</enum>
            </property>
@@ -101,6 +107,12 @@
             </property>
             <item>
              <widget class="QLineEdit" name="pixel_pt1">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
               <property name="toolTip">
                <string>pixel coordinates for first point</string>
               </property>
@@ -114,6 +126,12 @@
             </item>
             <item>
              <widget class="QLineEdit" name="pixel_pt2">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
               <property name="toolTip">
                <string>pixel coordinates for second point</string>
               </property>
@@ -134,7 +152,7 @@
             <number>0</number>
            </property>
            <property name="text">
-            <string>J2000</string>
+            <string>world</string>
            </property>
           </widget>
          </item>
@@ -219,7 +237,7 @@
             <string>position angle of the P/V line</string>
            </property>
            <property name="readOnly">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
           </widget>
          </item>
