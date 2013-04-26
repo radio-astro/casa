@@ -56,6 +56,7 @@ public:
     void setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void addScatterData();
     void addSumData();
+
     void clearPlot();
     void clearLegend();
 
@@ -110,6 +111,7 @@ protected:
 
 private:
 	void resetColors();
+	void addSumData( bool logScale );
 	void resetPlot( FeatherPlot::PlotType plotType );
 	void initializeZooming();
 	void initializeDiameterMarker();
@@ -122,7 +124,7 @@ private:
         		const QVector<double>& originalXValues, const QVector<double>& originalYValues) const;
     void initializeSumData( const QVector<double>& singleDishX, const QVector<double>& singleDishY,
     		const QVector<double>& interferometerX, const QVector<double>& interferometerY,
-    		QVector<double>& sumX, QVector<double>& sumY );
+    		QVector<double>& sumX, QVector<double>& sumY, bool logScale );
     pair<double,double> getMaxMin( QVector<double> values ) const;
     void zoomRectangleWeight( double minX, double maxX );
     void addZoomNeutralCurves();

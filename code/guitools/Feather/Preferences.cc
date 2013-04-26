@@ -51,7 +51,7 @@ Preferences::Preferences(QWidget *parent)
       displayXPlots( true ),
       displayLegend(true),
       logAmplitude(true),
-      logUV(false){
+      logUV(false), X_AXIS_UV( "U/V"), X_AXIS_RADIAL( "Azimuthaly Averaged Radial Values"){
 
 	ui.setupUi(this);
 	setWindowTitle( "Feather Plot Display");
@@ -67,9 +67,14 @@ Preferences::Preferences(QWidget *parent)
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(preferencesAccepted()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(preferencesRejected()));
 
-	ui.outputScatterCheckBox->setVisible( false );
-	ui.markerLabel->setVisible( false );
-	ui.dotSizeSpinBox->setVisible( false );
+	//xAxis Units
+	ui.xAxisComboBox->addItem( X_AXIS_UV );
+	ui.xAxisComboBox->addItem( X_AXIS_RADIAL );
+
+
+	//ui.outputScatterCheckBox->setVisible( false );
+	//ui.markerLabel->setVisible( false );
+	//ui.dotSizeSpinBox->setVisible( false );
 }
 
 void Preferences::initializeCustomSettings(){

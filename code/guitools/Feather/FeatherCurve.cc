@@ -59,6 +59,14 @@ void FeatherCurve::setTitle( const QString& title ){
 	plotCurve->setTitle( title );
 }
 
+bool FeatherCurve::isSumCurve() const {
+	bool sumCurve = false;
+	if ( getTitle().indexOf( "Sum") >= 0 ){
+		sumCurve = true;
+	}
+	return sumCurve;
+}
+
 
 void FeatherCurve::setCurveSize( bool scatterPlot, bool diagonalLine,
 		int dotSize, int lineThickness ){
@@ -107,7 +115,7 @@ std::pair<double,double> FeatherCurve::getBoundsY() const {
 	double minValue = minY;
 	double maxValue = maxY;
 	if ( scaleLogAmplitude ){
-		if ( !isWeightCurve() ){
+		if ( !isWeightCurve() && !isSumCurve()){
 			minValue = logarithm( minValue );
 			maxValue = logarithm( maxValue );
 		}
@@ -169,7 +177,7 @@ void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 
 		scaleLogAmplitude = ampLog;
 		if ( scaleLogAmplitude ){
-			if ( !isWeightCurve()){
+			if ( !isWeightCurve() && !isSumCurve()){
 				doLogs( scaledYValues, yValues.size() );
 			}
 			if ( scatterPlot ){
@@ -186,6 +194,9 @@ void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 
 double FeatherCurve::logarithm( double value ) const {
 	double logValue = value;
+	if ( value < 0 ){
+		qDebug() << "curve="<<getTitle()<<" value="<<value;
+	}
 	Assert( value >= 0 );
 	if ( value != 0 ){
 		logValue = qLn( value ) / qLn( 10 );

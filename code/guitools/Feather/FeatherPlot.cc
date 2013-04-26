@@ -410,6 +410,8 @@ void FeatherPlot::adjustPlotBounds( std::pair<double,double> curveBounds, QwtPlo
 }
 
 
+
+
 void FeatherPlot::setCurveData( FeatherCurve* curve, QwtPlot::Axis yAxis ){
 	curve->adjustData( scaleLogUV, scaleLogAmplitude );
 	std::pair<double,double> xBounds = curve->getBoundsX();

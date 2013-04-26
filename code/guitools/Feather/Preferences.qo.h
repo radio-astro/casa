@@ -73,6 +73,7 @@ private:
 	const static QString DOT_SIZE;
 	const static QString LOG_AMPLITUDE;
 	const static QString LOG_UV;
+	const static QString DISPLAY_X_AXIS_UV;
 
     Ui::PreferencesClass ui;
     int lineThickness;
@@ -85,6 +86,9 @@ private:
     bool displayLegend;
     bool logAmplitude;
     bool logUV;
+    bool xAxisUV;
+    const QString X_AXIS_UV;
+    const QString X_AXIS_RADIAL;
 };
 
 }

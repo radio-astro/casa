@@ -54,6 +54,7 @@ public:
 	virtual ~FeatherPlot();
 	void clearCurves();
 	void clearLegend();
+
 	void addCurve( QVector<double> xValues, QVector<double> yValues,
 			QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis );
 	void addDiagonal( QVector<double> xValues, QColor lineColor, QwtPlot::Axis yAxis );
