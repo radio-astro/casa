@@ -152,7 +152,7 @@
             <number>0</number>
            </property>
            <property name="text">
-            <string>world</string>
+            <string>J2000</string>
            </property>
           </widget>
          </item>
