@@ -5,6 +5,7 @@ CasaTaskDict = {
 		   'hif_cleanlist'    : 'CleanList', 
                    'hif_exportdata'   : 'ExportData',
                    'hif_flagdata'     : 'FlagDeterALMA',
+                   'hif_fluxcalflag'  : 'FluxcalFlag',
                    'hif_gaincal'      : 'Gaincal',
                    'hif_newgaincal'   : 'NewGaincal',
                    'hif_gfluxscale'   : 'GcorFluxscale',
