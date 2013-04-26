@@ -52,7 +52,7 @@
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/Unit.h>
-#include <casa/BasicSL/String.h>
+#include <casa/Quanta/QLogical.h>
 #include <casa/iostream.h>
 
 #include <memory>
@@ -249,6 +249,11 @@ template <class T> void Image2DConvolver<T>::convolve(
 					kernelType, kernelParms, pixelAxes, subCsys, inputBeam,
 					brightnessUnit, autoScale, scale, i == 0
 				);
+				if (targetres && near(beamOut.getMajor(), beamOut.getMinor(), 1e-7)) {
+					// circular beam should have same PA as given by user if
+					// targetres
+					beamOut.setPA(parameters[2]);
+				}
 				ImageConvolver<T> aic;
 				aic.convolve(
 					os, subImageOut, subImage, kernel,
@@ -310,6 +315,11 @@ template <class T> void Image2DConvolver<T>::convolve(
 			kernelType, kernelParms, pixelAxes, cSys, inputBeam,
 			brightnessUnit, autoScale, scale, True
 		);
+		if (targetres && near(beamOut.getMajor(), beamOut.getMinor(), 1e-7)) {
+			// circular beam should have same PA as given by user if
+			// targetres
+			beamOut.setPA(parameters[2]);
+		}
 		// Convolve.  We have already scaled the convolution kernel (with some
 		// trickery cleverer than what ImageConvolver can do) so no more scaling
 		ImageConvolver<T> aic;
