@@ -99,7 +99,7 @@ class FlagCmd(object):
         if self.spw is not None:
             match = match and (self.spw == spectrum.spw)
         if self.antenna is not None:
-            match = match and (self.antenna == spectrum.ant)
+            match = match and (self.antenna == spectrum.ant[0])
         if self.flag_time is not None:
             match = match and (self.flag_time > spectrum.time-0.5 and
               self.flag_time < spectrum.time + 0.5)
@@ -113,7 +113,7 @@ class FlagCmd(object):
         if self.spw is not None:
             match = match and (self.spw == image.spw)
         if self.antenna is not None:
-            match = match and ('ANTENNA' in self.axisnames)
+            match = match and ('ANTENNA' in str(self.axisnames))
         if self.flag_time is not None:
             match = match and ('TIME' in self.axisnames)
         if self.cell_index is not None:
