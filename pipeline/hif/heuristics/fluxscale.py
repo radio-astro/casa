@@ -29,7 +29,8 @@ def antenna(ms, refsource, refant, peak_frac=0.7):
     try:
         # frequencies are set to dummy values, we are only
         # interested in the object size
-        rtn = ss_setjy.solar_system_fd(source_name=refsource,
+        rtn = ss_setjy.solar_system_setjy().solar_system_fd(
+          source_name=refsource,
           MJDs=[obs_time['value']], frequencies=[[1.e9,1.1e9]],
           observatory='ALMA', casalog=casatools.casalog)
         calibrator_size = max(rtn[3][0][:2])
@@ -103,10 +104,15 @@ def antenna(ms, refsource, refant, peak_frac=0.7):
               pow(y[name] - y[refant], 2)) < limit_baseline:
                 antenna.update([name])
 
-        # the antennas to be used in the gaincals, suffixed with
-        # & to tell CASA tasks to onlt use baseline between antennas
-        # in the list
-        antenna = ','.join(ant for ant in antenna)
-        antenna += '&'
+        if len(antenna) < 3:
+            LOG.warning('fewer than 3 antennas within max baseline, revert to using all antennas')
+            antenna = ''
+        else:
+            # the antennas to be used in the gaincals, suffixed with
+            # & to tell CASA tasks to only use baseline between antennas
+            # in the list
+            antenna = ','.join(ant for ant in antenna)
+            antenna += '&'
+            LOG.info('antenna selection: %s' % antenna)
 
     return antenna
