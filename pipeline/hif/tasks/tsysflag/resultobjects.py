@@ -40,7 +40,7 @@ class TsysflagResults(resultobjects.TsyscalResults):
     def first(self, description):
         return copy.deepcopy(self.view[description][0])
 
-    def flagops(self):
+    def flagcmds(self):
         return copy.deepcopy(self.flagging)
 
     def flagged(self):
