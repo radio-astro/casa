@@ -29,8 +29,11 @@ import matplotlib.pyplot as plt
 import string
 
 # alma modules
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
+
+LOG = infrastructure.get_logger(__name__)
 
 _valid_chars = "_.%s%s" % (string.ascii_letters, string.digits)
 def _char_replacer(s):
@@ -56,6 +59,7 @@ class SkyDisplay(object):
     """Class to plot sky images."""
 
     def plot(self, context, result, reportdir):
+
         if not result:
             return []
 
