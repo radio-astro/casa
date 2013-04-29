@@ -8,6 +8,7 @@ from pipeline.hif.heuristics.tsysspwmap import tsysspwmap
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
+from pipeline.hif.tasks.flagging.flagdatasetter import FlagdataSetter
 
 from .resultobjects import TsysflagResults
 from ..common import commonresultobjects
@@ -20,7 +21,8 @@ LOG = infrastructure.get_logger(__name__)
 class TsysflagInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
-      intentgroups=None, metric=None, flag_nmedian=None, fnm_limit=None,
+      intentgroups=None, metric=None, flagcmdfile=None,
+      flag_nmedian=None, fnm_limit=None,
       flag_hi=None, fhi_limit=None, fhi_minsample=None,
       flag_tmf1=None, tmf1_axis=None, tmf1_limit=None,
       flag_maxabs=None, fmax_limit=None,
@@ -32,8 +34,21 @@ class TsysflagInputs(basetask.StandardInputs):
     @property
     def caltable(self):
         if self._caltable is None:
-            return self.context.callibrary.active.get_caltable(
+            caltables = self.context.callibrary.active.get_caltable(
               caltypes='tsys')
+
+            # return just the tsys table that matches the vis being handled
+            result = None
+            for name in caltables:
+                # Get the tsys table name
+                tsystable = caltableaccess.CalibrationTableDataFiller.getcal(
+                  name)
+                if tsystable.vis in self.vis:
+                    result = name
+                    break
+
+            return result
+
         return self._caltable
 
     @caltable.setter
@@ -73,6 +88,16 @@ class TsysflagInputs(basetask.StandardInputs):
     @metric.setter
     def metric(self, value):
         self._metric = value
+
+    @property
+    def flagcmdfile(self):
+        if self._flagcmdfile is None:
+            return '%s_flagcmds.txt' % self.caltable
+        return self._flagcmdfilefile
+
+    @flagcmdfile.setter
+    def flagcmdfile(self, value):
+        self._flagcmdfile = value
 
     # flag n * median
     @property
@@ -204,9 +229,6 @@ class TsysflagInputs(basetask.StandardInputs):
 class Tsysflag(basetask.StandardTaskTemplate):
     Inputs = TsysflagInputs
 
-    def is_multi_vis_task(self):
-        return True
-
     def prepare(self):
         inputs = self.inputs
 
@@ -220,10 +242,11 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
         # Construct the task that will set any flags raised in the
         # underlying data.
-        flagsetterinputs = caltableaccess.CalibrationTableFlagSetterInputs(
-          context=inputs.context, vis=inputs.vis)
-        flagsettertask = caltableaccess.CalibrationTableFlagSetter(
-          flagsetterinputs)
+        # Construct the task that will set any flags raised in the
+        # underlying data.
+        flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
+          vis=inputs.caltable, inpfile=inputs.flagcmdfile)
+        flagsettertask = FlagdataSetter(flagsetterinputs)
 
 	# Translate the input flagging parameters to a more compact
         # list of rules.
@@ -277,15 +300,6 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         super(TsysflagWorker, self).__init__(inputs)
         self.result = TsysflagResults()
 
-    def is_multi_vis_task(self):
-        # This task does not work on the vis files but instead on tsys
-        # cal tables that have already been created from them. In the
-        # automatic 'automatic multi ms handling' framework this would
-        # mean that the same flagging would be done repeatedly - once
-        # for each measurement set in vis. So, return True here to prevent
-        # that happening.
-        return True
-
     def prepare(self):
         inputs = self.inputs
 
@@ -293,64 +307,64 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         final = []
 
         # Loop over caltables.
-        for name in inputs.caltable:
+        name = inputs.caltable
 
-            # Get the tsys table name
-            tsystable = caltableaccess.CalibrationTableDataFiller.getcal(name)
-            self.result.vis = tsystable.vis
+        # Get the tsys table name
+        tsystable = caltableaccess.CalibrationTableDataFiller.getcal(name)
+        self.result.vis = tsystable.vis
 
-            # Get the MS object.
-            ms = self.inputs.context.observing_run.get_ms(name=tsystable.vis)
+        # Get the MS object.
+        ms = self.inputs.context.observing_run.get_ms(name=tsystable.vis)
 
-            # Construct a callibrary entry for the results that are to be
-            # merged back into the context.
-            calto = callibrary.CalTo(vis=tsystable.vis)
-            spwmap = tsysspwmap(vis=tsystable.vis, tsystable=name)
-            calfrom = callibrary.CalFrom(name, caltype='tsys', spwmap=spwmap)
-            calapp = callibrary.CalApplication(calto, calfrom)
-            final.append(calapp)
+        # Construct a callibrary entry for the results that are to be
+        # merged back into the context.
+        calto = callibrary.CalTo(vis=tsystable.vis)
+        spwmap = tsysspwmap(vis=tsystable.vis, tsystable=name)
+        calfrom = callibrary.CalFrom(name, caltype='tsys', spwmap=spwmap)
+        calapp = callibrary.CalApplication(calto, calfrom)
+        final.append(calapp)
 
-            # Get the spws from the tsystable.
-            tsysspws = set()
-            for row in tsystable.rows:
-                tsysspws.update([row.get('SPECTRAL_WINDOW_ID')])
+        # Get the spws from the tsystable.
+        tsysspws = set()
+        for row in tsystable.rows:
+            tsysspws.update([row.get('SPECTRAL_WINDOW_ID')])
 
-            # Get ids of fields for intent groups of interest
-            intentgroupids = {}
+        # Get ids of fields for intent groups of interest
+        intentgroupids = {}
+        for intentgroup in self.inputs.intentgroups:
+            # translate '*PHASE*+*TARGET*' or '*PHASE*,*TARGET*' to
+            # regexp form '.*PHASE.*|.*TARGET.*'
+            re_intent = intentgroup.replace(' ', '')
+            re_intent = re_intent.replace('*', '.*')
+            re_intent = re_intent.replace('+', '|')
+            re_intent = re_intent.replace(',', '|')
+
+            # translate intents to fieldids - have to be careful that
+            # PHASE ids have PHASE intent and no other
+            groupids = []
+            if re.search(pattern=re_intent, string='AMPLITUDE'):
+                groupids += [field.id for field in ms.fields if 'AMPLITUDE'
+                  in field.intents]
+            if re.search(pattern=re_intent, string='BANDPASS'):
+                groupids += [field.id for field in ms.fields if 'BANDPASS'
+                  in field.intents]
+            if re.search(pattern=re_intent, string='PHASE'):
+                groupids += [field.id for field in ms.fields if 
+                  'PHASE' in field.intents and
+                  'BANDPASS' not in field.intents and
+                  'AMPLITUDE' not in field.intents]
+            if re.search(pattern=re_intent, string='TARGET'):
+                groupids += [field.id for field in ms.fields if 'TARGET'
+                  in field.intents]
+
+            intentgroupids[intentgroup] = groupids
+
+        LOG.info ('Computing flagging metrics for caltable %s ' % (name))
+        for tsysspwid in tsysspws:
             for intentgroup in self.inputs.intentgroups:
-                # translate '*PHASE*+*TARGET*' or '*PHASE*,*TARGET*' to
-                # regexp form '.*PHASE.*|.*TARGET.*'
-                re_intent = intentgroup.replace(' ', '')
-                re_intent = re_intent.replace('*', '.*')
-                re_intent = re_intent.replace('+', '|')
-                re_intent = re_intent.replace(',', '|')
-
-                # translate intents to fieldids - have to be careful that
-                # PHASE ids have PHASE intent and no other
-                groupids = []
-                if re.search(pattern=re_intent, string='AMPLITUDE'):
-                    groupids += [field.id for field in ms.fields if 'AMPLITUDE'
-                      in field.intents]
-                if re.search(pattern=re_intent, string='BANDPASS'):
-                    groupids += [field.id for field in ms.fields if 'BANDPASS'
-                      in field.intents]
-                if re.search(pattern=re_intent, string='PHASE'):
-                    groupids += [field.id for field in ms.fields if 
-                      'PHASE' in field.intents and
-                      'BANDPASS' not in field.intents and
-                      'AMPLITUDE' not in field.intents]
-                if re.search(pattern=re_intent, string='TARGET'):
-                    groupids += [field.id for field in ms.fields if 'TARGET'
-                      in field.intents]
-
-                intentgroupids[intentgroup] = groupids
-
-            LOG.info ('Computing flagging metrics for caltable %s ' % (name))
-            for tsysspwid in tsysspws:
-                for intentgroup in self.inputs.intentgroups:
-                    # calculate view for each group of fieldids
-                    self.calculate_view(tsystable, tsysspwid, intentgroup,
-                      intentgroupids[intentgroup], inputs.metric)
+                # calculate view for each group of fieldids
+                self.calculate_view(tsystable, tsysspwid, intentgroup,
+                  intentgroupids[intentgroup], inputs.metric)
 
         self.result.final = final[:]
 
@@ -408,7 +422,14 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
 
         """
 
-        antennas = set()
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+        antenna_ids = [antenna.id for antenna in ms.antennas] 
+        antenna_ids.sort()
+        antenna_name = {}
+        for antenna_id in antenna_ids:
+            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas 
+              if antenna.id==antenna_id][0]
+
         times = set()
 
         # dict of results for each pol, defaultdict ia preferred to simple {}
@@ -427,18 +448,19 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
                 # unknown so store as '0' and '1'.
                 pols = range(np.shape(row.get('FPARAM'))[0])
                 for pol in pols:
+          
                     tsysspectrum = commonresultobjects.SpectrumResult(
                       data=row.get('FPARAM')[pol,:,0],
                       flag=row.get('FLAG')[pol,:,0],
                       datatype='Normalised Tsys', filename=tsystable.name,
                       field_id=row.get('FIELD_ID'),
                       spw=row.get('SPECTRAL_WINDOW_ID'),
-                      ant=row.get('ANTENNA1'), pol=pol,
+                      ant=(row.get('ANTENNA1'),
+                      antenna_name[row.get('ANTENNA1')]), pol=pol,
                       time=row.get('TIME'), normalise=True)
 
                     tsysspectra[pol].addview(tsysspectrum.description,
                       tsysspectrum)
-                    antennas.update([row.get('ANTENNA1')])
                     times.update([row.get('TIME')])
 
         for pol in pols:
@@ -476,10 +498,9 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
             tsysmedians.addview(tsysmedian.description, tsysmedian)
 
             # build the view, get values for axes, initialise pixels
-            antennas = np.sort(list(antennas))
             times = np.sort(list(times))
-            data = np.zeros([antennas[-1]+1, len(times)])
-            flag = np.ones([antennas[-1]+1, len(times)], np.bool)
+            data = np.zeros([antenna_ids[-1]+1, len(times)])
+            flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
 
             # get metric for each antenna, time/scan
             for description in tsysspectra[pol].descriptions():
@@ -498,11 +519,11 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
 
                 ant = tsysspectrum.ant
                 caltime = tsysspectrum.time
-                data[ant, caltime==times] = metric
-                flag[ant, caltime==times] = metricflag
+                data[ant[0], caltime==times] = metric
+                flag[ant[0], caltime==times] = metricflag
 
             axes = [commonresultobjects.ResultAxis(name='Antenna1',
-              units='id', data=np.arange(antennas[-1]+1)),
+              units='id', data=np.arange(antenna_ids[-1]+1)),
               commonresultobjects.ResultAxis(name='Time', units='',
               data=times)]
 
@@ -534,7 +555,14 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         antenna/time.
         """
 
-        antennas = set()
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+        antenna_ids = [antenna.id for antenna in ms.antennas] 
+        antenna_ids.sort()
+        antenna_name = {}
+        for antenna_id in antenna_ids:
+            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas 
+              if antenna.id==antenna_id][0]
+
         times = set()
 
         # dict of results for each pol, defaultdict ia preferred to simple {}
@@ -559,16 +587,16 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
                       datatype='Tsys', filename=tsystable.name,
                       field_id=row.get('FIELD_ID'),
                       spw=row.get('SPECTRAL_WINDOW_ID'),
-                      ant=row.get('ANTENNA1'), units='K', pol=pol,
-                      time=row.get('TIME'), normalise=False)
+                      ant=(row.get('ANTENNA1'),
+                      antenna_name[row.get('ANTENNA1')]), units='K',
+                      pol=pol, time=row.get('TIME'), normalise=False)
 
                     tsysspectra[pol].addview(tsysspectrum.description,
                       tsysspectrum)
-                    antennas.update([row.get('ANTENNA1')])
                     times.update([row.get('TIME')])
 
         for pol in pols:
-           # get median Tsys for each pol in this spw
+            # get median Tsys for each pol in this spw
             tsysmedians = TsysflagResults()
             spectrumstack = None
             for description in tsysspectra[pol].descriptions():
@@ -602,10 +630,9 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
             tsysmedians.addview(tsysmedian.description, tsysmedian)
 
             # build the view, get values for axes, initialise pixels
-            antennas = np.sort(list(antennas))
             times = np.sort(list(times))
-            data = np.zeros([antennas[-1]+1, len(times)])
-            flag = np.ones([antennas[-1]+1, len(times)], np.bool)
+            data = np.zeros([antenna_ids[-1]+1, len(times)])
+            flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
 
             # get metric for each antenna, time/scan
             for description in tsysspectra[pol].descriptions():
@@ -615,11 +642,11 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
 
                 ant = tsysspectrum.ant
                 caltime = tsysspectrum.time
-                data[ant, caltime==times] = metric
-                flag[ant, caltime==times] = metricflag
+                data[ant[0], caltime==times] = metric
+                flag[ant[0], caltime==times] = metricflag
 
             axes = [commonresultobjects.ResultAxis(name='Antenna1',
-              units='id', data=np.arange(antennas[-1]+1)),
+              units='id', data=np.arange(antenna_ids[-1]+1)),
               commonresultobjects.ResultAxis(name='Time', units='',
               data=times)]
 
@@ -650,7 +677,14 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         antenna/time.
         """
 
-        antennas = set()
+        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+        antenna_ids = [antenna.id for antenna in ms.antennas] 
+        antenna_ids.sort()
+        antenna_name = {}
+        for antenna_id in antenna_ids:
+            antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas 
+              if antenna.id==antenna_id][0]
+
         times = set()
 
         # dict of results for each pol, defaultdict ia preferred to simple {}
@@ -675,12 +709,12 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
                       datatype='Tsys', filename=tsystable.name,
                       field_id=row.get('FIELD_ID'),
                       spw=row.get('SPECTRAL_WINDOW_ID'),
-                      ant=row.get('ANTENNA1'), units='K', pol=pol,
-                      time=row.get('TIME'), normalise=True)
+                      ant=(row.get('ANTENNA1'),
+                      antenna_name[row.get('ANTENNA1')]), units='K',
+                      pol=pol, time=row.get('TIME'), normalise=True)
 
                     tsysspectra[pol].addview(tsysspectrum.description,
                       tsysspectrum)
-                    antennas.update([row.get('ANTENNA1')])
                     times.update([row.get('TIME')])
 
         for pol in pols:
@@ -718,10 +752,9 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
             tsysmedians.addview(tsysmedian.description, tsysmedian)
 
             # build the view, get values for axes, initialise pixels
-            antennas = np.sort(list(antennas))
             times = np.sort(list(times))
-            data = np.zeros([antennas[-1]+1, len(times)])
-            flag = np.ones([antennas[-1]+1, len(times)], np.bool)
+            data = np.zeros([antenna_ids[-1]+1, len(times)])
+            flag = np.ones([antenna_ids[-1]+1, len(times)], np.bool)
 
             # get MAD of channel by channel derivative of Tsys
             # for each antenna, time/scan
@@ -740,11 +773,11 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
 
                     ant = tsysspectrum.ant
                     caltime = tsysspectrum.time
-                    data[ant, caltime==times] = metric
-                    flag[ant, caltime==times] = 0
+                    data[ant[0], caltime==times] = metric
+                    flag[ant[0], caltime==times] = 0
 
             axes = [commonresultobjects.ResultAxis(name='Antenna1',
-              units='id', data=np.arange(antennas[-1]+1)),
+              units='id', data=np.arange(antenna_ids[-1]+1)),
               commonresultobjects.ResultAxis(name='Time', units='',
               data=times)]
 
