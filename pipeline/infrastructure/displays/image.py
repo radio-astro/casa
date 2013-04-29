@@ -9,8 +9,11 @@ import numpy as np
 from numpy import ma
 import pylab as plt
 
+import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.renderer.logger as logger
+
+LOG = infrastructure.get_logger(__name__)
 
 _valid_chars = "_.%s%s" % (string.ascii_letters, string.digits)
 def _char_replacer(s):
@@ -38,6 +41,7 @@ class ImageDisplay(object):
 
     def plot(self, context, results, reportdir, prefix='',
       change='Flagging'):
+
         if not results:
             return []
 
@@ -46,12 +50,12 @@ class ImageDisplay(object):
         plots = []        
 
         vis = results.vis
-        flagops = results.flagops()
+        flagcmds = results.flagcmds()
         descriptionlist = results.descriptions()
         descriptionlist.sort()
 
         for description in descriptionlist:
-            if len(flagops) > 0:
+            if len(flagcmds) > 0:
                 nsubplots = 3
                 ignore = self._plot_panel(nsubplots, 1,
                   description, results.first(description),
@@ -59,7 +63,7 @@ class ImageDisplay(object):
 
                 flagsSet = self._plot_panel(nsubplots, 2,
                   description, results.last(description),
-                  'After', stagenumber, flagops)
+                  'After', stagenumber, flagcmds)
             else:
                 nsubplots = 2
                 ignore = self._plot_panel(nsubplots, 1,
@@ -88,28 +92,28 @@ class ImageDisplay(object):
             yoff = self.plottext(0.25, yoff, 'cannot calculate', 45, mult=0.8)
 
             # key for data flagged during this stage
-            if len(flagops) > 0:
+            if len(flagcmds) > 0:
                 rulesplotted = set()
                 
                 yoff = self.plottext(0.1, yoff, 'Flagged here:', 35, mult=0.9)
                 yoff = self.plottext(0.1, yoff, 'rules:', 45, mult=0.8)
-                for flagop in flagops:
-                    if flagop.rulename == 'ignore':
+                for flagcmd in flagcmds:
+                    if flagcmd.rulename == 'ignore':
                         continue
  
-                    if (flagop.rulename, flagop.ruleaxis,
-                      flag_color[flagop.rulename]) not in rulesplotted:
-                        color = flag_color[flagop.rulename]
+                    if (flagcmd.rulename, flagcmd.ruleaxis,
+                      flag_color[flagcmd.rulename]) not in rulesplotted:
+                        color = flag_color[flagcmd.rulename]
                         ax.fill([0.1, 0.2, 0.2, 0.1], [yoff, yoff,
                           yoff+1.0/80.0, yoff+1.0/80.0],
                           facecolor=color, edgecolor=color)
-                        if flagop.ruleaxis is not None:
+                        if flagcmd.ruleaxis is not None:
                             yoff = self.plottext(0.25, yoff, '%s axis - %s' %
-                              (flagop.ruleaxis, flagop.rulename), 45, mult=0.8)
+                              (flagcmd.ruleaxis, flagcmd.rulename), 45, mult=0.8)
                         else:
-                            yoff = self.plottext(0.25, yoff, flagop.rulename,
+                            yoff = self.plottext(0.25, yoff, flagcmd.rulename,
                               45, mult=0.8)
-                        rulesplotted.update([(flagop.rulename, flagop.ruleaxis,
+                        rulesplotted.update([(flagcmd.rulename, flagcmd.ruleaxis,
                           color)])
 
             yoff = 0.6
@@ -157,7 +161,7 @@ class ImageDisplay(object):
         return plots
 
     def _plot_panel(self, nplots, plotnumber, description,
-      image, subtitle, stagenumber, flagops=[]):
+      image, subtitle, stagenumber, flagcmds=[]):
         """Plot the 2d data into one panel.
 
         Keyword arguments:
@@ -167,7 +171,7 @@ class ImageDisplay(object):
         image              -- The 2d data.
         subtitle           -- The title to be given to this subplot.
         stagenumber        -- The number of the recipe stage using the object.
-        flagops            -- Flag operationss applied to this view.
+        flagcmds           -- Flag operationss applied to this view.
         """  
         cc = ColorConverter()
         sentinels = {}
@@ -198,43 +202,36 @@ class ImageDisplay(object):
         pixelsflagged = False
 
         flagrules = set()
-        for flagop in flagops:
-            flagrules.update([flagop.rulename])
+        for flagcmd in flagcmds:
+            flagrules.update([flagcmd.rulename])
 
         flagrules = list(flagrules)
         flagrules.sort()
         flagrules = np.array(flagrules)
         flagind = np.indices(np.shape(flagrules))[0]
 
-        for flagop in flagops:
-            # ignore if the flagop.rulename says so
-            if flagop.rulename == 'ignore':
+        for flagcmd in flagcmds:
+            # ignore if the flagcm.rulename says so
+            if flagcmd.rulename == 'ignore':
                 continue
 
             # ignore if flag does not have colour associated with it
-            if flag_color.get(flagop.rulename) is None:
+            if flag_color.get(flagcmd.rulename) is None:
                 continue
 
-            # basic checks of flag applicability
-            if flagop.spw != image.spw:
-                continue
-            if flagop.cell_index != image.cell_index:
-                continue           
-            if flagop.axisnames == [xtitle, ytitle]:
-
+            if flagcmd.match_image(image):
                 # flag does apply, set pixel colour accordingly
                 sentinelvalue = 10.0 + float(
-                  flagind[flagrules==flagop.rulename][0])
+                  flagind[flagrules==flagcmd.rulename][0])
                 sentinels[sentinelvalue] = cc.to_rgb(
-                  flag_color[flagop.rulename])
+                  flag_color[flagcmd.rulename])
 
-                for flagcoord in flagop.flagcoords:
-                    flagx = flagcoord[0]
-                    flagy = flagcoord[1]
+                flagx = flagcmd.flagcoords[0]
+                flagy = flagcmd.flagcoords[1]
 
-                    fset = self._setsentinel(i, j, xdata, ydata, data, flagx,
-                      flagy, sentinelvalue) 
-                    pixelsflagged = pixelsflagged or fset
+                fset = self._setsentinel(i, j, xdata, ydata, data, flagx,
+                  flagy, sentinelvalue) 
+                pixelsflagged = pixelsflagged or fset
 
         # plot points with no data indigo. 
         nodata = image.nodata
