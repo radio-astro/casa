@@ -164,7 +164,7 @@ class Qa2Result(object):
     def first(self, description):
         return copy.deepcopy(self.view[description][0])
 
-    def flagops(self):
+    def flagcmds(self):
         return self.flagging
 
     def last(self, description):
