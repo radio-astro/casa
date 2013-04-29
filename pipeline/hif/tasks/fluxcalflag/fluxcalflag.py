@@ -7,6 +7,7 @@ import os
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure as infrastructure
+from pipeline.infrastructure import casa_tasks
 from .solsyslinesdict import SolarSystemLineList
 
 LOG = infrastructure.get_logger(__name__)
@@ -105,7 +106,7 @@ class FluxcalFlagInputs(basetask.StandardInputs):
     @applyflags.setter
     def applyflags(self, value):
         if value is None:
-            value = False
+            value = True
 	self._applyflags = value
 
 
@@ -228,25 +229,32 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 			fluxcal_lines.append(fluxcal_line)
 
 	# Generate the channel flagging statistics per
-	# field and spw assuming no line overlaps
+	# field and spw.
+	# Note: Assumes that if multiple lines are detected
+	# that there are no line overlaps
 	flagstats = self._flagstats (fluxcal_lines)
 
+	# Compute the reference spw map
 	flagall, refspwmap = self._refspwmap(all_spws, science_spws, flagstats,
 	    inputs.threshold)
-	LOG.info('Computed refspwmap for flux scaling %s' % refspwmap)
+	LOG.info('Spectral window map for flux scaling %s' % refspwmap)
 
 	# Generate a list of flagging commands
 	flagcmds = self._flagcmds (fluxcal_lines, flagstats, amp_obsmodes,
-	    inputs.threshold)
+	    inputs.threshold, flagall)
 	LOG.info('Flagging commands generated')
 	if not flagcmds:
 	    LOG.info('    None')
 	else:
 	    for cmd in flagcmds:
 	        LOG.info('    %s' % cmd)
-
-	# Actually apply flags
-	#     Add call here.
+	    if inputs.applyflags:
+	        LOG.info('Applying flags')
+	        if not self._executor._dry_run:
+		    task = casa_tasks.flagdata(vis=inputs.vis, mode='list',
+		        action='apply', inpfile=flagcmds, savepars=False,
+			flagbackup=False)
+		    self._executor.execute(task)
 
         result = FluxcalFlagResults(inputs.vis,
 	    fluxcal_linelist=fluxcal_lines, fluxcal_flagcmds=flagcmds,
@@ -347,7 +355,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 	    if not flagged:
 	        unflaggedspws[spw.id] = spw
 
-	# None need be flagged. 
+	# None need be completely flagged. 
 	if not flaggedspws:
 	    return True, [-1]
 
@@ -357,10 +365,12 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 	for i in range(max_spwid + 1):
 	    refspwmap.append(i)
 
-	# Science windows are completely flagged
+	# All Science windows would be completely flagged
 	if not unflaggedspws:
 	    return False, [-1]
 
+	# For spectral windows which are completely
+	# flagged find the closest unflagged window.
 	for fkey, fvalue in flaggedspws.iteritems():
 	    maxdiff = sys.float_info.max
 	    ctrfreq = fvalue.centre_frequency.value
@@ -378,7 +388,8 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 
 
     # Generate flagging commands one per field and spw
-    def _flagcmds (self, fluxcal_lines, flagstats, obsmodes, threshold):
+    def _flagcmds (self, fluxcal_lines, flagstats, obsmodes, threshold,
+        flagall):
 
 	# Generate the flagging commands
         flagcmds = []; flagcmd = ''
@@ -388,7 +399,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 		if flagcmd != '':
 		    flagcmds.append(flagcmd)
 		    flagcmd = ''
-		if flagstats[line.fieldname][line.spwid] > threshold:
+		if flagall and flagstats[line.fieldname][line.spwid] > threshold:
 	            flagcmd = 'mode=manual field=%s intent=%s spw=%d' % \
 	                (line.fieldname, ','.join(obsmodes), line.spwid)
 		else:
