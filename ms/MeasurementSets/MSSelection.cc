@@ -1067,8 +1067,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    if ((chanIDList(targetRow,ncols-1) == 0))
 	      chanIDList(targetRow,ncols-1)=defaultStep;
-	    if (chanIDList(targetRow,ncols-2) == chanIDList(targetRow,ncols-3)) // Stop == Step
-	      chanIDList(targetRow,ncols-1)=0;
+	    // if (chanIDList(targetRow,ncols-2) == chanIDList(targetRow,ncols-3)) // Stop == Step
+	    //   chanIDList(targetRow,ncols-1)=0;
 	  }
       }
     
