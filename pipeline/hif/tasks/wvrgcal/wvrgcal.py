@@ -354,11 +354,10 @@ class Wvrgcal(basetask.StandardTaskTemplate):
 
             wvrg_qa2.calculate_qa2_numbers(result.qa2)
 
-            # put a dummy FlagOp in the result structure to fool
+            # put a dummy FlagCmd in the result structure to fool
             # displays/image.py into plotting the before and after view
-            result.qa2.flagging = [arrayflaggerbase.FlagOp(filename=None,
-              rulename='ignore', spw=None, axisnames=None, flagcoords=None,
-              cell_index=None)]
+            result.qa2.flagging = [arrayflaggerbase.FlagCmd(filename=None,
+              rulename='ignore', spw=None, axisnames=None, flagcoords=None)]
 
             # if the qa2 score indicates that applying the wvrg file will
             # make things worse then remove it from the results so that
