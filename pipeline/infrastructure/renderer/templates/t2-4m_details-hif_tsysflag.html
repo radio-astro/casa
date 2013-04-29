@@ -6,10 +6,15 @@ import pydoc
 import numpy as np
 import sys
 
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.filenamer as filenamer
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.rendererutils as hrutils
+
+LOG = infrastructure.get_logger(__name__)
 %>
 <%inherit file="t2-4m_details-base.html"/>
 <%block name="header" />
@@ -28,13 +33,25 @@ try:
         os.mkdir(plots_dir)
 
     plots = []
-    flagops = []
+    htmlreports = {}
     for r in result:
-        flagops += r.flagops()
+        if hasattr(r, 'flagcmdfile'):
+            reason = r.reason
+
+            flagcmdhtml = os.path.join(plots_dir, '%s.html' % os.path.basename(
+              r.flagcmdfile))
+            hrutils.renderflagcmds(r.flagcmdfile, flagcmdhtml, reason)
+
+            # now write 'printTsysFlags' output to a report file
+            reporthtml = os.path.join(plots_dir, '%s.report.html' %
+              os.path.basename(r.flagcmdfile))
+            hrutils.printTsysFlags(r.table, reporthtml)
+            htmlreports[os.path.basename(r.flagcmdfile)] = (flagcmdhtml,reporthtml)
 
         if r.view:
             # display the view first
             # plot() returns the list of Plots it has generated
+            LOG.info('Plotting')
             plots.append(displays.ImageDisplay().plot(pcontext, r,
               reportdir=plots_dir))
 
@@ -54,11 +71,6 @@ try:
                 flaggrid0 = grid[0][(flagfirst==False) & (flaglast==True)]
                 flaggrid1 = grid[1][(flagfirst==False) & (flaglast==True)]
 
-                # get antenna/time of best Tsys
-                argmin = np.argmin(data[flaglast==False])
-                minpos = (grid[0][flaglast==False][argmin],
-                  grid[1][flaglast==False][argmin])
-
                 medians = r.last(description).children.get('tsysmedians')
                 tsysspectra = r.first(description).children.get('tsysspectra')
                 if medians is not None and tsysspectra is not None:
@@ -73,13 +85,13 @@ try:
                             for i,fg0 in enumerate(flaggrid0):
                                 fg1 = flaggrid1[i]
 
-                                if (tsysspectrum.ant, tsysspectrum.time) == \
+                                if (tsysspectrum.ant[0], tsysspectrum.time) == \
                                   (fg0, ydata[fg1]):
                                     plots.append(displays.SliceDisplay().plot(
                                       context=pcontext, results=tsysspectra,
                                       description_to_plot=tsys_desc,
                                       overplot_spectrum=medians.first(median_desc),
-                                      reportdir=plots_dir))
+                                      reportdir=plots_dir, plotbad=False))
 
     # Group the Plots by axes and plot types; each logical grouping will
     # be contained in a PlotGroup
@@ -90,15 +102,6 @@ try:
         plot_group.filename = renderer.filename
         with renderer.get_file() as fileobj:
             fileobj.write(renderer.render())
-
-    # extract the relevant data from the flagging operations, and sort
-    # them
-    temp = []
-    for flagop in flagops:
-        temp.append((os.path.basename(flagop.filename), flagop.rulename, 
-          flagop.spw, flagop.cell_index, flagop.axisnames, flagop.flagcoords))
-    temp.sort()
-    flagops = temp
 
 except Exception, e:
     print 'hif_tsysflag html template exception:', e
@@ -120,42 +123,19 @@ except Exception, e:
 </ul>
 % endif
 
-% if flagops:
+% if htmlreports:
 <h2>Flags</h2>
 <table border="1">
- <tr>
-  <td>File</td>
-  <td>Rule</td>
-  <td>SpW</td>
-  <td>Pol</td>
-  <td>
-   <table border="1">
     <tr>
-    % for axis in flagops[0][4]:
-         <td>${axis}</td>
-    %endfor 
+        <td>Flagging template</td>
+        <td>Flagging report</td>
     </tr>
-   </table>
-  </td>
- </tr>
-    % for flagop in flagops:
-        <tr>
-         <td>${flagop[0]}</td>
-         <td>${flagop[1]}</td>
-         <td>${flagop[2]}</td>
-         <td>${flagop[3]}</td>
-         <td>
-          <table border="1">
-        % for coords in flagop[5]:
-            <tr>
-            % for coord in coords:
-                <td>${coord}</td>
-            % endfor
-            </tr>
-        %endfor
-          </table>
-         </td> 
-        </tr>
+    % for file,reports in htmlreports.items():
+    <tr>
+        <td><a href=${reports[0]}>${file}</a></td>
+        <td><a href=${reports[1]}>report</a></td>
+    </tr>
     % endfor
 </table>
 % endif
+
