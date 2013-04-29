@@ -24,6 +24,10 @@ class WvrgcalFlagSetterInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None,
       wvrgcaltask=None):
         self._init_properties(vars())
+        
+        # include for compatibility with flagdata setter.
+        self.inpfile = 'not used'
+        self.reason = 'not used'
 
 
 class WvrgcalFlagSetter(basetask.StandardTaskTemplate):
@@ -60,9 +64,8 @@ class WvrgcalFlagSetter(basetask.StandardTaskTemplate):
             antindex = antindex[0]
 
             # update the set of wvrflag antennas that have attracted flagging
-            for flagcoord in f.flagcoords:
-                new_wvrflag.update([antenna.name for antenna in antennas 
-                  if antenna.id==flagcoord[antindex]])
+            new_wvrflag.update([antenna.name for antenna in antennas 
+              if antenna.id==f.flagcoords[antindex]])
 
         new_wvrflag = list(new_wvrflag)
         new_wvrflag = map(str, new_wvrflag)
