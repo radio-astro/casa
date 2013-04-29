@@ -126,6 +126,9 @@ public:
   Vector<Int> convertToSpwIndex(const Vector<Float>& freqList,
 				Int &nFSpec);
 private:
+  Int findChanIndex_p(const Float& freq, const Vector<Double>& chanFreqList,
+		      const Bool& greaterThan,
+		      const Bool& ascendingOrder);
   // Construct from an MS FIELD subtable
   MSSpwIndex();
   // FIELD subtable column accessor
