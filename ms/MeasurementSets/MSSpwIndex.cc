@@ -437,6 +437,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		      stop  = stop >= numChans(spw(i)) ? numChans(spw(i)) - 1 : stop;
 		    }
 		  if ((start != -1) && (stop != -1)) localFoundSpwList.push_back(spw(i));
+
+		  step = (((Int)step == 0) ? 1 : step);
+		  if (start == stop) step=0;
+
 		  localFreqList(pos++)=start;
 		  localFreqList(pos++)=stop;
 		  localFreqList(pos++)=step;
@@ -494,6 +498,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    }
 		  step=fabs(freqList(i+2)/maxCW);
 		  step = (((Int)step == 0) ? 1 : step)*cwDir;
+		  if (start == stop) step=0;
 		  
 		  if ((start != -1) && (stop != -1)) localFoundSpwList.push_back(spw(i));
 		  localFreqList(pos++)=(Int)start;
@@ -623,7 +628,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		Int start=(Int)freqList(j), stop=(Int)freqList(j+1), step=(Int)freqList(j+2);
 		//		  if (step==0) step=1;
-		step = step <= 0? 1 : step;
+		step = (step == 0? 1 : step);
+
 		Int n=0;
 		for(Int ii=start;ii<=stop;ii+=step) n++;
 		localFreqList.resize(n+localFreqList.nelements(),True);
