@@ -19,12 +19,6 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_wvrgcal</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
         <Command xmlns="">hif_tsyscal</Command>
         <ParameterSet>
         </ParameterSet>
@@ -63,6 +57,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hif_wvrgcalflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hif_setjy</Command>
         <ParameterSet>
         </ParameterSet>
@@ -90,10 +90,6 @@
     <ProcessingCommand>
         <Command xmlns="">hif_applycal</Command>
         <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">intent</Keyword>
-                <Value xmlns="">PHASE,TARGET</Value>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -118,7 +114,7 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">intent</Keyword>
-                <Value xmlns="">PHASE</Value>
+                <Value xmlns="">PHASE,BANDPASS,AMPLITUDE</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
