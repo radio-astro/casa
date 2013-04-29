@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import os
 import types
 
 from pipeline.hif.heuristics import caltable as caltable_heuristic
@@ -57,9 +58,17 @@ class Tsyscal(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
+        # construct the Tsys cal file
         gencal_args = inputs.to_casa_args()
         gencal_job = casa_tasks.gencal(**gencal_args)
         self._executor.execute(gencal_job)
+
+        # remove any flagging file associated with this caltable
+        flagcmdfile = '%s_flagcmds.txt' % gencal_args['caltable']
+        if os.path.exists(flagcmdfile):
+            LOG.warning('deleting old flagging file: %s' % os.path.basename(
+              flagcmdfile))
+            os.system('rm -fr %s' % flagcmdfile)
 
         LOG.warning('TODO: tsysspwmap heuristic re-reads measurement set!')
         LOG.warning("TODO: tsysspwmap heuristic won't handle missing file")
@@ -73,7 +82,6 @@ class Tsyscal(basetask.StandardTaskTemplate):
         callist.append(calapp)
 
         return resultobjects.TsyscalResults(pool=callist)
-
 
     def analyse(self, result):
         # With no best caltable to find, our task is simply to set the one
