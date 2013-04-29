@@ -9,9 +9,11 @@ import numpy as np
 from numpy import ma
 import pylab as plt
 
-#import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure as infrastructure
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.renderer.logger as logger
+
+LOG = infrastructure.get_logger(__name__)
 
 _valid_chars = "_.%s%s" % (string.ascii_letters, string.digits)
 def _char_replacer(s):
@@ -30,13 +32,15 @@ flag_color = {'outlier': 'red',
               'high outlier':'orange',
               'low outlier':'yellow',
               'edges':'lightblue',
+              'sharps':'green',
+              'sharps2':'green',
               'max abs':'pink',
               'min abs':'darkpink'}
 
 class SliceDisplay(object):
 
     def plot(self, context, results, reportdir, description_to_plot=None,
-      overplot_spectrum=None, plotbad=True):
+      overplot_spectrum=None, plotbad=True, plot_only_flagged=False):
 
         if not results:
             return []
@@ -53,12 +57,24 @@ class SliceDisplay(object):
             # plot just this one
             descriptionlist = [description_to_plot]
 
-        flagops = results.flagops()
+        flagcmds = results.flagcmds()
 
         for description in descriptionlist:
+            # decide if we want to plot this result
+            plot_result = True
+            if plot_only_flagged:
+                plot_result = False
+                for flagcmd in flagcmds:
+                    if flagcmd.match(results.last(description)):
+                        plot_result = True
+                        break
+
+            if not plot_result:
+                continue
+
+            # do the plot
             if results.flagging:
                 nsubplots = 3
-                # plot 'before flagging' result
                 ignore = self._plot_panel(nsubplots, 1,
                   description, results.first(description),
                   'Before Flagging', stagenumber,
@@ -69,14 +85,14 @@ class SliceDisplay(object):
                 flagsSet = self._plot_panel(nsubplots, 2,
                   description, results.last(description),
                   'After', stagenumber, plotbad=plotbad,
-                  flagops=flagops)
+                  flagcmds=flagcmds)
             else:
                 nsubplots = 2
                 ignore = self._plot_panel(nsubplots, 1,
                   description, results.first(description),
                   '', stagenumber,
                   overplot_spectrum=overplot_spectrum,
-                  plotbad=plotbad, flagops=flagops)
+                  plotbad=plotbad, flagcmds=flagcmds)
 
             # plot the titles and key
             plt.subplot(nsubplots, 1, nsubplots)
@@ -113,33 +129,35 @@ class SliceDisplay(object):
               ny_subplot=nsubplots, mult=1.6)
 
             # key for data flagged during this stage
-            if len(flagops) > 0:
+            if len(flagcmds) > 0:
                 ax = plt.gca()
                 rulesplotted = set()
                 
-                for flagop in flagops:
-                    if flagop.rulename == 'ignore':
+                for flagcmd in flagcmds:
+                    if flagcmd.rulename == 'ignore':
                         continue
 
-                    if (flagop.rulename, flagop.ruleaxis,
-                      flag_color[flagop.rulename]) not in rulesplotted:
+                    if (flagcmd.rulename, flagcmd.ruleaxis,
+                      flag_color[flagcmd.rulename]) not in rulesplotted:
 
                         plt.plot([xoff], [yoff], linestyle='None', marker='o',
                           markersize=5,
-                          markerfacecolor=flag_color[flagop.rulename],
-                          markeredgecolor=flag_color[flagop.rulename],
+                          markerfacecolor=flag_color[flagcmd.rulename],
+                          markeredgecolor=flag_color[flagcmd.rulename],
                           clip_on=False)
 
-                        if flagop.ruleaxis is not None:
+                        if flagcmd.ruleaxis is not None:
                             yoff = self.plottext(xoff+0.05, yoff,
                               '%s axis - %s' %
-                              (flagop.ruleaxis, flagop.rulename), 45, mult=1.6)
+                              (flagcmd.ruleaxis, flagcmd.rulename), 45,
+                              ny_subplot=nsubplots, mult=1.6)
                         else:
                             yoff = self.plottext(xoff+0.05, yoff,
-                              flagop.rulename, 45, mult=1.6)
+                              flagcmd.rulename, 45,
+                              ny_subplot=nsubplots, mult=1.6)
 
-                        rulesplotted.update([(flagop.rulename, flagop.ruleaxis,
-                          flag_color[flagop.rulename])])
+                        rulesplotted.update([(flagcmd.rulename, flagcmd.ruleaxis,
+                          flag_color[flagcmd.rulename])])
 
             # do not print axes, turn off autoscaling
             plt.axis([0, 1, 0, 1])
@@ -162,7 +180,7 @@ class SliceDisplay(object):
             # bug here somewhere - pol has 3 possible values for Tsyscal;
             # None, Pol1 or Pol2 but only None and Pol1 get displayed as
             # buttons.
-            # Not fixed as reporting is to be rewritten. 
+            # Not fixed as reporting is to be rewritten.
             plot = logger.Plot(plotfile, x_axis=xtitle, y_axis=ytitle,
               field=results.first(description).fieldname,
               parameters={ 'spw': results.first(description).spw,
@@ -178,7 +196,7 @@ class SliceDisplay(object):
       spectrum, subtitle, stagenumber, layout='landscape',
       lineregions=None, spectrumlineregions=None,
       plotbad=True, overplot_description=None, overplot_spectrum=None,
-      flagops=[]):
+      flagcmds=[]):
         """Plot the 2d data into one panel.
 
         Keyword arguments:
@@ -190,7 +208,7 @@ class SliceDisplay(object):
         stagenumber        -- The number of the recipe stage using the object.
         plotbad            -- True to plot flagged data, False to 
                               plot a 'floating' symbol at the x position.
-        flagops            -- List of FlagOp flagging operations done
+        flagcmds           -- List of FlagCmd flagging operations done
                               to the data in this stage.
         """  
 
@@ -366,16 +384,19 @@ class SliceDisplay(object):
               facecolors='blue', edgecolors='blue')  
 
         # overplot points flagged in this stage
-        pointsflagged = bool(len(flagops))
-        for flagop in flagops:
-            if flagop.spw==spw and flagop.filename==spectrum.filename:
-                bad_data = data[flagop.flagchannels]
+        pointsflagged = bool(len(flagcmds))
+        for flagcmd in flagcmds:
+#            print 'plot flagcmd', flagcmd
+#            print 'description', description
+            if flagcmd.match(spectrum):
+#                print 'match'
+                bad_data = data[flagcmd.flagchannels]
                 if len(bad_data) and not plotbad:
                     bad_data[:] = yflag 
-                bad_x = xaxis[flagop.flagchannels]
+                bad_x = xaxis[flagcmd.flagchannels]
                 plt.errorbar(bad_x, bad_data, linestyle='None', marker='o',
-                  markersize=5, markerfacecolor=flag_color[flagop.rulename],
-                  markeredgecolor=flag_color[flagop.rulename])
+                  markersize=5, markerfacecolor=flag_color[flagcmd.rulename],
+                  markeredgecolor=flag_color[flagcmd.rulename])
 
         # overplot points with no data in indigo
         bad_data = data[nodata==True]
