@@ -1,0 +1,97 @@
+<%!
+rsc_path = "../"
+
+import os.path
+import pydoc
+import numpy as np
+import sys
+
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.displays as displays
+import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.rendererutils as hrutils
+
+LOG = infrastructure.get_logger(__name__)
+%>
+<%inherit file="t2-4m_details-base.html"/>
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
+
+<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+
+## generate the plots
+<%
+try:
+    r = result[0]
+    stage_dir = os.path.join(pcontext.report_dir, 'stage%d' % (r.stage_number))
+    plots_dir = stage_dir
+    if not os.path.exists(plots_dir):
+        os.mkdir(plots_dir)
+
+    plots = []
+    htmlreports = {}
+    for r in result:
+        if hasattr(r, 'flagcmdfile'):
+            reason = r.reason
+
+            flagcmdhtml = os.path.join(plots_dir, '%s.html' % os.path.basename(
+              r.flagcmdfile))
+            hrutils.renderflagcmds(r.flagcmdfile, flagcmdhtml, reason)
+
+            # now write 'printTsysFlags' output to a report file
+            reporthtml = os.path.join(plots_dir, '%s.report.html' %
+              os.path.basename(r.flagcmdfile))
+            hrutils.printTsysFlags(r.table, reporthtml)
+            htmlreports[os.path.basename(r.flagcmdfile)] = (flagcmdhtml,reporthtml)
+
+        if r.view:
+            # display the view first
+            # plot() returns the list of Plots it has generated
+            LOG.info('Plotting')
+            plots.append(displays.SliceDisplay().plot(context=pcontext,
+              results=r, reportdir=plots_dir, plotbad=False,
+              plot_only_flagged=True))
+
+    # Group the Plots by axes and plot types; each logical grouping will
+    # be contained in a PlotGroup
+    plot_groups = logger.PlotGroup.create_plot_groups(plots)
+    # Write the thumbnail pages for each plot grouping to disk
+    for plot_group in plot_groups:
+        renderer = hr.PlotGroupRenderer(pcontext, r, plot_group)
+        plot_group.filename = renderer.filename
+        with renderer.get_file() as fileobj:
+            fileobj.write(renderer.render())
+
+except Exception, e:
+    print 'hif_tsysflagedges html template exception:', e
+    raise e
+%>
+ 
+% if plot_groups:
+<h2>Plots</h2>
+<ul>
+    % for plot_group in plot_groups:
+        <li><a href=${plot_group.filename}>${plot_group.title}</a>
+        shows the Tsys spectra flagged in each image.</li>
+    % endfor
+</ul>
+% endif
+
+% if htmlreports:
+<h2>Flags</h2>
+<table border="1">
+    <tr>
+        <td>Flagging template</td>
+        <td>Flagging report</td>
+    </tr>
+    % for file,reports in htmlreports.items():
+    <tr>
+        <td><a href=${reports[0]}>${file}</a></td>
+        <td><a href=${reports[1]}>report</a></td>
+    </tr>
+    % endfor
+</table>
+% endif
