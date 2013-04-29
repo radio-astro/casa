@@ -103,8 +103,8 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.Tsysflag:
         return 'Flag Tsys calibration'
     
-    if task_cls is hif.tasks.Tsysflagedges:
-        return 'Flag edges of Tsys calibration'
+    if task_cls is hif.tasks.Tsysflagchans:
+        return 'Flag channels of Tsys calibration'
 
     if task_cls is hif.tasks.Wvrgcal:
         return 'Calculate wvr calibration'
@@ -1479,7 +1479,7 @@ renderer_map = {
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
         hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html'),
         hif.tasks.Tsysflag       : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflag.html'),
-#         hif.tasks.Tsysflagedges  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflagedges.html'),
+        hif.tasks.Tsysflagchans  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflagchannels.html'),
         hif.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hif.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
