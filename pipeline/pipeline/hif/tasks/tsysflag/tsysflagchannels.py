@@ -519,12 +519,6 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
                     stackmedian[j] = np.median(valid_data)
                     stackmedianflag[j] = False
 
-#            viewresult = commonresultobjects.SpectrumResult(
-#              data=stackmedian, flag=stackmedianflag,
-#              datatype='Median Normalised Tsys',
-#              filename=tsystable.name, spw=spwid,
-#              intent=intent)
-
     def calculate_channel_time_image(self, tsystable, spwid, intent, fieldids):
         """
         tsystable -- CalibrationTableData object giving access to the tsys
