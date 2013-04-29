@@ -16,7 +16,7 @@ CasaTaskDict = {
                    'hif_setjy'        : 'Setjy',
                    'hif_tsyscal'      : 'Tsyscal',
                    'hif_tsysflag'     : 'Tsysflag',
-                   'hif_tsysflagedges': 'Tsysflagedges',
+                   'hif_tsysflagchannels': 'Tsysflagchans',
                    'hif_wvrgcal'      : 'Wvrgcal',
                    'hif_wvrgcalflag'  : 'Wvrgcalflag',
                    'hsd_calsky'       : 'SDCalSky',
