@@ -1064,10 +1064,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  chanIDList = chanIDs_p;
 	
 	for(uInt targetRow=0; targetRow<nrows; targetRow++)
-	  // if ((chanIDList(targetRow,ncols-1) < 1) &&
-	  //     (chanIDList(targetRow,ncols-2) < (chanIDList(targetRow,ncols-3))))
-	  if ((chanIDList(targetRow,ncols-1) == 0))
-	    chanIDList(targetRow,ncols-1)=defaultStep;
+	  {
+	    if ((chanIDList(targetRow,ncols-1) == 0))
+	      chanIDList(targetRow,ncols-1)=defaultStep;
+	    if (chanIDList(targetRow,ncols-2) == chanIDList(targetRow,ncols-3)) // Stop == Step
+	      chanIDList(targetRow,ncols-1)=0;
+	  }
       }
     
     
