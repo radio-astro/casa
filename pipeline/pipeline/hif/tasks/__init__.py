@@ -20,7 +20,7 @@ from .restoredata import RestoreData
 from .setmodel import Setjy
 from .setmodel import SetModel
 from .tsyscal import Tsyscal
-from .tsysflag import Tsysflag, Tsysflagedges
+from .tsysflag import Tsysflag, Tsysflagchans
 from .wvrgcal import Wvrgcal
 from .wvrgcal import Wvrgcalflag
 
