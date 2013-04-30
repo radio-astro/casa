@@ -603,7 +603,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
                         # flag the 'view'
                         rflag[:left_edge] = True
-                        rflag[-right_edge:] = True
+                        if right_edge > 0:
+                            rflag[-right_edge:] = True
 
                         # now compose a description of the flagging required on
                         # the MS
