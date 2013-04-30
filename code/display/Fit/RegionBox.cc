@@ -61,29 +61,79 @@ bool RegionBox::isInBox( double valueX, double valueY ) const {
 	return valueInBox;
 }
 
-QString RegionBox::toString() const {
+QVector<int> RegionBox::getActualBLC( const Vector<int>& imageBLC, const Vector<int>& imageTRC, bool* valid ) const {
+	//For the bottom left, we take the maximum of the image and region bottom left.
+	QVector<int> actualBLC(2);
+	actualBLC[0] = qMax( imageBLC[0], regionBoxBLC[0] );
+	actualBLC[1] = qMax( imageBLC[1], regionBoxBLC[1] );
+	*valid = false;
+	if ( isInImage( actualBLC, imageBLC, imageTRC)){
+		*valid = true;
+	}
+	return actualBLC;
+}
+
+bool RegionBox::isInImage( const QVector<int>& coords, const Vector<int>& imageBLC,
+		const Vector<int>& imageTRC ) const {
+	bool interior = false;
+	if ( imageBLC[0]<= coords[0] && coords[0]<=imageTRC[0]){
+		if ( imageBLC[1]<= coords[1] && coords[1]<=imageTRC[1]){
+			interior = true;
+		}
+	}
+	return interior;
+}
+
+QVector<int> RegionBox::getActualTRC( const Vector<int>& imageBLC, const Vector<int>& imageTRC, bool* valid ) const {
+	//For the top right, we take the minimum of the image and region trc.
+	QVector<int> actualTRC(2);
+	actualTRC[0] = qMin( imageTRC[0], regionBoxTRC[0] );
+	actualTRC[1] = qMin( imageTRC[1], regionBoxTRC[1] );
+	*valid = false;
+	if ( isInImage( actualTRC, imageBLC, imageTRC ) ){
+		*valid = true;
+	}
+	return actualTRC;
+}
+
+
+QString RegionBox::toString(const Vector<int>& imageBLC, const Vector<int>& imageTRC ) const {
 	QString pixelStr( "");
 	const QString COMMA_STR( ",");
-	pixelStr.append( QString::number(regionBoxBLC[0]) + COMMA_STR );
-	pixelStr.append( QString::number(regionBoxBLC[1]) + COMMA_STR );
+	bool valid = false;
+	QVector<int> actualTRC = getActualTRC( imageBLC, imageTRC, &valid );
+	if ( valid ){
+		QVector<int> actualBLC = getActualBLC( imageBLC, imageTRC, &valid );
+		if ( valid ){
+			pixelStr.append( QString::number(actualBLC[0]) + COMMA_STR );
+			pixelStr.append( QString::number(actualBLC[1]) + COMMA_STR );
 
-	pixelStr.append( QString::number(regionBoxTRC[0]) + COMMA_STR );
-	pixelStr.append( QString::number(regionBoxTRC[1]));
+			pixelStr.append( QString::number(actualTRC[0]) + COMMA_STR );
+			pixelStr.append( QString::number(actualTRC[1]));
+		}
+	}
 	return pixelStr;
 }
 
 
 
-QString RegionBox::toStringLabelled() const {
+QString RegionBox::toStringLabelled(const Vector<int>& imageBLC, const Vector<int>& imageTRC) const {
 	QString pixelStr( "");
 	const QString COMMA_STR( ",");
-	pixelStr.append( "Bottom Lower Corner=" );
-	pixelStr.append( "("+QString::number(regionBoxBLC[0]) + COMMA_STR );
-	pixelStr.append( QString::number(regionBoxBLC[1]) + "),  " );
+	bool valid = false;
+	QVector<int> actualTRC = getActualTRC( imageBLC, imageTRC, &valid );
+	if ( valid ){
+		QVector<int> actualBLC = getActualBLC( imageBLC, imageTRC, &valid );
+		if ( valid ){
+			pixelStr.append( "Bottom Lower Corner=" );
+			pixelStr.append( "("+QString::number(actualBLC[0]) + COMMA_STR );
+			pixelStr.append( QString::number(actualBLC[1]) + "),  " );
 
-	pixelStr.append( "Top Right Corner=" );
-	pixelStr.append( "(" + QString::number(regionBoxTRC[0]) + COMMA_STR );
-	pixelStr.append( QString::number(regionBoxTRC[1]) + ")");
+			pixelStr.append( "Top Right Corner=" );
+			pixelStr.append( "(" + QString::number(actualTRC[0]) + COMMA_STR );
+			pixelStr.append( QString::number(actualTRC[1]) + ")");
+		}
+	}
 	return pixelStr;
 }
 

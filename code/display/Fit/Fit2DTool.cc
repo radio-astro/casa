@@ -27,6 +27,7 @@
 #include <display/Fit/ColorComboDelegate.h>
 #include <display/RegionShapes/RegionShape.h>
 #include <display/Display/Options.h>
+
 #include <QMessageBox>
 #include <QDebug>
 #include <QDir>
@@ -313,6 +314,11 @@ void Fit2DTool::doFit(){
 	}
 
 	String pixelBox = findSourcesDialog.getPixelBox();
+	if ( pixelBox.length() == 0 ){
+		QMessageBox::warning( this, "Invalid Pixel Box", "Please check that the region is valid in the image.");
+		return;
+	}
+
 	Vector<Float> includeVector = populateInclude();
 	Vector<Float> excludeVector = populateExclude();
 	QString channelStr = ui.channelLineEdit->text();
