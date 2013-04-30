@@ -344,6 +344,7 @@ def simanalyze(
 
                 im.open(tpmstoimage)
                 im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
+                ### TODO: need to set phasecenter properly based on imdirection
                 im.defineimage(mode='channel',nx=sdimsize[0],ny=sdimsize[1],cellx=cell[0],celly=cell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
                 #im.setoptions(ftmachine='sd',gridfunction='pb')
                 im.setoptions(ftmachine='sd',gridfunction='pb')
