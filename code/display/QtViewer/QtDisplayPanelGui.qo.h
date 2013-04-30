@@ -48,6 +48,7 @@
 #include <display/Utilities/Lowlevel.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
 #include <display/Utilities/ImageProperties.h>
+#include <display/Utilities/StatusSink.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -87,7 +88,7 @@ template <class T> class ImageInterface;
 // The main display window for the Qt version of the viewer.
 // </summary>
 
-class QtDisplayPanelGui : public QtPanelBase {
+class QtDisplayPanelGui : public QtPanelBase, public viewer::StatusSink {
 
   Q_OBJECT;	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include

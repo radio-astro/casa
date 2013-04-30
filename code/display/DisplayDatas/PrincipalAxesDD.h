@@ -36,6 +36,7 @@
 
 // display library includes:
 #include <display/DisplayDatas/DisplayData.h>
+#include <display/Utilities/StatusSink.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -70,8 +71,7 @@ class PrincipalAxesDD : public DisplayData {
  public:
 
   // constructor
-  PrincipalAxesDD(uInt xAxis, uInt yAxis, Int mAxis = -1,
-     Bool axisLabels = True);
+  PrincipalAxesDD( uInt xAxis, uInt yAxis, Int mAxis = -1, Bool axisLabels = True, viewer::StatusSink *sink=0 );
 
   // destructor
   virtual ~PrincipalAxesDD();
@@ -248,6 +248,9 @@ class PrincipalAxesDD : public DisplayData {
 
    const String &spectralunitStr( ) const;
    const static String HISTOGRAM_RANGE;
+
+   bool hasMovieDimension( ) const { return has_nonsingleton_nondegenerate_nondisplayed_axis( *this ); }
+
  protected:
 
   // Set internal index (activeZIndex_) into the list of DMs (which cache
@@ -433,6 +436,8 @@ class PrincipalAxesDD : public DisplayData {
   void removePixelAxes (CoordinateSystem& cSys,
                         uInt startAxis,
                         const IPosition& fixedPosition);
+
+  viewer::StatusSink *ssink;
 
 };
  

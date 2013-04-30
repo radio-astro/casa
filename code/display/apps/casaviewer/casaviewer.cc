@@ -57,6 +57,7 @@
 */
 
 #include <casadbus/utilities/Diagnostic.h>
+#include <display/DisplayErrors.h>
 
 #include <casa/namespace.h>
 
@@ -110,6 +111,14 @@ bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
 		qWarning( ) << "unhandled exception:" << e.getMesg().c_str();
 		if ( recursion_count != 0 ) recursion_count--;
 		return false;
+	} catch ( viewer::internal_error e ) {
+	  qWarning( ) << "internal exception:" << e.what( );
+	  if ( recursion_count != 0 ) recursion_count--;
+        return false;
+	} catch ( std::exception e ) {
+	  qWarning( ) << "std exception:" << e.what( );
+	  if ( recursion_count != 0 ) recursion_count--;
+        return false;
 	} catch ( ... ) {
 		qWarning("unhandled exception... ");
 		qDebug() << "from" << receiver->objectName() << "from event type" << e->type();

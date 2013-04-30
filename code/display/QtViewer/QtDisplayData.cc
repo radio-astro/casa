@@ -442,11 +442,11 @@ void QtDisplayData::initImage(){
 	if( isRaster()) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsRaster<Float>(im_, 0, 1);
-			else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+			else dd_ = new LatticeAsRaster<Float>(im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 		}
 		else {
 			if(ndim ==2) dd_ = new LatticeAsRaster<Complex>(cim_, 0, 1);
-			else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+			else dd_ = new LatticeAsRaster<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 		}
 	}
 	else if( isContour() ) {

@@ -67,8 +67,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 const String PrincipalAxesDD::HISTOGRAM_RANGE = "minmaxhist";
 // constructor
-PrincipalAxesDD::PrincipalAxesDD(uInt xAxis, uInt yAxis, 
-				 Int mAxis, Bool axisLabels) 
+PrincipalAxesDD::PrincipalAxesDD(uInt xAxis, uInt yAxis, Int mAxis, Bool axisLabels, viewer::StatusSink *sink ) 
 : iAmRubbish(True),
   itsNotation(Coordinate::MIXED),
   itsNumImages(0),
@@ -77,7 +76,8 @@ PrincipalAxesDD::PrincipalAxesDD(uInt xAxis, uInt yAxis,
   itsSpectralQuantity("radio"),
   itsAbsolute(True),
   itsFractionalPixels(False),
-  itsUsesAxisLabels(axisLabels)
+  itsUsesAxisLabels(axisLabels),
+  ssink(sink)
 {
   itsDisplayAxes.resize(3);
   itsDisplayAxes[0] = xAxis;
@@ -1659,7 +1659,16 @@ Bool PrincipalAxesDD::labelAxes(const WCRefreshEvent &ev)
   if (!itsUsesAxisLabels) return False;
 
   if( !csConformed_ || activeZIndex_<0 ||
-      uInt(activeZIndex_) >= itsAxisLabellers.nelements() ) return False;
+      uInt(activeZIndex_) >= itsAxisLabellers.nelements() ) {
+	  if ( ssink ) {
+		  ostringstream out;
+		  out <<  "image does not conform to controlling coordinate system: " << description();
+		  static std::string last;
+		  if ( out.str( ) != last ) ssink->status( out.str( ), "error" );
+		  last = out.str( );
+	  }
+	  return False;
+  }
 	// (...but CS master with invalid blink restriction can still label--
 	// its labelling CS is more reliable than other DDs'....  This
 	// still needs work.  dk 12/04)

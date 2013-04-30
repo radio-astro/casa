@@ -60,6 +60,7 @@
 #include <images/Images/ImageInterface.h>
 #include <display/ds9/ds9parser.h>
 #include <casadbus/types/nullptr.h>
+#include <display/DisplayErrors.h>
 
 #include <QtCore/QPoint>
 #include <QtGui/QToolTip>
@@ -2600,7 +2601,11 @@ void QtDisplayPanel::loadRegions( const std::string &path, const std::string &ty
 		if ( wc_ ) {
 			casa::viewer::ds9context context( wc_ );
 			casa::viewer::ds9parser parser;
-			parser.parse_file( context, path.c_str( ) );
+			try {
+				parser.parse_file( context, path.c_str( ) );
+			} catch( viewer::internal_error e ) {
+				panel_->status(std::string("ds9 load failed: ") + path,"error");
+			}
 		}
 	}
 

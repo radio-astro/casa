@@ -74,9 +74,7 @@ template <class T> class LatticePADisplayData : public PrincipalAxesDD {
 
   // Image-based constructors: >2d and 2d
   // <group>
-  LatticePADisplayData(ImageInterface<T> *image, const uInt xAxis,
-		       const uInt yAxis, const uInt mAxis,
-		       const IPosition fixedPos);
+  LatticePADisplayData( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
   LatticePADisplayData(ImageInterface<T> *image, const uInt xAxis,
 		       const uInt yAxis);
   // </group>

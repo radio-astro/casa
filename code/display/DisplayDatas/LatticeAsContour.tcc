@@ -66,10 +66,7 @@ LatticeAsContour<T>::LatticeAsContour(Array<T> *array, const uInt xAxis,
 
 // >2d image-based ctor
 template <class T>
-LatticeAsContour<T>::LatticeAsContour(ImageInterface<T> *image,
-				      const uInt xAxis, const uInt yAxis,
-				      const uInt mAxis,
-				      const IPosition fixedPos) :
+LatticeAsContour<T>::LatticeAsContour( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis,const IPosition fixedPos, viewer::StatusSink *sink) :
   LatticePADisplayData<T>(image, xAxis, yAxis, mAxis, fixedPos),
   itsBaseContour(0), itsUnitContour(0) {
   constructParameters_();
