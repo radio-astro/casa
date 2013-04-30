@@ -46,9 +46,12 @@ SearchRedshiftDialog::SearchRedshiftDialog(QWidget *parent)
 	progressBar.setWindowTitle( "Redshift Search");
 	progressBar.setLabelText( "Searching for redshift ...");
 	progressBar.setWindowModality( Qt::WindowModal );
-	progressBar.setCancelButton( 0 );
+	Qt::WindowFlags flags = Qt::Dialog;
+		flags |= Qt::FramelessWindowHint;
+	progressBar.setWindowFlags( flags );
 	progressBar.setMinimum(0);
 	progressBar.setMaximum(0);
+	connect( &progressBar, SIGNAL(canceled()), this, SLOT(stopSearch()));
 
 	QDoubleValidator* validator = new QDoubleValidator( this );
 	ui.centerLineEdit->setValidator( validator );
@@ -155,19 +158,16 @@ void SearchRedshiftDialog::findRedshift(){
 		speciesList[0] = speciesName.toStdString();
 		searcher->setSpeciesNames( speciesList );
 
-		//Create a temporary file for the search results
-		//String resultTableName = viewer::options.temporaryPath("SearchRedshiftResults");
-		//searcher->setResultFile( resultTableName );
-
-		//Range for the search should be everything.
+		//Range for the search.
 		Double minValue = getTargetFrequency();
-		Double maxValue = numeric_limits<double>::max();
+		Double maxValue = minValue + 10000;
 		searcher->setFrequencyRange( minValue, maxValue );
 
 		//Start the background thread that will do the search
 		delete searchThread;
 		searchThread = new SearchThread( searcher, 0 );
 		searchThread->setCountNeeded( false );
+		searchInterrupted = false;
 		connect( searchThread, SIGNAL( finished() ), this, SLOT(searchFinished()));
 		searchThread->start();
 		progressBar.show();
@@ -176,6 +176,13 @@ void SearchRedshiftDialog::findRedshift(){
 		QString msg( "The species name cannot be left blank.");
 		Util::showUserMessage( msg, this );
 		setResultsVisible( false );
+	}
+}
+
+void SearchRedshiftDialog::stopSearch(){
+	if ( searchThread != NULL && searchThread->isRunning()){
+		searchInterrupted = true;
+		searchThread->stopSearch();
 	}
 }
 
@@ -193,83 +200,87 @@ double SearchRedshiftDialog::getTargetFrequency() const{
 }
 
 void SearchRedshiftDialog::searchFinished(){
-	vector<SplatResult> results = searchThread->getResults();
-	int resultCount = results.size();
-	if ( resultCount == 0 ){
-		progressBar.hide();
-		setResultsVisible( false );
-		QString msg( "There were no matching species in the database.");
-		Util::showUserMessage( msg, this );
-		return;
-	}
-
-	//Find the frequency nearest to but less than that indicated by the user.
-	double targetFrequency = getTargetFrequency();
-	double restFrequency = -1;
-	for ( int i = 0; i < resultCount; i++ ){
-		//Record line = results.asRecord("*" + String::toString(i) );
-
-		//Frequency
-		double freqValue = results[i].getFrequency().first;
-
-
-		//In GHz, the redshifted value (targetFrequency) will be smaller
-		//than the rest frequency.  We are looking for the rest frequency
-		//that is just slightly bigger than the target.
-		if ( freqValue >= targetFrequency ){
-			//First one we found;
-			if ( restFrequency == -1 ){
-				restFrequency = freqValue;
-			}
-			//See if this one is closer that our current best
-			else if ( freqValue < restFrequency ){
-				restFrequency = freqValue;
-			}
+	progressBar.hide();
+	if ( !searchInterrupted ){
+		vector<SplatResult> results = searchThread->getResults();
+		int resultCount = results.size();
+		if ( resultCount == 0 ){
+			progressBar.hide();
+			setResultsVisible( false );
+			QString msg( "There were no matching species in the database.");
+			Util::showUserMessage( msg, this );
+			return;
 		}
 
-		//Keep the GUI responsive while we are setting up the table
-		QCoreApplication::processEvents();
-	}
+		//Find the frequency nearest to but less than that indicated by the user.
+		double targetFrequency = getTargetFrequency();
+		double restFrequency = -1;
+		for ( int i = 0; i < resultCount; i++ ){
+			//Record line = results.asRecord("*" + String::toString(i) );
 
-	//Calculate the redshift and velocity
-	progressBar.hide();
-	if ( restFrequency != -1 ){
-		String splatalogueUnitStr( SearchMoleculesWidget::SPLATALOGUE_UNITS.toStdString());
-		Quantity targetQuantity( targetFrequency, splatalogueUnitStr );
-		MVFrequency mvFreq( targetQuantity );
-		MFrequency freq( mvFreq, frequencyType );
-		Quantity restQuantity( restFrequency, splatalogueUnitStr );
-		MVFrequency restFreq( restQuantity );
-		MDoppler velDoppler = freq.toDoppler( restFreq );
-		MDoppler doppler = MDoppler::Convert( velDoppler, dopplerType)();
+			//Frequency
+			double freqValue = results[i].getFrequency().first;
 
-		//Redshift
-		double redshiftVal = doppler.getValue();
-		ui.redshiftLineEdit->setText( QString::number( redshiftVal ));
 
-		//Velocity
-		QString unitStr = Util::stripFont( ui.velocityUnitLabel->text());
-		MVDoppler mvDoppler( redshiftVal );
-		MDoppler veldoppler2( mvDoppler, dopplerType );
-		MRadialVelocity mVelocity = MRadialVelocity::fromDoppler(veldoppler2, radialVelocityType);
-		String unitString = unitStr.toStdString();
-		Quantity velQuantity = mVelocity.get( unitString );
-		double velocity = velQuantity.getValue();
-		if ( !isnan(velocity) ){
-			ui.velocityLineEdit->setText( QString::number( velocity ));
+			//In GHz, the redshifted value (targetFrequency) will be smaller
+			//than the rest frequency.  We are looking for the rest frequency
+			//that is just slightly bigger than the target.
+			if ( freqValue >= targetFrequency ){
+				//First one we found;
+				if ( restFrequency == -1 ){
+					restFrequency = freqValue;
+				}
+				//See if this one is closer that our current best
+				else if ( freqValue < restFrequency ){
+					restFrequency = freqValue;
+				}
+			}
+
+			//Keep the GUI responsive while we are setting up the table
+			QCoreApplication::processEvents();
+		}
+
+
+		//Calculate the redshift and velocity
+		if ( restFrequency != -1 ){
+			String splatalogueUnitStr( SearchMoleculesWidget::SPLATALOGUE_UNITS.toStdString());
+			Quantity targetQuantity( targetFrequency, splatalogueUnitStr );
+			MVFrequency mvFreq( targetQuantity );
+			MFrequency freq( mvFreq, frequencyType );
+			Quantity restQuantity( restFrequency, splatalogueUnitStr );
+			MVFrequency restFreq( restQuantity );
+			MDoppler velDoppler = freq.toDoppler( restFreq );
+			MDoppler doppler = MDoppler::Convert( velDoppler, dopplerType)();
+
+			//Redshift
+			double redshiftVal = doppler.getValue();
+			ui.redshiftLineEdit->setText( QString::number( redshiftVal ));
+
+			//Velocity
+			QString unitStr = Util::stripFont( ui.velocityUnitLabel->text());
+			MVDoppler mvDoppler( redshiftVal );
+			MDoppler veldoppler2( mvDoppler, dopplerType );
+			MRadialVelocity mVelocity = MRadialVelocity::fromDoppler(veldoppler2, radialVelocityType);
+			String unitString = unitStr.toStdString();
+			Quantity velQuantity = mVelocity.get( unitString );
+			double velocity = velQuantity.getValue();
+			if ( !isnan(velocity) ){
+				ui.velocityLineEdit->setText( QString::number( velocity ));
+			}
+			else {
+				ui.velocityLineEdit->setText("");
+				QString msg( "Could not accurately determine velocity.");
+				Util::showUserMessage( msg, this );
+			}
+			setResultsVisible( true );
 		}
 		else {
-			ui.velocityLineEdit->setText("");
-			QString msg( "Could not accurately determine velocity.");
+			QString msg( "Could not find a rest frequency matching the search criteria.");
 			Util::showUserMessage( msg, this );
+			setResultsVisible( false );
 		}
-		setResultsVisible( true );
 	}
-	else {
-		QString msg( "Could not find a rest frequency matching the search criteria.");
-		Util::showUserMessage( msg, this );
-		setResultsVisible( false );
-	}
+
 }
 
 
