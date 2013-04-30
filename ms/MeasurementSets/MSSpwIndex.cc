@@ -438,7 +438,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		    }
 		  if ((start != -1) && (stop != -1)) localFoundSpwList.push_back(spw(i));
 
-		  step = (((Int)step == 0) ? 1 : step);
+		  step = (((Int)step <= 0) ? 1 : step);
 
 		  localFreqList(pos++)=start;
 		  localFreqList(pos++)=stop;
@@ -505,7 +505,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  // cwDir carries the direction in which
 		  // freq. increases with increase channel index.
 		  //
-		  step = (((Int)step == 0) ? 1 : step);//*cwDir;
+		  step = (((Int)step <= 0) ? 1 : step);//*cwDir;
 		  if (start > stop)
 		    {
 		      Float tmp=start;
@@ -545,7 +545,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
  	  {
  	    localFreqList(j++)=0;
  	    localFreqList(j++)=numChans(spw(i))-1;
- 	    localFreqList(j++)=-1;
+ 	    localFreqList(j++)=1;
  	  }
       }
     
@@ -640,7 +640,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {
 		Int start=(Int)freqList(j), stop=(Int)freqList(j+1), step=(Int)freqList(j+2);
 		//		  if (step==0) step=1;
-		step = (step == 0? 1 : step);
+		step = (step <= 0? 1 : step);
 
 		Int n=0;
 		for(Int ii=start;ii<=stop;ii+=step) n++;
