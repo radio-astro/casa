@@ -234,7 +234,6 @@ void QtRegionState::reset( const QString &n, Region *r ) {
 
 void QtRegionState::addHistogram(QWidget* histogram ){
 	categories->addTab( histogram, HISTOGRAM_MODE( ));
-
 }
 
 void QtRegionState::setRegion( Region *r ) { 
@@ -700,7 +699,7 @@ void QtRegionState::load_regions( bool ) {
 		return;
 	}
 
-	emit loadRegions( path, load_file_type->currentText( ) );
+	emit loadRegions( path, load_file_type->currentText( ) == "CASA region file" ? "casa region" : "ds9 region" );
 }
 
 void QtRegionState::update_default_file_extension(const QString &txt) {
@@ -1067,6 +1066,7 @@ QtSliceCutState::QtSliceCutState( const QString &name,
 			break;
 		}
 }
+
 
 }
 }

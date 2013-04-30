@@ -167,8 +167,8 @@ LatticePADisplayData<T>::LatticePADisplayData(ImageInterface<T> *image,
 					      const uInt xAxis,
 					      const uInt yAxis,
 					      const uInt mAxis,
-					      const IPosition fixedPos) :
-  PrincipalAxesDD(xAxis, yAxis, mAxis),
+					      const IPosition fixedPos, viewer::StatusSink *sink ) :
+  PrincipalAxesDD(xAxis, yAxis, mAxis, True, sink),
   itsBaseImagePtr(0),
   itsBaseArrayPtr(0),
   itsMaskedLatticePtr(0),

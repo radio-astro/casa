@@ -56,7 +56,7 @@ Polyline::Polyline( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pai
 	complete = true;
 }
 
-RegionInfo * Polyline::newInfoObject( ImageInterface<Float> *image ) {
+RegionInfo * Polyline::newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD * ) {
 	SliceRegionInfo* sliceRegion = NULL;
 	if ( image != NULL ){
 		RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();

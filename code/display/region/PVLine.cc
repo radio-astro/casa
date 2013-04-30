@@ -693,7 +693,12 @@ namespace casa {
 		}
 
 
-		RegionInfo *PVLine::newInfoObject( ImageInterface<Float> *image ) {
+		RegionInfo *PVLine::newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD *dd ) {
+
+			// cannot create P/V raster for an image without a spectral axis...
+			const CoordinateSystem &cs = image->coordinates( );
+			if ( dd->hasMovieDimension( ) == false || cs.hasSpectralAxis( ) == false ) return 0;
+
 			RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
 
 			double ppt1_x, ppt1_y, ppt2_x, ppt2_y;
