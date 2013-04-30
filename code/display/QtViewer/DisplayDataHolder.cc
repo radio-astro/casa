@@ -82,6 +82,9 @@ void DisplayDataHolder::setDDControlling( QtDisplayData* controlDD ){
 			controlling_dd = controlDD;
 		}
 	}
+	else {
+		controlling_dd = NULL;
+	}
 
 }
 

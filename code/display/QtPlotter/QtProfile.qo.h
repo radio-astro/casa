@@ -200,7 +200,7 @@ public slots:
 	void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
 
 	void plotMainCurve();
-	void setCollapseRange(float xmin, float xmax);
+	void setCollapseRange(double xmin, double xmax);
 
 	void overplot(QHash<QString, ImageInterface<float>*>);
 
