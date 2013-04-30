@@ -95,6 +95,10 @@ double FitWidget::getLambda() const {
 	return lambdaVal;
 }
 
+void FitWidget::setUnits( const QString& units ){
+	fitter->setUnits( units );
+}
+
 void FitWidget::setLambda( double lambda ){
 	ui.poissonLambdaLineEdit->setText( QString::number(lambda));
 	fitterPoisson->setLambda( lambda );

@@ -81,6 +81,10 @@ void Fitter::restrictDomain( double xMin, double xMax ){
 	resetDataWithLimits();
 }
 
+void Fitter::setUnits( QString units ){
+	this->units = units;
+}
+
 void Fitter::resetDataWithLimits(){
 	int count = 0;
 	Vector<Float>::iterator domainIterator = xValues.begin();
@@ -90,9 +94,9 @@ void Fitter::resetDataWithLimits(){
 		}
 		domainIterator++;
 	}
-
 	actualXValues.resize( count );
 	actualYValues.resize( count );
+
 	int j = 0;
 	int xValueCount = xValues.size();
 	for( int i = 0; i < xValueCount; i++ ){
@@ -104,11 +108,16 @@ void Fitter::resetDataWithLimits(){
 	}
 }
 
-QString Fitter::formatResultLine( QString label, float value ) const {
+QString Fitter::formatResultLine( QString label, float value, bool endLine ) const {
 	QString resultLine( label );
 	resultLine.append( "\t");
+	if ( label.length() < 15 ){
+		resultLine.append( "\t");
+	}
 	resultLine.append( QString::number( value));
-	resultLine.append( "\n");
+	if ( endLine ){
+		resultLine.append( "\n");
+	}
 	return resultLine;
 }
 
@@ -144,13 +153,12 @@ QString Fitter::getStatusMessage() const {
 void Fitter::toAscii( QTextStream& out ) const {
 	const QString LINE_END = "\n";
 	out << "#Chi-square:"<<solutionChiSquared<<LINE_END;
-	out << "#RMS:"<<solutionRMS<<LINE_END;
-
 	int count = fitValues.size();
+	out << "#Degrees of Freedom:"<<count<<LINE_END;
 	out << "#Value"<<"Count"<<"Fit Count"<< LINE_END;
 	for ( int i = 0; i < count; i++ ){
-		out << QString::number( xValues[i])
-		<< QString::number( yValues[i])
+		out << QString::number( actualXValues[i])
+		<< QString::number( actualYValues[i])
 		<< QString::number( fitValues[i]) << LINE_END;
 	}
 }

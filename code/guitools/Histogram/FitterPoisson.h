@@ -41,14 +41,12 @@ public:
 	virtual QString getSolutionStatistics() const;
 	virtual bool doFit();
 	virtual void toAscii( QTextStream& stream ) const;
+	virtual void restrictDomain( double xMin, double xMax );
 	virtual ~FitterPoisson();
 	virtual void clearFit();
 
 private:
-	//int factorial( int n ) const;
 	float getFitCount() const;
-	//float getRMSE() const;
-	//bool isIntegerValue( float val ) const;
 	float solutionLambda;
 	float solutionHeight;
 	bool lambdaSpecified;

@@ -41,6 +41,7 @@ public:
 	void setData( Vector<Float> xValues, Vector<Float> yValues );
 	virtual void restrictDomain( double xMin, double xMax );
 	virtual void clearDomainLimits();
+	void setUnits( QString units );
 	Vector<Float> getFitValues() const;
 	Vector<Float> getFitValuesX() const;
 	virtual bool doFit() = 0;
@@ -54,25 +55,27 @@ public:
 	virtual ~Fitter();
 
 protected:
-	QString formatResultLine( QString label, float value ) const;
+	QString formatResultLine( QString label, float value, bool endLine = true ) const;
 	float solutionChiSquared;
-	float solutionRMS;
 	bool solutionConverged;
 
 	Vector<Float> actualXValues;
 	Vector<Float> actualYValues;
 	Vector<Float> fitValues;
-	QString errorMsg;
-	QString statusMsg;
-	bool dataFitted;
-	float getMean() const;
-
-private:
-	void resetDataWithLimits();
-	Vector<Float> xValues;
-	Vector<Float> yValues;
 	double domainMin;
 	double domainMax;
+	QString errorMsg;
+	QString statusMsg;
+	QString units;
+	bool dataFitted;
+	float getMean() const;
+	void resetDataWithLimits();
+private:
+
+	Vector<Float> xValues;
+	Vector<Float> yValues;
+
+
 };
 
 } /* namespace casa */
