@@ -110,7 +110,11 @@ bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
 	if ( recursion_count != 0 ) recursion_count--;
 	return false;
 	} catch ( viewer::internal_error e ) {
-	  qWarning( ) << "unhandled exception:" << e.what( );
+	  qWarning( ) << "internal exception:" << e.what( );
+	  if ( recursion_count != 0 ) recursion_count--;
+        return false;
+	} catch ( std::exception e ) {
+	  qWarning( ) << "std exception:" << e.what( );
 	  if ( recursion_count != 0 ) recursion_count--;
         return false;
     } catch ( ... ) {
