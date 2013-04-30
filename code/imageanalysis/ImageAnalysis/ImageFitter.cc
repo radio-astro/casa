@@ -119,7 +119,6 @@ ComponentList ImageFitter::fit() {
 	if (! _residual.empty() || ! _model.empty()) {
 		templateImage = _createImageTemplate();
 		completePixelMask.reset(new LCMask(templateImage.shape()));
-
 		if (! _residual.empty()) {
 			residualImage.reset(
 				new TempImage<Float>(
@@ -231,12 +230,15 @@ ComponentList ImageFitter::fit() {
 			completePixelMask->putSlice(pixelMask, putLocation);
 			if (residualImage.get() != 0) {
 				if (! converged) {
+					curResidPixels.resize(pixels.shape());
 					curResidPixels.set(0);
 				}
 				residualImage->putSlice(curResidPixels, putLocation);
 			}
 			if (modelImage.get() != 0) {
 				if (! converged) {
+					curModelPixels.resize(pixels.shape());
+
 					curModelPixels.set(0);
 				}
 				modelImage->putSlice(curModelPixels, putLocation);
@@ -471,12 +473,18 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
         	<< " specified, so will attempt to fit that many gaussians "
         	<< LogIO::POST;
 	}
+
 	CasacRegionManager rm(_getImage()->coordinates());
 	uInt nSelectedChannels;
 	// Int specAxisNumber = _getImage()->coordinates().spectralAxisNumber();
 	// uInt nChannels = specAxisNumber >= 0 ? _getImage()->shape()[specAxisNumber] : 0;
-
-	_chanVec = rm.setSpectralRanges(_getChans(), nSelectedChannels, _getImage()->shape());
+	_chanVec = _getChans().empty()
+		? rm.setSpectralRanges(
+			nSelectedChannels, _getRegion(), _getImage()->shape()
+		)
+		: rm.setSpectralRanges(
+			_getChans(), nSelectedChannels, _getImage()->shape()
+		);
 	if (_chanVec.size() == 0) {
 		_chanVec.resize(2);
 		_chanVec.set(0);
@@ -491,7 +499,6 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 	}
 	_fitConverged.resize(nSelectedChannels);
 	// check units
-
 	Quantity q = Quantity(1, _bUnit);
 	Bool unitOK = q.isConform("Jy/rad2")
 		|| q.isConform("Jy*m/s/rad2");
@@ -520,16 +527,28 @@ void ImageFitter::_finishConstruction(const String& estimatesFilename) {
 			_bUnit = "Jy/pixel";
 		}
 	}
-
 }
 
 String ImageFitter::_resultsHeader() const {
 	ostringstream summary;
+	ostringstream chansoss;
+	String chans = _getChans();
+	if (! chans.empty()) {
+		chansoss << chans;
+	}
+	else if (_chanVec.size() == 2) {
+		if (_chanVec[0] == _chanVec[1]) {
+			chansoss << _chanVec[0];
+		}
+		else {
+			chansoss << _chanVec[0] << "-" << _chanVec[1];
+		}
+	}
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
 	summary << "Input parameters ---" << endl;
 	summary << "       --- imagename:           " << _getImage()->name() << endl;
 	summary << "       --- region:              " << _regionString << endl;
-	summary << "       --- channel:             " << _getChans() << endl;
+	summary << "       --- channel:             " << chansoss.str() << endl;
 	summary << "       --- stokes:              " << _getStokes() << endl;
 	summary << "       --- mask:                " << _getMask() << endl;
 	summary << "       --- include pixel ragne: " << _includePixelRange << endl;
@@ -1111,6 +1130,7 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 }
 
 SubImage<Float> ImageFitter::_createImageTemplate() const {
+	/*
 	IPosition imShape = _getImage()->shape();
 	IPosition startPos(imShape.nelements(), 0);
 	IPosition endPos(imShape - 1);
@@ -1126,11 +1146,23 @@ SubImage<Float> ImageFitter::_createImageTemplate() const {
 		startPos[stokesAxisNumber] = _stokesPixNumber;
 		endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
 	}
+	cout << "*** startpos " << startPos << " endPos " << endPos << endl;
 	Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
 	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
+	cout << __FILE__ << " " << __LINE__ << endl;
+
 	SubImage<Float> subImageTmp(*imageClone, slice, False);
+
+	cout << "*** subImageTmp shape " << subImageTmp.shape() << endl;
 	SubImage<Float> x = SubImageFactory<Float>::createSubImage(
 		subImageTmp, *_getRegion(), _getMask(), 0,
+		False, AxesSpecifier(), _getStretch()
+	);
+	*/
+	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
+
+	SubImage<Float> x = SubImageFactory<Float>::createSubImage(
+		*imageClone, *_getRegion(), _getMask(), 0,
 		False, AxesSpecifier(), _getStretch()
 	);
 	return x;

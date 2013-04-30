@@ -179,8 +179,9 @@ void AnnRegion::_extend() {
 			stokesNumbers[2*i] = (uInt)stokes[i];
 			stokesNumbers[2*i + 1] = stokesNumbers[2*i];
 		}
+        uInt nSel = 0;
 		vector<uInt> orderedRanges = CasacRegionManager::consolidateAndOrderRanges(
-			stokesNumbers
+			nSel, stokesNumbers
 		);
 		for (uInt i=0; i<orderedRanges.size(); i++) {
 			stokesRanges.push_back(Stokes::type(orderedRanges[i]));

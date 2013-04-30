@@ -77,6 +77,7 @@ int main() {
 	  Record regRec;
 	  CasacRegionManager rm(myImage->coordinates());
 	  IPosition imShape = myImage->shape();
+	  cout << "*** imShape " << imShape << endl;
 	  Double box1 = 1.24795026;
 	  Double box2 = 0.782552901;
 	  Double box3 = 1.24794616;
@@ -854,6 +855,28 @@ int main() {
 				  // caught as expected
 			  }
 			  AlwaysAssert(thrown == True, AipsError);
+
+		  }
+		  {
+			  writeTestString("Test setSpectralRanges does the right thing when region record supplied.");
+			  uInt nSelectedChannels;
+			  String regionName = "";
+			  String box = "";
+			  regRec = rm.fromBCS(
+			      diagnostics, nSelectedChannels, stokes,
+			      0, regionName, String("5~10,15,18"),
+			      CasacRegionManager::USE_ALL_STOKES, box,
+			      imShape
+			  );
+			  vector<uInt> x = rm.setSpectralRanges(nSelectedChannels, &regRec, imShape);
+			  AlwaysAssert(nSelectedChannels == 8, AipsError);
+			  AlwaysAssert(x.size() == 6, AipsError);
+			  AlwaysAssert(x[0] == 5, AipsError);
+			  AlwaysAssert(x[1] == 10, AipsError);
+			  AlwaysAssert(x[2] == 15, AipsError);
+			  AlwaysAssert(x[3] == 15, AipsError);
+			  AlwaysAssert(x[4] == 18, AipsError);
+			  AlwaysAssert(x[5] == 18, AipsError);
 
 		  }
 	  }

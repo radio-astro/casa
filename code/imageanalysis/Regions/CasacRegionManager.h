@@ -84,15 +84,27 @@ public:
 		const String& box, const IPosition& imShape, const String& imageName="",
 		Bool verbose=True
 	);
-
+	// <src>ranges</src> are pairs describing the pixel range over which to select.
+	// If you want to select just one pixel in the "range", you must specify that pixel
+	// in both parts of the pair. So if you want to select pixels 0 through 5 and pixel 13,
+	// you'd specify ranges[0] = 0; ranges[1] = 5; ranges[2] = 13; ranges[3] = 13
 	static vector<uInt> consolidateAndOrderRanges(
-		const vector<uInt>& ranges
+		uInt& nSelected, const vector<uInt>& ranges
 	);
 
 	static Record regionFromString(
 		const CoordinateSystem& csys, const String& regionStr,
 		const String& imageName, const IPosition& imShape
 	);
+
+	// Return the range(s) of spectral channels selected by the specification or the
+	// region record (Note only one of <src>specification</src> or <src>regionRec</src>
+	// may be specified). <src>imShape</src> is not used if <src>specification</src>
+	// is in the "new" format (ie contains "range").
+	vector<uInt> setSpectralRanges(
+		uInt& nSelectedChannels,
+		const Record *const regionRec, const IPosition& imShape=IPosition(0)
+	) const;
 
 	vector<uInt> setSpectralRanges(
 		String specification, uInt& nSelectedChannels,
@@ -146,10 +158,17 @@ private:
 		const IPosition& imShape
 	) const;
 
+	vector<uInt> _spectralRangeFromRegionRecord(
+		uInt& nSelectedChannels, const Record *const regionRec,
+		const IPosition& imShape
+	) const;
+
 	// does the image support the setting of a two dimensional box(es).
 	// If except is True, an exception will be thrown if this image does not
 	// support it. If not, False is returned in that case.
 	Bool _supports2DBox(Bool except) const;
+
+	vector<uInt> _initSpectralRanges(uInt& nSelectedChannels, const IPosition& imShape) const;
 };
 
 } // casa namespace
