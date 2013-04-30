@@ -91,10 +91,37 @@
         'eff' = Antenna efficiency (sqrt(K/Jy)) (VLA only)
         'gceff' = Gain curve and efficiency (VLA only)
 
-     The calibration specifications are not time-variable in the
-     present implementation.  Calibration values can be assigned to
-     each spw, antenna and pol selection, where applicable.  The 
-     same caltable can be specified for multipl runs of gencal, 
+
+     Generic calibration parameters should be specified in the 'parameter'
+     argument as a list.  The length of the list must correspond
+     to the net length of the specific polarizations, antennas, and
+     spws specified in the selection arguments.  The specified
+     parameters will be duplicated over all members of any unspecified
+     selection axes.  E.g., if pol=antenna=spw='', it only makes
+     sense to specify a single parameter value, and this will be
+     duplicated for all pols, antennas, and spws.  If multiple
+     parameter values are specified, at least one of the selection
+     arguments must be non-trivial, and the number of specified
+     parameters must be consistent with the explicit selection.
+     E.g., if a non-trivial spw selection is specified, then the 
+     parameter list should match the number of spws specified, and 
+     these values will be duplicated for all polarizations and 
+     antennas.   If more than one selection argument is non-trivially 
+     specified, the number of parameters specified should match 
+     the product of the number specified selection elements.  The 
+     parameter values should be sorted by pol (fastest), antenna, and 
+     spw (slowest).   Un-specified elements on non-trivially specified 
+     axes will be filled with nominal values (i.e., it is not
+     necessary to exhaustively specify all elements on any axis or 
+     use nominal parameter values explicitly).  Please consult the 
+     examples provided below for additional guidance.  There is
+     currently no support for time-dependent parameter specfication.
+     The specified parameters will be assumed constant in
+     time (though their impact on the data may be time-dependent, 
+     depending on the caltype).  Some caltype options do not require 
+     parameter specifications; these are described in detail below.
+     
+     The same caltable can be specified for multiple runs of gencal, 
      in which case the specified parameters will be incorporated 
      cumulatively.  E.g., amplitude parameters (caltype='amp')
      multiply and phase-like parameters ('ph', 'sbd','mbd','antpos') 
@@ -105,7 +132,7 @@
      the future.
 
      The caltables are applied to the data by using applycal.  Other
-     calibration tables must also be present, if applicable.
+     calibration tables may also be present, if applicable.
 
      For antenna position corrections (caltype='antpos'), the antenna 
      position offsets are specified in the ITRF frame. For EVLA, automated 
