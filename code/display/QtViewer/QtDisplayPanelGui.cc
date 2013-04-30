@@ -1341,6 +1341,9 @@ void QtDisplayPanelGui::removeAllDDs() {
 		qdd->done();
 		delete qdd;
 	}
+	if ( fitTool != NULL ){
+		fitTool->setImage( NULL );
+	}
 	updateFrameInformation();
 }
 
