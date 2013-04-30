@@ -1101,7 +1101,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	spwID = chanList_l(i,0); // First column has the SPW ID
 	Array<Double> chanFreq(msSpwSubTable.chanFreq()(spwID));
-	Double avgChanWidth = sum(msSpwSubTable.chanWidth()(spwID))
+	Double avgChanWidth = chanList_l(i,3)*sum(msSpwSubTable.chanWidth()(spwID))
 	  /msSpwSubTable.chanWidth()(spwID).nelements();
 	
 	freqList_l(i,0) = (Double)chanList_l(i,0);
