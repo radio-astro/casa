@@ -7,6 +7,9 @@ import pipeline.extern.logutils as logutils
 import pipeline.extern.logutils.colorize as colorize
 from . import casatools
 
+from logging import CRITICAL, WARNING, ERROR, INFO, DEBUG
+
+# Register two new logging levels with the standard logger
 TRACE = 5
 logging.addLevelName(TRACE, 'TRACE')
 colorize.ColorizingStreamHandler.level_map[TRACE] = (None, 'blue', False)
@@ -15,20 +18,23 @@ TODO = 13
 logging.addLevelName(TODO, 'TODO')
 colorize.ColorizingStreamHandler.level_map[TODO] = ('black', 'yellow', True)
 
-LOGGING_LEVELS = {'critical' : logging.CRITICAL,
-                  'error'    : logging.ERROR,
-                  'warning'  : logging.WARNING,
-                  'info'     : logging.INFO,
-                  'debug'    : logging.DEBUG,
+LOGGING_LEVELS = {'critical' : CRITICAL,
+                  'error'    : ERROR,
+                  'warning'  : WARNING,
+                  'info'     : INFO,
+                  'debug'    : DEBUG,
                   'todo'     : TODO,
-                  'trace'    : TRACE            }
+                  'trace'    : TRACE}
 
+# Begin with a default log level of NOTSET. All loggers created at module level
+# import time will use this logging level. 
 logging_level = logging.NOTSET
-_loggers = []
 
-# initialise the root logger to INFO, so that module-level logging messages
-# can be logged
-logging.getLogger().setLevel(logging.INFO)
+# initialise the root logger so that module-level messages can be logged.
+# Change this to see lower level messages from module-level statements at import
+# time
+logging.getLogger().setLevel(INFO)
+_loggers = []
 
 
 class CASALogHandler(logging.Handler):
@@ -78,13 +84,13 @@ class CASALogHandler(logging.Handler):
 
     @staticmethod
     def get_casa_priority(lvl):
-        if lvl >= logging.ERROR:
+        if lvl >= ERROR:
             return 'ERROR'
-        if lvl >= logging.WARNING:
+        if lvl >= WARNING:
             return 'WARN'
-        if lvl >= logging.INFO:
+        if lvl >= INFO:
             return 'INFO'
-        if lvl >= logging.DEBUG:
+        if lvl >= DEBUG:
             return 'DEBUG1'
         if lvl >= TRACE:
             return 'DEBUG2'
@@ -199,4 +205,3 @@ def set_logging_level(level='info'):
         
     casa_level = CASALogHandler.get_casa_priority(level_no)
     casatools.log.filter(casa_level)
-    
