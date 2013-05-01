@@ -128,11 +128,13 @@ class FluxcalFlagResults(basetask.Results):
 	    LOG.error ( ' No results to merge ')
 	    return
 
+	# For now only the refspwmap goes bavk to the context
+	# The other quantities can be merge later
 	ms = context.observing_run.get_ms( name = self._vis)
 	if ms:
-	    ms.fluxcal_linelist = self._fluxcal_linelist
-	    ms.fluxcal_flagcmds = self._fluxcal_flagcmds
-	    ms.fluxcal_refspwmap = self._refspwmap
+	    #ms.fluxcal_linelist = self._fluxcal_linelist
+	    ms.flagcmds.extend(self._fluxcal_flagcmds)
+	    ms.reference_spwmap = self._refspwmap
 
     def __repr__(self):
 	if self._vis is None or not self._fluxcal_linelist:
@@ -397,7 +399,8 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 	for line in fluxcal_lines:
 	    if line.fieldname != prev_fieldname or line.spwid != prev_spwid:
 		if flagcmd != '':
-		    flagcmds.append(flagcmd)
+		    flagcmds.append(flagcmd +
+		        ' reason="Flux_calibrator_atmospheric_line"')
 		    flagcmd = ''
 		if flagall and flagstats[line.fieldname][line.spwid] > threshold:
 	            flagcmd = 'mode=manual field=%s intent=%s spw=%d' % \
@@ -414,7 +417,7 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 
 	# Add last command
         if flagcmd != '':
-	    flagcmds.append(flagcmd)
+	    flagcmds.append(flagcmd + ' reason="Flux_calibrator_atmospheric_line"')
 		    
 	return flagcmds
 
