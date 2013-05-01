@@ -617,9 +617,10 @@ class CalLibrary(object):
             for line in [l for l in import_file if l.startswith('applycal(')]:
                 calapp = CalApplication.from_export(line)                
                 calapps.append(calapp)
-
-	if not append:
-            self._active = CalState()
+                                    
+        if not append:
+           self._active = CalState()
+           
         for calapp in calapps:
             LOG.debug('Adding %s' % calapp)        
             self.add(calapp.calto, calapp.calfrom)
