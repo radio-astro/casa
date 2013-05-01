@@ -1,5 +1,0 @@
-foreach(prog casahdf5support showtable showtablelock taql)
-    add_executable (${prog}  ${prog}.cc)
-    target_link_libraries (${prog} casa_tables)
-    install(TARGETS ${prog} DESTINATION bin)
-endforeach(prog casahdf5support showtablelock taql)

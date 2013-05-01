@@ -1,2 +1,0 @@
-
-casa::SynthesisIterBot *itsIterBot;
