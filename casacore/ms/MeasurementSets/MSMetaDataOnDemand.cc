@@ -684,7 +684,9 @@ Bool MSMetaDataOnDemand::_cacheUpdated(const Float incrementInBytes) {
 }
 
 std::set<uInt> MSMetaDataOnDemand::getSpwsForIntent(const String& intent) {
-	_checkIntent(intent);
+	if (! _hasIntent(intent)) {
+		return std::set<uInt>();
+	}
 	vector<std::set<String> > spwToIntentsMap = _getSpwToIntentsMap();
 	std::set<uInt> spws;
 	for (uInt i=0; i<spwToIntentsMap.size(); i++) {
@@ -1483,7 +1485,9 @@ std::set<Int> MSMetaDataOnDemand::getFieldsForScans(const std::set<Int>& scans) 
 }
 
 std::set<Int> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
-	_checkIntent(intent);
+	if (! _hasIntent(intent)) {
+		return std::set<Int>();
+	}
 	vector<std::set<String> > fieldToIntentsMap;
 	std::map<String, std::set<Int> > intentToFieldsMap;
 	_getFieldsAndIntentsMaps(
@@ -1492,14 +1496,9 @@ std::set<Int> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
 	return intentToFieldsMap[intent];
 }
 
-void MSMetaDataOnDemand::_checkIntent(const String& intent) {
+Bool MSMetaDataOnDemand::_hasIntent(const String& intent) {
 	std::set<String> uniqueIntents = getIntents();
-	if (uniqueIntents.find(intent) == uniqueIntents.end()) {
-		throw AipsError(
-			_ORIGIN + "Unknown intent "
-			+ intent + " for this dataset"
-		);
-	}
+	return uniqueIntents.find(intent) != uniqueIntents.end();
 }
 
 
