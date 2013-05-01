@@ -132,7 +132,6 @@ class MandatoryInputsMixin(object):
 	else:
 	    if not hasattr (self, '_my_vislist'):
                 LOG.trace('Setting Inputs._my_vislist to %s' % ms_names)
-                print 'Setting Inputs._my_vislist to ',  ms_names
                 self._my_vislist = ms_names
 	    return ms_names
 
@@ -145,7 +144,6 @@ class MandatoryInputsMixin(object):
                 self.context.observing_run.get_ms(name=vis)
 	    if not hasattr (self, '_my_vislist'):
                 LOG.trace('Setting Inputs._my_vislist to %s' % value)
-                print 'Setting Inputs._my_vislist to ', value 
                 self._my_vislist = value 
 
         self._vis = value
