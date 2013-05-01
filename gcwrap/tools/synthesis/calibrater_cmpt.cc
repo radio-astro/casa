@@ -465,7 +465,7 @@ calibrater::initcalset(const int calset)
 
 bool
 calibrater::delmod(const bool otf, const ::casac::variant& field,
-		   const bool scr)
+		   const ::casac::variant& spw, const bool scr)
 {
   if (! itsMS) {
     *itsLog << LogIO::SEVERE << "Must first open a MeasurementSet."
@@ -485,7 +485,8 @@ calibrater::delmod(const bool otf, const ::casac::variant& field,
     //remove the model from the header
     if (otf) {
       *itsLog << "Deleting OTF Visbility Model info." << LogIO::POST;
-      VisModelData::clearModel(*itsMS,toCasaString(field));
+      cerr << "field " << toCasaString(field) << " spw " << toCasaString(spw) << endl;
+      VisModelData::clearModel(*itsMS,toCasaString(field), toCasaString(spw));
     }
 
     // remove the MODEL_DATA column

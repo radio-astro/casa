@@ -1117,6 +1117,12 @@ cb.solve();
      <value></value>
      </param>
 
+     <param type="any" direction="in" name="spw">
+     <description>Select on spw only if field is defined</description>
+     <any type="variant"/>
+     <value></value>
+     </param>
+
      <param type="bool" direction="in" name="scr">
      <description>If T, delete the MODEL_DATA column</description>
      <value>false</value>
@@ -1140,6 +1146,9 @@ column visible.  (Create the MODEL_DATA column by using
 usescratch=T in the im tool, or by running the cb.open
 with addmodel=T.)
 
+If otf=T, the user may selectively remove only a selection of fields model from the MS by specifying the field parameter. Similarly if the field parameter is specified, selected spws model for those fields may be deleted by specifying the spw. 
+
+
 For convenience, this method also provides a means for
 deleting the MODEL_DATA column by setting scr=T.
 
@@ -1148,9 +1157,21 @@ deleting the MODEL_DATA column by setting scr=T.
 <example>
 
 cb.open('ngc5921.ms');
-cb.delmod(T,F);   # delete only the otf model
+cb.delmod(otf=T,scr=F);   # delete only the otf model for all fields
 cb.solve();
 
+cb.open('n4826.ms')
+cb.delmod(otf=T, field='1') 
+#delete otf model of field 1 only, all other fields model are untouched
+#if present
+cb.open('n4826.ms')
+cb.delmod(otf=T, field='1', spw='2') 
+#delete otf model of field 1 and spectralwindow 2  only.
+
+####NOTE doing:
+cb.delmod(otf=T, field='', spw='2')
+
+#will delete all otf models and spw will be ignored 
 
 </example>
 </method>
