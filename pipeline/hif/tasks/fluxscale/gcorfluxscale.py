@@ -64,6 +64,16 @@ class GcorFluxscaleInputs(fluxscale.FluxscaleInputs):
         self._refant = value
 
     @property
+    def refspwmap(self):
+        if self._refspwmap is None:
+            return []
+        return self._refspwmap
+
+    @refspwmap.setter
+    def refspwmap(self, value):
+        self._refspwmap = value
+
+    @property
     def hm_resolvedcals(self):
         if self._hm_resolvedcals is None:
             return 'automatic'
@@ -99,13 +109,11 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
     def prepare(self, **parameters):
         inputs = self.inputs
-        #ms = inputs.context.observing_run.get_ms(name=inputs.vis)
         ms = inputs.ms
 	result = commonfluxresults.FluxCalibrationResults(inputs.vis)
 
         # check that the measurement set does have an amplitude calibrator.
         if inputs.reference == '':
-            # No point carrying on if not.
             # No point carrying on if not.
             LOG.error('%s has no data with reference intent %s'
                       '' % (ms.basename, inputs.refintent))
@@ -114,8 +122,8 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         refant = inputs.refant
         if refant == '':
             # get the reference antenna for this measurement set from the 
-            # context. This seems to come back as a string containing a ranked
-            # list of antenna names, choose the first one.
+            # context. This comes back as a string containing a ranked
+            # list of antenna names. Choose the first one.
             refant = ms.reference_antenna
             if refant is None:
                 msg = ('No reference antenna specified and none found in context '
@@ -125,6 +133,12 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             refant = refant.split(',')
             refant = refant[0]
         LOG.info('refant:%s' % refant)
+
+	refspwmap = inputs.refspwmap
+	if not refspwmap:
+            refspwmap = ms.reference_spwmap
+	    if not refspwmap:
+	        refspwmap = [-1]
 
         hm_resolvedcals = inputs.hm_resolvedcals
 	allantenna = inputs.antenna
@@ -146,7 +160,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         # do a phase-only gaincal on the remaining calibrators using the full
 	# set of antennas
-        self._do_gaincal(caltable=caltable, field=inputs.transfer,
+        r = self._do_gaincal(caltable=caltable, field=inputs.transfer,
 	  intent=inputs.transintent, calmode='p', solint=inputs.phaseupsolint,
 	  antenna=allantenna, refant=refant, append=True, merge=True)
 
@@ -154,8 +168,8 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         # that fluxscale will analyse
         r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
 	    intent=inputs.transintent + ',' + inputs.refintent, calmode='a',
-	    solint=inputs.solint, antenna=allantenna, refant=refant, append=False,
-	    merge=True)
+	    solint=inputs.solint, antenna=allantenna, refant=refant,
+	    append=False, merge=True)
 
         # get the gaincal caltable from the results
 	# this is the table that will be fluxscaled
@@ -172,7 +186,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # Schedule a fluxscale job using this caltable. This is the result
             # that contains the flux measurements for the context.
             try:
-                self._do_fluxscale(caltable)
+                self._do_fluxscale(caltable, refspwmap=refspwmap)
 
                 # and finally, do a setjy, add its setjy_settings
                 # to the main result
@@ -214,7 +228,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 #        casatools.ca.open(caltable)
 #        spw = ca.spw(name=True)
 #        ca.spw() does not seem to work. For now use direct table access.
-        fluxscale_spwids = []
+#        fluxscale_spwids = []
         with casatools.TableReader(caltable, nomodify=False) as table:
             spwids = table.getcol('SPECTRAL_WINDOW_ID')
             spwids = set(spwids)
@@ -266,7 +280,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         return self._executor.execute(task, merge=merge)
 
-    def _do_fluxscale(self, caltable=None):
+    def _do_fluxscale(self, caltable=None, refspwmap=None):
         inputs = self.inputs
         
         task_args = {'output_dir' : inputs.output_dir,
@@ -274,7 +288,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
           'caltable'   : caltable,
           'reference'  : inputs.reference,
           'transfer'   : inputs.transfer,
-          'refspwmap'  : inputs.refspwmap  }
+          'refspwmap'  : refspwmap  }
         
         task_inputs = fluxscale.Fluxscale.Inputs(inputs.context, **task_args)
         task = fluxscale.Fluxscale(task_inputs)

@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import re
 import types
+import ast
 
 import pipeline.domain as domain
 from pipeline.hif.tasks.common import commonfluxresults
@@ -46,7 +47,7 @@ class FluxscaleInputs(basetask.StandardInputs):
         # spw needs to be a string and not a number
         if 'spw' in args:
             args['spw'] = str(args['spw'])
-            
+
         for k,v in args.items():
             if v is None:
                 del args[k]        
@@ -111,12 +112,48 @@ class FluxscaleInputs(basetask.StandardInputs):
 
     @property
     def refspwmap(self):
-        return self._refspwmap
+        """
+        Get the reference spw map.
+
+        refpwmap is normally found by inspecting the context and returning the
+        refspwmap as calculated by a prior 'flux calibrator flagging' task.
+        However, if refspwmap has been manually overridden, that
+        manually specified value is returned.
+
+        If a flux calibrator flagging task has not been executed and a manual
+        override value is not given, None is returned.
+        """
+        # if refant was overridden, return the manually specified value
+        if self._refspwmap is not None:
+            return self._refspwmap
+
+        # refspwmap is ms-dependent, so if this inputs is handling multiple
+        # measurement sets, return a list of refants instead.
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('refspwmap')
+
+        # we cannot find the context value without the measurement set
+        if not self.ms:
+            return None
+
+        # get the reference antenna for this measurement set
+        refspwmap = self.ms.reference_spwmap
+
+        # otherwise return whatever we found. We assume the calling function
+        # knows how to handle an object of this type.
+        return refspwmap
+
     
     @refspwmap.setter
     def refspwmap(self, value):
-        if value is None:
-            value = [-1,]
+        def element_to_int(e):
+	    if type(e) is types.ListType:
+	        return [element_to_int(i) for i in e]
+	    return int(e)
+
+	if value not in (None, -1):
+	    value = [element_to_int(n) for n in ast.literal_eval(str(value))]
+
         self._refspwmap = value
 
     @property
