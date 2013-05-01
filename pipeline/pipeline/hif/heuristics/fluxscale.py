@@ -37,10 +37,11 @@ def antenna(ms, refsource, refant, peak_frac=0.7):
     except:
         calibrator_size = None
 
-    if calibrator_size is None:
+    if calibrator_size is None or calibrator_size==0.0:
         # assume calibrator unresolved, set antenna='' so that all antennas
         # will be used in gaincals
         antenna = ''
+        LOG.info('calibrator is unresolved')
     else:
         antenna = set()
         LOG.info('calibrator:%s size:%s' % (refsource, calibrator_size))
