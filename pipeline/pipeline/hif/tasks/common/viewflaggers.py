@@ -412,6 +412,10 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                     elif rulename == 'nmedian':
 
+                        # Check for valid median
+                        if data_median is None:
+                            continue
+
                         # Check limits.
                         limit = rule['limit']
                         i2flag = i[np.logical_and(data > limit * data_median,
