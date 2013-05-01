@@ -608,7 +608,7 @@ def simalma(
                 msg("Analyzing TP image.", origin="simalma", priority=v_priority)
                 #taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_tp+"', modelimage='', cell='"+str(cell_tp)+"', imsize="+str(imsize_tp)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
                 vis_tp = fileroot+"/"+vis_tp
-                taskstr = "simanalyze(project="+project+", image=False, vis='"+vis_tp+"', analyze=True, showuv=False, showpsf=False, showconvolved=True, graphics="+str(graphics)+", verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+                taskstr = "simanalyze(project="+project+", image=False, imagename='"+fileroot+"/"+imagename_tp+"', analyze=True, showuv=False, showpsf=False, showconvolved=True, graphics="+str(graphics)+", verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
                 msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
 
                 try:
@@ -622,7 +622,7 @@ def simalma(
                     #           graphics=graphics, verbose=verbose,
                     #           overwrite=overwrite)
                     simanalyze(project=project, image=False,
-                               vis=vis_tp,
+                               imagename=fileroot+"/"+imagename_tp,
                                analyze=True,
                                showuv=False,showpsf=False,showconvolved=True,
                                graphics=graphics, verbose=verbose,
