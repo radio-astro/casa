@@ -1,7 +1,7 @@
 @CHARSET "UTF-8";
 
 body {
-	min-height:200px;
+	min-height:100%;
 	padding:10px 60px;
 	text-align:center;
 	font-family:"Lucida Grande","Lucida Sans","Lucida Sans Unicode","Segoe UI",Verdana,sans-serif;
