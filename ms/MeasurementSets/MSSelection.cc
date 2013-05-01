@@ -1135,7 +1135,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       Int islice=currspwsl.nelements();
       currspwsl.resize(islice+1,True);
       currspwsl(islice)=Slice(chanmat(i,1),
-			      chanmat(i,2)-chanmat(i,1)+1,
+			      (chanmat(i,2)-chanmat(i,1)+chanmat(i,3))/chanmat(i,3),
+			      // chanmat(i,2)-chanmat(i,1)+1,
 			      chanmat(i,3));
     }
     
