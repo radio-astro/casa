@@ -1457,7 +1457,7 @@ model_pbcor_sum = 72.72
 ## output channel.
 clean_image_max = 1.46
 clean_momentone_median = 429.
-clean_momentone_planezero = 690.
+clean_momentone_planezero = 690.6
 clean_momentone_planelast = 121.6911
 
 canonical = {}
