@@ -339,7 +339,7 @@ private:
 
 	static void _checkScan(const Int scan, const std::set<Int> allScans);
 
-	void _checkIntent(const String& intent);
+	Bool _hasIntent(const String& intent);
 
 	void _checkFieldID(const Int fieldID);
 
