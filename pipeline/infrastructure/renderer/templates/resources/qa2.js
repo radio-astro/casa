@@ -42,7 +42,8 @@ $(document).ready(function(){
         $("ul.thumb li:visible a").each(function() {        
         	var mainImage = $(this).attr("href"); //Find Image href
             var title = $(this).attr("title"); //Find Image title
-            if (mainImage == target) {
+            var basename = $.url(mainImage).segment(-1);
+            if (basename == target) {
             	index = thumbs.length;
             } 
             thumbs.push({
