@@ -10,11 +10,11 @@ from pipeline.infrastructure.basetask import timestamp
 
 #import pipeline.hsd.heuristics as heuristics
 
-loglevelMap = { logging.logging.CRITICAL: 0,
-                logging.logging.ERROR: 0,
-                logging.logging.WARNING: 1,
-                logging.logging.INFO: 2,
-                logging.logging.DEBUG: 3,
+loglevelMap = { logging.CRITICAL: 0,
+                logging.ERROR: 0,
+                logging.WARNING: 1,
+                logging.INFO: 2,
+                logging.DEBUG: 3,
                 logging.TRACE: 4 }
 
 fitfuncMap = { 'cspline': 'spline',
