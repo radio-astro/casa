@@ -23,9 +23,9 @@
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//#   
-//# @author 
-//# @version 
+//#
+//# @author
+//# @version
 //////////////////////////////////////////////////////////////////////////////
 
 #include <msmetadata_cmpt.h>
@@ -261,12 +261,20 @@ vector<int> msmetadata::fdmspws() {
 variant* msmetadata::fieldsforintent(const string& intent, const bool asnames) {
 	_FUNC(
 		std::set<Int> ids = _msmd->getFieldsForIntent(intent);
-		if (asnames) {
-			return new variant(_fieldNames(ids));
+		variant *x;
+		if (ids.size() == 0) {
+			*_log << LogIO::WARN << "Intent " << intent
+				<< " does not exist in this dataset." << LogIO::POST;
+			x = asnames
+				? new variant(vector<string>(0))
+				: new variant(vector<int>(0));
 		}
 		else {
-			return new variant(_setIntToVectorInt(ids));
+			x = asnames
+				? new variant(_fieldNames(ids))
+				: new variant(_setIntToVectorInt(ids));
 		}
+		return x;
 	)
 	return 0;
 }
@@ -607,7 +615,12 @@ int msmetadata::sideband(int spw) {
 
 vector<int> msmetadata::spwsforintent(const string& intent) {
 	_FUNC(
-		return _setUIntToVectorInt(_msmd->getSpwsForIntent(intent));
+		vector<int> x = _setUIntToVectorInt(_msmd->getSpwsForIntent(intent));
+		if (x.size() == 0) {
+			*_log << LogIO::WARN << "Intent " << intent
+				<< " does not exist in this dataset." << LogIO::POST;
+		}
+		return x;
 	)
 	return vector<int>();
 }
