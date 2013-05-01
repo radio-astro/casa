@@ -84,8 +84,9 @@
 # Imports
 # -------
 
-import os
 import math
+import os
+import string
 
 import numpy
 import scipy
@@ -1347,10 +1348,33 @@ def bpcal_score_RMS( RMS, RMSMax ):
 # ------------------------------------------------------------------------------
 
 def bpcal_score_SN( SN ):
-
-    score = scipy.special.erf( SN / math.sqrt(2.0) )
-
-    return score
+	try:
+		score = scipy.special.erf( SN / math.sqrt(2.0) )
+		return score
+	except FloatingPointError as e:
+		# work around scipy bug triggered with certain values, such as when
+		# SN=37.5922006575. The bug is supposed to be fixed in scipy 0.12.0,
+		# so detect which version of scipy we're running under and try the
+		# operation again if this version is known to be affected.
+		#
+		# We can safely ignore the exception as it is only thrown when the
+		# error function return value is so close to -1 or 1 that the lack of
+		# precision makes no practical difference.
+		(_, minor_version, _) = string.split(scipy.version.short_version, '.')
+		if int(minor_version) < 12:
+			under_orig = scipy.geterr()['under']
+			try:
+				scipy.seterr(under='warn')
+				score = scipy.special.erf( SN / math.sqrt(2.0) )
+				return score
+			except FloatingPointError as e:
+				msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % SN
+				raise FloatingPointError(msg)
+			finally:
+				scipy.seterr(under=under_orig)				
+		else:
+			msg = 'Error calling scipy.special.erf(%s/math.sqrt(2.0))' % SN
+			raise FloatingPointError(msg)
 
 # ------------------------------------------------------------------------------
 
