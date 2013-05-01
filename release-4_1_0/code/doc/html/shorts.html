@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+
+<SCRIPT LANGUAGE = "JavaScript1.2"
+src="../javascripts/menu.js"></script>
+<SCRIPT LANGUAGE = "JavaScript1.2"
+src="../javascripts/aipsmenu.js"></script>
+<SCRIPT LANGUAGE = "JavaScript1.2">
+<!--
+ // Function need to place directory relative to docs tree.
+ aMenu = new aipsMenu("..", "#00009C");
+ function onLoad() {
+    if (document.layers) {
+        aMenu.loadMenus();
+    }
+ }
+//-->
+</SCRIPT>
+
+
+    <title>LaTeX Shortcuts</title>
+  </head>
+
+  
+<body background="../gif/watermark.gif" bgcolor="#ffffff" text="#000000"
+link="#cc0f0f" vlink="#00009c">
+
+<table bgcolor="#00009C" cellpadding=4 cellspacing=0 border=0 width=600
+height=25>
+<tr><td>
+<a href="../gettingstarted.html"
+onMouseOver="aMenu.showAipsMenu('gsMenu')">
+<font size=2 face=helvetica  color="#ffffff">
+<b>Getting Started</b></a></td>
+<td>
+<a href="../user/documentation.html"
+onMouseOver="aMenu.showAipsMenu('userMenu')">
+<font size=2 face=helvetica color="#ffdd00">
+<b>Documentation</b></a></td>
+<td>
+<a href="../glish/glish.html"
+onMouseOver="aMenu.showAipsMenu('glishMenu')">
+<font size=2 face=helvetica color="#ffffff">
+<b>Glish</b></a></td>
+<td>
+<a href="../learnmore.html"
+onMouseOver="aMenu.showAipsMenu('learnMenu')">
+<font size=2 face=helvetica color="#ffffff">
+<b>Learn More</b></a></td>
+<td>
+<a href="../programmer/programmer.html"
+onMouseOver="aMenu.showAipsMenu('progMenu')">
+<font size=2 face=helvetica color="#ffffff">
+<b>Programming</b></a></td>
+<td>
+<a href="../contactus/contactus.html"
+onMouseOver="aMenu.showAipsMenu('commMenu')">
+<font size=2 face=helvetica color="#ffffff">
+<b>Contact Us</b></a>
+</td></tr></table>
+<table border=0 width=600>
+<tr><td><img src="../gif/aipslogo.gif">
+</td><td><font size=2 face=helvetica color="cc0f0f"><b>VERSIONID<b></font>
+</td><td valign=middle>
+<font size=2 face=helvetica color="cc0f0f"><a
+href="../newsletters/index.html"><img src="../gif/tri2.gif" border=0> 
+ <b>News</a></font></b><P>
+<font size=2 face=helvetica color="cc0f0f"><a
+href="../faq/faq.html"><img src="../gif/tri2.gif" border=0>  <b>FAQ</a
+></font></b><P>
+<font size=2 face=helvetica color="cc0f0f"><a
+href="../search/search.html"><img src="../gif/tri2.gif" border=0>  <b>
+Search</a></font></b><P>
+<font size=2 face=helvetica color="cc0f0f"><a href="../aips++.html"><img
+src="../gif/tri2.gif" border=0>  <b>Home</a
+></font></b><P>
+
+</td></tr></table>
+    <h1>Guide for <font face=helvetica>AIPS++</font> Help Writers</h1>
+
+<table cellpadding=4 cellspacing=4 border=2 width="100%">
+
+<tr><th>Term</th><th>LaTeX Shortcut</th></tr>
+<tr><td><font face=helvetica><B>AIPS++</B></font></td><td>\aipspp</td></tr>
+
+<tr><td><I>Glish</I></td><td>\glish</td></tr>
+
+<tr><td><I>AipsView</I></td><td>\av</td></tr>
+
+<tr><td><tt>tool</tt></td><td>\tool</td></tr>
+
+<tr><td><tt>tools</tt></td><td>\tools</td></tr>
+
+<tr><td><tt>tool function</tt></td><td>\toolfunction</td></tr>
+<tr><td><tt>tool functions</tt></td><td>\toolfunctions</td></tr>
+<tr><td><tt>constructor</tt></td><td>\constructor</td></tr>
+<tr><td><tt>constructors</tt></td><td>\constructors</td></tr>
+</table>
+<P>
+<B>Note:</B>
+<UL><LI> When defining new commands, please avoid using <tt>\newcommand</tt>
+and instead use <tt>\providecommand</tt>. <P>
+<LI> Also, to avoid checking in
+.help files with errors and waiting for the build to see if something is broken,
+please <tt>gmake</tt> <I>yourfilename</I><tt>.dvi</tt> before your check in.
+This will catch any of those nasty errors that would otherwise popup in the
+build. <P>
+
+<LI> All definitions in use by <font face=helvetica>AIPS++</font> can be found in
+<tt>code/doc/texinputs.dir/aips2defs.tex</tt>.</UL><P>
+Thanks.
+
+
+    <hr>
+    <address><a href="mailto:kweather@nrao.edu">Kate Weatherall</a></address>
+<!-- Created: Wed May 12 09:25:44 MDT 1999 -->
+<!-- hhmts start -->
+Last modified: Thu Jul 22 08:54:11 MDT 1999
+<!-- hhmts end -->
+  </body>
+</html>

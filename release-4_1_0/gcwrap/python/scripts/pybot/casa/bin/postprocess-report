@@ -1,0 +1,123 @@
+#!/usr/bin/perl
+use local::lib;
+use HTML::TreeBuilder;
+use HTML::PrettyPrinter;
+use HTML::Element;
+use File::Basename;
+use FileHandle;
+
+$publish_html_script = "$ENV{'HOME'}/pybot/casa/bin/publish-current-html";
+$symlinkfile = "/home/warp/casa/jenkins/work/userContent/promotion/stage01/report.html";
+
+die "a single argument is required" unless scalar(@ARGV) == 1;
+
+$commands = '';
+$reportfile = $ARGV[0];
+if ( $reportfile =~ m|\[([^\]]+)\]::(.*)| ) {
+    $commands = $1;
+    $reportfile = $2;
+}
+
+$delay = 0;
+@commands = split(';',$commands);
+foreach ( @commands ) {
+    $delay = $1 if m|DELAY:(\d+)|;
+}
+
+$reportdir = dirname($reportfile);
+die "cannot find report path: $reportdir" unless -d $reportdir;
+die "no version information (i.e. version.txt file) in '$reportdir'" unless -f "$reportdir/version.txt";
+
+###
+### read version information
+###
+open( V, "<", "$reportdir/version.txt");
+$v = <V>;
+close(V);
+die "version file format error: $v" unless $v =~ m|^VERSION>\s+([0-9.]+)\s+(\d+)|;
+$version = $1;
+$revision = $2;
+
+if ( $delay > 0 ) {
+    $pid = fork( );
+    if ( $pid < 0 ) { die "forking delay process failed"; }
+    if ( $pid > 0 ) {
+	### parent
+	print "postprocessing of $reportfile will happen in about " . ($delay > 60 ? ($delay / 60) . " minutes" : "$delay seconds") . "...\n";
+	exit(0);
+    }
+    
+    #### first child
+    setpgrp(0,0);
+    $SIG{TTOU} = "IGNORE";
+    $SIG{TTIN} = "IGNORE";
+    $SIG{TSTP} = "IGNORE";
+    $SIG{HUP} = "IGNORE";
+    $SIG{INT} = "IGNORE";
+    close(STDIN);
+    close(STDOUT);
+    close(STDERR);
+
+    if ( fork( ) != 0 ) { exit(0); }	### new process group leader exits...
+    #### second child
+        
+    sleep($delay);
+    exec( "$0 $reportfile" );
+    exit(0);
+}
+
+###
+### check for the report file after the delay... since it may not have appeared yet...
+###
+die "cannot find report file: $reportfile" unless -f $reportfile;
+
+###
+### parse html...
+###
+my $html = HTML::TreeBuilder->new;
+$html->store_comments(1);
+$html->parse_file($reportfile);
+
+###
+### extract and replace title
+###
+my $title = $html->look_down('_tag', 'h1');
+die "cannot find title content" unless defined $$title{'_content'};
+$ary = $$title{'_content'};
+$$ary[0] = "CASA $version Regressions (r$revision)";
+
+###
+### output new HTML document...
+### ...(using PrettyPrinter because otherwise it is one long line)...
+###
+my $hpp = new HTML::PrettyPrinter ('linelength' => 90,'quote_attr' => 1);
+$html->address("0.1.0")->attr(_hpp_indent,0);    # for an individual element
+$hpp->set_force_nl(1,qw(body head));             # for tags
+$hpp->set_force_nl(1,qw(@SECTIONS));             # as above
+$hpp->set_nl_inside(0,'default!');               # for all tags
+$hpp->allow_forced_nl(1);
+
+
+rename($reportfile,"$reportfile.orig") or die "could not rename report file";
+$fh = FileHandle->new($reportfile,"w");
+die "could not open output file" unless defined $fh;
+
+$hpp->select($fh);
+$hpp->format($html);
+undef $fh;               ### close file
+
+###
+### symlink is only created for report files that *seem* to be daily runs...
+### i.e. which have a date string as the report directory...
+### this prevents testing from overwriting the report link...
+###
+### NOTE: should fix this to make the link a relative path...
+###
+if ( basename($reportdir) =~ m|\d{8}_\d{4}| ) {
+    open( PUBLISH, "$publish_html_script $reportfile $symlinkfile 2>&1 |" );
+    while ( <PUBLISH> ) {
+	print "publish> $_";
+    }
+    close(PUBLISH);
+}
+

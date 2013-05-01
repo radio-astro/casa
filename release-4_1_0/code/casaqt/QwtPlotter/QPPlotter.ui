@@ -1,0 +1,576 @@
+<ui version="4.0" >
+ <class>PlotterUI</class>
+ <widget class="QWidget" name="PlotterUI" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>757</width>
+    <height>573</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Qwt Plotter</string>
+  </property>
+  <layout class="QVBoxLayout" >
+   <property name="spacing" >
+    <number>3</number>
+   </property>
+   <property name="leftMargin" >
+    <number>3</number>
+   </property>
+   <property name="topMargin" >
+    <number>3</number>
+   </property>
+   <property name="rightMargin" >
+    <number>3</number>
+   </property>
+   <property name="bottomMargin" >
+    <number>3</number>
+   </property>
+   <item>
+    <widget class="QSplitter" name="splitter_2" >
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <widget class="QFrame" name="canvasFrame" >
+      <property name="frameShape" >
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow" >
+       <enum>QFrame::Plain</enum>
+      </property>
+      <property name="lineWidth" >
+       <number>0</number>
+      </property>
+     </widget>
+     <widget class="QFrame" name="toolFrame" >
+      <property name="sizePolicy" >
+       <sizepolicy vsizetype="Preferred" hsizetype="Fixed" >
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="maximumSize" >
+       <size>
+        <width>150</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="frameShape" >
+       <enum>QFrame::NoFrame</enum>
+      </property>
+      <property name="frameShadow" >
+       <enum>QFrame::Plain</enum>
+      </property>
+      <layout class="QVBoxLayout" >
+       <property name="spacing" >
+        <number>3</number>
+       </property>
+       <property name="leftMargin" >
+        <number>3</number>
+       </property>
+       <property name="topMargin" >
+        <number>3</number>
+       </property>
+       <property name="rightMargin" >
+        <number>3</number>
+       </property>
+       <property name="bottomMargin" >
+        <number>3</number>
+       </property>
+       <item>
+        <widget class="QSplitter" name="splitter" >
+         <property name="orientation" >
+          <enum>Qt::Vertical</enum>
+         </property>
+         <widget class="QGroupBox" name="handBox" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize" >
+           <size>
+            <width>150</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="title" >
+           <string>Hand Tool</string>
+          </property>
+          <layout class="QVBoxLayout" >
+           <property name="spacing" >
+            <number>3</number>
+           </property>
+           <property name="leftMargin" >
+            <number>3</number>
+           </property>
+           <property name="topMargin" >
+            <number>3</number>
+           </property>
+           <property name="rightMargin" >
+            <number>3</number>
+           </property>
+           <property name="bottomMargin" >
+            <number>3</number>
+           </property>
+           <item>
+            <widget class="QRadioButton" name="handSelectButton" >
+             <property name="text" >
+              <string>Select</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="handZoomButton" >
+             <property name="text" >
+              <string>Zoom</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="handPanButton" >
+             <property name="text" >
+              <string>Pan</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="handNoneButton" >
+             <property name="text" >
+              <string>None</string>
+             </property>
+             <property name="checked" >
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType" >
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="trackerBox" >
+             <property name="enabled" >
+              <bool>true</bool>
+             </property>
+             <property name="text" >
+              <string>Tracker</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <spacer>
+             <property name="orientation" >
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeType" >
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" >
+              <size>
+               <width>20</width>
+               <height>10</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="legendBox" >
+             <property name="text" >
+              <string>Legend</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" >
+             <property name="spacing" >
+              <number>0</number>
+             </property>
+             <property name="leftMargin" >
+              <number>0</number>
+             </property>
+             <property name="topMargin" >
+              <number>0</number>
+             </property>
+             <property name="rightMargin" >
+              <number>0</number>
+             </property>
+             <property name="bottomMargin" >
+              <number>0</number>
+             </property>
+             <item>
+              <spacer>
+               <property name="orientation" >
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeType" >
+                <enum>QSizePolicy::Fixed</enum>
+               </property>
+               <property name="sizeHint" >
+                <size>
+                 <width>10</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QComboBox" name="legendChooser" >
+               <property name="enabled" >
+                <bool>false</bool>
+               </property>
+               <property name="currentIndex" >
+                <number>-1</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QGroupBox" name="exportBox" >
+          <property name="title" >
+           <string>Export Tools</string>
+          </property>
+          <layout class="QVBoxLayout" >
+           <property name="spacing" >
+            <number>3</number>
+           </property>
+           <property name="leftMargin" >
+            <number>3</number>
+           </property>
+           <property name="topMargin" >
+            <number>3</number>
+           </property>
+           <property name="rightMargin" >
+            <number>3</number>
+           </property>
+           <property name="bottomMargin" >
+            <number>3</number>
+           </property>
+           <item>
+            <layout class="QHBoxLayout" >
+             <property name="spacing" >
+              <number>3</number>
+             </property>
+             <property name="leftMargin" >
+              <number>3</number>
+             </property>
+             <property name="topMargin" >
+              <number>3</number>
+             </property>
+             <property name="rightMargin" >
+              <number>3</number>
+             </property>
+             <property name="bottomMargin" >
+              <number>3</number>
+             </property>
+             <item>
+              <widget class="QComboBox" name="exportFormat" />
+             </item>
+             <item>
+              <spacer>
+               <property name="orientation" >
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" >
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QCheckBox" name="exportScreen" >
+             <property name="text" >
+              <string>Screen Resolution</string>
+             </property>
+             <property name="checked" >
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" >
+             <property name="spacing" >
+              <number>3</number>
+             </property>
+             <property name="leftMargin" >
+              <number>3</number>
+             </property>
+             <property name="topMargin" >
+              <number>3</number>
+             </property>
+             <property name="rightMargin" >
+              <number>3</number>
+             </property>
+             <property name="bottomMargin" >
+              <number>3</number>
+             </property>
+             <item>
+              <widget class="QCheckBox" name="exportDPIbox" >
+               <property name="text" >
+                <string>dpi</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="exportDPI" >
+               <property name="enabled" >
+                <bool>false</bool>
+               </property>
+               <property name="minimum" >
+                <number>-1</number>
+               </property>
+               <property name="maximum" >
+                <number>9999999</number>
+               </property>
+               <property name="value" >
+                <number>-1</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" >
+             <property name="spacing" >
+              <number>3</number>
+             </property>
+             <property name="leftMargin" >
+              <number>3</number>
+             </property>
+             <property name="topMargin" >
+              <number>3</number>
+             </property>
+             <property name="rightMargin" >
+              <number>3</number>
+             </property>
+             <property name="bottomMargin" >
+              <number>3</number>
+             </property>
+             <item>
+              <widget class="QCheckBox" name="exportSizeBox" >
+               <property name="text" >
+                <string>size</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="exportWidth" >
+               <property name="enabled" >
+                <bool>false</bool>
+               </property>
+               <property name="minimum" >
+                <number>-1</number>
+               </property>
+               <property name="maximum" >
+                <number>9999</number>
+               </property>
+               <property name="value" >
+                <number>-1</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_2" >
+               <property name="enabled" >
+                <bool>false</bool>
+               </property>
+               <property name="text" >
+                <string>x</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="exportHeight" >
+               <property name="enabled" >
+                <bool>false</bool>
+               </property>
+               <property name="minimum" >
+                <number>-1</number>
+               </property>
+               <property name="maximum" >
+                <number>9999</number>
+               </property>
+               <property name="value" >
+                <number>-1</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" >
+             <property name="spacing" >
+              <number>3</number>
+             </property>
+             <property name="leftMargin" >
+              <number>3</number>
+             </property>
+             <property name="topMargin" >
+              <number>3</number>
+             </property>
+             <property name="rightMargin" >
+              <number>3</number>
+             </property>
+             <property name="bottomMargin" >
+              <number>3</number>
+             </property>
+             <item>
+              <spacer>
+               <property name="orientation" >
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" >
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="exportButton" >
+               <property name="text" >
+                <string>Export</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+       <item>
+        <spacer>
+         <property name="orientation" >
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" >
+          <size>
+           <width>20</width>
+           <height>421</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="panelFrame" >
+     <property name="frameShape" >
+      <enum>QFrame::NoFrame</enum>
+     </property>
+     <property name="frameShadow" >
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>legendBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>legendChooser</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>745</x>
+     <y>114</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>744</x>
+     <y>124</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>exportDPIbox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>exportDPI</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>626</x>
+     <y>205</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>678</x>
+     <y>206</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>exportSizeBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>exportWidth</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>618</x>
+     <y>228</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>643</x>
+     <y>228</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>exportSizeBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>exportHeight</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>627</x>
+     <y>227</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>719</x>
+     <y>227</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>exportSizeBox</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>label_2</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel" >
+     <x>627</x>
+     <y>227</y>
+    </hint>
+    <hint type="destinationlabel" >
+     <x>691</x>
+     <y>227</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

@@ -1,0 +1,116 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% STM 2007-04-13  split from previous version
+
+\chapter{Data Examination and Editing}
+\label{chapter:edtool}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Plot the Data}
+\label{section:edtool.pl}
+
+CASA uses the {\tt matplotlib} plotting library to display its plots.
+You can find information on {\tt matplotlib} at
+\url{http://matplotlib.sourceforge.net/}.
+
+\subsection{Plot Symbols}
+\label{section:edtool.pl.symb}
+
+The {\tt plotsymbol} defines both the line or
+symbol for the data being drawn as well as the color; from the
+matplotlib online documentation (e.g., type {\tt pl.plot?} for help):
+
+\small
+\begin{verbatim}
+    The following line styles are supported:
+        -     : solid line
+        --    : dashed line
+        -.    : dash-dot line
+        :     : dotted line
+        .     : points
+        ,     : pixels
+        o     : circle symbols
+        ^     : triangle up symbols
+        v     : triangle down symbols
+        <     : triangle left symbols
+        >     : triangle right symbols
+        s     : square symbols
+        +     : plus symbols
+        x     : cross symbols
+        D     : diamond symbols
+        d     : thin diamond symbols
+        1     : tripod down symbols
+        2     : tripod up symbols
+        3     : tripod left symbols
+        4     : tripod right symbols
+        h     : hexagon symbols
+        H     : rotated hexagon symbols
+        p     : pentagon symbols
+        |     : vertical line symbols
+        _     : horizontal line symbols
+        steps : use gnuplot style 'steps' # kwarg only
+    The following color strings are supported
+        b  : blue
+        g  : green
+        r  : red
+        c  : cyan
+        m  : magenta
+        y  : yellow
+        k  : black
+        w  : white
+    Line styles and colors are combined in a single format string, as in
+    'bo' for blue circles.
+\end{verbatim}
+\normalsize
+
+\subsection{Pylab - {\tt matplotlib} library interface}
+\label{section:edtool.pl.pylab}
+
+For even more functionality, you can access the {\tt pl} tool directly
+using {\tt pylab} functions that allow one to annotate, alter, or add
+to any plot displayed in the matplotlib plotter (e.g. {\tt
+plotxy}). {\tt matplotlib} commands can be found at:
+
+\url{http://matplotlib.sourceforge.net/pylab\_commands.html}
+
+The {\tt pl.clf()} method is perhaps the most useful native command as it will
+clear the contents of the plotter frame.
+
+A quick synopsis of relevant commands for altering plots are found
+below. 
+
+\small
+\begin{verbatim}
+  pl.axhline - draw a horizontal line across axes
+  pl.axvline - draw a vertical line across axes
+  pl.axhspan - draw a horizontal bar across axes
+  pl.axvspan - draw a vertical bar across axes
+  pl.clf     - clear the current figure
+  pl.close   - close the plotter (subsequent plots will reopen a plotter window)
+  pl.ion     - turn interaction mode on (default - this indicates that any plotting command
+               will be seen immediately after the command)
+  pl.ioff    - turn off interaction mode (a 'show' command is required to see commands after
+               this mode has been enabled)
+  pl.savefig - save the current figure
+  pl.subplot - make a subplot (numrows, numcols, axesnum)
+  pl.text    - add some text at location (x,y)
+  pl.title   - add/change the title
+  pl.xlim    - set/get the xlimits
+  pl.ylim    - set/get the ylimits
+  pl.xlabel  - add/change the xlabel
+  pl.ylabel  - add/change the ylabel
+\end{verbatim}
+\normalsize
+
+In addition, there are a range of mathematical functions provided
+(trigonometric, matrix algebra, logs, etc). Again, see the pylab
+documentation for help.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data Flagging}
+\label{section:flagging}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

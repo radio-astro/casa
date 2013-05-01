@@ -1,0 +1,577 @@
+%% Copyright (C) 1999,2000,2001,2002,2003
+%% Associated Universities, Inc. Washington DC, USA.
+%%
+%% This library is free software; you can redistribute it and/or modify it
+%% under the terms of the GNU Library General Public License as published by
+%% the Free Software Foundation; either version 2 of the License, or (at your
+%% option) any later version.
+%%
+%% This library is distributed in the hope that it will be useful, but WITHOUT
+%% ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+%% FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+%% License for more details.
+%%
+%% You should have received a copy of the GNU Library General Public License
+%% along with this library; if not, write to the Free Software Foundation,
+%% Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+%%
+%% Correspondence concerning AIPS++ should be addressed as follows:
+%%        Internet email: aips2-request@nrao.edu.
+%%        Postal address: AIPS++ Project Office
+%%                        National Radio Astronomy Observatory
+%%                        520 Edgemont Road
+%%                        Charlottesville, VA 22903-2475 USA
+%%
+%% $Id$
+\providecommand{\briggsURL}{http://www.aoc.nrao.edu/ftp/dissertations/dbriggs/diss.html}
+\providecommand{\pixonURL}{http://www.pixon.com/}
+\providecommand{\rsiURL}{http://www.rsinc.com/}
+
+\begin{ahmodule}{imager}{Module for synthesis and single dish imaging}
+\ahinclude{imager.g}
+
+\begin{ahdescription} 
+\end{ahdescription}
+
+{\tt imager} provides a unified interface for synthesis and single
+dish imaging including deconvolution starting from a MeasurementSet.
+
+\subsubsection*{What \texttt{imager} does:}
+
+\begin{description}
+\protect\item[Standard synthesis and single dish imaging] {\tt imager} does
+nearly all types of synthesis and single dish imaging, including dirty
+images, point spread functions, deconvolution, combination of single
+dish and synthesis, spectral imaging, polarimetry, wide-field imaging,
+mosaicing, holography, near-field imaging, tracking moving objects,
+{\em etc.}. As a result of this extensive range of capabilities, it
+can be complicated to use, especially for the more esoteric forms of
+imaging.
+\protect\item[Fine scaled tools] Rather than present one operation
+to process data from visibilities to a restored, deconvolved
+image, {\tt imager} contains a number of distinct, separate tool functions
+that allow careful tuning of the processing. For example, the
+weights used in imaging (the IMAGING\_WEIGHT column in the
+MeasurementSet), can be altered via a number of tool functions
+(\protect\ahlink{weight}{imager:imager.weight}, \protect\ahlink{filter}{imager:imager.filter}) 
+and inspected via a plotting
+tool function \protect\ahlink{plotweights}{imager:imager.plotweights}. Similarly, the
+deconvolution and restoration steps are separate, allowing user
+control of each step. It is our intention that other imaging tools may
+be built on top of imager: see, for example,
+\protect\ahlink{imagerwizard}{imager:imagerwizard}, which also has the side-benefit
+that
+it displays the imager (and other tools) commands as they are
+executed.
+\protect\item[Spectral imaging] \texttt{imager} can perform either spectral
+imaging or frequency synthesis (producing either an image with 
+each channel imaged independently or with some or 
+all channels summed together).
+Channels may be selected in a number of ways, either as channels
+or as velocities. Also a continuum model image may be subtracted 
+prior to making a cube.
+\protect
+\item[Many different deconvolution algorithms] {\tt imager} is rich in
+deconvolution algorithms, including a number of clean variants,
+maximum entropy, non-negative least squares, and the pixon algorithm.
+\item[Mixing of deconvolution functions] Since the deconvolved images
+are calculated and kept purely as images (rather than lists of clean
+components), deconvolution functions may be mixed as desired. Thus,
+one may use NNLS to deconvolve part of the Stokes I of an image, 
+and then use CLEAN to deconvolve another part of all polarizations
+in the image. Note that a list of clean components is not available.
+\item[Ability to fix model images] In a multifield deconvolution,
+it is possible to specify that some fields are not to be deconvolved,
+using the {\tt fixed} argument of \ahlink{clean}{imager:imager.clean}.
+\item[Single dish imaging] {\tt imager} can process single dish
+observations much as it does synthesis images. To make images with no
+deconvolution, use the \ahlink{makeimage}{imager:imager.makeimage}
+function. This allows construction of traditional single dish images
+and holography images. To deconvolve images, just use the
+``multifield'' deconvolution algorithms in
+\ahlink{clean}{imager:imager.clean} and 
+\ahlink{mem}{imager:imager.mem}. You will want to set the gridmachine
+in \ahlink{setoptions}{imager:imager.setoptions} to 'sd'.
+\item[Combination of single dish and synthesis data] If the single
+dish and interferometer data are in the same MeasurementSet, then
+imager can perform a joint deconvolution using
+``multifield'' deconvolution algorithms in
+\ahlink{clean}{imager:imager.clean} and 
+\ahlink{mem}{imager:imager.mem}. You will want to set the gridmachine
+in \ahlink{setoptions}{imager:imager.setoptions} to 'both'. You can
+change the relative weighting of synthesis and single dish data by
+using \ahlink{setsdoptions}{imager:imager.setsdoptions}.
+If the single dish and synthesis data cannot be combined into
+one MeasurementSet then you can still use the
+\ahlink{feather}{imager:imager.feather} function to combine already
+deconvolved images.
+\item[Multi-field processing] {\tt imager} can be run on any number
+of images, each of which can have any direction for the phase
+center. All coordinate transformations are done correctly.  Using the
+measures system, these fields may be given moving positions (such as
+the Sun using {\tt dm.direction('sun')} to specify the phase center) or
+positions in strange coordinates (such as Supergalactic using
+{\em e.g.} {\tt dm.direction('supergal', '0d', '0d')} as well as
+the more conventional representations ({\em e.g.}
+{\tt dm.direction('b1950', '12h26m33.248000', '02d19m43.290000')} specifies
+the coordinates of the core of 3C273). Note that for
+some coordinate systems a location must be supplied via
+the \ahlink{setoptions}{imager:imager.setoptions} tool function. For example,
+one can put an image at a specific azimuth and elevation ({\em e.g.}
+{\tt dm.direction('azel', '67.4d', '5.23d')}) at the
+VLA {\tt imgr.setoptions(location=dm.observatory('VLA'))}. Phase 
+rotation will be automatically calculated to track in 
+azimuth-elevation.
+\item[Wide-field imaging] {\tt imager} can perform wide-field
+imaging as needed to overcome the non-coplanar baselines
+effect for the VLA and other non-coplanar arrays.
+\item[Mosaicing] {\tt imager} can perform clean-based or mem-based mosaicing
+of many pointings into one image, using variants of the multi-field
+algorithms.
+\item[Processing of component lists] Discrete components
+(not the same as clean components!) can be represented by 
+\ahlink{componentmodels}{componentmodels}. A componentlist
+can hold any number of components. The components are subtracted from
+the visibility data before construction of an image. For high
+precision imaging, it is recommended that components be used for
+bright sources since the Fourier Transform of components avoids the
+limitations of the gridded transforms.
+%\item[Self-calibration] Self-calibration is accomplished
+%using the \ahlink{calibrater}{calibrater} tool. One sets up a calibrater tool
+%with the necessary parameters and then passes it by name to
+%the \ahlink{selfcal}{imager:imager.selfcal} tool function.
+\item[Joint deconvolution of Stokes IQUV] {\tt imager} can produce
+images of either $I$ alone, or $I,V$ or $I,Q,U,V$, deconvolving
+jointly as appropriate. The point spread function is constrained to
+be the same for all processed polarizations so asymmetric u,v coverage is
+not allowed.
+\item[Production of complex images] {\tt imager} can produce
+dirty or residual images or point spread functions in the original 
+data representation ({\em e.g.} RR,RL,RL,LL or XX,XY,YX,YY. 
+\item[Fine control and evaluation of visibility weighting] Various
+tool functions for controlling the visibility weights are available
+(\ahlink{weight}{imager:imager.weight}, \ahlink{filter}{imager:imager.filter}) 
+as well as tool functions for evaluating the effects of the weighting
+(\ahlink{plotweights}{imager:imager.plotweights},
+\ahlink{sensitivity}{imager:imager.sensitivity},
+\ahlink{fitpsf}{imager:imager.fitpsf}).  The Briggs algorithm for 
+weighting of visibility data can be used (see
+\ahlink{weight}{imager:imager.weight} and \htmladdnormallink{Dan Briggs'
+thesis} {\briggsURL}).
+\item[Flexible windowing in the deconvolution] Rather than use boxes
+to limit the region CLEANed, a mask image is used to constrain the
+region in which flux is allowed. There are various tool functions for making
+a mask image, including from regions and blc/trc specifications, and via
+thresholding the Stokes I image. In the Clark Clean, the mask is
+{\em soft}: it can vary between 0 and 1. Intermediate values of
+the mask bias against but do not rule out subtraction of clean components.
+\item[Non-Negative Least Squares Deconvolution] This algorithm
+is very effective at producing high dynamic range images of moderately
+resolved sources (see \htmladdnormallink{Dan Briggs' thesis}
+{\briggsURL}). It works on Stokes $I$ alone so the recommended
+procedure is to CLEAN $I,Q,U,V$ using \ahlink{clean}{imager:imager.clean}
+and then use NNLS to refine the $I$ part of the image using
+\ahlink{nnls}{imager:imager.nnls}.
+%\item[Specification of arguments as \ahlink{measures}{measures} ]
+\item[Specification of arguments as] A measure 
+is a measured quantity with optional units, coordinates and reference
+frames. These are allowed in a number of circumstances.  The advantage
+is that the user can specify arguments in very convenient form, and
+let the measures system do whatever conversion is required. For
+example:
+\begin{description}
+\item[Cell sizes] These can be specified as a quantity (see the 
+\ahlink{measures}{measures} module).
+\begin{verbatim}
+imgr.setimage(cellx='7arcsec', celly='7arcsec')
+\end{verbatim}
+\item[Image center direction] This must be specified as a 
+direction (see the \ahlink{measures}{measures} module).
+\begin{verbatim}
+imgr.setimage(phasecenter=dm.direction('j2000', '05h30m', '-30.2deg'))
+imgr.setimage(phasecenter=dm.direction('gal', '0deg', '0deg'))
+imgr.setimage(phasecenter=dm.direction('mars'))
+imgr.setimage(phasecenter=image('myother.image').coordmeasures().direction);
+\end{verbatim}
+\item[Velocities] These can be specified as radial velocities.
+\begin{verbatim}
+imgr.setimage(start=dm.radialvelocity('25km/s'), 
+            step=dm.radialvelocity('-500m/s'))
+\end{verbatim}
+\item[Position] For construction of images in some coordinate
+frames ({\em e.g} azimuth-elevation) the position to be used
+in processing must be set:
+\begin{verbatim}
+imgr.setoptions(location=dm.observatory('ATCA'))
+\end{verbatim}
+\end{description}
+\item[More choice in image size] Any even image size will work,
+though to speed the FFT, it is advisable to
+use a highly composite number (one that has many factors).
+The \ahlink{advise}{imager:imager.advise} function will
+calculate an acceptable number.
+\item[Integrated plotting] Plots of visibility 
+amplitude, weights (both point-by-point and gridded),
+uv coverage, and field and spectral window ids are available 
+(\ahlink{plotvis}{imager:imager.plotvis}, 
+\ahlink{plotweights}{imager:imager.plotweights}, 
+\ahlink{plotuv}{imager:imager.plotuv}, 
+\ahlink{plotsummary}{imager:imager.plotsummary}).
+\item[Synchronous or Asynchronous processing] Operations that
+take a substantial amount of time to run can be run in the
+background either by setting the global variable {\tt dowait:=F}
+or by setting an argument {\em e.g.} {\tt imgr.clean(async=T)}.
+To retrieve a result, use the result tool function of
+defaultservers with the job number as the argument. For example:
+\begin{verbatim}
+- imgr:=imager('ss433.MS')
+T
+- imgr.setimage(cellx='0.05arcsec', celly='50marcsec', nx=256, ny=256, 
+  spwid=1:2, fieldid=1, stokes='IV') 
+T 
+- imgr.fitpsf()
+1 
+# Wait for it to finish and then ask for the result:
+- defaultservers.result(1)
+[psf=, bpa=[value=42.7269936, unit=deg], bmin=[value=0.13008301, 
+unit=arcsec], bmaj=[value=0.159367442, unit=arcsec]] 
+\end{verbatim}
+\item[A novel sort-less gridding algorithm] The visibility data are
+not sorted before the gridding step. Instead, a cache of tiles is
+allocated to hold each baseline as it moves around in the Fourier
+plane. When a baseline moves off an existing tile, the results are
+written to disk and the necessary new tile is read in. Since the
+rotation of baselines in the uv plane is usually quite slow, the hit
+rate of such a cache is high. The size of the cache is by default
+set to half the physical memory of the machine, as specified
+by the aipsrc variable system.resources.memory. This can be overridden
+by the user, via the \ahlink{setoptions}{imager:imager.setoptions}
+tool function. The cache
+can be made smaller at the expense of more paging of tiles in and
+out. The tile size can also be changed but this is seldom needed.
+This approach is optimal for arrays with small numbers of antennas
+but can be slow for {\em e.g.} the VLA. We intend to rectify this
+in the near future.
+\item[Plug-in commands] {\tt imager} can be customized by attaching
+commands using the \aipspp\ plug-in system. See the file
+code/trial/apps/imager/imager\_standard.gp for an example of how to 
+attach commands. 
+\item[Suite of tests] {\tt imager} has a suite of tests. A standard 
+test data set and component list can also be created.
+\item[imagerwizard] The \ahlink{simplemage}{imager:imagerwizard}
+function is a wizard that performs interactively guided imaging
+of synthesis data.
+\item[dragon] The \ahlink{dragon}{imager:dragon} tool performs 
+wide-field imaging using imager.
+\item[vpmanager] The \ahlink{vpmanager}{imager:vpmanager} tool manages
+specification of primary beams for imager.
+\item[Near-field imaging {\em experimental}] Images of objects in the near-field of an
+array can be made. If the distance to the object is specified 
+in \ahlink{setimage}{imager:imager.setimage}, then the extra delay
+due to the wavefront curvature is corrected in the transforms.
+Note that some telescopes ({\em e.g.} VLA) make this correction in the real-time
+system. This effect is important if the distance to the object is comparable
+to or less than:
+\begin{equation}
+{B^2\over\lambda}
+\end{equation}
+where B is the baseline. Note that the sign of the correction could be
+in error in this experimental version: try using a negative distance
+as well as a positive distance.
+\end{description}
+
+\subsubsection*{What {\tt imager} needs:}
+
+{\tt imager} operates on a specified MeasurementSet to produce any of a
+range of different types of image: dirty, point spread function,
+clean, residual, {\em etc.}  A MeasurementSet is the holder for
+measurements from a telescope. It is simply an \aipspp\ Table obeying
+certain conventions as to required and optional contents. The
+intention is that it should contain all the information needed to
+reduce synthesis and single dish observations (see
+\htmladdnormallink{\aipspp\ Note 191} {../../notes/191.ps}). A
+UVFITS file can be converted to a MeasurementSet using the
+\ahlink{fitstoms}{ms:ms.fitstoms.constructor} tool function (a constructor of the
+\ahlink{ms}{ms} tool.
+
+{\tt imager} adds some extra columns to the MeasurementSet to store
+results of processing. The following columns in the MS are
+particularly important:
+\begin{description}
+\item[DATA] The original observed visibilities are in a column
+called DATA. These are not altered by any processing in \aipspp.
+\item[CORRECTED\_DATA] During a calibration process, as carried out by
+{\em e.g.} \ahlink{calibrater}{calibrater}, the visibilities may be corrected for
+calibration effects. This corrected visibilities are stored in a column
+CORRECTED\_DATA which is created on demand by calibrater and imager. In creating
+the CORRECTED\_DATA column, {\tt imager} will only correct for parallactic
+angle rotation. This can be controlled using the
+\ahlink{correct}{correct} tool function. All imaging performed by
+imager is from the CORRECTED\_DATA column (apart from the
+tool function \ahlink{makeimage}{imager:imager.makeimage} which can also make dirty
+images from the other visibility columns).
+\item[MODEL\_DATA] During various phases of processing, the
+visibilities as predicted from some model are required. These 
+model visibilities are stored in a column MODEL\_DATA. 
+These are used by the \ahlink{calibrater}{calibrater} tool for 
+calibration.
+\item[IMAGING\_WEIGHT] Weighting of data (including natural,
+uniform and Briggs weighting,
+and tapering) is accomplished by setting the column IMAGING\_WEIGHT
+appropriately. 
+\end{description}
+Standard tools such as the \ahlink{table}{table}
+module and the \ahlink{ms}{ms} can be used to access and possibly
+change these (and all other) columns.
+
+{\tt imager} can handle an initial model in a number of forms: as an
+image, as a list of images, as a \ahlink{componentmodels:componentlist}
+{componentmodels:componentlist}, or as some combination. Fitting of
+{\tt componentmodels} is planned but is not currently supported.
+
+{\tt imager} uses a number of scratch files. Following \aipspp\
+practice, these are placed in the directories specified in the
+aipsrc variable user.directories.work.
+Those disks that possess sufficient free disk space are
+chosen in sequence. So to spread your scratch files over
+two disks each of which has a directory tcornwel/tmp do {\em
+e.g.}
+
+\begin{verbatim}
+user.directories.work:   /bigdisk1/tcornwel/tmp /bigdisk2/tcornwel/tmp
+\end{verbatim}
+
+\subsubsection*{How to control imager:}
+
+To use {\tt imager}, one has to construct a {\tt imager} tool using
+a MeasurementSet as an argument, for example:
+
+\begin{verbatim}
+myimager:=imager('3C273XC1.ms')
+\end{verbatim}
+
+The Glish variable {\tt myimager} then contains the tool functions
+that may be used to do various operations on the MeasurementSet
+3C273XC1.ms. These tool functions can be broken down into those that
+set {\tt imager} up in some state, and those that actually do some
+processing. The setup tool functions are: 
+
+\begin{description}
+\item[setimage] is a {\em required} tool function that defines
+the parameters (size, sampling, phase center, {\em etc.}) of
+any image that is to be constructed. If you omit to call
+setimage prior to any operation that needs these parameters,
+an error message will result. setimage is passive: nothing 
+happens immediately but subsequent processing is altered.
+\item[setdata] is an {\em optional} tool function that selects which data
+are to be operated on during the processing. This selection can
+consist of choosing the spectral windows or fields that are
+to be operated on, or setting channels that are to be operated
+on in subsequent processing. setdata is active: the selection
+occurs immediately and is effective for all subsequent operations
+(until setdata is called again).
+\item[setoptions] is an {\em optional} tool function that sets parameters
+of lesser importance such as gridding parameters, cache sizes. While
+these affect the processing, usually the default values will
+suffice. setoptions is passive: nothing happens immediately but
+subsequent processing is altered.
+\item[setbeam] is an {\em optional} tool function that sets the
+parameters of the synthesized beam to be used in restoring deconvolved
+images. setbeam is passive: nothing happens immediately but
+subsequent processing is altered.
+\item[setvp] is an {\em optional} tool function that sets the
+parameters of the voltage pattern model used in mosaicing.
+setvp is passive: nothing happens immediately but
+subsequent processing is altered.
+\item[setsdoptions] is an {\em optional} tool function that sets the
+relative scaling and weighting of single dish data versus 
+interferometer data and also other single dish specific parameters like the convolution support when doing single dish imaging.
+\end{description}
+
+Thus to understand what imager is doing, one has to remember that at
+any time, it has a {\em state} that has been set by using these
+tool functions. The state may be viewed in one of two ways: either 
+\ahlink{summary}{imager:imager.summary} can be used to output the
+current state to the logger, or, in the GUI, the current
+state of these parameters is displayed and updated following any
+relevant changes. 
+
+All the other tool functions of {\tt imager} are active: something happens
+immediately. Hence, for example, the \ahlink{weight}{imager:imager.weight}
+tool function acts immediately to change the weighting of the selected
+data. In particular, unlike other packages, it does {\em not} set the
+weighting parameters for latter operations. The
+\ahlink{clean}{imager:imager.clean} tool function performs a clean deconvolution of
+an image, reading and writing a model image. Note that operations that
+require or produce an image usually take an appropriate image name in
+the argument list.  Often if such an image is not given then it is
+constructed using the image parameters set via
+\ahlink{setimage}{imager:imager.setimage} and using an appropriate name
+({\em e.g.} a restored image is named from the model image by
+appending .restored so that 3C273XC1.clean becomes
+3C273XC1.clean.restored).
+
+The concept of the {\em state} of imager bears a little more
+explanation.  The MeasurementSet can potentially contain data for many
+different fields and spectral windows. One therefore has to have some
+way of distinguishing which data are to be included in
+processing. Rather than have each possible tool function ({\em e.g.}
+weight, image, clean) take a long list of parameters to determine
+which data are to be included, {\tt imager} has a
+\ahlink{setdata}{imager:imager.setdata} tool function that sets {\tt
+imager} up some that in subsequent processing only the selected data
+are processed. For example, to select only field id 1 and spectral
+windows 1 and 2, one would do:
+
+\begin{verbatim}
+myimager.setdata(fieldid=1, spwid=1:2)
+\end{verbatim}
+
+The state of {\tt imager} also consists of information about the
+default image settings (set via \ahlink{setimage}{imager:imager.setimage})
+and various less important options (set via 
+\ahlink{setoptions}{imager:imager.setoptions}).
+
+\subsubsection*{What {\tt imager} produces:}
+
+{\tt imager} reads and writes \aipspp\ MeasurementSets and Images.  The
+format of images is 4 dimensional, with the first two being right
+ascension and declination, the third being polarization and the fourth
+being frequency. By suitable choice of the input parameters, one can
+make images of $I$ alone, $I,V$ or $I,Q,U,V$ for one or all channels.
+The \ahlink{makeimage}{imager:imager.makeimage} tool function can also make a complex image
+of the original polarizations {\em e.g.} RR, RL, LR, LL. This latter
+type of image is useful for diagnostic purposes.
+
+Images generated by {\tt imager} may be viewed using
+\ahlink{viewer}{viewer:viewer} tool or retrieved using the
+\ahlink{images}{images} tool, the MeasurementSets may be accessed
+using the \ahlink{ms}{ms} tool. More on this in the example below.
+
+\subsubsection*{What {\tt imager} does not do:}
+
+{\tt imager} does not handle calibration of visibility data beyond correction
+for parallactic angle variations.  Instead, you should use the
+\ahlink{calibrater}{calibrater} tool for this purpose.  However, {\tt imager} and calibrater can
+cooperate on the self-calibration of data. 
+%using the tool function
+%\ahlink{imager.selfcal}{imager:imager.selfcal}.
+
+\subsubsection*{What improvement to {\tt imager} are in the works:}
+
+We are currently working on a number of improvements:
+
+\begin{itemize}
+\item Improved gridder to handle many telescopes and many channels
+more efficiently.
+\item Parallelized CLEAN and gridding
+\end{itemize}
+
+\subsubsection*{Advanced use of imager:}
+
+As with all \aipspp\ applications, {\tt imager} is designed to be open: all
+the results are written to and read from standard \aipspp\ table files.
+This open design of {\tt imager} also allows the user to try out new
+methods of processing data.  Models may be read into Glish, edited or
+manipulated via standard Glish facilities, and then written out and
+used subsequently in {\tt imager}.  Suppose that we want to halve the
+Stokes I of all pixels with negative Stokes I. The following Glish
+fragment does the trick:
+\begin{verbatim}
+m:=image('myimage')
+shape:=im.shape()
+blc:=[1,1,1,1]
+trc:=[shape[1],shape[2],1,shape[4]]
+a:=m.getchunk(blc,trc)
+a[a<0.]*:=0.5
+m.putchunk(a,blc)
+m.flush()
+m.close()
+\end{verbatim}
+
+\protect\subsubsection*{Overview of {\tt imager} tool functions:}
+
+\protect\begin{description}
+\protect\item[Data access] \ahlink{open}{imager:imager.open},
+\ahlink{close}{imager:imager.close}, \ahlink{done}{imager:imager.done}
+\protect\item[Data selection] \ahlink{setdata}{imager:imager.setdata}
+\protect\item[Data editing] \ahlink{clipvis}{imager:imager.clipvis}
+\protect\item[Data calibration] \ahlink{correct}{imager:imager.correct}
+\protect\item[Data examination] \ahlink{plotvis}{imager:imager.plotvis}, \ahlink{plotuv}{imager:imager.plotuv}, 
+\ahlink{plotweights}{imager:imager.plotweights}, \ahlink{plotsummary}{imager:imager.plotsummary}
+\protect\item[Weighting] \ahlink{weight}{imager:imager.weight}, \ahlink{filter}{imager:imager.filter}, 
+\ahlink{uvrange}{imager:imager.uvrange}, \ahlink{sensitivity}{imager:imager.sensitivity}, 
+\ahlink{fitpsf}{imager:imager.fitpsf}, \ahlink{plotweights}{imager:imager.plotweights}
+\protect\item[Image definition] \ahlink{advise}{imager:imager.advise}, \ahlink{setimage}{imager:imager.setimage}, \ahlink{make}{imager:imager.make}
+\protect\item[Imaging] \ahlink{makeimage}{imager:imager.makeimage},
+\ahlink{clean}{imager:imager.clean},
+\ahlink{nnls}{imager:imager.nnls}, \ahlink{mem}{imager:imager.mem}, 
+\ahlink{pixon}{imager:imager.pixon}, 
+\ahlink{restore}{imager:imager.restore},
+\ahlink{residual}{imager:imager.residual}, 
+\ahlink{approximatepsf}{imager:imager.approximatepsf}, 
+\ahlink{fitpsf}{imager:imager.fitpsf}, 
+\ahlink{setbeam}{imager:imager.setbeam}, 
+\ahlink{ft}{imager:imager.ft}, 
+\ahlink{smooth}{imager:imager.smooth},
+\ahlink{feather}{imager:imager.feather},
+\ahlink{makemodelfromsd}{imager:imager.makemodelfromsd}
+\protect\item[Masks] \ahlink{mask}{imager:imager.mask},
+\ahlink{boxmask}{imager:imager.boxmask},
+\ahlink{regionmask}{imager:imager.regionmask},
+\ahlink{exprmask}{imager:imager.exprmask},
+\ahlink{clipimage}{imager:imager.clipimage}
+\protect\item[Miscellaneous] \protect\ahlink{summary}{imager:imager.summary}, 
+\protect\ahlink{setoptions}{imager:imager.setoptions},
+\protect\ahlink{setoptions}{imager:imager.setmfcontrol},
+\protect\ahlink{setoptions}{imager:imager.setsdoptions}
+\end{description}
+
+
+
+\begin{ahexample}
+The following example shows the quickest way to make a CLEAN image and
+display it. Note that this can be more easily done from the
+\ahlink{toolmanager}{tasking:toolmanager}.
+\begin{verbatim}
+include 'imager.g'
+#
+# First make the MS from a FITS file:
+#
+m:=fitstoms(msfile='3C273XC1.MS', fitsfile='3C273XC1.FITS'); m.close();
+#
+# Now make an imager tool for the MS
+#
+imgr:=imager('3C273XC1.MS')      
+#
+# Set the imager to produce images of cellsize 0.7 and
+# 256 by 256 pixels
+#
+imgr.setimage(nx=256,ny=256, cellx='0.7arcsec',celly='0.7arcsec');
+#
+# Wait for results before proceeding to the next step
+#
+dowait:=T
+#
+# Make and display a clean image
+#
+imgr.clean(niter=1000, threshold='30mJy',
+model='3C273XC1.clean.model', image='3C273XC1.clean.image')
+dd.image('3C273XC1.clean.image')
+#
+# Fourier transform the model 
+#
+imgr.ft(model='3C273XC1.clean.model')
+#
+# Plot the visibilities
+#
+imgr.plotvis()
+#
+# Write out the final MS and close the imager tool
+#
+imgr.close()
+\end{verbatim}
+\end{ahexample}
+\input{imager.htex}
+\input{vpmanager.htex}
+\end{ahmodule}

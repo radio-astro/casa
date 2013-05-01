@@ -1,0 +1,270 @@
+#LaTeX2HTML Version 96.1
+#
+### Command Line Argument Defaults #######################################
+
+$MAX_SPLIT_DEPTH = 8;	# Stop making separate files at this depth
+
+$MAX_LINK_DEPTH = 4;    # Stop showing child nodes at this depth   
+
+$NOLATEX = 0;           # 1 = do not pass unknown environments to Latex
+
+$EXTERNAL_IMAGES = 0;   # 1 = leave the images outside the document 
+
+$ASCII_MODE = 0;        # 1 = do not use any icons or internal images
+
+# 1 =  use links to external postscript images rather than inlined GIF's.
+$PS_IMAGES = 0;
+
+$TITLE = $default_title;      # The default is "No Title" 
+
+$DESTDIR = '';         # Put the result in this directory 
+
+# When this is set, the generated HTML files will be placed in the 
+# current directory. If set to 0 the default behaviour is to create (or reuse)
+# another file directory.
+$NO_SUBDIR = 0;
+
+
+$ADDRESS = "<A HREF=\"mailto:aips2-request\@nrao.edu\">aips2-request\@nrao.edu</A>\n<BR><B> Return to </B><A HREF=../../html/aips++.html>AIPS++ Home Page</A>\n<BR><STRONG>\n$address_data[1]</STRONG>";
+   
+
+$NO_NAVIGATION = 0;	# 1 = do not put a navigation panel at the top of each page
+
+# Put navigation links at the top of each  page.  If  the page  exceeds
+# $WORDS_IN_PAGE  number of words then put one at the bottom of the page.
+$AUTO_NAVIGATION = 1;
+
+# Put a link to the index page in  the  navigation  panel
+$INDEX_IN_NAVIGATION = 1;
+
+# Put a link to the table of contents  in  the  navigation  panel
+$CONTENTS_IN_NAVIGATION = 1;
+
+# Put a link to the next logical page  in  the  navigation  panel
+$NEXT_PAGE_IN_NAVIGATION = 1;
+
+# Put a link to the previous logical page  in  the  navigation  panel
+$PREVIOUS_PAGE_IN_NAVIGATION = 1;
+
+$INFO = 1;              # 0 = do not make a "About this document..." section 
+
+# Reuse images generated during previous runs
+$REUSE = 2;
+
+$SHOW_SECTION_NUMBERS = 0;
+
+### Other global variables ###############################################
+$CHILDLINE = "<BR> <HR>\n";
+$LINE_WIDTH = 500;		
+$WORDS_IN_PAGE = 100;	
+$default_language = 'english';	
+$WORDS_IN_NAVIGATION_PANEL_TITLES = 8;
+$PK_GENERATION = 1;
+$MATH_SCALE_FACTOR = 1.5;
+$FIGURE_SCALE_FACTOR = 1.5;
+$DEBUG = 0;
+$EXTERNAL_UP_LINK = "";
+$EXTERNAL_UP_TITLE = "";
+$NETSCAPE_HTML = 0;
+$PAPERSIZE = "a0";
+$TITLES_LANGUAGE = "english";
+
+### Navigation Panel ##########################################################
+
+sub aips2navbar {
+"<SCRIPT LANGUAGE = \"JavaScript\">\n" .
+"\n" .
+"<!--\n" .
+"if (document.images) {                     //if image object is available     \n" .
+
+"img1on = new Image();                       // MouseOver Images\n" .
+
+"img1on.src = \"../../navpages/images/navigation/aipsviewbaron.gif\"; \n" .
+
+"img2on = new Image();\n" .
+
+"img2on.src = \"../../navpages/images/navigation/glishusersbaron.gif\";  \n" .
+
+"img3on = new Image();\n" .
+
+"img3on.src = \"../../navpages/images/navigation/glossarybaron.gif\";\n" .
+
+"img4on = new Image();\n" .
+
+"img4on.src = \"../../navpages/images/navigation/modulereferencebaron.gif\";\n" .
+
+"img5on = new Image();\n" .
+
+"img5on.src = \"../../navpages/images/navigation/orangehomebaron.gif\";\n" .
+
+"\n" .
+
+"img1off = new Image();                                  // MouseOut Images\n" .
+
+"img1off.src = \"../../navpages/images/navigation/aipsviewbaroff.gif\"; \n" .
+
+"img2off = new Image();          \n" .
+
+"img2off.src = \"../../navpages/images/navigation/glishusersbaroff.gif\";\n" .
+
+"img3off = new Image();\n" .
+
+"img3off.src = \"../../navpages/images/navigation/glossarybaroff.gif\";\n" .
+
+"img4off = new Image();\n" .
+
+"img4off.src = \"../../navpages/images/navigation/modulereferencebaroff.gif\";\n" .
+
+"img5off = new Image();\n" .
+
+"img5off.src = \"../../navpages/images/navigation/orangehomebaroff.gif\";\n" .
+
+"}\n" .
+
+"\n" .
+
+"function imgOn(imgName) {\n" .
+
+"        if (document.images) {\n" .
+
+"            document[imgName].src = eval(imgName + \"on.src\");        }}\n" .
+
+"                        \n" .
+
+"function imgOff(imgName) {\n" .
+
+"        if (document.images) {\n" .
+
+"            document[imgName].src = eval(imgName + \"off.src\");        }}\n" .
+
+"\n" .
+
+"//-->\n" .
+
+"\n" .
+
+"</SCRIPT>\n" .
+
+"\n" .
+
+"\n" .
+
+"<BODY BGCOLOR=\"#ffffff\" TEXT=\"#000000\">\n" .
+
+"<FONT FACE=\"Arial,Helvetica\">\n" .
+
+"<table cellpadding=0 cellspacing=0 border=0 width=\"550\">\n" .
+
+"<tr><td>\n" .
+
+"<A HREF=\"../Aipsview/Aipsview.html\" \n" .
+
+"         onMouseOver=\"imgOn('img1')\" \n" .
+
+"         onMouseOut=\"imgOff('img1')\">\n" .
+
+"<IMG NAME=\"img1\" height=\"28\" SRC=\"../../navpages/images/navigation/aipsviewbaroff.gif\" BORDER=0></A>\n" .
+
+"</td><td>\n" .
+
+"<A HREF=\"../../reference/Glish/Glish.html\" \n" .
+
+"         onMouseOver=\"imgOn('img2')\" \n" .
+
+"         onMouseOut=\"imgOff('img2')\">\n" .
+
+"<IMG NAME=\"img2\" height=\"28\" SRC=\"../../navpages/images/navigation/glishusersbaroff.gif\" BORDER=0></A>\n" .
+
+"</td><td>\n" .
+
+"<A HREF=\"../../glossary/glossary.html\" \n" .
+
+"         onMouseOver=\"imgOn('img3')\" \n" .
+
+"         onMouseOut=\"imgOff('img3')\">\n" .
+
+"<IMG NAME=\"img3\" height=\"28\" SRC=\"../../navpages/images/navigation/glossarybaroff.gif\" BORDER=0></A>\n" .
+
+"</td><td>\n" .
+
+"<A HREF=\"../Refman/Refman.html\" \n" .
+
+"          onMouseOver=\"imgOn('img4')\" \n" .
+
+"          onMouseOut=\"imgOff('img4')\">\n" .
+
+"<IMG NAME=\"img4\" height=\"28\" SRC=\"../../navpages/images/navigation/modulereferencebaroff.gif\" BORDER=0></A>\n" .
+
+"</td><td>\n" .
+
+"<A HREF=\"../../html/aips++.html\" \n" .
+
+"          onMouseOver=\"imgOn('img5')\" \n" .
+
+"          onMouseOut=\"imgOff('img5')\">\n" .
+
+"<IMG NAME=\"img5\" height=\"28\" SRC=\"../../navpages/images/navigation/orangehomebaroff.gif\" BORDER=0></A>\n" .
+
+"</td></tr>\n" .
+
+"</table>\n" .
+
+"</BODY>\n"
+}
+
+sub top_navigation_panel {
+# Put in a body statement (could also have text color here)
+    &aips2navbar .
+
+    "<BR>\n" .		# Line break
+
+    # Now add a few buttons with a space between them
+    "$NEXT $UP $PREVIOUS $CONTENTS $INDEX $CUSTOM_BUTTONS" .
+    
+    "<BR>\n" .		# Line break
+	
+    # If ``next'' section exists, add its title to the navigation panel
+    ($NEXT_TITLE ? "<B> Next:</B> $NEXT_TITLE\n" : undef) 
+. 
+    
+    # Similarly with the ``up'' title ...
+    ($UP_TITLE ? "<B>Up:</B> $UP_TITLE\n" : undef) . 
+ 
+    # ... and the ``previous'' title
+    ($PREVIOUS_TITLE ? "<B> Previous:</B> $PREVIOUS_TITLE\n" : undef) .
+
+    #  Line Break, horizontal rule (3-d dividing line) and new paragraph  
+    "<BR> <P>\n"		
+}
+
+sub bot_navigation_panel {
+
+    #  Start with a horizontal rule (3-d dividing line)
+    "<HR>".			
+    
+    # Now add a few buttons with a space between them
+    "$NEXT $UP $PREVIOUS $CONTENTS $INDEX $CUSTOM_BUTTONS" .
+    
+    "<BR>\n" .		# Line break
+	
+    # If ``next'' section exists, add its title to the navigation panel
+    ($NEXT_TITLE ? "<B> Next:</B> $NEXT_TITLE\n" : undef)  .
+    
+    # Similarly with the ``up'' title ...
+    ($UP_TITLE ? "<B>Up:</B> $UP_TITLE\n" : undef) . 
+ 
+    # ... and the ``previous'' title
+    ($PREVIOUS_TITLE ? "<B> Previous:</B> $PREVIOUS_TITLE\n" : undef) .
+
+    "<BR><BR>\n" .
+    &aips2navbar;
+
+
+}
+
+
+&process_commands_wrap_deferred (<<_RAW_ARG_DEFERRED_CMDS_);
+helptab
+_RAW_ARG_DEFERRED_CMDS_
+
+1;	# This must be the last line

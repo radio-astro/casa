@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+	file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+	<task type="function" name="importvla" category="import/export">
+importvla(archivefiles=None,vis=None,
+              bandname=None,frequencytol=None,
+              project=None,
+              starttime=None,stoptime=None,
+              applytsys=None,
+              autocorr=None,antnamescheme=None,
+              async=None):
+  <shortdescription>Import VLA archive file(s) to a measurement set</shortdescription>
+ 
+  <description>
+      Imports an arbitrary number of VLA archive-format data sets into
+      a casa measurement set.  If more than one band is present, they
+      will be put in the same measurement set but in a separate spectral
+      window.  The task will handle old style and new style VLA (after
+      July 2007) archive data and apply the tsys to the data and to
+      the weights.
+   </description>
+   <input>
+	   <param type="stringArray" name="archivefiles" mustexist="true">
+		   <description>Name of input VLA archive file(s)</description>
+		   <value></value>
+	   </param>
+
+	   <param type="string" name="vis">
+		   <description>Name of output visibility file</description>
+		   <value></value>
+	   </param>
+
+	   <param type="string" name="bandname">
+		   <description>VLA frequency band name:\'\'=&gt;obtain all bands in the archive file</description>
+		   <value></value>
+		   <allowed kind="enum">
+			   <value>4</value>
+			   <value>P</value>
+			   <value>L</value>
+			   <value>S</value>
+			   <value>C</value>
+			   <value>X</value>
+			   <value>U</value>
+			   <value>K</value>
+			   <value>Ka</value>
+			   <value>Q</value>
+			   <value></value>
+		   </allowed>
+	   </param>
+
+	   <param type="double" name="frequencytol" units="Hz">
+		   <description>Frequency shift to define a unique spectra window (Hz)</description>
+		   <value>150000.0</value>
+	   </param>
+
+	   <param type="string" name="project">
+		   <description>Project name: \'\' =&gt; all projects in files</description>
+		   <value></value>
+	   </param>
+
+	   <param type="string" name="starttime">
+		   <description>start time to search for data</description>
+		   <value></value>
+	   </param>
+
+	   <param type="string" name="stoptime">
+		   <description>end time to search for data</description>
+		   <value></value>
+	   </param>
+
+	   <param type="bool" name="applytsys">
+		   <description>apply nominal sensistivity scaling to data and weights</description>
+		   <value>True</value>
+	   </param>
+
+	   <param type="bool" name="autocorr" >
+		   <description>import autocorrelations to ms, if set to True</description>
+		   <value>False</value>
+	   </param>
+
+
+	   <param type="string" name="antnamescheme" >
+		   <description>\'old\' or \'new\'; \'VA04\' or \'04\' for VLA ant 4</description>
+		   <value>new</value>
+		   <allowed kind="enum">
+			   <value>old</value>
+			   <value>new</value>
+		   </allowed>
+	   </param>
+
+	   <param type="bool" name="keepblanks" >
+		   <description>Fill scans with blank (empty) source names (e.g. tipping scans)</description>
+		   <value>False</value>
+	   </param>
+
+	   <param type="bool" name="evlabands" >
+		   <description>Use updated eVLA frequencies and bandwidths for bands and wavelengths</description>
+		   <value>False</value>
+	   </param>
+   </input>
+   <example>
+
+      Imports an arbitrary number of VLA archive-format data sets into
+      a casa measurement set.  If more than one band is present, they
+      will be put in the same measurement set but in a separate spectral
+      window.  The task will handle old style and new style VLA (after
+      July 2007) archive data and apply the tsys to the data and to
+      the weights.
+
+      Keyword arguments:
+      archivefiles -- Name of input VLA archive file(s)
+              default: none.  Must be supplied
+              example: archivefiles = 'AP314_A959519.xp1'
+              example: archivefiles=['AP314_A950519.xp1','AP314_A950519.xp2']
+      vis -- Name of output visibility file
+              default: none.  Must be supplied.
+              example: vis='NGC7538.ms'
+              Will not over-write existing ms of same name.
+              A backup flag-file version 'Original' will be made in
+                vis.flagversions.  See help flagmanager
+      bandname -- VLA Frequency band
+              default: =&gt; '' = all bands
+              example: bandname='K'
+              Options: '4'=48-96 MHz,'P'=298-345 MHz,'L'=1.15-1.75 GHz,
+              'C'=4.2-5.1 GHz,'X'=6.8-9.6 GHz,'U'=13.5-16.3 GHz,
+              'K'=20.8-25.8 GHz,'Q'=38-51 GHz
+      frequencytol -- Tolerance in frequency shift in making spectral windows
+              default: =&gt; 150000 (Hz).  For Doppler shifted data, &lt;10000 Hz may
+              may produce too many unnecessary spectral windows.
+              example: frequencytol = 1500000.0 (units = Hz)
+      project -- Project name to import from archive files:
+              default: '' =&gt; all projects in file
+              example: project='AL519'
+              project = 'al519' or AL519 will work.  Do not include
+              leading zeros; project = 'AL0519' will not work.
+      starttime -- Time after which data will be considered for importing
+              default: '' =&gt; all:  Date must be included.
+              syntax: starttime = '2003/1/31/05:05:23'
+      stoptime --  Time before which data will be considered for importing
+              default: '' =&gt; all:  Date must be included.
+              syntax: stoptime = '2003/1/31/08:05:23'
+      applytsys -- Apply data scaling and weight scaling by nominal
+              sensitivity (~Tsys)
+              default: True.  Strongly recommended
+      autocorr --  import autocorrelations to ms
+              default:  =&gt; False (no autocorrelations)
+      antnamescheme -- 'old' or 'new' antenna names.
+              default =&gt; 'new' gives antnenna names
+                'VA04' or 'EA13 for VLA telescopse 04 and 13 (EVLA)
+                'old' gives names '04' or '13'
+      keepblanks -- Should sources with blank names be filled into the data base
+              default =&gt; false.  Do not fill
+              These scans are tipping scans (as of June 1, 2009) and should not
+              be filled in the visibility data set.
+      evlabands -- Use the EVLA's center frequency and bandwidths for frequencies
+              specified via wavelength or band. 
+	      default =&gt; True. 
+      async --  Run asynchronously
+              default = False; do not run asychronously
+      </example>
+</task>
+</casaxml>

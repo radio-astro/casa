@@ -1,0 +1,113 @@
+<html>
+<head>
+<title>Batch processing tutorial</title>
+<style type="text/css" media="all">
+div.shell {
+background-color: #dbfff9;
+padding: 0.1em;
+}
+div.code {
+background-color: #c9ffbf;
+padding: 0.1em;
+}
+div.main {
+margin: 0.2em 0.2em 0.2em 0.2em;
+text-align: left;
+font-family: sans-serif;
+width: auto;
+}
+h1.custom {
+background-color: #aaaaaa;
+color: #000000;
+padding: 0.5em;
+font-family: sans-serif;
+font-size: x-large;
+}
+</style>
+</head>
+<body>
+<div>
+<h1 class=custom>
+Introduction
+</h1>
+<div class=main align=center>
+This tutorial is aimed at observers who want to "batch reduce" their
+data, i.e. process multiple files the same way.
+</div>
+<h1 class=custom>
+Part I - Need to knows
+</h1>
+<div class=main align=center>
+As ASAP is python based, we need to know a few commands and expression.
+Python has "lists", which are basically vectors. We will use
+these extensively.<br>
+<div class=code><pre>
+x = range(5) # creates a vector of length 5, x = [0,1,2,3,4]
+len(x)       # gives the length of the vector
+x[0]         # gets the first element of the vector
+x[-1]        # gets the last element of the vector
+</pre></div>
+"for" loops are very useful. The code which should be run in the loop
+has to be indented. The end of the loop is indicated by the fact that
+the next command is aligned with the for.<br>
+The following code prints out the numbers [0..4]
+<div class=code><pre>
+for i in range(5):
+   print i
+</pre></div>
+Vectors can also be filled:
+<div class=code><pre>
+x = [] # empty
+for i in range(5):
+   x.append(i*5)
+</pre></div>
+The output is x = [0,5,10,15,20]<br>
+Now we can access those elements like we did above (by index), or directly:
+<div class=code><pre>
+for i in x:
+   print i
+</pre></div>
+That's all we need to know!
+
+</div>
+<h1 class=custom>
+Part II - the code
+</h1>
+<div class=main align=center>
+This shows example code to process multiple files.<p>
+Let's say we have three files (a.rpf, b.rpf, c.rpf)  which contain
+on/off pairs and we want to get the quotients<br>
+<div class=code><pre>
+fnames = ["a.rpf","b.rpf","c.rpf"] # First we set up a vector of filenames
+vec = []                           # a vector to hold the scantables
+for f in fnames:
+   vec.append(scantable(f))        # fill the vector with scantables
+</pre></div>
+Then we can loop over all scantables:
+<div class=code><pre>
+quotients = []                        # to hold the quotient scantables
+for scan in vec:                      # loop over input scantables
+   quotients.append(scan.auto_quotient()) # add this quotient to the vector
+</pre></div>
+Let's have a look at the vector, and subtract a baseline
+<div class=code><pre>
+for q in quotients:
+   print q
+   q.auto_poly_baseline(order=1,insitu=True)
+</pre></div>
+Now we average the lot together:
+<div class=code><pre>
+av = average_time(quotients)
+</pre></div>
+
+</div>
+<h1 class=custom>
+Appendix
+</h1>
+<div class=main align=center>
+More info can be found on the ASAP homepage
+<a href="http://www.atnf.csiro.au/computing/software/asap">
+http://www.atnf.csiro.au/computing/software/asap</a>
+</div>
+</body>
+</html>

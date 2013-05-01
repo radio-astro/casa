@@ -1,0 +1,183 @@
+##########################################################################
+# imfit_test.py
+#
+# Copyright (C) 2008, 2009
+# Associated Universities, Inc. Washington DC, USA.
+#
+# This script is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Library General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+#
+# This library is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
+# License for more details.
+#
+# You should have received a copy of the GNU Library General Public License
+# along with this library; if not, write to the Free Software Foundation,
+# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
+#
+# Correspondence concerning AIPS++ should be adressed as follows:
+#        Internet email: aips2-request@nrao.edu.
+#        Postal address: AIPS++ Project Office
+#                        National Radio Astronomy Observatory
+#                        520 Edgemont Road
+#                        Charlottesville, VA 22903-2475 USA
+#
+# <author>
+# Dave Mehringer
+# </author>
+#
+# <summary>
+# Test suite for the CASA tool method ia.rebin()
+# </summary>
+#
+# <reviewed reviwer="" date="" tests="" demos="">
+# </reviewed
+#
+# <prerequisite>
+# <ul>
+# </ul>
+# </prerequisite>
+#
+# <etymology>
+# Test for the ia.rebin() tool method
+# </etymology>
+#
+# <synopsis>
+# Test the ia.rebin() tool method
+# </synopsis> 
+#
+# <example>
+#
+# This test runs as part of the CASA python unit test suite and can be run from
+# the command line via eg
+# 
+# `echo $CASAPATH/bin/casapy | sed -e 's$ $/$'` --nologger --log2term -c `echo $CASAPATH | awk '{print $1}'`/code/xmlcasa/scripts/regressions/admin/runUnitTest.py test_ia_rebin[test1,test2,...]
+#
+# </example>
+#
+# <motivation>
+# To provide a test standard for the ia.rebin() tool method to ensure
+# coding changes do not break the associated bits 
+# </motivation>
+#
+
+###########################################################################
+import shutil
+import casac
+from tasks import *
+from taskinit import *
+from __main__ import *
+import unittest
+
+def alleqnum(x,num,tolerance=0):
+    if len(x.shape)==1:
+        for i in range(x.shape[0]):
+            if not (abs(x[i]-num) < tolerance):
+                print "x[",i,"]=", x[i]
+                return false
+    if len(x.shape)==2:
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                if not (abs(x[i][j]-num) < tolerance):
+                    print "x[",i,"][",j,"]=", x[i][j]
+                    return false
+    if len(x.shape)==3:
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                for k in range(x.shape[2]):
+                    if not (abs(x[i][j][k]-num) < tolerance):
+                        print "x[",i,"][",j,"][",k,"]=", x[i][j][k]
+                        return false
+    if len(x.shape)==4:
+        for i in range(x.shape[0]):
+            for j in range(x.shape[1]):
+                for k in range(x.shape[2]):
+                    for l in range(x.shape[3]):
+                        if not (abs(x[i][j][k][l]-num) < tolerance):
+                            print "x[",i,"][",j,"][",k,"][",l,"]=", x[i][j][k]
+                            return false
+    if len(x.shape)>4:
+        stop('unhandled array shape in alleq')
+    return true
+
+
+class ia_rebin_test(unittest.TestCase):
+    
+    def setUp(self):
+        self._myia = iatool()
+    
+    def tearDown(self):
+        self._myia.done()
+    
+    def test_stretch(self):
+        """ ia.rebin(): Test stretch parameter"""
+        yy = iatool()
+        mymask = "maskim"
+        yy.fromshape(mymask, [200, 200, 1, 1])
+        yy.addnoise()
+        yy.done()
+        shape = [200,200,1,20]
+        yy.fromshape("", shape)
+        yy.addnoise()
+        self.assertRaises(
+            Exception,
+            yy.rebin, outfile="", bin=[2,2,1,1],
+            mask=mymask + ">0", stretch=False
+        )
+        zz = yy.rebin(
+            outfile="", bin=[2,2,1,1],
+            mask=mymask + ">0", stretch=True
+        )
+        self.assertTrue(type(zz) == type(yy))
+        yy.done()
+        zz.done()
+        
+    def test_general(self):
+        """ ia.rebin(): General tests"""
+        # tests moved from imagetest_regression.py and modified
+        
+        myia = self._myia
+        shp2 = [20,40]
+        d2 = myia.makearray(1.0, [shp2[0], shp2[1]])
+        #
+        myim2 = myia.newimagefromarray(pixels=d2)
+        self.assertTrue(myim2)
+        
+        try:
+            myim2b = true
+            myim2b = myim2.rebin(bin=[-100,2])
+        except Exception, e:
+            myim2b = false
+        self.assertFalse(myim2b)
+        
+        myim2b = myim2.rebin("",bin=[2,2])
+        self.assertTrue(myim2b)
+        p = myim2b.getchunk()
+        self.assertTrue(alleqnum(p,1.0,tolerance=0.0001))
+        #
+        ok = myim2.done() and myim2b.done()
+        self.assertTrue(ok)
+        
+    def test_multibeam(self):
+        """Test multiple beams"""
+        myia = self._myia
+        myia.fromshape("", [10, 10, 10])
+        myia.setrestoringbeam(
+            major="4arcsec", minor="2arcsec", pa="0deg",
+            channel=0, polarization=0
+        )
+        rebin = myia.rebin("", [2, 2, 1])
+        self.assertTrue(rebin)
+        exception = False
+        try:
+            rebin = myia.rebin("", [2, 2, 2])
+        except:
+            exception = True
+        self.assertTrue(exception)
+        rebin.done()
+            
+def suite():
+    return [ia_rebin_test]

@@ -1,0 +1,165 @@
+#!/bin/sh
+#-----------------------------------------------------------------------------
+# scanhtml: Produce an HTML index of an AIPS++ mail folder.
+#-----------------------------------------------------------------------------
+#   Copyright (C) 1995-1997,1999,2002
+#   Associated Universities, Inc. Washington DC, USA.
+#
+#   This program is free software; you can redistribute it and/or modify
+#   it under the terms of the GNU General Public License as published by
+#   the Free Software Foundation; either version 2 of the License, or
+#   (at your option) any later version.
+#
+#   This program is distributed in the hope that it will be useful,
+#   but WITHOUT ANY WARRANTY; without even the implied warranty of
+#   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#   GNU General Public License for more details.
+#
+#   You should have received a copy of the GNU General Public License
+#   along with this program; if not, write to the Free Software
+#   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#   Correspondence concerning AIPS++ should be addressed as follows:
+#          Internet email: aips2-request@nrao.edu.
+#          Postal address: AIPS++ Project Office
+#                          National Radio Astronomy Observatory
+#                          520 Edgemont Road
+#                          Charlottesville, VA 22903-2475 USA
+#
+#-----------------------------------------------------------------------------
+# Usage: scanhtml [<folder>]"
+#-----------------------------------------------------------------------------
+# scanhtml produces a 'scan' listing of an AIPS++ MH email archive folder and
+# converts it to an HTML index with links to the individual messages.  The
+# folder name defaults to "general".
+#
+# Options:
+#   none
+#
+# Original: 1995/07/18 by Mark Calabretta, ATNF
+# $Id$
+#-----------------------------------------------------------------------------
+# Directory definitions.
+  MHBIN=/opt/local/mh/bin
+  AIPSMAIL=$HOME/Mail
+  MSTRETCD=$HOME/master/etc
+
+# Parse the folder name.
+  if [ $# -gt 0 ]
+  then
+     FOLDER=$1
+  else
+     FOLDER="general"
+  fi
+
+# The first step in producing an updated folder index is to redirect stdout.
+  cp /dev/null $AIPSMAIL/"$FOLDER"/index.html
+  chmod 664 $AIPSMAIL/"$FOLDER"/index.html
+  exec 1>$AIPSMAIL/"$FOLDER"/index.html 2>&1
+
+# Write the HTML header.
+  echo "<HTML>"
+  echo "<HEAD>"
+  echo "<TITLE>AIPS++ $FOLDER email archive</TITLE>"
+  echo "<SCRIPT LANGUAGE = \"JavaScript1.2\" src=\"../../docs/javascripts/menu.js\"></script>"
+  echo "<SCRIPT LANGUAGE = \"JavaScript1.2\" src=\"../../docs/javascripts/aipsmenu.js\"></script>"
+  echo "<SCRIPT LANGUAGE = \"JavaScript1.2\">"
+  echo "<!--"
+  echo  "// Function need to place directory relative to docs tree."
+  echo  "aMenu = new aipsMenu(\".\", \"#00009C\");"
+  echo  "function onLoad() {"
+  echo     "if (document.layers) {"
+  echo         "aMenu.loadMenus();"
+  echo     "}"
+  echo  "}"
+  echo "//-->"
+  echo "</SCRIPT>"
+
+  echo "</HEAD>"
+  echo ""
+  echo "<BODY background=\"../../docs/gif/watermark.gif\" bgcolor=\"#ffffff\" text=\"#000000\" link=\"#cc0f0f\" vlink=\"#00009c\">"
+  echo "<table bgcolor=\"#000099\" cellpadding=4 cellspacing=0 border=0 width=600 height=25>"
+  echo "<tr><td>"
+  echo "<a href=\"../../docs/gettingstarted.html\" onMouseOver=\"aMenu.showAipsMenu('gsMenu')\">"
+  echo "<font size=2 face=helvetica  color=\"#ffffff\">"
+  echo "<b>Getting Started</b></a></td>"
+  echo "<td>"
+  echo "<a href=\"../../docs/user/documentation.html\" onMouseOver=\"aMenu.showAipsMenu('userMenu')\">"
+  echo "<font size=2 face=helvetica color=\"#ffffff\">"
+  echo "<b>Documentation</a></b></a></td>"
+  echo "<td>"
+  echo "<a href=\"../../docs/glish/glish.html\" onMouseOver=\"aMenu.showAipsMenu('glishMenu')\">"
+  echo "<font size=2 face=helvetica color=\"#ffffff\">"
+  echo "<b>Glish</a></b></a></td>"
+  echo "<td>"
+  echo "<a href=\"../../docs/learnmore.html\" onMouseOver=\"aMenu.showAipsMenu('learnMenu')\">"
+  echo "<font size=2 face=helvetica color=\"#ffffff\">"
+  echo "<b>Learn More</b></a></td>"
+  echo "<td>"
+  echo "<a href=\"../../docs/programming/programming.html\" onMouseOver=\"aMenu.showAipsMenu('progMenu')\">"
+  echo "<font size=2 face=helvetica color=\"#ffffff\">"
+  echo "<b>Programming</b></a></td>"
+  echo "<td>"
+  echo "<a href=\"../../docs/contactus/contactus.html\" onMouseOver=\"aMenu.showAipsMenu('commMenu')\">"
+  echo "<font size=2 face=helvetica color=\"#ffffff\"><b>"
+  echo "Contact Us</b></a>"
+  echo "</td></tr></table>"
+  echo "<table border=0 width=600>"
+  echo "<tr><td><img src=\"../../docs/gif/aipslogo.gif\" border=0>"
+  echo "</td><td valign=middle>"
+  echo "<font size=2 face=helvetica color=\"#cc0f0f\"><a href=\"../../docs/newsletters/index.html\"><img src=\"../../docs/gif/tri2.gif\" border=0>  <b>Latest News</a></font></b><P>"
+  echo "<font size=2 face=helvetica color=\"#cc0f0f\"><a href=\"../../docs/faq/faq.html\"><img src=\"../../docs/gif/tri2.gif\" border=0>  <b>FAQ</a></font></b><P>"
+  echo "<font size=2 face=helvetica color=\"#cc0f0f\"><a href=\"../../docs/search/search.html\"><img src=\"../../docs/gif/tri2.gif\" border=0>  <b>Search</a></font></b><P>"
+  echo "<font size=2 face=helvetica color=\"#cc0f0f\"><a href=\"../../docs/aips++.html\"><img src=\"../../docs/gif/tri2.gif\" border=0>  <b>Home</a></font></b><P>"
+  echo ""
+  echo "</td></tr></table>"
+  echo "<hr>"
+
+  echo "<P><H2>AIPS++ <I>$FOLDER</I> email archive"
+  echo "<I>(<A HREF=\"mailto:$FOLDER@nrao.edu\">$FOLDER@nrao.edu</A>)</I>"
+  echo "</H2></P>"
+
+  echo ""
+  echo "<P><H3>"
+  if [ -f $AIPSMAIL/"$FOLDER"/list ]
+  then
+#    Include a link to the recipient list.
+     echo "<A HREF=\"list\">List</A> current recipients."
+  fi
+
+# Include a link to the search form.
+  echo "<P><A HREF=\"http://aips2.nrao.edu/cgi-bin/pickhtml?$FOLDER\">Search</A>" \
+       "this folder.</P></H3>"
+  echo "<P><H4>"
+  echo "For Information or to join, visit <A HREF=\"http://listmgr.cv.nrao.edu/mailman/listinfo/$FOLDER\">http://listmgr.cv.nrao.edu/mailman/listinfo/$FOLDER</a></P></H4>"
+
+  echo ""
+  echo "<HR>"
+  echo ""
+  echo "<PRE>"
+  echo "<UL>"
+
+# Produce a scan list and convert it to an HTML list with links.
+  $MHBIN/scan +"$FOLDER" -header -reverse -width 132 | \
+     sed -e 's#&#\&amp;#g' \
+         -e 's#<#\&lt;#g' \
+         -e 's#>#\&gt;#g' \
+         -e 's#"#\&quot;#g' \
+         -e 's#^\( *\)\([1-9][0-9]*\)#<LI>\1<A HREF="\2">\2</A>#'
+
+# Write the HTML trailer.
+  echo "</UL>"
+  echo "</PRE>"
+  echo ""
+  echo "<HR>"
+  echo ""
+  echo "<P>This index was automatically generated on `$MSTRETCD/adate`.</P>"
+  echo ""
+  echo "<ADDRESS>"
+  echo "aips2adm@nrao.edu"
+  echo "</ADDRESS>"
+  echo ""
+  echo "</BODY>"
+  echo "</HTML>"
+
+  exit 0

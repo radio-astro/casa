@@ -1,0 +1,20 @@
+import os,glob,shutil
+
+# import root environment
+Import( "env")
+myenv = env.Clone()
+
+# gather cpp files
+cpps = []#env.SGlob("*.cpp")
+
+# location of libasap.a
+myenv.Prepend( LIBPATH = ['#/build'] )
+myenv.Prepend( CPPPATH = ['#/build'] )
+myenv.Append(CCFLAGS = ["-DWCSLIB_GETWCSTAB"])
+myenv.Prepend(LIBS = ['asap'])
+
+installs = []
+for cpp in cpps:
+    prog = myenv.Program(cpp)    
+    myenv.QInstall("#/$stagedir/bin", prog)
+

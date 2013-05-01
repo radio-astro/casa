@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+      file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="listpartition" category="information" visibility="experimental">
+	<shortdescription>List the summary of a multi-MS data set in the logger or in a file</shortdescription>
+	<description>
+       List the summary information of a multi-MS data set in the logger or in a file.
+
+       Lists the following properties of a multi-measurement set:
+       sub-MS name, scan list, spw list, list of number of channels per spw, 
+       number of rows for all scans.
+	</description>
+	<input>
+		<param type="string" name="vis" mustexist="true">
+			<description>Name of multi-MS or normal MS.</description>
+			<value></value>
+		</param>
+
+        <param type="bool" name="createdict">
+            <description>Create and return a dictionary with sub-MS information</description>
+            <value>False</value>
+        </param>
+		
+		<param type="string" name="listfile">
+			<description>Name of ASCII file to save output: \'\'==>to terminal</description>
+			<value></value>
+		</param>
+            
+	</input>
+<returns type="void"/>
+
+<example>
+
+       A multi-measurement set (MMS) is an MS that has been split into sub-MSs.
+       An MMS contains a reference MS in the top directory and the sub-MSs are 
+       located in a directory called SUBMSS inside the MMS directory.
+       Example of a MS that was 'split' in two scans using the task partition: 
+       
+       > ls pScan.mms/
+         SUBMSS/     table.dat   table.info
+       
+       > ls pScan.mms/SUBMSS/
+         pScan.0000.ms/ pScan.0001.ms/
+       
+       
+       The task lists the following properties of a multi-MS or MS:
+       sub-MS name, scan, spw list, list of number of channels per spw, 
+       number of rows for each scan and the size in disk. Example of logger output:
+       
+        Sub-MS         Scan  Spw               Nchan             Nrows   Size  
+        pScan.0000.ms  31    [ 0  1  2  3  4]  [64 64 64 64 64]  8640    42M   
+        pScan.0001.ms  30    [ 0  1  2  3  4]  [64 64 64 64 64]  8544    42M   
+
+
+
+       Keyword arguments:
+       vis -- Name of multi-MS or normal MS.
+              default: ''. 
+              example: vis='pScan.mms'
+
+       createdict -- Create and return a dictionary containing scan summaries of each
+                     sub-MS. 
+              default: False
+              
+              If set to True, the returned dictionary will contain information from
+              ms.getscansummary() and ms.getspectralwindowinfo(), with the addition of an 
+              index as the top key and the sub-MS name.
+              Example:
+              
+            {0: {'MS': 'pScan.0000.ms',
+                 'scanId': {31: {'nchans': array([64, 64, 64, 64, 64]),
+                                 'nrows': 8640,
+                                 'spwIds': array([ 0,  1,  2,  3,  4])}},
+                 'size': '42M'},
+             1: {'MS': 'pScan.0001.ms',
+                 'scanId': {30: {'nchans': array([64, 64, 64, 64, 64]),
+                                 'nrows': 8544,
+                                 'spwIds': array([ 0,  1,  2,  3,  4])}},
+                 'size': '42M'}}
+
+                    
+       listfile -- Name of ASCII file to save output to. If empty, it will 
+                   list on the logger/terminal.
+              default: ''
+              example: listfile='pscan.txt'
+
+ </example>
+ </task>
+ </casaxml>

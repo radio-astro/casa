@@ -1,0 +1,53 @@
+This file summarizes how to use the 'regression.py' script for testing
+CASA.
+
+The working directory can be chosen for convenience as all the
+*_regression.py scripts in $AIPSROOT/code/xmlcasa/scripts are copied
+into the working directory, before execution commences, when you run
+'casapy -c $AIPSROOT/code/xmlcasa/scripts/regression.py'.
+
+The file 'regression.py' will need to be modified if the data for some
+tests is not present in $AIPSROOT/data.  You will need to set
+DO_theTestName=False for all tests with missing datasets.
+
+After regression.py terminates, a summary of regression test results
+(test name, pass/fail, runtime, runtime/expected runtime) is left
+within the working directory in an output file named
+'REGRESSION'+datestamp+'.log'.
+
+To add another test to the 'regression.py' script, first make sure
+that the new test script defines startTime, endTime and regstate.  For
+example, the 'imagetest_regression.py' script contains:
+
+	import time
+	startTime = time.time()
+	regstate = False
+	imagetest()              # calls the actual test script
+	endTime = time.time()
+	regstate = True
+
+At the front of the 'regression.py' script, add a line to indicate
+that your new test script should be ran.  You need something like:
+
+###############################
+# Regression 
+# 
+###############################
+[...]
+DO_IMAGETEST            = True
+###############################
+
+Now modify scriptlist and ratedict using an existing test, such as
+IMAGETEST or NGC5921, as an example of what is needed.
+
+If your source test script appears in scriptlist (all upper case
+letters as 'IMAGETEST', for instance) and DO_IMAGETEST=True, this
+causes the regression script to try to execute a file called
+'imagetest_regression.py'.  It uses startTime and endTime to determine
+the script running time which is compared to the expected value
+recorded in ratedict.  For instance, ratedict has the key value pair
+'IMAGEPOLTEST':41.  Note that the expected runtime will be
+machine/load dependent.
+
+
+

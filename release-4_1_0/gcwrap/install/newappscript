@@ -1,0 +1,13 @@
+global casaBinDir
+global casaRoot
+global casapy
+
+set casaRoot to POSIX path of (path to me) & "Contents"
+set casaBinDir to casaRoot & "/MacOS"
+
+set casapy to casaBinDir & "/casapy"
+
+tell application "Terminal"
+	activate
+	do script casapy
+end tell

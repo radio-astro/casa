@@ -1,0 +1,81 @@
+
+<html>
+<head>
+<title>AIPS++ to CASA Migration</title>
+</head>
+
+<body bgcolor="#ffffff" text="#000000" link="#cc0f0f" vlink="#00009c">
+<h2> Site Managers</h2>
+<p>
+To move from AIPS++ to CASA in place do the following:
+<p>
+
+<ul>
+<li><pre>cd $AIPSROOT</pre>
+<li><pre>rm -rf code or mv code code.aips++</pre>
+<li><pre>cvs checkout -d code casa/code</pre>
+<li><pre>cd code/install</pre>
+<li><pre>gmake</pre>
+<li>Adjust local makedefs to remove the libaips and libtrial lines and
+    to add additional lib lines for static/shared builds as
+    needed. The new libraries (with their default build definitions)
+    are listed below. Only if a library needs to be built differently,
+    its line needs to be added to the local makedefs.
+     
+    <pre>
+#                      C++            C          FORTRAN
+#                   dbg    opt    dbg    opt    dbg    opt
+#                 ------------- ------------- -------------
+LIBcasa        := defeat static defeat defeat defeat defeat
+LIBscimath     := defeat static defeat defeat defeat static
+LIBtables      := defeat static defeat defeat defeat defeat
+LIBmeasures    := defeat static defeat defeat defeat static
+LIBfits        := defeat static defeat defeat defeat defeat
+LIBgraphics    := defeat static defeat defeat defeat defeat
+LIBlattices    := defeat static defeat defeat defeat defeat
+LIBcoordinates := defeat static defeat defeat defeat defeat
+LIBcomponents  := defeat static defeat defeat defeat defeat
+LIBimages      := defeat static defeat defeat defeat defeat
+LIBms          := defeat static defeat defeat defeat defeat
+LIBmsvis       := defeat static defeat defeat defeat defeat
+LIBcalibration := defeat static defeat defeat defeat defeat
+LIBionosphere  := defeat static defeat defeat defeat static
+LIBflagging    := defeat static defeat defeat defeat defeat
+LIBdish        := defeat static defeat defeat defeat defeat
+LIBsimulators  := defeat static defeat defeat defeat defeat
+LIBsynthesis   := defeat static defeat defeat defeat defeat
+LIBtasking     := defeat static defeat defeat defeat defeat
+    </pre>
+    Please note that scimath, measures and coordinates contain
+    Fortran libraries (for math, sofa, and pim, respectivily).
+<p>
+<li><pre>inhale.cvs -c</pre>
+Alternatively, do a fresh "consortium" install into a "casa" directory
+<p>
+    
+<li>If the runtests are done in a cron job, it might need to be
+    changed. Formerly runtests.sh produced four summary files (for
+    aips, trial, display and trialdisplay) which are usually emailed
+    to aips2-testing@nrao.edu in the cron job.
+    Now there are 21 such files which are combined in a single
+    runtests.summary file. It contains
+    the number of succeeding and failing test programs only.
+    It is sufficient to email this file.
+<p>
+<li>
+    AIPS++ has always been built with explicit template instantiation.
+    For example, for the gcc compiler the option
+    -fno-implicit-templates is usually part of the local makedefs.
+    Now that the STL library will be used more and more, it is better
+    to build AIPS++ with implicit template instantiation. This can be
+    achieved by removing -fno-implicit-templates from C++STD and
+    adding -DAIPS_AUTO_STL to CPPSTD.
+    <br>Note that AIPS++ templates still need to be instantiated
+    explicitly, because their implementations are not part of the .h
+    files (as is the case for the STL templates).
+</ul>
+    
+<p>For questions, assistance, or to obtain some "helper" scripts in the 
+transition, please contact aips2-requests@nrao.edu
+</body>
+</html>

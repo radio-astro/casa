@@ -1,0 +1,91 @@
+From olnon@RZMWS0.NFRA.NL  Thu Sep 15 16:08:44 1994
+Return-Path: <olnon@RZMWS0.NFRA.NL>
+Received: from cv3.cv.nrao.edu by baboon.cv.nrao.edu (4.1/DDN-DLB/1.5)
+	id AA20013; Thu, 15 Sep 94 16:08:44 EDT
+Received: from RZMVX4 (rzmvx4.nfra.nl) by cv3.cv.nrao.edu (4.1/DDN-DLB/1.13)
+	id AA29996; Thu, 15 Sep 94 16:08:37 EDT
+Received: from rzmws0.NFRA.NL (RZMWS0) by NFRA.NL (PMDF V4.3-7 #3695)
+ id <01HH5NMX74AO9VUW1K@NFRA.NL>; Thu, 15 Sep 1994 22:07:28 GMT+2
+Received: from rzmws1.NFRA.NL by rzmws0.NFRA.NL (4.1/SMI-4.1) id AA29311; Thu,
+ 15 Sep 94 22:07:07 +0200
+Date: Thu, 15 Sep 1994 22:08:08 +0100 (MET)
+From: olnon@RZMWS0.NFRA.NL (friso olnon)
+Subject: appendix to outline
+To: aips2-doc@NRAO.EDU
+Cc: JNoordam@NFRA.NL (Jan Noordam)
+Message-Id: <9409152007.AA29311@rzmws0.NFRA.NL>
+X-Envelope-To: aips2-doc@nrao.edu
+X-Mailer: ELM [version 2.3 PL11]
+Content-Transfer-Encoding: 7BIT
+
+Sorry, I lost one simple text file. Here it comes. Rename it to
+"task-description.mail" and add it to your HTML file cluster, and the
+relevant link will work:
+
+Date: Mon, 30 May 1994 11:03:17 +0100 (MET)
+From: olnon@RZMWS0.NFRA.NL (friso olnon)
+To: rsimon@nrao.edu
+
+ Richard,
+
+ About NFRA to provide a design for the AIPS++ Documentation System:
+ ------------------------------------------------------------------
+
+ o Why NFRA?
+
+ 1) We have always emphasized the importance of good documentation.
+ 2) We have experience in setting/keeping up such a system (NEWSTAR).
+ 3) We have manpower available.
+ 
+ 
+ o What will we do exactly?
+
+ Design a system that will take care of all AIPS++ documentation
+ needs:
+ 
+ 1) Make an inventory of the access needs and define the properties
+    of the various pieces of documentation and their links. Typically:
+    - layered along levels of experience (tutorials, reference manuals
+      or `bibles', technical descriptions);
+    - partitioned according to application domains (frameworks,
+      subsystems, modules, or whatever);
+    - navigation via hyperlinks (xmosaic viewer).
+ 
+ 2) Critically survey the existing AIPS++ documentation:
+    - list what can be used for the new system and how it can be
+      integrated;
+    - list the additional pieces of information needed to expand it to
+      a useful system before, say, the end of 1994;
+    - make a hotlist of documents quickly needed by the prototypers,
+      and try to get them written by someone -- such as the Map/List
+      and Table tutorials promised by Olnon.
+ 
+ 3) Define how the various pieces of documentation will be generated,
+    stored and maintained:
+    - To what extent can this automatically be done via the existing
+      or slightly adapted code management system?
+    - Which responsabilities must be laid where (central and local
+      management, integrators, programmmers, users)?
+    - Which rules will be enforced and what support should be
+      available (in the form of tools, guides, personal assistence)?
+ 
+ 
+ o When will it be ready?
+ 
+ Before 1994 September 1. How many of the hotlist documents will be
+ ready by then depends on the outside-NFRA help we get.
+ 
+ 
+ o Where do we go from there?
+ 
+ 1) Before January 1995, the mechanics of the new documentation system
+    must be in place and the first flesh put on the bones, so that the
+    beta AIPS++ release contains enough for serious field tests of the
+    documentation. It is not yet clear who will do what -- that is
+    part of our design and subsequent managerial decisions --, but I
+    guess that NFRA will do most of that.
+ 
+ 2) By January 1995, the organisation of the documentation system must
+    be integrated with that of the rest of the AIPS++ system. From
+    then on NFRA will play no special role, unless it is decided
+    otherwise.

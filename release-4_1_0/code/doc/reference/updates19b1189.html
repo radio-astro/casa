@@ -1,0 +1,222 @@
+<html>
+<head>
+
+<title>AIPS++ Updates</title>
+</head>
+
+
+<body background="../gif/watermark.gif" bgcolor="#ffffff" text="#000000"
+link="#cc0f0f" vlink="#00009c">
+
+<table bgcolor="#00009c" cellpadding=4 cellspacing=0 border=0 width=600
+height=25>
+<tr><td>
+<a href="../gettingstarted.html">
+<font size=2 face=helvetica  color="#ffdd00">
+<b>Getting Started</b></a></td>
+<td>
+<a href="../user/documentation.html">
+<font size=2 face=helvetica color="#ffffff">
+<b>Documentation</b></a></td>
+<td>
+<a href="../glish/glish.html">
+<font size=2 face=helvetica color="#ffffff">
+<b>Glish</b></a></td>
+<td>
+<a href="../learnmore.html">
+<font size=2 face=helvetica color="#ffffff">
+<b>Learn More</b></a></td>
+<td>
+<a href="../programmer/programmer.html">
+<font size=2 face=helvetica color="#ffffff">
+<b>Programming</b></a></td>
+<td>
+<a href="../contactus/contactus.html">
+<font size=2 face=helvetica color="#ffffff">
+<b>Contact Us</b></a>
+</td></tr></table>
+<table border=0 width=600>
+<tr><td><img src="../gif/aipslogo.gif">
+</td><td><font size=2 face=helvetica color="#cc0f0f"><b>VERSIONID</b></font>
+</td><td valign=middle>
+<font size=2 face=helvetica color="#cc0f0f"><a
+href="../newsletters/index.html"><img src="../gif/tri2.gif" border=0> 
+ <b>News</a></font></b><P>
+<font size=2 face=helvetica color="#cc0f0f"><a
+href="../faq/faq.html"><img src="../gif/tri2.gif" border=0>  <b>FAQ</a
+></font></b><P>
+<font size=2 face=helvetica color="#cc0f0f"><a
+href="../search/search.html"><img src="../gif/tri2.gif" border=0>  <b>
+Search</a></font></b><P>
+<font size=2 face=helvetica color="#cc0f0f"><a href="../aips++.html"><img
+src="../gif/tri2.gif" border=0>  <b>Home</a></font></b><P>
+
+</td></tr></table>
+<H1>AIPS++ Stable Snapshots</H1>
+<H2> Current Stable 1.9 Build 1189 2005/09/24 next Stable Snapshot due 2005/11/15</H2>
+
+AIPS++ provides stable snapshots during the current development cycle.  You should consider
+the stable snapshots as "alpha" software and proceed with caution. The stable snapshots have
+passed certain minimum tests.  Some snapshots are tested more thoroughly than others.  The
+test levels are stable, beta, and release. Completed targets for the current stable as well as
+a current list of in-progress targets for the next stable snapshot
+may be found at the <a href="http://aips2.nrao.edu/projectoffice/">AIPS++ Project Office Page.</a>
+<P>
+Prebuilt binaries for Solaris and Linux are available via
+the aupdate script. To determine your current version, type "avers" at a UNIX command prompt.
+To get the updated snapshot type "aupdate" at a UNIX command prompt.  Please note aupdate 
+retrieves the updated stable binaries and docs over the net using cvsup. The process can take
+"awhile".
+
+Additionally, RPM's are available for a variety of Linux distributions and may be found at
+<a href="ftp:://ftp.cv.nrao.edu/aips++/rpms">ftp::/ftp.cv.nrao.edu/aips++/rpms.</a> Please note there
+is currently limited support for users outside the ALMA community.
+<P>
+For AIPS++ versions less than v1.8 Build 391 you will need to obtain aupdate via anonymous ftp.  For Linux users please get <a href="ftp://aips2.nrao.edu/pub/import/Linux/aupdate.tar.gz">ftp://aips2.nrao.edu/pub/import/Linux/aupdate.tar.gz</a>, for Solaris user get it from
+<a href="ftp://aips2.nrao.edu/pub/import/Solaris/aupdate.tar.gz">
+ftp://aips2.nrao.edu/pub/import/Solaris/aupdate.tar.gz</a>. Unpack the tar file in your $AIPSARCH directory
+(the same directory that contains your AIPS++ bin directory). 
+<P>
+<font face=helvetica>AIPS++</font> does not
+currently support any version of Windows or any Apple computers.</p>
+<H2> Updated Stable Snapshot  1.9 Build 1189 2005/09/24 </H2>
+
+
+<H3>Resolved Defects/Enhancements:</H3>
+
+
+<NOSCRIPT>
+<em>Please enable JavaScript or you will have limited functionality.</em>
+</NOSCRIPT>
+
+<TABLE BORDER=1>
+<tr><th BGCOLOR=#CCCCCC ALIGN=LEFT>Identifier</th><th BGCOLOR=#CCCCCC ALIGN=LEFT>Project</th><th BGCOLOR=#CCCCCC ALIGN=LEFT>State</th><th BGCOLOR=#CCCCCC ALIGN=LEFT>Software</th><th BGCOLOR=#CCCCCC ALIGN=LEFT>Problem severity</th><th BGCOLOR=#CCCCCC ALIGN=LEFT>Headline</th><th BGCOLOR=#CCCCCC ALIGN=LEFT>Resolved_on</th></tr>
+
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04493&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04493</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>cal.correct will not correct data for FIELD_ID 1  </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02372&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02372</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>warnings printed when constructing</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso05056&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso05056</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>clarkclean slowdown in minor cycle loop</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04994&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04994</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>imager list of problems while doing mosaic imaging </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03856&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03856</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>calplot fails to find data for all spwids except the last one</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04887&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04887</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>flagger.ac crashed </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04868&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04868</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>Big cleaning runs very slowly</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04854&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04854</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>when doing channel selection it fails</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02493&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02493</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>multiple setapply with different time ranges crashes CALIB</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04782&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04782</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>flagger.setchan()</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03027&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03027</a></TD><TD>enhancements</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>multiscale clean takes too long</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03790&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03790</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>wont plot calibrated source data</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04664&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04664</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>model must be specified even if complist set</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04528&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04528</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>Setdata does not properly AND the msselect query with ohter options</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02586&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02586</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>bandpass solution crashes</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04559&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04559</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>image.moments produces wrong velocity</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03601&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03601</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>Need additional items in table headers.</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03454&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03454</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>differences when making dirty images on linux vs solaris</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04356&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04356</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>flagger.setchan doesn't execute</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03067&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03067</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>2</TD><TD>Follow up to defect 02779 and more.</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04619&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04619</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>Solutions overwritten when t &gt; scan length</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04605&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04605</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>cal.fluxscale doesn't work for more than 3 sources? </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04582&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04582</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>IRAM cookbook script now produces errors</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04581&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04581</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>fails to solve for bandpass for all spwids </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04708&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04708</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>flagger.setchan confused by windows</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04392&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04392</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>imagerwizard() fails on cookbook example</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04507&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04507</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>imageprofilefitter plots does not produce dopper-tracked velocity  </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04388&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04388</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: iramcal.flux ant efficiencies report wrong error estimates </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04961&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04961</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>setdata resets setapply</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04384&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04384</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>timerange should accomodate &quot;wrapping&quot;</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04380&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04380</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>fit problem when shadowing affect one antenna</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04358&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04358</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: iramcal.flux plot causes glish error</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04655&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04655</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>Cotton-Schwab clean gives worse dynamic range than it should</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04390&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04390</a></TD><TD>enhancements</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: please provide a summary of the total calibration process </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04314&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04314</a></TD><TD>enhancements</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: iramcal GSPLINE solution intervals should be by user choice </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04313&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04313</a></TD><TD>enhancements</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: iramcal should make first look plots</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04312&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04312</a></TD><TD>enhancements</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: iramcal.flux should be able to limit time range </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04309&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04309</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: iramcal.rf plots appear to have wrong error bars </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04307&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04307</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: iramcal should not produce plots with flagged data </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04303&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04303</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: iramcal functions can't abort due to lack of id() </TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04291&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04291</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>id() missing, cannot kill tool</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04707&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04707</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>cannot handle spwindows with different shapes</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso05161&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso05161</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>Polarization maps in aips++ look strange</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04270&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04270</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: rename iramcal module to be alma module</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04264&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04264</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>ALMA: flagger chokes when flagging iram dataset</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04250&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04250</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>setuvrange fails because of TaQL error</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04206&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04206</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>interpolate1d fails in setting weight on ATCA data</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso01430&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso01430</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>Does not set the row flag</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso01991&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso01991</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>velocity info not preserved</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02492&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02492</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>calib.fluxscale transfer to multiple sources doesn't work</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02506&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02506</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>would like ability to save flag tables</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04103&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04103</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>crashes with &quot;Operand to .shape is not a record&quot;</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04032&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04032</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>Calling dragon.setbeam does not seem to have any effect</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03985&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03985</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>flagger.state returned is inconsistent</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03846&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03846</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>cal.plotcal: resizing PGPlotter produces strange behavior</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02614&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02614</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>3</TD><TD>Always  seem to flag 0 times</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04123&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04123</a></TD><TD>enhancements</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>clean: mosaic processing: tiled gridding too slow</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03847&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03847</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>ASTRON links in documentation</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04275&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04275</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>Visible output truncated to first 3 columns</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04338&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04338</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>flagger.setchan not writing to scripter gui</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03469&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03469</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>3 TempLattices left after 4096 sized mem</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04385&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04385</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>1mm phase fits miss data points on 3 baselines</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso03267&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso03267</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>something doesn't die when ms is recreated</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04640&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04640</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>plots for scan-based BP solns</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02954&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02954</a></TD><TD>problems</TD><TD>R</TD><TD>vla</TD><TD>4</TD><TD>have to hit the create button twice</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02943&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02943</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>Refman flagger &amp; autoflagger should be in same module</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02675&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02675</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>doc bug, async is not a parameter</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02031&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02031</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>undocumented public functions</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso00276&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso00276</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>min() function</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso00374&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso00374</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>Needs meta info</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso00375&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso00375</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>Needs meta info</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04853&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04853</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>plocal for 4 spw b cal fails to plot all</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso00840&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso00840</a></TD><TD>enhancements</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>vpmanager: request for useful functions</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02418&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02418</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>spanner &quot;from MS&quot; should bring up Chooser</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso05152&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso05152</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>documentation for fitting many profiles is incorrect</TD><TD>05 September, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02143&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02143</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>reports that it flags things that should have been already flagged</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso00885&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso00885</a></TD><TD>enhancements</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>Indicate functions that have been used</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso01884&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso01884</a></TD><TD>problems</TD><TD>R</TD><TD>toolmanager</TD><TD>4</TD><TD>toolmanager makes spurious type grouping 'aips++'</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso01513&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso01513</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>&quot;Tool Status&quot; panel absent in some tools</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso01479&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso01479</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>Order tool functions by importance</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso01286&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso01286</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>4</TD><TD>Needs meta info</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02062&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02062</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>5</TD><TD>how to drive search in tm not obvious</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04436&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04436</a></TD><TD>problems</TD><TD>R</TD><TD>Aips++</TD><TD>5</TD><TD>solution intervals quantized</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02017&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02017</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>5</TD><TD>Out of date</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04142&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04142</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>5</TD><TD>postscript version of documentation is difficult to read</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04204&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04204</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>5</TD><TD>no help for filename in create dragon tool</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso01887&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso01887</a></TD><TD>enhancements</TD><TD>R</TD><TD>AIPS++</TD><TD>5</TD><TD>no way to create defaultviewer with toolmanager</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04274&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04274</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>5</TD><TD>Module Panel Label missing</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04203&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04203</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>5</TD><TD>coordination between toolmanager and catalog required</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso02557&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso02557</a></TD><TD>problems</TD><TD>R</TD><TD>AIPS++</TD><TD>5</TD><TD>bug description window needs to put returns in</TD><TD>16 August, 2005</TD></TR>
+<TR><TD><a href="http://aips2.nrao.edu/ddts/ddts_main?bug_id=AOCso04423&REMOTE_USER=nobody&LastForm=DumpBug" TARGET="defectframe">AOCso04423</a></TD><TD>problems</TD><TD>R</TD><TD>Aips++</TD><TD>5</TD><TD>Fix documentation dragon tool</TD><TD>16 August, 2005</TD></TR>
+<TR><TD COLSPAN=7><em>91 records found</em>
+
+</TABLE>
+<p><SCRIPT>
+function SetCookie(name, value)
+{
+   var nextyear = new Date();
+   var y = nextyear.getYear() + 1;
+   if (y < 1000) y+= 1900;
+   nextyear.setYear(y);
+   document.cookie= name + "=" + escape(value) + ";" + "expires=" + nextyear.toGMTString() + ";";
+}
+   document.onLoad= SetCookie ("WebTrackerHelp", "Viewing and modifying records");
+</SCRIPT>
+<p>
+<noscript><em>Please enable JavaScript or you will have limited functionality.</em></noscript>
+<H2> Previous Stable Snapshots</H2>
+<P><a href=updates19b1126.html>Version 1.9 Build 1126</a>
+<P><a href=updates19b1056.html>Version 1.9 Build 1056</a>
+<P><a href=updates19b913.html>Version 1.9 Build 913</a>
+<P><a href=updates19b874.html>Version 1.9 Build 874</a>
+<P><a href=updates19b803.html>Version 1.9 Build 803</a>
+<P><a href=updates19b615.html>Version 1.9 Build 615</a>
+<P><a href=updates19b587.html>Version 1.9 Build 587</a>
+<P><a href=updates19b489.html>Version 1.9 Build 489</a>
+<P><a href=updates19b355.html>Version 1.9 Build 355</a>
+<P><a href=updates19b275.html>Version 1.9 Build 275</a>
+<P><a href=updates19b187.html>Version 1.9 Build 187</a>
+<P><a href=updates19b075.html>Version 1.9 Build 075</a>
+
+<HR>
+
+Copyright &#169; 1995-2001,2002,2003,2004 Associated Universities Inc.,
+Washington, D.C.</i>
+
+</body>
+</html>
