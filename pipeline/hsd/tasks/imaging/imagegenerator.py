@@ -12,7 +12,6 @@ import pipeline.infrastructure.logging as logging
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
-logging.set_logging_level('trace')
 #logging.set_logging_level('info')
 
 NoData = common.NoData
