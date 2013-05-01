@@ -245,10 +245,10 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          vis=inputs.caltable, inpfile=inputs.flagcmdfile)
+          vis=inputs.vis, inpfile=inputs.flagcmdfile)
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
-	# Translate the input flagging parameters to a more compact
+        # Translate the input flagging parameters to a more compact
         # list of rules.
 	rules = viewflaggers.MatrixFlagger.make_flag_rules (
           flag_hilo=False,
