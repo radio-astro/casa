@@ -283,6 +283,7 @@ class QA2BandpassAdapter(object):
                                    x_axis='freq',
                                    y_axis=y_axis,
                                    field=self._result.inputs['field'],
+                                   qa2_score=score,
                                    parameters={'ant' : antenna.identifier,
                                                'spw' : spw.id,
                                                'pol' : polarization})

@@ -1488,7 +1488,7 @@ renderer_map = {
         hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html'),
         hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html')
     }
-}                
+}
 
 # adding classes to this tuple always rerenders their content, bypassing the
 # cache or 'existing file' checks. This is useful for developing and debugging

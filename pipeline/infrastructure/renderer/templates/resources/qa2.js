@@ -66,9 +66,16 @@ $(document).ready(function(){
 	
     var score_type = 'total';
     var scores = [];
-    for (var png in scorehash) {
-        var score = scorehash[png][score_type];
-        scores.push(score);
+    for (var png in scorehash) {    	
+    	/*
+    	 * Generate a histogram for those plots present in this page by checking
+    	 * whether the image is present before adding the score.
+    	 */
+        var ul = $("a[href='qa2/" + png + "']").parent();
+        if (ul.length > 0) {
+            var score = scorehash[png][score_type];
+            scores.push(score);
+        }
     }
     
     function filter(threshold_lo, threshold_hi) {

@@ -33,12 +33,12 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 
 <div class="thumbnails">
 	<ul class="thumb">
-% for plot in plot_group.plots:
+% for plot in sorted(plot_group.plots, key=lambda p: p.qa2_score['total']):
 		<li class="${plot.css_class}">
-			<a rel="fancybox-thumb" href="${os.path.relpath(plot.abspath, os.path.commonprefix([plot.abspath,dirname]))}" title="${plot.y_axis} vs ${plot.x_axis} for antenna #${plot.parameters['ant']} spw #${plot.parameters['spw']}">
+			<a rel="fancybox-thumb" href="${os.path.relpath(plot.abspath, os.path.commonprefix([plot.abspath,dirname]))}" title="${plot.parameters['ant']} spw ${plot.parameters['spw']}: QA2 total: ${plot.qa2_score['total']}">
 				<img   src="${os.path.relpath(plot.thumbnail, dirname)}"
-					 title="${plot.y_axis} vs ${plot.x_axis} for antenna #${plot.parameters['ant']} spw #${plot.parameters['spw']}"
-					   alt="${plot.y_axis} vs ${plot.x_axis} for antenna #${plot.parameters['ant']} spw #${plot.parameters['spw']}" >
+					 title="${plot.parameters['ant']} spw ${plot.parameters['spw']}: QA2 total: ${plot.qa2_score['total']}"
+					   alt="${plot.parameters['ant']} spw ${plot.parameters['spw']}: QA2 total: ${plot.qa2_score['total']}">
 				</img>
 			</a>
 		</li>
