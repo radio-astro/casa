@@ -137,7 +137,7 @@ class Context(object):
                 pass
             else: raise
 
-        LOG.info('Pipeline stage counter set to {0}'.format(self.stage))
+        LOG.trace('Pipeline stage counter set to {0}'.format(self.stage))
         LOG.todo('Add OUS registration task. Hard-coding log type to MOUS')
         self.logtype = 'MOUS'
 
@@ -171,9 +171,9 @@ class Context(object):
         if value is None:
             value = './'
 
-        self._output_dir = os.path.abspath(value)
-        LOG.trace('Setting output_dir to %s' % self.output_dir)
-#        if hasattr(self, '_output_dir') and self.output_dir != value:            
+        value = os.path.abspath(value)
+        LOG.trace('Setting output_dir to \'%s\'' % value)
+        self._output_dir = value
 
     @property
     def products_dir(self):
@@ -182,11 +182,12 @@ class Context(object):
     @products_dir.setter
     def products_dir(self, value):
         if value is None:
-            value = os.path.join(self.output_dir, '..', 'products')
-        else:
-            value = os.path.abspath(value)
+            (root_dir, _) = os.path.split(self.output_dir)
+            value = os.path.join(root_dir, 'products')
+        
+        value = os.path.abspath(value)
+        LOG.trace('Setting products_dir to \'%s\'' % value)
         self._products_dir = value
-        LOG.trace('Setting products_dir to %s' % self.products_dir)
         
     def save(self, filename=None):
         if filename in ('', None):
