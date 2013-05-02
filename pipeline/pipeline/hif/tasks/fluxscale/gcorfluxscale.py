@@ -154,22 +154,23 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         # do a phase-only gaincal on the flux calibrator using a restricted
 	# set of antennas
         r = self._do_gaincal(field=inputs.reference, intent=inputs.refintent,
-	    calmode='p', solint=inputs.phaseupsolint, antenna=resantenna,
-	    refant=refant, append=False, merge=False)
+	    gaintype='G', calmode='p', solint=inputs.phaseupsolint,
+	    antenna=resantenna, refant=refant, append=False, merge=False)
         caltable = r.final.pop().gaintable
 
         # do a phase-only gaincal on the remaining calibrators using the full
 	# set of antennas
         r = self._do_gaincal(caltable=caltable, field=inputs.transfer,
-	  intent=inputs.transintent, calmode='p', solint=inputs.phaseupsolint,
-	  antenna=allantenna, refant=refant, append=True, merge=True)
+	  intent=inputs.transintent, gaintype='G', calmode='p',
+	  solint=inputs.phaseupsolint, antenna=allantenna, refant=refant,
+	  append=True, merge=True)
 
         # now do the amplitude-only gaincal. This will produce the caltable
         # that fluxscale will analyse
         r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
-	    intent=inputs.transintent + ',' + inputs.refintent, calmode='a',
-	    solint=inputs.solint, antenna=allantenna, refant=refant,
-	    append=False, merge=True)
+	    intent=inputs.transintent + ',' + inputs.refintent, gaintype='T',
+	    calmode='a', solint=inputs.solint, antenna=allantenna,
+	    refant=refant, append=False, merge=True)
 
         # get the gaincal caltable from the results
 	# this is the table that will be fluxscaled
@@ -250,8 +251,9 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
         return True
                                 
-    def _do_gaincal(self, caltable=None, field=None, intent=None, calmode=None,
-        solint=None, antenna=None, refant=None, append=None, merge=True):
+    def _do_gaincal(self, caltable=None, field=None, intent=None, gaintype='G',
+        calmode=None, solint=None, antenna=None, refant=None, append=None,
+	merge=True):
 
         inputs = self.inputs
 
@@ -262,6 +264,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 	  'field'       : field,
 	  'intent'      : intent,
           'solint'      : solint,
+	  'gaintype'    : gaintype,
           'calmode'     : calmode,
           'minsnr'      : inputs.minsnr,
           'combine'     : '',
