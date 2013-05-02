@@ -4,6 +4,7 @@ import types
 from . import common
 from . import gaincalworker
 from . import gaincalmode
+from . import gtypegaincal
 from pipeline.hif.heuristics import caltable as gcaltable
 import pipeline.infrastructure as infrastructure
 
@@ -116,6 +117,9 @@ class NewGaincal(gaincalworker.GaincalWorker):
 
         # Compute the science target phase solution
         targetphaseresult = self._do_scitarget_phasecal()
+	# Readjust to the true calto.intent
+        targetphaseresult.pool[0].calto.intent = 'PHASE,TARGET'
+        targetphaseresult.final[0].calto.intent = 'PHASE,TARGET'
 
         # Adopt the target phase result
         result.pool.extend(targetphaseresult.pool)
@@ -158,42 +162,88 @@ class NewGaincal(gaincalworker.GaincalWorker):
         return result
     
     def _do_caltarget_phasecal(self):
-        self.inputs.solint=self.inputs.calsolint
-        self.inputs.minsnr=self.inputs.calminsnr
-        self.inputs.calmode='p'
-	# temporarily set this
-        self.inputs.to_intent = 'PHASE,TARGET,AMPLITUDE,BANDPASS'
-        #self.inputs.to_intent = 'AMPLITUDE,BANDPASS'
-        self.inputs.to_field = None
-        self.inputs.caltable=self.inputs.calphasetable
-        
-        gaincal_task = gaincalmode.GaincalMode(self.inputs)
+        inputs = self.inputs
+
+        task_args = {
+          'output_dir'  : inputs.output_dir,
+          'vis'         : inputs.vis,
+          'caltable'    : inputs.calphasetable,
+          'field'       : inputs.field,
+          'intent'      : inputs.intent,
+          'spw'         : inputs.spw,
+          'solint'      : inputs.calsolint,
+          'gaintype'    : 'G',
+          'calmode'     : 'p',
+          'minsnr'      : inputs.calminsnr,
+          'combine'     : inputs.combine,
+          'refant'      : inputs.refant,
+          'minblperant' : inputs.minblperant,
+          'solnorm'     : inputs.solnorm,
+          'to_intent'   : 'PHASE,TARGET,AMPLITUDE,BANDPASS',
+          'to_field'    : None
+        }
+        task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
+            **task_args)
+
+        gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
         result = self._executor.execute(gaincal_task, merge=True)
         
         return result
 
     def _do_scitarget_phasecal(self):
         inputs = self.inputs
-        inputs.solint = inputs.targetsolint
-        inputs.minsnr = inputs.targetminsnr
-        inputs.calmode = 'p'
-        inputs.to_intent = 'PHASE,TARGET'
-        inputs.caltable = inputs.targetphasetable
 
-        gaincal_task = gaincalmode.GaincalMode(inputs)
-        result = self._executor.execute(gaincal_task)
+        task_args = {
+          'output_dir'  : inputs.output_dir,
+          'vis'         : inputs.vis,
+          'caltable'    : inputs.targetphasetable,
+          'field'       : inputs.field,
+          'intent'      : inputs.intent,
+          'spw'         : inputs.spw,
+          'solint'      : inputs.targetsolint,
+          'gaintype'    : 'G',
+          'calmode'     : 'p',
+          'minsnr'      : inputs.targetminsnr,
+          'combine'     : inputs.combine,
+          'refant'      : inputs.refant,
+          'minblperant' : inputs.minblperant,
+          'solnorm'     : inputs.solnorm,
+          'to_intent'   : 'PHASE,TARGET',
+          'to_field'    : None
+        }
+        task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
+            ** task_args)
+
+        gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
+        result =  self._executor.execute(gaincal_task)
         
         return result
 
     def _do_target_ampcal(self):
-        self.inputs.solint='inf'
-        self.inputs.minsnr=self.inputs.targetminsnr
-        self.inputs.calmode='a'
-        self.inputs.to_intent = 'PHASE,TARGET,AMPLITUDE,BANDPASS'
-        self.inputs.to_field = None
-        self.inputs.caltable=self.inputs.amptable
-        
-        gaincal_task = gaincalmode.GaincalMode(self.inputs)
+        inputs = self.inputs
+
+        task_args = {
+          'output_dir'  : inputs.output_dir,
+          'vis'         : inputs.vis,
+          'caltable'    : inputs.amptable,
+          'field'       : inputs.field,
+          'intent'      : inputs.intent,
+          'spw'         : inputs.spw,
+          'solint'      : 'inf',
+          'gaintype'    : 'T',
+          'calmode'     : 'a',
+          'minsnr'      : inputs.targetminsnr,
+          'combine'     : inputs.combine,
+          'refant'      : inputs.refant,
+          'minblperant' : inputs.minblperant,
+          'solnorm'     : inputs.solnorm,
+          'to_intent'   : 'PHASE,TARGET,AMPLITUDE,BANDPASS',
+          'to_field'    : None
+        }
+        task_inputs = gtypegaincal.GTypeGaincalInputs(inputs.context,
+            ** task_args)
+
+        gaincal_task = gtypegaincal.GTypeGaincal(task_inputs)
         result =  self._executor.execute(gaincal_task)
-        
+
         return result
