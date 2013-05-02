@@ -18,7 +18,7 @@ class FlagdataSetterInputs(basetask.StandardInputs):
     FlagdataSetter manages the inputs for the FlagdataSetter task.
     """    
 
-    def __init__(self, context, vis=None, output_dir=None, inpfile=None,
+    def __init__(self, context, table, vis=None, output_dir=None, inpfile=None,
                  reason=None): 
         """
         Initialise the Inputs, initialising any property values to those given
@@ -26,8 +26,8 @@ class FlagdataSetterInputs(basetask.StandardInputs):
         
         :param context: the pipeline Context state object
         :type context: :class:`~pipeline.infrastructure.launcher.Context`
-        :param vis: the measurement set(s) to flag
-        :type vis: a string or list of strings
+        :param table: the measurement set or caltable to flag
+        :type table: a string
         :param output_dir: the output directory for pipeline data
         :type output_dir: string
         :param inpfile: file with flagcmds
@@ -40,12 +40,12 @@ class FlagdataSetterInputs(basetask.StandardInputs):
 
     @property
     def inpfile(self):
-        if type(self.vis) is types.ListType:
+        if type(self.table) is types.ListType:
             return self._handle_multiple_vis('inpfile')
         
         if self._inpfile is None:
-            vis_root = os.path.splitext(self.vis)[0]
-            return '%s_flagcmds.txt' % vis_root
+            table_root = os.path.splitext(self.table)[0]
+            return '%s_flagcmds.txt' % table_root
         return self._inpfile
 
     @inpfile.setter
@@ -91,7 +91,7 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
         inputs = self.inputs
         
         # to save inspecting the file, also log the flag commands
-        LOG.info('Flag commands for %s:' % inputs.vis)
+        LOG.info('Flag commands for %s:' % inputs.table)
         with open(inputs.inpfile, 'r') as stream:
             lines = stream.readlines()
             flagcmds_to_set = False
@@ -104,7 +104,7 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
 
         if flagcmds_to_set:
             # create and execute a flagdata job
-            job = casa_tasks.flagdata(vis=inputs.vis, mode='list', action='apply',
+            job = casa_tasks.flagdata(vis=inputs.table, mode='list', action='apply',
               inpfile=inputs.inpfile, savepars=False, flagbackup=False,
               reason=inputs.reason)
             self._executor.execute(job)
