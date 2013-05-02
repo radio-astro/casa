@@ -4,9 +4,12 @@ import os.path
 import pydoc
 import sys
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.displays as displays
 import pipeline.infrastructure.renderer.logger as logger
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+
+LOG = infrastructure.get_logger(__name__)
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
@@ -31,6 +34,7 @@ try:
         if r.empty():
             continue
 
+        LOG.info('Plotting')
         # psf and flux maps
         plots.append(displays.SkyDisplay().plot(pcontext, r.psf,
           reportdir=plots_dir))
