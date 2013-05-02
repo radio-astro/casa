@@ -462,7 +462,16 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaDataOnDemand::_getStateIDs() {
 	std::tr1::shared_ptr<Vector<Int> > states(
 		new Vector<Int>(MSMetaData::_getStates(*_ms))
 	);
-	if (_cacheUpdated(sizeof(Int)*states->size())) {
+    Int maxState = max(*states);
+    Int nstates = (Int)nStates();
+    if (maxState >= nstates) {
+        ostringstream oss;
+        oss << "MSMetaDataOnDemand::_getStateIDs(): Error: MS only has " << nstates
+             << " rows in its STATE table, but references STATE_ID "
+             << maxState << " in its main table.";
+        throw AipsError(oss.str());
+    }
+    if (_cacheUpdated(sizeof(Int)*states->size())) {
 		_stateIDs = states;
 	}
 	return states;
@@ -567,8 +576,8 @@ void MSMetaDataOnDemand::_getScansAndIntentsMaps(
 			std::set<Int>::const_iterator myState=states.begin();
 			myState!=endState; myState++
 		) {
-			intents = stateToIntentsMap[*myState];
-			scanToIntentsMap[scan].insert(intents.begin(), intents.end());
+            intents = stateToIntentsMap[*myState];
+            scanToIntentsMap[scan].insert(intents.begin(), intents.end());
 			std::set<String>::const_iterator endIntent = intents.end();
 			for (
 				std::set<String>::const_iterator myIntent=intents.begin();
