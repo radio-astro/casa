@@ -6,7 +6,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <task type="function" name="mstransform" category="manipulation" visibility="experimental">
-     <shortdescription>Task to combine/separate/regrid spws and do channel and time averaging</shortdescription>
+     <shortdescription>Split the MS, combine/separate/regrid spws and do channel and time averaging</shortdescription>
 
 <description>
     mstransform is a task that can do the same functionalities available
@@ -49,7 +49,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>False</value>
         </param>        
         <param type="int" name="ddistart" subparam="true" visibility="hidden">
-            <description>TO be hidden later!!!</description>
+            <description>For internal use only. Do not change it!</description>
             <value>-1</value>
         </param>
 
