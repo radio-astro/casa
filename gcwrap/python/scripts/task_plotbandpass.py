@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.15 2013/04/24 16:40:45 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.16 2013/05/02 13:59:12 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -2273,10 +2273,11 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
     if (channeldiff>0):
         # build blank dictionary:  madstats['DV01']['spw']['time']['pol']['amp' or 'phase' or both]
         #                          where spw, time, pol are each integers
-        madstats = dict.fromkeys(mymsmd.antennanames(antennasToPlot))
-#        madstats = dict.fromkeys(msAnt)
-# #      print "msAnt = ", msAnt
-# #      print "spwsToPlot = ", spwsToPlot
+        if (len(msAnt) > 0):
+            madstats = dict.fromkeys(mymsmd.antennanames(antennasToPlot))
+        else:
+            madstats = dict.fromkeys(['Ant '+str(i) for i in range(len(uniqueAntennaIds))])
+
         for i in range(len(madstats)):
             madstats[madstats.keys()[i]] = dict.fromkeys(spwsToPlot)
             for j in range(len(spwsToPlot)):
@@ -5497,6 +5498,7 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
         matches = np.where(mjdsec>=np.min(myTimes))[0]
         matches2 = np.where(mjdsec<=np.max(myTimes))[0]
 #            print "len(matches)=%d, len(matches2)=%d" % (len(matches), len(matches2))
+        noWeatherData = False
         if (len(matches)>0 and len(matches2) > 0):
             # average the weather points enclosed by the scan time range
             selectedValues = range(matches[0], matches2[-1]+1)
@@ -5511,40 +5513,52 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
         elif (len(matches2)>0):
             # all points are less than myTime, so take the last one
             selectedValues = matches2[-1]
-        if (type(selectedValues) == np.int64 or type(selectedValues) == np.int32 or  
-            type(selectedValues) == np.int):
-            conditions['readings'] = 1
-            if (verbose):
-                print "selectedValues=%d, myTimes[0]=%.0f, myTimes[1]=%.0f, len(matches)=%d, len(matches2)=%d" % (selectedValues,
-                   myTimes[0],myTimes[1], len(matches), len(matches2))
-                if (len(matches) > 0):
-                    print "matches[0]=%f, matches[-1]=%f" % (matches[0], matches[-1])
-                if (len(matches2) > 0):
-                    print "matches2[0]=%f, matches2[-1]=%d" % (matches2[0], matches2[-1])
         else:
-            conditions['readings'] = len(selectedValues)
-        conditions['pressure'] = np.mean(pressure[selectedValues])
-        if (conditions['pressure'] != conditions['pressure']):
-            # A nan value got through, due to no selected values (should be impossible)"
-            if (verbose):
-                print ">>>>>>>>>>>>>>>>>>>>>>>>  selectedValues = %s" % (str(selectedValues))
-                print "len(matches)=%d, len(matches2)=%d" % (len(matches), len(matches2))
-                print "matches[0]=%f, matches[-1]=%f, matches2[0]=%f, matches2[-1]=%d" % (matches[0], matches[-1], matches2[0], matches2[-1])
-        conditions['temperature'] = np.mean(temperature[selectedValues])
-        conditions['humidity'] = np.mean(relativeHumidity[selectedValues])
-        conditions['dewpoint'] = np.mean(dewPoint[selectedValues])
-        conditions['windspeed'] = np.mean(windSpeed[selectedValues])
-        conditions['winddirection'] = (180./math.pi)*np.arctan2(np.mean(sinWindDirection[selectedValues]),np.mean(cosWindDirection[selectedValues]))
-        if (conditions['winddirection'] < 0):
-            conditions['winddirection'] += 360
-        if (verbose):
-            print "Mean weather values for scan %s (field %s)" % (listscan,listfield)
-            print "  Pressure = %.2f mb" % (conditions['pressure'])
-            print "  Temperature = %.2f C" % (conditions['temperature'])
-            print "  Dew point = %.2f C" % (conditions['dewpoint'])
-            print "  Relative Humidity = %.2f %%" % (conditions['humidity'])
-            print "  Wind speed = %.2f m/s" % (conditions['windspeed'])
-            print "  Wind direction = %.2f deg" % (conditions['winddirection'])
+            # table has no weather data!
+            noWeatherData = True
+        if (noWeatherData):
+            conditions['pressure'] = 563.0
+            conditions['temperature'] = 0  # Celsius is expected
+            conditions['humidity'] = 20.0
+            conditions['dewpoint'] = -20.0
+            conditions['windspeed'] = 0
+            conditions['winddirection'] = 0
+            print "WARNING: No weather data found in the WEATHER table!"
+        else:
+          if (type(selectedValues) == np.int64 or type(selectedValues) == np.int32 or  
+              type(selectedValues) == np.int):
+              conditions['readings'] = 1
+              if (verbose):
+                  print "selectedValues=%d, myTimes[0]=%.0f, myTimes[1]=%.0f, len(matches)=%d, len(matches2)=%d" % (selectedValues,
+                     myTimes[0],myTimes[1], len(matches), len(matches2))
+                  if (len(matches) > 0):
+                      print "matches[0]=%f, matches[-1]=%f" % (matches[0], matches[-1])
+                  if (len(matches2) > 0):
+                      print "matches2[0]=%f, matches2[-1]=%d" % (matches2[0], matches2[-1])
+          else:
+              conditions['readings'] = len(selectedValues)
+          conditions['pressure'] = np.mean(pressure[selectedValues])
+          if (conditions['pressure'] != conditions['pressure']):
+              # A nan value got through, due to no selected values (should be impossible)"
+              if (verbose):
+                  print ">>>>>>>>>>>>>>>>>>>>>>>>  selectedValues = %s" % (str(selectedValues))
+                  print "len(matches)=%d, len(matches2)=%d" % (len(matches), len(matches2))
+                  print "matches[0]=%f, matches[-1]=%f, matches2[0]=%f, matches2[-1]=%d" % (matches[0], matches[-1], matches2[0], matches2[-1])
+          conditions['temperature'] = np.mean(temperature[selectedValues])
+          conditions['humidity'] = np.mean(relativeHumidity[selectedValues])
+          conditions['dewpoint'] = np.mean(dewPoint[selectedValues])
+          conditions['windspeed'] = np.mean(windSpeed[selectedValues])
+          conditions['winddirection'] = (180./math.pi)*np.arctan2(np.mean(sinWindDirection[selectedValues]),np.mean(cosWindDirection[selectedValues]))
+          if (conditions['winddirection'] < 0):
+              conditions['winddirection'] += 360
+          if (verbose):
+              print "Mean weather values for scan %s (field %s)" % (listscan,listfield)
+              print "  Pressure = %.2f mb" % (conditions['pressure'])
+              print "  Temperature = %.2f C" % (conditions['temperature'])
+              print "  Dew point = %.2f C" % (conditions['dewpoint'])
+              print "  Relative Humidity = %.2f %%" % (conditions['humidity'])
+              print "  Wind speed = %.2f m/s" % (conditions['windspeed'])
+              print "  Wind direction = %.2f deg" % (conditions['winddirection'])
 
 #    if (verbose): casalog.post("Calling mytb.done 14")
 #    mytb.done()
