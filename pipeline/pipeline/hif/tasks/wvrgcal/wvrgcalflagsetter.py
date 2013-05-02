@@ -21,8 +21,8 @@ class WvrgcalFlagSetterInputs(basetask.StandardInputs):
     """This class handles the setting of bad antennas in
     wvrgcal.
     """
-    def __init__(self, context, output_dir=None, vis=None,
-      wvrgcaltask=None):
+    def __init__(self, context, output_dir=None, 
+      table=None, vis=None, wvrgcaltask=None):
         self._init_properties(vars())
         
         # include for compatibility with flagdata setter.
