@@ -1218,7 +1218,7 @@ bool image::removefile(const std::string& filename) {
 			*_log << LogIO::WARN << "Cannot delete file " << fileName
 					<< " because " << message << LogIO::POST;
 		}
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
@@ -1229,6 +1229,10 @@ bool image::removefile(const std::string& filename) {
 bool image::done(const bool remove, const bool verbose) {
 	try {
 		*_log << _ORIGIN;
+		// resetting _stats must come before the table removal or the table
+		// removal will fail
+		_stats.reset(0);
+
 		if (remove && !detached()) {
 			if (!_image->remove(verbose)) {
 				*_log << LogIO::WARN << "Failed to remove image file"
@@ -1236,7 +1240,6 @@ bool image::done(const bool remove, const bool verbose) {
 			}
 		}
 		_image.reset(0);
-		_stats.reset(0);
 		return True;
 
 		/*
@@ -1244,7 +1247,7 @@ bool image::done(const bool remove, const bool verbose) {
 		 not released from memory...i.e done == close
 		 */
 
-	} catch (AipsError x) {
+	} catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);
