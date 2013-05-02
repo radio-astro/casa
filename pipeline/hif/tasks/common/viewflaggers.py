@@ -76,7 +76,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
         # add a record of flags set to the results object
         result.addflags(flags)
-        result.table = flagsettertask.inputs.vis
+        result.table = flagsettertask.inputs.table
         result.flagcmdfile = flagsettertask.inputs.inpfile
         result.reason = flagsettertask.inputs.reason
 
@@ -514,7 +514,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
         # add a record of flags set to the results object
         result.addflags(flags)
-        result.table = flagsettertask.inputs.vis
+        result.table = flagsettertask.inputs.table
         result.flagcmdfile = flagsettertask.inputs.inpfile
         result.reason = flagsettertask.inputs.reason
 
