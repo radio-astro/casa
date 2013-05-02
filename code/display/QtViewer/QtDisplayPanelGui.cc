@@ -583,6 +583,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	connect(qdp_,  SIGNAL(registrationChange()),
 			SLOT(hideImageMenus()));
+
+	// parallel cursor tracking signals...
+	connect( qdp_, SIGNAL(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)),
+			 SIGNAL(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)) );
+	connect( qdp_, SIGNAL(cursorPosition(viewer::Position)),
+			 SIGNAL(cursorPosition(viewer::Position)) );
+
 	updateDDMenus_();
 
 
@@ -1389,6 +1396,8 @@ std::string QtDisplayPanelGui::outputRegions( std::list<viewer::QtRegionState*> 
 	}
 	return regionDock_->outputRegions( regions, file, format, ds9_csys );
 }
+
+void QtDisplayPanelGui::activate( bool state ) { qdp_->activate(state); }
 
 QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
 	// retrieve DD with given name (0 if none).

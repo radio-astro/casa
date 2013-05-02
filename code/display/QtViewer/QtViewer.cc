@@ -80,6 +80,12 @@ QtDisplayPanelGui *QtViewer::createDPG() {
     // Create a main display panel Gui.
     //
     QtDisplayPanelGui* dpg = new QtDisplayPanelGui(this,0,"dpg",args_);
+	// don't need to worry about QtCleanPanelGui objs because they
+	// do not need to support cursor tracking and the P/V tool...
+	// although, there is nothing preventing QtCleanPanelGui objs
+	// being added to this list...
+	panels.push_back(dpg);
+	connect( dpg, SIGNAL(destroyed(QObject*)), SLOT(dpgDestroyed(QObject*)) );
 
     // Previously casaviewer.cc created a QtDisplayPanelGui directly,
     // now it uses this function to ensure consistent behavior with
@@ -105,10 +111,23 @@ QtDisplayPanelGui *QtViewer::createDPG() {
 
     return dpg;
 }
+
+void QtViewer::dpgDestroyed( QObject *o ) {
+	QtDisplayPanelGui *dpg = dynamic_cast<QtDisplayPanelGui*>(o);
+	if ( o != 0 ) {
+		panel_list_t::iterator iter = std::find(panels.begin( ), panels.end( ), o );
+		if ( iter != panels.end( ) ) panels.erase(iter);
+	}
+}
   
 QtCleanPanelGui *QtViewer::createInteractiveCleanGui( ) {
     QtCleanPanelGui* cpg = new QtCleanPanelGui(this,0,args_);
     return cpg;
+}
+
+void QtViewer::activate( bool state ) {
+	for ( panel_list_t::iterator iter = panels.begin( ); iter != panels.end( ); ++iter )
+		(*iter)->activate( state );
 }
   
 void QtViewer::quit() { QtViewerBase::quit(); }

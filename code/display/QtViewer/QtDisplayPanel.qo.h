@@ -43,6 +43,7 @@
 #include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/QtPlotter/QtOldMWCTools.qo.h>
 #include <display/region/QtRegionSourceFactory.h>
+#include <display/Display/Position.h>
 
 #include <graphics/X11/X_enter.h>
 #  include <QtCore>
@@ -83,6 +84,9 @@ class QtDisplayPanel : public QWidget,
 		//# name of this file in 'mocs' section.
 
 public:
+
+	// included in cursor boundary signals...
+	enum CursorBoundaryCondition { ENTER, LEAVE };
 
     class panel_state {
     public:
@@ -347,6 +351,9 @@ public:
   // *new* Region code  --  revoke region from region source...
   void revokeRegion( viewer::Region *r );
 
+  // called to indicate application activation state... true -> activated, false -> deactivated
+  void activate( bool );
+  
 
  public slots:
 
@@ -548,8 +555,11 @@ public:
   void restoring(QDomDocument* restoredoc);
 
   void activate(Record);
-  
- 
+
+  // signal cursor boundary transitions
+  void cursorBoundary( QtDisplayPanel::CursorBoundaryCondition );
+  void cursorPosition( viewer::Position );
+
  protected slots:
   
   //# I.e., only this class creates the connections to these,
@@ -892,6 +902,10 @@ public:
   //image region extension flags
   String extChan_;
   String extPol_;
+
+  // keep track or where the (USER) cursor currently is...
+  enum CursorBoundaryState { INSIDE_PLOT, OUTSIDE_PLOT };
+  CursorBoundaryState cursorBoundaryState;
 
  public:
  

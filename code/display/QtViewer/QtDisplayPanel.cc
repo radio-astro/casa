@@ -74,7 +74,7 @@ const int QtDisplayPanel::BOTTOM_MARGIN_SPACE_DEFAULT = 13;
 const int QtDisplayPanel::TOP_MARGIN_SPACE_DEFAULT = 4;
 const int QtDisplayPanel::RIGHT_MARGIN_SPACE_DEFAULT = 4;
 
-QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const std::list<std::string> &args) : 
+QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const std::list<std::string> &args) :
 						QWidget(parent),
 
 						panel_(panel),
@@ -94,7 +94,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 						blankCBPanel_(0), mainPanelSize_(1.),
 						hasRgn_(False), rgnExtent_(0), qsm_(0),
 						lastMotionEvent_(0), bkgdClrOpt_(0),
-						extChan_(""), extPol_("")  ,
+						extChan_(""), extPol_(""), cursorBoundaryState(OUTSIDE_PLOT),
 						printStats(True), useRegion(False),PGP_MARGIN_UNIT(65),
 						zStart_(0), zEnd_(1), zStep_(1),
 						bStart_(0), bEnd_(1), bStep_(1){
@@ -195,7 +195,7 @@ QtDisplayPanel::QtDisplayPanel(QtDisplayPanelGui* panel, QWidget *parent, const 
 }
 
 
-QtDisplayPanel::~QtDisplayPanel() { 
+QtDisplayPanel::~QtDisplayPanel() {
 	removeEventHandlers_();
 	unregisterAll();	// Also removes/deletes color bar panels.
 
@@ -331,7 +331,7 @@ void QtDisplayPanel::chgMouseBtn_(std::string tool, Int button) {
 
 
 
-void QtDisplayPanel::mouseRegionReady_(Record mouseRegion, 
+void QtDisplayPanel::mouseRegionReady_(Record mouseRegion,
 		WorldCanvasHolder* wch) {
 	// Connected to corresp. signals from 'region' mouse tools.  Emits that
 	// signal verbatum, but also processes it through the registered DDs
@@ -486,19 +486,76 @@ void QtDisplayPanel::removeEventHandlers_() {
 
 
 
+void QtDisplayPanel::activate( bool state ) {
+	if ( state == false && cursorBoundaryState == INSIDE_PLOT ) {
+		cursorBoundaryState = OUTSIDE_PLOT;
+		emit cursorBoundary( LEAVE );
+	}
+}
+
+static MDirection::Types current_casa_coordsys( WorldCanvas *wc ) {
+
+	if ( wc == 0 || wc->csMaster() == 0 ) return MDirection::J2000;
+
+	const CoordinateSystem &cs = wc->coordinateSystem( );
+	int index = cs.findCoordinate(Coordinate::DIRECTION);
+	if ( index < 0 ) {
+		// no direction coordinate...
+		return MDirection::N_Types;
+	}
+	return cs.directionCoordinate(index).directionType(true);
+}
 
 void QtDisplayPanel::operator()(const WCMotionEvent& ev) {
 	// Overrides base WCMotionEH operator, to forward cursor position
 	// events from any of the panel's WorldCanvases as POSITION TRACKING
 	// Qt signals, via any/all of the Panel's registered QtDisplayDatas.
 
-	if(!tracking_) return;
-
 	WorldCanvas* wc = ev.worldCanvas();
 	if(!myWC_(wc)) return;	// (safety)
 
+	static bool last_ev_initialized = false;
+	static WCMotionEvent last_ev;
+	if ( last_ev_initialized == false ) {
+		last_ev_initialized = true;
+		last_ev = ev;
+	}
 
-	if(!wc->inDrawArea(ev.pixX(), ev.pixY())) return;
+	if(!wc->inDrawArea(ev.pixX(), ev.pixY())) {
+		if ( cursorBoundaryState == INSIDE_PLOT ) {
+			cursorBoundaryState = OUTSIDE_PLOT;
+			Vector<Double> pix(2);
+			Vector<Double> lin(2);
+			Vector<Double> world(2);
+			pix(0) = last_ev.pixX( );
+			pix(1) = last_ev.pixY( );
+			if ( wc->pixToLin( lin, pix ) && wc->linToWorld( world, lin ) ) {
+				const Vector<String> &units = wc->worldAxisUnits( );
+				emit cursorPosition( viewer::Position( wc->coordinateSystem( ), Quantity(world(0),units(0)), Quantity(world(1),units(1)) ) );
+			}
+			emit cursorBoundary( LEAVE );
+		}
+		return;
+	} else {
+		if ( cursorBoundaryState == OUTSIDE_PLOT ) {
+			cursorBoundaryState = INSIDE_PLOT;
+			emit cursorBoundary( ENTER );
+		}
+		Vector<Double> pix(2);
+		Vector<Double> lin(2);
+		Vector<Double> world(2);
+		pix(0) = ev.pixX( );
+		pix(1) = ev.pixY( );
+		if ( wc->pixToLin( lin, pix ) && wc->linToWorld( world, lin ) ) {
+			const Vector<String> &units = wc->worldAxisUnits( );
+			emit cursorPosition( viewer::Position( wc->coordinateSystem( ), Quantity(world(0),units(0)), Quantity(world(1),units(1)) ) );
+		}
+	}
+
+	if ( cursorBoundaryState == INSIDE_PLOT ) last_ev = ev;
+
+	if(!tracking_) return;
+
 	// Don't track motion off draw area (must explicitly test this now).
 
 	if(lastMotionEvent_!=0) delete lastMotionEvent_;
@@ -1071,11 +1128,11 @@ ImageRegion QtDisplayPanel::getRegion(const String& name){
 	return reg;
 
 }
-// HOLD AND RELEASE OF REFRESH.  
+// HOLD AND RELEASE OF REFRESH.
 
 // In order to draw, every call to hold()
 // must be accompanied by a subsequent call to release() (so don't
-// neglect: beware of exceptions, e.g.).  Calls can nest (they are 
+// neglect: beware of exceptions, e.g.).  Calls can nest (they are
 // counted).  Panel may be deleted in a held state.  Also, excess calls
 // to release() will have no effect.  The calls are propagated to the main
 // PanelDisplay as well as to those used for color bars (and thence to
@@ -1104,10 +1161,10 @@ void QtDisplayPanel::release() {
 
 
 
-// DISPLAY PANEL OPTIONS METHODS    
+// DISPLAY PANEL OPTIONS METHODS
 
 
-Record QtDisplayPanel::getOptions() { 
+Record QtDisplayPanel::getOptions() {
 	// Return Options record (of margins and no.-of-panels settings, e.g.)
 	// The form of the record is suitable for automatically creating
 	// controlling user interface.  These options are set with the
@@ -1178,7 +1235,7 @@ void QtDisplayPanel::setOptions(Record opts, Bool emitAll) {
 		if(chgdOpts.nfields()!=0) emit optionsChanged(chgdOpts);
 
 		if(needsRefresh) pd_->refresh();
-		
+
 	release();}
 	catch (...) {  }
 }
@@ -1841,7 +1898,7 @@ void QtDisplayPanel::setColorBarMargins( bool vertical, float plotPercentage,
 
 
 
-void QtDisplayPanel::refreshCBPanels_() {  
+void QtDisplayPanel::refreshCBPanels_() {
 	// Refresh (only) the colorbar panels (if any).  (An attempt to reduce
 	// flashing during blink animation).
 
@@ -2082,7 +2139,7 @@ void QtDisplayPanel::setMode(bool modez, bool channelCubes) {
 		if(mode()=="Blink" || channelCubes ){
 			goToB_(bIndex());
 		}
-		// (Sets 'Blink restrictions').    
+		// (Sets 'Blink restrictions').
 		else {
 			pd_->removeRestriction("bIndex");
 		}
@@ -2094,7 +2151,7 @@ void QtDisplayPanel::setMode(bool modez, bool channelCubes) {
 	emit animatorChange();
 }
 
-void QtDisplayPanel::prev_() { 
+void QtDisplayPanel::prev_() {
 	Int newframe = frame() - step();
 	if(newframe<startFrame()) newframe = lastFrame();
 	goTo_(newframe);
@@ -2112,7 +2169,7 @@ void QtDisplayPanel::next_() {
 
 
 
-void QtDisplayPanel::revPlay() { 
+void QtDisplayPanel::revPlay() {
 	animating_ = -1;
 	tmr_.start();
 	emit animatorChange();
@@ -2881,4 +2938,3 @@ QtDisplayData* QtDisplayPanel::getDD( const std::string& name ) const {
 
 
 } //# NAMESPACE CASA - END
-

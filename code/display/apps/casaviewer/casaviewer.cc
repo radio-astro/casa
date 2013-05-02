@@ -90,8 +90,11 @@ static void signal_manager_root( int sig ) {
 
 class ViewerApp : public QApplication {
 public:
-	ViewerApp( int &argc, char **argv, bool gui_enabled ) : QApplication(argc, argv, gui_enabled) { }
+	ViewerApp( int &argc, char **argv, bool gui_enabled ) : QApplication(argc, argv, gui_enabled), viewer_(0) { }
 	bool notify( QObject *receiver, QEvent *e );
+	void subscribe( QtViewer *v ) { viewer_ = v; }
+private:
+	QtViewer *viewer_;
 };
 
 bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
@@ -104,6 +107,12 @@ bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
 
 	try {
 		recursion_count++;
+
+		// notify QtViewer when application is activated/deactivated, e.g. when OSX switches to
+		// "mission control", allowing the viewer to recognize that the mouse cursor has left...
+		if ( e->type() == QEvent::ApplicationActivate || e->type() == QEvent::ApplicationDeactivate )
+			if ( viewer_ != 0 ) viewer_->activate( e->type() == QEvent::ApplicationActivate ? true : false );
+
 		bool result = QApplication::notify(receiver,e);
 		if ( recursion_count != 0 ) recursion_count--;
 		return result;
@@ -232,6 +241,7 @@ int main( int argc, const char *argv[] ) {
 			stdargs.push_back(args[arg_index]);
 
 		QtViewer* v = new QtViewer( stdargs, server_startup || with_dbus, dbus_name );
+		qapp.subscribe(v);
 
 		if ( ! server_startup ) {
 

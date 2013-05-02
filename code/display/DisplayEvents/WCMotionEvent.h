@@ -128,6 +128,7 @@ class WCMotionEvent : public WorldCanvasEvent {
 
   // (Required) copy assignment.
   WCMotionEvent &operator=(const WCMotionEvent &other);
+  friend class QtDisplayPanel;		/*** to access assignment operator to save "last event" ***/
 
  private:
   

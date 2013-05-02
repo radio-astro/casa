@@ -214,6 +214,8 @@ class QtDisplayPanelGui : public QtPanelBase, public viewer::StatusSink {
 
   bool useNewRegions( ) const { return use_new_regions; }
 
+  // called to indicate application activation state... true -> activated, false -> deactivated
+  void activate( bool );
 
  public slots:
  
@@ -330,6 +332,9 @@ class QtDisplayPanelGui : public QtPanelBase, public viewer::StatusSink {
     void ddRemoved(QtDisplayData*);
 
     void closed( const QtDisplayPanelGui * );
+
+	void cursorBoundary( QtDisplayPanel::CursorBoundaryCondition );
+	void cursorPosition( viewer::Position );
 
  protected slots:
 

@@ -452,11 +452,11 @@ void QtDisplayData::initImage(){
 	else if( isContour() ) {
 		if(im_!=0) {
 			if(ndim ==2) dd_ = new LatticeAsContour<Float>(im_, 0, 1);
-			else dd_ = new LatticeAsContour<Float>(im_, axs[0], axs[1], axs[2], fixedPos);
+			else dd_ = new LatticeAsContour<Float>( im_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 		}
 		else {
 			if(ndim ==2) dd_ = new LatticeAsContour<Complex>(cim_, 0, 1);
-			else dd_ = new LatticeAsContour<Complex>(cim_, axs[0], axs[1], axs[2], fixedPos);
+			else dd_ = new LatticeAsContour<Complex>( cim_, axs[0], axs[1], axs[2], fixedPos, panel_ );
 		}
 	}
 	else if( isVector() ) {
