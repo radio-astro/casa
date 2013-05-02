@@ -350,6 +350,11 @@ class test_rflag(test_base):
         self.assertEqual(res['correlation']['LL']['flagged'], 10355.0)
         self.assertEqual(res['correlation']['LR']['flagged'], 0,)
         self.assertEqual(res['correlation']['RL']['flagged'], 0,)
+        
+    def test_rflag_CAS_5037(self):
+        '''flagdata:: Use provided value for time stats. but automatically computed value for freq. stats'''
+        flagdata(vis=self.vis, mode='rflag', field = '1', spw='10', timedev=0.1, \
+                 timedevscale=5.0, freqdevscale=5.0, action='calculate', flagbackup=False)
 
 class test_shadow(test_base):
     def setUp(self):
