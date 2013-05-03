@@ -153,7 +153,15 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                                 maxfound = True
                         if maxfound and minfound:
                             break
-                    reg = rg.box([mingoodx, mingoody], [maxgoodx, maxgoody])
+                    blc = shape[:]
+                    for i in range(len(blc)):
+                        blc[i] = 0
+                    blc[diraxes[0]] = mingoodx
+                    blc[diraxes[1]] = mingoody
+                    trc = shape - 1
+                    trc[diraxes[0]] = maxgoodx
+                    trc[diraxes[1]] = maxgoody
+                    reg = rg.box(blc, trc)
                     casalog.post("Cropping masked image boundaries", "NORMAL")
                     subim = rot.subimage(outfile=output, region=reg)
                     subim.done()   
