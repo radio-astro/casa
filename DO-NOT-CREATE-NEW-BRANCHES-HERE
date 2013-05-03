@@ -1,0 +1,11 @@
+Some Subversion 3rd party tools fail to merge changes between branches that do 
+not strictly comply with Subversion branching conventions.
+
+Create project branches in 
+
+https://svn.cv.nrao.edu/svn/casa/branches/project-[descriptive name]
+
+where [descriptive name] describes the purpose of the branch.
+
+This will allow more flexibility in choosing tools to merge work on that 
+branch to the CASA trunk or other branches.
