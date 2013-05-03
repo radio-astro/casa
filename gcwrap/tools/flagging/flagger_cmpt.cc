@@ -63,6 +63,11 @@ flagger::open(const std::string& msname)
 {
     try
     {
+    	*logger_p << LogIO::WARN << "This tool is being deprecated and will be removed from the system "
+    			<< LogIO::POST;
+    	*logger_p << LogIO::WARN << "in a future release. Please use the af tool instead."
+    			<< LogIO::POST;
+
 	if(ms_p) delete ms_p;
 	ms_p = new MeasurementSet(String(msname),Table::Update);
 
@@ -440,6 +445,11 @@ flagger::help(const std::string& names)
     {
 
     // TODO : IMPLEMENT ME HERE !
+    	*logger_p << LogIO::WARN << "This tool is being deprecated and will be removed from the system "
+    			<< LogIO::POST;
+    	*logger_p << LogIO::WARN << "in a future release. Please use the af tool instead."
+    			<< LogIO::POST;
+
         cout << "Not Implemented Yet !!! " << endl;
 	if(flagger_p)
         {

@@ -14,9 +14,10 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 </private>
 </code>
 
-        <shortdescription>Tool for manual and automated flagging</shortdescription>
+        <shortdescription>DEPRECATED. Tool for manual and automated flagging</shortdescription>
        
 <description>
+This tool is DEPRECATED. Use the af tool.
 The {\tt flagger} tool performs manual as well as automatic synthesis
 flagging operations within casapy. The {\tt flagger} tool can operate on
 one measurement set at a time.  
@@ -25,7 +26,7 @@ one measurement set at a time.
 <!-- ********************************************************************** -->
 
    <method type="constructor" name="flagger">
-   <shortdescription>Construct an flag tool from a
+   <shortdescription>DEPRECATED! Construct a flag tool from a
 MeasurementSet</shortdescription>
    
 <description>
@@ -52,7 +53,7 @@ fg:=flag('3C273XC1.MS')
 <!-- ********************************************************************** -->
 
    <method type="function" name="open">
-   <shortdescription>Attaches tool to a measurement set.</shortdescription>
+   <shortdescription>DEPRECATED! Attaches tool to a measurement set.</shortdescription>
    
 <description>
 This function attaches the tool to a measurement set. If
@@ -78,7 +79,7 @@ fg.open('3C273XC1.MS')
 
  
    <method type="function" name="setdata">
-   <shortdescription>Set the data selection parameters to define a
+   <shortdescription>DEPRECATED! Set the data selection parameters to define a
    subset of the data on which to perform any further selections/operations.
  For unspecified parameters, the full data range is assumed.
 All data selection parameters follow the ms-selection syntax.
@@ -153,7 +154,7 @@ All data selection parameters follow the ms-selection syntax.
 <!-- ********************************************************************** -->
 
    <method type="function" name="setmanualflags">
-   <shortdescription>This function will select specific data, for manual flagging.
+   <shortdescription>DEPRECATED! This function will select specific data, for manual flagging.
    </shortdescription>
    
 <description>
@@ -292,7 +293,7 @@ Note that fg.setmanualflags() can be called multiple times before a call to fg.r
 <!-- ********************************************************************** -->
 <!-- ********************************************************************** -->
    <method type="function" name="printflagselection">
-   <shortdescription>Print out a list of current manual and auto flag selections.
+   <shortdescription>DEPRECATED! Print out a list of current manual and auto flag selections.
    </shortdescription>
    
 <description>
@@ -306,7 +307,7 @@ Print out a list of current manual and auto flag selections.
 <!-- ********************************************************************** -->
 
    <method type="function" name="clearflagselection">
-   <shortdescription>Clear current manual and auto flag selections.
+   <shortdescription>DEPRECATED! Clear current manual and auto flag selections.
    </shortdescription>
    
 <description>
@@ -324,7 +325,7 @@ Clears all current manual and auto flag selections.
 <!-- ********************************************************************** -->
 
    <method type="function" name="getautoflagparams">
-   <shortdescription> Retrieve the current set of input parameters for a specified algorithm.
+   <shortdescription>DEPRECATED! Retrieve the current set of input parameters for a specified algorithm.
    \n This returns a python dictionary of parameters and their values.
    </shortdescription>
    
@@ -348,7 +349,7 @@ Retrieve the current set of input parameters for a specified algorithm.
 <!-- ********************************************************************** -->
 
    <method type="function" name="setautoflag">
-   <shortdescription>Setup an autoflag algorithm.
+   <shortdescription>DEPRECATED! Setup an autoflag algorithm.
    </shortdescription>
    
 <description>
@@ -382,7 +383,7 @@ Setup an autoflag algorithm.
 <!-- ********************************************************************** -->
 
    <method type="function" name="setshadowflags">
-   <shortdescription>Setup data selection parameters for flagging of
+   <shortdescription>DEPRECATED! Setup data selection parameters for flagging of
    shadowed antennas
    </shortdescription>
    
@@ -463,7 +464,7 @@ Defines data selection parameters.
 <!-- ********************************************************************** -->
 <!-- ********************************************************************** -->
    <method type="function" name="setelevationflags">
-   <shortdescription>Setup data selection parameters for flagging of
+   <shortdescription>DEPRECATED! Setup data selection parameters for flagging of
    antennas pointing at a low elevation
    </shortdescription>
    
@@ -550,7 +551,7 @@ Defines data selection parameters.
 <!-- ********************************************************************** -->
 
    <method type="function" name="setflagsummary">
-   <shortdescription>This function produces a summary of the flags. Statistics include
+   <shortdescription>DEPRECATED! This function produces a summary of the flags. Statistics include
    percentage of flagged data.
    </shortdescription>
    
@@ -627,7 +628,7 @@ Flag summary.
 
    <method type="function" name="setqueryflag">
    <shortdescription>
-   List out a data description corresponding to the result of a flag query.
+   DEPRECATED! List out a data description corresponding to the result of a flag query.
    For example, to print out the list of channels with more than 70% of its data flagged.
    </shortdescription>
    
@@ -737,7 +738,7 @@ Flag query
 
    <method type="function" name="setextendflag">
    <shortdescription>
-   Extend existing flags along a specific direction.
+   DEPRECATED! Extend existing flags along a specific direction.
    </shortdescription>
    
 <description>
@@ -845,7 +846,7 @@ Extend flags along a specific direction.
 <!-- ********************************************************************** -->
 
    <method type="function" name="run">
-   <shortdescription>Executes a flagging run</shortdescription>
+   <shortdescription>DEPRECATED! Executes a flagging run</shortdescription>
    
 <description>
 Executes a flagging run.
@@ -869,7 +870,7 @@ Executes a flagging run.
  
 <!-- ********************************************************************** -->
     <method type="function" name="writeflagstodisk">
-   <shortdescription>Applies flags from trial autoflag runs, to the data.</shortdescription>
+   <shortdescription>DEPRECATED! Applies flags from trial autoflag runs, to the data.</shortdescription>
    
 <description>
 Applies flags to the data.
@@ -885,7 +886,7 @@ Applies flags to the data.
 <!-- ********************************************************************** -->
 
    <method type="function" name="help">
-   <shortdescription>Prints help on available flagging methods</shortdescription>
+   <shortdescription>DEPRECATED! Prints help on available flagging methods</shortdescription>
    
 <description>
 
@@ -912,7 +913,7 @@ fg.help("timemed freqmed")
 
 
    <method type="function" name="done">
-   <shortdescription>Destroys the flag tool</shortdescription>
+   <shortdescription>DEPRECATED! Destroys the flag tool</shortdescription>
    
 <description>
 
@@ -933,7 +934,7 @@ T
 
 
    <method type="function" name="saveflagversion">
-   <shortdescription>*** \n Save current flags with a version name.*** 
+   <shortdescription>DEPRECATED! *** \n Save current flags with a version name.*** 
    			</shortdescription>
 <description> 
 </description>
@@ -958,7 +959,7 @@ T
 <!-- ********************************************************************** -->
 
     <method type="function" name="restoreflagversion">
-   <shortdescription>*** \n Restore flags from a saved flag_version. 
+   <shortdescription>DEPRECATED! *** \n Restore flags from a saved flag_version. 
 			\n versionname : name of flag version to restore to main table
 			\n merge : Type of operation to perform during restoration.
 			\n        merge = replace  : replaces the main table flags.
@@ -986,7 +987,7 @@ T
 
 
     <method type="function" name="deleteflagversion">
-   <shortdescription>*** \n Delete a saved flag_version. 
+   <shortdescription>DEPRECATED! *** \n Delete a saved flag_version. 
  			   ***</shortdescription>
 <description> 
 </description>
@@ -1002,7 +1003,7 @@ T
 <!-- ********************************************************************** -->
 
     <method type="function" name="getflagversionlist">
-   <shortdescription>*** \n Print out a list of saved flag_versions. 
+   <shortdescription>DEPRECATED! *** \n Print out a list of saved flag_versions. 
  			  ***</shortdescription>
 <description> 
 Print out the list of flag versions in the MS, unless the parameter printflags=False. The list of names is returned.
@@ -1016,557 +1017,10 @@ Print out the list of flag versions in the MS, unless the parameter printflags=F
 <returns type="stringArray"/>
 </method>
 
- 
-<!-- ********************************************************************** -->
-
-
-
 </tool>
 
 </casaxml>
 
-
-<!-- ********************************************************************** -->
-<!-- ********************************************************************** -->
-<!-- ********************************************************************** -->
-
-
-<!-- ********************************************************************** -->
-<!--
-   <method type="function" name="settimemed">
-   <shortdescription>Sets up the time-median flagging method</shortdescription>
-   
-<description> 
-
-The {\tt timemed} method uses a median-in-time filter. It works by computing a
-sliding median of some value $d_{cbt}$ (where $c$ is frequency channel, $b$ is
-baseline, and $t$ is time slot), as specified by the {\tt expr} parameter (see 
-the general \htmlref{flag module description} {flag} for details
-of how {\tt expr} determines $d$.) The sliding median is computed  in time, on
-a per-channel, per-baseline basis: 
-
-\[ 
-m_{cbt} = {\rm median}\lbrace d_{cbt'}, \mbox{~where~} |t'-t| \leq\delta \rbrace 
-\]
-
-(where $\delta$ is given by the {\tt hw} parameter.) Then, a median absolute deviation
-(MAD) of the data with respect to the median is computed on a per-row basis:
-
-\[ 
-M_{bt} = {\rm median}\lbrace |d_{cbt}-m_{cbt}|, \mbox{~for all~} c\rbrace
-\]
-
-(For single-channel data, $M_{bt}\equiv m_{0bt}$.) $M_{bt}$ is then smoothed 
-by applying a sliding median in time:
-
-\[
-\tilde M_{bt} = {\rm median}\lbrace M_{bt'}, \mbox{~where~} |t'-t| \leq 
-\tilde\delta \rbrace 
-\]
-
-(where $\tilde\delta$ is given by the {\tt rowhw} parameter.) All points where
-
-\[
-|d_{cbt}-m_{cbt}|&gt;\theta\tilde M_{bt}
-\] 
-
-are then flagged. The threshold level $\theta$ is given by the {\tt thr}
-parameter.
-
-In addition, {\tt timemed} can also flag entire rows based on their MAD. This
- is only performed for line data (specifically, when there are at least 10 
-channels per row), and may be explicitly disabled by specifying {\tt norow=T}.
- To do this, it first computes a per-baseline MAD of the MAD:
-
-\[ 
-\hat M_b = {\rm median}\lbrace |M_{bt}-\tilde M_{bt}|, \mbox{~for all~} 
-t\rbrace
-\]
-
-and flags rows where $|M_{bt}-\tilde M_{bt}|&gt;\hat\theta\hat M_b$, where
-$\hat\theta$ is given by the {\tt rowthr} parameter.
-
-{\tt Timemed} will iterate over the measurement set : and compute $m_{cbt}$
-:  only once. Existing flags are taken into account at this time (unless {\tt
-fignore} is specified). MADs are then computed and recomputed iteratively,
-dropping flagged points and rows, until convergence is achieved (i.e. no more
-flags are raised). Since $m_{cbt}$ is {\bf not} recomputed as new flags are
-raised, running this method a second time may sometimes be of use.
-
-</description>
-<input>
-
-     <param type="double" name="thr">
-     <description>Flagging threshold</description>
-     <value>5.0</value>
-     </param>
-
-     <param type="int" name="hw">
-     <description>Half-window for the sliding median, if time slots is less than 
-4 times half window, ignoring this chunk</description>
-     <value>10</value>
-     </param>
-
-     <param type="double" name="rowthr">
-     <description>Row flagging threshold</description>
-     <value>10.0</value>
-     </param>
-
-     <param type="int" name="rowhw">
-     <description>Half-window for the sliding median of the MAD</description>
-     <value>10</value>
-     </param>
-
-     <param type="bool" name="norow">
-     <description>Disable row flagging</description>
-     <value>false</value>
-     </param>
-
-     <param type="string" name="column">
-     <description>Which column to base flagging on</description>
-     <value>MODEL</value>
-     <value>CORR</value>
-     <value>DATA</value>
-     </param>
-
-     <param type="string" name="expr">
-     <description>Expression to use</description>
-     <value>ABS I</value>
-     </param>
-
-     <param type="bool" name="fignore">
-     <description>Ignore existing flags</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="bool"/>
-<example>
-- fg:=flag('3C273XC1.MS')
-- fg.setdata()
-- fg.settimemed(thr=5,hw=5,expr="- ABS RR LL")
-</example>
-</method>
-
--->
-<!-- ********************************************************************** -->
-<!--
-   <method type="function" name="setnewtimemed">
-   <shortdescription>Sets up the new time-median flagging method</shortdescription>
-   
-<description> 
-
-The {\tt newtimemed} method uses a median-in-time filter. It follows the 
-procedure of timemed but considering a median value from all time slots in a 
-chunk.
-
-The median is computed on a per-channel, per-baseline basis. The {\tt thr} 
-parameter multiplying the standard deviation of the data in a chunk sets the 
-threshold for flagging. If the {\tt thr} parameter is specified 
-(e.g. {\tt thr} = 3), all points with greater than three standard deviations 
-away from the median are flagged. 
-
-</description>
-<input>
-
-     <param type="double" name="thr">
-     <description>Flagging threshold</description>
-     <value>3.0</value>
-     </param>
-
-     <param type="string" name="column">
-     <description>Which column to base flagging on</description>
-     <value>MODEL</value>
-     <value>CORR</value>
-     <value>DATA</value>
-     </param>
-
-     <param type="string" name="expr">
-     <description>Expression to use</description>
-     <value>ABS I</value>
-     </param>
-
-     <param type="bool" name="fignore">
-     <description>Ignore existing flags</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="bool"/>
-<example>
-- fg:=flag('H031121.MS')
-- fg.setdata()
-- fg.setnewtimemed(thr=5, expr="ABS RR")
-- fg.run()
-</example>
-</method>
-
--->
-<!-- ********************************************************************** -->
-<!--
-   <method type="function" name="setfreqmed">
-   <shortdescription>Sets up the freq-median flagging method</shortdescription>
-   
-<description>
-
-The {\tt freqmed} method uses a median-in-frequency filter. It is very similar to
-{\tt timemed}, except that it is based on a sliding median in frequency:
-
-\[ 
-m_{cbt} = {\rm median}\lbrace d_{c\prime bt}, \mbox{~where~} |c\prime-c| \leq \delta \rbrace 
-\]
-
-In all other respects this method is identical to {\tt timemed}, hence we refer you
-you to the \htmlref{{\tt settimemed} description}{flag:flagger.settimemed} for 
-all details.
-
-</description>
-<input>
-
-     <param type="double" name="thr">
-     <description>Flagging threshold</description>
-     <value>5.0</value>
-     </param>
-
-     <param type="int" name="hw">
-     <description>Half-window for the sliding median</description>
-     <value>10</value>
-     </param>
-
-     <param type="double" name="rowthr">
-     <description>Row flagging threshold</description>
-     <value>10.0</value>
-     </param>
-
-     <param type="int" name="rowhw">
-     <description>Half-window for the sliding median of the MAD</description>
-     <value>10</value>
-     </param>
-
-     <param type="string" name="column">
-     <description>Which column to base flagging on</description>
-     <value>MODEL"</value>
-     <value>CORR"</value>
-     <value>DATA</value>
-     </param>
-
-     <param type="string" name="expr">
-     <description>Expression to use</description>
-     <value>ABS I`</value>
-     </param>
-
-     <param type="bool" name="fignore">
-     <description>Ignore existing flags</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="bool"/>
-<example>
-- fg:=flag('3C273XC1.MS')
-- fg.setdata()
-- fg.setfreqmed(thr=5,hw=5,expr="- ABS RR LL")
-</example>
-</method>
-
- -->
-<!-- ********************************************************************** -->
-
-<!--
-   <method type="function" name="setsprej">
-   <shortdescription>Sets up the spectral rejection flagging method</shortdescription>
-   
-<description> 
-
-The {\tt sprej} method works by fitting a user-specified segment of the
-spectrum (presumably, the continuum) by a polynomial. It then flags entire rows
-based on the chi-square statistic of the fit, in a manner similar to {\tt
-timemed}. Please refer to \htmlref{{\tt
-setimemed}}{flag:flagger.settimemed}  for detailed math, substituting
-$\chi^2_{bt}$ for $M_{bt}$. The value that is actually fitted  is specified via
-the {\tt expr} parameter (see  the general \htmlref{flag module}{flag
-module} description for details).
-
-The segement to be fitted can be specified as a range of channel indices
-(1-based) or frequencies. Frequencies may be given as string measures ({\tt
-"1.4GHz"}) or float values (units of MHz assumed). A vector of two values
-[C1,C2] specifies the segment from C1 to C2, inclusive. Several disjoint
-segments may be specified with a 2N vector or a (2,N) matrix.
-
-For a measurement set containing multiple spectral windows, you can set the
-{\tt region} argument to a record of records, with each sub-record containing
-{\tt spwid} and {\tt fq} and/or {\tt chan} fields, specifying the segments of
-a specific spectral window. See examples below.
-
-</description>
-<input>
-
-     <param type="int" name="ndeg">
-     <description>Number of degrees for polynomial</description>
-     <value>2</value>
-     </param>
-
-     <param type="double" name="rowthr">
-     <description>Flagging threshold, in MADs of $\chi^2$</description>
-     <value>5.0</value>
-     </param>
-
-     <param type="int" name="rowhw">
-     <description>Half-window for the sliding median</description>
-     <value>6</value>
-     </param>
-
-     <param type="bool" name="norow">
-     <description>Disable row flagging</description>
-     <value>false</value>
-     </param>
-
-     <param type="int" name="spwid">
-     <description>Spectral window number (0-based), or -1 for 
-all windows</description>
-     <value>-1 </value>
-     </param>
-     <param type="intArray" name="chan">
-     <description>Range of channels (0-based). Either ``fq'' or ``chan'' must be
-specified, 2N or (2,N).</description>
-     <value type="vector">
-     <value>-1</value>
-     <value>-1</value>
-     </value>
-     </param>
-
-     <param type="any" name="region">
-	     <any type="record"/>
-     <description>A compound spectral segment specification (see
-example)</description>
-     <value></value>
-     </param>
-
-     <param type="string" name="column">
-     <description>Which column to base flagging on</description>
-     <value>MODEL</value>
-     <value>CORR"</value>
-     <value>DATA</value>
-     </param>
-
-     <param type="string" name="expr">
-     <description>Expression to use</description>
-     <value>ABS I</value>
-     </param>
-
-     <param type="bool" name="fignore">
-     <description>Ignore existing flags</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="bool"/>
-<example>
-- fg:=flag('3C273XC1.MS')
-- fg.setdata()
-# use segments 807-807.5 and 809-809.5 MHz for fitting
-- fg.setsprej(fq=[807,807.5,809,809.5)) 
-...
-# use channels 10-20 and 30-40
-- fg.setsprej(chan=[[10,20],[30,40]])
-...
-# use different segements in different spectral windows
-- region := [=]
-- region[1] := [ spwid=1,fq="1.4GHz 1.401GHz" ]
-- region[2] := [ spwid=2,chan=[10,20] ]
-- region[3] := [ spwid=4,chan=[50,60] ]
-- fg.setsprej(region=region)
-</example>
-</method>
-
--->
-<!-- ********************************************************************** -->
-
-<!--
-   <method type="function" name="setuvbin">
-   <shortdescription>Sets up the UV Binner flagging method</shortdescription>
-   
-<description>
-
-The {\tt uvbin} method works by binning the data on a {\em value} vs.
-UV-distance plane ({\em value} is determined by the {\tt expr} parameter : see
-the general \htmlref{flag module description}{flag} for a description
-of this mechanism.) Data in underpopulated bins is then flagged. 
-
-The cut-off point for flagging may be expressed in one of two ways:
-
-\begin{itemize} 
-
-\item If the {\tt maxpop} parameter is specified (e.g. {\tt maxpop=4}), all
-bins with less than {\tt maxpop} points are flagged. 
-
-\item If the {\tt thr} parameter is specified, a probability cut-off is
-selected. This is done as follows. The cumulative probability $p(N)$, defined
-as the probability for a given point to reside in a bin of a population $\le
-N$, is first computed. All bins of population $N$, where $p(N)&lt;${\tt thr}, 
-are then flagged.
-
-In simpler terms, using {\tt thr=0.01} will flag up to 1\% of your data
-points, beginning with the least populous bins. I.e., first the single-point
-bins are flagged, then the 2-point bins, and so on, up to the $N-1$-point
-bins, where $N$ is such that flagging the $N$-point bins would exceed 1\% of all
-data points. 
-
-\item When both {\tt maxpop} and {\tt thr} are specified, {\tt uvbin} will
-use the higher of the two resulting cut-offs. 
-
-\end{itemize}
-
-{\tt Uvbin} can be asked to produce a value vs. UV-distance plot, and a plot of
-$p(N)$. These plots are attached to the flagging report. Uuse of the {\tt
-econoplot} mode is recommended when dealing with medium-to-large data sets,
-for significant reduction in plot file size and printing time.
-
-</description>
-<input>
-
-     <param type="double" name="thr">
-     <description>Population cut-off, as $p(N)$ value.</description>
-     <value>0.0</value>
-     </param>
-
-     <param type="int" name="minpop">
-     <description>Population cut-off, as minimum bin count. Either thr or
-maxpop must be specified, or both.</description>
-     <value>0</value>
-     </param>
-
-     <param type="intArray" name="nbins">
-     <description>Number of bins (one number for both axes, or separate for
-UV, value)</description>
-     <value>50</value>
-     </param>
-
-     <param type="int" name="plotchan">
-     <description>Channel number (0-based) to plot, T for middle channel, or -1 for no
-plot</description>
-     <value>-1</value>
-     </param>
-
-     <param type="bool" name="econoplot">
-     <description>Produce an economical plot (crowded bins are not resolved)</description>
-     <value>false</value>
-     </param>
-
-     <param type="string" name="column">
-     <description>Which column to base flagging on</description>
-     <value>MODEL</value>
-     <value>CORR</value>
-     <value>DATA</value>
-     </param>
-
-     <param type="string" name="expr">
-     <description>Expression to use</description>
-     <value>ABS I</value>
-     </param>
-
-     <param type="bool" name="fignore">
-     <description>Ignore existing flags</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="bool"/>
-<example>
-- fg:=flag('3C273XC1.MS')
-- fg.setdata()
-- fg.setuvbin(nbins=[50,100],expr="- ABS RR LL",plotchan=40,econoplot=T)
-</example>
-</method>
- 
--->
-<!-- ********************************************************************** -->
-
-<!-- ********************************************************************** -->
-
-<!--
-   <method type="function" name="run">
-   <shortdescription>Executes a flagging run</shortdescription>
-   
-<description>
-
-This function will perform a flagging run utilizing methods configured by prior
-{\tt set{\em method}()} calls. It has a number of optional parameters affecting
-various aspects of the flagging process:
-
-\begin{itemize}
-
-\item {\tt Run} will optionaly produce a graphical flagging report (plots
-of flag density per baseline, antenna, time, etc.), both on-screen and in a
-file. Either option may be turned on or off. To redirect hardcopy output, 
-the  {\tt devfile} argument may be set to a filename for PostScript output, 
-or  to a full PGPlot device specification (``file/device'').
-
-\item The {\tt globparm} argument allows you to set parameters that are ``global'' to
-all methods. For example, using {\tt globparm=$\lbrack$hw=10,fignore=T$\rbrack$} will cause
-{\bf all} methods to use the given values for the {\tt hw} and {\tt fignore}
-parameters, unless another value was explicitly set in the {\tt set{\em method}()}
-call. In other words, {\tt globparm} takes precedence over default values, 
-but not over {\tt set{\em method}()} arguments.
-
-\item When using {\tt trial}, flagging is performed and flagging reports are
-generated without writing the results back into the measurement set.
-
-\item The {\tt reset} option clears all pre-existing flags from the FLAG and
-FLAGROW columns of the measurement set prior to running the methods. If {\tt
-trial} is specified as well, the MS is not modified, but all methods run as if
-all flags were clear to begin with (in fact, {\tt reset} and {\tt trial} together is
-equivalent to  {\tt globparm=$\lbrack$fignore=T$\rbrack$}.)
-
-\end{itemize}
-
-</description>
-<input>
-
-     <param type="any" name="globparm">
-	     <any type="record"/>
-     <description>Record of global method parameters</description>
-     <value></value>
-     </param>
-
-     <param type="int" name="plotscr">
-     <description>Number of plots per window for on-screen flagging
-report, or default for no report</description>
-     <value>0</value>
-     </param>
-
-     <param type="int" name="plotdev">
-     <description>Number of plots per page in hardcopy flagging report, 
-0 for no report</description>
-     <value>0</value>
-     </param>
-
-     <param type="string" name="devfile">
-     <description>File or PGPlot device for hardcopy report</description>
-     <value>flagreport.ps/ps</value>
-     </param>
-
-     <param type="bool" name="reset">
-     <description>Reset pre-existing flags before running</description>
-     <value>false</value>
-     </param>
-
-     <param type="bool" name="trial">
-     <description>Do a trial run only</description>
-     <value>false</value>
-     </param>
-</input>
-<returns type="bool"/>
-<example>
-fg:=flag('3C273XC1.MS)
-fg.setdata();
-...
-fg.setselect(autocorr=T,quack=[240,120])
-...
-fg.setuvbin(thr=.01)
-...
-fg.run()
-</example>
-</method>
-
---> 
-<!-- ********************************************************************** -->
- 
 
 
 
