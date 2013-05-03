@@ -25,6 +25,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hif_tsysflagchannels</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hif_tsysflag</Command>
         <ParameterSet>
         </ParameterSet>
@@ -35,23 +41,19 @@
         <ParameterSet>
             <Parameter>
                 <Keyword xmlns="">metric</Keyword>
-                <Value xmlns="">shape</Value>
+                <Value xmlns="">derivative</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_maxabs</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">fmax_limit</Keyword>
+                <Value xmlns="">2</Value>
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">flag_nmedian</Keyword>
                 <Value xmlns="">False</Value>
-            </Parameter>
-            <Parameter>
-                <Keyword xmlns="">flag_hi</Keyword>
-                <Value xmlns="">True</Value>
-            </Parameter>
-            <Parameter>
-                <Keyword xmlns="">flag_tmf1</Keyword>
-                <Value xmlns="">True</Value>
-            </Parameter>
-            <Parameter>
-                <Keyword xmlns="">niter</Keyword>
-               <Value xmlns="">1</Value>
             </Parameter>
         </ParameterSet>
     </ProcessingCommand>
