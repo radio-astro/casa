@@ -15,14 +15,16 @@ class convertToMMS():
     def __init__(self,\
                  inpdir=None, \
                  mmsdir=None, \
+                 parallel=False, \
                  createmslink=False, \
                  cleanup=False):
 
         '''Run the partition task to create MMSs from a directory with MSs'''
         casalog.origin('convertToMMS')
-        
+
         self.inpdir = inpdir
         self.outdir = mmsdir
+        self.parallel = parallel
         self. createmslink = createmslink
         self.mmsdir = '/tmp/mmsdir'
         self.cleanup = cleanup        
@@ -91,7 +93,7 @@ class convertToMMS():
         # Create an MMS for each MS in list
         for ms in mslist:
             casalog.post('Will create an MMS for '+ms)
-            ret = self.runPartition(ms, self.mmsdir, self.createmslink)
+            ret = self.runPartition(ms, self.mmsdir, self.createmslink, self.parallel)
             if not ret:
                 sys.exit(2)
             
@@ -109,8 +111,6 @@ class convertToMMS():
             casalog.post('Creating symbolic link to '+bfile)
             os.symlink(file, lfile)
             
-            
-
 
     def getMSlist(self, files):
         '''Get a list of MSs from a directory.
@@ -180,7 +180,6 @@ class convertToMMS():
         return ret
                         
 
-
     def getFileslist(self, files):
         '''Get a list of non-MS files from a directory.
            files -> a tuple that is returned by the following call:
@@ -225,12 +224,13 @@ class convertToMMS():
         return fileslist
 
 
-    def runPartition(self, ms, mmsdir, createlink):
+    def runPartition(self, ms, mmsdir, createlink, runmode):
         '''Run partition with default values to create an MMS.
            ms         --> full pathname of the MS
            mmsdir     --> directory to save the MMS to
            createlink --> when True, it will create a symbolic link to the
-                         just created MMS in the same directory with extension .ms        
+                         just created MMS in the same directory with extension .ms  
+           runmode   --> run partition in parallel or sequential
         '''
         from tasks import partition
 
@@ -257,7 +257,7 @@ class convertToMMS():
         
         # Run partition   
         default('partition')
-        partition(vis=ms, outputvis=mms, createmms=True, datacolumn='all')
+        partition(vis=ms, outputvis=mms, createmms=True, datacolumn='all', parallel=runmode)
         casalog.origin('convertToMMS')
         
         # Check if MMS was created
@@ -313,6 +313,41 @@ class convertToMMS():
 #
 # ----------------------------------------------------------------------
 
+# def getNumberOf(msfile, item='row'):
+#     '''Using the msmd tool, it gets the number of
+#        scan, spw, antenna, baseline, field, state,
+#        channel, row in a MS or MMS'''
+#     
+#     md = msmdtool()
+#     try:
+#         md.open(msfile)
+#     except:
+#         print 'Cannot open the msfile'
+#         return 0
+#     
+#     if item == 'row':
+#         numof = md.nrows()
+#     elif item == 'scan':
+#         numof = md.nscans()
+#     elif item == 'spw':
+#         numof = md.nspw()
+#     elif item == 'antenna':
+#         numof = md.nantennas()
+#     elif item == 'baseline':
+#         numof = md.nbaselines()
+#     elif item == 'channel':
+#         numof = md.nchan()
+#     elif item == 'field':
+#         numof = md.nfields()
+#     elif item == 'state':
+#         numof = md.nstates()
+#     else:
+#         numof = 0
+#         
+#     md.close()
+#     return numof
+    
+      
 # NOTE
 # There is a bug in ms.getscansummary() that does not give the scans for all 
 # observation Ids, but only for the last one. See CAS-4409
