@@ -130,6 +130,12 @@ def simobserve(
             msg("No sky input found.  At least one of skymodel or complist must be set.",priority="error")
             return False
 
+        ### WORKAROUND for wrong flux in COMP + SKY TP simulations
+        if (not uvmode) and (obsmode != "") and \
+           os.path.exists(skymodel) and os.path.exists(complist):
+            msg("Single dish simulation has a flux recovery issue using both skymodel an components list as an input.\nPlease generate compskymodel image first by obsmode='' and use the image as the skymodel input.\nSorry for the inconvenience.", priority="error")
+            return False
+        ### End of WORKAROUND
 
         grscreen = False
         grfile = False
@@ -918,7 +924,8 @@ def simobserve(
                 sm.observemany(sourcenames=srces,spwname=fband,starttimes=starttimes,stoptimes=stoptimes,project=project)
 
             sm.setdata(fieldid=range(0,nfld))
-            sm.setvp()
+            if uvmode or components_only: #Interferometer only
+                sm.setvp()
 
             msg("done setting up observations (blank visibilities)")
             if verbose: sm.summary()

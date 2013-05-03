@@ -279,12 +279,18 @@ ia.close()
 #              'sigma': 0.014399,
 #              'sum': 951.08 }
 
-# reference statistic values for simulated image
-refstats = { 'max': 0.13314,
-             'min': -0.023702,
-             'rms': 0.020402,
-             'sigma': 0.016707,
-             'sum': 1402.5 }
+## reference statistic values for simulated image
+#refstats = { 'max': 0.13314,
+#             'min': -0.023702,
+#             'rms': 0.020402,
+#             'sigma': 0.016707,
+#             'sum': 1402.5 }
+# update after setvp fix (r21970)
+refstats = { 'max': 0.19002351,
+             'min': -0.02080192,
+             'rms': 0.02843619,
+             'sigma': 0.02089434,
+             'sum': 2305.42279108 }
 
 
 # # reference statistic values for diff image
@@ -294,12 +300,18 @@ refstats = { 'max': 0.13314,
 #              'sigma': 0.0096155,
 #              'sum': -90.078 }
 
-# reference statistic values for diff image
-diffstats = {'max': 0.03206,
-             'min': -0.10785,
-             'rms': 0.014134,
-             'sigma': 0.013433,
-             'sum': -526.38 }
+## reference statistic values for diff image
+#diffstats = {'max': 0.03206,
+#             'min': -0.10785,
+#             'rms': 0.014134,
+#             'sigma': 0.013433,
+#             'sum': -526.38 }
+# update after setvp fix (r21970)
+diffstats = {'max': 0.0287243,
+             'min': -0.16031383,
+             'rms': 0.02258857,
+             'sigma': 0.01913613,
+             'sum': -1434.54940508 }
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
