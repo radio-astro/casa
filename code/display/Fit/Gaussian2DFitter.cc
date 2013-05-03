@@ -112,7 +112,8 @@ void Gaussian2DFitter::run(){
 	catch( AipsError& error ){
 		successfulFit = false;
 		QString specificProblem( error.what() );
-		errorMsg = "Fit did not converge: "+ specificProblem;
+		qDebug() << "Unsuccessful fit: "<<specificProblem;
+		errorMsg = "Fit did not converge";
 	}
 }
 

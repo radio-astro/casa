@@ -97,6 +97,10 @@ private:
 	FindSourcesDialog( const FindSourcesDialog& other );
 	FindSourcesDialog& operator=( const FindSourcesDialog& other );
 	void populatePixelBox();
+	//Written because when a fit of a residual image was being done, the region
+	//bounds were larger than the bounds in the residual image.
+	void populateImageBounds();
+	QString getImagePixelBox() const;
 	void resetCurrentId( int suggestedId );
 	void resetSourceView();
 	void setSourceResultsVisible( bool visible );
@@ -104,7 +108,7 @@ private:
 	void initializeFileManagement();
 	void setTableValue(int row, int col, const String& val );
 	double populateCutOff(bool* valid) const;
-	Record makeRegion() const;
+	Record makeRegion( bool * valid ) const;
 	void resetSkyOverlay();
 	void clearSkyOverlay();
 	void clearRegions();
@@ -129,6 +133,8 @@ private:
 	const QString SKY_CATALOG;
 	ColorComboDelegate* colorDelegate;
 	PixelRangeDialog pixelRangeDialog;
+	Vector<int> blcVector;
+	Vector<int> trcVector;
     Ui::FindSourcesDialogClass ui;
 };
 }

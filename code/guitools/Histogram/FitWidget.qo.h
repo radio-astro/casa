@@ -49,6 +49,7 @@ public:
     void setCenterPeak( double center, double peak );
     void setFWHM( double fwhm );
     void setLambda( double lambda );
+    void setUnits( const QString& units );
     void setValues( int id, Vector<Float> xValues, Vector<Float> yValues );
     double getCenter() const;
     double getPeak() const;
