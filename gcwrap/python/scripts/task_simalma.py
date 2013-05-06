@@ -605,6 +605,23 @@ def simalma(
                 ia.close()
 
                 # Analyze TP image
+                # TMP fix: move skymodels around to make sure simanalyze picks
+                # the right one
+                blskymodel=fileroot+"/"+pref_bl+".skymodel"
+                acaskymodel=fileroot+"/"+pref_aca+".skymodel"
+                tpskymodel=fileroot+"/"+pref_tp+".skymodel"
+                if os.path.exists(blskymodel):
+                    shutil.move(blskymodel,blskymodel+".save")
+                else:
+                    msg("BL skymodel '%s' is not found" \
+                        % blskymodel, origin="simalma", priority="error")
+                if os.path.exists(acaskymodel):
+                    shutil.move(acaskymodel,acaskymodel+".save")
+                else:
+                    msg("ACA skymodel '%s' is not found" \
+                        % acaskymodel, origin="simalma", priority="error")
+
+
                 msg("Analyzing TP image.", origin="simalma", priority=v_priority)
                 #taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_tp+"', modelimage='', cell='"+str(cell_tp)+"', imsize="+str(imsize_tp)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
                 vis_tp = fileroot+"/"+vis_tp
@@ -675,6 +692,20 @@ def simalma(
                 msg("Visibility weights of each MS: %s" % str(visweightscale), origin="simalma", priority=v_priority)
                 concat(vis=vis, concatvis=concatvis,
                        visweightscale=visweightscale)
+
+            # TMP fix: get correct skymodel file so that simanalyze picks it
+            if os.path.exists(tpskymodel):
+                shutil.move(tpskymodel,tpskymodel+".save")
+            else:
+                msg("TP skymodel '%s' is not found" \
+                        % tpskymodel, origin="simalma", priority="error")
+
+            if os.path.exists(acaskymodel+".save"):
+                shutil.move(acaskymodel+".save",acaskymodel)
+            else:
+                msg("ACA skymodel '%s' is not found" \
+                        % acaskymodel+".save", origin="simalma", priority="error")
+
 
             taskstr = "simanalyze(project='"+ project+"', image="+str(image)+", vis='"+ vis_int+"', modelimage='', cell='"+str(cell)+"', imsize="+str(imsize)+", imdirection='"+ imdirection+"', niter="+str(niter)+", threshold='"+ threshold+"', weighting='"+ weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+ graphics+"', verbose="+str(verbose)+", overwrite="+ str(overwrite)+")"
             msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
@@ -760,6 +791,11 @@ def simalma(
                 msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
                 try:
                     feather(imagename=outimage0, highres=highimage, lowres=lowimage)
+                    # transfer mask - feather should really do this
+                    ia.open(outimage0)
+                    ia.maskhandler('copy',[highimage+":mask0",'mask0'])
+                    ia.maskhandler('set','mask0')
+                    ia.done()
                 except:
                     raise Exception, "simalma caught an exception in task feather"
                 finally:
