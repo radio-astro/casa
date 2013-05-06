@@ -462,7 +462,16 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaDataOnDemand::_getStateIDs() {
 	std::tr1::shared_ptr<Vector<Int> > states(
 		new Vector<Int>(MSMetaData::_getStates(*_ms))
 	);
-	if (_cacheUpdated(sizeof(Int)*states->size())) {
+    Int maxState = max(*states);
+    Int nstates = (Int)nStates();
+    if (maxState >= nstates) {
+        ostringstream oss;
+        oss << "MSMetaDataOnDemand::_getStateIDs(): Error: MS only has " << nstates
+             << " rows in its STATE table, but references STATE_ID "
+             << maxState << " in its main table.";
+        throw AipsError(oss.str());
+    }
+    if (_cacheUpdated(sizeof(Int)*states->size())) {
 		_stateIDs = states;
 	}
 	return states;
@@ -567,8 +576,8 @@ void MSMetaDataOnDemand::_getScansAndIntentsMaps(
 			std::set<Int>::const_iterator myState=states.begin();
 			myState!=endState; myState++
 		) {
-			intents = stateToIntentsMap[*myState];
-			scanToIntentsMap[scan].insert(intents.begin(), intents.end());
+            intents = stateToIntentsMap[*myState];
+            scanToIntentsMap[scan].insert(intents.begin(), intents.end());
 			std::set<String>::const_iterator endIntent = intents.end();
 			for (
 				std::set<String>::const_iterator myIntent=intents.begin();
@@ -684,7 +693,9 @@ Bool MSMetaDataOnDemand::_cacheUpdated(const Float incrementInBytes) {
 }
 
 std::set<uInt> MSMetaDataOnDemand::getSpwsForIntent(const String& intent) {
-	_checkIntent(intent);
+	if (! _hasIntent(intent)) {
+		return std::set<uInt>();
+	}
 	vector<std::set<String> > spwToIntentsMap = _getSpwToIntentsMap();
 	std::set<uInt> spws;
 	for (uInt i=0; i<spwToIntentsMap.size(); i++) {
@@ -1483,7 +1494,9 @@ std::set<Int> MSMetaDataOnDemand::getFieldsForScans(const std::set<Int>& scans) 
 }
 
 std::set<Int> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
-	_checkIntent(intent);
+	if (! _hasIntent(intent)) {
+		return std::set<Int>();
+	}
 	vector<std::set<String> > fieldToIntentsMap;
 	std::map<String, std::set<Int> > intentToFieldsMap;
 	_getFieldsAndIntentsMaps(
@@ -1492,14 +1505,9 @@ std::set<Int> MSMetaDataOnDemand::getFieldsForIntent(const String& intent) {
 	return intentToFieldsMap[intent];
 }
 
-void MSMetaDataOnDemand::_checkIntent(const String& intent) {
+Bool MSMetaDataOnDemand::_hasIntent(const String& intent) {
 	std::set<String> uniqueIntents = getIntents();
-	if (uniqueIntents.find(intent) == uniqueIntents.end()) {
-		throw AipsError(
-			_ORIGIN + "Unknown intent "
-			+ intent + " for this dataset"
-		);
-	}
+	return uniqueIntents.find(intent) != uniqueIntents.end();
 }
 
 
