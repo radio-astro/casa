@@ -63,6 +63,7 @@
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageCollapser.h>
 #include <imageanalysis/ImageAnalysis/ImageFitter.h>
+#include <imageanalysis/ImageAnalysis/ImageCropper.h>
 #include <imageanalysis/ImageAnalysis/ImagePadder.h>
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
 #include <imageanalysis/ImageAnalysis/ImagePrimaryBeamCorrector.h>
@@ -2334,8 +2335,47 @@ image* image::pad(
 		);
 		padder.setStretch(stretch);
 		padder.setPaddingPixels(npixels, value, padmask);
-		cout << "wantreturn " << wantreturn << endl;
 		std::auto_ptr<ImageInterface<Float> > out(padder.pad(wantreturn));
+		if (wantreturn) {
+			return new image(out.get());
+		}
+		return 0;
+
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+image* image::crop(
+	const string& outfile, const vector<int>& axes,
+	bool overwrite, const variant& region, const string& box,
+	const string& chans, const string& stokes, const string& mask,
+	bool  stretch, bool wantreturn
+) {
+	try {
+		*_log << _ORIGIN;
+		if (detached()) {
+			return 0;
+		}
+        if (axes.size() > 0) {
+            std::set<int> saxes(axes.begin(), axes.end());
+	    	if (*saxes.begin() < 0) {
+			    *_log << "All axes values must be >= 0" << LogIO::EXCEPTION;
+		    }
+        }
+        std::set<uInt> saxes(axes.begin(), axes.end());
+		std::auto_ptr<Record> regionPtr = _getRegion(region, True);
+
+		ImageCropper<Float> cropper(
+			_image->getImage(), regionPtr.get(), box,
+			chans, stokes, mask, outfile, overwrite
+		);
+		cropper.setStretch(stretch);
+        cropper.setAxes(saxes);
+        std::auto_ptr<ImageInterface<Float> > out(cropper.crop(wantreturn));
 		if (wantreturn) {
 			return new image(out.get());
 		}
