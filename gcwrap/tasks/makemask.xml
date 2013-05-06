@@ -159,7 +159,7 @@ expand : Expand a mask from one range of freqs to another range
 delete : delete an internal mask from an image (if the deleted mask was a default mask,
          the task chooses the first one in the remaining internal mask list (as appears 
          in the log when do listing with mode='list') 
-setdefaultmask : set a specified internal mask as a defult internal mask 
+setdefaultmask : set a specified internal mask as a default internal mask 
 <!--region : Make a mask from a list of region files on the input image coordinate-sys
 -->
 <!--draw : Draw a mask from the viewer using the input image.-->
@@ -168,7 +168,7 @@ it appears that interaction with the viewer can be a bit flaky when called
 in succession.-->
 
 In all cases (for output mask is expected), if the output image has a different coordinate system from the
-result of input and processing, the mask will be regridded to the output
+result of input and processing, the mask will be re-gridded to the output
 coordinate system.  
 
 
@@ -183,7 +183,7 @@ inpmask : Name(s) of input mask(s)
           default: none
          To specify an image (zero/non-zero) mask, just give a image name (e.g. myimage1.im)
          To specify an internal (T/F) mask, you must give a parent image name and the internal mask name
-         seperated by a colon. (e.g. myimage1.im:mask0). The internal mask names can be found by running
+         separated by a colon. (e.g. myimage1.im:mask0). The internal mask names can be found by running
          the makemask task in mode='list'.
  
          (expand mode)
@@ -205,13 +205,13 @@ output : Name of output image.
          *The resultant mask is written as an internal (T/F) mask if the output name is the form of 'imagename:maskname'
           The created mask is set as a default internal mask.
          *To re-grid a mask to a different coordinate system,  
-          give an image with the target coordinate system in inpimage. Or make a copy an imge
+          give an image with the target coordinate system in inpimage. Or make a copy an image
           with the target coordinate system and specified the name of the copy in output. 
 
 
-    - If output is specifield as a plain image, if it exists, it will regrid the mask to 
+    - If output is specified as a plain image, if it exists, it will regrid the mask to 
       the new coordinate system  and modify output (if overwrite=True).
-    - If output is specifield as an image with an internal mask, if the internal mask exists,
+    - If output is specified as an image with an internal mask, if the internal mask exists,
       it will regrid the mask to the new coordinate system  and modify the internal mask only (if overwrite=True).
     - If output does not exist, it will only copy inpimage
     - If output == inpimage, do not regrid. Only modify in-place.
@@ -222,10 +222,15 @@ overwrite : overwrite the mask specified in output? (see also the output rules a
             so any pre-existed masks in other channels  will be remain untouched.
 
 Additional expandable parameters for mode='expand':
-  inpfreqs : input channel/frequency/velocity range
+  inpfreqs : input channel/frequency/velocity range 
              Specify channels in a list of integers. for frequency/velocity, 
-             a range is specified in a string with '~', e.g. '1.5MHz~1.6MHz'
+             a range is specified in a string with '~', e.g. '1.5MHz~1.6MHz', '-8km/s~-14km/s' 
+             (for the cube with ascending frequencies)
              default: []  - all channels
+             * Note that the range in frequency or velocity needs to be specified as the same order 
+             as in the template cube specified in inpimage. E.g., if a template cube has descending 
+             frequencies, then the range will be, for example,'1.6MHz~1.5MHz' or '-14km/s~-8km/s'
+
   outfreqs : output channel/frequency/velocity range  
              Specify same way as inpfreqs
              default: []  - all channels
@@ -287,7 +292,7 @@ Usage examples :
 (7) (expand mode):
      Expand a (one/zero) mask from continuum imaging to use as an input mask image for
      spectral line imaging. Use an existing spectral line clean image as a template by
-     sepecified in inpimage. 
+     specified in inpimage. 
      The inpfreqs is left out as it uses a default (=[], means all channels).
 
      makemask(mode='expand', inpimage='spec.clean.image', inpmask='cont.clean.mask' 
@@ -308,10 +313,16 @@ Usage examples :
      As the inpimage is used as a template for the CoordinateSystem of the output cube, it is
      a prerequisite to have the cube image (a dirty image, etc). In this particular example, 
      it is assumed that bigmask.im is a working copy made from the cube image of a previous clean 
-     execution. It is used as an input template and the resultant mask is overwitten to the same image.
+     execution. It is used as an input template and the resultant mask is overwritten to the same image.
 
+     Specify the infreqs and outfreqs in frequency (assuming here bigmask.im has frequencies in ascending order)
      makemask(mode='expand', inpimage='bigmask.im', inpmask='smallmask.im:mask0', 
               inpfreqs='1.5MHz~1.6MHz', outfreqs='1.2MHz~1.8MHz', output='bigmask.im', overwrite=True)
+
+     or to specify the ranges in velocities,  
+     makemask(mode='expand', inpimage='bigmask.im', inpmask='smallmask.im:mask0', 
+              inpfreqs=4.0km/s~0.5km/s', outfreqs='6.5km/s~-2.4km/s', output='bigmask.im', overwrite=True)
+       
 
 (10) (delete mode)
       Delete an internal mask from an image.
