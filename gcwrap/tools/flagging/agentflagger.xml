@@ -1012,6 +1012,10 @@ for the time and frequency mode.
                 <description>Half-width of sliding window to use with \'usewindowstats\' (1,2,3). Default: </description>
                 <value>1</value>
             </param>
+            <param type="bool" name="extendflags">
+                <description>Extend the flags in time, frequency and correlations. Default:</description>
+                <value>true</value>
+            </param>
 
      <param type="bool" name="apply">
      <description>Parameter to flag or unflag the data. Default: </description>
@@ -1027,9 +1031,13 @@ The operator should be written only once and it will affect all the polarization
 given in the string. Note that if ntime='scan' and combinescans=True, all the scans will
 be loaded at once, thus requesting a lot of memory depending on the available spws.
 The parameter combinescans should be set to True only when ntime is specified as a 
-time-interval (not 'scan').
+time-interval (not 'scan'). By default, the flags will be extended in time, if
+more than 50% of the timeranges are flagged, 80% of the channels are flagged and
+it will extend to other polarizations too. This is similar to running the extend
+mode after running tfcrop on the MS.
 
-af.parsetfcropparameters(spw='9', ntime=10.0, combinescans=True, correlation='ABS_XX,XY')
+af.parsetfcropparameters(spw='9', ntime=10.0, combinescans=True, correlation='ABS_XX,XY',
+                         extendflags=True)
 </example>
 
 <returns type="bool"/> 

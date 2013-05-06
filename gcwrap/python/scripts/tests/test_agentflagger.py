@@ -633,7 +633,8 @@ class test_bpass(test_base):
         correlation = 'Sol2'
         aflocal.open(self.vis)
         aflocal.selectdata()
-        agentRflag={'apply':True,'mode':'rflag','correlation':correlation}
+        agentRflag={'apply':True,'mode':'rflag','correlation':correlation,
+                    'extendflags':False}
         agentSummary={'apply':True,'mode':'summary'}
         aflocal.parseagentparameters(agentRflag)
         aflocal.parseagentparameters(agentSummary)
@@ -657,7 +658,8 @@ class test_bpass(test_base):
         agentClip={'apply':True,'mode':'clip','clipzeros':True,'datacolumn':datacolumn,'correlation':correlation}
         aflocal.parseagentparameters(agentClip)
         
-        aflocal.parsetfcropparameters(datacolumn=datacolumn, correlation=correlation)
+        aflocal.parsetfcropparameters(datacolumn=datacolumn, correlation=correlation,
+                                      extendflags=False)
         aflocal.parsesummaryparameters()
         # Extend to the other solution
         aflocal.parseextendparameters(extendpols=True,growfreq=0.0,growtime=0.0)

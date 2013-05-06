@@ -220,7 +220,8 @@ class test_tfcrop(test_base):
         
     def test_tfcrop1(self):
         '''flagdata:: Test1 of mode = tfcrop'''
-        flagdata(vis=self.vis, mode='tfcrop', correlation='ABS_RR',ntime=51.0,spw='9', savepars=False)
+        flagdata(vis=self.vis, mode='tfcrop', correlation='ABS_RR',ntime=51.0,spw='9', 
+                 savepars=False, extendflags=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 4489)
         self.assertEqual(res['antenna']['ea19']['flagged'], 2294)
@@ -231,7 +232,8 @@ class test_tfcrop(test_base):
         # Note : With ntime=51.0, 64-bit machines get 18696 flags, and 32-bit gets 18695 flags.
         #           As far as we can determine, this is a genuine precision-related difference.
         #           With ntime=53.0, there happens to be no difference.
-        flagdata(vis=self.vis, mode='tfcrop',ntime=53.0,spw='9', savepars=False)
+        flagdata(vis=self.vis, mode='tfcrop',ntime=53.0,spw='9', savepars=False,
+                 extendflags=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 18671)
         self.assertEqual(res['correlation']['LL']['flagged'], 4250)
@@ -250,7 +252,7 @@ class test_tfcrop(test_base):
         
     def test_extendtime(self):
         '''flagdata:: Extend the flags created by tfcrop'''
-        flagdata(vis=self.vis, mode='tfcrop')
+        flagdata(vis=self.vis, mode='tfcrop', extendflags=False)
         # The total per spw:channel/baseline/correlation/scan is 89.
         # Show only the ones that are 50% of the total, 44 flags, These should grow
         pre = flagdata(vis=self.vis, mode='summary', spwchan=True, basecnt=True, correlation='RR',spw='5',
@@ -296,6 +298,25 @@ class test_tfcrop(test_base):
         self.assertEqual(pos['scan']['31']['flagged'], 0)
         self.assertEqual(pos['flagged'], 294912)
         
+    def test_tfcrop_extendflags(self):
+        '''flagdata: mode tfcrop with extendflags=True'''
+        # First, extend the flags manually
+        flagdata(vis=self.vis, mode='tfcrop', spw='0', extendflags=False, flagbackup=False)
+        flagdata(vis=self.vis, mode='extend', flagbackup=False,
+                 extendpols=True, growtime=50.0, growfreq=80.0)        
+        pre = flagdata(vis=self.vis, mode='summary', spw='0')
+        self.assertEqual(pre['spw']['0']['flagged'], 27768)
+        self.assertEqual(pre['spw']['0']['total'], 274944)
+        
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        
+        # Now, extend the flags automatically and compare
+        flagdata(vis=self.vis, mode='tfcrop', spw='0', extendflags=True, flagbackup=False)
+        pos = flagdata(vis=self.vis, mode='summary', spw='0')
+        
+        # Flags should be extended in time if > 50%, freq > 80% and
+        # will extend to the other polarizations too.
+        self.assertEqual(pos['spw']['0']['flagged'], pre['spw']['0']['flagged'])
         
 
 class test_rflag(test_base):
@@ -306,7 +327,8 @@ class test_rflag(test_base):
         
     def test_rflag1(self):
         '''flagdata:: Test1 of mode = rflag : automatic thresholds'''
-        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], flagbackup=False)
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[], freqdev=[], flagbackup=False,
+                 extendflags=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['flagged'], 42728.0)
         self.assertEqual(res['antenna']['ea19']['flagged'], 18411.0)
@@ -315,7 +337,7 @@ class test_rflag(test_base):
     def test_rflag2(self):
         '''flagdata:: Test2 of mode = rflag : partially-specified thresholds'''
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev=[[1,10,0.1],[1,11,0.07]], \
-                       freqdev=0.5, flagbackup=False)
+                       freqdev=0.5, flagbackup=False, extendflags=False)
         res = flagdata(vis=self.vis, mode='summary',spw='9,10,11')
         self.assertEqual(res['flagged'], 52411)
         self.assertEqual(res['antenna']['ea19']['flagged'], 24142)
@@ -325,16 +347,18 @@ class test_rflag(test_base):
         '''flagdata:: Test3 of mode = rflag : output/input via two methods'''
         # (1) Test input/output files, through the task, mode='rflag'
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
-                      freqdev='fdevfile.txt', action='calculate');
+                      freqdev='fdevfile.txt', action='calculate', extendflags=False);
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='tdevfile.txt', \
-                      freqdev='fdevfile.txt', action='apply', flagbackup=False)
+                      freqdev='fdevfile.txt', action='apply', flagbackup=False, 
+                      extendflags=False)
         res1 = flagdata(vis=self.vis, mode='summary')
         # (2) Test rflag output written to cmd file via mode='rflag' and 'savepars' 
         #      and then read back in via list mode. 
         #      Also test the 'savepars' when timedev and freqdev are specified differently...
         flagdata(vis=self.vis,mode='unflag', flagbackup=False)
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
-                      freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
+                      freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt',
+                      extendflags=False);
         flagdata(vis=self.vis, mode='list', inpfile='outcmd.txt', flagbackup=False)
         res2 = flagdata(vis=self.vis, mode='summary')
 
@@ -344,7 +368,8 @@ class test_rflag(test_base):
 
     def test_rflag4(self):
         '''flagdata:: Test4 of mode = rflag : correlation selection'''
-        flagdata(vis=self.vis, mode='rflag', spw='9,10', correlation='rr,ll', flagbackup=False)
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', correlation='rr,ll', flagbackup=False,
+                 extendflags=False)
         res = flagdata(vis=self.vis, mode='summary')
         self.assertEqual(res['correlation']['RR']['flagged'], 9781.0)
         self.assertEqual(res['correlation']['LL']['flagged'], 10355.0)
@@ -352,9 +377,71 @@ class test_rflag(test_base):
         self.assertEqual(res['correlation']['RL']['flagged'], 0,)
         
     def test_rflag_CAS_5037(self):
-        '''flagdata:: Use provided value for time stats. but automatically computed value for freq. stats'''
+        '''flagdata:: Use provided value for time stats, but automatically computed value for freq. stats'''
         flagdata(vis=self.vis, mode='rflag', field = '1', spw='10', timedev=0.1, \
                  timedevscale=5.0, freqdevscale=5.0, action='calculate', flagbackup=False)
+
+    def test_rflag_extendflags(self):
+        '''flagdata: automatically extend the flags after rflag'''    
+        # Manually extend the flags    
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', flagbackup=False,
+                 extendflags=False)
+        flagdata(vis=self.vis, mode='extend', growtime=50.0, growfreq=80.0,
+                 extendpols=True, flagbackup=False)
+        pre = flagdata(vis=self.vis, mode='summary', spw='9,10')
+
+        flagdata(vis=self.vis, mode='unflag', flagbackup=False)
+        
+        # Automatically extend the flags by default
+        flagdata(vis=self.vis, mode='rflag', spw='9,10', flagbackup=False)
+        pos = flagdata(vis=self.vis, mode='summary', spw='9,10')
+        self.assertEqual(pos['spw']['9']['flagged'], pre['spw']['9']['flagged'])
+        self.assertEqual(pos['spw']['10']['flagged'], pre['spw']['10']['flagged'])
+        
+    def test_rflag_extendflags2(self):
+        '''flagdata: in list mode extend the flags automatically after rflag'''
+        def getcounts():
+            ### Channel 51 should extend flags, but channel 52 should not.
+            counts = flagdata(vis=self.vis, mode='summary',spw='4',antenna='ea01&&ea11',
+                              scan='30',correlation='LL',spwchan=True)
+            chan51 = counts['spw:channel']['4:51']
+            chan52 = counts['spw:channel']['4:52']
+             
+            counts = flagdata(vis=self.vis, mode='summary',spw='4',antenna='ea01&&ea11',
+                              scan='30',correlation='RL',spwchan=True)
+        
+            chan51rl=counts['spw:channel']['4:51']
+                        
+            return chan51, chan52, chan51rl
+
+        # do not extend the flags
+        cmdlist = ["mode='rflag' spw='4' freqdevscale=4.0 extendflags=False"]
+        flagdata(vis=self.vis, mode='list', inpfile=cmdlist, flagbackup=False)
+        chan51, chan52, chan51rl = getcounts()
+
+        # Unflag
+        flagdata(vis=self.vis, mode='unflag', spw='4', flagbackup=False)
+
+        # automatically extend the flags
+        cmdlist = ["mode='rflag' spw='4' freqdevscale=4.0"]
+        flagdata(vis=self.vis, mode='list', inpfile=cmdlist, flagbackup=False)
+        achan51, achan52, achan51rl = getcounts()
+        
+        if chan51['flagged']/chan51['total']>0.5 and achan51['flagged']/achan51['total']==1.0 :
+            print 'Channel 51 had more than 50% and got extended. PASS'
+        else:
+            self.fail('Channel 51 failed')
+
+        if chan52['flagged']/chan52['total']<50.0 and achan52['flagged']/achan52['total']==chan52['flagged']/chan52['total']:
+            print 'Channel 52 had less than 50% and did not get extended. PASS'
+        else:
+            self.fail('Channel 52 failed') 
+
+        if chan51rl['flagged']/chan51rl['total']<0.5 and achan51rl['flagged']/achan51rl['total']==1.0:
+            print 'Channel 51 in RL had less than 50% but got completely flagged because Channel 51 in LL got extended. PASS'
+        else:
+            self.fail('Channel 51 extendpols failed') 
+
 
 class test_shadow(test_base):
     def setUp(self):
@@ -1530,7 +1617,7 @@ class test_CASA_4_0_bug_fix(test_base):
     def test_CAS_4312(self):
         """flagdata: Test channel selection with Rflag agent"""
         
-        flagdata(vis=self.vis,mode='rflag',spw='9:10~20')
+        flagdata(vis=self.vis,mode='rflag',spw='9:10~20', extendflags=False)
         summary = flagdata(vis=self.vis,mode='summary')
         self.assertEqual(summary['spw']['8']['flagged'],0,'Error in channel selection with Rflag agent')
         self.assertEqual(summary['spw']['9']['flagged'],1861,'Error in channel selection with Rflag agent')
@@ -2094,7 +2181,8 @@ class test_bandpass(test_base):
     def test_rflag_cparam_sol2_for_bpass(self):
         """Flagdata:: Test rflag solution 2 of CPARAM column for bpass"""
 
-        flagdata(vis=self.vis, mode='rflag', correlation='Sol2', flagbackup=False)
+        flagdata(vis=self.vis, mode='rflag', correlation='Sol2', flagbackup=False,
+                 extendflags=False)
         summary=flagdata(vis=self.vis, mode='summary')
         self.assertEqual(summary['flagged'], 13197)
         self.assertEqual(summary['correlation']['Sol1']['flagged'], 0)
@@ -2106,7 +2194,7 @@ class test_bandpass(test_base):
         flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='ABS_ALL',clipzeros=True,
                  flagbackup=False)
         flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='ABS_ALL',
-                 flagbackup=False)
+                 flagbackup=False, extendflags=False)
         summary=flagdata(vis=self.vis, mode='summary')
 #        self.assertTrue(abs(summary['flagged'] - 63861.0) <= 5)
 #        self.assertEqual(abs(summary['flagged'] - 69369) <= 5)
@@ -2121,7 +2209,7 @@ class test_bandpass(test_base):
         flagdata(vis=self.vis, mode='clip', datacolumn='CPARAM',correlation='Sol1',clipzeros=True,
                  flagbackup=False)
         flagdata(vis=self.vis, mode='tfcrop', datacolumn='CPARAM',correlation='Sol1',
-                 flagbackup=False)
+                 flagbackup=False, extendflags=False)
         pre=flagdata(vis=self.vis, mode='summary')
         assert abs(pre['flagged'] - 30426) <= 5
         assert abs(pre['correlation']['Sol1']['flagged'] - 30426) <= 5

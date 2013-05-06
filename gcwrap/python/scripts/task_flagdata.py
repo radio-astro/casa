@@ -46,6 +46,7 @@ def flagdata(vis,
              flagdimension,
              usewindowstats,
              halfwin,
+             extendflags,
              winsize,    # rflag parameters
              timedev,
              freqdev,
@@ -389,6 +390,7 @@ def flagdata(vis,
             agent_pars['flagdimension'] = flagdimension
             agent_pars['usewindowstats'] = usewindowstats
             agent_pars['halfwin'] = halfwin
+            agent_pars['extendflags'] = bool(extendflags)
             casalog.post('Time and Frequency (tfcrop) mode is active')
 
                       
@@ -402,6 +404,7 @@ def flagdata(vis,
             agent_pars['freqdevscale'] = freqdevscale
             agent_pars['spectralmax'] = spectralmax
             agent_pars['spectralmin'] = spectralmin
+            agent_pars['extendflags'] = bool(extendflags)
 
             # These can be double, doubleArray, or string.
             # writeflags=False : calculate and return thresholds.
@@ -621,19 +624,12 @@ def flagdata(vis,
         # Initialize the agents
         casalog.post('Initializing the agents')
         aflocal.init()
-
-        # HPC work: moved the flagbackup to before the cluster
-        # initialization.
-        # Backup the existing flags before applying new ones
-#        if flagbackup and writeflags:
-#            casalog.post('Backup original flags before applying new flags')
-#            fh.backupFlags(aflocal, 'flagdata')
         
         # Run the tool
         casalog.post('Running the agentflagger tool')
         summary_stats_list = aflocal.run(writeflags, True)
         
-        # Inform the user that end of MS summary was not written to the MS
+        # Inform the user when flags are not written to the MS
         if not writeflags:
             casalog.post("Flags are not written to the MS. (action=\'calculate\')")
 
@@ -754,4 +750,10 @@ def create_arg_dict(subMS_list,value):
         ret_dict.append(value)
         
     return ret_dict
+    
+   
+    
+    
+    
+    
     

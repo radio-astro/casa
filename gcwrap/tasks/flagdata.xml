@@ -224,6 +224,10 @@
                 <description>Half-width of sliding window to use with \'usewindowstats\' (1,2,3).</description>
                 <value>1</value>
             </param>
+            <param type="bool" name="extendflags" subparam="true">
+                <description>Extend flags along time, frequency and correlation.</description>
+                <value>True</value>
+            </param>
 
             <!-- RFLAG parameters -->
             <param type="int" name="winsize" subparam="true">
@@ -263,7 +267,6 @@
                 <description>If any correlation is flagged, flag all correlations</description>
                 <value type="bool">True</value>
             </param>
-
            <param type="double" name="growtime" subparam="true">
                 <description>Flag all \'ntime\' integrations if more than X% of the timerange is flagged (0-100)</description>
                 <value>50.0</value>
@@ -473,6 +476,7 @@
                         <default param="flagdimension"><value type="string">freqtime</value></default>
                         <default param="usewindowstats"><value type="string">none</value></default>
                         <default param="halfwin"><value type="int">1</value></default>                    
+                        <default param="extendflags"><value type="bool">True</value></default>
                     </equals>
                     <equals value="rflag">
                         <default param="field"><value type="string"></value></default>
@@ -496,6 +500,7 @@
                         <default param="freqdevscale"><value type="double">5.0</value></default>
                         <default param="spectralmax"><value type="double">1E6</value></default>
                         <default param="spectralmin"><value type="double">0.0</value></default>
+                        <default param="extendflags"><value type="bool">True</value></default>
                     </equals>
                     <equals value="extend">
                         <default param="field"><value type="string"></value></default>
@@ -895,17 +900,9 @@ The task will flag a subset of data based on the following modes of operation:
                  (4) Repeat (1-3) along the other dimension.
 
                  This algorithm is designed to operate on un-calibrated data (step (2)), 
-                 as well as calibrated data.  
+                 as well as calibrated data. It is recommended to extend the flags
+                 after running this algorithm. See the sub-parameter extendflags below.
 
-                 It is usually helpful to extend the flags along time, frequency, and correlation 
-                 in a second step (via mode='extend') within the same flagging run.
-                 Example : 
-                     cmd=["mode='tfcrop' freqcutoff=3.0 usewindowstats='sum' ", 
-                           "mode='extend' extendpols=True growtime=50.0 growaround=True"]
-                     flagdata(vis,mode='list',inpfile=cmd)                    
-
-                 Note : The data-expression on which to apply the flagging algorithm
-                            is given by the correlation parameter.
 
                ntime -- Timerange (in seconds or minutes) over which to buffer data before 
                         running the algorithm. 
@@ -1013,6 +1010,24 @@ The task will flag a subset of data based on the following modes of operation:
                     options: 1,2,3
                         Note: This is experimental !
 
+               extendflags -- Extend flags along time, frequency and correlation.
+                    default: True
+
+                    NOTE: It is usually helpful to extend the flags along time, frequency, 
+                          and correlation using this parameter, which will run the "extend"
+                          mode after "tfcrop" and extend the flags if more than 50% of the
+                          timeranges are already flagged, and if more than 80% of the channels
+                          are already flagged. It will also extend the flags to the other
+                          polarizations. The user may also set extendflags to False and run
+                          the "extend" mode in a second step within the same flagging run. See
+                          the example below:
+                    example : 
+                       cmd=["mode='tfcrop' freqcutoff=3.0 usewindowstats='sum' extendflags=False", 
+                            "mode='extend' extendpols=True growtime=50.0 growaround=True"]
+                     
+                       flagdata(vis, mode='list', inpfile=cmd)                    
+
+
         rflag -- Detect outliers based on the RFlag algorithm (ref. E.Greisen, AIPS, 2011).
                  The polarization expression is given by the correlation parameter.
 
@@ -1029,6 +1044,9 @@ The task will flag a subset of data based on the following modes of operation:
                    -- calculate avg of real and imag visibilities and their rms across channels
                    -- calculate the deviation of each channel from this avg, and the median-deviation
                    -- flag if deviation is larger than freqdevscale x medianDev
+
+                 It is recommended to extend the flags after running this algorithm. 
+                 See the sub-parameter extendflags below.
 
                  Example usage : 
 
@@ -1077,14 +1095,6 @@ The task will flag a subset of data based on the following modes of operation:
                           solutions in a gain table, it is advisable to pre-select subsets of 
                           correlations (or sols) on which to run one instance of RFlag. 
                           For example, correlation='RR,LL' or correlation='ABS sol1,sol2'.
-
-
-                  (4) It is usually helpful to extend the flags along time, frequency, and correlation 
-                       in a second step (via mode='extend') within the same flagging run.
-                       Example : 
-                           cmd=["mode='rflag' freqdevscale=3.0 ", 
-                                 "mode='extend' extendpols=True growtime=50.0 growaround=True"]
-                           flagdata(vis,mode='list',inpfile=cmd)                    
 
 
                ntime -- Timerange (in seconds or minutes) over which to buffer data before running 
@@ -1147,22 +1157,38 @@ The task will flag a subset of data based on the following modes of operation:
                spectralmin -- Flag whole spectrum if 'freqdev' is less than spectralmin ( fparm(5) in AIPS )
                     default: 0.0
 
+               extendflags -- Extend flags along time, frequency and correlation.
+                    default: True
+
+                    NOTE: It is usually helpful to extend the flags along time, frequency, 
+                          and correlation using this parameter, which will run the "extend"
+                          mode after "rflag" and extend the flags if more than 50% of the
+                          timeranges are already flagged, and if more than 80% of the channels
+                          are already flagged. It will also extend the flags to the other
+                          polarizations. The user may also set extendflags to False and run
+                          the "extend" mode in a second step within the same flagging run. See
+                          the example below:
+                    example : 
+                       cmd=["mode='rflag' freqdevscale=3.0 extendflags=False", 
+                            "mode='extend' extendpols=True growtime=50.0 growaround=True"]
+                     
+                       flagdata(vis, mode='list', inpfile=cmd)                    
 
 
         extend -- Extend and/or grow flags beyond what the basic algorithms detect.
-                        This mode will extend the accumulated flags available in the MS,
-                        regardless of which algorithm created them.
+                  This mode will extend the accumulated flags available in the MS,
+                  regardless of which algorithm created them.
 
-                        It is recommended that any autoflag algorithm be followed up by a
-                        flag extension.
+                  It is recommended that any autoflag (tfcrop, rflag) algorithm be followed 
+                  up by a flag extension.
                          
-                        Extensions will apply only within the selected data, according to the settings 
-                        of extendpols,growtime,growfreq,growaround, flagneartime,flagnearfreq.
+                  Extensions will apply only within the selected data, according to the settings 
+                  of extendpols,growtime,growfreq,growaround, flagneartime,flagnearfreq.
                         
-                        Note : Runtime summary counts in the logger can sometimes report larger
-                            flag percentages than what is actually flagged. This is because 
-                            extensions onto already-flagged data-points are counted as new flags. 
-                            An accurate flag count can be obtained via the summary mode.
+                  Note : Runtime summary counts in the logger can sometimes report larger
+                         flag percentages than what is actually flagged. This is because 
+                         extensions onto already-flagged data-points are counted as new flags. 
+                         An accurate flag count can be obtained via the summary mode.
 
                ntime -- Timerange (in seconds or minutes) over which to buffer data before running 
                         the algorithm.
