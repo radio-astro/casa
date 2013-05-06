@@ -50,6 +50,7 @@ void HistogramGraph::nextGraph(){
 void HistogramGraph::initPlot(){
 	histogram = new BinPlotWidget( false, false, false, NULL );
 	histogram->setDisplayPlotTitle( true );
+	histogram->setDisplayAxisTitles( true );
 
 	QHBoxLayout* boxLayout = new QHBoxLayout();
 	boxLayout->addWidget( histogram );

@@ -48,6 +48,7 @@
 #include <display/Utilities/Lowlevel.h>
 #include <display/DisplayDatas/DisplayDataOptions.h>
 #include <display/Utilities/ImageProperties.h>
+#include <display/Utilities/StatusSink.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -87,7 +88,7 @@ template <class T> class ImageInterface;
 // The main display window for the Qt version of the viewer.
 // </summary>
 
-class QtDisplayPanelGui : public QtPanelBase {
+class QtDisplayPanelGui : public QtPanelBase, public viewer::StatusSink {
 
   Q_OBJECT;	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
@@ -213,6 +214,8 @@ class QtDisplayPanelGui : public QtPanelBase {
 
   bool useNewRegions( ) const { return use_new_regions; }
 
+  // called to indicate application activation state... true -> activated, false -> deactivated
+  void activate( bool );
 
  public slots:
  
@@ -329,6 +332,9 @@ class QtDisplayPanelGui : public QtPanelBase {
     void ddRemoved(QtDisplayData*);
 
     void closed( const QtDisplayPanelGui * );
+
+	void cursorBoundary( QtDisplayPanel::CursorBoundaryCondition );
+	void cursorPosition( viewer::Position );
 
  protected slots:
 

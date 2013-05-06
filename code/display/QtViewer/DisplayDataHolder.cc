@@ -57,25 +57,35 @@ DisplayDataHolder::DisplayDataIterator DisplayDataHolder::endDD() const {
 
 bool DisplayDataHolder::exists(QtDisplayData* qdd) const {
 	bool exists = false;
-	DisplayDataIterator iter = dataList.begin();
-	while( iter != dataList.end() ) {
-		if(qdd == (*iter)){
-			exists = true;
-			break;
+	if ( dataList.size() > 0 ){
+		DisplayDataIterator iter = dataList.begin();
+		while( iter != dataList.end() ) {
+			if(qdd == (*iter)){
+				exists = true;
+				break;
+			}
+			iter++;
 		}
-		iter++;
 	}
 	return exists;
 }
 
 void DisplayDataHolder::setDDControlling( QtDisplayData* controlDD ){
-	controlling_dd = controlDD;
-	if ( imageTracker != NULL ){
-		imageTracker->masterImageSelected( controlling_dd );
+	if ( controlDD != NULL && exists( controlDD ) ){
+		if ( controlling_dd != controlDD ){
+			if ( imageTracker != NULL ){
+				imageTracker->masterImageSelected( controlDD );
+			}
+			if ( imageDisplayer != NULL ){
+				imageDisplayer->setControllingDD( controlDD );
+			}
+			controlling_dd = controlDD;
+		}
 	}
-	if ( imageDisplayer != NULL ){
-		imageDisplayer->setControllingDD( controlling_dd );
+	else {
+		controlling_dd = NULL;
 	}
+
 }
 
 QtDisplayData* DisplayDataHolder::getDDControlling( ) const {
@@ -151,8 +161,10 @@ void DisplayDataHolder::removeDDAll(){
 			imageTracker->imageRemoved( *iter );
 		}
 	}
+
 	dataList.resize(0);
 	controlling_dd = NULL;
+
 	//One more notification after the list has been cleared
 	//to update the master list.
 	if ( imageTracker != NULL ){

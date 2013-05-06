@@ -78,6 +78,13 @@ class QtViewer : public QtViewerBase {
   QtViewer( const std::list<std::string> &args, bool is_server=false, const char *dbus_name=0 );
   ~QtViewer();
 
+  // Called from casaviewer.cc, true indicates that this application has been activated,
+  // false indicates that it has been deactivated. The application (with OSX anyway)
+  // becomes deactivated when it looses application focus, e.g. when the user moves
+  // to "mission control" etc. This is useful for signaling that the mouse has left
+  // the display window... (in these cases where it leaves without dragging out)
+  void activate( bool );
+
   // name used to initialize connection to dbus
   static const QString &name( );
 
@@ -96,9 +103,9 @@ class QtViewer : public QtViewerBase {
   virtual void quit();
  
  
- signals:
- 
-  
+ private slots:
+	 void dpgDestroyed(QObject*);
+
  protected:
  
   QtDBusViewerAdaptor* dbus_;
@@ -108,6 +115,8 @@ class QtViewer : public QtViewerBase {
   static QString name_;
   QString dbus_name_;
   bool is_server_;
+  typedef vector<QtDisplayPanelGui*> panel_list_t;
+  panel_list_t panels;
     
 };
 

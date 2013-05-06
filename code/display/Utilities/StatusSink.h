@@ -1,4 +1,5 @@
-//# Copyright (C) 2005
+//# StatusSink.h: abstract base class (and null sink) for posting status messages.
+//# Copyright (C) 2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,36 +23,20 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
+//# $Id: QtDisplayPanelGui.qo.h,v 1.7 2006/10/10 21:42:05 dking Exp $
 
-#ifndef FITTERPOISSON_H_
-#define FITTERPOISSON_H_
-
-#include <guitools/Histogram/Fitter.h>
+#ifndef DISPLAY_STATUSSINK_H
+#define DISPLAY_STATUSSINK_H
+#include <string>
 
 namespace casa {
-/**
- * Fits Poisson curves to the histogram.
- */
+	namespace viewer {
+		class StatusSink {
+		public:
+			StatusSink( ) { }
+			virtual void status( const std::string &s, const std::string &type="info" ) = 0;
+		};
+	}
+}
 
-class FitterPoisson : public Fitter {
-public:
-	FitterPoisson();
-	void setLambda( double value );
-	double getLambda() const;
-	virtual QString getSolutionStatistics() const;
-	virtual bool doFit();
-	virtual void toAscii( QTextStream& stream ) const;
-	virtual void restrictDomain( double xMin, double xMax );
-	virtual ~FitterPoisson();
-	virtual void clearFit();
-
-private:
-	float getFitCount() const;
-	float solutionLambda;
-	float solutionHeight;
-	bool lambdaSpecified;
-	double lambda;
-};
-
-} /* namespace casa */
-#endif /* FITTERPOISSON_H_ */
+#endif

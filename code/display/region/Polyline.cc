@@ -89,7 +89,7 @@ Polyline::Polyline( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double
 	initPlot();
 }
 
-RegionInfo * Polyline::newInfoObject( ImageInterface<Float> *image ) {
+RegionInfo * Polyline::newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD * ) {
 	SliceRegionInfo* sliceRegion = NULL;
 	if ( image != NULL ){
 		RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();

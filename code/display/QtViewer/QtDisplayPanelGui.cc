@@ -582,6 +582,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 
 	connect(qdp_,  SIGNAL(registrationChange()),
 			SLOT(hideImageMenus()));
+
+	// parallel cursor tracking signals...
+	connect( qdp_, SIGNAL(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)),
+			 SIGNAL(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)) );
+	connect( qdp_, SIGNAL(cursorPosition(viewer::Position)),
+			 SIGNAL(cursorPosition(viewer::Position)) );
+
 	updateDDMenus_();
 
 
@@ -1321,6 +1328,7 @@ void QtDisplayPanelGui::removeAllDDs() {
 	//Remove them all from the master list
 	displayDataHolder->removeDDAll();
 	
+
 	//Clean up for each one.
 	for ( int i = 0; i < removeDDs.size(); i++ ){
 		emit ddRemoved( removeDDs[i] );
@@ -1333,6 +1341,13 @@ void QtDisplayPanelGui::removeAllDDs() {
 	if ( regionDock_ ){
 		regionDock_->updateRegionStats( );
 	}
+	if ( fitTool != NULL ){
+		fitTool->setImage( NULL );
+	}
+	if ( histogrammer != NULL ){
+		histogrammer->setImage( NULL );
+	}
+
 	updateFrameInformation();
 }
 
@@ -1405,6 +1420,8 @@ std::string QtDisplayPanelGui::outputRegions( std::list<viewer::QtRegionState*> 
 	}
 	return regionDock_->outputRegions( regions, file, format, ds9_csys );
 }
+
+void QtDisplayPanelGui::activate( bool state ) { qdp_->activate(state); }
 
 QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
 	// retrieve DD with given name (0 if none).

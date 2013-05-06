@@ -16,9 +16,10 @@ and selection. It does not support multiple channel selections, which are separa
 a semi-colon. If there is an spw selection, it will re-index the spws starting from 0.
 
 \subsection{Partition and Multi-MS support}
-Task mstransform can do everything that task partition does and more. It supports
-channel selections and re-indexing of spw sub-tables. The sub-tables are consolidated
-in the output MMS, which does not happen in task partition. %Explain POINTING,SYSCAL tables
+From CASA 4.1.0 onwards, task partition uses the MSTransform framework.
+Task mstransform can partition an MS to create an MMS using different separation
+axes. The default is to separate using both scan and spw axes.
+It supports channel selections and re-indexing of spw and ddi sub-tables. 
 
 The user has the option to create an output MMS in parallel (using simple_cluster) or
 in sequential. Set the parameter {\it parallel} to True to use simple_cluster. Note that

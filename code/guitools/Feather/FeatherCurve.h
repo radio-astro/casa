@@ -68,6 +68,7 @@ private:
 
 	void setCurvePenColor( const QColor& color );
 	bool isWeightCurve() const;
+	bool isSumCurve() const;
 	double logarithm( double value ) const;
 	void doLogs( double* values, int count ) const;
 

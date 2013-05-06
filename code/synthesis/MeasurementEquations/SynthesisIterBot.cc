@@ -62,7 +62,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
 	SynthesisIterBot::SynthesisIterBot() : actionRequestSync(new SIIterBot_callback( )),
 										   itsLoopController(new SIIterBot_state(actionRequestSync)),
-										   dbus_thread(NULL) { }
+										   dbus_thread(NULL) {
+		fprintf( stderr, ">>>>>>\t\tSynthesisIterBot::~SynthesisIterBot(0x%x)\n", this );
+		fflush( stderr );
+	}
 
 	void SynthesisIterBot::openDBus( ) {
 		if ( dbus_thread != NULL ) return;

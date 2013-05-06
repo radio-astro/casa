@@ -71,11 +71,10 @@ SearchMoleculesWidget::SearchMoleculesWidget(QWidget *parent)
 	progressBar.setWindowTitle( "Line Search");
 	progressBar.setLabelText( "Searching for molecular lines ...");
 	progressBar.setWindowModality( Qt::WindowModal );
-	//Qt::WindowFlags flags = progressBar.windowFlags();
-	//flags = flags & ~Qt::WindowCloseButtonHint;
+
 	Qt::WindowFlags flags = Qt::Dialog;
 	flags |= Qt::FramelessWindowHint;
-	progressBar.setWindowFlags( flags/*(Qt::CustomizeWindowHint | Qt::WindowTitleHint) & ~Qt::WindowCloseButtonHint*/);
+	progressBar.setWindowFlags( flags);
 	progressBar.setMinimum(0);
 	progressBar.setMaximum(0);
 	connect( &progressBar, SIGNAL(canceled()), this, SLOT(stopSearch()));

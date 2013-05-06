@@ -52,15 +52,22 @@ float FitterPoisson::getFitCount() const {
 	return count;
 }
 
+void FitterPoisson::restrictDomain( double xMin, double xMax ){
+	//Negative values don't make sense for a Poisson distribution.
+	domainMin = qMax( 0.0, xMin );
+	domainMax = qMax( 0.0, xMax );
+	resetDataWithLimits();
+}
 
 QString FitterPoisson::getSolutionStatistics() const {
 	QString result;
 	if ( solutionConverged ){
 		result.append( "The following fit was found:\n\n");
-		result.append( formatResultLine( "Lambda:", solutionLambda));
+		result.append( formatResultLine( "Lambda:", solutionLambda, false)+ " "+ units + "\n");
 		result.append( formatResultLine( "Height:", solutionHeight));
 		result.append( formatResultLine( "Chi-square:", solutionChiSquared));
-		result.append( formatResultLine( "RMSE:", solutionRMS));
+		int count = actualXValues.size();
+		result.append( formatResultLine( "Degrees of Freedom:", count));
 	}
 	else {
 		result.append( "Fit did not converge.\n");
@@ -80,6 +87,9 @@ bool FitterPoisson::doFit(){
 		errorMsg = "Could not fit a Poisson distribution because the lambda value: "+lambdaStr+" was not positive.";
 	}
 	else {
+		//Shouldn't change anything if they have already been
+		//set, but we only want to fit nonnegative values.
+		restrictDomain( domainMin, domainMax );
 		fitValues.resize( actualXValues.size());
 		NonLinearFitLM<Float> fitter(0);
 
@@ -115,7 +125,7 @@ bool FitterPoisson::doFit(){
 				    fitSuccessful = false;
 				}
 				else {
-					solutionRMS = solutionChiSquared / actualYValues.size();
+					//solutionRMS = solutionChiSquared / actualYValues.size();
 					solutionLambda = solution( 0, 0 );
 					solutionHeight = solution( 1, 0 );
 					PoissonFunction<Float> poissonFit(solutionLambda, solutionHeight );

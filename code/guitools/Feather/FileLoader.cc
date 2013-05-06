@@ -56,6 +56,8 @@ FileLoader::FileLoader(QWidget *parent)
 	connect( ui.lowResButton, SIGNAL(clicked()), this, SLOT(fileLowResolutionChanged()));
 	connect( ui.highResButton, SIGNAL(clicked()), this, SLOT(fileHighResolutionChanged()));
 	connect( ui.outputButton, SIGNAL(clicked()), this, SLOT( outputDirectoryChanged()));
+	connect( ui.dirtyImageButton, SIGNAL(clicked()), this, SLOT( dirtyImageChanged()));
+
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(filesChanged()));
 	connect( ui.cancelButton, SIGNAL( clicked()), this, SLOT(filesReset()));
@@ -111,10 +113,19 @@ QString FileLoader::getFilePathOutput() const {
 	return outputDirectory + outputFile;
 }
 
+QString FileLoader::getFileDirty() const{
+	return dirtyImageFile;
+}
+
 void FileLoader::directoryChanged(const QModelIndex& modelIndex ){
 	QString path = fileModel->filePath( modelIndex );
 	//ui.treeWidget->setCurrentIndex( modelIndex );
 	ui.directoryLineEdit->setText( path );
+}
+
+void FileLoader::dirtyImageChanged(){
+	QString emptyWarning;
+	fileChanged( ui.dirtyImageLineEdit, emptyWarning, false );
 }
 
 
@@ -152,7 +163,9 @@ void FileLoader::fileChanged( QLineEdit* destinationLineEdit,
 		destinationLineEdit->setText( path );
 	}
 	else {
-		QMessageBox::warning( this, "", emptyWarning );
+		if ( emptyWarning.length() > 0 ){
+			QMessageBox::warning( this, "", emptyWarning );
+		}
 	}
 }
 
@@ -214,6 +227,7 @@ void FileLoader::filesReset(){
 	ui.lowResolutionLineEdit->setText( lowResolutionImageFile );
 	ui.highResolutionLineEdit->setText( highResolutionImageFile );
 	ui.outputImageFileLineEdit->setText( outputFile );
+	ui.dirtyImageLineEdit->setText(dirtyImageFile );
 	ui.outputImageDirectoryLineEdit->setText( outputDirectory );
 	ui.saveOutputCheckBox->setChecked( saveOutput );
 	this->close();

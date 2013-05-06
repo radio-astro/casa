@@ -37,6 +37,7 @@
 #include <display/Display/Options.h>
 #include <display/Fit/RegionBox.h>
 #include <display/Fit/ColorComboDelegate.h>
+#include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 
 namespace casa {
 
@@ -398,7 +399,12 @@ void FindSourcesDialog::findSources(){
 	clearSkyOverlay();
 
 	ImageAnalysis* analysis = new ImageAnalysis( image );
-	Record region = makeRegion();
+	bool validRegion = false;
+	Record region = makeRegion( &validRegion );
+	if ( !validRegion ){
+		QMessageBox::warning( this, "Invalid Region", "Region was not valid for image.");
+		return;
+	}
 	QString cutoffStr = ui.cutoffLineEdit->text();
 	bool cutOffValid = false;
 	double cutoff = populateCutOff( &cutOffValid );
@@ -422,7 +428,7 @@ void FindSourcesDialog::findSources(){
 	}
 }
 
-Record FindSourcesDialog::makeRegion() const {
+Record FindSourcesDialog::makeRegion( bool * valid ) const {
 	IPosition pos = image->shape();
 	String regionName;
 	String channelStr = String::toString( channel ) + "~" + String::toString( channel );
@@ -434,14 +440,26 @@ Record FindSourcesDialog::makeRegion() const {
 	CasacRegionManager crm( cSys );
 	String diagnostics;
 	String infile = image->name();
-	Record region = crm.fromBCS( diagnostics, channelCount, stokesStr,
-			NULL, regionName, channelStr, CasacRegionManager::USE_FIRST_STOKES,
-			pixelBox, pos, infile);
+	Record region;
+	if ( pixelBox.length() == 0 ){
+		*valid = false;
+	}
+	else {
+		try {
+			region = crm.fromBCS( diagnostics, channelCount, stokesStr,
+					NULL, regionName, channelStr, CasacRegionManager::USE_FIRST_STOKES,
+					pixelBox, pos, infile);
+		}
+		catch( AipsError& error ){
+			QString errorMsg( error.getMesg().c_str());
+			qDebug() << "Error making region: "<<errorMsg;
+			*valid = false;
+		}
+	}
 	return region;
 }
 
 void FindSourcesDialog::createTable( ){
-	TableDesc::
 	TableDesc td("tTableDesc", "1", TableDesc::New);
 	const String TYPE_COLUMN("Type");
 	const String LONG_COLUMN("Long");
@@ -619,23 +637,33 @@ void FindSourcesDialog::initializeFileManagement(){
 //              Image and Region Updates
 //---------------------------------------------------------------
 
+void FindSourcesDialog::populateImageBounds(){
+	ImageStatsCalculator calc( image, NULL, "", false);
+	Record result = calc.calculate();
+	blcVector = result.asArrayInt( "blc");
+	trcVector = result.asArrayInt( "trc");
+}
+
+QString FindSourcesDialog::getImagePixelBox() const {
+	//No regions so just use the image as bounds.
+	QString pixelBoxStr;
+	const QString ZERO_STR( "0");
+	const QString COMMA_STR( ",");
+	pixelBoxStr.append( ZERO_STR + COMMA_STR );
+	pixelBoxStr.append( ZERO_STR + COMMA_STR );
+	IPosition imageShape = image->shape();
+	pixelBoxStr.append( QString::number( imageShape(0) - 1) + COMMA_STR);
+	pixelBoxStr.append( QString::number( imageShape(1) - 1));
+	return pixelBoxStr;
+}
 
 void FindSourcesDialog::populatePixelBox(){
 	QString pixelBoxStr("");
-	const QString COMMA_STR( ",");
 	if ( currentRegionId != DEFAULT_KEY ){
-		pixelBoxStr = regions[currentRegionId]->toString();
+		pixelBoxStr = regions[currentRegionId]->toString( blcVector, trcVector);
 	}
 	else {
-		//No regions so just use the image as bounds.
-		const QString ZERO_STR( "0");
-		pixelBoxStr.append( ZERO_STR + COMMA_STR );
-		pixelBoxStr.append( ZERO_STR + COMMA_STR );
-		IPosition imageShape = image->shape();
-		if ( imageShape.nelements() >= 2 ){
-			pixelBoxStr.append( QString::number( imageShape(0) - 1) + COMMA_STR);
-			pixelBoxStr.append( QString::number( imageShape(1) - 1));
-		}
+		pixelBoxStr = getImagePixelBox();
 	}
 	pixelBox = pixelBoxStr.toStdString();
 }
@@ -651,6 +679,7 @@ void FindSourcesDialog::setImage( ImageInterface<Float>* img ){
 			QTableWidgetItem* decHeaderItem = new QTableWidgetItem( axisNames[1].c_str());
 			ui.sourceTable->setHorizontalHeaderItem( static_cast<int>(DEC_COL), decHeaderItem);
 		}
+		populateImageBounds();
 	}
 }
 
@@ -708,7 +737,7 @@ bool FindSourcesDialog::updateRegion( int id, viewer::region::RegionChanges chan
 QString FindSourcesDialog::getRegionString() const {
 	QString str;
 	if ( regions.contains( currentRegionId)){
-		str = regions[currentRegionId]->toStringLabelled();
+		str = regions[currentRegionId]->toStringLabelled(blcVector, trcVector);
 	}
 	return str;
 }

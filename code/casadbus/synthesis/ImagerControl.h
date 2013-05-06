@@ -57,9 +57,11 @@ namespace casa {
 #endif
 							{
 		public:
-			static std::string dbusName( ) { return ""; }
+			static std::string connection_name( ) { return "edu.nrao.casa.SynthImager001"; }
+			static std::string interface_name( ) { return "edu.nrao.casa.SynthImager"; }
+			static std::string object_name( ) { return "/casa/synthimager"; }
 
-			ImagerControl( const std::string& serviceName=dbusName( ) );
+			ImagerControl( const std::string &connection_name_=connection_name( ), const std::string &object_name_=object_name( ) );
 			~ImagerControl( );
 
 		    bool incrementController( ) {

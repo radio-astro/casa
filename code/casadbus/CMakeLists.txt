@@ -101,6 +101,10 @@ install (FILES
 	DESTINATION include/casacode/casadbus/session
 	)
 install (FILES
+	synthesis/ImagerControl.h
+	DESTINATION include/casacode/casadbus/synthesis
+	)
+install (FILES
 	types/functor.h
 	types/nullptr.h
 	types/ptr.h

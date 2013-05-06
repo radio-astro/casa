@@ -1055,8 +1055,14 @@ FlagAgentRFlag::computeAntennaPairFlags(const vi::VisBuffer2 &visBuffer, VisMapp
 		field_spw_scutof_histogram_sum_p[field_spw] = vector<Double>(nChannels,0);
 		field_spw_scutof_histogram_counts_p[field_spw] = vector<Double>(nChannels,0);
 		field_spw_scutof_histogram_sum_squares_p[field_spw] = vector<Double>(nChannels,0);
+
+		if (field_spw_frequency_p.find(field_spw) == field_spw_frequency_p.end())
+		{
+			field_spw_frequency_p[field_spw] = vector<Double>(nChannels,0);
+			initFreq = True;
+		}
+
 		if (doflag_p) prepass_p = true;
-		initFreq = True;
 	}
 
 

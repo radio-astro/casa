@@ -172,7 +172,7 @@ bool FitterGaussian::doFit(){
 					solutionCenter = solution( 0, 1 );
 					solutionFWHM= solution( 0, 2 );
 					solutionChiSquared = fitgauss.chisquared();
-					solutionRMS = fitgauss.RMS();
+					//solutionRMS = fitgauss.RMS();
 					solutionConverged = fitgauss.converged();
 					fitSuccessful =fitgauss.converged();
 					if ( fitSuccessful ){
@@ -199,23 +199,22 @@ bool FitterGaussian::doFit(){
 QString FitterGaussian::getSolutionStatistics() const {
 	QString stats;
 	if ( solutionConverged ){
-		//if ( solutionRMS < rmsError ){
-			stats.append( "The following fit was found:\n\n");
-		/*}
-		else {
-			stats.append( "No fit satisfying RMS criterion was found.\nBest available fit:\n\n");
-		}*/
-		stats.append( formatResultLine( "Center:", solutionCenter));
+		stats.append( "The following fit was found:\n\n");
+		int valueCount = actualXValues.size();
+		const QString END_LINE( "\n");
+		stats.append( formatResultLine( "Center:", solutionCenter, false ) + " "+ units + END_LINE);
 		stats.append( formatResultLine( "Peak:", solutionPeak));
-		stats.append( formatResultLine( "FWHM:", solutionFWHM));
+		stats.append( formatResultLine( "FWHM:", solutionFWHM, false )+" "+ units + END_LINE );
 		stats.append( formatResultLine( "Chi-square:", solutionChiSquared));
-		stats.append( formatResultLine( "RMS:", solutionRMS));
+		stats.append( formatResultLine( "Degrees of Freedom:", valueCount));
 	}
 	else {
 		stats.append( "Fit did not converge.\n");
 	}
 	return stats;
 }
+
+
 
 void FitterGaussian::clearFit(){
 	Fitter::clearFit();
@@ -226,7 +225,6 @@ void FitterGaussian::clearFit(){
 	solutionCenter = -1;
 	solutionFWHM = -1;
 	solutionChiSquared = -1;
-	solutionRMS = std::numeric_limits<float>::max();
 	solutionConverged = false;
 }
 
@@ -234,9 +232,9 @@ void FitterGaussian::toAscii( QTextStream& stream ) const {
 	if ( solutionConverged ){
 		const QString END_LINE( "\n" );
 		stream << "#Gaussian Fit" << END_LINE;
-		stream << "#Center: "<< solutionCenter << END_LINE;
+		stream << "#Center: "<< solutionCenter << " " << units << END_LINE;
 		stream << "#Peak: "<< solutionPeak << END_LINE;
-		stream << "#FWHM: "<< solutionFWHM << END_LINE;
+		stream << "#FWHM: "<< solutionFWHM << " " << units << END_LINE;
 		Fitter::toAscii( stream );
 	}
 }

@@ -175,6 +175,9 @@ void BinPlotWidget::resetAxisTitles(){
 		if ( image != NULL ){
 			Unit unit = image->units();
 			QString unitStr( unit.getName().c_str());
+			if ( fitWidget != NULL ){
+				fitWidget->setUnits( unitStr );
+			}
 			xAxisTitle.append( "("+unitStr+")");
 		}
 
@@ -1360,10 +1363,15 @@ void BinPlotWidget::minMaxChanged(){
 		pair<double,double> minMaxValues = getMinMaxValues();
 		rectX = minMaxValues.first;
 		rectWidth = qAbs( minMaxValues.second - minMaxValues.first );
-		resetRectangleMarker();
-		rectMarker->show();
-		if ( fitWidget != NULL ){
-			fitWidget->restrictDomain( minMaxValues.first, minMaxValues.second );
+		if ( rectWidth > 0 ){
+			resetRectangleMarker();
+			rectMarker->show();
+			if ( fitWidget != NULL ){
+				fitWidget->restrictDomain( minMaxValues.first, minMaxValues.second );
+			}
+		}
+		else {
+			rectMarker->hide();
 		}
 		binPlot.replot();
 		emit rangeChanged();

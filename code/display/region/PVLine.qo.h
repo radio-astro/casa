@@ -31,6 +31,7 @@
 
 #include <display/region/Region.qo.h>
 #include <display/region/QtRegionSource.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <casa/BasicSL/String.h>
 #include <list>
 
@@ -103,6 +104,8 @@ namespace casa {
 
 		public slots:
 			void createPVImage(const std::string&,const std::string&,int);
+			void cursorBoundary(QtDisplayPanel::CursorBoundaryCondition);
+			void cursorPosition(viewer::Position);
 
 		private slots:
 			void dpg_deleted(QObject*);
@@ -119,7 +122,7 @@ namespace casa {
 			void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
 			std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
 			ImageRegion *get_image_region( DisplayData* ) const;
-			RegionInfo *newInfoObject( ImageInterface<Float> *image );
+			RegionInfo *newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD * );
 
 			virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
 			                                   std::vector<std::pair<double,double> > &world_pts ) const;
@@ -158,6 +161,8 @@ namespace casa {
 			bool within_vertex_handle( double x, double y ) const;
 			unsigned int check_handle( double x, double y ) const;
 			std::string worldCoordinateStrings( double x, double y );
+			bool draw_cursor_point;
+			double cursor_point_x, cursor_point_y;
 		};
 	}
 }

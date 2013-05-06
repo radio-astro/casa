@@ -28,6 +28,9 @@
 
 #include <casa/Containers/Record.h>
 #include <casa/OS/File.h>
+#include <images/Images/TempImage.h>
+#include <images/Images/SubImage.h>
+
 #include <images/Regions/ImageRegion.h>
 #include <images/Regions/WCBox.h>
 #include <lattices/Lattices/LCBox.h>
@@ -36,6 +39,8 @@
 
 #include <imageanalysis/Annotations/AnnRegion.h>
 #include <imageanalysis/Annotations/RegionTextList.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 #include <casa/namespace.h>
 #include <memory>
@@ -53,7 +58,7 @@ CasacRegionManager::CasacRegionManager(
 CasacRegionManager::~CasacRegionManager() {}
 
 vector<uInt> CasacRegionManager::consolidateAndOrderRanges(
-	const vector<uInt>& ranges
+	uInt& nSelected, const vector<uInt>& ranges
 ) {
 	uInt arrSize = ranges.size()/2;
 	uInt arrMin[arrSize];
@@ -97,6 +102,10 @@ vector<uInt> CasacRegionManager::consolidateAndOrderRanges(
 			consol.push_back(min);
 			consol.push_back(max);
 		}
+	}
+	nSelected = 0;
+	for (uInt i=0; i<consol.size()/2; i++) {
+		nSelected += consol[2*i + 1] - consol[2*i] + 1;
 	}
 	return consol;
 }
@@ -201,7 +210,8 @@ vector<uInt> CasacRegionManager::_setPolarizationRanges(
 			    << " does not match a known polarization." << LogIO::EXCEPTION;
 		}
 	}
-	return consolidateAndOrderRanges(ranges);
+	uInt nSel;
+	return consolidateAndOrderRanges(nSel, ranges);
 }
 
 Bool CasacRegionManager::_supports2DBox(Bool except) const {
@@ -837,42 +847,100 @@ String CasacRegionManager::_stokesFromRecord(
 	return stokes;
 }
 
+vector<uInt> CasacRegionManager::_initSpectralRanges(
+	uInt& nSelectedChannels, const IPosition& imShape
+) const {
+	vector<uInt> ranges(0);
+	if (! getcoordsys().hasSpectralAxis()) {
+		nSelectedChannels = 0;
+		return ranges;
+	}
+	uInt nChannels = imShape[getcoordsys().spectralAxisNumber()];
+	ranges.push_back(0);
+	ranges.push_back(nChannels - 1);
+	nSelectedChannels = nChannels;
+	return ranges;
+}
+
+
+vector<uInt> CasacRegionManager::setSpectralRanges(
+	uInt& nSelectedChannels,
+	const Record *const regionRec, const IPosition& imShape
+) const {
+	if (regionRec == 0 || ! getcoordsys().hasSpectralAxis()) {
+		return _initSpectralRanges(nSelectedChannels, imShape);
+	}
+	else {
+		return _spectralRangeFromRegionRecord(nSelectedChannels, regionRec, imShape);
+	}
+}
+
 vector<uInt> CasacRegionManager::setSpectralRanges(
 	String specification, uInt& nSelectedChannels,
 	const IPosition& imShape
 ) const {
 	LogOrigin origin("CasacRegionManager", __FUNCTION__);
 	*_getLog() << origin;
-
-	vector<uInt> ranges(0);
-	if (! getcoordsys().hasSpectralAxis()) {
-		if (! specification.empty()) {
-			*_getLog() << LogIO::WARN << "Channel specification is "
-				<< "not empty but the coordinate system has no spectral axis."
-				<< "Channel specification will be ignored" << LogIO::POST;
-		}
+	specification.trim();
+	String x = specification;
+	x.upcase();
+	if (x.empty() || x == ALL) {
+		return _initSpectralRanges(nSelectedChannels, imShape);
+	}
+	else if (! getcoordsys().hasSpectralAxis()) {
+		*_getLog() << LogIO::WARN << "Channel specification is "
+			<< "not empty but the coordinate system has no spectral axis."
+			<< "Channel specification will be ignored" << LogIO::POST;
 		nSelectedChannels = 0;
-		return ranges;
+		return vector<uInt>(0);
 	}
 	else if (specification.contains("range")) {
 		// this is a specification in the "new" ASCII region format
 		return _spectralRangeFromRangeFormat(nSelectedChannels, specification, imShape);
 	}
-	specification.trim();
-	specification.upcase();
-	uInt nChannels = imShape[getcoordsys().spectralAxisNumber()];
-
-	if (specification.empty() || specification == ALL) {
-		ranges.push_back(0);
-		ranges.push_back(nChannels - 1);
-		nSelectedChannels = nChannels;
-		return ranges;
-	}
 	else {
+		uInt nChannels = imShape[getcoordsys().spectralAxisNumber()];
 		return _spectralRangesFromTraditionalFormat(
 			nSelectedChannels, specification, nChannels
 		);
 	}
+}
+
+vector<uInt> CasacRegionManager::_spectralRangeFromRegionRecord(
+	uInt& nSelectedChannels, const Record *const regionRec,
+	const IPosition& imShape
+) const {
+	const CoordinateSystem& csys = getcoordsys();
+	TempImage<Float> x(imShape, csys);
+	x.set(0);
+	SubImage<Float> subimage = SubImageFactory<Float>::createSubImage(
+		x, *regionRec, "", _getLog(), False, AxesSpecifier(), False, True
+	);
+	ImageMetaData<Float> md(&subimage);
+	uInt nChan = md.nChannels();
+	const SpectralCoordinate& subsp = subimage.coordinates().spectralCoordinate();
+	Double subworld;
+	subsp.toWorld(subworld, 0);
+	const SpectralCoordinate& imsp = csys.spectralCoordinate();
+	Double pixOff;
+	imsp.toPixel(pixOff, subworld);
+	Int specAxisNumber = csys.spectralAxisNumber();
+	IPosition start(subimage.ndim(), 0);
+	ArrayLattice<Bool> mask(subimage.getMask());
+	IPosition planeShape = subimage.shape();
+	vector<uInt> myList;
+	planeShape[specAxisNumber] = 1;
+	for (uInt i=0; i<nChan; i++) {
+		start[specAxisNumber] = i;
+		Array<Bool> maskSlice;
+		mask.getSlice(maskSlice, start, planeShape);
+		if (anyTrue(maskSlice)) {
+			uInt real = i + (uInt)rint(pixOff);
+			myList.push_back(real);
+			myList.push_back(real);
+		}
+	}
+	return consolidateAndOrderRanges(nSelectedChannels, myList);
 }
 
 vector<uInt> CasacRegionManager::_spectralRangeFromRangeFormat(
@@ -1020,11 +1088,7 @@ vector<uInt> CasacRegionManager::_spectralRangesFromTraditionalFormat(
 		ranges.push_back(min);
 		ranges.push_back(max);
 	}
-	vector<uInt> consolidatedRanges = consolidateAndOrderRanges(ranges);
-	nSelectedChannels = 0;
-	for (uInt i=0; i<consolidatedRanges.size()/2; i++) {
-		nSelectedChannels += consolidatedRanges[2*i + 1] - consolidatedRanges[2*i] + 1;
-	}
+	vector<uInt> consolidatedRanges = consolidateAndOrderRanges(nSelectedChannels, ranges);
 	return consolidatedRanges;
 }
 

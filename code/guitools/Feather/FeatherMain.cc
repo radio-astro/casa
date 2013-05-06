@@ -28,6 +28,7 @@
 #include <images/Images/ImageUtilities.h>
 #include <casa/Utilities/PtrHolder.h>
 #include <QDebug>
+#include <QDir>
 #include <QMap>
 #include <QMessageBox>
 
@@ -184,17 +185,30 @@ void FeatherMain::functionColorsChanged(){
 	QColor scatterPlotColor = preferencesColor.getScatterPlotColor();
 	QColor dishDiameterLineColor = preferencesColor.getDishDiameterLineColor();
 	QColor zoomRectColor = preferencesColor.getZoomRectColor();
-	plotHolder->setColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor );
+	QColor sumColor = preferencesColor.getSumColor();
+	plotHolder->setColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor, sumColor );
+}
+
+QString FeatherMain::getFileName( QString path ) const {
+	QString fileName = path;
+	int slashIndex = path.lastIndexOf( QDir::separator() );
+	if ( slashIndex >= 0 ){
+		fileName = fileName.mid(slashIndex + 1);
+	}
+	return fileName;
 }
 
 void FeatherMain::imageFilesChanged(){
-	QString lowResolutionPath = fileLoader.getFilePathLowResolution();
-	QString highResolutionPath = fileLoader.getFilePathHighResolution();
-	QString outputPath = fileLoader.getFilePathOutput();
+	//Store the full path
+	lowResImagePath = fileLoader.getFilePathLowResolution();
+	highResImagePath = fileLoader.getFilePathHighResolution();
+	outputImagePath = fileLoader.getFilePathOutput();
 
-	ui.lowResolutionLabel->setText( lowResolutionPath );
-	ui.highResolutionLabel->setText( highResolutionPath );
-	ui.outputLabel->setText( outputPath );
+	//Only show the file names on the GUI.
+
+	ui.lowResolutionLabel->setText( getFileName(lowResImagePath) );
+	ui.highResolutionLabel->setText( getFileName( highResImagePath ));
+	ui.outputLabel->setText( getFileName( outputImagePath ));
 	bool imagesOK = loadImages();
 	ui.featherButton->setEnabled( imagesOK );
 	if ( !imagesOK ){
@@ -256,8 +270,6 @@ void FeatherMain::openPreferencesColor(){
 
 bool FeatherMain::loadImages(){
 	bool imagesGenerated = true;
-	lowResImagePath = ui.lowResolutionLabel->text();
-	highResImagePath = ui.highResolutionLabel->text();
 	if ( lowResImage != NULL ){
 		delete lowResImage;
 		lowResImage = NULL;
@@ -301,6 +313,7 @@ void FeatherMain::addOriginalDataToPlots(){
 	Vector<Float> intyAmpOrig;
 	featherWorker.getFTCutIntImage(intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
 	plotHolder->setInterferometerDataOriginal( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
+
 }
 
 void FeatherMain::clearPlots(){
@@ -338,7 +351,7 @@ void FeatherMain::featherImages() {
 		thread = new FeatherThread();
 		connect( thread, SIGNAL( finished() ), this, SLOT(featheringDone()));
 		thread->setFeatherWorker( &featherWorker );
-		QString outputImagePath = ui.outputLabel->text();
+		//QString outputImagePath = ui.outputLabel->text();
 		thread->setSaveOutput( fileLoader.isOutputSaved(), outputImagePath );
 		thread->start();
 		progressMeter.show();
@@ -359,11 +372,16 @@ void FeatherMain::featheringDone(){
 	plotHolder->setInterferometerWeight( thread->intxWeight, thread->intxAmpWeight, thread->intyWeight, thread->intyAmpWeight );
 	plotHolder->setSingleDishData( thread->sDxCut, thread->sDxAmpCut, thread->sDyCut, thread->sDyAmpCut );
 	plotHolder->setInterferometerData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut );
+
+
 	//In case we are zoomed on the original data, this will reload it, unzoomed.
 	addOriginalDataToPlots();
+
+	plotHolder->addSumData();
 	plotHolder->updateScatterData();
-	plotHolder->refreshPlots();
+
 	plotHolder->layoutPlotWidgets();
+	plotHolder->refreshPlots();
 
 	//Post a message if we could not save the output image.
 	if ( fileLoader.isOutputSaved() ){

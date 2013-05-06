@@ -761,6 +761,19 @@ void MSTransformDataHandler::open()
 		throw(MSSelectionNullSelection("MSSelectionNullSelection : The selected table has zero rows."));
 	}
 
+	// jagonzal (CAS-5076): Reindex state column when there is scan selection
+    std::map<Int, Int>::iterator stateRemapperIter;
+    for (	stateRemapperIter = splitter_p->stateRemapper_p.begin();
+    		stateRemapperIter != splitter_p->stateRemapper_p.end();
+    		stateRemapperIter++)
+    {
+    	inputOutputScanIntentIndexMap_p[stateRemapperIter->first] = stateRemapperIter->second;
+
+    	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "State " << stateRemapperIter->first << " mapped to " << stateRemapperIter->second << LogIO::POST;
+    }
+
+
 	selectedInputMs_p = &(splitter_p->mssel_p);
 	outputMs_p = &(splitter_p->msOut_p);
 	selectedInputMsCols_p = splitter_p->mscIn_p;

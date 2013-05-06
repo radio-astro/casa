@@ -29,6 +29,7 @@
 #include <display/region/PVLine.qo.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
+#include <display/Display/Position.h>
 #include <vector>
 
 #include <display/Display/WorldCanvasHolder.h>
@@ -57,8 +58,8 @@ namespace casa {
 		PVLine::PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
 		                bool hold_signals ) :	Region( "p/v line", wc, d,
 			                        new QtPVLineState(QString("p/v line")),hold_signals ),
-			pt1_x(x1), pt1_y(y1),
-			pt2_x(x2), pt2_y(y2), sub_dpg(0) {
+			pt1_x(x1), pt1_y(y1), pt2_x(x2), pt2_y(y2),
+			sub_dpg(0), draw_cursor_point(false) {
 			// center_x = linear_average(pt1_x,pt2_x);
 			// center_y = linear_average(pt1_y,pt2_y);
 			initHistogram();
@@ -70,7 +71,7 @@ namespace casa {
 		PVLine::PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
 		                bool hold_signals) : Region( "p/v line", wc, rs->dock( ), new QtPVLineState(QString("p/v line")), hold_signals ),
 			pt1_x(x1), pt1_y(y1),
-			pt2_x(x2), pt2_y(y2), sub_dpg(0) {
+			pt2_x(x2), pt2_y(y2), sub_dpg(0), draw_cursor_point(false) {
 			// center_x = linear_average(pt1_x,pt2_x);
 			// center_y = linear_average(pt1_y,pt2_y);
 			initHistogram();
@@ -84,7 +85,7 @@ namespace casa {
 		                QtMouseToolNames::PointRegionSymbols sym ) :
 			Region( name, wc, d, new QtPVLineState(QString("p/v line"), sym ),
 			        hold_signals ), pt1_x(x1),
-			pt1_y(y1), pt2_x(x2), pt2_y(y2), sub_dpg(0) {
+			pt1_y(y1), pt2_x(x2), pt2_y(y2), sub_dpg(0), draw_cursor_point(false) {
 			complete = true;
 			refresh_state_gui( );	/*** update position info ***/
 		}
@@ -410,7 +411,7 @@ namespace casa {
 			pc->drawLine( x1, y1, x2, y2 );
 			popDrawingEnv( );
 
-			if ( selected && memory::nullptr.check( creating_region ) ) {
+			if ( (selected || draw_cursor_point) && memory::nullptr.check( creating_region ) ) {
 
 				int s = 4;
 
@@ -445,6 +446,13 @@ namespace casa {
 						pc->drawEllipse( x2, y2, s * 2.0 + 1, s * 2.0 + 1, 0.0 );
 					}
 					popDrawingEnv( );
+				}
+				if ( draw_cursor_point ) {
+					try {
+						int curx, cury;
+						linear_to_screen( wc_, cursor_point_x, cursor_point_y, curx, cury );
+						pc->drawEllipse( curx, cury, 5, 5, 0.0 );
+					} catch(...) { }
 				}
 			}
 		}
@@ -693,7 +701,12 @@ namespace casa {
 		}
 
 
-		RegionInfo *PVLine::newInfoObject( ImageInterface<Float> *image ) {
+		RegionInfo *PVLine::newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD *dd ) {
+
+			// cannot create P/V raster for an image without a spectral axis...
+			const CoordinateSystem &cs = image->coordinates( );
+			if ( dd->hasMovieDimension( ) == false || cs.hasSpectralAxis( ) == false ) return 0;
+
 			RegionInfo::stats_t* dd_stats = new RegionInfo::stats_t();
 
 			double ppt1_x, ppt1_y, ppt2_x, ppt2_y;
@@ -838,6 +851,10 @@ namespace casa {
 					if ( sub_dpg == 0 ) {
 						sub_dpg = dock_->panel( )->createNewPanel( );
 						connect( sub_dpg, SIGNAL(destroyed(QObject*)), SLOT(dpg_deleted(QObject*)) );
+						connect( sub_dpg, SIGNAL(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)),
+								 SLOT(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)) );
+						connect( sub_dpg, SIGNAL(cursorPosition(viewer::Position)),
+								 SLOT(cursorPosition(viewer::Position)) );
 					}
 					sub_dpg->unregisterAllDDs( );
 					display_list.push_back(de);
@@ -847,6 +864,75 @@ namespace casa {
 					break;
 				}
 			}
+		}
+
+		void PVLine::cursorBoundary( QtDisplayPanel::CursorBoundaryCondition condition ) {
+			bool starting_condition = draw_cursor_point;
+			draw_cursor_point = (condition == QtDisplayPanel::ENTER ? true : false);
+			if ( starting_condition == true && draw_cursor_point == false ) refresh( );
+		}
+		void PVLine::cursorPosition( viewer::Position pos ) {
+
+			if( wc_==0 ) return;
+
+			Vector<Quantity> pvpos(pos.coord( ));
+			if ( pvpos.size( ) < 2 ) return;
+
+			double x1, y1, x2, y2;
+			if ( pt1_x < pt2_x ) {
+				x1 = pt1_x;
+				y1 = pt1_y;
+				x2 = pt2_x;
+				y2 = pt2_y;
+			} else {
+				x1 = pt2_x;
+				y1 = pt2_y;
+				x2 = pt1_x;
+				y2 = pt1_y;
+			}
+				
+
+			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
+			try {
+				linear_to_world( wc_, x1, y1, x2, y2, wpt1_x, wpt1_y, wpt2_x, wpt2_y );
+			}
+			catch(...) {
+				return;
+			}
+
+			Vector<Double> pt1_worldv(2);
+			Vector<Double> pt2_worldv(2);
+
+			pt1_worldv(0) = wpt1_x;
+			pt1_worldv(1) = wpt1_y;
+
+			pt2_worldv(0) = wpt2_x;
+			pt2_worldv(1) = wpt2_y;
+
+			// calculate separation
+			MDirection::Types cccs = current_casa_coordsys( );
+			MDirection pt1( Quantum<Vector<Double> > (pt1_worldv,"rad"), cccs );
+			MDirection pt2( Quantum<Vector<Double> > (pt2_worldv,"rad"), cccs );
+			Quantity sep = pt1.getValue( ).separation(pt2.getValue( ),"arcsec");
+
+			Quantity offsetv;
+			if ( pvpos(0).isConform(sep.getUnit( )) ) 
+				offsetv = pvpos(0);
+			else if ( pvpos(1).isConform(sep.getUnit( )) )
+				offsetv = pvpos(1);
+			else
+				return;
+
+			double offset = sep.getValue( ) / 2.0 + offsetv.getValue(sep.getUnit( ));
+			offset = fmax(0.0,offset);
+			offset = fmin(sep.getValue( ),offset);
+			double fraction = offset / sep.getValue( );
+			double len_y = y2 - y1;
+			double len_x = x2 - x1;
+			
+			cursor_point_x = x1 + (len_x * fraction);
+			cursor_point_y = y1 + (len_y * fraction);
+			refresh( );
 		}
 
 		void PVLine::dpg_deleted(QObject*) {

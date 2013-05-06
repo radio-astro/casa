@@ -124,6 +124,9 @@ private slots:
 	void featheringDone();
 
 private:
+	FeatherMain( const FeatherMain& other );
+	FeatherMain operator=( const FeatherMain& other );
+	QString getFileName( QString path ) const;
 	void initializeDishDiameterLimit( QLabel* diamLimitLabel );
 	void clearPlots();
 	bool isInputImagesChanged();
@@ -149,6 +152,7 @@ private:
     ImageInterface<Float>* highResImage;
     QString lowResImagePath;
     QString highResImagePath;
+    QString outputImagePath;
 
     Feather featherWorker;
     FeatherThread* thread;

@@ -184,9 +184,7 @@ template <class T> class LatticeAsContour : public LatticePADisplayData<T> {
   // and indicate the fixed axis values for axes in the data that are
   // not specified as xAxis, yAxis or mAxis.
   // <group>
-  LatticeAsContour(ImageInterface<T> *image, const uInt xAxis,
-		   const uInt yAxis, const uInt mAxis,
-		   const IPosition fixedPos);
+  LatticeAsContour( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
   LatticeAsContour(ImageInterface<T> *image, const uInt xAxis,
 		   const uInt yAxis);
   // </group>

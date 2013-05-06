@@ -27,6 +27,7 @@
 #include <display/Fit/ColorComboDelegate.h>
 #include <display/RegionShapes/RegionShape.h>
 #include <display/Display/Options.h>
+
 #include <QMessageBox>
 #include <QDebug>
 #include <QDir>
@@ -313,6 +314,11 @@ void Fit2DTool::doFit(){
 	}
 
 	String pixelBox = findSourcesDialog.getPixelBox();
+	if ( pixelBox.length() == 0 ){
+		QMessageBox::warning( this, "Invalid Pixel Box", "Please check that the region is valid in the image.");
+		return;
+	}
+
 	Vector<Float> includeVector = populateInclude();
 	Vector<Float> excludeVector = populateExclude();
 	QString channelStr = ui.channelLineEdit->text();
@@ -466,13 +472,16 @@ void Fit2DTool::newRegion( int id, const QString & shape, const QString &name,
 		const QList<int> &pixel_x, const QList<int> &pixel_y,
 		const QString & linecolor, const QString & text, const QString & font,
 		int fontsize, int fontstyle ) {
-	bool regionSet = findSourcesDialog.newRegion( id, shape, name, world_x, world_y, pixel_x,
+	bool regionSet = false;
+	if ( image != NULL ){
+		regionSet = findSourcesDialog.newRegion( id, shape, name, world_x, world_y, pixel_x,
 			pixel_y, linecolor, text, font, fontsize, fontstyle );
-	if ( regionSet ){
-		ui.fitRegionLabel->setVisible( true );
-		QString regionStr = findSourcesDialog.getRegionString();
-		QString boxSpec( regionStr);
-		ui.fitRegionLabel->setText( REGION_LABEL+boxSpec);
+		if ( regionSet ){
+			ui.fitRegionLabel->setVisible( true );
+			QString regionStr = findSourcesDialog.getRegionString();
+			QString boxSpec( regionStr);
+			ui.fitRegionLabel->setText( REGION_LABEL+boxSpec);
+		}
 	}
 }
 
@@ -481,15 +490,17 @@ void Fit2DTool::newRegion( int id, const QString & shape, const QString &name,
 void Fit2DTool::updateRegion( int id, viewer::region::RegionChanges changes,
 		const QList<double> & world_x, const QList<double> & world_y,
 		const QList<int> &pixel_x, const QList<int> &pixel_y ){
-	bool regionUpdate = findSourcesDialog.updateRegion( id, changes, world_x, world_y,
+	if ( image != NULL ){
+		bool regionUpdate = findSourcesDialog.updateRegion( id, changes, world_x, world_y,
 			pixel_x, pixel_y);
-	if ( regionUpdate ){
-		QString regionStr = findSourcesDialog.getRegionString();
-		if ( regionStr.length() == 0 ){
-			ui.fitRegionLabel->setVisible( false );
-		}
-		else {
-			ui.fitRegionLabel->setText( REGION_LABEL + regionStr);
+		if ( regionUpdate ){
+			QString regionStr = findSourcesDialog.getRegionString();
+			if ( regionStr.length() == 0 ){
+				ui.fitRegionLabel->setVisible( false );
+			}
+			else {
+				ui.fitRegionLabel->setText( REGION_LABEL + regionStr);
+			}
 		}
 	}
 }

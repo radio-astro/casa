@@ -43,6 +43,7 @@ public:
     QString getFilePathLowResolution() const;
     QString getFilePathHighResolution() const;
     QString getFilePathOutput() const;
+    QString getFileDirty() const;
     bool isOutputSaved() const;
 
 signals:
@@ -61,6 +62,7 @@ private slots:
 	void fileLowResolutionChanged();
 	void fileHighResolutionChanged();
 	void outputDirectoryChanged();
+	void dirtyImageChanged();
 	void validateDirectory( const QString& str );
 
 private:
@@ -70,6 +72,7 @@ private:
 	QString highResolutionImageFile;
 	QString outputFile;
 	QString outputDirectory;
+	QString dirtyImageFile;
 	QFileSystemModel* fileModel;
 	bool saveOutput;
     Ui::FileLoaderClass ui;

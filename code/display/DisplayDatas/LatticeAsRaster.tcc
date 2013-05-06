@@ -72,11 +72,8 @@ LatticeAsRaster<T>::LatticeAsRaster(Array<T> *array, const uInt xAxis,
 
 // >2d image-based ctor
 template <class T>
-LatticeAsRaster<T>::LatticeAsRaster(ImageInterface<T> *image,
-		const uInt xAxis, const uInt yAxis,
-		const uInt mAxis,
-		const IPosition fixedPos) :
-		LatticePADisplayData<T>(image, xAxis, yAxis, mAxis, fixedPos) {
+LatticeAsRaster<T>::LatticeAsRaster( ImageInterface<T> *image,const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink ) :
+		LatticePADisplayData<T>( image, xAxis, yAxis, mAxis, fixedPos, sink ) {
 	setupElements();
 	String attString("colormodel");
 	Attribute attColor(attString, Int(Display::Index));

@@ -56,6 +56,7 @@ public slots:
 	void show();
 	void findRedshift();
 	void searchFinished();
+	void stopSearch();
 
 private:
     void setResultsVisible( bool visible );
@@ -63,6 +64,7 @@ private:
     Ui::SearchRedshiftDialogClass ui;
     String databasePath;
     bool localSearch;
+    bool searchInterrupted;
     SearchThread* searchThread;
     QProgressDialog progressBar;
     MFrequency::Types frequencyType;

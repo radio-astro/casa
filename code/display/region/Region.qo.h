@@ -495,9 +495,7 @@ namespace casa {
 			// newInfoObject(...) is currently only used for PVLine regions, but it should be used for
 			// other regions to allow for specialized creation of the region info objects for display
 			// in "statistics"...
-			virtual RegionInfo *newInfoObject( ImageInterface<Float> * ) {
-				return 0;
-			}
+			virtual RegionInfo *newInfoObject( ImageInterface<Float> *, PrincipalAxesDD * ) { return 0; }
 
 			virtual ImageRegion *get_image_region( DisplayData* ) const
 			DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);

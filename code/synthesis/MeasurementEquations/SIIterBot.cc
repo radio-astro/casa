@@ -95,7 +95,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		LogIO os( LogOrigin("SIIterBot_state",__FUNCTION__,WHERE) );
 	}
     
-	SIIterBot_state::~SIIterBot_state() { }
+	SIIterBot_state::~SIIterBot_state() {
+		fprintf( stderr, ">>>>>>\t\tSIIterBot_state::~SIIterBot_state(0x%x)\n", this );
+		fflush( stderr );
+	}
 
 	bool SIIterBot_state::interactiveInputRequired( ) {
 		boost::lock_guard<boost::recursive_mutex> guard(recordMutex); 
@@ -570,6 +573,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	SIIterBot_adaptor::~SIIterBot_adaptor() {
+		fprintf( stderr, ">>>>>>\t\tSIIterBot_adaptor::~SIIterBot_adaptor(0x%x)\n", this );
+		fflush( stderr );
 #ifdef INTERACTIVE_ITERATION
 		state->denyCallbacks(this);
 		disconnect();
