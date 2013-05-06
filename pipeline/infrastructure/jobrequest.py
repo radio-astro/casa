@@ -31,7 +31,10 @@ from . import logging
 
 LOG = logging.get_logger(__name__)
 
-
+# functions to be executed just prior to and immediately after execution of the
+# CASA task, providing a way to collect metrics on task execution.
+PREHOOKS = []
+POSTHOOKS = []
 
 class JobRequest(object):
     def __init__(self, fn, *args, **kw):
@@ -93,8 +96,14 @@ class JobRequest(object):
         if dry_run:
             sys.stdout.write('Dry run: %s\n' % msg)                                
         else:
-            LOG.info('Executing %s' % msg)            
-            return self.fn(*self.args, **self.kw)
+            for hook in PREHOOKS:
+                hook()
+            LOG.info('Executing %s' % msg)
+            try:
+                return self.fn(*self.args, **self.kw)
+            finally:
+                for hook in POSTHOOKS:
+                    hook()
 
     def _recur_map(self, f, data):
         return [type(x) is types.StringType and f(x) or self._recur_map(f, x) for x in data]
