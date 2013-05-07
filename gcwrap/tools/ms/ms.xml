@@ -2472,10 +2472,10 @@ Date/Time:                         RR:                      RL:                 
      </param>
 
      <param type="any" direction="in" name="phasec">
-     <description> phase center, default = first field =
+     <description> phase center, default = first field in selection =
      </description>
      <any type="variant"/>
-     <value>0</value>
+     <value></value>
      </param>
 
      <param type="any" direction="in" name="restfreq">

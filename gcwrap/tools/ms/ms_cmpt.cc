@@ -1967,8 +1967,8 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	Double minTime = 1E42;
 	Bool doField = (fieldids.size()!=0);
 	
-	for(uInt irow=1;irow<itsMS->nrow(); irow++){ // loop over main table
-	  if(minTime<timeCol(irow)){
+	for(uInt irow=0;irow<itsMS->nrow(); irow++){ // loop over main table
+	  if(timeCol(irow)<minTime){
 	    
 	    Int theDDId = ddCol(irow);
 	    for(uInt i=0; i<ddids.size(); i++){
@@ -2025,6 +2025,9 @@ ms::cvelfreqs(const std::vector<int>& spwids,
       else{
 	if(t_phasec.empty()){
 	  phasec_fieldid = 0;
+	  if(fieldids.size()!=0){
+	    phasec_fieldid = fieldids[0];
+	  }
 	  phaseCenter = FIELDCols.phaseDirMeas(phasec_fieldid, theObsTime.get("s").getValue());
 	  mRV = FIELDCols.radVelMeas(phasec_fieldid, theObsTime.get("s").getValue());
 	}
