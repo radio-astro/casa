@@ -78,6 +78,7 @@ plotweather.xml
 plotxy.xml
 partition.xml
 polcal.xml
+porm.xml
 predictcomp.xml
 impv.xml
 rmtables.xml

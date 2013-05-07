@@ -71,6 +71,7 @@ from tasks import *
 from taskinit import *
 from __main__ import *
 import unittest
+import scipy.constants
 
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/po_tool/'
 eq_beams = datapath + "pol_eq_beams.fits"
@@ -83,6 +84,7 @@ class po_rotationmeasure_test(unittest.TestCase):
     
     def tearDown(self):
         self.mypo.done()
+        self.assertTrue(len(tb.showcache()) == 0)
     
     def test_multibeam(self):
         """Test multibeam images for correct behavior"""
@@ -90,9 +92,90 @@ class po_rotationmeasure_test(unittest.TestCase):
         print eq_beams
         mypo.open(eq_beams)
         self.assertTrue(mypo.rotationmeasure("g"))
+        mypo.done()
         mypo.open(neq_beams)
         self.assertRaises(Exception, mypo.rotationmeasure, "hh")
+        mypo.done()
         
+    def test_porm_basics(self):
+        """Sanity tests for task porm"""
+        myia = iatool()
+        outfile = "xx.im"
+        myia.fromshape(outfile, [20, 20, 4, 20])
+        myia.addnoise()
+        myia.done()
+        myrm = "rm1.im"
+        self.assertTrue(porm(imagename=outfile, rm=myrm))
+        myia.open(myrm)
+        self.assertTrue((myia.shape() == [20, 20]).all())
+        got1 = myia.statistics()['sumsq']
+        myia.done()
         
+        # test concatenation of images
+        outfile = "yy.im"
+        myia.fromshape(outfile, [20, 20, 4, 20])
+        myia.addnoise()
+        csys = myia.coordsys()
+        refval = csys.referencevalue()['numeric']
+        refval[3] = 1.5e9
+        csys.setreferencevalue(refval)
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        images = ["xx.im", "yy.im"]
+        myrm = "rm2.im"
+        self.assertTrue(porm(imagename=images, rm=myrm))
+        myia.open(myrm)
+        self.assertTrue((myia.shape() == [20, 20]).all())
+        got2 = myia.statistics()['sumsq']
+        myia.done()
+        self.assertTrue(abs(got1 - got2) > 0.1)
+
+    def test_algorithm(self):
+        """Test rotation measure computation algorithm"""
+        myia = iatool()
+        imagename = "rm_input.im"
+        myia.fromshape(imagename, [20, 20, 4, 20])
+        csys = myia.coordsys()
+        incr = csys.increment()['numeric']
+        incr[3] = 1000*incr[3]
+        csys.setincrement(incr)
+        myia.setcoordsys(csys.torecord())
+        pixvals = myia.getchunk()
+        # U values all 1
+        U = 1
+        pixvals[:,:,2,:] = U
+        c = scipy.constants.c
+        RM = 9.6
+        pa0deg = 22.5
+        pa0 = pa0deg/180*pi
+        for chan in range(myia.shape()[3]):
+            freq = myia.toworld([0,0,0,chan])['numeric'][3]
+            lam = c/freq
+            Q = U/tan(2*(pa0 + RM*lam*lam))
+            pixvals[:,:,1,chan] = Q
+        myia.putchunk(pixvals)
+        myia.done()
+        mypo = self.mypo
+        rmim = "rm.im"
+        pa0im = "pa0.im"
+        sigma = 10e-8
+        for i in [0, 1]:
+            if i == 0:
+                mypo.open(imagename)
+                mypo.rotationmeasure(rm=rmim, pa0=pa0im, sigma=sigma)
+                mypo.done()
+            else:
+                porm(imagename=imagename, rm=rmim, pa0=pa0im, sigma=sigma)
+            myia.open(rmim)
+            stats = myia.statistics()
+            self.assertTrue((abs(stats['min'][0] - RM)) < 1e-4)
+            self.assertTrue((abs(stats['max'][0] - RM)) < 1e-4)
+            myia.done(remove=True)
+            myia.open(pa0im)
+            stats = myia.statistics()
+            self.assertTrue((abs(stats['min'][0] - pa0deg)) < 1e-4)
+            self.assertTrue((abs(stats['max'][0] - pa0deg)) < 1e-4)
+            myia.done(remove=True)
+
 def suite():
     return [po_rotationmeasure_test]
