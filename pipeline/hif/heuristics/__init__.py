@@ -8,6 +8,7 @@ from .gaincal import MedianSNRNoAdapter
 from .bporder import BPOrder
 from .caltable import BandpassCaltable
 from .caltable import GaincalCaltable
+from .caltable import GainCurves
 from .caltable import FluxCaltable
 from .caltable import TsysCaltable
 from .caltable import AntposCaltable

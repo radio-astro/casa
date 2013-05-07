@@ -207,7 +207,10 @@ class CalFrom(object):
         'tsys'         : 3,
         'wvr'          : 4,
         'polarization' : 5,
-        'antpos'       : 6, 
+        'antpos'       : 6,
+        'gc'           : 7,
+        'opac'         : 8,
+        'rq'           : 9, 
     }
 
     CALTYPE_TO_VISCAL = {
