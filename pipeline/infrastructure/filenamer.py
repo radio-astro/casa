@@ -399,6 +399,16 @@ class CalibrationTable(NamingTemplate):
         '''Set the filename extension as appropriate for a gain calibration.
         ''' 
         return self.extension('gcal')
+    
+    def gc_cal(self):
+        '''Set the filename extension as appropriate for a gc calibration.
+        '''
+        return self.extension('gc')
+    
+    def opac_cal(self):
+        '''Set the filename extension as appropriate for a opac calibration.
+        ''' 
+        return self.extension('opac')
 
     def phase_only_gain_cal(self):
         '''Set the filename extension as appropriate for a phase-only gain
@@ -620,6 +630,16 @@ class TsysCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(TsysCalibrationTable, self).__init__(other)
         self.tsys_cal()
+
+class OpCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(OpCalibrationTable, self).__init__(other)
+        self.opac_cal()
+
+class GainCurvesCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(GainCurvesCalibrationTable, self).__init__(other)
+        self.gc_cal()
 
 class WvrgCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
