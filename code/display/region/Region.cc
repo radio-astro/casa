@@ -149,6 +149,8 @@ Region::~Region( ){
 	dock_->removeRegion(mystate);
 	signal_region_change( region::RegionChangeDelete );
 	disconnect(mystate, 0, 0, 0);
+	// QtRegionState is cleaned up by Qt...
+	mystate->clearRegion( );
 }
 
 bool Region::degenerate( ) const {
