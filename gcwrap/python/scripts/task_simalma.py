@@ -730,16 +730,17 @@ def simalma(
                        visweightscale=visweightscale)
 
             # TMP fix: get correct skymodel file so that simanalyze picks it
-            if os.path.exists(tpskymodel):
-                shutil.move(tpskymodel,tpskymodel+".save")
-            else:
-                msg("TP skymodel '%s' is not found" \
+            if acaratio > 0:
+                if os.path.exists(tpskymodel):
+                    shutil.move(tpskymodel,tpskymodel+".save")
+                else:
+                    msg("TP skymodel '%s' is not found" \
                         % tpskymodel, origin="simalma", priority="error")
 
-            if os.path.exists(acaskymodel+".save"):
-                shutil.move(acaskymodel+".save",acaskymodel)
-            else:
-                msg("ACA skymodel '%s' is not found" \
+                if os.path.exists(acaskymodel+".save"):
+                    shutil.move(acaskymodel+".save",acaskymodel)
+                else:
+                    msg("ACA skymodel '%s' is not found" \
                         % acaskymodel+".save", origin="simalma", priority="error")
 
 
