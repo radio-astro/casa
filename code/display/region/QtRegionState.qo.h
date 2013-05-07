@@ -208,6 +208,9 @@ namespace casa {
 
 			std::string bounding_index_to_string( int index ) const;
 
+			friend class Region;
+			void clearRegion( ) { region_ = 0; }
+
 		private:
 			void initRegionState( );
 			void statisticsUpdate( QtRegionStats *regionStats, std::tr1::shared_ptr<casa::viewer::RegionInfo> regionInfo );
