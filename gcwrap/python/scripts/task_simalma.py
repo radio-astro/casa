@@ -97,7 +97,7 @@ def simalma(
         maptype_aca = 'ALMA'
         maptype_tp = 'square'
         pbgridratio_tp = 0.36
-        refdate = '2013/05/21'
+        refdate = '2014/05/21'
         caldirection = ""
         calflux = "0Jy"
         tpantid = 0
