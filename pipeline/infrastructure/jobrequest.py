@@ -13,7 +13,9 @@ import flagmanager_cli
 import fluxscale_cli
 import gaincal_cli
 import gencal_cli
+import hanningsmooth_cli
 import importasdm_cli
+import importevla_cli
 import setjy_cli
 import plotants_cli
 import plotcal_cli
@@ -271,9 +273,15 @@ class CASATaskJobGenerator(object):
 
     def gencal(self, *v, **k):
         return self._get_job(gencal_cli.gencal_cli, *v, **k)
+    
+    def hanningsmooth(self, *v, **k):
+        return self._get_job(hanningsmooth_cli.hanningsmooth_cli, *v, **k)
 
     def importasdm(self, *v, **k):
         return self._get_job(importasdm_cli.importasdm_cli, *v, **k)
+
+    def importevla(self, *v, **k):
+        return self._get_job(importevla_cli.importevla_cli, *v, **k)
 
     def plotants(self, *v, **k):
         return self._get_job(plotants_cli.plotants_cli, *v, **k)
