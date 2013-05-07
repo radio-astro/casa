@@ -60,7 +60,11 @@ class pimager():
         stat=ia.statistics(verbose=False,list=False)
         csys=ia.coordsys()
         ia.open(image)
-        beampix=np.fabs(ia.restoringbeam()['major']['value']/qa.convert(csys.increment(type='direction', format='q')['quantity']['*1'], ia.restoringbeam()['major']['unit'])['value'])
+        beampix=10
+        if(ia.restoringbeam().has_key('major')):
+            beampix=np.fabs(ia.restoringbeam()['major']['value']/qa.convert(csys.increment(type='direction', format='q')['quantity']['*1'], ia.restoringbeam()['major']['unit'])['value'])
+        else:
+            beampix=np.max(ia.shape())/50;
         beampix=int(np.ceil(beampix))
         blc=copy.deepcopy(stat['maxpos'])
         trc=copy.deepcopy(stat['maxpos'])

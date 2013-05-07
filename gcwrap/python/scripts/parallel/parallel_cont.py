@@ -116,7 +116,7 @@ class imagecont():
           self.setparamcont(im, freq, band, singleprec=False)
           if((len(numchan)==0) or (np.sum(numchan)==0)):
               self.novaliddata=True
-        self.makecontimage(im, self.novaliddata, imname)
+        self.novaliddata=self.makecontimage(im, self.novaliddata, imname)
         self.imageparamset=True
 
 
@@ -171,7 +171,7 @@ class imagecont():
             if((len(numchan)==0) or (np.sum(numchan)==0)):
                 self.novaliddata[msname]=True
         if(nterms==1):
-            self.makecontimage(im, self.novaliddata[msname], imname)
+            self.novaliddata[msname]=self.makecontimage(im, self.novaliddata[msname], imname)
         else:
             self.makemtcontimage(im, imname, nterms, scales, freq)
         self.imageparamset=True
@@ -214,7 +214,6 @@ class imagecont():
              if(totchan==0):
                  return
         origname=msname
-        #pdb.set_trace()
         for k in range(totchan): 
             ###either psf 0 or no channel selected
             if(k==0):
@@ -460,7 +459,6 @@ class imagecont():
         """
         create a slice of channels image from cubeimage
         """
-    #pdb.set_trace()
         ia.open(inimage)
         modshape=ia.shape()
         if (modshape[3]==1) or (chan > (modshape[3]-1)) :
@@ -579,7 +577,6 @@ class imagecont():
         """
         put channels image back to a pre-exisiting cubeimage 
         """
-        #pdb.set_trace()
         if(type(chans) != list):
             chans=[chans]
         if(type(inim) != list):
@@ -786,23 +783,36 @@ class imagecont():
         
     #putchanimage=staticmethod(putchanimage)
     def makecontimage(self, im, novaliddata, imname):
+        makeblanks=lambda imn,im: [im.make(imn+eltypo) for eltypo in ['.image', '.residual', '.model', '.psf', '.wgt'] ]
         if(novaliddata==True):
             ###make blanks
-            im.make(imname+'.image')
-            im.make(imname+'.residual')
-            im.make(imname+'.model')
-            im.make(imname+'.psf')
-            return
+            ###The images may still be open...as we don't have 
+                    ###a reset function; setscales is the closest which will destroy
+                    ###the skyequation without much of anything else.
+            im.setscales()
+            makeblanks(imname, im)
+            return novaliddata
         if(not self.imageparamset):
             try:
                 im.clean(algorithm='mfclark', gain=self.gain, niter=0, threshold='0.05mJy', 
                          model=imname+'.model', image=imname+'.image', 
                          residual=imname+'.residual', psfimage=imname+'.psf')
+                ia=casac.image()
+                for ima in [imname+'.residual', imname+'.psf']:
+                    ia.open(ima)
+                    statout=ia.statistics(verbose=False, list=False)
+                    ia.done()
+                    if(statout['max'][0]==0.0):
+                        novaliddata=True
             except Exception, instance:
                 if(string.count(instance.message, 'PSFZero') >0):
                     novaliddata=True
+                    ###The images may still be open...as we don't have 
+                    ###a reset function; setscales is the closest which will destroy
+                    ###the skyequation without much of anything else.
+                    im.setscales()
                     ###make a blank image
-                    im.make(imname+'.image')
+                    makeblanks(imname, im)
                 else:
                     raise instance
         else:  ### else of  (if not self.imageparamset)
@@ -814,6 +824,7 @@ class imagecont():
                  #        model=imname+'.model', image=imname+'.image', 
                  #        residual=imname+'.residual')
                 #casalog.post('CACHE:  '+ str(tb.showcache()))
+        return novaliddata
     def makemtcontimage(self, im, imname, nterms, scales, reffreq):
         incremental=self.imageparamset
         models=[]

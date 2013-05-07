@@ -266,7 +266,7 @@ class test_unapply(test_base):
         # Note : For this test, scan=4 gives identical flags on 32/64 bit machines,
         #           and one flag difference on a Mac (32)
         #           Other scans give differences at the 0.005% level.
-        myinput = "scan=4 mode=tfcrop correlation='ABS_RR'"
+        myinput = "scan=4 mode=tfcrop correlation='ABS_RR' extendflags=False"
         filename = create_input(myinput)
         flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
                 flagbackup=False)
@@ -558,7 +558,7 @@ class test_rflag(test_base):
         filename1 = create_input(input1,'tdevfile.txt')
         filename2 = create_input(input2,'fdevfile.txt')
 
-        commlist=['mode=rflag spw=9,10 timedev='+filename1+' freqdev='+filename2]
+        commlist=['mode=rflag spw=9,10 extendflags=False timedev='+filename1+' freqdev='+filename2]
 
         flagdata(vis=self.vis,mode='unflag', flagbackup=False);
         flagcmd(vis=self.vis, inpmode='list', inpfile=commlist, action='apply', flagbackup=False)
@@ -567,7 +567,8 @@ class test_rflag(test_base):
 
 
         # (4) Give the values directly in the cmd input.....
-        commlist=['mode=rflag spw=9,10 timedev=[[1.0,9.0,0.038859],[1.0,10.0,0.162833]] \
+        commlist=['mode=rflag spw=9,10 extendflags=False ' \
+                  'timedev=[[1.0,9.0,0.038859],[1.0,10.0,0.162833]] \
                           freqdev=[[1.0,9.0,0.079151],[1.0,10.0,0.205693]]']
 
         flagdata(vis=self.vis,mode='unflag', flagbackup=False);
@@ -581,7 +582,8 @@ class test_rflag(test_base):
         #       i.e. re-run the threshold-generation of (2) with savepars=True
         flagdata(vis=self.vis,mode='unflag', flagbackup=False);
         flagdata(vis=self.vis, mode='rflag', spw='9,10', timedev='', \
-                      freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt');
+                      freqdev=[],action='calculate',savepars=True,outfile='outcmd.txt',
+                      extendflags=False);
         flagcmd(vis=self.vis, inpmode='list', inpfile='outcmd.txt');
         res5 = flagdata(vis=self.vis, mode='summary')
         print "(5) Finished flagcmd test : using outcmd.txt from flagdata (test 2) : ", res5['flagged']
@@ -595,7 +597,8 @@ class test_rflag(test_base):
         """
         # (6) flagcmd AUTO. Should give same answers as test_flagdata[test_rflag1]
         flagdata(vis=self.vis,mode='unflag');
-        flagcmd(vis=self.vis, inpmode='list', inpfile=['mode=rflag spw=9,10'], action='apply',
+        flagcmd(vis=self.vis, inpmode='list', inpfile=['mode=rflag spw=9,10 extendflags=False'], 
+                action='apply',
                 flagbackup=False)
         res6 = flagdata(vis=self.vis, mode='summary')
         print "(6) Finished flagcmd test : auto : ", res6['flagged']

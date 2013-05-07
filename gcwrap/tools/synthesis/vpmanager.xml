@@ -43,21 +43,15 @@ to the images.
 
 The vpmanager tool is the CASA Python object which constitutes the
 user interface to the VPManager C++ class. By default it is named "vp" in casapy.
-This document describes
-the upgraded version of the tool and class to be included in CASA 3.4.
 
 The VPManager class is implemented as a singleton, i.e. internally there is only one instance
 at all times. This instance accessed via the static VPManager::Instance() method. It is permanent 
-until casapy is exited or it is reinstantiated via the static VPManager::reset() method.
+until casapy is exited and can be reinitialised via the  VPManager::reset() method.
 
 The vp tool connects to the single instance of VPManager.
 All settings the user makes with the tool, have effect immediately and are then used
 by all parts of CASA which access the VPManager class (i.e. eventually all imaging and simulation
 routines).
-
-In order to enable parallelization, a simple {\it locking mechanism} protects from simultaneous access
-to the VPManager. Only the application programmer has to be aware of this. On the tool level
-the locking is done automatically.
 
 The VPManager instance keeps a simple database of available antenna responses, the {\it vplist}.
 This list is initialized at the startup of CASA or by calling the reset() method
@@ -178,18 +172,6 @@ available in the Atacama Large MM/sub-mm Array.
 The vpmanager constructor has no arguments.
 </description>
 </method>
- 
-   <method type="function" name="release">
-   <shortdescription>Release the VPManager for use by others.</shortdescription>
-   
-<description>
-No arguments.
-</description>
-<input>
-</input>
-<returns type="void"></returns>
-</method>
-
  
    <method type="function" name="saveastable">
    <shortdescription>Save the vp or pb descriptions as a table</shortdescription>

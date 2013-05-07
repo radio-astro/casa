@@ -1299,7 +1299,7 @@ def getLinePars(cmdline, mlist=[]):
           
         Returns a  dictionary.
     '''
-            
+                
     # Dictionary of parameters to return
     dicpars = {}
         
@@ -1368,7 +1368,7 @@ def getLinePars(cmdline, mlist=[]):
                     if xkey == m:
                         dicpars[m] = xval
                         
-    casalog.post(':getLinePars::dicpars=%s'%dicpars, 'DEBUG')         
+    casalog.post(':getLinePars::dicpars=%s'%dicpars, 'DEBUG')
             
     return dicpars
 
@@ -1481,7 +1481,8 @@ def readNtime(params):
 
 def fixType(params):
     '''Give correct types to non-string parameters
-       The types are defined in the XML file of the task tflagdata'''
+       The types are defined in the XML file of the task flagdata
+       Do not repeat any parameter'''
 
     # manual parameter
     if params.has_key('autocorr'):
@@ -1555,6 +1556,8 @@ def fixType(params):
         params['maxnpieces'] = int(params['maxnpieces'])        
     if params.has_key('halfwin'):
         params['halfwin'] = int(params['halfwin'])
+    if params.has_key('extendflags'):
+        params['extendflags'] = eval(params['extendflags'].capitalize())        
         
     # rflag parameters
     if params.has_key('winsize'):
@@ -1581,8 +1584,6 @@ def fixType(params):
         params['spectralmin'] = float(params['spectralmin']);
     if params.has_key('spectralmax'):
         params['spectralmax'] = float(params['spectralmax']);
-    
-
 
 def purgeEmptyPars(cmdline):
     '''Remove empty parameters from a string:
@@ -1679,10 +1680,12 @@ def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
     shadowpars = ['tolerance', 'addantenna']
     elevationpars = ['lowerlimit','upperlimit'] 
     tfcroppars = ['ntime','combinescans','datacolumn','timecutoff','freqcutoff',
-                  'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin']
+                  'timefit','freqfit','maxnpieces','flagdimension','usewindowstats','halfwin',
+                  'extendflags']
     extendpars = ['ntime','combinescans','extendpols','growtime','growfreq','growaround',
                   'flagneartime','flagnearfreq']
-    rflagpars = ['winsize','timedev','freqdev','timedevscale','freqdevscale','spectralmax','spectralmin']
+    rflagpars = ['winsize','timedev','freqdev','timedevscale','freqdevscale','spectralmax',
+                 'spectralmin', 'extendflags']
     
         
     # dictionary of successful command lines to save to outfile
@@ -1748,7 +1751,8 @@ def setupAgent(aflocal, myflagcmd, myrows, apply, writeflags, display=''):
             elif cmdline.__contains__('tfcrop'):
                 mode = 'tfcrop'
                 modepars = getLinePars(cmdline,tfcroppars)
-            elif cmdline.__contains__('extend'):
+            elif cmdline.__contains__('extend') and cmdline.__contains__('extendpols'):
+                # Necessary to avoid matching the extenflags parameter of rflag/tfcrop
                 mode = 'extend'
                 modepars = getLinePars(cmdline,extendpars)
             elif cmdline.__contains__('unflag'):

@@ -1112,6 +1112,47 @@ the Linear Coordinate (coordinate 1).
 </method>
 
  
+<method type="function" name="findaxisbyname">
+    <shortdescription>Find specified axis in coordinate system.</shortdescription>
+    <input>
+        <param type="string" name="axisname">
+            <description>Name of axis to find. Minimal match supported</description>
+            <value/>
+        </param>
+        <param type="bool" name="allowfriendlyname">
+            <description>Support friendly naming. Eg "spectral" will match "frequency" or "velocity", "ra" will match "right ascension"</description>
+            <value>true</value>
+        </param>        
+    </input>
+    <returns type="int">The axis number, exception is thrown if the axis does not exist.</returns>
+    <description>
+        Find the world axis based on its name. Matching is not case sensitive and minimal match is supported, eg "dec" will match "Declination".
+        In addition, if allowfriendlyname is True, other common terms will match the expected axis. Currently supported are:
+        "spectral" matches frequency type axes, eg "Frequency" or "Velocity",
+        "ra" matches "Right Ascension". These names must be spelled out completely; eg "spectral" rather than simply "spec".
+        The first matching axis (zero-based) number is returned. If no axis can be matched, an exception is thrown.
+    </description>
+    <example>
+        # Find the declination axis
+        ia.open("myimage")
+        csys = ia.coordsys()
+        ia.done()
+        try:
+            dec_axis_number = csys.findaxisbyname("dec", False)
+        except Exception
+            print "Declination axis not found
+        
+        # find the spectral axis
+        try:
+            spec_axis_number = csys.findaxisbyname("spectral", True)
+        except Exception:
+            print "Spectral axis could not be found.
+        
+     </example>
+</method>
+   
+
+ 
    <method type="function" name="findcoordinate">
    <shortdescription>Find axes of specified coordinate</shortdescription>
    

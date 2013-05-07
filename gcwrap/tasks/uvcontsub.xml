@@ -124,9 +124,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                          fitspw='*:113.767~114.528GHz;114.744~115.447GHz'
                                  --&gt; select the same frequency ranges for all the relevant spws 
          &gt;&gt;&gt; expandable parameter for fitspw 
-          excludechans - if Ture, it will exclude the spws:channels specified in fitspw
+          excludechans - if True, it will exclude the spws:channels specified in fitspw
                          for the fit
-                defalut: False (use fitspw for the fit) 
+                default: False (use fitspw for the fit) 
                 example: fitspw='0:114.528GHz~114.744GHz'; excludechans=True
                          --&gt; exclude the frequency range, 114.528GHz - 114.744GHz in the spw id 0
         combine -- Data axes to combine for the continuum estimate.

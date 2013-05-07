@@ -481,6 +481,7 @@ agentflagger::parsetfcropparameters(
 		const std::string& flagdimension,
 		const std::string& usewindowstats,
 		const int halfwin,
+		const bool extendflags,
 		const bool apply)
 {
 
@@ -496,7 +497,8 @@ agentflagger::parsetfcropparameters(
 					String(intent), String(observation), ntime, Bool(combinescans),
 		       	    String(datacolumn), timecutoff,
 		       	    freqcutoff, String(timefit), String(freqfit), maxnpieces,
-		       	    String(flagdimension), String(usewindowstats), halfwin, Bool(apply));
+		       	    String(flagdimension), String(usewindowstats), halfwin,
+		       	    Bool(extendflags), Bool(apply));
 
 		}
 

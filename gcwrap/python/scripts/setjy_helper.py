@@ -14,7 +14,7 @@ class ss_setjy_helper:
           casalog = casac.logsink()
         self._casalog = casalog
 
-    def setSolarObjectJy(self,field,spw,scalebychan, timerange,observation, scan, useephemdir):
+    def setSolarObjectJy(self,field,spw,scalebychan, timerange,observation, scan, useephemdir, usescratch=False):
 	"""
 	Set flux density of a solar system object using Bryan Butler's new
 	python model calculation code.
@@ -30,7 +30,7 @@ class ss_setjy_helper:
         qa = casac.quanta()
  
 
-	(myms, mytb, mycl, myme) = gentools(['ms','tb','cl','me'])
+	(myms, mytb, mycl, myme, mycb) = gentools(['ms','tb','cl','me', 'cb'])
 	# prepare parameters need to pass to the Bryan's code
 	# make ms selections
 	# get source name
@@ -313,15 +313,18 @@ class ss_setjy_helper:
 
               # if scratch=F check if the virtual model already exist
               # for the field if it is clear it.
-              if j==0: 
-                mytb.open(self.vis, nomodify=False)
-                kwds = mytb.getkeywords()
-                modelkwd='definedmodel_field_'+str(vfid)
-                if kwds.has_key(modelkwd):
-                  clmodname=kwds[modelkwd]
-                  mytb.removekeyword(clmodname)
-                  mytb.removekeyword(modelkwd)
-                mytb.close()
+              if j==0 and (not usescratch): 
+              #  mytb.open(self.vis, nomodify=False)
+              #  kwds = mytb.getkeywords()
+              #  modelkwd='definedmodel_field_'+str(vfid)
+              #  if kwds.has_key(modelkwd):
+              #    clmodname=kwds[modelkwd]
+              #    mytb.removekeyword(clmodname)
+              #    mytb.removekeyword(modelkwd)
+              #  mytb.close()
+                 mycb.open(self.vis,addcorr=False,addmodel=False)
+                 mycb.delmod(otf=True,field=str(vfid),spw=spwids, scr=False)
+                 mycb.close()
 
 	      # finally, put the componentlist as model
 	      self.im.selectvis(spw=spwids[j],field=field,observation=observation,time=timerange)

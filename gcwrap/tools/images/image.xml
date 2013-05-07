@@ -6651,6 +6651,79 @@ The {\stff open} function first closes the old \imagefile.
     </example>
 </method>
  
+ 
+<method type="function" name="crop">
+    <shortdescription>Crop masked pixels from the perimeter of an image.</shortdescription>
+    <input>
+        <param type="string" name="outfile">
+            <description>Output image name. If not specified, no persistent image is created.</description>
+            <value/>
+        </param>
+        <param type="intArray" name="axes">
+            <description>Axes to crop. Empty array means consider all axes.</description>
+            <value/>
+        </param>
+        <param type="bool"  name="overwrite">
+            <description>Overwrite the output if it exists? Default False</description>
+            <value>false</value>
+        </param>
+        <param type="any"  name="region">
+            <any type="variant"/>
+            <description>The region to correct. Default is entire image. If this is specified neither box, chans, nor stokes may be specified.</description>
+            <value></value>
+        </param>
+        <param type="string" name="box">
+            <value></value>
+            <description>Rectangular region in the directional plane to select. Default is to use the entire directional plane.</description>
+        </param>
+        <param type="string" name="chans">
+            <description>Spectral selection. See "help par.chans" for examples.  Default is the entire spectral range.</description>
+            <value></value>
+        </param>
+        
+        <param type="string" name="stokes">
+            <description>Polarization selection. Default is all.</description>
+            <value/>
+        </param>
+        <param type="string" name="mask">
+            <description>Mask to use. See help par.mask. Default is none.</description>
+            <value/>
+        </param>
+        <param type="bool" name="stretch">
+            <description>Stretch the mask if necessary and possible? See help par.stretch. Default False</description>
+            <value>false</value>
+        </param>
+        <param type="bool" name="wantreturn">
+            <description>Return an image analysis tool attached to the created subimage?</description>
+            <value>true</value>
+        </param>
+    </input>
+    <returns type="image"/>
+    <description>
+        This method crops masked slices from the perimeter of an image. The axes parameter specifies which axes to
+        consider. Axes not specified will not be cropped. An empty array implies that all axes should be considered.
+        If wantreturn is True, an image analysis tool attached to the output image is returned. If False, none is
+        returned.
+    </description>
+    <example>
+        # myimage is of shape 20, 20, 20 with only the inner 16 x 14 x 12 pixels unmasked
+        ia.open("myimage")
+        # crop masked slices on all axes
+        cropped = ia.crop()
+        # returns [16, 14, 12]
+        cropped.shape()
+        cropped.done()
+        # crop only the masked slices at the edges of the image along axis 1
+        cropped2 = ia.crop(outfile="", axes=[1])
+        ia.done()
+        # returns [20, 14, 20]
+        cropped2.shape()
+        cropped2.done()
+    </example>
+</method>
+ 
+ 
+ 
    <method type="function" name="pixelvalue">
    <shortdescription>Get value of image and mask at specified pixel coordinate</shortdescription>
    

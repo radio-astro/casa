@@ -10,15 +10,35 @@
 <returns type="void" />
 	
 <description>
-            Task for plotting and interacting with visibility data.  A variety
-        of axes choices (including data column) along with MS selection and
-        averaging options are provided for data selection.  Flag extension
-        parameters are also available for flagging operations in the plotter.
+
+        Task for plotting and interacting with visibility
+        data.  Limited support for caltable plotting is also
+        included as of CASA v4.1.
+
+        A variety of axes choices (including data column) along 
+        with MS selection and averaging options are provided for data 
+        selection.  Flag extension parameters are also available for
+        flagging operations in the plotter.
         
-            All of the provided parameters can also be set using the GUI once
+        All of the provided parameters can also be set using the GUI once
         the application has been launched.  Additional and more specific
         operations are available through the GUI and/or through the plotms
         tool (pm).
+
+        Most basic functions (plotting, iteration, locate, flagging)
+        will work for most CalTables. Parameterized CalTables
+        (delays, antpos, gaincurve, opacity), will, at best, currently 
+        just plot the simple parameters contained in the
+        table, not the effective amplitudes or phases sampled at
+        observing times, frequencies etc.  BPOLY and GSPLINE tables
+        are not yet supported.   Features currently unsupported for
+        CalTables include Averaging, Transformations (velocity 
+        conversions, etc.), and some details of selection (channel and 
+        polarization selection are not yet enabled) and axes choices 
+        (geometry options are not yet enabled).  In the plotms gui,
+        many options irrelevant for CalTables are not yet hidden when
+        interacting with a CalTable, and such settings will be ignored
+        (when benign) or cause an error message.
         
 </description>
 
@@ -30,7 +50,7 @@ MS Parameters
 ###############################################################################
 -->
   <param type="string" name="vis" kind="ms">
-    <description>input visibility dataset (blank for none)</description>
+    <description>input MS (or CalTable) (blank for none)</description>
     <value />
   </param>
 
@@ -1088,20 +1108,38 @@ Constraints
 
 <example>
 
-            Task for plotting and interacting with visibility data.  A variety
-        of axes choices (including data column) along with MS selection and
-        averaging options are provided for data selection.  Flag extension
-        parameters are also available for flagging operations in the plotter.
+        Task for plotting and interacting with visibility
+        data.  Limited support for caltable plotting is also
+        included as of CASA v4.1.
+
+        A variety of axes choices (including data column) along 
+        with MS selection and averaging options are provided for data 
+        selection.  Flag extension parameters are also available for
+        flagging operations in the plotter.
         
-            All of the provided parameters can also be set using the GUI once
+        All of the provided parameters can also be set using the GUI once
         the application has been launched.  Additional and more specific
         operations are available through the GUI and/or through the plotms
         tool (pm).
-        
+
+        Most basic functions (plotting, iteration, locate, flagging)
+        will work for most CalTables. Parameterized CalTables
+        (delays, antpos, gaincurve, opacity), will, at best, currently 
+        just plot the simple parameters contained in the
+        table, not the effective amplitudes or phases sampled at
+        observing times, frequencies etc.  BPOLY and GSPLINE tables
+        are not yet supported.   Features currently unsupported for
+        CalTables include Averaging, Transformations (velocity 
+        conversions, etc.), and some details of selection (channel and 
+        polarization selection are not yet enabled) and axes choices 
+        (geometry options are not yet enabled).  In the plotms gui,
+        many options irrelevant for CalTables are not yet hidden when
+        interacting with a CalTable, and such settings will be ignored
+        (when benign) or cause an error message.
 
     Keyword arguments:
-    vis -- input visibility dataset
-           default: ''
+    vis -- input MS or CalTable
+           default: ''  (will merely launch the gui)
     xaxis, yaxis -- what to plot on the two axes
                     default: '' (defaults are xaxis='time',
                                  yaxis='amp' on first execution;

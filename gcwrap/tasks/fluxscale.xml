@@ -22,7 +22,7 @@
        formed for each antenna and polarization (that they have in
        common).  The average of this ratio over antennas and polarizations
        yields a correction factor that is applied to the ordinary 
-       calibrators' gains.
+       calibrators' gains. (See also more detailed discussion in Example section below.)
 
 	</description>
 	<input>
@@ -96,7 +96,7 @@
        Using time-averaged gain amplitudes, the ratio between 
        each ordinary calibrator and the flux density calibrator(s) is 
        formed for each antenna and polarization (that they have in
-       common).  For incremetal=False(default), the median of 
+       common).  For incremental=False(default), the median of 
        this ratio over antennas and polarizations yields a correction 
        factor that is applied to the ordinary calibrators' gains. For 
        incremental=True, only the correction factors are written out 
@@ -111,7 +111,7 @@
        for multiple spws exist, fitted spectral index and (for nspw>2)
        curvature are also reported. The fit is done for 
        log(flux density) = a_o + a_1*(log(frequency)) + a_2*(log(frequency))**2 
-       where log(frequnecy) is with respect to the mean of log(frequency). 
+       where log(frequency) is with respect to the mean of log(frequency). 
        This reference frequency is reported in the logger along with the 
        flux density at that frequency.  The fit results are also reported 
        in the returned Python dictionary (the solutions are in 'spidx' 
@@ -144,7 +144,7 @@
                calibrator.  Use setjy to do this if it is a point source.
        reference -- Reference field name(s)
                The names of the fields with a known flux densities or
-                  visibilties that have been placed in the MODEL column
+                  visibilities that have been placed in the MODEL column
                   by setjy or ft for a model not in the CASA system.
                The syntax is similar to field.  Hence field index or
                   names can be used.
@@ -171,7 +171,7 @@
        append -- Append fluxscaled solutions to the fluxtable.
                default: False; (will overwrite if already existing)
                example: append=True
-       refspwmap -- Vector of spectral windows enablings scaling across
+       refspwmap -- Vector of spectral windows enabling scaling across
                spectral windows
                default: [-1]==> none.
                Example with 4 spectral windows:

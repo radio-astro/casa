@@ -91,7 +91,11 @@ The new coordinate system is defined by the template parameter, which can be:
       the center direction pixel is the reference pixel. The coordinate system of the input image
       is not modified and the output image's reference direction pixel is the center pixel.
       Note that the conversion between one frame and another in general becomes less accurate
-      as distance from the output image's reference pixel increases.
+      as distance from the output image's reference pixel increases. Before the rotation occurs, the
+      image is padded with masked pixels to ensure that all good pixels are used in the rotation (ie the
+      corners of the image are not cropped after the rotation). After the image is rotated, any masked slices
+      remaining along the edges of the image in the directional coordinate are cropped, so that there are
+      no masked slices in the directional coordinate along the edges of the final image.
     * a {'csys': [valid coordinate system dictionary], 'shap': [int array describing the output shape]} dictionary.
       This is normally obtained by first running regrid with template='get'. In this case imregrid returns the
       necessary dictionary.

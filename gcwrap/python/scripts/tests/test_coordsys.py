@@ -96,6 +96,16 @@ class coordsys_test(unittest.TestCase):
         """Test constructors"""
         x = coordsystool()
         x = cstool()
+        
+    def test_findaxisbyname(self):
+        myia = iatool()
+        myia.fromshape("", [4, 4, 4, 4])
+        csys = myia.coordsys()
+        myia.done()
+
+        self.assertTrue(csys.findaxisbyname("ri") == 0)
+        self.assertRaises(Exception, csys.findaxisbyname, "ra", False)
+        self.assertTrue(csys.findaxisbyname("ra", True) == 0)
 
 def suite():
     return [coordsys_test]

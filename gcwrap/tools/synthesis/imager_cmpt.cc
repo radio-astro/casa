@@ -753,15 +753,17 @@ imager::open(const std::string& thems, const bool compress, const bool useScratc
 bool
 imager::pb(const std::string& inimage, const std::string& outimage,
            const std::string& incomps, const std::string& outcomps,
-           const std::string& operation, const std::string& pointingcenter,
+           const std::string& operation, const ::casac::variant& pointingcenter,
            const ::casac::variant& parangle, const std::string& pborvp,
            const bool async)
 {
   Bool rstat(False);
   if(hasValidMS_p){
     try{
-	    casa::MDirection mpointingcenter;
-      mdFromString(mpointingcenter, pointingcenter);
+      casa::MDirection mpointingcenter(casa::Quantity(0, "rad"), casa::Quantity(0, "rad"), casa::MDirection::J2000) ;
+      if((String(pointingcenter.toString()) != casa::String("")) 
+	 && (String(pointingcenter.toString()) != casa::String("[]")))
+	casaMDirection(pointingcenter, mpointingcenter);
       rstat = itsImager->pb(inimage, outimage, incomps, outcomps, operation,
                             mpointingcenter, casaQuantity(parangle), pborvp);
     }

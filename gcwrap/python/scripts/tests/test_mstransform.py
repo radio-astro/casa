@@ -55,6 +55,15 @@ class test_base(unittest.TestCase):
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
         default(mstransform)
         
+    def setUp_CAS_5076(self):
+
+        self.vis = 'CAS-5076.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)        
+        
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
 
@@ -179,7 +188,7 @@ class test_Regridms1(test_base):
         # same as test_regrid1_1
         mmsfile = 'testmms13.mms'
         # Create input MMS
-        mstransform(vis=self.vis, outputvis=mmsfile, createmms=True, parallel=True,
+        mstransform(vis=self.vis, outputvis=mmsfile, createmms=True, parallel=False,
                     separationaxis='scan')
         
         outputms = "reg13.ms"
@@ -762,7 +771,7 @@ class test_Parallel(test_base):
         '''mstransform: create MMS with spw separation and channel selections in parallel'''
         outputms = "parallel1.mms"
         mstransform(vis=self.vis, outputvis=outputms, spw='0~4,5:1~10',createmms=True,
-                    separationaxis='spw', parallel=True)
+                    separationaxis='spw', parallel=False)
                             
         self.assertTrue(os.path.exists(outputms))
         
@@ -775,7 +784,7 @@ class test_Parallel(test_base):
         '''mstransform: create MMS with spw/scan separation and channel selections in parallel'''
         outputms = "parallel2.mms"
         mstransform(vis=self.vis, outputvis=outputms, spw='0:0~10,1:60~63',createmms=True,
-                    separationaxis='both', parallel=True)
+                    separationaxis='both', parallel=False)
                             
         self.assertTrue(os.path.exists(outputms))
         
@@ -790,7 +799,7 @@ class test_Parallel(test_base):
         '''mstransform: create MMS with scan separation and channel selections in parallel'''
         outputms = "parallel3.mms"
         mstransform(vis=self.vis, outputvis=outputms, spw='0:0~10,1:60~63',createmms=True,
-                    separationaxis='scan', parallel=True)                            
+                    separationaxis='scan', parallel=False)                            
         self.assertTrue(os.path.exists(outputms))
         
         # It should create 2 subMS, with spw=0~1
@@ -804,7 +813,7 @@ class test_Parallel(test_base):
         '''mstransform: verify spw sub-table consolidation in parallel'''
         outputms = "parallel4.mms"
         mstransform(vis=self.vis, outputvis=outputms, spw='3,5:10~20,7,9,11,13,15',createmms=True,
-                    separationaxis='spw', parallel=True)                            
+                    separationaxis='spw', parallel=False)                            
         self.assertTrue(os.path.exists(outputms))
         
         # spw=5 should be spw=1 after consolidation, with 10 channels
@@ -815,7 +824,7 @@ class test_Parallel(test_base):
         self.setUp_jupiter()
         outputms = 'parallel5.mms'
         mstransform(vis=self.vis, outputvis=outputms, combinespws=False, spw='0,1',field = '12',
-             datacolumn='DATA', createmms=True, separationaxis='scan', parallel=True)
+             datacolumn='DATA', createmms=True, separationaxis='scan', parallel=False)
         
         self.assertTrue(os.path.exists(outputms))
 
@@ -828,6 +837,25 @@ class test_Parallel(test_base):
         
         ret = th.verifyMS(outputms, 2, 1, 0)
         self.assertTrue(ret[0],ret[1])
+        
+        
+class test_state(test_base):
+    '''Test operation with state id'''
+    def setUp(self):
+        self.setUp_CAS_5076()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf test_state*.*ms')
+        
+    def test_CAS_5076(self):
+        '''mstransform: select 2 scans and automatically re-index state sub-table'''
+        outputms = "test_state.ms"
+        mstransform(vis=self.vis, outputvis=outputms, scan='2,3', datacolumn='DATA')
+        self.assertTrue(os.path.exists(outputms))        
+        
+        ''' this should not crash '''
+        listobs(outputms)
  
 # Cleanup class 
 class Cleanup(test_base):
@@ -855,4 +883,5 @@ def suite():
             test_SeparateSPWs,
             test_MMS,
             test_Parallel,
+            test_state,
             Cleanup]

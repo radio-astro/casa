@@ -40,7 +40,6 @@ def toolhelp():
     print ' cs : Coordinate system utilities'
     print ' cu : Class utilities'
     print ' dc : Deconvolver utilities'
-    print ' fg : Flagging/Flag management utilities'
     print ' fi : Fitting utilities'
     print ' fn : Functional utilities'
     print ' ia : Image analysis utilities'

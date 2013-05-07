@@ -198,8 +198,10 @@ def simalma(
                                             indirection, incell, incenter,
                                             inwidth, -1, False)
             shutil.rmtree(outmodel)
+            model_refdir =  model_vals[0]
             model_cell = model_vals[1]
             model_size = model_vals[2]
+            model_nchan = model_vals[3]
             model_center = model_vals[4]
             del model_vals
         else:
@@ -219,7 +221,8 @@ def simalma(
             model_size = ["%fdeg" % (2*cmax), "%fdeg" % (2*cmax)]
             cl.done()
             model_cell = None
-            del compdirs, model_refdir, coffs, xc, yc, cmax
+            model_nchan = 1
+            del compdirs, coffs, xc, yc, cmax
 
         # Calculate 12-m PB
         Dant = 12.
@@ -485,32 +488,38 @@ def simalma(
                 msg("- The total power map size: [%s, %s]" % \
                     (qa.tos(qimgsize_tp[0]), qa.tos(qimgsize_tp[1])), \
                     origin="simalma", priority=v_priority)
-                if cell != '':
-                    # user-defined cell size
-                    msg("- The user defined cell size: %s" % cell, \
-                        origin="simalma", priority=v_priority)
-                    imgcell = [cell, cell]
-                else:
-                    if model_cell == None:
-                        # components only simulation
-                        compmodel = fileroot+"/"+pref_bl+".compskymodel"
-                        msg("getting the cell size of input compskymodel", \
-                            origin="simalma", priority=v_priority)
-                        if not os.path.exists(compmodel):
-                            msg("Could not find the skymodel, '%s'" % \
-                                compmodel, priority='error')
-                        # modifymodel just collects info if outmodel==inmodel
-                        model_vals = myutil.modifymodel(compmodel,compmodel,
-                                                        "","","","","",-1,
-                                                        flatimage=False)
-                        model_cell = model_vals[1]
-                        model_size = model_vals[2]
+                #if cell != '':
+                #    # user-defined cell size
+                #    msg("- The user defined cell size: %s" % cell, \
+                #        origin="simalma", priority=v_priority)
+                #    imgcell = [cell, cell]
+                #else:
+                #    if model_cell == None:
+                #        # components only simulation
+                #        compmodel = fileroot+"/"+pref_bl+".compskymodel"
+                #        msg("getting the cell size of input compskymodel", \
+                #            origin="simalma", priority=v_priority)
+                #        if not os.path.exists(compmodel):
+                #            msg("Could not find the skymodel, '%s'" % \
+                #                compmodel, priority='error')
+                #        # modifymodel just collects info if outmodel==inmodel
+                #        model_vals = myutil.modifymodel(compmodel,compmodel,
+                #                                        "","","","","",-1,
+                #                                        flatimage=False)
+                #        model_cell = model_vals[1]
+                #        model_size = model_vals[2]
 
-                    # skymodel (+ components list) simulation
-                    msg("- The cell size of input skymodel: [%s, %s]" % \
-                        (qa.tos(model_cell[0]), qa.tos(model_cell[1])), \
-                        origin="simalma", priority=v_priority)
-                    imgcell = model_cell
+                #    # skymodel (+ components list) simulation
+                #    msg("- The cell size of input skymodel: [%s, %s]" % \
+                #        (qa.tos(model_cell[0]), qa.tos(model_cell[1])), \
+                #        origin="simalma", priority=v_priority)
+                #    imgcell = model_cell
+
+                ### generate TP image using BOX kernel
+                msg("- Using pointing spacing of TP simulation as the cell size of TP image: [%s, %s]" %\
+                    (qa.tos(grid_tp), qa.tos(grid_tp)),\
+                    origin="simalma", priority=v_priority)
+                imgcell = [qa.tos(grid_tp), qa.tos(grid_tp)]
 
                 imsize_tp = calc_imsize(mapsize=qimgsize_tp, cell=imgcell)
 
@@ -527,17 +536,51 @@ def simalma(
                         imsize_bl = imsize[0:2]
                     else:
                         imsize_bl = [imsize[0], imsize[0]]
-                    msg("---> BL imsize (user defined): [%d, %d]" % \
+                    #msg("---> BL imsize (user defined): [%d, %d]" % \
+                    #    (imsize_bl[0], imsize_bl[1]), \
+                    #    origin="simalma", priority=v_priority)
+                    ### scaling for TP grid size ########################
+                    if cell == "": # take from image cell size
+                        if model_cell == None:
+                            # components only simulation
+                            compmodel = fileroot+"/"+pref_bl+".compskymodel"
+                            msg("getting the cell size of input compskymodel", \
+                                origin="simalma", priority=v_priority)
+                            if not os.path.exists(compmodel):
+                                msg("Could not find the skymodel, '%s'" % \
+                                    compmodel, priority='error')
+                            # modifymodel just collects info if outmodel==inmodel
+                            model_vals = myutil.modifymodel(compmodel,compmodel,
+                                                            "","","","","",-1,
+                                                            flatimage=False)
+                            model_cell = model_vals[1]
+                        qcell = model_cell
+                    elif type(cell) == str:
+                        qcell = [qa.quantity(cell), qa.quantity(cell)]
+                    elif len(cell) > 1:
+                        qcell = [qa.quantity(cell[0]), qa.quantity(cell[1])]
+                    else:
+                        qcell = [qa.quantity(cell[0]), qa.quantity(cell[0])]
+                    #print "defined cell size = "+str(qcell)
+                    #print "defined grid size = "+str(grid_tp)
+                    factor = [qcell[0]['value']/qa.convert(grid_tp, qcell[0]['unit'])['value'], \
+                              qcell[1]['value']/qa.convert(grid_tp, qcell[1]['unit'])['value']]
+                    imsize_bl = [int(numpy.ceil(imsize_bl[0]*factor[0])),\
+                                 int(numpy.ceil(imsize_bl[1]*factor[1]))]
+                    msg("---> TP imsize to cover user defined image extent: [%d, %d]" % \
                         (imsize_bl[0], imsize_bl[1]), \
                         origin="simalma", priority=v_priority)
+                    #####################################################
                 else:
                     # the same as input model (calculate from model_size)
                     msg("estimating imsize of BL from input sky model.", \
                         origin="simalma", priority=v_priority)
                     imsize_bl = calc_imsize(mapsize=model_size, cell=imgcell)
-                    msg("---> Estimated BL imsize (sky model): [%d, %d]" % \
+                    #msg("---> Estimated BL imsize (sky model): [%d, %d]" % \
+                    msg("---> Estimated TP imsize to cover sky model: [%d, %d]" % \
                         (imsize_bl[0], imsize_bl[1]), \
                         origin="simalma", priority=v_priority)
+
 
                 imsize_tp = [max(imsize_tp[0], imsize_bl[0]), \
                              max(imsize_tp[1], imsize_bl[1])]
@@ -546,17 +589,42 @@ def simalma(
                     (imsize_tp[0], imsize_tp[1]), \
                     origin="simalma", priority=v_priority)
 
-                taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_tp+"', modelimage='', cell='"+str(cell_tp)+"', imsize="+str(imsize_tp)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+                # Generate TP image
+                msg("Generating TP image using 'BOX' kernel.",\
+                    origin="simalma", priority=v_priority)
+                im.open(fileroot+"/"+vis_tp)
+                im.selectvis(nchan=model_nchan,start=0,step=1,spw=0)
+                ### TODO: should set proper phasecenter based on imdirection!!!
+                im.defineimage(mode='channel',nx=imsize_tp[0],ny=imsize_tp[1],cellx=imgcell[0],celly=imgcell[1],phasecenter=model_refdir,nchan=model_nchan,start=0,step=1,spw=0)
+                im.setoptions(ftmachine='sd',gridfunction='box')
+                im.makeimage(type='singledish',image=fileroot+"/"+imagename_tp)
+                im.close()
+                # set restoring beam
+                ia.open(fileroot+"/"+imagename_tp)
+                ia.setrestoringbeam(major=PB12,minor=PB12,pa=qa.quantity("0.0deg"))
+                ia.close()
+
+                # Analyze TP image
+                msg("Analyzing TP image.", origin="simalma", priority=v_priority)
+                #taskstr = "simanalyze(project='"+project+"', image="+str(image)+", vis='"+vis_tp+"', modelimage='', cell='"+str(cell_tp)+"', imsize="+str(imsize_tp)+", imdirection='"+imdirection+"', niter="+str(niter)+", threshold='"+threshold+"', weighting='"+weighting+"', mask="+str([])+", outertaper="+str([])+", stokes='I', analyze="+str(True)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+                vis_tp = fileroot+"/"+vis_tp
+                taskstr = "simanalyze(project="+project+", image=False, imagename='"+fileroot+"/"+imagename_tp+"', analyze=True, showuv=False, showpsf=False, showconvolved=True, graphics="+str(graphics)+", verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
                 msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
 
                 try:
-                    simanalyze(project=project, image=image,
-                               vis=vis_tp, modelimage="",
-                               cell=cell_tp, imsize=imsize_tp,
-                               imdirection=imdirection, niter=niter,
-                               threshold=threshold, weighting=weighting,
-                               mask=[], outertaper=[], stokes='I',
+                    #simanalyze(project=project, image=image,
+                    #           vis=vis_tp, modelimage="",
+                    #           cell=cell_tp, imsize=imsize_tp,
+                    #           imdirection=imdirection, niter=niter,
+                    #           threshold=threshold, weighting=weighting,
+                    #           mask=[], outertaper=[], stokes='I',
+                    #           analyze=True,
+                    #           graphics=graphics, verbose=verbose,
+                    #           overwrite=overwrite)
+                    simanalyze(project=project, image=False,
+                               imagename=fileroot+"/"+imagename_tp,
                                analyze=True,
+                               showuv=False,showpsf=False,showconvolved=True,
                                graphics=graphics, verbose=verbose,
                                overwrite=overwrite)
                 except:

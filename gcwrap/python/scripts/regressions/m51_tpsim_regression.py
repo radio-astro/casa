@@ -122,22 +122,35 @@ ia.open(project+"/"+project + '.sd.image')
 m51sd_stats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-refstats = {'max':  1.8829,
-            'min': -0.52625,
-            'rms': 0.22069,
-            'sigma': 0.20145,
-            'sum': 23627}
+#refstats = {'max':  1.8829,
+#            'min': -0.52625,
+#            'rms': 0.22069,
+#            'sigma': 0.20145,
+#            'sum': 23627}
+# update after setvp fix (r21970)
+refstats = {'max': 3.17733955,
+            'min': -0.52407992,
+            'rms': 0.36143386,
+            'sigma': 0.32582116,
+            'sum': 41011.427}
+
 
 #ia.open(project+"/"+project + '.aca.tp.diff')
 ia.open(project+"/"+project + '.sd.diff')
 m51sd_diffstats=ia.statistics(verbose=False,list=False)
 ia.close()
 
-diffstats = {'max': 2.4528,
-             'min': -0.48053,
-             'rms': 0.26383,
-             'sigma': 0.24221,
-             'sum': 27423 }
+#diffstats = {'max': 2.4528,
+#             'min': -0.48053,
+#             'rms': 0.26383,
+#             'sigma': 0.24221,
+#             'sum': 27423 }
+# update after setvp fix (r21970)
+diffstats = {'max': 1.19746065,
+             'min': -0.50039643,
+             'rms': 0.13544469,
+             'sigma': 0.12991888,
+             'sum': 10038.482 }
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,

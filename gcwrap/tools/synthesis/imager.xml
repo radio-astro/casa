@@ -2402,10 +2402,10 @@ determine the primary beam function.
      <value>apply</value>
      </param>
 
-     <param type="MDirection" name="pointingcenter">
-     <description>Pointing center for primary beam application</description>
-     <value>false</value>
-     <value>N. pole</value>
+     <param type="any" name="pointingcenter">
+     <description>Pointing center for primary beam application: default N.Pole</description>
+     <any type="variant"/>
+     <value></value>
      </param>
 
      <param type="any" name="parangle" >

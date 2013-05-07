@@ -195,7 +195,8 @@ def setjy_core(vis=None, field=None, spw=None,
 
         setjyutil=ss_setjy_helper(myim,vis,casalog)
         setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
-                         timerange=timerange,observation=str(observation), scan=scan, useephemdir=useephemdir)
+                         timerange=timerange,observation=str(observation), scan=scan, 
+                         useephemdir=useephemdir,usescratch=usescratch)
         clnamelist=setjyutil.getclnamelist()
       else:
         myim.setjy(field=field, spw=spw, modimage=modimage,

@@ -54,6 +54,7 @@ def usage():
     print '   --all             run the script for all tasks in TASKLIST.'
     print '   --ignore          do no create MMS for the given <tasks>.'
     print '   --list            print the list of tasks from TASKLIST and exit.'
+    print '   --parallel        create MMSs in parallel using simple_cluster. This '
     print 'NOTE: it will look for MS data in the data repository under unittest.\r'
     print '=========================================================================='
 
@@ -71,14 +72,15 @@ def selectList(nolist):
     
     
 # Function to call partitionhelper.convertToMMS()
-def mmstest(mytask):
+def mmstest(mytask, parallel):
 
     TESTPATH = DATAPATH + 'unittest/'
     INPPATH = TESTPATH + mytask
     MMSPATH = './unittest_mms/'+mytask
 
     print '--------- Will create MMS data for test_'+mytask
-    ph.convertToMMS(inpdir=INPPATH, mmsdir=MMSPATH, createmslink=True, cleanup=True)
+    ph.convertToMMS(inpdir=INPPATH, mmsdir=MMSPATH, parallel=parallel, 
+                    createmslink=True, cleanup=True)
 
       
 # Location of the data repository
@@ -87,7 +89,7 @@ if not os.environ.has_key('CASAPATH'):
     os._exit(2)
     
 
-def main(thislist):
+def main(thislist, parallel=False):
     
     if thislist == []:
         print 'Need list of tasks to run.'
@@ -101,7 +103,7 @@ def main(thislist):
             print 'ERROR: task '+t+' is not in TASKLIST. Run this script with -l for the full list.'
             os._exit(0)
             
-        mmstest(t)
+        mmstest(t, parallel)
 
     from tasks import partition
 
@@ -111,7 +113,8 @@ def main(thislist):
         SDPATH = DATAPATH + 'unittest/listvis/'
         SDMMS = './unittest_mms/listvis/'
     
-        partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', datacolumn='float_data', createmms=True)
+        partition(vis=SDPATH+'OrionS_rawACSmod', outputvis=SDMMS+'OrionS_rawACSmod.mms', 
+                  datacolumn='float_data', createmms=True, parallel=parallel)
 
     if 'split' in thislist:
         # some additional MMSs
@@ -121,7 +124,8 @@ def main(thislist):
                        'split/labelled_by_time+ichan.ms']
         for myms in specialcase:
             shutil.rmtree(SPLITMMSPATH+os.path.basename(myms), ignore_errors=True)
-            partition(vis=DATAPATH+myms, outputvis=SPLITMMSPATH+os.path.basename(myms), datacolumn='all')
+            partition(vis=DATAPATH+myms, outputvis=SPLITMMSPATH+os.path.basename(myms), 
+                      datacolumn='all', parallel=parallel)
 
         # workaround for a partition shortcoming: column keywords not copied
         tb.open(SPLITMMSPATH+'hasfc.mms/SUBMSS/hasfc.0000.ms/', nomodify=False)
@@ -141,7 +145,8 @@ def main(thislist):
         for d in mydirs:
             print d
             if  os.path.splitext(d)[1]=='.ms':
-                partition(vis=WVRGCALPATH+d, outputvis=d, datacolumn='all', numsubms=5)
+                partition(vis=WVRGCALPATH+d, outputvis=d, datacolumn='all', numsubms=5,
+                          parallel=parallel)
             else:
                 os.symlink(WVRGCALPATH+d, d)
         os.chdir(origwd)
@@ -158,7 +163,8 @@ def main(thislist):
         for d in mydirs:
             print d
             if os.path.splitext(d)[1]=='.ms':
-                partition(vis=CONCATPATH+d, outputvis=d, datacolumn='all', numsubms=6)
+                partition(vis=CONCATPATH+d, outputvis=d, datacolumn='all', numsubms=6,
+                          parallel=parallel)
             else:
                 os.symlink(CONCATPATH+d, d)
         os.chdir(origwd)
@@ -175,7 +181,7 @@ if __name__ == "__main__":
                     
             try:
                 # Get only this script options
-                opts,args=getopt.getopt(sys.argv[i+2:], "ail", ["all", "ignore","list"])
+                opts,args=getopt.getopt(sys.argv[i+2:], "ailp", ["all", "ignore","list","parallel"])
                 
             except getopt.GetoptError, err:
                 # Print help information and exit:
@@ -186,6 +192,7 @@ if __name__ == "__main__":
             # List of tests to run
             tasknames = []
             
+            parallel = False            
             ignore = False
             all = False
             
@@ -196,6 +203,10 @@ if __name__ == "__main__":
             
             elif opts != []:
                 for o, a in opts:
+                    if o in ("-p", "--parallel"):
+                        parallel = True
+                        continue
+                    
                     if o in ("-a", "--all"):
                         all = True
                         tasknames = TASKLIST
@@ -226,7 +237,7 @@ if __name__ == "__main__":
                     tasknames = selectList(args)
                 
     try:                 
-        main(tasknames)
+        main(tasknames, parallel)
     except:
         traceback.print_exc()
     

@@ -702,6 +702,7 @@
               flagdimension='freqtime' 
               usewindowstats='none'
               halfwin=1 
+              extendflags=True
          
           2.7 Mode extend.
               ntime='scan'
@@ -724,6 +725,7 @@
               freqdevscale=5.0
               spectralmax=1000000.0
               spectralmin=0.0
+              extendflags=True
               
           2.9 Mode unflag.
               

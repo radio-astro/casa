@@ -88,10 +88,83 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                 # conversion doesn't barf
                 csys.convertdirection(oldrefcode)
                 angle = csys.convertdirection(newrefcode)
+                mysin = qa.getvalue(qa.sin(angle))
+                mycos = qa.getvalue(qa.cos(angle))
+                xnew = 0
+                ynew = 0
+                for xx in [-centerpix[0], centerpix[0]]:
+                    for yy in [-centerpix[1], centerpix[1]]:
+                        xnew = max(xnew, abs(xx*mycos - yy*mysin + 1))
+                        ynew = max(ynew, abs(xx*mysin + yy*mycos + 1))
+                pad = int(max(xnew - shape[0]/2, ynew - shape[1]/2))
+                casalog.post(
+                    "Padding image by " + str(pad)
+                        + " pixels so no pixels are cut off in the rotation",
+                    "NORMAL"
+                )
+                _myia = _myia.pad("", pad, wantreturn=True) 
+                shape = _myia.shape()
+                casalog.post(
+                    "Will rotate direction coordinate by "
+                        + qa.tos(qa.convert(qa.neg(angle),"deg"))
+                    , 'NORMAL'
+                )
+                docrop = (diraxes == [0,1]).all() or (diraxes == [1,0]).all()
+                outfile = "" if docrop else output
                 rot = _myia.rotate(
-                    outfile=output, shape=shape, pa=qa.neg(angle)
+                    outfile=outfile, shape=shape, pa=qa.neg(angle)
                 )
                 rot.setcoordsys(csys.torecord())
+                # now crop
+                if docrop:
+                    mingoodx = 0
+                    maxgoodx = shape[diraxes[0]] - 1
+                    mingoody = 0
+                    maxgoody = shape[diraxes[1]] - 1
+                    mask = rot.getchunk(getmask=True)
+                    if (not mask.any()):
+                        rot.done()
+                        raise Exception("all output pixels masked")
+                    minfound = False
+                    maxfound = False
+                    for x in range(int(shape[diraxes[0]]/2 + 1)):
+                        if not minfound:
+                            if mask[x].any():
+                                mingoodx = x
+                                minfound = True
+                        if not maxfound:
+                            testmax = shape[diraxes[0]] - x - 1
+                            if mask[testmax].any():
+                                maxgoodx = testmax
+                                maxfound = True
+                        if maxfound and minfound:
+                            break
+                    minfound = False
+                    maxfound = False
+                    for y in range(int(shape[diraxes[1]]/2 + 1)):
+                        if not minfound:
+                            if mask[:,y].any():
+                                mingoody = y
+                                minfound = True
+                        if not maxfound:
+                            testmax = shape[diraxes[1]] - y - 1
+                            if mask[:, testmax].any():
+                                maxgoody = testmax
+                                maxfound = True
+                        if maxfound and minfound:
+                            break
+                    blc = shape[:]
+                    for i in range(len(blc)):
+                        blc[i] = 0
+                    blc[diraxes[0]] = mingoodx
+                    blc[diraxes[1]] = mingoody
+                    trc = shape - 1
+                    trc[diraxes[0]] = maxgoodx
+                    trc[diraxes[1]] = maxgoody
+                    reg = rg.box(blc, trc)
+                    casalog.post("Cropping masked image boundaries", "NORMAL")
+                    subim = rot.subimage(outfile=output, region=reg)
+                    subim.done()   
                 rot.done()
                 _myia.done()
                 return True

@@ -235,6 +235,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
@@ -325,6 +326,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
@@ -444,6 +446,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
@@ -536,6 +539,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
@@ -666,6 +670,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
@@ -749,6 +754,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
@@ -833,6 +839,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
@@ -920,6 +927,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
@@ -1020,6 +1028,7 @@ class test_concat(unittest.TestCase):
                     retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
                 else:
                     print myname, ": ", name, "present."
+            self.assertTrue(retValue['success'])
             print myname, ": MS exists. All tables present. Try opening as MS ..."
             try:
                 ms.open(msname)
@@ -1120,6 +1129,7 @@ class test_concat(unittest.TestCase):
                     retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
                 else:
                     print myname, ": ", name, "present."
+            self.assertTrue(retValue['success'])
             print myname, ": MS exists. All tables present. Try opening as MS ..."
             try:
                 ms.open(msname)
@@ -1161,7 +1171,7 @@ class test_concat(unittest.TestCase):
         # endif
 
     def test11(self):
-        '''Concat 11: 2 parts of same MS split in time,  use of ephemerides'''
+        '''Concat 11: 2 parts of same MS split in time,  use of ephemerides, first ephemeris covers both MS time ranges'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
         
         self.res = concat(vis=['xy1.ms','xy2.ms'],concatvis=msname, copypointing=False)
@@ -1196,7 +1206,6 @@ class test_concat(unittest.TestCase):
                             "FIELD/table.f0",
                             "FIELD/EPHEM0_Uranus_54708-55437dUTC.tab",
                             "FIELD/EPHEM1_Jupiter_54708-55437dUTC.tab",
-                            "FIELD/EPHEM2_Uranus_54708-55437dUTC.tab",
                             "FLAG_CMD/table.f0",
                             "HISTORY/table.f0",
                             "OBSERVATION/table.f0",
@@ -1214,6 +1223,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
@@ -1284,6 +1294,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         nonames = set(["FIELD/EPHEM2_Uranus_54708-55437dUTC.tab",
                        "FIELD/EPHEM3_Uranus_54708-55437dUTC.tab",
@@ -1296,6 +1307,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' should not exist'
             else:
                 print myname, ": ", name, " not present as expected."
+        self.assertTrue(retValue['success'])
 
         try:
             ms.open(msname)
@@ -1366,6 +1378,7 @@ class test_concat(unittest.TestCase):
                 retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
             else:
                 print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
         print myname, ": MS exists. All tables present. Try opening as MS ..."
         try:
             ms.open(msname)
