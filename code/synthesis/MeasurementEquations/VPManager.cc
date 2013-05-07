@@ -51,90 +51,45 @@
 #include <casa/Logging/LogSink.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/OS/Directory.h>
+#include <casa/OS/Mutex.h>
 #include <images/Images/PagedImage.h>
 #include <unistd.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
   VPManager* VPManager::instance_p = 0;
-
-  VPManager* VPManager::Instance(){
-    if(instance_p==0){
-      instance_p = new VPManager();
-    }
-    return instance_p;
-  }
-
-  void VPManager::reset(){
-    if(instance_p){
-      delete instance_p;
-      instance_p = new VPManager(True);
-    }
-  }    
-
-  Bool VPManager::lock(){
-    if(isLocked_p){
-      return False;
-    }
-    else{
-      isLocked_p = True;
-    }
-    return True;
-  }
-
-  Bool VPManager::acquireLock(Double timeoutSecs,
-			      Bool verbose){
-    if(isLocked_p){
-      Timer t;
-      t.mark();
-      while(t.real()<=timeoutSecs){
-	sleep(1);
-	if(!isLocked_p){
-	  isLocked_p = True;
-	  return True;
-	}
-      }
-      // waiting was not successful
-      if(verbose){
-	if(isLocked()){ // still locked
-	  return False;
-	}
-	else{ // we acquired the lock 
-	  isLocked_p = True;
-	  return True;
-	}
-      }
-      return False;
-    }
-    else{
-      isLocked_p = True;
-    }
-    return True;
-  }
-
-  Bool VPManager::isLocked(){
-    if(!isLocked_p){
-	LogIO os;
-	os << LogOrigin("VPManager", "isLocked");
-	os << LogIO::SEVERE << "VPManager is in use. Need to release first." << LogIO::POST;
-	return True;
-    }
-    return False;
-  }    
-
-  void VPManager::release(){
-    isLocked_p = False;
-  }
+  Mutex VPManager::mutex_p(Mutex::Recursive); // to permit calls in same thread
 
   VPManager::VPManager(Bool verbose):
-    isLocked_p(True),
     vplist_p(),
     vplistdefaults_p(-1),
     aR_p()
   {
+    reset(verbose);
+  }
+
+
+  VPManager* VPManager::Instance(){
+    if(instance_p==0){
+      ScopedMutexLock locker(mutex_p);
+      if(instance_p==0){
+	instance_p = new VPManager();
+      }
+    }
+    return instance_p;
+  }
+
+  void VPManager::reset(Bool verbose)
+  {
+
+    ScopedMutexLock locker(mutex_p);
+
+    vplist_p = Record();
+    vplistdefaults_p.clear();
+    aR_p.init();
 
     LogIO os;
-    os << LogOrigin("VPManager", "ctor");
+    os << LogOrigin("VPManager", "reset");
 
     String telName;
     for(Int pbtype = static_cast<Int>(PBMath::DEFAULT) + 1;
@@ -195,13 +150,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     if(verbose){
       os << LogIO::NORMAL << "VPManager initialized." << LogIO::POST;
     }
-    release();
 
   }
 
 
   Bool VPManager::saveastable(const String& tablename){
     
+    ScopedMutexLock locker(mutex_p);
+
     TableDesc td("vptable", "1", TableDesc::Scratch);
     td.addColumn(ScalarColumnDesc<String>("telescope"));
     td.addColumn(ScalarColumnDesc<Int>("antenna"));
@@ -243,6 +199,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   Bool VPManager::loadfromtable(const String& tablename){
+
+    ScopedMutexLock locker(mutex_p);
 
     LogIO os(LogOrigin("vpmanager", "loadfromtable"));
 
@@ -295,6 +253,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   Bool VPManager::summarizevps(const Bool verbose) {
+
+    ScopedMutexLock locker(mutex_p);
 
     LogIO os(LogOrigin("vpmanager", "summarizevps"));
 
@@ -390,6 +350,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      const Quantity& paincrement, 
 			      const Bool usesymmetricbeam,
 			      Record& rec){
+
+    ScopedMutexLock locker(mutex_p);
+
     rec = Record();
     rec.define("name", "COMMONPB");
     rec.define("isVP", PBMathInterface::COMMONPB);
@@ -427,6 +390,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			    const Quantity& paincrement, 
 			    const Bool usesymmetricbeam,
 			    Record& rec){
+
+    ScopedMutexLock locker(mutex_p);
 
     rec=Record();
     rec.define("name", "AIRY");
@@ -482,6 +447,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       const Bool usesymmetricbeam,
 			       Record& rec) {
 
+    ScopedMutexLock locker(mutex_p);
+
     rec=Record();
     rec.define("name", "COSPOLY");
     rec.define("isVP", PBMathInterface::COSPOLY);
@@ -536,6 +503,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     const Quantity& paincrement, 
 			     const Bool usesymmetricbeam,
 			     Record& rec){
+
+    ScopedMutexLock locker(mutex_p);
+
     rec=Record();
     rec.define("name", "GAUSS");
     rec.define("isVP", PBMathInterface::GAUSS);
@@ -597,6 +567,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       const Bool usesymmetricbeam,
 			       Record& rec) {
 
+    ScopedMutexLock locker(mutex_p);
+
     rec=Record();
     rec.define("name", "IPOLY");
     rec.define("isVP", PBMathInterface::IPOLY);
@@ -653,6 +625,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       const Bool usesymmetricbeam,
 			       Record &rec) {
 
+    ScopedMutexLock locker(mutex_p);
+
     rec=Record();
     rec.define("name", "NUMERIC");
     rec.define("isVP", PBMathInterface::NUMERIC);
@@ -702,6 +676,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			     const String& imagimage,
 			     const String& compleximage,
 			     Record& rec){
+
+    ScopedMutexLock locker(mutex_p);
+
     rec=Record();
     rec.define("name", "IMAGE");
     rec.define("isVP", PBMathInterface::IMAGE);
@@ -742,6 +719,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			    const Quantity& paincrement,
 			    const Bool usesymmetricbeam,
 			    Record &rec) {
+
+    ScopedMutexLock locker(mutex_p);
 
     rec=Record();
     rec.define("name", "POLY");
@@ -788,6 +767,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool VPManager::setpbantresptable(const String& telescope, const String& othertelescope,
 				    const Bool dopb, const String& tablepath){
 
+    ScopedMutexLock locker(mutex_p);
+
     Record rec;
     rec.define("name", "REFERENCE");
     rec.define("isVP", PBMathInterface::NONE);
@@ -814,6 +795,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Bool VPManager::setuserdefault(const Int vplistfield, // (-1 = reset to standard default, -2 = unset)
 				 const String& telescope,
 				 const String& antennatype){     
+
+    ScopedMutexLock locker(mutex_p);
 
     LogIO os;
     os <<  LogOrigin("VPManager", "setuserdefault");
@@ -859,6 +842,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 const String& telescope,
 				 const String& antennatype){
 
+    ScopedMutexLock locker(mutex_p);
+
     String antDesc = antennaDescription(telescope, antennatype);
 
     if(vplistdefaults_p.isDefined(antDesc)){
@@ -885,6 +870,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			      const MFrequency& freq, 
 			      const MDirection& obsdirection // default: Zenith
 			      ){
+
+    ScopedMutexLock locker(mutex_p);
+
     LogIO os;
     os << LogOrigin("VPManager", "getanttypes");
 
@@ -982,6 +970,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			const MFrequency& freq, 
 			const MDirection& obsdirection // default: Zenith
 			){
+
+    ScopedMutexLock locker(mutex_p);
+
     LogIO os;
     os << LogOrigin("VPManager", "numvps");
 
@@ -1001,6 +992,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			const MFrequency& freq, 
 			const String& antennatype, // default: "" 
 			const MDirection& obsdirection){ // default is the Zenith
+
+    ScopedMutexLock locker(mutex_p);
 
     LogIO os;
     os << LogOrigin("VPManager", "getvp");
@@ -1284,6 +1277,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			const String& telescope,
 			const String& antennatype // default: "" 
 			){ 
+
+    ScopedMutexLock locker(mutex_p);
 
     LogIO os;
     os << LogOrigin("VPManager", "getvp2");

@@ -119,6 +119,7 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	displayDataHolder = new DisplayDataHolder();
 
 
+
 	if ( use_new_regions ) {
 		// -----
 		// This must be created here, because the process of (a) constructing a QtDisplayPanel,
@@ -778,7 +779,6 @@ void QtDisplayPanelGui::disconnectHistogram(){
 }
 
 void QtDisplayPanelGui::resetListenerImage(){
-
 	QtDisplayData* controllingDD = dd();
 	if ( controllingDD != NULL ){
 		ImageInterface<float>* img = /*pdd*/controllingDD->imageInterface();
@@ -899,16 +899,6 @@ void QtDisplayPanelGui::resetHistogram( viewer::Region* region ){
 
 void QtDisplayPanelGui::refreshFit(){
 	if ( fitTool != NULL ){
-		/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
-		bool foundImage = false;
-		if ( rdds.len() > 0 ){
-			for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-				QtDisplayData* pdd = qdds.getRight();
-				if(pdd != 0 && pdd->dataType() == "image") {
-					ImageInterface<float>* img = pdd->imageInterface();
-					PanelDisplay* ppd = qdp_->panelDisplay();
-					if (ppd != 0 && img != 0) {
-						if (ppd->isCSmaster(pdd->dd())) {*/
 		QtDisplayData* controllingDD = dd();
 		if ( controllingDD != NULL ){
 			ImageInterface<float>* img = controllingDD->imageInterface();
@@ -985,8 +975,6 @@ void QtDisplayPanelGui::addResidualFitImage( String path ){
 			removeDD( oldResidualDD );
 		}
 	}
-
-
 	QtDisplayData* dd = createDD( path, "image", "raster" );
 	if ( dd == NULL ){
 		qDebug() << "Could not add residual image to viewer: "<<path.c_str();
@@ -1023,21 +1011,9 @@ void QtDisplayPanelGui::addSkyComponentOverlay( String path, const QString& colo
 	labelColorRecord.define("value", colorName.toStdString());
 	opts.defineRecord( LABEL_CHAR_COLOR, labelColorRecord);
 	dd->setOptions( opts );
-	if ( dd == NULL ){
-		qDebug() << "Could not overlay sky catalog";
-	}
 }
 
 void QtDisplayPanelGui::removeSkyComponentOverlay( String path ){
-	/*QtDisplayData* displayDataToRemove = NULL;
-	for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-		QtDisplayData* displayData = qdds.getRight();
-		String ddPath = displayData->name();
-		if ( ddPath == path ){
-			displayDataToRemove = displayData;
-			break;
-		}
-	}*/
 	QtDisplayData* displayDataToRemove = displayDataHolder->getDD( path.c_str());
 	if ( displayDataToRemove != NULL ){
 		removeDD( displayDataToRemove );
@@ -1434,15 +1410,16 @@ QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {
 
 QtDisplayData* QtDisplayPanelGui::lookForExistingController(){
 	QtDisplayData *ctrld = 0;
-	DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
-	while( iter != qdp_->endRegistered()){
+	DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+	while( iter != qdp_->beginRegistered()){
+		iter--;
 		QtDisplayData* pdd = (*iter);
-		iter++;
-		if ( pdd != 0 && pdd->dataType() == "image" ) {
+		if ( pdd != 0 && pdd->isImage() ) {
 			ImageInterface<float>* img = pdd->imageInterface( );
 			PanelDisplay* ppd = qdp_->panelDisplay( );
 			if ( ppd != 0 && ppd->isCSmaster(pdd->dd()) && img != 0 ) {
 				ctrld = pdd;
+				break;
 			}
 		}
 	}
@@ -1454,11 +1431,9 @@ QtDisplayData* QtDisplayPanelGui::dd( ) {
 	// retrieve the "controlling" DD...
 	QtDisplayData* controlling_dd = displayDataHolder->getDDControlling();
 	if ( controlling_dd == 0 ) {
-
 		controlling_dd = lookForExistingController();
-
-		emit axisToolUpdate( controlling_dd );
 		if ( controlling_dd != 0 ){
+			emit axisToolUpdate( controlling_dd );
 			displayDataHolder->setDDControlling( controlling_dd );
 			connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
 					SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
@@ -2973,13 +2948,19 @@ void QtDisplayPanelGui::setControllingDD( QtDisplayData* controlDD ){
 
 void QtDisplayPanelGui::replaceControllingDD( QtDisplayData* oldControllingDD, QtDisplayData* newControllingDD){
 	if ( newControllingDD != oldControllingDD ) {
-		if ( oldControllingDD != 0 ){
+		if ( oldControllingDD != NULL ){
+
 			disconnect( oldControllingDD, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
 						this, SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
 		}
 
-		displayDataHolder->setDDControlling ( newControllingDD );
+		//Set the new controlling DD in the layers below this one.
+		//qdp_->setControllingDD( newControllingDD );
+
+
 		emit axisToolUpdate( newControllingDD );
+
+
 		if ( newControllingDD != 0 ){
 			connect( newControllingDD, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
 						SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
@@ -2990,7 +2971,7 @@ void QtDisplayPanelGui::replaceControllingDD( QtDisplayData* oldControllingDD, Q
 void QtDisplayPanelGui::controlling_dd_update(QtDisplayData* /*updateDD*/) {
 	// manage controlling_dd so that we can generate updateAxis( ) events
 	// in response to user visible axis changes...
-
+		
 	//Get the previous controllingDD (it may no longer exist if it was removed.
 	QtDisplayData* oldControllingDD = displayDataHolder->getDDControlling();
 

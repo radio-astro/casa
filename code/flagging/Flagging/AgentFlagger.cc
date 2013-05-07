@@ -80,6 +80,7 @@ AgentFlagger::done()
 	timeInterval_p = 0.0;
 	isMS_p = true;
 	combinescans_p = false;
+	extendflags_p = true;
 	spw_p = "";
 	scan_p = "";
 	field_p = "";
@@ -459,6 +460,12 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 		}
 	}
 
+	// Check if extend agent should be added to the list later
+	if (mode.compare("tfcrop") == 0 or mode.compare("rflag") == 0){
+		if (agentParams_p.isDefined("extendflags"))
+				agentParams_p.get("extendflags", extendflags_p);
+	}
+
 	if (listOfAgents.size() > 0) {
 		// add the agent(s) to the list
 		for (size_t i=0; i < listOfAgents.size(); i++) {
@@ -480,6 +487,38 @@ AgentFlagger::parseAgentParameters(Record agent_params)
 
 	// Keep a copy of the vector of Agents parameters
 	agents_config_list_copy_p = agents_config_list_p;
+
+	// Parse the parameters of the extend agent
+	if ((mode.compare("tfcrop") == 0 or mode.compare("rflag") == 0) and
+			extendflags_p==true){
+
+		os << LogIO::NORMAL << "Will extend the flags after " << mode <<
+				"; extendflags=True" << LogIO::POST;
+
+		extendflags_p = false;
+		parseExtendParameters(
+				"", // field
+				"",	// spw
+				"",	// array
+				"",	// feed
+				"",	// scan
+				"",	// antenna
+				"",	// uvrange
+				"",	// timerange
+				"",	// correlation
+				"",	// intent
+				"",	// observation
+				max_p,	// ntime
+				combinescans_p,	// combinescans
+				true,	// extendpols
+				50.0,	// growtime
+				80.0	// growfreq
+//				false,	// growaround
+//				false,	// flagneartime
+//				false,	// flagnearfreq
+//				true	// apply
+				);
+	}
 
 	return true;
 }
@@ -509,6 +548,7 @@ AgentFlagger::initAgents()
 	if (agents_config_list_p.empty()){
 		return false;
 	}
+
 
 	os<< LogIO::DEBUG1<< "There are initially "<< agents_config_list_p.size()<<
 			" agents in the list"<<LogIO::POST;
@@ -1289,7 +1329,7 @@ AgentFlagger::parseTfcropParameters(String field, String spw, String array, Stri
 		String intent, String observation, Double ntime, Bool combinescans,
 		String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
 		String freqfit, Int maxnpieces, String flagdimension, String usewindowstats, Int halfwin,
-		Bool apply)
+		Bool extendflags, Bool apply)
 {
 
 	LogIO os(LogOrigin("AgentFlagger", __FUNCTION__));
@@ -1327,6 +1367,7 @@ AgentFlagger::parseTfcropParameters(String field, String spw, String array, Stri
 	agent_record.define("flagdimension", flagdimension);
 	agent_record.define("usewindowstats", usewindowstats);
 	agent_record.define("halfwin", halfwin);
+	agent_record.define("extendflags", extendflags);
 	agent_record.define("apply", apply);
 
 	// Call the main method

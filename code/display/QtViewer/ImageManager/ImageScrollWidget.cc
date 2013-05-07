@@ -53,8 +53,20 @@ void ImageScrollWidget::setImageHolder( DisplayDataHolder* holder ){
 	imageScroll->setImageHolder( holder );
 }
 
+void ImageScrollWidget::setControllingDD( QtDisplayData* dd ){
+	imageScroll->setControllingDD( dd );
+}
+
 void ImageScrollWidget::setImageColorsEnabled( bool enabled ){
 	imageScroll->setImageColorsEnabled( enabled );
+}
+
+void ImageScrollWidget::applyColorChangesIndividually(){
+	imageScroll->applyColorChangesIndividually();
+}
+
+bool ImageScrollWidget::findColor( const QString& lookup, QColor* foundColor ){
+	return imageScroll->findColor( lookup, foundColor );
 }
 
 void ImageScrollWidget::clearSelections(){

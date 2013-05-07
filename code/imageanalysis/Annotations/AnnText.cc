@@ -32,8 +32,17 @@ AnnText::AnnText(
 	const Quantity& xPos, const Quantity& yPos,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
-	const String& text
-) : AnnotationBase(TEXT, dirRefFrameString, csys),
+	const String& text,
+	const Quantity& beginFreq,
+	const Quantity& endFreq,
+	const String& freqRefFrame,
+	const String& dopplerString,
+	const Quantity& restfreq,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnotationBase(
+		TEXT, dirRefFrameString, csys, beginFreq,
+		endFreq, freqRefFrame, dopplerString, restfreq, stokes
+	),
 	_inputDirection(AnnotationBase::Direction(1)),
 	_text(text) {
 	_init(xPos, yPos);
@@ -42,8 +51,9 @@ AnnText::AnnText(
 AnnText::AnnText(
 	const Quantity& xPos, const Quantity& yPos,
 	const CoordinateSystem& csys,
-	const String& text
-) : AnnotationBase(TEXT, csys),
+	const String& text,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnotationBase(TEXT, csys, stokes),
 	_inputDirection(AnnotationBase::Direction(1)),
 	_text(text) {
 	_init(xPos, yPos);

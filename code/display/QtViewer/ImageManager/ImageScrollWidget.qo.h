@@ -46,12 +46,15 @@ class ImageScrollWidget : public QWidget
 public:
     ImageScrollWidget(QWidget *parent = 0);
     void setImageHolder( DisplayDataHolder* holder );
+    void setControllingDD( QtDisplayData* dd );
     QList<ImageView*> getSelectedViews();
     bool isManaged( QtDisplayData* displayData ) const;
     void closeImages();
     void addImageViews( QList<ImageView*>& views );
     void removeImageViews( QList<ImageView*>& view );
     void setImageColorsEnabled( bool enabled );
+    void applyColorChangesIndividually();
+    bool findColor( const QString& lookup, QColor* foundColor );
     ~ImageScrollWidget();
 signals:
     void displayDataRemoved( QtDisplayData* imageData );

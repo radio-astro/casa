@@ -256,6 +256,7 @@ private:
   // A list containing the DisplayDatas that are registered on this
   // WorldCanvasHolder.
   std::list<DisplayData*> itsDisplayList;
+  DisplayData* controllingDD;
   
   // The CS master in effect after executeSizeControl was last run (0 if none).
   // For determining (via wasCSmaster(), above) whether a CS master change is

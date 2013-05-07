@@ -29,7 +29,10 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Quanta/MVAngle.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
+#include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <measures/Measures/MCDirection.h>
+#include <measures/Measures/VelocityMachine.h>
+
 
 #include <iomanip>
 
@@ -83,14 +86,20 @@ const boost::regex AnnotationBase::rgbHexRegex("([0-9]|[a-f]){6}");
 
 AnnotationBase::AnnotationBase(
 	const Type type, const String& dirRefFrameString,
-	const CoordinateSystem& csys
+	const CoordinateSystem& csys, const Quantity& beginFreq,
+	const Quantity& endFreq,
+	const String& freqRefFrame,
+	const String& dopplerString,
+	const Quantity& restfreq,
+	const Vector<Stokes::StokesTypes>& stokes
 )
-: _type(type), _csys(csys), _label(DEFAULT_LABEL),
-  _font(DEFAULT_FONT), _labelPos(DEFAULT_LABELPOS), _color(DEFAULT_COLOR),
-  _labelColor(DEFAULT_LABELCOLOR), _fontstyle(DEFAULT_FONTSTYLE),
-  _linestyle(DEFAULT_LINESTYLE), _fontsize(DEFAULT_FONTSIZE),
+: _type(type), _csys(csys), _label(DEFAULT_LABEL),_font(DEFAULT_FONT),
+  _labelPos(DEFAULT_LABELPOS), _color(DEFAULT_COLOR), _labelColor(DEFAULT_LABELCOLOR),
+  _fontstyle(DEFAULT_FONTSTYLE), _linestyle(DEFAULT_LINESTYLE), _fontsize(DEFAULT_FONTSIZE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
+
+  _convertedFreqLimits(0), _stokes(stokes),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
   _printGlobals(False), _labelOff(DEFAULT_LABELOFF) {
 	String preamble = _class + ": " + String(__FUNCTION__) + ": ";
@@ -105,11 +114,16 @@ AnnotationBase::AnnotationBase(
 			+ dirRefFrameString
 		);
 	}
+	_setFrequencyLimits(
+		beginFreq, endFreq, freqRefFrame,
+		dopplerString, restfreq
+	);
 	_init();
 }
 
 AnnotationBase::AnnotationBase(
-	const Type type, const CoordinateSystem& csys
+	const Type type, const CoordinateSystem& csys,
+	const Vector<Stokes::StokesTypes>& stokes
 )
 : _type(type), _csys(csys), _label(DEFAULT_LABEL),
   _font(DEFAULT_FONT), _labelPos(DEFAULT_LABELPOS),
@@ -118,8 +132,11 @@ AnnotationBase::AnnotationBase(
   _fontsize(DEFAULT_FONTSIZE),
   _linewidth(DEFAULT_LINEWIDTH), _symbolsize(DEFAULT_SYMBOLSIZE),
   _symbolthickness(DEFAULT_SYMBOLTHICKNESS), _usetex(DEFAULT_USETEX),
+  _convertedFreqLimits(0), _beginFreq(Quantity(0, "Hz")), _endFreq(Quantity(0, "Hz")),
+	_restFreq(Quantity(0, "Hz")), _stokes(stokes),
   _globals(map<Keyword, Bool>()), _params(map<Keyword, String>()),
-  _printGlobals(False), _labelOff(DEFAULT_LABELOFF) {
+  _printGlobals(False), _labelOff(DEFAULT_LABELOFF)
+ {
 	String preamble = String(__FUNCTION__) + ": ";
 	if (!csys.hasDirectionCoordinate()) {
 		throw AipsError(
@@ -143,6 +160,13 @@ AnnotationBase& AnnotationBase::operator= (
     _csys = other._csys;
     _directionAxes.resize(other._directionAxes.nelements());
     _directionAxes = other._directionAxes;
+    _convertedFreqLimits.assign(other._convertedFreqLimits);
+    _beginFreq = other._beginFreq;
+    _endFreq = other._endFreq;
+    _restFreq = other._restFreq;
+    _stokes.assign(other._stokes);
+    _freqRefFrame = other._freqRefFrame;
+    _dopplerType = other._dopplerType;
     _label = other._label;
     _color = other._color;
     _font = other._font;
@@ -153,8 +177,7 @@ AnnotationBase& AnnotationBase::operator= (
     _symbolsize = other._symbolsize;
     _symbolthickness = other._symbolthickness;
     _usetex = other._usetex;
-    _convertedDirections.resize(other._convertedDirections.nelements());
-    _convertedDirections = other._convertedDirections;
+    _convertedDirections.assign(other._convertedDirections);
     _globals = other._globals;
     _params = other._params;
     _printGlobals = other._printGlobals;
@@ -182,6 +205,20 @@ void AnnotationBase::_init() {
 	}
 	_params[COORD] = MDirection::showType(_directionRefFrame);
 	_directionAxes = IPosition(_csys.directionAxesNumbers());
+
+	uInt nStokes = _stokes.size();
+	if (nStokes > 0) {
+		ostringstream os;
+		os << "[";
+		for (uInt i=0; i< nStokes; i++) {
+			os << Stokes::name(_stokes[i]);
+			if (i != _stokes.size() - 1) {
+				os << ", ";
+			}
+		}
+		os << "]";
+		_params[CORR] = os.str();
+	}
 	for(uInt i=0; i<N_KEYS; i++) {
 		_globals[(Keyword)i] = False;
 	}
@@ -210,6 +247,216 @@ void AnnotationBase::unitInit() {
         UnitMap::putUser("chan",UnitVal(1.0), "channel number");
 		_doneUnitInit = True;
 	}
+}
+
+
+Bool AnnotationBase::_setFrequencyLimits(
+	const Quantity& beginFreq,
+	const Quantity& endFreq,
+	const String& freqRefFrame,
+	const String& dopplerString,
+	const Quantity& restfreq
+) {
+	String preamble(_class + ": " + String(__FUNCTION__) + ": ");
+    if (beginFreq.getValue() == 0 && endFreq.getValue() == 0) {
+        return False;
+    }
+	if (! getCsys().hasSpectralAxis()) {
+		return False;
+	}
+    if ( beginFreq.getUnit().empty() && endFreq.getUnit().empty()) {
+        throw AipsError(
+            preamble + "Neither frequency specified has units. Both must"
+        );
+    }
+	if (! beginFreq.getUnit().empty() && endFreq.getUnit().empty()) {
+		throw AipsError(
+			preamble + "beginning frequency specified but ending frequency not. "
+			+ "Both must specified or both must be unspecified."
+		);
+	}
+	if (beginFreq.getUnit().empty() && ! endFreq.getUnit().empty()) {
+		throw AipsError(
+			preamble + "ending frequency specified but beginning frequency not. "
+			+ "Both must specified or both must be unspecified."
+		);
+	}
+	if (! beginFreq.getUnit().empty()) {
+		if (! beginFreq.isConform(endFreq)) {
+			throw AipsError(
+				preamble + "Beginning freq units (" + beginFreq.getUnit()
+				+ ") do not conform to ending freq units (" + endFreq.getUnit()
+				+ ") but they must."
+			);
+		}
+
+		if (
+			! beginFreq.isConform("Hz")
+			&& ! beginFreq.isConform("m/s")
+			&& ! beginFreq.isConform("pix")
+		) {
+			throw AipsError(
+				preamble
+				+ "Invalid frequency unit " + beginFreq.getUnit()
+			);
+		}
+		if (beginFreq.isConform("m/s") && restfreq.getValue() <= 0) {
+			throw AipsError(
+				preamble
+				+ "Beginning and ending velocities supplied but no restfreq specified"
+			);
+		}
+		if (freqRefFrame.empty()) {
+			_freqRefFrame = getCsys().spectralCoordinate().frequencySystem();
+		}
+		else if (! MFrequency::getType(_freqRefFrame, freqRefFrame)) {
+			throw AipsError(
+				preamble
+				+ "Unknown frequency frame code "
+				+ freqRefFrame
+			);
+		}
+		else {
+			_setParam(AnnotationBase::FRAME, freqRefFrame);
+		}
+		if (dopplerString.empty()) {
+			_dopplerType = getCsys().spectralCoordinate().velocityDoppler();
+		}
+		else if (! MDoppler::getType(_dopplerType, dopplerString)) {
+			throw AipsError(
+				preamble + "Unknown doppler code " + dopplerString
+			);
+		}
+		else {
+			_setParam(AnnotationBase::VELTYPE, dopplerString);
+		}
+		_beginFreq = beginFreq;
+		_endFreq = endFreq;
+		_restFreq = restfreq;
+		_setParam(AnnotationBase::RANGE, _printFreqRange());
+		_setParam(AnnotationBase::RESTFREQ, _printFreq(_restFreq));
+
+		_checkAndConvertFrequencies();
+		return True;
+	}
+	return False;
+}
+
+
+Vector<MFrequency> AnnotationBase::getFrequencyLimits() const {
+	return _convertedFreqLimits;
+}
+
+Vector<Stokes::StokesTypes> AnnotationBase::getStokes() const {
+	return _stokes;
+}
+
+void AnnotationBase::_checkAndConvertFrequencies() {
+    MFrequency::Types cFrameType = getCsys().spectralCoordinate().frequencySystem(False);
+	MDoppler::Types cDopplerType = getCsys().spectralCoordinate().velocityDoppler();
+	_convertedFreqLimits.resize(2);
+    for (Int i=0; i<2; i++) {
+		Quantity qFreq = i == 0 ? _beginFreq : _endFreq;
+		String unit = qFreq.getUnit();
+
+		if (qFreq.isConform("pix")) {
+			Int spectralAxisNumber = getCsys().spectralAxisNumber();
+			Vector<Double> pixel = getCsys().referencePixel();
+			pixel[spectralAxisNumber] = qFreq.getValue();
+			Vector<Double> world;
+			getCsys().toWorld(world, pixel);
+			String unit = getCsys().worldAxisUnits()[spectralAxisNumber];
+			if (_freqRefFrame != cFrameType) {
+				LogIO log;
+				log << LogOrigin(String(__FUNCTION__)) << LogIO::WARN
+					<< ": Frequency range given in pixels but supplied frequency ref frame ("
+					<< MFrequency::showType(_freqRefFrame) << ") differs from that of "
+					<< "the provided coordinate system (" << MFrequency::showType(cFrameType)
+					<< "). The provided frequency range will therefore be assumed to already "
+					<< "be in the coordinate system frequency reference frame and no conversion "
+					<< "will be done" << LogIO::POST;
+			}
+			if (_dopplerType != cDopplerType) {
+				LogIO log;
+				log << LogOrigin(String(__FUNCTION__)) << LogIO::WARN
+					<< ": Frequency range given in pixels but supplied doppler type ("
+					<< MDoppler::showType(_dopplerType) << ") differs from that of "
+					<< "the provided coordinate system (" << MDoppler::showType(cDopplerType)
+					<< "). The provided frequency range will therefore be assumed to already "
+					<< "be in the coordinate system doppler and no conversion "
+					<< "will be done" << LogIO::POST;
+			}
+			_freqRefFrame = cFrameType;
+			_dopplerType = cDopplerType;
+			_convertedFreqLimits[i] = MFrequency(
+				Quantity(world[spectralAxisNumber], unit),
+				_freqRefFrame
+			);
+		}
+		else if (qFreq.isConform("m/s")) {
+			MFrequency::Ref freqRef(_freqRefFrame);
+			MDoppler::Ref velRef(_dopplerType);
+			VelocityMachine vm(freqRef, Unit("GHz"),
+				MVFrequency(_restFreq),
+				velRef, unit
+			);
+			qFreq = vm(qFreq);
+			_convertedFreqLimits[i] = MFrequency(qFreq, _freqRefFrame);
+			if (_dopplerType != cDopplerType) {
+				MDoppler dopplerConversion = MDoppler::Convert(_dopplerType, cDopplerType)();
+				_convertedFreqLimits[i] = MFrequency::fromDoppler(
+					dopplerConversion,
+					_convertedFreqLimits[i].get("Hz"), cFrameType
+				);
+			}
+		}
+		else if ( qFreq.isConform("Hz")) {
+			_convertedFreqLimits[i] = MFrequency(qFreq, _freqRefFrame);
+		}
+		else {
+			throw AipsError("Logic error. Bad spectral unit "
+				+ unit
+				+ " somehow made it to a place where it shouldn't have"
+			);
+		}
+		if (_freqRefFrame != cFrameType) {
+			Vector<Double> refDirection = getCsys().directionCoordinate().referenceValue();
+			Vector<String> directionUnits = getCsys().directionCoordinate().worldAxisUnits();
+			MDirection refDir(
+				Quantity(refDirection[0], directionUnits[0]),
+				Quantity(refDirection[1], directionUnits[1]),
+				getCsys().directionCoordinate().directionType()
+			);
+			MFrequency::Ref inFrame(_freqRefFrame, MeasFrame(refDir));
+			MFrequency::Ref outFrame(cFrameType, MeasFrame(refDir));
+			MFrequency::Convert converter(inFrame, outFrame);
+			_convertedFreqLimits[i] = converter(_convertedFreqLimits[i]);
+		}
+	}
+}
+
+
+String AnnotationBase::_printFreqRange() const {
+	ostringstream os;
+	os << "["
+		<< _printFreq(_beginFreq) << ", "
+		<< _printFreq(_endFreq) << "]";
+	return os.str();
+}
+
+String AnnotationBase::_printFreq(const Quantity& freq) {
+	if (freq.isConform("pix")) {
+		return _printPixel(freq.getValue());
+	}
+	ostringstream os;
+	os << std::fixed;
+	if (freq.isConform("km/s")) {
+		os << std::setprecision(4) << freq.getValue("km/s") << "km/s";
+	}
+	else {
+		os << std::setprecision(3) << freq.getValue("MHz") << "MHz";
+	}
+	return os.str();
 }
 
 AnnotationBase::Type AnnotationBase::getType() const {

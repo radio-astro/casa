@@ -141,8 +141,12 @@ void ImageView::showColorDialog(){
 	QColor selectedColor = QColorDialog::getColor( initialColor, this );
 	if ( selectedColor.isValid() ){
 		setButtonColor( selectedColor );
-		emit displayColorsChanged( this );
+		//emit displayColorsChanged( this );
 	}
+}
+
+void ImageView::emitDisplayColorsChanged(){
+	emit displayColorsChanged( this );
 }
 
 ImageView::DisplayType ImageView::getDataDisplayType() const {

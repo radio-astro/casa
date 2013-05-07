@@ -17,7 +17,7 @@
 \begin{document}
 \title{The CASA vpmanager tool\\ and the VPManager class}
 \author{D. Petry (ESO, Garching)}
-\date{Jan 9, 2012\\%{\small (Updated: )}
+\date{Apr 25, 2013\\%{\small (Updated: )}
 }
 \maketitle
 \normalsize
@@ -50,20 +50,22 @@ user-defined analytic primary beams.
 The vpmanager tool is the CASA Python object which constitutes the
 user interface to the VPManager C++ class. By default it is named "vp" in casapy.
 This document describes
-the upgraded version of the tool and class to be included in CASA 3.4.
+the upgraded version of the tool and class to be included in CASA 4.2.
+It is in terms of high-level functionality identical to the version introduced in CASA 3.4,
+however, in CASA 4.2 it was made thread-safe.
 
 The VPManager class is implemented as a singleton, i.e. internally there is only one instance
 at all times. This instance accessed via the static VPManager::Instance() method. It is permanent 
-until casapy is exited or it is reinstantiated via the static VPManager::reset() method.
+until casapy is exited. It can be reinitialised via the VPManager::reset() method.
 
 The vp tool connects to the single instance of VPManager.
 All settings the user makes with the tool, have effect immediately and are then used
 by all parts of CASA which access the VPManager class (i.e. eventually all imaging and simulation
 routines).
 
-In order to enable parallelization, a simple {\it locking mechanism} protects from simultaneous access
-to the VPManager. Only the application programmer has to be aware of this. On the tool level
-the locking is done automatically.
+In order to enable parallelization, a standard thread-safe locking mechanism using
+the casacore {\it Mutex} class protects from simultaneous access
+to the VPManager. This is transparent to both the application programmer and the tool user.
 
 The VPManager instance keeps a simple database of available antenna responses, the {\it vplist}.
 This list is initialized at the startup of CASA or by calling the reset() method
@@ -783,18 +785,9 @@ If the user wants to regenerate them, they first need to be deleted.
 \begin{verbatim}
 // this is a SINGLETON class
 static VPManager* Instance();
-static void reset();
+
+void reset(Bool verbose=False);
  
-// call before anything else (returns False if already locked)
-Bool lock();
-// or if you are ready to wait for the lock (returns True if successful)
-Bool acquireLock(Double timeoutSecs, 
-                 Bool verbose=False);
-// verbose check for lock
-Bool isLocked();
-// call when you are done
-void release();
-     
 Bool saveastable(const String& tablename);
 
 Bool loadfromtable(const String& tablename);
@@ -958,22 +951,10 @@ MDirection mObsDir;
 
 Record rec;
 
-// before the first access to the VPManager, the routine has to acquire the lock
-if(!VPManager::Instance()->acquireLock(60, True)){ // e.g. 60 seconds timeout, verbose
-    // acquireLock produces its own error message in the logger when verbose
-    return False;
-}
-
-if(!VPManager::Instance()->getvp(rec,
-                                 telescope, mObsTime, mFreq, antennatype, mObsDir)){
+if(!VPManager::Instance()->getvp(rec, telescope, mObsTime, mFreq, antennatype, mObsDir)){
     os << LogIO::SEVERE << "Could not obtain PB from vpmanager." << LogIO::POST;
-    // release the lock when you are done!
-    VPManager::Instance()->release();
     return False;
 }
-
-// if the above call was your last one to VPManager, release the lock
-VPManager::Instance()->release();
 
 myPBp = new PBMath(rec);
 
@@ -997,18 +978,10 @@ String antennatype;
 
 Record rec;
 
-if(!VPManager::Instance()->acquireLock(60, True)){ 
-    return False;
-}
-
 if(!VPManager::Instance()->getvp(rec,telescope, antennatype)){
     os << LogIO::SEVERE << "Could not obtain PB from vpmanager." << LogIO::POST;
-    VPManager::Instance()->release();
     return False;
 }
-
-// if the above call was your last one to VPManager, release the lock
-VPManager::Instance()->release();
 
 myPBp = new PBMath(rec);
 
@@ -1034,13 +1007,8 @@ Bool rval;
 
 Vector<String> antTypes;
 
-if(!VPManager::Instance()->acquireLock(60, True)){ 
-    return False;
-}
-
 rval = VPManager::Instance()->getanttypes(antTypes, 
                                           telescope, mObsTime, mFreq, mObsDir);
-VPManager::Instance()->release();
 
 if(!rval){
     os << LogIO::SEVERE << "No responses available for telescope "

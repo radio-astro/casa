@@ -56,15 +56,24 @@ public:
 		const Quantity& xPoint2,
 		const Quantity& yPoint2,
 		const String& dirRefFrameString,
-		const CoordinateSystem& csys
+		const CoordinateSystem& csys,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
+	// simplified constructor. Direction quantities must be in the same reference frame as
+	// <src>csys</src> and all frequencies are valid.
 	AnnLine(
 		const Quantity& xPoint1,
 		const Quantity& yPoint1,
 		const Quantity& xPoint2,
 		const Quantity& yPoint2,
-		const CoordinateSystem& csys
+		const CoordinateSystem& csys,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine

@@ -242,6 +242,7 @@ protected:
 	Record agentParams_p;
 	FlagAgentSummary *summaryAgent_p;
 	Bool combinescans_p;
+	Bool extendflags_p;
 
 	// True if there are apply and unapply parameters in the list
 	Bool mixed_p;
@@ -317,21 +318,20 @@ public:
        	    String intent, String observation, Double lowerlimit, Double upperlimit,
        	    Bool apply);
 
-
 	// Parse parameters for tfcrop
 	bool parseTfcropParameters(String field, String spw, String array, String feed,
 			String scan, String antenna, String uvrange, String timerange, String correlation,
        	    String intent, String observation, Double ntime, Bool combinescans,
        	    String datacolumn, Double timecutoff, Double freqcutoff, String timefit,
        	    String freqfit, Int maxnpieces, String flagdimension, String usewindowstats,
-       	    Int halfwin, Bool apply);
+       	    Int halfwin, Bool extendflags, Bool apply);
 
 	// Parse parameters for extend
-	bool parseExtendParameters(String field, String spw, String array, String feed,
-			String scan, String antenna, String uvrange, String timerange, String correlation,
-       	    String intent, String observation, Double ntime, Bool combinescans,
-       	    Bool extendpols, Double growtime, Double growfreq, Bool growaround,
-       	    Bool flagneartime, Bool flagnearfreq, Bool apply);
+	bool parseExtendParameters(String field="", String spw="", String array="", String feed="",
+			String scan="", String antenna="", String uvrange="", String timerange="", String correlation="",
+       	    String intent="", String observation="", Double ntime=0.0, Bool combinescans=false,
+       	    Bool extendpols=true, Double growtime=50.0, Double growfreq=50.0, Bool growaround=false,
+       	    Bool flagneartime=false, Bool flagnearfreq=false, Bool apply=true);
 
 	// Parse parameters for summary
 	bool parseSummaryParameters(String field, String spw, String array, String feed,

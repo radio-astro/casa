@@ -31,6 +31,9 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <boost/regex.hpp>
 
+#include <measures/Measures/Stokes.h>
+
+
 namespace casa {
 
 // <summary>Base class for annotations</summary>
@@ -286,17 +289,33 @@ public:
 		return _convertedDQs;
 	}
 
+	// get the frequency limits converted to the spectral frame of the coordinate
+	// system of this object. An empty Vector implies all applicable frequencies
+	// have been selected.
+	Vector<MFrequency> getFrequencyLimits() const;
+
+	// Get the stokes for which the selection applies. An empty Vector implies
+	// all applicable stokes have been selected.
+	Vector<Stokes::StokesTypes> getStokes() const;
+
 protected:
 
 	AnnotationBase(
 		const Type type, const String& dirRefFrameString,
-		const CoordinateSystem& csys
+		const CoordinateSystem& csys, const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// use only if the frame of the input directions is the
-	// same as the frame of the coordinate system
+	// same as the frame of the coordinate system. All frequencies
+	// are used.
 	AnnotationBase(
-		const Type type, const CoordinateSystem& csys
+		const Type type, const CoordinateSystem& csys,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// the implicitly defined copy constructor is fine
@@ -347,6 +366,20 @@ protected:
 
 	// return a string representing a pixel value, precision 1.
 	static String _printPixel(const Double& d);
+
+	// if freqRefFrame=="" -> use the reference frame of the coordinate system
+	// if dopplerString=="" -> use the doppler system associated with the coordinate system
+	// if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
+	// Tacitly does nothing if the coordinate system has no spectral axis.
+	// Returns True if frequencies actually need to be set and were set.
+	virtual Bool _setFrequencyLimits(
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq
+	);
+
 private:
 	Type _type;
 	MDirection::Types _directionRefFrame;
@@ -360,6 +393,11 @@ private:
 		_symbolthickness;
 	Bool _usetex;
 	Vector<MDirection> _convertedDirections;
+	Vector<MFrequency> _convertedFreqLimits;
+	Quantity _beginFreq, _endFreq, _restFreq;
+	Vector<Stokes::StokesTypes> _stokes;
+	MFrequency::Types _freqRefFrame;
+	MDoppler::Types _dopplerType;
 
 	map<Keyword, Bool> _globals;
 	map<Keyword, String> _params;
@@ -388,6 +426,14 @@ private:
 	void _testConvertToPixel() const;
 
 	static void _initTypeMap();
+
+
+
+	void _checkAndConvertFrequencies();
+
+	String _printFreqRange() const;
+
+	static String _printFreq(const Quantity& freq);
 
 };
 

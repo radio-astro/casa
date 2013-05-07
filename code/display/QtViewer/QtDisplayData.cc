@@ -1298,9 +1298,49 @@ void QtDisplayData::setColormap_(const String& clrMapName, bool invertChanged ) 
 	panel_->viewer()->release();
 
 	clrMap_ = clrMap;
+	restoreColorMapName = clrMapName_;
 	clrMapName_ = clrMapName;
 
 	// emit qddOK();
+}
+
+void QtDisplayData::setSaturationRange( double min, double max ){
+	Record intensityRecord;
+	Record rangeRecord;
+	Vector<float> values( 2 );
+	values[0] = min;
+	values[1] = max;
+	rangeRecord.define( "value", values );
+	intensityRecord.defineRecord( PrincipalAxesDD::HISTOGRAM_RANGE, rangeRecord );
+	setOptions( intensityRecord, true );
+}
+
+void QtDisplayData::removeColorMap( const String& name ){
+	std::map<String, Colormap*>::iterator iter = clrMaps_.find( name );
+	if ( iter != clrMaps_.end() ){
+		clrMaps_.erase( iter );
+		clrMapNames_.erase( name );
+		delete (*iter).second;
+
+		String nextColorMapName = clrMapName_;
+		//We are currently using the one we are removing so we need
+		//to use the restore one.
+		if ( name == clrMapName_ ){
+			nextColorMapName = restoreColorMapName;
+		}
+
+		//Change the color map we are using in this class.
+		delete clrMapOpt_;
+		clrMapOpt_ = new DParameterChoice(COLOR_MAP, "Color Map",
+								"Name of the mapping from data values to color",
+								clrMapNames_, nextColorMapName, nextColorMapName, "");
+		setColormap_( nextColorMapName );
+
+
+		//Notify the QtAutoGui we have made a change in the color map.
+		Record options = dd_->getOptions();
+		emit optionsChanged( options);
+	}
 }
 
 void QtDisplayData::setColorMap( Colormap* colorMap ){
@@ -1311,11 +1351,22 @@ void QtDisplayData::setColorMap( Colormap* colorMap ){
 		std::map<String, Colormap*>::iterator iter = clrMaps_.find( mapName );
 		if ( iter != clrMaps_.end() ){
 			clrMaps_.erase( iter );
+			delete (*iter).second;
 		}
 		clrMaps_[mapName] = colorMap;
+		clrMapNames_.insert(colormapnamemap::value_type(mapName,true));
 
-		//Adopt this as our new colormap.
-		setColormap_( mapName, false );
+		//Set the color map we are using internally.
+		delete clrMapOpt_;
+		clrMapOpt_ = new DParameterChoice(COLOR_MAP, "Color Map",
+						"Name of the mapping from data values to color",
+						clrMapNames_, mapName, mapName, "");
+
+		setColormap_(mapName );
+
+		//Notify the auto gui we are making the change.
+		Record options = getOptions();
+		emit optionsChanged( options );
 	}
 }
 

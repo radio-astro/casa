@@ -225,9 +225,9 @@ void PlotHolder::setDisplayXGraphs( bool visible ){
 
 void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
 		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
-		const QColor& zoomRectColor ){
+		const QColor& zoomRectColor, const QColor& sumColor ){
 	for ( int i = 0; i < plots.size(); i++ ){
-		plots[i]->setPlotColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor );
+		plots[i]->setPlotColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor, sumColor );
 	}
 }
 
@@ -261,6 +261,11 @@ void PlotHolder::setSingleDishData( const Vector<Float>& sDx, const Vector<Float
 	plots[SLICE_Y]->setSingleDishData( sDy, sDyAmp );
 	plots[SCATTER_X]->setSingleDishData( sDx, sDxAmp );
 	plots[SCATTER_Y]->setSingleDishData( sDy, sDyAmp );
+}
+
+void PlotHolder::addSumData(){
+	plots[SLICE_X]->addSumData();
+	plots[SLICE_Y]->addSumData();
 }
 
 

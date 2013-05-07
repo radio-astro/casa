@@ -64,6 +64,12 @@ void ImageScroll::setImageHolder( DisplayDataHolder* holder ){
 	}
 }
 
+void ImageScroll::setControllingDD( QtDisplayData* dd ){
+	if ( managedImages != NULL ){
+		managedImages->setDDControlling( dd );
+	}
+}
+
 //**************************************************************
 //         Gui Methods for manipulating images
 //**************************************************************
@@ -139,6 +145,23 @@ void ImageScroll::setImageColorsEnabled( bool enabled ){
 	while ( iter != images.end()){
 		(*iter)->setImageColorsEnabled( enabled );
 		iter++;
+	}
+}
+
+bool ImageScroll::findColor( const QString& lookup, QColor* foundColor ){
+	bool colorLocated = false;
+	for ( QList<ImageView*>::iterator iter = images.begin(); iter != images.end(); iter++ ){
+		if ( (*iter)->getName() == lookup ){
+			*foundColor = (*iter)->getDisplayedColor();
+			colorLocated = true;
+		}
+	}
+	return colorLocated;
+}
+
+void ImageScroll::applyColorChangesIndividually(){
+	for ( QList<ImageView*>::iterator iter = images.begin(); iter != images.end(); iter++ ){
+		(*iter)->emitDisplayColorsChanged();
 	}
 }
 

@@ -156,13 +156,15 @@ class PanelDisplay : public MultiWCHolder, public DisplayOptions {
   virtual void disableTool(const String& toolname);
   virtual const std::tr1::shared_ptr<MultiWCTool> getTool(const String& key);
 
-  virtual ListIter<WorldCanvas* >* wcs() {
-    return itsWCLI;
+  virtual ListIter<WorldCanvas* > wcs() {
+    //return itsWCLI;
+	return ListIter<WorldCanvas* >(itsWCList);
   }
 
   // Is the specified DisplayData the one in charge of coordinate
   // state of the Panel's WCs?
   virtual Bool isCSmaster(const DisplayData *dd) const;
+  void setCSmaster( DisplayData* dd );
 
   /**
    * Returns the current mapping of PGP units to pixel units.
@@ -216,7 +218,7 @@ private:
 
   // The WorldCanvases which we made, and a convenient iterator.
   List<WorldCanvas* > itsWCList;
-  ListIter<WorldCanvas* >* itsWCLI;
+  //ListIter<WorldCanvas* >* itsWCLI;
 
 
   // The WorldCanvasHolders which we made, and a convenient iterator.
@@ -231,7 +233,7 @@ private:
 
   List<WorldCanvasHolder* > itsWCHList;
 
-  ListIter<WorldCanvasHolder* >* itsWCHLI;
+  //ListIter<WorldCanvasHolder* >* itsWCHLI;
 
   SimpleOrderedMap<String, std::tr1::shared_ptr<MultiWCTool> > itsMWCTools;
 

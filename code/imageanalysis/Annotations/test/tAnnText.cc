@@ -51,11 +51,11 @@ int main () {
 			);
 			try {
 				AnnText text(
-					x, y, dirTypeString,
-					csys, t
+					x, y,
+					csys, t, Vector<Stokes::StokesTypes>(0)
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
 					<< LogIO::POST;
@@ -76,11 +76,11 @@ int main () {
 			);
 			try {
 				AnnText text(
-					x, y, dirTypeString,
-					csys, t
+					x, y,
+					csys, t, Vector<Stokes::StokesTypes>(0)
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: "
 					<< x.getMesg() << LogIO::POST;
@@ -98,8 +98,8 @@ int main () {
 				csys.directionCoordinate().directionType(False)
 			);
 			AnnText text(
-				x, y, dirTypeString,
-				csys, t
+				x, y,
+				csys, t, Vector<Stokes::StokesTypes>(0)
 			);
 
 			MDirection point = text.getDirection();
@@ -126,7 +126,8 @@ int main () {
 			String dirTypeString = "B1950";
 			AnnText text(
 				x, y, dirTypeString,
-				csys, t
+				csys, t, Quantity(0, "Hz"), Quantity(0, "Hz"), "", "", Quantity(0, "Hz"),
+				Vector<Stokes::StokesTypes>(0)
 			);
 			cout << text << endl;
 			MDirection point = text.getDirection();

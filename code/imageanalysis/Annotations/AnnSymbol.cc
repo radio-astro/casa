@@ -36,8 +36,17 @@ AnnSymbol::AnnSymbol(
 	const Quantity& x, const Quantity& y,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
-	const Char symbolChar
-) : AnnotationBase(SYMBOL, dirRefFrameString, csys),
+	const Char symbolChar,
+	const Quantity& beginFreq,
+	const Quantity& endFreq,
+	const String& freqRefFrame,
+	const String& dopplerString,
+	const Quantity& restfreq,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnotationBase(
+		SYMBOL, dirRefFrameString, csys, beginFreq, endFreq,
+		freqRefFrame, dopplerString, restfreq, stokes
+	),
 	_inputDirection(AnnotationBase::Direction(1)),
 	_symbolChar(symbolChar) {
 	_init(x, y);
@@ -52,8 +61,9 @@ AnnSymbol::AnnSymbol(
 AnnSymbol::AnnSymbol(
 	const Quantity& x, const Quantity& y,
 	const CoordinateSystem& csys,
-	const Symbol symbol
-) : AnnotationBase(SYMBOL, csys),
+	const Symbol symbol,
+	const Vector<Stokes::StokesTypes>& stokes
+) : AnnotationBase(SYMBOL, csys, stokes),
 	_inputDirection(AnnotationBase::Direction(1)),
 	_symbol(symbol) {
 	_init(x, y);

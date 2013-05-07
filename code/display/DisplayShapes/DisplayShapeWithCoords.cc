@@ -472,12 +472,12 @@ WorldCanvas* DisplayShapeWithCoords::chooseWCFromPixPoints(const
   Bool success = False;
   Bool pointsuccess = True;
 
-  ListIter<WorldCanvas* >* wcs = pd->wcs();
-  wcs->toStart();
+  ListIter<WorldCanvas* > wcs = pd->wcs();
+  wcs.toStart();
   
-  while(!wcs->atEnd() && !success) {
+  while(!wcs.atEnd() && !success) {
     // Test all points.
-    const CoordinateSystem* test = &(wcs->getRight()->coordinateSystem());
+    const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
     if (!test) {
       pointsuccess = False;
     } 
@@ -486,28 +486,28 @@ WorldCanvas* DisplayShapeWithCoords::chooseWCFromPixPoints(const
       
       pointsuccess = 
 	pointsuccess && 
-	(wcs->getRight()->inWC(Int(points(i,0)+0.5), Int(points(i,1)+0.5)) &&
-	 wcs->getRight()->inDrawArea(Int(points(i,0)+0.5), 
+	(wcs.getRight()->inWC(Int(points(i,0)+0.5), Int(points(i,1)+0.5)) &&
+	 wcs.getRight()->inDrawArea(Int(points(i,0)+0.5),
 				     Int(points(i,1)+0.5)));
       
     }
     
     if (pointsuccess) {
-      toReturn = wcs->getRight();
+      toReturn = wcs.getRight();
       success = True;
     } else {
-      wcs->step();
+      wcs.step();
     }
   }
   
   
   // if that returns nothing, look for one just in WC..
   if (!success) {
-    wcs->toStart();
+    wcs.toStart();
     pointsuccess = True;
     
-    while(!wcs->atEnd() && !success) {
-      const CoordinateSystem* test = &(wcs->getRight()->coordinateSystem());
+    while(!wcs.atEnd() && !success) {
+      const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
       if (!test) {
 	pointsuccess = False;
       }
@@ -515,15 +515,15 @@ WorldCanvas* DisplayShapeWithCoords::chooseWCFromPixPoints(const
       for (uInt i=0 ; i < points.nrow() ; i ++) {
 	pointsuccess = 
 	  pointsuccess && 
-	  (wcs->getRight()->inWC(Int(points(i,0)+0.5), Int(points(i,1)+0.5)));
+	  (wcs.getRight()->inWC(Int(points(i,0)+0.5), Int(points(i,1)+0.5)));
       }
       
       
       if (pointsuccess) {
-	toReturn = wcs->getRight();
+	toReturn = wcs.getRight();
 	success = True;
       } else {
-	wcs->step();
+	wcs.step();
       }
       
     }
@@ -540,44 +540,44 @@ WorldCanvas* DisplayShapeWithCoords::chooseWCFromPixPoint(const Float& xPos,
   Bool success = False;
   
   // Look for ones where the point is in WC and in draw area
-  ListIter<WorldCanvas* >* wcs = pd->wcs();
+  ListIter<WorldCanvas* > wcs = pd->wcs();
   
   
-  wcs->toStart();
+  wcs.toStart();
   
-  while(!wcs->atEnd() &&  !success) {
+  while(!wcs.atEnd() &&  !success) {
     
-    if (wcs->getRight()->inWC(Int(xPos+0.5), Int(yPos+0.5)) &&
-	wcs->getRight()->inDrawArea(Int(xPos+0.5), Int(yPos+0.5))) {
+    if (wcs.getRight()->inWC(Int(xPos+0.5), Int(yPos+0.5)) &&
+	wcs.getRight()->inDrawArea(Int(xPos+0.5), Int(yPos+0.5))) {
       
-      const CoordinateSystem* test = &(wcs->getRight()->coordinateSystem());
+      const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
       
       if (test) {
-	toReturn = wcs->getRight();
+	toReturn = wcs.getRight();
 	success = True;
       } else {
-	wcs->step();
+	wcs.step();
       }
       
     } else {
-      wcs->step();
+      wcs.step();
     }
   }
 
 
   // if that returns nothing, look for one just in WC..
   if (!success) {
-    wcs->toStart();
-    while(!wcs->atEnd() && !success) {
-      if (wcs->getRight()->inWC(Int(xPos+0.5), Int(yPos+0.5))) {
+    wcs.toStart();
+    while(!wcs.atEnd() && !success) {
+      if (wcs.getRight()->inWC(Int(xPos+0.5), Int(yPos+0.5))) {
 	
-	const CoordinateSystem* test = &(wcs->getRight()->coordinateSystem());
+	const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 
 	if (test) {
-	  toReturn = wcs->getRight();
+	  toReturn = wcs.getRight();
 	  success = True;
 	} else {
-	  wcs->step();
+	  wcs.step();
 	}
       } else {
 	wcs++;
@@ -655,11 +655,11 @@ WorldCanvas* DisplayShapeWithCoords::chooseWCFromWorldPoints(const Record&
   Vector<Double> pix(2);
   Vector<Double> wcent(2);
   Bool currentOK = True;
-  ListIter<WorldCanvas* >* wcs = pd->wcs();
-  wcs->toStart();
+  ListIter<WorldCanvas* > wcs = pd->wcs();
+  wcs.toStart();
   
-  while (!wcs->atEnd() && !success) {
-    const CoordinateSystem* test = &(wcs->getRight()->coordinateSystem());
+  while (!wcs.atEnd() && !success) {
+    const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
     if (!test) {
       currentOK = False;
     }
@@ -669,33 +669,33 @@ WorldCanvas* DisplayShapeWithCoords::chooseWCFromWorldPoints(const Record&
 
       wcent(0) = worldPoints(i,0); wcent(1) = worldPoints(i,1);
       
-      if (!wcs->getRight()->worldToPix(wcent, pix)) {
+      if (!wcs.getRight()->worldToPix(wcent, pix)) {
 	currentOK = False;
       }
       
       if (currentOK) {
 	currentOK = currentOK && 
-	  wcs->getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5)) &&
-	  wcs->getRight()->inDrawArea(Int(pix(0)+0.5), Int(pix(1)+0.5));
+	  wcs.getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5)) &&
+	  wcs.getRight()->inDrawArea(Int(pix(0)+0.5), Int(pix(1)+0.5));
       }
     }
     
     // Are all those points OK?
     if (currentOK) {
-      toReturn = wcs->getRight();
+      toReturn = wcs.getRight();
       success = True;
     } else {
-      wcs->step();
+      wcs.step();
     }
   }
   
   // Check for just on WC (not in draw area)
   if (!success) {
     currentOK = True;
-    wcs->toStart();
+    wcs.toStart();
   
-    while(!wcs->atEnd() && !success) {
-      const CoordinateSystem* test = &(wcs->getRight()->coordinateSystem());
+    while(!wcs.atEnd() && !success) {
+      const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
       if (!test) {
 	currentOK = False;
       }
@@ -703,21 +703,21 @@ WorldCanvas* DisplayShapeWithCoords::chooseWCFromWorldPoints(const Record&
       // Check all points for current WC.
       for (uInt i =0; i < worldPoints.nrow() ; i++) {
 	wcent(0) = worldPoints(i,0); wcent(1) = worldPoints(i,1);
-	if (!wcs->getRight()->worldToPix(wcent, pix)) {
+	if (!wcs.getRight()->worldToPix(wcent, pix)) {
 	  currentOK = False;
 	}
 	if (currentOK) {
 	  currentOK = currentOK && 
-	    wcs->getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5));
+	    wcs.getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5));
 	}
       }
       
       // Are all those points OK?
       if (currentOK) {
-	toReturn = wcs->getRight();
+	toReturn = wcs.getRight();
 	success = True;
       } else {
-	wcs->step();
+	wcs.step();
       }
     }
   }
@@ -780,49 +780,49 @@ WorldCanvas* DisplayShapeWithCoords::chooseWCFromWorldPoint(const Record&
 
   Vector<Double> pix(2);
 
-  ListIter<WorldCanvas* >* wcs = pd->wcs();
-  wcs->toStart();
+  ListIter<WorldCanvas* > wcs = pd->wcs();
+  wcs.toStart();
 
-  while (!wcs->atEnd() && !success) {
+  while (!wcs.atEnd() && !success) {
     // UNITS??!?!?
-    if (wcs->getRight()->worldToPix(wcent, pix)) {
-      if (wcs->getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5)) &&
-	  (wcs->getRight()->inDrawArea(Int(pix(0)+0.5), Int(pix(1)+0.5)))) {
+    if (wcs.getRight()->worldToPix(wcent, pix)) {
+      if (wcs.getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5)) &&
+	  (wcs.getRight()->inDrawArea(Int(pix(0)+0.5), Int(pix(1)+0.5)))) {
 
-	const CoordinateSystem* test = &(wcs->getRight()->coordinateSystem());
+	const CoordinateSystem* test = &(wcs.getRight()->coordinateSystem());
 	if (test) {
-	  toReturn = wcs->getRight();
+	  toReturn = wcs.getRight();
 	  success = True;
 	} else {
-	  wcs->step();
+	  wcs.step();
 	}
       } else {
-	wcs->step();
+	wcs.step();
       }
     } else {
-      wcs->step();
+      wcs.step();
     }
   }
   
   if (!success) {
-    wcs->toStart();
-    while(!wcs->atEnd() && !success) {
-      if (wcs->getRight()->worldToPix(wcent, pix)) {
-	if (wcs->getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5))) {
+    wcs.toStart();
+    while(!wcs.atEnd() && !success) {
+      if (wcs.getRight()->worldToPix(wcent, pix)) {
+	if (wcs.getRight()->inWC(Int(pix(0)+0.5), Int(pix(1)+0.5))) {
 	  const CoordinateSystem* test = 
-	    &(wcs->getRight()->coordinateSystem());
+	    &(wcs.getRight()->coordinateSystem());
 	  
 	  if (test) {
-	    toReturn = wcs->getRight();
+	    toReturn = wcs.getRight();
 	    success = True;
 	  } else {
-	    wcs->step();
+	    wcs.step();
 	  }
 	} else {
-	  wcs->step();
+	  wcs.step();
 	}
       } else {
-	wcs->step();
+	wcs.step();
       }
     }
   }

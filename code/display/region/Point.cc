@@ -86,7 +86,7 @@ namespace casa {
 				                        marker_ == QtMouseToolNames::SYM_CIRCLE           ? AnnSymbol::CIRCLE :
 				                        marker_ == QtMouseToolNames::SYM_DIAMOND          ? AnnSymbol::DIAMOND :
 				                        marker_ == QtMouseToolNames::SYM_SQUARE           ? AnnSymbol::SQUARE :
-				                        AnnSymbol::POINT );
+				                        AnnSymbol::POINT, Vector<Stokes::StokesTypes>(0) );
 
 				int scale = markerScale( );
 				if ( scale >= 0 )

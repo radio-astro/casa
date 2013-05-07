@@ -37,6 +37,7 @@ class ImageView;
 class ImageScrollWidget;
 class DisplayDataHolder;
 class ColormapDefinition;
+class Colormap;
 template <class T> class ImageInterface;
 
 /**
@@ -68,6 +69,7 @@ public slots:
 	void displayColorsChanged(ImageView* changedView );
 
 private slots:
+	void applyColorChanges();
 	void openToDisplayed();
 	void displayedToOpen();
 	void closeImage();
@@ -80,10 +82,15 @@ private:
 	ImageManagerDialog( const ImageManagerDialog& other );
 	ImageManagerDialog operator=( const ImageManagerDialog& other );
 
-	void updateSelectedMaster();
+	void updateSelectedMaster( const QString& previousSelection);
 	void updateMasterList();
 	void updateColorList();
 	void updateSaturationList();
+	void applyMasterColorMap();
+	void applyMasterIntensityRange();
+	Colormap* generateColorMap( ImageInterface<float>* img,
+			QColor baseColor, bool individualMap );
+	void setComboIndex( QComboBox* combo, int index );
 	void removeImageFromList( QList<ImageView*>& imageList );
 	void initializeScrollArea( QWidget* holder, ImageScrollWidget*& scrollArea );
 	bool getIntensityMinMax( ImageInterface<float>* img,
@@ -97,6 +104,8 @@ private:
     Ui::ImageManagerDialogClass ui;
     ImageScrollWidget* openScroll;
     ImageScrollWidget* displayedScroll;
+    const String SINGLE_COLOR_MAP;
+    const String MASTER_COLOR_MAP;
 };
 
 }

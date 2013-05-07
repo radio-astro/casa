@@ -464,9 +464,9 @@ void RegionToolManager::operator()(const WCRefreshEvent& ev) {
 void RegionToolManager::loadRegions( const std::string &path, const std::string &/*type*/ ) {
 
 	bool first_trip = true;
-	ListIter<WorldCanvas* >* wcs = pd->wcs();
-	for ( wcs->toStart(); ! wcs->atEnd(); wcs->step( ) ) {
-		WorldCanvas *wc = wcs->getRight();
+	ListIter<WorldCanvas* > wcs = pd->wcs();
+	for ( wcs.toStart(); ! wcs.atEnd(); wcs.step( ) ) {
+		WorldCanvas *wc = wcs.getRight();
 		if ( wc == 0 ) continue;
 		DisplayData *dd = wc->csMaster( );
 		if ( dd == 0 ) continue;

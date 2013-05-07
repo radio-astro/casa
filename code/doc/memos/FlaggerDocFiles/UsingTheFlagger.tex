@@ -198,15 +198,34 @@ With broad-band RFI, the piece-wise polynomial can sometimes model it as part of
 band-shape, and therefore not detect it as RFI.  In this case, reducing the maximum number 
 of pieces in the polynomial can help.     This algorithm usually has trouble with
 noisy RFI that is also extended in time of frequency, and additional statistics-based
-flagging is recommended (via the 'usewindowstats' parameter).    It is often required to
+flagging is recommended (via the 'usewindowstats' parameter). It is often required to
 set up parameters separately for each spectral-window.
 
 If frequency ranges of known astronomical spectral lines are known $a-priori$, they can
 be protected from automatic flagging by de-selecting those frequency-ranges via the 
 'spw' data-selection parameter. 
 
+\underline{NOTE:} It is usually helpful to extend the flags along time,
+frequency, and correlation after running tfcrop. By default, the flags are extended
+if more than 50\% of the timeranges are already flagged, 80\% of the
+channels are already flagged and it also extends the flags to the other
+polarizations in the selection. This automatic extension of flags is done
+through the parameter 'extendflags'. The user has the option to fine-tune
+the extension of flags via the mode='extend'
+within the same flagging run such as in the example below:
+
+\begin{verbatim}
+Example :
+  cmd=["mode='tfcrop' freqcutoff=3.0 usewindowstats='sum' extendflags=False ",
+       "mode='extend' extendpols=True growtime=50.0 growaround=True"] 
+     
+  flagdata(vis, mode='list', inpfile=cmd)
+
+\end{verbatim}
+
 Below are some examples that demonstrate what the algorithm does with different types
 of RFI.
+
 
 \begin{figure}
 \includegraphics[scale=0.4]{flag.protect.specline.1.png}
@@ -263,9 +282,10 @@ products to obtain the correct results.
 
 \end{enumerate}
 
-{\red Add info about how to use 'writeflags' + 'display' + output thresholds, etc...}
+%{\red Add info about how to use 'writeflags' + 'display' + output thresholds,
+% etc...}
 
-Reports and plots are generated from rflag (when writeflags=False), to display
+Reports and plots are generated from rflag (when action='calculate'), to display
 the mean deviations for each channel, as well as the mean variance of 
 local statistics from this median deviation (local statistics are computed in a 
 sliding-window). 
@@ -276,31 +296,31 @@ Below are some examples.
 \begin{enumerate}
 
 \item Calculate thresholds automatically per scan, and use them to find flags.
-                             Specify scale-factor for time-analysis thresholds, use default for frequency.
+Specify scale-factor for time-analysis thresholds, use default for frequency.
 
 \begin{verbatim}
-   flagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0,writeflags=True)
+   flagdata('my.ms', mode='rflag',spw='9',timedevscale=4.0)
 \end{verbatim}
  
 \item  Supply noise-estimates to be used with default scale-factors. 
   
 \begin{verbatim}
-   flagdata(vis='my.ms', mode='rflag', spw='9', timedev=0.1, freqdev=0.5, writeflags=True);
+   flagdata(vis='my.ms', mode='rflag', spw='9', timedev=0.1, freqdev=0.5);
 \end{verbatim}
 
 \item Two-passes. This replicates the usage pattern in AIPS.
 
-                             -- The first pass saves commands in an output text files, with auto-calculated thresholds.
-                                Thresholds are returned from rflag only when writeflags=False (calc-only mode). 
-                                The user can edit this file before doing the second pass, but the python-dictionary 
-                                 structure must be preserved.
+-- The first pass saves commands in output text files, with auto-calculated thresholds.
+Thresholds are returned from rflag only when action='calculate' (writing to
+the MS is off).
+The user can edit this file before doing the second pass, but the python-dictionary 
+structure must be preserved.
 
-                             -- The second pass applies these commands (writeflags=True).
+-- The second pass applies these commands (action='apply').
 
 \begin{verbatim}
-  flagdata(vis='my.ms', mode='rflag', spw='9,10', timedev='tdevfile.txt', freqdev='fdevfile.txt', writeflags=False);
-  flagdata(vis='my.ms', mode='rflag', spw='9,10', 
-            timedev='tdevfile.txt', freqdev='fdevfile.txt', writeflags=True);
+  flagdata(vis='my.ms', mode='rflag', spw='9,10', timedev='tdevfile.txt',freqdev='fdevfile.txt', action='calculate')
+  flagdata(vis='my.ms', mode='rflag', spw='9,10', timedev='tdevfile.txt',freqdev='fdevfile.txt', action='apply')
 \end{verbatim}
             
 \end{enumerate} 
@@ -311,7 +331,29 @@ Below are some examples.
 \caption{Example of rflag on narrow-band RFI}
 \end{figure}
 
-{\red Add figures of the new report plots.}
+% {\red Add figures of the new report plots.}
+
+
+\underline{NOTE:} It is usually helpful to extend the flags along time,
+frequency, and correlation in a second step, after running rflag. By default, 
+the flags are extended
+if more than 50\% of the timeranges are already flagged, 80\% of the
+channels are already flagged and it also extends the flags to the other
+polarizations in the selection. This automatic extension of flags is done
+through the parameter 'extendflags'. The user has the option to fine-tune
+the extension of flags via the mode='extend'
+within the same flagging run such as in the example below:
+
+\begin{verbatim}
+Example :
+  cmd=["mode='rflag' freqdevscale=3.0 extendflags=False ", 
+       "mode='extend' extendpols=True growtime=50.0 growaround=True"]
+     
+  flagdata(vis, mode='list', inpfile=cmd)
+
+\end{verbatim}
+
+
 
 \subsubsection{Extend}
 

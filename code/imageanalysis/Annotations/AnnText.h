@@ -51,13 +51,20 @@ public:
 		const Quantity& xPos, const Quantity& yPos,
 		const String& dirRefFrameString,
 		const CoordinateSystem& csys,
-		const String& text
+		const String& text,
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	AnnText(
 		const Quantity& xPos, const Quantity& yPos,
 		const CoordinateSystem& csys,
-		const String& text
+		const String& text,
+		const Vector<Stokes::StokesTypes>& stokes
 	);
 
 	// implicit copy constructor and destructor are fine

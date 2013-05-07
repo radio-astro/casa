@@ -50,6 +50,7 @@ class ImageScroll : public QWidget, public ImageTracker {
 public:
     ImageScroll(QWidget *parent = 0);
     void setImageHolder( DisplayDataHolder* holder );
+    void setControllingDD( QtDisplayData* dd );
     QList<ImageView*> getSelectedViews();
 
     bool isManaged( QtDisplayData* displayData ) const;
@@ -58,6 +59,8 @@ public:
     void removeImageViews( QList<ImageView*>& view );
     void setSelectAll( bool selectAll);
     void setImageColorsEnabled( bool enabled );
+    void applyColorChangesIndividually();
+    bool findColor( const QString& lookup, QColor* foundColor );
     virtual ~ImageScroll();
 
     //Image Tracker Interface
