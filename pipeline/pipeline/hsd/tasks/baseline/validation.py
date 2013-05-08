@@ -18,11 +18,10 @@ LOG = infrastructure.get_logger(__name__)
 
 class ValidateLineSinglePointing(object):
 
-    def __init__(self, context, datatable):
-        self.context = context
+    def __init__(self, datatable):
         self.datatable = datatable
 
-    def execute(self, ResultTable, DetectSignal, vIF, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
+    def execute(self, ResultTable, DetectSignal, vIF, nChan, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
         """
         ValidateLine class for single-pointing or multi-pointing (collection of 
         fields with single-pointing). Accept all detected lines without 
@@ -77,11 +76,10 @@ class ValidateLineRaster(object):
     MinFWHM = rules.LineFinderRule['MinFWHM']
     MaxFWHM = rules.LineFinderRule['MaxFWHM']
 
-    def __init__(self, context, datatable):
-        self.context = context
+    def __init__(self, datatable):
         self.datatable = datatable
 
-    def execute(self, ResultTable, DetectSignal, vIF, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
+    def execute(self, ResultTable, DetectSignal, vIF, nChan, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
         """
         2D fit line characteristics calculated in Process3
         Sigma clipping iterations will be applied if Nsigma is positive
@@ -112,7 +110,7 @@ class ValidateLineRaster(object):
         TotalLines = 0
         RMS0 = 0.0
         #nChan = self.datatable.getcell('NCHAN',idxList[0])
-        nChan = self.context.observing_run[0].spectral_window[vIF].nchan
+        #nChan = self.context.observing_run[0].spectral_window[vIF].nchan
         Lines = []
 
         # First cycle
@@ -241,6 +239,9 @@ class ValidateLineRaster(object):
 
         (GridCluster, GridMember, Lines) = self.validation_stage(GridCluster, GridMember, Lines, ITER)
 
+        LOG.info('Lines after validation: %s'%(Lines))
+        LOG.info('GridCluster after validation: %s'%(GridCluster))
+        
         ProcEndTime = time.time()
         LOG.info('Clustering: Validation Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
         ######## Clustering: Smoothing Stage ########
@@ -259,31 +260,44 @@ class ValidateLineRaster(object):
         ProcEndTime = time.time()
         LOG.info('Clustering: Smoothing Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
+        LOG.info('Lines after smoothing: %s'%(Lines))
+        LOG.info('GridCluster after smoothing: %s'%(GridCluster))
+        
         ######## Clustering: Final Stage ########
         ProcStartTime = time.time()
         LOG.info('Clustering: Final Stage Start')
 
-        (RealSignal, Lines) = self.final_stage(GridCluster, Region, Region2, Lines, category, GridSpaceRA, GridSpaceDEC, BroadComponent, Xorder, Yorder, x0, y0, Nsigma, nChan, Grid2SpectrumID, idxList, PosList)
+        (RealSignal, Lines) = self.final_stage(GridCluster, GridMember, Region, Region2, Lines, category, GridSpaceRA, GridSpaceDEC, BroadComponent, Xorder, Yorder, x0, y0, Nsigma, nChan, Grid2SpectrumID, idxList, PosList)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Final Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
+        LOG.info('Lines after final: %s'%(Lines))
+
         # Merge masks if possible
         ProcStartTime = time.time()
         # RealSignal should have all row's as its key
+        tmp_index = 0
         for row in idxList:
-            signal = self.__merge_lines(RealSignal[row][2], nChan)
+            if RealSignal.has_key(row):
+                signal = self.__merge_lines(RealSignal[row][2], nChan)
+            else:
+                signal = [[-1,-1]]
+                #RealSignal[row] = [PosList[0][tmp_index], PosList[1][tmp_index], signal]
+            tmp_index += 1
 
             # In the following code, access to MASKLIST and NOCHANGE columns 
             # is direct to underlying table object instead of access via 
             # datatable object's method since direct access is faster. 
-            # Note that MASKLIST [[-1,-1]] represents that  no masks are 
+            # Note that MASKLIST [[-1,-1]] represents that no masks are 
             # available, while NOCHANGE -1 indicates NOCHANGE is False.
             #tMASKLIST = self.datatable.getcell('MASKLIST',row)
             #tNOCHANGE = self.datatable.getcell('NOCHANGE',row)
-            tMASKLIST = self.datatable.tb2.getcell('MASKLIST',row).tolist()
-            if sum(tMASKLIST[0]) < 0:
+            tMASKLIST = self.datatable.tb2.getcell('MASKLIST',row)
+            if tMASKLIST[0][0] < 0:
                 tMASKLIST = []
+            else:
+                tMASKLIST=list(tMASKLIST)
             tNOCHANGE = self.datatable.tb2.getcell('NOCHANGE',row)
             #LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, RealSignal[row][2]))
             LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, signal))
@@ -570,7 +584,7 @@ class ValidateLineRaster(object):
 
         return (GridCluster, Lines)
 
-    def final_stage(self, GridCluster, Region, Region2, Lines, category, GridSpaceRA, GridSpaceDEC, BroadComponent, Xorder, Yorder, x0, y0, Nsigma, nChan, Grid2SpectrumID, idxList, PosList):
+    def final_stage(self, GridCluster, GridMember, Region, Region2, Lines, category, GridSpaceRA, GridSpaceDEC, BroadComponent, Xorder, Yorder, x0, y0, Nsigma, nChan, Grid2SpectrumID, idxList, PosList):
                 
         (Ncluster, nra, ndec) = GridCluster.shape
         Xorder0 = Xorder
@@ -581,11 +595,16 @@ class ValidateLineRaster(object):
 
         #HalfGrid = (GridSpaceRA ** 2 + GridSpaceDEC ** 2) ** 0.5 / 2.0
         HalfGrid = 0.5 * sqrt(GridSpaceRA*GridSpaceRA + GridSpaceDEC*GridSpaceDEC)
+
+        LOG.info('Ncluster=%s'%(Ncluster))
+        
         # Clean isolated grids
         for Nc in xrange(Ncluster):
             #print '\nNc=', Nc
+            LOG.info('Lines[%s][2]=%s'%(Nc,Lines[Nc][2]))
             if Lines[Nc][2] != False:
                 Plane = (GridCluster[Nc] > self.Marginal) * 1
+                LOG.info('Plane = %s'%(Plane))
                 if Plane.sum() == 0:
                     Lines[Nc][2] = False
                     #print 'Lines[Nc][2] -> False'
@@ -970,6 +989,8 @@ class ValidateLineRaster(object):
                                     else: continue
                     # for Plot
                     if not SingularMatrix: GridCluster[Nc] += BlurPlane
+                LOG.info('GridCluster=%s'%(GridCluster))
+                LOG.info('((GridCluster[%s] > 0.5)*1).sum()=%s'%(Nc,((GridCluster[Nc] > 0.5)*1).sum()))
                 if ((GridCluster[Nc] > 0.5)*1).sum() < self.Questionable: Lines[Nc][2] = False
                 for x in range(nra):
                     for y in range(ndec):
@@ -1029,11 +1050,10 @@ class ValidateLine(object):
                 'MULTI-POINT': ValidateLineSinglePointing,
                 'RASTER': ValidateLineRaster}
 
-    def __init__(self, context, datatable):
-        self.context = context
+    def __init__(self, datatable):
         self.datatable = datatable
 
-    def execute(self, ResultTable, DetectSignal, vIF, idxList, SpWin, Pattern, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
+    def execute(self, ResultTable, DetectSignal, vIF, nChan, idxList, SpWin, Pattern, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
         """
         2D fit line characteristics calculated in Process3
         Sigma clipping iterations will be applied if Nsigma is positive
@@ -1056,8 +1076,8 @@ class ValidateLine(object):
 
         # generate worker instance depending on observing pattern
         worker_cls = self.Patterns[Pattern]
-        worker = worker_cls(self.context, self.datatable)
-        return worker.execute(ResultTable, DetectSignal, vIF, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False)
+        worker = worker_cls(self.datatable)
+        return worker.execute(ResultTable, DetectSignal, vIF, nChan, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False)
 
 def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
     """

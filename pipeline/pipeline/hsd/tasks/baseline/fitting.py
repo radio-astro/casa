@@ -1,0 +1,337 @@
+from __future__ import absolute_import
+
+import os
+import time
+from math import sqrt
+import numpy
+import contextlib
+
+import asap as sd
+
+import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.jobrequest as jobrequest
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.logging as logging
+import pipeline.hsd.heuristics as heuristics
+from .. import common
+from . import rules
+
+LOG = infrastructure.get_logger(__name__)
+LogLevel='debug'
+#LogLevel='info'
+logging.set_logging_level(LogLevel)
+
+@contextlib.contextmanager
+def _temporary_file_name():
+    name = '_heuristics.temporary.table'
+    try:
+        yield name
+    finally:
+        os.system('rm -rf %s'%(name))
+
+def _create_dummy_scan(name, datatable, index_list):
+    with _temporary_file_name() as temporary_name:
+        for index in index_list:
+            try:
+                s = sd.scantable(name, average=False).get_row(datatable.getcell('ROW',index),insitu=False)
+                s.save(temporary_name, overwrite=True)
+                param_org = sd.rcParams['scantable.storage'] 
+                sd.rcParams['scantable.storage'] = 'memory'
+                dummy_scan = sd.scantable(temporary_name, average=False)
+                sd.rcParams['scantable.storage'] = param_org
+                return dummy_scan
+            except:
+                pass
+
+class FittingBase(object):
+    ApplicableDuration = 'raster' # 'raster' | 'subscan'
+    MaxPolynomialOrder = 'none' # 'none', 0, 1, 2,...
+    PolynomialOrder = 'automatic' # 'automatic', 0, 1, 2, ...
+    ClipCycle = 1
+    MaxFreq = 9
+    MinChannels = 512
+    MaxFragmentation = 3
+    
+    def execute(self, datatable, filename, filename_out, time_table, index_list, nchan, edge, fitorder='automatic'):
+        """
+        """
+
+        # fitting order
+        if fitorder == 'automatic':
+            # fit order heuristics
+            LOG.info('Baseline-Fitting order was automatically determined')
+            poly_order = heuristics.FitOrderHeuristics()
+        else:
+            LOG.info('Baseline-Fitting order was fixed to be %d'%(fitorder))
+            poly_order = lambda *args, **kwargs: fitorder
+
+        if self.ApplicableDuration == 'subscan':
+            member_list = time_table[1]
+        else:
+            member_list = time_table[0]
+
+        _edge = common.parseEdge(edge)
+
+        bltable_name = filename.rstrip('/')+'.baseline.table'
+
+        # dummy scantable for baseline subtraction
+        dummy_scan = _create_dummy_scan(filename, datatable, index_list)
+        LOG.info('dummy_scan.nrow()=%s'%(dummy_scan.nrow()))
+        LOG.info('nchan for dummy_scan=%s'%(len(dummy_scan._getspectrum())))
+
+        # working with spectral data in scantable
+        nrow_total = len(index_list)
+
+        # Create progress timer
+        Timer = common.ProgressTimer(80, nrow_total, LogLevel)
+
+        nwin = []
+        LOG.info('Baseline Fit: background subtraction...')
+        LOG.info('Processing %d spectra...'%(nrow_total))
+
+        for y in xrange(len(member_list)):
+                rows = member_list[y][0]
+                idxs = member_list[y][1]
+                with casatools.TableReader(filename) as tb:
+                    spectra = numpy.array([tb.getcell('SPECTRA',row)
+                                           for row in rows])
+                masklist = [datatable.tb2.getcell('MASKLIST',idx)
+                            for idx in idxs]
+
+                # fit order determination
+                polyorder = poly_order(spectra, masklist, _edge)
+                if fitorder == 'automatic' and self.MaxPolynomialOrder != 'none':
+                    polyorder = min(polyorder, self.MaxPolynomialOrder)
+                LOG.info('group %d: order=%s'%(y,polyorder))
+
+                nrow = len(rows)
+                LOG.info('nrow = %s'%(nrow))
+                for i in xrange(nrow):
+                    row = rows[i]
+                    idx = idxs[i]
+                    LOG.info('===== Processing at row = %s ====='%(row))
+                    nochange = datatable.tb2.getcell('NOCHANGE',idx)
+                    LOG.debug('row = %s, Flag = %s'%(row, nochange))
+
+                    # skip if no update on line window
+                    if nochange > 0:
+                        continue
+
+                    # set spectral data to dummy scantable
+                    sp = spectra[i]
+                    #sp[:_edge[0]] = 0
+                    #sp[(nchan-_edge[1]):] = 0
+                    #dummy_scan._setspectrum(sp)
+
+                    # mask lines
+                    maxwidth = 1
+                    masklist = datatable.getcell('MASKLIST',idx)
+                    for [chan0, chan1] in masklist:
+                        if chan1 - chan0 >= maxwidth:
+                            maxwidth = int((chan1 - chan0 + 1) / 1.4)
+                            # allowance in Process3 is 1/5:
+                            #    (1 + 1/5 + 1/5)^(-1) = (5/7)^(-1)
+                            #                         = 7/5 = 1.4
+                    max_polyorder = int((nchan - sum(_edge)) / maxwidth + 1)
+                    LOG.debug('Masked Region from previous processes = %s'%(masklist))
+                    LOG.debug('edge parameters= (%s,%s)'%(_edge))
+                    LOG.debug('Polynomial order = %d  Max Polynomial order = %d'%(polyorder, max_polyorder))
+
+                    # fitting
+                    polyorder = min(polyorder, max_polyorder)
+                    start_time = time.time()
+                    (result, nmask, win_polyorder, fragment, nwindow) = self._calc_baseline_fit(dummy_scan, sp, polyorder, nchan, 0, _edge, masklist, blfile=bltable_name)
+                    end_time = time.time()
+                    LOG.info('fitting: elapsed time=%s'%(end_time-start_time))
+                    print 'fitting: elapsed time=%s'%(end_time-start_time)
+                    nwin.append(nwindow)
+                    spectra[i] = result
+
+                # write data
+                with casatools.TableReader(filename, nomodify=False) as tb:
+                    for i in xrange(nrow):
+                        tb.putcell('SPECTRA', rows[i], spectra[i])
+                    
+
+    def _calc_baseline_fit(self, scan, data, polyorder, nchan, modification, edge, masklist, blfile):
+        LOG.debug('masklist=%s'%(masklist))
+
+        # set edge mask
+        data[:edge[0]] = 0.0
+        data[nchan-edge[1]:] = 0.0
+        
+        # Create mask for line protection
+        nchan_without_edge = nchan - sum(edge)
+        mask = numpy.ones(nchan, dtype=int)
+        if type(masklist) == list:
+            for [m0, m1] in masklist:
+                mask[m0:m1] = 0
+        else:
+            LOG.critical('Invalid masklist')
+        #if edge[1] > 0:
+        #    nmask = int(nchan_without_edge - numpy.sum(mask[edge[0]:-edge[1]] * 1.0))
+        #else:
+        #    nmask = int(nchan_without_edge - numpy.sum(mask[edge[0]:] * 1.0))
+        num_mask = int(nchan_without_edge - numpy.sum(mask[edge[0]:nchan-edge[1]] * 1.0))
+        num_nomask = nchan_without_edge - num_mask
+
+        LOG.debug('nchan_without_edge, num_mask, diff=%s, %s, %s'%(nchan_without_edge, num_mask, num_nomask))
+
+        (fragment, nwindow, win_polyorder) = self._calc_fragmentation(polyorder, num_nomask, 0)
+
+        outdata = self._fit(data, scan, polyorder, nchan, mask, edge, nchan_without_edge, num_mask, fragment, nwindow, win_polyorder, masklist, blfile)
+        outdata[:edge[0]] = 0.0
+        outdata[nchan-edge[1]:] = 0.0
+
+        return (outdata, num_mask, win_polyorder, fragment, nwindow)
+
+    def _calc_fragmentation(self, polyorder, nchan, modification=0):
+        polyorder += modification
+        fragment = int(min(polyorder / self.MaxFreq + 1, max(nchan / self.MinChannels, 1)))
+        fragment = min(fragment, self.MaxFragmentation)
+        nwindow = fragment * 2 - 1
+        win_polyorder = min(int(polyorder / fragment) + fragment - 1, self.MaxFreq)
+        return (fragment, nwindow, win_polyorder)
+
+class CubicSplineFitting(FittingBase):
+    def _fit(self, data, scan, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist, blfile):
+        mask[:edge[0]] = 0
+        mask[nchan-edge[1]:] = 0
+        num_nomask = nchan_without_edge - nchan_masked
+        num_pieces = max(int(min(polyorder * num_nomask / float(nchan_without_edge) + 0.5, 0.1 * num_nomask)), 1)
+        LOG.info('Cubic Spline Fit: Number of Sections = %d' % num_pieces)
+        scan._setspectrum(data, 0)
+        outdata = numpy.array(scan.cspline_baseline(insitu=False, mask=mask, npiece=num_pieces, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)._getspectrum(0))
+        #scan.cspline_baseline(insitu=True, mask=mask, npiece=num_pieces, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)
+        #outdata = numpy.array(scan._getspectrum(0))
+        return outdata
+
+class PolynomialFitting(FittingBase):
+    def _fit(self, data, scan, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist, blfile):
+        LOG.info('fragment, nwindow, win_polyorder = %s, %s, %s' % (fragment, nwindow, win_polyorder))
+        LOG.info('Number of subdivided segments = %s'%(nwindow))
+
+        # fit per fragments
+        resultdata = []
+        for win in xrange(nwindow):
+            ledge = int(win * nchan_without_edge / (fragment * 2) + edge[0])
+            redge = nchan - edge[1] - int(nchan_without_edge * (nwindow - 1 - win) / (fragment * 2))
+
+            # check new edges are inside mask region or not
+            masked = 0
+            for [m0, m1] in masklist:
+                new_ledge = ledge
+                new_redge = redge
+                # all masked
+                if m0 <= ledge and redge <= m1:
+                    new_ledge = m0 - (redge - ledge) / 2
+                    new_redge = m1 + (redge - ledge) / 2
+                    masked += redge - ledge
+                # mask inside windows
+                elif ledge < m0 and m1 < redge:
+                    masked += (m1 - m0)
+                    if m1 <= (redge + ledge) / 2:
+                        new_ledge = ledge - (m1 - m0)
+                        new_redge = redge
+                    elif (ledge + redge) / 2 <= m0:
+                        new_ledge = ledge
+                        new_redge = redge + (m1 - m0)
+                    else:
+                        new_ledge = ledge - ((ledge + redge) / 2 - m0)
+                        new_redge = redge - (m1 - (ledge + redge) / 2)
+                # left edge inside mask
+                elif m0 <= ledge and ledge < m1:
+                    masked += (m1 - ledge)
+                    if m1 <= (ledge + redge) / 2:
+                        new_ledge = ledge - (m1 - m0)
+                        new_redge = redge
+                    else:
+                        new_ledge = m0 - (redge - ledge) / 2
+                        new_redge = redge + (m1 - (ledge + redge) / 2)
+                # right edge inside mask
+                elif m0 < redge and redge <= m1:
+                    masked += (redge - m0)
+                    if (ledge + redge) / 2 <= m0:
+                        new_ledge = ledge
+                        new_redge = redge + (m1 - m0)
+                    else:
+                        new_ledge = ledge - ((ledge + redge) / 2 - m0)
+                        new_redge = m1 + (redge - ledge) / 2
+                ledge = new_ledge
+                redge = new_redge
+            ledge = max(ledge, edge[0])
+            redge = min(redge, nchan - edge[1])
+
+            # Calculate positions for combining fragmented spectrum
+            LOG.info('nchan_without_edge=%s, ledge=%s, redge=%s'%(nchan_without_edge, ledge, redge))
+            win_edge_ignore_l = int(nchan_without_edge / (fragment * win_polyorder))
+            win_edge_ignore_r = win_edge_ignore_l
+            pos_l0 = int(win * nchan_without_edge / (fragment * 2)) + nchan_without_edge / win_polyorder + ledge
+            pos_l1 = int((win + 1) * nchan_without_edge / (fragment * 2)) - 1 - nchan_without_edge / fragment / win_polyorder + ledge
+            pos_r0 = int((win + 1) * nchan_without_edge / (fragment * 2)) + nchan_without_edge / fragment / win_polyorder + ledge
+            pos_r1 = int((win + 2) * nchan_without_edge / (fragment * 2)) - 1 - nchan_without_edge / fragment / win_polyorder + ledge
+            dl = float(pos_l1 - pos_l0)
+            dr = float(pos_r1 - pos_r0)
+            LOG.info('PosL0, PosL1, PosR0, PosR1 = %s, %s, %s, %s' % (pos_l0,pos_l1, pos_r0, pos_r1))
+            if win == 0:
+                win_edge_ignore_l = 0
+                pos_l0 = edge[0]
+                pos_l1 = edge[0]
+                dl = 1.0
+            if win == (nwindow - 1):
+                win_edge_ignore_r = 0
+                pos_r0 = nchan - edge[1]
+                pos_r1 = nchan - edge[1]
+                dr = 1.0
+            LOG.info('PosL0, PosL1, PosR0, PosR1 = %s, %s, %s, %s' % (pos_l0,pos_l1, pos_r0, pos_r1))
+
+            nn_mask = float((pos_r1 - pos_l0) - mask[pos_l0:pos_r1].sum())
+            dorder = int(max(1, ((pos_r1 - pos_l0 - nn_mask * 0.5) * win_polyorder / (pos_r1 - pos_l0) + 0.5)))
+            LOG.info('Revised edgemask = %s:%s  Adjust polyorder = %s' % (ledge, redge, dorder))
+            LOG.info('Segment %d: Revised edgemask = %s:%s  Adjust polyorder used in individual fit= %s' % (win, ledge, redge, dorder))
+
+            start_time = time.time()
+            LOG.debug('Fitting Start')
+            edge_mask = scan.create_mask([0, redge-ledge])
+            # 0 and (redge-ledge) are included in the fitting range
+            scan._setspectrum(numpy.concatenate((data[ledge:redge],numpy.zeros(nchan+ledge-redge, dtype=numpy.float64))))
+            tmp_mask = numpy.concatenate((mask[ledge:redge], numpy.zeros(nchan+ledge-redge, dtype=int)))
+            tmpfit0 = scan.poly_baseline(order=dorder, mask=(tmp_mask & edge_mask), insitu=False, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)._getspectrum(0)
+            tmpfit = numpy.array(tmpfit0, dtype=numpy.float32)[:redge-ledge]
+
+            # Restore scan to the original position
+            # 0 -> EdgeL
+            resultdata.append(list(numpy.concatenate((numpy.zeros(ledge), tmpfit, numpy.zeros(nchan-redge)))))
+            end_time = time.time()
+            LOG.debug('Fitting End: Elapsed Time=%.1f'%(end_time-start_time))
+
+            # window function: f(x) = -2x^3 + 2x^2 (0 <= x <= 1)
+            for i in xrange(nchan):
+                if i < pos_l0:
+                    resultdata[win][i] = 0.0
+                elif i <= pos_l1:
+                    x = (i - pos_l0) / dl
+                    resultdata[win][i] *= (-2.0 * x ** 3.0 + 3.0 * x ** 2.0)
+                elif i > pos_r1:
+                    resultdata[win][i] = 0.0
+                elif i >= pos_r0:
+                    x = (i - pos_r0) / dr
+                    resultdata[win][i] *= (2.0 * x ** 3.0 - 3.0 * x ** 2.0 + 1.0)
+        outdata = numpy.sum(resultdata, axis=0)
+        outdata[:edge[0]] = 0.0
+        outdata[nchan-edge[1]:] = 0.0
+
+        return outdata
+
+class Fitting(object):
+    FittingEngine = {'CSPLINE': CubicSplineFitting,
+                     'SPLINE': CubicSplineFitting,
+                     'POLYNOMIAL': PolynomialFitting}
+    def __init__(self, fitfunc='cspline'):
+        self.engine = self.FittingEngine[fitfunc.upper()]()
+        
+    def execute(self, datatable, filename, filename_out, time_table, index_list, nchan, edge, fitorder='automatic'):
+        return self.engine.execute(datatable, filename, filename_out, time_table, index_list, nchan, edge, fitorder)
+            
+
