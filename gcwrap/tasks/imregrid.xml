@@ -40,6 +40,10 @@ template images must have the same coordinate structure.
         <description>Shape of the output image. Only used if template is an image. If not specified (-1), the output image shape is set equal to the input image shape.</description>
         <value>-1</value>
      </param>
+     <param type="string"  name="interpolation">
+        <description>The interpolation method.  One of "nearest", "linear", "cubic".</description>
+        <value>linear</value>
+     </param>
      <constraints>
         <when param="template">
             <notequals type="string" value="get">
@@ -55,32 +59,33 @@ template images must have the same coordinate structure.
 
 Keyword arguments:
 
-imagename   Name of the source image that needs to be regridded. Must be specified.
-            example: imagename='orion.image'
-template    Dictionary, directional reference code, or imagename defining the new
-            shape and coordinate system, or 'get' to return the template
-            dictionary for imagename.  Recognized directional reference codes are:
-            'J2000', 'B1950', 'B1950_VLA', 'GALACTIC', 'HADEC', 'AZEL',
-            'AZELSW', 'AZELNE', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC',
-            and 'SUPERGAL'.
-            default: 'get'; example: template='orion_j2000.im' (for a template image),
-            template='J2000' (to regrid the input image to J2000 coordinates).
-shape       Shape of the output image. Only used if template is an image.
-            If not specified (-1), the output image shape is set equal to
-            the input image shape. Ignored if template is set equal to a
-            reference code. If template is a dictionary, the output shape is
-            retrieved from the dictionary so the shape input parameter is ignored.
-output      Name for the regridded image.  Must be specified.
-            example: imagename='orion_shifted.im'
-asvelocity  If True, regrid spectral axis with respect to velocity, not frequency. If False,
-            regrid with respect to frequency. default: True
-axes        The pixel axes to regrid. Default value [-1] => all except Stokes. Ignored
-            if template is set equal to a reference code (in which case only the directional
-            axes are regridded). If specified, this should
-            be provided as an array. example axes=[0,1] (only regrid the first two axes, which
-            are normally the directional axes).
-async       Run task in a separate process (return CASA prompt)
-            default: False; example: async=True
+imagename       Name of the source image that needs to be regridded. Must be specified.
+                example: imagename='orion.image'
+template        Dictionary, directional reference code, or imagename defining the new
+                shape and coordinate system, or 'get' to return the template
+                dictionary for imagename.  Recognized directional reference codes are:
+                'J2000', 'B1950', 'B1950_VLA', 'GALACTIC', 'HADEC', 'AZEL',
+                'AZELSW', 'AZELNE', 'ECLIPTIC', 'MECLIPTIC', 'TECLIPTIC',
+                and 'SUPERGAL'.
+                default: 'get'; example: template='orion_j2000.im' (for a template image),
+                template='J2000' (to regrid the input image to J2000 coordinates).
+shape           Shape of the output image. Only used if template is an image.
+                If not specified (-1), the output image shape is set equal to
+                the input image shape. Ignored if template is set equal to a
+                reference code. If template is a dictionary, the output shape is
+                retrieved from the dictionary so the shape input parameter is ignored.
+output          Name for the regridded image.  Must be specified.
+                example: imagename='orion_shifted.im'
+asvelocity      If True, regrid spectral axis with respect to velocity, not frequency. If False,
+                regrid with respect to frequency. default: True
+axes            The pixel axes to regrid. Default value [-1] => all except Stokes. Ignored
+                if template is set equal to a reference code (in which case only the directional
+                axes are regridded). If specified, this should
+                be provided as an array. example axes=[0,1] (only regrid the first two axes, which
+                are normally the directional axes).
+interpolation   The interpolation method.  One of 'nearest', 'linear', 'cubic'.
+async           Run task in a separate process (return CASA prompt)
+                default: False; example: async=True
                 
 The new coordinate system is defined by the template parameter, which can be:
 
@@ -111,8 +116,14 @@ coordinate of the template coordinate system. Thus the output pixel
 values will correspond only to the velocity, not the frequency, of the
 output axis.
 
+A variety of interpolation schemes are provided (only
+the first three characters to be specified).  The cubic interpolation
+is substantially slower than linear, and often the improvement is
+modest.  By default linear interpolation is used.
+
 If an image has per-plane beams and one attempts to regrid the spectral axis,
 an exception is thrown.
+
 
 
 Basic Examples

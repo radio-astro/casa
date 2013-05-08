@@ -268,6 +268,17 @@ class simutil:
         tdata_array=pl.transpose(data_array)
         ttrans_array=tdata_array.tolist()
         ttrans_array.reverse()
+        
+        # get and apply mask
+        mask_array=ia.getchunk([-1,-1,1,1],[-1,-1,1,1],[1],[],True,True,True)
+        mask_array=pl.array(mask_array)
+        tmask_array=pl.transpose(mask_array)
+        tmtrans_array=tmask_array.tolist()
+        tmtrans_array.reverse()
+        ttrans_array=pl.array(ttrans_array)
+        z=pl.where(pl.array(tmtrans_array)==False)
+        ttrans_array[z[0],z[1]]=0.
+
         if (plot):
             pixsize=[qa.convert(pix[0],'arcsec')['value'],qa.convert(pix[1],'arcsec')['value']]
             xextent=imsize[0]*abs(pixsize[0])*0.5

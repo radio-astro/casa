@@ -80,6 +80,7 @@ partition.xml
 polcal.xml
 predictcomp.xml
 impv.xml
+rmfit.xml
 rmtables.xml
 sdbaseline.xml
 sdcal.xml

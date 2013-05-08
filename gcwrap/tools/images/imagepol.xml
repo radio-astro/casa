@@ -1236,12 +1236,12 @@ lpi.done()
      </param>
   
      <param type="double" direction="in" name="rmfg">
-     <description>Foreground Rotation Measure (rad/m/m) to subtract</description>
+     <description>Foreground Rotation Measure (rad/m/m) to subtract. </description>
      <value>0.0</value>
      </param>
   
      <param type="double" direction="in" name="rmmax">
-     <description>Maximum Rotation Measure (rad/m/m) to solve for</description>
+     <description>Maximum rotation measure (rad/m/m) to solve for. IMPORTANT TO SPECIFY.</description>
      <value>0.0</value>
      </param>
   

@@ -449,8 +449,33 @@ class imregrid_test(unittest.TestCase):
         dicttemp = imregrid(tempfile, template="get")
         dicttemp['csys']['direction0']['crpix'] = [2.5, 2.5]
         output = "out.im"
-        imregrid (tempfile, template=dicttemp, output=output) 
+        imregrid (tempfile, template=dicttemp, output=output)
         
+    def test_interpolate(self):
+        """Test interpolation parameter is recognized"""
+        myia = self._myia
+        myia.open(datapath + "myim.im")
+        csys = myia.coordsys()
+        incr = csys.increment()['numeric']
+        incr[0] = incr[0]*0.9
+        incr[1] = incr[1]*0.9
+        csys.setincrement(incr)
+        template = {}
+        template['csys'] = csys.torecord()
+        template['shap'] = myia.shape()
+        myia.done()
+        self.assertFalse(
+            imregrid(
+                imagename=datapath + "myim.im", template=template,
+                output="blah", interpolation="x"
+            )
+        )
+        self.assertTrue(
+            imregrid(
+                imagename=datapath + "myim.im", template=template,
+                output="blah3", interpolation="cubic"
+            )
+        )
             
 def suite():
     return [imregrid_test]
