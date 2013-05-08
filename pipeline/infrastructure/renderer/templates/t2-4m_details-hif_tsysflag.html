@@ -77,21 +77,28 @@ try:
                     # if the merit position was flagged then display the
                     # tsys overlaid on median tsys
 
-                    for median_desc in medians.descriptions():
-                        for tsys_desc in tsysspectra.descriptions():
-                            tsysspectrum = tsysspectra.first(tsys_desc)
+                    # first, find the flagged tsys spectrum
+                    for tsys_desc in tsysspectra.descriptions():
+                        tsysspectrum = tsysspectra.first(tsys_desc)
 
-                            # plot flagged Tsys spectra
-                            for i,fg0 in enumerate(flaggrid0):
-                                fg1 = flaggrid1[i]
+                        # plot flagged Tsys spectra
+                        for i,fg0 in enumerate(flaggrid0):
+                            fg1 = flaggrid1[i]
 
-                                if (tsysspectrum.ant[0], tsysspectrum.time) == \
-                                  (fg0, ydata[fg1]):
-                                    plots.append(displays.SliceDisplay().plot(
-                                      context=pcontext, results=tsysspectra,
-                                      description_to_plot=tsys_desc,
-                                      overplot_spectrum=medians.first(median_desc),
-                                      reportdir=plots_dir, plotbad=False))
+                            if (tsysspectrum.ant[0], tsysspectrum.time) == \
+                              (fg0, ydata[fg1]):
+
+                                # second, find the associated median
+                                for median_desc in medians.descriptions():
+                                    median_spectrum = medians.first(median_desc)
+                                    if median_spectrum.ant is None or \
+                                      median_spectrum.ant[0]==tsysspectrum.ant[0]:
+                                        plots.append(displays.SliceDisplay().plot(
+                                          context=pcontext, results=tsysspectra,
+                                          description_to_plot=tsys_desc,
+                                          overplot_spectrum=median_spectrum,
+                                          reportdir=plots_dir, plotbad=False))
+                                        break
 
     # Group the Plots by axes and plot types; each logical grouping will
     # be contained in a PlotGroup
