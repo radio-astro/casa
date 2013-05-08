@@ -2566,7 +2566,11 @@ void QtDisplayPanel::loadRegions( const std::string &path, const std::string &ty
 	// There are two approaches to parsing and loading regions. IMO the DS9
 	// approach is superior, but unifying them is no easy task...
 	if ( type == "casa region" ) {
-		toolmgr->loadRegions( path, type );
+		try {
+			toolmgr->loadRegions( path, type );
+		} catch( AipsError e ) {
+			panel_->status( e.getMesg( ), "error" );
+		} catch(...) { }
 	} else if ( type == "ds9 region" ) {
 		ConstListIter<WorldCanvas*> wcl = panelDisplay()->myWCLI;
 		wcl.toStart( );
@@ -2583,7 +2587,7 @@ void QtDisplayPanel::loadRegions( const std::string &path, const std::string &ty
 				parser.parse_file( context, path.c_str( ) );
 			} catch( viewer::internal_error e ) {
 				panel_->status(std::string("ds9 load failed: ") + path,"error");
-			}
+			} catch(...) { }
 		}
 	}
 
