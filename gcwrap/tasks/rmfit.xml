@@ -7,7 +7,7 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                                               -->
 
-<task type="function" name="porm" category="analysis">
+<task type="function" name="rmfit" category="analysis">
 
 <shortdescription>Calculate rotation measure.</shortdescription>
 
@@ -140,12 +140,12 @@ is the basic problem with rotation measure algorithms.
 EXAMPLES
 
 # Calculate the rotation measure for a single polarization image
-porm(imagename="mypol.im", rm="myrm.im", rmmax=50.0)
+rmfit(imagename="mypol.im", rm="myrm.im", rmmax=50.0)
 
 # calculate the rotation measure using a set of polarization images from
 # different spectral windows or bands.
 
-porm(imagename=["pol1.im", "pol2.im", "pol3.im", rm="myrm2.im", rmmax=50.0)
+rmfit(imagename=["pol1.im", "pol2.im", "pol3.im", rm="myrm2.im", rmmax=50.0)
 
 </example>
 

@@ -97,15 +97,15 @@ class po_rotationmeasure_test(unittest.TestCase):
         self.assertRaises(Exception, mypo.rotationmeasure, "hh")
         mypo.done()
         
-    def test_porm_basics(self):
-        """Sanity tests for task porm"""
+    def test_rmfit_basics(self):
+        """Sanity tests for task rmfit"""
         myia = iatool()
         outfile = "xx.im"
         myia.fromshape(outfile, [20, 20, 4, 20])
         myia.addnoise()
         myia.done()
         myrm = "rm1.im"
-        self.assertTrue(porm(imagename=outfile, rm=myrm))
+        self.assertTrue(rmfit(imagename=outfile, rm=myrm))
         myia.open(myrm)
         self.assertTrue((myia.shape() == [20, 20]).all())
         got1 = myia.statistics()['sumsq']
@@ -123,7 +123,7 @@ class po_rotationmeasure_test(unittest.TestCase):
         myia.done()
         images = ["xx.im", "yy.im"]
         myrm = "rm2.im"
-        self.assertTrue(porm(imagename=images, rm=myrm))
+        self.assertTrue(rmfit(imagename=images, rm=myrm))
         myia.open(myrm)
         self.assertTrue((myia.shape() == [20, 20]).all())
         got2 = myia.statistics()['sumsq']
@@ -165,7 +165,7 @@ class po_rotationmeasure_test(unittest.TestCase):
                 mypo.rotationmeasure(rm=rmim, pa0=pa0im, sigma=sigma)
                 mypo.done()
             else:
-                porm(imagename=imagename, rm=rmim, pa0=pa0im, sigma=sigma)
+                rmfit(imagename=imagename, rm=rmim, pa0=pa0im, sigma=sigma)
             myia.open(rmim)
             stats = myia.statistics()
             self.assertTrue((abs(stats['min'][0] - RM)) < 1e-4)
