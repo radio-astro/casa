@@ -83,6 +83,11 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
     """
     Inputs = FlagdataSetterInputs
 
+    # not sure why this is required, but is needed to prevent multiple
+    # executions of this task when vis is a list.
+    def is_multi_vis_task(self):
+        return True
+
     def prepare(self):
         """
         Prepare and execute a flagdata flagging job appropriate to the
