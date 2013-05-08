@@ -426,12 +426,12 @@ class CalibrationTable(NamingTemplate):
     def tsys_cal(self):
         '''Set the filename extension as appropriate for a tsys calibration.
         ''' 
-        return self.extension('tsys')
+        return self.extension('tsyscal')
 
     def wvrg_cal(self):
         '''Set the filename extension as appropriate for a wvr calibration.
         ''' 
-        return self.extension('wvr')
+        return self.extension('wvrcal')
 
     #- fit type convenience methods --------------------------------------------
     
