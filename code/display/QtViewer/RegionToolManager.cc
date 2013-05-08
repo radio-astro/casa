@@ -42,10 +42,9 @@
 namespace casa {
 namespace viewer {
 
-// QtDisplayPanelGui was added so that the "region source" apparatus can be removed in the future
-// since the partition of non-gui and gui regions has been removed...
-RegionToolManager::RegionToolManager( QtRegionSourceFactory *rsf, QtDisplayPanelGui */*dpg_*/, PanelDisplay *pd_ ) :
-								pd(pd_), moving_handle(false), moving_handle_info(0,0,region::PointOutside), moving_handle_region(0), factory(rsf) {
+RegionToolManager::RegionToolManager( QtRegionSourceFactory *rsf, QtDisplayPanelGui *dpg_, PanelDisplay *pd_ ) :
+								pd(pd_), moving_handle(false), moving_handle_info(0,0,region::PointOutside),
+								moving_handle_region(0), factory(rsf), panel(dpg_) {
 	// register for world canvas events...
 	pd->myWCLI->toStart( );
 	while ( ! pd->myWCLI->atEnd( ) ) {
@@ -617,17 +616,23 @@ void RegionToolManager::loadRegions( const std::string &path, const std::string 
 				Quantity minor_inc = el->getMinorAxis( ) / 2.0;
 				Quantity centerx = points[0].first;
 				Quantity centery = points[0].second;
-				if ( x_is_major ) {
-					qblcx = centerx - major_inc;
-					qblcy = centery - minor_inc;
-					qtrcx = centerx + major_inc;
-					qtrcy = centery + minor_inc;
-				} else {
-					qblcx = centerx - minor_inc;
-					qblcy = centery - major_inc;
-					qtrcx = centerx + minor_inc;
-					qtrcy = centery + major_inc;
-				}
+				try {
+					if ( x_is_major ) {
+						qblcx = centerx - major_inc;
+						qblcy = centery - minor_inc;
+						qtrcx = centerx + major_inc;
+						qtrcy = centery + minor_inc;
+					} else {
+						qblcx = centerx - minor_inc;
+						qblcy = centery - major_inc;
+						qtrcx = centerx + minor_inc;
+						qtrcy = centery + major_inc;
+					}
+				} catch( AipsError e ) {
+					panel->status( e.getMesg( ), "error" );
+					continue;
+				} catch(...) { continue; }
+				
 
 				double lblcx, lblcy, ltrcx, ltrcy;
 				try { viewer::world_to_linear( wc, qblcx.getValue(units[0]), qblcy.getValue(units[1]),

@@ -34,6 +34,7 @@ namespace casa {
 		class StatusSink {
 		public:
 			StatusSink( ) { }
+			virtual ~StatusSink( ) { }
 			virtual void status( const std::string &s, const std::string &type="info" ) = 0;
 		};
 	}

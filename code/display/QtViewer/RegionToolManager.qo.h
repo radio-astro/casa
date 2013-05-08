@@ -113,6 +113,7 @@ namespace casa {
 				// region source factory is needed to retrieve the region dock
 				// which can provide a list of selected regions...
 				QtRegionSourceFactory *factory;
+				QtDisplayPanelGui *panel;
 
 		};
     }
