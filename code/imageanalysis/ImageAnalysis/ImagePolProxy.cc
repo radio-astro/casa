@@ -796,20 +796,28 @@ namespace casa { //# name space casa begins
     ImageInterface<Float>* pRMOut = 0;
     ImageInterface<Float>* pRMOutErr = 0;
     makeImage (pRMOut, outRM, cSysRM, shapeRM, True, False);
+    // manage naked pointers so exception throwing doesn't leave open images
+    std::auto_ptr<ImageInterface<Float> > managed5(pRMOut);
+
     makeImage (pRMOutErr, outRMErr, cSysRM, shapeRM, True, False);
-    //
+    std::auto_ptr<ImageInterface<Float> > managed6(pRMOutErr);
+
     CoordinateSystem cSysPA;
     IPosition shapePA =
       itsImPol->positionAngleShape(cSysPA, fAxis, sAxis, *itsLog, axis);
     ImageInterface<Float>* pPA0Out = 0;
     ImageInterface<Float>* pPA0OutErr = 0;
     makeImage (pPA0Out, outPA0, cSysPA, shapePA, True, False);
+    std::auto_ptr<ImageInterface<Float> > managed1(pPA0Out);
     makeImage (pPA0OutErr, outPA0Err, cSysPA, shapePA, True, False);
-    //
+    std::auto_ptr<ImageInterface<Float> > managed2(pPA0OutErr);
+
     ImageInterface<Float>* pNTurnsOut = 0;
     makeImage (pNTurnsOut, outNTurns, cSysRM, shapeRM, True, False);
+    std::auto_ptr<ImageInterface<Float> > managed3(pNTurnsOut);
     ImageInterface<Float>* pChiSqOut = 0;
     makeImage (pChiSqOut, outChiSq, cSysRM, shapeRM, True, False);
+    std::auto_ptr<ImageInterface<Float> > managed4(pChiSqOut);
 
     // Make plotter
     PGPlotter pgPlotter;
@@ -819,37 +827,30 @@ namespace casa { //# name space casa begins
       pgPlotter.sch(2.0);
       pgPlotter.subp(nx, ny);
     }
-
-    // Do it
-    itsImPol->rotationMeasure(pRMOut, pRMOutErr, pPA0Out, pPA0OutErr,
-			      pNTurnsOut, pChiSqOut, pgPlotter,
-			      axis, rmMax, maxPaErr,
-			      sigmaQU, rmFg, True);
-    //
+    itsImPol->rotationMeasure(
+    	pRMOut, pRMOutErr, pPA0Out, pPA0OutErr,
+    	pNTurnsOut, pChiSqOut, pgPlotter,
+    	axis, rmMax, maxPaErr,
+    	sigmaQU, rmFg, True
+    );
     const ImageInterface<Float>* p = itsImPol->imageInterface();
     if (pRMOut) {
       copyMiscellaneous (*pRMOut, *p);
-      delete pRMOut;
     }
     if (pRMOutErr) {
       copyMiscellaneous (*pRMOutErr, *p);
-      delete pRMOutErr;
     }
     if (pPA0Out) {
       copyMiscellaneous (*pPA0Out, *p);
-      delete pPA0Out;
     }
     if (pPA0OutErr) {
       copyMiscellaneous (*pPA0OutErr, *p);
-      delete pPA0OutErr;
     }
     if (pNTurnsOut) {
       copyMiscellaneous (*pNTurnsOut, *p);
-      delete pNTurnsOut;
     }
     if (pChiSqOut) {
       copyMiscellaneous (*pChiSqOut, *p);
-      delete pChiSqOut;
     }
   }
 

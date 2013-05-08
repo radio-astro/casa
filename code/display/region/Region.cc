@@ -160,6 +160,8 @@ namespace casa {
 			signal_region_change( region::RegionChangeDelete );
 			disconnect(mystate, 0, 0, 0);
 			delete histogram;
+			// QtRegionState is cleaned up by Qt...
+			mystate->clearRegion( );
 		}
 
 		bool Region::degenerate( ) const {

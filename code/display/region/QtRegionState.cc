@@ -219,7 +219,7 @@ void QtRegionState::initRegionState( ) {
 }
 
 	QtRegionState::~QtRegionState( ) {
-		region_->selectedCountUpdateNeeded( );
+		if ( region_ ) region_->selectedCountUpdateNeeded( );
 	}
 
 void QtRegionState::reset( const QString &n, Region *r ) {

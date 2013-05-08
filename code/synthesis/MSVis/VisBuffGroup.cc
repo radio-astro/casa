@@ -59,6 +59,8 @@ Bool VisBuffGroup::store(const VisBuffer& vb)
   LogIO os(LogOrigin("VisBuffGroup", "store"));
   uInt ibuf = nBuf_p;
   Bool retval = False;
+  // not sure why but if this line is included CAS-5090..
+  Int tstnchan = vb.nChannel();
   
   try{
     VB_p.resize(nBuf_p + 1, False, True); // n, forceSmaller, copyElements

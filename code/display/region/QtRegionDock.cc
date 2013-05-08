@@ -74,7 +74,21 @@ namespace casa {
 
 	}
 
-	QtRegionDock::~QtRegionDock() {  }
+	QtRegionDock::~QtRegionDock() {
+		// perhaps these should be deleted somewhere else?
+		region_list_t dtor_list = region_list;
+
+		// clear list to prevent side-effects...
+		region_list.clear( );
+		// disconnect events from regions...
+		for ( region_list_t::iterator it = dtor_list.begin( ); it != dtor_list.end( ); ++it ) {
+			disconnect( *it, 0, 0, 0 );
+		}
+		// delete regions...
+		for ( region_list_t::iterator it = dtor_list.begin( ); it != dtor_list.end( ); ++it ) {
+			delete *it;
+		}
+	}
 
 	// void QtRegionDock::showStats( const QString &stats ) { }
 
