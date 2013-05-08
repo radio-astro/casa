@@ -27,6 +27,7 @@ Flag deviant system temperature measurements.
         <allowed kind="enum">
             <value>median</value>
             <value>shape</value>
+            <value>fieldshape</value>
             <value>derivative</value>
         </allowed>
     </param>
@@ -257,10 +258,24 @@ caltable -- List of input Tsys calibration tables
 metric -- Method to use as a measure of the Tsys quality. Possible values are:
     'median' -     Each pixel in each flagging image is the median value of
                    the unflagged channels in the associated Tsys spectrum.
+
     'shape'  -     Each pixel in each flagging image is a measure of the
                    difference in shape of the unflagged part of the 
                    associated normalised Tsys spectrum from the median of
                    the normalised Tsys spectra contributing to the image. 
+                   The shape metric is computed as:
+
+                   shape = 100 * mean(abs(normalized Tsys - median normalized Tsys))
+
+                   where a normalized array is:
+
+                   normalized = array / median (array)
+
+    'fieldshape' - Each pixel in each flagging image is a measure of the
+                   difference in shape of the unflagged part of the 
+                   associated normalised Tsys spectrum from the median of
+                   the normalised Tsys spectra for that antenna from all
+                   fields contributing to the image.
                    The shape metric is computed as:
 
                    shape = 100 * mean(abs(normalized Tsys - median normalized Tsys))
