@@ -639,6 +639,7 @@ void FindSourcesDialog::initializeFileManagement(){
 
 void FindSourcesDialog::populateImageBounds(){
 	ImageStatsCalculator calc( image, NULL, "", false);
+	calc.setList(False);
 	Record result = calc.calculate();
 	blcVector = result.asArrayInt( "blc");
 	trcVector = result.asArrayInt( "trc");
