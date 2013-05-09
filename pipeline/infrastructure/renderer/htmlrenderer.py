@@ -1479,7 +1479,7 @@ renderer_map = {
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
         hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html'),
         hif.tasks.Tsysflag       : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflag.html'),
-        hif.tasks.Tsysflagchans  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflagchannels.html'),
+        hif.tasks.Tsysflagchans  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflagchans.html'),
         hif.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hif.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
