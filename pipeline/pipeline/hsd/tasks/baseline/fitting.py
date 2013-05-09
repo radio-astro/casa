@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import os
 import time
+import re
 from math import sqrt
 import numpy
 import contextlib
@@ -16,33 +17,14 @@ import pipeline.infrastructure.logging as logging
 import pipeline.hsd.heuristics as heuristics
 from .. import common
 from . import rules
+from . import utils
+from .baselinetable import SplineBaselineTableGenerator
+from .baselinetable import PolynomialBaselineTableGenerator
 
 LOG = infrastructure.get_logger(__name__)
 LogLevel='debug'
 #LogLevel='info'
 logging.set_logging_level(LogLevel)
-
-@contextlib.contextmanager
-def _temporary_file_name():
-    name = '_heuristics.temporary.table'
-    try:
-        yield name
-    finally:
-        os.system('rm -rf %s'%(name))
-
-def _create_dummy_scan(name, datatable, index_list):
-    with _temporary_file_name() as temporary_name:
-        for index in index_list:
-            try:
-                s = sd.scantable(name, average=False).get_row(datatable.getcell('ROW',index),insitu=False)
-                s.save(temporary_name, overwrite=True)
-                param_org = sd.rcParams['scantable.storage'] 
-                sd.rcParams['scantable.storage'] = 'memory'
-                dummy_scan = sd.scantable(temporary_name, average=False)
-                sd.rcParams['scantable.storage'] = param_org
-                return dummy_scan
-            except:
-                pass
 
 class FittingBase(object):
     ApplicableDuration = 'raster' # 'raster' | 'subscan'
@@ -53,7 +35,7 @@ class FittingBase(object):
     MinChannels = 512
     MaxFragmentation = 3
     
-    def execute(self, datatable, filename, filename_out, time_table, index_list, nchan, edge, fitorder='automatic'):
+    def execute(self, datatable, filename, filename_out, bltable_name, time_table, index_list, nchan, edge, fitorder='automatic'):
         """
         """
 
@@ -73,10 +55,11 @@ class FittingBase(object):
 
         _edge = common.parseEdge(edge)
 
-        bltable_name = filename.rstrip('/')+'.baseline.table'
+        blfile = filename.rstrip('/')+'.baseline.table'
+        os.system('rm -rf %s'%(blfile))
 
         # dummy scantable for baseline subtraction
-        dummy_scan = _create_dummy_scan(filename, datatable, index_list)
+        dummy_scan = utils._create_dummy_scan(filename, datatable, index_list)
         LOG.info('dummy_scan.nrow()=%s'%(dummy_scan.nrow()))
         LOG.info('nchan for dummy_scan=%s'%(len(dummy_scan._getspectrum())))
 
@@ -91,70 +74,80 @@ class FittingBase(object):
         LOG.info('Processing %d spectra...'%(nrow_total))
 
         for y in xrange(len(member_list)):
-                rows = member_list[y][0]
-                idxs = member_list[y][1]
-                with casatools.TableReader(filename) as tb:
-                    spectra = numpy.array([tb.getcell('SPECTRA',row)
-                                           for row in rows])
-                masklist = [datatable.tb2.getcell('MASKLIST',idx)
-                            for idx in idxs]
+            rows = member_list[y][0]
+            idxs = member_list[y][1]
+            with casatools.TableReader(filename) as tb:
+                spectra = numpy.array([tb.getcell('SPECTRA',row)
+                                       for row in rows])
+            masklist = [datatable.tb2.getcell('MASKLIST',idx)
+                        for idx in idxs]
 
-                # fit order determination
-                polyorder = poly_order(spectra, masklist, _edge)
-                if fitorder == 'automatic' and self.MaxPolynomialOrder != 'none':
-                    polyorder = min(polyorder, self.MaxPolynomialOrder)
-                LOG.info('group %d: order=%s'%(y,polyorder))
+            # fit order determination
+            polyorder = poly_order(spectra, masklist, _edge)
+            if fitorder == 'automatic' and self.MaxPolynomialOrder != 'none':
+                polyorder = min(polyorder, self.MaxPolynomialOrder)
+            LOG.info('group %d: order=%s'%(y,polyorder))
 
-                nrow = len(rows)
-                LOG.info('nrow = %s'%(nrow))
+            # calculate fragmentation
+            (fragment, nwindow, win_polyorder) = self._calc_fragmentation(polyorder, nchan-sum(_edge), 0)
+
+            nrow = len(rows)
+            LOG.info('nrow = %s'%(nrow))
+            LOG.info('len(idxs) = %s'%(len(idxs)))
+            index_list = []
+            for i in xrange(nrow):
+                row = rows[i]
+                idx = idxs[i]
+                LOG.info('===== Processing at row = %s ====='%(row))
+                nochange = datatable.tb2.getcell('NOCHANGE',idx)
+                LOG.debug('row = %s, Flag = %s'%(row, nochange))
+
+                # skip if no update on line window
+                if nochange > 0:
+                    continue
+
+                # set spectral data to dummy scantable
+                sp = spectra[i]
+                #sp[:_edge[0]] = 0
+                #sp[(nchan-_edge[1]):] = 0
+                #dummy_scan._setspectrum(sp)
+
+                # mask lines
+                maxwidth = 1
+                masklist = datatable.getcell('MASKLIST',idx)
+                for [chan0, chan1] in masklist:
+                    if chan1 - chan0 >= maxwidth:
+                        maxwidth = int((chan1 - chan0 + 1) / 1.4)
+                        # allowance in Process3 is 1/5:
+                        #    (1 + 1/5 + 1/5)^(-1) = (5/7)^(-1)
+                        #                         = 7/5 = 1.4
+                max_polyorder = int((nchan - sum(_edge)) / maxwidth + 1)
+                LOG.debug('Masked Region from previous processes = %s'%(masklist))
+                LOG.debug('edge parameters= (%s,%s)'%(_edge))
+                LOG.debug('Polynomial order = %d  Max Polynomial order = %d'%(polyorder, max_polyorder))
+
+                # fitting
+                polyorder = min(polyorder, max_polyorder)
+                start_time = time.time()
+                (result, nmask) = self._calc_baseline_fit(dummy_scan, sp, polyorder, nchan, 0, _edge, masklist, blfile, win_polyorder, fragment, nwindow)
+                end_time = time.time()
+                LOG.info('fitting: elapsed time=%s'%(end_time-start_time))
+                nwin.append(nwindow)
+                spectra[i] = result
+                index_list.append(idx)
+
+            # write data
+            with casatools.TableReader(filename, nomodify=False) as tb:
                 for i in xrange(nrow):
-                    row = rows[i]
-                    idx = idxs[i]
-                    LOG.info('===== Processing at row = %s ====='%(row))
-                    nochange = datatable.tb2.getcell('NOCHANGE',idx)
-                    LOG.debug('row = %s, Flag = %s'%(row, nochange))
+                    tb.putcell('SPECTRA', rows[i], spectra[i])
 
-                    # skip if no update on line window
-                    if nochange > 0:
-                        continue
+            # update baseline table
+            self._update_bltable(bltable_name, blfile, datatable, index_list, nchan, _edge, nwindow, fragment)
 
-                    # set spectral data to dummy scantable
-                    sp = spectra[i]
-                    #sp[:_edge[0]] = 0
-                    #sp[(nchan-_edge[1]):] = 0
-                    #dummy_scan._setspectrum(sp)
-
-                    # mask lines
-                    maxwidth = 1
-                    masklist = datatable.getcell('MASKLIST',idx)
-                    for [chan0, chan1] in masklist:
-                        if chan1 - chan0 >= maxwidth:
-                            maxwidth = int((chan1 - chan0 + 1) / 1.4)
-                            # allowance in Process3 is 1/5:
-                            #    (1 + 1/5 + 1/5)^(-1) = (5/7)^(-1)
-                            #                         = 7/5 = 1.4
-                    max_polyorder = int((nchan - sum(_edge)) / maxwidth + 1)
-                    LOG.debug('Masked Region from previous processes = %s'%(masklist))
-                    LOG.debug('edge parameters= (%s,%s)'%(_edge))
-                    LOG.debug('Polynomial order = %d  Max Polynomial order = %d'%(polyorder, max_polyorder))
-
-                    # fitting
-                    polyorder = min(polyorder, max_polyorder)
-                    start_time = time.time()
-                    (result, nmask, win_polyorder, fragment, nwindow) = self._calc_baseline_fit(dummy_scan, sp, polyorder, nchan, 0, _edge, masklist, blfile=bltable_name)
-                    end_time = time.time()
-                    LOG.info('fitting: elapsed time=%s'%(end_time-start_time))
-                    print 'fitting: elapsed time=%s'%(end_time-start_time)
-                    nwin.append(nwindow)
-                    spectra[i] = result
-
-                # write data
-                with casatools.TableReader(filename, nomodify=False) as tb:
-                    for i in xrange(nrow):
-                        tb.putcell('SPECTRA', rows[i], spectra[i])
-                    
-
-    def _calc_baseline_fit(self, scan, data, polyorder, nchan, modification, edge, masklist, blfile):
+            # cleanup blfile
+            os.system('rm -rf %s'%(blfile))
+                        
+    def _calc_baseline_fit(self, scan, data, polyorder, nchan, modification, edge, masklist, blfile, win_polyorder, fragment, nwindow):
         LOG.debug('masklist=%s'%(masklist))
 
         # set edge mask
@@ -178,13 +171,15 @@ class FittingBase(object):
 
         LOG.debug('nchan_without_edge, num_mask, diff=%s, %s, %s'%(nchan_without_edge, num_mask, num_nomask))
 
-        (fragment, nwindow, win_polyorder) = self._calc_fragmentation(polyorder, num_nomask, 0)
+        # 2013/05/09 TN
+        # _calc_fragmentation is performed outside the loop over rows
+        #(fragment, nwindow, win_polyorder) = self._calc_fragmentation(polyorder, num_nomask, 0)
 
         outdata = self._fit(data, scan, polyorder, nchan, mask, edge, nchan_without_edge, num_mask, fragment, nwindow, win_polyorder, masklist, blfile)
         outdata[:edge[0]] = 0.0
         outdata[nchan-edge[1]:] = 0.0
 
-        return (outdata, num_mask, win_polyorder, fragment, nwindow)
+        return (outdata, num_mask)
 
     def _calc_fragmentation(self, polyorder, nchan, modification=0):
         polyorder += modification
@@ -194,6 +189,7 @@ class FittingBase(object):
         win_polyorder = min(int(polyorder / fragment) + fragment - 1, self.MaxFreq)
         return (fragment, nwindow, win_polyorder)
 
+
 class CubicSplineFitting(FittingBase):
     def _fit(self, data, scan, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist, blfile):
         mask[:edge[0]] = 0
@@ -202,10 +198,19 @@ class CubicSplineFitting(FittingBase):
         num_pieces = max(int(min(polyorder * num_nomask / float(nchan_without_edge) + 0.5, 0.1 * num_nomask)), 1)
         LOG.info('Cubic Spline Fit: Number of Sections = %d' % num_pieces)
         scan._setspectrum(data, 0)
-        outdata = numpy.array(scan.cspline_baseline(insitu=False, mask=mask, npiece=num_pieces, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)._getspectrum(0))
-        #scan.cspline_baseline(insitu=True, mask=mask, npiece=num_pieces, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)
-        #outdata = numpy.array(scan._getspectrum(0))
+        # 2013/05/08 TN
+        # insitu=False is slower since it needs to create scantable instance
+        # for output.
+        #outdata = numpy.array(scan.cspline_baseline(insitu=False, mask=mask, npiece=num_pieces, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)._getspectrum(0))
+        scan.cspline_baseline(insitu=True, mask=mask, npiece=num_pieces, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile, csvformat=True)
+        outdata = numpy.array(scan._getspectrum(0))
         return outdata
+
+    def _update_bltable(self, table_name, csvfile, datatable, index_list, nchan, edge, nwindow, fragment):
+        blgen = SplineBaselineTableGenerator()
+        blgen.import_csv(csvfile)
+        blgen.update_table(table_name, datatable, index_list)
+
 
 class PolynomialFitting(FittingBase):
     def _fit(self, data, scan, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist, blfile):
@@ -297,8 +302,13 @@ class PolynomialFitting(FittingBase):
             # 0 and (redge-ledge) are included in the fitting range
             scan._setspectrum(numpy.concatenate((data[ledge:redge],numpy.zeros(nchan+ledge-redge, dtype=numpy.float64))))
             tmp_mask = numpy.concatenate((mask[ledge:redge], numpy.zeros(nchan+ledge-redge, dtype=int)))
-            tmpfit0 = scan.poly_baseline(order=dorder, mask=(tmp_mask & edge_mask), insitu=False, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)._getspectrum(0)
-            tmpfit = numpy.array(tmpfit0, dtype=numpy.float32)[:redge-ledge]
+            # 2013/05/08 TN
+            # insitu=False is slower since it needs to create scantable instance
+            # for output.
+            #tmpfit0 = scan.poly_baseline(order=dorder, mask=(tmp_mask & edge_mask), insitu=False, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile)._getspectrum(0)
+            #tmpfit = numpy.array(tmpfit0, dtype=numpy.float32)[:redge-ledge]
+            scan.poly_baseline(order=dorder, mask=(tmp_mask & edge_mask), insitu=True, clipthresh=5.0, clipniter=self.ClipCycle, blfile=blfile, csvformat=True)
+            tmpfit = numpy.array(scan._getspectrum(0), dtype=numpy.float32)[:redge-ledge]
 
             # Restore scan to the original position
             # 0 -> EdgeL
@@ -324,14 +334,26 @@ class PolynomialFitting(FittingBase):
 
         return outdata
 
-class Fitting(object):
-    FittingEngine = {'CSPLINE': CubicSplineFitting,
-                     'SPLINE': CubicSplineFitting,
-                     'POLYNOMIAL': PolynomialFitting}
-    def __init__(self, fitfunc='cspline'):
-        self.engine = self.FittingEngine[fitfunc.upper()]()
-        
-    def execute(self, datatable, filename, filename_out, time_table, index_list, nchan, edge, fitorder='automatic'):
-        return self.engine.execute(datatable, filename, filename_out, time_table, index_list, nchan, edge, fitorder)
+    def _update_bltable(self, table_name, csvfile, datatable, index_list, nchan, edge, nwindow, fragment):
+        segments = []
+        nchan_without_edge = nchan - sum(edge)
+        for win in xrange(nwindow):
+            ledge = int(win *  nchan_without_edge / (fragment * 2) + edge[0])
+            redge = nchan - edge[1] - int(nchan_without_edge * (nwindow - 1 - win) / (fragment * 2))
+            redge = min(redge, nchan-1)
+            segments.append([ledge,redge])
+        blgen = PolynomialBaselineTableGenerator(segments)
+        blgen.import_csv(csvfile)
+        blgen.update_table(table_name, datatable, index_list)
+
+class FittingFactory(object):
+    @staticmethod
+    def get_fitting_class(fitfunc='spline'):
+        if re.match('^C?SPLINE$', fitfunc.upper()):
+            return CubicSplineFitting
+        elif re.match('^POLYNOMIAL$', fitfunc.upper()):
+            return PolynomialFitting
+        else:
+            return None
             
 
