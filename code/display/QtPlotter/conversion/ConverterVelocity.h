@@ -30,15 +30,15 @@
 
 namespace casa {
 
-class ConverterVelocity : public Converter {
-public:
-	ConverterVelocity(const QString& oldUnits,const QString& newUnits);
-	virtual double toPixel( double value );
-	static void convertVelocity( Vector<double> &resultValues,
-				QString& sourceUnits, QString& destUnits);
-	virtual Vector<double> convert( const Vector<double>& oldValues );
-	virtual ~ConverterVelocity();
-};
+	class ConverterVelocity : public Converter {
+	public:
+		ConverterVelocity(const QString& oldUnits,const QString& newUnits);
+		virtual double toPixel( double value );
+		static void convertVelocity( Vector<double> &resultValues,
+		                             QString& sourceUnits, QString& destUnits);
+		virtual Vector<double> convert( const Vector<double>& oldValues );
+		virtual ~ConverterVelocity();
+	};
 
 } /* namespace casa */
 #endif /* CONVERTERVELOCITY_H_ */

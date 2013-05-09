@@ -1,4 +1,4 @@
-//# DSBasic.cc: Basically, a base class for any shape which can be drawn with 
+//# DSBasic.cc: Basically, a base class for any shape which can be drawn with
 //# primitive lines.
 //# Copyright (C) 1998,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
@@ -24,73 +24,74 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <casa/aips.h>
 
 #include <display/Display/DParameterRange.h>
-#include <display/DisplayShapes/DSBasic.h> 
+#include <display/DisplayShapes/DSBasic.h>
 #include <display/Display/PixelCanvas.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSBasic::DSBasic() :
-  DisplayShape() { 
+	DSBasic::DSBasic() :
+		DisplayShape() {
 
-  itsLineWidth = new DParameterRange<Int> ("linewidth", "Line Width", 
-					   "Select the desired line width",
-					   1,20,1,1,1);
-}
+		itsLineWidth = new DParameterRange<Int> ("linewidth", "Line Width",
+		        "Select the desired line width",
+		        1,20,1,1,1);
+	}
 
-DSBasic::DSBasic(const DSBasic& other) :
-  DisplayShape(other),
-  itsLineWidth(other.itsLineWidth) {
-}
+	DSBasic::DSBasic(const DSBasic& other) :
+		DisplayShape(other),
+		itsLineWidth(other.itsLineWidth) {
+	}
 
 
 
-DSBasic::~DSBasic() {
-  delete itsLineWidth; itsLineWidth = 0;
-}
+	DSBasic::~DSBasic() {
+		delete itsLineWidth;
+		itsLineWidth = 0;
+	}
 
-Record DSBasic::getOptions() {
-  Record rec = DisplayShape::getOptions();
-  rec.define("type", "shape");
-  
-  itsLineWidth->toRecord(rec);
+	Record DSBasic::getOptions() {
+		Record rec = DisplayShape::getOptions();
+		rec.define("type", "shape");
 
-  return rec;
-}
+		itsLineWidth->toRecord(rec);
 
-Bool DSBasic::setOptions(const Record& settings) {
-  Bool localChange = False;
+		return rec;
+	}
 
-  if (itsLineWidth->fromRecord(settings)) localChange = True;
-  if (DisplayShape::setOptions(settings)) localChange = True;
+	Bool DSBasic::setOptions(const Record& settings) {
+		Bool localChange = False;
 
-  return localChange;
-}
+		if (itsLineWidth->fromRecord(settings)) localChange = True;
+		if (DisplayShape::setOptions(settings)) localChange = True;
 
-void DSBasic::setLineWidth(const Int pixels) {
-  itsLineWidth->setValue(pixels);
-}
+		return localChange;
+	}
 
-Int DSBasic::getLineWidth() {
-  return itsLineWidth->value();
-}
+	void DSBasic::setLineWidth(const Int pixels) {
+		itsLineWidth->setValue(pixels);
+	}
 
-void DSBasic::draw(PixelCanvas* pc) {
-  DisplayShape::draw(pc);
-}
+	Int DSBasic::getLineWidth() {
+		return itsLineWidth->value();
+	}
 
-void DSBasic::move(const Float& dX, const Float& dY) {
-  DisplayShape::move(dX, dY);
-}
+	void DSBasic::draw(PixelCanvas* pc) {
+		DisplayShape::draw(pc);
+	}
 
-void DSBasic::rotateAbout(const Float& angle, const Float& aboutX, 
-			    const Float& aboutY) {
-  DisplayShape::rotateAbout(angle, aboutX, aboutY);
-}
+	void DSBasic::move(const Float& dX, const Float& dY) {
+		DisplayShape::move(dX, dY);
+	}
+
+	void DSBasic::rotateAbout(const Float& angle, const Float& aboutX,
+	                          const Float& aboutY) {
+		DisplayShape::rotateAbout(angle, aboutX, aboutY);
+	}
 
 
 

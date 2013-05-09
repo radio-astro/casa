@@ -30,13 +30,13 @@
 
 namespace casa {
 
-class ConverterVelocityWavelength : public ConverterVelocity {
-public:
-	ConverterVelocityWavelength(const QString& oldUnits,
-		const QString& newUnits );
-	virtual Vector<double> convert( const Vector<double>& oldValues );
-	virtual ~ConverterVelocityWavelength();
-};
+	class ConverterVelocityWavelength : public ConverterVelocity {
+	public:
+		ConverterVelocityWavelength(const QString& oldUnits,
+		                            const QString& newUnits );
+		virtual Vector<double> convert( const Vector<double>& oldValues );
+		virtual ~ConverterVelocityWavelength();
+	};
 
 } /* namespace casa */
 #endif /* CONVERTERVELOCITYWAVELENGTH_H_ */

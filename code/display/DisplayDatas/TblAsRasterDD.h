@@ -30,18 +30,18 @@
 #define TRIALDISPLAY_TBLASRASTERDD_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <display/Display/DParameterRange.h>
 #include <display/Display/DParameterChoice.h>
-#include <display/Display/DParameterString.h>   
+#include <display/Display/DParameterString.h>
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <display/DisplayDatas/ActiveCaching2dDD.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class Table;
-class TblAsRasterDM;
-class Regex;
+	class Table;
+	class TblAsRasterDM;
+	class Regex;
 
 //# Forward Declarations
 
@@ -62,18 +62,18 @@ class Regex;
 //
 // <etymology>
 // "TblAsRasterDD" is a implementation of a <linkto class=ActiveCaching2dDD>
-// ActiveCaching2dDD </linkto> which provides for the display of data held 
+// ActiveCaching2dDD </linkto> which provides for the display of data held
 // within a table to be displayed as a raster image in an environment where
 // individual depictions of the data are automatically cached.
 // </etymology>
 //
 // <synopsis>
 // This class adds to the interface defined in <linkto
-// class=DisplayData>DisplayData </linkto>.  It adds the capability to 
+// class=DisplayData>DisplayData </linkto>.  It adds the capability to
 // display vector/array data from a <linkto class=Table>Table</linkto>
-// column as a raster image.  It is assumed that the Y axis is defined 
+// column as a raster image.  It is assumed that the Y axis is defined
 // to be either the row number of the table column being displayed or
-// the scalar value from the same row number in a different table 
+// the scalar value from the same row number in a different table
 // column (e.g. plotting intensity as a function of frequency against
 // row number or time determined from a different column of the table).
 // The X axis is assumed to be a one dimensional array or vector of
@@ -113,150 +113,151 @@ class Regex;
 //   <li> implement showValue()
 // </todo>
 
-class TblAsRasterDD : public ActiveCaching2dDD {
+	class TblAsRasterDD : public ActiveCaching2dDD {
 
- public:
+	public:
 
-  // constructors
-  // given an already constructed table
-  TblAsRasterDD(Table *table);
+		// constructors
+		// given an already constructed table
+		TblAsRasterDD(Table *table);
 
-  // given a string which gives the full pathname and filename of a table 
-  // on disk
-  TblAsRasterDD(const String tablename);
+		// given a string which gives the full pathname and filename of a table
+		// on disk
+		TblAsRasterDD(const String tablename);
 
-  // Destructor
-  virtual ~TblAsRasterDD();
+		// Destructor
+		virtual ~TblAsRasterDD();
 
-  // format the table value at the give world position 
-  virtual String showValue(const Vector<Double> &world);
+		// format the table value at the give world position
+		virtual String showValue(const Vector<Double> &world);
 
-  // get the data unit 
-  virtual const Unit dataUnit(const String column);
-  virtual const Unit dataUnit();
+		// get the data unit
+		virtual const Unit dataUnit(const String column);
+		virtual const Unit dataUnit();
 
-  // install the default options for this DisplayData
-  virtual void setDefaultOptions();
+		// install the default options for this DisplayData
+		virtual void setDefaultOptions();
 
-  // Apply options stored in <src>rec</src> to the DisplayData.  A
-  // return value of <src>True</src> means a refresh is needed.
-  // <src>recOut</src> contains any fields which were implicitly 
-  // changed as a result of the call to this function.  
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Apply options stored in <src>rec</src> to the DisplayData.  A
+		// return value of <src>True</src> means a refresh is needed.
+		// <src>recOut</src> contains any fields which were implicitly
+		// changed as a result of the call to this function.
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-  // Retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// Retrieve the current and default options and parameter types.
+		virtual Record getOptions();
 
-  // Return the type of this DisplayData.
-  virtual Display::DisplayDataType classType()
-    { return Display::Raster; }     
+		// Return the type of this DisplayData.
+		virtual Display::DisplayDataType classType() {
+			return Display::Raster;
+		}
 
-  // Create a new TblAsRasterDM for drawing on the given
-  // WorldCanvas when the AttributeBuffers are suitably matched to the
-  // current state of this DisplayData and of the WorldCanvas/Holder.
-  // The tag is a unique number used to identify the age of the newly
-  // constructed CachingDisplayMethod.
-  virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
-                                         AttributeBuffer *wchAttributes,
-                                         AttributeBuffer *ddAttributes,
-                                         CachingDisplayData *dd);
- 
-  // Return the current options of this DisplayData as an
-  // AttributeBuffer.
-  virtual AttributeBuffer optionsAsAttributes();
+		// Create a new TblAsRasterDM for drawing on the given
+		// WorldCanvas when the AttributeBuffers are suitably matched to the
+		// current state of this DisplayData and of the WorldCanvas/Holder.
+		// The tag is a unique number used to identify the age of the newly
+		// constructed CachingDisplayMethod.
+		virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
+		        AttributeBuffer *wchAttributes,
+		        AttributeBuffer *ddAttributes,
+		        CachingDisplayData *dd);
 
-  //provide read-only access to the table
-  Table *table();
+		// Return the current options of this DisplayData as an
+		// AttributeBuffer.
+		virtual AttributeBuffer optionsAsAttributes();
 
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
+		//provide read-only access to the table
+		Table *table();
 
- protected:
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
 
-  // (Required) default constructor.
-  TblAsRasterDD();
+	protected:
 
-  // (Required) copy constructor.
-  TblAsRasterDD(const TblAsRasterDD &other);
+		// (Required) default constructor.
+		TblAsRasterDD();
 
-  // (Required) copy assignment.
-  void operator=(const TblAsRasterDD &other);
+		// (Required) copy constructor.
+		TblAsRasterDD(const TblAsRasterDD &other);
 
- // Get the value of the named keyword, or the first keyword matching
-  // <src>regex</src>, and return it in <src>value</src>.  The return
-  // value is <src>True</src> for success, and <src>False</src> for
-  // failure, which is the result if the wrong type <src>T</src> is
-  // requested.
-  // <group>
-  template <class T> Bool getTableKeyword(T &value,
-                                          const String keyword) const;
-  template <class T> Bool getTableKeyword(T &value, const Regex &regex) const;
-  // </group>
- 
-  // Get the value of the named keyword, or the first keyword matching
-  // <src>regex</src> for the named column, and return it in
-  // <src>value</src>. The return value is <src>True</src> for
-  // success, and <src>False</src> for failure, which is the result if           // the wrong type <src>T</src> is requested, or if the keyword
-  // doesn't exist.
-  // <group>
-  template <class T> Bool getColumnKeyword(T &value, const String column,
-                                           const String keyword) const;
-  template <class T> Bool getColumnKeyword(T &value, const String column,
-                                           const Regex &regex) const;
-  // </group>                                                                    
-private:
+		// (Required) copy assignment.
+		void operator=(const TblAsRasterDD &other);
 
-  friend class TblAsRasterDM;
+// Get the value of the named keyword, or the first keyword matching
+		// <src>regex</src>, and return it in <src>value</src>.  The return
+		// value is <src>True</src> for success, and <src>False</src> for
+		// failure, which is the result if the wrong type <src>T</src> is
+		// requested.
+		// <group>
+		template <class T> Bool getTableKeyword(T &value,
+		                                        const String keyword) const;
+		template <class T> Bool getTableKeyword(T &value, const Regex &regex) const;
+		// </group>
 
-  // The table to be displayed
-  Table *itsTable;
+		// Get the value of the named keyword, or the first keyword matching
+		// <src>regex</src> for the named column, and return it in
+		// <src>value</src>. The return value is <src>True</src> for
+		// success, and <src>False</src> for failure, which is the result if           // the wrong type <src>T</src> is requested, or if the keyword
+		// doesn't exist.
+		// <group>
+		template <class T> Bool getColumnKeyword(T &value, const String column,
+		        const String keyword) const;
+		template <class T> Bool getColumnKeyword(T &value, const String column,
+		        const Regex &regex) const;
+		// </group>
+	private:
 
-  // The result from a table query
-  Table *itsQueryTable;
+		friend class TblAsRasterDM;
 
-  // store all the table column names
-  Vector<String> itsColumnNames;
+		// The table to be displayed
+		Table *itsTable;
 
-  // what columns are we displaying and do we have a movie axis available
-  DParameterChoice *itsXColumnName;
-  DParameterChoice *itsYColumnName;
-  DParameterChoice *itsMColumnName;
-  DParameterChoice *itsMColumnSet;
+		// The result from a table query
+		Table *itsQueryTable;
 
-  // options - what is the query string and is it unset?
-  String itsOptQueryString;
-  Bool itsOptQueryStringUnset;
+		// store all the table column names
+		Vector<String> itsColumnNames;
 
-  // set the default options for this display data
-  void installDefaultOptions();
+		// what columns are we displaying and do we have a movie axis available
+		DParameterChoice *itsXColumnName;
+		DParameterChoice *itsYColumnName;
+		DParameterChoice *itsMColumnName;
+		DParameterChoice *itsMColumnSet;
 
-  // Arrange the query table (called after changing an option).
-  Bool arrangeQueryTable();
- 
-  // holder for the current coordinate system
-  CoordinateSystem itsCoord;
-  Vector<Double> itsLinblc, itsLintrc;
+		// options - what is the query string and is it unset?
+		String itsOptQueryString;
+		Bool itsOptQueryStringUnset;
 
-  // update/set the coordinate system 
-  void getCoordinateSystem();
-  void setCoordinateSystem();
+		// set the default options for this display data
+		void installDefaultOptions();
 
-  // get all of the table columnNames
-  void getTableColumnNames();
+		// Arrange the query table (called after changing an option).
+		Bool arrangeQueryTable();
 
-  // get the table column world coordinate range
-  Vector<double> columnStatistics(const String& columnName);
+		// holder for the current coordinate system
+		CoordinateSystem itsCoord;
+		Vector<Double> itsLinblc, itsLintrc;
 
-  // get all of the table columnNames with a certain data type
-  Vector<String> getColumnNamesOfType(const Bool isarray);
+		// update/set the coordinate system
+		void getCoordinateSystem();
+		void setCoordinateSystem();
 
-  // Construct and destruct the parameter set.
-  // <group>
-  void constructParameters();
-  void destructParameters();
-  // </group>
-                   
-};
+		// get all of the table columnNames
+		void getTableColumnNames();
+
+		// get the table column world coordinate range
+		Vector<double> columnStatistics(const String& columnName);
+
+		// get all of the table columnNames with a certain data type
+		Vector<String> getColumnNamesOfType(const Bool isarray);
+
+		// Construct and destruct the parameter set.
+		// <group>
+		void constructParameters();
+		void destructParameters();
+		// </group>
+
+	};
 
 
 

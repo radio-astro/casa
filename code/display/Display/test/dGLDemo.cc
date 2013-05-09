@@ -105,157 +105,155 @@ static uInt nColorsAvailable_=0;
 static Bool doSmall_ = False;
 
 // Set current color to the given color 'index'.
-static void setColor(const uInt ROColor, GLPixelCanvas *pc)
-{
+static void setColor(const uInt ROColor, GLPixelCanvas *pc) {
 	pc->setColor(nColors_ - ROColor);
 }
 
 // Initialize colormap to gray scale.
-static void initColormap(GLPixelCanvasColorTable *ct)
-{Float scale = 1.0/(nColorsAvailable_-1);
+static void initColormap(GLPixelCanvasColorTable *ct) {
+	Float scale = 1.0/(nColorsAvailable_-1);
 
-	for(uInt i=0; i< nColorsAvailable_; i++)
-	{ Float clr = i*scale;
+	for(uInt i=0; i< nColorsAvailable_; i++) {
+		Float clr = i*scale;
 		ct->storeColor(i, clr, clr, clr);
 	}
 }
 
 class MyRefresh : public WCRefreshEH {
- public:
-  MyRefresh() { };
-  virtual void operator()(const WCRefreshEvent &ev);
+public:
+	MyRefresh() { };
+	virtual void operator()(const WCRefreshEvent &ev);
 };
 
 
 int main(int argc, char **argv) {
- Boolean trace = False;		// Whether to show trace info.
- Boolean delay = True;		// Whether to delay trace output.
- Boolean useLogIO = True;	// Whether to trace to LogIO (or cout).
- Boolean refresh = True;
- String traceString;
- Display::ColorModel g_colormodel;
+	Boolean trace = False;		// Whether to show trace info.
+	Boolean delay = True;		// Whether to delay trace output.
+	Boolean useLogIO = True;	// Whether to trace to LogIO (or cout).
+	Boolean refresh = True;
+	String traceString;
+	Display::ColorModel g_colormodel;
 
-  PNAME = argv[0];
+	PNAME = argv[0];
 
-  try {
+	try {
 
-    // Open the X connection and handle any X arguments.
-    SimpleWorldGLCanvasApp::openApplication("Gldemo",
-				NULL, 0, &argc, argv,
-				NULL, NULL, 0);
+		// Open the X connection and handle any X arguments.
+		SimpleWorldGLCanvasApp::openApplication("Gldemo",
+		                                        NULL, 0, &argc, argv,
+		                                        NULL, NULL, 0);
 
-    // Deal with our arguments.
-    Input inputs(1);
-    inputs.version("");
-    inputs.create("mode", "rgb", "drawing mode: rgb, index or hsv",
-		  "drawing mode");
-    inputs.create("trace", "f", "trace mode: t or f", "trace mode");
-    inputs.create("delay", "t", "Buffer trace: t or f", "buffer mode");
-    inputs.create("uselogio", "t", "Send trace to logio: t or f", "uselogio");
+		// Deal with our arguments.
+		Input inputs(1);
+		inputs.version("");
+		inputs.create("mode", "rgb", "drawing mode: rgb, index or hsv",
+		              "drawing mode");
+		inputs.create("trace", "f", "trace mode: t or f", "trace mode");
+		inputs.create("delay", "t", "Buffer trace: t or f", "buffer mode");
+		inputs.create("uselogio", "t", "Send trace to logio: t or f", "uselogio");
 
-    inputs.create("refresh", "t", "refresh mode: t or f", "refresh mode");
-    inputs.create("small", "f", "Just Image: t or f", "Full demo");
-    inputs.create("H", "f", "Help: t or f", "Display help message");
-    inputs.readArguments(argc, argv);
+		inputs.create("refresh", "t", "refresh mode: t or f", "refresh mode");
+		inputs.create("small", "f", "Just Image: t or f", "Full demo");
+		inputs.create("H", "f", "Help: t or f", "Display help message");
+		inputs.readArguments(argc, argv);
 
-    SimpleWorldGLCanvasApp *glapp = 0;
-    WorldCanvas *wCanvas = 0;
+		SimpleWorldGLCanvasApp *glapp = 0;
+		WorldCanvas *wCanvas = 0;
 
-    Boolean showhelp = inputs.getBool("H");
-    if(showhelp)
-    {	cout << HELP << endl;
-	exit(0);
-    }
+		Boolean showhelp = inputs.getBool("H");
+		if(showhelp) {
+			cout << HELP << endl;
+			exit(0);
+		}
 
-    String reqMode = inputs.getString("mode");
-    if (reqMode == "hsv") {
-      g_colormodel = Display::HSV;
-    } else if (reqMode == "rgb") {
-      g_colormodel = Display::RGB;
-    } else if(reqMode == "index") {
-      g_colormodel = Display::Index;
-    } else {
-      throw(AipsError("Unknown drawing mode"));
-    }
+		String reqMode = inputs.getString("mode");
+		if (reqMode == "hsv") {
+			g_colormodel = Display::HSV;
+		} else if (reqMode == "rgb") {
+			g_colormodel = Display::RGB;
+		} else if(reqMode == "index") {
+			g_colormodel = Display::Index;
+		} else {
+			throw(AipsError("Unknown drawing mode"));
+		}
 
-    trace = inputs.getBool("trace");
-    delay = inputs.getBool("delay");
-    useLogIO = inputs.getBool("uselogio");
-    // If either delay or useLogIO isn't its default, turn on tracing.
-    if(!(delay && useLogIO))
-	trace = True;
+		trace = inputs.getBool("trace");
+		delay = inputs.getBool("delay");
+		useLogIO = inputs.getBool("uselogio");
+		// If either delay or useLogIO isn't its default, turn on tracing.
+		if(!(delay && useLogIO))
+			trace = True;
 
-    refresh = inputs.getBool("refresh");
-    doSmall_ = inputs.getBool("small");
+		refresh = inputs.getBool("refresh");
+		doSmall_ = inputs.getBool("small");
 
-    // make a gl canvas.
-      glapp = new SimpleWorldGLCanvasApp(argv[0], g_colormodel);
-      wCanvas = glapp->worldCanvas();
+		// make a gl canvas.
+		glapp = new SimpleWorldGLCanvasApp(argv[0], g_colormodel);
+		wCanvas = glapp->worldCanvas();
 
-    if (!wCanvas) {
-      throw(AipsError("Couldn't construct WorldCanvas"));
-    }
+		if (!wCanvas) {
+			throw(AipsError("Couldn't construct WorldCanvas"));
+		}
 
-    MyRefresh refresher;
-    wCanvas->addRefreshEventHandler(refresher);
+		MyRefresh refresher;
+		wCanvas->addRefreshEventHandler(refresher);
 
-    if (glapp) {
-	GLPixelCanvas *glpc = glapp->glPixelCanvas();
-	glpc->trace(trace);
-	// AIPS++ Logging interferes with trace formatting so we supply
-	// a string to copy trace information to and display it all at once.
-	if(delay)
-		glpc->postToString(&traceString);
-	glpc->postToStream(!useLogIO);
+		if (glapp) {
+			GLPixelCanvas *glpc = glapp->glPixelCanvas();
+			glpc->trace(trace);
+			// AIPS++ Logging interferes with trace formatting so we supply
+			// a string to copy trace information to and display it all at once.
+			if(delay)
+				glpc->postToString(&traceString);
+			glpc->postToStream(!useLogIO);
 
-	// Allow user to see what happens if the OpenGL canvas doesn't
-	// handle refresh.
-	glpc->autoRefresh(refresh);
+			// Allow user to see what happens if the OpenGL canvas doesn't
+			// handle refresh.
+			glpc->autoRefresh(refresh);
 
-	// Setup colortable
-	GLPixelCanvasColorTable *ct = glpc->glpcctbl();
-	nColors_ = glpc->pcctbl()->nColors();
-	nColorsAvailable_ = nColors_ - nROColors_;
+			// Setup colortable
+			GLPixelCanvasColorTable *ct = glpc->glpcctbl();
+			nColors_ = glpc->pcctbl()->nColors();
+			nColorsAvailable_ = nColors_ - nROColors_;
 
-	initColormap(ct);
-	// Defined colors are stored at the end of the colormap.
-	ct->storeColor(nColors_-BLACK, 0.0, 0.0, 0.0);
-	ct->storeColor(nColors_-WHITE, 1.0, 1.0, 1.0);
-	ct->storeColor(nColors_-RED, 1.0, 0.0, 0.0);
-	ct->storeColor(nColors_-GREEN, 0.0, 1.0, 0.0);
-	ct->storeColor(nColors_-BLUE, 0.0, 0.0, 1.0);
-	ct->storeColor(nColors_-YELLOW, 1.0, 1.0, 0.0);
-	ct->storeColor(nColors_-GRAY, 0.5, 0.5, 0.5);
-	if(trace)
-	printf( "Ncolors %d, nColorsAvailable %d VisualID: 0x%x\n",
-		nColors_, nColorsAvailable_,
-		(uInt)ct->visualInfo()->visualid);
-	glapp->run();
-    }
-    else {
-	throw(AipsError("An application was not built"));
-    }
+			initColormap(ct);
+			// Defined colors are stored at the end of the colormap.
+			ct->storeColor(nColors_-BLACK, 0.0, 0.0, 0.0);
+			ct->storeColor(nColors_-WHITE, 1.0, 1.0, 1.0);
+			ct->storeColor(nColors_-RED, 1.0, 0.0, 0.0);
+			ct->storeColor(nColors_-GREEN, 0.0, 1.0, 0.0);
+			ct->storeColor(nColors_-BLUE, 0.0, 0.0, 1.0);
+			ct->storeColor(nColors_-YELLOW, 1.0, 1.0, 0.0);
+			ct->storeColor(nColors_-GRAY, 0.5, 0.5, 0.5);
+			if(trace)
+				printf( "Ncolors %d, nColorsAvailable %d VisualID: 0x%x\n",
+				        nColors_, nColorsAvailable_,
+				        (uInt)ct->visualInfo()->visualid);
+			glapp->run();
+		} else {
+			throw(AipsError("An application was not built"));
+		}
 
-    if(glapp)
-	delete glapp;
-  } catch (const AipsError &x) {
-    cerr << "Exception caught:" << endl;
-    cerr << x.getMesg() << endl;
-  }
+		if(glapp)
+			delete glapp;
+	} catch (const AipsError &x) {
+		cerr << "Exception caught:" << endl;
+		cerr << x.getMesg() << endl;
+	}
 }
 
 // Pointer to a function to generate some sort of drawing.
 typedef void (*FP)(Boolean filled, Float x, Float y, Float w, Float h,
-		   GLPixelCanvas *pc);
+                   GLPixelCanvas *pc);
 
 
 // Draw a, possibly filled, rectangle.
 // x0, y0	Center of object.
-static void drawRectangle(Boolean Filled, 
-			Float xc, Float yc, Float width, Float height,
-			GLPixelCanvas *pc)
-{ Float x0 = xc - width/2.0;
-  Float y0 = yc - height/2.0;
+static void drawRectangle(Boolean Filled,
+                          Float xc, Float yc, Float width, Float height,
+                          GLPixelCanvas *pc) {
+	Float x0 = xc - width/2.0;
+	Float y0 = yc - height/2.0;
 
 	if(Filled)
 		pc->drawFilledRectangle(x0, y0, x0+width, y0+height);
@@ -266,28 +264,27 @@ static void drawRectangle(Boolean Filled,
 // Draw an image. (Just a greyscale).
 // This is called the same way the octagon and rectangle functions
 // are called.
-static void drawImage(Boolean /*Filled*/, 
-			Float xc, Float yc, Float width, Float height,
-			GLPixelCanvas *pc)
-{ Float x0 = xc - width/2.0;
-  Float y0 = yc - height/2.0;
-  const uInt W = (uInt)width, H = (uInt)height;
+static void drawImage(Boolean /*Filled*/,
+                      Float xc, Float yc, Float width, Float height,
+                      GLPixelCanvas *pc) {
+	Float x0 = xc - width/2.0;
+	Float y0 = yc - height/2.0;
+	const uInt W = (uInt)width, H = (uInt)height;
 
-  Matrix<uInt> image(H, W);
-  Float scale = (float)(nColorsAvailable_-1)/(float)(W*H-1);
-  // Fill array.
-  for(uInt h = 0; h < H; h++)
-  {
-	for(uInt w = 0; w < W; w++)
-	{uInt pixel = (uInt)(( w + h*W)*scale);
-		if(pixel >= nColorsAvailable_)
-		{	printf("dGLDemo::%d > %d, w=%d, h=%d\n",
-				pixel, nColors_, w,h);
-			pixel = nColorsAvailable_-1;
+	Matrix<uInt> image(H, W);
+	Float scale = (float)(nColorsAvailable_-1)/(float)(W*H-1);
+	// Fill array.
+	for(uInt h = 0; h < H; h++) {
+		for(uInt w = 0; w < W; w++) {
+			uInt pixel = (uInt)(( w + h*W)*scale);
+			if(pixel >= nColorsAvailable_) {
+				printf("dGLDemo::%d > %d, w=%d, h=%d\n",
+				       pixel, nColors_, w,h);
+				pixel = nColorsAvailable_-1;
+			}
+			image(h, w) = pixel;
 		}
-		image(h, w) = pixel;
 	}
-  }
 	// This is a non standard function which always uses a colormap
 	// to generate pixel values whether or not the underlying visual
 	// is RGB or Indexed.
@@ -298,12 +295,12 @@ static void drawImage(Boolean /*Filled*/,
 // x0, y0	Center of object.
 //  drawOctagon sort of assumes width = height. Drawing may not be correct
 // if this isn't the case.
-static void drawOctagon(Boolean Filled, 
-			Float x0, Float y0, Float width, Float height,
-			GLPixelCanvas *pc)
-{ static const float S2 = 1.41421356;
-  static const float SCL = S2/(2.0+S2);
-  Vector<Float> xv(8), yv(8);
+static void drawOctagon(Boolean Filled,
+                        Float x0, Float y0, Float width, Float height,
+                        GLPixelCanvas *pc) {
+	static const float S2 = 1.41421356;
+	static const float SCL = S2/(2.0+S2);
+	Vector<Float> xv(8), yv(8);
 
 	if(height == 0.0)
 		height = width;
@@ -317,15 +314,23 @@ static void drawOctagon(Boolean Filled,
 	Float x1 = xs+x0, x2 = x1+x, x3 = x2+xs;
 	Float y1 = ys+y0, y2 = y1+y, y3 = y2+ys;
 
-	xv(0) = x0; yv(0) = y1;
-	xv(1) = x0; yv(1) = y2;
-	xv(2) = x1; yv(2) = y3;
-	xv(3) = x2; yv(3) = y3;
+	xv(0) = x0;
+	yv(0) = y1;
+	xv(1) = x0;
+	yv(1) = y2;
+	xv(2) = x1;
+	yv(2) = y3;
+	xv(3) = x2;
+	yv(3) = y3;
 
-	xv(4) = x3; yv(4) = y2;
-	xv(5) = x3; yv(5) = y1;
-	xv(6) = x2; yv(6) = y0;
-	xv(7) = x1; yv(7) = y0;
+	xv(4) = x3;
+	yv(4) = y2;
+	xv(5) = x3;
+	yv(5) = y1;
+	xv(6) = x2;
+	yv(6) = y0;
+	xv(7) = x1;
+	yv(7) = y0;
 	if(Filled)
 		pc->drawFilledPolygon(xv, yv);
 	else
@@ -337,19 +342,19 @@ static void drawOctagon(Boolean Filled,
 // Then a colored line.
 // The solid line is centered on x0, y0.
 static void drawLines(Float xc, Float yc, Float width, Float height,
-		      GLPixelCanvas *pc)
-{ Float xoff = xc - width/2.0;
-  Float yoff = yc - height/2.0;
-  Float x0 = 0.1 * width + xoff, x1 = 0.9*width + xoff;
-  Float ystep = height/7.0;	// # functions called.
-  Float y0 = ystep + yoff, y1 = ystep*2 + yoff;
-  Float y2 = ystep*3 + yoff, y3 = ystep*4 + yoff;
-  Float y4 = ystep*5, y5 = ystep*6;
-  Vector<uInt> colors(6);
-  Vector<Float> xv(6), yv(6);
+                      GLPixelCanvas *pc) {
+	Float xoff = xc - width/2.0;
+	Float yoff = yc - height/2.0;
+	Float x0 = 0.1 * width + xoff, x1 = 0.9*width + xoff;
+	Float ystep = height/7.0;	// # functions called.
+	Float y0 = ystep + yoff, y1 = ystep*2 + yoff;
+	Float y2 = ystep*3 + yoff, y3 = ystep*4 + yoff;
+	Float y4 = ystep*5, y5 = ystep*6;
+	Vector<uInt> colors(6);
+	Vector<Float> xv(6), yv(6);
 
-	for(int i=0; i< 6; i++)
-	{	xv(i) = x0 + (x1-x0)*i/5.0;
+	for(int i=0; i< 6; i++) {
+		xv(i) = x0 + (x1-x0)*i/5.0;
 		yv(i) = y3;
 	}
 	colors(0) = nColors_ - WHITE;
@@ -370,9 +375,10 @@ static void drawLines(Float xc, Float yc, Float width, Float height,
 	pc->drawColoredPoints(xv, yv, colors);
 
 	// Colored lines.
-	{Vector<Float> X1(6), X2(6), Y1(6), Y2(6);
-		for(int i=0; i< 6; i++)
-		{	X1(i) = x0 + (x1-x0)*i/6.0;
+	{
+		Vector<Float> X1(6), X2(6), Y1(6), Y2(6);
+		for(int i=0; i< 6; i++) {
+			X1(i) = x0 + (x1-x0)*i/6.0;
 			X2(i) = x0 + (x1-x0)*(i+1)/6.0;
 			Y1(i) = y5;
 			Y2(i) = y5;
@@ -404,8 +410,7 @@ static void drawLines(Float xc, Float yc, Float width, Float height,
 // may be partially visible.
 //  color is the polygon's color index.
 static void drawObj( Float x, Float y, Float w, Float h,
-		    uInt color, FP poly, GLPixelCanvas *pc)
-{
+                     uInt color, FP poly, GLPixelCanvas *pc) {
 	pc->pushAttrib(GL_CURRENT_BIT);
 	// Draw a box around area.
 	setColor(WHITE, pc);
@@ -433,18 +438,21 @@ static void drawObj( Float x, Float y, Float w, Float h,
 // Create a display list comprising:
 // 	A rectangle, octagon, lines and image.
 // Draw the list in two places.
-static struct { Display::FillStyle style; const char *name;} fillstyles[] = {
+static struct {
+	Display::FillStyle style;
+	const char *name;
+} fillstyles[] = {
 	{ Display::FSSolid, "FSSolid"},
 	{ Display::FSTiled, "FSTiled"},
 	{ Display::FSStippled, "FSStippled"},
 	{ Display::FSOpaqueStippled, "FSOpaqueStippled"}
-	};
+};
 
-static void doFull(GLPixelCanvas *pc, uInt width, uInt height)
-{// Size of each drawing region.
-  Float W = width*0.25, H = height*0.25;
-  static int entrycount = 0;
-  uInt color;
+static void doFull(GLPixelCanvas *pc, uInt width, uInt height) {
+	// Size of each drawing region.
+	Float W = width*0.25, H = height*0.25;
+	static int entrycount = 0;
+	uInt color;
 
 	pc->pushAttrib(GL_CURRENT_BIT);
 	// Reset
@@ -475,28 +483,28 @@ static void doFull(GLPixelCanvas *pc, uInt width, uInt height)
 	uInt rectList = pc->newList();
 	// GLPixelCanvas users can insert notes into the trace list to
 	// help debugging.
-	 pc->note("\"Draw a filled rectangle with a non filled rectangle inside it.\"");
-	 drawObj(0.0, 0.0, W, H, color, drawRectangle, pc);
+	pc->note("\"Draw a filled rectangle with a non filled rectangle inside it.\"");
+	drawObj(0.0, 0.0, W, H, color, drawRectangle, pc);
 	pc->endList();
 
 	// Same thing but with a polygon.
 	uInt octList = pc->newList();
-	 pc->note("\"Draw a filled polygon with a non filled polygon inside it.\"");
+	pc->note("\"Draw a filled polygon with a non filled polygon inside it.\"");
 
-	 drawObj(W, 0.0, W, H, RED, drawOctagon, pc);
+	drawObj(W, 0.0, W, H, RED, drawOctagon, pc);
 	pc->endList();
 
 	uInt lineList = pc->newList();
-	 pc->note("\"Draw different linestyles (with different widths).\"");
-	 setColor(WHITE, pc);
-	 pc->setLineWidth(2.0);
-	 pc->drawRectangle(W*2, 0.0, W*3, H);
-	 drawLines(W*2+W/2, H/2, W, H, pc);
+	pc->note("\"Draw different linestyles (with different widths).\"");
+	setColor(WHITE, pc);
+	pc->setLineWidth(2.0);
+	pc->drawRectangle(W*2, 0.0, W*3, H);
+	drawLines(W*2+W/2, H/2, W, H, pc);
 	pc->endList();
 
 	uInt imageList = pc->newList();
-	 pc->note("\"Drawing an image\"");
-	 drawObj(W*3, 0, W, H, WHITE, drawImage, pc);
+	pc->note("\"Drawing an image\"");
+	drawObj(W*3, 0, W, H, WHITE, drawImage, pc);
 	pc->endList();
 
 	uInt list2 = pc->newList();
@@ -536,21 +544,20 @@ static void doFull(GLPixelCanvas *pc, uInt width, uInt height)
 }
 
 // Just draw an image or so.
-static void doSmall(GLPixelCanvas *pc, uInt width, uInt height)
-{// Size of each drawing region.
- Float W = width*0.25, H = height*0.25;
+static void doSmall(GLPixelCanvas *pc, uInt width, uInt height) {
+	// Size of each drawing region.
+	Float W = width*0.25, H = height*0.25;
 
 	uInt imageList = pc->newList();
-	 drawImage(1, W/2, H/2, W, H, pc);
-	 drawObj(W, 0.0, W, H, YELLOW, drawImage, pc);
+	drawImage(1, W/2, H/2, W, H, pc);
+	drawObj(W, 0.0, W, H, YELLOW, drawImage, pc);
 	pc->endList();
 	pc->translateList(imageList, 0.0, H/4);
 	pc->drawList(imageList);
 	pc->deleteList(imageList);
 }
 
-void draw(WorldCanvas *wCanvas)
-{
+void draw(WorldCanvas *wCanvas) {
 	GLPixelCanvas *pc = (GLPixelCanvas *)wCanvas->pixelCanvas();
 	uInt width = pc->width();
 	uInt height = pc->height();
@@ -570,22 +577,21 @@ void draw(WorldCanvas *wCanvas)
 }
 
 void MyRefresh::operator()(const WCRefreshEvent &ev) {
-  if (ev.reason() == Display::BackCopiedToFront) {
-    return;
-  }
-  try {
-	WorldCanvas *wCanvas = ev.worldCanvas();
-	draw(wCanvas);
-   } catch (AipsError x) {
-	cerr << PNAME << ": " << x.getMesg() << endl;
-   }
+	if (ev.reason() == Display::BackCopiedToFront) {
+		return;
+	}
+	try {
+		WorldCanvas *wCanvas = ev.worldCanvas();
+		draw(wCanvas);
+	} catch (AipsError x) {
+		cerr << PNAME << ": " << x.getMesg() << endl;
+	}
 }
 
 #else
 
-int main()
-{
-  return 0;
+int main() {
+	return 0;
 }
 
 #endif	// OGL

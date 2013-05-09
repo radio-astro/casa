@@ -33,7 +33,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class PixelCanvas;
+	class PixelCanvas;
 
 //
 // <summary>
@@ -73,20 +73,20 @@ class PixelCanvas;
 // </todo>
 //
 
-class PCRefreshEH {
+	class PCRefreshEH {
 
- public:
+	public:
 
-  // Default Constructor Required
-  PCRefreshEH();
+		// Default Constructor Required
+		PCRefreshEH();
 
-  // Default just prints the event to cout
-  virtual void operator ()(const PCRefreshEvent & eh);
+		// Default just prints the event to cout
+		virtual void operator ()(const PCRefreshEvent & eh);
 
-  // Destructor
-  virtual ~PCRefreshEH();
+		// Destructor
+		virtual ~PCRefreshEH();
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

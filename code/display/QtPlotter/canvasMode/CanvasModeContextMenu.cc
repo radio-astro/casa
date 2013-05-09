@@ -28,33 +28,33 @@
 #include <QMouseEvent>
 namespace casa {
 
-CanvasModeContextMenu::CanvasModeContextMenu():
-	CanvasMode(Qt::ArrowCursor){
-}
-
-bool CanvasModeContextMenu::isMode( ModeIndex mode ) const {
-	bool matchingMode = false;
-	if ( mode == MODE_CONTEXTMENU ){
-		matchingMode = true;
+	CanvasModeContextMenu::CanvasModeContextMenu():
+		CanvasMode(Qt::ArrowCursor) {
 	}
-	return matchingMode;
-}
+
+	bool CanvasModeContextMenu::isMode( ModeIndex mode ) const {
+		bool matchingMode = false;
+		if ( mode == MODE_CONTEXTMENU ) {
+			matchingMode = true;
+		}
+		return matchingMode;
+	}
 
 
-void CanvasModeContextMenu::mousePressEventSpecific( QMouseEvent* event ){
-	receiver->showContextMenu( event );
-}
+	void CanvasModeContextMenu::mousePressEventSpecific( QMouseEvent* event ) {
+		receiver->showContextMenu( event );
+	}
 
-void CanvasModeContextMenu::mouseMoveEvent( QMouseEvent* /*event*/ ){
+	void CanvasModeContextMenu::mouseMoveEvent( QMouseEvent* /*event*/ ) {
 
-}
+	}
 
-void CanvasModeContextMenu::mouseReleaseEventSpecific( QMouseEvent* /*event*/ ){
+	void CanvasModeContextMenu::mouseReleaseEventSpecific( QMouseEvent* /*event*/ ) {
 
-}
+	}
 
-CanvasModeContextMenu::~CanvasModeContextMenu() {
-	// TODO Auto-generated destructor stub
-}
+	CanvasModeContextMenu::~CanvasModeContextMenu() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

@@ -35,145 +35,151 @@
 
 namespace casa {
 
-class AnnotationBase;
-class DisplayData;
-class SlicePlot;
+	class AnnotationBase;
+	class DisplayData;
+	class SlicePlot;
 
-namespace viewer {
+	namespace viewer {
 
-class Polyline : public Region {
-	Q_OBJECT
-public:
-	typedef std::pair<double,double> pt;
-	typedef std::vector<pt> point_list;
+		class Polyline : public Region {
+			Q_OBJECT
+		public:
+			typedef std::pair<double,double> pt;
+			typedef std::vector<pt> point_list;
 
-	//Construction
-	Polyline( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 );
-	Polyline( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts );
-	// carry over from QtRegion... hopefully, removed soon...
-	Polyline( QtRegionSourceKernel *, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals=false );
-	Polyline( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, bool hold_signals=false );
+			//Construction
+			Polyline( WorldCanvas *wc, QtRegionDock *d, double x1, double y1 );
+			Polyline( WorldCanvas *wc, QtRegionDock *d, const std::vector<std::pair<double,double> > &pts );
+			// carry over from QtRegion... hopefully, removed soon...
+			Polyline( QtRegionSourceKernel *, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts, bool hold_signals=false );
+			Polyline( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, bool hold_signals=false );
 
-	virtual ~Polyline( );
+			virtual ~Polyline( );
 
-	bool clickWithin( double x, double y ) const;
-	int clickHandle( double x, double y ) const;
+			bool clickWithin( double x, double y ) const;
+			int clickHandle( double x, double y ) const;
 
-	int moveHandle( int handle, double x, double y );
-	void move( double dx, double dy );
-	void resize( double /*width_delta*/, double /*height_delta*/ );
-	bool valid_translation( double dx, double dy, double width_delta, double height_delta );
+			int moveHandle( int handle, double x, double y );
+			void move( double dx, double dy );
+			void resize( double /*width_delta*/, double /*height_delta*/ );
+			bool valid_translation( double dx, double dy, double width_delta, double height_delta );
 
-	// returns point state (Region::PointLocation)
-	region::PointInfo checkPoint( double x, double y ) const;
+			// returns point state (Region::PointLocation)
+			region::PointInfo checkPoint( double x, double y ) const;
 
-	// returns mouse state (Region::MouseState)
-	unsigned int mouseMovement( double x, double y, bool other_selected );
+			// returns mouse state (Region::MouseState)
+			unsigned int mouseMovement( double x, double y, bool other_selected );
 
-	void linearCenter( double &x, double &y ) const;
-	void pixelCenter( double &x, double &y ) const;
-
-
-	void polylineComplete( );
-
-	void addVertex( double x, double y, bool rewrite_last_point=false );
-
-	AnnotationBase *annotation( ) const;
-
-	// return the *drawing* bounding rectangle...
-	// in "linear" coordinates...
-	void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
-
-	int numVertices( ) const { return drawing_points( ).size( ); }
-
-	void output( ds9writer &out ) const;
-
-	// fetch region type...
-	region::RegionTypes type( ) const { return region::PolylineRegion; }
-
-	void addPlot( QWidget* parent, string label );
+			void linearCenter( double &x, double &y ) const;
+			void pixelCenter( double &x, double &y ) const;
 
 
+			void polylineComplete( );
 
-signals:
-	void show1DSliceTool();
+			void addVertex( double x, double y, bool rewrite_last_point=false );
 
-public slots:
-	//Position marker
-	void setMarkerPosition( int regionId, int segmentIndex, float percentage );
-	void setShowMarkerPosition( int regionId, bool show );
+			AnnotationBase *annotation( ) const;
 
-protected:
-	virtual RegionInfo *newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD * );
-	unsigned int check_handle( double x, double y ) const;
+			// return the *drawing* bounding rectangle...
+			// in "linear" coordinates...
+			void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
 
-	enum YScaleTo { ScaleTop, ScaleBottom };
-	enum XScaleTo { ScaleLeft, ScaleRight };
-	enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
-	std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
-	ImageRegion *get_image_region( DisplayData* ) const;
+			int numVertices( ) const {
+				return drawing_points( ).size( );
+			}
 
-	void drawRegion( bool );
-	void drawText( );
+			void output( ds9writer &out ) const;
 
-	virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
-			std::vector<std::pair<double,double> > &world_pts ) const;
+			// fetch region type...
+			region::RegionTypes type( ) const {
+				return region::PolylineRegion;
+			}
 
-	const point_list &drawing_points( ) const { return _drawing_points_; }
-
-private slots:
-	void updatePolyLine(int regionId, viewer::region::RegionChanges,
-		const QList<double> & worldX, const QList<double>& worldY,
-		const QList<int> & pixelX, const QList<int> & pixelY);
-	void polyLineRegionChanged( viewer::Region* region, std::string changeType);
-	void polyLineRegionUpdate(int regionId, viewer::region::RegionChanges change,
-			const QList<double> & worldX, const QList<double>& worldY,
-			const QList<int> & pixelX, const QList<int> & pixelY);
+			void addPlot( QWidget* parent, string label );
 
 
 
-private:
-	bool within_vertex_handle( double x, double y ) const;
-	int move_sizing_rectangle_handle( int handle, double x, double y );
-	int move_vertex( int handle, double x, double y );
+		signals:
+			void show1DSliceTool();
 
-	void update_drawing_bounds_rectangle( );
-	void update_reference_bounds_rectangle( );
+		public slots:
+			//Position marker
+			void setMarkerPosition( int regionId, int segmentIndex, float percentage );
+			void setShowMarkerPosition( int regionId, bool show );
 
-	void update_drawing_state( );
-	void update_reference_state( int transformations, int handle, int new_handle );
+		protected:
+			virtual RegionInfo *newInfoObject( ImageInterface<Float> *image, PrincipalAxesDD * );
+			unsigned int check_handle( double x, double y ) const;
 
-	virtual void setCenter(double &x, double &y, double &deltx, double &delty);
-	void initPlot( );
-	void setPlotLineColor();
-	void setPlotLineColor( SlicePlot* plot );
+			enum YScaleTo { ScaleTop, ScaleBottom };
+			enum XScaleTo { ScaleLeft, ScaleRight };
+			enum Tranformations { FLIP_X = 1 << 0, FLIP_Y = 1 << 1 };
+			std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
+			ImageRegion *get_image_region( DisplayData* ) const;
 
-	double handle_delta_x, handle_delta_y;
+			void drawRegion( bool );
+			void drawText( );
 
-	point_list _ref_points_;
-	double _ref_blc_x_, _ref_blc_y_;
-	double _ref_trc_x_, _ref_trc_y_;
-	double _ref_width_, _ref_height_;
+			virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
+			                                   std::vector<std::pair<double,double> > &world_pts ) const;
 
-	point_list _drawing_points_;
-	double _drawing_blc_x_, _drawing_blc_y_;
-	double _drawing_trc_x_, _drawing_trc_y_;
-	double _drawing_width_, _drawing_height_;
+			const point_list &drawing_points( ) const {
+				return _drawing_points_;
+			}
 
-	double _center_x, _center_y;
-	double _center_delta_x, _center_delta_y;
+		private slots:
+			void updatePolyLine(int regionId, viewer::region::RegionChanges,
+			                    const QList<double> & worldX, const QList<double>& worldY,
+			                    const QList<int> & pixelX, const QList<int> & pixelY);
+			void polyLineRegionChanged( viewer::Region* region, std::string changeType);
+			void polyLineRegionUpdate(int regionId, viewer::region::RegionChanges change,
+			                          const QList<double> & worldX, const QList<double>& worldY,
+			                          const QList<int> & pixelX, const QList<int> & pixelY);
 
-	XScaleTo _x_origin_;
-	YScaleTo _y_origin_;
 
-	//Slice functionality
-	void drawPositionMarker();
-	QMap<QString,SlicePlot*> slicePlots;
-	int markerSegmentIndex;
-	float markerPercentage;
-	bool showPositionMarker;
-};
-}
+
+		private:
+			bool within_vertex_handle( double x, double y ) const;
+			int move_sizing_rectangle_handle( int handle, double x, double y );
+			int move_vertex( int handle, double x, double y );
+
+			void update_drawing_bounds_rectangle( );
+			void update_reference_bounds_rectangle( );
+
+			void update_drawing_state( );
+			void update_reference_state( int transformations, int handle, int new_handle );
+
+			virtual void setCenter(double &x, double &y, double &deltx, double &delty);
+			void initPlot( );
+			void setPlotLineColor();
+			void setPlotLineColor( SlicePlot* plot );
+
+			double handle_delta_x, handle_delta_y;
+
+			point_list _ref_points_;
+			double _ref_blc_x_, _ref_blc_y_;
+			double _ref_trc_x_, _ref_trc_y_;
+			double _ref_width_, _ref_height_;
+
+			point_list _drawing_points_;
+			double _drawing_blc_x_, _drawing_blc_y_;
+			double _drawing_trc_x_, _drawing_trc_y_;
+			double _drawing_width_, _drawing_height_;
+
+			double _center_x, _center_y;
+			double _center_delta_x, _center_delta_y;
+
+			XScaleTo _x_origin_;
+			YScaleTo _y_origin_;
+
+			//Slice functionality
+			void drawPositionMarker();
+			QMap<QString,SlicePlot*> slicePlots;
+			int markerSegmentIndex;
+			float markerPercentage;
+			bool showPositionMarker;
+		};
+	}
 }
 
 #endif

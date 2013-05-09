@@ -30,71 +30,65 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-AttributeValueBase::AttributeValueBase(AttValue::ValueType type, Bool strict)
-: itsValueType(type),
-  itsStrictness(strict)
-{}
+	AttributeValueBase::AttributeValueBase(AttValue::ValueType type, Bool strict)
+		: itsValueType(type),
+		  itsStrictness(strict)
+	{}
 
 
-AttributeValueBase::~AttributeValueBase() 
-{}
+	AttributeValueBase::~AttributeValueBase()
+	{}
 
-AttributeValueBase::AttributeValueBase(const AttributeValueBase& other) 
-: itsValueType(other.itsValueType),
-  itsStrictness(other.itsStrictness)
-{}
+	AttributeValueBase::AttributeValueBase(const AttributeValueBase& other)
+		: itsValueType(other.itsValueType),
+		  itsStrictness(other.itsStrictness)
+	{}
 
-const AttributeValueBase& AttributeValueBase::operator=(const AttributeValueBase& other) 
-{
-   if (this != &other) {
-      itsValueType = other.itsValueType;
-      itsStrictness = other.itsStrictness;
-   }
-   return *this;
-}
-
-
-AttValue::ValueType  AttributeValueBase::getType() const 
-{
-  return itsValueType;
-}
-
-void AttributeValueBase::setStrictness(const Bool &newStrict) 
-{
-  itsStrictness = newStrict;
-}
-
-Bool AttributeValueBase::getStrictness() const 
-{
-  return itsStrictness;
-}
-
-void AttributeValueBase::setType(const AttValue::ValueType &newType) 
-{
-  itsValueType = newType;
-}
-
-Bool AttributeValueBase::operator==(const AttributeValueBase& other) const 
-{
-  if (!myMatch(other)) return False;
-  return ((this->matches(other)) && other.matches(*this));
-}
-
-Bool AttributeValueBase::operator!=(const AttributeValueBase& other) const 
-{
-  return (!(*this==other));  
-}
+	const AttributeValueBase& AttributeValueBase::operator=(const AttributeValueBase& other) {
+		if (this != &other) {
+			itsValueType = other.itsValueType;
+			itsStrictness = other.itsStrictness;
+		}
+		return *this;
+	}
 
 
-Bool AttributeValueBase::myMatch(const AttributeValueBase &other) const
-{  
-  if (getType() != other.getType())  return False;
-  if (getType() == AttValue::AtInvalid) return False;
-  return True;
-}  
+	AttValue::ValueType  AttributeValueBase::getType() const {
+		return itsValueType;
+	}
 
-ostream &operator<<(ostream &os, AttributeValueBase &av) {
-  av.print(os); return os;  }
+	void AttributeValueBase::setStrictness(const Bool &newStrict) {
+		itsStrictness = newStrict;
+	}
+
+	Bool AttributeValueBase::getStrictness() const {
+		return itsStrictness;
+	}
+
+	void AttributeValueBase::setType(const AttValue::ValueType &newType) {
+		itsValueType = newType;
+	}
+
+	Bool AttributeValueBase::operator==(const AttributeValueBase& other) const {
+		if (!myMatch(other)) return False;
+		return ((this->matches(other)) && other.matches(*this));
+	}
+
+	Bool AttributeValueBase::operator!=(const AttributeValueBase& other) const {
+		return (!(*this==other));
+	}
+
+
+	Bool AttributeValueBase::myMatch(const AttributeValueBase &other) const {
+		if (getType() != other.getType())  return False;
+		if (getType() == AttValue::AtInvalid) return False;
+		return True;
+	}
+
+	ostream &operator<<(ostream &os, AttributeValueBase &av) {
+		av.print(os);
+		return os;
+	}
 
 
 } //# NAMESPACE CASA - END

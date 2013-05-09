@@ -127,8 +127,7 @@ namespace casa {
 				return count_;
 			}
 		private:
-			void* operator new (std::size_t) throw (std::logic_error)
-			{
+			void* operator new (std::size_t) throw (std::logic_error) {
 				throw std::logic_error("allocating an object not intended for dynamic allocation");
 			}
 			std::tr1::shared_ptr<ImageRegion> imageregion;
@@ -308,7 +307,9 @@ namespace casa {
 			// update status information...
 			virtual void status( const std::string &msg, const std::string &type="info" );
 
-			virtual bool markCenter( ) const { return mystate->markCenter( ); }
+			virtual bool markCenter( ) const {
+				return mystate->markCenter( );
+			}
 
 			virtual bool skyComponent( ) const DISPLAY_PURE_VIRTUAL(Region::skyComponent,true);
 
@@ -334,16 +335,13 @@ namespace casa {
 			}
 
 			// called when creating regions to allow suppression of corner-handle drawing...
-			static std::tr1::shared_ptr<viewer::Region> creatingRegion( )
-			{
+			static std::tr1::shared_ptr<viewer::Region> creatingRegion( ) {
 				return creating_region;
 			}
-			static void creatingRegionBegin( std::tr1::shared_ptr<viewer::Region> r )
-			{
+			static void creatingRegionBegin( std::tr1::shared_ptr<viewer::Region> r ) {
 				creating_region = r;
 			}
-			static void creatingRegionEnd( )
-			{
+			static void creatingRegionEnd( ) {
 				creating_region = memory::nullptr;
 			}
 
@@ -406,8 +404,7 @@ namespace casa {
 			QString getLoadDir( );
 			void putLoadDir( QString );
 
-			virtual bool setMarker( QtMouseToolNames::PointRegionSymbols )
-			{
+			virtual bool setMarker( QtMouseToolNames::PointRegionSymbols ) {
 				return false;
 			}
 
@@ -498,7 +495,9 @@ namespace casa {
 			// newInfoObject(...) is currently only used for PVLine regions, but it should be used for
 			// other regions to allow for specialized creation of the region info objects for display
 			// in "statistics"...
-			virtual RegionInfo *newInfoObject( ImageInterface<Float> *, PrincipalAxesDD * ) { return 0; }
+			virtual RegionInfo *newInfoObject( ImageInterface<Float> *, PrincipalAxesDD * ) {
+				return 0;
+			}
 
 			virtual ImageRegion *get_image_region( DisplayData* ) const
 			DISPLAY_PURE_VIRTUAL(Region::get_image_region,0);
@@ -554,9 +553,9 @@ namespace casa {
 			static std::tr1::shared_ptr<Region> creating_region;
 
 		private slots:
-						//Called when the histogram stack needs to be changed due
-						//to the add/removal of an image.
-						void update_histogram_event();
+			//Called when the histogram stack needs to be changed due
+			//to the add/removal of an image.
+			void update_histogram_event();
 
 		private:
 			// common state-setup for constructors...

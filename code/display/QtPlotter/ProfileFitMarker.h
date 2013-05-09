@@ -31,26 +31,26 @@
 
 namespace casa {
 
-class WorldCanvasTranslator;
+	class WorldCanvasTranslator;
 
-class ProfileFitMarker {
+	class ProfileFitMarker {
 
-public:
-	ProfileFitMarker(  const WorldCanvasTranslator * worldCanvasTranslator );
-	void setCenterPeak( double xVal, double yVal );
-	void setFWHM( double fwhm, double fwhmHeight );
-	void drawMarker( QPainter& event);
-	virtual ~ProfileFitMarker();
+	public:
+		ProfileFitMarker(  const WorldCanvasTranslator * worldCanvasTranslator );
+		void setCenterPeak( double xVal, double yVal );
+		void setFWHM( double fwhm, double fwhmHeight );
+		void drawMarker( QPainter& event);
+		virtual ~ProfileFitMarker();
 
-private:
-	const WorldCanvasTranslator* worldCanvasTranslator;
-	double center;
-	double peak;
-	double fwhm;
-	double fwhmHeight;
-	bool centerPeakSpecified;
-	bool fwhmSpecified;
-};
+	private:
+		const WorldCanvasTranslator* worldCanvasTranslator;
+		double center;
+		double peak;
+		double fwhm;
+		double fwhmHeight;
+		bool centerPeakSpecified;
+		bool fwhmSpecified;
+	};
 
 } /* namespace casa */
 #endif /* PROFILEFITMARKER_H_ */

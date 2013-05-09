@@ -38,86 +38,86 @@
 
 namespace casa {
 
-template <class T> class ImageInterface;
-class Gaussian2DFitter;
-class ColorComboDelegate;
-class RegionShape;
+	template <class T> class ImageInterface;
+	class Gaussian2DFitter;
+	class ColorComboDelegate;
+	class RegionShape;
 
-class Fit2DTool : public QDialog {
-    Q_OBJECT
+	class Fit2DTool : public QDialog {
+		Q_OBJECT
 
-public:
-    Fit2DTool(QWidget *parent = 0);
-    void setImage( ImageInterface<Float>* image );
-    ~Fit2DTool();
+	public:
+		Fit2DTool(QWidget *parent = 0);
+		void setImage( ImageInterface<Float>* image );
+		~Fit2DTool();
 
-signals:
-	void showOverlay(String, const QString&);
-	void removeOverlay(String);
-	void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
-	void add2DFitOverlay( QList<RegionShape*> fitMarkers );
-	void addResidualFitImage( String );
+	signals:
+		void showOverlay(String, const QString&);
+		void removeOverlay(String);
+		void remove2DFitOverlay( QList<RegionShape*> fitMarkers );
+		void add2DFitOverlay( QList<RegionShape*> fitMarkers );
+		void addResidualFitImage( String );
 
-public slots:
-	void frameChanged( int frame );
-	void newRegion( int, const QString &shape, const QString &name,
-		const QList<double> &world_x, const QList<double> &world_y,
-		const QList<int> &pixel_x, const QList<int> &pixel_y,
-		const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
-	void updateRegion( int, viewer::region::RegionChanges,
-		const QList<double> &world_x, const QList<double> &world_y,
-		const QList<int> &pixel_x, const QList<int> &pixel_y );
+	public slots:
+		void frameChanged( int frame );
+		void newRegion( int, const QString &shape, const QString &name,
+		                const QList<double> &world_x, const QList<double> &world_y,
+		                const QList<int> &pixel_x, const QList<int> &pixel_y,
+		                const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+		void updateRegion( int, viewer::region::RegionChanges,
+		                   const QList<double> &world_x, const QList<double> &world_y,
+		                   const QList<int> &pixel_x, const QList<int> &pixel_y );
 
-private slots:
-	void showFileDialog();
-	void showFindSourcesDialog();
-	void showPixelRangeDialog();
-	void estimateFileChanged( const QString& fullPath );
-	void pixelRangeChanged();
-	void pixelRangeEnabledChanged( bool enabled );
-	void pixelRangeNoneSelected( bool selected );
-	void doFit();
-	void fitColorChanged( const QString& colorName);
-	void fitDone();
-	void clearFitMarkers();
-	void showResults();
-	void showSaveDialog();
-	void showResidualHistogramDialog();
-	void residualSupportChanged( bool enable );
-	void showResidualDialog();
-	void displayFitChanged( bool display );
+	private slots:
+		void showFileDialog();
+		void showFindSourcesDialog();
+		void showPixelRangeDialog();
+		void estimateFileChanged( const QString& fullPath );
+		void pixelRangeChanged();
+		void pixelRangeEnabledChanged( bool enabled );
+		void pixelRangeNoneSelected( bool selected );
+		void doFit();
+		void fitColorChanged( const QString& colorName);
+		void fitDone();
+		void clearFitMarkers();
+		void showResults();
+		void showSaveDialog();
+		void showResidualHistogramDialog();
+		void residualSupportChanged( bool enable );
+		void showResidualDialog();
+		void displayFitChanged( bool display );
 
-private:
-	Fit2DTool( const Fit2DTool& fitTool );
-	Fit2DTool operator=( const Fit2DTool& fitTool );
-	Vector<Float> populateInclude() const;
-	Vector<Float> populateExclude() const;
-	void populateIncludeExclude(Vector<Float>& range ) const;
+	private:
+		Fit2DTool( const Fit2DTool& fitTool );
+		Fit2DTool operator=( const Fit2DTool& fitTool );
+		Vector<Float> populateInclude() const;
+		Vector<Float> populateExclude() const;
+		void populateIncludeExclude(Vector<Float>& range ) const;
 
-	void setImageFunctionalityEnabled( bool enable );
-	void resetRegion( const QList<int>& pixelX, const QList<int>& pixelY );
-	bool populateSaveFile( String& saveFile );
-	bool populateResidualFile( String& saveFile );
-	void showFileChooserDialog(const QString& title, QFileDialog::FileMode mode, QLineEdit* destinationLineEdit );
-	bool validateFile( QLineEdit* directoryLineEdit, QLineEdit* fileLineEdit,
-			String& saveFile, const QString& purpose );
-	void addViewerFitMarkers();
-	void removeViewerFitMarkers();
-	void clearRegions();
+		void setImageFunctionalityEnabled( bool enable );
+		void resetRegion( const QList<int>& pixelX, const QList<int>& pixelY );
+		bool populateSaveFile( String& saveFile );
+		bool populateResidualFile( String& saveFile );
+		void showFileChooserDialog(const QString& title, QFileDialog::FileMode mode, QLineEdit* destinationLineEdit );
+		bool validateFile( QLineEdit* directoryLineEdit, QLineEdit* fileLineEdit,
+		                   String& saveFile, const QString& purpose );
+		void addViewerFitMarkers();
+		void removeViewerFitMarkers();
+		void clearRegions();
 
-	const QString REGION_LABEL;
-	ImageInterface<Float>* image;
-	QList<RegionShape*> fitMarkers;
-	Gaussian2DFitter* fitter;
-	ColorComboDelegate* fitColorDelegate;
-	QProgressDialog progressBar;
-    FindSourcesDialog findSourcesDialog;
-    PixelRangeDialog pixelRangeDialog;
-    Fit2DLogDialog logDialog;
-    ResidualHistogramDialog residualHistogramDialog;
-    String residualImagePath;
+		const QString REGION_LABEL;
+		ImageInterface<Float>* image;
+		QList<RegionShape*> fitMarkers;
+		Gaussian2DFitter* fitter;
+		ColorComboDelegate* fitColorDelegate;
+		QProgressDialog progressBar;
+		FindSourcesDialog findSourcesDialog;
+		PixelRangeDialog pixelRangeDialog;
+		Fit2DLogDialog logDialog;
+		ResidualHistogramDialog residualHistogramDialog;
+		String residualImagePath;
 
-    Ui::Fit2DToolClass ui;
-};
+		Ui::Fit2DToolClass ui;
+	};
 }
 #endif // FIT2DTOOL_QO_H

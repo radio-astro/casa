@@ -30,25 +30,25 @@
 
 namespace casa {
 
-ColorComboDelegate::ColorComboDelegate(QObject* parent):
+	ColorComboDelegate::ColorComboDelegate(QObject* parent):
 		QItemDelegate(parent) {
-}
+	}
 
-void ColorComboDelegate::setSupportedColors( QStringList colorNameList ){
-	colorNames = colorNameList;
-}
+	void ColorComboDelegate::setSupportedColors( QStringList colorNameList ) {
+		colorNames = colorNameList;
+	}
 
-QString ColorComboDelegate::getNamedColor( int index ) const {
-	return colorNames[index];
-}
+	QString ColorComboDelegate::getNamedColor( int index ) const {
+		return colorNames[index];
+	}
 
-void ColorComboDelegate::paint( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const{
-	int colorIndex = index.row();
-	QColor itemColor( colorNames[colorIndex]);
-	painter->fillRect(option.rect, itemColor );
-}
+	void ColorComboDelegate::paint( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const {
+		int colorIndex = index.row();
+		QColor itemColor( colorNames[colorIndex]);
+		painter->fillRect(option.rect, itemColor );
+	}
 
-ColorComboDelegate::~ColorComboDelegate() {
-}
+	ColorComboDelegate::~ColorComboDelegate() {
+	}
 
 } /* namespace casa */

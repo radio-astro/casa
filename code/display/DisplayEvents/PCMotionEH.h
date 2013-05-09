@@ -33,11 +33,11 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class PixelCanvas;
+	class PixelCanvas;
 
 //
 // <summary>
-// PixelCanvas Event Handler for managing pointer motion events  
+// PixelCanvas Event Handler for managing pointer motion events
 // </summary>
 //
 // <prerequisite>
@@ -69,20 +69,20 @@ class PixelCanvas;
 // </example>
 //
 
-class PCMotionEH {
+	class PCMotionEH {
 
- public:
+	public:
 
-  // Default Constructor Required
-  PCMotionEH();
+		// Default Constructor Required
+		PCMotionEH();
 
-  // Default just prints the event to cout
-  virtual void operator ()(const PCMotionEvent & eh);  
+		// Default just prints the event to cout
+		virtual void operator ()(const PCMotionEvent & eh);
 
-  // Destructor
-  virtual ~PCMotionEH();
+		// Destructor
+		virtual ~PCMotionEH();
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

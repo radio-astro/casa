@@ -36,142 +36,142 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-Histogram2dDD::Histogram2dDD(const ImageInterface<Float> *image) :
-  itsBaseImage(0),
-  itsMaskedLattice(0),
-  itsLatticeStatistics(0),
-  itsLatticeHistograms(0) {
+	Histogram2dDD::Histogram2dDD(const ImageInterface<Float> *image) :
+		itsBaseImage(0),
+		itsMaskedLattice(0),
+		itsLatticeStatistics(0),
+		itsLatticeHistograms(0) {
 
-  itsBaseImage = image->cloneII();
-  itsMaskedLattice = itsBaseImage;
-  
-  // construct our statistics calculator
-  itsLatticeStatistics = 
-    new LatticeStatistics<Float>(*itsMaskedLattice, False);
-  if (!itsLatticeStatistics) {
-    throw(AipsError("Histogram2dDD::ctor - failed to create statistics"));
-  }
+		itsBaseImage = image->cloneII();
+		itsMaskedLattice = itsBaseImage;
 
-  // now figure out a coordinate system
-  Array<Float> tar;
-  Vector<Double> linblc(2), lintrc(2);
-  if (!itsLatticeStatistics->getConvertedStatistic(tar,LatticeStatsBase::MIN) ||
-      !tar.shape().nelements()) {
-    linblc(0) = -1.0;
-  } else {
-    IPosition ipos(tar.ndim());
-    ipos = 0;
-    linblc(0) = tar(ipos);
-  }
-  if (!itsLatticeStatistics->getConvertedStatistic(tar,LatticeStatsBase::MAX) ||
-      !tar.shape().nelements()) {
-    lintrc(0) = 1.0;
-  } else {
-    IPosition ipos(tar.ndim());
-    ipos = 0;
-    lintrc(0) = tar(ipos);
-  }
+		// construct our statistics calculator
+		itsLatticeStatistics =
+		    new LatticeStatistics<Float>(*itsMaskedLattice, False);
+		if (!itsLatticeStatistics) {
+			throw(AipsError("Histogram2dDD::ctor - failed to create statistics"));
+		}
 
-  linblc(1) = 0;
-  lintrc(1) = itsMaskedLattice->nelements();
+		// now figure out a coordinate system
+		Array<Float> tar;
+		Vector<Double> linblc(2), lintrc(2);
+		if (!itsLatticeStatistics->getConvertedStatistic(tar,LatticeStatsBase::MIN) ||
+		        !tar.shape().nelements()) {
+			linblc(0) = -1.0;
+		} else {
+			IPosition ipos(tar.ndim());
+			ipos = 0;
+			linblc(0) = tar(ipos);
+		}
+		if (!itsLatticeStatistics->getConvertedStatistic(tar,LatticeStatsBase::MAX) ||
+		        !tar.shape().nelements()) {
+			lintrc(0) = 1.0;
+		} else {
+			IPosition ipos(tar.ndim());
+			ipos = 0;
+			lintrc(0) = tar(ipos);
+		}
 
-  // scale lintrc(1) by inverse binwidth
-  Float bwidth = (lintrc(0) - linblc(0)) / (100 - 1);
-  if (bwidth != 0) {
-    lintrc(1) = lintrc(1) / bwidth * 4;
-  }
-  
-  CoordinateSystem newcsys;
-  Vector<String> names(2);
-  names(0) = "Data value";
-  names(1) = "Number";
-  Vector<String> units(2);
-  units(0) = itsBaseImage->units().getName();
-  units(1) = "_";
-  //Vector<Double> refVal = linblc;
-  //Vector<Double> inc = (lintrc - linblc) / 100.0;
-  Matrix<Double> pc(2, 2);
-  pc = 0.0;
-  pc(0, 0) = pc(1, 1) = 1.0;
-  //Vector<Double> refPix(2);
-  //refPix = 0.0;
+		linblc(1) = 0;
+		lintrc(1) = itsMaskedLattice->nelements();
 
-  Vector<Double> refVal = linblc;
-  Vector<Double> inc(2);
-  inc = 1.0;
-  Vector<Double> refPix = linblc;
+		// scale lintrc(1) by inverse binwidth
+		Float bwidth = (lintrc(0) - linblc(0)) / (100 - 1);
+		if (bwidth != 0) {
+			lintrc(1) = lintrc(1) / bwidth * 4;
+		}
 
-  LinearCoordinate lc(names, units, refVal, inc, pc, refPix);
-  newcsys.addCoordinate(lc);
+		CoordinateSystem newcsys;
+		Vector<String> names(2);
+		names(0) = "Data value";
+		names(1) = "Number";
+		Vector<String> units(2);
+		units(0) = itsBaseImage->units().getName();
+		units(1) = "_";
+		//Vector<Double> refVal = linblc;
+		//Vector<Double> inc = (lintrc - linblc) / 100.0;
+		Matrix<Double> pc(2, 2);
+		pc = 0.0;
+		pc(0, 0) = pc(1, 1) = 1.0;
+		//Vector<Double> refPix(2);
+		//refPix = 0.0;
 
-  //linblc = 0.0;
-  //lintrc(0) = 5.0;
-  //lintrc(1) = 100.0;
-  //cerr << "linblc = " << linblc << ", lintrc = " << lintrc << endl;
-  setCoordinateSystem(newcsys, linblc, lintrc);
-  
-  // construct our histogram calculator
-  itsLatticeHistograms = 
-    new LatticeHistograms<Float>(maskedLattice(), False, False);
-  if (!itsLatticeHistograms) {
-    throw(AipsError("Histogram2dDD::ctor - failed to create histograms"));
-  }
-  itsLatticeHistograms->setNBins(100);
+		Vector<Double> refVal = linblc;
+		Vector<Double> inc(2);
+		inc = 1.0;
+		Vector<Double> refPix = linblc;
 
-}
+		LinearCoordinate lc(names, units, refVal, inc, pc, refPix);
+		newcsys.addCoordinate(lc);
 
-Histogram2dDD::~Histogram2dDD() {
-}
+		//linblc = 0.0;
+		//lintrc(0) = 5.0;
+		//lintrc(1) = 100.0;
+		//cerr << "linblc = " << linblc << ", lintrc = " << lintrc << endl;
+		setCoordinateSystem(newcsys, linblc, lintrc);
 
-const Unit Histogram2dDD::dataUnit() {
-  return itsBaseImage->units();
-}
+		// construct our histogram calculator
+		itsLatticeHistograms =
+		    new LatticeHistograms<Float>(maskedLattice(), False, False);
+		if (!itsLatticeHistograms) {
+			throw(AipsError("Histogram2dDD::ctor - failed to create histograms"));
+		}
+		itsLatticeHistograms->setNBins(100);
 
-String Histogram2dDD::showValue(const Vector<Double> &world) {
-  String retval;
-  // IMPLEMENT THIS
-  return retval;
-}
+	}
 
-void Histogram2dDD::setDefaultOptions() {
-  ActiveCaching2dDD::setDefaultOptions();
-}
+	Histogram2dDD::~Histogram2dDD() {
+	}
 
-Bool Histogram2dDD::setOptions(Record &rec, Record &recOut) {
-  Bool ret = ActiveCaching2dDD::setOptions(rec, recOut);
-  return ret;
-}
+	const Unit Histogram2dDD::dataUnit() {
+		return itsBaseImage->units();
+	}
 
-Record Histogram2dDD::getOptions() {
-  Record rec = ActiveCaching2dDD::getOptions();
-  return rec;
-}
+	String Histogram2dDD::showValue(const Vector<Double> &world) {
+		String retval;
+		// IMPLEMENT THIS
+		return retval;
+	}
 
-CachingDisplayMethod *Histogram2dDD::newDisplayMethod(
-    WorldCanvas *worldCanvas,
-    AttributeBuffer *wchAttributes,
-    AttributeBuffer *ddAttributes,
-    CachingDisplayData *dd) {
-  return new Histogram2dDM(worldCanvas, wchAttributes, ddAttributes, dd);
-}
+	void Histogram2dDD::setDefaultOptions() {
+		ActiveCaching2dDD::setDefaultOptions();
+	}
 
-AttributeBuffer Histogram2dDD::optionsAsAttributes() {
-  AttributeBuffer buffer = ActiveCaching2dDD::optionsAsAttributes();
-  return buffer;
-}
+	Bool Histogram2dDD::setOptions(Record &rec, Record &recOut) {
+		Bool ret = ActiveCaching2dDD::setOptions(rec, recOut);
+		return ret;
+	}
 
-Histogram2dDD::Histogram2dDD() :
-  ActiveCaching2dDD() {
-  // MUST IMPLEMENT
-}
+	Record Histogram2dDD::getOptions() {
+		Record rec = ActiveCaching2dDD::getOptions();
+		return rec;
+	}
 
-Histogram2dDD::Histogram2dDD(const Histogram2dDD &) {
-  // MUST IMPLEMENT
-}
+	CachingDisplayMethod *Histogram2dDD::newDisplayMethod(
+	    WorldCanvas *worldCanvas,
+	    AttributeBuffer *wchAttributes,
+	    AttributeBuffer *ddAttributes,
+	    CachingDisplayData *dd) {
+		return new Histogram2dDM(worldCanvas, wchAttributes, ddAttributes, dd);
+	}
 
-void Histogram2dDD::operator=(const Histogram2dDD &) {
-  // MUST IMPLEMENT
-}
+	AttributeBuffer Histogram2dDD::optionsAsAttributes() {
+		AttributeBuffer buffer = ActiveCaching2dDD::optionsAsAttributes();
+		return buffer;
+	}
+
+	Histogram2dDD::Histogram2dDD() :
+		ActiveCaching2dDD() {
+		// MUST IMPLEMENT
+	}
+
+	Histogram2dDD::Histogram2dDD(const Histogram2dDD &) {
+		// MUST IMPLEMENT
+	}
+
+	void Histogram2dDD::operator=(const Histogram2dDD &) {
+		// MUST IMPLEMENT
+	}
 
 } //# NAMESPACE CASA - END
 

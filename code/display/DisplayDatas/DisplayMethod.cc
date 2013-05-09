@@ -35,61 +35,61 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DisplayMethod::DisplayMethod(DisplayData *parentDisplayData) : 
-  itsParentDisplayData(parentDisplayData) {
-}
+	DisplayMethod::DisplayMethod(DisplayData *parentDisplayData) :
+		itsParentDisplayData(parentDisplayData) {
+	}
 
-DisplayMethod::~DisplayMethod() { }
+	DisplayMethod::~DisplayMethod() { }
 
-void DisplayMethod::cleanup() { }
+	void DisplayMethod::cleanup() { }
 
-void DisplayMethod::addRestriction(Attribute &at, Bool permanent) {
-  restrictions.add(at, permanent);
-}
+	void DisplayMethod::addRestriction(Attribute &at, Bool permanent) {
+		restrictions.add(at, permanent);
+	}
 
-void DisplayMethod::addRestrictions(AttributeBuffer &at) {
-  restrictions.add(at);
-}
+	void DisplayMethod::addRestrictions(AttributeBuffer &at) {
+		restrictions.add(at);
+	}
 
-void DisplayMethod::setRestriction(Attribute &at) {
-  restrictions.set(at);
-}
+	void DisplayMethod::setRestriction(Attribute &at) {
+		restrictions.set(at);
+	}
 
-void DisplayMethod::setRestrictions(AttributeBuffer &at) {
-  restrictions.set(at);
-}
+	void DisplayMethod::setRestrictions(AttributeBuffer &at) {
+		restrictions.set(at);
+	}
 
-void DisplayMethod::removeRestriction(const String &name) {
-  restrictions.remove(name);
-}
+	void DisplayMethod::removeRestriction(const String &name) {
+		restrictions.remove(name);
+	}
 
-Bool DisplayMethod::existRestriction(const String &name) {
-  return restrictions.exists(name);
-}
+	Bool DisplayMethod::existRestriction(const String &name) {
+		return restrictions.exists(name);
+	}
 
-void DisplayMethod::clearRestrictions() {
-  restrictions.clear();
-}
+	void DisplayMethod::clearRestrictions() {
+		restrictions.clear();
+	}
 
-Bool DisplayMethod::matches(Attribute &at) {
-  return restrictions.matches(at);
-}
+	Bool DisplayMethod::matches(Attribute &at) {
+		return restrictions.matches(at);
+	}
 
-Bool DisplayMethod::matches(AttributeBuffer &atBuf) {
-  return restrictions.matches(atBuf);
-}
+	Bool DisplayMethod::matches(AttributeBuffer &atBuf) {
+		return restrictions.matches(atBuf);
+	}
 
 // (Required) default constructor.
-DisplayMethod::DisplayMethod() {
-}
+	DisplayMethod::DisplayMethod() {
+	}
 
 // (Required) copy constructor.
-DisplayMethod::DisplayMethod(const DisplayMethod &other) {
-}
+	DisplayMethod::DisplayMethod(const DisplayMethod &other) {
+	}
 
 // (Required) copy assignment.
-void DisplayMethod::operator=(const DisplayMethod &other) {
-}
+	void DisplayMethod::operator=(const DisplayMethod &other) {
+	}
 
 
 

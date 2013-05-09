@@ -28,28 +28,27 @@
 #include <QtGui/QWidget>
 #include <display/QtPlotter/SpecFitSettingsFixedTableCell.ui.h>
 
-class SpecFitSettingsFixedTableCell : public QWidget
-{
-    Q_OBJECT
+class SpecFitSettingsFixedTableCell : public QWidget {
+	Q_OBJECT
 
 public:
-    SpecFitSettingsFixedTableCell(QWidget *parent = 0);
-    ~SpecFitSettingsFixedTableCell();
-    QString getFixedStr() const;
-    void setFixedCenter( bool fixed );
-    void setFixedPeak( bool fixed );
-    void setFixedFwhm( bool fixed );
-    bool isCenterFixed() const;
-    bool isFWHMFixed() const;
-    bool isPeakFixed() const;
-    QSize sizeHint() const;
-    void clear();
+	SpecFitSettingsFixedTableCell(QWidget *parent = 0);
+	~SpecFitSettingsFixedTableCell();
+	QString getFixedStr() const;
+	void setFixedCenter( bool fixed );
+	void setFixedPeak( bool fixed );
+	void setFixedFwhm( bool fixed );
+	bool isCenterFixed() const;
+	bool isFWHMFixed() const;
+	bool isPeakFixed() const;
+	QSize sizeHint() const;
+	void clear();
 
 private:
-    Ui::SpecFitSettingsFixedTableCell ui;
-    const QString GAUSSIAN_ESTIMATE_FIXED_CENTER;
-    const QString GAUSSIAN_ESTIMATE_FIXED_PEAK;
-    const QString GAUSSIAN_ESTIMATE_FIXED_FWHM;
+	Ui::SpecFitSettingsFixedTableCell ui;
+	const QString GAUSSIAN_ESTIMATE_FIXED_CENTER;
+	const QString GAUSSIAN_ESTIMATE_FIXED_PEAK;
+	const QString GAUSSIAN_ESTIMATE_FIXED_FWHM;
 };
 
 #endif // SPECFITSETTINGSFIXEDTABLECELL_H

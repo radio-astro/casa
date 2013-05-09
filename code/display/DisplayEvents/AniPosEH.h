@@ -34,8 +34,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvasHolder;
-class Attribute;
+	class WorldCanvasHolder;
+	class Attribute;
 
 // <summary>
 // WorldCanvas position event handler for Animator.
@@ -44,47 +44,49 @@ class Attribute;
 // <synopsis>
 // </synopsis>
 
-class AniPosEH : public WCPositionEH {
+	class AniPosEH : public WCPositionEH {
 
- public:
+	public:
 
-  // Constructor
-  AniPosEH();
-  
-  // Destrutor
-  ~AniPosEH();
+		// Constructor
+		AniPosEH();
 
-  // The operator that is given the position events and must process
-  // them
-  virtual void operator()(const WCPositionEvent& ev);
+		// Destrutor
+		~AniPosEH();
 
-  // add/remove a WorldCanvasHolder to the handler
-  // <group>
-  virtual void addWorldCanvasHolder(WorldCanvasHolder *wcHolder);
-  virtual void removeWorldCanvasHolder(WorldCanvasHolder& wcHolder);
-  // </group>
+		// The operator that is given the position events and must process
+		// them
+		virtual void operator()(const WCPositionEvent& ev);
 
-  // reset the animator - this is typically called by the WorldCanvasHolder
-  // when DisplayDatas are registered or unregistered
-  virtual void resetAnimator() { animator.reset(); }
-  
- private:
+		// add/remove a WorldCanvasHolder to the handler
+		// <group>
+		virtual void addWorldCanvasHolder(WorldCanvasHolder *wcHolder);
+		virtual void removeWorldCanvasHolder(WorldCanvasHolder& wcHolder);
+		// </group>
 
-  // the Animator we control
-  Animator animator;
+		// reset the animator - this is typically called by the WorldCanvasHolder
+		// when DisplayDatas are registered or unregistered
+		virtual void resetAnimator() {
+			animator.reset();
+		}
 
-  // List of WorldCanvasHolders
-  List<void *> holderList;
+	private:
 
-  // set a restriction on the WorldCanvasHolders
-  void setRestriction(Attribute& att);
+		// the Animator we control
+		Animator animator;
 
-  // refresh the WorldCanvasHolders
-  void refresh();
-  
-  // cleanup the DisplayDatas on all WorldCanvasHolders
-  void cleanup();
-};
+		// List of WorldCanvasHolders
+		List<void *> holderList;
+
+		// set a restriction on the WorldCanvasHolders
+		void setRestriction(Attribute& att);
+
+		// refresh the WorldCanvasHolders
+		void refresh();
+
+		// cleanup the DisplayDatas on all WorldCanvasHolders
+		void cleanup();
+	};
 
 
 } //# NAMESPACE CASA - END

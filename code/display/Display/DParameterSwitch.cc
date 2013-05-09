@@ -1,4 +1,4 @@
-//# DParameterSwitch.cc: class to store and retrieve boolean parameters 
+//# DParameterSwitch.cc: class to store and retrieve boolean parameters
 //# Copyright (C) 2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -31,75 +31,75 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
-DParameterSwitch::DParameterSwitch(const String name, 
-				   const String description,
-				   const String help, 
-				   const Bool defaultvalue,
-				   const Bool value, 
-				   const String context) :
-  DisplayParameter(name, description, help, context, False, False),
-  itsDefaultValue(defaultvalue),
-  itsValue(value) {
-}
+	DParameterSwitch::DParameterSwitch(const String name,
+	                                   const String description,
+	                                   const String help,
+	                                   const Bool defaultvalue,
+	                                   const Bool value,
+	                                   const String context) :
+		DisplayParameter(name, description, help, context, False, False),
+		itsDefaultValue(defaultvalue),
+		itsValue(value) {
+	}
 
 // Copy constructor.
-DParameterSwitch::DParameterSwitch(const DParameterSwitch &other) :
-  DisplayParameter(other),
-  itsDefaultValue(other.itsDefaultValue),
-  itsValue(other.itsValue) {
-}
+	DParameterSwitch::DParameterSwitch(const DParameterSwitch &other) :
+		DisplayParameter(other),
+		itsDefaultValue(other.itsDefaultValue),
+		itsValue(other.itsValue) {
+	}
 
 // Destructor.
-DParameterSwitch::~DParameterSwitch() {
-}
+	DParameterSwitch::~DParameterSwitch() {
+	}
 
 // Copy assignment.
-DParameterSwitch& DParameterSwitch::operator=(const DParameterSwitch &other) {
-  if (this != &other) {
-    DisplayParameter::operator=(other);
-    itsDefaultValue = other.itsDefaultValue;
-    itsValue = other.itsValue;
-  }
-  return *this;
-}
+	DParameterSwitch& DParameterSwitch::operator=(const DParameterSwitch &other) {
+		if (this != &other) {
+			DisplayParameter::operator=(other);
+			itsDefaultValue = other.itsDefaultValue;
+			itsValue = other.itsValue;
+		}
+		return *this;
+	}
 
 // Update the value of this parameter from a record.
-Bool DParameterSwitch::fromRecord(const RecordInterface& record) {
-  static Bool error, result;
-  Bool previousval = itsValue;
-  result = displayOptions().readOptionRecord(itsValue, error, record, name());
-  if (result) {
-    return True;
-  } else {
-    itsValue = previousval;
-  }
-  return False;
-}
+	Bool DParameterSwitch::fromRecord(const RecordInterface& record) {
+		static Bool error, result;
+		Bool previousval = itsValue;
+		result = displayOptions().readOptionRecord(itsValue, error, record, name());
+		if (result) {
+			return True;
+		} else {
+			itsValue = previousval;
+		}
+		return False;
+	}
 
 // Describe this parameter in a record.
-void DParameterSwitch::toRecord(RecordInterface& record, 
-				const Bool, const Bool overwrite) {
-  if (record.isDefined(name())) {
-    if (overwrite) {
-      record.removeField(name());
-    } else {
-      return;
-    }
-  }
+	void DParameterSwitch::toRecord(RecordInterface& record,
+	                                const Bool, const Bool overwrite) {
+		if (record.isDefined(name())) {
+			if (overwrite) {
+				record.removeField(name());
+			} else {
+				return;
+			}
+		}
 
-  Record rec = baseDescription();
-  rec.define("ptype", "boolean");
-  rec.define("default", itsDefaultValue);
-  rec.define("value", itsValue);
-  record.defineRecord(name(), rec);
-}
+		Record rec = baseDescription();
+		rec.define("ptype", "boolean");
+		rec.define("default", itsDefaultValue);
+		rec.define("value", itsValue);
+		record.defineRecord(name(), rec);
+	}
 
 // Default constructor.
-DParameterSwitch::DParameterSwitch() :
-  DisplayParameter(),
-  itsDefaultValue(False),
-  itsValue(False) {
-}
+	DParameterSwitch::DParameterSwitch() :
+		DisplayParameter(),
+		itsDefaultValue(False),
+		itsValue(False) {
+	}
 
 } //# NAMESPACE CASA - END
 

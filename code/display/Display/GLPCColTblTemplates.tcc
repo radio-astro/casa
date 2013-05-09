@@ -33,43 +33,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // =====
 
-template <class T>
-void GLPixelCanvasColorTable_mapToColor(uLong * table,
-					 uInt tableSize,
-					 uInt mapOffset,
-					 Array<T> & inOutArray,
-					 Bool rangeCheck)
-{
-  VectorIterator<T> vi(inOutArray);
+	template <class T>
+	void GLPixelCanvasColorTable_mapToColor(uLong * table,
+	                                        uInt tableSize,
+	                                        uInt mapOffset,
+	                                        Array<T> & inOutArray,
+	                                        Bool rangeCheck) {
+		VectorIterator<T> vi(inOutArray);
 
-  uInt n = vi.vector().nelements();
-  T val;
+		uInt n = vi.vector().nelements();
+		T val;
 
-  if (rangeCheck)
-    {
-      uInt maxc = tableSize-1;
-      while (!vi.pastEnd())
-	{
-	  for (uInt i = 0; i < n; i++)
-	    {
-	      val = vi.vector()(i);
-	      vi.vector()(i) = table[mapOffset + ((val <= 0) ? 0 : (val >= maxc) ? maxc : val)];
-	    }
-	  vi.next();
+		if (rangeCheck) {
+			uInt maxc = tableSize-1;
+			while (!vi.pastEnd()) {
+				for (uInt i = 0; i < n; i++) {
+					val = vi.vector()(i);
+					vi.vector()(i) = table[mapOffset + ((val <= 0) ? 0 : (val >= maxc) ? maxc : val)];
+				}
+				vi.next();
+			}
+		} else {
+			while (!vi.pastEnd()) {
+				for (uInt i = 0; i < n; i++) {
+					vi.vector()(i) = table[mapOffset + vi.vector()(i)];
+				}
+				vi.next();
+			}
+		}
 	}
-    }
-  else
-    {
-      while (!vi.pastEnd())
-	{
-	  for (uInt i = 0; i < n; i++)
-	    {
-	      vi.vector()(i) = table[mapOffset + vi.vector()(i)];
-	    }
-	  vi.next();
-	}
-    }
-}
 
 } //# NAMESPACE CASA - END
 

@@ -38,8 +38,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    void DlHandleBase::throw_exception( const char *message ) const {
-	throw EXCEPTION(message);
-    }
+	void DlHandleBase::throw_exception( const char *message ) const {
+		throw EXCEPTION(message);
+	}
 
 } //# NAMESPACE CASA - END

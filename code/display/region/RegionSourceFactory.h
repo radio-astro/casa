@@ -7,15 +7,15 @@
 
 namespace casa {
 
-    namespace viewer {
+	namespace viewer {
 
-	class RegionSourceFactory {
-	    public:
-		virtual RegionSource *newSource( RegionCreator * ) = 0;
-		virtual ~RegionSourceFactory( ) { }
-		RegionSourceFactory( ) { }
-	};
-    }
+		class RegionSourceFactory {
+		public:
+			virtual RegionSource *newSource( RegionCreator * ) = 0;
+			virtual ~RegionSourceFactory( ) { }
+			RegionSourceFactory( ) { }
+		};
+	}
 }
 
 #endif

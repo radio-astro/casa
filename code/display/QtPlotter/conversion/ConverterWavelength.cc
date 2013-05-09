@@ -28,39 +28,39 @@
 
 namespace casa {
 
-ConverterWavelength::ConverterWavelength(const QString& oldUnits,const QString& newUnits ) :
-	Converter( oldUnits, newUnits ){
+	ConverterWavelength::ConverterWavelength(const QString& oldUnits,const QString& newUnits ) :
+		Converter( oldUnits, newUnits ) {
 
-}
+	}
 
-double ConverterWavelength::toPixel( double value ) {
-	spectralCoordinate.setWavelengthUnit( oldUnits.toStdString() );
-	Vector<Double> frequencyVector(1);
-	Vector<Double> wavelengthVector(1);
-	wavelengthVector[0] = value;
-	spectralCoordinate.wavelengthToFrequency(frequencyVector, wavelengthVector );
-	Double pixelValue;
-	spectralCoordinate.toPixel( pixelValue, frequencyVector[0]);
-	return pixelValue;
-}
+	double ConverterWavelength::toPixel( double value ) {
+		spectralCoordinate.setWavelengthUnit( oldUnits.toStdString() );
+		Vector<Double> frequencyVector(1);
+		Vector<Double> wavelengthVector(1);
+		wavelengthVector[0] = value;
+		spectralCoordinate.wavelengthToFrequency(frequencyVector, wavelengthVector );
+		Double pixelValue;
+		spectralCoordinate.toPixel( pixelValue, frequencyVector[0]);
+		return pixelValue;
+	}
 
-Vector<double> ConverterWavelength::convert( const Vector<double>& oldValues ){
-	Vector<double> resultValues( oldValues.size() );
-	resultValues = oldValues;
-	convertWavelength( resultValues, oldUnits, newUnits );
-	return resultValues;
-}
+	Vector<double> ConverterWavelength::convert( const Vector<double>& oldValues ) {
+		Vector<double> resultValues( oldValues.size() );
+		resultValues = oldValues;
+		convertWavelength( resultValues, oldUnits, newUnits );
+		return resultValues;
+	}
 
-void ConverterWavelength::convertWavelength( Vector<double> &resultValues,
-		QString& sourceUnits, QString& destUnits){
-	int sourceIndex = Converter::WAVELENGTH_UNITS.indexOf( sourceUnits );
-	int destIndex = Converter::WAVELENGTH_UNITS.indexOf( destUnits );
-	Converter::convert( resultValues, sourceIndex, destIndex );
-}
+	void ConverterWavelength::convertWavelength( Vector<double> &resultValues,
+	        QString& sourceUnits, QString& destUnits) {
+		int sourceIndex = Converter::WAVELENGTH_UNITS.indexOf( sourceUnits );
+		int destIndex = Converter::WAVELENGTH_UNITS.indexOf( destUnits );
+		Converter::convert( resultValues, sourceIndex, destIndex );
+	}
 
 
-ConverterWavelength::~ConverterWavelength() {
-	// TODO Auto-generated destructor stub
-}
+	ConverterWavelength::~ConverterWavelength() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

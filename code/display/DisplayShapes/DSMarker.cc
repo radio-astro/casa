@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <casa/aips.h>
 #include <display/DisplayShapes/DSMarker.h>
@@ -35,174 +35,177 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSMarker::DSMarker() : 
-  DSBasic() {
-  
-  itsSize = new DParameterRange<Int> ("size", "Marker Size", 
-				      "Select the height in pixels of marker",
-				      1,40,1,10,10);
-  
-  setDefaultOptions();
-}
+	DSMarker::DSMarker() :
+		DSBasic() {
 
-DSMarker::DSMarker(const Float& xPos, const Float& yPos, 
-		   const Display::Marker& marker, const uInt pixelSize) :
-  DSBasic() {
-  
-  DisplayShape::setHasHandles(True);
-  DisplayShape::setDrawHandles(True);
+		itsSize = new DParameterRange<Int> ("size", "Marker Size",
+		                                    "Select the height in pixels of marker",
+		                                    1,40,1,10,10);
 
+		setDefaultOptions();
+	}
 
-  itsSize = new DParameterRange<Int> ("size", "Marker Size", 
-				      "Select the height in pixels of marker",
-				      1,40,1,pixelSize,10);
-  itsCenter.resize(2);
-  itsCenter[0] = xPos;
-  itsCenter[1] = yPos;
+	DSMarker::DSMarker(const Float& xPos, const Float& yPos,
+	                   const Display::Marker& marker, const uInt pixelSize) :
+		DSBasic() {
 
-  itsMarkerStyle = marker;
-  itsValid = True;
-  itsBuiltHandle = False;
-  updateHandle();
-}
-
-DSMarker::DSMarker(const Record& /*settings*/) {
+		DisplayShape::setHasHandles(True);
+		DisplayShape::setDrawHandles(True);
 
 
-}
+		itsSize = new DParameterRange<Int> ("size", "Marker Size",
+		                                    "Select the height in pixels of marker",
+		                                    1,40,1,pixelSize,10);
+		itsCenter.resize(2);
+		itsCenter[0] = xPos;
+		itsCenter[1] = yPos;
 
-DSMarker::DSMarker(const DSMarker& other) :
-  DSBasic(other),
-  itsCenter(other.itsCenter),
-  itsHandle(other.itsHandle),
-  itsBuiltHandle(other.itsBuiltHandle),
-  itsSize(other.itsSize),
-  itsMarkerStyle(other.itsMarkerStyle),
-  itsValid(other.itsValid) {
+		itsMarkerStyle = marker;
+		itsValid = True;
+		itsBuiltHandle = False;
+		updateHandle();
+	}
 
-}
+	DSMarker::DSMarker(const Record& /*settings*/) {
 
-DSMarker::~DSMarker() {
 
-  delete itsSize; itsSize =0;
-}
+	}
 
-void DSMarker::move(const Float& dX, const Float& dY) {
-  if (itsValid) {
-    itsCenter[0] += dX;
-    itsCenter[1] += dY;
-  }
-  updateHandle();
-}
+	DSMarker::DSMarker(const DSMarker& other) :
+		DSBasic(other),
+		itsCenter(other.itsCenter),
+		itsHandle(other.itsHandle),
+		itsBuiltHandle(other.itsBuiltHandle),
+		itsSize(other.itsSize),
+		itsMarkerStyle(other.itsMarkerStyle),
+		itsValid(other.itsValid) {
 
-void DSMarker::setCenter(const Float& xPos, const Float& yPos) {
-  itsCenter[0] = xPos;
-  itsCenter[1] = yPos;
-  itsValid = True;
-  updateHandle();
-}
+	}
 
-Vector<Float> DSMarker::getCenter() {
-  if (itsValid) return itsCenter;
+	DSMarker::~DSMarker() {
 
-  Vector<Float> a(2); 
-  a[0]=0;a[1]=0;
-  return a;
-}
-void DSMarker::setSize(const uInt newSize) {
-  itsSize->setValue(newSize);
-  updateHandle();
-}
+		delete itsSize;
+		itsSize =0;
+	}
 
-void DSMarker::scale(const Float& scaleFactor) {
-  if (Int(itsSize->value() * scaleFactor) > 2) {
-    itsSize->setValue(Int(itsSize->value() * scaleFactor));
-    updateHandle();
-  }
-} 
+	void DSMarker::move(const Float& dX, const Float& dY) {
+		if (itsValid) {
+			itsCenter[0] += dX;
+			itsCenter[1] += dY;
+		}
+		updateHandle();
+	}
 
-void DSMarker::draw(PixelCanvas* pc) {
-  if (itsValid) {
-    pc->setLineWidth(DSBasic::getLineWidth());
-    pc->setColor(DisplayShape::getColor());
-    pc->drawMarker(itsCenter[0], itsCenter[1], 
-		   itsMarkerStyle, itsSize->value());
-  } 
-  DSBasic::draw(pc);
-}
+	void DSMarker::setCenter(const Float& xPos, const Float& yPos) {
+		itsCenter[0] = xPos;
+		itsCenter[1] = yPos;
+		itsValid = True;
+		updateHandle();
+	}
 
-Bool DSMarker::inObject(const Float& xPos, const Float& yPos) {
-  if (itsValid) 
+	Vector<Float> DSMarker::getCenter() {
+		if (itsValid) return itsCenter;
 
-    return ((xPos < itsCenter[0] + (itsSize->value()/2) ) &&
-	    (xPos > itsCenter[0] - (itsSize->value()/2)) &&
-	    (yPos > itsCenter[1] - (itsSize->value()/2)) &&
-	    (yPos < itsCenter[1] + (itsSize->value()/2)));
-  
-  return False;
-}
+		Vector<Float> a(2);
+		a[0]=0;
+		a[1]=0;
+		return a;
+	}
+	void DSMarker::setSize(const uInt newSize) {
+		itsSize->setValue(newSize);
+		updateHandle();
+	}
 
-Bool DSMarker::setOptions(const Record& settings) {
-  Bool localChange = False;
-  
-  if (settings.isDefined("center")) {
-    if (!itsValid) itsValid = True;
-    itsCenter = settings.asArrayFloat("center");
-  }
+	void DSMarker::scale(const Float& scaleFactor) {
+		if (Int(itsSize->value() * scaleFactor) > 2) {
+			itsSize->setValue(Int(itsSize->value() * scaleFactor));
+			updateHandle();
+		}
+	}
 
-  if (itsSize->fromRecord(settings)) localChange = True;
+	void DSMarker::draw(PixelCanvas* pc) {
+		if (itsValid) {
+			pc->setLineWidth(DSBasic::getLineWidth());
+			pc->setColor(DisplayShape::getColor());
+			pc->drawMarker(itsCenter[0], itsCenter[1],
+			               itsMarkerStyle, itsSize->value());
+		}
+		DSBasic::draw(pc);
+	}
 
-  if (settings.isDefined("markerstyle")) {
-    Int temp = settings.asInt("markerstyle");
-    Display::Marker newStyle = static_cast<Display::Marker>(temp);
-    
-    if (newStyle != itsMarkerStyle) {
-      localChange = True;
-      itsMarkerStyle = newStyle;
-    }
-  }
-  
-  if (DSBasic::setOptions(settings)) localChange = True;
-  if (localChange) updateHandle();
-  return localChange;
-}
+	Bool DSMarker::inObject(const Float& xPos, const Float& yPos) {
+		if (itsValid)
 
-Record DSMarker::getOptions() {
-  Record rec = DSBasic::getOptions();
-  rec.removeField("type");
-  
-  rec.define("type", "marker");
-  if (itsValid) rec.define("center", itsCenter);
+			return ((xPos < itsCenter[0] + (itsSize->value()/2) ) &&
+			        (xPos > itsCenter[0] - (itsSize->value()/2)) &&
+			        (yPos > itsCenter[1] - (itsSize->value()/2)) &&
+			        (yPos < itsCenter[1] + (itsSize->value()/2)));
 
-  itsSize->toRecord(rec);
-  rec.define("markerstyle", itsMarkerStyle);
+		return False;
+	}
 
-  return rec;
-}
+	Bool DSMarker::setOptions(const Record& settings) {
+		Bool localChange = False;
 
-void DSMarker::setDefaultOptions() {
-  itsCenter.resize(2);
+		if (settings.isDefined("center")) {
+			if (!itsValid) itsValid = True;
+			itsCenter = settings.asArrayFloat("center");
+		}
 
-  itsMarkerStyle = Display::Square;
-  itsValid = False; itsBuiltHandle = False;
-}
+		if (itsSize->fromRecord(settings)) localChange = True;
 
-void DSMarker::updateHandle() {
-  if (itsValid) {
+		if (settings.isDefined("markerstyle")) {
+			Int temp = settings.asInt("markerstyle");
+			Display::Marker newStyle = static_cast<Display::Marker>(temp);
 
-    itsHandle.resize(1,2);
-    itsHandle(0,0) = itsCenter(0) - (0.5 * itsSize->value());
-    itsHandle(0,1) = itsCenter(1) - (0.5 * itsSize->value());
-    
-    if(itsBuiltHandle) {
-      setHandlePositions(itsHandle);
-    } else {
-      buildHandles(itsHandle);
-      itsBuiltHandle = True;
-    }
-  }
+			if (newStyle != itsMarkerStyle) {
+				localChange = True;
+				itsMarkerStyle = newStyle;
+			}
+		}
 
-}
+		if (DSBasic::setOptions(settings)) localChange = True;
+		if (localChange) updateHandle();
+		return localChange;
+	}
+
+	Record DSMarker::getOptions() {
+		Record rec = DSBasic::getOptions();
+		rec.removeField("type");
+
+		rec.define("type", "marker");
+		if (itsValid) rec.define("center", itsCenter);
+
+		itsSize->toRecord(rec);
+		rec.define("markerstyle", itsMarkerStyle);
+
+		return rec;
+	}
+
+	void DSMarker::setDefaultOptions() {
+		itsCenter.resize(2);
+
+		itsMarkerStyle = Display::Square;
+		itsValid = False;
+		itsBuiltHandle = False;
+	}
+
+	void DSMarker::updateHandle() {
+		if (itsValid) {
+
+			itsHandle.resize(1,2);
+			itsHandle(0,0) = itsCenter(0) - (0.5 * itsSize->value());
+			itsHandle(0,1) = itsCenter(1) - (0.5 * itsSize->value());
+
+			if(itsBuiltHandle) {
+				setHandlePositions(itsHandle);
+			} else {
+				buildHandles(itsHandle);
+				itsBuiltHandle = True;
+			}
+		}
+
+	}
 
 
 

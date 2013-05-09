@@ -30,127 +30,127 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-WCToolPosEH::WCToolPosEH(WCTool *tool) :
-  itsTool(tool) { }
-void WCToolPosEH::operator()(const WCPositionEvent& ev) {
-  (*itsTool)(ev);
-}
-WCToolMotEH::WCToolMotEH(WCTool *tool) : 
-  itsTool(tool) { }
-void WCToolMotEH::operator()(const WCMotionEvent& ev) {
-  (*itsTool)(ev);
-}
-WCToolRefEH::WCToolRefEH(WCTool *tool) : 
-  itsTool(tool) { }
-void WCToolRefEH::operator()(const WCRefreshEvent& ev) {
-  (*itsTool)(ev);
-}
+	WCToolPosEH::WCToolPosEH(WCTool *tool) :
+		itsTool(tool) { }
+	void WCToolPosEH::operator()(const WCPositionEvent& ev) {
+		(*itsTool)(ev);
+	}
+	WCToolMotEH::WCToolMotEH(WCTool *tool) :
+		itsTool(tool) { }
+	void WCToolMotEH::operator()(const WCMotionEvent& ev) {
+		(*itsTool)(ev);
+	}
+	WCToolRefEH::WCToolRefEH(WCTool *tool) :
+		itsTool(tool) { }
+	void WCToolRefEH::operator()(const WCRefreshEvent& ev) {
+		(*itsTool)(ev);
+	}
 
-WCTool::WCTool(WorldCanvas *wcanvas,
-	       const Display::KeySym &keysym) :
-  DisplayTool(keysym),
-  itsWorldCanvas(wcanvas),
-  itsPixelCanvas(itsWorldCanvas->pixelCanvas()),
-  itsEventHandlersRegistered(False) {
-  itsPositionEH = new WCToolPosEH(this);
-  itsMotionEH = new WCToolMotEH(this);
-  itsRefreshEH = new WCToolRefEH(this);
-  enable();
-}
+	WCTool::WCTool(WorldCanvas *wcanvas,
+	               const Display::KeySym &keysym) :
+		DisplayTool(keysym),
+		itsWorldCanvas(wcanvas),
+		itsPixelCanvas(itsWorldCanvas->pixelCanvas()),
+		itsEventHandlersRegistered(False) {
+		itsPositionEH = new WCToolPosEH(this);
+		itsMotionEH = new WCToolMotEH(this);
+		itsRefreshEH = new WCToolRefEH(this);
+		enable();
+	}
 
-WCTool::~WCTool() {
-  disable();
-  delete itsRefreshEH;
-  delete itsMotionEH;
-  delete itsPositionEH;
-}
+	WCTool::~WCTool() {
+		disable();
+		delete itsRefreshEH;
+		delete itsMotionEH;
+		delete itsPositionEH;
+	}
 
-void WCTool::enable() {
-  if (!itsEventHandlersRegistered) {
-    itsEventHandlersRegistered = True;
-    itsWorldCanvas->addPositionEventHandler(*itsPositionEH);
-    itsWorldCanvas->addMotionEventHandler(*itsMotionEH);
-    itsWorldCanvas->addRefreshEventHandler(*itsRefreshEH);
-  }
-}
+	void WCTool::enable() {
+		if (!itsEventHandlersRegistered) {
+			itsEventHandlersRegistered = True;
+			itsWorldCanvas->addPositionEventHandler(*itsPositionEH);
+			itsWorldCanvas->addMotionEventHandler(*itsMotionEH);
+			itsWorldCanvas->addRefreshEventHandler(*itsRefreshEH);
+		}
+	}
 
-void WCTool::disable() {
-  if (itsEventHandlersRegistered) {
-    itsEventHandlersRegistered = False;
-    itsWorldCanvas->removePositionEventHandler(*itsPositionEH);
-    itsWorldCanvas->removeMotionEventHandler(*itsMotionEH);
-    itsWorldCanvas->removeRefreshEventHandler(*itsRefreshEH);
-  }
-}
+	void WCTool::disable() {
+		if (itsEventHandlersRegistered) {
+			itsEventHandlersRegistered = False;
+			itsWorldCanvas->removePositionEventHandler(*itsPositionEH);
+			itsWorldCanvas->removeMotionEventHandler(*itsMotionEH);
+			itsWorldCanvas->removeRefreshEventHandler(*itsRefreshEH);
+		}
+	}
 
-void WCTool::operator()(const WCPositionEvent &ev) {
-  if (ev.key() != getKey() || getKey( ) == Display::K_None) {
-    if (ev.keystate()) {
-      otherKeyPressed(ev);
-    } else {
-      otherKeyReleased(ev);
-    }
-  } else {
-    if (ev.keystate()) {
-      keyPressed(ev);
-    } else {
-      keyReleased(ev);
-    }
-  }
-}
+	void WCTool::operator()(const WCPositionEvent &ev) {
+		if (ev.key() != getKey() || getKey( ) == Display::K_None) {
+			if (ev.keystate()) {
+				otherKeyPressed(ev);
+			} else {
+				otherKeyReleased(ev);
+			}
+		} else {
+			if (ev.keystate()) {
+				keyPressed(ev);
+			} else {
+				keyReleased(ev);
+			}
+		}
+	}
 
-void WCTool::operator()(const WCMotionEvent &ev) {
-  static viewer::region::region_list_type empty;
-  moved(ev,empty);
-}
- 
-void WCTool::operator()(const WCRefreshEvent &ev) {
-  refresh(ev);
-}
+	void WCTool::operator()(const WCMotionEvent &ev) {
+		static viewer::region::region_list_type empty;
+		moved(ev,empty);
+	}
 
-void WCTool::keyPressed(const WCPositionEvent &) {
-}
+	void WCTool::operator()(const WCRefreshEvent &ev) {
+		refresh(ev);
+	}
 
-void WCTool::keyReleased(const WCPositionEvent &) {
-}
+	void WCTool::keyPressed(const WCPositionEvent &) {
+	}
 
-void WCTool::otherKeyPressed(const WCPositionEvent &) {
-}
+	void WCTool::keyReleased(const WCPositionEvent &) {
+	}
 
-void WCTool::otherKeyReleased(const WCPositionEvent &) {
-}
+	void WCTool::otherKeyPressed(const WCPositionEvent &) {
+	}
 
-void WCTool::moved(const WCMotionEvent &, const viewer::region::region_list_type &) {
-}
+	void WCTool::otherKeyReleased(const WCPositionEvent &) {
+	}
 
-void WCTool::refresh(const WCRefreshEvent &) {
-}
+	void WCTool::moved(const WCMotionEvent &, const viewer::region::region_list_type &) {
+	}
+
+	void WCTool::refresh(const WCRefreshEvent &) {
+	}
 
 // (Required) default constructor.
-WCTool::WCTool() :
-  DisplayTool(),
-  itsWorldCanvas(0),
-  itsPixelCanvas(0),
-  itsEventHandlersRegistered(False),
-  itsPositionEH(0),
-  itsMotionEH(0),
-  itsRefreshEH(0) {
-}
+	WCTool::WCTool() :
+		DisplayTool(),
+		itsWorldCanvas(0),
+		itsPixelCanvas(0),
+		itsEventHandlersRegistered(False),
+		itsPositionEH(0),
+		itsMotionEH(0),
+		itsRefreshEH(0) {
+	}
 
 // (Required) copy constructor.
-WCTool::WCTool(const WCTool &other) :
-  DisplayTool(other) {
-  // NOT YET IMPLEMENTED
-}
+	WCTool::WCTool(const WCTool &other) :
+		DisplayTool(other) {
+		// NOT YET IMPLEMENTED
+	}
 
 // (Required) copy assignment.
-WCTool &WCTool::operator=(const WCTool &other) {
-  if (this != &other) {
-    DisplayTool::operator=(other);
-    // NOT YET IMPLEMENTED
-  }
-  return *this;
-}
+	WCTool &WCTool::operator=(const WCTool &other) {
+		if (this != &other) {
+			DisplayTool::operator=(other);
+			// NOT YET IMPLEMENTED
+		}
+		return *this;
+	}
 
 
 

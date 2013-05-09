@@ -1,4 +1,4 @@
-//# AttributeBuffer.h: Buffer to store Attributes 
+//# AttributeBuffer.h: Buffer to store Attributes
 //# Copyright (C) 1996,1997,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -35,17 +35,17 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class String;
-class AttValBase;
-class Attribute;
+	class String;
+	class AttValBase;
+	class Attribute;
 
 
 // <summary> Buffer for storing Attributes </summary>
 // <use visibility=local>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <prerequisite>
 //   <li> Attributes
 // </prerequisite>
@@ -142,13 +142,13 @@ class Attribute;
 // information is passed and eg. what type it is. The code there looks like:
 //
 // <srcblock>
-// Bool WorldCanvasHolder::sizeControlEH(WorldCanvas *wCanvas) 
+// Bool WorldCanvasHolder::sizeControlEH(WorldCanvas *wCanvas)
 //
-//   AttributeBuffer sizeControlAtts; 
+//   AttributeBuffer sizeControlAtts;
 //
 //    // rewind the List of DisplayDatas registered withe this WorldCanvasHolder
 //    displayListIter->toStart();
-//  
+//
 //    // temp
 //    DisplayData *dData;
 //
@@ -170,7 +170,7 @@ class Attribute;
 //
 //    // things went ok
 //    return True;
-//  }  
+//  }
 // </srcblock>
 // </synopsis>
 //
@@ -179,7 +179,7 @@ class Attribute;
 // </srcBlock>
 // </example>
 //
-// <motivation> 
+// <motivation>
 //
 // For efficient handling of all the Attributes that a class in the Display
 // Library can have, a buffer is needed, with an interface that makes handling
@@ -187,275 +187,275 @@ class Attribute;
 //
 // </motivation>
 //
- 
-
-class AttributeBuffer {
 
- public:
-
-  // Constructor of empty buffer
-  AttributeBuffer();
 
-  // Copy constructor. Copy semantics.
-  AttributeBuffer(const AttributeBuffer& other);
+	class AttributeBuffer {
 
-  // Assignement operator
-  const AttributeBuffer& operator=(const AttributeBuffer& other);
-  
-  // Destructor
-  ~AttributeBuffer();
+	public:
 
-  // Return number of Attributes in the buffer
-  Int  nelements() const;
-  
-  // Define  new Attributes. If an Attribute of the same name exists, nothing
-  // happens. If <src>permanent == True</src>, the Attribute cannot be deleted
-  // from the Buffer.
-  // <group>
-  void add(const AttributeBuffer& otherBuf);
-  void add(const Attribute& newAttribute, const Bool permanent = False);
-  //</group>
+		// Constructor of empty buffer
+		AttributeBuffer();
 
-  // Add new Attributes. For type uInt, Int, Float and Double, the Attribute
-  // has tolerance (see AttributeValueTol), for Bool and String it has not
-  // (obviously). <src>strict</src> defines how Attribute match. See
-  // AttributeValue for the explanation of <src>strict</src> <group>
-  void add(const String& name, const uInt newValue, 
-           const uInt tolerance = 0, const Bool strict = False, 
-           const Bool permanent = False);
+		// Copy constructor. Copy semantics.
+		AttributeBuffer(const AttributeBuffer& other);
 
-  void add(const String& name, const Int newValue, 
-           const Int tolerance = 0, const Bool strict = False, 
-           const Bool permanent = False);
+		// Assignement operator
+		const AttributeBuffer& operator=(const AttributeBuffer& other);
 
-  void add(const String& name, const Float newValue, 
-           const Float tolerance = 0.0, const Bool strict = False, 
-           const Bool permanent = False);
+		// Destructor
+		~AttributeBuffer();
 
-  void add(const String& name, const Double newValue, 
-           const Double tolerance = 0.0, const Bool strict = False, 
-           const Bool permanent = False);
+		// Return number of Attributes in the buffer
+		Int  nelements() const;
 
-  void add(const String& name, const Bool newValue, 
-           const Bool strict = False, const Bool permanent = False);
+		// Define  new Attributes. If an Attribute of the same name exists, nothing
+		// happens. If <src>permanent == True</src>, the Attribute cannot be deleted
+		// from the Buffer.
+		// <group>
+		void add(const AttributeBuffer& otherBuf);
+		void add(const Attribute& newAttribute, const Bool permanent = False);
+		//</group>
 
-  void add(const String& name, const String& newValue, 
-           const Bool strict = False, const Bool permanent = False);
-
-  void add(const String& name, const Quantity newValue,
-	   const Bool strict = False, const Bool permanent = False);
-
+		// Add new Attributes. For type uInt, Int, Float and Double, the Attribute
+		// has tolerance (see AttributeValueTol), for Bool and String it has not
+		// (obviously). <src>strict</src> defines how Attribute match. See
+		// AttributeValue for the explanation of <src>strict</src> <group>
+		void add(const String& name, const uInt newValue,
+		         const uInt tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name, const Vector<uInt>& newValue, 
-           const uInt tolerance = 0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, const Int newValue,
+		         const Int tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name, const Vector<Int>& newValue, 
-           const Int tolerance = 0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, const Float newValue,
+		         const Float tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name, const Vector<Float>& newValue, 
-           const Float tolerance = 0.0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, const Double newValue,
+		         const Double tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name, const Vector<Double>& newValue, 
-           const Double tolerance = 0.0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, const Bool newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void add(const String& name, const Vector<Bool>& newValue,
-           const Bool strict = False, const Bool permanent = False);
+		void add(const String& name, const String& newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void add(const String& name, const Vector<String>& newValue,
-           const Bool strict = False, const Bool permanent = False);
+		void add(const String& name, const Quantity newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void add(const String& name, const Vector<Quantity>& newValue,
-	   const Bool strict = False, const Bool permanent = False);
 
-  // </group>
+		void add(const String& name, const Vector<uInt>& newValue,
+		         const uInt tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  // Add new Attributes. These are the pointer versions. Using these members
-  // will create Attributes based on AttributeValueTol or
-  // AttributeValuePoiTol. This means that if the Attribute is modified, the
-  // variable used to define the Attribute also changes and vice versa.
-  // <group>
-  void add(const String& name,  uInt *newValue, 
-           const uInt tolerance = 0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, const Vector<Int>& newValue,
+		         const Int tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name,  Int *newValue, 
-           const Int tolerance = 0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, const Vector<Float>& newValue,
+		         const Float tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name, Float *newValue, 
-           const Float tolerance = 0.0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, const Vector<Double>& newValue,
+		         const Double tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name, Double  *newValue, 
-           const Double tolerance = 0.0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, const Vector<Bool>& newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void add(const String& name, Bool *newValue, 
-           const Bool strict = False, const Bool permanent = False);
+		void add(const String& name, const Vector<String>& newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void add(const String& name, String *newValue, 
-           const Bool strict = False, const Bool permanent = False);
+		void add(const String& name, const Vector<Quantity>& newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void add(const String& name, Quantity *newValue,
-	   const Bool strict = False, const Bool permanent = False);
-  
+		// </group>
 
-  void add(const String& name, Vector<uInt> *newValue, 
-           const uInt tolerance = 0, const Bool strict = False, 
-           const Bool permanent = False);
+		// Add new Attributes. These are the pointer versions. Using these members
+		// will create Attributes based on AttributeValueTol or
+		// AttributeValuePoiTol. This means that if the Attribute is modified, the
+		// variable used to define the Attribute also changes and vice versa.
+		// <group>
+		void add(const String& name,  uInt *newValue,
+		         const uInt tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name, Vector<Int> *newValue, 
-           const Int tolerance = 0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name,  Int *newValue,
+		         const Int tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name,  Vector<Float> *newValue, 
-           const Float tolerance = 0.0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, Float *newValue,
+		         const Float tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name,  Vector<Double> *newValue, 
-           const Double tolerance = 0.0, const Bool strict = False, 
-           const Bool permanent = False);
+		void add(const String& name, Double  *newValue,
+		         const Double tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void add(const String& name,  Vector<Bool> *newValue, 
-           const Bool strict = False, const Bool permanent = False);
+		void add(const String& name, Bool *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void add(const String& name, Vector<String> *newValue,
-           const Bool strict = False, const Bool permanent = False);
-  
-  void add(const String& name, Vector<Quantity> *newValue,
-	   const Bool strict = False, const Bool permanent = False);
+		void add(const String& name, String *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  // </group>
+		void add(const String& name, Quantity *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
 
-  // Set the value of an Attribute. If the Attribute does not exist, it is
-  // created (using the corresponding add function with permanent set to
-  // False), otherwise the value of the existing Attribute, if it is of the
-  // correct type) will be changed. If the Attribute has a different type than
-  // the variable used in the set function, nothing happens (but I may change
-  // my mind and  throw an exception).
-  // <group>
-  void set(const AttributeBuffer& otherBuf);
-  void set(const Attribute& newAttribute);
+		void add(const String& name, Vector<uInt> *newValue,
+		         const uInt tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void set(const String& name, const uInt newValue, 
-           const uInt tolerance = 0, const Bool strict = False);
+		void add(const String& name, Vector<Int> *newValue,
+		         const Int tolerance = 0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void set(const String& name, const Int newValue, 
-           const Int tolerance = 0, const Bool strict = False);
+		void add(const String& name,  Vector<Float> *newValue,
+		         const Float tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void set(const String& name, const Float newValue, 
-           const Float tolerance = 0.0, const Bool strict = False);
+		void add(const String& name,  Vector<Double> *newValue,
+		         const Double tolerance = 0.0, const Bool strict = False,
+		         const Bool permanent = False);
 
-  void set(const String& name, const Double newValue, 
-           const Double tolerance = 0.0, const Bool strict = False);
+		void add(const String& name,  Vector<Bool> *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void set(const String& name, const Bool newValue, 
-           const Bool strict = False);
+		void add(const String& name, Vector<String> *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void set(const String& name, const String& newValue, 
-           const Bool strict = False);
+		void add(const String& name, Vector<Quantity> *newValue,
+		         const Bool strict = False, const Bool permanent = False);
 
-  void set(const String& name, const Quantity newValue,
-	   const Bool strict = False);
+		// </group>
 
 
-  void set(const String& name, const Vector<uInt>& newValue, 
-           const uInt tolerance = 0, const Bool strict = False);
+		// Set the value of an Attribute. If the Attribute does not exist, it is
+		// created (using the corresponding add function with permanent set to
+		// False), otherwise the value of the existing Attribute, if it is of the
+		// correct type) will be changed. If the Attribute has a different type than
+		// the variable used in the set function, nothing happens (but I may change
+		// my mind and  throw an exception).
+		// <group>
+		void set(const AttributeBuffer& otherBuf);
+		void set(const Attribute& newAttribute);
 
-  void set(const String& name, const Vector<Int>& newValue, 
-           const Int tolerance = 0, const Bool strict = False);
+		void set(const String& name, const uInt newValue,
+		         const uInt tolerance = 0, const Bool strict = False);
 
-  void set(const String& name, const Vector<Float>& newValue, 
-           const Float tolerance = 0.0, const Bool strict = False);
+		void set(const String& name, const Int newValue,
+		         const Int tolerance = 0, const Bool strict = False);
 
-  void set(const String& name, const Vector<Double>& newValue, 
-           const Double tolerance = 0.0, const Bool strict = False);
+		void set(const String& name, const Float newValue,
+		         const Float tolerance = 0.0, const Bool strict = False);
 
-  void set(const String& name, const Vector<Bool>& newValue,
-           const Bool strict = False);
+		void set(const String& name, const Double newValue,
+		         const Double tolerance = 0.0, const Bool strict = False);
 
-  void set(const String& name, const Vector<String>& newValue,
-           const Bool strict = False);
+		void set(const String& name, const Bool newValue,
+		         const Bool strict = False);
 
-  void set(const String& name, const Vector<Quantity>& newValue,
-	   const Bool strict = False);
+		void set(const String& name, const String& newValue,
+		         const Bool strict = False);
 
-  // </group>
+		void set(const String& name, const Quantity newValue,
+		         const Bool strict = False);
 
-  // Get tha value of the named Attribute.  Returns <src>True</src> for
-  // success, and <src>False</src> for failure.  This can happen if the
-  // caller asked for the wrong type.
-  template <class T> Bool getValue(const String &name, Vector<T> &value) const;
-  template <class T> Bool getValue(const String &name, T &value) const;
 
-  // Get the pointer to the Attribute if it exists, else get 0
-  Attribute *getAttribute(const String& name) const;
-  
-  // Get pointer to the AttributeValue if it exists, else get 0
-  AttributeValueBase *getAttributeValue(const String& name) const;
-  
-  // Get the data type of the Attribute
-  AttValue::ValueType getDataType(const String& name) const;
-  
-  // Function to see if Attribute res matches any Attribute in the
-  // AttributeBuffer *this. 
-  Bool matches(const Attribute& res) const;
+		void set(const String& name, const Vector<uInt>& newValue,
+		         const uInt tolerance = 0, const Bool strict = False);
 
-  // Function to see if  every Attribute in the AttributeBuffer resBuf
-  // matches every Attribute in the AttributeBuffer *this. Returns
-  // True if this is the case, returns False if for at least one Attribute
-  // in resBuf there is a mismatch.
-  Bool matches(const AttributeBuffer& resBuf) const;
+		void set(const String& name, const Vector<Int>& newValue,
+		         const Int tolerance = 0, const Bool strict = False);
 
-  // AttributeBuffer addition arithmetic.  Go through <src>*this</src>
-  // buffer, and for those Attributes who have equivalents in
-  // <src>other</src>, sum the values.
-  void operator+=(const AttributeBuffer &other);
+		void set(const String& name, const Vector<Float>& newValue,
+		         const Float tolerance = 0.0, const Bool strict = False);
 
-  // Remove Attributes from the AttributeBuffer. Only works on Attributes that
-  // are not permanent
-  // <group>
-  void remove(const String& name);
-  void clear();
-  // </group>
+		void set(const String& name, const Vector<Double>& newValue,
+		         const Double tolerance = 0.0, const Bool strict = False);
 
-  // Check if an Attribute with name name exists
-  Bool exists(const String& name) const;
+		void set(const String& name, const Vector<Bool>& newValue,
+		         const Bool strict = False);
 
-  // Add the Attributes of *this to other
-  void addBuff(AttributeBuffer& other) const;
+		void set(const String& name, const Vector<String>& newValue,
+		         const Bool strict = False);
 
-  // Set the Attributes of *this to other
-  void setBuff(AttributeBuffer& other) const;
+		void set(const String& name, const Vector<Quantity>& newValue,
+		         const Bool strict = False);
 
- private:
+		// </group>
 
-  friend ostream &operator<<(ostream &, AttributeBuffer &);
+		// Get tha value of the named Attribute.  Returns <src>True</src> for
+		// success, and <src>False</src> for failure.  This can happen if the
+		// caller asked for the wrong type.
+		template <class T> Bool getValue(const String &name, Vector<T> &value) const;
+		template <class T> Bool getValue(const String &name, T &value) const;
 
-  // PtrBlock for the Attributes. Should change this to a list
-  PtrBlock<Attribute *> attributes;
+		// Get the pointer to the Attribute if it exists, else get 0
+		Attribute *getAttribute(const String& name) const;
 
-  // Store if an Attribute is permamnent or not
-  Block<Bool> nonDeletable;
-  
-  // Internal routine to add an Attribute to the Buffer
-  void addAttributeToBuffer(Attribute *newAttribute, const Bool permanent);
+		// Get pointer to the AttributeValue if it exists, else get 0
+		AttributeValueBase *getAttributeValue(const String& name) const;
 
-  // Check if an Attribute exists and return the index in the PtrBlock
-  Bool exists(const String& name, Int& found) const;
+		// Get the data type of the Attribute
+		AttValue::ValueType getDataType(const String& name) const;
 
-  // Remove Attributes from the AttributeBuffer. Also erases  Attributes that
-  // are permanent. Only used in operator=.
-  void erase();
-  
-};
+		// Function to see if Attribute res matches any Attribute in the
+		// AttributeBuffer *this.
+		Bool matches(const Attribute& res) const;
 
-ostream &operator<<(ostream &os, AttributeBuffer &ab);
+		// Function to see if  every Attribute in the AttributeBuffer resBuf
+		// matches every Attribute in the AttributeBuffer *this. Returns
+		// True if this is the case, returns False if for at least one Attribute
+		// in resBuf there is a mismatch.
+		Bool matches(const AttributeBuffer& resBuf) const;
+
+		// AttributeBuffer addition arithmetic.  Go through <src>*this</src>
+		// buffer, and for those Attributes who have equivalents in
+		// <src>other</src>, sum the values.
+		void operator+=(const AttributeBuffer &other);
+
+		// Remove Attributes from the AttributeBuffer. Only works on Attributes that
+		// are not permanent
+		// <group>
+		void remove(const String& name);
+		void clear();
+		// </group>
+
+		// Check if an Attribute with name name exists
+		Bool exists(const String& name) const;
+
+		// Add the Attributes of *this to other
+		void addBuff(AttributeBuffer& other) const;
+
+		// Set the Attributes of *this to other
+		void setBuff(AttributeBuffer& other) const;
+
+	private:
+
+		friend ostream &operator<<(ostream &, AttributeBuffer &);
+
+		// PtrBlock for the Attributes. Should change this to a list
+		PtrBlock<Attribute *> attributes;
+
+		// Store if an Attribute is permamnent or not
+		Block<Bool> nonDeletable;
+
+		// Internal routine to add an Attribute to the Buffer
+		void addAttributeToBuffer(Attribute *newAttribute, const Bool permanent);
+
+		// Check if an Attribute exists and return the index in the PtrBlock
+		Bool exists(const String& name, Int& found) const;
+
+		// Remove Attributes from the AttributeBuffer. Also erases  Attributes that
+		// are permanent. Only used in operator=.
+		void erase();
+
+	};
+
+	ostream &operator<<(ostream &os, AttributeBuffer &ab);
 
 
 } //# NAMESPACE CASA - END

@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSPIXELPOLYLINE_H
 #define TRIALDISPLAY_DSPIXELPOLYLINE_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DSPolyLine.h>
@@ -41,31 +41,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of an absolute pixel DSPolyLine
 // </summary>
 
-class PanelDisplay;
-class DSWorldPolyLine;
-class DSScreenPolyLine;
+	class PanelDisplay;
+	class DSWorldPolyLine;
+	class DSScreenPolyLine;
 
-class DSPixelPolyLine : public DSPolyLine , public DisplayShapeWithCoords{
-  
-public:
-  
-  DSPixelPolyLine();
-  DSPixelPolyLine(const Record& settings);
-  DSPixelPolyLine(DSScreenPolyLine& other);
-  DSPixelPolyLine(DSWorldPolyLine& other);
-  
-  virtual ~DSPixelPolyLine();
+	class DSPixelPolyLine : public DSPolyLine , public DisplayShapeWithCoords {
 
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();  
-  
-  virtual Record getRawOptions() {
-    return DSPolyLine::getOptions();
-  }
-  
-private:
-  
-};
+	public:
+
+		DSPixelPolyLine();
+		DSPixelPolyLine(const Record& settings);
+		DSPixelPolyLine(DSScreenPolyLine& other);
+		DSPixelPolyLine(DSWorldPolyLine& other);
+
+		virtual ~DSPixelPolyLine();
+
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		virtual Record getRawOptions() {
+			return DSPolyLine::getOptions();
+		}
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

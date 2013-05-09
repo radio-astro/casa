@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <casa/aips.h>
 
@@ -33,130 +33,130 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSSquare::DSSquare() :
-  DSRectangle() {
-}
+	DSSquare::DSSquare() :
+		DSRectangle() {
+	}
 
-DSSquare::DSSquare(const DSSquare& other) :
-  DSRectangle(other) {
+	DSSquare::DSSquare(const DSSquare& other) :
+		DSRectangle(other) {
 
-}
+	}
 
-DSSquare::~DSSquare() {
+	DSSquare::~DSSquare() {
 
-}
+	}
 
-DSSquare::DSSquare(const Float& xPos, const Float& yPos, const Float& size, 
-		   const Bool& handles, const Bool& drawHandles) :
-  DSRectangle(xPos,yPos,size,size,handles,drawHandles) {
-}
+	DSSquare::DSSquare(const Float& xPos, const Float& yPos, const Float& size,
+	                   const Bool& handles, const Bool& drawHandles) :
+		DSRectangle(xPos,yPos,size,size,handles,drawHandles) {
+	}
 
-void DSSquare::setSize(const Float& size) {
-  DSRectangle::setWidth(size);
-  DSRectangle::setHeight(size);
-}
+	void DSSquare::setSize(const Float& size) {
+		DSRectangle::setWidth(size);
+		DSRectangle::setHeight(size);
+	}
 
-Bool DSSquare::setOptions(const Record& settings){
-  Bool localChange = False;
-  Record newsettings(settings);
+	Bool DSSquare::setOptions(const Record& settings) {
+		Bool localChange = False;
+		Record newsettings(settings);
 
-  if (newsettings.isDefined("size")) {
+		if (newsettings.isDefined("size")) {
 
-    if (newsettings.isDefined("height")) newsettings.removeField("height");
-    if (newsettings.isDefined("width")) newsettings.removeField("width");
+			if (newsettings.isDefined("height")) newsettings.removeField("height");
+			if (newsettings.isDefined("width")) newsettings.removeField("width");
 
-    newsettings.define("height", newsettings.asFloat("size"));
-    newsettings.define("width", newsettings.asFloat("size"));
+			newsettings.define("height", newsettings.asFloat("size"));
+			newsettings.define("width", newsettings.asFloat("size"));
 
-  }
+		}
 
-  if (DSRectangle::setOptions(newsettings)) localChange = True;
-  return localChange;
-  
-}
+		if (DSRectangle::setOptions(newsettings)) localChange = True;
+		return localChange;
 
-Record DSSquare::getOptions() {
-  Record rec(DSRectangle::getOptions());
-  rec.define("type", "square");
-  rec.define("size",getHeight());
-  
-  if (rec.isDefined("width")) rec.removeField("width");
-  if (rec.isDefined("height")) rec.removeField("height");
+	}
 
-  return rec;
-}
+	Record DSSquare::getOptions() {
+		Record rec(DSRectangle::getOptions());
+		rec.define("type", "square");
+		rec.define("size",getHeight());
 
-void DSSquare::changePoint(const Vector<Float>& pos, const Int nPoint) {
-  Float itsAngle(getAngle());
-  Matrix<Float> currentPoints(getPoints());
-  Vector<Float> currentCenter(getCenter());
+		if (rec.isDefined("width")) rec.removeField("width");
+		if (rec.isDefined("height")) rec.removeField("height");
 
-  Matrix<Float> unRotated(rotatePolygon(currentPoints,
-					-(toRadians(itsAngle)), 
-					currentCenter[0], currentCenter[1]));
+		return rec;
+	}
 
-  Vector<Float> clickPoint(rotatePoint(pos, 
-				       -(toRadians(itsAngle)), 
-				       currentCenter[0], currentCenter[1]));
+	void DSSquare::changePoint(const Vector<Float>& pos, const Int nPoint) {
+		Float itsAngle(getAngle());
+		Matrix<Float> currentPoints(getPoints());
+		Vector<Float> currentCenter(getCenter());
 
-  Float distance(hypot(clickPoint[0]-currentCenter[0], 
-		       clickPoint[1]-currentCenter[1]));
+		Matrix<Float> unRotated(rotatePolygon(currentPoints,
+		                                      -(toRadians(itsAngle)),
+		                                      currentCenter[0], currentCenter[1]));
 
-  Float angle(std::atan2(clickPoint[1] -  currentCenter[1],
-		         clickPoint[0] - currentCenter[0]));
-  Float compDist(cos(angle) * distance); 
+		Vector<Float> clickPoint(rotatePoint(pos,
+		                                     -(toRadians(itsAngle)),
+		                                     currentCenter[0], currentCenter[1]));
 
-  if (nPoint == 0) {
+		Float distance(hypot(clickPoint[0]-currentCenter[0],
+		                     clickPoint[1]-currentCenter[1]));
 
-    unRotated(0,0) = currentCenter[0] + compDist;
-    unRotated(0,1) = currentCenter[1] + compDist;
+		Float angle(std::atan2(clickPoint[1] -  currentCenter[1],
+		                       clickPoint[0] - currentCenter[0]));
+		Float compDist(cos(angle) * distance);
 
-    unRotated(1,0) = unRotated(0,0);
-    unRotated(3,1) = unRotated(0,1);
+		if (nPoint == 0) {
 
-  } else if (nPoint == 1) {
+			unRotated(0,0) = currentCenter[0] + compDist;
+			unRotated(0,1) = currentCenter[1] + compDist;
 
-    unRotated(1,0) = currentCenter[0] + compDist;
-    unRotated(1,1) = currentCenter[1] - compDist;
+			unRotated(1,0) = unRotated(0,0);
+			unRotated(3,1) = unRotated(0,1);
 
-    unRotated(0,0) = unRotated(1,0);
-    unRotated(2,1) = unRotated(1,1);
-    
-  } else if (nPoint == 2) {
+		} else if (nPoint == 1) {
 
-    unRotated(2,0) = currentCenter[0] + compDist;
-    unRotated(2,1) = currentCenter[1] + compDist;
+			unRotated(1,0) = currentCenter[0] + compDist;
+			unRotated(1,1) = currentCenter[1] - compDist;
 
-    unRotated(1,1) = unRotated(2,1);
-    unRotated(3,0) = unRotated(2,0);
+			unRotated(0,0) = unRotated(1,0);
+			unRotated(2,1) = unRotated(1,1);
 
-  } else if (nPoint == 3) {
+		} else if (nPoint == 2) {
 
-    unRotated(3,0) = currentCenter[0] + compDist;
-    unRotated(3,1) = currentCenter[1] - compDist;
+			unRotated(2,0) = currentCenter[0] + compDist;
+			unRotated(2,1) = currentCenter[1] + compDist;
 
-    unRotated(0,1) = unRotated(3,1);
-    unRotated(2,0) = unRotated(3,0);
-    
-  } else {
-    //cerr << "Debug - Error" << endl;
-  }
+			unRotated(1,1) = unRotated(2,1);
+			unRotated(3,0) = unRotated(2,0);
 
-  currentPoints = rotatePolygon(unRotated, toRadians(itsAngle), 
-				currentCenter[0], 
-				currentCenter[1]);
-  setPoints(currentPoints);
-}
+		} else if (nPoint == 3) {
 
-void DSSquare::changePoint(const Vector<Float>& pos) {
-  Matrix<Float> currentPoints(getPoints());
+			unRotated(3,0) = currentCenter[0] + compDist;
+			unRotated(3,1) = currentCenter[1] - compDist;
 
-  Int movingPoint(0);
-  closestPoint(currentPoints, pos[0], pos[1], movingPoint);
-  
-  changePoint(pos, movingPoint);
-  
-}
+			unRotated(0,1) = unRotated(3,1);
+			unRotated(2,0) = unRotated(3,0);
+
+		} else {
+			//cerr << "Debug - Error" << endl;
+		}
+
+		currentPoints = rotatePolygon(unRotated, toRadians(itsAngle),
+		                              currentCenter[0],
+		                              currentCenter[1]);
+		setPoints(currentPoints);
+	}
+
+	void DSSquare::changePoint(const Vector<Float>& pos) {
+		Matrix<Float> currentPoints(getPoints());
+
+		Int movingPoint(0);
+		closestPoint(currentPoints, pos[0], pos[1], movingPoint);
+
+		changePoint(pos, movingPoint);
+
+	}
 
 
 

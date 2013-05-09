@@ -92,7 +92,9 @@ class ViewerApp : public QApplication {
 public:
 	ViewerApp( int &argc, char **argv, bool gui_enabled ) : QApplication(argc, argv, gui_enabled), viewer_(0) { }
 	bool notify( QObject *receiver, QEvent *e );
-	void subscribe( QtViewer *v ) { viewer_ = v; }
+	void subscribe( QtViewer *v ) {
+		viewer_ = v;
+	}
 private:
 	QtViewer *viewer_;
 };
@@ -121,13 +123,13 @@ bool ViewerApp::notify( QObject *receiver, QEvent *e ) {
 		if ( recursion_count != 0 ) recursion_count--;
 		return false;
 	} catch ( viewer::internal_error e ) {
-	  qWarning( ) << "internal exception:" << e.what( );
-	  if ( recursion_count != 0 ) recursion_count--;
-        return false;
+		qWarning( ) << "internal exception:" << e.what( );
+		if ( recursion_count != 0 ) recursion_count--;
+		return false;
 	} catch ( std::exception e ) {
-	  qWarning( ) << "std exception:" << e.what( );
-	  if ( recursion_count != 0 ) recursion_count--;
-        return false;
+		qWarning( ) << "std exception:" << e.what( );
+		if ( recursion_count != 0 ) recursion_count--;
+		return false;
 	} catch ( ... ) {
 		qWarning("unhandled exception... ");
 		qDebug() << "from" << receiver->objectName() << "from event type" << e->type();
@@ -358,8 +360,7 @@ int main( int argc, const char *argv[] ) {
 
 	catch (const casa::AipsError& err) {
 		cerr<<"**"<<err.getMesg()<<endl;
-	}
-	catch (...) {
+	} catch (...) {
 		cerr<<"**non-AipsError exception**"<<endl;
 	}
 
@@ -471,13 +472,12 @@ static void preprocess_args( int argc, const char *argv[], int &numargs, char **
 	for ( int x = 1; x < argc; ++x ) {
 		if ( ! strcmp(argv[x], "--dbusname") ) {
 			++x;
-		}
-		else if ( strncmp( argv[x], "--server", 8 ) &&
-		          strncmp( argv[x], "--nogui", 7 ) &&
-		          strcmp( argv[x], "--persist" ) &&
-		          strcmp( argv[x], "--casapy" ) &&
-		          strcmp( argv[x], "--eso3d" ) &&
-		          strncmp( argv[x],"--dbusname",10) )
+		} else if ( strncmp( argv[x], "--server", 8 ) &&
+		            strncmp( argv[x], "--nogui", 7 ) &&
+		            strcmp( argv[x], "--persist" ) &&
+		            strcmp( argv[x], "--casapy" ) &&
+		            strcmp( argv[x], "--eso3d" ) &&
+		            strncmp( argv[x],"--dbusname",10) )
 			args[numargs++] = strdup(argv[x]);
 	}
 	args[numargs] = 0;

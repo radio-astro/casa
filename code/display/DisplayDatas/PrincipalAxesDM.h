@@ -35,123 +35,124 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvasHolder;
-class IPosition;
-class WorldCanvas;
-template <class T> class Vector;
+	class WorldCanvasHolder;
+	class IPosition;
+	class WorldCanvas;
+	template <class T> class Vector;
 
 // <summary>
 // Interface for DisplayMethods which have data arranged in "axes."
 // </summary>
 //
 // <synopsis>
-// This class adds to the interface defined by DisplayMethod to 
-// provide further infrastructure relevant to data which is 
+// This class adds to the interface defined by DisplayMethod to
+// provide further infrastructure relevant to data which is
 // arranged by axis (eg. lattice or column-based data).
 // </synopsis>
 
-class PrincipalAxesDM : public DisplayMethod {
+	class PrincipalAxesDM : public DisplayMethod {
 
- public:
+	public:
 
-  // User constructor.
-  PrincipalAxesDM(uInt xAxis, uInt yAxis, uInt mAxis, 
-		  PrincipalAxesDD *padd);
-  
-  // Destructor.
-  virtual ~PrincipalAxesDM();
+		// User constructor.
+		PrincipalAxesDM(uInt xAxis, uInt yAxis, uInt mAxis,
+		                PrincipalAxesDD *padd);
 
-  // Draw on the provided WorldCanvasHolder.  This method provides
-  // generic preparation that is common to all objects which are
-  // being sliced along principal axes.  It calls the pure virtual
-  // functions (below) which must be defined in fully typed derived
-  // classes.
-  virtual void draw(Display::RefreshReason reason,
-		    WorldCanvasHolder &wcHolder);
+		// Destructor.
+		virtual ~PrincipalAxesDM();
 
-  // clear drawlist state.
-  virtual void cleanup();
+		// Draw on the provided WorldCanvasHolder.  This method provides
+		// generic preparation that is common to all objects which are
+		// being sliced along principal axes.  It calls the pure virtual
+		// functions (below) which must be defined in fully typed derived
+		// classes.
+		virtual void draw(Display::RefreshReason reason,
+		                  WorldCanvasHolder &wcHolder);
 
- protected:
+		// clear drawlist state.
+		virtual void cleanup();
 
-  // This method does setup stuff that is common to all elements
-  // of an axis-bound display data element.
-  virtual void setup(IPosition fixedPos);
+	protected:
 
-  virtual void setup2d();
+		// This method does setup stuff that is common to all elements
+		// of an axis-bound display data element.
+		virtual void setup(IPosition fixedPos);
 
-  // This method should be defined in derived classes to simply
-  // return the shape of the data object, eg. Array.shape() or
-  // Image.shape(), etc.
-  virtual IPosition dataShape() = 0;
+		virtual void setup2d();
 
-  // This method should be defined in derived classes to actually
-  // draw the data contained in datMatrix, however it likes, starting
-  // at the point blc, on *wCanvas.  It *must* return a uInt which 
-  // indicates the drawListNumber it allocated for this drawing.
-  // If <src>usePixelEdges</src> is True, then the given blc and
-  // trc correspond to the world blc and trc of the first and last 
-  // pixels in the given data, otherwise they correspond to the world
-  // centres of the blc and trc pixels.
-  virtual uInt dataDrawSelf(WorldCanvas *wCanvas,
-			    const Vector<Double> &blc,
-			    const Vector<Double> &trc,
-			    const IPosition &start,
-			    const IPosition &sliceShape,
-			    const IPosition &stride,
-			    const Bool usePixelEdges = False) = 0;
-  
-  // Called by draw(): an optimization for ColormapChange in 24bit mode.
-  // Redraws the last image using only mapToColor on the WorldCanvas,
-  // if possible.  If it returns True, the new method
-  // WC::redrawIndexedImage() was used successfully (otherwise, draw()
-  // continues in the normal way).  Override to enable, if necessary
-  // (see LatticePADMRaster for an example).
-  virtual Bool dataRedrawSelf(WorldCanvas*, Display::RefreshReason) {
-    return False;
-  };
-  
-  // Some data members which all display elements along principal
-  // axes will play around with:
-  IPosition start;
-  IPosition sliceShape;
-  IPosition stride;
+		// This method should be defined in derived classes to simply
+		// return the shape of the data object, eg. Array.shape() or
+		// Image.shape(), etc.
+		virtual IPosition dataShape() = 0;
 
-  // Is a transpose necessary?
-  virtual Bool needToTranspose() {
-    return sliceShape(itsYAxisNum) >1 &&
-	  (sliceShape(itsXAxisNum)==1 || itsXAxisNum>itsYAxisNum); }
-	// The logic behind this cryptic code (see LatticePADM::dataGetSlice):
-	// If a either a 1xN or Nx1 slice (including 1x1) is requested,
-	// LatticePADM's latt.getSlice() Array will be 1-dimensional, which
-	// the Matrix = Array operator will turn into an Nx1 matrix.
-	// If, on the other hand, there is no degeneracy in the desired
-	// slice Matrix, it is returned in lattice (not X,Y) order.  (dk)
+		// This method should be defined in derived classes to actually
+		// draw the data contained in datMatrix, however it likes, starting
+		// at the point blc, on *wCanvas.  It *must* return a uInt which
+		// indicates the drawListNumber it allocated for this drawing.
+		// If <src>usePixelEdges</src> is True, then the given blc and
+		// trc correspond to the world blc and trc of the first and last
+		// pixels in the given data, otherwise they correspond to the world
+		// centres of the blc and trc pixels.
+		virtual uInt dataDrawSelf(WorldCanvas *wCanvas,
+		                          const Vector<Double> &blc,
+		                          const Vector<Double> &trc,
+		                          const IPosition &start,
+		                          const IPosition &sliceShape,
+		                          const IPosition &stride,
+		                          const Bool usePixelEdges = False) = 0;
 
-  // (Required) default constructor.
-  PrincipalAxesDM();
+		// Called by draw(): an optimization for ColormapChange in 24bit mode.
+		// Redraws the last image using only mapToColor on the WorldCanvas,
+		// if possible.  If it returns True, the new method
+		// WC::redrawIndexedImage() was used successfully (otherwise, draw()
+		// continues in the normal way).  Override to enable, if necessary
+		// (see LatticePADMRaster for an example).
+		virtual Bool dataRedrawSelf(WorldCanvas*, Display::RefreshReason) {
+			return False;
+		};
 
-  // (Required) copy constructor.
-  PrincipalAxesDM(const PrincipalAxesDM &other);
+		// Some data members which all display elements along principal
+		// axes will play around with:
+		IPosition start;
+		IPosition sliceShape;
+		IPosition stride;
 
-  // (Required) copy assignment.
-  void operator=(const PrincipalAxesDM &other);
-  
- private:
+		// Is a transpose necessary?
+		virtual Bool needToTranspose() {
+			return sliceShape(itsYAxisNum) >1 &&
+			       (sliceShape(itsXAxisNum)==1 || itsXAxisNum>itsYAxisNum);
+		}
+		// The logic behind this cryptic code (see LatticePADM::dataGetSlice):
+		// If a either a 1xN or Nx1 slice (including 1x1) is requested,
+		// LatticePADM's latt.getSlice() Array will be 1-dimensional, which
+		// the Matrix = Array operator will turn into an Nx1 matrix.
+		// If, on the other hand, there is no degeneracy in the desired
+		// slice Matrix, it is returned in lattice (not X,Y) order.  (dk)
 
-  // Axis numbers for internal book-keeping.
-  uInt itsXAxisNum, itsYAxisNum, itsZAxisNum;
+		// (Required) default constructor.
+		PrincipalAxesDM();
 
-  // Drawlist state.  Moved here, where it's used, from DisplayMethod,
-  // and made private.  11/03  dk.  The Caching side uses different
-  // state (and purgeCache(), rather than cleanup()).
+		// (Required) copy constructor.
+		PrincipalAxesDM(const PrincipalAxesDM &other);
 
-  Bool               notUsed;
-  WorldCanvasHolder *holder;
-  AttributeBuffer    drawState;
-  uInt               drawListNumber;
+		// (Required) copy assignment.
+		void operator=(const PrincipalAxesDM &other);
 
-};
+	private:
+
+		// Axis numbers for internal book-keeping.
+		uInt itsXAxisNum, itsYAxisNum, itsZAxisNum;
+
+		// Drawlist state.  Moved here, where it's used, from DisplayMethod,
+		// and made private.  11/03  dk.  The Caching side uses different
+		// state (and purgeCache(), rather than cleanup()).
+
+		Bool               notUsed;
+		WorldCanvasHolder *holder;
+		AttributeBuffer    drawState;
+		uInt               drawListNumber;
+
+	};
 
 
 } //# NAMESPACE CASA - END

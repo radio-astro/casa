@@ -30,14 +30,14 @@
 #define TRIALDISPLAY_TBLASRASTERDM_H
 
 #include <casa/aips.h>
-#include <tables/Tables/Table.h>           
-#include <display/Display/WorldCanvas.h>                  
+#include <tables/Tables/Table.h>
+#include <display/Display/WorldCanvas.h>
 #include <display/DisplayDatas/CachingDisplayMethod.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
-// <summary> 
+// <summary>
 // A DisplayMethod to draw Raster images from table data
 // </summary>
 //
@@ -55,45 +55,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// This class adds to the interface defined by DisplayMethod to provide 
-// the necessary infrastructure to draw raster displays of data from a 
+// This class adds to the interface defined by DisplayMethod to provide
+// the necessary infrastructure to draw raster displays of data from a
 // table when requested to do so by the TblAsRasterDD class.
 // </synopsis>
 
-class TblAsRasterDM : public CachingDisplayMethod {
+	class TblAsRasterDM : public CachingDisplayMethod {
 
- public:
+	public:
 
-  // constructor
-  TblAsRasterDM(WorldCanvas *worldCanvas, 
-		AttributeBuffer *wchAttributes,
-		AttributeBuffer *ddAttributes,
-		CachingDisplayData *dd);
-  
-  // Destructor.
-  virtual ~TblAsRasterDM();
-  
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
-  
-  // Draw into a cached drawing list, called by draw function.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder);
-  
- protected:
-  
-  // (Required) default constructor.
-  TblAsRasterDM();
-  
-  // (Required) copy constructor.
-  TblAsRasterDM(const TblAsRasterDM &other);
-  
-  // (Required) copy assignment.
-  void operator=(const TblAsRasterDM &other);
-  
- private:
+		// constructor
+		TblAsRasterDM(WorldCanvas *worldCanvas,
+		              AttributeBuffer *wchAttributes,
+		              AttributeBuffer *ddAttributes,
+		              CachingDisplayData *dd);
 
-};
+		// Destructor.
+		virtual ~TblAsRasterDM();
+
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
+
+		// Draw into a cached drawing list, called by draw function.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder);
+
+	protected:
+
+		// (Required) default constructor.
+		TblAsRasterDM();
+
+		// (Required) copy constructor.
+		TblAsRasterDM(const TblAsRasterDM &other);
+
+		// (Required) copy assignment.
+		void operator=(const TblAsRasterDM &other);
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

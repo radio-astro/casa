@@ -79,7 +79,7 @@ namespace casa {
 	}
 
 	CursorLink::CursorLink( const std::string &name, QtCanvasManager *m, QWidget *parent ) : QFrame(parent), mgr(m),
-	                                                                                         name_(name), current_color(Qt::black) {
+		name_(name), current_color(Qt::black) {
 		setupUi(this);
 		link->setText(QString::fromStdString(name_));
 		connect( color, SIGNAL(clicked()), this, SLOT(setColor( )) );

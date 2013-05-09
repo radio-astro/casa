@@ -1,4 +1,4 @@
-//# MWCPannerTool.h: MultiWorldCanvas panning tool 
+//# MWCPannerTool.h: MultiWorldCanvas panning tool
 //# Copyright (C) 2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -34,7 +34,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
+	class WorldCanvas;
 
 // <summary>
 // Multi WorldCanvas event-based ruler line tool
@@ -66,49 +66,49 @@ class WorldCanvas;
 // Does not get the proper units if measuring distances on a frequency axis.
 // </todo>
 
-class MWCRulerlineTool : public MultiWCTool, public DTVisible {
-  
- public:  
-  // Constructor
-  MWCRulerlineTool(Display::KeySym keysym = Display::K_Pointer_Button1,
-		 Bool scrollingAllowed = True);
-  
-  // Destructor
-  virtual ~MWCRulerlineTool();
-  
-  // Reset to non-showing, non-active.  Refreshes if necessary to erase
-  // (unless skipRefresh==True).
-  // (Does not unregister from WCs or disable future event handling).
-  virtual void reset(Bool skipRefresh=False);
+	class MWCRulerlineTool : public MultiWCTool, public DTVisible {
 
- protected:
-  // Functions called by the base class mouse event handling operators -
-  // these maintain the state of the pan vector and order it to be drawn
-  // via refresh().
-  // <group>
-  virtual void keyPressed(const WCPositionEvent &/*ev*/);
-  virtual void keyReleased(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
-  // </group>
+	public:
+		// Constructor
+		MWCRulerlineTool(Display::KeySym keysym = Display::K_Pointer_Button1,
+		                 Bool scrollingAllowed = True);
 
-  // draw the distance vector on a PixelCanvas.  (To be called only by the
-  // base class refresh event handler).
-  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		// Destructor
+		virtual ~MWCRulerlineTool();
 
- private:
-  // Should we respond to mouse movement and button release?  Should
-  // we draw?  Set when the button is pushed in one of the tool's WCs.
-  Bool itsActive;
+		// Reset to non-showing, non-active.  Refreshes if necessary to erase
+		// (unless skipRefresh==True).
+		// (Does not unregister from WCs or disable future event handling).
+		virtual void reset(Bool skipRefresh=False);
 
-  // are the units in x and y identical?
-  Bool itsEqualUnits;
+	protected:
+		// Functions called by the base class mouse event handling operators -
+		// these maintain the state of the pan vector and order it to be drawn
+		// via refresh().
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &/*ev*/);
+		virtual void keyReleased(const WCPositionEvent &/*ev*/);
+		virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		// </group>
 
-  // pixel coordinates of the pan vector.  1 = anchor, 2 = new position.
-  Int itsX1, itsY1, itsX2, itsY2, itsX3, itsY3;
+		// draw the distance vector on a PixelCanvas.  (To be called only by the
+		// base class refresh event handler).
+		virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
-  // axis index for RA and DEC
-  Int itsRaIndex, itsDecIndex;
-};
+	private:
+		// Should we respond to mouse movement and button release?  Should
+		// we draw?  Set when the button is pushed in one of the tool's WCs.
+		Bool itsActive;
+
+		// are the units in x and y identical?
+		Bool itsEqualUnits;
+
+		// pixel coordinates of the pan vector.  1 = anchor, 2 = new position.
+		Int itsX1, itsY1, itsX2, itsY2, itsX3, itsY3;
+
+		// axis index for RA and DEC
+		Int itsRaIndex, itsDecIndex;
+	};
 
 
 } //# NAMESPACE CASA - END

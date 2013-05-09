@@ -39,48 +39,48 @@
 #include <casa/namespace.h>
 main(int argc, char **argv) {
 
-  try {
+	try {
 
-    SimpleWorldCanvasApp *x11app = 0;
-    WorldCanvas *wCanvas = 0;
+		SimpleWorldCanvasApp *x11app = 0;
+		WorldCanvas *wCanvas = 0;
 
-    x11app = new SimpleWorldCanvasApp;
-    wCanvas = x11app->worldCanvas();
+		x11app = new SimpleWorldCanvasApp;
+		wCanvas = x11app->worldCanvas();
 
-    if (!wCanvas) {
-      throw(AipsError("Couldn't construct WorldCanvas"));
-    }
+		if (!wCanvas) {
+			throw(AipsError("Couldn't construct WorldCanvas"));
+		}
 
-    // manage it with a WorldCanvasHolder
-    WorldCanvasHolder *wcHolder = 0;
-    wcHolder = new WorldCanvasHolder(wCanvas);
-    if (!wcHolder) {
-      throw(AipsError("Couldn't construct WorldCanvasHolder"));
-    }
+		// manage it with a WorldCanvasHolder
+		WorldCanvasHolder *wcHolder = 0;
+		wcHolder = new WorldCanvasHolder(wCanvas);
+		if (!wcHolder) {
+			throw(AipsError("Couldn't construct WorldCanvasHolder"));
+		}
 
-    // create the nbody DisplayData
-    NBody *nbody = new NBody;
-	       
-    // add it to the display
-    wcHolder->addDisplayData(nbody);
+		// create the nbody DisplayData
+		NBody *nbody = new NBody;
 
-    // run the application
-    x11app->run();
+		// add it to the display
+		wcHolder->addDisplayData(nbody);
 
-    if (wcHolder) {
-      delete wcHolder;
-    }
-    if (x11app) {
-      delete x11app;
-    } 
-    if (nbody) {
-      delete nbody;
-    }
+		// run the application
+		x11app->run();
 
-  } catch (const AipsError &x) {
-    cerr << "Exception caught:" << endl;
-    cerr << x.getMesg() << endl;
-  }
-  
+		if (wcHolder) {
+			delete wcHolder;
+		}
+		if (x11app) {
+			delete x11app;
+		}
+		if (nbody) {
+			delete nbody;
+		}
+
+	} catch (const AipsError &x) {
+		cerr << "Exception caught:" << endl;
+		cerr << x.getMesg() << endl;
+	}
+
 }
 

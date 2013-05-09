@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSWORLDTEXT_H
 #define TRIALDISPLAY_DSWORLDTEXT_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <casa/Quanta/Quantum.h>
@@ -44,61 +44,61 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of a world coords. DSText
 // </summary>
 
-class PanelDisplay;
-class DSPixelText;
-class DSScreenText;
+	class PanelDisplay;
+	class DSPixelText;
+	class DSScreenText;
 
-class DSWorldText : public DSText , public DisplayShapeWithCoords {
+	class DSWorldText : public DSText , public DisplayShapeWithCoords {
 
-public:
+	public:
 
-  DSWorldText();
-  DSWorldText(const Record& settings, PanelDisplay* pd);
-  DSWorldText(DSScreenText& other, PanelDisplay* pd);
-  DSWorldText(DSPixelText& other, PanelDisplay* pd);
+		DSWorldText();
+		DSWorldText(const Record& settings, PanelDisplay* pd);
+		DSWorldText(DSScreenText& other, PanelDisplay* pd);
+		DSWorldText(DSPixelText& other, PanelDisplay* pd);
 
-  virtual ~DSWorldText();
+		virtual ~DSWorldText();
 
-  virtual void recalculateScreenPosition();
+		virtual void recalculateScreenPosition();
 
-  virtual void move(const Float& dX, const Float& dY);
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual void draw(PixelCanvas* pc);
-  
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void draw(PixelCanvas* pc);
 
-  virtual Record getRawOptions() {
-    return DSText::getOptions();
-  }
-  
-  virtual PanelDisplay* panelDisplay()  {
-    return itsPD;
-  }
-private:
-  
-  // Based on a WC option record
-  //  virtual Bool chooseWC(const Record& settings, PanelDisplay* pd, 
-  //		WorldCanvas* wc);
-  
-  // Based on a pixel center
-  //  virtual Bool chooseWC(const Float& xPos, const Float& yPos, 
-  //		PanelDisplay* pd, 
-  //		WorldCanvas* wc);
-  
-  // The paneldisplay from which I may choose an appropriate WC
-  PanelDisplay* itsPD;
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 
-  // The WC of my choosing
-  WorldCanvas* itsWC;
+		virtual Record getRawOptions() {
+			return DSText::getOptions();
+		}
 
-  // The center of the marker in world co-ords.
-  Vector<Quantum<Double> > itsWorldCenter;
-  
-  void updateWCent();
-};
+		virtual PanelDisplay* panelDisplay()  {
+			return itsPD;
+		}
+	private:
+
+		// Based on a WC option record
+		//  virtual Bool chooseWC(const Record& settings, PanelDisplay* pd,
+		//		WorldCanvas* wc);
+
+		// Based on a pixel center
+		//  virtual Bool chooseWC(const Float& xPos, const Float& yPos,
+		//		PanelDisplay* pd,
+		//		WorldCanvas* wc);
+
+		// The paneldisplay from which I may choose an appropriate WC
+		PanelDisplay* itsPD;
+
+		// The WC of my choosing
+		WorldCanvas* itsWC;
+
+		// The center of the marker in world co-ords.
+		Vector<Quantum<Double> > itsWorldCenter;
+
+		void updateWCent();
+	};
 
 } //# NAMESPACE CASA - END
 
-#endif 
+#endif
 

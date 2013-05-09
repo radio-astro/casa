@@ -30,15 +30,15 @@
 
 namespace casa {
 
-class ConverterWavelength : public Converter {
-public:
-	ConverterWavelength(const QString& oldUnits,const QString& newUnits);
-	virtual double toPixel( double value );
-	static void convertWavelength( Vector<double> &resultValues,
-				QString& sourceUnits, QString& destUnits);
-	virtual Vector<double> convert( const Vector<double>& oldValues );
-	virtual ~ConverterWavelength();
-};
+	class ConverterWavelength : public Converter {
+	public:
+		ConverterWavelength(const QString& oldUnits,const QString& newUnits);
+		virtual double toPixel( double value );
+		static void convertWavelength( Vector<double> &resultValues,
+		                               QString& sourceUnits, QString& destUnits);
+		virtual Vector<double> convert( const Vector<double>& oldValues );
+		virtual ~ConverterWavelength();
+	};
 
 } /* namespace casa */
 #endif /* CONVERTERWAVELENGTH_H_ */

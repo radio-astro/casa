@@ -29,42 +29,42 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-ColormapInfo::ColormapInfo() :
-  itsColormap(0),
-  itsWeight(0),
-  itsOffset(0),
-  itsSize(2),
-  itsRefCount(0) {
-}
+	ColormapInfo::ColormapInfo() :
+		itsColormap(0),
+		itsWeight(0),
+		itsOffset(0),
+		itsSize(2),
+		itsRefCount(0) {
+	}
 
-ColormapInfo::ColormapInfo(const Colormap *colormap, const Float &weight,
-			   const uInt &offset, const uInt &size) :
-  itsColormap(colormap),
-  itsWeight(weight),
-  itsOffset(offset),
-  itsSize(size),
-  itsRefCount(0) {
-}
+	ColormapInfo::ColormapInfo(const Colormap *colormap, const Float &weight,
+	                           const uInt &offset, const uInt &size) :
+		itsColormap(colormap),
+		itsWeight(weight),
+		itsOffset(offset),
+		itsSize(size),
+		itsRefCount(0) {
+	}
 
-void ColormapInfo::setWeight(const Float &weight) {
-  itsWeight = weight;
-}
+	void ColormapInfo::setWeight(const Float &weight) {
+		itsWeight = weight;
+	}
 
-void ColormapInfo::setOffset(const uInt &offset) {
-  itsOffset = offset;
-}
+	void ColormapInfo::setOffset(const uInt &offset) {
+		itsOffset = offset;
+	}
 
-void ColormapInfo::setSize(const uInt &size) {
-  itsSize = size;
-}
+	void ColormapInfo::setSize(const uInt &size) {
+		itsSize = size;
+	}
 
-void ColormapInfo::ref() {
-  itsRefCount++;
-}
+	void ColormapInfo::ref() {
+		itsRefCount++;
+	}
 
-void ColormapInfo::unref() {
-  itsRefCount--;
-}
+	void ColormapInfo::unref() {
+		itsRefCount--;
+	}
 
 
 } //# NAMESPACE CASA - END

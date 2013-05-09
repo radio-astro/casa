@@ -30,173 +30,169 @@
 
 namespace casa {
 
-DisplayDataHolder::DisplayDataHolder()
-	: imageTracker( NULL ), imageDisplayer(NULL), controlling_dd(NULL){
-}
+	DisplayDataHolder::DisplayDataHolder()
+		: imageTracker( NULL ), imageDisplayer(NULL), controlling_dd(NULL) {
+	}
 
 
 //******************************************************************************
 //                  Iteration Support
 //******************************************************************************
-int DisplayDataHolder::getCount() const {
-	return dataList.size();
-}
-bool DisplayDataHolder::isEmpty() const {
-	Bool empty = dataList.empty();
-	return empty;
-}
+	int DisplayDataHolder::getCount() const {
+		return dataList.size();
+	}
+	bool DisplayDataHolder::isEmpty() const {
+		Bool empty = dataList.empty();
+		return empty;
+	}
 
-DisplayDataHolder::DisplayDataIterator DisplayDataHolder::beginDD() const{
-	return dataList.begin();
-}
+	DisplayDataHolder::DisplayDataIterator DisplayDataHolder::beginDD() const {
+		return dataList.begin();
+	}
 
-DisplayDataHolder::DisplayDataIterator DisplayDataHolder::endDD() const {
-	return dataList.end();
-}
+	DisplayDataHolder::DisplayDataIterator DisplayDataHolder::endDD() const {
+		return dataList.end();
+	}
 
 
-bool DisplayDataHolder::exists(QtDisplayData* qdd) const {
-	bool exists = false;
-	if ( dataList.size() > 0 ){
+	bool DisplayDataHolder::exists(QtDisplayData* qdd) const {
+		bool exists = false;
+		if ( dataList.size() > 0 ) {
+			DisplayDataIterator iter = dataList.begin();
+			while( iter != dataList.end() ) {
+				if(qdd == (*iter)) {
+					exists = true;
+					break;
+				}
+				iter++;
+			}
+		}
+		return exists;
+	}
+
+	void DisplayDataHolder::setDDControlling( QtDisplayData* controlDD ) {
+		if ( controlDD != NULL && exists( controlDD ) ) {
+			if ( controlling_dd != controlDD ) {
+				if ( imageTracker != NULL ) {
+					imageTracker->masterImageSelected( controlDD );
+				}
+				if ( imageDisplayer != NULL ) {
+					imageDisplayer->setControllingDD( controlDD );
+				}
+				controlling_dd = controlDD;
+			}
+		} else {
+			controlling_dd = NULL;
+		}
+
+	}
+
+	QtDisplayData* DisplayDataHolder::getDDControlling( ) const {
+		// retrieve the "controlling" DD...
+		return controlling_dd;
+	}
+
+	QtDisplayData* DisplayDataHolder::getDD(const std::string& name) const {
+		// retrieve DD with given name (0 if none).
+		QtDisplayData* qdd = NULL;
 		DisplayDataIterator iter = dataList.begin();
-		while( iter != dataList.end() ) {
-			if(qdd == (*iter)){
-				exists = true;
+		while( iter != dataList.end()) {
+			if( (*iter)->name() == name ) {
+				qdd = (*iter);
 				break;
 			}
 			iter++;
 		}
+		return qdd;
 	}
-	return exists;
-}
 
-void DisplayDataHolder::setDDControlling( QtDisplayData* controlDD ){
-	if ( controlDD != NULL && exists( controlDD ) ){
-		if ( controlling_dd != controlDD ){
-			if ( imageTracker != NULL ){
-				imageTracker->masterImageSelected( controlDD );
+	void DisplayDataHolder::addDD( QtDisplayData* dd, int position ) {
+		if ( ! exists( dd )) {
+			if ( position < 0 ) {
+				dataList.push_back( dd );
+			} else {
+				DisplayDataList::iterator iter = dataList.begin();
+				int i = 0;
+				while ( i < position ) {
+					iter++;
+					i++;
+				}
+				dataList.insert( iter, dd );
 			}
-			if ( imageDisplayer != NULL ){
-				imageDisplayer->setControllingDD( controlDD );
+			if ( imageTracker != NULL ) {
+				imageTracker->imageAdded( dd );
 			}
-			controlling_dd = controlDD;
 		}
 	}
-	else {
+
+	void DisplayDataHolder::discardDD( QtDisplayData* dd, bool signal ) {
+		//First remove the dd from where it current happens to be.
+		//If a higher level is available, we do it through calls to
+		//the higher layer.  Otherwise, we do it internally.
+		if ( exists( dd )) {
+			if ( imageDisplayer != NULL ) {
+				imageDisplayer->unregisterDD( dd );
+			} else {
+				removeDD(dd, signal);
+			}
+		}
+	}
+
+	void DisplayDataHolder::insertDD( QtDisplayData* dd, int position ) {
+		if ( ! exists(dd) ) {
+
+			//Now put it back in at the proper position.
+			if ( imageDisplayer != NULL ) {
+				imageDisplayer->registerDD( dd, position );
+			} else {
+				addDD( dd, position );
+			}
+		}
+	}
+
+
+	void DisplayDataHolder::removeDDAll() {
+		if ( imageTracker != NULL ) {
+			for ( DisplayDataIterator iter = dataList.begin(); iter != dataList.end(); iter++) {
+				imageTracker->imageRemoved( *iter );
+			}
+		}
+
+		dataList.resize(0);
 		controlling_dd = NULL;
+
+		//One more notification after the list has been cleared
+		//to update the master list.
+		if ( imageTracker != NULL ) {
+			imageTracker->imageRemoved( NULL );
+		}
 	}
 
-}
-
-QtDisplayData* DisplayDataHolder::getDDControlling( ) const {
-	// retrieve the "controlling" DD...
-	return controlling_dd;
-}
-
-QtDisplayData* DisplayDataHolder::getDD(const std::string& name) const{
-	// retrieve DD with given name (0 if none).
-	QtDisplayData* qdd = NULL;
-	DisplayDataIterator iter = dataList.begin();
-	while( iter != dataList.end()){
-		if( (*iter)->name() == name ){
-			qdd = (*iter);
-			break;
-		}
-		iter++;
-	}
-	return qdd;
-}
-
-void DisplayDataHolder::addDD( QtDisplayData* dd, int position ){
-	if ( ! exists( dd )){
-		if ( position < 0 ){
-			dataList.push_back( dd );
-		}
-		else {
-			DisplayDataList::iterator iter = dataList.begin();
-			int i = 0;
-			while ( i < position ){
-				iter++;
-				i++;
+	bool DisplayDataHolder::removeDD(QtDisplayData* qdd, bool signal ) {
+		bool removed = false;
+		if ( qdd != NULL && exists( qdd) ) {
+			dataList.erase(std::remove(dataList.begin(), dataList.end(), qdd), dataList.end());
+			if ( isEmpty() || qdd == controlling_dd ) {
+				controlling_dd = NULL;
 			}
-			dataList.insert( iter, dd );
+			if ( imageTracker != NULL && signal ) {
+				imageTracker->imageRemoved( qdd );
+			}
+			removed = true;
 		}
-		if ( imageTracker != NULL ){
-			imageTracker->imageAdded( dd );
-		}
-	}
-}
-
-void DisplayDataHolder::discardDD( QtDisplayData* dd, bool signal ){
-	//First remove the dd from where it current happens to be.
-	//If a higher level is available, we do it through calls to
-	//the higher layer.  Otherwise, we do it internally.
-	if ( exists( dd )){
-		if ( imageDisplayer != NULL ){
-			imageDisplayer->unregisterDD( dd );
-		}
-		else {
-			removeDD(dd, signal);
-		}
-	}
-}
-
-void DisplayDataHolder::insertDD( QtDisplayData* dd, int position ){
-	if ( ! exists(dd) ){
-
-		//Now put it back in at the proper position.
-		if ( imageDisplayer != NULL ){
-			imageDisplayer->registerDD( dd, position );
-		}
-		else {
-			addDD( dd, position );
-		}
-	}
-}
-
-
-void DisplayDataHolder::removeDDAll(){
-	if ( imageTracker != NULL ){
-		for ( DisplayDataIterator iter = dataList.begin(); iter != dataList.end(); iter++){
-			imageTracker->imageRemoved( *iter );
-		}
+		return removed;
 	}
 
-	dataList.resize(0);
-	controlling_dd = NULL;
-
-	//One more notification after the list has been cleared
-	//to update the master list.
-	if ( imageTracker != NULL ){
-		imageTracker->imageRemoved( NULL );
+	void DisplayDataHolder::setImageTracker( ImageTracker* tracker ) {
+		imageTracker = tracker;
 	}
-}
 
-bool DisplayDataHolder::removeDD(QtDisplayData* qdd, bool signal ) {
-	bool removed = false;
-	if ( qdd != NULL && exists( qdd) ){
-		dataList.erase(std::remove(dataList.begin(), dataList.end(), qdd), dataList.end());
-		if ( isEmpty() || qdd == controlling_dd ){
-			controlling_dd = NULL;
-		}
-		if ( imageTracker != NULL && signal ){
-			imageTracker->imageRemoved( qdd );
-		}
-		removed = true;
+	void DisplayDataHolder::setImageDisplayer( ImageDisplayer* displayer ) {
+		imageDisplayer = displayer;
 	}
-	return removed;
-}
 
-void DisplayDataHolder::setImageTracker( ImageTracker* tracker ){
-	imageTracker = tracker;
-}
-
-void DisplayDataHolder::setImageDisplayer( ImageDisplayer* displayer ){
-	imageDisplayer = displayer;
-}
-
-DisplayDataHolder::~DisplayDataHolder() {
-	// TODO Auto-generated destructor stub
-}
+	DisplayDataHolder::~DisplayDataHolder() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

@@ -34,46 +34,46 @@
 
 namespace casa {
 
-class Record;
+	class Record;
 
-/**
- * Computes the angle and distance for a single line segment in the
- * slice.  Subclasses are used for computation depending on what is
- * displayed on the X-Axis of the slice and on the units of the X-Axis,
- */
+	/**
+	 * Computes the angle and distance for a single line segment in the
+	 * slice.  Subclasses are used for computation depending on what is
+	 * displayed on the X-Axis of the slice and on the units of the X-Axis,
+	 */
 
-class SliceStatistics {
-public:
-	SliceStatistics(SliceStatisticsFactory::AxisXUnits units );
-	void setXUnits( SliceStatisticsFactory::AxisXUnits units );
-	double getAngle( std::pair<int,int> pixelStart,
-			std::pair<int,int> pixelEnd ) const;
-	virtual double getLength(std::pair<double,double> worldStart,
-			std::pair<double,double> worldEnd,
-			std::pair<int,int> pixelStart,
-			std::pair<int,int> pixelEnd ) const = 0;
-	virtual double getLength( double value1World, double value2World,
-			double value1Pixel, double value2Pixel ) const = 0;
-	virtual double getStart( double value1World, double value2World,
-				double value1Pixel, double value2Pixel ) const = 0;
-	virtual double getEnd( double value1World, double value2World,
-				double value1Pixel, double value2Pixel ) const = 0;
-	virtual QString getLengthLabel() const = 0;
-	virtual QVector<double> interpolate( double start, double end,
-			const QVector<double>& values ) const;
-	virtual void adjustStart( QVector<double>& values, double start ) const=0;
-	QVector<double> convertArcUnits( QVector<double> arcseconds ) const;
-	double convertArcUnits( double value ) const;
-	virtual QVector<double> fromResults( Record* record  )const = 0;
-	virtual void storeIncrement( double* incr, QVector<double>& values, int index) const = 0;
-	static QVector<double> getFromArray( const Array<float>& source );
-	virtual ~SliceStatistics();
-protected:
-	QString getUnitText() const;
+	class SliceStatistics {
+	public:
+		SliceStatistics(SliceStatisticsFactory::AxisXUnits units );
+		void setXUnits( SliceStatisticsFactory::AxisXUnits units );
+		double getAngle( std::pair<int,int> pixelStart,
+		                 std::pair<int,int> pixelEnd ) const;
+		virtual double getLength(std::pair<double,double> worldStart,
+		                         std::pair<double,double> worldEnd,
+		                         std::pair<int,int> pixelStart,
+		                         std::pair<int,int> pixelEnd ) const = 0;
+		virtual double getLength( double value1World, double value2World,
+		                          double value1Pixel, double value2Pixel ) const = 0;
+		virtual double getStart( double value1World, double value2World,
+		                         double value1Pixel, double value2Pixel ) const = 0;
+		virtual double getEnd( double value1World, double value2World,
+		                       double value1Pixel, double value2Pixel ) const = 0;
+		virtual QString getLengthLabel() const = 0;
+		virtual QVector<double> interpolate( double start, double end,
+		                                     const QVector<double>& values ) const;
+		virtual void adjustStart( QVector<double>& values, double start ) const=0;
+		QVector<double> convertArcUnits( QVector<double> arcseconds ) const;
+		double convertArcUnits( double value ) const;
+		virtual QVector<double> fromResults( Record* record  )const = 0;
+		virtual void storeIncrement( double* incr, QVector<double>& values, int index) const = 0;
+		static QVector<double> getFromArray( const Array<float>& source );
+		virtual ~SliceStatistics();
+	protected:
+		QString getUnitText() const;
 
-	double radiansToArcseconds( double rad ) const;
-	SliceStatisticsFactory::AxisXUnits xUnits;
-};
+		double radiansToArcseconds( double rad ) const;
+		SliceStatisticsFactory::AxisXUnits xUnits;
+	};
 
 } /* namespace casa */
 #endif /* SLICESTATISTICS_H_ */

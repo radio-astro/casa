@@ -31,18 +31,17 @@
 #include <QColor>
 #include <graphics/X11/X_exit.h>
 
-namespace casa { 
+namespace casa {
 
-class QtDrawColors
-{
-public:
-     ~QtDrawColors(){}
-     QtDrawColors(){}
-     static QColor getDrawColor(int);
-     static QColor getDrawColor(const char*);
-     static QStringList getColorNames();
-private:
-};
+	class QtDrawColors {
+	public:
+		~QtDrawColors() {}
+		QtDrawColors() {}
+		static QColor getDrawColor(int);
+		static QColor getDrawColor(const char*);
+		static QStringList getColorNames();
+	private:
+	};
 
 
 }

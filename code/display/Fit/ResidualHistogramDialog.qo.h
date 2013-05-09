@@ -32,24 +32,24 @@
 
 namespace casa {
 
-template <class T> class ImageInterface;
-class BinPlotWidget;
+	template <class T> class ImageInterface;
+	class BinPlotWidget;
 
-class ResidualHistogramDialog : public QDialog {
-    Q_OBJECT
+	class ResidualHistogramDialog : public QDialog {
+		Q_OBJECT
 
-public:
-    ResidualHistogramDialog(QWidget *parent = 0);
-    bool setImage( const String& path );
-    ~ResidualHistogramDialog();
+	public:
+		ResidualHistogramDialog(QWidget *parent = 0);
+		bool setImage( const String& path );
+		~ResidualHistogramDialog();
 
-private:
-    ResidualHistogramDialog( const ResidualHistogramDialog& other );
-    ResidualHistogramDialog operator=( const ResidualHistogramDialog& other );
-    BinPlotWidget* plotWidget;
-    ImageInterface<Float>* residualImage;
-    Ui::ResidualHistogramDialogClass ui;
-};
+	private:
+		ResidualHistogramDialog( const ResidualHistogramDialog& other );
+		ResidualHistogramDialog operator=( const ResidualHistogramDialog& other );
+		BinPlotWidget* plotWidget;
+		ImageInterface<Float>* residualImage;
+		Ui::ResidualHistogramDialogClass ui;
+	};
 }
 
 #endif // RESIDUALHISTOGRAMDIALOG_QO_H

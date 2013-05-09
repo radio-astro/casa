@@ -37,66 +37,66 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MultiPolylineToolImpl::MultiPolylineToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) :
-  MultiPolylineTool( rf, pd, keysym, True) {
-}
+	MultiPolylineToolImpl::MultiPolylineToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym) :
+		MultiPolylineTool( rf, pd, keysym, True) {
+	}
 
-MultiPolylineToolImpl::~MultiPolylineToolImpl() {
-}
+	MultiPolylineToolImpl::~MultiPolylineToolImpl() {
+	}
 
-void MultiPolylineToolImpl::doubleInside() {
-  //cout << "doubleInside --->before region Readay" << endl;
-  regionReady();
-  //cout << "<------after region ready" << endl;
-}
+	void MultiPolylineToolImpl::doubleInside() {
+		//cout << "doubleInside --->before region Readay" << endl;
+		regionReady();
+		//cout << "<------after region ready" << endl;
+	}
 
-void MultiPolylineToolImpl::getLinearCoords(Vector<Double> &x, Vector<Double> &y) {
-  Vector<Int> xpix;
-  Vector<Int> ypix;
-  get(xpix, ypix);
-  Int xs, ys, z;
-  xpix.shape(xs);
-  ypix.shape(ys);
-  z = min(xs, ys);
-  x.resize(z);
-  y.resize(z);
-  //cout << "xs=" << xs << " ys=" << ys << " z=" << z << endl;
+	void MultiPolylineToolImpl::getLinearCoords(Vector<Double> &x, Vector<Double> &y) {
+		Vector<Int> xpix;
+		Vector<Int> ypix;
+		get(xpix, ypix);
+		Int xs, ys, z;
+		xpix.shape(xs);
+		ypix.shape(ys);
+		z = min(xs, ys);
+		x.resize(z);
+		y.resize(z);
+		//cout << "xs=" << xs << " ys=" << ys << " z=" << z << endl;
 
-  Vector<Double> xp(2), xl(2);
-  for (Int i = 0; i < z; i++) {
-     xp(0) = xpix(i);
-     xp(1) = ypix(i);
-     itsCurrentWC->pixToLin(xl, xp);
-     x(i) = xl(0);
-     y(i) = xl(1);
-     //cout << "x=" << x(i) << " y=" << y(i) << endl;
-  }
-  //cout << "getLinear" << endl;
-}
+		Vector<Double> xp(2), xl(2);
+		for (Int i = 0; i < z; i++) {
+			xp(0) = xpix(i);
+			xp(1) = ypix(i);
+			itsCurrentWC->pixToLin(xl, xp);
+			x(i) = xl(0);
+			y(i) = xl(1);
+			//cout << "x=" << x(i) << " y=" << y(i) << endl;
+		}
+		//cout << "getLinear" << endl;
+	}
 
-void MultiPolylineToolImpl::getWorldCoords(Vector<Double> &x, Vector<Double> &y) {
-  Vector<Int> xpix;
-  Vector<Int> ypix;
-  get(xpix, ypix);
-  Int xs, ys, z;
-  xpix.shape(xs);
-  ypix.shape(ys);
-  z = min(xs, ys);
-  x.resize(z);
-  y.resize(z);
-  //cout << "xs=" << xs << " ys=" << ys << " z=" << z << endl;
+	void MultiPolylineToolImpl::getWorldCoords(Vector<Double> &x, Vector<Double> &y) {
+		Vector<Int> xpix;
+		Vector<Int> ypix;
+		get(xpix, ypix);
+		Int xs, ys, z;
+		xpix.shape(xs);
+		ypix.shape(ys);
+		z = min(xs, ys);
+		x.resize(z);
+		y.resize(z);
+		//cout << "xs=" << xs << " ys=" << ys << " z=" << z << endl;
 
-  Vector<Double> xp(2), xl(2);
-  for (Int i = 0; i < z; i++) {
-     xp(0) = xpix(i);
-     xp(1) = ypix(i);
-     itsCurrentWC->pixToWorld(xl, xp);
-     x(i) = xl(0);
-     y(i) = xl(1);
-     //cout << "x=" << x(i) << " y=" << y(i) << endl;
-  }
-  //cout << "getWorld" << endl;
-}
+		Vector<Double> xp(2), xl(2);
+		for (Int i = 0; i < z; i++) {
+			xp(0) = xpix(i);
+			xp(1) = ypix(i);
+			itsCurrentWC->pixToWorld(xl, xp);
+			x(i) = xl(0);
+			y(i) = xl(1);
+			//cout << "x=" << x(i) << " y=" << y(i) << endl;
+		}
+		//cout << "getWorld" << endl;
+	}
 
 } //# NAMESPACE CASA - END
 

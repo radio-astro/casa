@@ -30,11 +30,13 @@
 #include <string>
 
 class VOID {
-    public:
+public:
 	VOID( const std::string &str ) : id_(str) { }
 	virtual ~VOID( ) { }
-	virtual std::string id( ) const { return id_; }
-    private:
+	virtual std::string id( ) const {
+		return id_;
+	}
+private:
 	std::string id_;
 };
 

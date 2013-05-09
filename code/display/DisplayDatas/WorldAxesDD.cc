@@ -47,168 +47,165 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-WorldAxesDD::WorldAxesDD() :
-  AxesDisplayData() {
-  installDefaultOptions();
+	WorldAxesDD::WorldAxesDD() :
+		AxesDisplayData() {
+		installDefaultOptions();
 
-  Vector<String> vstring;
+		Vector<String> vstring;
 
-  // spectral preferences
-  vstring.resize(5);
-  vstring(0) = "km/s";
-  vstring(1) = "m/s";
-  vstring(2) = "GHz";
-  vstring(3) = "MHz";
-  vstring(4) = "Hz";
-  itsParamSpectralUnit
-    = new DParameterChoice("spectralunit", "Spectral unit", "",
-             vstring, vstring(2), vstring(2), "Axis_units");
+		// spectral preferences
+		vstring.resize(5);
+		vstring(0) = "km/s";
+		vstring(1) = "m/s";
+		vstring(2) = "GHz";
+		vstring(3) = "MHz";
+		vstring(4) = "Hz";
+		itsParamSpectralUnit
+		    = new DParameterChoice("spectralunit", "Spectral unit", "",
+		                           vstring, vstring(2), vstring(2), "Axis_units");
 
-  vstring.resize(3);
-  vstring(0) = "radio";
-  vstring(1) = "optical";
-  vstring(2) = "true";
+		vstring.resize(3);
+		vstring(0) = "radio";
+		vstring(1) = "optical";
+		vstring(2) = "true";
 
-  itsParamVelocityType 
-    = new DParameterChoice("velocitytype", "Velocity type", "",
-             vstring, vstring(0), vstring(0), "Axis_units");
+		itsParamVelocityType
+		    = new DParameterChoice("velocitytype", "Velocity type", "",
+		                           vstring, vstring(0), vstring(0), "Axis_units");
 
-}
+	}
 
-WorldAxesDD::~WorldAxesDD() {
-  delete itsParamSpectralUnit;
-  delete itsParamVelocityType;
-}
+	WorldAxesDD::~WorldAxesDD() {
+		delete itsParamSpectralUnit;
+		delete itsParamVelocityType;
+	}
 
-void WorldAxesDD::setDefaultOptions() {
-  AxesDisplayData::setDefaultOptions();
-  installDefaultOptions();
-}
+	void WorldAxesDD::setDefaultOptions() {
+		AxesDisplayData::setDefaultOptions();
+		installDefaultOptions();
+	}
 
-Bool WorldAxesDD::setOptions(Record& rec, Record& recOut) {
-  Bool ret = AxesDisplayData::setOptions(rec, recOut);
+	Bool WorldAxesDD::setOptions(Record& rec, Record& recOut) {
+		Bool ret = AxesDisplayData::setOptions(rec, recOut);
 
-  Bool localchange = False;
+		Bool localchange = False;
 
-  // spectral preferences
+		// spectral preferences
 
-  localchange = (itsParamVelocityType->fromRecord(rec) || localchange);
-  localchange = (itsParamSpectralUnit->fromRecord(rec) || localchange); 
+		localchange = (itsParamVelocityType->fromRecord(rec) || localchange);
+		localchange = (itsParamSpectralUnit->fromRecord(rec) || localchange);
 
-  return (ret || localchange);
-}
+		return (ret || localchange);
+	}
 
-Record WorldAxesDD::getOptions() {
-  Record rec = AxesDisplayData::getOptions();
+	Record WorldAxesDD::getOptions() {
+		Record rec = AxesDisplayData::getOptions();
 
-  // context: Axis_units
-  itsParamSpectralUnit->toRecord(rec);
-  itsParamVelocityType->toRecord(rec);
+		// context: Axis_units
+		itsParamSpectralUnit->toRecord(rec);
+		itsParamVelocityType->toRecord(rec);
 
-  return rec;
-}
+		return rec;
+	}
 
-CachingDisplayMethod* WorldAxesDD::newDisplayMethod(
-    WorldCanvas* worldCanvas,
-    AttributeBuffer* wchAttributes,
-    AttributeBuffer* ddAttributes,
-    CachingDisplayData* dd) {
-  return new WorldAxesDM(worldCanvas, wchAttributes, ddAttributes, dd);
-}
+	CachingDisplayMethod* WorldAxesDD::newDisplayMethod(
+	    WorldCanvas* worldCanvas,
+	    AttributeBuffer* wchAttributes,
+	    AttributeBuffer* ddAttributes,
+	    CachingDisplayData* dd) {
+		return new WorldAxesDM(worldCanvas, wchAttributes, ddAttributes, dd);
+	}
 
-AttributeBuffer WorldAxesDD::optionsAsAttributes() {
-  AttributeBuffer buffer = AxesDisplayData::optionsAsAttributes();
+	AttributeBuffer WorldAxesDD::optionsAsAttributes() {
+		AttributeBuffer buffer = AxesDisplayData::optionsAsAttributes();
 
-  // context: Axis_units
-  buffer.set(itsParamSpectralUnit->name(), itsParamSpectralUnit->value());
-  buffer.set(itsParamVelocityType->name(), itsParamVelocityType->value());
+		// context: Axis_units
+		buffer.set(itsParamSpectralUnit->name(), itsParamSpectralUnit->value());
+		buffer.set(itsParamVelocityType->name(), itsParamVelocityType->value());
 
-  return buffer;
-}
+		return buffer;
+	}
 
-WorldAxesDD::WorldAxesDD(const WorldAxesDD& ) {
-}
+	WorldAxesDD::WorldAxesDD(const WorldAxesDD& ) {
+	}
 
-void WorldAxesDD::operator=(const WorldAxesDD& ) {
-}
+	void WorldAxesDD::operator=(const WorldAxesDD& ) {
+	}
 
-void WorldAxesDD::installDefaultOptions() {
-}
+	void WorldAxesDD::installDefaultOptions() {
+	}
 
-String WorldAxesDD::axisText(const WorldCanvas *wc, const uInt axisNo) const {
-  //cerr << "WADD::axisText(wc, " << axisNo << ") called." << endl;
-  const CoordinateSystem &wcCS = wc->coordinateSystem();
-  //cerr << "wc csys has " << wcCS.nCoordinates() << " coordinates." << endl;
-  //cerr << "  of which No = " << wcCS.findCoordinate(Coordinate::SPECTRAL) 
-  //     << " is spectral. " << endl;
-  
-  String base;
-  String base0 = wcCS.worldAxisNames()(axisNo);
-  String prefUnit = wcCS.worldAxisUnits()(axisNo);
+	String WorldAxesDD::axisText(const WorldCanvas *wc, const uInt axisNo) const {
+		//cerr << "WADD::axisText(wc, " << axisNo << ") called." << endl;
+		const CoordinateSystem &wcCS = wc->coordinateSystem();
+		//cerr << "wc csys has " << wcCS.nCoordinates() << " coordinates." << endl;
+		//cerr << "  of which No = " << wcCS.findCoordinate(Coordinate::SPECTRAL)
+		//     << " is spectral. " << endl;
 
-  Int coordinate, axisInCoordinate;
+		String base;
+		String base0 = wcCS.worldAxisNames()(axisNo);
+		String prefUnit = wcCS.worldAxisUnits()(axisNo);
 
-  wcCS.findWorldAxis(coordinate, axisInCoordinate, axisNo);
-  Coordinate::Type ctype = wcCS.type(coordinate);
+		Int coordinate, axisInCoordinate;
 
-  if (ctype == Coordinate::SPECTRAL) {
-    const SpectralCoordinate& dcoord = wcCS.spectralCoordinate(coordinate);
+		wcCS.findWorldAxis(coordinate, axisInCoordinate, axisNo);
+		Coordinate::Type ctype = wcCS.type(coordinate);
 
-    MFrequency::Types ctype;
-    MEpoch epoch;
-    MPosition position;
-    MDirection direction;
+		if (ctype == Coordinate::SPECTRAL) {
+			const SpectralCoordinate& dcoord = wcCS.spectralCoordinate(coordinate);
 
-    dcoord.getReferenceConversion(ctype, epoch, position, direction);
+			MFrequency::Types ctype;
+			MEpoch epoch;
+			MPosition position;
+			MDirection direction;
 
-    String freqType = MFrequency::showType(ctype);
+			dcoord.getReferenceConversion(ctype, epoch, position, direction);
 
-    Unit pVU(spectralUnit());
-    Unit HZ("Hz");
-    Unit KMS("km/s");
+			String freqType = MFrequency::showType(ctype);
 
-    if (pVU == KMS) {
-      prefUnit = spectralUnit();
-      base = freqType + String(" ") + velocityType() + String(" velocity (") + 
-             prefUnit + String(")");
-    } else if (pVU == HZ) {
-      //base = freqType + String(" ") + base0 + String(" (") + prefUnit + String(")");
-      base = base0 + String(" (") + spectralUnit() + String(")");
-    } else {
-      base = freqType + String(" ") + base0 + String(" (") + prefUnit + String(")"); 
-    }
-  }
-  else {
-    base = "";
-  }
-  return base;
-}
+			Unit pVU(spectralUnit());
+			Unit HZ("Hz");
+			Unit KMS("km/s");
 
-String WorldAxesDD::xAxisText(const WorldCanvas* wc) const {
-  //cerr << "X Unit = " << wc->coordinateSystem().worldAxisUnits()[0] << "..." << endl;
-  //cerr << "spectralUnit() = " << spectralUnit() << endl;
-  //if (Unit("Hz") == Unit(spectralUnit())) {
-  //  cerr << "spectralUnit() is conformant with Hz." << endl;
-  //}
-  String tAxisText = axisText(wc, 0);
-  if (tAxisText == "") {
-    return AxesDisplayData::xAxisText(wc);
-  }
-  else {
-    return tAxisText;
-  }
-}
+			if (pVU == KMS) {
+				prefUnit = spectralUnit();
+				base = freqType + String(" ") + velocityType() + String(" velocity (") +
+				       prefUnit + String(")");
+			} else if (pVU == HZ) {
+				//base = freqType + String(" ") + base0 + String(" (") + prefUnit + String(")");
+				base = base0 + String(" (") + spectralUnit() + String(")");
+			} else {
+				base = freqType + String(" ") + base0 + String(" (") + prefUnit + String(")");
+			}
+		} else {
+			base = "";
+		}
+		return base;
+	}
 
-String WorldAxesDD::yAxisText(const WorldCanvas* wc) const {
-  //cerr << "Y Unit = " << wc->coordinateSystem().worldAxisUnits()[1] << "..." << endl;
-  String tAxisText = axisText(wc, 1);
-  if (tAxisText == "") {
-    return AxesDisplayData::yAxisText(wc);
-  }
-  else {
-    return tAxisText;
-  }
-}
+	String WorldAxesDD::xAxisText(const WorldCanvas* wc) const {
+		//cerr << "X Unit = " << wc->coordinateSystem().worldAxisUnits()[0] << "..." << endl;
+		//cerr << "spectralUnit() = " << spectralUnit() << endl;
+		//if (Unit("Hz") == Unit(spectralUnit())) {
+		//  cerr << "spectralUnit() is conformant with Hz." << endl;
+		//}
+		String tAxisText = axisText(wc, 0);
+		if (tAxisText == "") {
+			return AxesDisplayData::xAxisText(wc);
+		} else {
+			return tAxisText;
+		}
+	}
+
+	String WorldAxesDD::yAxisText(const WorldCanvas* wc) const {
+		//cerr << "Y Unit = " << wc->coordinateSystem().worldAxisUnits()[1] << "..." << endl;
+		String tAxisText = axisText(wc, 1);
+		if (tAxisText == "") {
+			return AxesDisplayData::yAxisText(wc);
+		} else {
+			return tAxisText;
+		}
+	}
 
 
 

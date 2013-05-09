@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSPIXELPOLY_H
 #define TRIALDISPLAY_DSPIXELPOLY_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DSPoly.h>
@@ -41,33 +41,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of an absolute pixel DSPoly
 // </summary>
 
-class PanelDisplay;
-class DSWorldPoly;
-class DSScreenPoly;
-class DSPixelPolyLine;
+	class PanelDisplay;
+	class DSWorldPoly;
+	class DSScreenPoly;
+	class DSPixelPolyLine;
 
-class DSPixelPoly : public DSPoly , public DisplayShapeWithCoords{
-  
-public:
-  
-  DSPixelPoly();
-  DSPixelPoly(const Record& settings);
-  DSPixelPoly(DSScreenPoly& other);
-  DSPixelPoly(DSWorldPoly& other);
-  DSPixelPoly(DSPixelPolyLine& other);
-  
-  virtual ~DSPixelPoly();
+	class DSPixelPoly : public DSPoly , public DisplayShapeWithCoords {
 
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();  
-  
-  virtual Record getRawOptions() {
-    return DSPoly::getOptions();
-  }
-  
-private:
-  
-};
+	public:
+
+		DSPixelPoly();
+		DSPixelPoly(const Record& settings);
+		DSPixelPoly(DSScreenPoly& other);
+		DSPixelPoly(DSWorldPoly& other);
+		DSPixelPoly(DSPixelPolyLine& other);
+
+		virtual ~DSPixelPoly();
+
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		virtual Record getRawOptions() {
+			return DSPoly::getOptions();
+		}
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

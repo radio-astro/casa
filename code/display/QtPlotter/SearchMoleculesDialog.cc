@@ -33,67 +33,65 @@ namespace casa {
 
 
 
-SearchMoleculesDialog::SearchMoleculesDialog(QWidget *parent)
-    : QDialog(parent)
-{
-	ui.setupUi(this);
+	SearchMoleculesDialog::SearchMoleculesDialog(QWidget *parent)
+		: QDialog(parent) {
+		ui.setupUi(this);
 
-	QHBoxLayout* layout = new QHBoxLayout();
-	searchWidget = new SearchMoleculesWidget( this );
-	layout->addWidget( searchWidget );
-	ui.searchWidgetHolder->setLayout( layout );
+		QHBoxLayout* layout = new QHBoxLayout();
+		searchWidget = new SearchMoleculesWidget( this );
+		layout->addWidget( searchWidget );
+		ui.searchWidgetHolder->setLayout( layout );
 
-	QVBoxLayout* layout2 = new QVBoxLayout();
-	searchResultsWidget = new SearchMoleculesResultsWidget( this );
-	searchResultsWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-	searchWidget->setResultDisplay( searchResultsWidget );
-	//layout2->insertStretch( 0, 1);
-	layout2->addWidget( searchResultsWidget );
-	//layout2->insertStretch( 2, 1);
-	ui.searchResultsHolder->setLayout( layout2 );
+		QVBoxLayout* layout2 = new QVBoxLayout();
+		searchResultsWidget = new SearchMoleculesResultsWidget( this );
+		searchResultsWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+		searchWidget->setResultDisplay( searchResultsWidget );
+		//layout2->insertStretch( 0, 1);
+		layout2->addWidget( searchResultsWidget );
+		//layout2->insertStretch( 2, 1);
+		ui.searchResultsHolder->setLayout( layout2 );
 
-	connect( ui.applyButton, SIGNAL(clicked()), this, SIGNAL(moleculesSelected()));
-	connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(reject()));
-}
+		connect( ui.applyButton, SIGNAL(clicked()), this, SIGNAL(moleculesSelected()));
+		connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(reject()));
+	}
 
 
-void SearchMoleculesDialog::setRange( float min, float max, QString units ){
-	searchWidget->setRange( min, max, units );
-}
+	void SearchMoleculesDialog::setRange( float min, float max, QString units ) {
+		searchWidget->setRange( min, max, units );
+	}
 
-void SearchMoleculesDialog::updateReferenceFrame(){
-	searchWidget->updateReferenceFrame();
-}
+	void SearchMoleculesDialog::updateReferenceFrame() {
+		searchWidget->updateReferenceFrame();
+	}
 
 
 //-----------------------------------------------------------------------------
 //                        Accessors
 //-----------------------------------------------------------------------------
 
-QString SearchMoleculesDialog::getUnit() const {
-	return searchWidget->getUnit();
-}
+	QString SearchMoleculesDialog::getUnit() const {
+		return searchWidget->getUnit();
+	}
 
-QList<int> SearchMoleculesDialog::getLineIndices() const{
-	return searchResultsWidget->getLineIndices();
-}
+	QList<int> SearchMoleculesDialog::getLineIndices() const {
+		return searchResultsWidget->getLineIndices();
+	}
 
-bool SearchMoleculesDialog::getLine(int lineIndex, Float& peak, Float& center,
-		QString& molecularName, QString& chemicalName, QString& resolvedQNs,
-		QString& frequencyUnit ) const {
-	return searchResultsWidget->getLine( lineIndex, peak, center, molecularName,
-			chemicalName, resolvedQNs, frequencyUnit );
-}
+	bool SearchMoleculesDialog::getLine(int lineIndex, Float& peak, Float& center,
+	                                    QString& molecularName, QString& chemicalName, QString& resolvedQNs,
+	                                    QString& frequencyUnit ) const {
+		return searchResultsWidget->getLine( lineIndex, peak, center, molecularName,
+		                                     chemicalName, resolvedQNs, frequencyUnit );
+	}
 
-double SearchMoleculesDialog::getRedShiftedValue( bool reverseRedshift, float value ) const {
-	return searchWidget->getRedShiftedValue( reverseRedshift, value );
-}
-
-
+	double SearchMoleculesDialog::getRedShiftedValue( bool reverseRedshift, float value ) const {
+		return searchWidget->getRedShiftedValue( reverseRedshift, value );
+	}
 
 
-SearchMoleculesDialog::~SearchMoleculesDialog()
-{
 
-}
+
+	SearchMoleculesDialog::~SearchMoleculesDialog() {
+
+	}
 }

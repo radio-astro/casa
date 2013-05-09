@@ -35,11 +35,11 @@ namespace casa {
 
 	namespace viewer {
 
-		#define IMAGER_NAME "SynthesisImager"
+#define IMAGER_NAME "SynthesisImager"
 		static const char imager_address[] = "edu.nrao.casa." IMAGER_NAME;
 
 		CleanGui::CleanGui(QWidget *parent) : QDialog(parent), ic(0), current_process_index(-1),
-											  current_process_state(UNDEFINED) {
+			current_process_state(UNDEFINED) {
 			setupUi(this);
 			const QString WINDOW_TITLE( "Clean Tool");
 			this->setWindowTitle( WINDOW_TITLE );
@@ -139,7 +139,7 @@ namespace casa {
 			***** assume that a stopped process cannot be paused...
 			****/
 			if ( current_process_state == PAUSED ||
-				 current_process_state == STOPPED ) return;
+			        current_process_state == STOPPED ) return;
 
 			ic->changePauseFlag( true );
 			refresh( );
@@ -214,7 +214,7 @@ namespace casa {
 			// or this is an event from some entry not stored in our map... either way, we
 			// will traverse and check all the values...
 			for ( std::map<QObject*,QString>::const_iterator it = current_clean_state.begin( );
-				  it != current_clean_state.end( ); ++it ) {
+			        it != current_clean_state.end( ); ++it ) {
 				QLineEdit *ptr = dynamic_cast<QLineEdit*>(it->first);
 				if ( it->second != ptr->text( ) ) {
 					set_send_needed(true);
@@ -253,10 +253,10 @@ namespace casa {
 					}
 				} catch ( const AipsError &err ) {
 					std::cerr << "loading clean info failed (at " << __FILE__ << ":" << __LINE__ <<  "): " <<
-						err.getMesg( ) << std::endl;
+					          err.getMesg( ) << std::endl;
 				} catch ( ... ) {
 					std::cerr << "loading clean info failed (at " << __FILE__ << ":" << __LINE__ <<  ")..." <<
-						std::endl;
+					          std::endl;
 				}
 			}
 		}
@@ -270,7 +270,7 @@ namespace casa {
 #if DEBUG
 				std::ostream_iterator<std::string> out( cerr, ", " );
 				std::transform( details.begin( ), details.end( ), out,
-								(std::string (*)(const std::pair<std::string,dbus::variant>&)) dbus::asString );
+				                (std::string (*)(const std::pair<std::string,dbus::variant>&)) dbus::asString );
 				fflush(stderr);  //*** catches cerr too...
 #endif
 				/***********************************************************************
@@ -447,49 +447,49 @@ namespace casa {
 				******  Fill in the threshold...                                  ******
 				***********************************************************************/
 				result.insert(details_t::value_type( "threshold",
-													 threshold_entry->text( ).toDouble( ) ));
+				                                     threshold_entry->text( ).toDouble( ) ));
 
 				/***********************************************************************
 				******  Fill in the niter...                                      ******
 				***********************************************************************/
 				result.insert(details_t::value_type( "niter",
-													 niter_entry->text( ).toInt( ) ));
+				                                     niter_entry->text( ).toInt( ) ));
 
 				/***********************************************************************
 				******  Fill in cycle niter...                                    ******
 				***********************************************************************/
 				result.insert(details_t::value_type( "cycleniter",
-													 cycle_niter_entry->text( ).toInt( ) ));
+				                                     cycle_niter_entry->text( ).toInt( ) ));
 
 				/***********************************************************************
 				******  Fill in cycle threshold...                                ******
 				***********************************************************************/
 				result.insert(details_t::value_type( "cyclethreshold",
-													 cycle_threshold_entry->text( ).toDouble( ) ));
+				                                     cycle_threshold_entry->text( ).toDouble( ) ));
 
 				/***********************************************************************
 				******  Fill in interactive niter...                              ******
 				***********************************************************************/
 				result.insert(details_t::value_type( "interactiveniter",
-													 interactive_niter_entry->text( ).toInt( ) ));
+				                                     interactive_niter_entry->text( ).toInt( ) ));
 
 				/***********************************************************************
 				******  Fill in interactive threshold...                          ******
 				***********************************************************************/
 				result.insert(details_t::value_type( "interactivethreshold",
-													 interactive_threshold_entry->text( ).toDouble( ) ));
+				                                     interactive_threshold_entry->text( ).toDouble( ) ));
 
 				/***********************************************************************
 				******  Fill in cycle factor entry...                             ******
 				***********************************************************************/
 				result.insert(details_t::value_type( "cyclefactor",
-													 cycle_factor_entry->text( ).toDouble( ) ));
+				                                     cycle_factor_entry->text( ).toDouble( ) ));
 
 				/***********************************************************************
 				******  Fill in loop gain entry...                                ******
 				***********************************************************************/
 				result.insert(details_t::value_type( "loopgain",
-													 loop_gain_entry->text( ).toDouble( ) ));
+				                                     loop_gain_entry->text( ).toDouble( ) ));
 
 				/***********************************************************************
 				******  Fill in current clean state...                            ******

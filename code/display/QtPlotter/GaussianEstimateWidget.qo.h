@@ -36,84 +36,83 @@ class QwtPlotCurve;
 
 namespace casa {
 
-class MolecularLine;
+	class MolecularLine;
 
-class GaussianEstimateWidget : public QWidget
-{
-    Q_OBJECT
+	class GaussianEstimateWidget : public QWidget {
+		Q_OBJECT
 
-public:
-    static void setEstimateColor( QColor estimateColor );
-    GaussianEstimateWidget(QWidget *parent = 0);
-    void setCurveData(const Vector<float>& xValues, const Vector<float>& yValues);
-    void setCurveColor( QColor color );
-    void setTitle( const QString& titleStr );
-    void setRangeX( Float xValue, Float yValue );
-    void setRangeY( Float xValue, Float yValue );
-    void setDisplayYUnits( const QString& units );
-    void molecularLineChanged( float peak, float center, const QString& label,
-    		const QString& chemicalName, const QString& resolvedQNs, const QString& frequencyUnits );
-    SpecFitGaussian getEstimate();
-    void setEstimate( const SpecFitGaussian& estimate );
-    void unitsChanged( const QString& oldUnits, const QString& newUnits);
-    void setSliderValueFWHM( float value );
-    void updateUIBasedOnEstimate();
-    void clearMolecularLines();
-    ~GaussianEstimateWidget();
+	public:
+		static void setEstimateColor( QColor estimateColor );
+		GaussianEstimateWidget(QWidget *parent = 0);
+		void setCurveData(const Vector<float>& xValues, const Vector<float>& yValues);
+		void setCurveColor( QColor color );
+		void setTitle( const QString& titleStr );
+		void setRangeX( Float xValue, Float yValue );
+		void setRangeY( Float xValue, Float yValue );
+		void setDisplayYUnits( const QString& units );
+		void molecularLineChanged( float peak, float center, const QString& label,
+		                           const QString& chemicalName, const QString& resolvedQNs, const QString& frequencyUnits );
+		SpecFitGaussian getEstimate();
+		void setEstimate( const SpecFitGaussian& estimate );
+		void unitsChanged( const QString& oldUnits, const QString& newUnits);
+		void setSliderValueFWHM( float value );
+		void updateUIBasedOnEstimate();
+		void clearMolecularLines();
+		~GaussianEstimateWidget();
 
-signals:
-	void coordinatedValuesChanged(float);
+	signals:
+		void coordinatedValuesChanged(float);
 
-private slots:
-	void peakSliderChanged( int value );
-	void centerSliderChanged( int value );
-	void fwhmSliderChanged( int value );
-	void peakTextChanged();
-	void centerTextChanged();
-	void fwhmTextChanged();
-	void peakFixedChanged( bool fixed );
-	void centerFixedChanged( bool fixed );
-	void fwhmFixedChanged( bool fixed );
+	private slots:
+		void peakSliderChanged( int value );
+		void centerSliderChanged( int value );
+		void fwhmSliderChanged( int value );
+		void peakTextChanged();
+		void centerTextChanged();
+		void fwhmTextChanged();
+		void peakFixedChanged( bool fixed );
+		void centerFixedChanged( bool fixed );
+		void fwhmFixedChanged( bool fixed );
 
-private:
-    float scale( int value, Float min, Float max ) const;
-    float scaleY( int value ) const;
-    float scaleX( int value ) const;
-    int reverseScale( float value, Float min, Float max ) const;
-    int reverseScaleY( float value ) const;
-    int reverseScaleX( float value ) const;
-    float getFwhmRange() const;
-    void peakChanged( float value );
-    void centerChanged( float value );
-    void fwhmChanged( float value );
-    void updateFit();
-    void copyVectors( const Vector<float>& values, QVector<double>& vals, bool reverseOrder );
-    void copyVectors( const Vector<float>& sourceValues, Vector<float>& destinationValues, bool reverseOrder );
-    float adjustValue( float val ) const;
-    void setSliderValuePeak( float value );
-    void setSliderValueCenter( float value );
-    float reasonableFWHM( float value ) const;
-    float reasonableCenter( float value ) const;
-    float reasonablePeak( float value ) const;
+	private:
+		float scale( int value, Float min, Float max ) const;
+		float scaleY( int value ) const;
+		float scaleX( int value ) const;
+		int reverseScale( float value, Float min, Float max ) const;
+		int reverseScaleY( float value ) const;
+		int reverseScaleX( float value ) const;
+		float getFwhmRange() const;
+		void peakChanged( float value );
+		void centerChanged( float value );
+		void fwhmChanged( float value );
+		void updateFit();
+		void copyVectors( const Vector<float>& values, QVector<double>& vals, bool reverseOrder );
+		void copyVectors( const Vector<float>& sourceValues, Vector<float>& destinationValues, bool reverseOrder );
+		float adjustValue( float val ) const;
+		void setSliderValuePeak( float value );
+		void setSliderValueCenter( float value );
+		float reasonableFWHM( float value ) const;
+		float reasonableCenter( float value ) const;
+		float reasonablePeak( float value ) const;
 
-    QwtPlotCurve* initCurve( QColor color );
-    void clearCurve( QwtPlotCurve*& curve );
+		QwtPlotCurve* initCurve( QColor color );
+		void clearCurve( QwtPlotCurve*& curve );
 
-    QwtPlot* plot;
-    QwtPlotCurve* curve;
-    QwtPlotCurve* fitCurve;
-    Ui::GaussianEstimateWidgetClass ui;
-    SpecFitGaussian gaussianEstimate;
-    Vector<float> xValues;
-    Vector<float> yValues;
-    Float minX;
-    Float maxX;
-    Float minY;
-    Float maxY;
-    QColor curveColor;
-    static QColor fitCurveColor;
-    QMap<QString,MolecularLine*> molecularLineMap;
-};
+		QwtPlot* plot;
+		QwtPlotCurve* curve;
+		QwtPlotCurve* fitCurve;
+		Ui::GaussianEstimateWidgetClass ui;
+		SpecFitGaussian gaussianEstimate;
+		Vector<float> xValues;
+		Vector<float> yValues;
+		Float minX;
+		Float maxX;
+		Float minY;
+		Float maxY;
+		QColor curveColor;
+		static QColor fitCurveColor;
+		QMap<QString,MolecularLine*> molecularLineMap;
+	};
 }
 
 #endif // GAUSSIANESTIMATEWIDGET_QO_H

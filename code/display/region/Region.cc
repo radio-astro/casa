@@ -69,7 +69,7 @@ namespace casa {
 		struct strip_white_space {
 			strip_white_space(size_t s) : size(s+1), off(0), buf(new char[size]) { }
 			strip_white_space( const strip_white_space &other ) : size(other.size), off(other.off),
-				               buf(new char[size]) {
+				buf(new char[size]) {
 				strcpy(buf,other.buf);
 			}
 			~strip_white_space( ) {
@@ -172,8 +172,7 @@ namespace casa {
 			double pblcx, pblcy, ptrcx, ptrcy;
 			try {
 				linear_to_pixel( wc_, blcx, blcy, trcx, trcy, pblcx, pblcy, ptrcx, ptrcy );
-			}
-			catch (...) {
+			} catch (...) {
 				return true;
 			}
 			// non-degenerate if (un-zoomed) any pixel dimensions are less than zero...
@@ -213,7 +212,7 @@ namespace casa {
 			right_linearv(0) = trc_x;
 			right_linearv(1) = left_linearv(1);
 			if ( ! wc_->linToWorld( left_worldv, left_linearv ) ||
-				 ! wc_->linToWorld( right_worldv, right_linearv ) ) {
+			        ! wc_->linToWorld( right_worldv, right_linearv ) ) {
 				return false;
 			}
 
@@ -235,7 +234,7 @@ namespace casa {
 			bottom_linearv(0) = top_linearv(0);
 			bottom_linearv(1) = blc_y;
 			if ( ! wc_->linToWorld( top_worldv, top_linearv ) ||
-				 ! wc_->linToWorld( bottom_worldv, bottom_linearv ) ) {
+			        ! wc_->linToWorld( bottom_worldv, bottom_linearv ) ) {
 				return false;
 			}
 
@@ -433,8 +432,7 @@ namespace casa {
 			int blc_x, blc_y, trc_x, trc_y;
 			try {
 				linear_to_screen( wc_, lin_blc_x, lin_blc_y, lin_trc_x, lin_trc_y, blc_x, blc_y, trc_x, trc_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
@@ -484,8 +482,7 @@ namespace casa {
 			int x_screen, y_screen;
 			try {
 				linear_to_screen( wc_, x, y, x_screen, y_screen);
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 			pc->drawFilledRectangle(x_screen-2, y_screen-2, x_screen+2, y_screen+2);
@@ -511,14 +508,12 @@ namespace casa {
 			// compute the screen coos
 			try {
 				linear_to_screen( wc_, x + scale*deltx, y + scale*delty, x1, y1);
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 			try {
 				linear_to_screen( wc_, x - scale*deltx, y - scale*delty, x2, y2);
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
@@ -594,8 +589,7 @@ namespace casa {
 				                         qwidth, qheight );
 			} else if ( mode == mystate->STATISTICS_MODE( ).toStdString() ) {
 				mystate->updateStatistics( );
-			}
-			else if ( mode == mystate->HISTOGRAM_MODE( ).toStdString() ) {
+			} else if ( mode == mystate->HISTOGRAM_MODE( ).toStdString() ) {
 				this->updateHistogramRegion();
 			}
 
@@ -996,8 +990,7 @@ namespace casa {
 				double center_x, center_y;
 				try {
 					linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				x = as_string(center_x);
@@ -1007,8 +1000,7 @@ namespace casa {
 				double p_blc_x, p_blc_y, p_trc_x, p_trc_y;
 				try {
 					linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, p_blc_x, p_blc_y, p_trc_x, p_trc_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				bounding_width = fabs(p_trc_x-p_blc_x);
@@ -1027,8 +1019,7 @@ namespace casa {
 				double p_blc_x, p_blc_y, p_trc_x, p_trc_y;
 				try {
 					linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, p_blc_x, p_blc_y, p_trc_x, p_trc_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				bounding_width = fabs(p_trc_x-p_blc_x);
@@ -1040,8 +1031,7 @@ namespace casa {
 			if ( coord == cvcs ) {
 				try {
 					linear_to_world( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), result_x, result_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				convert_units( result_x, units[0], new_x_units, result_y, units[1], new_y_units );
@@ -1049,8 +1039,7 @@ namespace casa {
 			} else {
 				try {
 					linear_to_world( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), result_x, result_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				Quantum<Vector<double> > result = convert_angle( result_x, units[0], result_y, units[1], cccs, viewer_to_casa(coord) );
@@ -1065,8 +1054,7 @@ namespace casa {
 				double center_x, center_y;
 				try {
 					linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				x = as_string(center_x);
@@ -1093,8 +1081,7 @@ namespace casa {
 				double center_x, center_y;
 				try {
 					linear_to_pixel( wc_, linear_average(blc_x,trc_x), linear_average(blc_y,trc_y), center_x, center_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				y = as_string(center_y);
@@ -1319,8 +1306,7 @@ namespace casa {
 				double new_blc_y, new_trc_y;
 				try {
 					linear_to_pixel( wc_, cur_blc_x, cur_blc_y, cur_trc_x, cur_trc_y, pix_blc_x, pix_blc_y, pix_trc_x, pix_trc_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return false;
 				}
 				double cur_pix_distance = pix_trc_x - pix_blc_x;
@@ -1329,8 +1315,7 @@ namespace casa {
 				try {
 					pixel_to_linear( wc_, pix_blc_x - shift, pix_blc_y, pix_trc_x + shift, pix_trc_y,
 					                 new_blc_x, new_blc_y, new_trc_x, new_trc_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return false;
 				}
 				resize( (new_trc_x - new_blc_x) - (cur_trc_x - cur_blc_x), 0 );
@@ -1430,8 +1415,7 @@ namespace casa {
 				double new_blc_y, new_trc_y;
 				try {
 					linear_to_pixel( wc_, cur_blc_x, cur_blc_y, cur_trc_x, cur_trc_y, pix_blc_x, pix_blc_y, pix_trc_x, pix_trc_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return false;
 				}
 				double cur_pix_distance = pix_trc_y - pix_blc_y;
@@ -1440,8 +1424,7 @@ namespace casa {
 				try {
 					pixel_to_linear( wc_, pix_blc_x, pix_blc_y - shift, pix_trc_x, pix_trc_y + shift,
 					                 new_blc_x, new_blc_y, new_trc_x, new_trc_y );
-				}
-				catch(...) {
+				} catch(...) {
 					return false;
 				}
 				resize( 0, (new_trc_y - new_blc_y) - (cur_trc_y - cur_blc_y) );
@@ -1577,8 +1560,7 @@ namespace casa {
 				pc->setLineStyle( Display::LSDashed );
 				current_ls = region::DashLine;
 				break;
-			case region::DotLine:
-			{
+			case region::DotLine: {
 				QtPixelCanvas* qpc = dynamic_cast<QtPixelCanvas*>(pc);
 				if(qpc != NULL) {
 					qpc->setQtLineStyle(Qt::DotLine);
@@ -2078,7 +2060,7 @@ namespace casa {
 		}
 
 		void world_to_screen( WorldCanvas *wc, double world_x1, double world_y1, double world_x2, double world_y2,
-							  int &screen_x1, int &screen_y1, int &screen_x2, int &screen_y2 ) {
+		                      int &screen_x1, int &screen_y1, int &screen_x2, int &screen_y2 ) {
 			double lin_x1, lin_y1, lin_x2, lin_y2;
 			world_to_linear( wc, world_x1, world_y1, world_x2, world_y2, lin_x1, lin_y1, lin_x2, lin_y2 );
 			linear_to_screen( wc, lin_x1, lin_y1, lin_x2, lin_y2, screen_x1, screen_y1, screen_x2, screen_y2 );
@@ -2294,8 +2276,7 @@ namespace casa {
 						pixCen(1) = pVals(yPos);
 						if (xPos== 1 && yPos==0) {
 							pixCen(2) = -1.0*pVals(4)+C::pi_2;
-						}
-						else {
+						} else {
 							pixCen(2) = pVals(4);
 						}
 					}
@@ -2336,8 +2317,7 @@ namespace casa {
 							zspKey = "PeakFlux";
 							zspVal = String::toString(peakFlux.getValue());
 							layercenter->push_back(RegionInfo::center_t::value_type(zspKey, zspVal));
-						}
-						else {
+						} else {
 							// if a unit was defined for the image, store
 							// value and unit
 							zspKey = "IntegrFlux";
@@ -2362,8 +2342,7 @@ namespace casa {
 				// positive (bad fits have merged off above
 				if (fitter.converged(0)) {
 					layercenter->push_back(RegionInfo::center_t::value_type("Converged", "YES"));
-				}
-				else {
+				} else {
 					layercenter->push_back(RegionInfo::center_t::value_type("Converged", "NO"));
 					return layercenter;
 				}
@@ -2495,18 +2474,18 @@ namespace casa {
 
 			//Put the updated regions into the histogram.
 			DisplayData* masterDD = wc_->csMaster();
-			if ( masterDD != NULL ){
+			if ( masterDD != NULL ) {
 				ImageRegion* region = get_image_region( masterDD );
 				const std::list<DisplayData*> &dds = wc_->displaylist( );
 				for ( std::list<DisplayData*>::const_iterator ddi=dds.begin(); ddi != dds.end(); ++ddi ) {
 					DisplayData* dd = *ddi;
-					if ( dd != NULL ){
+					if ( dd != NULL ) {
 						PrincipalAxesDD* padd = dynamic_cast<PrincipalAxesDD*>(dd);
 						if (padd==0) {
 							continue;
 						}
 						ImageInterface<float>* image = dd->imageinterface();
-						if ( image != NULL ){
+						if ( image != NULL ) {
 							histogram->addImage( image );
 							histogram->setImageRegion( image->name(true).c_str(),region, id_);
 						}
@@ -2956,8 +2935,7 @@ namespace casa {
 			case region::RegionChangeFocus:
 			case region::RegionChangeModified:
 			case region::RegionChangeNewChannel:
-			case region::RegionChangeSelected:
-			{
+			case region::RegionChangeSelected: {
 				region::RegionTypes type;
 				QList<int> pixelx, pixely;
 				QList<double> worldx, worldy;
@@ -3033,7 +3011,7 @@ namespace casa {
 			held_signals[region::RegionChangeLabel] = false;
 		}
 
-		void Region::update_histogram_event(){
+		void Region::update_histogram_event() {
 
 			//Clear out the old histograms.
 			clearHistograms();
@@ -3049,8 +3027,8 @@ namespace casa {
 			}
 		}
 
-		void Region::clearHistograms(){
-			if ( histogram != NULL ){
+		void Region::clearHistograms() {
+			if ( histogram != NULL ) {
 				histogram->clear();
 			}
 		}

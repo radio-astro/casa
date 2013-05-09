@@ -1,4 +1,4 @@
-//# DisplayParameter.h: base class for storing and parsing parameters 
+//# DisplayParameter.h: base class for storing and parsing parameters
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -61,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <src>RecordInterface</src>-type object, and to add the description
 // of the parameter to a provided <src>RecordInterface</src> object.
 //
-// Other than this, all parameters share these common elements: 
+// Other than this, all parameters share these common elements:
 //
 // <li> <src>name</src>, a short <src>String</src> uniquely
 // identifiying the parameter.
@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <li> <src>context</src>, which if provided (ie. <src>context !=
 // String("")</src>) gives a category name for this parameter, and is
-// used, for example, by the autogui to place the parameter in an 
+// used, for example, by the autogui to place the parameter in an
 // appropriately named roll-up.
 //
 // <li> <src>allowunset</src>, which indicates whether this parameter
@@ -105,7 +105,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // parameter.
 // </synopsis>
 
-// <motivation> 
+// <motivation>
 // To avoid littering many of the display classes with code fragments
 // for constructing and parsing Records.
 // </motivation>
@@ -118,132 +118,145 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Provide base class support for unset values.
 // </todo>
 
-class DisplayParameter {
+	class DisplayParameter {
 
- public:
+	public:
 
-  // Destructor.
-  virtual ~DisplayParameter();
+		// Destructor.
+		virtual ~DisplayParameter();
 
-  // Parse <src>record</src>, and update this parameter if a field
-  // exists whose name matches that of this parameter.  Return
-  // <src>True</src> if the parameter is changed, otherwise return
-  // <src>False</src>.
-  virtual Bool fromRecord(const RecordInterface &record) = 0;
+		// Parse <src>record</src>, and update this parameter if a field
+		// exists whose name matches that of this parameter.  Return
+		// <src>True</src> if the parameter is changed, otherwise return
+		// <src>False</src>.
+		virtual Bool fromRecord(const RecordInterface &record) = 0;
 
-  // Place a record describing this parameter in a sub-field of
-  // <src>record</src> with name matching that of this parameter.  If
-  // <src>overwrite</src> is <src>True</src>, then any existing field
-  // with matching name will be overwritten.  If <src>fullrecord</src>
-  // is <src>True</src>, then a complete description of the parameter
-  // is given, otherwise just its current value is stored in
-  // <src>record</src>.
-  virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
-			const Bool overwrite = False) = 0;
+		// Place a record describing this parameter in a sub-field of
+		// <src>record</src> with name matching that of this parameter.  If
+		// <src>overwrite</src> is <src>True</src>, then any existing field
+		// with matching name will be overwritten.  If <src>fullrecord</src>
+		// is <src>True</src>, then a complete description of the parameter
+		// is given, otherwise just its current value is stored in
+		// <src>record</src>.
+		virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
+		                      const Bool overwrite = False) = 0;
 
-  // Return the name of this parameter.
-  String name() const 
-    { return itsName; }
+		// Return the name of this parameter.
+		String name() const {
+			return itsName;
+		}
 
-  // Return the description of this parameter.
-  String description() const 
-    { return itsDescription; }
+		// Return the description of this parameter.
+		String description() const {
+			return itsDescription;
+		}
 
-  // Return the help for this parameter.
-  String help() const 
-    { return itsHelp; }
+		// Return the help for this parameter.
+		String help() const {
+			return itsHelp;
+		}
 
-  // Return the context of this parameter.
-  String context() const
-    { return itsContext; }
+		// Return the context of this parameter.
+		String context() const {
+			return itsContext;
+		}
 
-  // Return whether this parameter can be unset.
-  Bool allowUnset() const
-    { return itsAllowUnset; }
+		// Return whether this parameter can be unset.
+		Bool allowUnset() const {
+			return itsAllowUnset;
+		}
 
-  // Return whether this parameter is editable.
-  Bool editable() const
-    { return itsEditable; }
+		// Return whether this parameter is editable.
+		Bool editable() const {
+			return itsEditable;
+		}
 
-  // Set or change the name of this parameter to that specified.
-  void setName(const String name)
-    { itsName = name; }
+		// Set or change the name of this parameter to that specified.
+		void setName(const String name) {
+			itsName = name;
+		}
 
-  // Set or change the description of this parameter to what is
-  // specified.
-  void setDescription(const String description)
-    { itsDescription = description; }
+		// Set or change the description of this parameter to what is
+		// specified.
+		void setDescription(const String description) {
+			itsDescription = description;
+		}
 
-  // Set or change the help for this parameter to what is specified.
-  void setHelp(const String help) 
-    { itsHelp = help; }
+		// Set or change the help for this parameter to what is specified.
+		void setHelp(const String help) {
+			itsHelp = help;
+		}
 
-  // Set or change the context of this parameter to what is specified.
-  void setContext(const String context) 
-    { itsContext = context; }
+		// Set or change the context of this parameter to what is specified.
+		void setContext(const String context) {
+			itsContext = context;
+		}
 
-  // Set or change whether this parameter may be unset, according to
-  // the function argument value.
-  void setAllowUnset(const Bool allowunset) 
-    { itsAllowUnset = allowunset; }
+		// Set or change whether this parameter may be unset, according to
+		// the function argument value.
+		void setAllowUnset(const Bool allowunset) {
+			itsAllowUnset = allowunset;
+		}
 
-  // Set or change whether this parameter is editable according to
-  // the function argument.
-  void setEditable(const Bool editable) 
-    { itsEditable = editable; }
+		// Set or change whether this parameter is editable according to
+		// the function argument.
+		void setEditable(const Bool editable) {
+			itsEditable = editable;
+		}
 
- protected:
+	protected:
 
-  // Constructor taking the name of the parameter, a short
-  // description, some help text, and flags indicating whether the
-  // parameter can be unset and is editable.
-  DisplayParameter(const String name, const String description,
-		   const String help, const String context = "",
-		   const Bool allowunset = False, 
-		   const Bool editable = True);
+		// Constructor taking the name of the parameter, a short
+		// description, some help text, and flags indicating whether the
+		// parameter can be unset and is editable.
+		DisplayParameter(const String name, const String description,
+		                 const String help, const String context = "",
+		                 const Bool allowunset = False,
+		                 const Bool editable = True);
 
-  // Copy constructor using copy semantics.
-  DisplayParameter(const DisplayParameter &other);
+		// Copy constructor using copy semantics.
+		DisplayParameter(const DisplayParameter &other);
 
-  // Default constructor yielding a useless DisplayParameter.
-  DisplayParameter();
+		// Default constructor yielding a useless DisplayParameter.
+		DisplayParameter();
 
-  // Copy assignment.
-  DisplayParameter &operator=(const DisplayParameter &other);
+		// Copy assignment.
+		DisplayParameter &operator=(const DisplayParameter &other);
 
-  // Return a basic description of this parameter; used by virtual
-  // implementations of <src>toRecord</src> method to fill out
-  // a Record describing this DisplayParameter.
-  Record baseDescription();
+		// Return a basic description of this parameter; used by virtual
+		// implementations of <src>toRecord</src> method to fill out
+		// a Record describing this DisplayParameter.
+		Record baseDescription();
 
-  // Return the DisplayOptions to use for parsing Records.
-  const DisplayOptions &displayOptions() const 
-    { return itsDisplayOptions; }
+		// Return the DisplayOptions to use for parsing Records.
+		const DisplayOptions &displayOptions() const {
+			return itsDisplayOptions;
+		}
 
- private:
+	private:
 
-  // Store for the name of this parameter.
-  String itsName;
+		// Store for the name of this parameter.
+		String itsName;
 
-  // Store for the description of this parameter.
-  String itsDescription;
+		// Store for the description of this parameter.
+		String itsDescription;
 
-  // Store for the help for this parameter.
-  String itsHelp;
+		// Store for the help for this parameter.
+		String itsHelp;
 
-  // Store for the context of this parameter.
-  String itsContext;
+		// Store for the context of this parameter.
+		String itsContext;
 
-  // Store for whether this parameter can be unset.
-  Bool itsAllowUnset;
+		// Store for whether this parameter can be unset.
+		Bool itsAllowUnset;
 
-  // Store for whether this parameter is editable.
-  Bool itsEditable;
+		// Store for whether this parameter is editable.
+		Bool itsEditable;
 
-  // Store for a DisplayOptions object for parsing Records.
-  DisplayOptions itsDisplayOptions;
+		// Store for a DisplayOptions object for parsing Records.
+		DisplayOptions itsDisplayOptions;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

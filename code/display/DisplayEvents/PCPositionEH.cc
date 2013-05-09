@@ -31,15 +31,15 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required
-PCPositionEH::PCPositionEH() {
-}
+	PCPositionEH::PCPositionEH() {
+	}
 
-void PCPositionEH::operator ()(const PCPositionEvent &) {
-}
+	void PCPositionEH::operator ()(const PCPositionEvent &) {
+	}
 
 // Destructor
-PCPositionEH::~PCPositionEH() {
-}
+	PCPositionEH::~PCPositionEH() {
+	}
 
 
 } //# NAMESPACE CASA - END

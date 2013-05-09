@@ -56,366 +56,450 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //template <class T> class ImageInterface;
 
-QtRegionManager::QtRegionManager(
-		QtDisplayPanel* qdp, QWidget* parent) :
+	QtRegionManager::QtRegionManager(
+	    QtDisplayPanel* qdp, QWidget* parent) :
 		QWidget(parent), qdp_(qdp), parent_(parent),
 		regData(), regState() {
 
-	// This gui receives signals from, and sends commands
-	// to qdp; qdp must be valid.
+		// This gui receives signals from, and sends commands
+		// to qdp; qdp must be valid.
 
-	setupUi(this);
-	// Creates all the widgets (such as pathEdit_) from
-	// the base class and inserts them into this widget.
-
-
-	//showHideMenu = new QMenu(this);
-	//showHideButton->setMenu(showHideMenu);
-	//deleteMenu = new QMenu(this);
-	//deleteButton->setMenu(deleteMenu);
-
-	cleanup();
-
-	//loadRegionFromImage();
-	//drawing_mode->clear();
-	//drawing_mode->addItem("union");
+		setupUi(this);
+		// Creates all the widgets (such as pathEdit_) from
+		// the base class and inserts them into this widget.
 
 
-	connect(qdp_,  SIGNAL(registrationChange()),
-			SLOT(loadRegionFromImage()));
-	//from double click in a region
-	connect(qdp_,
-			SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
-			SLOT(drawRegion(Record, WorldCanvasHolder*)));
-	//also from double click a region
-	connect(qdp_, SIGNAL(newRegion(String)),
-			SLOT(newRegion_(String)));
-	connect(this, SIGNAL(extendRegion(String, String)),
-			qdp_, SLOT(extendRegion(String, String)));
-	connect(qdp_, SIGNAL(animatorChange()),
-			SLOT(zPlaneChanged()) );
-	connect(qdp_, SIGNAL(activate(Record)),
-			SLOT(activate(Record)) );
-	connect(chan_sel, SIGNAL(editingFinished()),
-			SLOT(resetRegionExtension()));
-	connect(pol_sel, SIGNAL(editingFinished()),
-			SLOT(resetRegionExtension()));
-	connect(this, SIGNAL(destroyed()), SLOT(cleanup()));
-	connect(this, SIGNAL(destroyed()), SLOT(cleanup()));
-	connect(saveInImage, SIGNAL(clicked()),
-			SLOT(saveRegionInImage()));
-	connect(saveRGNFile, SIGNAL(clicked()),
-			SLOT(saveRegionInFile()));
-	connect(deleteReg, SIGNAL(clicked()),
-			SLOT(removeRegion()));
-	//connect(planeOnlyCB, SIGNAL(stateChanged(int)),
-	//                   SLOT(singlePlane()));
-	//connect(chanExt, SIGNAL(clicked()),
-	//                 SLOT(extendChan()));
-	//connect(polExt, SIGNAL(clicked()),
-	//                SLOT(extendPol()));
-	connect(helpButton, SIGNAL(clicked()),
-			SLOT(showHelp()));
-	connect(helpAct, SIGNAL(clicked()),
-			SLOT(showHelpActive()));
-	connect(resetregions, SIGNAL(clicked()),
-			SLOT(cleanup()));
-	connect(loadFile, SIGNAL(clicked()),
-			SLOT(loadRegionFromFile()));
-	connect(showOrHide, SIGNAL(clicked()),
-			SLOT(toggleImageRegion()));
-	connect(regName,
-			SIGNAL(currentIndexChanged(const QString &)),
-			SLOT(currentRegionChanged(const QString &)));
+		//showHideMenu = new QMenu(this);
+		//showHideButton->setMenu(showHideMenu);
+		//deleteMenu = new QMenu(this);
+		//deleteButton->setMenu(deleteMenu);
 
-	connect(deleteButton,
-			SIGNAL(clicked()),
-			SLOT(deleteActiveBox()));
-	connect(insertButton,
-			SIGNAL(clicked()),
-			SLOT(insertActiveBox()));
+		cleanup();
 
-	connect(exportButton,
-			SIGNAL(clicked()),
-			SLOT(exportRegions()));
+		//loadRegionFromImage();
+		//drawing_mode->clear();
+		//drawing_mode->addItem("union");
 
-	planeOnlyCB->setChecked(True);
-	planeOnlyCB->setChecked(False);
-	planeOnlyCB->hide();
-	chanExt->setEnabled(True);
-	polExt->setEnabled(True);
-	lineEdit->setReadOnly(true);
 
-	deleteButton->setEnabled(false);
-	insertButton->setEnabled(false);
+		connect(qdp_,  SIGNAL(registrationChange()),
+		        SLOT(loadRegionFromImage()));
+		//from double click in a region
+		connect(qdp_,
+		        SIGNAL(mouseRegionReady(Record, WorldCanvasHolder*)),
+		        SLOT(drawRegion(Record, WorldCanvasHolder*)));
+		//also from double click a region
+		connect(qdp_, SIGNAL(newRegion(String)),
+		        SLOT(newRegion_(String)));
+		connect(this, SIGNAL(extendRegion(String, String)),
+		        qdp_, SLOT(extendRegion(String, String)));
+		connect(qdp_, SIGNAL(animatorChange()),
+		        SLOT(zPlaneChanged()) );
+		connect(qdp_, SIGNAL(activate(Record)),
+		        SLOT(activate(Record)) );
+		connect(chan_sel, SIGNAL(editingFinished()),
+		        SLOT(resetRegionExtension()));
+		connect(pol_sel, SIGNAL(editingFinished()),
+		        SLOT(resetRegionExtension()));
+		connect(this, SIGNAL(destroyed()), SLOT(cleanup()));
+		connect(this, SIGNAL(destroyed()), SLOT(cleanup()));
+		connect(saveInImage, SIGNAL(clicked()),
+		        SLOT(saveRegionInImage()));
+		connect(saveRGNFile, SIGNAL(clicked()),
+		        SLOT(saveRegionInFile()));
+		connect(deleteReg, SIGNAL(clicked()),
+		        SLOT(removeRegion()));
+		//connect(planeOnlyCB, SIGNAL(stateChanged(int)),
+		//                   SLOT(singlePlane()));
+		//connect(chanExt, SIGNAL(clicked()),
+		//                 SLOT(extendChan()));
+		//connect(polExt, SIGNAL(clicked()),
+		//                SLOT(extendPol()));
+		connect(helpButton, SIGNAL(clicked()),
+		        SLOT(showHelp()));
+		connect(helpAct, SIGNAL(clicked()),
+		        SLOT(showHelpActive()));
+		connect(resetregions, SIGNAL(clicked()),
+		        SLOT(cleanup()));
+		connect(loadFile, SIGNAL(clicked()),
+		        SLOT(loadRegionFromFile()));
+		connect(showOrHide, SIGNAL(clicked()),
+		        SLOT(toggleImageRegion()));
+		connect(regName,
+		        SIGNAL(currentIndexChanged(const QString &)),
+		        SLOT(currentRegionChanged(const QString &)));
 
-	activeGroup = "";
-	activeBox = -1;
-	activeShape = 0;
-	timer = new QTimer(this);
-	flash = false;
-	connect(timer,
-			SIGNAL(timeout()),
-			SLOT(flashActive()));
+		connect(deleteButton,
+		        SIGNAL(clicked()),
+		        SLOT(deleteActiveBox()));
+		connect(insertButton,
+		        SIGNAL(clicked()),
+		        SLOT(insertActiveBox()));
 
-	cb = 1;
-}
-void QtRegionManager::displaySelectedRegion(){
+		connect(exportButton,
+		        SIGNAL(clicked()),
+		        SLOT(exportRegions()));
 
-	String theName(regName->currentText().toStdString());
-	/////read region name and call showregion with name
-	cout << "regname " << theName << endl;
-	showRegion(theName);
+		planeOnlyCB->setChecked(True);
+		planeOnlyCB->setChecked(False);
+		planeOnlyCB->hide();
+		chanExt->setEnabled(True);
+		polExt->setEnabled(True);
+		lineEdit->setReadOnly(true);
 
-}
+		deleteButton->setEnabled(false);
+		insertButton->setEnabled(false);
 
-void QtRegionManager::showRegion(const String& regName){
+		activeGroup = "";
+		activeBox = -1;
+		activeShape = 0;
+		timer = new QTimer(this);
+		flash = false;
+		connect(timer,
+		        SIGNAL(timeout()),
+		        SLOT(flashActive()));
 
-	ImageRegion imreg=qdp_->getRegion(regName);
-	if(imreg.isWCRegion()){
+		cb = 1;
+	}
+	void QtRegionManager::displaySelectedRegion() {
 
-		const WCRegion* wcreg=imreg.asWCRegionPtr();
-		CoordinateSystem csys;
-		{
+		String theName(regName->currentText().toStdString());
+		/////read region name and call showregion with name
+		cout << "regname " << theName << endl;
+		showRegion(theName);
+
+	}
+
+	void QtRegionManager::showRegion(const String& regName) {
+
+		ImageRegion imreg=qdp_->getRegion(regName);
+		if(imreg.isWCRegion()) {
+
+			const WCRegion* wcreg=imreg.asWCRegionPtr();
+			CoordinateSystem csys;
+			{
+				/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
+				ListIter<QtDisplayData*> qdds(DDs);
+				if (qdds.len() == 0)
+				 return;
+				qdds.toEnd();
+				qdds--;
+				QtDisplayData* qdd = qdds.getRight();*/
+				if ( qdp_->isEmptyRegistered()) {
+					return;
+				}
+				DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+				iter--;
+				QtDisplayData* qdd = (*iter);
+				csys=(qdd->imageInterface())->coordinates();
+			}
+			//cout << "before showreg csys" << endl;
+			Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
+			MDirection::Types dirType=csys.directionCoordinate(dirInd).directionType(True);
+			RSComposite *theShapes= new RSComposite(dirType);
+			//cout << "calling add" <<endl;
+			addRegionsToShape(theShapes, wcreg);
+			theShapes->setLineColor("cyan");
+			ListIter<RegionShape*> rgiter(regShapes_p);
+			rgiter.toEnd();
+			qdp_->registerRegionShape(theShapes);
+			rgiter.addRight(theShapes);
+		}
+
+	}
+
+
+	WCUnion* QtRegionManager::unfoldCompositeRegionToSimpleUnion(
+	    const WCRegion*& wcreg) {
+		PtrBlock<const WCRegion* > outRegPtrs ;
+		unfoldIntoSimpleRegionPtrs(outRegPtrs, wcreg);
+		WCUnion* outputUnion = new WCUnion(True, outRegPtrs);
+		return outputUnion;
+	}
+
+	void QtRegionManager::unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs, const WCRegion*& wcreg) {
+		if((wcreg->type()) == "WCBox") {
+			uInt nreg=outRegPtrs.nelements();
+			outRegPtrs.resize(nreg+1);
+			outRegPtrs[nreg]=new WCBox(static_cast<const WCBox & >(*wcreg));
+		} else if((wcreg->type()) == "WCPolygon") {
+			uInt nreg=outRegPtrs.nelements();
+			outRegPtrs.resize(nreg+1);
+			outRegPtrs[nreg]=new WCPolygon(static_cast<const WCPolygon & >(*wcreg));
+		} else if((wcreg->type()) == "WCUnion" ||(wcreg->type()) == "WCIntersection" ) {
+			PtrBlock<const WCRegion*> regPtrs=(static_cast<const WCCompound* >(wcreg))->regions();
+			//cout << "number of wcregions " << regPtrs.nelements() << endl;
+			for (uInt j=0; j < regPtrs.nelements(); ++j) {
+				unfoldIntoSimpleRegionPtrs(outRegPtrs, regPtrs[j]);
+			}
+
+		}
+
+	}
+
+	void QtRegionManager::addRegionsToShape(RSComposite*& theShapes, const WCRegion*& wcreg) {
+		//cout << "WCRegion->comment="
+		//     << wcreg->comment() << endl;
+		if((wcreg->type()) == "WCBox") {
+			TableRecord boxrec=wcreg->toRecord("");
+			const RecordInterface& blcrec=boxrec.asRecord("blc");
+			const RecordInterface& trcrec=boxrec.asRecord("trc");
+			CoordinateSystem *coords;
+			coords=CoordinateSystem::restore(boxrec,"coordinates");
+			//cout << "coords rect " << coords->nCoordinates() << endl;
+			Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
+			MDirection::Types dirType=coords->directionCoordinate(dirInd).directionType(True);
+			//Assuming x, y axes are dirInd and dirInd+1
+			Vector<Double> blc(2);
+			Vector<Double> trc(2);
+			QuantumHolder h;
+			for (Int j=dirInd; j <= dirInd+1; ++j) {
+				const RecordInterface& subRec0=blcrec.asRecord(j);
+				const RecordInterface& subRec1=trcrec.asRecord(j);
+				String error;
+				if (!h.fromRecord(error, subRec0)) {
+					throw (AipsError ("WCBox::fromRecord - could not recover blc because "+error));
+				}
+
+				blc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
+				if (!h.fromRecord(error, subRec1)) {
+					throw (AipsError ("WCBox::fromRecord - could not recover trc because "+error));
+				}
+				trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
+			}
+			RSRectangle *rect= new RSRectangle((blc(0)+trc(0))/2.0,(blc(1)+trc(1))/2.0,fabs(trc(0)-blc(0)), fabs(trc(1)-blc(1)), dirType);
+			rect->setLineColor("cyan");
+			//Doing it manually as Composites does not seem to be getting registered
+			//This is not a workaround because it add extra dd
+			//to the panel
+			///////////////////////////
+			//qdp_->registerRegionShape(rect);
+			//ListIter<RegionShape*> rgiter(regShapes_p);
+			//rgiter.toEnd();
+			//rgiter.addRight(rect);
+			///////////////////////////
+
+			theShapes->addShape(rect);
+
+		} else if((wcreg->type())== "WCPolygon") {
+			TableRecord polyrec=wcreg->toRecord("");
+			CoordinateSystem *coords;
+			coords=CoordinateSystem::restore(polyrec,"coordinates");
+			//cout << "coords polyg " << coords->nCoordinates() << endl;
+
+			Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
+			MDirection::Types dirType=coords->directionCoordinate(dirInd).directionType(True);
+			Vector<Double> x;
+			Vector<Double> y;
+			const RecordInterface& subRecord0 = polyrec.asRecord("x");
+			String error;
+			QuantumHolder h;
+			if (!h.fromRecord(error, subRecord0)) {
+				throw (AipsError ("WCPolygon::fromRecord - could not recover X Quantum vector because "+error));
+			}
+			x = h.asQuantumVectorDouble().getValue(RegionShape::UNIT);
+			const RecordInterface& subRecord1 = polyrec.asRecord("y");
+			if (!h.fromRecord(error, subRecord1)) {
+				throw (AipsError ("WCPolygon::fromRecord - could not recover Y Quantum vector because "+error));
+			}
+			y = h.asQuantumVectorDouble().getValue(RegionShape::UNIT);
+
+			RSPolygon *poly= new RSPolygon(x,y,dirType);
+			poly->setLineColor("cyan");
+			//Doing it manually as Composites does not seem to be getting registered
+			//This is not a workaround because it add extra dd
+			//to the panel
+			///////////////
+			//qdp_->registerRegionShape(poly);
+			//ListIter<RegionShape*> rgiter(regShapes_p);
+			//rgiter.toEnd();
+			//rgiter.addRight(poly);
+			/////////////
+			theShapes->addShape(poly);
+		} else if((wcreg->type()) == "WCUnion" ||(wcreg->type()) == "WCIntersection" ) {
+			PtrBlock<const WCRegion*> regPtrs=(static_cast<const WCCompound* >(wcreg))->regions();
+			//cout << "number of wcregions " << regPtrs.nelements() << endl;
+			for (uInt j=0; j < regPtrs.nelements(); ++j) {
+				addRegionsToShape(theShapes, regPtrs[j]);
+			}
+
+		}
+		String rest = wcreg->comment();
+		String chan = rest.before("polExt:");
+		chan = chan.after("chanExt:");
+		String pola = rest.after("polExt:");
+		//cout << "chanExt=" << chan << endl;
+		//cout << "polExt=" << pola << endl;
+		Attribute oldState("chan", chan);
+		Attribute newState("pola", pola);
+		theShapes->setRestriction(oldState);
+		theShapes->setRestriction(newState);
+
+	}
+	void QtRegionManager::drawRegion( Record mousereg, WorldCanvasHolder */*wch*/ ) {
+		//cout << "drawRegion ..." << endl;
+
+		if(this->isVisible() && mousereg.isDefined("world")) {
+			String type=mousereg.asString("type");
 			/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
-	ListIter<QtDisplayData*> qdds(DDs);
-        if (qdds.len() == 0)
-           return;
-	qdds.toEnd();
-	qdds--;
-	QtDisplayData* qdd = qdds.getRight();*/
-			if ( qdp_->isEmptyRegistered()){
+			ListIter<QtDisplayData*> qdds(DDs);
+			if (qdds.len() == 0)
+				return;
+			qdds.toEnd();
+			qdds--;*/
+			if ( qdp_->isEmptyRegistered()) {
 				return;
 			}
 			DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
 			iter--;
 			QtDisplayData* qdd = (*iter);
-			csys=(qdd->imageInterface())->coordinates();
-		}
-		//cout << "before showreg csys" << endl;
-		Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
-		MDirection::Types dirType=csys.directionCoordinate(dirInd).directionType(True);
-		RSComposite *theShapes= new RSComposite(dirType);
-		//cout << "calling add" <<endl;
-		addRegionsToShape(theShapes, wcreg);
-		theShapes->setLineColor("cyan");
-		ListIter<RegionShape*> rgiter(regShapes_p);
-		rgiter.toEnd();
-		qdp_->registerRegionShape(theShapes);
-		rgiter.addRight(theShapes);
-	}
+			ListIter<RegionShape*> rgiter(regShapes_p);
+			rgiter.toEnd();
+			//QtDisplayData* qdd = qdds.getRight();
 
-}
+			if( (qdd->imageInterface())) {
+				CoordinateSystem csys=(qdd->imageInterface())->coordinates();
+				Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
+				MDirection::Types dirType=csys.directionCoordinate(dirInd).directionType(True);
+				if(type.contains("box")) {
+					Record corners = mousereg.asRecord("world");
+					Vector<Double> blc = corners.asArrayDouble("blc");
+					Vector<Double> trc = corners.asArrayDouble("trc");
+					Vector<String> units=corners.asArrayString("units");
+					blc(0)=Quantity(blc(0), units(0)).getValue(RegionShape::UNIT);
+					blc(1)=Quantity(blc(1), units(1)).getValue(RegionShape::UNIT);
+					trc(0)=Quantity(trc(0), units(0)).getValue(RegionShape::UNIT);
+					trc(1)=Quantity(trc(1), units(1)).getValue(RegionShape::UNIT);
+					//Int zindex = mousereg.asInt("zindex");
+					RSRectangle *rect= new RSRectangle((blc(0)+trc(0))/2.0,(blc(1)+trc(1))/2.0,fabs(trc(0)-blc(0)), fabs(trc(1)-blc(1)), dirType);
+					rect->setLineColor("cyan");
+					qdp_->registerRegionShape(rect);
+					rgiter.addRight(rect);
+				} else if(type.contains("poly")) {
+					Record vertices=mousereg.asRecord("world");
+					Vector<Double> xs = vertices.asArrayDouble("x");
+					Vector<Double> ys = vertices.asArrayDouble("y");
+					Vector<String> units=vertices.asArrayString("units");
+					for (uInt k=0; k< xs.nelements(); ++k) {
+						xs(k)=Quantity(xs(k), units(0)).getValue(RegionShape::UNIT);
+						ys(k)=Quantity(ys(k), units(1)).getValue(RegionShape::UNIT);
 
-
-WCUnion* QtRegionManager::unfoldCompositeRegionToSimpleUnion(
-		const WCRegion*& wcreg){
-	PtrBlock<const WCRegion* > outRegPtrs ;
-	unfoldIntoSimpleRegionPtrs(outRegPtrs, wcreg);
-	WCUnion* outputUnion = new WCUnion(True, outRegPtrs);
-	return outputUnion;
-}
-
-void QtRegionManager::unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs, const WCRegion*& wcreg){
-	if((wcreg->type()) == "WCBox"){
-		uInt nreg=outRegPtrs.nelements();
-		outRegPtrs.resize(nreg+1);
-		outRegPtrs[nreg]=new WCBox(static_cast<const WCBox & >(*wcreg));
-	}
-	else if((wcreg->type()) == "WCPolygon"){
-		uInt nreg=outRegPtrs.nelements();
-		outRegPtrs.resize(nreg+1);
-		outRegPtrs[nreg]=new WCPolygon(static_cast<const WCPolygon & >(*wcreg));
-	}
-	else if((wcreg->type()) == "WCUnion" ||(wcreg->type()) == "WCIntersection" ){
-		PtrBlock<const WCRegion*> regPtrs=(static_cast<const WCCompound* >(wcreg))->regions();
-		//cout << "number of wcregions " << regPtrs.nelements() << endl;
-		for (uInt j=0; j < regPtrs.nelements(); ++j){
-			unfoldIntoSimpleRegionPtrs(outRegPtrs, regPtrs[j]);
-		}
-
-	}
-
-}
-
-void QtRegionManager::addRegionsToShape(RSComposite*& theShapes, const WCRegion*& wcreg){
-	//cout << "WCRegion->comment="
-	//     << wcreg->comment() << endl;
-	if((wcreg->type()) == "WCBox"){
-		TableRecord boxrec=wcreg->toRecord("");
-		const RecordInterface& blcrec=boxrec.asRecord("blc");
-		const RecordInterface& trcrec=boxrec.asRecord("trc");
-		CoordinateSystem *coords;
-		coords=CoordinateSystem::restore(boxrec,"coordinates");
-		//cout << "coords rect " << coords->nCoordinates() << endl;
-		Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
-		MDirection::Types dirType=coords->directionCoordinate(dirInd).directionType(True);
-		//Assuming x, y axes are dirInd and dirInd+1
-		Vector<Double> blc(2);
-		Vector<Double> trc(2);
-		QuantumHolder h;
-		for (Int j=dirInd; j <= dirInd+1; ++j){
-			const RecordInterface& subRec0=blcrec.asRecord(j);
-			const RecordInterface& subRec1=trcrec.asRecord(j);
-			String error;
-			if (!h.fromRecord(error, subRec0)) {
-				throw (AipsError ("WCBox::fromRecord - could not recover blc because "+error));
-			}
-
-			blc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
-			if (!h.fromRecord(error, subRec1)) {
-				throw (AipsError ("WCBox::fromRecord - could not recover trc because "+error));
-			}
-			trc(j-dirInd)=h.asQuantumDouble().getValue(RegionShape::UNIT);
-		}
-		RSRectangle *rect= new RSRectangle((blc(0)+trc(0))/2.0,(blc(1)+trc(1))/2.0,fabs(trc(0)-blc(0)), fabs(trc(1)-blc(1)), dirType);
-		rect->setLineColor("cyan");
-		//Doing it manually as Composites does not seem to be getting registered
-		//This is not a workaround because it add extra dd
-		//to the panel
-		///////////////////////////
-		//qdp_->registerRegionShape(rect);
-		//ListIter<RegionShape*> rgiter(regShapes_p);
-		//rgiter.toEnd();
-		//rgiter.addRight(rect);
-		///////////////////////////
-
-		theShapes->addShape(rect);
-
-	}
-	else if((wcreg->type())== "WCPolygon"){
-		TableRecord polyrec=wcreg->toRecord("");
-		CoordinateSystem *coords;
-		coords=CoordinateSystem::restore(polyrec,"coordinates");
-		//cout << "coords polyg " << coords->nCoordinates() << endl;
-
-		Int dirInd=coords->findCoordinate(Coordinate::DIRECTION);
-		MDirection::Types dirType=coords->directionCoordinate(dirInd).directionType(True);
-		Vector<Double> x;
-		Vector<Double> y;
-		const RecordInterface& subRecord0 = polyrec.asRecord("x");
-		String error;
-		QuantumHolder h;
-		if (!h.fromRecord(error, subRecord0)) {
-			throw (AipsError ("WCPolygon::fromRecord - could not recover X Quantum vector because "+error));
-		}
-		x = h.asQuantumVectorDouble().getValue(RegionShape::UNIT);
-		const RecordInterface& subRecord1 = polyrec.asRecord("y");
-		if (!h.fromRecord(error, subRecord1)) {
-			throw (AipsError ("WCPolygon::fromRecord - could not recover Y Quantum vector because "+error));
-		}
-		y = h.asQuantumVectorDouble().getValue(RegionShape::UNIT);
-
-		RSPolygon *poly= new RSPolygon(x,y,dirType);
-		poly->setLineColor("cyan");
-		//Doing it manually as Composites does not seem to be getting registered
-		//This is not a workaround because it add extra dd
-		//to the panel
-		///////////////
-		//qdp_->registerRegionShape(poly);
-		//ListIter<RegionShape*> rgiter(regShapes_p);
-		//rgiter.toEnd();
-		//rgiter.addRight(poly);
-		/////////////
-		theShapes->addShape(poly);
-	}
-	else if((wcreg->type()) == "WCUnion" ||(wcreg->type()) == "WCIntersection" ){
-		PtrBlock<const WCRegion*> regPtrs=(static_cast<const WCCompound* >(wcreg))->regions();
-		//cout << "number of wcregions " << regPtrs.nelements() << endl;
-		for (uInt j=0; j < regPtrs.nelements(); ++j){
-			addRegionsToShape(theShapes, regPtrs[j]);
-		}
-
-	}
-	String rest = wcreg->comment();
-	String chan = rest.before("polExt:");
-	chan = chan.after("chanExt:");
-	String pola = rest.after("polExt:");
-	//cout << "chanExt=" << chan << endl;
-	//cout << "polExt=" << pola << endl;
-	Attribute oldState("chan", chan);
-	Attribute newState("pola", pola);
-	theShapes->setRestriction(oldState);
-	theShapes->setRestriction(newState);
-
-}
-void QtRegionManager::drawRegion( Record mousereg, WorldCanvasHolder */*wch*/ ){
-	//cout << "drawRegion ..." << endl;
-
-	if(this->isVisible() && mousereg.isDefined("world")){
-		String type=mousereg.asString("type");
-		/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
-		ListIter<QtDisplayData*> qdds(DDs);
-		if (qdds.len() == 0)
-			return;
-		qdds.toEnd();
-		qdds--;*/
-		if ( qdp_->isEmptyRegistered()){
-			return;
-		}
-		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
-		iter--;
-		QtDisplayData* qdd = (*iter);
-		ListIter<RegionShape*> rgiter(regShapes_p);
-		rgiter.toEnd();
-		//QtDisplayData* qdd = qdds.getRight();
-
-		if( (qdd->imageInterface())){
-			CoordinateSystem csys=(qdd->imageInterface())->coordinates();
-			Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
-			MDirection::Types dirType=csys.directionCoordinate(dirInd).directionType(True);
-			if(type.contains("box")){
-				Record corners = mousereg.asRecord("world");
-				Vector<Double> blc = corners.asArrayDouble("blc");
-				Vector<Double> trc = corners.asArrayDouble("trc");
-				Vector<String> units=corners.asArrayString("units");
-				blc(0)=Quantity(blc(0), units(0)).getValue(RegionShape::UNIT);
-				blc(1)=Quantity(blc(1), units(1)).getValue(RegionShape::UNIT);
-				trc(0)=Quantity(trc(0), units(0)).getValue(RegionShape::UNIT);
-				trc(1)=Quantity(trc(1), units(1)).getValue(RegionShape::UNIT);
-				//Int zindex = mousereg.asInt("zindex");
-				RSRectangle *rect= new RSRectangle((blc(0)+trc(0))/2.0,(blc(1)+trc(1))/2.0,fabs(trc(0)-blc(0)), fabs(trc(1)-blc(1)), dirType);
-				rect->setLineColor("cyan");
-				qdp_->registerRegionShape(rect);
-				rgiter.addRight(rect);
-			}
-			else if(type.contains("poly")){
-				Record vertices=mousereg.asRecord("world");
-				Vector<Double> xs = vertices.asArrayDouble("x");
-				Vector<Double> ys = vertices.asArrayDouble("y");
-				Vector<String> units=vertices.asArrayString("units");
-				for (uInt k=0; k< xs.nelements(); ++k){
-					xs(k)=Quantity(xs(k), units(0)).getValue(RegionShape::UNIT);
-					ys(k)=Quantity(ys(k), units(1)).getValue(RegionShape::UNIT);
-
+					}
+					RSPolygon *poly= new RSPolygon(xs,ys,dirType);
+					poly->setLineColor("cyan");
+					qdp_->registerRegionShape(poly);
+					rgiter.addRight(poly);
 				}
-				RSPolygon *poly= new RSPolygon(xs,ys,dirType);
-				poly->setLineColor("cyan");
-				qdp_->registerRegionShape(poly);
-				rgiter.addRight(poly);
+
 			}
 
+		}//Visible
+	}
+
+	void QtRegionManager::loadRegionsImageFromFile() {
+		QMessageBox::warning(this, "QtRegionManager",
+		                     "Load region From file\n");
+
+		if ((savedName->text()) !="") {
+			QString sName = savedName->text();
+			String rName(sName.toStdString());
+			ImageRegion* reg = 0;
+			TableRecord rec;
+			try {
+				//cout << "rName=" << rName << endl;
+				AipsIO os(rName, ByteIO::Old);
+				//os.open(rName);
+				os >> rec;
+				//cout << "infile region record:\n" << rec << endl;
+				reg = ImageRegion::fromRecord(rec, rName+".tbl");
+
+				/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
+				ListIter<QtDisplayData*> qdds(DDs);
+				if (qdds.len() == 0)
+					return;
+				qdds.toEnd();
+				qdds--;
+				QtDisplayData* qdd = qdds.getRight();*/
+				if ( qdp_->isEmptyRegistered()) {
+					return;
+				}
+				DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+				iter--;
+				QtDisplayData* qdd = (*iter);
+
+				if (qdd->imageInterface()) {
+
+					ImageInterface<Float>* pImage = 0;
+					pImage = new SubImage<Float>(
+					    *(qdd->imageInterface()), *reg, False);
+
+					DisplayData *dd = 0;
+					if (!pImage)
+						return;
+					uInt ndim = pImage->ndim();
+					if (ndim < 2) {
+						throw(AipsError(String(
+						                    "Image has less than two dimensions")));
+					} else if (ndim == 2) {
+						dd = (DisplayData *)(
+						         new LatticeAsRaster<Float>(pImage, 0, 1));
+					} else {
+						IPosition fixedPos(ndim);
+						fixedPos = 0;
+						dd = (DisplayData *)(
+						         new LatticeAsRaster<Float>(
+						             pImage, 0, 1, 2, fixedPos));
+					}
+					//cout << "dd=" << dd <<  endl;
+					regData[sName] = dd;
+					regName->addItem(sName);
+					currentRegionChanged(sName);
+				}
+				return ;
+			} catch(...) {
+				cout << "Failed to read region record" << endl;
+				return ;
+			}
+			return ;
 		}
+	}
 
-	}//Visible
-}
+	void QtRegionManager::loadRegionFromFile() {
+		//QMessageBox::warning(this, "QtRegionManager",
+		//		    "Load region From file\n");
 
-void QtRegionManager::loadRegionsImageFromFile(){
-	QMessageBox::warning(this, "QtRegionManager",
-			"Load region From file\n");
+		if (!this->isVisible())
+			return;
 
-	if ((savedName->text()) !=""){
+		if ((savedName->text()) == "")
+			return;
+
 		QString sName = savedName->text();
+		if (regData.contains(sName))
+			return;
+
 		String rName(sName.toStdString());
-		ImageRegion* reg = 0;
+		ImageRegion* reg;
 		TableRecord rec;
-		try{
+		try {
 			//cout << "rName=" << rName << endl;
 			AipsIO os(rName, ByteIO::Old);
 			//os.open(rName);
 			os >> rec;
+			os.close();
 			//cout << "infile region record:\n" << rec << endl;
 			reg = ImageRegion::fromRecord(rec, rName+".tbl");
+
+			/*
+			const WCRegion* ptr = reg->asWCRegionPtr();
+			WCUnion* unfolded = unfoldCompositeRegionToSimpleUnion(ptr);
+			//cout << "regions:" << unfolded->toRecord("") << endl;
+
+			ImageRegion* newReg = new ImageRegion(*unfolded);
+			//put reconstructed in, otherwise can not delete
+			AipsIO rs(rName, ByteIO::NewNoReplace);
+			rs << newReg->toRecord(rName+".tbl");
+			rs.close();
+			 */
 
 			/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
 			ListIter<QtDisplayData*> qdds(DDs);
@@ -424,160 +508,69 @@ void QtRegionManager::loadRegionsImageFromFile(){
 			qdds.toEnd();
 			qdds--;
 			QtDisplayData* qdd = qdds.getRight();*/
-			if ( qdp_->isEmptyRegistered()){
+			if ( qdp_->isEmptyRegistered()) {
 				return;
 			}
 			DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
 			iter--;
 			QtDisplayData* qdd = (*iter);
 
-			if (qdd->imageInterface()){
+			sName = "File: " + sName;
+			regName->addItem(sName);
 
-				ImageInterface<Float>* pImage = 0;
-				pImage = new SubImage<Float>(
-						*(qdd->imageInterface()), *reg, False);
+			//addRegionToMenu(sName, "File");
 
-				DisplayData *dd = 0;
-				if (!pImage)
-					return;
-				uInt ndim = pImage->ndim();
-				if (ndim < 2) {
-					throw(AipsError(String(
-							"Image has less than two dimensions")));
-				} else if (ndim == 2) {
-					dd = (DisplayData *)(
-							new LatticeAsRaster<Float>(pImage, 0, 1));
-				} else {
-					IPosition fixedPos(ndim);
-					fixedPos = 0;
-					dd = (DisplayData *)(
-							new LatticeAsRaster<Float>(
-									pImage, 0, 1, 2, fixedPos));
-				}
-				//cout << "dd=" << dd <<  endl;
-				regData[sName] = dd;
-				regName->addItem(sName);
-				currentRegionChanged(sName);
-			}
-			return ;
-		}
-		catch(...) {
+			//cout << "------imageRegion\n"
+			//     << reg->toRecord("ab") << endl;
+			regData[sName] = regionToShape(qdd, reg);
+
+			//regData[sName] = regionToShape(qdd, newReg);
+			regState[sName] = false;
+			currentRegionChanged(sName);
+
+			savedName->setText("");
+			//RegionShape* dd = 0;
+			//String err = "";
+			//dd = RegionShape::shapeFromRecord(rec, err);
+			//cout << "dd=" << dd <<  endl;
+			//if (err == "") {
+			//   regData[sName] = dd;
+			//   regName->addItem(sName);
+			//   currentRegionChanged(sName);
+			//}
+			//else {
+			//  cout << "Error convert from record to shape: "
+			//       << err << endl;
+			//}
+
+		} catch(...) {
 			cout << "Failed to read region record" << endl;
-			return ;
 		}
-		return ;
 	}
-}
 
-void QtRegionManager::loadRegionFromFile(){
-	//QMessageBox::warning(this, "QtRegionManager",
-	//		    "Load region From file\n");
+	void QtRegionManager::zPlaneChanged() {
 
-	if (!this->isVisible())
-		return;
+		//DisplayData *dd = getImageData(regName->currentText());
+		//DisplayData *dd = getBoundingBoxData(
+		//                  regName->currentText());
 
-	if ((savedName->text()) == "")
-		return;
-
-	QString sName = savedName->text();
-	if (regData.contains(sName))
-		return;
-
-	String rName(sName.toStdString());
-	ImageRegion* reg;
-	TableRecord rec;
-	try{
-		//cout << "rName=" << rName << endl;
-		AipsIO os(rName, ByteIO::Old);
-		//os.open(rName);
-		os >> rec;
-		os.close();
-		//cout << "infile region record:\n" << rec << endl;
-		reg = ImageRegion::fromRecord(rec, rName+".tbl");
-
-		/*
-       const WCRegion* ptr = reg->asWCRegionPtr();
-       WCUnion* unfolded = unfoldCompositeRegionToSimpleUnion(ptr);
-       //cout << "regions:" << unfolded->toRecord("") << endl;
-
-       ImageRegion* newReg = new ImageRegion(*unfolded);
-       //put reconstructed in, otherwise can not delete
-       AipsIO rs(rName, ByteIO::NewNoReplace);
-       rs << newReg->toRecord(rName+".tbl");  
-       rs.close();
-		 */
-
+		int zIndex = 0;
 		/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
 		ListIter<QtDisplayData*> qdds(DDs);
-		if (qdds.len() == 0)
-			return;
-		qdds.toEnd();
-		qdds--;
-		QtDisplayData* qdd = qdds.getRight();*/
-		if ( qdp_->isEmptyRegistered()){
-			return;
+		if (qdds.len() > 0) {
+			qdds.toEnd();
+			qdds--;
+			QtDisplayData* qdd = qdds.getRight();*/
+		if ( !qdp_->isEmptyRegistered()) {
+
+			DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
+			iter--;
+			QtDisplayData* qdd = (*iter);
+			//cout << "img=" << qdd->imageInterface() << endl;
+			if (qdd->imageInterface()==0)
+				return;
+			zIndex = qdd->dd()->activeZIndex();
 		}
-		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
-		iter--;
-		QtDisplayData* qdd = (*iter);
-
-		sName = "File: " + sName;
-		regName->addItem(sName);
-
-		//addRegionToMenu(sName, "File");
-
-		//cout << "------imageRegion\n"
-		//     << reg->toRecord("ab") << endl;
-		regData[sName] = regionToShape(qdd, reg);
-
-		//regData[sName] = regionToShape(qdd, newReg);
-		regState[sName] = false;
-		currentRegionChanged(sName);
-
-		savedName->setText("");
-		//RegionShape* dd = 0;
-		//String err = "";
-		//dd = RegionShape::shapeFromRecord(rec, err);
-		//cout << "dd=" << dd <<  endl;
-		//if (err == "") {
-		//   regData[sName] = dd;
-		//   regName->addItem(sName);
-		//   currentRegionChanged(sName);
-		//}
-		//else {
-		//  cout << "Error convert from record to shape: "
-		//       << err << endl;
-		//}
-
-	}
-	catch(...) {
-		cout << "Failed to read region record" << endl;
-	}
-}
-
-void QtRegionManager::zPlaneChanged(){
-
-	//DisplayData *dd = getImageData(regName->currentText());
-	//DisplayData *dd = getBoundingBoxData(
-	//                  regName->currentText());
-
-	int zIndex = 0;
-	/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
-	ListIter<QtDisplayData*> qdds(DDs);
-	if (qdds.len() > 0) {
-		qdds.toEnd();
-		qdds--;
-		QtDisplayData* qdd = qdds.getRight();*/
-	if ( !qdp_->isEmptyRegistered()){
-
-		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
-		iter--;
-		QtDisplayData* qdd = (*iter);
-		//cout << "img=" << qdd->imageInterface() << endl;
-		if (qdd->imageInterface()==0)
-			return;
-		zIndex = qdd->dd()->activeZIndex();
-	}
 		//cout << "zIndex=" << zIndex << endl;
 
 		//cout << "regData count=" << regData.count() << endl;
@@ -629,8 +622,7 @@ void QtRegionManager::zPlaneChanged(){
 				qdp_->release();
 				//cout << sName.toStdString()
 				//     << " was not shown, is shown now" << endl;
-			}
-			else {
+			} else {
 				//qdp_->registerRegionShape((RegionShape*)dd);
 				qdp_->hold();
 				qdp_->panelDisplay()->addDisplayData(*dd);
@@ -641,9 +633,9 @@ void QtRegionManager::zPlaneChanged(){
 
 		}
 
-	
-}
-void QtRegionManager::toggleImageRegion(){
+
+	}
+	void QtRegionManager::toggleImageRegion() {
 
 		//DisplayData *dd = getImageData(regName->currentText());
 		//DisplayData *dd = getBoundingBoxData(
@@ -651,14 +643,14 @@ void QtRegionManager::toggleImageRegion(){
 
 		int zIndex = 0;
 		/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
-	ListIter<QtDisplayData*> qdds(DDs);
-	if (qdds.len() > 0) {
+		ListIter<QtDisplayData*> qdds(DDs);
+		if (qdds.len() > 0) {
 		qdds.toEnd();
 		qdds--;
 		QtDisplayData* qdd = qdds.getRight();
 		zIndex = qdd->dd()->activeZIndex();
-	}*/
-		if ( !qdp_->isEmptyRegistered()){
+		}*/
+		if ( !qdp_->isEmptyRegistered()) {
 			DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
 			iter--;
 			QtDisplayData* qdd = (*iter);
@@ -714,8 +706,7 @@ void QtRegionManager::toggleImageRegion(){
 			regState[sName] = true;
 			//cout << sName.toStdString()
 			//     << " was hidden, is shown now" << endl;
-		}
-		else {
+		} else {
 			//qdp_->unregisterRegionShape((RegionShape*)dd);
 			qdp_->hold();
 			qdp_->panelDisplay()->removeDisplayData(*dd);
@@ -729,10 +720,10 @@ void QtRegionManager::toggleImageRegion(){
 	}
 
 
-	void QtRegionManager::singlePlane(){
+	void QtRegionManager::singlePlane() {
 		//cout << "planeOnly checked="
 		//     << planeOnlyCB->isChecked() << endl;
-		if(planeOnlyCB->isChecked()){
+		if(planeOnlyCB->isChecked()) {
 			chan_sel->setText("");
 			pol_sel->setText("");
 			chan_sel->setEnabled(False);
@@ -740,13 +731,13 @@ void QtRegionManager::toggleImageRegion(){
 		}
 	}
 
-	void QtRegionManager::extendChan(){
+	void QtRegionManager::extendChan() {
 		chan_sel->setEnabled(True);
 		chan_sel->setText("");
 		//planeOnlyCB->setChecked(False);
 	}
 
-	void QtRegionManager::extendPol(){
+	void QtRegionManager::extendPol() {
 		pol_sel->setEnabled(True);
 		pol_sel->setText("");
 		//planeOnlyCB->setChecked(False);
@@ -762,39 +753,38 @@ void QtRegionManager::toggleImageRegion(){
 		regState.clear();
 		cleanup();
 		Vector<String> regionNames=qdp_->listRegionsInImage();
-		if(regionNames.nelements()==0){
+		if(regionNames.nelements()==0) {
 			regName->addItem("No regions saved");
 			showOrHide->setDisabled(true);
 			deleteReg->setDisabled(true);
-		}
-		else {
+		} else {
 			showOrHide->setEnabled(true);
 			deleteReg->setEnabled(true);
 
 			/*List<QtDisplayData*> DDs = qdp_->registeredDDs();
-		ListIter<QtDisplayData*> qdds(DDs);
-		if (qdds.len() == 0)
+			ListIter<QtDisplayData*> qdds(DDs);
+			if (qdds.len() == 0)
 			return;
-		qdds.toEnd();
-		qdds--;
-		QtDisplayData* qdd = qdds.getRight();*/
-			if ( qdp_->isEmptyRegistered()){
+			qdds.toEnd();
+			qdds--;
+			QtDisplayData* qdd = qdds.getRight();*/
+			if ( qdp_->isEmptyRegistered()) {
 				return;
 			}
 			DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
 			iter--;
 			QtDisplayData* qdd = (*iter);
-			for (uInt kk=0; kk < regionNames.nelements(); ++kk){
-				if (qdd->imageInterface()){
+			for (uInt kk=0; kk < regionNames.nelements(); ++kk) {
+				if (qdd->imageInterface()) {
 					//may not be necessary to check because
 					//regionNames list already does
 					bool inImage = (qdd->imageInterface())
-                				 ->hasRegion(regionNames(kk));
+					               ->hasRegion(regionNames(kk));
 					if (!inImage)
 						continue;
 
 					ImageRegion* reg = (qdd->imageInterface())
-                    				->getImageRegionPtr(regionNames[kk]);
+					                   ->getImageRegionPtr(regionNames[kk]);
 
 					const WCRegion* ptr = reg->asWCRegionPtr();
 					WCUnion* unfolded = unfoldCompositeRegionToSimpleUnion(ptr);
@@ -823,7 +813,7 @@ void QtRegionManager::toggleImageRegion(){
 	}
 
 	void QtRegionManager::addRegionToMenu(
-			const QString& sName, const QString& source) {
+	    const QString& sName, const QString& source) {
 		QAction *action = new QAction(source + ": " + sName, showHideMenu);
 		action->setCheckable(True);
 		action->setChecked(True);
@@ -846,7 +836,7 @@ void QtRegionManager::toggleImageRegion(){
 
 		String regname(bName.toStdString());
 		//cout << "remove region " << regname << endl;
-		if(regname != ""){
+		if(regname != "") {
 			qdp_->removeRegionInImage(regname);
 		}
 
@@ -867,8 +857,8 @@ void QtRegionManager::toggleImageRegion(){
 
 	void QtRegionManager::cleanup() {
 		uInt nreg=unionRegions_p.nelements();
-		for (uInt k=0; k< nreg; ++k){
-			if(unionRegions_p[k] !=0){
+		for (uInt k=0; k< nreg; ++k) {
+			if(unionRegions_p[k] !=0) {
 				delete unionRegions_p[k];
 			}
 
@@ -878,7 +868,7 @@ void QtRegionManager::toggleImageRegion(){
 		rgiter.toEnd();
 		while(!rgiter.atStart()) {
 			rgiter--;
-			if(qdp_->isRegistered(rgiter.getRight())){
+			if(qdp_->isRegistered(rgiter.getRight())) {
 				qdp_->unregisterRegionShape(rgiter.getRight());
 
 			}
@@ -891,14 +881,14 @@ void QtRegionManager::toggleImageRegion(){
 	void QtRegionManager::newRegion_(String /*imgFilename*/) {
 		//cout << "newRegion..." << endl;
 
-		if(this->isVisible()){
-			if(qdp_->hasRegion()){
+		if(this->isVisible()) {
+			if(qdp_->hasRegion()) {
 				//if ((drawing_mode->currentText()).contains("union")){
 
 				uInt regNo=unionRegions_p.nelements();
 				unionRegions_p.resize(regNo+1);
 				unionRegions_p[regNo]=new const
-						ImageRegion(qdp_->lastRegion());
+				ImageRegion(qdp_->lastRegion());
 				//cout << "regNo=" << regNo << " WCRegion="
 				//     << unionRegions_p[regNo]->isWCRegion()
 				//     << "   LCRegion="
@@ -908,15 +898,15 @@ void QtRegionManager::toggleImageRegion(){
 				//}
 
 				/*
-      ListIter<RegionShape*> rgiter(regShapes_p);
-      rgiter.toEnd();
-      while(!rgiter.atStart()) {
-          rgiter--;
-          if(qdp_->isRegistered(rgiter.getRight())){
-            qdp_->unregisterRegionShape(rgiter.getRight());
-          }
-          rgiter.removeRight();
-      }
+				ListIter<RegionShape*> rgiter(regShapes_p);
+				rgiter.toEnd();
+				while(!rgiter.atStart()) {
+				rgiter--;
+				if(qdp_->isRegistered(rgiter.getRight())){
+				qdp_->unregisterRegionShape(rgiter.getRight());
+				}
+				rgiter.removeRight();
+				}
 				 */
 				insertButton->setEnabled(activeBox > -1);
 			}
@@ -941,35 +931,33 @@ void QtRegionManager::toggleImageRegion(){
 		//     << pol_sel->text().toStdString() << endl;
 
 		QString sName = savedName->text();
-		if(sName != ""){
+		if(sName != "") {
 			String regname(sName.toStdString());
-			if(unionRegions_p.nelements() > 0){
+			if(unionRegions_p.nelements() > 0) {
 				WCUnion leUnion(unionRegions_p);
 				leUnion.setComment("chanExt:" +
-						chan_sel->text().toStdString() +
-						"polExt:" +
-						pol_sel->text().toStdString());
+				                   chan_sel->text().toStdString() +
+				                   "polExt:" +
+				                   pol_sel->text().toStdString());
 				ImageRegion* reg = new ImageRegion(leUnion);
 
-				try{
+				try {
 					AipsIO os(regname, ByteIO::NewNoReplace);
 					os << reg->toRecord(regname+".tbl");
 					cleanup();
 					savedName->setText("");
-				}
-				catch(...) {
+				} catch(...) {
 					QMessageBox::warning(this, "QtRegionManager",
-							"Could not create the region file.\n"
-							"Please check pathname and directory\n"
-							"permissions and be sure the file \n"
-							"does not already exist.");
+					                     "Could not create the region file.\n"
+					                     "Please check pathname and directory\n"
+					                     "permissions and be sure the file \n"
+					                     "does not already exist.");
 				}
 			}
-		}
-		else {
+		} else {
 			QMessageBox::warning(this, "QtRegionManager",
-					"Please enter a name to label region in box"
-					" below the button\n");
+			                     "Please enter a name to label region in box"
+			                     " below the button\n");
 		}
 
 	}
@@ -985,7 +973,7 @@ void QtRegionManager::toggleImageRegion(){
 		qdds.toEnd();
 		qdds--;
 		QtDisplayData* qdd = qdds.getRight();*/
-		if ( qdp_->isEmptyRegistered()){
+		if ( qdp_->isEmptyRegistered()) {
 			return;
 		}
 		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
@@ -995,27 +983,27 @@ void QtRegionManager::toggleImageRegion(){
 		QString sName = savedName->text();
 		if (sName == "") {
 			QMessageBox::warning(this, "QtRegionManager",
-					"Please enter a name to label region in box"
-					" below the button\n");
+			                     "Please enter a name to label region in box"
+			                     " below the button\n");
 			return;
 		}
 
 		String regname(sName.toStdString());
 		if (qdd->imageInterface() &&
-				(qdd->imageInterface())->hasRegion(regname)) {
+		        (qdd->imageInterface())->hasRegion(regname)) {
 			QMessageBox::warning(this, "QtRegionManager",
-					"Please enter a different name to label region.\n"
-					"There is already a saved region with that name.");
+			                     "Please enter a different name to label region.\n"
+			                     "There is already a saved region with that name.");
 			return;
 
 		}
 
-		if (unionRegions_p.nelements() > 0){
+		if (unionRegions_p.nelements() > 0) {
 			WCUnion leUnion(unionRegions_p);
 			leUnion.setComment("chanExt:" +
-					chan_sel->text().toStdString() +
-					"polExt:" +
-					pol_sel->text().toStdString());
+			                   chan_sel->text().toStdString() +
+			                   "polExt:" +
+			                   pol_sel->text().toStdString());
 			ImageRegion* reg = new ImageRegion(leUnion);
 			//cout << "to be save ImageRegion:\n"
 			//     << reg->toRecord("arbitrary") << endl;
@@ -1059,7 +1047,7 @@ void QtRegionManager::toggleImageRegion(){
 		qdds.toEnd();
 		qdds--;
 		QtDisplayData* qdd = qdds.getRight();*/
-		if ( qdp_->isEmptyRegistered()){
+		if ( qdp_->isEmptyRegistered()) {
 			return;
 		}
 		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
@@ -1113,8 +1101,7 @@ void QtRegionManager::toggleImageRegion(){
 			showOrHide->setText("Hide");
 			showOrHide->setEnabled(true);
 			regState[i] = true;
-		}
-		else {
+		} else {
 			//qdp_->unregisterRegionShape((RegionShape*)dd);
 			qdp_->hold();
 			qdp_->panelDisplay()->removeDisplayData(*dd);
@@ -1126,13 +1113,13 @@ void QtRegionManager::toggleImageRegion(){
 		}
 	}
 
-	DisplayData* QtRegionManager::getImageData(QString regName){
+	DisplayData* QtRegionManager::getImageData(QString regName) {
 		/*
-  QString to std::string:
-  std::string((const char*)qstr);
+		QString to std::string:
+		std::string((const char*)qstr);
 
-  std::string to QString:
-  QString(str.c_str());
+		std::string to QString:
+		QString(str.c_str());
 		 */
 		//String regname((const char*)(regName.data()));
 
@@ -1153,16 +1140,16 @@ void QtRegionManager::toggleImageRegion(){
 		qdds.toEnd();
 		qdds--;
 		QtDisplayData* qdd = qdds.getRight();*/
-		if ( qdp_->isEmptyRegistered()){
+		if ( qdp_->isEmptyRegistered()) {
 			return 0;
 		}
 		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
 		iter--;
 		QtDisplayData* qdd = (*iter);
 
-		if (qdd->imageInterface()){
+		if (qdd->imageInterface()) {
 			bool inImage = (qdd->imageInterface())
-            				  ->hasRegion(regname);
+			               ->hasRegion(regname);
 			//cout << "hasRegion " << regname << " "
 			//     << (qdd->imageInterface())->hasRegion(regname)
 			//     << endl;
@@ -1170,25 +1157,26 @@ void QtRegionManager::toggleImageRegion(){
 				return 0;
 
 			ImageRegion* reg = (qdd->imageInterface())
-                        				 ->getImageRegionPtr(regname);
+			                   ->getImageRegionPtr(regname);
 
 			ImageInterface<Float>* pImage = 0;
 			pImage = new SubImage<Float>(*(qdd->imageInterface()),
-					*reg, False);
+			                             *reg, False);
 
 			DisplayData *dd = 0;
 			uInt ndim = pImage->ndim();
 			if (ndim < 2) {
 				throw(AipsError(String(
-						"Image has less than two dimensions")));
+				                    "Image has less than two dimensions")));
 			} else if (ndim == 2) {
 				dd = (DisplayData *)(
-						new LatticeAsRaster<Float>(pImage, 0, 1));
-			} else {                                                         IPosition fixedPos(ndim);
-			fixedPos = 0;
-			dd = (DisplayData *)(
-					new LatticeAsRaster<Float>(
-							pImage, 0 , 1, 2, fixedPos));
+				         new LatticeAsRaster<Float>(pImage, 0, 1));
+			} else {
+				IPosition fixedPos(ndim);
+				fixedPos = 0;
+				dd = (DisplayData *)(
+				         new LatticeAsRaster<Float>(
+				             pImage, 0 , 1, 2, fixedPos));
 			}
 			regData[regName] = dd;
 			return dd;
@@ -1199,7 +1187,7 @@ void QtRegionManager::toggleImageRegion(){
 
 
 	DisplayData*
-	QtRegionManager::getBoundingBoxData(QString regName){
+	QtRegionManager::getBoundingBoxData(QString regName) {
 
 		String regname(regName.toStdString());
 		cout << "get region=" << regname << endl;
@@ -1218,16 +1206,16 @@ void QtRegionManager::toggleImageRegion(){
 		qdds.toEnd();
 		qdds--;
 		QtDisplayData* qdd = qdds.getRight();*/
-		if ( qdp_->isEmptyRegistered()){
+		if ( qdp_->isEmptyRegistered()) {
 			return 0;
 		}
 		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
 		iter--;
 		QtDisplayData* qdd = (*iter);
 
-		if (qdd->imageInterface()){
+		if (qdd->imageInterface()) {
 			bool inImage = (qdd->imageInterface())
-            				  ->hasRegion(regname);
+			               ->hasRegion(regname);
 			//cout << "hasRegion " << regname << " "
 			//     << (qdd->imageInterface())->hasRegion(regname)
 			//     << endl;
@@ -1235,17 +1223,17 @@ void QtRegionManager::toggleImageRegion(){
 				return 0;
 
 			ImageRegion* reg = (qdd->imageInterface())
-                        				 ->getImageRegionPtr(regname);
-			if (reg && reg->isWCRegion()){
+			                   ->getImageRegionPtr(regname);
+			if (reg && reg->isWCRegion()) {
 
 				const WCRegion* wcreg = reg->asWCRegionPtr();
 				CoordinateSystem csys;
 				csys = (qdd->imageInterface())->coordinates();
 				//cout << "before showreg csys" << endl;
 				Int dirInd =
-						csys.findCoordinate(Coordinate::DIRECTION);
+				    csys.findCoordinate(Coordinate::DIRECTION);
 				MDirection::Types dirType = csys.
-						directionCoordinate(dirInd).directionType(True);
+				                            directionCoordinate(dirInd).directionType(True);
 				RSComposite *theShapes= new RSComposite(dirType);
 				//cout << "calling add" <<endl;
 				addRegionsToShape(theShapes, wcreg);
@@ -1262,18 +1250,18 @@ void QtRegionManager::toggleImageRegion(){
 	}
 
 	RSComposite* QtRegionManager::regionToShape(
-			QtDisplayData* qdd, const ImageRegion* reg) {
+	    QtDisplayData* qdd, const ImageRegion* reg) {
 
-		if (reg && reg->isWCRegion()){
+		if (reg && reg->isWCRegion()) {
 
 			const WCRegion* wcreg = reg->asWCRegionPtr();
 			CoordinateSystem csys;
 			csys = (qdd->imageInterface())->coordinates();
 			//cout << "before showreg csys" << endl;
 			Int dirInd =
-					csys.findCoordinate(Coordinate::DIRECTION);
+			    csys.findCoordinate(Coordinate::DIRECTION);
 			MDirection::Types dirType = csys.
-					directionCoordinate(dirInd).directionType(True);
+			                            directionCoordinate(dirInd).directionType(True);
 			RSComposite *theShapes= new RSComposite(dirType);
 			addRegionsToShape(theShapes, wcreg);
 			theShapes->setLineColor("cyan");
@@ -1281,19 +1269,18 @@ void QtRegionManager::toggleImageRegion(){
 
 			//regData[regName] = theShapes;
 			return theShapes;
-		}
-		else {
+		} else {
 			return 0;
 		}
 	}
 
 	void QtRegionManager::resetRegionExtension() {
 		emit extendRegion(chan_sel->text().toStdString(),
-				pol_sel->text().toStdString());
+		                  pol_sel->text().toStdString());
 	}
 
 	bool QtRegionManager::planeAllowed(
-			int idx, String& xa, String& ya) {
+	    int idx, String& xa, String& ya) {
 		xa.gsub(" ", "");
 		ya.gsub(" ", "");
 		if (xa.length() == 0)
@@ -1304,8 +1291,8 @@ void QtRegionManager::toggleImageRegion(){
 			String x[2];
 			Int nx = split(w[k], x, 2, '~');
 			if (nx == 2 &&
-					idx >= atoi(x[0].c_str()) &&
-					idx <= atoi(x[1].c_str())) {
+			        idx >= atoi(x[0].c_str()) &&
+			        idx <= atoi(x[1].c_str())) {
 				return true;
 			}
 			if (nx == 1 && atoi(x[0].c_str()) == idx) {
@@ -1317,36 +1304,36 @@ void QtRegionManager::toggleImageRegion(){
 
 	void QtRegionManager::showHelp() {
 		QMessageBox::information(this, "QtRegionManager",
-				"Steps to create an image region (group):\n"
-				"  1. display the image;\n"
-				"  2. assign a region tool (rectangle or polygon) "
-				"to a mouse button;\n"
-				"  3. draw a region on the displayed image;\n"
-				"  4. adjust the size or shape by dragging "
-				"the corner handle;\n"
-				"  5. ajust the position by dragging the inside;\n"
-				"  6. record the region by double clicking inside;\n"
-				"  7. repeat 3~6 as needed;\n"
-				"  8. set the region extend channels and "
-				"polarizations, example:1,5~10;\n"
-				"  9. set the region (group) name to be saved;\n"
-				" 10. save the region in the image or to a file.");
+		                         "Steps to create an image region (group):\n"
+		                         "  1. display the image;\n"
+		                         "  2. assign a region tool (rectangle or polygon) "
+		                         "to a mouse button;\n"
+		                         "  3. draw a region on the displayed image;\n"
+		                         "  4. adjust the size or shape by dragging "
+		                         "the corner handle;\n"
+		                         "  5. ajust the position by dragging the inside;\n"
+		                         "  6. record the region by double clicking inside;\n"
+		                         "  7. repeat 3~6 as needed;\n"
+		                         "  8. set the region extend channels and "
+		                         "polarizations, example:1,5~10;\n"
+		                         "  9. set the region (group) name to be saved;\n"
+		                         " 10. save the region in the image or to a file.");
 
 	}
 
 	void QtRegionManager::showHelpActive() {
 		QMessageBox::information(this, "QtRegionManager",
-				"Steps to manipulate an image region:\n"
-				"  1. assign a region tool (rectangle or polygon) "
-				"to a mouse button;\n"
-				"  2. show the image region;\n"
-				"  3. click inside a region. the regions in the\n"
-				"     group are marked red. the active region is flashing;\n"
-				"  4. draw new regions with mouse. click 'insert'\n"
-				"     to add the new regions into the group.\n"
-				"  5. click 'delete' to remove the active region\n"
-				"     from the group.\n"
-				"  6. use 3~5 for moving or resizing a region.\n");
+		                         "Steps to manipulate an image region:\n"
+		                         "  1. assign a region tool (rectangle or polygon) "
+		                         "to a mouse button;\n"
+		                         "  2. show the image region;\n"
+		                         "  3. click inside a region. the regions in the\n"
+		                         "     group are marked red. the active region is flashing;\n"
+		                         "  4. draw new regions with mouse. click 'insert'\n"
+		                         "     to add the new regions into the group.\n"
+		                         "  5. click 'delete' to remove the active region\n"
+		                         "     from the group.\n"
+		                         "  6. use 3~5 for moving or resizing a region.\n");
 
 	}
 
@@ -1380,7 +1367,7 @@ void QtRegionManager::toggleImageRegion(){
 				continue;
 
 			if ((actGrp->isChecked() || actOne->isChecked()) &&
-					sName != activeGroup)
+			        sName != activeGroup)
 				continue;
 
 			DisplayData *dd = regData[sName];
@@ -1393,9 +1380,9 @@ void QtRegionManager::toggleImageRegion(){
 			//     << "\n"  << ddRec << endl;
 
 			if (!ddRec.asBool("isworld") ||
-					!ddRec.asString("type").contains("composite") ||
-					!ddRec.asBool("dependentchildren") ||
-					!ddRec.isDefined("children"))
+			        !ddRec.asString("type").contains("composite") ||
+			        !ddRec.asBool("dependentchildren") ||
+			        !ddRec.isDefined("children"))
 				continue;
 
 			RecordFieldPtr<Record> children(ddRec, "children");
@@ -1411,16 +1398,16 @@ void QtRegionManager::toggleImageRegion(){
 				Record& sub = *nth;
 				Vector<Double> xs;
 				Vector<Double> ys;
-				if (sub.asString("type").contains("polygon")){
+				if (sub.asString("type").contains("polygon")) {
 					xs = sub.asArrayDouble("xcoords");
 					ys = sub.asArrayDouble("ycoords");
 					cout << i << " polygon\n"
-							<< "   " << xs << "\n   " << ys << endl;
+					     << "   " << xs << "\n   " << ys << endl;
 				}
-				if (sub.asString("type").contains("rectangle")){
+				if (sub.asString("type").contains("rectangle")) {
 					xs = sub.asArrayDouble("coordinates");
 					cout << i << " rectangle\n"
-							<< "   " << xs << endl;
+					     << "   " << xs << endl;
 				}
 			}
 		}
@@ -1448,9 +1435,9 @@ void QtRegionManager::toggleImageRegion(){
 			//     << "\n"  << ddRec << endl;
 
 			if (!ddRec.asBool("isworld") ||
-					!ddRec.asString("type").contains("composite") ||
-					!ddRec.asBool("dependentchildren") ||
-					!ddRec.isDefined("children"))
+			        !ddRec.asString("type").contains("composite") ||
+			        !ddRec.asBool("dependentchildren") ||
+			        !ddRec.isDefined("children"))
 				continue;
 
 			RecordFieldPtr<Record> children(ddRec, "children");
@@ -1462,13 +1449,13 @@ void QtRegionManager::toggleImageRegion(){
 				Record& sub = *nth;
 				Vector<Double> xs;
 				Vector<Double> ys;
-				if (sub.asString("type").contains("polygon")){
+				if (sub.asString("type").contains("polygon")) {
 					xs = sub.asArrayDouble("xcoords");
 					ys = sub.asArrayDouble("ycoords");
 					sub.define("xcoords", ys);
 					sub.define("ycoords", xs);
 				}
-				if (sub.asString("type").contains("rectangle")){
+				if (sub.asString("type").contains("rectangle")) {
 					xs = sub.asArrayDouble("coordinates");
 					ys = xs;
 					ys(0) = xs(1);
@@ -1505,7 +1492,7 @@ void QtRegionManager::toggleImageRegion(){
 
 		String regname(sName.toStdString());
 		//cout << "remove region " << regname << endl;
-		if(regname != ""){
+		if(regname != "") {
 			qdp_->removeRegionInImage(regname);
 		}
 
@@ -1565,7 +1552,7 @@ void QtRegionManager::toggleImageRegion(){
 		qdds.toEnd();
 		qdds--;
 		QtDisplayData* qdd = qdds.getRight();*/
-		if ( qdp_->isEmptyRegistered()){
+		if ( qdp_->isEmptyRegistered()) {
 			return false;
 		}
 		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
@@ -1596,19 +1583,19 @@ void QtRegionManager::toggleImageRegion(){
 		if (stype == "Image") {
 			String regname(sName.toStdString());
 			if (qdd->imageInterface() &&
-					(qdd->imageInterface())->hasRegion(regname)) {
+			        (qdd->imageInterface())->hasRegion(regname)) {
 				//delete region in image
 			}
 
 			ImageRegion* prev = (qdd->imageInterface())
-        				 ->getImageRegionPtr(regname);
+			                    ->getImageRegionPtr(regname);
 
-			if (unionRegions_p.nelements() > 0){
+			if (unionRegions_p.nelements() > 0) {
 				WCUnion leUnion(unionRegions_p);
 				leUnion.setComment("chanExt:" +
-						chan_sel->text().toStdString() +
-						"polExt:" +
-						pol_sel->text().toStdString());
+				                   chan_sel->text().toStdString() +
+				                   "polExt:" +
+				                   pol_sel->text().toStdString());
 
 				const WCRegion* newUnion = new WCUnion(prev->asWCRegion(), leUnion);
 				WCUnion* unfolded = unfoldCompositeRegionToSimpleUnion(newUnion);
@@ -1640,32 +1627,31 @@ void QtRegionManager::toggleImageRegion(){
 			timer->stop();
 			return true;
 		}
-		if(stype == "File"){
+		if(stype == "File") {
 			String rName(sName.toStdString());
 			ImageRegion* prev = 0;
 			TableRecord rec;
 			bool ok = true;
-			try{
+			try {
 				//cout << "rName=" << rName << endl;
 				AipsIO os(rName, ByteIO::Old);
 				//os.open(rName);
 				os >> rec;
 				//cout << "infile region record:\n" << rec << endl;
 				prev = ImageRegion::fromRecord(rec, rName+".tbl");
-			}
-			catch(...) {
+			} catch(...) {
 				ok = false;
 			}
 
 			if (!ok || !prev)
 				return false;
 
-			if(unionRegions_p.nelements() > 0){
+			if(unionRegions_p.nelements() > 0) {
 				WCUnion leUnion(unionRegions_p);
 				leUnion.setComment("chanExt:" +
-						chan_sel->text().toStdString() +
-						"polExt:" +
-						pol_sel->text().toStdString());
+				                   chan_sel->text().toStdString() +
+				                   "polExt:" +
+				                   pol_sel->text().toStdString());
 
 				const WCRegion* newUnion = new WCUnion(prev->asWCRegion(), leUnion);
 				WCUnion* unfolded = unfoldCompositeRegionToSimpleUnion(newUnion);
@@ -1675,7 +1661,7 @@ void QtRegionManager::toggleImageRegion(){
 				//cout << "new to be saved ImageRegion:\n"
 				//     << newReg->toRecord("arbitrary") << endl;
 
-				try{
+				try {
 					AipsIO os(rName, ByteIO::Update);
 					os << newReg->toRecord(rName+".tbl");
 
@@ -1684,8 +1670,7 @@ void QtRegionManager::toggleImageRegion(){
 					currentRegionChanged(group);
 
 					cleanup();
-				}
-				catch(...) {
+				} catch(...) {
 					return false;
 				}
 
@@ -1729,7 +1714,7 @@ void QtRegionManager::toggleImageRegion(){
 		qdds.toEnd();
 		qdds--;
 		QtDisplayData* qdd = qdds.getRight();*/
-		if ( qdp_->isEmptyRegistered()){
+		if ( qdp_->isEmptyRegistered()) {
 			return false;
 		}
 		DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
@@ -1765,16 +1750,16 @@ void QtRegionManager::toggleImageRegion(){
 		if (stype == "Image") {
 			String regname(sName.toStdString());
 			if (qdd->imageInterface() &&
-					(qdd->imageInterface())->hasRegion(regname)) {
+			        (qdd->imageInterface())->hasRegion(regname)) {
 				//delete region in image
 			}
 
 			ImageRegion* prev = (qdd->imageInterface())
-        				 ->getImageRegionPtr(regname);
+			                    ->getImageRegionPtr(regname);
 
 			const WCRegion* wcr = prev->asWCRegionPtr();
 			PtrBlock<const WCRegion*> regPtrs=
-					(static_cast<const WCCompound* >(wcr))->regions();
+			    (static_cast<const WCCompound* >(wcr))->regions();
 
 			regPtrs.remove(comp);
 			WCUnion nu(True, regPtrs);
@@ -1784,7 +1769,7 @@ void QtRegionManager::toggleImageRegion(){
 			if (ttl == "1") {
 				//no more left, delete this group
 				//cout << "remove region " << regname << endl;
-				if (regname != ""){
+				if (regname != "") {
 					qdp_->removeRegionInImage(regname);
 				}
 
@@ -1793,8 +1778,7 @@ void QtRegionManager::toggleImageRegion(){
 				int k = regName->findText(group);
 				if (k > -1)
 					regName->removeItem(k);
-			}
-			else {
+			} else {
 				regData[group] = regionToShape(qdd, &newReg);
 				regState[group] = false;
 				currentRegionChanged(group);
@@ -1806,15 +1790,14 @@ void QtRegionManager::toggleImageRegion(){
 			ImageRegion* prev = 0;
 			TableRecord rec;
 			bool ok = true;
-			try{
+			try {
 				//cout << "rName=" << rName << endl;
 				AipsIO os(rName, ByteIO::Old);
 				//os.open(rName);
 				os >> rec;
 				//cout << "infile region record:\n" << rec << endl;
 				prev = ImageRegion::fromRecord(rec, rName+".tbl");
-			}
-			catch(...) {
+			} catch(...) {
 				ok = false;
 			}
 
@@ -1823,12 +1806,12 @@ void QtRegionManager::toggleImageRegion(){
 
 			const WCRegion* wcr = prev->asWCRegionPtr();
 			PtrBlock<const WCRegion*> regPtrs=
-					(static_cast<const WCCompound* >(wcr))->regions();
+			    (static_cast<const WCCompound* >(wcr))->regions();
 			regPtrs.remove(comp);
 			WCUnion nu(True, regPtrs);
 			ImageRegion newReg(nu);
 
-			try{
+			try {
 				AipsIO os(rName, ByteIO::Update);
 				os << newReg.toRecord(rName+".tbl");
 
@@ -1837,8 +1820,7 @@ void QtRegionManager::toggleImageRegion(){
 				currentRegionChanged(group);
 
 				cleanup();
-			}
-			catch(...) {
+			} catch(...) {
 				return false;
 			}
 
@@ -1851,8 +1833,7 @@ void QtRegionManager::toggleImageRegion(){
 				int k = regName->findText(group);
 				if (k > -1)
 					regName->removeItem(k);
-			}
-			else {
+			} else {
 				regData[group] = regionToShape(qdd, &newReg);
 				regState[group] = false;
 				currentRegionChanged(group);
@@ -1896,7 +1877,7 @@ void QtRegionManager::toggleImageRegion(){
 		wx  = -1000;
 
 		String tool = rec.asString("tool");
-		if (this->isVisible() && rec.isDefined("world")){
+		if (this->isVisible() && rec.isDefined("world")) {
 			Record world = rec.asRecord("world");
 			Vector<Double> wld = world.asArrayDouble("wld");
 			Vector<String> units = world.asArrayString("units");
@@ -1907,13 +1888,13 @@ void QtRegionManager::toggleImageRegion(){
 				qdds.toEnd();
 				qdds--;
 				QtDisplayData* qdd = qdds.getRight();*/
-			if ( !qdp_->isEmptyRegistered()){
+			if ( !qdp_->isEmptyRegistered()) {
 				DisplayDataHolder::DisplayDataIterator iter = qdp_->endRegistered();
 				iter--;
 				QtDisplayData* qdd = (*iter);
 				zIndex = qdd->dd()->activeZIndex();
 
-				if ((qdd->imageInterface())){
+				if ((qdd->imageInterface())) {
 					CoordinateSystem csys=(qdd->imageInterface())->coordinates();
 					//Int dirInd=csys.findCoordinate(Coordinate::DIRECTION);
 					//MDirection::Types dirType=csys.directionCoordinate(dirInd)
@@ -1983,9 +1964,9 @@ void QtRegionManager::toggleImageRegion(){
 			//     << "\n"  << ddRec << endl;
 
 			if (!ddRec.asBool("isworld") ||
-					!ddRec.asString("type").contains("composite") ||
-					!ddRec.asBool("dependentchildren") ||
-					!ddRec.isDefined("children"))
+			        !ddRec.asString("type").contains("composite") ||
+			        !ddRec.asBool("dependentchildren") ||
+			        !ddRec.isDefined("children"))
 				continue;
 
 			RecordFieldPtr<Record> children(ddRec, "children");
@@ -2003,7 +1984,7 @@ void QtRegionManager::toggleImageRegion(){
 				Vector<Double> ys;
 
 				if (sub.asString("type").contains("polygon") &&
-						tool.contains("olygon")){
+				        tool.contains("olygon")) {
 					//cout << "polygon--------" << endl;
 					xs = sub.asArrayDouble("xcoords");
 					ys = sub.asArrayDouble("ycoords");
@@ -2018,12 +1999,12 @@ void QtRegionManager::toggleImageRegion(){
 						yc = fmin(yc, ys(j));
 					}
 					if (xc <= wx(0) && wx(0) <= xd &&
-							yc <= wx(1) && wx(1) <= yd) {
+					        yc <= wx(1) && wx(1) <= yd) {
 						active = true;
 					}
 				}
 				if (sub.asString("type").contains("rectangle") &&
-						tool.contains("ectangle")){
+				        tool.contains("ectangle")) {
 					//cout << "rectangle--------" << endl;
 					xs = sub.asArrayDouble("coordinates");
 					xs.resize(4, true);
@@ -2038,7 +2019,7 @@ void QtRegionManager::toggleImageRegion(){
 					xs(1) = xc + xd;
 					ys(1) = yc + yd;
 					if (xs(0) <= wx(0) && wx(0) <= xs(1) &&
-							ys(0) <= wx(1) && wx(1) <= ys(1)) {
+					        ys(0) <= wx(1) && wx(1) <= ys(1)) {
 						active = true;
 					}
 				}
@@ -2065,8 +2046,8 @@ void QtRegionManager::toggleImageRegion(){
 
 							Record ddRec = ((RegionShape*)dd)->toRecord();
 							if (ddRec.asBool("isworld") &&
-									ddRec.asString("type").contains("composite") &&
-									ddRec.asBool("dependentchildren")) {
+							        ddRec.asString("type").contains("composite") &&
+							        ddRec.asBool("dependentchildren")) {
 
 								RegionShape* ee = 0;
 								String err = "";
@@ -2116,7 +2097,7 @@ void QtRegionManager::toggleImageRegion(){
 					//cout << xs << endl;
 					//cout << ys << endl;
 					lineEdit->setText(QString(" %1::%2:%3")
-							.arg(sName).arg(i + 1).arg(sz));
+					                  .arg(sName).arg(i + 1).arg(sz));
 					break;
 				}
 
@@ -2160,10 +2141,9 @@ void QtRegionManager::toggleImageRegion(){
 
 					qdp_->panelDisplay()->addDisplayData(*ee);
 					qdp_->release();
-				}
-				else {
+				} else {
 					cout << "Error convert from record to shape: "
-							<< err << endl;
+					     << err << endl;
 				}
 				activeGroup = sName;
 				activeBox = i;

@@ -39,139 +39,126 @@
 
 namespace casa {
 
-const QList<QString> Converter::FREQUENCY_UNITS =
-	QList<QString>() << "Hz" << "10Hz"<<"100Hz"<< "KHz" <<
-		"10KHz" << "100KHz" << "MHz" <<
-		"10MHz" << "100MHz" << "GHz";
-const QList<QString> Converter::WAVELENGTH_UNITS =
-	QList<QString>() << "Angstrom" << "nm" << "10nm" << "100nm" << "um" <<
-	"10um" << "100um" << "mm" << "cm" << "dm"<<"m";
-const QList<QString> Converter::VELOCITY_UNITS =
-	QList<QString>() << "m/s" << "10m/s" << "100m/s" << "km/s";
+	const QList<QString> Converter::FREQUENCY_UNITS =
+	    QList<QString>() << "Hz" << "10Hz"<<"100Hz"<< "KHz" <<
+	    "10KHz" << "100KHz" << "MHz" <<
+	    "10MHz" << "100MHz" << "GHz";
+	const QList<QString> Converter::WAVELENGTH_UNITS =
+	    QList<QString>() << "Angstrom" << "nm" << "10nm" << "100nm" << "um" <<
+	    "10um" << "100um" << "mm" << "cm" << "dm"<<"m";
+	const QList<QString> Converter::VELOCITY_UNITS =
+	    QList<QString>() << "m/s" << "10m/s" << "100m/s" << "km/s";
 
 
-SpectralCoordinate Converter::spectralCoordinate;
-void Converter::setSpectralCoordinate( SpectralCoordinate coordinate ){
-	spectralCoordinate = coordinate;
-}
-void Converter::setRestFrequency( double restFrequency ){
-	spectralCoordinate.setRestFrequency( restFrequency );
-}
-
-Converter* Converter::getConverter( const QString& oldUnits,
-				const QString& newUnits){
-	Converter* converter = NULL;
-	UnitType sourceUnitType = getUnitType( oldUnits );
-	UnitType destUnitType = getUnitType( newUnits );
-	if ( sourceUnitType == FREQUENCY_UNIT ){
-		if ( destUnitType == WAVELENGTH_UNIT || newUnits.isEmpty() ){
-			converter = new ConverterFrequencyWavelength( oldUnits, newUnits);
-		}
-		else if ( destUnitType == VELOCITY_UNIT ){
-			converter = new ConverterFrequencyVelocity( oldUnits, newUnits );
-		}
-		else if ( destUnitType == FREQUENCY_UNIT ){
-			converter = new ConverterFrequency( oldUnits, newUnits );
-		}
+	SpectralCoordinate Converter::spectralCoordinate;
+	void Converter::setSpectralCoordinate( SpectralCoordinate coordinate ) {
+		spectralCoordinate = coordinate;
 	}
-	else if ( sourceUnitType == VELOCITY_UNIT ){
-		if ( destUnitType == WAVELENGTH_UNIT || newUnits.isEmpty()){
-			converter = new ConverterVelocityWavelength( oldUnits, newUnits);
-		}
-		else if ( destUnitType == VELOCITY_UNIT ){
-			converter = new ConverterVelocity( oldUnits, newUnits );
-		}
-		else if ( destUnitType == FREQUENCY_UNIT ){
-			converter = new ConverterVelocityFrequency( oldUnits, newUnits );
-		}
+	void Converter::setRestFrequency( double restFrequency ) {
+		spectralCoordinate.setRestFrequency( restFrequency );
 	}
-	else if ( sourceUnitType == WAVELENGTH_UNIT ){
-		if ( destUnitType == WAVELENGTH_UNIT ){
-			converter = new ConverterWavelength( oldUnits, newUnits );
+
+	Converter* Converter::getConverter( const QString& oldUnits,
+	                                    const QString& newUnits) {
+		Converter* converter = NULL;
+		UnitType sourceUnitType = getUnitType( oldUnits );
+		UnitType destUnitType = getUnitType( newUnits );
+		if ( sourceUnitType == FREQUENCY_UNIT ) {
+			if ( destUnitType == WAVELENGTH_UNIT || newUnits.isEmpty() ) {
+				converter = new ConverterFrequencyWavelength( oldUnits, newUnits);
+			} else if ( destUnitType == VELOCITY_UNIT ) {
+				converter = new ConverterFrequencyVelocity( oldUnits, newUnits );
+			} else if ( destUnitType == FREQUENCY_UNIT ) {
+				converter = new ConverterFrequency( oldUnits, newUnits );
+			}
+		} else if ( sourceUnitType == VELOCITY_UNIT ) {
+			if ( destUnitType == WAVELENGTH_UNIT || newUnits.isEmpty()) {
+				converter = new ConverterVelocityWavelength( oldUnits, newUnits);
+			} else if ( destUnitType == VELOCITY_UNIT ) {
+				converter = new ConverterVelocity( oldUnits, newUnits );
+			} else if ( destUnitType == FREQUENCY_UNIT ) {
+				converter = new ConverterVelocityFrequency( oldUnits, newUnits );
+			}
+		} else if ( sourceUnitType == WAVELENGTH_UNIT ) {
+			if ( destUnitType == WAVELENGTH_UNIT ) {
+				converter = new ConverterWavelength( oldUnits, newUnits );
+			} else if ( destUnitType == VELOCITY_UNIT || newUnits.isEmpty() ) {
+				converter = new ConverterWavelengthVelocity( oldUnits, newUnits );
+			} else if ( destUnitType == FREQUENCY_UNIT ) {
+				converter = new ConverterWavelengthFrequency( oldUnits, newUnits );
+			}
+		} else if ( sourceUnitType == CHANNEL_UNIT ) {
+			converter = new ConverterChannel( oldUnits, newUnits );
 		}
-		else if ( destUnitType == VELOCITY_UNIT || newUnits.isEmpty() ){
-			converter = new ConverterWavelengthVelocity( oldUnits, newUnits );
+		return converter;
+	}
+
+	Converter::UnitType Converter::getUnitType( const QString& unit ) {
+		UnitType unitType = UNRECOGNIZED;
+		if ( FREQUENCY_UNITS.contains( unit )) {
+			unitType = FREQUENCY_UNIT;
+		} else if ( WAVELENGTH_UNITS.contains( unit )) {
+			unitType = WAVELENGTH_UNIT;
+		} else if ( VELOCITY_UNITS.contains( unit )) {
+			unitType = VELOCITY_UNIT;
+		} else if ( unit.isEmpty() ) {
+			unitType = CHANNEL_UNIT;
 		}
-		else if ( destUnitType == FREQUENCY_UNIT ){
-			converter = new ConverterWavelengthFrequency( oldUnits, newUnits );
-		}
+		return unitType;
 	}
-	else if ( sourceUnitType == CHANNEL_UNIT ){
-		converter = new ConverterChannel( oldUnits, newUnits );
+
+
+
+	Converter::Converter( const QString& oldUnitsStr, const QString& newUnitsStr):
+		oldUnits( oldUnitsStr), newUnits( newUnitsStr ) {
 	}
-	return converter;
-}
 
-Converter::UnitType Converter::getUnitType( const QString& unit ){
-	UnitType unitType = UNRECOGNIZED;
-	if ( FREQUENCY_UNITS.contains( unit )){
-		unitType = FREQUENCY_UNIT;
+	QString Converter::getNewUnits() const {
+		return newUnits;
 	}
-	else if ( WAVELENGTH_UNITS.contains( unit )){
-		unitType = WAVELENGTH_UNIT;
+
+	double Converter::convert ( double oldValue ) {
+		Vector<double> sourceValues( 1 );
+		sourceValues[0] = oldValue;
+		Vector<double> destValues = convert( sourceValues );
+		double result = destValues[0];
+		return result;
 	}
-	else if ( VELOCITY_UNITS.contains( unit )){
-		unitType = VELOCITY_UNIT;
-	}
-	else if ( unit.isEmpty() ){
-		unitType = CHANNEL_UNIT;
-	}
-	return unitType;
-}
 
-
-
-Converter::Converter( const QString& oldUnitsStr, const QString& newUnitsStr):
-		oldUnits( oldUnitsStr), newUnits( newUnitsStr ){
-}
-
-QString Converter::getNewUnits() const {
-	return newUnits;
-}
-
-double Converter::convert ( double oldValue ){
-	Vector<double> sourceValues( 1 );
-	sourceValues[0] = oldValue;
-	Vector<double> destValues = convert( sourceValues );
-	double result = destValues[0];
-	return result;
-}
-
-void Converter::convert( Vector<double> &resultValues, int sourceIndex, int destIndex){
-	if ( sourceIndex >= 0 && destIndex >= 0 ){
-		int diff = qAbs( destIndex - sourceIndex );
-		float power = pow( 10, diff );
-		if ( destIndex > sourceIndex ){
-			power = 1 / power;
-		}
-		for ( int i = 0; i < static_cast<int>(resultValues.size()); i++ ){
-			resultValues[i] = resultValues[i] * power;
+	void Converter::convert( Vector<double> &resultValues, int sourceIndex, int destIndex) {
+		if ( sourceIndex >= 0 && destIndex >= 0 ) {
+			int diff = qAbs( destIndex - sourceIndex );
+			float power = pow( 10, diff );
+			if ( destIndex > sourceIndex ) {
+				power = 1 / power;
+			}
+			for ( int i = 0; i < static_cast<int>(resultValues.size()); i++ ) {
+				resultValues[i] = resultValues[i] * power;
+			}
+		} else {
+			/*qDebug() <<  "Converter: could not convert sourceIndex=" <<
+						sourceIndex << " destIndex=" << destIndex;*/
 		}
 	}
-	else {
-		/*qDebug() <<  "Converter: could not convert sourceIndex=" <<
-					sourceIndex << " destIndex=" << destIndex;*/
-	}
-}
 
-bool Converter::setVelocityUnits( const QString& units ){
-	bool unitsUnderstood = spectralCoordinate.setVelocity( units.toStdString() );
-	if ( !unitsUnderstood ){
-		qDebug() << "Converter::setVelocityUnits units=" << units << " were not understood ";
+	bool Converter::setVelocityUnits( const QString& units ) {
+		bool unitsUnderstood = spectralCoordinate.setVelocity( units.toStdString() );
+		if ( !unitsUnderstood ) {
+			qDebug() << "Converter::setVelocityUnits units=" << units << " were not understood ";
+		}
+		return unitsUnderstood;
 	}
-	return unitsUnderstood;
-}
 
-bool Converter::setWavelengthUnits( const QString& units ){
-	bool unitsUnderstood = spectralCoordinate.setWavelengthUnit( units.toStdString() );
-	if ( !unitsUnderstood ){
-		qDebug() << "Converter::setFrequencyUnits units=" << units << " were not understood ";
+	bool Converter::setWavelengthUnits( const QString& units ) {
+		bool unitsUnderstood = spectralCoordinate.setWavelengthUnit( units.toStdString() );
+		if ( !unitsUnderstood ) {
+			qDebug() << "Converter::setFrequencyUnits units=" << units << " were not understood ";
+		}
+		return unitsUnderstood;
 	}
-	return unitsUnderstood;
-}
 
-Converter::~Converter() {
-	// TODO Auto-generated destructor stub
-}
+	Converter::~Converter() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

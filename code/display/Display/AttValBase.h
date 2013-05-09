@@ -55,8 +55,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 //
 // <example>
-// AttValue can be used to provide an enumeration which identifies 
-// the type of a variable, for example: 
+// AttValue can be used to provide an enumeration which identifies
+// the type of a variable, for example:
 // <srcblock>
 // Int i;
 // if (AttValue::whatType(&i) != AttValue::AtInt) {
@@ -66,7 +66,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </example>
 //
 // <motivation>
-// This is a support class to unify type identification for the 
+// This is a support class to unify type identification for the
 // various Attribute classes.
 // </motivation>
 //
@@ -74,73 +74,88 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Consider using global whatType function instead of this class.
 // </todo>
 
-class AttValue {
+	class AttValue {
 
- public:
+	public:
 
-  // The possible value types.  
-  enum ValueType {
-    AtuInt,
-    AtInt,
-    AtFloat,
-    AtDouble,
-    AtBool,
-    AtString,
-    AtQuantity,
-    AtInvalid
-  };
-  
-  // Determine the type of a scalar or Array variable.
-  // <group>
-  static AttValue::ValueType whatType(uInt *) 
-    { return AttValue::AtuInt; };
-  static AttValue::ValueType whatType(Vector<uInt> *) 
-    { return AttValue::AtuInt; };
-  static AttValue::ValueType whatType(Int *) 
-    { return AttValue::AtInt; };
-  static AttValue::ValueType whatType(Vector<Int> *) 
-    { return AttValue::AtInt; };
-  static AttValue::ValueType whatType(Float *) 
-    { return AttValue::AtFloat; };
-  static AttValue::ValueType whatType(Vector<Float> *) 
-    { return AttValue::AtFloat; };
-  static AttValue::ValueType whatType(Double *) 
-    { return AttValue::AtDouble; };
-  static AttValue::ValueType whatType(Vector<Double> *) 
-    { return AttValue::AtDouble; };
-  static AttValue::ValueType whatType(Bool *) 
-    { return AttValue::AtBool; };
-  static AttValue::ValueType whatType(Vector<Bool> *) 
-    { return AttValue::AtBool; };
-  static AttValue::ValueType whatType(String *) 
-    { return AttValue::AtString; };
-  static AttValue::ValueType whatType(Vector<String> *) 
-    { return AttValue::AtString; };
-  static AttValue::ValueType whatType(Quantity *)
-    { return AttValue::AtQuantity; };
-  static AttValue::ValueType whatType(Vector<Quantity> *)
-    { return AttValue::AtQuantity; };
-  static AttValue::ValueType whatType(void *) 
-    { return AttValue::AtInvalid; };
-  // </group>
+		// The possible value types.
+		enum ValueType {
+		    AtuInt,
+		    AtInt,
+		    AtFloat,
+		    AtDouble,
+		    AtBool,
+		    AtString,
+		    AtQuantity,
+		    AtInvalid
+		};
 
-};
+		// Determine the type of a scalar or Array variable.
+		// <group>
+		static AttValue::ValueType whatType(uInt *) {
+			return AttValue::AtuInt;
+		};
+		static AttValue::ValueType whatType(Vector<uInt> *) {
+			return AttValue::AtuInt;
+		};
+		static AttValue::ValueType whatType(Int *) {
+			return AttValue::AtInt;
+		};
+		static AttValue::ValueType whatType(Vector<Int> *) {
+			return AttValue::AtInt;
+		};
+		static AttValue::ValueType whatType(Float *) {
+			return AttValue::AtFloat;
+		};
+		static AttValue::ValueType whatType(Vector<Float> *) {
+			return AttValue::AtFloat;
+		};
+		static AttValue::ValueType whatType(Double *) {
+			return AttValue::AtDouble;
+		};
+		static AttValue::ValueType whatType(Vector<Double> *) {
+			return AttValue::AtDouble;
+		};
+		static AttValue::ValueType whatType(Bool *) {
+			return AttValue::AtBool;
+		};
+		static AttValue::ValueType whatType(Vector<Bool> *) {
+			return AttValue::AtBool;
+		};
+		static AttValue::ValueType whatType(String *) {
+			return AttValue::AtString;
+		};
+		static AttValue::ValueType whatType(Vector<String> *) {
+			return AttValue::AtString;
+		};
+		static AttValue::ValueType whatType(Quantity *) {
+			return AttValue::AtQuantity;
+		};
+		static AttValue::ValueType whatType(Vector<Quantity> *) {
+			return AttValue::AtQuantity;
+		};
+		static AttValue::ValueType whatType(void *) {
+			return AttValue::AtInvalid;
+		};
+		// </group>
 
-// <summary> 
+	};
+
+// <summary>
 // Base class for values of Attributes used in the display classes.
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="tAttribute" demos="">
 // </reviewed>
-// 
-// <etymology> 
+//
+// <etymology>
 // "AttributeValueBase" is a concatenation, representing a "Base"
 // class for "Attribute Values."
 // </etymology>
 //
-// <synopsis> 
+// <synopsis>
 // This class is the base for storing Attribute values.  <linkto
 // class=Attribute> Attributes </linkto> are simple name-value pairs,
 // where the name is a String, and the value can be a scalar or Array.
@@ -152,9 +167,9 @@ class AttValue {
 // of different types.
 // </synopsis>
 //
-// <motivation> 
+// <motivation>
 // To provide the non-templated (ie. type-independent) interface of
-// AttributeValues in a single place, thus enabling the hiding of 
+// AttributeValues in a single place, thus enabling the hiding of
 // the templated aspect of Attributes from the end-user.  In particular
 // it allows implementation of the comparison operators in the base
 // class, regardless of type.
@@ -164,79 +179,81 @@ class AttValue {
 // Nothing known.
 // </todo>
 
-class AttributeValueBase  {
+	class AttributeValueBase  {
 
- public:
-  
-  // Constructor.
-  AttributeValueBase(AttValue::ValueType type, Bool strict);
-  
-  // Copy constructor.
-  AttributeValueBase(const AttributeValueBase &other);
+	public:
 
-  // Destructor.
-  virtual ~AttributeValueBase();
+		// Constructor.
+		AttributeValueBase(AttValue::ValueType type, Bool strict);
 
-  // Copy assignment.
-  const AttributeValueBase& operator=(const AttributeValueBase &other);
-  
-  // Get the type of the value stored.
-  AttValue::ValueType getType() const; 
+		// Copy constructor.
+		AttributeValueBase(const AttributeValueBase &other);
 
-  // Check for equality (and inequality) of two objects derived from
-  // AttributeValueBase.  It is implemented in terms of the pure
-  // virtual method <src>matches</src>, which must be implemented in
-  // derived classes.  The <src>operator==</src> only returns
-  // <src>True</src> if <src>this->matches(other)</src> and
-  // <src>other.matches(*this)</src> are both <src>True</src>.  This
-  // guarantees that if <src> a == b </src> it follows that <src> b ==
-  // a </src> (this is enforced this way because <src>a</src> and
-  // <src>b</src> can be classes derived differently from
-  // AttributeValueBase which can therefore have a different
-  // implementation of <src>match()</src>).  
-  // <group>
-  Bool operator==(const AttributeValueBase &other) const;
-  Bool operator!=(const AttributeValueBase &other) const;
-  // </group>
-  
-  // Return a new copy of the AttributeValueBase 
-  virtual AttributeValueBase* clone() const = 0;
-  
-  // Set/get the strictness state of this AttributeValue.
-  // <group>
-  virtual void setStrictness(const Bool &newStrict);
-  virtual Bool getStrictness() const;
-  // </group>
-  
-  // Add <src>other</src> to <src>*this</src>.
-  virtual void operator+=(const AttributeValueBase& other) = 0;
+		// Destructor.
+		virtual ~AttributeValueBase();
 
-  // Return class name
-  virtual String className() const {return String("AttributeValueBase");};
+		// Copy assignment.
+		const AttributeValueBase& operator=(const AttributeValueBase &other);
 
-  virtual void print(ostream& os) = 0;
-  
- protected:
+		// Get the type of the value stored.
+		AttValue::ValueType getType() const;
 
-  // The type of what is stored.
-  AttValue::ValueType itsValueType;
+		// Check for equality (and inequality) of two objects derived from
+		// AttributeValueBase.  It is implemented in terms of the pure
+		// virtual method <src>matches</src>, which must be implemented in
+		// derived classes.  The <src>operator==</src> only returns
+		// <src>True</src> if <src>this->matches(other)</src> and
+		// <src>other.matches(*this)</src> are both <src>True</src>.  This
+		// guarantees that if <src> a == b </src> it follows that <src> b ==
+		// a </src> (this is enforced this way because <src>a</src> and
+		// <src>b</src> can be classes derived differently from
+		// AttributeValueBase which can therefore have a different
+		// implementation of <src>match()</src>).
+		// <group>
+		Bool operator==(const AttributeValueBase &other) const;
+		Bool operator!=(const AttributeValueBase &other) const;
+		// </group>
 
-  // Whether the match is strict or not.
-  Bool itsStrictness;
+		// Return a new copy of the AttributeValueBase
+		virtual AttributeValueBase* clone() const = 0;
 
-  // Calculate whether <src>*this</src> matches <src>other</src>.
-  // Since the meaning of "match" can be different for different
-  // types, it is left to the derived class to define this method.
-  virtual Bool matches(const AttributeValueBase &other) const = 0;
+		// Set/get the strictness state of this AttributeValue.
+		// <group>
+		virtual void setStrictness(const Bool &newStrict);
+		virtual Bool getStrictness() const;
+		// </group>
 
-  // Set the type of the value stored.
-  virtual void setType(const AttValue::ValueType &newType);
+		// Add <src>other</src> to <src>*this</src>.
+		virtual void operator+=(const AttributeValueBase& other) = 0;
 
-  // Check that private data match
-  Bool myMatch(const AttributeValueBase &other) const;
-};
+		// Return class name
+		virtual String className() const {
+			return String("AttributeValueBase");
+		};
 
-ostream &operator<<(ostream &os, AttributeValueBase &av);
+		virtual void print(ostream& os) = 0;
+
+	protected:
+
+		// The type of what is stored.
+		AttValue::ValueType itsValueType;
+
+		// Whether the match is strict or not.
+		Bool itsStrictness;
+
+		// Calculate whether <src>*this</src> matches <src>other</src>.
+		// Since the meaning of "match" can be different for different
+		// types, it is left to the derived class to define this method.
+		virtual Bool matches(const AttributeValueBase &other) const = 0;
+
+		// Set the type of the value stored.
+		virtual void setType(const AttValue::ValueType &newType);
+
+		// Check that private data match
+		Bool myMatch(const AttributeValueBase &other) const;
+	};
+
+	ostream &operator<<(ostream &os, AttributeValueBase &av);
 
 
 } //# NAMESPACE CASA - END

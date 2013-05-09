@@ -42,15 +42,24 @@ namespace casa {
 		public:
 			Position( ) { }
 			// Later this could check for consistency between the coordinate and the system...
-			Position( const CoordinateSystem &cs, const Quantity &x, const Quantity &y ) : csys_(cs), coord_(2)
-									{ coord_(0) = x; coord_(1) = y; }
+			Position( const CoordinateSystem &cs, const Quantity &x, const Quantity &y ) : csys_(cs), coord_(2) {
+				coord_(0) = x;
+				coord_(1) = y;
+			}
 			// Later this could check for consistency between the coordinate and the system...
-			Position( const CoordinateSystem &cs, const Quantity &x, const Quantity &y, const Quantity &z ) : csys_(cs), coord_(3)
-									{ coord_(0) = x; coord_(1) = y; coord_(2) = z; }
+			Position( const CoordinateSystem &cs, const Quantity &x, const Quantity &y, const Quantity &z ) : csys_(cs), coord_(3) {
+				coord_(0) = x;
+				coord_(1) = y;
+				coord_(2) = z;
+			}
 			Position( const Position &that ) : csys_(that.csys_), coord_(that.coord_) { }
 
-			const CoordinateSystem &csys( ) const { return csys_; }
-			const Vector<Quantity> &coord( ) const { return coord_; }
+			const CoordinateSystem &csys( ) const {
+				return csys_;
+			}
+			const Vector<Quantity> &coord( ) const {
+				return coord_;
+			}
 
 			void show( std::ostream &out ) const;
 
@@ -59,14 +68,23 @@ namespace casa {
 			Vector<Quantity> coord_;
 		};
 
-		inline std::ostream &operator<<( std::ostream &out, const casa::viewer::Position &pos ) { pos.show(out); return out; }
+		inline std::ostream &operator<<( std::ostream &out, const casa::viewer::Position &pos ) {
+			pos.show(out);
+			return out;
+		}
 
 	}
 
-	inline std::ostream &operator<<( std::ostream &out, const casa::viewer::Position &pos ) { pos.show(out); return out; }
+	inline std::ostream &operator<<( std::ostream &out, const casa::viewer::Position &pos ) {
+		pos.show(out);
+		return out;
+	}
 }
 
-inline std::ostream &operator<<( std::ostream &out, const casa::viewer::Position &pos ) { pos.show(out); return out; }
+inline std::ostream &operator<<( std::ostream &out, const casa::viewer::Position &pos ) {
+	pos.show(out);
+	return out;
+}
 
 #endif
 

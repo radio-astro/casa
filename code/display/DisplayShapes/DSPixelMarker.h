@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSPIXELMARKER_H
 #define TRIALDISPLAY_DSPIXELMARKER_H
 
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DisplayShapeWithCoords.h>
@@ -41,31 +41,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of an absolute pixel DSMarker
 // </summary>
 
-class DSWorldMarker;
-class DSScreenMarker;
+	class DSWorldMarker;
+	class DSScreenMarker;
 
-class DSPixelMarker : public DSMarker , public DisplayShapeWithCoords {
-  
-public:
-  
-  DSPixelMarker();
-  DSPixelMarker(const Record& settings);
-  DSPixelMarker(DSScreenMarker& other);
-  DSPixelMarker(DSWorldMarker& other);
-  
-  virtual ~DSPixelMarker();
+	class DSPixelMarker : public DSMarker , public DisplayShapeWithCoords {
 
-  virtual Record getOptions();
-  virtual Bool setOptions(const Record& settings);
+	public:
 
-  virtual Record getRawOptions() {
-    return DSMarker::getOptions();
-  }
+		DSPixelMarker();
+		DSPixelMarker(const Record& settings);
+		DSPixelMarker(DSScreenMarker& other);
+		DSPixelMarker(DSWorldMarker& other);
 
-  virtual void recalculateScreenPosition() {}
-private:
-  
-};
+		virtual ~DSPixelMarker();
+
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+
+		virtual Record getRawOptions() {
+			return DSMarker::getOptions();
+		}
+
+		virtual void recalculateScreenPosition() {}
+	private:
+
+	};
 
 } //# NAMESPACE CASA - END
 

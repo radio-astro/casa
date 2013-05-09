@@ -33,17 +33,17 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class DParameterChoice;
+	class DParameterChoice;
 
-// <summary> 
+// <summary>
 // A DisplayData to setup a World coordinate plot
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <prerequisite>
 //   <li> DisplayData
 //   <li> AxesDisplayData
@@ -51,77 +51,81 @@ class DParameterChoice;
 //
 // <etymology>
 // </etymology>
-// <synopsis> 
-// 
-// </synopsis> 
+// <synopsis>
+//
+// </synopsis>
 
-class WorldAxesDD : public AxesDisplayData {
+	class WorldAxesDD : public AxesDisplayData {
 
-public:
-  
-  // Constructor.
-  WorldAxesDD();
+	public:
 
-  // Destructor.
-  virtual ~WorldAxesDD();
+		// Constructor.
+		WorldAxesDD();
 
-    // Install the default options for this DisplayData.
-  virtual void setDefaultOptions();
+		// Destructor.
+		virtual ~WorldAxesDD();
 
-  // Apply options stored in <src>rec</src> to the DisplayData.  A
-  // return value of <src>True</src> means a refresh is needed.
-  // <src>recOut</src> contains any fields which were implicitly 
-  // changed as a result of the call to this function.
-  virtual Bool setOptions(Record& rec, Record& recOut);
+		// Install the default options for this DisplayData.
+		virtual void setDefaultOptions();
 
-  // Retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// Apply options stored in <src>rec</src> to the DisplayData.  A
+		// return value of <src>True</src> means a refresh is needed.
+		// <src>recOut</src> contains any fields which were implicitly
+		// changed as a result of the call to this function.
+		virtual Bool setOptions(Record& rec, Record& recOut);
 
-  // Create a new AxesDisplayMethod for drawing on the given
-  // WorldCanvas when the AttributeBuffers are suitably matched to the
-  // current state of this DisplayData and of the WorldCanvas/Holder.
-  // The tag is a unique number used to identify the age of the newly
-  // constructed CachingDisplayMethod.
-  virtual CachingDisplayMethod* newDisplayMethod(WorldCanvas* worldCanvas,
-				 AttributeBuffer* wchAttributes,
-				 AttributeBuffer* ddAttributes,
-				 CachingDisplayData* dd);
- 
-  // Return the current options of this DisplayData as an
-  // AttributeBuffer.
-  virtual AttributeBuffer optionsAsAttributes();
+		// Retrieve the current and default options and parameter types.
+		virtual Record getOptions();
 
-  virtual String spectralUnit() const
-    { return itsParamSpectralUnit->value(); }
-  
-  virtual String velocityType() const
-    { return itsParamVelocityType->value(); } 
+		// Create a new AxesDisplayMethod for drawing on the given
+		// WorldCanvas when the AttributeBuffers are suitably matched to the
+		// current state of this DisplayData and of the WorldCanvas/Holder.
+		// The tag is a unique number used to identify the age of the newly
+		// constructed CachingDisplayMethod.
+		virtual CachingDisplayMethod* newDisplayMethod(WorldCanvas* worldCanvas,
+		        AttributeBuffer* wchAttributes,
+		        AttributeBuffer* ddAttributes,
+		        CachingDisplayData* dd);
 
-  virtual String axisText(const WorldCanvas* wc, const uInt axisNo) const;
-  virtual String xAxisText(const WorldCanvas* wc=0) const;
-  virtual String yAxisText(const WorldCanvas* wc=0) const;
-      
-  // Pure virtual function from DisplayData...
-  String dataType() const { return "label"; }
+		// Return the current options of this DisplayData as an
+		// AttributeBuffer.
+		virtual AttributeBuffer optionsAsAttributes();
 
-protected:
+		virtual String spectralUnit() const {
+			return itsParamSpectralUnit->value();
+		}
 
-  // (Required) copy constructor.
-  WorldAxesDD(const WorldAxesDD& other);
+		virtual String velocityType() const {
+			return itsParamVelocityType->value();
+		}
 
-  // (Required) copy assignment.
-  void operator=(const WorldAxesDD& other);
+		virtual String axisText(const WorldCanvas* wc, const uInt axisNo) const;
+		virtual String xAxisText(const WorldCanvas* wc=0) const;
+		virtual String yAxisText(const WorldCanvas* wc=0) const;
 
-private:
+		// Pure virtual function from DisplayData...
+		String dataType() const {
+			return "label";
+		}
 
-  // Install the default options for this DisplayData.
-  void installDefaultOptions();
+	protected:
 
-  // Set Spectral preference (options)
-  DParameterChoice* itsParamSpectralUnit;
-  DParameterChoice* itsParamVelocityType;
+		// (Required) copy constructor.
+		WorldAxesDD(const WorldAxesDD& other);
 
-};
+		// (Required) copy assignment.
+		void operator=(const WorldAxesDD& other);
+
+	private:
+
+		// Install the default options for this DisplayData.
+		void installDefaultOptions();
+
+		// Set Spectral preference (options)
+		DParameterChoice* itsParamSpectralUnit;
+		DParameterChoice* itsParamVelocityType;
+
+	};
 
 
 } //# NAMESPACE CASA - END

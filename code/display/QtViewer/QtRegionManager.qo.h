@@ -39,131 +39,131 @@
 #include <QtCore>
 #include <QtGui>
 #include <QHash>
-   //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
-   //#   because they'll have Qt includes.
-   //#   E.g. <QApplication> needs the X11 definition of 'Display'
+//#dk Be careful to put *.ui.h within X_enter/exit bracket too,
+//#   because they'll have Qt includes.
+//#   E.g. <QApplication> needs the X11 definition of 'Display'
 #include <display/QtViewer/QtRegionMgr.ui.h>
 #include <graphics/X11/X_exit.h>
 
- 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class QtViewer;
-class ImageRegion;
-class Record;
-class RSComposite;
-class WCUnion;
-template <class T> class PtrBlock;
+	class QtViewer;
+	class ImageRegion;
+	class Record;
+	class RSComposite;
+	class WCUnion;
+	template <class T> class PtrBlock;
 
 
-class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
+	class QtRegionManager : public QWidget, protected Ui::QtRegionMgr {
 
-  Q_OBJECT
+		Q_OBJECT
 
- 
- public:
-  
-  QtRegionManager(QtDisplayPanel* qdp, QWidget* parent=0);
-  
-  ~QtRegionManager() {  }
-  
- public slots:
-  void changeAxis(String, String, String);
-  void activate(Record);
 
- protected slots:
-  //draw region on viewer
-  void drawRegion(Record mousereg, WorldCanvasHolder *wch);
-  // React to new region creation in display panel.
-  void newRegion_(String imgFilename);
+	public:
 
-  // Load region from current displayed image
-  void loadRegionFromImage();
-  // Load region from ds9 or aipsbox or rgn file
-  void loadRegionFromFile();
+		QtRegionManager(QtDisplayPanel* qdp, QWidget* parent=0);
 
-  //save region into image
-  void saveRegionInImage();
-  // react to SaveRgnn, save region to file
-  void saveRegionInFile();
-  //remove region from image
-  void removeRegion();
+		~QtRegionManager() {  }
 
-  void toggleImageRegion();
-  void zPlaneChanged();
-  void currentRegionChanged(const QString &);
-  void showHelp();
-  void showHelpActive();
+	public slots:
+		void changeAxis(String, String, String);
+		void activate(Record);
 
-  //convert region to shape
-  RSComposite *regionToShape(
-        QtDisplayData* qdd, const ImageRegion* wcreg);
+	protected slots:
+		//draw region on viewer
+		void drawRegion(Record mousereg, WorldCanvasHolder *wch);
+		// React to new region creation in display panel.
+		void newRegion_(String imgFilename);
 
-  // Cleanup on destruction
-  void cleanup();
+		// Load region from current displayed image
+		void loadRegionFromImage();
+		// Load region from ds9 or aipsbox or rgn file
+		void loadRegionFromFile();
 
-  void deleteActiveBox();
-  void insertActiveBox();
+		//save region into image
+		void saveRegionInImage();
+		// react to SaveRgnn, save region to file
+		void saveRegionInFile();
+		//remove region from image
+		void removeRegion();
 
-  // set up plane only or extending by channel and pol
-  void singlePlane();
-  void extendChan();
-  void extendPol();
+		void toggleImageRegion();
+		void zPlaneChanged();
+		void currentRegionChanged(const QString &);
+		void showHelp();
+		void showHelpActive();
 
-  void resetRegionExtension();
+		//convert region to shape
+		RSComposite *regionToShape(
+		    QtDisplayData* qdd, const ImageRegion* wcreg);
 
-  void loadRegionsImageFromFile();
-  DisplayData* getImageData(QString);
-  DisplayData* getBoundingBoxData(QString);
+		// Cleanup on destruction
+		void cleanup();
 
-  //delete region from image
-  void deleteRegion();
-  //show/hide region
-  void showHideRegion();
+		void deleteActiveBox();
+		void insertActiveBox();
 
-  void flashActive();
-  void exportRegions();
+		// set up plane only or extending by channel and pol
+		void singlePlane();
+		void extendChan();
+		void extendPol();
 
- public:
-  bool planeAllowed(int, String&, String&);
+		void resetRegionExtension();
 
- protected:
-  void addRegionsToShape(RSComposite*& theShapes, 
-                         const WCRegion*& wcreg);
-  WCUnion* unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg);
-  void displaySelectedRegion();
-  void showRegion(const String& regName);
+		void loadRegionsImageFromFile();
+		DisplayData* getImageData(QString);
+		DisplayData* getBoundingBoxData(QString);
 
-  bool deleteBox(QString&, int);
-  bool insertBox(QString&);
-  void rotateBox(int);
+		//delete region from image
+		void deleteRegion();
+		//show/hide region
+		void showHideRegion();
 
-  void addRegionToMenu(const QString&, const QString&);
-  
-  QtDisplayPanel* qdp_;
-  QWidget* parent_;
+		void flashActive();
+		void exportRegions();
 
- private:
-  PtrBlock<const ImageRegion * >  unionRegions_p;
-  List<RegionShape*> regShapes_p;
-  void unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs, const WCRegion*& wcreg);
-  QHash<QString, DisplayData*> regData;
-  QHash<QString, bool> regState;
-  QMenu *showHideMenu;
-  QMenu *deleteMenu;
+	public:
+		bool planeAllowed(int, String&, String&);
 
-  QString activeGroup;
-  int activeBox;
-  RegionShape* activeShape;
-  QTimer* timer;
-  bool flash;
+	protected:
+		void addRegionsToShape(RSComposite*& theShapes,
+		                       const WCRegion*& wcreg);
+		WCUnion* unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg);
+		void displaySelectedRegion();
+		void showRegion(const String& regName);
 
-  int cb;
+		bool deleteBox(QString&, int);
+		bool insertBox(QString&);
+		void rotateBox(int);
 
-signals:
-  void extendRegion(String, String);
-  
-};
+		void addRegionToMenu(const QString&, const QString&);
+
+		QtDisplayPanel* qdp_;
+		QWidget* parent_;
+
+	private:
+		PtrBlock<const ImageRegion * >  unionRegions_p;
+		List<RegionShape*> regShapes_p;
+		void unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs, const WCRegion*& wcreg);
+		QHash<QString, DisplayData*> regData;
+		QHash<QString, bool> regState;
+		QMenu *showHideMenu;
+		QMenu *deleteMenu;
+
+		QString activeGroup;
+		int activeBox;
+		RegionShape* activeShape;
+		QTimer* timer;
+		bool flash;
+
+		int cb;
+
+	signals:
+		void extendRegion(String, String);
+
+	};
 
 
 } //# NAMESPACE CASA - END

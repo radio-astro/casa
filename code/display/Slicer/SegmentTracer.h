@@ -33,22 +33,22 @@ class QwtPlot;
 
 namespace casa {
 
-class SegmentTracer : public QwtPlotPicker {
-public:
-	SegmentTracer( int regionId, int index, QwtPlot* canvas );
-	void setData( const QVector<double> xValues, const QVector<double> yValues );
-	virtual QwtText trackerText( const QwtDoublePoint & pos ) const;
-	virtual ~SegmentTracer();
+	class SegmentTracer : public QwtPlotPicker {
+	public:
+		SegmentTracer( int regionId, int index, QwtPlot* canvas );
+		void setData( const QVector<double> xValues, const QVector<double> yValues );
+		virtual QwtText trackerText( const QwtDoublePoint & pos ) const;
+		virtual ~SegmentTracer();
 
-private:
-	bool isBetween( double value, double start, double end ) const;
-	QwtPlotMarker* marker;
-	QwtPlot* slicePlot;
-	int regionId;
-	int index;
-	QVector<double> xValues;
-	QVector<double> yValues;
-};
+	private:
+		bool isBetween( double value, double start, double end ) const;
+		QwtPlotMarker* marker;
+		QwtPlot* slicePlot;
+		int regionId;
+		int index;
+		QVector<double> xValues;
+		QVector<double> yValues;
+	};
 
 } /* namespace casa */
 #endif /* SEGMENTTRACER_H_ */

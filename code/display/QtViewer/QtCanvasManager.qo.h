@@ -41,11 +41,11 @@
 #include <QSpacerItem>
 #include <graphics/X11/X_exit.h>
 
- 
-namespace casa { 
 
-class QtViewer;
-class QtCanvasManager;
+namespace casa {
+
+	class QtViewer;
+	class QtCanvasManager;
 
 // <summary>
 // Options widget for single DisplayPanel.
@@ -54,61 +54,75 @@ class QtCanvasManager;
 // <synopsis>
 // </synopsis>
 
-class QtCanvasManagerOptions : public QtAutoGui {
-	Q_OBJECT	
-public:
-	QtCanvasManagerOptions( QtDisplayPanel* qdp, QWidget *parent ) : QtAutoGui(parent) {
-		loadRecord(qdp->getOptions());
-		connect( this, SIGNAL(setOptions(Record)), qdp, SLOT(setOptions(Record)) );
-		connect( qdp, SIGNAL(optionsChanged(Record)), SLOT(changeOptions(Record)) );  
-	}
-	~QtCanvasManagerOptions() {  }
-};
+	class QtCanvasManagerOptions : public QtAutoGui {
+		Q_OBJECT
+	public:
+		QtCanvasManagerOptions( QtDisplayPanel* qdp, QWidget *parent ) : QtAutoGui(parent) {
+			loadRecord(qdp->getOptions());
+			connect( this, SIGNAL(setOptions(Record)), qdp, SLOT(setOptions(Record)) );
+			connect( qdp, SIGNAL(optionsChanged(Record)), SLOT(changeOptions(Record)) );
+		}
+		~QtCanvasManagerOptions() {  }
+	};
 
- class CursorLink : public QFrame, protected Ui::CursorLink {
-	 Q_OBJECT
- public:
-	 CursorLink( const std::string &name, QtCanvasManager *mgr, QWidget *parent=0 );
-	 std::string name( ) const { return name_; }
-	 bool isChecked( ) const { return link->checkState( ) == Qt::Unchecked ? false : true; }
-	 void setChecked( bool val ) { link->setCheckState( val ? Qt::Checked : Qt::Unchecked ); }
-	 void setText( const std::string &txt ) { link->setText(QString::fromStdString(txt)); }
-	 void setDPG( QtDisplayPanelGui *g ) { dpg = g; }
-	 QtDisplayPanelGui *getDPG( ) { return dpg; }
-	 void setColor( QColor c );
+	class CursorLink : public QFrame, protected Ui::CursorLink {
+		Q_OBJECT
+	public:
+		CursorLink( const std::string &name, QtCanvasManager *mgr, QWidget *parent=0 );
+		std::string name( ) const {
+			return name_;
+		}
+		bool isChecked( ) const {
+			return link->checkState( ) == Qt::Unchecked ? false : true;
+		}
+		void setChecked( bool val ) {
+			link->setCheckState( val ? Qt::Checked : Qt::Unchecked );
+		}
+		void setText( const std::string &txt ) {
+			link->setText(QString::fromStdString(txt));
+		}
+		void setDPG( QtDisplayPanelGui *g ) {
+			dpg = g;
+		}
+		QtDisplayPanelGui *getDPG( ) {
+			return dpg;
+		}
+		void setColor( QColor c );
 
- private slots:
-	 void setColor( );
-	 void linkChange(int);
+	private slots:
+		void setColor( );
+		void linkChange(int);
 
- private:
-	 QtCanvasManager *mgr;
-	 QtDisplayPanelGui *dpg;
-	 std::string name_;
-	 QColor current_color;
- };
+	private:
+		QtCanvasManager *mgr;
+		QtDisplayPanelGui *dpg;
+		std::string name_;
+		QColor current_color;
+	};
 
-class QtCanvasManager : public QDialog, protected Ui::QtCanvasManager {
-	Q_OBJECT	
-public:
+	class QtCanvasManager : public QDialog, protected Ui::QtCanvasManager {
+		Q_OBJECT
+	public:
 
-	QtCanvasManager(QtDisplayPanelGui *dpg);
-	~QtCanvasManager( ) { }
-	QtDisplayPanelGui *dpg( ) { return dpg_; }
+		QtCanvasManager(QtDisplayPanelGui *dpg);
+		~QtCanvasManager( ) { }
+		QtDisplayPanelGui *dpg( ) {
+			return dpg_;
+		}
 
-protected:
-  
-	void showEvent( QShowEvent* );
-	QtCanvasManagerOptions *options;
-	QtDisplayPanelGui *dpg_;
- private:
-	QVBoxLayout *layout;
-	QSpacerItem *spacer;
-	std::list<CursorLink*> link_widgets;
-  
-};
+	protected:
 
-} 
+		void showEvent( QShowEvent* );
+		QtCanvasManagerOptions *options;
+		QtDisplayPanelGui *dpg_;
+	private:
+		QVBoxLayout *layout;
+		QSpacerItem *spacer;
+		std::list<CursorLink*> link_widgets;
+
+	};
+
+}
 
 #endif
 

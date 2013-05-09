@@ -74,7 +74,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // // ...when inRec is received recording user gui updates
 // // (usually within 'setOptions()'):
-// 
+//
 // if(pbtn.fromRecord(inRec)) /* button was pressed; respond */ ;
 //
 // </srcblock>
@@ -89,53 +89,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> None.
 // </thrown>
 
-class DParameterButton : public DisplayParameter {
+	class DParameterButton : public DisplayParameter {
 
- public:
+	public:
 
-  // Constructor taking the name (id) of the button, a label which will
-  // appear beside the button, and the text which will appear on the button.
-  // Optionally, popup help text, 'context' string, and a flag indicating
-  // whether the button is enabled (disable is not fully supported yet).
-  // The context string determines which autogui rollup the button will
-  // appear in (replace spaces with underscores in this string).
-  DParameterButton(const String name, const String description,
-		   const String text, const String help="",
-		   const String context="", const Bool editable=True);
+		// Constructor taking the name (id) of the button, a label which will
+		// appear beside the button, and the text which will appear on the button.
+		// Optionally, popup help text, 'context' string, and a flag indicating
+		// whether the button is enabled (disable is not fully supported yet).
+		// The context string determines which autogui rollup the button will
+		// appear in (replace spaces with underscores in this string).
+		DParameterButton(const String name, const String description,
+		                 const String text, const String help="",
+		                 const String context="", const Bool editable=True);
 
-  // copy constructor.
-  DParameterButton(const DParameterButton &other);
+		// copy constructor.
+		DParameterButton(const DParameterButton &other);
 
-  // Destructor.
-  virtual ~DParameterButton();
+		// Destructor.
+		virtual ~DParameterButton();
 
-  // copy assignment.
-  DParameterButton &operator=(const DParameterButton &other);
+		// copy assignment.
+		DParameterButton &operator=(const DParameterButton &other);
 
-  // Determine whether the record (passed originally from autogui.g)
-  // indicates that the button was pressed.
-  virtual Bool fromRecord(const RecordInterface &record);
+		// Determine whether the record (passed originally from autogui.g)
+		// indicates that the button was pressed.
+		virtual Bool fromRecord(const RecordInterface &record);
 
-  // Place a record describing this button in a sub-field of
-  // <src>record</src> with name matching that of this parameter.  If
-  // <src>overwrite</src> is <src>True</src>, then any existing field
-  // with matching name will be overwritten.  If <src>fullrecord</src>
-  // is <src>True</src>, then a complete description of the parameter
-  // is given, otherwise just its current value is stored in
-  // <src>record</src>.  (At present, <src>fullrecord</src> is ignored;
-  // the full record is always returned).
-  virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
-			const Bool overwrite = False);
+		// Place a record describing this button in a sub-field of
+		// <src>record</src> with name matching that of this parameter.  If
+		// <src>overwrite</src> is <src>True</src>, then any existing field
+		// with matching name will be overwritten.  If <src>fullrecord</src>
+		// is <src>True</src>, then a complete description of the parameter
+		// is given, otherwise just its current value is stored in
+		// <src>record</src>.  (At present, <src>fullrecord</src> is ignored;
+		// the full record is always returned).
+		virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
+		                      const Bool overwrite = False);
 
- private:
+	private:
 
-  // default constructor disabled--do not use.
-  DParameterButton() : DisplayParameter(), itsText("") {  }
+		// default constructor disabled--do not use.
+		DParameterButton() : DisplayParameter(), itsText("") {  }
 
-  // Store for the text on the button.
-  String itsText;
+		// Store for the text on the button.
+		String itsText;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

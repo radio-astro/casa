@@ -29,14 +29,16 @@
 #include <display/QtViewer/QtDisplayPanelGui.qo.h>
 
 namespace casa {
-    namespace viewer {
+	namespace viewer {
 		RegionSource *QtRegionSourceFactory::newSource( RegionCreator *rc ) {
 			// passing kernel_ here ensures that all regions created by panel_ will
 			// be managed by the same RegionSource...
 			if ( kernel_.get( ) == 0 ) kernel_ = RegionSource::shared_kernel_ptr_type(new QtRegionSourceKernel(panel_));
 			return new QtRegionSource(rc,panel_,kernel_);
 		}
-	  
-		QtRegionDock *QtRegionSourceFactory::regionDock( ) { return panel_->regionDock( ); }
+
+		QtRegionDock *QtRegionSourceFactory::regionDock( ) {
+			return panel_->regionDock( );
+		}
 	}
 }

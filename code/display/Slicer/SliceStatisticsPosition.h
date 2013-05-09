@@ -31,30 +31,30 @@
 
 namespace casa {
 
-class SliceStatisticsPosition : public SliceStatistics {
-public:
-	SliceStatisticsPosition(SliceStatisticsFactory::AxisXUnits units);
-	virtual double getLength(std::pair<double,double> worldStart,
-				std::pair<double,double> worldEnd,
-				std::pair<int,int> pixelStart,
-				std::pair<int,int> pixelEnd ) const;
-	virtual void adjustStart( QVector<double>& values, double newStart ) const;
-	virtual double getLength( double value1World, double value2World,
-				double value1Pixel, double value2Pixel ) const ;
-	virtual double getStart( double value1WorldX, double value1WorldY,
-						double value2WorldX, double value2WorldY ) const;
-	virtual double getEnd( double value1WorldX, double value1WorldY,
-						double value2WorldX, double value2WorldY ) const;
-	virtual void storeIncrement( double* incr, QVector<double>& values, int index) const;
-	virtual QString getLengthLabel() const;
-	void setXPosition( bool xPosition );
-	virtual QVector<double> fromResults( Record* record  )const;
-	virtual QVector<double> interpolate( double start, double end,
-				const QVector<double>& values ) const;
-	virtual ~SliceStatisticsPosition();
-private:
-	bool xPosition;
-};
+	class SliceStatisticsPosition : public SliceStatistics {
+	public:
+		SliceStatisticsPosition(SliceStatisticsFactory::AxisXUnits units);
+		virtual double getLength(std::pair<double,double> worldStart,
+		                         std::pair<double,double> worldEnd,
+		                         std::pair<int,int> pixelStart,
+		                         std::pair<int,int> pixelEnd ) const;
+		virtual void adjustStart( QVector<double>& values, double newStart ) const;
+		virtual double getLength( double value1World, double value2World,
+		                          double value1Pixel, double value2Pixel ) const ;
+		virtual double getStart( double value1WorldX, double value1WorldY,
+		                         double value2WorldX, double value2WorldY ) const;
+		virtual double getEnd( double value1WorldX, double value1WorldY,
+		                       double value2WorldX, double value2WorldY ) const;
+		virtual void storeIncrement( double* incr, QVector<double>& values, int index) const;
+		virtual QString getLengthLabel() const;
+		void setXPosition( bool xPosition );
+		virtual QVector<double> fromResults( Record* record  )const;
+		virtual QVector<double> interpolate( double start, double end,
+		                                     const QVector<double>& values ) const;
+		virtual ~SliceStatisticsPosition();
+	private:
+		bool xPosition;
+	};
 
 } /* namespace casa */
 #endif /* SLICESTATISTICSPOSITION_H_ */

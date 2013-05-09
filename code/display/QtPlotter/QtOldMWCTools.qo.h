@@ -43,113 +43,108 @@
 
 namespace casa {
 
-class QtOldMWCTool
-{
+	class QtOldMWCTool {
 
-public:
-  QtOldMWCTool(): coordType("world") {}
-  virtual ~QtOldMWCTool() {}
-protected:
-  String coordType;
+	public:
+		QtOldMWCTool(): coordType("world") {}
+		virtual ~QtOldMWCTool() {}
+	protected:
+		String coordType;
 
-public:
-  virtual void setCoordType(const String& t) {
-             if (t == "world") coordType = t;
-             else coordType = "pixel";
-      // cout << "Object=" << objectName().toStdString()
-      //      << " setCoordType: coordType=" << coordType 
-      //      << " t=" << t << endl;
-  }
-  //String getCoordType() {return coordType;} 
+	public:
+		virtual void setCoordType(const String& t) {
+			if (t == "world") coordType = t;
+			else coordType = "pixel";
+			// cout << "Object=" << objectName().toStdString()
+			//      << " setCoordType: coordType=" << coordType
+			//      << " t=" << t << endl;
+		}
+		//String getCoordType() {return coordType;}
 
-};
+	};
 
-class QtOldPolyTool: public QtOldPTRegion,  public QtOldMWCTool
-{
-  Q_OBJECT
+	class QtOldPolyTool: public QtOldPTRegion,  public QtOldMWCTool {
+		Q_OBJECT
 
-public: 
-  QtOldPolyTool(PanelDisplay* pd);
-  virtual ~QtOldPolyTool() {}
- 
-public slots:
-  void setCoordType(const String& t);
+	public:
+		QtOldPolyTool(PanelDisplay* pd);
+		virtual ~QtOldPolyTool() {}
 
-signals:
-  void wcNotify( const String c, 
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
+	public slots:
+		void setCoordType(const String& t);
 
-protected:
-  virtual void updateRegion();
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
 
-};
+	protected:
+		virtual void updateRegion();
+
+	};
 
 
-class QtOldEllipseTool: public QtOldELRegion,  public QtOldMWCTool
-{
-  Q_OBJECT
+	class QtOldEllipseTool: public QtOldELRegion,  public QtOldMWCTool {
+		Q_OBJECT
 
-public:
-  QtOldEllipseTool(PanelDisplay* pd);
-  virtual ~QtOldEllipseTool() {}
+	public:
+		QtOldEllipseTool(PanelDisplay* pd);
+		virtual ~QtOldEllipseTool() {}
 
-public slots:
-  void setCoordType(const String& t);
+	public slots:
+		void setCoordType(const String& t);
 
-signals:
-  void wcNotify( const String c,
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
 
-protected:
-  virtual void updateRegion();
-};
-
-
-class QtOldRectTool: public QtOldRTRegion,  public QtOldMWCTool
-{
-  Q_OBJECT
-
-public: 
-  QtOldRectTool(PanelDisplay* pd);
-  virtual ~QtOldRectTool() {}
-
-public slots:
-  void setCoordType(const String& t);
-
-signals:
-  void wcNotify( const String c, 
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
-
-protected:
-  virtual void updateRegion();
-};
-
-class QtOldCrossTool: public QObject, public QtOldMWCTool, public MWCCrosshairTool
-{
-  Q_OBJECT
-
-public: 
-  QtOldCrossTool();
-  virtual ~QtOldCrossTool() {}
-  virtual void crosshairReady(const String& evtype);
-
-public slots:
-  void setCoordType(const String& t);
-
-signals:
-  void wcNotify( const String c, 
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
+	protected:
+		virtual void updateRegion();
+	};
 
 
-};
+	class QtOldRectTool: public QtOldRTRegion,  public QtOldMWCTool {
+		Q_OBJECT
+
+	public:
+		QtOldRectTool(PanelDisplay* pd);
+		virtual ~QtOldRectTool() {}
+
+	public slots:
+		void setCoordType(const String& t);
+
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
+
+	protected:
+		virtual void updateRegion();
+	};
+
+	class QtOldCrossTool: public QObject, public QtOldMWCTool, public MWCCrosshairTool {
+		Q_OBJECT
+
+	public:
+		QtOldCrossTool();
+		virtual ~QtOldCrossTool() {}
+		virtual void crosshairReady(const String& evtype);
+
+	public slots:
+		void setCoordType(const String& t);
+
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
+
+
+	};
 
 
 }

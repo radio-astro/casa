@@ -36,8 +36,8 @@
 #include <casa/iosfwd.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class ColormapInfo;
-class PixelCanvasColorTable;
+	class ColormapInfo;
+	class PixelCanvasColorTable;
 
 // <summary>
 // Class to manage registration of colormaps on PixelCanvasColorTables
@@ -47,7 +47,7 @@ class PixelCanvasColorTable;
 
 // <reviewed reviewer="None yet" date="yyyy/mm/dd" demos="">
 // </reviewed>
-  
+
 // <prerequisite>
 // <li> <linkto class="Colormap">Colormap</linkto>
 // <li> <linkto class="PixelCanvasColorTable">PixelCanvasColorTable</linkto>
@@ -90,64 +90,66 @@ class PixelCanvasColorTable;
 // Needed to have tool available to help manage more than one colormap.
 // </motivation>
 
-class ColormapManager {
+	class ColormapManager {
 
- public:
+	public:
 
-  // Constructor requires pointer to the PixelCanvasColorTable which it
-  // will manage.
-  ColormapManager(PixelCanvasColorTable *pcctbl);
+		// Constructor requires pointer to the PixelCanvasColorTable which it
+		// will manage.
+		ColormapManager(PixelCanvasColorTable *pcctbl);
 
-  // Destructor.
-  virtual ~ColormapManager();
+		// Destructor.
+		virtual ~ColormapManager();
 
-  // Register a Colormap with this ColormapManager, and optionally
-  // pass a weight - colormaps are distributed proportionally
-  // according to their weight.
-  void registerColormap(Colormap * dcmap, Float weight = 1.0);
+		// Register a Colormap with this ColormapManager, and optionally
+		// pass a weight - colormaps are distributed proportionally
+		// according to their weight.
+		void registerColormap(Colormap * dcmap, Float weight = 1.0);
 
-  // Register the <src>cmap</src> Colormap with this manager,
-  // replacing the <src>cmapToReplace</src> Colormap if possible.
-  void registerColormap(Colormap *cmap, Colormap *cmapToReplace);
+		// Register the <src>cmap</src> Colormap with this manager,
+		// replacing the <src>cmapToReplace</src> Colormap if possible.
+		void registerColormap(Colormap *cmap, Colormap *cmapToReplace);
 
-  // Unregister a Colormap with this ColormapManager.
-  Bool unregisterColormap(Colormap * dcmap);
+		// Unregister a Colormap with this ColormapManager.
+		Bool unregisterColormap(Colormap * dcmap);
 
-  // Return the current size of the colormap.
-  uInt getColormapSize(const Colormap * map) const;
+		// Return the current size of the colormap.
+		uInt getColormapSize(const Colormap * map) const;
 
-  // Return the current offset of the colormap.
-  uInt getColormapOffset(const Colormap * map) const;
+		// Return the current offset of the colormap.
+		uInt getColormapOffset(const Colormap * map) const;
 
-  // Redistribute the available colorcells to the registered
-  // colormaps.
-  void redistributeColormaps();
+		// Redistribute the available colorcells to the registered
+		// colormaps.
+		void redistributeColormaps();
 
-  // Reinstall the colorcell values.
-  void reinstallColormaps();
+		// Reinstall the colorcell values.
+		void reinstallColormaps();
 
-  // Is the given Colormap registered on this
-  // ColormapManager/PixelCanvasColorTable combination?
-  Bool member(const Colormap * map) const;
+		// Is the given Colormap registered on this
+		// ColormapManager/PixelCanvasColorTable combination?
+		Bool member(const Colormap * map) const;
 
-  // Return the number of registered Colormaps.
-  uInt nMaps() const { return itsInfoMap.ndefined(); }
+		// Return the number of registered Colormaps.
+		uInt nMaps() const {
+			return itsInfoMap.ndefined();
+		}
 
-  // Return a pointer to a Colormap by number.
-  const Colormap *getMap(const uInt mapnum) const;
+		// Return a pointer to a Colormap by number.
+		const Colormap *getMap(const uInt mapnum) const;
 
-  // Stream output operator.
-  friend ostream & operator << (ostream & os, const ColormapManager & cm);
+		// Stream output operator.
+		friend ostream & operator << (ostream & os, const ColormapManager & cm);
 
-private:
+	private:
 
-  // Pointer to managed PixelCanvasColorTable.
-  PixelCanvasColorTable * itsPCColorTable;
+		// Pointer to managed PixelCanvasColorTable.
+		PixelCanvasColorTable * itsPCColorTable;
 
-  // Map which associates Colormap pointers with ColormapInfo.
-  SimpleOrderedMap<const Colormap *, ColormapInfo *> itsInfoMap;
+		// Map which associates Colormap pointers with ColormapInfo.
+		SimpleOrderedMap<const Colormap *, ColormapInfo *> itsInfoMap;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -28,33 +28,33 @@
 #include <QMouseEvent>
 namespace casa {
 
-CanvasModeZoom::CanvasModeZoom():CanvasMode(Qt::CrossCursor) {
+	CanvasModeZoom::CanvasModeZoom():CanvasMode(Qt::CrossCursor) {
 
-}
-
-bool CanvasModeZoom::isMode( ModeIndex mode ) const {
-	bool matchingMode = false;
-	if ( mode == MODE_ZOOM ){
-		matchingMode = true;
 	}
-	return matchingMode;
-}
 
-void CanvasModeZoom::mousePressEventSpecific( QMouseEvent* event){
-	receiver->startZoomRect( event );
-	receiver->setCursor( cursor );
-}
+	bool CanvasModeZoom::isMode( ModeIndex mode ) const {
+		bool matchingMode = false;
+		if ( mode == MODE_ZOOM ) {
+			matchingMode = true;
+		}
+		return matchingMode;
+	}
 
-void CanvasModeZoom::mouseMoveEvent( QMouseEvent* event ){
-	receiver->updateZoomRect( event );
-}
+	void CanvasModeZoom::mousePressEventSpecific( QMouseEvent* event) {
+		receiver->startZoomRect( event );
+		receiver->setCursor( cursor );
+	}
 
-void CanvasModeZoom::mouseReleaseEventSpecific( QMouseEvent* event ){
-	receiver->endZoomRect( event );
-}
+	void CanvasModeZoom::mouseMoveEvent( QMouseEvent* event ) {
+		receiver->updateZoomRect( event );
+	}
 
-CanvasModeZoom::~CanvasModeZoom() {
-	// TODO Auto-generated destructor stub
-}
+	void CanvasModeZoom::mouseReleaseEventSpecific( QMouseEvent* event ) {
+		receiver->endZoomRect( event );
+	}
+
+	CanvasModeZoom::~CanvasModeZoom() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

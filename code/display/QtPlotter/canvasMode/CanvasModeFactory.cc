@@ -34,60 +34,54 @@
 #include <QDebug>
 namespace casa {
 
-CanvasModeFactory CanvasModeFactory::fact;
+	CanvasModeFactory CanvasModeFactory::fact;
 
-CanvasModeFactory::CanvasModeFactory() {
-	canvasModes.append( new CanvasModeAnnotation() );
-	canvasModes.append( new CanvasModeChannel() );
-	canvasModes.append( new CanvasModeContextMenu() );
-	canvasModes.append( new CanvasModeRangeSelection() );
-	canvasModes.append( new CanvasModeZoom() );
-}
+	CanvasModeFactory::CanvasModeFactory() {
+		canvasModes.append( new CanvasModeAnnotation() );
+		canvasModes.append( new CanvasModeChannel() );
+		canvasModes.append( new CanvasModeContextMenu() );
+		canvasModes.append( new CanvasModeRangeSelection() );
+		canvasModes.append( new CanvasModeZoom() );
+	}
 
-CanvasMode* CanvasModeFactory::getModeForEvent( QMouseEvent* event ){
+	CanvasMode* CanvasModeFactory::getModeForEvent( QMouseEvent* event ) {
 #if defined(__APPLE__)
-	const Qt::KeyboardModifier control_modifier = Qt::MetaModifier;
+		const Qt::KeyboardModifier control_modifier = Qt::MetaModifier;
 #else
-	const Qt::KeyboardModifier control_modifier = Qt::ControlModifier;
+		const Qt::KeyboardModifier control_modifier = Qt::ControlModifier;
 #endif
-	CanvasMode* canvasMode = NULL;
-	if (event->button() == Qt::LeftButton){
-		if ( event->modifiers() == Qt::ShiftModifier ){
-			canvasMode = fact.canvasModes[CanvasMode::MODE_RANGESELECTION];
-		}
-		else if ( event->modifiers() == control_modifier ){
-			canvasMode = fact.canvasModes[CanvasMode::MODE_ANNOTATION];
-		}
-		else {
-			canvasMode = fact.canvasModes[CanvasMode::MODE_ZOOM];
-		}
-	}
-	else if ( event->button() == Qt::RightButton ){
-		if ( event->modifiers() == Qt::ShiftModifier ){
+		CanvasMode* canvasMode = NULL;
+		if (event->button() == Qt::LeftButton) {
+			if ( event->modifiers() == Qt::ShiftModifier ) {
+				canvasMode = fact.canvasModes[CanvasMode::MODE_RANGESELECTION];
+			} else if ( event->modifiers() == control_modifier ) {
+				canvasMode = fact.canvasModes[CanvasMode::MODE_ANNOTATION];
+			} else {
+				canvasMode = fact.canvasModes[CanvasMode::MODE_ZOOM];
+			}
+		} else if ( event->button() == Qt::RightButton ) {
+			if ( event->modifiers() == Qt::ShiftModifier ) {
 
+			} else if ( event->modifiers() == control_modifier ) {
+				canvasMode = fact.canvasModes[CanvasMode::MODE_CHANNEL];
+			} else {
+				canvasMode = fact.canvasModes[CanvasMode::MODE_CONTEXTMENU];
+			}
+		} else {
+			qDebug() << "Unrecognized mode button"<<event->button();
 		}
-		else if ( event->modifiers() == control_modifier ){
-			canvasMode = fact.canvasModes[CanvasMode::MODE_CHANNEL];
-		}
-		else {
-			canvasMode = fact.canvasModes[CanvasMode::MODE_CONTEXTMENU];
-		}
+		return canvasMode;
 	}
-	else {
-		qDebug() << "Unrecognized mode button"<<event->button();
-	}
-	return canvasMode;
-}
 
-CanvasMode* CanvasModeFactory::getMode( CanvasMode::ModeIndex mode ){
-	return fact.canvasModes[mode];
-}
-
-CanvasModeFactory::~CanvasModeFactory() {
-	while( !canvasModes.isEmpty() ){
-		CanvasMode* mode = canvasModes.takeFirst();
-		delete mode;
+	CanvasMode* CanvasModeFactory::getMode( CanvasMode::ModeIndex mode ) {
+		return fact.canvasModes[mode];
 	}
-}
+
+	CanvasModeFactory::~CanvasModeFactory() {
+		while( !canvasModes.isEmpty() ) {
+			CanvasMode* mode = canvasModes.takeFirst();
+			delete mode;
+		}
+	}
 
 } /* namespace casa */

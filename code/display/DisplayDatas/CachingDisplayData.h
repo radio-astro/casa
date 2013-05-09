@@ -34,10 +34,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
-class WorldCanvasHolder;
-class AttributeBuffer;
-class CachingDisplayMethod;
+	class WorldCanvas;
+	class WorldCanvasHolder;
+	class AttributeBuffer;
+	class CachingDisplayMethod;
 
 // <summary>
 // Base class for auto-caching DisplayData objects.
@@ -93,129 +93,129 @@ class CachingDisplayMethod;
 // which should be considered in searches of the cache.
 // </synopsis>
 
-// <motivation> 
+// <motivation>
 // Most DisplayData classes will offer more than one view of the data.
 // Caching is therefore desirable to improve display speed for
 // re-display of individual views of the data.  It is nice to keep the
 // caching in one place, hence this class.
 // </motivation>
 
-class CachingDisplayData : public DisplayData {
+	class CachingDisplayData : public DisplayData {
 
- public:
+	public:
 
-  // Constructor.
-  CachingDisplayData();
+		// Constructor.
+		CachingDisplayData();
 
-  // Destructor.
-  virtual ~CachingDisplayData();
+		// Destructor.
+		virtual ~CachingDisplayData();
 
-  // Install the default options for this DisplayData.
-  virtual void setDefaultOptions();
+		// Install the default options for this DisplayData.
+		virtual void setDefaultOptions();
 
-  // Apply options stored in <src>rec</src> to the DisplayData.  A
-  // return value of <src>True</src> means a refresh is needed.
-  // <src>recOut</src> contains any fields which were implicitly
-  // changed as a result of the call to this function.  The options
-  // handled by this class are:
-  // <li> <src>cachesize</src>: an integer specifying the maximum 
-  // number of views which can be stored in the cache.  The default
-  // value can be specified by the <src>display.cachesize</src>
-  // variable in the user's <src>.aipsrc</src> file, and in lieu
-  // of that, will be 256.  If <src>cachesize</src> is lowered by
-  // a call to this method, the cache will be shrunk in size, with
-  // the oldest drawings being removed first. </li>
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Apply options stored in <src>rec</src> to the DisplayData.  A
+		// return value of <src>True</src> means a refresh is needed.
+		// <src>recOut</src> contains any fields which were implicitly
+		// changed as a result of the call to this function.  The options
+		// handled by this class are:
+		// <li> <src>cachesize</src>: an integer specifying the maximum
+		// number of views which can be stored in the cache.  The default
+		// value can be specified by the <src>display.cachesize</src>
+		// variable in the user's <src>.aipsrc</src> file, and in lieu
+		// of that, will be 256.  If <src>cachesize</src> is lowered by
+		// a call to this method, the cache will be shrunk in size, with
+		// the oldest drawings being removed first. </li>
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-  // Retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// Retrieve the current and default options and parameter types.
+		virtual Record getOptions();
 
-  // Refresh event handler which is called indirectly by the
-  // WorldCanvas, via the WorldCanvasHolder.  This function will take
-  // care of calling <src>newDisplayMethod</src> when necessary, and
-  // otherwise using an existing (previously cached) draw list.
-  virtual void refreshEH(const WCRefreshEvent &ev);
+		// Refresh event handler which is called indirectly by the
+		// WorldCanvas, via the WorldCanvasHolder.  This function will take
+		// care of calling <src>newDisplayMethod</src> when necessary, and
+		// otherwise using an existing (previously cached) draw list.
+		virtual void refreshEH(const WCRefreshEvent &ev);
 
-  // <group>
-  virtual void notifyRegister(WorldCanvasHolder *wcHolder) ;
-  virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
-				Bool ignoreRefresh = False) ;
-  // </group>
+		// <group>
+		virtual void notifyRegister(WorldCanvasHolder *wcHolder) ;
+		virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
+		                              Bool ignoreRefresh = False) ;
+		// </group>
 
-  // Purges cache, to avoid reusing images with the
-  // wrong colormap, then calls base class version.
-  virtual void setColormap(Colormap *cmap, Float weight);
-  
-  // Empty cache completely.
-  virtual void purgeCache();
+		// Purges cache, to avoid reusing images with the
+		// wrong colormap, then calls base class version.
+		virtual void setColormap(Colormap *cmap, Float weight);
 
-  // Empty cache of all DMs for a given WCH.
-  virtual void purgeCache(const WorldCanvasHolder& wch);
+		// Empty cache completely.
+		virtual void purgeCache();
+
+		// Empty cache of all DMs for a given WCH.
+		virtual void purgeCache(const WorldCanvasHolder& wch);
 
 
 
-protected:
+	protected:
 
-  // Create a new (Caching)DisplayMethod for drawing on the given
-  // WorldCanvas when the AttributeBuffers are suitably matched to the
-  // current state of this DisplayData and of the WorldCanvas/Holder.
-  virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
-				 AttributeBuffer *wchAttributes,
-				 AttributeBuffer *ddAttributes,
-						 CachingDisplayData *dd) = 0;
+		// Create a new (Caching)DisplayMethod for drawing on the given
+		// WorldCanvas when the AttributeBuffers are suitably matched to the
+		// current state of this DisplayData and of the WorldCanvas/Holder.
+		virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
+		        AttributeBuffer *wchAttributes,
+		        AttributeBuffer *ddAttributes,
+		        CachingDisplayData *dd) = 0;
 
-  // Return the current options of this DisplayData as an
-  // AttributeBuffer.  The caller must delete the returned buffer.
-  virtual AttributeBuffer optionsAsAttributes();
+		// Return the current options of this DisplayData as an
+		// AttributeBuffer.  The caller must delete the returned buffer.
+		virtual AttributeBuffer optionsAsAttributes();
 
-  // Return any additional Attributes to consider when searching the
-  // cache.  I guess I might put things like Colormap setup in here,
-  // since we need a way to handle the Colormap size being altered,
-  // and later returned to its original size/location in the
-  // PCColorTable, etc.
-  /*
-  virtual AttributeBuffer cachingAttributes();
-  */
+		// Return any additional Attributes to consider when searching the
+		// cache.  I guess I might put things like Colormap setup in here,
+		// since we need a way to handle the Colormap size being altered,
+		// and later returned to its original size/location in the
+		// PCColorTable, etc.
+		/*
+		virtual AttributeBuffer cachingAttributes();
+		*/
 
-  // Turn caching on/off.
-  virtual void setCaching(const Bool caching);
+		// Turn caching on/off.
+		virtual void setCaching(const Bool caching);
 
-  // (Required) copy constructor.
-  CachingDisplayData(const CachingDisplayData &other);
+		// (Required) copy constructor.
+		CachingDisplayData(const CachingDisplayData &other);
 
-  // (Required) copy assignment.
-  void operator=(const CachingDisplayData &other);
-  
-  
-  // The default is False.  Derived DDs (such as WedgeDD) can set it True
-  // so that the colormap on the PixelCanvas before the DD draws is
-  // restored to it afterward.  The 'colormap fiddling' mouse tools can
-  // (unfortunately) only operate on the PC's current colormap; this
-  // kludge is an attempt to assure that the 'right' one is left there.
-  Bool restorePCColormap_;
+		// (Required) copy assignment.
+		void operator=(const CachingDisplayData &other);
 
- private:
 
-  // Caching state.
-  Bool itsCachingState;
+		// The default is False.  Derived DDs (such as WedgeDD) can set it True
+		// so that the colormap on the PixelCanvas before the DD draws is
+		// restored to it afterward.  The 'colormap fiddling' mouse tools can
+		// (unfortunately) only operate on the PC's current colormap; this
+		// kludge is an attempt to assure that the 'right' one is left there.
+		Bool restorePCColormap_;
 
-  // Default and actual maximum length of element list.
-  Int itsDefaultMaximumCacheSize, itsOptionsMaximumCacheSize;
+	private:
 
-  // List containing the CachingDisplayMethods for this
-  // CachingDisplayData.
-  List<void *> itsElementList;
+		// Caching state.
+		Bool itsCachingState;
 
-  // Iterator for itsElementList.
-  ListIter<void *> *itsElementListIter;
+		// Default and actual maximum length of element list.
+		Int itsDefaultMaximumCacheSize, itsOptionsMaximumCacheSize;
 
-  // Clear out cache entries beyond end of list.
-  void trimCache();
+		// List containing the CachingDisplayMethods for this
+		// CachingDisplayData.
+		List<void *> itsElementList;
 
-  // Install the default options for this DisplayData.
-  void installDefaultOptions();
+		// Iterator for itsElementList.
+		ListIter<void *> *itsElementListIter;
 
-};
+		// Clear out cache entries beyond end of list.
+		void trimCache();
+
+		// Install the default options for this DisplayData.
+		void installDefaultOptions();
+
+	};
 
 
 } //# NAMESPACE CASA - END

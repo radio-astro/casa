@@ -134,7 +134,9 @@ namespace casa {
 		struct equal_op {
 			equal_op( int v ) : accumulate(true), size(1), index(0), val(v), mode(VAL) { }
 			equal_op( const Vector<int> *v ) : accumulate(true), size(v->size( )), index(0), vec(v), mode(VEC) { }
-			operator bool( ) { return accumulate; }
+			operator bool( ) {
+				return accumulate;
+			}
 			void operator( )( QSpinBox *s ) {
 				if ( mode == VAL )
 					accumulate = accumulate && (s->value( ) == val);

@@ -31,14 +31,14 @@
 #include <stdio.h>
 
 namespace casa {
-    namespace viewer {
+	namespace viewer {
 
-	inline std::string to_string(int i) {
-	    char buf[128];
-	    snprintf(buf,sizeof(buf),"%d",i);
-	    return std::string(buf);
+		inline std::string to_string(int i) {
+			char buf[128];
+			snprintf(buf,sizeof(buf),"%d",i);
+			return std::string(buf);
+		}
 	}
-    }
 }
 
 #endif

@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // WCCrosshairTool stands for WorldCanvas Crosshair Tool.
 // </etymology>
 //
-// <synopsis> 
+// <synopsis>
 // This class adds to its base WCTool to provide a tool for placing
 // and moving a crosshair on a WorldCanvas.  While WCCrosshairTool is
 // not abstract, it performs no useful function.  The programmer
@@ -69,7 +69,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The crosshair is drawn by simply clicking at the location the
 // crosshair should be placed.  Once constructed, the crosshair can be
 // relocated by dragging inside the crosshair.  The crosshair is
-// removed from the display when the Esc key is pressed.  
+// removed from the display when the Esc key is pressed.
 // </synopsis>
 //
 // <example>
@@ -85,124 +85,124 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <todo asof="1999/11/26">
 // </todo>
 
-class WCCrosshairTool : public WCTool, public DTVisible {
-  
- public:
-  
-  // Constructor requires a WorldCanvas to operate on, and optional
-  // specifications of the key to respond to, and whether the
-  // crosshair should be persistent.  A persistent crosshair will
-  // "stick around" after a double click action.
-  WCCrosshairTool(WorldCanvas *wcanvas,
-	     Display::KeySym keysym = Display::K_Pointer_Button1,
-	     const Bool persistent = True);
-  
-  // Destructor.
-  virtual ~WCCrosshairTool();
-  
-  // Switch the tool off: this calls the base class disable, and then
-  // erases the crosshair if necessary.
-  virtual void disable();
+	class WCCrosshairTool : public WCTool, public DTVisible {
 
-  // Functions called by the local event handling operators - these
-  // handle the drawing of the crosshair.  In special conditions,
-  // namely double clicking the key, they will pass control on to the
-  // doubleInside and doubleOutside functions.
-  // <group>
-  virtual void keyPressed(const WCPositionEvent &/*ev*/);
-  virtual void keyReleased(const WCPositionEvent &/*ev*/);
-  virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
-  virtual void refresh(const WCRefreshEvent &/*ev*/);
-  // </group>
+	public:
 
-  // Functions special to the crosshair event handling: called when
-  // there is a double click inside or outside the crosshair.
-  // <group>
-  virtual void doubleInside() { };
-  virtual void doubleOutside() { };
-  // </group>
+		// Constructor requires a WorldCanvas to operate on, and optional
+		// specifications of the key to respond to, and whether the
+		// crosshair should be persistent.  A persistent crosshair will
+		// "stick around" after a double click action.
+		WCCrosshairTool(WorldCanvas *wcanvas,
+		                Display::KeySym keysym = Display::K_Pointer_Button1,
+		                const Bool persistent = True);
 
-  // Functions called when the crosshair is ready and not being
-  // editted, and when this status changes.
-  // <group>
-  virtual void crosshairReady() { };
-  virtual void crosshairNotReady() { };
-  // </group>
+		// Destructor.
+		virtual ~WCCrosshairTool();
 
-  // Retrieve the crosshair position.
-  virtual void get(Int &x1, Int &y1) const ;
+		// Switch the tool off: this calls the base class disable, and then
+		// erases the crosshair if necessary.
+		virtual void disable();
 
- private:
+		// Functions called by the local event handling operators - these
+		// handle the drawing of the crosshair.  In special conditions,
+		// namely double clicking the key, they will pass control on to the
+		// doubleInside and doubleOutside functions.
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &/*ev*/);
+		virtual void keyReleased(const WCPositionEvent &/*ev*/);
+		virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
+		virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		virtual void refresh(const WCRefreshEvent &/*ev*/);
+		// </group>
 
-  // does the crosshair persist after double clicks?
-  Bool itsCrosshairPersistent;
+		// Functions special to the crosshair event handling: called when
+		// there is a double click inside or outside the crosshair.
+		// <group>
+		virtual void doubleInside() { };
+		virtual void doubleOutside() { };
+		// </group>
 
-  // what radius is the crosshair? in pixels
-  Int itsCrosshairRadius;
+		// Functions called when the crosshair is ready and not being
+		// editted, and when this status changes.
+		// <group>
+		virtual void crosshairReady() { };
+		virtual void crosshairNotReady() { };
+		// </group>
 
-  // is the crosshair on screen?
-  Bool itsOnScreen;
-  
-  // is some activity taking place with the crosshair?
-  Bool itsActive;
+		// Retrieve the crosshair position.
+		virtual void get(Int &x1, Int &y1) const ;
 
-  // has the crosshair been moved?
-  Bool itsMoved;
+	private:
 
-  // do we have a crosshair drawn yet?
-  Bool itsCrosshairExists;
+		// does the crosshair persist after double clicks?
+		Bool itsCrosshairPersistent;
 
-  // adjustment mode
-  enum AdjustMode {
-    Off, 
-    Move
-  };
-  WCCrosshairTool::AdjustMode itsAdjustMode;
+		// what radius is the crosshair? in pixels
+		Int itsCrosshairRadius;
 
-  // coordinates of the crosshair: pixel and world
-  // <group>
-  Int itsX1, itsY1;
-  Vector<Double> itsStoredWorldPosition;
-  // </group>
+		// is the crosshair on screen?
+		Bool itsOnScreen;
 
-  // set the coordinates of the crosshair
-  // <group>
-  virtual void set(const Int &x1, const Int &y1);
-  // </group>
+		// is some activity taking place with the crosshair?
+		Bool itsActive;
 
-  // set/get only the anchor point
-  // <group>
-  //virtual void set(const Int &x1, const Int &y1);
-  //virtual void get(Int &x1, Int &y1) const ;
-  // </group>
+		// has the crosshair been moved?
+		Bool itsMoved;
 
-  // preserve/restore the world coordinates
-  // <group>
-  virtual void preserve();
-  virtual void restore();
-  // </group>
+		// do we have a crosshair drawn yet?
+		Bool itsCrosshairExists;
 
-  // draw the crosshair on the WorldCanvas' PixelCanvas.
-  virtual void draw(const Bool drawHandles = False);
-  
-  // reset this drawer
-  virtual void reset();
+		// adjustment mode
+		enum AdjustMode {
+		    Off,
+		    Move
+		};
+		WCCrosshairTool::AdjustMode itsAdjustMode;
 
-  // position that move started from
-  Int itsBaseMoveX, itsBaseMoveY;
+		// coordinates of the crosshair: pixel and world
+		// <group>
+		Int itsX1, itsY1;
+		Vector<Double> itsStoredWorldPosition;
+		// </group>
 
-  // position of last press event
-  Int itsLastPressX, itsLastPressY;
-  Int its2ndLastPressX, its2ndLastPressY;
+		// set the coordinates of the crosshair
+		// <group>
+		virtual void set(const Int &x1, const Int &y1);
+		// </group>
 
-  // position of last release event
-  Int itsLastReleaseX, itsLastReleaseY;
+		// set/get only the anchor point
+		// <group>
+		//virtual void set(const Int &x1, const Int &y1);
+		//virtual void get(Int &x1, Int &y1) const ;
+		// </group>
 
-  // store the times of the last two presses here:
-  Double itsLastPressTime, its2ndLastPressTime;
+		// preserve/restore the world coordinates
+		// <group>
+		virtual void preserve();
+		virtual void restore();
+		// </group>
 
-};
+		// draw the crosshair on the WorldCanvas' PixelCanvas.
+		virtual void draw(const Bool drawHandles = False);
+
+		// reset this drawer
+		virtual void reset();
+
+		// position that move started from
+		Int itsBaseMoveX, itsBaseMoveY;
+
+		// position of last press event
+		Int itsLastPressX, itsLastPressY;
+		Int its2ndLastPressX, its2ndLastPressY;
+
+		// position of last release event
+		Int itsLastReleaseX, itsLastReleaseY;
+
+		// store the times of the last two presses here:
+		Double itsLastPressTime, its2ndLastPressTime;
+
+	};
 
 
 } //# NAMESPACE CASA - END

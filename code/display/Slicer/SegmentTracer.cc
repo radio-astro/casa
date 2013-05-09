@@ -33,87 +33,85 @@
 
 namespace casa {
 
-SegmentTracer::SegmentTracer( int regionId, int index, QwtPlot* plot ):
-	QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
-				QwtPlotPicker::PointSelection,
-				QwtPlotPicker::NoRubberBand, QwtPlotPicker::AlwaysOn, plot->canvas() ){
-	marker = new QwtPlotMarker();
-	QwtSymbol* traceSymbol = new QwtSymbol( QwtSymbol::Star1, QBrush(Qt::red), QPen(Qt::black), QSize(10,10));
-	marker->setSymbol( *traceSymbol );
-	marker->attach( plot );
-	marker->hide();
-	slicePlot = plot;
-	this->index = index;
-	this->regionId = regionId;
-}
-
-
-void SegmentTracer::setData( const QVector<double> xVals,
-		const QVector<double> yVals ){
-	int count = xVals.size();
-	xValues.resize( count );
-	yValues.resize( count );
-	for ( int i = 0; i < count; i++ ){
-		xValues[i] = xVals[i];
-		yValues[i] = yVals[i];
+	SegmentTracer::SegmentTracer( int regionId, int index, QwtPlot* plot ):
+		QwtPlotPicker( QwtPlot::xBottom, QwtPlot::yLeft,
+		               QwtPlotPicker::PointSelection,
+		               QwtPlotPicker::NoRubberBand, QwtPlotPicker::AlwaysOn, plot->canvas() ) {
+		marker = new QwtPlotMarker();
+		QwtSymbol* traceSymbol = new QwtSymbol( QwtSymbol::Star1, QBrush(Qt::red), QPen(Qt::black), QSize(10,10));
+		marker->setSymbol( *traceSymbol );
+		marker->attach( plot );
+		marker->hide();
+		slicePlot = plot;
+		this->index = index;
+		this->regionId = regionId;
 	}
-}
 
-bool SegmentTracer::isBetween( double value, double start, double end ) const {
-	bool between = false;
-	if ( start <= value && value <= end ){
-		between = true;
-	}
-	else if ( end <= value && value <= start ){
-		between = true;
-	}
-	return between;
-}
 
-QwtText SegmentTracer::trackerText( const QwtDoublePoint & pos ) const {
-	bool found = false;
-	int count = xValues.size() - 1;
-	for ( int i = 0; i < count; i++ ){
-		if ( isBetween( pos.x(), xValues[i], xValues[i+1]) &&
-				isBetween( pos.y(), yValues[i], yValues[i+1])){
-			//Interpolate the y value to figure out a point on the curve.
-			double xVal = pos.x();
-			double xDistance = xValues[i+1] - xValues[i];
-			double yVal = pos.y();
-			if ( xDistance != 0 ){
-				double slope = (yValues[i+1] - yValues[i]) / xDistance;
-				yVal = yValues[i] + slope * (xVal - xValues[i]);
-			}
-			marker->setValue( xVal, yVal );
-
-			float totalLength = qAbs( xValues[count] - xValues[0]);
-			float markerLength = qAbs( xVal - xValues[0]);
-			float percentage = markerLength / totalLength;
-			(dynamic_cast<SlicePlot*>(slicePlot))->markPositionChanged( regionId,index, percentage );
-			found = true;
-
-			break;
+	void SegmentTracer::setData( const QVector<double> xVals,
+	                             const QVector<double> yVals ) {
+		int count = xVals.size();
+		xValues.resize( count );
+		yValues.resize( count );
+		for ( int i = 0; i < count; i++ ) {
+			xValues[i] = xVals[i];
+			yValues[i] = yVals[i];
 		}
 	}
-	SlicePlot* slicerPlot = dynamic_cast<SlicePlot*>(slicePlot);
-	if ( slicerPlot->isFullVersion()){
-		bool markerVisible = marker->isVisible();
-		if ( markerVisible != found ){
-			if ( found ){
-				marker->show();
-			}
-			else {
-				marker->hide();
-			}
-			slicerPlot->markVisibilityChanged( regionId, found );
+
+	bool SegmentTracer::isBetween( double value, double start, double end ) const {
+		bool between = false;
+		if ( start <= value && value <= end ) {
+			between = true;
+		} else if ( end <= value && value <= start ) {
+			between = true;
 		}
-		slicePlot->replot();
+		return between;
 	}
-	QwtText blankText;
-	return blankText;
-}
-SegmentTracer::~SegmentTracer() {
-	// TODO Auto-generated destructor stub
-}
+
+	QwtText SegmentTracer::trackerText( const QwtDoublePoint & pos ) const {
+		bool found = false;
+		int count = xValues.size() - 1;
+		for ( int i = 0; i < count; i++ ) {
+			if ( isBetween( pos.x(), xValues[i], xValues[i+1]) &&
+			        isBetween( pos.y(), yValues[i], yValues[i+1])) {
+				//Interpolate the y value to figure out a point on the curve.
+				double xVal = pos.x();
+				double xDistance = xValues[i+1] - xValues[i];
+				double yVal = pos.y();
+				if ( xDistance != 0 ) {
+					double slope = (yValues[i+1] - yValues[i]) / xDistance;
+					yVal = yValues[i] + slope * (xVal - xValues[i]);
+				}
+				marker->setValue( xVal, yVal );
+
+				float totalLength = qAbs( xValues[count] - xValues[0]);
+				float markerLength = qAbs( xVal - xValues[0]);
+				float percentage = markerLength / totalLength;
+				(dynamic_cast<SlicePlot*>(slicePlot))->markPositionChanged( regionId,index, percentage );
+				found = true;
+
+				break;
+			}
+		}
+		SlicePlot* slicerPlot = dynamic_cast<SlicePlot*>(slicePlot);
+		if ( slicerPlot->isFullVersion()) {
+			bool markerVisible = marker->isVisible();
+			if ( markerVisible != found ) {
+				if ( found ) {
+					marker->show();
+				} else {
+					marker->hide();
+				}
+				slicerPlot->markVisibilityChanged( regionId, found );
+			}
+			slicePlot->replot();
+		}
+		QwtText blankText;
+		return blankText;
+	}
+	SegmentTracer::~SegmentTracer() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

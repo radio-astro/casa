@@ -55,7 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // triplet corresponding to that position in the colormap.  It can
 // read definitions from and write definitions to <linkto
 // class="Table"> Tables </linkto> on disk, thereby providing a
-// mechanism for using custom colormaps for display applications. 
+// mechanism for using custom colormaps for display applications.
 //
 
 // It supplies one built-in colormap <src>Greyscale 1</src>, which will
@@ -63,7 +63,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // tables. The standard colormaps ar in
 // <src>/aips++/data/colormaps/default.tbl</src>. These can be
 // deactivated by putting <src>display.colormaps.usedefault: no</src> in
-// the <src>.aipsrc</src> file. 
+// the <src>.aipsrc</src> file.
 // It also supplies user defined colormaps. It looks for the complete
 // path to the user table in <src>.aipsrc</src> under
 // <src>display.colormaps.usertable:</src>.
@@ -107,104 +107,104 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 
 // <thrown>
-// <li> AipsError: unrecognized map name 
-// <li> AipsError: incompatible colormap definition version 
+// <li> AipsError: unrecognized map name
+// <li> AipsError: incompatible colormap definition version
 // </thrown>
 
 // <todo asof="1998/12/14">
 // <li> add checks for red/green/blue componenets to have same number
-//      of elements 
+//      of elements
 // </todo>
 
-class RegEx;
-class String;
+	class RegEx;
+	class String;
 
-class ColormapDefinition {
+	class ColormapDefinition {
 
- public:
+	public:
 
-  // Construct a single color (white) Colormap
-  ColormapDefinition();
+		// Construct a single color (white) Colormap
+		ColormapDefinition();
 
-  // Construct the known Colormap <src>mapName</src>, first looking for
-  // a saved Colormap having this name, then resorting to a built-in
-  // Colormap, and if that doesn't exist, throw an error
-  explicit ColormapDefinition(const String & mapName);
-  
-  // Construct a new Colormap, using the supplied name and component
-  // vectors
-  ColormapDefinition(const String & mapName,
-		     const Vector<Float> & reds, 
-		     const Vector<Float> & greens,
-		     const Vector<Float> & blues);
+		// Construct the known Colormap <src>mapName</src>, first looking for
+		// a saved Colormap having this name, then resorting to a built-in
+		// Colormap, and if that doesn't exist, throw an error
+		explicit ColormapDefinition(const String & mapName);
 
-  // Obtain the Colormap value for the "index" value <src>0 <= t <= 1</src>
-  void getValue(const Float t, Float & red, Float & green, Float & blue) const;
+		// Construct a new Colormap, using the supplied name and component
+		// vectors
+		ColormapDefinition(const String & mapName,
+		                   const Vector<Float> & reds,
+		                   const Vector<Float> & greens,
+		                   const Vector<Float> & blues);
 
-  // Change the Colormap values with the provided component vectors
-  void setValues(const Vector<Float> & reds, 
-		 const Vector<Float> & greens,
-		 const Vector<Float> & blues);
+		// Obtain the Colormap value for the "index" value <src>0 <= t <= 1</src>
+		void getValue(const Float t, Float & red, Float & green, Float & blue) const;
 
-  // Write this ColormapDefinition to the named Table in the named
-  // directory (default values are obtained from the user's
-  // <src>.aipsrc</src> file.  If <src>overwrite</src> is
-  // <src>True</src>, then an existing map of the same name in the
-  // Table will be over-written.  If the named Table does not exist,
-  // it will be created.
+		// Change the Colormap values with the provided component vectors
+		void setValues(const Vector<Float> & reds,
+		               const Vector<Float> & greens,
+		               const Vector<Float> & blues);
 
-  // The table format has to conform with following scheme. 
-  // It must have five columns: 
-  // <src>CMAP_NAME</src> a String
-  // <src>RED</src> a Float array of dim n
-  // <src>GREEN</src> a Float array of dim n
-  // <src>BLUE</src> a Float array of dim n
-  // <src>SYNONYMS</src> a String array of dim m
-  Bool save(const String &fullPathName, 
-	    const Vector<String> &synonyms,
-	    const Bool &overwrite = True) const;
+		// Write this ColormapDefinition to the named Table in the named
+		// directory (default values are obtained from the user's
+		// <src>.aipsrc</src> file.  If <src>overwrite</src> is
+		// <src>True</src>, then an existing map of the same name in the
+		// Table will be over-written.  If the named Table does not exist,
+		// it will be created.
 
-  // Return the names of the built-in colormaps.  If <src>uniqueonly</src>
-  // is True (default), only the names of the unique colormaps 
-  // are returned, otherwise all colormap names are returned.
-  typedef std::map<String,bool> colormapnamemap;
-  static colormapnamemap builtinColormapNames(Bool uniqueonly = True);
+		// The table format has to conform with following scheme.
+		// It must have five columns:
+		// <src>CMAP_NAME</src> a String
+		// <src>RED</src> a Float array of dim n
+		// <src>GREEN</src> a Float array of dim n
+		// <src>BLUE</src> a Float array of dim n
+		// <src>SYNONYMS</src> a String array of dim m
+		Bool save(const String &fullPathName,
+		          const Vector<String> &synonyms,
+		          const Bool &overwrite = True) const;
 
-  // Load Colormap definitions for a specified colormap<src>name</src>
-  Bool loadColormap(const String& name);
-  Bool loadBuiltinColormap(const String& name);
+		// Return the names of the built-in colormaps.  If <src>uniqueonly</src>
+		// is True (default), only the names of the unique colormaps
+		// are returned, otherwise all colormap names are returned.
+		typedef std::map<String,bool> colormapnamemap;
+		static colormapnamemap builtinColormapNames(Bool uniqueonly = True);
 
-  // Write a ColormapDefinition to an ostream in a simple text form.
-  friend ostream & operator << (ostream & os, 
-				const ColormapDefinition& pcreh);
+		// Load Colormap definitions for a specified colormap<src>name</src>
+		Bool loadColormap(const String& name);
+		Bool loadBuiltinColormap(const String& name);
 
-private:
+		// Write a ColormapDefinition to an ostream in a simple text form.
+		friend ostream & operator << (ostream & os,
+		                              const ColormapDefinition& pcreh);
 
-  // The name of this ColormapDefinition
-  String itsName;
-  
-  // Utility function to look if a colormap name is in a Table
-  Bool queryColormapTable(const Table& table, const String& name);
+	private:
 
-  // load ColormapDefinitions from default location 
-  // aips++/data/colormaps/default.tbl
-  // and/or location specified in <src>display.colormaps.usertable</src>
-  static void loadColormapTable();
-  
-  //The loaded colormaps (a replacement for the builtins)
-  //<group>
-  static String ourDefaultColormap;
-  static Table ourDefaultColormapTable;
-  static Table ourUserColormapTable;
-  static String ourTableVersion;
-  //</group>
+		// The name of this ColormapDefinition
+		String itsName;
 
-  // The Color component vectors for this ColormapDefinition
-  Vector<Float> itsReds;
-  Vector<Float> itsGreens;
-  Vector<Float> itsBlues;
+		// Utility function to look if a colormap name is in a Table
+		Bool queryColormapTable(const Table& table, const String& name);
 
-};
+		// load ColormapDefinitions from default location
+		// aips++/data/colormaps/default.tbl
+		// and/or location specified in <src>display.colormaps.usertable</src>
+		static void loadColormapTable();
+
+		//The loaded colormaps (a replacement for the builtins)
+		//<group>
+		static String ourDefaultColormap;
+		static Table ourDefaultColormapTable;
+		static Table ourUserColormapTable;
+		static String ourTableVersion;
+		//</group>
+
+		// The Color component vectors for this ColormapDefinition
+		Vector<Float> itsReds;
+		Vector<Float> itsGreens;
+		Vector<Float> itsBlues;
+
+	};
 
 
 } //# NAMESPACE CASA - END

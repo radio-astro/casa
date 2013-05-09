@@ -34,69 +34,69 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-WedgeDM::WedgeDM(WorldCanvas *worldCanvas, 
-			     AttributeBuffer *wchAttributes,
-			     AttributeBuffer *ddAttributes,
-			     CachingDisplayData *dd) :
-  CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
-}
+	WedgeDM::WedgeDM(WorldCanvas *worldCanvas,
+	                 AttributeBuffer *wchAttributes,
+	                 AttributeBuffer *ddAttributes,
+	                 CachingDisplayData *dd) :
+		CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
+	}
 
-WedgeDM::~WedgeDM() {
-  cleanup();
-}
+	WedgeDM::~WedgeDM() {
+		cleanup();
+	}
 
-Bool WedgeDM::drawIntoList(Display::RefreshReason /*reason*/,
-				 WorldCanvasHolder &wcHolder) {
-  // Locate the WorldCanvas to draw upon
-  WorldCanvas *wc = wcHolder.worldCanvas();
+	Bool WedgeDM::drawIntoList(Display::RefreshReason /*reason*/,
+	                           WorldCanvasHolder &wcHolder) {
+		// Locate the WorldCanvas to draw upon
+		WorldCanvas *wc = wcHolder.worldCanvas();
 
-  WedgeDD *parent = dynamic_cast<WedgeDD *>
-    (parentDisplayData());
-  if (!parent) {
-    throw(AipsError("invalid parent of WedgeDM"));
-  }
-  if ( (wc->pixelCanvas()->pcctbl()->colorModel() == Display::RGB) ||
-       (wc->pixelCanvas()->pcctbl()->colorModel() == Display::HSV)) {
-    throw(AipsError("Wedges for RGB and HSV not yet supported"));
-  }
-  if (parent->itsMin == parent->itsMax) return False;
-  Attribute dmin("dataMin", static_cast<Double>(0.0));
-  Attribute dmax("dataMax", static_cast<Double>(1.0));
-  wc->setAttribute(dmin);
-  wc->setAttribute(dmax);
-  try {
-    wc->setDataScaleHandler(parent->itsPowerScaleHandler);    
-  } catch (const AipsError &x) {
-    throw(AipsError(x));
-  }  
-  Vector<Double> blc(2,0.0);
-  Vector<Double> trc(2,1.0);
-  if (parent->itsOptionsMode == "horizontal") {
-    Matrix<Float> tmpMat;
-    tmpMat = transpose(parent->itsColorbar);
-    blc(0) = static_cast<Double>(parent->itsMin);
-    trc(0) = static_cast<Double>(parent->itsMax);
-    wc->drawImage(blc,trc, tmpMat);
-  } else {
-    blc(1) = static_cast<Double>(parent->itsMin);
-    trc(1) = static_cast<Double>(parent->itsMax);
-    wc->drawImage(blc,trc, parent->itsColorbar);
-  }
-  return True;
-}
+		WedgeDD *parent = dynamic_cast<WedgeDD *>
+		                  (parentDisplayData());
+		if (!parent) {
+			throw(AipsError("invalid parent of WedgeDM"));
+		}
+		if ( (wc->pixelCanvas()->pcctbl()->colorModel() == Display::RGB) ||
+		        (wc->pixelCanvas()->pcctbl()->colorModel() == Display::HSV)) {
+			throw(AipsError("Wedges for RGB and HSV not yet supported"));
+		}
+		if (parent->itsMin == parent->itsMax) return False;
+		Attribute dmin("dataMin", static_cast<Double>(0.0));
+		Attribute dmax("dataMax", static_cast<Double>(1.0));
+		wc->setAttribute(dmin);
+		wc->setAttribute(dmax);
+		try {
+			wc->setDataScaleHandler(parent->itsPowerScaleHandler);
+		} catch (const AipsError &x) {
+			throw(AipsError(x));
+		}
+		Vector<Double> blc(2,0.0);
+		Vector<Double> trc(2,1.0);
+		if (parent->itsOptionsMode == "horizontal") {
+			Matrix<Float> tmpMat;
+			tmpMat = transpose(parent->itsColorbar);
+			blc(0) = static_cast<Double>(parent->itsMin);
+			trc(0) = static_cast<Double>(parent->itsMax);
+			wc->drawImage(blc,trc, tmpMat);
+		} else {
+			blc(1) = static_cast<Double>(parent->itsMin);
+			trc(1) = static_cast<Double>(parent->itsMax);
+			wc->drawImage(blc,trc, parent->itsColorbar);
+		}
+		return True;
+	}
 
-void WedgeDM::cleanup() {
-}
+	void WedgeDM::cleanup() {
+	}
 
-WedgeDM::WedgeDM() {
-}
+	WedgeDM::WedgeDM() {
+	}
 
-WedgeDM::WedgeDM(const WedgeDM &other) :
-  CachingDisplayMethod(other) {
-}
+	WedgeDM::WedgeDM(const WedgeDM &other) :
+		CachingDisplayMethod(other) {
+	}
 
-void WedgeDM::operator=(const WedgeDM &) {
-}
+	void WedgeDM::operator=(const WedgeDM &) {
+	}
 
 } //# NAMESPACE CASA - END
 

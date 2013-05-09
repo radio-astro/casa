@@ -57,11 +57,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // WCPTRegion stands for WorldCanvas Polygon Tool Region
 // </etymology>
 
-// <synopsis> 
+// <synopsis>
 // This class finalises the functionality in WCRectTool to
 // implement event-based drawing of polygonal regions on a
 // WorldCanvas.  Double clicking inside the constructed polygon
-// emits the region, whilst pressing Escape cancels the region. 
+// emits the region, whilst pressing Escape cancels the region.
 // </synopsis>
 
 // <example>
@@ -76,33 +76,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Nothing known
 // </todo>
 
-class MWCPTRegion : public MWCPolyTool {
+	class MWCPTRegion : public MWCPolyTool {
 
- public:
+	public:
 
-  // Constructor
-  MWCPTRegion(Display::KeySym keysym = Display::K_Pointer_Button3);
+		// Constructor
+		MWCPTRegion(Display::KeySym keysym = Display::K_Pointer_Button3);
 
-  // Destructor
-  virtual ~MWCPTRegion();
+		// Destructor
+		virtual ~MWCPTRegion();
 
- protected:
+	protected:
 
-  // Handle double-click inside the polygon.  Invokes regionReady().
-  virtual void doubleInside();
+		// Handle double-click inside the polygon.  Invokes regionReady().
+		virtual void doubleInside();
 
-  // This function is called when a region is deliberately "finished"
-  // by the user.  It can be implemented to do further actions, such
-  // as report the region to the application.
-  virtual void regionReady() { };
+		// This function is called when a region is deliberately "finished"
+		// by the user.  It can be implemented to do further actions, such
+		// as report the region to the application.
+		virtual void regionReady() { };
 
-  // get the world coords of the current polygon region
-  void getWorldCoords(Vector<Double> &x, Vector<Double> &y);
+		// get the world coords of the current polygon region
+		void getWorldCoords(Vector<Double> &x, Vector<Double> &y);
 
-  // get the linear coords of the current ploygon region
-  void getLinearCoords(Vector<Double> &x, Vector<Double> &y);
+		// get the linear coords of the current ploygon region
+		void getLinearCoords(Vector<Double> &x, Vector<Double> &y);
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

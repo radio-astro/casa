@@ -38,222 +38,220 @@
 
 namespace casa {
 
-ImageSlice::ImageSlice( int id, QWidget* parent ): QFrame(parent){
+	ImageSlice::ImageSlice( int id, QWidget* parent ): QFrame(parent) {
 
-	ui.setupUi(this);
-    regionId = id;
-	sliceWorker = new SliceWorker( id );
-	useViewerColors = true;
-	showCorners = false;
-	polylineUnit = true;
-	selected = false;
-	segmentColors.append(Qt::magenta);
+		ui.setupUi(this);
+		regionId = id;
+		sliceWorker = new SliceWorker( id );
+		useViewerColors = true;
+		showCorners = false;
+		polylineUnit = true;
+		selected = false;
+		segmentColors.append(Qt::magenta);
 
-	curveWidth = 1;
-	markerSize = 1;
+		curveWidth = 1;
+		markerSize = 1;
 
-	QHBoxLayout* layout = new QHBoxLayout();
-	colorBar = new ImageSliceColorBar( ui.colorBarHolder );
-	layout->addWidget( colorBar );
-	layout->setContentsMargins(0,0,0,0);
-	ui.colorBarHolder->setLayout( layout );
+		QHBoxLayout* layout = new QHBoxLayout();
+		colorBar = new ImageSliceColorBar( ui.colorBarHolder );
+		layout->addWidget( colorBar );
+		layout->setContentsMargins(0,0,0,0);
+		ui.colorBarHolder->setLayout( layout );
 
-	maximizeDisplay();
-	connect( ui.openCloseButton, SIGNAL(clicked()), this, SLOT(openCloseDisplay()));
-}
+		maximizeDisplay();
+		connect( ui.openCloseButton, SIGNAL(clicked()), this, SLOT(openCloseDisplay()));
+	}
 
 //------------------------------------------------------------------------
 //                         Setters
 //-------------------------------------------------------------------------
-void ImageSlice::setPlotPreferences( int lineWidth, int cornerSize ){
-	if ( cornerSize != markerSize ){
-		markerSize = cornerSize;
-		int markerCount = segmentCorners.size();
-		for ( int i = 0; i < markerCount; i++ ){
-			QwtSymbol symbol = segmentCorners[i]->symbol();
-			symbol.setSize( markerSize );
-			segmentCorners[i]->setSymbol(symbol);
+	void ImageSlice::setPlotPreferences( int lineWidth, int cornerSize ) {
+		if ( cornerSize != markerSize ) {
+			markerSize = cornerSize;
+			int markerCount = segmentCorners.size();
+			for ( int i = 0; i < markerCount; i++ ) {
+				QwtSymbol symbol = segmentCorners[i]->symbol();
+				symbol.setSize( markerSize );
+				segmentCorners[i]->setSymbol(symbol);
+			}
+		}
+		if ( lineWidth != curveWidth ) {
+			curveWidth = lineWidth;
+			int segmentCount = segments.size();
+			for ( int i = 0; i < segmentCount; i++ ) {
+				segments[i]->setCurveWidth( curveWidth );
+			}
 		}
 	}
-	if ( lineWidth != curveWidth ){
-		curveWidth = lineWidth;
-		int segmentCount = segments.size();
-		for ( int i = 0; i < segmentCount; i++ ){
-			segments[i]->setCurveWidth( curveWidth );
+
+	bool ImageSlice::isSelected() const {
+		return selected;
+	}
+
+	void ImageSlice::setSelected( bool selected ) {
+		this->selected = selected;
+	}
+
+	void ImageSlice::setImageAnalysis( ImageAnalysis* analysis ) {
+		sliceWorker->setImageAnalysis( analysis );
+	}
+
+	void ImageSlice::setInterpolationMethod( const String& method ) {
+		sliceWorker->setMethod( method );
+		if ( segments.size() > 0 ) {
+			//We have to rerun the slicer using the new method to feed
+			//new data into the curve.
+			runSliceWorker();
+			resetPlotCurve();
 		}
 	}
-}
 
-bool ImageSlice::isSelected() const {
-	return selected;
-}
+	void ImageSlice::runSliceWorker() {
+		sliceWorker->compute();
 
-void ImageSlice::setSelected( bool selected ){
-	this->selected = selected;
-}
+		clearCorners();
 
-void ImageSlice::setImageAnalysis( ImageAnalysis* analysis ){
-	sliceWorker->setImageAnalysis( analysis );
-}
+		int segmentCount = sliceWorker->getSegmentCount();
 
-void ImageSlice::setInterpolationMethod( const String& method ){
-	sliceWorker->setMethod( method );
-	if ( segments.size() > 0 ){
-		//We have to rerun the slicer using the new method to feed
-		//new data into the curve.
-		runSliceWorker();
-		resetPlotCurve();
-	}
-}
+		//Don't think this will happen, but we need to delete segments until
+		//we have the right number.
+		int currentSegmentCount = segments.size();
+		while ( segmentCount < currentSegmentCount ) {
+			SliceSegment* segment = segments.takeLast();
+			removeSegment( segment );
+			delete segment;
+			currentSegmentCount = segments.size();
+		}
 
-void ImageSlice::runSliceWorker(){
-	sliceWorker->compute();
+		//Add segments until we have the right number
+		while ( currentSegmentCount < segmentCount ) {
+			SliceSegment* sliceSegment = new SliceSegment(regionId, currentSegmentCount, this );
+			sliceSegment->setCurveWidth( curveWidth );
+			addSegment( sliceSegment );
+			segments.append( sliceSegment );
+			currentSegmentCount = segments.size();
+		}
 
-	clearCorners();
-
-	int segmentCount = sliceWorker->getSegmentCount();
-
-	//Don't think this will happen, but we need to delete segments until
-	//we have the right number.
-	int currentSegmentCount = segments.size();
-	while ( segmentCount < currentSegmentCount ){
-		SliceSegment* segment = segments.takeLast();
-		removeSegment( segment );
-		delete segment;
-		currentSegmentCount = segments.size();
+		resetSegmentColors();
 	}
 
-	//Add segments until we have the right number
-	while ( currentSegmentCount < segmentCount ){
-		SliceSegment* sliceSegment = new SliceSegment(regionId, currentSegmentCount, this );
-		sliceSegment->setCurveWidth( curveWidth );
-		addSegment( sliceSegment );
-		segments.append( sliceSegment );
-		currentSegmentCount = segments.size();
+	void ImageSlice::setSampleCount( int count ) {
+		sliceWorker->setSampleCount( count );
+		if ( segments.size() > 0 ) {
+			//We have to rerun the slicer with the new sample count
+			//in order to get new data into the curve.
+			runSliceWorker();
+			resetPlotCurve();
+		}
 	}
 
-	resetSegmentColors();
-}
-
-void ImageSlice::setSampleCount( int count ){
-	sliceWorker->setSampleCount( count );
-	if ( segments.size() > 0 ){
-		//We have to rerun the slicer with the new sample count
-		//in order to get new data into the curve.
-		runSliceWorker();
-		resetPlotCurve();
+	void ImageSlice::setAxes( const Vector<Int>& axes ) {
+		sliceWorker->setAxes( axes );
 	}
-}
 
-void ImageSlice::setAxes( const Vector<Int>& axes ){
-	sliceWorker->setAxes( axes );
-}
-
-void ImageSlice::setCoords( const Vector<Int>& coords ){
-	sliceWorker->setCoords( coords );
-}
-
-void ImageSlice::setStatistics( SliceStatistics* statistics ){
-	this->statistics = statistics;
-	if ( segments.size() > 0 ){
-		resetPlotCurve();
-		updateSliceStatistics();
+	void ImageSlice::setCoords( const Vector<Int>& coords ) {
+		sliceWorker->setCoords( coords );
 	}
-}
 
-void ImageSlice::updateSliceStatistics(){
-	QList<SliceSegment*>::iterator statIter = segments.begin();
-	while ( statIter != segments.end()){
-		(*statIter)->updateStatistics( statistics );
-		statIter++;
+	void ImageSlice::setStatistics( SliceStatistics* statistics ) {
+		this->statistics = statistics;
+		if ( segments.size() > 0 ) {
+			resetPlotCurve();
+			updateSliceStatistics();
+		}
 	}
-}
+
+	void ImageSlice::updateSliceStatistics() {
+		QList<SliceSegment*>::iterator statIter = segments.begin();
+		while ( statIter != segments.end()) {
+			(*statIter)->updateStatistics( statistics );
+			statIter++;
+		}
+	}
 
 
 
 //------------------------------------------------------------------
 //                  Color Management
 //------------------------------------------------------------------
-void ImageSlice::setUseViewerColors( bool viewerColors ){
-	if ( viewerColors != useViewerColors ){
-		useViewerColors = viewerColors;
-		if ( useViewerColors ){
+	void ImageSlice::setUseViewerColors( bool viewerColors ) {
+		if ( viewerColors != useViewerColors ) {
+			useViewerColors = viewerColors;
+			if ( useViewerColors ) {
+				segmentColors.clear();
+				segmentColors.append( viewerColor );
+			}
+		}
+	}
+
+	void ImageSlice::setCurveColor( QList<QColor> colors ) {
+		if ( !useViewerColors ) {
+			segmentColors.clear();
+			int colorCount = colors.size();
+			for( int i = 0; i < colorCount; i++ ) {
+				segmentColors.append( colors[i]);
+			}
+		}
+		resetSegmentColors();
+	}
+
+	void ImageSlice::resetSegmentColors() {
+		int colorCount = segmentColors.size();
+		if ( colorCount > 0 ) {
+			for ( int i = 0; i < segments.size(); i++ ) {
+				int colorIndex = i % colorCount;
+				segments[i]->setColor( segmentColors[colorIndex] );
+			}
+		}
+		colorBar->setColors( segmentColors );
+		colorBar->update();
+	}
+
+
+	void ImageSlice::setViewerCurveColor( const QString& colorName ) {
+		viewerColor = Qt::black;
+		if ( colorName == "green") {
+			viewerColor = Qt::green;
+		} else if ( colorName == "gray") {
+			viewerColor = Qt::gray;
+		} else {
+			viewerColor.setNamedColor( colorName );
+		}
+
+		if ( useViewerColors ) {
 			segmentColors.clear();
 			segmentColors.append( viewerColor );
+			resetSegmentColors();
 		}
 	}
-}
 
-void ImageSlice::setCurveColor( QList<QColor> colors ){
-	if ( !useViewerColors ){
-		segmentColors.clear();
-		int colorCount = colors.size();
-		for( int i = 0; i < colorCount; i++ ){
-			segmentColors.append( colors[i]);
+	void ImageSlice::setPolylineColorUnit( bool polyline ) {
+		polylineUnit = polyline;
+	}
+
+	int ImageSlice::getColorCount() const {
+		int colorCount = 1;
+		if ( !polylineUnit ) {
+			colorCount = sliceWorker->getSegmentCount();
+		}
+		return colorCount;
+	}
+
+
+	void ImageSlice::toAscii( QTextStream& out ) {
+		if ( segments.size() > 0 && sliceWorker != NULL ) {
+			sliceWorker->toAscii( out, statistics );
 		}
 	}
-	resetSegmentColors();
-}
 
-void ImageSlice::resetSegmentColors(){
-	int colorCount = segmentColors.size();
-	if ( colorCount > 0 ){
-		for ( int i = 0; i < segments.size(); i++ ){
-			int colorIndex = i % colorCount;
-			segments[i]->setColor( segmentColors[colorIndex] );
+	void ImageSlice::resetPlotCurve() {
+		if ( segments.size() > 0 ) {
+			//Now reset the curve with the new data.
+			QwtPlot* curvePlot = segments[0]->getPlot();
+			addPlotCurve( curvePlot );
+			resetSegmentColors();
 		}
 	}
-	colorBar->setColors( segmentColors );
-	colorBar->update();
-}
-
-
-void ImageSlice::setViewerCurveColor( const QString& colorName ){
-	viewerColor = Qt::black;
-	if ( colorName == "green"){
-		viewerColor = Qt::green;
-	}
-	else if ( colorName == "gray"){
-		viewerColor = Qt::gray;
-	}
-	else {
-		viewerColor.setNamedColor( colorName );
-	}
-
-	if ( useViewerColors ){
-		segmentColors.clear();
-		segmentColors.append( viewerColor );
-		resetSegmentColors();
-	}
-}
-
-void ImageSlice::setPolylineColorUnit( bool polyline ){
-	polylineUnit = polyline;
-}
-
-int ImageSlice::getColorCount() const {
-	int colorCount = 1;
-	if ( !polylineUnit ){
-		colorCount = sliceWorker->getSegmentCount();
-	}
-	return colorCount;
-}
-
-
-void ImageSlice::toAscii( QTextStream& out ){
-	if ( segments.size() > 0 && sliceWorker != NULL ){
-		sliceWorker->toAscii( out, statistics );
-	}
-}
-
-void ImageSlice::resetPlotCurve(){
-	if ( segments.size() > 0 ){
-		//Now reset the curve with the new data.
-		QwtPlot* curvePlot = segments[0]->getPlot();
-		addPlotCurve( curvePlot );
-		resetSegmentColors();
-	}
-}
 
 
 
@@ -261,176 +259,174 @@ void ImageSlice::resetPlotCurve(){
 //                 Data & Curve Management
 //------------------------------------------------------------------
 
-void ImageSlice::addPlotCurve( QwtPlot* plot){
-	clearCurve();
-	int segmentCount = segments.size();
-	int cornerCount = sliceWorker->getSegmentCount();
-	int cornerCountPerSegment = 1;
-	if ( segmentCount > 0 ){
-		cornerCountPerSegment = cornerCount / segmentCount;
-	}
-
-	double xIncr = 0;
-	for ( int i = 0; i < segmentCount; i++ ){
-
-		SliceSegment* sliceSegment = segments[i];
-		QVector<double> xValues = sliceWorker->getData( i, statistics );
-
-		//So that everything is zero based.
-		if ( i == 0 ){
-			statistics->storeIncrement( &xIncr, xValues, -1  );
-		}
-		statistics->adjustStart( xValues, xIncr );
-		statistics->storeIncrement( &xIncr, xValues, i );
-
-		QVector<double> pixels = sliceWorker->getPixels( i );
-		sliceSegment->addCurve( plot, xValues, pixels );
-
-		//Add the corner points
-		int pointCountPerSegment = qFloor(xValues.size() / cornerCountPerSegment);
-		for ( int j = 0; j < cornerCountPerSegment; j++ ){
-			int cornerIndex = (j+1)*pointCountPerSegment - 1;
-			addCorner( xValues[cornerIndex], pixels[cornerIndex], plot );
+	void ImageSlice::addPlotCurve( QwtPlot* plot) {
+		clearCurve();
+		int segmentCount = segments.size();
+		int cornerCount = sliceWorker->getSegmentCount();
+		int cornerCountPerSegment = 1;
+		if ( segmentCount > 0 ) {
+			cornerCountPerSegment = cornerCount / segmentCount;
 		}
 
+		double xIncr = 0;
+		for ( int i = 0; i < segmentCount; i++ ) {
+
+			SliceSegment* sliceSegment = segments[i];
+			QVector<double> xValues = sliceWorker->getData( i, statistics );
+
+			//So that everything is zero based.
+			if ( i == 0 ) {
+				statistics->storeIncrement( &xIncr, xValues, -1  );
+			}
+			statistics->adjustStart( xValues, xIncr );
+			statistics->storeIncrement( &xIncr, xValues, i );
+
+			QVector<double> pixels = sliceWorker->getPixels( i );
+			sliceSegment->addCurve( plot, xValues, pixels );
+
+			//Add the corner points
+			int pointCountPerSegment = qFloor(xValues.size() / cornerCountPerSegment);
+			for ( int j = 0; j < cornerCountPerSegment; j++ ) {
+				int cornerIndex = (j+1)*pointCountPerSegment - 1;
+				addCorner( xValues[cornerIndex], pixels[cornerIndex], plot );
+			}
+
+
+		}
 
 	}
 
-}
-
-void ImageSlice::updatePositionInformation(const QVector<String>& info ){
-	int segmentCount = segments.size();
-	int infoCount = info.size();
-	Assert( segmentCount = infoCount - 1 );
-	for ( int i = 0; i< segmentCount; i++ ){
-		segments[i]->updateEnds( info[i], info[i+1]);
+	void ImageSlice::updatePositionInformation(const QVector<String>& info ) {
+		int segmentCount = segments.size();
+		int infoCount = info.size();
+		Assert( segmentCount = infoCount - 1 );
+		for ( int i = 0; i< segmentCount; i++ ) {
+			segments[i]->updateEnds( info[i], info[i+1]);
+		}
 	}
-}
 
-void ImageSlice::updatePolyLine(  const QList<int>& pixelX,
-		const QList<int>& pixelY, const QList<double>& worldX,
-		const QList<double>& worldY){
-	sliceWorker->setVertices( pixelX, pixelY, worldX, worldY );
+	void ImageSlice::updatePolyLine(  const QList<int>& pixelX,
+	                                  const QList<int>& pixelY, const QList<double>& worldX,
+	                                  const QList<double>& worldY) {
+		sliceWorker->setVertices( pixelX, pixelY, worldX, worldY );
 
-	runSliceWorker();
+		runSliceWorker();
 
-	//Update the segments with new data.
-	int segmentCount = segments.size();
-	for ( int i = 0; i < segmentCount; i++ ){
-		segments[i]->setEndPointsWorld( worldX[i], worldY[i],
-						worldX[i+1], worldY[i+1]);
-		segments[i]->setEndPointsPixel( pixelX[i], pixelY[i],
-						pixelX[i+1], pixelY[i+1]);
-		segments[i]->updateStatistics( statistics );
+		//Update the segments with new data.
+		int segmentCount = segments.size();
+		for ( int i = 0; i < segmentCount; i++ ) {
+			segments[i]->setEndPointsWorld( worldX[i], worldY[i],
+			                                worldX[i+1], worldY[i+1]);
+			segments[i]->setEndPointsPixel( pixelX[i], pixelY[i],
+			                                pixelX[i+1], pixelY[i+1]);
+			segments[i]->updateStatistics( statistics );
+		}
 	}
-}
 
 
 
 
-void ImageSlice::clearCurve(){
-	QList<SliceSegment*>::iterator iter = segments.begin();
-	while ( iter != segments.end() ){
-		(*iter)->clearCurve();
-		iter++;
+	void ImageSlice::clearCurve() {
+		QList<SliceSegment*>::iterator iter = segments.begin();
+		while ( iter != segments.end() ) {
+			(*iter)->clearCurve();
+			iter++;
+		}
+		clearCorners();
 	}
-	clearCorners();
-}
 
 //---------------------------------------------------------------------
 //                  Markers between Segments
 //---------------------------------------------------------------------
 
-void ImageSlice::setShowCorners( bool show ){
-	if ( show != showCorners ){
-		showCorners = show;
-		if ( showCorners ){
-			resetPlotCurve();
+	void ImageSlice::setShowCorners( bool show ) {
+		if ( show != showCorners ) {
+			showCorners = show;
+			if ( showCorners ) {
+				resetPlotCurve();
+			} else {
+				clearCorners();
+			}
 		}
-		else {
-			clearCorners();
+	}
+
+	void ImageSlice::clearCorners() {
+		while ( !segmentCorners.isEmpty() ) {
+			QwtPlotMarker* corner = segmentCorners.takeLast();
+			corner->detach();
+			delete corner;
 		}
 	}
-}
 
-void ImageSlice::clearCorners(){
-	while ( !segmentCorners.isEmpty() ){
-		QwtPlotMarker* corner = segmentCorners.takeLast();
-		corner->detach();
-		delete corner;
+	void ImageSlice::addCorner( double xValue, double yValue, QwtPlot* plot ) {
+		if ( showCorners ) {
+			QwtSymbol* sym = new QwtSymbol( QwtSymbol::Cross, QBrush(Qt::black), QPen( Qt::black), QSize(5,5));
+			QwtPlotMarker* corner = new QwtPlotMarker();
+			sym->setSize( markerSize );
+			corner->setSymbol( *sym );
+			corner->setValue( xValue, yValue );
+			corner->attach( plot );
+			segmentCorners.append( corner );
+		}
 	}
-}
-
-void ImageSlice::addCorner( double xValue, double yValue, QwtPlot* plot ){
-	if ( showCorners ){
-		QwtSymbol* sym = new QwtSymbol( QwtSymbol::Cross, QBrush(Qt::black), QPen( Qt::black), QSize(5,5));
-		QwtPlotMarker* corner = new QwtPlotMarker();
-		sym->setSize( markerSize );
-		corner->setSymbol( *sym );
-		corner->setValue( xValue, yValue );
-		corner->attach( plot );
-		segmentCorners.append( corner );
-	}
-}
 
 //-----------------------------------------------------------------------------
 //               Statistics
 //-----------------------------------------------------------------------------
 
-void ImageSlice::addSegment( SliceSegment* segment ){
-	QLayout* layout = ui.segmentHolder->layout();
-	if ( layout == NULL ){
-		layout = new QHBoxLayout();
-		ui.segmentHolder->setLayout( layout );
+	void ImageSlice::addSegment( SliceSegment* segment ) {
+		QLayout* layout = ui.segmentHolder->layout();
+		if ( layout == NULL ) {
+			layout = new QHBoxLayout();
+			ui.segmentHolder->setLayout( layout );
+		}
+		QHBoxLayout* hLayout = dynamic_cast<QHBoxLayout*>(layout);
+		hLayout->addWidget( segment );
 	}
-	QHBoxLayout* hLayout = dynamic_cast<QHBoxLayout*>(layout);
-	hLayout->addWidget( segment );
-}
 
-void ImageSlice::removeSegment( SliceSegment* segment ){
-	QLayout* layout = ui.segmentHolder->layout();
-	if ( layout != NULL ){
-		layout->removeWidget( segment );
+	void ImageSlice::removeSegment( SliceSegment* segment ) {
+		QLayout* layout = ui.segmentHolder->layout();
+		if ( layout != NULL ) {
+			layout->removeWidget( segment );
+		}
 	}
-}
 
-void ImageSlice::openCloseDisplay(){
-	if ( minimized ){
-		maximizeDisplay();
+	void ImageSlice::openCloseDisplay() {
+		if ( minimized ) {
+			maximizeDisplay();
+		} else {
+			minimizeDisplay();
+		}
 	}
-	else {
-		minimizeDisplay();
+
+
+	void ImageSlice::minimizeDisplay() {
+		QLayout* statLayout = this->layout();
+		statLayout->removeWidget( ui.regionInfoWidget );
+		ui.regionInfoWidget->setParent( NULL );
+		minimized = true;
+		QIcon icon( ":/images/statsMaximize.png");
+		ui.openCloseButton->setIcon( icon );
 	}
-}
 
-
-void ImageSlice::minimizeDisplay(){
-	QLayout* statLayout = this->layout();
-	statLayout->removeWidget( ui.regionInfoWidget );
-	ui.regionInfoWidget->setParent( NULL );
-	minimized = true;
-	QIcon icon( ":/images/statsMaximize.png");
-	ui.openCloseButton->setIcon( icon );
-}
-
-void ImageSlice::maximizeDisplay(){
-	QLayout* statLayout = this->layout();
-	statLayout->addWidget( ui.regionInfoWidget );
-	minimized = false;
-	QIcon icon( ":/images/statsMinimize.png");
-	ui.openCloseButton->setIcon( icon );
-}
-
-
-
-ImageSlice::~ImageSlice() {
-	if ( minimized ){
-		delete ui.regionInfoWidget;
+	void ImageSlice::maximizeDisplay() {
+		QLayout* statLayout = this->layout();
+		statLayout->addWidget( ui.regionInfoWidget );
+		minimized = false;
+		QIcon icon( ":/images/statsMinimize.png");
+		ui.openCloseButton->setIcon( icon );
 	}
-	delete sliceWorker;
-	clearCorners();
-	clearCurve();
-}
+
+
+
+	ImageSlice::~ImageSlice() {
+		if ( minimized ) {
+			delete ui.regionInfoWidget;
+		}
+		delete sliceWorker;
+		clearCorners();
+		clearCurve();
+	}
 
 
 } /* namespace casa */

@@ -1,4 +1,4 @@
-//# Qtoptions.cc: class to store and retrieve parameters 
+//# Qtoptions.cc: class to store and retrieve parameters
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -29,14 +29,14 @@
 #include <QDir>
 
 namespace casa {
-    namespace viewer {
-	std::string QtOptionsKernel::tmp( ) const {
-	    return QDir::tempPath( ).toStdString( );
-	}
+	namespace viewer {
+		std::string QtOptionsKernel::tmp( ) const {
+			return QDir::tempPath( ).toStdString( );
+		}
 
-	void options_init_::do_init( ) {
-	    options.init( new QtOptionsKernel( ) );
-	}
+		void options_init_::do_init( ) {
+			options.init( new QtOptionsKernel( ) );
+		}
 
-    }
+	}
 }

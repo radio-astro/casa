@@ -28,43 +28,43 @@
 
 namespace casa {
 
-ConverterFrequencyVelocity::ConverterFrequencyVelocity(const QString& oldUnits,
-		const QString& newUnits):
-		ConverterFrequency( oldUnits, newUnits){
-}
-
-
-
-
-Vector<double> ConverterFrequencyVelocity::convert( const Vector<double>& oldValues ){
-	Vector<double> frequencyValues(oldValues.size());
-	frequencyValues = oldValues;
-
-	//Find out the frequency units the spectral coordinate is using and
-	//compare them to the frequency units we are using.  Transform the
-	//data if necessary to the units used by the spectral coordinate.
-	Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
-	String spectralUnit = spectralUnits[0];
-	QString spectralUnitStr( spectralUnit.c_str() );
-	if ( spectralUnitStr != oldUnits ){
-		ConverterFrequency::convertFrequency( frequencyValues, oldUnits, spectralUnitStr );
+	ConverterFrequencyVelocity::ConverterFrequencyVelocity(const QString& oldUnits,
+	        const QString& newUnits):
+		ConverterFrequency( oldUnits, newUnits) {
 	}
 
-	bool unitsUnderstood = setVelocityUnits( newUnits );
-	bool successfulConversion = false;
-	Vector<double> resultValues( oldValues.size());
-	if ( unitsUnderstood ){
-		successfulConversion = spectralCoordinate.frequencyToVelocity( resultValues, frequencyValues );
-	}
-	if ( !successfulConversion ){
-		resultValues = oldValues;
-		qDebug() << "Could not convert frequency to velocity";
-	}
-	return resultValues;
-}
 
-ConverterFrequencyVelocity::~ConverterFrequencyVelocity() {
-	// TODO Auto-generated destructor stub
-}
+
+
+	Vector<double> ConverterFrequencyVelocity::convert( const Vector<double>& oldValues ) {
+		Vector<double> frequencyValues(oldValues.size());
+		frequencyValues = oldValues;
+
+		//Find out the frequency units the spectral coordinate is using and
+		//compare them to the frequency units we are using.  Transform the
+		//data if necessary to the units used by the spectral coordinate.
+		Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
+		String spectralUnit = spectralUnits[0];
+		QString spectralUnitStr( spectralUnit.c_str() );
+		if ( spectralUnitStr != oldUnits ) {
+			ConverterFrequency::convertFrequency( frequencyValues, oldUnits, spectralUnitStr );
+		}
+
+		bool unitsUnderstood = setVelocityUnits( newUnits );
+		bool successfulConversion = false;
+		Vector<double> resultValues( oldValues.size());
+		if ( unitsUnderstood ) {
+			successfulConversion = spectralCoordinate.frequencyToVelocity( resultValues, frequencyValues );
+		}
+		if ( !successfulConversion ) {
+			resultValues = oldValues;
+			qDebug() << "Could not convert frequency to velocity";
+		}
+		return resultValues;
+	}
+
+	ConverterFrequencyVelocity::~ConverterFrequencyVelocity() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

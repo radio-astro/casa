@@ -40,9 +40,9 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
-class WCPositionEvent;
-class DrawingDisplayData;
+	class WorldCanvas;
+	class WCPositionEvent;
+	class DrawingDisplayData;
 
 
 // <summary>
@@ -55,160 +55,169 @@ class DrawingDisplayData;
 //
 // World units of 'pix' and 'frac' are defined.  'pix' units are in
 // screen pixel units.  They are not very useful once the display
-// has been zoomed.  'frac' units have range [0,0] -> [1,1] 
+// has been zoomed.  'frac' units have range [0,0] -> [1,1]
 // mapping to the display part of the pixel canvas.
 // </synopsis>
 
-class DDDObject : public WCRefreshEH, public WCMotionEH, 
-		  public WCPositionEH {
+	class DDDObject : public WCRefreshEH, public WCMotionEH,
+		public WCPositionEH {
 
- public:
+	public:
 
-  enum Mode {
-    None,
-    Handle,
-    Move,
-    Rotate
-  };
+		enum Mode {
+		    None,
+		    Handle,
+		    Move,
+		    Rotate
+		};
 
-  // Constructor taking a Record description.  Fields in the record
-  // are: <src>color</src> and <src>label</src>.
-  DDDObject(const Record &description, DrawingDisplayData *owner);
+		// Constructor taking a Record description.  Fields in the record
+		// are: <src>color</src> and <src>label</src>.
+		DDDObject(const Record &description, DrawingDisplayData *owner);
 
-  // Destructor.
-  virtual ~DDDObject();
-  
-  // Draw this DrawingDisplayData object for the given reason on the
-  // provided WorldCanvas.
-  virtual void draw(const Display::RefreshReason &reason, 
-		    WorldCanvas *worldcanvas) = 0;
-  
-  // Indicate whether the object should show its handles or not.  The
-  // parent DrawingDisplayData will control this, and either ask all
-  // DDDObjects to show their handles or not, via the user setting an
-  // option.  This actually controls the state of whether this
-  // DDDObject is editable, so the parent DrawingDisplayData could
-  // also allow editing of only one DDDObject at a time.
-  virtual void showHandles(const Bool show, const Bool tellOwner = True);
-  
-  // Query whether the object is showing its handles.
-  virtual Bool showingHandles() 
-    { return itsShowHandles; }
-  
-  // Return a record describing this object.
-  virtual Record description();
+		// Destructor.
+		virtual ~DDDObject();
 
-  // Update this object based on the information in the provided
-  // Record.
-  virtual void setDescription(const Record &rec);
+		// Draw this DrawingDisplayData object for the given reason on the
+		// provided WorldCanvas.
+		virtual void draw(const Display::RefreshReason &reason,
+		                  WorldCanvas *worldcanvas) = 0;
 
-  // Store a click in the buffer and look for a double-click event.
-  // If one is found, then call the doubleClick function in the 
-  // owning DisplayData.  Returns <src>True</src> if a double click
-  // was detected.
-  virtual Bool storeClick(const DisplayEvent &ev);
+		// Indicate whether the object should show its handles or not.  The
+		// parent DrawingDisplayData will control this, and either ask all
+		// DDDObjects to show their handles or not, via the user setting an
+		// option.  This actually controls the state of whether this
+		// DDDObject is editable, so the parent DrawingDisplayData could
+		// also allow editing of only one DDDObject at a time.
+		virtual void showHandles(const Bool show, const Bool tellOwner = True);
 
-  // Clear the click buffer.
-  virtual void clearClickBuffer();
+		// Query whether the object is showing its handles.
+		virtual Bool showingHandles() {
+			return itsShowHandles;
+		}
 
-  // Return the unique id of this object.
-  Int objectID() const
-    { return itsObjectID; }
+		// Return a record describing this object.
+		virtual Record description();
 
-  // Event handlers.  The parent DrawingDisplayData will distribute
-  // events as necessary to the various DDDObjects which comprise it.
-  // <group>
-  virtual void operator()(const WCRefreshEvent &ev) = 0;
-  virtual void operator()(const WCPositionEvent &ev) = 0;
-  virtual void operator()(const WCMotionEvent &ev) = 0;
-  // </group>
-  
- protected:
+		// Update this object based on the information in the provided
+		// Record.
+		virtual void setDescription(const Record &rec);
 
-  // Return the owner of this object.
-  DrawingDisplayData *owner()
-    { return itsOwner; }
+		// Store a click in the buffer and look for a double-click event.
+		// If one is found, then call the doubleClick function in the
+		// owning DisplayData.  Returns <src>True</src> if a double click
+		// was detected.
+		virtual Bool storeClick(const DisplayEvent &ev);
 
-  // Return the color to use to draw this object.
-  String color() const
-    { return itsColor; }
+		// Clear the click buffer.
+		virtual void clearClickBuffer();
 
-  // Return the label of this object.
-  String label() const
-  { return itsLabel; }
+		// Return the unique id of this object.
+		Int objectID() const {
+			return itsObjectID;
+		}
 
-  // Return the line width of this object.
-  Int lineWidth() const
-  { return itsLineWidth; }
+		// Event handlers.  The parent DrawingDisplayData will distribute
+		// events as necessary to the various DDDObjects which comprise it.
+		// <group>
+		virtual void operator()(const WCRefreshEvent &ev) = 0;
+		virtual void operator()(const WCPositionEvent &ev) = 0;
+		virtual void operator()(const WCMotionEvent &ev) = 0;
+		// </group>
 
-  Bool isEditable() const
-  { return itsEditable; }
+	protected:
 
-  Bool isMovable() const
-  { return itsMovable; }
+		// Return the owner of this object.
+		DrawingDisplayData *owner() {
+			return itsOwner;
+		}
 
-  Bool isFixed() const
-  { return !itsMovable && !itsEditable; }
+		// Return the color to use to draw this object.
+		String color() const {
+			return itsColor;
+		}
 
-  // (Required) default constructor.
-  DDDObject();
-  
-  // (Required) copy constructor.
-  DDDObject(const DDDObject &other);
+		// Return the label of this object.
+		String label() const {
+			return itsLabel;
+		}
 
-  // (Required) copy assignment.
-  void operator=(const DDDObject &other);
+		// Return the line width of this object.
+		Int lineWidth() const {
+			return itsLineWidth;
+		}
 
-  // Translate Matrix
-  void translateMatrix(Matrix<Double>& points, Double dx, Double dy);
+		Bool isEditable() const {
+			return itsEditable;
+		}
 
-  // Rotate Matrix
-  Matrix<Double> rotateMatrix(const Matrix<Double>& points, Double angle);
+		Bool isMovable() const {
+			return itsMovable;
+		}
 
-  // Is point inside the polygon
-  // <group>
-  Bool inPolygon(const Matrix<Double>& points, Double x, Double y);
-  Bool inPolygon(const Vector<Double>& xP, const Vector<Double>& yP,
-                 Double x, Double y);
-  // </group>
+		Bool isFixed() const {
+			return !itsMovable && !itsEditable;
+		}
 
-  // Convert CoordinateSystem to screen pixels
-  void convertCoordinateSystem (CoordinateSystem& cSys, WorldCanvas* wcPtr) const;
+		// (Required) default constructor.
+		DDDObject();
 
-  // Is the point on a handle
-  Bool onHandle(const Block<DDDHandle>& handles,
-                Double x, Double y);
+		// (Required) copy constructor.
+		DDDObject(const DDDObject &other);
 
- private:
+		// (Required) copy assignment.
+		void operator=(const DDDObject &other);
 
-  // DrawingDisplayData which owns this DDDObject.
-  DrawingDisplayData *itsOwner;
+		// Translate Matrix
+		void translateMatrix(Matrix<Double>& points, Double dx, Double dy);
 
-  // Whether the handles are showing, and therefore whether this
-  // DDDObject is presently editable.
-  Bool itsShowHandles;
+		// Rotate Matrix
+		Matrix<Double> rotateMatrix(const Matrix<Double>& points, Double angle);
 
-  // Is this object editable
-  Bool itsEditable;
-  // Is it movable
-  Bool itsMovable;
+		// Is point inside the polygon
+		// <group>
+		Bool inPolygon(const Matrix<Double>& points, Double x, Double y);
+		Bool inPolygon(const Vector<Double>& xP, const Vector<Double>& yP,
+		               Double x, Double y);
+		// </group>
 
-  // Timing for double clicks.
-  Double itsLastClickTime, its2ndLastClickTime;
+		// Convert CoordinateSystem to screen pixels
+		void convertCoordinateSystem (CoordinateSystem& cSys, WorldCanvas* wcPtr) const;
 
-  // Color of this object.
-  String itsColor;
+		// Is the point on a handle
+		Bool onHandle(const Block<DDDHandle>& handles,
+		              Double x, Double y);
 
-  // Line width of the lines drawn
-  Int itsLineWidth;
+	private:
 
-  // Label for this object.
-  String itsLabel;
+		// DrawingDisplayData which owns this DDDObject.
+		DrawingDisplayData *itsOwner;
 
-  // Unique identification for this object.
-  Int itsObjectID;
+		// Whether the handles are showing, and therefore whether this
+		// DDDObject is presently editable.
+		Bool itsShowHandles;
 
-};
+		// Is this object editable
+		Bool itsEditable;
+		// Is it movable
+		Bool itsMovable;
+
+		// Timing for double clicks.
+		Double itsLastClickTime, its2ndLastClickTime;
+
+		// Color of this object.
+		String itsColor;
+
+		// Line width of the lines drawn
+		Int itsLineWidth;
+
+		// Label for this object.
+		String itsLabel;
+
+		// Unique identification for this object.
+		Int itsObjectID;
+
+	};
 
 
 } //# NAMESPACE CASA - END

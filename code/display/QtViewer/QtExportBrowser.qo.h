@@ -27,49 +27,51 @@
 
 #ifndef QTEXPORTBROWSER_H_
 #define QTEXPORTBROWSER_H_
-	// (Trailing underscore is not a typo -- do not remove it;
-	// QtExportBrowser.ui.h uses the QTEXPORTBROWSER_H symbol).
+// (Trailing underscore is not a typo -- do not remove it;
+// QtExportBrowser.ui.h uses the QTEXPORTBROWSER_H symbol).
 
 #include <graphics/X11/X_enter.h>
 #include <QString>
 #include <QDir>
 
 //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
-   //#   because they'll have Qt includes.
-   //#   E.g. <QApplication> needs the X11 definition of 'Display'
+//#   because they'll have Qt includes.
+//#   E.g. <QApplication> needs the X11 definition of 'Display'
 #include <display/QtViewer/QtExportBrowser.ui.h>
 #include <graphics/X11/X_exit.h>
 
- 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class QtExportBrowser: public QDialog, private Ui::QtExportBrowser{
-   
-   Q_OBJECT
+	class QtExportBrowser: public QDialog, private Ui::QtExportBrowser {
 
- public:
-  
-   QtExportBrowser(QWidget* parent=0, QString filepath="");
-  ~QtExportBrowser();
+		Q_OBJECT
 
- public:
-  QString exportFilePath(void){return lineEdit_->text();};
-  void updateDirectory(const QString);
+	public:
+
+		QtExportBrowser(QWidget* parent=0, QString filepath="");
+		~QtExportBrowser();
+
+	public:
+		QString exportFilePath(void) {
+			return lineEdit_->text();
+		};
+		void updateDirectory(const QString);
 
 
- protected slots:
-  void buildDirTree();
-  void doubleClickItem(QTreeWidgetItem* item);
-  void clickItem(QTreeWidgetItem* item);
-  void returnPressed();
+	protected slots:
+		void buildDirTree();
+		void doubleClickItem(QTreeWidgetItem* item);
+		void clickItem(QTreeWidgetItem* item);
+		void returnPressed();
 
- private:
-  void setExportFilePath_(QString filePath);
+	private:
+		void setExportFilePath_(QString filePath);
 
-  QString exportFile_;
-  QString buffExpFile_;
-  QDir exportDir_;
-};
+		QString exportFile_;
+		QString buffExpFile_;
+		QDir exportDir_;
+	};
 } //# NAMESPACE CASA - END
 
 #endif

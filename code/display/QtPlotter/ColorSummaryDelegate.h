@@ -29,13 +29,13 @@
 
 namespace casa {
 
-class ColorSummaryDelegate : public QStyledItemDelegate {
-public:
-	ColorSummaryDelegate(QObject* parent = 0);
-	void paint( QPainter * painter, const QStyleOptionViewItem &option,
-			const QModelIndex & index ) const;
-	virtual ~ColorSummaryDelegate();
-};
+	class ColorSummaryDelegate : public QStyledItemDelegate {
+	public:
+		ColorSummaryDelegate(QObject* parent = 0);
+		void paint( QPainter * painter, const QStyleOptionViewItem &option,
+		            const QModelIndex & index ) const;
+		virtual ~ColorSummaryDelegate();
+	};
 
 } /* namespace casa */
 #endif /* COLORSUMMARYDELEGATE_H_ */

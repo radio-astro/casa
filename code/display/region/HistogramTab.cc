@@ -31,73 +31,71 @@
 #include <QDebug>
 
 namespace casa {
-HistogramTab::HistogramTab(QWidget *parent)
-    : QWidget(parent)
-{
-	ui.setupUi(this);
-	initialStackIndex = -1;
-}
-
-void HistogramTab::setImageRegion( const std::string& imageName,
-		ImageRegion* region, int regionId){
-	QString graphName( imageName.c_str());
-	if ( graphs.contains(graphName)){
-		HistogramGraph* graph = graphs[graphName];
-		graph->setImageRegion( region, regionId );
+	HistogramTab::HistogramTab(QWidget *parent)
+		: QWidget(parent) {
+		ui.setupUi(this);
+		initialStackIndex = -1;
 	}
-	else {
-		qDebug()<<"There is no tab for histogram image="<<graphName;
-	}
-}
 
-void HistogramTab::addImage( ImageInterface<float>* image ){
-	if ( image != NULL ){
-		QString graphName = image->name(true).c_str();
-		if ( !graphs.contains( graphName )){
-			HistogramGraph* histogramGraph = new HistogramGraph( this );
-			histogramGraph->setImage( image );
-			connect( histogramGraph, SIGNAL(showGraph(int)), this, SLOT(showNextGraph(int)));
-			graphs.insert( graphName, histogramGraph );
-			int addIndex = ui.stackedWidget->addWidget( histogramGraph );
-			if ( initialStackIndex < 0 ){
-				initialStackIndex = addIndex;
-			}
-			histogramGraph->setIndex( addIndex );
-			ui.stackedWidget->setCurrentIndex( addIndex );
-			resetNextEnabled();
+	void HistogramTab::setImageRegion( const std::string& imageName,
+	                                   ImageRegion* region, int regionId) {
+		QString graphName( imageName.c_str());
+		if ( graphs.contains(graphName)) {
+			HistogramGraph* graph = graphs[graphName];
+			graph->setImageRegion( region, regionId );
+		} else {
+			qDebug()<<"There is no tab for histogram image="<<graphName;
 		}
 	}
-}
 
-void HistogramTab::resetNextEnabled(){
-	bool nextEnabled = false;
-	int graphCount = graphs.size();
-	if ( graphCount > 1 ){
-		nextEnabled = true;
+	void HistogramTab::addImage( ImageInterface<float>* image ) {
+		if ( image != NULL ) {
+			QString graphName = image->name(true).c_str();
+			if ( !graphs.contains( graphName )) {
+				HistogramGraph* histogramGraph = new HistogramGraph( this );
+				histogramGraph->setImage( image );
+				connect( histogramGraph, SIGNAL(showGraph(int)), this, SLOT(showNextGraph(int)));
+				graphs.insert( graphName, histogramGraph );
+				int addIndex = ui.stackedWidget->addWidget( histogramGraph );
+				if ( initialStackIndex < 0 ) {
+					initialStackIndex = addIndex;
+				}
+				histogramGraph->setIndex( addIndex );
+				ui.stackedWidget->setCurrentIndex( addIndex );
+				resetNextEnabled();
+			}
+		}
 	}
-	QList<QString> keys = graphs.keys();
-	for ( QList<QString>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
-		graphs[*iter]->setNextEnabled( nextEnabled );
+
+	void HistogramTab::resetNextEnabled() {
+		bool nextEnabled = false;
+		int graphCount = graphs.size();
+		if ( graphCount > 1 ) {
+			nextEnabled = true;
+		}
+		QList<QString> keys = graphs.keys();
+		for ( QList<QString>::iterator iter = keys.begin(); iter != keys.end(); iter++ ) {
+			graphs[*iter]->setNextEnabled( nextEnabled );
+		}
 	}
-}
 
-void HistogramTab::showNextGraph( int nextIndex ){
-	int graphCount = graphs.size();
-	int actualNextIndex = ( nextIndex - initialStackIndex ) % graphCount;
-	ui.stackedWidget->setCurrentIndex( actualNextIndex + initialStackIndex );
-}
-
-void HistogramTab::clear(){
-	QList<QString> keys = graphs.keys();
-	for( QList<QString>::iterator iter = keys.begin(); iter != keys.end(); iter++){
-		HistogramGraph* graph = graphs.take( *iter );
-		ui.stackedWidget->removeWidget( graph );
-		delete graph;
+	void HistogramTab::showNextGraph( int nextIndex ) {
+		int graphCount = graphs.size();
+		int actualNextIndex = ( nextIndex - initialStackIndex ) % graphCount;
+		ui.stackedWidget->setCurrentIndex( actualNextIndex + initialStackIndex );
 	}
-	initialStackIndex = -1;
-}
 
-HistogramTab::~HistogramTab(){
+	void HistogramTab::clear() {
+		QList<QString> keys = graphs.keys();
+		for( QList<QString>::iterator iter = keys.begin(); iter != keys.end(); iter++) {
+			HistogramGraph* graph = graphs.take( *iter );
+			ui.stackedWidget->removeWidget( graph );
+			delete graph;
+		}
+		initialStackIndex = -1;
+	}
 
-}
+	HistogramTab::~HistogramTab() {
+
+	}
 }

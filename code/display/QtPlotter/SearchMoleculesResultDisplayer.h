@@ -29,27 +29,27 @@
 #include <spectrallines/Splatalogue/SplatResult.h>
 #include <vector>
 namespace casa {
-/**
- * Interface provides decoupling between classes that initialize a search
- * such as SearchMoleculesWidget and classes that display the results of
- * a search such as SearchMoleculesResultsWidget.
- */
-
-class SearchMoleculesResultDisplayer {
-public:
-	SearchMoleculesResultDisplayer();
 	/**
-	 * The parameters offset and count determine where the
-	 * passed in results fit in the overall search.  The 'offset'
-	 * parameters in the starting index and countTotal is the total
-	 * number of search results available.  This may be smaller than
-	 * the number of results returned if the countTotal exceeds the
-	 * limit on the number of search results obtained at one time.
+	 * Interface provides decoupling between classes that initialize a search
+	 * such as SearchMoleculesWidget and classes that display the results of
+	 * a search such as SearchMoleculesResultsWidget.
 	 */
-	virtual void displaySearchResults( const vector<SplatResult>& results,
-			int offset, int countTotal) = 0;
-	virtual ~SearchMoleculesResultDisplayer();
-};
+
+	class SearchMoleculesResultDisplayer {
+	public:
+		SearchMoleculesResultDisplayer();
+		/**
+		 * The parameters offset and count determine where the
+		 * passed in results fit in the overall search.  The 'offset'
+		 * parameters in the starting index and countTotal is the total
+		 * number of search results available.  This may be smaller than
+		 * the number of results returned if the countTotal exceeds the
+		 * limit on the number of search results obtained at one time.
+		 */
+		virtual void displaySearchResults( const vector<SplatResult>& results,
+		                                   int offset, int countTotal) = 0;
+		virtual ~SearchMoleculesResultDisplayer();
+	};
 
 } /* namespace casa */
 #endif /* SEARCHMOLECULESRESULTDISPLAYER_H_ */

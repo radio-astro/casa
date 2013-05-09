@@ -50,50 +50,54 @@
 //
 
 class obj : public casa::DlTarget {
-    public:
+public:
 	obj( const std::string &s ) : str(s) { }
-	std:: string value( ) { return str; }
-	std:: string value( ) const { return str + "(c)"; }
-    private:
+	std:: string value( ) {
+		return str;
+	}
+	std:: string value( ) const {
+		return str + "(c)";
+	}
+private:
 	std::string str;
 };
 
 int main( int argc, char **argv ) {
-    std::cout << "-------------------- begin test --------------------" << std::endl;
-    obj *obj1 = new obj("try one");
-    std::cout << "<1> " << obj1->value() << std::endl;
-    casa::DlHandle<obj> p1(obj1);
-    std::cout << "<2> " << p1->value() << std::endl;
-    try {
-	delete obj1;
-	std::cout << "<3> " << p1->value() << std::endl;
-    } catch (...) {
-	std::cout << "<3> ... 'try one' pointer successfully threw an exception upon a null pointer..." << std::endl;
-	std::cout << "\t\t... handle is " << (p1.null() ? "null" : "not null") << " ..." << std::endl;
-    }
-    obj *obj2 = new obj("try two");
-    {
-	casa::DlHandle<obj> p2(obj2);
-	std::cout << "<4> " << p2->value() << std::endl;
-    }
-    casa::DlHandle<obj> p3;
-    p3 = obj2;
-    std::cout << "<5> " << p3->value() << std::endl;
-    std::cout << "\t\t... handle is " << (p3.null() ? "null" : "not null") << " ..." << std::endl;
-    casa::DlHandle<obj> p4;
-    p4 = p3;
-    std::cout << "<6> " << (*p4).value() << std::endl;
-    std::cout << "\t\t... handle is " << (p4.null() ? "null" : "not null") << " ..." << std::endl;
+	std::cout << "-------------------- begin test --------------------" << std::endl;
+	obj *obj1 = new obj("try one");
+	std::cout << "<1> " << obj1->value() << std::endl;
+	casa::DlHandle<obj> p1(obj1);
+	std::cout << "<2> " << p1->value() << std::endl;
+	try {
+		delete obj1;
+		std::cout << "<3> " << p1->value() << std::endl;
+	} catch (...) {
+		std::cout << "<3> ... 'try one' pointer successfully threw an exception upon a null pointer..." << std::endl;
+		std::cout << "\t\t... handle is " << (p1.null() ? "null" : "not null") << " ..." << std::endl;
+	}
+	obj *obj2 = new obj("try two");
+	{
+		casa::DlHandle<obj> p2(obj2);
+		std::cout << "<4> " << p2->value() << std::endl;
+	}
+	casa::DlHandle<obj> p3;
+	p3 = obj2;
+	std::cout << "<5> " << p3->value() << std::endl;
+	std::cout << "\t\t... handle is " << (p3.null() ? "null" : "not null") << " ..." << std::endl;
+	casa::DlHandle<obj> p4;
+	p4 = p3;
+	std::cout << "<6> " << (*p4).value() << std::endl;
+	std::cout << "\t\t... handle is " << (p4.null() ? "null" : "not null") << " ..." << std::endl;
 
-    const casa::DlHandle<obj> p5(p4);
-    std::cout << "<7> " << (*p5).value() << std::endl;
-    std::cout << "\t\t... handle is " << (p5.null() ? "null" : "not null") << " ..." << std::endl;
+	const casa::DlHandle<obj> p5(p4);
+	std::cout << "<7> " << (*p5).value() << std::endl;
+	std::cout << "\t\t... handle is " << (p5.null() ? "null" : "not null") << " ..." << std::endl;
 
-    std::cout << "\t\t... deleting target..." << std::endl;
-    delete obj2;
-    std::cout << "\t\t... handle is " << (p3.null() ? "null" : "not null") << " ..." << std::endl;
-    std::cout << "\t\t... handle is " << (p4.null() ? "null" : "not null") << " ..." << std::endl;
-    std::cout << "\t\t... handle is " << (p5.null() ? "null" : "not null") << " ..." << std::endl;
+	std::cout << "\t\t... deleting target..." << std::endl;
+	delete obj2;
+	std::cout << "\t\t... handle is " << (p3.null() ? "null" : "not null") << " ..." << std::endl;
+	std::cout << "\t\t... handle is " << (p4.null() ? "null" : "not null") << " ..." << std::endl;
+	std::cout << "\t\t... handle is " << (p5.null() ? "null" : "not null") << " ..." << std::endl;
 
-    std::cout << "----------------------------------------------------" << std::endl;
+	std::cout << "----------------------------------------------------" << std::endl;
 }

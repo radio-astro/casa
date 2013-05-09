@@ -28,32 +28,32 @@
 #include <QMouseEvent>
 namespace casa {
 
-CanvasModeRangeSelection::CanvasModeRangeSelection():
-	CanvasMode(Qt::SplitHCursor){
-}
-
-bool CanvasModeRangeSelection::isMode( ModeIndex mode ) const {
-	bool matchingMode = false;
-	if ( mode == MODE_RANGESELECTION ){
-		matchingMode = true;
+	CanvasModeRangeSelection::CanvasModeRangeSelection():
+		CanvasMode(Qt::SplitHCursor) {
 	}
-	return matchingMode;
-}
+
+	bool CanvasModeRangeSelection::isMode( ModeIndex mode ) const {
+		bool matchingMode = false;
+		if ( mode == MODE_RANGESELECTION ) {
+			matchingMode = true;
+		}
+		return matchingMode;
+	}
 
 
-void CanvasModeRangeSelection::mousePressEventSpecific( QMouseEvent* event ){
-	receiver->startRangeX( event );
-}
+	void CanvasModeRangeSelection::mousePressEventSpecific( QMouseEvent* event ) {
+		receiver->startRangeX( event );
+	}
 
-void CanvasModeRangeSelection::mouseMoveEvent( QMouseEvent* event ){
-	receiver->updateRangeX( event );
-}
+	void CanvasModeRangeSelection::mouseMoveEvent( QMouseEvent* event ) {
+		receiver->updateRangeX( event );
+	}
 
-void CanvasModeRangeSelection::mouseReleaseEventSpecific( QMouseEvent* event ){
-	receiver->endRangeX( event );
-}
+	void CanvasModeRangeSelection::mouseReleaseEventSpecific( QMouseEvent* event ) {
+		receiver->endRangeX( event );
+	}
 
-CanvasModeRangeSelection::~CanvasModeRangeSelection() {
-}
+	CanvasModeRangeSelection::~CanvasModeRangeSelection() {
+	}
 
 } /* namespace casa */

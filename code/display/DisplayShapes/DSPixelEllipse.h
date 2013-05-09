@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSPIXELELLIPSE_H
 #define TRIALDISPLAY_DSPIXELELLIPSE_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DisplayShapeWithCoords.h>
@@ -42,31 +42,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of an absolute pixel DSEllipse
 // </summary>
 
-class Record;
-class DSWorldEllipse;
-class DSScreenEllipse;
+	class Record;
+	class DSWorldEllipse;
+	class DSScreenEllipse;
 
-class DSPixelEllipse : public DSEllipse, public DisplayShapeWithCoords {
+	class DSPixelEllipse : public DSEllipse, public DisplayShapeWithCoords {
 
-public :
+	public :
 
-  DSPixelEllipse();
-  DSPixelEllipse(const Record& settings);
-  DSPixelEllipse(DSScreenEllipse& other);
-  DSPixelEllipse(DSWorldEllipse& other);
+		DSPixelEllipse();
+		DSPixelEllipse(const Record& settings);
+		DSPixelEllipse(DSScreenEllipse& other);
+		DSPixelEllipse(DSWorldEllipse& other);
 
-  virtual ~DSPixelEllipse();
-  
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();  
-  
-  virtual Record getRawOptions() {
-    return DSEllipse::getOptions();
-  }
-  
-private:
-  
-};
+		virtual ~DSPixelEllipse();
+
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		virtual Record getRawOptions() {
+			return DSEllipse::getOptions();
+		}
+
+	private:
+
+	};
 
 } //# NAMESPACE CASA - END
 

@@ -1,28 +1,28 @@
 //# RectRegionEvent.h: class for rectangle region selection event
 //# Copyright (C) 1993,1994,1995,1996,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
-//# 
+//#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
-//# 
+//#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
-//# 
+//#
 //# You should have received a copy of the GNU Library General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//# 
+//#
 //# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# 
+//#
 //# $Id$
 
 #ifndef TRIALDISPLAY_RECTREGIONEVENT_H
@@ -30,12 +30,12 @@
 
 #include <casa/aips.h>
 #include <display/DisplayEvents/WorldCanvasEvent.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/BasicMath/Math.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
+	class WorldCanvas;
 
 // <summary>
 // Contains info on the WC rectanglar area selected by MWCRTRegion mouse tool
@@ -83,36 +83,41 @@ class WorldCanvas;
 // None.
 // </todo>
 
-class RectRegionEvent : public WorldCanvasEvent {
+	class RectRegionEvent : public WorldCanvasEvent {
 
- public:
+	public:
 
-  // Constructor taking a pointer to the WorldCanvas where the
-  // event occured, and the pixel coordinates of the rectangle.
-  RectRegionEvent(WorldCanvas *wc,
-		const Int pixX1, const Int pixY1,
-		const Int pixX2, const Int pixY2) :
+		// Constructor taking a pointer to the WorldCanvas where the
+		// event occured, and the pixel coordinates of the rectangle.
+		RectRegionEvent(WorldCanvas *wc,
+		                const Int pixX1, const Int pixY1,
+		                const Int pixX2, const Int pixY2) :
 
-		WorldCanvasEvent(wc),
-		itsPixBlc(2), itsPixTrc(2) {
+			WorldCanvasEvent(wc),
+			itsPixBlc(2), itsPixTrc(2) {
 
-    itsPixBlc(0) = min(pixX1, pixX2);
-    itsPixTrc(0) = max(pixX1, pixX2);	// sort into top-right
-    itsPixBlc(1) = min(pixY1, pixY2);	// and and bottom-left corners.
-    itsPixTrc(1) = max(pixY1, pixY2);  } 
-  
-  // The corners of the selected rectangle, in screen pixel coordinates.
-  // <group>
-  virtual const Vector<Int> pixBlc() const { return itsPixBlc; }
-  virtual const Vector<Int> pixTrc() const { return itsPixTrc; }
-  // </group>
+			itsPixBlc(0) = min(pixX1, pixX2);
+			itsPixTrc(0) = max(pixX1, pixX2);	// sort into top-right
+			itsPixBlc(1) = min(pixY1, pixY2);	// and and bottom-left corners.
+			itsPixTrc(1) = max(pixY1, pixY2);
+		}
 
- private:
-  
-  // pixel position of the rectangle
-  Vector<Int> itsPixBlc, itsPixTrc;
+		// The corners of the selected rectangle, in screen pixel coordinates.
+		// <group>
+		virtual const Vector<Int> pixBlc() const {
+			return itsPixBlc;
+		}
+		virtual const Vector<Int> pixTrc() const {
+			return itsPixTrc;
+		}
+		// </group>
 
-};
+	private:
+
+		// pixel position of the rectangle
+		Vector<Int> itsPixBlc, itsPixTrc;
+
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -45,9 +45,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 //
 // <motivation>
-// In a number of places, notably test programs, it is useful to 
+// In a number of places, notably test programs, it is useful to
 // be able to see a test pattern on the PixelCanvas which displays
-// currently registered Colormaps for Indexed ColorTables, or 
+// currently registered Colormaps for Indexed ColorTables, or
 // views of the color cube for RGB / HSV ColorTables.
 // </motivation>
 //
@@ -57,36 +57,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <todo>
 // </todo>
 
-class PCTestPattern : public PCRefreshEH {
+	class PCTestPattern : public PCRefreshEH {
 
- public:
-  
-  // Default (and only) constructor.
-  PCTestPattern();
+	public:
 
-  // Destructor.
-  ~PCTestPattern();
-  
-  // Refresh event handling operator.  This implementation draws
-  // the test pattern/s on the PixelCanvas stored in <src>ev</src>.
-  void operator()(const PCRefreshEvent &ev);
+		// Default (and only) constructor.
+		PCTestPattern();
 
- protected:
+		// Destructor.
+		~PCTestPattern();
 
-  // (Required) copy constructor.
-  PCTestPattern(const PCTestPattern &other);
+		// Refresh event handling operator.  This implementation draws
+		// the test pattern/s on the PixelCanvas stored in <src>ev</src>.
+		void operator()(const PCRefreshEvent &ev);
 
-  // (Required) copy assignment.
-  PCTestPattern &operator=(const PCTestPattern &other);
+	protected:
 
- private:
-  
-  Bool itsFirstTime;
-  uInt itsWidth, itsHeight;
-  uInt itsListLength;
-  uInt *itsImList;
+		// (Required) copy constructor.
+		PCTestPattern(const PCTestPattern &other);
 
-};
+		// (Required) copy assignment.
+		PCTestPattern &operator=(const PCTestPattern &other);
+
+	private:
+
+		Bool itsFirstTime;
+		uInt itsWidth, itsHeight;
+		uInt itsListLength;
+		uInt *itsImList;
+
+	};
 
 
 } //# NAMESPACE CASA - END

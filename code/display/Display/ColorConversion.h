@@ -61,23 +61,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // map a single hsv value to an rgb value
 // assumes h, s, and v to be in range [0, 1]. Returns r, g, b in range [0, 1].
-void hsvToRgb(Float h, Float s, Float v,
-	      Float &red, Float &green, Float &blue);
+	void hsvToRgb(Float h, Float s, Float v,
+	              Float &red, Float &green, Float &blue);
 
 // map an array of hsv values to an array of rgb value
-void hsvToRgb(const Array<Float> & h, const Array<Float> & s,
-	      const Array<Float> & v,
-	      Array<Float> & r, Array<Float> & g, Array<Float> & b);
+	void hsvToRgb(const Array<Float> & h, const Array<Float> & s,
+	              const Array<Float> & v,
+	              Array<Float> & r, Array<Float> & g, Array<Float> & b);
 
 // map a single rgb value to its hsv value
 //Assumes r, g, and b to be in range [0, 1]. Returns h, s, v in range [0, 1].
-void rgbToHsv(Float r, Float g, Float b, 
-	      Float &h, Float &s, Float &v);
+	void rgbToHsv(Float r, Float g, Float b,
+	              Float &h, Float &s, Float &v);
 
 // map an array of rgb values to an array of hsv values
-void rgbToHsv(const Array<Float> & r, const Array<Float> & g,
-	      const Array<Float> & b,
-	      Array<Float> & h, Array<Float> & s, Array<Float> & v);
+	void rgbToHsv(const Array<Float> & r, const Array<Float> & g,
+	              const Array<Float> & b,
+	              Array<Float> & h, Array<Float> & s, Array<Float> & v);
 
 
 // </group>

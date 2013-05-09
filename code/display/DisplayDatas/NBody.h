@@ -41,166 +41,171 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
-class WCResampleHandler;
-class WorldCanvasHolder;
-class AttributeBuffer;
-class Attribute;
-class Unit;
-class IPosition;
-  
-// <summary> 
+	class WorldCanvas;
+	class WCResampleHandler;
+	class WorldCanvasHolder;
+	class AttributeBuffer;
+	class Attribute;
+	class Unit;
+	class IPosition;
+
+// <summary>
 // Simple class which provides brute force n-body simulation and display.
 // </summary>
 
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
 
-// <synopsis> 
+// <synopsis>
 
 // This class provides a simple object which can (by brute force)
 // calculated the internal gravitational forces acting on a
 // self-gravitating set of bodies.
 // </synopsis>
 
-class NBody : public DisplayData {
+	class NBody : public DisplayData {
 
- public:   
+	public:
 
-  // Constructor.
-  NBody();
-    
-  // Destructor.
-  virtual ~NBody();
+		// Constructor.
+		NBody();
 
-  // Coordinate transformations, called by the WorldCanvasHolder.
-  // <group>
-  virtual Bool linToWorld(Vector<Double>& world, const Vector<Double>& lin);
-  virtual Bool worldToLin(Vector<Double>& lin, const Vector<Double>& world);
-  // </group>
+		// Destructor.
+		virtual ~NBody();
 
-  // irrelevant in this part of the tree
-  virtual void setActiveImage(uInt zindex) { return;};
+		// Coordinate transformations, called by the WorldCanvasHolder.
+		// <group>
+		virtual Bool linToWorld(Vector<Double>& world, const Vector<Double>& lin);
+		virtual Bool worldToLin(Vector<Double>& lin, const Vector<Double>& world);
+		// </group>
 
-  // Routines which yield information on the axis names and units, and
-  // some miscellaneous information. 
-  // <group>
-  virtual Vector<String> worldAxisNames() const;
-  virtual Vector<String> worldAxisUnits() const;
-  virtual const Unit dataUnit() ;
-  virtual const RecordInterface& miscInfo() ;
-  // </group>
+		// irrelevant in this part of the tree
+		virtual void setActiveImage(uInt zindex) {
+			return;
+		};
 
-  // Return the number of elements in this DisplayData.
-  virtual const uInt nelements(const WorldCanvasHolder& wcHolder) const;
-  virtual const uInt nelements() const;
+		// Routines which yield information on the axis names and units, and
+		// some miscellaneous information.
+		// <group>
+		virtual Vector<String> worldAxisNames() const;
+		virtual Vector<String> worldAxisUnits() const;
+		virtual const Unit dataUnit() ;
+		virtual const RecordInterface& miscInfo() ;
+		// </group>
 
-  // Add a restriction for item <src>itemNum</src> of this
-  // DisplayData. 
-  // <group>
-  virtual void addElementRestrictions(const uInt itemNum, 
-				      AttributeBuffer& other);
-  virtual void addElementRestriction(const uInt itemNum,
-                                     Attribute& newRestriction, 
-                                     Bool permanent);
-  // </group>
+		// Return the number of elements in this DisplayData.
+		virtual const uInt nelements(const WorldCanvasHolder& wcHolder) const;
+		virtual const uInt nelements() const;
 
-  // Set a restriction for item <src>itemNum</src> of this
-  // DisplayData. 
-  // <group>
-  virtual void setElementRestrictions(const uInt itemNum, 
-				      AttributeBuffer& other);
-  virtual void setElementRestriction(const uInt itemNum, 
-                                     Attribute& newRestriction);
-  // </group>
+		// Add a restriction for item <src>itemNum</src> of this
+		// DisplayData.
+		// <group>
+		virtual void addElementRestrictions(const uInt itemNum,
+		                                    AttributeBuffer& other);
+		virtual void addElementRestriction(const uInt itemNum,
+		                                   Attribute& newRestriction,
+		                                   Bool permanent);
+		// </group>
 
-  // Remove a restriction from item <src>itemNum</src>.
-  virtual void removeElementRestriction(const uInt itemNum, 
-					const String& name);
+		// Set a restriction for item <src>itemNum</src> of this
+		// DisplayData.
+		// <group>
+		virtual void setElementRestrictions(const uInt itemNum,
+		                                    AttributeBuffer& other);
+		virtual void setElementRestriction(const uInt itemNum,
+		                                   Attribute& newRestriction);
+		// </group>
 
-  // Clear all restrictions of item <src>itemNum</src> (except the
-  // ones that are permanent of course).
-  virtual void clearElementRestrictions(const uInt itemNum);
+		// Remove a restriction from item <src>itemNum</src>.
+		virtual void removeElementRestriction(const uInt itemNum,
+		                                      const String& name);
 
-  // Check if a restriction for item <src>itemNum</src> with name
-  // <src>name</src> exists.
-  virtual Bool existElementRestriction(const uInt itemNum, 
-				       const String& name);  
+		// Clear all restrictions of item <src>itemNum</src> (except the
+		// ones that are permanent of course).
+		virtual void clearElementRestrictions(const uInt itemNum);
 
-  // Get a handle to the buffer of restrictions for item
-  // <src>itemNum</src>.  Throws an exception of type AipsError if
-  // <src>itemNum</src> is out of range.
-  virtual AttributeBuffer *elementRestrictionBuffer(const uInt itemNum);
+		// Check if a restriction for item <src>itemNum</src> with name
+		// <src>name</src> exists.
+		virtual Bool existElementRestriction(const uInt itemNum,
+		                                     const String& name);
 
-  // Report the minimum and maximum data values for this DisplayData.
-  // <group>
-  virtual Double getDataMin();
-  virtual Double getDataMax();
-  // </group>
+		// Get a handle to the buffer of restrictions for item
+		// <src>itemNum</src>.  Throws an exception of type AipsError if
+		// <src>itemNum</src> is out of range.
+		virtual AttributeBuffer *elementRestrictionBuffer(const uInt itemNum);
 
-  // sizeControlFunction, called by the WorldCanvasHolder.
-  virtual Bool sizeControl(WorldCanvasHolder& wcHolder, 
-			   AttributeBuffer& holderBuf);
+		// Report the minimum and maximum data values for this DisplayData.
+		// <group>
+		virtual Double getDataMin();
+		virtual Double getDataMax();
+		// </group>
 
-  // Position event handler, called by the WorldCanvasHolder.
-  virtual void positionEH(const WCPositionEvent& ev);
+		// sizeControlFunction, called by the WorldCanvasHolder.
+		virtual Bool sizeControl(WorldCanvasHolder& wcHolder,
+		                         AttributeBuffer& holderBuf);
 
-  // Motion event handler, called by the WorldCanvasHolder.
-  virtual void motionEH(const WCMotionEvent& ev);
-  
-  // Refresh event handler, called by the WorldCanvasHolder.
-  virtual void refreshEH(const WCRefreshEvent& ev); 
+		// Position event handler, called by the WorldCanvasHolder.
+		virtual void positionEH(const WCPositionEvent& ev);
 
-  // Clean up, ie. remove cached images etc.
-  virtual void cleanup();
+		// Motion event handler, called by the WorldCanvasHolder.
+		virtual void motionEH(const WCMotionEvent& ev);
 
-  // required functions with null implementations
-  virtual String showPosition(const Vector<Double> &, const Bool &)
-    { return String(""); }
-  virtual String showValue(const Vector<Double> &) 
-    { return String(""); }
-  virtual Display::DisplayDataType classType()
-    { return Display::Vector; }
-  
- private:
+		// Refresh event handler, called by the WorldCanvasHolder.
+		virtual void refreshEH(const WCRefreshEvent& ev);
 
-  void setupStars();
-  void cleanupStars();
-  void drawImage(WorldCanvas& wCanvas);
-  void setScale();
-  
-  // General restrictions  (already declared in DisplayData.h)
-  //  AttributeBuffer restrictions;
-  //True if nothing should be drawn by the NBody
-  Bool turnedOff;
-  
-  // The min and max to use for drawing
-  Double dataMin;
-  Double dataMax;
-  
-  Double itsTimeStep;
-  Double itsDampingFactor;
-  Int itsNumSteps;
-  Int itsXSize;
-  Int itsYSize;
-  
-  // internal bookkeeping:
-  // buffer for stroing sizecontrol done by this NBody
-  AttributeBuffer sizeControlBuf;
-  
+		// Clean up, ie. remove cached images etc.
+		virtual void cleanup();
 
-  // Check if this NBody did the sizeControl
-  Bool iDidSizeControl(WorldCanvas& wCanvas);
+		// required functions with null implementations
+		virtual String showPosition(const Vector<Double> &, const Bool &) {
+			return String("");
+		}
+		virtual String showValue(const Vector<Double> &) {
+			return String("");
+		}
+		virtual Display::DisplayDataType classType() {
+			return Display::Vector;
+		}
 
-  void drawMovie(WorldCanvas& wCanvas, Int numSteps, Double timeStep, 
-                 Double dampingFactor);
+	private:
 
-  Record miscInfoDummy;
+		void setupStars();
+		void cleanupStars();
+		void drawImage(WorldCanvas& wCanvas);
+		void setScale();
 
-  List<void *> itsGalaxyList;
-  ListIter<void *> *itsGalaxyListIter;
-  
-};
+		// General restrictions  (already declared in DisplayData.h)
+		//  AttributeBuffer restrictions;
+		//True if nothing should be drawn by the NBody
+		Bool turnedOff;
+
+		// The min and max to use for drawing
+		Double dataMin;
+		Double dataMax;
+
+		Double itsTimeStep;
+		Double itsDampingFactor;
+		Int itsNumSteps;
+		Int itsXSize;
+		Int itsYSize;
+
+		// internal bookkeeping:
+		// buffer for stroing sizecontrol done by this NBody
+		AttributeBuffer sizeControlBuf;
+
+
+		// Check if this NBody did the sizeControl
+		Bool iDidSizeControl(WorldCanvas& wCanvas);
+
+		void drawMovie(WorldCanvas& wCanvas, Int numSteps, Double timeStep,
+		               Double dampingFactor);
+
+		Record miscInfoDummy;
+
+		List<void *> itsGalaxyList;
+		ListIter<void *> *itsGalaxyListIter;
+
+	};
 
 
 } //# NAMESPACE CASA - END

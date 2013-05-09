@@ -32,12 +32,12 @@
 #include <casa/namespace.h>
 int main(int, char *[]) {
 
-  SimpleRGBPixelCanvasApp app;
-  PCTestPattern patt;
+	SimpleRGBPixelCanvasApp app;
+	PCTestPattern patt;
 
-  app.addRefreshEventHandler(patt);
-  app.run();
+	app.addRefreshEventHandler(patt);
+	app.run();
 
-  return 0;
+	return 0;
 }
 

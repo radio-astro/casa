@@ -32,16 +32,16 @@ class QPainter;
 
 namespace casa {
 
-class ColorComboDelegate : public QItemDelegate {
-public:
-	ColorComboDelegate(QObject* parent = NULL);
-	void setSupportedColors( QStringList colorNames );
-	QString getNamedColor( int index ) const;
-	void paint( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const;
-	virtual ~ColorComboDelegate();
-private:
-	QStringList colorNames;
-};
+	class ColorComboDelegate : public QItemDelegate {
+	public:
+		ColorComboDelegate(QObject* parent = NULL);
+		void setSupportedColors( QStringList colorNames );
+		QString getNamedColor( int index ) const;
+		void paint( QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const;
+		virtual ~ColorComboDelegate();
+	private:
+		QStringList colorNames;
+	};
 
 } /* namespace casa */
 #endif /* COLORCOMBODELEGATE_H_ */

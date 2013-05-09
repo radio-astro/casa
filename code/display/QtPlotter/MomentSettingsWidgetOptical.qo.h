@@ -32,29 +32,28 @@
 namespace casa {
 
 
-class MomentSettingsWidgetOptical : public QWidget, public ProfileTaskFacilitator
-{
-    Q_OBJECT
+	class MomentSettingsWidgetOptical : public QWidget, public ProfileTaskFacilitator {
+		Q_OBJECT
 
-public:
-    MomentSettingsWidgetOptical(QWidget *parent = 0);
-    void setUnits( QString units );
-    void setRange( double min, double max );
-    void reset();
-    void clear();
-    ~MomentSettingsWidgetOptical();
+	public:
+		MomentSettingsWidgetOptical(QWidget *parent = 0);
+		void setUnits( QString units );
+		void setRange( double min, double max );
+		void reset();
+		void clear();
+		~MomentSettingsWidgetOptical();
 
-private slots:
-    void changeCollapseType(QString text=QString(""));
-	void changeCollapseError(QString text=QString(""));
-	void collapseImage();
+	private slots:
+		void changeCollapseType(QString text=QString(""));
+		void changeCollapseError(QString text=QString(""));
+		void collapseImage();
 
-private:
-    Ui::MomentSettingsWidgetOptical ui;
-    SpectralCollapser* collapser;
-    SpectralCollapser::CollapseType  itsCollapseType;
-    SpectralCollapser::CollapseError itsCollapseError;
-};
+	private:
+		Ui::MomentSettingsWidgetOptical ui;
+		SpectralCollapser* collapser;
+		SpectralCollapser::CollapseType  itsCollapseType;
+		SpectralCollapser::CollapseError itsCollapseError;
+	};
 
 }
 

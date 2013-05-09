@@ -38,66 +38,66 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MWCPTRegion::MWCPTRegion(Display::KeySym keysym) :
-  MWCPolyTool(keysym, True) {
-}
+	MWCPTRegion::MWCPTRegion(Display::KeySym keysym) :
+		MWCPolyTool(keysym, True) {
+	}
 
-MWCPTRegion::~MWCPTRegion() {
-}
+	MWCPTRegion::~MWCPTRegion() {
+	}
 
-void MWCPTRegion::doubleInside() {
-  //cout << "doubleInside --->before region Readay" << endl;
-  regionReady();
-  //cout << "<------after region ready" << endl;
-}
+	void MWCPTRegion::doubleInside() {
+		//cout << "doubleInside --->before region Readay" << endl;
+		regionReady();
+		//cout << "<------after region ready" << endl;
+	}
 
-void MWCPTRegion::getLinearCoords(Vector<Double> &x, Vector<Double> &y) {
-  Vector<Int> xpix;
-  Vector<Int> ypix;
-  get(xpix, ypix);
-  Int xs, ys, z;
-  xpix.shape(xs);
-  ypix.shape(ys);
-  z = min(xs, ys);
-  x.resize(z);
-  y.resize(z);
-  //cout << "xs=" << xs << " ys=" << ys << " z=" << z << endl;
+	void MWCPTRegion::getLinearCoords(Vector<Double> &x, Vector<Double> &y) {
+		Vector<Int> xpix;
+		Vector<Int> ypix;
+		get(xpix, ypix);
+		Int xs, ys, z;
+		xpix.shape(xs);
+		ypix.shape(ys);
+		z = min(xs, ys);
+		x.resize(z);
+		y.resize(z);
+		//cout << "xs=" << xs << " ys=" << ys << " z=" << z << endl;
 
-  Vector<Double> xp(2), xl(2);
-  for (Int i = 0; i < z; i++) {
-     xp(0) = xpix(i);
-     xp(1) = ypix(i);
-     itsCurrentWC->pixToLin(xl, xp);
-     x(i) = xl(0);
-     y(i) = xl(1);
-     //cout << "x=" << x(i) << " y=" << y(i) << endl;
-  }
-  //cout << "getLinear" << endl;
-}
+		Vector<Double> xp(2), xl(2);
+		for (Int i = 0; i < z; i++) {
+			xp(0) = xpix(i);
+			xp(1) = ypix(i);
+			itsCurrentWC->pixToLin(xl, xp);
+			x(i) = xl(0);
+			y(i) = xl(1);
+			//cout << "x=" << x(i) << " y=" << y(i) << endl;
+		}
+		//cout << "getLinear" << endl;
+	}
 
-void MWCPTRegion::getWorldCoords(Vector<Double> &x, Vector<Double> &y) {
-  Vector<Int> xpix;
-  Vector<Int> ypix;
-  get(xpix, ypix);
-  Int xs, ys, z;
-  xpix.shape(xs);
-  ypix.shape(ys);
-  z = min(xs, ys);
-  x.resize(z);
-  y.resize(z);
-  //cout << "xs=" << xs << " ys=" << ys << " z=" << z << endl;
+	void MWCPTRegion::getWorldCoords(Vector<Double> &x, Vector<Double> &y) {
+		Vector<Int> xpix;
+		Vector<Int> ypix;
+		get(xpix, ypix);
+		Int xs, ys, z;
+		xpix.shape(xs);
+		ypix.shape(ys);
+		z = min(xs, ys);
+		x.resize(z);
+		y.resize(z);
+		//cout << "xs=" << xs << " ys=" << ys << " z=" << z << endl;
 
-  Vector<Double> xp(2), xl(2);
-  for (Int i = 0; i < z; i++) {
-     xp(0) = xpix(i);
-     xp(1) = ypix(i);
-     itsCurrentWC->pixToWorld(xl, xp);
-     x(i) = xl(0);
-     y(i) = xl(1);
-     //cout << "x=" << x(i) << " y=" << y(i) << endl;
-  }
-  //cout << "getWorld" << endl;
-}
+		Vector<Double> xp(2), xl(2);
+		for (Int i = 0; i < z; i++) {
+			xp(0) = xpix(i);
+			xp(1) = ypix(i);
+			itsCurrentWC->pixToWorld(xl, xp);
+			x(i) = xl(0);
+			y(i) = xl(1);
+			//cout << "x=" << x(i) << " y=" << y(i) << endl;
+		}
+		//cout << "getWorld" << endl;
+	}
 
 } //# NAMESPACE CASA - END
 

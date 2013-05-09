@@ -33,7 +33,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class PixelCanvas;
+	class PixelCanvas;
 
 //
 // <summary>
@@ -71,20 +71,20 @@ class PixelCanvas;
 // </example>
 //
 
-class PCPositionEH {
+	class PCPositionEH {
 
- public:
+	public:
 
-  // Default Constructor Required
-  PCPositionEH();
+		// Default Constructor Required
+		PCPositionEH();
 
-  // Default just prints the event to cout
-  virtual void operator ()(const PCPositionEvent & eh);    
+		// Default just prints the event to cout
+		virtual void operator ()(const PCPositionEvent & eh);
 
-  // Destructor
-  virtual ~PCPositionEH();
+		// Destructor
+		virtual ~PCPositionEH();
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

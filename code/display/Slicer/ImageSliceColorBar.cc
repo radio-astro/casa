@@ -29,41 +29,40 @@
 
 namespace casa {
 
-ImageSliceColorBar::ImageSliceColorBar(QWidget* parent)
-	:QWidget( parent ){
-	// TODO Auto-generated constructor stub
+	ImageSliceColorBar::ImageSliceColorBar(QWidget* parent)
+		:QWidget( parent ) {
+		// TODO Auto-generated constructor stub
 
-}
-
-void ImageSliceColorBar::setColors( const QList<QColor>& segmentColors ){
-	colorList.clear();
-	int colorCount = segmentColors.size();
-	for ( int i = 0; i < colorCount; i++ ){
-		colorList.append( segmentColors[i]);
 	}
-}
 
-void ImageSliceColorBar::paintEvent( QPaintEvent* event ){
-	int colorCount = colorList.size();
-	if ( colorCount > 0 ){
-		QSize barSize = size();
-		int rectWidth = barSize.width() / colorCount;
-		int rectHeight = barSize.height() / 2;
-		QPainter painter( this );
-		for ( int i = 0; i < colorCount; i++ ){
-			int xLocation = i * rectWidth;
-			QRect rect( xLocation, 0, rectWidth, rectHeight );
-			QBrush brush( colorList[i]);
-			painter.fillRect( rect, brush );
+	void ImageSliceColorBar::setColors( const QList<QColor>& segmentColors ) {
+		colorList.clear();
+		int colorCount = segmentColors.size();
+		for ( int i = 0; i < colorCount; i++ ) {
+			colorList.append( segmentColors[i]);
 		}
 	}
-	else {
-		QWidget::paintEvent( event );
-	}
-}
 
-ImageSliceColorBar::~ImageSliceColorBar() {
-	// TODO Auto-generated destructor stub
-}
+	void ImageSliceColorBar::paintEvent( QPaintEvent* event ) {
+		int colorCount = colorList.size();
+		if ( colorCount > 0 ) {
+			QSize barSize = size();
+			int rectWidth = barSize.width() / colorCount;
+			int rectHeight = barSize.height() / 2;
+			QPainter painter( this );
+			for ( int i = 0; i < colorCount; i++ ) {
+				int xLocation = i * rectWidth;
+				QRect rect( xLocation, 0, rectWidth, rectHeight );
+				QBrush brush( colorList[i]);
+				painter.fillRect( rect, brush );
+			}
+		} else {
+			QWidget::paintEvent( event );
+		}
+	}
+
+	ImageSliceColorBar::~ImageSliceColorBar() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

@@ -50,83 +50,93 @@ namespace casa {
 		// because "linear coordinates" scale with zooming whereas "pixel coordinates" do not. Unfortunately,
 		// this means that coordinate transformation is required each time the region is drawn.
 		class Rectangle : public Region {
-			public:
-				~Rectangle( );
-				Rectangle( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2, 
-						   bool hold_signals=false );
+		public:
+			~Rectangle( );
+			Rectangle( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
+			           bool hold_signals=false );
 
-				// carry over from QtRegion... hopefully, removed soon...
-				Rectangle( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
-						   bool hold_signals=false);
+			// carry over from QtRegion... hopefully, removed soon...
+			Rectangle( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
+			           bool hold_signals=false);
 
-				bool clickWithin( double x, double y ) const
-					{ return x > blc_x && x < trc_x && y > blc_y && y < trc_y; }
+			bool clickWithin( double x, double y ) const {
+				return x > blc_x && x < trc_x && y > blc_y && y < trc_y;
+			}
 
-				int clickHandle( double x, double y ) const;
+			int clickHandle( double x, double y ) const;
 
-				bool doubleClick( double /*x*/, double /*y*/ );
+			bool doubleClick( double /*x*/, double /*y*/ );
 
-				// returns point state (Region::PointLocation)
-				region::PointInfo checkPoint( double x, double y ) const;
+			// returns point state (Region::PointLocation)
+			region::PointInfo checkPoint( double x, double y ) const;
 
-				// returns mouse state (Region::MouseState)
-				unsigned int mouseMovement( double x, double y, bool other_selected );
+			// returns mouse state (Region::MouseState)
+			unsigned int mouseMovement( double x, double y, bool other_selected );
 
-				// for rectangles, resizing can change the handle...
-				// for rectangles, moving a handle is resizing...
-				int moveHandle( int handle, double x, double y );
-				void move( double dx, double dy );
+			// for rectangles, resizing can change the handle...
+			// for rectangles, moving a handle is resizing...
+			int moveHandle( int handle, double x, double y );
+			void move( double dx, double dy );
 
-				void resize( double /*width_delta*/, double /*height_delta*/ );
-				bool valid_translation( double dx, double dy, double width_delta, double height_delta );
+			void resize( double /*width_delta*/, double /*height_delta*/ );
+			bool valid_translation( double dx, double dy, double width_delta, double height_delta );
 
-				void linearCenter( double &x, double &y ) const;
-				void pixelCenter( double &x, double &y ) const;
+			void linearCenter( double &x, double &y ) const;
+			void pixelCenter( double &x, double &y ) const;
 
-				AnnotationBase *annotation( ) const;
+			AnnotationBase *annotation( ) const;
 
-				virtual bool flag( MSAsRaster *msar );
+			virtual bool flag( MSAsRaster *msar );
 
-				// in "linear" coordinates...
-				void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
+			// in "linear" coordinates...
+			void boundingRectangle( double &blcx, double &blcy, double &trcx, double &trcy ) const;
 
-				void output( ds9writer &out ) const;
+			void output( ds9writer &out ) const;
 
-				// fetch region type...
-				region::RegionTypes type( ) const { return region::RectRegion; }
+			// fetch region type...
+			region::RegionTypes type( ) const {
+				return region::RectRegion;
+			}
 
-			protected:
-				Rectangle( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1, 
-						   double y1, double x2, double y2, bool hold_signals=false, 
-						   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN ) :
-												Region( name, wc, d, hold_signals, sym ), blc_x(x1<x2?x1:x2),
-												blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1), trc_y(y1<y2?y2:y1) { complete = true; }
+		protected:
+			Rectangle( const std::string &name, WorldCanvas *wc, QtRegionDock *d, double x1,
+			           double y1, double x2, double y2, bool hold_signals=false,
+			           QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN ) :
+				Region( name, wc, d, hold_signals, sym ), blc_x(x1<x2?x1:x2),
+				blc_y(y1<y2?y1:y2), trc_x(x1<x2?x2:x1), trc_y(y1<y2?y2:y1) {
+				complete = true;
+			}
 
-				RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
-				void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
-				std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
-				ImageRegion *get_image_region( DisplayData* ) const;
+			RegionInfo::stats_t *get_ms_stats( MSAsRaster *msar, double x, double y );
+			void generate_nonimage_statistics( DisplayData*, std::list<RegionInfo> * );
+			std::list<std::tr1::shared_ptr<RegionInfo> > *generate_dds_centers( );
+			ImageRegion *get_image_region( DisplayData* ) const;
 
-				virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts, 
-												   std::vector<std::pair<double,double> > &world_pts ) const;
+			virtual void fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
+			                                   std::vector<std::pair<double,double> > &world_pts ) const;
 
-				void drawRegion( bool );
-				/* void drawHandles( ); */
+			void drawRegion( bool );
+			/* void drawHandles( ); */
 
-				virtual void setCenter(double &x, double &y, double &deltx, double &delty) {center_x_=x; center_y_=y; center_delta_x_=deltx; center_delta_y_=delty;};
+			virtual void setCenter(double &x, double &y, double &deltx, double &delty) {
+				center_x_=x;
+				center_y_=y;
+				center_delta_x_=deltx;
+				center_delta_y_=delty;
+			};
 
-				double blc_x, blc_y;
-				double trc_x, trc_y;
-				double center_x_, center_y_;
-				double center_delta_x_, center_delta_y_;
-				double handle_delta_x, handle_delta_y;
+			double blc_x, blc_y;
+			double trc_x, trc_y;
+			double center_x_, center_y_;
+			double center_delta_x_, center_delta_y_;
+			double handle_delta_x, handle_delta_y;
 
-			private:
-				bool within_vertex_handle( double x, double y ) const;
-				unsigned int check_handle( double x, double y ) const;
+		private:
+			bool within_vertex_handle( double x, double y ) const;
+			unsigned int check_handle( double x, double y ) const;
 
 		};
-    }
+	}
 }
 
 #endif

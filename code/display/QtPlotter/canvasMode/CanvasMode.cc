@@ -27,34 +27,34 @@
 
 namespace casa {
 
-QtCanvas* CanvasMode::receiver = NULL;
+	QtCanvas* CanvasMode::receiver = NULL;
 
-void CanvasMode::setReceiver( QtCanvas* canvas ){
-	receiver = canvas;
-}
-
-bool CanvasMode::isMode( ModeIndex /*mode*/ ) const {
-	return false;
-}
-
-CanvasMode::CanvasMode(Qt::CursorShape modeCursor):
-	cursor( modeCursor){
-}
-void CanvasMode::mousePressEvent( QMouseEvent* event ){
-	if ( receiver != NULL ){
-		receiver->setCursor( cursor );
-		mousePressEventSpecific( event );
+	void CanvasMode::setReceiver( QtCanvas* canvas ) {
+		receiver = canvas;
 	}
-}
 
-void CanvasMode::mouseReleaseEvent( QMouseEvent* event ){
-	if ( receiver != NULL ){
-		mouseReleaseEventSpecific( event );
-		receiver->unsetCursor();
+	bool CanvasMode::isMode( ModeIndex /*mode*/ ) const {
+		return false;
 	}
-}
 
-CanvasMode::~CanvasMode() {
-}
+	CanvasMode::CanvasMode(Qt::CursorShape modeCursor):
+		cursor( modeCursor) {
+	}
+	void CanvasMode::mousePressEvent( QMouseEvent* event ) {
+		if ( receiver != NULL ) {
+			receiver->setCursor( cursor );
+			mousePressEventSpecific( event );
+		}
+	}
+
+	void CanvasMode::mouseReleaseEvent( QMouseEvent* event ) {
+		if ( receiver != NULL ) {
+			mouseReleaseEventSpecific( event );
+			receiver->unsetCursor();
+		}
+	}
+
+	CanvasMode::~CanvasMode() {
+	}
 
 } /* namespace casa */

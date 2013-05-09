@@ -34,21 +34,20 @@
 
 namespace casa {
 
-class Fit2DLogDialog : public QDialog
-{
-    Q_OBJECT
+	class Fit2DLogDialog : public QDialog {
+		Q_OBJECT
 
-public:
-    Fit2DLogDialog(QWidget *parent = 0);
-    bool setLog( const QString& fullPath );
-    ~Fit2DLogDialog();
+	public:
+		Fit2DLogDialog(QWidget *parent = 0);
+		bool setLog( const QString& fullPath );
+		~Fit2DLogDialog();
 
-private slots:
-	void logViewFinished();
+	private slots:
+		void logViewFinished();
 
-private:
-    Ui::Fit2DLogDialogClass ui;
-};
+	private:
+		Ui::Fit2DLogDialogClass ui;
+	};
 
 }
 #endif // FIT2DLOGDIALOG_QO_H

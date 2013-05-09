@@ -1,4 +1,4 @@
-//# QtOptions.h: base class for storing and parsing parameters 
+//# QtOptions.h: base class for storing and parsing parameters
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -30,12 +30,12 @@
 #include <display/Display/Options.h>
 
 namespace casa {
-    namespace viewer {
-	class QtOptionsKernel : public Options::Kernel {
-	    public:
-		std::string tmp( ) const;
-	};
-    }
+	namespace viewer {
+		class QtOptionsKernel : public Options::Kernel {
+		public:
+			std::string tmp( ) const;
+		};
+	}
 }
 
 #endif

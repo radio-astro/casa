@@ -33,11 +33,10 @@
 
 #include <casa/namespace.h>
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 
-    QApplication app(argc, argv);
-    QtDataManager dm;
-    dm.show();
-    return app.exec();
+	QApplication app(argc, argv);
+	QtDataManager dm;
+	dm.show();
+	return app.exec();
 }

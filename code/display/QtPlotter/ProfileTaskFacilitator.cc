@@ -32,269 +32,265 @@
 
 namespace casa {
 
-ProfileTaskFacilitator::ProfileTaskFacilitator() :
+	ProfileTaskFacilitator::ProfileTaskFacilitator() :
 		pixelCanvas( NULL ), taskMonitor( NULL ), logger( NULL ),
-		validator( NULL ){
+		validator( NULL ) {
 
-	validator = new QDoubleValidator(-1.0e+32, 1.0e+32,10, NULL);
-}
-
-void ProfileTaskFacilitator::clear(){
-
-}
-
-void ProfileTaskFacilitator::pixelsChanged( int /*pixX*/, int /*pixY*/ ){
-
-}
-void ProfileTaskFacilitator::setCanvas( QtCanvas* pCanvas ){
-	pixelCanvas = pCanvas;
-}
-
-void ProfileTaskFacilitator::setTaskMonitor( ProfileTaskMonitor* monitor ){
-	taskMonitor = monitor;
-}
-
-void ProfileTaskFacilitator::setLogger( LogIO* log ){
-	logger = log;
-}
-
-QString ProfileTaskFacilitator::getFileName(){
-	return taskMonitor->getFileName();
-}
-
-void ProfileTaskFacilitator::logWarning(String msg ){
-	*logger << LogIO::WARN << msg << LogIO::POST;
-}
-void ProfileTaskFacilitator::postStatus( String status ){
-	taskMonitor->postStatus( status );
-}
-Vector<Float> ProfileTaskFacilitator::getXValues() const {
-	return taskMonitor -> getXValues();
-}
-Vector<Float> ProfileTaskFacilitator::getYValues() const {
-	return taskMonitor -> getYValues();
-}
-Vector<Float> ProfileTaskFacilitator::getZValues() const {
-	return taskMonitor -> getZValues();
-}
-
-QString ProfileTaskFacilitator::getYUnit() const {
-	return taskMonitor -> getYUnit();
-}
-
-QString ProfileTaskFacilitator::getYUnitPrefix() const {
-	return taskMonitor -> getYUnitPrefix();
-}
-String ProfileTaskFacilitator::getXAxisUnit() const {
-	return taskMonitor -> getXAxisUnit();
-}
-
-void ProfileTaskFacilitator::plotMainCurve(){
-	taskMonitor -> plotMainCurve();
-}
-
-const ImageInterface<Float>* ProfileTaskFacilitator::getImage( const QString& imageName) const{
-	return taskMonitor -> getImage( imageName );
-}
-
-const String ProfileTaskFacilitator::getPixelBox() const {
-	Vector<double> xPixels;
-	Vector<double> yPixels;
-	taskMonitor->getPixelBounds(xPixels, yPixels);
-	String box = "";
-	const String commaStr = ",";
-	if ( xPixels.size() == 2 && yPixels.size() == 2 ){
-
-		box = String::toString(xPixels[0]) + commaStr;
-		box.append( String::toString( yPixels[0] )+ commaStr);
-		box.append( String::toString( xPixels[1] ) + commaStr );
-		box.append( String::toString( yPixels[1] ) );
+		validator = new QDoubleValidator(-1.0e+32, 1.0e+32,10, NULL);
 	}
-	else if ( xPixels.size() == 1 && yPixels.size() == 1 ){
-		box = String::toString(xPixels[0]) + commaStr;
-		box.append( String::toString( yPixels[0] )+ commaStr);
-		box.append( String::toString( xPixels[0] ) + commaStr );
-		box.append( String::toString( yPixels[0] ) );
-	}
-	else {
-		qDebug() << "Unrecognized region pixel size is "<<xPixels.size();
-	}
-	return box;
-}
 
-bool ProfileTaskFacilitator::isOptical(){
-	return optical;
-}
+	void ProfileTaskFacilitator::clear() {
 
-void ProfileTaskFacilitator::setOptical( bool opt ){
-	optical = opt;
-}
-
-bool ProfileTaskFacilitator::isValidChannelRangeValue( QString str, const QString& endStr ) {
-	bool valid = !str.isEmpty();
-	if ( !valid ){
-		String msg("No "+ endStr.toStdString() +" value specified!");
-		logWarning(msg);
-		postStatus(msg);
 	}
-	else {
-		//These checks are necessary in cases the values are set
-		//by the code rather than the user.
-		int pos=0;
-		if ( validator->validate(str, pos) != QValidator::Acceptable){
-			String startString(str.toStdString());
-			String msg = String( endStr.toStdString() +" value not correct: ") + startString;
-			logWarning( msg );
+
+	void ProfileTaskFacilitator::pixelsChanged( int /*pixX*/, int /*pixY*/ ) {
+
+	}
+	void ProfileTaskFacilitator::setCanvas( QtCanvas* pCanvas ) {
+		pixelCanvas = pCanvas;
+	}
+
+	void ProfileTaskFacilitator::setTaskMonitor( ProfileTaskMonitor* monitor ) {
+		taskMonitor = monitor;
+	}
+
+	void ProfileTaskFacilitator::setLogger( LogIO* log ) {
+		logger = log;
+	}
+
+	QString ProfileTaskFacilitator::getFileName() {
+		return taskMonitor->getFileName();
+	}
+
+	void ProfileTaskFacilitator::logWarning(String msg ) {
+		*logger << LogIO::WARN << msg << LogIO::POST;
+	}
+	void ProfileTaskFacilitator::postStatus( String status ) {
+		taskMonitor->postStatus( status );
+	}
+	Vector<Float> ProfileTaskFacilitator::getXValues() const {
+		return taskMonitor -> getXValues();
+	}
+	Vector<Float> ProfileTaskFacilitator::getYValues() const {
+		return taskMonitor -> getYValues();
+	}
+	Vector<Float> ProfileTaskFacilitator::getZValues() const {
+		return taskMonitor -> getZValues();
+	}
+
+	QString ProfileTaskFacilitator::getYUnit() const {
+		return taskMonitor -> getYUnit();
+	}
+
+	QString ProfileTaskFacilitator::getYUnitPrefix() const {
+		return taskMonitor -> getYUnitPrefix();
+	}
+	String ProfileTaskFacilitator::getXAxisUnit() const {
+		return taskMonitor -> getXAxisUnit();
+	}
+
+	void ProfileTaskFacilitator::plotMainCurve() {
+		taskMonitor -> plotMainCurve();
+	}
+
+	const ImageInterface<Float>* ProfileTaskFacilitator::getImage( const QString& imageName) const {
+		return taskMonitor -> getImage( imageName );
+	}
+
+	const String ProfileTaskFacilitator::getPixelBox() const {
+		Vector<double> xPixels;
+		Vector<double> yPixels;
+		taskMonitor->getPixelBounds(xPixels, yPixels);
+		String box = "";
+		const String commaStr = ",";
+		if ( xPixels.size() == 2 && yPixels.size() == 2 ) {
+
+			box = String::toString(xPixels[0]) + commaStr;
+			box.append( String::toString( yPixels[0] )+ commaStr);
+			box.append( String::toString( xPixels[1] ) + commaStr );
+			box.append( String::toString( yPixels[1] ) );
+		} else if ( xPixels.size() == 1 && yPixels.size() == 1 ) {
+			box = String::toString(xPixels[0]) + commaStr;
+			box.append( String::toString( yPixels[0] )+ commaStr);
+			box.append( String::toString( xPixels[0] ) + commaStr );
+			box.append( String::toString( yPixels[0] ) );
+		} else {
+			qDebug() << "Unrecognized region pixel size is "<<xPixels.size();
+		}
+		return box;
+	}
+
+	bool ProfileTaskFacilitator::isOptical() {
+		return optical;
+	}
+
+	void ProfileTaskFacilitator::setOptical( bool opt ) {
+		optical = opt;
+	}
+
+	bool ProfileTaskFacilitator::isValidChannelRangeValue( QString str, const QString& endStr ) {
+		bool valid = !str.isEmpty();
+		if ( !valid ) {
+			String msg("No "+ endStr.toStdString() +" value specified!");
+			logWarning(msg);
 			postStatus(msg);
-			valid = false;
+		} else {
+			//These checks are necessary in cases the values are set
+			//by the code rather than the user.
+			int pos=0;
+			if ( validator->validate(str, pos) != QValidator::Acceptable) {
+				String startString(str.toStdString());
+				String msg = String( endStr.toStdString() +" value not correct: ") + startString;
+				logWarning( msg );
+				postStatus(msg);
+				valid = false;
+			}
 		}
-	}
-	return valid;
-}
-
-void ProfileTaskFacilitator::findChannelRange( float startVal, float endVal,
-		const Vector<Float>& specValues, Int& channelStartIndex, Int& channelEndIndex ) {
-	if (specValues.size() < 1){
-		String msg = String("No spectral values provided!");
-		logWarning( msg );
-		return;
+		return valid;
 	}
 
-	Bool ascending=True;
-	if (specValues(specValues.size()-1)<specValues(0)){
-		ascending=False;
-	}
-	int startIndex = 0;
-	int endIndex = 0;
-	String startValueStr( "Start value: " );
-	String endValueStr( "End value: ");
-	String smallerStr( " is smaller than all spectral values!");
-	String largerStr( " is larger than all spectral values!");
-	if (ascending){
-		if (endVal < specValues(0)){
-			String msg = startValueStr + String::toString(endVal) + smallerStr;
+	void ProfileTaskFacilitator::findChannelRange( float startVal, float endVal,
+	        const Vector<Float>& specValues, Int& channelStartIndex, Int& channelEndIndex ) {
+		if (specValues.size() < 1) {
+			String msg = String("No spectral values provided!");
 			logWarning( msg );
 			return;
 		}
 
-		if (startVal > specValues(specValues.size()-1)){
-			String msg = endValueStr + String::toString(startVal) + largerStr;
+		Bool ascending=True;
+		if (specValues(specValues.size()-1)<specValues(0)) {
+			ascending=False;
+		}
+		int startIndex = 0;
+		int endIndex = 0;
+		String startValueStr( "Start value: " );
+		String endValueStr( "End value: ");
+		String smallerStr( " is smaller than all spectral values!");
+		String largerStr( " is larger than all spectral values!");
+		if (ascending) {
+			if (endVal < specValues(0)) {
+				String msg = startValueStr + String::toString(endVal) + smallerStr;
+				logWarning( msg );
+				return;
+			}
+
+			if (startVal > specValues(specValues.size()-1)) {
+				String msg = endValueStr + String::toString(startVal) + largerStr;
+				logWarning( msg );
+				return;
+			}
+
+			startIndex=0;
+			while (specValues(startIndex)<startVal) {
+				startIndex++;
+			}
+
+			endIndex=specValues.size()-1;
+			while (specValues(endIndex)>endVal) {
+				endIndex--;
+			}
+		}
+		//Descending case
+		else {
+			if (endVal < specValues(specValues.size()-1)) {
+				String msg = startValueStr + String::toString(endVal) + smallerStr;
+				logWarning( msg );
+				return;
+			}
+			if (startVal > specValues(0)) {
+				String msg = endValueStr + String::toString(startVal) + largerStr;
+				logWarning( msg );
+				return;
+			}
+
+			startIndex=0;
+			while (specValues(startIndex)>endVal) {
+				startIndex++;
+			}
+			endIndex=specValues.size()-1;
+			while (specValues(endIndex)<startVal) {
+				endIndex--;
+			}
+		}
+
+		channelStartIndex = startIndex;
+		channelEndIndex = endIndex;
+	}
+
+	void ProfileTaskFacilitator::setCollapseVals(const Vector<Float> &spcVals) {
+
+		*logger << LogOrigin("QtProfile", "setCollapseVals");
+
+		if ( spcVals.size() < 1 ) {
+			String message = "No spectral values! Can not set collapse values!";
+			logWarning( message );
+			return;
+		}
+
+		// grab the start and end value
+		Float valueStart=spcVals(0);
+		Float valueEnd  =spcVals(spcVals.size()-1);
+
+		Bool ascending(True);
+		if (valueStart > valueEnd) {
+			ascending=False;
+		}
+
+		// convert to QString
+		QString startQStr =  QString((String::toString(valueStart)).c_str());
+		QString endQStr   =  QString((String::toString(valueEnd)).c_str());
+
+		// make sure the values are valid
+		int pos=0;
+		QDoubleValidator validator( -1.0e+32, 1.0e+32, 10, NULL );
+		if (validator.validate(startQStr, pos) != QValidator::Acceptable) {
+			String msg = String("Spectral value not correct: ") + String::toString(valueStart);
+			logWarning( msg );
+			return;
+		}
+		if (validator.validate(endQStr, pos) != QValidator::Acceptable) {
+			String msg = String("Spectral value not correct: ") + String::toString(valueEnd);
 			logWarning( msg );
 			return;
 		}
 
-		startIndex=0;
-		while (specValues(startIndex)<startVal){
-			startIndex++;
+		//Set the values into the fields
+		String msg;
+		if (ascending) {
+			setRange( valueStart, valueEnd );
+			msg = String::toString(valueStart) + " and " + String::toString(valueEnd);
+		} else {
+			setRange( valueEnd, valueStart);
+			msg = String::toString(valueEnd) + " and " + String::toString(valueStart);
 		}
 
-		endIndex=specValues.size()-1;
-		while (specValues(endIndex)>endVal){
-			endIndex--;
-		}
-	}
-	//Descending case
-	else {
-		if (endVal < specValues(specValues.size()-1)){
-			String msg = startValueStr + String::toString(endVal) + smallerStr;
-			logWarning( msg );
-			return;
-		}
-		if (startVal > specValues(0)){
-			String msg = endValueStr + String::toString(startVal) + largerStr;
-			logWarning( msg );
-			return;
-		}
-
-		startIndex=0;
-		while (specValues(startIndex)>endVal){
-			startIndex++;
-		}
-		endIndex=specValues.size()-1;
-		while (specValues(endIndex)<startVal){
-			endIndex--;
-		}
+		// give feedback
+		msg = String("Initial collapse values set: ") + msg;
+		*logger << LogIO::NORMAL << msg << LogIO::POST;
 	}
 
-	channelStartIndex = startIndex;
-	channelEndIndex = endIndex;
-}
-
-void ProfileTaskFacilitator::setCollapseVals(const Vector<Float> &spcVals){
-
-	*logger << LogOrigin("QtProfile", "setCollapseVals");
-
-	if ( spcVals.size() < 1 ){
-		String message = "No spectral values! Can not set collapse values!";
-		logWarning( message );
-		return;
+	void ProfileTaskFacilitator::setCurveName( const QString& /*curveName*/ ) {
+		//Implemented to do nothing.  Subclasses should override if they need the
+		//names of the curves being drawn on the canvas.
 	}
 
-	// grab the start and end value
-	Float valueStart=spcVals(0);
-	Float valueEnd  =spcVals(spcVals.size()-1);
-
-	Bool ascending(True);
-	if (valueStart > valueEnd){
-		ascending=False;
+	void ProfileTaskFacilitator::addCurveName( const QString& /*curveName*/ ) {
+		//Implemented to do nothing.  Subclasses should override if they need the
+		//names of the curves being added to the canvas.
 	}
 
-	// convert to QString
-	QString startQStr =  QString((String::toString(valueStart)).c_str());
-	QString endQStr   =  QString((String::toString(valueEnd)).c_str());
-
-	// make sure the values are valid
-	int pos=0;
-	QDoubleValidator validator( -1.0e+32, 1.0e+32, 10, NULL );
-	if (validator.validate(startQStr, pos) != QValidator::Acceptable){
-		String msg = String("Spectral value not correct: ") + String::toString(valueStart);
-		logWarning( msg );
-		return;
-	}
-	if (validator.validate(endQStr, pos) != QValidator::Acceptable){
-		String msg = String("Spectral value not correct: ") + String::toString(valueEnd);
-		logWarning( msg );
-		return;
+	void ProfileTaskFacilitator::setDisplayYUnits( const QString& /*units*/ ) {
+		//Implemented to do nothing.  Subclasses should override if they need the
+		//y axis units being displayed on the canvas.
 	}
 
-	//Set the values into the fields
-	String msg;
-	if (ascending){
-		setRange( valueStart, valueEnd );
-		msg = String::toString(valueStart) + " and " + String::toString(valueEnd);
-	}
-	else{
-		setRange( valueEnd, valueStart);
-		msg = String::toString(valueEnd) + " and " + String::toString(valueStart);
+	void ProfileTaskFacilitator::setImageYUnits( const QString& /*units*/ ) {
+		//Implemented to do nothing.  Subclasses should override if they need the
+		//y axis units being displayed in the image.
 	}
 
-	// give feedback
-	msg = String("Initial collapse values set: ") + msg;
-	*logger << LogIO::NORMAL << msg << LogIO::POST;
-}
-
-void ProfileTaskFacilitator::setCurveName( const QString& /*curveName*/ ){
-	//Implemented to do nothing.  Subclasses should override if they need the
-	//names of the curves being drawn on the canvas.
-}
-
-void ProfileTaskFacilitator::addCurveName( const QString& /*curveName*/ ){
-	//Implemented to do nothing.  Subclasses should override if they need the
-	//names of the curves being added to the canvas.
-}
-
-void ProfileTaskFacilitator::setDisplayYUnits( const QString& /*units*/ ){
-	//Implemented to do nothing.  Subclasses should override if they need the
-	//y axis units being displayed on the canvas.
-}
-
-void ProfileTaskFacilitator::setImageYUnits( const QString& /*units*/ ){
-	//Implemented to do nothing.  Subclasses should override if they need the
-	//y axis units being displayed in the image.
-}
-
-ProfileTaskFacilitator::~ProfileTaskFacilitator() {
-	delete validator;
-}
+	ProfileTaskFacilitator::~ProfileTaskFacilitator() {
+		delete validator;
+	}
 
 } /* namespace casa */

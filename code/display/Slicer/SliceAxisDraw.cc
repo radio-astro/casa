@@ -27,24 +27,24 @@
 
 namespace casa {
 
-SliceAxisDraw::SliceAxisDraw() : QwtScaleDraw(){
-	tickFontSize = 6;
-}
+	SliceAxisDraw::SliceAxisDraw() : QwtScaleDraw() {
+		tickFontSize = 6;
+	}
 
-void SliceAxisDraw::setTickFontSize( int size ){
-	tickFontSize = size;
-}
+	void SliceAxisDraw::setTickFontSize( int size ) {
+		tickFontSize = size;
+	}
 
-QwtText SliceAxisDraw::label( double tickValue) const {
-	QwtText tickText( QString::number( tickValue ));
-	QFont font = tickText.font();
-	font.setPointSize( tickFontSize );
-	tickText.setFont( font );
-	return tickText;
-}
+	QwtText SliceAxisDraw::label( double tickValue) const {
+		QwtText tickText( QString::number( tickValue ));
+		QFont font = tickText.font();
+		font.setPointSize( tickFontSize );
+		tickText.setFont( font );
+		return tickText;
+	}
 
-SliceAxisDraw::~SliceAxisDraw() {
+	SliceAxisDraw::~SliceAxisDraw() {
 
-}
+	}
 
 } /* namespace casa */

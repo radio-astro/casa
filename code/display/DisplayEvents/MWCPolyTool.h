@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // double-clicks a particular key or mouse button inside or outside an
 // existing polygon respectively.  It is up to the programmer to decide
 // what these events mean, but it is recommended that an internal double-
-// click correspond to the main action of the tool, eg. emitting the 
+// click correspond to the main action of the tool, eg. emitting the
 // polygon vertices to the application, and that an external double-click
 // correspond to a secondary action of the tool, if indeed there are
 // additional actions suitable to the tool.
@@ -85,127 +85,130 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Add time constraint to double click detection
 // </todo>
 
-class MWCPolyTool : public MultiWCTool, public DTVisible {
+	class MWCPolyTool : public MultiWCTool, public DTVisible {
 
- public:
+	public:
 
-  // Constructor
-  MWCPolyTool(Display::KeySym keysym = Display::K_Pointer_Button1,
-	     const Bool persistent = False);
+		// Constructor
+		MWCPolyTool(Display::KeySym keysym = Display::K_Pointer_Button1,
+		            const Bool persistent = False);
 
-  // Destructor
-  virtual ~MWCPolyTool();
+		// Destructor
+		virtual ~MWCPolyTool();
 
-  // Switch the tool off - this calls the base class disable,
-  // and then erases the polygon if it's around
-  virtual void disable();
+		// Switch the tool off - this calls the base class disable,
+		// and then erases the polygon if it's around
+		virtual void disable();
 
-  // reset to non-existent, non-active polygon.
-  // Refreshes if necessary to erase (unless skipRefresh==True).
-  // (Does not unregister from WCs or disable future event handling).
-  virtual void reset(Bool skipRefresh=False);
-  
-  // Is a polygon currently defined?
-  virtual Bool polygonDefined() { return itsMode>=Ready;  } 
-  
- protected:
+		// reset to non-existent, non-active polygon.
+		// Refreshes if necessary to erase (unless skipRefresh==True).
+		// (Does not unregister from WCs or disable future event handling).
+		virtual void reset(Bool skipRefresh=False);
 
-  // Functions called by the base class event handling operators--and
-  // normally only those.  This is the input that controls the polygon's
-  // appearance and action.  When the polygon is ready and double-click
-  // is received, the doubleInside/Outside routine is invoked.
-  // <group>
-  virtual void keyPressed(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
-  virtual void keyReleased(const WCPositionEvent &/*ev*/);
-  virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
-  // </group>
+		// Is a polygon currently defined?
+		virtual Bool polygonDefined() {
+			return itsMode>=Ready;
+		}
 
-  // draw the polygon (if any) on the object's currently active WC.
-  // Only to be called by the base class refresh event handler.  Derived
-  // objects should use refresh() if they need to redraw, but even that
-  // is normally handled automatically by this class.
-  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+	protected:
 
-  // Output callback functions--to be overridden in derived class as needed.
-  // Called when there is a double click inside/outside the polygon
-  // <group>
-  virtual void doubleInside() { };
-  virtual void doubleOutside() { };
-  // </group>
+		// Functions called by the base class event handling operators--and
+		// normally only those.  This is the input that controls the polygon's
+		// appearance and action.  When the polygon is ready and double-click
+		// is received, the doubleInside/Outside routine is invoked.
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &/*ev*/);
+		virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		virtual void keyReleased(const WCPositionEvent &/*ev*/);
+		virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
+		// </group>
 
-  // Function called when a polygon is ready and not being 
-  // edited.  (Unused so far on the glish level (12/01)).
-  virtual void polygonReady() { };
+		// draw the polygon (if any) on the object's currently active WC.
+		// Only to be called by the base class refresh event handler.  Derived
+		// objects should use refresh() if they need to redraw, but even that
+		// is normally handled automatically by this class.
+		virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
-  // Retrieve polygon vertices, or a single vertex, in screen pixels.
-  // Valid results during the callback functions; to be used by them,
-  // as well as internally.
-  // <group>
-  virtual void get(Vector<Int> &x, Vector<Int> &y) const;
-  virtual void get(Int &x, Int &y, const Int pt) const;
-  // </group>
+		// Output callback functions--to be overridden in derived class as needed.
+		// Called when there is a double click inside/outside the polygon
+		// <group>
+		virtual void doubleInside() { };
+		virtual void doubleOutside() { };
+		// </group>
 
- private:
+		// Function called when a polygon is ready and not being
+		// edited.  (Unused so far on the glish level (12/01)).
+		virtual void polygonReady() { };
 
-  // Set the polygon vertices. itsNPoints should already be set, and
-  // x and y must contain (at least) this many points.
-  virtual void set(const Vector<Int> &x, const Vector<Int> &y);
+		// Retrieve polygon vertices, or a single vertex, in screen pixels.
+		// Valid results during the callback functions; to be used by them,
+		// as well as internally.
+		// <group>
+		virtual void get(Vector<Int> &x, Vector<Int> &y) const;
+		virtual void get(Int &x, Int &y, const Int pt) const;
+		// </group>
 
-  // replace a single vertex.
-  virtual void set(const Int x, const Int y, const Int pt);
-  // push/pop last vertex
-  // <group>
-  void pushPoint(Int x1, Int y1);
-  void popPoint();
-  // </group>
+	private:
 
-  // are we inside the polygon?
-  Bool inPolygon(const Int &x, const Int &y) const;
+		// Set the polygon vertices. itsNPoints should already be set, and
+		// x and y must contain (at least) this many points.
+		virtual void set(const Vector<Int> &x, const Vector<Int> &y);
 
-  // are we within the specified handle?
-  Bool inHandle(const Int &pt, const Int &x, const Int &y) const;
+		// replace a single vertex.
+		virtual void set(const Int x, const Int y, const Int pt);
+		// push/pop last vertex
+		// <group>
+		void pushPoint(Int x1, Int y1);
+		void popPoint();
+		// </group>
+
+		// are we inside the polygon?
+		Bool inPolygon(const Int &x, const Int &y) const;
+
+		// are we within the specified handle?
+		Bool inHandle(const Int &pt, const Int &x, const Int &y) const;
 
 
-  // should the polygon remain on screen after double clicks?
-  Bool itsPolygonPersistent;
+		// should the polygon remain on screen after double clicks?
+		Bool itsPolygonPersistent;
 
-  // state of the polygon tool
-  enum AdjustMode {
-    Off,	// Nothing exists yet
-    Def,	// defining initial polygon
-    Ready,	// polygon finished, no current activity
-    Move,	// moving entire polygon
-    Resize };	// moving single vertex whose handle was pressed
-  MWCPolyTool::AdjustMode itsMode;
+		// state of the polygon tool
+		enum AdjustMode {
+		    Off,	// Nothing exists yet
+		    Def,	// defining initial polygon
+		    Ready,	// polygon finished, no current activity
+		    Move,	// moving entire polygon
+		    Resize
+		};	// moving single vertex whose handle was pressed
+		MWCPolyTool::AdjustMode itsMode;
 
-  // set True on double-click, if the polygon is persistent.
-  // set False when the polygon is moved, resized or reset.
-  // If True, a click outside the polygon will erase it and begin
-  // definition of a new one.
-  Bool itsEmitted;
+		// set True on double-click, if the polygon is persistent.
+		// set False when the polygon is moved, resized or reset.
+		// If True, a click outside the polygon will erase it and begin
+		// definition of a new one.
+		Bool itsEmitted;
 
-  // Number of points
-  Int itsNPoints;
+		// Number of points
+		Int itsNPoints;
 
-  // Polygon points (linear).  Not to be used directly.
-  // use get, set, push, pop instead, which take pixel coordinate arguments.
-  // It's done this way so that zooms work on the figures.
-  Vector<Double> itsX, itsY;
+		// Polygon points (linear).  Not to be used directly.
+		// use get, set, push, pop instead, which take pixel coordinate arguments.
+		// It's done this way so that zooms work on the figures.
+		Vector<Double> itsX, itsY;
 
-  // size in pixels of the handles
-  Int itsHandleSize;
-  
-  // vertex being moved
-  Int itsSelectedHandle;
+		// size in pixels of the handles
+		Int itsHandleSize;
 
-  // position that move started from
-  Int itsBaseMoveX, itsBaseMoveY;
+		// vertex being moved
+		Int itsSelectedHandle;
 
-  // times of the last two presses
-  Double itsLastPressTime, its2ndLastPressTime;
+		// position that move started from
+		Int itsBaseMoveX, itsBaseMoveY;
 
-};
+		// times of the last two presses
+		Double itsLastPressTime, its2ndLastPressTime;
+
+	};
 
 
 } //# NAMESPACE CASA - END

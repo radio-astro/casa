@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSCIRCLE_H
 #define TRIALDISPLAY_DSCIRCLE_H
 
@@ -50,16 +50,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// DSCircle simply extends from DSEllipse, and adds some general circle 
+// DSCircle simply extends from DSEllipse, and adds some general circle
 // functionality. It basically replaces the set major and set minor axis
 // functions with a setRadius function. Almost all of the functionality
 // is contained in DSEllipse.
 //
-// There are generally two ways to make DisplayShape(s); To create them in 
-// "one hit" by providing arguments to the constructor, or by using the 
-// default constructor and then the "setOptions" method. A simple interface 
-// for all classes inheriting from the 
-// <linkto class="DisplayShape">DisplayShape</linkto> class is provided by 
+// There are generally two ways to make DisplayShape(s); To create them in
+// "one hit" by providing arguments to the constructor, or by using the
+// default constructor and then the "setOptions" method. A simple interface
+// for all classes inheriting from the
+// <linkto class="DisplayShape">DisplayShape</linkto> class is provided by
 // <linkto class="DisplayShapeInterface">DisplayShapeInterface</linkto>.
 // </synopsis>
 //
@@ -74,46 +74,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-class DSCircle : public DSEllipse {
+	class DSCircle : public DSEllipse {
 
-public:
+	public:
 
-  // Constructors and destructors. 
-  // <group>
-  DSCircle();
-  DSCircle(const Float& xPos, const Float& yPos, const Float& radius, 
-	   const Bool& hasHandles, const Bool& drawHandles);
-  DSCircle(const DSCircle& other);
-  virtual ~DSCircle();
-  // </group>
+		// Constructors and destructors.
+		// <group>
+		DSCircle();
+		DSCircle(const Float& xPos, const Float& yPos, const Float& radius,
+		         const Bool& hasHandles, const Bool& drawHandles);
+		DSCircle(const DSCircle& other);
+		virtual ~DSCircle();
+		// </group>
 
-  // General DisplayShape functionality
-  // <group>
-  virtual void rotate(const Float& /*angle*/) {};
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual Bool inObject(const Float& dX, const Float& dY);
-  virtual void changePoint(const Vector<Float>& newPos);
-  virtual void changePoint(const Vector<Float>& newPos, const Int nPoint);
-  // </group>
+		// General DisplayShape functionality
+		// <group>
+		virtual void rotate(const Float& /*angle*/) {};
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual Bool inObject(const Float& dX, const Float& dY);
+		virtual void changePoint(const Vector<Float>& newPos);
+		virtual void changePoint(const Vector<Float>& newPos, const Int nPoint);
+		// </group>
 
-  // Circle specific functionality
-  // <group>
-  virtual void setRadius(const Float& radius);
-  virtual void setMajorAxis(const Float& /*major*/) {};
-  virtual void setMinorAxis(const Float& /*minor*/) {};
-  // </group>
+		// Circle specific functionality
+		// <group>
+		virtual void setRadius(const Float& radius);
+		virtual void setMajorAxis(const Float& /*major*/) {};
+		virtual void setMinorAxis(const Float& /*minor*/) {};
+		// </group>
 
-  // Get and set options
-  // <group>
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
-  // </group>
+		// Get and set options
+		// <group>
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+		// </group>
 
-private:
-  // Function to set defaults when default constructor called
-  virtual void setDefaultOptions();
+	private:
+		// Function to set defaults when default constructor called
+		virtual void setDefaultOptions();
 
-};
+	};
 
 } //# NAMESPACE CASA - END
 

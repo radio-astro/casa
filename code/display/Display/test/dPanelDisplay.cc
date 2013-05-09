@@ -41,92 +41,92 @@
 #include <casa/namespace.h>
 main(int argc, char **argv) {
 
-  try {
+	try {
 
-    Input inputs(1);
-    inputs.version("");
-    inputs.create("count", "2", "number of rasters to draw (1 or 2)",
-		  "# rasters");
-    inputs.readArguments(argc, argv);
+		Input inputs(1);
+		inputs.version("");
+		inputs.create("count", "2", "number of rasters to draw (1 or 2)",
+		              "# rasters");
+		inputs.readArguments(argc, argv);
 
-    SimplePixelCanvasApp *x11app = 0;
-    PixelCanvas *pcanvas;
+		SimplePixelCanvasApp *x11app = 0;
+		PixelCanvas *pcanvas;
 
-    // make an X11PixelCanvas
-    x11app = new SimplePixelCanvasApp;
-    pcanvas = x11app->pixelCanvas();
+		// make an X11PixelCanvas
+		x11app = new SimplePixelCanvasApp;
+		pcanvas = x11app->pixelCanvas();
 
-    if (!pcanvas) {
-      throw(AipsError("Couldn't construct PixelCanvas"));
-    }
+		if (!pcanvas) {
+			throw(AipsError("Couldn't construct PixelCanvas"));
+		}
 
-    // manage it with a PanelDisplay
-    PanelDisplay *pdisplay = 0;
-    pdisplay = new PanelDisplay(pcanvas);
+		// manage it with a PanelDisplay
+		PanelDisplay *pdisplay = 0;
+		pdisplay = new PanelDisplay(pcanvas);
 
-    // make a some DisplayDatas
-    IPosition ipos1(2, 100, 100);
-    Array<Float> array1(ipos1);
-    for (uInt i = 0; i < uInt(ipos1(0)); i++) {
-      for (uInt j = 0; j < uInt(ipos1(1)); j++) {
-	array1(IPosition(2, i, j)) = Float(i);
-      }
-    }
-    LatticeAsRaster<Float> *lardd1 = 0;
-    lardd1 = new LatticeAsRaster<Float>(&array1, 0, 1);
-    if (!lardd1) {
-      throw(AipsError("couldn't build the display data"));
-    }
+		// make a some DisplayDatas
+		IPosition ipos1(2, 100, 100);
+		Array<Float> array1(ipos1);
+		for (uInt i = 0; i < uInt(ipos1(0)); i++) {
+			for (uInt j = 0; j < uInt(ipos1(1)); j++) {
+				array1(IPosition(2, i, j)) = Float(i);
+			}
+		}
+		LatticeAsRaster<Float> *lardd1 = 0;
+		lardd1 = new LatticeAsRaster<Float>(&array1, 0, 1);
+		if (!lardd1) {
+			throw(AipsError("couldn't build the display data"));
+		}
 
-    IPosition ipos2(2, 30, 70);
-    Array<Float> array2(ipos2);
-    for (uInt i = 0; i < uInt(ipos2(0)); i++) {
-      for (uInt j = 0; j < uInt(ipos2(1)); j++) {
-	array2(IPosition(2, i, j)) = Float(j);
-      }
-    }
-    LatticeAsRaster<Float> *lardd2 = 0;
-    lardd2 = new LatticeAsRaster<Float>(&array2, 0, 1);
-    if (!lardd2) {
-      throw(AipsError("couldn't build the display data"));
-    }
+		IPosition ipos2(2, 30, 70);
+		Array<Float> array2(ipos2);
+		for (uInt i = 0; i < uInt(ipos2(0)); i++) {
+			for (uInt j = 0; j < uInt(ipos2(1)); j++) {
+				array2(IPosition(2, i, j)) = Float(j);
+			}
+		}
+		LatticeAsRaster<Float> *lardd2 = 0;
+		lardd2 = new LatticeAsRaster<Float>(&array2, 0, 1);
+		if (!lardd2) {
+			throw(AipsError("couldn't build the display data"));
+		}
 
-    // set some colormaps
-    Colormap cmap1("Hot Metal 2");
-    lardd1->setColormap(&cmap1, 1.0);
-    Colormap cmap2("RGB 1");
-    lardd2->setColormap(&cmap2, 1.0);
-	       
-    // add the data to the PanelDisplay
-    pdisplay->addDisplayData(*lardd1);
-    if (inputs.getInt("count") == 2) {
-      pdisplay->addDisplayData(*lardd2);
-    }
+		// set some colormaps
+		Colormap cmap1("Hot Metal 2");
+		lardd1->setColormap(&cmap1, 1.0);
+		Colormap cmap2("RGB 1");
+		lardd2->setColormap(&cmap2, 1.0);
 
-    // run the PS application
-    if (x11app) {
-      x11app->run();
-    } else {
-      throw(AipsError("An application was not built"));
-    }
-    
-    if (pdisplay) {
-      delete pdisplay;
-    }
-    if (x11app) {
-      delete x11app;
-    } 
-    if (lardd2) {
-      delete lardd2;
-    }
-    if (lardd1) {
-      delete lardd1;
-    }
+		// add the data to the PanelDisplay
+		pdisplay->addDisplayData(*lardd1);
+		if (inputs.getInt("count") == 2) {
+			pdisplay->addDisplayData(*lardd2);
+		}
 
-  } catch (const AipsError &x) {
-    cerr << "Exception caught:" << endl;
-    cerr << x.getMesg() << endl;
-  }
-  
+		// run the PS application
+		if (x11app) {
+			x11app->run();
+		} else {
+			throw(AipsError("An application was not built"));
+		}
+
+		if (pdisplay) {
+			delete pdisplay;
+		}
+		if (x11app) {
+			delete x11app;
+		}
+		if (lardd2) {
+			delete lardd2;
+		}
+		if (lardd1) {
+			delete lardd1;
+		}
+
+	} catch (const AipsError &x) {
+		cerr << "Exception caught:" << endl;
+		cerr << x.getMesg() << endl;
+	}
+
 }
 

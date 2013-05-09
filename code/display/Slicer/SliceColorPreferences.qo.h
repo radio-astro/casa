@@ -31,50 +31,49 @@
 
 namespace casa {
 
-class SliceColorPreferences : public QDialog
-{
-    Q_OBJECT
+	class SliceColorPreferences : public QDialog {
+		Q_OBJECT
 
-public:
-    SliceColorPreferences(QWidget *parent = 0);
-    bool isViewerColors() const;
-    bool isPolylineUnit() const;
-    QList<QColor> getAccumulatedSliceColors() const;
-    ~SliceColorPreferences();
+	public:
+		SliceColorPreferences(QWidget *parent = 0);
+		bool isViewerColors() const;
+		bool isPolylineUnit() const;
+		QList<QColor> getAccumulatedSliceColors() const;
+		~SliceColorPreferences();
 
-signals:
-	void colorsChanged();
+	signals:
+		void colorsChanged();
 
-private slots:
-	void resetColors();
-	void addColorAccumulated();
-	void removeColorAccumulated();
-	void colorsAccepted();
-	void colorsRejected();
-	void useViewerColorsChanged( bool viewerColors );
+	private slots:
+		void resetColors();
+		void addColorAccumulated();
+		void removeColorAccumulated();
+		void colorsAccepted();
+		void colorsRejected();
+		void useViewerColorsChanged( bool viewerColors );
 
-private:
-	void persistColors();
-	void populateAccumulateColors( );
-	void showColorDialog( QPushButton* source );
-    void initializeUserColors();
-    void readCustomColor( QSettings& settings, const QString& countKey,
-    		const QString& baseLookup, QList<QString>& colorList );
-    void addColorListItem( QListWidget* list, const QColor& listColor );
-    static const QString APPLICATION;
-    static const QString ORGANIZATION;
-    static const QString ACCUMULATED_COLOR;
-    static const QString ACCUMULATED_COLOR_COUNT;
-    static const QString VIEWER_COLORS;
-    static const QString POLYLINE_UNIT;
-    bool viewerColors;
-    bool polylineUnit;
-    const QString POLYGONAL_CHAIN;
-    const QString LINE_SEGMENT;
-    QStringList colorUnits;
-    QList<QString> accumulateColorList;
-    Ui::SliceColorPreferencesClass ui;
-};
+	private:
+		void persistColors();
+		void populateAccumulateColors( );
+		void showColorDialog( QPushButton* source );
+		void initializeUserColors();
+		void readCustomColor( QSettings& settings, const QString& countKey,
+		                      const QString& baseLookup, QList<QString>& colorList );
+		void addColorListItem( QListWidget* list, const QColor& listColor );
+		static const QString APPLICATION;
+		static const QString ORGANIZATION;
+		static const QString ACCUMULATED_COLOR;
+		static const QString ACCUMULATED_COLOR_COUNT;
+		static const QString VIEWER_COLORS;
+		static const QString POLYLINE_UNIT;
+		bool viewerColors;
+		bool polylineUnit;
+		const QString POLYGONAL_CHAIN;
+		const QString LINE_SEGMENT;
+		QStringList colorUnits;
+		QList<QString> accumulateColorList;
+		Ui::SliceColorPreferencesClass ui;
+	};
 
 }
 #endif // SLICECOLORPREFERENCES_QO_H

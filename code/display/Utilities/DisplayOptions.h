@@ -75,7 +75,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </synopsis>
 
 // <example>
-// The following example shows the use of DisplayOptions as a 
+// The following example shows the use of DisplayOptions as a
 // stand-alone class.
 // <srcblock>
 // /* assume some Record "rec" is to be parsed */
@@ -86,7 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // if (dopt.readOptionRecord(min, error, rec, "minimum") && !error) {
 //   cerr << "minimum found and changed, new value is " << min << endl;
 // }
-// 
+//
 // String color;
 // Bool colorIsUnset = False;
 // if (dopt.readOptionRecord(color, colorIsUnset, error,
@@ -113,78 +113,79 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> add unset support for Bool, Float and Int types
 // </todo>
 
-class DisplayOptions {
+	class DisplayOptions {
 
- public:
+	public:
 
-  // Constructor.
-  DisplayOptions();
-  
-  // Destructor.
-  virtual ~DisplayOptions() { };
+		// Constructor.
+		DisplayOptions();
 
-  // Find the field <src>fieldname</src> in Record <src>rec</src>,
-  // containing the requested type (Bool, String, Float, Int) in
-  // itself or its "value" sub-field, and return the value in
-  // <src>target</src>.  If the field doesn't exist, or does not
-  // contain the requested type, or a "value" sub-field containing the
-  // requested type, then <src>error</src> is set True.  When
-  // <src>error</src> is False, the return value indicates whether
-  // <src>target</src> was modified.  The Float version will also read
-  // records containing Ints or Doubles, and cast their value to
-  // Float.  
-  // <group>
+		// Destructor.
+		virtual ~DisplayOptions() { };
 
-  template <class T> Bool readOptionRecord(Vector<T> &target, Bool &error, 
-					   const Record &rec,
-					   const String &fieldname) const;
+		// Find the field <src>fieldname</src> in Record <src>rec</src>,
+		// containing the requested type (Bool, String, Float, Int) in
+		// itself or its "value" sub-field, and return the value in
+		// <src>target</src>.  If the field doesn't exist, or does not
+		// contain the requested type, or a "value" sub-field containing the
+		// requested type, then <src>error</src> is set True.  When
+		// <src>error</src> is False, the return value indicates whether
+		// <src>target</src> was modified.  The Float version will also read
+		// records containing Ints or Doubles, and cast their value to
+		// Float.
+		// <group>
 
-  template <class T> Bool readOptionRecord(T &target, Bool &error, const Record &rec,
-					   const String &fieldname) const;
-  // </group>
+		template <class T> Bool readOptionRecord(Vector<T> &target, Bool &error,
+		        const Record &rec,
+		        const String &fieldname) const;
 
-  // Find the field <src>fieldname</src> in Record <src>rec</src>,
-  // containing the requested type (String) in itself or its "value"
-  // sub-field, and return the value in <src>target</src>.  If the
-  // field (or "value" sub-field) instead contains an "unset" Record,
-  // then <src>unsetTarget</src> is set True.  If the field doesn't
-  // exist, or does not contain the requested type (String) or an
-  // "unset" Record, or a "value" sub-field containing either of
-  // these, then <src>error</src> is set True.  When <src>error</src>
-  // is False, the return value indicates whether <src>target</src>
-  // (or <src>unsetTarget</src>) was modified.
-  virtual Bool readOptionRecord(String &target, Bool &unsetTarget,
-				Bool &error, const Record &rec,
-				const String &fieldname) const;
+		template <class T> Bool readOptionRecord(T &target, Bool &error, const Record &rec,
+		        const String &fieldname) const;
+		// </group>
 
-  // Return a Record which is an "unset" Record, ie. has a field with
-  // name <src>String("i_am_unset")</src> whose value is
-  // <src>String("i_am_unset")</src>.
-  Record unset() const
-    { return itsUnsetRecord; }
+		// Find the field <src>fieldname</src> in Record <src>rec</src>,
+		// containing the requested type (String) in itself or its "value"
+		// sub-field, and return the value in <src>target</src>.  If the
+		// field (or "value" sub-field) instead contains an "unset" Record,
+		// then <src>unsetTarget</src> is set True.  If the field doesn't
+		// exist, or does not contain the requested type (String) or an
+		// "unset" Record, or a "value" sub-field containing either of
+		// these, then <src>error</src> is set True.  When <src>error</src>
+		// is False, the return value indicates whether <src>target</src>
+		// (or <src>unsetTarget</src>) was modified.
+		virtual Bool readOptionRecord(String &target, Bool &unsetTarget,
+		                              Bool &error, const Record &rec,
+		                              const String &fieldname) const;
 
-  // Return True or False indicating if the provided Record is equal
-  // to an "unset" Record.
-   Bool isUnset(const Record &rec) const;
+		// Return a Record which is an "unset" Record, ie. has a field with
+		// name <src>String("i_am_unset")</src> whose value is
+		// <src>String("i_am_unset")</src>.
+		Record unset() const {
+			return itsUnsetRecord;
+		}
 
- protected:
+		// Return True or False indicating if the provided Record is equal
+		// to an "unset" Record.
+		Bool isUnset(const Record &rec) const;
 
-  // (Required) copy constructor.
-  DisplayOptions(const DisplayOptions &other);
+	protected:
 
-  // (Required) copy assignment.
-  void operator=(const DisplayOptions &other);
+		// (Required) copy constructor.
+		DisplayOptions(const DisplayOptions &other);
 
-private:
-  // A utility to check if two types are compatible. (I.e. double is 
-  // "compatible" with int. Used by readOptionRecord.
-  Bool compatible(const DataType &compareme, const DataType &tome) const;
+		// (Required) copy assignment.
+		void operator=(const DisplayOptions &other);
 
-  // An unset record to return with protected <src>unset()</src>
-  // function.
-  Record itsUnsetRecord;
+	private:
+		// A utility to check if two types are compatible. (I.e. double is
+		// "compatible" with int. Used by readOptionRecord.
+		Bool compatible(const DataType &compareme, const DataType &tome) const;
 
-};
+		// An unset record to return with protected <src>unset()</src>
+		// function.
+		Record itsUnsetRecord;
+
+	};
 
 
 } //# NAMESPACE CASA - END

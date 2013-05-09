@@ -29,41 +29,39 @@
 
 namespace casa {
 
-ResidualHistogramDialog::ResidualHistogramDialog(QWidget *parent)
-    : QDialog(parent), residualImage( NULL ){
-	ui.setupUi(this);
-	setWindowTitle( "Fit 2D Residual Image Histogram");
+	ResidualHistogramDialog::ResidualHistogramDialog(QWidget *parent)
+		: QDialog(parent), residualImage( NULL ) {
+		ui.setupUi(this);
+		setWindowTitle( "Fit 2D Residual Image Histogram");
 
-	//Add the plot widget to the dialog
-	QHBoxLayout* layout = new QHBoxLayout(ui.histogramHolder);
-	plotWidget = new BinPlotWidget( false, false, false, this );
-	plotWidget->setPlotMode( 1 );
-	layout->addWidget( plotWidget );
-	ui.histogramHolder->setLayout( layout );
+		//Add the plot widget to the dialog
+		QHBoxLayout* layout = new QHBoxLayout(ui.histogramHolder);
+		plotWidget = new BinPlotWidget( false, false, false, this );
+		plotWidget->setPlotMode( 1 );
+		layout->addWidget( plotWidget );
+		ui.histogramHolder->setLayout( layout );
 
-	connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(close()));
+		connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(close()));
 
-}
-bool ResidualHistogramDialog::setImage( const String& imagePath ){
-	bool success = true;
-	if ( residualImage != NULL ){
+	}
+	bool ResidualHistogramDialog::setImage( const String& imagePath ) {
+		bool success = true;
+		if ( residualImage != NULL ) {
+			delete residualImage;
+			residualImage = NULL;
+		}
+
+		try {
+			residualImage = new PagedImage<Float> (imagePath);
+			plotWidget->setImage( residualImage );
+		} catch( AipsError& error ) {
+			success = false;
+
+		}
+		return success;
+	}
+
+	ResidualHistogramDialog::~ResidualHistogramDialog() {
 		delete residualImage;
-		residualImage = NULL;
 	}
-
-	try {
-		residualImage = new PagedImage<Float> (imagePath);
-		plotWidget->setImage( residualImage );
-	}
-	catch( AipsError& error ){
-		success = false;
-
-	}
-	return success;
-}
-
-ResidualHistogramDialog::~ResidualHistogramDialog()
-{
-	delete residualImage;
-}
 }

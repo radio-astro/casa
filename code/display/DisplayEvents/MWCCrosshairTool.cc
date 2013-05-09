@@ -34,184 +34,203 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-MWCCrosshairTool::MWCCrosshairTool(Display::KeySym keysym,
-				   const Bool persistent) :
-  MultiWCTool(keysym),
-  itsPos(2),
-  itsPersist(persistent),
-  itsRadius(9),
-  itsShowing(False),
-  itsShow(False),
-  itsCross(False),
-  itsBtnDn(False) {
-}
+	MWCCrosshairTool::MWCCrosshairTool(Display::KeySym keysym,
+	                                   const Bool persistent) :
+		MultiWCTool(keysym),
+		itsPos(2),
+		itsPersist(persistent),
+		itsRadius(9),
+		itsShowing(False),
+		itsShow(False),
+		itsCross(False),
+		itsBtnDn(False) {
+	}
 
-MWCCrosshairTool::~MWCCrosshairTool() {
-  reset();
-}
+	MWCCrosshairTool::~MWCCrosshairTool() {
+		reset();
+	}
 
-void MWCCrosshairTool::disable() {
-  reset();
-  MultiWCTool::disable();
-}
+	void MWCCrosshairTool::disable() {
+		reset();
+		MultiWCTool::disable();
+	}
 
-void MWCCrosshairTool::keyPressed(const WCPositionEvent &ev) {
-  WorldCanvas *wc = ev.worldCanvas();
+	void MWCCrosshairTool::keyPressed(const WCPositionEvent &ev) {
+		WorldCanvas *wc = ev.worldCanvas();
 
-  if(itsShowing && itsCurrentWC->pixelCanvas() != wc->pixelCanvas()) reset();
-	// Clear drawing on other PC in (unlikely) event that this tool is
-        // registered on more than one PC.
+		if(itsShowing && itsCurrentWC->pixelCanvas() != wc->pixelCanvas()) reset();
+		// Clear drawing on other PC in (unlikely) event that this tool is
+		// registered on more than one PC.
 
-  // Record that button is pressed.  This means the crosshair will draw
-  // if the mouse moves into the draw area, even if it is outside it now.
-  itsBtnDn = True;
-  itsCurrentWC = wc;
-  Int x = ev.pixX(), y = ev.pixY(); set(x, y);
-  itsShow = wc->inDrawArea(x, y);
-  if(itsShowing || itsShow) refresh();
-	// Cause draw or erase, as necessary
+		// Record that button is pressed.  This means the crosshair will draw
+		// if the mouse moves into the draw area, even if it is outside it now.
+		itsBtnDn = True;
+		itsCurrentWC = wc;
+		Int x = ev.pixX(), y = ev.pixY();
+		set(x, y);
+		itsShow = wc->inDrawArea(x, y);
+		if(itsShowing || itsShow) refresh();
+		// Cause draw or erase, as necessary
 
-  if(itsShow) {		// valid position chosen--dispatch events.
-    CrosshairEvent ev(itsCurrentWC, x,y, "down");
-    itsCurrentWC->handleEvent(ev);	// send selected crosshair
-					// position to WC for distribution
-					// to new handlers.
-    //cout << "cross hair click" << endl;
-    crosshairReady("down");  }	// send crosshair position ready message
-				// to any derived handlers (Gtk...)
-}
+		if(itsShow) {		// valid position chosen--dispatch events.
+			CrosshairEvent ev(itsCurrentWC, x,y, "down");
+			itsCurrentWC->handleEvent(ev);	// send selected crosshair
+			// position to WC for distribution
+			// to new handlers.
+			//cout << "cross hair click" << endl;
+			crosshairReady("down");
+		}	// send crosshair position ready message
+		// to any derived handlers (Gtk...)
+	}
 
-void MWCCrosshairTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
-  if (!itsBtnDn) return;
-  WorldCanvas *wc = ev.worldCanvas();
-  if (wc != itsCurrentWC) {	// shouldn't happen.
-    reset();
-    return;  }
-  Int x = ev.pixX(), y = ev.pixY(); set(x, y);
-  itsShow = wc->inDrawArea(x, y);
-  if(itsShowing || itsShow) refresh();
+	void MWCCrosshairTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
+		if (!itsBtnDn) return;
+		WorldCanvas *wc = ev.worldCanvas();
+		if (wc != itsCurrentWC) {	// shouldn't happen.
+			reset();
+			return;
+		}
+		Int x = ev.pixX(), y = ev.pixY();
+		set(x, y);
+		itsShow = wc->inDrawArea(x, y);
+		if(itsShowing || itsShow) refresh();
 		// Draw or erase as necessary.
 
-  if(itsShow) {		// valid position chosen--dispatch events.
-    CrosshairEvent ev(itsCurrentWC, x,y, "move");
-    itsCurrentWC->handleEvent(ev);	// send selected crosshair
-					// position to WC for distribution
-					// to new handlers.
-    //cout << "cross hair move" << endl;
-    crosshairReady("move");  }	// send crosshair position ready message
-				// to any derived handlers (Gtk...)
-}
+		if(itsShow) {		// valid position chosen--dispatch events.
+			CrosshairEvent ev(itsCurrentWC, x,y, "move");
+			itsCurrentWC->handleEvent(ev);	// send selected crosshair
+			// position to WC for distribution
+			// to new handlers.
+			//cout << "cross hair move" << endl;
+			crosshairReady("move");
+		}	// send crosshair position ready message
+		// to any derived handlers (Gtk...)
+	}
 
-void MWCCrosshairTool::keyReleased(const WCPositionEvent &ev) {
-  if (!itsBtnDn) return;
-  WorldCanvas *wc = ev.worldCanvas();
-  if (wc != itsCurrentWC) {	// shouldn't happen.
-    reset();
-    return;  }
-  itsBtnDn = False;
-  Int x = ev.pixX(), y = ev.pixY(); set(x, y);
-  Bool inDA = wc->inDrawArea(x, y);
-  itsShow = (inDA && itsPersist);
-  if(itsShowing || itsShow) refresh();
+	void MWCCrosshairTool::keyReleased(const WCPositionEvent &ev) {
+		if (!itsBtnDn) return;
+		WorldCanvas *wc = ev.worldCanvas();
+		if (wc != itsCurrentWC) {	// shouldn't happen.
+			reset();
+			return;
+		}
+		itsBtnDn = False;
+		Int x = ev.pixX(), y = ev.pixY();
+		set(x, y);
+		Bool inDA = wc->inDrawArea(x, y);
+		itsShow = (inDA && itsPersist);
+		if(itsShowing || itsShow) refresh();
 		// Draw or erase as necessary.
 
-  if(inDA) {		// valid position chosen--dispatch events.
-    CrosshairEvent ev(itsCurrentWC, x,y, "up");
-    itsCurrentWC->handleEvent(ev);	// send selected crosshair
-					// position to WC for distribution
-					// to new handlers.
-    crosshairReady("up");  }	// send crosshair position ready message
-				// to any derived handlers (Gtk...)
-}
+		if(inDA) {		// valid position chosen--dispatch events.
+			CrosshairEvent ev(itsCurrentWC, x,y, "up");
+			itsCurrentWC->handleEvent(ev);	// send selected crosshair
+			// position to WC for distribution
+			// to new handlers.
+			crosshairReady("up");
+		}	// send crosshair position ready message
+		// to any derived handlers (Gtk...)
+	}
 
-void MWCCrosshairTool::otherKeyPressed(const WCPositionEvent &ev) {
-  if (ev.worldCanvas()==itsCurrentWC && ev.key() == Display::K_Escape)
-      reset();
-}
+	void MWCCrosshairTool::otherKeyPressed(const WCPositionEvent &ev) {
+		if (ev.worldCanvas()==itsCurrentWC && ev.key() == Display::K_Escape)
+			reset();
+	}
 
-void MWCCrosshairTool::set(Int x, Int y) {
-  if (!itsCurrentWC) return;
-  Vector<Double> pix(2);
-  pix(0) = x; pix(1) = y;
-  itsCurrentWC->pixToLin(itsPos, pix);
-  itsCurrentWC->pixToWorld(itsWorld, pix);
-}
+	void MWCCrosshairTool::set(Int x, Int y) {
+		if (!itsCurrentWC) return;
+		Vector<Double> pix(2);
+		pix(0) = x;
+		pix(1) = y;
+		itsCurrentWC->pixToLin(itsPos, pix);
+		itsCurrentWC->pixToWorld(itsWorld, pix);
+	}
 
-void MWCCrosshairTool::get(Int &x, Int &y) const {
-  if (!itsCurrentWC) return;
-  Vector<Double> pix(2);
-  itsCurrentWC->linToPix(pix, itsPos);
-  x = ifloor(pix(0) + 0.5);
-  y = ifloor(pix(1) + 0.5);
-}
+	void MWCCrosshairTool::get(Int &x, Int &y) const {
+		if (!itsCurrentWC) return;
+		Vector<Double> pix(2);
+		itsCurrentWC->linToPix(pix, itsPos);
+		x = ifloor(pix(0) + 0.5);
+		y = ifloor(pix(1) + 0.5);
+	}
 
-void MWCCrosshairTool::getLin(Double &x, Double &y) const {
-  if (!itsCurrentWC) return;
-  Int a;
-  itsPos.shape(a);
-  if (a != 2) return;
-  x = itsPos(0);
-  y = itsPos(1);
-}
+	void MWCCrosshairTool::getLin(Double &x, Double &y) const {
+		if (!itsCurrentWC) return;
+		Int a;
+		itsPos.shape(a);
+		if (a != 2) return;
+		x = itsPos(0);
+		y = itsPos(1);
+	}
 
-void MWCCrosshairTool::getWorld(Double &x, Double &y) const {
-  if (!itsCurrentWC) return;
-  Int a;
-  itsWorld.shape(a);
-  if (a != 2) return;
-  x = itsWorld(0);
-  y = itsWorld(1);
-}
+	void MWCCrosshairTool::getWorld(Double &x, Double &y) const {
+		if (!itsCurrentWC) return;
+		Int a;
+		itsWorld.shape(a);
+		if (a != 2) return;
+		x = itsWorld(0);
+		y = itsWorld(1);
+	}
 
-void MWCCrosshairTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) {
-  if(!itsShow) {itsShowing = False; return;  }
-  Int x, y; get(x, y);
-  if(!itsCurrentWC->inDrawArea(x, y)) { itsShowing = False; return;  }
+	void MWCCrosshairTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/) {
+		if(!itsShow) {
+			itsShowing = False;
+			return;
+		}
+		Int x, y;
+		get(x, y);
+		if(!itsCurrentWC->inDrawArea(x, y)) {
+			itsShowing = False;
+			return;
+		}
 
-  PixelCanvas *pCanvas = itsCurrentWC->pixelCanvas();
-  setClipToDrawArea();
+		PixelCanvas *pCanvas = itsCurrentWC->pixelCanvas();
+		setClipToDrawArea();
 
-  pCanvas->setCapStyle(Display::CSRound);
-  pCanvas->setColor(drawColor());
-  pCanvas->setLineWidth(lineWidth());
-  pCanvas->setDrawFunction(Display::DFCopy);
-   pCanvas->setLineStyle(Display::LSSolid);
+		pCanvas->setCapStyle(Display::CSRound);
+		pCanvas->setColor(drawColor());
+		pCanvas->setLineWidth(lineWidth());
+		pCanvas->setDrawFunction(Display::DFCopy);
+		pCanvas->setLineStyle(Display::LSSolid);
 
-  if (itsCross) {
-     pCanvas->setColor("White");
-     pCanvas->drawLine(x + itsRadius, y,  x + 3*itsRadius, y);
-     pCanvas->drawLine(x - itsRadius, y,  x - 3*itsRadius, y);
-     pCanvas->drawLine(x, y + itsRadius,  x, y + 3*itsRadius);
-     pCanvas->drawLine(x, y - itsRadius,  x, y - 3*itsRadius);
+		if (itsCross) {
+			pCanvas->setColor("White");
+			pCanvas->drawLine(x + itsRadius, y,  x + 3*itsRadius, y);
+			pCanvas->drawLine(x - itsRadius, y,  x - 3*itsRadius, y);
+			pCanvas->drawLine(x, y + itsRadius,  x, y + 3*itsRadius);
+			pCanvas->drawLine(x, y - itsRadius,  x, y - 3*itsRadius);
 
-  }
-  else {
-     //pCanvas->drawEllipse(x, y,  itsRadius, itsRadius,  0.0);
-     pCanvas->drawEllipse(x, y,  itsRadius * 2, itsRadius * 2,  0.0);
-     pCanvas->drawLine(x + itsRadius/2, y,  x + 3*itsRadius, y);
-     pCanvas->drawLine(x - itsRadius/2, y,  x - 3*itsRadius, y);
-     pCanvas->drawLine(x, y + itsRadius/2,  x, y + 3*itsRadius);
-     pCanvas->drawLine(x, y - itsRadius/2,  x, y - 3*itsRadius);
-  }
-  resetClip();
-  itsShowing = True;
-}
+		} else {
+			//pCanvas->drawEllipse(x, y,  itsRadius, itsRadius,  0.0);
+			pCanvas->drawEllipse(x, y,  itsRadius * 2, itsRadius * 2,  0.0);
+			pCanvas->drawLine(x + itsRadius/2, y,  x + 3*itsRadius, y);
+			pCanvas->drawLine(x - itsRadius/2, y,  x - 3*itsRadius, y);
+			pCanvas->drawLine(x, y + itsRadius/2,  x, y + 3*itsRadius);
+			pCanvas->drawLine(x, y - itsRadius/2,  x, y - 3*itsRadius);
+		}
+		resetClip();
+		itsShowing = True;
+	}
 
-void MWCCrosshairTool::handleEvent(DisplayEvent& ev) {
-  // currently just for reset events.
-  ResetCrosshairEvent* rchev = dynamic_cast<ResetCrosshairEvent*>(&ev);
-  if(rchev != 0) reset(rchev->skipRefresh());
-  MultiWCTool::handleEvent(ev);  }	// Let base class handle too.
+	void MWCCrosshairTool::handleEvent(DisplayEvent& ev) {
+		// currently just for reset events.
+		ResetCrosshairEvent* rchev = dynamic_cast<ResetCrosshairEvent*>(&ev);
+		if(rchev != 0) reset(rchev->skipRefresh());
+		MultiWCTool::handleEvent(ev);
+	}	// Let base class handle too.
 
-void MWCCrosshairTool::reset(Bool skipRefresh) {
-  itsBtnDn = False;
-  itsShow = False;
-  if(itsShowing && !skipRefresh) { refresh(); itsShowing = False;  }
-}
+	void MWCCrosshairTool::reset(Bool skipRefresh) {
+		itsBtnDn = False;
+		itsShow = False;
+		if(itsShowing && !skipRefresh) {
+			refresh();
+			itsShowing = False;
+		}
+	}
 
-void MWCCrosshairTool::setCross(Bool cross) {
-  itsCross = cross;
-}
+	void MWCCrosshairTool::setCross(Bool cross) {
+		itsCross = cross;
+	}
 
 } //# NAMESPACE CASA - END
 

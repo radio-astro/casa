@@ -37,36 +37,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Base class for scrolling DisplayData objects
 // </summary>
 
-class ScrollingRasterDM : public PrincipalAxesDM {
+	class ScrollingRasterDM : public PrincipalAxesDM {
 
-public:
+	public:
 
-  ScrollingRasterDM(uInt xAxis, uInt yAxis, Int mAxis, 
-    IPosition fixedPos, PrincipalAxesDD *padd);
+		ScrollingRasterDM(uInt xAxis, uInt yAxis, Int mAxis,
+		                  IPosition fixedPos, PrincipalAxesDD *padd);
 
-protected:
+	protected:
 
-  virtual void setup(IPosition fixedPos);
-  virtual IPosition dataShape();
-  
-  virtual uInt dataDrawSelf(WorldCanvas *wCanvas,
-  	const Vector<Double> &blc,
-	const Vector<Double> &trc,
-	const IPosition &start,
-	const IPosition &sliceShape,
-	const IPosition &stride,
-	const Bool usePixelEdges = False);
+		virtual void setup(IPosition fixedPos);
+		virtual IPosition dataShape();
+
+		virtual uInt dataDrawSelf(WorldCanvas *wCanvas,
+		                          const Vector<Double> &blc,
+		                          const Vector<Double> &trc,
+		                          const IPosition &start,
+		                          const IPosition &sliceShape,
+		                          const IPosition &stride,
+		                          const Bool usePixelEdges = False);
 
 
-  virtual Bool dataGetSlice(Matrix<Float>& data,
-		     Matrix<Bool> &mask,
-		     const IPosition& start,
-	     	     const IPosition& sliceShape,
-		     const IPosition& stride);
+		virtual Bool dataGetSlice(Matrix<Float>& data,
+		                          Matrix<Bool> &mask,
+		                          const IPosition& start,
+		                          const IPosition& sliceShape,
+		                          const IPosition& stride);
 
-private:
+	private:
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

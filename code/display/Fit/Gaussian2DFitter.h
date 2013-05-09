@@ -34,47 +34,47 @@
 
 namespace casa {
 
-template <class T> class ImageInterface;
+	template <class T> class ImageInterface;
 
-/**
- * Performs a 2DGaussian fit of an image in a background thread.
- */
+	/**
+	 * Performs a 2DGaussian fit of an image in a background thread.
+	 */
 
-class Gaussian2DFitter : public QThread {
-public:
-	Gaussian2DFitter();
-	void run();
-	bool isFitSuccessful() const;
-	void setFitParameters( ImageInterface<Float>* image, const String& box,
-			int channelNum, const String& estimatesFileName, const String& residualImageFile,
-			const Vector<Float>& includeVector, const Vector<Float>& excludeVector);
-	QString getErrorMessage() const;
-	QString getLogFilePath() const;
-	void setWriteLogFile( bool write );
-	QString getResidualImagePath() const;
-	void setFilePath( String path );
-	bool writeRegionFile() const;
-	QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName) const;
-	virtual ~Gaussian2DFitter();
+	class Gaussian2DFitter : public QThread {
+	public:
+		Gaussian2DFitter();
+		void run();
+		bool isFitSuccessful() const;
+		void setFitParameters( ImageInterface<Float>* image, const String& box,
+		                       int channelNum, const String& estimatesFileName, const String& residualImageFile,
+		                       const Vector<Float>& includeVector, const Vector<Float>& excludeVector);
+		QString getErrorMessage() const;
+		QString getLogFilePath() const;
+		void setWriteLogFile( bool write );
+		QString getResidualImagePath() const;
+		void setFilePath( String path );
+		bool writeRegionFile() const;
+		QList<RegionShape*> toDrawingDisplay( ImageInterface<Float>* image, const QString& colorName) const;
+		virtual ~Gaussian2DFitter();
 
-private:
-	Gaussian2DFitter( const Gaussian2DFitter& other );
-	Gaussian2DFitter operator=( const Gaussian2DFitter& other );
-	QString errorMsg;
-	bool successfulFit;
-	bool logFile;
-	ComponentListWrapper fitResultList;
-	ImageInterface<Float>* image;
-	Vector<Float> includePixs;
-	Vector<Float> excludePixs;
-	String pixelBox;
-	String filePath;
-	int channelNumber;
-	String estimateFile;
-	String residualImageFile;
-	const QString LOG_SUFFIX;
-	const QString REGION_SUFFIX;
-};
+	private:
+		Gaussian2DFitter( const Gaussian2DFitter& other );
+		Gaussian2DFitter operator=( const Gaussian2DFitter& other );
+		QString errorMsg;
+		bool successfulFit;
+		bool logFile;
+		ComponentListWrapper fitResultList;
+		ImageInterface<Float>* image;
+		Vector<Float> includePixs;
+		Vector<Float> excludePixs;
+		String pixelBox;
+		String filePath;
+		int channelNumber;
+		String estimateFile;
+		String residualImageFile;
+		const QString LOG_SUFFIX;
+		const QString REGION_SUFFIX;
+	};
 
 } /* namespace casa */
 #endif /* GAUSSIAN2DFITTER_H_ */

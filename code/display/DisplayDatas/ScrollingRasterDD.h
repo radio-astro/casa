@@ -46,151 +46,192 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WCResampleHandler;
+	class WCResampleHandler;
 
-class ScrollingRasterDM;
+	class ScrollingRasterDM;
 
-class ScrollingRasterDD : public PrincipalAxesDD {
+	class ScrollingRasterDD : public PrincipalAxesDD {
 
-public:
-  ScrollingRasterDD(const uInt nDim, 
-    const IPosition, const Vector<String>, const Vector<String>,
-    uInt sAxis = 2, uInt scanNo = 100);
-  virtual ~ScrollingRasterDD();
-  
-  virtual void updateLattice(const Record &){};
-  virtual void updateLattice(Array<Float> &, CoordinateSystem &);
-  
-  virtual String className() { 
-    return String("ScrollingRasterDD"); 
-  }
+	public:
+		ScrollingRasterDD(const uInt nDim,
+		                  const IPosition, const Vector<String>, const Vector<String>,
+		                  uInt sAxis = 2, uInt scanNo = 100);
+		virtual ~ScrollingRasterDD();
 
-  virtual Bool setOptions(Record &rec, Record &recOut);
-  virtual Record getOptions();
+		virtual void updateLattice(const Record &) {};
+		virtual void updateLattice(Array<Float> &, CoordinateSystem &);
 
-  virtual void setDefaultOptions();
-  
-  // distribute options to all the axis labellers - empty here, we use WorldAxesDD
-  virtual Bool setLabellerOptions(Record &, Record &){return False;}
+		virtual String className() {
+			return String("ScrollingRasterDD");
+		}
 
-  // retrieve options from the axis labellers - empty here, we use WorldAxesDD
-  virtual Record getLabellerOptions(){Record rec; return rec;}
-  
+		virtual Bool setOptions(Record &rec, Record &recOut);
+		virtual Record getOptions();
 
-  virtual Bool sizeControl(WorldCanvasHolder& wcHolder, 
-		   AttributeBuffer& holderBuf);
+		virtual void setDefaultOptions();
 
-  virtual WCResampleHandler *resampleHandler() { return itsResampleHandler; }
+		// distribute options to all the axis labellers - empty here, we use WorldAxesDD
+		virtual Bool setLabellerOptions(Record &, Record &) {
+			return False;
+		}
 
-protected:
-  friend class ScrollingRasterDM;
-  
-  virtual void updateLatticeConcat(Array<Float>* = NULL , CoordinateSystem* = NULL);
-  virtual void initLattice(const Record &);
-  virtual void initLattice(const Float, const Float, const uInt);
+		// retrieve options from the axis labellers - empty here, we use WorldAxesDD
+		virtual Record getLabellerOptions() {
+			Record rec;
+			return rec;
+		}
 
-  virtual void recreateEmptyLattices(uInt changedScanNumber = 0);
 
-  virtual const IPosition dataShape() const;
-  virtual const uInt dataDim() const;
-  virtual const Unit dataUnit() const;
-  virtual void setupElements();
-  virtual void getMinAndMax(); 
-  virtual void updateLatticeStatistics();
-  
-  //virtual void refresh(Bool);
-  
-  virtual Bool labelAxes(const WCRefreshEvent &ev);
-  
-  virtual MaskedLattice<Float>* maskedLattice() 
-    { return itsLatticeConcatPtr; }
+		virtual Bool sizeControl(WorldCanvasHolder& wcHolder,
+		                         AttributeBuffer& holderBuf);
 
-  virtual Display::DisplayDataType classType()
-    { return Display::Raster; }
-  // Pure virtual function from DisplayData...
-  String dataType() const { return "scrolling"; }
-  
-  virtual String showValue(const Vector<Double> &world);
-  virtual const Float dataValue(IPosition pos);
-  virtual const Bool maskValue(const IPosition &pos);
+		virtual WCResampleHandler *resampleHandler() {
+			return itsResampleHandler;
+		}
 
-  virtual Vector<String> worldAxisNames() const;
-  virtual Vector<String> worldAxisUnits() const;
+	protected:
+		friend class ScrollingRasterDM;
 
-  // (Required) default constructor.
-  ScrollingRasterDD(uInt mAxis=2, uInt scanNo=100);
+		virtual void updateLatticeConcat(Array<Float>* = NULL , CoordinateSystem* = NULL);
+		virtual void initLattice(const Record &);
+		virtual void initLattice(const Float, const Float, const uInt);
 
-  // (Required) copy constructor.
-  ScrollingRasterDD(const ScrollingRasterDD &other);
+		virtual void recreateEmptyLattices(uInt changedScanNumber = 0);
 
-  // (Required) copy assignment.
-  void operator=(const ScrollingRasterDD &other);
+		virtual const IPosition dataShape() const;
+		virtual const uInt dataDim() const;
+		virtual const Unit dataUnit() const;
+		virtual void setupElements();
+		virtual void getMinAndMax();
+		virtual void updateLatticeStatistics();
 
-  // Set Spectral preference -> not used here.
-  virtual void setSpectralPreference (
-    CoordinateSystem& /*cSys*/, const String&, const String& ){}
-  
-  void setHeaderMin(Float x){ itsHeaderMin = x; }
-  void setHeaderMax(Float x){ itsHeaderMax = x; }
-  Float headerMin() { return itsHeaderMin; }
-  Float headerMax() { return itsHeaderMax; }
-  void setScanNumber(uInt x){ itsScanNumber = x; }
-  uInt scanNumber() { return itsScanNumber; }
-  Bool headerReceived() { return itsHeaderReceived; }
-  void setHeaderReceived(Bool x) { itsHeaderReceived = x; }
-  
-  IPosition latticesShape(){ return itsLattices[0]->shape(); }
-  uInt shiftAxis(){ return itsShiftAxis; }
-  
-  void setNeedResize(const Bool x) { itsNeedResize = x; }
-  Bool needResize() { return itsNeedResize; }
-  
-  IPosition fixedPos() { return itsFixedPos; }
+		//virtual void refresh(Bool);
 
-  //void setPlaneNumber(const uInt x) { itsPlaneNumber = x; }
-  //uInt planeNumber() { return itsPlaneNumber; }
+		virtual Bool labelAxes(const WCRefreshEvent &ev);
 
-  void setLatticeShape(const IPosition x) { itsLatticeShape = x; }
-  IPosition latticeShape() { return itsLatticeShape; }
+		virtual MaskedLattice<Float>* maskedLattice() {
+			return itsLatticeConcatPtr;
+		}
 
-private:
-  // Worker function for c'tors.
-  void initSRDD(const Vector<String> aAxisNames, const Vector<String> aAxisUnits,
-		uInt mAxis);
+		virtual Display::DisplayDataType classType() {
+			return Display::Raster;
+		}
+		// Pure virtual function from DisplayData...
+		String dataType() const {
+			return "scrolling";
+		}
 
-  uInt nDim; 
+		virtual String showValue(const Vector<Double> &world);
+		virtual const Float dataValue(IPosition pos);
+		virtual const Bool maskValue(const IPosition &pos);
 
-  //ImageInterface<Float> *itsImagePtr;
-  ////Array<Float>          *itsBaseArrayPtr;
-  LatticeConcat<Float>* itsLatticeConcatPtr;
-  //MaskedLattice<Float>  *itsMaskedLatticePtr;
-  LatticeStatistics<Float> *itsLatticeStatisticsPtr;
-  SubLattice<Float> *itsFilledDisplayedLatticePtr;
-  //Int itsM2Axis;
-  IPosition itsFixedPos;
-  
-  Int itsFilledCount;
+		virtual Vector<String> worldAxisNames() const;
+		virtual Vector<String> worldAxisUnits() const;
 
-  MaskedLattice<Float> **itsLattices;
+		// (Required) default constructor.
+		ScrollingRasterDD(uInt mAxis=2, uInt scanNo=100);
 
-  Bool itsNeedResize;
-  uInt itsShiftAxis;
+		// (Required) copy constructor.
+		ScrollingRasterDD(const ScrollingRasterDD &other);
 
-  Bool itsHeaderReceived;
-  Float itsHeaderMin;
-  Float itsHeaderMax;
-  uInt itsScanNumber;
-  IPosition itsLatticeShape;
-  //IPosition itsScanShape;
-  //uInt itsPlaneNumber;
-  
-   // storage for the display parameters
-  String itsResample;
+		// (Required) copy assignment.
+		void operator=(const ScrollingRasterDD &other);
 
-  // pointer to resampler
-  WCResampleHandler *itsResampleHandler;
+		// Set Spectral preference -> not used here.
+		virtual void setSpectralPreference (
+		    CoordinateSystem& /*cSys*/, const String&, const String& ) {}
 
-};
+		void setHeaderMin(Float x) {
+			itsHeaderMin = x;
+		}
+		void setHeaderMax(Float x) {
+			itsHeaderMax = x;
+		}
+		Float headerMin() {
+			return itsHeaderMin;
+		}
+		Float headerMax() {
+			return itsHeaderMax;
+		}
+		void setScanNumber(uInt x) {
+			itsScanNumber = x;
+		}
+		uInt scanNumber() {
+			return itsScanNumber;
+		}
+		Bool headerReceived() {
+			return itsHeaderReceived;
+		}
+		void setHeaderReceived(Bool x) {
+			itsHeaderReceived = x;
+		}
+
+		IPosition latticesShape() {
+			return itsLattices[0]->shape();
+		}
+		uInt shiftAxis() {
+			return itsShiftAxis;
+		}
+
+		void setNeedResize(const Bool x) {
+			itsNeedResize = x;
+		}
+		Bool needResize() {
+			return itsNeedResize;
+		}
+
+		IPosition fixedPos() {
+			return itsFixedPos;
+		}
+
+		//void setPlaneNumber(const uInt x) { itsPlaneNumber = x; }
+		//uInt planeNumber() { return itsPlaneNumber; }
+
+		void setLatticeShape(const IPosition x) {
+			itsLatticeShape = x;
+		}
+		IPosition latticeShape() {
+			return itsLatticeShape;
+		}
+
+	private:
+		// Worker function for c'tors.
+		void initSRDD(const Vector<String> aAxisNames, const Vector<String> aAxisUnits,
+		              uInt mAxis);
+
+		uInt nDim;
+
+		//ImageInterface<Float> *itsImagePtr;
+		////Array<Float>          *itsBaseArrayPtr;
+		LatticeConcat<Float>* itsLatticeConcatPtr;
+		//MaskedLattice<Float>  *itsMaskedLatticePtr;
+		LatticeStatistics<Float> *itsLatticeStatisticsPtr;
+		SubLattice<Float> *itsFilledDisplayedLatticePtr;
+		//Int itsM2Axis;
+		IPosition itsFixedPos;
+
+		Int itsFilledCount;
+
+		MaskedLattice<Float> **itsLattices;
+
+		Bool itsNeedResize;
+		uInt itsShiftAxis;
+
+		Bool itsHeaderReceived;
+		Float itsHeaderMin;
+		Float itsHeaderMax;
+		uInt itsScanNumber;
+		IPosition itsLatticeShape;
+		//IPosition itsScanShape;
+		//uInt itsPlaneNumber;
+
+		// storage for the display parameters
+		String itsResample;
+
+		// pointer to resampler
+		WCResampleHandler *itsResampleHandler;
+
+	};
 
 
 } //# NAMESPACE CASA - END

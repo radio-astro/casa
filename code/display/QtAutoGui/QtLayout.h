@@ -42,70 +42,67 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-class QtFlowLayout : public QLayout
-    {
-    public:
-        QtFlowLayout(QWidget *parent, int margin = 0, int spacing = -1);
-        QtFlowLayout(int spacing = -1);
-        ~QtFlowLayout();
+	class QtFlowLayout : public QLayout {
+	public:
+		QtFlowLayout(QWidget *parent, int margin = 0, int spacing = -1);
+		QtFlowLayout(int spacing = -1);
+		~QtFlowLayout();
 
-        void addItem(QLayoutItem *item);
-        Qt::Orientations expandingDirections() const;
-        bool hasHeightForWidth() const;
-        int heightForWidth(int) const;
-        int count() const;
-        QLayoutItem *itemAt(int index) const;
-        QSize minimumSize() const;
-        void setGeometry(const QRect &rect);
-        QSize sizeHint() const;
-        QLayoutItem *takeAt(int index);
+		void addItem(QLayoutItem *item);
+		Qt::Orientations expandingDirections() const;
+		bool hasHeightForWidth() const;
+		int heightForWidth(int) const;
+		int count() const;
+		QLayoutItem *itemAt(int index) const;
+		QSize minimumSize() const;
+		void setGeometry(const QRect &rect);
+		QSize sizeHint() const;
+		QLayoutItem *takeAt(int index);
 
-    private:
-        int doLayout(const QRect &rect, bool testOnly) const;
+	private:
+		int doLayout(const QRect &rect, bool testOnly) const;
 
-        QList<QLayoutItem *> itemList;
-};
+		QList<QLayoutItem *> itemList;
+	};
 
 
-class QtBorderLayout : public QLayout
-{
-public:
-    enum Position { West, North, South, East, Center };
+	class QtBorderLayout : public QLayout {
+	public:
+		enum Position { West, North, South, East, Center };
 
-    QtBorderLayout(QWidget *parent, int margin = 0, int spacing = -1);
-    QtBorderLayout(int spacing = -1);
-    ~QtBorderLayout();
+		QtBorderLayout(QWidget *parent, int margin = 0, int spacing = -1);
+		QtBorderLayout(int spacing = -1);
+		~QtBorderLayout();
 
-    void addItem(QLayoutItem *item);
-    void addWidget(QWidget *widget, Position position);
-    Qt::Orientations expandingDirections() const;
-    bool hasHeightForWidth() const;
-    int count() const;
-    QLayoutItem *itemAt(int index) const;
-    QSize minimumSize() const;
-    void setGeometry(const QRect &rect);
-    QSize sizeHint() const;
-    QLayoutItem *takeAt(int index);
+		void addItem(QLayoutItem *item);
+		void addWidget(QWidget *widget, Position position);
+		Qt::Orientations expandingDirections() const;
+		bool hasHeightForWidth() const;
+		int count() const;
+		QLayoutItem *itemAt(int index) const;
+		QSize minimumSize() const;
+		void setGeometry(const QRect &rect);
+		QSize sizeHint() const;
+		QLayoutItem *takeAt(int index);
 
-    void add(QLayoutItem *item, Position position);
+		void add(QLayoutItem *item, Position position);
 
-private:
-    struct ItemWrapper
-    {
-	ItemWrapper(QLayoutItem *i, Position p) {
-	    item = i;
-	    position = p;
-	}
+	private:
+		struct ItemWrapper {
+			ItemWrapper(QLayoutItem *i, Position p) {
+				item = i;
+				position = p;
+			}
 
-	QLayoutItem *item;
-	Position position;
-    };
+			QLayoutItem *item;
+			Position position;
+		};
 
-    enum SizeType { MinimumSize, SizeHint };
-    QSize calculateSize(SizeType sizeType) const;
+		enum SizeType { MinimumSize, SizeHint };
+		QSize calculateSize(SizeType sizeType) const;
 
-    QList<ItemWrapper *> list;
-};
+		QList<ItemWrapper *> list;
+	};
 
 } //# NAMESPACE CASA - END
 

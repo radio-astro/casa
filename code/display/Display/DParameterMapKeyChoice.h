@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DPARAMETERMAPKEYCHOICE_H
 #define TRIALDISPLAY_DPARAMETERMAPKEYCHOICE_H
@@ -35,7 +35,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// Implementation of DParameterChoice to store parameter and 
+// Implementation of DParameterChoice to store parameter and
 // associated key
 // </summary>
 
@@ -59,14 +59,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // class=DParameterChoice>DParameterChoice</linkto> and provides a
 // choice-type parameter.  The string selection correspond to a "key"
 // selection. It is desgined for use with, for example, an enum. In such a
-// case, each string value can have an associated integer value which 
+// case, each string value can have an associated integer value which
 // can be cast to / from a enum.
 // </synopsis>
 // <example>
 
 // A DParameterMapKeyChoice can easily be used to store and update any
 // parameter which can be expressed as a selection from two or more
-// options. 
+// options.
 // <srcblock>
 // Vector<String> myStrings(2);
 //   myStrings(0) = "Ten";
@@ -76,13 +76,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   myInts(1) = 20;
 //
 // // ...
-// DParameterMapKeyChoice mchoice("number", "Choose a number of ...", 
+// DParameterMapKeyChoice mchoice("number", "Choose a number of ...",
 //                          "Select the number of ... to use for ...",
 //                          myStrings, myInts,
 //                          myStrings(0), myStrings(0));
 //
 // // ...
-// 
+//
 // // update the parameter from some Record (String representation);
 // mchoice.fromRecord(rec);
 //
@@ -95,7 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <motivation>
 // Often at C++ level, parameters will be described by enums etc.
-// At glish level however, it is often required for these parameters 
+// At glish level however, it is often required for these parameters
 // to be displayed as text options. This class is designed to make that
 // process easier. It can also be used more generally to associate any key
 // with a text option.
@@ -110,70 +110,71 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Template the class so a "key" can be anything.
 // </todo>
 
-class DParameterMapKeyChoice : public DParameterChoice {
+	class DParameterMapKeyChoice : public DParameterChoice {
 
- public:
+	public:
 
-  // Constructor taking the name of the parameter, a short
-  // description, some help text, the enum which is to form
-  // the basis of the options (must have an overloaded ostream <<
-  // operator), a vector of integers corresponding to the options
-  // within that enum, a default value, an initial value, and the 
-  // context of the parameter. Obviously the
-  // <src>defaultvalue</src> and <src>value</src> parameters must
-  // exist in the list of allowed options, otherwise an exception
-  // is thrown.
-  DParameterMapKeyChoice(const String name, const String description,
-			 const String help, const Vector<String>& options,
-			 const Vector<Int>& keys,
-			 const String defaultvalue, const String value, 
-			 const String context = "");
+		// Constructor taking the name of the parameter, a short
+		// description, some help text, the enum which is to form
+		// the basis of the options (must have an overloaded ostream <<
+		// operator), a vector of integers corresponding to the options
+		// within that enum, a default value, an initial value, and the
+		// context of the parameter. Obviously the
+		// <src>defaultvalue</src> and <src>value</src> parameters must
+		// exist in the list of allowed options, otherwise an exception
+		// is thrown.
+		DParameterMapKeyChoice(const String name, const String description,
+		                       const String help, const Vector<String>& options,
+		                       const Vector<Int>& keys,
+		                       const String defaultvalue, const String value,
+		                       const String context = "");
 
-  
-  // (Required) copy constructor.
-  DParameterMapKeyChoice(const DParameterMapKeyChoice &other);
 
-  // Destructor.
-  virtual ~DParameterMapKeyChoice();
+		// (Required) copy constructor.
+		DParameterMapKeyChoice(const DParameterMapKeyChoice &other);
 
-  // (Required) copy assignment.
-  DParameterMapKeyChoice &operator=(const DParameterMapKeyChoice &other);
+		// Destructor.
+		virtual ~DParameterMapKeyChoice();
 
-  // Return the list of all keys for this parameter.
-  Vector<Int> keys() const
-  { return itsKeys; }
+		// (Required) copy assignment.
+		DParameterMapKeyChoice &operator=(const DParameterMapKeyChoice &other);
 
-  // Return the current value of this parameter.
-  Int keyValue();
+		// Return the list of all keys for this parameter.
+		Vector<Int> keys() const {
+			return itsKeys;
+		}
 
-  // Thise function has very little implementation, it is here so if
-  // a user changes the list of options, we can ensure we do not make a 
-  // mistake when looking up its corresponding key
-  void setOptions(const Vector<String>& newOptions) {
-    itsLastString = "";
-    DParameterChoice::setOptions(newOptions);
-  }
+		// Return the current value of this parameter.
+		Int keyValue();
 
-  // Set the current value, based on a key.
-  Bool setKeyValue(const Int newValue);
+		// Thise function has very little implementation, it is here so if
+		// a user changes the list of options, we can ensure we do not make a
+		// mistake when looking up its corresponding key
+		void setOptions(const Vector<String>& newOptions) {
+			itsLastString = "";
+			DParameterChoice::setOptions(newOptions);
+		}
 
-  // Set or change the list of allowed options for this parameter.
-  void setKeys (const Vector<Int>& newKeys);
+		// Set the current value, based on a key.
+		Bool setKeyValue(const Int newValue);
 
-protected:
-  
-  // (Required) default constructor.
-  DParameterMapKeyChoice();
-  
-private:
-  // Lookup the key based on the string provided
-  Bool lookUpKey(const String& value);
+		// Set or change the list of allowed options for this parameter.
+		void setKeys (const Vector<Int>& newKeys);
 
-  // Store for the allowed options for this parameter.
-  Vector<Int> itsKeys;
-  Int itsKeyValue;
-  String itsLastString;
-};
+	protected:
+
+		// (Required) default constructor.
+		DParameterMapKeyChoice();
+
+	private:
+		// Lookup the key based on the string provided
+		Bool lookUpKey(const String& value);
+
+		// Store for the allowed options for this parameter.
+		Vector<Int> itsKeys;
+		Int itsKeyValue;
+		String itsLastString;
+	};
 
 
 } //# NAMESPACE CASA - END

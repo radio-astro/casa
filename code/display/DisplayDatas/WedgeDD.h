@@ -34,20 +34,20 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WCPowerScaleHandler;
-template <class T> class Matrix;
+	class WCPowerScaleHandler;
+	template <class T> class Matrix;
 
-class WedgeDM;
+	class WedgeDM;
 
-// <summary> 
+// <summary>
 // A DisplayData to draw color wedges
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <prerequisite>
 //   <li> DisplayData
 //   </li> CachingDisplayData
@@ -73,111 +73,120 @@ class WedgeDM;
 // Users want wedges
 //</motivation>
 //
-// <todo> 
+// <todo>
 // Transposed wedges
 // </todo>
 //
 
-class WedgeDD : public ActiveCaching2dDD {
+	class WedgeDD : public ActiveCaching2dDD {
 
-public:
+	public:
 
-  WedgeDD( DisplayData *image );
+		WedgeDD( DisplayData *image );
 
-  // Destructor.
-  virtual ~WedgeDD();
+		// Destructor.
+		virtual ~WedgeDD();
 
-  // Constructor help function, creates coordinatesystem and fills data Matrix
-  virtual void setup();
+		// Constructor help function, creates coordinatesystem and fills data Matrix
+		virtual void setup();
 
-  // The coordinate sydtem needs to be update when the data range changes
-  virtual void updateCsys();
-  
-  // Axis labeller, 5th step in the WCHolder refresh cycle
-  virtual Bool labelAxes(const WCRefreshEvent &ev);
+		// The coordinate sydtem needs to be update when the data range changes
+		virtual void updateCsys();
 
-  bool isDisplayable( ) const;
+		// Axis labeller, 5th step in the WCHolder refresh cycle
+		virtual Bool labelAxes(const WCRefreshEvent &ev);
 
-  // Return the data unit.
-  virtual const Unit dataUnit() const;
-  const IPosition dataShape() const { return IPosition( ); }
-  const uInt dataDim() const { return 0; }
-  std::vector<int> displayAxes( ) const { return std::vector<int>( ); }
+		bool isDisplayable( ) const;
 
-  // Format the wedge value at the given world position.
-  virtual String showValue(const Vector<Double> &world);
+		// Return the data unit.
+		virtual const Unit dataUnit() const;
+		const IPosition dataShape() const {
+			return IPosition( );
+		}
+		const uInt dataDim() const {
+			return 0;
+		}
+		std::vector<int> displayAxes( ) const {
+			return std::vector<int>( );
+		}
 
-  // Install the default options for this DisplayData.
-  virtual void setDefaultOptions();
-  
-  // Apply options stored in <src>rec</src> to the DisplayData.  A
-  // return value of <src>True</src> means a refresh is needed.
-  // <src>recOut</src> contains any fields which were implicitly 
-  // changed as a result of the call to this function.
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Format the wedge value at the given world position.
+		virtual String showValue(const Vector<Double> &world);
 
-  // Retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// Install the default options for this DisplayData.
+		virtual void setDefaultOptions();
 
-  // Return the type of this DisplayData.
-  virtual Display::DisplayDataType classType()
-  { return Display::Raster;}
-  // Pure virtual function from DisplayData...
-  String dataType() const { return "wedge"; }
-  
-  // Create a new AxesDisplayMethod for drawing on the given
-  // WorldCanvas when the AttributeBuffers are suitably matched to the
-  // current state of this DisplayData and of the WorldCanvas/Holder.
-  // The tag is a unique number used to identify the age of the newly
-  // constructed CachingDisplayMethod.
-  virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
-					 AttributeBuffer *wchAttributes,
-					 AttributeBuffer *ddAttributes,
-					 CachingDisplayData *dd);
- 
-  // Return the current options of this DisplayData as an
-  // AttributeBuffer.
-  virtual AttributeBuffer optionsAsAttributes();
+		// Apply options stored in <src>rec</src> to the DisplayData.  A
+		// return value of <src>True</src> means a refresh is needed.
+		// <src>recOut</src> contains any fields which were implicitly
+		// changed as a result of the call to this function.
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-  // Take actions on removal from WC[H] (notably, deletion of drawlists).
-  virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
-				Bool ignoreRefresh = False);
+		// Retrieve the current and default options and parameter types.
+		virtual Record getOptions();
 
-  const static String WEDGE_PREFIX;
+		// Return the type of this DisplayData.
+		virtual Display::DisplayDataType classType() {
+			return Display::Raster;
+		}
+		// Pure virtual function from DisplayData...
+		String dataType() const {
+			return "wedge";
+		}
 
-protected:
+		// Create a new AxesDisplayMethod for drawing on the given
+		// WorldCanvas when the AttributeBuffers are suitably matched to the
+		// current state of this DisplayData and of the WorldCanvas/Holder.
+		// The tag is a unique number used to identify the age of the newly
+		// constructed CachingDisplayMethod.
+		virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
+		        AttributeBuffer *wchAttributes,
+		        AttributeBuffer *ddAttributes,
+		        CachingDisplayData *dd);
+
+		// Return the current options of this DisplayData as an
+		// AttributeBuffer.
+		virtual AttributeBuffer optionsAsAttributes();
+
+		// Take actions on removal from WC[H] (notably, deletion of drawlists).
+		virtual void notifyUnregister(WorldCanvasHolder& wcHolder,
+		                              Bool ignoreRefresh = False);
+
+		const static String WEDGE_PREFIX;
+
+	protected:
 
 
 
-private:
-  // (Required) copy constructor.
-   WedgeDD(const WedgeDD &other);
+	private:
+		// (Required) copy constructor.
+		WedgeDD(const WedgeDD &other);
 
-   // (Required) copy assignment.
-   void operator=(const WedgeDD &other);
-  friend class WedgeDM;
-  // Data minimum and maximum to set up the coordinate system
-  Float itsMin, itsMax;
-  // the length of the Vector
-  uInt itsLength;
-  // the unit of the input data
-  String itsDataUnit;
-  //<group>
-  // the power law adjustment for for the scle handler
-  Float itsPowerCycles;
-  WCPowerScaleHandler* itsPowerScaleHandler;
+		// (Required) copy assignment.
+		void operator=(const WedgeDD &other);
+		friend class WedgeDM;
+		// Data minimum and maximum to set up the coordinate system
+		Float itsMin, itsMax;
+		// the length of the Vector
+		uInt itsLength;
+		// the unit of the input data
+		String itsDataUnit;
+		//<group>
+		// the power law adjustment for for the scle handler
+		Float itsPowerCycles;
+		WCPowerScaleHandler* itsPowerScaleHandler;
 
-  String itsOptionsMode;
-  //</group>
-  // the axis labeller  
-  WCCSNLAxisLabeller itsAxisLabeller;
-  // The actual colorbar data
-  Matrix<Float> itsColorbar;
-  // the local coordinate system - gets exported to the parent DD
-  CoordinateSystem itsCoordinateSystem;
+		String itsOptionsMode;
+		//</group>
+		// the axis labeller
+		WCCSNLAxisLabeller itsAxisLabeller;
+		// The actual colorbar data
+		Matrix<Float> itsColorbar;
+		// the local coordinate system - gets exported to the parent DD
+		CoordinateSystem itsCoordinateSystem;
 
-  DlHandle<DisplayData> ihandle_;
-};
+		DlHandle<DisplayData> ihandle_;
+	};
 
 
 } //# NAMESPACE CASA - END

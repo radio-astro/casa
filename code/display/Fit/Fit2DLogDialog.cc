@@ -30,35 +30,34 @@
 
 namespace casa {
 
-Fit2DLogDialog::Fit2DLogDialog(QWidget *parent)
-    : QDialog(parent){
-	ui.setupUi(this);
-	this->setWindowTitle( "Fit 2D Results");
-	connect(ui.closeButton, SIGNAL(clicked()), this, SLOT(logViewFinished()));
-}
-
-bool Fit2DLogDialog::setLog( const QString& fullPath ){
-	QFile logFile( fullPath);
-	bool successfulRead = true;
-	if ( logFile.open(QIODevice::ReadOnly) ){
-	   QTextStream in( &logFile );
-	   while ( !in.atEnd() ){
-	          QString line = in.readLine();
-	          ui.logTextEdit->append( line );
-	   }
-	   logFile.close();
+	Fit2DLogDialog::Fit2DLogDialog(QWidget *parent)
+		: QDialog(parent) {
+		ui.setupUi(this);
+		this->setWindowTitle( "Fit 2D Results");
+		connect(ui.closeButton, SIGNAL(clicked()), this, SLOT(logViewFinished()));
 	}
-	else {
-		successfulRead = false;
+
+	bool Fit2DLogDialog::setLog( const QString& fullPath ) {
+		QFile logFile( fullPath);
+		bool successfulRead = true;
+		if ( logFile.open(QIODevice::ReadOnly) ) {
+			QTextStream in( &logFile );
+			while ( !in.atEnd() ) {
+				QString line = in.readLine();
+				ui.logTextEdit->append( line );
+			}
+			logFile.close();
+		} else {
+			successfulRead = false;
+		}
+		return successfulRead;
 	}
-	return successfulRead;
-}
 
-void Fit2DLogDialog::logViewFinished(){
-	close();
-}
+	void Fit2DLogDialog::logViewFinished() {
+		close();
+	}
 
-Fit2DLogDialog::~Fit2DLogDialog(){
+	Fit2DLogDialog::~Fit2DLogDialog() {
 
-}
+	}
 }

@@ -34,142 +34,145 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-PassiveTableDD::PassiveTableDD(Table *table) :
-  PassiveCachingDD(),
-  itsTable(table),
-  itsQueryTable(0) {
-  installDefaultOptions();
-}
+	PassiveTableDD::PassiveTableDD(Table *table) :
+		PassiveCachingDD(),
+		itsTable(table),
+		itsQueryTable(0) {
+		installDefaultOptions();
+	}
 
-PassiveTableDD::PassiveTableDD(const String tablename) :
-  PassiveCachingDD(),
-  itsTable(0),
-  itsQueryTable(0) {
-  itsTable = new Table(tablename);
-  if (!itsTable) {
-    throw(AipsError("Cannot open named table"));
-  }
-  installDefaultOptions();
-}
+	PassiveTableDD::PassiveTableDD(const String tablename) :
+		PassiveCachingDD(),
+		itsTable(0),
+		itsQueryTable(0) {
+		itsTable = new Table(tablename);
+		if (!itsTable) {
+			throw(AipsError("Cannot open named table"));
+		}
+		installDefaultOptions();
+	}
 
-PassiveTableDD::~PassiveTableDD() {
-  if (itsQueryTable) {
-    itsQueryTable->markForDelete();
-    delete itsQueryTable;
-  }
-  if (itsTable) {
-    delete itsTable;
-  }
-}
+	PassiveTableDD::~PassiveTableDD() {
+		if (itsQueryTable) {
+			itsQueryTable->markForDelete();
+			delete itsQueryTable;
+		}
+		if (itsTable) {
+			delete itsTable;
+		}
+	}
 
-void PassiveTableDD::setDefaultOptions() {
-  PassiveCachingDD::setDefaultOptions();
-  installDefaultOptions();
-}
+	void PassiveTableDD::setDefaultOptions() {
+		PassiveCachingDD::setDefaultOptions();
+		installDefaultOptions();
+	}
 
-Bool PassiveTableDD::setOptions(Record &rec, Record &recOut) {
-  Bool ret = PassiveCachingDD::setOptions(rec, recOut);
+	Bool PassiveTableDD::setOptions(Record &rec, Record &recOut) {
+		Bool ret = PassiveCachingDD::setOptions(rec, recOut);
 
-  Bool localchange = False, error, unst;
+		Bool localchange = False, error, unst;
 
-  if (readOptionRecord(itsOptQueryString, unst,
-		       error, rec, "querystring")) {
-    arrangeQueryTable();
-    localchange = True;
-  }
+		if (readOptionRecord(itsOptQueryString, unst,
+		                     error, rec, "querystring")) {
+			arrangeQueryTable();
+			localchange = True;
+		}
 
-  return (ret || localchange);
-}
-	
-Record PassiveTableDD::getOptions() {
-  Record rec = PassiveCachingDD::getOptions();
-  
-  Record querystring;
-  querystring.define("dlformat", "querystring");
-  querystring.define("listname", "\"WHERE\" query");
-  querystring.define("ptype", "string");
-  querystring.defineRecord("default", unset());
-  querystring.define("value", itsOptQueryString);
-  querystring.define("allowunset", True);
-  rec.defineRecord("querystring", querystring);
+		return (ret || localchange);
+	}
 
-  return rec;  
-}
+	Record PassiveTableDD::getOptions() {
+		Record rec = PassiveCachingDD::getOptions();
 
-AttributeBuffer PassiveTableDD::optionsAsAttributes() {
-  AttributeBuffer buffer = PassiveCachingDD::optionsAsAttributes();
-  
-  buffer.set("querystring", itsOptQueryString);
-  
-  return buffer;
-}
+		Record querystring;
+		querystring.define("dlformat", "querystring");
+		querystring.define("listname", "\"WHERE\" query");
+		querystring.define("ptype", "string");
+		querystring.defineRecord("default", unset());
+		querystring.define("value", itsOptQueryString);
+		querystring.define("allowunset", True);
+		rec.defineRecord("querystring", querystring);
 
-Vector<String> PassiveTableDD::getColumnNamesOfType(const DataType type) {
-  uInt n = 0;
-  TableDesc tdesc(itsTable->tableDesc());
-  Vector<String> cnames = tdesc.columnNames();
-  Vector<String> retval(cnames.shape());
-  for (uInt i = 0; i < cnames.nelements(); i++) {
-    if (tdesc.columnDesc(cnames(i)).trueDataType() == type) {
-      retval(n++) = cnames(i);
-    }
-  }
-  retval.resize(n, True);
-  return retval;
-}
+		return rec;
+	}
 
-Table *PassiveTableDD::table() {
-  if (itsQueryTable) {
-    return itsQueryTable;
-  } else {
-    return itsTable;
-  }
-}
+	AttributeBuffer PassiveTableDD::optionsAsAttributes() {
+		AttributeBuffer buffer = PassiveCachingDD::optionsAsAttributes();
+
+		buffer.set("querystring", itsOptQueryString);
+
+		return buffer;
+	}
+
+	Vector<String> PassiveTableDD::getColumnNamesOfType(const DataType type) {
+		uInt n = 0;
+		TableDesc tdesc(itsTable->tableDesc());
+		Vector<String> cnames = tdesc.columnNames();
+		Vector<String> retval(cnames.shape());
+		for (uInt i = 0; i < cnames.nelements(); i++) {
+			if (tdesc.columnDesc(cnames(i)).trueDataType() == type) {
+				retval(n++) = cnames(i);
+			}
+		}
+		retval.resize(n, True);
+		return retval;
+	}
+
+	Table *PassiveTableDD::table() {
+		if (itsQueryTable) {
+			return itsQueryTable;
+		} else {
+			return itsTable;
+		}
+	}
 
 // (Required) default constructor.
-PassiveTableDD::PassiveTableDD() :
-  PassiveCachingDD() {
-}
+	PassiveTableDD::PassiveTableDD() :
+		PassiveCachingDD() {
+	}
 
 // (Required) copy constructor.
-PassiveTableDD::PassiveTableDD(const PassiveTableDD &) {
-}
+	PassiveTableDD::PassiveTableDD(const PassiveTableDD &) {
+	}
 
 // (Required) copy assignment.
-void PassiveTableDD::operator=(const PassiveTableDD &) {
-}
+	void PassiveTableDD::operator=(const PassiveTableDD &) {
+	}
 
-void PassiveTableDD::installDefaultOptions() {
-  itsOptQueryString = "";
-  arrangeQueryTable();
-}
+	void PassiveTableDD::installDefaultOptions() {
+		itsOptQueryString = "";
+		arrangeQueryTable();
+	}
 
-Bool PassiveTableDD::arrangeQueryTable() {
-  if (itsQueryTable) {
-    itsQueryTable->markForDelete();
-    delete itsQueryTable;
-  } 
-  itsQueryTable = 0;
-  if (itsOptQueryString != "") {
-    String selectStr = "SELECT ";
-    String fromStr = "FROM " + String(itsTable->tableName()) + String(" ");
-    String whereStr = "WHERE " + itsOptQueryString;
-    
-    try {
-      
-      itsQueryTable =
-          new Table(tableCommand(selectStr + fromStr + whereStr));  }
-    
-    catch (const AipsError& err) {
-      cerr<<"*** "<<err.getMesg()<<" ***"<<endl;  }
-    catch(...) { cerr<<"***Unknown query error***"<<endl;  }
-    
-    if (itsQueryTable) {
-      return True;
-    } 
-  }
-  return False;
-}
+	Bool PassiveTableDD::arrangeQueryTable() {
+		if (itsQueryTable) {
+			itsQueryTable->markForDelete();
+			delete itsQueryTable;
+		}
+		itsQueryTable = 0;
+		if (itsOptQueryString != "") {
+			String selectStr = "SELECT ";
+			String fromStr = "FROM " + String(itsTable->tableName()) + String(" ");
+			String whereStr = "WHERE " + itsOptQueryString;
+
+			try {
+
+				itsQueryTable =
+				    new Table(tableCommand(selectStr + fromStr + whereStr));
+			}
+
+			catch (const AipsError& err) {
+				cerr<<"*** "<<err.getMesg()<<" ***"<<endl;
+			} catch(...) {
+				cerr<<"***Unknown query error***"<<endl;
+			}
+
+			if (itsQueryTable) {
+				return True;
+			}
+		}
+		return False;
+	}
 
 
 } //# NAMESPACE CASA - END

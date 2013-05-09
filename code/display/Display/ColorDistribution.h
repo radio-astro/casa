@@ -44,21 +44,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <group name="Color Distribution interface">
 
-typedef struct 
-{
-unsigned int nCells;
-unsigned int nRed, nGreen, nBlue;
-} colorDistItem;
+	typedef struct {
+		unsigned int nCells;
+		unsigned int nRed, nGreen, nBlue;
+	} colorDistItem;
 
 
 // Given nCells cells, return the dimensions of an RGB or HSV color cube
 // that maximally uses those cells by finding the best fit dimensions.
 // If pow2 is True, then returned dimensions are limited to powers of two.
 // <group>
-Bool getRGBDistribution(uInt nCells, Bool pow2,
-			uInt & nRed, uInt & nGreen, uInt & nBlue);
-Bool getHSVDistribution(uInt nCells, Bool pow2,
-			uInt & nHue, uInt & nSat, uInt & nVal);
+	Bool getRGBDistribution(uInt nCells, Bool pow2,
+	                        uInt & nRed, uInt & nGreen, uInt & nBlue);
+	Bool getHSVDistribution(uInt nCells, Bool pow2,
+	                        uInt & nHue, uInt & nSat, uInt & nVal);
 // </group>
 // </group>
 

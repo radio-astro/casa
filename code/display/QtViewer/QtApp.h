@@ -54,76 +54,89 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# This class has utility for _any_ Qt casa app, not just qtviewer.
 //# Ultimately, it probably belongs outside in a different directory.
 // </synopsis>
-class QtApp {
+	class QtApp {
 
- public:
-  
-  QtApp() { init();  }   //# (You may not need to create one, though:
-  ~QtApp() {  }		 //#  everything's static).
-  
-  
-  // Return the program's [unique] QApplication object, creating it
-  // if it doesn't yet exist.
-  // Note: use QtApp::destroy() to delete the QApplication.
-  static QApplication* app( ) {
+	public:
 
-    static Int argc = 1;
-    static Char *argv[1];
-    static Char name[] = "casa.qtapp";
-    argv[0] = name;
+		QtApp() {
+			init();     //# (You may not need to create one, though:
+		}
+		~QtApp() {  }		 //#  everything's static).
 
-    QCoreApplication* qcapp = QApplication::instance();
-    if(QApplication::startingUp() || qcapp==0) {
-      qcapp = new QApplication(argc, argv);  }
-    
-    QApplication* qapp = dynamic_cast<QApplication*>(qcapp);
-    
-    if(qapp==0) {      //# This probably should not happen....
-      //# Someone created a QCoreApplication which was not a full-fledged
-      //# (i.e. gui-capable) QApplication, before calling this.  We want a
-      //# full-monty QApplication.  The following may be marginally better
-      //# than throwing/crashing if the caller is truly done with the old
-      //# QCoreApp (s/he shouldn't have called this routine otherwise).
-      delete qcapp; 
-      qapp = new QApplication(argc, argv);  }
-      
-    return qapp;  }
-  
-  
-  // Another name for app() that may be clearer during initialization....
-  static QApplication* init( ) {
-    return app( );  }
 
-  
-  // Enter the QApp's event loop.
-  static Int exec() { return app()->exec();  }
+		// Return the program's [unique] QApplication object, creating it
+		// if it doesn't yet exist.
+		// Note: use QtApp::destroy() to delete the QApplication.
+		static QApplication* app( ) {
 
-  
-  // Exit the QApp's event loop.
-  static void exit(Int returnCode=0) { app()->exit(returnCode);  }
+			static Int argc = 1;
+			static Char *argv[1];
+			static Char name[] = "casa.qtapp";
+			argv[0] = name;
 
-  
-  // Call when completely finished with Qt, if you're a stickler for cleanup.
-  static void destroy() { 
-    if(!QApplication::startingUp()) delete QApplication::instance();  }
-    
-  
-  // If True, a full-fledged QApplication has been created (though it
-  // may not necessarily be executing its event loop).
-  static Bool exists() { 
-    return !QApplication::startingUp() && 
-            dynamic_cast<QApplication*>(QApplication::instance())!=0;  }
+			QCoreApplication* qcapp = QApplication::instance();
+			if(QApplication::startingUp() || qcapp==0) {
+				qcapp = new QApplication(argc, argv);
+			}
 
-  
-  // Is the QApp executing its event loop? 
-  // (In many cases, caller probably ought to know this already...).
-  static Bool isInLoop() {
-    return exists() && app()->thread()->isRunning();  }
-	//# (Gleaned from QCoreApplication::exec() in qtapplication.cpp)
+			QApplication* qapp = dynamic_cast<QApplication*>(qcapp);
 
-  
-    
-};
+			if(qapp==0) {      //# This probably should not happen....
+				//# Someone created a QCoreApplication which was not a full-fledged
+				//# (i.e. gui-capable) QApplication, before calling this.  We want a
+				//# full-monty QApplication.  The following may be marginally better
+				//# than throwing/crashing if the caller is truly done with the old
+				//# QCoreApp (s/he shouldn't have called this routine otherwise).
+				delete qcapp;
+				qapp = new QApplication(argc, argv);
+			}
+
+			return qapp;
+		}
+
+
+		// Another name for app() that may be clearer during initialization....
+		static QApplication* init( ) {
+			return app( );
+		}
+
+
+		// Enter the QApp's event loop.
+		static Int exec() {
+			return app()->exec();
+		}
+
+
+		// Exit the QApp's event loop.
+		static void exit(Int returnCode=0) {
+			app()->exit(returnCode);
+		}
+
+
+		// Call when completely finished with Qt, if you're a stickler for cleanup.
+		static void destroy() {
+			if(!QApplication::startingUp()) delete QApplication::instance();
+		}
+
+
+		// If True, a full-fledged QApplication has been created (though it
+		// may not necessarily be executing its event loop).
+		static Bool exists() {
+			return !QApplication::startingUp() &&
+			       dynamic_cast<QApplication*>(QApplication::instance())!=0;
+		}
+
+
+		// Is the QApp executing its event loop?
+		// (In many cases, caller probably ought to know this already...).
+		static Bool isInLoop() {
+			return exists() && app()->thread()->isRunning();
+		}
+		//# (Gleaned from QCoreApplication::exec() in qtapplication.cpp)
+
+
+
+	};
 
 
 

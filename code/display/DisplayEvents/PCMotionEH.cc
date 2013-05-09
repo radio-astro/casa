@@ -31,15 +31,15 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Default Constructor Required
-PCMotionEH::PCMotionEH() {
-}
+	PCMotionEH::PCMotionEH() {
+	}
 
-void PCMotionEH::operator ()(const PCMotionEvent &) {
-}
+	void PCMotionEH::operator ()(const PCMotionEvent &) {
+	}
 
 // Destructor
-PCMotionEH::~PCMotionEH() {
-}
+	PCMotionEH::~PCMotionEH() {
+	}
 
 
 } //# NAMESPACE CASA - END

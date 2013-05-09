@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSWORLDARROW_H
 #define TRIALDISPLAY_DSWORLDARROW_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <casa/Quanta/Quantum.h>
@@ -43,71 +43,71 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <summary>
 // Implementation of a world coords DSArrow
 // </summary>
-class PanelDisplay;
-class DSPixelArrow;
-class DSScreenArrow;
+	class PanelDisplay;
+	class DSPixelArrow;
+	class DSScreenArrow;
 
-class DSWorldArrow : public DSArrow , public DisplayShapeWithCoords{
+	class DSWorldArrow : public DSArrow , public DisplayShapeWithCoords {
 
-public:
+	public:
 
-  DSWorldArrow();
-  DSWorldArrow(const Record& settings, PanelDisplay* pd);
-  DSWorldArrow(DSScreenArrow& other, PanelDisplay* pd);
-  DSWorldArrow(DSPixelArrow& other, PanelDisplay* pd);
+		DSWorldArrow();
+		DSWorldArrow(const Record& settings, PanelDisplay* pd);
+		DSWorldArrow(DSScreenArrow& other, PanelDisplay* pd);
+		DSWorldArrow(DSPixelArrow& other, PanelDisplay* pd);
 
-  virtual ~DSWorldArrow();
+		virtual ~DSWorldArrow();
 
-  virtual void recalculateScreenPosition();
+		virtual void recalculateScreenPosition();
 
-  // So we can update our WCs
-  // <group>
-  virtual void move(const Float& dX, const Float& dY);
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual void rotate(const Float& angle);
-  virtual void scale(const Float& scaleFactor);
-  virtual void setStartPoint(const Vector<Float>& startPoint);
-  virtual void setEndPoint(const Vector<Float>& endPoint);
-  virtual void changePoint(const Vector<Float>&pos, const Int n);
-  virtual void changePoint(const Vector<Float>& pos);
-  virtual void draw(PixelCanvas* pc);
-  // </group>
+		// So we can update our WCs
+		// <group>
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void rotate(const Float& angle);
+		virtual void scale(const Float& scaleFactor);
+		virtual void setStartPoint(const Vector<Float>& startPoint);
+		virtual void setEndPoint(const Vector<Float>& endPoint);
+		virtual void changePoint(const Vector<Float>&pos, const Int n);
+		virtual void changePoint(const Vector<Float>& pos);
+		virtual void draw(PixelCanvas* pc);
+		// </group>
 
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 
-  
 
-  virtual Record getRawOptions() {
-    return DSArrow::getOptions();
-  }
-  
-  virtual PanelDisplay* panelDisplay()  {
-    return itsPD;
-  }
-private:
-  
-  // Based on a WC option record
-  //  virtual WorldCanvas* chooseWC(const Record& settings, PanelDisplay* pd);
-  
-  // Based on a pixel center
-  virtual WorldCanvas* chooseWC(const Float& startXPos, 
-				const Float& startYPos, 
-				const Float& endXPos, const Float& endYPos,
-				PanelDisplay* pd);
-  
-  // The paneldisplay from which I may choose an appropriate WC
-  PanelDisplay* itsPD;
 
-  // The WC of my choosing
-  WorldCanvas* itsWC;
-  
-  // The center of the marker in world co-ords.
-  Vector<Quantum<Double> > itsWorldStart;
-  Vector<Quantum<Double> > itsWorldEnd;
-  
-  void updateWCoords();
-};
+		virtual Record getRawOptions() {
+			return DSArrow::getOptions();
+		}
+
+		virtual PanelDisplay* panelDisplay()  {
+			return itsPD;
+		}
+	private:
+
+		// Based on a WC option record
+		//  virtual WorldCanvas* chooseWC(const Record& settings, PanelDisplay* pd);
+
+		// Based on a pixel center
+		virtual WorldCanvas* chooseWC(const Float& startXPos,
+		                              const Float& startYPos,
+		                              const Float& endXPos, const Float& endYPos,
+		                              PanelDisplay* pd);
+
+		// The paneldisplay from which I may choose an appropriate WC
+		PanelDisplay* itsPD;
+
+		// The WC of my choosing
+		WorldCanvas* itsWC;
+
+		// The center of the marker in world co-ords.
+		Vector<Quantum<Double> > itsWorldStart;
+		Vector<Quantum<Double> > itsWorldEnd;
+
+		void updateWCoords();
+	};
 
 } //# NAMESPACE CASA - END
 

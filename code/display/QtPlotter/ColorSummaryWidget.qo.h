@@ -32,95 +32,94 @@
 
 namespace casa {
 
-class QtCanvas;
+	class QtCanvas;
 
-class ColorSummaryWidget : public QDialog
-{
-    Q_OBJECT
+	class ColorSummaryWidget : public QDialog {
+		Q_OBJECT
 
-public:
-    ColorSummaryWidget(QWidget *parent = 0);
-    ~ColorSummaryWidget();
-    void setColorCanvas( QtCanvas* colorCanvas );
+	public:
+		ColorSummaryWidget(QWidget *parent = 0);
+		~ColorSummaryWidget();
+		void setColorCanvas( QtCanvas* colorCanvas );
 
-private slots:
+	private slots:
 
-	//Methods to add colors in various categories
-	void addColorProfile();
-	void addColorFit();
-	void addColorFitSummary();
-	void channelLineColorChanged();
-	void molecularLineColorChanged();
-	void zoomRectColorChanged();
-	void initialGaussianEstimateColorChanged();
+		//Methods to add colors in various categories
+		void addColorProfile();
+		void addColorFit();
+		void addColorFitSummary();
+		void channelLineColorChanged();
+		void molecularLineColorChanged();
+		void zoomRectColorChanged();
+		void initialGaussianEstimateColorChanged();
 
-	//Methods to remove colors in various categories
-	void removeColorProfile();
-	void removeColorFit();
-	void removeColorFitSummary();
+		//Methods to remove colors in various categories
+		void removeColorProfile();
+		void removeColorFit();
+		void removeColorFitSummary();
 
-	//User changed to a different color scheme (traditional,
-	//alternative, custom, etc)
-	void colorSchemeChanged();
+		//User changed to a different color scheme (traditional,
+		//alternative, custom, etc)
+		void colorSchemeChanged();
 
-	//Stores any changes to the colors used by the application
-	//before closing the dialog.
-	void reject();
-	void accept();
+		//Stores any changes to the colors used by the application
+		//before closing the dialog.
+		void reject();
+		void accept();
 
-private:
-	void addColor( QListWidget* list );
-	void removeColor( QListWidget* list );
-	void initializeColors();
-	void addColorListItem( QListWidget* list, const QColor& listColor );
-	void readCustomColor( QSettings& settings, const QString& countKey,
-			const QString& baseLookup, QList<QString>& list );
-	void populateColorList( const QList<QString>& colors, QListWidget* list );
-	void copyViewList(QListWidget* listWidget, QList<QString>& canvasList);
-	void copyViewLists();
-	void initializePresetColors();
-	void initializeUserColors();
-	void populateColorLists();
-	void clearColorLists();
-	void registerColorChange();
-	void clearColorChange();
-	void pixelCanvasColorChange();
-	void persistColorList( QSettings& settings, QListWidget* list,
-			const QString& baseStr, const QString& countStr );
-	void persist();
-	void setLabelColor( QLabel* label, QString colorName  );
+	private:
+		void addColor( QListWidget* list );
+		void removeColor( QListWidget* list );
+		void initializeColors();
+		void addColorListItem( QListWidget* list, const QColor& listColor );
+		void readCustomColor( QSettings& settings, const QString& countKey,
+		                      const QString& baseLookup, QList<QString>& list );
+		void populateColorList( const QList<QString>& colors, QListWidget* list );
+		void copyViewList(QListWidget* listWidget, QList<QString>& canvasList);
+		void copyViewLists();
+		void initializePresetColors();
+		void initializeUserColors();
+		void populateColorLists();
+		void clearColorLists();
+		void registerColorChange();
+		void clearColorChange();
+		void pixelCanvasColorChange();
+		void persistColorList( QSettings& settings, QListWidget* list,
+		                       const QString& baseStr, const QString& countStr );
+		void persist();
+		void setLabelColor( QLabel* label, QString colorName  );
 
-    Ui::ColorSummaryWidget ui;
-    QtCanvas* pixelCanvas;
-    QList<QString> mainCurveColorList;
-    QList<QString> fitCurveColorList;
-    QList<QString> fitSummaryCurveColorList;
-    QList<QString>  traditionalCurveColorList;
-    QList<QString> customMainList;
-    QList<QString> customFitList;
-    QList<QString> customFitSummaryList;
-    QColor channelLineColor;
-    QColor zoomRectColor;
-    QColor molecularLineColor;
-    QColor initialGaussianEstimateColor;
-    enum ColorCategory {MAIN_COLOR, FIT_COLOR, SUMMARY_FIT_COLOR, END_COLOR_CATEGORY };
-    enum SchemeCategory {TRADITIONAL,ALTERNATIVE, CUSTOM };
+		Ui::ColorSummaryWidget ui;
+		QtCanvas* pixelCanvas;
+		QList<QString> mainCurveColorList;
+		QList<QString> fitCurveColorList;
+		QList<QString> fitSummaryCurveColorList;
+		QList<QString>  traditionalCurveColorList;
+		QList<QString> customMainList;
+		QList<QString> customFitList;
+		QList<QString> customFitSummaryList;
+		QColor channelLineColor;
+		QColor zoomRectColor;
+		QColor molecularLineColor;
+		QColor initialGaussianEstimateColor;
+		enum ColorCategory {MAIN_COLOR, FIT_COLOR, SUMMARY_FIT_COLOR, END_COLOR_CATEGORY };
+		enum SchemeCategory {TRADITIONAL,ALTERNATIVE, CUSTOM };
 
-    static const QString CUSTOM_PROFILE_COLOR;
-    static const QString CUSTOM_FIT_COLOR;
-    static const QString CUSTOM_SUMMARY_COLOR;
-    static const QString CUSTOM_PROFILE_COLOR_COUNT;
-    static const QString CUSTOM_FIT_COLOR_COUNT;
-    static const QString CUSTOM_SUMMARY_COLOR_COUNT;
-    static const QString COLOR_SCHEME_PREFERENCE;
-    static const QString CHANNEL_LINE_COLOR;
-    static const QString INITIAL_GAUSSIAN_ESTIMATE_COLOR;
-    static const QString MOLECULAR_LINE_COLOR;
-    static const QString ZOOM_RECT_COLOR;
+		static const QString CUSTOM_PROFILE_COLOR;
+		static const QString CUSTOM_FIT_COLOR;
+		static const QString CUSTOM_SUMMARY_COLOR;
+		static const QString CUSTOM_PROFILE_COLOR_COUNT;
+		static const QString CUSTOM_FIT_COLOR_COUNT;
+		static const QString CUSTOM_SUMMARY_COLOR_COUNT;
+		static const QString COLOR_SCHEME_PREFERENCE;
+		static const QString CHANNEL_LINE_COLOR;
+		static const QString INITIAL_GAUSSIAN_ESTIMATE_COLOR;
+		static const QString MOLECULAR_LINE_COLOR;
+		static const QString ZOOM_RECT_COLOR;
 
-    bool traditionalChange;
-    bool alternativeChange;
-};
+		bool traditionalChange;
+		bool alternativeChange;
+	};
 }
 
 #endif // COLORSUMMARYWIDGET_Q0_H

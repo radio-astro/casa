@@ -56,11 +56,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // MWCRTRegion stands for MultiWorldCanvas Rectangle Tool Region
 // </etymology>
 
-// <synopsis> 
+// <synopsis>
 // This class finalises the functionality in MWCRectTool to
 // implement event-based drawing of rectangular regions on a
 // WorldCanvas.  Double clicking inside the constructed rectangle
-// emits the region, whilst pressing Escape cancels the region. 
+// emits the region, whilst pressing Escape cancels the region.
 // </synopsis>
 
 // <example>
@@ -75,36 +75,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Nothing known
 // </todo>
 
-class MWCRTRegion : public MWCRectTool {
+	class MWCRTRegion : public MWCRectTool {
 
- public:
+	public:
 
-  // Constructor
-  MWCRTRegion(Display::KeySym keysym = Display::K_Pointer_Button2);
+		// Constructor
+		MWCRTRegion(Display::KeySym keysym = Display::K_Pointer_Button2);
 
-  // Destructor
-  virtual ~MWCRTRegion();
+		// Destructor
+		virtual ~MWCRTRegion();
 
-  // handle events, via new-style interface.  Currently just for reset event.
-  virtual void handleEvent(DisplayEvent& ev);
+		// handle events, via new-style interface.  Currently just for reset event.
+		virtual void handleEvent(DisplayEvent& ev);
 
- protected:
+	protected:
 
-  // Handle double-click inside the rectangle.  Invokes regionReady().
-  virtual void doubleInside();
+		// Handle double-click inside the rectangle.  Invokes regionReady().
+		virtual void doubleInside();
 
-  // This function is called when a region is deliberately "finished"
-  // by the user.  It can be implemented to do further actions, such
-  // as report the region to the application
-  virtual void regionReady() { };
+		// This function is called when a region is deliberately "finished"
+		// by the user.  It can be implemented to do further actions, such
+		// as report the region to the application
+		virtual void regionReady() { };
 
-  // get the world coords of the current rectangular region
-  void getWorldCoords(Vector<Double> &blc, Vector<Double> &trc);
-  
-  // get the linear coords of the current rectangular region
-  void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
+		// get the world coords of the current rectangular region
+		void getWorldCoords(Vector<Double> &blc, Vector<Double> &trc);
 
-};
+		// get the linear coords of the current rectangular region
+		void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
+
+	};
 
 
 } //# NAMESPACE CASA - END

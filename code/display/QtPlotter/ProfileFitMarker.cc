@@ -30,64 +30,64 @@
 
 namespace casa {
 
-ProfileFitMarker::ProfileFitMarker( const WorldCanvasTranslator* wct) :
-		worldCanvasTranslator( wct){
-	centerPeakSpecified = false;
-	fwhmSpecified = false;
-}
-
-void ProfileFitMarker::setCenterPeak( double xVal, double yVal ){
-	center = xVal;
-	peak = yVal;
-	centerPeakSpecified = true;
-}
-
-void ProfileFitMarker::setFWHM( double fwhmVal, double fwhmHeightVal  ){
-	fwhm = fwhmVal;
-	fwhmHeight = fwhmHeightVal;
-	fwhmSpecified = true;
-}
-
-void ProfileFitMarker::drawMarker( QPainter& painter){
-
-	//We can't do anything unless the center/peak is specified.
-	if ( centerPeakSpecified ){
-		//Set-up the pen
-		const QPen& pen = painter.pen();
-		QPen penCopy( pen );
-		const int POINT_SIZE = 5;
-		const int FWHM_SIZE = 3;
-		penCopy.setColor( Qt::black );
-		penCopy.setWidth( POINT_SIZE );
-		painter.setPen(penCopy);
-
-		//Plot the center/peak
-		//Calculate the pixel values for the points we need to plot
-		int pixelCenter = worldCanvasTranslator -> getPixelX( center );
-		int pixelPeak = worldCanvasTranslator -> getPixelY( peak );
-
-		//Mark a point at the (center,peak)
-		painter.drawPoint( pixelCenter, pixelPeak );
-
-		if (fwhmSpecified ){
-			penCopy.setWidth( FWHM_SIZE );
-			painter.setPen( penCopy );
-
-			//Draw a line to show the fwhm
-			int pixelfwhmHeight = worldCanvasTranslator -> getPixelY( fwhmHeight );
-			double halfWidth = fwhm / 2;
-			double fwhmXFirst = center - halfWidth;
-			double fwhmXSecond = center + halfWidth;
-			int pixelfwhmXFirst = worldCanvasTranslator -> getPixelX( fwhmXFirst );
-			int pixelfwhmXSecond = worldCanvasTranslator -> getPixelX( fwhmXSecond );
-			painter.drawLine( pixelfwhmXFirst, pixelfwhmHeight, pixelfwhmXSecond, pixelfwhmHeight );
-		}
-		painter.setPen( pen );
+	ProfileFitMarker::ProfileFitMarker( const WorldCanvasTranslator* wct) :
+		worldCanvasTranslator( wct) {
+		centerPeakSpecified = false;
+		fwhmSpecified = false;
 	}
-}
 
-ProfileFitMarker::~ProfileFitMarker() {
-	// TODO Auto-generated destructor stub
-}
+	void ProfileFitMarker::setCenterPeak( double xVal, double yVal ) {
+		center = xVal;
+		peak = yVal;
+		centerPeakSpecified = true;
+	}
+
+	void ProfileFitMarker::setFWHM( double fwhmVal, double fwhmHeightVal  ) {
+		fwhm = fwhmVal;
+		fwhmHeight = fwhmHeightVal;
+		fwhmSpecified = true;
+	}
+
+	void ProfileFitMarker::drawMarker( QPainter& painter) {
+
+		//We can't do anything unless the center/peak is specified.
+		if ( centerPeakSpecified ) {
+			//Set-up the pen
+			const QPen& pen = painter.pen();
+			QPen penCopy( pen );
+			const int POINT_SIZE = 5;
+			const int FWHM_SIZE = 3;
+			penCopy.setColor( Qt::black );
+			penCopy.setWidth( POINT_SIZE );
+			painter.setPen(penCopy);
+
+			//Plot the center/peak
+			//Calculate the pixel values for the points we need to plot
+			int pixelCenter = worldCanvasTranslator -> getPixelX( center );
+			int pixelPeak = worldCanvasTranslator -> getPixelY( peak );
+
+			//Mark a point at the (center,peak)
+			painter.drawPoint( pixelCenter, pixelPeak );
+
+			if (fwhmSpecified ) {
+				penCopy.setWidth( FWHM_SIZE );
+				painter.setPen( penCopy );
+
+				//Draw a line to show the fwhm
+				int pixelfwhmHeight = worldCanvasTranslator -> getPixelY( fwhmHeight );
+				double halfWidth = fwhm / 2;
+				double fwhmXFirst = center - halfWidth;
+				double fwhmXSecond = center + halfWidth;
+				int pixelfwhmXFirst = worldCanvasTranslator -> getPixelX( fwhmXFirst );
+				int pixelfwhmXSecond = worldCanvasTranslator -> getPixelX( fwhmXSecond );
+				painter.drawLine( pixelfwhmXFirst, pixelfwhmHeight, pixelfwhmXSecond, pixelfwhmHeight );
+			}
+			painter.setPen( pen );
+		}
+	}
+
+	ProfileFitMarker::~ProfileFitMarker() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

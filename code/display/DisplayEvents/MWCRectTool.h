@@ -65,10 +65,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // to a secondary action of the tool, if indeed a secondary action
 // exists.
 //
-// The rectangle is drawn by dragging the mouse from one corner to 
+// The rectangle is drawn by dragging the mouse from one corner to
 // the diagonally opposite corner.  Once constructed, the rectangle
 // can be resized by dragging its corners, or relocated by dragging
-// inside the rectangle.  The rectangle is removed from the display 
+// inside the rectangle.  The rectangle is removed from the display
 // when the Esc key is pressed.
 // </synopsis>
 //
@@ -76,122 +76,124 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </example>
 //
 // <motivation>
-// Many activities on the WorldCanvas will be based on the user drawing 
+// Many activities on the WorldCanvas will be based on the user drawing
 // a rectangle, and then proceeding to some action with that rectangle.
 // A nice example is zooming.
 // </motivation>
 
-class MWCRectTool : public MultiWCTool, public DTVisible {
-  
- public:
-  
-  // Constructor
-  MWCRectTool(Display::KeySym keysym = Display::K_Pointer_Button1,
-	      const Bool persistent = False);
-  
-  // Destructor
-  virtual ~MWCRectTool();
-  
-  // Switch the tool off - this erases the rectangle, if any,
-  // and calls the base class disable.
-  virtual void disable();
+	class MWCRectTool : public MultiWCTool, public DTVisible {
 
-  // reset to non-existent, non-active rectangle.
-  // Refreshes if necessary to erase (unless skipRefresh==True  In
-  // that case, the caller should do the refresh itself).
-  // (Does not unregister from WCs or disable future event handling).
-  virtual void reset(Bool skipRefresh=False);
-  
-  // Is a rectangle currently defined?
-  virtual Bool rectangleDefined() { return itsRectangleExists;  } 
-  
- 
- protected:
+	public:
 
-  // Functions called by the base class event handling operators--and
-  // normally only those.  This is the input that controls the rectangle's
-  // appearance and action.  When the rectangle is ready and double-click
-  // is received, the doubleInside/Outside routine will be invoked.
-  // <group>
-  virtual void keyPressed(const WCPositionEvent &/*ev*/);
-  virtual void keyReleased(const WCPositionEvent &/*ev*/);
-  virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
-  // </group>
+		// Constructor
+		MWCRectTool(Display::KeySym keysym = Display::K_Pointer_Button1,
+		            const Bool persistent = False);
 
-  // draw the rectangle (if any) on the object's currently active WC.
-  // Only to be called by the base class refresh event handler.  Derived
-  // objects should use refresh() if they need to redraw, but even that
-  // is normally handled automatically.
-  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		// Destructor
+		virtual ~MWCRectTool();
 
-  // Output callback functions--to be overridden in derived class.
-  // Called when there is a double click inside/outside the rectangle
-  // <group>
-  virtual void doubleInside() { };
-  virtual void doubleOutside() { };
-  // </group>
+		// Switch the tool off - this erases the rectangle, if any,
+		// and calls the base class disable.
+		virtual void disable();
 
-  // Called when a rectangle is ready and not being 
-  // edited.  (Unused so far on the glish level (12/01)).
-  virtual void rectangleReady() { };
+		// reset to non-existent, non-active rectangle.
+		// Refreshes if necessary to erase (unless skipRefresh==True  In
+		// that case, the caller should do the refresh itself).
+		// (Does not unregister from WCs or disable future event handling).
+		virtual void reset(Bool skipRefresh=False);
+
+		// Is a rectangle currently defined?
+		virtual Bool rectangleDefined() {
+			return itsRectangleExists;
+		}
 
 
-  // Retrieve the rectangle coordinates, in screen pixels.
-  // Anchor (if applicable) is (x1,y1).  Valid during the output callbacks;
-  // to be used by them, as well as internally.
-  virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
+	protected:
 
- private:
+		// Functions called by the base class event handling operators--and
+		// normally only those.  This is the input that controls the rectangle's
+		// appearance and action.  When the rectangle is ready and double-click
+		// is received, the doubleInside/Outside routine will be invoked.
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &/*ev*/);
+		virtual void keyReleased(const WCPositionEvent &/*ev*/);
+		virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
+		virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		// </group>
 
-  // set the pixel coordinates of the rectangle
-  virtual void set(const Int &x1, const Int &y1,
-		   const Int &x2, const Int &y2);
+		// draw the rectangle (if any) on the object's currently active WC.
+		// Only to be called by the base class refresh event handler.  Derived
+		// objects should use refresh() if they need to redraw, but even that
+		// is normally handled automatically.
+		virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
-  // get only the anchor point
-  virtual void get(Int &x1, Int &y1) const;
+		// Output callback functions--to be overridden in derived class.
+		// Called when there is a double click inside/outside the rectangle
+		// <group>
+		virtual void doubleInside() { };
+		virtual void doubleOutside() { };
+		// </group>
+
+		// Called when a rectangle is ready and not being
+		// edited.  (Unused so far on the glish level (12/01)).
+		virtual void rectangleReady() { };
 
 
-  // does the rectangle persist after double clicks (until a new one
-  // is started)?
-  Bool itsRectanglePersistent;
+		// Retrieve the rectangle coordinates, in screen pixels.
+		// Anchor (if applicable) is (x1,y1).  Valid during the output callbacks;
+		// to be used by them, as well as internally.
+		virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
 
-  // do we have a rectangle yet?  
-  // (if True, itsCurrentWC, itsEmitted, P1, and P2 are valid)
-  Bool itsRectangleExists;
+	private:
 
-  // was the button pressed in the rectangle (or, if none, in an active WC)
-  // and not yet released/reset?
-  Bool itsActive;
+		// set the pixel coordinates of the rectangle
+		virtual void set(const Int &x1, const Int &y1,
+		                 const Int &x2, const Int &y2);
 
-  // (valid only if itsActive==True):
-  // True = being moved     False = being resized
-  Bool itsMoving;
+		// get only the anchor point
+		virtual void get(Int &x1, Int &y1) const;
 
-  // (valid only if itsRectangleExists==True)
-  // Has doubleInside/Outside been called for this rectangle?  If so, a
-  // key press outside the rectangle will start a new rectangle, as if
-  // itsRectangleExists were False.
-  // However, a key press inside the rectangle will reset
-  // itsEmitted to False, allowing the rectangle to be reused
-  // (possibly moved or resized, and emitted again).
-  Bool itsEmitted;
 
-  // (Linear) coordinates of the rectangle (invariant over zooms, but not
-  // coordinate system changes.  To do: support the WorldCoordinateChange
-  // refresh reason, and reset this tool when it occurs).
-  Vector<Double> itsP1, itsP2;
+		// does the rectangle persist after double clicks (until a new one
+		// is started)?
+		Bool itsRectanglePersistent;
 
-  // storage of the handle (pixel) coordinates
-  Vector<Int> itsHX, itsHY;
+		// do we have a rectangle yet?
+		// (if True, itsCurrentWC, itsEmitted, P1, and P2 are valid)
+		Bool itsRectangleExists;
 
-  // position that move started from
-  Int itsBaseMoveX, itsBaseMoveY;
+		// was the button pressed in the rectangle (or, if none, in an active WC)
+		// and not yet released/reset?
+		Bool itsActive;
 
-  // store the times of the last two presses here:
-  Double itsLastPressTime, its2ndLastPressTime;
+		// (valid only if itsActive==True):
+		// True = being moved     False = being resized
+		Bool itsMoving;
 
-};
+		// (valid only if itsRectangleExists==True)
+		// Has doubleInside/Outside been called for this rectangle?  If so, a
+		// key press outside the rectangle will start a new rectangle, as if
+		// itsRectangleExists were False.
+		// However, a key press inside the rectangle will reset
+		// itsEmitted to False, allowing the rectangle to be reused
+		// (possibly moved or resized, and emitted again).
+		Bool itsEmitted;
+
+		// (Linear) coordinates of the rectangle (invariant over zooms, but not
+		// coordinate system changes.  To do: support the WorldCoordinateChange
+		// refresh reason, and reset this tool when it occurs).
+		Vector<Double> itsP1, itsP2;
+
+		// storage of the handle (pixel) coordinates
+		Vector<Int> itsHX, itsHY;
+
+		// position that move started from
+		Int itsBaseMoveX, itsBaseMoveY;
+
+		// store the times of the last two presses here:
+		Double itsLastPressTime, its2ndLastPressTime;
+
+	};
 
 
 } //# NAMESPACE CASA - END

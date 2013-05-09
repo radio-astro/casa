@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <display/DisplayShapes/DSScreenRectangle.h>
 #include <display/DisplayShapes/DSWorldRectangle.h>
@@ -40,135 +40,135 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSScreenRectangle::DSScreenRectangle() :
-  DSRectangle(),
-  itsPC(0),
-  itsRelativeCenter() {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-}
+	DSScreenRectangle::DSScreenRectangle() :
+		DSRectangle(),
+		itsPC(0),
+		itsRelativeCenter() {
 
-DSScreenRectangle::DSScreenRectangle(const Record& settings, PixelCanvas* pc) :
-  DSRectangle(),
-  itsPC(pc),
-  itsRelativeCenter(0) {
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
+	}
 
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  setOptions(settings);
-  
-}
-
-DSScreenRectangle::DSScreenRectangle(DSPixelRectangle& other, PixelCanvas* pc) :
-  DSRectangle(),
-  itsPC(pc),
-  itsRelativeCenter(0) {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  DSRectangle::setOptions(other.getRawOptions());
-  updateRelative();
-  
-}
-
-DSScreenRectangle::DSScreenRectangle(DSWorldRectangle& other) :
-  DSRectangle(),
-  itsPC(0),
-  itsRelativeCenter(0) {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  itsPC = other.panelDisplay()->pixelCanvas();
-  
-  DSRectangle::setOptions(other.getRawOptions());
-  updateRelative();
-}
- 
-DSScreenRectangle::~DSScreenRectangle() {
-
-}
-  
-
-Bool DSScreenRectangle::setOptions(const Record& settings) {
-  Bool localChange = False;
-  Record toSet = settings;
-  
-  if (settings.isDefined("coords")) {
-    if (settings.asString("coords") != "frac") {
-      throw(AipsError("I (DSScreenRectangle) was expecting an option "
-		      "record which"
-		      " had coords == \'frac\'. Please use a \'lock\' function"
-		      " to change my co-ord system"));
-    }
-  }
-  
-  if (DSRectangle::setOptions(toSet)) {
-    localChange = True;
-  }
-
-  return localChange;
-}
-
-void DSScreenRectangle::recalculateScreenPosition() {
-  if (!itsPC) {
-    throw(AipsError("Can't do recalculateScreenPosition() since I don't have"
-		    " a valid pixelCanvas, a relative start or a relative "
-		    "end saved!"));
-  }
-  
+	DSScreenRectangle::DSScreenRectangle(const Record& settings, PixelCanvas* pc) :
+		DSRectangle(),
+		itsPC(pc),
+		itsRelativeCenter(0) {
 
 
-}
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
 
-void DSScreenRectangle::move(const Float& dX, const Float& dY) {
-  DSRectangle::move(dX, dY);
-  updateRelative();
-}
+		setOptions(settings);
 
-void DSScreenRectangle::setCenter(const Float& xPos, const Float& yPos) {
-  DSRectangle::setCenter(xPos, yPos);
-  updateRelative();
-}
+	}
 
-void DSScreenRectangle::rotate(const Float& angle) {
-  DSRectangle::rotate(angle);
-  updateRelative();
-}
+	DSScreenRectangle::DSScreenRectangle(DSPixelRectangle& other, PixelCanvas* pc) :
+		DSRectangle(),
+		itsPC(pc),
+		itsRelativeCenter(0) {
 
-void DSScreenRectangle::changePoint(const Vector<Float>&pos, const Int n) {
-  DSRectangle::changePoint(pos, n);
-  updateRelative();
-}
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
 
-void DSScreenRectangle::changePoint(const Vector<Float>& pos) {
-  DSRectangle::changePoint(pos);
-  updateRelative();
-}
+		DSRectangle::setOptions(other.getRawOptions());
+		updateRelative();
+
+	}
+
+	DSScreenRectangle::DSScreenRectangle(DSWorldRectangle& other) :
+		DSRectangle(),
+		itsPC(0),
+		itsRelativeCenter(0) {
+
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
+
+		itsPC = other.panelDisplay()->pixelCanvas();
+
+		DSRectangle::setOptions(other.getRawOptions());
+		updateRelative();
+	}
+
+	DSScreenRectangle::~DSScreenRectangle() {
+
+	}
 
 
-void DSScreenRectangle::updateRelative() {
-  
-    
-}
+	Bool DSScreenRectangle::setOptions(const Record& settings) {
+		Bool localChange = False;
+		Record toSet = settings;
+
+		if (settings.isDefined("coords")) {
+			if (settings.asString("coords") != "frac") {
+				throw(AipsError("I (DSScreenRectangle) was expecting an option "
+				                "record which"
+				                " had coords == \'frac\'. Please use a \'lock\' function"
+				                " to change my co-ord system"));
+			}
+		}
+
+		if (DSRectangle::setOptions(toSet)) {
+			localChange = True;
+		}
+
+		return localChange;
+	}
+
+	void DSScreenRectangle::recalculateScreenPosition() {
+		if (!itsPC) {
+			throw(AipsError("Can't do recalculateScreenPosition() since I don't have"
+			                " a valid pixelCanvas, a relative start or a relative "
+			                "end saved!"));
+		}
 
 
-Record DSScreenRectangle::getOptions() {
 
-  Record toReturn;
-  
-  toReturn = DSRectangle::getOptions();
-  
-  // Shouldn't happen (should never be defined) .. but why not
-  if (toReturn.isDefined("coords")) {
-    toReturn.removeField("coords");
-  }
-  
-  toReturn.define("coords", "frac");
+	}
 
-  return toReturn;
+	void DSScreenRectangle::move(const Float& dX, const Float& dY) {
+		DSRectangle::move(dX, dY);
+		updateRelative();
+	}
 
-}
+	void DSScreenRectangle::setCenter(const Float& xPos, const Float& yPos) {
+		DSRectangle::setCenter(xPos, yPos);
+		updateRelative();
+	}
+
+	void DSScreenRectangle::rotate(const Float& angle) {
+		DSRectangle::rotate(angle);
+		updateRelative();
+	}
+
+	void DSScreenRectangle::changePoint(const Vector<Float>&pos, const Int n) {
+		DSRectangle::changePoint(pos, n);
+		updateRelative();
+	}
+
+	void DSScreenRectangle::changePoint(const Vector<Float>& pos) {
+		DSRectangle::changePoint(pos);
+		updateRelative();
+	}
+
+
+	void DSScreenRectangle::updateRelative() {
+
+
+	}
+
+
+	Record DSScreenRectangle::getOptions() {
+
+		Record toReturn;
+
+		toReturn = DSRectangle::getOptions();
+
+		// Shouldn't happen (should never be defined) .. but why not
+		if (toReturn.isDefined("coords")) {
+			toReturn.removeField("coords");
+		}
+
+		toReturn.define("coords", "frac");
+
+		return toReturn;
+
+	}
 
 } //# NAMESPACE CASA - END
 

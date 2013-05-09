@@ -56,11 +56,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // WCPTRegion stands for WorldCanvas Polygon Tool Region
 // </etymology>
 
-// <synopsis> 
+// <synopsis>
 // This class finalises the functionality in WCRectTool to
 // implement event-based drawing of polygonal regions on a
 // WorldCanvas.  Double clicking inside the constructed polygon
-// emits the region, whilst pressing Escape cancels the region. 
+// emits the region, whilst pressing Escape cancels the region.
 // </synopsis>
 
 // <example>
@@ -75,32 +75,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Nothing known
 // </todo>
 
-class WCPTRegion : public WCPolyTool {
+	class WCPTRegion : public WCPolyTool {
 
- public:
+	public:
 
-  // Constructor
-  WCPTRegion(WorldCanvas *wcanvas,
-	     Display::KeySym keysym = Display::K_Pointer_Button1);
+		// Constructor
+		WCPTRegion(WorldCanvas *wcanvas,
+		           Display::KeySym keysym = Display::K_Pointer_Button1);
 
-  // Destructor
-  virtual ~WCPTRegion();
+		// Destructor
+		virtual ~WCPTRegion();
 
-  // Functions specific to the region drawing - these are called by 
-  // lower-level event handlers in the base classes
-  virtual void doubleInside();
+		// Functions specific to the region drawing - these are called by
+		// lower-level event handlers in the base classes
+		virtual void doubleInside();
 
-  // This functio is called when a region is deliberately "finished"
-  // by the user.  It can be implemented to do further actions, such
-  // as report the region to the application
-  virtual void regionReady() { };
+		// This functio is called when a region is deliberately "finished"
+		// by the user.  It can be implemented to do further actions, such
+		// as report the region to the application
+		virtual void regionReady() { };
 
- private:
-  
-  // get the linear coords of the current polygonal region
-  //void getLinearCoords(Vector<Double> &x, Vector<Double> &y);
+	private:
 
-};
+		// get the linear coords of the current polygonal region
+		//void getLinearCoords(Vector<Double> &x, Vector<Double> &y);
+
+	};
 
 
 } //# NAMESPACE CASA - END

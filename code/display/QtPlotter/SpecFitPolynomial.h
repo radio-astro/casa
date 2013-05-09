@@ -29,15 +29,15 @@
 
 namespace casa {
 
-class SpecFitPolynomial : public SpecFit {
-public:
-	SpecFitPolynomial( Vector<Double> coefficients );
-	bool isXPixels();
-	void evaluate( Vector<Float>& xValues );
-	virtual ~SpecFitPolynomial();
-private:
-	Vector<Double> coefficients;
-};
+	class SpecFitPolynomial : public SpecFit {
+	public:
+		SpecFitPolynomial( Vector<Double> coefficients );
+		bool isXPixels();
+		void evaluate( Vector<Float>& xValues );
+		virtual ~SpecFitPolynomial();
+	private:
+		Vector<Double> coefficients;
+	};
 
 } /* namespace casa */
 #endif /* SPECFITPOLYNOMIAL_H_ */

@@ -70,7 +70,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // several datasets.
 //
 // A design goal is to have Display Library applications portable to
-// another graphics system by augmenting the Library to provide an 
+// another graphics system by augmenting the Library to provide an
 // interface to that graphics system.
 //
 // <h1><center><Display Library Contents></center></h1>
@@ -89,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //    <li> <a href="#WCDrawingCommands">Drawing Commands</a>
 //    <li> <a href="#WCEvents">Event Handling</a>
 //    <li> <a href="#WCHandlers">Other Handlers</a>
-//   </ol> 
+//   </ol>
 //  <li> <a href="#WorldCanvasHolder">WorldCanvasHolder</a>
 //  <li> <a href="#DisplayData">DisplayData</a>
 //  <li> <a href="#Zoomer">Zoomer</a>
@@ -99,7 +99,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <hr>
 //
 // <h2><a name="Overview">Display Library Overview</a></h2>
-// 
+//
 // The Display library is a set of tools for the AIPS++ programmer which make
 // it easier to create drawing windows and use those drawing windows as output
 // devices for graphical primitives, including images. To some extent, the
@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // the first layer, as well as classes that should make it easier to build a
 // full application that displays data. The classes of the second group can be
 // quite data specific.
-// 
+//
 // The main classes from the first group are the PixelCanvas, the WorldCanvas
 // and the ColorMap classes. The PixelCanvas conceptually corresponds to the
 // window on the screen. It works only in 'screen' units, ie. screen pixel
@@ -173,7 +173,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // The classes of the second group have a quite different purpose. They are
 // much more concerned with building an application that needs to display one
-// or more aips++ datasets in a number of ways. 
+// or more aips++ datasets in a number of ways.
 //
 // To make the link between the relatively generic display classes
 // (PixelCanvas, WorldCanvas etc) and classes quite specific for displaying
@@ -187,7 +187,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // should be easy to display more than one dataset in a window at the same
 // time. A standard example is a contourmap on top of a greyscale image.
 // Consequently, one can register more than one display object with the
-// WorldCanvasHolder so that they are displayed at the same time. 
+// WorldCanvasHolder so that they are displayed at the same time.
 //
 // One important aspect that the WorldCanvasHolder takes care of is the
 // sizeControl of the WorldCanvas. If a refresh event happens on the
@@ -214,7 +214,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // have to modify the attributes of the WorldCanvas. Because more than one
 // display object can draw on the WorldCanvas, this has to be done before the
 // actual drawing occurs (because the display objects do not know if there are
-// more than one display objects drawing on the WorldCanvas). 
+// more than one display objects drawing on the WorldCanvas).
 //
 // Another requirement for the Display Library was that no distinction should
 // be made based on how data is displayed. For example, displaying an image as
@@ -241,7 +241,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // the result of the volume rendering). A class derived from DisplayData does
 // not need to have an Aips++ dataset, but one could for example image a
 // DisplayData class that reads positions from a catalog and plots these
-// positions on the WorldCanvas. 
+// positions on the WorldCanvas.
 //
 // Because everything in the Display Library is event driven, it is also easy
 // to make applications that require more than one display window. The
@@ -254,7 +254,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // the correct attributes on all the WorldCanvases registered with the Zoomer
 // (meaning: it defines the area to which should be zoomed in) and invokes a
 // refresh event on all these WorldCanvases. This means that all the
-// WorldCanvases will zoom in synch. 
+// WorldCanvases will zoom in synch.
 //
 // Another design requirement of the Display Library was that it should be
 // easy to display movies, and the DisplayData are build with sequences in
@@ -319,7 +319,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // select the channel corresponding to velocity 1200.0. To display a position
 // velocity image, one would have to specify e.g. "xAxisName" = "Dec" and
 // "yAxisName" = "Velocity" and set "zValue" to 5.23443311 (the Ra of the
-// slice you want to look at). 
+// slice you want to look at).
 //
 // To determine if restrictionbuffers match, one can simply use the member
 // matches() of an AttributeBuffer. The logic of matching restrictions is
@@ -331,7 +331,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // plus or minus 5.0. This obviously can be used e.g. to match the channels of
 // two data cubes that are on a different velocity grid. The Animator class,
 // who can be used to make movies, completely relies on this restriction
-// mechanism. 
+// mechanism.
 //
 //
 //
@@ -362,10 +362,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // PixelCanvas drawing commands accept simple AIPS++ objects.  Presently the
 // drawing commands accept points as Vector<t>'s, where t can be
-// any scalar type but Bool.   Bool images are not supported because a Bool 
+// any scalar type but Bool.   Bool images are not supported because a Bool
 // cannot represent a color index.  Complex values are not supported because
 // there are many ways of creating a single scalar value from complex
-// values. 
+// values.
 //
 //
 // <h3><a name="PCEvents">PixelCanvas Event Handling</a></h3>
@@ -378,37 +378,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> motion event - sent when the mouse moves over the cursor.
 // </ol>
 //
-// Applications handle 
-// <linkto class=PixelCanvas>PixelCanvas</linkto> events by creating 
+// Applications handle
+// <linkto class=PixelCanvas>PixelCanvas</linkto> events by creating
 // <linkto class=PixelCanvas>PixelCanvas</linkto> event handlers
 // that must be derived from the appropriate event class, either
-// <linkto class=PCRefreshEH>PCRefreshEH</linkto>, 
+// <linkto class=PCRefreshEH>PCRefreshEH</linkto>,
 // <linkto class=PCPositionEH>PCPositionEH</linkto>, or
 // <linkto class=PCMotionEH>PCMotionEH</linkto>.  The () operator
 // must be overridden and implemented by responding to the
-// information contained in the 
-// <linkto class=PCRefreshEvent>PCRefreshEvent</linkto>, 
+// information contained in the
+// <linkto class=PCRefreshEvent>PCRefreshEvent</linkto>,
 // <linkto class=PCPositionEvent>PCPositionEvent</linkto>, or
 // <linkto class=PCMotionEvent>PCMotionEvent</linkto>, as appropriate.
-// 
+//
 //
 // <h3><a name="PCCaching">PixelCanvas Caching Mechanism</a></h3>
 //
 // There is a system for creating sequences of commands.  It works
 // be turning on caching, performing drawing commands, then shutting
-// it off.  An id is returned to the user to recall the stored 
+// it off.  An id is returned to the user to recall the stored
 // sequence.  This gives the user control over what is to be cached
 // while still abstracting the business of caching.
-// 
+//
 // The cache system improves drawing speed by storing drawing data
 // in native library formats.
 //
-// Data stored in native formats means that, for the X11PixelCanvas, 
+// Data stored in native formats means that, for the X11PixelCanvas,
 //
 // <ul>
-// <li> images are stored in terms of pixels as XImages, 
-// <li> coordinate positions are stored how X likes them (upper left is 0,0), 
-// <li> lines are stored as XLines or XSegments, as appropriate 
+// <li> images are stored in terms of pixels as XImages,
+// <li> coordinate positions are stored how X likes them (upper left is 0,0),
+// <li> lines are stored as XLines or XSegments, as appropriate
 // <li> Points are stored as XPoints.
 // <li> Pixmap Text is stored as drawing strings
 // <li> Stroked Text is stored as XSegments or XLines
@@ -437,16 +437,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Wanted to be able to resize the available colormap while
 //      a Display library application was running.
 // </ol>
-// 
+//
 // The constraints above have driven us to the following scheme:
 //
 // <ol>
-// <li> Create something called a 
+// <li> Create something called a
 // <linkto class="PixelCanvasColorTable">PixelCanvasColorTable</linkto>
 // and let it define a table of available colors for one or more
 // <linkto class="PixelCanvas">PixelCanvas</linkto>es and be responsible
 // for interfacing to the underlying graphics system's color allocation
-// facilities.  Through the 
+// facilities.  Through the
 // <linkto class="PixelCanvasColorTable">PixelCanvasColorTable</linkto>
 // one can abstract away the underlying graphic library's tedious and
 // cumbersome constructs and functions required to manage color resources
@@ -456,7 +456,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <linkto class="PixelCanvasColorTable">PixelCanvasColorTable</linkto>
 // class.
 //
-// <li> Define a <linkto class=Colormap>Colormap</linkto> to mean not a 
+// <li> Define a <linkto class=Colormap>Colormap</linkto> to mean not a
 // table of colors, but rather a function that takes a floating-point
 // parameter in [0.0,1.0] and returns an RGB triple.  This function can
 // then be used to fill some arbitrary number of consecutive colorcells.
@@ -468,7 +468,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Define a <linkto class=ColormapManager>ColormapManager</linkto> to be
 // responsible for dynamically partitioning its
 // <linkto class="PixelCanvasColorTable">PixelCanvasColorTable</linkto>
-// into chunks, one chunk for each registered 
+// into chunks, one chunk for each registered
 // <linkto class=Colormap>Colormap</linkto>, allowing for rigid
 // <linkto class=Colormap>Colormap</linkto>s (that must be for some reason
 // of a particular size) and weights to give greater color resolution
@@ -479,7 +479,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Allow for <linkto class="PixelCanvasColorTable">PixelCanvasColorTable</linkto>s
 // to be shared by more than one <linkto class="PixelCanvas">PixelCanvas</linkto>,
 // and allow <linkto class="PixelCanvas">PixelCanvas</linkto>es to share
-// <linkto class=Colormap>Colormap</linkto>s. 
+// <linkto class=Colormap>Colormap</linkto>s.
 //
 // <li> Try to abstract away all this mess by placing gateways to necessary
 // functionality in the <linkto class="PixelCanvas">PixelCanvas</linkto>
@@ -492,11 +492,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <linkto class="PixelCanvas">PixelCanvas</linkto> (needed only once).
 // <li> set the active colormap to the one used in step 1.
 // <li> create an image whose values range from 0 to N-1, where N is the size
-//      of the active colormap 
+//      of the active colormap
 //     (<linkto class="PixelCanvas">PixelCanvas</linkto>::getColormapSize()).
 // <li> call <linkto class="PixelCanvas">PixelCanvas</linkto>::mapToColor().
 // to convert to color values.
-// <li> call <linkto class="PixelCanvas">PixelCanvas</linkto>drawImage() 
+// <li> call <linkto class="PixelCanvas">PixelCanvas</linkto>drawImage()
 // with the Matrix of color values
 // </ol>
 //
@@ -505,13 +505,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <linkto class="PixelCanvasColorTable">PixelCanvasColorTable</linkto>
 // doesn't change.  Any such change will trigger a refresh event with the
 // reason Display::ColorTableChange on the affected
-// <linkto class="PixelCanvas">PixelCanvas</linkto>. 
+// <linkto class="PixelCanvas">PixelCanvas</linkto>.
 // This process can also be used to draw other primitives that each have
 // a value associated with it.
 // Several colormaps can be switched between by setting the active
 // colormap and querying the range, and using the mapToColor function.
 //
-// <li> Implement a function that resizes the 
+// <li> Implement a function that resizes the
 // <linkto class="PixelCanvasColorTable">PixelCanvasColorTable</linkto>,
 // forcing a redistribution of colormaps on affected
 // <linkto class="PixelCanvas">PixelCanvas</linkto>es followed by a
@@ -555,19 +555,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> motion event - sent when the mouse moves over the cursor.
 // </ol>
 //
-// Applications handle 
-// <linkto class=WorldCanvas>WorldCanvas</linkto> events by creating 
+// Applications handle
+// <linkto class=WorldCanvas>WorldCanvas</linkto> events by creating
 // <linkto class=WorldCanvas>WorldCanvas</linkto> event handlers
 // that must be derived from the appropriate event class, either
-// <linkto class=WCRefreshEH>WCRefreshEH</linkto>, 
+// <linkto class=WCRefreshEH>WCRefreshEH</linkto>,
 // <linkto class=WCPositionEH>WCPositionEH</linkto>, or
 // <linkto class=WCMotionEH>WCMotionEH</linkto>.  The () operator
 // must be overridden and implemented by responding to the
-// information contained in the 
-// <linkto class=WCRefreshEvent>WCRefreshEvent</linkto>, 
+// information contained in the
+// <linkto class=WCRefreshEvent>WCRefreshEvent</linkto>,
 // <linkto class=WCPositionEvent>WCPositionEvent</linkto>, or
 // <linkto class=WCMotionEvent>WCMotionEvent</linkto>, as appropriate.
-// 
+//
 //
 // <h3><a name="WCHandlers">Other WorldCanvas Handlers</a></h3>
 //
@@ -591,7 +591,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //  To control what is displayed on a WorldCanvas, the programmer can put
 //  restrictions on a WorldCanvasHolder. Only those DisplayData do actually
 //  draw whose restrictions match those of the WorldCanvasHolder. See the
-//  example given above, or have a look at the doc of the Animator. 
+//  example given above, or have a look at the doc of the Animator.
 //
 // <h2><a name="DisplayData">The DisplayData Interface</a></h2>
 //
@@ -633,7 +633,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // restrictions), the Animator sets the necessary restrictions on the
 // WorldCanvasHolders that are registered with the Animator, and forces a
 // refresh on all of them. All WorldCanvasHolder registered on an Animator
-// move in synch. 
+// move in synch.
 //
 //
 //
@@ -649,7 +649,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <hr>
 // This section is intended as information about what tasks remain to be
 // accomplished for the Display library.
-// 
+//
 // The following list illustrates work remaining at the PixelCanvas level:
 //
 // <todo asof="1997/10/06">
@@ -688,29 +688,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <hr>
 //
-// <b>The following section is intended for a programmer who wants to 
+// <b>The following section is intended for a programmer who wants to
 // improve the Display Library</b>
 //
 // <h3>Caching System Optimization</h3>
 //
-// An advanced optimization to the 
+// An advanced optimization to the
 // <linkto class="PixelCanvas">PixelCanvas</linkto>
-// caching system would be to compact sequences 
+// caching system would be to compact sequences
 // of drawing commands.  This would mean that a sequence received
 // by the PixelCanvas would be transformed into a more efficient sequence
-// of drawing commands that produces the same result.  Obviously, sequences 
-// of the same commands can often be combined into a single command.  
+// of drawing commands that produces the same result.  Obviously, sequences
+// of the same commands can often be combined into a single command.
 // But consider for example a drawn raster image I followed by a set of
-// vectors V on  top of the image.  This sequence can be represented by 
+// vectors V on  top of the image.  This sequence can be represented by
 // { I V }.
 //
-// We can partition V into 2 sets: Vin (contains vectors drawn inside the 
-// image) and Vout (vectors that have portions drawn outside the image). 
+// We can partition V into 2 sets: Vin (contains vectors drawn inside the
+// image) and Vout (vectors that have portions drawn outside the image).
 // A new image I' can be created from I by drawing I onto a pixmap, then
 // painting the vectors Vin on top, and storing the resultant image I'.
 //
-// The cached sequence is then { I' Vout }, and I and V can be discarded  
-// This will result in faster drawing times and reduced memory usage if 
+// The cached sequence is then { I' Vout }, and I and V can be discarded
+// This will result in faster drawing times and reduced memory usage if
 // Vin has significant size because the vectors in Vin are not drawn explicitly.
 //
 // Similar results can be achieved with drawn text and points, so that some

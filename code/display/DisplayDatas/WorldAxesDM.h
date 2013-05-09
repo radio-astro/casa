@@ -35,9 +35,9 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
+	class WorldCanvas;
 
-// <summary> 
+// <summary>
 // Class to draw a single set of axis labels for AxesDisplayData.
 // </summary>
 //
@@ -47,40 +47,40 @@ class WorldCanvas;
 // axis labels when requested by the AxesDisplayData class.
 // </synopsis>
 
-class WorldAxesDM : public CachingDisplayMethod {
+	class WorldAxesDM : public CachingDisplayMethod {
 
- public:
+	public:
 
-  // Constructor.
-  WorldAxesDM(WorldCanvas *worldCanvas, 
-	      AttributeBuffer *wchAttributes,
-	      AttributeBuffer *ddAttributes,
-	      CachingDisplayData *dd);
-  
-  // Destructor.
-  virtual ~WorldAxesDM();
-  
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
-  
-  // Draw into a cached drawing list, called by draw function.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder);
-  
- protected:
+		// Constructor.
+		WorldAxesDM(WorldCanvas *worldCanvas,
+		            AttributeBuffer *wchAttributes,
+		            AttributeBuffer *ddAttributes,
+		            CachingDisplayData *dd);
 
-  // (Required) default constructor.
-  WorldAxesDM();
+		// Destructor.
+		virtual ~WorldAxesDM();
 
-  // (Required) copy constructor.
-  WorldAxesDM(const WorldAxesDM &other);
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
 
-  // (Required) copy assignment.
-  void operator=(const WorldAxesDM &other);
+		// Draw into a cached drawing list, called by draw function.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder);
 
- private:
+	protected:
 
-};
+		// (Required) default constructor.
+		WorldAxesDM();
+
+		// (Required) copy constructor.
+		WorldAxesDM(const WorldAxesDM &other);
+
+		// (Required) copy assignment.
+		void operator=(const WorldAxesDM &other);
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -51,171 +51,171 @@
 
 #include <casa/namespace.h>
 class MyRefresh : public WCRefreshEH {
- public:
-  MyRefresh() { };
-  virtual void operator()(const WCRefreshEvent &ev);
+public:
+	MyRefresh() { };
+	virtual void operator()(const WCRefreshEvent &ev);
 };
 
 Display::ColorModel g_colormodel;
 
 int main(int argc, char **argv) {
 
-  try {
+	try {
 
-    Input inputs(1);
-    inputs.version("");
+		Input inputs(1);
+		inputs.version("");
 #if defined(OGL)
-    inputs.create("canvas", "x11", "drawing canvas: x11, ps or gl",
-		  "drawing canvas");
+		inputs.create("canvas", "x11", "drawing canvas: x11, ps or gl",
+		              "drawing canvas");
 #else
-    inputs.create("canvas", "x11", "drawing canvas: x11 or ps",
-		  "drawing canvas");
+		inputs.create("canvas", "x11", "drawing canvas: x11 or ps",
+		              "drawing canvas");
 #endif
-    inputs.create("count", "2", "number of rasters to draw (1 or 2)",
-		  "# rasters");
-    inputs.create("mode", "rgb", "drawing mode: rgb or hsv",
-		  "drawing mode");
-    inputs.readArguments(argc, argv);
+		inputs.create("count", "2", "number of rasters to draw (1 or 2)",
+		              "# rasters");
+		inputs.create("mode", "rgb", "drawing mode: rgb or hsv",
+		              "drawing mode");
+		inputs.readArguments(argc, argv);
 
-    PSWorldCanvasApp *psapp = 0;
-    SimpleWorldCanvasApp *x11app = 0;
+		PSWorldCanvasApp *psapp = 0;
+		SimpleWorldCanvasApp *x11app = 0;
 #if defined(OGL)
-    SimpleWorldGLCanvasApp *glapp = 0;
+		SimpleWorldGLCanvasApp *glapp = 0;
 #endif
-    WorldCanvas *wCanvas = 0;
-    PSPixelCanvas *pCanvas;
-    PSDriver *psdriver;
+		WorldCanvas *wCanvas = 0;
+		PSPixelCanvas *pCanvas;
+		PSDriver *psdriver;
 
-    String reqMode = inputs.getString("mode");
-    if (reqMode == "hsv") {
-      g_colormodel = Display::HSV;
-    } else if (reqMode == "rgb") {
-      g_colormodel = Display::RGB;
-    } else {
-      throw(AipsError("Unknown drawing mode"));
-    }
+		String reqMode = inputs.getString("mode");
+		if (reqMode == "hsv") {
+			g_colormodel = Display::HSV;
+		} else if (reqMode == "rgb") {
+			g_colormodel = Display::RGB;
+		} else {
+			throw(AipsError("Unknown drawing mode"));
+		}
 
-    // make a ps, x11 or gl canvas
-    String reqCanvas = inputs.getString("canvas");
-    if (reqCanvas == String("ps")) {
-      psdriver = new PSDriver("dMultichannelRaster.ps", PSDriver::A4, 
-			      PSDriver::LANDSCAPE);
-      psapp = new PSWorldCanvasApp(psdriver);
-      wCanvas = psapp->worldCanvas();
-      pCanvas = (PSPixelCanvas *)wCanvas->pixelCanvas();
-      pCanvas->setResolution(100, 100);
-      PSPixelCanvasColorTable *psctbl = pCanvas->PSpcctbl();
-      psctbl->setColorModel(g_colormodel);
-    } else if (reqCanvas == String("x11")) {
-      x11app = new SimpleWorldCanvasApp(g_colormodel);
-      wCanvas = x11app->worldCanvas();
-    }
+		// make a ps, x11 or gl canvas
+		String reqCanvas = inputs.getString("canvas");
+		if (reqCanvas == String("ps")) {
+			psdriver = new PSDriver("dMultichannelRaster.ps", PSDriver::A4,
+			                        PSDriver::LANDSCAPE);
+			psapp = new PSWorldCanvasApp(psdriver);
+			wCanvas = psapp->worldCanvas();
+			pCanvas = (PSPixelCanvas *)wCanvas->pixelCanvas();
+			pCanvas->setResolution(100, 100);
+			PSPixelCanvasColorTable *psctbl = pCanvas->PSpcctbl();
+			psctbl->setColorModel(g_colormodel);
+		} else if (reqCanvas == String("x11")) {
+			x11app = new SimpleWorldCanvasApp(g_colormodel);
+			wCanvas = x11app->worldCanvas();
+		}
 #if defined(OGL)
-    else if (reqCanvas == String("gl")) {
-      glapp = new SimpleWorldGLCanvasApp(argv[0], g_colormodel);
-      wCanvas = glapp->worldCanvas();
-    }
+		else if (reqCanvas == String("gl")) {
+			glapp = new SimpleWorldGLCanvasApp(argv[0], g_colormodel);
+			wCanvas = glapp->worldCanvas();
+		}
 #endif
- else {
-      throw(AipsError("Unknown canvas type"));
-    }
+		else {
+			throw(AipsError("Unknown canvas type"));
+		}
 
-    if (!wCanvas) {
-      throw(AipsError("Couldn't construct WorldCanvas"));
-    }
+		if (!wCanvas) {
+			throw(AipsError("Couldn't construct WorldCanvas"));
+		}
 
-    MyRefresh refresher;
-    wCanvas->addRefreshEventHandler(refresher);
+		MyRefresh refresher;
+		wCanvas->addRefreshEventHandler(refresher);
 
-    // run the PS application
-    if (psapp) {
-      psapp->run();
-    } else if (x11app) {
-      x11app->run();
-    }
+		// run the PS application
+		if (psapp) {
+			psapp->run();
+		} else if (x11app) {
+			x11app->run();
+		}
 #if defined(OGL)
-    else if (glapp) {
-      glapp->run();
-    }
+		else if (glapp) {
+			glapp->run();
+		}
 #endif
-    else {
-      throw(AipsError("An application was not built"));
-    }
+		else {
+			throw(AipsError("An application was not built"));
+		}
 
-    if (x11app) {
-      delete x11app;
-    } 
-    if (psapp) {
-      delete psapp;
-    }
+		if (x11app) {
+			delete x11app;
+		}
+		if (psapp) {
+			delete psapp;
+		}
 #if defined(OGL)
-    if(glapp)
-      delete glapp;
+		if(glapp)
+			delete glapp;
 #endif
-  } catch (const AipsError &x) {
-    cerr << "Exception caught:" << endl;
-    cerr << x.getMesg() << endl;
-  }
-  
+	} catch (const AipsError &x) {
+		cerr << "Exception caught:" << endl;
+		cerr << x.getMesg() << endl;
+	}
+
 }
 
 
 void MyRefresh::operator()(const WCRefreshEvent &ev) {
 
-  if (ev.reason() == Display::BackCopiedToFront) {
-    return;
-  }
+	if (ev.reason() == Display::BackCopiedToFront) {
+		return;
+	}
 
-  WorldCanvas *wCanvas = ev.worldCanvas();
-  WCPowerScaleHandler handler;
-  wCanvas->setDataScaleHandler(&handler);
+	WorldCanvas *wCanvas = ev.worldCanvas();
+	WCPowerScaleHandler handler;
+	wCanvas->setDataScaleHandler(&handler);
 
-  Matrix<Float> arr1(100, 100), arr2(100, 100), arr3(100, 100);
-  for (Int i = 0; i < arr1.shape()(0); i++) {
-    for (Int j = 0; j < arr1.shape()(1); j++) {
-      arr1(i, j) = Float(i);
-      arr2(i, j) = Float(j);
-      arr3(i, j) = Float(i + j);
-    }
-  }
+	Matrix<Float> arr1(100, 100), arr2(100, 100), arr3(100, 100);
+	for (Int i = 0; i < arr1.shape()(0); i++) {
+		for (Int j = 0; j < arr1.shape()(1); j++) {
+			arr1(i, j) = Float(i);
+			arr2(i, j) = Float(j);
+			arr3(i, j) = Float(i + j);
+		}
+	}
 
-  Vector<Double> blpos(2), trpos(2);
-  blpos = 0.0;
-  trpos = 0.75;
+	Vector<Double> blpos(2), trpos(2);
+	blpos = 0.0;
+	trpos = 0.75;
 
-  AttributeBuffer dataRange;
-  dataRange.add("dataMin", Double(min(arr1)));
-  dataRange.add("dataMax", Double(max(arr1)));
-  wCanvas->setAttributes(dataRange);
-  if (g_colormodel == Display::RGB) {
-    wCanvas->drawImage(blpos, trpos, arr1, Display::Red);
-  } else if (g_colormodel == Display::HSV) {
-    wCanvas->drawImage(blpos, trpos, arr1, Display::Hue);
-  }
+	AttributeBuffer dataRange;
+	dataRange.add("dataMin", Double(min(arr1)));
+	dataRange.add("dataMax", Double(max(arr1)));
+	wCanvas->setAttributes(dataRange);
+	if (g_colormodel == Display::RGB) {
+		wCanvas->drawImage(blpos, trpos, arr1, Display::Red);
+	} else if (g_colormodel == Display::HSV) {
+		wCanvas->drawImage(blpos, trpos, arr1, Display::Hue);
+	}
 
-  dataRange.set("dataMin", Double(min(arr2)));
-  dataRange.set("dataMax", Double(max(arr2)));
-  wCanvas->setAttributes(dataRange);
-  blpos = 0.2;
-  trpos(0) = 0.4;
-  trpos(1) = 0.9;
-  if (g_colormodel == Display::RGB) {
-    wCanvas->drawImage(blpos, trpos, arr2, Display::Green);
-  } else if (g_colormodel == Display::HSV) {
-    wCanvas->drawImage(blpos, trpos, arr2, Display::Saturation);
-  }
+	dataRange.set("dataMin", Double(min(arr2)));
+	dataRange.set("dataMax", Double(max(arr2)));
+	wCanvas->setAttributes(dataRange);
+	blpos = 0.2;
+	trpos(0) = 0.4;
+	trpos(1) = 0.9;
+	if (g_colormodel == Display::RGB) {
+		wCanvas->drawImage(blpos, trpos, arr2, Display::Green);
+	} else if (g_colormodel == Display::HSV) {
+		wCanvas->drawImage(blpos, trpos, arr2, Display::Saturation);
+	}
 
-  dataRange.set("dataMin", Double(min(arr3)));
-  dataRange.set("dataMax", Double(max(arr3)));
-  wCanvas->setAttributes(dataRange);
-  blpos(0) = 0.1;
-  blpos(1) = 0.1;
-  trpos = 0.8;
-  if (g_colormodel == Display::RGB) {
-    wCanvas->drawImage(blpos, trpos, arr3, Display::Blue);
-  } else if (g_colormodel == Display::HSV) {
-    wCanvas->drawImage(blpos, trpos, arr3, Display::Value);
-  }
+	dataRange.set("dataMin", Double(min(arr3)));
+	dataRange.set("dataMax", Double(max(arr3)));
+	wCanvas->setAttributes(dataRange);
+	blpos(0) = 0.1;
+	blpos(1) = 0.1;
+	trpos = 0.8;
+	if (g_colormodel == Display::RGB) {
+		wCanvas->drawImage(blpos, trpos, arr3, Display::Blue);
+	} else if (g_colormodel == Display::HSV) {
+		wCanvas->drawImage(blpos, trpos, arr3, Display::Value);
+	}
 
-  wCanvas->flushComponentImages();
+	wCanvas->flushComponentImages();
 }

@@ -1,4 +1,4 @@
-//# DParameterString.h: class to store and retrieve String parameters 
+//# DParameterString.h: class to store and retrieve String parameters
 //# Copyright (C) 2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -65,11 +65,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // example, a DParameterString is constructed to store some text to be
 // used for axis labelling:
 // <srcblock>
-// DParameterString pstring("xaxislabel", "X Axis Label", 
+// DParameterString pstring("xaxislabel", "X Axis Label",
 //                          "Enter the text to appear alongside the X Axis");
 //
 // // ...
-// 
+//
 // // update the parameter from some Record
 // pstring.fromRecord(rec);
 //
@@ -93,66 +93,68 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Nothing known.
 // </todo>
 
-class DParameterString : public DisplayParameter {
+	class DParameterString : public DisplayParameter {
 
- public:
+	public:
 
-  // Constructor taking the name of the parameter, a short
-  // description, some help text, a default value, an initial value,
-  // and flags indicating whether the parameter can be unset and is
-  // editable.
-  DParameterString(const String name, const String description,
-		   const String help, const String defaultvalue,
-		   const String value, const String context = "",
-		   const Bool editable = True);
+		// Constructor taking the name of the parameter, a short
+		// description, some help text, a default value, an initial value,
+		// and flags indicating whether the parameter can be unset and is
+		// editable.
+		DParameterString(const String name, const String description,
+		                 const String help, const String defaultvalue,
+		                 const String value, const String context = "",
+		                 const Bool editable = True);
 
-  // (Required) copy constructor.
-  DParameterString(const DParameterString &other);
+		// (Required) copy constructor.
+		DParameterString(const DParameterString &other);
 
-  // Destructor.
-  virtual ~DParameterString();
+		// Destructor.
+		virtual ~DParameterString();
 
-  // (Required) copy assignment.
-  DParameterString &operator=(const DParameterString &other);
+		// (Required) copy assignment.
+		DParameterString &operator=(const DParameterString &other);
 
-  // Parse <src>record</src>, and update this parameter if a field
-  // exists whose name matches that of this parameter.  Return
-  // <src>True</src> if the parameter is changed, otherwise return
-  // <src>False</src>.
-  virtual Bool fromRecord(const RecordInterface &record);
+		// Parse <src>record</src>, and update this parameter if a field
+		// exists whose name matches that of this parameter.  Return
+		// <src>True</src> if the parameter is changed, otherwise return
+		// <src>False</src>.
+		virtual Bool fromRecord(const RecordInterface &record);
 
-  // Place a record describing this parameter in a sub-field of
-  // <src>record</src> with name matching that of this parameter.  If
-  // <src>overwrite</src> is <src>True</src>, then any existing field
-  // with matching name will be overwritten.  If <src>fullrecord</src>
-  // is <src>True</src>, then a complete description of the parameter
-  // is given, otherwise just its current value is stored in
-  // <src>record</src>.  Presently <src>fullrecord</src> is ignored.
-  virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
-			const Bool overwrite = False);
+		// Place a record describing this parameter in a sub-field of
+		// <src>record</src> with name matching that of this parameter.  If
+		// <src>overwrite</src> is <src>True</src>, then any existing field
+		// with matching name will be overwritten.  If <src>fullrecord</src>
+		// is <src>True</src>, then a complete description of the parameter
+		// is given, otherwise just its current value is stored in
+		// <src>record</src>.  Presently <src>fullrecord</src> is ignored.
+		virtual void toRecord(RecordInterface &record, const Bool fullrecord = True,
+		                      const Bool overwrite = False);
 
-  // Return the default for this parameter.
-  String defaultValue() 
-    { return itsDefault; }
+		// Return the default for this parameter.
+		String defaultValue() {
+			return itsDefault;
+		}
 
-  // Return the current value of this parameter.
-  String value() 
-    { return itsValue; }
+		// Return the current value of this parameter.
+		String value() {
+			return itsValue;
+		}
 
- protected:
-  
-  // (Required) default constructor.
-  DParameterString();
+	protected:
 
- private:
+		// (Required) default constructor.
+		DParameterString();
 
-  // Store for the default of this parameter.
-  String itsDefault;
+	private:
 
-  // Store for the value of this parameter.
-  String itsValue;
+		// Store for the default of this parameter.
+		String itsDefault;
 
-};
+		// Store for the value of this parameter.
+		String itsValue;
+
+	};
 
 
 } //# NAMESPACE CASA - END

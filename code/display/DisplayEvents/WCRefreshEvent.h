@@ -1,28 +1,28 @@
 //# WCRefreshEvent.h: class which stores WorldCanvas refresh event information
 //# Copyright (C) 1993,1994,1995,1996,1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
-//# 
+//#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
-//# 
+//#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
-//# 
+//#
 //# You should have received a copy of the GNU Library General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//# 
+//#
 //# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# 
+//#
 //# $Id$
 
 #ifndef TRIALDISPLAY_WCREFRESHEVENT_H
@@ -34,7 +34,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
+	class WorldCanvas;
 
 // <summary>
 // Class which stores WorldCanvas refresh event information.
@@ -47,7 +47,7 @@ class WorldCanvas;
 
 // <etymology>
 // "WCRefreshEvent" is a contraction and concatenation of "WorldCanvas",
-// "Refresh" and "Event", and describes refresh events occuring on 
+// "Refresh" and "Event", and describes refresh events occuring on
 // WorldCanvases.
 // </etymology>
 
@@ -55,7 +55,7 @@ class WorldCanvas;
 // <li> <linkto class=WorldCanvasEvent>WorldCanvasEvent</linkto>
 // </prerequisite>
 
-// <synopsis> 
+// <synopsis>
 // This class adds to the information stored in the <linkto
 // class=WorldCanvasEvent>WorldCanvasEvent</linkto> class.  It adds
 // information describing the reason a refresh event has occurred.  An
@@ -68,7 +68,7 @@ class WorldCanvas;
 // be redrawn.  The reason for the refresh can be one of the
 // following:
 //
-// <dd> Display::UserCommand 
+// <dd> Display::UserCommand
 // <dt> The refresh event was caused by the user explicitly calling
 // the <linkto class=WorldCanvas>WorldCanvas</linkto> refresh
 // function.
@@ -85,7 +85,7 @@ class WorldCanvas;
 // (Display::ColorTableChange), and means that a single Colormap has
 // been modified, but that the overall distribution of colors remains
 // unchanged, ie. other Colormaps in this WorldCanvas' ColorTable are
-// unaffected. 
+// unaffected.
 //
 // <dd> Display::PixelCoordinateChange
 // <dt> The <linkto class=PixelCanvas>PixelCanvas</linkto> has changed
@@ -99,7 +99,7 @@ class WorldCanvas;
 // class=WorldCanvas>WorldCanvas</linkto> has changed.
 //
 // <dd> Display::WorldCoordinateChange
-// <dt> The world coordinate system which is overlaid on the 
+// <dt> The world coordinate system which is overlaid on the
 // PixelCanvas (normally by a <linkto
 // class=WorldCanvas>WorldCanvas</linkto> has changed.
 //
@@ -107,15 +107,15 @@ class WorldCanvas;
 // <dt> The back buffer has been written to the screen.  Only
 // transient graphics drawers should be interested in this refresh
 // reason.  Any graphics which are required to be visible over
-// everything else on the PixelCanvas (or WorldCanvas) should catch 
-// and respond to this refresh reason.  Examples include interactively 
+// everything else on the PixelCanvas (or WorldCanvas) should catch
+// and respond to this refresh reason.  Examples include interactively
 // constructed regions, eg. a zooming box.
 // </synopsis>
 
 // <example>
 // </example>
 
-// <motivation> 
+// <motivation>
 // A compact way of passing refresh event information around the
 // display classes was needed, with a functional but tight and
 // efficient interface.
@@ -129,38 +129,39 @@ class WorldCanvas;
 // None.
 // </todo>
 
-class WCRefreshEvent : public WorldCanvasEvent {
+	class WCRefreshEvent : public WorldCanvasEvent {
 
- public:
+	public:
 
-  // Constructor taking a pointer to the WorldCanvas for which the
-  // event is valid, and the reason for the refresh.
-  WCRefreshEvent(WorldCanvas *wc, const Display::RefreshReason &reason);
-  
-  // Destructor.
-  virtual ~WCRefreshEvent();
+		// Constructor taking a pointer to the WorldCanvas for which the
+		// event is valid, and the reason for the refresh.
+		WCRefreshEvent(WorldCanvas *wc, const Display::RefreshReason &reason);
 
-  // Why did the refresh occur?
-  virtual Display::RefreshReason reason() const 
-    { return itsRefreshReason; }
+		// Destructor.
+		virtual ~WCRefreshEvent();
 
- protected:
+		// Why did the refresh occur?
+		virtual Display::RefreshReason reason() const {
+			return itsRefreshReason;
+		}
 
-  // (Required) default constructor.
-  WCRefreshEvent();
+	protected:
 
-  // (Required) copy constructor.
-  WCRefreshEvent(const WCRefreshEvent &other);
+		// (Required) default constructor.
+		WCRefreshEvent();
 
-  // (Required) copy assignment.
-  WCRefreshEvent &operator=(const WCRefreshEvent &other);
+		// (Required) copy constructor.
+		WCRefreshEvent(const WCRefreshEvent &other);
 
- private:
+		// (Required) copy assignment.
+		WCRefreshEvent &operator=(const WCRefreshEvent &other);
 
-  // Store the reason for the refresh here at construction.
-  Display::RefreshReason itsRefreshReason;
+	private:
 
-};
+		// Store the reason for the refresh here at construction.
+		Display::RefreshReason itsRefreshReason;
+
+	};
 
 
 } //# NAMESPACE CASA - END

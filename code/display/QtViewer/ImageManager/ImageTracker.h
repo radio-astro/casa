@@ -28,38 +28,38 @@
 
 namespace casa {
 
-class QtDisplayData;
+	class QtDisplayData;
 
-/**
- * Interface class designed to reduce the coupling between the GUI class,
- * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
- * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
- */
+	/**
+	 * Interface class designed to reduce the coupling between the GUI class,
+	 * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
+	 * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
+	 */
 
-class ImageTracker {
-public:
-	virtual void imageAdded( QtDisplayData* image ) = 0;
-	virtual void imageRemoved( QtDisplayData* image ) = 0;
-	virtual void masterImageSelected( QtDisplayData* image ) =0;
-	ImageTracker(){}
-	virtual ~ImageTracker(){}
+	class ImageTracker {
+	public:
+		virtual void imageAdded( QtDisplayData* image ) = 0;
+		virtual void imageRemoved( QtDisplayData* image ) = 0;
+		virtual void masterImageSelected( QtDisplayData* image ) =0;
+		ImageTracker() {}
+		virtual ~ImageTracker() {}
 
-};
+	};
 
-/**
- * Interface implemented by GUI panels (QtDisplayPanel) that can add/remove
- * QtDisplayData's.  Called by the DisplayDataHolder to make
- * changes through the existing infrastructure.
- */
-class ImageDisplayer {
-public:
-	ImageDisplayer(){}
-	virtual ~ImageDisplayer(){}
-	virtual void setControllingDD( QtDisplayData* /*controlDD*/ ){
-	}
-	virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
-	virtual void unregisterDD( QtDisplayData* dd ) = 0;
-};
+	/**
+	 * Interface implemented by GUI panels (QtDisplayPanel) that can add/remove
+	 * QtDisplayData's.  Called by the DisplayDataHolder to make
+	 * changes through the existing infrastructure.
+	 */
+	class ImageDisplayer {
+	public:
+		ImageDisplayer() {}
+		virtual ~ImageDisplayer() {}
+		virtual void setControllingDD( QtDisplayData* /*controlDD*/ ) {
+		}
+		virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
+		virtual void unregisterDD( QtDisplayData* dd ) = 0;
+	};
 
 }
 #endif /* IMAGETRACKER_H_ */

@@ -40,154 +40,165 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
-class WorldCanvasHolder;
-template <class T> class Vector;
-class String;
-class AttributeBuffer;
+	class WorldCanvas;
+	class WorldCanvasHolder;
+	template <class T> class Vector;
+	class String;
+	class AttributeBuffer;
 
 // <summary>
 // Interface and simple implementation of axis labelling.
 // </summary>
 //
-// <synopsis> 
+// <synopsis>
 // This class adds to the interface defined by CachingDisplayData to
 // provide the necessary infrastructure for drawing axis labels on
 // WorldCanvases.  This class serves as a basic implementation which
 // can (and probably should) be over-written in derived classes.
 // </synopsis>
 
-class AxesDisplayData : public PassiveCachingDD {
+	class AxesDisplayData : public PassiveCachingDD {
 
- public:
+	public:
 
-  // Constructor.
-  AxesDisplayData();
+		// Constructor.
+		AxesDisplayData();
 
-  // Destructor.
-  virtual ~AxesDisplayData();
+		// Destructor.
+		virtual ~AxesDisplayData();
 
-  // Install the default options for this DisplayData.
-  virtual void setDefaultOptions();
+		// Install the default options for this DisplayData.
+		virtual void setDefaultOptions();
 
-  // Apply options stored in <src>rec</src> to the DisplayData.  A
-  // return value of <src>True</src> means a refresh is needed.
-  // <src>recOut</src> contains any fields which were implicitly 
-  // changed as a result of the call to this function.
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Apply options stored in <src>rec</src> to the DisplayData.  A
+		// return value of <src>True</src> means a refresh is needed.
+		// <src>recOut</src> contains any fields which were implicitly
+		// changed as a result of the call to this function.
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-  // Retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// Retrieve the current and default options and parameter types.
+		virtual Record getOptions();
 
-  // Return the type of this DisplayData.
-  virtual Display::DisplayDataType classType()
-    { return Display::CanvasAnnotation; }
+		// Return the type of this DisplayData.
+		virtual Display::DisplayDataType classType() {
+			return Display::CanvasAnnotation;
+		}
 
-  // Create a new AxesDisplayMethod for drawing on the given
-  // WorldCanvas when the AttributeBuffers are suitably matched to the
-  // current state of this DisplayData and of the WorldCanvas/Holder.
-  // The tag is a unique number used to identify the age of the newly
-  // constructed CachingDisplayMethod.
-  virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
-				 AttributeBuffer *wchAttributes,
-				 AttributeBuffer *ddAttributes,
-						 CachingDisplayData *dd);
- 
-  // Return the current options of this DisplayData as an
-  // AttributeBuffer.
-  virtual AttributeBuffer optionsAsAttributes();
-  
-  // Get the title text for labelling.
-  virtual String titleText() const 
-    { return itsParamTitleText->value(); }
+		// Create a new AxesDisplayMethod for drawing on the given
+		// WorldCanvas when the AttributeBuffers are suitably matched to the
+		// current state of this DisplayData and of the WorldCanvas/Holder.
+		// The tag is a unique number used to identify the age of the newly
+		// constructed CachingDisplayMethod.
+		virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
+		        AttributeBuffer *wchAttributes,
+		        AttributeBuffer *ddAttributes,
+		        CachingDisplayData *dd);
 
-  // Get the X and Y axis text Strings for labelling.
-  // a WC can be supplied in order to retrieve default titles
-  // from the WC CS.
-  // <group>
-  virtual String xAxisText(const WorldCanvas* wc=0) const;
-  virtual String yAxisText(const WorldCanvas* wc=0) const;
-  // </group>
+		// Return the current options of this DisplayData as an
+		// AttributeBuffer.
+		virtual AttributeBuffer optionsAsAttributes();
 
-  // Get what type of grid should be marked in each direction.
-  // <group>
-  virtual String xGridType() const
-    { return itsParamXGridType->value(); }
-  virtual String yGridType() const
-    { return itsParamYGridType->value(); }
-  // </group>
+		// Get the title text for labelling.
+		virtual String titleText() const {
+			return itsParamTitleText->value();
+		}
 
-  // Get the color to use for the title text, the X axis text, and the
-  // Y axis text labels.
-  // <group>
-  virtual String titleTextColor() const
-    { return itsParamTitleColor->value(); }
-  virtual String xAxisColor() const
-    { return itsParamXAxisColor->value(); }
-  virtual String yAxisColor() const
-    { return itsParamYAxisColor->value(); }
-  // </group>
+		// Get the X and Y axis text Strings for labelling.
+		// a WC can be supplied in order to retrieve default titles
+		// from the WC CS.
+		// <group>
+		virtual String xAxisText(const WorldCanvas* wc=0) const;
+		virtual String yAxisText(const WorldCanvas* wc=0) const;
+		// </group>
 
-  // Get the line width for labelling.
-  virtual Float lineWidth() const
-    { return itsParamLineWidth->value(); }
+		// Get what type of grid should be marked in each direction.
+		// <group>
+		virtual String xGridType() const {
+			return itsParamXGridType->value();
+		}
+		virtual String yGridType() const {
+			return itsParamYGridType->value();
+		}
+		// </group>
 
-  // Get the character font for labelling.
-  virtual String charFont() const
-    { return itsParamCharacterFont->value(); }
+		// Get the color to use for the title text, the X axis text, and the
+		// Y axis text labels.
+		// <group>
+		virtual String titleTextColor() const {
+			return itsParamTitleColor->value();
+		}
+		virtual String xAxisColor() const {
+			return itsParamXAxisColor->value();
+		}
+		virtual String yAxisColor() const {
+			return itsParamYAxisColor->value();
+		}
+		// </group>
 
-  // Get the character size for labelling.
-  virtual Float charSize() const
-    { return itsParamCharacterSize->value(); }
+		// Get the line width for labelling.
+		virtual Float lineWidth() const {
+			return itsParamLineWidth->value();
+		}
 
-  // Get the color of the plot outline.
-  virtual String outlineColor() const
-    { return itsParamOutlineColor->value(); }
-  static const float AXIS_LABEL_DEFAULT_CHAR_SIZE;
- protected:
+		// Get the character font for labelling.
+		virtual String charFont() const {
+			return itsParamCharacterFont->value();
+		}
 
-  // (Required) copy constructor.
-  AxesDisplayData(const AxesDisplayData &other);
+		// Get the character size for labelling.
+		virtual Float charSize() const {
+			return itsParamCharacterSize->value();
+		}
 
-  // (Required) copy assignment.
-  void operator=(const AxesDisplayData &other);
+		// Get the color of the plot outline.
+		virtual String outlineColor() const {
+			return itsParamOutlineColor->value();
+		}
+		static const float AXIS_LABEL_DEFAULT_CHAR_SIZE;
+	protected:
 
- private:
+		// (Required) copy constructor.
+		AxesDisplayData(const AxesDisplayData &other);
 
-  // display title text
-  DParameterString *itsParamTitleText;
+		// (Required) copy assignment.
+		void operator=(const AxesDisplayData &other);
 
-  // Store for X axis label text String.
-  DParameterString *itsParamXAxisText;
+	private:
 
-  // Store for Y axis label text String.
-  DParameterString *itsParamYAxisText;
+		// display title text
+		DParameterString *itsParamTitleText;
 
-  // coordinate grid?
-  DParameterChoice *itsParamXGridType, *itsParamYGridType;
+		// Store for X axis label text String.
+		DParameterString *itsParamXAxisText;
 
-  // title color
-  DParameterColorChoice *itsParamTitleColor;
-  //String itsOptionsTitleTextColor;
+		// Store for Y axis label text String.
+		DParameterString *itsParamYAxisText;
 
-  // label text color
-  DParameterColorChoice *itsParamXAxisColor, *itsParamYAxisColor;
-  //String itsOptionsXAxisColor, itsOptionsYAxisColor;
+		// coordinate grid?
+		DParameterChoice *itsParamXGridType, *itsParamYGridType;
 
-  // plot line width
-  DParameterRange<Float> *itsParamLineWidth;
+		// title color
+		DParameterColorChoice *itsParamTitleColor;
+		//String itsOptionsTitleTextColor;
 
-  // plot character font
-  DParameterChoice *itsParamCharacterFont;
+		// label text color
+		DParameterColorChoice *itsParamXAxisColor, *itsParamYAxisColor;
+		//String itsOptionsXAxisColor, itsOptionsYAxisColor;
 
-  // plot character size
-  DParameterRange<Float> *itsParamCharacterSize;
+		// plot line width
+		DParameterRange<Float> *itsParamLineWidth;
 
-  // plot outline color
-  DParameterColorChoice *itsParamOutlineColor;
+		// plot character font
+		DParameterChoice *itsParamCharacterFont;
+
+		// plot character size
+		DParameterRange<Float> *itsParamCharacterSize;
+
+		// plot outline color
+		DParameterColorChoice *itsParamOutlineColor;
 
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -25,53 +25,49 @@
 
 
 #include <display/QtPlotter/QtDrawSettings.h>
- 
-namespace casa { 
 
-QtDrawSettings::QtDrawSettings()
-{
-    minX = 0.0;
-    maxX = 10.0;
-    numXTicks = 5;
+namespace casa {
 
-    minY = 0.0;
-    maxY = 10.0;
-    numYTicks = 5;
-}
+	QtDrawSettings::QtDrawSettings() {
+		minX = 0.0;
+		maxX = 10.0;
+		numXTicks = 5;
 
-void QtDrawSettings::scroll(int dx, int dy)
-{
-    double stepX = spanX() / numXTicks;
-    minX += dx * stepX;
-    maxX += dx * stepX;
+		minY = 0.0;
+		maxY = 10.0;
+		numYTicks = 5;
+	}
 
-    double stepY = spanY() / numYTicks;
-    minY += dy * stepY;
-    maxY += dy * stepY;
-}
+	void QtDrawSettings::scroll(int dx, int dy) {
+		double stepX = spanX() / numXTicks;
+		minX += dx * stepX;
+		maxX += dx * stepX;
 
-void QtDrawSettings::adjust()
-{
-    adjustAxis(minX, maxX, numXTicks);
-    adjustAxis(minY, maxY, numYTicks);
-}
+		double stepY = spanY() / numYTicks;
+		minY += dy * stepY;
+		maxY += dy * stepY;
+	}
 
-void QtDrawSettings::adjustAxis(double &min, double &max,
-                                   int &numTicks)
-{
-    const int MinTicks = 4;
-    double grossStep = (max - min) / MinTicks;
-    double step = std::pow(10, floor(log10(grossStep)));
+	void QtDrawSettings::adjust() {
+		adjustAxis(minX, maxX, numXTicks);
+		adjustAxis(minY, maxY, numYTicks);
+	}
 
-    if (5 * step < grossStep)
-        step *= 5;
-    else if (2 * step < grossStep)
-        step *= 2;
+	void QtDrawSettings::adjustAxis(double &min, double &max,
+	                                int &numTicks) {
+		const int MinTicks = 4;
+		double grossStep = (max - min) / MinTicks;
+		double step = std::pow(10, floor(log10(grossStep)));
 
-    numTicks = (int)(ceil(max / step) - floor(min / step));
-    min = floor(min / step) * step;
-    max = ceil(max / step) * step;
-}
+		if (5 * step < grossStep)
+			step *= 5;
+		else if (2 * step < grossStep)
+			step *= 2;
+
+		numTicks = (int)(ceil(max / step) - floor(min / step));
+		min = floor(min / step) * step;
+		max = ceil(max / step) * step;
+	}
 
 
 

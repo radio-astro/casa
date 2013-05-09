@@ -61,7 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // double-clicks a particular key or mouse button inside or outside an
 // existing polygon respectively.  It is up to the programmer to decide
 // what these events mean, but it is recommended that an internal double-
-// click correspond to the main action of the tool, eg. emitting the 
+// click correspond to the main action of the tool, eg. emitting the
 // polygon vertices to the application, and that an external double-click
 // correspond to a secondary action of the tool, if indeed there are
 // additional actions suitable to the tool.
@@ -86,161 +86,170 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Add time constraint to double click detection
 // </todo>
 
-    class MultiPolyTool : public RegionTool, public DTVisible, public viewer::RegionCreator {
+	class MultiPolyTool : public RegionTool, public DTVisible, public viewer::RegionCreator {
 
-	 public:
+	public:
 
-	    // Constructor
-	    MultiPolyTool( viewer::RegionSourceFactory *rsf, PanelDisplay* pd,
-			   Display::KeySym keysym = Display::K_Pointer_Button1, const Bool persistent = False );
+		// Constructor
+		MultiPolyTool( viewer::RegionSourceFactory *rsf, PanelDisplay* pd,
+		               Display::KeySym keysym = Display::K_Pointer_Button1, const Bool persistent = False );
 
-	    // Destructor
-	    virtual ~MultiPolyTool();
+		// Destructor
+		virtual ~MultiPolyTool();
 
-	    // Switch the tool off - this calls the base class disable,
-	    // and then erases the polygon if it's around
-	    virtual void disable();
+		// Switch the tool off - this calls the base class disable,
+		// and then erases the polygon if it's around
+		virtual void disable();
 
-	    // reset to non-existent, non-active polygon.
-	    // Refreshes if necessary to erase (unless skipRefresh==True).
-	    // (Does not unregister from WCs or disable future event handling).
-	    virtual void reset(Bool skipRefresh=False);
-  
-	    // Is a polygon currently defined?
-	    virtual Bool polygonDefined() { return itsMode>=Ready;  } 
-  
-	    viewer::RegionSource *getRegionSource( ) { return rfactory; }
-  
-	    void checkPoint( WorldCanvas *wc, State &state );
+		// reset to non-existent, non-active polygon.
+		// Refreshes if necessary to erase (unless skipRefresh==True).
+		// (Does not unregister from WCs or disable future event handling).
+		virtual void reset(Bool skipRefresh=False);
 
-	    // called when the user (read GUI user) indicates that a region should be deleted...
-	    void revokeRegion( viewer::Region * );
+		// Is a polygon currently defined?
+		virtual Bool polygonDefined() {
+			return itsMode>=Ready;
+		}
 
-	    // returns a set which indicates regions this creator creates...
-	    const std::set<viewer::region::RegionTypes> &regionsCreated( ) const;
+		viewer::RegionSource *getRegionSource( ) {
+			return rfactory;
+		}
 
-	    bool create( viewer::region::RegionTypes /*region_type*/, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &/*pts*/,
-			 const std::string &/*label*/, viewer::region::TextPosition /*label_pos*/, const std::vector<int> &/*label_off*/,
-			 const std::string &/*font*/, int /*font_size*/, int /*font_style*/, const std::string &/*font_color*/,
-			 const std::string &/*line_color*/, viewer::region::LineStyle /*line_style*/, unsigned int /*line_width*/,
-			 bool /*annotation*/, VOID */*region_specific_state*/ );
+		void checkPoint( WorldCanvas *wc, State &state );
 
-	    RegionToolTypes type( ) const { return POLYTOOL; }
+		// called when the user (read GUI user) indicates that a region should be deleted...
+		void revokeRegion( viewer::Region * );
+
+		// returns a set which indicates regions this creator creates...
+		const std::set<viewer::region::RegionTypes> &regionsCreated( ) const;
+
+		bool create( viewer::region::RegionTypes /*region_type*/, WorldCanvas */*wc*/, const std::vector<std::pair<double,double> > &/*pts*/,
+		             const std::string &/*label*/, viewer::region::TextPosition /*label_pos*/, const std::vector<int> &/*label_off*/,
+		             const std::string &/*font*/, int /*font_size*/, int /*font_style*/, const std::string &/*font_color*/,
+		             const std::string &/*line_color*/, viewer::region::LineStyle /*line_style*/, unsigned int /*line_width*/,
+		             bool /*annotation*/, VOID */*region_specific_state*/ );
+
+		RegionToolTypes type( ) const {
+			return POLYTOOL;
+		}
 
 	protected:
 
-	    // Functions called by the base class event handling operators--and
-	    // normally only those.  This is the input that controls the polygon's
-	    // appearance and action.  When the polygon is ready and double-click
-	    // is received, the doubleInside/Outside routine is invoked.
-	    // <group>
-	    virtual void keyPressed(const WCPositionEvent &/*ev*/);
-	    virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
-	    virtual void keyReleased(const WCPositionEvent &/*ev*/);
-	    virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
-	    // </group>
+		// Functions called by the base class event handling operators--and
+		// normally only those.  This is the input that controls the polygon's
+		// appearance and action.  When the polygon is ready and double-click
+		// is received, the doubleInside/Outside routine is invoked.
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &/*ev*/);
+		virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		virtual void keyReleased(const WCPositionEvent &/*ev*/);
+		virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
+		// </group>
 
-	    // draw the polygon (if any) on the object's currently active WC.
-	    // Only to be called by the base class refresh event handler.  Derived
-	    // objects should use refresh() if they need to redraw, but even that
-	    // is normally handled automatically by this class.
-	    virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		// draw the polygon (if any) on the object's currently active WC.
+		// Only to be called by the base class refresh event handler.  Derived
+		// objects should use refresh() if they need to redraw, but even that
+		// is normally handled automatically by this class.
+		virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
-	    // Output callback functions--to be overridden in derived class as needed.
-	    // Called when there is a double click inside/outside the polygon
-	    // <group>
-	    virtual void doubleInside() { };
-	    virtual void doubleOutside() { };
-	    // </group>
+		// Output callback functions--to be overridden in derived class as needed.
+		// Called when there is a double click inside/outside the polygon
+		// <group>
+		virtual void doubleInside() { };
+		virtual void doubleOutside() { };
+		// </group>
 
-	    // Function called when a polygon is ready and not being 
-	    // edited.  (Unused so far on the glish level (12/01)).
-	    virtual void polygonReady() { };
+		// Function called when a polygon is ready and not being
+		// edited.  (Unused so far on the glish level (12/01)).
+		virtual void polygonReady() { };
 
-	    // Retrieve polygon vertices, or a single vertex, in screen pixels.
-	    // Valid results during the callback functions; to be used by them,
-	    // as well as internally.
-	    // <group>
-	    virtual void get(Vector<Int> &x, Vector<Int> &y) const;
-	    virtual void get(Int &x, Int &y, const Int pt) const;
-	    // </group>
+		// Retrieve polygon vertices, or a single vertex, in screen pixels.
+		// Valid results during the callback functions; to be used by them,
+		// as well as internally.
+		// <group>
+		virtual void get(Vector<Int> &x, Vector<Int> &y) const;
+		virtual void get(Int &x, Int &y, const Int pt) const;
+		// </group>
 
-		virtual bool checkType( viewer::region::RegionTypes t ) { return t == viewer::region::PolyRegion; }
+		virtual bool checkType( viewer::region::RegionTypes t ) {
+			return t == viewer::region::PolyRegion;
+		}
 
 	private:
-	    typedef std::list<std::tr1::shared_ptr<viewer::Polygon> > polygonlist;
+		typedef std::list<std::tr1::shared_ptr<viewer::Polygon> > polygonlist;
 
-	    void start_new_polygon( WorldCanvas *, int x, int y );
+		void start_new_polygon( WorldCanvas *, int x, int y );
 
-	    // Set the polygon vertices. itsNPoints should already be set, and
-	    // x and y must contain (at least) this many points.
-	    virtual void set(const Vector<Int> &x, const Vector<Int> &y);
+		// Set the polygon vertices. itsNPoints should already be set, and
+		// x and y must contain (at least) this many points.
+		virtual void set(const Vector<Int> &x, const Vector<Int> &y);
 
-	    // replace a single vertex.
-	    virtual void set(const Int x, const Int y, const Int pt);
+		// replace a single vertex.
+		virtual void set(const Int x, const Int y, const Int pt);
 
-	    std::tr1::shared_ptr<viewer::Polygon> resizing_region;
-	    std::tr1::shared_ptr<viewer::Polygon> creating_region;
+		std::tr1::shared_ptr<viewer::Polygon> resizing_region;
+		std::tr1::shared_ptr<viewer::Polygon> creating_region;
 
-	    // push/pop last vertex
-	    // <group>
-	    void pushPoint(Int x1, Int y1);
-	    void popPoint();
-	    // </group>
+		// push/pop last vertex
+		// <group>
+		void pushPoint(Int x1, Int y1);
+		void popPoint();
+		// </group>
 
-	    // are we inside the polygon?
-	    Bool inPolygon(const Int &x, const Int &y) const;
+		// are we inside the polygon?
+		Bool inPolygon(const Int &x, const Int &y) const;
 
-	    // are we within the specified handle?
-	    Bool inHandle(const Int &pt, const Int &x, const Int &y) const;
+		// are we within the specified handle?
+		Bool inHandle(const Int &pt, const Int &x, const Int &y) const;
 
 
-	    // should the polygon remain on screen after double clicks?
-	    Bool itsPolygonPersistent;
+		// should the polygon remain on screen after double clicks?
+		Bool itsPolygonPersistent;
 
-	    // state of the polyline tool
-	    enum AdjustMode {
-		Off,	// Nothing exists yet
-		Def,	// defining initial polygon
-		Ready,	// polygon finished, no current activity
-		Move,	// moving entire polygon
-		Resize };	// moving single vertex whose handle was pressed
-	    MultiPolyTool::AdjustMode itsMode;
+		// state of the polyline tool
+		enum AdjustMode {
+		    Off,	// Nothing exists yet
+		    Def,	// defining initial polygon
+		    Ready,	// polygon finished, no current activity
+		    Move,	// moving entire polygon
+		    Resize
+		};	// moving single vertex whose handle was pressed
+		MultiPolyTool::AdjustMode itsMode;
 
-	    // set True on double-click, if the polygon is persistent.
-	    // set False when the polygon is moved, resized or reset.
-	    // If True, a click outside the polygon will erase it and begin
-	    // definition of a new one.
-	    Bool itsEmitted;
+		// set True on double-click, if the polygon is persistent.
+		// set False when the polygon is moved, resized or reset.
+		// If True, a click outside the polygon will erase it and begin
+		// definition of a new one.
+		Bool itsEmitted;
 
-	    // Number of points
-	    Int itsNPoints;
+		// Number of points
+		Int itsNPoints;
 
-	    // Polygon points (linear).  Not to be used directly.
-	    // use get, set, push, pop instead, which take pixel coordinate arguments.
-	    // It's done this way so that zooms work on the figures.
-	    Vector<Double> itsX, itsY;
+		// Polygon points (linear).  Not to be used directly.
+		// use get, set, push, pop instead, which take pixel coordinate arguments.
+		// It's done this way so that zooms work on the figures.
+		Vector<Double> itsX, itsY;
 
-	    // size in pixels of the handles
-	    Int itsHandleSize;
-  
-	    // vertex being moved
-	    Int itsSelectedHandle;
+		// size in pixels of the handles
+		Int itsHandleSize;
 
-	    // position that move started from
-	    Int itsBaseMoveX, itsBaseMoveY;
+		// vertex being moved
+		Int itsSelectedHandle;
 
-	    // may not be needed...
-	    int resizing_region_handle;
+		// position that move started from
+		Int itsBaseMoveX, itsBaseMoveY;
 
-	    polygonlist moving_regions;
-	    double moving_linx_;
-	    double moving_liny_;
+		// may not be needed...
+		int resizing_region_handle;
 
-	    std::tr1::shared_ptr<viewer::Polygon> building_polygon;
-	    viewer::RegionSource *rfactory;
-	    polygonlist polygons;
-	    PanelDisplay *pd_;
+		polygonlist moving_regions;
+		double moving_linx_;
+		double moving_liny_;
+
+		std::tr1::shared_ptr<viewer::Polygon> building_polygon;
+		viewer::RegionSource *rfactory;
+		polygonlist polygons;
+		PanelDisplay *pd_;
 	};
 
 } //# NAMESPACE CASA - END

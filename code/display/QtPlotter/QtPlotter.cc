@@ -41,348 +41,328 @@
 #include <graphics/X11/X_exit.h>
 
 
-namespace casa { 
+namespace casa {
 
-QtPlotter::~QtPlotter()
-{
-    delete pc;
-    delete zoomInButton;
-    delete zoomOutButton;
-    delete printButton;
-    delete saveButton;
-    delete printExpButton;
-    //delete saveExpButton;
-    //delete writeButton;
-    delete openButton;
-}
+	QtPlotter::~QtPlotter() {
+		delete pc;
+		delete zoomInButton;
+		delete zoomOutButton;
+		delete printButton;
+		delete saveButton;
+		delete printExpButton;
+		//delete saveExpButton;
+		//delete writeButton;
+		delete openButton;
+	}
 
-QtPlotter::QtPlotter(QWidget *parent, const char *name) 
-        :QWidget(parent), fileName(name)
-{
-    initPlotterResource();
-    setWindowTitle(name);
+	QtPlotter::QtPlotter(QWidget *parent, const char *name)
+		:QWidget(parent), fileName(name) {
+		initPlotterResource();
+		setWindowTitle(name);
 
-    // setWindowIcon(QIcon(":/images/nrao.png"));
-    // (Wait until a casa.png is available...
-    setBackgroundRole(QPalette::Dark);
- 
-    QHBoxLayout *buttonLayout = new QHBoxLayout;
-    zoomInButton = new QToolButton(this);
-    zoomInButton->setIcon(QIcon(":/images/zoomin.png"));
-    zoomInButton->setToolTip("Zoom in.  (ctrl +)");
-    zoomInButton->adjustSize();
-    connect(zoomInButton, SIGNAL(clicked()), this, SLOT(zoomIn()));
-    
-    zoomOutButton = new QToolButton(this);
-    zoomOutButton->setIcon(QIcon(":/images/zoomout.png"));
-    zoomOutButton->setToolTip("Zoom out.  (ctrl -)");
-    zoomOutButton->adjustSize();
-    connect(zoomOutButton, SIGNAL(clicked()), this, SLOT(zoomOut()));    
-    
-    printButton = new QToolButton(this);
-    printButton->setIcon(QIcon(":/images/print.png"));
-    printButton->setToolTip("Print...");
-    printButton->adjustSize();
-    connect(printButton, SIGNAL(clicked()), this, SLOT(print()));
+		// setWindowIcon(QIcon(":/images/nrao.png"));
+		// (Wait until a casa.png is available...
+		setBackgroundRole(QPalette::Dark);
 
-    saveButton = new QToolButton(this);
-    saveButton->setIcon(QIcon(":/images/save.png"));
-    saveButton->setToolTip("Save as a (standard graphics) image.");
-    saveButton->adjustSize();
-    connect(saveButton, SIGNAL(clicked()), this, SLOT(save()));
+		QHBoxLayout *buttonLayout = new QHBoxLayout;
+		zoomInButton = new QToolButton(this);
+		zoomInButton->setIcon(QIcon(":/images/zoomin.png"));
+		zoomInButton->setToolTip("Zoom in.  (ctrl +)");
+		zoomInButton->adjustSize();
+		connect(zoomInButton, SIGNAL(clicked()), this, SLOT(zoomIn()));
 
-    printExpButton = new QToolButton(this);
-    printExpButton->setIcon(QIcon(":/images/printExp.png"));
-    printExpButton->setToolTip("Print to the default printer.");
-    printExpButton->adjustSize();
-    connect(printExpButton, SIGNAL(clicked()), this, SLOT(printExp()));
+		zoomOutButton = new QToolButton(this);
+		zoomOutButton->setIcon(QIcon(":/images/zoomout.png"));
+		zoomOutButton->setToolTip("Zoom out.  (ctrl -)");
+		zoomOutButton->adjustSize();
+		connect(zoomOutButton, SIGNAL(clicked()), this, SLOT(zoomOut()));
 
-    //saveExpButton = new QToolButton(this);
-    //saveExpButton->setIcon(QIcon(":/images/saveExp.png"));
-    //saveExpButton->setToolTip("Save as a (standard graphics) image.");
-    //saveExpButton->adjustSize();
-    //connect(saveExpButton, SIGNAL(clicked()), this, SLOT(saveExp()));
+		printButton = new QToolButton(this);
+		printButton->setIcon(QIcon(":/images/print.png"));
+		printButton->setToolTip("Print...");
+		printButton->adjustSize();
+		connect(printButton, SIGNAL(clicked()), this, SLOT(print()));
 
-    //writeButton = new QToolButton(this);
-    //writeButton->setIcon(QIcon(":/images/write.png"));
-    //writeButton->setToolTip("Save as an ascii plot file.");
-    //writeButton->adjustSize();
-    //connect(writeButton, SIGNAL(clicked()), this, SLOT(writeText()));
-    
-    openButton = new QToolButton(this);
-    openButton->setIcon(QIcon(":/images/open.png"));
-    openButton->setToolTip("Open a data file in the following format:\n"
-                           "0     1\n"
-                           "10    10\n"
-                           "\n"
-                           "1     1\n"
-                           "2     4\n"
-                           "3     9\n");
-    openButton->adjustSize();
-    connect(openButton, SIGNAL(clicked()), this, SLOT(openText()));
+		saveButton = new QToolButton(this);
+		saveButton->setIcon(QIcon(":/images/save.png"));
+		saveButton->setToolTip("Save as a (standard graphics) image.");
+		saveButton->adjustSize();
+		connect(saveButton, SIGNAL(clicked()), this, SLOT(save()));
 
-    leftButton = new QToolButton(this);
-    leftButton->setIcon(QIcon(":/images/leftarrow.png"));
-    leftButton->setToolTip("Scroll left  (left arrow)");
-    leftButton->adjustSize();
-    connect(leftButton, SIGNAL(clicked()), this, SLOT(left()));
-    
-    rightButton = new QToolButton(this);
-    rightButton->setIcon(QIcon(":/images/rightarrow.png"));
-    rightButton->setToolTip("Scroll right  (right arrow)");
-    rightButton->adjustSize();
-    connect(rightButton, SIGNAL(clicked()), this, SLOT(right()));    
-    
-    upButton = new QToolButton(this);
-    upButton->setIcon(QIcon(":/images/uparrow.png"));
-    upButton->setToolTip("Scroll up  (up arrow)");
-    upButton->adjustSize();
-    connect(upButton, SIGNAL(clicked()), this, SLOT(up()));
+		printExpButton = new QToolButton(this);
+		printExpButton->setIcon(QIcon(":/images/printExp.png"));
+		printExpButton->setToolTip("Print to the default printer.");
+		printExpButton->adjustSize();
+		connect(printExpButton, SIGNAL(clicked()), this, SLOT(printExp()));
 
-    downButton = new QToolButton(this);
-    downButton->setIcon(QIcon(":/images/downarrow.png"));
-    downButton->setToolTip("Scroll down  (down arrow)");
-    downButton->adjustSize();
-    connect(downButton, SIGNAL(clicked()), this, SLOT(down()));
+		//saveExpButton = new QToolButton(this);
+		//saveExpButton->setIcon(QIcon(":/images/saveExp.png"));
+		//saveExpButton->setToolTip("Save as a (standard graphics) image.");
+		//saveExpButton->adjustSize();
+		//connect(saveExpButton, SIGNAL(clicked()), this, SLOT(saveExp()));
 
-    buttonLayout->addWidget(zoomInButton);
-    buttonLayout->addWidget(zoomOutButton);    
-    buttonLayout->addWidget(leftButton);
-    buttonLayout->addWidget(rightButton);    
-    buttonLayout->addWidget(upButton);
-    buttonLayout->addWidget(downButton);    
-    buttonLayout->addItem(new QSpacerItem(40, zoomInButton->height(),
-         QSizePolicy::MinimumExpanding, QSizePolicy::Minimum));
-    buttonLayout->addWidget(openButton);
-    //buttonLayout->addWidget(writeButton);
-    buttonLayout->addWidget(printExpButton);
-    //buttonLayout->addWidget(saveExpButton);
-    buttonLayout->addWidget(printButton);
-    buttonLayout->addWidget(saveButton);
-    
-    if (!layout())
-       new QVBoxLayout(this);
-       
-    pc = new QtCanvas(this);
-    QPalette pal = pc->palette();
-    pal.setColor(QPalette::Background, Qt::white);
-    pc->setPalette(pal);
-    layout()->addWidget(pc);
+		//writeButton = new QToolButton(this);
+		//writeButton->setIcon(QIcon(":/images/write.png"));
+		//writeButton->setToolTip("Save as an ascii plot file.");
+		//writeButton->adjustSize();
+		//connect(writeButton, SIGNAL(clicked()), this, SLOT(writeText()));
 
-    layout()->addItem(buttonLayout);
-    
-    zoomInButton->hide();
-    zoomOutButton->hide();
-    upButton->hide();
-    downButton->hide();
-    leftButton->hide();
-    rightButton->hide();
+		openButton = new QToolButton(this);
+		openButton->setIcon(QIcon(":/images/open.png"));
+		openButton->setToolTip("Open a data file in the following format:\n"
+		                       "0     1\n"
+		                       "10    10\n"
+		                       "\n"
+		                       "1     1\n"
+		                       "2     4\n"
+		                       "3     9\n");
+		openButton->adjustSize();
+		connect(openButton, SIGNAL(clicked()), this, SLOT(openText()));
 
-    QSettings settings("CASA", "Viewer");
-    QString pName = settings.value("Print/printer").toString();
-    printExpButton->setVisible(!pName.isNull());
-    //saveExpButton->hide();
-    
-    connect(pc, SIGNAL(zoomChanged()), this, SLOT(updateZoomer()));
+		leftButton = new QToolButton(this);
+		leftButton->setIcon(QIcon(":/images/leftarrow.png"));
+		leftButton->setToolTip("Scroll left  (left arrow)");
+		leftButton->adjustSize();
+		connect(leftButton, SIGNAL(clicked()), this, SLOT(left()));
 
-    if (name != 0){
-      pc->plotPolyLines(name);
-    }
+		rightButton = new QToolButton(this);
+		rightButton->setIcon(QIcon(":/images/rightarrow.png"));
+		rightButton->setToolTip("Scroll right  (right arrow)");
+		rightButton->adjustSize();
+		connect(rightButton, SIGNAL(clicked()), this, SLOT(right()));
 
-   
-}
+		upButton = new QToolButton(this);
+		upButton->setIcon(QIcon(":/images/uparrow.png"));
+		upButton->setToolTip("Scroll up  (up arrow)");
+		upButton->adjustSize();
+		connect(upButton, SIGNAL(clicked()), this, SLOT(up()));
 
-void QtPlotter::zoomOut()
-{
-    pc->zoomOut();
-}
+		downButton = new QToolButton(this);
+		downButton->setIcon(QIcon(":/images/downarrow.png"));
+		downButton->setToolTip("Scroll down  (down arrow)");
+		downButton->adjustSize();
+		connect(downButton, SIGNAL(clicked()), this, SLOT(down()));
 
-void QtPlotter::zoomIn()
-{
-   pc->zoomIn();
-}
+		buttonLayout->addWidget(zoomInButton);
+		buttonLayout->addWidget(zoomOutButton);
+		buttonLayout->addWidget(leftButton);
+		buttonLayout->addWidget(rightButton);
+		buttonLayout->addWidget(upButton);
+		buttonLayout->addWidget(downButton);
+		buttonLayout->addItem(new QSpacerItem(40, zoomInButton->height(),
+		                                      QSizePolicy::MinimumExpanding, QSizePolicy::Minimum));
+		buttonLayout->addWidget(openButton);
+		//buttonLayout->addWidget(writeButton);
+		buttonLayout->addWidget(printExpButton);
+		//buttonLayout->addWidget(saveExpButton);
+		buttonLayout->addWidget(printButton);
+		buttonLayout->addWidget(saveButton);
 
-void QtPlotter::left()
-{
-   QApplication::sendEvent(pc,
-       new QKeyEvent(QEvent::KeyPress, Qt::Key_Left, 0, 0));
-}
+		if (!layout())
+			new QVBoxLayout(this);
 
-void QtPlotter::right()
-{
-   QApplication::sendEvent(pc,
-       new QKeyEvent(QEvent::KeyPress, Qt::Key_Right, 0, 0));
-}
+		pc = new QtCanvas(this);
+		QPalette pal = pc->palette();
+		pal.setColor(QPalette::Background, Qt::white);
+		pc->setPalette(pal);
+		layout()->addWidget(pc);
 
-void QtPlotter::up()
-{
-   QApplication::sendEvent(pc,
-       new QKeyEvent(QEvent::KeyPress, Qt::Key_Up, 0, 0));
-}
+		layout()->addItem(buttonLayout);
 
-void QtPlotter::down()
-{
-   QApplication::sendEvent(pc,
-       new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
-}
+		zoomInButton->hide();
+		zoomOutButton->hide();
+		upButton->hide();
+		downButton->hide();
+		leftButton->hide();
+		rightButton->hide();
 
-void QtPlotter::print()
-{
+		QSettings settings("CASA", "Viewer");
+		QString pName = settings.value("Print/printer").toString();
+		printExpButton->setVisible(!pName.isNull());
+		//saveExpButton->hide();
+
+		connect(pc, SIGNAL(zoomChanged()), this, SLOT(updateZoomer()));
+
+		if (name != 0) {
+			pc->plotPolyLines(name);
+		}
+
+
+	}
+
+	void QtPlotter::zoomOut() {
+		pc->zoomOut();
+	}
+
+	void QtPlotter::zoomIn() {
+		pc->zoomIn();
+	}
+
+	void QtPlotter::left() {
+		QApplication::sendEvent(pc,
+		                        new QKeyEvent(QEvent::KeyPress, Qt::Key_Left, 0, 0));
+	}
+
+	void QtPlotter::right() {
+		QApplication::sendEvent(pc,
+		                        new QKeyEvent(QEvent::KeyPress, Qt::Key_Right, 0, 0));
+	}
+
+	void QtPlotter::up() {
+		QApplication::sendEvent(pc,
+		                        new QKeyEvent(QEvent::KeyPress, Qt::Key_Up, 0, 0));
+	}
+
+	void QtPlotter::down() {
+		QApplication::sendEvent(pc,
+		                        new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, 0, 0));
+	}
+
+	void QtPlotter::print() {
 #ifndef QT_NO_PRINTER
-    QPrinter printer(QPrinter::ScreenResolution);
-    //printer.setFullPage(true);
-    QPrintDialog *dlg = new QPrintDialog(&printer, this);
-    if (dlg->exec() == QDialog::Accepted) {
-       QSettings settings("CASA", "Viewer");
-       settings.setValue("Print/printer", printer.printerName());
-       printIt(&printer);
-    }
-    delete dlg;
+		QPrinter printer(QPrinter::ScreenResolution);
+		//printer.setFullPage(true);
+		QPrintDialog *dlg = new QPrintDialog(&printer, this);
+		if (dlg->exec() == QDialog::Accepted) {
+			QSettings settings("CASA", "Viewer");
+			settings.setValue("Print/printer", printer.printerName());
+			printIt(&printer);
+		}
+		delete dlg;
 #endif
-}
+	}
 
-void QtPlotter::printIt(QPrinter* printer) 
-{
-    QPainter painter(printer);
-    QRect rect = painter.viewport();
-    rect.adjust(72, 72, -72, -72);
-    QPixmap *mp = pc->graph();
-    QSize size = mp->size();
-    size.scale(rect.size(), Qt::KeepAspectRatio);
-    painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
-    painter.setWindow(mp->rect());
-    painter.drawPixmap(0, 0, *mp);
-    painter.end();
-}
+	void QtPlotter::printIt(QPrinter* printer) {
+		QPainter painter(printer);
+		QRect rect = painter.viewport();
+		rect.adjust(72, 72, -72, -72);
+		QPixmap *mp = pc->graph();
+		QSize size = mp->size();
+		size.scale(rect.size(), Qt::KeepAspectRatio);
+		painter.setViewport(rect.x(), rect.y(), size.width(), size.height());
+		painter.setWindow(mp->rect());
+		painter.drawPixmap(0, 0, *mp);
+		painter.end();
+	}
 
-void QtPlotter::printExp()
-{
+	void QtPlotter::printExp() {
 #ifndef QT_NO_PRINTER
-    QPrinter printer(QPrinter::ScreenResolution);
-    QSettings settings("CASA", "Viewer");
-    printer.setPrinterName(settings.value("Print/printer").toString());
-    printIt(&printer);
+		QPrinter printer(QPrinter::ScreenResolution);
+		QSettings settings("CASA", "Viewer");
+		printer.setPrinterName(settings.value("Print/printer").toString());
+		printIt(&printer);
 #endif
-}
+	}
 
-void QtPlotter::save()
-{
-    QString fn = QFileDialog::getSaveFileName(this,
-       tr("Save as..."),
-       QString(), tr(
-            "(*.png);;(*.xpm);;(*.jpg);;"
-            "(*.png);;(*.ppm);;(*.jpeg)"));
+	void QtPlotter::save() {
+		QString fn = QFileDialog::getSaveFileName(this,
+		             tr("Save as..."),
+		             QString(), tr(
+		                 "(*.png);;(*.xpm);;(*.jpg);;"
+		                 "(*.png);;(*.ppm);;(*.jpeg)"));
 
-    if (fn.isEmpty())
-        return ;
-    fn = fn.section('/', -1);
+		if (fn.isEmpty())
+			return ;
+		fn = fn.section('/', -1);
 
-    QFile file(fn);
-    if (!file.open(QFile::WriteOnly))
-        return ;
+		QFile file(fn);
+		if (!file.open(QFile::WriteOnly))
+			return ;
 
-    char* t = "png";
-    QString ext = fn.section('.', -1);
-    if (ext == "xpm" || ext == "jpg" || ext == "png" ||
-        ext == "xbm" || ext == "ppm" || ext == "jpeg")
-        t = (char*)ext.toLocal8Bit().constData();
-    else 
-        fn.append(".png"); 
+		char* t = "png";
+		QString ext = fn.section('.', -1);
+		if (ext == "xpm" || ext == "jpg" || ext == "png" ||
+		        ext == "xbm" || ext == "ppm" || ext == "jpeg")
+			t = (char*)ext.toLocal8Bit().constData();
+		else
+			fn.append(".png");
 
-    int width = pc->graph()->width();
-    int height = pc->graph()->height();
+		int width = pc->graph()->width();
+		int height = pc->graph()->height();
 
-    //qDebug() << "before save" ;
-    pc->graph()->scaled(width, height, 
-          Qt::KeepAspectRatio).save(fn, t);
-    //qDebug() << "after save" ;
-    return ;
-}
+		//qDebug() << "before save" ;
+		pc->graph()->scaled(width, height,
+		                    Qt::KeepAspectRatio).save(fn, t);
+		//qDebug() << "after save" ;
+		return ;
+	}
 
-void QtPlotter::saveExp()
-{
-    //qDebug() << "fileName:" << fileName;
-    QFile file(fileName.append(".png"));
-    if (!file.open(QFile::WriteOnly))
-        return ;
-    //qDebug() << "open ok";
+	void QtPlotter::saveExp() {
+		//qDebug() << "fileName:" << fileName;
+		QFile file(fileName.append(".png"));
+		if (!file.open(QFile::WriteOnly))
+			return ;
+		//qDebug() << "open ok";
 
-    pc->graph()->save(fileName, "PNG");
-    //qDebug() << "save ok";
-    return ;
-}
+		pc->graph()->save(fileName, "PNG");
+		//qDebug() << "save ok";
+		return ;
+	}
 
-void QtPlotter::writeText()
-{
-    //qDebug() << "fileName:" << fileName;
-    QString fn = QFileDialog::getSaveFileName(this,
-       tr("Write plot data as text"),
-       QString(), tr( "(*.txt);;(*.plt)"));
+	void QtPlotter::writeText() {
+		//qDebug() << "fileName:" << fileName;
+		QString fn = QFileDialog::getSaveFileName(this,
+		             tr("Write plot data as text"),
+		             QString(), tr( "(*.txt);;(*.plt)"));
 
-    if (fn.isEmpty())
-        return ;
-    fn = fn.section('/', -1);
+		if (fn.isEmpty())
+			return ;
+		fn = fn.section('/', -1);
 
-    QFile file(fn);
-    if (!file.open(QFile::WriteOnly | QIODevice::Text))
-        return ;
+		QFile file(fn);
+		if (!file.open(QFile::WriteOnly | QIODevice::Text))
+			return ;
 
-    char* t = "plt";
-    QString ext = fn.section('.', -1);
-    if (ext == "txt" || ext == "plt")
-        t = (char*)ext.toLocal8Bit().constData();
-    else 
-        fn.append(".plt"); 
+		char* t = "plt";
+		QString ext = fn.section('.', -1);
+		if (ext == "txt" || ext == "plt")
+			t = (char*)ext.toLocal8Bit().constData();
+		else
+			fn.append(".plt");
 
-    QTextStream ts(&file);
-    
-    ts << "#Title:" << fileName << "\n";
-    ts << "#xLabel:\n";
-    ts << "#yLabel:\n";
-    
-    return ;
-}
+		QTextStream ts(&file);
 
-void QtPlotter::openText()
-{
-   QFileDialog *fdlg = new QFileDialog(0,
-                    "Choose a file to open",
-                    ".",
-                    "Plots (*.plt)");
-    QStringList fNames;
-    if (fdlg->exec())
-          fNames = fdlg->selectedFiles();
-    if (!fNames.isEmpty()){
-         pc->plotPolyLines(fNames.at(0));
-    }
-    delete fdlg; 
-}
+		ts << "#Title:" << fileName << "\n";
+		ts << "#xLabel:\n";
+		ts << "#yLabel:\n";
 
-void QtPlotter::updateZoomer()
-{
-    if (pc->getCurZoom() > 0)
-    {
-        zoomOutButton->setEnabled(true);
-        zoomOutButton->show();
-    }
-    if (pc->getCurZoom() == 0)
-    {
-        zoomOutButton->setEnabled(false);
-    }
-    if (pc->getCurZoom() < pc->getZoomStackSize() - 1)
-    {
-        zoomInButton->setEnabled(true);
-        zoomInButton->show();  
-    } 
-    if (pc->getCurZoom() == pc->getZoomStackSize() - 1)
-    {
-        zoomInButton->setEnabled(false);
-    }   
-    upButton->setVisible(1);
-    downButton->setVisible(1);
-    leftButton->setVisible(1);
-    rightButton->setVisible(1);
-}
+		return ;
+	}
+
+	void QtPlotter::openText() {
+		QFileDialog *fdlg = new QFileDialog(0,
+		                                    "Choose a file to open",
+		                                    ".",
+		                                    "Plots (*.plt)");
+		QStringList fNames;
+		if (fdlg->exec())
+			fNames = fdlg->selectedFiles();
+		if (!fNames.isEmpty()) {
+			pc->plotPolyLines(fNames.at(0));
+		}
+		delete fdlg;
+	}
+
+	void QtPlotter::updateZoomer() {
+		if (pc->getCurZoom() > 0) {
+			zoomOutButton->setEnabled(true);
+			zoomOutButton->show();
+		}
+		if (pc->getCurZoom() == 0) {
+			zoomOutButton->setEnabled(false);
+		}
+		if (pc->getCurZoom() < pc->getZoomStackSize() - 1) {
+			zoomInButton->setEnabled(true);
+			zoomInButton->show();
+		}
+		if (pc->getCurZoom() == pc->getZoomStackSize() - 1) {
+			zoomInButton->setEnabled(false);
+		}
+		upButton->setVisible(1);
+		downButton->setVisible(1);
+		leftButton->setVisible(1);
+		rightButton->setVisible(1);
+	}
 
 
 

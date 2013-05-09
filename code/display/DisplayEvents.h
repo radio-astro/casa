@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // "handling" "events"
 // </etymology>
 //
-// <synopsis> 
+// <synopsis>
 // This module contains classes which are used to handle
 // position, motion and refresh events that occur on PixelCanvases and
 // WorldCanvases.  Position events occur when the user presses or
@@ -82,7 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // registered on that PixelCanvas.  Likewise, all WorldCanvas events
 // for a particular WorldCanvas are distributed to all WorldCanvas
 // event handlers registered on that WorldCanvas.
-// 
+//
 // It is also critical for the programmer to be aware that in general,
 // the WorldCanvas registers one instance of each of the PCPositionEH,
 // PCMotionEH and PCRefreshEH type handler classes for its own use.
@@ -100,7 +100,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </example>
 //
 // <motivation>
-// Any interactive display library must provide methods for the 
+// Any interactive display library must provide methods for the
 // programmer to respond to user input.  That is the reason for this
 // module.
 // </motivation>

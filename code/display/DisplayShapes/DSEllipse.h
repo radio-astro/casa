@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSELLIPSE_H
 #define TRIALDISPLAY_DSELLIPSE_H
@@ -44,18 +44,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// DSEllipse is a method of managing the drawing of a ellipse onto a 
+// DSEllipse is a method of managing the drawing of a ellipse onto a
 // PixelCanvas.
 // </etymology>
 //
 // <synopsis>
-// DSEllipse is the DisplayShape implementation of the primitive ellipse. 
+// DSEllipse is the DisplayShape implementation of the primitive ellipse.
 //
-// There are generally two ways to make DisplayShape(s); To create them in 
-// "one hit" by providing arguments to the constructor, or by using the 
-// default constructor and then the "setOptions" method. A simple interface 
-// for all classes inheriting from the 
-// <linkto class="DisplayShape">DisplayShape</linkto> class is provided by 
+// There are generally two ways to make DisplayShape(s); To create them in
+// "one hit" by providing arguments to the constructor, or by using the
+// default constructor and then the "setOptions" method. A simple interface
+// for all classes inheriting from the
+// <linkto class="DisplayShape">DisplayShape</linkto> class is provided by
 // <linkto class="DisplayShapeInterface">DisplayShapeInterface</linkto>.
 // </synopsis>
 //
@@ -68,68 +68,68 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-class DSEllipse : public DSClosed {
+	class DSEllipse : public DSClosed {
 
-public:
-  // Constructors and destructors. the 'onlyShowOneHandle' flag is primarily 
-  // for use if the ellipse is intended to remain symmetrical i.e. a circle.
-  // <group>
-  DSEllipse(const Bool& onlyShowOneHandle = False);
-  DSEllipse(const DSEllipse& other);
-  DSEllipse(const Float& xPos, const Float& yPos, const Float& major, 
-	    const Float& minor,
-	    const Bool& hasHandles = False, const Bool& drawHandles = False, 
-	    const Bool& onlyShowOneHandle = False);
-  virtual ~DSEllipse();
-  // </group>
+	public:
+		// Constructors and destructors. the 'onlyShowOneHandle' flag is primarily
+		// for use if the ellipse is intended to remain symmetrical i.e. a circle.
+		// <group>
+		DSEllipse(const Bool& onlyShowOneHandle = False);
+		DSEllipse(const DSEllipse& other);
+		DSEllipse(const Float& xPos, const Float& yPos, const Float& major,
+		          const Float& minor,
+		          const Bool& hasHandles = False, const Bool& drawHandles = False,
+		          const Bool& onlyShowOneHandle = False);
+		virtual ~DSEllipse();
+		// </group>
 
-  // General DisplayShape functions.
-  // <group>
-  virtual void draw(PixelCanvas *pix);
-  virtual void move(const Float& dX, const Float& dY);
-  virtual Bool inObject(const Float& xPos, const Float& yPos);
-  virtual void rotate(const Float& angle);
-  virtual void rotateAbout(const Float& angle, const Float& aboutX, 
-			     const Float& aboutY);
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual Vector<Float> getCenter();
-  virtual void changePoint(const Vector<Float>& newPoint);
-  virtual void changePoint(const Vector<Float>& newPoint, const Int nPoint);
-  virtual void scale(const Float& scaleFactor);
-  // </group>
+		// General DisplayShape functions.
+		// <group>
+		virtual void draw(PixelCanvas *pix);
+		virtual void move(const Float& dX, const Float& dY);
+		virtual Bool inObject(const Float& xPos, const Float& yPos);
+		virtual void rotate(const Float& angle);
+		virtual void rotateAbout(const Float& angle, const Float& aboutX,
+		                         const Float& aboutY);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual Vector<Float> getCenter();
+		virtual void changePoint(const Vector<Float>& newPoint);
+		virtual void changePoint(const Vector<Float>& newPoint, const Int nPoint);
+		virtual void scale(const Float& scaleFactor);
+		// </group>
 
-  // Functions to set / get the minor and major axis of the ellipse 
-  // (in pixels). 
-  // <group>
-  virtual Float getMinorAxis();
-  virtual Float getMajorAxis();
-  virtual void setMajorAxis(const Float& newMajor);
-  virtual void setMinorAxis(const Float& newMinor);
-  // </group>
+		// Functions to set / get the minor and major axis of the ellipse
+		// (in pixels).
+		// <group>
+		virtual Float getMinorAxis();
+		virtual Float getMajorAxis();
+		virtual void setMajorAxis(const Float& newMajor);
+		virtual void setMinorAxis(const Float& newMinor);
+		// </group>
 
-  // Get and set options
-  // <group>
-  virtual Record getOptions();
-  virtual Bool setOptions(const Record& settings);
-  // </group>
+		// Get and set options
+		// <group>
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		// </group>
 
-protected: 
-  // Required on update
-  virtual void calculateHandlePositions();
-private:
+	protected:
+		// Required on update
+		virtual void calculateHandlePositions();
+	private:
 
-  Vector<Float> itsCenter;
-  Float itsAngle;
-  Float itsMajorAxis, itsMinorAxis;
-  Bool itsValid, itsOneHandle;
-  
-  Matrix<Float> itsHandleLocation;
+		Vector<Float> itsCenter;
+		Float itsAngle;
+		Float itsMajorAxis, itsMinorAxis;
+		Bool itsValid, itsOneHandle;
 
-  // Called when def. constructor used
-  virtual void setDefaultOptions();
+		Matrix<Float> itsHandleLocation;
+
+		// Called when def. constructor used
+		virtual void setDefaultOptions();
 
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -1,4 +1,4 @@
-//# DisplayParameter.cc: class to store and retrieve parameters 
+//# DisplayParameter.cc: class to store and retrieve parameters
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -30,68 +30,68 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
-DisplayParameter::DisplayParameter(const String name, const String description,
-				   const String help, const String context,
-				   const Bool allowunset,
-				   const Bool editable) :
-  itsName(name),
-  itsDescription(description),
-  itsHelp(help),
-  itsContext(context),
-  itsAllowUnset(allowunset),
-  itsEditable(editable) {
-}
+	DisplayParameter::DisplayParameter(const String name, const String description,
+	                                   const String help, const String context,
+	                                   const Bool allowunset,
+	                                   const Bool editable) :
+		itsName(name),
+		itsDescription(description),
+		itsHelp(help),
+		itsContext(context),
+		itsAllowUnset(allowunset),
+		itsEditable(editable) {
+	}
 
 // Copy constructor.
-DisplayParameter::DisplayParameter(const DisplayParameter &other) :
-  itsName(other.itsName),
-  itsDescription(other.itsDescription),
-  itsHelp(other.itsHelp),
-  itsContext(other.itsContext),
-  itsAllowUnset(other.itsAllowUnset),
-  itsEditable(other.itsEditable) {
-}
+	DisplayParameter::DisplayParameter(const DisplayParameter &other) :
+		itsName(other.itsName),
+		itsDescription(other.itsDescription),
+		itsHelp(other.itsHelp),
+		itsContext(other.itsContext),
+		itsAllowUnset(other.itsAllowUnset),
+		itsEditable(other.itsEditable) {
+	}
 
 // Destructor.
-DisplayParameter::~DisplayParameter() {
-}
+	DisplayParameter::~DisplayParameter() {
+	}
 
 // Copy assignment.
-DisplayParameter &DisplayParameter::operator=(const DisplayParameter &other) {
-  if (this != &other) {
-    itsName = other.itsName;
-    itsDescription = other.itsDescription;
-    itsHelp = other.itsHelp;
-    itsContext = other.itsContext;
-    itsAllowUnset = other.itsAllowUnset;
-    itsEditable = other.itsEditable;
-  }
-  return *this;
-}
+	DisplayParameter &DisplayParameter::operator=(const DisplayParameter &other) {
+		if (this != &other) {
+			itsName = other.itsName;
+			itsDescription = other.itsDescription;
+			itsHelp = other.itsHelp;
+			itsContext = other.itsContext;
+			itsAllowUnset = other.itsAllowUnset;
+			itsEditable = other.itsEditable;
+		}
+		return *this;
+	}
 
 // Default constructor.
-DisplayParameter::DisplayParameter() :
-  itsName(""),
-  itsDescription(""),
-  itsHelp(""),
-  itsContext(""),
-  itsAllowUnset(False),
-  itsEditable(False) {
-}
+	DisplayParameter::DisplayParameter() :
+		itsName(""),
+		itsDescription(""),
+		itsHelp(""),
+		itsContext(""),
+		itsAllowUnset(False),
+		itsEditable(False) {
+	}
 
 // Return a basic description of this parameter.
-Record DisplayParameter::baseDescription() {
-  Record rec;
-  rec.define("dlformat", itsName);
-  rec.define("listname", itsDescription);
-  rec.define("help", itsHelp);
-  rec.define("allowunset", itsAllowUnset);
-  rec.define("editable", itsEditable);
-  if (itsContext != String("")) {
-    rec.define("context", itsContext);
-  }
-  return rec;
-}
+	Record DisplayParameter::baseDescription() {
+		Record rec;
+		rec.define("dlformat", itsName);
+		rec.define("listname", itsDescription);
+		rec.define("help", itsHelp);
+		rec.define("allowunset", itsAllowUnset);
+		rec.define("editable", itsEditable);
+		if (itsContext != String("")) {
+			rec.define("context", itsContext);
+		}
+		return rec;
+	}
 
 
 } //# NAMESPACE CASA - END

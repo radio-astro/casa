@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSPOLY_H
 #define TRIALDISPLAY_DSPOLY_H
 
@@ -36,7 +36,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// Implementation of a Polygon. 
+// Implementation of a Polygon.
 // </summary>
 //
 // <prerequisite>
@@ -49,14 +49,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// DSPoly allows for the management of a polygon, including the addition and 
-// deletion of points. 
+// DSPoly allows for the management of a polygon, including the addition and
+// deletion of points.
 //
-// There are generally two ways to make DisplayShape(s); To create them in 
-// "one hit" by providing arguments to the constructor, or by using the 
-// default constructor and then the "setOptions" method. A simple interface 
-// for all classes inheriting from the 
-// <linkto class="DisplayShape">DisplayShape</linkto> class is provided 
+// There are generally two ways to make DisplayShape(s); To create them in
+// "one hit" by providing arguments to the constructor, or by using the
+// default constructor and then the "setOptions" method. A simple interface
+// for all classes inheriting from the
+// <linkto class="DisplayShape">DisplayShape</linkto> class is provided
 // by <linkto class="DisplayShapeInterface">DisplayShapeInterface</linkto>.
 // </synopsis>
 //
@@ -70,68 +70,68 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </example>
 
 
-class DSPoly : public DSClosed {
+	class DSPoly : public DSClosed {
 
-public:
+	public:
 
-  // Constructors and destructor
-  // <group>
-  DSPoly();
-  DSPoly(const DSPoly& other);
-  DSPoly(const Matrix<Float>& points, const Bool& handles = False,
-	 const Bool& drawHandles = False);
+		// Constructors and destructor
+		// <group>
+		DSPoly();
+		DSPoly(const DSPoly& other);
+		DSPoly(const Matrix<Float>& points, const Bool& handles = False,
+		       const Bool& drawHandles = False);
 
-  virtual ~DSPoly();
-  // </group>
+		virtual ~DSPoly();
+		// </group>
 
-  // General DisplayShape functions
-  // <group>
-  virtual void draw(PixelCanvas *pc);
-  virtual void rotate(const Float& angle);
-  virtual Bool inObject(const Float& xPos, const Float& yPos);
-  virtual void scale(const Float& scale);
-  virtual void move (const Float& dX, const Float& dY);
-  virtual void changePoint(const Vector<Float>& newLocation);
-  virtual void changePoint(const Vector<Float>& newLocation, const Int point); 
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual Vector<Float> getCenter();
-  virtual void rotateAbout(const Float& angle, const Float& aboutX, 
-			   const Float& aboutY);
-  // </group>
+		// General DisplayShape functions
+		// <group>
+		virtual void draw(PixelCanvas *pc);
+		virtual void rotate(const Float& angle);
+		virtual Bool inObject(const Float& xPos, const Float& yPos);
+		virtual void scale(const Float& scale);
+		virtual void move (const Float& dX, const Float& dY);
+		virtual void changePoint(const Vector<Float>& newLocation);
+		virtual void changePoint(const Vector<Float>& newLocation, const Int point);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual Vector<Float> getCenter();
+		virtual void rotateAbout(const Float& angle, const Float& aboutX,
+		                         const Float& aboutY);
+		// </group>
 
-  // Polygon specific functions, add, delete and set points, all in pixels. 
-  // Add point decides the best place in the array to insert the new point. 
-  // Similarly, deletePoints(const Vector<Float>& remove) deletes the point 
-  // closest to that provided. 
-  // <group>
-  virtual void addPoint(const Vector<Float>& newPoint);
-  virtual void deletePoint(const Vector<Float>& removePoint);
-  virtual void deletePoint(const Int nPoint);
-  virtual void setPoints(const Matrix<Float>& newPoints);
-  // </group>
+		// Polygon specific functions, add, delete and set points, all in pixels.
+		// Add point decides the best place in the array to insert the new point.
+		// Similarly, deletePoints(const Vector<Float>& remove) deletes the point
+		// closest to that provided.
+		// <group>
+		virtual void addPoint(const Vector<Float>& newPoint);
+		virtual void deletePoint(const Vector<Float>& removePoint);
+		virtual void deletePoint(const Int nPoint);
+		virtual void setPoints(const Matrix<Float>& newPoints);
+		// </group>
 
 
-  // Get and set options
-  // <group>
-  virtual Record getOptions();
-  virtual Bool setOptions(const Record& settings);
-  // </group>
+		// Get and set options
+		// <group>
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		// </group>
 
-private:
+	private:
 
-  // Points used to draw (with scaling + rotation) 
-  Matrix<Float> itsPoints;
-  Vector<Float> itsPolyCenter;
-  Bool itsValidPoints;
-  Bool itsValidCenter;
+		// Points used to draw (with scaling + rotation)
+		Matrix<Float> itsPoints;
+		Vector<Float> itsPolyCenter;
+		Bool itsValidPoints;
+		Bool itsValidCenter;
 
-  virtual void setDefaultOptions();
-  virtual Float getArea();
+		virtual void setDefaultOptions();
+		virtual Float getArea();
 
-protected:
-  virtual Matrix<Float> getPoints();  
+	protected:
+		virtual Matrix<Float> getPoints();
 
-};
+	};
 
 } //# NAMESPACE CASA - END
 

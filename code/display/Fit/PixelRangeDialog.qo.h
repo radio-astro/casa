@@ -34,34 +34,34 @@ using namespace std;
 
 namespace casa {
 
-template <class T> class ImageInterface;
-class BinPlotWidget;
+	template <class T> class ImageInterface;
+	class BinPlotWidget;
 
 //Displays a histogram that allows the user
 //to set a include/exclude pixel range for the fit.
 
-class PixelRangeDialog : public QDialog {
-    Q_OBJECT
+	class PixelRangeDialog : public QDialog {
+		Q_OBJECT
 
-public:
-    PixelRangeDialog(QWidget *parent = 0);
-    void setImage( ImageInterface<Float>* img );
-    void setInterval( double minValue, double maxValue );
-    //void setRangeMaxEnabled( bool enabled );
-    pair<double,double> getInterval() const;
-    vector<float> getXValues() const;
-    ~PixelRangeDialog();
+	public:
+		PixelRangeDialog(QWidget *parent = 0);
+		void setImage( ImageInterface<Float>* img );
+		void setInterval( double minValue, double maxValue );
+		//void setRangeMaxEnabled( bool enabled );
+		pair<double,double> getInterval() const;
+		vector<float> getXValues() const;
+		~PixelRangeDialog();
 
-protected:
-    void keyPressEvent( QKeyEvent* event );
+	protected:
+		void keyPressEvent( QKeyEvent* event );
 
-private:
-    PixelRangeDialog( const PixelRangeDialog& other );
-    PixelRangeDialog operator=( const PixelRangeDialog& other );
-    Ui::PixelRangeDialogClass ui;
-    BinPlotWidget* plotWidget;
+	private:
+		PixelRangeDialog( const PixelRangeDialog& other );
+		PixelRangeDialog operator=( const PixelRangeDialog& other );
+		Ui::PixelRangeDialogClass ui;
+		BinPlotWidget* plotWidget;
 
-};
+	};
 
 
 

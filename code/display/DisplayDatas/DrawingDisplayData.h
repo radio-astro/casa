@@ -35,11 +35,11 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
-class WorldCanvasHolder;
-class AttributeBuffer;
-class DrawingDisplayMethod;
-class DDDObject;
+	class WorldCanvas;
+	class WorldCanvasHolder;
+	class AttributeBuffer;
+	class DrawingDisplayMethod;
+	class DDDObject;
 
 // <summary>
 // DisplayData which provides interactive drawing capabilities.
@@ -52,122 +52,127 @@ class DDDObject;
 // the user to interactively modify the objects.
 // </synopsis>
 
-class DrawingDisplayData : public PassiveCachingDD {
+	class DrawingDisplayData : public PassiveCachingDD {
 
- public:
+	public:
 
-  // Constructor.
-  DrawingDisplayData(const Display::KeySym keysym = 
-		     Display::K_Pointer_Button1);
+		// Constructor.
+		DrawingDisplayData(const Display::KeySym keysym =
+		                       Display::K_Pointer_Button1);
 
-  // Destructor.
-  virtual ~DrawingDisplayData();
+		// Destructor.
+		virtual ~DrawingDisplayData();
 
-  // Install the default options for this DisplayData.
-  virtual void setDefaultOptions();
+		// Install the default options for this DisplayData.
+		virtual void setDefaultOptions();
 
-  // Apply options stored in <src>rec</src> to the DisplayData.  A
-  // return value of <src>True</src> means a refresh is needed.
-  // <src>recOut</src> contains any fields which were implicitly 
-  // changed as a result of the call to this function.
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Apply options stored in <src>rec</src> to the DisplayData.  A
+		// return value of <src>True</src> means a refresh is needed.
+		// <src>recOut</src> contains any fields which were implicitly
+		// changed as a result of the call to this function.
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-  // Retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// Retrieve the current and default options and parameter types.
+		virtual Record getOptions();
 
-  // Return the type of this DisplayData.
-  virtual Display::DisplayDataType classType()
-    { return Display::CanvasAnnotation; }
+		// Return the type of this DisplayData.
+		virtual Display::DisplayDataType classType() {
+			return Display::CanvasAnnotation;
+		}
 
-  // Create a new AxesDisplayMethod for drawing on the given
-  // WorldCanvas when the AttributeBuffers are suitably matched to the
-  // current state of this DisplayData and of the WorldCanvas/Holder.
-  // The tag is a unique number used to identify the age of the newly
-  // constructed CachingDisplayMethod.
-  virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
-				 AttributeBuffer *wchAttributes,
-				 AttributeBuffer *ddAttributes,
-						 CachingDisplayData *dd);
- 
-  // Return the current options of this DisplayData as an
-  // AttributeBuffer.
-  virtual AttributeBuffer optionsAsAttributes();
+		// Create a new AxesDisplayMethod for drawing on the given
+		// WorldCanvas when the AttributeBuffers are suitably matched to the
+		// current state of this DisplayData and of the WorldCanvas/Holder.
+		// The tag is a unique number used to identify the age of the newly
+		// constructed CachingDisplayMethod.
+		virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
+		        AttributeBuffer *wchAttributes,
+		        AttributeBuffer *ddAttributes,
+		        CachingDisplayData *dd);
 
-  virtual void refreshEH(const WCRefreshEvent &ev);
+		// Return the current options of this DisplayData as an
+		// AttributeBuffer.
+		virtual AttributeBuffer optionsAsAttributes();
 
-  // Add an object to the drawing as described in the given Record.
-  virtual void addObject(const Record &description);
+		virtual void refreshEH(const WCRefreshEvent &ev);
 
-  // Get the description of the object with the given id.
-  virtual Record description(const Int objectID);
+		// Add an object to the drawing as described in the given Record.
+		virtual void addObject(const Record &description);
 
-  // Set the description of the object with the given id.
-  virtual void setDescription(const Int objectID, const Record &rec);
+		// Get the description of the object with the given id.
+		virtual Record description(const Int objectID);
 
-  // Remove the object with the given id.
-  virtual void removeObject(const Int objectID);
+		// Set the description of the object with the given id.
+		virtual void setDescription(const Int objectID, const Record &rec);
 
-  // Set the handle state of the particular item.
-  virtual void setHandleState(DDDObject *item, const Bool state);
+		// Remove the object with the given id.
+		virtual void removeObject(const Int objectID);
 
-  // Return the current setting of the labelposition option.
-  virtual String labelPosition()
-    { return itsOptionsLabelPosition; }
-  
-  // Set/get which key to catch.
-  // <group>
-  virtual void setKey(const Display::KeySym &keysym);
-  virtual Display::KeySym key() const
-    { return itsKeySym; }
-  virtual Display::KeyModifier keyModifier() const
-    { return itsKeyModifier; }
-  // </group>
+		// Set the handle state of the particular item.
+		virtual void setHandleState(DDDObject *item, const Bool state);
 
-  // Double click interval.
-  virtual Double doubleClickInterval() const
-    { return itsDoubleClickInterval; }
+		// Return the current setting of the labelposition option.
+		virtual String labelPosition() {
+			return itsOptionsLabelPosition;
+		}
 
-  // Called when a double click occurred for the identified object.
-  // Null implementation in this class, derived classes can over-ride.
-  virtual void doubleClick(const Int objectID);
+		// Set/get which key to catch.
+		// <group>
+		virtual void setKey(const Display::KeySym &keysym);
+		virtual Display::KeySym key() const {
+			return itsKeySym;
+		}
+		virtual Display::KeyModifier keyModifier() const {
+			return itsKeyModifier;
+		}
+		// </group>
 
- protected:
+		// Double click interval.
+		virtual Double doubleClickInterval() const {
+			return itsDoubleClickInterval;
+		}
 
-  // (Required) copy constructor.
-  DrawingDisplayData(const DrawingDisplayData &other);
+		// Called when a double click occurred for the identified object.
+		// Null implementation in this class, derived classes can over-ride.
+		virtual void doubleClick(const Int objectID);
 
-  // (Required) copy assignment.
-  void operator=(const DrawingDisplayData &other);
+	protected:
 
- private:
+		// (Required) copy constructor.
+		DrawingDisplayData(const DrawingDisplayData &other);
 
-  friend class DrawingDisplayMethod;
+		// (Required) copy assignment.
+		void operator=(const DrawingDisplayData &other);
 
-  // The key to handle.
-  Display::KeySym itsKeySym;
+	private:
 
-  // The modifier mask for the key.
-  Display::KeyModifier itsKeyModifier;
+		friend class DrawingDisplayMethod;
 
-  // Double click interval (seconds)
-  Double itsDoubleClickInterval;
+		// The key to handle.
+		Display::KeySym itsKeySym;
 
-  // List containing the DDDObjects for this DrawingDisplayData.
-  List<void *> itsDDDOList;
+		// The modifier mask for the key.
+		Display::KeyModifier itsKeyModifier;
 
-  // Iterator for itsDDDOList
-  ListIter<void *> *itsDDDOListIter;
+		// Double click interval (seconds)
+		Double itsDoubleClickInterval;
 
-  // Obvious!
-  DDDObject *itsObjectWhichIsShowingHandles;
+		// List containing the DDDObjects for this DrawingDisplayData.
+		List<void *> itsDDDOList;
 
-  // Install the default options for this DisplayData.
-  void installDefaultOptions();
+		// Iterator for itsDDDOList
+		ListIter<void *> *itsDDDOListIter;
 
-  // Option: position for labels
-  String itsOptionsLabelPosition;
+		// Obvious!
+		DDDObject *itsObjectWhichIsShowingHandles;
 
-};
+		// Install the default options for this DisplayData.
+		void installDefaultOptions();
+
+		// Option: position for labels
+		String itsOptionsLabelPosition;
+
+	};
 
 
 } //# NAMESPACE CASA - END

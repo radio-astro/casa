@@ -29,24 +29,24 @@
 #include <QList>
 namespace casa {
 
-/**
- * Draws a colored rectangular bar across the top of the image slice statistics
- * as an identifier when the image slice is closed.
- */
+	/**
+	 * Draws a colored rectangular bar across the top of the image slice statistics
+	 * as an identifier when the image slice is closed.
+	 */
 
-class ImageSliceColorBar : public QWidget {
+	class ImageSliceColorBar : public QWidget {
 
-public:
-	ImageSliceColorBar(QWidget* parent = NULL);
-	void setColors( const QList<QColor>& segmentColors );
-	virtual ~ImageSliceColorBar();
+	public:
+		ImageSliceColorBar(QWidget* parent = NULL);
+		void setColors( const QList<QColor>& segmentColors );
+		virtual ~ImageSliceColorBar();
 
-protected:
-	virtual void paintEvent( QPaintEvent* event );
+	protected:
+		virtual void paintEvent( QPaintEvent* event );
 
-private:
-	QList<QColor> colorList;
-};
+	private:
+		QList<QColor> colorList;
+	};
 
 } /* namespace casa */
 #endif /* IMAGESLICECOLORBAR_QO_H_ */

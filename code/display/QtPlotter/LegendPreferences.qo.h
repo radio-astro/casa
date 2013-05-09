@@ -31,43 +31,42 @@
 
 namespace casa {
 
-class CanvasHolder;
+	class CanvasHolder;
 
 //Allows the user to customize properties of the spectral profile legend.
-class LegendPreferences : public QDialog
-{
-    Q_OBJECT
+	class LegendPreferences : public QDialog {
+		Q_OBJECT
 
-public:
-    LegendPreferences(CanvasHolder* canvas, QWidget *parent = 0);
-    void show();
-    ~LegendPreferences();
+	public:
+		LegendPreferences(CanvasHolder* canvas, QWidget *parent = 0);
+		void show();
+		~LegendPreferences();
 
-private slots:
-	void legendVisibilityChanged();
-	void legendLocationChanged( int index );
-	void accept();
-	void reject();
+	private slots:
+		void legendVisibilityChanged();
+		void legendLocationChanged( int index );
+		void accept();
+		void reject();
 
-private:
-	void initializeUserPreferences();
-	void initializeCurveLabels();
-	void curveLabelChange();
-	void persist();
-	void canvasLegendChange();
-	void colorBarVisibilityChange();
+	private:
+		void initializeUserPreferences();
+		void initializeCurveLabels();
+		void curveLabelChange();
+		void persist();
+		void canvasLegendChange();
+		void colorBarVisibilityChange();
 
-	bool showLegendDefault;
-	bool showColorBarDefault;
-	int legendPositionDefault;
+		bool showLegendDefault;
+		bool showColorBarDefault;
+		int legendPositionDefault;
 
-	const static QString LEGEND_VISIBLE;
-	const static QString LEGEND_LOCATION;
-	const static QString LEGEND_COLOR_BAR;
-    Ui::LegendPreferences ui;
-    CanvasHolder* canvasHolder;
+		const static QString LEGEND_VISIBLE;
+		const static QString LEGEND_LOCATION;
+		const static QString LEGEND_COLOR_BAR;
+		Ui::LegendPreferences ui;
+		CanvasHolder* canvasHolder;
 
-};
+	};
 }
 
 #endif // LEGENDPREFERENCES_H

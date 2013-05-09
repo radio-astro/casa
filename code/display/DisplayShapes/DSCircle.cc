@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <casa/aips.h>
 
@@ -32,91 +32,91 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSCircle::DSCircle() :
-  DSEllipse(True) {
-  setDefaultOptions();
-}
+	DSCircle::DSCircle() :
+		DSEllipse(True) {
+		setDefaultOptions();
+	}
 
 
-DSCircle::DSCircle(const Float& xPos, const Float& yPos, const Float& radius, 
-		   const Bool& hasHandles,
-		   const Bool& drawHandles) :
-  DSEllipse(xPos, yPos, radius, radius, False, False, True) {
-  
-  setHasHandles(hasHandles);
-  if (hasHandles) {
-    setDrawHandles(drawHandles);
-    Matrix<Float> hp(1,2);
-    hp(0,0) = xPos + radius;
-    hp(0,1) = yPos;
-    buildHandles(hp);
-  }
+	DSCircle::DSCircle(const Float& xPos, const Float& yPos, const Float& radius,
+	                   const Bool& hasHandles,
+	                   const Bool& drawHandles) :
+		DSEllipse(xPos, yPos, radius, radius, False, False, True) {
 
-}
+		setHasHandles(hasHandles);
+		if (hasHandles) {
+			setDrawHandles(drawHandles);
+			Matrix<Float> hp(1,2);
+			hp(0,0) = xPos + radius;
+			hp(0,1) = yPos;
+			buildHandles(hp);
+		}
 
-DSCircle::~DSCircle() {
+	}
 
-}
+	DSCircle::~DSCircle() {
 
-DSCircle::DSCircle(const DSCircle& other) :
-  DSEllipse(other) {
-}
+	}
 
-void DSCircle::changePoint(const Vector<Float> &newPos, const Int nPoint) {
-  changePoint(newPos);
-}
+	DSCircle::DSCircle(const DSCircle& other) :
+		DSEllipse(other) {
+	}
 
-void DSCircle::changePoint(const Vector<Float> &newPos) {
-  Vector<Float> cent(getCenter());
-  Float dist(hypot(newPos[0] - cent[0], newPos[1] - cent[1]));
-  setRadius(dist);
-  Matrix<Float> hp(1,2);
-  hp(0,0) = cent[0] + getMinorAxis();
-  hp(0,1) = cent[1];
-  setHandlePositions(hp);
-}
+	void DSCircle::changePoint(const Vector<Float> &newPos, const Int nPoint) {
+		changePoint(newPos);
+	}
 
-
-void DSCircle::setRadius(const Float& radius) {
-  DSEllipse::setMajorAxis(radius);
-  DSEllipse::setMinorAxis(radius);
-}
+	void DSCircle::changePoint(const Vector<Float> &newPos) {
+		Vector<Float> cent(getCenter());
+		Float dist(hypot(newPos[0] - cent[0], newPos[1] - cent[1]));
+		setRadius(dist);
+		Matrix<Float> hp(1,2);
+		hp(0,0) = cent[0] + getMinorAxis();
+		hp(0,1) = cent[1];
+		setHandlePositions(hp);
+	}
 
 
-Bool DSCircle::inObject(const Float& xPos, const Float& yPos) {
-  Bool inside = False;
-  Vector<Float> cent(getCenter());
-  inside = (hypot(xPos - cent[0], yPos - cent[1]) < getMinorAxis());
-  return inside;
-}
+	void DSCircle::setRadius(const Float& radius) {
+		DSEllipse::setMajorAxis(radius);
+		DSEllipse::setMinorAxis(radius);
+	}
 
-void DSCircle::setCenter(const Float& xPos, const Float& yPos) {
-  DSEllipse::setCenter(xPos, yPos);
-}
 
-Bool DSCircle::setOptions(const Record& settings) {
-  Bool localChange = False;
+	Bool DSCircle::inObject(const Float& xPos, const Float& yPos) {
+		Bool inside = False;
+		Vector<Float> cent(getCenter());
+		inside = (hypot(xPos - cent[0], yPos - cent[1]) < getMinorAxis());
+		return inside;
+	}
 
-  if (settings.isDefined("radius")) {
-    DSEllipse::setMinorAxis(settings.asFloat("radius"));
-    DSEllipse::setMajorAxis(settings.asFloat("radius"));
-  }
+	void DSCircle::setCenter(const Float& xPos, const Float& yPos) {
+		DSEllipse::setCenter(xPos, yPos);
+	}
 
-  if (DSEllipse::setOptions(settings)) localChange = True;
-  return localChange;
-}
+	Bool DSCircle::setOptions(const Record& settings) {
+		Bool localChange = False;
 
-Record DSCircle::getOptions() {
-  Record rec(DSEllipse::getOptions());
-  
-  rec.define("type", "circle");
-  rec.define("radius", getMinorAxis());
+		if (settings.isDefined("radius")) {
+			DSEllipse::setMinorAxis(settings.asFloat("radius"));
+			DSEllipse::setMajorAxis(settings.asFloat("radius"));
+		}
 
-  return rec;  
-}
-void DSCircle::setDefaultOptions() {
+		if (DSEllipse::setOptions(settings)) localChange = True;
+		return localChange;
+	}
 
-}
+	Record DSCircle::getOptions() {
+		Record rec(DSEllipse::getOptions());
+
+		rec.define("type", "circle");
+		rec.define("radius", getMinorAxis());
+
+		return rec;
+	}
+	void DSCircle::setDefaultOptions() {
+
+	}
 
 
 

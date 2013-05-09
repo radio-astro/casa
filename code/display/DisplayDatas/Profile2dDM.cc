@@ -34,98 +34,98 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 //#include <cpgplot.h>
 
-Profile2dDM::Profile2dDM(WorldCanvas *worldCanvas, 
-			     AttributeBuffer *wchAttributes,
-			     AttributeBuffer *ddAttributes,
-			     CachingDisplayData *dd) :
-  CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
-}
-
-Profile2dDM::~Profile2dDM() {
-  cleanup();
-}
-
-Bool Profile2dDM::drawIntoList(Display::RefreshReason reason,
-				 WorldCanvasHolder &wcHolder) {
-  // Locate the WorldCanvas to draw upon
-  WorldCanvas *wc = wcHolder.worldCanvas();
-  Profile2dDD *parent = dynamic_cast<Profile2dDD *>
-    (parentDisplayData());
-  if (!parent) {
-    throw(AipsError("Invalid parent of Profile2dDM"));
-  }
-  Matrix<Double> data;
-  Vector<Bool> mask;
-  parent->getDrawData(data);
-  parent->getMaskData(mask);
-  if (data.nelements()) {
-    setStyles(wc, parent); 
-    if (mask.nelements()) {
-      // Segment unmasked data
-      uInt start, finish, length;
-      start = 0;
-      finish = 0;
-      while (finish < mask.nelements()) {
-	start = finish;
-	while (finish < mask.nelements()
-	       && mask(finish)) {
-	  finish++;
+	Profile2dDM::Profile2dDM(WorldCanvas *worldCanvas,
+	                         AttributeBuffer *wchAttributes,
+	                         AttributeBuffer *ddAttributes,
+	                         CachingDisplayData *dd) :
+		CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
 	}
-	if (start != finish) {
-	  // insert data into a temp matrix for display
-	  Matrix<Double> subSection(finish-start, 2);
-	  length = subSection.shape()(0);
-	  for (uInt i=0; i < length; i++) {
-	    subSection(i,0) = data(start+i, 0);
-	    subSection(i,1) = data(start+i, 1);
-	  }
-	  wc->drawPolyline(subSection, True);
-	}      
-	finish++;
-      }
-    } else { 
-      wc->drawPolyline(data, True);
-    }
-    Double restFrequency = parent->restFrequency();
-    if (parent->showRestFrequency() && restFrequency != 0) {
-      // display the Rest Frequency
-      Vector<Double> a(2), b(2);
-      a(0) = restFrequency;
-      a(1) = parent->profileYMin();
-      b(0) = a(0);
-      b(1) = parent->profileYMax();
-      wc->setLineStyle(Display::LSDashed);
-      wc->drawLine(a, b, False);
-      }
-    wc->clearNonDrawArea();
-    restoreStyles(wc);
-  }
-  
-  return True;
-}
 
-void Profile2dDM::setStyles(WorldCanvas *wc, Profile2dDD *parent) {
-  wc->setColor(parent->profileColor());
-  wc->setLineWidth(parent->profileLineWidth());
-  wc->setLineStyle(parent->profileLineStyle());
-}
+	Profile2dDM::~Profile2dDM() {
+		cleanup();
+	}
 
-void Profile2dDM::restoreStyles(WorldCanvas *wc) {
-  wc->setLineStyle(Display::LSSolid);
-}
+	Bool Profile2dDM::drawIntoList(Display::RefreshReason reason,
+	                               WorldCanvasHolder &wcHolder) {
+		// Locate the WorldCanvas to draw upon
+		WorldCanvas *wc = wcHolder.worldCanvas();
+		Profile2dDD *parent = dynamic_cast<Profile2dDD *>
+		                      (parentDisplayData());
+		if (!parent) {
+			throw(AipsError("Invalid parent of Profile2dDM"));
+		}
+		Matrix<Double> data;
+		Vector<Bool> mask;
+		parent->getDrawData(data);
+		parent->getMaskData(mask);
+		if (data.nelements()) {
+			setStyles(wc, parent);
+			if (mask.nelements()) {
+				// Segment unmasked data
+				uInt start, finish, length;
+				start = 0;
+				finish = 0;
+				while (finish < mask.nelements()) {
+					start = finish;
+					while (finish < mask.nelements()
+					        && mask(finish)) {
+						finish++;
+					}
+					if (start != finish) {
+						// insert data into a temp matrix for display
+						Matrix<Double> subSection(finish-start, 2);
+						length = subSection.shape()(0);
+						for (uInt i=0; i < length; i++) {
+							subSection(i,0) = data(start+i, 0);
+							subSection(i,1) = data(start+i, 1);
+						}
+						wc->drawPolyline(subSection, True);
+					}
+					finish++;
+				}
+			} else {
+				wc->drawPolyline(data, True);
+			}
+			Double restFrequency = parent->restFrequency();
+			if (parent->showRestFrequency() && restFrequency != 0) {
+				// display the Rest Frequency
+				Vector<Double> a(2), b(2);
+				a(0) = restFrequency;
+				a(1) = parent->profileYMin();
+				b(0) = a(0);
+				b(1) = parent->profileYMax();
+				wc->setLineStyle(Display::LSDashed);
+				wc->drawLine(a, b, False);
+			}
+			wc->clearNonDrawArea();
+			restoreStyles(wc);
+		}
 
-void Profile2dDM::cleanup() {
-}
+		return True;
+	}
 
-Profile2dDM::Profile2dDM() {
-}
+	void Profile2dDM::setStyles(WorldCanvas *wc, Profile2dDD *parent) {
+		wc->setColor(parent->profileColor());
+		wc->setLineWidth(parent->profileLineWidth());
+		wc->setLineStyle(parent->profileLineStyle());
+	}
 
-Profile2dDM::Profile2dDM(const Profile2dDM &other) :
-  CachingDisplayMethod(other) {
-}
+	void Profile2dDM::restoreStyles(WorldCanvas *wc) {
+		wc->setLineStyle(Display::LSSolid);
+	}
 
-void Profile2dDM::operator=(const Profile2dDM &) {
-}
+	void Profile2dDM::cleanup() {
+	}
+
+	Profile2dDM::Profile2dDM() {
+	}
+
+	Profile2dDM::Profile2dDM(const Profile2dDM &other) :
+		CachingDisplayMethod(other) {
+	}
+
+	void Profile2dDM::operator=(const Profile2dDM &) {
+	}
 
 } //# NAMESPACE CASA - END
 

@@ -33,42 +33,42 @@ class QWidget;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 	class Util {
-		public:
-			static const QString ORGANIZATION;
-			static const QString APPLICATION;
-			static void showUserMessage( QString& msg, QWidget* parent);
-			static double degMinSecToRadians( int degrees, int mins, float secs );
-			static double hrMinSecToRadians( int hours, int mins, float secs );
-			static QString toHTML( const QString& baseStr );
-			static int getCenter( const Vector<Double>& values, Double& mean );
-			static void getRa(double radians, int& raHour, int& raMin, double& raSec);
-			static void getDec(double radians, int& decDeg, int& decMin, double& decSec);
-			static void minMax( double& min, double& max, const Vector<Double>& values );
-			static QString toDegreeString( int hrs, int mins, double secs );
-			static QString toDecString( int hrs, int mins, double secs );
-			static void appendSign( double rad, QString& degreeString );
-			static QList<QString> getTitleCaseVariations( QString source );
-			static QString toTitleCase( QString word );
+	public:
+		static const QString ORGANIZATION;
+		static const QString APPLICATION;
+		static void showUserMessage( QString& msg, QWidget* parent);
+		static double degMinSecToRadians( int degrees, int mins, float secs );
+		static double hrMinSecToRadians( int hours, int mins, float secs );
+		static QString toHTML( const QString& baseStr );
+		static int getCenter( const Vector<Double>& values, Double& mean );
+		static void getRa(double radians, int& raHour, int& raMin, double& raSec);
+		static void getDec(double radians, int& decDeg, int& decMin, double& decSec);
+		static void minMax( double& min, double& max, const Vector<Double>& values );
+		static QString toDegreeString( int hrs, int mins, double secs );
+		static QString toDecString( int hrs, int mins, double secs );
+		static void appendSign( double rad, QString& degreeString );
+		static QList<QString> getTitleCaseVariations( QString source );
+		static QString toTitleCase( QString word );
 
-			/**
-			 * Designed to take an input string of the format '[km/s]' and return 'km/s'.
-			 */
-			static QString stripBrackets( QString unitStr );
+		/**
+		 * Designed to take an input string of the format '[km/s]' and return 'km/s'.
+		 */
+		static QString stripBrackets( QString unitStr );
 
-			/**
-			 * Designed to take an input string of the format <font color='black'>km/s</font>'
-			 * and return 'km/s'.
-			 */
-			static QString stripFont( QString unitStr );
+		/**
+		 * Designed to take an input string of the format <font color='black'>km/s</font>'
+		 * and return 'km/s'.
+		 */
+		static QString stripFont( QString unitStr );
 
-		private:
-			Util();
-			virtual ~Util();
-			static double toRadians( double degrees );
-			static double toDecimalDegrees( int hrs, int mins, float seconds );
-			static const double PI;
-			static const double TIME_CONV;
-			static const double RAD_DEGREE_CONVERSION;
+	private:
+		Util();
+		virtual ~Util();
+		static double toRadians( double degrees );
+		static double toDecimalDegrees( int hrs, int mins, float seconds );
+		static const double PI;
+		static const double TIME_CONV;
+		static const double RAD_DEGREE_CONVERSION;
 
 	};
 }

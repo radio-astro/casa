@@ -38,104 +38,104 @@ class QStackedWidget;
 
 namespace casa {
 
-class QtDisplayPanelGui;
-class QtDisplayData;
+	class QtDisplayPanelGui;
+	class QtDisplayData;
 
-class AnnRectBox;
-class AnnEllipse;
-class AnnSymbol;
-class AnnPolygon;
-class AnnPolyline;
+	class AnnRectBox;
+	class AnnEllipse;
+	class AnnSymbol;
+	class AnnPolygon;
+	class AnnPolyline;
 
-namespace viewer {
+	namespace viewer {
 
-class QtRegion;
-class QtRegionDock;
+		class QtRegion;
+		class QtRegionDock;
 
-class QtRegionSourceKernel : public QObject, public RegionSourceKernel {
-	Q_OBJECT
-public:
-	QtRegionSourceKernel( QtDisplayPanelGui *panel );
+		class QtRegionSourceKernel : public QObject, public RegionSourceKernel {
+			Q_OBJECT
+		public:
+			QtRegionSourceKernel( QtDisplayPanelGui *panel );
 
-	QtRegionDock *dock( );
-	int numFrames( ) const;
+			QtRegionDock *dock( );
+			int numFrames( ) const;
 
-	~QtRegionSourceKernel( );
+			~QtRegionSourceKernel( );
 
-	void revokeRegion( Region *r );
+			void revokeRegion( Region *r );
 
-	// inherited pure-virtual from dtorNotifiee, removes deleted regions...
-	void dtorCalled( const dtorNotifier * );
+			// inherited pure-virtual from dtorNotifiee, removes deleted regions...
+			void dtorCalled( const dtorNotifier * );
 
-signals:
-	void regionCreated( int, const QString &shape, const QString &name,
-			const QList<double> &world_x, const QList<double> &world_y,
-			const QList<int> &pixel_x, const QList<int> &pixel_y,
-			const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
-	void regionUpdate( int, viewer::region::RegionChanges, const QList<double> &world_x, const QList<double> &world_y,
-			const QList<int> &pixel_x, const QList<int> &pixel_y );
-	void regionUpdateResponse( int, const QString &shape, const QString &name,
-			const QList<double> &world_x, const QList<double> &world_y,
-			const QList<int> &pixel_x, const QList<int> &pixel_y,
-			const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
-	void newCorners( double, double, double, double);
-	void show1DSliceTool();
+		signals:
+			void regionCreated( int, const QString &shape, const QString &name,
+			                    const QList<double> &world_x, const QList<double> &world_y,
+			                    const QList<int> &pixel_x, const QList<int> &pixel_y,
+			                    const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+			void regionUpdate( int, viewer::region::RegionChanges, const QList<double> &world_x, const QList<double> &world_y,
+			                   const QList<int> &pixel_x, const QList<int> &pixel_y );
+			void regionUpdateResponse( int, const QString &shape, const QString &name,
+			                           const QList<double> &world_x, const QList<double> &world_y,
+			                           const QList<int> &pixel_x, const QList<int> &pixel_y,
+			                           const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+			void newCorners( double, double, double, double);
+			void show1DSliceTool();
 
-public slots:
+		public slots:
 //Used to change the position of the source.
-void adjustPosition( double blcx, double blcy, double trcx, double trcy );
+			void adjustPosition( double blcx, double blcy, double trcx, double trcy );
 
-protected:
-friend class QtRegionSource;
+		protected:
+			friend class QtRegionSource;
 
-/* std::tr1::shared_ptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ); */
-std::tr1::shared_ptr<Rectangle> rectangle( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
-std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 );
-std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
-std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 );
-std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
-std::tr1::shared_ptr<PVLine> pvline( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
+			/* std::tr1::shared_ptr<Rectangle> rectangle( int blc_x, int blc_y, int trc_x, int trc_y ); */
+			std::tr1::shared_ptr<Rectangle> rectangle( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
+			std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 );
+			std::tr1::shared_ptr<Polygon> polygon( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
+			std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, double x1, double y1 );
+			std::tr1::shared_ptr<Polyline> polyline( RegionCreator *rc, WorldCanvas *wc, const std::vector<std::pair<double,double> > &pts );
+			std::tr1::shared_ptr<PVLine> pvline( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
 
 // ellipse is derived from rectangle... so while this should be "std::tr1::shared_ptr<Ellipse>" this would preclude
 // the direct reuse of the Rectangle code (which only differs by region creation)... perhaps a case where
 // smart pointers are not so smart (in not mirroring the inheritance hiearchy)... though perhaps it can be
 // generalized to "std::tr1::shared_ptr<Region>"...
-std::tr1::shared_ptr<Rectangle> ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
-std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, int size );
+			std::tr1::shared_ptr<Rectangle> ellipse( RegionCreator *rc, WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
+			std::tr1::shared_ptr<Rectangle> point( RegionCreator *rc, WorldCanvas *wc, double x, double y, QtMouseToolNames::PointRegionSymbols sym, int size );
 
-QtMouseToolNames::PointRegionSymbols currentPointSymbolType( ) const;
-
-
-protected slots:
-void loadRegions( const QString &path, const QString &type );
-void updateRegionState(QtDisplayData*);
+			QtMouseToolNames::PointRegionSymbols currentPointSymbolType( ) const;
 
 
+		protected slots:
+			void loadRegions( const QString &path, const QString &type );
+			void updateRegionState(QtDisplayData*);
 
-private:
 
-void load_crtf_regions( WorldCanvas *, const QString &path );
-void load_crtf_rectangle( WorldCanvas *wc, MDirection::Types cstype, const AnnRectBox *box );
-void load_crtf_ellipse( WorldCanvas *wc, MDirection::Types cstype, const AnnEllipse *ellipse );
-void load_crtf_point( WorldCanvas *wc, MDirection::Types cstype, const AnnSymbol *symbol );
-void load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon );
-void load_crtf_polyline( WorldCanvas *wc, MDirection::Types cstype, const AnnPolyline *polyline );
 
-QtDisplayPanelGui *panel_;
+		private:
 
-std::map<Region*,RegionCreator*> creator_of_region;
+			void load_crtf_regions( WorldCanvas *, const QString &path );
+			void load_crtf_rectangle( WorldCanvas *wc, MDirection::Types cstype, const AnnRectBox *box );
+			void load_crtf_ellipse( WorldCanvas *wc, MDirection::Types cstype, const AnnEllipse *ellipse );
+			void load_crtf_point( WorldCanvas *wc, MDirection::Types cstype, const AnnSymbol *symbol );
+			void load_crtf_polygon( WorldCanvas *wc, MDirection::Types cstype, const AnnPolygon *polygon );
+			void load_crtf_polyline( WorldCanvas *wc, MDirection::Types cstype, const AnnPolyline *polyline );
 
-};
+			QtDisplayPanelGui *panel_;
 
-class QtRegionSource : public RegionSource {
-public:
-	QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel );
-protected:
-	friend class QtRegionSourceFactory;
-	QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel, const shared_kernel_ptr_type &kernel );
-};
+			std::map<Region*,RegionCreator*> creator_of_region;
 
-}
+		};
+
+		class QtRegionSource : public RegionSource {
+		public:
+			QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel );
+		protected:
+			friend class QtRegionSourceFactory;
+			QtRegionSource( RegionCreator *rc, QtDisplayPanelGui *panel, const shared_kernel_ptr_type &kernel );
+		};
+
+	}
 }
 
 #endif

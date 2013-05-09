@@ -29,36 +29,36 @@
 
 namespace casa {
 
-class SpecFitGaussian : public SpecFit {
+	class SpecFitGaussian : public SpecFit {
 
-public:
-	SpecFitGaussian( float peak, float center, float fwhm, int index );
-	SpecFitGaussian( const SpecFitGaussian& other );
-	void setPeak( float peak );
-	void setCenter( float center );
-	void setFWHM( float fwhm );
-	float getFWHM() const;
-	float getCenter() const;
-	float getPeak() const;
-	void setPeakFixed( bool fixed );
-	void setCenterFixed( bool fixed );
-	void setFwhmFixed( bool fixed );
-	bool isPeakFixed() const;
-	bool isCenterFixed() const;
-	bool isFwhmFixed() const;
-	void evaluate( Vector<Float>& xValues );
-	SpecFitGaussian& operator=(const SpecFitGaussian& other );
-	virtual ~SpecFitGaussian();
+	public:
+		SpecFitGaussian( float peak, float center, float fwhm, int index );
+		SpecFitGaussian( const SpecFitGaussian& other );
+		void setPeak( float peak );
+		void setCenter( float center );
+		void setFWHM( float fwhm );
+		float getFWHM() const;
+		float getCenter() const;
+		float getPeak() const;
+		void setPeakFixed( bool fixed );
+		void setCenterFixed( bool fixed );
+		void setFwhmFixed( bool fixed );
+		bool isPeakFixed() const;
+		bool isCenterFixed() const;
+		bool isFwhmFixed() const;
+		void evaluate( Vector<Float>& xValues );
+		SpecFitGaussian& operator=(const SpecFitGaussian& other );
+		virtual ~SpecFitGaussian();
 
-private:
-	void initialize( const SpecFitGaussian& other );
-	float peak;
-	float center;
-	float fwhm;
-	bool fixedPeak;
-	bool fixedCenter;
-	bool fixedFwhm;
-};
+	private:
+		void initialize( const SpecFitGaussian& other );
+		float peak;
+		float center;
+		float fwhm;
+		bool fixedPeak;
+		bool fixedCenter;
+		bool fixedFwhm;
+	};
 
 } /* namespace casa */
 #endif /* SPECFITGAUSSIAN_H_ */

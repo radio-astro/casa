@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <display/DisplayShapes/DSPixelPolyLine.h>
 #include <display/DisplayShapes/DSScreenPolyLine.h>
@@ -35,78 +35,78 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSPixelPolyLine::DSPixelPolyLine() :
-  DSPolyLine() {
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
+	DSPixelPolyLine::DSPixelPolyLine() :
+		DSPolyLine() {
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
 
-}
+	}
 
-DSPixelPolyLine::DSPixelPolyLine(const Record& settings) :
-  DSPolyLine() {
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
-  
-  setOptions(settings);
-}
+	DSPixelPolyLine::DSPixelPolyLine(const Record& settings) :
+		DSPolyLine() {
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
 
-DSPixelPolyLine::DSPixelPolyLine(DSScreenPolyLine& other) :
-  DSPolyLine() {
-  
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
-  
-  DSPolyLine::setOptions(other.getRawOptions());
-  
-  
-}
+		setOptions(settings);
+	}
 
-DSPixelPolyLine::DSPixelPolyLine(DSWorldPolyLine& other) :
-  DSPolyLine() {
-  
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
-  
-  DSPolyLine::setOptions(other.getRawOptions());
-  
-}
+	DSPixelPolyLine::DSPixelPolyLine(DSScreenPolyLine& other) :
+		DSPolyLine() {
 
-DSPixelPolyLine::~DSPixelPolyLine() {
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
 
-}
+		DSPolyLine::setOptions(other.getRawOptions());
 
-Record DSPixelPolyLine::getOptions() {
-  Record toReturn;
-  
-  toReturn = DSPolyLine::getOptions();
-  
-  matrixFloatToQuant(toReturn, "polylinepoints", "pix");
-  
-  if (toReturn.isDefined("coords")) {
-    toReturn.removeField("coords");
-  }
-  
-  toReturn.define("coords", "pix");
-  
-  return toReturn;
-}
 
-Bool DSPixelPolyLine::setOptions(const Record& settings) {
-  
-  Bool localChange = False;
-  Record toSet = settings;
-  
-  if (settings.isDefined("coords")) {
-    if (settings.asString("coords") != "pix") {
-      throw(AipsError("I (DSPixelPolyLine) was expecting an "
-		      "option record which"
-		      " had coords == \'pix\'. Please use a \'lock\' function"
-		      " to change my co-ord system"));
-    }
-  }
-  
-  if (DSPolyLine::setOptions(toSet)) {
-    localChange = True;
-  }
+	}
 
-  return localChange;
-}
+	DSPixelPolyLine::DSPixelPolyLine(DSWorldPolyLine& other) :
+		DSPolyLine() {
+
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
+
+		DSPolyLine::setOptions(other.getRawOptions());
+
+	}
+
+	DSPixelPolyLine::~DSPixelPolyLine() {
+
+	}
+
+	Record DSPixelPolyLine::getOptions() {
+		Record toReturn;
+
+		toReturn = DSPolyLine::getOptions();
+
+		matrixFloatToQuant(toReturn, "polylinepoints", "pix");
+
+		if (toReturn.isDefined("coords")) {
+			toReturn.removeField("coords");
+		}
+
+		toReturn.define("coords", "pix");
+
+		return toReturn;
+	}
+
+	Bool DSPixelPolyLine::setOptions(const Record& settings) {
+
+		Bool localChange = False;
+		Record toSet = settings;
+
+		if (settings.isDefined("coords")) {
+			if (settings.asString("coords") != "pix") {
+				throw(AipsError("I (DSPixelPolyLine) was expecting an "
+				                "option record which"
+				                " had coords == \'pix\'. Please use a \'lock\' function"
+				                " to change my co-ord system"));
+			}
+		}
+
+		if (DSPolyLine::setOptions(toSet)) {
+			localChange = True;
+		}
+
+		return localChange;
+	}
 
 
 

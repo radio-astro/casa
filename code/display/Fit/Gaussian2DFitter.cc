@@ -30,100 +30,98 @@
 
 namespace casa {
 
-Gaussian2DFitter::Gaussian2DFitter() :
-	LOG_SUFFIX("Log.txt"), REGION_SUFFIX("Region.txt"){
-	logFile = false;
-}
-
-bool Gaussian2DFitter::isFitSuccessful() const {
-	return successfulFit;
-}
-
-QString Gaussian2DFitter::getErrorMessage() const {
-	return errorMsg;
-}
-
-QString Gaussian2DFitter::getLogFilePath() const {
-	QString logPath;
-	if ( logFile ){
-		logPath = filePath.c_str()+ LOG_SUFFIX;
+	Gaussian2DFitter::Gaussian2DFitter() :
+		LOG_SUFFIX("Log.txt"), REGION_SUFFIX("Region.txt") {
+		logFile = false;
 	}
-	else {
-		logPath = viewer::options.temporaryPath( "tmpFitLogFile" ).c_str();
+
+	bool Gaussian2DFitter::isFitSuccessful() const {
+		return successfulFit;
 	}
-	return logPath;
-}
 
-QString Gaussian2DFitter::getResidualImagePath() const {
-	return residualImageFile.c_str();
-}
-
-void Gaussian2DFitter::setFilePath( String path ){
-	filePath = path;
-}
-
-void Gaussian2DFitter::setWriteLogFile( bool write ){
-	logFile = write;
-}
-
-void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const String& box,
-		int channelNum, const String& estimatesFileName, const String& residualImage,
-		const Vector<Float>& include, const Vector<Float>& exclude ){
-	this->image = image;
-	pixelBox = box;
-	channelNumber = channelNum;
-	estimateFile = estimatesFileName;
-	residualImageFile = residualImage;
-	int includeCount = include.size();
-	includePixs.resize( includeCount );
-	for ( int i = 0; i < includeCount; i++ ){
-		includePixs[i] = include[i];
+	QString Gaussian2DFitter::getErrorMessage() const {
+		return errorMsg;
 	}
-	int excludeCount = exclude.size();
-	for ( int i = 0; i < excludeCount; i++ ){
-		excludePixs[i] = exclude[i];
+
+	QString Gaussian2DFitter::getLogFilePath() const {
+		QString logPath;
+		if ( logFile ) {
+			logPath = filePath.c_str()+ LOG_SUFFIX;
+		} else {
+			logPath = viewer::options.temporaryPath( "tmpFitLogFile" ).c_str();
+		}
+		return logPath;
 	}
-}
 
-QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(ImageInterface<Float>* image, const QString& colorName) const {
-	return fitResultList.toDrawingDisplay( image, colorName );
-}
+	QString Gaussian2DFitter::getResidualImagePath() const {
+		return residualImageFile.c_str();
+	}
 
-void Gaussian2DFitter::run(){
-	successfulFit = true;
-	String channelStr = String::toString(channelNumber);
+	void Gaussian2DFitter::setFilePath( String path ) {
+		filePath = path;
+	}
 
-	ImageFitter fitter(image, "", NULL, pixelBox, channelStr, "", "", includePixs,
-			excludePixs, residualImageFile, "", estimateFile);
-	String logFile = getLogFilePath().toStdString();
-	fitter.setLogfile( logFile );
+	void Gaussian2DFitter::setWriteLogFile( bool write ) {
+		logFile = write;
+	}
 
-	// do the fit
-	try {
-		ComponentList componentList = fitter.fit();
-		fitResultList.fromComponentList( componentList );
-
-		//If the fit did not converge record an error.
-		if (!fitter.converged(0)){
-			successfulFit = false;
-			errorMsg = "Fit did not converge.";
+	void Gaussian2DFitter::setFitParameters( ImageInterface<Float>* image, const String& box,
+	        int channelNum, const String& estimatesFileName, const String& residualImage,
+	        const Vector<Float>& include, const Vector<Float>& exclude ) {
+		this->image = image;
+		pixelBox = box;
+		channelNumber = channelNum;
+		estimateFile = estimatesFileName;
+		residualImageFile = residualImage;
+		int includeCount = include.size();
+		includePixs.resize( includeCount );
+		for ( int i = 0; i < includeCount; i++ ) {
+			includePixs[i] = include[i];
+		}
+		int excludeCount = exclude.size();
+		for ( int i = 0; i < excludeCount; i++ ) {
+			excludePixs[i] = exclude[i];
 		}
 	}
-	catch( AipsError& error ){
-		successfulFit = false;
-		QString specificProblem( error.what() );
-		qDebug() << "Unsuccessful fit: "<<specificProblem;
-		errorMsg = "Fit did not converge";
+
+	QList<RegionShape*> Gaussian2DFitter::toDrawingDisplay(ImageInterface<Float>* image, const QString& colorName) const {
+		return fitResultList.toDrawingDisplay( image, colorName );
 	}
-}
 
-bool Gaussian2DFitter::writeRegionFile() const {
-	QString regionFile = filePath.c_str() + REGION_SUFFIX;
-	bool successfulWrite = fitResultList.toRegionFile( image, channelNumber, regionFile );
-	return successfulWrite;
-}
+	void Gaussian2DFitter::run() {
+		successfulFit = true;
+		String channelStr = String::toString(channelNumber);
 
-Gaussian2DFitter::~Gaussian2DFitter() {
-}
+		ImageFitter fitter(image, "", NULL, pixelBox, channelStr, "", "", includePixs,
+		                   excludePixs, residualImageFile, "", estimateFile);
+		String logFile = getLogFilePath().toStdString();
+		fitter.setLogfile( logFile );
+
+		// do the fit
+		try {
+			ComponentList componentList = fitter.fit();
+			fitResultList.fromComponentList( componentList );
+
+			//If the fit did not converge record an error.
+			if (!fitter.converged(0)) {
+				successfulFit = false;
+				errorMsg = "Fit did not converge.";
+			}
+		} catch( AipsError& error ) {
+			successfulFit = false;
+			QString specificProblem( error.what() );
+			qDebug() << "Unsuccessful fit: "<<specificProblem;
+			errorMsg = "Fit did not converge";
+		}
+	}
+
+	bool Gaussian2DFitter::writeRegionFile() const {
+		QString regionFile = filePath.c_str() + REGION_SUFFIX;
+		bool successfulWrite = fitResultList.toRegionFile( image, channelNumber, regionFile );
+		return successfulWrite;
+	}
+
+	Gaussian2DFitter::~Gaussian2DFitter() {
+	}
 
 } /* namespace casa */

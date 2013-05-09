@@ -26,76 +26,76 @@
 
 namespace casa {
 
-SpecFit::SpecFit( QString fileSuffix) : suffix( fileSuffix ){
-}
-
-
-
-QString SpecFit::getSuffix(){
-	return suffix;
-}
-
-bool SpecFit::isXPixels(){
-	return false;
-}
-
-bool SpecFit::isSpecFitFor( int pixelX, int pixelY ) const{
-	bool correctCenter = false;
-	if ( centerX == pixelX && centerY == pixelY ){
-		correctCenter = true;
+	SpecFit::SpecFit( QString fileSuffix) : suffix( fileSuffix ) {
 	}
-	return correctCenter;
-}
-void SpecFit::setFitCenter( int pixelX, int pixelY ){
-	centerX = pixelX;
-	centerY = pixelY;
-}
 
-void SpecFit::setXValues(Vector<Float>& xVals) {
-	xValues = xVals;
-}
 
-Vector<Float> SpecFit::getXValues() const {
-	return xValues;
-}
 
-Vector<Float> SpecFit::getYValues() const {
-	return yValues;
-}
+	QString SpecFit::getSuffix() {
+		return suffix;
+	}
 
-void SpecFit::setCurveName( QString cName ){
-	curveName = cName;
-}
+	bool SpecFit::isXPixels() {
+		return false;
+	}
 
-QString SpecFit::getCurveName() const {
-	return curveName;
-}
+	bool SpecFit::isSpecFitFor( int pixelX, int pixelY ) const {
+		bool correctCenter = false;
+		if ( centerX == pixelX && centerY == pixelY ) {
+			correctCenter = true;
+		}
+		return correctCenter;
+	}
+	void SpecFit::setFitCenter( int pixelX, int pixelY ) {
+		centerX = pixelX;
+		centerY = pixelY;
+	}
 
-SpecFit::SpecFit( const SpecFit& other ){
-	initialize( other );
-}
+	void SpecFit::setXValues(Vector<Float>& xVals) {
+		xValues = xVals;
+	}
 
-SpecFit& SpecFit::operator=(const SpecFit& other ){
-	if ( this != &other ){
+	Vector<Float> SpecFit::getXValues() const {
+		return xValues;
+	}
+
+	Vector<Float> SpecFit::getYValues() const {
+		return yValues;
+	}
+
+	void SpecFit::setCurveName( QString cName ) {
+		curveName = cName;
+	}
+
+	QString SpecFit::getCurveName() const {
+		return curveName;
+	}
+
+	SpecFit::SpecFit( const SpecFit& other ) {
 		initialize( other );
 	}
-	return *this;
-}
 
-void SpecFit::initialize( const SpecFit& other ){
-	suffix = other.suffix;
-	curveName = other.curveName;
-	centerX = other.centerX;
-	centerY = other.centerY;
-	Vector<Float> xVals = getXValues();
-	xValues.resize( xVals.size() );
-	xValues = xVals;
-	Vector<Float> yVals = getYValues();
-	yValues.resize( yVals.size());
-	yValues = yVals;
-}
+	SpecFit& SpecFit::operator=(const SpecFit& other ) {
+		if ( this != &other ) {
+			initialize( other );
+		}
+		return *this;
+	}
 
-SpecFit::~SpecFit() {
-}
+	void SpecFit::initialize( const SpecFit& other ) {
+		suffix = other.suffix;
+		curveName = other.curveName;
+		centerX = other.centerX;
+		centerY = other.centerY;
+		Vector<Float> xVals = getXValues();
+		xValues.resize( xVals.size() );
+		xValues = xVals;
+		Vector<Float> yVals = getYValues();
+		yValues.resize( yVals.size());
+		yValues = yVals;
+	}
+
+	SpecFit::~SpecFit() {
+	}
 
 } /* namespace casa */

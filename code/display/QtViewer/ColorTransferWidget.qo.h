@@ -35,35 +35,34 @@ class QwtLinearColorMap;
 
 namespace casa {
 
-class ColorTransferWidget : public QWidget
-{
-    Q_OBJECT
+	class ColorTransferWidget : public QWidget {
+		Q_OBJECT
 
-public:
-    ColorTransferWidget(QWidget *parent = 0);
-    ~ColorTransferWidget();
+	public:
+		ColorTransferWidget(QWidget *parent = 0);
+		~ColorTransferWidget();
 
-    void setColorMap(QwtLinearColorMap* linearMap );
-    void setIntensities( std::vector<float>& intensities );
-    void setColorLookups( const Vector<uInt>& lookups );
+		void setColorMap(QwtLinearColorMap* linearMap );
+		void setIntensities( std::vector<float>& intensities );
+		void setColorLookups( const Vector<uInt>& lookups );
 
-private:
-    ColorTransferWidget( const ColorTransferWidget& other );
-    ColorTransferWidget operator=( const ColorTransferWidget& other );
-    int colorScaleMin;
-    int colorScaleMax;
-    void resetColorBar();
-    void resetColorCurve();
+	private:
+		ColorTransferWidget( const ColorTransferWidget& other );
+		ColorTransferWidget operator=( const ColorTransferWidget& other );
+		int colorScaleMin;
+		int colorScaleMax;
+		void resetColorBar();
+		void resetColorCurve();
 
-    Ui::ColorTransferWidgetClass ui;
+		Ui::ColorTransferWidgetClass ui;
 
-    Vector<uInt> colorLookups;
-    QwtPlot* plot;
-    QwtPlotCurve* colorCurve;
-    QwtLinearColorMap* colorMap;
+		Vector<uInt> colorLookups;
+		QwtPlot* plot;
+		QwtPlotCurve* colorCurve;
+		QwtLinearColorMap* colorMap;
 
-    QVector<double> intensities;
-};
+		QVector<double> intensities;
+	};
 
 }
 #endif // COLORTRANSFERWIDGET_QO_H

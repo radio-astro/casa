@@ -39,550 +39,530 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-Star::Star(Vector<Double>& position, Vector<Double>& velocity, 
-           Int xSize, Int ySize) :
+	Star::Star(Vector<Double>& position, Vector<Double>& velocity,
+	           Int xSize, Int ySize) :
 #if 1
-  itsPosition(position.copy()),
-  oldPosition(3,0),
-  itsOffset(3,0),
-  itsPlotPosition(3,0),
-  itsVelocity(velocity.copy()),
+		itsPosition(position.copy()),
+		oldPosition(3,0),
+		itsOffset(3,0),
+		itsPlotPosition(3,0),
+		itsVelocity(velocity.copy()),
 #endif
-  itsXSize(xSize), 
-  itsYSize(ySize),
-  itsDrawList(0), 
-  itsPixelCanvas(0), 
-  plotMode(Galaxy::POSITION),
-  changedPlotMode(True)
-{
+		itsXSize(xSize),
+		itsYSize(ySize),
+		itsDrawList(0),
+		itsPixelCanvas(0),
+		plotMode(Galaxy::POSITION),
+		changedPlotMode(True) {
 #if 0
-  itsPosition.resize(0);
-  itsPosition = position;
+		itsPosition.resize(0);
+		itsPosition = position;
 
-  oldPosition.resize(3);
-  oldPosition = 0;
-  
-  itsVelocity.resize(0);
-  itsVelocity = velocity;
-  
-  itsOffset.resize(3);
-  itsOffset = 0;
+		oldPosition.resize(3);
+		oldPosition = 0;
 
-  itsPlotPosition.resize(3);
-  itsPlotPosition = 0;
+		itsVelocity.resize(0);
+		itsVelocity = velocity;
+
+		itsOffset.resize(3);
+		itsOffset = 0;
+
+		itsPlotPosition.resize(3);
+		itsPlotPosition = 0;
 #endif
-  
-};
 
-Star::~Star() 
-{
-  if (itsPixelCanvas != 0) {
-    itsPixelCanvas->deleteList(itsDrawList);
-  }
-}
+	};
 
-void Star::draw(PixelCanvas *pCanvas) 
-{
-  // we assume that the drawmode has been set
+	Star::~Star() {
+		if (itsPixelCanvas != 0) {
+			itsPixelCanvas->deleteList(itsDrawList);
+		}
+	}
 
-  if (itsPixelCanvas != 0) {    
-    if ((pCanvas != itsPixelCanvas) || (changedPlotMode) ) {
-      // something changed, so delete DrawList
-      itsPixelCanvas->deleteList(itsDrawList);
-      // and store PixelCanvas
-      itsPixelCanvas = pCanvas;
-      // create new DrawList
-      itsDrawList = pCanvas->newList();
-      // draw the star
-      pCanvas->drawPoint(itsPlotPosition(0), itsPlotPosition(1));
-      // end drawlist
-      pCanvas->endList();
-      // end execute the drawing
-      pCanvas->drawList(itsDrawList);
-    } else {
-      pCanvas->drawList(itsDrawList);
-      pCanvas->translateList(itsDrawList, itsOffset(0), itsOffset(1));    
-      pCanvas->drawList(itsDrawList);
-    }
-  } else {
-    // used for first time plot, store PixelCanvas
-    itsPixelCanvas = pCanvas;
-    // create new drawlist
-    itsDrawList = pCanvas->newList();
-    // draw the star
-    pCanvas->drawPoint(itsPlotPosition(0), itsPlotPosition(1));
-    // close the drawlist
-    pCanvas->endList();
-    // and execute draw
-    pCanvas->drawList(itsDrawList);
-  }
-  changedPlotMode = False;
-  
-}
+	void Star::draw(PixelCanvas *pCanvas) {
+		// we assume that the drawmode has been set
 
-    
-void Star::applyForce(List<void *>& galaxyList, Double timeStep, 
-                      Double /* dampingFactor */) 
-{
-  Galaxy *galaxy;
-    // create iterator and temps
-  ListIter<void *> iter(&galaxyList);
-  Vector<Double> relPosition(3);
-  Vector<Double> force(3);
-  Double galForce;
-  Double distance;
-  Int i;
-  
-  force = 0.0;
-  
-  // loop through List
-  while (!iter.atEnd()) {
-    // get next galaxy from List
-    galaxy = (Galaxy *)iter.getRight();
-    // get galaxy position relative to this Star
-    relPosition = galaxy->getPosition();
-    distance = 0.0;
-    
-    for (i = 0; i < 3; i++) {
-      relPosition(i) -= itsPosition(i);
-    // get distance
-      distance += relPosition(i)*relPosition(i);
-    }
+		if (itsPixelCanvas != 0) {
+			if ((pCanvas != itsPixelCanvas) || (changedPlotMode) ) {
+				// something changed, so delete DrawList
+				itsPixelCanvas->deleteList(itsDrawList);
+				// and store PixelCanvas
+				itsPixelCanvas = pCanvas;
+				// create new DrawList
+				itsDrawList = pCanvas->newList();
+				// draw the star
+				pCanvas->drawPoint(itsPlotPosition(0), itsPlotPosition(1));
+				// end drawlist
+				pCanvas->endList();
+				// end execute the drawing
+				pCanvas->drawList(itsDrawList);
+			} else {
+				pCanvas->drawList(itsDrawList);
+				pCanvas->translateList(itsDrawList, itsOffset(0), itsOffset(1));
+				pCanvas->drawList(itsDrawList);
+			}
+		} else {
+			// used for first time plot, store PixelCanvas
+			itsPixelCanvas = pCanvas;
+			// create new drawlist
+			itsDrawList = pCanvas->newList();
+			// draw the star
+			pCanvas->drawPoint(itsPlotPosition(0), itsPlotPosition(1));
+			// close the drawlist
+			pCanvas->endList();
+			// and execute draw
+			pCanvas->drawList(itsDrawList);
+		}
+		changedPlotMode = False;
 
-    distance = sqrt(distance);
-    
-    if (distance > 1.0) {
-      // get the force for this distance
-      galForce = galaxy->force(distance);
-      for (i = 0; i < 3; i++) {
-        // normalize relative position
-        relPosition(i) /= distance;
-        // and add to total force
-        force(i) += relPosition(i)*galForce;
-      }
-    }
-    
-    
-    iter++;
-  }
+	}
 
-  for (i = 0; i < 3; i++) {
-    itsVelocity(i) = itsVelocity(i) + timeStep*force(i);
-    itsPosition(i) = itsPosition(i) + timeStep*itsVelocity(i);
-  }
 
-  switch (plotMode) {
-    default :
-    case Galaxy::POSITION : {
-      if (changedPlotMode) {
-        oldPosition(0) = Int(itsPosition(0)+itsXSize/2);
-        itsPlotPosition(0) = oldPosition(0);
-        oldPosition(1) = Int(itsPosition(1)+itsYSize/2);
-        itsPlotPosition(1) = oldPosition(1);
-      } else {
-        itsPlotPosition(0) = Int(itsPosition(0)+itsXSize/2);
-        itsOffset(0) = itsPlotPosition(0) - oldPosition(0);
-        if (itsOffset(0) != 0) {
-          oldPosition(0) = itsPlotPosition(0);
-        }
-        itsPlotPosition(1) = Int(itsPosition(1)+itsYSize/2);
-        itsOffset(1) = itsPlotPosition(1) - oldPosition(1);
-        if (itsOffset(1) != 0) {
-          oldPosition(1) = itsPlotPosition(1);
-        } 
-      }
-      break;
-    }
-    case Galaxy::VELOCITY : {
-      if (changedPlotMode) {
-        oldPosition(0) = Int(itsPosition(0)+itsXSize/2);
-        itsPlotPosition(0) = oldPosition(0);
-        oldPosition(1) = Int(itsYSize/4*itsVelocity(2) + itsYSize/2);
-        itsPlotPosition(1) = oldPosition(1);
-      } else {
-        itsPlotPosition(0) = Int(itsPosition(0) +itsXSize/2  );
-        itsOffset(0) = itsPlotPosition(0)  - oldPosition(0);
-        if (itsOffset(0) != 0) {
-          oldPosition(0) = itsPlotPosition(0);
-        } 
-        itsPlotPosition(1) = Int(itsYSize/4*itsVelocity(2) + itsYSize/2);
-        itsOffset(1) = itsPlotPosition(1) - oldPosition(1);
-        if (itsOffset(1) != 0) {
-          oldPosition(1) = itsPlotPosition(1);
-        } 
-      }
-      break;
-    }
-  }  // of switch
-  
-}
+	void Star::applyForce(List<void *>& galaxyList, Double timeStep,
+	                      Double /* dampingFactor */) {
+		Galaxy *galaxy;
+		// create iterator and temps
+		ListIter<void *> iter(&galaxyList);
+		Vector<Double> relPosition(3);
+		Vector<Double> force(3);
+		Double galForce;
+		Double distance;
+		Int i;
 
-void Star::setScale(Int xSize, Int ySize) 
-{
-  itsXSize = xSize;
-  itsYSize = ySize;
-  changedPlotMode = True;
-}
+		force = 0.0;
 
-    
-// Rotate the position and velocity using a giuven rotation Matrix  
-void Star::rotate(Matrix<Double>& rotMatrix) 
-{
-  itsPosition = product(rotMatrix, itsPosition);
-  itsVelocity = product(rotMatrix, itsVelocity);
-}
+		// loop through List
+		while (!iter.atEnd()) {
+			// get next galaxy from List
+			galaxy = (Galaxy *)iter.getRight();
+			// get galaxy position relative to this Star
+			relPosition = galaxy->getPosition();
+			distance = 0.0;
+
+			for (i = 0; i < 3; i++) {
+				relPosition(i) -= itsPosition(i);
+				// get distance
+				distance += relPosition(i)*relPosition(i);
+			}
+
+			distance = sqrt(distance);
+
+			if (distance > 1.0) {
+				// get the force for this distance
+				galForce = galaxy->force(distance);
+				for (i = 0; i < 3; i++) {
+					// normalize relative position
+					relPosition(i) /= distance;
+					// and add to total force
+					force(i) += relPosition(i)*galForce;
+				}
+			}
+
+
+			iter++;
+		}
+
+		for (i = 0; i < 3; i++) {
+			itsVelocity(i) = itsVelocity(i) + timeStep*force(i);
+			itsPosition(i) = itsPosition(i) + timeStep*itsVelocity(i);
+		}
+
+		switch (plotMode) {
+		default :
+		case Galaxy::POSITION : {
+			if (changedPlotMode) {
+				oldPosition(0) = Int(itsPosition(0)+itsXSize/2);
+				itsPlotPosition(0) = oldPosition(0);
+				oldPosition(1) = Int(itsPosition(1)+itsYSize/2);
+				itsPlotPosition(1) = oldPosition(1);
+			} else {
+				itsPlotPosition(0) = Int(itsPosition(0)+itsXSize/2);
+				itsOffset(0) = itsPlotPosition(0) - oldPosition(0);
+				if (itsOffset(0) != 0) {
+					oldPosition(0) = itsPlotPosition(0);
+				}
+				itsPlotPosition(1) = Int(itsPosition(1)+itsYSize/2);
+				itsOffset(1) = itsPlotPosition(1) - oldPosition(1);
+				if (itsOffset(1) != 0) {
+					oldPosition(1) = itsPlotPosition(1);
+				}
+			}
+			break;
+		}
+		case Galaxy::VELOCITY : {
+			if (changedPlotMode) {
+				oldPosition(0) = Int(itsPosition(0)+itsXSize/2);
+				itsPlotPosition(0) = oldPosition(0);
+				oldPosition(1) = Int(itsYSize/4*itsVelocity(2) + itsYSize/2);
+				itsPlotPosition(1) = oldPosition(1);
+			} else {
+				itsPlotPosition(0) = Int(itsPosition(0) +itsXSize/2  );
+				itsOffset(0) = itsPlotPosition(0)  - oldPosition(0);
+				if (itsOffset(0) != 0) {
+					oldPosition(0) = itsPlotPosition(0);
+				}
+				itsPlotPosition(1) = Int(itsYSize/4*itsVelocity(2) + itsYSize/2);
+				itsOffset(1) = itsPlotPosition(1) - oldPosition(1);
+				if (itsOffset(1) != 0) {
+					oldPosition(1) = itsPlotPosition(1);
+				}
+			}
+			break;
+		}
+		}  // of switch
+
+	}
+
+	void Star::setScale(Int xSize, Int ySize) {
+		itsXSize = xSize;
+		itsYSize = ySize;
+		changedPlotMode = True;
+	}
+
+
+// Rotate the position and velocity using a giuven rotation Matrix
+	void Star::rotate(Matrix<Double>& rotMatrix) {
+		itsPosition = product(rotMatrix, itsPosition);
+		itsVelocity = product(rotMatrix, itsVelocity);
+	}
 
 // Set the plot mode
-void Star::setPlotMode(Galaxy::PLOT_MODE newPlotMode) 
-{
-  plotMode = newPlotMode;
-  changedPlotMode = True;
-}
+	void Star::setPlotMode(Galaxy::PLOT_MODE newPlotMode) {
+		plotMode = newPlotMode;
+		changedPlotMode = True;
+	}
 
 
-Galaxy::Galaxy(Vector<Double>& position, Vector<Double>& velocity, 
-               Double mass, Double size, uInt numStars, uInt numRings, 
-               Double inclination, Double positionAngle, Int xSize, Int ySize) : 
-  itsMass(mass),  
-  itsXSize(xSize), 
-  itsYSize(ySize),
-  itsDrawList(0), 
-  itsPixelCanvas(0), 
-  plotMode(Galaxy::POSITION),
-  changedPlotMode(True)
-{
-  itsPosition.resize(0);
-  itsPosition = position;
+	Galaxy::Galaxy(Vector<Double>& position, Vector<Double>& velocity,
+	               Double mass, Double size, uInt numStars, uInt numRings,
+	               Double inclination, Double positionAngle, Int xSize, Int ySize) :
+		itsMass(mass),
+		itsXSize(xSize),
+		itsYSize(ySize),
+		itsDrawList(0),
+		itsPixelCanvas(0),
+		plotMode(Galaxy::POSITION),
+		changedPlotMode(True) {
+		itsPosition.resize(0);
+		itsPosition = position;
 
-  itsVelocity.resize(0);
-  itsVelocity = velocity;
- 
-  newPosition.resize(0);
-  newPosition = position;
+		itsVelocity.resize(0);
+		itsVelocity = velocity;
 
-  newVelocity.resize(0);
-  newVelocity = velocity;
+		newPosition.resize(0);
+		newPosition = position;
 
-  oldPosition.resize(3);
-  oldPosition = 0;
+		newVelocity.resize(0);
+		newVelocity = velocity;
 
-  itsOffset.resize(3);
-  itsOffset = 0;
+		oldPosition.resize(3);
+		oldPosition = 0;
 
-  itsPlotPosition.resize(3);
-  itsPlotPosition = 0;
+		itsOffset.resize(3);
+		itsOffset = 0;
 
-  itsSize = 5.0;
-  
-  itsStarListIter = new ListIter<void *>(&itsStarList); 
+		itsPlotPosition.resize(3);
+		itsPlotPosition = 0;
 
-  Star *star;
-  Double ringSize;
-  Int starsInRing;
-  Double angle = 0.0;
-  Double angleStep = 1.0;
-  Vector<Double> starPos(3);
-  Vector<Double> starVel(3);
-  Matrix<Double> rotMatrix(3,3);
-  Matrix<Double> incMatrix(3,3);
-  Matrix<Double> paMatrix(3,3);
-  
-  incMatrix = Rot3D(0, inclination);
-  paMatrix = Rot3D(2, positionAngle);
-  
-  for (uInt ring = 0; ring < numRings; ring++) {
-    ringSize = (ring+3)*size;
-    starsInRing = (ring+1)*numStars;
-    
-    for (Int inRing = 0; inRing < starsInRing; inRing++) {
-      starPos = 0.0;
-      starPos(0) = ringSize;
-      rotMatrix = Rot3D(2, angle);
-      angle += angleStep;
-      starPos = product(rotMatrix, starPos);
-      starPos = product(incMatrix, starPos);
-      starPos = product(paMatrix, starPos);
-      
-      starPos += itsPosition;
-      
-      starVel = 0.0;
-      starVel(1) = sqrt(ringSize*force(ringSize));
-      starVel = product(rotMatrix, starVel);
-      starVel = product(incMatrix, starVel);
-      starVel = product(paMatrix, starVel);
-      starVel += itsVelocity;
-      
-      star = new Star(starPos, starVel, xSize, ySize);
-      itsStarListIter->addRight((void *) star);
-    }
-  }
-}
+		itsSize = 5.0;
 
+		itsStarListIter = new ListIter<void *>(&itsStarList);
 
+		Star *star;
+		Double ringSize;
+		Int starsInRing;
+		Double angle = 0.0;
+		Double angleStep = 1.0;
+		Vector<Double> starPos(3);
+		Vector<Double> starVel(3);
+		Matrix<Double> rotMatrix(3,3);
+		Matrix<Double> incMatrix(3,3);
+		Matrix<Double> paMatrix(3,3);
 
-Galaxy::~Galaxy() 
-{
-  if (itsPixelCanvas != 0) {
-    itsPixelCanvas->deleteList(itsDrawList);
-  }
+		incMatrix = Rot3D(0, inclination);
+		paMatrix = Rot3D(2, positionAngle);
 
-  Star *star;
-  
-  itsStarListIter->toStart();
-  while ( !itsStarListIter->atEnd() ) {
-    star = (Star *) itsStarListIter->getRight();
-    delete star;
-    (*itsStarListIter)++;
-  }
-  delete itsStarListIter;
-}
+		for (uInt ring = 0; ring < numRings; ring++) {
+			ringSize = (ring+3)*size;
+			starsInRing = (ring+1)*numStars;
+
+			for (Int inRing = 0; inRing < starsInRing; inRing++) {
+				starPos = 0.0;
+				starPos(0) = ringSize;
+				rotMatrix = Rot3D(2, angle);
+				angle += angleStep;
+				starPos = product(rotMatrix, starPos);
+				starPos = product(incMatrix, starPos);
+				starPos = product(paMatrix, starPos);
+
+				starPos += itsPosition;
+
+				starVel = 0.0;
+				starVel(1) = sqrt(ringSize*force(ringSize));
+				starVel = product(rotMatrix, starVel);
+				starVel = product(incMatrix, starVel);
+				starVel = product(paMatrix, starVel);
+				starVel += itsVelocity;
+
+				star = new Star(starPos, starVel, xSize, ySize);
+				itsStarListIter->addRight((void *) star);
+			}
+		}
+	}
 
 
 
-    
-void Galaxy::computeStep(List<void *>& galaxyList, Double timeStep, 
-                   Double dampingFactor) 
-{
-    // create iterator and temps
-  ListIter<void *> iter(&galaxyList);
-  Vector<Double> relPosition(3);
-  Vector<Double> force(3);
-  Double galForce;
-  Double distance;
-  Galaxy *galaxy;
-    
-  force = 0.0;
-  
-  // loop through List
-  while (!iter.atEnd()) {
-    // get next galaxy from List
-    galaxy = (Galaxy *)iter.getRight();
+	Galaxy::~Galaxy() {
+		if (itsPixelCanvas != 0) {
+			itsPixelCanvas->deleteList(itsDrawList);
+		}
 
-    // get galaxy position relative to this Star
-    relPosition = (galaxy->getPosition())-itsPosition;
+		Star *star;
 
-    // get distance
-    distance = norm(relPosition);
+		itsStarListIter->toStart();
+		while ( !itsStarListIter->atEnd() ) {
+			star = (Star *) itsStarListIter->getRight();
+			delete star;
+			(*itsStarListIter)++;
+		}
+		delete itsStarListIter;
+	}
 
-    // normalize relative position
-    if (distance > 1.0) {
 
-      relPosition /= distance;
-      // get the force for this distance
 
-      galForce = galaxy->force(distance);
-      // and add to total force
 
-      force += relPosition*galForce;
-    }
+	void Galaxy::computeStep(List<void *>& galaxyList, Double timeStep,
+	                         Double dampingFactor) {
+		// create iterator and temps
+		ListIter<void *> iter(&galaxyList);
+		Vector<Double> relPosition(3);
+		Vector<Double> force(3);
+		Double galForce;
+		Double distance;
+		Galaxy *galaxy;
 
-    
-    iter++;
-  }
+		force = 0.0;
 
-  
-  newVelocity = itsVelocity + timeStep*force;
-  newVelocity *= dampingFactor;
-  newPosition = itsPosition + timeStep*newVelocity;
-  
-}
+		// loop through List
+		while (!iter.atEnd()) {
+			// get next galaxy from List
+			galaxy = (Galaxy *)iter.getRight();
 
-void Galaxy::update() 
-{
-  itsPosition = newPosition;
-  itsVelocity = newVelocity;
-  
-  switch (plotMode) {
-    default :
-    case Galaxy::POSITION : {
-      if (changedPlotMode) {
-        oldPosition(0) = Int(itsPosition(0)+itsXSize/2);
-        itsPlotPosition(0) = oldPosition(0);
-        oldPosition(1) = Int(itsPosition(1)+itsYSize/2);
-        itsPlotPosition(1) = oldPosition(1);
-      } else {
-        itsPlotPosition(0) = Int(itsPosition(0)+itsXSize/2);
-        itsOffset(0) = itsPlotPosition(0) - oldPosition(0);
-        if (itsOffset(0) != 0) {
-          oldPosition(0) = itsPlotPosition(0);
-        }
-        
-        itsPlotPosition(1) = Int(itsPosition(1)+itsYSize/2);
-        itsOffset(1) = itsPlotPosition(1) - oldPosition(1);
-        if (itsOffset(1) != 0) {
-          oldPosition(1) = itsPlotPosition(1);
-        } 
-      }
-      break;
-    }
-    case Galaxy::VELOCITY : {
-      if (changedPlotMode) {
-        oldPosition(0) = Int(itsPosition(0)+itsXSize/2);
-        itsPlotPosition(0) = oldPosition(0);
-        oldPosition(1) = Int(itsYSize/4*itsVelocity(2) + itsYSize/2);
-        itsPlotPosition(1) = oldPosition(1);
-      } else {
-        itsPlotPosition(0) = Int(itsPosition(0) + itsXSize/2);
-        itsOffset(0) = itsPlotPosition(0)  - oldPosition(0);
-        if (itsOffset(0) != 0) {
-          oldPosition(0) = itsPlotPosition(0);
-        } 
-        itsPlotPosition(1) = Int(itsYSize/4*itsVelocity(2) + itsYSize/2);
-        itsOffset(1) = itsPlotPosition(1) - oldPosition(1);
-        if (itsOffset(1) != 0) {
-          oldPosition(1) = itsPlotPosition(1);
-        } 
-      }
-      break;
-    }
-  }  // of switch
+			// get galaxy position relative to this Star
+			relPosition = (galaxy->getPosition())-itsPosition;
 
-}
+			// get distance
+			distance = norm(relPosition);
 
-  
-void Galaxy::applyForceToStars(List<void *>& galaxyList, Double timeStep,
-                               Double dampingFactor)
-{
-  Star *star;
+			// normalize relative position
+			if (distance > 1.0) {
 
-  itsStarListIter->toStart();
-  while ( !itsStarListIter->atEnd() ) {
-    star = (Star *) itsStarListIter->getRight();
-    star->applyForce(galaxyList, timeStep, dampingFactor);
-    (*itsStarListIter)++;
-  }
+				relPosition /= distance;
+				// get the force for this distance
 
-  
-}
+				galForce = galaxy->force(distance);
+				// and add to total force
 
-// Rotate the position and velocity using a given rotation Matrix  
-void Galaxy::rotate(Matrix<Double>& rotMatrix) 
-{
-  itsPosition = product(rotMatrix, itsPosition);
-  itsVelocity = product(rotMatrix, itsVelocity);
+				force += relPosition*galForce;
+			}
 
-  Star *star;
 
-  itsStarListIter->toStart();
-  while ( !itsStarListIter->atEnd() ) {
-    star = (Star *) itsStarListIter->getRight();
-    star->rotate(rotMatrix);
-    (*itsStarListIter)++;
-  }
-}
+			iter++;
+		}
+
+
+		newVelocity = itsVelocity + timeStep*force;
+		newVelocity *= dampingFactor;
+		newPosition = itsPosition + timeStep*newVelocity;
+
+	}
+
+	void Galaxy::update() {
+		itsPosition = newPosition;
+		itsVelocity = newVelocity;
+
+		switch (plotMode) {
+		default :
+		case Galaxy::POSITION : {
+			if (changedPlotMode) {
+				oldPosition(0) = Int(itsPosition(0)+itsXSize/2);
+				itsPlotPosition(0) = oldPosition(0);
+				oldPosition(1) = Int(itsPosition(1)+itsYSize/2);
+				itsPlotPosition(1) = oldPosition(1);
+			} else {
+				itsPlotPosition(0) = Int(itsPosition(0)+itsXSize/2);
+				itsOffset(0) = itsPlotPosition(0) - oldPosition(0);
+				if (itsOffset(0) != 0) {
+					oldPosition(0) = itsPlotPosition(0);
+				}
+
+				itsPlotPosition(1) = Int(itsPosition(1)+itsYSize/2);
+				itsOffset(1) = itsPlotPosition(1) - oldPosition(1);
+				if (itsOffset(1) != 0) {
+					oldPosition(1) = itsPlotPosition(1);
+				}
+			}
+			break;
+		}
+		case Galaxy::VELOCITY : {
+			if (changedPlotMode) {
+				oldPosition(0) = Int(itsPosition(0)+itsXSize/2);
+				itsPlotPosition(0) = oldPosition(0);
+				oldPosition(1) = Int(itsYSize/4*itsVelocity(2) + itsYSize/2);
+				itsPlotPosition(1) = oldPosition(1);
+			} else {
+				itsPlotPosition(0) = Int(itsPosition(0) + itsXSize/2);
+				itsOffset(0) = itsPlotPosition(0)  - oldPosition(0);
+				if (itsOffset(0) != 0) {
+					oldPosition(0) = itsPlotPosition(0);
+				}
+				itsPlotPosition(1) = Int(itsYSize/4*itsVelocity(2) + itsYSize/2);
+				itsOffset(1) = itsPlotPosition(1) - oldPosition(1);
+				if (itsOffset(1) != 0) {
+					oldPosition(1) = itsPlotPosition(1);
+				}
+			}
+			break;
+		}
+		}  // of switch
+
+	}
+
+
+	void Galaxy::applyForceToStars(List<void *>& galaxyList, Double timeStep,
+	                               Double dampingFactor) {
+		Star *star;
+
+		itsStarListIter->toStart();
+		while ( !itsStarListIter->atEnd() ) {
+			star = (Star *) itsStarListIter->getRight();
+			star->applyForce(galaxyList, timeStep, dampingFactor);
+			(*itsStarListIter)++;
+		}
+
+
+	}
+
+// Rotate the position and velocity using a given rotation Matrix
+	void Galaxy::rotate(Matrix<Double>& rotMatrix) {
+		itsPosition = product(rotMatrix, itsPosition);
+		itsVelocity = product(rotMatrix, itsVelocity);
+
+		Star *star;
+
+		itsStarListIter->toStart();
+		while ( !itsStarListIter->atEnd() ) {
+			star = (Star *) itsStarListIter->getRight();
+			star->rotate(rotMatrix);
+			(*itsStarListIter)++;
+		}
+	}
 
 // Set the plot mode
-void Galaxy::setPlotMode(Galaxy::PLOT_MODE newPlotMode) 
-{
-  plotMode = newPlotMode;
-  changedPlotMode = True;
+	void Galaxy::setPlotMode(Galaxy::PLOT_MODE newPlotMode) {
+		plotMode = newPlotMode;
+		changedPlotMode = True;
 
-  Star *star;
-  
-  itsStarListIter->toStart();
-  while ( !itsStarListIter->atEnd() ) {
-    star = (Star *) itsStarListIter->getRight();
-    star->setPlotMode(newPlotMode);
-    (*itsStarListIter)++;
-  }
-}
+		Star *star;
 
-void Galaxy::draw(PixelCanvas *pCanvas) 
-{
+		itsStarListIter->toStart();
+		while ( !itsStarListIter->atEnd() ) {
+			star = (Star *) itsStarListIter->getRight();
+			star->setPlotMode(newPlotMode);
+			(*itsStarListIter)++;
+		}
+	}
 
-  // we assume that the drawmode has been set
+	void Galaxy::draw(PixelCanvas *pCanvas) {
 
-  if (itsPixelCanvas != 0) {    
-    if ((pCanvas != itsPixelCanvas) || (changedPlotMode) ) {
-      // something changed, so delete DrawList
-      itsPixelCanvas->deleteList(itsDrawList);
-      // and store PixelCanvas
-      itsPixelCanvas = pCanvas;
-      // create new DrawList
-      itsDrawList = pCanvas->newList();
-      // draw the star
-      pCanvas->drawLine(itsPlotPosition(0)-5, itsPlotPosition(1), 
-                        itsPlotPosition(0)+5, itsPlotPosition(1));
-      pCanvas->drawLine(itsPlotPosition(0), itsPlotPosition(1)-5, 
-                        itsPlotPosition(0), itsPlotPosition(1)+5);
-      // end drawlist
-      pCanvas->endList();
-      // end execute the drawing
-      pCanvas->drawList(itsDrawList);
-    } else {
-      pCanvas->drawList(itsDrawList);
-      pCanvas->translateList(itsDrawList, itsOffset(0), itsOffset(1));    
-      pCanvas->drawList(itsDrawList);
-    }
-  } else {
-    // used for first time plot, store PixelCanvas
-    itsPixelCanvas = pCanvas;
-    // create new drawlist
-    itsDrawList = pCanvas->newList();
-    // draw the star
-    pCanvas->drawLine(itsPlotPosition(0)-5, itsPlotPosition(1), 
-                      itsPlotPosition(0)+5, itsPlotPosition(1));
-    pCanvas->drawLine(itsPlotPosition(0), itsPlotPosition(1)-5, 
-                      itsPlotPosition(0), itsPlotPosition(1)+5);
+		// we assume that the drawmode has been set
 
-    // close the drawlist
-    pCanvas->endList();
-    // and execute draw
-    pCanvas->drawList(itsDrawList);
-  }
-  changedPlotMode = False;
+		if (itsPixelCanvas != 0) {
+			if ((pCanvas != itsPixelCanvas) || (changedPlotMode) ) {
+				// something changed, so delete DrawList
+				itsPixelCanvas->deleteList(itsDrawList);
+				// and store PixelCanvas
+				itsPixelCanvas = pCanvas;
+				// create new DrawList
+				itsDrawList = pCanvas->newList();
+				// draw the star
+				pCanvas->drawLine(itsPlotPosition(0)-5, itsPlotPosition(1),
+				                  itsPlotPosition(0)+5, itsPlotPosition(1));
+				pCanvas->drawLine(itsPlotPosition(0), itsPlotPosition(1)-5,
+				                  itsPlotPosition(0), itsPlotPosition(1)+5);
+				// end drawlist
+				pCanvas->endList();
+				// end execute the drawing
+				pCanvas->drawList(itsDrawList);
+			} else {
+				pCanvas->drawList(itsDrawList);
+				pCanvas->translateList(itsDrawList, itsOffset(0), itsOffset(1));
+				pCanvas->drawList(itsDrawList);
+			}
+		} else {
+			// used for first time plot, store PixelCanvas
+			itsPixelCanvas = pCanvas;
+			// create new drawlist
+			itsDrawList = pCanvas->newList();
+			// draw the star
+			pCanvas->drawLine(itsPlotPosition(0)-5, itsPlotPosition(1),
+			                  itsPlotPosition(0)+5, itsPlotPosition(1));
+			pCanvas->drawLine(itsPlotPosition(0), itsPlotPosition(1)-5,
+			                  itsPlotPosition(0), itsPlotPosition(1)+5);
 
-  Star *star;
-  
-  itsStarListIter->toStart();
-  while ( !itsStarListIter->atEnd() ) {
-    star = (Star *) itsStarListIter->getRight();
-    star->draw(pCanvas);
-    (*itsStarListIter)++;
-  }
-}
+			// close the drawlist
+			pCanvas->endList();
+			// and execute draw
+			pCanvas->drawList(itsDrawList);
+		}
+		changedPlotMode = False;
+
+		Star *star;
+
+		itsStarListIter->toStart();
+		while ( !itsStarListIter->atEnd() ) {
+			star = (Star *) itsStarListIter->getRight();
+			star->draw(pCanvas);
+			(*itsStarListIter)++;
+		}
+	}
 
 
-Double Galaxy::force(Double distance) 
-{
+	Double Galaxy::force(Double distance) {
 
-  //return itsMass/(distance*distance+itsSize*itsSize);
-  return itsMass/(distance+itsSize);
-}
+		//return itsMass/(distance*distance+itsSize*itsSize);
+		return itsMass/(distance+itsSize);
+	}
 
 
-Double Galaxy::getMass() 
-{
-  return itsMass;
-}
+	Double Galaxy::getMass() {
+		return itsMass;
+	}
 
-Vector<Double>& Galaxy::getPosition() 
-{
-  return itsPosition;
-}
+	Vector<Double>& Galaxy::getPosition() {
+		return itsPosition;
+	}
 
-Vector<Double>& Galaxy::getVelocity() 
-{
-  return itsVelocity;
-}
+	Vector<Double>& Galaxy::getVelocity() {
+		return itsVelocity;
+	}
 
-void Galaxy::setScale(Int xSize, Int ySize) 
-{
-  itsXSize = xSize;
-  itsYSize = ySize;
-  changedPlotMode = True;
+	void Galaxy::setScale(Int xSize, Int ySize) {
+		itsXSize = xSize;
+		itsYSize = ySize;
+		changedPlotMode = True;
 
-  Star *star;
-  
-  itsStarListIter->toStart();
-  while ( !itsStarListIter->atEnd() ) {
-    star = (Star *) itsStarListIter->getRight();
-    star->setScale(xSize, ySize);
-    (*itsStarListIter)++;
-  }
-}
+		Star *star;
 
-  
+		itsStarListIter->toStart();
+		while ( !itsStarListIter->atEnd() ) {
+			star = (Star *) itsStarListIter->getRight();
+			star->setScale(xSize, ySize);
+			(*itsStarListIter)++;
+		}
+	}
+
+
 
 } //# NAMESPACE CASA - END
 

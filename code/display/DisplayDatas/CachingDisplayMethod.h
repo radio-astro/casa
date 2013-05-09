@@ -34,12 +34,12 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class AttributeBuffer;
-class WorldCanvas;
-class WorldCanvasHolder;
-class CachingDisplayData;
+	class AttributeBuffer;
+	class WorldCanvas;
+	class WorldCanvasHolder;
+	class CachingDisplayData;
 
-// <summary> 
+// <summary>
 // Assistance class for auto-caching of DisplayData objects.
 // </summary>
 
@@ -63,64 +63,65 @@ class CachingDisplayData;
 // </synopsis>
 
 
-class CachingDisplayMethod : public DisplayMethod {
+	class CachingDisplayMethod : public DisplayMethod {
 
- public:
+	public:
 
-  // Constructor.  A single instance of a CachingDisplayMethod is
-  // setup to draw on a particular WorldCanvas, and only when
-  // particular conditions, as stored in the provided
-  // AttributeBuffers, are met.  The parent DisplayData is given
-  // in <src>parentDisplayData</src>.
-  CachingDisplayMethod(WorldCanvas *worldCanvas, 
-		       AttributeBuffer *wchAttributes,
-		       AttributeBuffer *ddAttributes,
-		       CachingDisplayData *parentDisplayData);
+		// Constructor.  A single instance of a CachingDisplayMethod is
+		// setup to draw on a particular WorldCanvas, and only when
+		// particular conditions, as stored in the provided
+		// AttributeBuffers, are met.  The parent DisplayData is given
+		// in <src>parentDisplayData</src>.
+		CachingDisplayMethod(WorldCanvas *worldCanvas,
+		                     AttributeBuffer *wchAttributes,
+		                     AttributeBuffer *ddAttributes,
+		                     CachingDisplayData *parentDisplayData);
 
-  // Destructor.
-  virtual ~CachingDisplayMethod();
+		// Destructor.
+		virtual ~CachingDisplayMethod();
 
-  // Return the WorldCanvas recorded in this CachingDisplayMethod.
-  virtual WorldCanvas *worldCanvas() 
-    { return itsWorldCanvas; }
+		// Return the WorldCanvas recorded in this CachingDisplayMethod.
+		virtual WorldCanvas *worldCanvas() {
+			return itsWorldCanvas;
+		}
 
-  // Draw this slice of data on the supplied WorldCanvasHolder.
-  virtual void draw(Display::RefreshReason reason, 
-		    WorldCanvasHolder &wcHolder);
+		// Draw this slice of data on the supplied WorldCanvasHolder.
+		virtual void draw(Display::RefreshReason reason,
+		                  WorldCanvasHolder &wcHolder);
 
- protected:
+	protected:
 
-  // (Required) default constructor.
-  CachingDisplayMethod();
+		// (Required) default constructor.
+		CachingDisplayMethod();
 
-  // (Required) copy constructor.
-  CachingDisplayMethod(const CachingDisplayMethod &other);
+		// (Required) copy constructor.
+		CachingDisplayMethod(const CachingDisplayMethod &other);
 
-  // (Required) copy assignment.
-  void operator=(const CachingDisplayMethod &other);
+		// (Required) copy assignment.
+		void operator=(const CachingDisplayMethod &other);
 
-  // Draw into a cached drawing list, called by draw function.
-  // The return value is set False if the DM could not draw or
-  // does not wish a drawlist to be saved.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder) = 0;
+		// Draw into a cached drawing list, called by draw function.
+		// The return value is set False if the DM could not draw or
+		// does not wish a drawlist to be saved.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder) = 0;
 
- private:
+	private:
 
-  // Store for the WorldCanvas which this has previously drawn upon.
-  WorldCanvas *itsWorldCanvas;
+		// Store for the WorldCanvas which this has previously drawn upon.
+		WorldCanvas *itsWorldCanvas;
 
-  // Store for WorldCanvasHolder- and DisplayData-specific
-  // AttributeBuffers.
-  AttributeBuffer *itsWCHAttributes, *itsDDAttributes;
+		// Store for WorldCanvasHolder- and DisplayData-specific
+		// AttributeBuffers.
+		AttributeBuffer *itsWCHAttributes, *itsDDAttributes;
 
-  // Do we have a cached drawing list?
-  Bool itsHasList;
+		// Do we have a cached drawing list?
+		Bool itsHasList;
 
-  // Store for cached drawing list number.
-  uInt itsCachedDrawingList;
+		// Store for cached drawing list number.
+		uInt itsCachedDrawingList;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

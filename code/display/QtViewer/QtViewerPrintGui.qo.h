@@ -35,9 +35,9 @@
 #  include <QtCore>
 #  include <QtGui>
 #  include <QtXml/QDomDocument>
-   //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
-   //#   because they'll have Qt includes.
-   //#   E.g. <QApplication> needs the X11 definition of 'Display'
+//#dk Be careful to put *.ui.h within X_enter/exit bracket too,
+//#   because they'll have Qt includes.
+//#   E.g. <QApplication> needs the X11 definition of 'Display'
 #  include <display/QtViewer/printControl.ui.h>
 #include <graphics/X11/X_exit.h>
 
@@ -56,57 +56,56 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // viewer print widget
 // </summary>
 
-class QtViewerPrintGui : public QWidget
-{
-    Q_OBJECT
+	class QtViewerPrintGui : public QWidget {
+		Q_OBJECT
 
-public:
+	public:
 
-    QtViewerPrintGui(QtDisplayPanel *dp);
-    ~QtViewerPrintGui();
-  
-    QString printFileName() const;
-    QString printerName() const;
-    bool load(QDomDocument &doc);
-    void loadRecord(Record rec);
-    static const QString printRecord;
-    void adjustEpsBoundingBox( const char *from, const char *to,
-			       const QSize &wcmax, const QRect &viewport );
-    void printPS(QPrinter *printer, const QString printerType);
-    friend ostream& operator <<(ostream &os,const QtViewerPrintGui &obj);
-    friend ostream& operator <<(ostream &os,const QPrinter &printer); 
-signals:
+		QtViewerPrintGui(QtDisplayPanel *dp);
+		~QtViewerPrintGui();
 
-private slots:
-public slots:
-    void saveXPM();
-    void savePS(QPixmap*, int, int);
-    void print();
-    void dismiss();
-    void itemValueChanged(QString name, QString value, int action, bool apply);
-    void ps2eps(const QString &filename, QRect rect);
-    void printToFile(const QString &filename,bool isEPS);
-    void selectOutputType( const QString & text );
+		QString printFileName() const;
+		QString printerName() const;
+		bool load(QDomDocument &doc);
+		void loadRecord(Record rec);
+		static const QString printRecord;
+		void adjustEpsBoundingBox( const char *from, const char *to,
+		                           const QSize &wcmax, const QRect &viewport );
+		void printPS(QPrinter *printer, const QString printerType);
+		friend ostream& operator <<(ostream &os,const QtViewerPrintGui &obj);
+		friend ostream& operator <<(ostream &os,const QPrinter &printer);
+	signals:
 
-private:
-    QDomDocument m_doc;
-    QVBoxLayout *vboxLayout;
-    QLabel* sizeLabel;
-    QString printfilename;
-    QString savefiletype;
-    QString printmedia;
-    QString printorientation;
-    int printresolution;
-    float printmagnification;
-    QString printepsformat;
-    std::pair<int, int> printimgresolution;
-    double printimgsizefactor;
-    QPrinter *printer;
-    QtDisplayPanel *pDP;
-    
-private slots:
-    void dpResized(QSize panelSize, QSize canvasSize);
-};
+	private slots:
+	public slots:
+		void saveXPM();
+		void savePS(QPixmap*, int, int);
+		void print();
+		void dismiss();
+		void itemValueChanged(QString name, QString value, int action, bool apply);
+		void ps2eps(const QString &filename, QRect rect);
+		void printToFile(const QString &filename,bool isEPS);
+		void selectOutputType( const QString & text );
+
+	private:
+		QDomDocument m_doc;
+		QVBoxLayout *vboxLayout;
+		QLabel* sizeLabel;
+		QString printfilename;
+		QString savefiletype;
+		QString printmedia;
+		QString printorientation;
+		int printresolution;
+		float printmagnification;
+		QString printepsformat;
+		std::pair<int, int> printimgresolution;
+		double printimgsizefactor;
+		QPrinter *printer;
+		QtDisplayPanel *pDP;
+
+	private slots:
+		void dpResized(QSize panelSize, QSize canvasSize);
+	};
 
 // <summary>
 // viewer print widget
@@ -117,27 +116,26 @@ private slots:
 // </synopsis>
 
 //////////////////////////  QtViewerPrintCtl /////////////////////////
-class QtViewerPrintCtl : public QDialog, private Ui::PrintControl
-{
-    Q_OBJECT
-public:
+	class QtViewerPrintCtl : public QDialog, private Ui::PrintControl {
+		Q_OBJECT
+	public:
 
-    QtViewerPrintCtl(QtViewerPrintGui *parent = 0);
-    ~QtViewerPrintCtl();
-    QString fileName() const;
-    QString printerName() const;
-    QString orientation() const;
-    QString paper() const;
+		QtViewerPrintCtl(QtViewerPrintGui *parent = 0);
+		~QtViewerPrintCtl();
+		QString fileName() const;
+		QString printerName() const;
+		QString orientation() const;
+		QString paper() const;
 
-signals:
-   void printIt();
-private slots:
-    void checkPrinter();
-public slots:
+	signals:
+		void printIt();
+	private slots:
+		void checkPrinter();
+	public slots:
 
-private:
+	private:
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

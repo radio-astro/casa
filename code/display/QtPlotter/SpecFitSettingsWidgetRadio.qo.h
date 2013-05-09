@@ -35,94 +35,93 @@
 
 namespace casa {
 
-class ImageProfileFitter;
-class SpectralList;
-class SpectralElement;
-class SpecFit;
-class SpecFitThread;
+	class ImageProfileFitter;
+	class SpectralList;
+	class SpectralElement;
+	class SpecFit;
+	class SpecFitThread;
 
-class SpecFitSettingsWidgetRadio : public QWidget, public ProfileTaskFacilitator
-{
-    Q_OBJECT
+	class SpecFitSettingsWidgetRadio : public QWidget, public ProfileTaskFacilitator {
+		Q_OBJECT
 
-public:
-    SpecFitSettingsWidgetRadio(QWidget *parent = 0);
-    ~SpecFitSettingsWidgetRadio();
-    void setUnits( QString units );
-    void setDisplayYUnits( const QString& units );
-    void setImageYUnits( const QString& units );
-    void setCurveName( const QString& curveName );
-    void addCurveName( const QString& curveName );
-    void setRange(double start, double end );
-    void reset();
-    void pixelsChanged( int pixX, int pixY );
-
-
-private slots:
-	void polyFitChanged( int state );
-	void gaussCountChanged( int count );
-	void fitRatioChanged( int count );
-	void clean();
-	void specLineFit();
-	void setOutputLogFile();
-	void viewOutputLogFile();
-	void saveOutputChanged( int state );
-	void specFitEstimateSpecified(double xValue,double yValue, bool centerPeak);
-	void fitDone( bool newData = true );
-	void cancelFit();
-	void specifyGaussianEstimates();
-	void gaussianEstimatesChanged();
-
-private:
-	/**
-	 * Places the passed in Gaussian estimate val into the indicated row and
-	 * column of the initial Gaussian estimate table.
-	 */
-	void setEstimateValue( int row, int col, double val );
-	bool isValidEstimate( QString& peakStr, QString& centerStr,
-			QString& fwhmStr, QString& fixedStr, int rowIndex );
-	SpectralList buildSpectralList( int nGauss, Bool& validList );
-	bool isValidFitSpecification( int gaussCount, bool polyFit );
-	void setCanvas( QtCanvas* canvas );
-	void doFit( float startVal, float endVal, uint gaussCount, bool fitPoly, int polyN );
-	String getChannels( float startVal, float endVal, const Vector<Float>& specValues ) const;
-	void getFitBounds( Float& startVal, Float& endVal ) const;
-	int getFitCount(Int& startChannelIndex, Int& endChannelIndex );
-	void clearEstimates();
-	void clear();
-	void emptyCurveList();
-	void resolveOutputLogFile( );
-	/**
-				 * Decides if the units represent velocity, wavelength, or frequency.
-				 */
-	void getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const ;
-	bool processFitResults(Vector<float>& xValues, Vector<float>& xValuesPix);
-	void getEstimateStrings( int index, QString& peakStr, QString& centerStr, QString& fwhmStr ) const;
-	bool processFitResultGaussian( const SpectralElement* solution,
-			int index, QList<SpecFit*>& curves);
-	bool processFitResultPolynomial( const SpectralElement* solution,
-				QList<SpecFit*>& curves);
-	bool isInRange( double xValue ) const;
-	QString settingsToString() const;
-	double toPixels( double val) const;
-	void drawCurves( int pixelX, int pixelY );
-	SpectralCoordinate getSpectralCoordinate() const;
-
-	enum TableHeaders {PEAK,CENTER,FWHM,FIXED,END_COLUMN};
-    Ui::SpecFitSettingsWidgetRadio ui;
-    ImageProfileFitter* fitter;
-    SpecFitThread* specFitThread;
-    QProgressDialog progressDialog;
-    GaussianEstimateDialog gaussEstimateDialog;
+	public:
+		SpecFitSettingsWidgetRadio(QWidget *parent = 0);
+		~SpecFitSettingsWidgetRadio();
+		void setUnits( QString units );
+		void setDisplayYUnits( const QString& units );
+		void setImageYUnits( const QString& units );
+		void setCurveName( const QString& curveName );
+		void addCurveName( const QString& curveName );
+		void setRange(double start, double end );
+		void reset();
+		void pixelsChanged( int pixX, int pixY );
 
 
-    QString outputLogPath;
-    QString displayYUnits;
-    QString imageYUnits;
-    QList<QList<SpecFit*> > curveList;
-    int SUM_FIT_INDEX;
+	private slots:
+		void polyFitChanged( int state );
+		void gaussCountChanged( int count );
+		void fitRatioChanged( int count );
+		void clean();
+		void specLineFit();
+		void setOutputLogFile();
+		void viewOutputLogFile();
+		void saveOutputChanged( int state );
+		void specFitEstimateSpecified(double xValue,double yValue, bool centerPeak);
+		void fitDone( bool newData = true );
+		void cancelFit();
+		void specifyGaussianEstimates();
+		void gaussianEstimatesChanged();
 
-    volatile bool fitCancelled;
-};
+	private:
+		/**
+		 * Places the passed in Gaussian estimate val into the indicated row and
+		 * column of the initial Gaussian estimate table.
+		 */
+		void setEstimateValue( int row, int col, double val );
+		bool isValidEstimate( QString& peakStr, QString& centerStr,
+		                      QString& fwhmStr, QString& fixedStr, int rowIndex );
+		SpectralList buildSpectralList( int nGauss, Bool& validList );
+		bool isValidFitSpecification( int gaussCount, bool polyFit );
+		void setCanvas( QtCanvas* canvas );
+		void doFit( float startVal, float endVal, uint gaussCount, bool fitPoly, int polyN );
+		String getChannels( float startVal, float endVal, const Vector<Float>& specValues ) const;
+		void getFitBounds( Float& startVal, Float& endVal ) const;
+		int getFitCount(Int& startChannelIndex, Int& endChannelIndex );
+		void clearEstimates();
+		void clear();
+		void emptyCurveList();
+		void resolveOutputLogFile( );
+		/**
+					 * Decides if the units represent velocity, wavelength, or frequency.
+					 */
+		void getConversion( const String& unitStr, Bool& velocity, Bool& wavelength ) const ;
+		bool processFitResults(Vector<float>& xValues, Vector<float>& xValuesPix);
+		void getEstimateStrings( int index, QString& peakStr, QString& centerStr, QString& fwhmStr ) const;
+		bool processFitResultGaussian( const SpectralElement* solution,
+		                               int index, QList<SpecFit*>& curves);
+		bool processFitResultPolynomial( const SpectralElement* solution,
+		                                 QList<SpecFit*>& curves);
+		bool isInRange( double xValue ) const;
+		QString settingsToString() const;
+		double toPixels( double val) const;
+		void drawCurves( int pixelX, int pixelY );
+		SpectralCoordinate getSpectralCoordinate() const;
+
+		enum TableHeaders {PEAK,CENTER,FWHM,FIXED,END_COLUMN};
+		Ui::SpecFitSettingsWidgetRadio ui;
+		ImageProfileFitter* fitter;
+		SpecFitThread* specFitThread;
+		QProgressDialog progressDialog;
+		GaussianEstimateDialog gaussEstimateDialog;
+
+
+		QString outputLogPath;
+		QString displayYUnits;
+		QString imageYUnits;
+		QList<QList<SpecFit*> > curveList;
+		int SUM_FIT_INDEX;
+
+		volatile bool fitCancelled;
+	};
 }
 #endif // SPECFITSETTINGSWIDGETRADIO_H

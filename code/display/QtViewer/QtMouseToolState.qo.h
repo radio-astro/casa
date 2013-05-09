@@ -43,12 +43,12 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-class QtViewerBase;
+	class QtViewerBase;
 
 
 // <synopsis>
-// QtMouseToolState records the currently-active mouse button (if any) 
-// of each type of Qt mouse tool.  There may be a QtMouseToolBar for each 
+// QtMouseToolState records the currently-active mouse button (if any)
+// of each type of Qt mouse tool.  There may be a QtMouseToolBar for each
 // QtDisplayPanel (and in principle each may display a different subset
 // of all the possible tools, though this is not implemented yet (7/06)).
 // However, each mouse button (Left, Middle, Right) may be assigned to
@@ -68,81 +68,83 @@ class QtViewerBase;
 // current mouse tool button state.
 // </synopsis>
 
-class QtMouseToolState : public QObject {
- 
+	class QtMouseToolState : public QObject {
 
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
- 
- public:
- 
-  // Returns button currently assigned to a tool (0 = no button assigned).
-  Int buttonOf(String tool) {
-    return mousebtns_[QtMouseToolNames::toolIndex(tool)];  }
 
-  // Returns name of tool currently assigned to a mouse button (1, 2, or 3).
-  // (Returns NONE if passed mousebtn is 0 or no tool is assigned to it).
-  String toolOnButton(Int mousebtn) {
-    return QtMouseToolNames::toolName(toolIndexOnButton_(mousebtn));  }
+	public:
 
-  int getButtonState(const std::string &tool) const;
-    
-  
- public slots:
+		// Returns button currently assigned to a tool (0 = no button assigned).
+		Int buttonOf(String tool) {
+			return mousebtns_[QtMouseToolNames::toolIndex(tool)];
+		}
 
-  // Request reassignment of a given mouse button to a tool.
-  // NB: _This_ is where guis, etc. should request a button change, so that
-  // all stay on the same page (not directly to tool or displaypanel, e.g.).
-  void chgMouseBtn(String tool, Int mousebtn);
-  void mouseBtnStateChg(String tool, Int state);
-  
-  // Request signalling of the current mouse button setting for every
-  // type of tool.  Call this if you want to assure that everyone's
-  // up-to-date on mouse button settings.
-  void emitBtns();
+		// Returns name of tool currently assigned to a mouse button (1, 2, or 3).
+		// (Returns NONE if passed mousebtn is 0 or no tool is assigned to it).
+		String toolOnButton(Int mousebtn) {
+			return QtMouseToolNames::toolName(toolIndexOnButton_(mousebtn));
+		}
 
- 
- signals:
-  
-  // Notification of a tool's [new] mouse button.
-  void mouseBtnChg(std::string tool, Int mousebtn);
+		int getButtonState(const std::string &tool) const;
 
- 
- protected:
-  Casarc &rc;
-  
-  // Only QtviewerBase is intended to create/destroy
-  // a [single] instance of this class.
-  QtMouseToolState();
-  ~QtMouseToolState() {  }
-  friend class QtViewerBase;
-  
-  // Returns index of tool currently assigned to a mouse button (1, 2, or 3).
-  // (Returns nTools if passed mousebtn is 0 or no tool is assigned to it).
-  Int toolIndexOnButton_(Int mousebtn);
-  
- 
-  // The button currently assigned to the various types of mouse tool.
-  //
-  // mousebtns_ value    Corresp. internal library value
-  // ----------------     -------------------------------
-  // 0:  <no button>     Display::K_None  
-  // 1:  LeftButton      Display::K_Pointer_Button1
-  // 2:  MidButton       Display::K_Pointer_Button2
-  // 3:  RightButton     Display::K_Pointer_Button3
-  static Int mousebtns_[QtMouseToolNames::nTools+1];
-	//# Initial values; correspond to QtMouseToolNames::tools[], above.
-	//# mousebtns_[nTools] is an entry for an invalid tool.
-	//# At most one of the above will be 1,2,3; the rest will be 0.
 
- private:
-  std::map<std::string,int> tool_state;
-  void initButtonState( std::string, int );
-  void initToolState( );
+	public slots:
 
-};
+		// Request reassignment of a given mouse button to a tool.
+		// NB: _This_ is where guis, etc. should request a button change, so that
+		// all stay on the same page (not directly to tool or displaypanel, e.g.).
+		void chgMouseBtn(String tool, Int mousebtn);
+		void mouseBtnStateChg(String tool, Int state);
+
+		// Request signalling of the current mouse button setting for every
+		// type of tool.  Call this if you want to assure that everyone's
+		// up-to-date on mouse button settings.
+		void emitBtns();
+
+
+	signals:
+
+		// Notification of a tool's [new] mouse button.
+		void mouseBtnChg(std::string tool, Int mousebtn);
+
+
+	protected:
+		Casarc &rc;
+
+		// Only QtviewerBase is intended to create/destroy
+		// a [single] instance of this class.
+		QtMouseToolState();
+		~QtMouseToolState() {  }
+		friend class QtViewerBase;
+
+		// Returns index of tool currently assigned to a mouse button (1, 2, or 3).
+		// (Returns nTools if passed mousebtn is 0 or no tool is assigned to it).
+		Int toolIndexOnButton_(Int mousebtn);
+
+
+		// The button currently assigned to the various types of mouse tool.
+		//
+		// mousebtns_ value    Corresp. internal library value
+		// ----------------     -------------------------------
+		// 0:  <no button>     Display::K_None
+		// 1:  LeftButton      Display::K_Pointer_Button1
+		// 2:  MidButton       Display::K_Pointer_Button2
+		// 3:  RightButton     Display::K_Pointer_Button3
+		static Int mousebtns_[QtMouseToolNames::nTools+1];
+		//# Initial values; correspond to QtMouseToolNames::tools[], above.
+		//# mousebtns_[nTools] is an entry for an invalid tool.
+		//# At most one of the above will be 1,2,3; the rest will be 0.
+
+	private:
+		std::map<std::string,int> tool_state;
+		void initButtonState( std::string, int );
+		void initToolState( );
+
+	};
 
 } //# NAMESPACE CASA - END
 

@@ -40,131 +40,131 @@
 namespace casa {
 
 //////////////poly tool//////////////////
-QtOldPolyTool::QtOldPolyTool(PanelDisplay *pd) : QtOldPTRegion(pd)
-{
-  setObjectName("PolyTool"); 
-}
+	QtOldPolyTool::QtOldPolyTool(PanelDisplay *pd) : QtOldPTRegion(pd) {
+		setObjectName("PolyTool");
+	}
 
-void QtOldPolyTool::updateRegion() {
-  if (!itsCurrentWC) return;
+	void QtOldPolyTool::updateRegion() {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "ploy ready" << coordType.chars();
-  Vector<Double> wx;
-  Vector<Double> wy;
-  Vector<Double> px;
-  Vector<Double> py;
-  getWorldCoords(wx, wy);
-  getLinearCoords(px, py);
-  //Int nt;
-  //x.shape(nt);
-  //cout << "nt=" << nt << endl;
-  //for (Int i = 0; i << nt; i++) {
-  //  cout << "x=" << x(i) << " y=" << y(i) << endl;
-  //} 
+		//qDebug() << "ploy ready" << coordType.chars();
+		Vector<Double> wx;
+		Vector<Double> wy;
+		Vector<Double> px;
+		Vector<Double> py;
+		getWorldCoords(wx, wy);
+		getLinearCoords(px, py);
+		//Int nt;
+		//x.shape(nt);
+		//cout << "nt=" << nt << endl;
+		//for (Int i = 0; i << nt; i++) {
+		//  cout << "x=" << x(i) << " y=" << y(i) << endl;
+		//}
 
-  emit wcNotify( coordType, px, py, wx, wy, POLYPROF);
-}
+		emit wcNotify( coordType, px, py, wx, wy, POLYPROF);
+	}
 
-void QtOldPolyTool::setCoordType(const String& t) {
-    QtOldMWCTool::setCoordType(t);
-    updateRegion( );
-}
+	void QtOldPolyTool::setCoordType(const String& t) {
+		QtOldMWCTool::setCoordType(t);
+		updateRegion( );
+	}
 
 //////////////Ellipse tool//////////////////
-QtOldEllipseTool::QtOldEllipseTool(PanelDisplay *pd) : QtOldELRegion(pd)
-{
-  setObjectName("EllipseTool");
-}
+	QtOldEllipseTool::QtOldEllipseTool(PanelDisplay *pd) : QtOldELRegion(pd) {
+		setObjectName("EllipseTool");
+	}
 
-void QtOldEllipseTool::updateRegion() {
-  if (!itsCurrentWC) return;
+	void QtOldEllipseTool::updateRegion() {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "ploy ready" << coordType.chars();
-  Vector<Double> wx;
-  Vector<Double> wy;
-  Vector<Double> px;
-  Vector<Double> py;
-  getWorldCoords(wx, wy);
-  getLinearCoords(px, py);
-  //Int nt;
-  //px.shape(nt);
-  //cout << "nt=" << nt << endl;
-  //for (Int i = 0; i << nt; i++) {
-  //  cout << "x=" << x(i) << " y=" << y(i) << endl;
-  //}
+		//qDebug() << "ploy ready" << coordType.chars();
+		Vector<Double> wx;
+		Vector<Double> wy;
+		Vector<Double> px;
+		Vector<Double> py;
+		getWorldCoords(wx, wy);
+		getLinearCoords(px, py);
+		//Int nt;
+		//px.shape(nt);
+		//cout << "nt=" << nt << endl;
+		//for (Int i = 0; i << nt; i++) {
+		//  cout << "x=" << x(i) << " y=" << y(i) << endl;
+		//}
 
-  emit wcNotify( coordType, px, py, wx, wy, ELLPROF);
-}
+		emit wcNotify( coordType, px, py, wx, wy, ELLPROF);
+	}
 
-void QtOldEllipseTool::setCoordType(const String& t) {
-  QtOldMWCTool::setCoordType(t);
-  updateRegion( );
-}
+	void QtOldEllipseTool::setCoordType(const String& t) {
+		QtOldMWCTool::setCoordType(t);
+		updateRegion( );
+	}
 
 //////////////rect tool//////////////////
-QtOldRectTool::QtOldRectTool(PanelDisplay *pd) : QtOldRTRegion(pd) 
-{
-  setObjectName("RectTool"); 
-}
+	QtOldRectTool::QtOldRectTool(PanelDisplay *pd) : QtOldRTRegion(pd) {
+		setObjectName("RectTool");
+	}
 
-void QtOldRectTool::updateRegion() {
-  if (!itsCurrentWC) return;
+	void QtOldRectTool::updateRegion() {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "rect ready" << coordType.chars();
-  Vector<Double> wx;
-  Vector<Double> wy;
-  Vector<Double> px;
-  Vector<Double> py;
-  getWorldCoords(wx, wy);
-  getLinearCoords(px, py);
-  Vector<Double> wxx(2);
-  Vector<Double> wyy(2);
-  wxx(0) = wx(0); wxx(1) = wy(0);
-  wyy(0) = wx(1); wyy(1) = wy(1);
-  Vector<Double> pxx(2);
-  Vector<Double> pyy(2);
-  pxx(0) = px(0); pxx(1) = py(0);
-  pyy(0) = px(1); pyy(1) = py(1);
-  //cout << "(" << xx(0) << "," << yy(0) << ")"
-  //     << " (" << xx(1) << "," << yy(1) << ")" << endl;
-  emit wcNotify( coordType, pxx, pyy, wxx, wyy, RECTPROF);
-}
+		//qDebug() << "rect ready" << coordType.chars();
+		Vector<Double> wx;
+		Vector<Double> wy;
+		Vector<Double> px;
+		Vector<Double> py;
+		getWorldCoords(wx, wy);
+		getLinearCoords(px, py);
+		Vector<Double> wxx(2);
+		Vector<Double> wyy(2);
+		wxx(0) = wx(0);
+		wxx(1) = wy(0);
+		wyy(0) = wx(1);
+		wyy(1) = wy(1);
+		Vector<Double> pxx(2);
+		Vector<Double> pyy(2);
+		pxx(0) = px(0);
+		pxx(1) = py(0);
+		pyy(0) = px(1);
+		pyy(1) = py(1);
+		//cout << "(" << xx(0) << "," << yy(0) << ")"
+		//     << " (" << xx(1) << "," << yy(1) << ")" << endl;
+		emit wcNotify( coordType, pxx, pyy, wxx, wyy, RECTPROF);
+	}
 
-void QtOldRectTool::setCoordType(const String& t) {
-  QtOldMWCTool::setCoordType(t);
-  updateRegion( );
-}
+	void QtOldRectTool::setCoordType(const String& t) {
+		QtOldMWCTool::setCoordType(t);
+		updateRegion( );
+	}
 
 //////////////cross tool//////////////////
 
-QtOldCrossTool::QtOldCrossTool() : MWCCrosshairTool()
-{
-  setObjectName("CrossTool"); 
-}
+	QtOldCrossTool::QtOldCrossTool() : MWCCrosshairTool() {
+		setObjectName("CrossTool");
+	}
 
-void QtOldCrossTool::crosshairReady(const String & /*evtype*/) {
-  if (!itsCurrentWC) return;
+	void QtOldCrossTool::crosshairReady(const String & /*evtype*/) {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "cross ready" << coordType.chars();
-  Double wx, wy;
-  Double px, py;
-  getWorld(wx, wy);
-  getLin(px, py);
-  Vector<Double> wxx(1);
-  Vector<Double> wyy(1);
-  wxx[0]=wx; 
-  wyy[0]=wy;
-  Vector<Double> pxx(1);
-  Vector<Double> pyy(1);
-  pxx[0]=px; 
-  pyy[0]=py;
-  emit wcNotify( coordType, pxx, pyy, wxx, wyy, SINGPROF);
-}
+		//qDebug() << "cross ready" << coordType.chars();
+		Double wx, wy;
+		Double px, py;
+		getWorld(wx, wy);
+		getLin(px, py);
+		Vector<Double> wxx(1);
+		Vector<Double> wyy(1);
+		wxx[0]=wx;
+		wyy[0]=wy;
+		Vector<Double> pxx(1);
+		Vector<Double> pyy(1);
+		pxx[0]=px;
+		pyy[0]=py;
+		emit wcNotify( coordType, pxx, pyy, wxx, wyy, SINGPROF);
+	}
 
-void QtOldCrossTool::setCoordType(const String& t) {
-  QtOldMWCTool::setCoordType(t);
-  crosshairReady("");
-}
+	void QtOldCrossTool::setCoordType(const String& t) {
+		QtOldMWCTool::setCoordType(t);
+		crosshairReady("");
+	}
 
 
 }

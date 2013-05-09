@@ -34,33 +34,33 @@
 
 #include <casa/namespace.h>
 void localAbort(String message) {
-  cout << message << endl;
-  exit(1);
+	cout << message << endl;
+	exit(1);
 }
 
 int main(int, char **) {
-  try {
+	try {
 
-    // ------------------------------------------------------------
-    // Test that construction gives sensibly ordered events
-    DisplayEvent de1;
-    sleep (2);
-    DisplayEvent de2;
-    AlwaysAssert(de2.timeOfEvent() > de1.timeOfEvent(), AipsError);
+		// ------------------------------------------------------------
+		// Test that construction gives sensibly ordered events
+		DisplayEvent de1;
+		sleep (2);
+		DisplayEvent de2;
+		AlwaysAssert(de2.timeOfEvent() > de1.timeOfEvent(), AipsError);
 
-    // ------------------------------------------------------------
-    // Test copy assignment
-    de2 = de1;
-    AlwaysAssert(de2.timeOfEvent() == de1.timeOfEvent(), AipsError);
-    
-    // ------------------------------------------------------------
-    // Test copy constructor
-    DisplayEvent de3(de2);
-    AlwaysAssert(de3.timeOfEvent() == de1.timeOfEvent(), AipsError);
+		// ------------------------------------------------------------
+		// Test copy assignment
+		de2 = de1;
+		AlwaysAssert(de2.timeOfEvent() == de1.timeOfEvent(), AipsError);
 
-    cout << "OK" << endl;
-    return 0;
-  } catch (const AipsError &x) {
-    localAbort(x.getMesg());
-  } 
+		// ------------------------------------------------------------
+		// Test copy constructor
+		DisplayEvent de3(de2);
+		AlwaysAssert(de3.timeOfEvent() == de1.timeOfEvent(), AipsError);
+
+		cout << "OK" << endl;
+		return 0;
+	} catch (const AipsError &x) {
+		localAbort(x.getMesg());
+	}
 }

@@ -35,15 +35,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// <summary> 
+// <summary>
 // The DisplayMethod to draw Wedges
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <etymology>
 // </etymology>
 //
@@ -60,45 +60,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Users want wedges
 //</motivation>
 //
-// <todo> 
+// <todo>
 // Transposed wedge drawing
 // </todo>
 //
 
-class WedgeDM : public CachingDisplayMethod {
+	class WedgeDM : public CachingDisplayMethod {
 
-public:
+	public:
 
-  // Constructor.
-  WedgeDM(WorldCanvas *worldCanvas, 
-		AttributeBuffer *wchAttributes,
-		AttributeBuffer *ddAttributes,
-		CachingDisplayData *dd);
-  
-  // Destructor.
-  virtual ~WedgeDM();
-  
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
-  
-  // Draw into a cached drawing list, called by draw function.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder);
-  
-protected:
-  
-  // (Required) default constructor.
-  WedgeDM();
-  
-  // (Required) copy constructor.
-  WedgeDM(const WedgeDM &other);
-  
-  // (Required) copy assignment.
-  void operator=(const WedgeDM &other);
-  
-private:
+		// Constructor.
+		WedgeDM(WorldCanvas *worldCanvas,
+		        AttributeBuffer *wchAttributes,
+		        AttributeBuffer *ddAttributes,
+		        CachingDisplayData *dd);
 
-};
+		// Destructor.
+		virtual ~WedgeDM();
+
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
+
+		// Draw into a cached drawing list, called by draw function.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder);
+
+	protected:
+
+		// (Required) default constructor.
+		WedgeDM();
+
+		// (Required) copy constructor.
+		WedgeDM(const WedgeDM &other);
+
+		// (Required) copy assignment.
+		void operator=(const WedgeDM &other);
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

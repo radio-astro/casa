@@ -48,11 +48,13 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-	static inline int FLOOR( double v ) { return ifloor(v + .5); }
+	static inline int FLOOR( double v ) {
+		return ifloor(v + .5);
+	}
 
 	MultiPVTool::MultiPVTool( viewer::RegionSourceFactory *rcs, PanelDisplay* pd, Display::KeySym keysym, const Bool persistent ) :
 		RegionTool(keysym),
-		rfactory(rcs->newSource(this)), 
+		rfactory(rcs->newSource(this)),
 		itsPVLineExists(False),
 		itsActive(False),
 		itsP1(2), itsP2(2),
@@ -82,7 +84,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsLastPressTime = ev.timeOfEvent();
 
 		double linx1, liny1;
-		try { viewer::screen_to_linear( wc, x, y, linx1, liny1 ); } catch(...) { return; }
+		try {
+			viewer::screen_to_linear( wc, x, y, linx1, liny1 );
+		} catch(...) {
+			return;
+		}
 #if INCLUDE_OLD_CODE
 		// traverse in reverse order because the last region created is "on top"...
 		// check for click within a handle...
@@ -121,14 +127,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( ! itsCurrentWC->inDrawArea(x, y) ) return;
 
 		double linx, liny;
-		try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
+		try {
+			viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
+		} catch(...) {
+			return;
+		}
 
 		bool refresh_needed = false;
 		bool region_selected = false;
 		if ( memory::nullptr.check(resizing_region) == false ) {
 			// resize the rectangle
 			double linx1, liny1;
-			try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
+			try {
+				viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+			} catch(...) {
+				return;
+			}
 			resizing_region_handle = resizing_region->moveHandle( resizing_region_handle, linx1, liny1 );
 			refresh_needed = true;
 			// return;
@@ -154,7 +168,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( moving_regions.size( ) > 0 ) {
 			// resize the rectangle
 			double linx1, liny1;
-			try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
+			try {
+				viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+			} catch(...) {
+				return;
+			}
 			double dx = linx1 - moving_linx_;
 			double dy = liny1 - moving_liny_;
 			for( pvlinelist::iterator iter = moving_regions.begin( ); iter != moving_regions.end( ); ++iter ) {
@@ -227,7 +245,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			} else return;
 		}
 
-		if ( ev.worldCanvas() != itsCurrentWC ) { reset(); return;  }	// shouldn't happen.
+		if ( ev.worldCanvas() != itsCurrentWC ) {
+			reset();    // shouldn't happen.
+			return;
+		}
 
 		if ( memory::nullptr.check(resizing_region) == false ) {
 			// resize finished
@@ -247,7 +268,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			Int x = ev.pixX(), y = ev.pixY();
 			double linx1, liny1;
-			try { viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 ); } catch(...) { return; }
+			try {
+				viewer::screen_to_linear( itsCurrentWC, x, y, linx1, liny1 );
+			} catch(...) {
+				return;
+			}
 
 			pvlinelist selected_regions;
 			for ( pvlinelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
@@ -271,7 +296,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			refresh();	// current WC still valid, until new rect. started.
-						// In particular, still valid during callbacks below.
+			// In particular, still valid during callbacks below.
 		}
 
 	}
@@ -280,12 +305,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void MultiPVTool::otherKeyPressed(const WCPositionEvent &ev) {
 		const int pixel_step = 1;
 		WorldCanvas *wc = ev.worldCanvas( );
-		if ( wc == itsCurrentWC && 
-			 ( ev.key() == Display::K_Escape ||
-			   ev.key() == Display::K_Left ||
-			   ev.key() == Display::K_Right ||
-			   ev.key() == Display::K_Up ||
-			   ev.key() == Display::K_Down ) ) {
+		if ( wc == itsCurrentWC &&
+		        ( ev.key() == Display::K_Escape ||
+		          ev.key() == Display::K_Left ||
+		          ev.key() == Display::K_Right ||
+		          ev.key() == Display::K_Up ||
+		          ev.key() == Display::K_Down ) ) {
 			uInt x = ev.pixX();
 			uInt y = ev.pixY();
 
@@ -293,7 +318,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			moving_regions.clear( );		// ensure that moving state is clear...
 
 			double linx, liny;
-			try { viewer::screen_to_linear( wc, x, y, linx, liny ); } catch(...) { return; }
+			try {
+				viewer::screen_to_linear( wc, x, y, linx, liny );
+			} catch(...) {
+				return;
+			}
 
 			bool refresh_needed = false;
 			for ( pvlinelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ) {
@@ -301,7 +330,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					unsigned int result = (*iter)->mouseMovement(linx,liny,false);
 					if ( viewer::Region::regionSelected(result) ) {
 						if ( ev.key() == Display::K_Escape ) {
-							pvlinelist::iterator xi = iter; ++xi;
+							pvlinelist::iterator xi = iter;
+							++xi;
 							rectangles.erase( iter );
 							refresh_needed = true;
 							iter = xi;
@@ -324,13 +354,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 								default:
 									break;
 								}
-							} catch(...) { return; }
+							} catch(...) {
+								return;
+							}
 							(*iter)->move( dx, dy );
 							refresh_needed = true;
 							++iter;
 						}
-					} else { ++iter; }
-				} else { ++iter; }
+					} else {
+						++iter;
+					}
+				} else {
+					++iter;
+				}
 			}
 			if ( refresh_needed ) refresh( );
 		}
@@ -338,24 +374,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void MultiPVTool::set( const Int &x1, const Int &y1,
-						   const Int &x2, const Int &y2) {
+	                       const Int &x2, const Int &y2) {
 		if (!itsCurrentWC) return;
 		Vector<Double> pix(2);
-		pix(0)=x1; pix(1)=y1;  itsCurrentWC->pixToLin(itsP1, pix);
-		pix(0)=x2; pix(1)=y2;  itsCurrentWC->pixToLin(itsP2, pix);  }
+		pix(0)=x1;
+		pix(1)=y1;
+		itsCurrentWC->pixToLin(itsP1, pix);
+		pix(0)=x2;
+		pix(1)=y2;
+		itsCurrentWC->pixToLin(itsP2, pix);
+	}
 
 	void MultiPVTool::get(Int &x1, Int &y1, Int &x2, Int &y2) const {
 		if (!itsCurrentWC) return;
 		get(x1,y1);
 		Vector<Double> pix(2);
 		itsCurrentWC->linToPix(pix, itsP2);
-		x2 = ifloor(pix(0)+.5); y2 = ifloor(pix(1)+.5);  }
+		x2 = ifloor(pix(0)+.5);
+		y2 = ifloor(pix(1)+.5);
+	}
 
 	void MultiPVTool::get(Int &x1, Int &y1) const {
 		if (!itsCurrentWC) return;
 		Vector<Double> pix(2);
 		itsCurrentWC->linToPix(pix, itsP1);
-		x1 = ifloor(pix(0)+.5); y1 = ifloor(pix(1)+.5);  }
+		x1 = ifloor(pix(0)+.5);
+		y1 = ifloor(pix(1)+.5);
+	}
 
 
 	void MultiPVTool::draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type &selected_regions) {
@@ -488,9 +533,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
-    }
-    **********************************************************************************************************
-    *********************************************************************************************************/
+	}
+	**********************************************************************************************************
+	*********************************************************************************************************/
 
 
 	typedef ImageStatistics<Float>::stat_list getLayerStats_t;
@@ -602,7 +647,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			Int spInd = cs.findCoordinate(Coordinate::SPECTRAL);
 			SpectralCoordinate spCoord;
 			Int wSp=-1;
-			if ( spInd>=0 ){
+			if ( spInd>=0 ) {
 				wSp= (cs.worldAxes(spInd))[0];
 				spCoord=cs.spectralCoordinate(spInd);
 				spCoord.setVelocity();
@@ -685,7 +730,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const CoordinateSystem* cs=0;
 		try {
 			cs = &(image->coordinates());
-		} catch(...) { cs = 0;  }	// (necessity of try-catch is doubtful...).
+		} catch(...) {
+			cs = 0;     // (necessity of try-catch is doubtful...).
+		}
 
 		if (cs==0) return -1;
 
@@ -726,10 +773,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if( ! rectangleDefined() || itsCurrentWC==0 ) return;
 
 		WorldCanvasHolder *wch = pd_->wcHolder(itsCurrentWC);
-			// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
-			// locating the important coordinate state 'zindex' on wch
-			// (inaccessible from WC), instead of on WC, was a blunder....
-			// .... see also QtMouseTools.cc
+		// Only reason pd_ is 'needed' by this tool (it shouldn't need it):
+		// locating the important coordinate state 'zindex' on wch
+		// (inaccessible from WC), instead of on WC, was a blunder....
+		// .... see also QtMouseTools.cc
 		if ( wch == 0 ) return;
 		Int zindex = 0;
 		if (wch->restrictionBuffer()->exists("zIndex")) {
@@ -786,8 +833,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				if ( nAxes == 2 ) dispAxes.resize(2,True);
 
 				if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
-					 Int(pos.nelements()) != nAxes ||
-					 anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
+				        Int(pos.nelements()) != nAxes ||
+				        anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
 					continue;
 
 				if ( dispAxes.nelements() > 2u )
@@ -873,11 +920,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	bool MultiPVTool::create( viewer::region::RegionTypes /*region_type*/, WorldCanvas *wc,
-							  const std::vector<std::pair<double,double> > &pts,
-							  const std::string &label, viewer::region::TextPosition label_pos, const std::vector<int> &label_off,
-							  const std::string &font, int font_size, int font_style, const std::string &font_color,
-							  const std::string &line_color, viewer::region::LineStyle line_style, unsigned int line_width,
-							  bool is_annotation, VOID *region_specific_state ) {
+	                          const std::vector<std::pair<double,double> > &pts,
+	                          const std::string &label, viewer::region::TextPosition label_pos, const std::vector<int> &label_off,
+	                          const std::string &font, int font_size, int font_style, const std::string &font_color,
+	                          const std::string &line_color, viewer::region::LineStyle line_style, unsigned int line_width,
+	                          bool is_annotation, VOID *region_specific_state ) {
 
 		if ( pts.size( ) != 2 ) return false;
 		if ( itsCurrentWC == 0 ) itsCurrentWC = wc;
@@ -901,7 +948,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// other regions to disappear... instead, there <ESC> should cause the selected regions
 		// to be be deleted...      <drs>
 		// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-        // for ( pvlinelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
+		// for ( pvlinelist::iterator iter = rectangles.begin(); iter != rectangles.end(); ++iter ) {
 		//     // the only change that will count as "modifying" is a non-zero length name
 		//     if ( (*iter)->modified( ) == false ) {
 		// 	rectangles.erase( iter );
@@ -912,7 +959,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsCurrentWC = wc;
 
 		double linx, liny;
-		try { viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny ); } catch(...) { return; }
+		try {
+			viewer::screen_to_linear( itsCurrentWC, x, y, linx, liny );
+		} catch(...) {
+			return;
+		}
 
 		creating_region = resizing_region = allocate_region( wc, linx, liny, linx, liny, 0 );
 		viewer::Region::creatingRegionBegin(std::tr1::dynamic_pointer_cast<viewer::Region>(creating_region));

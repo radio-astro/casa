@@ -44,31 +44,31 @@
 #include <display/DisplayErrors.h>
 
 namespace casa {
-    namespace viewer {
+	namespace viewer {
 
-	Rectangle::Rectangle( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
-		bool hold_signals ) :	Region( "rectangle", wc, d, hold_signals ),
-														blc_x(x1<x2?x1:x2),
-														blc_y(y1<y2?y1:y2),
-														trc_x(x1<x2?x2:x1),
-														trc_y(y1<y2?y2:y1) {
-		initHistogram();
-		complete = true;
-	}
+		Rectangle::Rectangle( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
+		                      bool hold_signals ) :	Region( "rectangle", wc, d, hold_signals ),
+			blc_x(x1<x2?x1:x2),
+			blc_y(y1<y2?y1:y2),
+			trc_x(x1<x2?x2:x1),
+			trc_y(y1<y2?y2:y1) {
+			initHistogram();
+			complete = true;
+		}
 
-	// carry over from QtRegion... hopefully, removed soon...
-	Rectangle::Rectangle( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
-		bool hold_signals) :	Region( "rectangle", wc, rs->dock( ), hold_signals ),
-														blc_x(x1<x2?x1:x2),
-														blc_y(y1<y2?y1:y2),
-														trc_x(x1<x2?x2:x1),
-														trc_y(y1<y2?y2:y1) {
-		initHistogram();
-		complete = true;
-	}
+		// carry over from QtRegion... hopefully, removed soon...
+		Rectangle::Rectangle( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
+		                      bool hold_signals) :	Region( "rectangle", wc, rs->dock( ), hold_signals ),
+			blc_x(x1<x2?x1:x2),
+			blc_y(y1<y2?y1:y2),
+			trc_x(x1<x2?x2:x1),
+			trc_y(y1<y2?y2:y1) {
+			initHistogram();
+			complete = true;
+		}
 
 
-	Rectangle::~Rectangle( ) { }
+		Rectangle::~Rectangle( ) { }
 
 
 		unsigned int Rectangle::check_handle( double x, double y ) const {
@@ -142,101 +142,101 @@ namespace casa {
 
 		int Rectangle::moveHandle( int handle, double x, double y ) {
 			switch ( handle ) {
-				case 1:		// trc handle
-					if ( x < blc_x ) {
-						if ( y < blc_y ) {
-							trc_x = blc_x;
-							trc_y = blc_y;
-							blc_x = x;
-							blc_y = y;
-							handle = 3;
-						} else {
-							trc_x = blc_x;
-							trc_y = y;
-							blc_x = x;
-							handle = 4;
-						}
-					} else if ( y < blc_y ) {
-						trc_y = blc_y;
-						blc_y = y;
-						handle = 2;
-					} else {
-						trc_x = x;
-						trc_y = y;
-					}
-					break;
-				case 2:		// brc handle
-					if ( x < blc_x ) {
-						if ( y > trc_y ) {
-							blc_y = trc_y;
-							trc_x = blc_x;
-							trc_y = y;
-							blc_x = x;
-							handle = 4;
-						} else {
-							trc_x = blc_x;
-							blc_x = x;
-							blc_y = y;
-							handle = 3;
-						}
-					} else if ( y > trc_y ) {
-						blc_y = trc_y;
-						trc_x = x;
-						trc_y = y;
-						handle = 1;
-					} else {
-						trc_x = x;
-						blc_y = y;
-					}
-					break;
-				case 3:		// blc handle
-					if ( x > trc_x ) {
-						if ( y > trc_y ) {
-							blc_x = trc_x;
-							blc_y = trc_y;
-							trc_x = x;
-							trc_y = y;
-							handle = 1;
-						} else {
-							blc_x = trc_x;
-							trc_x = x;
-							blc_y = y;
-							handle = 2;
-						}
-					} else if ( y > trc_y ) {
-						blc_y = trc_y;
-						blc_x = x;
-						trc_y = y;
-						handle = 4;
-					} else {
-						blc_x = x;
-						blc_y = y;
-					}
-					break;
-				case 4:		// tlc handle
-					if ( x > trc_x ) {
-						if ( y < blc_y ) {
-							blc_x = trc_x;
-							trc_y = blc_y;
-							blc_y = y;
-							trc_x = x;
-							handle = 2;
-						} else {
-							blc_x = trc_x;
-							trc_x = x;
-							trc_y = y;
-							handle = 1;
-						}
-					} else if ( y < blc_y ) {
+			case 1:		// trc handle
+				if ( x < blc_x ) {
+					if ( y < blc_y ) {
+						trc_x = blc_x;
 						trc_y = blc_y;
 						blc_x = x;
 						blc_y = y;
 						handle = 3;
 					} else {
-						blc_x = x;
+						trc_x = blc_x;
 						trc_y = y;
+						blc_x = x;
+						handle = 4;
 					}
-					break;
+				} else if ( y < blc_y ) {
+					trc_y = blc_y;
+					blc_y = y;
+					handle = 2;
+				} else {
+					trc_x = x;
+					trc_y = y;
+				}
+				break;
+			case 2:		// brc handle
+				if ( x < blc_x ) {
+					if ( y > trc_y ) {
+						blc_y = trc_y;
+						trc_x = blc_x;
+						trc_y = y;
+						blc_x = x;
+						handle = 4;
+					} else {
+						trc_x = blc_x;
+						blc_x = x;
+						blc_y = y;
+						handle = 3;
+					}
+				} else if ( y > trc_y ) {
+					blc_y = trc_y;
+					trc_x = x;
+					trc_y = y;
+					handle = 1;
+				} else {
+					trc_x = x;
+					blc_y = y;
+				}
+				break;
+			case 3:		// blc handle
+				if ( x > trc_x ) {
+					if ( y > trc_y ) {
+						blc_x = trc_x;
+						blc_y = trc_y;
+						trc_x = x;
+						trc_y = y;
+						handle = 1;
+					} else {
+						blc_x = trc_x;
+						trc_x = x;
+						blc_y = y;
+						handle = 2;
+					}
+				} else if ( y > trc_y ) {
+					blc_y = trc_y;
+					blc_x = x;
+					trc_y = y;
+					handle = 4;
+				} else {
+					blc_x = x;
+					blc_y = y;
+				}
+				break;
+			case 4:		// tlc handle
+				if ( x > trc_x ) {
+					if ( y < blc_y ) {
+						blc_x = trc_x;
+						trc_y = blc_y;
+						blc_y = y;
+						trc_x = x;
+						handle = 2;
+					} else {
+						blc_x = trc_x;
+						trc_x = x;
+						trc_y = y;
+						handle = 1;
+					}
+				} else if ( y < blc_y ) {
+					trc_y = blc_y;
+					blc_x = x;
+					blc_y = y;
+					handle = 3;
+				} else {
+					blc_x = x;
+					trc_y = y;
+				}
+				break;
 			}
 
 			if ( blc_x > trc_x || blc_y > trc_y ) throw internal_error("rectangle inconsistency");
@@ -267,7 +267,11 @@ namespace casa {
 			double lx = linear_average(blc_x,trc_x);
 			double ly = linear_average(blc_y,trc_y);
 
-			try { linear_to_pixel( wc_, lx, ly, x, y ); } catch(...) { return; }
+			try {
+				linear_to_pixel( wc_, lx, ly, x, y );
+			} catch(...) {
+				return;
+			}
 		}
 
 		AnnotationBase *Rectangle::annotation( ) const {
@@ -277,7 +281,11 @@ namespace casa {
 			const CoordinateSystem &cs = wc_->coordinateSystem( );
 
 			double wblc_x, wblc_y, wtrc_x, wtrc_y;
-			try { linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y ); } catch(...) { return 0; }
+			try {
+				linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
+			} catch(...) {
+				return 0;
+			}
 			const Vector<String> &units = wc_->worldAxisUnits( );
 
 			Quantity qblc_x( wblc_x, units[0] );
@@ -313,17 +321,25 @@ namespace casa {
 		}
 
 		void Rectangle::fetch_region_details( region::RegionTypes &type, std::vector<std::pair<int,int> > &pixel_pts,
-											  std::vector<std::pair<double,double> > &world_pts ) const {
+		                                      std::vector<std::pair<double,double> > &world_pts ) const {
 
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
 
 			type = region::RectRegion;
 
 			double wblc_x, wblc_y, wtrc_x, wtrc_y;
-			try { linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y ); } catch(...) { return; }
+			try {
+				linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
+			} catch(...) {
+				return;
+			}
 
 			double pblc_x, pblc_y, ptrc_x, ptrc_y;
-			try { linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, pblc_x, pblc_y, ptrc_x, ptrc_y ); } catch(...) { return; }
+			try {
+				linear_to_pixel( wc_, blc_x, blc_y, trc_x, trc_y, pblc_x, pblc_y, ptrc_x, ptrc_y );
+			} catch(...) {
+				return;
+			}
 
 			pixel_pts.resize(2);
 			pixel_pts[0].first = static_cast<int>(pblc_x);
@@ -346,7 +362,11 @@ namespace casa {
 			if(pc==0) return;
 
 			int x1, y1, x2, y2;
-			try { linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 ); } catch(...) { return; }
+			try {
+				linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 );
+			} catch(...) {
+				return;
+			}
 			pc->drawRectangle( x1, y1, x2, y2 );
 
 			// draw the center
@@ -461,13 +481,17 @@ namespace casa {
 			RegionInfo::stats_t *result = new RegionInfo::stats_t( );
 
 			Vector<Double> pos(2);
-			try { linear_to_world( wc_, x, y, pos[0], pos[1] ); } catch(...) { return result; }
+			try {
+				linear_to_world( wc_, x, y, pos[0], pos[1] );
+			} catch(...) {
+				return result;
+			}
 
 			msar->showPosition( *result, pos );
 			return result;
 		}
 
-		std::list<std::tr1::shared_ptr<RegionInfo> > *Rectangle::generate_dds_centers( ){
+		std::list<std::tr1::shared_ptr<RegionInfo> > *Rectangle::generate_dds_centers( ) {
 
 			std::list<std::tr1::shared_ptr<RegionInfo> > *region_centers = new std::list<std::tr1::shared_ptr<RegionInfo> >( );
 			if( wc_==0 ) return region_centers;
@@ -527,8 +551,8 @@ namespace casa {
 					if ( nAxes == 2 ) dispAxes.resize(2,True);
 
 					if ( nAxes < 2 || Int(shp.nelements()) != nAxes ||
-						 Int(pos.nelements()) != nAxes ||
-						 anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
+					        Int(pos.nelements()) != nAxes ||
+					        anyLT(dispAxes,0) || anyGE(dispAxes,nAxes) )
 						continue;
 
 					if ( dispAxes.nelements() > 2u )
@@ -660,6 +684,6 @@ namespace casa {
 			out.rectangle(wc_,pts);
 		}
 
-    }
+	}
 
 }

@@ -98,8 +98,7 @@ namespace casa {
 			if ( signal_complete ) {
 				try {
 					polygonComplete( );
-				}
-				catch (...) {
+				} catch (...) {
 					/*fprintf( stderr, "******\tregion selection errors - %s, %d \t******\n", __FILE__, __LINE__ );*/
 				}
 			}
@@ -565,8 +564,7 @@ namespace casa {
 
 			try {
 				linear_to_pixel( wc_, lx, ly, x, y );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 		}
@@ -582,8 +580,7 @@ namespace casa {
 			int x1, y1, x2, y2;
 			try {
 				linear_to_screen( wc_, _drawing_points_[0].first, _drawing_points_[0].second, x1, y1 );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
@@ -595,8 +592,7 @@ namespace casa {
 			for ( unsigned int i=1; i < _drawing_points_.size( ); ++i ) {
 				try {
 					linear_to_screen( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x2, y2 );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				pc->drawLine(x1,y1,x2,y2);
@@ -612,8 +608,7 @@ namespace casa {
 				boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 				try {
 					linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 
@@ -631,8 +626,7 @@ namespace casa {
 				double xdx, ydy;
 				try {
 					screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				handle_delta_x = xdx - blc_x;
@@ -729,8 +723,7 @@ namespace casa {
 				double x,y;
 				try {
 					linear_to_world( wc_, _drawing_points_[i].first, _drawing_points_[i].second, x, y );
-				}
-				catch(...) {
+				} catch(...) {
 					return 0;
 				}
 				xv[i] = Quantity(x,units[0]);
@@ -782,8 +775,7 @@ namespace casa {
 				double wx, wy;
 				try {
 					linear_to_world( wc_, _drawing_points_[i].first, _drawing_points_[i].second, wx, wy );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				world_pts[i].first = wx;
@@ -792,8 +784,7 @@ namespace casa {
 				double px, py;
 				try {
 					linear_to_pixel( wc_, _drawing_points_[i].first, _drawing_points_[i].second, px, py );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				pixel_pts[i].first  = static_cast<int>(px);

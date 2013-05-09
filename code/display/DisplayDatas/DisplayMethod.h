@@ -38,86 +38,87 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forwards:
-class WorldCanvasHolder;
-class Attribute;
-class DisplayData;
+	class WorldCanvasHolder;
+	class Attribute;
+	class DisplayData;
 
 // <summary>
 // Base class for drawing a particular element (view) of a DisplayData.
 // </summary>
 //
-// <synopsis> 
+// <synopsis>
 // This base class defines an interface for drawing a single view of a
 // DisplayData object.  The fundamental idea is that a DisplayData
 // class will manage one or more DisplayMethod objects, and request
 // the individual objects to draw as necessary.
 // </synopsis>
 
-class DisplayMethod {
- public:
+	class DisplayMethod {
+	public:
 
-  // Constructor.  DisplayMethods need to know who their parent
-  // DisplayData is.
-  DisplayMethod(DisplayData *parentDisplayData);
+		// Constructor.  DisplayMethods need to know who their parent
+		// DisplayData is.
+		DisplayMethod(DisplayData *parentDisplayData);
 
-  // Destructor.
-  virtual ~DisplayMethod();
+		// Destructor.
+		virtual ~DisplayMethod();
 
-  // Draw on the provided WorldCanvasHolder.
-  virtual void draw(Display::RefreshReason reason,
-		    WorldCanvasHolder &wcHolder) = 0;
+		// Draw on the provided WorldCanvasHolder.
+		virtual void draw(Display::RefreshReason reason,
+		                  WorldCanvasHolder &wcHolder) = 0;
 
-  // clear drawlist state.
-  // dk note 11/03:  Only used by the PrincipleAxesDM branch, where the
-  // implementation has been moved.  Implementation should remain null
-  // on the CachingDD/DM branch, which uses different interface (purgeCache)
-  // and state for this.
-  virtual void cleanup();
+		// clear drawlist state.
+		// dk note 11/03:  Only used by the PrincipleAxesDM branch, where the
+		// implementation has been moved.  Implementation should remain null
+		// on the CachingDD/DM branch, which uses different interface (purgeCache)
+		// and state for this.
+		virtual void cleanup();
 
-  // Set & remove restrictions
-  // <group>
-  void addRestriction(Attribute& newAt, Bool permanent);
-  void addRestrictions(AttributeBuffer& newBuf);
-  void setRestriction(Attribute& newAt);
-  void setRestrictions(AttributeBuffer& newBuf);
-  void removeRestriction(const String& name);
-  Bool existRestriction(const String& name);
-  void clearRestrictions();
-  // </group>
+		// Set & remove restrictions
+		// <group>
+		void addRestriction(Attribute& newAt, Bool permanent);
+		void addRestrictions(AttributeBuffer& newBuf);
+		void setRestriction(Attribute& newAt);
+		void setRestrictions(AttributeBuffer& newBuf);
+		void removeRestriction(const String& name);
+		Bool existRestriction(const String& name);
+		void clearRestrictions();
+		// </group>
 
-  // match restriction
-  // <group>
-  Bool matches(Attribute& at);
-  Bool matches(AttributeBuffer& atBuf);
-  // </group>
+		// match restriction
+		// <group>
+		Bool matches(Attribute& at);
+		Bool matches(AttributeBuffer& atBuf);
+		// </group>
 
 
-  // Allow DisplayData objects to find out about restrictions in
-  // DisplayMethod elements...
-  friend class DisplayData;
+		// Allow DisplayData objects to find out about restrictions in
+		// DisplayMethod elements...
+		friend class DisplayData;
 
- protected:
+	protected:
 
-  AttributeBuffer  restrictions;
+		AttributeBuffer  restrictions;
 
-  // (Required) default constructor.
-  DisplayMethod();
+		// (Required) default constructor.
+		DisplayMethod();
 
-  // (Required) copy constructor.
-  DisplayMethod(const DisplayMethod &other);
+		// (Required) copy constructor.
+		DisplayMethod(const DisplayMethod &other);
 
-  // (Required) copy assignment.
-  void operator=(const DisplayMethod &other);
-  
-  // Return the parent DisplayData.
-  DisplayData *parentDisplayData() 
-    { return itsParentDisplayData; }
+		// (Required) copy assignment.
+		void operator=(const DisplayMethod &other);
 
- private:
+		// Return the parent DisplayData.
+		DisplayData *parentDisplayData() {
+			return itsParentDisplayData;
+		}
 
-  DisplayData *itsParentDisplayData;
+	private:
 
-};
+		DisplayData *itsParentDisplayData;
+
+	};
 
 
 } //# NAMESPACE CASA - END

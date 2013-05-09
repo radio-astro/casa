@@ -38,97 +38,106 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Class providing passive behaviour for CachingDisplayDatas.
 // </summary>
 
-// <synopsis> 
+// <synopsis>
 // A "passive" DisplayData is one which can only be used in
 // conjunction with another non-passive DisplayData.  As such, it will
 // not negotiate coordinates on a WorldCanvas, nor will it provide
 // coordinate conversion capabilities.
 // </synopsis>
 
-class PassiveCachingDD : public CachingDisplayData {
+	class PassiveCachingDD : public CachingDisplayData {
 
- public:
+	public:
 
-  // Constructor.
-  PassiveCachingDD();
+		// Constructor.
+		PassiveCachingDD();
 
-  // Destructor.
-  virtual ~PassiveCachingDD();
+		// Destructor.
+		virtual ~PassiveCachingDD();
 
-    // Coordinate transformation handlers, called by WorldCanvasHolder.
-  // These functions simply return False because this DisplayData is
-  // passive.
-  // <group>
-  virtual Bool linToWorld(Vector<Double> &world, const Vector<Double> &lin);
-  virtual Bool worldToLin(Vector<Double> &lin, const Vector<Double> &world);
-  // </group>
+		// Coordinate transformation handlers, called by WorldCanvasHolder.
+		// These functions simply return False because this DisplayData is
+		// passive.
+		// <group>
+		virtual Bool linToWorld(Vector<Double> &world, const Vector<Double> &lin);
+		virtual Bool worldToLin(Vector<Double> &lin, const Vector<Double> &world);
+		// </group>
 
-  // Format a string containing coordinate or value information at the
-  // given world coordinate.  They simply return empty Strings because
-  // this DisplayData is passive.
-  // <group>
-  virtual String showPosition(const Vector<Double> &world, 
-			      const Bool &displayAxesOnly = False);
-  virtual String showValue(const Vector<Double> &world);
-  // </group>
+		// Format a string containing coordinate or value information at the
+		// given world coordinate.  They simply return empty Strings because
+		// this DisplayData is passive.
+		// <group>
+		virtual String showPosition(const Vector<Double> &world,
+		                            const Bool &displayAxesOnly = False);
+		virtual String showValue(const Vector<Double> &world);
+		// </group>
 
-  
-  // World axis information suppliers.
-  // <group>
-  virtual Vector<String> worldAxisNames() const;
-  virtual Vector<String> worldAxisUnits() const;
-  // </group>
-  
-  const Unit dataUnit() const { return Unit("_"); }
-  const IPosition dataShape() const { return IPosition( ); }
-  const uInt dataDim() const { return 0; }
-  std::vector<int> displayAxes( ) const { return std::vector<int>( ); }
 
-  // Return the number of display elements (ie. drawable images) in
-  // this DisplayData.
-  // <group>
-  virtual const uInt nelements(const WorldCanvasHolder &wcHolder) const;
-  virtual const uInt nelements() const;
-  // </group>
+		// World axis information suppliers.
+		// <group>
+		virtual Vector<String> worldAxisNames() const;
+		virtual Vector<String> worldAxisUnits() const;
+		// </group>
 
-  // Install the default options for this DisplayData.
-  virtual void setDefaultOptions();
+		const Unit dataUnit() const {
+			return Unit("_");
+		}
+		const IPosition dataShape() const {
+			return IPosition( );
+		}
+		const uInt dataDim() const {
+			return 0;
+		}
+		std::vector<int> displayAxes( ) const {
+			return std::vector<int>( );
+		}
 
-  // Apply options stored in <src>rec</src> to the DisplayData.  A
-  // return value of <src>True</src> means a refresh is needed.
-  // <src>recOut</src> contains any fields which were implicitly 
-  // changed as a result of the call to this function.
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Return the number of display elements (ie. drawable images) in
+		// this DisplayData.
+		// <group>
+		virtual const uInt nelements(const WorldCanvasHolder &wcHolder) const;
+		virtual const uInt nelements() const;
+		// </group>
 
-  // Retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// Install the default options for this DisplayData.
+		virtual void setDefaultOptions();
 
-  // Negotiatiate WorldCanvas linear coordinate system when asked to
-  // do so by the WorldCanvasHolder.  In this implementation, simply
-  // return False to indicate that this DisplayData will not negotiate
-  // coordinates: it is a passive DisplayData.
+		// Apply options stored in <src>rec</src> to the DisplayData.  A
+		// return value of <src>True</src> means a refresh is needed.
+		// <src>recOut</src> contains any fields which were implicitly
+		// changed as a result of the call to this function.
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-  virtual void refreshEH(const WCRefreshEvent &ev);
-  virtual Bool sizeControl(WorldCanvasHolder &/*wcHolder*/,
-			   AttributeBuffer &/*holderBuf*/)
-    { return False; }
+		// Retrieve the current and default options and parameter types.
+		virtual Record getOptions();
 
-  // Tidy up the elements of this DisplayData.
-  virtual void cleanup();  
+		// Negotiatiate WorldCanvas linear coordinate system when asked to
+		// do so by the WorldCanvasHolder.  In this implementation, simply
+		// return False to indicate that this DisplayData will not negotiate
+		// coordinates: it is a passive DisplayData.
 
- protected:
+		virtual void refreshEH(const WCRefreshEvent &ev);
+		virtual Bool sizeControl(WorldCanvasHolder &/*wcHolder*/,
+		                         AttributeBuffer &/*holderBuf*/) {
+			return False;
+		}
 
-  // Return the current options of this DisplayData as an
-  // AttributeBuffer.  The caller must delete the returned buffer.
-  virtual AttributeBuffer optionsAsAttributes();
+		// Tidy up the elements of this DisplayData.
+		virtual void cleanup();
 
-  // (Required) copy constructor.
-  PassiveCachingDD(const PassiveCachingDD &other);
+	protected:
 
-  // (Required) copy assignment.
-  void operator=(const PassiveCachingDD &other);
+		// Return the current options of this DisplayData as an
+		// AttributeBuffer.  The caller must delete the returned buffer.
+		virtual AttributeBuffer optionsAsAttributes();
 
-};
+		// (Required) copy constructor.
+		PassiveCachingDD(const PassiveCachingDD &other);
+
+		// (Required) copy assignment.
+		void operator=(const PassiveCachingDD &other);
+
+	};
 
 
 } //# NAMESPACE CASA - END

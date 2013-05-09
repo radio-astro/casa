@@ -28,33 +28,33 @@
 #include <QMouseEvent>
 namespace casa {
 
-CanvasModeChannel::CanvasModeChannel():
-	CanvasMode(Qt::SizeHorCursor){
-}
-
-bool CanvasModeChannel::isMode( ModeIndex mode ) const {
-	bool matchingMode = false;
-	if ( mode == MODE_CHANNEL ){
-		matchingMode = true;
+	CanvasModeChannel::CanvasModeChannel():
+		CanvasMode(Qt::SizeHorCursor) {
 	}
-	return matchingMode;
-}
+
+	bool CanvasModeChannel::isMode( ModeIndex mode ) const {
+		bool matchingMode = false;
+		if ( mode == MODE_CHANNEL ) {
+			matchingMode = true;
+		}
+		return matchingMode;
+	}
 
 
-void CanvasModeChannel::mousePressEventSpecific( QMouseEvent* event ){
-	receiver->selectChannel( event );
-}
+	void CanvasModeChannel::mousePressEventSpecific( QMouseEvent* event ) {
+		receiver->selectChannel( event );
+	}
 
-void CanvasModeChannel::mouseMoveEvent( QMouseEvent* event ){
-	receiver->updateChannel( event );
-}
+	void CanvasModeChannel::mouseMoveEvent( QMouseEvent* event ) {
+		receiver->updateChannel( event );
+	}
 
-void CanvasModeChannel::mouseReleaseEventSpecific( QMouseEvent* event ){
-	receiver->moveChannel( event );
-}
+	void CanvasModeChannel::mouseReleaseEventSpecific( QMouseEvent* event ) {
+		receiver->moveChannel( event );
+	}
 
-CanvasModeChannel::~CanvasModeChannel() {
+	CanvasModeChannel::~CanvasModeChannel() {
 
-}
+	}
 
 } /* namespace casa */

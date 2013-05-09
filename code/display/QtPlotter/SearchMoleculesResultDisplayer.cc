@@ -26,13 +26,13 @@
 
 namespace casa {
 
-SearchMoleculesResultDisplayer::SearchMoleculesResultDisplayer() {
-	// TODO Auto-generated constructor stub
+	SearchMoleculesResultDisplayer::SearchMoleculesResultDisplayer() {
+		// TODO Auto-generated constructor stub
 
-}
+	}
 
-SearchMoleculesResultDisplayer::~SearchMoleculesResultDisplayer() {
-	// TODO Auto-generated destructor stub
-}
+	SearchMoleculesResultDisplayer::~SearchMoleculesResultDisplayer() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

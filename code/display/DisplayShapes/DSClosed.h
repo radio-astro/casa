@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSCLOSED_H
 #define TRIALDISPLAY_DSCLOSED_H
@@ -31,7 +31,7 @@
 
 #include <casa/aips.h>
 
-#include <display/DisplayShapes/DSBasic.h> 
+#include <display/DisplayShapes/DSBasic.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -49,7 +49,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// DSClosed simply manages the fill options of any closed display shapes. 
+// DSClosed simply manages the fill options of any closed display shapes.
 // </synopsis>
 //
 // <motivation>
@@ -61,53 +61,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </srcblock>
 // </example>
 
-class DSClosed : public DSBasic {
+	class DSClosed : public DSBasic {
 
-public:
+	public:
 
-  // Type of fill to use.
-  enum FillStyle {No_Fill, Full_Fill};
+		// Type of fill to use.
+		enum FillStyle {No_Fill, Full_Fill};
 
-  // Constructors and destructors
-  // <group>
-  DSClosed();
-  DSClosed(const DSClosed& other);
-  
-  virtual ~DSClosed();
-  // </group>
+		// Constructors and destructors
+		// <group>
+		DSClosed();
+		DSClosed(const DSClosed& other);
 
-  // Get / Set fill options
-  // <group>
-  virtual void setFillStyle(DSClosed::FillStyle fill);
-  virtual DSClosed::FillStyle getFillStyle();
-  virtual void setFillColor(String color);
-  virtual String getFillColor();
-  // </group>
+		virtual ~DSClosed();
+		// </group>
+
+		// Get / Set fill options
+		// <group>
+		virtual void setFillStyle(DSClosed::FillStyle fill);
+		virtual DSClosed::FillStyle getFillStyle();
+		virtual void setFillColor(String color);
+		virtual String getFillColor();
+		// </group>
 
 
-  // General DisplayShape functions. The non abstract functions in this group
-  // simply pass on calls up the class tree.
-  // <group>
-  virtual void draw(PixelCanvas *pc);
-  virtual void rotateAbout(const Float& angle, const Float& aboutX, 
-			   const Float& aboutY);
-  virtual void move(const Float& dX, const Float& dY);
-  // </group>
+		// General DisplayShape functions. The non abstract functions in this group
+		// simply pass on calls up the class tree.
+		// <group>
+		virtual void draw(PixelCanvas *pc);
+		virtual void rotateAbout(const Float& angle, const Float& aboutX,
+		                         const Float& aboutY);
+		virtual void move(const Float& dX, const Float& dY);
+		// </group>
 
-  // Get and set options
-  // <group>
-  virtual Record getOptions();
-  virtual Bool setOptions(const Record& settings);
-  // </group>
+		// Get and set options
+		// <group>
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		// </group>
 
-private:
+	private:
 
-  // Used to set up the class when default constructor called
-  virtual void setDefaultOptions();
-  DSClosed::FillStyle itsFillStyle;
-  String itsFillColor;
-  
-};
+		// Used to set up the class when default constructor called
+		virtual void setDefaultOptions();
+		DSClosed::FillStyle itsFillStyle;
+		String itsFillColor;
+
+	};
 
 } //# NAMESPACE CASA - END
 

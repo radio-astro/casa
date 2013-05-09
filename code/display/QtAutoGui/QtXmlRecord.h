@@ -45,27 +45,26 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class QtXmlRecord : public Record, public QObject
-{
+	class QtXmlRecord : public Record, public QObject {
 
-public:
-    QtXmlRecord();
-    ~QtXmlRecord();
-    bool recordToElement(const Record *rec, QDomElement *parent,
-			 QDomDocument &doc);    
-    Bool elementToRecord(QDomElement *ele, Record &rec, Bool useOptName=True);
-    Bool domToRecord(QDomDocument *doc, Record &rec);
-    Bool optsElemToRecord(QDomElement optsElem, Record &rec);
-    bool readDomFrom(QDomDocument &doc, QIODevice *device);
-    bool writeDomTo(QDomDocument *doc, QIODevice *device);
-    bool recordToDom(Record *rec, QDomDocument &doc);
-    const QString rootName;
-    static QString domToString(const QDomElement &elt);
-    static QDomDocument stringToDom(const QString &xml);   
+	public:
+		QtXmlRecord();
+		~QtXmlRecord();
+		bool recordToElement(const Record *rec, QDomElement *parent,
+		                     QDomDocument &doc);
+		Bool elementToRecord(QDomElement *ele, Record &rec, Bool useOptName=True);
+		Bool domToRecord(QDomDocument *doc, Record &rec);
+		Bool optsElemToRecord(QDomElement optsElem, Record &rec);
+		bool readDomFrom(QDomDocument &doc, QIODevice *device);
+		bool writeDomTo(QDomDocument *doc, QIODevice *device);
+		bool recordToDom(Record *rec, QDomDocument &doc);
+		const QString rootName;
+		static QString domToString(const QDomElement &elt);
+		static QDomDocument stringToDom(const QString &xml);
 
-private:
-    void formatXml(QDomDocument &doc);
-};
+	private:
+		void formatXml(QDomDocument &doc);
+	};
 
 } //# NAMESPACE CASA - END
 

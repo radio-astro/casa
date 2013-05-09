@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSPIXELTEXT_H
 #define TRIALDISPLAY_DSPIXELTEXT_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DSText.h>
@@ -40,31 +40,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of an absolute pixel DSText
 // </summary>
 
-class DSWorldText;
-class DSScreenText;
+	class DSWorldText;
+	class DSScreenText;
 
-class DSPixelText : public DSText, public DisplayShapeWithCoords {
-  
-public:
-  
-  DSPixelText();
-  DSPixelText(const Record& settings);
-  DSPixelText(DSScreenText& other);
-  DSPixelText(DSWorldText& other);
-  
-  virtual ~DSPixelText();
+	class DSPixelText : public DSText, public DisplayShapeWithCoords {
 
-  virtual Record getOptions();
-  virtual Bool setOptions(const Record& settings);
+	public:
 
-  virtual Record getRawOptions() {
-    return DSText::getOptions();
-  }
+		DSPixelText();
+		DSPixelText(const Record& settings);
+		DSPixelText(DSScreenText& other);
+		DSPixelText(DSWorldText& other);
 
-  virtual void recalculateScreenPosition() {}
-private:
-  
-};
+		virtual ~DSPixelText();
+
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+
+		virtual Record getRawOptions() {
+			return DSText::getOptions();
+		}
+
+		virtual void recalculateScreenPosition() {}
+	private:
+
+	};
 
 } //# NAMESPACE CASA - END
 

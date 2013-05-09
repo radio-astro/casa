@@ -27,40 +27,40 @@
 #include <QDebug>
 namespace casa {
 
-ConverterFrequencyWavelength::ConverterFrequencyWavelength(const QString& oldUnits,
-		const QString& newUnits):
-		ConverterFrequency( oldUnits, newUnits){
+	ConverterFrequencyWavelength::ConverterFrequencyWavelength(const QString& oldUnits,
+	        const QString& newUnits):
+		ConverterFrequency( oldUnits, newUnits) {
 
-}
+	}
 
-Vector<double> ConverterFrequencyWavelength::convert( const Vector<double>& oldValues ){
+	Vector<double> ConverterFrequencyWavelength::convert( const Vector<double>& oldValues ) {
 
-	Vector<double> resultValues(oldValues.size());
-	resultValues = oldValues;
+		Vector<double> resultValues(oldValues.size());
+		resultValues = oldValues;
 
-	bool unitsUnderstood = setWavelengthUnits( newUnits );
-	bool successfulConversion = false;
-	if ( unitsUnderstood ){
+		bool unitsUnderstood = setWavelengthUnits( newUnits );
+		bool successfulConversion = false;
+		if ( unitsUnderstood ) {
 
-		successfulConversion = spectralCoordinate.frequencyToWavelength( resultValues, oldValues );
+			successfulConversion = spectralCoordinate.frequencyToWavelength( resultValues, oldValues );
 
-		if ( successfulConversion ){
-			Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
-			String spectralUnit = spectralUnits[0];
-			QString spectralUnitStr( spectralUnit.c_str() );
-			if ( spectralUnitStr != oldUnits ){
-				ConverterFrequency::convertFrequency( resultValues, spectralUnitStr, oldUnits );
+			if ( successfulConversion ) {
+				Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
+				String spectralUnit = spectralUnits[0];
+				QString spectralUnitStr( spectralUnit.c_str() );
+				if ( spectralUnitStr != oldUnits ) {
+					ConverterFrequency::convertFrequency( resultValues, spectralUnitStr, oldUnits );
+				}
 			}
 		}
+		if ( !successfulConversion ) {
+			qDebug() << "Could not convert frequency to wavelength";
+		}
+		return resultValues;
 	}
-	if ( !successfulConversion ){
-		qDebug() << "Could not convert frequency to wavelength";
-	}
-	return resultValues;
-}
 
-ConverterFrequencyWavelength::~ConverterFrequencyWavelength() {
-	// TODO Auto-generated destructor stub
-}
+	ConverterFrequencyWavelength::~ConverterFrequencyWavelength() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

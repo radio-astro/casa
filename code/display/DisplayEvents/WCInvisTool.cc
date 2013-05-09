@@ -31,51 +31,51 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-WCInvisTool::WCInvisTool(WorldCanvas *wcanvas,
-			 Display::KeySym keysym) :
-  WCTool(wcanvas, keysym),
-  itsActive(False),
-  itsMoved(False) {
-}
+	WCInvisTool::WCInvisTool(WorldCanvas *wcanvas,
+	                         Display::KeySym keysym) :
+		WCTool(wcanvas, keysym),
+		itsActive(False),
+		itsMoved(False) {
+	}
 
-WCInvisTool::~WCInvisTool() {
-}
+	WCInvisTool::~WCInvisTool() {
+	}
 
-void WCInvisTool::keyPressed(const WCPositionEvent &ev) {
-  itsX = ev.linX();
-  itsY = ev.linY();
-  itsActive = True;
-  itsMoved = False;
-  positionReady();
-}
+	void WCInvisTool::keyPressed(const WCPositionEvent &ev) {
+		itsX = ev.linX();
+		itsY = ev.linY();
+		itsActive = True;
+		itsMoved = False;
+		positionReady();
+	}
 
-void WCInvisTool::keyReleased(const WCPositionEvent &) {
-  itsActive = False;
-}
+	void WCInvisTool::keyReleased(const WCPositionEvent &) {
+		itsActive = False;
+	}
 
-void WCInvisTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
-  if (!itsActive) {
-    return;
-  } else {
-    itsMoved = True;
-    itsX = ev.linX();
-    itsY = ev.linY();
-    positionReady();
-  }
-}
+	void WCInvisTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
+		if (!itsActive) {
+			return;
+		} else {
+			itsMoved = True;
+			itsX = ev.linX();
+			itsY = ev.linY();
+			positionReady();
+		}
+	}
 
-void WCInvisTool::get(Double &x, Double &y) const {
-  x = itsX;
-  y = itsY;
-}
+	void WCInvisTool::get(Double &x, Double &y) const {
+		x = itsX;
+		y = itsY;
+	}
 
-void WCInvisTool::getFractional(Double &x, Double &y) const {
-  Double lx, ly;
-  get(lx, ly);
-  WorldCanvas *wc = worldCanvas();
-  x = (lx - wc->linXMin()) / (wc->linXMax() - wc->linXMin());
-  y = (ly - wc->linYMin()) / (wc->linYMax() - wc->linYMin());
-}
+	void WCInvisTool::getFractional(Double &x, Double &y) const {
+		Double lx, ly;
+		get(lx, ly);
+		WorldCanvas *wc = worldCanvas();
+		x = (lx - wc->linXMin()) / (wc->linXMax() - wc->linXMin());
+		y = (ly - wc->linYMin()) / (wc->linYMax() - wc->linYMin());
+	}
 
 } //# NAMESPACE CASA - END
 

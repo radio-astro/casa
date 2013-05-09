@@ -42,8 +42,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </reviewed>
 
 // <etymology>
-// "DTVisible" is a contraction and concatenation of "DisplayTool" and 
-// "Visible", and provides additional interface features describing 
+// "DTVisible" is a contraction and concatenation of "DisplayTool" and
+// "Visible", and provides additional interface features describing
 // drawing options for visible DisplayTools.
 // </etymology>
 
@@ -52,7 +52,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // describing drawing settings for <linkto
 // class=DisplayTool>DisplayTools</linkto> which will need to draw on
 // a PixelCanvas or WorldCanvas.  Presently it only stores the drawing
-// color and line width, and double click interval, but it will 
+// color and line width, and double click interval, but it will
 // probably grow into something
 // more sophisticated.  The settings are taken from the users
 // <src>.aipsrc</src> file as follows:
@@ -60,15 +60,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <dd> <src>display.controls.color</src>
 // <dt> Either a named color (eg. <src>red</src>) can be given, or
 // the individual red, green and blue components specified in
-// hexadecimal (eg. <src>#f0f033</src>).  The default color is 
+// hexadecimal (eg. <src>#f0f033</src>).  The default color is
 // orange.
 //
 // <dd> <src>display.controls.linewidth</src>
-// <dt> An integer should be given specifying the line width 
+// <dt> An integer should be given specifying the line width
 // to use when drawing DisplayTools.  The default value is one.
 //
 // <dd> <src>display.controls.doubleclickinterval</src>
-// <dt> A real number specifying the time interval in seconds, 
+// <dt> A real number specifying the time interval in seconds,
 // in which a double click will be deemed to have occurred.  The
 // default value is 0.5 seconds.
 // </synopsis>
@@ -92,48 +92,51 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // None.
 // </todo>
 
-class DTVisible {
+	class DTVisible {
 
- public:
-  
-  // Default constructor.
-  DTVisible();
+	public:
 
-  // Destructor.
-  virtual ~DTVisible();
+		// Default constructor.
+		DTVisible();
 
-  // Return the color to use.
-  virtual String drawColor() const
-    { return itsDrawColor; }
+		// Destructor.
+		virtual ~DTVisible();
 
-  // Return the line width to use.
-  virtual Int lineWidth() const
-    { return itsLineWidth; }
+		// Return the color to use.
+		virtual String drawColor() const {
+			return itsDrawColor;
+		}
 
-  // Return the double click interval (in seconds).
-  virtual Double doubleClickInterval() const
-    { return itsDoubleClickInterval; }
+		// Return the line width to use.
+		virtual Int lineWidth() const {
+			return itsLineWidth;
+		}
 
- protected:
+		// Return the double click interval (in seconds).
+		virtual Double doubleClickInterval() const {
+			return itsDoubleClickInterval;
+		}
 
-  // (Required) copy constructor.
-  DTVisible(const DTVisible &other);
+	protected:
 
-  // (Required) copy assignment.
-  DTVisible &operator=(const DTVisible &other);
+		// (Required) copy constructor.
+		DTVisible(const DTVisible &other);
 
- private:
+		// (Required) copy assignment.
+		DTVisible &operator=(const DTVisible &other);
 
-  // Store the color to use here.
-  String itsDrawColor;
+	private:
 
-  // Store the line width here.
-  Int itsLineWidth;
+		// Store the color to use here.
+		String itsDrawColor;
 
-  // Store the double click interval (in seconds) here.
-  Double itsDoubleClickInterval;
+		// Store the line width here.
+		Int itsLineWidth;
 
-};
+		// Store the double click interval (in seconds) here.
+		Double itsDoubleClickInterval;
+
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -63,34 +63,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Nothing known.
 // </todo>
 
-class DParameterColorChoice : public DParameterChoice {
+	class DParameterColorChoice : public DParameterChoice {
 
- public:
+	public:
 
-  // Constructor takes the name of the parameter, a short 
-  // description and some help text.  The context of the
-  // parameter, and whether it is editable, can also be
-  // given.  The default and initial color is always the
-  // foreground color.
-  DParameterColorChoice(const String name, const String description, 
-			const String help, const String context = "",
-			const Bool editable = True);
+		// Constructor takes the name of the parameter, a short
+		// description and some help text.  The context of the
+		// parameter, and whether it is editable, can also be
+		// given.  The default and initial color is always the
+		// foreground color.
+		DParameterColorChoice(const String name, const String description,
+		                      const String help, const String context = "",
+		                      const Bool editable = True);
 
-  // Copy constructor using copy semantics.
-  DParameterColorChoice(const DParameterColorChoice &other);
+		// Copy constructor using copy semantics.
+		DParameterColorChoice(const DParameterColorChoice &other);
 
-  // Destructor.
-  virtual ~DParameterColorChoice();
+		// Destructor.
+		virtual ~DParameterColorChoice();
 
-  // Copy assignment.
-  DParameterColorChoice &operator=(const DParameterColorChoice &other);
+		// Copy assignment.
+		DParameterColorChoice &operator=(const DParameterColorChoice &other);
 
- protected:
+	protected:
 
-  // (Required) default constructor.
-  DParameterColorChoice();
+		// (Required) default constructor.
+		DParameterColorChoice();
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

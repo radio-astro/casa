@@ -69,55 +69,55 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Nothing known
 // </todo>
 
-class MWCRTZoomer : public MWCRectTool {
+	class MWCRTZoomer : public MWCRectTool {
 
- public:
+	public:
 
-  // Constructor
-  MWCRTZoomer(Display::KeySym keysym = Display::K_Pointer_Button1);
+		// Constructor
+		MWCRTZoomer(Display::KeySym keysym = Display::K_Pointer_Button1);
 
-  // Destructor
-  virtual ~MWCRTZoomer();
+		// Destructor
+		virtual ~MWCRTZoomer();
 
-  // This function resets the zoom
-  virtual void unzoom();
-  
-  //This function zooms with a given blc,trc
-  virtual void zoom(const Vector<Double> &linBlc, 
-		    const Vector<Double> &linTrc);
+		// This function resets the zoom
+		virtual void unzoom();
 
-  // zoom in/out by given factor
-  //<group>
-  virtual void zoomIn(Double factor=2.);
-  virtual void zoomOut(Double factor=2.);
-  //</group>
+		//This function zooms with a given blc,trc
+		virtual void zoom(const Vector<Double> &linBlc,
+		                  const Vector<Double> &linTrc);
 
- protected:
+		// zoom in/out by given factor
+		//<group>
+		virtual void zoomIn(Double factor=2.);
+		virtual void zoomOut(Double factor=2.);
+		//</group>
 
-  // Handle double-click inside or outside the rectangle; called by
-  // the base class when these events occur.  They execute
-  // zoom-in/zoom-out on the tool's active WC's (which should all
-  // have indentical linear coordinates for their draw areas--they
-  // certainly will have, after a zoom).
-  // Then the routines invoke the zoomed() callback, below.
-  // <group>
-  virtual void doubleInside();
-  virtual void doubleOutside();
-  // </group>
+	protected:
 
-  // This function is called when a zoom occurs.  It is supplied
-  // with the linear coords of the new zoom box, and thus can be
-  // implemented to do further actions, such as reporting the 
-  // new zoom box to the application
-  virtual void zoomed(const Vector<Double> &linBlc, 
-		      const Vector<Double> &linTrc);
+		// Handle double-click inside or outside the rectangle; called by
+		// the base class when these events occur.  They execute
+		// zoom-in/zoom-out on the tool's active WC's (which should all
+		// have indentical linear coordinates for their draw areas--they
+		// certainly will have, after a zoom).
+		// Then the routines invoke the zoomed() callback, below.
+		// <group>
+		virtual void doubleInside();
+		virtual void doubleOutside();
+		// </group>
 
- private:
-  
-  // get the linear coords of the current zoom box
-  void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
+		// This function is called when a zoom occurs.  It is supplied
+		// with the linear coords of the new zoom box, and thus can be
+		// implemented to do further actions, such as reporting the
+		// new zoom box to the application
+		virtual void zoomed(const Vector<Double> &linBlc,
+		                    const Vector<Double> &linTrc);
 
-};
+	private:
+
+		// get the linear coords of the current zoom box
+		void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
+
+	};
 
 
 } //# NAMESPACE CASA - END

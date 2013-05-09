@@ -27,13 +27,13 @@
 
 namespace casa {
 
-WorldCanvasTranslator::WorldCanvasTranslator() {
-	// TODO Auto-generated constructor stub
+	WorldCanvasTranslator::WorldCanvasTranslator() {
+		// TODO Auto-generated constructor stub
 
-}
+	}
 
-WorldCanvasTranslator::~WorldCanvasTranslator() {
-	// TODO Auto-generated destructor stub
-}
+	WorldCanvasTranslator::~WorldCanvasTranslator() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

@@ -36,55 +36,55 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <summary>
 // Base implementation of WCTool for invisible (non-drawing) tools.
 // </summary>
-// 
+//
 // <synopsis>
 // This class implements some of WCTool, and adds additional interface
 // to support invisible (ie. non-drawing) tools for WorldCanvases.
 // </synopsis>
 
-class WCInvisTool : public WCTool {
+	class WCInvisTool : public WCTool {
 
- public:
+	public:
 
-  // constructor
-  WCInvisTool(WorldCanvas *wcanvas,
-	      Display::KeySym keysym = Display::K_Pointer_Button1);
+		// constructor
+		WCInvisTool(WorldCanvas *wcanvas,
+		            Display::KeySym keysym = Display::K_Pointer_Button1);
 
-  // destructor
-  virtual ~WCInvisTool();
+		// destructor
+		virtual ~WCInvisTool();
 
-  // Functions called by the local event handling operators -
-  // these handle the drawing of the rectangle.  In special 
-  // conditions, namely double clicking the key, they will
-  // pass control on to the doubleInside and doubleOutside
-  // functions
-  // <group>
-  virtual void keyPressed(const WCPositionEvent &/*ev*/);
-  virtual void keyReleased(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
-  // </group>
+		// Functions called by the local event handling operators -
+		// these handle the drawing of the rectangle.  In special
+		// conditions, namely double clicking the key, they will
+		// pass control on to the doubleInside and doubleOutside
+		// functions
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &/*ev*/);
+		virtual void keyReleased(const WCPositionEvent &/*ev*/);
+		virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		// </group>
 
-  // Function called when a position is ready
-  virtual void positionReady() { };
+		// Function called when a position is ready
+		virtual void positionReady() { };
 
-  // Retrieve the position in linear WorldCanvas coordinates
-  virtual void get(Double &x, Double &y) const;
+		// Retrieve the position in linear WorldCanvas coordinates
+		virtual void get(Double &x, Double &y) const;
 
-  // Retrieve the position in fractional linear WorldCanvas coordinates
-  virtual void getFractional(Double &x, Double &y) const;
+		// Retrieve the position in fractional linear WorldCanvas coordinates
+		virtual void getFractional(Double &x, Double &y) const;
 
- private:
+	private:
 
-  // are we actively marking positions?
-  Bool itsActive;
+		// are we actively marking positions?
+		Bool itsActive;
 
-  // have we moved
-  Bool itsMoved;
+		// have we moved
+		Bool itsMoved;
 
-  // linear coordinates of the position
-  Double itsX, itsY;
+		// linear coordinates of the position
+		Double itsX, itsY;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

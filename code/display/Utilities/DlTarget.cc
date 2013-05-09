@@ -30,17 +30,17 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    DlTarget::~DlTarget( ) {
-	for ( pointer_list::iterator it = pointers.begin( ); it != pointers.end( ); ++it ) {
-	    (*it)->target_gone( );
+	DlTarget::~DlTarget( ) {
+		for ( pointer_list::iterator it = pointers.begin( ); it != pointers.end( ); ++it ) {
+			(*it)->target_gone( );
+		}
 	}
-    }
 
-    void DlTarget::unreg( DlHandleBase *p ) {
-	pointer_list::iterator it = find( pointers.begin(), pointers.end(), p );
-	if ( it != pointers.end() ) {
-	    pointers.erase( it );
+	void DlTarget::unreg( DlHandleBase *p ) {
+		pointer_list::iterator it = find( pointers.begin(), pointers.end(), p );
+		if ( it != pointers.end() ) {
+			pointers.erase( it );
+		}
 	}
-    }
 
 } //# NAMESPACE CASA - END

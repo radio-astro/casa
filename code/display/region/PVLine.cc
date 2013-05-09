@@ -108,8 +108,7 @@ namespace casa {
 		struct strip_white_space {
 			strip_white_space(size_t s) : size(s+1), off(0), buf(new char[size]) { }
 			strip_white_space( const strip_white_space &other ) : size(other.size), off(other.off),
-				buf(new char[size])
-			{
+				buf(new char[size]) {
 				strcpy(buf,other.buf);
 			}
 			~strip_white_space( ) {
@@ -301,8 +300,7 @@ namespace casa {
 
 			try {
 				linear_to_pixel( wc_, lx, ly, x, y );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 		}
@@ -316,8 +314,7 @@ namespace casa {
 			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
 			try {
 				linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return 0;
 			}
 			const Vector<String> &units = wc_->worldAxisUnits( );
@@ -364,16 +361,14 @@ namespace casa {
 			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
 			try {
 				linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
 			double ppt1_x, ppt1_y, ppt2_x, ppt2_y;
 			try {
 				linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, ppt1_x, ppt1_y, ppt2_x, ppt2_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
@@ -519,8 +514,7 @@ namespace casa {
 			Vector<Double> pos(2);
 			try {
 				linear_to_world( wc_, x, y, pos[0], pos[1] );
-			}
-			catch(...) {
+			} catch(...) {
 				return result;
 			}
 
@@ -713,15 +707,13 @@ namespace casa {
 			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
 			try {
 				linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, ppt1_x, ppt1_y, ppt2_x, ppt2_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return 0;
 			}
 
 			try {
 				linear_to_world( wc_, pt1_x, pt1_y, pt2_x, pt2_y, wpt1_x, wpt1_y, wpt2_x, wpt2_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return 0;
 			}
 
@@ -772,7 +764,7 @@ namespace casa {
 			std::string posangle = oss.str( );
 
 			return new PVLineRegionInfo( image->name(true), image->name(false), dd_stats, pixel, world,
-										 posangle, separation );
+			                             posangle, separation );
 		}
 
 		void PVLine::generate_nonimage_statistics( DisplayData *dd, std::list<RegionInfo> *region_statistics ) {
@@ -810,8 +802,7 @@ namespace casa {
 			double startx, starty, endx, endy;
 			try {
 				linear_to_pixel( wc_, pt1_x, pt1_y, pt2_x, pt2_y, startx, starty, endx, endy );
-			}
-			catch(...) {
+			} catch(...) {
 				return 0;
 			}
 			pvgen.setEndpoints( startx, starty, endx, endy );
@@ -852,9 +843,9 @@ namespace casa {
 						sub_dpg = dock_->panel( )->createNewPanel( );
 						connect( sub_dpg, SIGNAL(destroyed(QObject*)), SLOT(dpg_deleted(QObject*)) );
 						connect( sub_dpg, SIGNAL(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)),
-								 SLOT(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)) );
+						         SLOT(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)) );
 						connect( sub_dpg, SIGNAL(cursorPosition(viewer::Position)),
-								 SLOT(cursorPosition(viewer::Position)) );
+						         SLOT(cursorPosition(viewer::Position)) );
 					}
 					sub_dpg->unregisterAllDDs( );
 					display_list.push_back(de);
@@ -890,13 +881,12 @@ namespace casa {
 				x2 = pt1_x;
 				y2 = pt1_y;
 			}
-				
+
 
 			double wpt1_x, wpt1_y, wpt2_x, wpt2_y;
 			try {
 				linear_to_world( wc_, x1, y1, x2, y2, wpt1_x, wpt1_y, wpt2_x, wpt2_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
@@ -916,7 +906,7 @@ namespace casa {
 			Quantity sep = pt1.getValue( ).separation(pt2.getValue( ),"arcsec");
 
 			Quantity offsetv;
-			if ( pvpos(0).isConform(sep.getUnit( )) ) 
+			if ( pvpos(0).isConform(sep.getUnit( )) )
 				offsetv = pvpos(0);
 			else if ( pvpos(1).isConform(sep.getUnit( )) )
 				offsetv = pvpos(1);
@@ -929,7 +919,7 @@ namespace casa {
 			double fraction = offset / sep.getValue( );
 			double len_y = y2 - y1;
 			double len_x = x2 - x1;
-			
+
 			cursor_point_x = x1 + (len_x * fraction);
 			cursor_point_y = y1 + (len_y * fraction);
 			refresh( );

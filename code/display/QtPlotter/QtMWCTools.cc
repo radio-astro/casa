@@ -40,140 +40,139 @@
 namespace casa {
 
 //////////////poly tool//////////////////
-QtPolyTool::QtPolyTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtPTRegion(rf,pd)
-{
-  setObjectName("PolyTool"); 
-}
+	QtPolyTool::QtPolyTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtPTRegion(rf,pd) {
+		setObjectName("PolyTool");
+	}
 
-void QtPolyTool::updateRegion() {
-  if (!itsCurrentWC) return;
+	void QtPolyTool::updateRegion() {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "ploy ready" << coordType.chars();
-  Vector<Double> wx;
-  Vector<Double> wy;
-  Vector<Double> px;
-  Vector<Double> py;
-  getWorldCoords(wx, wy);
-  getLinearCoords(px, py);
-  //Int nt;
-  //x.shape(nt);
-  //cout << "nt=" << nt << endl;
-  //for (Int i = 0; i << nt; i++) {
-  //  cout << "x=" << x(i) << " y=" << y(i) << endl;
-  //} 
+		//qDebug() << "ploy ready" << coordType.chars();
+		Vector<Double> wx;
+		Vector<Double> wy;
+		Vector<Double> px;
+		Vector<Double> py;
+		getWorldCoords(wx, wy);
+		getLinearCoords(px, py);
+		//Int nt;
+		//x.shape(nt);
+		//cout << "nt=" << nt << endl;
+		//for (Int i = 0; i << nt; i++) {
+		//  cout << "x=" << x(i) << " y=" << y(i) << endl;
+		//}
 
-  emit wcNotify( coordType, px, py, wx, wy, POLYPROF);
-}
+		emit wcNotify( coordType, px, py, wx, wy, POLYPROF);
+	}
 
-void QtPolyTool::setCoordType(const String& t) {
-    QtMWCTool::setCoordType(t);
-    updateRegion( );
-}
+	void QtPolyTool::setCoordType(const String& t) {
+		QtMWCTool::setCoordType(t);
+		updateRegion( );
+	}
 
 
 //////////////polyline tool//////////////////
-QtPolylineTool::QtPolylineTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtPolylineToolRegion(rf,pd)
-{
-  setObjectName("PolylineTool");
-}
+	QtPolylineTool::QtPolylineTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtPolylineToolRegion(rf,pd) {
+		setObjectName("PolylineTool");
+	}
 
-void QtPolylineTool::updateRegion() {
-  if (!itsCurrentWC) return;
+	void QtPolylineTool::updateRegion() {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "ployline ready" << coordType.chars();
-  Vector<Double> wx;
-  Vector<Double> wy;
-  Vector<Double> px;
-  Vector<Double> py;
-  getWorldCoords(wx, wy);
-  getLinearCoords(px, py);
-  //Int nt;
-  //x.shape(nt);
-  //cout << "nt=" << nt << endl;
-  //for (Int i = 0; i << nt; i++) {
-  //  cout << "x=" << x(i) << " y=" << y(i) << endl;
-  //}
+		//qDebug() << "ployline ready" << coordType.chars();
+		Vector<Double> wx;
+		Vector<Double> wy;
+		Vector<Double> px;
+		Vector<Double> py;
+		getWorldCoords(wx, wy);
+		getLinearCoords(px, py);
+		//Int nt;
+		//x.shape(nt);
+		//cout << "nt=" << nt << endl;
+		//for (Int i = 0; i << nt; i++) {
+		//  cout << "x=" << x(i) << " y=" << y(i) << endl;
+		//}
 
-  emit wcNotify( coordType, px, py, wx, wy, POLYLINEPROF);
-}
+		emit wcNotify( coordType, px, py, wx, wy, POLYLINEPROF);
+	}
 
-void QtPolylineTool::setCoordType(const String& t) {
-    QtMWCTool::setCoordType(t);
-    updateRegion( );
-}
+	void QtPolylineTool::setCoordType(const String& t) {
+		QtMWCTool::setCoordType(t);
+		updateRegion( );
+	}
 
 
 //////////////Ellipse tool//////////////////
-QtEllipseTool::QtEllipseTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtELRegion(rf, pd) 
-{
-  setObjectName("EllipseTool");
-}
+	QtEllipseTool::QtEllipseTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtELRegion(rf, pd) {
+		setObjectName("EllipseTool");
+	}
 
-void QtEllipseTool::updateRegion() {
-  if (!itsCurrentWC) return;
+	void QtEllipseTool::updateRegion() {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "ploy ready" << coordType.chars();
-  Vector<Double> wx;
-  Vector<Double> wy;
-  Vector<Double> px;
-  Vector<Double> py;
-  getWorldCoords(wx, wy);
-  getLinearCoords(px, py);
-  //Int nt;
-  //px.shape(nt);
-  //cout << "nt=" << nt << endl;
-  //for (Int i = 0; i << nt; i++) {
-  //  cout << "x=" << x(i) << " y=" << y(i) << endl;
-  //}
+		//qDebug() << "ploy ready" << coordType.chars();
+		Vector<Double> wx;
+		Vector<Double> wy;
+		Vector<Double> px;
+		Vector<Double> py;
+		getWorldCoords(wx, wy);
+		getLinearCoords(px, py);
+		//Int nt;
+		//px.shape(nt);
+		//cout << "nt=" << nt << endl;
+		//for (Int i = 0; i << nt; i++) {
+		//  cout << "x=" << x(i) << " y=" << y(i) << endl;
+		//}
 
-  emit wcNotify( coordType, px, py, wx, wy, ELLPROF);
-}
+		emit wcNotify( coordType, px, py, wx, wy, ELLPROF);
+	}
 
-void QtEllipseTool::setCoordType(const String& t) {
-  QtMWCTool::setCoordType(t);
-  updateRegion( );
-}
+	void QtEllipseTool::setCoordType(const String& t) {
+		QtMWCTool::setCoordType(t);
+		updateRegion( );
+	}
 
 //////////////rect tool//////////////////
-	QtRectTool::QtRectTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtRTRegion(rf,pd) 
-{
-  setObjectName("RectTool"); 
-}
+	QtRectTool::QtRectTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtRTRegion(rf,pd) {
+		setObjectName("RectTool");
+	}
 
-void QtRectTool::updateRegion() {
-  if (!itsCurrentWC) return;
+	void QtRectTool::updateRegion() {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "rect ready" << coordType.chars();
-  Vector<Double> wx;
-  Vector<Double> wy;
-  Vector<Double> px;
-  Vector<Double> py;
-  getWorldCoords(wx, wy);
-  getLinearCoords(px, py);
-  Vector<Double> wxx(2);
-  Vector<Double> wyy(2);
-  wxx(0) = wx(0); wxx(1) = wy(0);
-  wyy(0) = wx(1); wyy(1) = wy(1);
-  Vector<Double> pxx(2);
-  Vector<Double> pyy(2);
-  pxx(0) = px(0); pxx(1) = py(0);
-  pyy(0) = px(1); pyy(1) = py(1);
-  //cout << "(" << xx(0) << "," << yy(0) << ")"
-  //     << " (" << xx(1) << "," << yy(1) << ")" << endl;
-  emit wcNotify( coordType, pxx, pyy, wxx, wyy, RECTPROF);
-}
+		//qDebug() << "rect ready" << coordType.chars();
+		Vector<Double> wx;
+		Vector<Double> wy;
+		Vector<Double> px;
+		Vector<Double> py;
+		getWorldCoords(wx, wy);
+		getLinearCoords(px, py);
+		Vector<Double> wxx(2);
+		Vector<Double> wyy(2);
+		wxx(0) = wx(0);
+		wxx(1) = wy(0);
+		wyy(0) = wx(1);
+		wyy(1) = wy(1);
+		Vector<Double> pxx(2);
+		Vector<Double> pyy(2);
+		pxx(0) = px(0);
+		pxx(1) = py(0);
+		pyy(0) = px(1);
+		pyy(1) = py(1);
+		//cout << "(" << xx(0) << "," << yy(0) << ")"
+		//     << " (" << xx(1) << "," << yy(1) << ")" << endl;
+		emit wcNotify( coordType, pxx, pyy, wxx, wyy, RECTPROF);
+	}
 
-void QtRectTool::setCoordType(const String& t) {
-  QtMWCTool::setCoordType(t);
-  updateRegion( );
-}
+	void QtRectTool::setCoordType(const String& t) {
+		QtMWCTool::setCoordType(t);
+		updateRegion( );
+	}
 
 //////////////cross tool//////////////////
 
-QtCrossTool::QtCrossTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd) : QtPointRegion(rf,pd) 
-{
-  setObjectName("CrossTool"); 
-}
+	QtCrossTool::QtCrossTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd) : QtPointRegion(rf,pd) {
+		setObjectName("CrossTool");
+	}
 
 // void QtCrossTool::crosshairReady(const String &evtype) {
 //   if (!itsCurrentWC) return;
@@ -185,74 +184,77 @@ QtCrossTool::QtCrossTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd) : Qt
 //   getLin(px, py);
 //   Vector<Double> wxx(1);
 //   Vector<Double> wyy(1);
-//   wxx[0]=wx; 
+//   wxx[0]=wx;
 //   wyy[0]=wy;
 //   Vector<Double> pxx(1);
 //   Vector<Double> pyy(1);
-//   pxx[0]=px; 
+//   pxx[0]=px;
 //   pyy[0]=py;
 //   emit wcNotify( coordType, pxx, pyy, wxx, wyy, SINGPROF);
 // }
 
-void QtCrossTool::updateRegion() {
-  if (!itsCurrentWC) return;
+	void QtCrossTool::updateRegion() {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "rect ready" << coordType.chars();
-  Vector<Double> wx;
-  Vector<Double> wy;
-  Vector<Double> px;
-  Vector<Double> py;
-  getWorldCoords(wx, wy);
-  getLinearCoords(px, py);
-  Vector<Double> wxx(2);
-  Vector<Double> wyy(2);
-  wxx(0) = wx(0); wxx(1) = wy(0);
-  wyy(0) = wx(1); wyy(1) = wy(1);
-  Vector<Double> pxx(2);
-  Vector<Double> pyy(2);
-  pxx(0) = px(0); pxx(1) = py(0);
-  pyy(0) = px(1); pyy(1) = py(1);
-  //cout << "(" << xx(0) << "," << yy(0) << ")"
-  //     << " (" << xx(1) << "," << yy(1) << ")" << endl;
-  emit wcNotify( coordType, pxx, pyy, wxx, wyy, SINGPROF);
-}
+		//qDebug() << "rect ready" << coordType.chars();
+		Vector<Double> wx;
+		Vector<Double> wy;
+		Vector<Double> px;
+		Vector<Double> py;
+		getWorldCoords(wx, wy);
+		getLinearCoords(px, py);
+		Vector<Double> wxx(2);
+		Vector<Double> wyy(2);
+		wxx(0) = wx(0);
+		wxx(1) = wy(0);
+		wyy(0) = wx(1);
+		wyy(1) = wy(1);
+		Vector<Double> pxx(2);
+		Vector<Double> pyy(2);
+		pxx(0) = px(0);
+		pxx(1) = py(0);
+		pyy(0) = px(1);
+		pyy(1) = py(1);
+		//cout << "(" << xx(0) << "," << yy(0) << ")"
+		//     << " (" << xx(1) << "," << yy(1) << ")" << endl;
+		emit wcNotify( coordType, pxx, pyy, wxx, wyy, SINGPROF);
+	}
 
-void QtCrossTool::setCoordType(const String& t) {
-  QtMWCTool::setCoordType(t);
-  updateRegion( );
-}
+	void QtCrossTool::setCoordType(const String& t) {
+		QtMWCTool::setCoordType(t);
+		updateRegion( );
+	}
 
 
 //////////////pv tool//////////////////
-QtPVTool::QtPVTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtPVToolRegion(rf,pd)
-{
-  setObjectName("PVTool"); 
-}
+	QtPVTool::QtPVTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd) : QtPVToolRegion(rf,pd) {
+		setObjectName("PVTool");
+	}
 
-void QtPVTool::updateRegion() {
-  if (!itsCurrentWC) return;
+	void QtPVTool::updateRegion() {
+		if (!itsCurrentWC) return;
 
-  //qDebug() << "ploy ready" << coordType.chars();
-  Vector<Double> wx;
-  Vector<Double> wy;
-  Vector<Double> px;
-  Vector<Double> py;
-  getWorldCoords(wx, wy);
-  getLinearCoords(px, py);
-  //Int nt;
-  //x.shape(nt);
-  //cout << "nt=" << nt << endl;
-  //for (Int i = 0; i << nt; i++) {
-  //  cout << "x=" << x(i) << " y=" << y(i) << endl;
-  //} 
+		//qDebug() << "ploy ready" << coordType.chars();
+		Vector<Double> wx;
+		Vector<Double> wy;
+		Vector<Double> px;
+		Vector<Double> py;
+		getWorldCoords(wx, wy);
+		getLinearCoords(px, py);
+		//Int nt;
+		//x.shape(nt);
+		//cout << "nt=" << nt << endl;
+		//for (Int i = 0; i << nt; i++) {
+		//  cout << "x=" << x(i) << " y=" << y(i) << endl;
+		//}
 
-  emit wcNotify( coordType, px, py, wx, wy, PVPROF);
-}
+		emit wcNotify( coordType, px, py, wx, wy, PVPROF);
+	}
 
-void QtPVTool::setCoordType(const String& t) {
-    QtMWCTool::setCoordType(t);
-    updateRegion( );
-}
+	void QtPVTool::setCoordType(const String& t) {
+		QtMWCTool::setCoordType(t);
+		updateRegion( );
+	}
 
 
 }

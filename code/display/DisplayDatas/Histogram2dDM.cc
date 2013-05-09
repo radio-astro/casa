@@ -35,90 +35,90 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-Histogram2dDM::Histogram2dDM(WorldCanvas *worldCanvas, 
-			     AttributeBuffer *wchAttributes,
-			     AttributeBuffer *ddAttributes,
-			     CachingDisplayData *dd) :
-  CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
-}
+	Histogram2dDM::Histogram2dDM(WorldCanvas *worldCanvas,
+	                             AttributeBuffer *wchAttributes,
+	                             AttributeBuffer *ddAttributes,
+	                             CachingDisplayData *dd) :
+		CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
+	}
 
-Histogram2dDM::~Histogram2dDM() {
-  cleanup();
-}
+	Histogram2dDM::~Histogram2dDM() {
+		cleanup();
+	}
 
-Bool Histogram2dDM::drawIntoList(Display::RefreshReason reason,
-				 WorldCanvasHolder &wcHolder) {
-  // Locate the WorldCanvas to draw upon
-  WorldCanvas *wc = wcHolder.worldCanvas();
+	Bool Histogram2dDM::drawIntoList(Display::RefreshReason reason,
+	                                 WorldCanvasHolder &wcHolder) {
+		// Locate the WorldCanvas to draw upon
+		WorldCanvas *wc = wcHolder.worldCanvas();
 
-  Histogram2dDD *parent = dynamic_cast<Histogram2dDD *>
-    (parentDisplayData());
-  if (!parent) {
-    throw(AipsError("invalid parent of Histogram2dDM"));
-  }
+		Histogram2dDD *parent = dynamic_cast<Histogram2dDD *>
+		                        (parentDisplayData());
+		if (!parent) {
+			throw(AipsError("invalid parent of Histogram2dDM"));
+		}
 
-  // determine low and high limits from canvas setup
-  //Vector<Double> world(2), lin(2);
-  Vector<Float> include(2);
-  //lin(0) = wc->linXMin();
-  //lin(1) = wc->linYMin();
-  //wc->linToWorld(world, lin);
-  //include(0) = static_cast<Float>(world(0));
-  //lin(0) = wc->linXMax();
-  //lin(1) = wc->linYMax();
-  //wc->linToWorld(world, lin);
-  //include(1) = static_cast<Float>(world(0));
-  include(0) = wc->linXMin();
-  include(1) = wc->linXMax();
+		// determine low and high limits from canvas setup
+		//Vector<Double> world(2), lin(2);
+		Vector<Float> include(2);
+		//lin(0) = wc->linXMin();
+		//lin(1) = wc->linYMin();
+		//wc->linToWorld(world, lin);
+		//include(0) = static_cast<Float>(world(0));
+		//lin(0) = wc->linXMax();
+		//lin(1) = wc->linYMax();
+		//wc->linToWorld(world, lin);
+		//include(1) = static_cast<Float>(world(0));
+		include(0) = wc->linXMin();
+		include(1) = wc->linXMax();
 
-  cerr << "setting include range to " << include << endl;
-  // set histogram domain
-  parent->itsLatticeHistograms->setIncludeRange(include);
+		cerr << "setting include range to " << include << endl;
+		// set histogram domain
+		parent->itsLatticeHistograms->setIncludeRange(include);
 
-  // re-evaluate histogram
-  Array<Float> values, counts;
-  cerr << "asking for histogram/s" << endl;
-  if (!parent->itsLatticeHistograms->getHistograms(values, counts)) {
-    throw(AipsError("could not calculate histogram"));
-  }
+		// re-evaluate histogram
+		Array<Float> values, counts;
+		cerr << "asking for histogram/s" << endl;
+		if (!parent->itsLatticeHistograms->getHistograms(values, counts)) {
+			throw(AipsError("could not calculate histogram"));
+		}
 
-  if ((values.shape().nelements() != 1) ||
-      (counts.shape().nelements() != 1)) {
-    throw(AipsError("incorrect shape for histogram results"));
-  }
+		if ((values.shape().nelements() != 1) ||
+		        (counts.shape().nelements() != 1)) {
+			throw(AipsError("incorrect shape for histogram results"));
+		}
 
-  // scale the result by the inverse of the binwidth, so that
-  // zooming works properly.
-  Float bwidth = (include(1) - include(0)) / 
-    static_cast<Float>(counts.nelements() - 1);
-  if (bwidth != 0) {
-    counts = counts / bwidth;
-  }
+		// scale the result by the inverse of the binwidth, so that
+		// zooming works properly.
+		Float bwidth = (include(1) - include(0)) /
+		               static_cast<Float>(counts.nelements() - 1);
+		if (bwidth != 0) {
+			counts = counts / bwidth;
+		}
 
-  // draw the histogram!
-  uInt nbins = values.shape()(0);
-  Bool delete1, delete2;
-  const Float *x, *data;
-  x = values.getStorage(delete1);
-  data = counts.getStorage(delete2);
-  cpgbin(nbins, x, data, 1);
-  values.freeStorage(x, delete1);
-  counts.freeStorage(data, delete2);
-  return True;
-}
+		// draw the histogram!
+		uInt nbins = values.shape()(0);
+		Bool delete1, delete2;
+		const Float *x, *data;
+		x = values.getStorage(delete1);
+		data = counts.getStorage(delete2);
+		cpgbin(nbins, x, data, 1);
+		values.freeStorage(x, delete1);
+		counts.freeStorage(data, delete2);
+		return True;
+	}
 
-void Histogram2dDM::cleanup() {
-}
+	void Histogram2dDM::cleanup() {
+	}
 
-Histogram2dDM::Histogram2dDM() {
-}
+	Histogram2dDM::Histogram2dDM() {
+	}
 
-Histogram2dDM::Histogram2dDM(const Histogram2dDM &other) :
-  CachingDisplayMethod(other) {
-}
+	Histogram2dDM::Histogram2dDM(const Histogram2dDM &other) :
+		CachingDisplayMethod(other) {
+	}
 
-void Histogram2dDM::operator=(const Histogram2dDM &) {
-}
+	void Histogram2dDM::operator=(const Histogram2dDM &) {
+	}
 
 
 } //# NAMESPACE CASA - END

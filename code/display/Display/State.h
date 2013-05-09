@@ -29,44 +29,52 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    namespace display { //# NAMESPACE DISPLAY - BEGIN
-	class state {
-	    friend class stateCleanup;
-	public:
+	namespace display { //# NAMESPACE DISPLAY - BEGIN
+		class state {
+			friend class stateCleanup;
+		public:
 
-	    static state &instance( ) { return initialized == false ? startup( ) : *singleton; }
+			static state &instance( ) {
+				return initialized == false ? startup( ) : *singleton;
+			}
 
-	    // allows classes (primarily in the redisplay chain) to tell if we
-	    // are currently outputing to a file...
-	    bool fileOutputMode( );
-	    // begin file output
-	    void beginFileOutputMode( );
-	    // end file output
-	    void endFileOutputMode( );
-	    
-	private:
+			// allows classes (primarily in the redisplay chain) to tell if we
+			// are currently outputing to a file...
+			bool fileOutputMode( );
+			// begin file output
+			void beginFileOutputMode( );
+			// end file output
+			void endFileOutputMode( );
 
-	    static state *singleton;
+		private:
 
-	    state( ) : file_output_mode_count_(0) { }
-	    ~state( ) { }
+			static state *singleton;
 
-	    static state &startup( );
-	    static void shutdown( );
+			state( ) : file_output_mode_count_(0) { }
+			~state( ) { }
 
-	    int file_output_mode_count_;
-	    static bool initialized;
+			static state &startup( );
+			static void shutdown( );
 
-	};
+			int file_output_mode_count_;
+			static bool initialized;
 
-	static class stateCleanup {
-	public:
-	    stateCleanup( ) { creation_count += 1; }
-	    ~stateCleanup( ) { if ( --creation_count == 0 ) { state::shutdown( ); } }
-	private:
-	    static unsigned int creation_count;
-	} local_state_cleanup_object;
-    }
+		};
+
+		static class stateCleanup {
+		public:
+			stateCleanup( ) {
+				creation_count += 1;
+			}
+			~stateCleanup( ) {
+				if ( --creation_count == 0 ) {
+					state::shutdown( );
+				}
+			}
+		private:
+			static unsigned int creation_count;
+		} local_state_cleanup_object;
+	}
 
 }
 

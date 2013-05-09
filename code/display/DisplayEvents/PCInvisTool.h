@@ -36,49 +36,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <summary>
 // Base implementation of PCTool for invisible (non-drawing) tools.
 // </summary>
-// 
+//
 // <synopsis>
 // This class implements some of PCTool, and adds additional interface
 // to support invisible (ie. non-drawing) tools for PixelCanvases.
 // </synopsis>
 
-class PCInvisTool : public PCTool {
+	class PCInvisTool : public PCTool {
 
- public:
+	public:
 
-  // Constructor.  Requires a PixelCanvas to operate on, and a key
-  // to catch.
-  PCInvisTool(PixelCanvas *pcanvas,
-	      Display::KeySym keysym = Display::K_Pointer_Button1);
+		// Constructor.  Requires a PixelCanvas to operate on, and a key
+		// to catch.
+		PCInvisTool(PixelCanvas *pcanvas,
+		            Display::KeySym keysym = Display::K_Pointer_Button1);
 
-  // Destructor.
-  virtual ~PCInvisTool();
+		// Destructor.
+		virtual ~PCInvisTool();
 
-  // Functions called by the local event handling operators.
-  // <group>
-  virtual void keyPressed(const PCPositionEvent &ev);
-  //virtual void keyReleased(const PCPositionEvent &ev);
-  virtual void moved(const PCMotionEvent &ev);
-  // </group>
+		// Functions called by the local event handling operators.
+		// <group>
+		virtual void keyPressed(const PCPositionEvent &ev);
+		//virtual void keyReleased(const PCPositionEvent &ev);
+		virtual void moved(const PCMotionEvent &ev);
+		// </group>
 
-  // Function called when a position is ready.
-  virtual void positionReady() { };
+		// Function called when a position is ready.
+		virtual void positionReady() { };
 
-  // Retrieve the position in PixelCanvas pixel coordinates.
-  virtual void get(Int &x, Int &y) const;
+		// Retrieve the position in PixelCanvas pixel coordinates.
+		virtual void get(Int &x, Int &y) const;
 
-  // Retrieve the position in fractional PixelCanvas coordinates.
-  virtual void getFractional(Float &x, Float &y) const;
+		// Retrieve the position in fractional PixelCanvas coordinates.
+		virtual void getFractional(Float &x, Float &y) const;
 
- private:
+	private:
 
-  // Have we moved?
-  Bool itsMoved;
+		// Have we moved?
+		Bool itsMoved;
 
-  // Pixel coordinates of the position.
-  Int itsX, itsY;
+		// Pixel coordinates of the position.
+		Int itsX, itsY;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

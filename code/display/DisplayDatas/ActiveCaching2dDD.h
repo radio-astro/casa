@@ -38,144 +38,148 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Class providing active behaviour for 2d CachingDisplayDatas.
 // </summary>
 
-// <synopsis> 
+// <synopsis>
 // An "active" DisplayData is one which is able to negotiate
 // coordinates on a WorldCanvas, and subsequently provide coordinate
-// conversion facilities.  This particular implementation is 
+// conversion facilities.  This particular implementation is
 // of a two-dimensional (2d) active DisplayData.
 // </synopsis>
 
-class ActiveCaching2dDD : public CachingDisplayData {
+	class ActiveCaching2dDD : public CachingDisplayData {
 
- public:
+	public:
 
-  // Constructor.  Caller must provide a CoordinateSystem, and the
-  // pixel range (via <src>pixelblc</src> and <src>pixeltrc</src>)
-  // over which the DisplayData is expected to function.  The primary
-  // use of <src>pixelblc</src> and <src>pixeltrc</src> is to provide
-  // limits for the unzoomed WorldCanvas.  <src>coordsys</src> must
-  // have only two world and pixel axes, otherwise an exception is
-  // thrown, and likewise, <src>pixblc</src> and <src>pixtrc</src>
-  // must both be of length two.
-  ActiveCaching2dDD(const CoordinateSystem &coordsys,
-		    const Vector<Double> &pixblc,
-		    const Vector<Double> &pixtrc);
+		// Constructor.  Caller must provide a CoordinateSystem, and the
+		// pixel range (via <src>pixelblc</src> and <src>pixeltrc</src>)
+		// over which the DisplayData is expected to function.  The primary
+		// use of <src>pixelblc</src> and <src>pixeltrc</src> is to provide
+		// limits for the unzoomed WorldCanvas.  <src>coordsys</src> must
+		// have only two world and pixel axes, otherwise an exception is
+		// thrown, and likewise, <src>pixblc</src> and <src>pixtrc</src>
+		// must both be of length two.
+		ActiveCaching2dDD(const CoordinateSystem &coordsys,
+		                  const Vector<Double> &pixblc,
+		                  const Vector<Double> &pixtrc);
 
-  // Destructor.
-  virtual ~ActiveCaching2dDD();
+		// Destructor.
+		virtual ~ActiveCaching2dDD();
 
-  // Coordinate transformation handlers, called by WorldCanvasHolder.
-  // <group>
-  virtual Bool linToWorld(Vector<Double> &world, const Vector<Double> &lin);
-  virtual Bool worldToLin(Vector<Double> &lin, const Vector<Double> &world);
-  // </group>
+		// Coordinate transformation handlers, called by WorldCanvasHolder.
+		// <group>
+		virtual Bool linToWorld(Vector<Double> &world, const Vector<Double> &lin);
+		virtual Bool worldToLin(Vector<Double> &lin, const Vector<Double> &world);
+		// </group>
 
-  // Format a string containing coordinate information at the given
-  // world coordinate.
-  virtual String showPosition(const Vector<Double> &world, 
-			      const Bool &displayAxesOnly = False);
+		// Format a string containing coordinate information at the given
+		// world coordinate.
+		virtual String showPosition(const Vector<Double> &world,
+		                            const Bool &displayAxesOnly = False);
 
-  // World axis information suppliers.
-  // <group>
-  virtual Vector<String> worldAxisNames() const;
-  virtual Vector<String> worldAxisUnits() const;
-  // </group>
-  
-  // Return the number of display elements (ie. drawable images) in
-  // this DisplayData.  Both return 1 because this is defined to be a
-  // two-dimensional DisplayData, and can only have one view.  That
-  // is, there is no third axis to iterate over for multiple views.
-  // <group>
-  virtual const uInt nelements(const WorldCanvasHolder &/*wcHolder*/) const
-    { return nelements(); }
-  virtual const uInt nelements() const
-    { return 1; }
-  // </group>
+		// World axis information suppliers.
+		// <group>
+		virtual Vector<String> worldAxisNames() const;
+		virtual Vector<String> worldAxisUnits() const;
+		// </group>
 
-  // Install the default options for this DisplayData.
-  virtual void setDefaultOptions();
+		// Return the number of display elements (ie. drawable images) in
+		// this DisplayData.  Both return 1 because this is defined to be a
+		// two-dimensional DisplayData, and can only have one view.  That
+		// is, there is no third axis to iterate over for multiple views.
+		// <group>
+		virtual const uInt nelements(const WorldCanvasHolder &/*wcHolder*/) const {
+			return nelements();
+		}
+		virtual const uInt nelements() const {
+			return 1;
+		}
+		// </group>
 
-  // Apply options stored in <src>rec</src> to the DisplayData.  A
-  // return value of <src>True</src> means a refresh is needed.
-  // <src>recOut</src> contains any fields which were implicitly 
-  // changed as a result of the call to this function.
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Install the default options for this DisplayData.
+		virtual void setDefaultOptions();
 
-  // Retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// Apply options stored in <src>rec</src> to the DisplayData.  A
+		// return value of <src>True</src> means a refresh is needed.
+		// <src>recOut</src> contains any fields which were implicitly
+		// changed as a result of the call to this function.
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-  // Negotiatiate WorldCanvas linear coordinate system when asked to
-  // do so by the WorldCanvasHolder.
-  virtual Bool sizeControl(WorldCanvasHolder &wcHolder, 
-			   AttributeBuffer &holderBuf);
-  
-  // Determine whether DD can draw on the current coordinate system
-  // of the given WC[H].
-  virtual Bool conformsToCS(const WorldCanvas& wc);
+		// Retrieve the current and default options and parameter types.
+		virtual Record getOptions();
 
-  // Tidy up the elements of this DisplayData.
-  virtual void cleanup();  
+		// Negotiatiate WorldCanvas linear coordinate system when asked to
+		// do so by the WorldCanvasHolder.
+		virtual Bool sizeControl(WorldCanvasHolder &wcHolder,
+		                         AttributeBuffer &holderBuf);
 
- protected:
+		// Determine whether DD can draw on the current coordinate system
+		// of the given WC[H].
+		virtual Bool conformsToCS(const WorldCanvas& wc);
 
-  // Return the current options of this DisplayData as an
-  // AttributeBuffer.  The caller must delete the returned buffer.
-  virtual AttributeBuffer optionsAsAttributes();
+		// Tidy up the elements of this DisplayData.
+		virtual void cleanup();
 
-  // (Required) default constructor.
-  ActiveCaching2dDD();
+	protected:
 
-  // (Required) copy constructor.
-  ActiveCaching2dDD(const ActiveCaching2dDD &other);
+		// Return the current options of this DisplayData as an
+		// AttributeBuffer.  The caller must delete the returned buffer.
+		virtual AttributeBuffer optionsAsAttributes();
 
-  // (Required) copy assignment.
-  void operator=(const ActiveCaching2dDD &other);
+		// (Required) default constructor.
+		ActiveCaching2dDD();
 
-  // Install a CoordinateSystem and limits.
-  void setCoordinateSystem(const CoordinateSystem &coordsys,
-			   const Vector<Double> &pixblc,
-			   const Vector<Double> &pixtrc);
+		// (Required) copy constructor.
+		ActiveCaching2dDD(const ActiveCaching2dDD &other);
 
-  // Identify a specified world axis by its Coordinate type, number,
-  // and axis in that coordinate.
-  void identifyWorldAxis(Coordinate::Type &type, Int &coordinate,
-			 Int &axisincoord, const uInt worldaxisnum);
+		// (Required) copy assignment.
+		void operator=(const ActiveCaching2dDD &other);
 
-  // Generate a String code for the specified world axis, describing
-  // the coordinate type, number and axis in that coordinate.
-  String codeWorldAxis(const uInt worldaxisnum);
+		// Install a CoordinateSystem and limits.
+		void setCoordinateSystem(const CoordinateSystem &coordsys,
+		                         const Vector<Double> &pixblc,
+		                         const Vector<Double> &pixtrc);
 
-  // Return the world axis increments.
-  Vector<Double> worldAxisIncrements() const;
+		// Identify a specified world axis by its Coordinate type, number,
+		// and axis in that coordinate.
+		void identifyWorldAxis(Coordinate::Type &type, Int &coordinate,
+		                       Int &axisincoord, const uInt worldaxisnum);
 
-  // Return whether tracking is currently world (T) or pixel (F) coordinates.
-  virtual Bool worldCoordTracking() const { return itsShowWorldCoordinate;  }
+		// Generate a String code for the specified world axis, describing
+		// the coordinate type, number and axis in that coordinate.
+		String codeWorldAxis(const uInt worldaxisnum);
 
-  // Store the 2d CoordinateSystem here.
-  CoordinateSystem itsCoordinateSystem;
+		// Return the world axis increments.
+		Vector<Double> worldAxisIncrements() const;
 
-  // Store the 2d pixel corners here.
-  Vector<Double> itsPixelBlc, itsPixelTrc;
+		// Return whether tracking is currently world (T) or pixel (F) coordinates.
+		virtual Bool worldCoordTracking() const {
+			return itsShowWorldCoordinate;
+		}
 
- private:
+		// Store the 2d CoordinateSystem here.
+		CoordinateSystem itsCoordinateSystem;
 
-  // Option: aspect ratio for pixels.
-  String itsOptionsAspect;
+		// Store the 2d pixel corners here.
+		Vector<Double> itsPixelBlc, itsPixelTrc;
 
-  // Position tracking
-  String itsSpectralUnit;
-  String itsVelocityType;
-  Bool itsAbsolute;
-  Bool itsShowWorldCoordinate;
-  Bool itsFractionalPixels;
+	private:
 
-  // Set Spectral formatting
-  void setSpectralFormatting (CoordinateSystem& cSys,
-                              const String& velTypeString,
-                              const String& unitString);
+		// Option: aspect ratio for pixels.
+		String itsOptionsAspect;
+
+		// Position tracking
+		String itsSpectralUnit;
+		String itsVelocityType;
+		Bool itsAbsolute;
+		Bool itsShowWorldCoordinate;
+		Bool itsFractionalPixels;
+
+		// Set Spectral formatting
+		void setSpectralFormatting (CoordinateSystem& cSys,
+		                            const String& velTypeString,
+		                            const String& unitString);
 
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

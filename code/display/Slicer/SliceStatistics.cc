@@ -31,121 +31,117 @@
 
 namespace casa {
 
-SliceStatistics::SliceStatistics(SliceStatisticsFactory::AxisXUnits units) {
-	xUnits = units;
+	SliceStatistics::SliceStatistics(SliceStatisticsFactory::AxisXUnits units) {
+		xUnits = units;
 
-}
-
-double SliceStatistics::radiansToArcseconds( double rad ) const {
-	double piValue = qAtan(1) * 4;
-	double degrees = 180 * rad / piValue;
-	double arcseconds = degrees * 3600;
-	return arcseconds;
-}
-
-double SliceStatistics::getAngle( std::pair<int,int> pixelStart,
-		std::pair<int,int> pixelEnd ) const {
-	double distanceX = pixelEnd.first - pixelStart.first;
-	double distanceY = pixelEnd.second - pixelStart.second;
-	double distanceSquared = qPow(distanceX, 2) + qPow( distanceY, 2);
-	double hypotenuse = qPow( distanceSquared, 0.5);
-	double angle = qAsin( qAbs(distanceX) / hypotenuse );
-	if ( ( distanceX * distanceY ) > 0 ){
-		double piValue = qAtan(1)*4;
-		angle = piValue/2 + angle;
 	}
-	return angle;
-}
 
-QVector<double> SliceStatistics::interpolate( double start, double end,
-		const QVector<double>& values ) const {
-	double min = start;
-	double max = end;
+	double SliceStatistics::radiansToArcseconds( double rad ) const {
+		double piValue = qAtan(1) * 4;
+		double degrees = 180 * rad / piValue;
+		double arcseconds = degrees * 3600;
+		return arcseconds;
+	}
 
-	//Find the data min and max;
-	double minValue = std::numeric_limits<float>::max();
-	double maxValue = -1 * std::numeric_limits<float>::max();
-	int valueCount = values.size();
-	for ( int i = 0; i < valueCount; i++ ){
-		if ( values[i] < minValue ){
-			minValue = values[i];
+	double SliceStatistics::getAngle( std::pair<int,int> pixelStart,
+	                                  std::pair<int,int> pixelEnd ) const {
+		double distanceX = pixelEnd.first - pixelStart.first;
+		double distanceY = pixelEnd.second - pixelStart.second;
+		double distanceSquared = qPow(distanceX, 2) + qPow( distanceY, 2);
+		double hypotenuse = qPow( distanceSquared, 0.5);
+		double angle = qAsin( qAbs(distanceX) / hypotenuse );
+		if ( ( distanceX * distanceY ) > 0 ) {
+			double piValue = qAtan(1)*4;
+			angle = piValue/2 + angle;
 		}
-		if ( values[i] > maxValue ){
-			maxValue = values[i];
+		return angle;
+	}
+
+	QVector<double> SliceStatistics::interpolate( double start, double end,
+	        const QVector<double>& values ) const {
+		double min = start;
+		double max = end;
+
+		//Find the data min and max;
+		double minValue = std::numeric_limits<float>::max();
+		double maxValue = -1 * std::numeric_limits<float>::max();
+		int valueCount = values.size();
+		for ( int i = 0; i < valueCount; i++ ) {
+			if ( values[i] < minValue ) {
+				minValue = values[i];
+			}
+			if ( values[i] > maxValue ) {
+				maxValue = values[i];
+			}
 		}
+
+		//Use a proportion to set the data withen min/max.
+		double span = max - min;
+		double valueSpan = maxValue - minValue;
+		QVector<double> results(valueCount);
+		for ( int i = 0; i <values.size(); i++ ) {
+			results[i] = (values[i] - minValue)*span / valueSpan + min;
+		}
+		return results;
 	}
 
-	//Use a proportion to set the data withen min/max.
-	double span = max - min;
-	double valueSpan = maxValue - minValue;
-	QVector<double> results(valueCount);
-	for ( int i = 0; i <values.size(); i++ ){
-		results[i] = (values[i] - minValue)*span / valueSpan + min;
+
+
+	QString SliceStatistics::getUnitText() const {
+		QString unitText;
+		if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ) {
+			unitText.append( "Pixels");
+		} else if ( xUnits == SliceStatisticsFactory::ARCSEC_UNIT ) {
+			unitText.append( "Arc Seconds");
+		} else if ( xUnits == SliceStatisticsFactory::ARCMIN_UNIT ) {
+			unitText.append( "Arc Minutes");
+		} else {
+			unitText.append( "Arc Degrees");
+		}
+		return unitText;
 	}
-	return results;
-}
 
-
-
-QString SliceStatistics::getUnitText() const {
-	QString unitText;
-	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
-		unitText.append( "Pixels");
+	void SliceStatistics::setXUnits( SliceStatisticsFactory::AxisXUnits units ) {
+		xUnits = units;
 	}
-	else if ( xUnits == SliceStatisticsFactory::ARCSEC_UNIT ){
-		unitText.append( "Arc Seconds");
-	}
-	else if ( xUnits == SliceStatisticsFactory::ARCMIN_UNIT ){
-		unitText.append( "Arc Minutes");
-	}
-	else {
-		unitText.append( "Arc Degrees");
-	}
-	return unitText;
-}
 
-void SliceStatistics::setXUnits( SliceStatisticsFactory::AxisXUnits units ){
-	xUnits = units;
-}
-
-QVector<double> SliceStatistics::getFromArray( const Array<float>& source ){
-	int count = source.size();
-	QVector<double> result( count );
-	std::vector<float> distanceVector = source.tovector();
-	for ( int i = 0; i < count; i++ ){
-		result[i] = distanceVector[i];
+	QVector<double> SliceStatistics::getFromArray( const Array<float>& source ) {
+		int count = source.size();
+		QVector<double> result( count );
+		std::vector<float> distanceVector = source.tovector();
+		for ( int i = 0; i < count; i++ ) {
+			result[i] = distanceVector[i];
+		}
+		return result;
 	}
-	return result;
-}
 
 
-QVector<double> SliceStatistics::convertArcUnits( QVector<double> arcseconds ) const {
-	int count = arcseconds.size();
-	QVector<double> converted(count);
-	for ( int i = 0; i < count; i++ ){
-		converted[i] = convertArcUnits(arcseconds[i]);
+	QVector<double> SliceStatistics::convertArcUnits( QVector<double> arcseconds ) const {
+		int count = arcseconds.size();
+		QVector<double> converted(count);
+		for ( int i = 0; i < count; i++ ) {
+			converted[i] = convertArcUnits(arcseconds[i]);
+		}
+		return converted;
 	}
-	return converted;
-}
 
-double SliceStatistics::convertArcUnits( double value ) const {
-	//First change radians to arcseconds.
-	value = value *180 / 3.14159 * 3600;
+	double SliceStatistics::convertArcUnits( double value ) const {
+		//First change radians to arcseconds.
+		value = value *180 / 3.14159 * 3600;
 
-	//Now change arcseconds to appropriate units.
-	int divisor = 1;
-	if ( xUnits == SliceStatisticsFactory::ARCMIN_UNIT ){
-		divisor = 60;
+		//Now change arcseconds to appropriate units.
+		int divisor = 1;
+		if ( xUnits == SliceStatisticsFactory::ARCMIN_UNIT ) {
+			divisor = 60;
+		} else if ( xUnits == SliceStatisticsFactory::ARCDEG_UNIT ) {
+			divisor = 3600;
+		}
+		double converted = value / divisor;
+		return converted;
 	}
-	else if ( xUnits == SliceStatisticsFactory::ARCDEG_UNIT ){
-		divisor = 3600;
-	}
-	double converted = value / divisor;
-	return converted;
-}
 
-SliceStatistics::~SliceStatistics() {
-	// TODO Auto-generated destructor stub
-}
+	SliceStatistics::~SliceStatistics() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

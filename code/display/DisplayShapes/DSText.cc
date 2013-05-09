@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <casa/aips.h>
 #include <scimath/Mathematics.h>
@@ -41,322 +41,333 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSText::DSText() :
-  DisplayShape()
-  
-  {
-    // Set up user options
-    itsString = new DParameterString("text", "Text Label", "Enter text here",
-				     "Text String", "Text String") ;
-    itsAngle = new DParameterRange<Float>("angle", "Text Angle", 
-					  "Select angle for drawing of text",
-					  -180,180, 1, 0,0);
-    itsFontSize = new DParameterRange<Int>("fontsize", "Font Size",
-    					   "Select the font size for text",
-    					   6, 64,1,12,12);
-    itsFont = new DParameterFontChoice("font", "Font", 
-    				       "Select desired text font");
-    
-    makeAlignmentChoice();
+	DSText::DSText() :
+		DisplayShape()
 
-    setDefaultOptions();
-}
+	{
+		// Set up user options
+		itsString = new DParameterString("text", "Text Label", "Enter text here",
+		                                 "Text String", "Text String") ;
+		itsAngle = new DParameterRange<Float>("angle", "Text Angle",
+		                                      "Select angle for drawing of text",
+		                                      -180,180, 1, 0,0);
+		itsFontSize = new DParameterRange<Int>("fontsize", "Font Size",
+		                                       "Select the font size for text",
+		                                       6, 64,1,12,12);
+		itsFont = new DParameterFontChoice("font", "Font",
+		                                   "Select desired text font");
 
-Bool DSText::inObject(const Float& xPos, const Float& yPos) {
-  if (itsValid && !itsHandlesMade) {
-    return (hypot(xPos - itsCenter[0], yPos - itsCenter[1]) < 5);
-  } else if (itsValid) {
-    return (inPolygon(itsHandleLocation, xPos, yPos)); 
-  }
-  return False;
-}
+		makeAlignmentChoice();
 
-void DSText::setCenter(const Float& xPos, const Float& yPos)
-{
-  if (itsValid) {
-    itsCenter[0] = xPos;
-    itsCenter[1] = yPos;
-  } else {
-    itsCenter[0] = xPos;
-    itsCenter[1] = yPos;
-    itsValid = True;
-  }
-  itsValidPositions = False;
-}
+		setDefaultOptions();
+	}
 
-DSText::DSText(const Float& xPos, const Float& yPos, const String& text,
-	       const Bool& hasHandles, const Bool& drawHandles) :
- DisplayShape() {
+	Bool DSText::inObject(const Float& xPos, const Float& yPos) {
+		if (itsValid && !itsHandlesMade) {
+			return (hypot(xPos - itsCenter[0], yPos - itsCenter[1]) < 5);
+		} else if (itsValid) {
+			return (inPolygon(itsHandleLocation, xPos, yPos));
+		}
+		return False;
+	}
 
-   // Set up user options
-  itsString = new DParameterString("text", "Text Label", "Enter text here",
-				   text, "Text String") ;
-  
-  itsAngle = new DParameterRange<Float>("angle", "Text Angle", 
-					"Select angle for drawing of text",
-					-180,180, 1, 0,0);
-  
-  itsFontSize = new DParameterRange<Int>("fontsize", "Font Size",
-					 "Select the font size for text",
-					 6, 64,1,12,12);
-  
-  itsFont = new DParameterFontChoice("font", "Font", 
-				     "Select desired text font");
-  
-  makeAlignmentChoice();
-  //
-  
-  itsCenter.resize(2);
-  itsCenter[0] = xPos;
-  itsCenter[1] = yPos;
-  
-  itsAlign = Display::AlignBottomLeft;
-  itsValid = True;
-  setHasHandles(hasHandles);
-  setDrawHandles(drawHandles);
-  
-  itsHandlesMade = False; itsValidPositions = False;
-}
+	void DSText::setCenter(const Float& xPos, const Float& yPos) {
+		if (itsValid) {
+			itsCenter[0] = xPos;
+			itsCenter[1] = yPos;
+		} else {
+			itsCenter[0] = xPos;
+			itsCenter[1] = yPos;
+			itsValid = True;
+		}
+		itsValidPositions = False;
+	}
+
+	DSText::DSText(const Float& xPos, const Float& yPos, const String& text,
+	               const Bool& hasHandles, const Bool& drawHandles) :
+		DisplayShape() {
+
+		// Set up user options
+		itsString = new DParameterString("text", "Text Label", "Enter text here",
+		                                 text, "Text String") ;
+
+		itsAngle = new DParameterRange<Float>("angle", "Text Angle",
+		                                      "Select angle for drawing of text",
+		                                      -180,180, 1, 0,0);
+
+		itsFontSize = new DParameterRange<Int>("fontsize", "Font Size",
+		                                       "Select the font size for text",
+		                                       6, 64,1,12,12);
+
+		itsFont = new DParameterFontChoice("font", "Font",
+		                                   "Select desired text font");
+
+		makeAlignmentChoice();
+		//
+
+		itsCenter.resize(2);
+		itsCenter[0] = xPos;
+		itsCenter[1] = yPos;
+
+		itsAlign = Display::AlignBottomLeft;
+		itsValid = True;
+		setHasHandles(hasHandles);
+		setDrawHandles(drawHandles);
+
+		itsHandlesMade = False;
+		itsValidPositions = False;
+	}
 
 
-DSText::~DSText() {
-  delete itsString; itsString = 0;
-  delete itsAngle; itsAngle = 0;
-  delete itsFontSize; itsFontSize = 0;
-  delete itsFont; itsFont = 0;
-  delete itsAlignment; itsAlignment = 0;
-}
+	DSText::~DSText() {
+		delete itsString;
+		itsString = 0;
+		delete itsAngle;
+		itsAngle = 0;
+		delete itsFontSize;
+		itsFontSize = 0;
+		delete itsFont;
+		itsFont = 0;
+		delete itsAlignment;
+		itsAlignment = 0;
+	}
 
-DSText::DSText(const DSText& other) :
-  DisplayShape(other),
-  itsString(other.itsString),
-  itsAngle(other.itsAngle),
-  itsAlignment(other.itsAlignment),
-  itsFont(other.itsFont),
-  itsFontSize(other.itsFontSize),
-  itsCenter(other.itsCenter),
-  itsPixHeight(other.itsPixHeight), 
-  itsPixWidth(other.itsPixWidth),
-  itsValid(other.itsValid),
-  itsHandlesMade(other.itsHandlesMade),
-  itsValidPositions(other.itsValidPositions),
-  itsStringLength(other.itsStringLength),
-  itsStringHeight(other.itsStringHeight),
-  itsHandleLocation(other.itsHandleLocation),
-  itsAlign(other.itsAlign) {
-  
-}
+	DSText::DSText(const DSText& other) :
+		DisplayShape(other),
+		itsString(other.itsString),
+		itsAngle(other.itsAngle),
+		itsAlignment(other.itsAlignment),
+		itsFont(other.itsFont),
+		itsFontSize(other.itsFontSize),
+		itsCenter(other.itsCenter),
+		itsPixHeight(other.itsPixHeight),
+		itsPixWidth(other.itsPixWidth),
+		itsValid(other.itsValid),
+		itsHandlesMade(other.itsHandlesMade),
+		itsValidPositions(other.itsValidPositions),
+		itsStringLength(other.itsStringLength),
+		itsStringHeight(other.itsStringHeight),
+		itsHandleLocation(other.itsHandleLocation),
+		itsAlign(other.itsAlign) {
 
-void DSText::draw(PixelCanvas *pix) {
-  
-  if (itsValid) {
-    pix->setColor(getColor());
-    
-    
-    DLFont* tempFont = new DLFont(itsFont->value(), DLFont::Name, 
-				  itsFontSize->value());
-    
-    pix->setFont(tempFont);
-    delete tempFont; tempFont = 0;
-    
-    itsPixHeight = pix->textHeight(itsString->value());
-    itsPixWidth = pix->textWidth(itsString->value());
-    
-    if (itsPixHeight != -1 && itsPixHeight != -1) {
-      calculateHandlePositions();
-      if (itsHandlesMade) {
-	setHandlePositions(itsHandleLocation);
-      } else {
-	buildHandles(itsHandleLocation);
-	itsHandlesMade = True;
-      }
-    } 
-    pix->drawText(itsCenter[0], itsCenter[1], itsString->value(), 
-		  itsAngle->value(), toEnum(itsAlignment->keyValue()));
-    
-    DisplayShape::draw(pix);
-  }
-}
+	}
 
-void DSText::move(const Float& dX, const Float& dY) {
-  itsCenter[0] += dX;
-  itsCenter[1] += dY;
-  DisplayShape::move(dX, dY);
-  itsValidPositions = False;
-}
+	void DSText::draw(PixelCanvas *pix) {
 
-void DSText::rotate(const Float& angle) {
+		if (itsValid) {
+			pix->setColor(getColor());
 
-  itsAngle->setValue(itsAngle->value() + angle);
 
-  Vector<Float> cent(2); cent=getCenter();
-  DisplayShape::rotateAbout(angle, cent[0], cent[1]);
-  itsValidPositions = False;
-}
+			DLFont* tempFont = new DLFont(itsFont->value(), DLFont::Name,
+			                              itsFontSize->value());
 
-Bool DSText::setOptions(const Record& settings) {
-  Bool localChange = False;
-  
-  if (settings.isDefined("center")) {
-    Vector<Float> cent(settings.asArrayFloat("center"));
-    setCenter(cent[0], cent[1]);
-  }
-  
-  if (itsFontSize->fromRecord(settings)) localChange = True;
-  if (itsFont->fromRecord(settings)) localChange = True;
-  if (itsString->fromRecord(settings)) localChange = True;
-  if (itsAngle->fromRecord(settings)) localChange = True;
-  if (itsAlignment->fromRecord(settings)) localChange = True;
+			pix->setFont(tempFont);
+			delete tempFont;
+			tempFont = 0;
 
-  if (DisplayShape::setOptions(settings)) localChange = True;
-  if (localChange) itsValidPositions = False;
-  
-  return localChange;
-}
+			itsPixHeight = pix->textHeight(itsString->value());
+			itsPixWidth = pix->textWidth(itsString->value());
 
-Vector<Float> DSText::getCenter() {
-  if (itsValid) return itsCenter;
+			if (itsPixHeight != -1 && itsPixHeight != -1) {
+				calculateHandlePositions();
+				if (itsHandlesMade) {
+					setHandlePositions(itsHandleLocation);
+				} else {
+					buildHandles(itsHandleLocation);
+					itsHandlesMade = True;
+				}
+			}
+			pix->drawText(itsCenter[0], itsCenter[1], itsString->value(),
+			              itsAngle->value(), toEnum(itsAlignment->keyValue()));
 
-  Vector<Float> a(2); a[0] = 0; a[1] = 0;
-  return a;
-}
+			DisplayShape::draw(pix);
+		}
+	}
 
-Record DSText::getOptions() {
-  Record rec = DisplayShape::getOptions();
+	void DSText::move(const Float& dX, const Float& dY) {
+		itsCenter[0] += dX;
+		itsCenter[1] += dY;
+		DisplayShape::move(dX, dY);
+		itsValidPositions = False;
+	}
 
-  itsString->toRecord(rec, True, True);
-  itsAngle->toRecord(rec, True, True);
-  itsFontSize->toRecord(rec, True, True);
-  itsFont->toRecord(rec, True, True);
-  itsAlignment->toRecord(rec, True, True);
+	void DSText::rotate(const Float& angle) {
 
-  if (rec.isDefined("type")) rec.removeField("type");
-  rec.define("type", "text");
+		itsAngle->setValue(itsAngle->value() + angle);
 
-  if (itsValid) rec.define("center", itsCenter);
+		Vector<Float> cent(2);
+		cent=getCenter();
+		DisplayShape::rotateAbout(angle, cent[0], cent[1]);
+		itsValidPositions = False;
+	}
 
-  return rec;
-}
+	Bool DSText::setOptions(const Record& settings) {
+		Bool localChange = False;
 
-void DSText::makeAlignmentChoice() {
+		if (settings.isDefined("center")) {
+			Vector<Float> cent(settings.asArrayFloat("center"));
+			setCenter(cent[0], cent[1]);
+		}
 
-  Vector<String> aligns(9);
-  aligns(0) = "AlignCenter";
-  aligns(1) = "AlignLeft";
-  aligns(2) = "AlignTop";
-  aligns(3) = "AlignRight";
-  aligns(4) = "AlignBottom";
-  aligns(5) = "AlignTopLeft";
-  aligns(6) = "AlignTopRight";
-  aligns(7) = "AlignBottomLeft";
-  aligns(8) = "AlignBottomRight";
+		if (itsFontSize->fromRecord(settings)) localChange = True;
+		if (itsFont->fromRecord(settings)) localChange = True;
+		if (itsString->fromRecord(settings)) localChange = True;
+		if (itsAngle->fromRecord(settings)) localChange = True;
+		if (itsAlignment->fromRecord(settings)) localChange = True;
 
-  Vector<Int> enums(9); for (Int i=0; i<9; i++) enums(i) = i;
+		if (DisplayShape::setOptions(settings)) localChange = True;
+		if (localChange) itsValidPositions = False;
 
-  itsAlignment = new DParameterMapKeyChoice("align", "Text Alignment",
-  				    "Select how text is positioned on screen",
-					    aligns, enums, aligns(7), 
-					    aligns(7));
-  
-}
+		return localChange;
+	}
 
-void DSText::changePoint(const Vector<Float>& newPos) {
-}
+	Vector<Float> DSText::getCenter() {
+		if (itsValid) return itsCenter;
 
-void DSText::changePoint(const Vector<Float>& newPos, const Int nPoint) {
-}
+		Vector<Float> a(2);
+		a[0] = 0;
+		a[1] = 0;
+		return a;
+	}
 
-void DSText::scale(const Float& scaleFactor) {
-  if ((itsFontSize->value() * scaleFactor) > 4) 
-    itsFontSize->setValue(itsFontSize->value() * scaleFactor);
-  
-  itsValidPositions = False;
-}
+	Record DSText::getOptions() {
+		Record rec = DisplayShape::getOptions();
 
-Display::TextAlign DSText::toEnum(const Int fromInt) {
-  Display::TextAlign caster;
+		itsString->toRecord(rec, True, True);
+		itsAngle->toRecord(rec, True, True);
+		itsFontSize->toRecord(rec, True, True);
+		itsFont->toRecord(rec, True, True);
+		itsAlignment->toRecord(rec, True, True);
 
-  if (fromInt >= 0) 
-    caster = static_cast<Display::TextAlign>(fromInt);
-  else caster = Display::AlignBottomLeft;
-  
-  return caster;
-}
+		if (rec.isDefined("type")) rec.removeField("type");
+		rec.define("type", "text");
 
-void DSText::calculateHandlePositions() {
-  if (itsValidPositions) return;
-  
-  itsHandleLocation.resize(4,2);
-  
-  Float radAngle(itsAngle->value() * (C::pi/180));
-  Display::TextAlign align = toEnum(itsAlignment->keyValue());
+		if (itsValid) rec.define("center", itsCenter);
 
-  Float xOff = 0, yOff = 0;
-  const static Int buffer = 5;
+		return rec;
+	}
 
-  switch(align) {
-  case Display::AlignLeft : 
-    xOff = - buffer;
-    yOff = - ((0.5 * itsPixHeight) + buffer);
-    break;
-  case Display::AlignCenter :
-    xOff = - ((0.5 * itsPixWidth) + buffer);
-    yOff = - ((0.5 * itsPixHeight) + buffer);
-    break;
-  case Display::AlignTop :
-    xOff = - ((0.5 * itsPixWidth) + buffer);
-    yOff = - ((itsPixHeight) + buffer);
-    break;
-  case Display::AlignRight :
-    xOff = - (itsPixWidth + buffer);
-    yOff = - ((0.5 * itsPixHeight) + buffer);
-    break;
-  case Display::AlignBottom :
-    xOff = -((0.5 * itsPixWidth) + buffer);
-    yOff = -buffer;
-    break;
-  case Display::AlignTopLeft :
-    xOff = -buffer;
-    yOff = -(itsPixHeight + buffer);
-    break;
-  case Display::AlignTopRight :
-    xOff =  - (itsPixWidth + buffer);
-    yOff =  - (itsPixHeight + buffer);
-    break;
-  case Display::AlignBottomLeft :
-    xOff = - buffer;
-    yOff = - buffer;
-    break;
-  case Display::AlignBottomRight :
-    xOff = - (itsPixWidth + buffer);
-    yOff = - buffer;
-    break;
-  }
+	void DSText::makeAlignmentChoice() {
 
-  itsHandleLocation(0,0) = itsCenter[0] + xOff;
-  itsHandleLocation(0,1) = itsCenter[1] + yOff;
-  itsHandleLocation(1,0) = itsHandleLocation(0,0);
-  itsHandleLocation(1,1) = itsHandleLocation(0,1) + itsPixHeight + (2*buffer);
-  itsHandleLocation(2,0) = itsHandleLocation(1,0) + itsPixWidth + (2*buffer);
-  itsHandleLocation(2,1) = itsHandleLocation(1,1);
-  itsHandleLocation(3,0) = itsHandleLocation(2,0);
-  itsHandleLocation(3,1) = itsHandleLocation(2,1) - itsPixHeight - (2*buffer);
-  
-  itsHandleLocation = rotatePolygon(itsHandleLocation, radAngle, 
-				    itsCenter[0], itsCenter[1]);
-  itsValidPositions = True;
-  
-}
+		Vector<String> aligns(9);
+		aligns(0) = "AlignCenter";
+		aligns(1) = "AlignLeft";
+		aligns(2) = "AlignTop";
+		aligns(3) = "AlignRight";
+		aligns(4) = "AlignBottom";
+		aligns(5) = "AlignTopLeft";
+		aligns(6) = "AlignTopRight";
+		aligns(7) = "AlignBottomLeft";
+		aligns(8) = "AlignBottomRight";
 
-void DSText::setDefaultOptions() {
-  setHasHandles(True);
-  setDrawHandles(True);
+		Vector<Int> enums(9);
+		for (Int i=0; i<9; i++) enums(i) = i;
 
-  itsCenter.resize(2);
-  itsAlign = Display::AlignBottomLeft;
-  itsValid = False;
-  itsHandlesMade = False; itsValidPositions = False;
-}
+		itsAlignment = new DParameterMapKeyChoice("align", "Text Alignment",
+		        "Select how text is positioned on screen",
+		        aligns, enums, aligns(7),
+		        aligns(7));
+
+	}
+
+	void DSText::changePoint(const Vector<Float>& newPos) {
+	}
+
+	void DSText::changePoint(const Vector<Float>& newPos, const Int nPoint) {
+	}
+
+	void DSText::scale(const Float& scaleFactor) {
+		if ((itsFontSize->value() * scaleFactor) > 4)
+			itsFontSize->setValue(itsFontSize->value() * scaleFactor);
+
+		itsValidPositions = False;
+	}
+
+	Display::TextAlign DSText::toEnum(const Int fromInt) {
+		Display::TextAlign caster;
+
+		if (fromInt >= 0)
+			caster = static_cast<Display::TextAlign>(fromInt);
+		else caster = Display::AlignBottomLeft;
+
+		return caster;
+	}
+
+	void DSText::calculateHandlePositions() {
+		if (itsValidPositions) return;
+
+		itsHandleLocation.resize(4,2);
+
+		Float radAngle(itsAngle->value() * (C::pi/180));
+		Display::TextAlign align = toEnum(itsAlignment->keyValue());
+
+		Float xOff = 0, yOff = 0;
+		const static Int buffer = 5;
+
+		switch(align) {
+		case Display::AlignLeft :
+			xOff = - buffer;
+			yOff = - ((0.5 * itsPixHeight) + buffer);
+			break;
+		case Display::AlignCenter :
+			xOff = - ((0.5 * itsPixWidth) + buffer);
+			yOff = - ((0.5 * itsPixHeight) + buffer);
+			break;
+		case Display::AlignTop :
+			xOff = - ((0.5 * itsPixWidth) + buffer);
+			yOff = - ((itsPixHeight) + buffer);
+			break;
+		case Display::AlignRight :
+			xOff = - (itsPixWidth + buffer);
+			yOff = - ((0.5 * itsPixHeight) + buffer);
+			break;
+		case Display::AlignBottom :
+			xOff = -((0.5 * itsPixWidth) + buffer);
+			yOff = -buffer;
+			break;
+		case Display::AlignTopLeft :
+			xOff = -buffer;
+			yOff = -(itsPixHeight + buffer);
+			break;
+		case Display::AlignTopRight :
+			xOff =  - (itsPixWidth + buffer);
+			yOff =  - (itsPixHeight + buffer);
+			break;
+		case Display::AlignBottomLeft :
+			xOff = - buffer;
+			yOff = - buffer;
+			break;
+		case Display::AlignBottomRight :
+			xOff = - (itsPixWidth + buffer);
+			yOff = - buffer;
+			break;
+		}
+
+		itsHandleLocation(0,0) = itsCenter[0] + xOff;
+		itsHandleLocation(0,1) = itsCenter[1] + yOff;
+		itsHandleLocation(1,0) = itsHandleLocation(0,0);
+		itsHandleLocation(1,1) = itsHandleLocation(0,1) + itsPixHeight + (2*buffer);
+		itsHandleLocation(2,0) = itsHandleLocation(1,0) + itsPixWidth + (2*buffer);
+		itsHandleLocation(2,1) = itsHandleLocation(1,1);
+		itsHandleLocation(3,0) = itsHandleLocation(2,0);
+		itsHandleLocation(3,1) = itsHandleLocation(2,1) - itsPixHeight - (2*buffer);
+
+		itsHandleLocation = rotatePolygon(itsHandleLocation, radAngle,
+		                                  itsCenter[0], itsCenter[1]);
+		itsValidPositions = True;
+
+	}
+
+	void DSText::setDefaultOptions() {
+		setHasHandles(True);
+		setDrawHandles(True);
+
+		itsCenter.resize(2);
+		itsAlign = Display::AlignBottomLeft;
+		itsValid = False;
+		itsHandlesMade = False;
+		itsValidPositions = False;
+	}
 
 
 

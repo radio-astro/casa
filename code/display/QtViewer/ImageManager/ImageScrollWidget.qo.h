@@ -30,46 +30,45 @@
 
 namespace casa {
 
-class ImageScroll;
-class ImageView;
-class QtDisplayData;
-class DisplayDataHolder;
+	class ImageScroll;
+	class ImageView;
+	class QtDisplayData;
+	class DisplayDataHolder;
 
-/**
- * Wraps a scroll list of images with the ability to select/deselect them.
- */
+	/**
+	 * Wraps a scroll list of images with the ability to select/deselect them.
+	 */
 
-class ImageScrollWidget : public QWidget
-{
-    Q_OBJECT
+	class ImageScrollWidget : public QWidget {
+		Q_OBJECT
 
-public:
-    ImageScrollWidget(QWidget *parent = 0);
-    void setImageHolder( DisplayDataHolder* holder );
-    void setControllingDD( QtDisplayData* dd );
-    QList<ImageView*> getSelectedViews();
-    bool isManaged( QtDisplayData* displayData ) const;
-    void closeImages();
-    void addImageViews( QList<ImageView*>& views );
-    void removeImageViews( QList<ImageView*>& view );
-    void setImageColorsEnabled( bool enabled );
-    void applyColorChangesIndividually();
-    bool findColor( const QString& lookup, QColor* foundColor );
-    ~ImageScrollWidget();
-signals:
-    void displayDataRemoved( QtDisplayData* imageData );
-    void displayDataAdded( QtDisplayData* imageData );
-    void displayTypeChanged( ImageView* imageData );
-    void displayColorsChanged( ImageView* imageData );
-private slots:
-	void clearSelections();
-	void selectAll();
-private:
-	ImageScrollWidget( const ImageScrollWidget& other );
-	ImageScrollWidget operator=( const ImageScrollWidget& other );
-    ImageScroll* imageScroll;
-    Ui::ImageScrollWidgetClass ui;
-};
+	public:
+		ImageScrollWidget(QWidget *parent = 0);
+		void setImageHolder( DisplayDataHolder* holder );
+		void setControllingDD( QtDisplayData* dd );
+		QList<ImageView*> getSelectedViews();
+		bool isManaged( QtDisplayData* displayData ) const;
+		void closeImages();
+		void addImageViews( QList<ImageView*>& views );
+		void removeImageViews( QList<ImageView*>& view );
+		void setImageColorsEnabled( bool enabled );
+		void applyColorChangesIndividually();
+		bool findColor( const QString& lookup, QColor* foundColor );
+		~ImageScrollWidget();
+	signals:
+		void displayDataRemoved( QtDisplayData* imageData );
+		void displayDataAdded( QtDisplayData* imageData );
+		void displayTypeChanged( ImageView* imageData );
+		void displayColorsChanged( ImageView* imageData );
+	private slots:
+		void clearSelections();
+		void selectAll();
+	private:
+		ImageScrollWidget( const ImageScrollWidget& other );
+		ImageScrollWidget operator=( const ImageScrollWidget& other );
+		ImageScroll* imageScroll;
+		Ui::ImageScrollWidgetClass ui;
+	};
 
 }
 

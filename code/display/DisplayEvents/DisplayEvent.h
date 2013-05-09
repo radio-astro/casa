@@ -1,28 +1,28 @@
 //# DisplayEvent.h: class for basic event information in the display classes
 //# Copyright (C) 1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
-//# 
+//#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
-//# 
+//#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
-//# 
+//#
 //# You should have received a copy of the GNU Library General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//# 
+//#
 //# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# 
+//#
 //# $Id$
 
 #ifndef DISPLAY_DISPLAYEVENT_H
@@ -43,7 +43,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <etymology>
 // "DisplayEvent" describes "Events" (ie. things which happen at a
-// measurable time) which various "Display" class objects would like 
+// measurable time) which various "Display" class objects would like
 // to know about.
 // </etymology>
 
@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This class is a simple class which provides the base for all event
 // information in the display classes.  It simply records the one
 // thing common to all events: the time the event occured.  The time
-// recorded is the Julian date at the time of construction of a 
+// recorded is the Julian date at the time of construction of a
 // DisplayEvent object, stored and returned in seconds.
 // <synopsis>
 
@@ -79,34 +79,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Nothing known.
 // </todo>
 
-class DisplayEvent {
+	class DisplayEvent {
 
- public:
+	public:
 
-  // Constructor.  The Julian date at construction is recorded as the
-  // event time of this DisplayEvent.
-  DisplayEvent();
+		// Constructor.  The Julian date at construction is recorded as the
+		// event time of this DisplayEvent.
+		DisplayEvent();
 
-  // Copy constructor - construct a new DisplayEvent from
-  // <src>other</src>.
-  DisplayEvent(const DisplayEvent &other);
+		// Copy constructor - construct a new DisplayEvent from
+		// <src>other</src>.
+		DisplayEvent(const DisplayEvent &other);
 
-  // Destructor.
-  virtual ~DisplayEvent();
+		// Destructor.
+		virtual ~DisplayEvent();
 
-  // Copy assignment using copy semantics.
-  DisplayEvent &operator=(const DisplayEvent &other);
+		// Copy assignment using copy semantics.
+		DisplayEvent &operator=(const DisplayEvent &other);
 
-  // Return the Julian date (in fractional seconds) that this event
-  // occured.
-  virtual Double timeOfEvent() const;
+		// Return the Julian date (in fractional seconds) that this event
+		// occured.
+		virtual Double timeOfEvent() const;
 
- private:
+	private:
 
-  // Store the time of the event here at construction.
-  Double itsTimeOfEvent;
+		// Store the time of the event here at construction.
+		Double itsTimeOfEvent;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

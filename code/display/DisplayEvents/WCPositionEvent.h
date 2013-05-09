@@ -1,28 +1,28 @@
 //# WCPositionEvent.h: class which stores WorldCanvas position event info
 //# Copyright (C) 1993,1994,1995,1996,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
-//# 
+//#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
-//# 
+//#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
-//# 
+//#
 //# You should have received a copy of the GNU Library General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//# 
+//#
 //# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# 
+//#
 //# $Id$
 
 #ifndef TRIALDISPLAY_WCPOSITIONEVENT_H
@@ -35,7 +35,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
+	class WorldCanvas;
 
 // <summary>
 // Class which stores WorldCanvas position event information.
@@ -47,7 +47,7 @@ class WorldCanvas;
 // </reviewed>
 
 // <etymology>
-// "WCPositionEvent" is a contraction and concatenation of "WorldCanvas", 
+// "WCPositionEvent" is a contraction and concatenation of "WorldCanvas",
 // "Position" and "Event", and describes position events occuring on
 // WorldCanvases.
 // </etymology>
@@ -80,55 +80,57 @@ class WorldCanvas;
 // None.
 // </todo>
 
-class WCPositionEvent : public WCMotionEvent {
+	class WCPositionEvent : public WCMotionEvent {
 
- public:
+	public:
 
-  // Constructor taking a pointer to the WorldCanvas for which the
-  // event is valid, the key which is pressed and its state
-  // (ie. pressed or released), the state of the keyboard and pointer
-  // modifiers, and the pixel, linear and world coordinates of the
-  // event.
-  WCPositionEvent(WorldCanvas * wc,
-		  const Display::KeySym &key,
-		  const Bool &keyState,
-		  const uInt &modifiers,
-		  const Int &pixX, const Int &pixY,
-		  const Double &linX, const Double &linY,
-		  const Vector<Double> &world);
+		// Constructor taking a pointer to the WorldCanvas for which the
+		// event is valid, the key which is pressed and its state
+		// (ie. pressed or released), the state of the keyboard and pointer
+		// modifiers, and the pixel, linear and world coordinates of the
+		// event.
+		WCPositionEvent(WorldCanvas * wc,
+		                const Display::KeySym &key,
+		                const Bool &keyState,
+		                const uInt &modifiers,
+		                const Int &pixX, const Int &pixY,
+		                const Double &linX, const Double &linY,
+		                const Vector<Double> &world);
 
-  // Destructor.
-  virtual ~WCPositionEvent();
+		// Destructor.
+		virtual ~WCPositionEvent();
 
-  // Which key was pressed or released?
-  virtual Display::KeySym key() const 
-    { return itsKey; }
+		// Which key was pressed or released?
+		virtual Display::KeySym key() const {
+			return itsKey;
+		}
 
-  // What state is the key in: <src>True</src> for pressed,
-  // <src>False</src> for released.
-  virtual Bool keystate() const 
-    { return itsKeyState; }
+		// What state is the key in: <src>True</src> for pressed,
+		// <src>False</src> for released.
+		virtual Bool keystate() const {
+			return itsKeyState;
+		}
 
- protected:
+	protected:
 
-  // (Required) default constructor.
-  WCPositionEvent();
+		// (Required) default constructor.
+		WCPositionEvent();
 
-  // (Required) copy constructor.
-  WCPositionEvent(const WCPositionEvent &other);
+		// (Required) copy constructor.
+		WCPositionEvent(const WCPositionEvent &other);
 
-  // (Required) copy assignment.
-  WCPositionEvent &operator=(const WCPositionEvent &other);
+		// (Required) copy assignment.
+		WCPositionEvent &operator=(const WCPositionEvent &other);
 
- private:
+	private:
 
-  // Store the key that was pressed or released here.
-  Display::KeySym itsKey;
+		// Store the key that was pressed or released here.
+		Display::KeySym itsKey;
 
-  // Store the state of that key here.
-  Bool itsKeyState;
+		// Store the state of that key here.
+		Bool itsKeyState;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

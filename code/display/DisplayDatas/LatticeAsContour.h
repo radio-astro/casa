@@ -41,10 +41,10 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forwards:
-template <class T> class Array;
-class IPosition;
-class Record;
-template <class T> class LatticePADMContour;
+	template <class T> class Array;
+	class IPosition;
+	class Record;
+	template <class T> class LatticePADMContour;
 
 // <summary>Class to manage the drawing of contour maps of slices from AIPS++ Lattices</summary>
 //
@@ -63,7 +63,7 @@ template <class T> class LatticePADMContour;
 // is "lattice"-based.
 // </etymology>
 //
-// <synopsis> 
+// <synopsis>
 // This class should be used to display contour maps---ie. line
 // drawings connecting data points of equal intensity (or level)---of
 // two-dimensional slices of data extracted from AIPS++ Lattices or
@@ -87,23 +87,23 @@ template <class T> class LatticePADMContour;
 // These functions simply accept a Record, which can be converted from
 // a GlishRecord: this is done in the <linkto
 // class="GTkDisplayData">GTkDisplayData</linkto> class.  The options
-// for the LatticeAsContour class are: 
-// <li> levels: a Vector<Float> (or Vector<Double>) of one or more 
+// for the LatticeAsContour class are:
+// <li> levels: a Vector<Float> (or Vector<Double>) of one or more
 // elements, being the data
 // values at which the contours are drawn.  Depending on type,
 // the values in the vector are interpreted as absolute or
 // fractions between the data minimum and maximum.
 // <li> type: a String, one of "frac" or "abs", indicating whether the
 // contour values in "levels" (multiplied by "scale") are fractions of the
-// data range between the minimum and maximum, or are instead absolute 
+// data range between the minimum and maximum, or are instead absolute
 // contour levels in the native units of the data.
 // <li> scale: a Float or Double which provides an additional scale
 // factor to apply to the contour levels in "levels."
 // <li> line: a positive Integer specifying the line width of
 // contours.
-// <li> dashneg: a Boolean value, which if True, will force contours 
+// <li> dashneg: a Boolean value, which if True, will force contours
 // at negative data values to be drawn in dashed line style.
-// <li> dashpos: a Boolean value, which if True, will force contours 
+// <li> dashpos: a Boolean value, which if True, will force contours
 // at positive data values to be drawn in dashed line style.
 // <li> color: a String which is the color with which to draw the
 // contours.  A valid X Color is required.
@@ -114,8 +114,8 @@ template <class T> class LatticePADMContour;
 //# complex data values should be translated to real pixel values.
 //#
 //# LatticeAsContour is templated, and can be used to draw Complex or Real
-//# Images or Arrays.  For Complex data, the default complexmode is 
-//# "magnitude."  
+//# Images or Arrays.  For Complex data, the default complexmode is
+//# "magnitude."
 //# </synopsis>
 //
 // <example>
@@ -155,135 +155,139 @@ template <class T> class LatticePADMContour;
 // <todo asof="yyyy/mm/dd">
 // </todo>
 
-template <class T> class LatticeAsContour : public LatticePADisplayData<T> {
+	template <class T> class LatticeAsContour : public LatticePADisplayData<T> {
 
- public:
+	public:
 
-  // Array-based constructors: >2d and 2d.  xAxis and yAxis specify 
-  // which axis in the array (0-based) should be mapped to X and Y
-  // on the display device: ie. 2-d slices of the data to be displayed
-  // have these axes.  mAxis specifies the "movie" axis, which is the axis
-  // along which different slices are taken.  fixedPos is an IPosition 
-  // having the same length as the number of dimensions in the array, 
-  // and indicate the fixed axis values for axes in the data that are
-  // not specified as xAxis, yAxis or mAxis.
-  // <group>
-  LatticeAsContour(Array<T> *array, const uInt xAxis,
-		   const uInt yAxis, const uInt mAxis,
-		   const IPosition fixedPos);
-  LatticeAsContour(Array<T> *array, const uInt xAxis,
-		   const uInt yAxis);
-  // </group>
+		// Array-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// which axis in the array (0-based) should be mapped to X and Y
+		// on the display device: ie. 2-d slices of the data to be displayed
+		// have these axes.  mAxis specifies the "movie" axis, which is the axis
+		// along which different slices are taken.  fixedPos is an IPosition
+		// having the same length as the number of dimensions in the array,
+		// and indicate the fixed axis values for axes in the data that are
+		// not specified as xAxis, yAxis or mAxis.
+		// <group>
+		LatticeAsContour(Array<T> *array, const uInt xAxis,
+		                 const uInt yAxis, const uInt mAxis,
+		                 const IPosition fixedPos);
+		LatticeAsContour(Array<T> *array, const uInt xAxis,
+		                 const uInt yAxis);
+		// </group>
 
-  // Image-based constructors: >2d and 2d.  xAxis and yAxis specify 
-  // which axis in the image (0-based) should be mapped to X and Y
-  // on the display device: ie. 2-d slices of the data to be displayed
-  // have these axes.  mAxis specifies the "movie" axis, which is the axis
-  // along which different slices are taken.  fixedPos is an IPosition 
-  // having the same length as the number of dimensions in the image, 
-  // and indicate the fixed axis values for axes in the data that are
-  // not specified as xAxis, yAxis or mAxis.
-  // <group>
-  LatticeAsContour( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
-  LatticeAsContour(ImageInterface<T> *image, const uInt xAxis,
-		   const uInt yAxis);
-  // </group>
+		// Image-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// which axis in the image (0-based) should be mapped to X and Y
+		// on the display device: ie. 2-d slices of the data to be displayed
+		// have these axes.  mAxis specifies the "movie" axis, which is the axis
+		// along which different slices are taken.  fixedPos is an IPosition
+		// having the same length as the number of dimensions in the image,
+		// and indicate the fixed axis values for axes in the data that are
+		// not specified as xAxis, yAxis or mAxis.
+		// <group>
+		LatticeAsContour( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
+		LatticeAsContour(ImageInterface<T> *image, const uInt xAxis,
+		                 const uInt yAxis);
+		// </group>
 
-  // Destructor
-  virtual ~LatticeAsContour();
+		// Destructor
+		virtual ~LatticeAsContour();
 
-  // Create the various elements in the sequence of displayable
-  // maps.  This is called upon construction as well as whenever
-  // the display and/or movie axes are changed via a call to 
-  // PrincipalAxesDD::setAxes.
-  //virtual void setupElements(IPosition fixedPos = IPosition(2));
-  virtual void setupElements();
+		// Create the various elements in the sequence of displayable
+		// maps.  This is called upon construction as well as whenever
+		// the display and/or movie axes are changed via a call to
+		// PrincipalAxesDD::setAxes.
+		//virtual void setupElements(IPosition fixedPos = IPosition(2));
+		virtual void setupElements();
 
-  // install the default options for display
-  virtual void setDefaultOptions();
+		// install the default options for display
+		virtual void setDefaultOptions();
 
-  // Apply the options stored in the provided Record to the 
-  // LatticeAsContour object.  If the return value is True, then
-  // some options have changed, and a refresh is needed to update
-  // the display.
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Apply the options stored in the provided Record to the
+		// LatticeAsContour object.  If the return value is True, then
+		// some options have changed, and a refresh is needed to update
+		// the display.
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-  // Retrieve the currently set options, and their types, default
-  // values, and any help text associated with each parameter.  This
-  // information can be used to generate form-type graphical user 
-  // interfaces or command-line interfaces to set the options with
-  // prompts.
-  virtual Record getOptions();
+		// Retrieve the currently set options, and their types, default
+		// values, and any help text associated with each parameter.  This
+		// information can be used to generate form-type graphical user
+		// interfaces or command-line interfaces to set the options with
+		// prompts.
+		virtual Record getOptions();
 
-  // Return the DisplayData type; used by the WorldCanvasHolder to
-  // determine the order of drawing.
-  virtual Display::DisplayDataType classType() { return Display::Vector; }
+		// Return the DisplayData type; used by the WorldCanvasHolder to
+		// determine the order of drawing.
+		virtual Display::DisplayDataType classType() {
+			return Display::Vector;
+		}
 
-  // class name
-  virtual String className() { return String("LatticeAsContour");}
+		// class name
+		virtual String className() {
+			return String("LatticeAsContour");
+		}
 
-  // Actual selected contour levels
-  virtual Vector<Float> levels();
-  
-  // Actual levels, in String format.  If precision is unspecified,
-  // one that is low enough not to be cluttered is used.
-  virtual String levelString(Int prec=0); 
- 
-  // Adds contour level information to the standard position tracking
-  // string from PADD.
-  virtual String showPosition(const Vector<Double> &wld, const Bool &abs,
-                              const Bool &dsp);
-  
-  using LatticePADisplayData<T>::dataUnit;
-  
-  
- protected:
-  
-  // Construct user option DisplayParameters (for min/max contour.)
-  // (To be used by constructors only.)
-  virtual void constructParameters_();
+		// Actual selected contour levels
+		virtual Vector<Float> levels();
 
-  // Set standard limits/values for contour sliders.  If recOut is provided,
-  // they will be set onto it in a manner suitable for updating gui via
-  // setOptions.
-  virtual void setStdContourLimits_(Record* recOut=0);
-   
-  
- private:
+		// Actual levels, in String format.  If precision is unspecified,
+		// one that is low enough not to be cluttered is used.
+		virtual String levelString(Int prec=0);
 
-  // Relative contour levels.
-  Vector<Float> itsLevels;
-  
-  // Min and Max actual contours. linearly scaled from itsLevels to fit these.
-  // <group>
-  DParameterRange<Float> *itsBaseContour;
-  DParameterRange<Float> *itsUnitContour;
-  // </group>
-  
-  Float itsLine;
-  Bool itsDashNeg;
-  Bool itsDashPos;
-  String itsColor;
+		// Adds contour level information to the standard position tracking
+		// string from PADD.
+		virtual String showPosition(const Vector<Double> &wld, const Bool &abs,
+		                            const Bool &dsp);
 
-  friend class LatticePADMContour<T>;
+		using LatticePADisplayData<T>::dataUnit;
 
-  //# Make parent members known.
-public:
-  using LatticePADisplayData<T>::nelements;
-  using LatticePADisplayData<T>::nPixelAxes;
-  using LatticePADisplayData<T>::fixedPosition;
-  using LatticePADisplayData<T>::displayAxes;
-  using LatticePADisplayData<T>::dataShape;
-  using LatticePADisplayData<T>::getMinAndMax;
-  using LatticePADisplayData<T>::readOptionRecord;
-  using LatticePADisplayData<T>::getDataMin;
-  using LatticePADisplayData<T>::getDataMax;
-  
-protected:
-  using LatticePADisplayData<T>::setNumImages;
-  using LatticePADisplayData<T>::DDelement;
-  using LatticePADisplayData<T>::datamax;
-};
+
+	protected:
+
+		// Construct user option DisplayParameters (for min/max contour.)
+		// (To be used by constructors only.)
+		virtual void constructParameters_();
+
+		// Set standard limits/values for contour sliders.  If recOut is provided,
+		// they will be set onto it in a manner suitable for updating gui via
+		// setOptions.
+		virtual void setStdContourLimits_(Record* recOut=0);
+
+
+	private:
+
+		// Relative contour levels.
+		Vector<Float> itsLevels;
+
+		// Min and Max actual contours. linearly scaled from itsLevels to fit these.
+		// <group>
+		DParameterRange<Float> *itsBaseContour;
+		DParameterRange<Float> *itsUnitContour;
+		// </group>
+
+		Float itsLine;
+		Bool itsDashNeg;
+		Bool itsDashPos;
+		String itsColor;
+
+		friend class LatticePADMContour<T>;
+
+		//# Make parent members known.
+	public:
+		using LatticePADisplayData<T>::nelements;
+		using LatticePADisplayData<T>::nPixelAxes;
+		using LatticePADisplayData<T>::fixedPosition;
+		using LatticePADisplayData<T>::displayAxes;
+		using LatticePADisplayData<T>::dataShape;
+		using LatticePADisplayData<T>::getMinAndMax;
+		using LatticePADisplayData<T>::readOptionRecord;
+		using LatticePADisplayData<T>::getDataMin;
+		using LatticePADisplayData<T>::getDataMax;
+
+	protected:
+		using LatticePADisplayData<T>::setNumImages;
+		using LatticePADisplayData<T>::DDelement;
+		using LatticePADisplayData<T>::datamax;
+	};
 
 
 } //# NAMESPACE CASA - END

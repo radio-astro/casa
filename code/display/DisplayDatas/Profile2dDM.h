@@ -35,15 +35,15 @@
 #include <display/DisplayDatas/Profile2dDD.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// <summary> 
+// <summary>
 // A DisplayMethod to draw Profiles
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <prerequisite>
 //   <li> DisplayMethod
 //   <li> CachingDisplayMethod
@@ -51,50 +51,50 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <etymology>
 // </etymology>
-// <synopsis> 
-// 
-// </synopsis> 
+// <synopsis>
+//
+// </synopsis>
 
-class Profile2dDM : public CachingDisplayMethod {
+	class Profile2dDM : public CachingDisplayMethod {
 
-  public:
+	public:
 
-  // Constructor.
-  Profile2dDM(WorldCanvas *worldCanvas, 
-		AttributeBuffer *wchAttributes,
-		AttributeBuffer *ddAttributes,
-		CachingDisplayData *dd);
-  
-  // Destructor.
-  virtual ~Profile2dDM();
-  
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
-  
-  // Draw into a cached drawing list, called by draw function.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder);
-  
-  protected:
-  
-  // (Required) default constructor.
-  Profile2dDM();
-  
-  // (Required) copy constructor.
-  Profile2dDM(const Profile2dDM &other);
-  
-  // (Required) copy assignment.
-  void operator=(const Profile2dDM &other);
-  
-  private:
-  // <group>
-  // Set the appropriate styes and rules for drawing the profile
-  void setStyles(WorldCanvas *wc, Profile2dDD *parent);
-  // Restore the appropriate styles and rules after drawing
-  // is completed
-  void restoreStyles(WorldCanvas *wc);
-  // </group>
-};
+		// Constructor.
+		Profile2dDM(WorldCanvas *worldCanvas,
+		            AttributeBuffer *wchAttributes,
+		            AttributeBuffer *ddAttributes,
+		            CachingDisplayData *dd);
+
+		// Destructor.
+		virtual ~Profile2dDM();
+
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
+
+		// Draw into a cached drawing list, called by draw function.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder);
+
+	protected:
+
+		// (Required) default constructor.
+		Profile2dDM();
+
+		// (Required) copy constructor.
+		Profile2dDM(const Profile2dDM &other);
+
+		// (Required) copy assignment.
+		void operator=(const Profile2dDM &other);
+
+	private:
+		// <group>
+		// Set the appropriate styes and rules for drawing the profile
+		void setStyles(WorldCanvas *wc, Profile2dDD *parent);
+		// Restore the appropriate styles and rules after drawing
+		// is completed
+		void restoreStyles(WorldCanvas *wc);
+		// </group>
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -32,35 +32,35 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
-DTVisible::DTVisible() {
-  Aipsrc::find(itsDrawColor, "display.controls.color", "green");
-  AipsrcValue<Int>::find(itsLineWidth, "display.controls.linewidth", 
-			 Int(1));
-  AipsrcValue<Double>::find(itsDoubleClickInterval, 
-			    "display.controls.doubleclickinterval",
-			    Double(0.5));
-}
+	DTVisible::DTVisible() {
+		Aipsrc::find(itsDrawColor, "display.controls.color", "green");
+		AipsrcValue<Int>::find(itsLineWidth, "display.controls.linewidth",
+		                       Int(1));
+		AipsrcValue<Double>::find(itsDoubleClickInterval,
+		                          "display.controls.doubleclickinterval",
+		                          Double(0.5));
+	}
 
 // Destructor.
-DTVisible::~DTVisible() {
-}
+	DTVisible::~DTVisible() {
+	}
 
 // (Required) copy constructor.
-DTVisible::DTVisible(const DTVisible &other) :
-  itsDrawColor(other.itsDrawColor),
-  itsLineWidth(other.itsLineWidth),
-  itsDoubleClickInterval(other.itsDoubleClickInterval) {
-}
+	DTVisible::DTVisible(const DTVisible &other) :
+		itsDrawColor(other.itsDrawColor),
+		itsLineWidth(other.itsLineWidth),
+		itsDoubleClickInterval(other.itsDoubleClickInterval) {
+	}
 
 // (Required) copy assignment.
-DTVisible &DTVisible::operator=(const DTVisible &other) {
-  if (this != &other) {
-    itsDrawColor = other.itsDrawColor;
-    itsLineWidth = other.itsLineWidth;
-    itsDoubleClickInterval = other.itsDoubleClickInterval;
-  }
-  return *this;
-}
+	DTVisible &DTVisible::operator=(const DTVisible &other) {
+		if (this != &other) {
+			itsDrawColor = other.itsDrawColor;
+			itsLineWidth = other.itsLineWidth;
+			itsDoubleClickInterval = other.itsDoubleClickInterval;
+		}
+		return *this;
+	}
 
 
 } //# NAMESPACE CASA - END

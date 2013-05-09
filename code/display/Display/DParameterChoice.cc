@@ -1,4 +1,4 @@
-//# DParameterChoice.cc: class to store and retrieve choice parameters 
+//# DParameterChoice.cc: class to store and retrieve choice parameters
 //# Copyright (C) 2000,2001
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -33,132 +33,132 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
-DParameterChoice::DParameterChoice(const String name, const String description,
-				   const String help, 
-				   const Vector<String> &options,
-				   const String defaultvalue,
-				   const String value, const String context, 
-				   const Bool editable) :
-  DisplayParameter(name, description, help, context, False, False),
-  itsEditable(editable),
-  itsOptions(options),
-  itsDefaultValue(defaultvalue),
-  itsValue(value) {
+	DParameterChoice::DParameterChoice(const String name, const String description,
+	                                   const String help,
+	                                   const Vector<String> &options,
+	                                   const String defaultvalue,
+	                                   const String value, const String context,
+	                                   const Bool editable) :
+		DisplayParameter(name, description, help, context, False, False),
+		itsEditable(editable),
+		itsOptions(options),
+		itsDefaultValue(defaultvalue),
+		itsValue(value) {
 
-  if (!existsOption(defaultvalue) || !existsOption(value)) {
-    throw(AipsError("Invalid default or value in DParameterChoice"));
-  }
-}
+		if (!existsOption(defaultvalue) || !existsOption(value)) {
+			throw(AipsError("Invalid default or value in DParameterChoice"));
+		}
+	}
 
 
-DParameterChoice::DParameterChoice( const String name, const String description,
-				    const String help, const ColormapDefinition::colormapnamemap &options,
-				    const String defaultvalue, const String value, 
-				    const String context, const Bool editable ) :
+	DParameterChoice::DParameterChoice( const String name, const String description,
+	                                    const String help, const ColormapDefinition::colormapnamemap &options,
+	                                    const String defaultvalue, const String value,
+	                                    const String context, const Bool editable ) :
 		DisplayParameter(name, description, help, context, False, False),
 		itsEditable(editable),
 		itsDefaultValue(defaultvalue),
 		itsValue(value) {
 
-    itsOptions.resize(options.size());
-    int i=0;
-    for ( ColormapDefinition::colormapnamemap::const_iterator iter = options.begin( );
-	  iter != options.end( ); ++iter ) {
-	itsOptions[i++] = iter->first;
-    }
+		itsOptions.resize(options.size());
+		int i=0;
+		for ( ColormapDefinition::colormapnamemap::const_iterator iter = options.begin( );
+		        iter != options.end( ); ++iter ) {
+			itsOptions[i++] = iter->first;
+		}
 
-    if (!existsOption(defaultvalue) || !existsOption(value)) {
-	throw(AipsError("Invalid default or value in DParameterChoice"));
-    }
-}
+		if (!existsOption(defaultvalue) || !existsOption(value)) {
+			throw(AipsError("Invalid default or value in DParameterChoice"));
+		}
+	}
 
 
 // Copy constructor.
-DParameterChoice::DParameterChoice(const DParameterChoice &other) :
-  DisplayParameter(other),
-  itsEditable(other.itsEditable),
-  itsOptions(other.itsOptions),
-  itsDefaultValue(other.itsDefaultValue),
-  itsValue(other.itsValue) {
-}
+	DParameterChoice::DParameterChoice(const DParameterChoice &other) :
+		DisplayParameter(other),
+		itsEditable(other.itsEditable),
+		itsOptions(other.itsOptions),
+		itsDefaultValue(other.itsDefaultValue),
+		itsValue(other.itsValue) {
+	}
 
 // Destructor.
-DParameterChoice::~DParameterChoice() {
-}
+	DParameterChoice::~DParameterChoice() {
+	}
 
 // Copy assignment.
-DParameterChoice &DParameterChoice::operator=(const DParameterChoice &other) {
-  if (this != &other) {
-    DisplayParameter::operator=(other);
-    itsEditable = other.itsEditable;
-    itsOptions = other.itsOptions;
-    itsDefaultValue = other.itsDefaultValue;
-    itsValue = other.itsValue;
-  }
-  return *this;
-}
+	DParameterChoice &DParameterChoice::operator=(const DParameterChoice &other) {
+		if (this != &other) {
+			DisplayParameter::operator=(other);
+			itsEditable = other.itsEditable;
+			itsOptions = other.itsOptions;
+			itsDefaultValue = other.itsDefaultValue;
+			itsValue = other.itsValue;
+		}
+		return *this;
+	}
 
 // Update the value of this parameter from a record.
-Bool DParameterChoice::fromRecord(const RecordInterface &record) {
-  static Bool error, result;
-  String previousval = itsValue;
-  result = displayOptions().readOptionRecord(itsValue, error, record, name());
-  if (result) {
-    // check that new itsValue is a member of itsOption
-    if (existsOption(itsValue)) {
-      return True;
-    } else {
-      if (itsEditable) {
-	itsOptions.resize(itsOptions.nelements()+1,True);
-	itsOptions(itsOptions.nelements()-1) = itsValue;
-	return True;
-      }
-      itsValue = previousval;
-      return False;
-    }
-  }
-  return False;
-}
+	Bool DParameterChoice::fromRecord(const RecordInterface &record) {
+		static Bool error, result;
+		String previousval = itsValue;
+		result = displayOptions().readOptionRecord(itsValue, error, record, name());
+		if (result) {
+			// check that new itsValue is a member of itsOption
+			if (existsOption(itsValue)) {
+				return True;
+			} else {
+				if (itsEditable) {
+					itsOptions.resize(itsOptions.nelements()+1,True);
+					itsOptions(itsOptions.nelements()-1) = itsValue;
+					return True;
+				}
+				itsValue = previousval;
+				return False;
+			}
+		}
+		return False;
+	}
 
 // Describe this parameter in a record.
-void DParameterChoice::toRecord(RecordInterface &record, 
-				const Bool, const Bool overwrite) {
-  if (record.isDefined(name())) {
-    if (overwrite) {
-      record.removeField(name());
-    } else {
-      return;
-    }
-  }
+	void DParameterChoice::toRecord(RecordInterface &record,
+	                                const Bool, const Bool overwrite) {
+		if (record.isDefined(name())) {
+			if (overwrite) {
+				record.removeField(name());
+			} else {
+				return;
+			}
+		}
 
-  Record rec = baseDescription();
-  if (itsEditable) {
-    rec.define("ptype", "userchoice");
-  } else {
-    rec.define("ptype", "choice");
-  }
-  rec.define("popt", itsOptions);
-  rec.define("default", itsDefaultValue);
-  rec.define("value", itsValue);
-  record.defineRecord(name(), rec);
-}
+		Record rec = baseDescription();
+		if (itsEditable) {
+			rec.define("ptype", "userchoice");
+		} else {
+			rec.define("ptype", "choice");
+		}
+		rec.define("popt", itsOptions);
+		rec.define("default", itsDefaultValue);
+		rec.define("value", itsValue);
+		record.defineRecord(name(), rec);
+	}
 
 // Default constructor.
-DParameterChoice::DParameterChoice() :
-  DisplayParameter(),
-  itsEditable(False),
-  itsDefaultValue(""),
-  itsValue("") {
-  itsOptions.resize(0);
-}
+	DParameterChoice::DParameterChoice() :
+		DisplayParameter(),
+		itsEditable(False),
+		itsDefaultValue(""),
+		itsValue("") {
+		itsOptions.resize(0);
+	}
 
-Bool DParameterChoice::existsOption(const String value) {
-  Bool exists = False;
-  for (uInt i = 0; (i < itsOptions.nelements()) && !exists; i++) {
-    exists = (itsOptions(i) == value);    
-  }
-  return exists;
-}
+	Bool DParameterChoice::existsOption(const String value) {
+		Bool exists = False;
+		for (uInt i = 0; (i < itsOptions.nelements()) && !exists; i++) {
+			exists = (itsOptions(i) == value);
+		}
+		return exists;
+	}
 
 } //# NAMESPACE CASA - END
 

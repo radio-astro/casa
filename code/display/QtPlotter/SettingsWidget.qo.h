@@ -32,52 +32,51 @@
 namespace casa {
 
 
-class QtCanvas;
-class LogIO;
-class ProfileTaskMonitor;
-class ProfileTaskFacilitator;
+	class QtCanvas;
+	class LogIO;
+	class ProfileTaskMonitor;
+	class ProfileTaskFacilitator;
 
-class SettingsWidget : public QWidget
-{
-    Q_OBJECT
+	class SettingsWidget : public QWidget {
+		Q_OBJECT
 
-public:
-    void setCollapseVals(const Vector<Float> &spcVals);
-    void setCanvas( QtCanvas* pCanvas );
-    void setTaskMonitor( ProfileTaskMonitor* fitMonitor );
-    void setCurveName( const QString& curveName );
-    void addCurveName( const QString& curveName );
-    void reset( bool taskChanged = false );
-    void setLogger( LogIO* log );
-    void setUnits( QString units );
-    void setDisplayYUnits( const QString& units );
-    void setImageYUnits( const QString& units );
-    void setRange( double start, double end );
-    static bool isOptical();
-    static void setOptical( bool optical );
-    void setTaskSpecLineFitting( bool specLineFitting );
-    void pixelsChanged(int, int );
-    SettingsWidget(QWidget *parent = 0);
-    ~SettingsWidget();
-
+	public:
+		void setCollapseVals(const Vector<Float> &spcVals);
+		void setCanvas( QtCanvas* pCanvas );
+		void setTaskMonitor( ProfileTaskMonitor* fitMonitor );
+		void setCurveName( const QString& curveName );
+		void addCurveName( const QString& curveName );
+		void reset( bool taskChanged = false );
+		void setLogger( LogIO* log );
+		void setUnits( QString units );
+		void setDisplayYUnits( const QString& units );
+		void setImageYUnits( const QString& units );
+		void setRange( double start, double end );
+		static bool isOptical();
+		static void setOptical( bool optical );
+		void setTaskSpecLineFitting( bool specLineFitting );
+		void pixelsChanged(int, int );
+		SettingsWidget(QWidget *parent = 0);
+		~SettingsWidget();
 
 
-private slots:
-	void clear();
-    void setFitRange(double start, double end );
 
-private:
-    QtCanvas* pixelCanvas;
-    ProfileTaskFacilitator* taskHelper;
-    ProfileTaskFacilitator* taskHelperOptical;
-    ProfileTaskFacilitator* taskHelperRadio;
-    LogIO* logger;
-    ProfileTaskMonitor* taskMonitor;
-    Ui::SettingsWidget ui;
-    static bool optical;
-    bool specLineFitting;
-    bool newCollapseVals;
+	private slots:
+		void clear();
+		void setFitRange(double start, double end );
 
-};
+	private:
+		QtCanvas* pixelCanvas;
+		ProfileTaskFacilitator* taskHelper;
+		ProfileTaskFacilitator* taskHelperOptical;
+		ProfileTaskFacilitator* taskHelperRadio;
+		LogIO* logger;
+		ProfileTaskMonitor* taskMonitor;
+		Ui::SettingsWidget ui;
+		static bool optical;
+		bool specLineFitting;
+		bool newCollapseVals;
+
+	};
 }
 #endif // SPECFITSETTINGSWIDGET_QO_H

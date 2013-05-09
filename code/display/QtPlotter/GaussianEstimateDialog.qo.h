@@ -35,52 +35,51 @@ class QScrollArea;
 
 namespace casa {
 
-class GaussianEstimateWidget;
-class Converter;
+	class GaussianEstimateWidget;
+	class Converter;
 
-class GaussianEstimateDialog : public QDialog
-{
-    Q_OBJECT
+	class GaussianEstimateDialog : public QDialog {
+		Q_OBJECT
 
-public:
-    GaussianEstimateDialog(QWidget *parent = 0);
-    ~GaussianEstimateDialog();
-    void setGaussCount( int count );
-    void setCurveData( const Vector<float>& xValues, const Vector<float>& yValues);
-    void setRangeX( Float min, Float max );
-    void setRangeY( Float min, Float max );
-    void setSpecFitUnits( const QString& specUnits );
-    void setDisplayYUnits( const QString& units );
-    QString getDisplayYUnits() const;
-    QString getUnits() const;
-    void setCurveColor( QColor color );
-    SpecFitGaussian getEstimate(int index );
-    void setEstimates( QList<SpecFitGaussian>& estimates );
+	public:
+		GaussianEstimateDialog(QWidget *parent = 0);
+		~GaussianEstimateDialog();
+		void setGaussCount( int count );
+		void setCurveData( const Vector<float>& xValues, const Vector<float>& yValues);
+		void setRangeX( Float min, Float max );
+		void setRangeY( Float min, Float max );
+		void setSpecFitUnits( const QString& specUnits );
+		void setDisplayYUnits( const QString& units );
+		QString getDisplayYUnits() const;
+		QString getUnits() const;
+		void setCurveColor( QColor color );
+		SpecFitGaussian getEstimate(int index );
+		void setEstimates( QList<SpecFitGaussian>& estimates );
 
-private slots:
-	void unitsChanged( int index );
-	void plotsCoordinatedChanged( int );
-	void coordinatedValuesChanged( float );
+	private slots:
+		void unitsChanged( int index );
+		void plotsCoordinatedChanged( int );
+		void coordinatedValuesChanged( float );
 
-private:
-	void resetEstimates();
-	void clearPlots( int removeCount);
-	void setCurveData();
-	void setDisplayYUnits();
-	void setCurveColor();
-	void initializeLimits( const Vector<float>& values, Float* const min, Float* const max );
-	Vector<float> translateDataUnits( const Vector<float>& xValues, Converter* converter );
-	Vector<float> xVals;
-    Vector<float> yVals;
-    QColor curveColor;
-    QString specUnitStr;
-    QString displayYUnits;
-    QString unitStr;
-    QList<GaussianEstimateWidget*> plots;
-    Ui::GaussianEstimateDialogClass ui;
-    bool plotsCoordinated;
+	private:
+		void resetEstimates();
+		void clearPlots( int removeCount);
+		void setCurveData();
+		void setDisplayYUnits();
+		void setCurveColor();
+		void initializeLimits( const Vector<float>& values, Float* const min, Float* const max );
+		Vector<float> translateDataUnits( const Vector<float>& xValues, Converter* converter );
+		Vector<float> xVals;
+		Vector<float> yVals;
+		QColor curveColor;
+		QString specUnitStr;
+		QString displayYUnits;
+		QString unitStr;
+		QList<GaussianEstimateWidget*> plots;
+		Ui::GaussianEstimateDialogClass ui;
+		bool plotsCoordinated;
 
-    QWidget* plotHolderWidget;
-};
+		QWidget* plotHolderWidget;
+	};
 }
 #endif // GAUSSIANESTIMATEDIALOG_QO_H

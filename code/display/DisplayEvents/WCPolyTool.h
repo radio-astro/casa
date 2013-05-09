@@ -60,7 +60,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // double-clicks a particular key or mouse button inside or outside an
 // existing polygon respectively.  It is up to the programmer to decide
 // what these events mean, but it is recommended that an internal double-
-// click correspond to the main action of the tool, eg. emitting the 
+// click correspond to the main action of the tool, eg. emitting the
 // polygon vertices to the application, and that an external double-click
 // correspond to a secondary action of the tool, if indeed there are
 // additional actions suitable to the tool.
@@ -85,130 +85,130 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Add time constraint to double click detection
 // </todo>
 
-class WCPolyTool : public WCTool, public DTVisible {
+	class WCPolyTool : public WCTool, public DTVisible {
 
- public:
+	public:
 
-  // Constructor
-  WCPolyTool(WorldCanvas *wcanvas,
-	     Display::KeySym keysym = Display::K_Pointer_Button1,
-	     const Bool persistent = False);
+		// Constructor
+		WCPolyTool(WorldCanvas *wcanvas,
+		           Display::KeySym keysym = Display::K_Pointer_Button1,
+		           const Bool persistent = False);
 
-  // Destructor
-  virtual ~WCPolyTool();
+		// Destructor
+		virtual ~WCPolyTool();
 
-  // Switch the tool off - this calls the base class disable,
-  // and then erases the polygon if it's around
-  virtual void disable();
+		// Switch the tool off - this calls the base class disable,
+		// and then erases the polygon if it's around
+		virtual void disable();
 
-  // Functions called by the local event handling operators -
-  // these handle the drawing of the polygon.  In special 
-  // conditions, namely double clicking the key, they will
-  // pass control on to the doubleInside and doubleOutside
-  // functions
-  // <group>
-  virtual void keyPressed(const WCPositionEvent &ev);
-  virtual void keyReleased(const WCPositionEvent &ev);
-  virtual void otherKeyPressed(const WCPositionEvent &ev);
-  virtual void moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/);
-  virtual void refresh(const WCRefreshEvent &ev);
-  // </group>
+		// Functions called by the local event handling operators -
+		// these handle the drawing of the polygon.  In special
+		// conditions, namely double clicking the key, they will
+		// pass control on to the doubleInside and doubleOutside
+		// functions
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &ev);
+		virtual void keyReleased(const WCPositionEvent &ev);
+		virtual void otherKeyPressed(const WCPositionEvent &ev);
+		virtual void moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/);
+		virtual void refresh(const WCRefreshEvent &ev);
+		// </group>
 
-  // Functions special to the polygon event handling - called when
-  // there is a double click inside/outside the polygon
-  // <group>
-  virtual void doubleInside() { };
-  virtual void doubleOutside() { };
-  // </group>
+		// Functions special to the polygon event handling - called when
+		// there is a double click inside/outside the polygon
+		// <group>
+		virtual void doubleInside() { };
+		virtual void doubleOutside() { };
+		// </group>
 
-  // Functions called when a polygon is ready and not being 
-  // editted, and when this status changes
-  // <group>
-  virtual void polygonReady() { };
-  virtual void polygonNotReady() { };
-  // </group>  
+		// Functions called when a polygon is ready and not being
+		// editted, and when this status changes
+		// <group>
+		virtual void polygonReady() { };
+		virtual void polygonNotReady() { };
+		// </group>
 
-  // Retrive the polygon vertices
-  virtual void get(Vector<Int> &x, Vector<Int> &y);
+		// Retrive the polygon vertices
+		virtual void get(Vector<Int> &x, Vector<Int> &y);
 
- private:
+	private:
 
-  // do the polygons persist after double clicks?
-  Bool itsPolygonPersistent;
+		// do the polygons persist after double clicks?
+		Bool itsPolygonPersistent;
 
-  // is the polygon on screen?
-  Bool itsOnScreen;
+		// is the polygon on screen?
+		Bool itsOnScreen;
 
-  // are we actively drawing?
-  Bool itsActive;
+		// are we actively drawing?
+		Bool itsActive;
 
-  // have we moved?
-  Bool itsMoved;
+		// have we moved?
+		Bool itsMoved;
 
-  // do we have a polygon yet?
-  Bool itsPolygonExists;
+		// do we have a polygon yet?
+		Bool itsPolygonExists;
 
-  // adjustment mode
-  enum AdjustMode {
-    Off,
-    Move,
-    Handle
-  };
-  WCPolyTool::AdjustMode itsAdjustMode;
+		// adjustment mode
+		enum AdjustMode {
+		    Off,
+		    Move,
+		    Handle
+		};
+		WCPolyTool::AdjustMode itsAdjustMode;
 
-  // Number of points
-  uInt itsNPoints;
+		// Number of points
+		uInt itsNPoints;
 
-  // Polygon points
-  // ... pixels
-  Vector<Int> itsX, itsY;
-  // ... world
-  Vector<Double> itsStoredWorldX, itsStoredWorldY;
+		// Polygon points
+		// ... pixels
+		Vector<Int> itsX, itsY;
+		// ... world
+		Vector<Double> itsStoredWorldX, itsStoredWorldY;
 
-  // Point operations
-  // <group>
-  void pushPoint(uInt x1, uInt y1);
-  void popPoint();
-  // </group>
+		// Point operations
+		// <group>
+		void pushPoint(uInt x1, uInt y1);
+		void popPoint();
+		// </group>
 
-  // preserve/restore the world coordinates
-  // <group>
-  void preserve();
-  void restore();
-  // </group>
+		// preserve/restore the world coordinates
+		// <group>
+		void preserve();
+		void restore();
+		// </group>
 
-  // draw the polygon on a PixelCanvas
-  void draw(Bool drawHandles = False);
-  
-  // reset this drawer
-  void reset();
+		// draw the polygon on a PixelCanvas
+		void draw(Bool drawHandles = False);
 
-  // size in pixels of the handles
-  uInt itsHandleSize;
-  
-  // are we within the specified handle?
-  Bool inHandle(const uInt &pt, const uInt &x, const uInt &y) const;
+		// reset this drawer
+		void reset();
 
-  // which handle to modify?
-  uInt itsSelectedHandle;
+		// size in pixels of the handles
+		uInt itsHandleSize;
 
-  // are we inside the polygon?
-  Bool inPolygon(const uInt &x, const uInt &y) const;
+		// are we within the specified handle?
+		Bool inHandle(const uInt &pt, const uInt &x, const uInt &y) const;
 
-  // position that move started from
-  Int itsBaseMoveX, itsBaseMoveY;
+		// which handle to modify?
+		uInt itsSelectedHandle;
 
-  // position of last press event
-  Int itsLastPressX, itsLastPressY;
-  Int its2ndLastPressX, its2ndLastPressY;
+		// are we inside the polygon?
+		Bool inPolygon(const uInt &x, const uInt &y) const;
 
-  // position of last release event
-  Int itsLastReleaseX, itsLastReleaseY;
+		// position that move started from
+		Int itsBaseMoveX, itsBaseMoveY;
 
-  // store the times of the last two presses here:
-  Double itsLastPressTime, its2ndLastPressTime;
+		// position of last press event
+		Int itsLastPressX, itsLastPressY;
+		Int its2ndLastPressX, its2ndLastPressY;
 
-};
+		// position of last release event
+		Int itsLastReleaseX, itsLastReleaseY;
+
+		// store the times of the last two presses here:
+		Double itsLastPressTime, its2ndLastPressTime;
+
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -19,7 +19,7 @@ namespace casa {
 				}
 				fprintf( stderr, "\n" );
 			}
-				
+
 
 			/* enum states { undisplayed, inactive, highlighted, selected }; */
 			// LSDoubleDashed is only used to preserve state (it is a Display::LineStyle option)
@@ -34,45 +34,63 @@ namespace casa {
 
 			enum RegionTypes { RectRegion, PointRegion, EllipseRegion, PolyRegion, PolylineRegion, PVLineRegion, NonRegion };
 			enum RegionSelect { SelectAny, SelectRect, SelectPoint, SelectEllipse, SelectPoly, SelectPolyline, SelectPVLine };
-			inline RegionTypes select_to_region( RegionSelect select )
-						{ return select == SelectRect ? RectRegion :
-									select == SelectPoint ? PointRegion :
-									select == SelectEllipse ? EllipseRegion :
-									select == SelectPoly ? PolyRegion :
-									select == SelectPolyline ? PolylineRegion :
-									select == SelectPVLine ? PVLineRegion : NonRegion; }
+			inline RegionTypes select_to_region( RegionSelect select ) {
+				return select == SelectRect ? RectRegion :
+				       select == SelectPoint ? PointRegion :
+				       select == SelectEllipse ? EllipseRegion :
+				       select == SelectPoly ? PolyRegion :
+				       select == SelectPolyline ? PolylineRegion :
+				       select == SelectPVLine ? PVLineRegion : NonRegion;
+			}
 
 
 			enum PointLocation { PointInside = 1 << 0, PointHandle = 1 << 1, PointOutside = 1 << 2 };
 
 			enum RegionChanges { RegionChangeCreate, RegionChangeUpdate, RegionChangeReset,
-				RegionChangeFocus, RegionChangeModified, RegionChangeLabel, RegionChangeDelete,
-				RegionChangeStatsUpdate, RegionChangeNewChannel, RegionChangeSelected };
+			                     RegionChangeFocus, RegionChangeModified, RegionChangeLabel, RegionChangeDelete,
+			                     RegionChangeStatsUpdate, RegionChangeNewChannel, RegionChangeSelected
+			                   };
 
 			class PointInfo {
-				public:
-					PointInfo( double x, double y, unsigned int location, unsigned int handle=0 ) :
-							x_(x), y_(y), location_(location), handle_(handle) { }
-					PointInfo( const PointInfo &other) : x_(other.x_), y_(other.y_), location_(other.location_), handle_(other.handle_) { }
-					unsigned int handle( ) const { return handle_; }
-					unsigned int &handle( ) { return handle_; }
-					unsigned int location( ) const { return location_; }
-					unsigned int operator&( region::PointLocation mask ) const { return location_ & mask; }
-					const PointInfo &operator=( const PointInfo &other ) {
-						x_ = other.x_;
-						y_ = other.y_;
-						location_ = other.location_;
-						handle_ = other.handle_;
-						return *this;
-					}
-					double x( ) const { return x_; }
-					double y( ) const { return y_; }
-					double &x( ) { return x_; }
-					double &y( ) { return y_; }
-				private:
-					double x_, y_;
-					unsigned int location_;
-					unsigned int handle_;
+			public:
+				PointInfo( double x, double y, unsigned int location, unsigned int handle=0 ) :
+					x_(x), y_(y), location_(location), handle_(handle) { }
+				PointInfo( const PointInfo &other) : x_(other.x_), y_(other.y_), location_(other.location_), handle_(other.handle_) { }
+				unsigned int handle( ) const {
+					return handle_;
+				}
+				unsigned int &handle( ) {
+					return handle_;
+				}
+				unsigned int location( ) const {
+					return location_;
+				}
+				unsigned int operator&( region::PointLocation mask ) const {
+					return location_ & mask;
+				}
+				const PointInfo &operator=( const PointInfo &other ) {
+					x_ = other.x_;
+					y_ = other.y_;
+					location_ = other.location_;
+					handle_ = other.handle_;
+					return *this;
+				}
+				double x( ) const {
+					return x_;
+				}
+				double y( ) const {
+					return y_;
+				}
+				double &x( ) {
+					return x_;
+				}
+				double &y( ) {
+					return y_;
+				}
+			private:
+				double x_, y_;
+				unsigned int location_;
+				unsigned int handle_;
 			};
 
 		}

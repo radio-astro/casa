@@ -35,88 +35,83 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DDDHandle::DDDHandle() {
-  itsCorners.resize(4,2);
-  itsSize = MEDIUM;
-  Vector<Double> point(2);
-  point(0) = 0.0;
-  point(1) = 0.0;
-  createHandle(point);
-}
+	DDDHandle::DDDHandle() {
+		itsCorners.resize(4,2);
+		itsSize = MEDIUM;
+		Vector<Double> point(2);
+		point(0) = 0.0;
+		point(1) = 0.0;
+		createHandle(point);
+	}
 
-DDDHandle::DDDHandle(Double xpos, Double ypos, DDDHandle::Size size) {
-  itsCorners.resize(4,2);
-  itsSize = size;
-  Vector<Double> point(2);
-  point(0) = xpos;
-  point(1) = ypos;
-  createHandle(point);
-}
+	DDDHandle::DDDHandle(Double xpos, Double ypos, DDDHandle::Size size) {
+		itsCorners.resize(4,2);
+		itsSize = size;
+		Vector<Double> point(2);
+		point(0) = xpos;
+		point(1) = ypos;
+		createHandle(point);
+	}
 
-DDDHandle::~DDDHandle() {
-}
+	DDDHandle::~DDDHandle() {
+	}
 
-void DDDHandle::createHandle(const Vector<Double>& point) {
-  itsCorners(0,0) = point(0)-(Double)itsSize;
-  itsCorners(0,1) = point(1)-(Double)itsSize-1.0;
-  itsCorners(1,0) = point(0)+(Double)itsSize+1.0;
-  itsCorners(1,1) = point(1)+(Double)itsSize;
-}
+	void DDDHandle::createHandle(const Vector<Double>& point) {
+		itsCorners(0,0) = point(0)-(Double)itsSize;
+		itsCorners(0,1) = point(1)-(Double)itsSize-1.0;
+		itsCorners(1,0) = point(0)+(Double)itsSize+1.0;
+		itsCorners(1,1) = point(1)+(Double)itsSize;
+	}
 
-void DDDHandle::createHandle(Double x, Double y) {
-  itsCorners(0,0) = x-(Double)itsSize;
-  itsCorners(0,1) = y-(Double)itsSize-1.0;
-  itsCorners(1,0) = x+(Double)itsSize+1.0;
-  itsCorners(1,1) = y+(Double)itsSize;
-}
+	void DDDHandle::createHandle(Double x, Double y) {
+		itsCorners(0,0) = x-(Double)itsSize;
+		itsCorners(0,1) = y-(Double)itsSize-1.0;
+		itsCorners(1,0) = x+(Double)itsSize+1.0;
+		itsCorners(1,1) = y+(Double)itsSize;
+	}
 
-void DDDHandle::resize(const DDDHandle::Size& size) {
-  itsCorners(0,0) += (Double)(itsSize-size);
-  itsCorners(0,1) += (Double)(itsSize-size);
-  itsCorners(1,0) -= (Double)(itsSize-size);
-  itsCorners(1,1) -= (Double)(itsSize-size);
-  itsSize = size;
-}
+	void DDDHandle::resize(const DDDHandle::Size& size) {
+		itsCorners(0,0) += (Double)(itsSize-size);
+		itsCorners(0,1) += (Double)(itsSize-size);
+		itsCorners(1,0) -= (Double)(itsSize-size);
+		itsCorners(1,1) -= (Double)(itsSize-size);
+		itsSize = size;
+	}
 
-void DDDHandle::move(Double dx, Double dy) {
-  itsCorners(0,0) += dx;
-  itsCorners(0,1) += dy;
-  itsCorners(1,0) += dx;
-  itsCorners(1,1) += dy;
-}
+	void DDDHandle::move(Double dx, Double dy) {
+		itsCorners(0,0) += dx;
+		itsCorners(0,1) += dy;
+		itsCorners(1,0) += dx;
+		itsCorners(1,1) += dy;
+	}
 
-Double DDDHandle::blcX() const
-{
-  return itsCorners(0,0);
-}
-Double DDDHandle::blcY() const
-{
-  return itsCorners(0,1);
-}
-Double DDDHandle::trcX() const
-{
-  return itsCorners(1,0);
-}
-Double DDDHandle::trcY() const
-{
-  return itsCorners(1,1);
-}
-Bool DDDHandle::underCursor(Double posx, Double posy) const
-{
-  if ( (posx >= min(blcX(),trcX())) && (posx <= max(blcX(),trcX())) &&
-       (posy >= min(blcY(),trcY())) && (posy <= max(blcY(),trcY())) ) {
-    return True; 
-  } else {
-    return False;
-  }
-}
+	Double DDDHandle::blcX() const {
+		return itsCorners(0,0);
+	}
+	Double DDDHandle::blcY() const {
+		return itsCorners(0,1);
+	}
+	Double DDDHandle::trcX() const {
+		return itsCorners(1,0);
+	}
+	Double DDDHandle::trcY() const {
+		return itsCorners(1,1);
+	}
+	Bool DDDHandle::underCursor(Double posx, Double posy) const {
+		if ( (posx >= min(blcX(),trcX())) && (posx <= max(blcX(),trcX())) &&
+		        (posy >= min(blcY(),trcY())) && (posy <= max(blcY(),trcY())) ) {
+			return True;
+		} else {
+			return False;
+		}
+	}
 
 
-DDDHandle::DDDHandle(const DDDHandle &) {
-}
+	DDDHandle::DDDHandle(const DDDHandle &) {
+	}
 
-void DDDHandle::operator=(const DDDHandle &) {
-}
+	void DDDHandle::operator=(const DDDHandle &) {
+	}
 
 } //# NAMESPACE CASA - END
 

@@ -36,25 +36,29 @@
 #include <display/Display/MouseToolState.h>
 
 namespace casa {
-    namespace viewer {
+	namespace viewer {
 
-	class Region;
+		class Region;
 
-	class QtRegionState : public QFrame, protected Ui::QtRegionState {
-		Q_OBJECT
+		class QtRegionState : public QFrame, protected Ui::QtRegionState {
+			Q_OBJECT
 		public:
 			// initializing the display depends upon having signals & slots connected
 			// which cannot happen until after the ctor of QtRegionState...
 			void init( );
 
-			QtRegionState( const QString &name, 
-						   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
-						   Region *region=0, QWidget *parent=0 );
+			QtRegionState( const QString &name,
+			               QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
+			               Region *region=0, QWidget *parent=0 );
 			~QtRegionState( );
 
-			bool statisticsIsVisible( ) { return categories->tabText(categories->currentIndex( )) == "stats"; }
+			bool statisticsIsVisible( ) {
+				return categories->tabText(categories->currentIndex( )) == "stats";
+			}
 
-			Region *region( ) { return region_; }
+			Region *region( ) {
+				return region_;
+			}
 			void setRegion( Region *r );
 
 			void updateCoord( );
@@ -68,15 +72,21 @@ namespace casa {
 
 			std::string lineColor( ) const;
 			std::string centerColor( ) const;
-			int lineWidth( ) const { return line_width->value( ); }
+			int lineWidth( ) const {
+				return line_width->value( );
+			}
 			region::LineStyle lineStyle( ) const;
 
-			int markerScale( ) const { return marker_scale->value( ); }
+			int markerScale( ) const {
+				return marker_scale->value( );
+			}
 			void setMarkerScale( int v );
 
 			std::string textColor( ) const;
 			std::string textFont( ) const;
-			int textFontSize( ) const { return font_size->value( ); }
+			int textFontSize( ) const {
+				return font_size->value( );
+			}
 			int textFontStyle( ) const;
 			std::string textValue( ) const;
 			region::TextPosition textPosition( ) const;
@@ -110,7 +120,7 @@ namespace casa {
 			void getCoordinatesAndUnits( region::Coord &c, region::Units &xu, region::Units &yu, std::string &bounding_units ) const;
 			void setCoordinatesAndUnits( region::Coord c, region::Units x_units, region::Units y_units, const std::string &bounding_units );
 			void updatePosition( const QString &x, const QString &y, const QString &angle,
-								 const QString &bounding_width, const QString &bounding_height );
+			                     const QString &bounding_width, const QString &bounding_height );
 
 			// may be called after "outputRegions" signal to notify the
 			// user that no regions were selected for output...
@@ -121,25 +131,45 @@ namespace casa {
 			/* void mark( bool set=true ) { region_mark->setCheckState( set ? Qt::Checked : Qt::Unchecked ); } */
 			/* bool marked( ) const { return region_mark->checkState( ) == Qt::Checked ? true : false; } */
 			void mark( bool set=true );
-			bool marked( ) const { return region_mark->isChecked( ); }
-			bool markCenter( ) const { return (markcenter_chk->checkState()==Qt::Checked); }
-			bool skyComponent() const { return (skycomp_chk->checkState()==Qt::Checked); };
+			bool marked( ) const {
+				return region_mark->isChecked( );
+			}
+			bool markCenter( ) const {
+				return (markcenter_chk->checkState()==Qt::Checked);
+			}
+			bool skyComponent() const {
+				return (skycomp_chk->checkState()==Qt::Checked);
+			};
 			bool mark_toggle( );
 
 			void nowVisible( );
-			QPushButton *getFitButton(){return imfit_fit;};
+			QPushButton *getFitButton() {
+				return imfit_fit;
+			};
 
-			void emitRefresh( ) { emit refreshCanvas( ); }
+			void emitRefresh( ) {
+				emit refreshCanvas( );
+			}
 
 			// return the current information mode of the region state, e.g. position, statistics, etc.
 			std::string mode( ) const;
 			const std::string LINE_COLOR_CHANGE;
 
-			virtual QString HISTOGRAM_MODE( ) const { return "Histogram"; }
-			virtual QString STATISTICS_MODE( ) const { return "Statistics"; }
-			virtual QString FILE_MODE( ) const { return "File"; }
-			virtual QString FIT_MODE( ) const { return "Fit"; }
-			virtual QString PROPERTIES_MODE( ) const { return "Properties"; }
+			virtual QString HISTOGRAM_MODE( ) const {
+				return "Histogram";
+			}
+			virtual QString STATISTICS_MODE( ) const {
+				return "Statistics";
+			}
+			virtual QString FILE_MODE( ) const {
+				return "File";
+			}
+			virtual QString FIT_MODE( ) const {
+				return "Fit";
+			}
+			virtual QString PROPERTIES_MODE( ) const {
+				return "Properties";
+			}
 
 		signals:
 			void regionChange( viewer::Region *, std::string );
@@ -209,7 +239,9 @@ namespace casa {
 			std::string bounding_index_to_string( int index ) const;
 
 			friend class Region;
-			void clearRegion( ) { region_ = 0; }
+			void clearRegion( ) {
+				region_ = 0;
+			}
 
 		private:
 			void initRegionState( );
@@ -218,29 +250,33 @@ namespace casa {
 			int pre_dd_change_statistics_count;
 
 
-	};
+		};
 
-	class QtPVLineState : public QtRegionState {
-		Q_OBJECT
+		class QtPVLineState : public QtRegionState {
+			Q_OBJECT
 		public:
 			QtPVLineState( const QString &name,
-						   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
-						   Region *region=0, QWidget *parent=0 );
-			QString STATISTICS_MODE( ) const { return "pV"; }
+			               QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
+			               Region *region=0, QWidget *parent=0 );
+			QString STATISTICS_MODE( ) const {
+				return "pV";
+			}
 
-	};
+		};
 
-	class QtSliceCutState : public QtRegionState {
-				Q_OBJECT
-				public:
-					QtSliceCutState( const QString &name,
-								   QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
-								   Region *region=0, QWidget *parent=0 );
-					QString STATISTICS_MODE( ) const { return "Slice Cut"; }
+		class QtSliceCutState : public QtRegionState {
+			Q_OBJECT
+		public:
+			QtSliceCutState( const QString &name,
+			                 QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
+			                 Region *region=0, QWidget *parent=0 );
+			QString STATISTICS_MODE( ) const {
+				return "Slice Cut";
+			}
 
-			};
+		};
 
-    }
+	}
 }
 
 #endif

@@ -33,27 +33,27 @@
 
 namespace casa {
 
-class ColormapDefinition;
+	class ColormapDefinition;
 
-/**
- * Overrides QwtLinearColorMap in order to provide QwtPlot color
- * lookups based on a casa ColormapDefinition.
- */
+	/**
+	 * Overrides QwtLinearColorMap in order to provide QwtPlot color
+	 * lookups based on a casa ColormapDefinition.
+	 */
 
-class ColorHistogramScale : public QwtLinearColorMap {
-public:
-	ColorHistogramScale( bool invert );
-	String getColorMapName() const;
-	void setColorMapName( const String& colorMapName );
+	class ColorHistogramScale : public QwtLinearColorMap {
+	public:
+		ColorHistogramScale( bool invert );
+		String getColorMapName() const;
+		void setColorMapName( const String& colorMapName );
 
-	virtual ~ColorHistogramScale();
-private:
-	ColorHistogramScale( ColorHistogramScale& other );
-	ColorHistogramScale operator=(ColorHistogramScale& other);
-	String mapName;
-	bool invertMap;
-	ColormapDefinition* colorDefinition;
-};
+		virtual ~ColorHistogramScale();
+	private:
+		ColorHistogramScale( ColorHistogramScale& other );
+		ColorHistogramScale operator=(ColorHistogramScale& other);
+		String mapName;
+		bool invertMap;
+		ColormapDefinition* colorDefinition;
+	};
 
 } /* namespace casa */
 #endif /* COLORHISTOGRAMSCALE_H_ */

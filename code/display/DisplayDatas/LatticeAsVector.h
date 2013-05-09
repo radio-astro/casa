@@ -41,10 +41,10 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forwards:
-template <class T> class Array;
-class IPosition;
-class Record;
-template <class T> class LatticePADMVector;
+	template <class T> class Array;
+	class IPosition;
+	class Record;
+	template <class T> class LatticePADMVector;
 
 // <summary>Class to manage the drawing of vector maps of slices from AIPS++ Lattices</summary>
 //
@@ -63,12 +63,12 @@ template <class T> class LatticePADMVector;
 // is lattice-based.
 // </etymology>
 //
-// <synopsis> 
+// <synopsis>
 // This class should be used to display vector maps---i.e.
-// lines with an amplitude and position angle 
+// lines with an amplitude and position angle
 // for two-dimensional slices of data extracted from AIPS++ Lattices or
 // Arrays having two or more dimensions.  The data source can be Complex
-// or Float.  If Complex, then both the amplitude and position angle 
+// or Float.  If Complex, then both the amplitude and position angle
 // can be extracted.  If Float, the data represents the position angle
 // (degrees) and an amplitude of unity is assumed.
 // I
@@ -122,117 +122,121 @@ template <class T> class LatticePADMVector;
 // <todo asof="2000/12/16">
 // </todo>
 
-template <class T> class LatticeAsVector : public LatticePADisplayData<T> {
+	template <class T> class LatticeAsVector : public LatticePADisplayData<T> {
 
- public:
-  // Array-based constructors: >2d and 2d.  xAxis and yAxis specify 
-  // which axis in the array (0-based) should be mapped to X and Y
-  // on the display device: ie. 2-d slices of the data to be displayed
-  // have these axes.  mAxis specifies the "movie" axis, which is the axis
-  // along which different slices are taken.  fixedPos is an IPosition 
-  // having the same length as the number of dimensions in the array, 
-  // and indicate the fixed axis values for axes in the data that are
-  // not specified as xAxis, yAxis or mAxis.
-  // <group>
-  LatticeAsVector(Array<T>* array, const uInt xAxis,
-                  const uInt yAxis, const uInt mAxis,
-                  const IPosition fixedPos);
-  LatticeAsVector(Array<T>* array, const uInt xAxis,
-                  const uInt yAxis);
-  // </group>
+	public:
+		// Array-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// which axis in the array (0-based) should be mapped to X and Y
+		// on the display device: ie. 2-d slices of the data to be displayed
+		// have these axes.  mAxis specifies the "movie" axis, which is the axis
+		// along which different slices are taken.  fixedPos is an IPosition
+		// having the same length as the number of dimensions in the array,
+		// and indicate the fixed axis values for axes in the data that are
+		// not specified as xAxis, yAxis or mAxis.
+		// <group>
+		LatticeAsVector(Array<T>* array, const uInt xAxis,
+		                const uInt yAxis, const uInt mAxis,
+		                const IPosition fixedPos);
+		LatticeAsVector(Array<T>* array, const uInt xAxis,
+		                const uInt yAxis);
+		// </group>
 
-  // Image-based constructors: >2d and 2d.  xAxis and yAxis specify 
-  // which axis in the image (0-based) should be mapped to X and Y
-  // on the display device: ie. 2-d slices of the data to be displayed
-  // have these axes.  mAxis specifies the "movie" axis, which is the axis
-  // along which different slices are taken.  fixedPos is an IPosition 
-  // having the same length as the number of dimensions in the image, 
-  // and indicate the fixed axis values for axes in the data that are
-  // not specified as xAxis, yAxis or mAxis.
-  // <group>
-  LatticeAsVector(ImageInterface<T>* image, const uInt xAxis,
-                  const uInt yAxis, const uInt mAxis,
-                  const IPosition fixedPos);
-  LatticeAsVector(ImageInterface<T>* image, const uInt xAxis,
-                  const uInt yAxis);
-  // </group>
+		// Image-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// which axis in the image (0-based) should be mapped to X and Y
+		// on the display device: ie. 2-d slices of the data to be displayed
+		// have these axes.  mAxis specifies the "movie" axis, which is the axis
+		// along which different slices are taken.  fixedPos is an IPosition
+		// having the same length as the number of dimensions in the image,
+		// and indicate the fixed axis values for axes in the data that are
+		// not specified as xAxis, yAxis or mAxis.
+		// <group>
+		LatticeAsVector(ImageInterface<T>* image, const uInt xAxis,
+		                const uInt yAxis, const uInt mAxis,
+		                const IPosition fixedPos);
+		LatticeAsVector(ImageInterface<T>* image, const uInt xAxis,
+		                const uInt yAxis);
+		// </group>
 
-  // Destructor
-  virtual ~LatticeAsVector();
+		// Destructor
+		virtual ~LatticeAsVector();
 
-  // Create the various elements in the sequence of displayable
-  // maps.  This is called upon construction as well as whenever
-  // the display and/or movie axes are changed via a call to 
-  // PrincipalAxesDD::setAxes.
-  //virtual void setupElements(IPosition fixedPos = IPosition(2));
-  virtual void setupElements();
+		// Create the various elements in the sequence of displayable
+		// maps.  This is called upon construction as well as whenever
+		// the display and/or movie axes are changed via a call to
+		// PrincipalAxesDD::setAxes.
+		//virtual void setupElements(IPosition fixedPos = IPosition(2));
+		virtual void setupElements();
 
-  // install the default options for display
-  virtual void setDefaultOptions();
+		// install the default options for display
+		virtual void setDefaultOptions();
 
-  // Apply the options stored in the provided Record to the 
-  // LatticeAsVector object.  If the return value is True, then
-  // some options have changed, and a refresh is needed to update
-  // the display.
-  virtual Bool setOptions(Record& rec, Record& recOut);
+		// Apply the options stored in the provided Record to the
+		// LatticeAsVector object.  If the return value is True, then
+		// some options have changed, and a refresh is needed to update
+		// the display.
+		virtual Bool setOptions(Record& rec, Record& recOut);
 
-  // Retrieve the currently set options, and their types, default
-  // values, and any help text associated with each parameter.  This
-  // information can be used to generate form-type graphical user 
-  // interfaces or command-line interfaces to set the options with
-  // prompts.
-  virtual Record getOptions();
+		// Retrieve the currently set options, and their types, default
+		// values, and any help text associated with each parameter.  This
+		// information can be used to generate form-type graphical user
+		// interfaces or command-line interfaces to set the options with
+		// prompts.
+		virtual Record getOptions();
 
-  // Return the DisplayData type; used by the WorldCanvasHolder to
-  // determine the order of drawing.
-  virtual Display::DisplayDataType classType() { return Display::Vector;}
+		// Return the DisplayData type; used by the WorldCanvasHolder to
+		// determine the order of drawing.
+		virtual Display::DisplayDataType classType() {
+			return Display::Vector;
+		}
 
-  // class name
-  virtual String className() { return String("LatticeAsVector");}
-  
-  // Value of the Lattice at a position--used by showValue().  Overrides
-  // base version to take user-controlled addition to phase angle into account.
-  virtual const T dataValue(IPosition pos);
+		// class name
+		virtual String className() {
+			return String("LatticeAsVector");
+		}
 
- private:
+		// Value of the Lattice at a position--used by showValue().  Overrides
+		// base version to take user-controlled addition to phase angle into account.
+		virtual const T dataValue(IPosition pos);
 
-  Float getVariance();
+	private:
+
+		Float getVariance();
 //
-  Float itsScale;          // Amplitude scale factor 
-  Float itsLineWidth;      // Line width of vectors
-  Int itsIncX;             // Increment in X (pixels)
-  Int itsIncY;             // Increment in Y (pixels)
-  Bool itsArrow;           // Do vectors have arrow head ?
-  Float itsBarb;           // Arrow head shape
-  String itsColor;         // Color of vectors
-  Float itsRotation;       // Add extra rotation
-  String itsPhaseType;     // phase handling type (normal/polarimetric)
-  Bool itsDebias;          // Debias amplitude ?
-  Float itsVar;            // Variance of noise for debiasing
-  Unit itsUnits;           // Image brightness units
-  Bool itsConstAmp;        // SHow as constant amplitude
- //
-  friend class LatticePADMVector<T>;
+		Float itsScale;          // Amplitude scale factor
+		Float itsLineWidth;      // Line width of vectors
+		Int itsIncX;             // Increment in X (pixels)
+		Int itsIncY;             // Increment in Y (pixels)
+		Bool itsArrow;           // Do vectors have arrow head ?
+		Float itsBarb;           // Arrow head shape
+		String itsColor;         // Color of vectors
+		Float itsRotation;       // Add extra rotation
+		String itsPhaseType;     // phase handling type (normal/polarimetric)
+		Bool itsDebias;          // Debias amplitude ?
+		Float itsVar;            // Variance of noise for debiasing
+		Unit itsUnits;           // Image brightness units
+		Bool itsConstAmp;        // SHow as constant amplitude
+//
+		friend class LatticePADMVector<T>;
 
-  //# Make parent members known.
-public:
-  using LatticePADisplayData<T>::nelements;
-  using LatticePADisplayData<T>::nPixelAxes;
-  using LatticePADisplayData<T>::fixedPosition;
-  using LatticePADisplayData<T>::displayAxes;
-  using LatticePADisplayData<T>::dataShape;
-  using LatticePADisplayData<T>::getMinAndMax;
-  using LatticePADisplayData<T>::readOptionRecord;
-protected:
-  using LatticePADisplayData<T>::setNumImages;
-  using LatticePADisplayData<T>::DDelement;
-  using LatticePADisplayData<T>::datamax;
-};
+		//# Make parent members known.
+	public:
+		using LatticePADisplayData<T>::nelements;
+		using LatticePADisplayData<T>::nPixelAxes;
+		using LatticePADisplayData<T>::fixedPosition;
+		using LatticePADisplayData<T>::displayAxes;
+		using LatticePADisplayData<T>::dataShape;
+		using LatticePADisplayData<T>::getMinAndMax;
+		using LatticePADisplayData<T>::readOptionRecord;
+	protected:
+		using LatticePADisplayData<T>::setNumImages;
+		using LatticePADisplayData<T>::DDelement;
+		using LatticePADisplayData<T>::datamax;
+	};
 
 
 //# Define template specializations.
-template <> Float LatticeAsVector<Complex>::getVariance();
-template <> Float LatticeAsVector<Float>::getVariance();
+	template <> Float LatticeAsVector<Complex>::getVariance();
+	template <> Float LatticeAsVector<Float>::getVariance();
 
 
 

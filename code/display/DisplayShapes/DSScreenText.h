@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSSCREENTEXT_H
 #define TRIALDISPLAY_DSSCREENTEXT_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DSText.h>
@@ -40,43 +40,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of a relative screen pos. DSText
 // </summary>
 
-class PixelCanvas;
-class DSWorldText;
-class DSPixelText;
-class Record;
+	class PixelCanvas;
+	class DSWorldText;
+	class DSPixelText;
+	class Record;
 
-class DSScreenText : public DSText , public DisplayShapeWithCoords {
-  
-public:
-  
-  DSScreenText();
-  DSScreenText(const Record& settings, PixelCanvas* pc);
-  DSScreenText(DSPixelText& other, PixelCanvas* pc);
-  DSScreenText(DSWorldText& other);
-  
-  virtual ~DSScreenText();
+	class DSScreenText : public DSText , public DisplayShapeWithCoords {
 
-  virtual void recalculateScreenPosition();
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
+	public:
 
-  // These are so we can monitor if the text is moved and update our
-  // relative position
-  virtual void move(const Float& dX, const Float& dY);
-  virtual void setCenter(const Float& xPos, const Float& yPos);
+		DSScreenText();
+		DSScreenText(const Record& settings, PixelCanvas* pc);
+		DSScreenText(DSPixelText& other, PixelCanvas* pc);
+		DSScreenText(DSWorldText& other);
 
-  virtual Record getRawOptions() {
-    return DSText::getOptions();
-  }
-private:
-  
-  PixelCanvas* itsPC;
-  Vector<Float> itsRelativeCenter;
-  
-  virtual Vector<Float> relToScreen(const Vector<Float>& rel);
-  virtual Vector<Float> screenToRel(const Vector<Float>& screen);
-  virtual void updateRC();
-};
+		virtual ~DSScreenText();
+
+		virtual void recalculateScreenPosition();
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		// These are so we can monitor if the text is moved and update our
+		// relative position
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+
+		virtual Record getRawOptions() {
+			return DSText::getOptions();
+		}
+	private:
+
+		PixelCanvas* itsPC;
+		Vector<Float> itsRelativeCenter;
+
+		virtual Vector<Float> relToScreen(const Vector<Float>& rel);
+		virtual Vector<Float> screenToRel(const Vector<Float>& screen);
+		virtual void updateRC();
+	};
 
 } //# NAMESPACE CASA - END
 
