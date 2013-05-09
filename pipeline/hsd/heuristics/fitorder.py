@@ -75,6 +75,7 @@ class FitOrderHeuristics(api.Heuristic):
             if flag == True: poly_order = float(max(2.0, i)) + 0.5
             else: poly_order = float(max(2.0, i))
 
+        # Finally, convert to polynomial order
         #poly_order = int(poly_order * 3.0)
         #poly_order = int(poly_order + 1) * 2.0 + 0.5)
         poly_order = int(poly_order * 2.0 + 1.5)
