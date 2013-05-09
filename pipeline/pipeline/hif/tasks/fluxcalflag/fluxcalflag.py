@@ -101,7 +101,7 @@ class FluxcalFlagInputs(basetask.StandardInputs):
     def applyflags(self):
         if self._applyflags is not None:
             return self._applyflags
-        return False           
+        return True          
 
     @applyflags.setter
     def applyflags(self, value):
@@ -403,8 +403,9 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
 		        ' reason="Flux_calibrator_atmospheric_line"')
 		    flagcmd = ''
 		if flagall and flagstats[line.fieldname][line.spwid] > threshold:
-	            flagcmd = 'mode=manual field=%s intent=%s spw=%d' % \
-	                (line.fieldname, ','.join(obsmodes), line.spwid)
+		    pass
+	            #flagcmd = 'mode=manual field=%s intent=%s spw=%d' % \
+	                #(line.fieldname, ','.join(obsmodes), line.spwid)
 		else:
 	            flagcmd = 'mode=manual field=%s intent=%s spw=%d:%d~%d' % \
 	                (line.fieldname, ','.join(obsmodes), line.spwid,
