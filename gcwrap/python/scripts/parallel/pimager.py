@@ -2444,6 +2444,8 @@ class pimager():
                     shutil.rmtree(maskimage, True)
                     shutil.move('__lala.mask', maskimage)
                 else:
+                    if(maskimage==''):
+                        maskimage=imagename+'.mask'
                     self.copyimage(inimage=residual, outimage=maskimage, init=True, initval=1.0);
                 if(not contclean or (not os.path.exists(model))):
                     self.copyimage(inimage=residual, outimage=model, 
