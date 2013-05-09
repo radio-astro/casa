@@ -91,6 +91,9 @@ namespace casa {
 		// convert casa pixel coordinates to linear coordinates...
 		void pixel_to_linear( WorldCanvas *wc_, double, double, double &, double & );
 		void pixel_to_linear( WorldCanvas *wc_, double, double, double, double, double &, double &, double &, double & );
+		// convert world coordantes to screen coordinates
+		void world_to_screen( WorldCanvas *wc_, double, double, int &, int & );
+		void world_to_screen( WorldCanvas *wc_, double, double, double, double, int &, int &, int &, int & );
 
 		// convert linear coordinates to specific coordinate systems...
 		void linear_to_j2000( WorldCanvas *wc_, double, double, double &, double & );

@@ -38,6 +38,7 @@
 #include <display/QtViewer/MakeMask.qo.h>
 #include <display/QtViewer/FileBox.qo.h>
 #include <display/QtViewer/MakeRegion.qo.h>
+#include <display/region/Region.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/QtMouseToolBar.qo.h>
 #include <display/QtViewer/QtViewer.qo.h>
@@ -60,6 +61,7 @@
 #include <display/RegionShapes/RegionShapes.h>
 #include <guitools/Histogram/HistogramMain.qo.h>
 #include <display/Clean/CleanGui.qo.h>
+#include <display/DisplayErrors.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -74,8 +76,118 @@ void display_panel_gui_status::leaveEvent( QEvent * ) {
 }
 }
 
+LinkedCursorEH::LinkedCursorEH( QtDisplayPanelGui *d ) : WCRefreshEH( ), dpg_(d) {
+	ConstListIter<WorldCanvas*>& wcs = *(dpg_->displayPanel( )->panelDisplay( )->myWCLI);
+	for ( wcs.toStart( ); ! wcs.atEnd( ); ++wcs )
+		wcs.getRight( )->addRefreshEventHandler(*this);
+}
 
-bool QtDisplayPanelGui::logger_did_region_warning = false;;
+LinkedCursorEH::~LinkedCursorEH( ) {
+	ConstListIter<WorldCanvas*>& wcs = *(dpg_->displayPanel( )->panelDisplay( )->myWCLI);
+	for ( wcs.toStart( ); ! wcs.atEnd( ); ++wcs )
+		wcs.getRight( )->removeRefreshEventHandler(*this);
+}
+void LinkedCursorEH::operator()(const WCRefreshEvent & ev) {
+	WorldCanvas *wc = ev.worldCanvas( );
+	if ( wc == 0 ) return;
+	PixelCanvas *pc = wc->pixelCanvas();
+	if ( pc == 0 ) return;
+	QtPixelCanvas* qpc = dynamic_cast<QtPixelCanvas*>(pc);
+	if ( qpc == 0 ) return;
+	Vector<String> axes = wc->worldAxisNames( );
+	Vector<String> units = wc->worldAxisUnits( );
+	if ( axes.size( ) < 2 ) return;
+	for ( sources_list_t::iterator iter = cursor_sources.begin( ); iter != cursor_sources.end( ); ++iter ) {
+		Vector<String> pos_axes = iter->second.pos.csys( ).worldAxisNames( );
+		if ( pos_axes.size( ) < 2 ) continue;
+		int xindex, yindex;
+		if ( axes(0) == pos_axes(0) && axes(1) == pos_axes(1) ) { xindex = 0; yindex = 1; }
+		else if ( axes(0) == pos_axes(1) && axes(1) == pos_axes(0) ) { xindex = 1; yindex = 0; }
+		else continue;
+
+		Vector<Quantity> pvpos(iter->second.pos.coord( ));
+		if ( pvpos.size( ) < 2 ) continue;
+
+		if ( pvpos(xindex).isConform(units(0)) == false || pvpos(yindex).isConform(units(1)) == false )
+			continue;
+
+		double wx = pvpos(xindex).getValue(units(0));
+		double wy = pvpos(yindex).getValue(units(1));
+		int scr_x, scr_y;
+
+		try {
+			viewer::world_to_screen( wc, wx, wy, scr_x, scr_y );
+		} catch(...) { continue; }
+
+		if ( wc->inDrawArea(scr_x,scr_y) ) {
+			QColor saved_color = qpc->getQtPenColor( );
+			qpc->setQtPenColor(iter->second.color);
+			qpc->drawEllipse( scr_x, scr_y, 5, 5, 0.0 );
+			const int x_off=6;
+			qpc->drawLine( scr_x - x_off, scr_y - x_off, scr_x + x_off, scr_y + x_off );
+			qpc->drawLine( scr_x - x_off, scr_y + x_off, scr_x + x_off, scr_y - x_off );
+			qpc->setQtPenColor(saved_color);
+		}
+	}
+}
+
+void LinkedCursorEH::addSource( QtDisplayPanelGui *src, QColor color ) {
+	sources_list_t::iterator iter = cursor_sources.find(src);
+	if ( iter != cursor_sources.end( ) ) {
+		iter->second.color = color;
+	} else {
+		cursor_sources.insert(sources_list_t::value_type(src,cursor_info_t(color)));
+		void cursorBoundary( QtDisplayPanel::CursorBoundaryCondition );
+		void cursorPosition( viewer::Position );
+		connect( src, SIGNAL(cursorBoundary(QtDisplayPanel::CursorBoundaryCondition)), this, SLOT(boundary(QtDisplayPanel::CursorBoundaryCondition)) );
+		connect( src, SIGNAL(cursorPosition(viewer::Position)), this, SLOT(position(viewer::Position)) );
+	}
+}
+
+void LinkedCursorEH::removeSource( QtDisplayPanelGui *src ) {
+	sources_list_t::iterator iter = cursor_sources.find(src);
+	if ( iter != cursor_sources.end( ) ) {
+		// disconnect all objects from the source dpg to this object...
+		disconnect( iter->first, 0, this, 0 );
+		cursor_sources.erase(iter);
+	}
+}
+
+void LinkedCursorEH::boundary( QtDisplayPanel::CursorBoundaryCondition ) { }
+void LinkedCursorEH::position( viewer::Position position ) {
+	sources_list_t::iterator iter = cursor_sources.find(dynamic_cast<QtDisplayPanelGui*>(QObject::sender( )));
+	if ( iter != cursor_sources.end( ) ) {
+		iter->second.pos = position;
+		dpg_->displayPanel( )->refresh( );
+	}
+}
+
+bool QtDisplayPanelGui::logger_did_region_warning = false;
+
+// also in casadbus/utilities/BusAccess.cc (generate_proxy_suffix)
+static char *base62( int len ) {
+	char *suffix = 0;
+	static const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	suffix = new char[len+1];
+	for (int i = 0; i < len; ++i) {
+		suffix[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+	}
+	suffix[len] = 0;
+	return suffix;
+}
+
+std::string QtDisplayPanelGui::idGen( ) {
+	static std::list<std::string> used;
+	for ( unsigned int i=0; i < 9999; ++i ) {
+		std::string identifier(base62(2));
+		if ( std::find(used.begin(),used.end(),identifier) == used.end( ) ) {
+			used.push_back(identifier);
+			return identifier;
+		}
+	}
+	throw viewer::internal_error("QtDisplayPanelGui id overflow (?)");
+	return "";
+}
 
 QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string rcstr, const std::list<std::string> &args ) :
 										   QtPanelBase(parent), logger(LogOrigin("CASA", "Viewer")), qdm_(0),qem_(0),qdo_(0),
@@ -90,12 +202,13 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 										   animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
 										   fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),
 										   clean_tool(0), regionDock_(0),
-										   status_bar_timer(new QTimer( )), autoDDOptionsShow(True){
+										   status_bar_timer(new QTimer( )), linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(True){
 
 	// initialize the "pix" unit, et al...
 	QtWCBox::unitInit( );
 
-	setWindowTitle("Viewer Display Panel");
+	setWindowTitle(QString("Viewer Display Panel (") + QString::fromStdString(id_) + QString(")"));
+
 	use_new_regions = std::find(args.begin(),args.end(),"--oldregions") == args.end();
 	const char default_dock_location[] = "right";
 
@@ -419,6 +532,9 @@ QtDisplayPanelGui::QtDisplayPanelGui(QtViewer* v, QWidget *parent, std::string r
 	trkgDockWidget_->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum);
 	trkgWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
 	trkgWidget_->layout()->setMargin(0);
+
+	// Setup display of linked cursor tracking (from other QtDisplayPanelGui)...
+	linkedCursorHandler = new LinkedCursorEH(this);
 
 	//######################################
 	//## Animation
@@ -1465,7 +1581,7 @@ QtDisplayData* QtDisplayPanelGui::dd( ) {
 List<QtDisplayData*> QtDisplayPanelGui::unregisteredDDs(){
 	// return a list of DDs that exist but are not registered on any panel.
 	//List<QtDisplayData*> uDDs(qdds_);
-	List<QtDisplayPanelGui*> DPs(viewer()->openDPs());
+	std::list<QtDisplayPanelGui*> dps(viewer( )->openDPs());
 	List<QtDisplayData*> uDDs;
 	ListIter<QtDisplayData*> uDDsIter( uDDs );
 	DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
@@ -1475,9 +1591,8 @@ List<QtDisplayData*> QtDisplayPanelGui::unregisteredDDs(){
 		//for(ListIter<QtDisplayData*> udds(uDDs); !udds.atEnd(); ) {
 		//QtDisplayData* dd = udds.getRight();
 		Bool regd = False;
-		for(ListIter<QtDisplayPanelGui*> dps(DPs); !dps.atEnd(); dps++) {
-			QtDisplayPanelGui* dp = dps.getRight();
-			if(dp->displayPanel()->isRegistered(dd)) {
+		for ( std::list<QtDisplayPanelGui*>::iterator iter = dps.begin( ); iter != dps.end( ); ++iter ) {
+			if((*iter)->displayPanel( )->isRegistered(dd)) {
 				regd = True;
 				break;
 			}
@@ -1698,7 +1813,7 @@ void QtDisplayPanelGui::hidePrintManager() {
 
 
 void QtDisplayPanelGui::showCanvasManager() {
-	if(qcm_==0) qcm_ = new QtCanvasManager(qdp_);
+	if(qcm_==0) qcm_ = new QtCanvasManager(this);
 	qcm_->showNormal();
 	qcm_->raise();  }
 
@@ -2919,6 +3034,14 @@ void QtDisplayPanelGui::ddClose(QtDisplayData* ddRemove ) {
 
 void QtDisplayPanelGui::ddOpen( const String& path, const String& dataType, const String& displayType ){
 	createDD( path, dataType, displayType );
+}
+
+void QtDisplayPanelGui::unlinkCursorTracking( QtDisplayPanelGui *other ) {
+	linkedCursorHandler->removeSource(other);
+}
+
+void QtDisplayPanelGui::linkCursorTracking( QtDisplayPanelGui *other, QColor color ) {
+	linkedCursorHandler->addSource(other,color);
 }
 
 

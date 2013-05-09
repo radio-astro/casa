@@ -40,6 +40,7 @@ namespace casa {
 		// about positions independent of the rest of the viewer hierarchy.
 		class Position {
 		public:
+			Position( ) { }
 			// Later this could check for consistency between the coordinate and the system...
 			Position( const CoordinateSystem &cs, const Quantity &x, const Quantity &y ) : csys_(cs), coord_(2)
 									{ coord_(0) = x; coord_(1) = y; }

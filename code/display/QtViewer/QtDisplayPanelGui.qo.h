@@ -81,8 +81,32 @@ class Fit2DTool;
 class SlicerMainWindow;
 class ColorHistogram;
 class ImageManagerDialog;
+class QtDisplayPanelGui;
 
 template <class T> class ImageInterface;
+
+class LinkedCursorEH : public QObject, public WCRefreshEH {
+	Q_OBJECT
+public:
+	LinkedCursorEH( QtDisplayPanelGui *dpg );
+	virtual ~LinkedCursorEH( );
+	void operator ()(const WCRefreshEvent &ev);
+	void addSource( QtDisplayPanelGui *src, QColor color );
+	void removeSource( QtDisplayPanelGui *src );
+private slots:
+	void boundary(QtDisplayPanel::CursorBoundaryCondition);
+	void position(viewer::Position);
+private:
+	struct cursor_info_t {
+		cursor_info_t(QColor c) : color(c) { }
+		QColor color;
+		viewer::Position pos;
+	};
+	typedef std::map<QtDisplayPanelGui*,cursor_info_t> sources_list_t;
+	sources_list_t cursor_sources;
+	QtDisplayPanelGui *dpg_;
+};
+ 
 
 // <summary>
 // The main display window for the Qt version of the viewer.
@@ -302,6 +326,12 @@ class QtDisplayPanelGui : public QtPanelBase, public viewer::StatusSink {
   void disconnectHistogram();
   void ddClose( QtDisplayData* removeDD);
   void ddOpen( const String& path, const String& dataType, const String& displayType );
+
+	// retrieve the identifier string for this QtDisplayPanelGui...
+	std::string id( ) const { return id_; }
+
+	void unlinkCursorTracking(QtDisplayPanelGui*);
+	void linkCursorTracking(QtDisplayPanelGui*,QColor);
 
  signals:
 
@@ -533,7 +563,7 @@ class QtDisplayPanelGui : public QtPanelBase, public viewer::StatusSink {
   void setAnimationRate();
   int getBoundedChannel( int channelNumber ) const;
   unsigned int showdataoptionspanel_enter_count;
-  QtDisplayPanelGui() : rc(viewer::getrc()) {  }		// (not intended for use)  
+  QtDisplayPanelGui() : rc(viewer::getrc()), linkedCursorHandler(0) {  }		// (not intended for use)  
   QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
 		  QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
   void connectRegionSignals(PanelDisplay* ppd);
@@ -580,6 +610,11 @@ class QtDisplayPanelGui : public QtPanelBase, public viewer::StatusSink {
   QTimer *status_bar_timer;
   QString status_bar_state;
   QString status_bar_stylesheet;
+
+  LinkedCursorEH *linkedCursorHandler;
+
+  std::string id_;
+  static std::string idGen( );
 
  private slots:
   void loadRegions( const QString &path, const QString &type );

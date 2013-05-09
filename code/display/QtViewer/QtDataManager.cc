@@ -969,11 +969,9 @@ void QtDataManager::load_regions_clicked( ) {
 void QtDataManager::restoreToOld_() {
 	// Restore viewer state to existing panel.
 	// Use the first empty panel, or if none, the first panel.
-	List<QtDisplayPanelGui*> DPs = panel_->viewer()->openDPs();
-	ListIter<QtDisplayPanelGui*> dps(DPs);
-
-	for(dps.toStart(); !dps.atEnd(); dps++) {
-		QtDisplayPanelGui* dp = dps.getRight();
+	std::list<QtDisplayPanelGui*> dps = panel_->viewer()->openDPs();
+	for ( std::list<QtDisplayPanelGui*>::iterator iter = dps.begin( ); iter != dps.end( ); ++iter ) {
+		QtDisplayPanelGui* dp = *iter;
 		//if(dp->displayPanel()->registeredDDs().len()==0) {
 		if ( dp->displayPanel()->isEmptyRegistered()){
 			restoreTo_(dp->displayPanel());		// restore to first empty panel, if any...
@@ -981,10 +979,8 @@ void QtDataManager::restoreToOld_() {
 		}
 	}
 
-	dps.toStart();
-	if(!dps.atEnd()) {
-		QtDisplayPanelGui* dp = dps.getRight();
-		restoreTo_(dp->displayPanel());		// ...else, restore to first panel, if any...
+	if ( dps.size( ) > 0 ) {
+		restoreTo_(dps.front( )->displayPanel( ));		// ...else, restore to first panel, if any...
 		return;
 	}
 
@@ -999,14 +995,10 @@ void QtDataManager::restoreToNew_() {
 	// Create new display panel, restore viewer state to it.
 	panel_->viewer()->createDPG();
 
-	List<QtDisplayPanelGui*> DPs = panel_->viewer()->openDPs();
-	if(DPs.len()>0) {				// (Safety: should be True)
-		ListIter<QtDisplayPanelGui*> dps(DPs);
-		dps.toEnd();
-		dps--;					// Newly-created dp should be
-		QtDisplayPanelGui* dp = dps.getRight();	// the last one on the list.
-
-		restoreTo_(dp->displayPanel());
+	std::list<QtDisplayPanelGui*> dps = panel_->viewer()->openDPs();
+	if ( dps.size( ) > 0 ) {
+		// Newly-created dp should be the last one on the list...
+		restoreTo_( dps.back( )->displayPanel());
 	}
 }
 

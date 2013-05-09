@@ -96,37 +96,31 @@ QtViewerBase::~QtViewerBase() { }
   
 
 void QtViewerBase::dpCreated( QtDisplayPanelGui *newDP, QtDisplayPanel *panel ) {
-  // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-  //    In the future (call sequence) newDP->displayPanel() will equal
-  //    panel, but because this function is called while constructing
-  //    newDP, both newDP and the panel must be passed in...
-  // --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-  // Only to be used by QtDisplayPanels, to inform this class of
-  // their creation.
-  ListIter<QtDisplayPanelGui*> qdps(qdps_);
-  qdps.toEnd();
-  qdps.addRight(newDP);				   // Put it on the list.
-  connect( newDP, SIGNAL(destroyed(QObject*)),
-                  SLOT(dpDestroyed_(QObject*)) );
-	   // (In case it's ever deleted).
-  connect( panel, SIGNAL(dpHidden(QtDisplayPanel*)),
-                  SLOT(dpHidden_(QtDisplayPanel*)), Qt::QueuedConnection);  }
-	   // (This will happen if the newDP is closed, even if not deleted.
-	   // Queued connection may not be necessary, but may be cleaner:
-	   // dpHidden_() might lead to viewer exit).
-
+	// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+	//    In the future (call sequence) newDP->displayPanel() will equal
+	//    panel, but because this function is called while constructing
+	//    newDP, both newDP and the panel must be passed in...
+	// --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+	// Only to be used by QtDisplayPanels, to inform this class of
+	// their creation.
+	qdps_.push_back(newDP);
+	connect( newDP, SIGNAL(destroyed(QObject*)), SLOT(dpDestroyed_(QObject*)) );
+	// (In case it's ever deleted).
+	connect( panel, SIGNAL(dpHidden(QtDisplayPanel*)), SLOT(dpHidden_(QtDisplayPanel*)), Qt::QueuedConnection );
+	// (This will happen if the newDP is closed, even if not deleted.
+	// Queued connection may not be necessary, but may be cleaner:
+	// dpHidden_() might lead to viewer exit).
+}
  
 
 void QtViewerBase::dpDestroyed_(QObject* dying) {
-  // Connected by this class, (only) to QDPs' destroyed() signals
-  // (for maintenance of the list of existing QDPs).
-  // (destroyed() is emitted just _before_ the QDP is deleted).
-  QtDisplayPanelGui* dyingDP = static_cast<QtDisplayPanelGui*>(dying);
-  for(ListIter<QtDisplayPanelGui*> qdps(qdps_); !qdps.atEnd(); ) {
-    if(dyingDP != qdps.getRight()) qdps++;
-    else qdps.removeRight();  }  }	 // Remove from the list.
+	// Connected by this class, (only) to QDPs' destroyed() signals
+	// (for maintenance of the list of existing QDPs).
+	// (destroyed() is emitted just _before_ the QDP is deleted).
+	std::list<QtDisplayPanelGui*>::iterator iter = std::find(qdps_.begin(),qdps_.end(),static_cast<QtDisplayPanelGui*>(dying));
+	if ( iter != qdps_.end( ) ) qdps_.erase(iter);
+}
 
-        
 
 void QtViewerBase::dpHidden_(QtDisplayPanel* /*qdp*/) {
   // Connected by this class, (only) to QDPs' dpHidden() signals
@@ -189,43 +183,44 @@ void QtViewerBase::dpHidden_(QtDisplayPanel* /*qdp*/) {
 }
     
 
-List<QtDisplayPanelGui*> QtViewerBase::openDPs() {
-  // The list of QtDisplayPanels that are not closed.
-  List<QtDisplayPanelGui*> opendps(qdps_);
-  for(ListIter<QtDisplayPanelGui*> opndps(opendps); !opndps.atEnd(); ) {
-    if(opndps.getRight()->isVisible()) opndps++;
-    else opndps.removeRight();  }
-  
-  return opendps;  }
-  
+std::list<QtDisplayPanelGui*> QtViewerBase::openDPs() {
+	std::list<QtDisplayPanelGui*> result;
+	// The list of QtDisplayPanels that are not closed.
+	for ( std::list<QtDisplayPanelGui*>::iterator iter = qdps_.begin( ); iter != qdps_.end( ); ++iter ) {
+		if ( (*iter)->isVisible( ) ) result.push_back(*iter);
+	}
+	return result;
+}
 
   
 Int QtViewerBase::nOpenDPs() {
-  // The number of open QtDisplayPanels.
-  Int nOpen=0;
-  for(ListIter<QtDisplayPanelGui*> qdps(qdps_); !qdps.atEnd(); qdps++) {
-    if(qdps.getRight()->isVisible()) nOpen++;  }
-  
-  return nOpen;  }
-
+	Int result = 0;
+	// The number of open QtDisplayPanels.
+	for ( std::list<QtDisplayPanelGui*>::iterator iter = qdps_.begin( ); iter != qdps_.end( ); ++iter ) {
+		if ( (*iter)->isVisible( ) ) ++result;
+	}
+	return result;
+}
 
   
 void QtViewerBase::hold() {
-  // Hold of (canvas-draw) refresh of all QDPs.  (NB: does not
-  // concern enabling of Qt Widgets).  Call to hold() must be matched to
-  // later call of release().  It is sometimes efficient to wait until
-  // several operations are complete and then redraw everything just once.
-  
-  for(ListIter<QtDisplayPanelGui*> qdps(qdps_); !qdps.atEnd(); qdps++) {
-    qdps.getRight()->displayPanel()->hold();  }  }
+	// Hold of (canvas-draw) refresh of all QDPs.  (NB: does not
+	// concern enabling of Qt Widgets).  Call to hold() must be matched to
+	// later call of release().  It is sometimes efficient to wait until
+	// several operations are complete and then redraw everything just once.
+	for ( std::list<QtDisplayPanelGui*>::iterator iter = qdps_.begin( ); iter != qdps_.end( ); ++iter ) {
+		(*iter)->displayPanel( )->hold( );
+	}
+}
 
-    
-    
+
 void QtViewerBase::release() {
-  for(ListIter<QtDisplayPanelGui*> qdps(qdps_); !qdps.atEnd(); qdps++) {
-    qdps.getRight()->displayPanel()->release();  }  }
+	for ( std::list<QtDisplayPanelGui*>::iterator iter = qdps_.begin( ); iter != qdps_.end( ); ++iter ) {
+		(*iter)->displayPanel( )->release( );
+	}
+}
 
-  
+
 String QtViewerBase::fileType(const String pathname) {
     // (static) function to aid typing files of interest to the viewer.
     // Moved from QtDataManager to be available for non-gui use.

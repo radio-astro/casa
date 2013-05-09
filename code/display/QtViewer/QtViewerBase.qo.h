@@ -77,7 +77,7 @@ class QtViewerBase : public QObject {
   virtual const QtMouseToolState* mouseBtns() const { return &msbtns_;  }
   
   // The list of QtDisplayPanels that are not closed.
-  virtual List<QtDisplayPanelGui*> openDPs();
+  virtual std::list<QtDisplayPanelGui*> openDPs();
   
   // The number of open QtDisplayPanels.  (More efficient than the
   // equivalent openDPs().len(), if the number is all that's needed).
@@ -185,7 +185,7 @@ class QtViewerBase : public QObject {
   // revive (show) a 'closed' QDP.  The publicly-available list openDPs()
   // shows only those which are not closed.  Minimized or covered
   // DPs are still considered 'open'.
-  List<QtDisplayPanelGui*> qdps_;
+  std::list<QtDisplayPanelGui*> qdps_;
   
   
   // This should be the only place this object is ever created....

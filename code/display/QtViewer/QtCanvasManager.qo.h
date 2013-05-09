@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2005,2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -29,18 +29,23 @@
 #include <casa/aips.h>
 #include <display/QtAutoGui/QtAutoGui.qo.h>
 #include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <display/QtViewer/QtCanvasManager.ui.h>
+#include <display/QtViewer/CursorLink.ui.h>
 #include <casa/Containers/Record.h>
 
 #include <graphics/X11/X_enter.h>
-#  include <QDir>
-#  include <QColor>
-#  include <QHash>
+/* #  include <QDir> */
+/* #  include <QColor> */
+/* #  include <QHash> */
+#include <QFrame>
+#include <QSpacerItem>
 #include <graphics/X11/X_exit.h>
 
  
 namespace casa { 
 
 class QtViewer;
+class QtCanvasManager;
 
 // <summary>
 // Options widget for single DisplayPanel.
@@ -49,23 +54,57 @@ class QtViewer;
 // <synopsis>
 // </synopsis>
 
-class QtCanvasManager : public QtAutoGui {
-  Q_OBJECT	
- public:
-  QtCanvasManager(QtDisplayPanel* qdp) : QtAutoGui(), qdp_(qdp) {
-    loadRecord(qdp_->getOptions());
-    connect( this, SIGNAL(setOptions(Record)),
-             qdp,   SLOT(setOptions(Record)) );
-    connect( qdp, SIGNAL(optionsChanged(Record)),
-                    SLOT(changeOptions(Record)) );  
-    setWindowTitle("Viewer Canvas Manager");
-  }
-  ~QtCanvasManager() {  }
+class QtCanvasManagerOptions : public QtAutoGui {
+	Q_OBJECT	
+public:
+	QtCanvasManagerOptions( QtDisplayPanel* qdp, QWidget *parent ) : QtAutoGui(parent) {
+		loadRecord(qdp->getOptions());
+		connect( this, SIGNAL(setOptions(Record)), qdp, SLOT(setOptions(Record)) );
+		connect( qdp, SIGNAL(optionsChanged(Record)), SLOT(changeOptions(Record)) );  
+	}
+	~QtCanvasManagerOptions() {  }
+};
 
-   
- protected:
+ class CursorLink : public QFrame, protected Ui::CursorLink {
+	 Q_OBJECT
+ public:
+	 CursorLink( const std::string &name, QtCanvasManager *mgr, QWidget *parent=0 );
+	 std::string name( ) const { return name_; }
+	 bool isChecked( ) const { return link->checkState( ) == Qt::Unchecked ? false : true; }
+	 void setChecked( bool val ) { link->setCheckState( val ? Qt::Checked : Qt::Unchecked ); }
+	 void setText( const std::string &txt ) { link->setText(QString::fromStdString(txt)); }
+	 void setDPG( QtDisplayPanelGui *g ) { dpg = g; }
+	 QtDisplayPanelGui *getDPG( ) { return dpg; }
+	 void setColor( QColor c );
+
+ private slots:
+	 void setColor( );
+	 void linkChange(int);
+
+ private:
+	 QtCanvasManager *mgr;
+	 QtDisplayPanelGui *dpg;
+	 std::string name_;
+	 QColor current_color;
+ };
+
+class QtCanvasManager : public QDialog, protected Ui::QtCanvasManager {
+	Q_OBJECT	
+public:
+
+	QtCanvasManager(QtDisplayPanelGui *dpg);
+	~QtCanvasManager( ) { }
+	QtDisplayPanelGui *dpg( ) { return dpg_; }
+
+protected:
   
-  QtDisplayPanel* qdp_;
+	void showEvent( QShowEvent* );
+	QtCanvasManagerOptions *options;
+	QtDisplayPanelGui *dpg_;
+ private:
+	QVBoxLayout *layout;
+	QSpacerItem *spacer;
+	std::list<CursorLink*> link_widgets;
   
 };
 

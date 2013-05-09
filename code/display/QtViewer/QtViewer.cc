@@ -115,7 +115,7 @@ QtDisplayPanelGui *QtViewer::createDPG() {
 void QtViewer::dpgDestroyed( QObject *o ) {
 	QtDisplayPanelGui *dpg = dynamic_cast<QtDisplayPanelGui*>(o);
 	if ( o != 0 ) {
-		panel_list_t::iterator iter = std::find(panels.begin( ), panels.end( ), o );
+		panel_list_t::iterator iter = std::find(panels.begin( ), panels.end( ), dpg );
 		if ( iter != panels.end( ) ) panels.erase(iter);
 	}
 }

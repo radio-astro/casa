@@ -2070,6 +2070,20 @@ namespace casa {
 			world_to_linear( wc, world_x1, world_y1, lin_x2, lin_y2 );
 		}
 
+
+		void world_to_screen( WorldCanvas *wc, double world_x1, double world_y1, int &screen_x1, int &screen_y1  ) {
+			double lin_x1, lin_y1;
+			world_to_linear( wc, world_x1, world_y1, lin_x1, lin_y1 );
+			linear_to_screen( wc, lin_x1, lin_y1, screen_x1, screen_y1 );
+		}
+
+		void world_to_screen( WorldCanvas *wc, double world_x1, double world_y1, double world_x2, double world_y2,
+							  int &screen_x1, int &screen_y1, int &screen_x2, int &screen_y2 ) {
+			double lin_x1, lin_y1, lin_x2, lin_y2;
+			world_to_linear( wc, world_x1, world_y1, world_x2, world_y2, lin_x1, lin_y1, lin_x2, lin_y2 );
+			linear_to_screen( wc, lin_x1, lin_y1, lin_x2, lin_y2, screen_x1, screen_y1, screen_x2, screen_y2 );
+		}
+
 		MDirection::Types get_coordinate_type( const CoordinateSystem &cs ) {
 			for ( uInt i=0; i < cs.nCoordinates(); ++i )
 				if ( cs.type(i) == Coordinate::DIRECTION )

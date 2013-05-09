@@ -38,6 +38,7 @@
 namespace casa {
     namespace dbus {
 
+	// also in display/QtViewer/QtDisplayPanelGui.cc (base62)
 	static char *generate_proxy_suffix( int len ) {
 	    char *suffix = 0;
 	    static const char alphanum[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";

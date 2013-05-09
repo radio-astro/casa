@@ -751,8 +751,10 @@ class QtPixelCanvas : public QWidget, public PixelCanvas {
   virtual void setArcMode(Display::ArcMode mode);
   // </group>
   
-  // This method is NOT in PixelCanvas.
+  // These method is NOT in PixelCanvas.
   virtual void setQtLineStyle(Qt::PenStyle style);
+  virtual void setQtPenColor( QColor c ) { itsPen.setColor(c); }
+  virtual QColor getQtPenColor( ) const { return itsPen.color( ); }
 
   // Get Graphics Attributes
   // <group>
