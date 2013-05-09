@@ -6,6 +6,8 @@ import math
 import numpy
 import time
 
+from taskinit import gentools
+
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.jobrequest as jobrequest
@@ -16,7 +18,7 @@ from .. import common
 from .simplegrid import SimpleGridding
 from .detection import DetectLine
 from .validation import ValidateLine
-from .fitting import Fitting
+from .fitting import FittingFactory
 
 LOG = infrastructure.get_logger(__name__)
 logging.set_logging_level('trace')
@@ -144,13 +146,17 @@ class SDBaselineWorker(object):
 
 
         # fit order determination and fitting
-        fitter = Fitting(fitfunc)
+        fitter_cls = FittingFactory.get_fitting_class(fitfunc)
+        fitter = fitter_cls()
+        
         # loop over file
         filenames = datatable.getkeyword('FILENAMES')
         for idx in file_index:
             #filename = os.path.join(context.output_dir, filenames[idx])
             filename = os.path.join(work_dir, filenames[idx])
             filename_out = filename.rstrip('/') + '_work'
+            bltable_name = filename.rstrip('/') + '.product.tbl'
+            createExportTable(bltable_name)
             with casatools.TableReader(filename) as tb:
                 copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
                 copied.close()
@@ -161,8 +167,115 @@ class SDBaselineWorker(object):
                 pol_indices = numpy.where(polnos.take(ant_indices)==pol)[0]
                 pol_indices = ant_indices.take(pol_indices)
                 LOG.info('pol_indices=%s'%(list(pol_indices)))
-                fitter.execute(datatable, filename, filename_out, time_table, pol_indices, nchan, edge, fitorder)
+                fitter.execute(datatable, filename, filename_out, bltable_name, time_table, pol_indices, nchan, edge, fitorder)
         
         return lines
         
+def createExportTable(table_name):
+    table = gentools(['tb'])[0]
+
+    desc = dict()
+
+    desc['Row'] = {
+        'comment': 'Row number',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer'
+        }
+
+    desc['Ant'] = {
+        'comment': 'Antenna IDr',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer'
+        }
+
+    desc['FitFunc'] = {
+        'comment': 'Baseline Fitting Function',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'string'
+        }
+
+    desc['SummaryFlag'] = {
+        'comment': 'Summary Flag applied',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'boolean'
+        }
+
+    desc['Sections'] = {
+        'comment': 'Spectral baseline section coefficients',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer',
+        'ndim': 2
+        }
+
+    desc['LineMask'] = {
+        'comment': 'Line detected region',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer',
+        'ndim': 2
+        }
+
+    desc['SectionCoefficients'] = {
+        'comment': 'Spectral baseline section coefficients',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'double',
+        'ndim': 2
+        }
+
+    desc['Statistics'] = {
+        'comment': 'Spectral baseline RMS',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'double',
+        'ndim': 1
+        }
+
+    desc['StatisticsFlags'] = {
+        'comment': 'Statistics Flags by category',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'boolean',
+        'ndim': 1
+        }
+
+    desc['PermanentFlags'] = {
+        'comment': 'Permanent Flags by category',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'boolean',
+        'ndim': 1
+        }
+
+    table.create(table_name, tabledesc=desc)
+    table.close()
+    #return table
+
+
+
 
