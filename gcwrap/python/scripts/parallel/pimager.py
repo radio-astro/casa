@@ -43,6 +43,7 @@ class pimager():
         self.observation=''
         self.pbcorr=False
         self.minpb=0.2
+        
         self.cyclefactor=1.5
         self.c=cluster
         if self.c == '' :
@@ -1217,7 +1218,7 @@ class pimager():
                     c.push(wtgrid=sumweight)
                     c.pgc('a.setweightgrid(msname="'+msname+'", weight=wtgrid)')
             newthresh=threshold
-            if(majorcycles <= 1):
+            if(majorcycles < 1):
                 ia.open(residual)
                 residstat=ia.statistics(verbose=False, list=False)
                 maxresid=np.max(residstat['max'], np.fabs(residstat['min']))
@@ -2297,10 +2298,10 @@ class pimager():
                      pixsize=['1arcsec', '1arcsec'], phasecenter='', 
                      field='', spw='*', freqrange=['', ''],  stokes='I', ftmachine='ft', wprojplanes=128, facets=1, 
                      hostnames='', 
-                     numcpuperhost=1, majorcycles=1, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[], weight='natural', robust=0.0, npixels=0, pbcorr=False, 
+                     numcpuperhost=1, majorcycles=1, cyclefactor=1.5, niter=1000, gain=0.1, threshold='0.0mJy', alg='clark', scales=[], weight='natural', robust=0.0, npixels=0, pbcorr=False, 
                      contclean=False, visinmem=False, maskimage='lala.mask',  numthreads=1,
-                     painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
-                     epjtablename=''):
+                     painc=360., pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir', uvtaper=False, outertaper=[], timerange='', uvrange='', baselines='', scan='', observation='',  minpb=0.2, savemodel=False,epjtablename='',mterm=True,wbawp=True,aterm=True,psterm=True,conjbeams=True 
+):
         """
         msnames=  list containing measurementset names
         imagename = image
@@ -2342,23 +2343,21 @@ class pimager():
             niterpercycle=niter
             majorcycles=1
         num_ext_procs=0
-        self.spw=spw
-        self.field=field
-        self.phasecenter=phasecenter
-        self.stokes=stokes
-        self.ftmachine=ftmachine
-        self.wprojplanes=wprojplanes
-        self.facets=facets
-        self.imsize=imsize
-        self.cell=pixsize
-        self.weight=weight
-        self.robust=robust
-        self.npixels=npixels
-        self.visinmem=visinmem
-        self.gain=gain
-        self.numthreads=numthreads
-        self.pbcorr=pbcorr
+        self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
+                               stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
+                               facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
+                               robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
+                               outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
+                               baselines=baselines, scan=scan, observation=observation, 
+                               visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, numthreads=numthreads, 
+                               cyclefactor=cyclefactor,
+                               painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename,
+                               mterm=mterm,wbawp=wbawp,aterm=aterm,psterm=psterm,conjbeams=conjbeams)
         self.setupcluster(hostnames,numcpuperhost, num_ext_procs)
+        owd=os.getcwd()
+        self.c.pgc('import os')
+        self.c.pgc('os.chdir("'+owd+'")')
+
         model=imagename+'.model' if (len(imagename) != 0) else 'elmodel'
         if(not contclean):
             print "Removing ", model, 'and', imagename+'.image'
@@ -2383,7 +2382,7 @@ class pimager():
         ## the above will return the freqmin, freqmax in the data if freqrange is default
         freq=(freqrange[0]+freqrange[1])/2.0
         band=abs(freqrange[1]-freqrange[0])
-        self.makeconttempimages(imagename, self.numcpu, contclean)
+        #pdb.set_trace()
         def gen_comm(msnames, field, freq, band, imname):
             spwsel=[]
             startsel=[]
@@ -2400,7 +2399,7 @@ class pimager():
         if(numms < self.numcpu):
             self.numcpu=numms
         out=range(self.numcpu)
-        
+        self.makeconttempimages(imagename, self.numcpu, contclean)
         for k in range(self.numcpu):
             if(not self.engineinfo.has_key(k)):
                 self.engineinfo[k]={}
@@ -2420,7 +2419,7 @@ class pimager():
                 runcomm=gen_comm(msnames=self.engineinfo[k]['msnames'], 
                                  field=self.field, freq=freq, band=band, 
                                  imname=self.engineinfo[k]['imname'])
-                #print 'cpu', k,  'command is ', runcomm
+                print 'cpu', k,  'command is ', runcomm
                 out[k]=self.c.odo(runcomm,k)
             over=False
             while (not over):
@@ -2440,7 +2439,7 @@ class pimager():
             self.averimages(residual, residuals)
             if(maj==0):
                 self.averimages(psf, psfs)
-                if(os.path.exists(maskimage)):
+                if((maskimage != '') and (os.path.exists(maskimage))):
                     self.regridimage(outimage='__lala.mask', inimage=maskimage, templateimage=residual);
                     shutil.rmtree(maskimage, True)
                     shutil.move('__lala.mask', maskimage)
