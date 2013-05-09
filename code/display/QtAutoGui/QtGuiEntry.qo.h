@@ -372,6 +372,8 @@ public slots:
    void setPaste();   
 signals:
    void itemValueChanged(QString name, QString value, int action, bool apply);
+protected:
+   void leaveEvent(QEvent*);
 private:
    QString ptype;
    QString itemName;  

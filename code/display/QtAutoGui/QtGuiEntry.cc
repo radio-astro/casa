@@ -419,8 +419,12 @@ void QtLineEditor::reSet(QString value) {
   validate(value);  }
 
   
-void QtLineEditor::editingFinished() { validateAndEmit(lineEdit->text());  }
+void QtLineEditor::editingFinished() { validateAndEmit(lineEdit->text()); }
 
+void QtLineEditor::leaveEvent( QEvent *ev ) {
+	QWidget::leaveEvent(ev);
+	validateAndEmit(lineEdit->text( ));
+}
 
 void QtLineEditor::validateAndEmit(QString value) {
   // Validates value and sets onto Widget; emits only if value is valid.
