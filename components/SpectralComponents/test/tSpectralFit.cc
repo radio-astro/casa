@@ -115,8 +115,10 @@ int main()
     };
     {
       SpectralEstimate est(rms, cutoff, minsig);
+      cout << "*** n " << n << endl;
       Vector<Float> deriv(n);
       const SpectralList &slist = est.estimate(y, &deriv);
+      cout << "*** y " << y << endl;
       r = slist.nelements();
       cout << "Found (using rms, cutoff, minsig, q): (" <<
 	rms << ", " << cutoff << ", " << minsig << ", " << q << ") " <<
