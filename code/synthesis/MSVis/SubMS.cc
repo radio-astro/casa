@@ -4797,8 +4797,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                           - oldRESOLUTION[i] / 2.0).get(unit).getValue(); // eliminate possible offsets
 	  }
 	  transREF_FREQUENCY = freqTrans(oldREF_FREQUENCY);
-	  transTOTAL_BANDWIDTH = transNewXin[oldNUM_CHAN-1] +
-            transCHAN_WIDTH[oldNUM_CHAN-1]/2. - transNewXin[0] + transCHAN_WIDTH[0]/2.;
+	  transTOTAL_BANDWIDTH = fabs(transNewXin[oldNUM_CHAN-1] - transNewXin[0]) +
+            fabs(transCHAN_WIDTH[oldNUM_CHAN-1])/2.  + fabs(transCHAN_WIDTH[0])/2.;
 
 	  if(radVelSignificant){ // correct in addition for radial velocity
 	    transNewXin  = radVelCorr.shiftFrequency(transNewXin);
@@ -4997,8 +4997,9 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	    MVFrequency mvf(newXout[0]);
 	    newREF_FREQUENCY.set(mvf);
 	    
-	    // trivial definition of the bandwidth
-	    newTOTAL_BANDWIDTH = newChanHiBound[newNUM_CHAN-1]-newChanLoBound[0];
+	    // trivial definition of the bandwidth (taking into account possibility of descending freqs)
+	    newTOTAL_BANDWIDTH = max(newChanHiBound[newNUM_CHAN-1], newChanHiBound[0])
+	      -min(newChanLoBound[0],newChanLoBound[newNUM_CHAN-1]);
 
 // 	    // effective bandwidth needs to be interpolated in quadrature
 // 	    Vector<Double> newEffBWSquared(newNUM_CHAN);
@@ -5745,8 +5746,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	newCHAN_WIDTH.assign(Vector<Double>(mergedChanWidth));
 	newEFFECTIVE_BW.assign(Vector<Double>(mergedEffBW));
 	newREF_FREQUENCY = newCHAN_FREQ(0); 
-	newTOTAL_BANDWIDTH = newCHAN_FREQ(newNUM_CHAN-1) + newCHAN_WIDTH(newNUM_CHAN-1)/2.
-	  - newCHAN_FREQ(0) + newCHAN_WIDTH(0)/2.;
+	newTOTAL_BANDWIDTH = fabs(newCHAN_FREQ(newNUM_CHAN-1) - newCHAN_FREQ(0))
+	  + fabs(newCHAN_WIDTH(newNUM_CHAN-1)/2.) + fabs(newCHAN_WIDTH(0)/2.);
 	newRESOLUTION.assign(Vector<Double>(mergedRes));
 	averageN = mergedAverageN;
 	averageWhichSPW = mergedAverageWhichSPW;
