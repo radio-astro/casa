@@ -93,7 +93,14 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         Setting the value to None restores the default pipeline value.
         """
         if value is None:
-            value = 2
+	    if not self.ms:
+	        value = 4
+	    else:
+	        nant = len(self.ms.antennas)
+		if nant < 5:
+	            value = max (2, nant - 1)
+		else:
+                    value = 4
         self._minblperant = value
 
     @property
