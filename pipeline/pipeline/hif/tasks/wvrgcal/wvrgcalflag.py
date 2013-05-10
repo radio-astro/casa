@@ -326,28 +326,30 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
     def analyse(self, result):
         inputs = self.inputs
 
-        # copy the views for the flag_intent from the QA2 section of the
-        # wvrgcal result
-        ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
-        fields = ms.fields
-        intent_list = self.inputs.flag_intent.split(',')
-        intent_fields = set()
-        for intent in intent_list:
-            re_intent = intent.replace('*', '.*')
-            intent_fields.update(
-              [fld.name for fld in fields if
-              re.search(pattern=re_intent, string=str(fld.intents))])
-        intent_fields = list(intent_fields)
+        # if there is a valid wvrgcal result
+        if result.final:
+            # copy the views for the flag_intent from the QA2 section of the
+            # wvrgcal result
+            ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
+            fields = ms.fields
+            intent_list = self.inputs.flag_intent.split(',')
+            intent_fields = set()
+            for intent in intent_list:
+                re_intent = intent.replace('*', '.*')
+                intent_fields.update(
+                  [fld.name for fld in fields if
+                  re.search(pattern=re_intent, string=str(fld.intents))])
+            intent_fields = list(intent_fields)
 
-        for description in result.qa2.descriptions():
-            add = False
-            for intent_field in intent_fields:
-                if 'Field:%s' % intent_field in description:
-                    add = True
-                    break
+            for description in result.qa2.descriptions():
+                add = False
+                for intent_field in intent_fields:
+                    if 'Field:%s' % intent_field in description:
+                        add = True
+                        break
                 
-            if add:
-                self.result.addview(description, result.qa2.last(description))
+                if add:
+                    self.result.addview(description, result.qa2.last(description))
  
         # copy over other info from wvrgcal result
         self.result.final = result.final 
