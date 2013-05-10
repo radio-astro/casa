@@ -31,9 +31,6 @@ class FittingBase(object):
     MaxPolynomialOrder = 'none' # 'none', 0, 1, 2,...
     PolynomialOrder = 'automatic' # 'automatic', 0, 1, 2, ...
     ClipCycle = 1
-    MaxFreq = 9
-    MinChannels = 512
-    MaxFragmentation = 3
     
     def execute(self, datatable, filename, filename_out, bltable_name, time_table, index_list, nchan, edge, fitorder='automatic'):
         """
@@ -59,7 +56,7 @@ class FittingBase(object):
         os.system('rm -rf %s'%(blfile))
 
         # dummy scantable for baseline subtraction
-        dummy_scan = utils._create_dummy_scan(filename, datatable, index_list)
+        dummy_scan = utils.create_dummy_scan(filename, datatable, index_list)
         LOG.info('dummy_scan.nrow()=%s'%(dummy_scan.nrow()))
         LOG.info('nchan for dummy_scan=%s'%(len(dummy_scan._getspectrum())))
 
@@ -89,7 +86,8 @@ class FittingBase(object):
             LOG.info('group %d: order=%s'%(y,polyorder))
 
             # calculate fragmentation
-            (fragment, nwindow, win_polyorder) = self._calc_fragmentation(polyorder, nchan-sum(_edge), 0)
+            fragmentation = heuristics.FragmentationHeuristics()
+            (fragment, nwindow, win_polyorder) = fragmentation(polyorder, nchan, edge)
 
             nrow = len(rows)
             LOG.info('nrow = %s'%(nrow))
@@ -106,11 +104,8 @@ class FittingBase(object):
                 if nochange > 0:
                     continue
 
-                # set spectral data to dummy scantable
+                # data to be fitted
                 sp = spectra[i]
-                #sp[:_edge[0]] = 0
-                #sp[(nchan-_edge[1]):] = 0
-                #dummy_scan._setspectrum(sp)
 
                 # mask lines
                 maxwidth = 1
@@ -171,23 +166,11 @@ class FittingBase(object):
 
         LOG.debug('nchan_without_edge, num_mask, diff=%s, %s, %s'%(nchan_without_edge, num_mask, num_nomask))
 
-        # 2013/05/09 TN
-        # _calc_fragmentation is performed outside the loop over rows
-        #(fragment, nwindow, win_polyorder) = self._calc_fragmentation(polyorder, num_nomask, 0)
-
         outdata = self._fit(data, scan, polyorder, nchan, mask, edge, nchan_without_edge, num_mask, fragment, nwindow, win_polyorder, masklist, blfile)
         outdata[:edge[0]] = 0.0
         outdata[nchan-edge[1]:] = 0.0
 
         return (outdata, num_mask)
-
-    def _calc_fragmentation(self, polyorder, nchan, modification=0):
-        polyorder += modification
-        fragment = int(min(polyorder / self.MaxFreq + 1, max(nchan / self.MinChannels, 1)))
-        fragment = min(fragment, self.MaxFragmentation)
-        nwindow = fragment * 2 - 1
-        win_polyorder = min(int(polyorder / fragment) + fragment - 1, self.MaxFreq)
-        return (fragment, nwindow, win_polyorder)
 
 
 class CubicSplineFitting(FittingBase):
