@@ -269,6 +269,20 @@ bool PlotMSOverPlot::parametersHaveChanged_(const PlotMSWatchedParameters &p,
     itsTCLParams_.updateDisplay = updateFlag & PMS_PP::UPDATE_DISPLAY;
     itsTCLParams_.endCacheLog = false;
 
+    // Clear selection if axes change
+    //if(updateFlag & PMS_PP::UPDATE_AXES) {
+    // Apparently UPDATE_AXES is not triggered by anything...
+    // UPDATE_CACHE should be close enough for now (I hope)
+    if(updateFlag & PMS_PP::UPDATE_CACHE) {
+        for(size_t r = 0; r < itsCanvases_.size(); ++r) {
+            for(size_t c = 0; c < itsCanvases_[r].size(); ++c) {
+                itsCanvases_[r][c]->standardMouseTools(
+                    )->selectTool()->clearSelectedRects();
+                itsCanvases_[r][c]->clearAnnotations();
+            }
+        }
+    }
+
     // Resize if iteration parameters have changed
     uInt rows = iter->numRows();
     uInt cols = iter->numColumns();
