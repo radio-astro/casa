@@ -13,6 +13,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hif_fluxcalflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hif_refant</Command>
         <ParameterSet>
         </ParameterSet>
@@ -25,7 +31,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_tsysflagchannels</Command>
+        <Command xmlns="">hif_tsysflagchans</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
@@ -84,7 +90,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_gaincal</Command>
+        <Command xmlns="">hif_newgaincal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
