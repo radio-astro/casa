@@ -105,10 +105,14 @@ def calculate_view(context, gaintable, result):
                         # gain for refant at time t
                         refant_row = rows[(spectral_window_id==spwid) & 
                           (timecol==t) & (antenna1==refant)]
-                        refant_gain = cparam_refant[refant][0,0,refant_row][0]
-                        refant_gain_flag = \
-                          flag_refant[refant][0,0,refant_row][0]
-                        
+                        if refant_row:
+                            refant_gain = \
+                              cparam_refant[refant][0,0,refant_row][0]
+                            refant_gain_flag = \
+                              flag_refant[refant][0,0,refant_row][0]
+                        else:
+                            refant_gain_flag = True
+
                         # now modify entries to make refant the reference
                         if not refant_gain_flag:
                             # use a.b = ab cos(theta) axb = ab sin(theta) to 
@@ -133,19 +137,21 @@ def calculate_view(context, gaintable, result):
                 data = np.zeros([max(antennas)+1, len(time_chunks)])
                 data_flag = np.ones([max(antennas)+1, len(time_chunks)],
                   np.bool)
+                chunk_base_times = np.zeros([len(time_chunks)])
 
                 for antenna in antennas:
                     selected_rows = rows[(spectral_window_id==spwid) & 
                       (antenna1==antenna)]
 
                     gain_times = timecol[selected_rows]
-                    chunk_base_times = np.zeros([len(time_chunks)])
 
                     for i,chunk in enumerate(time_chunks):
                         chunk_start = times[chunk[0]] - 0.1
                         chunk_end = times[chunk[-1]] + 0.1
                         chunk_select = (gain_times >= chunk_start) & \
                           (gain_times <= chunk_end)
+                        if not chunk_select.any():
+                            continue
 
                         gain_times_chunk = gain_times[chunk_select]
                         chunk_base_times[i] = gain_times_chunk[0]
