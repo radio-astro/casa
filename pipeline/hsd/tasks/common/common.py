@@ -13,6 +13,16 @@ LOG = infrastructure.get_logger(__name__)
 def absolute_path(name):
     return os.path.abspath(os.path.expanduser(os.path.expandvars(name)))
 
+def SrcTypeMap(calmode):
+    _calmode = calmode.lower()
+    _srctype_map = {'ps': 0,
+                    'otf': 0,
+                    'otfraster': 0}
+    if _srctype_map.has_key(_calmode):
+        return _srctype_map[_calmode]
+    else:
+        return None
+
 class SingleDishInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None,
                  infiles=None):
