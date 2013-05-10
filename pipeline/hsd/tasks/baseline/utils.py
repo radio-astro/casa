@@ -4,17 +4,121 @@ import os
 import contextlib
 
 import asap as sd
+from taskinit import gentools
+
+def createExportTable(table_name):
+    table = gentools(['tb'])[0]
+
+    desc = dict()
+
+    desc['Row'] = {
+        'comment': 'Row number',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer'
+        }
+
+    desc['Ant'] = {
+        'comment': 'Antenna IDr',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer'
+        }
+
+    desc['FitFunc'] = {
+        'comment': 'Baseline Fitting Function',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'string'
+        }
+
+    desc['SummaryFlag'] = {
+        'comment': 'Summary Flag applied',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'boolean'
+        }
+
+    desc['Sections'] = {
+        'comment': 'Spectral baseline section coefficients',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer',
+        'ndim': 2
+        }
+
+    desc['LineMask'] = {
+        'comment': 'Line detected region',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'integer',
+        'ndim': 2
+        }
+
+    desc['SectionCoefficients'] = {
+        'comment': 'Spectral baseline section coefficients',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'double',
+        'ndim': 2
+        }
+
+    desc['Statistics'] = {
+        'comment': 'Spectral baseline RMS',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'double',
+        'ndim': 1
+        }
+
+    desc['StatisticsFlags'] = {
+        'comment': 'Statistics Flags by category',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'boolean',
+        'ndim': 1
+        }
+
+    desc['PermanentFlags'] = {
+        'comment': 'Permanent Flags by category',
+        'dataManagerGroup': 'StandardStMan',
+        'dataManagerType': 'StandardStMan',
+        'maxlen': 0,
+        'option': 0,
+        'valueType': 'boolean',
+        'ndim': 1
+        }
+
+    table.create(table_name, tabledesc=desc)
+    table.close()
 
 @contextlib.contextmanager
-def _temporary_file_name():
-    name = '_heuristics.temporary.table'
+def temporary_filename(name='_heuristics.temporary.table'):
     try:
         yield name
     finally:
         os.system('rm -rf %s'%(name))
 
-def _create_dummy_scan(name, datatable, index_list):
-    with _temporary_file_name() as temporary_name:
+def create_dummy_scan(name, datatable, index_list):
+    with temporary_filename() as temporary_name:
         for index in index_list:
             try:
                 s = sd.scantable(name, average=False).get_row(datatable.getcell('ROW',index),insitu=False)
