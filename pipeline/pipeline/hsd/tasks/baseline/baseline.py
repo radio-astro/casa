@@ -14,7 +14,6 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
 from .. import common
 from .worker import SDBaselineWorker
-from . import utils
 
 LOG = infrastructure.get_logger(__name__)
 logging.set_logging_level('trace')
@@ -24,7 +23,9 @@ class SDBaselineInputs(common.SingleDishInputs):
     """
     Inputs for imaging
     """
-    def __init__(self, context, infiles=None, iflist=None, pollist=None):
+    def __init__(self, context, infiles=None, iflist=None, pollist=None,
+                 window=None, edge=None, broadline=None, fitorder=None,
+                 fitfunc=None):
         self._init_properties(vars())
 
     @property
@@ -45,34 +46,41 @@ class SDBaselineResults(common.SingleDishResults):
         LOG.todo('need to decide what is done in SDBaselineResults.merge_with_context')
 
     def _outcome_name(self):
-        #return [image.imagename for image in self.outcome]
-        return self.outcome.imagename
+        return self.outcome
 
 class SDBaseline(common.SingleDishTaskTemplate):
     Inputs = SDBaselineInputs
 
     def prepare(self):
-        context = self.inputs.context
+        inputs = self.inputs
+        context = inputs.context
         datatable = context.observing_run.datatable_instance
         reduction_group = context.observing_run.reduction_group
-        infiles = self.inputs.infiles
-        iflist = self.inputs.iflist
-        antennalist = self.inputs.antennalist
-        pollist = self.inputs.pollist
+        infiles = inputs.infiles
+        iflist = inputs.iflist
+        antennalist = inputs.antennalist
+        pollist = inputs.pollist
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
 
+        window = [] if inputs.window is None else inputs.window
+        edge = (0,0) if inputs.edge is None else inputs.edge
+        broadline = False if inputs.broadline is None else inputs.broadline
+        fitorder = 'automatic' if inputs.fitorder is None else inputs.fitorder
+        fitfunc = 'spline' if inputs.fitfunc is None else inputs.fitfunc
+        
         # task returns ResultsList
         results = basetask.ResultsList()
 
         # loop over reduction group
+        files = set()
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
             spwid = group_desc['member'][0][1]
             LOG.debug('spwid=%s'%(spwid))
             pols = group_desc['member'][0][2]
             if pollist is not None:
-                pols = list(set(pollist).intersection(pols))
+                pols = list(set(pollist) & set(pols))
 
             # skip spw not included in iflist
             if iflist is not None and spwid not in iflist:
@@ -80,7 +88,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 continue
                 
             # reference data is first scantable 
-            st = context.observing_run[indices[0]]
+            st = context.observing_run[group_desc['member'][0][0]]
 
             # skip channel averaged spw
             nchan = group_desc['nchan']
@@ -88,7 +96,36 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.info('Skip channel averaged spw %s.'%(spwid))
                 continue
 
+            beam_size = st.beam_size[spwid]
+            calmode = st.calibration_strategy['calmode']
+            srctype = common.SrcTypeMap(calmode)
+            worker = SDBaselineWorker()
+            _file_index = set(file_index) & set([m[0] for m in group_desc['member']])
+            files = files | _file_index
+            pattern = st.pattern[spwid][pols[0]]
+            parameters = {'datatable': datatable,
+                          'spwid': spwid,
+                          'nchan': nchan,
+                          'beam_size': beam_size,
+                          'pollist': pols,
+                          'srctype': srctype,
+                          'file_index': list(_file_index),
+                          'window': window,
+                          'edge': edge,
+                          'broadline': broadline,
+                          'fitorder': fitorder,
+                          'fitfunc': fitfunc,
+                          'observing_pattern': pattern,
+                          'work_dir': context.output_dir}
+            job = jobrequest.JobRequest(worker.execute, **parameters)
+            self._executor.execute(job)
 
+        for f in files:
+            name = st_names[f].rstrip('/') + '_work'
+            abs_path = os.path.join(context.output_dir,name)
+            results.append(SDBaselineResults(task=self.__class__,
+                                             success=True,
+                                             outcome=abs_path))
         return results
 
     def analyse(self, result):

@@ -157,9 +157,6 @@ class SDImaging(common.SingleDishTaskTemplate):
 
 
 class SDImagingWorker(object):
-    SRCTYPE = {'ps': 0,
-               'otf': 0,
-               'otfraster': 0}
 
     def __init__(self):
         pass
@@ -182,7 +179,7 @@ class SDImagingWorker(object):
 
         # assume all members have same calmode
         calmode = reference_data.calibration_strategy['calmode']
-        srctype = self.SRCTYPE[calmode] if self.SRCTYPE.has_key(calmode) else None
+        srctype = common.SrcTypeMap(calmode)
         
         data_array = []
         for pol in polids:                        

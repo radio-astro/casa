@@ -12,7 +12,6 @@ import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.logging as logging
-from .. import common
 from .simplegrid import SimpleGridding
 from .detection import DetectLine
 from .validation import ValidateLine
