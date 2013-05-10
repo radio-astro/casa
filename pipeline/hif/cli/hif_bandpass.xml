@@ -90,7 +90,7 @@ window in each measurement set.
 
   <param type="int" name="minblperant" subparam="true">
     <description>Minimum baselines per antenna required for solve</description>
-    <value>2</value>
+    <value>4</value>
   </param>
 
   <param type="double" name="minsnr" subparam="true">
@@ -142,7 +142,7 @@ window in each measurement set.
 
     <when param="hm_bandtype">
       <equals type="string" value="channel">
-        <default param="minblperant"><value type="int">2</value></default>
+        <default param="minblperant"><value type="int">4</value></default>
         <default param="minsnr"><value type="double">3.0</value></default>
       </equals>
       <equals type="string" value="polynomial">
@@ -236,7 +236,7 @@ combine -- Data axes to combine for solving. Axes are '', 'scan','spw','field'
 minblperant -- Minimum number of baselines required per antenna for each solve
     Antennas with fewer baselines are excluded from solutions. Used for
     hm_bandtype='channel' only.
-    default: 2
+    default: 4
 
 minsnr -- Solutions below this SNR are rejected. Used for hm_bandtype=
     'channel' only

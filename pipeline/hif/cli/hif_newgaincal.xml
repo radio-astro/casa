@@ -82,7 +82,7 @@ Previous calibrations are applied on the fly.
 
     <param type="int" name="minblperant">
 	<description>Minimum baselines per antenna required for solve</description>
-	<value>2</value>
+	<value>4</value>
     </param>
 
     <param type="double" name="calminsnr">
@@ -140,9 +140,9 @@ Previous calibrations are applied on the fly.
 	    </equals>
 	    <equals type="string" value="getinputs">
 	        <default param="vis"><value type="stringArray"></value></default>
+	        <default param="calphasetable"><value type="stringArray"></value></default>
 	        <default param="targetphasetable"><value type="stringArray"></value></default>
 	        <default param="amptable"><value type="stringArray"></value></default>
-	        <default param="calphasetable"><value type="stringArray"></value></default>
 	        <default param="field"><value type="string"></value></default>
 	        <default param="intent"><value type="string"></value></default>
 	        <default param="spw"><value type="string"></value></default>
@@ -193,8 +193,8 @@ combine -- Data axes to combine for solving. Options are  '','scan','spw',field'
 
 minblperant -- Minimum number of baselines required per antenna for each solve
     Antennas with fewer baaselines are excluded from solutions.
-    default: 2
-    example: minblperant=4
+    default: 4
+    example: minblperant=2
 
 calminsnr -- Solutions below this SNR are rejected for calibrator solutions. 
     default: 2.0
