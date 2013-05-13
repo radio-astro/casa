@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSSQUARE_H
 #define TRIALDISPLAY_DSSQUARE_H
@@ -35,7 +35,7 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// Implementation of a square. 
+// Implementation of a square.
 // </summary>
 //
 // <prerequisite>
@@ -49,15 +49,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// DSSquare simple extends DSRectangle, and takes much of its functionality 
-// from there. It also overrides some functions to ensure that during 
+// DSSquare simple extends DSRectangle, and takes much of its functionality
+// from there. It also overrides some functions to ensure that during
 // manipulation of the shape, it remains a square.
 //
-// There are generally two ways to make DisplayShape(s); To create them in 
-// "one hit" by providing arguments to the constructor, or by using the 
-// default constructor and then the "setOptions" method. A simple interface 
-// for all classes inheriting from the 
-// <linkto class="DisplayShape">DisplayShape</linkto> class is provided by 
+// There are generally two ways to make DisplayShape(s); To create them in
+// "one hit" by providing arguments to the constructor, or by using the
+// default constructor and then the "setOptions" method. A simple interface
+// for all classes inheriting from the
+// <linkto class="DisplayShape">DisplayShape</linkto> class is provided by
 // <linkto class="DisplayShapeInterface">DisplayShapeInterface</linkto>.
 // </synopsis>
 //
@@ -69,46 +69,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </example>
 
 
-class DSSquare : public DSRectangle { 
+	class DSSquare : public DSRectangle {
 
-public: 
-  
-  // Default constructor
-  DSSquare();
+	public:
 
-  // Constructor. Accepts the centre (xPos, yPos), the size (height/width
-  // in pixels), and whether or not it will ever have handles and if
-  // so, whether to draw them now.
-  DSSquare(const Float& xPos, const Float& yPos, const Float& size, 
-	   const Bool& handles = False, const Bool& drawHandles = False);
+		// Default constructor
+		DSSquare();
 
-  // Copy cons.
-  DSSquare(const DSSquare& other);
+		// Constructor. Accepts the centre (xPos, yPos), the size (height/width
+		// in pixels), and whether or not it will ever have handles and if
+		// so, whether to draw them now.
+		DSSquare(const Float& xPos, const Float& yPos, const Float& size,
+		         const Bool& handles = False, const Bool& drawHandles = False);
 
-  // Destructor
-  virtual ~DSSquare();
+		// Copy cons.
+		DSSquare(const DSSquare& other);
 
-  // Copy constructor
+		// Destructor
+		virtual ~DSSquare();
+
+		// Copy constructor
 
 
-  // Set the size of the square in pixels
-  virtual void setSize(const Float& size);
+		// Set the size of the square in pixels
+		virtual void setSize(const Float& size);
 
-  // Change the points, while maintaining the shape as a square
-  // <group>
-  virtual void changePoint(const Vector<Float>& pos);
-  virtual void changePoint(const Vector<Float>& pos, const Int nPoint);
-  // </group>
+		// Change the points, while maintaining the shape as a square
+		// <group>
+		virtual void changePoint(const Vector<Float>& pos);
+		virtual void changePoint(const Vector<Float>& pos, const Int nPoint);
+		// </group>
 
-  // Get and set options
-  // <group>
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
-  // </group>
+		// Get and set options
+		// <group>
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+		// </group>
 
-private:
+	private:
 
-};
+	};
 
 } //# NAMESPACE CASA - END
 

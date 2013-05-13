@@ -53,7 +53,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // "displaying" "data"
 // </etymology>
 //
-// <synopsis> 
+// <synopsis>
 //
 // <h3>Motivation</h3>
 //

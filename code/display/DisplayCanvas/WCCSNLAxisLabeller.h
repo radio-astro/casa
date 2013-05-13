@@ -40,72 +40,72 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // This class implements the interface defined in WCCSAxisLabeller to
-// provide arbitrary non-linear axis labelling, using coordinate 
+// provide arbitrary non-linear axis labelling, using coordinate
 // transformations provided by a supplied CoordinateSystem.
 //
 // </synopsis>
 
-class WCCSNLAxisLabeller : public WCCSAxisLabeller {
-  
- public:
+	class WCCSNLAxisLabeller : public WCCSAxisLabeller {
 
-  // Constructor
-  WCCSNLAxisLabeller();
+	public:
 
-  // Destructor 
-  virtual ~WCCSNLAxisLabeller();
+		// Constructor
+		WCCSNLAxisLabeller();
 
-  // Draw axis labels for the provided WorldCanvas refresh event.
-  // Note: it is the responsibility of the caller to assure that this
-  // object is invalidated (or destroyed) _before_ the WorldCanvas
-  // corresponding to ev gets destroyed, so that any cached axis drawing
-  // which the WC is holding for us can be deleted properly.
-  virtual Bool draw(const WCRefreshEvent &ev);
+		// Destructor
+		virtual ~WCCSNLAxisLabeller();
 
-  // Invalidate/return any cached drawing list
-  virtual void invalidate();
+		// Draw axis labels for the provided WorldCanvas refresh event.
+		// Note: it is the responsibility of the caller to assure that this
+		// object is invalidated (or destroyed) _before_ the WorldCanvas
+		// corresponding to ev gets destroyed, so that any cached axis drawing
+		// which the WC is holding for us can be deleted properly.
+		virtual Bool draw(const WCRefreshEvent &ev);
 
-  // Install the CoordinateSystem to use
-  virtual void setCoordinateSystem(const CoordinateSystem &coordsys);
+		// Invalidate/return any cached drawing list
+		virtual void invalidate();
 
-  // Set the world min and max ranges (and their associated units)
-  // to be used by the CoordinateSystem::toMix computations.  
-  // If not specified with this function,
-  // -180->180, -90->90 for DirectionCoordinates used (rest
-  // don't matter).  Specifying this correctly can make the
-  // toMix computations much faster (it uses an iterative
-  // solution) and avoid solution ambiguities.  
-  void setWorldRanges (const Vector<Double>& worldMin,
-                       const Vector<Double>& worldMax,
-                       const Vector<String>& units);
+		// Install the CoordinateSystem to use
+		virtual void setCoordinateSystem(const CoordinateSystem &coordsys);
 
-  // install the default options for this DisplayData
-  virtual void setDefaultOptions();
+		// Set the world min and max ranges (and their associated units)
+		// to be used by the CoordinateSystem::toMix computations.
+		// If not specified with this function,
+		// -180->180, -90->90 for DirectionCoordinates used (rest
+		// don't matter).  Specifying this correctly can make the
+		// toMix computations much faster (it uses an iterative
+		// solution) and avoid solution ambiguities.
+		void setWorldRanges (const Vector<Double>& worldMin,
+		                     const Vector<Double>& worldMax,
+		                     const Vector<String>& units);
 
-  // apply options stored in rec to the DisplayData; return value
-  // True means a refresh is needed.  Any fields added to the
-  // updatedOptions argument are options which have changed in
-  // some way due to the setting of other options - ie. they 
-  // are context sensitive.
-  virtual Bool setOptions(const Record &rec, Record &updatedOptions);
+		// install the default options for this DisplayData
+		virtual void setDefaultOptions();
 
-  // retrieve the current and default options and parameter types.
-  virtual Record getOptions() const;
+		// apply options stored in rec to the DisplayData; return value
+		// True means a refresh is needed.  Any fields added to the
+		// updatedOptions argument are options which have changed in
+		// some way due to the setting of other options - ie. they
+		// are context sensitive.
+		virtual Bool setOptions(const Record &rec, Record &updatedOptions);
 
- private:
+		// retrieve the current and default options and parameter types.
+		virtual Record getOptions() const;
 
-  // Is the drawlist state below valid?
-  Bool itsValid;
+	private:
 
-  // our drawlist number
-  uInt itsDrawListNumber;
+		// Is the drawlist state below valid?
+		Bool itsValid;
 
-  // attribute buffer that suits the drawlist we have made
-  AttributeBuffer itsDrawStateBuffer;
+		// our drawlist number
+		uInt itsDrawListNumber;
 
-  // last WorldCanvas drawn upon
-  WorldCanvas *itsLastWorldCanvas;
-};
+		// attribute buffer that suits the drawlist we have made
+		AttributeBuffer itsDrawStateBuffer;
+
+		// last WorldCanvas drawn upon
+		WorldCanvas *itsLastWorldCanvas;
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -42,42 +42,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // tool which gets registered with a specific PixelCanvas.
 // </synopsis>
 
-class PCITFiddler : public PCInvisTool {
+	class PCITFiddler : public PCInvisTool {
 
- public:
+	public:
 
-  enum FiddleType {
-    StretchAndShift,
-    BrightnessAndContrast
-  };
+		enum FiddleType {
+		    StretchAndShift,
+		    BrightnessAndContrast
+		};
 
-  // Constructor.  Requires a PixelCanvas to fiddle upon, and
-  // optional specification of the fiddling type and key to
-  // detect.
-  PCITFiddler(PixelCanvas *pcanvas,
-	      const PCITFiddler::FiddleType &fiddletype = 
-	      PCITFiddler::StretchAndShift,
-	      Display::KeySym keysym = Display::K_Pointer_Button1);
+		// Constructor.  Requires a PixelCanvas to fiddle upon, and
+		// optional specification of the fiddling type and key to
+		// detect.
+		PCITFiddler(PixelCanvas *pcanvas,
+		            const PCITFiddler::FiddleType &fiddletype =
+		                PCITFiddler::StretchAndShift,
+		            Display::KeySym keysym = Display::K_Pointer_Button1);
 
-  // Destructor.
-  virtual ~PCITFiddler();
+		// Destructor.
+		virtual ~PCITFiddler();
 
-  // Set/get the fiddle type.
-  // <group>
-  virtual void setFiddleType(const PCITFiddler::FiddleType &fiddletype);
-  virtual PCITFiddler::FiddleType getFiddleType()
-    { return itsFiddleType; }
-  // </group>
+		// Set/get the fiddle type.
+		// <group>
+		virtual void setFiddleType(const PCITFiddler::FiddleType &fiddletype);
+		virtual PCITFiddler::FiddleType getFiddleType() {
+			return itsFiddleType;
+		}
+		// </group>
 
-  // This function is called when a new position is ready.  We 
-  // implement it to fiddle the Colormap in this class.
-  virtual void positionReady();
+		// This function is called when a new position is ready.  We
+		// implement it to fiddle the Colormap in this class.
+		virtual void positionReady();
 
- private:
+	private:
 
-  PCITFiddler::FiddleType itsFiddleType;
+		PCITFiddler::FiddleType itsFiddleType;
 
-};  
+	};
 
 
 } //# NAMESPACE CASA - END

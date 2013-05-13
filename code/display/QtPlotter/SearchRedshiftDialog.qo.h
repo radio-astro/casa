@@ -35,41 +35,40 @@
 
 namespace casa {
 
-class SearchThread;
+	class SearchThread;
 
-class SearchRedshiftDialog : public QDialog
-{
-    Q_OBJECT
+	class SearchRedshiftDialog : public QDialog {
+		Q_OBJECT
 
-public:
-    SearchRedshiftDialog(QWidget *parent = 0);
-    void setCenter( double centerVal );
-    void setUnits( QString unitStr );
-    void setDatabasePath( String path );
-    void setLocalSearch( bool local );
-    void setFrequencyType( MRadialVelocity::Types mType );
-    void setDopplerType( MDoppler::Types type );
-    void setIdentifiedLines( const QList<QString>& lineNames );
-    ~SearchRedshiftDialog();
+	public:
+		SearchRedshiftDialog(QWidget *parent = 0);
+		void setCenter( double centerVal );
+		void setUnits( QString unitStr );
+		void setDatabasePath( String path );
+		void setLocalSearch( bool local );
+		void setFrequencyType( MRadialVelocity::Types mType );
+		void setDopplerType( MDoppler::Types type );
+		void setIdentifiedLines( const QList<QString>& lineNames );
+		~SearchRedshiftDialog();
 
-public slots:
-	void show();
-	void findRedshift();
-	void searchFinished();
-	void stopSearch();
+	public slots:
+		void show();
+		void findRedshift();
+		void searchFinished();
+		void stopSearch();
 
-private:
-    void setResultsVisible( bool visible );
-    double getTargetFrequency() const;
-    Ui::SearchRedshiftDialogClass ui;
-    String databasePath;
-    bool localSearch;
-    bool searchInterrupted;
-    SearchThread* searchThread;
-    QProgressDialog progressBar;
-    MFrequency::Types frequencyType;
-    MRadialVelocity::Types radialVelocityType;
-    MDoppler::Types dopplerType;
-};
+	private:
+		void setResultsVisible( bool visible );
+		double getTargetFrequency() const;
+		Ui::SearchRedshiftDialogClass ui;
+		String databasePath;
+		bool localSearch;
+		bool searchInterrupted;
+		SearchThread* searchThread;
+		QProgressDialog progressBar;
+		MFrequency::Types frequencyType;
+		MRadialVelocity::Types radialVelocityType;
+		MDoppler::Types dopplerType;
+	};
 }
 #endif // SEARCHREDSHIFTDIALOG_QO_H

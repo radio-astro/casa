@@ -31,31 +31,33 @@
 #include <string>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-    namespace viewer {
-	// ensure that path is a directory, returns true upon success false upon failure...
-	bool create_dir( const char *path, bool recurse=false );
-	inline bool create_dir( const std::string &s, bool recurse=false ) { return create_dir(s.c_str( ),recurse); }
-	// get the current time
-	std::string time( );
-	// get the current data
-	std::string date( );
-	// get viewer's rc file
-	Casarc &getrc( );
-	// set the path for the viewer's casarc file...
-	bool setrcDir( const std::string & );
+	namespace viewer {
+		// ensure that path is a directory, returns true upon success false upon failure...
+		bool create_dir( const char *path, bool recurse=false );
+		inline bool create_dir( const std::string &s, bool recurse=false ) {
+			return create_dir(s.c_str( ),recurse);
+		}
+		// get the current time
+		std::string time( );
+		// get the current data
+		std::string date( );
+		// get viewer's rc file
+		Casarc &getrc( );
+		// set the path for the viewer's casarc file...
+		bool setrcDir( const std::string & );
 
-	class guiwait {
-	    public:
-		guiwait( );
-		~guiwait( );
-	    private:
-		int noop;
+		class guiwait {
+		public:
+			guiwait( );
+			~guiwait( );
+		private:
+			int noop;
 
-		// Prevent heap allocation
-		void * operator new   (size_t);
-		void * operator new[] (size_t);
-	};
-    }
+			// Prevent heap allocation
+			void * operator new   (size_t);
+			void * operator new[] (size_t);
+		};
+	}
 }
 
 #endif

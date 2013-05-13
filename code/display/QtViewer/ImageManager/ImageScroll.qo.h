@@ -36,63 +36,63 @@ class QSpacerItem;
 
 namespace casa {
 
-class ImageView;
-class QtDisplayData;
-class DisplayDataHolder;
+	class ImageView;
+	class QtDisplayData;
+	class DisplayDataHolder;
 
-/**
- * Displays a list of images, allowing the user to reorder them.
- */
+	/**
+	 * Displays a list of images, allowing the user to reorder them.
+	 */
 
-class ImageScroll : public QWidget, public ImageTracker {
-    Q_OBJECT
+	class ImageScroll : public QWidget, public ImageTracker {
+		Q_OBJECT
 
-public:
-    ImageScroll(QWidget *parent = 0);
-    void setImageHolder( DisplayDataHolder* holder );
-    void setControllingDD( QtDisplayData* dd );
-    QList<ImageView*> getSelectedViews();
+	public:
+		ImageScroll(QWidget *parent = 0);
+		void setImageHolder( DisplayDataHolder* holder );
+		void setControllingDD( QtDisplayData* dd );
+		QList<ImageView*> getSelectedViews();
 
-    bool isManaged( QtDisplayData* displayData ) const;
-    void closeImages();
-    void addImageViews( QList<ImageView*>& views );
-    void removeImageViews( QList<ImageView*>& view );
-    void setSelectAll( bool selectAll);
-    void setImageColorsEnabled( bool enabled );
-    void applyColorChangesIndividually();
-    bool findColor( const QString& lookup, QColor* foundColor );
-    virtual ~ImageScroll();
+		bool isManaged( QtDisplayData* displayData ) const;
+		void closeImages();
+		void addImageViews( QList<ImageView*>& views );
+		void removeImageViews( QList<ImageView*>& view );
+		void setSelectAll( bool selectAll);
+		void setImageColorsEnabled( bool enabled );
+		void applyColorChangesIndividually();
+		bool findColor( const QString& lookup, QColor* foundColor );
+		virtual ~ImageScroll();
 
-    //Image Tracker Interface
-    virtual void masterImageSelected( QtDisplayData* image );
-    virtual void imageAdded( QtDisplayData* image );
-    virtual void imageRemoved( QtDisplayData* image );
+		//Image Tracker Interface
+		virtual void masterImageSelected( QtDisplayData* image );
+		virtual void imageAdded( QtDisplayData* image );
+		virtual void imageRemoved( QtDisplayData* image );
 
-signals:
-	void displayDataRemoved( QtDisplayData* imageData );
-	void displayDataAdded( QtDisplayData* imageData );
-	void displayTypeChanged( ImageView* displayData );
-	void displayColorsChanged( ImageView* displayData );
+	signals:
+		void displayDataRemoved( QtDisplayData* imageData );
+		void displayDataAdded( QtDisplayData* imageData );
+		void displayTypeChanged( ImageView* displayData );
+		void displayColorsChanged( ImageView* displayData );
 
-protected:
-	void dragEnterEvent( QDragEnterEvent* enterEvent );
-    void dropEvent( QDropEvent* dropEvent );
-    void dragMoveEvent( QDragMoveEvent* dragMoveEvent );
+	protected:
+		void dragEnterEvent( QDragEnterEvent* enterEvent );
+		void dropEvent( QDropEvent* dropEvent );
+		void dragMoveEvent( QDragMoveEvent* dragMoveEvent );
 
-private:
-    ImageScroll( const ImageScroll& other );
-    ImageScroll operator=( const ImageScroll& other );
-    void addImage( ImageView* imageView );
-    void closeImage( ImageView* imageView, bool deleteImage = true );
-    ImageView* findImageView( const QString& name );
-    ImageView* getMimeImageView( const QMimeData* mimeData );
-    QSpacerItem* spacer;
-    const int LAYOUT_SPACING;
-    const int LAYOUT_MARGIN;
-    QList<ImageView*> images;
-    DisplayDataHolder* managedImages;
-    bool imageColorsEnabled;
-};
+	private:
+		ImageScroll( const ImageScroll& other );
+		ImageScroll operator=( const ImageScroll& other );
+		void addImage( ImageView* imageView );
+		void closeImage( ImageView* imageView, bool deleteImage = true );
+		ImageView* findImageView( const QString& name );
+		ImageView* getMimeImageView( const QMimeData* mimeData );
+		QSpacerItem* spacer;
+		const int LAYOUT_SPACING;
+		const int LAYOUT_MARGIN;
+		QList<ImageView*> images;
+		DisplayDataHolder* managedImages;
+		bool imageColorsEnabled;
+	};
 
 }
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <display/DisplayShapes/DSPixelPoly.h>
 #include <display/DisplayShapes/DSScreenPoly.h>
@@ -37,95 +37,95 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSPixelPoly::DSPixelPoly() :
-  DSPoly() {
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
+	DSPixelPoly::DSPixelPoly() :
+		DSPoly() {
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
 
-}
+	}
 
-DSPixelPoly::DSPixelPoly(const Record& settings) :
-  DSPoly() {
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
-  
-  setOptions(settings);
-}
+	DSPixelPoly::DSPixelPoly(const Record& settings) :
+		DSPoly() {
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
 
-DSPixelPoly::DSPixelPoly(DSScreenPoly& other) :
-  DSPoly() {
-  
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
-  
-  DSPoly::setOptions(other.getRawOptions());
-  
-  
-}
+		setOptions(settings);
+	}
 
-DSPixelPoly::DSPixelPoly(DSWorldPoly& other) :
-  DSPoly() {
-  
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
-  
-  DSPoly::setOptions(other.getRawOptions());
-  
-}
+	DSPixelPoly::DSPixelPoly(DSScreenPoly& other) :
+		DSPoly() {
 
-DSPixelPoly::DSPixelPoly(DSPixelPolyLine& other) :
-  DSPoly() {
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
 
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
+		DSPoly::setOptions(other.getRawOptions());
 
-  Record otherOptions = other.getOptions();
-  if (otherOptions.isDefined("polylinepoints")) {
-    Record points = otherOptions.subRecord("polylinepoints");
-    otherOptions.removeField("polylinepoints");
-    otherOptions.defineRecord("polygonpoints", points);
-  }
-  
-  setOptions(otherOptions);
 
-}
+	}
 
-DSPixelPoly::~DSPixelPoly() {
+	DSPixelPoly::DSPixelPoly(DSWorldPoly& other) :
+		DSPoly() {
 
-}
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
 
-Record DSPixelPoly::getOptions() {
-  Record toReturn;
-  
-  toReturn = DSPoly::getOptions();
-  
-  matrixFloatToQuant(toReturn, "polylinepoints", "pix");
-  
-  if (toReturn.isDefined("coords")) {
-    toReturn.removeField("coords");
-  }  
-  toReturn.define("coords", "pix");
-  
-  return toReturn;
-}
+		DSPoly::setOptions(other.getRawOptions());
 
-Bool DSPixelPoly::setOptions(const Record& settings) {
-  
-  Bool localChange = False;
-  Record toSet = settings;
-  
-  if (settings.isDefined("coords")) {
-    if (settings.asString("coords") != "pix") {
-      throw(AipsError("I (DSPixelPoly) was expecting an "
-		      "option record which"
-		      " had coords == \'pix\'. Please use a \'lock\' function"
-		      " to change my co-ord system"));
-    }
-  }
-  
-  matrixFloatFromQuant(toSet, "polygonpoints", "pix");
-  
-  if (DSPoly::setOptions(toSet)) {
-    localChange = True;
-  }
+	}
 
-  return localChange;
-}
+	DSPixelPoly::DSPixelPoly(DSPixelPolyLine& other) :
+		DSPoly() {
+
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
+
+		Record otherOptions = other.getOptions();
+		if (otherOptions.isDefined("polylinepoints")) {
+			Record points = otherOptions.subRecord("polylinepoints");
+			otherOptions.removeField("polylinepoints");
+			otherOptions.defineRecord("polygonpoints", points);
+		}
+
+		setOptions(otherOptions);
+
+	}
+
+	DSPixelPoly::~DSPixelPoly() {
+
+	}
+
+	Record DSPixelPoly::getOptions() {
+		Record toReturn;
+
+		toReturn = DSPoly::getOptions();
+
+		matrixFloatToQuant(toReturn, "polylinepoints", "pix");
+
+		if (toReturn.isDefined("coords")) {
+			toReturn.removeField("coords");
+		}
+		toReturn.define("coords", "pix");
+
+		return toReturn;
+	}
+
+	Bool DSPixelPoly::setOptions(const Record& settings) {
+
+		Bool localChange = False;
+		Record toSet = settings;
+
+		if (settings.isDefined("coords")) {
+			if (settings.asString("coords") != "pix") {
+				throw(AipsError("I (DSPixelPoly) was expecting an "
+				                "option record which"
+				                " had coords == \'pix\'. Please use a \'lock\' function"
+				                " to change my co-ord system"));
+			}
+		}
+
+		matrixFloatFromQuant(toSet, "polygonpoints", "pix");
+
+		if (DSPoly::setOptions(toSet)) {
+			localChange = True;
+		}
+
+		return localChange;
+	}
 
 } //# NAMESPACE CASA - END
 

@@ -42,144 +42,144 @@
 #include <QPushButton>
 #include <QComboBox>
 #include <graphics/X11/X_exit.h>
- 
-namespace casa { 
 
-class RSComposite;
-class WCUnion;
+namespace casa {
 
-class MakeRegion : public QWidget {
+	class RSComposite;
+	class WCUnion;
 
-  Q_OBJECT
+	class MakeRegion : public QWidget {
 
- public:
-  
-  MakeRegion(QtDisplayPanel* qdp);
-  ~MakeRegion() {}
-  
- public slots:
+		Q_OBJECT
 
-  //handle double click that announces a box is ready
-  void drawRegion(Record mousereg, WorldCanvasHolder *wch);
+	public:
 
-  //React to new region creation in display panel.
-  void newRegion_(String imgFilename);
+		MakeRegion(QtDisplayPanel* qdp);
+		~MakeRegion() {}
 
-  //handle switch display axis
-  void changeAxis(String, String, String, int);
+	public slots:
 
-  //handle single click to select a box
-  void activate(Record);
+		//handle double click that announces a box is ready
+		void drawRegion(Record mousereg, WorldCanvasHolder *wch);
 
-  //this is not used, it emits for any wc change, too often
-  void wcChanged(const String,
-                 const Vector<Double>, const Vector<Double>);
+		//React to new region creation in display panel.
+		void newRegion_(String imgFilename);
 
-  virtual void closeEvent(QCloseEvent* event);
+		//handle switch display axis
+		void changeAxis(String, String, String, int);
 
- signals:
-  void hideRegionInImage();
+		//handle single click to select a box
+		void activate(Record);
 
- protected slots:
+		//this is not used, it emits for any wc change, too often
+		void wcChanged(const String,
+		               const Vector<Double>, const Vector<Double>);
 
-  //load masks from the image
-  void loadRegionFromImage();
+		virtual void closeEvent(QCloseEvent* event);
 
-  //save masks to the image
-  void saveRegionToImage();
+	signals:
+		void hideRegionInImage();
 
-  //delete region from the image
-  void deleteRegionFromImage();
+	protected slots:
 
-  //delete all masks
-  void deleteAll();
+		//load masks from the image
+		void loadRegionFromImage();
 
-  //toggle show or hide, but does not delete any
-  void showHideAll();
+		//save masks to the image
+		void saveRegionToImage();
 
-  //toggle show or hide, but does not delete any
-  void showHideGroup();
+		//delete region from the image
+		void deleteRegionFromImage();
 
-  //use a different color
-  void colorAll(const QString&);
+		//delete all masks
+		void deleteAll();
 
-  //the work horse for all the edit commands
-  void doIt();
+		//toggle show or hide, but does not delete any
+		void showHideAll();
 
-  //show help text
-  void showHelp();
+		//toggle show or hide, but does not delete any
+		void showHideGroup();
 
-  //create new box of this shape
-  void reShape(const QString&);
- 
-  void zPlaneChanged();
-  void pPlaneChanged();
- protected:
+		//use a different color
+		void colorAll(const QString&);
 
-  void rotateBox(int cb);
-  void addBox(RegionShape*);
-  void deleteBox(RegionShape*);
-  void reDraw();
+		//the work horse for all the edit commands
+		void doIt();
 
-  void addRegionsToShape(RSComposite*& theShapes,
-                         const WCRegion*& wcreg);
+		//show help text
+		void showHelp();
 
-  WCUnion* unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg);
-  void unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs, 
-                                  const WCRegion*& wcreg);
+		//create new box of this shape
+		void reShape(const QString&);
 
-  //convert region to shape
-  RSComposite *regionToShape(
-        QtDisplayData* qdd, const ImageRegion* wcreg);
+		void zPlaneChanged();
+		void pPlaneChanged();
+	protected:
 
-  bool planeAllowed(String, String);
+		void rotateBox(int cb);
+		void addBox(RegionShape*);
+		void deleteBox(RegionShape*);
+		void reDraw();
 
- private:
+		void addRegionsToShape(RSComposite*& theShapes,
+		                       const WCRegion*& wcreg);
 
-  QtDisplayPanel* qdp_;
+		WCUnion* unfoldCompositeRegionToSimpleUnion(const WCRegion*& wcreg);
+		void unfoldIntoSimpleRegionPtrs(PtrBlock<const WCRegion*>& outRegPtrs,
+		                                const WCRegion*& wcreg);
 
-  PtrBlock<const ImageRegion*> unionRegions_p;
-  DisplayData* regData;
+		//convert region to shape
+		RSComposite *regionToShape(
+		    QtDisplayData* qdd, const ImageRegion* wcreg);
 
-  RegionShape* activeShape;
+		bool planeAllowed(String, String);
 
-  QTimer* timer;
-  bool flash;
+	private:
 
-  int cb;
-  int zIndex;
-  int pIndex;
-  String zAxis;
+		QtDisplayPanel* qdp_;
 
-  QGroupBox* tGroup;
-  QPushButton* removeAll;
-  QMenu *showHideMenu;
-  QPushButton* showHide;
-  QComboBox* color;
-  
-  QLineEdit* chan;
-  QLineEdit* corr;
-  QLineEdit* name;
-  QPushButton* load;
-  QPushButton* save;
+		PtrBlock<const ImageRegion*> unionRegions_p;
+		DisplayData* regData;
 
-  /*
-  QGroupBox* eGroup;
-  QComboBox* shape; 
-  QPushButton* remove;
-  QPushButton* rotateL;
-  QPushButton* rotateR;
-  QPushButton* left;
-  QPushButton* right;
-  QPushButton* up;
-  QPushButton* down;
-  QPushButton* wider;
-  QPushButton* narrower;
-  QPushButton* taller;
-  QPushButton* shorter;
-  */
-  
-};
+		RegionShape* activeShape;
+
+		QTimer* timer;
+		bool flash;
+
+		int cb;
+		int zIndex;
+		int pIndex;
+		String zAxis;
+
+		QGroupBox* tGroup;
+		QPushButton* removeAll;
+		QMenu *showHideMenu;
+		QPushButton* showHide;
+		QComboBox* color;
+
+		QLineEdit* chan;
+		QLineEdit* corr;
+		QLineEdit* name;
+		QPushButton* load;
+		QPushButton* save;
+
+		/*
+		QGroupBox* eGroup;
+		QComboBox* shape;
+		QPushButton* remove;
+		QPushButton* rotateL;
+		QPushButton* rotateR;
+		QPushButton* left;
+		QPushButton* right;
+		QPushButton* up;
+		QPushButton* down;
+		QPushButton* wider;
+		QPushButton* narrower;
+		QPushButton* taller;
+		QPushButton* shorter;
+		*/
+
+	};
 
 
 }

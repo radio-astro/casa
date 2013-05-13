@@ -31,53 +31,53 @@
 
 namespace casa {
 
-ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString /*yAxisUnits*/, QWidget *parent)
-    : QMainWindow(parent){
-	ui.setupUi(this);
-	setWindowTitle( "Graphical Collapse/Moments Threshold Specification");
+	ThresholdingBinPlotDialog::ThresholdingBinPlotDialog(QString /*yAxisUnits*/, QWidget *parent)
+		: QMainWindow(parent) {
+		ui.setupUi(this);
+		setWindowTitle( "Graphical Collapse/Moments Threshold Specification");
 
-	//Add the plot widget to the dialog
-	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
-	plotWidget = new BinPlotWidget( false, true, true, this );
-	plotWidget->setPlotMode( 1 );
-	layout->addWidget( plotWidget );
-	ui.plotWidgetHolder->setLayout( layout );
-	plotWidget->addZoomActions( true, ui.menuZoom );
-	plotWidget->addDisplayActions( ui.menuDisplay, NULL );
-	plotWidget->addPlotModeActions( ui.menuConfigure, NULL, NULL);
+		//Add the plot widget to the dialog
+		QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
+		plotWidget = new BinPlotWidget( false, true, true, this );
+		plotWidget->setPlotMode( 1 );
+		layout->addWidget( plotWidget );
+		ui.plotWidgetHolder->setLayout( layout );
+		plotWidget->addZoomActions( true, ui.menuZoom );
+		plotWidget->addDisplayActions( ui.menuDisplay, NULL );
+		plotWidget->addPlotModeActions( ui.menuConfigure, NULL, NULL);
 
-	connect( plotWidget, SIGNAL(postStatusMessage(const QString&)), this, SLOT(postStatusMessage(const QString&)));
-	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
-	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(close()));
-}
-
-void ThresholdingBinPlotDialog::postStatusMessage( const QString& warning ){
-	QStatusBar* statBar = statusBar();
-	if ( statBar != NULL ){
-		statBar->showMessage( warning, 5000 );
+		connect( plotWidget, SIGNAL(postStatusMessage(const QString&)), this, SLOT(postStatusMessage(const QString&)));
+		connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
+		connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(close()));
 	}
-}
+
+	void ThresholdingBinPlotDialog::postStatusMessage( const QString& warning ) {
+		QStatusBar* statBar = statusBar();
+		if ( statBar != NULL ) {
+			statBar->showMessage( warning, 5000 );
+		}
+	}
 
 
 
-void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ){
-	plotWidget->setImage( img );
-}
+	void ThresholdingBinPlotDialog::setImage( ImageInterface<Float>* img ) {
+		plotWidget->setImage( img );
+	}
 
-pair<double,double> ThresholdingBinPlotDialog::getInterval() const {
-	return plotWidget->getMinMaxValues();
-}
+	pair<double,double> ThresholdingBinPlotDialog::getInterval() const {
+		return plotWidget->getMinMaxValues();
+	}
 
-void ThresholdingBinPlotDialog::setInterval( double minValue, double maxValue ){
-	plotWidget->setMinMaxValues( minValue, maxValue );
-}
+	void ThresholdingBinPlotDialog::setInterval( double minValue, double maxValue ) {
+		plotWidget->setMinMaxValues( minValue, maxValue );
+	}
 
-void ThresholdingBinPlotDialog::accept(){
-	emit accepted();
-	close();
-}
+	void ThresholdingBinPlotDialog::accept() {
+		emit accepted();
+		close();
+	}
 
-ThresholdingBinPlotDialog::~ThresholdingBinPlotDialog(){
-}
+	ThresholdingBinPlotDialog::~ThresholdingBinPlotDialog() {
+	}
 
 }

@@ -32,92 +32,92 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DisplayOptions::DisplayOptions() {
-  itsUnsetRecord.define("i_am_unset", "i_am_unset");
-}
+	DisplayOptions::DisplayOptions() {
+		itsUnsetRecord.define("i_am_unset", "i_am_unset");
+	}
 
-Bool DisplayOptions::compatible(const DataType &compareme,
-			        const DataType &tome) const {
-  if(compareme>=TpRecord) return False;
-  if(compareme==tome) return True;
-  if (compareme==TpFloat || compareme==TpDouble)
-    return (tome == TpDouble || tome == TpInt || tome ==TpFloat);
-  if (compareme==TpArrayFloat || compareme==TpArrayDouble)
-    return (tome==TpArrayFloat || tome == TpArrayInt || tome==TpArrayDouble);
-  return False;
-}
+	Bool DisplayOptions::compatible(const DataType &compareme,
+	                                const DataType &tome) const {
+		if(compareme>=TpRecord) return False;
+		if(compareme==tome) return True;
+		if (compareme==TpFloat || compareme==TpDouble)
+			return (tome == TpDouble || tome == TpInt || tome ==TpFloat);
+		if (compareme==TpArrayFloat || compareme==TpArrayDouble)
+			return (tome==TpArrayFloat || tome == TpArrayInt || tome==TpArrayDouble);
+		return False;
+	}
 
-Bool DisplayOptions::readOptionRecord(String &target, Bool &unsetTarget,
-				      Bool &error,
-				      const Record &rec,
-				      const String &fieldname) const {
-  Bool result = readOptionRecord(target, error, rec, fieldname);
-  if (!error) {
-    result = (result || unsetTarget);
-    unsetTarget = False;
-    return result;
-  }
-  static String i_am_unset("i_am_unset");
-  // if we are here, we ought to look for an unset now...
-  if (!rec.isDefined(fieldname)) {
-    error = True;
-    return False;
-  }
-  if (rec.dataType(fieldname) != TpRecord) {
-    error = True;
-    return False;
-  }
-  Record subrec = rec.subRecord(fieldname);
-  String subfield("");
-  if (subrec.isDefined(i_am_unset)) {
-    subfield = i_am_unset;
-  } else if (subrec.isDefined("value")) {
-    Record trec = subrec.subRecord("value");
-    if (trec.isDefined(i_am_unset)) {
-      subrec = trec;
-      subfield = i_am_unset;
-    }
-  }
-  if (subfield != i_am_unset) {
-    error = True;
-    return False;
-  }
-  if (subrec.dataType(subfield) != TpString) {
-    error = True;
-    return False;
-  }
-  String temp;
-  subrec.get(subfield, temp);
-  if (temp != i_am_unset) {
-    error = True;
-    return False;
-  }
+	Bool DisplayOptions::readOptionRecord(String &target, Bool &unsetTarget,
+	                                      Bool &error,
+	                                      const Record &rec,
+	                                      const String &fieldname) const {
+		Bool result = readOptionRecord(target, error, rec, fieldname);
+		if (!error) {
+			result = (result || unsetTarget);
+			unsetTarget = False;
+			return result;
+		}
+		static String i_am_unset("i_am_unset");
+		// if we are here, we ought to look for an unset now...
+		if (!rec.isDefined(fieldname)) {
+			error = True;
+			return False;
+		}
+		if (rec.dataType(fieldname) != TpRecord) {
+			error = True;
+			return False;
+		}
+		Record subrec = rec.subRecord(fieldname);
+		String subfield("");
+		if (subrec.isDefined(i_am_unset)) {
+			subfield = i_am_unset;
+		} else if (subrec.isDefined("value")) {
+			Record trec = subrec.subRecord("value");
+			if (trec.isDefined(i_am_unset)) {
+				subrec = trec;
+				subfield = i_am_unset;
+			}
+		}
+		if (subfield != i_am_unset) {
+			error = True;
+			return False;
+		}
+		if (subrec.dataType(subfield) != TpString) {
+			error = True;
+			return False;
+		}
+		String temp;
+		subrec.get(subfield, temp);
+		if (temp != i_am_unset) {
+			error = True;
+			return False;
+		}
 
-  Bool ret = (!unsetTarget);
-  unsetTarget = True;
-  error = False;
-  return ret;
-}
+		Bool ret = (!unsetTarget);
+		unsetTarget = True;
+		error = False;
+		return ret;
+	}
 
-Bool DisplayOptions::isUnset(const Record &rec) const {
-  static String i_am_unset("i_am_unset");
-  if (rec.isDefined(i_am_unset)) {
-    if (rec.dataType(i_am_unset) == TpString) {
-      String temp;
-      rec.get(i_am_unset, temp);
-      if (temp == i_am_unset) {
-	return True;
-      }
-    }
-  }
-  return False;
-}
+	Bool DisplayOptions::isUnset(const Record &rec) const {
+		static String i_am_unset("i_am_unset");
+		if (rec.isDefined(i_am_unset)) {
+			if (rec.dataType(i_am_unset) == TpString) {
+				String temp;
+				rec.get(i_am_unset, temp);
+				if (temp == i_am_unset) {
+					return True;
+				}
+			}
+		}
+		return False;
+	}
 
-DisplayOptions::DisplayOptions(const DisplayOptions &) {
-}
+	DisplayOptions::DisplayOptions(const DisplayOptions &) {
+	}
 
-void DisplayOptions::operator=(const DisplayOptions &) {
-}
+	void DisplayOptions::operator=(const DisplayOptions &) {
+	}
 
 } //# NAMESPACE CASA - END
 

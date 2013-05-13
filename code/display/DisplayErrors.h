@@ -30,22 +30,26 @@
 #define DISPLAY_ERRORS_H_
 
 namespace casa {
-    namespace viewer {
-	struct internal_error : public std::exception {
-	    internal_error( const char *err="internal viewer inconsistency" ) : str(err) { }
-	    ~internal_error( ) throw( ) { }
-	    const char* what() const throw() { return str.c_str( ); }
-	    const std::string str;
-	};
+	namespace viewer {
+		struct internal_error : public std::exception {
+			internal_error( const char *err="internal viewer inconsistency" ) : str(err) { }
+			~internal_error( ) throw( ) { }
+			const char* what() const throw() {
+				return str.c_str( );
+			}
+			const std::string str;
+		};
 
-	struct runtime_error : public std::exception {
-	    runtime_error( const char *err="runtime viewer error" ) : str(err) { }
-	    ~runtime_error( ) throw( ) { }
-	    const char* what() const throw() { return str.c_str( ); }
-	    const std::string str;
-	};
+		struct runtime_error : public std::exception {
+			runtime_error( const char *err="runtime viewer error" ) : str(err) { }
+			~runtime_error( ) throw( ) { }
+			const char* what() const throw() {
+				return str.c_str( );
+			}
+			const std::string str;
+		};
 
-    }
+	}
 }
 
 #endif

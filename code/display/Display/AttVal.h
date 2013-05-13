@@ -34,24 +34,24 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// <summary> 
+// <summary>
 // Type-dependent interface for values of Attributes.
 // </summary>
 
 // <use visibility=export>
- 
+
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="tAttribute" demos="">
 // </reviewed>
- 
+
 // <prerequisite>
 // <li> AttributeValueBase
 // </prerequisite>
 
-// <etymology> 
+// <etymology>
 // An <em>AttributeValue</em> stores the value of an Attribute
 // </etymology>
 
-// <synopsis>  
+// <synopsis>
 // An Attribute in the Display Library has a name and a value.  In
 // order to facilite easy use of Attributes in user code, the value of
 // an Attribute has to be wrapped in a templated class, the
@@ -83,7 +83,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // AttributeValue<Int> intAtt2(3, False);
 // AttributeValue<Int> intAtt3(2, False);
 // </srcblock>
-// 
+//
 // At this point, <src>intAtt1==intAtt2</src> will return
 // <src>True</src>, and <src>intAtt1==intAtt3</src> will return
 // <src>False</src>.
@@ -108,7 +108,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // and similarly <src>vecAtt2==intAtt2</src> is also <src>False</src>.
 // </example>
 
-// <motivation> 
+// <motivation>
 // and <linkto class=Attribute> Attribute </linkto>.
 // </motivation>
 //
@@ -116,77 +116,83 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Nothing known.
 // </todo>
 
-template <class T> class AttributeValue : public AttributeValueBase {
-  
- public:
+	template <class T> class AttributeValue : public AttributeValueBase {
 
-  // Construct from a scalar value. The parameter <src>strict</src>
-  // defines whether whether matching has to be done for each element
-  // (<src>strict == True</src>) (a scalar value AttributeValue is
-  // considered a Vector of length one), or whether AttributeValues
-  // match if any one element of one Vector is equal to any other
-  // element of the other Vector (<src>strict == False</src>).
-  AttributeValue(const T &value, const Bool strict);
+	public:
 
-  // Construct from a <src>Vector</src>.  The parameter
-  // <src>strict</src> defines whether whether matching has to be done
-  // for each element (<src>strict == True</src>), or whether
-  // AttributeValues match if any one element of one Vector is equal
-  // to any other element of the other Vector (<src>strict == False</src>).
-  AttributeValue(const Vector<T> &value, const Bool strict);
-  
-  // Destructor.
-  virtual ~AttributeValue();
+		// Construct from a scalar value. The parameter <src>strict</src>
+		// defines whether whether matching has to be done for each element
+		// (<src>strict == True</src>) (a scalar value AttributeValue is
+		// considered a Vector of length one), or whether AttributeValues
+		// match if any one element of one Vector is equal to any other
+		// element of the other Vector (<src>strict == False</src>).
+		AttributeValue(const T &value, const Bool strict);
 
-  // Copy constructor.
-  AttributeValue(const AttributeValue<T> &other);
+		// Construct from a <src>Vector</src>.  The parameter
+		// <src>strict</src> defines whether whether matching has to be done
+		// for each element (<src>strict == True</src>), or whether
+		// AttributeValues match if any one element of one Vector is equal
+		// to any other element of the other Vector (<src>strict == False</src>).
+		AttributeValue(const Vector<T> &value, const Bool strict);
 
-  // Assignment (copy semantics)
-  const AttributeValue<T>& operator=(const AttributeValue<T> &other);
+		// Destructor.
+		virtual ~AttributeValue();
 
-  // Set/get the value of the AttributeValue.
-  // <group>
-  virtual void setValue(const T &value);
-  virtual void setValue(const Vector<T> &value);
-  virtual Vector<T> getValue() const {return itsValue;};
-  // </group>
+		// Copy constructor.
+		AttributeValue(const AttributeValue<T> &other);
 
-  // Returns a new copy of the AttributeValue
-  virtual AttributeValueBase* clone() const;
+		// Assignment (copy semantics)
+		const AttributeValue<T>& operator=(const AttributeValue<T> &other);
 
-  // Add <src>other</src> to <src>*this</src>.
-  virtual void operator+=(const AttributeValueBase& other);
+		// Set/get the value of the AttributeValue.
+		// <group>
+		virtual void setValue(const T &value);
+		virtual void setValue(const Vector<T> &value);
+		virtual Vector<T> getValue() const {
+			return itsValue;
+		};
+		// </group>
 
-  // Return class name
-  virtual String className() const {return String("AttributeValue");};
+		// Returns a new copy of the AttributeValue
+		virtual AttributeValueBase* clone() const;
 
-  virtual void print(ostream& os) { os<<itsValue;  }
+		// Add <src>other</src> to <src>*this</src>.
+		virtual void operator+=(const AttributeValueBase& other);
 
- protected:
-  // Implements when the values of two Attributes match or not.  The
-  // state of <src>strict</src> determines whether whether matching
-  // has to be done for each element (<src> strict == True </src>), or
-  // whether AttributeValues match if any one element of one Vector is
-  // equal to any other element of the other Vector.
-  virtual Bool matches(const AttributeValueBase& other) const;
+		// Return class name
+		virtual String className() const {
+			return String("AttributeValue");
+		};
 
-  // Cast from Base class 
-  const AttributeValue<T>& myCast (const AttributeValueBase& other) const;
+		virtual void print(ostream& os) {
+			os<<itsValue;
+		}
+
+	protected:
+		// Implements when the values of two Attributes match or not.  The
+		// state of <src>strict</src> determines whether whether matching
+		// has to be done for each element (<src> strict == True </src>), or
+		// whether AttributeValues match if any one element of one Vector is
+		// equal to any other element of the other Vector.
+		virtual Bool matches(const AttributeValueBase& other) const;
+
+		// Cast from Base class
+		const AttributeValue<T>& myCast (const AttributeValueBase& other) const;
 
 
- private:
-  // The attribute value
-  Vector<T> itsValue;
+	private:
+		// The attribute value
+		Vector<T> itsValue;
 
-  // Sett T type in base class
-  void setType();
+		// Sett T type in base class
+		void setType();
 
-  // Do actual matching
-  Bool myMatch(const AttributeValue<T>& other) const;
+		// Do actual matching
+		Bool myMatch(const AttributeValue<T>& other) const;
 
-  // Default constructor
-  AttributeValue();
-};
+		// Default constructor
+		AttributeValue();
+	};
 
 } //# NAMESPACE CASA - END
 

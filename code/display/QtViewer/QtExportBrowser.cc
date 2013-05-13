@@ -37,205 +37,207 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-QtExportBrowser::QtExportBrowser(QWidget *parent, QString filePath) :
-		QDialog(parent)
-{
-  setupUi(this);
+	QtExportBrowser::QtExportBrowser(QWidget *parent, QString filePath) :
+		QDialog(parent) {
+		setupUi(this);
 
-  setExportFilePath_(filePath);
-  buildDirTree();
+		setExportFilePath_(filePath);
+		buildDirTree();
 
-  // Note: The hidden "apply" button is the scapegoat to get
-  //       'return' signals from the lineEditor after 'returnPressed()'
-  //       of this class has been passed and the input was NOT accepted.
-  //       This way the widget stays open and the user can provide a
-  //       correct input. Seems to be complicated but I (MK) could not
-  //       find a better way.
-  QPushButton *applyBtn = buttonBox->button(QDialogButtonBox::Apply);
-  if (applyBtn){applyBtn->setAutoDefault(true); applyBtn->setDefault(true); applyBtn->hide();}
-  //QPushButton *saveBtn = buttonBox->button(QDialogButtonBox::Save);
-  //if (saveBtn){saveBtn->setAutoDefault(false); saveBtn->setDefault(false);}
-  //QPushButton *closeBtn = buttonBox->button(QDialogButtonBox::Close);
-  //if (closeBtn){closeBtn->setAutoDefault(false); closeBtn->setDefault(false);}
-
-  connect(treeWidget_,    SIGNAL(itemClicked(QTreeWidgetItem*,int)),
-		  SLOT(clickItem(QTreeWidgetItem*)));
-  connect(treeWidget_,    SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
-		  SLOT(doubleClickItem(QTreeWidgetItem*)));
-  connect(lineEdit_,   SIGNAL(returnPressed()),
-		  SLOT(returnPressed()));
-}
-
-
-QtExportBrowser::~QtExportBrowser(){
-}
-void QtExportBrowser::buildDirTree() {
-
-  // make the tree header
-  treeWidget_->clear();
-  QStringList lbl;
-  lbl << "Name" << "Type";
-  treeWidget_->setColumnCount(2);
-  treeWidget_->setHeaderLabels(lbl);
-
-  QTreeWidgetItem *dirItem;
-
-  // create and add an item for the home directory
-  dirItem = new QTreeWidgetItem();
-  dirItem->setIcon(0, QIcon(":/icons/home_folder.png"));
-  dirItem->setToolTip(0, QString("Home directory"));
-  dirItem->setText(1, "Directory");
-  //dirItem->setTextColor(1, getDirColor(dType));
-  treeWidget_->insertTopLevelItem (0, dirItem );
-
-  // create and add an item for the root directory
-  dirItem = new QTreeWidgetItem();
-  dirItem->setIcon(0, QIcon(":/icons/root_folder.png"));
-  dirItem->setToolTip(0, QString("Root directory"));
-  dirItem->setText(1, "Directory");
-  //dirItem->setTextColor(1, getDirColor(dType));
-  treeWidget_->insertTopLevelItem (1, dirItem );
-
-  // list the content of dir
-  // go over each item
-  exportDir_.makeAbsolute();
-  QStringList entryList = exportDir_.entryList();
-  for (int i = 0; i < entryList.size(); i++) {
-
-	  QString it = entryList.at(i);
-	  if (it.compare(".") > 0) {
-
-		  /// generate new item
-		  dirItem = new QTreeWidgetItem(treeWidget_);
-		  dirItem->setText(0, it);
-
-		  // put the full path into the tooltip;
-		  // just differentiate between "Directories" and "Files"
-		  QFileInfo fileInfo = QFileInfo(exportDir_.path() + "/" +  entryList.at(i));
-		  if (fileInfo.isDir())
-			  dirItem->setText(1, "Directory");
-		  else
-			  dirItem->setText(1, "File");
-	  }
-  }
-
-  // resize the tree widget
-  treeWidget_->resizeColumnToContents(0);
-}
-
-void QtExportBrowser::doubleClickItem(QTreeWidgetItem* item){
-	// make sure a directory was clicked
-	if(item!=0 && item->text(1)=="Directory"){
-
-		// correct the 'clickItem' action
-		if (buffExpFile_.size()>0){
-			exportFile_=buffExpFile_;
-			buffExpFile_.clear();
+		// Note: The hidden "apply" button is the scapegoat to get
+		//       'return' signals from the lineEditor after 'returnPressed()'
+		//       of this class has been passed and the input was NOT accepted.
+		//       This way the widget stays open and the user can provide a
+		//       correct input. Seems to be complicated but I (MK) could not
+		//       find a better way.
+		QPushButton *applyBtn = buttonBox->button(QDialogButtonBox::Apply);
+		if (applyBtn) {
+			applyBtn->setAutoDefault(true);
+			applyBtn->setDefault(true);
+			applyBtn->hide();
 		}
+		//QPushButton *saveBtn = buttonBox->button(QDialogButtonBox::Save);
+		//if (saveBtn){saveBtn->setAutoDefault(false); saveBtn->setDefault(false);}
+		//QPushButton *closeBtn = buttonBox->button(QDialogButtonBox::Close);
+		//if (closeBtn){closeBtn->setAutoDefault(false); closeBtn->setDefault(false);}
 
-		// get the text
-		QString iText = item->text(0);
-
-		// if there is a text go to that directory
-		if (iText.size()>0){
-			updateDirectory(item->text(0));
-		}
-		// if there is no text
-		else if (iText.size()==0){
-
-			// get the top-level index
-			int index = treeWidget_->indexOfTopLevelItem (item );
-
-			// go to "home" or "root"
-			if (index == 0)
-				updateDirectory(QDir::homePath());
-			else if (index == 1)
-				updateDirectory(QDir::rootPath());
-		}
-	}
-}
-
-void QtExportBrowser::clickItem(QTreeWidgetItem* item){
-
-	// check whether the item is usable
-	if(item!=0 && item->text(0).size()>0){
-
-		// save a directory name
-		if (item->text(1) =="Directory")
-			buffExpFile_=exportFile_;
-
-		// save the marked item
-		exportFile_=item->text(0);
+		connect(treeWidget_,    SIGNAL(itemClicked(QTreeWidgetItem*,int)),
+		        SLOT(clickItem(QTreeWidgetItem*)));
+		connect(treeWidget_,    SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
+		        SLOT(doubleClickItem(QTreeWidgetItem*)));
+		connect(lineEdit_,   SIGNAL(returnPressed()),
+		        SLOT(returnPressed()));
 	}
 
-	// put the new path in the editor
-	lineEdit_->setText(exportDir_.path()+"/"+exportFile_);
-}
 
-void QtExportBrowser::updateDirectory(QString newDir){
-	// try to go to the new dir;
-	// if not possible, message an go back to old dir
-	QDir saved = exportDir_;
-  if(!exportDir_.cd(newDir)) {
-    QMessageBox::warning(this, tr("QtExportBrowser"),
-    tr("No such directory:\n %1").arg(newDir));
-    exportDir_ = saved;
-  }
+	QtExportBrowser::~QtExportBrowser() {
+	}
+	void QtExportBrowser::buildDirTree() {
 
-  // update the treewidget
-  buildDirTree();
+		// make the tree header
+		treeWidget_->clear();
+		QStringList lbl;
+		lbl << "Name" << "Type";
+		treeWidget_->setColumnCount(2);
+		treeWidget_->setHeaderLabels(lbl);
 
-  // refresh the line editor
-  exportDir_.makeAbsolute();
-  lineEdit_->setText(exportDir_.path()+"/"+exportFile_);
-}
+		QTreeWidgetItem *dirItem;
 
-void QtExportBrowser::returnPressed(){
+		// create and add an item for the home directory
+		dirItem = new QTreeWidgetItem();
+		dirItem->setIcon(0, QIcon(":/icons/home_folder.png"));
+		dirItem->setToolTip(0, QString("Home directory"));
+		dirItem->setText(1, "Directory");
+		//dirItem->setTextColor(1, getDirColor(dType));
+		treeWidget_->insertTopLevelItem (0, dirItem );
 
-	// get the save path and cut a trailing "/"
-	QString str = lineEdit_->text();
-	while (str.endsWith("/") && str.size()>1)
-		str.chop(1);
+		// create and add an item for the root directory
+		dirItem = new QTreeWidgetItem();
+		dirItem->setIcon(0, QIcon(":/icons/root_folder.png"));
+		dirItem->setToolTip(0, QString("Root directory"));
+		dirItem->setText(1, "Directory");
+		//dirItem->setTextColor(1, getDirColor(dType));
+		treeWidget_->insertTopLevelItem (1, dirItem );
 
-	// check the directory exists, saving
-	// thus would be possible
-	QFileInfo fileInfo(str);
-	QDir dir = QDir(fileInfo.path());
-	if (!dir.exists()){
-		// go back to what existed
-		// give a message and return
-		exportFile_ = fileInfo.fileName();
+		// list the content of dir
+		// go over each item
+		exportDir_.makeAbsolute();
+		QStringList entryList = exportDir_.entryList();
+		for (int i = 0; i < entryList.size(); i++) {
+
+			QString it = entryList.at(i);
+			if (it.compare(".") > 0) {
+
+				/// generate new item
+				dirItem = new QTreeWidgetItem(treeWidget_);
+				dirItem->setText(0, it);
+
+				// put the full path into the tooltip;
+				// just differentiate between "Directories" and "Files"
+				QFileInfo fileInfo = QFileInfo(exportDir_.path() + "/" +  entryList.at(i));
+				if (fileInfo.isDir())
+					dirItem->setText(1, "Directory");
+				else
+					dirItem->setText(1, "File");
+			}
+		}
+
+		// resize the tree widget
+		treeWidget_->resizeColumnToContents(0);
+	}
+
+	void QtExportBrowser::doubleClickItem(QTreeWidgetItem* item) {
+		// make sure a directory was clicked
+		if(item!=0 && item->text(1)=="Directory") {
+
+			// correct the 'clickItem' action
+			if (buffExpFile_.size()>0) {
+				exportFile_=buffExpFile_;
+				buffExpFile_.clear();
+			}
+
+			// get the text
+			QString iText = item->text(0);
+
+			// if there is a text go to that directory
+			if (iText.size()>0) {
+				updateDirectory(item->text(0));
+			}
+			// if there is no text
+			else if (iText.size()==0) {
+
+				// get the top-level index
+				int index = treeWidget_->indexOfTopLevelItem (item );
+
+				// go to "home" or "root"
+				if (index == 0)
+					updateDirectory(QDir::homePath());
+				else if (index == 1)
+					updateDirectory(QDir::rootPath());
+			}
+		}
+	}
+
+	void QtExportBrowser::clickItem(QTreeWidgetItem* item) {
+
+		// check whether the item is usable
+		if(item!=0 && item->text(0).size()>0) {
+
+			// save a directory name
+			if (item->text(1) =="Directory")
+				buffExpFile_=exportFile_;
+
+			// save the marked item
+			exportFile_=item->text(0);
+		}
+
+		// put the new path in the editor
 		lineEdit_->setText(exportDir_.path()+"/"+exportFile_);
-		QString msg = "Directory: " + dir.path()  + " does not exist!\nCan NOT save " + fileInfo.fileName();
-		QMessageBox qMsg;
-		qMsg.setText(msg);
-		qMsg.exec();
-		return;
 	}
-	else{
-		// store path and dir, exit with "accept"
-		exportFile_ = fileInfo.fileName();
-		exportDir_ =  dir;
+
+	void QtExportBrowser::updateDirectory(QString newDir) {
+		// try to go to the new dir;
+		// if not possible, message an go back to old dir
+		QDir saved = exportDir_;
+		if(!exportDir_.cd(newDir)) {
+			QMessageBox::warning(this, tr("QtExportBrowser"),
+			                     tr("No such directory:\n %1").arg(newDir));
+			exportDir_ = saved;
+		}
+
+		// update the treewidget
+		buildDirTree();
+
+		// refresh the line editor
+		exportDir_.makeAbsolute();
 		lineEdit_->setText(exportDir_.path()+"/"+exportFile_);
-		done(QDialog::Accepted);
 	}
-}
 
-void QtExportBrowser::setExportFilePath_(QString filePath){
-	// chop trailing "/"
-	while (filePath.endsWith("/") && filePath.size()>1)
-		filePath.chop(1);
+	void QtExportBrowser::returnPressed() {
 
-	// split the path to dir and file
-	QFileInfo fileInfo(filePath);
-	exportFile_ = fileInfo.fileName();
-	exportDir_ =  QDir(fileInfo.path());
+		// get the save path and cut a trailing "/"
+		QString str = lineEdit_->text();
+		while (str.endsWith("/") && str.size()>1)
+			str.chop(1);
 
-	// if the dir does not exist, take $HOME
-	if (!exportDir_.exists())
-		exportDir_ = QDir::homePath ();
+		// check the directory exists, saving
+		// thus would be possible
+		QFileInfo fileInfo(str);
+		QDir dir = QDir(fileInfo.path());
+		if (!dir.exists()) {
+			// go back to what existed
+			// give a message and return
+			exportFile_ = fileInfo.fileName();
+			lineEdit_->setText(exportDir_.path()+"/"+exportFile_);
+			QString msg = "Directory: " + dir.path()  + " does not exist!\nCan NOT save " + fileInfo.fileName();
+			QMessageBox qMsg;
+			qMsg.setText(msg);
+			qMsg.exec();
+			return;
+		} else {
+			// store path and dir, exit with "accept"
+			exportFile_ = fileInfo.fileName();
+			exportDir_ =  dir;
+			lineEdit_->setText(exportDir_.path()+"/"+exportFile_);
+			done(QDialog::Accepted);
+		}
+	}
 
-	// set dir+file in the editor
-	lineEdit_->setText(exportDir_.path()+"/"+exportFile_);
-}
+	void QtExportBrowser::setExportFilePath_(QString filePath) {
+		// chop trailing "/"
+		while (filePath.endsWith("/") && filePath.size()>1)
+			filePath.chop(1);
+
+		// split the path to dir and file
+		QFileInfo fileInfo(filePath);
+		exportFile_ = fileInfo.fileName();
+		exportDir_ =  QDir(fileInfo.path());
+
+		// if the dir does not exist, take $HOME
+		if (!exportDir_.exists())
+			exportDir_ = QDir::homePath ();
+
+		// set dir+file in the editor
+		lineEdit_->setText(exportDir_.path()+"/"+exportFile_);
+	}
 } //# NAMESPACE CASA - END

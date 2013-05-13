@@ -35,62 +35,62 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class PCTool;
-class PixelCanvas;
+	class PCTool;
+	class PixelCanvas;
 
 // <summary>
 // PixelCanvas position event handler for PCTool.
 // </summary>
 //
 // <synopsis>
-// This class is a simple implementation of a PCPositionEH which 
+// This class is a simple implementation of a PCPositionEH which
 // passes PixelCanvas position events on to a single PCTool.
 // </synopsis>
 
-class PCToolPosEH : public PCPositionEH {
- public:
-  PCToolPosEH(PCTool *tool);
-  virtual ~PCToolPosEH(){};
-  virtual void operator()(const PCPositionEvent& ev);
- private:
-  PCTool *itsTool;
-};
+	class PCToolPosEH : public PCPositionEH {
+	public:
+		PCToolPosEH(PCTool *tool);
+		virtual ~PCToolPosEH() {};
+		virtual void operator()(const PCPositionEvent& ev);
+	private:
+		PCTool *itsTool;
+	};
 
 // <summary>
 // PixelCanvas motion event handler for PCTool.
 // </summary>
 //
 // <synopsis>
-// This class is a simple implementation of a PCMotionEH which 
+// This class is a simple implementation of a PCMotionEH which
 // passes PixelCanvas motion events on to a single PCTool.
 // </synopsis>
 
-class PCToolMotEH : public PCMotionEH {
- public:
-  PCToolMotEH(PCTool *tool);
-  virtual ~PCToolMotEH(){};
-  virtual void operator()(const PCMotionEvent& ev);
- private:
-  PCTool *itsTool;
-};
+	class PCToolMotEH : public PCMotionEH {
+	public:
+		PCToolMotEH(PCTool *tool);
+		virtual ~PCToolMotEH() {};
+		virtual void operator()(const PCMotionEvent& ev);
+	private:
+		PCTool *itsTool;
+	};
 
 // <summary>
 // PixelCanvas refresh event handler for PCTool.
 // </summary>
 //
 // <synopsis>
-// This class is a simple implementation of a PCRefreshEH which 
+// This class is a simple implementation of a PCRefreshEH which
 // passes PixelCanvas refresh events on to a single PCTool.
 // </synopsis>
 
-class PCToolRefEH : public PCRefreshEH {
- public:
-  PCToolRefEH(PCTool *tool);
-  virtual ~PCToolRefEH(){};
-  virtual void operator()(const PCRefreshEvent& ev);
- private:
-  PCTool *itsTool;
-};
+	class PCToolRefEH : public PCRefreshEH {
+	public:
+		PCToolRefEH(PCTool *tool);
+		virtual ~PCToolRefEH() {};
+		virtual void operator()(const PCRefreshEvent& ev);
+	private:
+		PCTool *itsTool;
+	};
 
 // <summary>
 // Base class for PixelCanvas event-based tools.
@@ -112,7 +112,7 @@ class PCToolRefEH : public PCRefreshEH {
 // </etymology>
 
 // <synopsis>
-// This class is a base class upon which tools which respond to 
+// This class is a base class upon which tools which respond to
 // various events on a PixelCanvas can be built.  It wraps up
 // the position, motion and refresh events so that the programmer
 // sees them all coming into one class, where they can be dealt
@@ -125,9 +125,9 @@ class PCToolRefEH : public PCRefreshEH {
 // </example>
 
 // <motivation>
-// The majority of tools written for the PixelCanvas will fall 
-// into the category that this class serves: they respond to a 
-// single key or mouse button, and they potentially need to 
+// The majority of tools written for the PixelCanvas will fall
+// into the category that this class serves: they respond to a
+// single key or mouse button, and they potentially need to
 // respond to position, motion and refresh events.
 // </motivation>
 
@@ -135,82 +135,84 @@ class PCToolRefEH : public PCRefreshEH {
 //   <li> Nothing known
 // </todo>
 
-class PCTool {
-  
- public:
-  
-  // Constructor.  A PixelCanvas to attach to must be specified,
-  // and normally a key to respond to as well.
-  PCTool(PixelCanvas *pcanvas,
-	 Display::KeySym keysym = Display::K_Pointer_Button1);
-  
-  // Destructor.
-  virtual ~PCTool();
-  
-  // Switch the tool on/off.  This simply registers or unregisters the
-  // event handlers.
-  // <group>
-  virtual void enable();
-  virtual void disable();
-  // </group>
-  
-  // Required operators for event handling.  These are called when
-  // events occur, and distribute the events to the "user-level"
-  // methods.
-  // <group>
-  virtual void operator()(const PCPositionEvent& ev);
-  virtual void operator()(const PCMotionEvent& ev);
-  virtual void operator()(const PCRefreshEvent& ev);
-  // </group>
+	class PCTool {
 
-  // Functions called by the local event handling operators.  By
-  // default they do nothing, so a derived class needs only implement
-  // the events it cares about.
-  // <group>
-  virtual void keyPressed(const PCPositionEvent &ev);
-  virtual void keyReleased(const PCPositionEvent &ev);
-  virtual void otherKeyPressed(const PCPositionEvent &ev);
-  virtual void otherKeyReleased(const PCPositionEvent &ev);
-  virtual void moved(const PCMotionEvent &ev);
-  virtual void refresh(const PCRefreshEvent &ev);
-  // </group>
+	public:
 
-  // Get the PixelCanvas to which this Tool is attached.
-  virtual PixelCanvas *pixelCanvas() const 
-    { return itsPixelCanvas; }
+		// Constructor.  A PixelCanvas to attach to must be specified,
+		// and normally a key to respond to as well.
+		PCTool(PixelCanvas *pcanvas,
+		       Display::KeySym keysym = Display::K_Pointer_Button1);
 
-  // Set/get which key to catch.
-  // <group>
-  virtual void setKey(const Display::KeySym &keysym);
-  virtual Display::KeySym getKey() const
-    { return itsKeySym; }
-  // </group>
+		// Destructor.
+		virtual ~PCTool();
 
- protected:
+		// Switch the tool on/off.  This simply registers or unregisters the
+		// event handlers.
+		// <group>
+		virtual void enable();
+		virtual void disable();
+		// </group>
 
-  // Indicate whether key is presently pressed.
-  virtual Bool keyPresentlyDown(const PCMotionEvent &ev);
+		// Required operators for event handling.  These are called when
+		// events occur, and distribute the events to the "user-level"
+		// methods.
+		// <group>
+		virtual void operator()(const PCPositionEvent& ev);
+		virtual void operator()(const PCMotionEvent& ev);
+		virtual void operator()(const PCRefreshEvent& ev);
+		// </group>
 
- private:
+		// Functions called by the local event handling operators.  By
+		// default they do nothing, so a derived class needs only implement
+		// the events it cares about.
+		// <group>
+		virtual void keyPressed(const PCPositionEvent &ev);
+		virtual void keyReleased(const PCPositionEvent &ev);
+		virtual void otherKeyPressed(const PCPositionEvent &ev);
+		virtual void otherKeyReleased(const PCPositionEvent &ev);
+		virtual void moved(const PCMotionEvent &ev);
+		virtual void refresh(const PCRefreshEvent &ev);
+		// </group>
 
-  // The PixelCanvas to which this is connected.
-  PixelCanvas *itsPixelCanvas;
+		// Get the PixelCanvas to which this Tool is attached.
+		virtual PixelCanvas *pixelCanvas() const {
+			return itsPixelCanvas;
+		}
 
-  // The key to handle.
-  Display::KeySym itsKeySym;
+		// Set/get which key to catch.
+		// <group>
+		virtual void setKey(const Display::KeySym &keysym);
+		virtual Display::KeySym getKey() const {
+			return itsKeySym;
+		}
+		// </group>
 
-  // The modifier mask for the key.
-  Display::KeyModifier itsKeyModifier;
+	protected:
 
-  // Whether the event handlers are currently registered.
-  Bool itsEventHandlersRegistered;
+		// Indicate whether key is presently pressed.
+		virtual Bool keyPresentlyDown(const PCMotionEvent &ev);
 
-  // The event handlers.
-  PCToolPosEH *itsPositionEH;
-  PCToolMotEH *itsMotionEH;
-  PCToolRefEH *itsRefreshEH;
+	private:
 
-};
+		// The PixelCanvas to which this is connected.
+		PixelCanvas *itsPixelCanvas;
+
+		// The key to handle.
+		Display::KeySym itsKeySym;
+
+		// The modifier mask for the key.
+		Display::KeyModifier itsKeyModifier;
+
+		// Whether the event handlers are currently registered.
+		Bool itsEventHandlersRegistered;
+
+		// The event handlers.
+		PCToolPosEH *itsPositionEH;
+		PCToolMotEH *itsMotionEH;
+		PCToolRefEH *itsRefreshEH;
+
+	};
 
 
 } //# NAMESPACE CASA - END

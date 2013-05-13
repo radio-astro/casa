@@ -48,18 +48,18 @@ namespace casa {
 // Nothing yet: it may prove useful for Qt-signal-emitting mouse tools
 // (which are MWCTools or possibly PCTools) to have a common base.
 // </synopsis>
-class QtOldMouseTool: public QObject {
+	class QtOldMouseTool: public QObject {
 
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
-  
- public: 
- 
-  QtOldMouseTool() : QObject() {  }
-  ~QtOldMouseTool() {  }
 
-}; 
+	public:
+
+		QtOldMouseTool() : QObject() {  }
+		~QtOldMouseTool() {  }
+
+	};
 
 
 
@@ -68,149 +68,149 @@ class QtOldMouseTool: public QObject {
 // QtOldRTRegion is the Rectangle Region mouse tool that sends a signal
 // when a new rectangle is ready.
 // </synopsis>
-class QtOldRTRegion: public QtOldMouseTool, public MWCRTRegion {
-  
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+	class QtOldRTRegion: public QtOldMouseTool, public MWCRTRegion {
+
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
- public: 
- 
-  QtOldRTRegion(PanelDisplay* pd) : QtOldMouseTool(), MWCRTRegion(), pd_(pd) {  }
-  
-  ~QtOldRTRegion() {  }
-  
-  // Retrieve the current rectangular mouse region record and WCH, if any.
-  // (If nothing is ready, returns False -- be sure to check before using
-  // return parameters.  See implementation for mouseRegion Record format).
-  Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+	public:
 
- signals:
- 
-  // See regionReady() implementation for format of the record.  (For some
-  // uses, a connecting slot may be able to do without the WCH* parameter).
-  void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
-  void echoClicked(Record);
+		QtOldRTRegion(PanelDisplay* pd) : QtOldMouseTool(), MWCRTRegion(), pd_(pd) {  }
 
- protected:
-  
-  // Signals mouseRegionReady with an appropriate Record, when
-  // called by base class in response to user selection with the mouse.
-  // See implementation for format of the record.
-  virtual void regionReady();
+		~QtOldRTRegion() {  }
 
-  virtual void clicked(Int x, Int y); 
-  virtual void doubleClicked(Int x, Int y); 
-  //virtual void rectangleReady(); 
-  //virtual void handleEvent(DisplayEvent& ev);
-  //virtual void keyPressed(const WCPositionEvent &ev);
-  
-  PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
+		// Retrieve the current rectangular mouse region record and WCH, if any.
+		// (If nothing is ready, returns False -- be sure to check before using
+		// return parameters.  See implementation for mouseRegion Record format).
+		Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
 
-};
+	signals:
+
+		// See regionReady() implementation for format of the record.  (For some
+		// uses, a connecting slot may be able to do without the WCH* parameter).
+		void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
+		void echoClicked(Record);
+
+	protected:
+
+		// Signals mouseRegionReady with an appropriate Record, when
+		// called by base class in response to user selection with the mouse.
+		// See implementation for format of the record.
+		virtual void regionReady();
+
+		virtual void clicked(Int x, Int y);
+		virtual void doubleClicked(Int x, Int y);
+		//virtual void rectangleReady();
+		//virtual void handleEvent(DisplayEvent& ev);
+		//virtual void keyPressed(const WCPositionEvent &ev);
+
+		PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
+
+	};
 
 
 // <synopsis>
 // QtOldELRegion is the Ellipse Region mouse tool that sends a signal
 // when a new circle is ready.
 // </synopsis>
-class QtOldELRegion: public QtOldMouseTool, public MWCETRegion {
+	class QtOldELRegion: public QtOldMouseTool, public MWCETRegion {
 
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
- public:
+	public:
 
-  QtOldELRegion(PanelDisplay* pd) : QtOldMouseTool(), MWCETRegion(), pd_(pd) {  }
+		QtOldELRegion(PanelDisplay* pd) : QtOldMouseTool(), MWCETRegion(), pd_(pd) {  }
 
-  ~QtOldELRegion() {  }
+		~QtOldELRegion() {  }
 
-  // Retrieve the current circular mouse region record and WCH, if any.
-  // (If nothing is ready, returns False -- be sure to check before using
-  // return parameters.  See implementation for mouseRegion Record format).
-  Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+		// Retrieve the current circular mouse region record and WCH, if any.
+		// (If nothing is ready, returns False -- be sure to check before using
+		// return parameters.  See implementation for mouseRegion Record format).
+		Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
 
- signals:
+	signals:
 
-  // See regionReady() implementation for format of the record.  (For some
-  // uses, a connecting slot may be able to do without the WCH* parameter).
-  void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
-  void echoClicked(Record);
+		// See regionReady() implementation for format of the record.  (For some
+		// uses, a connecting slot may be able to do without the WCH* parameter).
+		void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
+		void echoClicked(Record);
 
- protected:
+	protected:
 
-  // Signals mouseRegionReady with an appropriate Record, when
-  // called by base class in response to user selection with the mouse.
-  // See implementation for format of the record.
-  virtual void regionReady();
+		// Signals mouseRegionReady with an appropriate Record, when
+		// called by base class in response to user selection with the mouse.
+		// See implementation for format of the record.
+		virtual void regionReady();
 
-  virtual void clicked(Int x, Int y);
-  virtual void doubleClicked(Int x, Int y);
+		virtual void clicked(Int x, Int y);
+		virtual void doubleClicked(Int x, Int y);
 
-  PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
+		PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
 
-};
+	};
 
 
 // <synopsis>
 // QtOldPTRegion is the Polygon Region mouse tool that sends a signal
 // when a new polygon is ready.
 // </synopsis>
-class QtOldPTRegion: public QtOldMouseTool, public MWCPTRegion {
-  
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+	class QtOldPTRegion: public QtOldMouseTool, public MWCPTRegion {
+
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
- public: 
- 
-  QtOldPTRegion(PanelDisplay* pd) : QtOldMouseTool(), MWCPTRegion(), pd_(pd) {  }
-  
-  ~QtOldPTRegion() {  }
-  
-  // Retrieve the current polygon mouse region record and WCH, if any.
-  // (If nothing is ready, returns False -- be sure to check before using
-  // return parameters.  See implementation for mouseRegion Record format).
-  Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
+	public:
 
- signals:
- 
-  // See regionReady() implementation for format of the record.  (For some
-  // uses, a connecting slot may be able to do without the WCH* parameter).
-  void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
-  void echoClicked(Record);
+		QtOldPTRegion(PanelDisplay* pd) : QtOldMouseTool(), MWCPTRegion(), pd_(pd) {  }
 
- protected:
-  
-  // This callback is invoked by the base when the user double-clicks
-  // inside a polygon defined previously (but see also polygonReady(),
-  // below).  This implementation emits the Qt signal mouseRegionReady()
-  // with an appropriate Record defining the user's polygon mouse selection.
-  // See implementation for format of the record.
-  virtual void regionReady();
-  virtual void clicked(Int x, Int y);
-  virtual void doubleClicked(Int x, Int y); 
+		~QtOldPTRegion() {  }
 
-  //virtual void handleEvent(DisplayEvent& ev);
-  //virtual void keyPressed(const WCPositionEvent &ev);
-  
-  ///////This is not correct !
-  //
-  // This callback is invoked by the base when the polygon is first
-  // defined (by a double-click at last point) or when the mouse is
-  // released after a move/resize.  It was unused in glish.  For Qt,
-  // this will also signal that the polygon region has been fully
-  // 'selected/made ready' (which will preclude the need for the
-  // user to double-click [again] inside the polygon to select it). 
-  //virtual void polygonReady() { regionReady();  }
+		// Retrieve the current polygon mouse region record and WCH, if any.
+		// (If nothing is ready, returns False -- be sure to check before using
+		// return parameters.  See implementation for mouseRegion Record format).
+		Bool getMouseRegion(Record& mouseRegion, WorldCanvasHolder*& wch);
 
-  // is this fix to 1393?
-  virtual void polygonReady() { }
+	signals:
 
-  PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
+		// See regionReady() implementation for format of the record.  (For some
+		// uses, a connecting slot may be able to do without the WCH* parameter).
+		void mouseRegionReady(Record mouseRegion, WorldCanvasHolder*);
+		void echoClicked(Record);
 
-};
+	protected:
+
+		// This callback is invoked by the base when the user double-clicks
+		// inside a polygon defined previously (but see also polygonReady(),
+		// below).  This implementation emits the Qt signal mouseRegionReady()
+		// with an appropriate Record defining the user's polygon mouse selection.
+		// See implementation for format of the record.
+		virtual void regionReady();
+		virtual void clicked(Int x, Int y);
+		virtual void doubleClicked(Int x, Int y);
+
+		//virtual void handleEvent(DisplayEvent& ev);
+		//virtual void keyPressed(const WCPositionEvent &ev);
+
+		///////This is not correct !
+		//
+		// This callback is invoked by the base when the polygon is first
+		// defined (by a double-click at last point) or when the mouse is
+		// released after a move/resize.  It was unused in glish.  For Qt,
+		// this will also signal that the polygon region has been fully
+		// 'selected/made ready' (which will preclude the need for the
+		// user to double-click [again] inside the polygon to select it).
+		//virtual void polygonReady() { regionReady();  }
+
+		// is this fix to 1393?
+		virtual void polygonReady() { }
+
+		PanelDisplay* pd_;	// (Kludge... zIndex inaccessible from WC...)
+
+	};
 
 
 

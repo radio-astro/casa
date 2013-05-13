@@ -30,17 +30,17 @@
 
 namespace casa {
 
-class CanvasModeAnnotation : public CanvasMode {
-public:
-	CanvasModeAnnotation();
-	virtual bool isMode( ModeIndex mode ) const;
-	virtual void mousePressEventSpecific( QMouseEvent* event );
-	virtual void mouseMoveEvent( QMouseEvent* event );
-	virtual void mouseReleaseEventSpecific( QMouseEvent* event );
-	virtual ~CanvasModeAnnotation();
-private:
-	bool dragEnabled;
-};
+	class CanvasModeAnnotation : public CanvasMode {
+	public:
+		CanvasModeAnnotation();
+		virtual bool isMode( ModeIndex mode ) const;
+		virtual void mousePressEventSpecific( QMouseEvent* event );
+		virtual void mouseMoveEvent( QMouseEvent* event );
+		virtual void mouseReleaseEventSpecific( QMouseEvent* event );
+		virtual ~CanvasModeAnnotation();
+	private:
+		bool dragEnabled;
+	};
 
 } /* namespace casa */
 #endif /* CANVASMODEANNOTATION_H_ */

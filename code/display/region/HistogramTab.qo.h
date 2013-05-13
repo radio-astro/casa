@@ -31,33 +31,32 @@
 
 namespace casa {
 
-template <class T> class ImageInterface;
-class ImageRegion;
-class HistogramGraph;
+	template <class T> class ImageInterface;
+	class ImageRegion;
+	class HistogramGraph;
 
-/**
- * Manages a stack widget that displays histograms for a single region
- * but multiple images.
- */
+	/**
+	 * Manages a stack widget that displays histograms for a single region
+	 * but multiple images.
+	 */
 
-class HistogramTab : public QWidget
-{
-    Q_OBJECT
+	class HistogramTab : public QWidget {
+		Q_OBJECT
 
-public:
-    HistogramTab(QWidget *parent = 0);
-    void addImage( ImageInterface<float>* image );
-    void setImageRegion( const std::string& imageName, ImageRegion* region, int regionId);
-    void clear();
-    ~HistogramTab();
-private slots:
-	void showNextGraph( int nextIndex );
-private:
-	int initialStackIndex;
-	void resetNextEnabled();
-    QMap<QString,HistogramGraph*> graphs;
-    Ui::HistogramTabClass ui;
-};
+	public:
+		HistogramTab(QWidget *parent = 0);
+		void addImage( ImageInterface<float>* image );
+		void setImageRegion( const std::string& imageName, ImageRegion* region, int regionId);
+		void clear();
+		~HistogramTab();
+	private slots:
+		void showNextGraph( int nextIndex );
+	private:
+		int initialStackIndex;
+		void resetNextEnabled();
+		QMap<QString,HistogramGraph*> graphs;
+		Ui::HistogramTabClass ui;
+	};
 }
 
 #endif // HISTOGRAMTAB_QO_H

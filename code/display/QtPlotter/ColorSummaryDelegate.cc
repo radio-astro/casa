@@ -36,38 +36,38 @@
 
 namespace casa {
 
-ColorSummaryDelegate::ColorSummaryDelegate( QObject* parent ) :
-	QStyledItemDelegate( parent ){
+	ColorSummaryDelegate::ColorSummaryDelegate( QObject* parent ) :
+		QStyledItemDelegate( parent ) {
 
-}
-
-void ColorSummaryDelegate::paint( QPainter * painter, const QStyleOptionViewItem &option,
-			const QModelIndex & index ) const{
-	// Call the original paint method with the selection state cleared
-	// to prevent painting the original selection background
-	QStyleOptionViewItemV4 optionV4 = *qstyleoption_cast<const QStyleOptionViewItemV4 *>(&option);
-	int selected = optionV4.state & QStyle::State_Selected;
-	optionV4.state &= ~QStyle::State_Selected;
-	QStyledItemDelegate::paint(painter, optionV4, index);
-	if ( selected != 0 ){
-		QRect viewport = painter->viewport();
-		QPen pen = painter->pen();
-		int oldWidth = pen.width();
-		const int PEN_WIDTH = 4;
-		pen.setWidth( PEN_WIDTH );
-		QColor oldColor = pen.color();
-		pen.setColor( Qt::black );
-		painter->setPen( pen );
-		int startY = option.decorationSize.height() * index.row();
-		painter->drawRect(0,startY,viewport.width(), option.decorationSize.height()-PEN_WIDTH/2);
-		pen.setWidth( oldWidth );
-		pen.setColor( oldColor );
-		painter->setPen( pen );
 	}
-}
 
-ColorSummaryDelegate::~ColorSummaryDelegate() {
-	// TODO Auto-generated destructor stub
-}
+	void ColorSummaryDelegate::paint( QPainter * painter, const QStyleOptionViewItem &option,
+	                                  const QModelIndex & index ) const {
+		// Call the original paint method with the selection state cleared
+		// to prevent painting the original selection background
+		QStyleOptionViewItemV4 optionV4 = *qstyleoption_cast<const QStyleOptionViewItemV4 *>(&option);
+		int selected = optionV4.state & QStyle::State_Selected;
+		optionV4.state &= ~QStyle::State_Selected;
+		QStyledItemDelegate::paint(painter, optionV4, index);
+		if ( selected != 0 ) {
+			QRect viewport = painter->viewport();
+			QPen pen = painter->pen();
+			int oldWidth = pen.width();
+			const int PEN_WIDTH = 4;
+			pen.setWidth( PEN_WIDTH );
+			QColor oldColor = pen.color();
+			pen.setColor( Qt::black );
+			painter->setPen( pen );
+			int startY = option.decorationSize.height() * index.row();
+			painter->drawRect(0,startY,viewport.width(), option.decorationSize.height()-PEN_WIDTH/2);
+			pen.setWidth( oldWidth );
+			pen.setColor( oldColor );
+			painter->setPen( pen );
+		}
+	}
+
+	ColorSummaryDelegate::~ColorSummaryDelegate() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

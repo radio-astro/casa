@@ -33,7 +33,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Containers/Record.h>
-#include <casa/Containers/Block.h> 
+#include <casa/Containers/Block.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
@@ -43,7 +43,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class LogIO;
+	class LogIO;
 
 // <summary>
 // Implementation of aan ellipse object for DrawingDisplayData class.
@@ -59,127 +59,129 @@ class LogIO;
 // </todo>
 //
 
-class DDDPolygon : public DDDObject {
+	class DDDPolygon : public DDDObject {
 
- public:
+	public:
 
-  // Constructor taking a Record description.  Fields in the record,
-  // on top of what is consumed by the DDDObject constructor, are:
-  // Required : <src>x</src> (quantum of vector double) and
-  // <src>y</src> (quantum of vector double).
-  // Other, not required fields are <src>outline & editable</src>
-  // which default to <src>True</src>.  When <src>editable=False</src>
-  // the object can be moved but not reshaped, when <src>True</src>   
-  // it can be moved and reshaped.   When   <src>outline=False</src> 
-  // the ellipse is filled.
-  DDDPolygon(const Record &description, DrawingDisplayData *owner);
+		// Constructor taking a Record description.  Fields in the record,
+		// on top of what is consumed by the DDDObject constructor, are:
+		// Required : <src>x</src> (quantum of vector double) and
+		// <src>y</src> (quantum of vector double).
+		// Other, not required fields are <src>outline & editable</src>
+		// which default to <src>True</src>.  When <src>editable=False</src>
+		// the object can be moved but not reshaped, when <src>True</src>
+		// it can be moved and reshaped.   When   <src>outline=False</src>
+		// the ellipse is filled.
+		DDDPolygon(const Record &description, DrawingDisplayData *owner);
 
-  // Destructor.
-  virtual ~DDDPolygon();
-  
-  // Draw this rectangle object for the given reason on the provided
-  // WorldCanvas.
-  virtual void draw(const Display::RefreshReason &reason, 
-		    WorldCanvas *worldcanvas);
-  
-  // Return a record describing this object.  Presently returns
-  // only construction description.
-  virtual Record description();
+		// Destructor.
+		virtual ~DDDPolygon();
 
-  // Update this object based on the information in the provided
-  // Record.
-  virtual void setDescription(const Record &rec);
-  
-  // Event handlers.  The parent DrawingDisplayData will distribute
-  // events as necessary to the various DDDObjects which comprise it.
-  // <group>
-  virtual void operator()(const WCRefreshEvent &/*ev*/) {;};
-  virtual void operator()(const WCPositionEvent &ev);
-  virtual void operator()(const WCMotionEvent &ev);
-  // </group>
+		// Draw this rectangle object for the given reason on the provided
+		// WorldCanvas.
+		virtual void draw(const Display::RefreshReason &reason,
+		                  WorldCanvas *worldcanvas);
+
+		// Return a record describing this object.  Presently returns
+		// only construction description.
+		virtual Record description();
+
+		// Update this object based on the information in the provided
+		// Record.
+		virtual void setDescription(const Record &rec);
+
+		// Event handlers.  The parent DrawingDisplayData will distribute
+		// events as necessary to the various DDDObjects which comprise it.
+		// <group>
+		virtual void operator()(const WCRefreshEvent &/*ev*/) {
+			;
+		};
+		virtual void operator()(const WCPositionEvent &ev);
+		virtual void operator()(const WCMotionEvent &ev);
+		// </group>
 
 
 
 
- protected:
+	protected:
 
-  // (Required) default constructor.
-  DDDPolygon();
+		// (Required) default constructor.
+		DDDPolygon();
 
-  // (Required) copy constructor.
-  DDDPolygon(const DDDPolygon &other);
+		// (Required) copy constructor.
+		DDDPolygon(const DDDPolygon &other);
 
-  // (Required) copy assignment.
-  void operator=(const DDDPolygon &other);
-  
- private:
+		// (Required) copy assignment.
+		void operator=(const DDDPolygon &other);
+
+	private:
 
 // Fill style
-  Bool itsOutline;
+		Bool itsOutline;
 
 // Define x and y
-  Quantum<Vector<Double> > itsWorldX, itsWorldY;
-  Vector<Double> itsPixelX, itsPixelY;
-  uInt itsNPoints;
+		Quantum<Vector<Double> > itsWorldX, itsWorldY;
+		Vector<Double> itsPixelX, itsPixelY;
+		uInt itsNPoints;
 
 // Rotated Rectangle Corners to draw in screen pixel
-  Matrix<Double> itsCorners;
+		Matrix<Double> itsCorners;
 
 // List of handles
 
-  Block<DDDHandle> itsHandles;
+		Block<DDDHandle> itsHandles;
 
 // Mode.
 
-  DDDObject::Mode itsMode;
+		DDDObject::Mode itsMode;
 
 // Store for movement bases.
 
-  Double itsBaseMoveX, itsBaseMoveY;
+		Double itsBaseMoveX, itsBaseMoveY;
 
 // In function draw(), recompute all pixel coordinates when true
 // else use what is currently set
 
-  Bool itsRecompute;
+		Bool itsRecompute;
 
 // LOgger
 
-  LogIO itsLogger;
+		LogIO itsLogger;
 
 // CoordinateSystem in screen pixel coordinates
-  CoordinateSystem itsCoordinateSystem;
-  
+		CoordinateSystem itsCoordinateSystem;
+
 // pointer to world canvas (shallow copy)
-  WorldCanvas* itsWorldCanvasPtr;
+		WorldCanvas* itsWorldCanvasPtr;
 
 // Fractional indicators
-  Bool itsFracX, itsFracY;
+		Bool itsFracX, itsFracY;
 
 // COnvert parameters from world to pixel
-   void convertToPixel ();
+		void convertToPixel ();
 
 // Update private world parameters from current pixel values
-   void updateWorldValues ();
+		void updateWorldValues ();
 
 // Decode record into private data
-   void decode(const RecordInterface& description, Bool required);
+		void decode(const RecordInterface& description, Bool required);
 
 // Encode private data into record
-   void encode(RecordInterface& description) const;
+		void encode(RecordInterface& description) const;
 
 // compute corners of rectangle of bounding box of polygon
-  void createCorners();
+		void createCorners();
 
 // create handles, one per vertex
-   void createHandles();
+		void createHandles();
 
 
 // Debugging routines
 
-   void listWorld();
-   void listPixel();
+		void listWorld();
+		void listPixel();
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

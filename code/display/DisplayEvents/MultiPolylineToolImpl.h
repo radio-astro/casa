@@ -59,33 +59,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-class MultiPolylineToolImpl : public MultiPolylineTool {
+	class MultiPolylineToolImpl : public MultiPolylineTool {
 
- public:
+	public:
 
-  // Constructor
-  MultiPolylineToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym = Display::K_Pointer_Button3);
+		// Constructor
+		MultiPolylineToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym = Display::K_Pointer_Button3);
 
-  // Destructor
-  virtual ~MultiPolylineToolImpl();
+		// Destructor
+		virtual ~MultiPolylineToolImpl();
 
- protected:
+	protected:
 
-  // Handle double-click inside the polygon.  Invokes regionReady().
-  virtual void doubleInside();
+		// Handle double-click inside the polygon.  Invokes regionReady().
+		virtual void doubleInside();
 
-  // This function is called when a region is deliberately "finished"
-  // by the user.  It can be implemented to do further actions, such
-  // as report the region to the application.
-  virtual void regionReady() { };
+		// This function is called when a region is deliberately "finished"
+		// by the user.  It can be implemented to do further actions, such
+		// as report the region to the application.
+		virtual void regionReady() { };
 
-  // get the world coords of the current polygon region
-  void getWorldCoords(Vector<Double> &x, Vector<Double> &y);
+		// get the world coords of the current polygon region
+		void getWorldCoords(Vector<Double> &x, Vector<Double> &y);
 
-  // get the linear coords of the current ploygon region
-  void getLinearCoords(Vector<Double> &x, Vector<Double> &y);
+		// get the linear coords of the current ploygon region
+		void getLinearCoords(Vector<Double> &x, Vector<Double> &y);
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

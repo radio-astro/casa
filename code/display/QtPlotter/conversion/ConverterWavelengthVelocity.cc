@@ -27,33 +27,33 @@
 #include <QDebug>
 namespace casa {
 
-ConverterWavelengthVelocity::ConverterWavelengthVelocity(const QString& oldUnits,
-	const QString& newUnits) :
-	ConverterWavelength( oldUnits, newUnits){
-}
+	ConverterWavelengthVelocity::ConverterWavelengthVelocity(const QString& oldUnits,
+	        const QString& newUnits) :
+		ConverterWavelength( oldUnits, newUnits) {
+	}
 
-Vector<double> ConverterWavelengthVelocity::convert( const Vector<double>& oldValues ){
-	Vector<double> resultValues( oldValues.size());
+	Vector<double> ConverterWavelengthVelocity::convert( const Vector<double>& oldValues ) {
+		Vector<double> resultValues( oldValues.size());
 
-	bool validWavelength = setWavelengthUnits( oldUnits );
-	bool validVelocity = setVelocityUnits( newUnits );
+		bool validWavelength = setWavelengthUnits( oldUnits );
+		bool validVelocity = setVelocityUnits( newUnits );
 
-	bool successfulConversion = false;
-	if ( validWavelength && validVelocity ){
-		Vector<double> frequencyValues( oldValues.size());
-		successfulConversion = spectralCoordinate.wavelengthToFrequency( frequencyValues,oldValues);
-		if ( successfulConversion ){
-			successfulConversion = spectralCoordinate.frequencyToVelocity( resultValues, frequencyValues);
+		bool successfulConversion = false;
+		if ( validWavelength && validVelocity ) {
+			Vector<double> frequencyValues( oldValues.size());
+			successfulConversion = spectralCoordinate.wavelengthToFrequency( frequencyValues,oldValues);
+			if ( successfulConversion ) {
+				successfulConversion = spectralCoordinate.frequencyToVelocity( resultValues, frequencyValues);
+			}
 		}
+		if ( !successfulConversion ) {
+			resultValues = oldValues;
+			qDebug() << "Could not convert wavelength to velocity";
+		}
+		return resultValues;
 	}
-	if ( !successfulConversion ){
-		resultValues = oldValues;
-		qDebug() << "Could not convert wavelength to velocity";
+	ConverterWavelengthVelocity::~ConverterWavelengthVelocity() {
+		// TODO Auto-generated destructor stub
 	}
-	return resultValues;
-}
-ConverterWavelengthVelocity::~ConverterWavelengthVelocity() {
-	// TODO Auto-generated destructor stub
-}
 
 } /* namespace casa */

@@ -37,27 +37,27 @@ namespace casa {
 
 		class SlicerGen : public QObject, private Ui::SlicerGen {
 			Q_OBJECT
-			public:
-				SlicerGen( );
-				void initialize( QFrame * );
-				void disable( );
-				void enable( const std::string &path );
-				bool sliceReady( ) const;
-				std::string getSliceRep( ) const;
+		public:
+			SlicerGen( );
+			void initialize( QFrame * );
+			void disable( );
+			void enable( const std::string &path );
+			bool sliceReady( ) const;
+			std::string getSliceRep( ) const;
 
-			private:
-				Vector<int> shape;
-				std::vector<QSpinBox*> startgui;
-				void load_startgui( );
-				std::vector<QSpinBox*> sizegui;
-				void load_sizegui( );
-				typedef std::map<QSpinBox*,int> spin_map_t;
-				spin_map_t axis_map;
+		private:
+			Vector<int> shape;
+			std::vector<QSpinBox*> startgui;
+			void load_startgui( );
+			std::vector<QSpinBox*> sizegui;
+			void load_sizegui( );
+			typedef std::map<QSpinBox*,int> spin_map_t;
+			spin_map_t axis_map;
 
-			private slots:
-				void adjust_position(int);
-				void adjust_size(int);
-			
+		private slots:
+			void adjust_position(int);
+			void adjust_size(int);
+
 		};
 	}
 }

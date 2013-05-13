@@ -35,15 +35,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// <summary> 
+// <summary>
 // A DisplayMethod to draw histograms
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <prerequisite>
 //   <li> DisplayMethod
 //   <li> CachingDisplayMethod
@@ -51,44 +51,44 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <etymology>
 // </etymology>
-// <synopsis> 
-// 
-// </synopsis> 
+// <synopsis>
+//
+// </synopsis>
 
-class Histogram2dDM : public CachingDisplayMethod {
+	class Histogram2dDM : public CachingDisplayMethod {
 
- public:
+	public:
 
-  // Constructor.
-  Histogram2dDM(WorldCanvas *worldCanvas, 
-		AttributeBuffer *wchAttributes,
-		AttributeBuffer *ddAttributes,
-		CachingDisplayData *dd);
-  
-  // Destructor.
-  virtual ~Histogram2dDM();
-  
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
-  
-  // Draw into a cached drawing list, called by draw function.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder);
-  
- protected:
-  
-  // (Required) default constructor.
-  Histogram2dDM();
-  
-  // (Required) copy constructor.
-  Histogram2dDM(const Histogram2dDM &other);
-  
-  // (Required) copy assignment.
-  void operator=(const Histogram2dDM &other);
-  
- private:
+		// Constructor.
+		Histogram2dDM(WorldCanvas *worldCanvas,
+		              AttributeBuffer *wchAttributes,
+		              AttributeBuffer *ddAttributes,
+		              CachingDisplayData *dd);
 
-};
+		// Destructor.
+		virtual ~Histogram2dDM();
+
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
+
+		// Draw into a cached drawing list, called by draw function.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder);
+
+	protected:
+
+		// (Required) default constructor.
+		Histogram2dDM();
+
+		// (Required) copy constructor.
+		Histogram2dDM(const Histogram2dDM &other);
+
+		// (Required) copy assignment.
+		void operator=(const Histogram2dDM &other);
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

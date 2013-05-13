@@ -27,8 +27,8 @@
 
 #ifndef QTEXPORTMANAGER_H_
 #define QTEXPORTMANAGER_H_
-	// (Trailing underscore is not a typo -- do not remove it;
-	// QtDataManager.ui.h uses the QTDATAMANAGER_H symbol).
+// (Trailing underscore is not a typo -- do not remove it;
+// QtDataManager.ui.h uses the QTDATAMANAGER_H symbol).
 
 
 #include <casa/aips.h>
@@ -40,78 +40,80 @@
 #include <QColor>
 #include <QHash>
 #include <QWidget>
-   //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
-   //#   because they'll have Qt includes.
-   //#   E.g. <QApplication> needs the X11 definition of 'Display'
+//#dk Be careful to put *.ui.h within X_enter/exit bracket too,
+//#   because they'll have Qt includes.
+//#   E.g. <QApplication> needs the X11 definition of 'Display'
 #include <display/QtViewer/QtExportManager.ui.h>
 //#include <display/QtViewer/QtDataMgrMsSelect.ui.h>
 #include <graphics/X11/X_exit.h>
 
- 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class QtDisplayPanelGui;
-class QtDisplayPanel;
-class QtDisplayData;
-template <class T> class ImageInterface;
+	class QtDisplayPanelGui;
+	class QtDisplayPanel;
+	class QtDisplayData;
+	template <class T> class ImageInterface;
 
-class QtExportManager : public QWidget, private Ui::QtExportManager {
-   
-   Q_OBJECT
+	class QtExportManager : public QWidget, private Ui::QtExportManager {
 
- public:
-  
-   QtExportManager(QtDisplayPanelGui* panel=0, const char* name=0,
-		QWidget* parent=0 );
-  ~QtExportManager();
+		Q_OBJECT
 
- public slots:
-  void updateEM(QtDisplayData* qdd=0, Bool autoRegister=True);
+	public:
 
- protected:
-  void fillFormatBox(int type);
-  QColor getDirColor(int);
-  QString getOutFileName(QString &filter);
-  QString getOutDirName(QString &);
-  QString getOutDirNameOLD(QString &filter);
+		QtExportManager(QtDisplayPanelGui* panel=0, const char* name=0,
+		                QWidget* parent=0 );
+		~QtExportManager();
 
-  enum DATATYPE { UNKNOWN, IMAGE, MEASUREMENT_SET, SKY_CATALOG, RESTORE,
-		  DIRECTORY, QUALIMG, CASAREGION, DS9REGION };
-  enum DISPLAYTYPE { RASTER, CONTOUR, VECTOR, MARKER, SKY_CAT,
-		     NEWPANEL, OLDPANEL };
+	public slots:
+		void updateEM(QtDisplayData* qdd=0, Bool autoRegister=True);
 
-  QHash<int, String>  dataType_;
-  QHash<QString, int> uiDataType_;
-  QHash<int, String>  displayType_;
-  QHash<QString, int> uiDisplayType_;
-  QHash<int, QtDisplayData*> qddList_;
-  QVector<int>        exportTypes_;
+	protected:
+		void fillFormatBox(int type);
+		QColor getDirColor(int);
+		QString getOutFileName(QString &filter);
+		QString getOutDirName(QString &);
+		QString getOutDirNameOLD(QString &filter);
 
- protected slots:
-  void changeItemSelection();
-  void exportData();
-  void buildFileList();
-  void browseOutFilePath();
-  void browseFileSelection();
-  void browseFileSelectionOLD();
+		enum DATATYPE { UNKNOWN, IMAGE, MEASUREMENT_SET, SKY_CATALOG, RESTORE,
+		                DIRECTORY, QUALIMG, CASAREGION, DS9REGION
+		              };
+		enum DISPLAYTYPE { RASTER, CONTOUR, VECTOR, MARKER, SKY_CAT,
+		                   NEWPANEL, OLDPANEL
+		                 };
 
-  void showDDCreateError_(String);
+		QHash<int, String>  dataType_;
+		QHash<QString, int> uiDataType_;
+		QHash<int, String>  displayType_;
+		QHash<QString, int> uiDisplayType_;
+		QHash<int, QtDisplayData*> qddList_;
+		QVector<int>        exportTypes_;
 
- 
- private:
-  void expImageInterfaceToFITS(ImageInterface<Float>* img, String outFile);
-  void getSectralCoordFlags(const ImageInterface<Float>* img, Bool &preferVelocity, Bool &opticalVelocity,
-		  Bool &preferWavelength, Bool &preferAirWavelength);
-  void expImageInterfaceToCASA(ImageInterface<Float>* img, String outFile);
-  //void expImageInterfaceToMIRIAD(ImageInterface<Float>* img, String outFile);
-  void messageFromEM(QString &msg);
+	protected slots:
+		void changeItemSelection();
+		void exportData();
+		void buildFileList();
+		void browseOutFilePath();
+		void browseFileSelection();
+		void browseFileSelectionOLD();
 
-  QWidget *parent_;
-  QtDisplayPanelGui* panel_;
-  QDir dir_;
-  QTreeWidgetItem *selItem_;
-  int saveType_;
-};
+		void showDDCreateError_(String);
+
+
+	private:
+		void expImageInterfaceToFITS(ImageInterface<Float>* img, String outFile);
+		void getSectralCoordFlags(const ImageInterface<Float>* img, Bool &preferVelocity, Bool &opticalVelocity,
+		                          Bool &preferWavelength, Bool &preferAirWavelength);
+		void expImageInterfaceToCASA(ImageInterface<Float>* img, String outFile);
+		//void expImageInterfaceToMIRIAD(ImageInterface<Float>* img, String outFile);
+		void messageFromEM(QString &msg);
+
+		QWidget *parent_;
+		QtDisplayPanelGui* panel_;
+		QDir dir_;
+		QTreeWidgetItem *selItem_;
+		int saveType_;
+	};
 
 
 

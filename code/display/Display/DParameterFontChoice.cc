@@ -33,59 +33,60 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor
-DParameterFontChoice::DParameterFontChoice(const String name,
-					   const String description,
-					   const String help,
-					   const String context) :
-					     
-  DParameterChoice() {
+	DParameterFontChoice::DParameterFontChoice(const String name,
+	        const String description,
+	        const String help,
+	        const String context) :
 
-  setName(name);
-  setDescription(description);
-  setHelp(help);
+		DParameterChoice() {
 
-  DLFont* dummy = new DLFont();
-  Vector<String> fontNames = dummy->getAllNames();
-  delete dummy; dummy = 0;
-  
-  setOptions(fontNames);
-  // Try for helvetica (elem 8 in dlfont).. else whatever we get first. 
-  if (fontNames.nelements() >= 9) {
-    setDefaultValue(fontNames(8));
-    setValue(fontNames(8));
-  } else {
-    setDefaultValue(fontNames(0));
-    setValue(fontNames(0));
-  }
-  setContext(context);
-  setEditable(False);
-  
-}
+		setName(name);
+		setDescription(description);
+		setHelp(help);
+
+		DLFont* dummy = new DLFont();
+		Vector<String> fontNames = dummy->getAllNames();
+		delete dummy;
+		dummy = 0;
+
+		setOptions(fontNames);
+		// Try for helvetica (elem 8 in dlfont).. else whatever we get first.
+		if (fontNames.nelements() >= 9) {
+			setDefaultValue(fontNames(8));
+			setValue(fontNames(8));
+		} else {
+			setDefaultValue(fontNames(0));
+			setValue(fontNames(0));
+		}
+		setContext(context);
+		setEditable(False);
+
+	}
 
 // Copy constructor.
-DParameterFontChoice::DParameterFontChoice(const DParameterFontChoice &
-					     other) :
-  DParameterChoice(other) {
-}
+	DParameterFontChoice::DParameterFontChoice(const DParameterFontChoice &
+	        other) :
+		DParameterChoice(other) {
+	}
 
 // Destructor.
-DParameterFontChoice::~DParameterFontChoice() {
-}
+	DParameterFontChoice::~DParameterFontChoice() {
+	}
 
 // Copy assignment.
-DParameterFontChoice &DParameterFontChoice::
-operator=(const DParameterFontChoice &other) {
-  if (this != &other) {
-    DParameterChoice::operator=(other);
-  }
-  return *this;
-}
+	DParameterFontChoice &DParameterFontChoice::
+	operator=(const DParameterFontChoice &other) {
+		if (this != &other) {
+			DParameterChoice::operator=(other);
+		}
+		return *this;
+	}
 
 
 // Default constructor.
-DParameterFontChoice::DParameterFontChoice() :
-  DParameterChoice() {
-}
+	DParameterFontChoice::DParameterFontChoice() :
+		DParameterChoice() {
+	}
 
 
 } //# NAMESPACE CASA - END

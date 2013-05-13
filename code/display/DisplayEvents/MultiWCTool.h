@@ -38,10 +38,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class MultiWCTool;
-class WorldCanvas;
-class PixelCanvas;
-class PanelDisplay;
+	class MultiWCTool;
+	class WorldCanvas;
+	class PixelCanvas;
+	class PanelDisplay;
 
 // <summary>
 // Base class for MultiWorldCanvas event-based tools.
@@ -63,7 +63,7 @@ class PanelDisplay;
 // </etymology>
 //
 // <synopsis>
-// This class is a base class upon which tools which respond to 
+// This class is a base class upon which tools which respond to
 // various events on a WorldCanvas can be built.  It wraps up
 // the position, motion and refresh events so that the programmer
 // sees them all coming into one class, where they can be dealt
@@ -76,9 +76,9 @@ class PanelDisplay;
 // </example>
 //
 // <motivation>
-// The majority of tools written for the WorldCanvas will fall 
-// into the category that this class serves: they respond to a 
-// single key or mouse button, and they potentially need to 
+// The majority of tools written for the WorldCanvas will fall
+// into the category that this class serves: they respond to a
+// single key or mouse button, and they potentially need to
 // respond to position, motion and refresh events.
 // </motivation>
 //
@@ -86,118 +86,118 @@ class PanelDisplay;
 //   <li> Nothing known
 // </todo>
 
-class MultiWCTool : public DisplayTool,
-		    public WCPositionEH,
-		    public WCMotionEH,
-		    public WCRefreshEH {
-  
- public:
-  
-  // Constructor taking the primary key to which this tool will
-  // respond.
-  MultiWCTool(const Display::KeySym &keysym = Display::K_Pointer_Button1, bool enable_events=true );
-  
-  // Destructor.
-  virtual ~MultiWCTool();
+	class MultiWCTool : public DisplayTool,
+		public WCPositionEH,
+		public WCMotionEH,
+		public WCRefreshEH {
 
-  // Add/remove a WorldCanvas from the control of this tool.
-  // <group>
-  virtual void addWorldCanvas(WorldCanvas &worldcanvas);
-  virtual void removeWorldCanvas(WorldCanvas &worldcanvas);
-  // </group>
-  
-  // Add/Remove a list of WorldCanvases from PanelDisplay
-  // <group>
-  virtual void addWorldCanvases(PanelDisplay* pdisp);
-  virtual void removeWorldCanvases(PanelDisplay* pdisp);
-  // </group>
+	public:
 
-  // Switch the tool on/off - this simply registers or unregisters
-  // the event handlers on the WorldCanvases.
-  // <group>
-  virtual void enable();
-  virtual void disable();
-  // </group>
-  
-  // Required operators for event handling - these are called when
-  // events occur, and distribute the events to the "user-level"
-  // methods
-  // <group>
-  virtual void operator()(const WCPositionEvent& ev);
-  virtual void operator()(const WCMotionEvent& ev);
-  virtual void operator()(const WCRefreshEvent& ev);
-  // </group>
+		// Constructor taking the primary key to which this tool will
+		// respond.
+		MultiWCTool(const Display::KeySym &keysym = Display::K_Pointer_Button1, bool enable_events=true );
 
-  // Derived classes should implement this to return to the non-showing,
-  // non-active state.  It should not unregister the tool from WCs or
-  // disable event handling.  If skipRefresh is false and the tool was showing,
-  // it also calls refresh() to erase.  (The caller should set skipRefresh=True
-  // (only) if it will handle refresh itself).
-  virtual void reset(Bool /*skipRefresh*/=False) {  }
+		// Destructor.
+		virtual ~MultiWCTool();
 
- protected:
+		// Add/remove a WorldCanvas from the control of this tool.
+		// <group>
+		virtual void addWorldCanvas(WorldCanvas &worldcanvas);
+		virtual void removeWorldCanvas(WorldCanvas &worldcanvas);
+		// </group>
 
-  // Functions called by the local event handling operators -
-  // by default they do nothing, so a derived class needs only
-  // implement the events it cares about
-  // <group>
-  virtual void keyPressed(const WCPositionEvent &/*ev*/);
-  virtual void keyReleased(const WCPositionEvent &/*ev*/);
-  virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
-  virtual void otherKeyReleased(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent & /*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
-  virtual void updateRegion() {}
-  virtual void clicked(Int /*x*/, Int /*y*/) {}
-  virtual void doubleClicked(Int /*x*/, Int /*y*/) {}
-  // </group>
+		// Add/Remove a list of WorldCanvases from PanelDisplay
+		// <group>
+		virtual void addWorldCanvases(PanelDisplay* pdisp);
+		virtual void removeWorldCanvases(PanelDisplay* pdisp);
+		// </group>
 
-  // Draw whatever should be drawn (if anything) on current WC.
-  // Should only be called by refresh event handler.
-  virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		// Switch the tool on/off - this simply registers or unregisters
+		// the event handlers on the WorldCanvases.
+		// <group>
+		virtual void enable();
+		virtual void disable();
+		// </group>
 
-  // Copy back-to-front buffer (erasing all MWCTool drawings),
-  // then cause this (and all MWCTools on current WC's PC)
-  // to draw (or not draw) themselves, according to their
-  // current state.  Mouse and kbd event handlers within the tools
-  // now call this in response to drawing state changes, rather than
-  // calling draw() directly, so that only valid tool drawings are
-  // displayed, even when more than one is active.  NB: the meaning of
-  // this routine has changed to be more in line with the rest of the DL
-  // (i.e., it now causes, rather than responds to, refresh events).
-  virtual void refresh();
+		// Required operators for event handling - these are called when
+		// events occur, and distribute the events to the "user-level"
+		// methods
+		// <group>
+		virtual void operator()(const WCPositionEvent& ev);
+		virtual void operator()(const WCMotionEvent& ev);
+		virtual void operator()(const WCRefreshEvent& ev);
+		// </group>
 
-  // An iterator for the WorldCanvases.
-  mutable ListIter<WorldCanvas *> *itsWCListIter;
+		// Derived classes should implement this to return to the non-showing,
+		// non-active state.  It should not unregister the tool from WCs or
+		// disable event handling.  If skipRefresh is false and the tool was showing,
+		// it also calls refresh() to erase.  (The caller should set skipRefresh=True
+		// (only) if it will handle refresh itself).
+		virtual void reset(Bool /*skipRefresh*/=False) {  }
 
-  // Cause subsequent drawing commands to be clipped to the current WC
-  // (or its drawing area).  Be sure to reset when finished drawing; 
-  // clipping will apply to drawing on entire PC.
-  // <group>
-  virtual void setClipToDrawArea();
-  virtual void setClipToWC();
-  virtual void resetClip();
-  // </group>
+	protected:
 
-  // WC being (or to be) drawn on (may be 0 initially).  WC where latest
-  // relevant input event was received.
-  WorldCanvas *itsCurrentWC;
+		// Functions called by the local event handling operators -
+		// by default they do nothing, so a derived class needs only
+		// implement the events it cares about
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &/*ev*/);
+		virtual void keyReleased(const WCPositionEvent &/*ev*/);
+		virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
+		virtual void otherKeyReleased(const WCPositionEvent &/*ev*/);
+		virtual void moved(const WCMotionEvent & /*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		virtual void updateRegion() {}
+		virtual void clicked(Int /*x*/, Int /*y*/) {}
+		virtual void doubleClicked(Int /*x*/, Int /*y*/) {}
+		// </group>
 
- private:
+		// Draw whatever should be drawn (if anything) on current WC.
+		// Should only be called by refresh event handler.
+		virtual void draw(const WCRefreshEvent&/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
 
-  // copy, default constructors (do not use)
-  // <group>
-  MultiWCTool();
-  MultiWCTool(const MultiWCTool &other);
-  MultiWCTool &operator=(const MultiWCTool &other);  
-  // </group>
+		// Copy back-to-front buffer (erasing all MWCTool drawings),
+		// then cause this (and all MWCTools on current WC's PC)
+		// to draw (or not draw) themselves, according to their
+		// current state.  Mouse and kbd event handlers within the tools
+		// now call this in response to drawing state changes, rather than
+		// calling draw() directly, so that only valid tool drawings are
+		// displayed, even when more than one is active.  NB: the meaning of
+		// this routine has changed to be more in line with the rest of the DL
+		// (i.e., it now causes, rather than responds to, refresh events).
+		virtual void refresh();
 
-  // The WorldCanvases to which this tool is connected.
-  List<WorldCanvas *> itsWCList;
+		// An iterator for the WorldCanvases.
+		mutable ListIter<WorldCanvas *> *itsWCListIter;
 
-  // whether the event handlers are registered
-  Bool itsEventHandlersRegistered;
+		// Cause subsequent drawing commands to be clipped to the current WC
+		// (or its drawing area).  Be sure to reset when finished drawing;
+		// clipping will apply to drawing on entire PC.
+		// <group>
+		virtual void setClipToDrawArea();
+		virtual void setClipToWC();
+		virtual void resetClip();
+		// </group>
 
-};
+		// WC being (or to be) drawn on (may be 0 initially).  WC where latest
+		// relevant input event was received.
+		WorldCanvas *itsCurrentWC;
+
+	private:
+
+		// copy, default constructors (do not use)
+		// <group>
+		MultiWCTool();
+		MultiWCTool(const MultiWCTool &other);
+		MultiWCTool &operator=(const MultiWCTool &other);
+		// </group>
+
+		// The WorldCanvases to which this tool is connected.
+		List<WorldCanvas *> itsWCList;
+
+		// whether the event handlers are registered
+		Bool itsEventHandlersRegistered;
+
+	};
 
 
 } //# NAMESPACE CASA - END

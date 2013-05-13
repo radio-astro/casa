@@ -61,8 +61,8 @@ namespace casa {
 			PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
 			        bool hold_signals=false);
 
-			bool clickWithin( double x, double y ) const
-			{	double blc_x, blc_y, trc_x, trc_y;
+			bool clickWithin( double x, double y ) const {
+				double blc_x, blc_y, trc_x, trc_y;
 				boundingRectangle( blc_x, blc_y, trc_x, trc_y );
 				return x > blc_x && x < trc_x && y > blc_y && y < trc_y;
 			}

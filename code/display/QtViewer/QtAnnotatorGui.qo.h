@@ -43,11 +43,11 @@
 #include <graphics/X11/X_exit.h>
 
 
- 
-namespace casa { 
 
-class QtViewer;
-class QtMarkerGui;
+namespace casa {
+
+	class QtViewer;
+	class QtMarkerGui;
 
 // <summary>
 // Annotating widget for a display panel.
@@ -57,70 +57,70 @@ class QtMarkerGui;
 // </synopsis>
 
 
-class QtAnnotatorGui: public QWidget, private Ui::Annotating {
-    Q_OBJECT
-public:
-    QtAnnotatorGui(QtDisplayPanel *parent = 0) ;
-    ~QtAnnotatorGui();
+	class QtAnnotatorGui: public QWidget, private Ui::Annotating {
+		Q_OBJECT
+	public:
+		QtAnnotatorGui(QtDisplayPanel *parent = 0) ;
+		~QtAnnotatorGui();
 
-    static const QString toolshorthands[12];
-    static const QString basebitmaps[12];
-    static const QString markerbitmaps[14];
-    static const QString helptext[12];
-    static const QString canvastype[3];
+		static const QString toolshorthands[12];
+		static const QString basebitmaps[12];
+		static const QString markerbitmaps[14];
+		static const QString helptext[12];
+		static const QString canvastype[3];
 
-    static const int dlkeys[4];
+		static const int dlkeys[4];
 
-private:
-    QButtonGroup *bGroup;
-    QButtonGroup *mGroup;
+	private:
+		QButtonGroup *bGroup;
+		QButtonGroup *mGroup;
 
-    void setup();
-    QToolButton *button[12];
-    QToolButton *marker[14];
-    int activeTool;
-    int activeMarker;
-    int activeKey;
-    QString canvasType;
+		void setup();
+		QToolButton *button[12];
+		QToolButton *marker[14];
+		int activeTool;
+		int activeMarker;
+		int activeKey;
+		QString canvasType;
 
-    QtMarkerGui *gridLayout2;
-    bool moveMarker;
-    QtDisplayPanel* pDP;
-    Annotations* annot;
+		QtMarkerGui *gridLayout2;
+		bool moveMarker;
+		QtDisplayPanel* pDP;
+		Annotations* annot;
 
-private slots:
-    void mouseReleaseEvent(QMouseEvent *event);
-    void buttonClicked(QAbstractButton* button);
-    void markerClicked(QAbstractButton* button);
-    void buttonClicked(int button);
-    void canvasLockChanged(const QString &text);
-    void canvasLockChanged(int idx);
+	private slots:
+		void mouseReleaseEvent(QMouseEvent *event);
+		void buttonClicked(QAbstractButton* button);
+		void markerClicked(QAbstractButton* button);
+		void buttonClicked(int button);
+		void canvasLockChanged(const QString &text);
+		void canvasLockChanged(int idx);
 
-public:
-    void markerReleased(QMouseEvent *event);
-    QButtonGroup* mgroup();
+	public:
+		void markerReleased(QMouseEvent *event);
+		QButtonGroup* mgroup();
 
-public slots:
-    void confirmToolKitChange(const QString, const Qt::MouseButton, const bool);
-signals:
-    void toolKitChange(const QString, const Qt::MouseButton, const bool);
-    void setMarker(const QString);
-    // Display::K_Pointer_Button1,  -- LeftButton  -- 1
-    // Display::K_Pointer_Button2,  -- MidButton  -- 2
-    // Display::K_Pointer_Button3;  -- RightButton  -- 3
-};
+	public slots:
+		void confirmToolKitChange(const QString, const Qt::MouseButton, const bool);
+	signals:
+		void toolKitChange(const QString, const Qt::MouseButton, const bool);
+		void setMarker(const QString);
+		// Display::K_Pointer_Button1,  -- LeftButton  -- 1
+		// Display::K_Pointer_Button2,  -- MidButton  -- 2
+		// Display::K_Pointer_Button3;  -- RightButton  -- 3
+	};
 
-class QtMarkerGui: public QWidget {
-    Q_OBJECT
-public:
-    QtMarkerGui(QtAnnotatorGui *parent = 0, Qt::WFlags f = Qt::Popup) ;
-    ~QtMarkerGui() ;
-    virtual void mouseReleaseEvent ( QMouseEvent * event );
-private:
-    QtAnnotatorGui* parent;
+	class QtMarkerGui: public QWidget {
+		Q_OBJECT
+	public:
+		QtMarkerGui(QtAnnotatorGui *parent = 0, Qt::WFlags f = Qt::Popup) ;
+		~QtMarkerGui() ;
+		virtual void mouseReleaseEvent ( QMouseEvent * event );
+	private:
+		QtAnnotatorGui* parent;
 
-};
- 
+	};
+
 }
 
 #endif

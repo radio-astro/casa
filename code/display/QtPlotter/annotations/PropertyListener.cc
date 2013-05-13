@@ -9,11 +9,11 @@
 
 namespace casa {
 
-PropertyListener::PropertyListener() {
+	PropertyListener::PropertyListener() {
 
-}
+	}
 
-PropertyListener::~PropertyListener() {
-}
+	PropertyListener::~PropertyListener() {
+	}
 
 } /* namespace casa */

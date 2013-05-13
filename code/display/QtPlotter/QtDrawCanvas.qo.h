@@ -54,166 +54,165 @@
 #include <vector>
 #include <graphics/X11/X_exit.h>
 
-namespace casa { 
+namespace casa {
 
-typedef std::vector<double> CurveData;
+	typedef std::vector<double> CurveData;
 
-class GraphLabel
-{
-public:
-     QString text;
-     QString fontName;
-     int fontSize;
-     QColor color;
-     GraphLabel() : text(""), fontName("Helvetica [Cronyx]"), 
-                    fontSize(12), color(Qt::blue) {}   	
-};
+	class GraphLabel {
+	public:
+		QString text;
+		QString fontName;
+		int fontSize;
+		QColor color;
+		GraphLabel() : text(""), fontName("Helvetica [Cronyx]"),
+			fontSize(12), color(Qt::blue) {}
+	};
 
-class QtDrawCanvas : public QWidget
-{
-    Q_OBJECT
-public:
-    enum {LINE = 0, POINT, FPOINT, CIRCLE, FCIRCLE, 
-                    RECT, FRECT, DIM, FDIM, 
-                    PLUS, FPLUS, CROSS, FCROSS,
-                    TRIGU, FTRIGU, TRIGD, FTRIGD, 
-                    TRIGL, FTRIGL, TRIGR, FTRIGR, 
-                    SAND, FSAND, WING, FWING, 
-                    BEAM, FBEAM, BED, FBED, 
-          HIST, FHIST};
-    QtDrawCanvas(QWidget *parent = 0);
+	class QtDrawCanvas : public QWidget {
+		Q_OBJECT
+	public:
+		enum {LINE = 0, POINT, FPOINT, CIRCLE, FCIRCLE,
+		      RECT, FRECT, DIM, FDIM,
+		      PLUS, FPLUS, CROSS, FCROSS,
+		      TRIGU, FTRIGU, TRIGD, FTRIGD,
+		      TRIGL, FTRIGL, TRIGR, FTRIGR,
+		      SAND, FSAND, WING, FWING,
+		      BEAM, FBEAM, BED, FBED,
+		      HIST, FHIST
+		     };
+		QtDrawCanvas(QWidget *parent = 0);
 
-    void setPlotSettings(const QtDrawSettings &settings);
-    void setCurveData(int id, const CurveData data, 
-                      int tp = 0, int cl = 0);
-    void clearCurve(int id);
-    void setDataRange();
-    void setImageMode(bool);
-    void setPixmap(const QImage&);
-    QPixmap* graph();
-    void drawBackBuffer(QPainter *);
-    void plotPolyLines(QString);    
+		void setPlotSettings(const QtDrawSettings &settings);
+		void setCurveData(int id, const CurveData data,
+		                  int tp = 0, int cl = 0);
+		void clearCurve(int id);
+		void setDataRange();
+		void setImageMode(bool);
+		void setPixmap(const QImage&);
+		QPixmap* graph();
+		void drawBackBuffer(QPainter *);
+		void plotPolyLines(QString);
 
-    //ln = 0, new chart 
-    //ln < 0, remove trace 
-    //ln > 0, append trace if ln exists, otherwise add trace
-    //tp = 0, continous line
-    //tp > 0, discrete symbols
-    //tp < 0, line and symbols
-    //cl, color value range from 0 up
-    void plotPolyLine(const Vector<Int>&, 
-                      const Vector<Int>&, 
-                      int ln = 0, int tp = 0, int cl = 0);
-    void plotPolyLine(const Vector<Float> &x, 
-                      const Vector<Float> &y,
-                      int ln = 0, int tp = 0, int cl = 0);
-    void plotPolyLine(const Vector<Double>&, 
-                      const Vector<Double>&,
-                      int ln = 0, int tp = 0, int cl = 0);
+		//ln = 0, new chart
+		//ln < 0, remove trace
+		//ln > 0, append trace if ln exists, otherwise add trace
+		//tp = 0, continous line
+		//tp > 0, discrete symbols
+		//tp < 0, line and symbols
+		//cl, color value range from 0 up
+		void plotPolyLine(const Vector<Int>&,
+		                  const Vector<Int>&,
+		                  int ln = 0, int tp = 0, int cl = 0);
+		void plotPolyLine(const Vector<Float> &x,
+		                  const Vector<Float> &y,
+		                  int ln = 0, int tp = 0, int cl = 0);
+		void plotPolyLine(const Vector<Double>&,
+		                  const Vector<Double>&,
+		                  int ln = 0, int tp = 0, int cl = 0);
 
-    //Each row is a trace
-    //ln = 0, new chart
-    //ln < 0, remove traces
-    //ln > 0, append traces from (ln)th, add if not exists
-    //tp < 0, same shape for all traces
-    //tp = 0, continuous lines
-    //tp > 0, different discrete shape for each trace
-    //cl > 0, different color for each trace
-    //cl <= 0, same color for all traces
-    void plotPolyLine(const Matrix<Int> &verts,
-                      int ln = 0, int tp = 0, int cl = 0);
-    void plotPolyLine(const Matrix<Float> &verts,
-                      int ln = 0, int tp = 0, int cl = 0);
-    void plotPolyLine(const Matrix<Double> &verts,
-                      int ln = 0, int tp = 0, int cl = 0);
+		//Each row is a trace
+		//ln = 0, new chart
+		//ln < 0, remove traces
+		//ln > 0, append traces from (ln)th, add if not exists
+		//tp < 0, same shape for all traces
+		//tp = 0, continuous lines
+		//tp > 0, different discrete shape for each trace
+		//cl > 0, different color for each trace
+		//cl <= 0, same color for all traces
+		void plotPolyLine(const Matrix<Int> &verts,
+		                  int ln = 0, int tp = 0, int cl = 0);
+		void plotPolyLine(const Matrix<Float> &verts,
+		                  int ln = 0, int tp = 0, int cl = 0);
+		void plotPolyLine(const Matrix<Double> &verts,
+		                  int ln = 0, int tp = 0, int cl = 0);
 
-    // template<class T>
-    void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
-    void drawImage(const Matrix<uInt> &data);
-    //void setMarkMode(bool);
-    
-    QColor getLinearColor(double);
-    QSize minimumSizeHint() const;
-    QSize sizeHint() const;
-    ~QtDrawCanvas();
-    void increaseCurZoom();
-    int getCurZoom();
-    int getZoomStackSize();
-    int getCurLine();
-    int getTotalLines();
-    
-    void setTitle(const QString &text, 
-                  int fontSize = 12, int color = 0, 
-                  const QString &font = "Helvetica [Cronyx]");
-    void setXLabel(const QString &text, 
-                  int fontSize = 10, int color = 1, 
-                  const QString &font = "Helvetica [Cronyx]");
-    void setYLabel(const QString &text, 
-                  int fontSize = 10, int color = 2, 
-                  const QString &font = "Helvetica [Cronyx]");
-    void setWelcome(const QString &text, int fontSize = 14, 
-                    int color = 1, 
-                    const QString &font = "Helvetica [Cronyx]");
+		// template<class T>
+		void drawImage(const Matrix<uInt> &data, Matrix<uInt> *mask);
+		void drawImage(const Matrix<uInt> &data);
+		//void setMarkMode(bool);
 
-public slots:
-    void zoomIn();
-    void zoomOut();
-    void markPrev();
-    void markNext();
-    
-signals:
-    void zoomChanged();    
-    void gotFocus();
-   
-protected:
-    void paintEvent(QPaintEvent *event);
-    void resizeEvent(QResizeEvent *event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void keyPressEvent(QKeyEvent *event);
-    void wheelEvent(QWheelEvent *event);
-    void focusInEvent(QFocusEvent *event);
+		QColor getLinearColor(double);
+		QSize minimumSizeHint() const;
+		QSize sizeHint() const;
+		~QtDrawCanvas();
+		void increaseCurZoom();
+		int getCurZoom();
+		int getZoomStackSize();
+		int getCurLine();
+		int getTotalLines();
 
-private:
-    void updateRubberBandRegion();
-    void refreshPixmap();    
-    void drawGrid(QPainter *painter);
-    void drawTicks(QPainter *painter);
-    void drawLabels(QPainter *painter);
-    void drawWelcome(QPainter *painter);
-    void drawCurves(QPainter *painter);
-    void drawRects(QPainter *painter);
-       
-    enum { Margin = 60 };
+		void setTitle(const QString &text,
+		              int fontSize = 12, int color = 0,
+		              const QString &font = "Helvetica [Cronyx]");
+		void setXLabel(const QString &text,
+		               int fontSize = 10, int color = 1,
+		               const QString &font = "Helvetica [Cronyx]");
+		void setYLabel(const QString &text,
+		               int fontSize = 10, int color = 2,
+		               const QString &font = "Helvetica [Cronyx]");
+		void setWelcome(const QString &text, int fontSize = 14,
+		                int color = 1,
+		                const QString &font = "Helvetica [Cronyx]");
 
-    GraphLabel title;
-    GraphLabel xLabel;
-    GraphLabel yLabel;
-    GraphLabel welcome;
-    
-    std::map<int, CurveData> curveMap;
-    std::map<int, int> typeMap;
-    std::map<int, int> colorMap;
-    int curLine;
+	public slots:
+		void zoomIn();
+		void zoomOut();
+		void markPrev();
+		void markNext();
 
-    std::vector<QtDrawSettings> zoomStack;
-    int curZoom;
+	signals:
+		void zoomChanged();
+		void gotFocus();
 
-    std::map<int, CurveData> markerStack;
-    int curMarker;
+	protected:
+		void paintEvent(QPaintEvent *event);
+		void resizeEvent(QResizeEvent *event);
+		void mousePressEvent(QMouseEvent *event);
+		void mouseMoveEvent(QMouseEvent *event);
+		void mouseReleaseEvent(QMouseEvent *event);
+		void keyPressEvent(QKeyEvent *event);
+		void wheelEvent(QWheelEvent *event);
+		void focusInEvent(QFocusEvent *event);
 
-    QRect rubberBandRect;
-    bool rubberBandIsShown;
+	private:
+		void updateRubberBandRegion();
+		void refreshPixmap();
+		void drawGrid(QPainter *painter);
+		void drawTicks(QPainter *painter);
+		void drawLabels(QPainter *painter);
+		void drawWelcome(QPainter *painter);
+		void drawCurves(QPainter *painter);
+		void drawRects(QPainter *painter);
 
-    bool imageMode;
-    bool markMode;
+		enum { Margin = 60 };
 
-    QPixmap pixmap;
-    QPixmap backBuffer;
-    Matrix<uInt> *pMask;
+		GraphLabel title;
+		GraphLabel xLabel;
+		GraphLabel yLabel;
+		GraphLabel welcome;
 
-};
+		std::map<int, CurveData> curveMap;
+		std::map<int, int> typeMap;
+		std::map<int, int> colorMap;
+		int curLine;
+
+		std::vector<QtDrawSettings> zoomStack;
+		int curZoom;
+
+		std::map<int, CurveData> markerStack;
+		int curMarker;
+
+		QRect rubberBandRect;
+		bool rubberBandIsShown;
+
+		bool imageMode;
+		bool markMode;
+
+		QPixmap pixmap;
+		QPixmap backBuffer;
+		Matrix<uInt> *pMask;
+
+	};
 
 }
 #endif

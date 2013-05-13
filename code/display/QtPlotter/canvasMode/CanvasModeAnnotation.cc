@@ -30,69 +30,65 @@
 
 namespace casa {
 
-CanvasModeAnnotation::CanvasModeAnnotation()
-	:CanvasMode(Qt::CrossCursor){
-	dragEnabled = false;
-}
+	CanvasModeAnnotation::CanvasModeAnnotation()
+		:CanvasMode(Qt::CrossCursor) {
+		dragEnabled = false;
+	}
 
-bool CanvasModeAnnotation::isMode( ModeIndex mode ) const {
-	bool matchingMode = false;
-	if ( mode == MODE_ANNOTATION ){
-		matchingMode = true;
+	bool CanvasModeAnnotation::isMode( ModeIndex mode ) const {
+		bool matchingMode = false;
+		if ( mode == MODE_ANNOTATION ) {
+			matchingMode = true;
+		}
+		return matchingMode;
 	}
-	return matchingMode;
-}
 
-void CanvasModeAnnotation::mousePressEventSpecific( QMouseEvent* event ){
-	receiver->selectAnnotation( event );
-	dragEnabled = true;
-	if ( receiver->isAnnotation( event ) ){
-		Annotation* currentAnnotation = receiver->getSelectedAnnotation();
-		currentAnnotation->registerMousePosition( event->pos().x(), event->pos().y() );
-	}
-	else {
-		if ( receiver->selectedAnnotation != NULL ){
-			delete receiver->selectedAnnotation;
-		}
-		receiver->selectedAnnotation = new AnnotationText( receiver );
-		receiver->selectedAnnotation->move( event->pos().x(), event->pos().y() );
-	}
-}
-
-void CanvasModeAnnotation::mouseMoveEvent( QMouseEvent* event ){
-	if ( dragEnabled ){
-		if ( receiver->isAnnotation( event ) ){
-			Annotation* currentAnnotation = receiver->getSelectedAnnotation();
-			currentAnnotation->mousePositionMoved( event->pos().x(), event->pos().y() );
-			receiver->update();
-		}
-		else if ( receiver->isAnnotationActive() ){
-			Annotation* activeAnnotation = receiver->getActiveAnnotation();
-			activeAnnotation->setDimensionsPosition( event->pos().x(), event->pos().y() );
-			receiver->update();
-		}
-	}
-	else {
-		if ( receiver->isAnnotation( event ) ){
+	void CanvasModeAnnotation::mousePressEventSpecific( QMouseEvent* event ) {
+		receiver->selectAnnotation( event );
+		dragEnabled = true;
+		if ( receiver->isAnnotation( event ) ) {
 			Annotation* currentAnnotation = receiver->getSelectedAnnotation();
 			currentAnnotation->registerMousePosition( event->pos().x(), event->pos().y() );
-			receiver->update();
+		} else {
+			if ( receiver->selectedAnnotation != NULL ) {
+				delete receiver->selectedAnnotation;
+			}
+			receiver->selectedAnnotation = new AnnotationText( receiver );
+			receiver->selectedAnnotation->move( event->pos().x(), event->pos().y() );
 		}
 	}
-}
 
-void CanvasModeAnnotation::mouseReleaseEventSpecific( QMouseEvent* event ){
-	if ( receiver->isAnnotationActive()){
-		receiver->storeActiveAnnotation( event );
+	void CanvasModeAnnotation::mouseMoveEvent( QMouseEvent* event ) {
+		if ( dragEnabled ) {
+			if ( receiver->isAnnotation( event ) ) {
+				Annotation* currentAnnotation = receiver->getSelectedAnnotation();
+				currentAnnotation->mousePositionMoved( event->pos().x(), event->pos().y() );
+				receiver->update();
+			} else if ( receiver->isAnnotationActive() ) {
+				Annotation* activeAnnotation = receiver->getActiveAnnotation();
+				activeAnnotation->setDimensionsPosition( event->pos().x(), event->pos().y() );
+				receiver->update();
+			}
+		} else {
+			if ( receiver->isAnnotation( event ) ) {
+				Annotation* currentAnnotation = receiver->getSelectedAnnotation();
+				currentAnnotation->registerMousePosition( event->pos().x(), event->pos().y() );
+				receiver->update();
+			}
+		}
 	}
-	else {
-		receiver->selectAnnotation(event, false );
-	}
-	dragEnabled = false;
-}
 
-CanvasModeAnnotation::~CanvasModeAnnotation() {
-	// TODO Auto-generated destructor stub
-}
+	void CanvasModeAnnotation::mouseReleaseEventSpecific( QMouseEvent* event ) {
+		if ( receiver->isAnnotationActive()) {
+			receiver->storeActiveAnnotation( event );
+		} else {
+			receiver->selectAnnotation(event, false );
+		}
+		dragEnabled = false;
+	}
+
+	CanvasModeAnnotation::~CanvasModeAnnotation() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

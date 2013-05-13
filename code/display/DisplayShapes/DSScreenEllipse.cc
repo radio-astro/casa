@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <display/DisplayShapes/DSScreenEllipse.h>
 #include <display/DisplayShapes/DSWorldEllipse.h>
@@ -40,135 +40,135 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSScreenEllipse::DSScreenEllipse() :
-  DSEllipse(),
-  itsPC(0),
-  itsRelativeCenter() {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-}
+	DSScreenEllipse::DSScreenEllipse() :
+		DSEllipse(),
+		itsPC(0),
+		itsRelativeCenter() {
 
-DSScreenEllipse::DSScreenEllipse(const Record& settings, PixelCanvas* pc) :
-  DSEllipse(),
-  itsPC(pc),
-  itsRelativeCenter(0) {
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
+	}
 
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  setOptions(settings);
-  
-}
-
-DSScreenEllipse::DSScreenEllipse(DSPixelEllipse& other, PixelCanvas* pc) :
-  DSEllipse(),
-  itsPC(pc),
-  itsRelativeCenter(0) {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  DSEllipse::setOptions(other.getRawOptions());
-  updateRelative();
-  
-}
-
-DSScreenEllipse::DSScreenEllipse(DSWorldEllipse& other) :
-  DSEllipse(),
-  itsPC(0),
-  itsRelativeCenter(0) {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  itsPC = other.panelDisplay()->pixelCanvas();
-  
-  DSEllipse::setOptions(other.getRawOptions());
-  updateRelative();
-}
- 
-DSScreenEllipse::~DSScreenEllipse() {
-
-}
-  
-
-Bool DSScreenEllipse::setOptions(const Record& settings) {
-  Bool localChange = False;
-  Record toSet = settings;
-  
-  if (settings.isDefined("coords")) {
-    if (settings.asString("coords") != "frac") {
-      throw(AipsError("I (DSScreenEllipse) was expecting an option "
-		      "record which"
-		      " had coords == \'frac\'. Please use a \'lock\' function"
-		      " to change my co-ord system"));
-    }
-  }
-  
-  if (DSEllipse::setOptions(toSet)) {
-    localChange = True;
-  }
-
-  return localChange;
-}
-
-void DSScreenEllipse::recalculateScreenPosition() {
-  if (!itsPC) {
-    throw(AipsError("Can't do recalculateScreenPosition() since I don't have"
-		    " a valid pixelCanvas, a relative start or a relative "
-		    "end saved!"));
-  }
-  
+	DSScreenEllipse::DSScreenEllipse(const Record& settings, PixelCanvas* pc) :
+		DSEllipse(),
+		itsPC(pc),
+		itsRelativeCenter(0) {
 
 
-}
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
 
-void DSScreenEllipse::move(const Float& dX, const Float& dY) {
-  DSEllipse::move(dX, dY);
-  updateRelative();
-}
+		setOptions(settings);
 
-void DSScreenEllipse::setCenter(const Float& xPos, const Float& yPos) {
-  DSEllipse::setCenter(xPos, yPos);
-  updateRelative();
-}
+	}
 
-void DSScreenEllipse::rotate(const Float& angle) {
-  DSEllipse::rotate(angle);
-  updateRelative();
-}
+	DSScreenEllipse::DSScreenEllipse(DSPixelEllipse& other, PixelCanvas* pc) :
+		DSEllipse(),
+		itsPC(pc),
+		itsRelativeCenter(0) {
 
-void DSScreenEllipse::changePoint(const Vector<Float>&pos, const Int n) {
-  DSEllipse::changePoint(pos, n);
-  updateRelative();
-}
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
 
-void DSScreenEllipse::changePoint(const Vector<Float>& pos) {
-  DSEllipse::changePoint(pos);
-  updateRelative();
-}
+		DSEllipse::setOptions(other.getRawOptions());
+		updateRelative();
+
+	}
+
+	DSScreenEllipse::DSScreenEllipse(DSWorldEllipse& other) :
+		DSEllipse(),
+		itsPC(0),
+		itsRelativeCenter(0) {
+
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
+
+		itsPC = other.panelDisplay()->pixelCanvas();
+
+		DSEllipse::setOptions(other.getRawOptions());
+		updateRelative();
+	}
+
+	DSScreenEllipse::~DSScreenEllipse() {
+
+	}
 
 
-void DSScreenEllipse::updateRelative() {
-  
-    
-}
+	Bool DSScreenEllipse::setOptions(const Record& settings) {
+		Bool localChange = False;
+		Record toSet = settings;
+
+		if (settings.isDefined("coords")) {
+			if (settings.asString("coords") != "frac") {
+				throw(AipsError("I (DSScreenEllipse) was expecting an option "
+				                "record which"
+				                " had coords == \'frac\'. Please use a \'lock\' function"
+				                " to change my co-ord system"));
+			}
+		}
+
+		if (DSEllipse::setOptions(toSet)) {
+			localChange = True;
+		}
+
+		return localChange;
+	}
+
+	void DSScreenEllipse::recalculateScreenPosition() {
+		if (!itsPC) {
+			throw(AipsError("Can't do recalculateScreenPosition() since I don't have"
+			                " a valid pixelCanvas, a relative start or a relative "
+			                "end saved!"));
+		}
 
 
-Record DSScreenEllipse::getOptions() {
 
-  Record toReturn;
-  
-  toReturn = DSEllipse::getOptions();
-  
-  // Shouldn't happen (should never be defined) .. but why not
-  if (toReturn.isDefined("coords")) {
-    toReturn.removeField("coords");
-  }
-  
-  toReturn.define("coords", "frac");
+	}
 
-  return toReturn;
+	void DSScreenEllipse::move(const Float& dX, const Float& dY) {
+		DSEllipse::move(dX, dY);
+		updateRelative();
+	}
 
-}
+	void DSScreenEllipse::setCenter(const Float& xPos, const Float& yPos) {
+		DSEllipse::setCenter(xPos, yPos);
+		updateRelative();
+	}
+
+	void DSScreenEllipse::rotate(const Float& angle) {
+		DSEllipse::rotate(angle);
+		updateRelative();
+	}
+
+	void DSScreenEllipse::changePoint(const Vector<Float>&pos, const Int n) {
+		DSEllipse::changePoint(pos, n);
+		updateRelative();
+	}
+
+	void DSScreenEllipse::changePoint(const Vector<Float>& pos) {
+		DSEllipse::changePoint(pos);
+		updateRelative();
+	}
+
+
+	void DSScreenEllipse::updateRelative() {
+
+
+	}
+
+
+	Record DSScreenEllipse::getOptions() {
+
+		Record toReturn;
+
+		toReturn = DSEllipse::getOptions();
+
+		// Shouldn't happen (should never be defined) .. but why not
+		if (toReturn.isDefined("coords")) {
+			toReturn.removeField("coords");
+		}
+
+		toReturn.define("coords", "frac");
+
+		return toReturn;
+
+	}
 
 
 

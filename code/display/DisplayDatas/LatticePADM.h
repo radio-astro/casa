@@ -37,10 +37,10 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forwards:
-template <class T> class Array;
-template <class T> class MaskedLattice;
-class IPosition;
-template <class T> class LatticePADisplayData;
+	template <class T> class Array;
+	template <class T> class MaskedLattice;
+	class IPosition;
+	template <class T> class LatticePADisplayData;
 
 // <summary>
 // Partial implementation of PrincipalAxesDM for Lattice-based data.
@@ -51,46 +51,46 @@ template <class T> class LatticePADisplayData;
 // which adds methods particular to handling Lattice-based data.
 // </synopsis>
 
-template <class T> class LatticePADisplayMethod : public PrincipalAxesDM {
+	template <class T> class LatticePADisplayMethod : public PrincipalAxesDM {
 
- public:
+	public:
 
-  // Constructor
-  // do I need the default constructor?
-  LatticePADisplayMethod();
-  LatticePADisplayMethod(const uInt xAxis, const uInt yAxis, 
-			 const uInt mAxis, const IPosition fixedPos,
-			 LatticePADisplayData<T> *arDat);
-  // 2d version
-  LatticePADisplayMethod(const uInt xAxis, const uInt yAxis, 
-			 LatticePADisplayData<T> *arDat);
+		// Constructor
+		// do I need the default constructor?
+		LatticePADisplayMethod();
+		LatticePADisplayMethod(const uInt xAxis, const uInt yAxis,
+		                       const uInt mAxis, const IPosition fixedPos,
+		                       LatticePADisplayData<T> *arDat);
+		// 2d version
+		LatticePADisplayMethod(const uInt xAxis, const uInt yAxis,
+		                       LatticePADisplayData<T> *arDat);
 
-  // Destructor
-  virtual ~LatticePADisplayMethod();
+		// Destructor
+		virtual ~LatticePADisplayMethod();
 
- protected:
+	protected:
 
-  // Query the shape of the lattice: used by draw() in PrincipalAxesDM
-  virtual IPosition dataShape();
+		// Query the shape of the lattice: used by draw() in PrincipalAxesDM
+		virtual IPosition dataShape();
 
-  // Extract data from the lattice: used by draw() in PrincipalAxesDM
-  // this is probably not needed in this class...
-  virtual Bool dataGetSlice(Matrix<T>& datMatrix,
-			    Matrix<Bool>& mask,
-			    const IPosition& start,
-			    const IPosition& sliceShape,
-			    const IPosition& stride);
-  
-  virtual Bool dataGetSlice(Matrix<T>& datMatrix,
-			    Matrix<Bool>& mask,
-			    const IPosition& start,
-			    const IPosition& sliceShape,
-			    const IPosition& stride,
-                            MaskedLattice<T>& latt);
- 
- private:
+		// Extract data from the lattice: used by draw() in PrincipalAxesDM
+		// this is probably not needed in this class...
+		virtual Bool dataGetSlice(Matrix<T>& datMatrix,
+		                          Matrix<Bool>& mask,
+		                          const IPosition& start,
+		                          const IPosition& sliceShape,
+		                          const IPosition& stride);
 
-};
+		virtual Bool dataGetSlice(Matrix<T>& datMatrix,
+		                          Matrix<Bool>& mask,
+		                          const IPosition& start,
+		                          const IPosition& sliceShape,
+		                          const IPosition& stride,
+		                          MaskedLattice<T>& latt);
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

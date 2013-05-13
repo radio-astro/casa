@@ -41,50 +41,50 @@
 }
 
 namespace casa {
-    namespace viewer {
-	std::map< region::RegionTypes, RegionCreator::creator_list_type*> RegionCreator::creator_map;
-	RegionCreator::creator_list_type RegionCreator::unsorted_creators;
+	namespace viewer {
+		std::map< region::RegionTypes, RegionCreator::creator_list_type*> RegionCreator::creator_map;
+		RegionCreator::creator_list_type RegionCreator::unsorted_creators;
 
-	RegionCreator::RegionCreator( ) {
-	    unsorted_creators.push_back(this);
-	}
-
-	RegionCreator::~RegionCreator( ) {
-	    // remove all the references 
-	    for ( creator_map_type::iterator it = creator_map.begin( );
-		  it != creator_map.end(); ++it ) {
-		// region::RegionTypes tt = (*it).first;
-		creator_list_type::iterator me_in_list = std::find((*it).second->begin(),(*it).second->end(),this);
-		if ( me_in_list != (*it).second->end( ) ) {
-		    (*it).second->erase(me_in_list);
+		RegionCreator::RegionCreator( ) {
+			unsorted_creators.push_back(this);
 		}
-	    }
-	}
 
-	const RegionCreator::creator_list_type &RegionCreator::findCreator( region::RegionTypes type ) {
-
-	    // sort newly constructed creators...
-	    for ( creator_list_type::iterator creator_it=unsorted_creators.begin( );
-		  creator_it != unsorted_creators.end( ); ++creator_it ) {
-		const std::set<region::RegionTypes> &types = (*creator_it)->regionsCreated( );
-		for( std::set<region::RegionTypes>::iterator types_it=types.begin( );
-		     types_it != types.end( ); ++types_it ) {
-		    creator_list_type *dlist = 0;
-		    FIND_LIST(dlist,*types_it)
-		    dlist->push_back(*creator_it);
+		RegionCreator::~RegionCreator( ) {
+			// remove all the references
+			for ( creator_map_type::iterator it = creator_map.begin( );
+			        it != creator_map.end(); ++it ) {
+				// region::RegionTypes tt = (*it).first;
+				creator_list_type::iterator me_in_list = std::find((*it).second->begin(),(*it).second->end(),this);
+				if ( me_in_list != (*it).second->end( ) ) {
+					(*it).second->erase(me_in_list);
+				}
+			}
 		}
-	    }
 
-	    // clear newly constructed creators list...
-	    unsorted_creators.clear( );
+		const RegionCreator::creator_list_type &RegionCreator::findCreator( region::RegionTypes type ) {
 
-	    creator_list_type *result = 0;
-	    FIND_LIST(result,type)
-	    return *result;
+			// sort newly constructed creators...
+			for ( creator_list_type::iterator creator_it=unsorted_creators.begin( );
+			        creator_it != unsorted_creators.end( ); ++creator_it ) {
+				const std::set<region::RegionTypes> &types = (*creator_it)->regionsCreated( );
+				for( std::set<region::RegionTypes>::iterator types_it=types.begin( );
+				        types_it != types.end( ); ++types_it ) {
+					creator_list_type *dlist = 0;
+					FIND_LIST(dlist,*types_it)
+					dlist->push_back(*creator_it);
+				}
+			}
+
+			// clear newly constructed creators list...
+			unsorted_creators.clear( );
+
+			creator_list_type *result = 0;
+			FIND_LIST(result,type)
+			return *result;
+		}
+
+
 	}
-
-      
-    }
 }
-	  
+
 

@@ -32,44 +32,44 @@
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 namespace casa {
 
-class Converter {
-public:
-	Converter( const QString& oldUnits, const QString& newUnits);
+	class Converter {
+	public:
+		Converter( const QString& oldUnits, const QString& newUnits);
 
-	//Factory for producing the appropriate converter.
-	//Note:  user is responsible for deleting the converter.
-	static Converter* getConverter( const QString& oldUnits,const QString& newUnits );
-	static void setSpectralCoordinate( SpectralCoordinate coordinate );
-	static void setRestFrequency( double restFrequency );
-	static void convert( Vector<double> &resultValues, int sourceIndex, int destIndex);
+		//Factory for producing the appropriate converter.
+		//Note:  user is responsible for deleting the converter.
+		static Converter* getConverter( const QString& oldUnits,const QString& newUnits );
+		static void setSpectralCoordinate( SpectralCoordinate coordinate );
+		static void setRestFrequency( double restFrequency );
+		static void convert( Vector<double> &resultValues, int sourceIndex, int destIndex);
 
-	bool setVelocityUnits( const QString& units );
-	bool setWavelengthUnits( const QString& units );
-	QString getNewUnits() const;
+		bool setVelocityUnits( const QString& units );
+		bool setWavelengthUnits( const QString& units );
+		QString getNewUnits() const;
 
 
 
-	//Abstract methods to be implemented by subclasses.
-	//virtual float convert( float oldValue ) const = 0;
-	virtual double toPixel( double value ) = 0;
-	virtual Vector<double> convert( const Vector<double>& oldValues ) = 0;
-	virtual double convert ( double oldValue );
-	virtual ~Converter();
+		//Abstract methods to be implemented by subclasses.
+		//virtual float convert( float oldValue ) const = 0;
+		virtual double toPixel( double value ) = 0;
+		virtual Vector<double> convert( const Vector<double>& oldValues ) = 0;
+		virtual double convert ( double oldValue );
+		virtual ~Converter();
 
-protected:
-	static const QList<QString> FREQUENCY_UNITS;
-	static const QList<QString> WAVELENGTH_UNITS;
-	static const QList<QString> VELOCITY_UNITS;
+	protected:
+		static const QList<QString> FREQUENCY_UNITS;
+		static const QList<QString> WAVELENGTH_UNITS;
+		static const QList<QString> VELOCITY_UNITS;
 
-	QString oldUnits;
-	QString newUnits;
-	static SpectralCoordinate spectralCoordinate;
-	typedef enum {FREQUENCY_UNIT, VELOCITY_UNIT, WAVELENGTH_UNIT, CHANNEL_UNIT, UNRECOGNIZED } UnitType;
+		QString oldUnits;
+		QString newUnits;
+		static SpectralCoordinate spectralCoordinate;
+		typedef enum {FREQUENCY_UNIT, VELOCITY_UNIT, WAVELENGTH_UNIT, CHANNEL_UNIT, UNRECOGNIZED } UnitType;
 
-private:
-	static UnitType getUnitType( const QString& unit );
+	private:
+		static UnitType getUnitType( const QString& unit );
 
-};
+	};
 
 } /* namespace casa */
 #endif /* CONVERTER_H_ */

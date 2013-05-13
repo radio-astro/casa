@@ -31,21 +31,21 @@
 
 namespace casa {
 
-/**
- * Overriding QwtScaleDraw in order to provide custom (smaller) fonts for the
- * tick labels on a plot axis.
- */
+	/**
+	 * Overriding QwtScaleDraw in order to provide custom (smaller) fonts for the
+	 * tick labels on a plot axis.
+	 */
 
-class SliceAxisDraw : public QwtScaleDraw {
-public:
-	SliceAxisDraw();
-	void setTickFontSize( int size );
-	virtual QwtText label( double tickValue) const;
-	virtual ~SliceAxisDraw();
+	class SliceAxisDraw : public QwtScaleDraw {
+	public:
+		SliceAxisDraw();
+		void setTickFontSize( int size );
+		virtual QwtText label( double tickValue) const;
+		virtual ~SliceAxisDraw();
 
-private:
-	int tickFontSize;
-};
+	private:
+		int tickFontSize;
+	};
 
 } /* namespace casa */
 #endif /* SLICEAXISDRAW_H_ */

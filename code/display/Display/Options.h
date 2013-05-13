@@ -1,4 +1,4 @@
-//# Options.h: base class for storing and parsing parameters 
+//# Options.h: base class for storing and parsing parameters
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -33,57 +33,71 @@
 #include <sys/stat.h>
 
 namespace casa {
-    namespace viewer {
+	namespace viewer {
 
-	class Options {
-	    public:
-		class Kernel {
-		    public:
-			virtual std::string tmp( ) const = 0;
-			virtual ~Kernel( ) { }
+		class Options {
+		public:
+			class Kernel {
+			public:
+				virtual std::string tmp( ) const = 0;
+				virtual ~Kernel( ) { }
+			};
+
+			std::string tmp( ) const {
+				return kernel->tmp( );
+			}
+
+			// this returns a path to be used as a temporary file or directory, and
+			// by default, deletes the file when the viewer exits... the "base_name"
+			// is just the name to be used as a starting point for finding a unique
+			// file name, an example would be "my_tmp_file"... but it could be
+			// anything (not including directories, i.e. "/")... this function
+			// guarantees that no two returned strings will be identical... and that
+			// all will be valid path names...
+			std::string temporaryPath( const std::string &base_name, bool remove=true ) {
+				return _temporary_path_( base_name, remove );
+			}
+
+			Options( ) { }  /*** initialized by options_init_  ***/
+			~Options( ) { } /*** finalized by options_init_    ***/
+
+
+		private:
+			friend class options_init_;
+			Options( const Options & ) { }
+			const Options &operator=(const Options&) {
+				return *this;
+			}
+			void init( Kernel *k ) {
+				kernel = k;
+				returned_paths = new std::map<std::string,std::pair<std::string,bool> >( );
+			}
+			void finalize( );
+			typedef std::map<std::string,std::pair<std::string,bool> > path_map;
+			path_map *returned_paths;
+			Kernel *kernel;
+
+			std::string _temporary_path_( const std::string &/*base_dir_name*/, bool /*remove*/ );
 		};
 
-		std::string tmp( ) const { return kernel->tmp( ); }
+		extern Options options;
 
-		// this returns a path to be used as a temporary file or directory, and
-		// by default, deletes the file when the viewer exits... the "base_name"
-		// is just the name to be used as a starting point for finding a unique
-		// file name, an example would be "my_tmp_file"... but it could be
-		// anything (not including directories, i.e. "/")... this function
-		// guarantees that no two returned strings will be identical... and that
-		// all will be valid path names...
-		std::string temporaryPath( const std::string &base_name, bool remove=true )
-			{ return _temporary_path_( base_name, remove ); }
-
-		Options( ) { }  /*** initialized by options_init_  ***/
-		~Options( ) { } /*** finalized by options_init_    ***/
-		
-
-	    private:
-		friend class options_init_;
-		Options( const Options & ) { }
-		const Options &operator=(const Options&) { return *this; }
-		void init( Kernel *k ) { kernel = k; returned_paths = new std::map<std::string,std::pair<std::string,bool> >( ); }
-		void finalize( );
-		typedef std::map<std::string,std::pair<std::string,bool> > path_map;
-		path_map *returned_paths;
-		Kernel *kernel;
-
-		std::string _temporary_path_( const std::string &/*base_dir_name*/, bool /*remove*/ );
-	};
-
-	extern Options options;
-
-	static class options_init_ {
-	    public:
-	        options_init_( ) { if ( count++ == 0 ) do_init( ); }
-		~options_init_( ) { if ( --count == 0 ) { options.finalize( ); } }
-	    private:
-		static unsigned int count;
-		// to be defined in qt (or other windowing library) land....
-		void do_init( );
-	} _options_init_object_;
-    }
+		static class options_init_ {
+		public:
+			options_init_( ) {
+				if ( count++ == 0 ) do_init( );
+			}
+			~options_init_( ) {
+				if ( --count == 0 ) {
+					options.finalize( );
+				}
+			}
+		private:
+			static unsigned int count;
+			// to be defined in qt (or other windowing library) land....
+			void do_init( );
+		} _options_init_object_;
+	}
 }
 
 #endif

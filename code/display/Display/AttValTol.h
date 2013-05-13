@@ -33,25 +33,25 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class AttValBase;
+	class AttValBase;
 
-// <summary> 
+// <summary>
 // Templated class for storing Attributes which have a tolerance.
 // </summary>
 
 // <use visibility=export>
- 
+
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="tAttribute" demos="">
 // </reviewed>
- 
+
 // <prerequisite>
 // <li> <linkto class="AttributeValue">AttributeValue</linkto>
 // </prerequisite>
 
-// <etymology> 
-// "AttributeValueTol" is a contraction of "Attribute Value" and 
-// "Tolerance", and stores an Attribute which has associated with 
-// it some tolerance to be observed in matching with other 
+// <etymology>
+// "AttributeValueTol" is a contraction of "Attribute Value" and
+// "Tolerance", and stores an Attribute which has associated with
+// it some tolerance to be observed in matching with other
 // Attributes.
 // </etymology>
 
@@ -63,13 +63,13 @@ class AttValBase;
 // exactly in order for the AttributeValueTols to match.  Tolerant
 // matching is defined as <src>abs(val1-val2) <= tolerance1</src>.
 // Remember though that in general both Attributes must independently
-// match each other for a match to exist, and so it is normally also a 
+// match each other for a match to exist, and so it is normally also a
 // requirement that <src>abs(val1 - val2) <= tolerance2</src> when the
 // second Attribute also has tolerance specified.
 // </synopsis>
 
 // <example>
-// If we have 
+// If we have
 //
 // <srcBlock>
 // AttributeValueTol<Float> Att1(3.0, 1.2, False);
@@ -93,61 +93,67 @@ class AttValBase;
 // </todo>
 
 
-template <class T> class AttributeValueTol : public AttributeValue<T> {
+	template <class T> class AttributeValueTol : public AttributeValue<T> {
 
- public:
-  // Constructor for a scalar, with specified scalar tolerance and
-  // strictness.
-  AttributeValueTol(const T &value, const T &tolerance, const Bool strict);
-  
-  // Constructor for a <src>Vector</src> value, with specified scalar
-  // tolerance and strictness.
-  AttributeValueTol(const Vector<T> &value, const T &tolerance, const Bool strict);
+	public:
+		// Constructor for a scalar, with specified scalar tolerance and
+		// strictness.
+		AttributeValueTol(const T &value, const T &tolerance, const Bool strict);
 
-  // Copy contructor.
-  AttributeValueTol(const AttributeValueTol<T> &other);
-  
-  // Destructor.
-  virtual ~AttributeValueTol();
+		// Constructor for a <src>Vector</src> value, with specified scalar
+		// tolerance and strictness.
+		AttributeValueTol(const Vector<T> &value, const T &tolerance, const Bool strict);
 
-  // Assignment operator.
-  const AttributeValueTol<T> &operator=(const AttributeValueTol<T>& other);
+		// Copy contructor.
+		AttributeValueTol(const AttributeValueTol<T> &other);
 
-  // Return a new copy of the AttributeValueTol (virtual constructor).
-  virtual AttributeValueBase *clone() const;
+		// Destructor.
+		virtual ~AttributeValueTol();
 
-  // Change or retrieve the scalar tolerance.
-  // <group>
-  virtual void setTolerance(T value) {itsValueTolerance = value;};
-  virtual T getTolerance() const {return itsValueTolerance;};
-  // </group>
+		// Assignment operator.
+		const AttributeValueTol<T> &operator=(const AttributeValueTol<T>& other);
 
-  // Return class name 
-  virtual String className() const {return String("AttributeValueTol");};
+		// Return a new copy of the AttributeValueTol (virtual constructor).
+		virtual AttributeValueBase *clone() const;
 
-protected:
+		// Change or retrieve the scalar tolerance.
+		// <group>
+		virtual void setTolerance(T value) {
+			itsValueTolerance = value;
+		};
+		virtual T getTolerance() const {
+			return itsValueTolerance;
+		};
+		// </group>
 
-  // Implements when the values of two Attributes match, taking note 
-  // of tolerance in this particular implementation.
-  virtual Bool matches(const AttributeValueBase& other) const;
+		// Return class name
+		virtual String className() const {
+			return String("AttributeValueTol");
+		};
 
- private:
+	protected:
 
-  // The value of the tolerance
-  T itsValueTolerance;
+		// Implements when the values of two Attributes match, taking note
+		// of tolerance in this particular implementation.
+		virtual Bool matches(const AttributeValueBase& other) const;
 
-  // Does the actual matching
-  Bool myMatch(const AttributeValue<T>& other) const;
+	private:
 
-  // Default constructor
-  AttributeValueTol();
+		// The value of the tolerance
+		T itsValueTolerance;
 
-  //# Make parent members known.
-public:
-  using AttributeValue<T>::getType;
-  using AttributeValue<T>::getValue;
-  using AttributeValue<T>::getStrictness;
-};
+		// Does the actual matching
+		Bool myMatch(const AttributeValue<T>& other) const;
+
+		// Default constructor
+		AttributeValueTol();
+
+		//# Make parent members known.
+	public:
+		using AttributeValue<T>::getType;
+		using AttributeValue<T>::getValue;
+		using AttributeValue<T>::getStrictness;
+	};
 
 } //# NAMESPACE CASA - END
 

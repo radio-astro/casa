@@ -74,37 +74,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Nothing known
 // </todo>
 
-class WCRTZoomer : public WCRectTool {
+	class WCRTZoomer : public WCRectTool {
 
- public:
+	public:
 
-  // Constructor
-  WCRTZoomer(WorldCanvas *wcanvas,
-	     Display::KeySym keysym = Display::K_Pointer_Button1);
+		// Constructor
+		WCRTZoomer(WorldCanvas *wcanvas,
+		           Display::KeySym keysym = Display::K_Pointer_Button1);
 
-  // Destructor
-  virtual ~WCRTZoomer();
+		// Destructor
+		virtual ~WCRTZoomer();
 
-  // Functions specific to the zooming - these are called by 
-  // lower-level event handlers in the base classes
-  // <group>
-  virtual void doubleInside();
-  virtual void doubleOutside();
-  // </group>
+		// Functions specific to the zooming - these are called by
+		// lower-level event handlers in the base classes
+		// <group>
+		virtual void doubleInside();
+		virtual void doubleOutside();
+		// </group>
 
-  // This function is called when a zoom occurs.  It is supplied
-  // with the linear coords of the new zoom box, and thus can be
-  // implemented to do further actions, or perhaps report the 
-  // new zoom box to the application
-  virtual void zoomed(const Vector<Double> &linBlc, 
-		      const Vector<Double> &linTrc);
+		// This function is called when a zoom occurs.  It is supplied
+		// with the linear coords of the new zoom box, and thus can be
+		// implemented to do further actions, or perhaps report the
+		// new zoom box to the application
+		virtual void zoomed(const Vector<Double> &linBlc,
+		                    const Vector<Double> &linTrc);
 
- private:
-  
-  // get the linear coords of the current zoom box
-  void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
+	private:
 
-};
+		// get the linear coords of the current zoom box
+		void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
+
+	};
 
 
 } //# NAMESPACE CASA - END

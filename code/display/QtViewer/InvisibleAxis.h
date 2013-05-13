@@ -30,15 +30,15 @@
 
 namespace casa {
 
-class InvisibleAxis : public QwtScaleDraw {
-public:
-	InvisibleAxis();
-	virtual void draw( QPainter*, const QPalette& ) const;
-	virtual void drawBackbone( QPainter* ) const;
-	virtual void drawLabel( QPainter*, double val ) const;
-	virtual void drawTick( QPainter*, double val, double len) const;
-	virtual ~InvisibleAxis();
-};
+	class InvisibleAxis : public QwtScaleDraw {
+	public:
+		InvisibleAxis();
+		virtual void draw( QPainter*, const QPalette& ) const;
+		virtual void drawBackbone( QPainter* ) const;
+		virtual void drawLabel( QPainter*, double val ) const;
+		virtual void drawTick( QPainter*, double val, double len) const;
+		virtual ~InvisibleAxis();
+	};
 
 } /* namespace casa */
 #endif /* INIVISIBLEAXIS_H_ */

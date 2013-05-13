@@ -34,7 +34,7 @@
 #include <casa/Containers/Record.h>
 #include <display/Display/Attribute.h>
 #include <casa/Utilities/DataType.h>
-#include <tables/Tables/ArrayColumn.h> 
+#include <tables/Tables/ArrayColumn.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <display/Display/WorldCanvas.h>
 #include <display/Display/PixelCanvas.h>
@@ -44,126 +44,126 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructor
-TblAsContourDM::TblAsContourDM(WorldCanvas *worldCanvas, 
-				 AttributeBuffer *wchAttributes,
-				 AttributeBuffer *ddAttributes,
-				 CachingDisplayData *dd) :
-  CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
-}
- 
+	TblAsContourDM::TblAsContourDM(WorldCanvas *worldCanvas,
+	                               AttributeBuffer *wchAttributes,
+	                               AttributeBuffer *ddAttributes,
+	                               CachingDisplayData *dd) :
+		CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
+	}
+
 // destructor
-TblAsContourDM::~TblAsContourDM() {
-  cleanup();
-}
- 
+	TblAsContourDM::~TblAsContourDM() {
+		cleanup();
+	}
+
 // cleanup function
-void TblAsContourDM::cleanup() {
-}
+	void TblAsContourDM::cleanup() {
+	}
 
-Bool TblAsContourDM::drawIntoList(Display::RefreshReason reason,
-				   WorldCanvasHolder &wcHolder) {
+	Bool TblAsContourDM::drawIntoList(Display::RefreshReason reason,
+	                                  WorldCanvasHolder &wcHolder) {
 
-  // which world canvas do we draw on?
-  WorldCanvas *wc = wcHolder.worldCanvas();
- 
-  // can we do a dynamic cast to the correct data type?
-  TblAsContourDD *parent = dynamic_cast<TblAsContourDD *>
-    (parentDisplayData());                                            
-  if (!parent) {
-    throw(AipsError("invalid parent of TblAsContourDM"));
-  }                
+		// which world canvas do we draw on?
+		WorldCanvas *wc = wcHolder.worldCanvas();
 
-  // get the table column data type
-  TableDesc tdesc(parent->table()->tableDesc());
-  DataType type = 
-    tdesc.columnDesc(parent->itsXColumnName->value()).trueDataType();
+		// can we do a dynamic cast to the correct data type?
+		TblAsContourDD *parent = dynamic_cast<TblAsContourDD *>
+		                         (parentDisplayData());
+		if (!parent) {
+			throw(AipsError("invalid parent of TblAsContourDM"));
+		}
 
-  // array to contain data to be plotted
-  Array<float> data;
-  Table *theTable = parent->table();
+		// get the table column data type
+		TableDesc tdesc(parent->table()->tableDesc());
+		DataType type =
+		    tdesc.columnDesc(parent->itsXColumnName->value()).trueDataType();
 
-  if (type == TpArrayDouble) {
-    Array<double> typedata;
-    // read the column into an array
-    ROArrayColumn<double> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    // now convert array to type double
-    data.resize(typedata.shape());
-    convertArray(data,typedata);
-  }
-  if (type == TpArrayFloat) {
-    ROArrayColumn<float> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(data,True);
-  }
-  if (type == TpArrayUShort) {
-    Array<ushort> typedata;
-    ROArrayColumn<ushort> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    data.resize(typedata.shape());
-    convertArray(data,typedata);
-  }
-  if (type == TpArrayInt) {
-    Array<int> typedata;
-    ROArrayColumn<int> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    data.resize(typedata.shape());
-    convertArray(data,typedata);
-  }
-  if (type == TpArrayUInt) {
-    Array<uInt> typedata;
-    ROArrayColumn<uInt> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    data.resize(typedata.shape());
-    convertArray(data,typedata);
-  }
-  // put the data into the matrix
-  const Matrix<float> theData = data;
+		// array to contain data to be plotted
+		Array<float> data;
+		Table *theTable = parent->table();
 
-  // define several things for drawing
-  Bool usePixelEdges = True;  // Better than center (should be user choice) dk
+		if (type == TpArrayDouble) {
+			Array<double> typedata;
+			// read the column into an array
+			ROArrayColumn<double>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			// now convert array to type double
+			data.resize(typedata.shape());
+			convertArray(data,typedata);
+		}
+		if (type == TpArrayFloat) {
+			ROArrayColumn<float>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(data,True);
+		}
+		if (type == TpArrayUShort) {
+			Array<ushort> typedata;
+			ROArrayColumn<ushort>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			data.resize(typedata.shape());
+			convertArray(data,typedata);
+		}
+		if (type == TpArrayInt) {
+			Array<int> typedata;
+			ROArrayColumn<int>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			data.resize(typedata.shape());
+			convertArray(data,typedata);
+		}
+		if (type == TpArrayUInt) {
+			Array<uInt> typedata;
+			ROArrayColumn<uInt>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			data.resize(typedata.shape());
+			convertArray(data,typedata);
+		}
+		// put the data into the matrix
+		const Matrix<float> theData = data;
 
-  // find data min and max
-  float dmin=0.,dmax=0.;
-  minMax(dmin,dmax,data);
+		// define several things for drawing
+		Bool usePixelEdges = True;  // Better than center (should be user choice) dk
 
-  // determine the contour levels to be used in the plot
-  Vector<Float> levels(parent->itsLevels.nelements());
-  for (uInt i = 0; i < levels.nelements(); i++) {
-    if (parent->itsType == "abs") {
-      levels(i) = parent->itsLevels(i) * parent->itsScale;
-    } else {
-      levels(i) = dmin + parent->itsLevels(i) * parent->itsScale *
-        (dmax - dmin);
-    }
-  }
+		// find data min and max
+		float dmin=0.,dmax=0.;
+		minMax(dmin,dmax,data);
 
-  // set properties for apperance of contour lines
-  wc->setColor(parent->itsColor);
-  wc->pixelCanvas()->setLineWidth(parent->itsLine);
-  Attribute dashem("dashNegativeContours", Bool(parent->itsDash));
-  wc->setAttribute(dashem);
+		// determine the contour levels to be used in the plot
+		Vector<Float> levels(parent->itsLevels.nelements());
+		for (uInt i = 0; i < levels.nelements(); i++) {
+			if (parent->itsType == "abs") {
+				levels(i) = parent->itsLevels(i) * parent->itsScale;
+			} else {
+				levels(i) = dmin + parent->itsLevels(i) * parent->itsScale *
+				            (dmax - dmin);
+			}
+		}
 
-  // now plot the data
-  return wc->drawContourMap( parent->itsLinblc, parent->itsLintrc, theData, levels, usePixelEdges );
-}
+		// set properties for apperance of contour lines
+		wc->setColor(parent->itsColor);
+		wc->pixelCanvas()->setLineWidth(parent->itsLine);
+		Attribute dashem("dashNegativeContours", Bool(parent->itsDash));
+		wc->setAttribute(dashem);
+
+		// now plot the data
+		return wc->drawContourMap( parent->itsLinblc, parent->itsLintrc, theData, levels, usePixelEdges );
+	}
 
 // (required) default constructor
-TblAsContourDM::TblAsContourDM(){
-}
+	TblAsContourDM::TblAsContourDM() {
+	}
 
 // (required) copy constructor
-TblAsContourDM::TblAsContourDM(const TblAsContourDM & other) :
-  CachingDisplayMethod(other) {
-}
+	TblAsContourDM::TblAsContourDM(const TblAsContourDM & other) :
+		CachingDisplayMethod(other) {
+	}
 
 // (required) copy assignment
-void TblAsContourDM::operator=(const TblAsContourDM &){
-}
+	void TblAsContourDM::operator=(const TblAsContourDM &) {
+	}
 
 
 } //# NAMESPACE CASA - END

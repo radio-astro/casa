@@ -1,28 +1,28 @@
 //# DisplayDataEvent.h: base class for events sent by DisplayDatas
 //# Copyright (C) 2003
 //# Associated Universities, Inc. Washington DC, USA.
-//# 
+//#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
-//# 
+//#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
-//# 
+//#
 //# You should have received a copy of the GNU Library General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//# 
+//#
 //# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# 
+//#
 //# $Id$
 
 #ifndef TRIALDISPLAY_DISPLAYDATAEVENT_H
@@ -33,7 +33,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class DisplayData;
+	class DisplayData;
 
 // <summary>
 // Class for events sent by DisplayDatas
@@ -45,7 +45,7 @@ class DisplayData;
 // </reviewed>
 
 // <etymology>
-// "DisplayDataEvents" describes "Events" (ie. things which happen at a 
+// "DisplayDataEvents" describes "Events" (ie. things which happen at a
 // measurable time) which are sent by DisplayDatas.
 // </etymology>
 
@@ -76,38 +76,38 @@ class DisplayData;
 // None.
 // </todo>
 
-class DisplayDataEvent : public DisplayEvent {
+	class DisplayDataEvent : public DisplayEvent {
 
- public:
+	public:
 
-  // Constructor, taking a pointer to a constant DD.
-  DisplayDataEvent(DisplayData* dd);
+		// Constructor, taking a pointer to a constant DD.
+		DisplayDataEvent(DisplayData* dd);
 
-  // Destructor.
-  virtual ~DisplayDataEvent();
+		// Destructor.
+		virtual ~DisplayDataEvent();
 
-  // Return a pointer to the DD that generated the event.
-  virtual DisplayData *displayData() const {
-    return itsDisplayData;
-  }
+		// Return a pointer to the DD that generated the event.
+		virtual DisplayData *displayData() const {
+			return itsDisplayData;
+		}
 
- protected:
+	protected:
 
-  // (Required) default constructor.
-  DisplayDataEvent();
+		// (Required) default constructor.
+		DisplayDataEvent();
 
-  // (Required) copy constructor.
-  DisplayDataEvent(const DisplayDataEvent &other);
-  
-  // (Required) copy assignment.
-  DisplayDataEvent &operator=(const DisplayDataEvent &other);
+		// (Required) copy constructor.
+		DisplayDataEvent(const DisplayDataEvent &other);
 
- private:
+		// (Required) copy assignment.
+		DisplayDataEvent &operator=(const DisplayDataEvent &other);
 
-  // Store the DisplayData of the event here at construction.
-  DisplayData *itsDisplayData;
+	private:
 
-};
+		// Store the DisplayData of the event here at construction.
+		DisplayData *itsDisplayData;
+
+	};
 
 
 } //# NAMESPACE CASA - END

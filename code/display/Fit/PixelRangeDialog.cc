@@ -31,54 +31,54 @@
 
 namespace casa {
 
-PixelRangeDialog::PixelRangeDialog( QWidget *parent)
-    : QDialog(parent){
-	ui.setupUi(this);
-	setWindowTitle( "Fit 2D Pixel Range Specification");
+	PixelRangeDialog::PixelRangeDialog( QWidget *parent)
+		: QDialog(parent) {
+		ui.setupUi(this);
+		setWindowTitle( "Fit 2D Pixel Range Specification");
 
-	//Add the plot widget to the dialog
-	QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
-	plotWidget = new BinPlotWidget( false, true, false, this );
-	plotWidget->setPlotMode( 1 );
-	plotWidget->hideMaximumRange();
-	layout->addWidget( plotWidget );
-	ui.plotWidgetHolder->setLayout( layout );
+		//Add the plot widget to the dialog
+		QHBoxLayout* layout = new QHBoxLayout(ui.plotWidgetHolder);
+		plotWidget = new BinPlotWidget( false, true, false, this );
+		plotWidget->setPlotMode( 1 );
+		plotWidget->hideMaximumRange();
+		layout->addWidget( plotWidget );
+		ui.plotWidgetHolder->setLayout( layout );
 
-	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
-	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(close()));
-}
-
-void PixelRangeDialog::keyPressEvent( QKeyEvent* event ){
-	int keyCode = event->key();
-	//This was written here because pressing a return on a line edit inside
-	//the dialog was closing the dialog.
-	if ( keyCode != Qt::Key_Return ){
-		QDialog::keyPressEvent( event );
+		connect( ui.okButton, SIGNAL(clicked()), this, SLOT(accept()));
+		connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(close()));
 	}
-}
+
+	void PixelRangeDialog::keyPressEvent( QKeyEvent* event ) {
+		int keyCode = event->key();
+		//This was written here because pressing a return on a line edit inside
+		//the dialog was closing the dialog.
+		if ( keyCode != Qt::Key_Return ) {
+			QDialog::keyPressEvent( event );
+		}
+	}
 
 
-void PixelRangeDialog::setImage( ImageInterface<Float>* img ){
-	plotWidget->setImage( img );
-}
+	void PixelRangeDialog::setImage( ImageInterface<Float>* img ) {
+		plotWidget->setImage( img );
+	}
 
-pair<double,double> PixelRangeDialog::getInterval() const {
-	return plotWidget->getMinMaxValues();
-}
+	pair<double,double> PixelRangeDialog::getInterval() const {
+		return plotWidget->getMinMaxValues();
+	}
 
-void PixelRangeDialog::setInterval( double minValue, double maxValue ){
-	plotWidget->setMinMaxValues( minValue, maxValue );
-}
+	void PixelRangeDialog::setInterval( double minValue, double maxValue ) {
+		plotWidget->setMinMaxValues( minValue, maxValue );
+	}
 
-/*void PixelRangeDialog::setRangeMaxEnabled( bool enabled ){
-	plotWidget->setRangeMaxEnabled( enabled );
-}*/
+	/*void PixelRangeDialog::setRangeMaxEnabled( bool enabled ){
+		plotWidget->setRangeMaxEnabled( enabled );
+	}*/
 
-vector<float> PixelRangeDialog::getXValues() const {
-	return plotWidget->getXValues();
-}
+	vector<float> PixelRangeDialog::getXValues() const {
+		return plotWidget->getXValues();
+	}
 
-PixelRangeDialog::~PixelRangeDialog(){
-}
+	PixelRangeDialog::~PixelRangeDialog() {
+	}
 
 }

@@ -36,49 +36,48 @@ namespace casa {
 //external to the canvas is shown, this class handles the legend and the coordination
 //between the legend and the pixel canvas.
 
-class CanvasHolder : public QWidget
-{
-    Q_OBJECT
+	class CanvasHolder : public QWidget {
+		Q_OBJECT
 
-public:
-    CanvasHolder(QWidget *parent = 0);
+	public:
+		CanvasHolder(QWidget *parent = 0);
 
-    //Sets the visibility of the the legend.
-    void setShowLegend( bool showLegend );
+		//Sets the visibility of the the legend.
+		void setShowLegend( bool showLegend );
 
-    //Determines whether a color bar will be drawn along side the legend
-    //text.  When a color bar is not used, the text will be colored to
-    //identify the curve.
-    void setColorBarVisibility( bool visible );
+		//Determines whether a color bar will be drawn along side the legend
+		//text.  When a color bar is not used, the text will be colored to
+		//identify the curve.
+		void setColorBarVisibility( bool visible );
 
-    //Returns a list of curve identifiers
-    QList<QString> getCurveLabels();
+		//Returns a list of curve identifiers
+		QList<QString> getCurveLabels();
 
-    //Sets the curve identifier
-    void setCurveLabels( const QList<QString>& curveNames );
+		//Sets the curve identifier
+		void setCurveLabels( const QList<QString>& curveNames );
 
-    //Location of the legend
-    enum LegendLocation { CANVAS, CANVAS_BELOW, CANVAS_RIGHT};
-    void setLegendPosition( int location );
-    QtCanvas* getCanvas();
-    ~CanvasHolder();
+		//Location of the legend
+		enum LegendLocation { CANVAS, CANVAS_BELOW, CANVAS_RIGHT};
+		void setLegendPosition( int location );
+		QtCanvas* getCanvas();
+		~CanvasHolder();
 
-private slots:
-	void changeLegendDisplay();
+	private slots:
+		void changeLegendDisplay();
 
-private:
-    void refreshLegend();
-    void addLegend( QBoxLayout* innerLayout, QBoxLayout* outerLayout );
-    void addHorizontalLegend( QBoxLayout* verticalLayout );
-    void addVerticalLegend( QBoxLayout* verticalLayout );
+	private:
+		void refreshLegend();
+		void addLegend( QBoxLayout* innerLayout, QBoxLayout* outerLayout );
+		void addHorizontalLegend( QBoxLayout* verticalLayout );
+		void addVerticalLegend( QBoxLayout* verticalLayout );
 
-    Ui::CanvasHolderClass ui;
-    bool showLegend;
-    bool colorBarVisible;
-    LegendLocation legendLocation;
-    QtCanvas pixelCanvas;
-    QWidget* legend;
-    QWidget* centralWidget;
-};
+		Ui::CanvasHolderClass ui;
+		bool showLegend;
+		bool colorBarVisible;
+		LegendLocation legendLocation;
+		QtCanvas pixelCanvas;
+		QWidget* legend;
+		QWidget* centralWidget;
+	};
 }
 #endif // CANVASHOLDER_H

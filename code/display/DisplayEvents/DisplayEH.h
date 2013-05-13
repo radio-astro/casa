@@ -1,28 +1,28 @@
 //# DisplayEH.h: WorldCanvas refresh event handler
 //# Copyright (C) 1993,1994,1995,1996,1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
-//# 
+//#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
-//# 
+//#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
-//# 
+//#
 //# You should have received a copy of the GNU Library General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//# 
+//#
 //# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# 
+//#
 //# $Id$
 
 #ifndef TRIALDISPLAY_DISPLAYEH_H
@@ -44,7 +44,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-// DisplayEH : generic display event handler--A handler for any type of 
+// DisplayEH : generic display event handler--A handler for any type of
 // display library event.
 // </etymology>
 //
@@ -64,7 +64,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // interface will allow more general use of existing event dispatching lists.
 //
 // The immediate use for DisplayEH will be to enable more general
-// exchange of control messages between objects already attached 
+// exchange of control messages between objects already attached
 // (directly or indirectly) to WorldCanvas as handlers, in particular
 // between DisplayDatas and MultiWCTools.  WorldCanvas and WorldCanvasHolder
 // will add this simple interface in order to distribute the new events;
@@ -81,10 +81,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // use an existing one for its intended purpose), and send the
 // event by calling WC::handleEvent(event).
 //
-// Except for the accommodations mentioned above, the current 
+// Except for the accommodations mentioned above, the current
 // interface and functionality of WCRefreshEHs and all other
 // existing event handlers is left as is.  Note especially that
-// the older events (Position, Motion, Refresh) are still sent 
+// the older events (Position, Motion, Refresh) are still sent
 // using the old 'operator()' interface, which remains in place, at
 // least for now.
 //
@@ -97,21 +97,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // to respond to events of interest.
 // </motivation>
 
-class DisplayEH {
+	class DisplayEH {
 
- public:
+	public:
 
-  // Classes that contain this interface (i.e., derive from it) can
-  // override this method to implement actions for whatever types of
-  // DisplayEvent they're interested in.
-  // It was thought best at this point to move away from the old
-  // 'operator()' style of handling interface, for clarity.
+		// Classes that contain this interface (i.e., derive from it) can
+		// override this method to implement actions for whatever types of
+		// DisplayEvent they're interested in.
+		// It was thought best at this point to move away from the old
+		// 'operator()' style of handling interface, for clarity.
 
-  virtual void handleEvent(DisplayEvent&) {  } 
-  
-  virtual ~DisplayEH() {  }
+		virtual void handleEvent(DisplayEvent&) {  }
 
-};
+		virtual ~DisplayEH() {  }
+
+	};
 
 
 } //# NAMESPACE CASA - END

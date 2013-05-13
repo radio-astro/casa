@@ -53,59 +53,62 @@
 #include <vector>
 #include <graphics/X11/X_exit.h>
 
-inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
+inline void initPlotterResource() {
+	Q_INIT_RESOURCE(QtPlotter);
+}
 
-namespace casa { 
-
-
-class QtPlotter : public QWidget
-{
-    Q_OBJECT
-public:
-    QtPlotter(QWidget *parent = 0, const char *name = 0);
-    ~QtPlotter();
-
-    QtCanvas* canvas() {return pc;}
-
-public slots:
-    void zoomIn();
-    void zoomOut();
-    void print();
-    void save();
-    void printExp();
-    void saveExp();
-    void writeText();
-    void openText();
-    void up();
-    void down();
-    void left();
-    void right();
-    void updateZoomer();
+namespace casa {
 
 
-signals:
+	class QtPlotter : public QWidget {
+		Q_OBJECT
+	public:
+		QtPlotter(QWidget *parent = 0, const char *name = 0);
+		~QtPlotter();
 
-private:
+		QtCanvas* canvas() {
+			return pc;
+		}
 
-    void printIt(QPrinter*);
-    QToolButton *zoomInButton;
-    QToolButton *zoomOutButton;
-    QToolButton *leftButton;
-    QToolButton *rightButton;
-    QToolButton *upButton;
-    QToolButton *downButton;
-    
-    QToolButton *printButton;
-    QToolButton *saveButton;
-    QToolButton *printExpButton;
-    //QToolButton *saveExpButton;
-    //QToolButton *writeButton;
-    QToolButton *openButton;
-    
-    QtCanvas *pc;
-    
-    QString fileName;
-};
+	public slots:
+		void zoomIn();
+		void zoomOut();
+		void print();
+		void save();
+		void printExp();
+		void saveExp();
+		void writeText();
+		void openText();
+		void up();
+		void down();
+		void left();
+		void right();
+		void updateZoomer();
+
+
+	signals:
+
+	private:
+
+		void printIt(QPrinter*);
+		QToolButton *zoomInButton;
+		QToolButton *zoomOutButton;
+		QToolButton *leftButton;
+		QToolButton *rightButton;
+		QToolButton *upButton;
+		QToolButton *downButton;
+
+		QToolButton *printButton;
+		QToolButton *saveButton;
+		QToolButton *printExpButton;
+		//QToolButton *saveExpButton;
+		//QToolButton *writeButton;
+		QToolButton *openButton;
+
+		QtCanvas *pc;
+
+		QString fileName;
+	};
 
 
 }

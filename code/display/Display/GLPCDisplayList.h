@@ -47,7 +47,7 @@
 // </thrown>
 //
 // <todo asof="2001/10/9">
-// 
+//
 // </todo>
 
 #ifndef TRIALDISPLAY_GLPCDISPLAYLIST_H
@@ -63,51 +63,63 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <summary>
 // Base class for the various display list subclasses.
 // </summary>
-class GLPCDisplayListElement {
-  public:
-	// Draw element unless disabled or force is True.
-	virtual void call(Bool force=False, const uInt nspaces=0);
+	class GLPCDisplayListElement {
+	public:
+		// Draw element unless disabled or force is True.
+		virtual void call(Bool force=False, const uInt nspaces=0);
 
-	// enable/disable
-	// <group>
-	Bool enabled()const {return enabled_;}
-	Bool disabled()const {return !enabled_;}
-	virtual void disable();
-	virtual void enable();
-	// </group>
+		// enable/disable
+		// <group>
+		Bool enabled()const {
+			return enabled_;
+		}
+		Bool disabled()const {
+			return !enabled_;
+		}
+		virtual void disable();
+		virtual void enable();
+		// </group>
 
-	// Each element has a name which is printed out when tracing.
-	// <group>
-	const char *name()const{return name_.chars();}
-	void name(const char *);
-	// </group>
-	// Enable/disable tracing.
-	// <group>
-	Bool trace()const{return trace_;}
-	void trace(const Bool t){ trace_ = t;}
-	// </group>
-	// Begin recording commands.
-	// Recording is a one shot deal. After stop is called, recording
-	// can not be reenabled.
-	virtual void start();	//# Start recording.
-	// Stop display list recording. Ignored if not already recording.
-	virtual void stop();
-	// Each element is reference counted.
-	uLong useCount()const {return usage_;}
-	void ref();
-	void unref();
-  protected:
-	GLPCDisplayListElement(const char *name=NULL);
-	// Elements self delete when the reference count goes to 0.
-	virtual ~GLPCDisplayListElement();
-	void traceCheck(uInt spaces=0, const char *str=NULL,
-			const char *name=NULL);
-  private:
-	uLong	usage_;
-	Bool	enabled_;
-	Bool	trace_;
-	String	name_;
-};
+		// Each element has a name which is printed out when tracing.
+		// <group>
+		const char *name()const {
+			return name_.chars();
+		}
+		void name(const char *);
+		// </group>
+		// Enable/disable tracing.
+		// <group>
+		Bool trace()const {
+			return trace_;
+		}
+		void trace(const Bool t) {
+			trace_ = t;
+		}
+		// </group>
+		// Begin recording commands.
+		// Recording is a one shot deal. After stop is called, recording
+		// can not be reenabled.
+		virtual void start();	//# Start recording.
+		// Stop display list recording. Ignored if not already recording.
+		virtual void stop();
+		// Each element is reference counted.
+		uLong useCount()const {
+			return usage_;
+		}
+		void ref();
+		void unref();
+	protected:
+		GLPCDisplayListElement(const char *name=NULL);
+		// Elements self delete when the reference count goes to 0.
+		virtual ~GLPCDisplayListElement();
+		void traceCheck(uInt spaces=0, const char *str=NULL,
+		                const char *name=NULL);
+	private:
+		uLong	usage_;
+		Bool	enabled_;
+		Bool	trace_;
+		String	name_;
+	};
 
 // <summary>
 // Returns a Display List Element for recording GL commands.
@@ -119,27 +131,27 @@ class GLPCDisplayListElement {
 // stop ends the list. Typically, these OpenGL lists are very short,
 // containing just one or two commands. eg. draw a rectangle.
 // </synopsis>
-class GLPCDisplayListEntry : public GLPCDisplayListElement {
-  public:
-	enum RECORDSTATE { INITED, RECORDING, STOPPED};
+	class GLPCDisplayListEntry : public GLPCDisplayListElement {
+	public:
+		enum RECORDSTATE { INITED, RECORDING, STOPPED};
 
-	GLPCDisplayListEntry::GLPCDisplayListEntry(
-					const char *name=NULL,
-					GLenum mode=GL_COMPILE_AND_EXECUTE);
-	virtual ~GLPCDisplayListEntry();
-	//# Draw list.
-	virtual void call(Bool force, const uInt spaces);
-	//# Recording is a one shot deal. After stop is called, recording
-	//# can not be reenabled.
-	virtual void start();	//# Start recording.
-	//# Stop display list recording. Ignored if not already recording.
-	virtual void stop();
-  protected:
-  private:
-	GLenum		mode_;
-	GLuint		id_;	
-	RECORDSTATE	recording_;
-};
+		GLPCDisplayListEntry::GLPCDisplayListEntry(
+		    const char *name=NULL,
+		    GLenum mode=GL_COMPILE_AND_EXECUTE);
+		virtual ~GLPCDisplayListEntry();
+		//# Draw list.
+		virtual void call(Bool force, const uInt spaces);
+		//# Recording is a one shot deal. After stop is called, recording
+		//# can not be reenabled.
+		virtual void start();	//# Start recording.
+		//# Stop display list recording. Ignored if not already recording.
+		virtual void stop();
+	protected:
+	private:
+		GLenum		mode_;
+		GLuint		id_;
+		RECORDSTATE	recording_;
+	};
 
 //#////////////////////////////////////////////////////////////////
 
@@ -151,48 +163,52 @@ class GLPCDisplayListEntry : public GLPCDisplayListElement {
 // to hold all the GLPCDisplayListEntrys that are created. A GLPCDisplayList
 // can also hold other GLPCDisplayLists (drawList called inside a list).
 // </synopsis>
-class GLPCDisplayList : public GLPCDisplayListElement {
-  public:
-	// Amount by which to increment the list of display lists when
-	// it fills up.
-	enum {DefaultSizeIncrement=16};
+	class GLPCDisplayList : public GLPCDisplayListElement {
+	public:
+		// Amount by which to increment the list of display lists when
+		// it fills up.
+		enum {DefaultSizeIncrement=16};
 
-	GLPCDisplayList(const char *name=NULL,
-			uInt sizeincr=GLPCDisplayList::DefaultSizeIncrement);
+		GLPCDisplayList(const char *name=NULL,
+		                uInt sizeincr=GLPCDisplayList::DefaultSizeIncrement);
 
-	// Copy a display list's list.
-	GLPCDisplayList(const GLPCDisplayList &list);
-	~GLPCDisplayList();
+		// Copy a display list's list.
+		GLPCDisplayList(const GLPCDisplayList &list);
+		~GLPCDisplayList();
 
-	// Append another element to list.
-	void add(GLPCDisplayListElement *);
+		// Append another element to list.
+		void add(GLPCDisplayListElement *);
 
-	// Run the current list.
-	virtual void call(Bool force=False, uInt spaces=0);
+		// Run the current list.
+		virtual void call(Bool force=False, uInt spaces=0);
 
-	// Translate the list.
-	// Set translation values. New values are added to current.
-	void translate(Float xt, Float yt, Float zt=0.0);
+		// Translate the list.
+		// Set translation values. New values are added to current.
+		void translate(Float xt, Float yt, Float zt=0.0);
 
-	//# Miscellaneous
+		//# Miscellaneous
 
-	// Return current translation
-	void  translation(Float &xo, Float &yo)const;
-	void  translation(Float &xo, Float &yo, Float &zo)const;
-	// Return/Set amount to increase id list by.
-	uInt sizeincrement()const{return sizeincr_;}
-	void sizeincrement(const uInt sizeincr) { sizeincr_ = sizeincr;}
-  protected:
-  private:
-	void resize();
-	void unrefall();
+		// Return current translation
+		void  translation(Float &xo, Float &yo)const;
+		void  translation(Float &xo, Float &yo, Float &zo)const;
+		// Return/Set amount to increase id list by.
+		uInt sizeincrement()const {
+			return sizeincr_;
+		}
+		void sizeincrement(const uInt sizeincr) {
+			sizeincr_ = sizeincr;
+		}
+	protected:
+	private:
+		void resize();
+		void unrefall();
 
-	GLfloat	xt_, yt_, zt_;	//# Amount to translate display list.
-	uInt	sizeincr_;	//# Amount to increase listids_ when it's full.
-	uInt	numentries_;	//# # of entries & index to next free.
-	uInt	listSize_;	//# # of slots in list.
-	GLPCDisplayListElement **list_;
-};
+		GLfloat	xt_, yt_, zt_;	//# Amount to translate display list.
+		uInt	sizeincr_;	//# Amount to increase listids_ when it's full.
+		uInt	numentries_;	//# # of entries & index to next free.
+		uInt	listSize_;	//# # of slots in list.
+		GLPCDisplayListElement **list_;
+	};
 
 
 } //# NAMESPACE CASA - END

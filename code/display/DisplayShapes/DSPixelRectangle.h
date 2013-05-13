@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSPIXELRECTANGLE_H
 #define TRIALDISPLAY_DSPIXELRECTANGLE_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DisplayShapeWithCoords.h>
@@ -41,31 +41,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of an absolute pixel DSRectangle
 // </summary>
 
-class Record;
-class DSWorldRectangle;
-class DSScreenRectangle;
+	class Record;
+	class DSWorldRectangle;
+	class DSScreenRectangle;
 
-class DSPixelRectangle : public DSRectangle, public DisplayShapeWithCoords {
+	class DSPixelRectangle : public DSRectangle, public DisplayShapeWithCoords {
 
-public :
-  DSPixelRectangle();
-  DSPixelRectangle(const Record& settings);
-  DSPixelRectangle(DSScreenRectangle& other);
-  DSPixelRectangle(DSWorldRectangle& other);
+	public :
+		DSPixelRectangle();
+		DSPixelRectangle(const Record& settings);
+		DSPixelRectangle(DSScreenRectangle& other);
+		DSPixelRectangle(DSWorldRectangle& other);
 
-  virtual ~DSPixelRectangle();
-  
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();  
-  
-  virtual Record getRawOptions() {
-    return DSRectangle::getOptions();
-  }
-  
-private:
+		virtual ~DSPixelRectangle();
+
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		virtual Record getRawOptions() {
+			return DSRectangle::getOptions();
+		}
+
+	private:
 
 
-};
+	};
 
 } //# NAMESPACE CASA - END
 

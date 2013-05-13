@@ -35,25 +35,25 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-// <summary> 
+// <summary>
 // Templated class for storing a pointer to the value of an Attribute.
 // </summary>
 
 // <use visibility=local>
- 
+
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="tAttribute" demos="">
 // </reviewed>
- 
+
 // <prerequisite>
 // <li> <linkto class="AttributeValue">AttributeValue</linkto>
 // </prerequisite>
 
-// <etymology> 
+// <etymology>
 // "AttributeValuePoi" is a contraction of "Attribute Value" and
 // "Pointer", and stores a pointer to the value of an Attribute.
 // </etymology>
 
-// <synopsis> 
+// <synopsis>
 // An AttributeValuePoi differs from a <linkto class="AttributeValue">
 // AttributeValue</linkto> in that instead of using its own variable
 // to store the actual value like AttributeValue does, it stores a
@@ -71,7 +71,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <srcBlock>
 // Int varInt = 1;
 // AttributeValuePoi<Int> intAtt(&varInt, False);
-// 
+//
 // Vector<Int> bla = intAtt.getValue();
 // // bla(0) is 1;
 //
@@ -79,14 +79,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // varInt = 2;
 // bla = intAtt.getValue();
 // // bla(0) is now 2
-// 
+//
 // intAtt.setValue(5);
 // // now also varInt == 5
 //
 // </srcBlock>
 // </example>
 
-// <motivation> 
+// <motivation>
 // The motivation for this class is to be able to provide an Attribute
 // interface for modifying private members of some classes.  For
 // example, this interface is used to control the linear coordinate
@@ -97,73 +97,75 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Nothing known.
 // </todo>
 
-template <class T> class AttributeValuePoi : public AttributeValue<T> {
+	template <class T> class AttributeValuePoi : public AttributeValue<T> {
 
- public:
+	public:
 
-  // Constructor for a pointer to a scalar.
-  AttributeValuePoi(T* value, const Bool strict);
+		// Constructor for a pointer to a scalar.
+		AttributeValuePoi(T* value, const Bool strict);
 
-  // Constructor for a pointer to a <src>Vector</src>.
-  AttributeValuePoi(Vector<T> *value, const Bool strict);
-  
-  // Copy constructor.
-  AttributeValuePoi(const AttributeValuePoi<T> &other);
+		// Constructor for a pointer to a <src>Vector</src>.
+		AttributeValuePoi(Vector<T> *value, const Bool strict);
 
-  // Destructor.
-  virtual ~AttributeValuePoi();
+		// Copy constructor.
+		AttributeValuePoi(const AttributeValuePoi<T> &other);
 
-  // Assignment operator.
-  const AttributeValuePoi<T>& operator=(const AttributeValuePoi<T> &other);
+		// Destructor.
+		virtual ~AttributeValuePoi();
 
-  // Return a new copy of the AttributeValuePoi (virtual constructor).
-  virtual AttributeValueBase *clone() const;
+		// Assignment operator.
+		const AttributeValuePoi<T>& operator=(const AttributeValuePoi<T> &other);
 
-  // Add <src>other</src> to <src>*this</src>.  Needs to over-ride
-  // base class definition because the pointers need to be 
-  // dereferenced prior to addition.
-  virtual void operator+=(const AttributeValueBase& other);
+		// Return a new copy of the AttributeValuePoi (virtual constructor).
+		virtual AttributeValueBase *clone() const;
 
-  // Change the value of the AttributeValue.
-  // <group>
-  virtual void setValue(const T &value);
-  virtual void setValue(const Vector<T> &value);
-  // </group>
+		// Add <src>other</src> to <src>*this</src>.  Needs to over-ride
+		// base class definition because the pointers need to be
+		// dereferenced prior to addition.
+		virtual void operator+=(const AttributeValueBase& other);
 
-  // Get the DataType of aliased variable.
-  virtual DataType getPointerType() const;
+		// Change the value of the AttributeValue.
+		// <group>
+		virtual void setValue(const T &value);
+		virtual void setValue(const Vector<T> &value);
+		// </group>
 
-  // Return class name
-  virtual String className() const {return String("AttributeValuePoi");};
+		// Get the DataType of aliased variable.
+		virtual DataType getPointerType() const;
+
+		// Return class name
+		virtual String className() const {
+			return String("AttributeValuePoi");
+		};
 
 
- private:
+	private:
 
-  // Update the variable that is aliased to the AttributeValuePoi.
-  void updatePointerValue() const;
-  
-  // Pointer to the aliased variable. Only one is ever active depending
-  // upon how the object was constructed.  The memory allocated to these pointers
-  // does not belong to this object.  
-  // <group>
-  Vector<T>* itsVectorPointerPtr;
-  T* itsScalarPointerPtr;
-  // </group>
-  
-  // The pointer DataType 
-  DataType itsPointerType;
+		// Update the variable that is aliased to the AttributeValuePoi.
+		void updatePointerValue() const;
 
-  // Cast from base class
-  const AttributeValuePoi<T>& myCast (const AttributeValueBase& other) const;
+		// Pointer to the aliased variable. Only one is ever active depending
+		// upon how the object was constructed.  The memory allocated to these pointers
+		// does not belong to this object.
+		// <group>
+		Vector<T>* itsVectorPointerPtr;
+		T* itsScalarPointerPtr;
+		// </group>
 
-  // Default constructor
-  AttributeValuePoi();
+		// The pointer DataType
+		DataType itsPointerType;
 
-  //# Make parent members known.
-public:
-  using AttributeValue<T>::getType;
-  using AttributeValue<T>::getValue;
-};
+		// Cast from base class
+		const AttributeValuePoi<T>& myCast (const AttributeValueBase& other) const;
+
+		// Default constructor
+		AttributeValuePoi();
+
+		//# Make parent members known.
+	public:
+		using AttributeValue<T>::getType;
+		using AttributeValue<T>::getValue;
+	};
 
 
 } //# NAMESPACE CASA - END

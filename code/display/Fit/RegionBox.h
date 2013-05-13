@@ -32,28 +32,28 @@
 
 namespace casa {
 
-class RegionBox {
-public:
-	RegionBox(const QList<int> &pixel_x, const QList<int> &pixel_y);
-	QString toString(const Vector<int>& imageBLC, const Vector<int>& imageTRC) const;
-	QString toStringLabelled(const Vector<int>& imageBLC, const Vector<int>& imageTRC) const;
+	class RegionBox {
+	public:
+		RegionBox(const QList<int> &pixel_x, const QList<int> &pixel_y);
+		QString toString(const Vector<int>& imageBLC, const Vector<int>& imageTRC) const;
+		QString toStringLabelled(const Vector<int>& imageBLC, const Vector<int>& imageTRC) const;
 
-	void update( const QList<int> & pixelX, const QList<int> & pixelY );
-	bool isInBox( double valueX, double valueY ) const;
-	virtual ~RegionBox();
-private:
-	void clear();
-	//Code was crashing when the region box bounds were bigger than the
-	//image bounds.  The actualBLC/TRC methods choose smaller region boxes
-	//in such cases.
-	QVector<int> getActualBLC( const Vector<int>& imageBLC, const Vector<int>& imageTRC, bool* valid) const;
-	QVector<int> getActualTRC( const Vector<int>& imageBLC, const Vector<int>& imageTRC, bool* valid ) const;
-	bool isInImage( const QVector<int>& coords, const Vector<int>& imageBLC,
-			const Vector<int>& imageTRC ) const;
-	void initBox( const QList<int> & pixelX, const QList<int>& pixelY );
-	QList<int> regionBoxBLC;
-	QList<int> regionBoxTRC;
-};
+		void update( const QList<int> & pixelX, const QList<int> & pixelY );
+		bool isInBox( double valueX, double valueY ) const;
+		virtual ~RegionBox();
+	private:
+		void clear();
+		//Code was crashing when the region box bounds were bigger than the
+		//image bounds.  The actualBLC/TRC methods choose smaller region boxes
+		//in such cases.
+		QVector<int> getActualBLC( const Vector<int>& imageBLC, const Vector<int>& imageTRC, bool* valid) const;
+		QVector<int> getActualTRC( const Vector<int>& imageBLC, const Vector<int>& imageTRC, bool* valid ) const;
+		bool isInImage( const QVector<int>& coords, const Vector<int>& imageBLC,
+		                const Vector<int>& imageTRC ) const;
+		void initBox( const QList<int> & pixelX, const QList<int>& pixelY );
+		QList<int> regionBoxBLC;
+		QList<int> regionBoxTRC;
+	};
 
 } /* namespace casa */
 #endif /* REGIONBOX_H_ */

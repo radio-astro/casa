@@ -40,17 +40,17 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-WCPTRegion::WCPTRegion(WorldCanvas *wcanvas,
-		       Display::KeySym keysym) :
-  WCPolyTool(wcanvas, keysym, True) {
-}
+	WCPTRegion::WCPTRegion(WorldCanvas *wcanvas,
+	                       Display::KeySym keysym) :
+		WCPolyTool(wcanvas, keysym, True) {
+	}
 
-WCPTRegion::~WCPTRegion() {
-}
+	WCPTRegion::~WCPTRegion() {
+	}
 
-void WCPTRegion::doubleInside() {
-  regionReady();
-}
+	void WCPTRegion::doubleInside() {
+		regionReady();
+	}
 
 } //# NAMESPACE CASA - END
 

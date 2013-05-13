@@ -23,90 +23,90 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <casa/aips.h>
 
-#include <display/DisplayShapes/DSClosed.h> 
+#include <display/DisplayShapes/DSClosed.h>
 #include <display/Display/PixelCanvas.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSClosed::DSClosed() :
-  DSBasic() {
-  setDefaultOptions();
-}
+	DSClosed::DSClosed() :
+		DSBasic() {
+		setDefaultOptions();
+	}
 
-DSClosed::DSClosed(const DSClosed& other) :
-  DSBasic(other),
-  itsFillStyle(other.itsFillStyle),
-  itsFillColor(other.itsFillColor) {
-}
+	DSClosed::DSClosed(const DSClosed& other) :
+		DSBasic(other),
+		itsFillStyle(other.itsFillStyle),
+		itsFillColor(other.itsFillColor) {
+	}
 
-DSClosed::~DSClosed() {
-}
+	DSClosed::~DSClosed() {
+	}
 
-void DSClosed::setFillStyle(DSClosed::FillStyle fill) {
-  itsFillStyle = fill;
-}
+	void DSClosed::setFillStyle(DSClosed::FillStyle fill) {
+		itsFillStyle = fill;
+	}
 
-DSClosed::FillStyle DSClosed::getFillStyle() {
-  return itsFillStyle;
-}
+	DSClosed::FillStyle DSClosed::getFillStyle() {
+		return itsFillStyle;
+	}
 
-void DSClosed::setFillColor(String color) {
-  itsFillColor = color;
-}
+	void DSClosed::setFillColor(String color) {
+		itsFillColor = color;
+	}
 
-String DSClosed::getFillColor() {
-  return itsFillColor;
-}
+	String DSClosed::getFillColor() {
+		return itsFillColor;
+	}
 
-void DSClosed::draw(PixelCanvas *pix) {
-  DSBasic::draw(pix);
-}
- 
-void DSClosed::rotateAbout(const Float& angle, const Float& aboutX, 
-			     const Float& aboutY) {
-  DSBasic::rotateAbout(angle, aboutX, aboutY);
-}
+	void DSClosed::draw(PixelCanvas *pix) {
+		DSBasic::draw(pix);
+	}
 
-void DSClosed::move(const Float& dX, const Float& dY) {
-  DSBasic::move(dX, dY);
-}
+	void DSClosed::rotateAbout(const Float& angle, const Float& aboutX,
+	                           const Float& aboutY) {
+		DSBasic::rotateAbout(angle, aboutX, aboutY);
+	}
 
-Record DSClosed::getOptions() {
-  Record rec = DSBasic::getOptions();
+	void DSClosed::move(const Float& dX, const Float& dY) {
+		DSBasic::move(dX, dY);
+	}
 
-  rec.define("type", "closedshape");
-  rec.define("fillStyle", itsFillStyle);
+	Record DSClosed::getOptions() {
+		Record rec = DSBasic::getOptions();
 
-  rec.define("fillColor", itsFillColor); // Probably not needed. 
-  //I think color = fillColor, imposed by pixelCanvas?
+		rec.define("type", "closedshape");
+		rec.define("fillStyle", itsFillStyle);
 
-  return rec;
-}
+		rec.define("fillColor", itsFillColor); // Probably not needed.
+		//I think color = fillColor, imposed by pixelCanvas?
 
-Bool DSClosed::setOptions(const Record& settings) {
-  Bool localChange = False;
-  if (settings.isDefined("fillstyle")) {
-    Int temp(settings.asInt("fillstyle"));
-    itsFillStyle = static_cast<DSClosed::FillStyle>(temp);
-  }
-  if (settings.isDefined("fillcolor")) 
-    itsFillColor = settings.asString("fillcolor");
+		return rec;
+	}
 
-  if (DSBasic::setOptions(settings)) localChange = True;
-  
-  return localChange;
-}
+	Bool DSClosed::setOptions(const Record& settings) {
+		Bool localChange = False;
+		if (settings.isDefined("fillstyle")) {
+			Int temp(settings.asInt("fillstyle"));
+			itsFillStyle = static_cast<DSClosed::FillStyle>(temp);
+		}
+		if (settings.isDefined("fillcolor"))
+			itsFillColor = settings.asString("fillcolor");
 
-void DSClosed::setDefaultOptions() {
-  itsFillStyle = DSClosed::No_Fill;
-  itsFillColor = "white";
-}
+		if (DSBasic::setOptions(settings)) localChange = True;
 
-  
+		return localChange;
+	}
+
+	void DSClosed::setDefaultOptions() {
+		itsFillStyle = DSClosed::No_Fill;
+		itsFillColor = "white";
+	}
+
+
 
 
 

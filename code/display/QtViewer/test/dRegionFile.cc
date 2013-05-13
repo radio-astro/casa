@@ -42,51 +42,60 @@
 #include <casa/namespace.h>
 
 int main(int argc, char** argv) {
-  
-  try {
- 
-    if(argc < 2){
-      cout << "Usage: dRgn <regionfilename> " << endl;
-      return -1;  }
-    
-    String path = argv[1];
-    
-    
-    //Extract the ImageRegion from the file.
-    
-    AipsIO os(path);
-    TableRecord trec;
-    os >> trec;
-    ImageRegion* ir = ImageRegion::fromRecord(trec, path+".tbl");
-  
-    
-    // Print the region from its 'TableRecord' form.
-    
-    cout<<endl<<"rec:"<<endl<<endl << trec <<endl;
-    
-    
-    // Do something 'useful' with the restored ImageRegion.
-    // (Note: printRegionStats() was handy; it happens to be a viewer
-    // method, but doesn't require the viewer in principle; internally
-    // it only needs an ImageRegion and the image it applies to.
-    // See internals of printRegionStats() to see how it creates
-    // a SubImage and orders up statistics on that).
-    
-    Int rgnpos = path.length()-4;
-    if(rgnpos>0 && path.from(rgnpos)==".rgn") {
-      String imgName = path.before(rgnpos);
-      QtViewerBase v;
-      QtDisplayData dd(&v, imgName, "image", "raster");
-      if(dd.imageInterface()!=0) {
 
-	cout<<endl<<"Region stats for "<<imgName<<":"<<endl;
-        dd.printRegionStats(*ir);  }  }
-      
-    
-    delete ir;
-    return 0;  }
-  
-  
-  catch (const casa::AipsError& err) { 
-    cerr<<"**"<<err.getMesg()<<endl; return -1;  }
-  catch (...) { cerr<<"**non-AipsError exception**"<<endl; return -1;  }  }
+	try {
+
+		if(argc < 2) {
+			cout << "Usage: dRgn <regionfilename> " << endl;
+			return -1;
+		}
+
+		String path = argv[1];
+
+
+		//Extract the ImageRegion from the file.
+
+		AipsIO os(path);
+		TableRecord trec;
+		os >> trec;
+		ImageRegion* ir = ImageRegion::fromRecord(trec, path+".tbl");
+
+
+		// Print the region from its 'TableRecord' form.
+
+		cout<<endl<<"rec:"<<endl<<endl << trec <<endl;
+
+
+		// Do something 'useful' with the restored ImageRegion.
+		// (Note: printRegionStats() was handy; it happens to be a viewer
+		// method, but doesn't require the viewer in principle; internally
+		// it only needs an ImageRegion and the image it applies to.
+		// See internals of printRegionStats() to see how it creates
+		// a SubImage and orders up statistics on that).
+
+		Int rgnpos = path.length()-4;
+		if(rgnpos>0 && path.from(rgnpos)==".rgn") {
+			String imgName = path.before(rgnpos);
+			QtViewerBase v;
+			QtDisplayData dd(&v, imgName, "image", "raster");
+			if(dd.imageInterface()!=0) {
+
+				cout<<endl<<"Region stats for "<<imgName<<":"<<endl;
+				dd.printRegionStats(*ir);
+			}
+		}
+
+
+		delete ir;
+		return 0;
+	}
+
+
+	catch (const casa::AipsError& err) {
+		cerr<<"**"<<err.getMesg()<<endl;
+		return -1;
+	} catch (...) {
+		cerr<<"**non-AipsError exception**"<<endl;
+		return -1;
+	}
+}

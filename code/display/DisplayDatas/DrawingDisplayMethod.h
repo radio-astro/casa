@@ -35,8 +35,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
-class DrawingDisplayData;
+	class WorldCanvas;
+	class DrawingDisplayData;
 
 // <summary>
 // DisplayMethod which provides actual drawing for DrawingDisplayData class.
@@ -44,44 +44,44 @@ class DrawingDisplayData;
 
 // <synopsis>
 // This class provides the necessary implementation for the
-// actual drawing of the objects contained within a 
-// DrawingDisplayData object. 
+// actual drawing of the objects contained within a
+// DrawingDisplayData object.
 // </synopsis>
 
-class DrawingDisplayMethod : public CachingDisplayMethod {
+	class DrawingDisplayMethod : public CachingDisplayMethod {
 
- public:
+	public:
 
-  // Constructor.
-  DrawingDisplayMethod(WorldCanvas *worldCanvas, 
-		       AttributeBuffer *wchAttributes,
-		       AttributeBuffer *ddAttributes,
-		       CachingDisplayData *dd);
-  
-  // Destructor.
-  virtual ~DrawingDisplayMethod();
+		// Constructor.
+		DrawingDisplayMethod(WorldCanvas *worldCanvas,
+		                     AttributeBuffer *wchAttributes,
+		                     AttributeBuffer *ddAttributes,
+		                     CachingDisplayData *dd);
 
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
+		// Destructor.
+		virtual ~DrawingDisplayMethod();
 
-  // Draw into a cached drawing list, called by draw function.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder);
-  
- protected:
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
 
-  // (Required) default constructor.
-  DrawingDisplayMethod();
+		// Draw into a cached drawing list, called by draw function.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder);
 
-  // (Required) copy constructor.
-  DrawingDisplayMethod(const DrawingDisplayMethod &other);
+	protected:
 
-  // (Required) copy assignment.
-  void operator=(const DrawingDisplayMethod &other);
+		// (Required) default constructor.
+		DrawingDisplayMethod();
 
- private:
+		// (Required) copy constructor.
+		DrawingDisplayMethod(const DrawingDisplayMethod &other);
 
-};
+		// (Required) copy assignment.
+		void operator=(const DrawingDisplayMethod &other);
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

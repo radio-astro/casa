@@ -31,50 +31,90 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    class DlTarget;
+	class DlTarget;
 
-    class DlHandleBase {
+	class DlHandleBase {
 
 	protected:
-	    DlHandleBase( ) { }
-	    DlHandleBase( const DlHandleBase & ) { }
-	    virtual void target_gone( ) const = 0;
-	    virtual bool null( ) const = 0;
+		DlHandleBase( ) { }
+		DlHandleBase( const DlHandleBase & ) { }
+		virtual void target_gone( ) const = 0;
+		virtual bool null( ) const = 0;
 
-	    void throw_exception( const char * ) const;
+		void throw_exception( const char * ) const;
 
-	    virtual ~DlHandleBase( ) { }
+		virtual ~DlHandleBase( ) { }
 	private:
-	    friend class DlTarget;
-	
-	    // Prevent heap allocation
-	    void * operator new   (size_t);
-	    void * operator new[] (size_t);
-    };
+		friend class DlTarget;
+
+		// Prevent heap allocation
+		void * operator new   (size_t);
+		void * operator new[] (size_t);
+	};
 
 
-    template <class T> class DlHandle : public DlHandleBase {
+	template <class T> class DlHandle : public DlHandleBase {
 	public:
-	    DlHandle( ) : target_(0) { }
-	    DlHandle( T *tgt ) : target_(tgt) { if ( target_ ) target_->reg(this); }
-	    DlHandle( const DlHandle<T> &other ) : DlHandleBase(other), target_(other.target_) { if ( target_ ) target_->reg(this); }
-	    T *operator->( ) { if ( ! target_ ) throw_exception( "null pointer in DlHandle" ); return target_; }
-	    const T *operator->( ) const { if ( ! target_ ) throw_exception( "null pointer in DlHandle" ); return target_; }
-	    operator T*( ) { if ( ! target_ ) throw_exception( "null pointer in DlHandle" ); return target_; }
-	    T &operator*( ) { if ( ! target_ ) throw_exception( "null pointer in DlHandle" ); return *target_; }
-	    operator const T*( ) const { if ( ! target_ ) throw_exception( "null pointer in DlHandle" ); return target_; }
-	    const T &operator*( ) const { if ( ! target_ ) throw_exception( "null pointer in DlHandle" ); return *target_; }
-	    DlHandle<T> &operator=( const DlHandle<T> &other ) { if ( target_ ) target_->unreg(this); target_ = other.target_; if ( target_ ) target_->reg(this); return *this; }
-	    T *operator=( T *tgt ) { if ( target_ ) target_->unreg(this); target_ = tgt; if ( target_ ) target_->reg(this); return target_; }
+		DlHandle( ) : target_(0) { }
+		DlHandle( T *tgt ) : target_(tgt) {
+			if ( target_ ) target_->reg(this);
+		}
+		DlHandle( const DlHandle<T> &other ) : DlHandleBase(other), target_(other.target_) {
+			if ( target_ ) target_->reg(this);
+		}
+		T *operator->( ) {
+			if ( ! target_ ) throw_exception( "null pointer in DlHandle" );
+			return target_;
+		}
+		const T *operator->( ) const {
+			if ( ! target_ ) throw_exception( "null pointer in DlHandle" );
+			return target_;
+		}
+		operator T*( ) {
+			if ( ! target_ ) throw_exception( "null pointer in DlHandle" );
+			return target_;
+		}
+		T &operator*( ) {
+			if ( ! target_ ) throw_exception( "null pointer in DlHandle" );
+			return *target_;
+		}
+		operator const T*( ) const {
+			if ( ! target_ ) throw_exception( "null pointer in DlHandle" );
+			return target_;
+		}
+		const T &operator*( ) const {
+			if ( ! target_ ) throw_exception( "null pointer in DlHandle" );
+			return *target_;
+		}
+		DlHandle<T> &operator=( const DlHandle<T> &other ) {
+			if ( target_ ) target_->unreg(this);
+			target_ = other.target_;
+			if ( target_ ) target_->reg(this);
+			return *this;
+		}
+		T *operator=( T *tgt ) {
+			if ( target_ ) target_->unreg(this);
+			target_ = tgt;
+			if ( target_ ) target_->reg(this);
+			return target_;
+		}
 
-	    ~DlHandle( ) { if ( target_ ) target_->unreg(this); }
+		~DlHandle( ) {
+			if ( target_ ) target_->unreg(this);
+		}
 
-	    bool null( ) const { return target_ == 0; }
-	    const T *ptr( ) const { return target_; }
+		bool null( ) const {
+			return target_ == 0;
+		}
+		const T *ptr( ) const {
+			return target_;
+		}
 
 	protected:
-	    void target_gone( ) const { ((DlHandle<T>*)this)->target_ = 0; }
-	    T *target_;
-    };
+		void target_gone( ) const {
+			((DlHandle<T>*)this)->target_ = 0;
+		}
+		T *target_;
+	};
 }
 #endif

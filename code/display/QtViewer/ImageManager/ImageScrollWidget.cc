@@ -30,85 +30,83 @@
 
 namespace casa {
 
-ImageScrollWidget::ImageScrollWidget(QWidget *parent)
-    : QWidget(parent)
-{
-	ui.setupUi(this);
-	imageScroll = new ImageScroll( this );
-	ui.scrollHolder->setWidget( imageScroll );
-	connect( imageScroll, SIGNAL(displayDataAdded(QtDisplayData*)),
-			this, SIGNAL(displayDataAdded(QtDisplayData*)));
-	connect( imageScroll, SIGNAL(displayDataRemoved(QtDisplayData*)),
-			this, SIGNAL(displayDataRemoved(QtDisplayData*)));
-	connect( imageScroll, SIGNAL(displayTypeChanged(ImageView*)),
-			this, SIGNAL(displayTypeChanged(ImageView*)));
-	connect( imageScroll, SIGNAL(displayColorsChanged(ImageView*)),
-			this, SIGNAL(displayColorsChanged(ImageView*)));
+	ImageScrollWidget::ImageScrollWidget(QWidget *parent)
+		: QWidget(parent) {
+		ui.setupUi(this);
+		imageScroll = new ImageScroll( this );
+		ui.scrollHolder->setWidget( imageScroll );
+		connect( imageScroll, SIGNAL(displayDataAdded(QtDisplayData*)),
+		         this, SIGNAL(displayDataAdded(QtDisplayData*)));
+		connect( imageScroll, SIGNAL(displayDataRemoved(QtDisplayData*)),
+		         this, SIGNAL(displayDataRemoved(QtDisplayData*)));
+		connect( imageScroll, SIGNAL(displayTypeChanged(ImageView*)),
+		         this, SIGNAL(displayTypeChanged(ImageView*)));
+		connect( imageScroll, SIGNAL(displayColorsChanged(ImageView*)),
+		         this, SIGNAL(displayColorsChanged(ImageView*)));
 
-	connect( ui.clearAllButton, SIGNAL(clicked()), this, SLOT(clearSelections()));
-	connect( ui.selectAllButton, SIGNAL(clicked()), this, SLOT(selectAll()));
-}
+		connect( ui.clearAllButton, SIGNAL(clicked()), this, SLOT(clearSelections()));
+		connect( ui.selectAllButton, SIGNAL(clicked()), this, SLOT(selectAll()));
+	}
 
-void ImageScrollWidget::setImageHolder( DisplayDataHolder* holder ){
-	imageScroll->setImageHolder( holder );
-}
+	void ImageScrollWidget::setImageHolder( DisplayDataHolder* holder ) {
+		imageScroll->setImageHolder( holder );
+	}
 
-void ImageScrollWidget::setControllingDD( QtDisplayData* dd ){
-	imageScroll->setControllingDD( dd );
-}
+	void ImageScrollWidget::setControllingDD( QtDisplayData* dd ) {
+		imageScroll->setControllingDD( dd );
+	}
 
-void ImageScrollWidget::setImageColorsEnabled( bool enabled ){
-	imageScroll->setImageColorsEnabled( enabled );
-}
+	void ImageScrollWidget::setImageColorsEnabled( bool enabled ) {
+		imageScroll->setImageColorsEnabled( enabled );
+	}
 
-void ImageScrollWidget::applyColorChangesIndividually(){
-	imageScroll->applyColorChangesIndividually();
-}
+	void ImageScrollWidget::applyColorChangesIndividually() {
+		imageScroll->applyColorChangesIndividually();
+	}
 
-bool ImageScrollWidget::findColor( const QString& lookup, QColor* foundColor ){
-	return imageScroll->findColor( lookup, foundColor );
-}
+	bool ImageScrollWidget::findColor( const QString& lookup, QColor* foundColor ) {
+		return imageScroll->findColor( lookup, foundColor );
+	}
 
-void ImageScrollWidget::clearSelections(){
-	imageScroll->setSelectAll( false );
-}
+	void ImageScrollWidget::clearSelections() {
+		imageScroll->setSelectAll( false );
+	}
 
-void ImageScrollWidget::selectAll(){
-	imageScroll->setSelectAll( true );
-}
+	void ImageScrollWidget::selectAll() {
+		imageScroll->setSelectAll( true );
+	}
 
 
-bool ImageScrollWidget::isManaged( QtDisplayData* displayData ) const {
-	return imageScroll->isManaged( displayData );
-}
+	bool ImageScrollWidget::isManaged( QtDisplayData* displayData ) const {
+		return imageScroll->isManaged( displayData );
+	}
 
-void ImageScrollWidget::addImageViews( QList<ImageView*>& views ){
+	void ImageScrollWidget::addImageViews( QList<ImageView*>& views ) {
 
-	imageScroll->addImageViews( views );
-}
+		imageScroll->addImageViews( views );
+	}
 
-void ImageScrollWidget::removeImageViews( QList<ImageView*>& views ){
+	void ImageScrollWidget::removeImageViews( QList<ImageView*>& views ) {
 
-	imageScroll->removeImageViews( views );
-	//resetScroll();
-}
+		imageScroll->removeImageViews( views );
+		//resetScroll();
+	}
 
-QList<ImageView*> ImageScrollWidget::getSelectedViews() {
+	QList<ImageView*> ImageScrollWidget::getSelectedViews() {
 
-	return imageScroll->getSelectedViews();
-}
-
+		return imageScroll->getSelectedViews();
+	}
 
 
 
-void ImageScrollWidget::closeImages(){
 
-	imageScroll->closeImages();
+	void ImageScrollWidget::closeImages() {
 
-}
+		imageScroll->closeImages();
 
-ImageScrollWidget::~ImageScrollWidget()
-{
+	}
 
-}
+	ImageScrollWidget::~ImageScrollWidget() {
+
+	}
 }

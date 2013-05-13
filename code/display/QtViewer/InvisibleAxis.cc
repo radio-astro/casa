@@ -27,29 +27,29 @@
 
 namespace casa {
 
-InvisibleAxis::InvisibleAxis() {
-	// TODO Auto-generated constructor stub
+	InvisibleAxis::InvisibleAxis() {
+		// TODO Auto-generated constructor stub
 
-}
+	}
 
-void InvisibleAxis::draw( QPainter*, const QPalette& ) const{
+	void InvisibleAxis::draw( QPainter*, const QPalette& ) const {
 
-}
+	}
 
-void InvisibleAxis::drawBackbone( QPainter* ) const {
+	void InvisibleAxis::drawBackbone( QPainter* ) const {
 
-}
+	}
 
-void InvisibleAxis::drawLabel( QPainter*, double /*val*/ ) const {
+	void InvisibleAxis::drawLabel( QPainter*, double /*val*/ ) const {
 
-}
+	}
 
-void InvisibleAxis::drawTick( QPainter*, double /*val*/, double /*len*/) const {
+	void InvisibleAxis::drawTick( QPainter*, double /*val*/, double /*len*/) const {
 
-}
+	}
 
-InvisibleAxis::~InvisibleAxis() {
-	// TODO Auto-generated destructor stub
-}
+	InvisibleAxis::~InvisibleAxis() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

@@ -26,13 +26,13 @@
 
 namespace casa {
 
-ProfileTaskMonitor::ProfileTaskMonitor() {
-	// TODO Auto-generated constructor stub
+	ProfileTaskMonitor::ProfileTaskMonitor() {
+		// TODO Auto-generated constructor stub
 
-}
+	}
 
-ProfileTaskMonitor::~ProfileTaskMonitor() {
-	// TODO Auto-generated destructor stub
-}
+	ProfileTaskMonitor::~ProfileTaskMonitor() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

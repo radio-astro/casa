@@ -43,143 +43,142 @@ class QTimer;
 
 namespace casa {
 
-class QtCanvas;
+	class QtCanvas;
 
-/**
- * Responsible for running the search algorithm in
- * the background so that we don't freeze the GUI.
- */
-class SearchThread : public QThread {
-public:
-	SearchThread( Searcher* searcher, int offset ){
-		this->searcher= searcher;
-		this->offset = offset;
-		countNeeded = true;
-	}
-	String getErrorMessage() const {
-		return errorMsg;
-	}
-	String getErrorMessageCount() const {
-		return errorMsgCount;
-	}
-
-	void setCountNeeded( bool needed ){
-		countNeeded = needed;
-	}
-
-	long getResultsCount() const {
-		return searchResultsCount;
-	}
-
-	vector<SplatResult> getResults() const {
-		return searchResults;
-	}
-
-	void stopSearch(){
-		searcher->stopSearch();
-	}
-
-	void run(){
-		if ( offset == 0 && countNeeded ){
-			searchResultsCount = searcher->doSearchCount( errorMsgCount );
+	/**
+	 * Responsible for running the search algorithm in
+	 * the background so that we don't freeze the GUI.
+	 */
+	class SearchThread : public QThread {
+	public:
+		SearchThread( Searcher* searcher, int offset ) {
+			this->searcher= searcher;
+			this->offset = offset;
+			countNeeded = true;
 		}
-		else {
-			searchResultsCount = 1;
+		String getErrorMessage() const {
+			return errorMsg;
 		}
-		if ( searchResultsCount > 0 ){
-			searchResults = searcher->doSearch( errorMsg, offset );
+		String getErrorMessageCount() const {
+			return errorMsgCount;
 		}
-	}
-	~SearchThread(){
-	}
-private:
-	Searcher* searcher;
-	int searchResultsCount;
-	int offset;
-	bool countNeeded;
-	vector<SplatResult> searchResults;
-	string errorMsg;
-	string errorMsgCount;
-};
+
+		void setCountNeeded( bool needed ) {
+			countNeeded = needed;
+		}
+
+		long getResultsCount() const {
+			return searchResultsCount;
+		}
+
+		vector<SplatResult> getResults() const {
+			return searchResults;
+		}
+
+		void stopSearch() {
+			searcher->stopSearch();
+		}
+
+		void run() {
+			if ( offset == 0 && countNeeded ) {
+				searchResultsCount = searcher->doSearchCount( errorMsgCount );
+			} else {
+				searchResultsCount = 1;
+			}
+			if ( searchResultsCount > 0 ) {
+				searchResults = searcher->doSearch( errorMsg, offset );
+			}
+		}
+		~SearchThread() {
+		}
+	private:
+		Searcher* searcher;
+		int searchResultsCount;
+		int offset;
+		bool countNeeded;
+		vector<SplatResult> searchResults;
+		string errorMsg;
+		string errorMsgCount;
+	};
 
 
-class SearchMoleculesWidget : public QWidget
-{
-    Q_OBJECT
+	class SearchMoleculesWidget : public QWidget {
+		Q_OBJECT
 
-public:
-    SearchMoleculesWidget(QWidget *parent = 0);
-    void setCanvas( QtCanvas* drawCanvas );
-    QString getUnit() const;
-    bool isLocal() const;
+	public:
+		SearchMoleculesWidget(QWidget *parent = 0);
+		void setCanvas( QtCanvas* drawCanvas );
+		QString getUnit() const;
+		bool isLocal() const;
 
-    void setRange( double min, double max, QString units );
-    void updateReferenceFrame();
-    static void setInitialReferenceFrame( QString initialReferenceStr );
-    void setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay );
-    double getRedShiftedValue( bool reverseRedshift, double value ) const;
+		void setRange( double min, double max, QString units );
+		void updateReferenceFrame();
+		static void setInitialReferenceFrame( QString initialReferenceStr );
+		void setResultDisplay( SearchMoleculesResultDisplayer* resultDisplay );
+		double getRedShiftedValue( bool reverseRedshift, double value ) const;
 
-    vector<SplatResult> getSearchResults() const;
-    MDoppler::Types getDopplerType() const;
-    MRadialVelocity::Types getReferenceFrame() const;
-    ~SearchMoleculesWidget();
-    static const QString SPLATALOGUE_UNITS;
+		vector<SplatResult> getSearchResults() const;
+		MDoppler::Types getDopplerType() const;
+		MRadialVelocity::Types getReferenceFrame() const;
+		~SearchMoleculesWidget();
+		static const QString SPLATALOGUE_UNITS;
 
-signals:
-	void searchCompleted();
+	signals:
+		void searchCompleted();
 
-private slots:
-    void search();
-    void searchUnitsChanged( const QString& searchUnits );
-    void dopplerShiftChanged();
-    void dopplerVelocityUnitsChanged();
-    void searchFinished();
-    void prevResults();
-    void nextResults();
-    void stopSearch();
+	private slots:
+		void search();
+		void searchUnitsChanged( const QString& searchUnits );
+		void dopplerShiftChanged();
+		void dopplerVelocityUnitsChanged();
+		void searchFinished();
+		void prevResults();
+		void nextResults();
+		void stopSearch();
 
-private:
+	private:
 
-    static QString initialReferenceStr;
+		static QString initialReferenceStr;
 
-    void setAstronomicalFilters( Searcher* searcher );
-    void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
-    void initializeSearchRange( QLineEdit* lineEdit, Double& value );
-    vector<string> initializeChemicalNames();
-    void startSearchThread();
-    void setSearchRangeDefault();
-    void setRangeValue( double value, QString units, QLineEdit* lineEdit );
+		void setAstronomicalFilters( Searcher* searcher );
+		void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
+		void initializeSearchRange( QLineEdit* lineEdit, Double& value );
+		vector<string> initializeChemicalNames();
+		void startSearchThread();
+		void setSearchRangeDefault();
+		void setRangeValue( double value, QString units, QLineEdit* lineEdit );
 
-    MDoppler getRedShiftAdjustment( bool reverseRedshift) const;
+		MDoppler getRedShiftAdjustment( bool reverseRedshift) const;
 
-    enum AstroFilters { NONE, TOP_20, PLANETARY_ATMOSPHERE,HOT_CORES,
-		DARK_CLOUDS,DIFFUSE_CLOUDS,COMETS, AGB_PPN_PN,EXTRAGALACTIC };
+		enum AstroFilters { NONE, TOP_20, PLANETARY_ATMOSPHERE,HOT_CORES,
+		                    DARK_CLOUDS,DIFFUSE_CLOUDS,COMETS, AGB_PPN_PN,EXTRAGALACTIC
+		                  };
 
-    Ui::SearchMoleculesWidget ui;
+		Ui::SearchMoleculesWidget ui;
 
-    QString unitStr;
-    QString dopplerVelocityUnitStr;
-    vector<SplatResult> searchResults;
-    QList<QString> velocityUnitsList;
-    QMap<QString, MRadialVelocity::Types> radialVelocityTypeMap;
-    QMap<QString, MDoppler::Types> dopplerTypeMap;
-    bool dopplerInVelocity;
-    bool searchInterrupted;
-    SearchThread* searchThread;
-    Searcher* searcher;
-    QtCanvas* canvas;
-    QProgressDialog progressBar;
+		QString unitStr;
+		QString dopplerVelocityUnitStr;
+		vector<SplatResult> searchResults;
+		QList<QString> velocityUnitsList;
+		QMap<QString, MRadialVelocity::Types> radialVelocityTypeMap;
+		QMap<QString, MDoppler::Types> dopplerTypeMap;
+		bool dopplerInVelocity;
+		bool searchInterrupted;
+		SearchThread* searchThread;
+		Searcher* searcher;
+		QtCanvas* canvas;
+		QProgressDialog progressBar;
 
 
-    //Scrolling support
-    int searchResultCount;
-    int searchResultOffset;
-    int searchResultLimit;
+		//Scrolling support
+		int searchResultCount;
+		int searchResultOffset;
+		int searchResultLimit;
 
-    static const double SPLATALOGUE_DEFAULT_MIN;
-    static const double SPLATALOGUE_DEFAULT_MAX;
-    SearchMoleculesResultDisplayer* resultDisplay;
-};
+		static const double SPLATALOGUE_DEFAULT_MIN;
+		static const double SPLATALOGUE_DEFAULT_MAX;
+		SearchMoleculesResultDisplayer* resultDisplay;
+	};
 
 }
 

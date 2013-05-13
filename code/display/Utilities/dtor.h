@@ -31,29 +31,29 @@
 #include <list>
 
 namespace casa {
-    namespace viewer {
+	namespace viewer {
 
-	class dtorNotifier;
+		class dtorNotifier;
 
-	class dtorNotifiee {
-	    public:
-		dtorNotifiee( ) { }
-		virtual ~dtorNotifiee( ) { }
-		virtual void dtorCalled( const dtorNotifier * ) = 0;
-	};
+		class dtorNotifiee {
+		public:
+			dtorNotifiee( ) { }
+			virtual ~dtorNotifiee( ) { }
+			virtual void dtorCalled( const dtorNotifier * ) = 0;
+		};
 
-	class dtorNotifier {
-	    public:
-		dtorNotifier( ) { }
-		// signals any dtorNotifiee's that are registered
-		~dtorNotifier( );
-		void addNotifiee( dtorNotifiee * );
-		void removeNotifiee( dtorNotifiee * );
-	    private:
-		std::list<dtorNotifiee*> registrants;
+		class dtorNotifier {
+		public:
+			dtorNotifier( ) { }
+			// signals any dtorNotifiee's that are registered
+			~dtorNotifier( );
+			void addNotifiee( dtorNotifiee * );
+			void removeNotifiee( dtorNotifiee * );
+		private:
+			std::list<dtorNotifiee*> registrants;
 
-	};
-    }
+		};
+	}
 }
 
 #endif

@@ -39,142 +39,143 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor which makes an isolated MWCAnimator.
-MWCAnimator::MWCAnimator() { 
-}
+	MWCAnimator::MWCAnimator() {
+	}
 
 // Constructor for a single MultiWCHolder.
-MWCAnimator::MWCAnimator(MultiWCHolder &mholder) {
-  addMWCHolder(mholder);
-}
+	MWCAnimator::MWCAnimator(MultiWCHolder &mholder) {
+		addMWCHolder(mholder);
+	}
 
 // Destructor.
-MWCAnimator::~MWCAnimator() {
-}
+	MWCAnimator::~MWCAnimator() {
+	}
 
 // Add/remove MultiWCHolder/s.
-void MWCAnimator::addMWCHolder(MultiWCHolder &mholder) {
-  if (isAlreadyRegistered(mholder)) {
-    return;
-  }
-  ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
-  localMWCHLI.toEnd();
-  localMWCHLI.addRight(&mholder);
-}
-void MWCAnimator::removeMWCHolder(MultiWCHolder &mholder) {
-  if (!isAlreadyRegistered(mholder)) {
-    return;
-  }
-  ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
-  localMWCHLI.toStart();
-  while (!localMWCHLI.atEnd()) {
-    if (&mholder == localMWCHLI.getRight()) {
-      localMWCHLI.removeRight();
-      return;
-    } else {
-      localMWCHLI++;
-    }
-  }
-}
-void MWCAnimator::removeMWCHolders() {
-  ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
-  localMWCHLI.toStart();
-  while (!localMWCHLI.atEnd()) {
-    localMWCHLI.removeRight();
-    // don't increment iterator - removeRight() has that effect!
-  }
-}
+	void MWCAnimator::addMWCHolder(MultiWCHolder &mholder) {
+		if (isAlreadyRegistered(mholder)) {
+			return;
+		}
+		ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
+		localMWCHLI.toEnd();
+		localMWCHLI.addRight(&mholder);
+	}
+	void MWCAnimator::removeMWCHolder(MultiWCHolder &mholder) {
+		if (!isAlreadyRegistered(mholder)) {
+			return;
+		}
+		ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
+		localMWCHLI.toStart();
+		while (!localMWCHLI.atEnd()) {
+			if (&mholder == localMWCHLI.getRight()) {
+				localMWCHLI.removeRight();
+				return;
+			} else {
+				localMWCHLI++;
+			}
+		}
+	}
+	void MWCAnimator::removeMWCHolders() {
+		ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
+		localMWCHLI.toStart();
+		while (!localMWCHLI.atEnd()) {
+			localMWCHLI.removeRight();
+			// don't increment iterator - removeRight() has that effect!
+		}
+	}
 
 // Set linear restrictions
-void MWCAnimator::setLinearRestrictions(AttributeBuffer &restrictions,
-					const AttributeBuffer &increments) {
-  ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
-  localMWCHLI.toStart();
-  while (!localMWCHLI.atEnd()) {
-    localMWCHLI.getRight()->setLinearRestrictions(restrictions, increments);
-    // MultiWCHolder leaves restrictions equal to those set on the 
-    // final WorldCanvasHolder.  So just knock it up by one here.
-    restrictions += increments;
-    localMWCHLI++;
-  }
-}
+	void MWCAnimator::setLinearRestrictions(AttributeBuffer &restrictions,
+	                                        const AttributeBuffer &increments) {
+		ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
+		localMWCHLI.toStart();
+		while (!localMWCHLI.atEnd()) {
+			localMWCHLI.getRight()->setLinearRestrictions(restrictions, increments);
+			// MultiWCHolder leaves restrictions equal to those set on the
+			// final WorldCanvasHolder.  So just knock it up by one here.
+			restrictions += increments;
+			localMWCHLI++;
+		}
+	}
 
 // Set linear restriction
-void MWCAnimator::setLinearRestriction(const RecordInterface &rec) {
-  static String nameString("name"), valueString("value"), 
-    incrementString("increment");
-  if (rec.isDefined(nameString) && rec.isDefined(valueString) &&
-      rec.isDefined(incrementString) && 
-      (rec.dataType(valueString) == rec.dataType(incrementString))) {
-    String name;
-    rec.get(nameString, name);
-    switch(rec.dataType(valueString)) {
-    case TpInt: {
-      Int val, inc;
-      Int tol = 0;
-      rec.get(valueString, val);
-      rec.get(incrementString, inc);
-      setLinearRestriction(name, val, inc, tol);
-      break;
-    }
-    case TpFloat: {
-      Float val, inc;
-      Float tol = 1e-5;
-      rec.get(valueString, val);
-      rec.get(incrementString, inc);
-      setLinearRestriction(name, val, inc, tol);
-      break;
-    }
-    case TpDouble: {
-      Double val, inc;
-      Double tol = 1e-7;
-      rec.get(valueString, val);
-      rec.get(incrementString, inc);
-      setLinearRestriction(name, val, inc, tol);
-      break;
-    }
-    case TpRecord: {
-      /*
-      Record valrec, increc;
-      valrec = rec.asRecord(valueString);
-      increc = rec.asRecord(incrementString);
-      QuantumHolder valh, inch;
-      String error;
-      if (valh.fromRecord(error, valrec)) {
-	if (inch.fromRecord(error, increc)) {
-	  setLinearRestriction(name, valh.asQuantum(), inch.asQuantum());
+	void MWCAnimator::setLinearRestriction(const RecordInterface &rec) {
+		static String nameString("name"), valueString("value"),
+		       incrementString("increment");
+		if (rec.isDefined(nameString) && rec.isDefined(valueString) &&
+		        rec.isDefined(incrementString) &&
+		        (rec.dataType(valueString) == rec.dataType(incrementString))) {
+			String name;
+			rec.get(nameString, name);
+			switch(rec.dataType(valueString)) {
+			case TpInt: {
+				Int val, inc;
+				Int tol = 0;
+				rec.get(valueString, val);
+				rec.get(incrementString, inc);
+				setLinearRestriction(name, val, inc, tol);
+				break;
+			}
+			case TpFloat: {
+				Float val, inc;
+				Float tol = 1e-5;
+				rec.get(valueString, val);
+				rec.get(incrementString, inc);
+				setLinearRestriction(name, val, inc, tol);
+				break;
+			}
+			case TpDouble: {
+				Double val, inc;
+				Double tol = 1e-7;
+				rec.get(valueString, val);
+				rec.get(incrementString, inc);
+				setLinearRestriction(name, val, inc, tol);
+				break;
+			}
+			case TpRecord: {
+				/*
+				Record valrec, increc;
+				valrec = rec.asRecord(valueString);
+				increc = rec.asRecord(incrementString);
+				QuantumHolder valh, inch;
+				String error;
+				if (valh.fromRecord(error, valrec)) {
+				if (inch.fromRecord(error, increc)) {
+				  setLinearRestriction(name, valh.asQuantum(), inch.asQuantum());
+				}
+				     }
+				     */
+			}
+			default:
+				// unsupported type at this point in time...should we say something?
+				break;
+			}
+		} else {
+			// failure - should we say something?
+			return;
+		}
 	}
-      }
-      */
-    }
-    default:
-      // unsupported type at this point in time...should we say something?
-      break;
-    }
-  } else {
-    // failure - should we say something?
-    return;
-  }
-}
 
 
 // Remove a restriction (including a 'linear' (ramped) one).
-void MWCAnimator::removeRestriction(const String& name) {
-  for(ListIter<MultiWCHolder*> mwcs(itsMWCHList); !mwcs.atEnd(); mwcs++)
-      mwcs.getRight()->removeRestriction(name);  }
+	void MWCAnimator::removeRestriction(const String& name) {
+		for(ListIter<MultiWCHolder*> mwcs(itsMWCHList); !mwcs.atEnd(); mwcs++)
+			mwcs.getRight()->removeRestriction(name);
+	}
 
 
 // Do we already have this WorldCanvasHolder registered?
-const Bool MWCAnimator::isAlreadyRegistered(const MultiWCHolder &mholder) {
-  ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
-  localMWCHLI.toStart();
-  while (!localMWCHLI.atEnd()) {
-    if (&mholder == localMWCHLI.getRight()) {
-      return True;
-    }
-    localMWCHLI++;
-  }
-  return False;
-}
+	const Bool MWCAnimator::isAlreadyRegistered(const MultiWCHolder &mholder) {
+		ListIter<MultiWCHolder *> localMWCHLI(itsMWCHList);
+		localMWCHLI.toStart();
+		while (!localMWCHLI.atEnd()) {
+			if (&mholder == localMWCHLI.getRight()) {
+				return True;
+			}
+			localMWCHLI++;
+		}
+		return False;
+	}
 
 } //# NAMESPACE CASA - END
 

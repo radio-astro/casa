@@ -29,35 +29,35 @@
 
 namespace casa {
 
-class SliceStatistics;
+	class SliceStatistics;
 
-/**
- * Returns SliceStatistics appropriate to what is displayed on the
- * x-axis and the units being used.
- */
+	/**
+	 * Returns SliceStatistics appropriate to what is displayed on the
+	 * x-axis and the units being used.
+	 */
 
-class SliceStatisticsFactory {
-public:
-	enum AxisXUnits {PIXEL_UNIT, ARCSEC_UNIT, ARCMIN_UNIT, ARCDEG_UNIT };
-	enum AxisXChoice {DISTANCE,X_POSITION, Y_POSITION};
-	void setAxisXChoice( AxisXChoice choice );
-	void setXUnits( AxisXUnits unitMode );
-	bool isDistance() const;
-	bool isPositionX() const;
-	bool isPositionY() const;
+	class SliceStatisticsFactory {
+	public:
+		enum AxisXUnits {PIXEL_UNIT, ARCSEC_UNIT, ARCMIN_UNIT, ARCDEG_UNIT };
+		enum AxisXChoice {DISTANCE,X_POSITION, Y_POSITION};
+		void setAxisXChoice( AxisXChoice choice );
+		void setXUnits( AxisXUnits unitMode );
+		bool isDistance() const;
+		bool isPositionX() const;
+		bool isPositionY() const;
 
-	SliceStatistics* getStatistics();
-	SliceStatisticsFactory();
+		SliceStatistics* getStatistics();
+		SliceStatisticsFactory();
 
 
-	virtual ~SliceStatisticsFactory();
-private:
-	SliceStatistics* statisticsDistance;
-	SliceStatistics* statisticsPosition;
-	AxisXUnits xUnits;
-	AxisXChoice xAxis;
+		virtual ~SliceStatisticsFactory();
+	private:
+		SliceStatistics* statisticsDistance;
+		SliceStatistics* statisticsPosition;
+		AxisXUnits xUnits;
+		AxisXChoice xAxis;
 
-};
+	};
 
 } /* namespace casa */
 #endif /* SLICESTATISTICSFACTORY_H_ */

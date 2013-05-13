@@ -34,102 +34,96 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <class T>
-AttributeValuePoi<T>::AttributeValuePoi(T* value, const Bool strict) 
-: AttributeValue<T>(*value, strict),
-  itsVectorPointerPtr(0),
-  itsScalarPointerPtr(value),
-  itsPointerType(whatType(value)) 
-{}
+	template <class T>
+	AttributeValuePoi<T>::AttributeValuePoi(T* value, const Bool strict)
+		: AttributeValue<T>(*value, strict),
+		  itsVectorPointerPtr(0),
+		  itsScalarPointerPtr(value),
+		  itsPointerType(whatType(value))
+	{}
 
-template <class T>
-AttributeValuePoi<T>::AttributeValuePoi(Vector<T>* value, const Bool strict) 
-: AttributeValue<T>(*value, strict),
-  itsVectorPointerPtr(value),
-  itsScalarPointerPtr(0),
-  itsPointerType(whatType(value)) 
-{}
+	template <class T>
+	AttributeValuePoi<T>::AttributeValuePoi(Vector<T>* value, const Bool strict)
+		: AttributeValue<T>(*value, strict),
+		  itsVectorPointerPtr(value),
+		  itsScalarPointerPtr(0),
+		  itsPointerType(whatType(value))
+	{}
 
-template <class T>
-AttributeValuePoi<T>::~AttributeValuePoi() 
-{}
+	template <class T>
+	AttributeValuePoi<T>::~AttributeValuePoi()
+	{}
 
-template <class T>
-AttributeValuePoi<T>::AttributeValuePoi(const AttributeValuePoi<T> &other) 
-: AttributeValue<T>(other),
-  itsVectorPointerPtr(other.itsVectorPointerPtr), 
-  itsScalarPointerPtr(other.itsScalarPointerPtr), 
-  itsPointerType(other.itsPointerType) 
-{}
+	template <class T>
+	AttributeValuePoi<T>::AttributeValuePoi(const AttributeValuePoi<T> &other)
+		: AttributeValue<T>(other),
+		  itsVectorPointerPtr(other.itsVectorPointerPtr),
+		  itsScalarPointerPtr(other.itsScalarPointerPtr),
+		  itsPointerType(other.itsPointerType)
+	{}
 
-template <class T>
-const AttributeValuePoi<T> &AttributeValuePoi<T>::operator=(const AttributeValuePoi<T> &other) 
-{
-  if (&other != this) {
-    AttributeValue<T>::operator=(other);
-    itsVectorPointerPtr = other.itsVectorPointerPtr;
-    itsScalarPointerPtr = other.itsScalarPointerPtr;
-    itsPointerType = other.itsPointerType;
-  }
-  return *this;
-}
+	template <class T>
+	const AttributeValuePoi<T> &AttributeValuePoi<T>::operator=(const AttributeValuePoi<T> &other) {
+		if (&other != this) {
+			AttributeValue<T>::operator=(other);
+			itsVectorPointerPtr = other.itsVectorPointerPtr;
+			itsScalarPointerPtr = other.itsScalarPointerPtr;
+			itsPointerType = other.itsPointerType;
+		}
+		return *this;
+	}
 
-template <class T>
-void AttributeValuePoi<T>::setValue(const T &value) 
-{
-  AttributeValue<T>::setValue(value);
-  updatePointerValue();
-}
+	template <class T>
+	void AttributeValuePoi<T>::setValue(const T &value) {
+		AttributeValue<T>::setValue(value);
+		updatePointerValue();
+	}
 
 
 
-template <class T>
-void AttributeValuePoi<T>::setValue(const Vector<T> &value) 
-{
-  if (itsScalarPointerPtr) {
+	template <class T>
+	void AttributeValuePoi<T>::setValue(const Vector<T> &value) {
+		if (itsScalarPointerPtr) {
 
 // We can set only the first element
 
-     AttributeValue<T>::setValue(value(0));
-  } else {
-     AttributeValue<T>::setValue(value);
-  }
+			AttributeValue<T>::setValue(value(0));
+		} else {
+			AttributeValue<T>::setValue(value);
+		}
 //
-  updatePointerValue();
-}
+		updatePointerValue();
+	}
 
-template <class T>
-AttributeValueBase* AttributeValuePoi<T>::clone() const 
-{
-  return new AttributeValuePoi<T>(*this);
-}
+	template <class T>
+	AttributeValueBase* AttributeValuePoi<T>::clone() const {
+		return new AttributeValuePoi<T>(*this);
+	}
 
 
-template <class T>
-void AttributeValuePoi<T>::operator+=(const AttributeValueBase &other) 
-{
+	template <class T>
+	void AttributeValuePoi<T>::operator+=(const AttributeValueBase &other) {
 // check that other is an AttributeValuePoi:
 
-  if (other.className() != String("AttributeValuePoi")) return;
+		if (other.className() != String("AttributeValuePoi")) return;
 
 // check that types are consistent, and not invalid
 
-  if (getType() != other.getType()) return;
-  if (getType() == AttValue::AtInvalid) return;
-// 
-  const AttributeValuePoi<T>& tmp = myCast(other);
-  if (getPointerType() != tmp.getPointerType()) return;
+		if (getType() != other.getType()) return;
+		if (getType() == AttValue::AtInvalid) return;
 //
-  AttributeValue<T>::operator+=(other);  
+		const AttributeValuePoi<T>& tmp = myCast(other);
+		if (getPointerType() != tmp.getPointerType()) return;
 //
-  Vector<T> value = getValue();
-  updatePointerValue();
-}
+		AttributeValue<T>::operator+=(other);
+//
+		Vector<T> value = getValue();
+		updatePointerValue();
+	}
 
 
-template <class T>
-void AttributeValuePoi<T>::updatePointerValue() const 
-{
+	template <class T>
+	void AttributeValuePoi<T>::updatePointerValue() const {
 
 // If the new value that was set was a vector but we started
 // off life with a scalar, too bad.  All that can happen
@@ -138,34 +132,32 @@ void AttributeValuePoi<T>::updatePointerValue() const
 // itsVectorPtr do not long belong to this object.
 // I [nebk] think this is a design error.
 
-  if (itsScalarPointerPtr != 0) {
-     *itsScalarPointerPtr = getValue()(0);
-     if (getValue().nelements() > 1) {
-        cerr << "AttValPoi::updatePointerValue - discarding vector elements.  This is" << endl;
-        cerr << "AttValPoi::updatePointerValue - a design flaw. Please defect this error" << endl;
-     }
-  } else {
-     const Vector<T>& value = getValue();
-     itsVectorPointerPtr->resize(0);
-     *itsVectorPointerPtr = value;
-  }    
-}
+		if (itsScalarPointerPtr != 0) {
+			*itsScalarPointerPtr = getValue()(0);
+			if (getValue().nelements() > 1) {
+				cerr << "AttValPoi::updatePointerValue - discarding vector elements.  This is" << endl;
+				cerr << "AttValPoi::updatePointerValue - a design flaw. Please defect this error" << endl;
+			}
+		} else {
+			const Vector<T>& value = getValue();
+			itsVectorPointerPtr->resize(0);
+			*itsVectorPointerPtr = value;
+		}
+	}
 
 
 // get the DataType of the aliased variable
-template <class T>
-DataType AttributeValuePoi<T>::getPointerType() const 
-{
-  return itsPointerType;
-}
+	template <class T>
+	DataType AttributeValuePoi<T>::getPointerType() const {
+		return itsPointerType;
+	}
 
 
 
-template <class T>
-const AttributeValuePoi<T>& AttributeValuePoi<T>::myCast (const AttributeValueBase& other) const
-{
-  return dynamic_cast<const AttributeValuePoi<T>& >(other);
-}
+	template <class T>
+	const AttributeValuePoi<T>& AttributeValuePoi<T>::myCast (const AttributeValueBase& other) const {
+		return dynamic_cast<const AttributeValuePoi<T>& >(other);
+	}
 
 } //# NAMESPACE CASA - END
 

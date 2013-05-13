@@ -35,11 +35,11 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <class T> class Array;
-class IPosition;
-class Record;
-template <class T> class LatticePADMRaster;
-class WCPowerScaleHandler;
+	template <class T> class Array;
+	class IPosition;
+	class Record;
+	template <class T> class LatticePADMRaster;
+	class WCPowerScaleHandler;
 
 // <summary>Class to manage the drawing of raster images of slices from AIPS++ Lattices</summary>
 //
@@ -58,7 +58,7 @@ class WCPowerScaleHandler;
 // is "lattice"-based.
 // </etymology>
 //
-// <synopsis> 
+// <synopsis>
 // This class should be used to display raster images--- ie. filled,
 // pseudo-color pixel images where each screen (or device) pixel is
 // shaded with a color from a look-up table that is assigned to be
@@ -84,7 +84,7 @@ class WCPowerScaleHandler;
 // These functions simply accept a Record, which can be converted from
 // a GlishRecord: this is done in the <linkto
 // class="GTkDisplayData">GTkDisplayData</linkto> class.  The options
-// for the LatticeAsRaster class are: 
+// for the LatticeAsRaster class are:
 // <li> range: a Vector<Double> of two elements, being the minimum and
 // maximum data values to map to the minimum and maximum color values.
 // <li> power: a Float which specifies the deviation from linear of
@@ -106,8 +106,8 @@ class WCPowerScaleHandler;
 // complex data values should be translated to real pixel values.
 //
 // LatticeAsRaster is templated, and can be used to draw Complex or Real
-// Images or Arrays.  For Complex data, the default complexmode is 
-// "magnitude."  LatticeAsRaster objects can be registered on any 
+// Images or Arrays.  For Complex data, the default complexmode is
+// "magnitude."  LatticeAsRaster objects can be registered on any
 // WorldCanvasHolder, but will only draw on WorldCanvases having an
 // attribute value of Display::Index for "colormodel."
 // </synopsis>
@@ -149,115 +149,119 @@ class WCPowerScaleHandler;
 // <todo asof="yyyy/mm/dd">
 // </todo>
 
-template <class T> class LatticeAsRaster : public LatticePADisplayData<T> {
+	template <class T> class LatticeAsRaster : public LatticePADisplayData<T> {
 
-public:
+	public:
 
-	// Array-based constructors: >2d and 2d.  xAxis and yAxis specify
-	// which axis in the array (0-based) should be mapped to X and Y
-	// on the display device: ie. 2-d slices of the data to be displayed
-	// have these axes.  mAxis specifies the "movie" axis, which is the axis
-	// along which different slices are taken.  fixedPos is an IPosition
-	// having the same length as the number of dimensions in the array,
-	// and indicate the fixed axis values for axes in the data that are
-	// not specified as xAxis, yAxis or mAxis.
-	// <group>
-	LatticeAsRaster(Array<T> *array, const uInt xAxis,
-			const uInt yAxis, const uInt mAxis,
-			const IPosition fixedPos);
-	LatticeAsRaster(Array<T> *array, const uInt xAxis,
-			const uInt yAxis);
-	// </group>
+		// Array-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// which axis in the array (0-based) should be mapped to X and Y
+		// on the display device: ie. 2-d slices of the data to be displayed
+		// have these axes.  mAxis specifies the "movie" axis, which is the axis
+		// along which different slices are taken.  fixedPos is an IPosition
+		// having the same length as the number of dimensions in the array,
+		// and indicate the fixed axis values for axes in the data that are
+		// not specified as xAxis, yAxis or mAxis.
+		// <group>
+		LatticeAsRaster(Array<T> *array, const uInt xAxis,
+		                const uInt yAxis, const uInt mAxis,
+		                const IPosition fixedPos);
+		LatticeAsRaster(Array<T> *array, const uInt xAxis,
+		                const uInt yAxis);
+		// </group>
 
-	// Image-based constructors: >2d and 2d.  xAxis and yAxis specify
-	// which axis in the image (0-based) should be mapped to X and Y
-	// on the display device: ie. 2-d slices of the data to be displayed
-	// have these axes.  mAxis specifies the "movie" axis, which is the axis
-	// along which different slices are taken.  fixedPos is an IPosition
-	// having the same length as the number of dimensions in the image,
-	// and indicate the fixed axis values for axes in the data that are
-	// not specified as xAxis, yAxis or mAxis.
-	// <group>
-	LatticeAsRaster( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
-	LatticeAsRaster(ImageInterface<T> *image, const uInt xAxis,
-			const uInt yAxis);
-	// </group>
+		// Image-based constructors: >2d and 2d.  xAxis and yAxis specify
+		// which axis in the image (0-based) should be mapped to X and Y
+		// on the display device: ie. 2-d slices of the data to be displayed
+		// have these axes.  mAxis specifies the "movie" axis, which is the axis
+		// along which different slices are taken.  fixedPos is an IPosition
+		// having the same length as the number of dimensions in the image,
+		// and indicate the fixed axis values for axes in the data that are
+		// not specified as xAxis, yAxis or mAxis.
+		// <group>
+		LatticeAsRaster( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
+		LatticeAsRaster(ImageInterface<T> *image, const uInt xAxis,
+		                const uInt yAxis);
+		// </group>
 
-	// Destructor
-	virtual ~LatticeAsRaster();
+		// Destructor
+		virtual ~LatticeAsRaster();
 
-	// Create the various elements in the sequence of displayable
-	// images.  This is called upon construction as well as whenever
-	// the display and/or movie axes are changed via a call to
-	// PrincipalAxesDD::setAxes.
-	//virtual void setupElements(IPosition fixedPos = IPosition(uInt(2)));
-	virtual void setupElements();
+		// Create the various elements in the sequence of displayable
+		// images.  This is called upon construction as well as whenever
+		// the display and/or movie axes are changed via a call to
+		// PrincipalAxesDD::setAxes.
+		//virtual void setupElements(IPosition fixedPos = IPosition(uInt(2)));
+		virtual void setupElements();
 
-	// Install the default options for display.
-	virtual void setDefaultOptions();
+		// Install the default options for display.
+		virtual void setDefaultOptions();
 
-	// Apply the options stored in the provided Record to the
-	// LatticeAsRaster object.  If the return value is True, then
-	// some options have changed, and a refresh is needed to update
-	// the display.
-	virtual Bool setOptions(Record &rec, Record &recOut);
+		// Apply the options stored in the provided Record to the
+		// LatticeAsRaster object.  If the return value is True, then
+		// some options have changed, and a refresh is needed to update
+		// the display.
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-	// Retrieve the currently set options, and their types, default
-	// values, and any help text associated with each parameter.  This
-	// information can be used to generate form-type graphical user
-	// interfaces or command-line interfaces to set the options with
-	// prompts.
-	virtual Record getOptions();
-	//static Record getGlobalOption();
+		// Retrieve the currently set options, and their types, default
+		// values, and any help text associated with each parameter.  This
+		// information can be used to generate form-type graphical user
+		// interfaces or command-line interfaces to set the options with
+		// prompts.
+		virtual Record getOptions();
+		//static Record getGlobalOption();
 
-	// Return the DisplayData type; used by the WorldCanvasHolder to
-	// determine the order of drawing.
-	virtual Display::DisplayDataType classType() { return Display::Raster; }
+		// Return the DisplayData type; used by the WorldCanvasHolder to
+		// determine the order of drawing.
+		virtual Display::DisplayDataType classType() {
+			return Display::Raster;
+		}
 
-	// class name
-	virtual String className() { return String("LatticeAsRaster");}
-	const static String HISTOGRAM_RANGE;
-	const static String COLOR_MODE;
-	//const static String GLOBAL_COLORS;
-private:
-	//Bool setGlobalOption(Record &rec);
-	// Storage for the data range parameters
-	Vector<Float> itsOptionsDataRange;
-	Vector<Float> itsOptionsDataDefault;
+		// class name
+		virtual String className() {
+			return String("LatticeAsRaster");
+		}
+		const static String HISTOGRAM_RANGE;
+		const static String COLOR_MODE;
+		//const static String GLOBAL_COLORS;
+	private:
+		//Bool setGlobalOption(Record &rec);
+		// Storage for the data range parameters
+		Vector<Float> itsOptionsDataRange;
+		Vector<Float> itsOptionsDataDefault;
 
-	//Float itsOptionsPower;
+		//Float itsOptionsPower;
 
-	// what colormode the raster should be drawn in, options are
-	// "colormap" for normal pseudo-color rasters, and "red", "green"
-	// and "blue" for RGB canvases, and "hue", "saturation" and "value"
-	// for HSV canvases.
-	String itsOptionsColorMode;
+		// what colormode the raster should be drawn in, options are
+		// "colormap" for normal pseudo-color rasters, and "red", "green"
+		// and "blue" for RGB canvases, and "hue", "saturation" and "value"
+		// for HSV canvases.
+		String itsOptionsColorMode;
 
-	// pointers to scale and resampling handlers
-	WCPowerScaleHandler *itsPowerScaleHandler;
+		// pointers to scale and resampling handlers
+		WCPowerScaleHandler *itsPowerScaleHandler;
 
-	// allow the corresponding DisplayMethod to access this' private data.
-	friend class LatticePADMRaster<T>;
+		// allow the corresponding DisplayMethod to access this' private data.
+		friend class LatticePADMRaster<T>;
 
-	//static bool globalColors;
+		//static bool globalColors;
 
-	//# Make parent members known.
-public:
-	using LatticePADisplayData<T>::nelements;
-	using LatticePADisplayData<T>::nPixelAxes;
-	using LatticePADisplayData<T>::fixedPosition;
-	using LatticePADisplayData<T>::displayAxes;
-	using LatticePADisplayData<T>::dataShape;
-	using LatticePADisplayData<T>::getDataMin;
-	using LatticePADisplayData<T>::getDataMax;
-	using LatticePADisplayData<T>::readOptionRecord;
-	using LatticePADisplayData<T>::setAttribute;
-	using LatticePADisplayData<T>::getHist;
-	using LatticePADisplayData<T>::getBrightnessUnits;
-protected:
-	using LatticePADisplayData<T>::setNumImages;
-	using LatticePADisplayData<T>::DDelement;
-};
+		//# Make parent members known.
+	public:
+		using LatticePADisplayData<T>::nelements;
+		using LatticePADisplayData<T>::nPixelAxes;
+		using LatticePADisplayData<T>::fixedPosition;
+		using LatticePADisplayData<T>::displayAxes;
+		using LatticePADisplayData<T>::dataShape;
+		using LatticePADisplayData<T>::getDataMin;
+		using LatticePADisplayData<T>::getDataMax;
+		using LatticePADisplayData<T>::readOptionRecord;
+		using LatticePADisplayData<T>::setAttribute;
+		using LatticePADisplayData<T>::getHist;
+		using LatticePADisplayData<T>::getBrightnessUnits;
+	protected:
+		using LatticePADisplayData<T>::setNumImages;
+		using LatticePADisplayData<T>::DDelement;
+	};
 
 
 } //# NAMESPACE CASA - END

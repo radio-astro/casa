@@ -29,61 +29,61 @@
 #include <list>
 namespace casa {
 
-class QtDisplayData;
-class ImageTracker;
-class ImageDisplayer;
+	class QtDisplayData;
+	class ImageTracker;
+	class ImageDisplayer;
 
-/**
- * Manages and controls access to a lit of QtDisplayDatas.
- */
+	/**
+	 * Manages and controls access to a lit of QtDisplayDatas.
+	 */
 
-class DisplayDataHolder {
-public:
-	DisplayDataHolder();
+	class DisplayDataHolder {
+	public:
+		DisplayDataHolder();
 
-	//Adds the DisplayData.
-	void addDD( QtDisplayData* dd, int position = -1 );
+		//Adds the DisplayData.
+		void addDD( QtDisplayData* dd, int position = -1 );
 
-	// Removes the QDD from the list and deletes it (if it existed --
-	// Return value: whether qdd was in the list in the first place).
-	bool removeDD(QtDisplayData* qdd, bool signal = true);
-	void removeDDAll();
+		// Removes the QDD from the list and deletes it (if it existed --
+		// Return value: whether qdd was in the list in the first place).
+		bool removeDD(QtDisplayData* qdd, bool signal = true);
+		void removeDDAll();
 
-	// Insert and discard to basically the same thing as add/remove
-	// except that they perform the operation through a GUI level
-	// if one is available.
-	void insertDD( QtDisplayData* dd, int position );
-	void discardDD( QtDisplayData* dd, bool signal );
+		// Insert and discard to basically the same thing as add/remove
+		// except that they perform the operation through a GUI level
+		// if one is available.
+		void insertDD( QtDisplayData* dd, int position );
+		void discardDD( QtDisplayData* dd, bool signal );
 
-	//Iteration support
-	typedef std::list<QtDisplayData *> DisplayDataList;
-	typedef DisplayDataList::const_iterator DisplayDataIterator;
-	int getCount() const;
-	bool isEmpty() const;
-	DisplayDataIterator beginDD () const;
-	DisplayDataIterator endDD () const;
+		//Iteration support
+		typedef std::list<QtDisplayData *> DisplayDataList;
+		typedef DisplayDataList::const_iterator DisplayDataIterator;
+		int getCount() const;
+		bool isEmpty() const;
+		DisplayDataIterator beginDD () const;
+		DisplayDataIterator endDD () const;
 
-	//Controlling DD
-	QtDisplayData* getDDControlling( ) const;
-	void setDDControlling( QtDisplayData* controllingDD );
+		//Controlling DD
+		QtDisplayData* getDDControlling( ) const;
+		void setDDControlling( QtDisplayData* controllingDD );
 
-	// retrieve a DD with given name (0 if none).
-	QtDisplayData* getDD(const std::string& name) const;
+		// retrieve a DD with given name (0 if none).
+		QtDisplayData* getDD(const std::string& name) const;
 
-	// Check that a given DD is on the list.
-	bool exists(QtDisplayData* qdd) const;
+		// Check that a given DD is on the list.
+		bool exists(QtDisplayData* qdd) const;
 
-	void setImageTracker( ImageTracker* tracker );
-	void setImageDisplayer( ImageDisplayer* displayer );
-	virtual ~DisplayDataHolder();
-private:
-	DisplayDataHolder( const DisplayDataHolder& displayDataHolder );
-	DisplayDataHolder operator=( const DisplayDataHolder& displayDataHolder );
-	ImageTracker* imageTracker;
-	ImageDisplayer* imageDisplayer;
-	QtDisplayData *controlling_dd;
-	std::list<QtDisplayData*> dataList;
-};
+		void setImageTracker( ImageTracker* tracker );
+		void setImageDisplayer( ImageDisplayer* displayer );
+		virtual ~DisplayDataHolder();
+	private:
+		DisplayDataHolder( const DisplayDataHolder& displayDataHolder );
+		DisplayDataHolder operator=( const DisplayDataHolder& displayDataHolder );
+		ImageTracker* imageTracker;
+		ImageDisplayer* imageDisplayer;
+		QtDisplayData *controlling_dd;
+		std::list<QtDisplayData*> dataList;
+	};
 
 } /* namespace casa */
 #endif /* DISPLAYDATAHOLDER_H_ */

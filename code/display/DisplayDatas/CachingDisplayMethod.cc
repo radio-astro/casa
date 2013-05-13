@@ -33,73 +33,78 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
-CachingDisplayMethod::CachingDisplayMethod(WorldCanvas *worldCanvas,
-					   AttributeBuffer *wchAttributes,
-					   AttributeBuffer *ddAttributes,
-					   CachingDisplayData *
-					   parentDisplayData) :
-  DisplayMethod(parentDisplayData),
-  itsWorldCanvas(worldCanvas),
-  itsHasList(False),
-  itsCachedDrawingList(0) {
-  addRestrictions(*wchAttributes);
-  addRestrictions(*ddAttributes);
-}
+	CachingDisplayMethod::CachingDisplayMethod(WorldCanvas *worldCanvas,
+	        AttributeBuffer *wchAttributes,
+	        AttributeBuffer *ddAttributes,
+	        CachingDisplayData *
+	        parentDisplayData) :
+		DisplayMethod(parentDisplayData),
+		itsWorldCanvas(worldCanvas),
+		itsHasList(False),
+		itsCachedDrawingList(0) {
+		addRestrictions(*wchAttributes);
+		addRestrictions(*ddAttributes);
+	}
 
 // Destructor.
-CachingDisplayMethod::~CachingDisplayMethod() {
-  if (itsWorldCanvas) {
-    if (itsHasList && itsWorldCanvas->validList(itsCachedDrawingList)) {
-      itsWorldCanvas->deleteList(itsCachedDrawingList);
-    }
-  }
-}
+	CachingDisplayMethod::~CachingDisplayMethod() {
+		if (itsWorldCanvas) {
+			if (itsHasList && itsWorldCanvas->validList(itsCachedDrawingList)) {
+				itsWorldCanvas->deleteList(itsCachedDrawingList);
+			}
+		}
+	}
 
 // Draw this slice of data on the supplied WorldCanvasHolder.
-void CachingDisplayMethod::draw(Display::RefreshReason reason,
-				WorldCanvasHolder &wcHolder) {
-  WorldCanvas *wc = wcHolder.worldCanvas();
-  if (wc != itsWorldCanvas) {
-    throw(AipsError("Invalid WorldCanvas given to "
-		    "CachingDisplayMethod::draw"));  }
-  
-  if ( !itsHasList || !wc->validList(itsCachedDrawingList) ) {
-    Bool couldDraw;
+	void CachingDisplayMethod::draw(Display::RefreshReason reason,
+	                                WorldCanvasHolder &wcHolder) {
+		WorldCanvas *wc = wcHolder.worldCanvas();
+		if (wc != itsWorldCanvas) {
+			throw(AipsError("Invalid WorldCanvas given to "
+			                "CachingDisplayMethod::draw"));
+		}
+
+		if ( !itsHasList || !wc->validList(itsCachedDrawingList) ) {
+			Bool couldDraw;
 
 
-    itsCachedDrawingList = wc->newList();
-    try { couldDraw = drawIntoList(reason, wcHolder);  }
+			itsCachedDrawingList = wc->newList();
+			try {
+				couldDraw = drawIntoList(reason, wcHolder);
+			}
 
-    catch (...) {	// At least clean up drawlist state...
-      wc->endList();
-      if(wc->validList(itsCachedDrawingList))
-		wc->deleteList(itsCachedDrawingList);
-      itsHasList = False;
-      throw;  }		//  ...before passing exception on.
-    
-    wc->endList();
+			catch (...) {	// At least clean up drawlist state...
+				wc->endList();
+				if(wc->validList(itsCachedDrawingList))
+					wc->deleteList(itsCachedDrawingList);
+				itsHasList = False;
+				throw;
+			}		//  ...before passing exception on.
 
-    // if DM can't draw, do not save the drawlist.
-    if(! couldDraw && wc->validList(itsCachedDrawingList) ) 
-		      wc->deleteList(itsCachedDrawingList);
+			wc->endList();
 
-    itsHasList = couldDraw && wc->validList(itsCachedDrawingList);  }
+			// if DM can't draw, do not save the drawlist.
+			if(! couldDraw && wc->validList(itsCachedDrawingList) )
+				wc->deleteList(itsCachedDrawingList);
 
-    
-  if(itsHasList) wc->drawList(itsCachedDrawingList);
-}
+			itsHasList = couldDraw && wc->validList(itsCachedDrawingList);
+		}
+
+
+		if(itsHasList) wc->drawList(itsCachedDrawingList);
+	}
 
 // (Required) default constructor.
-CachingDisplayMethod::CachingDisplayMethod() {
-}
+	CachingDisplayMethod::CachingDisplayMethod() {
+	}
 
 // (Required) copy constructor.
-CachingDisplayMethod::CachingDisplayMethod(const CachingDisplayMethod &) {
-}
+	CachingDisplayMethod::CachingDisplayMethod(const CachingDisplayMethod &) {
+	}
 
 // (Required) copy assignment.
-void CachingDisplayMethod::operator=(const CachingDisplayMethod &) {
-}
+	void CachingDisplayMethod::operator=(const CachingDisplayMethod &) {
+	}
 
 } //# NAMESPACE CASA - END
 

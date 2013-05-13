@@ -34,66 +34,67 @@
 #include <casa/namespace.h>
 class tDisplayTool : public DisplayTool {
 public:
-  // Constructor.
-  tDisplayTool(const Display::KeySym &keysym = Display::K_Pointer_Button1) :
-    DisplayTool(keysym) { } ;
-  // Copy constructor.
-  tDisplayTool(const tDisplayTool &other) :
-    DisplayTool(other) { };
-  // Copy assignment.
-  tDisplayTool &operator=(const tDisplayTool &other) {
-    if (this != &other) {
-      DisplayTool::operator=(other);
-    }
-    return *this;
-  }
-  // Destructor.
-  virtual ~tDisplayTool() { };
-  // Enable/disable.
-  virtual void enable() { };
-  virtual void disable() { };
-  // return key modifier
-  Display::KeyModifier getModifiers() 
-  { return keyModifiers(); }
+	// Constructor.
+	tDisplayTool(const Display::KeySym &keysym = Display::K_Pointer_Button1) :
+		DisplayTool(keysym) { } ;
+	// Copy constructor.
+	tDisplayTool(const tDisplayTool &other) :
+		DisplayTool(other) { };
+	// Copy assignment.
+	tDisplayTool &operator=(const tDisplayTool &other) {
+		if (this != &other) {
+			DisplayTool::operator=(other);
+		}
+		return *this;
+	}
+	// Destructor.
+	virtual ~tDisplayTool() { };
+	// Enable/disable.
+	virtual void enable() { };
+	virtual void disable() { };
+	// return key modifier
+	Display::KeyModifier getModifiers() {
+		return keyModifiers();
+	}
 };
 
 void localAbort(String message) {
-  cout << message << endl;
-  exit(1);
+	cout << message << endl;
+	exit(1);
 }
 
 int main(int, char **) {
-  try {
+	try {
 
-    // test default constructor gives correct button (ie. button 1)
-    tDisplayTool tDT1;
-    AlwaysAssert(tDT1.getKey() == Display::K_Pointer_Button1, AipsError);
+		// test default constructor gives correct button (ie. button 1)
+		tDisplayTool tDT1;
+		AlwaysAssert(tDT1.getKey() == Display::K_Pointer_Button1, AipsError);
 
-    // test constructor with non-default button
-    tDisplayTool tDT2(Display::K_Pointer_Button3);
-    AlwaysAssert(tDT2.getKey() == Display::K_Pointer_Button3, AipsError);
+		// test constructor with non-default button
+		tDisplayTool tDT2(Display::K_Pointer_Button3);
+		AlwaysAssert(tDT2.getKey() == Display::K_Pointer_Button3, AipsError);
 
-    // test copy constructor
-    tDisplayTool tDT3(tDT1);
-    AlwaysAssert(tDT3.getKey() == tDT1.getKey(), AipsError);
+		// test copy constructor
+		tDisplayTool tDT3(tDT1);
+		AlwaysAssert(tDT3.getKey() == tDT1.getKey(), AipsError);
 
-    // test copy assignment
-    tDisplayTool *tDT4 = new tDisplayTool(tDT2);
-    AlwaysAssert(tDT4, AipsError);
-    AlwaysAssert(tDT4->getKey() == tDT2.getKey(), AipsError);
-    
-    // test setkey/getkey functions
-    tDT1.setKey(Display::K_Pointer_Button2);
-    AlwaysAssert(tDT1.getKey() == Display::K_Pointer_Button2, AipsError);
+		// test copy assignment
+		tDisplayTool *tDT4 = new tDisplayTool(tDT2);
+		AlwaysAssert(tDT4, AipsError);
+		AlwaysAssert(tDT4->getKey() == tDT2.getKey(), AipsError);
 
-    // test keymodifier function for button 2, and then for keyboard 'L'
-    AlwaysAssert(tDT1.getModifiers(), AipsError);
-    tDisplayTool tDT5(Display::K_L);
-    AlwaysAssert(!tDT5.getModifiers(), AipsError);
-    
-    cout << "OK" << endl;
-    return 0;
-  } catch (const AipsError &x) {
-    localAbort(x.getMesg());
-  } 
+		// test setkey/getkey functions
+		tDT1.setKey(Display::K_Pointer_Button2);
+		AlwaysAssert(tDT1.getKey() == Display::K_Pointer_Button2, AipsError);
+
+		// test keymodifier function for button 2, and then for keyboard 'L'
+		AlwaysAssert(tDT1.getModifiers(), AipsError);
+		tDisplayTool tDT5(Display::K_L);
+		AlwaysAssert(!tDT5.getModifiers(), AipsError);
+
+		cout << "OK" << endl;
+		return 0;
+	} catch (const AipsError &x) {
+		localAbort(x.getMesg());
+	}
 }

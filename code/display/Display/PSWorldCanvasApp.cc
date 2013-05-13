@@ -41,59 +41,59 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // default constructor
-PSWorldCanvasApp::PSWorldCanvasApp(PSDriver *ps) {
+	PSWorldCanvasApp::PSWorldCanvasApp(PSDriver *ps) {
 
-  ps_ = ps;
-  if(ps == NULL)
-	throw(AipsError("PSWorldCanvasApp passed NULL PSDriver."));
+		ps_ = ps;
+		if(ps == NULL)
+			throw(AipsError("PSWorldCanvasApp passed NULL PSDriver."));
 
-  PSPixelCanvasColorTable *psTable = 0;
-  try {
-    psTable = new PSPixelCanvasColorTable(ps);
-  } catch (AipsError x) {
-    psTable = 0;
-  } 
+		PSPixelCanvasColorTable *psTable = 0;
+		try {
+			psTable = new PSPixelCanvasColorTable(ps);
+		} catch (AipsError x) {
+			psTable = 0;
+		}
 
-  if (psTable == 0) {
-    throw(AipsError("Unable to build PSPixelCanvasColorTable"));
-  }
+		if (psTable == 0) {
+			throw(AipsError("Unable to build PSPixelCanvasColorTable"));
+		}
 
-  itsPixelCanvas = new PSPixelCanvas( ps_, psTable);
-  itsWorldCanvas = new WorldCanvas(itsPixelCanvas);
-}
+		itsPixelCanvas = new PSPixelCanvas( ps_, psTable);
+		itsWorldCanvas = new WorldCanvas(itsPixelCanvas);
+	}
 
 // default destructor
-PSWorldCanvasApp::~PSWorldCanvasApp() {
-  if (itsWorldCanvas) {
-    delete itsWorldCanvas;
-    itsWorldCanvas = 0;
-  }
-  if (itsPixelCanvas) {
-    delete itsPixelCanvas;
-    itsPixelCanvas = 0;
-  }
-}
+	PSWorldCanvasApp::~PSWorldCanvasApp() {
+		if (itsWorldCanvas) {
+			delete itsWorldCanvas;
+			itsWorldCanvas = 0;
+		}
+		if (itsPixelCanvas) {
+			delete itsPixelCanvas;
+			itsPixelCanvas = 0;
+		}
+	}
 
-void PSWorldCanvasApp::run() {
-  //** not sure what multiple refreshes will mean on a PSPixelCanvas,
-  //** I think that PSPixelCanvas::clear() should clear the page,
-  //** and we will add another command, like PixelCanvas::page() 
-  //** which will actually do a clear for X11PixelCanvases, but
-  //** will start a new page for PSPixelCanvases.  For the moment,
-  //** I'll leave it at clear, assuming that this WON'T start a 
-  //** new page in your driver...
-  itsPixelCanvas->clear();
-  // It currently does a showpage which is ignored if the PSDriver thinks
-  // it is in EPS mode. There is an untested ifdef to draw a filled
-  // rectangle the size of the bounding box. If not in EPS mode, the
-  // bounding box is 0 size.
+	void PSWorldCanvasApp::run() {
+		//** not sure what multiple refreshes will mean on a PSPixelCanvas,
+		//** I think that PSPixelCanvas::clear() should clear the page,
+		//** and we will add another command, like PixelCanvas::page()
+		//** which will actually do a clear for X11PixelCanvases, but
+		//** will start a new page for PSPixelCanvases.  For the moment,
+		//** I'll leave it at clear, assuming that this WON'T start a
+		//** new page in your driver...
+		itsPixelCanvas->clear();
+		// It currently does a showpage which is ignored if the PSDriver thinks
+		// it is in EPS mode. There is an untested ifdef to draw a filled
+		// rectangle the size of the bounding box. If not in EPS mode, the
+		// bounding box is 0 size.
 
-  //** now do a full refresh, and I guess we need to have some 
-  //** command to close the output.  Perhaps just deleting the 
-  //** PixelCanvas is sufficient, so when "this" is destroyed,
-  //** the file is closed...
-  itsPixelCanvas->refresh();
-}
+		//** now do a full refresh, and I guess we need to have some
+		//** command to close the output.  Perhaps just deleting the
+		//** PixelCanvas is sufficient, so when "this" is destroyed,
+		//** the file is closed...
+		itsPixelCanvas->refresh();
+	}
 
 } //# NAMESPACE CASA - END
 

@@ -34,7 +34,7 @@
 #include <casa/Containers/Record.h>
 #include <display/Display/Attribute.h>
 #include <casa/Utilities/DataType.h>
-#include <tables/Tables/ArrayColumn.h> 
+#include <tables/Tables/ArrayColumn.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <display/DisplayDatas/TblAsRasterDD.h>
 #include <display/DisplayDatas/TblAsRasterDM.h>
@@ -42,107 +42,107 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructor
-TblAsRasterDM::TblAsRasterDM(WorldCanvas *worldCanvas, 
-				 AttributeBuffer *wchAttributes,
-				 AttributeBuffer *ddAttributes,
-				 CachingDisplayData *dd) :
-  CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
-}
- 
+	TblAsRasterDM::TblAsRasterDM(WorldCanvas *worldCanvas,
+	                             AttributeBuffer *wchAttributes,
+	                             AttributeBuffer *ddAttributes,
+	                             CachingDisplayData *dd) :
+		CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
+	}
+
 // destructor
-TblAsRasterDM::~TblAsRasterDM() {
-  cleanup();
-}
- 
+	TblAsRasterDM::~TblAsRasterDM() {
+		cleanup();
+	}
+
 // cleanup function
-void TblAsRasterDM::cleanup() {
-}
+	void TblAsRasterDM::cleanup() {
+	}
 
-Bool TblAsRasterDM::drawIntoList(Display::RefreshReason reason,
-				   WorldCanvasHolder &wcHolder) {
+	Bool TblAsRasterDM::drawIntoList(Display::RefreshReason reason,
+	                                 WorldCanvasHolder &wcHolder) {
 
-  // which world canvas do we draw on?
-  WorldCanvas *wc = wcHolder.worldCanvas();
- 
-  // can we do a dynamic cast to the correct data type?
-  TblAsRasterDD *parent = dynamic_cast<TblAsRasterDD *>
-    (parentDisplayData());                                            
-  if (!parent) {
-    throw(AipsError("invalid parent of TblAsRasterDM"));
-  }                
+		// which world canvas do we draw on?
+		WorldCanvas *wc = wcHolder.worldCanvas();
 
-  // get the table column data type
-  TableDesc tdesc(parent->table()->tableDesc());
-  DataType type = 
-    tdesc.columnDesc(parent->itsXColumnName->value()).trueDataType();
+		// can we do a dynamic cast to the correct data type?
+		TblAsRasterDD *parent = dynamic_cast<TblAsRasterDD *>
+		                        (parentDisplayData());
+		if (!parent) {
+			throw(AipsError("invalid parent of TblAsRasterDM"));
+		}
 
-  // array to contain data to be plotted
-  Array<float> data;
-  Table *theTable = parent->table();
+		// get the table column data type
+		TableDesc tdesc(parent->table()->tableDesc());
+		DataType type =
+		    tdesc.columnDesc(parent->itsXColumnName->value()).trueDataType();
 
-  if (type == TpArrayDouble) {
-    Array<double> typedata;
-    // read the column into an array
-    ROArrayColumn<double> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    // now convert array to type float
-    data.resize(typedata.shape());
-    convertArray(data,typedata);
-  }
-  if (type == TpArrayFloat) {
-    ROArrayColumn<float> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(data,True);
-  }
-  if (type == TpArrayUShort) {
-    Array<ushort> typedata;
-    ROArrayColumn<ushort> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    data.resize(typedata.shape());
-    convertArray(data,typedata);
-  }
-  if (type == TpArrayInt) {
-    Array<int> typedata;
-    ROArrayColumn<int> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    data.resize(typedata.shape());
-    convertArray(data,typedata);
-  }
-  if (type == TpArrayUInt) {
-    Array<uInt> typedata;
-    ROArrayColumn<uInt> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    data.resize(typedata.shape());
-    convertArray(data,typedata);
-  }
-  // put the data into the matrix
-  const Matrix<float> theData = data;
+		// array to contain data to be plotted
+		Array<float> data;
+		Table *theTable = parent->table();
 
-  // define several things for drawing
-  Bool usePixelEdges = True;
+		if (type == TpArrayDouble) {
+			Array<double> typedata;
+			// read the column into an array
+			ROArrayColumn<double>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			// now convert array to type float
+			data.resize(typedata.shape());
+			convertArray(data,typedata);
+		}
+		if (type == TpArrayFloat) {
+			ROArrayColumn<float>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(data,True);
+		}
+		if (type == TpArrayUShort) {
+			Array<ushort> typedata;
+			ROArrayColumn<ushort>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			data.resize(typedata.shape());
+			convertArray(data,typedata);
+		}
+		if (type == TpArrayInt) {
+			Array<int> typedata;
+			ROArrayColumn<int>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			data.resize(typedata.shape());
+			convertArray(data,typedata);
+		}
+		if (type == TpArrayUInt) {
+			Array<uInt> typedata;
+			ROArrayColumn<uInt>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			data.resize(typedata.shape());
+			convertArray(data,typedata);
+		}
+		// put the data into the matrix
+		const Matrix<float> theData = data;
 
-  // now plot the data
-  wc->drawImage(parent->itsLinblc, parent->itsLintrc, theData, 
-			usePixelEdges);
-  return True;
-}
+		// define several things for drawing
+		Bool usePixelEdges = True;
+
+		// now plot the data
+		wc->drawImage(parent->itsLinblc, parent->itsLintrc, theData,
+		              usePixelEdges);
+		return True;
+	}
 
 // (required) default constructor
-TblAsRasterDM::TblAsRasterDM(){
-}
+	TblAsRasterDM::TblAsRasterDM() {
+	}
 
 // (required) copy constructor
-TblAsRasterDM::TblAsRasterDM(const TblAsRasterDM & other) :
-  CachingDisplayMethod(other) {
-}
+	TblAsRasterDM::TblAsRasterDM(const TblAsRasterDM & other) :
+		CachingDisplayMethod(other) {
+	}
 
 // (required) copy assignment
-void TblAsRasterDM::operator=(const TblAsRasterDM &){
-}
+	void TblAsRasterDM::operator=(const TblAsRasterDM &) {
+	}
 
 
 } //# NAMESPACE CASA - END

@@ -39,103 +39,103 @@ class QFileSystemModel;
 
 namespace casa {
 
-class SkyCatOverlayDD;
-class RegionBox;
-class ColorComboDelegate;
+	class SkyCatOverlayDD;
+	class RegionBox;
+	class ColorComboDelegate;
 
-/**
- * Displays a dialog that allows the user to find and edit a source list
- * that can be used as estimates for a 2D fit.
- */
+	/**
+	 * Displays a dialog that allows the user to find and edit a source list
+	 * that can be used as estimates for a 2D fit.
+	 */
 
-class FindSourcesDialog : public QDialog
-{
-    Q_OBJECT
+	class FindSourcesDialog : public QDialog {
+		Q_OBJECT
 
-public:
-    FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
-    void setImage( ImageInterface<Float>* image );
-    void setChannel( int channel );
+	public:
+		FindSourcesDialog(QWidget *parent = 0, bool displayModeFunctionality = true);
+		void setImage( ImageInterface<Float>* image );
+		void setChannel( int channel );
 
-    QString getRegionString() const;
-    String getPixelBox() const;
-    String getScreenedEstimatesFile( const String& estimatesFileName,
-    		bool* errorWritingFile );
-    const static QStringList colorNames;
-    ~FindSourcesDialog();
+		QString getRegionString() const;
+		String getPixelBox() const;
+		String getScreenedEstimatesFile( const String& estimatesFileName,
+		                                 bool* errorWritingFile );
+		const static QStringList colorNames;
+		~FindSourcesDialog();
 
-signals:
-	void showOverlay(String, const QString& );
-	void removeOverlay(String path );
-	void estimateFileSpecified( const QString& fullPath );
+	signals:
+		void showOverlay(String, const QString& );
+		void removeOverlay(String path );
+		void estimateFileSpecified( const QString& fullPath );
 
-public slots:
-	void setImageMode( bool imageMode );
-	bool newRegion( int id, const QString & shape, const QString &name,
-	    		const QList<double> & world_x, const QList<double> & world_y,
-	    		const QList<int> &pixel_x, const QList<int> &pixel_y,
-	    		const QString & linecolor, const QString & text, const QString & font,
-	    		int fontsize, int fontstyle );
-	bool updateRegion( int id, viewer::region::RegionChanges changes,
-	    		const QList<double> & world_x, const QList<double> & world_y,
-	    		const QList<int> &pixel_x, const QList<int> &pixel_y );
-	void setOverlayColor(const QString& colorName);
+	public slots:
+		void setImageMode( bool imageMode );
+		bool newRegion( int id, const QString & shape, const QString &name,
+		                const QList<double> & world_x, const QList<double> & world_y,
+		                const QList<int> &pixel_x, const QList<int> &pixel_y,
+		                const QString & linecolor, const QString & text, const QString & font,
+		                int fontsize, int fontstyle );
+		bool updateRegion( int id, viewer::region::RegionChanges changes,
+		                   const QList<double> & world_x, const QList<double> & world_y,
+		                   const QList<int> &pixel_x, const QList<int> &pixel_y );
+		void setOverlayColor(const QString& colorName);
 
-private slots:
-	void findSources();
-	void deleteSelectedSource();
-	void canceledFindSources();
-	void saveEstimateFile();
-	void directoryChanged(const QModelIndex& modelIndex );
-	void validateDirectory( const QString& str );
-	void cutoffModeChanged( bool noise );
-	void showPixelRange();
-	void pixelRangeChanged();
-	void viewerDisplayChanged();
+	private slots:
+		void findSources();
+		void deleteSelectedSource();
+		void canceledFindSources();
+		void saveEstimateFile();
+		void directoryChanged(const QModelIndex& modelIndex );
+		void validateDirectory( const QString& str );
+		void cutoffModeChanged( bool noise );
+		void showPixelRange();
+		void pixelRangeChanged();
+		void viewerDisplayChanged();
 
-private:
-	FindSourcesDialog( const FindSourcesDialog& other );
-	FindSourcesDialog& operator=( const FindSourcesDialog& other );
-	void populatePixelBox();
-	//Written because when a fit of a residual image was being done, the region
-	//bounds were larger than the bounds in the residual image.
-	void populateImageBounds();
-	QString getImagePixelBox() const;
-	void resetCurrentId( int suggestedId );
-	void resetSourceView();
-	void setSourceResultsVisible( bool visible );
-	void createTable();
-	void initializeFileManagement();
-	void setTableValue(int row, int col, const String& val );
-	double populateCutOff(bool* valid) const;
-	Record makeRegion( bool * valid ) const;
-	void resetSkyOverlay();
-	void clearSkyOverlay();
-	void clearRegions();
-	bool writeEstimateFile( QString& filePath,
-	    	bool screenEstimates = false, RegionBox* screeningBox = NULL );
-	QString getRemoveOverlayPath() const;
+	private:
+		FindSourcesDialog( const FindSourcesDialog& other );
+		FindSourcesDialog& operator=( const FindSourcesDialog& other );
+		void populatePixelBox();
+		//Written because when a fit of a residual image was being done, the region
+		//bounds were larger than the bounds in the residual image.
+		void populateImageBounds();
+		QString getImagePixelBox() const;
+		void resetCurrentId( int suggestedId );
+		void resetSourceView();
+		void setSourceResultsVisible( bool visible );
+		void createTable();
+		void initializeFileManagement();
+		void setTableValue(int row, int col, const String& val );
+		double populateCutOff(bool* valid) const;
+		Record makeRegion( bool * valid ) const;
+		void resetSkyOverlay();
+		void clearSkyOverlay();
+		void clearRegions();
+		bool writeEstimateFile( QString& filePath,
+		                        bool screenEstimates = false, RegionBox* screeningBox = NULL );
+		QString getRemoveOverlayPath() const;
 
-	ComponentListWrapper skyList;
-	enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL,
-			MAJOR_AXIS_COL, MINOR_AXIS_COL, ANGLE_COL/*, FIXED_COL*/ };
-	ImageInterface<Float>* image;
-	String pixelBox;
-	QString skyPath;
-	QString overlayColorName;
-	bool imageMode;
-	int channel;
-	int resultIndex;
-	int currentRegionId;
-	QFileSystemModel* fileModel;
-	QMap< int, RegionBox*> regions;
-	const int DEFAULT_KEY;
-	const QString SKY_CATALOG;
-	ColorComboDelegate* colorDelegate;
-	PixelRangeDialog pixelRangeDialog;
-	Vector<int> blcVector;
-	Vector<int> trcVector;
-    Ui::FindSourcesDialogClass ui;
-};
+		ComponentListWrapper skyList;
+		enum SourceColumns { ID_COL, RA_COL, DEC_COL, FLUX_COL,
+		                     MAJOR_AXIS_COL, MINOR_AXIS_COL, ANGLE_COL/*, FIXED_COL*/
+		                   };
+		ImageInterface<Float>* image;
+		String pixelBox;
+		QString skyPath;
+		QString overlayColorName;
+		bool imageMode;
+		int channel;
+		int resultIndex;
+		int currentRegionId;
+		QFileSystemModel* fileModel;
+		QMap< int, RegionBox*> regions;
+		const int DEFAULT_KEY;
+		const QString SKY_CATALOG;
+		ColorComboDelegate* colorDelegate;
+		PixelRangeDialog pixelRangeDialog;
+		Vector<int> blcVector;
+		Vector<int> trcVector;
+		Ui::FindSourcesDialogClass ui;
+	};
 }
 #endif // FIND_SOURCES_DIALOG_QO_H

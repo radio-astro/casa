@@ -32,20 +32,22 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-    class DlTarget {
+	class DlTarget {
 
 	public:
-	    DlTarget( ) { }
-	    DlTarget( const DlTarget & ) { }
-	    virtual ~DlTarget( );
+		DlTarget( ) { }
+		DlTarget( const DlTarget & ) { }
+		virtual ~DlTarget( );
 
-	    void reg( DlHandleBase *p ) { pointers.push_back(p); }
-	    void unreg( DlHandleBase *p );
+		void reg( DlHandleBase *p ) {
+			pointers.push_back(p);
+		}
+		void unreg( DlHandleBase *p );
 
 	private:
-	    typedef std::list<DlHandleBase*> pointer_list;
-	    pointer_list pointers;
-    };
+		typedef std::list<DlHandleBase*> pointer_list;
+		pointer_list pointers;
+	};
 
 }
 #endif

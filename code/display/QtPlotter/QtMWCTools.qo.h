@@ -40,168 +40,160 @@
 
 namespace casa {
 
-enum ProfileType
-{
-	UNKNPROF,
-	SINGPROF,
-	RECTPROF,
-	ELLPROF,
-	POLYPROF,
-	POLYLINEPROF,
-	PVPROF
-};
+	enum ProfileType {
+	    UNKNPROF,
+	    SINGPROF,
+	    RECTPROF,
+	    ELLPROF,
+	    POLYPROF,
+	    POLYLINEPROF,
+	    PVPROF
+	};
 
-class QtMWCTool
-{
+	class QtMWCTool {
 
-public:
-  QtMWCTool(): coordType("world") {}
-  virtual ~QtMWCTool() {}
-protected:
-  String coordType;
+	public:
+		QtMWCTool(): coordType("world") {}
+		virtual ~QtMWCTool() {}
+	protected:
+		String coordType;
 
-public:
-  virtual void setCoordType(const String& t) {
-             if (t == "world") coordType = t;
-             else coordType = "pixel";
-      // cout << "Object=" << objectName().toStdString()
-      //      << " setCoordType: coordType=" << coordType 
-      //      << " t=" << t << endl;
-  }
-  //String getCoordType() {return coordType;} 
+	public:
+		virtual void setCoordType(const String& t) {
+			if (t == "world") coordType = t;
+			else coordType = "pixel";
+			// cout << "Object=" << objectName().toStdString()
+			//      << " setCoordType: coordType=" << coordType
+			//      << " t=" << t << endl;
+		}
+		//String getCoordType() {return coordType;}
 
-};
+	};
 
-class QtPolyTool: public QtPTRegion,  public QtMWCTool
-{
-  Q_OBJECT
+	class QtPolyTool: public QtPTRegion,  public QtMWCTool {
+		Q_OBJECT
 
-public: 
-  QtPolyTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
-  virtual ~QtPolyTool() {}
- 
-public slots:
-  void setCoordType(const String& t);
+	public:
+		QtPolyTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
+		virtual ~QtPolyTool() {}
 
-signals:
-  void wcNotify( const String c, 
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
+	public slots:
+		void setCoordType(const String& t);
 
-protected:
-  virtual void updateRegion();
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
 
-};
+	protected:
+		virtual void updateRegion();
 
-class QtPolylineTool: public QtPolylineToolRegion,  public QtMWCTool
-{
-  Q_OBJECT
+	};
 
-public:
-  QtPolylineTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
-  virtual ~QtPolylineTool() {}
+	class QtPolylineTool: public QtPolylineToolRegion,  public QtMWCTool {
+		Q_OBJECT
 
-public slots:
-  void setCoordType(const String& t);
+	public:
+		QtPolylineTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
+		virtual ~QtPolylineTool() {}
 
-signals:
-  void wcNotify( const String c,
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
+	public slots:
+		void setCoordType(const String& t);
 
-protected:
-  virtual void updateRegion();
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
 
-};
+	protected:
+		virtual void updateRegion();
 
-class QtEllipseTool: public QtELRegion,  public QtMWCTool
-{
-  Q_OBJECT
+	};
 
-public:
-  QtEllipseTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd);
-  virtual ~QtEllipseTool() {}
+	class QtEllipseTool: public QtELRegion,  public QtMWCTool {
+		Q_OBJECT
 
-public slots:
-  void setCoordType(const String& t);
+	public:
+		QtEllipseTool(viewer::RegionSourceFactory *rf, PanelDisplay *pd);
+		virtual ~QtEllipseTool() {}
 
-signals:
-  void wcNotify( const String c,
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
+	public slots:
+		void setCoordType(const String& t);
 
-protected:
-  virtual void updateRegion();
-};
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
+
+	protected:
+		virtual void updateRegion();
+	};
 
 
-class QtRectTool: public QtRTRegion,  public QtMWCTool
-{
-  Q_OBJECT
+	class QtRectTool: public QtRTRegion,  public QtMWCTool {
+		Q_OBJECT
 
-public: 
-  QtRectTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
-  virtual ~QtRectTool() {}
+	public:
+		QtRectTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
+		virtual ~QtRectTool() {}
 
-public slots:
-  void setCoordType(const String& t);
+	public slots:
+		void setCoordType(const String& t);
 
-signals:
-  void wcNotify( const String c, 
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
 
-protected:
-  virtual void updateRegion();
-};
+	protected:
+		virtual void updateRegion();
+	};
 
-class QtCrossTool: public QtPointRegion, public QtMWCTool
-{
-  Q_OBJECT
+	class QtCrossTool: public QtPointRegion, public QtMWCTool {
+		Q_OBJECT
 
-public: 
-  QtCrossTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
-  virtual ~QtCrossTool() {}
-  /* virtual void crosshairReady(const String& evtype); */
+	public:
+		QtCrossTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
+		virtual ~QtCrossTool() {}
+		/* virtual void crosshairReady(const String& evtype); */
 
-public slots:
-  void setCoordType(const String& t);
+	public slots:
+		void setCoordType(const String& t);
 
-signals:
-  void wcNotify( const String c, 
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
 
-protected:
-  virtual void updateRegion();
-};
+	protected:
+		virtual void updateRegion();
+	};
 
-class QtPVTool: public QtPVToolRegion,  public QtMWCTool
-{
-  Q_OBJECT
+	class QtPVTool: public QtPVToolRegion,  public QtMWCTool {
+		Q_OBJECT
 
-public: 
-  QtPVTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
-  virtual ~QtPVTool() {}
- 
-public slots:
-  void setCoordType(const String& t);
+	public:
+		QtPVTool(viewer::RegionSourceFactory *rf, PanelDisplay* pd);
+		virtual ~QtPVTool() {}
 
-signals:
-  void wcNotify( const String c, 
-		 const Vector<Double> px, const Vector<Double> py,
-		 const Vector<Double> wx, const Vector<Double> wy,
-		 const ProfileType ptype);
+	public slots:
+		void setCoordType(const String& t);
 
-protected:
-  virtual void updateRegion();
+	signals:
+		void wcNotify( const String c,
+		               const Vector<Double> px, const Vector<Double> py,
+		               const Vector<Double> wx, const Vector<Double> wy,
+		               const ProfileType ptype);
 
-};
+	protected:
+		virtual void updateRegion();
+
+	};
 
 }
 

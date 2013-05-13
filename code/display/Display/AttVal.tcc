@@ -35,121 +35,110 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <class T>
-AttributeValue<T>::AttributeValue(const T &value, const Bool strict)
-: AttributeValueBase(AttValue::AtInvalid, strict),
-  itsValue(0)
-{
-  setValue(value);
-  setType();
-}
+	template <class T>
+	AttributeValue<T>::AttributeValue(const T &value, const Bool strict)
+		: AttributeValueBase(AttValue::AtInvalid, strict),
+		  itsValue(0) {
+		setValue(value);
+		setType();
+	}
 
-template <class T>
-AttributeValue<T>::AttributeValue(const Vector<T> &value, const Bool strict) 
-: AttributeValueBase(AttValue::AtInvalid, strict),
-  itsValue(0)
-{
-  itsValue = value;
-  setType();
-}
+	template <class T>
+	AttributeValue<T>::AttributeValue(const Vector<T> &value, const Bool strict)
+		: AttributeValueBase(AttValue::AtInvalid, strict),
+		  itsValue(0) {
+		itsValue = value;
+		setType();
+	}
 
-template <class T>
-AttributeValue<T>::~AttributeValue() 
-{}
+	template <class T>
+	AttributeValue<T>::~AttributeValue()
+	{}
 
-template <class T>
-AttributeValue<T>::AttributeValue(const AttributeValue<T> &other) 
-: AttributeValueBase(other.itsValueType, other.itsStrictness),
-  itsValue(other.itsValue.copy())
-{}
+	template <class T>
+	AttributeValue<T>::AttributeValue(const AttributeValue<T> &other)
+		: AttributeValueBase(other.itsValueType, other.itsStrictness),
+		  itsValue(other.itsValue.copy())
+	{}
 
 
-template <class T>
-const AttributeValue<T> &AttributeValue<T>::operator=(const AttributeValue<T>& other) 
-{
-  if (&other != this) {
-     AttributeValueBase::operator=(other);
-     setValue(other.itsValue);
-  }
-  return *this;
-}
+	template <class T>
+	const AttributeValue<T> &AttributeValue<T>::operator=(const AttributeValue<T>& other) {
+		if (&other != this) {
+			AttributeValueBase::operator=(other);
+			setValue(other.itsValue);
+		}
+		return *this;
+	}
 
-template <class T>
-void AttributeValue<T>::setValue(const T &value) 
-{
-  itsValue.resize(1);
-  itsValue(0) = value;
-}
+	template <class T>
+	void AttributeValue<T>::setValue(const T &value) {
+		itsValue.resize(1);
+		itsValue(0) = value;
+	}
 
-template <class T>
-void AttributeValue<T>::setValue(const Vector<T> &value) 
-{ 
-  itsValue.resize(0);
-  itsValue = value;
-}
+	template <class T>
+	void AttributeValue<T>::setValue(const Vector<T> &value) {
+		itsValue.resize(0);
+		itsValue = value;
+	}
 
-template <class T>
-AttributeValueBase* AttributeValue<T>::clone() const 
-{
-  return new AttributeValue<T>(*this);
-}
+	template <class T>
+	AttributeValueBase* AttributeValue<T>::clone() const {
+		return new AttributeValue<T>(*this);
+	}
 
 
-template <class T>
-Bool AttributeValue<T>::matches(const AttributeValueBase& other) const 
-{
-  return myMatch(myCast(other));
-}
+	template <class T>
+	Bool AttributeValue<T>::matches(const AttributeValueBase& other) const {
+		return myMatch(myCast(other));
+	}
 
-template <class T>
-void AttributeValue<T>::operator+=(const AttributeValueBase& other) 
-{
-  if (!AttributeValueBase::myMatch(other)) return;
-//  
-  Vector<T>& thisValue = itsValue;  
-  const Vector<T>& otherValue = myCast(other).itsValue;
+	template <class T>
+	void AttributeValue<T>::operator+=(const AttributeValueBase& other) {
+		if (!AttributeValueBase::myMatch(other)) return;
 //
-  if (thisValue.nelements() != otherValue.nelements()) return;
+		Vector<T>& thisValue = itsValue;
+		const Vector<T>& otherValue = myCast(other).itsValue;
 //
-  thisValue += otherValue;
-}
-
-
-template <class T>
-void AttributeValue<T>::setType () 
-{
-  T* p = 0;
-  AttributeValueBase::setType (AttValue::whatType(p));
-}
-
-template <class T>
-Bool AttributeValue<T>::myMatch(const AttributeValue<T>& other) const 
-{
-  const Vector<T>& thisValue = itsValue;
-  const Vector<T>& otherValue = other.itsValue;
+		if (thisValue.nelements() != otherValue.nelements()) return;
 //
-  if (getStrictness()) {
-    if (thisValue.nelements() != otherValue.nelements()) return False;
-    for (uInt i = 0; i < thisValue.nelements(); i++) {
-       if (thisValue(i) != otherValue(i)) return False;
-    }
-    return True;
-  } else {
-    for (uInt i = 0; i < thisValue.nelements(); i++) {
-      for (uInt j = 0; j < otherValue.nelements(); j++) {
-        if (thisValue(i) == otherValue(j)) return True;
-      }
-    }
-  }
-  return False;
-}
+		thisValue += otherValue;
+	}
 
 
-template <class T>
-const AttributeValue<T>& AttributeValue<T>::myCast (const AttributeValueBase& other) const
-{
-  return dynamic_cast<const AttributeValue<T>& >(other);
-}
+	template <class T>
+	void AttributeValue<T>::setType () {
+		T* p = 0;
+		AttributeValueBase::setType (AttValue::whatType(p));
+	}
+
+	template <class T>
+	Bool AttributeValue<T>::myMatch(const AttributeValue<T>& other) const {
+		const Vector<T>& thisValue = itsValue;
+		const Vector<T>& otherValue = other.itsValue;
+//
+		if (getStrictness()) {
+			if (thisValue.nelements() != otherValue.nelements()) return False;
+			for (uInt i = 0; i < thisValue.nelements(); i++) {
+				if (thisValue(i) != otherValue(i)) return False;
+			}
+			return True;
+		} else {
+			for (uInt i = 0; i < thisValue.nelements(); i++) {
+				for (uInt j = 0; j < otherValue.nelements(); j++) {
+					if (thisValue(i) == otherValue(j)) return True;
+				}
+			}
+		}
+		return False;
+	}
+
+
+	template <class T>
+	const AttributeValue<T>& AttributeValue<T>::myCast (const AttributeValueBase& other) const {
+		return dynamic_cast<const AttributeValue<T>& >(other);
+	}
 
 } //# NAMESPACE CASA - END
 

@@ -12,9 +12,9 @@
 
 namespace casa {
 
-class AnnotationEditorText;
+	class AnnotationEditorText;
 
-class AnnotationText : public Annotation {
+	class AnnotationText : public Annotation {
 	public:
 		AnnotationText( QWidget* parent);
 		void drawAnnotation( QPainter* painter );
@@ -26,7 +26,7 @@ class AnnotationText : public Annotation {
 		QString label;
 		QFont fontFamily;
 		AnnotationEditorText* annotationEditorText;
-};
+	};
 
 } /* namespace casa */
 #endif /* ANNOTATIONTEXT_H_ */

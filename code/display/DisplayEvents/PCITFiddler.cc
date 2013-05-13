@@ -33,59 +33,56 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
-PCITFiddler::PCITFiddler(PixelCanvas *pcanvas,
-			 const PCITFiddler::FiddleType &fiddletype,
-			 Display::KeySym keysym) :
-  PCInvisTool(pcanvas, keysym),
-  itsFiddleType(fiddletype) {
-}
+	PCITFiddler::PCITFiddler(PixelCanvas *pcanvas,
+	                         const PCITFiddler::FiddleType &fiddletype,
+	                         Display::KeySym keysym) :
+		PCInvisTool(pcanvas, keysym),
+		itsFiddleType(fiddletype) {
+	}
 
 // Destructor.
-PCITFiddler::~PCITFiddler() {
-}
+	PCITFiddler::~PCITFiddler() {
+	}
 
 // Set the fiddle type.
-void PCITFiddler::setFiddleType(const PCITFiddler::FiddleType &fiddletype) {
-  itsFiddleType = fiddletype;
-}
+	void PCITFiddler::setFiddleType(const PCITFiddler::FiddleType &fiddletype) {
+		itsFiddleType = fiddletype;
+	}
 
 // This function is called when a new position is ready.
-void PCITFiddler::positionReady() {
-  Float xfrac, yfrac;
-  getFractional(xfrac, yfrac);
-  Colormap *cmap = pixelCanvas()->colormap();
-  if (!cmap) {
-    return;
-  }
-  switch (itsFiddleType) {
-  case PCITFiddler::StretchAndShift:
-    {
-      Float shift, slope;
-      slope = tan((1.0 - yfrac) * 3.14159265 / 2.0);
-      // squash up xfrac so as not to waste too much space
-      // at the edges of the PixelCanvas
-      Float xfracsquashed = pow(abs(xfrac - 0.5) * 2.0, 2.0 + 1.0 / slope) / 
-	2.0;
-      xfrac = (xfrac - 0.5 < 0.0) ? 0.5 - xfracsquashed : 0.5 + xfracsquashed;
-      shift = (slope == 0.0) ? 0.5 : xfrac + (xfrac - 0.5) / slope;
-      Vector<Float> params(2);
-      params(0) = 0.5 - slope * shift;
-      params(1) = slope;
-      cmap->setShapingCoefficients(params);
-      break;
-    }
-  case PCITFiddler::BrightnessAndContrast:
-    {
-      cmap->setBrightness(xfrac, False); // suppress reinstall with False
-      cmap->setContrast(yfrac);
-      break;
-    }
-  default:
-    {
-      throw(AipsError("Unknown fiddle type in PCITFiddler::positionReady"));
-    }
-  }
-}
+	void PCITFiddler::positionReady() {
+		Float xfrac, yfrac;
+		getFractional(xfrac, yfrac);
+		Colormap *cmap = pixelCanvas()->colormap();
+		if (!cmap) {
+			return;
+		}
+		switch (itsFiddleType) {
+		case PCITFiddler::StretchAndShift: {
+			Float shift, slope;
+			slope = tan((1.0 - yfrac) * 3.14159265 / 2.0);
+			// squash up xfrac so as not to waste too much space
+			// at the edges of the PixelCanvas
+			Float xfracsquashed = pow(abs(xfrac - 0.5) * 2.0, 2.0 + 1.0 / slope) /
+			                      2.0;
+			xfrac = (xfrac - 0.5 < 0.0) ? 0.5 - xfracsquashed : 0.5 + xfracsquashed;
+			shift = (slope == 0.0) ? 0.5 : xfrac + (xfrac - 0.5) / slope;
+			Vector<Float> params(2);
+			params(0) = 0.5 - slope * shift;
+			params(1) = slope;
+			cmap->setShapingCoefficients(params);
+			break;
+		}
+		case PCITFiddler::BrightnessAndContrast: {
+			cmap->setBrightness(xfrac, False); // suppress reinstall with False
+			cmap->setContrast(yfrac);
+			break;
+		}
+		default: {
+			throw(AipsError("Unknown fiddle type in PCITFiddler::positionReady"));
+		}
+		}
+	}
 
 } //# NAMESPACE CASA - END
 

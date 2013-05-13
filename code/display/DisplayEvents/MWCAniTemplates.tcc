@@ -31,15 +31,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <class T>
-void MWCAnimator::setLinearRestriction(const String &name,
-				       const T &value, const T &increment,
-				       const T& tol) {
-  AttributeBuffer resbuf, incbuf;
-  resbuf.add(name, value, tol);
-  incbuf.add(name, increment);
-  setLinearRestrictions(resbuf, incbuf);
-}
+	template <class T>
+	void MWCAnimator::setLinearRestriction(const String &name,
+	                                       const T &value, const T &increment,
+	                                       const T& tol) {
+		AttributeBuffer resbuf, incbuf;
+		resbuf.add(name, value, tol);
+		incbuf.add(name, increment);
+		setLinearRestrictions(resbuf, incbuf);
+	}
 
 } //# NAMESPACE CASA - END
 

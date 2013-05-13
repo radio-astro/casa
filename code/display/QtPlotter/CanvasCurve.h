@@ -38,50 +38,50 @@
 
 namespace casa {
 
-typedef std::vector<double> CurveData;
-typedef std::vector<double> ErrorData;
+	typedef std::vector<double> CurveData;
+	typedef std::vector<double> ErrorData;
 
-class CanvasCurve {
-public:
-	CanvasCurve();
-	CanvasCurve( CurveData curveData, ErrorData errorData,
-			QString legend, QColor curveColor, int curveType );
-	QColor getColor() const;
-	void setColor( QColor color );
-	QString getLegend() const;
-	void setLegend( const QString& legend );
-	int getCurveType() const;
-	CurveData getCurveData();
-	Vector<float> getXValues() const;
-	Vector<float> getYValues() const;
-	CurveData getErrorData();
+	class CanvasCurve {
+	public:
+		CanvasCurve();
+		CanvasCurve( CurveData curveData, ErrorData errorData,
+		             QString legend, QColor curveColor, int curveType );
+		QColor getColor() const;
+		void setColor( QColor color );
+		QString getLegend() const;
+		void setLegend( const QString& legend );
+		int getCurveType() const;
+		CurveData getCurveData();
+		Vector<float> getXValues() const;
+		Vector<float> getYValues() const;
+		CurveData getErrorData();
 
-	QString getToolTip( double x, double y , const double X_ERROR,
-			const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const;
-	void getMinMax(Double& xmin, Double& xmax, Double& ymin,
-			Double& ymax, bool plotError ) const;
-	std::pair<double,double> getRangeFor(double xMin, double xMax, Bool& exists );
-	void scaleYValues( const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits );
-	double convertValue( double value, double freqValue, const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits);
-	virtual ~CanvasCurve();
+		QString getToolTip( double x, double y , const double X_ERROR,
+		                    const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const;
+		void getMinMax(Double& xmin, Double& xmax, Double& ymin,
+		               Double& ymax, bool plotError ) const;
+		std::pair<double,double> getRangeFor(double xMin, double xMax, Bool& exists );
+		void scaleYValues( const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits );
+		double convertValue( double value, double freqValue, const QString& oldDisplayUnits, const QString& yUnitDisplay, const QString& xUnits);
+		virtual ~CanvasCurve();
 
-private:
-	Vector<float> getErrorValues() const;
-	double getMaxY() const;
-	double getMaxError() const;
-	void storeData( const QString& oldUnits );
-	void setYValues( const Vector<float>& yValues );
-	void setErrorValues( const Vector<float>& errorValues );
+	private:
+		Vector<float> getErrorValues() const;
+		double getMaxY() const;
+		double getMaxError() const;
+		void storeData( const QString& oldUnits );
+		void setYValues( const Vector<float>& yValues );
+		void setErrorValues( const Vector<float>& errorValues );
 
-	QColor curveColor;
-	QString legend;
-	CurveData curveData;
-	ErrorData errorData;
-	QString maxUnits;
-	double maxValue;
-	double maxErrorValue;
-	int curveType;
-};
+		QColor curveColor;
+		QString legend;
+		CurveData curveData;
+		ErrorData errorData;
+		QString maxUnits;
+		double maxValue;
+		double maxErrorValue;
+		int curveType;
+	};
 
 } /* namespace casa */
 #endif /* CANVASCURVE_H_ */

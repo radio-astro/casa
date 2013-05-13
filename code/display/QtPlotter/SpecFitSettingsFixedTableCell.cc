@@ -25,11 +25,10 @@
 #include "SpecFitSettingsFixedTableCell.qo.h"
 
 SpecFitSettingsFixedTableCell::SpecFitSettingsFixedTableCell(QWidget *parent)
-    : QWidget(parent),
-      GAUSSIAN_ESTIMATE_FIXED_CENTER("c"),
-      GAUSSIAN_ESTIMATE_FIXED_PEAK( "p"),
-      GAUSSIAN_ESTIMATE_FIXED_FWHM( "f")
-{
+	: QWidget(parent),
+	  GAUSSIAN_ESTIMATE_FIXED_CENTER("c"),
+	  GAUSSIAN_ESTIMATE_FIXED_PEAK( "p"),
+	  GAUSSIAN_ESTIMATE_FIXED_FWHM( "f") {
 	ui.setupUi(this);
 }
 
@@ -38,15 +37,15 @@ QSize SpecFitSettingsFixedTableCell::sizeHint() const {
 	return suggestedSize;
 }
 
-void SpecFitSettingsFixedTableCell::setFixedCenter( bool fixed ){
+void SpecFitSettingsFixedTableCell::setFixedCenter( bool fixed ) {
 	ui.centerCheckBox->setChecked( fixed );
 }
 
-void SpecFitSettingsFixedTableCell::setFixedPeak( bool fixed ){
+void SpecFitSettingsFixedTableCell::setFixedPeak( bool fixed ) {
 	ui.peakCheckBox->setChecked( fixed );
 }
 
-void SpecFitSettingsFixedTableCell::setFixedFwhm( bool fixed ){
+void SpecFitSettingsFixedTableCell::setFixedFwhm( bool fixed ) {
 	ui.fwhmCheckBox->setChecked( fixed );
 }
 
@@ -64,26 +63,25 @@ bool SpecFitSettingsFixedTableCell::isPeakFixed() const {
 
 QString SpecFitSettingsFixedTableCell::getFixedStr() const {
 	QString fixedEstimateStr;
-	if ( ui.centerCheckBox->isChecked() ){
+	if ( ui.centerCheckBox->isChecked() ) {
 		fixedEstimateStr.append( GAUSSIAN_ESTIMATE_FIXED_CENTER );
 	}
-	if ( ui.peakCheckBox->isChecked() ){
+	if ( ui.peakCheckBox->isChecked() ) {
 		fixedEstimateStr.append( GAUSSIAN_ESTIMATE_FIXED_PEAK );
 	}
-	if ( ui.fwhmCheckBox->isChecked() ){
+	if ( ui.fwhmCheckBox->isChecked() ) {
 		fixedEstimateStr.append( GAUSSIAN_ESTIMATE_FIXED_FWHM );
 	}
 	return fixedEstimateStr;
 }
 
-void SpecFitSettingsFixedTableCell::clear(){
+void SpecFitSettingsFixedTableCell::clear() {
 	ui.centerCheckBox->setChecked( false );
 	ui.peakCheckBox->setChecked( false );
 	ui.fwhmCheckBox->setChecked( false );
 }
 
 
-SpecFitSettingsFixedTableCell::~SpecFitSettingsFixedTableCell()
-{
+SpecFitSettingsFixedTableCell::~SpecFitSettingsFixedTableCell() {
 
 }

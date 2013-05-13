@@ -40,83 +40,84 @@
 
 namespace casa {
 
-    /* class QtMWCTool; */
-    class QtMouseTool;
-    class QtRectTool;
+	/* class QtMWCTool; */
+	class QtMouseTool;
+	class QtRectTool;
 
-    namespace viewer {
+	namespace viewer {
 
 		// the RegionCreator class now has static members which allow for the
 		// retrieval of lists of RegionCreator objects for creating each type
 		// of region (currently rectangle, polygon, ellipse, and point).
 		class RegionToolManager : public QObject, public WCPositionEH, public WCMotionEH, public WCRefreshEH {
 			Q_OBJECT
-	    	public:
+		public:
 
-				enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool, PolylineTool, PVTool };
+			enum ToolTypes { RectTool, PointTool, EllipseTool, PolyTool, PolylineTool, PVTool };
 
 
-				RegionToolManager( QtRegionSourceFactory *rsf, QtDisplayPanelGui *dpg, PanelDisplay *pd );
-				~RegionToolManager( );
+			RegionToolManager( QtRegionSourceFactory *rsf, QtDisplayPanelGui *dpg, PanelDisplay *pd );
+			~RegionToolManager( );
 
-				// Required operators for event handling - these are called when
-				// events occur, and distribute the events to the "user-level"
-				// methods
-				// <group>
-				void operator()(const WCPositionEvent& ev);
-				void operator()(const WCMotionEvent& ev);
-				void operator()(const WCRefreshEvent& ev);
-				// </group>
+			// Required operators for event handling - these are called when
+			// events occur, and distribute the events to the "user-level"
+			// methods
+			// <group>
+			void operator()(const WCPositionEvent& ev);
+			void operator()(const WCMotionEvent& ev);
+			void operator()(const WCRefreshEvent& ev);
+			// </group>
 
-				void loadRegions( const std::string &path, const std::string &type );
+			void loadRegions( const std::string &path, const std::string &type );
 
-				// fetch tool for a particular region type...
-				std::tr1::shared_ptr<RegionTool> tool( region::RegionTypes );
+			// fetch tool for a particular region type...
+			std::tr1::shared_ptr<RegionTool> tool( region::RegionTypes );
 
-	    	private:
+		private:
 
-				region::RegionSelect tool_to_select(RegionTool::RegionToolTypes type ) const
-						{ return type == RegionTool::POLYTOOL ? region::SelectPoly :
-									type == RegionTool::RECTTOOL ? region::SelectRect :
-									type == RegionTool::POINTTOOL ? region::SelectPoint :
-									type == RegionTool::ELLIPSETOOL ? region::SelectEllipse :
-									type == RegionTool::POLYLINETOOL ? region::SelectPolyline : region::SelectAny; }
+			region::RegionSelect tool_to_select(RegionTool::RegionToolTypes type ) const {
+				return type == RegionTool::POLYTOOL ? region::SelectPoly :
+				       type == RegionTool::RECTTOOL ? region::SelectRect :
+				       type == RegionTool::POINTTOOL ? region::SelectPoint :
+				       type == RegionTool::ELLIPSETOOL ? region::SelectEllipse :
+				       type == RegionTool::POLYLINETOOL ? region::SelectPolyline : region::SelectAny;
+			}
 
-				typedef std::pair<double,double> linear_point_type;
-				PanelDisplay *pd;
-				typedef std::map<ToolTypes,std::tr1::shared_ptr<RegionTool> > tool_map;
-				tool_map tools;
+			typedef std::pair<double,double> linear_point_type;
+			PanelDisplay *pd;
+			typedef std::map<ToolTypes,std::tr1::shared_ptr<RegionTool> > tool_map;
+			tool_map tools;
 
-				// members for keeping track of marked (sticky-selected) regions...
-				/* region_list_type marked_regions; */
+			// members for keeping track of marked (sticky-selected) regions...
+			/* region_list_type marked_regions; */
 
-				// members for state when moving selected region...
-				bool inDrawArea( WorldCanvas *wc, const linear_point_type &new_blc, const linear_point_type &new_trc ) const;
-				region::region_list_type moving_regions;
-				linear_point_type moving_ref_point;
-				linear_point_type moving_blc;
-				linear_point_type moving_trc;
+			// members for state when moving selected region...
+			bool inDrawArea( WorldCanvas *wc, const linear_point_type &new_blc, const linear_point_type &new_trc ) const;
+			region::region_list_type moving_regions;
+			linear_point_type moving_ref_point;
+			linear_point_type moving_blc;
+			linear_point_type moving_trc;
 
-				// members for state when moving a region handle...
-				bool moving_handle;
-				viewer::region::PointInfo moving_handle_info;
-				viewer::Region *moving_handle_region;
+			// members for state when moving a region handle...
+			bool moving_handle;
+			viewer::region::PointInfo moving_handle_info;
+			viewer::Region *moving_handle_region;
 
-				// returns new region marked state...
-				bool add_mark_select( RegionTool::State &state, region::RegionSelect );
-				void clear_mark_select( RegionTool::State &state, region::RegionSelect );
-				bool setup_moving_regions( RegionTool::State &state, region::RegionSelect );
-				void setup_moving_regions_state( double linx, double liny, const region::region_list_type & );
-				void translate_moving_regions( WorldCanvas *wc, double dx, double dy );
-				bool process_double_click( RegionTool::State &state, region::RegionSelect );
+			// returns new region marked state...
+			bool add_mark_select( RegionTool::State &state, region::RegionSelect );
+			void clear_mark_select( RegionTool::State &state, region::RegionSelect );
+			bool setup_moving_regions( RegionTool::State &state, region::RegionSelect );
+			void setup_moving_regions_state( double linx, double liny, const region::region_list_type & );
+			void translate_moving_regions( WorldCanvas *wc, double dx, double dy );
+			bool process_double_click( RegionTool::State &state, region::RegionSelect );
 
-				// region source factory is needed to retrieve the region dock
-				// which can provide a list of selected regions...
-				QtRegionSourceFactory *factory;
-				QtDisplayPanelGui *panel;
+			// region source factory is needed to retrieve the region dock
+			// which can provide a list of selected regions...
+			QtRegionSourceFactory *factory;
+			QtDisplayPanelGui *panel;
 
 		};
-    }
+	}
 }
 
 

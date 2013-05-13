@@ -49,101 +49,101 @@
 
 namespace casa {
 
-    class QtViewer;
-    class QtDisplayPanel;
-    class QtDisplayData;
-    class ImageRegion;
-    class WorldCanvasHolder;
+	class QtViewer;
+	class QtDisplayPanel;
+	class QtDisplayData;
+	class ImageRegion;
+	class WorldCanvasHolder;
 
-    // <synopsis>
-    // Demo class to encapsulate 'serial' running of qtviewer into callable
-    // methods of a class; this example also applies it to the task of
-    // interactive selection of CLEAN boxes.
-    // </synopsis>
-    class QtCleanPanelGui: public QtDisplayPanelGui {
+	// <synopsis>
+	// Demo class to encapsulate 'serial' running of qtviewer into callable
+	// methods of a class; this example also applies it to the task of
+	// interactive selection of CLEAN boxes.
+	// </synopsis>
+	class QtCleanPanelGui: public QtDisplayPanelGui {
 
-	Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
-			//# implement/.../*.h files; also, makefile must include
-			//# name of this file in 'mocs' section.
-  
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+		//# implement/.../*.h files; also, makefile must include
+		//# name of this file in 'mocs' section.
 
-    protected: 
-	friend class QtViewer;
-	QtCleanPanelGui( QtViewer* v, QWidget* parent=0,
-			 const std::list<std::string> &args = std::list<std::string>( ) );
-  
-    public: 
-	~QtCleanPanelGui();
-  
-	bool supports( SCRIPTING_OPTION option ) const;
-	QVariant start_interact( const QVariant &input, int id );
-	QVariant setoptions( const QMap<QString,QVariant> &input, int id);
 
-	// the QtDBusViewerAdaptor can handle loading & registering data itself,
-	// but to connect up extra functionality, the upper-level QtDisplayPanelGui
-	// (or in the current case, the derived QtCleanPanelGui) would have to be
-	// notified that data has been added. This will allow it to set up the
-	// callbacks for drawing regions...
-	void addedData( QString type, QtDisplayData * );
+	protected:
+		friend class QtViewer;
+		QtCleanPanelGui( QtViewer* v, QWidget* parent=0,
+		                 const std::list<std::string> &args = std::list<std::string>( ) );
 
-    protected slots:
- 
-	virtual void exitStop();
-	virtual void exitDone();
-	virtual void exitNoMore();
+	public:
+		~QtCleanPanelGui();
 
-	// Connected to the rectangle region mouse tools new rectangle signal.
-	// Accumulates [/ displays] selected boxes.
-	virtual void newMouseRegion(Record mouseRegion, WorldCanvasHolder* wch);
+		bool supports( SCRIPTING_OPTION option ) const;
+		QVariant start_interact( const QVariant &input, int id );
+		QVariant setoptions( const QMap<QString,QVariant> &input, int id);
 
-	virtual void changeMaskAxis(String, String, String, std::vector<int> );
-	virtual void changeImageAxis(String, String, String, std::vector<int> );
-	virtual void changeMaskSelectionText( String x, String y, String z );
+		// the QtDBusViewerAdaptor can handle loading & registering data itself,
+		// but to connect up extra functionality, the upper-level QtDisplayPanelGui
+		// (or in the current case, the derived QtCleanPanelGui) would have to be
+		// notified that data has been added. This will allow it to set up the
+		// callbacks for drawing regions...
+		void addedData( QString type, QtDisplayData * );
 
-    signals:
-	void interact( QVariant );
+	protected slots:
 
-    protected: 
+		virtual void exitStop();
+		virtual void exitDone();
+		virtual void exitNoMore();
 
-	// scripted (via dbus) panels should override the closeEvent( ) and hide the gui
-	// instead of deleting it when it was created via a dbus script...
-	void closeEvent(QCloseEvent *event);
+		// Connected to the rectangle region mouse tools new rectangle signal.
+		// Accumulates [/ displays] selected boxes.
+		virtual void newMouseRegion(Record mouseRegion, WorldCanvasHolder* wch);
 
-	std::list<QWidget*> disabled_widgets;
- 
-	QRadioButton* addRB_;
-	QRadioButton* eraseRB_;
-	QRadioButton* allChanRB_;
-	QRadioButton* thisPlaneRB_;
-	QRadioButton* allHiddenRB_;
-	QRadioButton* thisHiddenRB_;
-	QPushButton* maskNoMorePB_;
-	QPushButton* maskDonePB_;
-	QPushButton* stopPB_;
-	QLineEdit* niterED_;
-	QLineEdit* ncyclesED_;
-	QLineEdit* threshED_;
-	Record buttonState_;
+		virtual void changeMaskAxis(String, String, String, std::vector<int> );
+		virtual void changeImageAxis(String, String, String, std::vector<int> );
+		virtual void changeMaskSelectionText( String x, String y, String z );
 
-	// standard palette...
-	QPalette default_palette;
-	// palette used when input is expected for clean...
-	QPalette input_palette;
+	signals:
+		void interact( QVariant );
 
-    private: 
-	bool in_interact_mode;
-	int interact_id;
+	protected:
 
-	void writeRegionText(const ImageRegion& imageReg, const String& filename, Float value);
+		// scripted (via dbus) panels should override the closeEvent( ) and hide the gui
+		// instead of deleting it when it was created via a dbus script...
+		void closeEvent(QCloseEvent *event);
 
-	QtDisplayData* imagedd_;
-	QtDisplayData* maskdd_;			// later: to display clean region.
-	std::string axis_change;
+		std::list<QWidget*> disabled_widgets;
 
-	CoordinateSystem csys_p;  
-	DirectionCoordinate dirCoord_p;
+		QRadioButton* addRB_;
+		QRadioButton* eraseRB_;
+		QRadioButton* allChanRB_;
+		QRadioButton* thisPlaneRB_;
+		QRadioButton* allHiddenRB_;
+		QRadioButton* thisHiddenRB_;
+		QPushButton* maskNoMorePB_;
+		QPushButton* maskDonePB_;
+		QPushButton* stopPB_;
+		QLineEdit* niterED_;
+		QLineEdit* ncyclesED_;
+		QLineEdit* threshED_;
+		Record buttonState_;
 
-};
+		// standard palette...
+		QPalette default_palette;
+		// palette used when input is expected for clean...
+		QPalette input_palette;
+
+	private:
+		bool in_interact_mode;
+		int interact_id;
+
+		void writeRegionText(const ImageRegion& imageReg, const String& filename, Float value);
+
+		QtDisplayData* imagedd_;
+		QtDisplayData* maskdd_;			// later: to display clean region.
+		std::string axis_change;
+
+		CoordinateSystem csys_p;
+		DirectionCoordinate dirCoord_p;
+
+	};
 
 
 } //# NAMESPACE CASA - END

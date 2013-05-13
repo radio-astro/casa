@@ -36,61 +36,61 @@
 #include <display/Utilities/Lowlevel.h>
 
 namespace casa {
-    namespace viewer {
+	namespace viewer {
 
-	class Preferences : public QDialog, protected Ui::Preferences {
-	    Q_OBJECT
-	    public:
-		Preferences( QWidget *parent=0 );
-		~Preferences( );
+		class Preferences : public QDialog, protected Ui::Preferences {
+			Q_OBJECT
+		public:
+			Preferences( QWidget *parent=0 );
+			~Preferences( );
 
-	    protected slots:
-		void reset_edits( );
-		void cancel_edits( );
-		void apply_edits( );
+		protected slots:
+			void reset_edits( );
+			void cancel_edits( );
+			void apply_edits( );
 
-	    protected:
-		void showEvent( QShowEvent* );
+		protected:
+			void showEvent( QShowEvent* );
 
-	    private:
-		typedef std::map<std::string,std::vector<std::string> > tokenized_type;
-		typedef std::map<std::string,std::set<std::string> > branch_count_type;
+		private:
+			typedef std::map<std::string,std::vector<std::string> > tokenized_type;
+			typedef std::map<std::string,std::set<std::string> > branch_count_type;
 
-		void init( );
-		
-		// returns the number of configuration options...
-		int tokenize( tokenized_type & );
-		// returns the number of root nodes...
-		int countbranches( const tokenized_type &, branch_count_type & );
-		// calculate tree depth...
-		int find_tree_depth( bool, const tokenized_type &, const branch_count_type & );
-		static const char *init_state[];
+			void init( );
 
-		QSignalMapper *sigmap;
-		typedef std::map<std::string,QValidator*> validate_map_type;
-		validate_map_type validate_map;
+			// returns the number of configuration options...
+			int tokenize( tokenized_type & );
+			// returns the number of root nodes...
+			int countbranches( const tokenized_type &, branch_count_type & );
+			// calculate tree depth...
+			int find_tree_depth( bool, const tokenized_type &, const branch_count_type & );
+			static const char *init_state[];
 
-		typedef std::map<std::string,std::string> rcvalues_type;
-		typedef std::map<std::string,std::string> tooltips_type;
-		typedef std::map<std::string,QLineEdit*> rcedits_type;
-		// tool tips for leaves & nodes...
-		tooltips_type tips;
-		// initial viewer default values...
-		rcvalues_type defaults;
-		// rc values to edit boxes...
-		rcedits_type edits;
+			QSignalMapper *sigmap;
+			typedef std::map<std::string,QValidator*> validate_map_type;
+			validate_map_type validate_map;
 
-		const int init_fields;
-		const int tip_offset;
-		const int role_offset;
-		const int default_offset;
-		const int validate_offset;
+			typedef std::map<std::string,std::string> rcvalues_type;
+			typedef std::map<std::string,std::string> tooltips_type;
+			typedef std::map<std::string,QLineEdit*> rcedits_type;
+			// tool tips for leaves & nodes...
+			tooltips_type tips;
+			// initial viewer default values...
+			rcvalues_type defaults;
+			// rc values to edit boxes...
+			rcedits_type edits;
 
-		// connection to rc file
-		Casarc &rc;
-	};
+			const int init_fields;
+			const int tip_offset;
+			const int role_offset;
+			const int default_offset;
+			const int validate_offset;
 
-    }
+			// connection to rc file
+			Casarc &rc;
+		};
+
+	}
 }
 
 #endif

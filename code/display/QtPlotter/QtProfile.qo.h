@@ -70,15 +70,17 @@
 #include <graphics/X11/X_exit.h>
 #include <display/QtPlotter/QtProfileGUI.ui.h>
 
-inline void initPlotterResource() { Q_INIT_RESOURCE(QtPlotter); }
+inline void initPlotterResource() {
+	Q_INIT_RESOURCE(QtPlotter);
+}
 
 
-namespace casa { 
+namespace casa {
 
-class QtProfilePrefs;
-class ColorSummaryWidget;
-class LegendPreferences;
-class QtCanvas;
+	class QtProfilePrefs;
+	class ColorSummaryWidget;
+	class LegendPreferences;
+	class QtCanvas;
 
 //Note:  The purpose of the SpecFitMonitor interface is to provide
 //a communications interface between the class doing spectral line
@@ -86,294 +88,300 @@ class QtCanvas;
 //this class and the class doing the work of spectral fitting as
 //much as possible.
 
-class QtProfile : public QMainWindow, Ui::QtProfileGUI, public ProfileTaskMonitor
-{
-	Q_OBJECT
+	class QtProfile : public QMainWindow, Ui::QtProfileGUI, public ProfileTaskMonitor {
+		Q_OBJECT
 
-public:
-	enum ExtrType {
-		MEAN     =0,
-		MEDIAN   =1,
-		SUM      =2,
-		MSE      =3,
-		RMSE     =4,
-		SQRTSUM  =5,
-		NSQRTSUM =6,
-		FLUX     =7,
-		EFLUX    =8,
+	public:
+		enum ExtrType {
+		    MEAN     =0,
+		    MEDIAN   =1,
+		    SUM      =2,
+		    MSE      =3,
+		    RMSE     =4,
+		    SQRTSUM  =5,
+		    NSQRTSUM =6,
+		    FLUX     =7,
+		    EFLUX    =8,
+		};
+
+		enum PlotType {
+		    PMEAN,
+		    PMEDIAN,
+		    PSUM,
+		    //PVRMSE,
+		    PFLUX=7,
+		};
+
+		enum ErrorType {
+		    PNOERROR,
+		    PERMSE,
+		    PPROPAG
+		};
+
+
+
+		QtProfile(ImageInterface<Float>* img, const char *name = 0,
+		          QWidget *parent = 0, std::string rcstr="prf");
+
+		~QtProfile();
+		MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
+
+		virtual std::string rcid( ) const {
+			return rcid_;
+		}
+		void setPath( QString filePath ) {
+			imagePath = filePath;
+		}
+
+
+		//Allows the profiler to come up specialized to do spectroscopy
+		//or another task.
+		void setPurpose( ProfileTaskMonitor::PURPOSE purpose );
+
+		//These methods are from the ProfileTaskMoniter interface.
+		//Their purpose is to provide the class doing the spectral
+		//profile fitting with initial input values, to inform
+		//this class of status and log messages indicated the result
+		//of a spectral fit, and to perform moments/collapsing.
+		void postStatus( String status );
+		Vector<Float> getXValues() const;
+		Vector<Float> getYValues() const;
+		Vector<Float> getZValues() const;
+		QString getYUnit() const;
+		QString getYUnitPrefix() const;
+		String getXAxisUnit() const;
+		QString getFileName() const;
+		QString getImagePath() const;
+		const ImageInterface<Float>* getImage( const QString& imageName="") const;
+		const void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
+		void persist( const QString& key, const QString& value );
+		QString read( const QString & key ) const;
+		void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
+		void setPosition( const QList<double>& xValues, const QList<double>& yValues );
+		void processTrackRecord( const String& dataName, const String& positionInfo );
+	public slots:
+		void zoomIn();
+		void zoomOut();
+		void zoomNeutral();
+		void print();
+		void saveGraphic();
+		void printExp();
+		void saveExp();
+		void exportProfile();
+		void up();
+		void down();
+		void left();
+		void right();
+		void preferences();
+		void frameChanged( int );
+		void setPreferences(bool stateAutoX, bool stateAutoY, int showGrid,
+		                    int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
+		                    bool displayStepFunction, bool opticalFitter, bool showChannelLine );
+		void curveColorPreferences();
+		void legendPreferences();
+		void togglePalette( int modeIndex );
+
+		void setPlotError(int);
+		void changeCoordinate(const QString &text);
+		void changeFrame(const QString &text);
+
+		void changeCoordinateType( const QString & text );
+
+		void changeTopAxisCoordinateType( const QString & text );
+		virtual void closeEvent ( QCloseEvent *);
+		void resetProfile(ImageInterface<Float>* img, const char *name = 0);
+		void wcChanged( const String,
+		                const Vector<Double>, const Vector<Double>,
+		                const Vector<Double>, const Vector<Double>,
+		                const ProfileType);
+		void redraw( );
+		void changePlotType(const QString &text);
+		void changeErrorType(const QString &text);
+
+		void changeAxisOld(String xa, String ya, String za, std::vector<int>);
+		void changeAxis(String xa, String ya, String za, std::vector<int>);
+		void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
+
+		void plotMainCurve();
+		void setCollapseRange(double xmin, double xmax);
+
+		void overplot(QHash<QString, ImageInterface<float>*>);
+
+		void newRegion( int, const QString &shape, const QString &name,
+		                const QList<double> &world_x, const QList<double> &world_y,
+		                const QList<int> &pixel_x, const QList<int> &pixel_y,
+		                const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
+
+		void updateRegion( int, viewer::region::RegionChanges,
+		                   const QList<double> &world_x, const QList<double> &world_y,
+		                   const QList<int> &pixel_x, const QList<int> &pixel_y );
+		void pixelsChanged(int, int );
+		void clearPaletteModes();
+
+	signals:
+		void hideProfile();
+		void coordinateChange(const String&);
+		void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
+		void channelSelect( int channelIndex );
+		void adjustPosition( double tlcx, double tlcy, double brcx, double brcy );
+		void movieChannel( int startChannel, int endChannel );
+
+	private:
+		void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
+		void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
+		void fillPlotTypes(const ImageInterface<Float>* img);
+		void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
+		void printIt(QPrinter*);
+		bool exportASCIISpectrum(QString &fn);
+		bool exportFITSSpectrum(QString &fn);
+		void messageFromProfile(QString &msg);
+		void setUnitsText( String unitStr );
+		void resetYUnits( const QString& units);
+
+		/**
+		 * Returns false if first vector value is greater than the last
+		 * vector value; otherwise returns true.
+		 */
+		bool isAxisAscending(const Vector<Float>& axisValues ) const;
+
+		void setTitle( const QString& shape );
+		void copyToLastEvent( const String& c, const Vector<Double> &px,
+		                      const Vector<Double> &py,
+		                      const Vector<Double> &wx,
+		                      const Vector<Double> &wy );
+		void setPlotType( int wcArraySize );
+		bool checkCube();
+		void assignCoordinate(const String& c);
+		void initializeCoordinateVectors(const Vector<double> &px, const Vector<double> &py,
+		                                 const Vector<double> &wx, const Vector<double> &wy, Vector<double> &pxv,
+		                                 Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
+		void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
+		                       const Vector<double> &wxv, const Vector<double> &wyv );
+		bool getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
+		                                 Vector<Float> &z_xval, Vector<Float> &z_yval,
+		                                 const String& xytype, const String& specaxis,
+		                                 const Int& whichStokes, const Int& whichTabular,
+		                                 const Int& whichLinear, const String& xunits,
+		                                 const String& specFrame, const Int &combineType,
+		                                 const Int& whichQuality, const String& restValue );
+		bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
+		                             const String& coordinateType, const String& xAxisUnit,
+		                             Vector<Float> &z_xval, Vector<Float> &z_yval );
+		bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
+		void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
+		                       const Vector<double> wxv, const Vector<double> wyv );
+		void addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
+		                         const QString& label );
+		void adjustTopAxisSettings();
+		void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
+		void toggleAction( QAction* action );
+		Int scaleAxis();
+		void addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM );
+		void initializeSolidAngle() const;
+		//Conversion
+		QString getRaDec(double x, double y);
+
+		//Finds the channel index closest to the passed in value.
+		int findNearestChannel( float xval ) const;
+		void initPreferences();
+		void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
+		void setYUnitConversionVisibility( bool visible );
+		ImageAnalysis* analysis;
+		ImageInterface<Float>* image;
+
+		QHash<QString, ImageAnalysis*> *over;
+		const String WORLD_COORDINATES;
+		String coordinate;
+		String coordinateType;
+		String xaxisUnit;
+		String ctypeUnit;
+		String spcRefFrame;
+		String cSysRval;
+		QString fileName;
+		QString imagePath;
+		QString position;
+		QString yUnit;
+		QString yUnitPrefix;
+
+		QString xpos;
+		QString ypos;
+		int cube;
+
+		int npoints;
+		int npoints_old;
+
+		int stateMProf;
+		int stateRel;
+
+		Vector<Float> z_xval;
+		Vector<Float> z_yval;
+		Vector<Double> lastPX, lastPY;
+		Vector<Double> lastWX, lastWY;
+		Vector<Float> z_eval;
+		QString region;
+
+		String last_event_cs;
+		Vector<Double> last_event_px, last_event_py;
+		Vector<Double> last_event_wx, last_event_wy;
+
+		// connection to rc file
+		Casarc &rc;
+		// rc id for this panel type
+		std::string rcid_;
+
+		QtProfile::PlotType  itsPlotType;
+		QtProfile::ErrorType itsErrorType;
+
+		LogIO *itsLog;
+		Int ordersOfM_;
+		Bool newCollapseVals;
+
+		static const QString PLOT_TYPE_FLUX;
+		static const QString PLOT_TYPE_MEAN;
+		static const QString PLOT_TYPE_MEDIAN;
+		static const QString PLOT_TYPE_SUM;
+
+		class spectra_info {
+		public:
+			spectra_info( ) { }
+			spectra_info( const QString &s ) : shape_(s) { }
+			spectra_info( const spectra_info &other ) : shape_(other.shape_) { }
+			const spectra_info &operator=( const spectra_info &other ) {
+				shape_ = other.shape_;
+				return *this;
+			}
+			const QString &shape( ) {
+				return shape_;
+			}
+		private:
+			QString shape_;
+		};
+
+
+		typedef std::map<int,spectra_info> SpectraInfoMap;
+		const int NO_REGION_ID;
+		int current_region_id;
+		SpectraInfoMap spectra_info_map;
+
+
+		ColorSummaryWidget* colorSummaryWidget;
+		LegendPreferences* legendPreferencesDialog;
+		QtCanvas* pixelCanvas;
+		QtProfilePrefs* profilePrefs;
+		int frameIndex;
+		bool newOverplots;
+		pair<double,double> getMaximumTemperature();
+		void postConversionWarning( QString unitStr);
+		void adjustPlotUnits( );
+	private slots:
+		void changeTopAxis();
+		void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );
+		void setDisplayYUnits( const QString& unitStr );
+		void channelSelect(float xval);
+		void channelRangeSelect( float channelStart, float channelEnd );
+
+
 	};
-
-	enum PlotType {
-		PMEAN,
-		PMEDIAN,
-		PSUM,
-		//PVRMSE,
-		PFLUX=7,
-	};
-
-	enum ErrorType {
-		PNOERROR,
-		PERMSE,
-		PPROPAG
-	};
-
-
-
-	QtProfile(ImageInterface<Float>* img, const char *name = 0,
-			QWidget *parent = 0, std::string rcstr="prf");
-
-	~QtProfile();
-	MFrequency::Types determineRefFrame( ImageInterface<Float>* img, bool check_native_frame = false );
-
-	virtual std::string rcid( ) const { return rcid_; }
-	void setPath( QString filePath ){
-		imagePath = filePath;
-	}
-
-
-	//Allows the profiler to come up specialized to do spectroscopy
-	//or another task.
-	void setPurpose( ProfileTaskMonitor::PURPOSE purpose );
-
-	//These methods are from the ProfileTaskMoniter interface.
-	//Their purpose is to provide the class doing the spectral
-	//profile fitting with initial input values, to inform
-	//this class of status and log messages indicated the result
-	//of a spectral fit, and to perform moments/collapsing.
-	void postStatus( String status );
-	Vector<Float> getXValues() const;
-	Vector<Float> getYValues() const;
-	Vector<Float> getZValues() const;
-	QString getYUnit() const;
-	QString getYUnitPrefix() const;
-	String getXAxisUnit() const;
-	QString getFileName() const;
-	QString getImagePath() const;
-	const ImageInterface<Float>* getImage( const QString& imageName="") const;
-	const void getPixelBounds(Vector<double>& pixelX, Vector<double>& pixelY) const;
-	void persist( const QString& key, const QString& value );
-	QString read( const QString & key ) const;
-	void imageCollapsed(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
-	void setPosition( const QList<double>& xValues, const QList<double>& yValues );
-	void processTrackRecord( const String& dataName, const String& positionInfo );
-public slots:
-	void zoomIn();
-	void zoomOut();
-	void zoomNeutral();
-	void print();
-	void saveGraphic();
-	void printExp();
-	void saveExp();
-	void exportProfile();
-	void up();
-	void down();
-	void left();
-	void right();
-	void preferences();
-	void frameChanged( int );
-	void setPreferences(bool stateAutoX, bool stateAutoY, int showGrid,
-			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-			bool displayStepFunction, bool opticalFitter, bool showChannelLine );
-	void curveColorPreferences();
-	void legendPreferences();
-	void togglePalette( int modeIndex );
-
-	void setPlotError(int);
-	void changeCoordinate(const QString &text);
-	void changeFrame(const QString &text);
-
-	void changeCoordinateType( const QString & text );
-
-	void changeTopAxisCoordinateType( const QString & text );
-	virtual void closeEvent ( QCloseEvent *);
-	void resetProfile(ImageInterface<Float>* img, const char *name = 0);
-	void wcChanged( const String,
-			const Vector<Double>, const Vector<Double>,
-			const Vector<Double>, const Vector<Double>,
-			const ProfileType);
-	void redraw( );
-	void changePlotType(const QString &text);
-	void changeErrorType(const QString &text);
-
-	void changeAxisOld(String xa, String ya, String za, std::vector<int>);
-	void changeAxis(String xa, String ya, String za, std::vector<int>);
-	void changeSpectrum(String spcTypeUnit, String spcRval, String spcSys);
-
-	void plotMainCurve();
-	void setCollapseRange(double xmin, double xmax);
-
-	void overplot(QHash<QString, ImageInterface<float>*>);
-
-	void newRegion( int, const QString &shape, const QString &name,
-			const QList<double> &world_x, const QList<double> &world_y,
-			const QList<int> &pixel_x, const QList<int> &pixel_y,
-			const QString &linecolor, const QString &text, const QString &font, int fontsize, int fontstyle );
-
-	void updateRegion( int, viewer::region::RegionChanges,
-			   const QList<double> &world_x, const QList<double> &world_y,
-			   const QList<int> &pixel_x, const QList<int> &pixel_y );
-	void pixelsChanged(int, int );
-	void clearPaletteModes();
-
-signals:
-   void hideProfile();
-   void coordinateChange(const String&);
-   void showCollapsedImg(String path, String dataType, String displayType, Bool autoRegister, Bool tmpData, ImageInterface<Float>* img);
-   void channelSelect( int channelIndex );
-   void adjustPosition( double tlcx, double tlcy, double brcx, double brcy );
-   void movieChannel( int startChannel, int endChannel );
-
-private:
-   void stringToPlotType(const QString &text,  QtProfile::PlotType &pType);
-   void stringToErrorType(const QString &text, QtProfile::ErrorType &eType);
-   void fillPlotTypes(const ImageInterface<Float>* img);
-   void getcoordTypeUnit(String &ctypeUnitStr, String &cTypeStr, String &unitStr);
-   void printIt(QPrinter*);
-   bool exportASCIISpectrum(QString &fn);
-   bool exportFITSSpectrum(QString &fn);
-   void messageFromProfile(QString &msg);
-   void setUnitsText( String unitStr );
-   void resetYUnits( const QString& units);
-
-   /**
-    * Returns false if first vector value is greater than the last
-    * vector value; otherwise returns true.
-    */
-   bool isAxisAscending(const Vector<Float>& axisValues ) const;
-
-   void setTitle( const QString& shape );
-   void copyToLastEvent( const String& c, const Vector<Double> &px,
-   	    		const Vector<Double> &py,
-   	    		const Vector<Double> &wx,
-   	    		const Vector<Double> &wy );
-   void setPlotType( int wcArraySize );
-   bool checkCube();
-   void assignCoordinate(const String& c);
-   void initializeCoordinateVectors(const Vector<double> &px, const Vector<double> &py,
-   			const Vector<double> &wx, const Vector<double> &wy, Vector<double> &pxv,
-   			Vector<double> &pyv, Vector<double> &wxv, Vector<double> &wyv) const;
-   void setPositionStatus(const Vector<double> &pxv, const Vector<double> &pyv,
-   								const Vector<double> &wxv, const Vector<double> &wyv );
-   bool getFrequencyProfileWrapper( const Vector<double> &wxv, const Vector<double> &wyv,
-   		Vector<Float> &z_xval, Vector<Float> &z_yval,
-   		const String& xytype, const String& specaxis,
-   		const Int& whichStokes, const Int& whichTabular,
-   		const Int& whichLinear, const String& xunits,
-   		const String& specFrame, const Int &combineType,
-   		const Int& whichQuality, const String& restValue );
-   bool assignFrequencyProfile( const Vector<double> &wxv, const Vector<double> &wyv,
-   		   const String& coordinateType, const String& xAxisUnit,
-   		   Vector<Float> &z_xval, Vector<Float> &z_yval );
-   bool setErrorPlotting( const Vector<double> &wxv, const Vector<double> &wyv);
-   void storeCoordinates( const Vector<double> pxv, const Vector<double> pyv,
-									const Vector<double> wxv, const Vector<double> wyv );
-   void addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
-   			const QString& label );
-   void adjustTopAxisSettings();
-   void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
-   void toggleAction( QAction* action );
-   Int scaleAxis();
-   void addImageAnalysisGraph( const Vector<double> &wxv, const Vector<double> &wyv, Int ordersOfM );
-   void initializeSolidAngle() const;
-   //Conversion
-   QString getRaDec(double x, double y);
-
-   //Finds the channel index closest to the passed in value.
-   int findNearestChannel( float xval ) const;
-   void initPreferences();
-   void updateAxisUnitCombo( const QString& textToMatch, QComboBox* axisUnitCombo );
-   void setYUnitConversionVisibility( bool visible );
-   ImageAnalysis* analysis;
-   ImageInterface<Float>* image;
-
-   QHash<QString, ImageAnalysis*> *over;
-   const String WORLD_COORDINATES;
-   String coordinate;
-   String coordinateType;
-   String xaxisUnit;
-   String ctypeUnit;
-   String spcRefFrame;
-   String cSysRval;
-   QString fileName;
-   QString imagePath;
-   QString position;
-   QString yUnit;
-   QString yUnitPrefix;
-
-   QString xpos;
-   QString ypos;
-   int cube;
-
-   int npoints;
-   int npoints_old;
-
-   int stateMProf;
-   int stateRel;
-
-   Vector<Float> z_xval;
-   Vector<Float> z_yval;
-   Vector<Double> lastPX, lastPY;
-   Vector<Double> lastWX, lastWY;
-   Vector<Float> z_eval;
-   QString region;
-
-   String last_event_cs;
-   Vector<Double> last_event_px, last_event_py;
-   Vector<Double> last_event_wx, last_event_wy;
-
-   // connection to rc file
-   Casarc &rc;
-   // rc id for this panel type
-   std::string rcid_;
-
-   QtProfile::PlotType  itsPlotType;
-   QtProfile::ErrorType itsErrorType;
-
-   LogIO *itsLog;
-   Int ordersOfM_;
-   Bool newCollapseVals;
-
-   static const QString PLOT_TYPE_FLUX;
-   static const QString PLOT_TYPE_MEAN;
-   static const QString PLOT_TYPE_MEDIAN;
-   static const QString PLOT_TYPE_SUM;
-
-   class spectra_info {
-   public:
-   	spectra_info( ) { }
-   	spectra_info( const QString &s ) : shape_(s) { }
-   	spectra_info( const spectra_info &other ) : shape_(other.shape_) { }
-   	const spectra_info &operator=( const spectra_info &other ) { shape_ = other.shape_; return *this; }
-   	const QString &shape( ) { return shape_; }
-   private:
-   	QString shape_;
-   };
-
-
-   typedef std::map<int,spectra_info> SpectraInfoMap;
-   const int NO_REGION_ID;
-   int current_region_id;
-   SpectraInfoMap spectra_info_map;
-
-
-   ColorSummaryWidget* colorSummaryWidget;
-   LegendPreferences* legendPreferencesDialog;
-   QtCanvas* pixelCanvas;
-   QtProfilePrefs* profilePrefs;
-   int frameIndex;
-   bool newOverplots;
-   pair<double,double> getMaximumTemperature();
-   void postConversionWarning( QString unitStr);
-   void adjustPlotUnits( );
-   private slots:
-   	   void changeTopAxis();
-   	   void updateXAxisLabel( const QString &text, QtPlotSettings::AxisIndex axisIndex );
-   	   void setDisplayYUnits( const QString& unitStr );
-   	   void channelSelect(float xval);
-   	   void channelRangeSelect( float channelStart, float channelEnd );
-
-
-};
 
 }
 #endif

@@ -62,8 +62,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <synopsis>
 // This class forms the base for classes which draw axis grids,
-// axes, ticks and tick labels on WorldCanvases.  In its 
-// present form, it is really a heavily pruned form of the 
+// axes, ticks and tick labels on WorldCanvases.  In its
+// present form, it is really a heavily pruned form of the
 // DisplayData.
 // </synopsis>
 //
@@ -72,7 +72,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //
 // <motivation>
 // Axis labels are a necessary annotation for meaningful displays
-// of data.  This class is motivated by the desire to provide 
+// of data.  This class is motivated by the desire to provide
 // (eventually) many different types of axis labelling.
 // </motivation>
 //
@@ -81,223 +81,241 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> perhaps convert to a DisplayData?
 // </todo>
 
-class WCAxisLabeller : public DisplayOptions {
+	class WCAxisLabeller : public DisplayOptions {
 
- public:
+	public:
 
-  // Constructor
-  WCAxisLabeller();
+		// Constructor
+		WCAxisLabeller();
 
-  // Destructor
-  virtual ~WCAxisLabeller();
+		// Destructor
+		virtual ~WCAxisLabeller();
 
-  // Draw axis labels for the provided WorldCanvas refresh event
-  virtual Bool draw(const WCRefreshEvent &ev) = 0;
+		// Draw axis labels for the provided WorldCanvas refresh event
+		virtual Bool draw(const WCRefreshEvent &ev) = 0;
 
-  // Invalidate any cached drawings
-  virtual void invalidate() { };
+		// Invalidate any cached drawings
+		virtual void invalidate() { };
 
-  // install the default options for this DisplayData
-  virtual void setDefaultOptions();
+		// install the default options for this DisplayData
+		virtual void setDefaultOptions();
 
-  // apply options stored in rec to the DisplayData; return value
-  // True means a refresh is needed.  Any fields added to the
-  // updatedOptions argument are options which have changed in
-  // some way due to the setting of other options - ie. they 
-  // are context sensitive.
-  virtual Bool setOptions(const Record &rec, Record &updatedOptions);
+		// apply options stored in rec to the DisplayData; return value
+		// True means a refresh is needed.  Any fields added to the
+		// updatedOptions argument are options which have changed in
+		// some way due to the setting of other options - ie. they
+		// are context sensitive.
+		virtual Bool setOptions(const Record &rec, Record &updatedOptions);
 
-  // retrieve the current and default options and parameter types.
-  virtual Record getOptions() const;
+		// retrieve the current and default options and parameter types.
+		virtual Record getOptions() const;
 
-  // set/return whether labelling is on or off.  This is a global
-  // switch.  If True is returned from the set function, then a
-  // refresh is required.
-  // <group>
-  virtual Bool setAxisLabelSwitch(const Bool labelswitch = False);
-  virtual Bool axisLabelSwitch() const
-    { return itsOptionsAxisLabelSwitch; }
-  // </group>
+		// set/return whether labelling is on or off.  This is a global
+		// switch.  If True is returned from the set function, then a
+		// refresh is required.
+		// <group>
+		virtual Bool setAxisLabelSwitch(const Bool labelswitch = False);
+		virtual Bool axisLabelSwitch() const {
+			return itsOptionsAxisLabelSwitch;
+		}
+		// </group>
 
-  // set/return the title text.  If True is returned from the set
-  // function then a refresh is required.
-  // <group>
-  virtual Bool setTitleText(const String text = String(""));
-  virtual String titleText() const 
-    { return itsOptionsTitleText; }
-  // </group>
+		// set/return the title text.  If True is returned from the set
+		// function then a refresh is required.
+		// <group>
+		virtual Bool setTitleText(const String text = String(""));
+		virtual String titleText() const {
+			return itsOptionsTitleText;
+		}
+		// </group>
 
-  // set/return the color of the title text.  If True is returned from
-  // the set function, then a refresh should be called.
-  // <group>
-  virtual Bool setTitleTextColor(const String color = String("foreground"));
-  virtual String titleTextColor() const
-    { return itsOptionsTitleTextColor; }
-  // </group>
+		// set/return the color of the title text.  If True is returned from
+		// the set function, then a refresh should be called.
+		// <group>
+		virtual Bool setTitleTextColor(const String color = String("foreground"));
+		virtual String titleTextColor() const {
+			return itsOptionsTitleTextColor;
+		}
+		// </group>
 
-  // set/return the X and Y label text.  If True is returned from 
-  // the set functions, then a refresh is needed.
-  // <group>
-  virtual Bool setXAxisText(const String text = String(""));
-  virtual Bool setYAxisText(const String text = String(""));
-  virtual Bool unsetXAxisText();
-  virtual Bool unsetYAxisText();
-  virtual String xAxisText() const;
-  virtual String yAxisText() const;
-  virtual Bool isXAxisTextUnset() const
-    { return itsOptionsXAxisTextUnset; }
-  virtual Bool isYAxisTextUnset() const
-    { return itsOptionsYAxisTextUnset; }
-  // </group>
+		// set/return the X and Y label text.  If True is returned from
+		// the set functions, then a refresh is needed.
+		// <group>
+		virtual Bool setXAxisText(const String text = String(""));
+		virtual Bool setYAxisText(const String text = String(""));
+		virtual Bool unsetXAxisText();
+		virtual Bool unsetYAxisText();
+		virtual String xAxisText() const;
+		virtual String yAxisText() const;
+		virtual Bool isXAxisTextUnset() const {
+			return itsOptionsXAxisTextUnset;
+		}
+		virtual Bool isYAxisTextUnset() const {
+			return itsOptionsYAxisTextUnset;
+		}
+		// </group>
 
-  // set/return the color of the label text.  If True is returned
-  // from the set function, then a refresh is needed.
-  // <group>
-  virtual Bool setXAxisTextColor(const String color = String("foreground"));
-  virtual Bool setYAxisTextColor(const String color = String("foreground"));
-  virtual String xAxisTextColor() const
-    { return itsOptionsXAxisTextColor; }
-  virtual String yAxisTextColor() const
-    { return itsOptionsYAxisTextColor; }
-  // </group>
+		// set/return the color of the label text.  If True is returned
+		// from the set function, then a refresh is needed.
+		// <group>
+		virtual Bool setXAxisTextColor(const String color = String("foreground"));
+		virtual Bool setYAxisTextColor(const String color = String("foreground"));
+		virtual String xAxisTextColor() const {
+			return itsOptionsXAxisTextColor;
+		}
+		virtual String yAxisTextColor() const {
+			return itsOptionsYAxisTextColor;
+		}
+		// </group>
 
-  // set/return what type of grid is marked in each direction.
-  // If True is returned from the set functions, a refresh is needed.
-  // <group>
-  virtual Bool setXGridType(const String type = String("None"));
-  virtual Bool setYGridType(const String type = String("None"));
-  virtual String xGridType() const 
-    { return itsOptionsXGridType; }
-  virtual String yGridType() const
-    { return itsOptionsYGridType; }
-  // </group>
+		// set/return what type of grid is marked in each direction.
+		// If True is returned from the set functions, a refresh is needed.
+		// <group>
+		virtual Bool setXGridType(const String type = String("None"));
+		virtual Bool setYGridType(const String type = String("None"));
+		virtual String xGridType() const {
+			return itsOptionsXGridType;
+		}
+		virtual String yGridType() const {
+			return itsOptionsYGridType;
+		}
+		// </group>
 
-  // set/return the color of the grid lines per direction.  If True
-  // is returned from the set functions, a refresh is needed.
-  // <group>
-  virtual Bool setXGridColor(const String color = String("foreground"));
-  virtual Bool setYGridColor(const String color = String("foreground"));
-  virtual String xGridColor() const
-    { return itsOptionsXGridColor; }
-  virtual String yGridColor() const
-    { return itsOptionsYGridColor; }
-  // </group>
+		// set/return the color of the grid lines per direction.  If True
+		// is returned from the set functions, a refresh is needed.
+		// <group>
+		virtual Bool setXGridColor(const String color = String("foreground"));
+		virtual Bool setYGridColor(const String color = String("foreground"));
+		virtual String xGridColor() const {
+			return itsOptionsXGridColor;
+		}
+		virtual String yGridColor() const {
+			return itsOptionsYGridColor;
+		}
+		// </group>
 
-  // set/return the tick length in millimetres.  If True is returned
-  // from the set function, then a refresh is probably needed.
-  // <group>
-  virtual Bool setTickLength(const Float length = 4.0);
-  virtual Float tickLength() const 
-  { return itsOptionsTickLength; }
-  // </group>
+		// set/return the tick length in millimetres.  If True is returned
+		// from the set function, then a refresh is probably needed.
+		// <group>
+		virtual Bool setTickLength(const Float length = 4.0);
+		virtual Float tickLength() const {
+			return itsOptionsTickLength;
+		}
+		// </group>
 
-  // set/return the position of World label strings
-  // <group>
-  virtual Bool setLabelPosition(const String position = String("Auto"));
-  virtual String labelPosition() const
-  { return itsOptionsLabelPos; }
-  // </group>
+		// set/return the position of World label strings
+		// <group>
+		virtual Bool setLabelPosition(const String position = String("Auto"));
+		virtual String labelPosition() const {
+			return itsOptionsLabelPos;
+		}
+		// </group>
 
 
-  // set/return whether there is a plot outline or not.  If True is
-  // returned from the set function, then a refresh is probably needed.
-  // <group>
-  virtual Bool setPlotOutline(const Bool outline = True);
-  virtual Bool plotOutline() const
-    { return itsOptionsPlotOutline; }
-  // </group>
+		// set/return whether there is a plot outline or not.  If True is
+		// returned from the set function, then a refresh is probably needed.
+		// <group>
+		virtual Bool setPlotOutline(const Bool outline = True);
+		virtual Bool plotOutline() const {
+			return itsOptionsPlotOutline;
+		}
+		// </group>
 
-  // set/return the color used for the plot outline.  If True is 
-  // returned from the set function, then a refresh should be 
-  // enacted.
-  // <group>
-  virtual Bool setPlotOutlineColor(const String color = String("foreground"));
-  virtual String plotOutlineColor() const
-    { return itsOptionsPlotOutlineColor; }
-  // </group>
+		// set/return the color used for the plot outline.  If True is
+		// returned from the set function, then a refresh should be
+		// enacted.
+		// <group>
+		virtual Bool setPlotOutlineColor(const String color = String("foreground"));
+		virtual String plotOutlineColor() const {
+			return itsOptionsPlotOutlineColor;
+		}
+		// </group>
 
-  // set/return the char size for the plot graphics
-  // <group>
-  virtual Bool setCharSize(const Float size = 1.2);
-  virtual Float charSize() const
-    { return itsOptionsCharSize; }
-  // </group>
+		// set/return the char size for the plot graphics
+		// <group>
+		virtual Bool setCharSize(const Float size = 1.2);
+		virtual Float charSize() const {
+			return itsOptionsCharSize;
+		}
+		// </group>
 
-  // set/return the char font for the plot graphics
-  // <group>
-  virtual Bool setCharFont(const String font = "normal");
-  virtual String charFont() const
-    { return itsOptionsCharFont; }
-  // </group>
+		// set/return the char font for the plot graphics
+		// <group>
+		virtual Bool setCharFont(const String font = "normal");
+		virtual String charFont() const {
+			return itsOptionsCharFont;
+		}
+		// </group>
 
-  // set/return the line width for the plot graphics.
-  // <group>
-  /*
-  virtual Bool setLineWidth(const Int width = 0);
-  virtual Int lineWidth() const 
-    { return itsOptionsLineWidth; }
-  */
-  virtual Bool setLineWidth(const Float width = 0.0);
-  virtual Float lineWidth() const
-    { return itsOptionsLineWidth; }
-  // </group>
+		// set/return the line width for the plot graphics.
+		// <group>
+		/*
+		virtual Bool setLineWidth(const Int width = 0);
+		virtual Int lineWidth() const
+		  { return itsOptionsLineWidth; }
+		*/
+		virtual Bool setLineWidth(const Float width = 0.0);
+		virtual Float lineWidth() const {
+			return itsOptionsLineWidth;
+		}
+		// </group>
 
-  static const String LABEL_CHAR_SIZE;
-  static const String PLOT_TITLE;
- private:
+		static const String LABEL_CHAR_SIZE;
+		static const String PLOT_TITLE;
+	private:
 
-  // global switch on or off
-  Bool itsOptionsAxisLabelSwitch;
+		// global switch on or off
+		Bool itsOptionsAxisLabelSwitch;
 
-  // display title text
-  String itsOptionsTitleText;
+		// display title text
+		String itsOptionsTitleText;
 
-  // title color
-  String itsOptionsTitleTextColor;
+		// title color
+		String itsOptionsTitleTextColor;
 
-  // display axes label text
-  String itsOptionsXAxisText, itsOptionsYAxisText;
+		// display axes label text
+		String itsOptionsXAxisText, itsOptionsYAxisText;
 
-  // are the above unset
-  Bool itsOptionsXAxisTextUnset, itsOptionsYAxisTextUnset;
+		// are the above unset
+		Bool itsOptionsXAxisTextUnset, itsOptionsYAxisTextUnset;
 
-  // label text color
-  String itsOptionsXAxisTextColor, itsOptionsYAxisTextColor;
+		// label text color
+		String itsOptionsXAxisTextColor, itsOptionsYAxisTextColor;
 
-  // coordinate grid?
-  String itsOptionsXGridType, itsOptionsYGridType;
+		// coordinate grid?
+		String itsOptionsXGridType, itsOptionsYGridType;
 
-  // coordinate grid colors
-  String itsOptionsXGridColor, itsOptionsYGridColor;
+		// coordinate grid colors
+		String itsOptionsXGridColor, itsOptionsYGridColor;
 
-  // tick mark length in mm
-  Float itsOptionsTickLength;
+		// tick mark length in mm
+		Float itsOptionsTickLength;
 
-  // Label position
-  String itsOptionsLabelPos;
+		// Label position
+		String itsOptionsLabelPos;
 
-  // plot outline?
-  Bool itsOptionsPlotOutline;
+		// plot outline?
+		Bool itsOptionsPlotOutline;
 
-  // plot outline color
-  String itsOptionsPlotOutlineColor;
+		// plot outline color
+		String itsOptionsPlotOutlineColor;
 
-  // plot character size
-  Float itsOptionsCharSize;
+		// plot character size
+		Float itsOptionsCharSize;
 
-  // plot character font
-  String itsOptionsCharFont;
+		// plot character font
+		String itsOptionsCharFont;
 
-  // plot line width
-  //Int itsOptionsLineWidth;
-  Float itsOptionsLineWidth;
+		// plot line width
+		//Int itsOptionsLineWidth;
+		Float itsOptionsLineWidth;
 
-  // defaults for on/off switch and character size
-  // (from .aipsrc, if they exist there).
-  Bool itsDefaultSwitch;
-  Float itsDefaultCharSize;
+		// defaults for on/off switch and character size
+		// (from .aipsrc, if they exist there).
+		Bool itsDefaultSwitch;
+		Float itsDefaultCharSize;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

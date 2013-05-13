@@ -718,7 +718,7 @@ void PlotMSDBusApp::dbusRunXmlMethod(
         
         
         if(updateImmediately && itsPlotms_.guiShown()) {
-            if(resized) itsPlotms_.addSinglePlot(&ppp);
+            if(resized) itsPlotms_.addOverPlot(&ppp);
             else {
                 PlotMSPlotParameters* sp =
                     itsPlotms_.getPlotManager().plotParameters(index);

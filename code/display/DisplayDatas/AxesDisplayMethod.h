@@ -35,10 +35,10 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
-class AxesDisplayData;
+	class WorldCanvas;
+	class AxesDisplayData;
 
-// <summary> 
+// <summary>
 // Class to draw a single set of axis labels for AxesDisplayData.
 // </summary>
 //
@@ -48,40 +48,40 @@ class AxesDisplayData;
 // axis labels when requested by the AxesDisplayData class.
 // </synopsis>
 
-class AxesDisplayMethod : public CachingDisplayMethod {
+	class AxesDisplayMethod : public CachingDisplayMethod {
 
- public:
+	public:
 
-  // Constructor.
-  AxesDisplayMethod(WorldCanvas *worldCanvas, 
-		    AttributeBuffer *wchAttributes,
-		    AttributeBuffer *ddAttributes,
-		    CachingDisplayData *dd);
-  
-  // Destructor.
-  virtual ~AxesDisplayMethod();
+		// Constructor.
+		AxesDisplayMethod(WorldCanvas *worldCanvas,
+		                  AttributeBuffer *wchAttributes,
+		                  AttributeBuffer *ddAttributes,
+		                  CachingDisplayData *dd);
 
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
+		// Destructor.
+		virtual ~AxesDisplayMethod();
 
-  // Draw into a cached drawing list, called by draw function.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder);
-  
- protected:
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
 
-  // (Required) default constructor.
-  AxesDisplayMethod();
+		// Draw into a cached drawing list, called by draw function.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder);
 
-  // (Required) copy constructor.
-  AxesDisplayMethod(const AxesDisplayMethod &other);
+	protected:
 
-  // (Required) copy assignment.
-  void operator=(const AxesDisplayMethod &other);
+		// (Required) default constructor.
+		AxesDisplayMethod();
 
- private:
+		// (Required) copy constructor.
+		AxesDisplayMethod(const AxesDisplayMethod &other);
 
-};
+		// (Required) copy assignment.
+		void operator=(const AxesDisplayMethod &other);
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

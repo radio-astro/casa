@@ -1,4 +1,4 @@
-//# DSBasic.h: Basically, a base class for any shape which can be drawn with 
+//# DSBasic.h: Basically, a base class for any shape which can be drawn with
 //# primitive lines.
 //# Copyright (C) 1998,1999,2000,2001,2002
 //# Associated Universities, Inc. Washington DC, USA.
@@ -24,7 +24,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSBASIC_H
 #define TRIALDISPLAY_DSBASIC_H
@@ -35,7 +35,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <class T> class DParameterRange;
+	template <class T> class DParameterRange;
 
 // <summary>
 // Base class for all "basic" shapes
@@ -50,9 +50,9 @@ template <class T> class DParameterRange;
 // </etymology>
 //
 // <synopsis>
-// DSBasic is a base class for any shape using basic lines to draw it self, 
-// i.e. shapes such as lines, circles and polygons should extend this class. 
-// More complex DisplayShapes, e.g. text should not. 
+// DSBasic is a base class for any shape using basic lines to draw it self,
+// i.e. shapes such as lines, circles and polygons should extend this class.
+// More complex DisplayShapes, e.g. text should not.
 //
 // <motivation>
 // A common interface for the setting of linewidths
@@ -65,40 +65,40 @@ template <class T> class DParameterRange;
 // </example>
 
 
-class DSBasic : public DisplayShape {
+	class DSBasic : public DisplayShape {
 
-public:
+	public:
 
-  // Default constructor
-  DSBasic();
+		// Default constructor
+		DSBasic();
 
-  // Copy constructor
-  DSBasic(const DSBasic& other);
+		// Copy constructor
+		DSBasic(const DSBasic& other);
 
-  // Destructor
-  virtual ~DSBasic();
+		// Destructor
+		virtual ~DSBasic();
 
-  // Manage line width
-  // <group>
-  virtual void setLineWidth(const Int pixels);
-  virtual Int getLineWidth();
-  // </group>
+		// Manage line width
+		// <group>
+		virtual void setLineWidth(const Int pixels);
+		virtual Int getLineWidth();
+		// </group>
 
-  // Standard fns
-  // <group>
-  virtual void draw(PixelCanvas* pc);
-  virtual void rotateAbout(const Float& angle, const Float& aboutX, 
-			     const Float& aboutY);
-  virtual void move(const Float& dX, const Float& dY);
-  virtual Record getOptions();
-  virtual Bool setOptions(const Record& settings);
-  // </group>
+		// Standard fns
+		// <group>
+		virtual void draw(PixelCanvas* pc);
+		virtual void rotateAbout(const Float& angle, const Float& aboutX,
+		                         const Float& aboutY);
+		virtual void move(const Float& dX, const Float& dY);
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& settings);
+		// </group>
 
-private:
+	private:
 
-  DParameterRange<Int>* itsLineWidth;
+		DParameterRange<Int>* itsLineWidth;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

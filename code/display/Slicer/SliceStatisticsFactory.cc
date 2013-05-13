@@ -33,74 +33,73 @@
 namespace casa {
 
 
-SliceStatisticsFactory::SliceStatisticsFactory():
-	statisticsDistance(NULL), statisticsPosition(NULL){
-	xUnits = PIXEL_UNIT;
-	xAxis = DISTANCE;
-}
+	SliceStatisticsFactory::SliceStatisticsFactory():
+		statisticsDistance(NULL), statisticsPosition(NULL) {
+		xUnits = PIXEL_UNIT;
+		xAxis = DISTANCE;
+	}
 
-SliceStatistics* SliceStatisticsFactory::getStatistics() {
-	SliceStatistics* stats = NULL;
-	if ( xAxis == DISTANCE ){
-		if ( statisticsDistance == NULL ){
-			statisticsDistance = new SliceStatisticsDistance( xUnits );
+	SliceStatistics* SliceStatisticsFactory::getStatistics() {
+		SliceStatistics* stats = NULL;
+		if ( xAxis == DISTANCE ) {
+			if ( statisticsDistance == NULL ) {
+				statisticsDistance = new SliceStatisticsDistance( xUnits );
+			}
+			stats = statisticsDistance;
+		} else if ( xAxis == X_POSITION || xAxis == Y_POSITION ) {
+			if ( statisticsPosition == NULL ) {
+				statisticsPosition = new SliceStatisticsPosition( xUnits );
+			}
+			bool xPosition = false;
+			if ( xAxis == X_POSITION ) {
+				xPosition = true;
+			}
+			dynamic_cast<SliceStatisticsPosition*>(statisticsPosition)->setXPosition( xPosition );
+			stats = statisticsPosition;
+
 		}
-		stats = statisticsDistance;
+		return stats;
 	}
-	else if ( xAxis == X_POSITION || xAxis == Y_POSITION ){
-		if ( statisticsPosition == NULL ){
-			statisticsPosition = new SliceStatisticsPosition( xUnits );
+
+	void SliceStatisticsFactory::setAxisXChoice( AxisXChoice choice ) {
+		xAxis = choice;
+	}
+
+	void SliceStatisticsFactory::setXUnits( AxisXUnits unitMode ) {
+		xUnits = unitMode;
+		if ( statisticsDistance != NULL ) {
+			statisticsDistance->setXUnits( xUnits );
 		}
-		bool xPosition = false;
-		if ( xAxis == X_POSITION ){
-			xPosition = true;
+		if ( statisticsPosition != NULL ) {
+			statisticsPosition->setXUnits( xUnits );
 		}
-		dynamic_cast<SliceStatisticsPosition*>(statisticsPosition)->setXPosition( xPosition );
-		stats = statisticsPosition;
+	}
 
+	bool SliceStatisticsFactory::isDistance() const {
+		bool distanceUnits = false;
+		if ( xAxis == DISTANCE ) {
+			distanceUnits = true;
+		}
+		return distanceUnits;
 	}
-	return stats;
-}
+	bool SliceStatisticsFactory::isPositionX() const {
+		bool positionUnits = false;
+		if ( xAxis == X_POSITION ) {
+			positionUnits = true;
+		}
+		return positionUnits;
+	}
+	bool SliceStatisticsFactory::isPositionY() const {
+		bool positionUnits = false;
+		if ( xAxis == Y_POSITION ) {
+			positionUnits = true;
+		}
+		return positionUnits;
+	}
 
-void SliceStatisticsFactory::setAxisXChoice( AxisXChoice choice ){
-	xAxis = choice;
-}
-
-void SliceStatisticsFactory::setXUnits( AxisXUnits unitMode ){
-	xUnits = unitMode;
-	if ( statisticsDistance != NULL ){
-		statisticsDistance->setXUnits( xUnits );
+	SliceStatisticsFactory::~SliceStatisticsFactory() {
+		delete statisticsDistance;
+		delete statisticsPosition;
 	}
-	if ( statisticsPosition != NULL ){
-		statisticsPosition->setXUnits( xUnits );
-	}
-}
-
-bool SliceStatisticsFactory::isDistance() const{
-	bool distanceUnits = false;
-	if ( xAxis == DISTANCE ){
-		distanceUnits = true;
-	}
-	return distanceUnits;
-}
-bool SliceStatisticsFactory::isPositionX() const {
-	bool positionUnits = false;
-	if ( xAxis == X_POSITION ){
-		positionUnits = true;
-	}
-	return positionUnits;
-}
-bool SliceStatisticsFactory::isPositionY() const {
-	bool positionUnits = false;
-	if ( xAxis == Y_POSITION ){
-		positionUnits = true;
-	}
-	return positionUnits;
-}
-
-SliceStatisticsFactory::~SliceStatisticsFactory() {
-	delete statisticsDistance;
-	delete statisticsPosition;
-}
 
 } /* namespace casa */

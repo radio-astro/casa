@@ -30,80 +30,80 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-PassiveCachingDD::PassiveCachingDD() :
-  CachingDisplayData() {
-}
+	PassiveCachingDD::PassiveCachingDD() :
+		CachingDisplayData() {
+	}
 
-PassiveCachingDD::~PassiveCachingDD() {
-}
+	PassiveCachingDD::~PassiveCachingDD() {
+	}
 
-Bool PassiveCachingDD::linToWorld(Vector<Double> &, const Vector<Double> &) {
-  return False;
-}
+	Bool PassiveCachingDD::linToWorld(Vector<Double> &, const Vector<Double> &) {
+		return False;
+	}
 
-Bool PassiveCachingDD::worldToLin(Vector<Double> &, const Vector<Double> &) {
-  return False;
-}
+	Bool PassiveCachingDD::worldToLin(Vector<Double> &, const Vector<Double> &) {
+		return False;
+	}
 
-String PassiveCachingDD::showPosition(const Vector<Double> &, const Bool &) {
-  return String("");
-}
+	String PassiveCachingDD::showPosition(const Vector<Double> &, const Bool &) {
+		return String("");
+	}
 
-String PassiveCachingDD::showValue(const Vector<Double> &) {
-  return String("");
-}
-void PassiveCachingDD::refreshEH(const WCRefreshEvent &ev) {
-  CachingDisplayData::refreshEH(ev);
-}
+	String PassiveCachingDD::showValue(const Vector<Double> &) {
+		return String("");
+	}
+	void PassiveCachingDD::refreshEH(const WCRefreshEvent &ev) {
+		CachingDisplayData::refreshEH(ev);
+	}
 
-Vector<String> PassiveCachingDD::worldAxisNames() const {
-  Vector<String> axisNames(2);
-  axisNames = String("");
-  return axisNames;
-}
+	Vector<String> PassiveCachingDD::worldAxisNames() const {
+		Vector<String> axisNames(2);
+		axisNames = String("");
+		return axisNames;
+	}
 
-Vector<String> PassiveCachingDD::worldAxisUnits() const {
-  Vector<String> axisUnits(2);
-  axisUnits = String("_");
-  return axisUnits;
-}
+	Vector<String> PassiveCachingDD::worldAxisUnits() const {
+		Vector<String> axisUnits(2);
+		axisUnits = String("_");
+		return axisUnits;
+	}
 
-const uInt PassiveCachingDD::nelements(const WorldCanvasHolder 
-				       &wcHolder) const {
-  return 0;
-}
+	const uInt PassiveCachingDD::nelements(const WorldCanvasHolder
+	                                       &wcHolder) const {
+		return 0;
+	}
 
-const uInt PassiveCachingDD::nelements() const {
-  return 0;
-}
+	const uInt PassiveCachingDD::nelements() const {
+		return 0;
+	}
 
-void PassiveCachingDD::setDefaultOptions() {
-  CachingDisplayData::setDefaultOptions();
-}
+	void PassiveCachingDD::setDefaultOptions() {
+		CachingDisplayData::setDefaultOptions();
+	}
 
-Bool PassiveCachingDD::setOptions(Record &rec, Record &recOut) {
-  Bool ret = CachingDisplayData::setOptions(rec, recOut);
-  return ret;
-}
+	Bool PassiveCachingDD::setOptions(Record &rec, Record &recOut) {
+		Bool ret = CachingDisplayData::setOptions(rec, recOut);
+		return ret;
+	}
 
-Record PassiveCachingDD::getOptions() {
-  Record rec = CachingDisplayData::getOptions();
-  return rec;
-}
+	Record PassiveCachingDD::getOptions() {
+		Record rec = CachingDisplayData::getOptions();
+		return rec;
+	}
 
-void PassiveCachingDD::cleanup() {
-}
+	void PassiveCachingDD::cleanup() {
+	}
 
-AttributeBuffer PassiveCachingDD::optionsAsAttributes() {
-  AttributeBuffer buffer = CachingDisplayData::optionsAsAttributes();
-  return buffer;
-}
+	AttributeBuffer PassiveCachingDD::optionsAsAttributes() {
+		AttributeBuffer buffer = CachingDisplayData::optionsAsAttributes();
+		return buffer;
+	}
 
-PassiveCachingDD::PassiveCachingDD(const PassiveCachingDD &) {
-}
+	PassiveCachingDD::PassiveCachingDD(const PassiveCachingDD &) {
+	}
 
-void PassiveCachingDD::operator=(const PassiveCachingDD &) {
-}
+	void PassiveCachingDD::operator=(const PassiveCachingDD &) {
+	}
 
 } //# NAMESPACE CASA - END
 

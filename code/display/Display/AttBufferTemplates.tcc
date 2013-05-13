@@ -34,64 +34,62 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <class T>
-Bool AttributeBuffer::getValue(const String &name, T &value) const 
-{
-  Vector<T> tmp;
-  if (getValue(name, tmp)) {
-    value = tmp(0);
-    return True;
-  } else {
-    return False;
-  }
-}
+	template <class T>
+	Bool AttributeBuffer::getValue(const String &name, T &value) const {
+		Vector<T> tmp;
+		if (getValue(name, tmp)) {
+			value = tmp(0);
+			return True;
+		} else {
+			return False;
+		}
+	}
 
-template <class T>
-Bool AttributeBuffer::getValue(const String &name, Vector<T> &value) const 
-{
-  Vector<T>* tmp = NULL;
-  DataType dtype = whatType(tmp);
-  AttValue::ValueType valType;
-  switch(dtype) {
-  case TpArrayUInt:
-    valType = AttValue::AtuInt;
-    break;
-  case TpArrayInt:
-    valType = AttValue::AtInt;
-    break;
-  case TpArrayBool:
-    valType = AttValue::AtBool;
-    break;
-  case TpArrayFloat:
-    valType = AttValue::AtFloat;
-    break;
-  case TpArrayDouble:
-    valType = AttValue::AtDouble;
-    break;
-  case TpArrayString:
-    valType = AttValue::AtString;
-    break;
-  case TpArrayQuantity:
-    valType = AttValue::AtQuantity;
-    break;
-  default:
-    throw(AipsError("Invalid template for AttributeBuffer::getValue"));
-  }
-  
-  for (uInt i = 0; i < attributes.nelements(); i++) {
-    if (name == (attributes[i])->getName()) {
-       AttributeValue<T>* tmp = 
-         dynamic_cast<AttributeValue<T>* >(attributes[i]->getAttributeValue());
-       if (tmp) {
-          value = tmp->getValue();
-   	  return True;
-       } else {
-          return False;
-       }
-    }
-  }
-  return False;
-}
+	template <class T>
+	Bool AttributeBuffer::getValue(const String &name, Vector<T> &value) const {
+		Vector<T>* tmp = NULL;
+		DataType dtype = whatType(tmp);
+		AttValue::ValueType valType;
+		switch(dtype) {
+		case TpArrayUInt:
+			valType = AttValue::AtuInt;
+			break;
+		case TpArrayInt:
+			valType = AttValue::AtInt;
+			break;
+		case TpArrayBool:
+			valType = AttValue::AtBool;
+			break;
+		case TpArrayFloat:
+			valType = AttValue::AtFloat;
+			break;
+		case TpArrayDouble:
+			valType = AttValue::AtDouble;
+			break;
+		case TpArrayString:
+			valType = AttValue::AtString;
+			break;
+		case TpArrayQuantity:
+			valType = AttValue::AtQuantity;
+			break;
+		default:
+			throw(AipsError("Invalid template for AttributeBuffer::getValue"));
+		}
+
+		for (uInt i = 0; i < attributes.nelements(); i++) {
+			if (name == (attributes[i])->getName()) {
+				AttributeValue<T>* tmp =
+				    dynamic_cast<AttributeValue<T>* >(attributes[i]->getAttributeValue());
+				if (tmp) {
+					value = tmp->getValue();
+					return True;
+				} else {
+					return False;
+				}
+			}
+		}
+		return False;
+	}
 
 
 

@@ -40,19 +40,19 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class Attribute;
-class DisplayData;
-class String;
+	class Attribute;
+	class DisplayData;
+	class String;
 
 // <summary>
-// A holder to interface between DisplayDatas and a WorldCanvas 
+// A holder to interface between DisplayDatas and a WorldCanvas
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <prerequisite>
 //   <li> Attribute
 //   <li> AttributeBuffer
@@ -67,208 +67,223 @@ class String;
 // the DDs.
 // </etymology>
 //
-// <synopsis> 
+// <synopsis>
 // </synopsis>
 //
-// <example> 
+// <example>
 // </example>
 //
-// <motivation> 
+// <motivation>
 // </motivation>
 
-class WorldCanvasHolder : public WCRefreshEH,
-			  public WCMotionEH,
-			  public WCPositionEH,
-			  public WCSizeControlHandler,
-			  public WCCoordinateHandler {
+	class WorldCanvasHolder : public WCRefreshEH,
+		public WCMotionEH,
+		public WCPositionEH,
+		public WCSizeControlHandler,
+		public WCCoordinateHandler {
 
- public:
+	public:
 
-  // Constructor.  A WorldCanvas must be provided for the constructed
-  // WorldCanvasHolder to "hold".
-  WorldCanvasHolder(WorldCanvas *canvas);
+		// Constructor.  A WorldCanvas must be provided for the constructed
+		// WorldCanvasHolder to "hold".
+		WorldCanvasHolder(WorldCanvas *canvas);
 
-  // Destructor.
-  virtual ~WorldCanvasHolder();
+		// Destructor.
+		virtual ~WorldCanvasHolder();
 
-  // Return the WorldCanvas which is held by this WorldCanvasHolder.
-  virtual WorldCanvas *worldCanvas() const
-    { return itsWorldCanvas; }
+		// Return the WorldCanvas which is held by this WorldCanvasHolder.
+		virtual WorldCanvas *worldCanvas() const {
+			return itsWorldCanvas;
+		}
 
-  // Add a DisplayData object to the list of DisplayDatas registered
-  // on the held WorldCanvas by this WorldCanvasHolder.
-  virtual void addDisplayData(DisplayData *dData); 
+		// Add a DisplayData object to the list of DisplayDatas registered
+		// on the held WorldCanvas by this WorldCanvasHolder.
+		virtual void addDisplayData(DisplayData *dData);
 
-  // Remove a DisplayData from the list of DisplayDatas which are
-  // registered by this WorldCanvasHolder for display on the held
-  // WorldCanvas. <src>ignoreRefresh</src> tells the DD not to refresh
-  // just to clean up DMs
-  virtual void removeDisplayData(DisplayData& dData, 
-				 Bool ignoreRefresh = False); 
+		// Remove a DisplayData from the list of DisplayDatas which are
+		// registered by this WorldCanvasHolder for display on the held
+		// WorldCanvas. <src>ignoreRefresh</src> tells the DD not to refresh
+		// just to clean up DMs
+		virtual void removeDisplayData(DisplayData& dData,
+		                               Bool ignoreRefresh = False);
 
-  // How many DisplayDatas are registered?
-  virtual const uInt nDisplayDatas() const;
+		// How many DisplayDatas are registered?
+		virtual const uInt nDisplayDatas() const;
 
-  // Install a single restriction, or a buffer of restrictions, on the
-  // WorldCanvasHolder which DisplayData must match in order that they
-  // be allowed to draw themselves.
-  // <group>
-  void setRestriction(const Attribute& restriction) {
-	  itsWorldCanvas->setRestriction(restriction);
-  }
-  void setRestrictions(const AttributeBuffer& resBuff) {
-	  itsWorldCanvas->setRestrictions(resBuff);
-  }
-  // </group>
+		// Install a single restriction, or a buffer of restrictions, on the
+		// WorldCanvasHolder which DisplayData must match in order that they
+		// be allowed to draw themselves.
+		// <group>
+		void setRestriction(const Attribute& restriction) {
+			itsWorldCanvas->setRestriction(restriction);
+		}
+		void setRestrictions(const AttributeBuffer& resBuff) {
+			itsWorldCanvas->setRestrictions(resBuff);
+		}
+		// </group>
 
-  // Check if a named restriction exists.
-  const Bool existRestriction(const String& name) const {
-	  return itsWorldCanvas->existRestriction(name);
-  }
-  
-  //Set whether or not the viewer is in blink mode
-  void setBlinkMode( bool mode ){
-	  blinkMode = mode;
-  }
+		// Check if a named restriction exists.
+		const Bool existRestriction(const String& name) const {
+			return itsWorldCanvas->existRestriction(name);
+		}
 
-  // Remove the named restriction, or all restrictions, from the
-  // WorldCanvasHolder.
-  // <group>
-  void removeRestriction(const String& restrictionName) {
-	  itsWorldCanvas->removeRestriction(restrictionName);
-  }
-  void removeRestrictions() {
-	  itsWorldCanvas->removeRestrictions( );
-  }
-  // </group>
-  
-  // Determine whether the restrictions installed on the
-  // WorldCanvasHolder match the given restriction or buffer of
-  // restrictions.
-  // <group>
-  Bool matchesRestriction(const Attribute& restriction) const { return itsWorldCanvas->matchesRestriction(restriction); }
-  Bool matchesRestrictions(const AttributeBuffer& buffer) const { return itsWorldCanvas->matchesRestrictions(buffer); }
-  // </group>
- 
-  // Return the buffer of restrictions installed on this
-  // WorldCanvasHolder.
-  const AttributeBuffer *restrictionBuffer() const { return itsWorldCanvas->restrictionBuffer( ); }
-  
-  // Invoke a refresh on the WorldCanvas, ie. this is a shorthand for
-  // WorldCanvasHolder->worldCanvas()->refresh(reason);.
-  virtual void refresh(const Display::RefreshReason &reason = 
-		       Display::UserCommand,
-		       const Bool &explicitrequest = True);
+		//Set whether or not the viewer is in blink mode
+		void setBlinkMode( bool mode ) {
+			blinkMode = mode;
+		}
 
-  // Handle size control requests originating from the WorldCanvas.
-  virtual Bool executeSizeControl(WorldCanvas *wCanvas);     
+		// Remove the named restriction, or all restrictions, from the
+		// WorldCanvasHolder.
+		// <group>
+		void removeRestriction(const String& restrictionName) {
+			itsWorldCanvas->removeRestriction(restrictionName);
+		}
+		void removeRestrictions() {
+			itsWorldCanvas->removeRestrictions( );
+		}
+		// </group>
 
-  // Distribute a WCPositionEvent originating from the held
-  // WorldCanvas over the DisplayDatas.
-  virtual void operator()(const WCPositionEvent &ev);
-  
-  // Distribute a WCRefreshEvent originating from the held WorldCanvas
-  // over the DisplayDatas.
-  virtual void operator()(const WCRefreshEvent &ev);
+		// Determine whether the restrictions installed on the
+		// WorldCanvasHolder match the given restriction or buffer of
+		// restrictions.
+		// <group>
+		Bool matchesRestriction(const Attribute& restriction) const {
+			return itsWorldCanvas->matchesRestriction(restriction);
+		}
+		Bool matchesRestrictions(const AttributeBuffer& buffer) const {
+			return itsWorldCanvas->matchesRestrictions(buffer);
+		}
+		// </group>
 
-  // Distribute a  WCMotionEvent originating from the held WorldCanvas
-  // over the DisplayDatas.
-  virtual void operator()(const WCMotionEvent &ev);
+		// Return the buffer of restrictions installed on this
+		// WorldCanvasHolder.
+		const AttributeBuffer *restrictionBuffer() const {
+			return itsWorldCanvas->restrictionBuffer( );
+		}
 
-  // Handle other, generic types of events.  As with the handlers above,
-  // WCH handles these new events by simply passing them on to the
-  // DisplayDatas registered on it.  WorldCanvasHolder inherits this
-  // new-style event handling interface from DisplayEH, via WCRefreshEH.
-  virtual void handleEvent(DisplayEvent& ev);
+		// Invoke a refresh on the WorldCanvas, ie. this is a shorthand for
+		// WorldCanvasHolder->worldCanvas()->refresh(reason);.
+		virtual void refresh(const Display::RefreshReason &reason =
+		                         Display::UserCommand,
+		                     const Bool &explicitrequest = True);
 
-  // Coordinate conversion routines, handled for the WorldCanvas.  
-  // In future, they should be handled on the WC itself, via its own CS.
-  // At present, these requests are forwarded to the CSmaster DD, which
-  // should be equivalent in most cases.
-  // <group>
-  virtual Bool linToWorld(Vector<Double>& world, const Vector<Double>& lin);
-  virtual Bool worldToLin(Vector<Double>& lin, const Vector<Double>& world);
-  
-  //# (these latter two are merely to stop a compiler whine...)
-  virtual Bool linToWorld(Matrix<Double> & world, Vector<Bool> & failures,
-                          const Matrix<Double> & lin) {
-    return WCCoordinateHandler::linToWorld(world, failures, lin);  }
-  
-  virtual Bool worldToLin(Matrix<Double> & lin, Vector<Bool> & failures,
-                          const Matrix<Double> & world) {
-    return WCCoordinateHandler::worldToLin(lin, failures, world);  }
-  // </group> 
+		// Handle size control requests originating from the WorldCanvas.
+		virtual Bool executeSizeControl(WorldCanvas *wCanvas);
 
-  // Return the number of world axes, which is hard-wired to 2.
-  virtual uInt nWorldAxes() const {
-    return 2;
-  }
+		// Distribute a WCPositionEvent originating from the held
+		// WorldCanvas over the DisplayDatas.
+		virtual void operator()(const WCPositionEvent &ev);
 
-  // Maximum number of animation frames of all registered
-  // DDs which are valid for the WC's current CS state.
-  virtual const uInt nelements();
-  
-  // Force a cleanup of all the DisplayDatas which are registered with
-  // this WorldCanvasHolder.
-  virtual void cleanup();
-  
-  // The DD in charge of setting WC coordinate state (0 if none).
-  const DisplayData* csMaster() const { return itsWorldCanvas->csMaster( ); }
+		// Distribute a WCRefreshEvent originating from the held WorldCanvas
+		// over the DisplayDatas.
+		virtual void operator()(const WCRefreshEvent &ev);
 
-  // Is the specified DisplayData the one in charge of WC state?
-  // (During DD::sizeControl() execution, it means instead that the
-  // DD has permission to become CSmaster, if it can).
-  Bool isCSmaster(const DisplayData *dd) const { return itsWorldCanvas->isCSmaster(dd); }
-    
-  // Was the passed DD the last CS master (or, if no DD passed, was
-  // there any CS master)?  For convenience of the DDs during the next
-  // sizeControl execution, in determining whether a CS master change is
-  // occurring, and whether anyone was master before.  This affects
-  // whether any old zoom window is retained or completely reset.
-  Bool wasCSmaster(DisplayData* dd=0) const { 
-    return (dd==0)? itsLastCSmaster!=0 : itsLastCSmaster==dd;  }
+		// Distribute a  WCMotionEvent originating from the held WorldCanvas
+		// over the DisplayDatas.
+		virtual void operator()(const WCMotionEvent &ev);
 
-  // used by PanelDisplay on new WCHs to keep a consistent CS master on
-  // all its main display WC[H]s.  Sets [default] CS master dd to that of
-  // passed wch (if that dd is registered here), and gets it to reset WC
-  // coordinate state.
-  virtual Bool syncCSmaster(const WorldCanvasHolder* wch);
-  bool setCSMaster( DisplayData* dd );
+		// Handle other, generic types of events.  As with the handlers above,
+		// WCH handles these new events by simply passing them on to the
+		// DisplayDatas registered on it.  WorldCanvasHolder inherits this
+		// new-style event handling interface from DisplayEH, via WCRefreshEH.
+		virtual void handleEvent(DisplayEvent& ev);
 
-  const std::list<DisplayData*> &displaylist( ) const
-	{ return itsDisplayList; }
+		// Coordinate conversion routines, handled for the WorldCanvas.
+		// In future, they should be handled on the WC itself, via its own CS.
+		// At present, these requests are forwarded to the CSmaster DD, which
+		// should be equivalent in most cases.
+		// <group>
+		virtual Bool linToWorld(Vector<Double>& world, const Vector<Double>& lin);
+		virtual Bool worldToLin(Vector<Double>& lin, const Vector<Double>& world);
 
-  /**
-   * Returns the current pgp draw unit, which depends on the x-range
-   * of the data currently being displayed.
-   */
-  Float getDrawUnit() const;
+		//# (these latter two are merely to stop a compiler whine...)
+		virtual Bool linToWorld(Matrix<Double> & world, Vector<Bool> & failures,
+		                        const Matrix<Double> & lin) {
+			return WCCoordinateHandler::linToWorld(world, failures, lin);
+		}
 
-  const static String BLINK_MODE;
+		virtual Bool worldToLin(Matrix<Double> & lin, Vector<Bool> & failures,
+		                        const Matrix<Double> & world) {
+			return WCCoordinateHandler::worldToLin(lin, failures, world);
+		}
+		// </group>
 
-private: 
-  //True if the viewer is in blink mode.
-  bool blinkMode;
+		// Return the number of world axes, which is hard-wired to 2.
+		virtual uInt nWorldAxes() const {
+			return 2;
+		}
 
-  // The WorldCanvas that is held by this WorldCanvasHolder.
-  WorldCanvas *itsWorldCanvas;
+		// Maximum number of animation frames of all registered
+		// DDs which are valid for the WC's current CS state.
+		virtual const uInt nelements();
 
-  // A list containing the DisplayDatas that are registered on this
-  // WorldCanvasHolder.
-  std::list<DisplayData*> itsDisplayList;
-  DisplayData* controllingDD;
-  
-  // The CS master in effect after executeSizeControl was last run (0 if none).
-  // For determining (via wasCSmaster(), above) whether a CS master change is
-  // occurring, and whether anyone was master before.  This affects whether
-  // the old zoom window is retained or completely reset.
-  // (Note void*, rather than DD*, type: it is not intended to be dereferenced,
-  // just compared for equality.  The original DD may not even exist by the
-  // time it is used).
-  void* itsLastCSmaster;
-  Float drawUnit;
+		// Force a cleanup of all the DisplayDatas which are registered with
+		// this WorldCanvasHolder.
+		virtual void cleanup();
 
-};
+		// The DD in charge of setting WC coordinate state (0 if none).
+		const DisplayData* csMaster() const {
+			return itsWorldCanvas->csMaster( );
+		}
+
+		// Is the specified DisplayData the one in charge of WC state?
+		// (During DD::sizeControl() execution, it means instead that the
+		// DD has permission to become CSmaster, if it can).
+		Bool isCSmaster(const DisplayData *dd) const {
+			return itsWorldCanvas->isCSmaster(dd);
+		}
+
+		// Was the passed DD the last CS master (or, if no DD passed, was
+		// there any CS master)?  For convenience of the DDs during the next
+		// sizeControl execution, in determining whether a CS master change is
+		// occurring, and whether anyone was master before.  This affects
+		// whether any old zoom window is retained or completely reset.
+		Bool wasCSmaster(DisplayData* dd=0) const {
+			return (dd==0)? itsLastCSmaster!=0 : itsLastCSmaster==dd;
+		}
+
+		// used by PanelDisplay on new WCHs to keep a consistent CS master on
+		// all its main display WC[H]s.  Sets [default] CS master dd to that of
+		// passed wch (if that dd is registered here), and gets it to reset WC
+		// coordinate state.
+		virtual Bool syncCSmaster(const WorldCanvasHolder* wch);
+		bool setCSMaster( DisplayData* dd );
+
+		const std::list<DisplayData*> &displaylist( ) const {
+			return itsDisplayList;
+		}
+
+		/**
+		 * Returns the current pgp draw unit, which depends on the x-range
+		 * of the data currently being displayed.
+		 */
+		Float getDrawUnit() const;
+
+		const static String BLINK_MODE;
+
+	private:
+		//True if the viewer is in blink mode.
+		bool blinkMode;
+
+		// The WorldCanvas that is held by this WorldCanvasHolder.
+		WorldCanvas *itsWorldCanvas;
+
+		// A list containing the DisplayDatas that are registered on this
+		// WorldCanvasHolder.
+		std::list<DisplayData*> itsDisplayList;
+		DisplayData* controllingDD;
+
+		// The CS master in effect after executeSizeControl was last run (0 if none).
+		// For determining (via wasCSmaster(), above) whether a CS master change is
+		// occurring, and whether anyone was master before.  This affects whether
+		// the old zoom window is retained or completely reset.
+		// (Note void*, rather than DD*, type: it is not intended to be dereferenced,
+		// just compared for equality.  The original DD may not even exist by the
+		// time it is used).
+		void* itsLastCSmaster;
+		Float drawUnit;
+
+	};
 
 } //# NAMESPACE CASA - END
 

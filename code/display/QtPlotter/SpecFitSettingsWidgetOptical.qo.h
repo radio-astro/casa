@@ -31,28 +31,27 @@
 
 namespace casa {
 
-class SpectralFitter;
+	class SpectralFitter;
 
-class SpecFitSettingsWidgetOptical : public QWidget, public ProfileTaskFacilitator
-{
-    Q_OBJECT
+	class SpecFitSettingsWidgetOptical : public QWidget, public ProfileTaskFacilitator {
+		Q_OBJECT
 
-public:
-    SpecFitSettingsWidgetOptical(QWidget *parent = 0);
-    ~SpecFitSettingsWidgetOptical();
-    void setRange(double start, double end );
-    void setUnits( QString units );
-    void reset();
-    void clear();
+	public:
+		SpecFitSettingsWidgetOptical(QWidget *parent = 0);
+		~SpecFitSettingsWidgetOptical();
+		void setRange(double start, double end );
+		void setUnits( QString units );
+		void reset();
+		void clear();
 
-private slots:
-	void specLineFit();
-	void clean();
+	private slots:
+		void specLineFit();
+		void clean();
 
-private:
-    Ui::SpecFitSettingsWidgetOptical ui;
-    SpectralFitter* fitter;
-};
+	private:
+		Ui::SpecFitSettingsWidgetOptical ui;
+		SpectralFitter* fitter;
+	};
 
 }
 #endif // SPECFITSETTINGSWIDGETOPTICAL_H

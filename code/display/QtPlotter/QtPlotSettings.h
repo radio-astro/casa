@@ -31,71 +31,72 @@
 #include <utility>		/***for std::pair***/
 
 using namespace std;
- 
-namespace casa { 
 
-class QtPlotSettings
-{
-public:
-    QtPlotSettings();
-    void adjust( const QString& topUnits, const QString& bottomUnits, bool autoScaleX, bool autoScaleY );
-    void zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
-    		bool autoScaleX, bool autoScaleY );
-    void zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
-    		bool autoScaleX, bool autoScaleY );
-    void zoomY( double minY, double maxY, bool autoScaleY );
-    pair<double,double> getZoomInY( double zoomFactor ) const;
-    pair<double,double> getZoomOutY( double zoomFactor ) const;
+namespace casa {
 
-    void scroll(int dx, int dy);
-    enum AxisIndex {xBottom, xTop, END_AXIS_INDEX };
-    double spanX( AxisIndex index ) const {
-    	return maxX[static_cast<int>(index)] - minX[static_cast<int>(index)];
-    }
-    double spanY() const { return maxY - minY; }
-    double getMinX( AxisIndex index ) const {
-    	return minX[static_cast<int>(index)];
-    }
-    void setMinX( AxisIndex index, double value );
-    double getMaxX( AxisIndex index ) const {
-    	return maxX[static_cast<int>(index)];
-    }
-    void setMaxX( AxisIndex index, double value );
-    double getMinY() const {
-    	return minY;
-    }
+	class QtPlotSettings {
+	public:
+		QtPlotSettings();
+		void adjust( const QString& topUnits, const QString& bottomUnits, bool autoScaleX, bool autoScaleY );
+		void zoomOut( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
+		              bool autoScaleX, bool autoScaleY );
+		void zoomIn( double zoomFactor, const QString& topUnits, const QString& bottomUnits,
+		             bool autoScaleX, bool autoScaleY );
+		void zoomY( double minY, double maxY, bool autoScaleY );
+		pair<double,double> getZoomInY( double zoomFactor ) const;
+		pair<double,double> getZoomOutY( double zoomFactor ) const;
 
-    void setMinY( double value );
-    double getMaxY() const {
-    	return maxY;
-    }
+		void scroll(int dx, int dy);
+		enum AxisIndex {xBottom, xTop, END_AXIS_INDEX };
+		double spanX( AxisIndex index ) const {
+			return maxX[static_cast<int>(index)] - minX[static_cast<int>(index)];
+		}
+		double spanY() const {
+			return maxY - minY;
+		}
+		double getMinX( AxisIndex index ) const {
+			return minX[static_cast<int>(index)];
+		}
+		void setMinX( AxisIndex index, double value );
+		double getMaxX( AxisIndex index ) const {
+			return maxX[static_cast<int>(index)];
+		}
+		void setMaxX( AxisIndex index, double value );
+		double getMinY() const {
+			return minY;
+		}
 
-    void setMaxY( double value );
-    int getNumTicksX( ) const {
-    	return numXTicks;
-    }
-    int getNumTicksY() const {
-    	return numYTicks;
-    }
+		void setMinY( double value );
+		double getMaxY() const {
+			return maxY;
+		}
+
+		void setMaxY( double value );
+		int getNumTicksX( ) const {
+			return numXTicks;
+		}
+		int getNumTicksY() const {
+			return numYTicks;
+		}
 
 
 
-private:
+	private:
 
-    void adjustAxis(double &min, double &max, int &numTicks);
-    void adjustAxisTop( double &min, double &max, const QString& topUnits,
-    		const QString& bottomUnits );
-    double minX[END_AXIS_INDEX];
-    double maxX[END_AXIS_INDEX];
-    int numXTicks;
-    double minY;
-    double maxY;
-    double minPercentage;
-    double maxPercentage;
-    double originalMinX;
-    double originalMaxX;
-    int numYTicks;
-};
+		void adjustAxis(double &min, double &max, int &numTicks);
+		void adjustAxisTop( double &min, double &max, const QString& topUnits,
+		                    const QString& bottomUnits );
+		double minX[END_AXIS_INDEX];
+		double maxX[END_AXIS_INDEX];
+		int numXTicks;
+		double minY;
+		double maxY;
+		double minPercentage;
+		double maxPercentage;
+		double originalMinX;
+		double originalMaxX;
+		int numYTicks;
+	};
 
 
 }

@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSPIXELARROW_H
 #define TRIALDISPLAY_DSPIXELARROW_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DSArrow.h>
@@ -41,31 +41,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of an absolute pixel DSArrow
 // </summary>
 
-class PanelDisplay;
-class DSWorldArrow;
-class DSScreenArrow;
+	class PanelDisplay;
+	class DSWorldArrow;
+	class DSScreenArrow;
 
-class DSPixelArrow : public DSArrow , public DisplayShapeWithCoords{
+	class DSPixelArrow : public DSArrow , public DisplayShapeWithCoords {
 
-public:
+	public:
 
-  DSPixelArrow();
-  DSPixelArrow(const Record& settings);
-  DSPixelArrow(DSScreenArrow& other);
-  DSPixelArrow(DSWorldArrow& other);
-  
-  virtual ~DSPixelArrow();
+		DSPixelArrow();
+		DSPixelArrow(const Record& settings);
+		DSPixelArrow(DSScreenArrow& other);
+		DSPixelArrow(DSWorldArrow& other);
 
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();  
-  
-  virtual Record getRawOptions() {
-    return DSArrow::getOptions();
-  }
-  
-private:
-  
-};
+		virtual ~DSPixelArrow();
+
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		virtual Record getRawOptions() {
+			return DSArrow::getOptions();
+		}
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

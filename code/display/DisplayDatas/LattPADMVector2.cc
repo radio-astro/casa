@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <casa/aips.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -32,21 +32,20 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <>
-Matrix<Float> LatticePADMVector<Complex>::getAmplitude(const Matrix<Complex>& data) const
-{
-   return phase(data);
-}
+	template <>
+	Matrix<Float> LatticePADMVector<Complex>::getAmplitude(const Matrix<Complex>& data) const {
+		return phase(data);
+	}
 
-template <>
-Matrix<Float> LatticePADMVector<Float>::getAmplitude(const Matrix<Float>& /*data*/) const
+	template <>
+	Matrix<Float> LatticePADMVector<Float>::getAmplitude(const Matrix<Float>& /*data*/) const
 //
 // Never called
 //
-{
-   Matrix<Float> t;
-   return t;
-}
+	{
+		Matrix<Float> t;
+		return t;
+	}
 
 } //# NAMESPACE CASA - END
 

@@ -27,97 +27,97 @@
 
 namespace casa {
 
-SpecFitGaussian::SpecFitGaussian( float peakVal, float centerVal, float fwhmVal, int index) :
+	SpecFitGaussian::SpecFitGaussian( float peakVal, float centerVal, float fwhmVal, int index) :
 		SpecFit("_Gaussian_FIT_"+QString::number(index)),
-		fixedPeak( false ), fixedCenter( false ), fixedFwhm( false ){
-	peak = peakVal;
-	center = centerVal;
-	fwhm = fwhmVal;
-}
-
-void SpecFitGaussian::setPeak( float peakVal ){
-	peak = peakVal;
-}
-
-float SpecFitGaussian::getPeak() const{
-	return peak;
-}
-
-void SpecFitGaussian::setCenter( float centerVal ){
-	center = centerVal;
-}
-
-float SpecFitGaussian::getCenter() const{
-	return center;
-}
-
-void SpecFitGaussian::setFWHM( float fwhmVal ){
-	fwhm = fwhmVal;
-}
-
-float SpecFitGaussian::getFWHM() const {
-	return fwhm;
-}
-
-void SpecFitGaussian::setPeakFixed( bool fixed ){
-	fixedPeak = fixed;
-}
-
-void SpecFitGaussian::setCenterFixed( bool fixed ){
-	fixedCenter = fixed;
-}
-
-void SpecFitGaussian::setFwhmFixed( bool fixed ){
-	fixedFwhm = fixed;
-}
-
-bool SpecFitGaussian::isPeakFixed() const {
-	return fixedPeak;
-}
-
-bool SpecFitGaussian::isCenterFixed() const{
-	return fixedCenter;
-}
-
-bool SpecFitGaussian::isFwhmFixed() const {
-	return fixedFwhm;
-}
-
-
-void SpecFitGaussian::evaluate(Vector<Float>& xVals ){
-	//Model the fit so that we can give it to the canvas for
-	//drawing.
-	xValues = xVals;
-	yValues.resize( xValues.size());
-	Gaussian1D<Float> gaussFit(peak, center, fwhm );
-	for( int i = 0; i < static_cast<int>(xValues.size()); i++ ){
-		yValues[i] = gaussFit.eval(&xValues[i]);
+		fixedPeak( false ), fixedCenter( false ), fixedFwhm( false ) {
+		peak = peakVal;
+		center = centerVal;
+		fwhm = fwhmVal;
 	}
-}
 
-SpecFitGaussian::SpecFitGaussian( const SpecFitGaussian& other ) : SpecFit( other ){
-	initialize( other );
-}
+	void SpecFitGaussian::setPeak( float peakVal ) {
+		peak = peakVal;
+	}
 
-SpecFitGaussian& SpecFitGaussian::operator=(const SpecFitGaussian& other ){
-	if ( this != &other ){
-		SpecFit::initialize( other );
+	float SpecFitGaussian::getPeak() const {
+		return peak;
+	}
+
+	void SpecFitGaussian::setCenter( float centerVal ) {
+		center = centerVal;
+	}
+
+	float SpecFitGaussian::getCenter() const {
+		return center;
+	}
+
+	void SpecFitGaussian::setFWHM( float fwhmVal ) {
+		fwhm = fwhmVal;
+	}
+
+	float SpecFitGaussian::getFWHM() const {
+		return fwhm;
+	}
+
+	void SpecFitGaussian::setPeakFixed( bool fixed ) {
+		fixedPeak = fixed;
+	}
+
+	void SpecFitGaussian::setCenterFixed( bool fixed ) {
+		fixedCenter = fixed;
+	}
+
+	void SpecFitGaussian::setFwhmFixed( bool fixed ) {
+		fixedFwhm = fixed;
+	}
+
+	bool SpecFitGaussian::isPeakFixed() const {
+		return fixedPeak;
+	}
+
+	bool SpecFitGaussian::isCenterFixed() const {
+		return fixedCenter;
+	}
+
+	bool SpecFitGaussian::isFwhmFixed() const {
+		return fixedFwhm;
+	}
+
+
+	void SpecFitGaussian::evaluate(Vector<Float>& xVals ) {
+		//Model the fit so that we can give it to the canvas for
+		//drawing.
+		xValues = xVals;
+		yValues.resize( xValues.size());
+		Gaussian1D<Float> gaussFit(peak, center, fwhm );
+		for( int i = 0; i < static_cast<int>(xValues.size()); i++ ) {
+			yValues[i] = gaussFit.eval(&xValues[i]);
+		}
+	}
+
+	SpecFitGaussian::SpecFitGaussian( const SpecFitGaussian& other ) : SpecFit( other ) {
 		initialize( other );
 	}
-	return *this;
-}
 
-void SpecFitGaussian::initialize( const SpecFitGaussian& other ){
-	peak = other.peak;
-	center = other.center;
-	fwhm = other.fwhm;
-	fixedPeak = other.fixedPeak;
-	fixedCenter = other.fixedCenter;
-	fixedFwhm = other.fixedFwhm;
-}
+	SpecFitGaussian& SpecFitGaussian::operator=(const SpecFitGaussian& other ) {
+		if ( this != &other ) {
+			SpecFit::initialize( other );
+			initialize( other );
+		}
+		return *this;
+	}
 
-SpecFitGaussian::~SpecFitGaussian() {
-	// TODO Auto-generated destructor stub
-}
+	void SpecFitGaussian::initialize( const SpecFitGaussian& other ) {
+		peak = other.peak;
+		center = other.center;
+		fwhm = other.fwhm;
+		fixedPeak = other.fixedPeak;
+		fixedCenter = other.fixedCenter;
+		fixedFwhm = other.fixedFwhm;
+	}
+
+	SpecFitGaussian::~SpecFitGaussian() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

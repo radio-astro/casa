@@ -48,114 +48,118 @@
 
 namespace casa {
 
-class QtDisplayPanel;
+	class QtDisplayPanel;
 
 
 
-class QtMouseToolButton: public QToolButton {
-  
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+	class QtMouseToolButton: public QToolButton {
+
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
- public: 
- 
-  QtMouseToolButton(const std::string &type, QWidget* parent = 0);
-  virtual ~QtMouseToolButton() {  }
+	public:
 
-  virtual std::string getIconStr(Int) const;
-  
- protected:
-  
-  virtual void mousePressEvent(QMouseEvent*);
-  void mouseMoveEvent   (QMouseEvent *) {  }
-  void mouseReleaseEvent(QMouseEvent *) {  }
-  
-  // (Prevents interference with right mouse button).
-  void contextMenuEvent(QContextMenuEvent *event) { event->accept();  }
-  
- signals:
- 
-  void mouseToolBtnPress(String tool, Int btn);
-  void mouseToolBtnState(String tool, Int state);
+		QtMouseToolButton(const std::string &type, QWidget* parent = 0);
+		virtual ~QtMouseToolButton() {  }
 
- private:
-  std::string tool_;
+		virtual std::string getIconStr(Int) const;
 
-};
+	protected:
+
+		virtual void mousePressEvent(QMouseEvent*);
+		void mouseMoveEvent   (QMouseEvent *) {  }
+		void mouseReleaseEvent(QMouseEvent *) {  }
+
+		// (Prevents interference with right mouse button).
+		void contextMenuEvent(QContextMenuEvent *event) {
+			event->accept();
+		}
+
+	signals:
+
+		void mouseToolBtnPress(String tool, Int btn);
+		void mouseToolBtnState(String tool, Int state);
+
+	private:
+		std::string tool_;
+
+	};
 
 
 
-class QtPointToolButton: public QtMouseToolButton {
-  
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+	class QtPointToolButton: public QtMouseToolButton {
+
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
- public: 
- 
-  QtPointToolButton(QWidget* parent = 0);
-  ~QtPointToolButton() { delete timer; }
+	public:
 
- protected:
+		QtPointToolButton(QWidget* parent = 0);
+		~QtPointToolButton() {
+			delete timer;
+		}
 
-  Casarc &rc;
+	protected:
 
-  virtual void mousePressEvent(QMouseEvent*);
-  virtual void mouseReleaseEvent(QMouseEvent*);
+		Casarc &rc;
 
-  QTimer *timer;
-  QPoint popup_menu_pos;
-  
- protected slots:
-  void show_context_menu( const QPoint & );
-  void popup_options_menu( );
+		virtual void mousePressEvent(QMouseEvent*);
+		virtual void mouseReleaseEvent(QMouseEvent*);
 
-};
+		QTimer *timer;
+		QPoint popup_menu_pos;
+
+	protected slots:
+		void show_context_menu( const QPoint & );
+		void popup_options_menu( );
+
+	};
 
 
 
 
-class QtMouseToolBar: public QToolBar {
-  
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+	class QtMouseToolBar: public QToolBar {
+
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
 
- public: 
- 
-  QtMouseToolBar(QtMouseToolState* msbtns, QtDisplayPanel* qdp = 0,
-		 QWidget* parent = 0);
-  ~QtMouseToolBar() {  }
+	public:
 
-  QtMouseToolButton *button( const std::string &name );
-  
- 
- protected slots:
-  
-  // Connected to the QtMouseToolState::mouseBtnChg() signal.  Changes the
-  // tool button's (QAction's) state (icon, whether checked), to reflect
-  // the [new] mouse button assignment for a given mouse tool.
-  virtual void chgMouseBtn_(std::string tool, Int button);
-  
-  // Overridden from QToolBar, responding to clicks from any mouse button.
-  // Relays that mouse button to central registry for assignment to 
-  // desired tool.
-  //void mouseReleaseEvent(QMouseEvent *event);
+		QtMouseToolBar(QtMouseToolState* msbtns, QtDisplayPanel* qdp = 0,
+		               QWidget* parent = 0);
+		~QtMouseToolBar() {  }
 
- 
- protected:
- 
-  // Holds button state for all mouse-tool bars and display panels.
-  QtMouseToolState* msbtns_;
-  
-  // Names of tools within this toolbar (in order)
-  Vector<String> tools_;
+		QtMouseToolButton *button( const std::string &name );
 
-  std::map<std::string,QtMouseToolButton*> buttons_;
-  
-};
+
+	protected slots:
+
+		// Connected to the QtMouseToolState::mouseBtnChg() signal.  Changes the
+		// tool button's (QAction's) state (icon, whether checked), to reflect
+		// the [new] mouse button assignment for a given mouse tool.
+		virtual void chgMouseBtn_(std::string tool, Int button);
+
+		// Overridden from QToolBar, responding to clicks from any mouse button.
+		// Relays that mouse button to central registry for assignment to
+		// desired tool.
+		//void mouseReleaseEvent(QMouseEvent *event);
+
+
+	protected:
+
+		// Holds button state for all mouse-tool bars and display panels.
+		QtMouseToolState* msbtns_;
+
+		// Names of tools within this toolbar (in order)
+		Vector<String> tools_;
+
+		std::map<std::string,QtMouseToolButton*> buttons_;
+
+	};
 
 
 } //# NAMESPACE CASA - END

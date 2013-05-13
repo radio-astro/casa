@@ -15,7 +15,7 @@ class QPainter;
 
 namespace casa {
 
-class Annotation : public PropertyListener {
+	class Annotation : public PropertyListener {
 	public:
 		Annotation( QWidget* parent = NULL );
 
@@ -78,7 +78,7 @@ class Annotation : public PropertyListener {
 		const int MIN_WIDTH;
 		const int MIN_HEIGHT;
 		MouseLocation mouseLocation;
-};
+	};
 
 } /* namespace casa */
 #endif /* ANNOTATION_H_ */

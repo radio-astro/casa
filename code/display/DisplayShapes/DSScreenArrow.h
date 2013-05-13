@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSSCREENARROW_H
 #define TRIALDISPLAY_DSSCREENARROW_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <casa/Quanta/Quantum.h>
@@ -45,53 +45,53 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of a relative screen pos DSArrow
 // </summary>
 
-class PixelCanvas;
-class DSPixelArrow;
-class DSWorldArrow;
+	class PixelCanvas;
+	class DSPixelArrow;
+	class DSWorldArrow;
 
-class DSScreenArrow : public DSArrow , public DisplayShapeWithCoords{
+	class DSScreenArrow : public DSArrow , public DisplayShapeWithCoords {
 
-public:
+	public:
 
-  DSScreenArrow();
-  DSScreenArrow(const Record& settings, PixelCanvas* pc);
-  DSScreenArrow(DSPixelArrow& other, PixelCanvas* pc);
-  DSScreenArrow(DSWorldArrow& other);
+		DSScreenArrow();
+		DSScreenArrow(const Record& settings, PixelCanvas* pc);
+		DSScreenArrow(DSPixelArrow& other, PixelCanvas* pc);
+		DSScreenArrow(DSWorldArrow& other);
 
-  virtual ~DSScreenArrow();
-  
-  virtual void recalculateScreenPosition();
-  
-  // So we can update our Screen pos (relative)
-  // <group>
-  virtual void move(const Float& dX, const Float& dY);
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual void rotate(const Float& angle);
-  virtual void scale(const Float& scaleFactor);
-  virtual void setStartPoint(const Vector<Float>& startPoint);
-  virtual void setEndPoint(const Vector<Float>& endPoint);
-  virtual void changePoint(const Vector<Float>&pos, const Int n);
-  virtual void changePoint(const Vector<Float>& pos);
-  // </group>
+		virtual ~DSScreenArrow();
 
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
-  
-  virtual Record getRawOptions() {
-    return DSArrow::getOptions();
-  }
-  
-private:
+		virtual void recalculateScreenPosition();
 
-  // The pixelcanvas we are using
-  PixelCanvas* itsPC;
+		// So we can update our Screen pos (relative)
+		// <group>
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void rotate(const Float& angle);
+		virtual void scale(const Float& scaleFactor);
+		virtual void setStartPoint(const Vector<Float>& startPoint);
+		virtual void setEndPoint(const Vector<Float>& endPoint);
+		virtual void changePoint(const Vector<Float>&pos, const Int n);
+		virtual void changePoint(const Vector<Float>& pos);
+		// </group>
 
-  // The center of the marker in world co-ords.
-  Vector<Float> itsRelativeStart;
-  Vector<Float> itsRelativeEnd;
-  
-  void updateRelative();
-};
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		virtual Record getRawOptions() {
+			return DSArrow::getOptions();
+		}
+
+	private:
+
+		// The pixelcanvas we are using
+		PixelCanvas* itsPC;
+
+		// The center of the marker in world co-ords.
+		Vector<Float> itsRelativeStart;
+		Vector<Float> itsRelativeEnd;
+
+		void updateRelative();
+	};
 
 } //# NAMESPACE CASA - END
 

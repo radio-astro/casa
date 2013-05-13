@@ -43,185 +43,185 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-SkyCatOverlayDM::SkyCatOverlayDM(WorldCanvas *worldCanvas, 
-				     AttributeBuffer *wchAttributes,
-				     AttributeBuffer *ddAttributes,
-				     CachingDisplayData *dd) :
-  CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
-}
+	SkyCatOverlayDM::SkyCatOverlayDM(WorldCanvas *worldCanvas,
+	                                 AttributeBuffer *wchAttributes,
+	                                 AttributeBuffer *ddAttributes,
+	                                 CachingDisplayData *dd) :
+		CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
+	}
 
-SkyCatOverlayDM::~SkyCatOverlayDM() {
-  cleanup();
-}
+	SkyCatOverlayDM::~SkyCatOverlayDM() {
+		cleanup();
+	}
 
 
-Bool SkyCatOverlayDM::drawIntoList(Display::RefreshReason reason,
-				    WorldCanvasHolder &wcHolder) {
-  // Locate the WorldCanvas to draw upon
-  WorldCanvas *wc = wcHolder.worldCanvas();
+	Bool SkyCatOverlayDM::drawIntoList(Display::RefreshReason reason,
+	                                   WorldCanvasHolder &wcHolder) {
+		// Locate the WorldCanvas to draw upon
+		WorldCanvas *wc = wcHolder.worldCanvas();
 
-  SkyCatOverlayDD *parent = dynamic_cast<SkyCatOverlayDD *>
-    (parentDisplayData());
-  if (!parent) {
-    throw(AipsError("invalid parent of SkyCatOverlayDM"));
-  }
+		SkyCatOverlayDD *parent = dynamic_cast<SkyCatOverlayDD *>
+		                          (parentDisplayData());
+		if (!parent) {
+			throw(AipsError("invalid parent of SkyCatOverlayDM"));
+		}
 
-  TableDesc tdesc = parent->table()->tableDesc();
-  ColumnDesc cdesc = tdesc.columnDesc(parent->itsLongitudeColumn);
-  DataType dtype = cdesc.dataType();
-  Vector<Float> longVec, latVec;
-  Vector<String> dirtypeVec;
-  if (dtype == TpFloat) {
-    ROScalarColumn<Float> longCol(*(parent->table()), 
-				  parent->itsLongitudeColumn);
-    longCol.getColumn(longVec, True);
-  } else if (dtype == TpDouble) {
-    ROScalarColumn<Double> longCol(*(parent->table()),
-				   parent->itsLongitudeColumn);
-    Vector<Double> dlongVec;
-    longCol.getColumn(dlongVec, True);
-    longVec.resize(dlongVec.shape());
-    convertArray(longVec, dlongVec);
-  }
+		TableDesc tdesc = parent->table()->tableDesc();
+		ColumnDesc cdesc = tdesc.columnDesc(parent->itsLongitudeColumn);
+		DataType dtype = cdesc.dataType();
+		Vector<Float> longVec, latVec;
+		Vector<String> dirtypeVec;
+		if (dtype == TpFloat) {
+			ROScalarColumn<Float> longCol(*(parent->table()),
+			                              parent->itsLongitudeColumn);
+			longCol.getColumn(longVec, True);
+		} else if (dtype == TpDouble) {
+			ROScalarColumn<Double> longCol(*(parent->table()),
+			                               parent->itsLongitudeColumn);
+			Vector<Double> dlongVec;
+			longCol.getColumn(dlongVec, True);
+			longVec.resize(dlongVec.shape());
+			convertArray(longVec, dlongVec);
+		}
 
-  cdesc = tdesc.columnDesc(parent->itsLatitudeColumn);
-  dtype = cdesc.dataType();
-  if (dtype == TpFloat) {
-    ROScalarColumn<Float> latCol(*(parent->table()), 
-				  parent->itsLatitudeColumn);
-    latCol.getColumn(latVec, True);
-  } else if (dtype == TpDouble) {
-    ROScalarColumn<Double> latCol(*(parent->table()),
-				   parent->itsLatitudeColumn);
-    Vector<Double> dlatVec;
-    latCol.getColumn(dlatVec, True);
-    latVec.resize(dlatVec.shape());
-    convertArray(latVec, dlatVec);
-  }
+		cdesc = tdesc.columnDesc(parent->itsLatitudeColumn);
+		dtype = cdesc.dataType();
+		if (dtype == TpFloat) {
+			ROScalarColumn<Float> latCol(*(parent->table()),
+			                             parent->itsLatitudeColumn);
+			latCol.getColumn(latVec, True);
+		} else if (dtype == TpDouble) {
+			ROScalarColumn<Double> latCol(*(parent->table()),
+			                              parent->itsLatitudeColumn);
+			Vector<Double> dlatVec;
+			latCol.getColumn(dlatVec, True);
+			latVec.resize(dlatVec.shape());
+			convertArray(latVec, dlatVec);
+		}
 
-  if (latVec.nelements() != longVec.nelements()) {
-    throw(AipsError("Non-conformant Long/Lat columns"));
-  }
+		if (latVec.nelements() != longVec.nelements()) {
+			throw(AipsError("Non-conformant Long/Lat columns"));
+		}
 
-  Unit longUnit(parent->columnUnit(parent->itsLongitudeColumn));
-  Unit latUnit(parent->columnUnit(parent->itsLatitudeColumn));
+		Unit longUnit(parent->columnUnit(parent->itsLongitudeColumn));
+		Unit latUnit(parent->columnUnit(parent->itsLatitudeColumn));
 
-  cdesc = tdesc.columnDesc(parent->itsDirectionTypeColumn);
-  ROScalarColumn<String> dirtypeCol(*(parent->table()), 
-				  parent->itsDirectionTypeColumn);
-  dirtypeCol.getColumn(dirtypeVec, True);
-    
+		cdesc = tdesc.columnDesc(parent->itsDirectionTypeColumn);
+		ROScalarColumn<String> dirtypeCol(*(parent->table()),
+		                                  parent->itsDirectionTypeColumn);
+		dirtypeCol.getColumn(dirtypeVec, True);
 
-  String xaxiscode, yaxiscode;
-  String xattString("xaxiscode (required match)");
-  String yattString("yaxiscode (required match)");
 
-  if (!wc->getAttributeValue(xattString, xaxiscode) ||
-      !wc->getAttributeValue(yattString, yaxiscode)) {
-    throw(AipsError("Unable to determine WorldCanvas axiscodes"));
-  }	// (shouldn't happen anymore, since conformsTo[CS]() is now tested
-  	// for direction axis codes before allowing draw() to be called..)
-  
-  // ASSUMPTION: axiscodes are the same for x and y
+		String xaxiscode, yaxiscode;
+		String xattString("xaxiscode (required match)");
+		String yattString("yaxiscode (required match)");
 
-  String wcxaxisrefcode = "";
-  String wcyaxisrefcode = "";  
+		if (!wc->getAttributeValue(xattString, xaxiscode) ||
+		        !wc->getAttributeValue(yattString, yaxiscode)) {
+			throw(AipsError("Unable to determine WorldCanvas axiscodes"));
+		}	// (shouldn't happen anymore, since conformsTo[CS]() is now tested
+		// for direction axis codes before allowing draw() to be called..)
 
-  if (xaxiscode.contains("Direction") && yaxiscode.contains("Direction")) {
-    String tmp = xaxiscode.after("Direction");
-    wcxaxisrefcode = tmp.at(0,tmp.length()-1);
-    tmp = yaxiscode.after("Direction");
-    wcyaxisrefcode = tmp.at(0,tmp.length()-1);
-  }
-  if (wcxaxisrefcode == "" || wcyaxisrefcode == "") {
-    throw(AipsError("Overlays only possible using direction (lon,lat) on WorldCanvas"));
-  }
+		// ASSUMPTION: axiscodes are the same for x and y
 
-  MDirection::Types dirtype;
-  if (!MDirection::getType(dirtype, wcxaxisrefcode) ||
-      !MDirection::getType(dirtype, wcyaxisrefcode)) {
-    throw(AipsError("Unable to parse Direction type"));
-  }
+		String wcxaxisrefcode = "";
+		String wcyaxisrefcode = "";
 
-  MDirection mdir;
-  MDirection::Ref mref;
-  MDirection::Ref min;
-  mdir.giveMe(mref,wcxaxisrefcode);
-  Vector<Float> long_rad,lat_rad;
-  long_rad.resize(longVec.nelements());
-  lat_rad.resize(latVec.nelements());
+		if (xaxiscode.contains("Direction") && yaxiscode.contains("Direction")) {
+			String tmp = xaxiscode.after("Direction");
+			wcxaxisrefcode = tmp.at(0,tmp.length()-1);
+			tmp = yaxiscode.after("Direction");
+			wcyaxisrefcode = tmp.at(0,tmp.length()-1);
+		}
+		if (wcxaxisrefcode == "" || wcyaxisrefcode == "") {
+			throw(AipsError("Overlays only possible using direction (lon,lat) on WorldCanvas"));
+		}
 
-  // ASSUMPTION: assume that WorldCanvas units are radians - this 
-  // will be fixed when WorldCanvas learns about CoordinateSystem.
+		MDirection::Types dirtype;
+		if (!MDirection::getType(dirtype, wcxaxisrefcode) ||
+		        !MDirection::getType(dirtype, wcyaxisrefcode)) {
+			throw(AipsError("Unable to parse Direction type"));
+		}
 
-  Quantity longQnt,latQnt;
-  Unit wcUnit("rad");
-  for (uInt i=0; i< longVec.nelements(); i++) {
-    mdir.giveMe(min,dirtypeVec(i));
-    longQnt = Quantity(longVec(i),longUnit);
-    latQnt = Quantity(latVec(i),latUnit);
-    if (wcxaxisrefcode != dirtypeVec(i) ) {
-      mdir = MDirection::Convert(MDirection(longQnt,latQnt,min),
-				 mref) ();
-      long_rad(i) = (mdir.getAngle(wcUnit)).getValue()(0);
-      lat_rad(i) = (mdir.getAngle(wcUnit)).getValue()(1);
-    } else {
-      long_rad(i) = longQnt.getValue(wcUnit);
-      lat_rad(i) = latQnt.getValue(wcUnit);
-    }
-  }
+		MDirection mdir;
+		MDirection::Ref mref;
+		MDirection::Ref min;
+		mdir.giveMe(mref,wcxaxisrefcode);
+		Vector<Float> long_rad,lat_rad;
+		long_rad.resize(longVec.nelements());
+		lat_rad.resize(latVec.nelements());
 
-  // finally draw the markers
-  wc->setLineWidth(parent->lineWidth());
-  wc->setColor(parent->markerColor());
+		// ASSUMPTION: assume that WorldCanvas units are radians - this
+		// will be fixed when WorldCanvas learns about CoordinateSystem.
 
-  if (parent->mapColumn() != "<none>") {
-    ROTableColumn mapCol(*(parent->table()),
-			 parent->mapColumn());
-    Vector<Float> mapVec(parent->table()->nrow());
-    for (uInt i=0; i < mapVec.nelements(); ++i) {
-      mapVec(i) = mapCol.asfloat(i);
-    }
-    wc->drawMappedMarkers(long_rad, lat_rad, mapVec, 1, 20,
-			  parent->markerType());
-  } else {    
-    wc->drawMarkers(long_rad, lat_rad, parent->markerType(),
-		    parent->markerSize());
-  }
-  if (parent->nameColumn() != "<none>") {
-    ROScalarColumn<String> nameCol(*(parent->table()),
-				   parent->nameColumn());
-    Vector<String> nameVec;
-    nameCol.getColumn(nameVec, True);
-    wc->setColor(parent->charColor());
-    cpgsch(parent->charSize());
-    if (parent->charFont() == "roman") {
-      cpgscf(2);
-    } else if (parent->charFont() == "italic") {
-      cpgscf(3); 
-    } else if (parent->charFont() == "script") {
-      cpgscf(4);
-    } else {
-      cpgscf(1);
-    }
-    wc->drawTextStrings(long_rad, lat_rad, nameVec, parent->charAngle(), 
-                        parent->labelXOffset(), parent->labelYOffset());    
-  }
-  return True;
-}
+		Quantity longQnt,latQnt;
+		Unit wcUnit("rad");
+		for (uInt i=0; i< longVec.nelements(); i++) {
+			mdir.giveMe(min,dirtypeVec(i));
+			longQnt = Quantity(longVec(i),longUnit);
+			latQnt = Quantity(latVec(i),latUnit);
+			if (wcxaxisrefcode != dirtypeVec(i) ) {
+				mdir = MDirection::Convert(MDirection(longQnt,latQnt,min),
+				                           mref) ();
+				long_rad(i) = (mdir.getAngle(wcUnit)).getValue()(0);
+				lat_rad(i) = (mdir.getAngle(wcUnit)).getValue()(1);
+			} else {
+				long_rad(i) = longQnt.getValue(wcUnit);
+				lat_rad(i) = latQnt.getValue(wcUnit);
+			}
+		}
 
-void SkyCatOverlayDM::cleanup() {
-}
+		// finally draw the markers
+		wc->setLineWidth(parent->lineWidth());
+		wc->setColor(parent->markerColor());
 
-SkyCatOverlayDM::SkyCatOverlayDM() {
-}
+		if (parent->mapColumn() != "<none>") {
+			ROTableColumn mapCol(*(parent->table()),
+			                     parent->mapColumn());
+			Vector<Float> mapVec(parent->table()->nrow());
+			for (uInt i=0; i < mapVec.nelements(); ++i) {
+				mapVec(i) = mapCol.asfloat(i);
+			}
+			wc->drawMappedMarkers(long_rad, lat_rad, mapVec, 1, 20,
+			                      parent->markerType());
+		} else {
+			wc->drawMarkers(long_rad, lat_rad, parent->markerType(),
+			                parent->markerSize());
+		}
+		if (parent->nameColumn() != "<none>") {
+			ROScalarColumn<String> nameCol(*(parent->table()),
+			                               parent->nameColumn());
+			Vector<String> nameVec;
+			nameCol.getColumn(nameVec, True);
+			wc->setColor(parent->charColor());
+			cpgsch(parent->charSize());
+			if (parent->charFont() == "roman") {
+				cpgscf(2);
+			} else if (parent->charFont() == "italic") {
+				cpgscf(3);
+			} else if (parent->charFont() == "script") {
+				cpgscf(4);
+			} else {
+				cpgscf(1);
+			}
+			wc->drawTextStrings(long_rad, lat_rad, nameVec, parent->charAngle(),
+			                    parent->labelXOffset(), parent->labelYOffset());
+		}
+		return True;
+	}
 
-SkyCatOverlayDM::SkyCatOverlayDM(const SkyCatOverlayDM &other) :
-  CachingDisplayMethod(other) {
-}
+	void SkyCatOverlayDM::cleanup() {
+	}
 
-void SkyCatOverlayDM::operator=(const SkyCatOverlayDM &) {
-}
+	SkyCatOverlayDM::SkyCatOverlayDM() {
+	}
+
+	SkyCatOverlayDM::SkyCatOverlayDM(const SkyCatOverlayDM &other) :
+		CachingDisplayMethod(other) {
+	}
+
+	void SkyCatOverlayDM::operator=(const SkyCatOverlayDM &) {
+	}
 
 
 } //# NAMESPACE CASA - END

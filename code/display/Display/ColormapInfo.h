@@ -29,7 +29,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class Colormap;
+	class Colormap;
 
 #ifndef TRIALDISPLAY_COLORMAPINFO_H
 #define TRIALDISPLAY_COLORMAPINFO_H
@@ -47,72 +47,77 @@ class Colormap;
 // <example>
 // </example>
 
-class ColormapInfo {
+	class ColormapInfo {
 
- public:
+	public:
 
-  // (Required) default constructor.
-  ColormapInfo();
+		// (Required) default constructor.
+		ColormapInfo();
 
-  // Constructor taking a pointer to a Colormap, and the initial
-  // weight, offset and size of the Colormap.
-  ColormapInfo(const Colormap *colormap, const Float &weight, 
-	       const uInt &offset, const uInt &size);
+		// Constructor taking a pointer to a Colormap, and the initial
+		// weight, offset and size of the Colormap.
+		ColormapInfo(const Colormap *colormap, const Float &weight,
+		             const uInt &offset, const uInt &size);
 
-  // Yield a pointer to the Colormap about which this stores
-  // information.
-  const Colormap *colormap() const 
-    { return itsColormap; }
+		// Yield a pointer to the Colormap about which this stores
+		// information.
+		const Colormap *colormap() const {
+			return itsColormap;
+		}
 
-  // Return the current weight for this mapping.
-  Float weight() const 
-    { return itsWeight; }
+		// Return the current weight for this mapping.
+		Float weight() const {
+			return itsWeight;
+		}
 
-  // Return the current offset for this mapping.
-  uInt offset() const 
-    { return itsOffset; }
+		// Return the current offset for this mapping.
+		uInt offset() const {
+			return itsOffset;
+		}
 
-  // Return the current size for this mapping.
-  uInt size() const 
-    { return itsSize; }
+		// Return the current size for this mapping.
+		uInt size() const {
+			return itsSize;
+		}
 
-  // Set the weight for this mapping.
-  void setWeight(const Float &weight);
+		// Set the weight for this mapping.
+		void setWeight(const Float &weight);
 
-  // Set the offset for this mapping.
-  void setOffset(const uInt &offset);
+		// Set the offset for this mapping.
+		void setOffset(const uInt &offset);
 
-  // Set the size for this mapping.
-  void setSize(const uInt &size);
+		// Set the size for this mapping.
+		void setSize(const uInt &size);
 
-  // Increment and decrement the reference count for this mapping.
-  // <group>
-  void ref();
-  void unref();
-  // </group>
+		// Increment and decrement the reference count for this mapping.
+		// <group>
+		void ref();
+		void unref();
+		// </group>
 
-  // Return the current reference count.
-  uInt refCount() const 
-    { return itsRefCount; }
+		// Return the current reference count.
+		uInt refCount() const {
+			return itsRefCount;
+		}
 
-private:
+	private:
 
-  // Store the Colormap of this mapping here.
-  const Colormap *itsColormap;
+		// Store the Colormap of this mapping here.
+		const Colormap *itsColormap;
 
-  // Store the weight of the mapping here.
-  Float itsWeight;
+		// Store the weight of the mapping here.
+		Float itsWeight;
 
-  // Store the offset of the mapping here.
-  uInt itsOffset;
+		// Store the offset of the mapping here.
+		uInt itsOffset;
 
-  // Store the size of the mapping here.
-  uInt itsSize;
+		// Store the size of the mapping here.
+		uInt itsSize;
 
-  // Store the reference count of the mapping here.
-  Int itsRefCount;
+		// Store the reference count of the mapping here.
+		Int itsRefCount;
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

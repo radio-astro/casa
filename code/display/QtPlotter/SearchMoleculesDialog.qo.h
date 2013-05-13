@@ -30,34 +30,33 @@
 #include <casa/aips.h>
 namespace casa {
 
-class SearchMoleculesWidget;
-class SearchMoleculesResultsWidget;
+	class SearchMoleculesWidget;
+	class SearchMoleculesResultsWidget;
 
-class SearchMoleculesDialog : public QDialog
-{
-    Q_OBJECT
+	class SearchMoleculesDialog : public QDialog {
+		Q_OBJECT
 
-public:
-    SearchMoleculesDialog(QWidget *parent = 0);
-    QList<int> getLineIndices() const;
-    bool getLine(int lineIndex, Float& peak, Float& center, QString& molecularName,
-    		QString& chemicalName, QString& resolvedQNs, QString& frequencyUnit) const;
-    void setRange( float min, float max, QString units );
-    double getRedShiftedValue( bool reverseRedshift, float value ) const;
-    void searchFinished();
-    void updateReferenceFrame();
-    QString getUnit() const;
-    ~SearchMoleculesDialog();
+	public:
+		SearchMoleculesDialog(QWidget *parent = 0);
+		QList<int> getLineIndices() const;
+		bool getLine(int lineIndex, Float& peak, Float& center, QString& molecularName,
+		             QString& chemicalName, QString& resolvedQNs, QString& frequencyUnit) const;
+		void setRange( float min, float max, QString units );
+		double getRedShiftedValue( bool reverseRedshift, float value ) const;
+		void searchFinished();
+		void updateReferenceFrame();
+		QString getUnit() const;
+		~SearchMoleculesDialog();
 
-signals:
-	void moleculesSelected();
+	signals:
+		void moleculesSelected();
 
 
-private:
-	SearchMoleculesWidget* searchWidget;
-	SearchMoleculesResultsWidget* searchResultsWidget;
-    Ui::SearchMoleculesDialog ui;
+	private:
+		SearchMoleculesWidget* searchWidget;
+		SearchMoleculesResultsWidget* searchResultsWidget;
+		Ui::SearchMoleculesDialog ui;
 
-};
+	};
 }
 #endif // SEARCHMOLECULES_QO_H

@@ -35,69 +35,75 @@
 #  include <QColor>
 #include <graphics/X11/X_exit.h>
 
- 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-class QtLELEdit : public QLineEdit {
-  //# Used within QtDataManager's designer-created gui (QtDataManager.ui[.h]).
-  //# A QLineEdit which also signals whenever it gets focus.
-   
-  Q_OBJECT
- 
- 
- public:
- 
-  QtLELEdit(QWidget* parent=0) : QLineEdit(parent) {
-    
-    inactivePalette_ = activePalette_ = palette();
-    
-    //# The inactive pallette shows text in the 'disabled' color, even
-    //# if the edit widget is not really disabled.  This is to provide
-    //# feedback that the LEL expression is / is not being used.
-    
-    QColor dsbldText = palette().color(QPalette::Disabled, QPalette::Text);
-    inactivePalette_.setColor(QPalette::Active, QPalette::Text, dsbldText);
-    inactivePalette_.setColor(QPalette::Inactive, QPalette::Text, dsbldText);
+	class QtLELEdit : public QLineEdit {
+		//# Used within QtDataManager's designer-created gui (QtDataManager.ui[.h]).
+		//# A QLineEdit which also signals whenever it gets focus.
 
-    deactivate();  }
-     
-  
-  Bool isActive() { return active_;  }
- 
- 
- signals:
- 
-  void gotFocus(QFocusEvent* ev);
+		Q_OBJECT
 
- 
- public slots:
- 
-  virtual void  activate() {
-    setPalette(activePalette_);
-    active_ = True;  }
-  
-  virtual void deactivate() {
-    setPalette(inactivePalette_);
-    active_ = False;  }
-  
-   
-  
- protected slots:
-  
-  virtual void focusInEvent(QFocusEvent* ev) {
-    QLineEdit::focusInEvent(ev);
-    activate();
-    emit gotFocus(ev);  }
 
-    
- protected:
- 
-  QPalette activePalette_;
-  QPalette inactivePalette_;
-  Bool active_;
-     
-};
+	public:
+
+		QtLELEdit(QWidget* parent=0) : QLineEdit(parent) {
+
+			inactivePalette_ = activePalette_ = palette();
+
+			//# The inactive pallette shows text in the 'disabled' color, even
+			//# if the edit widget is not really disabled.  This is to provide
+			//# feedback that the LEL expression is / is not being used.
+
+			QColor dsbldText = palette().color(QPalette::Disabled, QPalette::Text);
+			inactivePalette_.setColor(QPalette::Active, QPalette::Text, dsbldText);
+			inactivePalette_.setColor(QPalette::Inactive, QPalette::Text, dsbldText);
+
+			deactivate();
+		}
+
+
+		Bool isActive() {
+			return active_;
+		}
+
+
+	signals:
+
+		void gotFocus(QFocusEvent* ev);
+
+
+	public slots:
+
+		virtual void  activate() {
+			setPalette(activePalette_);
+			active_ = True;
+		}
+
+		virtual void deactivate() {
+			setPalette(inactivePalette_);
+			active_ = False;
+		}
+
+
+
+	protected slots:
+
+		virtual void focusInEvent(QFocusEvent* ev) {
+			QLineEdit::focusInEvent(ev);
+			activate();
+			emit gotFocus(ev);
+		}
+
+
+	protected:
+
+		QPalette activePalette_;
+		QPalette inactivePalette_;
+		Bool active_;
+
+	};
 
 
 

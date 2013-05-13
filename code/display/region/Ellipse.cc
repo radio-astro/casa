@@ -63,8 +63,7 @@ namespace casa {
 			double wx, wy;
 			try {
 				linear_to_world( wc_, (blc_x + trc_x) / 2.0, (blc_y + trc_y) / 2.0, wx, wy );
-			}
-			catch(...) {
+			} catch(...) {
 				return 0;
 			}
 			const Vector<String> &units = wc_->worldAxisUnits( );
@@ -76,8 +75,7 @@ namespace casa {
 			double wblc_x, wblc_y, wtrc_x, wtrc_y;
 			try {
 				linear_to_world( wc_, blc_x, blc_y, trc_x, trc_y, wblc_x, wblc_y, wtrc_x, wtrc_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return 0;
 			}
 			// The position angle (rot) is the angle between north and the major axis of the
@@ -142,14 +140,12 @@ namespace casa {
 			int cx, cy;
 			try {
 				linear_to_screen( wc_, blc_x, blc_y, trc_x, trc_y, x1, y1, x2, y2 );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 			try {
 				linear_to_screen( wc_, center_x, center_y, cx, cy );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
@@ -177,8 +173,7 @@ namespace casa {
 				double xdx, ydy;
 				try {
 					screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy );
-				}
-				catch(...) {
+				} catch(...) {
 					return;
 				}
 				handle_delta_x = xdx - blc_x;

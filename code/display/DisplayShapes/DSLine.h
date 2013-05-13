@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSLINE_H
 #define TRIALDISPLAY_DSLINE_H
@@ -35,7 +35,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <class T> class Vector;
+	template <class T> class Vector;
 
 // <summary>
 // Implementation of a line.
@@ -51,19 +51,19 @@ template <class T> class Vector;
 // </etymology>
 //
 // <synopsis>
-// DSLine simply extends from DSPolyLine, and adds specific functions to a 
-// line with only two points (e.g. setStartPoint) 
+// DSLine simply extends from DSPolyLine, and adds specific functions to a
+// line with only two points (e.g. setStartPoint)
 //
-// There are generally two ways to make DisplayShape(s); To create them in 
-// "one hit" by providing arguments to the constructor, or by using the 
-// default constructor and then the "setOptions" method. A simple interface 
-// for all classes inheriting from the 
-// <linkto class="DisplayShape">DisplayShape</linkto> class is provided by 
+// There are generally two ways to make DisplayShape(s); To create them in
+// "one hit" by providing arguments to the constructor, or by using the
+// default constructor and then the "setOptions" method. A simple interface
+// for all classes inheriting from the
+// <linkto class="DisplayShape">DisplayShape</linkto> class is provided by
 // <linkto class="DisplayShapeInterface">DisplayShapeInterface</linkto>.
 // </synopsis>
 //
 // <motivation>
-// The need for a basic line drawing tool. 
+// The need for a basic line drawing tool.
 // </motivation>
 //
 // <example>
@@ -87,64 +87,64 @@ template <class T> class Vector;
 // </srcblock>
 // </example>
 
-class DSLine : public DSPolyLine {
+	class DSLine : public DSPolyLine {
 
-public:
+	public:
 
-  // Constructors and Destructors
-  // <group>
-  DSLine();
-  DSLine(const DSLine &other);
-  DSLine(const Vector<Float>& startPos, const Vector<Float>& endPos, 
-	 const Bool& handles = True, const Bool& drawHandles = True);
-  virtual ~DSLine();
-  // </group>
+		// Constructors and Destructors
+		// <group>
+		DSLine();
+		DSLine(const DSLine &other);
+		DSLine(const Vector<Float>& startPos, const Vector<Float>& endPos,
+		       const Bool& handles = True, const Bool& drawHandles = True);
+		virtual ~DSLine();
+		// </group>
 
-  // This does nothing, it's so arrow and other inheriting classes can 
-  // take note of new centers
-  virtual void setCenter(const Float& xPos, const Float& yPos);
+		// This does nothing, it's so arrow and other inheriting classes can
+		// take note of new centers
+		virtual void setCenter(const Float& xPos, const Float& yPos);
 
-  // Does this line have a valid start and a valid end?
-  virtual Bool isValid();
+		// Does this line have a valid start and a valid end?
+		virtual Bool isValid();
 
-  // Line specific functions for ease of use
-  // <group>
-  virtual void setStartPoint(const Vector<Float>& start);
-  virtual void setEndPoint(const Vector<Float>& end);
-  // </group>
+		// Line specific functions for ease of use
+		// <group>
+		virtual void setStartPoint(const Vector<Float>& start);
+		virtual void setEndPoint(const Vector<Float>& end);
+		// </group>
 
-  // Set and get options
-  // <group>
-  virtual Record getOptions();
-  virtual Bool setOptions(const Record& newSettings);
-  // </group>
+		// Set and get options
+		// <group>
+		virtual Record getOptions();
+		virtual Bool setOptions(const Record& newSettings);
+		// </group>
 
-private:
+	private:
 
 
-  Bool itsValidStart, itsValidEnd;
+		Bool itsValidStart, itsValidEnd;
 
-  // These are to hold the points while line is being made (line is invalid).
-  Vector<Float> itsStart;
-  Vector<Float> itsEnd;
+		// These are to hold the points while line is being made (line is invalid).
+		Vector<Float> itsStart;
+		Vector<Float> itsEnd;
 
-protected: 
-  
-  virtual Bool validStart() {
-    return itsValidStart;
-  }
+	protected:
 
-  virtual Bool validEnd() {
-    return itsValidEnd;
-  }
+		virtual Bool validStart() {
+			return itsValidStart;
+		}
 
-  virtual void make();
-  // General utility functions. 
-  // <group>
-  virtual Matrix<Float> getEnds();
-  virtual Matrix<Float> asPolyLine(const Vector<Float>& startPos, const Vector<Float>& endPos);
-  // </group>
-};
+		virtual Bool validEnd() {
+			return itsValidEnd;
+		}
+
+		virtual void make();
+		// General utility functions.
+		// <group>
+		virtual Matrix<Float> getEnds();
+		virtual Matrix<Float> asPolyLine(const Vector<Float>& startPos, const Vector<Float>& endPos);
+		// </group>
+	};
 
 
 } //# NAMESPACE CASA - END

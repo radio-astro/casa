@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <casa/aips.h>
 
@@ -34,147 +34,150 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSLine::DSLine() :
-  DSPolyLine() {
- 
-  itsValidStart = False;
-  itsValidEnd = False;
-}
+	DSLine::DSLine() :
+		DSPolyLine() {
 
-DSLine::DSLine(const DSLine& other) :
-  DSPolyLine(other),
-  itsValidStart(other.itsValidStart),
-  itsValidEnd(other.itsValidEnd),
-  itsStart(other.itsStart),
-  itsEnd(other.itsEnd) {
-}
+		itsValidStart = False;
+		itsValidEnd = False;
+	}
 
-DSLine::~DSLine() {
+	DSLine::DSLine(const DSLine& other) :
+		DSPolyLine(other),
+		itsValidStart(other.itsValidStart),
+		itsValidEnd(other.itsValidEnd),
+		itsStart(other.itsStart),
+		itsEnd(other.itsEnd) {
+	}
 
-}
-DSLine::DSLine(const Vector<Float>& startPos, const Vector<Float>& endPos, 
-	       const Bool& handles, const Bool& drawHandles) : 
+	DSLine::~DSLine() {
 
-  DSPolyLine() {
+	}
+	DSLine::DSLine(const Vector<Float>& startPos, const Vector<Float>& endPos,
+	               const Bool& handles, const Bool& drawHandles) :
 
-  // Valid:
-  itsValidStart = True;
-  itsValidEnd = True;
-  itsStart = startPos;
-  itsEnd = endPos;
+		DSPolyLine() {
 
-  setHasHandles(handles);
-  setDrawHandles(drawHandles);
-  make();
-}
+		// Valid:
+		itsValidStart = True;
+		itsValidEnd = True;
+		itsStart = startPos;
+		itsEnd = endPos;
 
-void DSLine::make() {
-  if (isValid()) {
-    buildHandles(asPolyLine(itsStart, itsEnd));
-    setPoints(asPolyLine(itsStart, itsEnd));
-  } else {
-    //cerr << "DSLine.cc - Debug - Create called too early!" << endl;
-  }
-}
+		setHasHandles(handles);
+		setDrawHandles(drawHandles);
+		make();
+	}
 
-Matrix<Float> DSLine::getEnds() {
-  return(DSPolyLine::getPoints());
-}
+	void DSLine::make() {
+		if (isValid()) {
+			buildHandles(asPolyLine(itsStart, itsEnd));
+			setPoints(asPolyLine(itsStart, itsEnd));
+		} else {
+			//cerr << "DSLine.cc - Debug - Create called too early!" << endl;
+		}
+	}
 
-Bool DSLine::isValid() {
-  return (itsValidStart && itsValidEnd);
-}
+	Matrix<Float> DSLine::getEnds() {
+		return(DSPolyLine::getPoints());
+	}
 
-void DSLine::setCenter(const Float& xPos, const Float& yPos) {
-  if (isValid()) {
-    DSPolyLine::setCenter(xPos, yPos);
-  } else {
-    itsStart(0) = xPos; itsStart(1) = yPos;
-    itsEnd(0) = xPos; itsEnd(1) = yPos;
-    itsValidStart = True;
-    itsValidEnd = True;
-    make();
-  }
-}
+	Bool DSLine::isValid() {
+		return (itsValidStart && itsValidEnd);
+	}
 
-void DSLine::setStartPoint(const Vector<Float>& start) {
-  if (isValid()) DSPolyLine::changePoint(start, 0);
-  else {
-    itsStart = start;
-    if (!itsValidStart && itsValidEnd) {
-      itsValidStart = True;
-      make();
-    } else itsValidStart = True;
-  }
-}
+	void DSLine::setCenter(const Float& xPos, const Float& yPos) {
+		if (isValid()) {
+			DSPolyLine::setCenter(xPos, yPos);
+		} else {
+			itsStart(0) = xPos;
+			itsStart(1) = yPos;
+			itsEnd(0) = xPos;
+			itsEnd(1) = yPos;
+			itsValidStart = True;
+			itsValidEnd = True;
+			make();
+		}
+	}
 
-Record DSLine::getOptions() {
-  Record rec = DSPolyLine::getOptions();
+	void DSLine::setStartPoint(const Vector<Float>& start) {
+		if (isValid()) DSPolyLine::changePoint(start, 0);
+		else {
+			itsStart = start;
+			if (!itsValidStart && itsValidEnd) {
+				itsValidStart = True;
+				make();
+			} else itsValidStart = True;
+		}
+	}
 
-  if (rec.isDefined("type"))
-    rec.removeField("type");
-  rec.define("type", "line");
+	Record DSLine::getOptions() {
+		Record rec = DSPolyLine::getOptions();
 
-  Vector<Float> start; Vector<Float> end;
-  
-  if (rec.isDefined("polylinepoints")) {
-    rec.removeField("polylinepoints");
-    
-    Matrix<Float> temp(getEnds());
+		if (rec.isDefined("type"))
+			rec.removeField("type");
+		rec.define("type", "line");
 
-    if (temp.nrow() >= 1) start = temp.row(0);
-    if (temp.nrow() >= 2) end = temp.row(1);
-    
-    if (itsValidStart && temp.nrow() >= 1)
-      rec.define("startpoint", start);
-    if (itsValidEnd && temp.nrow() >= 2)
-      rec.define("endpoint", end);
-    
-  }
+		Vector<Float> start;
+		Vector<Float> end;
 
-  return rec;
-}
+		if (rec.isDefined("polylinepoints")) {
+			rec.removeField("polylinepoints");
 
-Bool DSLine::setOptions(const Record& newSettings) {
-  Bool localChange = False;
+			Matrix<Float> temp(getEnds());
 
-  if (newSettings.isDefined("startpoint")) {
-    setStartPoint(newSettings.asArrayFloat("startpoint"));
-    localChange = True;
-  }
-  
-  if (newSettings.isDefined("endpoint")) {
-    setEndPoint(newSettings.asArrayFloat("endpoint"));
-    localChange = True;
-  }
+			if (temp.nrow() >= 1) start = temp.row(0);
+			if (temp.nrow() >= 2) end = temp.row(1);
 
-  if (DSPolyLine::setOptions(newSettings)) localChange = True;
-  return localChange;
-}
+			if (itsValidStart && temp.nrow() >= 1)
+				rec.define("startpoint", start);
+			if (itsValidEnd && temp.nrow() >= 2)
+				rec.define("endpoint", end);
 
-void DSLine::setEndPoint(const Vector<Float>& end) {
-  itsEnd = end;
-  if (isValid()) DSPolyLine::changePoint(end, 1);
-  else if (itsValidStart && !itsValidEnd) {
-    itsValidEnd = True;
-    make();
-  } else itsValidEnd = True;
-}
+		}
 
-Matrix<Float> DSLine::asPolyLine(const Vector<Float>& start, 
-				 const Vector<Float>& end) {
+		return rec;
+	}
 
-  if (start.nelements() != 2 && end.nelements() != 2) {
-    throw (AipsError("DSLine.cc ::asPolyLine - Error making a polyLine from two points"));
-  }
-  
-  Matrix<Float> temp(2,2);
-  for (uInt i=0;i<2;i++) {
-    temp(0, i) = start[i];
-    temp(1,i) = end[i];
-  }
-  return temp;
-}
+	Bool DSLine::setOptions(const Record& newSettings) {
+		Bool localChange = False;
+
+		if (newSettings.isDefined("startpoint")) {
+			setStartPoint(newSettings.asArrayFloat("startpoint"));
+			localChange = True;
+		}
+
+		if (newSettings.isDefined("endpoint")) {
+			setEndPoint(newSettings.asArrayFloat("endpoint"));
+			localChange = True;
+		}
+
+		if (DSPolyLine::setOptions(newSettings)) localChange = True;
+		return localChange;
+	}
+
+	void DSLine::setEndPoint(const Vector<Float>& end) {
+		itsEnd = end;
+		if (isValid()) DSPolyLine::changePoint(end, 1);
+		else if (itsValidStart && !itsValidEnd) {
+			itsValidEnd = True;
+			make();
+		} else itsValidEnd = True;
+	}
+
+	Matrix<Float> DSLine::asPolyLine(const Vector<Float>& start,
+	                                 const Vector<Float>& end) {
+
+		if (start.nelements() != 2 && end.nelements() != 2) {
+			throw (AipsError("DSLine.cc ::asPolyLine - Error making a polyLine from two points"));
+		}
+
+		Matrix<Float> temp(2,2);
+		for (uInt i=0; i<2; i++) {
+			temp(0, i) = start[i];
+			temp(1,i) = end[i];
+		}
+		return temp;
+	}
 
 
 

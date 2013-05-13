@@ -37,63 +37,63 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WCTool;
-class WorldCanvas;
-class PixelCanvas;
+	class WCTool;
+	class WorldCanvas;
+	class PixelCanvas;
 
 // <summary>
 // WorldCanvas position event handler for WCTool.
 // </summary>
 //
 // <synopsis>
-// This class is a simple implementation of a WCPositionEH which 
+// This class is a simple implementation of a WCPositionEH which
 // passes WorldCanvas position events on to a single WCTool.
 // </synopsis>
 
-class WCToolPosEH : public WCPositionEH {
- public:
-  WCToolPosEH(WCTool *tool);
-  virtual ~WCToolPosEH(){};
-  virtual void operator()(const WCPositionEvent& ev);
- private:
-  WCTool *itsTool;
-};
+	class WCToolPosEH : public WCPositionEH {
+	public:
+		WCToolPosEH(WCTool *tool);
+		virtual ~WCToolPosEH() {};
+		virtual void operator()(const WCPositionEvent& ev);
+	private:
+		WCTool *itsTool;
+	};
 
 // <summary>
 // WorldCanvas motion event handler for WCTool.
 // </summary>
 //
 // <synopsis>
-// This class is a simple implementation of a WCMotionEH which 
+// This class is a simple implementation of a WCMotionEH which
 // passes WorldCanvas motion events on to a single WCTool.
 // </synopsis>
 
-class WCToolMotEH : public WCMotionEH {
- public:
-  WCToolMotEH(WCTool *tool);
-  virtual ~WCToolMotEH(){};
-  virtual void operator()(const WCMotionEvent& ev);
- private:
-  WCTool *itsTool;
-};
+	class WCToolMotEH : public WCMotionEH {
+	public:
+		WCToolMotEH(WCTool *tool);
+		virtual ~WCToolMotEH() {};
+		virtual void operator()(const WCMotionEvent& ev);
+	private:
+		WCTool *itsTool;
+	};
 
 // <summary>
 // WorldCanvas refresh event handler for WCTool.
 // </summary>
 //
 // <synopsis>
-// This class is a simple implementation of a WCRefreshEH which 
+// This class is a simple implementation of a WCRefreshEH which
 // passes WorldCanvas refresh events on to a single WCTool.
 // </synopsis>
 
-class WCToolRefEH : public WCRefreshEH {
- public:
-  WCToolRefEH(WCTool *tool);
-  virtual ~WCToolRefEH(){};
-  virtual void operator()(const WCRefreshEvent& ev);
- private:
-  WCTool *itsTool;
-};
+	class WCToolRefEH : public WCRefreshEH {
+	public:
+		WCToolRefEH(WCTool *tool);
+		virtual ~WCToolRefEH() {};
+		virtual void operator()(const WCRefreshEvent& ev);
+	private:
+		WCTool *itsTool;
+	};
 
 // <summary>
 // Base class for WorldCanvas event-based tools.
@@ -115,7 +115,7 @@ class WCToolRefEH : public WCRefreshEH {
 // </etymology>
 
 // <synopsis>
-// This class is a base class upon which tools which respond to 
+// This class is a base class upon which tools which respond to
 // various events on a WorldCanvas can be built.  It wraps up
 // the position, motion and refresh events so that the programmer
 // sees them all coming into one class, where they can be dealt
@@ -128,9 +128,9 @@ class WCToolRefEH : public WCRefreshEH {
 // </example>
 
 // <motivation>
-// The majority of tools written for the WorldCanvas will fall 
-// into the category that this class serves: they respond to a 
-// single key or mouse button, and they potentially need to 
+// The majority of tools written for the WorldCanvas will fall
+// into the category that this class serves: they respond to a
+// single key or mouse button, and they potentially need to
 // respond to position, motion and refresh events.
 // </motivation>
 
@@ -138,82 +138,84 @@ class WCToolRefEH : public WCRefreshEH {
 //   <li> Nothing known
 // </todo>
 
-class WCTool : public DisplayTool {
-  
- public:
-  
-  // Constructor taking a pointer to a WorldCanvas to which this tool
-  // will attach, and a primary key to respond to.
-  WCTool(WorldCanvas *wcanvas,
-	 const Display::KeySym &keysym = Display::K_Pointer_Button1);
-  
-  // Destructor.
-  virtual ~WCTool();
-  
-  // Switch the tool on/off - this simply registers or unregisters
-  // the event handlers
-  // <group>
-  virtual void enable();
-  virtual void disable();
-  // </group>
-  
-  // Required operators for event handling - these are called when
-  // an events occur, and distribute the events to the "user-level"
-  // methods
-  // <group>
-  virtual void operator()(const WCPositionEvent& ev);
-  virtual void operator()(const WCMotionEvent& ev);
-  virtual void operator()(const WCRefreshEvent& ev);
-  // </group>
+	class WCTool : public DisplayTool {
 
-  // Functions called by the local event handling operators -
-  // by default they do nothing, so a derived class needs only
-  // implement the events it cares about
-  // <group>
-  virtual void keyPressed(const WCPositionEvent &/*ev*/);
-  virtual void keyReleased(const WCPositionEvent &/*ev*/);
-  virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
-  virtual void otherKeyReleased(const WCPositionEvent &/*ev*/);
-  virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
-  virtual void refresh(const WCRefreshEvent &/*ev*/);
-  // </group>
+	public:
 
-  // Get the WorldCanvas that this Tool is attached to
-  virtual WorldCanvas *worldCanvas() const 
-    { return itsWorldCanvas; }
+		// Constructor taking a pointer to a WorldCanvas to which this tool
+		// will attach, and a primary key to respond to.
+		WCTool(WorldCanvas *wcanvas,
+		       const Display::KeySym &keysym = Display::K_Pointer_Button1);
 
-  // Get the PixelCanvas that this Tool is attached to via its WorldCanvas
-  virtual PixelCanvas *pixelCanvas() const
-    { return itsPixelCanvas; }
+		// Destructor.
+		virtual ~WCTool();
 
- protected:
+		// Switch the tool on/off - this simply registers or unregisters
+		// the event handlers
+		// <group>
+		virtual void enable();
+		virtual void disable();
+		// </group>
 
-  // (Required) default constructor.
-  WCTool();
+		// Required operators for event handling - these are called when
+		// an events occur, and distribute the events to the "user-level"
+		// methods
+		// <group>
+		virtual void operator()(const WCPositionEvent& ev);
+		virtual void operator()(const WCMotionEvent& ev);
+		virtual void operator()(const WCRefreshEvent& ev);
+		// </group>
 
-  // (Required) copy constructor.
-  WCTool(const WCTool &other);
+		// Functions called by the local event handling operators -
+		// by default they do nothing, so a derived class needs only
+		// implement the events it cares about
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &/*ev*/);
+		virtual void keyReleased(const WCPositionEvent &/*ev*/);
+		virtual void otherKeyPressed(const WCPositionEvent &/*ev*/);
+		virtual void otherKeyReleased(const WCPositionEvent &/*ev*/);
+		virtual void moved(const WCMotionEvent &/*ev*/, const viewer::region::region_list_type & /*selected_regions*/);
+		virtual void refresh(const WCRefreshEvent &/*ev*/);
+		// </group>
 
-  // (Required) copy assignment.
-  WCTool &operator=(const WCTool &other);  
+		// Get the WorldCanvas that this Tool is attached to
+		virtual WorldCanvas *worldCanvas() const {
+			return itsWorldCanvas;
+		}
 
- private:
+		// Get the PixelCanvas that this Tool is attached to via its WorldCanvas
+		virtual PixelCanvas *pixelCanvas() const {
+			return itsPixelCanvas;
+		}
 
-  // The WorldCanvas to which this is connected
-  WorldCanvas *itsWorldCanvas;
+	protected:
 
-  // The PixelCanvas to which this is connected via the WorldCanvas
-  PixelCanvas *itsPixelCanvas;
+		// (Required) default constructor.
+		WCTool();
 
-  // whether the event handlers are registered
-  Bool itsEventHandlersRegistered;
+		// (Required) copy constructor.
+		WCTool(const WCTool &other);
 
-  // event handlers:
-  WCToolPosEH *itsPositionEH;
-  WCToolMotEH *itsMotionEH;
-  WCToolRefEH *itsRefreshEH;
+		// (Required) copy assignment.
+		WCTool &operator=(const WCTool &other);
 
-};
+	private:
+
+		// The WorldCanvas to which this is connected
+		WorldCanvas *itsWorldCanvas;
+
+		// The PixelCanvas to which this is connected via the WorldCanvas
+		PixelCanvas *itsPixelCanvas;
+
+		// whether the event handlers are registered
+		Bool itsEventHandlersRegistered;
+
+		// event handlers:
+		WCToolPosEH *itsPositionEH;
+		WCToolMotEH *itsMotionEH;
+		WCToolRefEH *itsRefreshEH;
+
+	};
 
 
 } //# NAMESPACE CASA - END

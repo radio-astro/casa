@@ -1,4 +1,4 @@
-//# DParameterString.cc: class to store and retrieve String parameters 
+//# DParameterString.cc: class to store and retrieve String parameters
 //# Copyright (C) 2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -33,67 +33,67 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
-DParameterString::DParameterString(const String name, const String description,
-				   const String help, 
-				   const String defaultvalue,
-				   const String value, const String context, 
-				   const Bool editable) :
-  DisplayParameter(name, description, help, context, False, editable),
-  itsDefault(defaultvalue),
-  itsValue(value) {
-}
+	DParameterString::DParameterString(const String name, const String description,
+	                                   const String help,
+	                                   const String defaultvalue,
+	                                   const String value, const String context,
+	                                   const Bool editable) :
+		DisplayParameter(name, description, help, context, False, editable),
+		itsDefault(defaultvalue),
+		itsValue(value) {
+	}
 
 // Copy constructor.
-DParameterString::DParameterString(const DParameterString &other) :
-  DisplayParameter(other),
-  itsDefault(other.itsDefault),
-  itsValue(other.itsValue) {
-}
+	DParameterString::DParameterString(const DParameterString &other) :
+		DisplayParameter(other),
+		itsDefault(other.itsDefault),
+		itsValue(other.itsValue) {
+	}
 
 // Destructor.
-DParameterString::~DParameterString() {
-}
+	DParameterString::~DParameterString() {
+	}
 
 // Copy assignment.
-DParameterString &DParameterString::operator=(const DParameterString &other) {
-  if (this != &other) {
-    itsDefault = other.itsDefault;
-    itsValue = other.itsValue;
-  }
-  return *this;
-}
+	DParameterString &DParameterString::operator=(const DParameterString &other) {
+		if (this != &other) {
+			itsDefault = other.itsDefault;
+			itsValue = other.itsValue;
+		}
+		return *this;
+	}
 
 // Update the value of this parameter from a record.
-Bool DParameterString::fromRecord(const RecordInterface &record) {
-  static Bool error;
-  return displayOptions().readOptionRecord(itsValue, error, record, name());
-}
+	Bool DParameterString::fromRecord(const RecordInterface &record) {
+		static Bool error;
+		return displayOptions().readOptionRecord(itsValue, error, record, name());
+	}
 
 // Describe this parameter in a record.
-void DParameterString::toRecord(RecordInterface &record, 
-				  const Bool, const Bool overwrite) {
-  if (record.isDefined(name())) {
-    if (overwrite) {
-      record.removeField(name());
-    } else {
-      return;
-    }
-  }
+	void DParameterString::toRecord(RecordInterface &record,
+	                                const Bool, const Bool overwrite) {
+		if (record.isDefined(name())) {
+			if (overwrite) {
+				record.removeField(name());
+			} else {
+				return;
+			}
+		}
 
-  Record rec = baseDescription();
-  rec.define("ptype", "string");
-  rec.define("default", itsDefault);
-  rec.define("value", itsValue);
+		Record rec = baseDescription();
+		rec.define("ptype", "string");
+		rec.define("default", itsDefault);
+		rec.define("value", itsValue);
 
-  record.defineRecord(name(), rec);
-}
+		record.defineRecord(name(), rec);
+	}
 
 // Default constructor.
-DParameterString::DParameterString() :
-  DisplayParameter(),
-  itsDefault(""),
-  itsValue("") {
-}
+	DParameterString::DParameterString() :
+		DisplayParameter(),
+		itsDefault(""),
+		itsValue("") {
+	}
 
 } //# NAMESPACE CASA - END
 

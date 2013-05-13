@@ -39,19 +39,19 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class PixelCanvas;
-class MultiWCHolder;
-class PanelDisplay;
+	class PixelCanvas;
+	class MultiWCHolder;
+	class PanelDisplay;
 
-// <summary> 
+// <summary>
 // An event handler to negotiate between three different PanelDisplays
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <prerequisite>
 //   <li> EventHandlers
 //   <li> SlicePanelDisplay
@@ -65,31 +65,31 @@ class PanelDisplay;
 // </synopsis>
 //
 
-class SliceEH : public WCMotionEH,public WCPositionEH, public DTVisible {
-public:
-  SliceEH(PanelDisplay* mwch, uInt axis=0, uInt daxis=0);
-  virtual ~SliceEH();
-  virtual void draw(const WCMotionEvent &ev);
-  virtual void operator()(const WCMotionEvent &ev);
-  virtual void operator()(const WCPositionEvent &ev);
-  virtual void matchKey(Display::KeySym key);
-private:
-  PanelDisplay* itsPD;
-  MWCAnimator itsAni;
-  uInt itsAxis;
-  uInt itsDrawAxis;
-  Display::KeySym itsPositionKey;
-  Display::KeyModifier itsMotionKey;
-};
+	class SliceEH : public WCMotionEH,public WCPositionEH, public DTVisible {
+	public:
+		SliceEH(PanelDisplay* mwch, uInt axis=0, uInt daxis=0);
+		virtual ~SliceEH();
+		virtual void draw(const WCMotionEvent &ev);
+		virtual void operator()(const WCMotionEvent &ev);
+		virtual void operator()(const WCPositionEvent &ev);
+		virtual void matchKey(Display::KeySym key);
+	private:
+		PanelDisplay* itsPD;
+		MWCAnimator itsAni;
+		uInt itsAxis;
+		uInt itsDrawAxis;
+		Display::KeySym itsPositionKey;
+		Display::KeyModifier itsMotionKey;
+	};
 // <summary> An application provide displays of three axis
-// combinations of data in a cube 
+// combinations of data in a cube
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <prerequisite>
 //   <li> PanelDisplay
 // </prerequisite>
@@ -108,42 +108,44 @@ private:
 // Slicing is a handy tool to ananlyse data cubes
 // </motivation>
 //
-// <todo> 
+// <todo>
 // </todo>
 //
 
-class SlicePanelDisplay : public WCMotionEH {
-public:
-  SlicePanelDisplay(PixelCanvas* pcanvas);
-  virtual ~SlicePanelDisplay();
+	class SlicePanelDisplay : public WCMotionEH {
+	public:
+		SlicePanelDisplay(PixelCanvas* pcanvas);
+		virtual ~SlicePanelDisplay();
 
-  virtual Record getOptions() const;
-  virtual Bool setOptions(const Record& rec, Record& updatedOptions);
+		virtual Record getOptions() const;
+		virtual Bool setOptions(const Record& rec, Record& updatedOptions);
 
-  virtual void hold();
-  virtual void release();
+		virtual void hold();
+		virtual void release();
 
-  virtual void refresh(const Display::RefreshReason &reason = Display::UserCommand);
+		virtual void refresh(const Display::RefreshReason &reason = Display::UserCommand);
 
-  virtual PanelDisplay* getPanelDisplay(const String& pdname);
-  
-  virtual void setToolKey(const String& toolname,
-                          const Display::KeySym& keysym);
-  virtual void disableTools();
-  virtual void enableTools();
+		virtual PanelDisplay* getPanelDisplay(const String& pdname);
 
-  virtual void operator()(const WCMotionEvent &ev);
-  virtual PanelDisplay* activePanelDisplay() { return itsActivePD;};
- 
-  virtual void precompute();
+		virtual void setToolKey(const String& toolname,
+		                        const Display::KeySym& keysym);
+		virtual void disableTools();
+		virtual void enableTools();
 
-private:
-  SimpleOrderedMap<String, PanelDisplay* > itsPanelDisplays;
-  SimpleOrderedMap<String, SliceEH* > itsSliceEHs;
-  PanelDisplay* itsActivePD;
-  void installEHs();
-  void removeEHs();
-};
+		virtual void operator()(const WCMotionEvent &ev);
+		virtual PanelDisplay* activePanelDisplay() {
+			return itsActivePD;
+		};
+
+		virtual void precompute();
+
+	private:
+		SimpleOrderedMap<String, PanelDisplay* > itsPanelDisplays;
+		SimpleOrderedMap<String, SliceEH* > itsSliceEHs;
+		PanelDisplay* itsActivePD;
+		void installEHs();
+		void removeEHs();
+	};
 
 
 } //# NAMESPACE CASA - END

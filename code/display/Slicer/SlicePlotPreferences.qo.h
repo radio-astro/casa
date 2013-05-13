@@ -30,37 +30,36 @@
 
 namespace casa {
 
-class SlicePlotPreferences : public QDialog
-{
-    Q_OBJECT
+	class SlicePlotPreferences : public QDialog {
+		Q_OBJECT
 
-public:
-    SlicePlotPreferences(QWidget *parent = 0);
-    int getLineWidth() const;
-    int getMarkerSize() const;
-    ~SlicePlotPreferences();
+	public:
+		SlicePlotPreferences(QWidget *parent = 0);
+		int getLineWidth() const;
+		int getMarkerSize() const;
+		~SlicePlotPreferences();
 
-signals:
-	void plotPreferencesChanged();
+	signals:
+		void plotPreferencesChanged();
 
-private slots:
-	void preferencesAccepted();
-	void preferencesRejected();
+	private slots:
+		void preferencesAccepted();
+		void preferencesRejected();
 
-private:
-    void initializeCustomSettings();
-    void reset();
-    void persist();
+	private:
+		void initializeCustomSettings();
+		void reset();
+		void persist();
 
-    int lineThickness;
-    int markerSize;
+		int lineThickness;
+		int markerSize;
 
-    Ui::SlicePlotPreferencesClass ui;
-    const static QString ORGANIZATION;
-    const static QString APPLICATION;
-    const static QString LINE_THICKNESS;
-    const static QString MARKER_SIZE;
-};
+		Ui::SlicePlotPreferencesClass ui;
+		const static QString ORGANIZATION;
+		const static QString APPLICATION;
+		const static QString LINE_THICKNESS;
+		const static QString MARKER_SIZE;
+	};
 
 }
 #endif // PLOTPREFERENCES_QO_H

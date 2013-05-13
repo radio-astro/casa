@@ -34,78 +34,78 @@ class QCursor;
 
 namespace casa {
 
-class SliceZoomer;
-class SliceColorPreferences;
-class SlicePlotPreferences;
-class StatisticsRegion;
+	class SliceZoomer;
+	class SliceColorPreferences;
+	class SlicePlotPreferences;
+	class StatisticsRegion;
 
-class SlicerMainWindow : public QMainWindow {
+	class SlicerMainWindow : public QMainWindow {
 
-    Q_OBJECT
+		Q_OBJECT
 
-public:
-    SlicerMainWindow(QWidget *parent = 0);
-    void updateChannel( int channel );
-    void updatePolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
-		const QList<double> & worldX, const QList<double> & worldY,
-		const QList<int> &pixelX, const QList<int> & pixelY );
-    void addPolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
-    		const QList<double> & worldX, const QList<double> & worldY,
-    		const QList<int> &pixelX, const QList<int> & pixelY, const QString& colorName );
-    void setImage( ImageInterface<float>* img );
-    void setRegionSelected( int regionId, bool selected );
-    void setCurveColor( int id, const QString& color );
-    void updatePositionInformation( int id, const QVector<String>& info );
-    ~SlicerMainWindow();
+	public:
+		SlicerMainWindow(QWidget *parent = 0);
+		void updateChannel( int channel );
+		void updatePolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
+		                      const QList<double> & worldX, const QList<double> & worldY,
+		                      const QList<int> &pixelX, const QList<int> & pixelY );
+		void addPolyLine(  int regionId, viewer::region::RegionChanges regionChanges,
+		                   const QList<double> & worldX, const QList<double> & worldY,
+		                   const QList<int> &pixelX, const QList<int> & pixelY, const QString& colorName );
+		void setImage( ImageInterface<float>* img );
+		void setRegionSelected( int regionId, bool selected );
+		void setCurveColor( int id, const QString& color );
+		void updatePositionInformation( int id, const QVector<String>& info );
+		~SlicerMainWindow();
 
-signals:
-	void markerPositionChanged(int regionId,int segmentIndex,float percentage);
-	void markerVisibilityChanged(int regionId,bool showMarker);
+	signals:
+		void markerPositionChanged(int regionId,int segmentIndex,float percentage);
+		void markerVisibilityChanged(int regionId,bool showMarker);
 
-private slots:
-	void clearCurves();
-	void autoCountChanged( bool selected );
-	void sampleCountChanged();
-	void accumulateChanged( bool accumulate );
-	void interpolationMethodChanged( const QString& method );
-	void showPlotPreferences();
-	void resetPlotPreferences();
-	void exportSlice();
-	void showColorDialog();
-	void resetColors();
-	void zoomIn();
-	void zoomNeutral();
-	void zoomOut();
-	bool checkZoom();
-	void markPositionChanged(int regionId,int segmentIndex,float percentage);
-	void markVisibilityChanged(int regionId,bool showMarker);
+	private slots:
+		void clearCurves();
+		void autoCountChanged( bool selected );
+		void sampleCountChanged();
+		void accumulateChanged( bool accumulate );
+		void interpolationMethodChanged( const QString& method );
+		void showPlotPreferences();
+		void resetPlotPreferences();
+		void exportSlice();
+		void showColorDialog();
+		void resetColors();
+		void zoomIn();
+		void zoomNeutral();
+		void zoomOut();
+		bool checkZoom();
+		void markPositionChanged(int regionId,int segmentIndex,float percentage);
+		void markVisibilityChanged(int regionId,bool showMarker);
 
-private:
-	void initializeZooming();
-	SlicerMainWindow( const SlicerMainWindow& mainWindow );
-	SlicerMainWindow& operator=( const SlicerMainWindow&  other);
+	private:
+		void initializeZooming();
+		SlicerMainWindow( const SlicerMainWindow& mainWindow );
+		SlicerMainWindow& operator=( const SlicerMainWindow&  other);
 
-	int populateSampleCount() const;
+		int populateSampleCount() const;
 
-	//Persistence
-	bool toImageFormat( const QString& fileName, const QString& format );
-	bool toASCII( const QString& fileName );
+		//Persistence
+		bool toImageFormat( const QString& fileName, const QString& format );
+		bool toASCII( const QString& fileName );
 
-	//Statistics
-	void updateStatisticsLayout();
+		//Statistics
+		void updateStatisticsLayout();
 
-	SliceColorPreferences* colorPreferences;
-	SlicePlotPreferences* plotPreferences;
-    SliceZoomer* plotZoomer;
+		SliceColorPreferences* colorPreferences;
+		SlicePlotPreferences* plotPreferences;
+		SliceZoomer* plotZoomer;
 
-    SlicePlot slicePlot;
+		SlicePlot slicePlot;
 
-    QStringList methodList;
-    QStringList xAxisList;
+		QStringList methodList;
+		QStringList xAxisList;
 
-    Ui::SlicerMainWindowClass ui;
+		Ui::SlicerMainWindowClass ui;
 
-};
+	};
 }
 
 #endif // SLICERMAINWINDOW_QO_H

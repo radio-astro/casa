@@ -27,41 +27,41 @@
 #include <QDebug>
 namespace casa {
 
-ConverterFrequency::ConverterFrequency(const QString& oldUnits, const QString& newUnits) :
-	Converter( oldUnits, newUnits ){
-}
-
-double ConverterFrequency::toPixel( double value ) {
-	Double pixelValue;
-	Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
-	String spectralUnit = spectralUnits[0];
-	QString spectralUnitStr( spectralUnit.c_str());
-	if ( spectralUnitStr != oldUnits ){
-		Vector<double> freqValues(1);
-		freqValues[0] = value;
-		convertFrequency( freqValues, oldUnits, spectralUnitStr );
-		value = freqValues[0];
+	ConverterFrequency::ConverterFrequency(const QString& oldUnits, const QString& newUnits) :
+		Converter( oldUnits, newUnits ) {
 	}
-	spectralCoordinate.toPixel( pixelValue, value );
-	return pixelValue;
-}
 
-Vector<double> ConverterFrequency::convert( const Vector<double>& oldValues ){
-	Vector<double> resultValues( oldValues.size() );
-	resultValues = oldValues;
-	convertFrequency( resultValues, oldUnits, newUnits );
-	return resultValues;
-}
+	double ConverterFrequency::toPixel( double value ) {
+		Double pixelValue;
+		Vector<String> spectralUnits = spectralCoordinate.worldAxisUnits();
+		String spectralUnit = spectralUnits[0];
+		QString spectralUnitStr( spectralUnit.c_str());
+		if ( spectralUnitStr != oldUnits ) {
+			Vector<double> freqValues(1);
+			freqValues[0] = value;
+			convertFrequency( freqValues, oldUnits, spectralUnitStr );
+			value = freqValues[0];
+		}
+		spectralCoordinate.toPixel( pixelValue, value );
+		return pixelValue;
+	}
 
-void ConverterFrequency::convertFrequency( Vector<double> &resultValues,
-		QString& frequencySourceUnits, QString& frequencyDestUnits){
+	Vector<double> ConverterFrequency::convert( const Vector<double>& oldValues ) {
+		Vector<double> resultValues( oldValues.size() );
+		resultValues = oldValues;
+		convertFrequency( resultValues, oldUnits, newUnits );
+		return resultValues;
+	}
+
+	void ConverterFrequency::convertFrequency( Vector<double> &resultValues,
+	        QString& frequencySourceUnits, QString& frequencyDestUnits) {
 		int sourceIndex = Converter::FREQUENCY_UNITS.indexOf( frequencySourceUnits );
 		int destIndex = Converter::FREQUENCY_UNITS.indexOf( frequencyDestUnits );
 		Converter::convert( resultValues, sourceIndex, destIndex );
-}
+	}
 
-ConverterFrequency::~ConverterFrequency() {
-	// TODO Auto-generated destructor stub
-}
+	ConverterFrequency::~ConverterFrequency() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

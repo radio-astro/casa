@@ -31,143 +31,132 @@
 
 namespace casa {
 
-SliceStatisticsPosition::SliceStatisticsPosition(SliceStatisticsFactory::AxisXUnits units):
-	SliceStatistics( units ){
-	xPosition = false;
+	SliceStatisticsPosition::SliceStatisticsPosition(SliceStatisticsFactory::AxisXUnits units):
+		SliceStatistics( units ) {
+		xPosition = false;
 
-}
-
-void SliceStatisticsPosition::storeIncrement( double* incr,
-		QVector<double>& values, int index) const {
-	if ( index < 0 && !values.isEmpty() ){
-		*incr = -1 * values[0];
 	}
-}
 
-double SliceStatisticsPosition::getLength(std::pair<double,double> worldStart,
-	std::pair<double,double> worldEnd,
-	std::pair<int,int> pixelStart,
-	std::pair<int,int> pixelEnd ) const {
-	double distance = 0;
-	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
-		if ( xPosition ){
-			distance = qAbs( pixelEnd.first - pixelStart.first );
-		}
-		else {
-			distance = qAbs( pixelEnd.second - pixelStart.second );
+	void SliceStatisticsPosition::storeIncrement( double* incr,
+	        QVector<double>& values, int index) const {
+		if ( index < 0 && !values.isEmpty() ) {
+			*incr = -1 * values[0];
 		}
 	}
-	else {
-		if ( xPosition ){
-			distance = qAbs( worldEnd.first - worldStart.first );
+
+	double SliceStatisticsPosition::getLength(std::pair<double,double> worldStart,
+	        std::pair<double,double> worldEnd,
+	        std::pair<int,int> pixelStart,
+	        std::pair<int,int> pixelEnd ) const {
+		double distance = 0;
+		if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ) {
+			if ( xPosition ) {
+				distance = qAbs( pixelEnd.first - pixelStart.first );
+			} else {
+				distance = qAbs( pixelEnd.second - pixelStart.second );
+			}
+		} else {
+			if ( xPosition ) {
+				distance = qAbs( worldEnd.first - worldStart.first );
+			} else {
+				distance = qAbs( worldEnd.second - worldStart.second );
+			}
+			distance = convertArcUnits( distance );
 		}
-		else {
-			distance = qAbs( worldEnd.second - worldStart.second );
+
+		return distance;
+	}
+
+	QVector<double> SliceStatisticsPosition::fromResults( Record* record  )const {
+		Array<float> positionArray;
+		if ( xPosition ) {
+			positionArray = record->asArrayFloat("xpos");
+		} else {
+			positionArray = record->asArrayFloat("ypos");
 		}
-		distance = convertArcUnits( distance );
+		QVector<double> positionPixels= getFromArray( positionArray );
+		return positionPixels;
 	}
 
-	return distance;
-}
-
-QVector<double> SliceStatisticsPosition::fromResults( Record* record  )const {
-	Array<float> positionArray;
-	if ( xPosition ){
-		positionArray = record->asArrayFloat("xpos");
-	}
-	else {
-		positionArray = record->asArrayFloat("ypos");
-	}
-	QVector<double> positionPixels= getFromArray( positionArray );
-	return positionPixels;
-}
-
-void SliceStatisticsPosition::adjustStart( QVector<double>& values,
-		double newStart ) const {
-	int count = values.size();
-	for ( int i = 0; i < count; i++ ){
-		values[i] = values[i] + newStart;
-	}
-}
-
-QVector<double> SliceStatisticsPosition::interpolate( double start, double end,
-			const QVector<double>& values ) const{
-	QVector<double> results( values.size());
-	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
-		results = values;
-	}
-	else {
-		results = SliceStatistics::interpolate( start, end, values );
-		results = convertArcUnits( results );
-	}
-	return results;
-}
-
-double SliceStatisticsPosition::getLength( double value1World, double value2World,
-			double value1Pixel, double value2Pixel ) const {
-	double distance = 0;
-	if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ){
-		if ( xPosition ){
-			distance = value1Pixel;
-		}
-		else {
-			distance = value2Pixel;
+	void SliceStatisticsPosition::adjustStart( QVector<double>& values,
+	        double newStart ) const {
+		int count = values.size();
+		for ( int i = 0; i < count; i++ ) {
+			values[i] = values[i] + newStart;
 		}
 	}
-	else {
-		if ( xPosition ){
-			distance = value1World;
+
+	QVector<double> SliceStatisticsPosition::interpolate( double start, double end,
+	        const QVector<double>& values ) const {
+		QVector<double> results( values.size());
+		if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ) {
+			results = values;
+		} else {
+			results = SliceStatistics::interpolate( start, end, values );
+			results = convertArcUnits( results );
 		}
-		else {
-			distance = value2World;
+		return results;
+	}
+
+	double SliceStatisticsPosition::getLength( double value1World, double value2World,
+	        double value1Pixel, double value2Pixel ) const {
+		double distance = 0;
+		if ( xUnits == SliceStatisticsFactory::PIXEL_UNIT ) {
+			if ( xPosition ) {
+				distance = value1Pixel;
+			} else {
+				distance = value2Pixel;
+			}
+		} else {
+			if ( xPosition ) {
+				distance = value1World;
+			} else {
+				distance = value2World;
+			}
+			distance = convertArcUnits( distance );
 		}
-		distance = convertArcUnits( distance );
+
+		return distance;
 	}
 
-	return distance;
-}
+	double SliceStatisticsPosition::getStart( double value1WorldX, double value1WorldY,
+	        double /*value2WorldX*/, double /*value2WorldY*/ ) const {
+		double start = 0;
+		if ( xPosition ) {
+			start = value1WorldX;
+		} else {
+			start = value1WorldY;
+		}
+		return start;
+	}
+	double SliceStatisticsPosition::getEnd( double /*value1WorldX*/, double /*value1WorldY*/,
+	                                        double value2WorldX, double value2WorldY ) const {
+		double end = 0;
+		if ( xPosition ) {
+			end = value2WorldX;
+		} else {
+			end = value2WorldY;
+		}
+		return end;
+	}
 
-double SliceStatisticsPosition::getStart( double value1WorldX, double value1WorldY,
-					double /*value2WorldX*/, double /*value2WorldY*/ ) const {
-	double start = 0;
-	if ( xPosition ){
-		start = value1WorldX;
+	QString SliceStatisticsPosition::getLengthLabel() const {
+		QString labelStr;
+		if ( xPosition ) {
+			labelStr.append( "X Position (");
+		} else {
+			labelStr.append( "Y Position (");
+		}
+		labelStr.append( getUnitText() );
+		labelStr.append( "):");
+		return labelStr;
 	}
-	else {
-		start = value1WorldY;
-	}
-	return start;
-}
-double SliceStatisticsPosition::getEnd( double /*value1WorldX*/, double /*value1WorldY*/,
-	double value2WorldX, double value2WorldY ) const {
-	double end = 0;
-	if ( xPosition ){
-		end = value2WorldX;
-	}
-	else {
-		end = value2WorldY;
-	}
-	return end;
-}
 
-QString SliceStatisticsPosition::getLengthLabel() const {
-	QString labelStr;
-	if ( xPosition ){
-		labelStr.append( "X Position (");
+	void SliceStatisticsPosition::setXPosition( bool xAxis ) {
+		xPosition = xAxis;
 	}
-	else {
-		labelStr.append( "Y Position (");
+
+	SliceStatisticsPosition::~SliceStatisticsPosition() {
 	}
-	labelStr.append( getUnitText() );
-	labelStr.append( "):");
-	return labelStr;
-}
-
-void SliceStatisticsPosition::setXPosition( bool xAxis ){
-	xPosition = xAxis;
-}
-
-SliceStatisticsPosition::~SliceStatisticsPosition() {
-}
 
 } /* namespace casa */

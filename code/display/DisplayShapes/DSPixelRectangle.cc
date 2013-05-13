@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <display/DisplayShapes/DSPixelRectangle.h>
 #include <display/DisplayShapes/DSWorldRectangle.h>
@@ -37,84 +37,84 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSPixelRectangle::DSPixelRectangle() :
-  DSRectangle() {
+	DSPixelRectangle::DSPixelRectangle() :
+		DSRectangle() {
 
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
-}
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
+	}
 
-DSPixelRectangle::DSPixelRectangle(const Record& settings) :
-  DSRectangle() {
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
-  
-  setOptions(settings);
-}
+	DSPixelRectangle::DSPixelRectangle(const Record& settings) :
+		DSRectangle() {
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
 
-DSPixelRectangle::DSPixelRectangle(DSScreenRectangle& other) :
-  DSRectangle() {
-  
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
+		setOptions(settings);
+	}
 
-  DSRectangle::setOptions(other.getRawOptions());
-}
+	DSPixelRectangle::DSPixelRectangle(DSScreenRectangle& other) :
+		DSRectangle() {
 
-DSPixelRectangle::DSPixelRectangle(DSWorldRectangle& other) : 
-  DSRectangle() {
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
 
-  UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
-  
-  DSRectangle::setOptions(other.getRawOptions());
+		DSRectangle::setOptions(other.getRawOptions());
+	}
 
-}
+	DSPixelRectangle::DSPixelRectangle(DSWorldRectangle& other) :
+		DSRectangle() {
+
+		UnitMap::putUser("pix", UnitVal(1.0), "absolute pixels");
+
+		DSRectangle::setOptions(other.getRawOptions());
+
+	}
 
 
-DSPixelRectangle::~DSPixelRectangle() {
-  
-}
+	DSPixelRectangle::~DSPixelRectangle() {
 
-Record DSPixelRectangle::getOptions() {
-  Record toReturn;
-  
-  toReturn = DSRectangle::getOptions();
-  
-  DisplayShapeWithCoords::floatPointToPix(toReturn, "center");
-  DisplayShapeWithCoords::floatToPix(toReturn, "majoraxis");
-  DisplayShapeWithCoords::floatToPix(toReturn, "minoraxis");
-  
+	}
 
-  // Shouldn't happen (should never be defined) .. but why not
-  if (toReturn.isDefined("coords")) {
-    toReturn.removeField("coords");
-  }
+	Record DSPixelRectangle::getOptions() {
+		Record toReturn;
 
-  toReturn.define("coords", "pix");
-  
-  return toReturn;
-}
+		toReturn = DSRectangle::getOptions();
 
-Bool DSPixelRectangle::setOptions(const Record& settings) {
-  
-  Bool localChange = False;
-  Record toSet = settings;
-  
-  if (settings.isDefined("coords")) {
-    if (settings.asString("coords") != "pix") {
-      throw(AipsError("I (DSPixelArrow) was expecting an option record which"
-		      " had coords == \'pix\'. Please use a \'lock\' function"
-		      " to change my co-ord system"));
-    }
-  }
-  
-  floatPointFromPix(toSet, "center");
-  floatFromPix(toSet, "majoraxis");
-  floatFromPix(toSet, "minoraxis");
+		DisplayShapeWithCoords::floatPointToPix(toReturn, "center");
+		DisplayShapeWithCoords::floatToPix(toReturn, "majoraxis");
+		DisplayShapeWithCoords::floatToPix(toReturn, "minoraxis");
 
-  if (DSRectangle::setOptions(toSet)) {
-    localChange = True;
-  }
 
-  return localChange;
-}
+		// Shouldn't happen (should never be defined) .. but why not
+		if (toReturn.isDefined("coords")) {
+			toReturn.removeField("coords");
+		}
+
+		toReturn.define("coords", "pix");
+
+		return toReturn;
+	}
+
+	Bool DSPixelRectangle::setOptions(const Record& settings) {
+
+		Bool localChange = False;
+		Record toSet = settings;
+
+		if (settings.isDefined("coords")) {
+			if (settings.asString("coords") != "pix") {
+				throw(AipsError("I (DSPixelArrow) was expecting an option record which"
+				                " had coords == \'pix\'. Please use a \'lock\' function"
+				                " to change my co-ord system"));
+			}
+		}
+
+		floatPointFromPix(toSet, "center");
+		floatFromPix(toSet, "majoraxis");
+		floatFromPix(toSet, "minoraxis");
+
+		if (DSRectangle::setOptions(toSet)) {
+			localChange = True;
+		}
+
+		return localChange;
+	}
 
 
 

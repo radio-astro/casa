@@ -37,11 +37,11 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# forwards:
-class IPosition;
-class WorldCanvas;
-template <class T> class LatticePADisplayData;
-template <class T> class Vector;
-template <class T> class Matrix;
+	class IPosition;
+	class WorldCanvas;
+	template <class T> class LatticePADisplayData;
+	template <class T> class Vector;
+	template <class T> class Matrix;
 
 // <summary>
 // Class to draw a single vector map of a slice from an AIPS++ Lattice.
@@ -66,7 +66,7 @@ template <class T> class Matrix;
 // <synopsis>
 // This is a helper class for the LatticeAsVector class.  One or more
 // instances of this class are created by a single LatticeAsVector
-// object, each being responsible for drawing a different slice of the 
+// object, each being responsible for drawing a different slice of the
 // data.
 // </synopsis>
 //
@@ -82,7 +82,7 @@ template <class T> class Matrix;
 //     DDelement.resize(nImages);
 //     for (uInt index = 0; index < nImages; index++) {
 //       fixedPos(zAxisNum) = index;
-//       DDelement[index] = (LatticePADisplayMethod<Complex> *)new 
+//       DDelement[index] = (LatticePADisplayMethod<Complex> *)new
 //       LatticePADMVector(dataLattice(), xAxisNum, yAxisNum,
 //                            zAxisNum, fixedPos, this);
 //     }
@@ -108,53 +108,53 @@ template <class T> class Matrix;
 // <todo asof="yyyy/mm/dd">
 // </todo>
 
-template <class T> class LatticePADMVector : public LatticePADisplayMethod<T> {
+	template <class T> class LatticePADMVector : public LatticePADisplayMethod<T> {
 
- public:
-  
-  // Constructors: >2d and 2d.  xAxis and yAxis specify which axis in 
-  // the Lattice (0-based) should be mapped to X and Y on the display
-  // device: ie. 2-d slices of the data to be displayed have these as
-  // axes.  mAxis specifies the "movie" axis, which is the axis along
-  // which different slices are taken.  fixedPos is an IPosition
-  // having the same length as the number of dimensions in the array, 
-  // and indicates the fixed axis values for axes in the data that are
-  // not specified as xAxis or yAxis: indeed, <src>fixedPos(mAxis)</src>
-  // indicates which pixel value along the movie axis that this
-  // particular object looks after.
-  // <group>
-  LatticePADMVector(const uInt xAxis,
-                    const uInt yAxis, const uInt mAxis,
-                    const IPosition fixedPos,
-                    LatticePADisplayData<T>* arDat);
-  LatticePADMVector(const uInt xAxis,
-                    const uInt yAxis, LatticePADisplayData<T>* arDat);
-  // </group>
+	public:
 
-  // Destructor
-  virtual ~LatticePADMVector();
+		// Constructors: >2d and 2d.  xAxis and yAxis specify which axis in
+		// the Lattice (0-based) should be mapped to X and Y on the display
+		// device: ie. 2-d slices of the data to be displayed have these as
+		// axes.  mAxis specifies the "movie" axis, which is the axis along
+		// which different slices are taken.  fixedPos is an IPosition
+		// having the same length as the number of dimensions in the array,
+		// and indicates the fixed axis values for axes in the data that are
+		// not specified as xAxis or yAxis: indeed, <src>fixedPos(mAxis)</src>
+		// indicates which pixel value along the movie axis that this
+		// particular object looks after.
+		// <group>
+		LatticePADMVector(const uInt xAxis,
+		                  const uInt yAxis, const uInt mAxis,
+		                  const IPosition fixedPos,
+		                  LatticePADisplayData<T>* arDat);
+		LatticePADMVector(const uInt xAxis,
+		                  const uInt yAxis, LatticePADisplayData<T>* arDat);
+		// </group>
 
-  // Actually draw on the display device.  The WorldCanvasHolder will
-  // tell the LatticeAsVector that it should now draw, which will in
-  // turn determine which of its one or more LatticePADMVector objects 
-  // should draw by matching the movie value on the WorldCanvas.  The 
-  // vector is drawn in the world coordinate range blc to trc.
-  virtual uInt dataDrawSelf(WorldCanvas *wCanvas,
-			    const Vector<Double> &blc,
-			    const Vector<Double> &trc,
-			    const IPosition &start,
-			    const IPosition &shape,
-			    const IPosition &stride,
-			    const Bool usePixelEdges = False);
+		// Destructor
+		virtual ~LatticePADMVector();
 
- private:
+		// Actually draw on the display device.  The WorldCanvasHolder will
+		// tell the LatticeAsVector that it should now draw, which will in
+		// turn determine which of its one or more LatticePADMVector objects
+		// should draw by matching the movie value on the WorldCanvas.  The
+		// vector is drawn in the world coordinate range blc to trc.
+		virtual uInt dataDrawSelf(WorldCanvas *wCanvas,
+		                          const Vector<Double> &blc,
+		                          const Vector<Double> &trc,
+		                          const IPosition &start,
+		                          const IPosition &shape,
+		                          const IPosition &stride,
+		                          const Bool usePixelEdges = False);
+
+	private:
 //
-  Matrix<Float> getAmplitude(const Matrix<T>& data) const;
+		Matrix<Float> getAmplitude(const Matrix<T>& data) const;
 
-  //# Make parent members known.
-protected:
-  using LatticePADisplayMethod<T>::parentDisplayData;
-};
+		//# Make parent members known.
+	protected:
+		using LatticePADisplayMethod<T>::parentDisplayData;
+	};
 
 
 } //# NAMESPACE CASA - END

@@ -32,43 +32,42 @@
 
 namespace casa {
 
-template <class T> class ImageInterface;
-class BinPlotWidget;
-class ImageRegion;
+	template <class T> class ImageInterface;
+	class BinPlotWidget;
+	class ImageRegion;
 
-/**
- * Displays a histogram specific to a region and an image; contains
- * a "Next" button that toggles to a histogram displaying the same
- * region, but a different image.
- */
+	/**
+	 * Displays a histogram specific to a region and an image; contains
+	 * a "Next" button that toggles to a histogram displaying the same
+	 * region, but a different image.
+	 */
 
 
-class HistogramGraph : public QWidget
-{
-    Q_OBJECT
+	class HistogramGraph : public QWidget {
+		Q_OBJECT
 
-public:
-    HistogramGraph(QWidget *parent = 0);
-    ~HistogramGraph();
-    void initPlot();
-    void setIndex( int stackIndex );
-    void setNextEnabled( bool enabled );
-    void setImage( ImageInterface<float>* image );
-    void setImageRegion( ImageRegion* region, int id );
+	public:
+		HistogramGraph(QWidget *parent = 0);
+		~HistogramGraph();
+		void initPlot();
+		void setIndex( int stackIndex );
+		void setNextEnabled( bool enabled );
+		void setImage( ImageInterface<float>* image );
+		void setImageRegion( ImageRegion* region, int id );
 
-signals:
-	void showGraph( int nextIndex );
+	signals:
+		void showGraph( int nextIndex );
 
-private slots:
-	void nextGraph();
+	private slots:
+		void nextGraph();
 
-private:
-	HistogramGraph( const HistogramGraph& other );
-	HistogramGraph operator=( const HistogramGraph& other );
-    int index;
-    Ui::HistogramGraphClass ui;
-    BinPlotWidget* histogram;
-};
+	private:
+		HistogramGraph( const HistogramGraph& other );
+		HistogramGraph operator=( const HistogramGraph& other );
+		int index;
+		Ui::HistogramGraphClass ui;
+		BinPlotWidget* histogram;
+	};
 }
 
 #endif // HISTOGRAMGRAPH_QO_H

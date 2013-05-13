@@ -37,26 +37,26 @@ namespace casa {
 	const QString Util::APPLICATION = "Spectral Profiler";
 
 	Util::Util() {
-	// TODO Auto-generated constructor stub
+		// TODO Auto-generated constructor stub
 	}
 
 	Util::~Util() {
-	// TODO Auto-generated destructor stub
+		// TODO Auto-generated destructor stub
 	}
 
 	const double Util::PI = std::atan(1.0) * 4.0;
 	const double Util::TIME_CONV = 60.0;
 	const double Util::RAD_DEGREE_CONVERSION = 572.95779513082;
 
-	double Util::degMinSecToRadians( int degrees, int mins, float secs ){
+	double Util::degMinSecToRadians( int degrees, int mins, float secs ) {
 		assert( -90 <= degrees && degrees <=90 );
 		assert( 0 <= mins && mins < TIME_CONV );
 		assert( 0 <= secs && secs < TIME_CONV );
-        double decimalDegrees = toDecimalDegrees( degrees, mins, secs );
+		double decimalDegrees = toDecimalDegrees( degrees, mins, secs );
 		return toRadians( decimalDegrees );
 	}
 
-	double Util::hrMinSecToRadians( int hours, int mins, float secs ){
+	double Util::hrMinSecToRadians( int hours, int mins, float secs ) {
 		assert( 0 <= hours && hours <= 24 );
 		assert( 0 <= mins && mins < TIME_CONV );
 		assert( 0 <= secs && secs < TIME_CONV );
@@ -66,52 +66,49 @@ namespace casa {
 		return toRadians( degrees );
 	}
 
-	QString Util::toHTML( const QString& baseStr ){
+	QString Util::toHTML( const QString& baseStr ) {
 		QString htmlStr( "<font color='black'>");
 		htmlStr.append( baseStr );
 		htmlStr.append( "</font>");
 		return htmlStr;
 	}
 
-	double Util::toRadians( double degrees ){
+	double Util::toRadians( double degrees ) {
 		double rads = degrees *  PI / 180;
 		return rads;
 	}
 
-	double Util::toDecimalDegrees( int degrees, int mins, float seconds ){
+	double Util::toDecimalDegrees( int degrees, int mins, float seconds ) {
 		double deg = degrees + mins / TIME_CONV + seconds / (TIME_CONV * TIME_CONV );
 		return deg;
 	}
 
-	void Util::showUserMessage( QString& msg, QWidget* parent ){
+	void Util::showUserMessage( QString& msg, QWidget* parent ) {
 		QMessageBox msgBox( parent );
 		msgBox.setText( msg );
 		msgBox.exec();
 	}
 
-	void Util::minMax( double& min, double& max, const Vector<Double>& values ){
-		if ( values.size() > 0 ){
+	void Util::minMax( double& min, double& max, const Vector<Double>& values ) {
+		if ( values.size() > 0 ) {
 			min = values[0];
 			max = values[0];
-			for ( int i = 1; i < static_cast<int>(values.size()); i++ ){
-				if ( values[i] < min ){
+			for ( int i = 1; i < static_cast<int>(values.size()); i++ ) {
+				if ( values[i] < min ) {
 					min = values[i];
-				}
-				else if ( values[i] > max ){
+				} else if ( values[i] > max ) {
 					max = values[i];
 				}
 			}
 		}
 	}
 
-	int Util::getCenter( const Vector<Double>& values, Double& mean ){
-		if ( values.size() == 1 ){
+	int Util::getCenter( const Vector<Double>& values, Double& mean ) {
+		if ( values.size() == 1 ) {
 			mean =  values[0];
-		}
-		else if ( values.size() == 2 ){
+		} else if ( values.size() == 2 ) {
 			mean =  0.5*(values[0]+values[1]);
-		}
-		else {
+		} else {
 			Double minval;
 			Double maxval;
 			minMax(minval, maxval, values);
@@ -122,58 +119,58 @@ namespace casa {
 	}
 
 	void Util::getRa(double radians, int& raHour, int& raMin, double& raSec) {
-	   double ras = radians * 24 * RAD_DEGREE_CONVERSION;
-	   if (ras > 86400) ras = 0;
-	   double rah = ras/3600;
-	   raHour = (int)floor(rah);
-	   double ram = (rah - raHour) * 60;
-	   raMin = (int)floor(ram);
-	   double raSecond = (ram - raMin) * 60;
-	   raSec = floor(1000 * raSecond) / 1000.;
+		double ras = radians * 24 * RAD_DEGREE_CONVERSION;
+		if (ras > 86400) ras = 0;
+		double rah = ras/3600;
+		raHour = (int)floor(rah);
+		double ram = (rah - raHour) * 60;
+		raMin = (int)floor(ram);
+		double raSecond = (ram - raMin) * 60;
+		raSec = floor(1000 * raSecond) / 1000.;
 	}
 
 	void Util::getDec(double radians, int& decDeg, int& decMin, double& decSec) {
 
-	   int sign = (radians > 0) ? 1 : -1;
-	   double decs = sign * radians * 360 * RAD_DEGREE_CONVERSION;
+		int sign = (radians > 0) ? 1 : -1;
+		double decs = sign * radians * 360 * RAD_DEGREE_CONVERSION;
 
-	   if (decs > 1296000) decs = 0;
+		if (decs > 1296000) decs = 0;
 
-	   double decd = decs / 3600;
-	   decDeg = (int)floor(decd);
-	   double decm = (decd - decDeg) * 60;
-	   decMin = (int)floor(decm);
-	   double decSeconds = (decm - decMin) * 60;
-	   decSec = floor(1000 * decSeconds) / 1000.;
+		double decd = decs / 3600;
+		decDeg = (int)floor(decd);
+		double decm = (decd - decDeg) * 60;
+		decMin = (int)floor(decm);
+		double decSeconds = (decm - decMin) * 60;
+		decSec = floor(1000 * decSeconds) / 1000.;
 
 	}
 
-	QString Util::stripBrackets( QString unitStr ){
+	QString Util::stripBrackets( QString unitStr ) {
 		int startIndex = unitStr.indexOf( "[");
 		int endIndex = unitStr.indexOf( "]");
 		QString noBrackets = unitStr;
-		if ( startIndex >= 0 && endIndex > 0 ){
+		if ( startIndex >= 0 && endIndex > 0 ) {
 			noBrackets = unitStr.mid(startIndex+1, endIndex - startIndex-1);
 		}
 		return noBrackets;
 	}
 
-	QString Util::stripFont( QString unitStr ){
+	QString Util::stripFont( QString unitStr ) {
 		int openingBracketEnd = unitStr.indexOf( ">");
 		int endBracketStart = unitStr.indexOf( "<", openingBracketEnd);
 		QString strippedUnits = unitStr;
-		if ( openingBracketEnd > 0 && endBracketStart > 0 ){
+		if ( openingBracketEnd > 0 && endBracketStart > 0 ) {
 			strippedUnits = unitStr.mid(openingBracketEnd + 1, endBracketStart - openingBracketEnd -1 );
 		}
 		return strippedUnits;
 	}
 
-	QList<QString> Util::getTitleCaseVariations( QString source ){
+	QList<QString> Util::getTitleCaseVariations( QString source ) {
 		QString baseString = source.trimmed().toLower();
 		QStringList wordList = baseString.split( " ", QString::SkipEmptyParts );
 		QMap<int,QList<QString> > wordMap;
 		int wordCount = wordList.size();
-		for ( int i = 0; i < wordCount; i++ ){
+		for ( int i = 0; i < wordCount; i++ ) {
 			QString wordLookup = wordList[i];
 			QList<QString> titleCaseList;
 			titleCaseList.append( wordLookup );
@@ -185,13 +182,13 @@ namespace casa {
 		int count = static_cast<int>(qPow( 2, wordCount ));
 		QList<QString> variationList;
 		int i = 0;
-		while ( i < count ){
+		while ( i < count ) {
 			QString variation;
-			for ( int j = 0; j < wordCount; j++ ){
+			for ( int j = 0; j < wordCount; j++ ) {
 				int lookup = static_cast<int>((i / qPow( 2, wordCount - j - 1))) % 2;
 				QList<QString> lookupList = wordMap[j];
 				variation = variation + lookupList[lookup];
-				if ( j != wordCount - 1 ){
+				if ( j != wordCount - 1 ) {
 					variation = variation + " ";
 				}
 			}
@@ -201,26 +198,25 @@ namespace casa {
 		return variationList;
 	}
 
-	QString Util::toTitleCase( QString word ){
+	QString Util::toTitleCase( QString word ) {
 		QString firstLetter = word.mid( 0, 1 );
 		QString firstLetterUpperCase = firstLetter.toUpper();
 		QString result = word.replace(0,1,firstLetterUpperCase );
 		return result;
 	}
 
-	QString Util::toDegreeString( int hrs, int mins, double secs ){
+	QString Util::toDegreeString( int hrs, int mins, double secs ) {
 		return QString::number(hrs) + ":"+QString::number(mins)+":"+QString::number(secs);
 	}
 
-	QString Util::toDecString( int hrs, int mins, double secs ){
+	QString Util::toDecString( int hrs, int mins, double secs ) {
 		return QString::number(hrs) + "."+QString::number(mins)+"."+QString::number(secs);
 	}
 
-	void Util::appendSign( double rad, QString& degreeString ){
-		if ( rad < 0 ){
+	void Util::appendSign( double rad, QString& degreeString ) {
+		if ( rad < 0 ) {
 			degreeString = "-"+degreeString;
-		}
-		else {
+		} else {
 			degreeString = "+"+degreeString;
 		}
 	}

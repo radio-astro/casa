@@ -29,33 +29,33 @@
 #include <assert.h>
 namespace casa {
 
-ConverterWavelengthFrequency::ConverterWavelengthFrequency(const QString& oldUnits,const QString& newUnits) :
-		ConverterWavelength( oldUnits, newUnits ){
-}
+	ConverterWavelengthFrequency::ConverterWavelengthFrequency(const QString& oldUnits,const QString& newUnits) :
+		ConverterWavelength( oldUnits, newUnits ) {
+	}
 
-Vector<double> ConverterWavelengthFrequency::convert( const Vector<double>& oldValues ){
-	Vector<double> resultValues( oldValues.size());
-	bool wavelengthRecognized = setWavelengthUnits( oldUnits );
-	bool successfulConversion = false;
-	if ( wavelengthRecognized ){
-		successfulConversion = spectralCoordinate.wavelengthToFrequency( resultValues, oldValues );
-		if ( successfulConversion ){
-			Vector<String> coordUnits = spectralCoordinate.worldAxisUnits();
-			assert ( coordUnits.size() == 1 );
-			String coordUnit = coordUnits[0];
-			QString coordUnitStr( coordUnit.c_str());
-			ConverterFrequency::convertFrequency( resultValues, coordUnitStr, newUnits );
+	Vector<double> ConverterWavelengthFrequency::convert( const Vector<double>& oldValues ) {
+		Vector<double> resultValues( oldValues.size());
+		bool wavelengthRecognized = setWavelengthUnits( oldUnits );
+		bool successfulConversion = false;
+		if ( wavelengthRecognized ) {
+			successfulConversion = spectralCoordinate.wavelengthToFrequency( resultValues, oldValues );
+			if ( successfulConversion ) {
+				Vector<String> coordUnits = spectralCoordinate.worldAxisUnits();
+				assert ( coordUnits.size() == 1 );
+				String coordUnit = coordUnits[0];
+				QString coordUnitStr( coordUnit.c_str());
+				ConverterFrequency::convertFrequency( resultValues, coordUnitStr, newUnits );
+			}
 		}
+		if ( !successfulConversion ) {
+			resultValues = oldValues;
+			qDebug() << "Could not convert wavelength to frequency";
+		}
+		return resultValues;
 	}
-	if ( !successfulConversion ){
-		resultValues = oldValues;
-		qDebug() << "Could not convert wavelength to frequency";
-	}
-	return resultValues;
-}
 
-ConverterWavelengthFrequency::~ConverterWavelengthFrequency() {
-	// TODO Auto-generated destructor stub
-}
+	ConverterWavelengthFrequency::~ConverterWavelengthFrequency() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

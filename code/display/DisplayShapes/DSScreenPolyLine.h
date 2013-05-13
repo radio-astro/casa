@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #ifndef TRIALDISPLAY_DSSCREENPOLYLINE_H
 #define TRIALDISPLAY_DSSCREENPOLYLINE_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <casa/Quanta/Quantum.h>
@@ -45,46 +45,46 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of a relative screen pos. DSPolyLine
 // </summary>
 
-class PixelCanvas;
-class DSPixelPolyLine;
-class DSWorldPolyLine;
+	class PixelCanvas;
+	class DSPixelPolyLine;
+	class DSWorldPolyLine;
 
-class DSScreenPolyLine : public DSPolyLine , public DisplayShapeWithCoords{
-  
-public:
-  DSScreenPolyLine();
-  DSScreenPolyLine(const Record& settings, PixelCanvas* pc);
-  DSScreenPolyLine(DSPixelPolyLine& other, PixelCanvas* pc);
-  DSScreenPolyLine(DSWorldPolyLine& other);
+	class DSScreenPolyLine : public DSPolyLine , public DisplayShapeWithCoords {
 
-  virtual ~DSScreenPolyLine();
-  
-  virtual void recalculateScreenPosition();
+	public:
+		DSScreenPolyLine();
+		DSScreenPolyLine(const Record& settings, PixelCanvas* pc);
+		DSScreenPolyLine(DSPixelPolyLine& other, PixelCanvas* pc);
+		DSScreenPolyLine(DSWorldPolyLine& other);
 
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual void move(const Float& dX, const Float& dY);
-  virtual void scale(const Float& scaleFactor);
-  virtual void rotate(const Float& angle);
-  
-  virtual void changePoint(const Vector<Float>&pos, const Int n);
-  virtual void changePoint(const Vector<Float>& pos);
-  virtual void addPoint(const Vector<Float>& newPos);
-  virtual void setPoints(const Matrix<Float>& points);
-  
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
-  
-  virtual Record getRawOptions() {
-    return DSPolyLine::getOptions();
-  }
+		virtual ~DSScreenPolyLine();
 
-private:
-  PixelCanvas* itsPC;
-  Matrix<Float> itsRelativePoints;
-  
-  void updateRelative();
-  
-};
+		virtual void recalculateScreenPosition();
+
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void scale(const Float& scaleFactor);
+		virtual void rotate(const Float& angle);
+
+		virtual void changePoint(const Vector<Float>&pos, const Int n);
+		virtual void changePoint(const Vector<Float>& pos);
+		virtual void addPoint(const Vector<Float>& newPos);
+		virtual void setPoints(const Matrix<Float>& points);
+
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		virtual Record getRawOptions() {
+			return DSPolyLine::getOptions();
+		}
+
+	private:
+		PixelCanvas* itsPC;
+		Matrix<Float> itsRelativePoints;
+
+		void updateRelative();
+
+	};
 
 } //# NAMESPACE CASA - END
 

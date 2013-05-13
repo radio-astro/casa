@@ -31,15 +31,15 @@ namespace casa {
 
 //Purpose of this class is to convert from channels= pixels to the world units/pixels
 //used by the spectral axis.
-class ConverterChannel : public Converter {
-public:
-	ConverterChannel( const QString& oldUnits, const QString& newUnits );
+	class ConverterChannel : public Converter {
+	public:
+		ConverterChannel( const QString& oldUnits, const QString& newUnits );
 
-	virtual double toPixel( double value );
-	virtual Vector<double> convert( const Vector<double>& oldValues );
-	virtual double convert ( double oldValue );
-	virtual ~ConverterChannel();
-};
+		virtual double toPixel( double value );
+		virtual Vector<double> convert( const Vector<double>& oldValues );
+		virtual double convert ( double oldValue );
+		virtual ~ConverterChannel();
+	};
 
 } /* namespace casa */
 #endif /* CONVERTERCHANNEL_H_ */

@@ -33,61 +33,61 @@
 #include <graphics/X11/X_enter.h>
 #  include <QWidget>
 #  include <QResizeEvent>
-   //#dk Be careful to put *.ui.h within X_enter/exit bracket too,
-   //#   because they'll have Qt includes.
-   //#   E.g. <QApplication> needs the X11 definition of 'Display'
+//#dk Be careful to put *.ui.h within X_enter/exit bracket too,
+//#   because they'll have Qt includes.
+//#   E.g. <QApplication> needs the X11 definition of 'Display'
 #  include <display/QtViewer/QtDataOptionsPanel.ui.h>
 #include <graphics/X11/X_exit.h>
 
- 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class QtDisplayPanelGui;
-class QtDisplayData;
+	class QtDisplayPanelGui;
+	class QtDisplayData;
 
-class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
-   
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+	class QtDataOptionsPanel : public QWidget, protected Ui::QtDataOptionsPanel {
+
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
 
 
- public:
-  
-  QtDataOptionsPanel(QtDisplayPanelGui* panel=0, QWidget* parent=0 );
-  ~QtDataOptionsPanel();
-  
- signals:
-  void setAutoApply(bool);
-  void globalColorSettingsChanged( bool );
-  void dataOptionsTabChanged( const QString& name );
+	public:
 
- protected:
+		QtDataOptionsPanel(QtDisplayPanelGui* panel=0, QWidget* parent=0 );
+		~QtDataOptionsPanel();
 
-  //void paintEvent(QPaintEvent* event);	//#dk (hye-type trick)
-  
-  void resizeEvent (QResizeEvent* ev);		//#diag -- to show size
-  
-  QWidget *parent_;
-  QtDisplayPanelGui *panel_;
- 
- protected slots:
- 
-  // These respond to DD creation/removal signals from viewer_
-  // <group>  
-  virtual void createDDTab_(QtDisplayData*);
-  virtual void removeDDTab_(QtDisplayData*);
-  // </group> 
-  virtual void auto_apply_state_change(bool);
-  
-  private slots:
-  	  void tabChanged( int index );
+	signals:
+		void setAutoApply(bool);
+		void globalColorSettingsChanged( bool );
+		void dataOptionsTabChanged( const QString& name );
 
- private:
-  
-  QtDataOptionsPanel() {  }	// (not intended for use).
-  
-};
+	protected:
+
+		//void paintEvent(QPaintEvent* event);	//#dk (hye-type trick)
+
+		void resizeEvent (QResizeEvent* ev);		//#diag -- to show size
+
+		QWidget *parent_;
+		QtDisplayPanelGui *panel_;
+
+	protected slots:
+
+		// These respond to DD creation/removal signals from viewer_
+		// <group>
+		virtual void createDDTab_(QtDisplayData*);
+		virtual void removeDDTab_(QtDisplayData*);
+		// </group>
+		virtual void auto_apply_state_change(bool);
+
+	private slots:
+		void tabChanged( int index );
+
+	private:
+
+		QtDataOptionsPanel() {  }	// (not intended for use).
+
+	};
 
 } //# NAMESPACE CASA - END
 

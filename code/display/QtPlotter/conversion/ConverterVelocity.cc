@@ -28,35 +28,35 @@
 
 namespace casa {
 
-ConverterVelocity::ConverterVelocity(const QString& oldUnits, const QString& newUnits) :
-	Converter( oldUnits, newUnits){
+	ConverterVelocity::ConverterVelocity(const QString& oldUnits, const QString& newUnits) :
+		Converter( oldUnits, newUnits) {
 
-}
+	}
 
-double ConverterVelocity::toPixel( double value ){
-	Double pixelVal;
-	spectralCoordinate.setVelocity( oldUnits.toStdString() );
-	spectralCoordinate.velocityToPixel( pixelVal, value );
-	return pixelVal;
-}
+	double ConverterVelocity::toPixel( double value ) {
+		Double pixelVal;
+		spectralCoordinate.setVelocity( oldUnits.toStdString() );
+		spectralCoordinate.velocityToPixel( pixelVal, value );
+		return pixelVal;
+	}
 
-Vector<double> ConverterVelocity::convert( const Vector<double>& oldValues ){
-	Vector<double> resultValues( oldValues.size() );
-	resultValues = oldValues;
-	convertVelocity( resultValues, oldUnits, newUnits );
-	return resultValues;
-}
+	Vector<double> ConverterVelocity::convert( const Vector<double>& oldValues ) {
+		Vector<double> resultValues( oldValues.size() );
+		resultValues = oldValues;
+		convertVelocity( resultValues, oldUnits, newUnits );
+		return resultValues;
+	}
 
-void ConverterVelocity::convertVelocity( Vector<double> &resultValues,
-		QString& sourceUnits, QString& destUnits){
+	void ConverterVelocity::convertVelocity( Vector<double> &resultValues,
+	        QString& sourceUnits, QString& destUnits) {
 		int sourceIndex = Converter::VELOCITY_UNITS.indexOf( sourceUnits );
 		int destIndex = Converter::VELOCITY_UNITS.indexOf( destUnits );
 		Converter::convert( resultValues, sourceIndex, destIndex );
-}
+	}
 
 
-ConverterVelocity::~ConverterVelocity() {
-	// TODO Auto-generated destructor stub
-}
+	ConverterVelocity::~ConverterVelocity() {
+		// TODO Auto-generated destructor stub
+	}
 
 } /* namespace casa */

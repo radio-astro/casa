@@ -32,58 +32,58 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor
-DParameterColorChoice::DParameterColorChoice(const String name,
-					     const String description,
-					     const String help,
-					     const String context,
-					     const Bool editable) :
-  DParameterChoice() {
-  setName(name);
-  setDescription(description);
-  setHelp(help);
-  Vector<String> colors(11);
-  colors(0) = "foreground";
-  colors(1) = "background";
-  colors(2) = "black";
-  colors(3) = "white";
-  colors(4) = "red";
-  colors(5) = "green";
-  colors(6) = "blue";
-  colors(7) = "cyan";
-  colors(8) = "magenta";
-  colors(9) = "yellow";
-  colors(10) = "gray";
-  setOptions(colors);
-  setDefaultValue(colors(0));
-  setValue(colors(0));
-  setContext(context);
-  setEditable(editable);
+	DParameterColorChoice::DParameterColorChoice(const String name,
+	        const String description,
+	        const String help,
+	        const String context,
+	        const Bool editable) :
+		DParameterChoice() {
+		setName(name);
+		setDescription(description);
+		setHelp(help);
+		Vector<String> colors(11);
+		colors(0) = "foreground";
+		colors(1) = "background";
+		colors(2) = "black";
+		colors(3) = "white";
+		colors(4) = "red";
+		colors(5) = "green";
+		colors(6) = "blue";
+		colors(7) = "cyan";
+		colors(8) = "magenta";
+		colors(9) = "yellow";
+		colors(10) = "gray";
+		setOptions(colors);
+		setDefaultValue(colors(0));
+		setValue(colors(0));
+		setContext(context);
+		setEditable(editable);
 
-}
+	}
 
 // Copy constructor.
-DParameterColorChoice::DParameterColorChoice(const DParameterColorChoice &
-					     other) :
-  DParameterChoice(other) {
-}
+	DParameterColorChoice::DParameterColorChoice(const DParameterColorChoice &
+	        other) :
+		DParameterChoice(other) {
+	}
 
 // Destructor.
-DParameterColorChoice::~DParameterColorChoice() {
-}
+	DParameterColorChoice::~DParameterColorChoice() {
+	}
 
 // Copy assignment.
-DParameterColorChoice &DParameterColorChoice::
-operator=(const DParameterColorChoice &other) {
-  if (this != &other) {
-    DParameterChoice::operator=(other);
-  }
-  return *this;
-}
+	DParameterColorChoice &DParameterColorChoice::
+	operator=(const DParameterColorChoice &other) {
+		if (this != &other) {
+			DParameterChoice::operator=(other);
+		}
+		return *this;
+	}
 
 // Default constructor.
-DParameterColorChoice::DParameterColorChoice() :
-  DParameterChoice() {
-}
+	DParameterColorChoice::DParameterColorChoice() :
+		DParameterChoice() {
+	}
 
 } //# NAMESPACE CASA - END
 

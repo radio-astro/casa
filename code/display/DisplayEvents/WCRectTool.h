@@ -65,10 +65,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // to a secondary action of the tool, if indeed a secondary action
 // exists.
 //
-// The rectangle is drawn by dragging the mouse from one corner to 
+// The rectangle is drawn by dragging the mouse from one corner to
 // the diagonally opposite corner.  Once constructed, the rectangle
 // can be resized by dragging its corners, or relocated by dragging
-// inside the rectangle.  The rectangle is removed from the display 
+// inside the rectangle.  The rectangle is removed from the display
 // when the Esc key is pressed.
 // </synopsis>
 //
@@ -76,7 +76,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </example>
 //
 // <motivation>
-// Many activities on the WorldCanvas will be based on the user drawing 
+// Many activities on the WorldCanvas will be based on the user drawing
 // a rectangle, and then proceeding to some action with that rectangle.
 // A nice example is zooming.
 // </motivation>
@@ -85,122 +85,122 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Add time constraint to double click detection
 // </todo>
 
-class WCRectTool : public WCTool, public DTVisible {
-  
- public:
-  
-  // Constructor
-  WCRectTool(WorldCanvas *wcanvas,
-	     Display::KeySym keysym = Display::K_Pointer_Button1,
-	     const Bool persistent = False);
-  
-  // Destructor
-  virtual ~WCRectTool();
-  
-  // Switch the tool off - this calls the base class disable, and
-  // then erases the rectangle if it's around
-  virtual void disable();
+	class WCRectTool : public WCTool, public DTVisible {
 
-  // Functions called by the local event handling operators -
-  // these handle the drawing of the rectangle.  In special 
-  // conditions, namely double clicking the key, they will
-  // pass control on to the doubleInside and doubleOutside
-  // functions
-  // <group>
-  virtual void keyPressed(const WCPositionEvent &ev);
-  virtual void keyReleased(const WCPositionEvent &ev);
-  virtual void otherKeyPressed(const WCPositionEvent &ev);
-  virtual void moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/);
-  virtual void refresh(const WCRefreshEvent &ev);
-  // </group>
+	public:
 
-  // Functions special to the rectangle event handling - called when
-  // there is a double click inside/outside the rectangle
-  // <group>
-  virtual void doubleInside() { };
-  virtual void doubleOutside() { };
-  // </group>
+		// Constructor
+		WCRectTool(WorldCanvas *wcanvas,
+		           Display::KeySym keysym = Display::K_Pointer_Button1,
+		           const Bool persistent = False);
 
-  // Functions called when a rectangle is ready and not being 
-  // editted, and when this status changes
-  // <group>
-  virtual void rectangleReady() { };
-  virtual void rectangleNotReady() { };
-  // </group>
+		// Destructor
+		virtual ~WCRectTool();
 
-  // Retrieve the rectangle corners
-  virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
+		// Switch the tool off - this calls the base class disable, and
+		// then erases the rectangle if it's around
+		virtual void disable();
 
- private:
+		// Functions called by the local event handling operators -
+		// these handle the drawing of the rectangle.  In special
+		// conditions, namely double clicking the key, they will
+		// pass control on to the doubleInside and doubleOutside
+		// functions
+		// <group>
+		virtual void keyPressed(const WCPositionEvent &ev);
+		virtual void keyReleased(const WCPositionEvent &ev);
+		virtual void otherKeyPressed(const WCPositionEvent &ev);
+		virtual void moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/);
+		virtual void refresh(const WCRefreshEvent &ev);
+		// </group>
 
-  // do the rectangles persist after double clicks?
-  Bool itsRectanglePersistent;
+		// Functions special to the rectangle event handling - called when
+		// there is a double click inside/outside the rectangle
+		// <group>
+		virtual void doubleInside() { };
+		virtual void doubleOutside() { };
+		// </group>
 
-  // is the rectangle on screen?
-  Bool itsOnScreen;
-  
-  // are we actively zooming?
-  Bool itsActive;
+		// Functions called when a rectangle is ready and not being
+		// editted, and when this status changes
+		// <group>
+		virtual void rectangleReady() { };
+		virtual void rectangleNotReady() { };
+		// </group>
 
-  // have we moved?
-  Bool itsMoved;
+		// Retrieve the rectangle corners
+		virtual void get(Int &x1, Int &y1, Int &x2, Int &y2) const ;
 
-  // do we have a rectangle drawn yet?
-  Bool itsRectangleExists;
+	private:
 
-  // adjustment mode
-  enum AdjustMode {
-    Off, 
-    Move
-  };
-  WCRectTool::AdjustMode itsAdjustMode;
+		// do the rectangles persist after double clicks?
+		Bool itsRectanglePersistent;
 
-  // coordinates of the rectangle: pixel and world
-  // <group>
-  Int itsX1, itsY1, itsX2, itsY2;
-  Vector<Double> itsStoredWorldBlc, itsStoredWorldTrc;
-  // </group>
+		// is the rectangle on screen?
+		Bool itsOnScreen;
 
-  // set the coordinates of the rectangle
-  // <group>
-  virtual void set(const Int &x1, const Int &y1, const Int &x2, const Int &y2);
-  // </group>
+		// are we actively zooming?
+		Bool itsActive;
 
-  // set/get only the anchor point
-  // <group>
-  virtual void set(const Int &x1, const Int &y1);
-  virtual void get(Int &x1, Int &y1) const ;
-  // </group>
+		// have we moved?
+		Bool itsMoved;
 
-  // preserve/restore the world coordinates
-  // <group>
-  virtual void preserve();
-  virtual void restore();
-  // </group>
+		// do we have a rectangle drawn yet?
+		Bool itsRectangleExists;
 
-  // draw the rubberband box on a PixelCanvas
-  virtual void draw(const Bool drawHandles = False);
-  
-  // reset this drawer
-  virtual void reset();
+		// adjustment mode
+		enum AdjustMode {
+		    Off,
+		    Move
+		};
+		WCRectTool::AdjustMode itsAdjustMode;
 
-  // storage of the handle coordinates
-  Vector<Int> itsHX, itsHY;
+		// coordinates of the rectangle: pixel and world
+		// <group>
+		Int itsX1, itsY1, itsX2, itsY2;
+		Vector<Double> itsStoredWorldBlc, itsStoredWorldTrc;
+		// </group>
 
-  // position that move started from
-  Int itsBaseMoveX, itsBaseMoveY;
+		// set the coordinates of the rectangle
+		// <group>
+		virtual void set(const Int &x1, const Int &y1, const Int &x2, const Int &y2);
+		// </group>
 
-  // position of last press event
-  Int itsLastPressX, itsLastPressY;
-  Int its2ndLastPressX, its2ndLastPressY;
+		// set/get only the anchor point
+		// <group>
+		virtual void set(const Int &x1, const Int &y1);
+		virtual void get(Int &x1, Int &y1) const ;
+		// </group>
 
-  // position of last release event
-  Int itsLastReleaseX, itsLastReleaseY;
+		// preserve/restore the world coordinates
+		// <group>
+		virtual void preserve();
+		virtual void restore();
+		// </group>
 
-  // store the times of the last two presses here:
-  Double itsLastPressTime, its2ndLastPressTime;
+		// draw the rubberband box on a PixelCanvas
+		virtual void draw(const Bool drawHandles = False);
 
-};
+		// reset this drawer
+		virtual void reset();
+
+		// storage of the handle coordinates
+		Vector<Int> itsHX, itsHY;
+
+		// position that move started from
+		Int itsBaseMoveX, itsBaseMoveY;
+
+		// position of last press event
+		Int itsLastPressX, itsLastPressY;
+		Int its2ndLastPressX, its2ndLastPressY;
+
+		// position of last release event
+		Int itsLastReleaseX, itsLastReleaseY;
+
+		// store the times of the last two presses here:
+		Double itsLastPressTime, its2ndLastPressTime;
+
+	};
 
 
 } //# NAMESPACE CASA - END

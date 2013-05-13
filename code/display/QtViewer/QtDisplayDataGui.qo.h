@@ -39,10 +39,10 @@
 #  include <QHash>
 #include <graphics/X11/X_exit.h>
 
- 
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class QtViewer;
+	class QtViewer;
 
 // <summary>
 // Qt options widget for single DisplayData.
@@ -52,62 +52,63 @@ class QtViewer;
 // QtDisplayDataGui is a thin layer over a QtAutoGui base, to
 // provide the options widget for a single QtDisplayData.  It is normally
 // in a tab of a QtDataOptionsPanel.  Unlike QtAutoGui, which is
-// intended to be generic and reusable for other purposes, QtDisplayDataGui   
+// intended to be generic and reusable for other purposes, QtDisplayDataGui
 // knows about a QtDisplayData; QtDisplayDataGui makes the communication
 // connections between its QtDisplayData and QtAutoGui.
 // </synopsis>
 
 //class QtDisplayDataGui : protected QtAutoGui {
-class QtDisplayDataGui : public QtAutoGui {
-  
-  Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
+	class QtDisplayDataGui : public QtAutoGui {
+
+		Q_OBJECT	//# Allows slot/signal definition.  Must only occur in
 		//# implement/.../*.h files; also, makefile must include
 		//# name of this file in 'mocs' section.
-   
- public:
-  
-  // Always pass a valid QtDisplayData* when creating QtDisplayDataGui,
-  // and use it only as long as the QtDisplayData* remains valid
-  QtDisplayDataGui(QtDisplayData* qdd) : QtAutoGui(), qdd_(qdd) {
-  
-    setFileName((qdd_->name()+".opts").c_str());
-    
-    loadRecord(qdd_->getOptions());	//# populate gui
-    
-    //# set up communication between gui and qdd_.
-    
-/*     
-    QtAutoGui* thisAutoGui = this;
-      
-    connect( thisAutoGui, SIGNAL(setOptions(Record)),
-             qdd_,        SLOT(setOptions(Record)) );
-    connect( qdd_,         SIGNAL(optionsChanged(Record)),
-             thisAutoGui,  SLOT(changeOptions(Record)) );  }
-*/  
-    
-   
-    connect( this, SIGNAL(setOptions(Record)),
-             qdd_,   SLOT(setOptions(Record)) );
-    //cerr<<" QDDG cn: this:"<<this<<" qdd:"<<qdd_<<endl;	//#diag
 
-    connect( qdd_, SIGNAL(optionsChanged(Record)),
-                     SLOT(changeOptions(Record)) );  }
- 
+	public:
 
-    
-  ~QtDisplayDataGui() {  }
+		// Always pass a valid QtDisplayData* when creating QtDisplayDataGui,
+		// and use it only as long as the QtDisplayData* remains valid
+		QtDisplayDataGui(QtDisplayData* qdd) : QtAutoGui(), qdd_(qdd) {
 
-   
- protected:
-  
-  QtDisplayData* qdd_;
-	//# (QtDisplayDataGui is not responsible for destroying qdd_).
-  
-  // Not to be used; QtDisplayDataGui must be created with a valid
-  // QtDisplayData*.
-  QtDisplayDataGui() {  }
-  
-};
+			setFileName((qdd_->name()+".opts").c_str());
+
+			loadRecord(qdd_->getOptions());	//# populate gui
+
+			//# set up communication between gui and qdd_.
+
+			/*
+			    QtAutoGui* thisAutoGui = this;
+
+			    connect( thisAutoGui, SIGNAL(setOptions(Record)),
+			             qdd_,        SLOT(setOptions(Record)) );
+			    connect( qdd_,         SIGNAL(optionsChanged(Record)),
+			             thisAutoGui,  SLOT(changeOptions(Record)) );  }
+			*/
+
+
+			connect( this, SIGNAL(setOptions(Record)),
+			         qdd_,   SLOT(setOptions(Record)) );
+			//cerr<<" QDDG cn: this:"<<this<<" qdd:"<<qdd_<<endl;	//#diag
+
+			connect( qdd_, SIGNAL(optionsChanged(Record)),
+			         SLOT(changeOptions(Record)) );
+		}
+
+
+
+		~QtDisplayDataGui() {  }
+
+
+	protected:
+
+		QtDisplayData* qdd_;
+		//# (QtDisplayDataGui is not responsible for destroying qdd_).
+
+		// Not to be used; QtDisplayDataGui must be created with a valid
+		// QtDisplayData*.
+		QtDisplayDataGui() {  }
+
+	};
 
 } //# NAMESPACE CASA - END
 

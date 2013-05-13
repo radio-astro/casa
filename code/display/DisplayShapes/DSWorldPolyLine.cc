@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <display/DisplayShapes/DSWorldPolyLine.h>
 #include <display/DisplayShapes/DSPixelPolyLine.h>
@@ -37,289 +37,289 @@
 #include <coordinates/Coordinates/CoordinateSystem.h>
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSWorldPolyLine::DSWorldPolyLine() :
-  DSPolyLine(),
-  itsPD(0),
-  itsWC(0),
-  itsWorldXPoints(0),
-  itsWorldYPoints(0) {
-  
-  // Default cons. We know nothing about anything.
-  
-}
+	DSWorldPolyLine::DSWorldPolyLine() :
+		DSPolyLine(),
+		itsPD(0),
+		itsWC(0),
+		itsWorldXPoints(0),
+		itsWorldYPoints(0) {
 
-DSWorldPolyLine::DSWorldPolyLine(const Record& settings, PanelDisplay* pd) :
-  DSPolyLine(),
-  itsPD(pd),
-  itsWC(0),
-  itsWorldXPoints(0),
-  itsWorldYPoints(0) { 
-  setOptions(settings);
-}
+		// Default cons. We know nothing about anything.
 
-DSWorldPolyLine::DSWorldPolyLine(DSScreenPolyLine& other, PanelDisplay* pd) :
-  DSPolyLine(),
-  itsPD(pd),
-  itsWC(0),
-  itsWorldXPoints(0),
-  itsWorldYPoints(0) {
-  
-  Record shapeSettings = other.getRawOptions();
-  DSPolyLine::setOptions(shapeSettings);
-  updateWCoords();
-  
-}
+	}
 
-DSWorldPolyLine::DSWorldPolyLine(DSPixelPolyLine& other, PanelDisplay* pd) :
-  DSPolyLine(),
-  itsPD(pd),
-  itsWC(0),
-  itsWorldXPoints(0),
-  itsWorldYPoints(0) {
-  
-  Record shapeSettings = other.getRawOptions();
-  DSPolyLine::setOptions(shapeSettings);
-  updateWCoords();
-}
+	DSWorldPolyLine::DSWorldPolyLine(const Record& settings, PanelDisplay* pd) :
+		DSPolyLine(),
+		itsPD(pd),
+		itsWC(0),
+		itsWorldXPoints(0),
+		itsWorldYPoints(0) {
+		setOptions(settings);
+	}
 
-DSWorldPolyLine::~DSWorldPolyLine() {
+	DSWorldPolyLine::DSWorldPolyLine(DSScreenPolyLine& other, PanelDisplay* pd) :
+		DSPolyLine(),
+		itsPD(pd),
+		itsWC(0),
+		itsWorldXPoints(0),
+		itsWorldYPoints(0) {
 
-}
+		Record shapeSettings = other.getRawOptions();
+		DSPolyLine::setOptions(shapeSettings);
+		updateWCoords();
 
-void DSWorldPolyLine::recalculateScreenPosition() {
-  if (!itsWC) {
-    Matrix<Float> points = getPoints();
-    if (points.nelements()) {
-      
-      // Slightly dodgy... but probably more appropriate than a throw.
-      // We will be using "old" screen pos i.e. before a "recalculation"
-      // to find our WC.
+	}
 
-      itsWC = chooseWCFromPixPoints(points, itsPD);
-      if (!itsWC) {
-	throw(AipsError("Couldn't recalculate screen pos of polygon "
-			"as I couldn't find a valid WC to use"));
-      }
-    } else {
-      return;
-    }
-  }
-  
-  Matrix<Float> pointsToSet(itsWorldXPoints.nelements(), 2);
+	DSWorldPolyLine::DSWorldPolyLine(DSPixelPolyLine& other, PanelDisplay* pd) :
+		DSPolyLine(),
+		itsPD(pd),
+		itsWC(0),
+		itsWorldXPoints(0),
+		itsWorldYPoints(0) {
 
-  // TODO Units here..
+		Record shapeSettings = other.getRawOptions();
+		DSPolyLine::setOptions(shapeSettings);
+		updateWCoords();
+	}
 
-  for (uInt i=0; i<itsWorldXPoints.nelements(); i++) {
-    Vector<Double> worldPoint(2);
-    Vector<Double> pixPoint(2);
-    worldPoint(0) = itsWorldXPoints(i).getValue();
-    worldPoint(1) = itsWorldYPoints(i).getValue();
-    itsWC->worldToPix(pixPoint, worldPoint);
-    pointsToSet(i,0) = Float(pixPoint(0));
-    pointsToSet(i,1) = Float(pixPoint(1));
-  }
-  DSPolyLine::setPoints(pointsToSet);
+	DSWorldPolyLine::~DSWorldPolyLine() {
 
-}
+	}
 
-void DSWorldPolyLine::draw(PixelCanvas* pc) {
-  
-  if (itsWC && getPoints().nelements()) {
-    
-    Matrix<Float> pnts = getPoints();
-    if (inWorldCanvasDrawArea(pnts, itsWC)) {
-      DSPolyLine::draw(pc);
-    }
-  }
-}
+	void DSWorldPolyLine::recalculateScreenPosition() {
+		if (!itsWC) {
+			Matrix<Float> points = getPoints();
+			if (points.nelements()) {
 
+				// Slightly dodgy... but probably more appropriate than a throw.
+				// We will be using "old" screen pos i.e. before a "recalculation"
+				// to find our WC.
 
-Bool DSWorldPolyLine::setOptions(const Record& settings) {
-  Bool localChange = False;
-  Record toSet = settings;
-  
-  if (settings.isDefined("coords")) {
-    if (settings.asString("coords") != "world") {
-      throw(AipsError("I (DSWorldPolyLine) was expecting an option record which"
-		      " had coords == \'world\'. Please use a \'lock\' or"
-		      " \'revert\' function"
-		      " to change my co-ord system"));
-    }
-  }
-  
-  
-  if (settings.isDefined("polylinepoints")) {
-    if (!itsWC) {
-      cerr << "NYI - DSWorldPolyLine.cc - #152" << endl;
-      throw (AipsError("NYI"));
-    }
+				itsWC = chooseWCFromPixPoints(points, itsPD);
+				if (!itsWC) {
+					throw(AipsError("Couldn't recalculate screen pos of polygon "
+					                "as I couldn't find a valid WC to use"));
+				}
+			} else {
+				return;
+			}
+		}
 
-    // TODO fix this
-    matrixFloatFromQuant(toSet, "polylinepoints", "?");
+		Matrix<Float> pointsToSet(itsWorldXPoints.nelements(), 2);
 
-    Matrix<Float> worldPoints = toSet.asArrayFloat("polylinepoints");
-    Matrix<Float> pixelPoints(worldPoints.nrow(), worldPoints.ncolumn());
-    
-    for (uInt i=0 ; i < worldPoints.nrow() ; i ++) {
-      Vector<Double> wrld(2);
-      Vector<Double> pix(2);
-      wrld(0) = Double(worldPoints(i, 0));
-      wrld(1) = Double(worldPoints(i, 1));
-      itsWC->worldToPix(pix, wrld);
+		// TODO Units here..
 
-      pixelPoints(i,0) = Float(pix(0));
-      pixelPoints(i,1) = Float(pix(1));
-    }
-    toSet.removeField("polylinepoints");
-    toSet.define("polylinepoints", pixelPoints);
-    
-  }
+		for (uInt i=0; i<itsWorldXPoints.nelements(); i++) {
+			Vector<Double> worldPoint(2);
+			Vector<Double> pixPoint(2);
+			worldPoint(0) = itsWorldXPoints(i).getValue();
+			worldPoint(1) = itsWorldYPoints(i).getValue();
+			itsWC->worldToPix(pixPoint, worldPoint);
+			pointsToSet(i,0) = Float(pixPoint(0));
+			pointsToSet(i,1) = Float(pixPoint(1));
+		}
+		DSPolyLine::setPoints(pointsToSet);
 
-  if (DSPolyLine::setOptions(toSet)) {
-    localChange = True;
-  }
-  
-  return localChange;
-}
+	}
 
-Record DSWorldPolyLine::getOptions() {
-  Record toReturn;
-  toReturn = DSPolyLine::getOptions();
-  
-  if (toReturn.isDefined("polylinepoints")) {
-    if(toReturn.dataType("polylinepoints") != TpArrayFloat) {
-      throw(AipsError("Bad data type returned for field \'polylinepoints\'"));
-    }
-    
-    if (!itsWC) {
-      itsWC = chooseWCFromPixPoints(toReturn.asArrayFloat("polylinepoints"),
-				    itsPD);
-      
-      if (!itsWC) {
-	throw(AipsError("DSWorldPolyLine couldn't convert to world  position "
-			"since "
-			"it couldn't find a valid worldcanvas"));
-      }
-      
-    }
-  
-  
-  // -> World options.
-    /*
-  Vector<String> units = itsWC->coordinateSystem().worldAxisUnits();
-  String encodeTo = units(0);
-  
-  for (uInt i=0; i < units.nelements(); i++) {
-    if (units(i) != encodeTo) {
-      throw(AipsError("Not sure yet how to deal with the sitatuion that "
-		      "arose in DSWorldPoly.cc #199!?!"));
-		      }
-    }
-  
-  //  matrixFloatToQuant(toReturn, "polylinepoints", encodeTo);
-  }
-    */
-    
-    pixelToWorldPoints(toReturn, "polylinepoints", itsWC);
+	void DSWorldPolyLine::draw(PixelCanvas* pc) {
 
-  }
-  // Shouldn't happen (should never be defined) .. but why not
-  if (toReturn.isDefined("coords")) {
-    toReturn.removeField("coords");
-  }
-  
-  toReturn.define("coords", "world");
-  return toReturn;
-}
+		if (itsWC && getPoints().nelements()) {
+
+			Matrix<Float> pnts = getPoints();
+			if (inWorldCanvasDrawArea(pnts, itsWC)) {
+				DSPolyLine::draw(pc);
+			}
+		}
+	}
 
 
-void DSWorldPolyLine::updateWCoords() {
-  Matrix<Float> pixelPoints = getPoints();
-  
-  if (pixelPoints.nelements()) {
-    
-    if (!itsWC) {
-      itsWC = chooseWCFromPixPoints(pixelPoints, itsPD);
-      if (!itsWC) {
-	throw(AipsError("Couldn't update world coordinates of polyline "
-			"as I couldn't find a valid WC to use"));
-      }
-    }
-    // Ok, valid itsWC and points
-    
-    Vector<String> units = itsWC->coordinateSystem().worldAxisUnits();
-    String encodeTo = units(0);
-    
-    for (uInt i=0; i < units.nelements(); i++) {
-      if (units(i) != encodeTo) {
-	throw(AipsError("Not sure *yet* how to deal with the sitatuion that "
-			"arose in DSWorldPolyLine.cc #252!?!"));
-      }
-    }
-    
-    itsWorldXPoints.resize(pixelPoints.nrow());
-    itsWorldYPoints.resize(pixelPoints.nrow());
-    
-    for (uInt i=0; i < pixelPoints.nrow() ; i ++) {
-      Vector<Double> pixPoint(2);
-      Vector<Double> worldPoint(2);
-      pixPoint(0) = Double(pixelPoints(i,0));
-      pixPoint(1) = Double(pixelPoints(i,1));
+	Bool DSWorldPolyLine::setOptions(const Record& settings) {
+		Bool localChange = False;
+		Record toSet = settings;
 
-      cerr << "DSWOrldPolyLine update WCoords... converting " << 
-	pixPoint(0) << "," << pixPoint(1) << " to world" << endl;
-      
-      if (!itsWC->pixToWorld(worldPoint, pixPoint)) {
-	throw(AipsError("Couldn't convert pix->world"));
-      }
-      
-      itsWorldXPoints(i) = Quantity(worldPoint(0), encodeTo);
-      itsWorldYPoints(i) = Quantity(worldPoint(1), encodeTo);
-    }
-    
-  }
-}
+		if (settings.isDefined("coords")) {
+			if (settings.asString("coords") != "world") {
+				throw(AipsError("I (DSWorldPolyLine) was expecting an option record which"
+				                " had coords == \'world\'. Please use a \'lock\' or"
+				                " \'revert\' function"
+				                " to change my co-ord system"));
+			}
+		}
 
 
-void DSWorldPolyLine::move(const Float& dX, const Float& dY) {
-  DSPolyLine::move(dX, dY);
-  updateWCoords();
-}
+		if (settings.isDefined("polylinepoints")) {
+			if (!itsWC) {
+				cerr << "NYI - DSWorldPolyLine.cc - #152" << endl;
+				throw (AipsError("NYI"));
+			}
 
-void DSWorldPolyLine::setCenter(const Float& xPos, const Float& yPos) {
-  DSPolyLine::setCenter(xPos, yPos);
-  updateWCoords();
-}
+			// TODO fix this
+			matrixFloatFromQuant(toSet, "polylinepoints", "?");
 
-void DSWorldPolyLine::rotate(const Float& angle) {
-  DSPolyLine::rotate(angle);
-  updateWCoords();
-}
+			Matrix<Float> worldPoints = toSet.asArrayFloat("polylinepoints");
+			Matrix<Float> pixelPoints(worldPoints.nrow(), worldPoints.ncolumn());
 
-void DSWorldPolyLine::scale(const Float& scaleFactor) {
-  DSPolyLine::scale(scaleFactor);
-  updateWCoords();
-}
+			for (uInt i=0 ; i < worldPoints.nrow() ; i ++) {
+				Vector<Double> wrld(2);
+				Vector<Double> pix(2);
+				wrld(0) = Double(worldPoints(i, 0));
+				wrld(1) = Double(worldPoints(i, 1));
+				itsWC->worldToPix(pix, wrld);
 
-void DSWorldPolyLine::addPoint(const Vector<Float>& newPos) {
-  DSPolyLine::addPoint(newPos);
-  updateWCoords();
-}
+				pixelPoints(i,0) = Float(pix(0));
+				pixelPoints(i,1) = Float(pix(1));
+			}
+			toSet.removeField("polylinepoints");
+			toSet.define("polylinepoints", pixelPoints);
 
-void DSWorldPolyLine::setPoints(const Matrix<Float>& points) {
-  DSPolyLine::setPoints(points);
-  updateWCoords();
-}
+		}
 
-void DSWorldPolyLine::changePoint(const Vector<Float>&pos, const Int n) {
-  DSPolyLine::changePoint(pos, n);
-  updateWCoords();
-}
+		if (DSPolyLine::setOptions(toSet)) {
+			localChange = True;
+		}
 
-void DSWorldPolyLine::changePoint(const Vector<Float>& pos) {
-  DSPolyLine::changePoint(pos);
-  updateWCoords();
-}
+		return localChange;
+	}
+
+	Record DSWorldPolyLine::getOptions() {
+		Record toReturn;
+		toReturn = DSPolyLine::getOptions();
+
+		if (toReturn.isDefined("polylinepoints")) {
+			if(toReturn.dataType("polylinepoints") != TpArrayFloat) {
+				throw(AipsError("Bad data type returned for field \'polylinepoints\'"));
+			}
+
+			if (!itsWC) {
+				itsWC = chooseWCFromPixPoints(toReturn.asArrayFloat("polylinepoints"),
+				                              itsPD);
+
+				if (!itsWC) {
+					throw(AipsError("DSWorldPolyLine couldn't convert to world  position "
+					                "since "
+					                "it couldn't find a valid worldcanvas"));
+				}
+
+			}
+
+
+			// -> World options.
+			/*
+			Vector<String> units = itsWC->coordinateSystem().worldAxisUnits();
+			String encodeTo = units(0);
+
+			for (uInt i=0; i < units.nelements(); i++) {
+			if (units(i) != encodeTo) {
+			  throw(AipsError("Not sure yet how to deal with the sitatuion that "
+				      "arose in DSWorldPoly.cc #199!?!"));
+				      }
+			}
+
+			//  matrixFloatToQuant(toReturn, "polylinepoints", encodeTo);
+			}
+			*/
+
+			pixelToWorldPoints(toReturn, "polylinepoints", itsWC);
+
+		}
+		// Shouldn't happen (should never be defined) .. but why not
+		if (toReturn.isDefined("coords")) {
+			toReturn.removeField("coords");
+		}
+
+		toReturn.define("coords", "world");
+		return toReturn;
+	}
+
+
+	void DSWorldPolyLine::updateWCoords() {
+		Matrix<Float> pixelPoints = getPoints();
+
+		if (pixelPoints.nelements()) {
+
+			if (!itsWC) {
+				itsWC = chooseWCFromPixPoints(pixelPoints, itsPD);
+				if (!itsWC) {
+					throw(AipsError("Couldn't update world coordinates of polyline "
+					                "as I couldn't find a valid WC to use"));
+				}
+			}
+			// Ok, valid itsWC and points
+
+			Vector<String> units = itsWC->coordinateSystem().worldAxisUnits();
+			String encodeTo = units(0);
+
+			for (uInt i=0; i < units.nelements(); i++) {
+				if (units(i) != encodeTo) {
+					throw(AipsError("Not sure *yet* how to deal with the sitatuion that "
+					                "arose in DSWorldPolyLine.cc #252!?!"));
+				}
+			}
+
+			itsWorldXPoints.resize(pixelPoints.nrow());
+			itsWorldYPoints.resize(pixelPoints.nrow());
+
+			for (uInt i=0; i < pixelPoints.nrow() ; i ++) {
+				Vector<Double> pixPoint(2);
+				Vector<Double> worldPoint(2);
+				pixPoint(0) = Double(pixelPoints(i,0));
+				pixPoint(1) = Double(pixelPoints(i,1));
+
+				cerr << "DSWOrldPolyLine update WCoords... converting " <<
+				     pixPoint(0) << "," << pixPoint(1) << " to world" << endl;
+
+				if (!itsWC->pixToWorld(worldPoint, pixPoint)) {
+					throw(AipsError("Couldn't convert pix->world"));
+				}
+
+				itsWorldXPoints(i) = Quantity(worldPoint(0), encodeTo);
+				itsWorldYPoints(i) = Quantity(worldPoint(1), encodeTo);
+			}
+
+		}
+	}
+
+
+	void DSWorldPolyLine::move(const Float& dX, const Float& dY) {
+		DSPolyLine::move(dX, dY);
+		updateWCoords();
+	}
+
+	void DSWorldPolyLine::setCenter(const Float& xPos, const Float& yPos) {
+		DSPolyLine::setCenter(xPos, yPos);
+		updateWCoords();
+	}
+
+	void DSWorldPolyLine::rotate(const Float& angle) {
+		DSPolyLine::rotate(angle);
+		updateWCoords();
+	}
+
+	void DSWorldPolyLine::scale(const Float& scaleFactor) {
+		DSPolyLine::scale(scaleFactor);
+		updateWCoords();
+	}
+
+	void DSWorldPolyLine::addPoint(const Vector<Float>& newPos) {
+		DSPolyLine::addPoint(newPos);
+		updateWCoords();
+	}
+
+	void DSWorldPolyLine::setPoints(const Matrix<Float>& points) {
+		DSPolyLine::setPoints(points);
+		updateWCoords();
+	}
+
+	void DSWorldPolyLine::changePoint(const Vector<Float>&pos, const Int n) {
+		DSPolyLine::changePoint(pos, n);
+		updateWCoords();
+	}
+
+	void DSWorldPolyLine::changePoint(const Vector<Float>& pos) {
+		DSPolyLine::changePoint(pos);
+		updateWCoords();
+	}
 
 
 

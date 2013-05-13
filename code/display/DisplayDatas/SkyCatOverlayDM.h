@@ -35,8 +35,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class WorldCanvas;
-class SkyCatOverlayDD;
+	class WorldCanvas;
+	class SkyCatOverlayDD;
 
 // <summary>
 // Class to draw catalogue overlays for SkyCatOverlayDD.
@@ -48,40 +48,40 @@ class SkyCatOverlayDD;
 // requested to do so by the SkyCatOverlayDD class.
 // </synopsis>
 
-class SkyCatOverlayDM : public CachingDisplayMethod {
+	class SkyCatOverlayDM : public CachingDisplayMethod {
 
- public:
+	public:
 
-  // Constructor.
-  SkyCatOverlayDM(WorldCanvas *worldCanvas, 
-		  AttributeBuffer *wchAttributes,
-		  AttributeBuffer *ddAttributes,
-		  CachingDisplayData *dd);
-  
-  // Destructor.
-  virtual ~SkyCatOverlayDM();
+		// Constructor.
+		SkyCatOverlayDM(WorldCanvas *worldCanvas,
+		                AttributeBuffer *wchAttributes,
+		                AttributeBuffer *ddAttributes,
+		                CachingDisplayData *dd);
 
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
+		// Destructor.
+		virtual ~SkyCatOverlayDM();
 
-  // Draw into a cached drawing list, called by draw function.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder);
-  
- protected:
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
 
-  // (Required) default constructor.
-  SkyCatOverlayDM();
-  
-  // (Required) copy constructor.
-  SkyCatOverlayDM(const SkyCatOverlayDM &other);
-  
-  // (Required) copy assignment.
-  void operator=(const SkyCatOverlayDM &other);
-  
- private:
+		// Draw into a cached drawing list, called by draw function.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder);
 
-};
+	protected:
+
+		// (Required) default constructor.
+		SkyCatOverlayDM();
+
+		// (Required) copy constructor.
+		SkyCatOverlayDM(const SkyCatOverlayDM &other);
+
+		// (Required) copy assignment.
+		void operator=(const SkyCatOverlayDM &other);
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

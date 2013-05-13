@@ -30,71 +30,70 @@
 
 namespace casa {
 
-/**
- * Manages an individual panel of the viewer animator.  Objects of
- * this class may animate frames withen an image or they may animate
- * between loaded images.
- */
-class AnimatorWidget : public QWidget
-{
-    Q_OBJECT
+	/**
+	 * Manages an individual panel of the viewer animator.  Objects of
+	 * this class may animate frames withen an image or they may animate
+	 * between loaded images.
+	 */
+	class AnimatorWidget : public QWidget {
+		Q_OBJECT
 
-public:
-    AnimatorWidget(QWidget *parent = 0);
+	public:
+		AnimatorWidget(QWidget *parent = 0);
 
-    void setFrameInformation( int frm, int len );
-    void setRateInformation( int minr, int maxr, int rate );
-    void setModeEnabled( bool enable );
-    void setPlaying( int play );
-    bool isPlaying() const;
-    int getRate() const;
-    int getFrame() const;
-    int getFrameCount() const;
-    int getFrameStart() const;
-    int getFrameEnd() const;
-    int getStepSize() const;
-    ~AnimatorWidget();
+		void setFrameInformation( int frm, int len );
+		void setRateInformation( int minr, int maxr, int rate );
+		void setModeEnabled( bool enable );
+		void setPlaying( int play );
+		bool isPlaying() const;
+		int getRate() const;
+		int getFrame() const;
+		int getFrameCount() const;
+		int getFrameStart() const;
+		int getFrameEnd() const;
+		int getStepSize() const;
+		~AnimatorWidget();
 
-signals:
-	void goTo(int frame);
-	void setRate(int);
-	void toStart();
-	void revStep();
-	void revPlay();
-	void stop();
-	void fwdStep();
-	void fwdPlay();
-	void toEnd();
-	void frameNumberEdited( int );
-	void lowerBoundChanged( int );
-	void upperBoundChanged( int );
-	void stepSizeChanged( int );
+	signals:
+		void goTo(int frame);
+		void setRate(int);
+		void toStart();
+		void revStep();
+		void revPlay();
+		void stop();
+		void fwdStep();
+		void fwdPlay();
+		void toEnd();
+		void frameNumberEdited( int );
+		void lowerBoundChanged( int );
+		void upperBoundChanged( int );
+		void stepSizeChanged( int );
 
-public slots:
-	void stopping();
+	public slots:
+		void stopping();
 
-private slots:
-	void frameNumberEdited();
-	void movieLimitLowerChanged( int value );
-	void movieLimitUpperChanged( int value );
-	void sliderControl( int action );
-	void endToEndMode( bool mode );
-	void starting();
-	void revStepping();
+	private slots:
+		void frameNumberEdited();
+		void movieLimitLowerChanged( int value );
+		void movieLimitUpperChanged( int value );
+		void sliderControl( int action );
+		void endToEndMode( bool mode );
+		void starting();
+		void revStepping();
 
-	void fwdStepping();
-	void ending();
-	void revPlaying();
-	void fwdPlaying();
+		void fwdStepping();
+		void ending();
+		void revPlaying();
+		void fwdPlaying();
 
-private:
-	int resetFrameBounded( int frameNumber ) const;
-	void disableAll();
-	void blockSignals( bool block );
-	int frameCount;
-	int play;
-    Ui::AnimatorWidget ui;
-    bool rateNotSet;
-};
+	private:
+		int resetFrameBounded( int frameNumber ) const;
+		void disableAll();
+		void blockSignals( bool block );
+		int frameCount;
+		int play;
+		Ui::AnimatorWidget ui;
+		bool rateNotSet;
+	};
 }
 #endif // ANIMATORWIDGET_QO_H

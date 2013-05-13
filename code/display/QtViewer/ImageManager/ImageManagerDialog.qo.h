@@ -32,81 +32,81 @@
 
 namespace casa {
 
-class QtDisplayData;
-class ImageView;
-class ImageScrollWidget;
-class DisplayDataHolder;
-class ColormapDefinition;
-class Colormap;
-template <class T> class ImageInterface;
+	class QtDisplayData;
+	class ImageView;
+	class ImageScrollWidget;
+	class DisplayDataHolder;
+	class ColormapDefinition;
+	class Colormap;
+	template <class T> class ImageInterface;
 
-/**
- * Allows users to manipulate the images loaded in the viewer.  Includes
- * the ability to reorder images, change color display properties, etc.
- * Please see CAS-4081 for details.
- */
-class ImageManagerDialog : public QDialog, public ImageTracker {
-    Q_OBJECT
+	/**
+	 * Allows users to manipulate the images loaded in the viewer.  Includes
+	 * the ability to reorder images, change color display properties, etc.
+	 * Please see CAS-4081 for details.
+	 */
+	class ImageManagerDialog : public QDialog, public ImageTracker {
+		Q_OBJECT
 
-public:
-    ImageManagerDialog(QWidget *parent = 0);
-    void setImageHolders( DisplayDataHolder* displayed, DisplayDataHolder* allImages );
-    QtDisplayData* getDisplayChangeDD() const;
-    ~ImageManagerDialog();
+	public:
+		ImageManagerDialog(QWidget *parent = 0);
+		void setImageHolders( DisplayDataHolder* displayed, DisplayDataHolder* allImages );
+		QtDisplayData* getDisplayChangeDD() const;
+		~ImageManagerDialog();
 
-    //Image Tracker Interface
-    void masterImageSelected( QtDisplayData* image );
-    void imageAdded( QtDisplayData* image );
-    void imageRemoved( QtDisplayData* image );
+		//Image Tracker Interface
+		void masterImageSelected( QtDisplayData* image );
+		void imageAdded( QtDisplayData* image );
+		void imageRemoved( QtDisplayData* image );
 
-signals:
-	void ddClosed( QtDisplayData* dd );
-	void ddOpened( const String& path, const String& dataType,
-			const String& displayType/*, const QColor singleColor*/ );
+	signals:
+		void ddClosed( QtDisplayData* dd );
+		void ddOpened( const String& path, const String& dataType,
+		               const String& displayType/*, const QColor singleColor*/ );
 
-public slots:
-	void displayTypeChanged( ImageView* changedView );
-	void displayColorsChanged(ImageView* changedView );
+	public slots:
+		void displayTypeChanged( ImageView* changedView );
+		void displayColorsChanged(ImageView* changedView );
 
-private slots:
-	void applyColorChanges();
-	void openToDisplayed();
-	void displayedToOpen();
-	void closeImage();
-	void unDisplayImage( QtDisplayData* image );
-	void displayImage( QtDisplayData* image );
-	void colorRestrictionsChanged();
-	void masterImageChanged( const QString& imageName );
+	private slots:
+		void applyColorChanges();
+		void openToDisplayed();
+		void displayedToOpen();
+		void closeImage();
+		void unDisplayImage( QtDisplayData* image );
+		void displayImage( QtDisplayData* image );
+		void colorRestrictionsChanged();
+		void masterImageChanged( const QString& imageName );
 
-private:
-	ImageManagerDialog( const ImageManagerDialog& other );
-	ImageManagerDialog operator=( const ImageManagerDialog& other );
+	private:
+		ImageManagerDialog( const ImageManagerDialog& other );
+		ImageManagerDialog operator=( const ImageManagerDialog& other );
 
-	void updateSelectedMaster( const QString& previousSelection);
-	void updateMasterList();
-	void updateColorList();
-	void updateSaturationList();
-	void applyMasterColorMap();
-	void applyMasterIntensityRange();
-	Colormap* generateColorMap( ImageInterface<float>* img,
-			QColor baseColor, bool individualMap );
-	void setComboIndex( QComboBox* combo, int index );
-	void removeImageFromList( QList<ImageView*>& imageList );
-	void initializeScrollArea( QWidget* holder, ImageScrollWidget*& scrollArea );
-	bool getIntensityMinMax( ImageInterface<float>* img,
-			double* intensityMin, double* intensityMax );
-	bool isControlEligible( QtDisplayData* qdd ) const;
-	ColormapDefinition* generateSaturationMap( double minIntensity, double maxIntensity,
-			QColor baseColor );
-	void updateImageList(QComboBox* combo );
-	DisplayDataHolder* openHolder;
-	DisplayDataHolder* allImages;
-    Ui::ImageManagerDialogClass ui;
-    ImageScrollWidget* openScroll;
-    ImageScrollWidget* displayedScroll;
-    const String SINGLE_COLOR_MAP;
-    const String MASTER_COLOR_MAP;
-};
+		void updateSelectedMaster( const QString& previousSelection);
+		void updateMasterList();
+		void updateColorList();
+		void updateSaturationList();
+		void applyMasterColorMap();
+		void applyMasterIntensityRange();
+		Colormap* generateColorMap( ImageInterface<float>* img,
+		                            QColor baseColor, bool individualMap );
+		void setComboIndex( QComboBox* combo, int index );
+		void removeImageFromList( QList<ImageView*>& imageList );
+		void initializeScrollArea( QWidget* holder, ImageScrollWidget*& scrollArea );
+		bool getIntensityMinMax( ImageInterface<float>* img,
+		                         double* intensityMin, double* intensityMax );
+		bool isControlEligible( QtDisplayData* qdd ) const;
+		ColormapDefinition* generateSaturationMap( double minIntensity, double maxIntensity,
+		        QColor baseColor );
+		void updateImageList(QComboBox* combo );
+		DisplayDataHolder* openHolder;
+		DisplayDataHolder* allImages;
+		Ui::ImageManagerDialogClass ui;
+		ImageScrollWidget* openScroll;
+		ImageScrollWidget* displayedScroll;
+		const String SINGLE_COLOR_MAP;
+		const String MASTER_COLOR_MAP;
+	};
 
 }
 

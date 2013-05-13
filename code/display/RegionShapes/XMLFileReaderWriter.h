@@ -36,90 +36,90 @@
 namespace casa {
 
 // Constants and methods for reading/writing RS XML files.
-class RSXML {
-public:
-    // Converts a Record to/from a QDomElement.
-    // <group>
-    static QDomElement recordToXML(const RecordInterface& record,
-                                   String elementName = "casa-record");    
-    static Record XMLToRecord(const QDomElement& element);
-    // </group>
-    
-private:
-    // Document used for creating nodes.
-    static QDomDocument DOCUMENT;
-    
-    // Constants.
-    // <group>
-    static const QString ARRAY;
-    static const QString FIELD;
-    static const QString NAME;
-    static const QString SHAPE;
-    static const QString TYPE;
-    static const QString VAL;
-    // </group>
-    
-    // Converts an IPosition to/from a QString.
-    // <group>
-    static QString shapeToString(const IPosition& shape);
-    static IPosition stringToShape(const QString& shape);
-    // </group>
-};
+	class RSXML {
+	public:
+		// Converts a Record to/from a QDomElement.
+		// <group>
+		static QDomElement recordToXML(const RecordInterface& record,
+		                               String elementName = "casa-record");
+		static Record XMLToRecord(const QDomElement& element);
+		// </group>
+
+	private:
+		// Document used for creating nodes.
+		static QDomDocument DOCUMENT;
+
+		// Constants.
+		// <group>
+		static const QString ARRAY;
+		static const QString FIELD;
+		static const QString NAME;
+		static const QString SHAPE;
+		static const QString TYPE;
+		static const QString VAL;
+		// </group>
+
+		// Converts an IPosition to/from a QString.
+		// <group>
+		static QString shapeToString(const IPosition& shape);
+		static IPosition stringToShape(const QString& shape);
+		// </group>
+	};
 
 
 // Implementation of RegionFileReader/RegionFileWriter for reading/writing
 // CASA-XML files.
-class XMLFileReaderWriter : public RSFileReader, public RSFileWriter {
-public:
-    // Static Members //
-    
-    // Returns the shapes represented by the given QDomElement.  The top-level
-    // element MUST have tag name SHAPE_OPTIONS, and will have zero or more
-    // children elements, each representing a RegionShape, with tag name
-    // SHAPE.
-    static vector<RegionShape*> DOMToShapes(QDomElement& element);
-    
-    // Returns a QDomElement that represents the given shapes.  The top-level
-    // element will have tag name SHAPE_OPTIONS, and will have zero or more
-    // children elements, each representing a RegionShape, with tag name SHAPE.
-    // The given document is used to create the element, but the element is NOT
-    // added to the document.
-    static QDomElement shapesToDOM(QDomDocument& document,
-                                   const vector<RegionShape*>& shapes);
-    
-    // XML file constants.
-    // <group>
-    static const QString DOCROOT_NAME;
-    static const pair<QString, QString> VERSION;
-    static const QString SHAPE_OPTIONS;
-    static const QString SHAPE;
-    // </group>
-    
-    
-    // Non-Static Members //    
-    
-    // Constructor.
-    XMLFileReaderWriter();
-    
-    // Destructor.
-    ~XMLFileReaderWriter();
-    
-    // RSFileReader methods //
+	class XMLFileReaderWriter : public RSFileReader, public RSFileWriter {
+	public:
+		// Static Members //
 
-    // Implements RSFileReader::read.
-    bool read(vector<RegionShape*>& shapes);
-    
-    // RSFileWriter methods //
-    
-    // Implements RSFileWriter::optionsWidget.
-    QWidget* optionsWidget() const;
-    
-    // Implements RSFileWriter::setOptions.
-    void setOptions(const QWidget* widget);
+		// Returns the shapes represented by the given QDomElement.  The top-level
+		// element MUST have tag name SHAPE_OPTIONS, and will have zero or more
+		// children elements, each representing a RegionShape, with tag name
+		// SHAPE.
+		static vector<RegionShape*> DOMToShapes(QDomElement& element);
 
-    // Implements RSFileWriter::write.
-    bool write(const vector<RegionShape*>& shapes) const;
-};
+		// Returns a QDomElement that represents the given shapes.  The top-level
+		// element will have tag name SHAPE_OPTIONS, and will have zero or more
+		// children elements, each representing a RegionShape, with tag name SHAPE.
+		// The given document is used to create the element, but the element is NOT
+		// added to the document.
+		static QDomElement shapesToDOM(QDomDocument& document,
+		                               const vector<RegionShape*>& shapes);
+
+		// XML file constants.
+		// <group>
+		static const QString DOCROOT_NAME;
+		static const pair<QString, QString> VERSION;
+		static const QString SHAPE_OPTIONS;
+		static const QString SHAPE;
+		// </group>
+
+
+		// Non-Static Members //
+
+		// Constructor.
+		XMLFileReaderWriter();
+
+		// Destructor.
+		~XMLFileReaderWriter();
+
+		// RSFileReader methods //
+
+		// Implements RSFileReader::read.
+		bool read(vector<RegionShape*>& shapes);
+
+		// RSFileWriter methods //
+
+		// Implements RSFileWriter::optionsWidget.
+		QWidget* optionsWidget() const;
+
+		// Implements RSFileWriter::setOptions.
+		void setOptions(const QWidget* widget);
+
+		// Implements RSFileWriter::write.
+		bool write(const vector<RegionShape*>& shapes) const;
+	};
 
 }
 

@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DISPLAYSHAPEWITHCOORDS_H
 #define TRIALDISPLAY_DISPLAYSHAPEWITHCOORDS_H
 
@@ -36,65 +36,65 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Base class for DisplayShapes with Coords
 // </summary>
 
-class Record;
-class PixelCanvas;
-class PanelDisplay;
-class WorldCanvas;
+	class Record;
+	class PixelCanvas;
+	class PanelDisplay;
+	class WorldCanvas;
 
-template <class T> class Vector;
-template <class T> class Matrix;
+	template <class T> class Vector;
+	template <class T> class Matrix;
 
-class DisplayShapeWithCoords {
-  
-public:
-  virtual Record getRawOptions() = 0;
+	class DisplayShapeWithCoords {
 
-  static void floatToPix(Record& inHere, const String& field);
-  static void floatPointToPix(Record& inHere, const String& field);
+	public:
+		virtual Record getRawOptions() = 0;
 
-  static void matrixFloatToQuant(Record& inHere, const String& field,
-				 const String& unit);
-  static void matrixFloatFromQuant(Record& inHere, 
-				   const String& field,
-				   const String& onlyParseTheseUnits);
+		static void floatToPix(Record& inHere, const String& field);
+		static void floatPointToPix(Record& inHere, const String& field);
 
-  static void floatFromPix(Record& inHere, const String& field);
-  static void floatPointFromPix(Record& inHere, const String& field);
+		static void matrixFloatToQuant(Record& inHere, const String& field,
+		                               const String& unit);
+		static void matrixFloatFromQuant(Record& inHere,
+		                                 const String& field,
+		                                 const String& onlyParseTheseUnits);
 
-  static WorldCanvas* chooseWCFromWorldPoint(const Record& settings, 
-					     PanelDisplay* pd);
+		static void floatFromPix(Record& inHere, const String& field);
+		static void floatPointFromPix(Record& inHere, const String& field);
 
-  static WorldCanvas* chooseWCFromWorldPoints(const Record& settings,
-					      const String& fieldWithPoints,
-					      PanelDisplay* pd);
+		static WorldCanvas* chooseWCFromWorldPoint(const Record& settings,
+		        PanelDisplay* pd);
 
-  static WorldCanvas* chooseWCFromPixPoint(const Float& xPos, 
-					   const Float& yPos,
-					   PanelDisplay* pd);
+		static WorldCanvas* chooseWCFromWorldPoints(const Record& settings,
+		        const String& fieldWithPoints,
+		        PanelDisplay* pd);
 
-  static WorldCanvas* chooseWCFromPixPoints(const Matrix<Float> points,
-					    PanelDisplay* pd);
-  
-  static Vector<Float> floatPointFromQuant(const Record &inHere, 
-					   const String& field,
-					   String& units);
+		static WorldCanvas* chooseWCFromPixPoint(const Float& xPos,
+		        const Float& yPos,
+		        PanelDisplay* pd);
 
-  static Vector<Float> relToScreen(const Vector<Float>& rel, PixelCanvas* pc);
-  static Vector<Float> screenToRel(const Vector<Float>& screen, 
-				   PixelCanvas* pc);
+		static WorldCanvas* chooseWCFromPixPoints(const Matrix<Float> points,
+		        PanelDisplay* pd);
 
-  static Matrix<Float> relToScreen(const Matrix<Float>& rel, PixelCanvas* pc);
-  static Matrix<Float> screenToRel(const Matrix<Float>& screen, 
-				   PixelCanvas* pc);
-  
-  static Bool inWorldCanvasDrawArea(const Matrix<Float> points, 
-				    WorldCanvas* wc);
+		static Vector<Float> floatPointFromQuant(const Record &inHere,
+		        const String& field,
+		        String& units);
 
-  static void pixelToWorldPoints(Record& inHere, const String& fieldname,
-				 WorldCanvas* wc);
-  virtual ~DisplayShapeWithCoords(){}
-  
-};
+		static Vector<Float> relToScreen(const Vector<Float>& rel, PixelCanvas* pc);
+		static Vector<Float> screenToRel(const Vector<Float>& screen,
+		                                 PixelCanvas* pc);
+
+		static Matrix<Float> relToScreen(const Matrix<Float>& rel, PixelCanvas* pc);
+		static Matrix<Float> screenToRel(const Matrix<Float>& screen,
+		                                 PixelCanvas* pc);
+
+		static Bool inWorldCanvasDrawArea(const Matrix<Float> points,
+		                                  WorldCanvas* wc);
+
+		static void pixelToWorldPoints(Record& inHere, const String& fieldname,
+		                               WorldCanvas* wc);
+		virtual ~DisplayShapeWithCoords() {}
+
+	};
 
 } //# NAMESPACE CASA - END
 

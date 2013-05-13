@@ -36,79 +36,78 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <>
-Float LatticeAsVector<Complex>::getVariance() 
-{
-   MaskedLattice<Complex>* ml = maskedLattice();
-   Float clip = 10.0;
-   Float realVar = 0.0;
-   Float imagVar = 0.0;
-   {
-     LatticeExprNode n1(real(*ml));
-     LatticeExprNode n2(n1[abs(n1-mean(n1)) < clip*stddev(n1)]);
-     LatticeExprNode n3(variance(n2));
-     realVar = n3.getFloat();
-   }
-   {
-     LatticeExprNode n1(imag(*ml));
-     LatticeExprNode n2(n1[abs(n1-mean(n1)) < clip*stddev(n1)]);
-     LatticeExprNode n3(variance(n2));
-     imagVar = n3.getFloat();
-   }
-   return (realVar + imagVar) / 2.0;
-}
+	template <>
+	Float LatticeAsVector<Complex>::getVariance() {
+		MaskedLattice<Complex>* ml = maskedLattice();
+		Float clip = 10.0;
+		Float realVar = 0.0;
+		Float imagVar = 0.0;
+		{
+			LatticeExprNode n1(real(*ml));
+			LatticeExprNode n2(n1[abs(n1-mean(n1)) < clip*stddev(n1)]);
+			LatticeExprNode n3(variance(n2));
+			realVar = n3.getFloat();
+		}
+		{
+			LatticeExprNode n1(imag(*ml));
+			LatticeExprNode n2(n1[abs(n1-mean(n1)) < clip*stddev(n1)]);
+			LatticeExprNode n3(variance(n2));
+			imagVar = n3.getFloat();
+		}
+		return (realVar + imagVar) / 2.0;
+	}
 
-template <>
-Float LatticeAsVector<Float>::getVariance() 
+	template <>
+	Float LatticeAsVector<Float>::getVariance()
 //
 // Never called
 //
-{
-   return 0.0;
-}
+	{
+		return 0.0;
+	}
 
-template <>
-const Float LatticeAsVector<Float>::dataValue(IPosition pos) {
+	template <>
+	const Float LatticeAsVector<Float>::dataValue(IPosition pos) {
 
-  // Return the value of the Lattice at a particular position.
-  // Overrides the base method to take itsRotation (user-specified
-  // addition to position angle) into account as well.
+		// Return the value of the Lattice at a particular position.
+		// Overrides the base method to take itsRotation (user-specified
+		// addition to position angle) into account as well.
 
-  Float val = LatticePADisplayData<Float>::dataValue(pos);
-  if(itsRotation==0.) return val;
+		Float val = LatticePADisplayData<Float>::dataValue(pos);
+		if(itsRotation==0.) return val;
 
-  Float rotation = itsRotation*C::pi/180.;
-	// Computation is done in radians (itsRotation is in degrees).
+		Float rotation = itsRotation*C::pi/180.;
+		// Computation is done in radians (itsRotation is in degrees).
 
-  Float toRadians = (itsUnits==Unit("rad"))?
-		    itsUnits.getValue().getFac() : C::pi/180.;
-	// Assume Float data is in degrees unless an angle Unit is provided.
+		Float toRadians = (itsUnits==Unit("rad"))?
+		                  itsUnits.getValue().getFac() : C::pi/180.;
+		// Assume Float data is in degrees unless an angle Unit is provided.
 
-  if(toRadians!=0.) val = (val*toRadians + rotation)/toRadians;
+		if(toRadians!=0.) val = (val*toRadians + rotation)/toRadians;
 
-  return remainder(val, 360.);
-	// remainder (from math.h) actually assures that val is in the
-	// range [-180,+180], (not [0,360]).
-}
+		return remainder(val, 360.);
+		// remainder (from math.h) actually assures that val is in the
+		// range [-180,+180], (not [0,360]).
+	}
 
 
-template <>
-const Complex LatticeAsVector<Complex>::dataValue(IPosition pos) {
+	template <>
+	const Complex LatticeAsVector<Complex>::dataValue(IPosition pos) {
 
-  // This is only a half-hearted stab (there are no Image<Complex>'s yet).
-  // When they're implemented, showValue() should also be modified to
-  // display this Complex value in polar coordinates....
+		// This is only a half-hearted stab (there are no Image<Complex>'s yet).
+		// When they're implemented, showValue() should also be modified to
+		// display this Complex value in polar coordinates....
 
-  Complex val = LatticePADisplayData<Complex>::dataValue(pos);
-  if(itsRotation==0.) return val;
+		Complex val = LatticePADisplayData<Complex>::dataValue(pos);
+		if(itsRotation==0.) return val;
 
-  Float rotation = itsRotation*C::pi/180.;
-	// Computation is done in radians (itsRotation is in degrees).
+		Float rotation = itsRotation*C::pi/180.;
+		// Computation is done in radians (itsRotation is in degrees).
 
-  val = polar(abs(val), arg(val)+rotation);
+		val = polar(abs(val), arg(val)+rotation);
 
-  return val;
-}
+		return val;
+	}
 
 
 } //# NAMESPACE CASA - END

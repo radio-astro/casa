@@ -12,16 +12,16 @@ namespace casa {
 		class QtRegionDock;
 
 		class QtRegionSourceFactory : public RegionSourceFactory {
-			public:
-				RegionSource *newSource( RegionCreator *rc );
-				QtRegionSourceFactory( QtDisplayPanelGui *panel ) : panel_(panel) { }
-				~QtRegionSourceFactory( ) { }
-				QtRegionDock *regionDock( );
-			private:
-				RegionSource::shared_kernel_ptr_type kernel_;
-				QtDisplayPanelGui *panel_;
+		public:
+			RegionSource *newSource( RegionCreator *rc );
+			QtRegionSourceFactory( QtDisplayPanelGui *panel ) : panel_(panel) { }
+			~QtRegionSourceFactory( ) { }
+			QtRegionDock *regionDock( );
+		private:
+			RegionSource::shared_kernel_ptr_type kernel_;
+			QtDisplayPanelGui *panel_;
 		};
-    }
+	}
 }
 
 #endif

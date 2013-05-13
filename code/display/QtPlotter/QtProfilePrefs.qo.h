@@ -69,57 +69,57 @@
 
 #include <display/QtPlotter/QtProfilePrefsGUI.ui.h>
 
-namespace casa { 
+namespace casa {
 
-class QtProfilePrefs : public QDialog, Ui::QtProfilePrefsGUI{
-	Q_OBJECT
+	class QtProfilePrefs : public QDialog, Ui::QtProfilePrefsGUI {
+		Q_OBJECT
 
-public:
-	QtProfilePrefs(QWidget *parent = 0);
-	QtProfilePrefs(QWidget *parent, bool stateAutoX, bool stateAutoY, int showGrid,
-			int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
-			bool displayStepFunction, bool opticalFitter, bool channelLine);
-	~QtProfilePrefs();
-	void syncUserPreferences();
+	public:
+		QtProfilePrefs(QWidget *parent = 0);
+		QtProfilePrefs(QWidget *parent, bool stateAutoX, bool stateAutoY, int showGrid,
+		               int stateMProf, int stateRel, bool showToolTips, bool showTopAxis,
+		               bool displayStepFunction, bool opticalFitter, bool channelLine);
+		~QtProfilePrefs();
+		void syncUserPreferences();
 
-signals:
-	void currentPrefs(bool stateAutoX, bool stateAutoY, int showGrid, int stateMProf,
-			int stateRel, bool showToolTips, bool showTopAxis,
-			bool displayStepFunction, bool opticalFitter, bool channelLine);
+	signals:
+		void currentPrefs(bool stateAutoX, bool stateAutoY, int showGrid, int stateMProf,
+		                  int stateRel, bool showToolTips, bool showTopAxis,
+		                  bool displayStepFunction, bool opticalFitter, bool channelLine);
 
-private slots:
-	void accepted();
-	void rejected();
-	void adjustBoxes(int st);
+	private slots:
+		void accepted();
+		void rejected();
+		void adjustBoxes(int st);
 
-private:
-	void initializeConnections();
-	void persist();
-	void reset();
+	private:
+		void initializeConnections();
+		void persist();
+		void reset();
 
 
-	static const QString X_AUTO_SCALE;
-	static const QString Y_AUTO_SCALE;
-	static const QString SHOW_GRID;
-	static const QString OVERLAY;
-	static const QString RELATIVE;
-	static const QString TOOLTIPS;
-	static const QString TOP_AXIS;
-	static const QString STEP_FUNCTION;
-	static const QString OPTICAL;
-	static const QString CHANNEL_LINE;
+		static const QString X_AUTO_SCALE;
+		static const QString Y_AUTO_SCALE;
+		static const QString SHOW_GRID;
+		static const QString OVERLAY;
+		static const QString RELATIVE;
+		static const QString TOOLTIPS;
+		static const QString TOP_AXIS;
+		static const QString STEP_FUNCTION;
+		static const QString OPTICAL;
+		static const QString CHANNEL_LINE;
 
-	bool xAutoScaleDefault;
-	bool yAutoScaleDefault;
-	bool showGridDefault;
-	bool overlayDefault;
-	bool relativeDefault;
-	bool toolTipsDefault;
-	bool topAxisDefault;
-	bool stepFunctionDefault;
-	bool opticalDefault;
-	bool channelLineDefault;
-};
+		bool xAutoScaleDefault;
+		bool yAutoScaleDefault;
+		bool showGridDefault;
+		bool overlayDefault;
+		bool relativeDefault;
+		bool toolTipsDefault;
+		bool topAxisDefault;
+		bool stepFunctionDefault;
+		bool opticalDefault;
+		bool channelLineDefault;
+	};
 
 }
 #endif

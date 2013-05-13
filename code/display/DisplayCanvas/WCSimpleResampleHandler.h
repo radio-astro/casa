@@ -37,14 +37,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <summary>
 // Class which implements simple resampling for the WorldCanvas.
 // </summary>
-//  
+//
 // <prerequisite>
 // <li> <linkto class="WCResampleHandler>WCResampleHandler</linkto>
 // </prerequisite>
 //
-// <etymology> 
+// <etymology>
 // The name "WCSimpleResampleHandler" is a contraction of the terms
-// "WorldCanvas," "Simple," "Resample" and "Handler."  
+// "WorldCanvas," "Simple," "Resample" and "Handler."
 // </etymology>
 //
 // <synopsis>
@@ -57,74 +57,74 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // The provision of raster images which are smooth in appearance.
 // </motivation>
 
-class WCSimpleResampleHandler : public WCResampleHandler {
+	class WCSimpleResampleHandler : public WCResampleHandler {
 
- public:
+	public:
 
-  // Default constructor (Provides NEAREST)
-  WCSimpleResampleHandler();
+		// Default constructor (Provides NEAREST)
+		WCSimpleResampleHandler();
 
-  // Constructor 
-  WCSimpleResampleHandler(Interpolate2D::Method type=Interpolate2D::NEAREST);
+		// Constructor
+		WCSimpleResampleHandler(Interpolate2D::Method type=Interpolate2D::NEAREST);
 
-  // Copy Constructor (copy semantics)
-  WCSimpleResampleHandler (const WCSimpleResampleHandler& other);
+		// Copy Constructor (copy semantics)
+		WCSimpleResampleHandler (const WCSimpleResampleHandler& other);
 
-  // Assignment operator (copy semantics)
-  WCSimpleResampleHandler& operator=(const WCSimpleResampleHandler& other);
+		// Assignment operator (copy semantics)
+		WCSimpleResampleHandler& operator=(const WCSimpleResampleHandler& other);
 
-  // Destructor
-  virtual ~WCSimpleResampleHandler();
+		// Destructor
+		virtual ~WCSimpleResampleHandler();
 
-  // Reset interpolation method
-  void setInterpolationType (Interpolate2D::Method type);  
+		// Reset interpolation method
+		void setInterpolationType (Interpolate2D::Method type);
 
-  // The output array is presized by the caller to the correct size.  It will
-  // be filled using information in the input array combined with other
-  // resample-specific information.  Here again the interface is type expanded
-  // rather than templated because C++ doesn't yet handle templated member
-  // functions in a non-templated class.
-  // <group>
-  virtual void operator()(Matrix<Bool> & out, const Matrix<Bool> & in);
-  virtual void operator()(Matrix<uChar> & out, const Matrix<uChar> & in);
-  virtual void operator()(Matrix<Char> & out, const Matrix<Char> & in);
-  virtual void operator()(Matrix<uShort> & out, const Matrix<uShort> & in);
-  virtual void operator()(Matrix<Short> & out, const Matrix<Short> & in);
-  virtual void operator()(Matrix<uInt> & out, const Matrix<uInt> & in);
-  virtual void operator()(Matrix<Int> & out, const Matrix<Int> & in);
-  virtual void operator()(Matrix<uLong> & out, const Matrix<uLong> & in);
-  virtual void operator()(Matrix<Long> & out, const Matrix<Long> & in);
-  virtual void operator()(Matrix<Float> & out, const Matrix<Float> & in);
-  virtual void operator()(Matrix<Double> & out, const Matrix<Double> & in);
-  virtual void operator()(Matrix<Complex> & out, const Matrix<Complex> & in);
-  virtual void operator()(Matrix<DComplex> & out, const Matrix<DComplex> & in);
-  // </group>
+		// The output array is presized by the caller to the correct size.  It will
+		// be filled using information in the input array combined with other
+		// resample-specific information.  Here again the interface is type expanded
+		// rather than templated because C++ doesn't yet handle templated member
+		// functions in a non-templated class.
+		// <group>
+		virtual void operator()(Matrix<Bool> & out, const Matrix<Bool> & in);
+		virtual void operator()(Matrix<uChar> & out, const Matrix<uChar> & in);
+		virtual void operator()(Matrix<Char> & out, const Matrix<Char> & in);
+		virtual void operator()(Matrix<uShort> & out, const Matrix<uShort> & in);
+		virtual void operator()(Matrix<Short> & out, const Matrix<Short> & in);
+		virtual void operator()(Matrix<uInt> & out, const Matrix<uInt> & in);
+		virtual void operator()(Matrix<Int> & out, const Matrix<Int> & in);
+		virtual void operator()(Matrix<uLong> & out, const Matrix<uLong> & in);
+		virtual void operator()(Matrix<Long> & out, const Matrix<Long> & in);
+		virtual void operator()(Matrix<Float> & out, const Matrix<Float> & in);
+		virtual void operator()(Matrix<Double> & out, const Matrix<Double> & in);
+		virtual void operator()(Matrix<Complex> & out, const Matrix<Complex> & in);
+		virtual void operator()(Matrix<DComplex> & out, const Matrix<DComplex> & in);
+		// </group>
 
-  // This function resamples the input matrix to the output.
-  // pixblc is the location relative to the input matrix of the
-  // bottom-left pixel of the output (sim. for pixtrc); blank is
-  // the output value where none of the input data is useful.
-  // The output matrix must be presized to the required size.
-  // <group>
-  virtual void operator()(Matrix<Float> &out, const Matrix<Float> &in,
-			  const Vector<Float> &pixblc, 
-			  const Vector<Float> &pixtrc,
-			  const Float blank = 0.0);
-  virtual void operator()(Matrix<Float> &out, Matrix<Bool>& outMask,
-                          const Matrix<Float> &in, const Matrix<Bool> &inMask,
-                          const Vector<Float> &inblc,   
-                          const Vector<Float> &intrc,  
-                          const Float blank = 0.0);
-  virtual void operator()(Matrix<Bool> &out, const Matrix<Bool> &in,
-			  const Vector<Float> &pixblc, 
-			  const Vector<Float> &pixtrc,
-			  const Bool blank = False);
-  // </group>
+		// This function resamples the input matrix to the output.
+		// pixblc is the location relative to the input matrix of the
+		// bottom-left pixel of the output (sim. for pixtrc); blank is
+		// the output value where none of the input data is useful.
+		// The output matrix must be presized to the required size.
+		// <group>
+		virtual void operator()(Matrix<Float> &out, const Matrix<Float> &in,
+		                        const Vector<Float> &pixblc,
+		                        const Vector<Float> &pixtrc,
+		                        const Float blank = 0.0);
+		virtual void operator()(Matrix<Float> &out, Matrix<Bool>& outMask,
+		                        const Matrix<Float> &in, const Matrix<Bool> &inMask,
+		                        const Vector<Float> &inblc,
+		                        const Vector<Float> &intrc,
+		                        const Float blank = 0.0);
+		virtual void operator()(Matrix<Bool> &out, const Matrix<Bool> &in,
+		                        const Vector<Float> &pixblc,
+		                        const Vector<Float> &pixtrc,
+		                        const Bool blank = False);
+		// </group>
 
 
-private:
-  Interpolate2D itsInterp;
-};
+	private:
+		Interpolate2D itsInterp;
+	};
 
 
 } //# NAMESPACE CASA - END

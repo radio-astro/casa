@@ -33,7 +33,7 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Containers/Record.h>
-#include <casa/Containers/Block.h> 
+#include <casa/Containers/Block.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
@@ -43,8 +43,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class LogIO;
-class DisplayEvent;
+	class LogIO;
+	class DisplayEvent;
 
 // <summary>
 // Implementation of an ellipse/rectangle object for DrawingDisplayData class.
@@ -53,7 +53,7 @@ class DisplayEvent;
 // <synopsis>
 // This class implements the interface defined by DDDObject, to provide
 // an ellipse or rectangle object for registration with DrawingDisplayData objects.
-// The widths are all full widths.  
+// The widths are all full widths.
 // </synopsis>
 //
 // <todo>
@@ -62,142 +62,142 @@ class DisplayEvent;
 // </todo>
 //
 
-class DDDEllipse : public DDDObject {
+	class DDDEllipse : public DDDObject {
 
- public:
+	public:
 
-  // Constructor taking a Record description.  Fields in the record,
-  // on top of what is consumed by the DDDObject constructor, are:
-  // Required : <src>center</src> (vector of quanta length 2),
-  // <src>major, minor, positionangle</src> (all quanta).  
-  //
-  // Units 'frac' ([0->1]) are available for the center only.
-  // Units 'pix' (absolute 0-rel image pixels) are available for the 
-  // major and minor only.
-  //
-  // Other, not required fields are <src>outline & editable</src>
-  // which default to <src>True</src>.  When <src>editable=False</src>
-  // the object can be moved but not reshaped, when <src>True</src>   
-  // it can be moved and reshaped.   When   <src>outline=False</src> 
-  // the ellipse is filled.   If the field <src>rectangle=True</src>
-  // a rectangle is drawn. If it does not exist or is False, an ellipse
-  // is drawn.
-  //
-  // Finally, field <src>doreference</src> which defaults to <src>False</src>
-  // is used to control the location at which conversions to and from
-  // pixel coordinates are done.  If <src>True</src> then all conversions
-  // are done at the reference value. Otherwise, the conversions are 
-  // done at the actual location of the shape.  For example, with
-  // a DirectionCoordinate plane, setting <src>doreference=True</src>
-  // will cause the shape to rotate as you move it about the display
-  // as the position angle tracks the local North.  
-  DDDEllipse(const Record &description, DrawingDisplayData *owner);
+		// Constructor taking a Record description.  Fields in the record,
+		// on top of what is consumed by the DDDObject constructor, are:
+		// Required : <src>center</src> (vector of quanta length 2),
+		// <src>major, minor, positionangle</src> (all quanta).
+		//
+		// Units 'frac' ([0->1]) are available for the center only.
+		// Units 'pix' (absolute 0-rel image pixels) are available for the
+		// major and minor only.
+		//
+		// Other, not required fields are <src>outline & editable</src>
+		// which default to <src>True</src>.  When <src>editable=False</src>
+		// the object can be moved but not reshaped, when <src>True</src>
+		// it can be moved and reshaped.   When   <src>outline=False</src>
+		// the ellipse is filled.   If the field <src>rectangle=True</src>
+		// a rectangle is drawn. If it does not exist or is False, an ellipse
+		// is drawn.
+		//
+		// Finally, field <src>doreference</src> which defaults to <src>False</src>
+		// is used to control the location at which conversions to and from
+		// pixel coordinates are done.  If <src>True</src> then all conversions
+		// are done at the reference value. Otherwise, the conversions are
+		// done at the actual location of the shape.  For example, with
+		// a DirectionCoordinate plane, setting <src>doreference=True</src>
+		// will cause the shape to rotate as you move it about the display
+		// as the position angle tracks the local North.
+		DDDEllipse(const Record &description, DrawingDisplayData *owner);
 
-  // Destructor.
-  virtual ~DDDEllipse();
-  
-  // Draw this object for the given reason on the provided
-  // WorldCanvas.
-  virtual void draw(const Display::RefreshReason &reason, 
-		    WorldCanvas *worldcanvas);
-  
-  // Return a record describing this object.  Presently returns
-  // only construction description.
-  virtual Record description();
+		// Destructor.
+		virtual ~DDDEllipse();
 
-  // Update this object based on the information in the provided
-  // Record.
-  virtual void setDescription(const Record &rec);
-  
-  // Event handlers.  The parent DrawingDisplayData will distribute
-  // events as necessary to the various DDDObjects which comprise it.
-  // <group>
-  virtual void operator()(const WCRefreshEvent &ev);
-  virtual void operator()(const WCPositionEvent &ev);
-  virtual void operator()(const WCMotionEvent &ev);
-  // </group>
+		// Draw this object for the given reason on the provided
+		// WorldCanvas.
+		virtual void draw(const Display::RefreshReason &reason,
+		                  WorldCanvas *worldcanvas);
 
- protected:
+		// Return a record describing this object.  Presently returns
+		// only construction description.
+		virtual Record description();
 
-  // (Required) default constructor.
-  DDDEllipse();
+		// Update this object based on the information in the provided
+		// Record.
+		virtual void setDescription(const Record &rec);
 
-  // (Required) copy constructor.
-  DDDEllipse(const DDDEllipse &other);
+		// Event handlers.  The parent DrawingDisplayData will distribute
+		// events as necessary to the various DDDObjects which comprise it.
+		// <group>
+		virtual void operator()(const WCRefreshEvent &ev);
+		virtual void operator()(const WCPositionEvent &ev);
+		virtual void operator()(const WCMotionEvent &ev);
+		// </group>
 
-  // (Required) copy assignment.
-  void operator=(const DDDEllipse &other);
+	protected:
 
- private:
+		// (Required) default constructor.
+		DDDEllipse();
+
+		// (Required) copy constructor.
+		DDDEllipse(const DDDEllipse &other);
+
+		// (Required) copy assignment.
+		void operator=(const DDDEllipse &other);
+
+	private:
 
 // Fill style
-  Bool itsOutline;
+		Bool itsOutline;
 
 // Define center x, center y, major, minor, pa in world
-  Vector<Quantum<Double> > itsWorldParameters;
+		Vector<Quantum<Double> > itsWorldParameters;
 
 // Define center x, center y, major, minor, pa (radians) in screen pixel
-  Vector<Double> itsPixelCenter, itsPixelShape;
+		Vector<Double> itsPixelCenter, itsPixelShape;
 
 // Rotated Rectangle Corners to draw in screen pixel
-  Matrix<Double> itsCorners;
-  Matrix<Double> itsPixelOffsets;
+		Matrix<Double> itsCorners;
+		Matrix<Double> itsPixelOffsets;
 
 // List of handles
 
-  Block<DDDHandle> itsHandles;
+		Block<DDDHandle> itsHandles;
 
 // Mode.
 
-  DDDObject::Mode itsMode;
+		DDDObject::Mode itsMode;
 
 // Store for movement bases.
 
-  Double itsBaseMoveX, itsBaseMoveY;
+		Double itsBaseMoveX, itsBaseMoveY;
 
 // Logger
 
-  LogIO itsLogger;
+		LogIO itsLogger;
 
 // CoordinateSystem in screen pixel coordinates
-  CoordinateSystem itsCoordinateSystem;
-  
+		CoordinateSystem itsCoordinateSystem;
+
 // pointer to world canvas (shallow copy)
-  WorldCanvas* itsWorldCanvasPtr;
+		WorldCanvas* itsWorldCanvasPtr;
 
 // are we drawing a rectangle or an ellipse ?
-  Bool itsRectangle;
+		Bool itsRectangle;
 
 // Fractional indicators
-  Bool itsFracX, itsFracY;
+		Bool itsFracX, itsFracY;
 
 // Do world/pixel conversions at reference location ?
-   Bool itsDoRef;
+		Bool itsDoRef;
 
 // COnvert parameters from world to pixel
-   void convertToPixel ();
+		void convertToPixel ();
 
 // Update private world parameters from current pixel values
-   void updateWorldValues ();
+		void updateWorldValues ();
 
 // Decode record into private data
 
-   void decode(const RecordInterface& description, Bool required);
+		void decode(const RecordInterface& description, Bool required);
 
 // Encode private data into record
-   void encode(RecordInterface& description) const;
+		void encode(RecordInterface& description) const;
 
 // compute corners of rectangle
-  void createCorners();
+		void createCorners();
 
-  Matrix<Int> toIntPixel(const Matrix<Double>& points);
+		Matrix<Int> toIntPixel(const Matrix<Double>& points);
 
 // Debugging routines
 
-   void listWorld();
-   void listPixel();
+		void listWorld();
+		void listPixel();
 
-};
+	};
 
 
 } //# NAMESPACE CASA - END

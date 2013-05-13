@@ -48,15 +48,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Double> linBlc, linTrc;
 		getLinearCoords(linBlc, linTrc);
 		if ((fabs(linBlc(0) - linTrc(0)) > Double(0.0)) &&
-			(fabs(linBlc(1) - linTrc(1)) > Double(0.0))) {
+		        (fabs(linBlc(1) - linTrc(1)) > Double(0.0))) {
 
 			Int x1,y1, x2,y2;
 			get(x1,y1, x2,y2);
 			RectRegionEvent ev(itsCurrentWC, x1,y1, x2,y2);
 			itsCurrentWC->handleEvent(ev);
-				// send region event to WC's handlers.
+			// send region event to WC's handlers.
 
-			regionReady();  }	// send region event to derived handlers (e.g. Gtk)
+			regionReady();
+		}	// send region event to derived handlers (e.g. Gtk)
 	}
 
 	void MultiPVToolImpl::getLinearCoords(Vector<Double> &blc, Vector<Double> &trc) {

@@ -28,30 +28,32 @@
 #include <algorithm>
 
 namespace casa {
-    namespace viewer {
+	namespace viewer {
 
-	void dtorNotifier::addNotifiee( dtorNotifiee *notifiee ) {
-	    registrants.push_back(notifiee);
+		void dtorNotifier::addNotifiee( dtorNotifiee *notifiee ) {
+			registrants.push_back(notifiee);
+		}
+
+		void dtorNotifier::removeNotifiee( dtorNotifiee *notifiee ) {
+			std::list<dtorNotifiee*>::iterator it = std::find( registrants.begin( ), registrants.end( ), notifiee );
+			if ( it != registrants.end( ) ) registrants.erase(it);
+		}
+
+		// this should be declared within dtorNotifier::~dtorNotifier( ),
+		// but it chokes gcc version 4.2.1 (Apple Inc. build 5666) (dot 3)
+		struct functor {
+			functor( const dtorNotifier *notifier ) : self(notifier) { }
+			void operator( )( dtorNotifiee *element ) {
+				element->dtorCalled(self);
+			}
+			const dtorNotifier *self;
+		};
+
+		dtorNotifier::~dtorNotifier( ) {
+			std::for_each( registrants.begin( ), registrants.end( ), functor(this) );
+		}
 	}
-
-	void dtorNotifier::removeNotifiee( dtorNotifiee *notifiee ) {
-	    std::list<dtorNotifiee*>::iterator it = std::find( registrants.begin( ), registrants.end( ), notifiee );
-	    if ( it != registrants.end( ) ) registrants.erase(it);
-	}
-
-	// this should be declared within dtorNotifier::~dtorNotifier( ),
-	// but it chokes gcc version 4.2.1 (Apple Inc. build 5666) (dot 3)
-	struct functor {
-	    functor( const dtorNotifier *notifier ) : self(notifier) { }
-	    void operator( )( dtorNotifiee *element ) { element->dtorCalled(self); }
-	    const dtorNotifier *self;
-	};
-
-	dtorNotifier::~dtorNotifier( ) {
-	    std::for_each( registrants.begin( ), registrants.end( ), functor(this) );
-	}
-    }
 }
 
 
-	
+

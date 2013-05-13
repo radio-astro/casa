@@ -34,39 +34,38 @@
 
 namespace casa {
 
-class QtCanvas;
-class SearchMoleculesWidget;
-class Converter;
+	class QtCanvas;
+	class SearchMoleculesWidget;
+	class Converter;
 
-class LineOverlaysTab : public QWidget
-{
-    Q_OBJECT
+	class LineOverlaysTab : public QWidget {
+		Q_OBJECT
 
-public:
-    LineOverlaysTab(QWidget *parent = 0);
-    void setRange( double min, double max, String units );
-    void setInitialReferenceFrame( QString referenceStr );
-    void setCanvas( QtCanvas* canvas );
-    ~LineOverlaysTab();
+	public:
+		LineOverlaysTab(QWidget *parent = 0);
+		void setRange( double min, double max, String units );
+		void setInitialReferenceFrame( QString referenceStr );
+		void setCanvas( QtCanvas* canvas );
+		~LineOverlaysTab();
 
-private slots:
-	void graphSelectedLines();
-	void graphSelectedSpecies();
-	void searchCompleted();
-	void eraseLines();
-	void saveIdentifiedLines();
-	void findRedshift( double center, double peak );
+	private slots:
+		void graphSelectedLines();
+		void graphSelectedSpecies();
+		void searchCompleted();
+		void eraseLines();
+		void saveIdentifiedLines();
+		void findRedshift( double center, double peak );
 
-private:
-	void addLineToPixelCanvas( float center, float peak,
-			QString molecularName, QString chemicalName,
-			QString resolvedQNs, QString frequencyUnit, Converter* converter);
+	private:
+		void addLineToPixelCanvas( float center, float peak,
+		                           QString molecularName, QString chemicalName,
+		                           QString resolvedQNs, QString frequencyUnit, Converter* converter);
 
-    Ui::LineOverlaysTabClass ui;
-    SearchMoleculesWidget* searchWidget;
-    QtCanvas* pixelCanvas;
-    LineOverlaysSearchResultsDialog searchResults;
-    SearchRedshiftDialog searchRedshiftDialog;
-};
+		Ui::LineOverlaysTabClass ui;
+		SearchMoleculesWidget* searchWidget;
+		QtCanvas* pixelCanvas;
+		LineOverlaysSearchResultsDialog searchResults;
+		SearchRedshiftDialog searchRedshiftDialog;
+	};
 }
 #endif // LINEOVERLAYSTAB_QO_H

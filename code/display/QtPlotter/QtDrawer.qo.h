@@ -55,66 +55,67 @@
 #include <vector>
 #include <graphics/X11/X_exit.h>
 
-inline void initQtDrawerResource() { Q_INIT_RESOURCE(QtDrawer); }
+inline void initQtDrawerResource() {
+	Q_INIT_RESOURCE(QtDrawer);
+}
 
-namespace casa { 
+namespace casa {
 
 
-class QtDrawer : public QWidget
-{
-    Q_OBJECT
-public:
-    QtDrawer(QWidget *parent = 0, const char *name = 0,
-            int nr = 1, int rc = 1);
-    ~QtDrawer();
+	class QtDrawer : public QWidget {
+		Q_OBJECT
+	public:
+		QtDrawer(QWidget *parent = 0, const char *name = 0,
+		         int nr = 1, int rc = 1);
+		~QtDrawer();
 
-    QtDrawCanvas* canvas(int i = 0, int j = 0); 
+		QtDrawCanvas* canvas(int i = 0, int j = 0);
 
-public slots:
-    void zoomIn();
-    void zoomOut();
-    void print();
-    void save();
-    void printExp();
-    void saveExp();
-    void writeText();
-    void openText();
-    void up();
-    void down();
-    void left();
-    void right();
-    void updateZoomer();
-    void focusChanged();
-    //virtual void closeEvent ( QCloseEvent * event ); 
+	public slots:
+		void zoomIn();
+		void zoomOut();
+		void print();
+		void save();
+		void printExp();
+		void saveExp();
+		void writeText();
+		void openText();
+		void up();
+		void down();
+		void left();
+		void right();
+		void updateZoomer();
+		void focusChanged();
+		//virtual void closeEvent ( QCloseEvent * event );
 
-signals:
+	signals:
 
-private:
+	private:
 
-    void printIt(QPrinter*);
-    QToolButton *zoomInButton;
-    QToolButton *zoomOutButton;
-    QToolButton *leftButton;
-    QToolButton *rightButton;
-    QToolButton *upButton;
-    QToolButton *downButton;
-    
-    QToolButton *printButton;
-    QToolButton *saveButton;
-    QToolButton *printExpButton;
-    //QToolButton *saveExpButton;
-    //QToolButton *writeButton;
-    QToolButton *openButton;
-    
-    QtDrawCanvas *pc;
-    
-    QString fileName;
+		void printIt(QPrinter*);
+		QToolButton *zoomInButton;
+		QToolButton *zoomOutButton;
+		QToolButton *leftButton;
+		QToolButton *rightButton;
+		QToolButton *upButton;
+		QToolButton *downButton;
 
-    QGridLayout *grid;
-    QGroupBox *gridGroup;
-    int numRow;
-    int numCol;
-};
+		QToolButton *printButton;
+		QToolButton *saveButton;
+		QToolButton *printExpButton;
+		//QToolButton *saveExpButton;
+		//QToolButton *writeButton;
+		QToolButton *openButton;
+
+		QtDrawCanvas *pc;
+
+		QString fileName;
+
+		QGridLayout *grid;
+		QGroupBox *gridGroup;
+		int numRow;
+		int numCol;
+	};
 
 
 }

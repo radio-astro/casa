@@ -29,32 +29,34 @@
 #include <algorithm>
 
 namespace casa {
-    namespace viewer {
-	RegionSourceKernel::~RegionSourceKernel( ) {
-	    for ( std::list<Region*>::iterator it = created_regions.begin( ); it != created_regions.end( ); ++it )
-		(*it)->removeNotifiee(this);
-	}
+	namespace viewer {
+		RegionSourceKernel::~RegionSourceKernel( ) {
+			for ( std::list<Region*>::iterator it = created_regions.begin( ); it != created_regions.end( ); ++it )
+				(*it)->removeNotifiee(this);
+		}
 
-	void RegionSourceKernel::dtorCalled( const dtorNotifier *dtor ) {
-	    std::list<Region*>::iterator it = std::find(created_regions.begin( ), created_regions.end( ), dtor);
-	    if ( it != created_regions.end( ) ) {
-		created_regions.erase(it);
-	    }
-	}
+		void RegionSourceKernel::dtorCalled( const dtorNotifier *dtor ) {
+			std::list<Region*>::iterator it = std::find(created_regions.begin( ), created_regions.end( ), dtor);
+			if ( it != created_regions.end( ) ) {
+				created_regions.erase(it);
+			}
+		}
 
-	// this should be declared within RegionSourceKernel::generateExistingRegionUpdates( ),
-	// but it chokes gcc version 4.2.1 (Apple Inc. build 5666) (dot 3)
-	struct functor {
-	    void operator( )( Region *element ) { element->emitUpdate( ); }
-	};
-	void RegionSourceKernel::generateExistingRegionUpdates( ) {
-	  std::for_each( created_regions.begin( ), created_regions.end( ), functor( ) );
-	}
+		// this should be declared within RegionSourceKernel::generateExistingRegionUpdates( ),
+		// but it chokes gcc version 4.2.1 (Apple Inc. build 5666) (dot 3)
+		struct functor {
+			void operator( )( Region *element ) {
+				element->emitUpdate( );
+			}
+		};
+		void RegionSourceKernel::generateExistingRegionUpdates( ) {
+			std::for_each( created_regions.begin( ), created_regions.end( ), functor( ) );
+		}
 
-	void RegionSourceKernel::register_new_region( Region *region ) {
-	    created_regions.push_back(region);
-	    region->addNotifiee(this);
+		void RegionSourceKernel::register_new_region( Region *region ) {
+			created_regions.push_back(region);
+			region->addNotifiee(this);
+		}
+
 	}
-	
-    }
 }

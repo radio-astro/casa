@@ -31,123 +31,123 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-PCToolPosEH::PCToolPosEH(PCTool *tool) :
-  itsTool(tool) { }
-void PCToolPosEH::operator()(const PCPositionEvent& ev) {
-  (*itsTool)(ev);
-}
-PCToolMotEH::PCToolMotEH(PCTool *tool) : 
-  itsTool(tool) { }
-void PCToolMotEH::operator()(const PCMotionEvent& ev) {
-  (*itsTool)(ev);
-}
-PCToolRefEH::PCToolRefEH(PCTool *tool) : 
-  itsTool(tool) { }
-void PCToolRefEH::operator()(const PCRefreshEvent& ev) {
-  (*itsTool)(ev);
-}
+	PCToolPosEH::PCToolPosEH(PCTool *tool) :
+		itsTool(tool) { }
+	void PCToolPosEH::operator()(const PCPositionEvent& ev) {
+		(*itsTool)(ev);
+	}
+	PCToolMotEH::PCToolMotEH(PCTool *tool) :
+		itsTool(tool) { }
+	void PCToolMotEH::operator()(const PCMotionEvent& ev) {
+		(*itsTool)(ev);
+	}
+	PCToolRefEH::PCToolRefEH(PCTool *tool) :
+		itsTool(tool) { }
+	void PCToolRefEH::operator()(const PCRefreshEvent& ev) {
+		(*itsTool)(ev);
+	}
 
 // Constructor.
-PCTool::PCTool(PixelCanvas *pcanvas, Display::KeySym keysym) :
-  itsPixelCanvas(pcanvas),
-  itsKeySym(keysym),
-  itsEventHandlersRegistered(False) {
-  try {
-    itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
-  } catch (AipsError x) {
-    if (&x) {
-      itsKeyModifier = (Display::KeyModifier)0;
-    }
-  } 
-  itsPositionEH = new PCToolPosEH(this);
-  itsMotionEH = new PCToolMotEH(this);
-  itsRefreshEH = new PCToolRefEH(this);
-  enable();
-}
+	PCTool::PCTool(PixelCanvas *pcanvas, Display::KeySym keysym) :
+		itsPixelCanvas(pcanvas),
+		itsKeySym(keysym),
+		itsEventHandlersRegistered(False) {
+		try {
+			itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
+		} catch (AipsError x) {
+			if (&x) {
+				itsKeyModifier = (Display::KeyModifier)0;
+			}
+		}
+		itsPositionEH = new PCToolPosEH(this);
+		itsMotionEH = new PCToolMotEH(this);
+		itsRefreshEH = new PCToolRefEH(this);
+		enable();
+	}
 
 // Destructor.
-PCTool::~PCTool() {
-  disable();
-  if (itsRefreshEH) {
-    delete itsRefreshEH;
-  }
-  if (itsMotionEH) {
-    delete itsMotionEH;
-  }
-  if (itsPositionEH) {
-    delete itsPositionEH;
-  }
-}
+	PCTool::~PCTool() {
+		disable();
+		if (itsRefreshEH) {
+			delete itsRefreshEH;
+		}
+		if (itsMotionEH) {
+			delete itsMotionEH;
+		}
+		if (itsPositionEH) {
+			delete itsPositionEH;
+		}
+	}
 
 // Switch the tool on/off.
-void PCTool::enable() {
-  if (!itsEventHandlersRegistered) {
-    itsEventHandlersRegistered = True;
-    itsPixelCanvas->addPositionEventHandler(*itsPositionEH);
-    itsPixelCanvas->addMotionEventHandler(*itsMotionEH);
-    itsPixelCanvas->addRefreshEventHandler(*itsRefreshEH);
-  }
-}
-void PCTool::disable() {
-  if (itsEventHandlersRegistered) {
-    itsEventHandlersRegistered = False;
-    itsPixelCanvas->removePositionEventHandler(*itsPositionEH);
-    itsPixelCanvas->removeMotionEventHandler(*itsMotionEH);
-    itsPixelCanvas->removeRefreshEventHandler(*itsRefreshEH);
-  }
-}
+	void PCTool::enable() {
+		if (!itsEventHandlersRegistered) {
+			itsEventHandlersRegistered = True;
+			itsPixelCanvas->addPositionEventHandler(*itsPositionEH);
+			itsPixelCanvas->addMotionEventHandler(*itsMotionEH);
+			itsPixelCanvas->addRefreshEventHandler(*itsRefreshEH);
+		}
+	}
+	void PCTool::disable() {
+		if (itsEventHandlersRegistered) {
+			itsEventHandlersRegistered = False;
+			itsPixelCanvas->removePositionEventHandler(*itsPositionEH);
+			itsPixelCanvas->removeMotionEventHandler(*itsMotionEH);
+			itsPixelCanvas->removeRefreshEventHandler(*itsRefreshEH);
+		}
+	}
 
 // Required operators for event handling.
-void PCTool::operator()(const PCPositionEvent &ev) {
-  if (ev.key() != itsKeySym || getKey( ) == Display::K_None) {
-    if (ev.keystate()) {
-      otherKeyPressed(ev);
-    } else {
-      otherKeyReleased(ev);
-    }
-  } else {
-    if (ev.keystate()) {
-      keyPressed(ev);
-    } else {
-      keyReleased(ev);
-    }
-  }
-}
-void PCTool::operator()(const PCMotionEvent &ev) {
-  moved(ev);
-}
-void PCTool::operator()(const PCRefreshEvent &ev) {
-  refresh(ev);
-}
+	void PCTool::operator()(const PCPositionEvent &ev) {
+		if (ev.key() != itsKeySym || getKey( ) == Display::K_None) {
+			if (ev.keystate()) {
+				otherKeyPressed(ev);
+			} else {
+				otherKeyReleased(ev);
+			}
+		} else {
+			if (ev.keystate()) {
+				keyPressed(ev);
+			} else {
+				keyReleased(ev);
+			}
+		}
+	}
+	void PCTool::operator()(const PCMotionEvent &ev) {
+		moved(ev);
+	}
+	void PCTool::operator()(const PCRefreshEvent &ev) {
+		refresh(ev);
+	}
 
 // Functions called by the local event handling operators.
-void PCTool::keyPressed(const PCPositionEvent &) {
-}
-void PCTool::keyReleased(const PCPositionEvent &) {
-}
-void PCTool::otherKeyPressed(const PCPositionEvent &) {
-}
-void PCTool::otherKeyReleased(const PCPositionEvent &) {
-}
-void PCTool::moved(const PCMotionEvent &) {
-}
-void PCTool::refresh(const PCRefreshEvent &) {
-}
+	void PCTool::keyPressed(const PCPositionEvent &) {
+	}
+	void PCTool::keyReleased(const PCPositionEvent &) {
+	}
+	void PCTool::otherKeyPressed(const PCPositionEvent &) {
+	}
+	void PCTool::otherKeyReleased(const PCPositionEvent &) {
+	}
+	void PCTool::moved(const PCMotionEvent &) {
+	}
+	void PCTool::refresh(const PCRefreshEvent &) {
+	}
 
-void PCTool::setKey(const Display::KeySym &keysym) {
-  itsKeySym = keysym;
-  try {
-    itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
-  } catch (AipsError x) {
-    if (&x) {
-      itsKeyModifier = (Display::KeyModifier)0;
-    }
-  } 
-}
+	void PCTool::setKey(const Display::KeySym &keysym) {
+		itsKeySym = keysym;
+		try {
+			itsKeyModifier = Display::keyModifierFromKeySym(itsKeySym);
+		} catch (AipsError x) {
+			if (&x) {
+				itsKeyModifier = (Display::KeyModifier)0;
+			}
+		}
+	}
 
-Bool PCTool::keyPresentlyDown(const PCMotionEvent &ev) {
-  return (ev.modifiers() & itsKeyModifier);
-}
+	Bool PCTool::keyPresentlyDown(const PCMotionEvent &ev) {
+		return (ev.modifiers() & itsKeyModifier);
+	}
 
 } //# NAMESPACE CASA - END
 

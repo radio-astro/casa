@@ -40,41 +40,41 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-WCRTRegion::WCRTRegion(WorldCanvas *wcanvas,
-		       Display::KeySym keysym) :
-  WCRectTool(wcanvas, keysym, True) {
-}
+	WCRTRegion::WCRTRegion(WorldCanvas *wcanvas,
+	                       Display::KeySym keysym) :
+		WCRectTool(wcanvas, keysym, True) {
+	}
 
-WCRTRegion::~WCRTRegion() {
-}
+	WCRTRegion::~WCRTRegion() {
+	}
 
-void WCRTRegion::doubleInside() {
-  Vector<Double> linBlc, linTrc;
-  getLinearCoords(linBlc, linTrc);
-  if ((fabs(linBlc(0) - linTrc(0)) > (Double)1.0) &&
-      (fabs(linBlc(1) - linTrc(1)) > (Double)1.0)) {
-    //regionReady(linBlc, linTrc);
-    regionReady();
-  }
-}
+	void WCRTRegion::doubleInside() {
+		Vector<Double> linBlc, linTrc;
+		getLinearCoords(linBlc, linTrc);
+		if ((fabs(linBlc(0) - linTrc(0)) > (Double)1.0) &&
+		        (fabs(linBlc(1) - linTrc(1)) > (Double)1.0)) {
+			//regionReady(linBlc, linTrc);
+			regionReady();
+		}
+	}
 
-void WCRTRegion::getLinearCoords(Vector<Double> &blc, Vector<Double> &trc) {
-  // get the pixel coordinates of the rectangular region
-  Int x1, y1, x2, y2;
-  get(x1, y1, x2, y2);
-  // sort them into blc, trc
-  Vector<Double> pixblc(2);
-  Vector<Double> pixtrc(2);
-  pixblc(0) = min(x1, x2);
-  pixtrc(0) = max(x1, x2);
-  pixblc(1) = min(y1, y2);
-  pixtrc(1) = max(y1, y2);
-  // convert pixel to linear coordinates
-  blc.resize(2);
-  trc.resize(2);
-  worldCanvas()->pixToLin(blc, pixblc);
-  worldCanvas()->pixToLin(trc, pixtrc);
-}
+	void WCRTRegion::getLinearCoords(Vector<Double> &blc, Vector<Double> &trc) {
+		// get the pixel coordinates of the rectangular region
+		Int x1, y1, x2, y2;
+		get(x1, y1, x2, y2);
+		// sort them into blc, trc
+		Vector<Double> pixblc(2);
+		Vector<Double> pixtrc(2);
+		pixblc(0) = min(x1, x2);
+		pixtrc(0) = max(x1, x2);
+		pixblc(1) = min(y1, y2);
+		pixtrc(1) = max(y1, y2);
+		// convert pixel to linear coordinates
+		blc.resize(2);
+		trc.resize(2);
+		worldCanvas()->pixToLin(blc, pixblc);
+		worldCanvas()->pixToLin(trc, pixtrc);
+	}
 
 
 } //# NAMESPACE CASA - END

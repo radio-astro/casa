@@ -28,17 +28,17 @@
 #include <display/QtPlotter/canvasMode/CanvasMode.h>
 namespace casa {
 
-class CanvasModeChannel : public CanvasMode {
-public:
-	CanvasModeChannel();
-	virtual bool isMode( ModeIndex mode ) const;
-	virtual void mousePressEventSpecific( QMouseEvent* event );
-	virtual void mouseMoveEvent( QMouseEvent* event );
-	virtual void mouseReleaseEventSpecific( QMouseEvent* event );
-	virtual ~CanvasModeChannel();
-protected:
+	class CanvasModeChannel : public CanvasMode {
+	public:
+		CanvasModeChannel();
+		virtual bool isMode( ModeIndex mode ) const;
+		virtual void mousePressEventSpecific( QMouseEvent* event );
+		virtual void mouseMoveEvent( QMouseEvent* event );
+		virtual void mouseReleaseEventSpecific( QMouseEvent* event );
+		virtual ~CanvasModeChannel();
+	protected:
 
-};
+	};
 
 } /* namespace casa */
 #endif /* CANVASMODECHANNEL_H_ */

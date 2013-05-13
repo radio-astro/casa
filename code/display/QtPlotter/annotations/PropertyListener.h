@@ -10,12 +10,12 @@
 
 namespace casa {
 
-class PropertyListener {
-public:
-	PropertyListener();
-	virtual void propertiesChanged() = 0;
-	virtual ~PropertyListener();
-};
+	class PropertyListener {
+	public:
+		PropertyListener();
+		virtual void propertiesChanged() = 0;
+		virtual ~PropertyListener();
+	};
 
 } /* namespace casa */
 #endif /* PROPERTYLISTENER_H_ */

@@ -33,43 +33,42 @@
 #include <casa/aips.h>
 namespace casa {
 
-class SearchMoleculesResultsWidget;
+	class SearchMoleculesResultsWidget;
 
-class LineOverlaysSearchResultsDialog : public QDialog, public SearchMoleculesResultDisplayer
-{
-    Q_OBJECT
+	class LineOverlaysSearchResultsDialog : public QDialog, public SearchMoleculesResultDisplayer {
+		Q_OBJECT
 
-public:
-    LineOverlaysSearchResultsDialog(QWidget *parent = 0);
-    QList<int> getLineIndices() const;
-    bool getLine(int lineIndex, Float& peak, Float& center,
-           		QString& molecularName, QString& chemicalName,
-           		QString& resolvedQNs, QString& frequencyUnit ) const;
-    void getLines( QList<float>& peaks, QList<float>& centers,
-    		QString& molecularName, QList<QString>& chemicalNames,
-    		QList<QString>& resolvedQNs, QString& frequencyUnit ) const;
-    void displaySearchResults( const vector<SplatResult>& results, int offset,
-    		int totalCount);
-    int getLineCount() const;
-    ~LineOverlaysSearchResultsDialog();
+	public:
+		LineOverlaysSearchResultsDialog(QWidget *parent = 0);
+		QList<int> getLineIndices() const;
+		bool getLine(int lineIndex, Float& peak, Float& center,
+		             QString& molecularName, QString& chemicalName,
+		             QString& resolvedQNs, QString& frequencyUnit ) const;
+		void getLines( QList<float>& peaks, QList<float>& centers,
+		               QString& molecularName, QList<QString>& chemicalNames,
+		               QList<QString>& resolvedQNs, QString& frequencyUnit ) const;
+		void displaySearchResults( const vector<SplatResult>& results, int offset,
+		                           int totalCount);
+		int getLineCount() const;
+		~LineOverlaysSearchResultsDialog();
 
-signals:
-	void graphSelectedLines();
-	void graphSelectedSpecies();
-	void showPreviousSearchResults();
-	void showNextSearchResults();
+	signals:
+		void graphSelectedLines();
+		void graphSelectedSpecies();
+		void showPreviousSearchResults();
+		void showNextSearchResults();
 
-private slots:
-	void drawSelectedLines();
-	void drawSelectedSpecies();
+	private slots:
+		void drawSelectedLines();
+		void drawSelectedSpecies();
 
 
-private:
-	void setSearchScrollingVisible( bool visible );
-    Ui::LineOverlaysSearchResultsDialogClass ui;
-    SearchMoleculesResultsWidget* searchResultsWidget;
-    const static QString NO_LINES_SELECTED;
-};
+	private:
+		void setSearchScrollingVisible( bool visible );
+		Ui::LineOverlaysSearchResultsDialogClass ui;
+		SearchMoleculesResultsWidget* searchResultsWidget;
+		const static QString NO_LINES_SELECTED;
+	};
 
 }
 #endif // LINEOVERLAYSSEARCHRESULTSDIALOG_QO_H

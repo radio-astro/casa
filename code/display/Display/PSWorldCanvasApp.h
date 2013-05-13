@@ -63,37 +63,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Test class for the PostScript PixelCanvas
 // </motivation>
 
-class PSWorldCanvasApp {
+	class PSWorldCanvasApp {
 
- public:
+	public:
 
-  // default constructor
-  PSWorldCanvasApp(PSDriver *ps);
+		// default constructor
+		PSWorldCanvasApp(PSDriver *ps);
 
-  // default destructor
-  virtual ~PSWorldCanvasApp();
+		// default destructor
+		virtual ~PSWorldCanvasApp();
 
-  // retrieve a pointer to the WorldCanvas
-  WorldCanvas *worldCanvas() const
-    { return itsWorldCanvas; }
+		// retrieve a pointer to the WorldCanvas
+		WorldCanvas *worldCanvas() const {
+			return itsWorldCanvas;
+		}
 
-  // Run the application
-  void run();
+		// Run the application
+		void run();
 
-  PSDriver *getDriver()const{return ps_;}
-  PSPixelCanvas *pixelCanvas()const{return itsPixelCanvas;}
- protected:
-  
- private:
+		PSDriver *getDriver()const {
+			return ps_;
+		}
+		PSPixelCanvas *pixelCanvas()const {
+			return itsPixelCanvas;
+		}
+	protected:
 
-  // Pointer to the PixelCanvas
-  PSPixelCanvas *itsPixelCanvas;
+	private:
 
-  // Pointer to the WorldCanvas
-  WorldCanvas *itsWorldCanvas;
+		// Pointer to the PixelCanvas
+		PSPixelCanvas *itsPixelCanvas;
 
-  PSDriver *ps_;
-};
+		// Pointer to the WorldCanvas
+		WorldCanvas *itsWorldCanvas;
+
+		PSDriver *ps_;
+	};
 
 
 } //# NAMESPACE CASA - END

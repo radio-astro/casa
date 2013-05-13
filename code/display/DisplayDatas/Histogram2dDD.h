@@ -35,20 +35,20 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-template <class T> class ImageInterface;
-template <class T> class LatticeStatistics;
-template <class T> class LatticeHistograms;
-class Histogram2dDM;
+	template <class T> class ImageInterface;
+	template <class T> class LatticeStatistics;
+	template <class T> class LatticeHistograms;
+	class Histogram2dDM;
 
-// <summary> 
+// <summary>
 // A DisplayData to draw histograms
 // </summary>
 //
 // <use visibility=export>
-// 
+//
 // <reviewed reviewer="" date="yyyy/mm/dd" tests="" demos="">
 // </reviewed>
-// 
+//
 // <prerequisite>
 //   <li> DisplayData
 //   <li> CachingDisplayData
@@ -57,101 +57,104 @@ class Histogram2dDM;
 //
 // <etymology>
 // </etymology>
-// <synopsis> 
-// 
-// </synopsis> 
+// <synopsis>
+//
+// </synopsis>
 
-class Histogram2dDD : public ActiveCaching2dDD {
+	class Histogram2dDD : public ActiveCaching2dDD {
 
- public:
+	public:
 
-  // Constructor taking a pointer to an already constructed
-  // ImageInterface.
-  Histogram2dDD(const ImageInterface<Float> *image);
+		// Constructor taking a pointer to an already constructed
+		// ImageInterface.
+		Histogram2dDD(const ImageInterface<Float> *image);
 
-  // Constructor taking a pointer to an already constructed Table,
-  // and a String indicating a column name.
-  //Histogram2dDD(const Table *table, const String column);
+		// Constructor taking a pointer to an already constructed Table,
+		// and a String indicating a column name.
+		//Histogram2dDD(const Table *table, const String column);
 
-  // Constructor taking a pointer to an Array.
-  //Histogram2dDD(const Array<Float> *array);
+		// Constructor taking a pointer to an Array.
+		//Histogram2dDD(const Array<Float> *array);
 
-  // Destructor.
-  virtual ~Histogram2dDD();
+		// Destructor.
+		virtual ~Histogram2dDD();
 
-  // Return the data unit.
-  virtual const Unit dataUnit();
+		// Return the data unit.
+		virtual const Unit dataUnit();
 
-  // Format the histogram value at the given world position.
-  virtual String showValue(const Vector<Double> &world);
+		// Format the histogram value at the given world position.
+		virtual String showValue(const Vector<Double> &world);
 
-  // Install the default options for this DisplayData.
-  virtual void setDefaultOptions();
-  
-  // Apply options stored in <src>rec</src> to the DisplayData.  A
-  // return value of <src>True</src> means a refresh is needed.
-  // <src>recOut</src> contains any fields which were implicitly 
-  // changed as a result of the call to this function.
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Install the default options for this DisplayData.
+		virtual void setDefaultOptions();
 
-  // Retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// Apply options stored in <src>rec</src> to the DisplayData.  A
+		// return value of <src>True</src> means a refresh is needed.
+		// <src>recOut</src> contains any fields which were implicitly
+		// changed as a result of the call to this function.
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
-  // Return the type of this DisplayData.
-  virtual Display::DisplayDataType classType()
-    { return Display::CanvasAnnotation; }
-  
-  // Create a new AxesDisplayMethod for drawing on the given
-  // WorldCanvas when the AttributeBuffers are suitably matched to the
-  // current state of this DisplayData and of the WorldCanvas/Holder.
-  // The tag is a unique number used to identify the age of the newly
-  // constructed CachingDisplayMethod.
-  virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
-					 AttributeBuffer *wchAttributes,
-					 AttributeBuffer *ddAttributes,
-					 CachingDisplayData *dd);
- 
-  // Return the current options of this DisplayData as an
-  // AttributeBuffer.
-  virtual AttributeBuffer optionsAsAttributes();
+		// Retrieve the current and default options and parameter types.
+		virtual Record getOptions();
 
-  // Provide read-only access to the Lattice.
-  const Lattice<Float> &lattice() const 
-    { return *itsMaskedLattice; }
+		// Return the type of this DisplayData.
+		virtual Display::DisplayDataType classType() {
+			return Display::CanvasAnnotation;
+		}
 
-  // Provide read-only access to the MaskedLattce.
-  const MaskedLattice<Float> &maskedLattice() const
-    { return *itsMaskedLattice; }
+		// Create a new AxesDisplayMethod for drawing on the given
+		// WorldCanvas when the AttributeBuffers are suitably matched to the
+		// current state of this DisplayData and of the WorldCanvas/Holder.
+		// The tag is a unique number used to identify the age of the newly
+		// constructed CachingDisplayMethod.
+		virtual CachingDisplayMethod *newDisplayMethod(WorldCanvas *worldCanvas,
+		        AttributeBuffer *wchAttributes,
+		        AttributeBuffer *ddAttributes,
+		        CachingDisplayData *dd);
 
- protected:
+		// Return the current options of this DisplayData as an
+		// AttributeBuffer.
+		virtual AttributeBuffer optionsAsAttributes();
 
-  // (Required) default constructor.
-  Histogram2dDD();
+		// Provide read-only access to the Lattice.
+		const Lattice<Float> &lattice() const {
+			return *itsMaskedLattice;
+		}
 
-  // (Required) copy constructor.
-  Histogram2dDD(const Histogram2dDD &other);
+		// Provide read-only access to the MaskedLattce.
+		const MaskedLattice<Float> &maskedLattice() const {
+			return *itsMaskedLattice;
+		}
 
-  // (Required) copy assignment.
-  void operator=(const Histogram2dDD &other);
+	protected:
 
- private:
+		// (Required) default constructor.
+		Histogram2dDD();
 
-  friend class Histogram2dDM;
+		// (Required) copy constructor.
+		Histogram2dDD(const Histogram2dDD &other);
 
-  // The base image cloned at construction.
-  ImageInterface<Float> *itsBaseImage;
+		// (Required) copy assignment.
+		void operator=(const Histogram2dDD &other);
 
-  // The masked lattice, effectively referencing one of itsBaseImage,
-  // ...
-  MaskedLattice<Float> *itsMaskedLattice;
+	private:
 
-  // Object to use for calculating statistics.
-  LatticeStatistics<Float> *itsLatticeStatistics;
+		friend class Histogram2dDM;
 
-  // Object ot use for calculating histograms.
-  LatticeHistograms<Float> *itsLatticeHistograms;
+		// The base image cloned at construction.
+		ImageInterface<Float> *itsBaseImage;
 
-};
+		// The masked lattice, effectively referencing one of itsBaseImage,
+		// ...
+		MaskedLattice<Float> *itsMaskedLattice;
+
+		// Object to use for calculating statistics.
+		LatticeStatistics<Float> *itsLatticeStatistics;
+
+		// Object ot use for calculating histograms.
+		LatticeHistograms<Float> *itsLatticeHistograms;
+
+	};
 
 
 } //# NAMESPACE CASA - END

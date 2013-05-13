@@ -1,28 +1,28 @@
 //# DisplayTool.h: base class for event-based tools in the display classes
 //# Copyright (C) 1999,2000
 //# Associated Universities, Inc. Washington DC, USA.
-//# 
+//#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or (at your
 //# option) any later version.
-//# 
+//#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
 //# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
 //# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library General Public
 //# License for more details.
-//# 
+//#
 //# You should have received a copy of the GNU Library General Public License
 //# along with this library; if not, write to the Free Software Foundation,
 //# Inc., 675 Massachusetts Ave, Cambridge, MA 02139, USA.
-//# 
+//#
 //# Correspondence concerning AIPS++ should be addressed as follows:
 //#        Internet email: aips2-request@nrao.edu.
 //#        Postal address: AIPS++ Project Office
 //#                        National Radio Astronomy Observatory
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
-//# 
+//#
 //# $Id$
 
 #ifndef TRIALDISPLAY_DISPLAYTOOL_H
@@ -71,61 +71,62 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Nothing known.
 // </todo>
 
-class DisplayTool {
+	class DisplayTool {
 
- public:
+	public:
 
-  // Destructor.
-  virtual ~DisplayTool();
+		// Destructor.
+		virtual ~DisplayTool();
 
-  // Switch the tool on/off.  This simply registers or unregisters the
-  // event handlers.
-  // <group>
-  virtual void enable() = 0;
-  virtual void disable() = 0;
-  // </group>
-  
-  // Set/get which key to catch.
-  // <group>
-  virtual void setKey(const Display::KeySym &keysym);
-  virtual Display::KeySym getKey() const;
-  // </group>
+		// Switch the tool on/off.  This simply registers or unregisters the
+		// event handlers.
+		// <group>
+		virtual void enable() = 0;
+		virtual void disable() = 0;
+		// </group>
 
- protected:
+		// Set/get which key to catch.
+		// <group>
+		virtual void setKey(const Display::KeySym &keysym);
+		virtual Display::KeySym getKey() const;
+		// </group>
 
-  // Constructor taking a key to which this tool will initially be
-  // attached, typically one of the pointer buttons.
-  explicit DisplayTool(const Display::KeySym &keysym = 
-		       Display::K_Pointer_Button1);
+	protected:
 
-  // Copy constructor - construct a new DisplayTool from
-  // <src>other</src>, using copy semantics.
-  DisplayTool(const DisplayTool &other);
+		// Constructor taking a key to which this tool will initially be
+		// attached, typically one of the pointer buttons.
+		explicit DisplayTool(const Display::KeySym &keysym =
+		                         Display::K_Pointer_Button1);
 
-  // Copy assignment using copy semantics.
-  DisplayTool &operator=(const DisplayTool &other);
+		// Copy constructor - construct a new DisplayTool from
+		// <src>other</src>, using copy semantics.
+		DisplayTool(const DisplayTool &other);
 
-  // Return the modifier mask.  Some keys, specifically the mouse
-  // (pointer) buttons, have associated with them a bit mask which is
-  // used to determine if that key is currently held down.  This
-  // function returns the modifier for the key of this tool, and
-  // returns 0 if the key does not have a modifier bit mask, eg. it is
-  // an alphanumeric key on the keyboard.
-  Display::KeyModifier keyModifiers()
-    { return itsKeyModifier; }
+		// Copy assignment using copy semantics.
+		DisplayTool &operator=(const DisplayTool &other);
 
- private:
+		// Return the modifier mask.  Some keys, specifically the mouse
+		// (pointer) buttons, have associated with them a bit mask which is
+		// used to determine if that key is currently held down.  This
+		// function returns the modifier for the key of this tool, and
+		// returns 0 if the key does not have a modifier bit mask, eg. it is
+		// an alphanumeric key on the keyboard.
+		Display::KeyModifier keyModifiers() {
+			return itsKeyModifier;
+		}
 
-  // The key to handle.
-  Display::KeySym itsKeySym;
+	private:
 
-  // The modifier mask for the key.
-  Display::KeyModifier itsKeyModifier;
+		// The key to handle.
+		Display::KeySym itsKeySym;
 
-  // Support function to choose a key modifier for the tool key.
-  void chooseKeyModifier();
+		// The modifier mask for the key.
+		Display::KeyModifier itsKeyModifier;
 
-};
+		// Support function to choose a key modifier for the tool key.
+		void chooseKeyModifier();
+
+	};
 
 
 } //# NAMESPACE CASA - END

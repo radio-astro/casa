@@ -35,167 +35,167 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class PixelCanvas;
+	class PixelCanvas;
 
 // <summary>
 // Simple class to represent a Galaxy as a collection of Stars.
 // </summary>
 
-class Galaxy {
+	class Galaxy {
 
- public:
-  
-  enum PLOT_MODE {
-    POSITION,
-    VELOCITY
-  };
-  
-  // Constructor
-  Galaxy(Vector<Double>& position, Vector<Double>& velocity, Double mass,
-         Double size, uInt numStars, uInt numRings, Double inclination, 
-         Double positionAngle, Int xSize, Int ySize);
+	public:
 
-  // Destructor
-  ~Galaxy();
+		enum PLOT_MODE {
+		    POSITION,
+		    VELOCITY
+		};
 
-  // Compute a new position, applying the force of the Galaxies in the List
-  // but do not update current position and velocity
-  void computeStep(List<void *>& galaxyList, Double timeStep, 
-                  Double dampingFactor = 1.0);
+		// Constructor
+		Galaxy(Vector<Double>& position, Vector<Double>& velocity, Double mass,
+		       Double size, uInt numStars, uInt numRings, Double inclination,
+		       Double positionAngle, Int xSize, Int ySize);
 
-  // update position and velocity to new value
-  void update();
-  
-  // Compute a new position for the Stars in this Galaxy
-  void applyForceToStars(List<void *>& galaxyList, Double timeStep,
-                         Double dampingFactor);
-  
-  // Rotate position and velocity
-  void rotate(Matrix<Double>& rotMatrix);
+		// Destructor
+		~Galaxy();
 
-  // Draw the Galaxy on the PixelCanvas
-  void draw(PixelCanvas *pixelCanvas);
+		// Compute a new position, applying the force of the Galaxies in the List
+		// but do not update current position and velocity
+		void computeStep(List<void *>& galaxyList, Double timeStep,
+		                 Double dampingFactor = 1.0);
 
-  // magnitude of the force for this galaxy
-  Double force(Double distance);
-  
-  // Return the Mass of the Galaxy
-  Double getMass();
+		// update position and velocity to new value
+		void update();
 
-  // Return the position of the Galaxy
-  Vector<Double>& getPosition();
-  
-  // Return the Velocity of the Galaxy
-  Vector<Double>& getVelocity();
+		// Compute a new position for the Stars in this Galaxy
+		void applyForceToStars(List<void *>& galaxyList, Double timeStep,
+		                       Double dampingFactor);
 
-  // Set the plot mode
-  void setPlotMode(Galaxy::PLOT_MODE plotMode);
+		// Rotate position and velocity
+		void rotate(Matrix<Double>& rotMatrix);
 
-  void setScale(Int xSize, Int ySize)   ;
+		// Draw the Galaxy on the PixelCanvas
+		void draw(PixelCanvas *pixelCanvas);
 
- private:
+		// magnitude of the force for this galaxy
+		Double force(Double distance);
 
-  // The mass of the Galaxy
-  Double itsMass;  
+		// Return the Mass of the Galaxy
+		Double getMass();
 
-  // its size
-  Double itsSize;
+		// Return the position of the Galaxy
+		Vector<Double>& getPosition();
 
-  // The position of the Galaxy
-  Vector<Double> itsPosition;
+		// Return the Velocity of the Galaxy
+		Vector<Double>& getVelocity();
 
-  // The velocity of the Galaxy
-  Vector<Double> itsVelocity;
+		// Set the plot mode
+		void setPlotMode(Galaxy::PLOT_MODE plotMode);
+
+		void setScale(Int xSize, Int ySize)   ;
+
+	private:
+
+		// The mass of the Galaxy
+		Double itsMass;
+
+		// its size
+		Double itsSize;
+
+		// The position of the Galaxy
+		Vector<Double> itsPosition;
+
+		// The velocity of the Galaxy
+		Vector<Double> itsVelocity;
 
 
-  // The new computed position of the Galaxy
-  Vector<Double> newPosition;
+		// The new computed position of the Galaxy
+		Vector<Double> newPosition;
 
-  // The new computed velocity of the Galaxy
-  Vector<Double> newVelocity;
+		// The new computed velocity of the Galaxy
+		Vector<Double> newVelocity;
 
-  // The list of Stars in this Galaxy
-  List<void *>   itsStarList;
-  // and an iterator for this List
-  
-  ListIter<void *> *itsStarListIter;
-  
-  Vector<Int> oldPosition;
-  // Last offset applied to itsPosition
-  Vector<Int> itsOffset;
-  // Last offset applied to itsPosition
-  Vector<Int> itsPlotPosition;
+		// The list of Stars in this Galaxy
+		List<void *>   itsStarList;
+		// and an iterator for this List
 
-  Int itsXSize;
-  Int itsYSize;
-  
-  // Number of the draw list for the current PixelCanvas
-  uInt           itsDrawList;
+		ListIter<void *> *itsStarListIter;
 
-  PixelCanvas    *itsPixelCanvas;
+		Vector<Int> oldPosition;
+		// Last offset applied to itsPosition
+		Vector<Int> itsOffset;
+		// Last offset applied to itsPosition
+		Vector<Int> itsPlotPosition;
 
-  Galaxy::PLOT_MODE plotMode;
-  
-  Bool changedPlotMode;
-};
+		Int itsXSize;
+		Int itsYSize;
+
+		// Number of the draw list for the current PixelCanvas
+		uInt           itsDrawList;
+
+		PixelCanvas    *itsPixelCanvas;
+
+		Galaxy::PLOT_MODE plotMode;
+
+		Bool changedPlotMode;
+	};
 
 // <summary>
 // Simple class which represents a star as a point mass.
 // </summary>
 
-class Star {
+	class Star {
 
- public:
+	public:
 
-  // Constructor
-  Star(Vector<Double>& position, Vector<Double>& velocity, 
-       Int xSize, Int ySize);
+		// Constructor
+		Star(Vector<Double>& position, Vector<Double>& velocity,
+		     Int xSize, Int ySize);
 
-  // Destructor
-  ~Star();
+		// Destructor
+		~Star();
 
-  // Draw the current position on the PixelCanvas
-  void draw(PixelCanvas *pixelCanvas);
+		// Draw the current position on the PixelCanvas
+		void draw(PixelCanvas *pixelCanvas);
 
-  // Compute new position by applying the forces of the Galaxies in the List
-  void applyForce(List<void *>& galaxyList, Double timeStep, 
-                  Double dampingFactor);
+		// Compute new position by applying the forces of the Galaxies in the List
+		void applyForce(List<void *>& galaxyList, Double timeStep,
+		                Double dampingFactor);
 
-  // Rotate position and velocity
-  void rotate(Matrix<Double>& rotMatrix);
+		// Rotate position and velocity
+		void rotate(Matrix<Double>& rotMatrix);
 
-  // Set the plot mode
-  void setPlotMode(Galaxy::PLOT_MODE newPlotMode);
-  
-  void setScale(Int xSize, Int ySize)   ;
+		// Set the plot mode
+		void setPlotMode(Galaxy::PLOT_MODE newPlotMode);
 
- private:
+		void setScale(Int xSize, Int ySize)   ;
 
-  // Position of the Star
-  Vector<Double> itsPosition;
-  // The last drawn position of the Star 
-  Vector<Int> oldPosition;
-  // Last offset applied to itsPosition
-  Vector<Int> itsOffset;
-  // Last offset applied to itsPosition
-  Vector<Int> itsPlotPosition;
+	private:
 
-  // Velocity of the Star
-  Vector<Double> itsVelocity;
+		// Position of the Star
+		Vector<Double> itsPosition;
+		// The last drawn position of the Star
+		Vector<Int> oldPosition;
+		// Last offset applied to itsPosition
+		Vector<Int> itsOffset;
+		// Last offset applied to itsPosition
+		Vector<Int> itsPlotPosition;
 
-  Int itsXSize;
-  Int itsYSize;
-  
-  // Number of the draw list for the current PixelCanvas
-  uInt           itsDrawList;
+		// Velocity of the Star
+		Vector<Double> itsVelocity;
 
-  // Temp to check if we are drawing on a new PixelCanvas
-  PixelCanvas    *itsPixelCanvas;
+		Int itsXSize;
+		Int itsYSize;
 
-  Galaxy::PLOT_MODE plotMode;
-  
-  Bool changedPlotMode;
-};
+		// Number of the draw list for the current PixelCanvas
+		uInt           itsDrawList;
+
+		// Temp to check if we are drawing on a new PixelCanvas
+		PixelCanvas    *itsPixelCanvas;
+
+		Galaxy::PLOT_MODE plotMode;
+
+		Bool changedPlotMode;
+	};
 
 
 } //# NAMESPACE CASA - END

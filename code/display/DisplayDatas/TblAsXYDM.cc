@@ -35,8 +35,8 @@
 #include <display/Display/Attribute.h>
 #include <casa/Utilities/DataType.h>
 #include <casa/Arrays/ArrayIter.h>
-#include <tables/Tables/ArrayColumn.h> 
-#include <tables/Tables/ScalarColumn.h> 
+#include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/ScalarColumn.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <display/DisplayDatas/TblAsXYDD.h>
 #include <display/DisplayDatas/TblAsXYDM.h>
@@ -44,168 +44,168 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // constructor
-TblAsXYDM::TblAsXYDM(WorldCanvas *worldCanvas, 
-				 AttributeBuffer *wchAttributes,
-				 AttributeBuffer *ddAttributes,
-				 CachingDisplayData *dd) :
-  CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
-}
- 
+	TblAsXYDM::TblAsXYDM(WorldCanvas *worldCanvas,
+	                     AttributeBuffer *wchAttributes,
+	                     AttributeBuffer *ddAttributes,
+	                     CachingDisplayData *dd) :
+		CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
+	}
+
 // destructor
-TblAsXYDM::~TblAsXYDM() {
-  cleanup();
-}
- 
+	TblAsXYDM::~TblAsXYDM() {
+		cleanup();
+	}
+
 // cleanup function
-void TblAsXYDM::cleanup() {
-}
+	void TblAsXYDM::cleanup() {
+	}
 
-Bool TblAsXYDM::drawIntoList(Display::RefreshReason reason,
-				   WorldCanvasHolder &wcHolder) {
+	Bool TblAsXYDM::drawIntoList(Display::RefreshReason reason,
+	                             WorldCanvasHolder &wcHolder) {
 
-  // which world canvas do we draw on?
-  WorldCanvas *wc = wcHolder.worldCanvas();
- 
-  // can we do a dynamic cast to the correct data type?
-  TblAsXYDD *parent = dynamic_cast<TblAsXYDD *>
-    (parentDisplayData());                                            
-  if (!parent) {
-    throw(AipsError("invalid parent of TblAsXYDM"));
-  }                
+		// which world canvas do we draw on?
+		WorldCanvas *wc = wcHolder.worldCanvas();
 
-  // get the table column data type
-  TableDesc tdesc(parent->table()->tableDesc());
-  DataType type = 
-    tdesc.columnDesc(parent->itsXColumnName->value()).trueDataType();
+		// can we do a dynamic cast to the correct data type?
+		TblAsXYDD *parent = dynamic_cast<TblAsXYDD *>
+		                    (parentDisplayData());
+		if (!parent) {
+			throw(AipsError("invalid parent of TblAsXYDM"));
+		}
 
-  // array to contain data to be plotted
-  Array<Float> xData,yData;
-  Table *theTable = parent->table();
+		// get the table column data type
+		TableDesc tdesc(parent->table()->tableDesc());
+		DataType type =
+		    tdesc.columnDesc(parent->itsXColumnName->value()).trueDataType();
 
-  cout << "Getting the data to plot" << endl;
+		// array to contain data to be plotted
+		Array<Float> xData,yData;
+		Table *theTable = parent->table();
 
-  // get the x column data
-  if (type == TpDouble) {
-    Vector<double> typedata;
-    // read the column into an array
-    ROScalarColumn<double> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    // now convert array to type double
-    xData.resize(typedata.shape());
-    convertArray(xData,typedata);
-  }
-  if (type == TpArrayFloat) {
-    Vector<float> typedata;
-    ROScalarColumn<float> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    xData.resize(typedata.shape());
-    xData=typedata;
-  }
-  if (type == TpArrayUShort) {
-    Vector<ushort> typedata;
-    ROScalarColumn<ushort> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    xData.resize(typedata.shape());
-    convertArray(xData,typedata);
-  }
-  if (type == TpArrayInt) {
-    Vector<int> typedata;
-    ROScalarColumn<int> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    xData.resize(typedata.shape());
-    convertArray(xData,typedata);
-  }
-  if (type == TpArrayUInt) {
-    Vector<uInt> typedata;
-    ROScalarColumn<uInt> 
-      dataCol(*theTable,parent->itsXColumnName->value());
-    dataCol.getColumn(typedata,True);
-    xData.resize(typedata.shape());
-    convertArray(xData,typedata);
-  }
+		cout << "Getting the data to plot" << endl;
 
-  cout << "getting the y column data" << endl;
+		// get the x column data
+		if (type == TpDouble) {
+			Vector<double> typedata;
+			// read the column into an array
+			ROScalarColumn<double>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			// now convert array to type double
+			xData.resize(typedata.shape());
+			convertArray(xData,typedata);
+		}
+		if (type == TpArrayFloat) {
+			Vector<float> typedata;
+			ROScalarColumn<float>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			xData.resize(typedata.shape());
+			xData=typedata;
+		}
+		if (type == TpArrayUShort) {
+			Vector<ushort> typedata;
+			ROScalarColumn<ushort>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			xData.resize(typedata.shape());
+			convertArray(xData,typedata);
+		}
+		if (type == TpArrayInt) {
+			Vector<int> typedata;
+			ROScalarColumn<int>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			xData.resize(typedata.shape());
+			convertArray(xData,typedata);
+		}
+		if (type == TpArrayUInt) {
+			Vector<uInt> typedata;
+			ROScalarColumn<uInt>
+			dataCol(*theTable,parent->itsXColumnName->value());
+			dataCol.getColumn(typedata,True);
+			xData.resize(typedata.shape());
+			convertArray(xData,typedata);
+		}
 
-  // get the y column data
-  if (parent->itsYColumnName->value()=="<row>") {
-    cout << "y column is a row value" << endl;
-    yData.resize(xData.shape());
-    indgen(yData); // set yData(k)=k
-  } else {
-    if (type == TpDouble) {
-      Vector<double> typedata;
-      // read the column into an array
-      ROScalarColumn<double> 
-	dataCol(*theTable,parent->itsYColumnName->value());
-      dataCol.getColumn(typedata,True);
-      // now convert array to type double
-      yData.resize(typedata.shape());
-      convertArray(yData,typedata);
-    }
-    if (type == TpArrayFloat) {
-      Vector<float> typedata;
-      ROScalarColumn<float> 
-	dataCol(*theTable,parent->itsYColumnName->value());
-      dataCol.getColumn(typedata,True);
-      yData.resize(typedata.shape());
-      yData=typedata;
-    }
-    if (type == TpArrayUShort) {
-      Vector<ushort> typedata;
-      ROScalarColumn<ushort> 
-	dataCol(*theTable,parent->itsYColumnName->value());
-      dataCol.getColumn(typedata,True);
-      yData.resize(typedata.shape());
-      convertArray(yData,typedata);
-    }
-    if (type == TpArrayInt) {
-      Vector<int> typedata;
-      ROScalarColumn<int> 
-	dataCol(*theTable,parent->itsYColumnName->value());
-      dataCol.getColumn(typedata,True);
-      yData.resize(typedata.shape());
-      convertArray(yData,typedata);
-    }
-    if (type == TpArrayUInt) {
-      Vector<uInt> typedata;
-      ROScalarColumn<uInt> 
-	dataCol(*theTable,parent->itsYColumnName->value());
-      dataCol.getColumn(typedata,True);
-      yData.resize(typedata.shape());
-      convertArray(yData,typedata);
-    }
-  }
+		cout << "getting the y column data" << endl;
 
-  cout << xData << endl;
-  cout << yData << endl;
-  cout << parent->itsXColumnName->value() << "  " << 
-    parent->itsYColumnName->value();
-  cout << endl;
+		// get the y column data
+		if (parent->itsYColumnName->value()=="<row>") {
+			cout << "y column is a row value" << endl;
+			yData.resize(xData.shape());
+			indgen(yData); // set yData(k)=k
+		} else {
+			if (type == TpDouble) {
+				Vector<double> typedata;
+				// read the column into an array
+				ROScalarColumn<double>
+				dataCol(*theTable,parent->itsYColumnName->value());
+				dataCol.getColumn(typedata,True);
+				// now convert array to type double
+				yData.resize(typedata.shape());
+				convertArray(yData,typedata);
+			}
+			if (type == TpArrayFloat) {
+				Vector<float> typedata;
+				ROScalarColumn<float>
+				dataCol(*theTable,parent->itsYColumnName->value());
+				dataCol.getColumn(typedata,True);
+				yData.resize(typedata.shape());
+				yData=typedata;
+			}
+			if (type == TpArrayUShort) {
+				Vector<ushort> typedata;
+				ROScalarColumn<ushort>
+				dataCol(*theTable,parent->itsYColumnName->value());
+				dataCol.getColumn(typedata,True);
+				yData.resize(typedata.shape());
+				convertArray(yData,typedata);
+			}
+			if (type == TpArrayInt) {
+				Vector<int> typedata;
+				ROScalarColumn<int>
+				dataCol(*theTable,parent->itsYColumnName->value());
+				dataCol.getColumn(typedata,True);
+				yData.resize(typedata.shape());
+				convertArray(yData,typedata);
+			}
+			if (type == TpArrayUInt) {
+				Vector<uInt> typedata;
+				ROScalarColumn<uInt>
+				dataCol(*theTable,parent->itsYColumnName->value());
+				dataCol.getColumn(typedata,True);
+				yData.resize(typedata.shape());
+				convertArray(yData,typedata);
+			}
+		}
 
-  // define several things for drawing
-  // Bool usePixelEdges = False;  // don't use this yet
+		cout << xData << endl;
+		cout << yData << endl;
+		cout << parent->itsXColumnName->value() << "  " <<
+		     parent->itsYColumnName->value();
+		cout << endl;
 
-  // now plot the data
-  wc->drawMarkers(xData, yData);
-  return True;
-}
+		// define several things for drawing
+		// Bool usePixelEdges = False;  // don't use this yet
+
+		// now plot the data
+		wc->drawMarkers(xData, yData);
+		return True;
+	}
 
 // (required) default constructor
-TblAsXYDM::TblAsXYDM(){
-}
+	TblAsXYDM::TblAsXYDM() {
+	}
 
 // (required) copy constructor
-TblAsXYDM::TblAsXYDM(const TblAsXYDM & other) :
-  CachingDisplayMethod(other) {
-}
+	TblAsXYDM::TblAsXYDM(const TblAsXYDM & other) :
+		CachingDisplayMethod(other) {
+	}
 
 // (required) copy assignment
-void TblAsXYDM::operator=(const TblAsXYDM &){
-}
+	void TblAsXYDM::operator=(const TblAsXYDM &) {
+	}
 
 
 } //# NAMESPACE CASA - END

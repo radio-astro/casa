@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSSCREENRECTANGLE_H
 #define TRIALDISPLAY_DSSCREENRECTANGLE_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DSRectangle.h>
@@ -40,47 +40,47 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class DSPixelRectangle;
-class DSWorldRectangle;
-class PixelCanvas;
+	class DSPixelRectangle;
+	class DSWorldRectangle;
+	class PixelCanvas;
 
-class DSScreenRectangle : public DSRectangle, public DisplayShapeWithCoords {
+	class DSScreenRectangle : public DSRectangle, public DisplayShapeWithCoords {
 
-public:
-  
-  DSScreenRectangle();
-  DSScreenRectangle(const Record& setting, PixelCanvas* pc);
-  DSScreenRectangle(DSPixelRectangle& other, PixelCanvas* pc);
-  DSScreenRectangle(DSWorldRectangle& other);
-  
-  virtual ~DSScreenRectangle();
+	public:
 
-  virtual void recalculateScreenPosition();
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
+		DSScreenRectangle();
+		DSScreenRectangle(const Record& setting, PixelCanvas* pc);
+		DSScreenRectangle(DSPixelRectangle& other, PixelCanvas* pc);
+		DSScreenRectangle(DSWorldRectangle& other);
 
-  virtual void move(const Float& dX, const Float& dy);
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual void rotate(const Float& angle);
-  virtual void changePoint(const Vector<Float>&pos, const Int n);
-  virtual void changePoint(const Vector<Float>& pos);
-  // PLUS OTHERS! :)  change point etc
-  
-  virtual Record getRawOptions() {
-    return DSRectangle::getOptions();
-  }
+		virtual ~DSScreenRectangle();
 
-  virtual void updateRelative();
+		virtual void recalculateScreenPosition();
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 
-private:
-  PixelCanvas* itsPC;
-  Vector<Float> itsRelativeCenter;
+		virtual void move(const Float& dX, const Float& dy);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void rotate(const Float& angle);
+		virtual void changePoint(const Vector<Float>&pos, const Int n);
+		virtual void changePoint(const Vector<Float>& pos);
+		// PLUS OTHERS! :)  change point etc
 
-  Float itsRelWidth;
-  Float itsRelHeight;
-  
-};
+		virtual Record getRawOptions() {
+			return DSRectangle::getOptions();
+		}
+
+		virtual void updateRelative();
+
+	private:
+		PixelCanvas* itsPC;
+		Vector<Float> itsRelativeCenter;
+
+		Float itsRelWidth;
+		Float itsRelHeight;
+
+	};
 
 } //# NAMESPACE CASA - END
 
-#endif 
+#endif

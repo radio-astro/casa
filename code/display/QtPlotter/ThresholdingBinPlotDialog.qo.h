@@ -34,36 +34,36 @@ using namespace std;
 
 namespace casa {
 
-template <class T> class ImageInterface;
-class BinPlotWidget;
+	template <class T> class ImageInterface;
+	class BinPlotWidget;
 
 //This dialog displays a histogram that allows the user
 //to set a minimum/maximum moment collapse threshold graphically.
 //Intensity is displayed on the x-axis.  The y-axis is a count of
 //the number of pixels at each intensity.
 
-class ThresholdingBinPlotDialog : public QMainWindow {
-    Q_OBJECT
+	class ThresholdingBinPlotDialog : public QMainWindow {
+		Q_OBJECT
 
-public:
-    ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
-    void setImage( ImageInterface<Float>* img );
-    void setInterval( double minValue, double maxValue );
-    pair<double,double> getInterval() const;
-    ~ThresholdingBinPlotDialog();
+	public:
+		ThresholdingBinPlotDialog(QString yAxisUnits, QWidget *parent = 0);
+		void setImage( ImageInterface<Float>* img );
+		void setInterval( double minValue, double maxValue );
+		pair<double,double> getInterval() const;
+		~ThresholdingBinPlotDialog();
 
-signals:
-    void accepted();
+	signals:
+		void accepted();
 
-private slots:
-	void accept();
-	void postStatusMessage( const QString& warning );
+	private slots:
+		void accept();
+		void postStatusMessage( const QString& warning );
 
-private:
-    Ui::ThresholdingBinPlotDialogClass ui;
-    BinPlotWidget* plotWidget;
+	private:
+		Ui::ThresholdingBinPlotDialogClass ui;
+		BinPlotWidget* plotWidget;
 
-};
+	};
 
 
 

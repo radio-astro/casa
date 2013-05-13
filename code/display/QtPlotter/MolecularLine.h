@@ -36,42 +36,42 @@ namespace casa {
 
 
 
-class MolecularLine : public QwtPlotMarker {
-public:
-	static void setMolecularLineColor( QColor lineColor );
+	class MolecularLine : public QwtPlotMarker {
+	public:
+		static void setMolecularLineColor( QColor lineColor );
 
-	MolecularLine( float center, float peak, const QString& name,
-			const QString& chemicalName, const QString& resolvedQNs,
-			const QString& frequencyUnits, float originalFrequency );
-	virtual int rtti() const;
-	void setCenter( float center );
-	float getCenter( ) const;
-	void setPeak( float peak );
-	float getPeak() const;
-	void setLabel( const QString& label );
-	QString getLabel() const;
-	virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
-		const QwtScaleMap & yMap, const QRect & canvasRect) const;
-	void draw (QPainter * painter, int centerPixel,
-		int peakPixel, int zeroPixel, int width, int height ) const;
-	void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
-	bool equalTo( const MolecularLine* const other ) const;
-	void toStream( QTextStream* stream ) const;
-	virtual ~MolecularLine();
+		MolecularLine( float center, float peak, const QString& name,
+		               const QString& chemicalName, const QString& resolvedQNs,
+		               const QString& frequencyUnits, float originalFrequency );
+		virtual int rtti() const;
+		void setCenter( float center );
+		float getCenter( ) const;
+		void setPeak( float peak );
+		float getPeak() const;
+		void setLabel( const QString& label );
+		QString getLabel() const;
+		virtual void draw ( QPainter* painter, const QwtScaleMap & xMap,
+		                    const QwtScaleMap & yMap, const QRect & canvasRect) const;
+		void draw (QPainter * painter, int centerPixel,
+		           int peakPixel, int zeroPixel, int width, int height ) const;
+		void getMinMax( Double& xmin, Double& xmax, Double& ymin, Double& ymax ) const;
+		bool equalTo( const MolecularLine* const other ) const;
+		void toStream( QTextStream* stream ) const;
+		virtual ~MolecularLine();
 
-private:
-	MolecularLine();
-	static QColor lineColor;
-	float center;
-	float originalFrequency;
-	float peak;
-	QString label;
-	QString resolvedQNs;
-	QString chemicalName;
-	QString frequencyUnits;
+	private:
+		MolecularLine();
+		static QColor lineColor;
+		float center;
+		float originalFrequency;
+		float peak;
+		QString label;
+		QString resolvedQNs;
+		QString chemicalName;
+		QString frequencyUnits;
 
-	void init();
-};
+		void init();
+	};
 
 } /* namespace casa */
 #endif /* MOLECULARLINE_H_ */

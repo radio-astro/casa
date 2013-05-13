@@ -51,96 +51,96 @@
 
 #include <casa/namespace.h>
 int main(int argc, char **argv) {
-  try {
+	try {
 
-    Input inputs(1);
-    inputs.create("in", "", "Input file name");
-    inputs.create("fits", "F", "Is FITS file ?");
-    inputs.create("abs", "T", "Absolute labels ?");
-    inputs.readArguments(argc, argv);
-    String in = inputs.getString("in");
-    const casa::Bool isFITS = inputs.getBool("fits");
-    const casa::Bool isAbs = inputs.getBool("abs");
+		Input inputs(1);
+		inputs.create("in", "", "Input file name");
+		inputs.create("fits", "F", "Is FITS file ?");
+		inputs.create("abs", "T", "Absolute labels ?");
+		inputs.readArguments(argc, argv);
+		String in = inputs.getString("in");
+		const casa::Bool isFITS = inputs.getBool("fits");
+		const casa::Bool isAbs = inputs.getBool("abs");
 
 // make a simple XWindow with embedded WorldCanvas:
 
-    SimpleWorldCanvasApp app;
-    WorldCanvas *wCanvas = app.worldCanvas();
+		SimpleWorldCanvasApp app;
+		WorldCanvas *wCanvas = app.worldCanvas();
 
 // manage it with a WorldCanvasHolder:
 
-    WorldCanvasHolder wcHolder(wCanvas);
-    
-    if(in=="") in = Aipsrc::aipsRoot()+"/data/demo/Images/test_image";
+		WorldCanvasHolder wcHolder(wCanvas);
 
-    ImageInterface<Float>* pImage = 0;
-    if (isFITS) {
-       cout << "Trying to load FITS Image \"" << in << "\"" << endl;
-       pImage = new FITSImage(in);
-    } else {
-       cout << "Trying to load AIPS++ Image \"" << in << "\"" << endl;
-       pImage = new PagedImage<Float>(in);
-    }
+		if(in=="") in = Aipsrc::aipsRoot()+"/data/demo/Images/test_image";
+
+		ImageInterface<Float>* pImage = 0;
+		if (isFITS) {
+			cout << "Trying to load FITS Image \"" << in << "\"" << endl;
+			pImage = new FITSImage(in);
+		} else {
+			cout << "Trying to load AIPS++ Image \"" << in << "\"" << endl;
+			pImage = new PagedImage<Float>(in);
+		}
 
 // check image dimensions:
 
-    uInt nDim = pImage->ndim();
-    if (nDim < 2) {
-      throw(AipsError("image has less than two dimensions"));
-    }
+		uInt nDim = pImage->ndim();
+		if (nDim < 2) {
+			throw(AipsError("image has less than two dimensions"));
+		}
 
 // a DisplayData to draw a raster image:
 
-    LatticeAsRaster<Float> *lar;
-    if (nDim == 2) {
-      lar = new LatticeAsRaster<Float>(pImage, 0, 1);
-    } else {
-      IPosition fixedPos(nDim);
-      fixedPos = 0;
-      lar = new LatticeAsRaster<Float>(pImage, 0, 1, 2, fixedPos);
-    }
-    if (!lar) {
-      throw(AipsError("couldn't build the display data"));
-    }
+		LatticeAsRaster<Float> *lar;
+		if (nDim == 2) {
+			lar = new LatticeAsRaster<Float>(pImage, 0, 1);
+		} else {
+			IPosition fixedPos(nDim);
+			fixedPos = 0;
+			lar = new LatticeAsRaster<Float>(pImage, 0, 1, 2, fixedPos);
+		}
+		if (!lar) {
+			throw(AipsError("couldn't build the display data"));
+		}
 
-    // use a more interesting colormap:
-    Colormap *cmap = new Colormap(String("Hot Metal 2"));
-    lar->setColormap(cmap, 1.0);
+		// use a more interesting colormap:
+		Colormap *cmap = new Colormap(String("Hot Metal 2"));
+		lar->setColormap(cmap, 1.0);
 
 //  Add axis labels
 
-     Record rec0, recOut;
-     rec0.define("axislabelswitch", True);
-     if (isAbs) {
-        rec0.define("axislabelabsrel", "absolute");
-     } else {   
-        rec0.define("axislabelabsrel", "relative");
-     }
-     lar->setOptions(rec0, recOut);
+		Record rec0, recOut;
+		rec0.define("axislabelswitch", True);
+		if (isAbs) {
+			rec0.define("axislabelabsrel", "absolute");
+		} else {
+			rec0.define("axislabelabsrel", "relative");
+		}
+		lar->setOptions(rec0, recOut);
 
 
 // add the DisplayDatas to the display:
 
-    wcHolder.addDisplayData((DisplayData *)lar);
+		wcHolder.addDisplayData((DisplayData *)lar);
 
 // add some tools:
 
-    WCRTZoomer zoomer(wCanvas);
-    AniPosEH aniPosEH;
-    aniPosEH.addWorldCanvasHolder(&wcHolder);
-    PCITFiddler stdFiddler(wCanvas->pixelCanvas(), 
-			   PCITFiddler::StretchAndShift,
-			   Display::K_Pointer_Button2);
-    WCCrosshairTool crosshair(wCanvas, Display::K_Pointer_Button3);
+		WCRTZoomer zoomer(wCanvas);
+		AniPosEH aniPosEH;
+		aniPosEH.addWorldCanvasHolder(&wcHolder);
+		PCITFiddler stdFiddler(wCanvas->pixelCanvas(),
+		                       PCITFiddler::StretchAndShift,
+		                       Display::K_Pointer_Button2);
+		WCCrosshairTool crosshair(wCanvas, Display::K_Pointer_Button3);
 
 // run the application
 
-    app.run();
+		app.run();
 
-  } catch (const AipsError &x) {
-    cerr << "Exception caught" << endl;
-    cerr << "Message: " << x.getMesg() << endl;
-    return 1;
-  }
-  return 0;
+	} catch (const AipsError &x) {
+		cerr << "Exception caught" << endl;
+		cerr << "Message: " << x.getMesg() << endl;
+		return 1;
+	}
+	return 0;
 }

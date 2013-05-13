@@ -32,61 +32,61 @@
 
 namespace casa {
 
-class ImageAnalysis;
-class Record;
-class SliceStatistics;
+	class ImageAnalysis;
+	class Record;
+	class SliceStatistics;
 
-/**
- * Responsible for computing the (x,y)-values that represent a
- * slice cut.
- */
+	/**
+	 * Responsible for computing the (x,y)-values that represent a
+	 * slice cut.
+	 */
 
-class SliceWorker {
+	class SliceWorker {
 
-public:
-	SliceWorker( int id );
-	void setImageAnalysis( ImageAnalysis* analysis );
-	void setVertices( const QList<int>& xValues, const QList<int>& yValues,
-			const QList<double>& xValuesWorld, const QList<double>& yValuesWorld);
-	void setAxes( const Vector<Int>& axes );
-	void setCoords( const Vector<Int>& coords );
-	void setSampleCount( int count );
+	public:
+		SliceWorker( int id );
+		void setImageAnalysis( ImageAnalysis* analysis );
+		void setVertices( const QList<int>& xValues, const QList<int>& yValues,
+		                  const QList<double>& xValuesWorld, const QList<double>& yValuesWorld);
+		void setAxes( const Vector<Int>& axes );
+		void setCoords( const Vector<Int>& coords );
+		void setSampleCount( int count );
 
-	void setMethod( const String& method );
+		void setMethod( const String& method );
 
-	void toAscii( QTextStream& stream, SliceStatistics* statistics ) const;
-	void compute();
-	int getSegmentCount() const;
-	QVector<double> getPixels(int index) const;
-	QVector<double> getData( int index, SliceStatistics* statistics ) const;
-	virtual ~SliceWorker();
+		void toAscii( QTextStream& stream, SliceStatistics* statistics ) const;
+		void compute();
+		int getSegmentCount() const;
+		QVector<double> getPixels(int index) const;
+		QVector<double> getData( int index, SliceStatistics* statistics ) const;
+		virtual ~SliceWorker();
 
-private:
-	SliceWorker( const SliceWorker& other );
-	SliceWorker& operator=( const SliceWorker other );
+	private:
+		SliceWorker( const SliceWorker& other );
+		SliceWorker& operator=( const SliceWorker other );
 
-	double getDistance( double x, double y ) const;
-	QVector<double> interpolate( double start, double end,
-			const QVector<double>& values ) const;
-	void clearResults();
+		double getDistance( double x, double y ) const;
+		QVector<double> interpolate( double start, double end,
+		                             const QVector<double>& values ) const;
+		void clearResults();
 
-	QVector<double> getValues( int index, const QVector<double>& pixels, SliceStatistics* statistic ) const;
-	void computeSlice( const Vector<double>& xValues,
-			const Vector<double>& yValues );
-	ImageAnalysis* imageAnalysis;
-	QList<Record*> sliceResults;
-	Vector<Double> verticesX;
-	Vector<Double> verticesY;
-	Vector<Double> verticesXWorld;
-	Vector<Double> verticesYWorld;
+		QVector<double> getValues( int index, const QVector<double>& pixels, SliceStatistics* statistic ) const;
+		void computeSlice( const Vector<double>& xValues,
+		                   const Vector<double>& yValues );
+		ImageAnalysis* imageAnalysis;
+		QList<Record*> sliceResults;
+		Vector<Double> verticesX;
+		Vector<Double> verticesY;
+		Vector<Double> verticesXWorld;
+		Vector<Double> verticesYWorld;
 
-	Vector<Int> axes;
-	Vector<Int> coords;
+		Vector<Int> axes;
+		Vector<Int> coords;
 
-	int sampleCount;
-	int id;
-	String method;
-};
+		int sampleCount;
+		int id;
+		String method;
+	};
 
 } /* namespace casa */
 #endif /* SLICER_H_ */

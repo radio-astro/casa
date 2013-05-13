@@ -46,157 +46,157 @@
 #include <casa/namespace.h>
 int main(int argc, char **argv) {
 
-  try {
+	try {
 
-    Input inputs(1);
-    inputs.version("");
-    inputs.create("canvas", "x11", "drawing canvas: x11 or ps",
-		  "drawing canvas");
-    inputs.create("count", "2", "number of rasters to draw (1 or 2)",
-		  "# rasters");
-    inputs.readArguments(argc, argv);
+		Input inputs(1);
+		inputs.version("");
+		inputs.create("canvas", "x11", "drawing canvas: x11 or ps",
+		              "drawing canvas");
+		inputs.create("count", "2", "number of rasters to draw (1 or 2)",
+		              "# rasters");
+		inputs.readArguments(argc, argv);
 
-    PSWorldCanvasApp *psapp = 0;
-    SimpleWorldCanvasApp *x11app = 0;
-    WorldCanvas *wCanvas = 0;
-    PSPixelCanvas *pCanvas;
-    PSDriver *psdriver;
+		PSWorldCanvasApp *psapp = 0;
+		SimpleWorldCanvasApp *x11app = 0;
+		WorldCanvas *wCanvas = 0;
+		PSPixelCanvas *pCanvas;
+		PSDriver *psdriver;
 
-    // make a ps or x11 canvas
-    String reqCanvas = inputs.getString("canvas");
-    if (reqCanvas == String("ps")) {
-      psdriver = new PSDriver("tArrayAsRaster.ps", PSDriver::A4, 
-			      PSDriver::LANDSCAPE);
-      psapp = new PSWorldCanvasApp(psdriver);
-      wCanvas = psapp->worldCanvas();
-      pCanvas = (PSPixelCanvas *)wCanvas->pixelCanvas();
-      pCanvas->setResolution(100, 100);
-    } else if (reqCanvas == String("x11")) {
-      x11app = new SimpleWorldCanvasApp;
-      wCanvas = x11app->worldCanvas();
-    } else {
-      throw(AipsError("Unknown canvas type"));
-    }
+		// make a ps or x11 canvas
+		String reqCanvas = inputs.getString("canvas");
+		if (reqCanvas == String("ps")) {
+			psdriver = new PSDriver("tArrayAsRaster.ps", PSDriver::A4,
+			                        PSDriver::LANDSCAPE);
+			psapp = new PSWorldCanvasApp(psdriver);
+			wCanvas = psapp->worldCanvas();
+			pCanvas = (PSPixelCanvas *)wCanvas->pixelCanvas();
+			pCanvas->setResolution(100, 100);
+		} else if (reqCanvas == String("x11")) {
+			x11app = new SimpleWorldCanvasApp;
+			wCanvas = x11app->worldCanvas();
+		} else {
+			throw(AipsError("Unknown canvas type"));
+		}
 
-    if (!wCanvas) {
-      throw(AipsError("Couldn't construct WorldCanvas"));
-    }
+		if (!wCanvas) {
+			throw(AipsError("Couldn't construct WorldCanvas"));
+		}
 
-    // manage it with a WorldCanvasHolder
-    WorldCanvasHolder *wcHolder = 0;
-    wcHolder = new WorldCanvasHolder(wCanvas);
-    if (!wcHolder) {
-      throw(AipsError("Couldn't construct WorldCanvasHolder"));
-    }
+		// manage it with a WorldCanvasHolder
+		WorldCanvasHolder *wcHolder = 0;
+		wcHolder = new WorldCanvasHolder(wCanvas);
+		if (!wcHolder) {
+			throw(AipsError("Couldn't construct WorldCanvasHolder"));
+		}
 
-    IPosition ipos1(2, 100, 100);
-    Array<Float> array1(ipos1);
-    for (uInt i = 0; i < uInt(ipos1(0)); i++) {
-      for (uInt j = 0; j < uInt(ipos1(1)); j++) {
-	array1(IPosition(2, i, j)) = Float(i);
-      }
-    }
-    LatticeAsRaster<Float> *lardd1 = 0;
-    lardd1 = new LatticeAsRaster<Float>(&array1, 0, 1);
-    if (!lardd1) {
-      throw(AipsError("couldn't build the display data"));
-    }
+		IPosition ipos1(2, 100, 100);
+		Array<Float> array1(ipos1);
+		for (uInt i = 0; i < uInt(ipos1(0)); i++) {
+			for (uInt j = 0; j < uInt(ipos1(1)); j++) {
+				array1(IPosition(2, i, j)) = Float(i);
+			}
+		}
+		LatticeAsRaster<Float> *lardd1 = 0;
+		lardd1 = new LatticeAsRaster<Float>(&array1, 0, 1);
+		if (!lardd1) {
+			throw(AipsError("couldn't build the display data"));
+		}
 
-    IPosition ipos2(2, 30, 70);
-    Array<Float> array2(ipos2);
-    for (uInt i = 0; i < uInt(ipos2(0)); i++) {
-      for (uInt j = 0; j < uInt(ipos2(1)); j++) {
-	array2(IPosition(2, i, j)) = Float(j);
-      }
-    }
-    LatticeAsRaster<Float> *lardd2 = 0;
-    lardd2 = new LatticeAsRaster<Float>(&array2, 0, 1);
-    if (!lardd2) {
-      throw(AipsError("couldn't build the display data"));
-    }
+		IPosition ipos2(2, 30, 70);
+		Array<Float> array2(ipos2);
+		for (uInt i = 0; i < uInt(ipos2(0)); i++) {
+			for (uInt j = 0; j < uInt(ipos2(1)); j++) {
+				array2(IPosition(2, i, j)) = Float(j);
+			}
+		}
+		LatticeAsRaster<Float> *lardd2 = 0;
+		lardd2 = new LatticeAsRaster<Float>(&array2, 0, 1);
+		if (!lardd2) {
+			throw(AipsError("couldn't build the display data"));
+		}
 
-    Record rec, recOut;
-    rec.define("axislabelswitch", True);
-    rec.define("xgridtype", "Full grid");
-    rec.define("ygridtype", "Full grid");
-    lardd1->setOptions(rec, recOut);
+		Record rec, recOut;
+		rec.define("axislabelswitch", True);
+		rec.define("xgridtype", "Full grid");
+		rec.define("ygridtype", "Full grid");
+		lardd1->setOptions(rec, recOut);
 
-    Colormap cmap1("Hot Metal 2");
-    lardd1->setColormap(&cmap1, 1.0);
-    Colormap cmap2("RGB 1");
-    lardd2->setColormap(&cmap2, 1.0);
-	       
-    // add the data to the display
-    wcHolder->addDisplayData((DisplayData *)lardd1);
-    if (inputs.getInt("count") == 2) {
-      wcHolder->addDisplayData((DisplayData *)lardd2);
-    }
+		Colormap cmap1("Hot Metal 2");
+		lardd1->setColormap(&cmap1, 1.0);
+		Colormap cmap2("RGB 1");
+		lardd2->setColormap(&cmap2, 1.0);
 
-    // make a DrawingDisplayData
-    DrawingDisplayData ddd;
-    Record recrec;
-    Vector<Double> blc(2), trc(2);
-    blc(0) = 22.5;
-    blc(1) = 32.5;
-    trc(0) = 67.5;
-    trc(1) = 45.0;
-    recrec.define("type", "rectangle");
-    recrec.define("color", "black");
-    recrec.define("id", 45);
-    recrec.define("label", "NGC 45");
-    recrec.define("blc", blc);
-    recrec.define("trc", trc);
-    ddd.addObject(recrec);
+		// add the data to the display
+		wcHolder->addDisplayData((DisplayData *)lardd1);
+		if (inputs.getInt("count") == 2) {
+			wcHolder->addDisplayData((DisplayData *)lardd2);
+		}
 
-    recrec.define("color", "green");
-    recrec.define("id", 47);
-    recrec.define("label", "NGC 47");
-    recrec.define("blc", blc / 2.0);
-    recrec.define("trc", trc / 1.6);
-    ddd.addObject(recrec);
+		// make a DrawingDisplayData
+		DrawingDisplayData ddd;
+		Record recrec;
+		Vector<Double> blc(2), trc(2);
+		blc(0) = 22.5;
+		blc(1) = 32.5;
+		trc(0) = 67.5;
+		trc(1) = 45.0;
+		recrec.define("type", "rectangle");
+		recrec.define("color", "black");
+		recrec.define("id", 45);
+		recrec.define("label", "NGC 45");
+		recrec.define("blc", blc);
+		recrec.define("trc", trc);
+		ddd.addObject(recrec);
 
-    ddd.removeObject(45);
+		recrec.define("color", "green");
+		recrec.define("id", 47);
+		recrec.define("label", "NGC 47");
+		recrec.define("blc", blc / 2.0);
+		recrec.define("trc", trc / 1.6);
+		ddd.addObject(recrec);
 
-    Record drawingOptions;
-    drawingOptions.define("labelposition", "centre");
-    ddd.setOptions(drawingOptions, recOut);
-    
-    // register it    
-    wcHolder->addDisplayData((DisplayData *)&ddd);
-    
-    // add a zoomer
-    WCRTZoomer zoomer(wCanvas, Display::K_Pointer_Button3);
+		ddd.removeObject(45);
 
-    // run the PS application
-    if (psapp) {
-      psapp->run();
-    } else if (x11app) {
-      x11app->run();
-    } else {
-      throw(AipsError("An application was not built"));
-    }
+		Record drawingOptions;
+		drawingOptions.define("labelposition", "centre");
+		ddd.setOptions(drawingOptions, recOut);
 
-    if (wcHolder) {
-      delete wcHolder;
-    }
-    if (x11app) {
-      delete x11app;
-    } 
-    if (psapp) {
-      delete psapp;
-    }
-    if (lardd2) {
-      delete lardd2;
-    }
-    if (lardd1) {
-      delete lardd1;
-    }
+		// register it
+		wcHolder->addDisplayData((DisplayData *)&ddd);
 
-  } catch (const AipsError &x) {
-    cerr << "Exception caught:" << endl;
-    cerr << x.getMesg() << endl;
-    return 1;
-  }
-  return 0;
+		// add a zoomer
+		WCRTZoomer zoomer(wCanvas, Display::K_Pointer_Button3);
+
+		// run the PS application
+		if (psapp) {
+			psapp->run();
+		} else if (x11app) {
+			x11app->run();
+		} else {
+			throw(AipsError("An application was not built"));
+		}
+
+		if (wcHolder) {
+			delete wcHolder;
+		}
+		if (x11app) {
+			delete x11app;
+		}
+		if (psapp) {
+			delete psapp;
+		}
+		if (lardd2) {
+			delete lardd2;
+		}
+		if (lardd1) {
+			delete lardd1;
+		}
+
+	} catch (const AipsError &x) {
+		cerr << "Exception caught:" << endl;
+		cerr << x.getMesg() << endl;
+		return 1;
+	}
+	return 0;
 }
 

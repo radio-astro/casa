@@ -60,8 +60,7 @@ namespace casa {
 			double wx, wy;
 			try {
 				linear_to_world( wc_, blc_x, blc_y, wx, wy );
-			}
-			catch (...) {
+			} catch (...) {
 				return 0;
 			}
 			const Vector<String> &units = wc_->worldAxisUnits( );
@@ -112,16 +111,14 @@ namespace casa {
 			double wblc_x, wblc_y;
 			try {
 				linear_to_world( wc_, blc_x, blc_y, wblc_x, wblc_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
 			double pblc_x, pblc_y;
 			try {
 				linear_to_pixel( wc_, blc_x, blc_y, pblc_x, pblc_y );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
@@ -168,8 +165,7 @@ namespace casa {
 			int x, y;
 			try {
 				linear_to_screen( wc_, blc_x, blc_y, x, y );
-			}
-			catch(...) {
+			} catch(...) {
 				return;
 			}
 
@@ -193,16 +189,16 @@ namespace casa {
 				pc->drawLine( x, y+5+inc, x, y-5-inc );
 				pc->drawLine( x+5+inc, y, x-5-inc, y );
 				break;
-			case QtMouseToolNames::SYM_X:
-			{	pc->drawLine( x-5-inc, y+5+scale*scale_unit, x+5+scale*scale_unit, y-5-scale*scale_unit );
+			case QtMouseToolNames::SYM_X: {
+				pc->drawLine( x-5-inc, y+5+scale*scale_unit, x+5+scale*scale_unit, y-5-scale*scale_unit );
 				pc->drawLine( x-5-inc, y-5-inc, x+5+inc, y+5+inc );
 			}
 			break;
 			case QtMouseToolNames::SYM_CIRCLE:
 				pc->drawEllipse( x, y, 6+inc, 6+inc, 0 );
 				break;
-			case QtMouseToolNames::SYM_DIAMOND:
-			{	const int minor=4;
+			case QtMouseToolNames::SYM_DIAMOND: {
+				const int minor=4;
 				const int major=6;
 				const int mjr = scale * (int)((double)scale_unit*(6.0/4.0));
 				pc->drawLine( x-minor-inc, y, x, y+major+mjr );
@@ -250,8 +246,7 @@ namespace casa {
 			int x, y, ptx, pty;
 			try {
 				linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty );
-			}
-			catch(...) {
+			} catch(...) {
 				return false;
 			}
 			if ( x >  ptx - radius && x < ptx + radius  && y > pty - radius && y < pty + radius )
@@ -267,8 +262,7 @@ namespace casa {
 
 			try {
 				linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty );
-			}
-			catch(...) {
+			} catch(...) {
 				return region::PointInfo(0,0,region::PointOutside);
 			}
 
@@ -287,8 +281,7 @@ namespace casa {
 			int x, y, ptx, pty;
 			try {
 				linear_to_screen( wc_, xd, yd, blc_x, blc_y, x, y, ptx, pty );
-			}
-			catch(...) {
+			} catch(...) {
 				return 0;
 			}
 

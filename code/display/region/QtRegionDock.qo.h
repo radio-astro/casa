@@ -37,68 +37,92 @@
 
 namespace casa {
 
-    class QtDisplayData;
-    class QtDisplayPanelGui;
+	class QtDisplayData;
+	class QtDisplayPanelGui;
 
-    namespace viewer {
+	namespace viewer {
 
-	class Region;
-	class QtRegionState;
-	class ds9writer;
-	class Region;
+		class Region;
+		class QtRegionState;
+		class ds9writer;
+		class Region;
 
-	class QtRegionDock : public QDockWidget, protected Ui::QtRegionDock {
-	    Q_OBJECT
-	    public:
+		class QtRegionDock : public QDockWidget, protected Ui::QtRegionDock {
+			Q_OBJECT
+		public:
 
-		QtRegionDock( QtDisplayPanelGui *, QWidget* parent=0 );
-		~QtRegionDock();
+			QtRegionDock( QtDisplayPanelGui *, QWidget* parent=0 );
+			~QtRegionDock();
 
-		void addRegion(Region *,QtRegionState*,int index = -1);
-		int indexOf(QtRegionState*) const;
-		void removeRegion(QtRegionState*);
-		void selectRegion(QtRegionState*,bool scroll=true);
+			void addRegion(Region *,QtRegionState*,int index = -1);
+			int indexOf(QtRegionState*) const;
+			void removeRegion(QtRegionState*);
+			void selectRegion(QtRegionState*,bool scroll=true);
 
-		void status( const std::string &msg, const std::string &type="info" );
+			void status( const std::string &msg, const std::string &type="info" );
 
-		QtDisplayPanelGui *panel( ) { return dpg; }
+			QtDisplayPanelGui *panel( ) {
+				return dpg;
+			}
 
-		/* QStackedWidget *regionStack( ) { return regions; } */
+			/* QStackedWidget *regionStack( ) { return regions; } */
 
-		/* void showStats( const QString &stats ); */
+			/* void showStats( const QString &stats ); */
 
-		std::pair<int,int> &tabState( ) { return current_tab_state; }
-		std::map<std::string,int> &coordState( ) { return current_coord_state; }
-		QString &saveDir( ) { return current_save_dir; }
-		QString &loadDir( ) { return current_load_dir; }
-		int &colorIndex( ) { return current_color_index; }
+			std::pair<int,int> &tabState( ) {
+				return current_tab_state;
+			}
+			std::map<std::string,int> &coordState( ) {
+				return current_coord_state;
+			}
+			QString &saveDir( ) {
+				return current_save_dir;
+			}
+			QString &loadDir( ) {
+				return current_load_dir;
+			}
+			int &colorIndex( ) {
+				return current_color_index;
+			}
 
-		// called to signal that selected region state needs to be updated...
-		void selectedCountUpdateNeeded( );
-		// retrieve the selected region state...
-		size_t selectedRegionCount( ) { return selected_region_set_.size( ); }
-		const region::region_list_type &selectedRegionSet( ) { return selected_region_set_; }
-		size_t markedRegionCount( ) { return marked_region_set_.size( ); }
-		const region::region_list_type &markedRegionSet( ) { return marked_region_set_; }
-		const region::region_list_type &weaklySelectedRegionSet( ) { return weakly_selected_region_set_; }
-		void clearWeaklySelectedRegionSet( );
-		bool isWeaklySelectedRegion( const Region * ) const;
-		void addWeaklySelectedRegion( Region * );
-		void removeWeaklySelectedRegion( Region * );
+			// called to signal that selected region state needs to be updated...
+			void selectedCountUpdateNeeded( );
+			// retrieve the selected region state...
+			size_t selectedRegionCount( ) {
+				return selected_region_set_.size( );
+			}
+			const region::region_list_type &selectedRegionSet( ) {
+				return selected_region_set_;
+			}
+			size_t markedRegionCount( ) {
+				return marked_region_set_.size( );
+			}
+			const region::region_list_type &markedRegionSet( ) {
+				return marked_region_set_;
+			}
+			const region::region_list_type &weaklySelectedRegionSet( ) {
+				return weakly_selected_region_set_;
+			}
+			void clearWeaklySelectedRegionSet( );
+			bool isWeaklySelectedRegion( const Region * ) const;
+			void addWeaklySelectedRegion( Region * );
+			void removeWeaklySelectedRegion( Region * );
 
-		void dismiss( );
+			void dismiss( );
 
-		std::list<Region*> regions( ) const { return region_list; }
-		// zero length string indicates OK!
-		std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file,
-					   std::string format, std::string ds9_csys="pixel" );
+			std::list<Region*> regions( ) const {
+				return region_list;
+			}
+			// zero length string indicates OK!
+			std::string outputRegions( std::list<viewer::QtRegionState*> regions, std::string file,
+			                           std::string format, std::string ds9_csys="pixel" );
 
-		void updateRegionStats( );
-		void emitCreate( Region * );
+			void updateRegionStats( );
+			void emitCreate( Region * );
 
-		int numFrames( ) const;
-		void deleteRegions( const region::region_list_type & );
-		void revokeRegion( Region *r );
+			int numFrames( ) const;
+			void deleteRegions( const region::region_list_type & );
+			void revokeRegion( Region *r );
 
 		signals:
 			// triggers deletion elsewhere of Region containing this QtRegionState
@@ -128,36 +152,36 @@ namespace casa {
 			void handle_visibility(bool);
 			void emit_region_stack_change( int );
 
-	    protected:
-		void enterEvent( QEvent* );
-		void leaveEvent( QEvent* );
-		void closeEvent ( QCloseEvent * event );
+		protected:
+			void enterEvent( QEvent* );
+			void leaveEvent( QEvent* );
+			void closeEvent ( QCloseEvent * event );
 
-	    private:
-		QtDisplayPanelGui *dpg;
-		QtDisplayData *current_dd;
-		std::pair<int,int> current_tab_state;
-		std::map<std::string,int> current_coord_state;
-		int current_color_index;
-		QString current_save_dir;
-		QString current_load_dir;
-		bool dismissed;
-		bool mouse_in_dock;
+		private:
+			QtDisplayPanelGui *dpg;
+			QtDisplayData *current_dd;
+			std::pair<int,int> current_tab_state;
+			std::map<std::string,int> current_coord_state;
+			int current_color_index;
+			QString current_save_dir;
+			QString current_load_dir;
+			bool dismissed;
+			bool mouse_in_dock;
 
-		typedef std::list<Region*> region_list_t;
-		region_list_t region_list;
-		typedef std::map<QtRegionState*,Region*> region_map_t;
-		region_map_t region_map;
+			typedef std::list<Region*> region_list_t;
+			region_list_t region_list;
+			typedef std::map<QtRegionState*,Region*> region_map_t;
+			region_map_t region_map;
 
-		// maintain a count of selected regions, information which is used
-		// to determine the corner treatment when drawing regions...
-		region::region_list_type selected_region_set_;
-		region::region_list_type weakly_selected_region_set_;
-		region::region_list_type marked_region_set_;
-		void update_region_statistics( );
+			// maintain a count of selected regions, information which is used
+			// to determine the corner treatment when drawing regions...
+			region::region_list_type selected_region_set_;
+			region::region_list_type weakly_selected_region_set_;
+			region::region_list_type marked_region_set_;
+			void update_region_statistics( );
 
-	};
-    }
+		};
+	}
 }
 
 #endif

@@ -87,10 +87,14 @@ Vector<Quantity> Image2DConvolver<T>::_getConvolvingBeamForTargetResolution(
 		targetBeamParms[2]
 	);
 	try {
-		inputBeam.deconvolve(convolvingBeam, targetBeam);
-	}
+		if(inputBeam.deconvolve(convolvingBeam, targetBeam)) {
+            // point source, or convolvingBeam nonsensical
+            throw AipsError();
+        }
+    }
 	catch (const AipsError& x) {
-		os << "Unable to reach target resolution of "
+        os << LogOrigin("Image2DConvolver", __FUNCTION__)
+            << "Unable to reach target resolution of "
 			<< targetBeam << " Input image beam "
 			<< inputBeam << " is probably too large"
 			<< LogIO::EXCEPTION;
@@ -299,7 +303,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 	else {
 		GaussianBeam inputBeam = imageInfo.restoringBeam();
 		if (targetres) {
-			kernelParms = _getConvolvingBeamForTargetResolution(
+            kernelParms = _getConvolvingBeamForTargetResolution(
 				os, parameters, inputBeam
 			);
 			os << LogIO::NORMAL << "Convolving image that has a beam of "
@@ -310,7 +314,7 @@ template <class T> void Image2DConvolver<T>::convolve(
 				os, kernel, kernelType, kernelParms, pixelAxes, imageIn
 			);
 		}
-		_dealWithRestoringBeam(
+        _dealWithRestoringBeam(
 			os, brightnessUnitOut, beamOut, kernel, kernelVolume,
 			kernelType, kernelParms, pixelAxes, cSys, inputBeam,
 			brightnessUnit, autoScale, scale, True

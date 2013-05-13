@@ -1,4 +1,4 @@
-//# Options.cc: class to store and retrieve parameters 
+//# Options.cc: class to store and retrieve parameters
 //# Copyright (C) 2011
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -85,7 +85,7 @@ namespace casa {
 				if ( it->second.second ) {
 					// does it look like one of our temporaries?
 					if ( it->first.compare(0,temporary_path.size(),temporary_path) == 0 &&
-						 it->first.size( ) != temporary_path.size( ) ) {
+					        it->first.size( ) != temporary_path.size( ) ) {
 						File tmpfile(it->first);
 						if ( tmpfile.exists( ) && tmpfile.isWritable( ) ) {
 							if ( tmpfile.isDirectory(false) ) {

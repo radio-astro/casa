@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSWORLDPOLY_H
 #define TRIALDISPLAY_DSWORLDPOLY_H
 
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <casa/Quanta/Quantum.h>
@@ -45,67 +45,67 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of a world coords DSPoly
 // </summary>
 
-class PanelDisplay;
-class DSPixelPoly;
-class DSScreenPoly;
-class DSWorldPolyLine;
+	class PanelDisplay;
+	class DSPixelPoly;
+	class DSScreenPoly;
+	class DSWorldPolyLine;
 
-class DSWorldPoly : public DSPoly , public DisplayShapeWithCoords{
+	class DSWorldPoly : public DSPoly , public DisplayShapeWithCoords {
 
-public:
+	public:
 
-  DSWorldPoly();
-  DSWorldPoly(const Record& settings, PanelDisplay* pd);
-  DSWorldPoly(DSScreenPoly& other, PanelDisplay* pd);
-  DSWorldPoly(DSPixelPoly& other, PanelDisplay* pd);
-  DSWorldPoly(DSWorldPolyLine& other);
+		DSWorldPoly();
+		DSWorldPoly(const Record& settings, PanelDisplay* pd);
+		DSWorldPoly(DSScreenPoly& other, PanelDisplay* pd);
+		DSWorldPoly(DSPixelPoly& other, PanelDisplay* pd);
+		DSWorldPoly(DSWorldPolyLine& other);
 
-  virtual ~DSWorldPoly();
+		virtual ~DSWorldPoly();
 
-  virtual void recalculateScreenPosition();
+		virtual void recalculateScreenPosition();
 
-  // So we can update our WCs
-  // <group>
-  virtual void move(const Float& dX, const Float& dY);
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual void rotate(const Float& angle);
-  virtual void scale(const Float& scaleFactor);
-  
-  virtual void addPoint(const Vector<Float>& newPos);
-  virtual void setPoints(const Matrix<Float>& points);
-  
-  virtual void changePoint(const Vector<Float>&pos, const Int n);
-  virtual void changePoint(const Vector<Float>& pos);
-  virtual void draw(PixelCanvas* pc);
-  // </group>
+		// So we can update our WCs
+		// <group>
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void rotate(const Float& angle);
+		virtual void scale(const Float& scaleFactor);
 
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
-  
-  
+		virtual void addPoint(const Vector<Float>& newPos);
+		virtual void setPoints(const Matrix<Float>& points);
 
-  virtual Record getRawOptions() {
-    return DSPoly::getOptions();
-  }
-  
-  virtual PanelDisplay* panelDisplay()  {
-    return itsPD;
-  }
+		virtual void changePoint(const Vector<Float>&pos, const Int n);
+		virtual void changePoint(const Vector<Float>& pos);
+		virtual void draw(PixelCanvas* pc);
+		// </group>
 
-private:
-  
-  // The paneldisplay from which I may choose an appropriate WC
-  PanelDisplay* itsPD;
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 
-  // The WC of my choosing
-  WorldCanvas* itsWC;
-  
-  // The center of the marker in world co-ords.
-  Vector<Quantum<Double> > itsWorldXPoints;
-  Vector<Quantum<Double> > itsWorldYPoints;
 
-  void updateWCoords();
-};
+
+		virtual Record getRawOptions() {
+			return DSPoly::getOptions();
+		}
+
+		virtual PanelDisplay* panelDisplay()  {
+			return itsPD;
+		}
+
+	private:
+
+		// The paneldisplay from which I may choose an appropriate WC
+		PanelDisplay* itsPD;
+
+		// The WC of my choosing
+		WorldCanvas* itsWC;
+
+		// The center of the marker in world co-ords.
+		Vector<Quantum<Double> > itsWorldXPoints;
+		Vector<Quantum<Double> > itsWorldYPoints;
+
+		void updateWCoords();
+	};
 
 } //# NAMESPACE CASA - END
 

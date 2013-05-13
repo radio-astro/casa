@@ -30,43 +30,43 @@
 
 namespace casa {
 
-ColorHistogramScale::ColorHistogramScale(bool invert):QwtLinearColorMap(),
+	ColorHistogramScale::ColorHistogramScale(bool invert):QwtLinearColorMap(),
 		colorDefinition(NULL) {
-	invertMap = invert;
-}
-
-String ColorHistogramScale::getColorMapName() const {
-	return mapName;
-}
-
-
-void ColorHistogramScale::setColorMapName( const String& colorMapName ){
-	mapName = colorMapName;
-	colorDefinition = new ColormapDefinition( colorMapName );
-	for ( int i = 0; i < 100; i++ ){
-		float percent = i / 100.0f;
-
-		Float red = 0;
-		Float green = 0;
-		Float blue = 0;
-		colorDefinition->getValue( percent, red, green, blue );
-		const int COLOR_MAX = 255;
-		int greenValue = static_cast<int>( green * COLOR_MAX );
-		int redValue = static_cast<int>( red * COLOR_MAX );
-		int blueValue = static_cast<int>( blue * COLOR_MAX );
-		if ( invertMap ){
-			greenValue = COLOR_MAX - greenValue;
-			redValue   = COLOR_MAX - redValue;
-			blueValue  = COLOR_MAX - blueValue;
-		}
-		QColor colorStop( redValue, greenValue, blueValue );
-		addColorStop( percent, colorStop );
+		invertMap = invert;
 	}
-}
+
+	String ColorHistogramScale::getColorMapName() const {
+		return mapName;
+	}
 
 
-ColorHistogramScale::~ColorHistogramScale() {
-	delete colorDefinition;
-}
+	void ColorHistogramScale::setColorMapName( const String& colorMapName ) {
+		mapName = colorMapName;
+		colorDefinition = new ColormapDefinition( colorMapName );
+		for ( int i = 0; i < 100; i++ ) {
+			float percent = i / 100.0f;
+
+			Float red = 0;
+			Float green = 0;
+			Float blue = 0;
+			colorDefinition->getValue( percent, red, green, blue );
+			const int COLOR_MAX = 255;
+			int greenValue = static_cast<int>( green * COLOR_MAX );
+			int redValue = static_cast<int>( red * COLOR_MAX );
+			int blueValue = static_cast<int>( blue * COLOR_MAX );
+			if ( invertMap ) {
+				greenValue = COLOR_MAX - greenValue;
+				redValue   = COLOR_MAX - redValue;
+				blueValue  = COLOR_MAX - blueValue;
+			}
+			QColor colorStop( redValue, greenValue, blueValue );
+			addColorStop( percent, colorStop );
+		}
+	}
+
+
+	ColorHistogramScale::~ColorHistogramScale() {
+		delete colorDefinition;
+	}
 
 } /* namespace casa */

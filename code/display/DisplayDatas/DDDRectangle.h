@@ -44,68 +44,70 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // a rectangle object for registration with DrawingDisplayData objects.
 // </synopsis>
 
-class DDDRectangle : public DDDObject {
+	class DDDRectangle : public DDDObject {
 
- public:
+	public:
 
-  // Constructor taking a Record description.  Fields in the record,
-  // on top of what is consumed by the DDDObject constructor, are:
-  // <src>blc</src> and <src>trc</src>.
-  DDDRectangle(const Record &description, DrawingDisplayData *owner);
+		// Constructor taking a Record description.  Fields in the record,
+		// on top of what is consumed by the DDDObject constructor, are:
+		// <src>blc</src> and <src>trc</src>.
+		DDDRectangle(const Record &description, DrawingDisplayData *owner);
 
-  // Destructor.
-  virtual ~DDDRectangle();
+		// Destructor.
+		virtual ~DDDRectangle();
 
-  
-  // Draw this rectangle object for the given reason on the provided
-  // WorldCanvas.
-  virtual void draw(const Display::RefreshReason &reason, 
-		    WorldCanvas *worldcanvas);
-  
-  // Return a record describing this object.
-  virtual Record description();
 
-  // Update this object based on the information in the provided
-  // Record.
-  virtual void setDescription(const Record &rec);
-  
-  // Event handlers.  The parent DrawingDisplayData will distribute
-  // events as necessary to the various DDDObjects which comprise it.
-  // <group>
-  virtual void operator()(const WCRefreshEvent &/*ev*/) {;};
-  virtual void operator()(const WCPositionEvent &ev);
-  virtual void operator()(const WCMotionEvent &ev);
-  // </group>
+		// Draw this rectangle object for the given reason on the provided
+		// WorldCanvas.
+		virtual void draw(const Display::RefreshReason &reason,
+		                  WorldCanvas *worldcanvas);
 
- protected:
+		// Return a record describing this object.
+		virtual Record description();
 
-  // (Required) default constructor.
-  DDDRectangle();
+		// Update this object based on the information in the provided
+		// Record.
+		virtual void setDescription(const Record &rec);
 
-  // (Required) copy constructor.
-  DDDRectangle(const DDDRectangle &other);
+		// Event handlers.  The parent DrawingDisplayData will distribute
+		// events as necessary to the various DDDObjects which comprise it.
+		// <group>
+		virtual void operator()(const WCRefreshEvent &/*ev*/) {
+			;
+		};
+		virtual void operator()(const WCPositionEvent &ev);
+		virtual void operator()(const WCMotionEvent &ev);
+		// </group>
 
-  // (Required) copy assignment.
-  void operator=(const DDDRectangle &other);
-  
- private:
+	protected:
 
-  // Blc and trc of rectangle in world coordinates.
-  Vector<Double> itsBlc, itsTrc;
+		// (Required) default constructor.
+		DDDRectangle();
 
-  // Handle coordinates.
-  Vector<Int> itsHX, itsHY;
+		// (Required) copy constructor.
+		DDDRectangle(const DDDRectangle &other);
 
-  // Mode.
-  DDDObject::Mode itsMode;
+		// (Required) copy assignment.
+		void operator=(const DDDRectangle &other);
 
-  // Store for movement bases.
-  Int itsBaseMoveX, itsBaseMoveY;
+	private:
 
-  // is it a left handle?  a bottom handle?
-  Bool itsLeftHandle, itsBottomHandle;
+		// Blc and trc of rectangle in world coordinates.
+		Vector<Double> itsBlc, itsTrc;
 
-};
+		// Handle coordinates.
+		Vector<Int> itsHX, itsHY;
+
+		// Mode.
+		DDDObject::Mode itsMode;
+
+		// Store for movement bases.
+		Int itsBaseMoveX, itsBaseMoveY;
+
+		// is it a left handle?  a bottom handle?
+		Bool itsLeftHandle, itsBottomHandle;
+
+	};
 
 
 } //# NAMESPACE CASA - END

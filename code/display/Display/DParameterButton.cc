@@ -30,47 +30,51 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
-DParameterButton::DParameterButton(const String name,
-		  const String description, const String text,
-		  const String help, const String context,
-		  const Bool editable) :
-  DisplayParameter(name, description, help, context, False, editable),
-  itsText(text) {  }
+	DParameterButton::DParameterButton(const String name,
+	                                   const String description, const String text,
+	                                   const String help, const String context,
+	                                   const Bool editable) :
+		DisplayParameter(name, description, help, context, False, editable),
+		itsText(text) {  }
 
 // Copy constructor.
-DParameterButton::DParameterButton(const DParameterButton &other) :
-  DisplayParameter(other), itsText(other.itsText) {  }
+	DParameterButton::DParameterButton(const DParameterButton &other) :
+		DisplayParameter(other), itsText(other.itsText) {  }
 
 // Destructor.
-DParameterButton::~DParameterButton() {  }
+	DParameterButton::~DParameterButton() {  }
 
 // Copy assignment.
-DParameterButton& DParameterButton::operator=(const DParameterButton& other) {
-  if (this != &other) itsText = other.itsText;
-  return *this;  }
+	DParameterButton& DParameterButton::operator=(const DParameterButton& other) {
+		if (this != &other) itsText = other.itsText;
+		return *this;
+	}
 
 // Determine whether the record indicated that the button was pressed.
 // (This will be True if the record simply contains a field with this
 // DParameter's name-id).
-Bool DParameterButton::fromRecord(const RecordInterface &record) {
-  Bool btnval, notFound;
-  displayOptions().readOptionRecord(btnval, notFound, record, name());
-  return !notFound;  }
+	Bool DParameterButton::fromRecord(const RecordInterface &record) {
+		Bool btnval, notFound;
+		displayOptions().readOptionRecord(btnval, notFound, record, name());
+		return !notFound;
+	}
 
 // Describe this parameter in a record.
-void DParameterButton::toRecord(RecordInterface &record, const Bool,
-				const Bool overwrite) {
-  if (record.isDefined(name())) {
-    if (overwrite) record.removeField(name());
-    else return;  }
+	void DParameterButton::toRecord(RecordInterface &record, const Bool,
+	                                const Bool overwrite) {
+		if (record.isDefined(name())) {
+			if (overwrite) record.removeField(name());
+			else return;
+		}
 
-  Record rec = baseDescription();
-  rec.define("ptype", "button");
-  rec.define("text", itsText);
-  rec.define("default", True);
-  rec.define("value", True);
+		Record rec = baseDescription();
+		rec.define("ptype", "button");
+		rec.define("text", itsText);
+		rec.define("default", True);
+		rec.define("value", True);
 
-  record.defineRecord(name(), rec);  }
+		record.defineRecord(name(), rec);
+	}
 
 } //# NAMESPACE CASA - END
 

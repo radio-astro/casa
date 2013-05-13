@@ -38,41 +38,48 @@
 // types, names and reference indices for them, etc.
 // </synopsis>
 namespace casa {
-    namespace QtMouseToolNames {
+	namespace QtMouseToolNames {
 
-	enum { nTools = 13 };
-  
-	extern const std::string ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST,	POINT, RECTANGLE, ELLIPSE, POLYGON, POLYLINE,
-					RULERLINE, POSITIONVELOCITY, MULTICROSSHAIR, ANNOTATIONS, NONE;
+		enum { nTools = 13 };
 
-	//# nTools is an invalid tool index (or stands for "none") in these arrays.
-	extern const std::string     tools[nTools+1], longnames[nTools+1], helptexts[nTools+1];
-	extern std::string           iconnames[nTools+1];
+		extern const std::string ZOOM, PAN, SHIFTSLOPE, BRIGHTCONTRAST,	POINT, RECTANGLE, ELLIPSE, POLYGON, POLYLINE,
+		       RULERLINE, POSITIONVELOCITY, MULTICROSSHAIR, ANNOTATIONS, NONE;
 
-	// Return index of named tool within the master list.
-	// (i==nTools means 'not a tool').
-	inline int toolIndex(std::string tool) {
-	    for(int i=0;;i++) if (tools[i]==tool || i==nTools) return i;
+		//# nTools is an invalid tool index (or stands for "none") in these arrays.
+		extern const std::string     tools[nTools+1], longnames[nTools+1], helptexts[nTools+1];
+		extern std::string           iconnames[nTools+1];
+
+		// Return index of named tool within the master list.
+		// (i==nTools means 'not a tool').
+		inline int toolIndex(std::string tool) {
+			for(int i=0;; i++) if (tools[i]==tool || i==nTools) return i;
 			//# i==nTools means 'not a tool'.
-	}
+		}
 
-	inline std::string toolName(int toolindex) {
-	    if(toolindex<0 || toolindex>=nTools) return NONE;
-	    return tools[toolindex];
-	}
+		inline std::string toolName(int toolindex) {
+			if(toolindex<0 || toolindex>=nTools) return NONE;
+			return tools[toolindex];
+		}
 
-	inline std::string longName(std::string tool) { return longnames[toolIndex(tool)];  }
-	inline std::string iconName(std::string tool) { return iconnames[toolIndex(tool)];  }
-	inline std::string help(std::string tool)     { return helptexts[toolIndex(tool)];  }
+		inline std::string longName(std::string tool) {
+			return longnames[toolIndex(tool)];
+		}
+		inline std::string iconName(std::string tool) {
+			return iconnames[toolIndex(tool)];
+		}
+		inline std::string help(std::string tool)     {
+			return helptexts[toolIndex(tool)];
+		}
 
-	enum PointRegionSymbols { SYM_DOT=0, SYM_DOWN_RIGHT_ARROW=1, SYM_DOWN_LEFT_ARROW=2,
-				  SYM_UP_RIGHT_ARROW=3, SYM_UP_LEFT_ARROW=4, SYM_PLUS=5,
-				  SYM_X=6, SYM_CIRCLE=7, SYM_DIAMOND=8, SYM_SQUARE=9,
-				  SYM_POINT_REGION_COUNT=10, SYM_UNKNOWN };
-	std::string pointRegionSymbolIcon( PointRegionSymbols, int button=-1 );
-	std::string pointRegionSymbolRc(PointRegionSymbols);
+		enum PointRegionSymbols { SYM_DOT=0, SYM_DOWN_RIGHT_ARROW=1, SYM_DOWN_LEFT_ARROW=2,
+		                          SYM_UP_RIGHT_ARROW=3, SYM_UP_LEFT_ARROW=4, SYM_PLUS=5,
+		                          SYM_X=6, SYM_CIRCLE=7, SYM_DIAMOND=8, SYM_SQUARE=9,
+		                          SYM_POINT_REGION_COUNT=10, SYM_UNKNOWN
+		                        };
+		std::string pointRegionSymbolIcon( PointRegionSymbols, int button=-1 );
+		std::string pointRegionSymbolRc(PointRegionSymbols);
 
-    };
+	};
 };
 
 #endif

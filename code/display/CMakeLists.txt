@@ -162,6 +162,8 @@ casa_qt4_wrap_ui( outfiles_ui
   QtViewer/ImageManager/ImageManagerDialog.ui
   QtViewer/ImageManager/ImageScroll.ui
   QtViewer/ImageManager/ImageView.ui
+  QtViewer/QtCanvasManager.ui
+  QtViewer/CursorLink.ui
   QtPlotter/QtProfileGUI.ui
   QtPlotter/QtProfilePrefsGUI.ui
   QtPlotter/CanvasHolder.ui
@@ -509,6 +511,7 @@ casa_add_library( display
   QtViewer/MakeMask.cc
   QtViewer/MakeRegion.cc
   QtViewer/QtAnnotatorGui.cc
+  QtViewer/QtCanvasManager.cc
   QtViewer/QtCleanPanelGui.cc
   QtViewer/QtDataManager.cc
   QtViewer/QtExportManager.cc

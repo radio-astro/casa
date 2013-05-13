@@ -38,15 +38,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class IPosition;
-class WCResampleHandler;
-class ImageRegion;
-class WCLELMask;
-class WorldCanvas;
-template <class T> class Array;
-template <class T> class Lattice;
-template <class T> class MaskedLattice;
-template <class T> class LatticeStatistics;
+	class IPosition;
+	class WCResampleHandler;
+	class ImageRegion;
+	class WCLELMask;
+	class WorldCanvas;
+	template <class T> class Array;
+	template <class T> class Lattice;
+	template <class T> class MaskedLattice;
+	template <class T> class LatticeStatistics;
 
 // <summary>
 // Partial implementation of PrincipalAxesDD for Lattice-based data.
@@ -57,208 +57,218 @@ template <class T> class LatticeStatistics;
 // which adds methods particular to handling Lattice-based data.
 // </synopsis>
 
-template <class T> class LatticePADisplayData : public PrincipalAxesDD {
+	template <class T> class LatticePADisplayData : public PrincipalAxesDD {
 
- public:
-  // Constructors (no default)
-  //LatticePADisplayData();
+	public:
+		// Constructors (no default)
+		//LatticePADisplayData();
 
-  // Array-based constructors: >2d and 2d
-  // <group>
-  LatticePADisplayData(Array<T> *array, const uInt xAxis,
-		       const uInt yAxis, const uInt mAxis,
-		       const IPosition fixedPos);
-  LatticePADisplayData(Array<T> *array, const uInt xAxis,
-		       const uInt yAxis);
-  // </group>
+		// Array-based constructors: >2d and 2d
+		// <group>
+		LatticePADisplayData(Array<T> *array, const uInt xAxis,
+		                     const uInt yAxis, const uInt mAxis,
+		                     const IPosition fixedPos);
+		LatticePADisplayData(Array<T> *array, const uInt xAxis,
+		                     const uInt yAxis);
+		// </group>
 
-  // Image-based constructors: >2d and 2d
-  // <group>
-  LatticePADisplayData( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
-  LatticePADisplayData(ImageInterface<T> *image, const uInt xAxis,
-		       const uInt yAxis);
-  // </group>
+		// Image-based constructors: >2d and 2d
+		// <group>
+		LatticePADisplayData( ImageInterface<T> *image, const uInt xAxis, const uInt yAxis, const uInt mAxis, const IPosition fixedPos, viewer::StatusSink *sink=0 );
+		LatticePADisplayData(ImageInterface<T> *image, const uInt xAxis,
+		                     const uInt yAxis);
+		// </group>
 
-  // Destructor
-  virtual ~LatticePADisplayData();
+		// Destructor
+		virtual ~LatticePADisplayData();
 
-  // Format a string containing value information at the 
-  // given world coordinate
-  virtual String showValue(const Vector<Double> &world);
+		// Format a string containing value information at the
+		// given world coordinate
+		virtual String showValue(const Vector<Double> &world);
 
-  // required functions to help inherited "setup" amongst other things
-  virtual const IPosition dataShape() const;
-  virtual const uInt dataDim() const;
-  virtual const T dataValue(IPosition pos);
-  virtual const Unit dataUnit() const;
+		// required functions to help inherited "setup" amongst other things
+		virtual const IPosition dataShape() const;
+		virtual const uInt dataDim() const;
+		virtual const T dataValue(IPosition pos);
+		virtual const Unit dataUnit() const;
 
-  // Pure virtual function from DisplayData...
-  String dataType() const { return "image"; }
-  // Get image analyis about object...
-  virtual ImageAnalysis *imageanalysis( ) const;
-  ImageInterface<Float> *imageinterface( );
-
-
-  // left as pure virtual for implementation in concrete class
-  virtual void setupElements() = 0;
-  virtual void getMinAndMax();
-
-  // return mask value at given position
-  virtual const Bool maskValue(const IPosition &pos);
-
-  // install the default options for this DisplayData
-  virtual void setDefaultOptions();
-
-  // apply options stored in val to the DisplayData; return value
-  // True means a refresh is needed...
-  virtual Bool setOptions(Record &rec, Record &recOut);
+		// Pure virtual function from DisplayData...
+		String dataType() const {
+			return "image";
+		}
+		// Get image analyis about object...
+		virtual ImageAnalysis *imageanalysis( ) const;
+		ImageInterface<Float> *imageinterface( );
 
 
+		// left as pure virtual for implementation in concrete class
+		virtual void setupElements() = 0;
+		virtual void getMinAndMax();
 
-  // retrieve the current and default options and parameter types.
-  virtual Record getOptions();
+		// return mask value at given position
+		virtual const Bool maskValue(const IPosition &pos);
 
-  // Return the class name of this DisplayData; useful mostly for
-  // debugging purposes, and perhaps future use in the glish widget
-  // interface.
-  virtual String className() { return String("LatticePADisplayData"); }  
-  String description( ) const
-	{ return itsBaseImagePtr ? itsBaseImagePtr->name( ) : "none available"; }
+		// install the default options for this DisplayData
+		virtual void setDefaultOptions();
 
-  virtual WCResampleHandler *resampleHandler() { return itsResampleHandler; }
-
-  
-
-  virtual Display::ComplexToRealMethod complexMode() 
-    { return itsComplexToRealMethod; }
-  virtual void setComplexMode(Display::ComplexToRealMethod method) 
-    { itsComplexToRealMethod = method; }
-
-  virtual MaskedLattice<T> *maskedLattice() 
-    { return itsMaskedLatticePtr; }
+		// apply options stored in val to the DisplayData; return value
+		// True means a refresh is needed...
+		virtual Bool setOptions(Record &rec, Record &recOut);
 
 
-   // Insert an array into a Record. The array is insert into a "value" field, eg
-  // somerecord.fieldname.value
-  virtual Bool insertArray(Record& toGoInto, Vector<Float> toInsert, const String fieldname);
-  virtual Bool insertFloat(Record& toGoInto, Float toInsert, const String fieldname);
 
-  // Return the last calculated histogram
-  virtual Record getHist();
-  
-  // Return the brightness unit as a string
-  virtual String getBrightnessUnits();
-  
-  // Aids updateHistogram() by computing a stride to use for efficiency
-  // when computing histograms (could be used elsewhere too).
-  // Input parameter 'shape' is the shape of the original lattice or array.
-  // Return value indicates whether striding should be used; if so, the
-  // recommended stride is returned in the 'stride' parameter.
-  // maxPixels is the desired maximum number of elements in the sub-lattice
-  // that would result from using the returned stride (may be exceeded
-  // because of minPerAxis requirements, or in any case by a few percent).
-  // A stride greater than 1 will not be returned for an axis if it
-  // would make the length of that axis in the strided sub-lattice
-  // less than minPerAxis.
-  static Bool useStriding(const IPosition& shape, IPosition& stride,
-			  uInt maxPixels=1000000u, uInt minPerAxis=20u);
+		// retrieve the current and default options and parameter types.
+		virtual Record getOptions();
+
+		// Return the class name of this DisplayData; useful mostly for
+		// debugging purposes, and perhaps future use in the glish widget
+		// interface.
+		virtual String className() {
+			return String("LatticePADisplayData");
+		}
+		String description( ) const {
+			return itsBaseImagePtr ? itsBaseImagePtr->name( ) : "none available";
+		}
+
+		virtual WCResampleHandler *resampleHandler() {
+			return itsResampleHandler;
+		}
 
 
- protected:
 
-  // Called by constructors: set up data for beam drawing, if applicable.
-  virtual void SetUpBeamData_();
-  
-  
-  // Will draw the beam ellipse if applicable (i.e., the LatticePADD
-  // has an image with beam data, beam drawing is turned on, and the
-  // WC's CoordinateSystem is set to sky coordinates).
-  virtual void drawBeamEllipse_(WorldCanvas* wc);
-  
+		virtual Display::ComplexToRealMethod complexMode() {
+			return itsComplexToRealMethod;
+		}
+		virtual void setComplexMode(Display::ComplexToRealMethod method) {
+			itsComplexToRealMethod = method;
+		}
 
-  
- private:
+		virtual MaskedLattice<T> *maskedLattice() {
+			return itsMaskedLatticePtr;
+		}
 
-  // The base image cloned at construction.
-  ImageInterface<T>* itsBaseImagePtr;
 
-  // The base array cloned at construction.
-  Array<T>* itsBaseArrayPtr;
+		// Insert an array into a Record. The array is insert into a "value" field, eg
+		// somerecord.fieldname.value
+		virtual Bool insertArray(Record& toGoInto, Vector<Float> toInsert, const String fieldname);
+		virtual Bool insertFloat(Record& toGoInto, Float toInsert, const String fieldname);
 
-  // The image histogram
-  Record imageHistogram;
+		// Return the last calculated histogram
+		virtual Record getHist();
 
-  // Whether to always calculate the histogram or not
-  Bool calcHist;
-  
-  // The masked lattice, effectively referencing one of itsBaseImagePtr
-  // or itsBaseArray, or some sub-region of said.
-  MaskedLattice<T>* itsMaskedLatticePtr;
+		// Return the brightness unit as a string
+		virtual String getBrightnessUnits();
 
-  // Says whether the destructor should delete itsMaskedLattice or not
-  Bool itsDeleteMLPointer;
-  
-  // Object to use for calculating statistics.
-  LatticeStatistics<Float>* itsLatticeStatisticsPtr;
+		// Aids updateHistogram() by computing a stride to use for efficiency
+		// when computing histograms (could be used elsewhere too).
+		// Input parameter 'shape' is the shape of the original lattice or array.
+		// Return value indicates whether striding should be used; if so, the
+		// recommended stride is returned in the 'stride' parameter.
+		// maxPixels is the desired maximum number of elements in the sub-lattice
+		// that would result from using the returned stride (may be exceeded
+		// because of minPerAxis requirements, or in any case by a few percent).
+		// A stride greater than 1 will not be returned for an axis if it
+		// would make the length of that axis in the strided sub-lattice
+		// less than minPerAxis.
+		static Bool useStriding(const IPosition& shape, IPosition& stride,
+		                        uInt maxPixels=1000000u, uInt minPerAxis=20u);
 
-  // Is itsLattice a SubImage?
-  ImageRegion* itsRegionPtr;
 
-  // OTF mask
-  WCLELMask* itsMaskPtr;
+	protected:
 
-  // The data unit
-  Unit itsDataUnit;
+		// Called by constructors: set up data for beam drawing, if applicable.
+		virtual void SetUpBeamData_();
 
-  // the complex to real method
-  Display::ComplexToRealMethod itsComplexToRealMethod;
 
-  // storage for the display parameters
-  String itsResample;
-  String itsComplexMode;
+		// Will draw the beam ellipse if applicable (i.e., the LatticePADD
+		// has an image with beam data, beam drawing is turned on, and the
+		// WC's CoordinateSystem is set to sky coordinates).
+		virtual void drawBeamEllipse_(WorldCanvas* wc);
 
-  // beam-drawing state
-  // </group>
 
-  std::vector<std::vector<double> > beams_;
-  String majorunit_;	//# units of above (should be angular
-  String minorunit_;	//# (relative world sky coordinates).
-  String paunit_;	//# angular units of posangle_.
-  
-  DParameterChoice* beamOnOff_;		//# User-selectable parameters.
-  DParameterChoice* beamStyle_;		//# "Outline", "Filled"
-  DParameterChoice* beamColor_;
-  DParameterRange<Int>* beamLineWidth_;
-  DParameterRange<Float>* beamXCenter_;		//# 0=left edge, 1=right edge
-  DParameterRange<Float>* beamYCenter_;		//# 0=bottom edge, 1=top edge
-  // </group>
-  
-  
-  
-  // pointer to resampler
-  WCResampleHandler *itsResampleHandler;
 
-  // update itsLatticeStatistics
-  void updateLatticeStatistics();
+	private:
 
-  // Update the histogram, and attach it to the supplied record 
-  Bool updateHistogram(Record &rec, MaskedLattice<Complex> &pImage);
-  Bool updateHistogram(Record &rec, ImageInterface<Float> &pImage);
-  Bool updateHistogram(Record &rec, const Array<Complex>*);
-  Bool updateHistogram(Record &rec, const Array<Float>*);
-  
-  WCLELMask* makeMask (const RecordInterface& mask);
-  ImageRegion* makeRegion (const RecordInterface& region);
-  Bool isMaskDifferent (WCLELMask*& pMask);
-  Bool isRegionDifferent (ImageRegion*& pRegion);
+		// The base image cloned at construction.
+		ImageInterface<T>* itsBaseImagePtr;
 
-   // Transfer preferences between CoordinateSystems
-  Bool transferPreferences (CoordinateSystem& cSysInOut,
-                             const CoordinateSystem& cSysIn) const;
+		// The base array cloned at construction.
+		Array<T>* itsBaseArrayPtr;
 
-  // Delete temporary image data
-  void delTmpImage();
-};
+		// The image histogram
+		Record imageHistogram;
+
+		// Whether to always calculate the histogram or not
+		Bool calcHist;
+
+		// The masked lattice, effectively referencing one of itsBaseImagePtr
+		// or itsBaseArray, or some sub-region of said.
+		MaskedLattice<T>* itsMaskedLatticePtr;
+
+		// Says whether the destructor should delete itsMaskedLattice or not
+		Bool itsDeleteMLPointer;
+
+		// Object to use for calculating statistics.
+		LatticeStatistics<Float>* itsLatticeStatisticsPtr;
+
+		// Is itsLattice a SubImage?
+		ImageRegion* itsRegionPtr;
+
+		// OTF mask
+		WCLELMask* itsMaskPtr;
+
+		// The data unit
+		Unit itsDataUnit;
+
+		// the complex to real method
+		Display::ComplexToRealMethod itsComplexToRealMethod;
+
+		// storage for the display parameters
+		String itsResample;
+		String itsComplexMode;
+
+		// beam-drawing state
+		// </group>
+
+		std::vector<std::vector<double> > beams_;
+		String majorunit_;	//# units of above (should be angular
+		String minorunit_;	//# (relative world sky coordinates).
+		String paunit_;	//# angular units of posangle_.
+
+		DParameterChoice* beamOnOff_;		//# User-selectable parameters.
+		DParameterChoice* beamStyle_;		//# "Outline", "Filled"
+		DParameterChoice* beamColor_;
+		DParameterRange<Int>* beamLineWidth_;
+		DParameterRange<Float>* beamXCenter_;		//# 0=left edge, 1=right edge
+		DParameterRange<Float>* beamYCenter_;		//# 0=bottom edge, 1=top edge
+		// </group>
+
+
+
+		// pointer to resampler
+		WCResampleHandler *itsResampleHandler;
+
+		// update itsLatticeStatistics
+		void updateLatticeStatistics();
+
+		// Update the histogram, and attach it to the supplied record
+		Bool updateHistogram(Record &rec, MaskedLattice<Complex> &pImage);
+		Bool updateHistogram(Record &rec, ImageInterface<Float> &pImage);
+		Bool updateHistogram(Record &rec, const Array<Complex>*);
+		Bool updateHistogram(Record &rec, const Array<Float>*);
+
+		WCLELMask* makeMask (const RecordInterface& mask);
+		ImageRegion* makeRegion (const RecordInterface& region);
+		Bool isMaskDifferent (WCLELMask*& pMask);
+		Bool isRegionDifferent (ImageRegion*& pRegion);
+
+		// Transfer preferences between CoordinateSystems
+		Bool transferPreferences (CoordinateSystem& cSysInOut,
+		                          const CoordinateSystem& cSysIn) const;
+
+		// Delete temporary image data
+		void delTmpImage();
+	};
 
 
 } //# NAMESPACE CASA - END

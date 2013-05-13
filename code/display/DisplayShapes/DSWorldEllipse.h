@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSWORLDELLIPSE_H
 #define TRIALDISPLAY_DSWORLDELLIPSE_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <casa/Quanta/Quantum.h>
@@ -44,67 +44,67 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of a world coords DSEllipse
 // </summary>
 
-class PanelDisplay;
-class DSPixelEllipse;
-class DSScreenEllipse;
+	class PanelDisplay;
+	class DSPixelEllipse;
+	class DSScreenEllipse;
 
-class DSWorldEllipse : public DSEllipse , public DisplayShapeWithCoords{
-  
-public:
-  
-  DSWorldEllipse();
-  DSWorldEllipse(const Record& settings, PanelDisplay* pd);
-  DSWorldEllipse(DSScreenEllipse& other, PanelDisplay* pd);
-  DSWorldEllipse(DSPixelEllipse& other, PanelDisplay* pd);
+	class DSWorldEllipse : public DSEllipse , public DisplayShapeWithCoords {
 
-  virtual ~DSWorldEllipse();
+	public:
 
-  virtual void recalculateScreenPosition();
+		DSWorldEllipse();
+		DSWorldEllipse(const Record& settings, PanelDisplay* pd);
+		DSWorldEllipse(DSScreenEllipse& other, PanelDisplay* pd);
+		DSWorldEllipse(DSPixelEllipse& other, PanelDisplay* pd);
 
-  // So we can update our WCs
-  // <group>
-  virtual void move(const Float& dX, const Float& dY);
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual void rotate(const Float& angle);
-  virtual void changePoint(const Vector<Float>&pos, const Int n);
-  virtual void changePoint(const Vector<Float>& pos);
-  virtual void draw(PixelCanvas* pc);
-  // </group>
+		virtual ~DSWorldEllipse();
 
-  // PLUS OTHERS!!
+		virtual void recalculateScreenPosition();
 
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
+		// So we can update our WCs
+		// <group>
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void rotate(const Float& angle);
+		virtual void changePoint(const Vector<Float>&pos, const Int n);
+		virtual void changePoint(const Vector<Float>& pos);
+		virtual void draw(PixelCanvas* pc);
+		// </group>
 
-  
+		// PLUS OTHERS!!
 
-  virtual Record getRawOptions() {
-    return DSEllipse::getOptions();
-  }
-  
-  virtual PanelDisplay* panelDisplay()  {
-    return itsPD;
-  }
-private:
-  
-  
-  // Based on a pixel center
-  //  virtual Bool chooseWC(const Float& centerX, const Float& centerY,
-  //		PanelDisplay* pdx, 
-  //WorldCanvas* wc);
-  
-  // The paneldisplay from which I may choose an appropriate WC
-  PanelDisplay* itsPD;
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
 
-  // The WC of my choosing
-  WorldCanvas* itsWC;
 
-  // The center of the marker in world co-ords.
-  // x, y, major, minor, angle
-  Vector<Quantum<Double> > itsWorldParameters;
-  
-  void updateWCoords();
-};
+
+		virtual Record getRawOptions() {
+			return DSEllipse::getOptions();
+		}
+
+		virtual PanelDisplay* panelDisplay()  {
+			return itsPD;
+		}
+	private:
+
+
+		// Based on a pixel center
+		//  virtual Bool chooseWC(const Float& centerX, const Float& centerY,
+		//		PanelDisplay* pdx,
+		//WorldCanvas* wc);
+
+		// The paneldisplay from which I may choose an appropriate WC
+		PanelDisplay* itsPD;
+
+		// The WC of my choosing
+		WorldCanvas* itsWC;
+
+		// The center of the marker in world co-ords.
+		// x, y, major, minor, angle
+		Vector<Quantum<Double> > itsWorldParameters;
+
+		void updateWCoords();
+	};
 
 } //# NAMESPACE CASA - END
 

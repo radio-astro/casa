@@ -28,76 +28,74 @@
 
 namespace casa {
 
-const QString SlicePlotPreferences::ORGANIZATION = "NRAO/CASA";
-const QString SlicePlotPreferences::APPLICATION = "Slice 1D";
-const QString SlicePlotPreferences::LINE_THICKNESS = "Line Thickness";
-const QString SlicePlotPreferences::MARKER_SIZE = "Marker Size";
+	const QString SlicePlotPreferences::ORGANIZATION = "NRAO/CASA";
+	const QString SlicePlotPreferences::APPLICATION = "Slice 1D";
+	const QString SlicePlotPreferences::LINE_THICKNESS = "Line Thickness";
+	const QString SlicePlotPreferences::MARKER_SIZE = "Marker Size";
 
-SlicePlotPreferences::SlicePlotPreferences(QWidget *parent)
-    : QDialog(parent)
-{
-	lineThickness = 1;
-	markerSize = 5;
+	SlicePlotPreferences::SlicePlotPreferences(QWidget *parent)
+		: QDialog(parent) {
+		lineThickness = 1;
+		markerSize = 5;
 
-	ui.setupUi(this);
-	ui.lineWidthSpinBox->setMinimum(1);
-	ui.lineWidthSpinBox->setMaximum( 10 );
-	ui.lineWidthSpinBox->setValue( lineThickness );
+		ui.setupUi(this);
+		ui.lineWidthSpinBox->setMinimum(1);
+		ui.lineWidthSpinBox->setMaximum( 10 );
+		ui.lineWidthSpinBox->setValue( lineThickness );
 
-	ui.segmentMarkerSpinBox->setMinimum(1);
-	ui.segmentMarkerSpinBox->setMaximum( 10 );
-	ui.segmentMarkerSpinBox->setValue( markerSize );
+		ui.segmentMarkerSpinBox->setMinimum(1);
+		ui.segmentMarkerSpinBox->setMaximum( 10 );
+		ui.segmentMarkerSpinBox->setValue( markerSize );
 
-	initializeCustomSettings();
-	reset();
+		initializeCustomSettings();
+		reset();
 
-	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(preferencesAccepted()));
-	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(preferencesRejected()));
-}
+		connect( ui.okButton, SIGNAL(clicked()), this, SLOT(preferencesAccepted()));
+		connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(preferencesRejected()));
+	}
 
-void SlicePlotPreferences::initializeCustomSettings(){
-	//Only use the default values passed in if the user has not indicated
-	//any preferences.
-	QSettings settings( ORGANIZATION, APPLICATION );
-	lineThickness = settings.value( LINE_THICKNESS, lineThickness).toInt();
-	markerSize = settings.value( MARKER_SIZE, markerSize).toInt();
-}
+	void SlicePlotPreferences::initializeCustomSettings() {
+		//Only use the default values passed in if the user has not indicated
+		//any preferences.
+		QSettings settings( ORGANIZATION, APPLICATION );
+		lineThickness = settings.value( LINE_THICKNESS, lineThickness).toInt();
+		markerSize = settings.value( MARKER_SIZE, markerSize).toInt();
+	}
 
-int SlicePlotPreferences::getLineWidth() const {
-	return lineThickness;
-}
+	int SlicePlotPreferences::getLineWidth() const {
+		return lineThickness;
+	}
 
-int SlicePlotPreferences::getMarkerSize() const {
-	return markerSize;
-}
+	int SlicePlotPreferences::getMarkerSize() const {
+		return markerSize;
+	}
 
-void SlicePlotPreferences::preferencesAccepted(){
-	persist();
-	emit plotPreferencesChanged();
-	this->close();
-}
-void SlicePlotPreferences::preferencesRejected(){
-	reset();
-	this->close();
-}
+	void SlicePlotPreferences::preferencesAccepted() {
+		persist();
+		emit plotPreferencesChanged();
+		this->close();
+	}
+	void SlicePlotPreferences::preferencesRejected() {
+		reset();
+		this->close();
+	}
 
-void SlicePlotPreferences::reset(){
-	ui.lineWidthSpinBox->setValue( lineThickness );
-	ui.segmentMarkerSpinBox->setValue( markerSize );
-}
+	void SlicePlotPreferences::reset() {
+		ui.lineWidthSpinBox->setValue( lineThickness );
+		ui.segmentMarkerSpinBox->setValue( markerSize );
+	}
 
-void SlicePlotPreferences::persist(){
-	QSettings settings( ORGANIZATION, APPLICATION );
+	void SlicePlotPreferences::persist() {
+		QSettings settings( ORGANIZATION, APPLICATION );
 
-	lineThickness = ui.lineWidthSpinBox->value();
-	settings.setValue( LINE_THICKNESS, lineThickness );
+		lineThickness = ui.lineWidthSpinBox->value();
+		settings.setValue( LINE_THICKNESS, lineThickness );
 
-	markerSize = ui.segmentMarkerSpinBox->value();
-	settings.setValue( MARKER_SIZE, markerSize );
-}
+		markerSize = ui.segmentMarkerSpinBox->value();
+		settings.setValue( MARKER_SIZE, markerSize );
+	}
 
-SlicePlotPreferences::~SlicePlotPreferences()
-{
+	SlicePlotPreferences::~SlicePlotPreferences() {
 
-}
+	}
 }

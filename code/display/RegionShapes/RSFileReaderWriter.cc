@@ -33,104 +33,126 @@ namespace casa {
 
 // RFERROR DEFINITIONS //
 
-RFError::RFError() : m_fatal(false) { }
+	RFError::RFError() : m_fatal(false) { }
 
-RFError::RFError(const String& error, bool isFatal) : m_error(error),
-        m_fatal(isFatal) { }
+	RFError::RFError(const String& error, bool isFatal) : m_error(error),
+		m_fatal(isFatal) { }
 
-RFError::~RFError() { }
+	RFError::~RFError() { }
 
-bool RFError::isFatal() const { return m_fatal; }
+	bool RFError::isFatal() const {
+		return m_fatal;
+	}
 
-const String& RFError::error() const { return m_error; }
+	const String& RFError::error() const {
+		return m_error;
+	}
 
-void RFError::set(const String& error, bool isFatal) {
-    m_error = error;
-    m_fatal = isFatal;
-}
+	void RFError::set(const String& error, bool isFatal) {
+		m_error = error;
+		m_fatal = isFatal;
+	}
 
 
 // RSFILEREADERWRITER DEFINITIONS //
 
 // Non-Static Methods //
 
-void RSFileReaderWriter::setFile(const String& filename) {
-    m_filename = filename;
-}
+	void RSFileReaderWriter::setFile(const String& filename) {
+		m_filename = filename;
+	}
 
-const RFError& RSFileReaderWriter::lastError() const{ return m_lastError; }
+	const RFError& RSFileReaderWriter::lastError() const {
+		return m_lastError;
+	}
 
-void RSFileReaderWriter::setError(const String& error, bool isFatal) const {
-    const_cast<RFError&>(m_lastError).set(error, isFatal);
-}
+	void RSFileReaderWriter::setError(const String& error, bool isFatal) const {
+		const_cast<RFError&>(m_lastError).set(error, isFatal);
+	}
 
 
 // Static Methods //
 
-RSFileReaderWriter::SupportedType RSFileReaderWriter::supportedType(String t) {
-    t.downcase();
-    if(t == "ds9")           return DS9;
-    else if(t == "casa-xml") return CASA_XML;
-    
-    else return DS9; // default
-}
+	RSFileReaderWriter::SupportedType RSFileReaderWriter::supportedType(String t) {
+		t.downcase();
+		if(t == "ds9")           return DS9;
+		else if(t == "casa-xml") return CASA_XML;
 
-String RSFileReaderWriter::supportedType(SupportedType type) {
-    switch(type) {
-    case DS9:      return "DS9";
-    case CASA_XML: return "CASA-XML";
-    
-    default: return ""; // unknown
-    }
-}
+		else return DS9; // default
+	}
 
-String RSFileReaderWriter::extensionForType(SupportedType type) {
-    switch(type) {
-    case DS9:      return "reg";
-    case CASA_XML: return "xml";
-        
-    default: return ""; // unknown    
-    }
-}
+	String RSFileReaderWriter::supportedType(SupportedType type) {
+		switch(type) {
+		case DS9:
+			return "DS9";
+		case CASA_XML:
+			return "CASA-XML";
 
-vector<RSFileReaderWriter::SupportedType> RSFileReaderWriter::supportedTypes(){
-    vector<SupportedType> v(2);
-    v[0] = DS9; v[1] = CASA_XML;
-    return v;
-}
+		default:
+			return ""; // unknown
+		}
+	}
 
-vector<String> RSFileReaderWriter::supportedTypesStrings() {
-    vector<SupportedType> types = supportedTypes();
-    vector<String> v(types.size());
-    for(unsigned int i = 0; i < v.size(); i++) v[i] = supportedType(types[i]);
-    return v;
-}
+	String RSFileReaderWriter::extensionForType(SupportedType type) {
+		switch(type) {
+		case DS9:
+			return "reg";
+		case CASA_XML:
+			return "xml";
 
-RSFileReader* RSFileReaderWriter::readerForType(SupportedType type) {
-    switch(type) {
-    case DS9:      return new DS9FileReader();
-    case CASA_XML: return new XMLFileReaderWriter();
-    
-    default: return NULL; // unknown
-    }
-}
+		default:
+			return ""; // unknown
+		}
+	}
 
-RSFileWriter* RSFileReaderWriter::writerForType(SupportedType type) {
-    switch(type) {
-    case DS9:      return new DS9FileWriter();
-    case CASA_XML: return new XMLFileReaderWriter();
-    
-    default: return NULL; // unknown
-    }
-}
+	vector<RSFileReaderWriter::SupportedType> RSFileReaderWriter::supportedTypes() {
+		vector<SupportedType> v(2);
+		v[0] = DS9;
+		v[1] = CASA_XML;
+		return v;
+	}
 
-QWidget* RSFileReaderWriter::optionsWidgetForType(SupportedType type) {
-    switch(type) {
-    case DS9:      return DS9FileWriter().optionsWidget();
-    case CASA_XML: return XMLFileReaderWriter().optionsWidget();
-    
-    default: return NULL; // unknown
-    }
-}
+	vector<String> RSFileReaderWriter::supportedTypesStrings() {
+		vector<SupportedType> types = supportedTypes();
+		vector<String> v(types.size());
+		for(unsigned int i = 0; i < v.size(); i++) v[i] = supportedType(types[i]);
+		return v;
+	}
+
+	RSFileReader* RSFileReaderWriter::readerForType(SupportedType type) {
+		switch(type) {
+		case DS9:
+			return new DS9FileReader();
+		case CASA_XML:
+			return new XMLFileReaderWriter();
+
+		default:
+			return NULL; // unknown
+		}
+	}
+
+	RSFileWriter* RSFileReaderWriter::writerForType(SupportedType type) {
+		switch(type) {
+		case DS9:
+			return new DS9FileWriter();
+		case CASA_XML:
+			return new XMLFileReaderWriter();
+
+		default:
+			return NULL; // unknown
+		}
+	}
+
+	QWidget* RSFileReaderWriter::optionsWidgetForType(SupportedType type) {
+		switch(type) {
+		case DS9:
+			return DS9FileWriter().optionsWidget();
+		case CASA_XML:
+			return XMLFileReaderWriter().optionsWidget();
+
+		default:
+			return NULL; // unknown
+		}
+	}
 
 }

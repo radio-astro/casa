@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 
 #include <display/DisplayShapes/DSScreenPoly.h>
 #include <display/DisplayShapes/DSWorldPoly.h>
@@ -42,211 +42,210 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DSScreenPoly::DSScreenPoly() :
-  DSPoly(),
-  itsPC(0),
-  itsRelativePoints(0,0) {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-}
+	DSScreenPoly::DSScreenPoly() :
+		DSPoly(),
+		itsPC(0),
+		itsRelativePoints(0,0) {
 
-DSScreenPoly::DSScreenPoly(const Record& settings, PixelCanvas* pc) :
-  DSPoly(),
-  itsPC(pc),
-  itsRelativePoints(0,0) {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  setOptions(settings);
-  
-}
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
+	}
 
-DSScreenPoly::DSScreenPoly(DSPixelPoly& other, PixelCanvas* pc) :
-  DSPoly(),
-  itsPC(pc),
-  itsRelativePoints(0,0) {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  DSPoly::setOptions(other.getRawOptions());
-  updateRelative();
-}
+	DSScreenPoly::DSScreenPoly(const Record& settings, PixelCanvas* pc) :
+		DSPoly(),
+		itsPC(pc),
+		itsRelativePoints(0,0) {
 
-DSScreenPoly::DSScreenPoly(DSWorldPoly& other) :
-  DSPoly(),
-  itsPC(0),
-  itsRelativePoints(0,0) {
-  
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  itsPC = other.panelDisplay()->pixelCanvas();
-  
-  DSPoly::setOptions(other.getRawOptions());
-  updateRelative();
-}
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
 
-DSScreenPoly::DSScreenPoly(DSScreenPolyLine& other, PixelCanvas* pc) :
-  DSPoly(),
-  itsPC(pc),
-  itsRelativePoints(0,0) 
-{
+		setOptions(settings);
 
-  UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
-  
-  Record otherOptions = other.getOptions();
+	}
 
-  if (otherOptions.isDefined("polylinepoints")) {
+	DSScreenPoly::DSScreenPoly(DSPixelPoly& other, PixelCanvas* pc) :
+		DSPoly(),
+		itsPC(pc),
+		itsRelativePoints(0,0) {
 
-    Record points = otherOptions.subRecord("polylinepoints");
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
 
-    otherOptions.removeField("polylinepoints");
-    otherOptions.defineRecord("polygonpoints", points);
-  }
+		DSPoly::setOptions(other.getRawOptions());
+		updateRelative();
+	}
 
-  setOptions(otherOptions);
-  updateRelative();
-}
+	DSScreenPoly::DSScreenPoly(DSWorldPoly& other) :
+		DSPoly(),
+		itsPC(0),
+		itsRelativePoints(0,0) {
 
-DSScreenPoly::~DSScreenPoly() {
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
 
-}
-  
+		itsPC = other.panelDisplay()->pixelCanvas();
 
-Bool DSScreenPoly::setOptions(const Record& settings) {
-  Bool localChange = False;
-  Record toSet = settings;
-  
-  if (settings.isDefined("coords")) {
-    if (settings.asString("coords") != "frac") {
-      throw(AipsError("I (DSScreenPoly) was expecting an option "
-		      "record which"
-		      " had coords != \'frac\'. Please use a \'lock\' function"
-		      " to change my co-ord system"));
-    }
-  }
-  
-  matrixFloatFromQuant(toSet, "polygonpoints", "frac");
+		DSPoly::setOptions(other.getRawOptions());
+		updateRelative();
+	}
+
+	DSScreenPoly::DSScreenPoly(DSScreenPolyLine& other, PixelCanvas* pc) :
+		DSPoly(),
+		itsPC(pc),
+		itsRelativePoints(0,0) {
+
+		UnitMap::putUser("frac", UnitVal(1.0), "fractional units");
+
+		Record otherOptions = other.getOptions();
+
+		if (otherOptions.isDefined("polylinepoints")) {
+
+			Record points = otherOptions.subRecord("polylinepoints");
+
+			otherOptions.removeField("polylinepoints");
+			otherOptions.defineRecord("polygonpoints", points);
+		}
+
+		setOptions(otherOptions);
+		updateRelative();
+	}
+
+	DSScreenPoly::~DSScreenPoly() {
+
+	}
 
 
-  if (toSet.isDefined("polygonpoints")) {
-    Matrix<Float> relative = toSet.asArrayFloat("polygonpoints");
-    Matrix<Float> screen = relToScreen(relative, itsPC);
-    
-    toSet.removeField("polygonpoints");
-    toSet.define("polygonpoints", screen);
+	Bool DSScreenPoly::setOptions(const Record& settings) {
+		Bool localChange = False;
+		Record toSet = settings;
 
-  }
+		if (settings.isDefined("coords")) {
+			if (settings.asString("coords") != "frac") {
+				throw(AipsError("I (DSScreenPoly) was expecting an option "
+				                "record which"
+				                " had coords != \'frac\'. Please use a \'lock\' function"
+				                " to change my co-ord system"));
+			}
+		}
 
-  if (DSPoly::setOptions(toSet)) {
-    localChange = True;
-  }
-
-  return localChange;
-}
-
+		matrixFloatFromQuant(toSet, "polygonpoints", "frac");
 
 
-void DSScreenPoly::recalculateScreenPosition() {
-  if (itsRelativePoints.nelements() > 0) {
-    if (!itsPC) {
-      throw(AipsError("No pixel canvas available to update screen pos for"
-		      " ScreenPoly"));
-    }
-    
-    if (itsRelativePoints.ncolumn() != 2) {
-      throw(AipsError("Bad format for relative Points Matrix"));
-    }
-    
-    Matrix<Float> pixel = relToScreen(itsRelativePoints, itsPC);
-    setPoints(pixel);
-  }
-}
+		if (toSet.isDefined("polygonpoints")) {
+			Matrix<Float> relative = toSet.asArrayFloat("polygonpoints");
+			Matrix<Float> screen = relToScreen(relative, itsPC);
 
-void DSScreenPoly::move(const Float& dX, const Float& dY) {
-  DSPoly::move(dX, dY);
-  updateRelative();
-}
+			toSet.removeField("polygonpoints");
+			toSet.define("polygonpoints", screen);
 
-void DSScreenPoly::setCenter(const Float& xPos, const Float& yPos) {
-  DSPoly::setCenter(xPos, yPos);
-  updateRelative();
-}
+		}
 
-void DSScreenPoly::rotate(const Float& angle) {
-  DSPoly::rotate(angle);
-  updateRelative();
-}
+		if (DSPoly::setOptions(toSet)) {
+			localChange = True;
+		}
 
-void DSScreenPoly::scale(const Float& scaleFactor) {
-  DSPoly::scale(scaleFactor);
-  updateRelative();
-}
-
-void DSScreenPoly::changePoint(const Vector<Float>&pos, const Int n) {
-  DSPoly::changePoint(pos, n);
-  updateRelative();
-}
-
-void DSScreenPoly::changePoint(const Vector<Float>& pos) {
-  DSPoly::changePoint(pos);
-  updateRelative();
-}
+		return localChange;
+	}
 
 
-void DSScreenPoly::updateRelative() {
-  Matrix<Float> pixel = getPoints();
-  
-  if (pixel.nelements() > 0) {
-    if (!itsPC) {
-      throw(AipsError("No pixel canvas available to update screen pos for"
-		      " ScreenPoly"));
-    }
-    
-    if (pixel.ncolumn() != 2) {
-      throw(AipsError("Bad format for pixel Points Matrix returned "
-		      "from shape"));
-    }
-    
-    itsRelativePoints.resize(pixel.nrow(), pixel.ncolumn());
-    itsRelativePoints = screenToRel(pixel, itsPC);
-  }
-}
 
-void DSScreenPoly::addPoint(const Vector<Float>& newPos) {
-  DSPoly::addPoint(newPos);
-  updateRelative();
-}
-void DSScreenPoly::setPoints(const Matrix<Float>& points) {
-  DSPoly::setPoints(points);
-  updateRelative();
-}
+	void DSScreenPoly::recalculateScreenPosition() {
+		if (itsRelativePoints.nelements() > 0) {
+			if (!itsPC) {
+				throw(AipsError("No pixel canvas available to update screen pos for"
+				                " ScreenPoly"));
+			}
+
+			if (itsRelativePoints.ncolumn() != 2) {
+				throw(AipsError("Bad format for relative Points Matrix"));
+			}
+
+			Matrix<Float> pixel = relToScreen(itsRelativePoints, itsPC);
+			setPoints(pixel);
+		}
+	}
+
+	void DSScreenPoly::move(const Float& dX, const Float& dY) {
+		DSPoly::move(dX, dY);
+		updateRelative();
+	}
+
+	void DSScreenPoly::setCenter(const Float& xPos, const Float& yPos) {
+		DSPoly::setCenter(xPos, yPos);
+		updateRelative();
+	}
+
+	void DSScreenPoly::rotate(const Float& angle) {
+		DSPoly::rotate(angle);
+		updateRelative();
+	}
+
+	void DSScreenPoly::scale(const Float& scaleFactor) {
+		DSPoly::scale(scaleFactor);
+		updateRelative();
+	}
+
+	void DSScreenPoly::changePoint(const Vector<Float>&pos, const Int n) {
+		DSPoly::changePoint(pos, n);
+		updateRelative();
+	}
+
+	void DSScreenPoly::changePoint(const Vector<Float>& pos) {
+		DSPoly::changePoint(pos);
+		updateRelative();
+	}
 
 
-Record DSScreenPoly::getOptions() {
+	void DSScreenPoly::updateRelative() {
+		Matrix<Float> pixel = getPoints();
 
-  Record toReturn;
-  
-  toReturn = DSPoly::getOptions();
+		if (pixel.nelements() > 0) {
+			if (!itsPC) {
+				throw(AipsError("No pixel canvas available to update screen pos for"
+				                " ScreenPoly"));
+			}
 
-  if (toReturn.isDefined("polygonpoints")) {
-    Matrix<Float> pixel = toReturn.asArrayFloat("polygonpoints");
-    Matrix<Float> relative = screenToRel(pixel, itsPC);
-    toReturn.removeField("polygonpoints");
-    toReturn.define("polygonpoints", relative);
+			if (pixel.ncolumn() != 2) {
+				throw(AipsError("Bad format for pixel Points Matrix returned "
+				                "from shape"));
+			}
 
-    matrixFloatToQuant(toReturn, "polygonpoints", "frac");
-  }
+			itsRelativePoints.resize(pixel.nrow(), pixel.ncolumn());
+			itsRelativePoints = screenToRel(pixel, itsPC);
+		}
+	}
 
-  // Shouldn't happen (should never be defined) .. but why not
-  if (toReturn.isDefined("coords")) {
-    toReturn.removeField("coords");
-  }
+	void DSScreenPoly::addPoint(const Vector<Float>& newPos) {
+		DSPoly::addPoint(newPos);
+		updateRelative();
+	}
+	void DSScreenPoly::setPoints(const Matrix<Float>& points) {
+		DSPoly::setPoints(points);
+		updateRelative();
+	}
 
-  toReturn.define("coords", "frac");
 
-  return toReturn;
+	Record DSScreenPoly::getOptions() {
 
-}
+		Record toReturn;
+
+		toReturn = DSPoly::getOptions();
+
+		if (toReturn.isDefined("polygonpoints")) {
+			Matrix<Float> pixel = toReturn.asArrayFloat("polygonpoints");
+			Matrix<Float> relative = screenToRel(pixel, itsPC);
+			toReturn.removeField("polygonpoints");
+			toReturn.define("polygonpoints", relative);
+
+			matrixFloatToQuant(toReturn, "polygonpoints", "frac");
+		}
+
+		// Shouldn't happen (should never be defined) .. but why not
+		if (toReturn.isDefined("coords")) {
+			toReturn.removeField("coords");
+		}
+
+		toReturn.define("coords", "frac");
+
+		return toReturn;
+
+	}
 
 
 

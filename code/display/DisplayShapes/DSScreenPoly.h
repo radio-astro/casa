@@ -23,12 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSSCREENPOLY_H
 #define TRIALDISPLAY_DSSCREENPOLY_H
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <casa/Quanta/Quantum.h>
@@ -44,48 +44,48 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of a relative screen pos. DSPoly
 // </summary>
 
-class PixelCanvas;
-class DSPixelPoly;
-class DSScreenPolyLine;
-class DSWorldPoly;
+	class PixelCanvas;
+	class DSPixelPoly;
+	class DSScreenPolyLine;
+	class DSWorldPoly;
 
-class DSScreenPoly : public DSPoly , public DisplayShapeWithCoords{
-  
-public:
-  DSScreenPoly();
-  DSScreenPoly(const Record& settings, PixelCanvas* pc);
-  DSScreenPoly(DSPixelPoly& other, PixelCanvas* pc);
-  DSScreenPoly(DSWorldPoly& other);
-  DSScreenPoly(DSScreenPolyLine& other, PixelCanvas* pc);
+	class DSScreenPoly : public DSPoly , public DisplayShapeWithCoords {
 
-  virtual ~DSScreenPoly();
-  
-  virtual void recalculateScreenPosition();
+	public:
+		DSScreenPoly();
+		DSScreenPoly(const Record& settings, PixelCanvas* pc);
+		DSScreenPoly(DSPixelPoly& other, PixelCanvas* pc);
+		DSScreenPoly(DSWorldPoly& other);
+		DSScreenPoly(DSScreenPolyLine& other, PixelCanvas* pc);
 
-  virtual void setCenter(const Float& xPos, const Float& yPos);
-  virtual void move(const Float& dX, const Float& dY);
-  virtual void scale(const Float& scaleFactor);
-  virtual void rotate(const Float& angle);
-  
-  virtual void changePoint(const Vector<Float>&pos, const Int n);
-  virtual void changePoint(const Vector<Float>& pos);
-  virtual void addPoint(const Vector<Float>& newPos);
-  virtual void setPoints(const Matrix<Float>& points);
-  
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
-  
-  virtual Record getRawOptions() {
-    return DSPoly::getOptions();
-  }
+		virtual ~DSScreenPoly();
 
-private:
-  PixelCanvas* itsPC;
-  Matrix<Float> itsRelativePoints;
-  
-  void updateRelative();
-  
-};
+		virtual void recalculateScreenPosition();
+
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void scale(const Float& scaleFactor);
+		virtual void rotate(const Float& angle);
+
+		virtual void changePoint(const Vector<Float>&pos, const Int n);
+		virtual void changePoint(const Vector<Float>& pos);
+		virtual void addPoint(const Vector<Float>& newPos);
+		virtual void setPoints(const Matrix<Float>& points);
+
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		virtual Record getRawOptions() {
+			return DSPoly::getOptions();
+		}
+
+	private:
+		PixelCanvas* itsPC;
+		Matrix<Float> itsRelativePoints;
+
+		void updateRelative();
+
+	};
 
 } //# NAMESPACE CASA - END
 

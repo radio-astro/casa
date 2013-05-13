@@ -38,43 +38,43 @@ namespace casa {
 
 		class CleanGui : public QDialog, private Ui::CleanGui {
 			Q_OBJECT
-			public:
-				CleanGui( QWidget *parent = 0 );
-				virtual ~CleanGui( );
+		public:
+			CleanGui( QWidget *parent = 0 );
+			virtual ~CleanGui( );
 
-			private slots:
-				void selection_change( );
-				void check_box_change( QTreeWidgetItem*, int );
+		private slots:
+			void selection_change( );
+			void check_box_change( QTreeWidgetItem*, int );
 
-				void send_state_event( );
-				void play_button_event( );
-				void pause_button_event( );
-				void stop_button_event( );
-				void refresh_button_event( );
+			void send_state_event( );
+			void play_button_event( );
+			void pause_button_event( );
+			void stop_button_event( );
+			void refresh_button_event( );
 
-				void entry_changed_event(const QString&);
+			void entry_changed_event(const QString&);
 
-			private:
-				enum clean_state_t { UNDEFINED, PAUSED, RUNNING, STOPPED };
-				// this class is not intended for copy or assignment...
-				CleanGui( const CleanGui & );
-				CleanGui operator=( const CleanGui & );
+		private:
+			enum clean_state_t { UNDEFINED, PAUSED, RUNNING, STOPPED };
+			// this class is not intended for copy or assignment...
+			CleanGui( const CleanGui & );
+			CleanGui operator=( const CleanGui & );
 
-				// update information for the process currently selected...
-				void refresh( );
-				std::map<std::string,dbus::variant> collect( );
+			// update information for the process currently selected...
+			void refresh( );
+			std::map<std::string,dbus::variant> collect( );
 
-				// indicate (or unindicate) that values have changed,
-				// and a send is required...
-				void set_send_needed( bool );
-				void allow_editing( bool );
+			// indicate (or unindicate) that values have changed,
+			// and a send is required...
+			void set_send_needed( bool );
+			void allow_editing( bool );
 
-				ImagerControl *ic;
-				int current_process_index;
-				clean_state_t current_process_state;
+			ImagerControl *ic;
+			int current_process_index;
+			clean_state_t current_process_state;
 
-				std::map<QObject*,QString> current_clean_state;
-				QString default_send_tooltip;
+			std::map<QObject*,QString> current_clean_state;
+			QString default_send_tooltip;
 		};
 	}
 }

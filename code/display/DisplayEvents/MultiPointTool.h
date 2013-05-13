@@ -65,10 +65,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // to a secondary action of the tool, if indeed a secondary action
 // exists.
 //
-// The rectangle is drawn by dragging the mouse from one corner to 
+// The rectangle is drawn by dragging the mouse from one corner to
 // the diagonally opposite corner.  Once constructed, the rectangle
 // can be resized by dragging its corners, or relocated by dragging
-// inside the rectangle.  The rectangle is removed from the display 
+// inside the rectangle.  The rectangle is removed from the display
 // when the Esc key is pressed.
 // </synopsis>
 //
@@ -76,34 +76,38 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </example>
 //
 // <motivation>
-// Many activities on the WorldCanvas will be based on the user drawing 
+// Many activities on the WorldCanvas will be based on the user drawing
 // a rectangle, and then proceeding to some action with that rectangle.
 // A nice example is zooming.
 // </motivation>
 
-    class MultiPointTool : public MultiRectTool {
-  
+	class MultiPointTool : public MultiRectTool {
+
 	public:
-  
-	    // Constructor
-	    MultiPointTool( viewer::RegionSourceFactory *rsf, PanelDisplay* pd,
-			      Display::KeySym keysym = Display::K_Pointer_Button1, const Bool persistent = False ) :
+
+		// Constructor
+		MultiPointTool( viewer::RegionSourceFactory *rsf, PanelDisplay* pd,
+		                Display::KeySym keysym = Display::K_Pointer_Button1, const Bool persistent = False ) :
 			MultiRectTool( rsf, pd, keysym, persistent ) { }
-  
-	    // Destructor
-	    virtual ~MultiPointTool() { }
 
-	    // returns a set which indicates regions this creator creates...
-	    const std::set<viewer::region::RegionTypes> &regionsCreated( ) const;
+		// Destructor
+		virtual ~MultiPointTool() { }
 
-	    RegionToolTypes type( ) const { return POINTTOOL; }
+		// returns a set which indicates regions this creator creates...
+		const std::set<viewer::region::RegionTypes> &regionsCreated( ) const;
+
+		RegionToolTypes type( ) const {
+			return POINTTOOL;
+		}
 
 	protected:
 
-		bool checkType( viewer::region::RegionTypes t ) { return t == viewer::region::PointRegion; }
-	    virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID *region_specific_state ) const;
+		bool checkType( viewer::region::RegionTypes t ) {
+			return t == viewer::region::PointRegion;
+		}
+		virtual std::tr1::shared_ptr<viewer::Rectangle> allocate_region( WorldCanvas *wc, double x1, double y1, double x2, double y2, VOID *region_specific_state ) const;
 
-    };
+	};
 
 } //# NAMESPACE CASA - END
 

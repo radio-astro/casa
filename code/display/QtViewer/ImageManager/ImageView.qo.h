@@ -33,68 +33,67 @@
 
 namespace casa {
 
-class QtDisplayData;
+	class QtDisplayData;
 
-/**
- * Displays properties of an image for manipulating such as color and
- * display type.
- */
+	/**
+	 * Displays properties of an image for manipulating such as color and
+	 * display type.
+	 */
 
-class ImageView : public QFrame
-{
-    Q_OBJECT
+	class ImageView : public QFrame {
+		Q_OBJECT
 
-public:
-    ImageView(QtDisplayData* data, QWidget *parent = 0);
-    QString getName() const;
-    QtDisplayData* getData() const;
-    QString getDataDisplayTypeName() const;
-    bool isImageSelected() const;
-    void setImageSelected( bool selected );
-    void setImageColorsEnabled( bool enabled );
-    void setDisplayedColor( QColor imageColor );
-    void emitDisplayColorsChanged();
-    QColor getDisplayedColor() const;
-    void makeDrag();
-    ~ImageView();
+	public:
+		ImageView(QtDisplayData* data, QWidget *parent = 0);
+		QString getName() const;
+		QtDisplayData* getData() const;
+		QString getDataDisplayTypeName() const;
+		bool isImageSelected() const;
+		void setImageSelected( bool selected );
+		void setImageColorsEnabled( bool enabled );
+		void setDisplayedColor( QColor imageColor );
+		void emitDisplayColorsChanged();
+		QColor getDisplayedColor() const;
+		void makeDrag();
+		~ImageView();
 
-signals:
-	void imageSelected(ImageView*);
-	void displayTypeChanged( ImageView* dd );
-	void displayColorsChanged( ImageView* dd );
+	signals:
+		void imageSelected(ImageView*);
+		void displayTypeChanged( ImageView* dd );
+		void displayColorsChanged( ImageView* dd );
 
-protected:
-    virtual void mouseMoveEvent( QMouseEvent* event );
+	protected:
+		virtual void mouseMoveEvent( QMouseEvent* event );
 
-private slots:
-	void openCloseDisplay();
-	void showColorDialog();
-	void imageSelectionChanged( bool selected );
-	void displayTypeChanged();
+	private slots:
+		void openCloseDisplay();
+		void showColorDialog();
+		void imageSelectionChanged( bool selected );
+		void displayTypeChanged();
 
-private:
-	ImageView( const ImageView& other );
-	ImageView operator=( const ImageView& other );
-	void setBackgroundColor( QColor color );
-	void minimizeDisplay();
-	void maximizeDisplay();
-	void initDisplayType();
+	private:
+		ImageView( const ImageView& other );
+		ImageView operator=( const ImageView& other );
+		void setBackgroundColor( QColor color );
+		void minimizeDisplay();
+		void maximizeDisplay();
+		void initDisplayType();
 
-	void setButtonColor( QColor color );
-	QColor getButtonColor() const;
+		void setButtonColor( QColor color );
+		QColor getButtonColor() const;
 
-	enum DisplayType { DISPLAY_RASTER, DISPLAY_CONTOUR, DISPLAY_VECTOR, DISPLAY_MARKER };
-	DisplayType getDataDisplayType() const;
+		enum DisplayType { DISPLAY_RASTER, DISPLAY_CONTOUR, DISPLAY_VECTOR, DISPLAY_MARKER };
+		DisplayType getDataDisplayType() const;
 
-    bool selected;
-    bool minimized;
-    QColor selectedColor;
-    QColor normalColor;
+		bool selected;
+		bool minimized;
+		QColor selectedColor;
+		QColor normalColor;
 
-    QtDisplayData* imageData;
-    QButtonGroup* displayGroup;
-    Ui::ImageViewClass ui;
-};
+		QtDisplayData* imageData;
+		QButtonGroup* displayGroup;
+		Ui::ImageViewClass ui;
+	};
 
 }
 

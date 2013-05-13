@@ -30,15 +30,15 @@
 #define TRIALDISPLAY_TBLASXYDM_H
 
 #include <casa/aips.h>
-#include <tables/Tables/Table.h>           
-#include <display/Display/WorldCanvas.h>                  
+#include <tables/Tables/Table.h>
+#include <display/Display/WorldCanvas.h>
 #include <display/DisplayDatas/CachingDisplayMethod.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 //# Forward Declarations
 
-// <summary> 
+// <summary>
 // A DisplayMethod to draw XY plots from table data
 // </summary>
 //
@@ -56,45 +56,45 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// This class adds to the interface defined by DisplayMethod to provide 
-// the necessary infrastructure to draw xy displays of data from a 
+// This class adds to the interface defined by DisplayMethod to provide
+// the necessary infrastructure to draw xy displays of data from a
 // table when requested to do so by the TblAsXYDD class.
 // </synopsis>
 
-class TblAsXYDM : public CachingDisplayMethod {
+	class TblAsXYDM : public CachingDisplayMethod {
 
- public:
+	public:
 
-  // constructor
-  TblAsXYDM(WorldCanvas *worldCanvas, 
-		AttributeBuffer *wchAttributes,
-		AttributeBuffer *ddAttributes,
-		CachingDisplayData *dd);
-  
-  // Destructor.
-  virtual ~TblAsXYDM();
-  
-  // Clean up (ie. delete any existing cached display list).
-  virtual void cleanup();
-  
-  // Draw into a cached drawing list, called by draw function.
-  virtual Bool drawIntoList(Display::RefreshReason reason,
-			    WorldCanvasHolder &wcHolder);
-  
- protected:
-  
-  // (Required) default constructor.
-  TblAsXYDM();
-  
-  // (Required) copy constructor.
-  TblAsXYDM(const TblAsXYDM &other);
-  
-  // (Required) copy assignment.
-  void operator=(const TblAsXYDM &other);
-  
- private:
+		// constructor
+		TblAsXYDM(WorldCanvas *worldCanvas,
+		          AttributeBuffer *wchAttributes,
+		          AttributeBuffer *ddAttributes,
+		          CachingDisplayData *dd);
 
-};
+		// Destructor.
+		virtual ~TblAsXYDM();
+
+		// Clean up (ie. delete any existing cached display list).
+		virtual void cleanup();
+
+		// Draw into a cached drawing list, called by draw function.
+		virtual Bool drawIntoList(Display::RefreshReason reason,
+		                          WorldCanvasHolder &wcHolder);
+
+	protected:
+
+		// (Required) default constructor.
+		TblAsXYDM();
+
+		// (Required) copy constructor.
+		TblAsXYDM(const TblAsXYDM &other);
+
+		// (Required) copy assignment.
+		void operator=(const TblAsXYDM &other);
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

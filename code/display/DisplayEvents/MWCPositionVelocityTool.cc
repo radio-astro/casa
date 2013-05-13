@@ -42,9 +42,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	MWCPositionVelocityTool::~MWCPositionVelocityTool() {
 		reset();
 	}
-  
+
 	void MWCPositionVelocityTool::keyPressed(const WCPositionEvent &ev) {
-		itsX1=itsX2=ev.pixX(); itsY1=itsY2=ev.pixY();
+		itsX1=itsX2=ev.pixX();
+		itsY1=itsY2=ev.pixY();
 		itsCurrentWC = ev.worldCanvas();
 		itsActive = True;
 		itsRaIndex  = -1;
@@ -56,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<String> unitNames=itsCurrentWC->worldAxisUnits();
 
 		// identify RA and DEC axis
-		for (Int index=0; index < (Int)aXisNames.size(); index++){
+		for (Int index=0; index < (Int)aXisNames.size(); index++) {
 			if (aXisNames(index).contains("scension") && (index < 2))
 				itsRaIndex=index;
 			if (aXisNames(index).contains("eclination") && (index < 2))
@@ -64,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		// check for equal units
-		if (unitNames.size()>1){
+		if (unitNames.size()>1) {
 			if (!unitNames(0).compare(unitNames(1)) && unitNames(0).size()>0)
 				itsEqualUnits=True;
 			else
@@ -74,13 +75,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void MWCPositionVelocityTool::moved(const WCMotionEvent &ev, const viewer::region::region_list_type & /*selected_regions*/) {
 		if (!itsActive) return;
-		itsX2 = ev.pixX(); itsY2 = ev.pixY();
+		itsX2 = ev.pixX();
+		itsY2 = ev.pixY();
 		refresh();
 	}
 
 	void MWCPositionVelocityTool::keyReleased(const WCPositionEvent &ev) {
 		if(!itsActive) return;
-		if(itsCurrentWC!=ev.worldCanvas()) { refresh(); return;  }
+		if(itsCurrentWC!=ev.worldCanvas()) {
+			refresh();
+			return;
+		}
 
 		reset();
 	}
@@ -99,13 +104,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		String unit("");
 
 		// get the position of the start- and end-points -- we will be rotating the cube about the mid-point of the line
-		pix1(0) = (Double)itsX1; pix1(1) = (Double)itsY1;
-		pix2(0) = (Double)itsX2; pix2(1) = (Double)itsY2;
+		pix1(0) = (Double)itsX1;
+		pix1(1) = (Double)itsY1;
+		pix2(0) = (Double)itsX2;
+		pix2(1) = (Double)itsY2;
 
 		//std::cout << "draw\t\t" << pix1 << ", " << pix2 << std::endl;
 
 		// determine the positions in world coordinates
-		if ( ! itsCurrentWC->pixToWorld(world1, pix1) || !itsCurrentWC->pixToWorld(world2, pix2)){
+		if ( ! itsCurrentWC->pixToWorld(world1, pix1) || !itsCurrentWC->pixToWorld(world2, pix2)) {
 
 			// if one of the positions could
 			// NOT be determined, just draw a line between
@@ -128,7 +135,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			world3(index) = world2(index);
 
 		// get the corner point in pixel-coordinates
-		if (!itsCurrentWC->worldToPix(pix3, world3)){
+		if (!itsCurrentWC->worldToPix(pix3, world3)) {
 
 			// if one the third positions could
 			// NOT be determined, just draw a line between
@@ -140,7 +147,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return;
 		}
 
-		if (fabs(pix3(0))>10000.0 || fabs(pix3(1))>10000.0){
+		if (fabs(pix3(0))>10000.0 || fabs(pix3(1))>10000.0) {
 			// if one the third positions could
 			// NOT be determined, just draw a line between
 			// the start and end point
@@ -160,7 +167,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		String dText;
 		diff(0) = fabs(world1(0)-world2(0));
 		diff(1) = fabs(world1(1)-world2(1));
-		if (itsRaIndex > -1 && itsDecIndex > -1){
+		if (itsRaIndex > -1 && itsDecIndex > -1) {
 			diff(0) = diff(0)*3600.0*180.0/C::pi;
 			diff(1) = diff(1)*3600.0*180.0/C::pi;
 			diff(itsRaIndex) = diff(itsRaIndex) * cos(world3(itsDecIndex));
@@ -194,7 +201,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dY=Int(20.0*sin(angle1)+0.5);
 		dist1 = (tPosX-dX-itsX2)*(tPosX-dX-itsX2) + (tPosY-dY-itsY2)*(tPosY-dY-itsY2);
 		dist2 = (tPosX+dX-itsX2)*(tPosX+dX-itsX2) + (tPosY+dY-itsY2)*(tPosY+dY-itsY2);
-		if (dist1 < dist2){
+		if (dist1 < dist2) {
 			tPosX += dX;
 			tPosY += dY;
 		} else {
@@ -217,7 +224,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dY=Int(20.0*sin(angle1)+0.5);
 		dist1 = (tPosX-dX-itsX1)*(tPosX-dX-itsX1) + (tPosY-dY-itsY1)*(tPosY-dY-itsY1);
 		dist2 = (tPosX+dX-itsX1)*(tPosX+dX-itsX1) + (tPosY+dY-itsY1)*(tPosY+dY-itsY1);
-		if (dist1 < dist2){
+		if (dist1 < dist2) {
 			tPosX += dX;
 			tPosY += dY;
 		} else {
@@ -249,7 +256,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			dY=Int(20.0*sin(angle1)+0.5);
 			dist1 = (tPosX-dX-itsX3)*(tPosX-dX-itsX3) + (tPosY-dY-itsY3)*(tPosY-dY-itsY3);
 			dist2 = (tPosX+dX-itsX3)*(tPosX+dX-itsX3) + (tPosY+dY-itsY3)*(tPosY+dY-itsY3);
-			if (dist1 < dist2){
+			if (dist1 < dist2) {
 				tPosX += dX;
 				tPosY += dY;
 			} else {

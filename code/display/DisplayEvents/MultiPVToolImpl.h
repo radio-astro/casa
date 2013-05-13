@@ -57,7 +57,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // MultiPVToolImpl stands for MultiWorldCanvas Rectangle Tool Region
 // </etymology>
 
-// <synopsis> 
+// <synopsis>
 // Why this "finalization" is required is beyond me... i.e. why not
 // roll this functionality into the parent class??
 // <drs> Thu Aug 18 20:13:53 UTC 2011
@@ -65,7 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // This class finalises the functionality in MWCRectTool to
 // implement event-based drawing of rectangular regions on a
 // WorldCanvas.  Double clicking inside the constructed rectangle
-// emits the region, whilst pressing Escape cancels the region. 
+// emits the region, whilst pressing Escape cancels the region.
 // </synopsis>
 
 // <example>
@@ -80,36 +80,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> Nothing known
 // </todo>
 
-class MultiPVToolImpl : public MultiPVTool {
+	class MultiPVToolImpl : public MultiPVTool {
 
- public:
+	public:
 
-  // Constructor
-  MultiPVToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym = Display::K_Pointer_Button2);
+		// Constructor
+		MultiPVToolImpl(viewer::RegionSourceFactory *rf, PanelDisplay* pd, Display::KeySym keysym = Display::K_Pointer_Button2);
 
-  // Destructor
-  virtual ~MultiPVToolImpl();
+		// Destructor
+		virtual ~MultiPVToolImpl();
 
-  // handle events, via new-style interface.  Currently just for reset event.
-  virtual void handleEvent(DisplayEvent& ev);
+		// handle events, via new-style interface.  Currently just for reset event.
+		virtual void handleEvent(DisplayEvent& ev);
 
- protected:
+	protected:
 
-  // Handle double-click inside the rectangle.  Invokes regionReady().
-  virtual void doubleInside();
+		// Handle double-click inside the rectangle.  Invokes regionReady().
+		virtual void doubleInside();
 
-  // This function is called when a region is deliberately "finished"
-  // by the user.  It can be implemented to do further actions, such
-  // as report the region to the application
-  virtual void regionReady() { };
+		// This function is called when a region is deliberately "finished"
+		// by the user.  It can be implemented to do further actions, such
+		// as report the region to the application
+		virtual void regionReady() { };
 
-  // get the world coords of the current rectangular region
-  void getWorldCoords(Vector<Double> &blc, Vector<Double> &trc);
-  
-  // get the linear coords of the current rectangular region
-  void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
+		// get the world coords of the current rectangular region
+		void getWorldCoords(Vector<Double> &blc, Vector<Double> &trc);
 
-};
+		// get the linear coords of the current rectangular region
+		void getLinearCoords(Vector<Double> &blc, Vector<Double> &trc);
+
+	};
 
 
 } //# NAMESPACE CASA - END

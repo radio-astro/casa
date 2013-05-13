@@ -30,15 +30,15 @@
 
 namespace casa {
 
-class ConverterFrequency : public Converter {
-public:
-	ConverterFrequency(const QString& oldUnits, const QString& newUnits);
-	static void convertFrequency( Vector<double> &resultValues,
-			QString& frequencySourceUnits, QString& frequencyDestUnits);
-	virtual double toPixel( double value );
-	virtual Vector<double> convert( const Vector<double>& oldValues );
-	virtual ~ConverterFrequency();
-};
+	class ConverterFrequency : public Converter {
+	public:
+		ConverterFrequency(const QString& oldUnits, const QString& newUnits);
+		static void convertFrequency( Vector<double> &resultValues,
+		                              QString& frequencySourceUnits, QString& frequencyDestUnits);
+		virtual double toPixel( double value );
+		virtual Vector<double> convert( const Vector<double>& oldValues );
+		virtual ~ConverterFrequency();
+	};
 
 } /* namespace casa */
 #endif /* CONVERTERFREQUENCY_H_ */

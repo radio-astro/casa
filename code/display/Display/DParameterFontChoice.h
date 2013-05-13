@@ -56,10 +56,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 
 // <synopsis>
-// This class is basically a placeholder for several different 
+// This class is basically a placeholder for several different
 // representations of fonts. Currently avaiable fonts are hard-coded
 // into this class. The class holds three representations - Their 'name',
-// X-windows font description and post script font name. This class can 
+// X-windows font description and post script font name. This class can
 // be used in conjustion with <linkto class=DLFont>DLFont</linkto>
 // to set the font on a number of different pixel canvases.
 // </synopsis>
@@ -72,34 +72,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // <li> Nothing known.
 // </todo>
 
-class DParameterFontChoice : public DParameterChoice {
+	class DParameterFontChoice : public DParameterChoice {
 
- public:
+	public:
 
-  // Constructor takes the name of the parameter, a short 
-  // description and some help text.  The context of the
-  // parameter, and whether it is editable, can also be
-  // given. 
-  DParameterFontChoice(const String name, const String description, 
-		       const String help, const String context = "");
-  
-  // Copy constructor using copy semantics.
-  DParameterFontChoice(const DParameterFontChoice &other);
+		// Constructor takes the name of the parameter, a short
+		// description and some help text.  The context of the
+		// parameter, and whether it is editable, can also be
+		// given.
+		DParameterFontChoice(const String name, const String description,
+		                     const String help, const String context = "");
 
-  // Destructor.
-  virtual ~DParameterFontChoice();
+		// Copy constructor using copy semantics.
+		DParameterFontChoice(const DParameterFontChoice &other);
 
-  // Copy assignment.
-  DParameterFontChoice &operator=(const DParameterFontChoice &other);
+		// Destructor.
+		virtual ~DParameterFontChoice();
 
-protected:
+		// Copy assignment.
+		DParameterFontChoice &operator=(const DParameterFontChoice &other);
 
-  // (Required) default constructor.
-  DParameterFontChoice();
-  
-private:
+	protected:
 
-};
+		// (Required) default constructor.
+		DParameterFontChoice();
+
+	private:
+
+	};
 
 
 } //# NAMESPACE CASA - END

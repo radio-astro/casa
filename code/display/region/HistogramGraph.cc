@@ -31,46 +31,44 @@
 namespace casa {
 
 
-HistogramGraph::HistogramGraph(QWidget *parent )
-    : QWidget(parent)
-{
-	ui.setupUi(this);
-	initPlot();
-	connect( ui.nextButton, SIGNAL(clicked()), this, SLOT(nextGraph()));
-}
+	HistogramGraph::HistogramGraph(QWidget *parent )
+		: QWidget(parent) {
+		ui.setupUi(this);
+		initPlot();
+		connect( ui.nextButton, SIGNAL(clicked()), this, SLOT(nextGraph()));
+	}
 
-void HistogramGraph::setIndex( int stackIndex ){
-	index = stackIndex;
-}
+	void HistogramGraph::setIndex( int stackIndex ) {
+		index = stackIndex;
+	}
 
-void HistogramGraph::nextGraph(){
-	emit showGraph( index+1);
-}
+	void HistogramGraph::nextGraph() {
+		emit showGraph( index+1);
+	}
 
-void HistogramGraph::initPlot(){
-	histogram = new BinPlotWidget( false, false, false, NULL );
-	histogram->setDisplayPlotTitle( true );
-	histogram->setDisplayAxisTitles( true );
+	void HistogramGraph::initPlot() {
+		histogram = new BinPlotWidget( false, false, false, NULL );
+		histogram->setDisplayPlotTitle( true );
+		histogram->setDisplayAxisTitles( true );
 
-	QHBoxLayout* boxLayout = new QHBoxLayout();
-	boxLayout->addWidget( histogram );
-	ui.histogramHolder->setLayout( boxLayout );
-}
+		QHBoxLayout* boxLayout = new QHBoxLayout();
+		boxLayout->addWidget( histogram );
+		ui.histogramHolder->setLayout( boxLayout );
+	}
 
-void HistogramGraph::setNextEnabled( bool enabled ){
-	ui.nextButton->setEnabled( enabled );
-}
+	void HistogramGraph::setNextEnabled( bool enabled ) {
+		ui.nextButton->setEnabled( enabled );
+	}
 
-void HistogramGraph::setImageRegion( ImageRegion* region, int id ){
-	histogram->setImageRegion( region, id );
-}
+	void HistogramGraph::setImageRegion( ImageRegion* region, int id ) {
+		histogram->setImageRegion( region, id );
+	}
 
-void HistogramGraph::setImage( ImageInterface<float>* image ){
-	histogram->setImage( image );
-}
+	void HistogramGraph::setImage( ImageInterface<float>* image ) {
+		histogram->setImage( image );
+	}
 
-HistogramGraph::~HistogramGraph()
-{
+	HistogramGraph::~HistogramGraph() {
 
-}
+	}
 }

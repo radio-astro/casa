@@ -23,13 +23,13 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: 
+//# $Id:
 #ifndef TRIALDISPLAY_DSSCREENMARKER_H
 #define TRIALDISPLAY_DSSCREENMARKER_H
 
 
 #include <casa/aips.h>
-#include <casa/Arrays/Vector.h> 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
 
 #include <display/DisplayShapes/DSMarker.h>
@@ -41,41 +41,41 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // Implementation of relative screen pos. DSMarker
 // </summary>
 
-class PixelCanvas;
-class DSPixelMarker;
-class DSWorldMarker;
+	class PixelCanvas;
+	class DSPixelMarker;
+	class DSWorldMarker;
 
-class DSScreenMarker : public DSMarker, public DisplayShapeWithCoords {
-  
-public:
-  
-  DSScreenMarker();
-  DSScreenMarker(const Record& settings, PixelCanvas* pc);
-  DSScreenMarker(DSPixelMarker& other, PixelCanvas* pc);
-  DSScreenMarker(DSWorldMarker& other);
-  
-  virtual ~DSScreenMarker();
+	class DSScreenMarker : public DSMarker, public DisplayShapeWithCoords {
 
-  virtual void recalculateScreenPosition();
-  virtual Bool setOptions(const Record& settings);
-  virtual Record getOptions();
+	public:
 
-  // These are so we can monitor if the marker is moved and update our
-  // relative position
-  virtual void move(const Float& dX, const Float& dY);
-  virtual void setCenter(const Float& xPos, const Float& yPos);
+		DSScreenMarker();
+		DSScreenMarker(const Record& settings, PixelCanvas* pc);
+		DSScreenMarker(DSPixelMarker& other, PixelCanvas* pc);
+		DSScreenMarker(DSWorldMarker& other);
 
-  virtual Record getRawOptions() {
-    return DSMarker::getOptions();
-  }
-private:
-  
-  PixelCanvas* itsPC;
-  Vector<Float> itsRelativeCenter;
-  
+		virtual ~DSScreenMarker();
 
-  virtual void updateRC();
-};
+		virtual void recalculateScreenPosition();
+		virtual Bool setOptions(const Record& settings);
+		virtual Record getOptions();
+
+		// These are so we can monitor if the marker is moved and update our
+		// relative position
+		virtual void move(const Float& dX, const Float& dY);
+		virtual void setCenter(const Float& xPos, const Float& yPos);
+
+		virtual Record getRawOptions() {
+			return DSMarker::getOptions();
+		}
+	private:
+
+		PixelCanvas* itsPC;
+		Vector<Float> itsRelativeCenter;
+
+
+		virtual void updateRC();
+	};
 
 } //# NAMESPACE CASA - END
 

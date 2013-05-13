@@ -36,44 +36,44 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-DrawingDisplayMethod::DrawingDisplayMethod(WorldCanvas *worldCanvas, 
-					   AttributeBuffer *wchAttributes,
-					   AttributeBuffer *ddAttributes,
-					   CachingDisplayData *dd) :
-  CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
-}
+	DrawingDisplayMethod::DrawingDisplayMethod(WorldCanvas *worldCanvas,
+	        AttributeBuffer *wchAttributes,
+	        AttributeBuffer *ddAttributes,
+	        CachingDisplayData *dd) :
+		CachingDisplayMethod(worldCanvas, wchAttributes, ddAttributes, dd) {
+	}
 
-DrawingDisplayMethod::~DrawingDisplayMethod() {
-  cleanup();
-}
+	DrawingDisplayMethod::~DrawingDisplayMethod() {
+		cleanup();
+	}
 
-Bool DrawingDisplayMethod::drawIntoList(Display::RefreshReason reason,
-					WorldCanvasHolder &wcHolder) {
-  // use friendship to access list of DDDObjects
-  ListIter<void *> *listIter = 
-    ((DrawingDisplayData *)parentDisplayData())->itsDDDOListIter;
-  DDDObject *dddObject;
-  listIter->toStart();
-  while (!listIter->atEnd()) {
-    dddObject = (DDDObject *)listIter->getRight();
-    dddObject->draw(reason, wcHolder.worldCanvas());
-    (*listIter)++;
-  }
-  return True;
-}
+	Bool DrawingDisplayMethod::drawIntoList(Display::RefreshReason reason,
+	                                        WorldCanvasHolder &wcHolder) {
+		// use friendship to access list of DDDObjects
+		ListIter<void *> *listIter =
+		    ((DrawingDisplayData *)parentDisplayData())->itsDDDOListIter;
+		DDDObject *dddObject;
+		listIter->toStart();
+		while (!listIter->atEnd()) {
+			dddObject = (DDDObject *)listIter->getRight();
+			dddObject->draw(reason, wcHolder.worldCanvas());
+			(*listIter)++;
+		}
+		return True;
+	}
 
-void DrawingDisplayMethod::cleanup() {
-}
+	void DrawingDisplayMethod::cleanup() {
+	}
 
-DrawingDisplayMethod::DrawingDisplayMethod() {
-}
+	DrawingDisplayMethod::DrawingDisplayMethod() {
+	}
 
-DrawingDisplayMethod::DrawingDisplayMethod(const DrawingDisplayMethod &other) :
-  CachingDisplayMethod(other) {
-}
+	DrawingDisplayMethod::DrawingDisplayMethod(const DrawingDisplayMethod &other) :
+		CachingDisplayMethod(other) {
+	}
 
-void DrawingDisplayMethod::operator=(const DrawingDisplayMethod &) {
-}
+	void DrawingDisplayMethod::operator=(const DrawingDisplayMethod &) {
+	}
 
 } //# NAMESPACE CASA - END
 

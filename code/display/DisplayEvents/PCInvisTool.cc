@@ -31,44 +31,44 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Constructor.
-PCInvisTool::PCInvisTool(PixelCanvas *pcanvas, Display::KeySym keysym) :
-  PCTool(pcanvas, keysym) {
-}
+	PCInvisTool::PCInvisTool(PixelCanvas *pcanvas, Display::KeySym keysym) :
+		PCTool(pcanvas, keysym) {
+	}
 
 // Destructor.
-PCInvisTool::~PCInvisTool() {
-}
+	PCInvisTool::~PCInvisTool() {
+	}
 
 // Functions called by the local event handling operators.
-void PCInvisTool::keyPressed(const PCPositionEvent &ev) {
-  itsX = ev.x();
-  itsY = ev.y();
-  positionReady();
-}
-void PCInvisTool::moved(const PCMotionEvent &ev) {
-  if (!keyPresentlyDown(ev)) {
-    return;
-  } else {
-    itsX = ev.x();
-    itsY = ev.y();
-    positionReady();
-  }
-}
+	void PCInvisTool::keyPressed(const PCPositionEvent &ev) {
+		itsX = ev.x();
+		itsY = ev.y();
+		positionReady();
+	}
+	void PCInvisTool::moved(const PCMotionEvent &ev) {
+		if (!keyPresentlyDown(ev)) {
+			return;
+		} else {
+			itsX = ev.x();
+			itsY = ev.y();
+			positionReady();
+		}
+	}
 
 // Retrieve the position in PixelCanvas pixel coordinates.
-void PCInvisTool::get(Int &x, Int &y) const {
-  x = itsX;
-  y = itsY;
-}
+	void PCInvisTool::get(Int &x, Int &y) const {
+		x = itsX;
+		y = itsY;
+	}
 
 // Retrieve the position in fractional PixelCanvas coordinates.
-void PCInvisTool::getFractional(Float &x, Float &y) const {
-  Int lx, ly;
-  get(lx, ly);
-  PixelCanvas *pc = pixelCanvas();
-  x = Float(lx) / Float(pc->width() - 1);
-  y = Float(ly) / Float(pc->height() - 1);
-}
+	void PCInvisTool::getFractional(Float &x, Float &y) const {
+		Int lx, ly;
+		get(lx, ly);
+		PixelCanvas *pc = pixelCanvas();
+		x = Float(lx) / Float(pc->width() - 1);
+		y = Float(ly) / Float(pc->height() - 1);
+	}
 
 } //# NAMESPACE CASA - END
 
