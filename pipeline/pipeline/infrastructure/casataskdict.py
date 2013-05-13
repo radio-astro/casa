@@ -27,5 +27,6 @@ CasaTaskDict = {
                    'hsd_importdata'   : 'SDImportData',
                    'hsd_inspectdata'  : 'SDInspectData',
                    'hsd_imaging'      : 'SDImaging',
+                   'hsd_baseline'     : 'SDBaseline',
                    'hsd_reduce'       : 'SDReduction'
                }
