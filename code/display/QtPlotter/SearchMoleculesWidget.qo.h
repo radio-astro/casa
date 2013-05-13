@@ -144,6 +144,9 @@ namespace casa {
 		void convertRangeLineEdit( QLineEdit* lineEdit, Converter* converter );
 		void initializeSearchRange( QLineEdit* lineEdit, Double& value );
 		vector<string> initializeChemicalNames();
+		vector<string> initializeChemicalFormulas();
+		QList<QString> getSearchChemicals();
+		vector<string> convertStringFormats( const QList<QString>& names );
 		void startSearchThread();
 		void setSearchRangeDefault();
 		void setRangeValue( double value, QString units, QLineEdit* lineEdit );

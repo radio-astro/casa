@@ -49,7 +49,6 @@ namespace casa {
 	QString SearchMoleculesWidget::initialReferenceStr = "LSRK";
 
 	void SearchMoleculesWidget::setInitialReferenceFrame( QString frameStr ) {
-
 		initialReferenceStr = frameStr;
 	}
 
@@ -116,6 +115,7 @@ namespace casa {
 		for ( int i = 0; i < velocityUnitsList.size(); i++ ) {
 			ui.dopplerUnitsComboBox->addItem( velocityUnitsList[i] );
 		}
+		dopplerVelocityUnitStr = velocityUnitsList[0];
 		dopplerTypeMap.insert( "Radio", MDoppler::RADIO);
 		dopplerTypeMap.insert( "Optical", MDoppler::OPTICAL);
 		dopplerTypeMap.insert( "Relativistic", MDoppler::RELATIVISTIC );
@@ -134,12 +134,17 @@ namespace casa {
 		dopplerInVelocity = true;
 		this->dopplerShiftChanged();
 
+		//Name versus chemical search
+		QButtonGroup* chemGroup = new QButtonGroup( this );
+		chemGroup->addButton( ui.nameRadioButton );
+		chemGroup->addButton( ui.formulaRadioButton );
 
 		//Signal/Slot
 		connect( ui.searchButton, SIGNAL(clicked()), this, SLOT(search()));
 		connect( ui.velocityRadio, SIGNAL(clicked()), this, SLOT(dopplerShiftChanged()));
 		connect( ui.redshiftRadio, SIGNAL(clicked()), this, SLOT(dopplerShiftChanged()));
 		connect( ui.dopplerUnitsComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(dopplerVelocityUnitsChanged()));
+
 	}
 
 //-------------------------------------------------------------------------------------
@@ -261,6 +266,7 @@ namespace casa {
 			QString dopplerStr = ui.dopplerLineEdit->text();
 			if (dopplerStr.length() > 0 ) {
 				double dopplerVal = dopplerStr.toDouble();
+
 				Converter* converter = Converter::getConverter( dopplerVelocityUnitStr, currentUnits );
 				dopplerVal = converter->convert( dopplerVal );
 				ui.dopplerLineEdit->setText( QString::number( dopplerVal ));
@@ -269,8 +275,6 @@ namespace casa {
 			dopplerVelocityUnitStr = currentUnits;
 		}
 	}
-
-
 
 //------------------------------------------------------------------------------------
 //                 Performing the search and displaying the results
@@ -294,12 +298,31 @@ namespace casa {
 		}
 	}
 
-	vector<string> SearchMoleculesWidget::initializeChemicalNames() {
-		//Get the search parameters
-		QString searchList = ui.searchLineEdit->text();
+	QList<QString> SearchMoleculesWidget::getSearchChemicals(){
+		//Get the names/chemical formulas to search for.
 		QList<QString> moleculeList;
+		QString searchList = ui.searchLineEdit->text();
 		if ( ! searchList.isEmpty() ) {
 			moleculeList = searchList.split(",");
+		}
+		return moleculeList;
+	}
+
+	vector<string> SearchMoleculesWidget::convertStringFormats( const QList<QString>& names ){
+		//The search engine needs casa independent units
+		int masterListCount = names.size();
+		vector<string> chemNames( masterListCount );
+		for ( int i = 0; i < masterListCount; i++ ) {
+			chemNames[i] = names[i].trimmed().toStdString();
+		}
+		return chemNames;
+	}
+
+	vector<string> SearchMoleculesWidget::initializeChemicalNames() {
+		//Get the names of chemicals to search for.
+		QList<QString> moleculeList;
+		if ( ui.chemicalGroupBox->isChecked() && ui.nameRadioButton->isChecked()){
+			moleculeList = getSearchChemicals();
 		}
 
 		//We need to have upper and lower case variations of all of the
@@ -312,12 +335,19 @@ namespace casa {
 		}
 
 		//The search engine needs casa independent units
-		int masterListCount = moleculeMasterList.size();
-		vector<string> chemNames( masterListCount );
-		for ( int i = 0; i < masterListCount; i++ ) {
-			chemNames[i] = moleculeMasterList[i].trimmed().toStdString();
-		}
+		vector<string> chemNames = convertStringFormats( moleculeMasterList );
 		return chemNames;
+	}
+
+	vector<string> SearchMoleculesWidget::initializeChemicalFormulas(){
+		//Get the names of chemical formulas to search for.
+		QList<QString> moleculeList;
+		if ( ui.chemicalGroupBox->isChecked() && ui.formulaRadioButton->isChecked()){
+			moleculeList = getSearchChemicals();
+		}
+
+		vector<string> chemFormulas = convertStringFormats( moleculeList );
+		return chemFormulas;
 	}
 
 	double SearchMoleculesWidget::getRedShiftedValue( bool reverseRedshift, double value ) const {
@@ -419,6 +449,9 @@ namespace casa {
 		//Get the chemical names
 		vector<string> chemNames = initializeChemicalNames();
 		searcher->setChemicalNames( chemNames );
+
+		vector<string> chemFormulas = initializeChemicalFormulas();
+		searcher->setSpeciesNames( chemFormulas );
 
 		//Set the range for the search
 		Double minValue = SPLATALOGUE_DEFAULT_MIN;

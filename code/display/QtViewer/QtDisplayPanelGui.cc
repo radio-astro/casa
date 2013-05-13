@@ -1369,11 +1369,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			movieStep = -1;
 		}
+		//Movie last must be larger than movie start so we can use them for wrap
+		//around and stopping criteria.
+		if ( movieLast < movieStart ){
+			int tmp = movieLast;
+			movieLast = movieStart;
+			movieStart = tmp;
+		}
 
 		//Start a new movie.
 		setAnimationRate();
+
 		movieChannel = boundedChannelStart;
-		movieChannelEnd = boundedChannelEnd;
+		movieChannelEnd = boundedChannelEnd + 1;
 		movieTimer.start();
 	}
 
