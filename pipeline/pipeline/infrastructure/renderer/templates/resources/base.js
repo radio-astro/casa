@@ -9,6 +9,8 @@ function receiveMessage(event) {
 		{
 			type    : 'image',
 			index   : index,
+            prevEffect : 'none',
+            nextEffect : 'none',
 			helpers	: {
 				title	: {
 					type: 'outside'
