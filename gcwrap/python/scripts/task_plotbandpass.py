@@ -1194,7 +1194,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             if (debug): print "time = %s" % (str(mytimestamp))
             msAnt = mymsmd.antennanames(range(mymsmd.nantennas()))
             if (debug): print "msAnt = %s" % (str(msAnt))
-            msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+#            msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+            msFields = mymsmd.namesforfields()
             casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
         except:
             print "1)Could not open the associated measurement set tables (%s). Will not translate antenna names or frequencies." % (msName)
@@ -1212,7 +1213,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 if (debug): print "%.1f sec elapsed" % (donetime-mytimestamp)
                 mytimestamp = timeUtilities.time()
                 msAnt = mymsmd.antennanames(range(mymsmd.nantennas()))
-                msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+#                msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+                msFields = mymsmd.namesforfields()
                 casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
             except:
                 print "1b) Could not open the associated measurement set tables (%s). Will not translate antenna names or channels to frequencies." % (msName)
