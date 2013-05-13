@@ -37,6 +37,9 @@ class CalApplication(object):
         for key in ('gainfield', 'gaintable', 'interp'):
             if type(d[key]) is types.StringType:
                 d[key] = [d[key]]
+        for key in ('calwt',):
+            if type(d[key]) is types.BooleanType:
+                d[key] = [d[key]]
 
         # do the same for spwmap. A bit more complicated, as a single valued
         # spwmap is a list of integers, or may not have any values at all.                
@@ -46,15 +49,16 @@ class CalApplication(object):
         except IndexError, _:
             d['spwmap'] = [d['spwmap']]
 
-        zipped = zip(d['gaintable'], d['gainfield'], d['interp'], d['spwmap'])
+        zipped = zip(d['gaintable'], d['gainfield'], d['interp'], d['spwmap'],
+                     d['calwt'])
 
         calfroms = []
-        for (gaintable, gainfield, interp, spwmap) in zipped:
+        for (gaintable, gainfield, interp, spwmap, calwt) in zipped:
             with utils.open_table(gaintable) as caltable:
                 viscal = caltable.getkeyword('VisCal')
             
             calfrom = CalFrom(gaintable, gainfield=gainfield, interp=interp, 
-                              spwmap=spwmap) 
+                              spwmap=spwmap, calwt=calwt)
             calfrom.caltype = CalFrom.get_caltype_for_viscal(viscal) 
             LOG.trace('Marking caltable \'%s\' as caltype \'%s\''
                       '' % (gaintable, calfrom.caltype))
@@ -72,21 +76,27 @@ class CalApplication(object):
                 'gaintable' : self.gaintable,
                 'gainfield' : self.gainfield,
                 'spwmap'    : self.spwmap,
-                'interp'    : self.interp    }
+                'interp'    : self.interp,
+                'calwt'     : self.calwt}
         
-        for key in ('gaintable', 'gainfield', 'spwmap', 'interp'):
+        for key in ('gaintable', 'gainfield', 'spwmap', 'interp', 'calwt'):
             if type(args[key]) is types.StringType:
                 args[key] = '\'%s\'' % args[key]
         
         return ('applycal(vis=\'{vis}\', field=\'{field}\', '
                 'intent=\'{intent}\', spw=\'{spw}\', antenna=\'{antenna}\', '
                 'gaintable={gaintable}, gainfield={gainfield}, '
-                'spwmap={spwmap}, interp={interp})'
+                'spwmap={spwmap}, interp={interp}, calwt={calwt})'
                 ''.format(**args))
 
     @property
     def antenna(self):
         return self.calto.antenna
+
+    @property
+    def calwt(self):
+        l = [cf.calwt for cf in self.calfrom]
+        return l[0] if len(l) is 1 else l
     
     def exists(self):
         for cf in self.calfrom: 
@@ -243,12 +253,13 @@ class CalFrom(object):
     }
     
     def __init__(self, gaintable, gainfield=None, interp=None, spwmap=None,
-                 caltype=None):
+                 caltype=None, calwt=None):
         self.gaintable = gaintable
         self.gainfield = gainfield
         self.interp = interp
         self.spwmap = spwmap
         self.caltype = caltype
+        self.calwt = calwt
 
     @property
     def caltype(self):
@@ -261,6 +272,16 @@ class CalFrom(object):
         value = string.lower(value)
         assert value in CalFrom.CALTYPES
         self._caltype = value
+
+    @property
+    def calwt(self):
+        return self._calwt
+    
+    @calwt.setter
+    def calwt(self, value):
+        if value is None:
+            value = True
+        self._calwt = value
 
     @property
     def gainfield(self):
@@ -310,7 +331,8 @@ class CalFrom(object):
         return (self.gaintable == other.gaintable and
                 self.gainfield == other.gainfield and
                 self.interp    == other.interp    and
-                self.spwmap    == other.spwmap)
+                self.spwmap    == other.spwmap    and
+                self.calwt     == other.calwt)
     
     def __hash__(self):
         result = 17
@@ -318,12 +340,14 @@ class CalFrom(object):
         result = 37*result + hash(self.gainfield)
         result = 37*result + hash(self.interp)
         result = 37*result + hash(tuple([o for o in self.spwmap]))
+        result = 37*result + hash(self.calwt)
         return result
 
     def __repr__(self):
         return ('CalFrom(\'%s\', gainfield=\'%s\', interp=\'%s\', '
-                'spwmap=\'%s\', caltype=\'%s\')' % (self.gaintable, 
-                self.gainfield, self.interp, self.spwmap, self.caltype))
+                'spwmap=\'%s\', caltype=\'%s\', calwt=%s)' % 
+                (self.gaintable, self.gainfield, self.interp, self.spwmap, 
+                 self.caltype, self.calwt))
 
 
 class CalToIdAdapter(object):
@@ -589,7 +613,7 @@ class CalLibrary(object):
         LOG.info('Exporting applied calibration state to %s' % filename)
         self._export(self._applied, filename)
 
-    def get_calstate(self, calto, hide_null=True):
+    def get_calstate(self, calto, hide_null=True, ignore=[]):
         # wrap the text-only CalTo in a CalToIdAdapter, which will parse the
         # CalTo properties and give us the appropriate subtable IDs to iterate
         # over 
@@ -601,10 +625,18 @@ class CalLibrary(object):
             for field_id in id_resolver.field:
                 for intent in id_resolver.get_field_intents(field_id, spw_id):
                     for antenna_id in id_resolver.antenna:
-                        # perhaps this should be deepcopied. Do we trust all 
-                        # clients using this method?
-                        v = self._active[ms_name][spw_id][field_id][intent][antenna_id][:]
-                        result[ms_name][spw_id][field_id][intent][antenna_id] = v
+                        calfroms_orig = self._active[ms_name][spw_id][field_id][intent][antenna_id][:]
+
+                        # Make the hash function ignore the ignored properties
+                        # by setting their value to the default (and equal) 
+                        # value. As we're modifying the CalFrom state, we must
+                        # do this to a deepcopied object.  
+                        calfroms_copy = copy.deepcopy(calfroms_orig)
+                        for prop in ignore:
+                            for calfrom in calfroms_copy:
+                                setattr(calfrom, prop, None)
+
+                        result[ms_name][spw_id][field_id][intent][antenna_id] = calfroms_copy
 
         return result
 
@@ -619,7 +651,7 @@ class CalLibrary(object):
                 calapps.append(calapp)
                                     
         if not append:
-           self._active = CalState()
+            self._active = CalState()
            
         for calapp in calapps:
             LOG.debug('Adding %s' % calapp)        

@@ -37,7 +37,7 @@ DISABLE_WEBLOG = False
 
 def timestamp(method):
     def timed(self, *args, **kw):
-        start = datetime.datetime.now();        
+        start = datetime.datetime.now();
         result = method(self, *args, **kw)
         end = datetime.datetime.now()
 
@@ -127,24 +127,23 @@ class MandatoryInputsMixin(object):
 
         ms_names = [ms.name 
                     for ms in self.context.observing_run.measurement_sets]
-	if len(ms_names) == 1:
-            return ms_names[0]
-	else:
-	    if not hasattr (self, '_my_vislist'):
-                LOG.trace('Setting Inputs._my_vislist to %s' % ms_names)
-                self._my_vislist = ms_names
-	    return ms_names
+        return ms_names[0] if len(ms_names) == 1 else ms_names
 
     @vis.setter    
     def vis(self, value):
+        vislist = value if type(value) is types.ListType else [value,]
+        
         # check that the context holds each vis specified by the user
-        if type(value) is types.ListType:
-            for vis in value:
-                # get_ms throws a KeyError if the ms is not in the context 
-                self.context.observing_run.get_ms(name=vis)
-	    if not hasattr (self, '_my_vislist'):
-                LOG.trace('Setting Inputs._my_vislist to %s' % value)
-                self._my_vislist = value 
+        for vis in vislist:
+            # get_ms throws a KeyError if the ms is not in the context 
+            self.context.observing_run.get_ms(name=vis)
+
+        if type(value) in (types.ListType, types.NoneType) or not hasattr(self, '_my_vislist'):
+            LOG.trace('Setting Inputs._my_vislist to %s' % vislist)
+            self._my_vislist = vislist
+        else:
+            LOG.trace('Leaving Inputs._my_vislist at current value of %s' 
+                      % self._my_vislist)
 
         self._vis = value
 
@@ -187,7 +186,8 @@ class OnTheFlyCalibrationMixin(object):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('calstate')
         
-        return self.context.callibrary.get_calstate(self.calto)
+        return self.context.callibrary.get_calstate(self.calto, 
+                                                    ignore=['calwt',])
 
     @property
     def gaincurve(self):
@@ -386,6 +386,32 @@ class ModeInputs(api.Inputs):
         for k, v in parameters.items():
             setattr(self, k, v)
 
+    def _handle_multiple_vis(self, property_name):
+        """
+        Return a list of property values, one for each measurement set given
+        in the Inputs.
+                
+        Some Inputs properties are ms-dependent. This utility function is used
+        when multiple measurement sets are specified in the inputs. A list
+        will be returned containing a list of property values, one for each
+        measurement set specified in the inputs.
+        """
+        # _handle_multiple_vis must be present on the ModeInputs to allow 
+        # multi-vis properties on the top-level ModeInputs class. Failure to do
+        # so results in delegation to active._handle_multiple_vis for the
+        # multi-vis property, which then raises an AttributeError as the
+        # named top-level attribute does not exist in the lower-level delegate
+        # class.  
+        original = self.vis
+        try:
+            result = []
+            for vis in original: 
+                self.vis = vis
+                result.append(getattr(self, property_name))
+            return result
+        finally:
+            self.vis = original
+
     def __getattr__(self, name):
         # __getattr__ is only called when this object's __dict__ does not
         # contain the requested property. When this happens, we delegate to
@@ -395,7 +421,7 @@ class ModeInputs(api.Inputs):
         # pickle, which checks for __getnewargs__ and __getstate__.
         if name.startswith('__') and name.endswith('__'):
             return super(ModeInputs, self).__getattr__(name)
-        
+
         LOG.trace('getattr delegating to %s for attribute \'%s\''
                   '' % (self._active.__class__.__name__, name))
         return getattr(self._active, name)
@@ -409,7 +435,7 @@ class ModeInputs(api.Inputs):
                       '\' object'.format(name, val, self.__class__.__name__))
             return super(ModeInputs, self).__setattr__(name, val)
 
-        # check whether we this class has a getter/setter by this name. If so,
+        # check whether this class has a getter/setter by this name. If so,
         # allow the write to __dict__
         for (fn_name, _) in inspect.getmembers(self.__class__, 
                                                inspect.isdatadescriptor):
@@ -859,7 +885,7 @@ class StandardTaskTemplate(api.Task):
         head = self.inputs.vis[0]
         tail = self.inputs.vis[1:]
 
-        to_split = ('to_field', 'to_intent')
+        to_split = ('to_field', 'to_intent', 'calphasetable', 'targetphasetable')
         split_properties = self._get_handled_headtails(to_split)
 
         for name, ht in split_properties.items():
@@ -936,11 +962,12 @@ class Executor(object):
 
         return result
 
+
 def property_with_default(name, default, doc=None):
-    """
+    '''
     Return a property whose value is reset to a default value when setting the
     property value to None.
-    """
+    '''
     # our standard name for the private property backing the public property 
     # is a prefix of one underscore
     varname = '_' + name 
