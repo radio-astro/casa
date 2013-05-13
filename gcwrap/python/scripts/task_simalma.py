@@ -96,8 +96,11 @@ def simalma(
         maptype_bl = 'ALMA'
         maptype_aca = 'ALMA'
         maptype_tp = 'square'
-        pbgridratio_tp = 0.36
-        refdate = '2014/05/21'
+        #pbgridratio_tp = 0.36
+        pbgridratio_tp = 0.25
+        # the scale factor to correct expected Gauss PB size to empirical simPB
+        simpb_factor = 0.92
+        #refdate = '2014/05/21'
         caldirection = ""
         calflux = "0Jy"
         tpantid = 0
@@ -130,9 +133,9 @@ def simalma(
         q = re.compile('.*CYCLE.?1.*')
         isC1 = q.match(antennalist.upper())
         if isC1:
-            msg("Cycle-1 ALMA simulation", origin="simalma", priority="warn")
+            msg("Cycle 1 ALMA simulation", origin="simalma", priority="warn")
         else:
-            msg("Full Science ALMA simulation", origin="simalma", priority="warn")
+            msg("Cycle 2 or Full Science ALMA simulation", origin="simalma", priority="warn")
 
         # antennalist of ACA and TP
         antlist_tp = "aca.tp.cfg"
@@ -143,7 +146,7 @@ def simalma(
             else:
                 acaconfig = "i"
 
-        warnmsg = "You are simulating Cycle1 observation but requested Full Science configuration for ACA. Assuming you know what you want and using config '%s'."
+        warnmsg = "You are simulating Cycle 1 observation but requested Full Science configuration for ACA. Assuming you know what you want and using config '%s'."
         if acaconfig.upper().startswith("I"):
             antlist_aca = "aca.i.cfg"
             if isC1:
@@ -228,11 +231,15 @@ def simalma(
         # Calculate 12-m PB
         Dant = 12.
         pbval = 0.2997924 / qa.convert(qa.quantity(model_center),'GHz')['value'] \
-                / Dant * 3600. * 180 / numpy.pi # arcsec
-        PB12 = qa.quantity(pbval*1.2, "arcsec")
-        PB12ot = qa.quantity(pbval, "arcsec")
+                / Dant * 3600. * 180 / numpy.pi # (wave length)/D_ant in arcsec
+        PB12 = qa.quantity(pbval*1.175, "arcsec")
+        PB12ot = PB12   ###qa.quantity(pbval, "arcsec")
+        PB12sim = qa.mul(PB12, simpb_factor)
         msg("PB size: %s" % (qa.tos(PB12)), origin="simalma", priority='DEBUG2')
+        # Pointing spacing of observations
         pointingspacing = str(nyquist)+"PB"
+        #ptgspacing_tp = str(pbgridratio_tp*PB12ot['value']/PB12['value'])+"PB"
+        ptgspacing_tp = qa.tos(qa.mul(PB12sim, pbgridratio_tp)) #str(pbgridratio_tp*PB12sim['value']/PB12['value'])+"PB"
 
         ############################################################
         # ALMA-BL simulation
@@ -251,7 +258,7 @@ def simalma(
         #    mapsize_bl = mapsize
         mapsize_bl = mapsize
 
-        taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_bl+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+totaltime+"', antennalist='"+antennalist+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+        taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_bl+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', hourangle='"+hourangle+"', totaltime='"+totaltime+"', antennalist='"+antennalist+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
         msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
 
         try:
@@ -265,7 +272,7 @@ def simalma(
                        direction=direction, mapsize=mapsize_bl,
                        maptype=maptype_bl, pointingspacing=pointingspacing,
                        caldirection=caldirection, calflux=calflux, 
-                       obsmode=obsmode_int, refdate=refdate,
+                       obsmode=obsmode_int, #refdate=refdate,
                        hourangle=hourangle, totaltime=totaltime,
                        antennalist=antennalist,
                        sdantlist="", sdant=0,
@@ -304,7 +311,7 @@ def simalma(
             # Same pointings as BL
             #ptgfile_aca = ptgfile_bl
 
-            taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_aca+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+tottime_aca+"', antennalist='"+antlist_aca+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+            taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(setpointings)+", ptgfile='"+ptgfile+"', integration='"+integration+"', direction='"+str(direction)+"', mapsize="+str(mapsize_bl)+", maptype='"+maptype_aca+"', pointingspacing='"+pointingspacing+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_int+"',  hourangle='"+hourangle+"', totaltime='"+tottime_aca+"', antennalist='"+antlist_aca+"', sdantlist='', sdant="+str(0)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
             msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
 
             try:
@@ -319,7 +326,7 @@ def simalma(
                            direction=direction, mapsize=mapsize_bl,
                            maptype=maptype_aca, pointingspacing=pointingspacing,
                            caldirection=caldirection, calflux=calflux, 
-                           obsmode=obsmode_int, refdate=refdate,
+                           obsmode=obsmode_int, #refdate=refdate,
                            hourangle=hourangle, totaltime=tottime_aca,
                            antennalist=antlist_aca,
                            sdantlist="", sdant=0,
@@ -362,23 +369,32 @@ def simalma(
                 del time
                 qx = qa.quantity(max(offsets[0])-min(offsets[0]),"deg")
                 qy = qa.quantity(max(offsets[1])-min(offsets[1]),"deg")
+                # map extent to cover all pointings + 2PB 
                 mapx = qa.add(qa.mul(PB12ot,2.),qx)   # in the unit same as PB
                 mapy = qa.add(qa.mul(PB12ot,2.),qy)   # in the unit same as PB
                 mapsize_tp = [qa.tos(mapx), qa.tos(mapy)]
                 # number of pointings to map vicinity of each pointings
-                npts_multi = npts * int(2./pbgridratio_tp)**2
+                #npts_multi = npts * int(2./pbgridratio_tp)**2
+                qptgspc_tp = qa.quantity(ptgspacing_tp)
+                dirs_multi_tp = myutil.calc_pointings2(qptgspc_tp,
+                                                       qa.tos(qa.mul(PB12ot,2.)),
+                                                       "square", pointings[0])
+                npts_multi = npts * len(dirs_multi_tp)
+
                 msg("Number of pointings to map vicinity of each direction = %d" % npts_multi, origin="simalma", priority="DEBUG2")
+                del qptgspc_tp, dirs_multi_tp
 
             # back-up imsize for TP image generation
             qimgsize_tp = [mapx, mapy]
 
-            grid_tp = qa.mul(PB12ot, pbgridratio_tp)
+            #qgrid_tp = qa.mul(PB12ot, pbgridratio_tp)
+            qptgspc_tp = qa.quantity(ptgspacing_tp)
             pbunit = PB12ot['unit']
             # number of pointings to map pointing region
             npts_rect = int(qa.convert(mapx, pbunit)['value'] \
-                            / qa.convert(grid_tp, pbunit)['value']) \
+                            / qa.convert(qptgspc_tp, pbunit)['value']) \
                         * int(qa.convert(mapy, pbunit)['value'] \
-                              / qa.convert(grid_tp, pbunit)['value'])
+                              / qa.convert(qptgspc_tp, pbunit)['value'])
             msg("Number of pointings to map a rect region = %d" % npts_rect, origin="simalma", priority="DEBUG2")
 
             if rectmode:
@@ -392,12 +408,13 @@ def simalma(
                     dir_tp = []
                     locsize = qa.mul(2, PB12ot)
                     for dir in pointings:
-                        dir_tp += myutil.calc_pointings2(qa.tos(grid_tp),
+                        dir_tp += myutil.calc_pointings2(qa.tos(qptgspc_tp),
                                                          qa.tos(locsize),
                                                          "square", dir)
 
                     mapsize_tp = ["", ""]
-                    npts_tp = npts_multi
+                    #npts_tp = npts_multi
+                    npts_tp = len(dir_tp)
                     msg("Multi-pointing mode: The total power antenna observes +-1PB of each point", origin="simalma", priority='warn')
                 else:
                     # Map a region that covers all directions
@@ -407,7 +424,6 @@ def simalma(
                     msg("- Center of poinings: %s" % center, origin="simalma", priority='warn')
                     msg("- Map size: [%s, %s]" % (mapsize_tp[0], mapsize_tp[1]), origin="simalma", priority='warn')
 
-            ptgspacing_tp = str(pbgridratio_tp*PB12ot['value']/PB12['value'])+"PB"
 
             # Scale integration time of TP (assure >= 1 visit per direction)
             tottime_tp = tottime_aca
@@ -430,7 +446,7 @@ def simalma(
                 ##tottime_tp = qa.tos(qa.convert(qa.quantity(totsec, "s"), iunit))
                 #tottime_tp = qa.tos(qa.quantity(totsec, "s"))
 
-            taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(True)+", ptgfile='$project.ptg.txt', integration='"+integration_tp+"', direction='"+str(dir_tp)+"', mapsize="+str(mapsize_tp)+", maptype='"+maptype_tp+"', pointingspacing='"+ptgspacing_tp+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_sd+"', refdate='"+refdate+"', hourangle='"+hourangle+"', totaltime='"+tottime_tp+"', antennalist='', sdantlist='"+antlist_tp+"', sdant="+str(tpantid)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
+            taskstr = "simobserve(project='"+project+"', skymodel='"+skymodel+"', inbright='"+inbright+"', indirection='"+indirection+"', incell='"+incell+"', incenter='"+incenter+"', inwidth='"+inwidth+"', complist='"+complist+"', compwidth='"+compwidth+"', setpointings="+str(True)+", ptgfile='$project.ptg.txt', integration='"+integration_tp+"', direction='"+str(dir_tp)+"', mapsize="+str(mapsize_tp)+", maptype='"+maptype_tp+"', pointingspacing='"+ptgspacing_tp+"', caldirection='"+caldirection+"', calflux='"+calflux+"',  obsmode='"+obsmode_sd+"', hourangle='"+hourangle+"', totaltime='"+tottime_tp+"', antennalist='', sdantlist='"+antlist_tp+"', sdant="+str(tpantid)+", thermalnoise='"+thermalnoise+"', user_pwv="+str(pwv)+", t_ground="+str(t_ground)+", leakage="+str(leakage)+", graphics='"+graphics+"', verbose="+str(verbose)+", overwrite="+str(overwrite)+")"
             msg("Executing: "+taskstr, origin="simalma", priority=v_priority)
 
             try:
@@ -444,7 +460,7 @@ def simalma(
                            direction=dir_tp, mapsize=mapsize_tp,
                            maptype=maptype_tp, pointingspacing=ptgspacing_tp,
                            caldirection=caldirection, calflux=calflux, 
-                           obsmode=obsmode_sd, refdate=refdate,
+                           obsmode=obsmode_sd, #refdate=refdate,
                            hourangle=hourangle, totaltime=tottime_tp,
                            antennalist="", sdantlist=antlist_tp, sdant=tpantid,
                            thermalnoise=thermalnoise, user_pwv=pwv,
@@ -518,9 +534,9 @@ def simalma(
 
 #                 ### generate TP image using BOX kernel
 #                 msg("- Using pointing spacing of TP simulation as the cell size of TP image: [%s, %s]" %\
-#                     (qa.tos(grid_tp), qa.tos(grid_tp)),\
+#                     (qa.tos(qptgspc_tp), qa.tos(qptgspc_tp)),\
 #                     origin="simalma", priority=v_priority)
-#                 imgcell = [qa.tos(grid_tp), qa.tos(grid_tp)]
+#                 imgcell = [qa.tos(qptgspc_tp), qa.tos(qptgspc_tp)]
 #                 #####################################################
 
                 imsize_tp = calc_imsize(mapsize=qimgsize_tp, cell=imgcell)
@@ -564,9 +580,9 @@ def simalma(
 #                     else:
 #                         qcell = [qa.quantity(cell[0]), qa.quantity(cell[0])]
 #                     #print "defined cell size = "+str(qcell)
-#                     #print "defined grid size = "+str(grid_tp)
-#                     factor = [qcell[0]['value']/qa.convert(grid_tp, qcell[0]['unit'])['value'], \
-#                               qcell[1]['value']/qa.convert(grid_tp, qcell[1]['unit'])['value']]
+#                     #print "defined grid size = "+str(qptgspc_tp)
+#                     factor = [qcell[0]['value']/qa.convert(qptgspc_tp, qcell[0]['unit'])['value'], \
+#                               qcell[1]['value']/qa.convert(qptgspc_tp, qcell[1]['unit'])['value']]
 #                     imsize_bl = [int(numpy.ceil(imsize_bl[0]*factor[0])),\
 #                                  int(numpy.ceil(imsize_bl[1]*factor[1]))]
 #                     msg("---> TP imsize to cover user defined image extent: [%d, %d]" % \
@@ -587,29 +603,60 @@ def simalma(
                 imsize_tp = [max(imsize_tp[0], imsize_bl[0]), \
                              max(imsize_tp[1], imsize_bl[1])]
 
-                msg("The image size of TP: [%d, %d]" % \
+                msg("The image pixel size of TP: [%d, %d]" % \
                     (imsize_tp[0], imsize_tp[1]), \
                     origin="simalma", priority=v_priority)
 
                 # Generate TP image
                 msg("Generating TP image using 'GJinc' kernel.",\
                     origin="simalma", priority=v_priority)
-                gfac = 2.52     # b in Mangum et al. (2007)
-                jfac = 1.55     # c in Mangum et al. (2007)
-                qfwhm = PB12    # FWHM of GJinc kernel.
-                gwidth = qa.tos(qa.mul(gfac/3.,qfwhm))
-                jwidth = qa.tos(qa.mul(jfac/3.,qfwhm))
-                sdimaging(infile=fileroot+"/"+vis_tp,
-                          gridfunction='gjinc', gwidth=gwidth, jwidth=jwidth,
-                          outfile=fileroot+"/"+imagename_tp,
-                          imsize=imsize_tp, cell=cell_tp,
-                          phasecenter=model_refdir,
-                          dochannelmap=True, nchan=model_nchan)
+                gfac = 2.52       # b in Mangum et al. (2007)
+                jfac = 1.55       # c in Mangum et al. (2007)
+                convfac = 1.8     # The conversion factor to get HWHM of kernel roughly equal to qhwhm
+                kernelfac = 0.7   # ratio of (kernel HWHM)/(TP pointingspacing)
+                #qfwhm = PB12      # FWHM of GJinc kernel.
+                #gwidth = qa.tos(qa.mul(gfac/3.,qfwhm))
+                #jwidth = qa.tos(qa.mul(jfac/3.,qfwhm))
+                qhwhm = qa.mul(qptgspc_tp, kernelfac)  # hwhm of GJinc kernel
+                gwidth = qa.tos(qa.mul(qhwhm, convfac))
+                jwidth = qa.tos(qa.mul(jfac/gfac/numpy.log(2.),gwidth))
+                #print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
+                # Parameters for sdimaging
+                task_param = {}
+                task_param['infile'] = fileroot+"/"+vis_tp
+                task_param['gridfunction'] = 'gjinc'
+                task_param['gwidth'] = gwidth
+                task_param['jwidth'] = jwidth
+                task_param['outfile'] = fileroot+"/"+imagename_tp
+                task_param['imsize'] = imsize_tp
+                task_param['cell'] = cell_tp
+                task_param['phasecenter'] = model_refdir
+                task_param['dochannelmap'] = True
+                task_param['nchan'] = model_nchan
+                saveinputs('sdimaging',
+                           fileroot+"/"+project+".sd.sdimaging.last",
+                           myparams=task_param)
+                #sdimaging(infile=fileroot+"/"+vis_tp,
+                #          gridfunction='gjinc', gwidth=gwidth, jwidth=jwidth,
+                #          outfile=fileroot+"/"+imagename_tp,
+                #          imsize=imsize_tp, cell=cell_tp,
+                #          phasecenter=model_refdir,
+                #          dochannelmap=True, nchan=model_nchan)
+                sdimaging(**task_param)
                 # TODO: scale TP image
                 
                 # Set restoring beam
                 # TODO: set proper beam size
-                bmsize = qa.quantity(PB12)
+                #bmsize = qa.quantity(PB12)
+                pbunit = PB12sim['unit']
+                simpb_val = PB12sim['value']
+                # the acutal HWHM is 3.5% smaller
+                kernel_val = qa.convert(qhwhm, pbunit)['value']*0.965 
+                bmsize = qa.quantity(numpy.sqrt(simpb_val**2+4.*kernel_val**2), pbunit)
+                msg("Setting estimated restoring beam to TP image: %s" % qa.tos(bmsize),\
+                    origin="simalma", priority=v_priority)
+                #print "- SimPB = %f%s" % (simpb_val, pbunit)
+                #print "- image kernel = %f%s" % (kernel_val, pbunit)                
                 ia.open(fileroot+"/"+imagename_tp)
                 ia.setrestoringbeam(major=bmsize, minor=bmsize,
                                     pa=qa.quantity("0.0deg"))
