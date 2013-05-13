@@ -4399,12 +4399,13 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
         H = 20
     if (('elevation' in conditions.keys()) == False):
         # Someone cleared the POINTING table, so calculate elevation from Ra/Dec/MJD
-        myfieldId =  mymsmd.fieldsforname(mymsmd.fieldsforscan(bestscan))
+#        myfieldId =  mymsmd.fieldsforname(mymsmd.fieldsforscan(bestscan))
+        myfieldId =  mymsmd.fieldsforscan(bestscan)
         print "myfieldId = %s" % (str(myfieldId))
         myscantime = np.mean(mymsmd.timesforscan(bestscan))
         mydirection = getRADecForField(vis, myfieldId, verbose)
-        print "mydirection = %s" % (str(mydirection))
         if (verbose):
+            print "mydirection = %s" % (str(mydirection))
             print "Scan =  %d, time = %.1f,  Field = %d, direction = %s" % (bestscan, myscantime, myfieldId, str(mydirection))
         telescopeName = mymsmd.observatorynames()[0]
         if (len(telescopeName) < 1):
