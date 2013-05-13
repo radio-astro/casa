@@ -43,8 +43,6 @@ def _get_unified_task_module(packages):
             module.__dict__[k] = v
     return module
 
-#LOG.warn('Don\'t forget to add hsd.tasks to pipeline.__init__.py once the SD '
-#         'tasks are working!')
 tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks])
 
 
