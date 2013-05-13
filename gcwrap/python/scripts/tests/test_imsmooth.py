@@ -1159,6 +1159,29 @@ class imsmooth_test(unittest.TestCase):
                     self.assertTrue(maxdiff < 1e-6) 
         myia.done()
         outia.done()
+
+        myia.open(imagename)
+        myia.setrestoringbeam(
+            major="6arcsec", minor="3arcsec", pa="0deg"
+        )
+        myia.done()
+        for code in [run_convolve2d, run_imsmooth]:
+            outfile = "tres6" + str(code)
+            if code == run_convolve2d:
+                self.assertRaises(
+                    Exception, code, imagename=imagename, kernel="gaussian",
+                    major="5.99arcsec", minor="2.99arcsec", pa="0deg", targetres=True,
+                    outfile=outfile
+                )
+            else:
+                self.assertFalse(
+                    code(
+                        imagename=imagename, kernel="gaussian",
+                        major="5.99arcsec", minor="2.99arcsec", pa="0deg", targetres=True,
+                        outfile=outfile
+                    )
+                )        
+ 
     
     def test_overwrite(self):
         """ test overwrite parameter """
