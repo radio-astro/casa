@@ -120,6 +120,8 @@ class NewGaincal(gaincalworker.GaincalWorker):
 	# Readjust to the true calto.intent
         targetphaseresult.pool[0].calto.intent = 'PHASE,TARGET'
         targetphaseresult.final[0].calto.intent = 'PHASE,TARGET'
+        targetphaseresult.pool[0].calfrom[-1].calwt = False
+        targetphaseresult.final[0].calfrom[-1].calwt = False
 
         # Adopt the target phase result
         result.pool.extend(targetphaseresult.pool)
@@ -131,6 +133,8 @@ class NewGaincal(gaincalworker.GaincalWorker):
 	# Readjust to the true calto.intent
         calphaseresult.pool[0].calto.intent = 'AMPLITUDE,BANDPASS'
         calphaseresult.final[0].calto.intent = 'AMPLITUDE,BANDPASS'
+        calphaseresult.pool[0].calfrom[-1].calwt = False
+        calphaseresult.final[0].calfrom[-1].calwt = False
 
         # Accept calphase result as is.
         result.pool.extend(calphaseresult.pool)
