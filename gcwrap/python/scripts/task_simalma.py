@@ -620,13 +620,29 @@ def simalma(
                 qhwhm = qa.mul(qptgspc_tp, kernelfac)  # hwhm of GJinc kernel
                 gwidth = qa.tos(qa.mul(qhwhm, convfac))
                 jwidth = qa.tos(qa.mul(jfac/gfac/numpy.log(2.),gwidth))
-                print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
-                sdimaging(infile=fileroot+"/"+vis_tp,
-                          gridfunction='gjinc', gwidth=gwidth, jwidth=jwidth,
-                          outfile=fileroot+"/"+imagename_tp,
-                          imsize=imsize_tp, cell=cell_tp,
-                          phasecenter=model_refdir,
-                          dochannelmap=True, nchan=model_nchan)
+                #print("Kernel parameter: [qhwhm, gwidth, jwidth] = [%s, %s, %s]" % (qa.tos(qhwhm), gwidth, jwidth))
+                # Parameters for sdimaging
+                task_param = {}
+                task_param['infile'] = fileroot+"/"+vis_tp
+                task_param['gridfunction'] = 'gjinc'
+                task_param['gwidth'] = gwidth
+                task_param['jwidth'] = jwidth
+                task_param['outfile'] = fileroot+"/"+imagename_tp
+                task_param['imsize'] = imsize_tp
+                task_param['cell'] = cell_tp
+                task_param['phasecenter'] = model_refdir
+                task_param['dochannelmap'] = True
+                task_param['nchan'] = model_nchan
+                saveinputs('sdimaging',
+                           fileroot+"/"+project+".sd.sdimaging.last",
+                           myparams=task_param)
+                #sdimaging(infile=fileroot+"/"+vis_tp,
+                #          gridfunction='gjinc', gwidth=gwidth, jwidth=jwidth,
+                #          outfile=fileroot+"/"+imagename_tp,
+                #          imsize=imsize_tp, cell=cell_tp,
+                #          phasecenter=model_refdir,
+                #          dochannelmap=True, nchan=model_nchan)
+                sdimaging(**task_param)
                 # TODO: scale TP image
                 
                 # Set restoring beam
@@ -639,8 +655,8 @@ def simalma(
                 bmsize = qa.quantity(numpy.sqrt(simpb_val**2+4.*kernel_val**2), pbunit)
                 msg("Setting estimated restoring beam to TP image: %s" % qa.tos(bmsize),\
                     origin="simalma", priority=v_priority)
-                print "- SimPB = %f%s" % (simpb_val, pbunit)
-                print "- image kernel = %f%s" % (kernel_val, pbunit)                
+                #print "- SimPB = %f%s" % (simpb_val, pbunit)
+                #print "- image kernel = %f%s" % (kernel_val, pbunit)                
                 ia.open(fileroot+"/"+imagename_tp)
                 ia.setrestoringbeam(major=bmsize, minor=bmsize,
                                     pa=qa.quantity("0.0deg"))
