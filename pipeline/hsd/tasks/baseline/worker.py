@@ -23,10 +23,6 @@ logging.set_logging_level('trace')
 #logging.set_logging_level('info')
 
 class SDBaselineWorker(object):
-    SRCTYPE = {'ps': 0,
-               'otf': 0,
-               'otfraster': 0}
-
     def __init__(self):
         pass
 
