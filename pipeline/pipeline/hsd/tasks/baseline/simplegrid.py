@@ -57,9 +57,6 @@ class SDSimpleGridResults(common.SingleDishResults):
 
 class SDSimpleGrid(common.SingleDishTaskTemplate):
     Inputs = SDSimpleGridInputs
-    SRCTYPE = {'ps': 0,
-               'otf': 0,
-               'otfraster': 0}
 
     def prepare(self):
         context = self.inputs.context
@@ -85,7 +82,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
             ant = group_desc['member'][0][0]
             st = context.observing_run[ant]
             calmode = st.calibration_strategy['calmode']
-            srctype = self.SRCTYPE[calmode] if self.SRCTYPE.has_key(calmode) else None
+            srctype = common.SrcTypeMap(calmode)
             
             # beam size
             grid_size = qa.convert(st.beam_size[spw], 'deg')['value']
