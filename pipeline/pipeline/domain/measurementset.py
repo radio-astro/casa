@@ -224,8 +224,8 @@ class MeasurementSet(object):
         self.frequency_groups = []
         self.states = []
         self.reference_antenna = None
-	self.reference_spwmap= None
-	self.flagcmds = []
+        self.reference_spwmap= None
+        self.flagcmds = []
         self.session = session
     
     def __repr__(self):
