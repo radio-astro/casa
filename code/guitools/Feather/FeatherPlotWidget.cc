@@ -37,10 +37,10 @@ namespace casa {
 FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent)
     : QWidget(parent), plot( NULL ),
       singleDishWeightColor(Qt::darkYellow), singleDishDataColor(Qt::green), sumDataColor( Qt::cyan ),
-      interferometerWeightColor( Qt::magenta), interferometerDataColor(Qt::blue),
+      interferometerWeightColor( Qt::magenta), interferometerDataColor(Qt::blue), dirtyColor( Qt::gray ),
       singleDishFunction( "Low Resolution Slice"), interferometerFunction( "High Resolution Slice"),
       singleDishWeightFunction("Low Resolution Weight"), interferometerWeightFunction( "High Resolution Weight"),
-      sumFunction( "Sum Slice"),
+      sumFunction( "Sum Slice"), dirtyFunction( "Dirty Slice"),
       permanentScatter( false ),
       plotTitle(title), MARKER_WIDTH(2){
 
@@ -750,6 +750,19 @@ void FeatherPlotWidget::addSumData( bool logScale ){
 	}
 }
 
+void FeatherPlotWidget::setDirtyData( const Vector<Float>& xValues, const Vector<Float>& yValues ){
+	int count = qMin( xValues.size(), yValues.size() );
+	dirtyDataXValues.resize( count );
+	dirtyDataYValues.resize( count );
+	for ( int i = 0; i < count; i++ ){
+		dirtyDataXValues[i] = xValues[i];
+		dirtyDataYValues[i] = yValues[i];
+	}
+	if ( !plot->isScatterPlot() ){
+		plot->addCurve( dirtyDataXValues, dirtyDataYValues, dirtyColor, dirtyFunction, sliceAxis );
+	}
+	plot->replot();
+}
 
 void FeatherPlotWidget::setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues ){
 	int count = qMin( xValues.size(), yValues.size() );

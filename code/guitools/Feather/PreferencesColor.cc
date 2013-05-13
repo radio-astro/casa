@@ -24,6 +24,7 @@
 //#
 #include "PreferencesColor.qo.h"
 #include <guitools/Feather/Preferences.qo.h>
+#include <guitools/Feather/PreferencesFunction.qo.h>
 #include <QColorDialog>
 
 namespace casa {
@@ -38,46 +39,63 @@ PreferencesColor::PreferencesColor(QWidget *parent)
 	setWindowTitle( "Feather Plot Color Preferences");
 
 	//Default colors
-	colorMap.insert( SD_WEIGHT_COLOR, QColor( "#8B4513"));
-	colorMap.insert( SD_SLICE_COLOR, QColor("#DEB887"));
-	colorMap.insert( INT_WEIGHT_COLOR, QColor("#008080"));
-	colorMap.insert( INT_SLICE_COLOR, QColor("#4682B4"));
-	scatterPlotColor = Qt::black;
-	sumColor=Qt::blue;
+
 	zoomRectColor = QColor("#6A5ACD");
 	dishDiameterLineColor = QColor( "#483D8B");
 
+	initializeCurvePreferences();
 	initializeUserColors();
 	resetColors();
 
 	connect( ui.zoomRectangleColorButton, SIGNAL(clicked()), this, SLOT(selectZoomRectColor()));
-	connect( ui.scatterColorButton, SIGNAL(clicked()), this, SLOT(selectScatterPlotColor()));
+	//connect( ui.scatterColorButton, SIGNAL(clicked()), this, SLOT(selectScatterPlotColor()));
 	connect( ui.dishDiameterColorButton, SIGNAL(clicked()), this, SLOT( selectDishDiameterLineColor()));
-	connect( ui.singleDishWeightColorButton, SIGNAL(clicked()), this, SLOT(selectSDWeightColor()));
-	connect( ui.singleDishSliceColorButton, SIGNAL(clicked()), this, SLOT(selectSDSliceColor()));
-	connect( ui.interferometerWeightColorButton, SIGNAL(clicked()), this, SLOT(selectINTWeightColor()));
-	connect( ui.interferometerSliceColorButton, SIGNAL(clicked()), this, SLOT(selectINTSliceColor()));
-	connect( ui.sumButton, SIGNAL(clicked()), this, SLOT(selectSumColor()));
+	//connect( ui.singleDishWeightColorButton, SIGNAL(clicked()), this, SLOT(selectSDWeightColor()));
+	//connect( ui.singleDishSliceColorButton, SIGNAL(clicked()), this, SLOT(selectSDSliceColor()));
+	//connect( ui.interferometerWeightColorButton, SIGNAL(clicked()), this, SLOT(selectINTWeightColor()));
+	//connect( ui.interferometerSliceColorButton, SIGNAL(clicked()), this, SLOT(selectINTSliceColor()));
+	//connect( ui.sumButton, SIGNAL(clicked()), this, SLOT(selectSumColor()));
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(colorsAccepted()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(colorsRejected()));
+}
+
+void PreferencesColor::initializeCurvePreferences(){
+	for ( int i = 0; i < CURVES_END; i++ ){
+		PreferencesFunction* functionPreferences = new PreferencesFunction( i, this );
+		curvePreferences.insert( static_cast<CurveTypes>(i), functionPreferences );
+	}
+
+	//Set up the initial (default) colors
+	curvePreferences[WEIGHT_LOW]->setColor( "#8B4513" );
+	curvePreferences[WEIGHT_HIGH]->setColor("#008080" );
+	curvePreferences[SLICE_LOW]->setColor("#DEB887" );
+	curvePreferences[SLICE_HIGH]->setColor( "#4682B4");
+	curvePreferences[SCATTER_HIGH]->setColor( Qt::black );
+	curvePreferences[SCATTER_DIRTY]->setColor( Qt::gray );
+	curvePreferences[SLICE_SUM]->setColor( Qt::blue );
 }
 
 void PreferencesColor::initializeUserColors(){
 	//Only use the default values passed in if the user has not indicated
 	//any preferences.
 	QSettings settings( Preferences::ORGANIZATION, Preferences::APPLICATION );
-	for ( int i = 0; i < END_COLOR; i++ ){
+	/*for ( int i = 0; i < END_COLOR; i++ ){
 		QString colorName = readCustomColor( settings, i );
 		if ( colorName.length() > 0 ){
 			QColor customColor( colorName );
 			colorMap[static_cast<FunctionColor>(i)] = customColor;
 		}
+	}*/
+	QList<CurveTypes> keys = curvePreferences.keys();
+	for ( QList<CurveTypes>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
+		curvePreferences[*iter]->readCustomColor( settings, FUNCTION_COLOR);
 	}
-	QString scatterColorName = readCustomColor( settings, SCATTER_INDEX );
+
+	/*QString scatterColorName = readCustomColor( settings, SCATTER_INDEX );
 	if ( scatterColorName.length() > 0 ){
 		scatterPlotColor = QColor( scatterColorName );
-	}
+	}*/
 
 	QString dishDiameterColorName = readCustomColor( settings, DISH_DIAMETER_INDEX );
 	if ( dishDiameterColorName.length() > 0 ){
@@ -89,13 +107,18 @@ void PreferencesColor::initializeUserColors(){
 		zoomRectColor = QColor( zoomRectColorName );
 	}
 
-	QString sumColorName = readCustomColor( settings, SUM_INDEX );
+	/*QString sumColorName = readCustomColor( settings, SUM_INDEX );
 	if ( sumColorName.length() > 0 ){
 		sumColor = QColor( sumColorName );
-	}
+	}*/
 }
 
 QMap<PreferencesColor::FunctionColor,QColor> PreferencesColor::getFunctionColors( ) const {
+	QMap<PreferencesColor::FunctionColor, QColor> colorMap;
+	colorMap.insert( SD_WEIGHT_COLOR, curvePreferences[WEIGHT_LOW]->getColor());
+	colorMap.insert( SD_SLICE_COLOR, curvePreferences[SLICE_LOW]->getColor());
+	colorMap.insert( INT_WEIGHT_COLOR, curvePreferences[WEIGHT_HIGH]->getColor());
+	colorMap.insert( INT_SLICE_COLOR, curvePreferences[SLICE_HIGH]->getColor());
 	return colorMap;
 }
 
@@ -115,11 +138,11 @@ QColor PreferencesColor::getSumColor() const {
 	return sumColor;
 }
 
-void PreferencesColor::storeCustomColor( QSettings& settings, FunctionColor index ){
+/*void PreferencesColor::storeCustomColor( QSettings& settings, FunctionColor index ){
 	QString storageKey = FUNCTION_COLOR + QString::number( index );
 	QString colorName = colorMap[index].name();
 	settings.setValue( storageKey, colorName );
-}
+}*/
 
 QString PreferencesColor::readCustomColor( QSettings& settings, int index){
 	QString lookupStr = FUNCTION_COLOR + QString::number(index);
@@ -127,34 +150,35 @@ QString PreferencesColor::readCustomColor( QSettings& settings, int index){
 	return colorName;
 }
 
-void PreferencesColor::storeMapColor( QPushButton* button, FunctionColor colorType ){
+/*void PreferencesColor::storeMapColor( QPushButton* button, FunctionColor colorType ){
 	QColor buttonColor = getButtonColor( button );
 	QString buttonColorName = buttonColor.name();
 	colorMap[colorType] = buttonColorName;
-}
+}*/
 
 void PreferencesColor::persistColors(){
 	//Copy the colors from the buttons into the map.
-	storeMapColor( ui.singleDishWeightColorButton, SD_WEIGHT_COLOR);
-	storeMapColor( ui.singleDishSliceColorButton, SD_SLICE_COLOR);
+	QList<CurveTypes> keys = curvePreferences.keys();
+	for ( QList<CurveTypes>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
+		curvePreferences[*iter]->storeColor();
+	}
 
-	storeMapColor( ui.interferometerWeightColorButton, INT_WEIGHT_COLOR);
-	storeMapColor( ui.interferometerSliceColorButton, INT_SLICE_COLOR);
-
-	scatterPlotColor = getButtonColor( ui.scatterColorButton );
-	sumColor = getButtonColor( ui.sumButton );
 	dishDiameterLineColor = getButtonColor( ui.dishDiameterColorButton );
 	zoomRectColor = getButtonColor( ui.zoomRectangleColorButton );
 
 	//Save the colors in the map
 	QSettings settings( Preferences::ORGANIZATION, Preferences::APPLICATION );
 	settings.clear();
-	for ( int i = 0; i < END_COLOR; i++ ){
+	/*for ( int i = 0; i < END_COLOR; i++ ){
 		storeCustomColor( settings, static_cast<FunctionColor>(i) );
+	}*/
+
+	for ( QList<CurveTypes>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
+		curvePreferences[*iter]->storeCustomColor( settings, FUNCTION_COLOR );
 	}
 
-	QString scatterKey = FUNCTION_COLOR + QString::number( SCATTER_INDEX );
-	settings.setValue( scatterKey, scatterPlotColor.name() );
+	/*QString scatterKey = FUNCTION_COLOR + QString::number( SCATTER_INDEX );
+	settings.setValue( scatterKey, scatterPlotColor.name() );*/
 
 	QString dishDiameterKey = FUNCTION_COLOR + QString::number( DISH_DIAMETER_INDEX );
 	settings.setValue( dishDiameterKey, dishDiameterLineColor.name());
@@ -162,8 +186,8 @@ void PreferencesColor::persistColors(){
 	QString zoomRectKey = FUNCTION_COLOR + QString::number( ZOOM_INDEX );
 	settings.setValue( zoomRectKey, zoomRectColor.name());
 
-	QString sumKey = FUNCTION_COLOR + QString::number( SUM_INDEX );
-	settings.setValue( sumKey, sumColor.name() );
+	/*QString sumKey = FUNCTION_COLOR + QString::number( SUM_INDEX );
+	settings.setValue( sumKey, sumColor.name() );*/
 }
 
 void PreferencesColor::colorsAccepted(){
@@ -178,15 +202,12 @@ void PreferencesColor::colorsRejected(){
 }
 
 void PreferencesColor::resetColors(){
-	setButtonColor( ui.scatterColorButton, Qt::black );
-	setButtonColor( ui.singleDishWeightColorButton, colorMap[SD_WEIGHT_COLOR]);
-	setButtonColor( ui.singleDishSliceColorButton, colorMap[SD_SLICE_COLOR]);
-	setButtonColor( ui.interferometerWeightColorButton, colorMap[INT_WEIGHT_COLOR]);
-	setButtonColor( ui.interferometerSliceColorButton, colorMap[INT_SLICE_COLOR]);
-	setButtonColor( ui.scatterColorButton, scatterPlotColor );
+	QList<CurveTypes> keys = curvePreferences.keys();
+	for ( QList<CurveTypes>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
+		curvePreferences[*iter]->resetColor();
+	}
 	setButtonColor( ui.dishDiameterColorButton, dishDiameterLineColor );
 	setButtonColor( ui.zoomRectangleColorButton, zoomRectColor );
-	setButtonColor( ui.sumButton, sumColor );
 }
 
 void PreferencesColor::setButtonColor( QPushButton* button, QColor color ){
@@ -210,25 +231,25 @@ void PreferencesColor::showColorDialog( QPushButton* source ){
 	}
 }
 
-void PreferencesColor::selectSDWeightColor(){
+/*void PreferencesColor::selectSDWeightColor(){
 	showColorDialog( ui.singleDishWeightColorButton );
-}
+}*/
 
-void PreferencesColor::selectSDSliceColor(){
+/*void PreferencesColor::selectSDSliceColor(){
 	showColorDialog( ui.singleDishSliceColorButton );
-}
+}*/
 
-void PreferencesColor::selectINTWeightColor(){
+/*void PreferencesColor::selectINTWeightColor(){
 	showColorDialog( ui.interferometerWeightColorButton );
-}
+}*/
 
-void PreferencesColor::selectINTSliceColor(){
+/*void PreferencesColor::selectINTSliceColor(){
 	showColorDialog( ui.interferometerSliceColorButton );
-}
+}*/
 
-void PreferencesColor::selectScatterPlotColor(){
+/*void PreferencesColor::selectScatterPlotColor(){
 	showColorDialog( ui.scatterColorButton );
-}
+}*/
 
 void PreferencesColor::selectDishDiameterLineColor(){
 	showColorDialog( ui.dishDiameterColorButton );
@@ -238,9 +259,9 @@ void PreferencesColor::selectZoomRectColor(){
 	showColorDialog( ui.zoomRectangleColorButton );
 }
 
-void PreferencesColor::selectSumColor(){
+/*void PreferencesColor::selectSumColor(){
 	showColorDialog( ui.sumButton );
-}
+}*/
 
 PreferencesColor::~PreferencesColor(){
 }

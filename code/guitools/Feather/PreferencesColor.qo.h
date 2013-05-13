@@ -32,6 +32,8 @@
 
 namespace casa {
 
+class PreferencesFunction;
+
 class PreferencesColor : public QDialog
 {
     Q_OBJECT
@@ -51,21 +53,22 @@ signals:
 	void colorsChanged();
 
 private slots:
-	void selectSDWeightColor();
-	void selectSDSliceColor();
-	void selectINTWeightColor();
-	void selectINTSliceColor();
-	void selectScatterPlotColor();
+	//void selectSDWeightColor();
+	//void selectSDSliceColor();
+	//void selectINTWeightColor();
+	//void selectINTSliceColor();
+	//void selectScatterPlotColor();
 	void selectDishDiameterLineColor();
 	void selectZoomRectColor();
-	void selectSumColor();
+	//void selectSumColor();
 	void colorsAccepted();
 	void colorsRejected();
 
 private:
 	void initializeUserColors();
-	void storeCustomColor( QSettings& settings, FunctionColor index );
-	void storeMapColor( QPushButton* button, FunctionColor colorType );
+	void initializeCurvePreferences();
+	//void storeCustomColor( QSettings& settings, FunctionColor index );
+	//void storeMapColor( QPushButton* button, FunctionColor colorType );
 	QString readCustomColor( QSettings& settings, int index);
     QColor getButtonColor( QPushButton* button ) const;
     void setButtonColor( QPushButton* button, QColor color );
@@ -74,7 +77,7 @@ private:
     void persistColors();
 
     Ui::PreferencesColorClass ui;
-    QMap<FunctionColor,QColor> colorMap;
+    //QMap<FunctionColor,QColor> colorMap;
     QColor scatterPlotColor;
     QColor sumColor;
     QColor dishDiameterLineColor;
@@ -83,6 +86,10 @@ private:
     const int SUM_INDEX;
     const int DISH_DIAMETER_INDEX;
     const int ZOOM_INDEX;
+
+    typedef enum CurveTypes {SLICE_LOW,SLICE_HIGH,SLICE_SUM,SLICE_DIRTY,
+    	WEIGHT_LOW,WEIGHT_HIGH,SCATTER_HIGH,SCATTER_DIRTY, CURVES_END };
+    QMap<CurveTypes,PreferencesFunction*> curvePreferences;
 
     static const QString FUNCTION_COLOR;
 };

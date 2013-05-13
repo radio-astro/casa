@@ -46,6 +46,10 @@ void FeatherThread::run(){
 	featherWorker->getFeatheredCutSD( sDxCut, sDxAmpCut, sDyCut, sDyAmpCut );
 	featherWorker->getFeatheredCutINT( intxCut, intxAmpCut, intyCut, intyAmpCut );
 
+	if ( dirtyImage ){
+		//featherWorker->getFeatheredCutDirty( intxDirty, intxAmpDirty, intyDirty, intyAmpDirty );
+	}
+
 	if ( saveOutput ){
 		fileSaved = featherWorker->saveFeatheredImage( saveFilePath.toStdString() );
 	}
@@ -54,7 +58,7 @@ void FeatherThread::run(){
 FeatherMain::FeatherMain(QWidget *parent)
     : QMainWindow(parent), fileLoader( this ),
       preferences( this ), preferencesColor( this ),
-      lowResImage( NULL ), highResImage( NULL ),
+      lowResImage( NULL ), highResImage( NULL ), dirtyImage( NULL ),
       thread(NULL), plotHolder(NULL), progressMeter(this), logger(LogOrigin("CASA", "Feather")){
 
 	ui.setupUi(this);
@@ -173,6 +177,7 @@ void FeatherMain::preferencesChanged(){
 	plotHolder->setDisplayOutputSlice( preferences.isDisplayOutputFunctions());
 	plotHolder->setDisplayYGraphs( preferences.isDisplayY() );
 	plotHolder->setDisplayXGraphs( preferences.isDisplayX() );
+	plotHolder->setXAxisUV( preferences.isXAxisUV());
 
 	plotHolder->setLogScale( preferences.isLogUV(), preferences.isLogAmplitude() );
 	plotHolder->refreshPlots();
@@ -203,6 +208,7 @@ void FeatherMain::imageFilesChanged(){
 	lowResImagePath = fileLoader.getFilePathLowResolution();
 	highResImagePath = fileLoader.getFilePathHighResolution();
 	outputImagePath = fileLoader.getFilePathOutput();
+	dirtyImagePath = fileLoader.getFileDirty();
 
 	//Only show the file names on the GUI.
 
@@ -268,18 +274,19 @@ void FeatherMain::openPreferencesColor(){
 	preferencesColor.exec();
 }
 
+void FeatherMain::clearImage( ImageInterface<Float>*& image ){
+	delete image;
+	image = NULL;
+}
+
 bool FeatherMain::loadImages(){
 	bool imagesGenerated = true;
-	if ( lowResImage != NULL ){
-		delete lowResImage;
-		lowResImage = NULL;
-	}
-	if ( highResImage != NULL ){
-		delete highResImage;
-		highResImage = NULL;
-	}
+	clearImage( lowResImage );
+	clearImage( highResImage );
+	clearImage( dirtyImage );
+
 	try {
-		imagesGenerated = generateInputImage( lowResImagePath.toStdString(), highResImagePath.toStdString(), lowResImage, highResImage );
+		imagesGenerated = generateInputImage();
 	}
 	catch( AipsError& error ){
 		imagesGenerated = false;
@@ -291,6 +298,13 @@ bool FeatherMain::loadImages(){
 		if ( highResImage != NULL && lowResImage != NULL ){
 			featherWorker.setINTImage( *highResImage );
 			featherWorker.setSDImage( *lowResImage );
+			if ( dirtyImage != NULL ){
+				//featherWorker.setDirtyImage( *dirtyImage );
+			}
+			else {
+				//Clear out any left-over dirty image by putting an empty one in.
+				//????????????????????????  Maybe not necessary
+			}
 		}
 		else {
 			imagesGenerated = false;
@@ -352,6 +366,11 @@ void FeatherMain::featherImages() {
 		connect( thread, SIGNAL( finished() ), this, SLOT(featheringDone()));
 		thread->setFeatherWorker( &featherWorker );
 		//QString outputImagePath = ui.outputLabel->text();
+		bool dirtyImageProvided = false;
+		if ( this->dirtyImagePath.trimmed().length() > 0 ){
+			dirtyImageProvided = true;
+		}
+		thread->setDirtyImageSupported( dirtyImageProvided );
 		thread->setSaveOutput( fileLoader.isOutputSaved(), outputImagePath );
 		thread->start();
 		progressMeter.show();
@@ -372,7 +391,9 @@ void FeatherMain::featheringDone(){
 	plotHolder->setInterferometerWeight( thread->intxWeight, thread->intxAmpWeight, thread->intyWeight, thread->intyAmpWeight );
 	plotHolder->setSingleDishData( thread->sDxCut, thread->sDxAmpCut, thread->sDyCut, thread->sDyAmpCut );
 	plotHolder->setInterferometerData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut );
-
+	if ( dirtyImagePath.trimmed().length() > 0 ){
+		plotHolder->setDirtyData( thread->intxDirty, thread->intxAmpDirty, thread->intyDirty, thread->intyAmpDirty );
+	}
 
 	//In case we are zoomed on the original data, this will reload it, unzoomed.
 	addOriginalDataToPlots();
@@ -423,8 +444,8 @@ pair<float,float> FeatherMain::populateDishDiameters( Bool& validDiameters ) {
 	return diameters;
 }
 
-bool FeatherMain::generateInputImage( const String& lowResImagePath, const String& highResImagePath,
-		ImageInterface<Float>*& lowResImage, ImageInterface<Float>*& highResImage ){
+bool FeatherMain::generateInputImage( ){
+
 	bool success = true;
 	try {
 		logger << LogIO::NORMAL
@@ -432,8 +453,11 @@ bool FeatherMain::generateInputImage( const String& lowResImagePath, const Strin
 				<< LogIO::POST;
 
 		//Get initial images
-		PagedImage<Float> highResImageTemp(highResImagePath);
-		PagedImage<Float> lowResImageTemp(lowResImagePath);
+		String highResLocation(highResImagePath.toStdString());
+		String lowResLocation(lowResImagePath.toStdString());
+
+		PagedImage<Float> highResImageTemp(highResLocation);
+		PagedImage<Float> lowResImageTemp(lowResLocation);
 		if(highResImageTemp.shape().nelements() != lowResImageTemp.shape().nelements()){
 			String msg( "High and low resolution images do not have the same number of axes.");
 			logger << LogIO::SEVERE  << msg << LogIO::EXCEPTION;
@@ -441,9 +465,29 @@ bool FeatherMain::generateInputImage( const String& lowResImagePath, const Strin
 			success = false;
 		}
 		else {
-			lowResImage = new PagedImage<Float>(lowResImagePath);
-			highResImage = new PagedImage<Float>(highResImagePath);
+			lowResImage = new PagedImage<Float>(lowResLocation);
+			highResImage = new PagedImage<Float>(highResLocation);
 		}
+
+		//Decide if we are going to be supporting a dirty image or not.
+		bool dirtyImageSupport = false;
+		if ( dirtyImagePath.length() > 0 ){
+			dirtyImageSupport = true;
+		}
+		if ( dirtyImagePath.length() > 0  ){
+			String dirtyImageLocation( dirtyImagePath.trimmed().length() > 0 );
+			PagedImage<Float> dirtyImageTemp(dirtyImageLocation);
+			if(dirtyImageTemp.shape().nelements() != lowResImageTemp.shape().nelements()){
+				String msg( "Dirty and low resolution images do not have the same number of axes.");
+				logger << LogIO::SEVERE  << msg << LogIO::EXCEPTION;
+				QMessageBox::warning( this, "Warning!", msg.c_str());
+				success = false;
+			}
+			else {
+				dirtyImage = new PagedImage<Float>(lowResLocation);
+			}
+		}
+
 	}
 	catch (AipsError& x) {
 		String msg = x.getMesg();

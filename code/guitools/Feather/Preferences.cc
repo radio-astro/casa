@@ -37,6 +37,7 @@ const QString Preferences::DISPLAY_OUTPUT_FUNCTIONS = "Display Output Functions"
 const QString Preferences::DISPLAY_OUTPUT_SCATTERPLOT = "Display Output Scatter Plot";
 const QString Preferences::DISPLAY_Y_PLOTS = "Display Y Plots";
 const QString Preferences::DISPLAY_X_PLOTS = "Display X Plots";
+const QString Preferences::DISPLAY_X_AXIS_UV = "Display X Axis U/V";
 const QString Preferences::LOG_AMPLITUDE = "Logarithm of Amplitude";
 const QString Preferences::LOG_UV = "Logarithm of u/v Axis";
 
@@ -70,7 +71,8 @@ Preferences::Preferences(QWidget *parent)
 	//xAxis Units
 	ui.xAxisComboBox->addItem( X_AXIS_UV );
 	ui.xAxisComboBox->addItem( X_AXIS_RADIAL );
-
+	connect( ui.xAxisComboBox, SIGNAL(currentIndexChanged(int)),
+			this, SLOT( xAxisChanged()));
 
 	//ui.outputScatterCheckBox->setVisible( false );
 	//ui.markerLabel->setVisible( false );
@@ -91,6 +93,17 @@ void Preferences::initializeCustomSettings(){
 	displayXPlots = settings.value( DISPLAY_X_PLOTS, displayXPlots ).toBool();
 	logAmplitude = settings.value( LOG_AMPLITUDE, logAmplitude ).toBool();
 	logUV = settings.value( LOG_UV, logUV ).toBool();
+	xAxisUV = settings.value( DISPLAY_X_AXIS_UV, xAxisUV ).toBool();
+}
+
+void Preferences::xAxisChanged(){
+	QString xAxisMode = ui.xAxisComboBox->currentText();
+	bool uvXAxis = false;
+	if ( xAxisMode == X_AXIS_UV ){
+		uvXAxis = true;
+	}
+	ui.xPlotCheckBox->setEnabled(uvXAxis);
+	ui.yPlotCheckBox->setEnabled(uvXAxis);
 }
 
 bool Preferences::isLogAmplitude() const {
@@ -124,6 +137,10 @@ bool Preferences::isDisplayY() const {
 	return displayYPlots;
 }
 
+bool Preferences::isXAxisUV() const {
+	return xAxisUV;
+}
+
 int Preferences::getLineThickness() const {
 	return lineThickness;
 }
@@ -154,7 +171,14 @@ void Preferences::reset(){
 	ui.xPlotCheckBox->setChecked( displayXPlots );
 	ui.logAmplitudeCheckBox->setChecked( logAmplitude );
 	ui.logUVCheckBox->setChecked( logUV );
-
+	if ( xAxisUV ){
+		int index = ui.xAxisComboBox->findText( X_AXIS_UV );
+		ui.xAxisComboBox->setCurrentIndex( index );
+	}
+	else {
+		int index = ui.xAxisComboBox->findText( X_AXIS_RADIAL );
+		ui.xAxisComboBox->setCurrentIndex( index );
+	}
 }
 
 void Preferences::persist(){
@@ -189,6 +213,14 @@ void Preferences::persist(){
 
 	logUV = ui.logUVCheckBox->isChecked();
 	settings.setValue( LOG_UV, logUV );
+
+	QString xAxisType = ui.xAxisComboBox->currentText();
+	if ( xAxisType == X_AXIS_UV ){
+		xAxisUV = true;
+	}
+	else {
+		xAxisUV = false;
+	}
 }
 
 Preferences::~Preferences(){

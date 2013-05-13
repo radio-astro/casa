@@ -41,6 +41,7 @@ qt4_wrap_cpp( outfiles_qoh
   Feather/FeatherMain.qo.h
   Feather/FileLoader.qo.h
   Feather/FeatherPlotWidget.qo.h
+  Feather/PreferencesFunction.qo.h
   Feather/Preferences.qo.h
   Feather/PreferencesColor.qo.h
   Histogram/BinPlotWidget.qo.h
@@ -61,6 +62,7 @@ casa_qt4_wrap_ui( outfiles_ui
   Feather/FeatherMain.ui
   Feather/FileLoader.ui
   Feather/FeatherPlotWidget.ui
+  Feather/PreferencesFunction.ui
   Feather/Preferences.ui
   Feather/PreferencesColor.ui
   Histogram/BinPlotWidget.ui
@@ -87,6 +89,7 @@ casa_add_library( guitools
   Feather/FeatherPlotWidget.cc
   Feather/FileLoader.cc
   Feather/Preferences.cc
+  Feather/PreferencesFunction.cc
   Feather/PreferencesColor.cc
   Feather/FeatherPlot.cc
   Feather/FeatherCurve.cc
