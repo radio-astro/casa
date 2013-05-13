@@ -227,7 +227,7 @@ class ImportData(basetask.StandardTaskTemplate):
         # write flux results to a CSV. I'm not sure what these values will be
         # used for now as we can import all flux values into the context with
         # no ill effects.
-        export_flux_from_result(results, inputs.context)
+        export_flux_from_result(setjy_results, inputs.context)
 
         return results
     
@@ -297,7 +297,7 @@ def get_setjy_results(mses):
             
             # import flux values for all fields and intents so that we can 
             # compare them to the fluxscale-derived values later in the run
-#        for field in [f for f in source.fields if 'AMPLITUDE' in f.intents]:
+#            for field in [f for f in source.fields if 'AMPLITUDE' in f.intents]:
             for field in source.fields:
                 result.measurements[field.id].extend(m)
         
@@ -437,31 +437,30 @@ def export_flux_from_context(context, filename=None):
 
         LOG.info('Exported %s flux measurements to %s' % (counter, filename))
 
-def export_flux_from_result(results, context):
+def export_flux_from_result(results, context, filename='flux.csv'):
     '''
     Export flux densities from a set of results to a CSV file.
     '''
     if type(results) is not types.ListType:
         results = [results,]        
-    filename = os.path.join(context.output_dir, 'flux.csv')
+    abspath = os.path.join(context.output_dir, filename)
         
-    with open(filename, 'wt') as f:
+    with open(abspath, 'wt') as f:
         writer = csv.writer(f)
         writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V'))
     
         counter = 0
-        for importdata_result in results:
-            for setjy_result in importdata_result.setjy_results:
-                ms_name = setjy_result.vis
-                ms_basename = os.path.basename(ms_name)
-                for field_id, measurements in setjy_result.measurements.items():
-                    for m in measurements:
-                        (I, Q, U, V) = m.casa_flux_density
-                        writer.writerow((ms_basename, field_id, m.spw.id, 
-                                         I, Q, U, V))
-                        counter += 1
+        for setjy_result in results:
+            ms_name = setjy_result.vis
+            ms_basename = os.path.basename(ms_name)
+            for field_id, measurements in setjy_result.measurements.items():
+                for m in measurements:
+                    (I, Q, U, V) = m.casa_flux_density
+                    writer.writerow((ms_basename, field_id, m.spw.id, 
+                                     I, Q, U, V))
+                    counter += 1
 
-        LOG.info('Exported %s flux measurements to %s' % (counter, filename))
+        LOG.info('Exported %s flux measurements to %s' % (counter, abspath))
 
 
 def import_flux(context, filename=None):
