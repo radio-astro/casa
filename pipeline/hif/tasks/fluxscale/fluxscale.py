@@ -147,12 +147,12 @@ class FluxscaleInputs(basetask.StandardInputs):
     @refspwmap.setter
     def refspwmap(self, value):
         def element_to_int(e):
-	    if type(e) is types.ListType:
-	        return [element_to_int(i) for i in e]
-	    return int(e)
+            if type(e) is types.ListType:
+                return [element_to_int(i) for i in e]
+            return int(e)
 
-	if value not in (None, -1):
-	    value = [element_to_int(n) for n in ast.literal_eval(str(value))]
+        if value not in (None, -1):
+            value = [element_to_int(n) for n in ast.literal_eval(str(value))]
 
         self._refspwmap = value
 
