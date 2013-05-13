@@ -158,12 +158,13 @@ class RestoreDataInputs(basetask.StandardInputs):
 
 
 class RestoreDataResults(basetask.Results):
-    def __init__(self, importdata_results=None):
+    def __init__(self, importdata_results=None, applycal_results=None):
 	"""
 	Initialise the results objects.
 	"""
         super(RestoreDataResults, self).__init__()
 	self.importdata_results = importdata_results
+	self.applycal_results = applycal_results
         self.mses=[]
 
     def merge_with_context(self, context):
@@ -172,6 +173,9 @@ class RestoreDataResults(basetask.Results):
                 result.merge_with_context(context)
         for ms in context.observing_run.measurement_sets:
             self.mses.append(ms)
+        if self.applycal_results:
+            for result in self.applycal_results:
+                result.merge_with_context(context)
 
     def __repr__(self):
         return 'RestoreDataResults:\n\t{0}'.format(
@@ -268,7 +272,7 @@ class RestoreData(basetask.StandardTaskTemplate):
 	apply_results = self._do_applycal()
 
 	# Return the results object, which will be used for the weblog
-	return RestoreDataResults(import_results)
+	return RestoreDataResults(import_results, apply_results)
 
     def analyse(self, results):
 	"""
