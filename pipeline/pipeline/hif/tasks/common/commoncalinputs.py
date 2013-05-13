@@ -80,10 +80,31 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         """
         Get the value of minblperant.
         
-        Unless minblperant has been manually set, the pipeline default value
-        is returned.
         """
-        return self._minblperant
+
+        # if minblperant was overridden, return the manually specified value
+	if self._minblperant is not None:
+            return self._minblperant
+
+        # minblperant is ms-dependent, so if this inputs is handling multiple
+        # measurement sets, return minblperant instead.
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('minblperant')
+
+        # if we cannot find the context value without the measurement set
+	# set value to 4, otherwise use number of antennas to determine value
+        if not self.ms:
+            minlperant = 4
+	else:
+	    nant = len(self.ms.antennas)
+	    if nant < 5:
+	        minblperant = max (2, nant - 1)
+	    else:
+                minblperant = 4
+
+        # otherwise return whatever we found. We assume the calling function
+        # knows how to handle an object of this type.
+        return minblperant
 
     @minblperant.setter
     def minblperant(self, value):
@@ -92,15 +113,6 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         
         Setting the value to None restores the default pipeline value.
         """
-        if value is None:
-	    if not self.ms:
-	        value = 4
-	    else:
-	        nant = len(self.ms.antennas)
-		if nant < 5:
-	            value = max (2, nant - 1)
-		else:
-                    value = 4
         self._minblperant = value
 
     @property
