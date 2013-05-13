@@ -2,6 +2,7 @@ import shutil
 import unittest
 import os
 import filecmp
+import exceptions
 from tasks import *
 from taskinit import *
 from __main__ import default
@@ -251,7 +252,13 @@ class test_unapply(test_base):
     # Action unapply
     def setUp(self):
         self.setUp_ngc5921()
-
+        
+    def test_unsupported_unapply(self):
+        '''flagcmd: raise exception from inpmode=list and unapply'''
+#        try:
+        self.assertFalse(flagcmd(vis=self.vis, action='unapply', inpmode='list',
+                inpfile=["spw='0' reason='MANUAL'"]))
+#
     def test_utfcrop(self):
         '''flagcmd: unapply tfcrop agent'''
         # Remove any cmd from table

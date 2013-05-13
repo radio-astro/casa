@@ -144,7 +144,7 @@ def flagcmd(
                 else:
                     casalog.post('Safety Mode: you chose not to set clearall=True, no action'
                                  )
-                return
+                return True
             
             elif inpmode == 'table':
     
@@ -166,6 +166,10 @@ def flagcmd(
     
                 listmode = 'cmd'
             elif inpmode == 'list':
+                if action == 'unapply':
+                    casalog.post("The unapply action can only be used with inpmode='table'",'WARN')
+                    casalog.post("Save the commands to the FLAG_CMD table before using unapply",'WARN')
+                    raise ValueError, "Unsupported action='unapply' for inpmode='list'"
     
                 # ##### TO DO: take time ranges calculation into account ??????
                 # Parse the input file
@@ -217,6 +221,11 @@ def flagcmd(
             elif inpmode == 'xml':
     
                 casalog.post('Reading from Flag.xml')
+                if action == 'unapply':
+                    casalog.post("The unapply action can only be used with inpmode='table;'",'WARN')
+                    casalog.post("save the commands to the FLAG_CMD table before using unapply.",'WARN')
+                    raise ValueError, "Unsupported action='unapply' for inpmode='xml'"
+
                 # Read from Flag.xml (also needs Antenna.xml)
                 if inpfile == '':
                     flagtable = vis
@@ -423,27 +432,23 @@ def flagcmd(
 
         aflocal.done()
         casalog.post('%s' % instance, 'ERROR')
-        raise
+        return False
+        
+    else:
+        # write history
+        if not iscal:
+            retval = True
+            try:
+                param_names = flagcmd.func_code.co_varnames[:flagcmd.func_code.co_argcount]
+                param_vals = [eval(p) for p in param_names]
+                retval &= write_history(mslocal, vis, 'flagcmd', param_names,
+                                        param_vals, casalog)
+                
+            except Exception, instance:
+                casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                             'WARN')
 
-    # write history
-    if not iscal:
-        try:
-            mslocal.open(vis, nomodify=False)
-            mslocal.writehistory(message='taskname = flagcmd',
-                                 origin='flagcmd')
-            mslocal.writehistory(message='vis      = "' + str(vis) + '"',
-                                 origin='flagcmd')
-            mslocal.writehistory(message='action   = "' + str(action) + '"'
-                                 , origin='flagcmd')
-
-            mslocal.writehistory(message='inpmode  = "' + str(inpmode) + '"'
-                                 , origin='flagcmd')
-
-            mslocal.close()
-        except:
-            casalog.post('Cannot open vis for history, ignoring', 'WARN')
-
-    return 
+    return True
 
 
 # ************************************************************************
