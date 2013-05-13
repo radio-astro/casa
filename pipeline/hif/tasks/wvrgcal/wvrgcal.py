@@ -268,7 +268,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             # add this wvrg table to the callibrary for this spw
             calto = callibrary.CalTo(vis=inputs.vis, spw=spw)
             calfrom = callibrary.CalFrom(caltable, caltype='wvr', spwmap=[],
-              interp='nearest')
+              interp='nearest', calwt=False)
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
             caltables.append(caltable)
