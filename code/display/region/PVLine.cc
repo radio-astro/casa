@@ -58,7 +58,7 @@ namespace casa {
 		PVLine::PVLine( WorldCanvas *wc, QtRegionDock *d, double x1, double y1, double x2, double y2,
 		                bool hold_signals ) :	Region( "p/v line", wc, d,
 			                        new QtPVLineState(QString("p/v line")),hold_signals ),
-			pt1_x(x1), pt1_y(y1), pt2_x(x2), pt2_y(y2),
+			pt1_x(x1), pt1_y(y1), pt2_x(x2), pt2_y(y2), display_width(0),
 			sub_dpg(0), draw_cursor_point(false) {
 			// center_x = linear_average(pt1_x,pt2_x);
 			// center_y = linear_average(pt1_y,pt2_y);
@@ -71,7 +71,7 @@ namespace casa {
 		PVLine::PVLine( QtRegionSourceKernel *rs, WorldCanvas *wc, double x1, double y1, double x2, double y2,
 		                bool hold_signals) : Region( "p/v line", wc, rs->dock( ), new QtPVLineState(QString("p/v line")), hold_signals ),
 			pt1_x(x1), pt1_y(y1),
-			pt2_x(x2), pt2_y(y2), sub_dpg(0), draw_cursor_point(false) {
+			pt2_x(x2), pt2_y(y2), display_width(0), sub_dpg(0), draw_cursor_point(false) {
 			// center_x = linear_average(pt1_x,pt2_x);
 			// center_y = linear_average(pt1_y,pt2_y);
 			initHistogram();
@@ -85,7 +85,7 @@ namespace casa {
 		                QtMouseToolNames::PointRegionSymbols sym ) :
 			Region( name, wc, d, new QtPVLineState(QString("p/v line"), sym ),
 			        hold_signals ), pt1_x(x1),
-			pt1_y(y1), pt2_x(x2), pt2_y(y2), sub_dpg(0), draw_cursor_point(false) {
+			pt1_y(y1), pt2_x(x2), pt2_y(y2), display_width(0), sub_dpg(0), draw_cursor_point(false) {
 			complete = true;
 			refresh_state_gui( );	/*** update position info ***/
 		}
@@ -96,6 +96,8 @@ namespace casa {
 		unsigned int PVLine::check_handle( double x, double y ) const {
 			bool pt1 = x >= (pt1_x - handle_delta_x) && x <= (pt1_x + handle_delta_x) && y >= (pt1_y - handle_delta_y) && y <= (pt1_y + handle_delta_y);
 			bool pt2 = x >= (pt2_x - handle_delta_x) && x <= (pt2_x + handle_delta_x) && y >= (pt2_y - handle_delta_y) && y <= (pt2_y + handle_delta_y);
+			//sometimes moving end-points seems to fail...
+			//fprintf( stderr, "p1(%s) p2(%s)\n", pt1 ? "T" : "F", pt2 ? "T" : "F" );
 			// bool center = x >= (center_x - handle_delta_x) && x <= (center_x + handle_delta_x) && y >= (center_y - handle_delta_y) && y <= (center_y + handle_delta_y);
 			return pt1 ? 1 : pt2 ? 2 : 0;
 		}
@@ -385,6 +387,76 @@ namespace casa {
 			world_pts[1].second = wpt2_y;
 		}
 
+		std::vector<double> PVLine::calculate_offset_points( double slope, double off, double x, double y ) {
+			std::vector<double> result;
+			double pslope = -1.0 * ( 1.0 / slope );
+			double angle = atan(pslope);
+			// === === === === === === === === === === === === === === === 
+			double xoff = cos(angle) * off;
+			result.push_back(x + xoff);				/*** x1 ***/
+			result.push_back(pslope * xoff + y);	/*** y1 ***/
+			// === === === === === === === === === === === === === === === 
+			double xoff2 = cos(angle+M_PI) * off;
+			result.push_back(x + xoff2);			/*** x2 ***/
+			result.push_back(pslope * xoff2 + y);	/*** y2 ***/
+			return result;
+		}
+
+		void PVLine::draw_pv_line( PixelCanvas *pc, bool selected ) {
+			double distance_from_line = ((double)display_width - 1.0) / 2.0;
+
+			int x1, y1, x2, y2;
+			if ( selected == false || distance_from_line <= 1 ) {
+				try {
+					linear_to_screen( wc_, pt1_x, pt1_y, pt2_x, pt2_y, x1, y1, x2, y2 );
+					// linear_to_screen( wc_, center_x, center_y, cx, cy );
+				} catch(...) {
+					return;
+				}
+
+				pushDrawingEnv( region::SolidLine, 2 );
+				pc->drawLine( x1, y1, x2, y2 );
+				popDrawingEnv( );
+			} else {
+				const double small = 0.000001;
+				double rise = (pt2_y-pt1_y);
+				double run = (pt2_x-pt1_x);
+
+				if ( fabs(run) <= small ) {
+
+					// vertical line...
+					try {
+						linear_to_screen( wc_, pt1_x-distance_from_line, pt1_y, pt2_x-distance_from_line, pt2_y, x1, y1, x2, y2 );
+					} catch(...) { return; }
+					pc->drawLine( x1, y1, x2, y2 );
+					try {
+						linear_to_screen( wc_, pt1_x+distance_from_line, pt1_y, pt2_x+distance_from_line, pt2_y, x1, y1, x2, y2 );
+					} catch(...) { return; }
+					pc->drawLine( x1, y1, x2, y2 );
+
+				} else {
+
+					double slope = rise / run;
+
+					std::vector<double> off1 = calculate_offset_points(slope, distance_from_line, pt1_x, pt1_y);
+					std::vector<double> off2 = calculate_offset_points(slope, distance_from_line, pt2_x, pt2_y);
+
+					try {
+						linear_to_screen( wc_, off1[0], off1[1], off2[0], off2[1], x1, y1, x2, y2 );
+					} catch(...) {
+						return;
+					}
+					pc->drawLine( x1, y1, x2, y2 );
+					try {
+						linear_to_screen( wc_, off1[2], off1[3], off2[2], off2[3], x1, y1, x2, y2 );
+					} catch(...) {
+						return;
+					}
+					pc->drawLine( x1, y1, x2, y2 );
+
+				}
+			}
+		}
 
 		void PVLine::drawRegion( bool selected ) {
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;
@@ -392,29 +464,27 @@ namespace casa {
 			PixelCanvas *pc = wc_->pixelCanvas();
 			if(pc==0) return;
 
-			int x1, y1, x2, y2;
-			// int cx, cy;
 
-			try {
-				linear_to_screen( wc_, pt1_x, pt1_y, pt2_x, pt2_y, x1, y1, x2, y2 );
-				// linear_to_screen( wc_, center_x, center_y, cx, cy );
-			} catch(...) {
-				return;
-			}
-
-			pushDrawingEnv( region::SolidLine, 2 );
-			pc->drawLine( x1, y1, x2, y2 );
-			popDrawingEnv( );
+			draw_pv_line( pc, weaklySelected( ) || marked( ) );
 
 			if ( (selected || draw_cursor_point) && memory::nullptr.check( creating_region ) ) {
 
 				int s = 4;
+				int x1, y1, x2, y2;
+
+				try {
+					linear_to_screen( wc_, pt1_x, pt1_y, pt2_x, pt2_y, x1, y1, x2, y2 );
+					// linear_to_screen( wc_, center_x, center_y, cx, cy );
+				} catch(...) {
+					return;
+				}
 
 				double xdx, ydy;
 				screen_to_linear( wc_, x1 + s, y1 + s, xdx, ydy );
 				handle_delta_x = xdx - pt1_x;
 				handle_delta_y = ydy - pt2_y;
 
+				
 				if (s) {
 					pushDrawingEnv( region::SolidLine);
 					if ( weaklySelected( ) ) {
@@ -825,6 +895,13 @@ namespace casa {
 			}
 			QApplication::restoreOverrideCursor();
 			return result;
+		}
+
+		void PVLine::changePVInfo( int width ) {
+			if ( width != display_width ) {
+				display_width = width;
+				refresh( );
+			}
 		}
 
 		void PVLine::createPVImage( const std::string &name,const std::string &desc, int width ) {

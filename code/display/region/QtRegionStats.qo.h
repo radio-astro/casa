@@ -91,8 +91,13 @@ namespace casa {
 					return next_button;
 				}
 				bool updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> );
+			protected:
+				void enterEvent (QEvent *);
+				void showEvent ( QShowEvent * );
+
 			signals:
 				void createPVImage(const std::string&,const std::string&,int);
+				void setPVInfo(int width);
 
 			private slots:
 				void create_pv_image( );
