@@ -90,7 +90,13 @@
 
 
 <example>
- 
+The hsd_imaging task generates single dish images per antenna.
+Image configuration (grid size, number of pixels, etc.) is automatically
+determined based on meta data such as antenna diameter, map extent, etc.
+
+Note that this task doesn't use imager tool or any single dish imaging
+tasks inside, but uses image analysis tool to generate images. 
+  
 Keyword arguments:
 
 ---- pipeline parameter arguments which can be set in any pipeline mode
