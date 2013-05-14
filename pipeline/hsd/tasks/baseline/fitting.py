@@ -14,7 +14,8 @@ import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.logging as logging
-import pipeline.hsd.heuristics as heuristics
+#import pipeline.hsd.heuristics as heuristics
+from pipeline.hsd.heuristics import fitorder, fragmentation
 from .. import common
 from . import rules
 from . import utils
@@ -32,18 +33,18 @@ class FittingBase(object):
     PolynomialOrder = 'automatic' # 'automatic', 0, 1, 2, ...
     ClipCycle = 1
     
-    def execute(self, datatable, filename, filename_out, bltable_name, time_table, index_list, nchan, edge, fitorder='automatic'):
+    def execute(self, datatable, filename, filename_out, bltable_name, time_table, index_list, nchan, edge, fit_order='automatic'):
         """
         """
 
         # fitting order
-        if fitorder == 'automatic':
+        if fit_order == 'automatic':
             # fit order heuristics
             LOG.info('Baseline-Fitting order was automatically determined')
-            poly_order = heuristics.FitOrderHeuristics()
+            h_polyorder = fitorder.FitOrderHeuristics()
         else:
-            LOG.info('Baseline-Fitting order was fixed to be %d'%(fitorder))
-            poly_order = lambda *args, **kwargs: fitorder
+            LOG.info('Baseline-Fitting order was fixed to be %d'%(fit_order))
+            h_polyorder = lambda *args, **kwargs: fitorder
 
         if self.ApplicableDuration == 'subscan':
             member_list = time_table[1]
@@ -80,14 +81,14 @@ class FittingBase(object):
                         for idx in idxs]
 
             # fit order determination
-            polyorder = poly_order(spectra, masklist, _edge)
-            if fitorder == 'automatic' and self.MaxPolynomialOrder != 'none':
+            polyorder = h_polyorder(spectra, masklist, _edge)
+            if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
                 polyorder = min(polyorder, self.MaxPolynomialOrder)
             LOG.info('group %d: order=%s'%(y,polyorder))
 
             # calculate fragmentation
-            fragmentation = heuristics.FragmentationHeuristics()
-            (fragment, nwindow, win_polyorder) = fragmentation(polyorder, nchan, edge)
+            h_fragmentation = fragmentation.FragmentationHeuristics()
+            (fragment, nwindow, win_polyorder) = h_fragmentation(polyorder, nchan, edge)
 
             nrow = len(rows)
             LOG.info('nrow = %s'%(nrow))
