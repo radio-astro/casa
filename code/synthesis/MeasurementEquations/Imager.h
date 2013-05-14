@@ -807,7 +807,7 @@ protected:
                        Vector<Vector<Flux<Double> > >& returnFluxes,
                        Vector<Vector<Flux<Double> > >& returnFluxErrs,
                        Vector<String>& tempCLs, Vector<Double>& fluxUsed,
-                       String& fluxScaleName,
+                       String& fluxScaleName, MEpoch& aveEpoch,
                        const Vector<Vector<MFrequency> >& mfreqs,
                        const String& model, const String& fieldName, 
                        const ROMSColumns& msc, const Int fldid,
@@ -824,7 +824,8 @@ protected:
                                   const MDirection& fieldDir, const Unit& freqUnit,
                                   const Vector<Double>& fluxdens,
                                   const Bool precompute, const Double spix,
-                                  const MFrequency& reffreq);
+                                  const MFrequency& reffreq, 
+				  const MEpoch& aveEpoch);
   // Returns True or throws up.
   Bool sjy_regridCubeChans(TempImage<Float>* tmodimage,
                            PagedImage<Float>& modimage, Int freqAxis);
