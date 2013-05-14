@@ -62,6 +62,7 @@
 #include <guitools/Histogram/HistogramMain.qo.h>
 #include <display/Clean/CleanGui.qo.h>
 #include <display/DisplayErrors.h>
+#include <display/DisplayDatas/PrincipalAxesDD.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -133,6 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				qpc->drawLine( scr_x - x_off, scr_y - x_off, scr_x + x_off, scr_y + x_off );
 				qpc->drawLine( scr_x - x_off, scr_y + x_off, scr_x + x_off, scr_y - x_off );
 				qpc->setQtPenColor(saved_color);
+				dpg_->updateCursorInfo( wc, pvpos(xindex), pvpos(yindex) );
 			}
 		}
 	}
@@ -1520,6 +1522,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDisplayPanelGui::activate( bool state ) {
 		qdp_->activate(state);
+	}
+
+	void QtDisplayPanelGui::updateCursorInfo( WorldCanvas *wc, Quantity x, Quantity y ) {
+		Vector<String> units = wc->worldAxisUnits( );
+		if ( x.isConform(units(0)) == false || y.isConform(units(1)) == false )
+			return;
+
+		Vector<Double> wpt(2);
+		wpt(0) = x.getValue(units(0));
+		wpt(1) = y.getValue(units(1));
+		int count = 0;
+		stringstream ss;
+		for ( DisplayDataHolder::DisplayDataIterator iter = beginDD( ); iter != endDD( ); ++iter ) {
+			PrincipalAxesDD *dd = dynamic_cast<PrincipalAxesDD*>((*iter)->dd( ));
+			if ( dd ) {
+				ss.str("");
+				ss.clear( );
+				ss << dd->showValue(wpt);
+				// if the first string is shorter than a typical value, add spaces...
+				if(ss.tellp() < 23) while(ss.tellp() < 23) ss << ' ';
+				// ...otherwise add a tab
+				else ss << '\t';
+				// add position information...
+				ss << dd->showPosition( wpt );
+				TrackBox *track = trkBox_(*iter);
+				if ( track ) track->setText(ss.str( ));
+			}
+		}
 	}
 
 	QtDisplayData* QtDisplayPanelGui::dd(const std::string& name) {

@@ -267,6 +267,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// called to indicate application activation state... true -> activated, false -> deactivated
 		void activate( bool );
 
+		// display cursor information for the specified point (in world coordinates)
+		void updateCursorInfo( WorldCanvas *wc, Quantity x, Quantity y );
+
 	public slots:
 
 		// At least for now, colorbars can only be placed horizontally or vertically,
