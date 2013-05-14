@@ -861,7 +861,6 @@ std::set<String> MSMetaDataOnDemand::getFieldNamesForSpw(const uInt spw) {
 	return fieldNames;
 }
 
-
 void MSMetaDataOnDemand::_getScansAndSpwMaps(
 	std::map<Int, std::set<uInt> >& scanToSpwMap,
 	vector<std::set<Int> >& spwToScanMap
@@ -1510,19 +1509,28 @@ Bool MSMetaDataOnDemand::_hasIntent(const String& intent) {
 	return uniqueIntents.find(intent) != uniqueIntents.end();
 }
 
-
 vector<String> MSMetaDataOnDemand::getFieldNamesForFieldIDs(
-	const vector<Int>& fieldIDs
+	const vector<uInt>& fieldIDs
 ) {
 	if (fieldIDs.size() == 0) {
 		return _getFieldNames();
 	}
-	_checkFieldIDs(fieldIDs);
+	// Do not use _checkFieldIDs since fieldIDs that may not be in the
+	// main table can be valid. CAS-5168
+	uInt max = *max_element(fieldIDs.begin(), fieldIDs.end());
+	uInt nField = nFields();
+	if (max >= nField) {
+		ostringstream os;
+		os << "MSMetaDataOnDemand::" << __FUNCTION__ << ": This MS only has "
+			<< nField << " fields so requested field number " << max
+			<< " does not exist";
+		throw AipsError(os.str());
+	}
 	vector<String> allNames = _getFieldNames();
 	vector<String> names;
-	vector<Int>::const_iterator end = fieldIDs.end();
+	vector<uInt>::const_iterator end = fieldIDs.end();
 	for (
-		vector<Int>::const_iterator iter=fieldIDs.begin();
+		vector<uInt>::const_iterator iter=fieldIDs.begin();
 		iter!=end; iter++
 	) {
 		names.push_back(allNames[*iter]);
@@ -1835,7 +1843,6 @@ vector<std::set<String> > MSMetaDataOnDemand::_getSpwToIntentsMap() {
 		_spwToIntentsMap = spwToIntentsMap;
 		return spwToIntentsMap;
 	}
-	//std::map<uInt, std::set<uInt> > checkedMap;
 	std::tr1::shared_ptr<Vector<Int> > dataDescIDs = _getDataDescIDs();
 	Vector<Int>::const_iterator curDDID = dataDescIDs->begin();
 	Vector<Int>::const_iterator endDDID = dataDescIDs->end();
@@ -2006,6 +2013,7 @@ void MSMetaDataOnDemand::_checkScan(const Int scan, const std::set<Int> uniqueSc
 
 void MSMetaDataOnDemand::_checkFieldID(const Int fieldID) {
 	std::set<Int> uniqueFields = _getUniqueFiedIDs();
+    cout << "uniqueFields " << uniqueFields << endl;
 	if (uniqueFields.find(fieldID) == uniqueFields.end() ) {
 		throw AipsError(
 			_ORIGIN + "field ID ("
@@ -2031,7 +2039,6 @@ std::set<Int> MSMetaDataOnDemand::_getUniqueFiedIDs() {
 	}
 	return _uniqueFieldIDs;
 }
-
 
 void MSMetaDataOnDemand::_checkStateID(const Int stateID) {
 	if (_uniqueStateIDs.empty()) {
