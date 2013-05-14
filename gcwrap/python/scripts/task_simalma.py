@@ -507,7 +507,7 @@ def simalma(
                    # user-defined cell size
                    msg("- The user defined cell size: %s" % cell, \
                        origin="simalma", priority=v_priority)                   
-                   cell_tp = (qa.tos(cell[0]), qa.tos(cell[1]))
+                   cell_tp = (qa.tos(cell), qa.tos(cell))
                 else:
                    if model_cell == None:
                        # components only simulation
@@ -626,7 +626,7 @@ def simalma(
                 task_param['gwidth'] = gwidth
                 task_param['jwidth'] = jwidth
                 task_param['outfile'] = fileroot+"/"+imagename_tp
-                task_param['imsize'] = imsize_tp                
+                task_param['imsize'] = imsize_tp
                 # sdimaging doesn't actually take a quantity,
                 cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
                 task_param['cell'] = cell_arcmin
