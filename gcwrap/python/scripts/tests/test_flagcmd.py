@@ -625,12 +625,13 @@ class test_actions(test_base):
         self.setUp_data4rflag()
         
     def tearDown(self):
-        if os.path.exists('fourplot.png'):
-            os.remove('fourplot.png')
+        pass
+#         if os.path.exists('fourplot.png'):
+#             os.remove('fourplot.png')
         
-    def test_action_plot(self):
-        '''flagcmd: Test action=plot'''
-        outplot = 'fourplot.png'
+    def test_action_plot_table(self):
+        '''flagcmd: Test action=plot, nothing plotted'''
+        outplot = 'noplot.png'
         flagcmd(vis=self.vis, inpmode='list', 
             inpfile=["intent='CAL*POINT*' field=''","scan='5'"], 
             action='list', savepars=True)
@@ -640,6 +641,18 @@ class test_actions(test_base):
         
         self.assertTrue(os.path.exists(outplot),'Plot file was not created')
 
+    # CAS-5180
+    def test_action_plot_list(self):
+        '''flagcmd: Test action=plot to plot 4 antennas and no timerange'''
+        outplot = 'fourplot.png'
+        cmds = ["antenna='ea01' reason='none'",
+                "antenna='ea11' reason='no_reason'",
+                "antenna='ea19' reason='none'",
+                "antenna='ea24' reason='other'"]
+        
+        flagcmd(vis=self.vis, inpmode='list', inpfile=cmds, action='plot',plotfile=outplot)
+                
+        self.assertTrue(os.path.exists(outplot),'Plot file was not created')
         
     def test_action_list1(self):
          '''flagcmd: action=list with inpmode from a list'''

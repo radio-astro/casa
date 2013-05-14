@@ -278,7 +278,7 @@ def flagcmd(
                 casalog.post('Extracted ' + str(mycmdlist.__len__())
                              + ' flag commands', 'DEBUG')
     
-                casalog.post('%s' % mycmdlist, 'DEBUG')
+#                casalog.post('%s' % mycmdlist, 'DEBUG')
                 casalog.post('%s' % myflagcmd, 'DEBUG')
     
             #
@@ -1562,7 +1562,7 @@ def clearFlagCmd(msfile, myrowlist=[]):
 
     tb.close()
 
-
+# DEPRECATED. Use newplotflags
 def plotflags(
     myflags,
     plotname,
