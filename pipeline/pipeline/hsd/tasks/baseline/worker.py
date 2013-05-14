@@ -23,10 +23,24 @@ logging.set_logging_level('trace')
 #logging.set_logging_level('info')
 
 class SDBaselineWorker(object):
-    def __init__(self):
-        pass
+    def __init__(self, context):
+        self.context = context
 
-    def execute(self, datatable, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern, work_dir):
+    def execute(self, datatable, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern):
+
+        # filename for input/output
+        filenames_out = [self.context.observing_run[idx].baselined_name
+                         for idx in file_index]
+        filenames_in = [self.context.observing_run[idx].name
+                        for idx in file_index]
+        filenames_out = dict(zip(file_index, filenames_out))
+        filenames_in = dict(zip(file_index, filenames_in))
+        filenames_grd = [filenames_out[idx] if os.path.exists(filenames_out[idx])
+                        else filenames_in[idx] for idx in file_index]
+        filenames_grd = dict(zip(file_index, filenames_grd))
+
+        LOG.debug('filenames_grd=%s'%(filenames_grd))
+        
         # spectral window
         #spw = reference_data.spectral_window[spwid]
         #nchan = spw.nchan
@@ -37,7 +51,7 @@ class SDBaselineWorker(object):
 
         # simple gridding
         simple_grid = SimpleGridding(datatable, spwid, srctype, grid_size, 
-                                     file_index, nplane=3)
+                                     filenames_grd, nplane=3)
         (spectra, grid_table) = simple_grid.execute()
 
         LOG.info('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(spectra.shape)))
@@ -58,8 +72,8 @@ class SDBaselineWorker(object):
         srctypes = numpy.array(datatable.getcol('SRCTYPE'))
         antennas = numpy.array(datatable.getcol('ANTENNA'))
         index_list = numpy.where(numpy.logical_and(ifnos == spwid, srctypes==srctype))[0]
-        LOG.info('index_list=%s'%(list(index_list)))
-        LOG.info('len(index_list)=%s'%(len(index_list)))
+        LOG.debug('index_list=%s'%(list(index_list)))
+        LOG.debug('len(index_list)=%s'%(len(index_list)))
         lines = line_validator.execute(grid_table, detect_signal, spwid, nchan, index_list, window, observing_pattern, grid_size, grid_size, iteration)
 
 
@@ -68,16 +82,16 @@ class SDBaselineWorker(object):
         fitter = fitter_cls()
         
         # loop over file
-        filenames = datatable.getkeyword('FILENAMES')
         for idx in file_index:
-            #filename = os.path.join(context.output_dir, filenames[idx])
-            filename = os.path.join(work_dir, filenames[idx])
-            filename_out = filename.rstrip('/') + '_work'
-            bltable_name = filename.rstrip('/') + '.product.tbl'
+            filename_in = filenames_in[idx]
+            filename_out = filenames_out[idx]
+            if not os.path.exists(filename_out):
+                with casatools.TableReader(filename_in) as tb:
+                    copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
+                    copied.close()
+            bltable_name = self.context.observing_run[idx].name.rstrip('/') + '.product.tbl'
+            #if not os.path.exists(bltable_name):
             utils.createExportTable(bltable_name)
-            with casatools.TableReader(filename) as tb:
-                copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
-                copied.close()
             ant_indices = numpy.where(antennas.take(index_list)==idx)[0]
             ant_indices = index_list.take(ant_indices)
             for pol in pollist:
@@ -85,7 +99,6 @@ class SDBaselineWorker(object):
                 pol_indices = numpy.where(polnos.take(ant_indices)==pol)[0]
                 pol_indices = ant_indices.take(pol_indices)
                 LOG.info('pol_indices=%s'%(list(pol_indices)))
-                fitter.execute(datatable, filename, filename_out, bltable_name, time_table, pol_indices, nchan, edge, fitorder)
-        
-        #return lines
+                fitter.execute(datatable, filename_in, filename_out, bltable_name, time_table, pol_indices, nchan, edge, fitorder)
+
         
