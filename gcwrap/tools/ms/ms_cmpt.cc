@@ -1878,7 +1878,8 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	      const ::casac::variant& phasec, 
 	      const ::casac::variant& restfreq, 
 	      const std::string& outframe,
-	      const std::string& veltype
+	      const std::string& veltype,
+	      const bool verbose
 	      )
 {
   std::vector<double> rval(0); // the new channel centers
@@ -1889,7 +1890,9 @@ ms::cvelfreqs(const std::vector<int>& spwids,
     
       *itsLog << LogOrigin("ms", "cvelfreqs");
 
-      *itsLog << LogIO::NORMAL << "Calculating grid ..." << LogIO::POST;
+      if(verbose){
+	*itsLog << LogIO::NORMAL << "Calculating grid ..." << LogIO::POST;
+      }
       
       Vector<Double> newCHAN_FREQ; 
       Vector<Double> newCHAN_WIDTH;
@@ -1922,7 +1925,7 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 			      True, // dont't modify the MS
 			      oldCHAN_FREQ,
 			      oldCHAN_WIDTH,
-			      True // verbose
+			      verbose
 			      )){
 	  *itsLog << LogIO::SEVERE << "Error combining SPWs." << LogIO::POST;
 	  return rval;
@@ -1994,9 +1997,11 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	  }
 	} // end for
 	theObsTime = mainCols.timeMeas()(minTimeRow);
-	*itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection:" << LogIO::POST;
-	*itsLog << LogIO::NORMAL << "    " << MVTime(theObsTime.getValue().getTime()).string(MVTime::YMD)
-		<< " (" << theObsTime.getRefString() << ")" << LogIO::POST;
+	if(verbose){
+	  *itsLog << LogIO::NORMAL << "Using observation time from earliest row of the MS given the SPW and FIELD selection:" << LogIO::POST;
+	  *itsLog << LogIO::NORMAL << "    " << MVTime(theObsTime.getValue().getTime()).string(MVTime::YMD)
+		  << " (" << theObsTime.getRefString() << ")" << LogIO::POST;
+	}
       }
       
       // determine phase center
@@ -2038,7 +2043,9 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	    return rval;
 	  }
 	  else{
-	    *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
+	    if(verbose){
+	      *itsLog << LogIO::NORMAL << "Using user-provided phase center." << LogIO::POST;
+	    }
 	  }
 	}
       }
@@ -2057,19 +2064,25 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 	if (Xobservatory.length() == 0 || 
 	    !casa::MeasTable::Observatory(Xpos,Xobservatory)) {
 	  // unknown observatory
-	  *itsLog << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
-		  << "\". Determining observatory position from antenna 0." << LogIO::POST;
+	  if(verbose){
+	    *itsLog << LogIO::WARN << "Unknown observatory: \"" << Xobservatory 
+		    << "\". Determining observatory position from antenna 0." << LogIO::POST;
+	  }
 	  Xpos=casa::MPosition::Convert(ANTCols.positionMeas()(0), casa::MPosition::ITRF)();
 	}
 	else{
-	  *itsLog << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
-		  << LogIO::POST;
+	  if(verbose){
+	    *itsLog << LogIO::NORMAL << "Using tabulated observatory position for " << Xobservatory << ":"
+		    << LogIO::POST;
+	  }
 	  Xpos=casa::MPosition::Convert(Xpos, casa::MPosition::ITRF)();
 	}
-	mObsPos = Xpos;
-	ostringstream oss;
-	oss <<  "   " << mObsPos << " (ITRF)";
-	*itsLog << LogIO::NORMAL << oss.str() << LogIO::POST;
+	if(verbose){
+	  mObsPos = Xpos;
+	  ostringstream oss;
+	  oss <<  "   " << mObsPos << " (ITRF)";
+	  *itsLog << LogIO::NORMAL << oss.str() << LogIO::POST;
+	}
       }
       
       // calculate new grid
@@ -2089,7 +2102,7 @@ ms::cvelfreqs(const std::vector<int>& spwids,
 			   restfreq.toString(), 
 			   outframe,
 			   veltype,
-			   True, // verbose
+			   verbose, 
 			   mRV
 			   );
       

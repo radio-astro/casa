@@ -2495,6 +2495,11 @@ Date/Time:                         RR:                      RL:                 
      <value>radio</value>
      </param>
 
+     <param type="bool" direction="in" name="verbose">
+     <description>If true, create log output</description>
+     <value>true</value>
+     </param>
+
   </input>
   <returns type="doubleArray"/>
 
