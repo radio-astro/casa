@@ -189,7 +189,7 @@ public:
 
 	// get the field names associated with the specified field IDs. If <src>fieldIDs</src>
 	// is empty, a vector of all the field names is returned.
-	vector<String> getFieldNamesForFieldIDs(const vector<Int>& fieldIDs);
+	vector<String> getFieldNamesForFieldIDs(const vector<uInt>& fieldIDs);
 
 	// Get the fields which fail into the specified time range (center-tol to center+tol)
 	std::set<Int> getFieldsForTimes(Double center, Double tol);
