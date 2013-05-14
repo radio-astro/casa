@@ -176,7 +176,9 @@ class ScantableRep(SingleDishBase):
 
         # antenna property
         self.antenna = None
-        
+
+    def __repr__(self):
+        return 'Scantable(%s)'%(self.name)
 
 class Polarization(SingleDishBase):
     to_polid = {'XX': 0, 'YY': 1, 'XY': 2, 'YX': 3, 
