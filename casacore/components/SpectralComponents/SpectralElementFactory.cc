@@ -33,7 +33,7 @@
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
-#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
+//#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
 #include <components/SpectralComponents/SpectralElementFactory.h>
 
 
@@ -213,13 +213,15 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		specEl.reset(new GaussianMultipletSpectralElement(comps, fixedMatrix));
 	}
 	break;
-	case SpectralElement::POWERLOGPOLY: {
+    /*
+    case SpectralElement::POWERLOGPOLY: {
 		Double nu0 = in.asDouble("nu0");
 		specEl.reset(new PowerLogPolynomialSpectralElement(param, nu0));
 		specEl->set(param);
 		specEl->setError(errs);
 	}
 	break;
+    */
 	default:
 		throw AipsError(
 				"Unhandled or illegal spectral element record in "
