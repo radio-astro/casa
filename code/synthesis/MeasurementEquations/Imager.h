@@ -825,7 +825,7 @@ protected:
                                   const Vector<Double>& fluxdens,
                                   const Bool precompute, const Double spix,
                                   const MFrequency& reffreq, 
-				  const MEpoch& aveEpoch);
+				  const MEpoch& aveEpoch, const Int fieldId);
   // Returns True or throws up.
   Bool sjy_regridCubeChans(TempImage<Float>* tmodimage,
                            PagedImage<Float>& modimage, Int freqAxis);
