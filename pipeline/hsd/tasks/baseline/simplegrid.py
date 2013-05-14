@@ -108,7 +108,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
         return result
 
 class SimpleGridding(object):
-    def __init__(self, datatable, spw, srctype, grid_size, file_index=None, nplane=3):
+    def __init__(self, datatable, spw, srctype, grid_size, data_in, nplane=3):
         self.datatable = datatable
         self.datatable_name = self.datatable.plaintable
         self.spw = spw
@@ -127,24 +127,16 @@ class SimpleGridding(object):
             self.grid_ra = grid_size
             self.grid_dec = grid_size
         self.nplane = nplane
-        self.file_index = file_index
+        self.data_in = data_in
 
     def execute(self):
         grid_table = self.make_grid_table()
         work_dir = os.path.join('/',*(self.datatable.plaintable.split('/')[:-2]))
         #LOG.debug('work_dir=%s'%(work_dir))
         filenames = [os.path.join(work_dir,f) for f in self.datatable.getkeyword('FILENAMES')]
-        if self.file_index is None:
-            data_in = dict(zip(range(len(filenames)), filenames))
-        else:
-            data_in = {}
-            for index in self.file_index:
-                data_in[index] = filenames[index]
-        #for (k,v) in data_in.items():
-        #    LOG.debug('data[%s]=%s'%(k,v))
         import time
         start = time.time()
-        retval = self.grid(data_in=data_in, grid_table=grid_table)
+        retval = self.grid(grid_table=grid_table)
         end = time.time()
         LOG.debug('Elapsed time: %s sec'%(end-start))
         return retval
@@ -252,7 +244,7 @@ class SimpleGridding(object):
         return grid_table
 
 
-    def grid(self, data_in, grid_table, LogLevel=2):
+    def grid(self, grid_table, LogLevel=2):
         """
         The process does re-map and combine spectrum for each position
         grid_table format:
@@ -277,7 +269,7 @@ class SimpleGridding(object):
         # any opened table object is needed, so we use the one 
         # that datatable holds.
         tb = self.datatable.tb1
-        tx = tb.taql('SELECT NELEMENTS(FLAGTRA) AS NCHAN FROM "%s" WHERE IFNO==%s LIMIT 1'%(data_in.values()[0], self.spw))
+        tx = tb.taql('SELECT NELEMENTS(FLAGTRA) AS NCHAN FROM "%s" WHERE IFNO==%s LIMIT 1'%(self.data_in.values()[0], self.spw))
         NCHAN = tx.getcell('NCHAN',0)
         tx.close()
         del tx
@@ -297,7 +289,7 @@ class SimpleGridding(object):
             
         # loop for all ROWs in grid_table to make dictionary that 
         # associates spectra in data_in and weights with grids.
-        bind_to_grid = dict([(k,[]) for k in data_in.keys()])
+        bind_to_grid = dict([(k,[]) for k in self.data_in.keys()])
         for ROW in xrange(NROW):
             [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[ROW]
             for [row, delta, rms, index, ant] in RowDelta:
@@ -310,8 +302,8 @@ class SimpleGridding(object):
         Timer = common.ProgressTimer(80, sum(map(len,bind_to_grid.values())), LogLevel)
 
         # loop for antennas
-        for AntID in data_in.keys():
-            with casatools.TableReader(data_in[AntID]) as tb:
+        for AntID in self.data_in.keys():
+            with casatools.TableReader(self.data_in[AntID]) as tb:
                 for entry in bind_to_grid[AntID]:
                     [tROW, ROW, Weight, tSFLAG] = entry
                     if tSFLAG == 1:

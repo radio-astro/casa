@@ -24,7 +24,7 @@ class SDBaselineInputs(common.SingleDishInputs):
     Inputs for imaging
     """
     def __init__(self, context, infiles=None, iflist=None, pollist=None,
-                 window=None, edge=None, broadline=None, fitorder=None,
+                 linewindow=None, edge=None, broadline=None, fitorder=None,
                  fitfunc=None):
         self._init_properties(vars())
 
@@ -63,10 +63,10 @@ class SDBaseline(common.SingleDishTaskTemplate):
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
 
-        window = [] if inputs.window is None else inputs.window
+        window = [] if inputs.linewindow is None else inputs.linewindow
         edge = (0,0) if inputs.edge is None else inputs.edge
         broadline = False if inputs.broadline is None else inputs.broadline
-        fitorder = 'automatic' if inputs.fitorder is None else inputs.fitorder
+        fitorder = 'automatic' if inputs.fitorder is None or inputs.fitorder < 0 else inputs.fitorder
         fitfunc = 'spline' if inputs.fitfunc is None else inputs.fitfunc
         
         # task returns ResultsList
@@ -99,7 +99,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             beam_size = st.beam_size[spwid]
             calmode = st.calibration_strategy['calmode']
             srctype = common.SrcTypeMap(calmode)
-            worker = SDBaselineWorker()
+            worker = SDBaselineWorker(context)
             _file_index = set(file_index) & set([m[0] for m in group_desc['member']])
             files = files | _file_index
             pattern = st.pattern[spwid][pols[0]]
@@ -115,17 +115,23 @@ class SDBaseline(common.SingleDishTaskTemplate):
                           'broadline': broadline,
                           'fitorder': fitorder,
                           'fitfunc': fitfunc,
-                          'observing_pattern': pattern,
-                          'work_dir': context.output_dir}
+                          'observing_pattern': pattern}
             job = jobrequest.JobRequest(worker.execute, **parameters)
             self._executor.execute(job)
 
         for f in files:
-            name = st_names[f].rstrip('/') + '_work'
-            abs_path = os.path.join(context.output_dir,name)
-            results.append(SDBaselineResults(task=self.__class__,
-                                             success=True,
-                                             outcome=abs_path))
+            name = context.observing_run[f].baselined_name
+            result = SDBaselineResults(task=self.__class__,
+                                       success=True,
+                                       outcome=name)
+
+            if self.inputs.context.subtask_counter is 0: 
+                result.stage_number = self.inputs.context.task_counter - 1
+            else:
+                result.stage_number = self.inputs.context.task_counter 
+
+            results.append(result)
+                
         return results
 
     def analyse(self, result):
