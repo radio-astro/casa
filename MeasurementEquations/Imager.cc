@@ -2814,7 +2814,6 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
        << LogIO::POST;
     
     this->lock();
-    cerr << "Freq selection = " << mssFreqSel_p << endl << mssChanSel_p << endl;
     mssChanSel.assign(mssChanSel_p);
 
     VisSetUtil::Sensitivity(*rvi_p, mssFreqSel_p, mssChanSel, pointsourcesens, relativesens, sumwt,
@@ -4683,6 +4682,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
     Vector<Vector<Flux<Double> > > returnFluxes(nspws), returnFluxErrs(nspws);
     Vector<Vector<MFrequency> > mfreqs(nspws);
     ROMSColumns msc(*ms_p);
+    MEpoch aveEpoch=MEpoch(msc.timeMeas()(0));
     const Unit freqUnit = sjy_setup_arrs(returnFluxes, returnFluxErrs, tempCLs, mfreqs,
                                          msc.spectralWindow(), nspws, selToRawSpwIds,
                                          chanDep);
@@ -4725,7 +4725,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
         }
 
         foundSrc = sjy_computeFlux(os, fluxStd, returnFluxes, returnFluxErrs, tempCLs,
-                                   fluxUsed, fluxScaleName, mfreqs, model, fieldName,
+                                   fluxUsed, fluxScaleName, aveEpoch, mfreqs, model, fieldName,
                                    msselc, fldid, fieldDir, standard);
       }
       
@@ -4762,7 +4762,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           tmodimage = sjy_prepImage(os, fluxStd, fluxUsed, freqsOfScale, freqscaling, model, msc.spectralWindow(),
                                     rawspwid, chanDep, mfreqs, selspw, fieldName,
                                     fieldDir, freqUnit, fluxdens, precompute, spix,
-                                    reffreq);
+                                    reffreq, aveEpoch);
         }
         else if(!precompute){
           // fluxUsed was supplied by the user instead of FluxStandard, so
@@ -4923,6 +4923,8 @@ Unit Imager::sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
 {
   // .getUnits() is a little confusing - it seems to return a Vector which is
   // a list of all the units, not the unit for each row.
+
+  
   const Unit freqUnit(spwcols.chanFreqQuant().getUnits()[0]);
 
   IPosition ipos(1, 0);
@@ -5017,7 +5019,7 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
                              Vector<Vector<Flux<Double> > >& returnFluxes,
                              Vector<Vector<Flux<Double> > >& returnFluxErrs,
                              Vector<String>& tempCLs, Vector<Double>& fluxUsed,
-                             String& fluxScaleName,
+                             String& fluxScaleName, MEpoch& aveEpoch,
                              const Vector<Vector<MFrequency> >& mfreqs,
                              const String& model, const String& fieldName, 
                              const ROMSColumns& msc, const Int fldid, 
@@ -5046,7 +5048,8 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
     meantime += 0.5 * (msc.time()(msc.nrow() - 1) - meantime);
     MEpoch mtime(msc.timeMeas()(0));
     mtime.set(Quantity(meantime, "s"));
-            
+    aveEpoch=mtime;
+
     foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
                                  returnFluxes, returnFluxErrs,
                                  tempCLs, "_setjy_");
@@ -5131,18 +5134,29 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
                                         const Unit& freqUnit,
                                         const Vector<Double>& fluxdens,
                                         const Bool precompute, const Double spix,
-                                        const MFrequency& reffreq)
+                                        const MFrequency& reffreq,
+					const MEpoch& aveEpoch)
 {
   TempImage<Float>* tmodimage = NULL;
+  
+  Double freqMax, freqMin;
+  Vector<Vector<Int> >dummy;
+  adviseChanSelex(freqMin, freqMax, 0.0, MFrequency::LSRK, dummy, dummy, dummy, "", 0, True);
   Vector<Double> freqArray = spwcols.chanFreq()(rawspwid);
+  Int nchan=freqArray.shape()[0]   ;
+  Double freqWidth=fabs(freqMax-freqMin)/Double((nchan > 1) ? (nchan-1) : 1);
+  //Filling it with the LSRK values
+  for (Int k =0;k < nchan; ++k){
+    freqArray[k]=freqMin+k*freqWidth;
+  }
   Vector<Double> freqInc = spwcols.chanWidth()(rawspwid);
   Double medianFreq = median(freqArray);
-
+  
   freqsOfScale.resize();
   freqscale.resize();
 
   // 2 channel extra
-  Double freqWidth = max(freqArray) - min(freqArray) + 2 * max(freqInc);
+  freqWidth = freqMax - freqMin + 2 * max(freqInc);
 
   Matrix<Double> fluxUsedPerChan; // 4 rows nchan col ...will resize when needed
 
@@ -5161,8 +5175,10 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
     for(uInt k = 0; k < freqArray.nelements(); ++k){
       whichChan[0] = k;
       if(precompute){
-        fluxStd.compute(fieldName, spwcols.chanFreqMeas()(rawspwid)(whichChan),
-                        returnFlux, returnFluxErr);
+        //fluxStd.compute(fieldName, spwcols.chanFreqMeas()(rawspwid)(whichChan),
+        //                returnFlux, returnFluxErr);
+	fluxStd.compute(fieldName, MFrequency(Quantity(freqArray[k], "Hz"), MFrequency::LSRK),
+			returnFlux, returnFluxErr);
         returnFlux.value(fluxUsed);
       }
       else{
@@ -5185,10 +5201,13 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
   Int polAxis = CoordinateUtil::findStokesAxis(whichPols, csys);
   Int icoord = csys.findCoordinate(Coordinate::SPECTRAL);
   SpectralCoordinate spcsys = csys.spectralCoordinate(icoord);
+  MEpoch elEpoch; MDirection elDir; MFrequency::Types elTypes; MPosition elPos;
+  spcsys.getReferenceConversion(elTypes, elEpoch, elPos, elDir);
+  spcsys.setReferenceConversion(MFrequency::LSRK, aveEpoch, elPos, elDir);  
   spcsys.setReferenceValue(Vector<Double>(1, medianFreq));
   spcsys.setReferencePixel(Vector<Double>(1, 0.0));
   spcsys.setWorldAxisUnits(Vector<String>(1,
-                                          mfreqs[selspw][0].getUnit().getName()));
+					  mfreqs[selspw][0].getUnit().getName()));
   spcsys.setIncrement(Vector<Double>(1, freqWidth));
   // make a cube model if the model is a cube already
   if(modimage.shape()(freqAxis) >1){
