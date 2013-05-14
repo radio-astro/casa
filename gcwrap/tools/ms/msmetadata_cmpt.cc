@@ -417,7 +417,7 @@ double msmetadata::meanfreq(int spw, const string& unit) {
 vector<string> msmetadata::namesforfields(const variant& fieldids) {
 	_FUNC(
 		variant::TYPE myType = fieldids.type();
-		vector<Int> fieldIDs;
+		vector<uInt> fieldIDs;
 		if (myType == variant::INT) {
 			Int id = fieldids.toInt();
 			if (id < 0) {
@@ -426,14 +426,15 @@ vector<string> msmetadata::namesforfields(const variant& fieldids) {
 			fieldIDs.push_back(id);
 		}
 		else if (myType == variant::INTVEC) {
-			fieldIDs = fieldids.toIntVec();
-			if (min(Vector<Int>(fieldids.toIntVec())) < 0 ) {
+			vector<Int> kk = fieldids.toIntVec();
+			if (min(Vector<Int>(kk)) < 0 ) {
 				throw AipsError("All field IDs must be nonnegative.");
 			}
+			fieldIDs = _vectorIntToVectorUInt(kk);
 		}
 		else if (fieldids.size() != 0) {
 			throw AipsError(
-				"Unsupported type for fieldids. It must be a nonnegative integer or integer array"
+				"Unsupported type for fieldids. It must be a nonnegative integer or nonnegative integer array"
 			);
 		}
 		return _vectorStringToStdVectorString(
@@ -712,13 +713,6 @@ vector<int> msmetadata::wvrspws() {
 	return vector<int>();
 }
 
-/*
-msmetadata::msmetadata(const MeasurementSet& ms) : _msmd(new MSMetaDataPreload(ms)), _log(new LogIO()) {
-	*_log << LogIO::NORMAL << "Read metadata from "
-		<< _msmd->nRows() << " rows." << LogIO::POST;
-}
-*/
-
 msmetadata::msmetadata(
 	const MeasurementSet *const &ms, const float cachesize
 ) : _msmd(0), _ms(0), _log(new LogIO()) {
@@ -727,8 +721,11 @@ msmetadata::msmetadata(
 
 
 vector<string> msmetadata::_fieldNames(const set<int>& ids) {
+	if (*min_element(ids.begin(), ids.end()) < 0) {
+		throw AipsError("All provided IDs must be greater than 0");
+	}
 	return _vectorStringToStdVectorString(
-		_msmd->getFieldNamesForFieldIDs(vector<Int>(ids.begin(), ids.end()))
+		_msmd->getFieldNamesForFieldIDs(vector<uInt>(ids.begin(), ids.end()))
 	);
 }
 

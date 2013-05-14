@@ -497,8 +497,6 @@ def simalma(
                     msg("ACA is requested but total power MS '%s' is not found" \
                         % msname_tp, origin="simalma", priority="error")
 
-                cell_tp = cell
-
                 # Define imsize to cover TP map region
                 #imsize_aca = 0
                 msg("Defining image size of ACA to cover map region of total power simulation", origin="simalma", priority=v_priority)
@@ -508,8 +506,8 @@ def simalma(
                 if cell != '':
                    # user-defined cell size
                    msg("- The user defined cell size: %s" % cell, \
-                       origin="simalma", priority=v_priority)
-                   imgcell = [cell, cell]
+                       origin="simalma", priority=v_priority)                   
+                   cell_tp = (qa.tos(cell), qa.tos(cell))
                 else:
                    if model_cell == None:
                        # components only simulation
@@ -530,7 +528,7 @@ def simalma(
                    msg("- The cell size of input skymodel: [%s, %s]" % \
                        (qa.tos(model_cell[0]), qa.tos(model_cell[1])), \
                        origin="simalma", priority=v_priority)
-                   imgcell = model_cell
+                   cell_tp = (qa.tos(model_cell[0]), qa.tos(model_cell[1]))
 
 #                 ### generate TP image using BOX kernel
 #                 msg("- Using pointing spacing of TP simulation as the cell size of TP image: [%s, %s]" %\
@@ -539,7 +537,7 @@ def simalma(
 #                 imgcell = [qa.tos(qptgspc_tp), qa.tos(qptgspc_tp)]
 #                 #####################################################
 
-                imsize_tp = calc_imsize(mapsize=qimgsize_tp, cell=imgcell)
+                imsize_tp = calc_imsize(mapsize=qimgsize_tp, cell=cell_tp)
 
                 msg("---> The number of pixels needed to cover the map region: [%d, %d]" % \
                     (imsize_tp[0], imsize_tp[1]), \
@@ -593,7 +591,7 @@ def simalma(
                     # the same as input model (calculate from model_size)
                     msg("estimating imsize of BL from input sky model.", \
                         origin="simalma", priority=v_priority)
-                    imsize_bl = calc_imsize(mapsize=model_size, cell=imgcell)
+                    imsize_bl = calc_imsize(mapsize=model_size, cell=cell_tp)
                     msg("---> Estimated BL imsize (sky model): [%d, %d]" % \
                     #msg("---> Estimated TP imsize to cover sky model: [%d, %d]" % \
                         (imsize_bl[0], imsize_bl[1]), \
@@ -629,7 +627,9 @@ def simalma(
                 task_param['jwidth'] = jwidth
                 task_param['outfile'] = fileroot+"/"+imagename_tp
                 task_param['imsize'] = imsize_tp
-                task_param['cell'] = cell_tp
+                # sdimaging doesn't actually take a quantity,
+                cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
+                task_param['cell'] = cell_arcmin
                 task_param['phasecenter'] = model_refdir
                 task_param['dochannelmap'] = True
                 task_param['nchan'] = model_nchan
