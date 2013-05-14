@@ -37,48 +37,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# Constants
 const Double GaussianSpectralElement::SigmaToFWHM = sqrt(8.0*C::ln2);
 
-//# Constructors
 GaussianSpectralElement::GaussianSpectralElement()
-: PCFSpectralElement() {
-	Vector<Double> param(3);
-	param(0) = 1.0;
-	param(1) = 0.0;
-	param(2) = 2*sqrt(C::ln2)/C::pi;
-	_construct(SpectralElement::GAUSSIAN, param);
-}
+: PCFSpectralElement(SpectralElement::GAUSSIAN, 1, 0, 2*sqrt(C::ln2)/C::pi) {}
 
 GaussianSpectralElement::GaussianSpectralElement(
-	const Double ampl,
-	const Double center, const Double sigma
-) : PCFSpectralElement() {
-	if (ampl == 0) {
-		throw AipsError("Gaussian amplitude cannot equal 0");
-	}
-	Vector<Double> param(3);
-	param(0) = ampl;
-	param(1) = center;
-	param(2) =  sigma > 0 ? sigma : -sigma;
-	_construct(SpectralElement::GAUSSIAN, param);
-}
+	const Double ampl, const Double center, const Double sigma
+) : PCFSpectralElement(SpectralElement::GAUSSIAN, ampl, center, sigma) {}
 
 GaussianSpectralElement::GaussianSpectralElement(
 	const Vector<Double> &param
-) : PCFSpectralElement() {
-    if (param.nelements() != 3) {
-    	throw AipsError(
-    		"GaussianSpectralElement: GAUSSIAN must have "
-    		"3 parameters"
-    	);
-    }
-	if (param[0] == 0) {
-		throw AipsError("Gaussian amplitude cannot equal 0");
-	}
-	Vector<Double> p = param.copy();
-	if (p[2] < 0) {
-		p[2] = -p[2];
-	}
-	_construct(SpectralElement::GAUSSIAN, p);
-}
+) : PCFSpectralElement(SpectralElement::GAUSSIAN, param) {}
 
 GaussianSpectralElement::GaussianSpectralElement(
 	const GaussianSpectralElement &other
@@ -89,15 +57,6 @@ GaussianSpectralElement::~GaussianSpectralElement() {}
 
 SpectralElement* GaussianSpectralElement::clone() const {
 	return new GaussianSpectralElement(*this);
-}
-
-GaussianSpectralElement& GaussianSpectralElement::operator=(
-	const GaussianSpectralElement &other
-) {
-	if (this != &other) {
-		SpectralElement::operator=(other);
-	}
-	return *this;
 }
 
 Double GaussianSpectralElement::operator()(const Double x) const {

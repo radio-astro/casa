@@ -33,6 +33,7 @@
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
+#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
 #include <components/SpectralComponents/SpectralElementFactory.h>
 
 
@@ -40,14 +41,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
-		const RecordInterface &in
+	const RecordInterface &in
 ) {
 	std::auto_ptr<SpectralElement> specEl(0);
 	if (
-			! in.isDefined("type")
-			|| in.type(in.idToNumber(RecordFieldId("type"))) != TpString
+		! in.isDefined("type")
+		|| in.type(in.idToNumber(RecordFieldId("type"))) != TpString
 	) {
-		throw AipsError("Record is not a SpectralElement");
+		throw AipsError("Record does not represent a SpectralElement");
 	}
 	String stp;
 	SpectralElement::Types tp;
@@ -79,8 +80,8 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		}
 		else {
 			throw AipsError(
-					"SpectralElement::fromRecord: errors field "
-					"must be double, float or int\n"
+				"SpectralElement::fromRecord: errors field "
+				"must be double, float or int\n"
 			);
 		}
 	}
@@ -105,8 +106,8 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		}
 		else {
 			throw AipsError(
-					"SpectralElement::fromRecord: parameters field "
-					"must be double, float or int\n"
+				"SpectralElement::fromRecord: parameters field "
+				"must be double, float or int\n"
 			);
 		}
 	}
@@ -118,20 +119,20 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 	}
 	if (errs.nelements() != param.nelements()) {
 		throw AipsError(
-				"SpectralElement::fromRecord must have equal lengths "
-				"for parameters and errors fields"
+			"SpectralElement::fromRecord must have equal lengths "
+			"for parameters and errors fields"
 		);
 	}
 	switch (tp) {
 	case SpectralElement::GAUSSIAN:
 		if (param.nelements() != 3) {
 			throw AipsError(
-					"Illegal number of parameters for Gaussian element"
+				"Illegal number of parameters for Gaussian element"
 			);
 		}
 		if (param(2) <= 0.0) {
 			throw AipsError(
-					"The width of a Gaussian element must be positive"
+				"The width of a Gaussian element must be positive"
 			);
 		}
 		param(2) = GaussianSpectralElement::sigmaFromFWHM (param(2));
@@ -147,7 +148,7 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		}
 		if (param(2) <= 0.0) {
 			throw AipsError(
-					"The width of a Lorentzian element must be positive"
+				"The width of a Lorentzian element must be positive"
 			);
 		}
 		specEl.reset(new LorentzianSpectralElement(param(0), param(1), param(2)));
@@ -156,8 +157,8 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 	case SpectralElement::POLYNOMIAL:
 		if (param.nelements() == 0) {
 			throw AipsError(
-					"Polynomial spectral element must have order "
-					"of at least zero"
+				"Polynomial spectral element must have order "
+				"of at least zero"
 			);
 		}
 		specEl.reset(new PolynomialSpectralElement(param.nelements() - 1));
@@ -191,14 +192,15 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		}
 		Record gaussians = in.asRecord("gaussians");
 		uInt i = 0;
-		Vector<GaussianSpectralElement> comps(0);
+		vector<GaussianSpectralElement> comps(0);
 		while(True) {
 			String id = "*" + String::toString(i);
 			if (gaussians.isDefined(id)) {
-				comps.resize(comps.size()+1, True);
 				std::auto_ptr<SpectralElement> gauss = fromRecord(gaussians.asRecord(id));
-				comps[i] = *dynamic_cast<GaussianSpectralElement*>(
+				comps.push_back(
+					*dynamic_cast<GaussianSpectralElement*>(
 						gauss.get()
+					)
 				);
 				i++;
 			}
@@ -209,6 +211,13 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		Matrix<Double> fixedMatrix = in.asArrayDouble("fixedMatrix");
 		fixedMatrix.reform(IPosition(2, comps.size()-1, 3));
 		specEl.reset(new GaussianMultipletSpectralElement(comps, fixedMatrix));
+	}
+	break;
+	case SpectralElement::POWERLOGPOLY: {
+		Double nu0 = in.asDouble("nu0");
+		specEl.reset(new PowerLogPolynomialSpectralElement(param, nu0));
+		specEl->set(param);
+		specEl->setError(errs);
 	}
 	break;
 	default:
