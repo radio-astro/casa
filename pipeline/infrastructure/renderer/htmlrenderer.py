@@ -129,6 +129,9 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDImaging:
         return 'Image single dish data'
 
+    if task_cls is hsd.tasks.SDBaseline:
+        return 'Subtract spectral baseline'
+
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
         return ('\'%s\' (developers should add a task description)'
