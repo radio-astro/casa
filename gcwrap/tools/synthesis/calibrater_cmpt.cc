@@ -485,8 +485,14 @@ calibrater::delmod(const bool otf, const ::casac::variant& field,
     //remove the model from the header
     if (otf) {
       *itsLog << "Deleting OTF Visbility Model info." << LogIO::POST;
-      cerr << "field " << toCasaString(field) << " spw " << toCasaString(spw) << endl;
-      VisModelData::clearModel(*itsMS,toCasaString(field), toCasaString(spw));
+      //cerr << "field " << toCasaString(field) << " spw " << toCasaString(spw) << endl;
+      String fieldStr=toCasaString(field);
+      fieldStr.downcase();
+      if(fieldStr==String("false")) fieldStr=String("");
+      String spwStr=toCasaString(spw);
+      spwStr.downcase();
+      if(spwStr==String("false")) spwStr=String("");
+      VisModelData::clearModel(*itsMS, fieldStr, spwStr);
     }
 
     // remove the MODEL_DATA column
