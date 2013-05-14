@@ -150,10 +150,8 @@ class ScantableRep(SingleDishBase):
     tolerance = 1.0e-3
 
     def __init__(self, name, ms=None, session=None):
-        self.basename = os.path.basename(name.rstrip('/'))
-        self.name = name
+        self.name = name.rstrip('/')
         self.ms = ms
-        self.ms_name = ms.basename if ms is not None else None
         self.session = session
 
         # observation property
@@ -176,6 +174,21 @@ class ScantableRep(SingleDishBase):
 
         # antenna property
         self.antenna = None
+
+    @property
+    def basename(self):
+        return os.path.basename(self.name)
+
+    @property
+    def ms_name(self):
+        if self.ms is not None:
+            return self.ms.basename
+        else:
+            return None
+            
+    @property
+    def baselined_name(self):
+        return self.name + '_work'
 
     def __repr__(self):
         return 'Scantable(%s)'%(self.name)
