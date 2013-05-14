@@ -1704,17 +1704,17 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
                 lastChan = chanEnd_p[k];
 
                 Int nchan = lastChan - inpChan + 1;
-                os << LogIO::WARN
+                os << LogIO::NORMAL
                    << "The last output channel of spw " << spw_p[k]
                    << " has only " << nchan << " input channel";
                 if(nchan > 1)
                   os << "s.";
-                else
-                  os << ".\nRemember that MS selection ranges (unlike Python), *include* the last number.";
+                //else
+                //  os << ".\nRemember that MS selection ranges (unlike Python), *include* the last number.";
                 os << LogIO::POST;
-                os << LogIO::WARN
-                   << "You will not be able to export an MS where the width varies by channel to UVFITS!"
-                   << LogIO::POST;
+                //os << LogIO::WARN
+                //   << "You will not be able to export an MS where the width varies by channel to UVFITS!"
+                //   << LogIO::POST;
               }
 
               chanFreqOut[outChan] = (chanFreqIn[inpChan] +
@@ -2313,7 +2313,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
     // prepare progress meter
     Float progress = 0.4;
     Float progressStep = 0.4;
-    if(ms_p.nrow()>1000000){
+    if(ms_p.nrow()>100000){
       progress = 0.2;
       progressStep = 0.2;
     }
@@ -5388,7 +5388,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       }
 
       if(verbose){
-	os << LogIO::NORMAL << "Original SPWs sorted by first (lowest) channel frequency:" << LogIO::POST;
+	os << LogIO::NORMAL << "Input SPWs sorted by first (lowest) channel frequency:" << LogIO::POST;
 
 	ostringstream oss; // needed for iomanip functions
 	oss << "   SPW " << std::setw(3) << id0 << ": " << std::setw(5) << newNUM_CHAN 
@@ -6142,7 +6142,7 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       // prepare progress meter
       Float progress = 0.4;
       Float progressStep = 0.4;
-      if(nMainTabRows>1000000){
+      if(nMainTabRows>100000){
 	progress = 0.2;
 	progressStep = 0.2;
       }
