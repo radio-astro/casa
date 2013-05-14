@@ -40,28 +40,41 @@ PCFSpectralElement::PCFSpectralElement()
 : SpectralElement() {
 }
 
+PCFSpectralElement::PCFSpectralElement(
+	SpectralElement::Types type
+) : SpectralElement(type, Vector<Double>(3, 1)) {
+	setCenter(0);
+}
+
+PCFSpectralElement::PCFSpectralElement(
+	SpectralElement::Types type, const Vector<Double>& param
+) : SpectralElement(type, param) {
+	if (param.size() != 3) {
+		throw AipsError(
+			"PCFSpectralElement: PCF function must have "
+			"3 parameters"
+	    );
+	}
+	if (param[0] == 0) {
+		throw AipsError(
+			"PCFSpectralElement: PCF amplitude cannot equal 0"
+		);
+	}
+}
+
+PCFSpectralElement::PCFSpectralElement(
+	SpectralElement::Types type, Double amp,
+	Double center, Double width
+) : SpectralElement(type, vector<Double>(3)) {
+	setAmpl(amp);
+	setCenter(center);
+	setWidth(width);
+}
+
 PCFSpectralElement::PCFSpectralElement(const PCFSpectralElement& other)
 : SpectralElement(other) {}
 
 PCFSpectralElement::~PCFSpectralElement() {}
-
-
-/*
-SpectralElement* PCFSpectralElement::clone() const {
-	return new PCFSpectralElement(*this);
-}
-*/
-
-/*
-PCFSpectralElement& PCFSpectralElement::operator=(
-	const PCFSpectralElement &other
-) {
-	if (this != &other) {
-		SpectralElement::operator=(other);
-	}
-	return *this;
-}
-*/
 
 Double PCFSpectralElement::getAmpl() const {
   return get()[0];
@@ -71,7 +84,7 @@ Double PCFSpectralElement::getCenter() const {
   return get()[1];
 }
 
-Double PCFSpectralElement::getFWHM() const {
+Double PCFSpectralElement::getWidth() const {
 	return get()[2];
 }
 
@@ -83,7 +96,7 @@ Double PCFSpectralElement::getCenterErr() const {
 	return getError()[1];
 }
 
-Double PCFSpectralElement::getFWHMErr() const {
+Double PCFSpectralElement::getWidthErr() const {
 	return getError()[2];
 }
 
@@ -108,10 +121,10 @@ void PCFSpectralElement::setCenter(const Double center) {
 	setError(err);
 }
 
-void PCFSpectralElement::setFWHM(const Double fwhm) {
+void PCFSpectralElement::setWidth(const Double width) {
 
 	Vector<Double> p = get();
-	p[2] = fwhm > 0 ? fwhm : -fwhm;
+	p[2] = width > 0 ? width : -width;
 	_set(p);
 	Vector<Double> err = getError();
 	err[2] = 0;
@@ -129,7 +142,7 @@ void PCFSpectralElement::fixCenter(const Bool isFixed) {
 	fix(myFixed);
 }
 
-void PCFSpectralElement::fixFWHM(const Bool isFixed) {
+void PCFSpectralElement::fixWidth(const Bool isFixed) {
 	Vector<Bool> myFixed = fixed();
 	myFixed[2] = isFixed;
 	fix(myFixed);
@@ -145,7 +158,7 @@ void PCFSpectralElement::fixByString(const String& s) {
 		fixCenter(True);
 	}
 	if (fix.contains("f")) {
-		fixFWHM(True);
+		fixWidth(True);
 	}
 }
 
@@ -157,7 +170,7 @@ Bool PCFSpectralElement::fixedCenter() const {
 	return fixed()[1];
 }
 
-Bool PCFSpectralElement::fixedFWHM() const {
+Bool PCFSpectralElement::fixedWidth() const {
 	return fixed()[2];
 }
 
@@ -179,11 +192,9 @@ void PCFSpectralElement::set(const Vector<Double>& params) {
 }
 
 Double PCFSpectralElement::getIntegralErr() const {
-	Double amp = getAmpl();
-	Double ampErr = getAmplErr();
-	Double fwhm = getFWHM();
-	Double fwhmErr = getFWHMErr();
-	return sqrt(ampErr*ampErr/amp/amp + fwhmErr*fwhmErr/fwhm/fwhm) * getIntegral();
+	Double damp = getAmplErr()/getAmpl();
+	Double dwidth = getWidthErr()/getWidth();
+	return sqrt(damp*damp + dwidth*dwidth) * getIntegral();
 }
 
 

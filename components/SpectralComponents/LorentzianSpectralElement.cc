@@ -35,51 +35,27 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 LorentzianSpectralElement::LorentzianSpectralElement()
-: PCFSpectralElement() {
-	Vector<Double> p(3);
-	p[0] = 1;
-	p[1] = 0;
-	p[2] = 1;
-	_construct(SpectralElement::LORENTZIAN, p);
+: PCFSpectralElement(SpectralElement::LORENTZIAN, Vector<Double>(3)) {
+	setAmpl(1);
+	setCenter(0);
+	setFWHM(1);
 }
 
 LorentzianSpectralElement::LorentzianSpectralElement(
 	const Double ampl,
 	const Double center, const Double fwhm
-) : PCFSpectralElement() {
-	if (ampl == 0) {
-		throw AipsError("Lorentzian amplitude cannot equal 0");
-	}
+) : PCFSpectralElement(SpectralElement::LORENTZIAN, ampl, center, fwhm) {
 	if (fwhm == 0) {
 		throw AipsError("Lorentzian fwhm cannot equal 0");
 	}
-	Vector<Double> param(3);
-	param(0) = ampl;
-	param(1) = center;
-	param(2) =  fwhm > 0 ? fwhm : -fwhm;
-	_construct(SpectralElement::LORENTZIAN, param);
 }
 
 LorentzianSpectralElement::LorentzianSpectralElement(
 	const Vector<Double>& param
-) : PCFSpectralElement() {
-    if (param.nelements() != 3) {
-    	throw AipsError(
-    		String(__FUNCTION__) +  ": LORENTZIAN must have "
-    		"3 parameters"
-    	);
-    }
-	if (param[0] == 0) {
-		throw AipsError("Lorentzian amplitude cannot equal 0");
-	}
+) : PCFSpectralElement(SpectralElement::LORENTZIAN, param) {
 	if (param[2] == 0) {
 		throw AipsError("Lorentzian fwhm cannot equal 0");
 	}
-	Vector<Double> p = param.copy();
-	if (p[2] < 0) {
-		p[2] = -p[2];
-	}
-	_construct(SpectralElement::LORENTZIAN, p);
 }
 
 LorentzianSpectralElement::LorentzianSpectralElement(

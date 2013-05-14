@@ -95,6 +95,15 @@ protected:
 
 	CompiledSpectralElement();
 
+	// For subclasses. Parameters and function must be set after construction.
+	explicit CompiledSpectralElement(
+		SpectralElement::Types type, const Vector<Double>& param=Vector<Double>(0)
+	);
+
+	CompiledSpectralElement(
+		SpectralElement::Types type, uInt nParam
+	);
+
 	virtual void _setFunction(const String& function);
 
 private:
