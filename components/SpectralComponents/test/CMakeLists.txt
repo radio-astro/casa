@@ -1,7 +1,6 @@
 set (tests
 tGaussianMultipletSpectralElement
 tLorentzianSpectralElement
-tPowerLogPolynomialSpectralElement
 tProfileFit1D
 tSpectralFit
 )
