@@ -144,7 +144,7 @@ Bool FluxStdPerleyTaylor99::setSourceCoeffs()
   
   setFreqUnit("GHz");
   //FCQS::Source srcEnum = getSrcEnum();
-  FSS::Source srcEnum = FCQVS::getSrcEnum();
+  FSS::Source srcEnum = FCVQS::getSrcEnum();
 
   //LogIO os(LogOrigin("FluxStdPerleyTaylor99", "setSourceCoeffs", WHERE));
   // os << LogIO::NORMAL
@@ -186,7 +186,7 @@ Bool FluxStdPerleyButler2010::setSourceCoeffs()
   
   setFreqUnit("GHz");
   //FCQS::Source srcEnum = getSrcEnum();
-  FSS::Source srcEnum = FCQVS::getSrcEnum();
+  FSS::Source srcEnum = FCVQS::getSrcEnum();
 
   //if(srcEnum == FCQS::THREEC286)
   if(srcEnum == FSS::THREEC286)
