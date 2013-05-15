@@ -2331,7 +2331,6 @@ image* image::pad(
 		);
 		padder.setStretch(stretch);
 		padder.setPaddingPixels(npixels, value, padmask);
-		cout << "wantreturn " << wantreturn << endl;
 		std::auto_ptr<ImageInterface<Float> > out(padder.pad(wantreturn));
 		if (wantreturn) {
 			return new image(out.get());

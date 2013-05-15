@@ -1,6 +1,7 @@
 import os
 import shutil
 from taskinit import *
+import numpy
 
 def imregrid(imagename, template, output, asvelocity, axes, shape):
     _myia = None
@@ -73,7 +74,7 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                         + "the reference pixel equal to the center pixel. "
                         + "The output image will have this modified coordinate system."
                     )
-                    newrefpix = csys.referencepixel()["numeric"]
+                    newrefpix = csys.referencepixel()['numeric']
                     newrefpix[diraxes[0]] = centerpix[0]
                     newrefpix[diraxes[1]] = centerpix[1]
                     newrefval = csys.toworld(newrefpix)["numeric"]
@@ -86,7 +87,7 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                 
                 # for some reason, we need to set the old refcode explicity so the
                 # conversion doesn't barf
-                csys.convertdirection(oldrefcode)
+                # csys.convertdirection(oldrefcode)
                 angle = csys.convertdirection(newrefcode)
                 mysin = qa.getvalue(qa.sin(angle))
                 mycos = qa.getvalue(qa.cos(angle))
@@ -97,22 +98,28 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                         xnew = max(xnew, abs(xx*mycos - yy*mysin + 1))
                         ynew = max(ynew, abs(xx*mysin + yy*mycos + 1))
                 pad = int(max(xnew - shape[0]/2, ynew - shape[1]/2))
-                casalog.post(
-                    "Padding image by " + str(pad)
+                # disable padding for debugging
+                if pad > 0:
+                    casalog.post(
+                        "Padding image by " + str(pad)
                         + " pixels so no pixels are cut off in the rotation",
-                    "NORMAL"
-                )
-                _myia = _myia.pad("", pad, wantreturn=True) 
-                shape = _myia.shape()
+                        "NORMAL"
+                    )
+                    _myia = _myia.pad("", pad, wantreturn=True)
+                    shape = _myia.shape()
+                    newrefpix = csys.referencepixel()['numeric']
+                    newrefpix[diraxes[0]] = newrefpix[diraxes[0]] + pad
+                    newrefpix[diraxes[1]] = newrefpix[diraxes[1]] + pad
+                    csys.setreferencepixel(newrefpix)
                 casalog.post(
                     "Will rotate direction coordinate by "
-                        + qa.tos(qa.convert(qa.neg(angle),"deg"))
-                    , 'NORMAL'
+                    + qa.tos(qa.convert(angle,"deg"))
+                , 'NORMAL'
                 )
                 docrop = (diraxes == [0,1]).all() or (diraxes == [1,0]).all()
                 outfile = "" if docrop else output
                 rot = _myia.rotate(
-                    outfile=outfile, shape=shape, pa=qa.neg(angle)
+                    outfile=outfile, shape=shape, pa=angle
                 )
                 rot.setcoordsys(csys.torecord())
                 # now crop
@@ -153,18 +160,20 @@ def imregrid(imagename, template, output, asvelocity, axes, shape):
                                 maxfound = True
                         if maxfound and minfound:
                             break
-                    blc = shape[:]
+                    blc = numpy.copy(shape)
                     for i in range(len(blc)):
                         blc[i] = 0
                     blc[diraxes[0]] = mingoodx
                     blc[diraxes[1]] = mingoody
+
                     trc = shape - 1
                     trc[diraxes[0]] = maxgoodx
                     trc[diraxes[1]] = maxgoody
                     reg = rg.box(blc, trc)
                     casalog.post("Cropping masked image boundaries", "NORMAL")
                     subim = rot.subimage(outfile=output, region=reg)
-                    subim.done()   
+
+                    subim.done() 
                 rot.done()
                 _myia.done()
                 return True
