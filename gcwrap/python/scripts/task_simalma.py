@@ -507,7 +507,7 @@ def simalma(
                    # user-defined cell size
                    msg("- The user defined cell size: %s" % cell, \
                        origin="simalma", priority=v_priority)                   
-                   cell_tp = (qa.tos(cell), qa.tos(cell))
+                   cell_tp = [qa.tos(cell), qa.tos(cell)]
                 else:
                    if model_cell == None:
                        # components only simulation
@@ -528,7 +528,7 @@ def simalma(
                    msg("- The cell size of input skymodel: [%s, %s]" % \
                        (qa.tos(model_cell[0]), qa.tos(model_cell[1])), \
                        origin="simalma", priority=v_priority)
-                   cell_tp = (qa.tos(model_cell[0]), qa.tos(model_cell[1]))
+                   cell_tp = [qa.tos(model_cell[0]), qa.tos(model_cell[1])]
 
 #                 ### generate TP image using BOX kernel
 #                 msg("- Using pointing spacing of TP simulation as the cell size of TP image: [%s, %s]" %\
@@ -628,8 +628,9 @@ def simalma(
                 task_param['outfile'] = fileroot+"/"+imagename_tp
                 task_param['imsize'] = imsize_tp
                 # sdimaging doesn't actually take a quantity,
-                cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
-                task_param['cell'] = cell_arcmin
+                #cell_arcmin=qa.convert(cell_tp[0],'arcmin')['value']
+                #task_param['cell'] = cell_arcmin
+                task_param['cell'] = cell_tp
                 task_param['phasecenter'] = model_refdir
                 task_param['dochannelmap'] = True
                 task_param['nchan'] = model_nchan
