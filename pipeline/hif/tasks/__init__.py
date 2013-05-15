@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from .antpos import Antpos
 from .applycal import Applycal
+from .atmflag import Atmflag
 from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .clean import Clean
 from .cleanlist import CleanList
