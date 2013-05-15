@@ -34,7 +34,7 @@ flag_color = {'outlier': 'red',
               'too many flags':'lightblue',
               'nmedian':'darkred',
               'max abs':'pink',
-              'min abs':'darkpink'}
+              'min abs':'darkcyan'}
               
 
 class ImageDisplay(object):
