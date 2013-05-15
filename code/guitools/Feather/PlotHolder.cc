@@ -38,7 +38,8 @@ PlotHolder::PlotHolder(QWidget *parent)
       legendVisible( false ),
       displayOutputSlice(false),displayOriginalSlice( false),
       displayScatter( false ), tempScatterPlot(false),
-      displayYGraphs( false ), displayXGraphs( true ){
+      displayYGraphs( false ), displayXGraphs( true ),
+      xAxisUV( true ){
 	ui.setupUi(this);
 
 	initializePlots();
@@ -75,6 +76,10 @@ void PlotHolder::initializePlots(){
 	connect( origYWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
 	connect( origYWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( origYWidget );
+	/*FeatherPlotWidget* origDistanceWidget = new FeatherPlotWidget("Original U/V Distance", FeatherPlot::ORIGINAL);
+	connect( origDistanceWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
+	connect( origDistanceWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
+	plots.append( origDistanceWidget );*/
 	FeatherPlotWidget* xWidget = new FeatherPlotWidget( "Feathered Data Slice U", FeatherPlot::SLICE_CUT);
 	connect( xWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
 	connect( xWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
@@ -83,6 +88,10 @@ void PlotHolder::initializePlots(){
 	connect( yWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
 	connect( yWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( yWidget );
+	/*FeatherPlotWidget* distanceWidget = new FeatherPlotWidget( "Feathered Data Slice U/V Distance", FeatherPlot::SLICE_CUT);
+	connect( distanceWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
+	connect( distanceWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
+	plots.append( distanceWidget );*/
 	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidget( "Feathered Data Scatter U", FeatherPlot::SCATTER_PLOT);
 	xWidgetScatter->setPermanentScatter( true );
 	plots.append( xWidgetScatter );
@@ -187,8 +196,10 @@ void PlotHolder::setLegendVisibility( bool visible ){
 	legendVisible = visible;
 	plots[SLICE_X_ORIGINAL]->setLegendVisibility( visible );
 	plots[SLICE_Y_ORIGINAL]->setLegendVisibility( visible );
+	//plots[DISTANCE_ORIGINAL]->setLegendVisibility( visible );
 	plots[SLICE_X]->setLegendVisibility( visible );
 	plots[SLICE_Y]->setLegendVisibility( visible );
+	//plots[DISTANCE_SLICE]->setLegendVisibility( visible );
 }
 
 
@@ -220,6 +231,10 @@ void PlotHolder::setDisplayYGraphs( bool visible ){
 
 void PlotHolder::setDisplayXGraphs( bool visible ){
 	displayXGraphs = visible;
+}
+
+void PlotHolder::setXAxisUV( bool xAxisUV ){
+	this->xAxisUV = xAxisUV;
 }
 
 
@@ -275,6 +290,14 @@ void PlotHolder::setInterferometerData( const Vector<Float>& intx, const Vector<
 	plots[SLICE_Y]->setInterferometerData( inty, intyAmp );
 	plots[SCATTER_X]->setInterferometerData( intx, intxAmp );
 	plots[SCATTER_Y]->setInterferometerData( inty, intyAmp );
+}
+
+void PlotHolder::setDirtyData( const Vector<Float>& intx, const Vector<Float>& intxAmp,
+       		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
+	plots[SLICE_X]->setDirtyData( intx, intxAmp );
+	plots[SLICE_Y]->setDirtyData( inty, intyAmp );
+	plots[SCATTER_X]->setDirtyData( intx, intxAmp );
+	plots[SCATTER_Y]->setDirtyData( inty, intyAmp );
 }
 
 

@@ -63,8 +63,8 @@ FileLoader::FileLoader(QWidget *parent)
 	connect( ui.cancelButton, SIGNAL( clicked()), this, SLOT(filesReset()));
 
 	//Takeout
-	//ui.lowResolutionLineEdit->setText("/home/uniblab/casa/active/test/orion_gbt.im" );
-	//ui.highResolutionLineEdit->setText("/home/uniblab/casa/active/test/orion_vlamem.im");
+	ui.lowResolutionLineEdit->setText("/home/uniblab/casa/active/test/orion_gbt.im" );
+	ui.highResolutionLineEdit->setText("/home/uniblab/casa/active/test/orion_vlamem.im");
 	ui.saveOutputCheckBox->setChecked( false );
 }
 

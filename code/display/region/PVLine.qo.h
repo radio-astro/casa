@@ -104,6 +104,7 @@ namespace casa {
 
 		public slots:
 			void createPVImage(const std::string&,const std::string&,int);
+			void changePVInfo(int);
 			void cursorBoundary(QtDisplayPanel::CursorBoundaryCondition);
 			void cursorPosition(viewer::Position);
 
@@ -136,6 +137,7 @@ namespace casa {
 			double pt2_x, pt2_y;
 			/* double center_x, center_y; */
 			double handle_delta_x, handle_delta_y;
+			int display_width;
 
 			// one display_element is created for each image created from this PVLine...
 			// the resulting display list may be useful in the future...
@@ -157,9 +159,12 @@ namespace casa {
 			ImageInterface<Float> *generatePVImage( ImageInterface<Float> *, std::string, int, bool );
 
 		private:
-			QtDisplayPanelGui *sub_dpg;
 			bool within_vertex_handle( double x, double y ) const;
 			unsigned int check_handle( double x, double y ) const;
+			std::vector<double> calculate_offset_points( double slope, double off, double x, double y );
+			void draw_pv_line( PixelCanvas *pc, bool selected=false );
+
+			QtDisplayPanelGui *sub_dpg;
 			std::string worldCoordinateStrings( double x, double y );
 			bool draw_cursor_point;
 			double cursor_point_x, cursor_point_y;

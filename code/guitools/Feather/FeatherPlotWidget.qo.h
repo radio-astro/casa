@@ -54,6 +54,7 @@ public:
     void setInterferometerWeight( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void setSingleDishData( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues );
+    void setDirtyData( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void addScatterData();
     void addSumData();
 
@@ -140,6 +141,7 @@ private:
     QColor scatterPlotColor;
     QColor dishDiameterLineColor;
     QColor zoomRectColor;
+    QColor dirtyColor;
 
     QVector<double> singleDishWeightXValues;
     QVector<double> singleDishWeightYValues;
@@ -149,12 +151,15 @@ private:
     QVector<double> singleDishDataYValues;
     QVector<double> interferometerDataXValues;
     QVector<double> interferometerDataYValues;
+    QVector<double> dirtyDataXValues;
+    QVector<double> dirtyDataYValues;
 
     QString singleDishFunction;
     QString interferometerFunction;
     QString singleDishWeightFunction;
     QString interferometerWeightFunction;
     QString sumFunction;
+    QString dirtyFunction;
 
     bool permanentScatter;
     QString plotTitle;

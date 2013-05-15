@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>397</width>
-    <height>351</height>
+    <width>545</width>
+    <height>318</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -72,7 +72,7 @@
     </spacer>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_3">
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
       <spacer name="horizontalSpacer_4">
        <property name="orientation">
@@ -80,164 +80,117 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>13</width>
+         <width>40</width>
          <height>20</height>
         </size>
        </property>
       </spacer>
      </item>
      <item>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Scatter Plot:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QPushButton" name="scatterColorButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="baseSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Click to select a color for the points in the scatter plot.</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_9">
-         <property name="text">
-          <string>Low &amp; High Slice Sum Function:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QPushButton" name="sumButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="baseSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Click to select a color for the points in the scatter plot.</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>&lt;font color='black'&gt;Dish Diameter Line:&lt;/font&gt;</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QPushButton" name="dishDiameterColorButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="baseSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Click to specify a color to use when drawing the line showing the value of the dish diameter.</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_8">
-         <property name="text">
-          <string>Zoom Rectangle:</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QPushButton" name="zoomRectangleColorButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="baseSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Click to specify a color to use in drawing the zoom rectangle.</string>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>&lt;font color='black'&gt;Dish Diameter Line:&lt;/font&gt;</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="dishDiameterColorButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>113</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="baseSize">
+        <size>
+         <width>113</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Click to specify a color to use when drawing the line showing the value of the dish diameter.</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_5">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <spacer name="horizontalSpacer_8">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Zoom Rectangle:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="zoomRectangleColorButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>113</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="baseSize">
+        <size>
+         <width>113</width>
+         <height>25</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Click to specify a color to use in drawing the zoom rectangle.</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
      </item>
      <item>
       <spacer name="horizontalSpacer_9">
@@ -246,7 +199,7 @@
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>17</width>
+         <width>40</width>
          <height>20</height>
         </size>
        </property>
@@ -268,7 +221,7 @@
     </spacer>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <spacer name="horizontalSpacer_6">
        <property name="orientation">
@@ -284,20 +237,10 @@
      </item>
      <item>
       <layout class="QGridLayout" name="gridLayout">
-       <property name="sizeConstraint">
-        <enum>QLayout::SetDefaultConstraint</enum>
-       </property>
        <item row="0" column="1">
-        <widget class="QLabel" name="label_6">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
+        <widget class="QLabel" name="label_13">
          <property name="text">
-          <string>Low Resolution</string>
+          <string>Low</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -305,33 +248,26 @@
         </widget>
        </item>
        <item row="0" column="2">
-        <widget class="QLabel" name="label_7">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
+        <widget class="QLabel" name="label_14">
          <property name="text">
-          <string>High Resolution</string>
+          <string>High</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
-         </property>
+       <item row="0" column="3">
+        <widget class="QLabel" name="label_15">
          <property name="text">
-          <string>Weight Function</string>
+          <string>Sum Low/High</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_11">
+         <property name="text">
+          <string>Slice</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -339,113 +275,91 @@
         </widget>
        </item>
        <item row="1" column="1">
-        <widget class="QPushButton" name="singleDishWeightColorButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+        <widget class="QWidget" name="sliceLowPreferences" native="true">
          <property name="minimumSize">
           <size>
-           <width>113</width>
-           <height>25</height>
+           <width>91</width>
+           <height>0</height>
           </size>
-         </property>
-         <property name="toolTip">
-          <string>Click to select a color for graphing the low resolution weight function.</string>
-         </property>
-         <property name="text">
-          <string/>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_5">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-           <weight>50</weight>
-           <bold>false</bold>
-          </font>
+       <item row="1" column="2">
+        <widget class="QWidget" name="sliceHighPreferences" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>91</width>
+           <height>0</height>
+          </size>
          </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QWidget" name="sliceSumPreferences" native="true"/>
+       </item>
+       <item row="1" column="4">
+        <widget class="QWidget" name="sliceDirtyPreferences" native="true">
+         <property name="minimumSize">
+          <size>
+           <width>91</width>
+           <height>0</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_12">
          <property name="text">
-          <string>Slice Function</string>
+          <string>Weight</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QPushButton" name="singleDishSliceColorButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+       <item row="2" column="1">
+        <widget class="QWidget" name="weightLowPreferences" native="true"/>
+       </item>
+       <item row="2" column="2">
+        <widget class="QWidget" name="weightHighPreferences" native="true"/>
+       </item>
+       <item row="3" column="4">
+        <widget class="QWidget" name="scatterDirtyPreferences" native="true">
          <property name="minimumSize">
           <size>
-           <width>113</width>
-           <height>25</height>
+           <width>91</width>
+           <height>0</height>
           </size>
          </property>
-         <property name="toolTip">
-          <string>Click to select a color for graphing the low resolution slice cut.</string>
-         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_2">
          <property name="text">
-          <string/>
+          <string>Scatter Plot:</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
          </property>
         </widget>
        </item>
        <item row="3" column="2">
-        <widget class="QPushButton" name="interferometerSliceColorButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+        <widget class="QWidget" name="scatterHighPreferences" native="true">
          <property name="minimumSize">
           <size>
-           <width>113</width>
-           <height>25</height>
+           <width>91</width>
+           <height>0</height>
           </size>
-         </property>
-         <property name="toolTip">
-          <string>Click to select a color for graphing the high resolution slice cut.</string>
-         </property>
-         <property name="text">
-          <string/>
          </property>
         </widget>
        </item>
-       <item row="1" column="2">
-        <widget class="QPushButton" name="interferometerWeightColorButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>113</width>
-           <height>25</height>
-          </size>
-         </property>
-         <property name="toolTip">
-          <string>Click to select a color for graphing the high resolution weight function.</string>
-         </property>
+       <item row="0" column="4">
+        <widget class="QLabel" name="label_16">
          <property name="text">
-          <string/>
+          <string>Dirty</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
          </property>
         </widget>
        </item>

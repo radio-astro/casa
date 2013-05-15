@@ -191,7 +191,7 @@ SpectralList SpectralListFactory::create(
 			log << "All elements of gmncomps must be positive"
 				<< LogIO::EXCEPTION;
 		}
-		Vector<GaussianSpectralElement> g(mygmncomps[i]);
+		vector<GaussianSpectralElement> g(mygmncomps[i]);
 		Matrix<Double> constraints(mygmncomps[i] - 1, 3);
 		for (uInt j=0; j<(uInt)mygmncomps[i]; j++) {
 			g[j] = GaussianSpectralElement(

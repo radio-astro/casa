@@ -86,6 +86,7 @@ namespace casa {
 				// coord_box->hide( );
 				// averaging_frame->hide( );
 				connect( create_button, SIGNAL(clicked( )), this, SLOT(create_pv_image( )) );
+				connect( pvwidth, SIGNAL(valueChanged(int)), this, SIGNAL(setPVInfo(int)) );
 			}
 
 			bool pvline_stats_t::updateStatisticsInfo( std::tr1::shared_ptr<casa::viewer::RegionInfo> info ) {
@@ -101,6 +102,16 @@ namespace casa {
 					/* expect only std::bad_cast */
 				}
 				return true;
+			}
+
+			void pvline_stats_t::enterEvent (QEvent *e) {
+				QWidget::enterEvent(e);
+				emit setPVInfo(pvwidth->value( ));
+			}
+
+			void pvline_stats_t::showEvent ( QShowEvent *e ) {
+				QWidget::showEvent(e);
+				emit setPVInfo(pvwidth->value( ));
 			}
 
 			void pvline_stats_t::create_pv_image( ) {
@@ -250,7 +261,9 @@ namespace casa {
 				stats_box_ = new qt::pvline_stats_t( );
 				layout_->addWidget(stats_box_,0,Qt::AlignLeft);
 				if ( region != NULL ) {
-					connect( stats_box_, SIGNAL(createPVImage(const std::string&,const std::string&,int)), region, SLOT(createPVImage(const std::string&,const std::string&,int)) );
+					connect( stats_box_, SIGNAL(createPVImage(const std::string&,const std::string&,int)),
+							 region, SLOT(createPVImage(const std::string&,const std::string&,int)) );
+					connect( stats_box_, SIGNAL(setPVInfo(int)), region, SLOT(changePVInfo(int)) );
 				}
 				return stats_box_;
 			} else {

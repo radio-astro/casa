@@ -49,7 +49,7 @@ friend class FeatherMain;
 
 public:
 	FeatherThread():featherWorker(NULL),
-		saveOutput(false), fileSaved(true){}
+		saveOutput(false), fileSaved(true), dirtyImage( false ){}
 	void setFeatherWorker( Feather* worker ){
 		featherWorker = worker;
 	}
@@ -59,6 +59,10 @@ public:
 			saveFilePath = outputPath;
 		}
 	}
+	void setDirtyImageSupported ( bool supported ){
+		dirtyImage = supported;
+	}
+
 	void run();
 	~FeatherThread(){}
 
@@ -86,8 +90,14 @@ private:
 	Vector<Float> intyCut;
 	Vector<Float> intyAmpCut;
 
+	Vector<Float> intxDirty;
+	Vector<Float> intxAmpDirty;
+	Vector<Float> intyDirty;
+	Vector<Float> intyAmpDirty;
+
 	bool saveOutput;
 	bool fileSaved;
+	bool dirtyImage;
 	QString saveFilePath;
 
 };
@@ -128,10 +138,10 @@ private:
 	FeatherMain operator=( const FeatherMain& other );
 	QString getFileName( QString path ) const;
 	void initializeDishDiameterLimit( QLabel* diamLimitLabel );
+	void clearImage( ImageInterface<Float>*& image );
 	void clearPlots();
 	bool isInputImagesChanged();
-	bool generateInputImage( const String& lowResImagePath, const String& highResImagePath,
-			ImageInterface<Float>*& lowResImage, ImageInterface<Float>*& highResImage );
+	bool generateInputImage();
 	pair<float,float> populateDishDiameters(Bool& validDiameters);
 	float populateSDFactor() const;
 	bool loadImages();
@@ -150,9 +160,11 @@ private:
 
     ImageInterface<Float>* lowResImage;
     ImageInterface<Float>* highResImage;
+    ImageInterface<Float>* dirtyImage;
     QString lowResImagePath;
     QString highResImagePath;
     QString outputImagePath;
+    QString dirtyImagePath;
 
     Feather featherWorker;
     FeatherThread* thread;

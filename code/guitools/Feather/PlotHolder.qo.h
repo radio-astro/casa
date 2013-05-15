@@ -58,6 +58,8 @@ public:
     		const Vector<Float>& sDy, const Vector<Float>& sDyAmp );
     void setInterferometerDataOriginal( const Vector<Float>& intx, const Vector<Float>& intxAmp,
     		const Vector<Float>& inty, const Vector<Float>& intyAmp );
+    void setDirtyData( const Vector<Float>& intx, const Vector<Float>& intxAmp,
+        		const Vector<Float>& inty, const Vector<Float>& intyAmp );
     void updateScatterData( );
     void addSumData();
     void clearPlots();
@@ -71,6 +73,7 @@ public:
     void setDisplayOriginalSlice( bool visible );
     void setDisplayYGraphs( bool visible );
     void setDisplayXGraphs( bool visible );
+    void setXAxisUV( bool xAxisUV );
     void setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
     		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
     		const QColor& zoomRectColor, const QColor& sumColor );
@@ -101,7 +104,8 @@ private slots:
 	void rectangleZoomed( double minX, double maxX, double minY, double maxY );
 
 private:
-	enum Plots {  SLICE_X_ORIGINAL, SLICE_Y_ORIGINAL, SLICE_X, SLICE_Y, SCATTER_X, SCATTER_Y };
+	enum Plots {  SLICE_X_ORIGINAL, SLICE_Y_ORIGINAL, /*DISTANCE_ORIGINAL,*/
+		SLICE_X, SLICE_Y, /*DISTANCE_SLICE,*/ SCATTER_X, SCATTER_Y };
 	void initializePlots();
 	void initializeActions();
 	void emptyLayout(QLayout* layout );
@@ -123,6 +127,9 @@ private:
     bool tempScatterPlot;
     bool displayYGraphs;
     bool displayXGraphs;
+    //The x-axis on the slice cuts and original graphs can either be u/v (two graphs)
+    //or radial (one graph).
+    bool xAxisUV;
 };
 }
 

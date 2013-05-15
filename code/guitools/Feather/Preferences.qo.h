@@ -46,6 +46,7 @@ public:
     bool isDisplayY() const;
     bool isLogAmplitude() const;
     bool isLogUV() const;
+    bool isXAxisUV() const;
     int getLineThickness() const;
     int getDotSize() const;
     ~Preferences();
@@ -57,6 +58,7 @@ signals:
 private slots:
 	void preferencesAccepted();
 	void preferencesRejected();
+	void xAxisChanged();
 
 private:
 	void initializeCustomSettings();
