@@ -21,9 +21,10 @@ LOG = infrastructure.get_logger(__name__)
 class TsysflagchansInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
-      intentgroups=None, metric=None, flagcmdfile=None, flag_edges=None,
-      edge_limit=None, flag_sharps=None, sharps_limit=None, flag_sharps2=None,
-      sharps2_limit=None, niter=None):
+      intentgroups=None, metric=None,
+#      flagcmdfile=None,
+      flag_edges=None, edge_limit=None, flag_sharps=None, sharps_limit=None,
+      flag_sharps2=None, sharps2_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -86,15 +87,15 @@ class TsysflagchansInputs(basetask.StandardInputs):
     def metric(self, value):
         self._metric = value
 
-    @property
-    def flagcmdfile(self):
-        if self._flagcmdfile is None:
-            return '%s_flagcmds.txt' % self.caltable
-        return self._flagcmdfilefile
+#    @property
+#    def flagcmdfile(self):
+#        if self._flagcmdfile is None:
+#            return '%s_flagcmds.txt' % self.caltable
+#        return self._flagcmdfilefile
 
-    @flagcmdfile.setter
-    def flagcmdfile(self, value):
-        self._flagcmdfile = value
+#    @flagcmdfile.setter
+#    def flagcmdfile(self, value):
+#        self._flagcmdfile = value
 
     @property
     def flag_edges(self):
@@ -184,7 +185,8 @@ class Tsysflagchans(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          table=inputs.caltable, inpfile=inputs.flagcmdfile)
+          table=inputs.caltable, inpfile=[])
+#          table=inputs.caltable, inpfile=inputs.flagcmdfile)
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
 	# Translate the input flagging parameters to a more compact
