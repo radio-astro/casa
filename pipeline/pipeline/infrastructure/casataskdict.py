@@ -1,6 +1,6 @@
 CasaTaskDict = {
                    'hif_antpos'       : 'Antpos',
-                   'hif_atmflag'      : 'AtmFlag',
+                   'hif_atmflag'      : 'Atmflag',
                    'hif_applycal'     : 'Applycal',
                    'hif_bandpass'     : 'Bandpass',
 		   'hif_cleanlist'    : 'CleanList', 
