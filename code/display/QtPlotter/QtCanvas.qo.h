@@ -175,6 +175,11 @@ namespace casa {
 			return showTopAxis;
 		}
 
+		//Even if the user wants to show a top axis, we won't do it
+		//when there are multiple curves which are not compatible in their
+		//x-axis units.
+		void setTopAxisCompatible( bool compatible );
+
 		//Whether or not to show tool tips with the x,y coordinates
 		//of the points on the plot.
 		void setShowToolTips( bool toolTipsVisible ) {
@@ -460,7 +465,11 @@ namespace casa {
 		int xRectStart;
 		int xRectEnd;
 
+		//Whether or not the user WANTS to see a top axis.
 		bool showTopAxis;
+		//We can only show the top axis in the case of multiple curves, when
+		//all the curves have equally spaced units in their top axis.
+		bool topAxisCompatible;
 		bool showToolTips;
 		bool showFrameMarker;
 		bool displayStepFunction;

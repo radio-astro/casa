@@ -79,6 +79,7 @@ namespace casa {
 		plotError  = 2;
 		showGrid   = 2;
 		taskMode = LINE_OVERLAY_MODE;
+		topAxisCompatible = false;
 
 		initContextMenu();
 
@@ -885,6 +886,13 @@ namespace casa {
 		update();
 	}
 
+	void QtCanvas::setTopAxisCompatible( bool compatible ){
+		bool oldTopAxisCompatible = topAxisCompatible;
+		topAxisCompatible = compatible;
+		if ( oldTopAxisCompatible != topAxisCompatible ){
+			refreshPixmap();
+		}
+	}
 
 	void QtCanvas::setShowTopAxis( bool showAxis ) {
 		bool oldShowAxis = showTopAxis;
@@ -956,7 +964,9 @@ namespace casa {
 
 	int QtCanvas::getLastAxis() const {
 		int lastAxis = QtPlotSettings::END_AXIS_INDEX;
-		if ( ! showTopAxis || curveMap.size() > 1 ) {
+		//Don't show the top axis if the user has specified NOT to see it OR
+		//there are multiple curves which are NOT compatible in their top axis units.
+		if ( ! showTopAxis || (!topAxisCompatible && curveMap.size()>1 )) {
 			lastAxis = QtPlotSettings::xTop;
 		}
 		return lastAxis;

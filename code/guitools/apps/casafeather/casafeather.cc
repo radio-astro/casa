@@ -50,6 +50,9 @@ int main( int argc, char *argv[] ) {
 	try {
 		FeatherMain featherApplication;
 		featherApplication.show();
+		/*QPixmap featherPixmap( 200, 200 );
+		featherApplication.render( &featherPixmap);
+		featherPixmap.save("/users/slovelan/tmp/feather.png");*/
 		stat = app.exec();
 		return stat;
 	}

@@ -79,6 +79,9 @@ namespace casa {
 	const QString QtProfile::PLOT_TYPE_MEAN = "Mean";
 	const QString QtProfile::PLOT_TYPE_MEDIAN = "Median";
 	const QString QtProfile::PLOT_TYPE_SUM = "Sum";
+	const QString QtProfile::FREQUENCY = "frequency";
+	const QString QtProfile::RADIO_VELOCITY = "radio velocity";
+	const QString QtProfile::CHANNEL = "channel";
 
 
 	QtProfile::~QtProfile() {
@@ -144,6 +147,7 @@ namespace casa {
 		}
 
 		// read the preferred ctype from casarc
+		initializeXAxisUnits();
 		QString pref_ctype = read( ".freqcoord.type");
 		if (pref_ctype.size()>0) {
 			// change to the preferred ctype
@@ -250,6 +254,19 @@ namespace casa {
 
 	}
 
+	void QtProfile::initializeXAxisUnits(){
+		xUnitsList =(QStringList()<<
+		   "radio velocity [m/s]"<< "radio velocity [km/s]" <<
+		   "optical velocity [m/s]" << "optical velocity [km/s]" <<
+		   "frequency [Hz]" << "frequency [MHz]" << "frequency [GHz]" <<
+		   "wavelength [mm]" << "wavelength [um]" << "wavelength [nm]" << "wavelength [Angstrom]" <<
+		   "air wavelength [mm]" << "air wavelength [um]" << "air wavelength [nm]"<<"air wavelength [Angstrom]"<<
+		   "channel");
+		for ( int i = 0; i < xUnitsList.size(); i++ ){
+			bottomAxisCType->addItem( xUnitsList[i]);
+		}
+		restrictTopAxisOptions( false );
+	}
 
 	void QtProfile::setUnitsText( String unitStr ) {
 		QString unitLabel("<font color='black'>["+QString(unitStr.c_str())+"]</font>");
@@ -977,8 +994,36 @@ namespace casa {
 		return axisAscending;
 	}
 
+	int QtProfile::getChannelCount( ImageAnalysis* analysis ){
+		const ImageInterface<float>* img = analysis->getImage();
+		CoordinateSystem cSys = img->coordinates();
+		Int spectralIndex = cSys.spectralAxisNumber();
+		IPosition imgShape = img->shape();
+		int channelCount = imgShape[spectralIndex];
+		return channelCount;
+	}
+
+	ImageAnalysis* QtProfile::findImageWithMaximumChannels(){
+		ImageAnalysis* maxChannelAnalysis = analysis;
+		int maxChannelCount = getChannelCount( analysis );
+		if ( over ){
+			QHashIterator<QString, ImageAnalysis*> i(*over);
+			while (i.hasNext() && stateMProf) {
+				i.next();
+				QString ky = i.key();
+				ImageAnalysis* ana = i.value();
+				int channelCount = getChannelCount( ana );
+				if ( channelCount > maxChannelCount ){
+					maxChannelAnalysis = ana;
+					maxChannelCount = channelCount;
+				}
+			}
+		}
+		return maxChannelAnalysis;
+	}
+
 	void QtProfile::changeTopAxis() {
-		if ( lastWX.size() > 0 && pixelCanvas->getShowTopAxis() ) {
+		if ( pixelCanvas->getShowTopAxis() && lastWX.size() >= 2 ) {
 			Vector<Float> xValues (lastWX.size());
 			Vector<Float> yValues (lastWY.size());
 			QString text = topAxisCType ->currentText();
@@ -992,20 +1037,25 @@ namespace casa {
 			bool bottomAxisAscendingX = isAxisAscending( z_xval );
 
 			//Get the minimum and maximum x-value for the top axis
-			assignFrequencyProfile( lastWX, lastWY, coordinateType, cTypeUnit, xValues, yValues  );
+			//Of all the images we are overplotting, use the one with the maximum
+			//number of channels.
+			ImageAnalysis* maxChannelAnalysis = findImageWithMaximumChannels();
+			bool ok=maxChannelAnalysis->getFreqProfile( lastWX, lastWY, xValues, yValues,
+						                             WORLD_COORDINATES, coordinateType, 0, 0, 0, cTypeUnit, spcRefFrame,
+						                             (Int)QtProfile::MEAN, 0, cSysRval);
+			if ( ok ){
+				//Check to see if the top axis ordering is ascending in x
+				bool topAxisAscendingX = isAxisAscending(xValues);
 
-			//Check to see if the top axis ordering is ascending in x
-			bool topAxisAscendingX = isAxisAscending(xValues);
-
-			//We will have to show the labels of the top axis descending if the
-			//order does not match that of the bottom axis.
-			bool topAxisDescending = false;
-			if ( topAxisAscendingX != bottomAxisAscendingX ) {
-				topAxisDescending = true;
+				//We will have to show the labels of the top axis descending if the
+				//order does not match that of the bottom axis.
+				bool topAxisDescending = false;
+				if ( topAxisAscendingX != bottomAxisAscendingX ) {
+					topAxisDescending = true;
+				}
+				pixelCanvas -> setTopAxisRange( xValues, topAxisDescending );
 			}
-			pixelCanvas -> setTopAxisRange( xValues, topAxisDescending );
 		}
-
 	}
 
 	void QtProfile::plotMainCurve() {
@@ -1075,7 +1125,6 @@ namespace casa {
 	}
 
 	void QtProfile::overplot(QHash<QString, ImageInterface<float>*> hash) {
-
 		// re-set the images that are overplotted
 		if (over) {
 			delete over;
@@ -2329,14 +2378,119 @@ namespace casa {
 		}
 	}
 
+	double QtProfile::getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits ){
+		//We just care about the min and the max so we use a vector
+		//of size 2.
+		Vector<Float> xval(2);
+		Vector<Float> yval(2);
+		double unitPerChannel = -1;
+		//Note that we don't care if it is mean or something else because
+		//we are just interested in x-values here.
+		*ok = false;
+		if ( z_xval.size()> 0 ){
+			QRegExp unitsMatch( matchUnits+"*");
+			unitsMatch.setPatternSyntax( QRegExp::Wildcard);
+			int unitIndex = xUnitsList.indexOf( unitsMatch );
+			QString text = xUnitsList[unitIndex];
+			String xUnits = String(text.toStdString());
+			String coordinateType;
+			String cTypeUnit;
+			getcoordTypeUnit(xUnits, coordinateType, cTypeUnit);
+			*ok=analysis->getFreqProfile( lastWX, lastWY, xval, yval,
+					WORLD_COORDINATES, coordinateType, 0, 0, 0, cTypeUnit, spcRefFrame,
+							(Int)QtProfile::MEAN, 0);
+			if ( *ok ){
+				unitPerChannel = qAbs(xval[0] - xval[1]) / z_xval.size();
+			}
+		}
+		return unitPerChannel;
+	}
+
+	bool QtProfile::isFrequencyMatch(){
+		return isXUnitsMatch( FREQUENCY );
+	}
+
+	bool QtProfile::isVelocityMatch(){
+		return isXUnitsMatch( RADIO_VELOCITY );
+	}
+
+	bool QtProfile::isXUnitsMatch(const QString& matchUnits){
+		//Calculate the units per channel for each image
+		//and see if it matches within a given error percentage.
+		bool unitsMatch = true;
+
+		//Get the units per channel for the main image
+		bool unitsAvailable = false;
+		double unitsPerChannel = getUnitsPerChannel( analysis, &unitsAvailable, matchUnits );
+		if ( !unitsAvailable ){
+			unitsMatch = false;
+		}
+		else {
+
+			//Compare that with the frequency per channel of the overplots
+			if ( over != NULL){
+				const float ERROR_TOL = 0.00001f;
+				QHashIterator<QString, ImageAnalysis*> i(*over);
+				while (i.hasNext() && stateMProf) {
+					i.next();
+					QString ky = i.key();
+					ImageAnalysis* ana = i.value();
+					double overUnitsPerChannel = getUnitsPerChannel( ana, &unitsAvailable, matchUnits );
+					if ( !unitsAvailable ){
+						unitsMatch = false;
+						break;
+					}
+					else if ( qAbs( overUnitsPerChannel - unitsPerChannel) > ERROR_TOL ){
+						unitsMatch = false;
+						break;
+					}
+				}
+			}
+		}
+		return unitsMatch;
+	}
+
+
+	void QtProfile::restrictTopAxisOptions( bool restrictOptions, bool allowFrequency, bool allowVelocity ){
+		topAxisCType->clear();
+		for ( int i = 0; i < xUnitsList.size(); i++ ){
+			if ( !restrictOptions ||
+				(allowFrequency && xUnitsList[i].indexOf( FREQUENCY) >=0) ||
+				(allowVelocity && xUnitsList[i].indexOf( RADIO_VELOCITY) >= 0 ) ||
+				xUnitsList[i].indexOf( CHANNEL) >= 0){
+				topAxisCType->addItem( xUnitsList[i]);
+			}
+		}
+	}
+
 	void QtProfile::adjustTopAxisSettings() {
 		int mainCurveCount = pixelCanvas->getLineCount();
-		if ( mainCurveCount > 1 ) {
-			this->topAxisCType->setEnabled( false );
-		} else if ( pixelCanvas->getShowTopAxis() ) {
-			topAxisCType->setEnabled( true );
+		//If the user does not want us to show a top axis
+		//we don't.
+		restrictTopAxisOptions( false );
+		if ( !pixelCanvas->getShowTopAxis() ){
+			topAxisCType->setEnabled( false );
+		}
+		//If we have more than one curve, we show the top axis
+		//only if there is an image whose domain encompasses the domains
+		//of all the other images using the frequency units on the bottom
+		//axis.  The is because the canvas plots the bottom axis using the
+		//min and max of all the images whereas the top axis just uses a
+		//the min/max of a single image.  We also need to check that the
+		//frequency units/channel are the same on all images.
+		else if ( mainCurveCount > 1 ) {
+			bool frequencyMatch = isFrequencyMatch();
+			bool velocityMatch = isVelocityMatch();
+			bool enableTopAxis = frequencyMatch || velocityMatch;
+			topAxisCType->setEnabled( enableTopAxis );
+			if ( enableTopAxis ){
+				restrictTopAxisOptions( true, frequencyMatch, velocityMatch );
+			}
+			pixelCanvas->setTopAxisCompatible( enableTopAxis );
+		//If there is only one curve, we show the top axis assuming
+		//nothing else applies.
 		} else {
-			topAxisCType-> setEnabled( false );
+			topAxisCType-> setEnabled( true );
 		}
 	}
 

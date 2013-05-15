@@ -1463,12 +1463,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
-		/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-			if(qdd == qdds.getRight()) {
-				if ( qdd == controlling_dd ){
-					controlling_dd = NULL;
-				}
-				qdds.removeRight();*/
 		bool removed = displayDataHolder->removeDD( qdd );
 		if ( removed ) {
 			emit ddRemoved(qdd);
@@ -1479,13 +1473,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			delete qdd;
 			updateFrameInformation();
 		}
-
-		/*if ( qdds_.len() == 0 ){
-			this->controlling_dd = NULL;
-		}*/
-
 		return removed;
-
 	}
 
 
@@ -2122,19 +2110,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDisplayPanelGui::showImageProfile() {
 
-		//List<QtDisplayData*> rdds = qdp_->registeredDDs();
 		QHash<QString, ImageInterface<float>*> overlap;
 		bool profileVisible = false;
 		if ( profile_ && profile_->isVisible()) {
 			profileVisible = true;
 		}
-		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
-		while ( iter != displayDataHolder->endDD()) {
-			//for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 
-			//QtDisplayData* pdd = qdds.getRight();
+		for ( DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
+				iter != qdp_->endRegistered(); iter++ ){
 			QtDisplayData* pdd = (*iter);
-			iter++;
 			if(pdd != 0 && pdd->dataType() == "image") {
 
 				ImageInterface<float>* img = pdd->imageInterface();

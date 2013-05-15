@@ -273,6 +273,7 @@ namespace casa {
 		void addCanvasMainCurve( const Vector<Float>& xVals, const Vector<Float>& yVals,
 		                         const QString& label );
 		void adjustTopAxisSettings();
+		void initializeXAxisUnits();
 		void setPixelCanvasYUnits( const QString& yUnitPrefix, const QString& yUnit );
 		void toggleAction( QAction* action );
 		Int scaleAxis();
@@ -289,6 +290,18 @@ namespace casa {
 		ImageAnalysis* analysis;
 		ImageInterface<Float>* image;
 
+		//For deciding whether or not it makes sense to show the top axis when
+		//multiple images are loaded.
+		bool isXUnitsMatch(const QString& matchUnits);
+		bool isFrequencyMatch();
+		bool isVelocityMatch();
+		int getChannelCount( ImageAnalysis* analysis );
+		ImageAnalysis* findImageWithMaximumChannels();
+		void restrictTopAxisOptions( bool restrictOptions, bool allowFrequency = true, bool allowVelocity=true );
+		double getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits );
+
+
+
 		QHash<QString, ImageAnalysis*> *over;
 		const String WORLD_COORDINATES;
 		String coordinate;
@@ -302,7 +315,8 @@ namespace casa {
 		QString position;
 		QString yUnit;
 		QString yUnitPrefix;
-
+		//Holds the available x-axis units
+		QStringList xUnitsList;
 		QString xpos;
 		QString ypos;
 		int cube;
@@ -340,6 +354,9 @@ namespace casa {
 		static const QString PLOT_TYPE_MEAN;
 		static const QString PLOT_TYPE_MEDIAN;
 		static const QString PLOT_TYPE_SUM;
+		static const QString FREQUENCY;
+		static const QString RADIO_VELOCITY;
+		static const QString CHANNEL;
 
 		class spectra_info {
 		public:
