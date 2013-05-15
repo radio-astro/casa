@@ -11,13 +11,10 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.basetask as basetask
-#import pipeline.infrastructure.logging as logging
 from .. import common
 from .worker import SDBaselineWorker
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
-#logging.set_logging_level('info')
 
 class SDBaselineInputs(common.SingleDishInputs):
     """
@@ -76,9 +73,10 @@ class SDBaseline(common.SingleDishTaskTemplate):
         files = set()
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
-            spwid = group_desc['member'][0][1]
+            first_member = group_desc.member_list[0]
+            spwid = first_member[1]
             LOG.debug('spwid=%s'%(spwid))
-            pols = group_desc['member'][0][2]
+            pols = first_member[2]
             if pollist is not None:
                 pols = list(set(pollist) & set(pols))
 
@@ -88,10 +86,10 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 continue
                 
             # reference data is first scantable 
-            st = context.observing_run[group_desc['member'][0][0]]
+            st = context.observing_run[first_member[0]]
 
             # skip channel averaged spw
-            nchan = group_desc['nchan']
+            nchan = group_desc.nchan
             if nchan == 1:
                 LOG.info('Skip channel averaged spw %s.'%(spwid))
                 continue
@@ -100,7 +98,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             calmode = st.calibration_strategy['calmode']
             srctype = common.SrcTypeMap(calmode)
             worker = SDBaselineWorker(context)
-            _file_index = set(file_index) & set([m[0] for m in group_desc['member']])
+            _file_index = set(file_index) & set([m[0] for m in group_desc.member_list])
             files = files | _file_index
             pattern = st.pattern[spwid][pols[0]]
             parameters = {'datatable': datatable,

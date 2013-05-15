@@ -8,6 +8,7 @@ from asap import srctype as st
 import pipeline.infrastructure as infrastructure
 #import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casatools as casatools
+import pipeline.domain.singledish as singledish
 from ... import heuristics
 
 LOG = infrastructure.get_logger(__name__)
@@ -51,8 +52,8 @@ class DataTableAnalyser(object):
                 pols = pol_properties[spw_property.pol_association[0]].polno
                 match = False
                 for (k,v) in self.reduction_group.items():
-                    group_range = v['freq_range']
-                    group_nchan = v['nchan']
+                    group_range = v.frequency_range#v['freq_range']
+                    group_nchan = v.nchan#v['nchan']
                     overlap = max( 0.0, min(group_range[1],freq_range[1]) \
                                    - max(group_range[0],freq_range[0]))
                     width = max(group_range[1],freq_range[1]) \
@@ -64,13 +65,11 @@ class DataTableAnalyser(object):
                 if match is False:
                     # add new group
                     key = len(self.reduction_group)
-                    self.reduction_group[key] = {
-                        'freq_range': freq_range,
-                        'nchan': nchan,
-                        'member': [[idx,spw,pols]]
-                        }
+                    newgroup = singledish.ReductionGroupDesc(freq_range, nchan)
+                    newgroup.add_member(idx, spw, pols)
+                    self.reduction_group[key] = newgroup
                 else:
-                    self.reduction_group[match]['member'].append([idx,spw,pols])
+                    self.reduction_group[match].add_member(idx, spw, pols)
 
         LOG.debug('reduction_group:\n%s'%(self.reduction_group))
 

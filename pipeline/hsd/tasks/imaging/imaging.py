@@ -70,9 +70,10 @@ class SDImaging(common.SingleDishTaskTemplate):
         # loop over reduction group
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
-            spwid = group_desc['member'][0][1]
+            first_member = group_desc.member_list[0]
+            spwid = first_member[1]
             LOG.debug('spwid=%s'%(spwid))
-            pols = group_desc['member'][0][2]
+            pols = first_member[2]
             if pollist is not None:
                 pols = list(set(pollist).intersection(pols))
 
@@ -83,7 +84,7 @@ class SDImaging(common.SingleDishTaskTemplate):
 
             # image is created per antenna
             antenna_group = {}
-            for m in group_desc['member']:
+            for m in group_desc.member_list:
                 antenna = context.observing_run[m[0]].antenna.name
                 if antenna in antenna_group.keys():
                     antenna_group[antenna].append(m[0])

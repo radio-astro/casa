@@ -7,14 +7,10 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-#import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure import JobRequest
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
-#LogLevel='trace'
-LogLevel='info'
-#logging.set_logging_level(LogLevel)
 
 subsqr = lambda x, y: (x - y) * (x - y)
 NoData = common.NoData
@@ -70,7 +66,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
         file_index = [st_names.index(infile) for infile in infiles]
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw
-            spw = group_desc['member'][0][1]
+            spw = group_desc.menber_list[0][1]
             LOG.debug('spw=%s'%(spw))
 
             # skip spw that is not included in iflist
@@ -244,7 +240,7 @@ class SimpleGridding(object):
         return grid_table
 
 
-    def grid(self, grid_table, LogLevel=2):
+    def grid(self, grid_table, LogLevel='info'):
         """
         The process does re-map and combine spectrum for each position
         grid_table format:
