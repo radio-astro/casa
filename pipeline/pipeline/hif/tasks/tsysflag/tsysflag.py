@@ -89,15 +89,15 @@ class TsysflagInputs(basetask.StandardInputs):
     def metric(self, value):
         self._metric = value
 
-    @property
-    def flagcmdfile(self):
-        if self._flagcmdfile is None:
-            return '%s_flagcmds.txt' % self.caltable
-        return self._flagcmdfilefile
+#    @property
+#    def flagcmdfile(self):
+#        if self._flagcmdfile is None:
+#            return '%s_flagcmds.txt' % self.caltable
+#        return self._flagcmdfilefile
 
-    @flagcmdfile.setter
-    def flagcmdfile(self, value):
-        self._flagcmdfile = value
+#    @flagcmdfile.setter
+#    def flagcmdfile(self, value):
+#        self._flagcmdfile = value
 
     # flag n * median
     @property
@@ -245,7 +245,8 @@ class Tsysflag(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          table=inputs.caltable, inpfile=inputs.flagcmdfile)
+          table=inputs.caltable, inpfile=[])
+#          table=inputs.caltable, inpfile=inputs.flagcmdfile)
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
         # Translate the input flagging parameters to a more compact
