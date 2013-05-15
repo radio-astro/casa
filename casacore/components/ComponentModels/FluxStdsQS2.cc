@@ -51,7 +51,7 @@ Bool FluxStdBaars::setSourceCoeffs()
   
   setFreqUnit("MHz");
   //FCQS::Source srcEnum = getSrcEnum();
-  FSS::Source srcEnum = getSrcEnum();
+  FSS::Source srcEnum = FCVQS::getSrcEnum();
   
   //if(srcEnum == FCQS::THREEC286)
   if(srcEnum == FSS::THREEC286)
@@ -82,7 +82,7 @@ Bool FluxStdPerley90::setSourceCoeffs()
   
   setFreqUnit("MHz");
   //FCQS::Source srcEnum = getSrcEnum();
-  FSS::Source srcEnum = getSrcEnum();
+  FSS::Source srcEnum = FCVQS::getSrcEnum();
 
   //if(srcEnum == FCQS::THREEC286)
   if(srcEnum == FSS::THREEC286)
@@ -113,7 +113,7 @@ Bool FluxStdPerleyTaylor95::setSourceCoeffs()
   
   setFreqUnit("MHz");
   //FCQS::Source srcEnum = getSrcEnum();
-  FSS::Source srcEnum = getSrcEnum();
+  FSS::Source srcEnum = FCVQS::getSrcEnum();
 
   //if(srcEnum == FCQS::THREEC286)
   if(srcEnum == FSS::THREEC286)
@@ -144,7 +144,7 @@ Bool FluxStdPerleyTaylor99::setSourceCoeffs()
   
   setFreqUnit("GHz");
   //FCQS::Source srcEnum = getSrcEnum();
-  FSS::Source srcEnum = getSrcEnum();
+  FSS::Source srcEnum = FCQVS::getSrcEnum();
 
   //LogIO os(LogOrigin("FluxStdPerleyTaylor99", "setSourceCoeffs", WHERE));
   // os << LogIO::NORMAL
@@ -186,7 +186,7 @@ Bool FluxStdPerleyButler2010::setSourceCoeffs()
   
   setFreqUnit("GHz");
   //FCQS::Source srcEnum = getSrcEnum();
-  FSS::Source srcEnum = getSrcEnum();
+  FSS::Source srcEnum = FCQVS::getSrcEnum();
 
   //if(srcEnum == FCQS::THREEC286)
   if(srcEnum == FSS::THREEC286)
@@ -224,7 +224,7 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
 {
   Bool found = true;
   setFreqUnit("GHz");
-  FSS::Source srcEnum = FCQS::getSrcEnum();
+  FSS::Source srcEnum = FCVQS::getSrcEnum();
   String stddatapath;
   String stdTabName("PerleyButler2013Coeffs");
   
@@ -238,7 +238,7 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
   }
   Path stdTablePath(stddatapath);
   //cerr<<"stddatapath="<<stddatapath<<endl;
-  FCQS::readQSCoeffsTable(stdTablePath);
+  FCVQS::readQSCoeffsTable(stdTablePath);
 /***
   if (srcEnum != FCQS::THREEC286 && 
       srcEnum != FCQS::THREEC123 &&
