@@ -96,7 +96,7 @@ class importevla_test(unittest.TestCase):
         self.res = importevla(asdm=self.asdm, vis=msname, scans='2')
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
+#                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",

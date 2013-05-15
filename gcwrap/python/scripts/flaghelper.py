@@ -1165,7 +1165,7 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
             casalog.post('Replaced blanks with underscores in cmdreason', 'WARN')
            
         try:                            
-            
+            printonce = True            
             for key in myflags.keys():
                 # Remove leading and trailing white spaces
                 cmdline = myflags[key]['command'].strip()
@@ -1192,7 +1192,9 @@ def writeFlagCmd(msfile, myflags, vrows, applied, add_reason, outfile):
                     if add_reason == '':
                         tempreason = reason
                         reason = tempreason.replace(' ','_')
-                        casalog.post('Replaced blanks with underscores in reason', 'WARN')
+                        if printonce:
+                            casalog.post('Replaced blanks with underscores in reason', 'WARN')
+                            printonce = False
                         print >> ffout, '%s reason=\'%s\'' %(cmdline, reason)
                         
                     else:

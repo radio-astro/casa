@@ -195,7 +195,7 @@ class asdm_import1(test_base):
         self.assertEqual(self.res, None)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
+#                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -347,7 +347,7 @@ class asdm_import1(test_base):
             print myname, ': *** Unexpected error reimporting the exported ASDM, regression failed ***'   
             raise
 
-class asdm_import1(test_base):
+class asdm_import2(test_base):
     
     def setUp(self):
         self.setUp_m51()
@@ -360,7 +360,7 @@ class asdm_import1(test_base):
         shutil.rmtree('myinput.ms', ignore_errors=True)
         shutil.rmtree('M51.ms.asdm', ignore_errors=True)
                 
-    def test1(self):
+    def test_import2(self):
         '''Asdm-import: Test good v1.2 input with filler v3 and inverse filler v3 '''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
@@ -368,7 +368,7 @@ class asdm_import1(test_base):
         self.assertEqual(self.res, None)
         print myname, ": Success! Now checking output ..."
         mscomponents = set(["table.dat",
-                            "table.f0",
+#                            "table.f0",
                             "table.f1",
                             "table.f2",
                             "table.f3",
@@ -528,7 +528,7 @@ class asdm_import1(test_base):
             print myname, ': *** Unexpected error reimporting the exported ASDM, regression failed ***'   
             raise
         
-class asdm_import2(test_base):
+class asdm_import3(test_base):
     
     def setUp(self):
         self.setUp_xosro()
@@ -549,7 +549,7 @@ class asdm_import2(test_base):
         
         self.assertEqual(flagcmddict.keys().__len__(),214)
 
-class asdm_import3(test_base):
+class asdm_import4(test_base):
     
     def setUp(self):
         self.setUp_autocorr()
@@ -611,7 +611,7 @@ class asdm_import3(test_base):
         self.assertTrue(os.path.exists(fbackup))
         
 
-class asdm_import4(test_base):
+class asdm_import5(test_base):
     
     def setUp(self):
         self.setUp_m51()
@@ -624,7 +624,7 @@ class asdm_import4(test_base):
         os.system('rm -rf reference.ms* reimported-M51.ms*')
         
                 
-    def test1(self):
+    def test1_lazy1(self):
         '''Asdm-import: Test good v1.2 input with default filler in lazy mode'''
         retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
 
@@ -739,6 +739,10 @@ class asdm_import4(test_base):
                 
         
 def suite():
-    return [asdm_import1, asdm_import2, asdm_import3, asdm_import4]        
+    return [asdm_import1, 
+            asdm_import2, 
+            asdm_import3, 
+            asdm_import4,
+            asdm_import5]        
         
     
