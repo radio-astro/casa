@@ -39,14 +39,9 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-SpectralElement::SpectralElement(SpectralElement::Types type, const Vector<Double>& parms)
-	: _type(type), _params(parms), _errors(parms.size(), 0),
-	  _fixed(parms.size(), False) {}
-
-
 SpectralElement::SpectralElement(const SpectralElement &other)
-: _type(other._type), _params(other._params.copy()), _errors(other._errors.copy()),
-  _fixed(other._fixed.copy()) {}
+: tp_p(other.tp_p), par_p(other.par_p.copy()), err_p(other.err_p.copy()),
+  fix_p(other.fix_p.copy()) {}
 
 SpectralElement::~SpectralElement() {}
 
@@ -54,23 +49,22 @@ SpectralElement &SpectralElement::operator=(
 	const SpectralElement &other
 ) {
 	if (this != &other) {
-		_type = other._type;
-		uInt n = other._params.size();
-		_params.resize(n);
-		_params = other._params.copy();
-		_errors.resize(n);
-		_errors = other._errors.copy();
-		_fixed.resize(n);
-		_fixed = other._fixed.copy();
+		tp_p = other.tp_p;
+		par_p.resize(other.par_p.size());
+		par_p = other.par_p.copy();
+		err_p.resize(other.err_p.size());
+		err_p = other.err_p.copy();
+		fix_p.resize(other.fix_p.size());
+		fix_p = other.fix_p.copy();
 	}
 	return *this;
 }
 
 Double SpectralElement::operator[](const uInt n) const {
-	if (n >= _params.size()) {
+	if (n >= par_p.nelements()) {
 		throw(AipsError("SpectralElement: Illegal index for parameter"));
 	}
-	return _params[n];
+	return par_p(n);
 }
 
 Bool SpectralElement::operator==(
@@ -80,9 +74,9 @@ Bool SpectralElement::operator==(
 		return True;
 	}
 	return (
-		_type == other._type && allNear(_params, other._params, 1e-8)
-		&& allNear(_errors, other._errors, 1e-8)
-		&& allTrue(_fixed == other._fixed)
+		tp_p == other.tp_p && allNear(par_p, other.par_p, 1e-8)
+		&& allNear(err_p, other.err_p, 1e-8)
+		&& allTrue(fix_p == other.fix_p)
 	);
 }
 
@@ -94,8 +88,7 @@ const String* SpectralElement::allTypes(
 		String("POLYNOMIAL"),
 		String("COMPILED"),
 		String("GAUSSIAN MULTIPLET"),
-		String("LORENTZIAN"),
-		String("POWER LOGARITHMIC POLYNOMIAL")
+		String("LORENTZIAN")
 
 	};
 
@@ -104,8 +97,7 @@ const String* SpectralElement::allTypes(
 		SpectralElement::POLYNOMIAL,
 		SpectralElement::COMPILED,
 		SpectralElement::GMULTIPLET,
-		SpectralElement::LORENTZIAN,
-		SpectralElement::POWERLOGPOLY
+		SpectralElement::LORENTZIAN
 	};
 
 	nall = SpectralElement::N_Types;
@@ -114,11 +106,11 @@ const String* SpectralElement::allTypes(
 }
 
 void SpectralElement::_set(const Vector<Double>& params) {
-	_params = params.copy();
+	par_p = params.copy();
 }
 
 void SpectralElement::_setType(const SpectralElement::Types type) {
-	_type = type;
+	tp_p = type;
 }
 
 const String &SpectralElement::fromType(SpectralElement::Types tp) {
@@ -146,23 +138,25 @@ Bool SpectralElement::toType(
 }
 
 void SpectralElement::get(Vector<Double> &param) const {
-	param = _params.copy();
+  param.resize(par_p.nelements());
+  param = par_p.copy();
 }
 
 Vector<Double> SpectralElement::get() const {
-	return _params.copy();
+	return par_p.copy();
 }
 
 void SpectralElement::getError(Vector<Double> &err) const {
-	err = _errors.copy();
+	err.resize(err_p.nelements());
+	err = err_p.copy();
 }
 
 Vector<Double> SpectralElement::getError() const {
-	return _errors.copy();
+	return err_p.copy();
 }
 
 void SpectralElement::setError(const Vector<Double> &err) {
-	if (err.nelements() != _params.nelements()) {
+	if (err.nelements() != par_p.nelements()) {
 		throw(
 			AipsError(
 				"SpectralElement: setting incorrect "
@@ -170,11 +164,11 @@ void SpectralElement::setError(const Vector<Double> &err) {
 			)
 		);
 	}
-	_errors = err.copy();
+	err_p = err.copy();
 }
 
 void SpectralElement::fix(const Vector<Bool> &fix) {
-	if (fix.nelements() != _params.nelements()) {
+	if (fix.nelements() != par_p.nelements()) {
 		throw(
 			AipsError(
 				"SpectralElement: setting incorrect number of fixed "
@@ -182,17 +176,17 @@ void SpectralElement::fix(const Vector<Bool> &fix) {
 			)
 		);
 	}
-	_fixed = fix.copy();
+	fix_p = fix.copy();
 }
 
 const Vector<Bool>& SpectralElement::fixed() const {
-	return _fixed;
+	return fix_p;
 }
 
 Bool SpectralElement::toRecord(RecordInterface &out) const {
-	out.define(RecordFieldId("type"), fromType(_type));
-	Vector<Double> ptmp(_params);
-	Vector<Double> etmp(_params);
+	out.define(RecordFieldId("type"), fromType(tp_p));
+	Vector<Double> ptmp(par_p.copy());
+	Vector<Double> etmp(err_p.copy());
 	out.define(RecordFieldId("parameters"), ptmp);
 	out.define(RecordFieldId("errors"), etmp);
 	return True;
@@ -208,7 +202,6 @@ void SpectralElement::set(const Vector<Double>& params) {
 	_set(params);
 }
 
-/*
 void SpectralElement::_construct(
 	const Types type, const Vector<Double>& params
 ) {
@@ -217,7 +210,7 @@ void SpectralElement::_construct(
 	err_p = Vector<Double>(params.size(), 0);
 	fix_p = Vector<Bool>(params.size(), 0);
 }
-*/
+
 } //# NAMESPACE CASA - END
 
 

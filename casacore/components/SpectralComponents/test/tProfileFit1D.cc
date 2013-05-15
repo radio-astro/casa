@@ -55,7 +55,7 @@ GaussianMultipletSpectralElement makeMultiplet (
 	const Vector<Double>& sigma
 );
 
-vector<LorentzianSpectralElement> makeLorentzians (
+Vector<LorentzianSpectralElement> makeLorentzians (
 	Vector<Double>& x, Vector<Double>& y,
 	const Vector<Double>& amp, const Vector<Double>& cen,
 	const Vector<Double>& fwhm
@@ -66,6 +66,7 @@ int main() {
 	try {
 
 		{
+
 			// Data
 			Vector<Double> x,y;
 			Vector<Bool> m;
@@ -76,7 +77,10 @@ int main() {
 			// Make fitter, set data and fit
 			ProfileFit1D<Double> fitter;
 			fitter.setData (x,y,m);
+			cout << __FILE__ << " " << __LINE__ << endl;
 			fitter.setGaussianElements (1);
+			cout << __FILE__ << " " << __LINE__ << endl;
+
 			const SpectralElement *firstEl = fitter.getList(False)[0];
 			AlwaysAssert(
 				firstEl->getType() == SpectralElement::GAUSSIAN, AipsError
@@ -140,7 +144,10 @@ int main() {
 			cen[1] = 60;
 			sigma[0] = 6;
 			sigma[1] = 6;
+
+
 			GaussianMultipletSpectralElement gm0 = makeMultiplet (x, y, amp, cen, sigma);
+
 			ProfileFit1D<Double> fitter;
 			Vector<Bool> m (x.size(), True);
 			fitter.setData (x,y,m);
@@ -168,6 +175,7 @@ int main() {
 					),
 				AipsError
 			);
+
 			Matrix<Double> r(1, 3);
 			GaussianMultipletSpectralElement gm = gm0;
 
@@ -242,7 +250,7 @@ int main() {
 			cen[1] = 60;
 			fwhm[0] = 6;
 			fwhm[1] = 6.5;
-			vector<LorentzianSpectralElement> lse = makeLorentzians (x, y, amp, cen, fwhm);
+			Vector<LorentzianSpectralElement> lse = makeLorentzians (x, y, amp, cen, fwhm);
 
 			ProfileFit1D<Double> fitter;
 			Vector<Bool> m (x.size(), True);
@@ -389,7 +397,7 @@ GaussianMultipletSpectralElement makeMultiplet (
 	indgen(x);
 	x += minx;
 	y.resize(x.size());
-	vector<GaussianSpectralElement> g(amp.size());
+	Vector<GaussianSpectralElement> g(amp.size());
 	Matrix<Double> r(g.size() - 1, 3, 0);
 	for (uInt i=0; i<amp.size(); i++) {
 		g[i] = GaussianSpectralElement(amp[i], cen[i], sigma[i]);
@@ -404,7 +412,7 @@ GaussianMultipletSpectralElement makeMultiplet (
 	return gm;
 }
 
-vector<LorentzianSpectralElement> makeLorentzians (
+Vector<LorentzianSpectralElement> makeLorentzians (
 	Vector<Double>& x, Vector<Double>& y,
 	const Vector<Double>& amp, const Vector<Double>& cen,
 	const Vector<Double>& fwhm
@@ -421,9 +429,9 @@ vector<LorentzianSpectralElement> makeLorentzians (
 	indgen(x);
 	x += minx;
 	y.resize(x.size());
-	vector<LorentzianSpectralElement> lse;
+	Vector<LorentzianSpectralElement> lse(amp.size());
 	for (uInt i=0; i<amp.size(); i++) {
-		lse.push_back(LorentzianSpectralElement(amp[i], cen[i], fwhm[i]));
+		lse[i] = LorentzianSpectralElement(amp[i], cen[i], fwhm[i]);
 	}
 	for (uInt i=0; i<x.size(); i++) {
 		y[i] = 0;

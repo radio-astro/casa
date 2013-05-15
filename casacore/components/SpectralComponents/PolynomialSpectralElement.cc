@@ -32,16 +32,16 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-PolynomialSpectralElement::PolynomialSpectralElement()
-: SpectralElement(SpectralElement::POLYNOMIAL, Vector<Double>(0)) {
-}
 
 PolynomialSpectralElement::PolynomialSpectralElement(const uInt n)
-: SpectralElement(SpectralElement::POLYNOMIAL, Vector<Double>(n+1)) {
+: SpectralElement() {
+	Vector<Double> p(n+1, 0);
+	_construct(SpectralElement::POLYNOMIAL, p);
 }
 
 PolynomialSpectralElement::PolynomialSpectralElement(const Vector<Double>& param)
-: SpectralElement(SpectralElement::POLYNOMIAL, param) {
+: SpectralElement() {
+	_construct(SpectralElement::POLYNOMIAL, param);
 }
 
 PolynomialSpectralElement::PolynomialSpectralElement(
@@ -54,7 +54,6 @@ SpectralElement* PolynomialSpectralElement::clone() const {
 	return new PolynomialSpectralElement(*this);
 }
 
-/*
 PolynomialSpectralElement& PolynomialSpectralElement::operator=(
 	const PolynomialSpectralElement &other
 ) {
@@ -63,7 +62,6 @@ PolynomialSpectralElement& PolynomialSpectralElement::operator=(
 	}
 	return *this;
 }
-*/
 
 Double PolynomialSpectralElement::operator()(const Double x) const {
 	Double s = 0;
@@ -84,23 +82,7 @@ uInt PolynomialSpectralElement::getDegree() const {
 
 ostream &operator<<(ostream &os, const PolynomialSpectralElement &elem) {
 	os << SpectralElement::fromType((elem.getType())) << " element: " << endl;
-	uInt degree = elem.getDegree();
-    os << "  Degree:    " << degree << endl;
-    os << "  Function: c0 ";
-    ostringstream ss;
-    Vector<Double> c = elem.get();
-    ss << "c0: " << c[0] << endl;
-    for (uInt i=1; i<=degree; i++) {
-    	os << " + c" << i << "*x";
-    	if (i > 1) {
-    		os << "**" << i;
-    	}
-    	ss << "c" << i << ": " << c[i] << endl;
-    }
-    os << endl;
-    os << ss.str();
-
-
+    os << "  Degree:    " << elem.getDegree() << endl;
     return os;
 }
 
