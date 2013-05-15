@@ -55,6 +55,9 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.Applycal:
         return 'Apply calibrations from context'
 
+    if task_cls is hif.tasks.Atmflag:
+        return 'Flag on atmospheric transmission'
+
     if task_cls is hif.tasks.FlagDeterALMA:
         return 'ALMA deterministic flagging'
 
@@ -1472,6 +1475,7 @@ renderer_map = {
         hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
     },
     T2_4MDetailsRenderer : {
+        hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_cleanlist.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
