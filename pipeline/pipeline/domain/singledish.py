@@ -339,16 +339,20 @@ class ReductionGroupMember(object):
     def __eq__(self, other):
         return other.antenna == self.antenna and other.spw == self.spw and other.pols == self.pols 
         
-class ReductionGroupDesc(object):
+class ReductionGroupDesc(list):
     def __init__(self, frequency_range=None, nchan=None):
         self.frequency_range = frequency_range
         self.nchan = nchan
-        self.member_list = []
+        #self.member_list = []
+
+    #@property
+    #def member_list(self):
+    #    return self
 
     def add_member(self, antenna, spw, pols):
         new_member = ReductionGroupMember(antenna, spw, pols)
-        if not new_member in self.member_list:
-            self.member_list.append(new_member)
+        if not new_member in self:
+            self.append(new_member)
 
     def __repr__(self):
-        return 'ReductionGroupDesc(frequency_range=%s, nchan=%s, member=%s)'%(self.frequency_range, self.nchan, self.member_list)
+        return 'ReductionGroupDesc(frequency_range=%s, nchan=%s, member=%s)'%(self.frequency_range, self.nchan, self[:])

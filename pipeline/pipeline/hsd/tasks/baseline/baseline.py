@@ -43,7 +43,7 @@ class SDBaselineResults(common.SingleDishResults):
         LOG.todo('need to decide what is done in SDBaselineResults.merge_with_context')
 
     def _outcome_name(self):
-        return self.outcome
+        return '%s: %s (spw=%s, pol=%s)'%(self.outcome['index'], self.outcome['name'], self.outcome['spw'], self.outcome['pols'])
 
 class SDBaseline(common.SingleDishTaskTemplate):
     Inputs = SDBaselineInputs
@@ -73,7 +73,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         files = set()
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
-            first_member = group_desc.member_list[0]
+            first_member = group_desc[0]
             spwid = first_member.spw
             LOG.debug('spwid=%s'%(spwid))
             pols = first_member.pols
@@ -98,7 +98,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             calmode = st.calibration_strategy['calmode']
             srctype = common.SrcTypeMap(calmode)
             worker = SDBaselineWorker(context)
-            _file_index = set(file_index) & set([m.antenna for m in group_desc.member_list])
+            _file_index = set(file_index) & set([m.antenna for m in group_desc])
             files = files | _file_index
             pattern = st.pattern[spwid][pols[0]]
             parameters = {'datatable': datatable,
@@ -117,18 +117,34 @@ class SDBaseline(common.SingleDishTaskTemplate):
             job = jobrequest.JobRequest(worker.execute, **parameters)
             self._executor.execute(job)
 
-        for f in files:
-            name = context.observing_run[f].baselined_name
-            result = SDBaselineResults(task=self.__class__,
-                                       success=True,
-                                       outcome=name)
+            for f in _file_index:
+                name = context.observing_run[f].baselined_name
+                outcome = {'name': name, 'index': f, 'spw': spwid, 'pols': pols}
+                result = SDBaselineResults(task=self.__class__,
+                                           success=True,
+                                           outcome=outcome)
+                
+                if self.inputs.context.subtask_counter is 0: 
+                    result.stage_number = self.inputs.context.task_counter - 1
+                else:
+                    result.stage_number = self.inputs.context.task_counter 
 
-            if self.inputs.context.subtask_counter is 0: 
-                result.stage_number = self.inputs.context.task_counter - 1
-            else:
-                result.stage_number = self.inputs.context.task_counter 
+                results.append(result)
 
-            results.append(result)
+        #for f in files:
+        #    name = context.observing_run[f].baselined_name
+        #    index = f
+        #    outcome = {'name': name, 'index': index}
+        #    result = SDBaselineResults(task=self.__class__,
+        #                               success=True,
+        #                               outcome=outcome)
+
+        #    if self.inputs.context.subtask_counter is 0: 
+        #        result.stage_number = self.inputs.context.task_counter - 1
+        #    else:
+        #        result.stage_number = self.inputs.context.task_counter 
+
+        #    results.append(result)
                 
         return results
 

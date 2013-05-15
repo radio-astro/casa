@@ -12,7 +12,6 @@ from .. import common
 
 LOG = infrastructure.get_logger(__name__)
 
-subsqr = lambda x, y: (x - y) * (x - y)
 NoData = common.NoData
 
 class SDSimpleGridInputs(common.SingleDishInputs):
@@ -75,7 +74,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
                 continue
 
             # assume all members have same calmode
-            ant = group_desc.member_list[0].antenna
+            ant = group_desc[0].antenna
             st = context.observing_run[ant]
             calmode = st.calibration_strategy['calmode']
             srctype = common.SrcTypeMap(calmode)
@@ -229,8 +228,9 @@ class SimpleGridding(object):
                         # Also, x * x is ~30% faster than x ** 2.0.
                         #Delta = (((ras[index] - RA) * dec_corr) ** 2.0 + \
                         #         (decs[index] - DEC) ** 2.0) ** 0.5
-                        Delta = sqrt(subsqr(ras[index], RA) * dec_corr * dec_corr 
-                                     + subsqr(decs[index], DEC))
+                        Delta = sqrt((ras[index] - RA) * (ras[index] - RA)
+                                     * dec_corr * dec_corr 
+                                     + (decs[index] - DEC) * (decs[index] - DEC))
                         line[6].append([rows[index], Delta, stats[index], index_list[index], ants[index]])
                     grid_table.append(line)
                     #LOG.info("grid_table: %s" % line)
