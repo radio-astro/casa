@@ -89,7 +89,7 @@ class FluxCalcVQS: public FluxStdSrcs
 {
 public:
 
-  typedef FluxCalcVQS FCQS;
+  typedef FluxCalcVQS FCVQS;
   typedef RigidVector<String, 4> RVS4;
   typedef RigidVector<String, 5> RVS5;
   typedef RigidVector<Float, 4> RVF4;
@@ -134,7 +134,7 @@ public:
   // srcEnum_p != FCQS::UNKNOWN_SOURCE
   virtual Bool setSource(const String& sourceName);
 
-  FCQS::Source getSrcEnum();
+  FCVQS::Source getSrcEnum();
 
   //MDirection getDirection() {return directions_p[srcEnum_p];}
   MDirection getDirection() {return FluxStdSrcs::getDirection(srcEnum_p);}
@@ -152,7 +152,7 @@ protected:
   FluxCalcVQS();   // Initializes names_p.
 
 private:
-  FCQS::Source srcEnum_p;       // The source identifier.
+  FCVQS::Source srcEnum_p;       // The source identifier.
 
   // A map from an FS::Source enum to a list of recognized names for it.
   //std::map<FCQS::Source, Vector<String> > names_p;
