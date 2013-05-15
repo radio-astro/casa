@@ -306,3 +306,16 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
     @property
     def is_atmcal(self):
         return (self.type == 'SP' and self.intent.find('ATMOSPHERE') != -1)
+
+
+class ReductionGroupDesc(object):
+    def __init__(self, frequency_range=None, nchan=None):
+        self.frequency_range = frequency_range
+        self.nchan = nchan
+        self.member_list = []
+
+    def add_member(self, antenna, spw, pols):
+        item = [antenna, spw, pols]
+        if not item in self.member_list:
+            self.member_list.append(item)
+        
