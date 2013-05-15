@@ -37,15 +37,20 @@ try:
         if hasattr(r, 'flagcmdfile'):
             reason = r.reason
 
+#            flagcmdhtml = os.path.join(plots_dir, '%s.html' % os.path.basename(
+#              r.flagcmdfile))
             flagcmdhtml = os.path.join(plots_dir, '%s.html' % os.path.basename(
-              r.flagcmdfile))
+              r.table))
             hrutils.renderflagcmds(r.flagcmdfile, flagcmdhtml, reason)
 
             # now write 'printTsysFlags' output to a report file
+#            reporthtml = os.path.join(plots_dir, '%s.report.html' %
+#              os.path.basename(r.flagcmdfile))
             reporthtml = os.path.join(plots_dir, '%s.report.html' %
-              os.path.basename(r.flagcmdfile))
+              os.path.basename(r.table))
             hrutils.printTsysFlags(r.table, reporthtml)
-            htmlreports[os.path.basename(r.flagcmdfile)] = (flagcmdhtml,reporthtml)
+#            htmlreports[os.path.basename(r.flagcmdfile)] = (flagcmdhtml,reporthtml)
+            htmlreports[os.path.basename(r.table)] = (flagcmdhtml,reporthtml)
 
         if r.view:
             # display the view first
@@ -66,7 +71,7 @@ try:
             fileobj.write(renderer.render())
 
 except Exception, e:
-    print 'hif_tsysflagedges html template exception:', e
+    print 'hif_tsysflagchans html template exception:', e
     raise e
 %>
  
@@ -84,7 +89,7 @@ except Exception, e:
 <h2>Flags</h2>
 <table border="1">
     <tr>
-        <td>Flagging template</td>
+        <td>Flagcmds</td>
         <td>Flagging report</td>
     </tr>
     % for file,reports in htmlreports.items():
