@@ -29,13 +29,14 @@ class GriddingBase(object):
                 'WeightRMS': True, \
                 'WeightTsysExptime': False} 
 
-    def __init__(self, datatable, antenna, spw, pol, srctype, nchan, grid_size):
+    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
         self.datatable = datatable
         self.datatable_name = self.datatable.plaintable
         if type(antenna) == int:
             self.antenna = [antenna]
         else:
             self.antenna = antenna
+        self.files = files
         self.spw = spw
         self.pol = pol
         self.nchan = nchan
@@ -60,15 +61,7 @@ class GriddingBase(object):
         allowance = self.grid_ra * 0.1
         spacing = self.grid_ra / 3.0
         index_list, grid_table = self.GroupForGrid(combine_size, allowance, spacing, 'RASTER')
-        #return index_list, grid_table
-        work_dir = os.path.join('/',*(self.datatable.plaintable.split('/')[:-2]))
-        filenames = [os.path.join(work_dir,f) for f in self.datatable.getkeyword('FILENAMES')]
-        #DataIn = filenames[self.antenna]
-        DataIn = [filenames[i] for i in self.antenna]
-        ### FOR TESTING ###
-        #DataIn = ['uid___A002_X316307_X6f.CM02.asap_work/',
-        #          'uid___A002_X3178c7_X31.CM02.asap_work/']
-        ###################
+        DataIn = self.files
         LOG.info('DataIn=%s'%(DataIn))
         LOG.info('index_list.shape=%s'%(list(index_list.shape)))
         spstorage, grid_table2 = self.Process8(DataIn, index_list, self.nchan, grid_table, 0.5 * combine_size, self.rule)
@@ -94,10 +87,6 @@ class GriddingBase(object):
         if self.srctype is not None:
             taqlstring += ' && SRCTYPE==%s'%(self.srctype)
 
-        ### FOR TESTING ###
-        #taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID, RO.ROW, RO.ANTENNA, RO.RA, RO.DEC, RW.STATISTICS[0] AS STAT FROM "%s" RO, "%s" RW WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join('ThisIsExportedDataTable.tbl/RO'),os.path.join('ThisIsExportedDataTable.tbl/RW'),self.spw,self.pol,list(self.antenna))        
-        ###################
-            
         LOG.debug('taqlstring="%s"'%(taqlstring))
         #NpRAs = numpy.take(self.datatable.getcol('RA'),Idx)
         #NpDECs = numpy.take(self.datatable.getcol('DEC'),Idx)
@@ -326,9 +315,9 @@ class GriddingBase(object):
         return (StorageOut, OutputTable)
 
 class RasterGridding(GriddingBase):
-    def __init__(self, datatable, antenna, spw, pol, srctype, nchan, grid_size):
+    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
 
-        super(RasterGridding, self).__init__(datatable, antenna, spw, pol, srctype, nchan, grid_size)
+        super(RasterGridding, self).__init__(datatable, antenna, files, spw, pol, srctype, nchan, grid_size)
 
     def _group(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """
@@ -401,9 +390,9 @@ class RasterGridding(GriddingBase):
         return GridTable
         
 class SinglePointGridding(GriddingBase):
-    def __init__(self, datatable, antenna, spw, pol, srctype, nchan, grid_size):
+    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
 
-        super(SinglePointGridding, self).__init__(datatable, antenna, spw, pol, srctype, nchan, grid_size)
+        super(SinglePointGridding, self).__init__(datatable, antenna, files, spw, pol, srctype, nchan, grid_size)
 
     def _group(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """
@@ -437,9 +426,9 @@ class SinglePointGridding(GriddingBase):
         return GridTable
         
 class MultiPointGridding(GriddingBase):
-    def __init__(self, datatable, antenna, spw, pol, srctype, nchan, grid_size):
+    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
 
-        super(MultiPointGridding, self).__init__(datatable, antenna, spw, pol, srctype, nchan, grid_size)
+        super(MultiPointGridding, self).__init__(datatable, antenna, files, spw, pol, srctype, nchan, grid_size)
 
     def _group(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """

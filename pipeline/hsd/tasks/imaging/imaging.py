@@ -102,12 +102,20 @@ class SDImaging(common.SingleDishTaskTemplate):
                 # source name
                 source_name = st.source[0].name.replace(' ','_')
 
+                # filenames for gridding
+                data_name = lambda x: x.baselined_name \
+                            if os.path.exists(x.baselined_name) else x.name
+                filenames = [data_name(context.observing_run[i]) for i in indices]
+
+                LOG.debug('filenames=%s'%(filenames))
+                
                 worker = SDImagingWorker()
                 parameters = {'datatable': datatable,
                               'reference_data': st,
                               'source_name': source_name,
                               'antenna_name': name,
                               'antenna_indices': indices,
+                              'antenna_files': filenames,
                               'spwid': spwid,
                               'polids': pols}
 
@@ -159,7 +167,7 @@ class SDImagingWorker(object):
     def __init__(self):
         pass
 
-    def execute(self, datatable, reference_data, source_name, antenna_name, antenna_indices, spwid, polids):
+    def execute(self, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids):
         # spectral window
         spw = reference_data.spectral_window[spwid]
         refpix = spw.refpix
@@ -181,7 +189,7 @@ class SDImagingWorker(object):
         
         data_array = []
         for pol in polids:                        
-            worker = gridding_class(datatable, antenna_indices, spwid, pol, srctype, nchan, grid_size)
+            worker = gridding_class(datatable, antenna_indices, antenna_files, spwid, pol, srctype, nchan, grid_size)
 
             (spectra,grid_table) = worker.execute()
 
