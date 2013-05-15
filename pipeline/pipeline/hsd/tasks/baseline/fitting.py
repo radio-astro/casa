@@ -13,7 +13,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
-import pipeline.infrastructure.logging as logging
+#import pipeline.infrastructure.logging as logging
 #import pipeline.hsd.heuristics as heuristics
 from pipeline.hsd.heuristics import fitorder, fragmentation
 from .. import common
@@ -25,7 +25,7 @@ from .baselinetable import PolynomialBaselineTableGenerator
 LOG = infrastructure.get_logger(__name__)
 LogLevel='debug'
 #LogLevel='info'
-logging.set_logging_level(LogLevel)
+#logging.set_logging_level(LogLevel)
 
 class FittingBase(object):
     ApplicableDuration = 'raster' # 'raster' | 'subscan'
