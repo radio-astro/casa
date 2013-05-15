@@ -348,33 +348,19 @@ def importevla(
         casalog.post('%s' % instance, 'ERROR')
 
         # write history
-    mslocal.open(viso, nomodify=False)
-    mslocal.writehistory(message='taskname   = importevla',
-                         origin='importevla')
-    mslocal.writehistory(message='asdm       = "' + str(asdm) + '"',
-                         origin='importevla')
-    mslocal.writehistory(message='vis        = "' + str(viso) + '"',
-                         origin='importevla')
-    if flagzero:
-        mslocal.writehistory(message='flagzero   = T"',
-                             origin='importevla')
-        if flagpol:
-            mslocal.writehistory(message='flagpol    = T"',
-                                 origin='importevla')
-    if shadow:
-        mslocal.writehistory(message='shadow     = T"',
-                             origin='importevla')
-        mslocal.writehistory(message='tolerance   = "' + str(tolerance)
-                             + '"', origin='importevla')
-        mslocal.writehistory(message='addantenna   = "'
-                             + str(addantenna) + '"',
-                             origin='importevla')
-    if applyflags:
-        mslocal.writehistory(message='applyflags = T"',
-                             origin='importevla')
+    else:
+        retval = True
+        try:
+            param_names = importevla.func_code.co_varnames[:importevla.func_code.co_argcount]
+            param_vals = [eval(p) for p in param_names]
+            retval &= write_history(mslocal, vis, 'importevla', param_names,
+                                    param_vals, casalog)
+            
+        except Exception, instance:
+            casalog.post("*** Error \'%s\' updating HISTORY" % (instance),
+                         'WARN')
 
-    mslocal.close()
-
+   
 
 # ===============================================================================
 
