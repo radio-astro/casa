@@ -143,13 +143,13 @@ class SDImaging(common.SingleDishTaskTemplate):
                                               success = True, 
                                               outcome = image_item)
                     result.task = self.__class__
-                    results.append(result)
 
                     if self.inputs.context.subtask_counter is 0: 
                         result.stage_number = self.inputs.context.task_counter - 1
                     else:
                         result.stage_number = self.inputs.context.task_counter 
 
+                    results.append(result)
         return results
 
     def analyse(self, result):
