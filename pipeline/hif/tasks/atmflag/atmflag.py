@@ -226,7 +226,6 @@ class AtmflagWorker(basetask.StandardTaskTemplate):
             reffreq = casatools.quanta.convert(reffreq, 'GHz')
             chansep = casatools.atmosphere.getChanSep(band)
             chansep = casatools.quanta.convert(chansep, 'GHz')
-            print numchan, refchan, reffreq, chansep
 
             freqs = np.zeros([numchan], np.double)
             for i in np.arange(numchan):
