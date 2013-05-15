@@ -3479,7 +3479,27 @@ ms::addephemeris(const int id,
 
     }
 
-    if(!itsMS->field().addEphemeris(id, t_name, t_comment)){
+    uInt theId=0;
+    if(id>=0){
+      theId = id;
+    }
+    else{ // if the given id is invalid, determine the next free id
+      String ephIDName = MSField::columnName(MSField::EPHEMERIS_ID);
+      if(itsMS->field().actualTableDesc().isColumn(ephIDName)){
+	ScalarColumn<Int> ephid(itsMS->field(), ephIDName);
+	Vector<Int> ids = ephid.getColumn();
+	for(uInt i=0; i<ids.size(); i++){
+	  for(uInt j=0; j<fieldids.size(); j++){
+	    if(i==fieldids[j] && ids[i]>=0){ // these are the ids to be overwritten
+	      ids[i] = -1; // exclude them from the search
+	    }
+	  }
+	}
+	theId = max(ids)+1; 
+      }
+    }
+
+    if(!itsMS->field().addEphemeris(theId, t_name, t_comment)){
       *itsLog << LogOrigin("ms", "addephemeris") 
 	      << LogIO::SEVERE << "Error adding ephemeris to MS." << LogIO::POST;
       return False;
@@ -3500,7 +3520,7 @@ ms::addephemeris(const int id,
 	  *itsLog << LogIO::WARN << "   Will replace it by the start time of the added ephemeris." << LogIO::POST;
 	}
       }
-      msfc.ephemerisId().put(fieldids(i), id);
+      msfc.ephemerisId().put(fieldids(i), theId);
     }
    
     {// Update HISTORY table of newly created MS
