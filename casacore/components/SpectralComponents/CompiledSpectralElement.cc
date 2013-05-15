@@ -38,7 +38,7 @@ CompiledSpectralElement::CompiledSpectralElement() {}
 CompiledSpectralElement::CompiledSpectralElement(
 		const String& function,
 		const Vector<Double>& param
-) : SpectralElement(), _function(function) {
+) : SpectralElement(SpectralElement::COMPILED, param), _function(function) {
 	CompiledFunction<Double> comp;
 	if (! comp.setFunction(_function)) {
 		throw AipsError(
@@ -52,10 +52,15 @@ CompiledSpectralElement::CompiledSpectralElement(
 			"compiled function does not match number of input parameters"
 		);
 	}
-	_construct(SpectralElement::COMPILED, param);
 }
 
+CompiledSpectralElement::CompiledSpectralElement(
+	SpectralElement::Types type, const Vector<Double>& param
+) : SpectralElement(type, param), _function("") {}
 
+CompiledSpectralElement::CompiledSpectralElement(
+	SpectralElement::Types type, uInt nParam
+) : SpectralElement(type, Vector<Double>(nParam)), _function("") {}
 
 CompiledSpectralElement::CompiledSpectralElement(
 	const CompiledSpectralElement& other
