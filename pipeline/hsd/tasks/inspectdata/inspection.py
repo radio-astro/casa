@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import re
 
 import pipeline.infrastructure as infrastructure
-#import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure import JobRequest
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
@@ -11,7 +10,6 @@ from . import reader
 from . import analyser
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
 
 import os
 import asap as sd

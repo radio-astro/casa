@@ -7,15 +7,11 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.jobrequest as jobrequest
-#import pipeline.infrastructure.logging as logging
 import pipeline.h.heuristics as heuristics
 from .. import common
 from . import rules
 
 LOG = infrastructure.get_logger(__name__)
-#LogLevel='trace'
-LogLevel='info'
-#logging.set_logging_level(LogLevel)
 
 class DetectLine(object):
     #LineFinder = heuristics.AsapLineFinder
@@ -26,7 +22,7 @@ class DetectLine(object):
         self.datatable = datatable
         self.lf = self.LineFinder()
 
-    def execute(self, grid_table, spectra, window=[], edge=(0, 0), broadline=True):
+    def execute(self, grid_table, spectra, window=[], edge=(0, 0), broadline=True, LogLevel='info'):
         """
         The process finds emission lines and determines protection regions for baselinefit
         """
