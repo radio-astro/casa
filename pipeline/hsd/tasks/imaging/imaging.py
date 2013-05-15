@@ -67,7 +67,7 @@ class SDImaging(common.SingleDishTaskTemplate):
         # loop over reduction group
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
-            first_member = group_desc.member_list[0]
+            first_member = group_desc[0]
             spwid = first_member.spw
             LOG.debug('spwid=%s'%(spwid))
             pols = first_member.pols
@@ -81,7 +81,7 @@ class SDImaging(common.SingleDishTaskTemplate):
 
             # image is created per antenna
             antenna_group = {}
-            for m in group_desc.member_list:
+            for m in group_desc:
                 antenna = context.observing_run[m.antenna].antenna.name
                 if antenna in antenna_group.keys():
                     antenna_group[antenna].append(m.antenna)
