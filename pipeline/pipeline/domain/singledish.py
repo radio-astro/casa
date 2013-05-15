@@ -308,6 +308,37 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
         return (self.type == 'SP' and self.intent.find('ATMOSPHERE') != -1)
 
 
+class ReductionGroupMember(object):
+    def __init__(self, antenna, spw, pols):
+        self.antenna = antenna
+        self.spw = spw
+        self.pols = pols
+        self.iteration = [0 for p in xrange(self.npol)]
+
+    @property
+    def npol(self):
+        return len(self.pols)
+
+    def iter_countup(self, pols=None):
+        if pols is None:
+            for i in xrange(self.npol):
+                self.iteration[i] += 1
+        elif isinstance(pols, int):
+            self.iteration[pols] += 1
+        else:
+            # should be list
+            for i in pols:
+                self.iteration[self.pols.index(i)] += 1
+
+    def iter_reset(self):
+        self.iteration = [0 for p in self.pols]
+
+    def __repr__(self):
+        return 'ReductionGroupMember(antenna=%s, spw=%s, pols=%s, iteration=%s)'%(self.antenna, self.spw, self.pols, self.iteration)
+
+    def __eq__(self, other):
+        return other.antenna == self.antenna and other.spw == self.spw and other.pols == self.pols 
+        
 class ReductionGroupDesc(object):
     def __init__(self, frequency_range=None, nchan=None):
         self.frequency_range = frequency_range
@@ -315,7 +346,9 @@ class ReductionGroupDesc(object):
         self.member_list = []
 
     def add_member(self, antenna, spw, pols):
-        item = [antenna, spw, pols]
-        if not item in self.member_list:
-            self.member_list.append(item)
-        
+        new_member = ReductionGroupMember(antenna, spw, pols)
+        if not new_member in self.member_list:
+            self.member_list.append(new_member)
+
+    def __repr__(self):
+        return 'ReductionGroupDesc(frequency_range=%s, nchan=%s, member=%s)'%(self.frequency_range, self.nchan, self.member_list)

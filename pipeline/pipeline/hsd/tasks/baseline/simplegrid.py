@@ -66,7 +66,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
         file_index = [st_names.index(infile) for infile in infiles]
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw
-            spw = group_desc.menber_list[0][1]
+            spw = group_desc.menber_list[0].spw
             LOG.debug('spw=%s'%(spw))
 
             # skip spw that is not included in iflist
@@ -75,7 +75,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
                 continue
 
             # assume all members have same calmode
-            ant = group_desc['member'][0][0]
+            ant = group_desc.member_list[0].antenna
             st = context.observing_run[ant]
             calmode = st.calibration_strategy['calmode']
             srctype = common.SrcTypeMap(calmode)
