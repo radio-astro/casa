@@ -40,7 +40,21 @@ class SDBaselineResults(common.SingleDishResults):
 
     def merge_with_context(self, context):
         super(SDBaselineResults, self).merge_with_context(context)
-        LOG.todo('need to decide what is done in SDBaselineResults.merge_with_context')
+
+        # increment iteration counter for reduction group
+        reduction_group = context.observing_run.reduction_group
+
+        # assume that all members have same spw
+        spw = self.outcome['spw']
+        antenna = self.outcome['index']
+        pols = self.outcome['pols']
+        group_id = -1
+        for (idx,desc) in reduction_group.items():
+            if desc[0].spw == spw:
+                group_id = idx
+                break
+        if group_id >= 0:
+            reduction_group[group_id].iter_countup(antenna, spw, pols)
 
     def _outcome_name(self):
         return '%s: %s (spw=%s, pol=%s)'%(self.outcome['index'], self.outcome['name'], self.outcome['spw'], self.outcome['pols'])
