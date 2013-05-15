@@ -88,12 +88,6 @@ class GriddingBase(object):
             taqlstring += ' && SRCTYPE==%s'%(self.srctype)
 
         LOG.debug('taqlstring="%s"'%(taqlstring))
-        #NpRAs = numpy.take(self.datatable.getcol('RA'),Idx)
-        #NpDECs = numpy.take(self.datatable.getcol('DEC'),Idx)
-        #NpRMSs = numpy.take(self.datatable.getcol('STATISTICS'),Idx,axis=1)[1,:]
-        #NpROWs = numpy.take(self.datatable.getcol('ROW'),Idx)
-        #NpIDXs = numpy.array(index_list)
-        #NpANTs = numpy.take(self.datatable.getcol('ANTENNA'),index_list)
         tx = table.taql(taqlstring)
         index_list = tx.getcol('ID')
         rows = tx.getcol('ROW')
@@ -120,10 +114,6 @@ class GriddingBase(object):
         #### GridSpacingRA = GridSpacing * DecCorrection
         index_listTmp=[]
         if type(index_list[0]) == list:
-            #index_listTmp = index_list[0][:]
-            #for i in range(len(index_list)-1):
-            #    index_listTmp += index_list[i+1]
-            #index_list = index_listTmp
             index_list = [x for y in index_list for x in y]
         
         GridTable = self._group(index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection)
@@ -162,9 +152,7 @@ class GriddingBase(object):
         # 2011/11/12 DataIn and rowsSel are [list]
         NSpIn = len(IDX[0])
         for i in range(len(IDX)-1): NSpIn += len(IDX[i+1])
-        #SpStorage = {}
         SpStorage = numpy.zeros((NSpIn, NCHAN), dtype=numpy.float32)
-        #SpStorage = numpy.zeros((len(IDX), NCHAN), dtype=numpy.float32)
 
         if NCHAN != 1:
             clip = GridRule['Clipping']
@@ -188,14 +176,6 @@ class GriddingBase(object):
         tSFLAG = self.datatable.getcol('FLAG_SUMMARY')
         tTSYS = self.datatable.getcol('TSYS')
         tEXPT = self.datatable.getcol('EXPOSURE')
-        ### FOR TESTING ###
-        #with casatools.TableReader('ThisIsExportedDataTable.tbl/RO') as tb:
-        #    tROW = tb.getcol('ROW')
-        #    tTSYS = tb.getcol('TSYS')
-        #    tEXPT = tb.getcol('EXPOSURE')
-        #with casatools.TableReader('ThisIsExportedDataTable.tbl/RW') as tb:
-        #    tSFLAG = tb.getcol('FLAG_SUMMARY')
-        ###################
 
         # 2011/11/12 DataIn and rowsSel are [list]
         IDX2StorageID = {}
@@ -207,7 +187,6 @@ class GriddingBase(object):
                     SpStorage[StorageID] = tb.getcell('SPECTRA', tROW[x])
                     IDX2StorageID[x] = StorageID
                     StorageID += 1
-                    #SpStorage[x] = tb.getcell('SPECTRA', tROW[x])
                 LOG.debug('Data Stored in SpStorage')
 
         # Create progress timer
@@ -221,10 +200,8 @@ class GriddingBase(object):
             for [row, delta, rms, index, ant] in RowDelta:
                 # Check Summary Flag
                 if tSFLAG[int(index)] == 1:
-                    #if self.datatable[row][DT_SFLAG] == 1:
                     rowlist.append(int(row))
                     indexlist.append(IDX2StorageID[int(index)])
-                    #indexlist.append(int(index))
                     deltalist.append(delta)
                     rmslist.append(rms)
                 else: flagged += 1
@@ -235,17 +212,10 @@ class GriddingBase(object):
             elif len(rowlist) == 1:
                 # One valid Spectrum at the position
                 StorageOut[ID] = SpStorage[rowlist[0]]
-                #StorageOut[ID] = SpStorage[indexlist[0]]
                 RMS = rmslist[0]
             else:
                 # More than one valid Spectra at the position
-                #data = SpStorage[rowlist].copy()
-                #data = SpStorage[indexlist].copy()
                 data = SpStorage[indexlist]
-                #data = numpy.array([SpStorage[i] for i in indexlist])
-                #print data
-                #w = numpy.ones(numpy.shape(data), numpy.float64)
-                #weightlist = numpy.ones(len(rowlist), numpy.float64)
                 w = numpy.ones(numpy.shape(data), numpy.float32)
                 weightlist = numpy.ones(len(rowlist), numpy.float32)
                 # Clipping
@@ -338,8 +308,6 @@ class RasterGridding(GriddingBase):
             ras = ras + numpy.less_equal(ras, 180) * 360.0
             MinRA = ras.min()
             MaxRA = ras.max()
-        #NGridRA = int((max(RAs) - MinRA) / (GridSpacing * DecCorrection)) + 1
-        #NGridDEC = int((max(DECs) - MinDEC) / GridSpacing) + 1
         # (RAcenter, DECcenter) to be the center of the grid
         NGridRA = int((MaxRA - MinRA) / (GridSpacing * DecCorrection)) + 1
         NGridDEC = int((MaxDEC - MinDEC) / GridSpacing) + 1
@@ -380,7 +348,6 @@ class RasterGridding(GriddingBase):
                     line = [self.spw, self.pol, x, y, RA, DEC, []]
                 GridTable.append(line)
                 LOG.debug("GridTable: %s" % line)
-        #del DEC, DeltaDEC, SelectD, sDeltaDEC, sRA, sROW, sIDX, sRMS, sANT, sDeltaRA, RA, Delta, line
 
         LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
 
@@ -407,15 +374,11 @@ class SinglePointGridding(GriddingBase):
         NGridDEC = 1
         CenterRA = ras.mean()
         CenterDEC = decs.mean()
-        #CenterRA = (numpy.array(RAs)).mean()
-        #CenterDEC = (numpy.array(DECs)).mean()
         line = [self.spw, self.pol, 0, 0, CenterRA, CenterDEC, []]
         for x in range(len(index_list)):
             Delta = math.sqrt((ras[x] - CenterRA) ** 2.0 + (decs[x] - CenterDEC) ** 2.0)
-            #Delta = math.math.sqrt((RAs[x] - CenterRA) ** 2.0 + (DECs[x] - CenterDEC) ** 2.0)
             if Delta <= Allowance:
                 line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
-                #line[6].append([rows[x], Delta, RMSs[x], IDXs[x]])
         GridTable.append(line)
         LOG.debug("GridTable: %s" % line)
         end = time.time()
@@ -447,19 +410,14 @@ class MultiPointGridding(GriddingBase):
                 if Flag[x] == 1:
                     RA = ras[x]
                     DEC = decs[x]
-                    #RA = RAs[x]
-                    #DEC = DECs[x]
                     RAtmp = [RA]
                     DECtmp = [DEC]
                     for y in range(x + 1, len(index_list)):
                         if Flag[y] == 1:
                             Delta = math.sqrt((RA - ras[y]) ** 2.0 + (DEC - decs[y]) ** 2.0)
-                            #Delta = math.math.sqrt((RA - RAs[y]) ** 2.0 + (DEC - DECs[y]) ** 2.0)
                             if Delta <= Allowance:
                                 RAtmp.append(ras[y])
                                 DECtmp.append(decs[y])
-                                #RAtmp.append(RAs[y])
-                                #DECtmp.append(DECs[y])
                     CenterRA = (numpy.array(RAtmp)).mean()
                     CenterDEC = (numpy.array(DECtmp)).mean()
                     line = [self.spw, self.pol, 0, NGridRA, CenterRA, CenterDEC, []]
@@ -467,10 +425,8 @@ class MultiPointGridding(GriddingBase):
                     for x in range(len(index_list)):
                         if Flag[x] == 1:
                             Delta = math.sqrt((ras[x] - CenterRA) ** 2.0 + (decs[x] - CenterDEC) ** 2.0)
-                            #Delta = math.math.sqrt((RAs[x] - CenterRA) ** 2.0 + (DECs[x] - CenterDEC) ** 2.0)
                             if Delta <= Allowance:
                                 line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
-                                #line[6].append([rows[x], Delta, RMSs[x], IDXs[x]])
                                 Flag[x] = 0
                     GridTable.append(line)
                     LOG.debug("GridTable: %s" % line)
