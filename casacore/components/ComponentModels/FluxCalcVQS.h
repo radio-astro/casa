@@ -92,8 +92,8 @@ public:
   typedef FluxCalcVQS FCVQS;
   typedef RigidVector<String, 4> RVS4;
   typedef RigidVector<String, 5> RVS5;
-  typedef RigidVector<Float, 4> RVF4;
-  typedef RigidVector<Float, 5> RVF5;
+  //typedef RigidVector<Float, 4> RVF4;
+  //typedef RigidVector<Float, 5> RVF5;
 
   // Source identifiers.
   /****
