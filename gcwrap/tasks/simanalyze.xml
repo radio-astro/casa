@@ -10,7 +10,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <shortdescription>image and analyze simulated datasets</shortdescription>
   <description>
     This task is for imaging and analyzing datasets simulated with simobserve
-    Please contact CASA helpdesk with questions.
+    Please see http://casaguides.nrao.edu, and contact the CASA helpdesk 
+    with questions.
   </description>
   
   <input>
@@ -273,28 +274,29 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     Please contact CASA experts with any questions.
     -------------------------------
     project -- root filename for all output files.
-               must be the same as used when simulating the observation.
-               in particular $project/$project.skymodel will be required
-               to compare output and input images.
+         This must be the same as used when simulating the observation.
+         In particular $project/$project.skymodel will be required
+         in order to compare output and input images.
     image -- invert and deconvolve the measurement set(s)
-       * NOTE: interactive clean or more parameters than the subset visible
-         here are available by simply running the clean task directly, 
+       * NOTE: interactive clean or use of more parameters than the subset 
+         visible here are available by simply running the clean task directly, 
          then returning to simanalyze to run "analyze" if desired.
        * NOTE: the channelization of the output image cube will be the 
          same as that in the simulated Measurement Set.
-       * if graphics turned on, display the clean image and residual image
+       * if graphics are turned on, this step will display the clean image 
+         and residual image
        * uses Cotton-Schwab clean for single fields and Mosaic gridding
          for multiple fields (with Clark PSF calculation in minor cycles).
-    vis -- the simulated interferometric MS, or total-power one, or both
-       * one can use '$project' to let the task automatically replace it to
+    vis -- the simulated interferometric MS, or total-power MS, or both
+       * one can use '$project' and let the task automatically replace it with
          the project name, e.g., vis='$project.noisy.ms,$project.noisy.sd.ms'.
          However, note that if you created measurement set(s) using simobserve,
-         they will have names including the configuration, e.g. 
+         MS names will include the configuration, e.g. 
          $project.alma_out20.noisy.ms
        * setting this paramter to "default" will find and attempt to image
          all measurement sets (interferometric and single dish) in the 
          project directory
-    modelimage -- prior (e.g. SD) image to be used in clean
+    modelimage -- prior (e.g. total power) image to be used in clean
     cell -- cell size e.g '10arcsec'.  "" defaults to the skymodel cell
     imsize -- image size in spatial pixels (x,y)
        0 or -1 will use the model image size; example: imsize=[500,500]
