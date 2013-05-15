@@ -187,10 +187,8 @@ def importevla(
                 
         else:
             if online:
-                        # print 'ERROR: No Flag.xml in SDM'
                 casalog.post('ERROR: No Flag.xml in SDM', 'SEVERE')
             else:
-                        # print 'WARNING: No Flag.xml in SDM'
                 casalog.post('WARNING: No Flag.xml in SDM', 'WARN')
 
         if flagzero or shadow:
