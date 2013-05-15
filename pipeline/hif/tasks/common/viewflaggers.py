@@ -44,8 +44,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
             # Get latest data
             result = self._executor.execute(datatask)
-            if not result:
-                return []
+            if not result.descriptions():
+                return result
 
             descriptionlist = result.descriptions()
             descriptionlist.sort()
@@ -450,7 +450,7 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 class VectorFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
-        flagsettertask=None, rules=None, niter=None):
+        flagsettertask=None, rules=None, niter=None, intent=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -475,6 +475,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         rules = inputs.rules
         flagsettertask = self.flagsettertask
         niter = inputs.niter
+        intent = inputs.intent
 
         iter = 1
         flags = []
@@ -491,7 +492,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
             for description in descriptionlist:
                 image = result.last(description)
                 # get flags for this view according to the rules
-                newflags += self.generate_flags(image, rules)
+                newflags += self.generate_flags(image, rules, intent)
 
             # set any flags raised
             LOG.info('Iteration %s raised %s flagging commands' % \
@@ -525,6 +526,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
     @staticmethod
     def make_flag_rules (flag_edges=False, edge_limit=2.0,
+      flag_minabs=False, fmin_limit=0.0,
+      flag_nmedian=False, fnm_limit=0.0,
       flag_sharps=False, sharps_limit=0.05,
       flag_sharps2=False, sharps2_limit=0.05):
 
@@ -537,6 +540,10 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         rules = []
         if flag_edges:
             rules.append({'name':'edges', 'limit':edge_limit})
+        if flag_minabs:
+            rules.append({'name':'min abs', 'limit':fmin_limit})
+        if flag_nmedian:
+            rules.append({'name':'nmedian', 'limit':fnm_limit})
         if flag_sharps:
             rules.append({'name':'sharps', 'limit':sharps_limit})
         if flag_sharps2:
@@ -544,7 +551,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
         return rules
 
-    def generate_flags(self, vector, rules):
+    def generate_flags(self, vector, rules, intent):
         """
         Calculate the statistics of a vector and flag the data according
         to a list of specified rules.
@@ -627,6 +634,63 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               rulename=rulename, spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords,
                               flagchannels=channels_flagged))
+
+                elif rulename == 'min abs':
+                    limit = rule['limit']
+                    if len(valid_data):
+
+                        flag_chan = (np.abs(data)<limit) & np.logical_not(flag)
+
+                        # flag the 'view'
+                        rflag[flag_chan] = True
+
+                        # now compose a description of the flagging required on
+                        # the MS
+                        nchannels = len(rdata)
+                        channels = np.arange(nchannels)
+                        channels_flagged = channels[flag_chan]
+
+                        if len(channels_flagged) > 0:
+                            # Add new flag command to flag data underlying the
+                            # view.
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                              reason='stage%s' % self.inputs.context.stage,
+                              filename=table, rulename=rulename,
+                              spw=spw, axisnames=axisnames,
+                              flagcoords=flagcoords,
+                              flagchannels=channels_flagged,
+                              channel_axis=vector.axis,
+                              intent=intent))
+
+                elif rulename == 'nmedian':
+                    limit = rule['limit']
+                    if len(valid_data):
+
+                        if limit < 1:
+                            flag_chan = (data < np.median(data)*limit) & np.logical_not(flag)
+                        else:
+                            flag_chan = (data > np.median(data)*limit) & np.logical_not(flag)
+
+                        # flag the 'view'
+                        rflag[flag_chan] = True
+
+                        # now compose a description of the flagging required on
+                        # the MS
+                        nchannels = len(rdata)
+                        channels = np.arange(nchannels)
+                        channels_flagged = channels[flag_chan]
+
+                        if len(channels_flagged) > 0:
+                            # Add new flag command to flag data underlying the
+                            # view.
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                              reason='stage%s' % self.inputs.context.stage,
+                              filename=table, rulename=rulename,
+                              spw=spw, axisnames=axisnames,
+                              flagcoords=flagcoords,
+                              flagchannels=channels_flagged,
+                              channel_axis=vector.axis,
+                              intent=intent))
 
                 elif rulename == 'sharps':
                     limit = rule['limit']
