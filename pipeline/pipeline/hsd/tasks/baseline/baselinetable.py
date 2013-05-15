@@ -5,12 +5,8 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
 
 LOG = infrastructure.get_logger(__name__)
-LogLevel='debug'
-#LogLevel='info'
-logging.set_logging_level(LogLevel)
 
 class BaselineTableGenerator(object):
     fitfunc = 'none'

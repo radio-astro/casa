@@ -13,8 +13,6 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
-#import pipeline.infrastructure.logging as logging
-#import pipeline.hsd.heuristics as heuristics
 from pipeline.hsd.heuristics import fitorder, fragmentation
 from .. import common
 from . import rules
@@ -23,9 +21,6 @@ from .baselinetable import SplineBaselineTableGenerator
 from .baselinetable import PolynomialBaselineTableGenerator
 
 LOG = infrastructure.get_logger(__name__)
-LogLevel='debug'
-#LogLevel='info'
-#logging.set_logging_level(LogLevel)
 
 class FittingBase(object):
     ApplicableDuration = 'raster' # 'raster' | 'subscan'
@@ -33,7 +28,7 @@ class FittingBase(object):
     PolynomialOrder = 'automatic' # 'automatic', 0, 1, 2, ...
     ClipCycle = 1
     
-    def execute(self, datatable, filename, filename_out, bltable_name, time_table, index_list, nchan, edge, fit_order='automatic'):
+    def execute(self, datatable, filename, filename_out, bltable_name, time_table, index_list, nchan, edge, fit_order='automatic', LogLevel='info'):
         """
         """
 

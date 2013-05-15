@@ -8,13 +8,9 @@ import scipy.cluster.vq as VQ
 import numpy.linalg as LA
 
 import pipeline.infrastructure as infrastructure
-#import pipeline.infrastructure.logging as logging
 from . import rules
 
 LOG = infrastructure.get_logger(__name__)
-#LogLevel='trace'
-#LogLevel='info'
-#logging.set_logging_level(LogLevel)
 
 class ValidateLineSinglePointing(object):
 

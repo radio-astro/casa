@@ -2,17 +2,14 @@ from __future__ import absolute_import
 
 import os
 import math
-#from math import cos, sqrt, exp
 import numpy
 import time
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('info')
 
 NoData = common.NoData
 

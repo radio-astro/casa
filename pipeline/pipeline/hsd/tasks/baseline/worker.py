@@ -11,7 +11,6 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.basetask as basetask
-#import pipeline.infrastructure.logging as logging
 from .simplegrid import SimpleGridding
 from .detection import DetectLine
 from .validation import ValidateLine
@@ -19,8 +18,6 @@ from .fitting import FittingFactory
 from . import utils
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
-#logging.set_logging_level('info')
 
 class SDBaselineWorker(object):
     def __init__(self, context):

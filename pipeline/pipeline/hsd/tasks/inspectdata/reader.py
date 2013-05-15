@@ -8,12 +8,10 @@ import asap as sd
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-#import pipeline.infrastructure.logging as logging
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from pipeline.domain.datatable import DataTableColumnMaskList as ColMaskList
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
 
 class DataTableReader(object):
     def __init__(self, table_name):

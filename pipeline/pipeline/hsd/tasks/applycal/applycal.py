@@ -3,12 +3,10 @@ from __future__ import absolute_import
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
-#import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure import casa_tasks
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
 
 import os
 import asap as sd
