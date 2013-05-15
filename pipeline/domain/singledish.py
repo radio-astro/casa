@@ -343,16 +343,17 @@ class ReductionGroupDesc(list):
     def __init__(self, frequency_range=None, nchan=None):
         self.frequency_range = frequency_range
         self.nchan = nchan
-        #self.member_list = []
-
-    #@property
-    #def member_list(self):
-    #    return self
 
     def add_member(self, antenna, spw, pols):
         new_member = ReductionGroupMember(antenna, spw, pols)
         if not new_member in self:
             self.append(new_member)
+
+    def iter_countup(self, antenna, spw, pols=None):
+        for member in self:
+            if member.antenna == antenna and member.spw == spw:
+                member.iter_countup(pols)
+                break
 
     def __repr__(self):
         return 'ReductionGroupDesc(frequency_range=%s, nchan=%s, member=%s)'%(self.frequency_range, self.nchan, self[:])
