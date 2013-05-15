@@ -295,11 +295,13 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
 
             casalog.post("FIELD table PHASE_DIR, DELAY_DIR, and REFERENCE_DIR columns changed for field "+str(fld)+".", 'NORMAL')
 
-            if ('EPHEMERIS_ID' in tbt.colnames()) and (tbt.getcell('EPHEMERIS_ID',fld)>=0): # originally an ephemeris was used
-                tbt.putcell('EPHEMERIS_ID', fld, -1) # remove the reference to it
-                casalog.post("FIELD table EPHEMERIS_ID column reset to -1 for field "+str(fld)+".", 'NORMAL')
-
             if(theephemeris==''):
+                
+                if ('EPHEMERIS_ID' in tbt.colnames()) and (tbt.getcell('EPHEMERIS_ID',fld)>=0): # originally an ephemeris was used
+                    eidc = tbt.getcol('EPHEMERIS_ID')
+                    eidc[fld] = -1
+                    tbt.putcol('EPHEMERIS_ID', eidc) # remove the reference to it
+                    casalog.post("FIELD table EPHEMERIS_ID column reset to -1 for field "+str(fld)+".", 'NORMAL')
 
                 if(thenewref!=-1):
                     # modify reference of the direction columns permanently
@@ -364,15 +366,24 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
             tbt.close()
 
             #modify SOURCE table
+            newsra_rad = thenewra_rad
+            newsdec_rad = thenewdec_rad
+            if(theephemeris!=''): # get the nominal position from the ephemeris
+                mst.open(vis)
+                trec = mst.getfielddirmeas('PHASE_DIR',1)
+                newsra_rad = trec['m0']['value']
+                newsdec_rad = trec['m1']['value']
+                mst.close()
             tbt.open(vis+'/SOURCE', nomodify=False)
             sdir = tbt.getcol('DIRECTION')
             newsdir = sdir
             sname = tbt.getcol('NAME')
+                
             for i in xrange(0,tbt.nrows()):
                 if(sname[i]==planetname):
                     #print 'i old dir ', i, " ", sdir[0][i], sdir[1][i]
-                    newsdir[0][i] = thenewra_rad
-                    newsdir[1][i] = thenewdec_rad
+                    newsdir[0][i] = newsra_rad
+                    newsdir[1][i] = newsdec_rad
                     #print '  new dir ', newsdir[0][i], newsdir[1][i]
             tbt.putcol('DIRECTION', newsdir)
             tbt.close()
