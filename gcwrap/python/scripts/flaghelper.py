@@ -191,6 +191,8 @@ def makeDict(cmdlist, myreason='any'):
        structure and default values:
        
         flagd['row']      =
+        flagd['antenna']  =
+        flagd['timerange'] =
         flagd['applied']  = False
         flagd['command']  = ''
         flagd['interval'] = 0.0
@@ -246,6 +248,8 @@ def makeDict(cmdlist, myreason='any'):
     severity = 0
     coltime = 0.0
     coltype = 'FLAG'
+    antenna = ''
+    timerange = ''
     
     myflagd = {}
     ncmds = 0
@@ -293,9 +297,32 @@ def makeDict(cmdlist, myreason='any'):
                     flagd['addantenna'] = antpardict
                     command = newcmd                                
                         
+            # CAS-5180: Get antenna and timerange to use when action='plot'
+            keyvlist = command.split()
+            if keyvlist.__len__() > 0:
+                for keyv in keyvlist:
+                    try:
+                        (xkey, val) = keyv.split('=')
+                    except:
+                        print 'Error: not key=value pair for ' + keyv
+                        break
+                    xval = val
+                    if xval.count("'") > 0:
+                        xval = xval.strip("'")
+                    if xval.count('"') > 0:
+                        xval = xval.strip('"')
+                    if xkey == 'mode':
+                        flagd['mode'] = xval
+                    elif xkey == 'timerange':
+                        timerange = xval
+                    elif xkey == 'antenna':
+                        antenna = xval                        
+                        
             flagd['row'] = str(i)
             flagd['applied'] = applied
             flagd['reason'] = reason 
+            flagd['timerange'] = timerange
+            flagd['antenna'] = antenna
             
             # Remove reason from command line   
             command = command.rstrip()

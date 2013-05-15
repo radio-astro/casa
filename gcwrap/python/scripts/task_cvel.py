@@ -173,18 +173,6 @@ def cvel(vis, outputvis,
     try:
 	casalog.origin('cvel')
 
-	parsummary = 'vis="'+str(vis)+'", outputvis="'+str(outputvis)+'", passall="'+str(passall)+'", '
-	parsummary += 'field="'+str(field)+'", spw='+str(spw)+', antenna="'+str(antenna)+'", timerange="'
-        parsummary += str(timerange)+'",'
-        casalog.post(parsummary,'INFO')
-        parsummary = 'mode='+str(mode)+', nchan='+str(nchan)+', start='+str(start)+', width='+str(width)
-        parsummary += ', interpolation = '+str(interpolation)+', outframe="'+str(outframe)+'",'
-        casalog.post(parsummary,'INFO')
-        parsummary = 'phasecenter="'+str(phasecenter)+'", restfreq="'+str(restfreq)+'", veltype="'+str(veltype)
-        parsummary += '", hanning="'+str(hanning)+'"'
-        casalog.post(parsummary,'INFO')
-
-	
 	if not ((type(vis)==str) & (os.path.exists(vis))):
 	    raise Exception, 'Visibility data set not found - please verify the name'
 
@@ -281,7 +269,8 @@ def cvel(vis, outputvis,
                     raise TypeError, "start parameter is not a valid frequency quantity " %start
             if(not(width=="") and (qa.quantity(width)['unit'].find('Hz') < 0)):
                 ms.close()
-                raise TypeError, "width parameter %s is not a valid frequency quantity " %width	
+                raise TypeError, "width parameter %s is not a valid frequency quantity " %width
+            
         elif(mode=='velocity'):
             ## reset the default values
             if(start==0):
@@ -296,13 +285,63 @@ def cvel(vis, outputvis,
             if(not(width=="") and (qa.quantity(width)['unit'].find('m/s') < 0)):
                 ms.close()
                 raise TypeError, "width parameter %s is not a valid velocity quantity " %width
+
         elif(mode=='channel' or mode=='channel_b'):
             if((type(width) != int) or (type(start) != int)):
                 ms.close()
                 raise TypeError, "start and width have to be integers with mode = %s" %mode            
 
+
+        ## check if preaveraging is necessary
+        dopreaverage=False
+        preavwidth = [1]        
+
+        thespwsel = ms.msseltoindex(vis=vis, spw=spw)['spw']
+        thefieldsel = ms.msseltoindex(vis=vis, field=field)['field']
+        outgrid =  ms.cvelfreqs(spwids=thespwsel, fieldids=thefieldsel,
+                                mode=mode, nchan=nchan, start=start, width=width,
+                                phasec=newphasecenter, restfreq=restfreq,
+                                outframe=outframe, veltype=veltype, verbose=False)
+        if(len(outgrid)>1):
+            tmpavwidth = []
+            for thespw in thespwsel:
+                outgridw1 =  ms.cvelfreqs(spwids=[thespw], fieldids=thefieldsel,
+                                          mode='channel', nchan=-1, start=0, width=1, # native width
+                                          phasec=newphasecenter, restfreq=restfreq,
+                                          outframe=outframe, veltype=veltype, verbose=False)
+                if(len(outgridw1)>1):
+                    widthratio = abs((outgrid[1]-outgrid[0])/(outgridw1[1]-outgridw1[0]))                    
+                    if(widthratio>=2.0): # do preaverage
+                        tmpavwidth.append( int(widthratio+0.001) )
+                        dopreaverage=True
+                else:
+                    tmpavwidth.append(1)
+
+            if dopreaverage:
+                preavwidth = tmpavwidth
+
         ms.close()
-        
+
+        # if in channel mode and preaveraging, 
+        if(dopreaverage and (mode=='channel' or mode=='channel_b')):
+            if(max(preavwidth)==1):
+                dopreaverage = False
+            else:
+                # switch to frequency mode
+                mode = 'frequency'
+                if(width>0):
+                    start = str(outgrid[0]/1E6)+'MHz'
+                    width = str((outgrid[1]-outgrid[0]))+'Hz'
+                else:
+                    start = str(outgrid[len(outgrid)-1]/1E6)+'MHz'
+                    width = str(-(outgrid[1]-outgrid[0]))+'Hz'
+                casalog.post("After pre-averaging, will switch to frequency mode with start="+start+", width = "+width, 'INFO')
+
+        if(dopreaverage and hanning and max(preavwidth)>2):
+            casalog.post("NOTE: You have requested Hanning smoothing and at the same time you have chosen\n"
+                         +"a large width parameter which makes pre-averaging necessary.\n"
+                         +"The Hanning-smoothing may be redundant in this context.\n", 'WARN')
+
         # determine parameter "datacolumn"
         tb.open(vis)
         allcols = tb.colnames()
@@ -321,7 +360,7 @@ def cvel(vis, outputvis,
         else:
             raise Exception, "Neither DATA nor CORRECTED_DATA nor MODEL_DATA column present. Cannot proceed."
 
-        if(doselection):
+        if(doselection and not dopreaverage):
             casalog.post("Creating selected SubMS ...", 'INFO')
             ms.open(vis)
             ms.split(outputms=outputvis, field=field,
@@ -332,8 +371,58 @@ def cvel(vis, outputvis,
                      scan=scan,          uvrange="")
             ms.close()
 
+        elif(dopreaverage and not doselection):
+            if(hanning):
+                casalog.post("Creating working copy for Hanning-smoothing ...", 'INFO')
+                shutil.rmtree(outputvis+'TMP',ignore_errors=True)
+                shutil.copytree(vis,outputvis+'TMP')
+                ms.open(outputvis+'TMP', nomodify=False)
+                ms.hanningsmooth(datacolumn=datacolumn)
+                ms.close()
+                hanning = False
+                ms.open(outputvis+'TMP')
+            else:
+                ms.open(vis)
+                
+            casalog.post("Creating preaveraged SubMS using widths "+str(preavwidth), 'INFO')
+            ms.split(outputms=outputvis, 
+                     whichcol=datacolumn, step=preavwidth)
+            ms.close()
+
+        elif(doselection and dopreaverage):
+            if(hanning):
+                casalog.post("Creating selected working copy for Hanning-smoothing ...", 'INFO')
+                shutil.rmtree(outputvis+'TMP',ignore_errors=True)
+                ms.open(vis)
+                ms.split(outputms=outputvis+'TMP', field=field,
+                         spw=spw,            step=[1],
+                         baseline=antenna,   subarray=array,
+                         timebin='-1s',      time=timerange,
+                         whichcol=datacolumn,
+                         scan=scan,          uvrange="")
+                ms.close()
+                ms.open(outputvis+'TMP', nomodify=False)
+                ms.hanningsmooth(datacolumn=datacolumn)
+                ms.close()
+                hanning = False
+                ms.open(outputvis+'TMP')
+                casalog.post("Creating preaveraged SubMS using widths "+str(preavwidth), 'INFO')
+                ms.split(outputms=outputvis, 
+                         whichcol=datacolumn, step=preavwidth)
+                ms.close()
+            else:
+                casalog.post("Creating selected, preaveraged SubMS using widths "+str(preavwidth), 'INFO')
+                ms.open(vis)
+                ms.split(outputms=outputvis, field=field,
+                         spw=spw,            step=preavwidth,
+                         baseline=antenna,   subarray=array,
+                         timebin='-1s',      time=timerange,
+                         whichcol=datacolumn,
+                         scan=scan,          uvrange="")
+                ms.close()
+
         else:
-            # no selection necessary, just copy
+            # no selection or preaveraging necessary, just copy
             casalog.post("Creating working copy ...", 'INFO')
             shutil.rmtree(outputvis,ignore_errors=True)
             shutil.copytree(vis,outputvis)

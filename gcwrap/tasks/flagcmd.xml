@@ -182,11 +182,11 @@
     It is possible to flag cal tables using this task, although we recommend using the flagdata
     task for this.
     
-    When using this task to flag cal tables, only the apply and list actions are supported. 
+    When using this task to flag cal tables, only the 'apply' and 'list' actions are supported. 
     Because cal tables do not have a FLAG_CMD sub-table, the default inpmode='table' can only 
-    be used if an MS is given in the inpfile parameter so that flags from the MS are applied to 
+    be used if an MS is given in the 'inpfile' parameter so that flags from the MS are applied to 
     the cal table. Otherwise, the flag commands must be given using inpmode='list', either from a 
-    file or from a list of strings. See below for more information about these parameters. 
+    file(s) or from a list of strings. See below for more information about these parameters. 
     Data selection for calibration tables is limited to field, scan, antenna, time, spw and
     observation. If the calibration table was created before CASA 4.1, this task will create 
     a dummy OBSERVATION column and OBSERVATION sub-table in the input calibration table to
@@ -254,8 +254,12 @@
 
 
        inpmode "list" -- input commands from an ASCII file, a list of files or via a list of strings.
+                         NOTE: You can only apply the flags from a list; you will not be able
+                               to unapply them. Transfer the flag commands to the FLAG_CMD table
+                               if you want to unapply the flags. For this, see action='list' below.
    
-          inpfile -- name of an ASCII file, list of files or a list of Python strings.
+          inpfile -- name of an ASCII file, list of files or a list of Python strings to apply to
+                     MS or cal table.
                default: '' 
                options: [] with flag commands or 
                         [] with filenames or 
@@ -282,7 +286,7 @@
                      flagcmd(vis, inpmode='list',inpfile=cmd)                    
 
 
-          reason -- select flag commands based on REASON(s) 
+          reason -- select flag commands to apply, based on REASON(s) 
                default: 'any' (all flags regardless of reason)
                         can be a string, or list of strings
                example: reason='FOCUS_ERROR'
@@ -299,6 +303,9 @@
    
        inpmode "xml" -- input online flags from Flag.xml file in the MS. This mode
                         is not available for cal tables.
+                        NOTE: You can only apply the flags from a XML file; you will not be able
+                              to unapply them. Transfer the flag commands to the FLAG_CMD table
+                              if you want to unapply the flags. For this, see action='list' below.
    
           tbuff -- (float) time padding buffer (seconds, default=1.0)
    
@@ -319,7 +326,7 @@
 
     --ACTIONS--
 
-    action -- operation to perform on MS and/or in flag commands from inpfile
+    action -- operation to perform on MS and/or in flag commands from inpfile.
             options: 'apply','clear','list','plot','unapply','extract'
             default: 'apply'
 
@@ -333,10 +340,10 @@
                default: True
 
    
-       action "unapply" --  unapply flags in MS. (Not available for cal tables)
+       action "unapply" --  unapply flags in MS. (Not available for cal tables).
 
-          This operation will unapply the commands chosen by inpmode.
-          If inpmode='table' it will set the APPLIED column to False. 
+          This operation will unapply the commands chosen by inpmode='table' ONLY.
+          After unapplying the commands, the task will update the APPLIED column to False. 
           
           IMPORTANT: In order to guarantee that only the data selected in 
           the command is unapplied, the framework will first unapply the selected
@@ -355,7 +362,7 @@
           This operation will list the commands chosen by inpmode on the screen
           and save them to the MS or to a file without applying. It will save the commands
           to outfile if the parameter savepars is set to True. If outfile is None, it
-          will save the commands to the MS given in vis.
+          will save the commands to the MS given in 'vis'.
 
 
        action "plot" --  plot flags (ant vs. time). (Not available for cal tables)
@@ -578,7 +585,8 @@
 
         * action = 'unapply'
 
-          This will effectively unapply any commands on the selected data.
+          This will effectively unapply any commands on the selected data that
+          come from the FLAG_CMD table.
 
         * action = 'list'
 

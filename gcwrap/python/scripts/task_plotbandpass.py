@@ -1194,7 +1194,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             if (debug): print "time = %s" % (str(mytimestamp))
             msAnt = mymsmd.antennanames(range(mymsmd.nantennas()))
             if (debug): print "msAnt = %s" % (str(msAnt))
-            msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+#            msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+            msFields = mymsmd.namesforfields()
             casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
         except:
             print "1)Could not open the associated measurement set tables (%s). Will not translate antenna names or frequencies." % (msName)
@@ -1212,7 +1213,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 if (debug): print "%.1f sec elapsed" % (donetime-mytimestamp)
                 mytimestamp = timeUtilities.time()
                 msAnt = mymsmd.antennanames(range(mymsmd.nantennas()))
-                msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+#                msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+                msFields = mymsmd.namesforfields()
                 casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
             except:
                 print "1b) Could not open the associated measurement set tables (%s). Will not translate antenna names or channels to frequencies." % (msName)
@@ -4399,12 +4401,13 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
         H = 20
     if (('elevation' in conditions.keys()) == False):
         # Someone cleared the POINTING table, so calculate elevation from Ra/Dec/MJD
-        myfieldId =  mymsmd.fieldsforname(mymsmd.fieldsforscan(bestscan))
+#        myfieldId =  mymsmd.fieldsforname(mymsmd.fieldsforscan(bestscan))
+        myfieldId =  mymsmd.fieldsforscan(bestscan)
         print "myfieldId = %s" % (str(myfieldId))
         myscantime = np.mean(mymsmd.timesforscan(bestscan))
         mydirection = getRADecForField(vis, myfieldId, verbose)
-        print "mydirection = %s" % (str(mydirection))
         if (verbose):
+            print "mydirection = %s" % (str(mydirection))
             print "Scan =  %d, time = %.1f,  Field = %d, direction = %s" % (bestscan, myscantime, myfieldId, str(mydirection))
         telescopeName = mymsmd.observatorynames()[0]
         if (len(telescopeName) < 1):
