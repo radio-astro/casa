@@ -832,7 +832,8 @@ def get_nx_ny(n):
 def get_cellx_celly(c,unit='arcsec'):
     if isinstance(c, str):
         cellx = celly = c
-    elif isinstance(c, list) or isinstance(c, np.ndarray):
+    #elif isinstance(c, list) or isinstance(c, np.ndarray):
+    elif type(c) in (list, tuple, np.ndarray):
         if len(c) == 1:
             cellx = celly = __to_quantity_string(c[0],unit)
         elif len(c) > 1:
