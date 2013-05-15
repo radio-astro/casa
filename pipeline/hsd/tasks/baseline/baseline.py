@@ -74,9 +74,9 @@ class SDBaseline(common.SingleDishTaskTemplate):
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
             first_member = group_desc.member_list[0]
-            spwid = first_member[1]
+            spwid = first_member.spw
             LOG.debug('spwid=%s'%(spwid))
-            pols = first_member[2]
+            pols = first_member.pols
             if pollist is not None:
                 pols = list(set(pollist) & set(pols))
 
@@ -86,7 +86,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 continue
                 
             # reference data is first scantable 
-            st = context.observing_run[first_member[0]]
+            st = context.observing_run[first_member.antenna]
 
             # skip channel averaged spw
             nchan = group_desc.nchan
@@ -98,7 +98,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             calmode = st.calibration_strategy['calmode']
             srctype = common.SrcTypeMap(calmode)
             worker = SDBaselineWorker(context)
-            _file_index = set(file_index) & set([m[0] for m in group_desc.member_list])
+            _file_index = set(file_index) & set([m.antenna for m in group_desc.member_list])
             files = files | _file_index
             pattern = st.pattern[spwid][pols[0]]
             parameters = {'datatable': datatable,
