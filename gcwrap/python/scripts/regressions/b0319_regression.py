@@ -116,16 +116,15 @@ plotavertime=time.time()
 clearcal(vis='B0319_0317.ms')
 default('blcal')
 blcal(vis='B0319_0317.ms',caltable='B0319.Mt',
-      solint='3s',combine='',gaincurve=False,opacity=0.0)
+      solint='3s',combine='')
 default('blcal')
 blcal(vis='B0319_0317.ms',caltable='B0319.MFt',
       gaintable='B0319.Mt',interp='nearest',
       solint='inf',combine='scan',
-      gaincurve=False,opacity=0.0,freqdep=True)
+      freqdep=True)
 default('applycal')
 applycal(vis='B0319_0317.ms',
-	 gaintable=['B0319.Mt','B0319.MFt'],
-	 gaincurve=False,opacity=0.0)
+	 gaintable=['B0319.Mt','B0319.MFt'])
 calibratetime=time.time()
 
 #Compare observed 'data' and 'corrected' data
@@ -147,14 +146,14 @@ plotcomparetime=time.time()
 #plotxy('B0319_0317.ms','time','phase','data',nchan=1,start=5,width=50,plotsymbol='ro')
 #plotxy('B0319_0317.ms','time','phase','corrected',nchan=1,start=5,width=50,plotsymbol='bo',overplot=True)
 ##Derive K
-#fringecal('B0319_0317.ms','B0319.K',solint=0.,gaincurve=False,opacity=0.0)
+#fringecal('B0319_0317.ms','B0319.K',solint=0.)
 #correct('B0319_0317.ms',gaintable='B0319.K')
 #plotxy('B0319_0317.ms','time','phase','corrected',nchan=1,start=5,width=50,plotsymbol='go',overplot=True)
 
 # M,MF is better in this case - re-correct the data
 #clearcal('B0319_0317.ms')
-#blcal('B0319_0317.ms',caltable='B0319.Mt',solint=3.,gaincurve=False,opacity=0.0)
-#blcal('B0319_0317.ms',caltable='B0319.MFt',solint=30000.,gaincurve=False,opacity=0.0,freqdep=True)
+#blcal('B0319_0317.ms',caltable='B0319.Mt',solint=3.)
+#blcal('B0319_0317.ms',caltable='B0319.MFt',solint=30000.,freqdep=True)
 #correct('B0319_0317.ms',gaintable=['B0319.Mt','B0319.MFt'])
 
 #Examine the calibration solutions

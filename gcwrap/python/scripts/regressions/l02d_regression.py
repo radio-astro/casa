@@ -58,7 +58,7 @@ gaincal(vis='l.ms',caltable='l.3mmUSB.gcal0',
 	field='0',spw='7,15,19:9~118',
 	gaintype='GSPLINE',calmode='p',splinetime=10000.,
 	refant='1',phasewrap=260,
-	gaincurve=False,opacity=0.0,preavg=0)
+	preavg=0)
 
 print '--bandpass (3mm)--'
 #derive bandpass calibration for 3mm (C34S J=2-1) using USB continuum phase solns
@@ -67,7 +67,7 @@ bandpass(vis='l.ms',caltable='l.3mmC34S.bpoly',
 	 field='0',spw='3',
 	 bandtype='BPOLY',degamp=2,degphase=2,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l.3mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l.3mmUSB.gcal0')
 
 # Band pass for CH3OH,3mm continuum USB/LSB
 default('bandpass')
@@ -75,19 +75,19 @@ bandpass(vis='l.ms',caltable='l.3mmch3oh.bpoly',
 	 field='0',spw='11',
 	 bandtype='BPOLY',degamp=2,degphase=4,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l.3mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l.3mmUSB.gcal0')
 default('bandpass')
 bandpass(vis='l.ms',caltable='l.3mmcont.bpoly',
 	 field='0',spw='7,15,19',
 	 bandtype='BPOLY',degamp=10,degphase=25,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l.3mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l.3mmUSB.gcal0')
 default('bandpass')
 bandpass(vis='l.ms',caltable='l.3mmcont.bpoly',
 	 field='0',spw='6,14,18',
 	 bandtype='BPOLY',degamp=10,degphase=25,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l.3mmUSB.gcal0',gaincurve=False,opacity=0.0,append=True)
+	 gaintable='l.3mmUSB.gcal0',append=True)
 
 print '--gaincal phase (3mm)--'
 #derive new and better phase solutions for 3mm LSB
@@ -96,7 +96,7 @@ gaincal(vis='l.ms',caltable='l.3mmcont.gcal',
 	field='0,1,2',spw='6,14,18,7,15,19',
 	gaintype='GSPLINE',calmode='p',splinetime=3000.,refant='1',
 	phasewrap=260,
-	gaincurve=False,opacity=0.0,gaintable='l.3mmcont.bpoly',preavg=0.)
+	gaintable='l.3mmcont.bpoly',preavg=0.)
 
 #Apply all solutions derived so far, determine calibrator's flux densities by solving for T 
 #and use fluxscale
@@ -104,7 +104,6 @@ default('gaincal')
 gaincal(vis='l.ms',caltable='l.3mmcont.temp',
 	field='0,1,2',spw='7,15,19,6,14,18',
 	solint='600s',refant='1',gaintype='T',
-	opacity=0.0,gaincurve=False,
 	gaintable=['l.3mmcont.gcal','l.3mmcont.bpoly'])
 
 #fluxscale
@@ -142,7 +141,7 @@ gaincal(vis='l.ms',caltable='l.3mmcont.amp.gcal',
 	field='0,1,2',spw='7,15,19,6,14,18',
 	gaintype='GSPLINE',calmode='a',splinetime=3000.,refant='1',
 	phasewrap=260,
-	gaincurve=False,opacity=0.0,preavg=0.,
+	preavg=0.,
 	gaintable=['l.3mmcont.gcal','l.3mmcont.bpoly'])
 calamp3mmtime=time.time()
 
@@ -153,17 +152,14 @@ calamp3mmtime=time.time()
 default('applycal')
 applycal(vis='l.ms',
 	 field='3',spw='3',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l.3mmcont.gcal','l.3mmcont.amp.gcal','l.3mmC34S.bpoly']);
 # Correct Target other 3mm line data (CH3OH)
 applycal(vis='l.ms',
 	 field='3',spw='11',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l.3mmcont.gcal','l.3mmcont.amp.gcal','l.3mmch3oh.bpoly'])
 # Correct Target source 3mm continuum 
 applycal(vis='l.ms',
 	 field='3',spw='7,15,19,6,14,18',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l.3mmcont.gcal','l.3mmcont.amp.gcal','l.3mmcont.bpoly'])
 correct3mmtime=time.time()
 
@@ -176,7 +172,7 @@ default('gaincal')
 gaincal(vis='l.ms',caltable='l.1mmUSB.gcal0',
 	field='0',spw='27,31:9~118',
 	gaintype='GSPLINE',calmode='p',splinetime=7000.,refant='1',
-	phasewrap=260,preavg=0.,gaincurve=False,opacity=0.0)
+	phasewrap=260,preavg=0.)
 
 ## Derive bandpass calibration for 1mm 
 ##
@@ -184,17 +180,17 @@ bandpass(vis='l.ms',caltable='l.1mmcont.bpoly',
 	 field='0',spw='27,31',
 	 bandtype='BPOLY',degamp=10,degphase=20,visnorm=False,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l.1mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l.1mmUSB.gcal0')
 bandpass(vis='l.ms',caltable='l.1mmcont.bpoly',
 	 field='0',spw='26,30',
 	 bandtype='BPOLY',degamp=10,degphase=20,visnorm=False,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l.1mmUSB.gcal0',gaincurve=False,opacity=0.0,append=True)
+	 gaintable='l.1mmUSB.gcal0',append=True)
 bandpass(vis='l.ms',caltable='l.1mmUSB.bpoly',
 	 field='0',spw='23',
 	 bandtype='BPOLY',degamp=10,degphase=20,visnorm=False,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l.1mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l.1mmUSB.gcal0')
 
 ## Determine phase solutions for 1mm LSB & USB 
 ##
@@ -204,7 +200,7 @@ gaincal(vis='l.ms',caltable='l.1mmcont.gcal',
 	field='0,1,2',spw='26,27,30,31',
 	gaintype='GSPLINE',calmode='p',splinetime=3000.,refant='1',
 	phasewrap=260,
-	gaincurve=False,opacity=0.0,gaintable='l.1mmcont.bpoly',preavg=0.)
+	gaintable='l.1mmcont.bpoly',preavg=0.)
 
 ##  Apply all solutions derived so far, determine
 ##  calibrators' flux densities using a solve for T and
@@ -214,7 +210,6 @@ default('gaincal')
 gaincal(vis='l.ms',caltable='l.1mmcont.temp',
 	field='0,1,2',spw='26,27,30,31',
 	solint='1200s',refant='1',gaintype='T',
-	opacity=0.0,gaincurve=False,
 	gaintable=['l.1mmcont.gcal','l.1mmcont.bpoly'])
 #
 default('fluxscale')
@@ -244,7 +239,6 @@ gaincal(vis='l.ms',caltable='l.1mmcont.amp.gcal',
 	field='0,1,2',spw='26,27,30,31',
 	gaintype='GSPLINE',calmode='a',splinetime=3000.,refant='1',
 	phasewrap=260,
-	gaincurve=False,opacity=0.0,
 	preavg=0.,
 	gaintable=['l.1mmcont.gcal','l.1mmcont.bpoly'])
 calamp1mmtime=time.time()
@@ -256,12 +250,10 @@ calamp1mmtime=time.time()
 default('applycal')
 applycal(vis='l.ms',
 	 field='3',spw='26,27,30,31',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l.1mmcont.gcal','l.1mmcont.amp.gcal','l.1mmcont.bpoly'])
 default('applycal')
 applycal(vis='l.ms',
 	 field='3',spw='23',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l.1mmcont.gcal','l.1mmcont.amp.gcal','l.1mmcont.bpoly'],
 	 spwmap=[[-1],[-1],[26]])
 correct1mmtime=time.time()
@@ -354,7 +346,7 @@ gaincal(vis='l2.ms',caltable='l2.3mmUSB.gcal0',
 	field='0',spw='7,15,19:9~118',
 	gaintype='GSPLINE',calmode='p',splinetime=10000.,refant='1',
 	phasewrap=260,
-	gaincurve=False,opacity=0.0,preavg=0)
+	preavg=0)
 
 print '--bandpass (3mm)--'
 #derive bandpass calibration for 3mm (C34S J=2-1) using USB continuum phase solns
@@ -363,7 +355,7 @@ bandpass(vis='l2.ms',caltable='l2.3mmC34S.bpoly',
 	 field='0',spw='3',
 	 bandtype='BPOLY',degamp=2,degphase=2,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l2.3mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l2.3mmUSB.gcal0')
 
 # Band pass for CH3OH,3mm continuum USB/LSB
 default('bandpass')
@@ -371,19 +363,19 @@ bandpass(vis='l2.ms',caltable='l2.3mmch3oh.bpoly',
 	 field='0',spw='11',
 	 bandtype='BPOLY',degamp=10,degphase=20,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l2.3mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l2.3mmUSB.gcal0')
 default('bandpass')
 bandpass(vis='l2.ms',caltable='l2.3mmcont.bpoly',
 	 field='0',spw='7,15,19',
 	 bandtype='BPOLY',degamp=10,degphase=25,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l2.3mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l2.3mmUSB.gcal0')
 default('bandpass')
 bandpass(vis='l2.ms',caltable='l2.3mmcont.bpoly',
 	 field='0',spw='6,14,18',
 	 bandtype='BPOLY',degamp=10,degphase=25,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l2.3mmUSB.gcal0',gaincurve=False,opacity=0.0,append=True)
+	 gaintable='l2.3mmUSB.gcal0',append=True)
 
 print '--gaincal phase (3mm)--'
 #derive new and better phase solutions for 3mm LSB
@@ -392,15 +384,14 @@ gaincal(vis='l2.ms',caltable='l2.3mmcont.gcal',
 	field='0,1,2',spw='6,14,18,7,15,19',
 	gaintype='GSPLINE',calmode='p',splinetime=10000.,refant='1',
 	phasewrap=260,
-	gaincurve=False,opacity=0.0,gaintable='l2.3mmcont.bpoly',preavg=0.)
+	gaintable='l2.3mmcont.bpoly',preavg=0.)
 
 #Apply all solutions derived so far, determine calibrator's flux densities by solving for T 
 #and use fluxscale
 default('gaincal')
 gaincal(vis='l2.ms',caltable='l2.3mmcont.temp',
 	field='0,1,2',spw='7,15,19,6,14,18',
-	solint='600s',refant='1',gaintype='T',opacity=0.0,
-	gaincurve=False,
+	solint='600s',refant='1',gaintype='T',
 	gaintable=['l2.3mmcont.gcal','l2.3mmcont.bpoly'])
 
 #fluxscale
@@ -437,7 +428,6 @@ gaincal(vis='l2.ms',caltable='l2.3mmcont.amp.gcal',
 	field='0,1,2',spw='7,15,19,6,14,18',
 	gaintype='GSPLINE',calmode='a',splinetime=10000.,
 	refant='1',phasewrap=260,
-	gaincurve=False,opacity=0.0,
 	preavg=0.,
 	gaintable=['l2.3mmcont.gcal','l2.3mmcont.bpoly'])
 calamp3mmtime=time.time()
@@ -449,19 +439,16 @@ calamp3mmtime=time.time()
 default('applycal')
 applycal(vis='l2.ms',
 	 field='3',spw='3',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l2.3mmcont.gcal','l2.3mmcont.amp.gcal','l2.3mmC34S.bpoly'])
 # Correct Target other 3mm line data (CH3OH)
 default('applycal')
 applycal(vis='l2.ms',
 	 field='3',spw='11',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l2.3mmcont.gcal','l2.3mmcont.amp.gcal','l2.3mmch3oh.bpoly'])
 # Correct Target source 3mm continuum 
 default('applycal')
 applycal(vis='l2.ms',
 	 field='3',spw='7,15,19,6,14,18',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l2.3mmcont.gcal','l2.3mmcont.amp.gcal','l2.3mmcont.bpoly'])
 correct3mmtime=time.time()
 
@@ -493,8 +480,7 @@ default('gaincal')
 gaincal(vis='l2.ms',caltable='l2.1mmUSB.gcal0',
 	field='0',spw='27,31:9~118',
 	gaintype='GSPLINE',calmode='p',splinetime=10000.,
-	refant='1',phasewrap=260,preavg=0.,
-	gaincurve=False,opacity=0.0)
+	refant='1',phasewrap=260,preavg=0.)
 
 ## Derive bandpass calibration for 1mm 
 ##
@@ -503,18 +489,18 @@ bandpass(vis='l2.ms',caltable='l2.1mmcont.bpoly',
 	 field='0',spw='27,31',
 	 bandtype='BPOLY',degamp=10,degphase=20,visnorm=False,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l2.1mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l2.1mmUSB.gcal0')
 default('bandpass')
 bandpass(vis='l2.ms',caltable='l2.1mmcont.bpoly',
 	 field='0',spw='26,30',
 	 bandtype='BPOLY',degamp=10,degphase=20,visnorm=False,solnorm=False,
-	 maskcenter=2,maskedge=0,refant='1',gaintable='l2.1mmUSB.gcal0',gaincurve=False,opacity=0.0,append=True)
+	 maskcenter=2,maskedge=0,refant='1',gaintable='l2.1mmUSB.gcal0',append=True)
 default('bandpass')
 bandpass(vis='l2.ms',caltable='l2.1mmUSB.bpoly',
 	 field='0',spw='23',
 	 bandtype='BPOLY',degamp=10,degphase=20,visnorm=False,solnorm=False,
 	 maskcenter=2,maskedge=0,refant='1',
-	 gaintable='l2.1mmUSB.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='l2.1mmUSB.gcal0')
 
 ## Determine phase solutions for 1mm LSB & USB 
 ##
@@ -524,7 +510,7 @@ gaincal(vis='l2.ms',caltable='l2.1mmcont.gcal',
 	field='0,1,2',spw='26,27,30,31',
 	gaintype='GSPLINE',calmode='p',splinetime=10000.,refant='1',
 	phasewrap=260,
-	gaincurve=False,opacity=0.0,gaintable='l2.1mmcont.bpoly',preavg=0.)
+	gaintable='l2.1mmcont.bpoly',preavg=0.)
 
 ##  Apply all solutions derived so far, determine
 ##  calibrators' flux densities using a solve for T and
@@ -534,7 +520,6 @@ default('gaincal')
 gaincal(vis='l2.ms',caltable='l2.1mmcont.temp',
 	field='0,1,2',spw='26,27,30,31',
 	solint='1200s',refant='1',gaintype='T',
-	opacity=0.0,gaincurve=False,
 	gaintable=['l2.1mmcont.gcal','l2.1mmcont.bpoly'])
 #
 default('fluxscale')
@@ -564,7 +549,6 @@ gaincal(vis='l2.ms',caltable='l2.1mmcont.amp.gcal',
 	field='0,1,2',spw='26,27,30,31',
 	gaintype='GSPLINE',calmode='a',splinetime=10000.,refant='1',
 	phasewrap=260,
-	gaincurve=False,opacity=0.0,
 	preavg=0.,
 	gaintable=['l2.1mmcont.gcal','l2.1mmcont.bpoly'])
 calamp1mmtime=time.time()
@@ -576,12 +560,10 @@ calamp1mmtime=time.time()
 default('applycal')
 applycal(vis='l2.ms',
 	 field='3',spw='26,27,30,31',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l2.1mmcont.gcal','l2.1mmcont.amp.gcal','l2.1mmcont.bpoly'])
 default('applycal')
 applycal(vis='l2.ms',
 	 field='3',spw='23',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['l2.1mmcont.gcal','l2.1mmcont.amp.gcal','l2.1mmcont.bpoly'],
 	 spwmap=[[-1],[-1],[26]])
 correct1mmtime=time.time()

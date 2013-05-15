@@ -8,6 +8,7 @@
 #    Uses new clean task                                                 #
 # Updated      STM 2008-06-18 (Beta Patch 2.0) Format as regression      #
 # Updated      STM 2008-09-17 (Beta Patch 3.0) Use imval task            #
+# Updated      GAM 2013-05-15 Removed redundant gaincurve/opacity refs   #
 #                                                                        #
 ##########################################################################
 
@@ -129,8 +130,6 @@ fluxcaldir = pathname + '/data/nrao/VLA/CalModels/'
 fluxcalfield = '0137+331'    # primary calibrator for setjy
 fluxcalmodel = '3C48_C.im'   # if non-blank use this model image
 gaincalfield = ''            # names of gain calibrators (''=all fields)
-usegaincurve = False         # use a-priori antenna gain-elevation curve?
-gainopacity = 0.0            # a-priori atmospheric optical depth (Tau)
 calrefant = 'VA15'           # reference antenna name for calibration (VA15,EA19)
 gainsolint = 20.0            # 20s for gaincal solutions
 polcalfield = '2202+422'     # polarization (D-term) calibrator
@@ -653,10 +652,6 @@ print "Calibrating using fields "+field
 # Calibrate these spw
 spw = usespw
 
-# a-priori calibration application
-gaincurve = usegaincurve
-opacity = gainopacity
-
 # do not apply parallactic angle correction
 parang = False
 
@@ -840,10 +835,6 @@ vis = msfile
 # Start with the un-fluxscaled gain table
 gaintable = gtable
 
-# use settings from gaincal
-gaincurve = usegaincurve
-opacity = gainopacity
-
 # Output table
 ptable = prefix + '.pcal'
 caltable = ptable
@@ -984,10 +975,6 @@ if ( pcalmodel.has_key(polxfield) ):
     # Start with the G and D tables
     gaintable = [gtable,ptable]
     
-    # use settings from gaincal
-    gaincurve = usegaincurve
-    opacity = gainopacity
-    
     # Output table
     xtable = prefix + '.polx'
     caltable = xtable
@@ -1084,10 +1071,6 @@ if (dopolx):
     gaintable = [ftable,ptable,xtable]
 else:
     gaintable = [ftable,ptable]
-
-# use settings from gaincal
-gaincurve = usegaincurve
-opacity = gainopacity
 
 # select all the data
 spw = usespw

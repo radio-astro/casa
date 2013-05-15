@@ -370,7 +370,7 @@ def analyseASDM(basename, caltablename0, genwvr=True):
             spw=avspw[i],
             selectdata=False,timerange="",uvrange="",
             antenna="",scan="",msselect="",
-            gaincurve=False,opacity=0.0,parang=False,calwt=True,
+            parang=False,calwt=True,
             # We use G after all, not Gspline
             gaintable=[caltablename+"_spw"+str(i)+".G_WVR",caltablename0,caltablename+"_spw"+str(i)+".K",caltablename+"_spw"+str(i)+".B"],
             gainfield=['','','',''],

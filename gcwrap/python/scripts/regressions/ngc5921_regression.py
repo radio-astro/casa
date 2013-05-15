@@ -407,12 +407,6 @@ spw = ''
 # No other selection
 selectdata = False
 
-# In this band we do not need a-priori corrections for
-# antenna gain-elevation curve or atmospheric opacity
-# (at 8GHz and above you would want these)
-gaincurve = False
-opacity = 0.0
-
 # Choose bandpass solution type
 # Pick standard time-binned B (rather than BPOLY)
 bandtype = 'B'
@@ -481,12 +475,6 @@ spw = '0:6~56'
 
 # No other selection
 selectdata = False
-
-# In this band we do not need a-priori corrections for
-# antenna gain-elevation curve or atmospheric opacity
-# (at 8GHz and above you would want these)
-gaincurve = False
-opacity = 0.0
 
 # scan-based G solutions for both amplitude and phase
 gaintype = 'G'
@@ -640,10 +628,6 @@ spwmap = []
 # all channels
 spw = ''
 selectdata = False
-
-# as before
-gaincurve = False
-opacity = 0.0
 
 # select all fields
 field = ''

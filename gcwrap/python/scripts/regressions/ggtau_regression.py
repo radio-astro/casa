@@ -79,7 +79,7 @@ default('gaincal')
 gaincal(vis='ggtau_07feb97.ms',caltable='ggtau.3mm.ph.gcal0',
 	field='1',spw='2:14~43',
 	gaintype='GSPLINE',calmode='p',splinetime=10000.,refant='1',phasewrap=260,
-	gaincurve=False,opacity=0.0,preavg=120)
+	preavg=120)
 
 print '--bandpass (3mm)--'
 #derive bandpass calibration for 3mm LSB
@@ -88,8 +88,7 @@ bandpass(vis='ggtau_07feb97.ms',caltable='ggtau.3mm.bpoly',
 	 field='1',spw='2:3~62',
 	 bandtype='BPOLY',degamp=6,degphase=12,
 	 solnorm=False,maskcenter=4,maskedge=0,refant='1',
-	 gaintable='ggtau.3mm.ph.gcal0',
-	 gaincurve=False,opacity=0.0)
+	 gaintable='ggtau.3mm.ph.gcal0')
 
 print '--gaincal phase (3mm)--'
 #derive new and better phase solutions for 3mm LSB
@@ -98,15 +97,15 @@ gaincal(vis='ggtau_07feb97.ms',caltable='ggtau.3mm.ph.gcal',
 	field='0,1,3',spw='2:2~61',
 	gaintype='GSPLINE',calmode='p',splinetime=10000.,refant='1',phasewrap=260,
 	gaintable='ggtau.3mm.bpoly',
-	gaincurve=False,opacity=0.0,preavg=0.)
+	preavg=0.)
 
 #Apply all solutions derived so far, determine calibrator's flux densities by solving for T and using fluxscale
 default('gaincal')
 gaincal(vis='ggtau_07feb97.ms',caltable='ggtau.3mm.temp',
 	field='0,1,3',spw='2:2~61',
 	solint='600s',refant='1',
-	gaintype='T',opacity=0.0,
-	gaincurve=False,gaintable=['ggtau.3mm.ph.gcal','ggtau.3mm.bpoly'])
+	gaintype='T',
+	gaintable=['ggtau.3mm.ph.gcal','ggtau.3mm.bpoly'])
 
 #fluxscale
 default('fluxscale')
@@ -131,7 +130,6 @@ default('gaincal')
 gaincal(vis='ggtau_07feb97.ms',caltable='ggtau.3mm.amp.gcal',
 	field='0,1,3',spw='2:2~61',
 	gaintype='GSPLINE',calmode='a',splinetime=20000.,refant='1',phasewrap=260,
-	gaincurve=False,opacity=0.0,
 	gaintable=['ggtau.3mm.ph.gcal','ggtau.3mm.bpoly'],preavg=2500.)
 
 calamp3mmtime=time.time()
@@ -143,7 +141,6 @@ calamp3mmtime=time.time()
 default('applycal')
 applycal(vis='ggtau_07feb97.ms',
 	 spw='2',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['ggtau.3mm.ph.gcal','ggtau.3mm.amp.gcal','ggtau.3mm.bpoly'])
 correct3mmtime=time.time()
 
@@ -190,8 +187,7 @@ default('gaincal')
 gaincal(vis='ggtau_07feb97.ms',caltable='ggtau.1mm.ph.gcal0',
 	field='1',spw='10,14,18:14~43',
 	gaintype='GSPLINE',calmode='p',
-	splinetime=10000.,refant='1',phasewrap=260,preavg=120,
-	gaincurve=False,opacity=0.0)
+	splinetime=10000.,refant='1',phasewrap=260,preavg=120)
 
 ## Derive bandpass calibration for 1mm LSB:
 ##
@@ -202,7 +198,7 @@ bandpass(vis='ggtau_07feb97.ms',caltable='ggtau.1mm.bpoly',
 	 field='1',spw='10,14,18:2~61',
 	 bandtype='BPOLY',degamp=6,degphase=6,
 	 visnorm=False,solnorm=False,maskcenter=4,maskedge=0,refant='1',
-	 gaintable='ggtau.1mm.ph.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='ggtau.1mm.ph.gcal0')
 
 ## Determine phase solutions for 1mm LSB for all calibrators
 ##
@@ -215,7 +211,6 @@ default('gaincal')
 gaincal(vis='ggtau_07feb97.ms',caltable='ggtau.1mm.ph.gcal',
 	field='0,1,3',spw='10,14,18:2~61',
 	gaintype='GSPLINE',calmode='p',splinetime=10000.,refant='1',phasewrap=260,
-	gaincurve=False,opacity=0.0,
 	gaintable=['ggtau.3mm.ph.gcal','ggtau.1mm.bpoly'],preavg=0.)
 
 ##  Apply all solutions derived so far, determine
@@ -226,7 +221,6 @@ default('gaincal')
 gaincal(vis='ggtau_07feb97.ms',caltable='ggtau.1mm.temp',
 	field='0,1,3',spw='10,14,18:2~61',
 	solint='600s',refant='1',gaintype='T',
-	opacity=0.0,gaincurve=False,
 	gaintable=['ggtau.1mm.ph.gcal','ggtau.1mm.bpoly'])
 #
 default('fluxscale')
@@ -252,7 +246,7 @@ default('gaincal')
 gaincal(vis='ggtau_07feb97.ms',caltable='ggtau.1mm.amp.gcal',
 	field='0,1,3',spw='10,14,18:2~61',
 	gaintype='GSPLINE',calmode='a',splinetime=20000.,refant='1',phasewrap=260,
-	gaincurve=False,opacity=0.0,preavg=2500.,
+	preavg=2500.,
 	gaintable=['ggtau.1mm.ph.gcal','ggtau.1mm.bpoly'])
 calamp1mmtime=time.time()
 
@@ -263,7 +257,6 @@ calamp1mmtime=time.time()
 default('applycal')
 applycal(vis='ggtau_07feb97.ms',
 	 spw='10,14,18',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['ggtau.1mm.ph.gcal','ggtau.1mm.amp.gcal','ggtau.1mm.bpoly'])
 correct1mmtime=time.time()
 
@@ -297,12 +290,11 @@ bandpass(vis='ggtau_07feb97.ms',caltable='ggtau.hco.bpoly',
 	 field='1',spw='6:25~230',
 	 bandtype='BPOLY',degamp=1,degphase=1,visnorm=False,solnorm=False,
 	 maskcenter=40,maskedge=0,refant='1',
-	 gaintable='ggtau.3mm.ph.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='ggtau.3mm.ph.gcal0')
 
 default('applycal')
 applycal(vis='ggtau_07feb97.ms',
 	 spw='6',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['ggtau.3mm.ph.gcal','ggtau.3mm.amp.gcal','ggtau.hco.bpoly'])
 default('split')
 split(vis='ggtau_07feb97.ms',outputvis='ggtau.hco.split.ms',
@@ -333,11 +325,10 @@ bandpass(vis='ggtau_07feb97.ms',caltable='ggtau.co.bpoly',
 	 field='1',spw='22:8~247',
 	 bandtype='BPOLY',degamp=1,degphase=1,visnorm=False,solnorm=False,
 	 maskcenter=4,maskedge=0,refant='1',
-	 gaintable='ggtau.1mm.ph.gcal0',gaincurve=False,opacity=0.0)
+	 gaintable='ggtau.1mm.ph.gcal0')
 default('applycal')
 applycal(vis='ggtau_07feb97.ms',
 	 spw='22',
-	 gaincurve=False,opacity=0.0,
 	 gaintable=['ggtau.1mm.ph.gcal','ggtau.1mm.amp.gcal','ggtau.co.bpoly'])
 default('split')
 split(vis='ggtau_07feb97.ms',outputvis='ggtau.co.split.ms',

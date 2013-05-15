@@ -98,7 +98,7 @@ default('gaincal')
 gaincal(vis='n4826_22apr.ms',caltable='n4826_22apr.gcal',
 	field='0,1',spw='0', gaintype='G',
 	minsnr=2.0,
-	refant='ANT5',gaincurve=False,opacity=0.0,solint='inf',combine='obsid')
+	refant='ANT5',solint='inf',combine='obsid')
 gaincal1time=time.time()
 ## Transfer the flux density scale:
 print '--fluxscale - 22apr98--'
@@ -115,10 +115,10 @@ print '--correct 22apr98--'
 default('applycal')
 applycal(vis='n4826_22apr.ms',
 	field='1',spw='0',
-	gaincurve=False,opacity=0.0,gaintable='n4826_22apr.fcal')
+	gaintable='n4826_22apr.fcal')
 applycal(vis='n4826_22apr.ms',
 	field='2~8',spw='1~4',
-	gaincurve=False,opacity=0.0,gaintable='n4826_22apr.fcal',spwmap=[0])
+	gaintable='n4826_22apr.fcal',spwmap=[0])
 correct1time=time.time()
 
 ## Split out calibrated target source  and calibrater data:
@@ -198,7 +198,7 @@ default('gaincal')
 gaincal(vis='n4826_16apr.ms',caltable='n4826_16apr.gcal',
 	field='0,1',spw='0,1', gaintype='G',
 	minsnr=2.0,
-	refant='ANT5',gaincurve=False,opacity=0.0,solint='inf',combine='obsid')
+	refant='ANT5',solint='inf',combine='obsid')
 gaincal2time=time.time()
  #     Found 14 good G Jones solutions.
 ## Transfer the flux density scale:
@@ -220,10 +220,10 @@ print '--correct - 16apr98 --'
 default('applycal')
 applycal(vis='n4826_16apr.ms',
 	field='1',spw='1',
-        gaincurve=False,opacity=0.0,gaintable='n4826_16apr.fcal')
+        gaintable='n4826_16apr.fcal')
 applycal(vis='n4826_16apr.ms',
 	field='2~8',spw='2~5',
-        gaincurve=False,opacity=0.0,gaintable='n4826_16apr.fcal',spwmap=[1])
+        gaintable='n4826_16apr.fcal',spwmap=[1])
 correct2time=time.time()
 ## Split out calibrated target source  and calibrater data:
 print '--split - 16apr98 --'

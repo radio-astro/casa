@@ -25,6 +25,7 @@
 # Updated by STM    2008-06-03                  Patch 4 vals, fix error  #
 # Updated by STM    2009-06-19                  Patch 4 release          #
 # Updated by STM    2009-12-07                  Release 3.0 final        #
+# Updated by GAM    2013-05-15 Removed redundant gaincurve/opacity refs  #
 #                                                                        #
 # N4826 - BIMA SONG Data                                                 #
 #                                                                        #
@@ -581,7 +582,7 @@ print 'Output table ngc4826.tutorial.16apr98.gcal'
 
 gaincal(vis='ngc4826.tutorial.ms', caltable='ngc4826.tutorial.16apr98.gcal',
 	field='0,1', spw='0~11', gaintype='G', minsnr=2.0,
-	refant='ANT5', gaincurve=False, opacity=0.0,
+	refant='ANT5',
 	solint='inf', combine='spw')
 
 if benchmarking:
@@ -659,7 +660,6 @@ print 'Applying calibration table ngc4826.tutorial.16apr98.fcal to data'
 
 applycal(vis='ngc4826.tutorial.ms',
 	 field='', spw='',
-	 gaincurve=False, opacity=0.0, 
          gaintable='ngc4826.tutorial.16apr98.fcal',
 	 spwmap=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
