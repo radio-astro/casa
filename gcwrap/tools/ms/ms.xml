@@ -4688,8 +4688,8 @@ in spectral window 1.
   <input>
     
      <param type="int" direction="in" name="id">
-     <description>The unique id number to give to this ephemeris (will overwrite pre-existing ephemeris of same id)</description>
-     <value>0</value>
+     <description>The unique id number to give to this ephemeris (will overwrite pre-existing ephemeris of same id, -1 will use next unused id)</description>
+     <value>-1</value>
      </param>
 
      <param type="string" direction="in" name="ephemerisname">

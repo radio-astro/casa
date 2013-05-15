@@ -21,8 +21,11 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
     
     fixuvw     -- recalc uvw coordinates? (default: False)
 
-    direction  -- if set, don't use pointing table but set direction to this value
-               example: 'J2000 19h30m00 -40d00m00', default= '' (use pointing table)
+    direction  -- if set, don't use pointing table but set direction to this value.
+                  The direction can either be given explicitly or as the path
+                  to a JPL Horizons ephemeris (for an example of the format,
+                  see directory data/ephemerides/JPL-Horizons/).
+                  example: 'J2000 19h30m00 -40d00m00', default= '' (use pointing table)
 
     refant     -- if using pointing table information, use it from this antenna
                   default: 0 (antenna id 0)
@@ -35,23 +38,6 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
 		              using only the unflagged maintable rows 
                             '2012/07/11/08:41:32' will use the given timestamp (must be
                             within the observaton time)
-
-    Examples:
-
-    fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', True)
-          will look up the pointing direction from antenna 0 for field 'Titan' in 
-          the POINTING table based on the first timestamp in the main table rows for 
-          this field, enter this direction in the FIELD and SOURCE tables, and then 
-          recalculate the UVW coordinates for this field.
-
-    fixplanets('uid___A002_X1c6e54_X223.ms', 'Titan', False, 'J2000 12h30m15 -02d12m00')
-          will set the directions for field 'Titan' in the FIELD and SOURCE table to the
-          given direction and not recalculate the UVW coordinates.
-          (This can be useful for several purposes, among them preparing a concatenation
-          of datasets. Only fields with the same direction will be recognised as identical.
-          fixplanets can then be run again after the concatenation using parameters as in
-          the first example above.)
-
     """
     
     casalog.origin('fixplanets')
@@ -66,7 +52,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
         if(len(fields) == 0):
             casalog.post( "Field selection returned zero results.", 'WARN')
             return True
-        
+
         tbt.open(vis+"/FIELD")
         oldrefcol = []
         if('PhaseDir_Ref' in tbt.colnames()):
@@ -81,6 +67,8 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
             thenewdec_rad = 0.
             thenewref = -1
             thenewrefstr = ''
+            theephemeris = ''
+            
             if(direction==''): # use information from the pointing table
                 # find median timestamp for this field in the main table
                 shutil.rmtree(fixplanetstemp, ignore_errors=True)
@@ -233,38 +221,50 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
                 thenewdec_rad = thedirmemod['m1']['value']
                 me.done()
                 shutil.rmtree(fixplanetstemp2, ignore_errors=True)
+
             else: # direction is not an empty string, use this instead of the pointing table information
                 if(type(direction)==str):
                     dirstr = direction.split(' ')
-                    codes = []
-                    if len(dirstr)==2:
-                        dirstr = ['J2000', dirstr[0], dirstr[1]]
-                        casalog.post('Assuming reference frame J2000 for parameter \'direction\'', 'NORMAL')
-                    elif not len(dirstr)==3:
-                        casalog.post('Incorrect format in parameter \'direction\'', 'SEVERE')
-                        return False
-                    try:
-                        thedir = me.direction(dirstr[0], dirstr[1], dirstr[2])
-                        thenewra_rad = thedir['m0']['value']
-                        thenewdec_rad = thedir['m1']['value']
-                    except Exception, instance:
-                        casalog.post("*** Error \'%s\' when interpreting parameter \'direction\': " % (instance), 'SEVERE')
-                        return False
-                    try:
-                        tbt.open(vis+"/FIELD")
-                        thenewrefindex = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')['TabRefTypes'].tolist().index(dirstr[0])
-                        thenewref = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')['TabRefCodes'][thenewrefindex]
-                        thenewrefstr = dirstr[0]
-                        tbt.close()
-                    except Exception, instance:
-                        casalog.post("PHASE_DIR is not a variable reference column. Will leave reference as is.", 'WARN')
-                        thenewref = -1
-                    if(0<thenewref and thenewref<32):
-                        casalog.post("*** Error when interpreting parameter \'direction\':\n presently only J2000 and solar system objects are supported.",
-                                     'SEVERE')
-                        return False
+                    if len(dirstr)==1: # an ephemeris table was given
+                        if(os.path.exists(dirstr[0]) and not os.path.isfile(dirstr[0])):
+                            theephemeris = dirstr[0]
+                            thenewra_rad = 0.
+                            thenewdec_rad = 0.
+                            casalog.post('Will use ephemeris table '+theephemeris+' with offset (0,0)', 'NORMAL')
+                        else:
+                            casalog.post("*** Error when interpreting parameter \'direction\':\n string is neither a direction nor an ephemeris table.",
+                                         'SEVERE')
+                            return False
+                    else:
+                        if len(dirstr)==2: # a direction without ref frame was given
+                            dirstr = ['J2000', dirstr[0], dirstr[1]]
+                            casalog.post('Assuming reference frame J2000 for parameter \'direction\'', 'NORMAL')
+                        elif not len(dirstr)==3:
+                            casalog.post('Incorrect format in parameter \'direction\'', 'SEVERE')
+                            return False
+                        # process direction and refframe
+                        try:
+                            thedir = me.direction(dirstr[0], dirstr[1], dirstr[2])
+                            thenewra_rad = thedir['m0']['value']
+                            thenewdec_rad = thedir['m1']['value']
+                        except Exception, instance:
+                            casalog.post("*** Error \'%s\' when interpreting parameter \'direction\': " % (instance), 'SEVERE')
+                            return False
+                        try:
+                            tbt.open(vis+"/FIELD")
+                            thenewrefindex = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')['TabRefTypes'].tolist().index(dirstr[0])
+                            thenewref = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')['TabRefCodes'][thenewrefindex]
+                            thenewrefstr = dirstr[0]
+                            tbt.close()
+                        except Exception, instance:
+                            casalog.post("PHASE_DIR is not a variable reference column. Will leave reference as is.", 'WARN')
+                            thenewref = -1
+                        if(0<thenewref and thenewref<32):
+                            casalog.post("*** Error when interpreting parameter \'direction\':\n presently only J2000 and solar system objects are supported.",
+                                         'SEVERE')
+                            return False
             #endif
-            
+
             # modify FIELD table
             tbt.open(vis+'/FIELD', nomodify=False)
             numfields = tbt.nrows()
@@ -272,7 +272,11 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
             planetname = tbt.getcell('NAME',fld)
             casalog.post( 'object: '+planetname, 'NORMAL')
             casalog.post( 'old RA, DEC (rad) '+str(theolddir[0])+" " +str(theolddir[1]), 'NORMAL')
-            casalog.post( 'new RA, DEC (rad) '+str(thenewra_rad)+" "+ str(thenewdec_rad), 'NORMAL')
+            if(theephemeris==''):
+                casalog.post( 'new RA, DEC (rad) '+str(thenewra_rad)+" "+ str(thenewdec_rad), 'NORMAL')
+            else:
+                casalog.post( 'new RA, DEC to be taken from ephemeris table '+theephemeris
+                              +' with offsets (rad) '+str(thenewra_rad)+" "+ str(thenewdec_rad), 'NORMAL')
 
             pcol = tbt.getcol('PHASE_DIR')
             pcol[0][0][fld] = thenewra_rad
@@ -288,53 +292,68 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
             pcol[0][0][fld] = thenewra_rad
             pcol[1][0][fld] = thenewdec_rad
             tbt.putcol('REFERENCE_DIR',pcol)
+
             casalog.post("FIELD table PHASE_DIR, DELAY_DIR, and REFERENCE_DIR columns changed for field "+str(fld)+".", 'NORMAL')
 
-            if(thenewref!=-1):
-                # modify reference of the direction columns permanently
-                theoldref = -1
-                theoldref2 = -1
-                theoldref3 = -1
-                try:
-                    pcol = tbt.getcol('PhaseDir_Ref')
-                    theoldref = pcol[fld]
-                    pcol[fld] = thenewref
-                    oldrefcol = pcol
-                        
-                    pcol2 = tbt.getcol('DelayDir_Ref')
-                    theoldref2 = pcol2[fld]
-                    pcol2[fld] = thenewref
-                    
-                    pcol3 = tbt.getcol('RefDir_Ref')
-                    theoldref3 = pcol3[fld]
-                    pcol3[fld] = thenewref
+            if ('EPHEMERIS_ID' in tbt.colnames()) and (tbt.getcell('EPHEMERIS_ID',fld)>=0): # originally an ephemeris was used
+                tbt.putcell('EPHEMERIS_ID', fld, -1) # remove the reference to it
+                casalog.post("FIELD table EPHEMERIS_ID column reset to -1 for field "+str(fld)+".", 'NORMAL')
 
-                    if not (theoldref==theoldref2 and theoldref==theoldref3):
-                        casalog.post("The three FIELD table direction reference frame entries for field "+str(fld)
-                                     +" are not identical in the input data: "
-                                     +str(theoldref)+", "+str(theoldref2)+", "+str(theoldref3)
-                                     +". Will try to continue ...", 'WARN')
-                        theoldref=-1
+            if(theephemeris==''):
+
+                if(thenewref!=-1):
+                    # modify reference of the direction columns permanently
+                    theoldref = -1
+                    theoldref2 = -1
+                    theoldref3 = -1
+                    try:
+                        pcol = tbt.getcol('PhaseDir_Ref')
+                        theoldref = pcol[fld]
+                        pcol[fld] = thenewref
+                        oldrefcol = pcol
+
+                        pcol2 = tbt.getcol('DelayDir_Ref')
+                        theoldref2 = pcol2[fld]
+                        pcol2[fld] = thenewref
+
+                        pcol3 = tbt.getcol('RefDir_Ref')
+                        theoldref3 = pcol3[fld]
+                        pcol3[fld] = thenewref
+
+                        if not (theoldref==theoldref2 and theoldref==theoldref3):
+                            casalog.post("The three FIELD table direction reference frame entries for field "+str(fld)
+                                         +" are not identical in the input data: "
+                                         +str(theoldref)+", "+str(theoldref2)+", "+str(theoldref3)
+                                         +". Will try to continue ...", 'WARN')
+                            theoldref=-1
+                        else:
+                            oldrefstrindex = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')['TabRefCodes'].tolist().index(theoldref)
+                            oldrefstr = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')['TabRefTypes'][oldrefstrindex]
+                            casalog.post("Original FIELD table direction reference frame entries for field "+str(fld)
+                                         +" are all "+str(theoldref)+" ("+oldrefstr+")", 'NORMAL')
+                        tbt.putcol('PhaseDir_Ref', pcol)
+                        tbt.putcol('DelayDir_Ref', pcol2)
+                        tbt.putcol('RefDir_Ref', pcol3)
+
+                    except Exception, instance:
+                        casalog.post("*** Error \'%s\' when writing reference frames in FIELD table: " % (instance),
+                                     'SEVERE')
+                        return False
+                    if(theoldref != thenewref):
+                        casalog.post("FIELD table direction reference frame entries for field "+str(fld)
+                                     +" set to "+str(thenewref)+" ("+thenewrefstr+")", 'NORMAL')
                     else:
-                        oldrefstrindex = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')['TabRefCodes'].tolist().index(theoldref)
-                        oldrefstr = tbt.getcolkeyword('PHASE_DIR', 'MEASINFO')['TabRefTypes'][oldrefstrindex]
-                        casalog.post("Original FIELD table direction reference frame entries for field "+str(fld)
-                                     +" are all "+str(theoldref)+" ("+oldrefstr+")", 'NORMAL')
-                    tbt.putcol('PhaseDir_Ref', pcol)
-                    tbt.putcol('DelayDir_Ref', pcol2)
-                    tbt.putcol('RefDir_Ref', pcol3)
-
+                        casalog.post("FIELD table direction reference frame entries for field "+str(fld)
+                                     +" unchanged.", 'NORMAL')                        
+            else: # we are working with an ephemeris
+                try:
+                    mst.open(vis, nomodify=False)
+                    mst.addephemeris(-1, theephemeris, planetname, fld) # -1 = take the next free ID
+                    mst.close()
                 except Exception, instance:
-                    casalog.post("*** Error \'%s\' when writing reference frames in FIELD table: " % (instance),
-                                 'SEVERE')
+                    casalog.post("*** Error \'%s\' when attaching ephemeris: " % (instance),
+                                     'SEVERE')
                     return False
-                if(theoldref != thenewref):
-                    casalog.post("FIELD table direction reference frame entries for field "+str(fld)
-                                 +" set to "+str(thenewref)+" ("+thenewrefstr+")", 'NORMAL')
-                else:
-                    casalog.post("FIELD table direction reference frame entries for field "+str(fld)
-                                 +" unchanged.", 'NORMAL')                        
-                
 
             if(fixuvw and (oldrefcol!=[]) and (thenewref>0)): 
                 # modify reference of phase dir for fixuvw

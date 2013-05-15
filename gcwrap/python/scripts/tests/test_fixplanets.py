@@ -14,6 +14,7 @@ Features tested:
   2. Does the setting of a given direction work on an MS imported from an ASDM from April 2011
   3. Does the setting of a given direction with ref !=J2000 and != sol.sys. object give the expected error?
   4. Does the setting of a given direction work with a sol system ref frame
+  5. Does the use of an ephemeris via the direction parameter work
 
 '''
 datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/listvis/'
@@ -28,13 +29,14 @@ class fixplanets_test1(unittest.TestCase):
         shutil.rmtree(outms, ignore_errors=True)
         shutil.copytree(datapath + inpms, outms)
         shutil.rmtree(outms2, ignore_errors=True)
-        shutil.copytree(datapath + inpms2, outms2)
+        os.system('cp -R '+datapath+inpms2 + ' ' + outms2) 
+        #shutil.copytree(datapath + inpms2, outms2)
         default(fixplanets)
         
     def tearDown(self):
         shutil.rmtree(outms, ignore_errors=True)
         shutil.rmtree(outms2, ignore_errors=True)
-        
+    
     def test1(self):
         '''Does a standard fixplanets work on an MS imported from an ASDM from April 2011'''
         for myms in [outms,outms2]:
@@ -84,7 +86,14 @@ class fixplanets_test1(unittest.TestCase):
                 
             self.assertFalse(rval)
 
-
+    def test8(self):
+        '''Does a fixplanets with ephemeris work'''
+        for myms in [outms,outms2]:
+            rval = fixplanets(vis=myms, field='Titan', fixuvw=True,
+                              direction=os.environ.get('CASAPATH').split()[0] + '/data/ephemerides/JPL-Horizons/Titan_55438-56292dUTC.tab')
+                
+            self.assertTrue(rval)
+            self.assertTrue(os.path.exists(myms+'/FIELD/EPHEM0_Titan.tab'))
 
     
 def suite():
