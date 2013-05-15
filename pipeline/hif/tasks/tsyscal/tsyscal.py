@@ -64,11 +64,11 @@ class Tsyscal(basetask.StandardTaskTemplate):
         self._executor.execute(gencal_job)
 
         # remove any flagging file associated with this caltable
-        flagcmdfile = '%s_flagcmds.txt' % gencal_args['caltable']
-        if os.path.exists(flagcmdfile):
-            LOG.warning('deleting old flagging file: %s' % os.path.basename(
-              flagcmdfile))
-            os.system('rm -fr %s' % flagcmdfile)
+#        flagcmdfile = '%s_flagcmds.txt' % gencal_args['caltable']
+#        if os.path.exists(flagcmdfile):
+#            LOG.warning('deleting old flagging file: %s' % os.path.basename(
+#              flagcmdfile))
+#            os.system('rm -fr %s' % flagcmdfile)
 
         LOG.warning('TODO: tsysspwmap heuristic re-reads measurement set!')
         LOG.warning("TODO: tsysspwmap heuristic won't handle missing file")
