@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import numpy as np
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
@@ -58,14 +59,21 @@ def renderflagcmds(flagcmdsfile, htmlflagcmds, reason):
     """Method to render a flagdata file into html format. flagcmds 
     that match the given reason are rendered black, others grey.
     """
-    with open(flagcmdsfile, 'r') as stream:
-        lines = stream.readlines()
+    if type(flagcmdsfile) is types.StringType:
+        # input flagcmds from file named
+        with open(flagcmdsfile, 'r') as stream:
+            lines = stream.readlines()
+    elif type(flagcmdsfile) is types.ListType:
+        # flagcmds are listed in flagcmdsfile variable
+        lines = flagcmdsfile
+    else:
+        raise Exception, 'bad type for flagcmdsfile: %s' % type(flagcmdsfile)
+
     with open(htmlflagcmds, 'w') as stream:
         stream.write('<html>')
         stream.write('<head/>')
         stream.write('<body>')
-        stream.write('''This is a list of the flagcmds in the flagging
-          input file that were created by this stage.
+        stream.write('''This is the list of flagcmds created by this stage.
           <br>''')
 
         for line in lines:
