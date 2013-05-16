@@ -10,7 +10,7 @@ def setjy(vis=None, field=None, spw=None,
           selectdata=None, timerange=None, scan=None, observation=None,
           modimage=None, listmodels=None,
           scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
-          standard=None, useephemdir=None, usescratch=None):
+          standard=None, useephemdir=None, interpolation=None, usescratch=None):
   """Fills the model column for flux density calibrators."""
 
   casalog.origin('setjy')
@@ -34,7 +34,7 @@ def setjy(vis=None, field=None, spw=None,
       for subMS in subMS_list:
           retval_i = setjy_core(subMS, field, spw, selectdata, timerange, 
                                 scan, observation, modimage, listmodels, scalebychan, 
-                                fluxdensity, spix, reffreq, standard, useephemdir, usescratch)
+                                fluxdensity, spix, reffreq, standard, useephemdir, usescratch, interpolation)
           if not retval_i:
               retval = False
               casalog.post("setjy failed for sub-MS %s" % (subMS),'WARNING')
@@ -61,7 +61,7 @@ def setjy(vis=None, field=None, spw=None,
   else:
     retval = setjy_core(vis, field, spw, selectdata, timerange, 
                         scan, observation, modimage, listmodels, scalebychan, 
-                        fluxdensity, spix, reffreq, standard, useephemdir, usescratch)
+                        fluxdensity, spix, reffreq, standard, useephemdir, usescratch, interpolation)
 
   return retval
 
@@ -70,7 +70,7 @@ def setjy_core(vis=None, field=None, spw=None,
                selectdata=None, timerange=None, scan=None, observation=None,
                modimage=None, listmodels=None,
                scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
-               standard=None, useephemdir=None, usescratch=None):
+               standard=None, useephemdir=None, usescratch=None, interpolation=None):
   """Fills the model column for flux density calibrators."""
 
   retval = True
@@ -202,7 +202,7 @@ def setjy_core(vis=None, field=None, spw=None,
         myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
                  standard=standard, scalebychan=scalebychan, time=timerange,
-                 observation=str(observation), scan=scan)
+                 observation=str(observation), scan=scan, interpolation=interpolation)
       myim.close()
 
   # This block should catch errors mainly from the actual operation mode 
