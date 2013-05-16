@@ -23,7 +23,7 @@ class SDBaselineWorker(object):
     def __init__(self, context):
         self.context = context
 
-    def execute(self, datatable, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern):
+    def execute(self, datatable, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern, detected_lines):
 
         # filename for input/output
         filenames_out = [self.context.observing_run[idx].baselined_name
@@ -73,6 +73,10 @@ class SDBaselineWorker(object):
         LOG.debug('len(index_list)=%s'%(len(index_list)))
         lines = line_validator.execute(grid_table, detect_signal, spwid, nchan, index_list, window, observing_pattern, grid_size, grid_size, iteration)
 
+        LOG.debug('lines=%s'%(lines))
+
+        for l in lines:
+            detected_lines.append(l)
 
         # fit order determination and fitting
         fitter_cls = FittingFactory.get_fitting_class(fitfunc)

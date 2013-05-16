@@ -41,13 +41,14 @@ class SDBaselineResults(common.SingleDishResults):
     def merge_with_context(self, context):
         super(SDBaselineResults, self).merge_with_context(context)
 
-        # increment iteration counter for reduction group
         reduction_group = context.observing_run.reduction_group
 
-        # assume that all members have same spw
+        # increment iteration counter
+        # register detected lines to reduction group member
         spw = self.outcome['spw']
         antenna = self.outcome['index']
         pols = self.outcome['pols']
+        lines = self.outcome['lines']
         group_id = -1
         for (idx,desc) in reduction_group.items():
             if desc[0].spw == spw:
@@ -55,6 +56,7 @@ class SDBaselineResults(common.SingleDishResults):
                 break
         if group_id >= 0:
             reduction_group[group_id].iter_countup(antenna, spw, pols)
+            reduction_group[group_id].add_linelist(lines, antenna, spw, pols)
 
     def _outcome_name(self):
         return '%s: %s (spw=%s, pol=%s)'%(self.outcome['index'], self.outcome['name'], self.outcome['spw'], self.outcome['pols'])
@@ -115,6 +117,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             _file_index = set(file_index) & set([m.antenna for m in group_desc])
             files = files | _file_index
             pattern = st.pattern[spwid][pols[0]]
+            detected_lines = []
             parameters = {'datatable': datatable,
                           'spwid': spwid,
                           'nchan': nchan,
@@ -127,13 +130,17 @@ class SDBaseline(common.SingleDishTaskTemplate):
                           'broadline': broadline,
                           'fitorder': fitorder,
                           'fitfunc': fitfunc,
-                          'observing_pattern': pattern}
+                          'observing_pattern': pattern,
+                          'detected_lines': detected_lines}
             job = jobrequest.JobRequest(worker.execute, **parameters)
             self._executor.execute(job)
 
+            LOG.info('detected_lines=%s'%(detected_lines))
+
             for f in _file_index:
                 name = context.observing_run[f].baselined_name
-                outcome = {'name': name, 'index': f, 'spw': spwid, 'pols': pols}
+                outcome = {'name': name, 'index': f, 'spw': spwid,
+                           'pols': pols, 'lines': detected_lines}
                 result = SDBaselineResults(task=self.__class__,
                                            success=True,
                                            outcome=outcome)
