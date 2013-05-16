@@ -28,12 +28,15 @@ class NewGaincalInputs(gaincalmode.GaincalModeInputs):
     def calphasetable(self):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
-	if self._calphasetable is None:
-	    return gcaltable.GaincalCaltable()
+
+	if self._calphasetable is not None:
+            return self._calphasetable
 
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('calphasetable')
-        return self._calphasetable
+
+	return gcaltable.GaincalCaltable()
+
 
     @calphasetable.setter
     def calphasetable(self, value):
@@ -43,11 +46,14 @@ class NewGaincalInputs(gaincalmode.GaincalModeInputs):
     def targetphasetable(self):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
-	if self._targetphasetable is None:
-            return gcaltable.GaincalCaltable()
+
+	if self._targetphasetable is not None:
+            return self._targetphasetable
+
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('targetphasetable')
-        return self._targetphasetable
+
+        return gcaltable.GaincalCaltable()
 
     @targetphasetable.setter
     def targetphasetable(self, value):
@@ -57,11 +63,14 @@ class NewGaincalInputs(gaincalmode.GaincalModeInputs):
     def amptable(self):
         # The value of caltable is ms-dependent, so test for multiple
         # measurement sets and listify the results if necessary
-	if self._amptable is None:
-            return gcaltable.GaincalCaltable()
+
+	if self._amptable is not None:
+            return self._amptable
+
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('amptable')
-        return self._amptable
+
+        return gcaltable.GaincalCaltable()
 
     @amptable.setter
     def amptable(self, value):
