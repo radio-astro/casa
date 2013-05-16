@@ -33,17 +33,16 @@
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
-//#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
+#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
 #include <components/SpectralComponents/SpectralElementFactory.h>
 
-
 namespace casa { //# NAMESPACE CASA - BEGIN
-
 
 std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 	const RecordInterface &in
 ) {
 	std::auto_ptr<SpectralElement> specEl(0);
+	String origin = "SpectralElementFactory::fromRecord: ";
 	if (
 		! in.isDefined("type")
 		|| in.type(in.idToNumber(RecordFieldId("type"))) != TpString
@@ -106,6 +105,7 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		}
 		else {
 			throw AipsError(
+				origin +
 				"SpectralElement::fromRecord: parameters field "
 				"must be double, float or int\n"
 			);
@@ -119,6 +119,7 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 	}
 	if (errs.nelements() != param.nelements()) {
 		throw AipsError(
+			origin +
 			"SpectralElement::fromRecord must have equal lengths "
 			"for parameters and errors fields"
 		);
@@ -127,11 +128,12 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 	case SpectralElement::GAUSSIAN:
 		if (param.nelements() != 3) {
 			throw AipsError(
-				"Illegal number of parameters for Gaussian element"
+				origin + "Illegal number of parameters for Gaussian element"
 			);
 		}
 		if (param(2) <= 0.0) {
 			throw AipsError(
+				origin +
 				"The width of a Gaussian element must be positive"
 			);
 		}
@@ -177,7 +179,7 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		}
 		else {
 			throw AipsError(
-					"No compiled string in SpectralElement::fromRecord\n"
+				"No compiled string in SpectralElement::fromRecord\n"
 			);
 		}
 		break;
@@ -213,20 +215,29 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 		specEl.reset(new GaussianMultipletSpectralElement(comps, fixedMatrix));
 	}
 	break;
-    /*
+
     case SpectralElement::POWERLOGPOLY: {
+    	if (! in.isDefined("nu0")) {
+    		throw AipsError(
+    			"Record does not have required field nu0"
+    		);
+    	}
 		Double nu0 = in.asDouble("nu0");
 		specEl.reset(new PowerLogPolynomialSpectralElement(param, nu0));
 		specEl->set(param);
 		specEl->setError(errs);
 	}
 	break;
-    */
+
 	default:
 		throw AipsError(
-				"Unhandled or illegal spectral element record in "
-				"SpectralElement::fromRecord\n"
+			"Unhandled or illegal spectral element record in "
+			"SpectralElement::fromRecord\n"
 		);
+	}
+
+	if (in.isDefined("fixed")) {
+		specEl->fix(in.asArrayBool("fixed"));
 	}
 	return specEl;
 }

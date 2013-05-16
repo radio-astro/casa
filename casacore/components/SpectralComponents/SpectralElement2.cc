@@ -30,7 +30,7 @@
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
-//#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
+#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
 
 #include <casa/iostream.h>
 
@@ -52,6 +52,9 @@ ostream &operator<<(ostream &os, const SpectralElement &elem) {
 		break;
 	case SpectralElement::LORENTZIAN:
 		os << *dynamic_cast<const LorentzianSpectralElement*>(&elem);
+		break;
+	case SpectralElement::POWERLOGPOLY:
+		os << *dynamic_cast<const PowerLogPolynomialSpectralElement*>(&elem);
 		break;
 	default:
 		throw AipsError("SpectralElement2::<<((): Logic Error. Unhandled spectral element type");

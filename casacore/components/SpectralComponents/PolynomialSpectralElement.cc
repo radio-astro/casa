@@ -54,17 +54,6 @@ SpectralElement* PolynomialSpectralElement::clone() const {
 	return new PolynomialSpectralElement(*this);
 }
 
-/*
-PolynomialSpectralElement& PolynomialSpectralElement::operator=(
-	const PolynomialSpectralElement &other
-) {
-	if (this != &other) {
-		SpectralElement::operator=(other);
-	}
-	return *this;
-}
-*/
-
 Double PolynomialSpectralElement::operator()(const Double x) const {
 	Double s = 0;
 	Vector<Double> p = get();
