@@ -4426,6 +4426,12 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
     Int spwid, fldid;
     ROMSColumns msc(*ms_p);
     ConstantSpectrum cspectrum;
+    // TT
+    Double meantime = msc.time()(0);
+    meantime += 0.5 * (msc.time()(msc.nrow() - 1) - meantime);
+    MEpoch mtime(msc.timeMeas()(0));
+    mtime.set(Quantity(meantime, "s"));
+
 
     for (uInt kk=0; kk<fldids.nelements(); ++kk) {
       fldid=fldids[kk];
@@ -4457,7 +4463,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	  FluxStandard fluxStd(fluxScaleEnum);
 	  Flux<Double> returnFlux, returnFluxErr;
 
-	  if (fluxStd.compute(fieldName, mfreq, returnFlux, returnFluxErr)) {
+	  if (fluxStd.compute(fieldName, mfreq, mtime, returnFlux, returnFluxErr)) {
 	    // Standard reference source identified
 	    returnFlux.value(fluxUsed);
 	  } 
@@ -4596,7 +4602,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                    const String& standard, const Bool chanDep,
                    const Double spix, const MFrequency& reffreq,
                    const String& timerange, const String& scanstr,
-                   const String& obsidstr)
+                   const String& obsidstr, const String& interpolation)
 {
   if(!valid())
     return False;
@@ -4676,6 +4682,9 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
       throw(AipsError(standard + " is not a recognized flux density scale"));
 
     FluxStandard fluxStd(fluxScaleEnum);
+    if (fluxScaleEnum==FluxStandard::PERLEY_BUTLER_2013) {
+      fluxStd.setInterpMethod(interpolation);
+    }
 
     // Setup the frequency, Flux, and ComponentList arrays.
     uInt nspws = selToRawSpwIds.nelements();
@@ -4758,6 +4767,8 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	Vector<Double> freqscaling;
 	Vector<Double> freqsOfScale;
 
+        MEpoch mtime = msc.field().timeMeas()(fldid);
+
         if(model != ""){
           tmodimage = sjy_prepImage(os, fluxStd, fluxUsed, freqsOfScale, freqscaling, model, msc.spectralWindow(),
                                     rawspwid, chanDep, mfreqs, selspw, fieldName,
@@ -4796,7 +4807,8 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           }
 
           // No worries about varying fluxes or sizes here, so any time will do.
-          MEpoch mtime = msc.field().timeMeas()(fldid);
+          // Moved this line up (TT 2013/05/09) 
+          //MEpoch mtime = msc.field().timeMeas()(fldid);
 
           tempCLs[selspw] = FluxStandard::makeComponentList(fieldName,
                                                             mfreqs[selspw][0],
@@ -5027,11 +5039,18 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
                              const String& standard)
 {
   Bool foundSrc = False;
+   
+  Double meantime = msc.time()(0);
+  meantime += 0.5 * (msc.time()(msc.nrow() - 1) - meantime);
+  MEpoch mtime(msc.timeMeas()(0));
+  mtime.set(Quantity(meantime, "s"));
 
   if(model != ""){
     // Just get the fluxes and their uncertainties for scaling the image.
-    foundSrc = fluxStd.compute(fieldName, mfreqs, returnFluxes,
-                               returnFluxErrs);
+    //foundSrc = fluxStd.compute(fieldName, mfreqs, returnFluxes,
+     //                          returnFluxErrs);
+    foundSrc = fluxStd.compute(fieldName, mfreqs, mtime, returnFluxes,
+                              returnFluxErrs);
   }
   else{
     // Go ahead and get FluxStandard to make the ComponentList, since
@@ -5044,10 +5063,13 @@ Bool Imager::sjy_computeFlux(LogIO& os, FluxStandard& fluxStd,
     //
     // Obviously that would be overkill if the source does not vary.
     //
+    /***
     Double meantime = msc.time()(0);
     meantime += 0.5 * (msc.time()(msc.nrow() - 1) - meantime);
     MEpoch mtime(msc.timeMeas()(0));
     mtime.set(Quantity(meantime, "s"));
+    ***/
+            
     aveEpoch=mtime;
 
     foundSrc = fluxStd.computeCL(fieldName, mfreqs, mtime, fieldDir,
@@ -5184,7 +5206,7 @@ TempImage<Float>* Imager::sjy_prepImage(LogIO& os, FluxStandard& fluxStd,
         //fluxStd.compute(fieldName, spwcols.chanFreqMeas()(rawspwid)(whichChan),
         //                returnFlux, returnFluxErr);
 	fluxStd.compute(fieldName, MFrequency(Quantity(freqArray[k], "Hz"), MFrequency::LSRK),
-			returnFlux, returnFluxErr);
+			aveEpoch, returnFlux, returnFluxErr);
         returnFlux.value(fluxUsed);
       }
       else{

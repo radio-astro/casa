@@ -45,7 +45,8 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 FluxCalcVQS::FluxCalcVQS() :
-  srcEnum_p(FluxCalcVQS::UNKNOWN_SOURCE)
+  srcEnum_p(FluxCalcVQS::UNKNOWN_SOURCE),
+  istimevar_p(false)
 { }
 
 // Defined even though it's pure virtual; see http://www.gotw.ca/gotw/031.htm
@@ -54,21 +55,11 @@ Bool FluxCalcVQS::operator()(Vector<Flux<Double> >& values,
                             Vector<Flux<Double> >& errors,
                             const Vector<MFrequency>& mfreqs)
 {
-  cerr<<"FluxCalcVQS non-var ()"<<endl;
   uInt nfreqs = mfreqs.nelements();
   
   values.resize(nfreqs);
   errors.resize(nfreqs);
 
-  //read coefficents of all epoch of the particular soruce for the perley-butler
-  // 2013, move the coefficients including those non-variable to an CASA table.
-  // readCoefficents(Vector<Vector<Float>>& coeffs);
-  //updateCoefficent() 
-  // for those considered to be variable, for each set of coefficients
-  // at each epoch, call the follwoing to get values (fluxes)
-  // and accumate in vector of vector to do interpolation.
-  //
-  
   Bool success = true;
   for(uInt f = 0; f < nfreqs; ++f)
     success &= (*this)(values[f], errors[f], mfreqs[f], False);
@@ -81,33 +72,31 @@ Bool FluxCalcVQS::operator()(Vector<Flux<Double> >& values,
                             Vector<Flux<Double> >& errors,
                             const Vector<MFrequency>& mfreqs,
                             const MEpoch& mtime,
-                            const String& interptype)
+                            const String& interpmethod)
 
 {
-  cerr<<"FluxCalcVQS var ()"<<endl;
   uInt nfreqs = mfreqs.nelements();
 
   values.resize(nfreqs);
   errors.resize(nfreqs);
 
-  //read coefficents of all epoch of the particular soruce for the perley-butler
-  // 2013, move the coefficients including those non-variable to an CASA table.
-  // readCoefficents(Vector<Vector<Float>>& coeffs);
-  //updateCoefficent()
   // for those considered to be variable, for each set of coefficients
   // at each epoch, call the follwoing to get values (fluxes)
   // and accumate in vector of vector to do interpolation.
-  //
+  // istimevar_p to determine if the source is variable. If not
+  // no interpolation is done, use first row of the coeffs table. 
   
   Bool success = true;
-  
-  Int nep=epochvec_p.nelements();
+
+  Int nep = 1;
+  if (istimevar_p) nep=epochvec_p.nelements();
+
   Flux<Double> tmpfluxes;
   Flux<Double> tmperrors;
   Vector<Double> tmpfluxvec;
   Vector<Double> tmperrvec;
+  
   fluxes_p.resize(nep);
-
   for(uInt f = 0; f < nfreqs; ++f){
     for(uInt iep=0; iep < (uInt)nep; ++iep) {
       setSourceCoeffsfromVec(iep);    
@@ -115,20 +104,24 @@ Bool FluxCalcVQS::operator()(Vector<Flux<Double> >& values,
       tmpfluxes.value(tmpfluxvec);
       tmperrors.value(tmperrvec);
       // currently only I flux is returned...
-      cerr<<"tmpfluxvec[0]="<<tmpfluxvec[0]<<endl;
-      cerr<<"epochvec_p[iep]="<<epochvec_p[iep]<<endl;
+      //cerr<<"tmpfluxvec[0]="<<tmpfluxvec[0]<<endl;
+      //cerr<<"epochvec_p[iep]="<<epochvec_p[iep]<<endl;
       fluxes_p[iep]=tmpfluxvec[0];
     }   
-    //setup interpolator 
-    ScalarSampledFunctional<Double> dts(epochvec_p);
-    ScalarSampledFunctional<Float> flxs(fluxes_p);
-    Interpolate1D<Double, Float> interpolateFlux(dts,flxs);
-    interpolateFlux.setMethod(getInterpType_p(interptype));
+    if (istimevar_p) {
+      //setup interpolator 
+      ScalarSampledFunctional<Double> dts(epochvec_p);
+      ScalarSampledFunctional<Float> flxs(fluxes_p);
+      Interpolate1D<Double, Float> interpolateFlux(dts,flxs);
+      interpolateFlux.setMethod(getInterpMethod_p(interpmethod));
 
-    values[f].setValue(interpolateFlux(mtime.get("d").getValue()));
+      values[f].setValue(interpolateFlux(mtime.get("d").getValue()));
+    }
+    else { // no interpolation for non-var source, use first row data
+      values[f].setValue(fluxes_p[0]);  
+    }
   }
-  cerr<<"values[0] afater interpolation="<<values[0].value()[0]<<endl;
-    
+
 //      success &= (*this)(values[f], errors[f], mfreqs[f]);
     
   return success;
@@ -173,6 +166,7 @@ void FluxCalcVQS::readQSCoeffsTable(const Path& fileName)
   Vector<Double> tempEpochs;
   epochCol.getColumn(tempEpochs,True);
   CoeffCol.getColumn(coeffsmat_p,True);
+  CoeffErrorCol.getColumn(coefferrsmat_p,True);
   //convert the epoch (year + fraction) to mjd
   convertYearFracToMjd(tempEpochs,epochvec_p);
   os << LogIO::DEBUG1
@@ -183,25 +177,25 @@ void FluxCalcVQS::readQSCoeffsTable(const Path& fileName)
   //cerr<<"coeffsmat_p(0)(0)="<<coeffsmat_p(0,0)<<endl;
 }
 
-void FluxCalcVQS::interpolate(const String& interptype)
+void FluxCalcVQS::interpolate(const String& interpmethod)
 {
   ScalarSampledFunctional<Double> dts(epochvec_p);
   ScalarSampledFunctional<Float> flxs(fluxes_p);
   Interpolate1D<Double, Float> interpolateFlux(dts,flxs);
-  interpolateFlux.setMethod(getInterpType_p(interptype));
+  interpolateFlux.setMethod(getInterpMethod_p(interpmethod));
 }
 
-Interpolate1D<Double,Float>::Method FluxCalcVQS::getInterpType_p(const String& interptype)
+Interpolate1D<Double,Float>::Method FluxCalcVQS::getInterpMethod_p(const String& interpmethod)
 {
-  if (interptype.contains("nearest"))
+  if (interpmethod.contains("nearest"))
     return Interpolate1D<Double,Float>::nearestNeighbour;
-  if (interptype.contains("linear"))
+  if (interpmethod.contains("linear"))
     return Interpolate1D<Double,Float>::linear;
-  if (interptype.contains("cubic")) 
+  if (interpmethod.contains("cubic")) 
     return Interpolate1D<Double,Float>::cubic;
-  if (interptype.contains("spline"))
+  if (interpmethod.contains("spline"))
     return Interpolate1D<Double,Float>::spline;
-  throw(AipsError("Unknown interpolation type: "+interptype));
+  throw(AipsError("Unknown interpolation method: "+interpmethod));
 }
 
 void FluxCalcVQS::convertYearFracToMjd(const Vector<Double>& yearfrac, Vector<Double>& mjds)
@@ -224,11 +218,16 @@ void FluxCalcVQS::convertYearFracToMjd(const Vector<Double>& yearfrac, Vector<Do
 void FluxCalcVQS::setSourceCoeffsfromVec(uInt& i) 
 {
   //cerr<<"i="<<i<<endl;
-  Vector<Float> err(4,0.0);
+  //Vector<Float> err(4,0.0);
   tvcoeffs_p(0)=coeffsmat_p.column(i); 
   //cerr<<"coeffsmat_p.column.nelements()="<<coeffsmat_p.column(i).nelements()<<endl;
   //cerr<<"err.elements()="<<err.nelements()<<endl;
-  tvcoeffs_p(1)=err; 
+  tvcoeffs_p(1)=coefferrsmat_p.column(i); 
+}
+
+void FluxCalcVQS::isTimeVar(Bool istimevar) 
+{
+  istimevar_p=istimevar;
 }
 
 } //# NAMESPACE CASA - END

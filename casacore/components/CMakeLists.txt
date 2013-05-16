@@ -30,7 +30,10 @@ ComponentModels/ComponentShape.cc
 ComponentModels/FluxStandard.cc
 ComponentModels/FluxCalcLogFreqPolynomial.cc
 ComponentModels/FluxCalcQS.cc
-ComponentModels/FluxStdsQS.cc
+#ComponentModels/FluxStdsQS.cc
+ComponentModels/FluxStdsQS2.cc
+ComponentModels/FluxStdSrcs.cc
+ComponentModels/FluxCalcVQS.cc
 ComponentModels/FluxCalc_SS_JPL_Butler.cc
 ComponentModels/SkyCompBase.cc
 ComponentModels/ComponentList.cc
@@ -70,8 +73,11 @@ ComponentModels/FluxStandard.h
 ComponentModels/FluxCalcLogFreqPolynomial.h
 ComponentModels/FluxCalcLogFreqPolynomial.tcc
 ComponentModels/FluxCalcQS.h
+ComponentModels/FluxCalcVQS.h
 ComponentModels/FluxCalc_SS_JPL_Butler.h
-ComponentModels/FluxStdsQS.h
+#ComponentModels/FluxStdsQS.h
+ComponentModels/FluxStdsQS2.h
+ComponentModels/FluxStdSrcs.h
 ComponentModels/Flux.h
 ComponentModels/Flux.tcc
 DESTINATION include/casacore/components/ComponentModels
