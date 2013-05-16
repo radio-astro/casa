@@ -50,6 +50,9 @@ class AnnAnnulus: public AnnRegion {
 
 public:
 
+	// avoid using the default constructor, it's behavior is subject to change
+	AnnAnnulus();
+
 	AnnAnnulus(
 		const Quantity& xcenter,
 		const Quantity& ycenter,

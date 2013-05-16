@@ -81,6 +81,13 @@ public:
 	vector<Double> getSpectralPixelRange() const;
 
 
+	Bool setFrequencyLimits(
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq
+	);
 
 protected:
 
@@ -121,9 +128,6 @@ protected:
 		const Vector<Stokes::StokesTypes>& stokes
 	);
 
-	// implicitly defined copy constructor is fine
-	// AnnRegion(AnnRegion& other);
-
 	// copy constructor
 	AnnRegion(const AnnRegion& other);
 
@@ -147,13 +151,6 @@ protected:
 	// defined in the direction plane
 	void _setDirectionRegion(const ImageRegion& region);
 
-	Bool _setFrequencyLimits(
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame,
-		const String& dopplerString,
-		const Quantity& restfreq
-	);
 
 
 private:

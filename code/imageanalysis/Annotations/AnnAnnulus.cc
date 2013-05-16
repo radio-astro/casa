@@ -18,11 +18,19 @@
 #include <imageanalysis/Annotations/AnnAnnulus.h>
 
 #include <casa/Quanta/MVAngle.h>
+#include <coordinates/Coordinates/CoordinateUtil.h>
 #include <images/Regions/WCDifference.h>
 #include <images/Regions/WCEllipsoid.h>
 
 
 namespace casa {
+
+AnnAnnulus::AnnAnnulus()
+	: AnnRegion(
+		ANNULUS, CoordinateUtil::defaultCoords2D(), IPosition(2, 1, 1),
+		Vector<Stokes::StokesTypes>()
+	), _xcenter(), _ycenter(),
+	_innerRadius(), _outerRadius() {}
 
 AnnAnnulus::AnnAnnulus(
 	const Quantity& xcenter,

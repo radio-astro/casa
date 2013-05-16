@@ -114,7 +114,7 @@ AnnotationBase::AnnotationBase(
 			+ dirRefFrameString
 		);
 	}
-	_setFrequencyLimits(
+	setFrequencyLimits(
 		beginFreq, endFreq, freqRefFrame,
 		dopplerString, restfreq
 	);
@@ -250,7 +250,7 @@ void AnnotationBase::unitInit() {
 }
 
 
-Bool AnnotationBase::_setFrequencyLimits(
+Bool AnnotationBase::setFrequencyLimits(
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrame,

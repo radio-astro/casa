@@ -51,20 +51,29 @@ AnnRegion::AnnRegion(
 	_constructing = False;
 }
 
+AnnRegion::AnnRegion(const AnnRegion& other)
+	: AnnotationBase(other), _isAnnotationOnly(other._isAnnotationOnly),
+	   _isDifference(other._isDifference),
+	   _constructing(other._constructing),
+	   _imageRegion(other._imageRegion),
+	   _directionRegion(other._directionRegion), _imShape(other._imShape),
+	  _spectralPixelRange(other._spectralPixelRange) {}
+
+
 AnnRegion::~AnnRegion() {}
 
 AnnRegion& AnnRegion::operator= (const AnnRegion& other) {
-    if (this == &other) {
-    	return *this;
+    if (&other != this) {
+    	AnnotationBase::operator= (other);
+    	_isAnnotationOnly = other._isAnnotationOnly;
+    	_imageRegion = other._imageRegion;
+    	_isDifference = other._isDifference;
+    	_directionRegion = other._directionRegion;
+    	_constructing = other._constructing;
+    	_imShape.resize(other._imShape.size());
+    	_imShape = other._imShape;
+    	_spectralPixelRange = other._spectralPixelRange;
     }
-    AnnotationBase::operator= (other);
-    _isAnnotationOnly = other._isAnnotationOnly;
-    _imageRegion = other._imageRegion;
-    _isDifference = other._isDifference;
-    _directionRegion = other._directionRegion;
-    _constructing = other._constructing;
-    _imShape = other._imShape;
-    _spectralPixelRange = other._spectralPixelRange;
     return *this;
 }
 
@@ -111,7 +120,7 @@ void AnnRegion::_init() {
 
 }
 
-Bool AnnRegion::_setFrequencyLimits(
+Bool AnnRegion::setFrequencyLimits(
 	const Quantity& beginFreq,
 	const Quantity& endFreq,
 	const String& freqRefFrame,
@@ -119,7 +128,7 @@ Bool AnnRegion::_setFrequencyLimits(
 	const Quantity& restfreq
 ) {
 	if (
-		AnnotationBase::_setFrequencyLimits(
+		AnnotationBase::setFrequencyLimits(
 			beginFreq, endFreq, freqRefFrame, dopplerString, restfreq
 		)
 	) {
