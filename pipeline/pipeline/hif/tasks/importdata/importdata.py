@@ -24,11 +24,12 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImportDataInputs(basetask.StandardInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
-                 session=None, overwrite=None, save_flagonline=None):
+                 asis=None, session=None, overwrite=None, save_flagonline=None):
         self._init_properties(vars())
 
     overwrite = basetask.property_with_default('overwrite', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
+    asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
 
     @property
     def session(self):
@@ -273,6 +274,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      savecmds=inputs.save_flagonline,
                                      outfile=outfile,
                                      process_caldevice=False,
+				     asis=inputs.asis,
                                      overwrite=inputs.overwrite)
         
         self._executor.execute(task)
