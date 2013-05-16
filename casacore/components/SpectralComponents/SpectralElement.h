@@ -73,11 +73,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //   <li> add more profile types
 // </todo>
 
-class SpectralElement { // : public RecordTransformable {
+class SpectralElement {
 public:
 
 	//# Enumerations
-	// Types of spectral lines known
+	// Supported spectral components
 	enum Types {
 		// A gaussian profile
 		GAUSSIAN,
@@ -89,6 +89,8 @@ public:
 		GMULTIPLET,
 		// Lorentzian
 		LORENTZIAN,
+		// power log polynomial
+		POWERLOGPOLY,
 		N_Types
 	};
 
@@ -116,14 +118,8 @@ public:
 	static Bool toType(SpectralElement::Types &tp,
 			const String &typName);
 
-	// Get the data for this element
-	// <thrown>
-	//  <li> AipsError if element does not have data
-	//	   (e.g. amplitude for POLYNOMIAL)
-	// </thrown>
-	// <group>
 	// Get type of this element
-	SpectralElement::Types getType() const { return tp_p; }
+	SpectralElement::Types getType() const { return _type; }
 
 	// Get all parameters
 	void get(Vector<Double>& params) const;
@@ -135,7 +131,7 @@ public:
 	Vector<Double> getError() const;
 
 	// Get the order (i.e. the number of parameters)
-	uInt getOrder() const { return par_p.nelements(); };
+	uInt getOrder() const { return _params.size(); };
 
 	// Set the error fields
 	virtual void setError(const Vector<Double> &err);
@@ -158,13 +154,16 @@ public:
 	virtual void set(const Vector<Double>& params);
 
 protected:
+
 	SpectralElement() {}
+
+	SpectralElement(Types type, const Vector<Double>& parms=Vector<Double>(0));
 
 	SpectralElement(const SpectralElement& other);
 
 	SpectralElement &operator=(const SpectralElement& other);
 
-	void _construct(const Types type, const Vector<Double>& params);
+	// void _construct(const Types type, const Vector<Double>& params);
 
 	void _set(const Vector<Double>& params);
 
@@ -173,16 +172,16 @@ protected:
 private:
 	//#Data
 	// type of element
-	Types tp_p;
+	Types _type;
 
 	// The parameters of the function. I.e. the polynomial coefficients;
 	// amplitude, center and sigma of a Gaussian.
-	Vector<Double> par_p;
+	Vector<Double> _params;
 	// The errors of the parameters
-	Vector<Double> err_p;
+	Vector<Double> _errors;
 	// The indication if the parameter has to be fixed (True) or solved (False).
 	// Solved is the default.
-	Vector<Bool> fix_p;
+	Vector<Bool> _fixed;
 
 };
 
