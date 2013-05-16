@@ -803,8 +803,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			animrec.define("blength", pd_->bLength());
 			animrec.define("bindex",  pd_->bIndex());
 		}
-
-
 		setAnimator_(animrec);
 
 
@@ -1254,11 +1252,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			pd_->setBlinkMode( !modeZ_ );
 			installEventHandlers_();
 
-
 			setAnimator_(Record());
 			// Assures animation state is set onto new canvases,
 			// if any (and causes refresh).
-
 
 			checkColorBars_();
 			// to realign color bar (length) margins if necessary.
@@ -1968,9 +1964,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtDisplayPanel::setAnimatorOptions_(Record opts) {
 		if(opts.isDefined("setanimator") &&
 		        opts.dataType ("setanimator")==TpRecord) {
-
 			Record sarec = opts.asRecord("setanimator");
-
 			setAnimator_(sarec);
 		}
 	}
@@ -2008,7 +2002,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// "zlength" field, and just implement nelements() properly
 		// instead; that gets polled in the prior statement.  This was
 		// inserted just in case ScrollingRasterDD might need it).
-
 
 		setZlen_(len);
 
@@ -3053,6 +3046,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtDisplayData* QtDisplayPanel::getDD( const std::string& name ) const {
 		return displayDataHolder->getDD( name );
+	}
+
+	QtDisplayData* QtDisplayPanel::getChannelDD() const {
+		return displayDataHolder->getChannelDD();
 	}
 
 

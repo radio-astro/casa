@@ -611,9 +611,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void setControllingDD( QtDisplayData* controlDD );
 		void replaceControllingDD( QtDisplayData* oldControllingDD, QtDisplayData* newControllingDD);
 		// used to manage generation of the updateAxes( ) signal...
-		//QtDisplayData *controlling_dd;
 
+		//Methods for letting the animator know whether it should display
+		//the image/channel animator(s) based on the number of images and
+		//and the number of channels in the images.
 		void updateFrameInformation();
+		void updateFrameInformationChannel();
+		void updateFrameInformationImage();
+
 		void updateSliceCorners( int id, const QList<double>& worldX,
 		                         const QList<double>& worldY );
 		void initAnimationHolder();
@@ -687,7 +692,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void sliceMarkerVisibilityChanged(int regionId, bool visible);
 		void sliceMarkerPositionChanged(int regionId, int segmentIndex, float percentage);
 		void updateMultiSpectralFitLocation( Record trackingRec);
-
+		/**
+		 * Written in response to CAS-5101. When multiple images are loaded,
+		 * some with many channels and one with only one channel, the available
+		 * frames in the channel animator needs to change based on the mode.  Assume
+		 * the single channel image is the one that will be animated in normal
+		 * mode.  In this case, the channel animator should register a single
+		 * frame and not allow animation.  However, if we are in "channel images mode", a form of blink mode, the
+		 * number of available channels should be the maximum of the channel count
+		 * in all the images. Channel animation should then take place.  Method
+		 * sets the mode, and then updates the channel count accordingly.
+		 */
+		void animationModeChanged( bool modeZ);
 
 
 	public:

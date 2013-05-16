@@ -154,6 +154,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool isRegistered(QtDisplayData*);
 		//</group>
 
+		//Returns the DD that will be animating the channels
+		//in normal mode.
+		QtDisplayData* getChannelDD() const;
 
 
 

@@ -39,6 +39,7 @@
 
 #include <guitools/Feather/FeatherMain.qo.h>
 #include <QApplication>
+#include <QDebug>
 #include <casa/namespace.h>
 
 
@@ -50,7 +51,10 @@ int main( int argc, char *argv[] ) {
 	try {
 		FeatherMain featherApplication;
 		featherApplication.show();
-		/*QPixmap featherPixmap( 200, 200 );
+		/*featherApplication.ensurePolished();
+		QSize rect = featherApplication.size();
+		qDebug() << "Size of rectangle is "<<rect.width()<<" height="<<rect.height();
+		QPixmap featherPixmap( rect.width(), rect.height() );
 		featherApplication.render( &featherPixmap);
 		featherPixmap.save("/users/slovelan/tmp/feather.png");*/
 		stat = app.exec();

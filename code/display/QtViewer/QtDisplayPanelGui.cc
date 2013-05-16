@@ -54,7 +54,6 @@
 #include <display/QtViewer/ColorHistogram.qo.h>
 #include <display/QtViewer/ImageManager/ImageManagerDialog.qo.h>
 #include <display/Fit/Fit2DTool.qo.h>
-//#include <display/Fit/FindSourcesDialog.qo.h>
 #include <display/Slicer/SlicerMainWindow.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 #include <display/region/Polyline.qo.h>
@@ -272,7 +271,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		qsm_->setVisible(false);
 
 		qdp_->setShapeManager(qsm_);
-		manageImages = false;
+		manageImages = true;
 
 
 		// SURROUNDING GUI LAYOUT
@@ -805,7 +804,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			connect(animationHolder, SIGNAL(fwdPlay()),SLOT(fwdPlay_()));
 			connect(animationHolder, SIGNAL(fwdStep()), qdp_, SLOT(fwdStep()));
 			connect(animationHolder, SIGNAL(toEnd()), qdp_, SLOT(toEnd()));
-			connect(animationHolder, SIGNAL(setMode(bool)), qdp_, SLOT(setMode(bool)));
+			connect(animationHolder, SIGNAL(setMode(bool)), this, SLOT(animationModeChanged(bool)));
 			connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 			connect(animationHolder, SIGNAL(movieChannels(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
 			connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
@@ -815,17 +814,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
+	void QtDisplayPanelGui::animationModeChanged( bool modeZ){
+		qdp_->setMode( modeZ );
+		updateFrameInformationChannel();
+	}
+
 	void QtDisplayPanelGui::globalColorSettingsChanged( bool global ) {
 		QtDisplayData::setGlobalColorOptions( global );
 	}
 
 	void QtDisplayPanelGui::globalOptionsChanged( QtDisplayData* originator, Record opts ) {
-		/*for(ListIter<QtDisplayData*> iter(qdds_); !iter.atEnd(); iter++) {
-			QtDisplayData* dd = iter.getRight();
-			if ( dd != originator ){
-				dd->setOptions( opts, true );
-			}
-		}*/
 		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
 		while ( iter != displayDataHolder->endDD()) {
 			if ( originator != (*iter)) {
@@ -1253,19 +1251,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return qdd;
 	}
 
-	void QtDisplayPanelGui::updateFrameInformation() {
-		//List<QtDisplayData*> rdds = qdp_->registeredDDs();
-		//int displayDataCount = rdds.len();
-		//ListIter<QtDisplayData*> iter(rdds );
 
-		int maxChannels = qdp_->nZFrames();
+	void QtDisplayPanelGui::updateFrameInformationImage(){
+		//Determine whether we should show the image animator.
 		QSet<QString> uniqueImages;
-
 		DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
 		while ( iter != qdp_->endRegistered()) {
-
-			//while ( i < displayDataCount ){
-			//QtDisplayData* rdd = iter.getRight();
 			QtDisplayData* rdd = (*iter);
 			const viewer::ImageProperties & imgProperties = rdd->imageProperties( );
 			const string imagePath = imgProperties.path();
@@ -1274,23 +1265,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			QString imagePathStr( imagePath.c_str());
 			if ( !rdd->isSkyCatalog()) {
 				uniqueImages.insert( imagePathStr );
-				if ( imgProperties.hasSpectralAxis() ) {
-					int spectralAxisNum = imgProperties.spectralAxisNumber();
-					const Vector<int> imgShape = imgProperties.shape();
-					int channelCount = imgShape[spectralAxisNum];
-					if ( channelCount > 1 ) {
-						if ( channelCount > maxChannels ) {
-							maxChannels = channelCount;
-						}
-					}
-				}
 			}
 			iter++;
 		}
-		if ( maxChannels > 1 ) {
-			animationHolder->setChannelModeEnabled( maxChannels );
-		}
 		animationHolder->setModeEnabled( uniqueImages.size() );
+	}
+
+	void QtDisplayPanelGui::updateFrameInformationChannel(){
+		//This figure is the maximum number of channels in any image.
+		//We should enable the channel animator if there is at least one
+		//image with more than one channel.
+		int maxChannels = qdp_->nZFrames();
+		if ( maxChannels > 1 ) {
+			//To find the actual number of channels, we rely on the
+			//the image that is currently on target for channeling.
+			QtDisplayData* channelMaster = qdp_->getChannelDD();
+			int actualChannels = maxChannels;
+			if ( channelMaster != NULL ){
+				viewer::ImageProperties props = channelMaster->imageProperties();
+				Vector<Int> imgShape = props.shape();
+				if ( props.hasSpectralAxis() ){
+					int spectralIndex = props.spectralAxisNumber();
+					actualChannels = imgShape[spectralIndex];
+				}
+				else {
+					actualChannels = 1;
+				}
+			}
+			//If we are in channel mode we use the actual number of channels.
+			if ( qdp_->modeZ()){
+				animationHolder->setChannelModeEnabled( actualChannels );
+			}
+			//Use the maximum number of channels, but since we aren't in channel
+			//mode, we don't want it to come up selected.
+			else {
+				animationHolder->setChannelModeEnabled( maxChannels, false);
+			}
+		}
+	}
+
+	void QtDisplayPanelGui::updateFrameInformation() {
+		updateFrameInformationChannel();
+		updateFrameInformationImage();
+
 	}
 
 	int QtDisplayPanelGui::getBoundedChannel( int channelNumber ) const {

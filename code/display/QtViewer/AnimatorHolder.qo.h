@@ -44,7 +44,7 @@ namespace casa {
 		void setFrameInformation( bool mode, int frm, int len );
 		void setRateInformation( bool mode, int minr, int maxr, int rate );
 		void setModeEnabled( int count );
-		void setChannelModeEnabled( int count);
+		void setChannelModeEnabled( int count, bool select=true);
 		int getRate( bool mode ) const;
 		int getLowerBoundChannel() const;
 		int getUpperBoundChannel() const;
