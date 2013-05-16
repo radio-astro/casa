@@ -314,27 +314,35 @@ class ReductionGroupMember(object):
         self.spw = spw
         self.pols = pols
         self.iteration = [0 for p in xrange(self.npol)]
+        self.linelist = [[] for p in xrange(self.npol)]
 
     @property
     def npol(self):
         return len(self.pols)
 
     def iter_countup(self, pols=None):
-        if pols is None:
-            for i in xrange(self.npol):
-                self.iteration[i] += 1
-        elif isinstance(pols, int):
-            self.iteration[pols] += 1
-        else:
-            # should be list
-            for i in pols:
-                self.iteration[self.pols.index(i)] += 1
+        for i in self.__gen_pols(pols):
+            self.iteration[i] += 1
 
     def iter_reset(self):
         self.iteration = [0 for p in self.pols]
 
+    def add_linelist(self, linelist, pols=None):
+        for i in self.__gen_pols(pols):
+            self.linelist[i] = linelist
+
+    def __gen_pols(self, pols):
+        if pols is None:
+            for i in xrange(self.npol):
+                yield i
+        elif isinstance(pols, int):
+            yield pols
+        else:
+            for i in pols:
+                yield self.pols.index(i)
+
     def __repr__(self):
-        return 'ReductionGroupMember(antenna=%s, spw=%s, pols=%s, iteration=%s)'%(self.antenna, self.spw, self.pols, self.iteration)
+        return 'ReductionGroupMember(antenna=%s, spw=%s, pols=%s)'%(self.antenna, self.spw, self.pols)
 
     def __eq__(self, other):
         return other.antenna == self.antenna and other.spw == self.spw and other.pols == self.pols 
@@ -350,9 +358,18 @@ class ReductionGroupDesc(list):
             self.append(new_member)
 
     def iter_countup(self, antenna, spw, pols=None):
-        for member in self:
+        member = self[self.__search_member(antenna, spw)]
+        member.iter_countup(pols)
+
+    def add_linelist(self, linelist, antenna, spw, pols=None):
+        member = self[self.__search_member(antenna, spw)]
+        member.add_linelist(linelist, pols)
+
+    def __search_member(self, antenna, spw):
+        for indx in xrange(len(self)):
+            member = self[indx]
             if member.antenna == antenna and member.spw == spw:
-                member.iter_countup(pols)
+                return indx
                 break
 
     def __repr__(self):
