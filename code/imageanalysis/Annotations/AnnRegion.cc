@@ -77,6 +77,19 @@ AnnRegion& AnnRegion::operator= (const AnnRegion& other) {
     return *this;
 }
 
+Bool AnnRegion::operator== (const AnnRegion& other) {
+	return &other == this || (
+		_isAnnotationOnly == other._isAnnotationOnly
+		&& _imageRegion == other._imageRegion
+		&& _isDifference == other._isDifference
+		&& _directionRegion == other._directionRegion
+		&& _constructing == other._constructing
+		&& _imShape == other._imShape
+		&& _spectralPixelRange == other._spectralPixelRange
+	);
+}
+
+
 void AnnRegion::setAnnotationOnly(const Bool isAnnotationOnly) {
 	_isAnnotationOnly = isAnnotationOnly;
 }

@@ -17,11 +17,12 @@
 
 #include <imageanalysis/Annotations/AnnAnnulus.h>
 
+#include <casa/Arrays/ArrayLogical.h>
 #include <casa/Quanta/MVAngle.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
 #include <images/Regions/WCDifference.h>
 #include <images/Regions/WCEllipsoid.h>
-
+#include <casa/Quanta/QLogical.h>
 
 namespace casa {
 
@@ -75,18 +76,29 @@ _convertedRadii(Vector<Quantity>(2)),
 AnnAnnulus& AnnAnnulus::operator= (
 	const AnnAnnulus& other
 ) {
-    if (this == &other) {
-    	return *this;
-    }
-    AnnRegion::operator=(other);
-	_convertedRadii.resize(other._convertedRadii.nelements());
-	_convertedRadii = other._convertedRadii;
-	_xcenter = other._xcenter;
-	_ycenter = other._ycenter;
-	_innerRadius = other._innerRadius;
-	_outerRadius = other._outerRadius;
+	if (&other != this) {
+		AnnRegion::operator=(other);
+		_convertedRadii.resize(other._convertedRadii.nelements());
+		_convertedRadii = other._convertedRadii;
+		_xcenter = other._xcenter;
+		_ycenter = other._ycenter;
+		_innerRadius = other._innerRadius;
+		_outerRadius = other._outerRadius;
+	}
     return *this;
 }
+
+Bool AnnAnnulus::operator==(const AnnAnnulus& other) {
+	return this == &other || (
+		AnnRegion::operator==(other)
+		&& allEQ(_convertedRadii, other._convertedRadii)
+		&& _xcenter == other._xcenter
+		&& _ycenter == other._ycenter
+		&& _innerRadius == other._innerRadius
+		&& _outerRadius == other._outerRadius
+	);
+}
+
 
 MDirection AnnAnnulus::getCenter() const {
 	return _getConvertedDirections()[0];

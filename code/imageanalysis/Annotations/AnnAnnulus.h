@@ -90,6 +90,9 @@ public:
 
 	AnnAnnulus& operator=(const AnnAnnulus& other);
 
+	Bool operator==(const AnnAnnulus& other);
+
+
 	// get the center position, converted to the frame
 	// of the input coordinate system if necessary
 	MDirection getCenter() const;

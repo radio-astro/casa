@@ -482,6 +482,19 @@ int main () {
 				beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq
 			);
+			annulus[1].setAnnotationOnly(False);
+			AlwaysAssert(annulus[0] == annulus[1], AipsError);
+			vector<String> s(2);
+			ostringstream os;
+			os << annulus[0];
+			s[0] = os.str();
+			os.str("");
+			os << annulus[1];
+			s[1] = os.str();
+			cout << "'" << s[0] << "'" << endl;
+			cout << "'" << s[1] << "'" << endl;
+
+			AlwaysAssert(s[0] == s[1], AipsError);
 			for (uInt i=0; i<2; i++) {
 				Vector<MFrequency> freqs = annulus[i].getFrequencyLimits();
 				AlwaysAssert(
@@ -581,8 +594,6 @@ int main () {
 			);
 		}
 		{
-			cout << __FILE__ << " " << __LINE__ << endl;
-
 			log << LogIO::NORMAL
 				<< "Test modified doppler definitions"
 				<< LogIO::POST;
