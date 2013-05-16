@@ -262,9 +262,10 @@ Bool operator()(Vector<Flux<Double> >& values,
 **/ 
 private:
   virtual Bool setSourceCoeffs();
+  Bool timevar_p;
 };
 
 
 } //# NAMESPACE CASA - END
 
-#endif /* COMPONENTS_FLUXSTDSQS_H */
+#endif /* COMPONENTS_FLUXSTDSQS2_H */

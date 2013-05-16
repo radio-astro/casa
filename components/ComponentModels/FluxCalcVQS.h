@@ -92,8 +92,6 @@ public:
   typedef FluxCalcVQS FCVQS;
   typedef RigidVector<String, 4> RVS4;
   typedef RigidVector<String, 5> RVS5;
-  //typedef RigidVector<Float, 4> RVF4;
-  //typedef RigidVector<Float, 5> RVF5;
 
   // Source identifiers.
   /****
@@ -119,12 +117,12 @@ public:
                   Vector<Flux<Double> >& errors,
                   const Vector<MFrequency>& mfreqs);
   
-  //for time variable case with interpolation type
+  //for time variable case with interpolation method 
   Bool operator()(Vector<Flux<Double> >& values,
                   Vector<Flux<Double> >& errors,
                   const Vector<MFrequency>& mfreqs, 
                   const MEpoch& mtime,
-                  const String& interptype);
+                  const String& interpmethod);
 
   // If a FS::Source enum matches srcName, returns the enum.
   // Otherwise, FCQS::UNKNOWN_SOURCE.
@@ -142,11 +140,14 @@ public:
   // Read the coefficient data table
   void readQSCoeffsTable(const Path& fileName);
   // Interpolate for time variable source
-  void interpolate(const String& interptype);
+  void interpolate(const String& interpmethod);
   // Set the coefficients from one epoch where i is row number in the original data table  
   void setSourceCoeffsfromVec(uInt& i);
   // Get currently set coefficients
   RigidVector<Vector<Float>,2 >  getCurrentCoeffs() {return tvcoeffs_p;}
+
+  //keep track if it is non-time var source for Perley-Butler2013
+  void isTimeVar(Bool istimevar); 
 
 protected:
   FluxCalcVQS();   // Initializes names_p.
@@ -161,20 +162,21 @@ private:
   //std::map<FCQS::Source, MDirection> directions_p;
 
   // get interpolate method enum
-  Interpolate1D<Double,Float>::Method getInterpType_p(const String& interptype);
+  Interpolate1D<Double,Float>::Method getInterpMethod_p(const String& interpmethod);
 
   //convert epochs in year.frac to mjds
   void convertYearFracToMjd(const Vector<Double>& yearfrac, Vector<Double>& mjds);
 
-
   Vector<Double> epochvec_p;
   Matrix<Float> coeffsmat_p;
+  Matrix<Float> coefferrsmat_p;
   Vector<Float> fluxes_p;
   //Vector<Float> tvcoeffs_p;
   RigidVector<Vector<Float>,2> tvcoeffs_p;
   Table Table_p;
+  Bool istimevar_p;
   //virtual Bool setCoeffs() = 0;
-
+  //
 };
 
 } //# NAMESPACE CASA - END
