@@ -29,6 +29,11 @@
 	</allowed>
     </param>
 
+    <param type="string" name="asis" subparam="true">
+	<description>ASDM to convert as is</description>
+	<value>Receiver CalAtmosphere</value>
+    </param>
+
     <param type="bool" name="overwrite" subparam="true">
 	<description>Overwrite existing files on import</description>
 	<value>True</value>
@@ -49,11 +54,13 @@
 	    <equals type="string" value="automatic">
 	    </equals>
 	    <equals type="string" value="interactive">
+		<default param="asis"><value type="string">Receiver CalAtmosphere</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
 	    </equals>
 	    <equals type="string" value="getinputs">
+		<default param="asis"><value type="string">Receiver CalAtmosphere</value></default>
 		<default param="overwrite"><value type="bool">True</value></default>
 	    </equals>
 	</when>
@@ -101,6 +108,10 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 
 ---- pipeline context defined parameter argument which can be set only in
 'interactive mode'
+
+asis -- ASDM tables to convert as is
+   default: 'Receiver CalAtmosphere'
+   example: 'Receiver', ''
 
 overwrite -- Overwrite existing MSs on output.
    default: True
