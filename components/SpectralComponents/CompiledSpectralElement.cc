@@ -98,11 +98,7 @@ void CompiledSpectralElement::_setFunction(const String& function) {
 }
 
 Bool CompiledSpectralElement::toRecord(RecordInterface& out) const {
-	out.define(RecordFieldId("type"), fromType(getType()));
-	Vector<Double> ptmp(get().copy());
-	Vector<Double> etmp(getError().copy());
-	out.define(RecordFieldId("parameters"), ptmp);
-	out.define(RecordFieldId("errors"), etmp);
+	SpectralElement::toRecord(out);
 	out.define(RecordFieldId("compiled"), _function);
 	return True;
 }

@@ -9,6 +9,7 @@ SpectralComponents/LorentzianSpectralElement.cc
 SpectralComponents/GaussianMultipletSpectralElement.cc
 SpectralComponents/PCFSpectralElement.cc
 SpectralComponents/PolynomialSpectralElement.cc
+SpectralComponents/PowerLogPolynomialSpectralElement.cc
 SpectralComponents/SpectralFit.cc
 SpectralComponents/SpectralEstimate.cc
 SpectralComponents/SpectralList.cc
@@ -92,6 +93,7 @@ SpectralComponents/PCFSpectralElement.h
 SpectralComponents/ProfileFit1D.h
 SpectralComponents/ProfileFit1D.tcc
 SpectralComponents/PolynomialSpectralElement.h
+SpectralComponents/PowerLogPolynomialSpectralElement.h
 SpectralComponents/SpectralEstimate.h
 SpectralComponents/Spectral2Estimate.tcc
 SpectralComponents/SpectralElement.h
