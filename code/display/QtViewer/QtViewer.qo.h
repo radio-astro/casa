@@ -103,8 +103,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual void quit();
 
 
-	private slots:
-		void dpgDestroyed(QObject*);
+	private:
+		friend class QtDisplayPanelGui;
+		void dpgDeleted(QtDisplayPanelGui*);
 
 	protected:
 

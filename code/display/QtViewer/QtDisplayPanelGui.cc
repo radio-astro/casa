@@ -88,6 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for ( wcs.toStart( ); ! wcs.atEnd( ); ++wcs )
 			wcs.getRight( )->removeRefreshEventHandler(*this);
 	}
+
 	void LinkedCursorEH::operator()(const WCRefreshEvent & ev) {
 		WorldCanvas *wc = ev.worldCanvas( );
 		if ( wc == 0 ) return;
@@ -1155,17 +1156,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtDisplayPanelGui::~QtDisplayPanelGui() {
 
+		v_->dpgDeleted(this);
+		delete linkedCursorHandler;
+
 		removeAllDDs();
 		delete displayDataHolder;
 		delete qdp_;	// (probably unnecessary because of Qt parenting...)
 		// (possibly wrong, for same reason?...).
 		// (indeed was wrong as the last deletion [at least] because the display panel also reference the qsm_)
 
-		if(qpm_!=0) delete qpm_;
-		if(qrm_!=0) delete qrm_;
-		if(qsm_!=0) delete qsm_;
-		if(qdm_!=0) delete qdm_;
-		if(qdo_!=0) delete qdo_;
+		delete qpm_;
+		delete qrm_;
+		delete qsm_;
+		delete qdm_;
+		delete qdo_;
 	}
 
 	int QtDisplayPanelGui::buttonToolState(const std::string &tool) const {
@@ -1520,7 +1524,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Double> wpt(2);
 		wpt(0) = x.getValue(units(0));
 		wpt(1) = y.getValue(units(1));
-		int count = 0;
+
 		stringstream ss;
 		for ( DisplayDataHolder::DisplayDataIterator iter = beginDD( ); iter != endDD( ); ++iter ) {
 			PrincipalAxesDD *dd = dynamic_cast<PrincipalAxesDD*>((*iter)->dd( ));

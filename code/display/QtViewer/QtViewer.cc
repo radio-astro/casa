@@ -85,7 +85,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// although, there is nothing preventing QtCleanPanelGui objs
 		// being added to this list...
 		panels.push_back(dpg);
-		connect( dpg, SIGNAL(destroyed(QObject*)), SLOT(dpgDestroyed(QObject*)) );
 
 		// Previously casaviewer.cc created a QtDisplayPanelGui directly,
 		// now it uses this function to ensure consistent behavior with
@@ -112,12 +111,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return dpg;
 	}
 
-	void QtViewer::dpgDestroyed( QObject *o ) {
-		QtDisplayPanelGui *dpg = dynamic_cast<QtDisplayPanelGui*>(o);
-		if ( o != 0 ) {
-			panel_list_t::iterator iter = std::find(panels.begin( ), panels.end( ), dpg );
-			if ( iter != panels.end( ) ) panels.erase(iter);
-		}
+	void QtViewer::dpgDeleted( QtDisplayPanelGui *dpg ) {
+		panel_list_t::iterator iter = std::find(panels.begin( ), panels.end( ), dpg );
+		if ( iter != panels.end( ) ) panels.erase(iter);
 	}
 
 	QtCleanPanelGui *QtViewer::createInteractiveCleanGui( ) {
