@@ -508,7 +508,7 @@ class Imager
              const MFrequency& reffreq=MFrequency(Quantity(1.0, "GHz"),
                                                   MFrequency::LSRK),
              const String& timerange="", const String& scanstr="",
-             const String& obsidstr="");
+             const String& obsidstr="", const String& interpolation="nearest");
 
   // Make an empty image
   Bool make(const String& model);
