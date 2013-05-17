@@ -7,6 +7,7 @@ from taskinit import *
 import unittest
 
 IMAGE = 'image.im'
+gim = "gaussian_source.im"
 
 total = 0
 fail  = 0
@@ -440,6 +441,37 @@ class imregrid_test(unittest.TestCase):
         myia.open(datapath + "mygal.im")
         expec = myia.getchunk()
         self.assertTrue((got == expec).all())
+        
+    def test_ref_code_preserves_position(self):
+        """Test that regridding to new refcode preserves source positions"""
+        gal = "mygalactic.im"
+        imregrid(datapath+gim,template="GALACTIC", output=gal)
+        orig = iatool()
+        orig.open(datapath+gim)
+        ofit = orig.fitcomponents(box="850,150,950,250")
+        orig.done()
+        ocl = cltool()
+        ocl.add(ofit['results']['component0'])
+        orefdir = ocl.getrefdir(0)
+        galtool = iatool()
+        galtool.open(gal)
+        gfit = galtool.fitcomponents(box="1120,520,1170,570")
+        galtool.done()
+        gcl = cltool()
+        gcl.add(gfit['results']['component0'])
+        grefdir = gcl.getrefdir(0)
+        myme = metool()
+        self.assertTrue(qa.getvalue(qa.convert(myme.separation(orefdir, grefdir), "arcsec")) < 0.003)
+        rev = "back_to_J2000.im"
+        imregrid(gal,template="J2000", output=rev)
+        revtool = iatool()
+        revtool.open(rev)
+        rfit = revtool.fitcomponents(box="850,150,950,250")
+        revtool.done()
+        rcl = cltool()
+        rcl.add(rfit['results']['component0'])
+        rrefdir = rcl.getrefdir(0)
+        self.assertTrue(qa.getvalue(qa.convert(myme.separation(orefdir, rrefdir), "arcsec")) < 2e-4)
         
     def test_get(self):
         """Test using template='get' works"""
