@@ -57,6 +57,8 @@ class SDInspectDataResults(common.SingleDishResults):
         datatable.putcol('TIMEGRP_L', time_group[1])
         datatable.putkeyword('TIMEGAP_S', time_gap[0])
         datatable.putkeyword('TIMEGAP_L', time_gap[1])
+
+        # export datatable (both RO and RW)
         datatable.exportdata(minimal=False)
 
         # merge
@@ -101,9 +103,6 @@ class SDInspectData(common.SingleDishTaskTemplate):
         else:
             job = JobRequest(worker.execute, name=infiles)
             self._executor.execute(job)
-
-        # finally, export DataTable
-        worker.export_datatable(minimal=False)
 
         # done, restore scantable.storage
         sd.rcParams['scantable.storage'] = storage_save
