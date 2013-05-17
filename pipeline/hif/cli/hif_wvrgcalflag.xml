@@ -118,7 +118,7 @@ Generate a gain table based on Water Vapour Radiometer data and flag bad antenna
 
     <param type="double" name="fhi_limit" subparam="true">
         <description>Flag figure of merit values higher than limit * MAD</description>
-        <value>5.0</value>
+        <value>10.0</value>
     </param>
 
     <param type="int" name="fhi_minsample" subparam="true">
@@ -199,7 +199,7 @@ Generate a gain table based on Water Vapour Radiometer data and flag bad antenna
 
         <when param="flag_hi">
             <equals type="bool" value="True">
-                <default param="fhi_limit"><value>5.0</value></default>
+                <default param="fhi_limit"><value>10.0</value></default>
                 <default param="fhi_minsample"><value>5</value></default>
             </equals>
             <equals type="bool" value="False">
