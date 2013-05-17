@@ -25,60 +25,54 @@
 //#
 //# $Id: SpectralElement.cc 21024 2011-03-01 11:46:18Z gervandiepen $
 
-#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
+#include <components/SpectralComponents/LogTransformedPolynomialSpectralElement.h>
 
 #include <casa/iostream.h>
 
-#define _ORIGIN  String("PowerLogPolynomialSpectralElement::") + __FUNCTION__ + ":" + String::toString(__LINE__) + ": "
+#define _ORIGIN  String("LogTransformedPolynomialSpectralElement::") + __FUNCTION__ + ":" + String::toString(__LINE__) + ": "
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-PowerLogPolynomialSpectralElement::PowerLogPolynomialSpectralElement(
+LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement(
 	uInt n
-) : CompiledSpectralElement(SpectralElement::POWERLOGPOLY, n) {
+) : CompiledSpectralElement(SpectralElement::LOGTRANSPOLY, n) {
 	if (n == 0) {
 		throw AipsError(_ORIGIN + "n must be greater than zero.");
 	}
 	_makeFunction();
 }
 
-PowerLogPolynomialSpectralElement::PowerLogPolynomialSpectralElement(
+LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement(
 	const Vector<Double>& param
-) : CompiledSpectralElement(SpectralElement::POWERLOGPOLY, param) {
+) : CompiledSpectralElement(SpectralElement::LOGTRANSPOLY, param) {
 	_makeFunction();
 }
 
-void PowerLogPolynomialSpectralElement::_makeFunction() {
+void LogTransformedPolynomialSpectralElement::_makeFunction() {
 	ostringstream function;
-	function << "p0";
+	function << "ln(p0)";
 	uInt n = get().size();
 	for (uInt i=1; i<n; i++) {
 		if (i == 1) {
-			function << "*(x)^(p1";
+			function << "+ p1*ln(x)";
 		}
 		else {
-			function << " + p" << i << "*ln(x)";
-			if (i > 2) {
-				function << "^" << (i-1);
-			}
-		}
-		if (i == n-1) {
-			function << ")";
+			function << " + p" << i << "*ln(x)^" << i;
 		}
 	}
 	_setFunction(function.str());
 }
 
-PowerLogPolynomialSpectralElement::PowerLogPolynomialSpectralElement(
-	const PowerLogPolynomialSpectralElement &other
+LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement(
+	const LogTransformedPolynomialSpectralElement &other
 ) : CompiledSpectralElement(other) {}
 
-PowerLogPolynomialSpectralElement::~PowerLogPolynomialSpectralElement() {}
+LogTransformedPolynomialSpectralElement::~LogTransformedPolynomialSpectralElement() {}
 
-PowerLogPolynomialSpectralElement& PowerLogPolynomialSpectralElement::operator=(
-	const PowerLogPolynomialSpectralElement& other
+LogTransformedPolynomialSpectralElement& LogTransformedPolynomialSpectralElement::operator=(
+	const LogTransformedPolynomialSpectralElement& other
 ) {
 	if (this != &other) {
 		CompiledSpectralElement::operator=(other);
@@ -86,8 +80,8 @@ PowerLogPolynomialSpectralElement& PowerLogPolynomialSpectralElement::operator=(
 	return *this;
 }
 
-SpectralElement* PowerLogPolynomialSpectralElement::clone() const {
-	return new PowerLogPolynomialSpectralElement(*this);
+SpectralElement* LogTransformedPolynomialSpectralElement::clone() const {
+	return new LogTransformedPolynomialSpectralElement(*this);
 }
 
 } //# NAMESPACE CASA - END

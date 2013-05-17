@@ -91,6 +91,8 @@ public:
 		LORENTZIAN,
 		// power log polynomial
 		POWERLOGPOLY,
+		// log transformed polynomial
+		LOGTRANSPOLY,
 		N_Types
 	};
 

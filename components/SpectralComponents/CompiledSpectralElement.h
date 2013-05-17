@@ -80,6 +80,11 @@ public:
 	CompiledSpectralElement &operator=(
 		const CompiledSpectralElement& other
 	);
+
+	Bool operator==(
+		const CompiledSpectralElement& other
+	) const;
+
 	// Evaluate the value of the element at x
 	virtual Double operator()(const Double x) const;
 

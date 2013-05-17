@@ -27,7 +27,7 @@
 #include <casa/aips.h>
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Containers/Record.h>
-#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
+#include <components/SpectralComponents/LogTransformedPolynomialSpectralElement.h>
 #include <components/SpectralComponents/SpectralElementFactory.h>
 
 #include <casa/Utilities/Assert.h>
@@ -39,7 +39,6 @@
 
 #include <casa/namespace.h>
 
-
 int main() {
 	{
 		try {
@@ -48,17 +47,18 @@ int main() {
 			p[0] = 5.5;
 			p[1] = 2.2;
 			p[2] = 3.3;
-			PowerLogPolynomialSpectralElement plp(p);
-			AlwaysAssert(near(plp(2), 123.36739264171082), AipsError);
+			LogTransformedPolynomialSpectralElement ltp(p);
+			cout << "at 2 " << ltp(2) << endl;
+			AlwaysAssert(near(ltp(2), 4.8151668354003698), AipsError);
 
-			cout << plp << endl;
-			AlwaysAssert(allTrue(plp.get() == p), AipsError);
+			cout << ltp << endl;
+			AlwaysAssert(allTrue(ltp.get() == p), AipsError);
 			cout << "Test to/from record" << endl;
 			Record rec;
-			plp.toRecord(rec);
+			ltp.toRecord(rec);
 			std::auto_ptr<SpectralElement> el = SpectralElementFactory::fromRecord(rec);
-			plp = *dynamic_cast<PowerLogPolynomialSpectralElement *>(el.get());
-			AlwaysAssert(allTrue(plp.get() == p), AipsError);
+			LogTransformedPolynomialSpectralElement ltp2 = *dynamic_cast<LogTransformedPolynomialSpectralElement *>(el.get());
+			AlwaysAssert(ltp == ltp2, AipsError);
 		}
 		catch (const AipsError& x) {
 			cout << x.getMesg() << endl;
