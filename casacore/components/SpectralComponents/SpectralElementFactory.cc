@@ -31,6 +31,7 @@
 #include <components/SpectralComponents/CompiledSpectralElement.h>
 #include <components/SpectralComponents/GaussianSpectralElement.h>
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
+#include <components/SpectralComponents/LogTransformedPolynomialSpectralElement.h>
 #include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
 #include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
@@ -217,22 +218,23 @@ std::auto_ptr<SpectralElement> SpectralElementFactory::fromRecord(
 	break;
 
     case SpectralElement::POWERLOGPOLY: {
-    	if (! in.isDefined("nu0")) {
-    		throw AipsError(
-    			"Record does not have required field nu0"
-    		);
-    	}
-		Double nu0 = in.asDouble("nu0");
-		specEl.reset(new PowerLogPolynomialSpectralElement(param, nu0));
+		specEl.reset(new PowerLogPolynomialSpectralElement(param));
 		specEl->set(param);
 		specEl->setError(errs);
 	}
 	break;
 
+    case SpectralElement::LOGTRANSPOLY: {
+    		specEl.reset(new LogTransformedPolynomialSpectralElement(param));
+    		specEl->set(param);
+    		specEl->setError(errs);
+    	}
+    	break;
+
 	default:
 		throw AipsError(
 			"Unhandled or illegal spectral element record in "
-			"SpectralElement::fromRecord\n"
+			"SpectralElementFactory::fromRecord\n"
 		);
 	}
 

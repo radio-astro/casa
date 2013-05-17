@@ -45,6 +45,8 @@ ostream &operator<<(ostream &os, const SpectralElement &elem) {
 		os << *dynamic_cast<const PolynomialSpectralElement*>(&elem);
 		break;
 	case SpectralElement::COMPILED:
+	case SpectralElement::POWERLOGPOLY:
+	case SpectralElement::LOGTRANSPOLY:
 		os << *dynamic_cast<const CompiledSpectralElement*>(&elem);
         break;
 	case SpectralElement::GMULTIPLET:
@@ -52,9 +54,6 @@ ostream &operator<<(ostream &os, const SpectralElement &elem) {
 		break;
 	case SpectralElement::LORENTZIAN:
 		os << *dynamic_cast<const LorentzianSpectralElement*>(&elem);
-		break;
-	case SpectralElement::POWERLOGPOLY:
-		os << *dynamic_cast<const PowerLogPolynomialSpectralElement*>(&elem);
 		break;
 	default:
 		throw AipsError("SpectralElement2::<<((): Logic Error. Unhandled spectral element type");

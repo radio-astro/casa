@@ -95,7 +95,8 @@ const String* SpectralElement::allTypes(
 		String("COMPILED"),
 		String("GAUSSIAN MULTIPLET"),
 		String("LORENTZIAN"),
-		String("POWER LOGARITHMIC POLYNOMIAL")
+		String("POWER LOGARITHMIC POLYNOMIAL"),
+		String("LOGARITHMIC TRANSFORMED POLYNOMIAL")
 
 	};
 
@@ -105,7 +106,9 @@ const String* SpectralElement::allTypes(
 		SpectralElement::COMPILED,
 		SpectralElement::GMULTIPLET,
 		SpectralElement::LORENTZIAN,
-		SpectralElement::POWERLOGPOLY
+		SpectralElement::POWERLOGPOLY,
+		SpectralElement::LOGTRANSPOLY
+
 	};
 
 	nall = SpectralElement::N_Types;

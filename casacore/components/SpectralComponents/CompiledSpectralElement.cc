@@ -82,6 +82,15 @@ CompiledSpectralElement& CompiledSpectralElement::operator=(
 	return *this;
 }
 
+
+Bool CompiledSpectralElement::operator==(
+	const CompiledSpectralElement& other
+) const {
+	return SpectralElement::operator==(other) && _function == other._function;
+
+}
+
+
 Double CompiledSpectralElement::operator()(const Double x) const {
 	CompiledFunction<Double> comp;
 	comp.setFunction(_function);
@@ -106,6 +115,10 @@ Bool CompiledSpectralElement::toRecord(RecordInterface& out) const {
 ostream &operator<<(ostream& os, const CompiledSpectralElement& elem) {
 	os << SpectralElement::fromType((elem.getType())) << " element: " << endl;
 	os << "  Function:    " << elem.getFunction() << endl;
+	const Vector<Double> p = elem.get();
+	for (uInt i=0; i<p.size(); i++) {
+		os << "p" << i << ": " << p[i] << endl;
+	}
 	return os;
 }
 

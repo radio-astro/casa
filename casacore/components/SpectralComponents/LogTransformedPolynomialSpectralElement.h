@@ -26,16 +26,16 @@
 //#
 //# $Id: SpectralElement.h 20652 2009-07-06 05:04:32Z Malte.Marquarding $
 
-#ifndef COMPONENTS_POWERLOGPOLYNOMIALSPECTRALELEMENT_H
-#define COMPONENTS_POWERLOGPOLYNOMIALSPECTRALELEMENT_H
+#ifndef COMPONENTS_LOGTRANSFORMEDPOLYNOMIALSPECTRALELEMENT_H
+#define COMPONENTS_LOGTRANSFORMEDPOLYNOMIALSPECTRALELEMENT_H
 
 #include <components/SpectralComponents/CompiledSpectralElement.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // <summary>
-// Describes the function most often used for determining spectral index plus higher order terms:
-// y = c_0 * x**( c_1 + c_2*ln(x) + c_3*ln(x)**2 + ... )
+// Describes the often used for determining spectral index plus higher order terms:
+// y = log (S_x) = ln(c_0) + c_1*ln(x) + c_2*ln(x)**2 + c_3*ln(x)**3 + ...
 // where c_1 is the traditional spectral index (alpha).
 // </summary>
 
@@ -65,24 +65,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 
 
-class PowerLogPolynomialSpectralElement: public CompiledSpectralElement {
+class LogTransformedPolynomialSpectralElement: public CompiledSpectralElement {
 public:
 
 	// Constructor. The n coefficients c_i to be solved for are
-	// c_0 * nu**(c_1 + c_2*log(x) + c_3*log(x)**2 + ... + c_(n-1)*log(x)**(n - 2))
-	explicit PowerLogPolynomialSpectralElement(uInt n);
+	// ln(c_0) + c_1 * ln(x) + c_2 * ln(x)**2 + c_3 * ln(x)**3 + ... c_(n-1)*ln(x)**(n-1)
+	// where x = nu/nu0
+	explicit LogTransformedPolynomialSpectralElement(uInt n);
 
 	// Construct with the given parameters. See above constructor for order in which the parameters should
 	// be supplied.
-	PowerLogPolynomialSpectralElement(const Vector<Double> &param);
+	LogTransformedPolynomialSpectralElement(const Vector<Double> &param);
 
 	// Copy constructor (deep copy)
-	PowerLogPolynomialSpectralElement(const PowerLogPolynomialSpectralElement &other);
+	LogTransformedPolynomialSpectralElement(const LogTransformedPolynomialSpectralElement &other);
 
-	~PowerLogPolynomialSpectralElement();
+	~LogTransformedPolynomialSpectralElement();
 
-	PowerLogPolynomialSpectralElement &operator=(
-		const PowerLogPolynomialSpectralElement& other
+	LogTransformedPolynomialSpectralElement &operator=(
+		const LogTransformedPolynomialSpectralElement& other
 	);
 
 	SpectralElement* clone() const;
