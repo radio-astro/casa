@@ -61,9 +61,9 @@ TD_DESC_RO = [
     __coldesc('integer', 0, 0, -1, 'Pol number'),
     __coldesc('integer', 0, 0, -1, 'Beam number'),
     __coldesc('string',  0, 0, -1, 'Date'),
-    __coldesc('double',  0, 0, -1, 'Time in MJD', 'sec'),
-    __coldesc('double',  0, 0, -1, 'Elapsed time since first scan' 'sec'),
-    __coldesc('double',  0, 0, -1, 'Exposure time', 'sec'),
+    __coldesc('double',  0, 0, -1, 'Time in MJD', 's'),
+    __coldesc('double',  0, 0, -1, 'Elapsed time since first scan' 's'),
+    __coldesc('double',  0, 0, -1, 'Exposure time', 's'),
     __coldesc('double',  0, 0, -1, 'Right Ascension', 'deg'),
     __coldesc('double',  0, 0, -1, 'Declination', 'deg'),
     __coldesc('double',  0, 0, -1, 'Azimuth', 'deg'),
@@ -148,6 +148,10 @@ class DataTableImpl( object ):
             return self.tb1.nrows()
         else:
             return 0
+
+    @property
+    def name(self):
+        return self.plaintable
 
     def get_row_index_simple(self, col, val):
         vals = self.getcol(col)
