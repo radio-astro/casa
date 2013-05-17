@@ -3048,8 +3048,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return displayDataHolder->getDD( name );
 	}
 
-	QtDisplayData* QtDisplayPanel::getChannelDD() const {
-		return displayDataHolder->getChannelDD();
+	QtDisplayData* QtDisplayPanel::getChannelDD( int index ) const {
+		return displayDataHolder->getChannelDD( index );
 	}
 
 

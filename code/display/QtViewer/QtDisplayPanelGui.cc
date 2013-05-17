@@ -789,6 +789,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDisplayPanelGui::initAnimationHolder() {
 		if ( animationHolder == NULL ) {
+			animationImageIndex = -1;
 			animationHolder = new AnimatorHolder( this );
 			connect(animationHolder, SIGNAL(lowerBoundAnimatorChannelChanged(int)), qdp_, SLOT(lowerBoundAnimatorChannelChanged(int)));
 			connect(animationHolder, SIGNAL(upperBoundAnimatorChannelChanged(int)), qdp_, SLOT(upperBoundAnimatorChannelChanged(int)));
@@ -808,6 +809,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 			connect(animationHolder, SIGNAL(movieChannels(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
 			connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
+			connect(animationHolder, SIGNAL(animationImageChanged(int)), this, SLOT(animationImageChanged(int)));
 
 			// Set interface according to the initial state of underlying animator.
 			updateAnimUi_();
@@ -817,6 +819,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtDisplayPanelGui::animationModeChanged( bool modeZ){
 		qdp_->setMode( modeZ );
 		updateFrameInformationChannel();
+	}
+
+	void QtDisplayPanelGui::animationImageChanged( int index ){
+		animationImageIndex = index;
+		updateFrameInformationChannel();
+		if ( regionDock_ != NULL ){
+			regionDock_->updateStackOrder( animationImageIndex );
+		}
 	}
 
 	void QtDisplayPanelGui::globalColorSettingsChanged( bool global ) {
@@ -1279,7 +1289,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( maxChannels > 1 ) {
 			//To find the actual number of channels, we rely on the
 			//the image that is currently on target for channeling.
-			QtDisplayData* channelMaster = qdp_->getChannelDD();
+			QtDisplayData* channelMaster = qdp_->getChannelDD(animationImageIndex);
 			int actualChannels = maxChannels;
 			if ( channelMaster != NULL ){
 				viewer::ImageProperties props = channelMaster->imageProperties();
@@ -1299,7 +1309,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//Use the maximum number of channels, but since we aren't in channel
 			//mode, we don't want it to come up selected.
 			else {
-				animationHolder->setChannelModeEnabled( maxChannels, false);
+				animationHolder->setChannelModeEnabled( /*maxChannels*/actualChannels, false);
 			}
 		}
 	}

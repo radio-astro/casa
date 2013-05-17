@@ -306,6 +306,7 @@ namespace casa {
 			addRemoveChannelAnimatorBasedOnFrameCount();
 		} else {
 			animatorImage->setFrameInformation( frm, len );
+			emit animationImageChanged( frm );
 		}
 	}
 

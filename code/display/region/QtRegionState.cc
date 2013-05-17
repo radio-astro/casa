@@ -33,6 +33,7 @@
 #include <display/region/Region.qo.h>
 #include <display/region/QtRegionState.qo.h>
 #include <display/region/QtRegionStats.qo.h>
+#include <display/region/HistogramTab.qo.h>
 #include <casadbus/types/nullptr.h>
 #include <QFileDialog>
 #include <display/DisplayErrors.h>
@@ -170,6 +171,15 @@ namespace casa {
 
 		}
 
+		void QtRegionState::updateStackOrder( int firstImage ){
+			statistics_group->setCurrentIndex( firstImage );
+			histogramTab->showGraph( firstImage );
+		}
+
+		int QtRegionState::getStackIndex() const {
+			return statistics_group->currentIndex();
+		}
+
 		void QtRegionState::initRegionState( ) {
 			int current_color_index = region_->colorIndex( );
 			line_color->setCurrentIndex(current_color_index);
@@ -234,6 +244,7 @@ namespace casa {
 
 		void QtRegionState::addHistogram(QWidget* histogram ) {
 			categories->addTab( histogram, HISTOGRAM_MODE( ));
+			histogramTab = dynamic_cast<HistogramTab*>(histogram);
 		}
 
 		void QtRegionState::setRegion( Region *r ) {
@@ -255,6 +266,7 @@ namespace casa {
 				pre_dd_change_statistics_count = -1;
 				return;
 			}
+			int currentIndex = statistics_group->currentIndex();
 			clearStatistics();
 
 			while ( (int)stats->size() > statistics_group->count() ) {
@@ -272,7 +284,8 @@ namespace casa {
 			}
 
 			int num = statistics_group->count( );
-			QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(0));
+			int firstIndex = 0;
+			QtRegionStats *first = dynamic_cast<QtRegionStats*>(statistics_group->widget(firstIndex));
 			if ( first == 0 ) throw internal_error( );
 			std::list<std::tr1::shared_ptr<RegionInfo> >::iterator stat_iter = stats->begin();
 			if ( ! memory::nullptr.check((*stat_iter)->list( )) ) {
@@ -300,8 +313,15 @@ namespace casa {
 			prev->setNext( statistics_group, first );
 
 			int statistics_count = statistics_group->count( );
-			if ( pre_dd_change_statistics_count < statistics_count && statistics_count > 0 )
-				statistics_group->setCurrentIndex(statistics_count-1);
+			if ( pre_dd_change_statistics_count < statistics_count && statistics_count > 0 ){
+				//statistics_group->setCurrentIndex(statistics_count-1);
+				if ( currentIndex >= 0 && currentIndex < statistics_count){
+					statistics_group->setCurrentIndex( currentIndex );
+				}
+				else {
+					statistics_group->setCurrentIndex( 0 );
+				}
+			}
 
 			pre_dd_change_statistics_count = -1;
 		}
@@ -567,7 +587,6 @@ namespace casa {
 		}
 
 		void QtRegionState::stackChange( QWidget *top ) {
-
 			if ( top == this ) {
 				QString state = states->tabText(categories->currentIndex( ));
 				if ( state == "coordinates" ) {

@@ -74,6 +74,8 @@ namespace casa {
 
 		}
 
+
+
 		QtRegionDock::~QtRegionDock() {
 			// perhaps these should be deleted somewhere else?
 			region_list_t dtor_list = region_list;
@@ -90,6 +92,23 @@ namespace casa {
 			}
 		}
 
+		void QtRegionDock::updateStackOrder( int topIndex ){
+			int regionStackCount = region_stack->count();
+			if ( regionStackCount > 0 ){
+				for ( int i = 0; i < regionStackCount; i++ ){
+					QtRegionState* state = dynamic_cast<QtRegionState*>(region_stack->widget( i ));
+					state->updateStackOrder( topIndex );
+				}
+			}
+			else {
+				QWidget* currentWidget= region_stack->currentWidget();
+				if ( currentWidget != NULL ){
+					QtRegionState* state = dynamic_cast<QtRegionState*>(currentWidget);
+					state->updateStackOrder( topIndex );
+				}
+			}
+		}
+
 		// void QtRegionDock::showStats( const QString &stats ) { }
 
 		void QtRegionDock::enterEvent( QEvent* ) {
@@ -97,6 +116,7 @@ namespace casa {
 			if ( region_stack->count( ) > 0 ) {
 				QtRegionState *current_selection = dynamic_cast<QtRegionState*>(region_stack->currentWidget( ));
 				if ( current_selection ) {
+
 					Region *region = current_selection->region( );
 					if ( region ) {
 						clearWeaklySelectedRegionSet( );

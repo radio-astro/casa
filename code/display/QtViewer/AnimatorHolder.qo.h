@@ -71,6 +71,7 @@ namespace casa {
 		void lowerBoundAnimatorChannelChanged( int );
 		void upperBoundAnimatorChannelChanged(int);
 		void stepSizeAnimatorChannelChanged(int);
+		void animationImageChanged(int);
 
 	private slots:
 		void goToChannel(int frame);

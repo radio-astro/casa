@@ -87,13 +87,20 @@ namespace casa {
 
 	}
 
-	QtDisplayData* DisplayDataHolder::getChannelDD() const {
-		//The channel dd is the last one in the list
+	QtDisplayData* DisplayDataHolder::getChannelDD( int index ) const {
 		QtDisplayData* channelDD = NULL;
 		if ( dataList.size() > 0 ){
-			DisplayDataIterator iter = dataList.end();
-			iter--;
-			channelDD = *iter;
+			//By default, the channel dd is the last one in the list
+			if ( index < 0 || index >= static_cast<int>(dataList.size())){
+				index = dataList.size() - 1;
+			}
+			DisplayDataIterator iter = dataList.begin();
+			int i = 0;
+			while (i < index ){
+				iter++;
+				i++;
+			}
+			channelDD = (*iter);
 		}
 		return channelDD;
 	}

@@ -118,6 +118,11 @@ namespace casa {
 			                           std::string format, std::string ds9_csys="pixel" );
 
 			void updateRegionStats( );
+			/**
+			 * Allows the images displayed in the region dock to remain in sync
+			 * with the images selected in the animator.
+			 */
+			void updateStackOrder( int topIndex );
 			void emitCreate( Region * );
 
 			int numFrames( ) const;

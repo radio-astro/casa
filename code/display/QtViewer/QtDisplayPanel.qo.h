@@ -156,7 +156,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//Returns the DD that will be animating the channels
 		//in normal mode.
-		QtDisplayData* getChannelDD() const;
+		QtDisplayData* getChannelDD( int index ) const;
 
 
 

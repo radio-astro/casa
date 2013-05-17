@@ -160,7 +160,7 @@ void BinPlotWidget::setColorMap(QwtLinearColorMap* linearMap ){
 
 void BinPlotWidget::resetAxisTitles(){
 	if ( displayAxisTitles ){
-		QString yAxisTitle = "Count";
+		QString yAxisTitle = "Count(Pixels)";
 		if ( displayLogY ){
 			yAxisTitle = LOG_COUNT;
 		}

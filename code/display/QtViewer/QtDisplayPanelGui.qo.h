@@ -631,6 +631,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		viewer::Preferences *preferences;
 		AnimatorHolder* animationHolder;
+		int animationImageIndex;
 		HistogramMain* histogrammer;
 		ColorHistogram* colorHistogram;
 		Fit2DTool* fitTool;
@@ -704,7 +705,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 * sets the mode, and then updates the channel count accordingly.
 		 */
 		void animationModeChanged( bool modeZ);
-
+		void animationImageChanged( int index );
 
 	public:
 

@@ -36,9 +36,12 @@
 #include <display/Display/MouseToolState.h>
 
 namespace casa {
+
+	class HistogramTab;
 	namespace viewer {
 
 		class Region;
+
 
 		class QtRegionState : public QFrame, protected Ui::QtRegionState {
 			Q_OBJECT
@@ -46,6 +49,7 @@ namespace casa {
 			// initializing the display depends upon having signals & slots connected
 			// which cannot happen until after the ctor of QtRegionState...
 			void init( );
+
 
 			QtRegionState( const QString &name,
 			               QtMouseToolNames::PointRegionSymbols sym=QtMouseToolNames::SYM_UNKNOWN,
@@ -69,6 +73,8 @@ namespace casa {
 			void setCenterBackground(QString background);
 			void clearStatistics( );
 			void addHistogram(QWidget* histogram);
+			void updateStackOrder( int firstImage );
+			int getStackIndex() const;
 
 			std::string lineColor( ) const;
 			std::string centerColor( ) const;
@@ -248,7 +254,7 @@ namespace casa {
 			void statisticsUpdate( QtRegionStats *regionStats, std::tr1::shared_ptr<casa::viewer::RegionInfo> regionInfo );
 			unsigned int setting_combo_box;
 			int pre_dd_change_statistics_count;
-
+			HistogramTab* histogramTab;
 
 		};
 
