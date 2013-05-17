@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" ?>
+<casaxml xmlns="http://casa.nrao.edu/schema/psetTypes.html"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
+file:///opt/casa/code/xmlcasa/xml/casa.xsd">
+
+<task type="function" name="hif_atmflag" category="pipeline">
+<shortdescription>Flag channels with bad atmospheric transmission</shortdescription>
+<description>
+Flag channels with bad atmospheric transmission.
+</description>
+<input>
+    <param type="stringArray" name="vis" subparam="true">
+        <description>List of input measurement sets</description>
+        <value></value>
+    </param>
+
+    <param type="string" name="intent">
+        <description>Data intents to which flags are to be applied</description>
+        <value>*AMP*,*BANDPASS*,*PHASE*</value>
+    </param>
+
+    <param type="bool" name="flag_minabs">
+        <description>True to flag channels where transmission &lt; fmin_limit</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="fmin_limit" subparam="true">
+        <description>Transmission limit below which channels are to be flagged</description>
+        <value>0.1</value>
+    </param>
+
+    <param type="bool" name="flag_nmedian">
+        <description>True to flag channels where transmission &lt; fnm_limit * median transmission</description>
+        <value>False</value>
+    </param>
+
+    <param type="double" name="fnm_limit" subparam="true">
+        <description>If flag_nmedian then flag channels where transmission &lt; fnm_limit * median transmission</description>
+        <value>0.5</value>
+    </param>
+
+    <param type="string" name="pipelinemode">
+        <description>The pipeline operations mode</description>
+        <value>automatic</value>
+        <allowed kind="enum">
+            <value>automatic</value>
+            <value>interactive</value>
+            <value>getinputs</value>
+        </allowed>
+    </param>
+
+    <param type="bool" name="dryrun" subparam="true">
+        <description>Run the task (False) or list commands(True)</description>
+       <value>False</value>
+    </param>
+
+    <param type="bool" name="acceptresults" subparam="true">
+        <description>Automatically apply results to context</description>
+        <value>True</value>
+    </param>
+
+    <constraints>
+        <when param="pipelinemode">
+            <equals type="string" value="automatic" />
+            <equals type="string" value="interactive">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="flag_minabs"><value type="bool">False</value></default>
+                <default param="flag_nmedian"><value type="bool">False</value></default>
+                <default param="dryrun"><value type="bool">False</value></default>
+                <default param="acceptresults"><value type="bool">True</value></default>
+            </equals>
+            <equals type="string" value="getinputs">
+                <default param="vis"><value type="stringArray"></value></default>
+                <default param="flag_minabs"><value type="bool">False</value></default>
+                <default param="flag_nmedian"><value type="bool">False</value></default>
+            </equals>
+        </when>
+
+        <when param="flag_minabs">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="fmin_limit"><value>0.1</value></default>
+            </equals>
+        </when>
+
+        <when param="flag_nmedian">
+            <equals type="bool" value="False">
+            </equals>
+            <equals type="bool" value="True">
+                <default param="fnm_limit"><value>0.5</value></default>
+            </equals>
+        </when>
+
+    </constraints>
+</input>
+
+<output>
+    <param type="any" name="results">
+        <description>The output results object</description>
+        <any type="variant"/>
+        <value></value>
+    </param>
+</output>
+<returns type="void"/>
+
+
+<example>
+
+hif_atmflag flags channels where the atmospheric transmission is low
+
+Keyword arguments:
+
+pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
+   determines the values of all context defined pipeline inputs automatically.
+   In interactive mode the user can set the pipeline context defined parameters
+   manually.  In 'getinputs' mode the user can check the settings of all
+   pipeline parameters without running the task.
+   default: 'automatic'.
+
+---- pipeline parameter arguments which can be set in any pipeline mode
+
+intents -- Specifies the data intents whose channels are to be flagged
+           if they have low atmospheric transmission. This string is 
+           inserted into the flagcmd given to the flagdata task 
+           applying the flags; it must have a valid flagcmd format.
+    default '*AMP*,*BANDPASS*,*PHASE*'  
+
+flag_minabs -- True to flag channels with transmission &lt; fmin_limit.
+    default False
+
+fmin_limit -- The atmospheric transmission below which channels are to be
+              flagged if flag_minabs is True.
+    default 0.1
+
+flag_nmedian -- True to flag channels with transmission &lt; fnm_limit * median
+                transmission.
+    default: False
+
+fnm_limit -- Flag channels with transmission &lt; fnm_limit * median transmission,
+             if flag_nmedian is True.
+    default: 0.5
+
+---- pipeline context defined parameter arguments which can be set only in
+'interactive mode'
+
+vis -- List of input measurement sets
+    default: [] - Use the measurement sets currently stored in the pipeline context. 
+    example: vis=['X132.ms']
+
+-- Pipeline task execution modes
+
+dryrun -- Run the commands (True) or generate the commands to be run but
+   do not execute (False).
+   default: True
+
+acceptresults -- This parameter has no effect. The Tsyscal file is already
+                 in the pipeline context and is flagged in situ.
+
+Output:
+
+results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
+    the results object for the pipeline task is returned.
+
+Description
+
+Spectral window channels with low atmospheric transmission are identified 
+and flagged. The flagging view comprises a transmission spectrum for each
+spectral window calculated using the CASA atmosphere model.
+
+Flags are generated by running the following rules on each spectrum:
+
+If flag_minabs = True then channels with transmission below fmin_limit
+are flagged.
+
+If flag_nmedian = True then channels with transmission below fnm_limit *
+median transmission are flagged.
+
+The flagging limits are set by frequency rather than by channel number.
+The frequency frame is the native one of the spectral windows, usually TOPO. 
+
+Examples:
+
+1. Flag channels with transmission below 0.1 in each SpW.
+
+   hif_atmflag()
+       equivalent to:
+   hif_atmflag(flag_minabs=True, fmin_limit=0.1)
+
+2. Flag channels with transmission below 0.4 * median transmission across 
+   the spectral window.
+ 
+   hif_atmflag(flag_nmedian=True, fnm_limit=0.4)
+
+</example> 
+
+</task>
+</casaxml>
+
