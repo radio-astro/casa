@@ -40,7 +40,7 @@ try:
             flagcmdhtml = os.path.join(plots_dir, '%s.atm.flagcmd.html' %
               os.path.basename(r.vis))
             hrutils.renderflagcmds(r.flagcmdfile, flagcmdhtml, reason)
-            htmlreports[os.path.basename(r.vis)] = flagcmdhtml
+            htmlreports[os.path.basename(r.vis)] = os.path.basename(flagcmdhtml)
 
         if r.view:
             # display the view first
