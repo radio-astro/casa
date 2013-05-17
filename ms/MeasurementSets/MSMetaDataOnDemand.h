@@ -341,11 +341,9 @@ private:
 
 	Bool _hasIntent(const String& intent);
 
-	void _checkFieldID(const Int fieldID);
+	Bool _hasFieldID(const Int fieldID);
 
-	void _checkFieldIDs(const vector<Int>& fieldIDs);
-
-	void _checkStateID(const Int stateID);
+	Bool _hasStateID(const Int stateID);
 
 	vector<std::set<String> > _getSpwToIntentsMap();
 
