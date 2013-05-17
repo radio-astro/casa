@@ -255,7 +255,13 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         setattr(self, 'context', properties['context'])
         for k, v in properties.items():
             if k not in kw_ignore:
-                setattr(self, k, v)
+                try:
+                    setattr(self, k, v)
+                except AttributeError:
+                    # AttributeError is raised when attempting to set value of
+                    # read-only properties
+                    pass
+                
 
     def _get_task_args(self, ignore=()):
         """
