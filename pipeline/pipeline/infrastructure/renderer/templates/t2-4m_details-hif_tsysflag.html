@@ -50,8 +50,10 @@ try:
             reporthtml = os.path.join(plots_dir, '%s.report.html' %
               os.path.basename(r.table))
             hrutils.printTsysFlags(r.table, reporthtml)
-#            htmlreports[os.path.basename(r.flagcmdfile)] = (flagcmdhtml,reporthtml)
-            htmlreports[os.path.basename(r.table)] = (flagcmdhtml,reporthtml)
+#            htmlreports[os.path.basename(r.flagcmdfile)] = (
+#              os.path.basename(flagcmdhtml), os.path.basename(reporthtml))
+            htmlreports[os.path.basename(r.table)] = (
+              os.path.basename(flagcmdhtml), os.path.basename(reporthtml))
 
         if r.view:
             # display the view first
