@@ -10,7 +10,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <shortdescription>(Experimental) simple simulation task for ALMA </shortdescription>
   <description>
     This task will simulate ALMA 12-m, ACA-7m and total power array data, 
-   and image and analyze them. Please contact CASA helpdesk with questions.
+    and image and analyze them. 
+    Please see http://casaguides.nrao.edu, and contact the CASA helpdesk 
+    with questions.
   </description>
   
   <input>
@@ -530,13 +532,12 @@ ALMA simulation task:
     versions of CASA, check the inputs carefully.
     More information and examples are availible at 
      http://casaguides.nrao.edu/index.php?title=Simulating_Observations_in_CASA
-    Please contact CASA experts with any questions, especially 
-    about features noted below as *experimental*    
+    Please contact CASA experts with any questions.
     -------------------------------
     project -- root filename for all output files.
     -------------------------------
-    skymodel -- image model of the sky in FITS or CASA image, 
-         with optional parameters that can be overridden
+    skymodel -- image model of the sky in FITS or CASA image, with optional 
+         parameters that can be overridden
     inbright -- peak brightness in Jy/pixel, or "" for unchanged
        * NOTE: "unchanged" will take the numerical values in your image 
          and assume they are in Jy/pixel, even if it says some other unit 
@@ -581,10 +582,12 @@ ALMA simulation task:
        * NOTE: In this task, it should be an ALMA configuration.
        * standard arrays are found in your CASA data repository, 
          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
-       * a string of the form "alma;0.5arcsec" will be parsed into a full 12m ALMA
-         configuration.  This only works for full ALMA and may fail to find the 
-         standard configuration files on some systems - see casaguides.nrao.edu
+       * a string of the form "alma;0.5arcsec" will be parsed into a full 
+         12m ALMA configuration.  This only works for full ALMA and may fail 
+         to find the standard configuration files on some systems 
+         - see casaguides.nrao.edu
     hourangle -- hour angle of observation e.g. '-3h'
+       * note that if you don't add a unit, it will assume seconds.
     totaltime --- total time of observation e.g '7200s' or if a number without
          units, interpreted as the number of times to repeat the map
     acaratio  --- ratio of the total observation time of ACA relative to 
@@ -631,36 +634,42 @@ ALMA simulation task:
     overwrite -- overwrite existing files in the project subdirectory
 
     -------------------------------
-    What does this task do:
+    What does this task do?
     -------------------------------
-    simalma is a task to simulate ALMA observation with simple interface. 
-    It simulates ALMA 12m observation and optionally ACA 7m and Total power
-    observations when acaratio > 0. 
+    simalma is a task to simulate a complete ALMA observation with a simple 
+    interface. It simulates ALMA 12m observation and optionally ACA 7m and 
+    total power (TP) observations when acaratio > 0. 
     When image=True, simulated data set(s) are imaged and analyzed.
-    ALMA 12m and ACA 7m data sets are concatenated (if both generated)
-    before imaging, and CLEAN is used to generate a synthesized image from
-    the concatenated data set. Interferometer and total power images (if both
-    simulated) are combined by feathering.
+    
+    ALMA 12m and ACA 7m data sets are concatenated (if both are generated)
+    before imaging, and the clean task is used to generate a synthesized 
+    image from the concatenated data set. 
+    The interferometer and total power images are then combined by feathering.
 
     NOTE this task is very experimental and may not exactly reproduce
-    actual ALMA products.
+    actual ALMA data products.  The ALMA project is refining the optimal 
+    method of combining the three types of data.
 
     The following assumptions are made to make the interface simple:
     * This task is intended to be run only once with a set of parameters.
-      Therefore, it always sets up input model and pointings, and invokes simulation.
-      You can stop before imaging step and reduce data manually with the other tasks,
-      e.g, simanalyze, clean, and feather.
-    * acaratio controls whether or not ACA observation is simulated. if acaratio > 0,
-      ACA observation is simulated with total observation time = acaratio * totaltime
-      for both ACA 7m and Total power array.
+      Therefore, it always sets up input model and pointings, and invokes 
+      simulation.
+      You can stop before imaging step and reduce data manually with the other 
+      tasks, e.g, simanalyze, clean, and feather.
+    * acaratio controls whether or not an ACA observation is simulated. 
+      If acaratio > 0, an ACA observation is simulated for both ACA 7m and
+      total power array, with total observation time of each equal to  
+      acaratio * totaltime   
     * pwv controls whether or not thermal noise is applied to simulated data.
-      When pwv > 0, the thermal noise is applied to simulated data. J. Pardo's ATM
-      library is used to construct an atmospheric profile of the ALMA site.
-    * if a list of directions is not specified, ALMA 12m and ACA 7m arrays will
-      pack mapsize with the same hex algorithm as the ALMA OT in Nyquist sampling
-    * Total power array maps slightly (+1 PB) larger area compared to 12m array for
-      later combined imaging. It samples the region with lattice grids of spacing, 
-      0.36 lamba/d.
+      When pwv > 0, the thermal noise is applied to simulated data. 
+      J. Pardo's ATM library is used to construct an atmospheric profile of 
+      the ALMA site.
+    * if a list of directions is not specified, observations with the ALMA 12m 
+      and ACA 7m arrays will observe a region of size mapsize using the same 
+      hexagonal algorithm as the ALMA OT, with Nyquist sampling.
+    * The total power array maps a slightly (+1 primary beam) larger area 
+      than the 12m array does, to improve later image combination. 
+      It samples the region with lattice grids of spacing 0.36 lambda/D.
 
     -------------------------------
     How to specify a model image:

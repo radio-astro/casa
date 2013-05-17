@@ -10,7 +10,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
   <shortdescription>mosaic simulation task</shortdescription>
   <description>
     This task will simulate interferometric data.  
-    Please contact CASA helpdesk with questions.
+    Please see http://casaguides.nrao.edu, and contact the CASA helpdesk 
+    with questions.
   </description>
   
   <input>
@@ -112,7 +113,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="maptype" subparam="true">
-      <description>hexagonal, square (raster), ALMA, ALMA2012</description>
+      <description>hexagonal, square (raster), ALMA, etc</description>
       <value type="string">hexagonal</value>
       <allowed kind="enum">
 	<value type="string">hexagonal</value>
@@ -381,19 +382,18 @@ it'll do them for the same amount of time -->
 <example>
 mosaic simulation task:
 
-    This task simulates interferometric observations (currently 
-    only ALMA can be done easily).  New functionality is actively 
-    being added, so if you have changed versions of CASA, check 
-    the inputs carefully.
+    This task simulates interferometric observations (currently optimized for 
+    ALMA and JVLA).  New functionality is actively being added, so if you have 
+    changed versions of CASA, check the inputs carefully.
     More information and examples are availible at 
      http://casaguides.nrao.edu/index.php?title=Simulating_Observations_in_CASA
-    Please contact CASA experts with any questions, especially 
-    about features noted below as *experimental*    
+    Please contact CASA experts with any questions, especially about features 
+    noted below as *experimental*    
     -------------------------------
     project -- root filename for all output files.
     -------------------------------
-    skymodel -- image model of the sky in FITS or CASA image, 
-         with optional parameters that can be overridden
+    skymodel -- image model of the sky in FITS or CASA image, with optional 
+         parameters that can be overridden
     inbright -- peak brightness in Jy/pixel, or "" for unchanged
        * NOTE: "unchanged" will take the numerical values in your image 
          and assume they are in Jy/pixel, even if it says some other unit 
@@ -435,26 +435,28 @@ mosaic simulation task:
     mapsize -- angular size of map 
        * set to "" to span the model image
     maptype -- hexagonal, square (rectangular raster), 
-         "ALMA" for the same hex algorithm as the ALMA OT 
+         "ALMA" for the same hex algorithm as the ALMA Cycle 1 OT 
          or "ALMA2012" for the algorithm used in the Cycle 0 OT
     pointingspacing -- spacing in between beams e.g '1arcsec'
          or "0.25PB" to use 1/4 of the primary beam FWHM, or 
          "" will use Nyquist spacing, lambda/d/sqrt(3).
     -------------------------------
-    obsmode -- observation mode to calculate visibilities from skymodel (which
-         may have been modified above, (optionally) complist, and $ptgfile (which 
-         may have been generated above)
+    obsmode -- observation mode to calculate visibilities from a skymodel image
+         (which may have been modified above), an optional component list, 
+         and a pointing file (which also may have been generated above)
        * this parameter takes two possible values:
-       - interferometer (or i)
-       - singledish (or s)
-       * if graphics are on, display the array (like plotants), the uv 
-         coverage, the synthesized (dirty) beam, and ephemeris information
-       * if simulating from component list, you should specify
-         compwidth, the desired bandwidth - 
-         there is not currently a way to specify the spectrum of a component, 
-         so simulations from a componentlist only will be continuum (1 chan)
+         - interferometer (or i)
+         - singledish (or s)
+       * if graphics are on, this observe step will display the array 
+         (similar to plotants), the uv coverage, the synthesized (dirty) beam, 
+         and ephemeris information
+       * if simulating from component list, you should specify "compwidth", 
+         the desired bandwidth.  There is not currently a way to specify the 
+         spectrum of a component, so simulations from a componentlist only 
+         will be continuum (1 chan)
     refdate -- date of simulated observation eg: '2014/05/21'
     hourangle -- hour angle of observation e.g. '-3h'
+       * note that if you don't add a unit, it will assume seconds
     totaltime --- total time of observation e.g '7200s' or if a number without
          units, interpreted as the number of times to repeat the map
     antennalist -- ascii file containing antenna positions.
@@ -467,15 +469,15 @@ mosaic simulation task:
            # zone=19
        * standard arrays are found in your CASA data repository, 
          os.getenv("CASAPATH").split()[0]+"/data/alma/simmos/"        
-       * if "", will not not produce an interferometric MS
-       * a string of the form "alma;0.5arcsec" will be parsed into a full 12m ALMA
-         configuration.  This only works for full ALMA and may fail to find the 
-         standard configuration files on some systems - see casaguides.nrao.edu
-    caldirection -- *NEW* an unresolved calibrator can be observed 
-         interleaved with the science pointings.  This feature is 
-         experimental, so please contact us with any questions.
+       * if "", simobserve will not not produce an interferometric MS
+       * a string of the form "alma;0.5arcsec" will be parsed into a full 
+         12m ALMA configuration.  This only works for full ALMA and may fail 
+         to find the standard configuration files on some systems 
+         - see casaguides.nrao.edu for more information.
+    caldirection -- an unresolved calibrator can be observed 
+         interleaved with the science pointings.  
        * The calibrator is implemented as a point source clean component 
-         with this direction and flux=calflux
+         with this specified direction and flux=calflux
     sdant -- the index of the antenna in the list to use for total 
          power.  defaults to the first antenna on the list. 
     -------------------------------
@@ -534,8 +536,8 @@ mosaic simulation task:
     * simobserve does NOT require a coordinate system in the header. If the
       coordinate information is incomplete, missing, or you would like to
       override it, set the appropriate "in" paremeters.  
-      In the absence of other information, simobserve will assume that the axes of 
-      your input correspond to RA, Dec, and (optionally) frequency and 
+      In the absence of other information, simobserve will assume that the 
+      axes of your input correspond to RA, Dec, and (optionally) frequency and 
       (optionally) Stokes parameter.  
 
     * If you have a proper Coordinate System, simobserve will do its best to
