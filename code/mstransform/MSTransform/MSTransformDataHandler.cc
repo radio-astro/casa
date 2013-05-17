@@ -137,6 +137,7 @@ void MSTransformDataHandler::initialize()
 	useweights_p = "flags";
 	interpolationMethodPar_p = String("linear");	// Options are: nearest, linear, cubic, spline, fftshift
 	phaseCenterPar_p = new casac::variant("");
+	userPhaseCenter_p = False;
 	restFrequency_p = String("");
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
 
@@ -1194,6 +1195,8 @@ void MSTransformDataHandler::initRefFrameTransParams()
     		MSFieldColumns fieldCols(fieldTable);
     		phaseCenter_p = fieldCols.phaseDirMeasCol()(fieldIdForPhaseCenter)(IPosition(1,0));
     	}
+
+    	userPhaseCenter_p = True;
     }
     else
     {
@@ -1205,6 +1208,8 @@ void MSTransformDataHandler::initRefFrameTransParams()
     		MSField fieldTable = outputMs_p->field();
     		MSFieldColumns fieldCols(fieldTable);
     		phaseCenter_p = fieldCols.phaseDirMeasCol()(0)(IPosition(1,0));
+
+    		userPhaseCenter_p = False;
     	}
     	// Parse phase center
     	else
@@ -1215,6 +1220,8 @@ void MSTransformDataHandler::initRefFrameTransParams()
         				<< "Cannot interpret phase center " << phaseCenter << LogIO::POST;
         		return;
         	}
+
+        	userPhaseCenter_p = True;
     	}
     }
 
@@ -1455,7 +1462,6 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 	inputOutputChanFactorMap_p.clear();
 	vector<channelInfo>::iterator inputChanIter;
 	vector<channelInfo>::iterator combChanIter;
-	map<uInt,vector< pair<Int,uInt> > > outputInputChannelMap;
 	for (combChanIter = combinedChannels.begin(); combChanIter != combinedChannels.end(); combChanIter++)
 	{
 		for (inputChanIter = inputChannels.begin(); inputChanIter != inputChannels.end(); inputChanIter++)
@@ -1464,70 +1470,12 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 			if (overlap)
 			{
 				inputChanIter->outChannel = combChanIter->inpChannel;
-				outputInputChannelMap[combChanIter->inpChannel].push_back(std::make_pair(inputChanIter->SPW_id,inputChanIter->inpChannel));
-				inputOutputChanFactorMap_p[inputChanIter->SPW_id][inputChanIter->inpChannel].push_back(std::make_pair(inputChanIter->outChannel,overlap));
+				inputOutputChanFactorMap_p[inputChanIter->outChannel].
+				push_back(channelContribution(inputChanIter->SPW_id,inputChanIter->inpChannel,inputChanIter->outChannel,overlap));
 			}
 		}
 	}
 
-/*
-	// Go trough output-input channel and detect channels with more than one input channel contribution
-	Int spw;
-	uInt channel;
-	Double factor;
-	ostringstream combined_chan_oss;
-	map<uInt,vector< pair<Int,uInt> > >::iterator outputInputChanIter;
-	for (outputInputChanIter = outputInputChannelMap.begin(); outputInputChanIter != outputInputChannelMap.end(); outputInputChanIter++)
-	{
-		if (outputInputChanIter->second.size()>1)
-		{
-			// Calculate normalizing factor
-			Double normFactor = 0;
-			vector< pair<Int,uInt> >::iterator contributingInpChanIier;
-			for (contributingInpChanIier=outputInputChanIter->second.begin();
-					contributingInpChanIier!=outputInputChanIter->second.end();contributingInpChanIier++)
-			{
-				normFactor += inputOutputChanFactorMap_p[contributingInpChanIier->first][contributingInpChanIier->second].second;
-			}
-
-			// Apply normalizing factor
-			for (contributingInpChanIier=outputInputChanIter->second.begin();
-					contributingInpChanIier!=outputInputChanIter->second.end();contributingInpChanIier++)
-			{
-				inputOutputChanFactorMap_p[contributingInpChanIier->first][contributingInpChanIier->second].second /= normFactor;
-			}
-
-			// Print log info about contributing channels
-			uInt inpChanListIndex = 0;
-			combined_chan_oss.str("");
-			combined_chan_oss.clear();
-			combined_chan_oss << "Combined channel " << outputInputChanIter->first << " has contribution from the following input channels: " << endl;
-			for (inpChanListIndex=0;inpChanListIndex<outputInputChanIter->second.size();inpChanListIndex++)
-			{
-				spw = outputInputChanIter->second.at(inpChanListIndex).first;
-				channel = outputInputChanIter->second.at(inpChanListIndex).second;
-				factor = inputOutputChanFactorMap_p[spw][channel].second;
-				combined_chan_oss << "spw=" << spw << " ";
-				combined_chan_oss << "channel=" << channel << " ";
-				combined_chan_oss << "weight=" << factor << endl;
-			}
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << combined_chan_oss.str() << LogIO::POST;
-		}
-		else
-		{
-			combined_chan_oss.str("");
-			combined_chan_oss.clear();
-			combined_chan_oss << "Combined channel " << outputInputChanIter->first << " has contribution only from the following input channel: " << endl;
-			spw = outputInputChanIter->second.at(0).first;
-			channel = outputInputChanIter->second.at(0).second;
-			factor = inputOutputChanFactorMap_p[spw][channel].second;
-			combined_chan_oss << "spw=" << spw << " ";
-			combined_chan_oss << "channel=" << channel << " ";
-			combined_chan_oss << "weight=" << factor << endl;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << combined_chan_oss.str() << LogIO::POST;
-		}
-	}
-*/
     // Create combined SPW structure
     spwInfo combinedSpw;
 	if (channelAverage_p)
@@ -1555,23 +1503,6 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 		combinedSpw = spwInfo(combinedCHAN_FREQ,combinedCHAN_WIDTH);
 	}
 
-	/*
-	// Debugging info
-    ostringstream debug_oss;
-    debug_oss <<  " phaseCenter_p=" << phaseCenter_p << endl;
-    debug_oss <<  " inputReferenceFrame_p=" << inputReferenceFrame_p << endl;
-    debug_oss <<  " observationTime_p=" << observationTime_p << endl;
-    debug_oss <<  " observatoryPosition_p=" << observatoryPosition_p << endl;
-    debug_oss <<  " mode_p=" << mode_p << endl;
-    debug_oss <<  " nChan_p=" << nChan_p << endl;
-    debug_oss <<  " start_p=" << start_p << endl;
-    debug_oss <<  " width_p=" << width_p << endl;
-    debug_oss <<  " restFrequency_p=" << restFrequency_p << endl;
-    debug_oss <<  " outputReferenceFramePar_p=" << outputReferenceFramePar_p << endl;
-    debug_oss <<  " velocityType_p=" << velocityType_p << endl;
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-	<< debug_oss.str() << LogIO::POST;
-	*/
 
 	/// Determine output SPW structure ///////////////////
 
@@ -2521,16 +2452,36 @@ void MSTransformDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
 // -----------------------------------------------------------------------
 void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 {
-	// Phase center is fixed for a given fieldId, which is constant along a chunk of data
-	phaseCenter_p = vb->phaseCenter();
-
 	// NOTE (jagonzal): According to dpetry the difference between times is negligible but he recommends to use TIME
-	Double snapshotTime = vb->time()(0);
-	observationTime_p = MEpoch(Quantity(snapshotTime,"s"), MEpoch::UTC);
+	//                  However it does not cross-validate unless we use timeMeas from the MS columns
+	ScalarMeasColumn<MEpoch> mainTimeMeasCol = selectedInputMsCols_p->timeMeas();
+	observationTime_p = mainTimeMeasCol(vb->rowIds()(0));
 
 	MFrequency::Ref inputFrameRef = MFrequency::Ref(inputReferenceFrame_p,
-													MeasFrame(phaseCenter_p, observatoryPosition_p, observationTime_p));
-	freqTransEngine_p = MFrequency::Convert(MSTransformations::Hz, inputFrameRef, outputReferenceFrame_p);
+													MeasFrame(vb->phaseCenter(), observatoryPosition_p, observationTime_p));
+
+	MFrequency::Ref outputFrameRef;
+	if (userPhaseCenter_p)
+	{
+		outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
+				MeasFrame(phaseCenter_p, observatoryPosition_p, observationTime_p));
+	}
+	else
+	{
+		outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
+				MeasFrame(vb->phaseCenter(), observatoryPosition_p, observationTime_p));
+	}
+
+	/*
+	ostringstream oss;
+	oss.precision(20);
+	oss <<  "inputReferenceFrame_p=" << inputFrameRef << endl;
+	oss <<  "outputReferenceFrame_p=" << outputFrameRef << endl;
+	logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
+	*/
+
+
+	freqTransEngine_p = MFrequency::Convert(MSTransformations::Hz, inputFrameRef, outputFrameRef);
 
 	Int spwIndex = 0;
 	if (not combinespws_p)
@@ -3389,13 +3340,17 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 
 	Int spw = 0;
 	Double weight;
-	uInt outputChannel;
+	uInt inputChannel;
 	Bool inputChanelFlag;
 	Double normalizingFactor;
 	uInt row = 0, baseline_index = 0;
 	vector<uInt> baselineRows;
-	vector< pair<uInt,Double> > contributions;
-	vector< pair<uInt,Double> >::iterator contributionsIter;
+	map<Int, uInt> spwRowMap;
+	map<Int, uInt>::iterator spwRowMapIter;
+	map<Int, uInt> spwFractionCountsMap;
+	Bool unityContributors = False;
+	vector< channelContribution > contributions;
+	vector< channelContribution >::iterator contributionsIter;
 	map < Int , map < uInt, Bool > > removeContributionsMap;
 
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
@@ -3404,7 +3359,7 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 		inputPlaneData = 0.0;
 
 		// Initialize weights plane
-		// inputPlaneWeights = 0.0
+		inputPlaneWeights = 0.0;
 
 		// Initialize normalizing factor plane
 		normalizingFactorPlane = 0.0;
@@ -3412,37 +3367,90 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 		// Fill input plane to benefit from contiguous access to the input cube
 		baselineRows = iter->second;
 
+		// Create spw-row map for this baseline
+		spwRowMap.clear();
 		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
 		{
 			row = *iter;
 			spw = spws(row);
+			spwRowMap[spw]=row;
+		}
 
-			// Initialize output plane flags (used to track the contributions from each SPW)
-			inputPlaneFlags = False;
+		for (uInt outputChannel = 0; outputChannel < numOfCombInputChanMap_p[0]; outputChannel++)
+		{
+			contributions = inputOutputChanFactorMap_p[outputChannel];
 
-			// Fill input planes
-			for (uInt inputChannel = 0; inputChannel < inputDataCube.shape()(1); inputChannel++)
+			for (uInt pol = 0; pol < inputDataCube.shape()(0); pol++)
 			{
-				contributions = inputOutputChanFactorMap_p[spw][inputChannel];
+				spwFractionCountsMap.clear();
+				unityContributors = False;
+
+				// Go through list of contributors for this output channel and polarization and gather flags info
 				for (contributionsIter = contributions.begin(); contributionsIter != contributions.end(); contributionsIter++)
 				{
-					outputChannel = contributionsIter->first;
-					weight = contributionsIter->second;
+					inputChannel = contributionsIter->inpChannel;
+					weight = contributionsIter->weight;
 
-					for (uInt pol = 0; pol < inputDataCube.shape()(0); pol++)
+					// Find row for this input channel
+					spw = contributionsIter->inpSpw;
+					spwRowMapIter = spwRowMap.find(spw);
+					if (spwRowMapIter != spwRowMap.end())
 					{
+						row = spwRowMap[spw];
+
+						// Fill flags info
 						inputChanelFlag = inputFlagCube(pol,inputChannel,row);
-						// If one channel is flag we remove the non-unitary contributions from this SPW to this output channel
-						if ((!inputChanelFlag) and (!inputPlaneFlags(pol,outputChannel) or weight >= 1.0))
+						contributionsIter->flag = inputChanelFlag;
+
+						// Count input channel if it is not flagged and has non-unity overlapping fraction
+						if (weight<1.0)
+						{
+							if (!inputChanelFlag) spwFractionCountsMap[spw] += 1;
+						}
+						// Count if we have valid unity contributors, otherwise we don't discard non-unity contributors
+						else
+						{
+							unityContributors = True;
+						}
+					}
+					else
+					{
+						// Fill flags info
+						contributionsIter->flag = True;
+					}
+				}
+
+				// Remove contributions from SPWs with odd numbers of contributors with non-unity
+				// overlap fraction which could influence the averaging asymmetrically
+				for (contributionsIter = contributions.begin(); contributionsIter != contributions.end(); contributionsIter++)
+				{
+					inputChannel = contributionsIter->inpChannel;
+					weight = contributionsIter->weight;
+					spw = contributionsIter->inpSpw;
+
+					// Find row for this input channel
+					if (!contributionsIter->flag)
+					{
+						// jagonzal: Caution, accessing the map populates it!!!
+						row = spwRowMap[spw];
+
+						if ((spwFractionCountsMap[spw] % 2 == 0) or (weight >= 1.0) or (!unityContributors))
 						{
 							inputPlaneData(pol,outputChannel) += weight*inputDataCube(pol,inputChannel,row);
 							normalizingFactorPlane(pol,outputChannel) += weight;
 							(*this.*fillWeightsPlane_p)(pol,inputChannel,outputChannel,row,inputWeightsCube,inputPlaneWeights,weight);
-						}
-						else
-						{
-							inputPlaneFlags(pol,outputChannel) = True;
 
+							/*
+							cout 	<< "outChan=" << outputChannel
+									<< " inpChan=" << inputChannel
+									<< " spw=" << spw
+									<< " fraction count=" << spwFractionCountsMap[spw]
+									<< " unity contributors=" << unityContributors
+									<< " weight=" << weight
+									<< " value=" << inputDataCube(pol,inputChannel,row)
+									<< " flag=" << inputFlagCube(pol,inputChannel,row)
+									<< " OK" << endl;
+							*/
 						}
 					}
 				}
@@ -3456,12 +3464,17 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 			for (uInt pol = 0; pol < nInputCorrelations; pol++)
 			{
 				normalizingFactor = normalizingFactorPlane(pol,outputChannel);
-				if (normalizingFactor > 0)
+				if (normalizingFactor >= 1)
 				{
 					inputPlaneData(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
 
 					// Normalize weights plane
-					// inputPlaneWeights(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
+					//inputPlaneWeights(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
+				}
+				else if (normalizingFactor > 0)
+				{
+					inputPlaneData(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
+					inputPlaneFlags(pol,outputChannel) = True;
 				}
 				else
 				{
@@ -4175,6 +4188,19 @@ template <class T> void MSTransformDataHandler::regrid(	Int inputSpw,
     											False, // A good data point has its flag set to False
     											False // If False extrapolated data points are set flagged
 						    					);
+
+    /*
+	ostringstream oss;
+	oss.precision(20);
+	oss << "inputDataStripe= " << inputDataStripe << endl;
+	oss << "inputFlagsStripe= " << inputFlagsStripe << endl;
+	oss << "inputFreq= " << inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux << endl;
+	oss << "outputFreq= " << inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ << endl;
+	oss << "outputDataStripe= " << outputDataStripe << endl;
+	oss << "outputFlagsStripe= " << outputFlagsStripe << endl;
+	logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
+	*/
+
 	return;
 }
 
