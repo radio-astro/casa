@@ -19,7 +19,7 @@ class FlagdataSetterInputs(basetask.StandardInputs):
     """    
 
     def __init__(self, context, table, vis=None, output_dir=None, 
-      flagcmds=None, inpfile=None, append=None, reason=None): 
+      flagcmds=None, inpfile=None, reason=None): 
         """
         Initialise the Inputs, initialising any property values to those given
         here.
@@ -82,11 +82,6 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
     """
     """
     Inputs = FlagdataSetterInputs
-
-    # not sure why this is required, but is needed to prevent multiple
-    # executions of this task when vis is a list.
-    def is_multi_vis_task(self):
-        return True
 
     def prepare(self):
         """
@@ -155,11 +150,7 @@ class FlagdataSetter(basetask.StandardTaskTemplate):
                 inputs.reason = flag.reason
         else:
             # assume inpfile is a file and write the flagcmds to it
-            if inputs.append:
-                mode = 'a'
-            else:
-                mode = 'w'
-            with open(inputs.inpfile, mode) as stream:
+            with open(inputs.inpfile, 'a') as stream:
                 for flag in flags:
                     stream.write('%s\n' % flag.flagcmd)
                     inputs.reason = flag.reason
