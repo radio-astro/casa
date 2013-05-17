@@ -2393,13 +2393,14 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  MFrequency::Convert freqTrans2(unit, fromFrame, outFrameV[iDone]);
 
 	  MDoppler radVelCorr; // no correction
-	  Bool radVelSignificant = False; // is the radial velocity large enough to warrant a shift?
+	  Bool radVelSignificant = False;
 
 	  // prepare correction for radial velocity if requested and possible
 	  if(doRadVelCorr && fldCols.needInterTime(theFieldId)){
-	    MRadialVelocity mrv = fldCols.radVelMeas(theFieldId, mainTimesV(mainTabRow));
-	    radVelCorr = mrv.toDoppler();
-	    if(fabs(mrv.get("m/s").getValue())>1E-2){
+	    MRadialVelocity mRV = fldCols.radVelMeas(theFieldId, mainTimesV(mainTabRow));
+	    Quantity mrv = mRV.get("m/s");
+	    radVelCorr = MDoppler(-mrv); // NOTE: opposite sign to achieve correction
+	    if(fabs(mrv.getValue())>1E-6){
 	      radVelSignificant = True;
 	    }
 	  } 
@@ -4223,8 +4224,8 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 			    const String& restfreq, 
 			    const String& outframe,
 			    const String& veltype,
-			    Bool verbose,
-			    MRadialVelocity mRV // only used for outframe=="OBJECT"
+			    const Bool verbose,
+			    const MRadialVelocity mRV // only used for outframe=="OBJECT"
 			    ){
 
     Vector<Double> newChanLoBound; 
@@ -4345,9 +4346,16 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
       Bool radVelSignificant = False; // is the radial velocity large enough to warrant a shift?
       // prepare correction for radial velocity if requested and possible
       if(doRadVelCorr){
-	radVelCorr = mRV.toDoppler();
-	if(fabs(mRV.get("m/s").getValue())>1E-2){
+	Quantity mrv = mRV.get("m/s"); // (const)
+	radVelCorr = MDoppler(-mrv); // NOTE: opposite sign to achieve correction!
+	Double mRVVal = mrv.getValue();
+	if(fabs(mRVVal)>1E-6){
 	  radVelSignificant = True;
+	}
+	if(verbose){
+	  os << LogIO::NORMAL
+	     << "Note: The given additional radial velocity of " << mRVVal << " m/s will be taken into account."
+	     << LogIO::POST;
 	}
       } 
 
@@ -4775,11 +4783,15 @@ Bool SubMS::fillAllTables(const Vector<MS::PredefinedColumns>& datacols)
 	  Bool radVelSignificant = False; // is the radial velocity large enough to warrant a shift?
 	  // prepare correction for radial velocity if requested and possible
 	  if(doRadVelCorr && FIELDCols.needInterTime(theFieldIdToUse)){
-	    MRadialVelocity mrv = FIELDCols.radVelMeas(theFieldIdToUse, mainCols.time()(mainTabRow));
-	    radVelCorr = mrv.toDoppler();
-	    if(fabs(mrv.get("m/s").getValue())>1E-2){
+	    MRadialVelocity mRV = FIELDCols.radVelMeas(theFieldIdToUse, mainCols.time()(mainTabRow));
+	    Quantity mrv = mRV.get("m/s");
+	    radVelCorr = MDoppler(-mrv); // NOTE: opposite sign to achieve correction
+	    if(fabs(mrv.getValue())>1E-6){
 	      radVelSignificant = True;
 	    }
+	    os << LogIO::NORMAL
+	       << "Note: The geocentric radial velocity from the ephemeris for field " << theFieldIdToUse << " will be taken into account."
+	       << LogIO::POST;
 	  } 
 
 	  // also create the reference for storage in the "Done" table
