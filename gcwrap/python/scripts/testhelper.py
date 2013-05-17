@@ -84,6 +84,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
                                 print a[i]
                                 print b[i]
                                 differs = True
+                                break
                         elif (type(a[i])==int):
                             if (abs(a[i]-b[i]) > 0):
                                 print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
@@ -91,6 +92,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
                                 print a[i]
                                 print b[i]
                                 differs = True
+                                break
                         elif (type(a[i])==str):
                             if not (a[i]==b[i]):
                                 print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
@@ -98,6 +100,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
                                 print a[i]
                                 print b[i]
                                 differs = True
+                                break
                         elif (type(a[i])==list or type(a[i])==np.ndarray):
                             for j in range(0,len(a[i])):
                                 if (type(a[i][j])==float or type(a[i][j])==int):
@@ -107,6 +110,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
                                         print a[i][j]
                                         print b[i][j]
                                         differs = True
+                                        break
                                 elif (type(a[i][j])==list or type(a[i][j])==np.ndarray):
                                     for k in range(0,len(a[i][j])):
                                         if (abs(a[i][j][k]-b[i][j][k]) > tolerance*abs(a[i][j][k]+b[i][j][k])):
@@ -115,6 +119,7 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
                                             print a[i][j][k]
                                             print b[i][j][k]
                                             differs = True
+                                            break
                     if differs:
                         rval = False
                         break

@@ -221,6 +221,12 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
     The timesort function permits you to sort the MS main table by time in
     ascending order. This can be useful after a concatenation. 
+    
+  \medskip\noindent\textbf{Sorting the main table by a custom set of columns}
+
+    The sort function permits you to sort the MS main table by a custom
+    set of columns in ascending order. This can be useful to compare tables
+    generated in different ways (e.g.: cvel and mastransform)
    
 
   \medskip\noindent\textbf{Splitting}
@@ -3038,6 +3044,49 @@ for i in range(len(tcoord)):
     This example sorts the main table of 3C273XC1.MS by time.
     The original MS is overwritten by the sorted one.
   </example>
+</method>
+
+  <method type="function" name="sort">
+  <shortdescription>Sort the main table of an MS using a custom set of columns</shortdescription>
+   
+  <keyword>sort</keyword>
+  <input>
+    
+     <param type="string" direction="in" name="newmsname">
+     <description> Name of the output measurement set (default: overwrite original)</description>
+     <value></value>
+     </param>
+       
+     <param type="stringArray" direction="in" name="columns">
+     <description>Vector of column names (case sensitive).</description>
+     <value></value>
+     </param>
+    
+  </input>  
+  
+  <returns type="bool"/>
+
+  <description>
+    This function sorts the main table of the measurement set by the contents
+    of the input set of columns in ascending order and writes a copy of the MS 
+    with the sorted main table into newmsfile.
+
+    If no newmsname is given, a sorted copy of the MS is written into a new MS under the name
+    x.sorted (where x is the name of the original MS). The original MS is then closed and deleted.
+    The new MS is renamed to the name of the original MS and then reopened.
+  </description>
+  
+  <example>
+    
+      
+      ms.open("3C273XC1.MS", nomodify=False)
+      ms.sort(['ANTENNA1','ANTENNA2'])
+      ms.done()
+    
+    This example sorts the main table of 3C273XC1.MS by ANTENNA1 and then ANTENNA2.
+    The original MS is overwritten by the sorted one.
+  </example>
+  
 </method>
  
 <method type="function" name="contsub">
