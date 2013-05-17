@@ -209,7 +209,7 @@ class WvrgcalflagInputs(basetask.StandardInputs):
     @property
     def fhi_limit(self):
         if self._fhi_limit is None:
-            return 5
+            return 10
         return self._fhi_limit
 
     @fhi_limit.setter
