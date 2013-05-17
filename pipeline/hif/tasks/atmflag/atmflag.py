@@ -20,21 +20,10 @@ class AtmflagInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None,
       intent=None, flag_minabs=None, fmin_limit=None,
-      flag_nmedian=None, fnm_limit=None,
-      flagcmdfile=None, append=None):
+      flag_nmedian=None, fnm_limit=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
-
-    @property
-    def append(self):
-        if self._append is None:
-            return False
-        return self._append
-
-    @append.setter
-    def append(self, value):
-        self._append = value
 
     @property
     def intent(self):
@@ -86,16 +75,6 @@ class AtmflagInputs(basetask.StandardInputs):
     def fnm_limit(self, value):
         self._fnm_limit = value
 
-    @property
-    def flagcmdfile(self):
-        if self._flagcmdfile is None:
-            return '%s_flagcmds.txt' % os.path.splitext(self.vis)[0]
-        return self._flagcmdfilefile
-
-    @flagcmdfile.setter
-    def flagcmdfile(self, value):
-        self._flagcmdfile = value
-
 
 class Atmflag(basetask.StandardTaskTemplate):
     Inputs = AtmflagInputs
@@ -113,7 +92,7 @@ class Atmflag(basetask.StandardTaskTemplate):
         # Construct the task that will set any flags raised in the
         # underlying data.
         flagsetterinputs = FlagdataSetter.Inputs(context=inputs.context,
-          table=inputs.vis, inpfile=inputs.flagcmdfile, append=inputs.append)
+          vis=inputs.vis, table=inputs.vis, inpfile=[])
         flagsettertask = FlagdataSetter(flagsetterinputs)
 
 	# Translate the input flagging parameters to a more compact
