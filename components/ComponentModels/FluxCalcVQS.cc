@@ -45,7 +45,7 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 FluxCalcVQS::FluxCalcVQS() :
-  srcEnum_p(FluxCalcVQS::UNKNOWN_SOURCE),
+  srcEnum_p(FluxStdSrcs::UNKNOWN_SOURCE),
   istimevar_p(false)
 { }
 
