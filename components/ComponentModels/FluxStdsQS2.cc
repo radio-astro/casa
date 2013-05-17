@@ -33,7 +33,7 @@
 //#include <casa/Logging/LogIO.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
+namespace NSTDS { //# NAMESPACE NSTDS - BEGIN
 // Each of these c'tors defines the polynomial coefficients for the
 // log10(fluxDensity) = polynomial(log10(frequency)) calculations
 // and optionally additional coefficients for estimating the flux density
@@ -236,4 +236,5 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
   return found;
 }
 
+} //# NAMESPACE NSTD - END 
 } //# NAMESPACE CASA - END
