@@ -33,7 +33,9 @@
 #include <components/ComponentModels/FluxCalcVQS.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
-
+namespace NSTDS { //# NAMESPACE NSTDS "new standards"  - BEGIN
+                  //#   once old code (FluxCalcQS etc) deleted this can be
+                  //#   removed.
 // <summary> 
 // FluxStdBaars: The Baars flux standard.
 // </summary>
@@ -265,7 +267,7 @@ private:
   Bool timevar_p;
 };
 
-
+} //# NAMESPACE NSTDS -END
 } //# NAMESPACE CASA - END
 
 #endif /* COMPONENTS_FLUXSTDSQS2_H */

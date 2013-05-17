@@ -160,17 +160,17 @@ Bool FluxStandard::compute(const String& sourceName,
   CountedPtr<FluxCalcVQS> fluxStdPtr;
   Bool timeVariable(false);
   if(itsFluxScale == BAARS)
-    fluxStdPtr = new FluxStdBaars;
+    fluxStdPtr = new NSTDS::FluxStdBaars;
   else if(itsFluxScale == PERLEY_90)
-    fluxStdPtr = new FluxStdPerley90;
+    fluxStdPtr = new NSTDS::FluxStdPerley90;
   else if(itsFluxScale == PERLEY_TAYLOR_95)
-    fluxStdPtr = new FluxStdPerleyTaylor95;
+    fluxStdPtr = new NSTDS::FluxStdPerleyTaylor95;
   else if(itsFluxScale == PERLEY_TAYLOR_99)
-    fluxStdPtr = new FluxStdPerleyTaylor99;
+    fluxStdPtr = new NSTDS::FluxStdPerleyTaylor99;
   else if(itsFluxScale == PERLEY_BUTLER_2010)
-    fluxStdPtr = new FluxStdPerleyButler2010;
+    fluxStdPtr = new NSTDS::FluxStdPerleyButler2010;
   else if(itsFluxScale == PERLEY_BUTLER_2013) {
-    fluxStdPtr = new FluxStdPerleyButler2013;
+    fluxStdPtr = new NSTDS::FluxStdPerleyButler2013;
     timeVariable=true; // to read from the table 
     if (interpmethod_p=="") {
       ostringstream oss;
