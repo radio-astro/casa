@@ -22,9 +22,6 @@ class DataTableReader(object):
     def get_datatable(self):
         return self.datatable
 
-    def export_datatable(self, minimal=False):
-        self.datatable.exportdata(minimal=minimal)
-
     def execute(self, name):
         Rad2Deg = 180. / 3.141592653
         
