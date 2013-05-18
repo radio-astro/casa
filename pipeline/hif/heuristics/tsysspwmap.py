@@ -76,7 +76,7 @@ def trimSpwmap(spwMap) :
     return spwMap[:i]
         
         
-def tsysspwmap(vis,tsystable,trim=True,relax=False, tsysChanTol=0):
+def tsysspwmap(vis,tsystable,trim=True,relax=False, tsysChanTol=1):
     """
     Generate default spwmap for ALMA Tsys, including TDM->FDM associations
     Input:
