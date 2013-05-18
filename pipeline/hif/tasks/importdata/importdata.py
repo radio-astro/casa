@@ -220,15 +220,19 @@ class ImportData(basetask.StandardTaskTemplate):
                                                         ms.basename))
             ms.session = inputs.session
 
-        setjy_results = get_setjy_results(observing_run.measurement_sets)
-
-        results = ImportDataResults(observing_run.measurement_sets, 
+	if os.path.exists(os.path.join(inputs.context.output_dir, 'flux.csv')):
+            setjy_results = import_flux(inputs.context.output_dir, observing_run)
+            results = ImportDataResults(observing_run.measurement_sets,
+	        setjy_results) 
+	else:
+            setjy_results = get_setjy_results(observing_run.measurement_sets)
+            results = ImportDataResults(observing_run.measurement_sets, 
                                     setjy_results)
     
-        # write flux results to a CSV. I'm not sure what these values will be
-        # used for now as we can import all flux values into the context with
-        # no ill effects.
-        export_flux_from_result(setjy_results, inputs.context)
+            # write flux results to a CSV. I'm not sure what these values will be
+            # used for now as we can import all flux values into the context with
+            # no ill effects.
+            export_flux_from_result(setjy_results, inputs.context)
 
         return results
     
@@ -298,8 +302,6 @@ def get_setjy_results(mses):
             m = [m for m in measurements if m.spw in science_spws]
             
             # import flux values for all fields and intents so that we can 
-            # compare them to the fluxscale-derived values later in the run
-#            for field in [f for f in source.fields if 'AMPLITUDE' in f.intents]:
             for field in source.fields:
                 result.measurements[field.id].extend(m)
         
@@ -465,12 +467,12 @@ def export_flux_from_result(results, context, filename='flux.csv'):
         LOG.info('Exported %s flux measurements to %s' % (counter, abspath))
 
 
-def import_flux(context, filename=None):
+def import_flux(output_dir, observing_run, filename=None):
     '''
     Read flux densities from a CSV file and import them into the context.
     ''' 
     if not filename:
-        filename = os.path.join(context.output_dir, 'flux.csv')
+        filename = os.path.join(output_dir, 'flux.csv')
 
     with open(filename, 'rt') as f:
         reader = csv.reader(f)
@@ -482,7 +484,8 @@ def import_flux(context, filename=None):
         for row in reader:
             (ms_name, field_id, spw_id, I, Q, U, V) = row
             spw_id = int(spw_id)
-            ms = context.observing_run.get_ms(ms_name)
+            #ms = context.observing_run.get_ms(os.path.join(context.output_dir, ms_name))
+            ms = observing_run.get_ms(ms_name)
             fields = ms.get_fields(field_id)
             spw = ms.get_spectral_window(spw_id)
             measurement = domain.FluxMeasurement(spw, I, Q, U, V)
@@ -501,3 +504,19 @@ def import_flux(context, filename=None):
                 counter += 1
                 
         LOG.info('Imported %s flux measurements from %s' % (counter, filename))
+
+	# Convert into a set of results for the web log
+	results = []
+	for ms in observing_run.measurement_sets:
+	    science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
+	    result = commonfluxresults.FluxCalibrationResults(ms.name)
+	    for field in ms.get_fields():
+		if field.flux_densities is None:
+		    continue
+	        for flux in field.flux_densities:
+	            if flux.spw.id not in science_spw_ids:
+		       continue
+		    result.measurements[field.name].append(flux)
+	    results.append(result)
+        return results
+	    
