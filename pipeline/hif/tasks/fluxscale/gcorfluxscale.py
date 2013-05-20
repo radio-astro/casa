@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-
+import os
 import os.path
 
 import pipeline.infrastructure as infrastructure
@@ -200,13 +200,16 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if check_ok:
             # Schedule a fluxscale job using this caltable. This is the result
             # that contains the flux measurements for the context.
+
+            # We need to write the fluxscale-derived flux densities to a file,
+            # which can then be used as input for the subsequent setjy task.
+            # This is the name of that file.
+            reffile = os.path.join(inputs.context.output_dir,
+                                   'fluxscale_s%s.csv' % inputs.context.stage)
+
             try:
                 fluxscale_result = self._do_fluxscale(caltable, 
                                                       refspwmap=refspwmap)
-
-                # write the fluxscale-derived flux densities to a file
-                reffile = os.path.join(inputs.context.output_dir,
-                                    'fluxscale_s%s.csv' % inputs.context.stage)
 
                 importdata.importdata.export_flux_from_result(fluxscale_result,
                                                               inputs.context,
@@ -222,6 +225,11 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
                 LOG.error('Unable to complete flux scaling operation')
                 LOG.exception(e)
                 return result
+
+            finally:
+                # clean up temporary file
+                if os.path.exists(reffile):
+                    os.remove(reffile)
 
         else:
             LOG.error('Unable to complete flux scaling operation')
