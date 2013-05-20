@@ -530,7 +530,7 @@ class DataTableColumnMaskList( RWDataTableColumn ):
         if sum(v[0]) < 0:
             return []
         else:
-            return list(v)
+            return v.tolist() 
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
         """
