@@ -31,20 +31,18 @@ class QMouseEvent;
 namespace casa {
 
 	class CanvasMode;
+	class QtCanvas;
 
 	class CanvasModeFactory {
 	public:
-
-		static CanvasMode* getModeForEvent( QMouseEvent* event );
-		static CanvasMode* getMode( CanvasMode::ModeIndex type );
+		CanvasModeFactory(QtCanvas* receiver);
+		CanvasMode* getModeForEvent( QMouseEvent* event );
+		CanvasMode* getMode( CanvasMode::ModeIndex type );
 		virtual ~CanvasModeFactory();
 
 
 	private:
 		QList<CanvasMode*> canvasModes;
-
-		CanvasModeFactory();
-		static CanvasModeFactory fact;
 	};
 
 } /* namespace casa */

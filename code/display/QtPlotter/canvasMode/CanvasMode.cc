@@ -27,8 +27,6 @@
 
 namespace casa {
 
-	QtCanvas* CanvasMode::receiver = NULL;
-
 	void CanvasMode::setReceiver( QtCanvas* canvas ) {
 		receiver = canvas;
 	}
@@ -38,7 +36,7 @@ namespace casa {
 	}
 
 	CanvasMode::CanvasMode(Qt::CursorShape modeCursor):
-		cursor( modeCursor) {
+		cursor( modeCursor), receiver(NULL) {
 	}
 	void CanvasMode::mousePressEvent( QMouseEvent* event ) {
 		if ( receiver != NULL ) {

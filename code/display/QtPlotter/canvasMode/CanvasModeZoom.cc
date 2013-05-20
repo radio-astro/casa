@@ -53,6 +53,10 @@ namespace casa {
 		receiver->endZoomRect( event );
 	}
 
+	QString CanvasModeZoom::toString() const {
+		return "Zoom";
+	}
+
 	CanvasModeZoom::~CanvasModeZoom() {
 		// TODO Auto-generated destructor stub
 	}

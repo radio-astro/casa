@@ -30,18 +30,21 @@
 #include <display/QtPlotter/canvasMode/CanvasModeContextMenu.h>
 #include <display/QtPlotter/canvasMode/CanvasModeRangeSelection.h>
 #include <display/QtPlotter/canvasMode/CanvasModeZoom.h>
+#include <display/QtPlotter/QtCanvas.qo.h>
 #include <QMouseEvent>
 #include <QDebug>
 namespace casa {
 
-	CanvasModeFactory CanvasModeFactory::fact;
 
-	CanvasModeFactory::CanvasModeFactory() {
+	CanvasModeFactory::CanvasModeFactory(QtCanvas* receiver ) {
 		canvasModes.append( new CanvasModeAnnotation() );
 		canvasModes.append( new CanvasModeChannel() );
 		canvasModes.append( new CanvasModeContextMenu() );
 		canvasModes.append( new CanvasModeRangeSelection() );
 		canvasModes.append( new CanvasModeZoom() );
+		for ( int i = 0; i < canvasModes.size(); i++ ){
+			canvasModes[i]->setReceiver( receiver );
+		}
 	}
 
 	CanvasMode* CanvasModeFactory::getModeForEvent( QMouseEvent* event ) {
@@ -53,19 +56,19 @@ namespace casa {
 		CanvasMode* canvasMode = NULL;
 		if (event->button() == Qt::LeftButton) {
 			if ( event->modifiers() == Qt::ShiftModifier ) {
-				canvasMode = fact.canvasModes[CanvasMode::MODE_RANGESELECTION];
+				canvasMode = canvasModes[CanvasMode::MODE_RANGESELECTION];
 			} else if ( event->modifiers() == control_modifier ) {
-				canvasMode = fact.canvasModes[CanvasMode::MODE_ANNOTATION];
+				canvasMode = canvasModes[CanvasMode::MODE_ANNOTATION];
 			} else {
-				canvasMode = fact.canvasModes[CanvasMode::MODE_ZOOM];
+				canvasMode = canvasModes[CanvasMode::MODE_ZOOM];
 			}
 		} else if ( event->button() == Qt::RightButton ) {
 			if ( event->modifiers() == Qt::ShiftModifier ) {
 
 			} else if ( event->modifiers() == control_modifier ) {
-				canvasMode = fact.canvasModes[CanvasMode::MODE_CHANNEL];
+				canvasMode = canvasModes[CanvasMode::MODE_CHANNEL];
 			} else {
-				canvasMode = fact.canvasModes[CanvasMode::MODE_CONTEXTMENU];
+				canvasMode = canvasModes[CanvasMode::MODE_CONTEXTMENU];
 			}
 		} else {
 			qDebug() << "Unrecognized mode button"<<event->button();
@@ -74,7 +77,7 @@ namespace casa {
 	}
 
 	CanvasMode* CanvasModeFactory::getMode( CanvasMode::ModeIndex mode ) {
-		return fact.canvasModes[mode];
+		return canvasModes[mode];
 	}
 
 	CanvasModeFactory::~CanvasModeFactory() {

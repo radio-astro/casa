@@ -87,6 +87,10 @@ namespace casa {
 		dragEnabled = false;
 	}
 
+	QString CanvasModeAnnotation::toString() const{
+		return "Annotation";
+	}
+
 	CanvasModeAnnotation::~CanvasModeAnnotation() {
 		// TODO Auto-generated destructor stub
 	}

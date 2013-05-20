@@ -63,6 +63,7 @@
 namespace casa {
 
 	class Annotation;
+	class CanvasModeFactory;
 
 #define QT_DIAMOND_SIZE 5
 
@@ -545,6 +546,7 @@ namespace casa {
 
 		Annotation* getActiveAnnotation() const;
 		CanvasMode* currentMode;
+		CanvasModeFactory* modeFactory;
 	};
 
 }
