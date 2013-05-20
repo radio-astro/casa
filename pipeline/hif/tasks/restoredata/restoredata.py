@@ -32,6 +32,8 @@ import shutil
 import fnmatch
 import types
 import string
+import shutil
+import glob
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -79,8 +81,8 @@ class RestoreDataInputs(basetask.StandardInputs):
 	a string or list of strings containing the ASDM(s) to be restored.
      """	
 
-    def __init__(self, context, products_dir=None, rawdata_dir=None,
-        output_dir=None, session=None, vis=None):
+    def __init__(self, context, copytoraw=None, products_dir=None,
+        rawdata_dir=None, output_dir=None, session=None, vis=None):
 
 	"""
 	Initialise the Inputs, initialising any property values to those given
@@ -88,6 +90,8 @@ class RestoreDataInputs(basetask.StandardInputs):
 		
 	:param context: the pipeline Context state object
 	:type context: :class:`~pipeline.infrastructure.launcher.Context`
+	:param copytoraw: copy the required data products from products_dir to
+	 rawdata_dir
 	:param products_dir: the directory of archived pipeline products
 	:type products_dir: string
 	:param rawdata_dir: the raw data directory for ASDM(s) and products
@@ -105,6 +109,17 @@ class RestoreDataInputs(basetask.StandardInputs):
 
     # Session information  may come from the user or the pipeline processing
     # request.
+
+    @property
+    def copytoraw(self):
+        if self._copytoraw is None:
+            self._copytoraw = False
+            return self._copytoraw
+        return self._copytoraw
+
+    @copytoraw.setter
+    def copytoraw(self, value):
+        self._copytoraw = value
 
     @property
     def products_dir(self):
@@ -174,8 +189,11 @@ class RestoreDataResults(basetask.Results):
         for ms in context.observing_run.measurement_sets:
             self.mses.append(ms)
         if self.applycal_results:
-            for result in self.applycal_results:
-                result.merge_with_context(context)
+            if type(self.applycal_results) is types.ListType:
+                for result in self.applycal_results:
+                    result.merge_with_context(context)
+	    else:
+                self.applycal_results.merge_with_context(context)
 
     def __repr__(self):
         return 'RestoreDataResults:\n\t{0}'.format(
@@ -231,17 +249,45 @@ class RestoreData(basetask.StandardTaskTemplate):
 	#   Download ASDMs from the archive or products_dir to rawdata_dir.
 	#   TBD: Currently assumed done somehow
 
-	# Convert ASDMSre assumed to be on disk in rawdata_dir. After this step
+	# Download flag versions
+	#   Download from the archive or products_dir to rawdata_dir.
+	if inputs.copytoraw:
+	    inflagfiles = glob.glob(os.path.join(inputs.products_dir, \
+	        '*.flagversions.tar.gz'))
+	    for flagfile in inflagfiles:
+	        LOG.info('Copying %s to %s' % (flagfile, inputs.rawdata_dir))
+	        shutil.copy (flagfile, os.path.join(inputs.rawdata_dir,
+		    os.path.basename(flagfile)))
+
+	# Download calibration tables
+	#   Download calibration files from the archive or products_dir to
+	# rawdata_dir.
+	if inputs.copytoraw:
+	    incaltables = glob.glob(os.path.join(inputs.products_dir, \
+	        '*.caltables.tar.gz'))
+	    for caltable in incaltables:
+	        LOG.info('Copying %s to %s' % (caltable, inputs.rawdata_dir))
+	        shutil.copy (caltable, os.path.join(inputs.rawdata_dir,
+		    os.path.basename(caltable)))
+
+	# Download calibration apply lists
+	#   Download from the archive or products_dir to rawdata_dir.
+	#   TBD: Currently assumed done somehow
+	if inputs.copytoraw:
+	    inapplycals = glob.glob(os.path.join(inputs.products_dir, \
+	        '*.calapply.txt'))
+	    for applycal in inapplycals:
+	        LOG.info('Copying %s to %s' % (applycal, inputs.rawdata_dir))
+	        shutil.copy (applycal, os.path.join(inputs.rawdata_dir,
+		    os.path.basename(applycal)))
+
+	# Convert ASDMS assumed to be on disk in rawdata_dir. After this step
 	# has been completed the MS and MS.flagversions directories will exist
 	# and MS,flagversions will contain a copy of the original MS flags,
 	# Flags.Original.
 	#    TBD: Add error handling
 	import_results = self._do_importasdm(sessionlist=sessionlist,
 	    vislist=vislist)
-
-	# Download flag versions
-	#   Download from the archive or products_dir to rawdata_dir.
-	#   TBD: Currently assumed done somehow
 	
 	# Restore final MS.flagversions and flags
 	flag_version_name = 'Pipeline_Final'
@@ -252,18 +298,9 @@ class RestoreData(basetask.StandardTaskTemplate):
 	# each session.
 	session_names, session_vislists= self._get_sessions()
 
-	# Download calibration tables
-	#   Download calibration files from the archive or products_dir to
-	# rawdata_dir.
-	#   TBD: Currently assumed done somehow
-
 	# Restore calibration tables
 	self._do_restore_caltables(session_names=session_names,
 	    session_vislists=session_vislists)
-
-	# Download calibration apply lists
-	#   Download from the archive or products_dir to rawdata_dir.
-	#   TBD: Currently assumed done somehow
 
 	# Import calibration apply lists
 	self._do_restore_calstate()
