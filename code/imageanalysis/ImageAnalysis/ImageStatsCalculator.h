@@ -71,19 +71,28 @@ public:
 
     inline String getClass() const {return _class;}
 
+    // I suspect this is not useful any longer
     inline void setPlotStats(const Vector<String>& ps) {_plotStats.assign(ps); }
 
+    // Set range of pixel values to include in the calculation. Should be a two element
+    // Vector
     inline void setIncludePix(const Vector<Float>& inc) {_includepix.assign(inc);}
 
+    // Set range of pixel values to exclude from the calculation. Should be a two element
+    // Vector
     inline void setExcludePix(const Vector<Float>& exc) {_excludepix.assign(exc);}
 
+    // I doubt this is useful any longer
     inline void setPlotter(const String& p) {_plotter = p;}
 
+    // I doubt this is useful any longer
     inline void setNXNY(const Int x, const Int y) {
     	_nx = x;
     	_ny = y;
     }
 
+    // List stats to logger? If you want no logging you should set this to False in addition to
+    // calling setVerbosity()
     inline void setList(const Bool l) {_list = l;}
 
     inline void setForce(const Bool f) {_force = f;}
