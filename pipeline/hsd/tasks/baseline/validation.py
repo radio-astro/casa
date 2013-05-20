@@ -55,7 +55,12 @@ class ValidateLineSinglePointing(object):
                 LOG.debug('DataTable = %s, DetectSignal = %s, OldFlag = %s' % (mask_list, DetectSignal[0][2], no_change))
                 if mask_list == DetectSignal[0][2]:
                     if type(no_change) != int:
-                        self.datatable.putcell('NOCHANGE',row,ITER - 1)
+                        # 2013/05/17 TN
+                        # Put ITER itself instead to subtract 1 since
+                        # iteration counter is incremented *after* the
+                        # baseline subtraction in refactorred code.
+                        #self.datatable.putcell('NOCHANGE',row,ITER - 1)
+                        self.datatable.putcell('NOCHANGE',row,ITER)
                 else:
                     self.datatable.putcell('MASKLIST',row,DetectSignal[0][2])
                     self.datatable.putcell('NOCHANGE',row,False)
@@ -293,15 +298,19 @@ class ValidateLineRaster(object):
             if tMASKLIST[0][0] < 0:
                 tMASKLIST = []
             else:
-                tMASKLIST=list(tMASKLIST)
+                tMASKLIST=tMASKLIST.tolist()#list(tMASKLIST)
             tNOCHANGE = self.datatable.tb2.getcell('NOCHANGE',row)
             #LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, RealSignal[row][2]))
             LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, signal))
             if tMASKLIST == signal:
                 #if type(tNOCHANGE) != int:
                 if tNOCHANGE < 0:
-                    #self.datatable.putcell('NOCHANGE',row,ITER - 1)
-                    self.datatable.tb2.putcell('NOCHANGE',row,ITER - 1)
+                    # 2013/05/17 TN
+                    # Put ITER itself instead to subtract 1 since iteration
+                    # counter is incremented *after* baseline subtraction
+                    # in refactorred code.
+                    #self.datatable.tb2.putcell('NOCHANGE',row,ITER - 1)
+                    self.datatable.tb2.putcell('NOCHANGE', row, ITER)
             else:
                 #self.datatable.putcell('NOCHANGE',row,False)
                 #self.datatable.tb2.putcell('MASKLIST',row,numpy.array(RealSignal[row][2]))

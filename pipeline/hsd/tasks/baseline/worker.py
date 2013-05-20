@@ -23,7 +23,7 @@ class SDBaselineWorker(object):
     def __init__(self, context):
         self.context = context
 
-    def execute(self, datatable, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern, detected_lines):
+    def execute(self, datatable, iteration, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern, detected_lines):
 
         # filename for input/output
         filenames_out = [self.context.observing_run[idx].baselined_name
@@ -63,7 +63,6 @@ class SDBaselineWorker(object):
 
         # line validation
         line_validator = ValidateLine(datatable)
-        iteration = 1
         ifnos = numpy.array(datatable.getcol('IF'))
         polnos = numpy.array(datatable.getcol('POL'))
         srctypes = numpy.array(datatable.getcol('SRCTYPE'))

@@ -41,25 +41,32 @@ class SDBaselineResults(common.SingleDishResults):
     def merge_with_context(self, context):
         super(SDBaselineResults, self).merge_with_context(context)
 
-        reduction_group = context.observing_run.reduction_group
+        # replace and export datatable to merge updated data with context
+        datatable = context.observing_run.datatable_instance
+        self.outcome['datatable'].exportdata(minimal=True)
 
+        context.datatable = self.outcome['datatable']
+        
         # increment iteration counter
         # register detected lines to reduction group member
-        spw = self.outcome['spw']
-        antenna = self.outcome['index']
-        pols = self.outcome['pols']
-        lines = self.outcome['lines']
-        group_id = -1
-        for (idx,desc) in reduction_group.items():
-            if desc[0].spw == spw:
-                group_id = idx
-                break
-        if group_id >= 0:
-            reduction_group[group_id].iter_countup(antenna, spw, pols)
-            reduction_group[group_id].add_linelist(lines, antenna, spw, pols)
+        reduction_group = context.observing_run.reduction_group
+        for b in self.outcome['baselined']:
+            spw = b['spw']
+            antenna = b['index']
+            pols = b['pols']
+            lines = b['lines']
+            group_id = -1
+            for (idx,desc) in reduction_group.items():
+                if desc[0].spw == spw:
+                    group_id = idx
+                    break
+            if group_id >= 0:
+                reduction_group[group_id].iter_countup(antenna, spw, pols)
+                reduction_group[group_id].add_linelist(lines, antenna, spw, pols)
 
     def _outcome_name(self):
-        return '%s: %s (spw=%s, pol=%s)'%(self.outcome['index'], self.outcome['name'], self.outcome['spw'], self.outcome['pols'])
+        return ['%s: %s (spw=%s, pol=%s)'%(b['index'], b['name'], b['spw'], b['pols'])
+                for b in self.outcome['baselined']]
 
 class SDBaseline(common.SingleDishTaskTemplate):
     Inputs = SDBaselineInputs
@@ -82,8 +89,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
         fitorder = 'automatic' if inputs.fitorder is None or inputs.fitorder < 0 else inputs.fitorder
         fitfunc = 'spline' if inputs.fitfunc is None else inputs.fitfunc
         
-        # task returns ResultsList
-        results = basetask.ResultsList()
+        baselined = []
 
         # loop over reduction group
         files = set()
@@ -93,6 +99,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             spwid = first_member.spw
             LOG.debug('spwid=%s'%(spwid))
             pols = first_member.pols
+            iteration = first_member.iteration[0]
             if pollist is not None:
                 pols = list(set(pollist) & set(pols))
 
@@ -119,6 +126,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             pattern = st.pattern[spwid][pols[0]]
             detected_lines = []
             parameters = {'datatable': datatable,
+                          'iteration': iteration, 
                           'spwid': spwid,
                           'nchan': nchan,
                           'beam_size': beam_size,
@@ -139,33 +147,19 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
             for f in _file_index:
                 name = context.observing_run[f].baselined_name
-                outcome = {'name': name, 'index': f, 'spw': spwid,
-                           'pols': pols, 'lines': detected_lines}
-                result = SDBaselineResults(task=self.__class__,
-                                           success=True,
-                                           outcome=outcome)
+                baselined.append({'name': name, 'index': f, 'spw': spwid,
+                                  'pols': pols, 'lines': detected_lines})
+
+        outcome = {'datatable': datatable,
+                   'baselined': baselined}
+        results = SDBaselineResults(task=self.__class__,
+                                    success=True,
+                                    outcome=outcome)
                 
-                if self.inputs.context.subtask_counter is 0: 
-                    result.stage_number = self.inputs.context.task_counter - 1
-                else:
-                    result.stage_number = self.inputs.context.task_counter 
-
-                results.append(result)
-
-        #for f in files:
-        #    name = context.observing_run[f].baselined_name
-        #    index = f
-        #    outcome = {'name': name, 'index': index}
-        #    result = SDBaselineResults(task=self.__class__,
-        #                               success=True,
-        #                               outcome=outcome)
-
-        #    if self.inputs.context.subtask_counter is 0: 
-        #        result.stage_number = self.inputs.context.task_counter - 1
-        #    else:
-        #        result.stage_number = self.inputs.context.task_counter 
-
-        #    results.append(result)
+        if self.inputs.context.subtask_counter is 0: 
+            results.stage_number = self.inputs.context.task_counter - 1
+        else:
+            results.stage_number = self.inputs.context.task_counter 
                 
         return results
 

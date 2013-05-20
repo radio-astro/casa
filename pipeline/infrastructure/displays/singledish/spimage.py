@@ -61,16 +61,16 @@ class SDSpectralImageDisplay(object):
             dec_min = bottom[key(id_direction[1])]
             dec_max = top[key(id_direction[1])]
 
-        Xmax = nx - 1
-        Xmin = 0
-        Ymax = ny - 1
-        Ymin = 0
-        Npanel = min(max(Xmax - Xmin + 1, Ymax - Ymin + 1), self.MaxPanel)
-        STEP = int((max(Xmax - Xmin + 1, Ymax - Ymin + 1) - 1) / Npanel) + 1
-        NH = (Xmax - Xmin) / STEP + 1
-        NV = (Ymax - Ymin) / STEP + 1
+        x_max = nx - 1
+        x_min = 0
+        y_max = ny - 1
+        y_min = 0
+        num_panel = min(max(x_max - x_min + 1, y_max - y_min + 1), self.MaxPanel)
+        STEP = int((max(x_max - x_min + 1, y_max - y_min + 1) - 1) / num_panel) + 1
+        NH = (x_max - x_min) / STEP + 1
+        NV = (y_max - y_min) / STEP + 1
 
-        LOG.info('Npanel=%s, STEP=%s, NH=%s, NV=%s'%(Npanel,STEP,NH,NV))
+        LOG.info('num_panel=%s, STEP=%s, NH=%s, NV=%s'%(num_panel,STEP,NH,NV))
 
         chan0 = 0
         chan1 = nchan
@@ -86,7 +86,7 @@ class SDSpectralImageDisplay(object):
         xmin = min(Frequency[chan0], Frequency[chan1-1])
         xmax = max(Frequency[chan0], Frequency[chan1-1])
 
-        TickSize = 10 - Npanel/2
+        TickSize = 10 - num_panel/2
         Format = PL.FormatStrFormatter('%.2f')
 
         masked_data = data * mask
@@ -95,7 +95,7 @@ class SDSpectralImageDisplay(object):
 
         LabelRA = numpy.zeros((NH, 2), numpy.float32) + NoData
         LabelDEC = numpy.zeros((NV, 2), numpy.float32) + NoData
-        LabelRADEC = numpy.zeros((Npanel, 2, 2), numpy.float32) + NoData
+        LabelRADEC = numpy.zeros((num_panel, 2, 2), numpy.float32) + NoData
         refpix = coordsys.referencepixel()['numeric'][id_direction[0]]
         refval = coordsys.referencevalue()['numeric'][id_direction[0]]
         increment = coordsys.increment()['numeric'][id_direction[0]]
@@ -128,7 +128,7 @@ class SDSpectralImageDisplay(object):
         # loop over pol
         for pol in xrange(npol):
             masked_data_p = masked_data[:,:,:,pol]
-            Plot = numpy.zeros((Npanel, Npanel, (chan1 - chan0)), numpy.float32) + NoData
+            Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
             TotalSP = masked_data_p.sum(axis=0).sum(axis=0)
             mask_p = mask[:,:,:,pol]
             isvalid = mask_p.prod(axis=2)
@@ -160,8 +160,8 @@ class SDSpectralImageDisplay(object):
                 #  1/10-th value from max and min are used instead
                 ListMax = []
                 ListMin = []
-                for x in range(Npanel):
-                    for y in range(Npanel):
+                for x in range(num_panel):
+                    for y in range(num_panel):
                         if Plot[x][y].min() > NoDataThreshold:
                             ListMax.append(Plot[x][y].max())
                             ListMin.append(Plot[x][y].min())
