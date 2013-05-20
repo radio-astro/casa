@@ -220,14 +220,15 @@ class ImportData(basetask.StandardTaskTemplate):
                                                         ms.basename))
             ms.session = inputs.session
 
-	if os.path.exists(os.path.join(inputs.context.output_dir, 'flux.csv')):
-            setjy_results = import_flux(inputs.context.output_dir, observing_run)
-            results = ImportDataResults(observing_run.measurement_sets,
-	        setjy_results) 
-	else:
+        if os.path.exists(os.path.join(inputs.context.output_dir, 'flux.csv')):
+            setjy_results = import_flux(inputs.context.output_dir, 
+                                        observing_run)
+            results = ImportDataResults(observing_run.measurement_sets, 
+                                        setjy_results) 
+        else:
             setjy_results = get_setjy_results(observing_run.measurement_sets)
             results = ImportDataResults(observing_run.measurement_sets, 
-                                    setjy_results)
+                                        setjy_results)
     
             # write flux results to a CSV. I'm not sure what these values will be
             # used for now as we can import all flux values into the context with
@@ -278,7 +279,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      savecmds=inputs.save_flagonline,
                                      outfile=outfile,
                                      process_caldevice=False,
-				     asis=inputs.asis,
+                                     asis=inputs.asis,
                                      overwrite=inputs.overwrite)
         
         self._executor.execute(task)
@@ -302,6 +303,8 @@ def get_setjy_results(mses):
             m = [m for m in measurements if m.spw in science_spws]
             
             # import flux values for all fields and intents so that we can 
+            # compare them to the fluxscale-derived values later in the run
+#            for field in [f for f in source.fields if 'AMPLITUDE' in f.intents]:
             for field in source.fields:
                 result.measurements[field.id].extend(m)
         
@@ -505,18 +508,17 @@ def import_flux(output_dir, observing_run, filename=None):
                 
         LOG.info('Imported %s flux measurements from %s' % (counter, filename))
 
-	# Convert into a set of results for the web log
-	results = []
-	for ms in observing_run.measurement_sets:
-	    science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
-	    result = commonfluxresults.FluxCalibrationResults(ms.name)
-	    for field in ms.get_fields():
-		if field.flux_densities is None:
-		    continue
-	        for flux in field.flux_densities:
-	            if flux.spw.id not in science_spw_ids:
-		       continue
-		    result.measurements[field.name].append(flux)
-	    results.append(result)
+        # Convert into a set of results for the web log
+        results = []
+        for ms in observing_run.measurement_sets:
+            science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
+            result = commonfluxresults.FluxCalibrationResults(ms.name)
+            for field in ms.get_fields():
+                if field.flux_densities is None:
+                    continue
+                for flux in field.flux_densities:
+                    if flux.spw.id not in science_spw_ids:
+                        continue
+                    result.measurements[field.name].append(flux)
+            results.append(result)
         return results
-	    
