@@ -42,10 +42,10 @@ class SDBaselineResults(common.SingleDishResults):
         super(SDBaselineResults, self).merge_with_context(context)
 
         # replace and export datatable to merge updated data with context
-        datatable = context.observing_run.datatable_instance
-        self.outcome['datatable'].exportdata(minimal=True)
+        datatable = self.outcome.pop('datatable')
+        datatable.exportdata(minimal=True)
 
-        context.datatable = self.outcome['datatable']
+        context.observing_run.datatable_instance = datatable
         
         # increment iteration counter
         # register detected lines to reduction group member
