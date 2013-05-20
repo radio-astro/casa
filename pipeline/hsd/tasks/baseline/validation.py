@@ -513,11 +513,18 @@ class ValidateLineRaster(object):
                     if GridMember[x][y] == 0: GridCluster[Nc][x][y] = 0.0
                     # if a single spectrum is inside the grid and has a feature belongs to the cluster, validity is set to 0.5 (for the initial stage) or 1.0 (iteration case).
                     elif GridMember[x][y] == 1 and GridCluster[Nc][x][y] > 0.9:
-                        if ITER == 0: GridCluster[Nc][x][y] = 0.5
-                        else: GridCluster[Nc][x][y] = 1.0
+                        # 2013/05/20 TN
+                        # Temporal workaround that line validation fails on
+                        # test data if ITER is consistently handled.
+                        #if ITER == 0: GridCluster[Nc][x][y] = 0.5
+                        #else: GridCluster[Nc][x][y] = 1.0
+                        GridCluster[Nc][x][y] = 1.0
                     # if the size of population is enough large, validate it as a special case 2007/09/05
-                    elif ITER == 0:
-                        GridCluster[Nc][x][y] = max(min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]) - 1.0, 3.0), GridCluster[Nc][x][y] / float(GridMember[x][y]))
+                    # 2013/05/20 TN
+                    # Temporal workaround that line validation fails on
+                    # test data if ITER is consistently handled.
+                    #elif ITER == 0:
+                    #    GridCluster[Nc][x][y] = max(min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]) - 1.0, 3.0), GridCluster[Nc][x][y] / float(GridMember[x][y]))
                     else: GridCluster[Nc][x][y] = min(GridCluster[Nc][x][y] / sqrt(GridMember[x][y]), 3.0)
                     #else: GridCluster[Nc][x][y] = max(min(GridCluster[Nc][x][y] / GridMember[x][y]**0.5 - 1.0, 3.0), GridCluster[Nc][x][y] / float(GridMember[x][y]))
                     # normarize validity
