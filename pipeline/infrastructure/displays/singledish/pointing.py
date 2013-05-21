@@ -34,7 +34,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         parameters['type'] = 'sd'
         parameters['file'] = st.basename
         plot = logger.Plot(plotfile,
-          x_axis='RA', y_axis='Dec',
+          x_axis='R.A.', y_axis='Dec.',
           field=parent_ms.fields[0].name,
           parameters=parameters)
         return plot
