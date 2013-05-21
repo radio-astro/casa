@@ -3,12 +3,11 @@
 
 #include <casa/aips.h>
 #include <synthesis/MSVis/TransformingVi2.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 
 namespace casa {
 
 namespace vi {
-
-class WeightFunction;
 
 namespace avg {
 
@@ -20,8 +19,7 @@ class AveragingTvi2 : public TransformingVi2 {
 
 public:
 
-    AveragingTvi2 (ViImplementation2 * inputVii, Double averagingInterval,
-                   Int nAveragesPerChunk, WeightFunction * weightFunction);
+    AveragingTvi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVii, Double averagingInterval);
     ~AveragingTvi2 ();
 
     /////////////////////////////////////////////////////////////////////////
@@ -48,7 +46,7 @@ public:
     // The input VI must use the data description ID as a sort column so that
     // a chunk will only contain data from a single DDID setting.
 
-    void originChunks ();
+    void originChunks (Bool forceRewind = False);
     void nextChunk ();
     Bool moreChunks () const;
 
@@ -63,6 +61,7 @@ protected:
     void produceSubchunk ();
     void processInputSubchunk (const VisBuffer2 *);
     Bool reachedAveragingBoundary();
+    void captureIterationInfo (const VisBuffer2 * vb2);
     bool subchunksReady () const;
     void validateInputVi (ViImplementation2 *);
 
@@ -71,9 +70,10 @@ private:
     const Double averagingInterval_p; // averaging interval in seconds
     Int ddidLastUsed_p; // ddId last used to produce a subchunk.
     Bool inputViiAdvanced_p; // true if input VII was advanced but data not used
-    const Int nAveragesPerChunk_p; // number of subchunks per chunk on output
+    Subchunk subchunk_p;
     Bool subchunkExists_p;
     avg::VbSet * vbSet_p;
+    WeightScaling * weightScaling_p;
 };
 
 } // end namespace vi

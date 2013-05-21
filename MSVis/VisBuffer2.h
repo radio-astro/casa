@@ -48,6 +48,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <typename T> class Array;
 class CStokesVector;
+template <typename T> class CountedPtr;
 template <typename T> class Cube;
 template <typename T> class Matrix;
 class MDirection;
@@ -58,6 +59,7 @@ namespace vi {
 
 class Subchunk;
 class VisibilityIterator2;
+class WeightScaling;
 
 typedef enum {VbPlain, VbAsynchronous} VisBufferType;
 
@@ -170,7 +172,7 @@ public:
     virtual void copyCoordinateInfo(const VisBuffer2 * other, Bool includeDirections,
                                     Bool fetchIfNeeded = True) = 0;
 
-    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool copyValues = False) = 0;
+    virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool clearCache = False) = 0;
     virtual void validateShapes () const = 0;
 
     // For attached VBs this returns the VI the VB is attached to.  For free
@@ -347,8 +349,8 @@ public:
     virtual void setFeed2 (const Vector<Int> & value) = 0; // [nR]
     virtual const Vector<Int> & fieldId () const = 0;
     virtual void setFieldId (const Vector<Int> &) = 0;
-    virtual const Matrix<Bool> & flag () const = 0; // [nF,nR]
-    virtual void setFlag (const Matrix<Bool>& value) = 0; // [nF,nR]
+    //virtual const Matrix<Bool> & flag () const = 0; // [nF,nR]
+    //virtual void setFlag (const Matrix<Bool>& value) = 0; // [nF,nR]
     virtual const Array<Bool> & flagCategory () const = 0; // [nC,nF,nCategories,nR]
     virtual void setFlagCategory (const Array<Bool>& value) = 0; // [nC,nF,nCategories,nR]
     virtual const Cube<Bool> & flagCube () const = 0; // [nC,nF,nR]
@@ -405,6 +407,10 @@ public:
 //    virtual void setVisCubeModel(const Vector<Float>& stokes) = 0; // [1..4]
 //    virtual const Matrix<CStokesVector> & visModel () const = 0; // [nF,nR]
 //    virtual void setVisModel (Matrix<CStokesVector> &) = 0; // [nF,nR]
+
+    virtual Float getWeightScaled (Int row) const = 0;
+    virtual Float getWeightScaled (Int correlation, Int row) const = 0;
+    virtual Float getWeightScaled (Int correlation, Int channel, Int row) const = 0;
 
     //--------------------------------------------------------
     //
@@ -493,9 +499,11 @@ public:
     //virtual Int spectralWindow () const = 0;
 
     virtual const Vector<Int> & spectralWindows () const = 0; // [nR]
-    //virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
+    virtual void setSpectralWindows (const Vector<Int> & spectralWindows) = 0;
 
     static VisBuffer2 * factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions options);
+
+    virtual CountedPtr<WeightScaling> getWeightScaling () const = 0;
 
 protected:
 
@@ -503,7 +511,8 @@ protected:
                                        Bool isNewArrayId, Bool isNewFieldId,
                                        Bool isNewSpectralWindow, const Subchunk & subchunk,
                                        Int nRows, Int nChannels, Int nCorrelations,
-                                       const Vector<Int> & correlations) = 0;
+                                       const Vector<Int> & correlations,
+                                       CountedPtr<WeightScaling> weightScaling) = 0;
     virtual void invalidate() = 0;
     virtual Bool isRekeyable () const = 0;
     virtual void setFillable (Bool isFillable) = 0;

@@ -70,12 +70,11 @@ VisibilityIterator2::copyingViFactory (const MeasurementSet & srcMs,
 {
     VisibilityIterator2 * vi = new VisibilityIterator2 ();
 
-    Block <MeasurementSet> mss (1, srcMs);
+    Block <const MeasurementSet *> mss (1, & srcMs);
     Block <Int> sortColumns;
 
-    VisibilityIteratorImpl2 * viReader = new VisibilityIteratorImpl2 (vi, mss, sortColumns,
-                                                                      true, 0, VbPlain, False);
-
+    VisibilityIteratorImpl2 * viReader = new VisibilityIteratorImpl2 (vi, mss, SortColumns(),
+                                                                      0, VbPlain, False);
     FinalTvi2 * fVi = new FinalTvi2 (viReader, vi, dstMs, False);
 
     vi->impl_p = fVi;
@@ -204,8 +203,7 @@ Tester::sweepMs (TestWidget & tester)
 
         do {
 
-            Block<Int> noSortColumns;
-            auto_ptr <VisibilityIterator2> vi (new VisibilityIterator2 (* ms, noSortColumns, writableVi));
+            auto_ptr <VisibilityIterator2> vi (new VisibilityIterator2 (* ms, SortColumns (), writableVi));
 
             VisBuffer2 * vb = vi->getVisBuffer ();
             Int nRowsProcessed = 0;
@@ -817,7 +815,7 @@ BasicChannelSelection::checkWeightSpectrum (Int rowId, Int spectralWindow, Int r
 {
     Int expectedChannelNumber = channel * channelIncrement + channelOffset;
 
-    Float expectedValue = rowId * 1000 + spectralWindow * 100 + expectedChannelNumber * 10 + correlation;
+    Float expectedValue = rowId * 1000 + spectralWindow * 100 + expectedChannelNumber * 10 + correlation + 1;
     expectedValue *= factor_p;
 
     Float actualValue = vb->weightSpectrum() (correlation, channel, row);
@@ -1038,7 +1036,7 @@ PerformanceComparator::compare (int tests, int nSweeps, int nChannelTests)
 
     ROVisibilityIterator oldVi (ms, sortColumns, True);
 
-    VisibilityIterator2 newVi (ms, sortColumns);
+    VisibilityIterator2 newVi (ms, SortColumns ());
 
     printf ("\n--- Default channel selection ---\n");
 

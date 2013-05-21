@@ -138,8 +138,8 @@ public:
     virtual Int arrayId() const { return vb2_p-> arrayId()(0); }
 
     // Return flag for each channel & row
-    virtual Matrix<Bool>& flag() { return const_cast<Matrix<Bool>&> (vb2_p-> flag());}
-    virtual const Matrix<Bool>& flag() const { return vb2_p-> flag(); }
+    virtual Matrix<Bool>& flag() { IllegalOperation(); }
+    virtual const Matrix<Bool>& flag() const { IllegalOperation(); }
 
     // Return flag for each polarization, channel and row
     virtual Cube<Bool>& flagCube() { return const_cast<Cube<Bool>&> (vb2_p-> flagCube());}

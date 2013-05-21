@@ -107,11 +107,9 @@ class TransformingVi2 : public ViImplementation2 {
 
 public:
 
-  TransformingVi2 (ViImplementation2 * inputVi);
-
     // Destructor
 
-    virtual ~TransformingVi2 () = 0;
+    virtual ~TransformingVi2 ();
 
     //   +==================================+
     //   |                                  |
@@ -158,7 +156,7 @@ public:
 
     virtual Bool existsColumn (VisBufferComponent2 id) const;
 
-    virtual const Block<Int>& getSortColumns() const;
+    virtual const SortColumns & getSortColumns() const;
 
     virtual Bool isNewArrayId () const;
     virtual Bool isNewFieldId () const;
@@ -280,11 +278,7 @@ public:
 
     // Return sigma
 
-    virtual void sigma (Vector<Float> & sig) const;
-
-    // Return sigma matrix (pol-dep)
-
-    virtual void sigmaMat (Matrix<Float> & sigmat) const;
+    virtual void sigma (Matrix<Float> & sigmat) const;
 
     // Return current SpectralWindow
 
@@ -333,11 +327,7 @@ public:
 
     // Return weight
 
-    virtual void weight (Vector<Float> & wt) const;
-
-    // Returns the nPol_p x curNumRow_p weight matrix
-
-    virtual void weightMat (Matrix<Float> & wtmat) const;
+    virtual void weight (Matrix<Float> & wtmat) const;
 
     // Determine whether WEIGHT_SPECTRUM exists.
 
@@ -547,8 +537,15 @@ public:
     virtual void writeModel(const RecordInterface& rec, Bool iscomponentlist=True,
                             Bool incremental=False);
 
+    virtual void setWeightScaling (CountedPtr <WeightScaling> weightscaling);
+    virtual Bool hasWeightScaling () const;
+    virtual CountedPtr<WeightScaling> getWeightScaling () const;
+
 protected:
 
+    TransformingVi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVi);
+
+    VisibilityIterator2 * getVi () const;
     ViImplementation2 * getVii () const;
     void setVisBuffer (VisBuffer2 * vb);
 
@@ -556,6 +553,8 @@ private:
 
     ViImplementation2 * inputVii_p;
     VisBuffer2 * vb_p;
+    VisibilityIterator2 * vi_p; // [use] The container
+    CountedPtr<WeightScaling> weightScaling_p;
 
 };
 

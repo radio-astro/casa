@@ -17,7 +17,8 @@ namespace test {
 
 
 MsFactory::MsFactory (const String & msName)
- : includeAutocorrelations_p (False),
+ : addWeightSpectrum_p (True),
+   includeAutocorrelations_p (False),
    simulator_p (new NewMSSimulator (msName)),
    timeStart_p (-1)
 {
@@ -211,9 +212,18 @@ MsFactory::addSpectralWindow (const String & name,
 }
 
 void
+MsFactory::addWeightSpectrum (Bool addIt)
+{
+    addWeightSpectrum_p = addIt;
+}
+
+
+void
 MsFactory::addColumns ()
 {
-    addCubeColumn (MS::WEIGHT_SPECTRUM, "WeightSpectrumTiled");
+    if (addWeightSpectrum_p){
+        addCubeColumn (MS::WEIGHT_SPECTRUM, "WeightSpectrumTiled");
+    }
 }
 
 void

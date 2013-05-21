@@ -114,7 +114,7 @@ public:
     // which are provided as part of the MSColumns object returned by
     // MSIter::msColumns.
 
-    SubtableColumns (const MSIter & msIter);
+    SubtableColumns (CountedPtr <MSIter> msIter);
 
     const ROMSAntennaColumns& antenna() const;
     const ROMSDataDescColumns& dataDescription() const;
@@ -136,8 +136,7 @@ public:
 
 private:
 
-    const MSIter & msIter_p;
-
+    CountedPtr <MSIter> msIter_p;
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -188,37 +187,44 @@ private:
 
 };
 
+
+
 ///////////////////////////////////////////////////////////
 //
 // Code to provide interface to weight function
+//
+// WeightScaling is essentially the interface to the function
+// used for weight scaling while WeightScalingImpl is the class
+// to actually use to create WeightScaling functors.  The use of
+// a templated implementation allows the wrapping of both functors
+// and functions while the base class allows polymorphic storage.
 
-class WeightFunction {
+class WeightScaling {
 public:
 
-    virtual ~WeightFunction () {}
-    Float operator() (Float f) { return apply (f);}
-    virtual Float apply (Float) = 0;
+    virtual ~WeightScaling () {}
+    Float operator() (Float x) { return apply (x);}
 
-    static WeightFunction * generateUnityWeightFunction ();
-    static WeightFunction * generateIdentityWeightFunction ();
-    static WeightFunction * generateSquareWeightFunction ();
+    static CountedPtr<WeightScaling> generateUnityWeightScaling ();
+    static CountedPtr<WeightScaling> generateIdentityWeightScaling ();
+    static CountedPtr<WeightScaling> generateSquareWeightScaling ();
 
 protected:
 
+    virtual Float apply (Float) = 0;
     static Float unity (Float);
     static Float identity (Float x);
     static Float square (Float x);
-
 };
 
 template<typename F>
-class WeightFunctionImpl : public WeightFunction {
+class WeightScalingImpl : public WeightScaling {
 public:
 
     // Provide either a unary function, Float (*) (Float), or
     // a functor class having a Float operator() (Float) method.
 
-    WeightFunctionImpl (F f) : function_p (f) {}
+    WeightScalingImpl (F f) : function_p (f) {}
 
     Float apply (Float f) { return function_p (f);}
 
@@ -227,27 +233,35 @@ private:
     F function_p;
 };
 
+
 template<typename F>
-WeightFunction * generateWeightFunction (F f) { return new WeightFunctionImpl<F> (f);}
+CountedPtr <WeightScaling> generateWeightScaling (F f) { return new WeightScalingImpl<F> (f);}
 
 class SortColumns {
 public:
 
-    SortColumns (const Block<Int> & columns = Block<Int> (), Bool addDefaultColumns = True);
+    explicit SortColumns (const Block<Int> & columnIds = Block<Int> (), Bool addDefaultColumns = True);
 
-    Bool addDefaultSortColumns () const;
-    const Block<Int> & getColumns () const;
+    Bool shouldAddDefaultColumns () const;
+    const Block<Int> & getColumnIds () const;
 
 private:
 
     Bool addDefaultColumns_p;
-    Block<Int> columns_p;
-
-
+    Block<Int> columnIds_p;
 };
 
-
 class VisibilityIterator2;
+
+//////////////////////////////////////////////////////////////////////
+//
+// Class ViFactory
+//
+// The ViFactory is a class that can be used to initialize the implementation of
+// a VisibilityIterator2.  It is passed into VI2's constructor where it creates
+// the needed ViImplementation object used by the VI2.  The first example of this
+// factory is the AveragingVi2Factory which is used to create a VI2 which will
+// return time-averaged data.
 
 class ViFactory {
 
@@ -255,7 +269,11 @@ public:
 
     virtual ~ViFactory () {}
 
-    virtual VisibilityIterator2 * createVi () = 0;
+protected:
+
+    friend class VisibilityIterator2;
+
+    virtual ViImplementation2 * createVi (VisibilityIterator2 *) const = 0;
 };
 
 // <summary>
@@ -374,9 +392,6 @@ class VisibilityIterator2 : private boost::noncopyable
     friend class asyncio::VLAT; // allow VI lookahead thread class to access protected
                                 // functions VLAT should not access private parts,
                                 // especially variables
-
-    friend class AveragingTvi2Factory;
-
 public:
 
 
@@ -428,18 +443,18 @@ public:
   // either either provides prefetch columns (enables) or a null pointer (disables).
 
   VisibilityIterator2 (const MeasurementSet& ms,
-                       const Block<Int>& sortColumns = Block<Int> (),
+                       const SortColumns & sortColumns = SortColumns (),
                        Bool isWritable = False,
                        const VisBufferComponents2 * prefetchColumns = 0,
-                       const Bool addDefaultSortCols = True,
                        Double timeInterval = 0);
 
-  VisibilityIterator2 (const Block<MeasurementSet>& mss,
-                       const Block<Int>& sortColumns = Block<Int> (),
+  VisibilityIterator2 (const Block<const MeasurementSet *>& mss,
+                       const SortColumns & sortColumns = SortColumns (),
                        Bool isWritable = False,
                        const VisBufferComponents2 * prefetchColumns = 0,
-                       const Bool addDefaultSortCols = True,
                        Double timeInterval = 0);
+
+  VisibilityIterator2 (const ViFactory & factory);
 
   // Destructor
 
@@ -589,18 +604,36 @@ public:
   // defined in MSMainEnums.h.  These can be specified as MS::ANTENNA1,
   // MS::ARRAY_ID, etc.
 
-  const Block<Int>& getSortColumns() const;
+  const SortColumns & getSortColumns() const;
 
   // Returns the VisBuffer permanently attached to this VisibilityIterator.
 
   VisBuffer2 * getVisBuffer ();
+
+  // Manages the weight function that can be used to process the weights
+  // produced by the "scaled" variants of the weight accessors.  Use
+  // generateWeightscaling to create a WeightScaling object.  This allow you
+  // to use either a function (FLoat (Float)) or a functor (object having
+  // method Float operator () (Float)).
+  //
+  // To revert to having no scaling function, call setWeightScaling with
+  // 0 as the argument.  Any call to setWeightScaling needs to be followed
+  // by an originChunks call before any further data access is performed
+  // using the VI.
+  //
+  // The method hasWeightScaling will return false if either no weightScaling
+  // object has installed or setWeightScaling (0) was called.  There is not
+  // way for VI to know if the user has passed in the identity function;
+  // doing so will still cause hasWeightScaling to return true.
+
+  virtual void setWeightScaling (CountedPtr<WeightScaling> weightscaling);
+  virtual Bool hasWeightScaling () const;
 
   //reference to actual ms in interator
 
   const MeasurementSet& ms() const;
 
   const vi::SubtableColumns & subtableColumns () const;
-
 
   // The reporting frame of reference is the default frame of reference to be
   // used when the user requests the frequencies of the current data selection
@@ -629,7 +662,7 @@ public:
   // the output channel in the case of channel averaging.
   // All polarizations have the same flag value.
 
-  void writeFlag(const Matrix<Bool>& flag);
+//  void writeFlag(const Matrix<Bool>& flag);
 
   // Write/modify the flags in the data.
   // This writes the flags as found in the MS, Cube(npol,nchan,nrow),
@@ -717,9 +750,8 @@ protected:
   VisibilityIterator2();
 
   void construct (const VisBufferComponents2 * prefetchColumns,
-                  const Block<MeasurementSet>& mss,
-                  const Block<Int>& sortColumns,
-                  const Bool addDefaultSortCols,
+                  const Block<const MeasurementSet *>& mss,
+                  const SortColumns & sortColumns,
                   Double timeInterval,
                   Bool writable);
 
@@ -913,11 +945,7 @@ protected:
 
   // Return sigma
 
-  virtual void sigma(Vector<Float>& sig) const;
-
-  // Return sigma matrix (pol-dep)
-
-  virtual void sigmaMat(Matrix<Float>& sigmat) const;
+  virtual void sigma(Matrix<Float>& sigmat) const;
 
   // Return current SpectralWindow
 
@@ -976,13 +1004,9 @@ protected:
 
   virtual void uvw(Matrix<Double>& uvw) const;
 
-  // Return weight
+  // Returns the nPol_p x curNumRow_p weight matrix.
 
-  virtual void weight(Vector<Float>& wt) const;
-
-  // Returns the nPol_p x curNumRow_p weight matrix
-
-  virtual void weightMat(Matrix<Float>& wtmat) const;
+  virtual void weight (Matrix<Float>& wt) const;
 
   // Determine whether WEIGHT_SPECTRUM exists.
 
@@ -1000,7 +1024,6 @@ protected:
   // correlations).
 
   Vector<Int> getCorrelations () const;
-
 
   Vector<Double> getFrequencies (Double time, Int frameOfReference) const;
   Vector<Int> getChannels (Double time, Int frameOfReference) const;

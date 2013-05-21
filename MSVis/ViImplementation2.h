@@ -59,20 +59,20 @@ class VisImagingWeight;
 
 namespace vi {
 
-class FrequencySelections;
-class Subchunk;
-class VisibilityIterator2;
 
 //# forward decl
 
-class VisBuffer2;
-
 class ChannelSelector;
 class ChannelSelectorCache;
-class SpectralWindowChannelsCache;
+class FrequencySelections;
+class SortColumns;
 class SpectralWindowChannels;
+class SpectralWindowChannelsCache;
+class Subchunk;
 class SubtableColumns;
-
+class VisBuffer2;
+class VisibilityIterator2;
+class WeightScaling;
 
 // <summary>
 // VisibilityIterator2 iterates through one or more readonly MeasurementSets
@@ -181,7 +181,7 @@ public:
 
     virtual Bool existsColumn (VisBufferComponent2 id) const = 0;
 
-    virtual const Block<Int>& getSortColumns() const = 0;
+    virtual const SortColumns & getSortColumns() const = 0;
 
     virtual Bool isNewArrayId () const = 0;
     virtual Bool isNewFieldId () const = 0;
@@ -304,11 +304,7 @@ public:
 
     // Return sigma
 
-    virtual void sigma (Vector<Float> & sig) const = 0;
-
-    // Return sigma matrix (pol-dep)
-
-    virtual void sigmaMat (Matrix<Float> & sigmat) const = 0;
+    virtual void sigma (Matrix<Float> & sigmat) const = 0;
 
     // Return current SpectralWindow
 
@@ -354,14 +350,9 @@ public:
 
     virtual IPosition visibilityShape () const = 0;
 
-
     // Return weight
 
-    virtual void weight (Vector<Float> & wt) const = 0;
-
-    // Returns the nPol_p x curNumRow_p weight matrix
-
-    virtual void weightMat (Matrix<Float> & wtmat) const = 0;
+    virtual void weight (Matrix<Float> & wtmat) const = 0;
 
     // Determine whether WEIGHT_SPECTRUM exists.
 
@@ -370,6 +361,10 @@ public:
     // Return weightspectrum (a weight for each channel)
 
     virtual void weightSpectrum (Cube<Float> & wtsp) const = 0;
+
+    virtual void setWeightScaling (CountedPtr<WeightScaling> weightscaling) = 0;
+    virtual Bool hasWeightScaling () const = 0;
+    virtual CountedPtr<WeightScaling> getWeightScaling () const = 0;
 
     // Return the number of sub-intervals in the current chunk
 
@@ -522,7 +517,7 @@ public:
     // This will flag all channels in the original data that contributed to
     // the output channel in the case of channel averaging.
     // All polarizations have the same flag value.
-    virtual void writeFlag (const Matrix<Bool> & flag) = 0;
+//    virtual void writeFlag (const Matrix<Bool> & flag) = 0;
 
     // Write/modify the flags in the data.
     // This writes the flags as found in the MS, Cube (npol,nchan,nrow),
@@ -573,6 +568,11 @@ public:
 
 
 protected:
+
+    static void doWeightScaling (Bool hasWeightScaling,
+                                 WeightScaling * scaling,
+                                 const Array<Float>& unscaled,
+                                 Array<Float>& scaled);
 
 };
 

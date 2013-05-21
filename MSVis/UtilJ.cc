@@ -188,6 +188,18 @@ repackageAipsError (AipsError & error, const String & message, const String & fi
     return AipsError (os.str());
 }
 
+long
+round (Double d)
+{
+    Double sign = (d < 0) ? -1.0 : 1.0;
+
+    d += 0.5 * sign;
+
+    long result = (long) d;
+
+    return result;
+}
+
 
 void
 sleepMs (Int milliseconds)

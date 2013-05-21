@@ -152,7 +152,7 @@ VisBufferComponents2::name (Int id)
     names [Feed2] = "Feed2";
     names [FeedPa2] = "FeedPa2";
     names [FieldId] = "FieldId";
-    names [Flag] = "Flag";
+    //names [Flag] = "Flag";
     names [FlagCategory] = "FlagCategory";
     names [FlagCube] = "FlagCube";
     names [FlagRow] = "FlagRow";
@@ -172,15 +172,15 @@ VisBufferComponents2::name (Int id)
     names [RowIds] = "RowIds";
     names [Scan] = "Scan";
     names [Sigma] = "Sigma";
-    names [SigmaMat] = "SigmaMat";
     names [SpectralWindows] = "SpectralWindows";
     names [StateId] = "StateId";
     names [Time] = "Time";
     names [TimeCentroid] = "TimeCentroid";
     names [TimeInterval] = "TimeInterval";
     names [Weight] = "Weight";
-    names [WeightMat] = "WeightMat";
+    names [WeightScaled] = "WeightScaled";
     names [WeightSpectrum] = "WeightSpectrum";
+    names [WeightSpectrumScaled] = "WeightSpectrumScaled";
     names [Uvw] = "Uvw";
     names [VisibilityCorrected] = "VisibilityCorrected";
     names [VisibilityModel] = "VisibilityModel";
