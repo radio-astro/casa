@@ -11,7 +11,6 @@ std::auto_ptr<
 		casa::AutoDiff<casa::Double>, casa::AutoDiff<casa::Double>
 	>
 > _firstDeriv;
-
 */
 functional(
 	casa::Gaussian1D<casa::Double>*& function
@@ -20,5 +19,15 @@ functional(
 functional(
 	casa::Gaussian2D<casa::Double>*& function
 );
+
+functional(
+	casa::PowerLogarithmicPolynomial<casa::Double>*& function
+);
+
+/*
+functional(
+	casa::Function<casa::Double, casa::Double>*& function
+);
+*/
 
 bool _isAttached() const;

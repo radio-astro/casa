@@ -17,6 +17,7 @@
 #include <casa/Quanta/QuantumHolder.h>
 #include <scimath/Functionals/Gaussian1D.h>
 #include <scimath/Functionals/Gaussian2D.h>
+#include <scimath/Functionals/PowerLogarithmicPolynomial.h>
 
 #include <stdcasa/StdCasa/CasacSupport.h>
 
@@ -26,7 +27,7 @@
 using namespace std;
 using namespace casa;
 
-#define _ORIGIN *_log << LogOrigin("msmetadata_cmpt.cc", __FUNCTION__, __LINE__);
+#define _ORIGIN *_log << LogOrigin("functional_cmpt.cc", __FUNCTION__, __LINE__);
 
 #define _FUNC(BODY) \
         try { \
@@ -60,6 +61,7 @@ functional::functional() : _log(new LogIO())
 
 }
 
+
 functional::functional(
 	Gaussian1D<Double>*& function //, Gaussian1D<AutoDiff<Double> >*& first
 ) :  _log(new LogIO()), _functional(function) //, _firstDeriv(first)
@@ -69,6 +71,18 @@ functional::functional(
 	Gaussian2D<Double>*& function
 ) :  _log(new LogIO()), _functional(function)
 {}
+
+functional::functional(
+	PowerLogarithmicPolynomial<Double>*& function
+) :  _log(new LogIO()), _functional(function)
+{}
+
+/*
+functional::functional(
+	Function<Double, Double>*& function
+) :  _log(new LogIO()), _functional(function)
+{}
+*/
 
 functional::~functional() {}
 /*
@@ -81,7 +95,7 @@ functional::open(const std::string& name, const int order, const std::vector<dou
 
 */
 variant* functional::f(const variant& v) {
-	//_FUNC(
+	_FUNC(
 		switch(v.type()) {
 		case variant::INT:
 			// allow fall through
@@ -127,7 +141,7 @@ variant* functional::f(const variant& v) {
 		default:
 			throw AipsError("Unpermitted type for value");
 		}
-//	);
+	);
 }
 
 /*
@@ -327,6 +341,18 @@ functional* functional::gaussian2d(
 	);
 
 }
+
+
+::casac::functional* functional::powerlogpoly(
+	const vector<double>& parms
+) {
+	_FUNC2(
+		PowerLogarithmicPolynomial<Double> *plp = new PowerLogarithmicPolynomial<Double>(parms);
+		return new functional(plp);
+	);
+}
+
+
 /*
 
 ::casac::functional *
