@@ -157,6 +157,7 @@
 #                                                                           #
 #############################################################################
 import os
+import sys
 import time
 import regression_utility as tstutl
 
@@ -902,7 +903,7 @@ if doimage:
     cyclespeedup = -1
     scaletype = 'SAULT'
     pbcor=False
-    minpb = 0.1
+    minpb = 0.02
     sigma = '0.001Jy'
     targetflux = '1.0Jy'
     constrainflux = False
@@ -1050,113 +1051,113 @@ else:
     outfile='ngc1333.'+datestring+'.log'
     logfile=open(outfile,'w')
 
-    print >>logfile,''
-    print >>logfile,'********** Data Summary *********'
-    print >>logfile,'*********************************'
-    print >>logfile,''
-    print >>logfile,'********** Regression ***********'
-    print >>logfile,'*                               *'
+    for x in [sys.stdout, logfile]: print >> x ,''
+    for x in [sys.stdout, logfile]: print >> x ,'********** Data Summary *********'
+    for x in [sys.stdout, logfile]: print >> x ,'*********************************'
+    for x in [sys.stdout, logfile]: print >> x ,''
+    for x in [sys.stdout, logfile]: print >> x ,'********** Regression ***********'
+    for x in [sys.stdout, logfile]: print >> x ,'*                               *'
     regstate = True
     if (diff_cal1_2may < 0.05):
-        print >>logfile,'* Passed cal1 max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed cal1 max amplitude test (2may) *'
     else:
-        print >>logfile,'* Failed cal1 max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed cal1 max amplitude test (2may) *'
         regstate = False
-    print >>logfile,'*   Cal1 max amp (2may) '+str(gcal1_2may)+' ('+str(cal1_2may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Cal1 max amp (2may) '+str(gcal1_2may)+' ('+str(cal1_2may)+')'
     if (diff_cal2_2may < 0.05):
-        print >>logfile,'* Passed cal2 max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed cal2 max amplitude test (2may) *'
     else:
-        print >>logfile,'* Failed cal2 max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed cal2 max amplitude test (2may) *'
         regstate = False
-    print >>logfile,'*   Cal2 max amp (2may) '+str(gcal2_2may)+' ('+str(cal2_2may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Cal2 max amp (2may) '+str(gcal2_2may)+' ('+str(cal2_2may)+')'
     if (diff_cal1_8may < 0.05):
-        print >>logfile,'* Passed cal1 max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed cal1 max amplitude test (8may) *'
     else:
-        print >>logfile,'* Failed cal1 max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed cal1 max amplitude test (8may) *'
         regstate = False
-    print >>logfile,'*   Cal1 max amp (8may) '+str(gcal1_8may)+' ('+str(cal1_8may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Cal1 max amp (8may) '+str(gcal1_8may)+' ('+str(cal1_8may)+')'
     if (diff_cal2_8may < 0.05):
-        print >>logfile,'* Passed cal2 max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed cal2 max amplitude test (8may) *'
     else:
-        print >>logfile,'* Failed cal2 max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed cal2 max amplitude test (8may) *'
         regstate = False
-    print >>logfile,'*   Cal2 max amp (8may) '+str(gcal2_8may)+' ('+str(cal2_8may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Cal2 max amp (8may) '+str(gcal2_8may)+' ('+str(cal2_8may)+')'
     if (diff_src_2may < 0.05):
-        print >>logfile,'* Passed src max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed src max amplitude test (2may) *'
     else:
-        print >>logfile,'* Failed src max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed src max amplitude test (2may) *'
         regstate = False
-    print >>logfile,'*   Src max amp (2may) '+str(src_2may)+' ('+str(src2may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Src max amp (2may) '+str(src_2may)+' ('+str(src2may)+')'
     if (diff_src_8may < 0.05):
-        print >>logfile,'* Passed src max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed src max amplitude test (8may) *'
     else:
-        print >>logfile,'* Failed src max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed src max amplitude test (8may) *'
         regstate = False
-    print >>logfile,'*   Src max amp (8may) '+str(src_8may)+' ('+str(src8may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Src max amp (8may) '+str(src_8may)+' ('+str(src8may)+')'
     if (diff_immax < 0.05):
-        print >>logfile,'* Passed image max test                *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed image max test                *'
     else:
         if doimage:
-            print >>logfile,'* Failed image max test                *'
+            for x in [sys.stdout, logfile]: print >> x ,'* Failed image max test                *'
             regstate = False
         else:
-            print >>logfile,'* Did not do image max test'
+            for x in [sys.stdout, logfile]: print >> x ,'* Did not do image max test'
             
-    print >>logfile,'*   Image max '+str(thistest_immax)+' ('+str(immax)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Image max '+str(thistest_immax)+' ('+str(immax)+')'
     if (diff_imrms < 0.05):
-        print >>logfile,'* Passed image rms test                *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed image rms test                *'
     else:
         if doimage:
-            print >>logfile,'* Failed image rms test                *'
+            for x in [sys.stdout, logfile]: print >> x ,'* Failed image rms test                *'
             regstate = False
         else:
-            print >>logfile,'* Did not do image rms test'
-    print >>logfile,'*   Image rms '+str(thistest_imrms)+' ('+str(imrms)+')'
+            for x in [sys.stdout, logfile]: print >> x ,'* Did not do image rms test'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Image rms '+str(thistest_imrms)+' ('+str(imrms)+')'
     #if ((diff_cal1_2may<0.05) & (diff_cal2_2may<0.05) &
     #    (diff_cal1_8may<0.05) & (diff_cal2_8may<0.05) &
     #    (diff_src_2may<0.05) & (diff_src_8may<0.05) &
     #    (diff_immax<0.05) & (diff_imrms<0.05)): 
     if regstate:
-        print >>logfile,'---'
-	print >>logfile,'Passed Regression test for NGC1333'
-	print >>logfile,'---'
+        for x in [sys.stdout, logfile]: print >> x ,'---'
+	for x in [sys.stdout, logfile]: print >> x ,'Passed Regression test for NGC1333'
+	for x in [sys.stdout, logfile]: print >> x ,'---'
         tstutl.note("Passed Regression test for NGC1333","NORMAL")
     else: 
-	print >>logfile,'----FAILED Regression test for NGC1333'
+	for x in [sys.stdout, logfile]: print >> x ,'----FAILED Regression test for NGC1333'
         tstutl.note("FAILED Regression test for NGC1333","SEVERE")
-    print >>logfile,'*********************************'
+    for x in [sys.stdout, logfile]: print >> x ,'*********************************'
+    for x in [sys.stdout, logfile]: print >> x ,''
+    for x in [sys.stdout, logfile]: print >> x ,''
+    for x in [sys.stdout, logfile]: print >> x ,'********* Benchmarking *****************'
+    for x in [sys.stdout, logfile]: print >> x ,'*                                      *'
+    for x in [sys.stdout, logfile]: print >> x ,'Total wall clock time was: '+str(endTime - startTime)
+    for x in [sys.stdout, logfile]: print >> x ,'Total CPU        time was: '+str(endProc - startProc)
+    for x in [sys.stdout, logfile]: print >> x ,'Processing rate MB/s  was: '+str(240.3/(endTime - startTime))
+    for x in [sys.stdout, logfile]: print >> x ,'* Breakdown:                           *'
+    for x in [sys.stdout, logfile]: print >> x ,'*   import       time was: '+str(importtime-startTime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   listobs      time was: '+str(listtime-importtime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   flagdata     time was: '+str(flagtime-listtime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   setjy        time was: '+str(setjytime-flagtime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   gencal       time was: '+str(gencaltime-setjytime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   gaincal      time was: '+str(gaintime-gencaltime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   bandpass     time was: '+str(bptime-gaintime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   fluxscale    time was: '+str(fstime-bptime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   correct      time was: '+str(correcttime-fstime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   split        time was: '+str(splitcaltime-correcttime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   import       time was: '+str(importtime2-splitcaltime)
+    for x in [sys.stdout, logfile]: print >> x ,'+   listobs      time was: '+str(listtime2-importtime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   flagdata     time was: '+str(flagtime2-listtime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   setjy        time was: '+str(setjytime2-flagtime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   gencal       time was: '+str(gencaltime2-setjytime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   gaincal      time was: '+str(gaintime2-gencaltime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   bandpass     time was: '+str(bptime2-gaintime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   fluxscale    time was: '+str(fstime2-bptime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   correct      time was: '+str(correcttime2-fstime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   split        time was: '+str(splitcaltime2-correcttime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   concatenate  time was: '+str(concattime-splitcaltime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   image        time was: '+str(imagetime-concattime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   moments      time was: '+str(momenttime-imagetime)
+    for x in [sys.stdout, logfile]: print >> x ,'*****************************************'
 
-    print >>logfile,''
-    print >>logfile,''
-    print >>logfile,'********* Benchmarking *****************'
-    print >>logfile,'*                                      *'
-    print >>logfile,'Total wall clock time was: '+str(endTime - startTime)
-    print >>logfile,'Total CPU        time was: '+str(endProc - startProc)
-    print >>logfile,'Processing rate MB/s  was: '+str(240.3/(endTime - startTime))
-    print >>logfile,'* Breakdown:                           *'
-    print >>logfile,'*   import       time was: '+str(importtime-startTime)
-    print >>logfile,'*   listobs      time was: '+str(listtime-importtime)
-    print >>logfile,'*   flagdata     time was: '+str(flagtime-listtime)
-    print >>logfile,'*   setjy        time was: '+str(setjytime-flagtime)
-    print >>logfile,'*   gencal       time was: '+str(gencaltime-setjytime)
-    print >>logfile,'*   gaincal      time was: '+str(gaintime-gencaltime)
-    print >>logfile,'*   bandpass     time was: '+str(bptime-gaintime)
-    print >>logfile,'*   fluxscale    time was: '+str(fstime-bptime)
-    print >>logfile,'*   correct      time was: '+str(correcttime-fstime)
-    print >>logfile,'*   split        time was: '+str(splitcaltime-correcttime)
-    print >>logfile,'*   import       time was: '+str(importtime2-splitcaltime)
-    print >>logfile,'+   listobs      time was: '+str(listtime2-importtime2)
-    print >>logfile,'*   flagdata     time was: '+str(flagtime2-listtime2)
-    print >>logfile,'*   setjy        time was: '+str(setjytime2-flagtime2)
-    print >>logfile,'*   gencal       time was: '+str(gencaltime2-setjytime2)
-    print >>logfile,'*   gaincal      time was: '+str(gaintime2-gencaltime2)
-    print >>logfile,'*   bandpass     time was: '+str(bptime2-gaintime2)
-    print >>logfile,'*   fluxscale    time was: '+str(fstime2-bptime2)
-    print >>logfile,'*   correct      time was: '+str(correcttime2-fstime2)
-    print >>logfile,'*   split        time was: '+str(splitcaltime2-correcttime2)
-    print >>logfile,'*   concatenate  time was: '+str(concattime-splitcaltime2)
-    print >>logfile,'*   image        time was: '+str(imagetime-concattime)
-    print >>logfile,'*   moments      time was: '+str(momenttime-imagetime)
-    print >>logfile,'*****************************************'
     #
     logfile.close()
