@@ -79,16 +79,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 template<class T> class PowerLogarithmicPolynomial: public PowerLogarithmicPolynomialParam<T> {
 public:
-  //# Enumerations
   
-  //# Constructors
-  // Constructs an empty PowerLogarithmicPolynomial
+	// Constructs an empty PowerLogarithmicPolynomial
 	PowerLogarithmicPolynomial() : PowerLogarithmicPolynomialParam<T>() {}
-  // Makes a power logaritmic polynomial with the specified number of coefficients, all set to
-  // zero. 
-  explicit PowerLogarithmicPolynomial(uInt n) : PowerLogarithmicPolynomialParam<T>(n) {}
-  // Copy constructor/assignment (deep copy)
-  // <group>
+
+	// Makes a power logaritmic polynomial with the specified number of coefficients, all set to
+	// zero.
+	explicit PowerLogarithmicPolynomial(uInt n) : PowerLogarithmicPolynomialParam<T>(n) {}
+
+	// Make a function with the specified params.
+	PowerLogarithmicPolynomial(const vector<T>& parms) : PowerLogarithmicPolynomialParam<T>(parms) {}
+
+	// Copy constructor/assignment (deep copy)
+	// <group>
   PowerLogarithmicPolynomial(const PowerLogarithmicPolynomial<T> &other) : PowerLogarithmicPolynomialParam<T>(other) {}
   template <class W>
   PowerLogarithmicPolynomial(const PowerLogarithmicPolynomial<W> &other) : PowerLogarithmicPolynomialParam<T>(other) {}

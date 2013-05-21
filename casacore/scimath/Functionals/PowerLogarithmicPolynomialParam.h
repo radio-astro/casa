@@ -96,6 +96,8 @@ public:
   // Makes a polynomial of the specified number of coefficients, all set to zero.
   explicit PowerLogarithmicPolynomialParam(uInt n);
   
+  PowerLogarithmicPolynomialParam(const vector<T>& parms);
+
   // Make this a copy of other (deep copy).
   // <group>
   PowerLogarithmicPolynomialParam(const PowerLogarithmicPolynomialParam<T> &other);
