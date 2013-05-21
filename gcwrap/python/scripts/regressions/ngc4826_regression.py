@@ -126,7 +126,7 @@ print '--split - 22apr98--'
 default('split')
 split(vis='n4826_22apr.ms',outputvis='gcal.split.ms',
 #      field=1,spw=0,nchan=1,start=0,step=1,datacolumn='corrected')
-	field='1',spw='0:0~1',datacolumn='corrected')
+      field='1',spw='0',datacolumn='corrected')
 default('split')
 split(vis='n4826_22apr.ms',outputvis='src.split.ms',
 #      field=[2,3,4,5,6,7,8],spw=[1,2,3,4],nchan=64,start=0,step=1,
@@ -230,7 +230,7 @@ print '--split - 16apr98 --'
 default('split')
 split(vis='n4826_16apr.ms',outputvis='gcala.split.ms',
 #      field=1,spw=1,nchan=1,start=0,step=1,datacolumn='corrected')
-	field='1',spw='1:0~1',datacolumn='corrected')
+      field='1',spw='1',datacolumn='corrected')
 default('split')
 split(vis='n4826_16apr.ms',outputvis='srca.split.ms',
 #      field=[2,3,4,5,6,7,8],spw=[2,3,4,5],nchan=64,start=0,step=1,
