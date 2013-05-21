@@ -1,6 +1,7 @@
 import casa as c
 import numpy as np
-def field2skycat(msname='', skycat=''):
+import re;
+def field2skycat(msname='', skycat='',fieldpattern=''):
     """
     Converts field table in ms to skycatalog
     allow overlay on image in the viewer
@@ -15,11 +16,17 @@ def field2skycat(msname='', skycat=''):
     dir=c.table.getcol('PHASE_DIR')
     nam=c.table.getcol('NAME')
     nfield=c.table.nrows()
+    n=0;
+    for k in range(nfield):
+        if (re.match(fieldpattern,nam[k]) != None):
+            n=n+1
+
     eltype=[]
     if(c.table.getcolkeyword('PHASE_DIR', 'MEASINFO').has_key('VarRefCol')):
         typeid=c.table.getcol(c.table.getcolkeyword('PHASE_DIR', 'MEASINFO')['VarRefCol'])
         for k in range(nfield):
-            eltype.append(enumTypes[typeid[k]])
+            if (re.match(fieldpattern,nam[k]) != None):
+                eltype.append(enumTypes[typeid[k]])
     else:
         eltype=[c.table.getcolkeyword('PHASE_DIR', 'MEASINFO')['Ref']]*nfield
     unitra=c.table.getcolkeyword('PHASE_DIR', 'QuantumUnits')[0]
@@ -33,22 +40,30 @@ def field2skycat(msname='', skycat=''):
     des['FIELD_ID']={'valueType':'string'}
     des['RA']={'valueType':'string'}
     des['DEC']={'valueType':'string'}
-    c.table.create(tablename=skycat, tabledesc=des, nrow=nfield)
+
+
+    c.table.create(tablename=skycat, tabledesc=des, nrow=n);
     c.table.putcol('Type', eltype)
-    lati=np.zeros((nfield,))
-    longi=np.zeros((nfield,))
+    lati=np.zeros((n,))
+    longi=np.zeros((n,))
     RA=[]
     DEC=[]
     fid=[]
+    fieldname=[]
+    n=0;
     for k in range(nfield):
-        longi[k]=qa.convert(qa.quantity(dir[0,0,k], unitra),'deg')['value']
-        lati[k]=qa.convert(qa.quantity(dir[1,0,k], unitdec), 'deg')['value']
-        RA.append(qa.time(qa.quantity(dir[0,0,k], unitra), prec=10))
-        DEC.append(qa.angle(qa.quantity(dir[1,0,0], unitdec), prec=10))
-        fid.append(str(k))
+        if (re.match(fieldpattern,nam[k]) != None):
+            longi[n]=qa.convert(qa.quantity(dir[0,0,k], unitra),'deg')['value']
+            lati[n]=qa.convert(qa.quantity(dir[1,0,k], unitdec), 'deg')['value']
+            RA.append(qa.time(qa.quantity(dir[0,0,k], unitra), prec=10))
+            DEC.append(qa.angle(qa.quantity(dir[1,0,0], unitdec), prec=10))
+            fid.append(str(k))
+            fieldname.append(nam[k]);
+            n=n+1;
     c.table.putcol('RA', RA)
     c.table.putcol('DEC', DEC)
-    c.table.putcol('FIELD_NAME', nam)
+#    c.table.putcol('FIELD_NAME', nam)
+    c.table.putcol('FIELD_NAME', fieldname);
     c.table.putcol('FIELD_ID', fid)
     c.table.putcol('Long', longi)
     c.table.putcol('Lat', lati)
