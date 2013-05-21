@@ -24,6 +24,11 @@
 	<value></value>
     </param>
 
+    <param type="bool" name="copytoraw" subparam="true">
+	<description>Copy data products to raw data directory</description>
+	<value>False</value>
+    </param>
+
     <param type="string" name="rawdata_dir" subparam="true">
 	<description>The rawdata directory</description>
 	<value></value>
@@ -57,6 +62,7 @@
 		<default param="vis"><value type="stringArray"></value></default>
 		<default param="sessions"><value type="stringArray"></value></default>
 		<default param="products_dir"><value type="string"></value></default>
+		<default param="copytoraw"><value type="bool">False</value></default>
 		<default param="rawdata_dir"><value type="string"></value></default>
 		<default param="dryrun"><value type="bool">False</value></default>
 		<default param="acceptresults"><value type="bool">True</value></default>
@@ -65,6 +71,7 @@
 		<default param="vis"><value type="stringArray"></value></default>
 		<default param="sessions"><value type="stringArray"></value></default>
 		<default param="products_dir"><value type="string"></value></default>
+		<default param="copytoraw"><value type="bool">False</value></default>
 		<default param="rawdata_dir"><value type="string"></value></default>
 	    </equals>
 	</when>
