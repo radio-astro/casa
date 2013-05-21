@@ -2385,7 +2385,8 @@ void MSTransformDataHandler::setIterationApproach()
 // -----------------------------------------------------------------------
 void MSTransformDataHandler::generateIterator()
 {
-	visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,sortColumns_p,false,NULL,false,timeBin_p);
+	visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns (sortColumns_p,false),
+	                                                   false, NULL,timeBin_p);
 	if (channelSelector_p != NULL) visibilityIterator_p->setFrequencySelection(*channelSelector_p);
 	return;
 }

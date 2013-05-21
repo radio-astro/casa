@@ -34,8 +34,6 @@ namespace test {
 
 class MsFactory;
 
-
-
 class TestWidget {
 
 public:

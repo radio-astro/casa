@@ -39,9 +39,10 @@ namespace casa {
 
 namespace vi {
 
-TransformingVi2::TransformingVi2 (ViImplementation2 * inputVi)
+TransformingVi2::TransformingVi2 (VisibilityIterator2 * vi, ViImplementation2 * inputVi)
 : inputVii_p (inputVi),
-  vb_p (0)
+  vb_p (0),
+  vi_p (vi)
 {}
 
 TransformingVi2::~TransformingVi2 ()
@@ -273,7 +274,7 @@ TransformingVi2::getRowIds (Vector<uInt> & rowids)  const
      getVii()->getRowIds (rowids);
 }
 
-const Block<Int>&
+const SortColumns &
 TransformingVi2::getSortColumns ()  const
 {
     return getVii()->getSortColumns ();
@@ -522,15 +523,9 @@ TransformingVi2::setVisBuffer (VisBuffer2 * vb)
 
 
 void
-TransformingVi2::sigma (Vector<Float> & sig)  const
+TransformingVi2::sigma (Matrix<Float> & sig)  const
 {
      getVii()->sigma (sig);
-}
-
-void
-TransformingVi2::sigmaMat (Matrix<Float> & sigmat)  const
-{
-     getVii()->sigmaMat (sigmat);
 }
 
 void
@@ -643,15 +638,9 @@ TransformingVi2::visibilityShape ()  const
 }
 
 void
-TransformingVi2::weight (Vector<Float> & wt)  const
+TransformingVi2::weight (Matrix<Float> & wt)  const
 {
      getVii()->weight (wt);
-}
-
-void
-TransformingVi2::weightMat (Matrix<Float> & wtmat)  const
-{
-     getVii()->weightMat (wtmat);
 }
 
 void
@@ -768,6 +757,25 @@ TransformingVi2::writeWeightSpectrum (const Cube<Float> & /*wtsp*/)
 {
     Tvi2NotImplemented ();
 }
+
+void
+TransformingVi2::setWeightScaling (CountedPtr <WeightScaling> weightScaling)
+{
+    getVii()->setWeightScaling(weightScaling);
+}
+
+Bool
+TransformingVi2::hasWeightScaling () const
+{
+    return getVii()->hasWeightScaling();
+}
+
+CountedPtr<WeightScaling>
+TransformingVi2::getWeightScaling () const
+{
+    return getVii()->getWeightScaling();
+}
+
 
 } // end namespace vi
 

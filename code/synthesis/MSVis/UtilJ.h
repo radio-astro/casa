@@ -279,7 +279,7 @@ mapValues (const std::map<K,V> & aMap)
 
 void printBacktrace (ostream & os, const String & prefix = "");
 
-
+long round (Double d);
 
 void sleepMs (Int milliseconds);
 void toStdError (const String & m, const String & prefix = "*E* ");

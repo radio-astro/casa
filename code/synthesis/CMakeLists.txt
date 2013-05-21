@@ -125,6 +125,7 @@ casa_add_library( synthesis
   MSVis/VisibilityIteratorImpl2.cc
   MSVis/TransformingVi2.cc
   MSVis/AveragingTvi2.cc
+  MSVis/AveragingVi2Factory.cc
   MSVis/FinalTvi2.cc
 ####  MSVis/VisibilityIteratorImplAsync2.cc
   MSVis/VisImagingWeight.cc
@@ -496,6 +497,7 @@ install (FILES
         MSVis/VisibilityIteratorImpl2.h
         MSVis/VisibilityIteratorImplAsync2.h
         MSVis/TransformingVi2.h
+	MSVis/AveragingVi2Factory.h
 	MSVis/AveragingTvi2.h
 	MSVis/FinalTvi2.h
 	MSVis/VisibilityProcessing.h

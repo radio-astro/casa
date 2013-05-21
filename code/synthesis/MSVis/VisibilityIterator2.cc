@@ -51,47 +51,45 @@ namespace casa {
 
 namespace vi {
 
-SortColumns::SortColumns (const Block<Int> & columns, Bool addDefaultColumns)
+SortColumns::SortColumns (const Block<Int> & columnIds, Bool addDefaultColumns)
 : addDefaultColumns_p (addDefaultColumns),
-  columns_p (columns)
+  columnIds_p (columnIds)
 {}
 
 Bool
-SortColumns::addDefaultSortColumns () const
+SortColumns::shouldAddDefaultColumns () const
 {
     return addDefaultColumns_p;
 }
 
 const Block<Int> &
-SortColumns::getColumns () const
+SortColumns::getColumnIds () const
 {
-    return columns_p;
+    return columnIds_p;
 }
 
 
-WeightFunction *
-WeightFunction::generateUnityWeightFunction ()
+CountedPtr <WeightScaling>
+WeightScaling::generateUnityWeightScaling ()
 {
-    return generateWeightFunction (WeightFunction::unity);
+    return generateWeightScaling (WeightScaling::unity);
 }
 
-WeightFunction *
-WeightFunction::generateIdentityWeightFunction ()
+CountedPtr <WeightScaling>
+WeightScaling::generateIdentityWeightScaling ()
 {
-    return  generateWeightFunction (WeightFunction::identity);
+    return  generateWeightScaling (WeightScaling::identity);
 }
 
-WeightFunction *
-WeightFunction::generateSquareWeightFunction ()
+CountedPtr <WeightScaling>
+WeightScaling::generateSquareWeightScaling ()
 {
-    return  generateWeightFunction (WeightFunction::square);
+    return  generateWeightScaling (WeightScaling::square);
 }
 
-
-Float WeightFunction::unity (Float) { return 1.0;}
-Float WeightFunction::identity (Float x) { return x;}
-Float WeightFunction::square (Float x) { return x * x;}
-
+Float WeightScaling::unity (Float) { return 1.0;}
+Float WeightScaling::identity (Float x) { return x;}
+Float WeightScaling::square (Float x) { return x * x;}
 
 VisibilityIterator2::VisibilityIterator2()
 : impl_p (0)
@@ -99,25 +97,31 @@ VisibilityIterator2::VisibilityIterator2()
 }
 
 VisibilityIterator2::VisibilityIterator2(const MeasurementSet& ms,
-                                         const Block<Int>& sortColumns,
+                                         const SortColumns & sortColumns,
                                          Bool isWritable,
                                          const VisBufferComponents2 * prefetchColumns,
-                                         const Bool addDefaultSortCols,
                                          Double timeInterval)
 {
-    construct (prefetchColumns, Block<MeasurementSet> (1, ms), sortColumns,
-               addDefaultSortCols, timeInterval, isWritable);
+    Block<const MeasurementSet *> mss (1, & ms);
+    construct (prefetchColumns, mss, sortColumns,
+               timeInterval, isWritable);
 }
 
-VisibilityIterator2::VisibilityIterator2 (const Block<MeasurementSet>& mss,
-                                          const Block<Int>& sortColumns,
+VisibilityIterator2::VisibilityIterator2 (const Block<const MeasurementSet *>& mss,
+                                          const SortColumns & sortColumns,
                                           Bool isWritable,
                                           const VisBufferComponents2 * prefetchColumns,
-                                          const Bool addDefaultSortCols,
                                           Double timeInterval)
 {
-    construct (prefetchColumns, mss, sortColumns, addDefaultSortCols,
-               timeInterval, isWritable);
+    construct (prefetchColumns, mss, sortColumns, timeInterval, isWritable);
+}
+
+VisibilityIterator2::VisibilityIterator2 (const ViFactory & factory)
+: impl_p (0)
+{
+    ViImplementation2 * newImpl = factory.createVi (this);
+
+    impl_p = newImpl;
 }
 
 //VisibilityIterator2::VisibilityIterator2 (const VisBufferComponents2 * prefetchColumns,
@@ -135,9 +139,8 @@ VisibilityIterator2::VisibilityIterator2 (const Block<MeasurementSet>& mss,
 
 void
 VisibilityIterator2::construct (const VisBufferComponents2 * prefetchColumns,
-                                const Block<MeasurementSet>& mss,
-                                const Block<Int>& sortColumns,
-                                const Bool addDefaultSortCols,
+                                const Block<const MeasurementSet *>& mss,
+                                const SortColumns & sortColumns,
                                 Double timeInterval,
                                 Bool writable)
 {
@@ -152,8 +155,7 @@ VisibilityIterator2::construct (const VisBufferComponents2 * prefetchColumns,
         //                                               addDefaultSortCols, timeInterval, writable);
     }
     else{
-        impl_p = new VisibilityIteratorImpl2 (this, mss, sortColumns,
-                                              addDefaultSortCols, timeInterval, VbPlain, writable);
+        impl_p = new VisibilityIteratorImpl2 (this, mss, sortColumns, timeInterval, VbPlain, writable);
     }
 }
 
@@ -204,7 +206,7 @@ VisibilityIterator2::antennaMounts () const
     return impl_p->antennaMounts ();
 }
 
-const Block<Int>&
+const SortColumns &
 VisibilityIterator2::getSortColumns() const
 {
   CheckImplementationPointerR();
@@ -863,17 +865,10 @@ VisibilityIterator2::setRowBlocking (Int nRows) // for use by Async I/O *ONLY
 }
 
 void
-VisibilityIterator2::sigma (Vector<Float>& sig) const
+VisibilityIterator2::sigma (Matrix<Float>& sig) const
 {
     CheckImplementationPointerR ();
     impl_p->sigma (sig);
-}
-
-void
-VisibilityIterator2::sigmaMat (Matrix<Float>& sigmat) const
-{
-    CheckImplementationPointerR ();
-    impl_p->sigmaMat (sigmat);
 }
 
 void
@@ -1003,17 +998,10 @@ VisibilityIterator2::visibilityShape () const
 }
 
 void
-VisibilityIterator2::weight (Vector<Float>& wt) const
+VisibilityIterator2::weight (Matrix<Float>& wt) const
 {
     CheckImplementationPointerR ();
     impl_p->weight (wt);
-}
-
-void
-VisibilityIterator2::weightMat (Matrix<Float>& wtmat) const
-{
-    CheckImplementationPointerR ();
-    impl_p->weightMat (wtmat);
 }
 
 void
@@ -1023,12 +1011,12 @@ VisibilityIterator2::weightSpectrum (Cube<Float>& wtsp) const
     impl_p->weightSpectrum (wtsp);
 }
 
-void
-VisibilityIterator2::writeFlag (const Matrix<Bool>& flag)
-{
-    CheckImplementationPointerW ();
-    impl_p->writeFlag (flag);
-}
+//void
+//VisibilityIterator2::writeFlag (const Matrix<Bool>& flag)
+//{
+//    CheckImplementationPointerW ();
+//    impl_p->writeFlag (flag);
+//}
 
 void
 VisibilityIterator2::writeFlag (const Cube<Bool>& flag)
@@ -1141,114 +1129,129 @@ VisibilityIterator2::writeBackChanges (VisBuffer2 * vb)
     impl_p->writeBackChanges (vb);
 }
 
-SubtableColumns::SubtableColumns (const MSIter & msIter)
+void
+VisibilityIterator2::setWeightScaling (CountedPtr<WeightScaling> weightScaling)
+{
+  CheckImplementationPointerW ();
+
+  impl_p->setWeightScaling (weightScaling);
+}
+
+Bool
+VisibilityIterator2::hasWeightScaling () const
+{
+  CheckImplementationPointerW ();
+
+  return impl_p->hasWeightScaling ();
+}
+
+SubtableColumns::SubtableColumns (CountedPtr <MSIter> msIter)
 : msIter_p (msIter)
 {}
 
 const ROMSAntennaColumns&
 SubtableColumns::antenna() const
 {
-    return msIter_p.msColumns().antenna();
+    return msIter_p->msColumns().antenna();
 }
 
 const ROMSDataDescColumns&
 SubtableColumns::dataDescription() const
 {
-    return msIter_p.msColumns().dataDescription();
+    return msIter_p->msColumns().dataDescription();
 }
 
 const ROMSFeedColumns&
 SubtableColumns::feed() const
 {
-    return msIter_p.msColumns().feed();
+    return msIter_p->msColumns().feed();
 }
 
 const ROMSFieldColumns&
 SubtableColumns::field() const
 {
-    return msIter_p.msColumns().field();
+    return msIter_p->msColumns().field();
 }
 
 const ROMSFlagCmdColumns&
 SubtableColumns::flagCmd() const
 {
-    return msIter_p.msColumns().flagCmd();
+    return msIter_p->msColumns().flagCmd();
 }
 
 const ROMSHistoryColumns&
 SubtableColumns::history() const
 {
-    return msIter_p.msColumns().history();
+    return msIter_p->msColumns().history();
 }
 
 const ROMSObservationColumns&
 SubtableColumns::observation() const
 {
-    return msIter_p.msColumns().observation();
+    return msIter_p->msColumns().observation();
 }
 
 const ROMSPointingColumns&
 SubtableColumns::pointing() const
 {
-    return msIter_p.msColumns().pointing();
+    return msIter_p->msColumns().pointing();
 }
 
 const ROMSPolarizationColumns&
 SubtableColumns::polarization() const
 {
 
-    return msIter_p.msColumns().polarization();
+    return msIter_p->msColumns().polarization();
 }
 
 const ROMSProcessorColumns&
 SubtableColumns::processor() const
 {
-    return msIter_p.msColumns().processor();
+    return msIter_p->msColumns().processor();
 }
 
 const ROMSSpWindowColumns&
 SubtableColumns::spectralWindow() const
 {
 
-    return msIter_p.msColumns().spectralWindow();
+    return msIter_p->msColumns().spectralWindow();
 }
 
 const ROMSStateColumns&
 SubtableColumns::state() const
 {
-    return msIter_p.msColumns().state();
+    return msIter_p->msColumns().state();
 }
 
 const ROMSDopplerColumns&
 SubtableColumns::doppler() const
 {
-    return msIter_p.msColumns().doppler();
+    return msIter_p->msColumns().doppler();
 }
 
 const ROMSFreqOffsetColumns&
 SubtableColumns::freqOffset() const
 {
-    return msIter_p.msColumns().freqOffset();
+    return msIter_p->msColumns().freqOffset();
 }
 
 const ROMSSourceColumns&
 SubtableColumns::source() const
 {
-    return msIter_p.msColumns().source();
+    return msIter_p->msColumns().source();
 }
 
 const ROMSSysCalColumns&
 SubtableColumns::sysCal() const
 {
-    return msIter_p.msColumns().sysCal();
+    return msIter_p->msColumns().sysCal();
 }
 
 const ROMSWeatherColumns&
 SubtableColumns::weather() const
 {
-    return msIter_p.msColumns().weather();
+    return msIter_p->msColumns().weather();
 }
-
 
 
 } // end namespace vi

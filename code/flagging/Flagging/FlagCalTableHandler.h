@@ -32,6 +32,12 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
+namespace vi {
+
+class WeightScaling;
+
+}
+
 class DummyBufferImpl: public vi::VisBuffer2
 {
 public:
@@ -179,13 +185,20 @@ public:
     virtual Vector<Int> getCorrelationNumbers () const {Vector<Int> dummy; return dummy;}
     virtual void validateShapes () const {}
 
+    virtual Float getWeightScaled (Int row) const { return 0;}
+    virtual Float getWeightScaled (Int correlation, Int row) const { return 0;}
+    virtual Float getWeightScaled (Int correlation, Int channel, Int row) const { return 0;}
+    virtual CountedPtr<vi::WeightScaling> getWeightScaling () const { return 0; }
+
+
 protected:
 
     virtual void configureNewSubchunk (Int msId, const String & msName, Bool isNewMs,
                                        Bool isNewArrayId, Bool isNewFieldId,
                                        Bool isNewSpectralWindow, const vi::Subchunk & subchunk,
                                        Int nRows, Int nChannels, Int nCorrelations,
-                                       const Vector<Int> & correlations) {}
+                                       const Vector<Int> & correlations,
+                                       CountedPtr <vi::WeightScaling> weightScaling) {}
     virtual void invalidate() {}
     virtual Bool isRekeyable () const {Bool dummy; return dummy;}
     virtual void setRekeyable (Bool isRekeable) {}
