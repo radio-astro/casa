@@ -187,9 +187,9 @@ def load_ngc4826(prefix,msname,caltable):
     print 'Using solint=inf combining over spw'
     print 'Output table ngc4826.tutorial.16apr98.gcal'
     gaincal(vis=msname, caltable=caltable,
-        field='0,1', spw='0~11', gaintype='G', minsnr=2.0,
-        refant='ANT5', gaincurve=False, opacity=0.0,
-        solint='inf', combine='spw')
+            field='0,1', spw='0~11', gaintype='G', minsnr=2.0,
+            refant='ANT5', 
+            solint='inf', combine='spw')
 #=============================================================================
 
 #=============================================================================
@@ -241,13 +241,10 @@ def load_jupiter6cm(prefix,msname,caltable):
     usespw = ''
     usespwlist = ['0','1']
     
-    # prior calibration to apply
-    usegaincurve = True
-    gainopacity = 0.0
-    
     # reference antenna 11 (11=VLA:N1)
     calrefant = '11'
-    
+
+    gctable = calprefix + '.gcurve'
     gtable = calprefix + '.gcal'
     ftable = calprefix + '.fluxscale'
     atable = calprefix + '.accum'
@@ -456,6 +453,25 @@ def load_jupiter6cm(prefix,msname,caltable):
     #
     #=====================================================================
     #
+    # Make gaincurve table
+    #
+    print '--Gencal(gc)--'
+    default('gencal')
+
+    print "Making gaincurve table for use in subsequent operations"
+
+    vis = msfile
+    
+    # set the name for the output gain caltable
+    caltable = gctable
+
+    caltype='gc'
+
+    gencal()
+
+    #
+    #=====================================================================
+    #
     # Initial gain calibration
     #
     print '--Gaincal--'
@@ -479,9 +495,8 @@ def load_jupiter6cm(prefix,msname,caltable):
     field = '1331+305,0137+331'
     spw = ''
     
-    # a-priori calibration application
-    gaincurve = usegaincurve
-    opacity = gainopacity
+    # use gc table
+    gaintable=[gctable]
     
     # scan-based G solutions for both amplitude and phase
     gaintype = 'G'
@@ -598,12 +613,8 @@ def load_jupiter6cm(prefix,msname,caltable):
         vis = msfile
     
         # Start with the un-fluxscaled gain table
-        gaintable = gtable
+        gaintable = [gctable,gtable]
     
-        # use settings from gaincal
-        gaincurve = usegaincurve
-        opacity = gainopacity
-        
         # Output table
         caltable = ptable
     
@@ -710,11 +721,7 @@ def load_jupiter6cm(prefix,msname,caltable):
         vis = msfile
         
         # Start with the G and D tables
-        gaintable = [gtable,ptable]
-        
-        # use settings from gaincal
-        gaincurve = usegaincurve
-        opacity = gainopacity
+        gaintable = [gctable,gtable,ptable]
         
         # Output table
         caltable = xtable

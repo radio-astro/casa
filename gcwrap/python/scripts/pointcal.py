@@ -8,7 +8,7 @@ from parameter_check import *
 def pointcal(vis=None,model=None,caltable=None,
 	     field=None,spw=None,
 	     selectdata=None,timerange=None,uvrange=None,antenna=None,scan=None,msselect=None,
-	     gaincurve=None,opacity=None,solint=None):
+	     solint=None):
 	"""Solve for pointing error calibration:
 
 	This program is under development.  Please do not use.
@@ -69,12 +69,6 @@ def pointcal(vis=None,model=None,caltable=None,
        scan -- Scan number range - New, under developement
        msselect -- Optional complex data selection (ignore for now)
 
-	gaincurve -- Apply VLA antenna gain curve correction (True/False)
-		default: False; 
-		Use gaincurve=True ONLY for VLA data
-	opacity -- Opacity correction to apply
-		default: 0.0 (no opacity correction)
-		example: opacity=0.051
 	solint --  Solution interval (sec)
 		default: 0.0 (scan based); example: solint=60.
 
@@ -123,8 +117,6 @@ def pointcal(vis=None,model=None,caltable=None,
 		antenna=''
 		scan=''
 		msselect=''
-        gaincurve=myf['gaincurve']
-        opacity=myf['opacity']
         solint=myf['solint']
         #sys._getframe(1).f_globals[key]=keyVal
 
@@ -132,15 +124,15 @@ def pointcal(vis=None,model=None,caltable=None,
         arg_names=['vis','model','caltable',
 		   'field','spw',
 		   'selectdata','timerange','uvrange','antenna','scan','msselect',
-		   'gaincurve','opacity','solint']
+		   'solint']
         arg_values=[vis,model,caltable,
 		    field,spw,
 		    selectdata,timerange,uvrange,antenna,scan,msselect,
-		    gaincurve,opacity,solint]
+		    solint]
         arg_types=[str,str,str,
 		   str,str,
 		   bool,str,str,str,str,str,
-		   bool,float,float]
+		   float]
         try:
                 parameter_checktype(arg_names,arg_values,arg_types)
         except TypeError, e:
@@ -163,8 +155,6 @@ def pointcal(vis=None,model=None,caltable=None,
 			     nchan=nchan,start=start,step=step,
 			     msselect=msselect);
 
-		if (opacity>0.0): cb.setapply2(type='TOPAC',t=-1,opacity=opacity)
-		if gaincurve: cb.setapply2(type='GAINCURVE',t=-1)
 		cb.setsolve2(type='POINTCAL',t=solint,refant='',table=caltable)
 		#cb.state()
 		cb.solve()
@@ -196,8 +186,6 @@ def pointcal_defaults(param=None):
 				  {'scan':''},
 				  {'msselect':''}])
                          }
-        a['gaincurve']=False
-        a['opacity']=0.0
         a['solint']=0.0
 	if(param == None):
 		myf['__set_default_parameters'](a)
@@ -221,8 +209,6 @@ def pointcal_description(key='pointcal',subkey=None):
         'antenna': 'Select data based on antenna/baseline',
         'scan': 'Select data based on scan number',
         'msselect': 'Optional data selection (see help)',
-        'gaincurve': 'Apply VLA antenna gain curve correction',
-        'opacity':'Opacity correction to apply (nepers)',
         'gaintable': 'Gain calibration solutions to apply',
         'gainselect': 'Select subset of calibration solutions from gaintable',
         'solint': 'Solution interval (sec)',

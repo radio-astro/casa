@@ -11,7 +11,7 @@ def gaincal(vis=None,caltable=None,
 	    gaintype=None,smodel=None,calmode=None,append=None,
 	    splinetime=None,npointaver=None,phasewrap=None,
 	    gaintable=None,gainfield=None,interp=None,spwmap=None,
-	    gaincurve=None,opacity=None,parang=None):
+	    parang=None):
 
 	#Python script
         casalog.origin('gaincal')
@@ -85,14 +85,6 @@ def gaincal(vis=None,caltable=None,
 		
 		# ...and now the specialized terms
 		# (BTW, interp irrelevant for these, since they are evaluated)
-
-		# opacity (if non-trivially specified and any >0.0)
-		opacarr=np.array(opacity)   # as numpy array for uniformity
-		if (np.sum(opacarr)>0.0):
-			# opacity transmitted as a list in all cases
-			mycb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=True)
-
-		if gaincurve: mycb.setapply(type='GAINCURVE',t=-1,calwt=True)
 
 		# Apply parallactic angle, if requested
 		if parang: mycb.setapply(type='P')

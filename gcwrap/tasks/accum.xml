@@ -182,32 +182,6 @@
              caltable = 'accum1_cal'
              accum()
 
-       Incorporate gaincurve, opacity, parang once and for all
-
-          taskname= 'gaincal'
-             vis = 'mydata.ms'
-             caltable = 'first_cal'
-               etc
-             gaincurve = T
-             opacity = 0.11
-             parang = T
-             gaincal()
-
-           taskname = 'accum'
-             default()
-             vis = 'mydata.ms'
-             tablein = ''
-             accumtime = 10
-             incrtable = 'first_cal'
-             caltable = 'accum1_cal'
-             accum()
-
-         accum1_cal with contain not only the gaincal solution, but the gaincurve,
-             opacity and parang correction.  Hence, when applying accum1_cal
-             on the fly for subsequent calibrations (gaincal, bandpass) or applying
-             the calibrations, then
-                gaincurve=F; opacity = 0.0; parang = F  should be used
-     
   
  </example>
  </task>

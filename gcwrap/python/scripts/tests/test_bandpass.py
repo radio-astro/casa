@@ -92,7 +92,7 @@ class bandpass1_test(test_base):
         '''Bandpass 1a: Create bandpass table using field=0'''
         msbcal = self.msfile + '.bcal'
         reference = self.reffile + '.ref1a.bcal'
-        bandpass(vis=self.msfile, caltable=msbcal, field='0',opacity=0.0,bandtype='B',
+        bandpass(vis=self.msfile, caltable=msbcal, field='0',bandtype='B',
                  solint='inf',combine='scan',refant='VA15')
         self.assertTrue(os.path.exists(msbcal))
                 
@@ -117,7 +117,7 @@ class bandpass2_test(test_base):
         '''Bandpass 1b: Create cal tables for the MS and MMS split by spws'''
         msbcal = self.msfile + '.bcal'
         reference = self.reffile + '.ref1b.bcal'
-        bandpass(vis=self.msfile, caltable=msbcal, field='0',spw='0', opacity=0.0,bandtype='B',
+        bandpass(vis=self.msfile, caltable=msbcal, field='0',spw='0',bandtype='B',
                  solint='inf',combine='scan',refant='ANT5')
         self.assertTrue(os.path.exists(msbcal))
         

@@ -3,7 +3,7 @@ import os
 from regressframe import regressionframe
 
 class regressverify :
-	datarepos = '/opt/casa/data'
+	datarepos = '/home/casa/data/trunk'
 	def fill(self) :
 		rstat = True 
 		return rstat
@@ -24,7 +24,7 @@ class regressverify :
 pipeline = regressionframe()
 verify = regressverify()
 
-pipeline.datarepos ='/opt/casa/data'
+pipeline.datarepos ='/home/casa/data/trunk'
 pipeline.workdir ='./g192'
 datapath = pipeline.datarepos+'/regression/ATST1/G192/'
 
@@ -43,8 +43,9 @@ pipeline.flag['tflagdata']['args'] = {'vis':'g192_a.ms',
 									'autocorr':True}
 pipeline.flag['verify'] = verify.flag
 
-pipeline.calibrate['tasks'] = ['setjy', 'gaincal', 'bandpass', 'fluxscale', 'applycal']
+pipeline.calibrate['tasks'] = ['setjy', 'gencal', 'gaincal', 'bandpass', 'fluxscale', 'applycal']
 pipeline.calibrate['setjy'] = {}
+pipeline.calibrate['gencal'] = {}
 pipeline.calibrate['gaincal'] = {}
 pipeline.calibrate['bandpass'] = {}
 pipeline.calibrate['fluxscale'] = {}
@@ -53,23 +54,29 @@ pipeline.calibrate['setjy']['args'] = {'vis':'g192_a.ms',
 				       'field':'4',
 				       'standard':'Perley-Taylor 99'
 				       }
+
+pipeline.calibrate['gencal']['args'] = {'vis':'g192_a.ms',
+					'caltable':'g192_a.opac',
+					'caltype':'opac',
+					'parameter':[0.062]
+					}
+
 pipeline.calibrate['gaincal']['args'] = {'vis':'g192_a.ms',
-	                              'caltable':'g192_a.gcal',
-	                              'field':'0,2,3,4',
-				      'spw':'0:3~117',
-				      'gaintype':'G',
-				      'opacity':0.062,
-				      'solint':'inf',
-				      'combine':'',
-                                      'refant':'VA05'
-	                             }
+					 'caltable':'g192_a.gcal',
+					 'field':'0,2,3,4',
+					 'spw':'0:3~117',
+					 'gaintype':'G',
+					 'solint':'inf',
+					 'combine':'',
+					 'refant':'VA05',
+					 'gaintable':'g192_a.opac'
+					 }
 pipeline.calibrate['bandpass']['args'] = {'vis':'g192_a.ms',
 	                               'caltable':'g192_a.bcal',
 	                               'field':'3',
-				       'opacity':0.062,
-	                               'gaintable':'g192_a.gcal',
-	                               'gainfield':'3',
-	                               'interp':'nearest',
+	                               'gaintable':['g192_a.opac','g192_a.gcal'],
+	                               'gainfield':['','3'],
+	                               'interp':['','nearest'],
 				       'solint':'inf',
 				       'combine':'scan',
                                        'refant':'VA05' 
@@ -82,9 +89,8 @@ pipeline.calibrate['fluxscale']['args'] = {'vis':'g192_a.ms',
 	                              }
 pipeline.calibrate['applycal']['args'] = {'vis':'g192_a.ms',
 	                               'field':'0,1,2',
-				       'opacity':0.062,
-				       'gaintable':['g192_a.fluxcal','g192_a.bcal'],
-				       'gainfield':'0,2'
+				       'gaintable':['g192_a.opac','g192_a.fluxcal','g192_a.bcal'],
+				       'gainfield':['','0,2']
 	                              }
 pipeline.calibrate['verify'] = verify.calibrate
 
@@ -124,7 +130,7 @@ pipeline.image['verify'] = verify.image
 
 pipeline.analysis['tasks'] = ['exportfits']
 pipeline.analysis['exportfits'] = {}
-pipeline.analysis['exportfits']['args'] = {'imagename':'g192_a2.fits',
+pipeline.analysis['exportfits']['args'] = {'imagename':'g192_a2.image',
 	                                 'fitsimage':'g192_a2.fits'}
 pipeline.analysis['verify'] = verify.analysis
 pipeline.run("G192 regression")

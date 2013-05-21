@@ -8,7 +8,7 @@ def blcal(vis=None,caltable=None,
           observation=None, msselect=None,
 	  solint=None,combine=None,freqdep=None,calmode=None,solnorm=None,
 	  gaintable=None,gainfield=None,interp=None,spwmap=None,
-	  gaincurve=None,opacity=None,parang=None):
+	  parang=None):
 
 	#Python script
 
@@ -79,14 +79,6 @@ def blcal(vis=None,caltable=None,
 
                 # ...and now the specialized terms
                 # (BTW, interp irrelevant for these, since they are evaluated)
-
-		# opacity (if non-trivially specified and any >0.0)
-		opacarr=np.array(opacity)   # as numpy array for uniformity
-		if (np.sum(opacarr)>0.0):
-			# opacity transmitted as a list in all cases
-			cb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=True)
-			
-		if gaincurve: cb.setapply(type='GAINCURVE',t=-1,calwt=True)
 
 		# Apply parallactic angle, if requested
 		if parang: cb.setapply(type='P')

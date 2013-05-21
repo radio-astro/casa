@@ -1038,10 +1038,6 @@ class par(str):
 		""" Loop gain for CLEANing: """
 
 	@staticmethod
-	def gaincurve():
-		""" Apply VLA antenna gain curve correction: """
-
-	@staticmethod
 	def gaintype():
 		""" Type of gain calibration solution to solve for. 
 		This can be either 'G' or 'GSPLINE'.
@@ -1944,10 +1940,6 @@ class par(str):
 	@staticmethod
 	def nypanel():
 		""" Panel number in the y-direction: """
-
-	@staticmethod
-	def opacity():
-		""" Opacity correction to apply (nepers): """
 
 	@staticmethod
 	def optical():

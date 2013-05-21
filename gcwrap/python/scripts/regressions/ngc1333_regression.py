@@ -17,8 +17,6 @@
 #    (~ 43 GHz, VLA Q band receivers).  There is no detectable continuum    #
 #    emission in this data.  There are 2 overlapping spectral windows with  #
 #    starting frequencies of 43.4197 GHz & 43.4224 GHz.                     #
-#    No tipping scans were done during this observation so we cannot do an  #
-#    opacity correction during the gain calibration.                        #
 #    Each calibrator is observed in both spectral windows:                  #
 #      0336+323 = Gain calibrator (Sv ~ 2.1 Jy on 2may; 2.8 Jy on 8may)     #
 #      0542+498 = Flux density calibrator (3c147, Sv = 0.9144 Jy)           #
@@ -142,8 +140,7 @@
 #   o added use of canned image model for 0542 (3C147_Q.im)                 #
 #   o There *is* an opacity tip for 08May!  Using opacity=0.062 for 08May   #
 #      and opacity=0.06 for 02May (from tip on 01May)                       #
-#   o Use gaincurve=True for *all* calibration solve and apply, not just    #
-#      some.                                                                #
+#   o Use gaincurve for *all* calibration solve and apply, not just some    #
 #   o The phase stability is not too bad, but scan-based solutions          #
 #      (solint='inf') in gaincal are too long, especially for the long      #
 #      scans on the flux density calibrator.  Using solint='int' yields a   #
@@ -359,6 +356,29 @@ setjy(vis=msfile1,field='0542+498_2',modimage=modelim,scalebychan=False,standard
 if benchmarking:
     setjytime = time.time()
 
+
+#
+#=====================================================================
+#
+# Prior calibrations (opacity and gaincurve)
+#
+print '--Gencal (opacity, gaincurve)--'
+default('gencal')
+
+opactable = prefix1 + '.opac'
+gencal(vis=msfile1,caltable=opactable,
+       caltype='opac',
+       parameter=[0.06])
+
+gcurvetable = prefix1 + '.gaincurve'
+gencal(vis=msfile1,caltable=gcurvetable,
+       caltype='gc')
+
+# Record gencal completion time
+if benchmarking:
+    gencaltime = time.time()
+
+
 #
 #=====================================================================
 #
@@ -370,12 +390,14 @@ default('gaincal')
 gtable1 = prefix1 + '.1.gcal'
 gaincal(vis=msfile1,caltable=gtable1,
 	field='0,12,14',spw='0:4~58', gaintype='G',
-	opacity=0.06,solint='int',combine='',refant='VA27',minsnr=2.,gaincurve=True)
+	solint='int',combine='',refant='VA27',minsnr=2.,
+        gaintable=[opactable,gcurvetable],interp=['',''])
 
 gtable2 = prefix1 + '.2.gcal'
 gaincal(vis=msfile1,caltable=gtable2,
 	field='6,13,15',spw='1:4~58', gaintype='G',
-	opacity=0.06,solint='int',combine='',refant='VA27',gaincurve=True)
+	solint='int',combine='',refant='VA27',
+        gaintable=[opactable,gcurvetable],interp=['',''])
 
 # gaincal calibration completion time
 if benchmarking:
@@ -392,13 +414,13 @@ default('bandpass')
 btable1 = prefix1 + '.1.bcal'
 bandpass(vis=msfile1,caltable=btable1,
 	 field='0',spw='0',
-	 opacity=0.06,gaintable=gtable1,interp='nearest',
-	 refant='VA27',solint='inf',combine='scan',gaincurve=True)
+	 gaintable=[opactable,gcurvetable,gtable1],interp=['','','nearest'],
+	 refant='VA27',solint='inf',combine='scan')
 btable2 = prefix1 + '.2.bcal'
 bandpass(vis=msfile1,caltable=btable2,
 	 field='6',spw='1',
-	 opacity=0.06,gaintable=gtable2,interp='nearest',
-	 refant='VA27',solint='inf',combine='scan',gaincurve=True)
+	 gaintable=[opactable,gcurvetable,gtable2],interp=['','','nearest'],
+	 refant='VA27',solint='inf',combine='scan')
 
 # bandpass calibration completion time
 if benchmarking:
@@ -435,14 +457,12 @@ default('applycal')
 
 applycal(vis=msfile1,
 	 field='0~5',spw='0',
-	 gaincurve=True,opacity=0.06,
-	 gaintable=[ftable1,btable1],
-	 gainfield='0',calwt=False)
+	 gaintable=[opactable,gcurvetable,ftable1,btable1],
+	 gainfield=['','','0'],calwt=False)
 applycal(vis=msfile1,
 	 field='6~11',spw='1',
-	 gaincurve=True,opacity=0.06,
-	 gaintable=[ftable2,btable2],
-	 gainfield='6',calwt=False)
+	 gaintable=[opactable,gcurvetable,ftable2,btable2],
+	 gainfield=['','','6'],calwt=False)
 
 # Record applycal completion time
 if benchmarking:
@@ -640,6 +660,28 @@ setjy(vis=msfile2,field='0542+498_2',modimage=modelim,scalebychan=False,standard
 if benchmarking:
     setjytime2 = time.time()
 
+
+#
+#=====================================================================
+#
+# Prior calibrations (opacity and gaincurve)
+#
+print '--Gencal (opacity, gaincurve)--'
+default('gencal')
+
+opactable2 = prefix2 + '.opac'
+gencal(vis=msfile1,caltable=opactable2,
+       caltype='opac',
+       parameter=[0.062])
+
+gcurvetable2 = prefix2 + '.gaincurve'
+gencal(vis=msfile1,caltable=gcurvetable2,
+       caltype='gc')
+
+# gencal2 completion time
+if benchmarking:
+    gencaltime2 = time.time()
+
 #
 #=====================================================================
 #
@@ -651,11 +693,13 @@ default('gaincal')
 gtable2_1 = prefix2 + '.1.gcal'
 gaincal(vis=msfile2,caltable=gtable2_1,
 	field='0,12,14',spw='0:4~58', gaintype='G',
-	opacity=0.062,solint='int',combine='',refant='VA27',gaincurve=True)
+	solint='int',combine='',refant='VA27',
+        gaintable=[opactable2,gcurvetable2],interp=['',''])
 gtable2_2 = prefix2 + '.2.gcal'
 gaincal(vis=msfile2,caltable=gtable2_2,
 	field='6,13,15',spw='1:4~58', gaintype='G',
-	opacity=0.062,solint='int',combine='',refant='VA27',gaincurve=True)
+	solint='int',combine='',refant='VA27',
+        gaintable=[opactable2,gcurvetable2],interp=['',''])
 
 # gaincal calibration completion time
 if benchmarking:
@@ -673,17 +717,15 @@ default('bandpass')
 btable2_1 = prefix2 + '.1.bcal'
 bandpass(vis=msfile2,caltable=btable2_1,
 	 field='0',spw='0',
-	 opacity=0.062,
-	 gaintable=gtable2_1,interp='nearest',
+	 gaintable=[opactable2,gcurvetable2,gtable2_1],interp=['','','nearest'],
 	 refant='VA27',
-	 solint='inf',combine='scan',gaincurve=True)
+	 solint='inf',combine='scan')
 btable2_2 = prefix2 + '.2.bcal'
 bandpass(vis=msfile2,caltable=btable2_2,
 	 field='6',spw='1',
-	 opacity=0.062,
-	 gaintable=gtable2_2,interp='nearest',
+	 gaintable=[opactable2,gcurvetable2,gtable2_2],interp=['','','nearest'],
 	 refant='VA27',
-	 solint='inf',combine='scan',gaincurve=True)
+	 solint='inf',combine='scan')
 
 # bandpass calibration completion time
 if benchmarking:
@@ -721,14 +763,12 @@ default('applycal')
 
 applycal(vis=msfile2,
 	 field='0~5',spw='0',
-	 gaincurve=True,opacity=0.062,
-	 gaintable=[ftable2_1,btable2_1],
-	 gainfield='0',calwt=False)
+	 gaintable=[opactable2,gcurvetable2,ftable2_1,btable2_1],
+	 gainfield=['','','0'],calwt=False)
 applycal(vis=msfile2,
 	 field='6~11',spw='1',
-	 gaincurve=True,opacity=0.062,
-	 gaintable=[ftable2_2,btable2_2],
-	 gainfield='6',calwt=False)
+	 gaintable=[opactable2,gcurvetable2,ftable2_2,btable2_2],
+	 gainfield=['','','6'],calwt=False)
 
 
 # Record applycal completion time
@@ -1098,7 +1138,8 @@ else:
     print >>logfile,'*   listobs      time was: '+str(listtime-importtime)
     print >>logfile,'*   flagdata     time was: '+str(flagtime-listtime)
     print >>logfile,'*   setjy        time was: '+str(setjytime-flagtime)
-    print >>logfile,'*   gaincal      time was: '+str(gaintime-setjytime)
+    print >>logfile,'*   gencal       time was: '+str(gencaltime-setjytime)
+    print >>logfile,'*   gaincal      time was: '+str(gaintime-gencaltime)
     print >>logfile,'*   bandpass     time was: '+str(bptime-gaintime)
     print >>logfile,'*   fluxscale    time was: '+str(fstime-bptime)
     print >>logfile,'*   correct      time was: '+str(correcttime-fstime)
@@ -1107,7 +1148,8 @@ else:
     print >>logfile,'+   listobs      time was: '+str(listtime2-importtime2)
     print >>logfile,'*   flagdata     time was: '+str(flagtime2-listtime2)
     print >>logfile,'*   setjy        time was: '+str(setjytime2-flagtime2)
-    print >>logfile,'*   gaincal      time was: '+str(gaintime2-setjytime2)
+    print >>logfile,'*   gencal       time was: '+str(gencaltime2-setjytime2)
+    print >>logfile,'*   gaincal      time was: '+str(gaintime2-gencaltime2)
     print >>logfile,'*   bandpass     time was: '+str(bptime2-gaintime2)
     print >>logfile,'*   fluxscale    time was: '+str(fstime2-bptime2)
     print >>logfile,'*   correct      time was: '+str(correcttime2-fstime2)
