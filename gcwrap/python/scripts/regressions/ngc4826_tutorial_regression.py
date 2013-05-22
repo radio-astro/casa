@@ -582,7 +582,7 @@ print 'Output table ngc4826.tutorial.16apr98.gcal'
 
 gaincal(vis='ngc4826.tutorial.ms', caltable='ngc4826.tutorial.16apr98.gcal',
 	field='0,1', spw='0~11', gaintype='G', minsnr=2.0,
-	refant='ANT5',
+	refant='ANT5', 
 	solint='inf', combine='spw')
 
 if benchmarking:
@@ -659,7 +659,7 @@ default('applycal')
 print 'Applying calibration table ngc4826.tutorial.16apr98.fcal to data'
 
 applycal(vis='ngc4826.tutorial.ms',
-	 field='', spw='',
+	 field='', spw='', 
          gaintable='ngc4826.tutorial.16apr98.fcal',
 	 spwmap=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])
 
@@ -1418,17 +1418,17 @@ testvers = 'CASA Version 3.0.2 (build #11306)'
 clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
 clean_offline_rms = 0.055416
-clean_momentzero_max = 165.74
+clean_momentzero_max = 151.72
 clean_momentzero_rms = 14.234
 #
 #  32 bits gets 423.6954 and 64 bits gets 422.142792
 #  diff << 1 chanwidth.
-clean_momentone_median = 429
+clean_momentone_median = 422.92
 clean_momentone_planezero = 696.702393
 clean_momentone_planelast = 127.786629
 vis_mean_cal = 195.0509
 vis_mean_src = 54.665
-model_sum = 72.0
+model_sum = 71.349
 model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 
 # RR, 1/19/2011 - The rmses went down, just like in orionmos4sim.  This is
@@ -1438,7 +1438,7 @@ model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 # region.)
 clean_offsrc_rms = 0.0604
 clean_offline_rms = 0.0625
-clean_momentzero_rms = 16.8
+clean_momentzero_rms = 14.05
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
 
@@ -1455,9 +1455,9 @@ model_pbcor_sum = 72.72
 ## RR, 3/25 - 4/3/2011, after clean was changed to used the center of output
 ## channel frequencies, instead of center of the first input channel in each
 ## output channel.
-clean_image_max = 1.46
-clean_momentone_median = 429.
-clean_momentone_planezero = 690.6
+clean_image_max = 1.4647
+clean_momentone_median = 424.40
+clean_momentone_planezero = 690.6068
 clean_momentone_planelast = 121.6911
 
 canonical = {}

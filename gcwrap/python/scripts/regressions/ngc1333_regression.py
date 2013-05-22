@@ -903,7 +903,7 @@ if doimage:
     cyclespeedup = -1
     scaletype = 'SAULT'
     pbcor=False
-    minpb = 0.02
+    minpb = 0.1
     sigma = '0.001Jy'
     targetflux = '1.0Jy'
     constrainflux = False
