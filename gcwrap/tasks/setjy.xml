@@ -26,7 +26,7 @@
        density and/or model.
 
        For Solar System Objects, model determination was updated and it is 
-       available vis the 'Bulter-JPL-Horizons 2012' standard.
+       available via the 'Butler-JPL-Horizons 2012' standard.
        <!--Solar System Objects are supported via the 'Butler-JPL-Horizons
        2010' standard.  -->
        Currently they are modeled as uniform
@@ -215,7 +215,7 @@
     for comparison. Users may want to use predictcomp task to see the differeces. 
     Currently they are modeled as uniform temperature disks based
     on their ephemerides at the time of observation (note that this may
-    oversimply objects, in particular asteroids).  The object name is
+    oversimplify objects, in particular asteroids).  The object name is
     obtained from the 'field' parameter. Recognized objects are listed
     below, under 'standard'.
 
@@ -318,9 +318,10 @@
            clean beam.
 
     listmodels -- If True, do nothing but list candidates for modimage
-           (for extragalactic calibrators) that are present on the system.  It looks for *.im* *.mod* in .,
-           CalModels, and CalModels directories in the casa['dirs']['data']
-           tree.  It does not check whether they are appropriate for the MS!
+           (for extragalactic calibrators) that are present on the system.  
+           It looks for *.im* *.mod* in ., CalModels, and CalModels directories 
+           in the casa['dirs']['data'] tree.  It does not check whether they are 
+           appropriate for the MS!
            If standard='Butler-JPL-Horizons 2012', Tb models (frequency-depended
            brightness temperature models) for Solar System objects used in the 
            standard.  For standard='Butler-JPL-Horizons 2010', the recognized
@@ -346,7 +347,7 @@
 	              calibrators (like 3C286, 3C147 and 3C48, depending on
 		      standard) and insert 1.0 for selected fields with
 		      unrecognized sources.
-            example   field = '1'; fluxdensity=[3.2,0,0,0] wil put in 
+            example   field = '1'; fluxdensity=[3.2,0,0,0] will put in 
                       a flux density of I=3.2 for field='1'
 
             At present (June 2000), this is the only method to insert a
@@ -420,11 +421,11 @@
 
             * Venus: model for ~300MHz to 350GHz, no atmospheric lines (CO,H2O,HDO, etc)
             * Mars: tabulated as a function of time and frequency (30 - 1000GHz) based on 
-               Rudy el tal (1988), no atmopheric lines (CO, H20, H2O2, HDO, etc)
+               Rudy et al (1988), no atmospheric lines (CO, H20, H2O2, HDO, etc)
             * Jupiter: model for 30-1020GHz, does not include synchrotron emission
             * Uranus: model for 60-1800GHz, contains no rings or synchrotron.
             * Neptune: model for 2-2000GHz, the broad CO absorption line
-               is included, but contains no rings or syncrotron. 
+               is included, but contains no rings or synchrotron. 
             * Titan: model for 53.3-1024.1GHz, include many spectral lines
 
             **  not recommended (The temperature is not yet adjusted for
@@ -464,8 +465,8 @@
        &gt;&gt;&gt; standard="Perley-Butler 2013" expandable parameter
 
             interpolation -- method for interpolation ('nearest', 'linear', 'cubic',
-                or 'spline') in time for the time variable sources (3C48,3C138,3C147). 
-                This is parameter is ignored for other non-variable sources in the standard.
+                or 'spline') in time for the time variable sources (3C48,3C138,3C147).
+                This parameter is ignored for other non-variable sources in the standard.
                 default:'nearest' 
 
        &gt;&gt;&gt; standard="Butler-JPL-Horizons 2012" expandable parameter
