@@ -67,10 +67,11 @@ class CalibrationQA2Section(QA2Section):
     
     description = 'Calibration'
     url = 't2-3-1m.html'
-    
+ 
+    LOG.todo('Re-enable QA2 output in CalibrationQA2Section')
     result_descriptions = {
-        bandpass.common.BandpassResults         : 'Bandpass',
-        gaincal.common.GaincalResults           : 'Gain',
+#        bandpass.common.BandpassResults         : 'Bandpass',
+#        gaincal.common.GaincalResults           : 'Gain',
         wvrgcal.resultobjects.WvrgcalflagResult : 'WVR Calibration'
     }
     
@@ -179,6 +180,9 @@ class QA2BandpassAdapter(object):
         self._result = result
         self._qa2 = result.qa2
 
+        if not result.qa2:
+            return
+
         vis = self._result.inputs['vis']
         self._ms = self._context.observing_run.get_ms(vis)
 
@@ -252,6 +256,10 @@ class QA2BandpassAdapter(object):
         }
 
     def _get_plots(self, y_axis):
+        # bail out early if no QA2 analysis has been performed.
+        if 'QA2PLOTS' not in self._qa2:
+            return []
+
         y_axis = 'amp' if y_axis == 'amp' else 'phase'
         plot_key = 'AMPLITUDE_PLOT' if y_axis == 'amp' else 'PHASE_PLOT'
 

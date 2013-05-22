@@ -833,6 +833,9 @@ class T2_3MDetailsBandpassRenderer(T2_3MDetailsDefaultRenderer):
         flagged = []
         num_flagged_feeds = 0
         for result in results:
+            # return early if there are no QA2 results
+            if not result.qa2:
+                return ctx
             adapter = qa2adapter.QA2BandpassAdapter(context, result)
             plots.append(adapter.amplitude_plots)
             plots.append(adapter.phase_plots)
@@ -1472,7 +1475,7 @@ class LogCopier(object):
 renderer_map = {
     T2_3MDetailsRenderer : {
         hif.tasks.Wvrgcalflag    : T2_3MDetailsWvrgcalflagRenderer( ),
-        hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
+#        hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
     },
     T2_4MDetailsRenderer : {
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
