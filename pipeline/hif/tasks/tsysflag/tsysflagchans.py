@@ -110,7 +110,7 @@ class TsysflagchansInputs(basetask.StandardInputs):
     @property
     def edge_limit(self):
         if self._edge_limit is None:
-            return 2
+            return 3.0
         return self._edge_limit
 
     @edge_limit.setter
