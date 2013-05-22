@@ -38,18 +38,19 @@ namespace casa {
 
 	public:
 		enum ModeIndex {MODE_ANNOTATION, MODE_CHANNEL, MODE_CONTEXTMENU, MODE_RANGESELECTION, MODE_ZOOM };
-		static void setReceiver( QtCanvas* receiver );
+		void setReceiver( QtCanvas* receiver );
 		virtual bool isMode( ModeIndex mode ) const;
 		void mousePressEvent( QMouseEvent* event );
 		virtual void mousePressEventSpecific( QMouseEvent* event ) = 0;
 		virtual void mouseMoveEvent( QMouseEvent* event ) = 0;
 		void mouseReleaseEvent( QMouseEvent* event );
 		virtual void mouseReleaseEventSpecific( QMouseEvent* event ) = 0;
+		virtual QString toString() const = 0;
 		virtual ~CanvasMode();
 
 	protected:
 		CanvasMode( Qt::CursorShape modeCursor );
-		static QtCanvas* receiver;
+		QtCanvas* receiver;
 		Qt::CursorShape cursor;
 	};
 

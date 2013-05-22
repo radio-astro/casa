@@ -53,6 +53,10 @@ namespace casa {
 
 	}
 
+	QString CanvasModeContextMenu::toString() const {
+		return "Context Menu";
+	}
+
 	CanvasModeContextMenu::~CanvasModeContextMenu() {
 		// TODO Auto-generated destructor stub
 	}

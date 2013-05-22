@@ -60,12 +60,13 @@ namespace MSTransformations
 
 // Forward declarations
 struct spwInfo;
+struct channelContribution;
 
 // Map definition
 typedef map<MS::PredefinedColumns,MS::PredefinedColumns> dataColMap;
 typedef map< pair< pair<Int,Int> , pair<Int,Int> >,vector<uInt> > baselineMap;
 typedef map<Int,map<uInt, uInt > > inputSpwChanMap;
-typedef map<Int,map<uInt, vector < pair<uInt,Double> > > > inputOutputChanFactorMap;
+typedef map<Int,vector < channelContribution > >  inputOutputChanFactorMap;
 typedef map<Int,pair < spwInfo, spwInfo > > inputOutputSpwMap;
 
 // Struct definition
@@ -115,30 +116,59 @@ struct channelInfo {
 
 	Double overlap(const channelInfo& other) const
 	{
+
 		// The other channel completely covers this channel
-		if ((other.lowerBound() <= lowerBound()) and (other.upperBound() >= upperBound()))
+		if ((lowerBound() <= other.lowerBound()) and (upperBound() >= other.upperBound()))
 		{
 			return 1.0;
 		}
 		// The other channel is completely covered by this channel
-		else if ((other.lowerBound() >= lowerBound()) and (other.upperBound() <= upperBound()))
+		else if ((lowerBound() >= other.lowerBound()) and (upperBound() <= other.upperBound()))
 		{
-			return other.CHAN_WIDTH/this->CHAN_WIDTH;
+			return CHAN_WIDTH/other.CHAN_WIDTH;
 		}
 		// Lower end of this channel is overlapping with the other channel
-		else if (other.lowerBound() < lowerBound() && lowerBound() < other.upperBound() && other.upperBound() < upperBound())
-		{
-			return (other.upperBound()-lowerBound())/this->CHAN_WIDTH;
-		}
-		// Upper end of this channel is overlapping with the other channel
 		else if (lowerBound() < other.lowerBound() && other.lowerBound() < upperBound() && upperBound() < other.upperBound())
 		{
-			return (upperBound()-other.lowerBound())/this->CHAN_WIDTH;
+			return (upperBound()-other.lowerBound())/other.CHAN_WIDTH;
+		}
+		// Upper end of this channel is overlapping with the other channel
+		else if (other.lowerBound() < lowerBound() && lowerBound() < other.upperBound() && other.upperBound() < upperBound())
+		{
+			return (other.upperBound()-lowerBound())/other.CHAN_WIDTH;
 		}
 		else
 		{
 			return 0.0;
 		}
+
+	}
+};
+
+struct channelContribution {
+
+	Int inpSpw;
+	uInt inpChannel;
+	uInt outChannel;
+	Double weight;
+	Bool flag;
+
+	channelContribution()
+	{
+		inpSpw = 0;
+		inpChannel = 0;
+		outChannel = 0;
+		weight = 0;
+		flag = False;
+	}
+
+	channelContribution(Int inputSpw, uInt inputChannel, uInt outputChannel,Double fraction)
+	{
+		inpSpw = inputSpw;
+		inpChannel = inputChannel;
+		outChannel = outputChannel;
+		weight = fraction;
+		flag = True;
 	}
 };
 
@@ -753,7 +783,10 @@ protected:
 	MPosition observatoryPosition_p;
 	MEpoch observationTime_p;
 	MDirection phaseCenter_p;
+	Bool userPhaseCenter_p;
 	MFrequency::Convert freqTransEngine_p;
+
+	ROScalarMeasColumn<MEpoch> timeMeas_p;
 
 	// Logging
 	LogIO logger_p;

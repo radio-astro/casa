@@ -68,86 +68,6 @@
           <property name="toolTip">
            <string>Select the plot unit.</string>
           </property>
-          <item>
-           <property name="text">
-            <string>radio velocity [m/s]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>radio velocity [km/s]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>optical velocity [m/s]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>optical velocity [km/s]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>frequency [Hz]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>frequency [MHz]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>frequency [GHz]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>wavelength [mm]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>wavelength [um]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>wavelength [nm]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>wavelength [Angstrom]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>air wavelength [mm]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>air wavelength [um]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>air wavelength [nm]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>air wavelength [Angstrom]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>channel</string>
-           </property>
-          </item>
          </widget>
         </item>
        </layout>
@@ -166,86 +86,6 @@
           <property name="toolTip">
            <string>Select the plot unit.</string>
           </property>
-          <item>
-           <property name="text">
-            <string>radio velocity [m/s]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>radio velocity [km/s]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>optical velocity [m/s]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>optical velocity [km/s]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>frequency [Hz]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>frequency [MHz]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>frequency [GHz]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>wavelength [mm]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>wavelength [um]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>wavelength [nm]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>wavelength [Angstrom]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>air wavelength [mm]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>air wavelength [um]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>air wavelength [nm]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>air wavelength [Angstrom]</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>channel</string>
-           </property>
-          </item>
          </widget>
         </item>
        </layout>
@@ -374,7 +214,7 @@
          <enum>QTabWidget::South</enum>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">

@@ -221,7 +221,7 @@ public:
 
     Double
     operator () (const FillState & fillState, Int, Int ) const {
-        return fillState.time_p + fillState.timeDelta_p * .01;
+        return fillState.time_p; // same as time for this model
     }
 };
 
@@ -276,7 +276,7 @@ public:
     operator () (const FillState & fillState, Int channel, Int correlation) const {
 
         Float r = fillState.rowNumber_p * 1000 + fillState.spectralWindow_p * 100 +
-                  channel * 10 + correlation;
+                  channel * 10 + correlation + 1;
         return r;
     }
 };
@@ -295,6 +295,7 @@ public:
     void addAntennas (Int nAntennas);
 
     //// void addColumn (MSMainEnums::PredefinedColumns columnId);
+    void addWeightSpectrum (Bool addIt);
 
     void addCubeColumn (MSMainEnums::PredefinedColumns columnId,
                         const String & dataStorageMangerName);
@@ -468,6 +469,7 @@ private:
 
     };
 
+    Bool addWeightSpectrum_p;
     Columns columns_p;
     ColumnIds columnIds_p;
     Generators generators_p;

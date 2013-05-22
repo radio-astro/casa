@@ -415,12 +415,13 @@ void ImageProfileFitter::_setResults() {
     if (_polyOrder >= 0) {
     	nComps++;
     }
-	Array<Bool> attemptedArr(IPosition(1, _fitters.size()), False);
-	Array<Bool> successArr(IPosition(1, _fitters.size()), False);
-	Array<Bool> convergedArr(IPosition(1, _fitters.size()), False);
-	Array<Bool> validArr(IPosition(1, _fitters.size()), False);
+    uInt aSize = _fitters.size();
+	Array<Bool> attemptedArr(IPosition(1, aSize), False);
+	Array<Bool> successArr(IPosition(1, aSize), False);
+	Array<Bool> convergedArr(IPosition(1, aSize), False);
+	Array<Bool> validArr(IPosition(1, aSize), False);
 
-	Array<Int> niterArr(IPosition(1, _fitters.size()), -1);
+	Array<Int> niterArr(IPosition(1, aSize), -1);
 	vector<vector<Matrix<Double> > > pcfMatrices(
 		NGSOLMATRICES, vector<Matrix<Double> >(_nGaussMultiplets+_nOthers)
 	);
@@ -449,15 +450,15 @@ void ImageProfileFitter::_setResults() {
 				)->getGaussians().size();
 			compCount++;
 		}
-		blank.resize(_fitters.size(), nSubcomps, False);
+		blank.resize(aSize, nSubcomps, False);
 		blank = fNAN;
 		for (uInt k=0; k<NGSOLMATRICES; k++) {
 			pcfMatrices[k][i] = blank;
 		}
 	}
-	Matrix<String> typeMat(_fitters.size(), nComps, "UNDEF");
-	Array<Bool> mask(IPosition(1, _fitters.size()), False);
-	Array<Int> nCompArr(IPosition(1, _fitters.size()), -1);
+	Matrix<String> typeMat(aSize, nComps, "UNDEF");
+	Array<Bool> mask(IPosition(1, aSize), False);
+	Array<Int> nCompArr(IPosition(1, aSize), -1);
 	IPosition inTileShape = _subImage.niceCursorShape();
 	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
@@ -654,8 +655,6 @@ void ImageProfileFitter::_setResults() {
 		}
 	}
 }
-
-
 
 String ImageProfileFitter::_getTag(const uInt i) const {
 	return i == _gsPlane
@@ -1525,15 +1524,6 @@ void ImageProfileFitter::_fitProfiles(
 		if (! fitter.setData (curPos, abcissaType, True)) {
 			*_getLog() << "Unable to set data" << LogIO::EXCEPTION;
 		}
-		//curPos seems to just contain a list of zeros.
-		/*else {
-			Vector<Int> curPosVector = curPos.asVector();
-			*_getLog() <<LogIO::WARN << "Writing out curPosVector" << LogIO::POST;
-			for ( int i = 0; i < curPosVector.size(); i++ ){
-
-				*_getLog()<< LogIO::WARN << curPosVector[i]<<LogIO::POST;
-			}
-		}*/
 		if (_nonPolyEstimates.nelements() == 0) {
 			if (! fitter.setGaussianElements (_nGaussSinglets)) {
 				*_getLog() << "Unable to set gaussian elements"
@@ -1590,7 +1580,8 @@ void ImageProfileFitter::_fitProfiles(
 		nFit++;
 		Bool ok = False;
 		try {
-			if (ok = fitter.fit()) {
+			ok = fitter.fit();
+			if (ok) {
 				_flagFitterIfNecessary(fitter);
 				ok = fitter.isValid();
 				if (
@@ -1600,7 +1591,7 @@ void ImageProfileFitter::_fitProfiles(
 				}
 			}
 		}
-		catch (AipsError x) {
+		catch (const AipsError& x) {
 			ok = False;                       // Some other error
 		}
 		_fitters(curPos) = fitter;

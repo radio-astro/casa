@@ -35,6 +35,7 @@ namespace casa {
 		virtual void mousePressEventSpecific( QMouseEvent* event );
 		virtual void mouseMoveEvent( QMouseEvent* event );
 		virtual void mouseReleaseEventSpecific( QMouseEvent* event );
+		virtual QString toString() const;
 		virtual ~CanvasModeZoom();
 	};
 

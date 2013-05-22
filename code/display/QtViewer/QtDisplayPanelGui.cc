@@ -54,7 +54,6 @@
 #include <display/QtViewer/ColorHistogram.qo.h>
 #include <display/QtViewer/ImageManager/ImageManagerDialog.qo.h>
 #include <display/Fit/Fit2DTool.qo.h>
-//#include <display/Fit/FindSourcesDialog.qo.h>
 #include <display/Slicer/SlicerMainWindow.qo.h>
 #include <display/region/QtRegionSource.qo.h>
 #include <display/region/Polyline.qo.h>
@@ -88,6 +87,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for ( wcs.toStart( ); ! wcs.atEnd( ); ++wcs )
 			wcs.getRight( )->removeRefreshEventHandler(*this);
 	}
+
 	void LinkedCursorEH::operator()(const WCRefreshEvent & ev) {
 		WorldCanvas *wc = ev.worldCanvas( );
 		if ( wc == 0 ) return;
@@ -271,7 +271,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		qsm_->setVisible(false);
 
 		qdp_->setShapeManager(qsm_);
-		manageImages = false;
+		manageImages = true;
 
 
 		// SURROUNDING GUI LAYOUT
@@ -789,6 +789,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDisplayPanelGui::initAnimationHolder() {
 		if ( animationHolder == NULL ) {
+			animationImageIndex = -1;
 			animationHolder = new AnimatorHolder( this );
 			connect(animationHolder, SIGNAL(lowerBoundAnimatorChannelChanged(int)), qdp_, SLOT(lowerBoundAnimatorChannelChanged(int)));
 			connect(animationHolder, SIGNAL(upperBoundAnimatorChannelChanged(int)), qdp_, SLOT(upperBoundAnimatorChannelChanged(int)));
@@ -804,13 +805,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			connect(animationHolder, SIGNAL(fwdPlay()),SLOT(fwdPlay_()));
 			connect(animationHolder, SIGNAL(fwdStep()), qdp_, SLOT(fwdStep()));
 			connect(animationHolder, SIGNAL(toEnd()), qdp_, SLOT(toEnd()));
-			connect(animationHolder, SIGNAL(setMode(bool)), qdp_, SLOT(setMode(bool)));
+			connect(animationHolder, SIGNAL(setMode(bool)), this, SLOT(animationModeChanged(bool)));
 			connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 			connect(animationHolder, SIGNAL(movieChannels(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
 			connect(animationHolder, SIGNAL(stopMovie()), this, SLOT(movieStop()));
+			connect(animationHolder, SIGNAL(animationImageChanged(int)), this, SLOT(animationImageChanged(int)));
 
 			// Set interface according to the initial state of underlying animator.
 			updateAnimUi_();
+		}
+	}
+
+	void QtDisplayPanelGui::animationModeChanged( bool modeZ){
+		qdp_->setMode( modeZ );
+		updateFrameInformationChannel();
+	}
+
+	void QtDisplayPanelGui::animationImageChanged( int index ){
+		animationImageIndex = index;
+		updateFrameInformationChannel();
+		if ( regionDock_ != NULL ){
+			regionDock_->updateStackOrder( animationImageIndex );
 		}
 	}
 
@@ -819,12 +834,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void QtDisplayPanelGui::globalOptionsChanged( QtDisplayData* originator, Record opts ) {
-		/*for(ListIter<QtDisplayData*> iter(qdds_); !iter.atEnd(); iter++) {
-			QtDisplayData* dd = iter.getRight();
-			if ( dd != originator ){
-				dd->setOptions( opts, true );
-			}
-		}*/
 		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
 		while ( iter != displayDataHolder->endDD()) {
 			if ( originator != (*iter)) {
@@ -1155,17 +1164,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtDisplayPanelGui::~QtDisplayPanelGui() {
 
+		v_->dpgDeleted(this);
+		delete linkedCursorHandler;
+
 		removeAllDDs();
 		delete displayDataHolder;
 		delete qdp_;	// (probably unnecessary because of Qt parenting...)
 		// (possibly wrong, for same reason?...).
 		// (indeed was wrong as the last deletion [at least] because the display panel also reference the qsm_)
 
-		if(qpm_!=0) delete qpm_;
-		if(qrm_!=0) delete qrm_;
-		if(qsm_!=0) delete qsm_;
-		if(qdm_!=0) delete qdm_;
-		if(qdo_!=0) delete qdo_;
+		delete qpm_;
+		delete qrm_;
+		delete qsm_;
+		delete qdm_;
+		delete qdo_;
 	}
 
 	int QtDisplayPanelGui::buttonToolState(const std::string &tool) const {
@@ -1249,19 +1261,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return qdd;
 	}
 
-	void QtDisplayPanelGui::updateFrameInformation() {
-		//List<QtDisplayData*> rdds = qdp_->registeredDDs();
-		//int displayDataCount = rdds.len();
-		//ListIter<QtDisplayData*> iter(rdds );
 
-		int maxChannels = qdp_->nZFrames();
+	void QtDisplayPanelGui::updateFrameInformationImage(){
+		//Determine whether we should show the image animator.
 		QSet<QString> uniqueImages;
-
 		DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
 		while ( iter != qdp_->endRegistered()) {
-
-			//while ( i < displayDataCount ){
-			//QtDisplayData* rdd = iter.getRight();
 			QtDisplayData* rdd = (*iter);
 			const viewer::ImageProperties & imgProperties = rdd->imageProperties( );
 			const string imagePath = imgProperties.path();
@@ -1270,23 +1275,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			QString imagePathStr( imagePath.c_str());
 			if ( !rdd->isSkyCatalog()) {
 				uniqueImages.insert( imagePathStr );
-				if ( imgProperties.hasSpectralAxis() ) {
-					int spectralAxisNum = imgProperties.spectralAxisNumber();
-					const Vector<int> imgShape = imgProperties.shape();
-					int channelCount = imgShape[spectralAxisNum];
-					if ( channelCount > 1 ) {
-						if ( channelCount > maxChannels ) {
-							maxChannels = channelCount;
-						}
-					}
-				}
 			}
 			iter++;
 		}
-		if ( maxChannels > 1 ) {
-			animationHolder->setChannelModeEnabled( maxChannels );
-		}
 		animationHolder->setModeEnabled( uniqueImages.size() );
+	}
+
+	void QtDisplayPanelGui::updateFrameInformationChannel(){
+		//This figure is the maximum number of channels in any image.
+		//We should enable the channel animator if there is at least one
+		//image with more than one channel.
+		int maxChannels = qdp_->nZFrames();
+		if ( maxChannels > 1 ) {
+			//To find the actual number of channels, we rely on the
+			//the image that is currently on target for channeling.
+			QtDisplayData* channelMaster = qdp_->getChannelDD(animationImageIndex);
+			int actualChannels = maxChannels;
+			if ( channelMaster != NULL ){
+				viewer::ImageProperties props = channelMaster->imageProperties();
+				Vector<Int> imgShape = props.shape();
+				if ( props.hasSpectralAxis() ){
+					int spectralIndex = props.spectralAxisNumber();
+					actualChannels = imgShape[spectralIndex];
+				}
+				else {
+					actualChannels = 1;
+				}
+			}
+			//If we are in channel mode we use the actual number of channels.
+			if ( qdp_->modeZ()){
+				animationHolder->setChannelModeEnabled( actualChannels );
+			}
+			//Use the maximum number of channels, but since we aren't in channel
+			//mode, we don't want it to come up selected.
+			else {
+				animationHolder->setChannelModeEnabled( /*maxChannels*/actualChannels, false);
+			}
+		}
+	}
+
+	void QtDisplayPanelGui::updateFrameInformation() {
+		updateFrameInformationChannel();
+		updateFrameInformationImage();
+
 	}
 
 	int QtDisplayPanelGui::getBoundedChannel( int channelNumber ) const {
@@ -1463,12 +1494,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
-		/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-			if(qdd == qdds.getRight()) {
-				if ( qdd == controlling_dd ){
-					controlling_dd = NULL;
-				}
-				qdds.removeRight();*/
 		bool removed = displayDataHolder->removeDD( qdd );
 		if ( removed ) {
 			emit ddRemoved(qdd);
@@ -1479,13 +1504,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			delete qdd;
 			updateFrameInformation();
 		}
-
-		/*if ( qdds_.len() == 0 ){
-			this->controlling_dd = NULL;
-		}*/
-
 		return removed;
-
 	}
 
 
@@ -1532,7 +1551,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Double> wpt(2);
 		wpt(0) = x.getValue(units(0));
 		wpt(1) = y.getValue(units(1));
-		int count = 0;
+
 		stringstream ss;
 		for ( DisplayDataHolder::DisplayDataIterator iter = beginDD( ); iter != endDD( ); ++iter ) {
 			PrincipalAxesDD *dd = dynamic_cast<PrincipalAxesDD*>((*iter)->dd( ));
@@ -2122,19 +2141,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	void QtDisplayPanelGui::showImageProfile() {
 
-		//List<QtDisplayData*> rdds = qdp_->registeredDDs();
 		QHash<QString, ImageInterface<float>*> overlap;
 		bool profileVisible = false;
 		if ( profile_ && profile_->isVisible()) {
 			profileVisible = true;
 		}
-		DisplayDataHolder::DisplayDataIterator iter = displayDataHolder->beginDD();
-		while ( iter != displayDataHolder->endDD()) {
-			//for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
 
-			//QtDisplayData* pdd = qdds.getRight();
+		for ( DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
+				iter != qdp_->endRegistered(); iter++ ){
 			QtDisplayData* pdd = (*iter);
-			iter++;
 			if(pdd != 0 && pdd->dataType() == "image") {
 
 				ImageInterface<float>* img = pdd->imageInterface();

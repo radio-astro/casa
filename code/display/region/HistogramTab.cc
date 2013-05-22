@@ -51,6 +51,7 @@ namespace casa {
 	void HistogramTab::addImage( ImageInterface<float>* image ) {
 		if ( image != NULL ) {
 			QString graphName = image->name(true).c_str();
+
 			if ( !graphs.contains( graphName )) {
 				HistogramGraph* histogramGraph = new HistogramGraph( this );
 				histogramGraph->setImage( image );
@@ -59,9 +60,9 @@ namespace casa {
 				int addIndex = ui.stackedWidget->addWidget( histogramGraph );
 				if ( initialStackIndex < 0 ) {
 					initialStackIndex = addIndex;
+					ui.stackedWidget->setCurrentIndex( addIndex );
 				}
 				histogramGraph->setIndex( addIndex );
-				ui.stackedWidget->setCurrentIndex( addIndex );
 				resetNextEnabled();
 			}
 		}
@@ -81,9 +82,20 @@ namespace casa {
 
 	void HistogramTab::showNextGraph( int nextIndex ) {
 		int graphCount = graphs.size();
-		int actualNextIndex = ( nextIndex - initialStackIndex ) % graphCount;
-		ui.stackedWidget->setCurrentIndex( actualNextIndex + initialStackIndex );
+		if ( graphCount > 0 ){
+			int actualNextIndex = ( nextIndex - initialStackIndex ) % graphCount;
+			ui.stackedWidget->setCurrentIndex( actualNextIndex + initialStackIndex );
+		}
 	}
+
+	void HistogramTab::showGraph( int index ){
+		if ( index < 0 ){
+			index = 0;
+		}
+		int actualIndex = initialStackIndex + index;
+		ui.stackedWidget->setCurrentIndex( actualIndex );
+	}
+
 
 	void HistogramTab::clear() {
 		QList<QString> keys = graphs.keys();

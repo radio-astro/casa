@@ -48,9 +48,19 @@ namespace casa {
 		void addImage( ImageInterface<float>* image );
 		void setImageRegion( const std::string& imageName, ImageRegion* region, int regionId);
 		void clear();
+		/**
+		 * This method was written so that the image showing on the histogram
+		 * will be the same as the one indicated on the image animator.
+		 */
+		void showGraph( int index );
 		~HistogramTab();
+
 	private slots:
+		/**
+		 * When the 'next' button is pressed on the histogram.
+		 */
 		void showNextGraph( int nextIndex );
+
 	private:
 		int initialStackIndex;
 		void resetNextEnabled();

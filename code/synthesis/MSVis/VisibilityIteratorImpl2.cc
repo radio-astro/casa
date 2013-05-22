@@ -31,8 +31,8 @@
 #include <casa/Containers/Record.h>
 #include <casa/Exceptions.h>
 #include <casa/Quanta/MVTime.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/Sort.h>
+#include <casa/Utilities.h>
+#include <ms/MeasurementSets.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSpwIndex.h>
@@ -734,9 +734,8 @@ VisibilityIteratorImpl2::putColumnRows (ScalarColumn<T> & column, const Vector <
 //{}
 
 VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
-                                                  const Block<MeasurementSet> &mss,
-                                                  const Block<Int> & sortColumns,
-                                                  Bool addDefaultSort,
+                                                  const Block<const MeasurementSet *> &mss,
+                                                  const SortColumns & sortColumns,
                                                   Double timeInterval,
                                                   VisBufferType vbType,
                                                   Bool isWritable)
@@ -749,17 +748,18 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
   more_p (False),
   msIndex_p (0),
   msIterAtOrigin_p (False),
-  msIter_p (mss, sortColumns, timeInterval, addDefaultSort),
+  msIter_p (0),
   nPolarizations_p (-1),
   nRowBlocking_p (0),
   reportingFrame_p (VisBuffer2::FrameNotSpecified),
   sortColumns_p (sortColumns),
   spectralWindowChannelsCache_p (new SpectralWindowChannelsCache ()),
-  subtableColumns_p (new SubtableColumns (msIter_p)),
+  subtableColumns_p (0),
   tileCacheIsSet_p (0),
   timeInterval_p (timeInterval),
   vb_p (0),
-  vi_p (0)
+  vi_p (0),
+  weightScaling_p (0)
 {
     // Make sure the pointer to the containing ROVI (vi_p) is NULL when calling initialize
     // otherwise the call back to the VI can result in it trying to use an uninitialized pointer
@@ -831,7 +831,7 @@ VisibilityIteratorImpl2::addDataSelection (const MeasurementSet & ms)
 
 
 void
-VisibilityIteratorImpl2::initialize (const Block<MeasurementSet> &mss)
+VisibilityIteratorImpl2::initialize (const Block<const MeasurementSet *> &mss)
 {
     cache_p.flush();
 
@@ -844,10 +844,18 @@ VisibilityIteratorImpl2::initialize (const Block<MeasurementSet> &mss)
 
     for (Int k = 0; k < nMs; ++k) {
 
-        measurementSets_p [k] = mss [k];
+        measurementSets_p [k] = * mss [k];
 
         addDataSelection (measurementSets_p [k]);
     }
+
+   msIter_p = new MSIter (measurementSets_p,
+                          sortColumns_p.getColumnIds(),
+                          timeInterval_p,
+                          sortColumns_p.shouldAddDefaultColumns());
+
+   subtableColumns_p = new SubtableColumns (msIter_p);
+
 
     // Install default frequency selections.  This will select all
     // channels in all windows.
@@ -877,28 +885,6 @@ VisibilityIteratorImpl2::Cache::Cache()
   parangTime_p (-1)
 {}
 
-//VisibilityIteratorImpl2::Cache &
-//VisibilityIteratorImpl2::Cache::operator= (const VisibilityIteratorImpl2::Cache & other)
-//{
-//    azel0_p = other.azel0_p;
-//    azel0Time_p = other.azel0Time_p;
-//    azel_p.assign (other.azel_p);
-//    azelTime_p = other.azelTIme_p;
-//    feedpa_p.assign (other.feedpa_p);
-//    feedpaTime_p = other.feedpaTime_p;
-//    hourang_p = other.hourang_p;
-//    hourangTime_p = other.hourangTime_p;
-//    msHasFC_p = other.msHasFC_p;
-//    msHasWtSp_p = other.msHasWtSp_p;
-//    parang0_p = other.parang0_p;
-//    parang0Time_p = other.parang0Time_p;
-//    parang_p.assign (other.parang_p);
-//    parangTime_p = other.parangTime_p;
-//    rowIds_p = other.rowIds_p;
-//
-//    return * this;
-//}
-
 void
 VisibilityIteratorImpl2::Cache::flush ()
 {
@@ -910,40 +896,10 @@ VisibilityIteratorImpl2::Cache::flush ()
     parang0Time_p = -1;
 }
 
-//VisibilityIteratorImpl2::Columns &
-//VisibilityIteratorImpl2::Columns::operator= (const VisibilityIteratorImpl2::Columns & other)
-//{
-//    antenna1_p.reference (other.antenna1_p);
-//    antenna2_p.reference (other.antenna2_p);
-//    corrVis_p.reference (other.corrVis_p);
-//    exposure_p.reference (other.exposure_p);
-//    feed1_p.reference (other.feed1_p);
-//    feed2_p.reference (other.feed2_p);
-//    flag_p.reference (other.flag_p);
-//    flagCategory_p.reference (other.flagCategory_p);
-//    flagRow_p.reference (other.flagRow_p);
-//    floatVis_p.reference (other.floatVis_p);
-//    modelVis_p.reference (other.modelVis_p);
-//    observation_p.reference (other.observation_p);
-//    processor_p.reference (other.processor_p);
-//    scan_p.reference (other.scan_p);
-//    sigma_p.reference (other.sigma_p);
-//    state_p.reference (other.state_p);
-//    time_p.reference (other.time_p);
-//    timeCentroid_p.reference (other.timeCentroid_p);
-//    timeInterval_p.reference (other.timeInterval_p);
-//    uvw_p.reference (other.uvw_p);
-//    vis_p.reference (other.vis_p);
-//    weight_p.reference (other.weight_p);
-//    weightSpectrum_p.reference (other.weightSpectrum_p);
-//
-//    return * this;
-//}
-
 const Cube<RigidVector<Double, 2> > &
 VisibilityIteratorImpl2::getBeamOffsets () const
 {
-    return msIter_p.getBeamOffsets ();
+    return msIter_p->getBeamOffsets ();
 }
 
 Vector<Double>
@@ -1038,31 +994,31 @@ VisibilityIteratorImpl2::getInterval () const
 Bool
 VisibilityIteratorImpl2::isNewArrayId () const
 {
-    return msIter_p.newArray();
+    return msIter_p->newArray();
 }
 
 Bool
 VisibilityIteratorImpl2::isNewFieldId () const
 {
-    return msIter_p.newField ();
+    return msIter_p->newField ();
 }
 
 Bool
 VisibilityIteratorImpl2::isNewMs () const
 {
-    return msIter_p.newMS ();
+    return msIter_p->newMS ();
 }
 
 Bool
 VisibilityIteratorImpl2::isNewSpectralWindow () const
 {
-    return msIter_p.newSpectralWindow ();
+    return msIter_p->newSpectralWindow ();
 }
 
 Bool
 VisibilityIteratorImpl2::allBeamOffsetsZero () const
 {
-    return msIter_p.allBeamOffsetsZero ();
+    return msIter_p->allBeamOffsetsZero ();
 }
 
 Int
@@ -1073,7 +1029,7 @@ VisibilityIteratorImpl2::nRows () const
 
 Int VisibilityIteratorImpl2::nRowsInChunk () const
 {
-    return msIter_p.table ().nrow ();
+    return msIter_p->table ().nrow ();
 }
 
 Bool
@@ -1085,25 +1041,25 @@ VisibilityIteratorImpl2::more () const
 Bool
 VisibilityIteratorImpl2::moreChunks () const
 {
-    return msIter_p.more ();
+    return msIter_p->more ();
 }
 
 const ROMSColumns *
 VisibilityIteratorImpl2::msColumnsKluge () const
 {
-    return & msIter_p.msColumns();
+    return & msIter_p->msColumns();
 }
 
 Int
 VisibilityIteratorImpl2::msId () const
 {
-    return msIter_p.msId ();
+    return msIter_p->msId ();
 }
 
 const MeasurementSet &
 VisibilityIteratorImpl2::ms () const
 {
-    return msIter_p.ms ();
+    return msIter_p->ms ();
 }
 
 void
@@ -1124,20 +1080,20 @@ VisibilityIteratorImpl2::arrayIds (Vector<Int> & arrayIds) const
 String
 VisibilityIteratorImpl2::fieldName () const
 {
-    return msIter_p.fieldName ();
+    return msIter_p->fieldName ();
 }
 
 // Return the current Source Name
 String
 VisibilityIteratorImpl2::sourceName () const
 {
-    return msIter_p.sourceName ();
+    return msIter_p->sourceName ();
 }
 
 const Vector<String> &
 VisibilityIteratorImpl2::antennaMounts () const
 {
-    return msIter_p.antennaMounts ();
+    return msIter_p->antennaMounts ();
 }
 
 void
@@ -1155,19 +1111,19 @@ VisibilityIteratorImpl2::setRowBlocking (Int nRow)
 const MDirection &
 VisibilityIteratorImpl2::phaseCenter () const
 {
-        return msIter_p.phaseCenter ();
+        return msIter_p->phaseCenter ();
 }
 
 Int
 VisibilityIteratorImpl2::polFrame () const
 {
-        return msIter_p.polFrame ();
+        return msIter_p->polFrame ();
 }
 
 Int
 VisibilityIteratorImpl2::spectralWindow () const
 {
-    return msIter_p.spectralWindowId ();
+    return msIter_p->spectralWindowId ();
 }
 
 void
@@ -1191,14 +1147,14 @@ VisibilityIteratorImpl2::spectralWindows (Vector<Int> & spws) const
 Int
 VisibilityIteratorImpl2::polarizationId () const
 {
-    return msIter_p.polarizationId ();
+    return msIter_p->polarizationId ();
 }
 
 // Return current DataDescription Id
 Int
 VisibilityIteratorImpl2::dataDescriptionId () const
 {
-    return msIter_p.dataDescriptionId ();
+    return msIter_p->dataDescriptionId ();
 }
 
 void
@@ -1210,19 +1166,19 @@ VisibilityIteratorImpl2::dataDescriptionIds (Vector<Int> & ddis) const
 Bool
 VisibilityIteratorImpl2::newFieldId () const
 {
-    return (rowBounds_p.subchunkBegin_p == 0 && msIter_p.newField ());
+    return (rowBounds_p.subchunkBegin_p == 0 && msIter_p->newField ());
 }
 
 Bool
 VisibilityIteratorImpl2::newArrayId () const
 {
-    return (rowBounds_p.subchunkBegin_p == 0 && msIter_p.newArray ());
+    return (rowBounds_p.subchunkBegin_p == 0 && msIter_p->newArray ());
 }
 
 Bool
 VisibilityIteratorImpl2::newSpectralWindow () const
 {
-    return (rowBounds_p.subchunkBegin_p == 0 && msIter_p.newSpectralWindow ());
+    return (rowBounds_p.subchunkBegin_p == 0 && msIter_p->newSpectralWindow ());
 }
 
 Bool
@@ -1375,7 +1331,7 @@ VisibilityIteratorImpl2::applyPendingChanges ()
 
         if (exists){
 
-            msIter_p.setInterval(newInterval);
+            msIter_p->setInterval(newInterval);
             timeInterval_p = newInterval;
         }
 
@@ -1403,7 +1359,7 @@ VisibilityIteratorImpl2::originChunks (Bool forceRewind)
 
     if (! msIterAtOrigin_p || forceRewind) {
 
-        msIter_p.origin ();
+        msIter_p->origin ();
         msIterAtOrigin_p = True;
 
         positionMsIterToASelectedSpectralWindow ();
@@ -1419,11 +1375,11 @@ VisibilityIteratorImpl2::originChunks (Bool forceRewind)
 void
 VisibilityIteratorImpl2::positionMsIterToASelectedSpectralWindow ()
 {
-    while (msIter_p.more() &&
-           ! frequencySelections_p->isSpectralWindowSelected (msIter_p.msId(),
-                                                              msIter_p.spectralWindowId())){
+    while (msIter_p->more() &&
+           ! frequencySelections_p->isSpectralWindowSelected (msIter_p->msId(),
+                                                              msIter_p->spectralWindowId())){
 
-        msIter_p ++;
+        (* msIter_p) ++;
     }
 }
 
@@ -1454,7 +1410,7 @@ VisibilityIteratorImpl2::getSubchunkId () const
     return subchunk_p;
 }
 
-const Block<Int>&
+const SortColumns &
 VisibilityIteratorImpl2::getSortColumns() const
 {
   return sortColumns_p;
@@ -1483,8 +1439,8 @@ VisibilityIteratorImpl2::throwIfPendingChanges ()
 Bool
 VisibilityIteratorImpl2::isInASelectedSpectralWindow () const
 {
-    return frequencySelections_p->isSpectralWindowSelected(msIter_p.msId(),
-                                                           msIter_p.spectralWindowId ());
+    return frequencySelections_p->isSpectralWindowSelected(msIter_p->msId(),
+                                                           msIter_p->spectralWindowId ());
 }
 
 Bool
@@ -1496,32 +1452,24 @@ VisibilityIteratorImpl2::isWritable () const
 void
 VisibilityIteratorImpl2::nextChunk ()
 {
-    ThrowIf (! msIter_p.more (),
+    ThrowIf (! msIter_p->more (),
              "Attempt to advance past end of data using nextChunk");
 
     throwIfPendingChanges (); // error if unapplied changes exist
 
-    if (msIter_p.more ()) {
+    // Advance the MS Iterator until either there's no
+    // more data or it points to a selected spectral window.
 
-        // Advance the MS Iterator until either there's no
-        // more data or it points to a selected spectral window.
+    (* msIter_p) ++;
 
-        msIter_p++;
+    positionMsIterToASelectedSpectralWindow ();
 
-        positionMsIterToASelectedSpectralWindow ();
-
-//        if (msIter_p.newMS ()) {
-//            msIndex_p = msId ();
-//            doChannelSelection ();
-//        }
-
-        msIterAtOrigin_p = False;
-    }
+    msIterAtOrigin_p = False;
 
     // If the MS Iterator was successfully advanced then
     // set up for a new chunk
 
-    if (msIter_p.more ()) {
+    if (msIter_p->more ()) {
 
         subchunk_p.incrementChunk();
 
@@ -1530,7 +1478,7 @@ VisibilityIteratorImpl2::nextChunk ()
         vb_p->invalidate (); // flush the cache ??????????
     }
 
-    more_p = msIter_p.more ();
+    more_p = msIter_p->more ();
 }
 
 void
@@ -1606,13 +1554,14 @@ VisibilityIteratorImpl2::configureNewSubchunk ()
 
     // Set flags for current subchunk
 
-    nPolarizations_p = subtableColumns_p->polarization ().numCorr ()(msIter_p.polarizationId ());
+    nPolarizations_p = subtableColumns_p->polarization ().numCorr ()(msIter_p->polarizationId ());
 
     String msName = ms().tableName ();
     vb_p->configureNewSubchunk (msId (), msName, isNewMs (), isNewArrayId (), isNewFieldId (),
                                 isNewSpectralWindow (), subchunk_p, rowBounds_p.subchunkNRows_p,
                                 channelSelector_p->getNFrequencies(), nPolarizations_p,
-                                channelSelector_p->getCorrelations());
+                                channelSelector_p->getCorrelations(),
+                                weightScaling_p);
 
 }
 
@@ -1905,7 +1854,7 @@ VisibilityIteratorImpl2::getNMs () const
 MFrequency::Types
 VisibilityIteratorImpl2::getObservatoryFrequencyType () const
 {
-    const MFrequency & f0 = msIter_p.frequency0();
+    const MFrequency & f0 = msIter_p->frequency0();
 
     MFrequency::Types t = MFrequency::castType (f0.type());
 
@@ -1915,7 +1864,7 @@ VisibilityIteratorImpl2::getObservatoryFrequencyType () const
 MPosition
 VisibilityIteratorImpl2::getObservatoryPosition () const
 {
-    return msIter_p.telescopePosition();
+    return msIter_p->telescopePosition();
 }
 
 const SpectralWindowChannels &
@@ -1978,7 +1927,7 @@ VisibilityIteratorImpl2::getSpectralWindowChannels (Int msId, Int spectralWindow
 void
 VisibilityIteratorImpl2::configureNewChunk ()
 {
-    rowBounds_p.chunkNRows_p = msIter_p.table ().nrow ();
+    rowBounds_p.chunkNRows_p = msIter_p->table ().nrow ();
     rowBounds_p.subchunkBegin_p = -1; // undefined value
     rowBounds_p.subchunkEnd_p = -1;   // will increment to 1st row
 
@@ -1998,17 +1947,17 @@ VisibilityIteratorImpl2::configureNewChunk ()
 
     // If this is a new MeasurementSet then set up the antenna locations
 
-    if (msIter_p.newMS ()) {
+    if (msIter_p->newMS ()) {
 
         // Flush some cache flag values
 
         cache_p.flush ();
 
-        msd_p.setAntennas (msIter_p.msColumns ().antenna ());
+        msd_p.setAntennas (msIter_p->msColumns ().antenna ());
     }
 
-    if (msIter_p.newField () || msIterAtOrigin_p) {
-        msd_p.setFieldCenter (msIter_p.phaseCenter ());
+    if (msIter_p->newField () || msIterAtOrigin_p) {
+        msd_p.setFieldCenter (msIter_p->phaseCenter ());
     }
 }
 
@@ -2025,18 +1974,18 @@ VisibilityIteratorImpl2::setTileCache ()
     // sliced data access that grows memory dramatically in some cases
     //  if (useSlicer_p){
 
-    if (! (msIter_p.newDataDescriptionId () || msIter_p.newMS ()) ) {
+    if (! (msIter_p->newDataDescriptionId () || msIter_p->newMS ()) ) {
         return;
     }
 
-    const MeasurementSet & theMs = msIter_p.ms ();
+    const MeasurementSet & theMs = msIter_p->ms ();
     if (theMs.tableType () == Table::Memory) {
         return;
     }
 
     const ColumnDescSet & cds = theMs.tableDesc ().columnDescSet ();
 
-    uInt startrow = msIter_p.table ().rowNumbers ()(0); // Get the first row number for this DDID.
+    uInt startrow = msIter_p->table ().rowNumbers ()(0); // Get the first row number for this DDID.
 
     if (tileCacheIsSet_p.nelements () != 8) {
         tileCacheIsSet_p.resize (8);
@@ -2194,7 +2143,7 @@ VisibilityIteratorImpl2::attachColumns (const Table & t)
 MEpoch
 VisibilityIteratorImpl2::getEpoch () const
 {
-    MEpoch mEpoch = msIter_p.msColumns().timeMeas ()(0);
+    MEpoch mEpoch = msIter_p->msColumns().timeMeas ()(0);
 
     return mEpoch;
 }
@@ -2207,7 +2156,7 @@ VisibilityIteratorImpl2::getReceptor0Angle ()
     Vector<Float> receptor0Angle (nAntennas);
 
     for (int i = 0; i < nAntennas; i++) {
-        receptor0Angle [i] = msIter_p.receptorAngle ()(0, i);
+        receptor0Angle [i] = msIter_p->receptorAngle ()(0, i);
     }
 
     return receptor0Angle;
@@ -2229,7 +2178,7 @@ VisibilityIteratorImpl2::getRowIds (Vector<uInt> & rowIds) const
         // needs to be created once per chunk since a new reference table is
         // created each time the MSIter moves to the next chunk.
 
-        cache_p.chunkRowIds_p = msIter_p.table ().rowNumbers (msIter_p.ms ());
+        cache_p.chunkRowIds_p = msIter_p->table ().rowNumbers (msIter_p->ms ());
 
     }
 
@@ -2269,7 +2218,7 @@ VisibilityIteratorImpl2::feed2(Vector<Int> & fd2) const
 void
 VisibilityIteratorImpl2::corrType (Vector<Int> & corrTypes) const
 {
-    Int polId = msIter_p.polarizationId ();
+    Int polId = msIter_p->polarizationId ();
 
     subtableColumns_p->polarization ().corrType ().get (polId, corrTypes, True);
 }
@@ -2314,7 +2263,7 @@ VisibilityIteratorImpl2::flag (Matrix<Bool> & flags) const
 Bool
 VisibilityIteratorImpl2::flagCategoryExists() const
 {
-  if(msIter_p.newMS()){ // Cache to avoid testing unnecessarily.
+  if(msIter_p->newMS()){ // Cache to avoid testing unnecessarily.
     try{
       cache_p.msHasFC_p = columns_p.flagCategory_p.hasContent();
     }
@@ -2444,105 +2393,6 @@ VisibilityIteratorImpl2::floatData (Cube<Float> & fcube) const
     }
 }
 
-//void
-//VisibilityIteratorImpl2::visibilityCorrected (Matrix<CStokesVector> & vis) const
-//{
-//    getVisibilityAsStokes (vis, columns_p.corrVis_p);
-//
-//}
-
-//void
-//VisibilityIteratorImpl2::visibilityModel (Matrix<CStokesVector> & vis) const
-//{
-//    getVisibilityAsStokes (vis, columns_p.modelVis_p);
-//}
-
-//void
-//VisibilityIteratorImpl2::visibilityObserved (Matrix<CStokesVector> & vis) const
-//{
-//    getVisibilityAsStokes (vis, columns_p.vis_p);
-//}
-
-//void
-//VisibilityIteratorImpl2::getVisibilityAsStokes (Matrix<CStokesVector> & visibilityStokes,
-//                                                    const ROArrayColumn<Complex> & column) const
-//{
-//    // Read in the raw visibility data
-//
-//    Cube<Complex> visibilityRaw;
-//
-//    getColumnRows (column, visibilityRaw);
-//
-//    // Resize the result (Matrix<CStokesVector>) to match up with the
-//    // shape of the data.
-//
-//    Int nFrequencies = visibilityRaw.shape()(1);
-//
-//    visibilityStokes.resize (nFrequencies, rowBounds_p.subchunkNRows_p);
-//
-//    // Convert the polarizations into a Stokes Vector for each channel, row.
-//    // The cases where only 1 or 2 polarizations are present require some
-//    // assumptions/approximations be made to fill out the vector.
-//    //
-//    // The original implementation used a pointer based scheme to optimize
-//    // the performance.  If this routine turns out to be too sluggish then
-//    // an enhancement along those lines might be worthy the added opacity.
-//
-//    if (nPolarizations_p == 4){
-//
-//        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
-//            for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-//
-//                CStokesVector & stokesVector = visibilityStokes (frequency, row);
-//
-//                for (Int polarization = 0; polarization < 4; polarization ++){
-//
-//                    stokesVector (polarization) = visibilityRaw (polarization, frequency, row);
-//
-//                }
-//            }
-//        }
-//    }
-//    else if (nPolarizations_p == 2){
-//
-//        //  Assume XX,YY or RR,LL are provided.  Set cross terms to zero.
-//
-//        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
-//            for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-//
-//                CStokesVector & stokesVector = visibilityStokes (frequency, row);
-//
-//                stokesVector (0) = visibilityRaw (0, frequency, row);
-//                stokesVector (1) = 0;
-//                stokesVector (2) = 0;
-//                stokesVector (3) = visibilityRaw (1, frequency, row);
-//            }
-//        }
-//    }
-//    else if (nPolarizations_p == 1){
-//
-//        // Assume provided polarization is an estimate of Stokes I (one of RR,LL,XX,YY).
-//        // Cross terms are then zero.
-//
-//        for (Int row = 0; row < rowBounds_p.subchunkNRows_p; row ++) {
-//            for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-//
-//                CStokesVector & stokesVector = visibilityStokes (frequency, row);
-//
-//                stokesVector (0) = visibilityRaw (0, frequency, row);
-//                stokesVector (3) = stokesVector (0);
-//                stokesVector (1) = 0;
-//                stokesVector (2) = 0;
-//            }
-//        }
-//
-//    }
-//    else{
-//        ThrowIf (True, String::format ("Unexpected number of polarizations: %d; should be 1, 2 or 4",
-//                                       nPolarizations_p));
-//    }
-//}
-
 void
 VisibilityIteratorImpl2::uvw (Matrix<Double> & uvwmat) const
 {
@@ -2609,7 +2459,7 @@ VisibilityIteratorImpl2::parang (Double time) const
         // get the Epoch reference from the column
 
         MEpoch mEpoch = getEpoch();
-        Int nAnt = msIter_p.receptorAngle ().shape ()(1);
+        Int nAnt = msIter_p->receptorAngle ().shape ()(1);
 
         cache_p.parang_p = parangCalculate (time, msd_p, nAnt, mEpoch);
 
@@ -2627,7 +2477,7 @@ VisibilityIteratorImpl2::azel (Double ut) const
 
         cache_p.azelTime_p = ut;
 
-        Int nAnt = msIter_p.receptorAngle ().shape ()(1);
+        Int nAnt = msIter_p->receptorAngle ().shape ()(1);
 
         MEpoch mEpoch = getEpoch();
 
@@ -2687,53 +2537,21 @@ VisibilityIteratorImpl2::hourang (Double time) const
 
 
 void
-VisibilityIteratorImpl2::sigma (Vector<Float> & sigmaVector) const
+VisibilityIteratorImpl2::sigma (Matrix<Float> & sigma) const
 {
-    Matrix<Float> sigmaMatrix;
-
-    sigmaMat (sigmaMatrix);
-
-    // Do a rough average of the parallel hand polarizations to get a single
-    // sigma. Should do this properly someday, or return all values
-
-    sigmaVector.resize (sigmaMatrix.ncolumn ());
-    sigmaVector = sigmaMatrix.row (0);
-    sigmaVector += sigmaMatrix.row (nPolarizations_p - 1);
-    sigmaVector /= 2.0f;
+    getColumnRowsMatrix (columns_p.sigma_p, sigma);
 }
 
 void
-VisibilityIteratorImpl2::sigmaMat (Matrix<Float> & sigmat) const
+VisibilityIteratorImpl2::weight (Matrix<Float> & wt) const
 {
-    getColumnRowsMatrix (columns_p.sigma_p, sigmat);
-}
-
-void
-VisibilityIteratorImpl2::weight (Vector<Float> & wt) const
-{
-    // Take average of parallel hand polarizations for now.
-    // Later convert weight () to return full polarization dependence
-
-    Matrix<Float> polWeight;
-
-    weightMat (polWeight);
-
-    wt.resize (polWeight.ncolumn ());
-    wt = polWeight.row (0);
-    wt += polWeight.row (nPolarizations_p - 1);
-    wt /= 2.0f;
-}
-
-void
-VisibilityIteratorImpl2::weightMat (Matrix<Float> & wtmat) const
-{
-    getColumnRowsMatrix (columns_p.weight_p, wtmat);
+    getColumnRowsMatrix (columns_p.weight_p, wt);
 }
 
 Bool
 VisibilityIteratorImpl2::weightSpectrumExists () const
 {
-    if (msIter_p.newMS ()) { // Cache to avoid testing unnecessarily.
+    if (msIter_p->newMS ()) { // Cache to avoid testing unnecessarily.
         try {
             cache_p.msHasWtSp_p = columns_p.weightSpectrum_p.hasContent ();
             // Comparing columns_p.weightSpectrum_p.shape (0) to
@@ -2769,13 +2587,32 @@ VisibilityIteratorImpl2::weightSpectrum (Cube<Float> & spectrum) const
     }
 }
 
+void
+VisibilityIteratorImpl2::setWeightScaling (CountedPtr<WeightScaling> weightScaling)
+{
+    weightScaling_p = weightScaling;
+}
+
+Bool
+VisibilityIteratorImpl2::hasWeightScaling () const
+{
+    return ! weightScaling_p.null();
+}
+
+CountedPtr<WeightScaling>
+VisibilityIteratorImpl2::getWeightScaling () const
+{
+    return weightScaling_p;
+}
+
+
 const VisImagingWeight &
 VisibilityIteratorImpl2::getImagingWeightGenerator () const
 {
     return imwgt_p;
 }
 
-Vector<MeasurementSet>
+Block<MeasurementSet>
 VisibilityIteratorImpl2::getMeasurementSets () const
 {
     return measurementSets_p;
@@ -2853,8 +2690,8 @@ Int
 VisibilityIteratorImpl2::nRowsViWillSweep () const
 {
     Int numcoh = 0;
-    for (uInt k = 0; k < uInt (msIter_p.numMS ()) ; ++k) {
-        numcoh += msIter_p.ms (k).nrow ();
+    for (uInt k = 0; k < uInt (msIter_p->numMS ()) ; ++k) {
+        numcoh += msIter_p->ms (k).nrow ();
     }
     return numcoh;
 
@@ -2863,7 +2700,7 @@ VisibilityIteratorImpl2::nRowsViWillSweep () const
 const Table
 VisibilityIteratorImpl2::attachTable () const
 {
-    return msIter_p.table ();
+    return msIter_p->table ();
 }
 
 void
@@ -2872,7 +2709,7 @@ VisibilityIteratorImpl2::slurp () const
     // Set the table data manager (ISM and SSM) cache size to the full column size, for
     //   the columns ANTENNA1, ANTENNA2, FEED1, FEED2, TIME, INTERVAL, FLAG_ROW, SCAN_NUMBER and UVW
 
-    Record dmInfo (msIter_p.ms ().dataManagerInfo ());
+    Record dmInfo (msIter_p->ms ().dataManagerInfo ());
 
     RecordDesc desc = dmInfo.description ();
 
@@ -2918,17 +2755,17 @@ VisibilityIteratorImpl2::slurp () const
                     dmInfo.subRecord (i).get ("TYPE", dm_type);
 
                     Bool can_exceed_nr_buckets = False;
-                    uInt num_buckets = msIter_p.ms ().nrow ();
+                    uInt num_buckets = msIter_p->ms ().nrow ();
                         // One bucket is at least one row, so this is enough
 
                     if (dm_type == "IncrementalStMan") {
 
-                        ROIncrementalStManAccessor acc (msIter_p.ms (), dm_name);
+                        ROIncrementalStManAccessor acc (msIter_p->ms (), dm_name);
                         acc.setCacheSize (num_buckets, can_exceed_nr_buckets);
 
                     } else if (dm_type == "StandardStMan") {
 
-                        ROStandardStManAccessor acc (msIter_p.ms (), dm_name);
+                        ROStandardStManAccessor acc (msIter_p->ms (), dm_name);
                         acc.setCacheSize (num_buckets, can_exceed_nr_buckets);
                     }
                     /* These are the only storage managers which use the BucketCache
@@ -2952,7 +2789,7 @@ VisibilityIteratorImpl2::slurp () const
 const Cube<Double> &
 VisibilityIteratorImpl2::receptorAngles() const
 {
-    return msIter_p.receptorAngles ();
+    return msIter_p->receptorAngles ();
 }
 
 IPosition
@@ -2978,49 +2815,49 @@ VisibilityIteratorImpl2::setFrequencySelections (FrequencySelections const& freq
 void
 VisibilityIteratorImpl2::jonesC(Vector<SquareMatrix<complex<float>, 2> >& cjones) const
 {
-    cjones.resize (msIter_p.CJones ().nelements ());
-    cjones = msIter_p.CJones ();
+    cjones.resize (msIter_p->CJones ().nelements ());
+    cjones = msIter_p->CJones ();
 }
 
 
-void
-VisibilityIteratorImpl2::writeFlag (const Matrix<Bool> & flag)
-{
-
-    Int nFrequencies = channelSelector_p->getNFrequencies();
-    Int nPolarizations = nPolarizations_p;
-    Int nRows = this->nRows();
-
-    // The flag matrix is expected to have dimensions [nF, nR].
-
-    ThrowIf ((int) flag.nrow() != nFrequencies || (int) flag.ncolumn() != nRows,
-             String::format ("Shape mismatch: got [%d,%d]; expected [%d,%d]",
-                             flag.nrow(), flag.ncolumn(), nFrequencies, nRows));
-
-    // Convert the flag matrix into the flag cube defined in the MS.  The flag
-    // value for a (row,channel) will be copied into all of the polarizations.
-
-    Cube<Bool> flagCube;
-
-    flagCube.resize (nPolarizations, nFrequencies, nRows);
-
-    for (Int row = 0; row < nRows; row++) {
-
-        for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-
-            Bool flagValue = flag (frequency, row); // same value for all polarizations
-
-            for (Int polarization = 0; polarization < nPolarizations; polarization ++) {
-
-                flagCube (polarization, frequency, row) = flagValue;
-            }
-        }
-    }
-
-    // Write the newly constructed flag cube into the MS.
-
-    writeFlag (flagCube);
-}
+//void
+//VisibilityIteratorImpl2::writeFlag (const Matrix<Bool> & flag)
+//{
+//
+//    Int nFrequencies = channelSelector_p->getNFrequencies();
+//    Int nPolarizations = nPolarizations_p;
+//    Int nRows = this->nRows();
+//
+//    // The flag matrix is expected to have dimensions [nF, nR].
+//
+//    ThrowIf ((int) flag.nrow() != nFrequencies || (int) flag.ncolumn() != nRows,
+//             String::format ("Shape mismatch: got [%d,%d]; expected [%d,%d]",
+//                             flag.nrow(), flag.ncolumn(), nFrequencies, nRows));
+//
+//    // Convert the flag matrix into the flag cube defined in the MS.  The flag
+//    // value for a (row,channel) will be copied into all of the polarizations.
+//
+//    Cube<Bool> flagCube;
+//
+//    flagCube.resize (nPolarizations, nFrequencies, nRows);
+//
+//    for (Int row = 0; row < nRows; row++) {
+//
+//        for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
+//
+//            Bool flagValue = flag (frequency, row); // same value for all polarizations
+//
+//            for (Int polarization = 0; polarization < nPolarizations; polarization ++) {
+//
+//                flagCube (polarization, frequency, row) = flagValue;
+//            }
+//        }
+//    }
+//
+//    // Write the newly constructed flag cube into the MS.
+//
+//    writeFlag (flagCube);
+//}
 
 void
 VisibilityIteratorImpl2::writeFlag (const Cube<Bool> & flags)
@@ -3047,77 +2884,6 @@ VisibilityIteratorImpl2::writeFlagRow (const Vector<Bool> & rowflags)
 {
     putColumnRows (columns_p.flagRow_p, rowflags);
 }
-
-//void
-//VisibilityIteratorImpl2::writeVisCorrected (const Matrix<CStokesVector> & visibilityStokes)
-//{
-//    Cube<Complex> visCube;
-//
-//    convertVisFromStokes (visibilityStokes, visCube);
-//
-//    writeVisCorrected (visCube);
-//}
-
-//void
-//VisibilityIteratorImpl2::writeVisModel (const Matrix<CStokesVector> & visibilityStokes)
-//{
-//    Cube<Complex> visCube;
-//
-//    convertVisFromStokes (visibilityStokes, visCube);
-//
-//    writeVisModel (visCube);
-//}
-
-//void
-//VisibilityIteratorImpl2::writeVisObserved (const Matrix<CStokesVector> & visibilityStokes)
-//{
-//    Cube<Complex> visCube;
-//
-//    convertVisFromStokes (visibilityStokes, visCube);
-//
-//    writeVisObserved (visCube);
-//}
-
-//void
-//VisibilityIteratorImpl2::convertVisFromStokes (const Matrix<CStokesVector> & visibilityStokes,
-//                                                    Cube<Complex> & visibilityCube)
-//{
-//    Int nRows = rowBounds_p.subchunkNRows_p;
-//    Int nFrequencies = channelSelector_p->getNFrequencies();
-//    Int nPolarizations = this->nPolarizations();
-//
-//    visibilityCube.resize (nPolarizations, nFrequencies, nRows);
-//
-//    // The cube could be walked through using pointer operations rather than
-//    // using cube references.  If the straight-forward implementation below
-//    // proves to be too slow, then it can be reimplemented using pointer
-//    // operations.
-//
-//    for (Int row = 0; row < nRows; row ++) {
-//
-//        for (Int frequency = 0; frequency < nFrequencies; frequency ++) {
-//
-//            const CStokesVector & v = visibilityStokes (frequency, row);
-//
-//            if (nPolarizations == 4){
-//
-//                visibilityCube (0, frequency, row) = v (0);
-//                visibilityCube (1, frequency, row) = v (1);
-//                visibilityCube (2, frequency, row) = v (2);
-//                visibilityCube (3, frequency, row) = v (3);
-//            }
-//            else if (nPolarizations == 2){
-//
-//                visibilityCube (0, frequency, row) = v (0);
-//                visibilityCube (1, frequency, row) = v (3);
-//            }
-//            else if (nPolarizations == 1){
-//
-//                visibilityCube (0, frequency, row) = (v (0) + v (3)) / 2;
-//            }
-//        }
-//    }
-//}
 
 void
 VisibilityIteratorImpl2::writeVisCorrected (const Cube<Complex> & vis)
@@ -3225,8 +2991,8 @@ VisibilityIteratorImpl2::writeBackChanges (VisBuffer2 * vb)
 void
 VisibilityIteratorImpl2::initializeBackWriters ()
 {
-    backWriters_p [Flag] =
-        makeBackWriter (& VisibilityIteratorImpl2::writeFlag, & VisBuffer2::flag);
+//    backWriters_p [Flag] =
+//        makeBackWriter (& VisibilityIteratorImpl2::writeFlag, & VisBuffer2::flag);
     backWriters_p [FlagCube] =
         makeBackWriter (& VisibilityIteratorImpl2::writeFlag, & VisBuffer2::flagCube);
     backWriters_p [FlagRow] =
@@ -3245,13 +3011,6 @@ VisibilityIteratorImpl2::initializeBackWriters ()
         makeBackWriter (& VisibilityIteratorImpl2::writeWeightSpectrum, & VisBuffer2::weightSpectrum);
 
     // Now do the visibilities.
-
-//    backWriters_p [VisibilityObserved] =
-//        makeBackWriter (& VisibilityIteratorImpl2::writeVisObserved, & VisBuffer2::vis);
-//    backWriters_p [VisibilityCorrected] =
-//        makeBackWriter (& VisibilityIteratorImpl2::writeVisCorrected, & VisBuffer2::visCorrected);
-//    backWriters_p [VisibilityModel] =
-//        makeBackWriter (& VisibilityIteratorImpl2::writeVisModel, & VisBuffer2::visModel);
 
     backWriters_p [VisibilityCubeObserved] =
         makeBackWriter (& VisibilityIteratorImpl2::writeVisObserved, & VisBuffer2::visCube);

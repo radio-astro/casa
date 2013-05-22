@@ -53,6 +53,10 @@ namespace casa {
 		receiver->moveChannel( event );
 	}
 
+	QString CanvasModeChannel::toString() const {
+		return "Channel";
+	}
+
 	CanvasModeChannel::~CanvasModeChannel() {
 
 	}

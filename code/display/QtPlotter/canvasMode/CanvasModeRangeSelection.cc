@@ -53,6 +53,9 @@ namespace casa {
 		receiver->endRangeX( event );
 	}
 
+	QString CanvasModeRangeSelection::toString() const {
+		return "Range Selection";
+	}
 	CanvasModeRangeSelection::~CanvasModeRangeSelection() {
 	}
 

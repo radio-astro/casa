@@ -298,6 +298,19 @@ public:
 	// all applicable stokes have been selected.
 	Vector<Stokes::StokesTypes> getStokes() const;
 
+	// if freqRefFrame=="" -> use the reference frame of the coordinate system
+	// if dopplerString=="" -> use the doppler system associated with the coordinate system
+	// if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
+	// Tacitly does nothing if the coordinate system has no spectral axis.
+	// Returns True if frequencies actually need to be set and were set.
+	virtual Bool setFrequencyLimits(
+		const Quantity& beginFreq,
+		const Quantity& endFreq,
+		const String& freqRefFrame,
+		const String& dopplerString,
+		const Quantity& restfreq
+	);
+
 protected:
 
 	AnnotationBase(
@@ -367,18 +380,7 @@ protected:
 	// return a string representing a pixel value, precision 1.
 	static String _printPixel(const Double& d);
 
-	// if freqRefFrame=="" -> use the reference frame of the coordinate system
-	// if dopplerString=="" -> use the doppler system associated with the coordinate system
-	// if restfreq=Quantity(0, "Hz") -> use the rest frequency associated with the coordinate system
-	// Tacitly does nothing if the coordinate system has no spectral axis.
-	// Returns True if frequencies actually need to be set and were set.
-	virtual Bool _setFrequencyLimits(
-		const Quantity& beginFreq,
-		const Quantity& endFreq,
-		const String& freqRefFrame,
-		const String& dopplerString,
-		const Quantity& restfreq
-	);
+
 
 private:
 	Type _type;

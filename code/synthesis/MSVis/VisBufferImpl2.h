@@ -62,6 +62,11 @@ class VisBufferImpl2;
 class VisibilityIterator2;
 class VisibilityIterator2;
 
+namespace avg {
+
+    class VbAvg;
+}
+
 
 
 //<summary>VisBufferImpls encapsulate one chunk of visibility data for processing.</summary>
@@ -107,6 +112,7 @@ class VisibilityIterator2;
 class VisBufferImpl2 : public VisBuffer2 {
 
     friend class VLAT; // for async i/o
+    friend class casa::vi::avg::VbAvg;
     friend class VbCacheItemBase;
     friend class VisBufferCache;
     friend class VisBufferState;
@@ -262,8 +268,8 @@ public:
     virtual const Vector<Float> & feedPa2 () const;
     virtual const Vector<Int> & fieldId () const;
     virtual void setFieldId (const Vector<Int> &);
-    virtual const Matrix<Bool> & flag () const;
-    virtual void setFlag (const Matrix<Bool>&);
+//    virtual const Matrix<Bool> & flag () const;
+//    virtual void setFlag (const Matrix<Bool>&);
     virtual const Array<Bool> & flagCategory () const;
     virtual void setFlagCategory (const Array<Bool>&);
     virtual const Cube<Bool> & flagCube () const;
@@ -290,7 +296,7 @@ public:
     //virtual const Matrix<Float> & sigmaMat () const;
     //virtual Int spectralWindow () const;
     virtual const Vector<Int> & spectralWindows () const;
-    //virtual void setSpectralWindows (const Vector<Int> & spectralWindows);
+    virtual void setSpectralWindows (const Vector<Int> & spectralWindows);
     virtual const Vector<Int> & stateId () const;
     virtual void setStateId (const Vector<Int> & value);
     virtual const Vector<Double> & time () const;
@@ -320,11 +326,8 @@ public:
 //    virtual void setVis (Matrix<CStokesVector> &);
     virtual const Matrix<Float> & weight () const;
     virtual void setWeight (const Matrix<Float>&);
-//    virtual const Matrix<Float> & weightMat () const;
-//    virtual void setWeightMat (const Matrix<Float>&);
     virtual const Cube<Float> & weightSpectrum () const;
     virtual void setWeightSpectrum (const Cube<Float>&);
-
 
 protected:
 
@@ -364,7 +367,8 @@ protected:
                                        Bool isNewArrayId, Bool isNewFieldId,
                                        Bool isNewSpectralWindow, const Subchunk & subchunk,
                                        Int nRows, Int nChannels, Int nCorrelations,
-                                       const Vector<Int> & correlations);
+                                       const Vector<Int> & correlations,
+                                       CountedPtr<WeightScaling> weightScaling);
 
     virtual void copyRow (Int sourceRow, Int destinationRow);
     virtual void deleteRows (const Vector<Int> & rowsToDelete);
@@ -374,7 +378,7 @@ protected:
     virtual VisBufferComponents2 dirtyComponentsGet () const;
     virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents);
     virtual void dirtyComponentsSet (VisBufferComponent2 component);
-    void normalizeRow (Int row, Int nCorrelations, const Matrix<Bool> & flagged,
+    void normalizeRow (Int row, Int nCorrelations, const Cube<Bool> & flagged,
                        Cube<Complex> & visCube, Cube<Complex> & modelCube,
                         Matrix<Float> & weightMat);
 
@@ -396,15 +400,22 @@ protected:
     virtual Cube<Complex> & visCubeModelRef (); // [nC,nF,nR]
     virtual Cube<Float> & weightSpectrumRef (); // [nC,nF,nR]
 
+    Float getWeightScaled (Int row) const;
+    Float getWeightScaled (Int correlation, Int row) const;
+    Float getWeightScaled (Int correlation, Int channel, Int row) const;
+    virtual CountedPtr<WeightScaling> getWeightScaling () const;
+    void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
+                           Bool isNewArrayId, Bool isNewFieldId, Bool isNewSpectralWindow,
+                           const Subchunk & subchunk, const Vector<Int> & correlations,
+                           CountedPtr <WeightScaling> weightScaling);
+    Bool weightSpectrumPresent () const;
+
 private:
 
     virtual Bool areCorrelationsInCanonicalOrder () const;
     void checkVisIterBase (const char * func, const char * file, int line, const char * extra = "") const;
     void construct(VisibilityIterator2 * vi, VisBufferOptions options);
     void constructCache();
-    void setIterationInfo (Int msId, const String & msName, Bool isNewMs,
-                           Bool isNewArrayId, Bool isNewFieldId, Bool isNewSpectralWindow,
-                           const Subchunk & subchunk, const Vector<Int> & correlations);
     virtual void validate();
 
     /////////////////////////////////////////

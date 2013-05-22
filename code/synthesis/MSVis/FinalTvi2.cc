@@ -15,7 +15,7 @@ namespace vi {
 
 FinalTvi2::FinalTvi2 (ViImplementation2 * inputVi, VisibilityIterator2 * vi,
                       MeasurementSet & finalMs, Bool isWritable)
-: TransformingVi2 (inputVi),
+: TransformingVi2 (vi, inputVi),
   columns_p (),
   columnsAttached_p (False),
   ms_p (finalMs)
@@ -44,7 +44,8 @@ FinalTvi2::configureNewSubchunk ()
                                           nRows(),
                                           nChannels,
                                           getVii()->nPolarizations(),
-                                          getVii()->getCorrelations());
+                                          getVii()->getCorrelations(),
+                                          getVii()->getWeightScaling());
 }
 
 

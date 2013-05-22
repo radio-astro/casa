@@ -1,10 +1,14 @@
 
-
+#include <synthesis/MSVis/VisibilityIterator2.h>
 #include <synthesis/MSVis/ViImplementation2.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MEpoch.h>
 #include <casa/Quanta/MVTime.h>
 #include <ms/MeasurementSets/MSDerivedValues.h>
+#include <casa/Arrays.h>
+
+#include <algorithm>
+using namespace std;
 
 namespace casa {
 
@@ -158,6 +162,33 @@ ViImplementation2::parangCalculate (Double time, MSDerivedValues & msd, int nAnt
 
     return parang;
 }
+
+void
+ViImplementation2::doWeightScaling (Bool hasWeightScaling,
+                                    WeightScaling * scaling,
+                                    const Array<Float>& unscaled,
+                                    Array<Float>& scaled)
+{
+    if (hasWeightScaling){
+
+        // Apply the scaling function to each of the weights.
+
+        scaled.resize (unscaled.shape());
+
+        std::transform <Array<Float>::const_contiter,
+                        Array<Float>::contiter,
+                        WeightScaling &>
+            (unscaled.cbegin(), unscaled.cend(), scaled.cbegin(), * scaling);
+
+    }
+    else{
+
+        // No scaling function so simply copy raw weights to scaled.
+
+        scaled.assign (unscaled);
+    }
+}
+
 
 } // end namespace vi
 

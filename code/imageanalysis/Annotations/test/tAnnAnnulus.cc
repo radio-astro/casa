@@ -33,6 +33,8 @@
 
 #include <casa/namespace.h>
 
+#include <vector>
+
 int main () {
 	try {
 		LogIO log;
@@ -414,21 +416,32 @@ int main () {
 				csys.spectralCoordinate().restFrequency(), "Hz"
 			);
 			Vector<Stokes::StokesTypes> stokes(0);
-			AnnAnnulus annulus(
+			std::vector<AnnAnnulus> annulus(2);
+			annulus[0] = AnnAnnulus(
 				centerx, centery, inner, outer,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
-			Vector<MFrequency> freqs = annulus.getFrequencyLimits();
-			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), beginFreq.getValue("Hz")),
-				AipsError
+			annulus[1] = AnnAnnulus(
+				centerx, centery, inner, outer,
+				csys, shape, stokes
 			);
-			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), endFreq.getValue("Hz")),
-				AipsError
+			annulus[1].setFrequencyLimits(
+				beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq
 			);
+			for (uInt i=0; i<2; i++) {
+				Vector<MFrequency> freqs = annulus[i].getFrequencyLimits();
+				AlwaysAssert(
+					near(freqs[0].get("Hz").getValue(), beginFreq.getValue("Hz")),
+					AipsError
+				);
+				AlwaysAssert(
+					near(freqs[1].get("Hz").getValue(), endFreq.getValue("Hz")),
+					AipsError
+				);
+			}
 		}
 
 		{
@@ -453,23 +466,46 @@ int main () {
 			Quantity restfreq(
 				csys.spectralCoordinate().restFrequency(), "Hz"
 			);
+			vector<AnnAnnulus> annulus(2);
 			Vector<Stokes::StokesTypes> stokes(0);
-			AnnAnnulus annulus(
+			annulus[0] = AnnAnnulus(
 				centerx, centery, inner, outer,
 				dirTypeString,
 				csys, shape, beginFreq, endFreq, freqRefFrameString,
 				dopplerString, restfreq, stokes, False
 			);
+			annulus[1] = AnnAnnulus(
+				centerx, centery, inner, outer,
+				csys, shape, stokes
+			);
+			annulus[1].setFrequencyLimits(
+				beginFreq, endFreq, freqRefFrameString,
+				dopplerString, restfreq
+			);
+			annulus[1].setAnnotationOnly(False);
+			AlwaysAssert(annulus[0] == annulus[1], AipsError);
+			vector<String> s(2);
+			ostringstream os;
+			os << annulus[0];
+			s[0] = os.str();
+			os.str("");
+			os << annulus[1];
+			s[1] = os.str();
+			cout << "'" << s[0] << "'" << endl;
+			cout << "'" << s[1] << "'" << endl;
 
-			Vector<MFrequency> freqs = annulus.getFrequencyLimits();
-			AlwaysAssert(
-				near(freqs[0].get("Hz").getValue(), 1415508785.4853702),
-				AipsError
-			);
-			AlwaysAssert(
-				near(freqs[1].get("Hz").getValue(), 1450521370.2853618),
-				AipsError
-			);
+			AlwaysAssert(s[0] == s[1], AipsError);
+			for (uInt i=0; i<2; i++) {
+				Vector<MFrequency> freqs = annulus[i].getFrequencyLimits();
+				AlwaysAssert(
+					near(freqs[0].get("Hz").getValue(), 1415508785.4853702),
+					AipsError
+				);
+				AlwaysAssert(
+					near(freqs[1].get("Hz").getValue(), 1450521370.2853618),
+					AipsError
+				);
+			}
 		}
 
 		{
@@ -558,8 +594,6 @@ int main () {
 			);
 		}
 		{
-			cout << __FILE__ << " " << __LINE__ << endl;
-
 			log << LogIO::NORMAL
 				<< "Test modified doppler definitions"
 				<< LogIO::POST;

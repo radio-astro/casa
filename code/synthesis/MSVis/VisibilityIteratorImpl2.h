@@ -44,7 +44,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 template <typename T> class ArrayColumn;
-//class CStokesVector;
+template <typename T> class CountedPtr;
+class MsIter;
 template <typename T> class ROArrayColumn;
 template <typename T, Int N> class RigidVector;
 template <typename T, Int N> class SquareMatrix;
@@ -190,9 +191,8 @@ public:
 //                                Double timeInterval = 0);
 
     VisibilityIteratorImpl2 (VisibilityIterator2 * rovi,
-                             const Block<MeasurementSet> & mss,
-                             const Block<Int> & sortColumns,
-                             Bool addDefaultSortCols,
+                             const Block<const MeasurementSet *> & mss,
+                             const SortColumns & sortColumns,
                              Double timeInterval,
                              VisBufferType vbType,
                              Bool isWritable);
@@ -202,6 +202,7 @@ public:
 //                                  VisibilityIterator2 * rovi);
 
     // Destructor
+
     virtual ~VisibilityIteratorImpl2 ();
 
         // Members
@@ -237,7 +238,7 @@ public:
 
     virtual Subchunk getSubchunkId () const;
 
-    virtual const Block<Int>& getSortColumns() const;
+    virtual const SortColumns & getSortColumns() const;
 
     virtual void setFrequencySelections (const FrequencySelections & selection);
 
@@ -277,7 +278,6 @@ public:
 
     // Return feed2
     virtual void feed2 (Vector<Int> & fd2) const;
-
 
     // Return feed configuration matrix for specified antenna
     void jonesC (Vector<SquareMatrix<Complex, 2> > & cjones) const;
@@ -370,10 +370,7 @@ public:
     virtual void corrType (Vector<Int> & corrTypes) const;
 
     // Return sigma
-    virtual void sigma (Vector<Float> & sig) const;
-
-    // Return sigma matrix (pol-dep)
-    virtual void sigmaMat (Matrix<Float> & sigmat) const;
+    virtual void sigma (Matrix<Float> & sig) const;
 
     // Return current SpectralWindow
     virtual Int spectralWindow () const;
@@ -423,16 +420,17 @@ public:
     virtual void uvw (Matrix<Double> & uvwmat) const;
 
     // Return weight
-    virtual void weight (Vector<Float> & wt) const;
-
-    // Returns the nPol_p x curNumRow_p weight matrix
-    virtual void weightMat (Matrix<Float> & wtmat) const;
+    virtual void weight (Matrix<Float> & wt) const;
 
     // Determine whether WEIGHT_SPECTRUM exists.
     Bool weightSpectrumExists () const;
 
     // Return weightspectrum (a weight for each channel)
     virtual void weightSpectrum (Cube<Float> & wtsp) const;
+
+    virtual void setWeightScaling (CountedPtr<WeightScaling> weightscaling);
+    virtual CountedPtr<WeightScaling> getWeightScaling () const;
+    virtual Bool hasWeightScaling () const;
 
     // Return imaging weight (a weight for each channel)
     //virtual Matrix<Float> & imagingWeight (Matrix<Float> & wt) const;
@@ -520,7 +518,7 @@ public:
     // This will flag all channels in the original data that contributed to
     // the output channel in the case of channel averaging.
     // All polarizations have the same flag value.
-    virtual void writeFlag (const Matrix<Bool> & flag);
+//    virtual void writeFlag (const Matrix<Bool> & flag);
 
     // Write/modify the flags in the data.
     // This writes the flags as found in the MS, Cube (npol,nchan,nrow),
@@ -629,7 +627,7 @@ protected:
 
     // Returns the MS objects that this VI is iterating over.
 
-    Vector <MeasurementSet> getMeasurementSets () const;
+    Block <MeasurementSet> getMeasurementSets () const;
 
     // Provides access to the MS-derived values object
 
@@ -644,7 +642,7 @@ protected:
 
     // Ctor auxiliary method
 
-    virtual void initialize (const Block<MeasurementSet> & mss);
+    virtual void initialize (const Block<const MeasurementSet *> & mss);
 
     // Returns true if MS Iterator is currently pointing to a selected
     // spectral window
@@ -859,7 +857,7 @@ protected:
         Int nRowBlocking_p;
     };
 
-    typedef Vector <MeasurementSet> MeasurementSets;
+    typedef Block <MeasurementSet> MeasurementSets;
 
     class RowBounds {
     public:
@@ -893,7 +891,7 @@ protected:
     Bool                          more_p; // True if more data in this chunk
     Int                           msIndex_p; // array index of current MS
     Bool                          msIterAtOrigin_p; // True if MS Iter is a start of first MS
-    MSIter                        msIter_p; // MS Iter that underlies the VI (sweeps in chunks)
+    CountedPtr<MSIter>            msIter_p; // MS Iter that underlies the VI (sweeps in chunks)
     mutable MSDerivedValues       msd_p; // Helper class holding MS derived values.
     Int                           nPolarizations_p;
     Int                           nRowBlocking_p; // suggested # of rows in a subchunk
@@ -901,7 +899,7 @@ protected:
     Int                           reportingFrame_p; // default frequency reporting (not selecting)
                                                     // frame of reference
     RowBounds                     rowBounds_p; // Subchunk row management object (see above)
-    Block<Int>                    sortColumns_p; // sort columns specified when creating VI
+    SortColumns                   sortColumns_p; // sort columns specified when creating VI
     mutable SpectralWindowChannelsCache * spectralWindowChannelsCache_p; // [own] Info about spectral windows
     Subchunk                      subchunk_p; // (chunkN #, subchunk #) pair
     SubtableColumns *             subtableColumns_p; // [own] Allows const access to MS's subtable columns
@@ -909,6 +907,7 @@ protected:
     Double                        timeInterval_p;
     VisBuffer2 *                  vb_p;  // [own] VisBuffer attached to this VI
     VisibilityIterator2 *         vi_p; // [use] Containing VI
+    CountedPtr<WeightScaling>     weightScaling_p;
 };
 
 } // end namespace vi

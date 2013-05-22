@@ -51,6 +51,7 @@ namespace casa {
 
 	QtCanvas::~QtCanvas() {
 		this->clearCurve();
+		delete modeFactory;
 	}
 
 	QtCanvas::QtCanvas(QWidget *parent)
@@ -79,10 +80,14 @@ namespace casa {
 		plotError  = 2;
 		showGrid   = 2;
 		taskMode = LINE_OVERLAY_MODE;
+		topAxisCompatible = false;
 
 		initContextMenu();
 
-		CanvasMode::setReceiver( this );
+		//CanvasMode::setReceiver( this );
+		//canvasId = instanceId;
+		//instanceId++;
+		modeFactory = new CanvasModeFactory( this );
 
 	}
 
@@ -628,12 +633,17 @@ namespace casa {
 	}
 
 	void QtCanvas::paintEvent(QPaintEvent *event) {
+		/*bool parentActive = isParentActive();
+		qDebug() << "Paint event canvasId="<<canvasId<<" parentActive="<<parentActive;
+		if ( !parentActive ){
+			return;
+		}*/
 		QPainter painter(this);
 		QVector<QRect> rects = event->region().rects();
 		for (int i = 0; i < (int)rects.size(); ++i)
 			painter.drawPixmap(rects[i], pixmap, rects[i]);
 
-		//painter.drawPixmap(0, 0, pixmap);
+			//painter.drawPixmap(0, 0, pixmap);
 		if (rubberBandIsShown) {
 			painter.setPen(zoomColor);
 			painter.fillRect(rubberBandRect, Qt::transparent);
@@ -739,7 +749,7 @@ namespace casa {
 
 	void QtCanvas::mousePressEvent(QMouseEvent *event) {
 		if ( currentMode == NULL ) {
-			currentMode = CanvasModeFactory::getModeForEvent( event );
+			currentMode = modeFactory->getModeForEvent( event );
 		}
 
 		if ( currentMode != NULL ) {
@@ -885,6 +895,13 @@ namespace casa {
 		update();
 	}
 
+	void QtCanvas::setTopAxisCompatible( bool compatible ){
+		bool oldTopAxisCompatible = topAxisCompatible;
+		topAxisCompatible = compatible;
+		if ( oldTopAxisCompatible != topAxisCompatible ){
+			refreshPixmap();
+		}
+	}
 
 	void QtCanvas::setShowTopAxis( bool showAxis ) {
 		bool oldShowAxis = showTopAxis;
@@ -895,7 +912,6 @@ namespace casa {
 	}
 
 	void QtCanvas::refreshPixmap() {
-
 		pixmap = QPixmap(size());
 		pixmap.fill(this, 0, 0);
 		QPainter painter(&pixmap);
@@ -956,7 +972,9 @@ namespace casa {
 
 	int QtCanvas::getLastAxis() const {
 		int lastAxis = QtPlotSettings::END_AXIS_INDEX;
-		if ( ! showTopAxis || curveMap.size() > 1 ) {
+		//Don't show the top axis if the user has specified NOT to see it OR
+		//there are multiple curves which are NOT compatible in their top axis units.
+		if ( ! showTopAxis || (!topAxisCompatible && curveMap.size()>1 )) {
 			lastAxis = QtPlotSettings::xTop;
 		}
 		return lastAxis;
@@ -1726,15 +1744,15 @@ namespace casa {
 	}
 
 	void QtCanvas::rangeSelectionMode() {
-		currentMode = CanvasModeFactory::getMode( CanvasMode::MODE_RANGESELECTION );
+		currentMode = modeFactory->getMode( CanvasMode::MODE_RANGESELECTION );
 	}
 
 	void QtCanvas::channelPositioningMode() {
-		currentMode = CanvasModeFactory::getMode( CanvasMode::MODE_CHANNEL );
+		currentMode = modeFactory->getMode( CanvasMode::MODE_CHANNEL );
 	}
 
 	void QtCanvas::createAnnotationText() {
-		currentMode = CanvasModeFactory::getMode( CanvasMode::MODE_ANNOTATION );
+		currentMode = modeFactory->getMode( CanvasMode::MODE_ANNOTATION );
 		emit togglePalette( CanvasMode::MODE_ANNOTATION );
 	}
 

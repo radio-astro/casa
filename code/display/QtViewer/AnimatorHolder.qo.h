@@ -44,7 +44,7 @@ namespace casa {
 		void setFrameInformation( bool mode, int frm, int len );
 		void setRateInformation( bool mode, int minr, int maxr, int rate );
 		void setModeEnabled( int count );
-		void setChannelModeEnabled( int count);
+		void setChannelModeEnabled( int count, bool select=true);
 		int getRate( bool mode ) const;
 		int getLowerBoundChannel() const;
 		int getUpperBoundChannel() const;
@@ -71,6 +71,7 @@ namespace casa {
 		void lowerBoundAnimatorChannelChanged( int );
 		void upperBoundAnimatorChannelChanged(int);
 		void stepSizeAnimatorChannelChanged(int);
+		void animationImageChanged(int);
 
 	private slots:
 		void goToChannel(int frame);

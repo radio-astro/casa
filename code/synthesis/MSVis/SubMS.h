@@ -408,8 +408,9 @@ class SubMS
 			    const String& restfreq, 
 			    const String& outframe,
 			    const String& veltype,
-			    Bool verbose=False,
-			    MRadialVelocity mRV=MRadialVelocity() // only used when outframe=="OBJECT"
+			    const Bool verbose=False,
+			    const MRadialVelocity mRV=MRadialVelocity() // additional radial velo shift to apply, 
+                                                                        // used e.g. when outframe=="OBJECT"
 			    );
 
   // Support method for regridSpw():

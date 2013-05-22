@@ -625,6 +625,7 @@ namespace casa {
 
 	void FindSourcesDialog::populateImageBounds() {
 		ImageStatsCalculator calc( image, NULL, "", false);
+		calc.setVerbose(False);
 		calc.setList(False);
 		Record result = calc.calculate();
 		blcVector = result.asArrayInt( "blc");

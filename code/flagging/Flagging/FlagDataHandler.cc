@@ -1169,18 +1169,18 @@ FlagDataHandler::preFetchColumns()
 				}
 				break;
 			}
-			case vi::Flag:
-			{
-				if (asyncio_enabled_p)
-				{
-					prefetchColumns_p->operator +=(vi::Flag);
-				}
-				else
-				{
-					visibilityBuffer_p->flag();
-				}
-				break;
-			}
+//			case vi::Flag:
+//			{
+//				if (asyncio_enabled_p)
+//				{
+//					prefetchColumns_p->operator +=(vi::Flag);
+//				}
+//				else
+//				{
+//					visibilityBuffer_p->flag();
+//				}
+//				break;
+//			}
 			case vi::FlagCategory:
 			{
 				if (asyncio_enabled_p)

@@ -13,12 +13,10 @@
 //#include <casa/Arrays/MaskedArray.h>
 #include <casa/OS/Path.h>
 #include <casa/OS/Timer.h>
-#include <casa/Utilities/Assert.h>
-#include <casa/Utilities/GenSort.h>
+#include <casa/Utilities.h>
 #include <casa/aipstype.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <ms/MeasurementSets/MSColumns.h>
-#include <synthesis/MSVis/UtilJ.h>
 #include <synthesis/MSVis/UtilJ.h>
 #include <synthesis/MSVis/VisBufferAsyncWrapper2.h>
 #include <synthesis/MSVis/VisBufferComponents2.h>
@@ -33,6 +31,10 @@
 #define CheckVisIter() checkVisIter (__func__, __FILE__, __LINE__)
 #define CheckVisIter1(s) checkVisIter (__func__, __FILE__, __LINE__,s)
 #define CheckVisIterBase() checkVisIterBase (__func__, __FILE__, __LINE__)
+
+#include <functional>
+
+using namespace std;
 
 namespace casa {
 
@@ -615,7 +617,7 @@ public:
     VbCacheItemArray <Vector<Int> > feed2_p;
     VbCacheItemArray <Vector<Float> > feed2Pa_p;
     VbCacheItemArray <Vector<Int> > fieldId_p;
-    VbCacheItemArray <Matrix<Bool> > flag_p;
+//    VbCacheItemArray <Matrix<Bool> > flag_p;
     VbCacheItemArray <Array<Bool> > flagCategory_p;
     VbCacheItemArray <Cube<Bool> > flagCube_p;
     VbCacheItemArray <Vector<Bool> > flagRow_p;
@@ -743,7 +745,8 @@ public:
       validShapes_p (N_ShapePatterns),
       vi_p (0),
       viC_p (0),
-      visModelData_p ()
+      visModelData_p (),
+      weightScaling_p (0)
     {}
 
     Bool areCorrelationsSorted_p; // Have correlations been sorted by sortCorr?
@@ -768,6 +771,7 @@ public:
     VisibilityIterator2 * vi_p; // [use]
     const VisibilityIterator2 * viC_p; // [use]
     mutable VisModelData visModelData_p;
+    CountedPtr <WeightScaling> weightScaling_p;
 };
 
 
@@ -803,7 +807,7 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     feed2_p.initialize (this, vb, &VisBufferImpl2::fillFeed2, Feed2, Nr);
     feed2Pa_p.initialize (this, vb, &VisBufferImpl2::fillFeedPa2, FeedPa2, NoCheck);
     fieldId_p.initialize (this, vb, &VisBufferImpl2::fillFieldId, FieldId, Nr);
-    flag_p.initialize (this, vb, &VisBufferImpl2::fillFlag, Flag, NoCheck, False);
+    //flag_p.initialize (this, vb, &VisBufferImpl2::fillFlag, Flag, NoCheck, False);
     flagCategory_p.initialize (this, vb, &VisBufferImpl2::fillFlagCategory, FlagCategory, NoCheck, False);
         // required column but not used in casa, make it a nocheck for shape validation
     flagCube_p.initialize (this, vb, &VisBufferImpl2::fillFlagCube, FlagCube, NcNfNr, False);
@@ -834,8 +838,8 @@ VisBufferCache::initialize (VisBufferImpl2 * vb)
     visCube_p.initialize (this, vb, &VisBufferImpl2::fillCubeObserved, VisibilityCubeObserved, NcNfNr, False);
     //visibility_p.initialize (this, vb, &VisBufferImpl2::fillVisibilityObserved, VisibilityObserved, NoCheck, False);
     weight_p.initialize (this, vb, &VisBufferImpl2::fillWeight, Weight, NcNr, False);
-   // weightMat_p.initialize (this, vb, &VisBufferImpl2::fillWeightMat, WeightMat, NoCheck, False);
-    weightSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrum, WeightSpectrum, NcNfNr, False);
+    weightSpectrum_p.initialize (this, vb, &VisBufferImpl2::fillWeightSpectrum,
+                                 WeightSpectrum, NcNfNr, False);
 
 }
 
@@ -1048,10 +1052,15 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
 
     copyComponents (* vb, components, fetchIfNeeded);
 
-    setIterationInfo (vb->msId(), vb->msName (), vb->isNewMs (),
-                      vb->isNewArrayId (), vb->isNewFieldId (), vb->isNewSpectralWindow (),
+    setIterationInfo (vb->msId(),
+                      vb->msName (),
+                      vb->isNewMs (),
+                      vb->isNewArrayId (),
+                      vb->isNewFieldId (),
+                      vb->isNewSpectralWindow (),
                       vb->getSubchunk (),
-                      vb->getCorrelationNumbers());
+                      vb->getCorrelationNumbers(),
+                      vb->getWeightScaling());
 
     if(dirDependent){
 
@@ -1430,7 +1439,7 @@ VisBufferImpl2::normalize()
     Int nCorrelations = this->nCorrelations ();
 
     const Vector<Bool> & rowFlagged = cache_p->flagRow_p.get ();
-    const Matrix<Bool> & flagged = cache_p->flag_p.get ();
+    const Cube<Bool> & flagged = cache_p->flagCube_p.get ();
 
     Cube<Complex> & visCube = cache_p->visCube_p.getRef();
     Cube<Complex> & modelCube = cache_p->modelVisCube_p.getRef();
@@ -1453,7 +1462,7 @@ VisBufferImpl2::normalize()
 }
 
 void
-VisBufferImpl2::normalizeRow (Int row, Int nCorrelations, const Matrix<Bool> & flagged,
+VisBufferImpl2::normalizeRow (Int row, Int nCorrelations, const Cube<Bool> & flagged,
                               Cube<Complex> & visCube, Cube<Complex> & modelCube,
                               Matrix<Float> & weightMat)
 {
@@ -1462,11 +1471,11 @@ VisBufferImpl2::normalizeRow (Int row, Int nCorrelations, const Matrix<Bool> & f
 
     for (Int channel = 0; channel < nChannels (); channel ++) {
 
-        if (flagged (channel, row)){
-            continue;  // data is flagged so skip over it
-        }
-
         for (Int correlation = 0; correlation < nCorrelations; correlation ++) {
+
+            if (flagged (correlation, channel, row)){
+                continue;  // data is flagged so skip over it
+            }
 
             // If the model amplitude is zero, zero out the observed value.
             // Otherwise divide the observed value by the model value and
@@ -1562,7 +1571,8 @@ VisBufferImpl2::setIterationInfo (Int msId,
                                   Bool isNewFieldId,
                                   Bool isNewSpectralWindow,
                                   const Subchunk & subchunk,
-                                  const Vector<Int> & correlations)
+                                  const Vector<Int> & correlations,
+                                  CountedPtr <WeightScaling> weightScaling)
 {
     // Set the iteration attributes into this VisBuffer
 
@@ -1575,6 +1585,7 @@ VisBufferImpl2::setIterationInfo (Int msId,
     state_p->isNewSpectralWindow_p = isNewSpectralWindow;
     state_p->subchunk_p = subchunk;
     state_p->correlations_p.assign (correlations);
+    state_p->weightScaling_p = weightScaling;
 }
 
 void
@@ -1596,14 +1607,15 @@ VisBufferImpl2::configureNewSubchunk (Int msId,
                                       Int nRows,
                                       Int nChannels,
                                       Int nCorrelations,
-                                      const Vector<Int> & correlations)
+                                      const Vector<Int> & correlations,
+                                      CountedPtr<WeightScaling> weightScaling)
 {
     // Prepare this VisBuffer for the new subchunk
 
     cacheClear();
 
     setIterationInfo (msId, msName, isNewMs, isNewArrayId, isNewFieldId,
-                      isNewSpectralWindow, subchunk, correlations);
+                      isNewSpectralWindow, subchunk, correlations, weightScaling);
 
     setFillable (True); // New subchunk, so it's fillable
 
@@ -1997,17 +2009,17 @@ VisBufferImpl2::setFieldId (const Vector<Int> & value)
     cache_p->fieldId_p.set (value);
 }
 
-const Matrix<Bool> &
-VisBufferImpl2::flag () const
-{
-    return cache_p->flag_p.get ();
-}
+//const Matrix<Bool> &
+//VisBufferImpl2::flag () const
+//{
+//    return cache_p->flag_p.get ();
+//}
 
-void
-VisBufferImpl2::setFlag (const Matrix<Bool>& value)
-{
-    cache_p->flag_p.set (value);
-}
+//void
+//VisBufferImpl2::setFlag (const Matrix<Bool>& value)
+//{
+//    cache_p->flag_p.set (value);
+//}
 
 const Array<Bool> &
 VisBufferImpl2::flagCategory () const
@@ -2183,11 +2195,11 @@ VisBufferImpl2::spectralWindows () const
 	return cache_p->spectralWindows_p.get ();
 }
 
-//void
-//VisBufferImpl2::setSpectralWindows (const Vector<Int> & spectralWindows)
-//{
-//    cache_p->spectralWindows_p.set (spectralWindows);
-//}
+void
+VisBufferImpl2::setSpectralWindows (const Vector<Int> & spectralWindows)
+{
+    cache_p->spectralWindows_p.set (spectralWindows);
+}
 
 
 const Vector<Int> &
@@ -2813,24 +2825,35 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
     ThrowIf (weightGenerator.getType () == "none",
              "Bug check: Imaging weight generator not set");
 
-    value.resize (flag().shape ());
+#warning "Rework logic so that called code is not expecting a flag matrix."
+
+    value.resize (IPosition (2, nChannels(), nRows()));
+
+    Matrix<Bool> flagMat = flagCube().yzPlane(0);
+    std::logical_and<Bool> andOp;
+
+    for (Int i = 1; i < nCorrelations(); ++ i){
+
+        Matrix<Bool> flagPlane = flagCube().yzPlane(i);
+        arrayTransform<Bool,Bool,Bool,std::logical_and<Bool> > (flagMat, flagPlane, flagMat, andOp);
+    }
 
     if (weightGenerator.getType () == "uniform") {
 
-        weightGenerator.weightUniform (value, flag (), uvw (), getFrequencies (0), weight (), msId (), fieldId ()(0));
+        weightGenerator.weightUniform (value, flagMat, uvw (), getFrequencies (0), weight (), msId (), fieldId ()(0));
 
     } else if (weightGenerator.getType () == "radial") {
 
-        weightGenerator.weightRadial (value, flag (), uvw (), getFrequencies (0), weight ());
+        weightGenerator.weightRadial (value, flagMat, uvw (), getFrequencies (0), weight ());
 
     } else {
 
-        weightGenerator.weightNatural (value, flag (), weight ());
+        weightGenerator.weightNatural (value, flagMat, weight ());
     }
 
     if (weightGenerator.doFilter ()) {
 
-        weightGenerator.filter (value, flag (), uvw (), getFrequencies (0), weight ());
+        weightGenerator.filter (value, flagMat, uvw (), getFrequencies (0), weight ());
     }
 }
 
@@ -2942,7 +2965,7 @@ VisBufferImpl2::fillSigma (Matrix<Float>& value) const
 {
   CheckVisIter ();
 
-  getViP()->sigmaMat (value);
+  getViP()->sigma (value);
 }
 
 //void
@@ -3040,16 +3063,9 @@ VisBufferImpl2::fillWeight (Matrix<Float>& value) const
 {
   CheckVisIter ();
 
-  getViP()->weightMat (value);
+  getViP()->weight (value);
 }
 
-//void
-//VisBufferImpl2::fillWeightMat (Matrix<Float>& value) const
-//{
-//  CheckVisIter ();
-//
-//  getViP()->weightMat (value);
-//}
 
 void
 VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
@@ -3057,6 +3073,93 @@ VisBufferImpl2::fillWeightSpectrum (Cube<Float>& value) const
   CheckVisIter ();
 
   getViP()->weightSpectrum (value);
+}
+
+Float
+VisBufferImpl2::getWeightScaled (Int row) const
+{
+    Float sum = 0;
+    Int n = nCorrelations();
+
+    for (Int correlation = 0; correlation < n; ++ correlation){
+
+        sum += getWeightScaled (correlation, row);
+    }
+
+    return sum / n;
+}
+
+Float
+VisBufferImpl2::getWeightScaled (Int correlation, Int row) const
+{
+    if (flagRow () (row)){
+        return 0;
+    }
+
+    if (weightSpectrumPresent()){
+
+        Float sum;
+        Int n = nChannels ();
+
+        for (Int channel = 0; channel < n; ++ channel){
+
+            sum += getWeightScaled (correlation, channel, row);
+
+        }
+
+        return sum / n;
+    }
+    else {
+
+        Float theWeight = weight () (correlation, row);
+
+        if (! state_p->weightScaling_p.null()){
+            theWeight = (* state_p->weightScaling_p) (theWeight);
+        }
+
+        return theWeight;
+    }
+}
+
+Float
+VisBufferImpl2::getWeightScaled (Int correlation, Int channel, Int row) const
+{
+    // Get the weight from the weightSpectrum if it is present (either it was
+    // read from the MS or it was set by the user); otherwise get the weight
+    // from the weight column.
+
+    Float theWeight = 0;
+
+    if (weightSpectrumPresent ()){
+
+        theWeight = weightSpectrum () (correlation, channel, row);
+    }
+    else{
+        theWeight = weight () (correlation, row);
+    }
+
+    // If there is a scaling function, the apply that to the weight
+
+    if (! state_p->weightScaling_p.null()){
+        theWeight = (* state_p->weightScaling_p) (theWeight);
+    }
+
+    return theWeight;
+}
+
+CountedPtr<WeightScaling>
+VisBufferImpl2::getWeightScaling () const
+{
+    return state_p->weightScaling_p;
+}
+
+Bool
+VisBufferImpl2::weightSpectrumPresent () const
+{
+    Bool present = cache_p->weightSpectrum_p.isPresent() ||
+                   (isAttached() && getVi()->existsWeightSpectrum());
+
+    return present;
 }
 
 

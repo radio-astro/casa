@@ -393,7 +393,9 @@ FlagMSHandler::generateIterator()
 		if (mapScanStartStop_p)
 		{
 			if (visibilityIterator_p) delete visibilityIterator_p;
-			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,sortOrder_p,true,NULL,true,timeInterval_p);
+			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,
+			                                                   vi::SortColumns (sortOrder_p, true),
+			                                                   true,NULL, timeInterval_p);
 			preSweep();
 		}
 
@@ -410,12 +412,16 @@ FlagMSHandler::generateIterator()
 
 			// Then create and initialize RO Async iterator
 			if (visibilityIterator_p) delete visibilityIterator_p;
-			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,sortOrder_p,true,prefetchColumns_p,true,timeInterval_p);
+			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,
+			                                                   vi::SortColumns (sortOrder_p, true),
+			                                                   true,prefetchColumns_p,timeInterval_p);
 		}
 		else if (!mapScanStartStop_p)
 		{
 			if (visibilityIterator_p) delete visibilityIterator_p;
-			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,sortOrder_p,true,NULL,true,timeInterval_p);
+			visibilityIterator_p = new vi::VisibilityIterator2(*selectedMeasurementSet_p,
+			                                                   vi::SortColumns (sortOrder_p, true),
+			                                                   true,NULL,timeInterval_p);
 		}
 
 		// Set the table data manager (ISM and SSM) cache size to the full column size, for

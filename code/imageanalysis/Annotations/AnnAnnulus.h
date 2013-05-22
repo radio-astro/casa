@@ -50,6 +50,9 @@ class AnnAnnulus: public AnnRegion {
 
 public:
 
+	// avoid using the default constructor, it's behavior is subject to change
+	AnnAnnulus();
+
 	AnnAnnulus(
 		const Quantity& xcenter,
 		const Quantity& ycenter,
@@ -86,6 +89,9 @@ public:
 	// the default copy constructor and destructor are fine
 
 	AnnAnnulus& operator=(const AnnAnnulus& other);
+
+	Bool operator==(const AnnAnnulus& other);
+
 
 	// get the center position, converted to the frame
 	// of the input coordinate system if necessary
