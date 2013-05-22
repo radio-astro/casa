@@ -162,10 +162,12 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False, tsysChanTol=1):
                 spwWithoutMatch.append(i)
             applyCalSpwMap.append(int(useSpw))        
 
-    if len(spwWithoutMatch) != 0:
-        LOG.warning('Found no match for following spw ids: '+str(spwWithoutMatch))
+        if len(spwWithoutMatch) != 0:
+            LOG.warning('Found no match for following spw ids: '+str(spwWithoutMatch))
     if trim :
+        LOG.info('Computed tsysspwmap is: '+str(trimSpwmap(applyCalSpwMap)))
         return trimSpwmap(applyCalSpwMap)
     else :
+        LOG.info('Computed tsysspwmap is: '+str(applyCalSpwMap))
         return applyCalSpwMap
 
