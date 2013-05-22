@@ -95,7 +95,8 @@ const String* SpectralElement::allTypes(
 		String("COMPILED"),
 		String("GAUSSIAN MULTIPLET"),
 		String("LORENTZIAN"),
-		String("POWER LOGARITHMIC POLYNOMIAL")
+		String("POWER LOGARITHMIC POLYNOMIAL"),
+		String("LOGARITHMIC TRANSFORMED POLYNOMIAL")
 
 	};
 
@@ -105,7 +106,9 @@ const String* SpectralElement::allTypes(
 		SpectralElement::COMPILED,
 		SpectralElement::GMULTIPLET,
 		SpectralElement::LORENTZIAN,
-		SpectralElement::POWERLOGPOLY
+		SpectralElement::POWERLOGPOLY,
+		SpectralElement::LOGTRANSPOLY
+
 	};
 
 	nall = SpectralElement::N_Types;
@@ -193,8 +196,9 @@ Bool SpectralElement::toRecord(RecordInterface &out) const {
 	out.define(RecordFieldId("type"), fromType(_type));
 	Vector<Double> ptmp(_params);
 	Vector<Double> etmp(_params);
-	out.define(RecordFieldId("parameters"), ptmp);
-	out.define(RecordFieldId("errors"), etmp);
+	out.define(RecordFieldId("parameters"), _params);
+	out.define(RecordFieldId("errors"), _errors);
+	out.define(RecordFieldId("fixed"), _fixed);
 	return True;
 }
 
@@ -208,16 +212,6 @@ void SpectralElement::set(const Vector<Double>& params) {
 	_set(params);
 }
 
-/*
-void SpectralElement::_construct(
-	const Types type, const Vector<Double>& params
-) {
-	tp_p = type;
-	par_p = params.copy();
-	err_p = Vector<Double>(params.size(), 0);
-	fix_p = Vector<Bool>(params.size(), 0);
-}
-*/
 } //# NAMESPACE CASA - END
 
 

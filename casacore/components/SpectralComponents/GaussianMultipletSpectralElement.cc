@@ -56,9 +56,6 @@ GaussianMultipletSpectralElement::GaussianMultipletSpectralElement(
 	Matrix<Bool> fixed(LogicalArray(constraints != 0.0));
 
 	for (uInt i=1; i<estimates.size(); i++) {
-		cout << "0 fixed: " << estimates[0].fixedAmpl() << endl;
-		cout << "i fixed " << estimates[i].fixedAmpl() << endl;
-		cout << "fixed el " << fixed(i-1, 0) << endl;
 		if (! estimates[0].fixedAmpl()
 			&& estimates[i].fixedAmpl()
 			&& fixed(i-1, 0)

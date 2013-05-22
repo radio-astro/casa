@@ -491,7 +491,9 @@ std::tr1::shared_ptr<Vector<Int> > MSMetaDataOnDemand::_getDataDescIDs() {
 }
 
 std::set<Int> MSMetaDataOnDemand::getScansForState(const Int stateID) {
-	_checkStateID(stateID);
+	if (! _hasStateID(stateID)) {
+		return std::set<Int>();
+	}
 	std::set<Int> uniqueScans;
 	std::map<Int, std::set<Int> > myScanToStatesMap = _getScanToStatesMap();
 	std::tr1::shared_ptr<Vector<Int> > scans = _getScans();
@@ -727,7 +729,9 @@ std::set<String> MSMetaDataOnDemand::getIntentsForSpw(const uInt spw) {
 }
 
 std::set<String> MSMetaDataOnDemand::getIntentsForField(Int fieldID) {
-	_checkFieldID(fieldID);
+	if (! _hasFieldID(fieldID)) {
+		return std::set<String>();
+	}
 	vector<std::set<String> > fieldToIntentsMap;
 	std::map<String, std::set<Int> > intentToFieldsMap;
 	_getFieldsAndIntentsMaps(
@@ -797,7 +801,9 @@ void MSMetaDataOnDemand::_getFieldsAndSpwMaps(
 }
 
 std::set<uInt> MSMetaDataOnDemand::getSpwsForField(const Int fieldID) {
-	_checkFieldID(fieldID);
+	if (! _hasFieldID(fieldID)) {
+		return std::set<uInt>();
+	}
 	std::map<Int, std::set<uInt> > myFieldToSpwMap;
 	vector<std::set<Int> > mySpwToFieldMap;
 	_getFieldsAndSpwMaps(myFieldToSpwMap, mySpwToFieldMap);
@@ -1436,7 +1442,9 @@ void MSMetaDataOnDemand::_getFieldsAndScansMaps(
 }
 
 std::set<Int> MSMetaDataOnDemand::getScansForFieldID(const Int fieldID) {
-	_checkFieldID(fieldID);
+	if (! _hasFieldID(fieldID)) {
+		return std::set<Int>();
+	}
 	std::map<Int, std::set<Int> > fieldToScansMap;
 	std::map<Int, std::set<Int> > scanToFieldsMap;
 	_getFieldsAndScansMaps(
@@ -1604,7 +1612,9 @@ void MSMetaDataOnDemand::_getFieldsAndTimesMaps(
 }
 
 std::set<Double> MSMetaDataOnDemand::getTimesForField(const Int fieldID) {
-	_checkFieldID(fieldID);
+	if (! _hasFieldID(fieldID)) {
+		return std::set<Double>();
+	}
 	std::tr1::shared_ptr<std::map<Int, std::set<Double> > > fieldToTimesMap;
 	std::tr1::shared_ptr<std::map<Double, std::set<Int> > > timeToFieldsMap;
 	_getFieldsAndTimesMaps(
@@ -2011,25 +2021,18 @@ void MSMetaDataOnDemand::_checkScan(const Int scan, const std::set<Int> uniqueSc
 	}
 }
 
-void MSMetaDataOnDemand::_checkFieldID(const Int fieldID) {
-	std::set<Int> uniqueFields = _getUniqueFiedIDs();
-    cout << "uniqueFields " << uniqueFields << endl;
-	if (uniqueFields.find(fieldID) == uniqueFields.end() ) {
+Bool MSMetaDataOnDemand::_hasFieldID(const Int fieldID) {
+	if (fieldID >= (Int)nFields()) {
 		throw AipsError(
-			_ORIGIN + "field ID ("
-			+ String::toString(fieldID) + ") is not present in this dataset."
+			_ORIGIN + "Requested field ID "
+			+ String::toString(fieldID)
+			+ " is greater than or equal to the number of records ("
+			+ String::toString(nFields())
+		    + ") in this MS's FIELD table"
 		);
 	}
-}
-
-void MSMetaDataOnDemand::_checkFieldIDs(const vector<Int>& fieldIDs) {
-	vector<Int>::const_iterator end = fieldIDs.end();
-	for (
-		vector<Int>::const_iterator f=fieldIDs.begin();
-		f!=end; f++
-	) {
-		_checkFieldID(*f);
-	}
+	std::set<Int> uniqueFields = _getUniqueFiedIDs();
+	return uniqueFields.find(fieldID) != uniqueFields.end();
 }
 
 std::set<Int> MSMetaDataOnDemand::_getUniqueFiedIDs() {
@@ -2040,17 +2043,23 @@ std::set<Int> MSMetaDataOnDemand::_getUniqueFiedIDs() {
 	return _uniqueFieldIDs;
 }
 
-void MSMetaDataOnDemand::_checkStateID(const Int stateID) {
+Bool MSMetaDataOnDemand::_hasStateID(const Int stateID) {
+	// This method is responsible for setting _uniqueStateIDs
+	if (stateID >= (Int)nStates()) {
+		throw AipsError(
+			_ORIGIN + "Requested state ID "
+			+ String::toString(stateID)
+			+ " is greater than or equal to the number of records ("
+			+ String::toString(nStates())
+			+ ") in this MS's STATE table"
+		);
+	}
 	if (_uniqueStateIDs.empty()) {
 		std::tr1::shared_ptr<Vector<Int> > allStateIDs = _getStateIDs();
 		_uniqueStateIDs.insert(allStateIDs->begin(), allStateIDs->end());
 	}
-	if (_uniqueStateIDs.find(stateID) == _uniqueStateIDs.end() ) {
-		throw AipsError(
-			_ORIGIN + "state ID ("
-			+ String::toString(stateID) + ") is not present in this dataset."
-		);
-	}
+	return _uniqueStateIDs.find(stateID) != _uniqueStateIDs.end();
+
 }
 
 }

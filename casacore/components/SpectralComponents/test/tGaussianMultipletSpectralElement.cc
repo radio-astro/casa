@@ -154,18 +154,12 @@ int main() {
 		GaussianSpectralElement g1(4, 4.4, 4.6);
 		GaussianSpectralElement g2(5, 5.2, 5.8);
 		vector<GaussianSpectralElement> gaussians(2);
-		cout << __FILE__ << " " << __LINE__ << endl;
 		gaussians[0] = g1;
 		gaussians[1] = g2;
 		Matrix<Double> relations(1, 3, 0);
 		Double ampRatio = 4.5;
 		relations(0, 0) = ampRatio;
-		cout << __FILE__ << " " << __LINE__ << endl;
-
 		GaussianMultipletSpectralElement doublet(gaussians, relations);
-		cout << doublet << endl;
-		cout << __FILE__ << " " << __LINE__ << endl;
-
 		for (uInt i=0; i<gaussians.size(); i++) {
 			Vector<Double> expected = gaussians[i].get();
 			if (i==1) {
@@ -214,7 +208,9 @@ int main() {
 		relations(0, 2) = 4;
 		GaussianMultipletSpectralElement doublet(gaussians, relations);
 		Record myRec;
+		cout << "doublet real " << doublet << endl;
 		doublet.toRecord(myRec);
+		cout << "myrec " << myRec << endl;
 		std::auto_ptr<SpectralElement> ptr = SpectralElementFactory::fromRecord(myRec);
 		GaussianMultipletSpectralElement out = *dynamic_cast<GaussianMultipletSpectralElement*>(
 			ptr.get()

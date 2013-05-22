@@ -113,13 +113,13 @@ Double GaussianSpectralElement::getIntegral() const {
 Bool GaussianSpectralElement::toRecord(
 	RecordInterface& out
 ) const {
-	out.define(RecordFieldId("type"), fromType(getType()));
-	Vector<Double> ptmp(get().copy());
-	Vector<Double> etmp(getError().copy());
-	ptmp(2) = sigmaToFWHM(ptmp(2));
-	etmp(2) = sigmaToFWHM(etmp(2));
-	out.define(RecordFieldId("parameters"), ptmp);
-	out.define(RecordFieldId("errors"), etmp);
+	PCFSpectralElement::toRecord(out);
+	Vector<Double> p = out.asArrayDouble("parameters");
+	Vector<Double> e = out.asArrayDouble("errors");
+	p[2] = getFWHM();
+	out.define("parameters", p);
+	e[2] = getFWHMErr();
+	out.define("errors", e);
 	return True;
 }
 
