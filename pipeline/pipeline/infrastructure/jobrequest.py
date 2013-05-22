@@ -97,13 +97,13 @@ class JobRequest(object):
             sys.stdout.write('Dry run: %s\n' % msg)                                
         else:
             for hook in PREHOOKS:
-                hook()
+                hook(self)
             LOG.info('Executing %s' % msg)
             try:
                 return self.fn(*self.args, **self.kw)
             finally:
                 for hook in POSTHOOKS:
-                    hook()
+                    hook(self)
 
     def _recur_map(self, f, data):
         return [type(x) is types.StringType and f(x) or self._recur_map(f, x) for x in data]
