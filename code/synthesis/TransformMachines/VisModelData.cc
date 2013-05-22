@@ -31,10 +31,15 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/OS/Timer.h>
+#include <casa/Containers/Record.h>
 #include <casa/Logging/LogIO.h>
+#include <tables/Tables/ScaRecordColDesc.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MeasurementSets/MSSource.h>
+#include <ms/MeasurementSets/MSSourceIndex.h>
+#include <ms/MeasurementSets/MSSourceColumns.h>
 
 #include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/TransformMachines/VisModelData.h>
@@ -92,12 +97,38 @@ void VisModelData::listModel(const MeasurementSet& thems){
   }
     
 }
+
+void VisModelData::removeRecordByKey(MeasurementSet& theMS, const String& theKey){
+
+  if(Table::isReadable(theMS.sourceTableName()) &&theMS.source().nrow() > 0 ){
+    if(theMS.source().keywordSet().isDefined(theKey)){
+      Int rowid=theMS.source().keywordSet().asInt(theKey);
+      TableRecord elrec;
+      //Replace the model with an empty record
+      MSSourceColumns srcCol(theMS.source());
+      srcCol.sourceModel().put(rowid, elrec);
+      theMS.source().rwKeywordSet().removeField(theKey);
+    }
+  }
+  //Remove from Main table if it is there
+  if(theMS.rwKeywordSet().isDefined(theKey))
+    theMS.rwKeywordSet().removeField(theKey);
+}
+
 void VisModelData::clearModel(const MeasurementSet& thems){
   
-  Table newTab(thems);
+  //  Table newTab(thems);
+  MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
   if(!newTab.isWritable())
     return;
-
+  Vector<String> theParts(newTab.getPartNames(True));
+  if(theParts.nelements() > 1){
+    for (uInt k=0; k < theParts.nelements(); ++k){
+      MeasurementSet subms(theParts[k], newTab.lockOptions(), Table::Update);
+      clearModel(subms);
+    }
+    return;
+  }
   LogIO logio;
   logio << "Clearing all model records in MS header."
 	  << LogIO::POST;
@@ -109,15 +140,22 @@ void VisModelData::clearModel(const MeasurementSet& thems){
   const Int option=Sort::HeapSort | Sort::NoDuplicates;
   Int nfields=GenSort<Int>::sort (fields, order, option);
   for (Int k=0; k< nfields; ++k){
-    if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
-
+    String elkey;
+    Int srow;
+    //if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+      if(isModelDefined(k, thems, elkey, srow))
       {
 	logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") deleted." << LogIO::POST;
-
-	String elkey=newTab.rwKeywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
-	if(newTab.rwKeywordSet().isDefined(elkey))
-	  newTab.rwKeywordSet().removeField(elkey);
-	newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+	//Remove from Source table
+	removeRecordByKey(newTab, elkey);
+	if(srow > -1){
+	  if(thems.source().keywordSet().isDefined("definedmodel_field_"+String::toString(fields[k]))){
+	    newTab.source().rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+	  }
+	}
+	//Remove from Main table if it is there
+	if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+	  newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
       }
   }
   
@@ -127,7 +165,15 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 }
   void VisModelData::clearModel(const MeasurementSet& thems, const String field, const String specwindows){
  
-  Table newTab(thems);
+  MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
+  Vector<String> theParts(newTab.getPartNames(True));
+  if(theParts.nelements() > 1){
+    for (uInt k =0; k < theParts.nelements(); ++k){
+      MeasurementSet subms(theParts[k], newTab.lockOptions(), Table::Update);
+      clearModel(subms, field, specwindows);
+    }
+    return;
+  }
   if(!newTab.isWritable())
     return;
 
@@ -170,25 +216,33 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	  << LogIO::POST;
     
     for (Int k=0; k< nfields; ++k){
-      if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+      String elkey;
+      Int srow;
+      if(isModelDefined(k, newTab, elkey, srow))
 	
 	{
-	  
-	  String elkey=newTab.rwKeywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
+	
 	  if(nspws==0){
 	    logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") deleted." << LogIO::POST;
-	    
-	    if(newTab.rwKeywordSet().isDefined(elkey))
-	      newTab.rwKeywordSet().removeField(elkey);
-	    newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+	    removeRecordByKey(newTab, elkey);
+	    if(srow > -1 ){
+	      if(newTab.source().keywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+		newTab.source().rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));	      
+	    }
+	    if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+	      newTab.rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
 	  }
 	  else{
-	    if(newTab.rwKeywordSet().isDefined(elkey)){
-	      Record conteneur=newTab.rwKeywordSet().asRecord(elkey);
-	      removeSpw(conteneur, spws);
-	      newTab.rwKeywordSet().removeField(elkey);
-	      newTab.rwKeywordSet().defineRecord(elkey, conteneur);
-	      
+	    //if(newTab.rwKeywordSet().isDefined(elkey)){
+	    
+	    TableRecord conteneur;
+	    getModelRecord(elkey, conteneur, newTab); 
+	    //=newTab.rwKeywordSet().asRecord(elkey);
+	    removeSpw(conteneur, spws);
+	    //newTab.rwKeywordSet().removeField(elkey);
+	    //  newTab.rwKeywordSet().defineRecord(elkey, conteneur);
+	    putRecordByKey(newTab, elkey, conteneur, srow);
+  
 	      /*
 	      Vector<Int> defspws=conteneur.asArrayInt("spws");
 	      Vector<Int> newdefspw(defspws.nelements(), -1);
@@ -210,11 +264,11 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 		updatespw(conteneur, 
 	      }
 	      */
-	    }
-	      
 	  }
+	      
+	
 	    
-	}
+    }
       else
 	logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") not found." << LogIO::POST;
     }
@@ -225,9 +279,9 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 
   }
 
-  Bool VisModelData::removeSpw(Record& therec, const Vector<Int>& spws){
+  Bool VisModelData::removeSpw(TableRecord& therec, const Vector<Int>& spws){
      Int numft=0;
-     Int numcl=0;
+     //Int numcl=0;
      Vector<String> numtype(2);
      Vector<String> keyval(2);
      numtype[0]=String("numft");
@@ -258,7 +312,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
      return True;
   }
 
-  Bool VisModelData::removeFTFromRec(Record& therec, const String& keyval){
+  Bool VisModelData::removeFTFromRec(TableRecord& therec, const String& keyval){
 
     String *splitkey=new String[2];
     Int nsep=split(keyval, splitkey, 2, String("_"));
@@ -319,7 +373,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     return True;
   }
 
-  Bool VisModelData::addToRec(Record& therec, const Vector<Int>& spws){
+  Bool VisModelData::addToRec(TableRecord& therec, const Vector<Int>& spws){
 
     Int numft=0;
     Int numcl=0;
@@ -389,6 +443,127 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     return (!allTrue(hasSpw) || ((numft+numcl)>0));
   }
 
+Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems, String& thekey, Int& sourceRow){
+  sourceRow=-1;
+  String modelkey=String("definedmodel_field_")+String::toString(fieldId);
+  thekey="";
+  if(Table::isReadable(thems.sourceTableName()) &&thems.source().nrow() > 0 ){
+    if(thems.source().keywordSet().isDefined(modelkey)){
+      thekey=thems.source().keywordSet().asString(modelkey);
+      if(thems.source().keywordSet().isDefined(thekey))
+	sourceRow=thems.source().keywordSet().asInt(thekey);
+    }
+  }else{
+    if(thems.keywordSet().isDefined(modelkey)){
+      thekey=thems.keywordSet().asString(modelkey);  
+    }
+  }
+  if(thekey != "" )
+    return VisModelData::isModelDefined(thekey, thems);
+  return False;
+  
+}
+
+  Bool VisModelData::isModelDefined(const String& elkey, const MeasurementSet& thems){
+    //Let's try the Source table
+    if(Table::isReadable(thems.sourceTableName()) &&thems.source().nrow() > 0 ){
+      if(thems.source().keywordSet().isDefined(elkey))
+	return True;      
+    }
+    //Let's try the Main table 
+    if(thems.keywordSet().isDefined(elkey))
+      return True;
+    return False;
+  }
+
+  Bool VisModelData::getModelRecord(const String& theKey, TableRecord& theRec, const MeasurementSet& theMs){
+    //Let's try the Source table
+    if(Table::isReadable(theMs.sourceTableName()) &&theMs.source().nrow() > 0 ){
+      if(theMs.source().keywordSet().isDefined(theKey)){
+	//Get the row for the model 
+        Int row=theMs.source().keywordSet().asInt(theKey);
+	//ROMSSourceColumns srcCol(theMs.source());
+     
+	ROScalarColumn<TableRecord> scol(theMs.source(), "SOURCE_MODEL");
+	scol.get(row, theRec);
+      }
+      return True;
+    }
+    //Let's try the Main table 
+    if(theMs.keywordSet().isDefined(theKey)){
+      theRec=theMs.keywordSet().asRecord(theKey);
+      return True;
+    }
+    return False;
+
+
+  }
+
+  void VisModelData::putRecordByKey(MeasurementSet& theMS, const String& theKey, const TableRecord& theRec, const Int sourceRowNum){
+    //Prefer the Source table first    
+    if( (sourceRowNum> -1) && Table::isReadable(theMS.sourceTableName()) && Int(theMS.source().nrow()) > sourceRowNum ){
+      MSSource& mss=theMS.source();
+      if(!mss.isColumn(MSSource::SOURCE_MODEL) ){
+	mss.addColumn(ScalarRecordColumnDesc("SOURCE_MODEL"), True);
+      }
+      if(mss.rwKeywordSet().isDefined(theKey))
+	mss.rwKeywordSet().removeField(theKey);
+      mss.rwKeywordSet().define(theKey, sourceRowNum);
+      MSSourceColumns srcCol(mss);
+      srcCol.sourceModel().put(sourceRowNum, theRec);
+      return;
+    }
+    //Oh well no source table so will add it to the main table
+    theMS.rwKeywordSet().defineRecord(theKey, theRec);
+    
+
+  }
+
+  Bool VisModelData::putModelRecord(const Vector<Int>& fieldIds, TableRecord& theRec, MeasurementSet& theMS){
+    Vector<String> theParts(theMS.getPartNames(True));
+    if(theParts.nelements() > 1){
+      Bool retval=True;
+      for (uInt k =0; k < theParts.nelements(); ++k){
+	MeasurementSet subms(theParts[k], theMS.lockOptions(), Table::Update);
+	retval= retval && putModelRecord(fieldIds, theRec, subms);
+      }
+      return retval;
+    }
+ 
+    String elkey="model";
+    for (uInt k=0; k < fieldIds.nelements();  ++k){
+      elkey=elkey+"_"+String::toString(fieldIds[k]);
+    }
+    if(theMS.rwKeywordSet().isDefined(elkey))
+      theMS.rwKeywordSet().removeField(elkey);
+    Int row=-1;
+    //Prefer the Source table first    
+    if(Table::isReadable(theMS.sourceTableName()) &&theMS.source().nrow() > 0 ){
+      //
+      ROMSFieldColumns fCol(theMS.field());
+      row=0;
+      MSSource& mss=theMS.source();
+      if(!fCol.sourceId().isNull()){
+	Int sid=fCol.sourceId().get(fieldIds[0]);
+	Vector<uInt> rows=MSSourceIndex(mss).getRowNumbersOfSourceID(sid);
+	if(rows.nelements() > 0) row=rows[0];
+      }
+      putRecordByKey(theMS, elkey, theRec, row);
+      for (uInt k=0; k < fieldIds.nelements();  ++k){
+	mss.rwKeywordSet().define("definedmodel_field_"+String::toString(fieldIds[k]), elkey);
+      }
+      return True;
+      
+    }
+    //Oh well no source table so will add it to the main table
+    putRecordByKey(theMS, elkey, theRec, -1);
+    for (uInt k=0; k < fieldIds.nelements();  ++k){
+      theMS.rwKeywordSet().define("definedmodel_field_"+String::toString(fieldIds[k]), elkey);	
+    }
+    return True;
+  }
+
+
 void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& rec, const Vector<Int>& validfieldids, const Vector<Int>& spws, const Vector<Int>& starts, const Vector<Int>& nchan,  const Vector<Int>& incr, Bool iscomponentlist, Bool incremental){
 
     //A field can have multiple FTmachines and ComponentList associated with it 
@@ -408,11 +583,11 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     for (uInt k=0; k < validfieldids.nelements();  ++k){
       elkey=elkey+"_"+String::toString(validfieldids[k]);
     }
-    Record outRec; 
+    TableRecord outRec; 
     Bool addtorec=False;
-    Table newTab(thems);
-    if(newTab.rwKeywordSet().isDefined(elkey)){
-      outRec=newTab.rwKeywordSet().asRecord(elkey); 
+    MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
+    if(isModelDefined(elkey, newTab)){ 
+      getModelRecord(elkey, outRec, thems);
       //if incremental no need to check & remove what is in the record
       if(!incremental)
 	addtorec=addToRec(outRec, spws);
@@ -431,25 +606,59 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     }
     iscomponentlist ? outRec.define("numcl", counter+1) : outRec.define("numft", counter+1); 
   
-    for (uInt k=0; k < validfieldids.nelements();  ++k){
-      newTab.rwKeywordSet().define("definedmodel_field_"+String::toString(validfieldids[k]), elkey);
+    //for (uInt k=0; k < validfieldids.nelements();  ++k){
+    //  newTab.rwKeywordSet().define("definedmodel_field_"+String::toString(validfieldids[k]), elkey);
       
-    }
+    // }
     iscomponentlist ? outRec.defineRecord("cl_"+String::toString(counter), modrec):
       outRec.defineRecord("ft_"+String::toString(counter), modrec);
-    if(newTab.rwKeywordSet().isDefined(elkey))
-	newTab.rwKeywordSet().removeField(elkey);
-    newTab.rwKeywordSet().defineRecord(elkey, outRec);
+    //////////////////
+    //cerr << "num keys " << newTab.rwKeywordSet().nfields() << " name of Table " << newTab.tableName() << "  parts " << Vector<String>(newTab.getPartNames(True))  << " antenna table " << newTab.antenna().tableName() << endl;
+    //for (uInt k=0; k < newTab.rwKeywordSet().nfields() ; ++k){
+    //  cerr << "keys " << k << "  is  " << newTab.rwKeywordSet().name(k) << " type " << newTab.rwKeywordSet().dataType(k) << endl;
+    //}
+    ////////////////////////
+    putModelRecord(validfieldids, outRec, newTab);  
+    //if(newTab.rwKeywordSet().isDefined(elkey))
+    //	newTab.rwKeywordSet().removeField(elkey);
+    //newTab.rwKeywordSet().defineRecord(elkey, outRec);
     
     // tim.show("Time taken to save record ");
  
+      /*
+      String subName=newTab.tableName()+"/"+elkey;
+      if(Table::isReadable(subName) && !Table::canDeleteTable(subName, True))
+      	throw(AipsError("Cannot save model into MS"));
+      else if ((Table::isReadable(subName) && Table::canDeleteTable(subName, True)))
+	Table::deleteTable(subName, True);
+      TableDesc td1 ("td1", TableDesc::New);
+      //td1.addColumn (ArrayColumnDesc<Int> ("SPECTRAL_WINDOW_ID"));
+      //td1.addColumn(ScalarColumnDesc<TableRecord>("MODEL"));
+      SetupNewTable newtab1 (subName, td1, Table::New);
+      Table tab1 (newtab1);
+      newTab.rwKeywordSet().defineTable(elkey, tab1);
+      tab1.rwKeywordSet().defineRecord(elkey, outRec);
+      */
+      //ArrayColumn<Int> spwCol(tab1, "SPECTRAL_WINDOW_ID");
+      //ScalarColumn<TableRecord> modCol(tab1, "MODEL");
+      //newTab.addRow(1,False);
+      //spwCol.put(0,spws);
+      //modCol.put(0,outRec);
+      //newTab.flush();
+    // MSSource& mss=newTab.source();
+    //  cerr << "has model_source " << mss.isColumn(MSSource::SOURCE_MODEL) << endl;
+    //  if(!mss.isColumn(MSSource::SOURCE_MODEL) ){
+    //mss.addColumn(ScalarRecordColumnDesc("SOURCE_MODEL"), True);
+    //  }
+    //  MSSourceColumns srcCol(mss);
+    //  srcCol.sourceModel().put(0, outRec);
 }
 
 
 
 
 
-  void VisModelData::addModel(const Record& rec,  const Vector<Int>& /*msids*/, const VisBuffer& vb){
+  void VisModelData::addModel(const RecordInterface& rec,  const Vector<Int>& /*msids*/, const VisBuffer& vb){
     
 
 

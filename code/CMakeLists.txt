@@ -1,6 +1,6 @@
 # CASA - Common Astronomy Software Applications
 # Copyright (C) 2010 by ESO (in the framework of the ALMA collaboration)
-# Copyright (C) 2010 Associated Universities, Inc. Washington DC, USA.
+# Copyright (C) 2010-2013 Associated Universities, Inc. Washington DC, USA.
 #
 # This file is part of CASA.
 #
@@ -689,7 +689,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.205
+           VERSION 1.0.206
            VERSION 1.0.198
            PREFIX_HINTS ${CASACORE_ROOT_DIR} ${Boost_INCLUDE_DIR}
            INCLUDES casa/aips.h

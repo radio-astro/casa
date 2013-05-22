@@ -2316,15 +2316,18 @@ Cube<Complex>& VisBuffer::fillVisCube(VisibilityIterator::DataColumn whichOne)
     {
       CheckVisIter1 (" (Model)");
       modelVisCubeOK_p = True;
-      String modelkey=String("definedmodel_field_")+String::toString(fieldId());
-      Bool hasmodkey=visIter_p->ms().keywordSet().isDefined(modelkey);
+      String modelkey; //=String("definedmodel_field_")+String::toString(fieldId());
+      Int snum;
+      Bool hasmodkey=VisModelData::isModelDefined(fieldId(), visIter_p->ms(), modelkey, snum);
       if( hasmodkey || !(visIter_p->ms().tableDesc().isColumn("MODEL_DATA"))){
 	//cerr << "HASMOD " << visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) << endl;
 	if(visModelData_p.hasModel(msId(), fieldId(), spectralWindow()) ==-1){
 	  if(hasmodkey){
-	    String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
-	    Record modrec(visIter_p->ms().keywordSet().asRecord(whichrec));
-	    visModelData_p.addModel(modrec, Vector<Int>(1, msId()), *this);
+	    //String whichrec=visIter_p->ms().keywordSet().asString(modelkey);
+	    TableRecord modrec;
+	    if(VisModelData::getModelRecord(modelkey, modrec, visIter_p->ms())){
+	      visModelData_p.addModel(modrec, Vector<Int>(1, msId()), *this);
+	    }
 	  }
 	}
 	visModelData_p.getModelVis(*this);
