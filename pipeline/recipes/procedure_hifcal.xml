@@ -31,12 +31,6 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_tsysflagchans</Command>
-        <ParameterSet>
-        </ParameterSet>
-    </ProcessingCommand>
-
-    <ProcessingCommand>
         <Command xmlns="">hif_tsysflag</Command>
         <ParameterSet>
         </ParameterSet>
@@ -56,6 +50,50 @@
             <Parameter>
                 <Keyword xmlns="">fmax_limit</Keyword>
                 <Value xmlns="">2</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_nmedian</Keyword>
+                <Value xmlns="">False</Value>
+            </Parameter>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_tsysflagchans</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_tsysflag</Command>
+        <ParameterSet>
+            <Parameter>
+                <Keyword xmlns="">metric</Keyword>
+                <Value xmlns="">fieldshape</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">intentgroups</Keyword>
+                <Value xmlns="">['*AMPLITUDE*+*BANDPASS*+*PHASE*+*TARGET*']</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_maxabs</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">fmax_limit</Keyword>
+                <Value xmlns="">20</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">flag_tmf1</Keyword>
+                <Value xmlns="">True</Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">tmf1_axis</Keyword>
+                <Value xmlns="">Antenna1 </Value>
+            </Parameter>
+            <Parameter>
+                <Keyword xmlns="">tmf1_limit</Keyword>
+                <Value xmlns="">0.666</Value>
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">flag_nmedian</Keyword>
