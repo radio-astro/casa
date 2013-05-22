@@ -1418,8 +1418,8 @@ testvers = 'CASA Version 3.0.2 (build #11306)'
 clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
 clean_offline_rms = 0.055416
-clean_momentzero_max = 151.72
-clean_momentzero_rms = 14.234
+clean_momentzero_max = 151.66
+clean_momentzero_rms = 14.31
 #
 #  32 bits gets 423.6954 and 64 bits gets 422.142792
 #  diff << 1 chanwidth.
