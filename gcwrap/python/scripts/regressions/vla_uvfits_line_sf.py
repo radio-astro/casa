@@ -12,13 +12,14 @@ class regressverify :
 	##
 	if os.path.exists('/opt/casa/data'):
 		datarepos = '/opt/casa/data'
-	elif os.path.exists('/home/casa/data'):
-		datarepos = '/home/casa/data'
+	elif os.path.exists('/home/casa/data/trunk'):
+		datarepos = '/home/casa/data/trunk'
 	elif os.path.exists(os.environ['CASAPATH'].split()[0] + "/data"):
 		datarepos = os.environ['CASAPATH'].split()[0] + "/data"
 	else:
 		raise Exception('cannot find data repository')
-	
+
+	print 'datarepos = ', datarepos
 	def fill(self) :
 		rstat = True
 		print "Starting fill verification"
@@ -116,8 +117,8 @@ verify = regressverify()
 ##
 if os.path.exists('/opt/casa/data'):
 	pipeline.datarepos = '/opt/casa/data'
-elif os.path.exists('/home/casa/data'):
-	pipeline.datarepos = '/home/casa/data'
+elif os.path.exists('/home/casa/data/trunk'):
+	pipeline.datarepos = '/home/casa/data/trunk'
 elif os.path.exists(os.environ['CASAPATH'].split()[0] + "/data"):
 	pipeline.datarepos = os.environ['CASAPATH'].split()[0] + "/data"
 else:
@@ -165,8 +166,6 @@ pipeline.calibrate['bandpass']['args'] = {'vis':'ngc5921.ms',
 				    'field' : '0',
 				    'spw' : '',
 				    'selectdata' : False,
-				    'gaincurve' : False,
-				    'opacity' : 0.0,
 				    'bandtype' : 'B',
 				    'solint' : 'inf',
 				    'combine' : 'scan',
@@ -180,8 +179,6 @@ pipeline.calibrate['gaincal']['args'] = {'vis':'ngc5921.ms',
 				   'field' : '0,1',
 				   'spw' : '0:6~56',
 				   'selectdata' : False,
-				   'gaincurve' : False,
-				   'opacity' : 0.0,
 				   'gaintype' : 'G',
 				   'solint' : 'inf',
 				   'combine' : '',
@@ -206,8 +203,6 @@ pipeline.calibrate['applycal'][0]['args'] = {'vis':'ngc5921.ms',
 				    'spwmap' : [],
 				    'spw' : '',
 				    'selectdata' : False,
-				    'gaincurve' : False,
-				    'opacity' : 0.0,
 				    'field' : '1,2'
                                    }
 pipeline.calibrate['applycal'][1]['args'] = {'vis':'ngc5921.ms',
@@ -216,8 +211,6 @@ pipeline.calibrate['applycal'][1]['args'] = {'vis':'ngc5921.ms',
 				    'spwmap' : [],
 				    'spw' : '',
 				    'selectdata' : False,
-				    'gaincurve' : False,
-				    'opacity' : 0.0,
 				    'field' : '0',
 				    'gainfield':['0','*']
 		                   }

@@ -8,9 +8,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <task type="function" name="exportfits" category="import/export">
 <shortdescription>Convert a CASA image to a FITS file</shortdescription>
 <description>
-CASA-produced images can be written to disk for transporting
-to other software packages.  No subimaging of the fits image
-can be made with this task.
+	CASA-produced images can be written to disk for transporting
+	to other software packages.  No subimaging of the fits image
+	can be made with this task.
+
 </description>
 <input>
 	<param type="string" name="imagename" mustexist="true">
@@ -73,37 +74,14 @@ can be made with this task.
 		<value>True</value>
 	</param>
 
+	<param type="bool" name="dropdeg" >
+		<description>Drop all degenerate axes (e.g. Stokes and/or Frequency)?</description>
+		<value>False</value>
+	</param>
+
 </input>
 <example>
-
-	CASA-produced images can be written to disk for transporting
-	to other software packages.  No subimaging of the fits image
-	can be made with this task.
-
-	Keyword arguments:
-	imagename -- Name of input CASA image
-		default: none; example: imagename='3C273XC1.image'
-	fitsimage -- Name of ouput image FITS file
-		default: none; example='3C273XC1.fits'
-	velocity -- Use velocity (rather than frequency) as spectral axis
-		default: False
-	optical -- Use the optical (rather than radio) velocity convention
-		default: False;
-	bitpix -- Bits per pixel
-		default: -32 (floating point)
-		&lt;Options: -32 (floating point), 16 (integer)&gt;
-	minpix -- Minimum pixel value
-		default: 0 = autoscale
-	maxpix -- Maximum pixel value
-		default: 0 = autoscale
-	overwrite -- Overwrite pre-existing imagename
-		default=False; example: overwrite=True
-	dropstokes -- Drop Stokes axis?
-		default: False; example: dropstokes=True
-	stokeslast -- Put Stokes axis last in header?
-		default: True; example: stokeslast=False
-	history -- Write history to fits image?
-		default: True; example: history=False
+  exportfits(imagename='NGC3256-continuum.image', fitsimage='NGC3256cont.fits', history=False)
 </example> 
 
 </task>

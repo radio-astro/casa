@@ -17,8 +17,6 @@
 #    (~ 43 GHz, VLA Q band receivers).  There is no detectable continuum    #
 #    emission in this data.  There are 2 overlapping spectral windows with  #
 #    starting frequencies of 43.4197 GHz & 43.4224 GHz.                     #
-#    No tipping scans were done during this observation so we cannot do an  #
-#    opacity correction during the gain calibration.                        #
 #    Each calibrator is observed in both spectral windows:                  #
 #      0336+323 = Gain calibrator (Sv ~ 2.1 Jy on 2may; 2.8 Jy on 8may)     #
 #      0542+498 = Flux density calibrator (3c147, Sv = 0.9144 Jy)           #
@@ -142,8 +140,7 @@
 #   o added use of canned image model for 0542 (3C147_Q.im)                 #
 #   o There *is* an opacity tip for 08May!  Using opacity=0.062 for 08May   #
 #      and opacity=0.06 for 02May (from tip on 01May)                       #
-#   o Use gaincurve=True for *all* calibration solve and apply, not just    #
-#      some.                                                                #
+#   o Use gaincurve for *all* calibration solve and apply, not just some    #
 #   o The phase stability is not too bad, but scan-based solutions          #
 #      (solint='inf') in gaincal are too long, especially for the long      #
 #      scans on the flux density calibrator.  Using solint='int' yields a   #
@@ -160,6 +157,7 @@
 #                                                                           #
 #############################################################################
 import os
+import sys
 import time
 import regression_utility as tstutl
 
@@ -359,6 +357,29 @@ setjy(vis=msfile1,field='0542+498_2',modimage=modelim,scalebychan=False,standard
 if benchmarking:
     setjytime = time.time()
 
+
+#
+#=====================================================================
+#
+# Prior calibrations (opacity and gaincurve)
+#
+print '--Gencal (opacity, gaincurve)--'
+default('gencal')
+
+opactable = prefix1 + '.opac'
+gencal(vis=msfile1,caltable=opactable,
+       caltype='opac',
+       parameter=[0.06])
+
+gcurvetable = prefix1 + '.gaincurve'
+gencal(vis=msfile1,caltable=gcurvetable,
+       caltype='gc')
+
+# Record gencal completion time
+if benchmarking:
+    gencaltime = time.time()
+
+
 #
 #=====================================================================
 #
@@ -370,12 +391,14 @@ default('gaincal')
 gtable1 = prefix1 + '.1.gcal'
 gaincal(vis=msfile1,caltable=gtable1,
 	field='0,12,14',spw='0:4~58', gaintype='G',
-	opacity=0.06,solint='int',combine='',refant='VA27',minsnr=2.,gaincurve=True)
+	solint='int',combine='',refant='VA27',minsnr=2.,
+        gaintable=[opactable,gcurvetable],interp=['',''])
 
 gtable2 = prefix1 + '.2.gcal'
 gaincal(vis=msfile1,caltable=gtable2,
 	field='6,13,15',spw='1:4~58', gaintype='G',
-	opacity=0.06,solint='int',combine='',refant='VA27',gaincurve=True)
+	solint='int',combine='',refant='VA27',
+        gaintable=[opactable,gcurvetable],interp=['',''])
 
 # gaincal calibration completion time
 if benchmarking:
@@ -392,13 +415,13 @@ default('bandpass')
 btable1 = prefix1 + '.1.bcal'
 bandpass(vis=msfile1,caltable=btable1,
 	 field='0',spw='0',
-	 opacity=0.06,gaintable=gtable1,interp='nearest',
-	 refant='VA27',solint='inf',combine='scan',gaincurve=True)
+	 gaintable=[opactable,gcurvetable,gtable1],interp=['','','nearest'],
+	 refant='VA27',solint='inf',combine='scan')
 btable2 = prefix1 + '.2.bcal'
 bandpass(vis=msfile1,caltable=btable2,
 	 field='6',spw='1',
-	 opacity=0.06,gaintable=gtable2,interp='nearest',
-	 refant='VA27',solint='inf',combine='scan',gaincurve=True)
+	 gaintable=[opactable,gcurvetable,gtable2],interp=['','','nearest'],
+	 refant='VA27',solint='inf',combine='scan')
 
 # bandpass calibration completion time
 if benchmarking:
@@ -435,14 +458,12 @@ default('applycal')
 
 applycal(vis=msfile1,
 	 field='0~5',spw='0',
-	 gaincurve=True,opacity=0.06,
-	 gaintable=[ftable1,btable1],
-	 gainfield='0',calwt=False)
+	 gaintable=[opactable,gcurvetable,ftable1,btable1],
+	 gainfield=['','','0'],calwt=False)
 applycal(vis=msfile1,
 	 field='6~11',spw='1',
-	 gaincurve=True,opacity=0.06,
-	 gaintable=[ftable2,btable2],
-	 gainfield='6',calwt=False)
+	 gaintable=[opactable,gcurvetable,ftable2,btable2],
+	 gainfield=['','','6'],calwt=False)
 
 # Record applycal completion time
 if benchmarking:
@@ -640,6 +661,28 @@ setjy(vis=msfile2,field='0542+498_2',modimage=modelim,scalebychan=False,standard
 if benchmarking:
     setjytime2 = time.time()
 
+
+#
+#=====================================================================
+#
+# Prior calibrations (opacity and gaincurve)
+#
+print '--Gencal (opacity, gaincurve)--'
+default('gencal')
+
+opactable2 = prefix2 + '.opac'
+gencal(vis=msfile1,caltable=opactable2,
+       caltype='opac',
+       parameter=[0.062])
+
+gcurvetable2 = prefix2 + '.gaincurve'
+gencal(vis=msfile1,caltable=gcurvetable2,
+       caltype='gc')
+
+# gencal2 completion time
+if benchmarking:
+    gencaltime2 = time.time()
+
 #
 #=====================================================================
 #
@@ -651,11 +694,13 @@ default('gaincal')
 gtable2_1 = prefix2 + '.1.gcal'
 gaincal(vis=msfile2,caltable=gtable2_1,
 	field='0,12,14',spw='0:4~58', gaintype='G',
-	opacity=0.062,solint='int',combine='',refant='VA27',gaincurve=True)
+	solint='int',combine='',refant='VA27',
+        gaintable=[opactable2,gcurvetable2],interp=['',''])
 gtable2_2 = prefix2 + '.2.gcal'
 gaincal(vis=msfile2,caltable=gtable2_2,
 	field='6,13,15',spw='1:4~58', gaintype='G',
-	opacity=0.062,solint='int',combine='',refant='VA27',gaincurve=True)
+	solint='int',combine='',refant='VA27',
+        gaintable=[opactable2,gcurvetable2],interp=['',''])
 
 # gaincal calibration completion time
 if benchmarking:
@@ -673,17 +718,15 @@ default('bandpass')
 btable2_1 = prefix2 + '.1.bcal'
 bandpass(vis=msfile2,caltable=btable2_1,
 	 field='0',spw='0',
-	 opacity=0.062,
-	 gaintable=gtable2_1,interp='nearest',
+	 gaintable=[opactable2,gcurvetable2,gtable2_1],interp=['','','nearest'],
 	 refant='VA27',
-	 solint='inf',combine='scan',gaincurve=True)
+	 solint='inf',combine='scan')
 btable2_2 = prefix2 + '.2.bcal'
 bandpass(vis=msfile2,caltable=btable2_2,
 	 field='6',spw='1',
-	 opacity=0.062,
-	 gaintable=gtable2_2,interp='nearest',
+	 gaintable=[opactable2,gcurvetable2,gtable2_2],interp=['','','nearest'],
 	 refant='VA27',
-	 solint='inf',combine='scan',gaincurve=True)
+	 solint='inf',combine='scan')
 
 # bandpass calibration completion time
 if benchmarking:
@@ -721,14 +764,12 @@ default('applycal')
 
 applycal(vis=msfile2,
 	 field='0~5',spw='0',
-	 gaincurve=True,opacity=0.062,
-	 gaintable=[ftable2_1,btable2_1],
-	 gainfield='0',calwt=False)
+	 gaintable=[opactable2,gcurvetable2,ftable2_1,btable2_1],
+	 gainfield=['','','0'],calwt=False)
 applycal(vis=msfile2,
 	 field='6~11',spw='1',
-	 gaincurve=True,opacity=0.062,
-	 gaintable=[ftable2_2,btable2_2],
-	 gainfield='6',calwt=False)
+	 gaintable=[opactable2,gcurvetable2,ftable2_2,btable2_2],
+	 gainfield=['','','6'],calwt=False)
 
 
 # Record applycal completion time
@@ -862,7 +903,7 @@ if doimage:
     cyclespeedup = -1
     scaletype = 'SAULT'
     pbcor=False
-    minpb = 0.1
+    minpb = 0.02
     sigma = '0.001Jy'
     targetflux = '1.0Jy'
     constrainflux = False
@@ -1010,111 +1051,113 @@ else:
     outfile='ngc1333.'+datestring+'.log'
     logfile=open(outfile,'w')
 
-    print >>logfile,''
-    print >>logfile,'********** Data Summary *********'
-    print >>logfile,'*********************************'
-    print >>logfile,''
-    print >>logfile,'********** Regression ***********'
-    print >>logfile,'*                               *'
+    for x in [sys.stdout, logfile]: print >> x ,''
+    for x in [sys.stdout, logfile]: print >> x ,'********** Data Summary *********'
+    for x in [sys.stdout, logfile]: print >> x ,'*********************************'
+    for x in [sys.stdout, logfile]: print >> x ,''
+    for x in [sys.stdout, logfile]: print >> x ,'********** Regression ***********'
+    for x in [sys.stdout, logfile]: print >> x ,'*                               *'
     regstate = True
     if (diff_cal1_2may < 0.05):
-        print >>logfile,'* Passed cal1 max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed cal1 max amplitude test (2may) *'
     else:
-        print >>logfile,'* Failed cal1 max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed cal1 max amplitude test (2may) *'
         regstate = False
-    print >>logfile,'*   Cal1 max amp (2may) '+str(gcal1_2may)+' ('+str(cal1_2may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Cal1 max amp (2may) '+str(gcal1_2may)+' ('+str(cal1_2may)+')'
     if (diff_cal2_2may < 0.05):
-        print >>logfile,'* Passed cal2 max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed cal2 max amplitude test (2may) *'
     else:
-        print >>logfile,'* Failed cal2 max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed cal2 max amplitude test (2may) *'
         regstate = False
-    print >>logfile,'*   Cal2 max amp (2may) '+str(gcal2_2may)+' ('+str(cal2_2may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Cal2 max amp (2may) '+str(gcal2_2may)+' ('+str(cal2_2may)+')'
     if (diff_cal1_8may < 0.05):
-        print >>logfile,'* Passed cal1 max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed cal1 max amplitude test (8may) *'
     else:
-        print >>logfile,'* Failed cal1 max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed cal1 max amplitude test (8may) *'
         regstate = False
-    print >>logfile,'*   Cal1 max amp (8may) '+str(gcal1_8may)+' ('+str(cal1_8may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Cal1 max amp (8may) '+str(gcal1_8may)+' ('+str(cal1_8may)+')'
     if (diff_cal2_8may < 0.05):
-        print >>logfile,'* Passed cal2 max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed cal2 max amplitude test (8may) *'
     else:
-        print >>logfile,'* Failed cal2 max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed cal2 max amplitude test (8may) *'
         regstate = False
-    print >>logfile,'*   Cal2 max amp (8may) '+str(gcal2_8may)+' ('+str(cal2_8may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Cal2 max amp (8may) '+str(gcal2_8may)+' ('+str(cal2_8may)+')'
     if (diff_src_2may < 0.05):
-        print >>logfile,'* Passed src max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed src max amplitude test (2may) *'
     else:
-        print >>logfile,'* Failed src max amplitude test (2may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed src max amplitude test (2may) *'
         regstate = False
-    print >>logfile,'*   Src max amp (2may) '+str(src_2may)+' ('+str(src2may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Src max amp (2may) '+str(src_2may)+' ('+str(src2may)+')'
     if (diff_src_8may < 0.05):
-        print >>logfile,'* Passed src max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed src max amplitude test (8may) *'
     else:
-        print >>logfile,'* Failed src max amplitude test (8may) *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Failed src max amplitude test (8may) *'
         regstate = False
-    print >>logfile,'*   Src max amp (8may) '+str(src_8may)+' ('+str(src8may)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Src max amp (8may) '+str(src_8may)+' ('+str(src8may)+')'
     if (diff_immax < 0.05):
-        print >>logfile,'* Passed image max test                *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed image max test                *'
     else:
         if doimage:
-            print >>logfile,'* Failed image max test                *'
+            for x in [sys.stdout, logfile]: print >> x ,'* Failed image max test                *'
             regstate = False
         else:
-            print >>logfile,'* Did not do image max test'
+            for x in [sys.stdout, logfile]: print >> x ,'* Did not do image max test'
             
-    print >>logfile,'*   Image max '+str(thistest_immax)+' ('+str(immax)+')'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Image max '+str(thistest_immax)+' ('+str(immax)+')'
     if (diff_imrms < 0.05):
-        print >>logfile,'* Passed image rms test                *'
+        for x in [sys.stdout, logfile]: print >> x ,'* Passed image rms test                *'
     else:
         if doimage:
-            print >>logfile,'* Failed image rms test                *'
+            for x in [sys.stdout, logfile]: print >> x ,'* Failed image rms test                *'
             regstate = False
         else:
-            print >>logfile,'* Did not do image rms test'
-    print >>logfile,'*   Image rms '+str(thistest_imrms)+' ('+str(imrms)+')'
+            for x in [sys.stdout, logfile]: print >> x ,'* Did not do image rms test'
+    for x in [sys.stdout, logfile]: print >> x ,'*   Image rms '+str(thistest_imrms)+' ('+str(imrms)+')'
     #if ((diff_cal1_2may<0.05) & (diff_cal2_2may<0.05) &
     #    (diff_cal1_8may<0.05) & (diff_cal2_8may<0.05) &
     #    (diff_src_2may<0.05) & (diff_src_8may<0.05) &
     #    (diff_immax<0.05) & (diff_imrms<0.05)): 
     if regstate:
-        print >>logfile,'---'
-	print >>logfile,'Passed Regression test for NGC1333'
-	print >>logfile,'---'
+        for x in [sys.stdout, logfile]: print >> x ,'---'
+	for x in [sys.stdout, logfile]: print >> x ,'Passed Regression test for NGC1333'
+	for x in [sys.stdout, logfile]: print >> x ,'---'
         tstutl.note("Passed Regression test for NGC1333","NORMAL")
     else: 
-	print >>logfile,'----FAILED Regression test for NGC1333'
+	for x in [sys.stdout, logfile]: print >> x ,'----FAILED Regression test for NGC1333'
         tstutl.note("FAILED Regression test for NGC1333","SEVERE")
-    print >>logfile,'*********************************'
+    for x in [sys.stdout, logfile]: print >> x ,'*********************************'
+    for x in [sys.stdout, logfile]: print >> x ,''
+    for x in [sys.stdout, logfile]: print >> x ,''
+    for x in [sys.stdout, logfile]: print >> x ,'********* Benchmarking *****************'
+    for x in [sys.stdout, logfile]: print >> x ,'*                                      *'
+    for x in [sys.stdout, logfile]: print >> x ,'Total wall clock time was: '+str(endTime - startTime)
+    for x in [sys.stdout, logfile]: print >> x ,'Total CPU        time was: '+str(endProc - startProc)
+    for x in [sys.stdout, logfile]: print >> x ,'Processing rate MB/s  was: '+str(240.3/(endTime - startTime))
+    for x in [sys.stdout, logfile]: print >> x ,'* Breakdown:                           *'
+    for x in [sys.stdout, logfile]: print >> x ,'*   import       time was: '+str(importtime-startTime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   listobs      time was: '+str(listtime-importtime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   flagdata     time was: '+str(flagtime-listtime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   setjy        time was: '+str(setjytime-flagtime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   gencal       time was: '+str(gencaltime-setjytime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   gaincal      time was: '+str(gaintime-gencaltime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   bandpass     time was: '+str(bptime-gaintime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   fluxscale    time was: '+str(fstime-bptime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   correct      time was: '+str(correcttime-fstime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   split        time was: '+str(splitcaltime-correcttime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   import       time was: '+str(importtime2-splitcaltime)
+    for x in [sys.stdout, logfile]: print >> x ,'+   listobs      time was: '+str(listtime2-importtime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   flagdata     time was: '+str(flagtime2-listtime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   setjy        time was: '+str(setjytime2-flagtime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   gencal       time was: '+str(gencaltime2-setjytime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   gaincal      time was: '+str(gaintime2-gencaltime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   bandpass     time was: '+str(bptime2-gaintime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   fluxscale    time was: '+str(fstime2-bptime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   correct      time was: '+str(correcttime2-fstime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   split        time was: '+str(splitcaltime2-correcttime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   concatenate  time was: '+str(concattime-splitcaltime2)
+    for x in [sys.stdout, logfile]: print >> x ,'*   image        time was: '+str(imagetime-concattime)
+    for x in [sys.stdout, logfile]: print >> x ,'*   moments      time was: '+str(momenttime-imagetime)
+    for x in [sys.stdout, logfile]: print >> x ,'*****************************************'
 
-    print >>logfile,''
-    print >>logfile,''
-    print >>logfile,'********* Benchmarking *****************'
-    print >>logfile,'*                                      *'
-    print >>logfile,'Total wall clock time was: '+str(endTime - startTime)
-    print >>logfile,'Total CPU        time was: '+str(endProc - startProc)
-    print >>logfile,'Processing rate MB/s  was: '+str(240.3/(endTime - startTime))
-    print >>logfile,'* Breakdown:                           *'
-    print >>logfile,'*   import       time was: '+str(importtime-startTime)
-    print >>logfile,'*   listobs      time was: '+str(listtime-importtime)
-    print >>logfile,'*   flagdata     time was: '+str(flagtime-listtime)
-    print >>logfile,'*   setjy        time was: '+str(setjytime-flagtime)
-    print >>logfile,'*   gaincal      time was: '+str(gaintime-setjytime)
-    print >>logfile,'*   bandpass     time was: '+str(bptime-gaintime)
-    print >>logfile,'*   fluxscale    time was: '+str(fstime-bptime)
-    print >>logfile,'*   correct      time was: '+str(correcttime-fstime)
-    print >>logfile,'*   split        time was: '+str(splitcaltime-correcttime)
-    print >>logfile,'*   import       time was: '+str(importtime2-splitcaltime)
-    print >>logfile,'+   listobs      time was: '+str(listtime2-importtime2)
-    print >>logfile,'*   flagdata     time was: '+str(flagtime2-listtime2)
-    print >>logfile,'*   setjy        time was: '+str(setjytime2-flagtime2)
-    print >>logfile,'*   gaincal      time was: '+str(gaintime2-setjytime2)
-    print >>logfile,'*   bandpass     time was: '+str(bptime2-gaintime2)
-    print >>logfile,'*   fluxscale    time was: '+str(fstime2-bptime2)
-    print >>logfile,'*   correct      time was: '+str(correcttime2-fstime2)
-    print >>logfile,'*   split        time was: '+str(splitcaltime2-correcttime2)
-    print >>logfile,'*   concatenate  time was: '+str(concattime-splitcaltime2)
-    print >>logfile,'*   image        time was: '+str(imagetime-concattime)
-    print >>logfile,'*   moments      time was: '+str(momenttime-imagetime)
-    print >>logfile,'*****************************************'
     #
     logfile.close()

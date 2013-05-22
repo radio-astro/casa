@@ -3359,6 +3359,11 @@ one field, and will currently only process Stokes I.
      <description>Observation ID(s) to operate on</description>
      <value></value>
      </param>
+
+     <param type="string" name="interpolation">
+     <description>interpolation method in the case of time variable calibrator</description>
+     <value>nearest</value>
+     </param>
 </input>
 <returns type="bool"/>
 <example>

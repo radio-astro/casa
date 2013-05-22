@@ -968,7 +968,33 @@ v =  g2d.f([0,1,1.5,0])
 
 </example>
 </method>
--->
+
+<method type="function" name="powerlogpoly">
+   <shortdescription>Create and return a new functional tool representing a 1D power log polynomial function, y = c_0 * x**( c_1 + c_2*ln(x) + c_3*ln(x)**2 + ... c_n*ln(x)**(n-1)</shortdescription>
+
+<input>
+     <param type="doubleArray" direction="in" name="coefficients">
+        <value>0</value>
+        <description>Array of coefficients.</description>
+     </param>
+</input>
+<returns type="functional">Functional</returns>
+<description>
+
+Create a 1-dimensional power log polynomial function with the specified coefficents.
+
+</description>
+
+<example>
+
+# get the value and derivatives of 2*x**(1+ln(x))
+plp = fn.powerlogpoly(2,1,1)
+
+# returns array([ 0.125,  2.   ,  0.125])
+vals = gfn.f([0, 1, 2])
+
+</example>
+</method>
 
 <!-- ****************************************************************** -->
 <!--

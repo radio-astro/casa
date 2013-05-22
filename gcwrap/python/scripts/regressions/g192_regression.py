@@ -31,20 +31,27 @@ print '--Setjy--'
 default('setjy')
 setjy(vis='g192_a.ms',field='4',scalebychan=False,standard='Perley-Taylor 99') #set flux density for 1331+305 (3C286)
 setjytime = time.time()
+
+print '--Gencal(opac)--'
+# make opacity caltable
+default('gencal')
+gencal(vis='g192_a.ms',caltable='g192_a.opac',caltype='opac',parameter=[0.062])
+gencaltime = time.time()
+
 print '--Gaincal--'
 #Select data for gain calibrators and drop outer channesl that may bias the solution
-#correct for specified zenith opacity and VLA gain curves (default)
 default('gaincal')
 gaincal(vis='g192_a.ms',caltable='g192_a.gcal',
 	field='0,2,3,4',spw='0:3~117', gaintype='G',
-	opacity=0.062,solint='inf',combine='',refant='VA05')
+	solint='inf',combine='',refant='VA05',
+	gaintable=['g192_a.opac'])
 gaintime = time.time()
 print '--Bandpass--'
 #Select bandpass calibrator. Arrange to solve for a single solution over the entire observation 
 default('bandpass')
 bandpass(vis='g192_a.ms',caltable='g192_a.bcal',
 	 field='3',  
-	 opacity=0.062,gaintable='g192_a.gcal',gainfield='3',interp='nearest',
+	 gaintable=['g192_a.opac','g192_a.gcal'],gainfield=['','3'],interp=['','nearest'],
 	 solint='inf',combine='scan',
 	 refant='VA05')
 bptime = time.time()
@@ -61,8 +68,7 @@ print '--Correct--'
 default('applycal')
 applycal(vis='g192_a.ms',
 	 field='0,1,2', 
-	 opacity=0.062,
-	 gaintable=['g192_a.fluxcal','g192_a.bcal'],gainfield='0,2');
+	 gaintable=['g192_a.opac','g192_a.fluxcal','g192_a.bcal'],gainfield=['','0,2']);
 correcttime = time.time()
 
 print '--Split (Cal/src data)--'
@@ -242,7 +248,8 @@ print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*   import       time was: '+str(importtime-startTime)
 print >>logfile,'*   tflagdata    time was: '+str(flagtime-importtime)
 print >>logfile,'*   setjy        time was: '+str(setjytime-flagtime)
-print >>logfile,'*   gaincal      time was: '+str(gaintime-setjytime)
+print >>logfile,'*   gencal       time was: '+str(gencaltime-setjytime)
+print >>logfile,'*   gaincal      time was: '+str(gaintime-gencaltime)
 print >>logfile,'*   bandpass     time was: '+str(bptime-gaintime)
 print >>logfile,'*   fluxscale    time was: '+str(fstime-bptime)
 print >>logfile,'*   applycal     time was: '+str(correcttime-fstime)

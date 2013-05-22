@@ -80,8 +80,6 @@ def accum(vis=None,tablein=None,incrtable=None,caltable=None,field=None,calfield
           calmode = 'ap'            # do an amp/phase cal removing first phase cal
           caltable = 'amp.cal'      # output amplitude calibration table
           solint = 0                # solution for each scan
-          gaincurve = false
-          opacity =0.0              # no opacity correction
           gaintable = 'phase.cal'   # First, apply previous phase calibration on the fly
           go
 

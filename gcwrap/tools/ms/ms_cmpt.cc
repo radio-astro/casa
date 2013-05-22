@@ -2431,6 +2431,83 @@ ms::timesort(const std::string& msname)
     return rstat;
 }
 
+bool
+ms::sort(const std::string& msname,const std::vector<std::string>& columns)
+{
+    Bool rstat(False);
+    try {
+	if(!detached()){
+	    *itsLog << LogOrigin("ms", "sort");
+
+	    if (DOos::totalSize(itsMS->tableName(), True) >
+		DOos::freeSpace(Vector<String>(1, itsMS->tableName()), True)(0)) {
+		*itsLog << "There does not appear to be enough free disk space "
+			<< "(on the filesystem containing " << itsMS->tableName()
+			<< ") for the sorting to succeed." << LogIO::EXCEPTION;
+	    }
+
+	    {
+
+		// Prepare columns for Table::sort method
+		Block<String> cols(columns.size());
+		for (uInt col=0;col<columns.size();col++)
+		{
+			cols[col] = columns.at(col);
+		}
+
+		// Prepare columns for loggin info
+		ostringstream oss;
+		oss.clear();
+		oss << columns;
+		String strCols(oss.str());
+
+		String originalName = itsMS->tableName();
+		itsMS->flush();
+
+		MeasurementSet sortedMS = itsMS->sort(cols);
+
+		if (msname.length() == 0) { // no name given, sort and don't keep copy
+		    // make deep copy
+		    sortedMS.deepCopy(originalName+".sorted", Table::New);
+		    // close reference table
+		    sortedMS = MeasurementSet();
+		    // close original MS
+		    close();
+		    // rename copy to original name
+		    Table newMSmain(originalName+".sorted", Table::Update);
+		    newMSmain.rename(originalName, Table::New);    // will also delete original table
+		    newMSmain = Table();
+		    // reopen
+		    open(originalName,  Table::Update, False);
+		    *itsLog << LogOrigin("ms", "sort");
+		    String message = "Sorted by " + oss.str() + " in ascending order.";
+		    writehistory(std::string(message.data()), "", std::string("ms::sort()"), originalName, "ms");
+		    *itsLog << LogIO::NORMAL << "Sorted main table of " << originalName << " by  " + strCols + " ."
+			    << LogIO::POST;
+		}
+		else { // sort into a new MS
+		    sortedMS.deepCopy(msname, Table::New);
+		    String message = "Generated from " + originalName + " by sorting by  " + strCols + "  in ascending order.";
+		    writehistory(std::string(message.data()), "", std::string("ms::sort()"), msname, "ms");
+
+		    *itsLog << LogIO::NORMAL << "Sorted main table of " << originalName << " by  " + strCols + "  and stored it in "
+			    << msname << " ."<< LogIO::POST;
+
+		}
+	    }
+
+	    rstat = True;
+	}
+
+    } catch (AipsError x) {
+	*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
+	Table::relinquishAutoLocks(True);
+	RETHROW(x);
+    }
+    Table::relinquishAutoLocks(True);
+    return rstat;
+}
+
 bool ms::contsub(const std::string& outputms,    const ::casac::variant& fitspw,
                  const int fitorder,             const std::string& combine,
                  const ::casac::variant& spw,    const ::casac::variant& unionspw,

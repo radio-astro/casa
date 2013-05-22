@@ -19,8 +19,6 @@ def applycal(vis=None,
 	     gainfield=None,
 	     interp=None,
 	     spwmap=None,
-	     gaincurve=None,
-	     opacity=None,
 	     parang=None,
 	     calwt=None,
 	     applymode=None,
@@ -125,14 +123,6 @@ def applycal(vis=None,
 
 		# ...and now the specialized terms
 		# (BTW, interp irrelevant for these, since they are evaluated)
-
-		# opacity (if non-trivially specified and any >0.0)
-		opacarr=np.array(opacity)   # as numpy array for uniformity
-		if (np.sum(opacarr)>0.0):
-			# opacity transmitted as a list in all cases
-			mycb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=calwt[0])
-
-		if gaincurve: mycb.setapply(type='GAINCURVE',t=-1,calwt=calwt[0])
 
 		# Apply parallactic angle, if requested
 		if parang: mycb.setapply(type='P')

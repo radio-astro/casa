@@ -32,17 +32,25 @@ print '--Setjy--'
 default('setjy')
 setjy(vis='ngc7538.ms',field='0',standard='Perley-Taylor 99',scalebychan=False) #set flux density for 1331+305 (3C286)
 setjytime = time.time()
+
+print '--Gencal(opac)--'
+default('gencal')
+gencal(vis='ngc7538.ms', caltable='ap314.opac',
+       caltype='opac',parameter=[0.08])
+gencaltime = time.time()
+
 print '--Gaincal--'
 default('gaincal')
 gaincal(vis='ngc7538.ms', caltable='ap314.gcal',
 	field='<2', spw='0~1:2~56', gaintype='G',
-	opacity=0.08,solint='inf', combine='', refant='VA19')
+	solint='inf', combine='', refant='VA19',
+	gaintable=['ap314.opac'])
 gaintime = time.time()
 print '--Bandpass--'
 default('bandpass')
 bandpass(vis='ngc7538.ms', caltable='1328.bcal',
-	 field='0', opacity=0.08,
-	 gaintable='ap314.gcal', interp='nearest',
+	 field='0',
+	 gaintable=['ap314.opac','ap314.gcal'], interp=['','nearest'],
 	 refant='VA19')
 bptime = time.time()
 print '--Fluxscale--'
@@ -54,9 +62,8 @@ print '--Apply Cal--'
 default('applycal')
 applycal(vis='ngc7538.ms',
 	 field='1~5',
-	 opacity=0.08,
-	 gaintable=['ap314.fluxcal', '1328.bcal'],
-	 gainfield='1')
+	 gaintable=['ap314.opac','ap314.fluxcal', '1328.bcal'],
+	 gainfield=['','1'])
 	 
 correcttime = time.time()
 
@@ -219,7 +226,8 @@ print >>logfile,'* Breakdown:                           *'
 print >>logfile,'*   import       time was: '+str(importtime-startTime)
 print >>logfile,'*   flagautocorr time was: '+str(flagtime-importtime)
 print >>logfile,'*   setjy        time was: '+str(setjytime-flagtime)
-print >>logfile,'*   gaincal      time was: '+str(gaintime-setjytime)
+print >>logfile,'*   gencal       time was: '+str(gencaltime-setjytime)
+print >>logfile,'*   gaincal      time was: '+str(gaintime-gencaltime)
 print >>logfile,'*   bandpass     time was: '+str(bptime-gaintime)
 print >>logfile,'*   fluxscale    time was: '+str(fstime-bptime)
 print >>logfile,'*   applycal     time was: '+str(correcttime-fstime)

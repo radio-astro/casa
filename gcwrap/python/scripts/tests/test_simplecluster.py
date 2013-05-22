@@ -559,7 +559,7 @@ class test_applycal_mms(test_simplecluster):
 
         applycal(vis=self.vis,field='',spw='',selectdata=False,gaintable=self.aux,
                  gainfield=['nearest','nearest','0'],
-                 interp=['linear', 'linear','nearest'],spwmap=[],gaincurve=False,opacity=0.0)
+                 interp=['linear', 'linear','nearest'],spwmap=[])
         
         compare = testhelper.compTables(self.ref,self.vis,['FLAG_CATEGORY'])
         

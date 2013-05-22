@@ -132,7 +132,7 @@ class gaincal2_test(test_base):
         msgcal = self.msfile + '.gcal'
         reference = self.reffile + '.ref1b.gcal'
         gaincal(vis=self.msfile, caltable=msgcal, field='0,1',spw='0', gaintype='G',minsnr=2.0,
-                refant='ANT5',gaincurve=False, opacity=0.0, solint='inf',combine='')
+                refant='ANT5', solint='inf',combine='')
         self.assertTrue(os.path.exists(msgcal))
 
         # Compare the calibration tables

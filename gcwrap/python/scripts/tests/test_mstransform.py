@@ -210,29 +210,38 @@ class test_Regridms3(test_base):
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf reg*.*ms cvel31.*ms')
+        os.system('rm -rf reg31*.*ms cvel31.*ms')
 
-#    def test_regrid3_1(self):
-#        '''Cvel 12: Check that output columns are the same when using cvel'''
-#        outputms = 'reg31.ms'
-#        
-#        mstransform(vis=self.vis, outputvis=outputms, field='6',
-#                    combinespws=True, regridms=True, datacolumn='data',
-#                    mode='frequency', nchan=2, start='4.8101 GHz', width='50 MHz',
-#                    outframe='')
-#
-#        ret = th.verifyMS(outputms, 1, 2, 0)
-#        self.assertTrue(ret[0],ret[1])
-#        
-#        # Now run with cvel to compare the columns, CAS-4940
-#        outputms = 'cvel31.ms'
-#        cvel(vis=self.vis, outputvis=outputms, field='6',
-#            passall=False,mode='frequency',nchan=2,start='4.8101 GHz',
-#            width='50 MHz',outframe='')
-#        
-#        self.assertTrue(th.compVarColTables('cvel31.ms','reg31.ms', 'WEIGHT'))
-#        self.assertTrue(th.compVarColTables('cvel31.ms','reg31.ms', 'SIGMA'))
-#        self.assertTrue(th.compVarColTables('cvel31.ms','reg31.ms', 'DATA'))
+    def test_regrid3_1(self):
+        '''mstransform 12: Check that output columns are the same when using mstransform'''
+        outputms = 'reg31.ms'
+        
+        mstransform(vis=self.vis, outputvis=outputms, field='6',
+                    combinespws=True, regridms=True, datacolumn='data',
+                    mode='frequency', nchan=2, start='4.8101 GHz', width='50 MHz',
+                    outframe='')
+
+        ret = th.verifyMS(outputms, 1, 2, 0)
+        self.assertTrue(ret[0],ret[1])
+              
+        # Now run with cvel to compare the columns, CAS-4866
+        outputms = 'cvel31.ms'
+        cvel(vis=self.vis, outputvis=outputms, field='6',
+            passall=False,mode='frequency',nchan=2,start='4.8101 GHz',
+            width='50 MHz',outframe='')
+        
+        # Sort the output MSs so that they can be compared
+        myms = mstool()
+        
+        myms.open('cvel31.ms')
+        myms.sort('cvel31-sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+        
+        myms.open('reg31.ms')
+        myms.sort('reg31-sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+        
+        self.assertTrue(th.compTables('cvel31-sorted.ms','reg31-sorted.ms', 'FLAG_CATEGORY'))
 
 # Uncomment after seg fault is fixed
 #    def test_regrid3_2(self):
@@ -875,7 +884,7 @@ def suite():
     return [
             test_Combspw1,
             test_Regridms1,
-#            test_Regridms3,
+            test_Regridms3,
             test_Hanning,
             test_FreqAvg,
             test_Shape,

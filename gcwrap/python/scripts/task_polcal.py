@@ -8,8 +8,7 @@ def polcal(vis=None,caltable=None,
            observation=None, msselect=None,
 	   solint=None,combine=None,preavg=None,refant=None,minblperant=None,minsnr=None,
 	   poltype=None,smodel=None,append=None,
-	   gaintable=None,gainfield=None,interp=None,spwmap=None,
-	   gaincurve=None,opacity=None):
+	   gaintable=None,gainfield=None,interp=None,spwmap=None):
 
 	#Python script
         casalog.origin('polcal')
@@ -80,15 +79,6 @@ def polcal(vis=None,caltable=None,
 		
 		# ...and now the specialized terms
 		# (BTW, interp irrelevant for these, since they are evaluated)
-
-		# opacity (if non-trivially specified and any >0.0)
-		opacarr=np.array(opacity)   # as numpy array for uniformity
-		if (np.sum(opacarr)>0.0):
-			# opacity transmitted as a list in all cases
-			cb.setapply(type='TOPAC',t=-1,opacity=opacarr.tolist(),calwt=True)
-
-		if gaincurve: cb.setapply(type='GAINCURVE',t=-1,calwt=True)
-
 
 		# D-terms require parallactic angle
 		cb.setapply(type='P')

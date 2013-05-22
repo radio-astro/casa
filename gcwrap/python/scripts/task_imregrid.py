@@ -84,9 +84,6 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
                     _myia = tsub
                     _myia.setcoordsys(csys.torecord())
                 
-                # for some reason, we need to set the old refcode explicity so the
-                # conversion doesn't barf
-                csys.convertdirection(oldrefcode)
                 angle = csys.convertdirection(newrefcode)
                 mysin = qa.getvalue(qa.sin(angle))
                 mycos = qa.getvalue(qa.cos(angle))
@@ -97,20 +94,26 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
                         xnew = max(xnew, abs(xx*mycos - yy*mysin + 1))
                         ynew = max(ynew, abs(xx*mysin + yy*mycos + 1))
                 pad = int(max(xnew - shape[0]/2, ynew - shape[1]/2))
-                casalog.post(
-                    "Padding image by " + str(pad)
-                        + " pixels so no pixels are cut off in the rotation",
-                    "NORMAL"
-                )
-                _myia = _myia.pad("", pad, wantreturn=True) 
-                shape = _myia.shape()
+                if pad > 0:
+                    casalog.post(
+                        "Padding image by " + str(pad)
+                            + " pixels so no pixels are cut off in the rotation",
+                        "NORMAL"
+                        )
+                    _myia = _myia.pad("", pad, wantreturn=True) 
+                    shape = _myia.shape()
+                    newrefpix = csys.referencepixel()['numeric']
+                    newrefpix[diraxes[0]] = newrefpix[diraxes[0]] + pad
+                    newrefpix[diraxes[1]] = newrefpix[diraxes[1]] + pad
+                    csys.setreferencepixel(newrefpix)
+                    
                 casalog.post(
                     "Will rotate direction coordinate by "
-                        + qa.tos(qa.convert(qa.neg(angle),"deg"))
+                        + qa.tos(qa.convert(angle,"deg"))
                     , 'NORMAL'
                 )
                 rot = _myia.rotate(
-                    outfile="", shape=shape, pa=qa.neg(angle)
+                    outfile="", shape=shape, pa=angle
                 )
                 rot.setcoordsys(csys.torecord())
                 # now crop
