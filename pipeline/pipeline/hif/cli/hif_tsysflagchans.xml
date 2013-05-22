@@ -38,7 +38,7 @@ Flag deviant channels in system temperature measurements.
 
     <param type="double" name="edge_limit" subparam="true">
         <description>Candidate edge channels have channel to channel difference > edge_limit * median across spectrum</description>
-        <value>2</value>
+        <value>3</value>
     </param>
 
     <param type="bool" name="flag_sharps">
@@ -96,7 +96,7 @@ Flag deviant channels in system temperature measurements.
 
         <when param="flag_edges">
             <equals type="bool" value="True">
-                <default param="edge_limit"><value>2.0</value></default>
+                <default param="edge_limit"><value>3.0</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -176,7 +176,7 @@ edge_limit -- The first channels inward from each end of the spectrum where the
               median across the spectrum are designated as the 'edges'. These
               channels and those outside them are flagged. If the 'edges' lie more
               than 1/4 of the way across the spectrum then no flagging is done.
-    default 2
+    default 3
 
 flag_sharps -- True to flag channels that cover sharp spectral features.
     default: False
@@ -239,14 +239,14 @@ Examples:
 
    hif_tsysflagchans()
        equivalent to:
-   hif_tsysflagchans(flag_edges=True, edge_limit=2)
+   hif_tsysflagchans(flag_edges=True, edge_limit=3)
 
 2. Flag the edges of the Tsys measurements in each SpW, and sharp spectral
    features in the band.
  
    hif_tsysflagchans(flag_sharps2=True)
        equivalent to:
-   hif_tsysflagchans(flag_edges=True, edge_limit=2, flag_sharps2=True, sharps2_limit=0.05)
+   hif_tsysflagchans(flag_edges=True, edge_limit=3, flag_sharps2=True, sharps2_limit=0.05)
 
 3. Flag antenna-based 'glitches':
 
