@@ -1,0 +1,43 @@
+<%!
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.qa2adapter as qa2
+%>
+<%inherit file="base.html"/>
+
+<%block name="title">Task Details</%block>
+
+<script src="${self.attr.rsc_path}resources/base.js"></script>
+
+<script>
+$(document).ready(function(){
+	// Load stage details into panel is 'stage=x' given in URL 
+	var stageNum = $.url().fparam('stage');
+	var stageDetailsUrl = $('a#link_stage' + stageNum).attr('href');
+	if (typeof stageDetailsUrl != 'undefined')
+		$('iframe[name="details"]').attr({ src : stageDetailsUrl });
+});
+</script>
+ 
+<h1>Task Details</h1>
+
+<div class="colmask leftmenu">
+	<div class="colleft">
+		<div class="col1">
+			<iframe src="stage${results[0].stage_number}/t2-4m_details.html" name="details"></iframe>
+		</div>
+		<div class="col2">
+			<ul>
+			% for result in results:
+				<li>Stage ${hr.get_stage_number(result)}: ${hr.get_task_name(result)}</li>
+				<ul>
+					<li><a id="link_stage${result.stage_number}" href="stage${result.stage_number}/t2-4m_details.html" target="details">Task details</a></li>
+					<% qa2_url = qa2.get_url(result) %>
+					% if qa2_url:
+						<li><a href="${qa2_url}#stage=${result.stage_number}">QA2 details</a></li>
+					% endif
+				</ul>
+			% endfor
+			</ul>
+		</div>
+	</div>
+</div>

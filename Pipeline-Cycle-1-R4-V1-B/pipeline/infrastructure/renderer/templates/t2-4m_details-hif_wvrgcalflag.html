@@ -1,0 +1,39 @@
+<%!
+rsc_path = "../"
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="t2-4m_details-base.html"/>
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
+
+<h1>Stage ${hr.get_stage_number(result)}: WVR Calibration and Flagging</h1>
+
+<h2>Flagging results</h2>
+
+<table class="minimalist" summary="Flagging Results">
+	<caption>Flagging Results</caption>
+    <thead>
+        <tr>
+            <th>Measurement Set</th>
+            <th>Flags</th>
+        </tr>
+    </thead>
+	<tbody>
+% for r in result:
+		<tr>
+			<td>${r.vis}</td>
+		  	<td>'${', '.join(r.wvrflag)}'</td>
+		</tr>
+% endfor		
+	</tbody>
+</table>
+ 
+% if plot_groups:
+<h2>Flag Plots</h2>
+<ul>
+% for plot_group in plot_groups: 
+	<li><a href=${plot_group.filename}>${plot_group.title}</a></li>
+% endfor
+</ul>
+% endif

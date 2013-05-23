@@ -1,0 +1,44 @@
+<%!
+rsc_path = "../../"
+%>
+<%inherit file="base.html"/>
+<%block name="header" />
+
+<%block name="title">${ms.basename} Observation Summary</%block>
+
+<script>
+$(document).ready(function(){
+	$("a.grouped_elements").fancybox();
+});
+</script>
+
+<h1>${ms.basename}</h1>
+
+<div class="gallery">
+	<ul>
+		<li>
+		<a class="grouped_elements" rel="plots" href="intent_vs_time.png">
+			<img src="intent_vs_time.png"
+				 title="Intent vs. Time for ${ms.basename}"
+				 alt="Intent vs. Time for ${ms.basename}" />
+			<p>Intent vs. Time</p>
+		</a>
+		</li>
+		<li>
+		<a class="grouped_elements" rel="plots" href="field_vs_time.png">
+			<img src="field_vs_time.png"
+				 title="Field vs. Time for ${ms.basename}"
+				 alt="Field vs. Time for ${ms.basename}" />
+			<p>Field vs. Time</p>
+		</a>
+		</li>
+	</ul>
+</div>
+
+<ul>
+	<li>WX (TPH vs. time)</li>
+	<li>PWV vs. time</li>
+	<li>El histogram</li>
+	<li>Az/El, Antennas</li>
+	<li>etc.</li>
+</ul>

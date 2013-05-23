@@ -1,0 +1,18 @@
+<%!
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="base.html"/>
+
+<%block name="title">Task Summary</%block>
+
+<h1>Task Summary</h1>
+<ul>
+% for result in results:
+<li>Stage ${result.stage_number} (<a href="t2-4m.html#stage=${result.stage_number}">Details</a>): ${hr.get_task_description(result)}</li>
+	<ul>
+	<li>Heuristics parameters, key decisions, results, QA2 score
+	</ul>
+% endfor
+</ul>
+
+<%block name="footer"><a href="t2-4m.html">Details</a></%block>
