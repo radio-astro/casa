@@ -19,7 +19,7 @@ A set of common helper functions for unit tests:
    create_input - Save the string in a text file with the given name           
 '''
 
-def compTables(referencetab, testtab, excludecols, tolerance=0.001):
+def compTables(referencetab, testtab, excludecols, tolerance=0.001, mode="percentage"):
 
     """
     compTables - compare two CASA tables
@@ -77,23 +77,23 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
                 if not (a==b).all():
                     differs = False
                     for i in range(0,len(a)):
-                        if (type(a[i])==float):
-                            if (abs(a[i]-b[i]) > tolerance*abs(a[i]+b[i])):
+                        if (isinstance(a[i],float)):
+                            if ((mode=="percentage") and (abs(a[i]-b[i]) > tolerance*abs(a[i]+b[i]))) or ((mode=="absolute") and (abs(a[i]-b[i]) > tolerance)):
                                 print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
                                 print i
                                 print a[i]
                                 print b[i]
                                 differs = True
                                 break
-                        elif (type(a[i])==int):
+                        elif (isinstance(a[i],int)):
                             if (abs(a[i]-b[i]) > 0):
                                 print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
                                 print i
                                 print a[i]
                                 print b[i]
                                 differs = True
-                                break
-                        elif (type(a[i])==str):
+                                #break
+                        elif (isinstance(a[i],str)):
                             if not (a[i]==b[i]):
                                 print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
                                 print i
@@ -101,25 +101,29 @@ def compTables(referencetab, testtab, excludecols, tolerance=0.001):
                                 print b[i]
                                 differs = True
                                 break
-                        elif (type(a[i])==list or type(a[i])==np.ndarray):
+                        elif (isinstance(a[i],list)) or (isinstance(a[i],np.ndarray)):
                             for j in range(0,len(a[i])):
-                                if (type(a[i][j])==float or type(a[i][j])==int):
-                                    if (abs(a[i][j]-b[i][j]) > tolerance*abs(a[i][j]+b[i][j])):
+                                if ((isinstance(a[i][j],float)) or (isinstance(a[i][j],int))):
+                                    if ((mode=="percentage") and (abs(a[i][j]-b[i][j]) > tolerance*abs(a[i][j]+b[i][j]))) or ((mode=="absolute") and (abs(a[i][j]-b[i][j]) > tolerance)):
                                         print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
                                         print i, j
                                         print a[i][j]
                                         print b[i][j]
                                         differs = True
                                         break
-                                elif (type(a[i][j])==list or type(a[i][j])==np.ndarray):
+                                elif (isinstance(a[i][j],list)) or (isinstance(a[i][j],np.ndarray)):
                                     for k in range(0,len(a[i][j])):
-                                        if (abs(a[i][j][k]-b[i][j][k]) > tolerance*abs(a[i][j][k]+b[i][j][k])):
+                                        if ((mode=="percentage") and (abs(a[i][j][k]-b[i][j][k]) > tolerance*abs(a[i][j][k]+b[i][j][k]))) or ((mode=="absolute") and (abs(a[i][j][k]-b[i][j][k]) > tolerance)):
                                             print 'Column ',c,' differs in tables ', referencetab, ' and ', testtab
                                             print i, j, k
                                             print a[i][j][k]
                                             print b[i][j][k]
                                             differs = True
                                             break
+                        else:
+                            print "unknown data type: ",type(a[i])
+                            differs = True
+                            break
                     if differs:
                         rval = False
                         break

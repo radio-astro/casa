@@ -1250,6 +1250,7 @@ void MSTransformDataHandler::regridSpwSubTable()
     ScalarColumn<Int> numChanCol = spwCols.numChan();
     ScalarColumn<Double> refFrequencyCol = spwCols.refFrequency();
     ScalarColumn<Double> totalBandwidthCol = spwCols.totalBandwidth();
+    ScalarColumn<Int> measFreqRefCol = spwCols.measFreqRef();
 
     Int spwId;
     for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
@@ -1341,6 +1342,7 @@ void MSTransformDataHandler::regridSpwSubTable()
         resolutionCol.put(spw_idx, outputSpw.RESOLUTION);
         refFrequencyCol.put(spw_idx,outputSpw.REF_FREQUENCY);
         totalBandwidthCol.put(spw_idx,outputSpw.TOTAL_BANDWIDTH);
+        measFreqRefCol.put(spw_idx,outputReferenceFrame_p);
 
         // Print characteristics of output SPW
         oss.str("");
@@ -1385,6 +1387,7 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     ScalarColumn<Int> numChanCol = spwCols.numChan();
     ScalarColumn<Double> refFrequencyCol = spwCols.refFrequency();
     ScalarColumn<Double> totalBandwidthCol = spwCols.totalBandwidth();
+    ScalarColumn<Int> measFreqRefCol = spwCols.measFreqRef();
 
     // Create list of input channels
     vector<channelInfo> inputChannels;
@@ -1567,6 +1570,7 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     resolutionCol.put(0, outputSpw.RESOLUTION);
     refFrequencyCol.put(0,outputSpw.REF_FREQUENCY);
     totalBandwidthCol.put(0,outputSpw.TOTAL_BANDWIDTH);
+    measFreqRefCol.put(0,outputReferenceFrame_p);
 
     // Flush changes
     outputMs_p->flush(True);
@@ -1768,7 +1772,8 @@ void MSTransformDataHandler::reindexFeedSubTable()
     	MSFeed msSubtable = outputMs_p->feed();
     	MSFeedColumns tableCols(msSubtable);
     	ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-    	reindexColumn(spwCol,0);
+    	Vector<Int> newSpw(spwCol.nrow(),0);
+    	spwCol.putColumn(newSpw);
 
         // Flush changes
         outputMs_p->flush(True);
@@ -1792,7 +1797,8 @@ void MSTransformDataHandler::reindexSysCalSubTable()
     	MSSysCal msSubtable = outputMs_p->sysCal();
     	MSSysCalColumns tableCols(msSubtable);
     	ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-    	reindexColumn(spwCol,0);
+    	Vector<Int> newSpw(spwCol.nrow(),0);
+    	spwCol.putColumn(newSpw);
 
         // Flush changes
         outputMs_p->flush(True);
@@ -1816,7 +1822,8 @@ void MSTransformDataHandler::reindexFreqOffsetSubTable()
     	MSFreqOffset msSubtable = outputMs_p->freqOffset();
     	MSFreqOffsetColumns tableCols(msSubtable);
     	ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-    	reindexColumn(spwCol,0);
+    	Vector<Int> newSpw(spwCol.nrow(),0);
+    	spwCol.putColumn(newSpw);
 
         // Flush changes
         outputMs_p->flush(True);
