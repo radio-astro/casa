@@ -378,9 +378,14 @@
 
     standard -- Flux density standard, used if fluxdensity[0] &lt; 0.0
             default: 'Perley-Butler 2010'; example: standard='Baars'
-            Options: 'Baars','Perley 90','Perley-Taylor 95',
-               'Perley-Taylor 99', 'Perley-Butler 2010', 'Perley-Butler 2013',
-               'Butler-JPL-Horizons 2010', and 'Butler-JPL-Horizons 2012'. 
+            Options: 'Baars',
+                     'Perley 90',
+                     'Perley-Taylor 95',
+                     'Perley-Taylor 99', 
+                     'Perley-Butler 2010', 
+                     'Perley-Butler 2013',
+                     'Butler-JPL-Horizons 2010', 
+                 and 'Butler-JPL-Horizons 2012'. 
             All but the last two are for extragalactic calibrators,
             and the final two are for Solar System objects.  
 
@@ -401,8 +406,9 @@
             3C295   1409+524   1411+522   J1411+5212       1,2,3,4,5,6
               -     1934-638      -       J1939-6342       1,3,4,5,6
             ----------------------------------------------------------- 
-            * supported in: 1 - Perley-Butler 2010, 2 - Perley-Butler 2013,
-            3 - Perley-Taylor 99, 4 - Perley-Taylor 95, 5 - Perley 90, 6 - Baars 
+            * supported in: 1 - Perley-Butler 2010, 2 - Perley-Butler 2013 (ref. Perley and 
+            Butler 2013, ApJS 204, 19), 3 - Perley-Taylor 99, 4 - Perley-Taylor 95, 
+            5 - Perley 90, 6 - Baars 
 
             Solar system objects:
             The 'Butler-JPL-Horizons 2012' standard is recommended over 
