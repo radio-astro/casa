@@ -18,15 +18,15 @@ class SingleDishDisplayInputs(object):
 class SDImageDisplayInputs(SingleDishDisplayInputs):
     @property
     def imagename(self):
-        return self.result.outcome.imagename
+        return self.result.outcome['image'].imagename
 
     @property
     def spw(self):
-        return self.result.outcome.spwlist
+        return self.result.outcome['image'].spwlist
 
     @property
     def antenna(self):
-        return self.result.outcome.antenna
+        return self.result.outcome['image'].antenna
 
     @property
     def stage_number(self):
@@ -39,7 +39,15 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
 
     @property
     def source(self):
-        return self.result.outcome.sourcename
+        return self.result.outcome['image'].sourcename
+
+    @property
+    def num_valid_spectrum(self):
+        return self.result.outcome['validsp']
+
+    @property
+    def rms(self):
+        return self.result.outcome['rms']
 
 
 class SDInspectionDisplay(object):
