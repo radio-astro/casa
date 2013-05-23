@@ -119,7 +119,7 @@ class SDSpectralImageDisplay(object):
         self.init()
         
         plot_list = []
-        plot_list.extend(self.__plot_sparse_map())
+        #plot_list.extend(self.__plot_sparse_map())
         plot_list.extend(self.__plot_channel_map())
 
         return plot_list
@@ -239,56 +239,65 @@ class SDSpectralImageDisplay(object):
         #if self.velocity[0] < self.velocity[1]: Reverse = True
         #else: Reverse = False
         Reverse = (self.velocity[0] < self.velocity[1])
-
-        # loop over polarizations
-        for pol in xrange(self.npol):
-            data = self.data[:,:,:,pol]
-            masked_data = data * self.mask[:,:,:,pol]
-            flattened_data = masked_data.reshape((nrow,self.nchan))
+ 
+        # loop over detected lines
+        ValidCluster = 0
+        #for Nc in range(Ncluster):
+        for line_window in self.__gen_line_list(line_list):
+            #if line_list[Nc][2] != True: continue
             
-            # Integrated Spectrum
-            Sp = numpy.sum(numpy.transpose((ValidSp * numpy.transpose(flattened_data))),axis=0)/numpy.sum(ValidSp,axis=0)
-        ##     (F0, F1) = (min(Abcissa[1][0], Abcissa[1][nchan - 1]), max(Abcissa[1][0], Abcissa[1][nchan - 1]))
-            (F0, F1) = (min(self.frequency[0], self.frequency[-1]), max(self.frequency[0], self.frequency[-1]))
+            ChanC = int(line_window[0] + 0.5)
+            #VelC = Abcissa[2][ChanC]
+            if float(ChanC) == line_window[0]:
+    ##             VelC = Abcissa[2][ChanC]
+                VelC = self.velocity[ChanC]
+            else:
+    ##             VelC = 0.5 * ( Abcissa[2][ChanC] + Abcissa[2][ChanC-1] )
+                 VelC = 0.5 * ( self.velocity[ChanC] + self.velocity[ChanC-1] )
+            if ChanC > 0:
+    ##             ChanVelWidth = abs(Abcissa[2][ChanC] - Abcissa[2][ChanC - 1])
+                ChanVelWidth = abs(self.velocity[ChanC] - self.velocity[ChanC - 1])
+            else:
+    ##             ChanVelWidth = abs(Abcissa[2][ChanC] - Abcissa[2][ChanC + 1])
+                ChanVelWidth = abs(self.velocity[ChanC] - self.velocity[ChanC + 1])
 
-            # loop over detected lines
-            ValidCluster = 0
-            #for Nc in range(Ncluster):
-            for line_window in self.__gen_line_list(line_list):
-                #if line_list[Nc][2] != True: continue
+            # 2007/9/13 Change the magnification factor 1.2 to your preference (to Dirk)
+            # be sure the width of one channel map is integer
+            ChanW = max(int(line_window[1] * 1.4 / self.NumChannelMap + 0.5), 1)
+            #ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW)
+            ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW + 0.5)
+            # 2007/9/10 remedy for 'out of index' error
+            #print '\nDEBUG0: Nc, ChanB, ChanW, NchanMap', Nc, ChanB, ChanW, self.NumChannelMap
+            if ChanB < 0:
+                ChanW = int(ChanC * 2.0 / self.NumChannelMap)
+                if ChanW == 0: continue
+                ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW)
+            elif ChanB + ChanW * self.NumChannelMap > self.nchan:
+                ChanW = int((self.nchan - 1 - ChanC) * 2.0 / self.NumChannelMap)
+                if ChanW == 0: continue
+                ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW)
+            #print 'DEBUG1: Nc, ChanB, ChanW, NchanMap', Nc, ChanB, ChanW, self.NumChannelMap, '\n'
+
+            chan0 = max(ChanB-1, 0)
+            chan1 = min(ChanB + self.NumChannelMap*ChanW, self.nchan-1)
+            V0 = min(self.velocity[chan0], self.velocity[chan1]) - VelC
+            V1 = max(self.velocity[chan0], self.velocity[chan1]) - VelC
+            #print 'chan0, chan1, V0, V1, VelC =', chan0, chan1, V0, V1, VelC
+
+            # loop over polarizations
+            for pol in xrange(self.npol):
+                data = self.data[:,:,:,pol]
+                masked_data = data * self.mask[:,:,:,pol]
+                flattened_data = masked_data.reshape((nrow,self.nchan))
+                
+                # Integrated Spectrum
+                Sp = numpy.sum(numpy.transpose((ValidSp * numpy.transpose(flattened_data))),axis=0)/numpy.sum(ValidSp,axis=0)
+                ##     (F0, F1) = (min(Abcissa[1][0], Abcissa[1][nchan - 1]), max(Abcissa[1][0], Abcissa[1][nchan - 1]))
+                (F0, F1) = (min(self.frequency[0], self.frequency[-1]), max(self.frequency[0], self.frequency[-1]))
+
+            ###
                 Title = []
                 N = 0
-                ChanC = int(line_window[0] + 0.5)
-                #VelC = Abcissa[2][ChanC]
-                if float(ChanC) == line_window[0]:
-        ##             VelC = Abcissa[2][ChanC]
-                    VelC = self.velocity[ChanC]
-                else:
-        ##             VelC = 0.5 * ( Abcissa[2][ChanC] + Abcissa[2][ChanC-1] )
-                     VelC = 0.5 * ( self.velocity[ChanC] + self.velocity[ChanC-1] )
-                if ChanC > 0:
-        ##             ChanVelWidth = abs(Abcissa[2][ChanC] - Abcissa[2][ChanC - 1])
-                    ChanVelWidth = abs(self.velocity[ChanC] - self.velocity[ChanC - 1])
-                else:
-        ##             ChanVelWidth = abs(Abcissa[2][ChanC] - Abcissa[2][ChanC + 1])
-                    ChanVelWidth = abs(self.velocity[ChanC] - self.velocity[ChanC + 1])
-
-                # 2007/9/13 Change the magnification factor 1.2 to your preference (to Dirk)
-                # be sure the width of one channel map is integer
-                ChanW = max(int(line_window[1] * 1.4 / self.NumChannelMap + 0.5), 1)
-                #ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW)
-                ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW + 0.5)
-                # 2007/9/10 remedy for 'out of index' error
-                #print '\nDEBUG0: Nc, ChanB, ChanW, NchanMap', Nc, ChanB, ChanW, self.NumChannelMap
-                if ChanB < 0:
-                    ChanW = int(ChanC * 2.0 / self.NumChannelMap)
-                    if ChanW == 0: continue
-                    ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW)
-                elif ChanB + ChanW * self.NumChannelMap > self.nchan:
-                    ChanW = int((self.nchan - 1 - ChanC) * 2.0 / self.NumChannelMap)
-                    if ChanW == 0: continue
-                    ChanB = int(ChanC - self.NumChannelMap / 2.0 * ChanW)
-                #print 'DEBUG1: Nc, ChanB, ChanW, NchanMap', Nc, ChanB, ChanW, self.NumChannelMap, '\n'
 
                 # Draw Total Intensity Map
                 Total = masked_data.sum(axis=2) * ChanVelWidth
@@ -381,11 +390,6 @@ class SDSpectralImageDisplay(object):
                 #print 'DEBUG: chan0, chan1', chan0, chan1
                 #print 'DEBUG: V0, V1', V0, V1
                 # 2011/11/21
-                chan0 = max(ChanB-1, 0)
-                chan1 = min(ChanB + self.NumChannelMap*ChanW, self.nchan-1)
-                V0 = min(self.velocity[chan0], self.velocity[chan1]) - VelC
-                V1 = max(self.velocity[chan0], self.velocity[chan1]) - VelC
-                #print 'chan0, chan1, V0, V1, VelC =', chan0, chan1, V0, V1, VelC
                 #print Abcissa[2][chan0:chan1]
                 #print Sp[chan0:chan1]
                 #print Table
@@ -698,7 +702,7 @@ class SDSpectralImageDisplay(object):
             if ShowPlot: PL.draw()
 
             FigFileDir = self.stage_dir
-            FigFileRoot = self.inputs.imagename+'pol%s_Sparse'%(pol)
+            FigFileRoot = self.inputs.imagename+'.pol%s_Sparse'%(pol)
             plotfile = os.path.join(FigFileDir, FigFileRoot+'_0.png')
             if FigFileDir != False:
                 PL.savefig(plotfile, format='png', dpi=DPIDetail)
