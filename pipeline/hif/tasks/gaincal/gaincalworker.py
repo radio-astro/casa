@@ -25,7 +25,7 @@ class GaincalWorkerInputs(common.CommonGaincalInputs):
                  # preapply calibrations
                  gaincurve=None, opacity=None, preavg=None,
                  # calibration target
-                 to_intent=None, to_field=None):
+                 to_intent=None, to_field=None, scan=None, uvrange=None):
         self._init_properties(vars())
 
 
