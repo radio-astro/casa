@@ -45,7 +45,7 @@ class SDImagingResults(common.SingleDishResults):
 
     def _outcome_name(self):
         #return [image.imagename for image in self.outcome]
-        return self.outcome.imagename
+        return self.outcome['image'].imagename
 
 class SDImaging(common.SingleDishTaskTemplate):
     Inputs = SDImagingInputs
@@ -110,6 +110,8 @@ class SDImaging(common.SingleDishTaskTemplate):
                 LOG.debug('filenames=%s'%(filenames))
                 
                 worker = SDImagingWorker()
+                validsps = []
+                rmss = []
                 parameters = {'datatable': datatable,
                               'reference_data': st,
                               'source_name': source_name,
@@ -117,7 +119,9 @@ class SDImaging(common.SingleDishTaskTemplate):
                               'antenna_indices': indices,
                               'antenna_files': filenames,
                               'spwid': spwid,
-                              'polids': pols}
+                              'polids': pols,
+                              'num_validsp_array': validsps,
+                              'rms_array': rmss}
 
                 # create job for imaging
                 job = jobrequest.JobRequest(worker.execute, **parameters)
@@ -144,10 +148,13 @@ class SDImaging(common.SingleDishTaskTemplate):
                                                         spwlist=spwid,
                                                         sourcetype='TARGET')
                     image_item.antenna = name
-
+                    outcome = {}
+                    outcome['image'] = image_item
+                    outcome['validsp'] = numpy.array(validsps)
+                    outcome['rms'] = numpy.array(rmss)
                     result = SDImagingResults(task = self.__class__,
                                               success = True, 
-                                              outcome = image_item)
+                                              outcome = outcome)
                     result.task = self.__class__
 
                     if self.inputs.context.subtask_counter is 0: 
@@ -167,7 +174,7 @@ class SDImagingWorker(object):
     def __init__(self):
         pass
 
-    def execute(self, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids):
+    def execute(self, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids, num_validsp_array, rms_array):
         # spectral window
         spw = reference_data.spectral_window[spwid]
         refpix = spw.refpix
@@ -188,12 +195,15 @@ class SDImagingWorker(object):
         srctype = common.SrcTypeMap(calmode)
         
         data_array = []
+        #num_validsp_array = []
+        #rms_array = []
         for pol in polids:                        
             worker = gridding_class(datatable, antenna_indices, antenna_files, spwid, pol, srctype, nchan, grid_size)
 
             (spectra,grid_table) = worker.execute()
-
             data_array.append(spectra)
+            num_validsp_array.append([r[6] for r in grid_table])
+            rms_array.append([r[8] for r in grid_table])
 
         # imaging
         LOG.todo('How to set edge parameter? Is it local? or global?')

@@ -113,6 +113,20 @@ class SDSpectralImageDisplay(object):
         self.spw = self.inputs.spw
         self.antenna = self.inputs.antenna
 
+    @property
+    def num_valid_spectrum(self):
+        flat_data = self.inputs.num_valid_spectrum
+        return self.__reshape2d(flat_data)
+
+    @property
+    def rms(self):
+        flat_data = self.inputs.rms
+        return self.__reshape2d(flat_data)
+
+    def __reshape2d(self, array2d):
+        array3d = array2d.reshape((self.npol,self.ny,self.nx)).transpose()
+        return numpy.flipud(array3d)
+
     def plot(self):
         qa = casatools.quanta
 
@@ -210,7 +224,8 @@ class SDSpectralImageDisplay(object):
         #Total = numpy.zeros(((self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
         # ValidSp: SQRT of Number of combined spectra for the weight
         LOG.todo('ValidSp must be transferred from hsd_imaging')
-        ValidSp = numpy.ones(nrow, dtype=numpy.float32)
+        #ValidSp = numpy.ones(nrow, dtype=numpy.float32)
+        ValidSp = self.num_valid_spectrum.reshape((nrow,self.npol))
         #ValidSp = numpy.zeros(nrow, dtype=numpy.float32)
         #for row in range(nrow): ValidSp[row] = math.sqrt(Table[row][6])
 
@@ -223,42 +238,28 @@ class SDSpectralImageDisplay(object):
 
         # How to coordinate the map
         ShowPlot = True
-        #if self.NumChannelMap == 12: (NhPanel, NvPanel) = (4, 3)
-        #elif self.NumChannelMap == 15: (NhPanel, NvPanel) = (5, 3)
-        #else: (NhPanel, NvPanel) = (5, 3)
         TickSize = 6
         if ShowPlot: PL.ion()
         PL.figure(self.MATPLOTLIB_FIGURE_ID)
         if ShowPlot: PL.ioff()
         # 2008/9/20 Dec Effect has been taken into account
-        #Aspect = 1.0 / math.cos(Table[0][5] / 180. * 3.141592653)
         Aspect = 1.0 / math.cos(0.5 * (self.dec_min + self.dec_max) / 180.0 * 3.141592653)
 
         # Check the direction of the Velocity axis
-        ##     if Abcissa[2][0] < Abcissa[2][1]: Reverse = True
-        #if self.velocity[0] < self.velocity[1]: Reverse = True
-        #else: Reverse = False
         Reverse = (self.velocity[0] < self.velocity[1])
  
         # loop over detected lines
         ValidCluster = 0
         #for Nc in range(Ncluster):
-        for line_window in self.__gen_line_list(line_list):
-            #if line_list[Nc][2] != True: continue
-            
+        for line_window in self.__gen_line_list(line_list):            
             ChanC = int(line_window[0] + 0.5)
-            #VelC = Abcissa[2][ChanC]
             if float(ChanC) == line_window[0]:
-    ##             VelC = Abcissa[2][ChanC]
                 VelC = self.velocity[ChanC]
             else:
-    ##             VelC = 0.5 * ( Abcissa[2][ChanC] + Abcissa[2][ChanC-1] )
                  VelC = 0.5 * ( self.velocity[ChanC] + self.velocity[ChanC-1] )
             if ChanC > 0:
-    ##             ChanVelWidth = abs(Abcissa[2][ChanC] - Abcissa[2][ChanC - 1])
                 ChanVelWidth = abs(self.velocity[ChanC] - self.velocity[ChanC - 1])
             else:
-    ##             ChanVelWidth = abs(Abcissa[2][ChanC] - Abcissa[2][ChanC + 1])
                 ChanVelWidth = abs(self.velocity[ChanC] - self.velocity[ChanC + 1])
 
             # 2007/9/13 Change the magnification factor 1.2 to your preference (to Dirk)
@@ -291,11 +292,9 @@ class SDSpectralImageDisplay(object):
                 flattened_data = masked_data.reshape((nrow,self.nchan))
                 
                 # Integrated Spectrum
-                Sp = numpy.sum(numpy.transpose((ValidSp * numpy.transpose(flattened_data))),axis=0)/numpy.sum(ValidSp,axis=0)
-                ##     (F0, F1) = (min(Abcissa[1][0], Abcissa[1][nchan - 1]), max(Abcissa[1][0], Abcissa[1][nchan - 1]))
+                Sp = numpy.sum(numpy.transpose((ValidSp[:,pol] * numpy.transpose(flattened_data))),axis=0)/numpy.sum(ValidSp[:,pol],axis=0)
                 (F0, F1) = (min(self.frequency[0], self.frequency[-1]), max(self.frequency[0], self.frequency[-1]))
 
-            ###
                 Title = []
                 N = 0
 
@@ -381,19 +380,6 @@ class SDSpectralImageDisplay(object):
                 # Plot Integrated Spectrum #2
                 x0 = 0.1 / 3.0
                 a = PL.axes([x0, y0, x1, y1])
-                #chan0 = max(int(line_list[Nc][0]-line_list[Nc][1]*1.3), 0)
-                #chan1 = min(int(line_list[Nc][0]+line_list[Nc][1]*1.3), nchan)
-        ##         V0 = min(Abcissa[2][chan0], Abcissa[2][chan1 - 1]) - VelC
-        ##         V1 = max(Abcissa[2][chan0], Abcissa[2][chan1 - 1]) - VelC
-                #V0 = min(self.velocity[chan0], self.velocity[chan1 - 1]) - VelC
-                #V1 = max(self.velocity[chan0], self.velocity[chan1 - 1]) - VelC
-                #print 'DEBUG: chan0, chan1', chan0, chan1
-                #print 'DEBUG: V0, V1', V0, V1
-                # 2011/11/21
-                #print Abcissa[2][chan0:chan1]
-                #print Sp[chan0:chan1]
-                #print Table
-        ##         PL.plot(Abcissa[2][chan0:chan1] - VelC, Sp[chan0:chan1], '-b', markersize=2, markeredgecolor='b', markerfacecolor='b')
                 PL.plot(self.velocity[chan0:chan1] - VelC, Sp[chan0:chan1], '-b', markersize=2, markeredgecolor='b', markerfacecolor='b')
                 for i in range(self.NumChannelMap + 1):
                     ChanL = int(ChanB + i*ChanW)
@@ -491,16 +477,21 @@ class SDSpectralImageDisplay(object):
                                    field=self.inputs.source,
                                    parameters=parameters)
                 plot_list.append(plot)
-                
-                ValidCluster += 1
+
+            ValidCluster += 1
 
 
-            # Draw RMS Map
+        # Draw RMS Map
+        for pol in xrange(self.npol):
+        
             #for row in range(nrow):
                 #if Table[row][6] > 0:
                 #    RMSMap[self.y_max-(Table[row][3]-self.y_min)][self.x_max-(Table[row][2]-self.x_min)] = Table[row][8]
                 #else:
                 #    RMSMap[self.y_max-1-(Table[row][3]-self.y_min)][self.x_max-1-(Table[row][2]-self.x_min)] = 0.0
+            RMSMap = self.rms[:,:,pol] * (self.num_valid_spectrum[:,:,pol] > 0)
+            RMSMap = numpy.flipud(RMSMap.transpose())
+            LOG.debug('RMSMap=%s'%(RMSMap))
             LOG.todo('RMS must be transferred from imaging results')
             PL.cla()
             PL.clf()
@@ -547,18 +538,25 @@ class SDSpectralImageDisplay(object):
             PL.title('Baseline RMS Map', size=12)
 
             if ShowPlot != False: PL.draw()
+            FigFileRoot = self.inputs.imagename + '.pol%s'%(pol)
             plotfile = os.path.join(FigFileDir, FigFileRoot+'_rmsmap.png')
             if FigFileDir != False:
                 PL.savefig(plotfile, format='png', dpi=DPISummary)
 
-            parameters2 = parameters.copy()
-            parameters2['type'] = 'rms_map'
+            parameters = {}
+            parameters['intent'] = 'TARGET'
+            parameters['spw'] = self.spw
+            parameters['pol'] = pol
+            parameters['ant'] = self.antenna
+            parameters['type'] = 'channel_map'
+            parameters['file'] = self.inputs.imagename
+            parameters['type'] = 'rms_map'
 
             plot2 = logger.Plot(plotfile,
                                 x_axis='R.A.',
                                 y_axis='Dec.',
                                 field=self.inputs.source,
-                                parameters=parameters2)
+                                parameters=parameters)
             plot_list.append(plot2)
 
         return plot_list
