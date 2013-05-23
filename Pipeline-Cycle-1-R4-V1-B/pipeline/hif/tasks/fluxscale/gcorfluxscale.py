@@ -271,10 +271,11 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
             # check that fieldids contains the amplitude and phase calibrators
             if fieldids.isdisjoint(amp_fieldid):
-                LOG.error(
-                  '%s contains no results for amplitude calibrator' % 
+                LOG.warning(
+                  '%s contains ambiguous amplitude calibrator field names' % 
                   os.path.basename(caltable))
-                return False
+                #return False
+                return True
             if not fieldids.issuperset(phase_fieldids):
                 LOG.error(
                   '%s does not contain results for all phase calibrators' %
