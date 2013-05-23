@@ -110,7 +110,7 @@ class pimager():
         casalog.filter("INFO")
         return True  
     @staticmethod
-    def weightedaverimages(outimage='outimage', inimages=[], wgtimages=[]):
+    def weightedaverimages(outimage='outimage', inimages=[], wgtimages=[], pblimit=0.1):
         casalog.filter("ERROR")
         if((type(inimages)==list) and (len (inimages)==0)):
             return False
@@ -131,8 +131,13 @@ class pimager():
             for k in range(1, len(inimages)) :
                 ia.calc('"'+outimage+'" +  "'+inimages[k]+'"*"'+wgtimages[k]+'"')
                 ib.calc('"'+'__sumweight_image' + '" +  "'+wgtimages[k]+'"')
+            maxW=ib.statistics()['max'][0]
             ib.done()
-            ia.calc('"'+outimage+'"'+'/"__sumweight_image"')
+            condition = '"__sumweight_image"' + " > " + str(maxW*pblimit);
+            val1 = '"' + outimage + '"/"__sumweight_image"';
+            val2 = str(0.0);
+            cmd  = "iif("+condition+","+val1+","+val2+")";
+            ia.calc(cmd)
             ia.done()
             shutil.rmtree( '__sumweight_image')
         elif(type(inimages)==str):
@@ -1160,7 +1165,7 @@ class pimager():
                 fluxims[k]=imlist[k]+'.flux'
                 weightims[k]=imlist[k]+'.wgt'
                 coverims[k]=imlist[k]+'.flux.pbcoverage'
-            self.weightedaverimages(residual, residuals, weightims)
+            self.weightedaverimages(residual, residuals, weightims, pblimit)
             if((maskimage == '') or (maskimage==[])):
                 maskimage=imagename+'.mask'
                 ia.removefile(maskimage)
@@ -1200,7 +1205,7 @@ class pimager():
                 if(not contclean or (not os.path.exists(model))):
                     self.copyimage(inimage=residual, outimage=model, 
                               init=True, initval=0.0)     
-                self.weightedaverimages(psf, psfs, weightims)
+                self.weightedaverimages(psf, psfs, weightims, pblimit)
                 if(self.ftmachine=='mosaic'):
                     self.averimages(fluxim, fluxims)
                     self.averimages(coverim, coverims)
@@ -1293,6 +1298,8 @@ class pimager():
             shutil.rmtree(imlist[k]+'.residual', True)
             shutil.rmtree(imlist[k]+'.image', True)
             shutil.rmtree(imlist[k]+'.wgt', True)
+            shutil.rmtree(fluxims[k], True)
+            shutil.rmtree(coverims[k], True)
         if(savemodel):
             myim=casac.imager()
             myim.selectvis(vis=msname, spw=spw, field=field)
