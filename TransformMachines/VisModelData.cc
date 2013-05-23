@@ -143,7 +143,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     String elkey;
     Int srow;
     //if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
-      if(isModelDefined(k, thems, elkey, srow))
+      if(isModelDefined(fields[k], thems, elkey, srow))
       {
 	logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ") deleted." << LogIO::POST;
 	//Remove from Source table
@@ -164,8 +164,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 
 }
   void VisModelData::clearModel(const MeasurementSet& thems, const String field, const String specwindows){
- 
-  MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
+    MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
   Vector<String> theParts(newTab.getPartNames(True));
   if(theParts.nelements() > 1){
     for (uInt k =0; k < theParts.nelements(); ++k){
@@ -218,7 +217,7 @@ void VisModelData::clearModel(const MeasurementSet& thems){
     for (Int k=0; k< nfields; ++k){
       String elkey;
       Int srow;
-      if(isModelDefined(k, newTab, elkey, srow))
+      if(isModelDefined(fields[k], newTab, elkey, srow))
 	
 	{
 	
