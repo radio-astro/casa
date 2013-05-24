@@ -160,13 +160,17 @@ namespace casa {
 				//Output file
 				String outFile;
 				bool outputFileTemporary = getOutputFileName( outFile, i, channelStr );
-
+				/*const String& doppler = "RADIO",  const String& outfile = "",
+				        const String& smoothout="", const String& plotter="/NULL",
+				        const Int nx=1, const Int ny=1,  const Bool yind=False,
+				        const Bool overwrite=False, const Bool drop=True,*/
 
 				ImageInterface<Float>* newImage = analysis->moments( whichMoments, axis, region,
 				                                  mask, method,
 				                                  smoothaxes, smoothtypes, smoothwidths,
 				                                  includepix,excludepix,
-				                                  peaksnr, stddev, "RADIO", outFile, "", "");
+				                                  peaksnr, stddev, "RADIO", outFile, "", "",
+				                                  1,1,False,False,False);
 				if ( newImage != NULL ) {
 					CollapseResult result( outFile, outputFileTemporary, newImage );
 					collapseResults.push_back( result );
@@ -386,7 +390,6 @@ namespace casa {
 		const ImageInterface<float>* image = taskMonitor->getImage();
 		CoordinateSystem cSys = image -> coordinates();
 		int spectralAxisNumber = cSys.spectralAxisNumber();
-
 		Vector<String> method;
 
 		//Note default SNRPEAK is 3.  Must be nonnegative.
@@ -415,17 +418,18 @@ namespace casa {
 		//Get the region
 		IPosition pos = image->shape();
 		String regionName;
-		String stokesStr;
+
+		String stokesStr = "";
 		CasacRegionManager crm( cSys );
 		String diagnostics;
 		String pixelBox="";
 		Record region = crm.fromBCS( diagnostics, nSelectedChannels, stokesStr,
-		                             NULL, regionName, channelStr, CasacRegionManager::USE_ALL_STOKES,
+		                             NULL, regionName, channelStr, CasacRegionManager::USE_FIRST_STOKES,
 		                             pixelBox, pos, infile);
-
 		//Set up the imageAnalysis
 		if ( imageAnalysis == NULL ) {
 			imageAnalysis = new ImageAnalysis( image );
+
 		}
 
 		//Set up the thread that will do the work.
@@ -600,9 +604,6 @@ namespace casa {
 			ui.minThresholdLineEdit->clear();
 			ui.maxThresholdLineEdit->clear();
 		}
-
-		//ui.graphThresholdButton->setEnabled( false );
-		//ui.graphThresholdButton->setVisible( false );
 	}
 
 

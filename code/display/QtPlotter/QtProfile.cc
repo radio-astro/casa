@@ -614,6 +614,13 @@ namespace casa {
 
 		//YUnits
 		yUnit = QString(img->units().getName().chars());
+		//Images created with immoments seem to have units of the form
+		//Jy/beam.km/s (CAS-5216).  We have to strip the ".km/s" in order
+		//to have units recognized by the profiler.
+		int periodIndex = yUnit.indexOf( ".");
+		if ( periodIndex > 0 ){
+			yUnit = yUnit.left( periodIndex);
+		}
 		yUnitPrefix = "";
 		adjustPlotUnits();
 		setPixelCanvasYUnits( yUnitPrefix, yUnit );
