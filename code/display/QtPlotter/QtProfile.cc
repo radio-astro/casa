@@ -2454,9 +2454,13 @@ namespace casa {
 	void QtProfile::restrictTopAxisOptions( bool restrictOptions, bool allowFrequency, bool allowVelocity ){
 		topAxisCType->clear();
 		for ( int i = 0; i < xUnitsList.size(); i++ ){
+			int frequencyIndex = xUnitsList[i].indexOf( FREQUENCY);
+			int radioVelocityIndex = xUnitsList[i].indexOf( RADIO_VELOCITY);
+			int wavelengthIndex = xUnitsList[i].indexOf( "wavelength");
 			if ( !restrictOptions ||
-				(allowFrequency && xUnitsList[i].indexOf( FREQUENCY) >=0) ||
-				(allowVelocity && xUnitsList[i].indexOf( RADIO_VELOCITY) >= 0 ) ||
+				(allowFrequency &&  frequencyIndex>=0) ||
+				(allowVelocity && radioVelocityIndex >= 0 ) ||
+				(allowFrequency && wavelengthIndex==0) ||
 				xUnitsList[i].indexOf( CHANNEL) >= 0){
 				topAxisCType->addItem( xUnitsList[i]);
 			}
