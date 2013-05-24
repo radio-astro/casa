@@ -5485,7 +5485,7 @@ ia.history(list=T, browse=F)       # List history to logger
      
      <param type="bool" name="verbose">
         <description>Emit informational messages to logger?</description>
-        <value>true</value>
+        <value>false</value>
      </param>
 </input>
 <returns type="bool"/>
