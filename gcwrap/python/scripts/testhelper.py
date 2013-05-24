@@ -170,14 +170,16 @@ def compVarColTables(referencetab, testtab, varcol, tolerance=0.):
                         if (tolerance>0.):
                             differs=False
                             for j in range(0,len(rdata)):
-                                if (type(rdata[j])==float or type(rdata[j])==int):
+###                                if (type(rdata[j])==float or type(rdata[j])==int):
+                                if ((isinstance(rdata[j],float)) or (isinstance(rdata[j],int))):
                                     if (abs(rdata[j]-tdata[j]) > tolerance*abs(rdata[j]+tdata[j])):
 #                                        print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab
 #                                        print therow, j
 #                                        print rdata[j]
 #                                        print tdata[j]
                                         differs = True
-                                elif (type(rdata[j])==list or type(rdata[j])==np.ndarray):
+###                                elif (type(rdata[j])==list or type(rdata[j])==np.ndarray):
+                                elif (isinstance(a[i][j],list)) or (isinstance(a[i][j],np.ndarray)):
                                     for k in range(0,len(rdata[j])):
                                         if (abs(rdata[j][k]-tdata[j][k]) > tolerance*abs(rdata[j][k]+tdata[j][k])):
 #                                            print 'Column ', col,' differs in tables ', referencetab, ' and ', testtab

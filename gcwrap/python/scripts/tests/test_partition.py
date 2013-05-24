@@ -5,7 +5,7 @@ import unittest
 import testhelper as th
 import partitionhelper as ph
 from tasks import *
-from taskinit import *
+from taskinit import msmdtool, mstool, aftool
 from __main__ import default
 from parallel.parallel_task_helper import ParallelTaskHelper
 
@@ -32,10 +32,14 @@ class test_base(unittest.TestCase):
         self.mmsfile = self.prefix + '.mms'
         
         fpath = os.path.join(datapath,self.msfile)
-        if os.path.lexists(fpath):        
+#         if os.path.lexists(fpath):        
+#             shutil.copytree(fpath, self.msfile, symlinks=True)
+#         else:
+#             self.fail('Data does not exist -> '+fpath)
+        if not os.path.exists(self.msfile):        
             shutil.copytree(fpath, self.msfile, symlinks=True)
         else:
-            self.fail('Data does not exist -> '+fpath)
+            print 'MS is already around, no need to copy it.'
 
         default('partition')
 
@@ -52,10 +56,14 @@ class test_base(unittest.TestCase):
         self.mmsfile = self.prefix + '.mms'
         
         fpath = os.path.join(datapath,self.msfile)
-        if os.path.lexists(fpath):        
+#         if os.path.lexists(fpath):        
+#             shutil.copytree(fpath, self.msfile, symlinks=True)
+#         else:
+#             self.fail('Data does not exist -> '+fpath)
+        if not os.path.exists(self.msfile):        
             shutil.copytree(fpath, self.msfile, symlinks=True)
         else:
-            self.fail('Data does not exist -> '+fpath)
+            print 'MS is already around, no need to copy it.'
 
         default('partition')
 
@@ -66,10 +74,11 @@ class partition_test1(test_base):
         self.setUp_ngc4826()
 
     def tearDown(self):
-        shutil.rmtree(self.msfile, ignore_errors=True)        
+#        shutil.rmtree(self.msfile, ignore_errors=True)        
         shutil.rmtree(self.mmsfile, ignore_errors=True)        
-        shutil.rmtree(self.msfile+'.flagversions', ignore_errors=True)        
+#        shutil.rmtree(self.msfile+'.flagversions', ignore_errors=True)        
         shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True)        
+        os.system("rm -rf *ms_sorted*")    
 
     def test_nomms(self):
         '''Partition: Create a normal MS with createmms=False'''
@@ -77,46 +86,23 @@ class partition_test1(test_base):
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
         
+        # Sort the output MSs so that they can be compared
+        myms = mstool()
+        
+        myms.open(self.msfile)
+        myms.sort('ms_sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+        
+        myms.open(self.mmsfile)
+        myms.sort('mms_sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+
         # Compare both tables. Ignore the DATA column and compare it in next line
-        self.assertTrue(th.compTables(self.msfile, self.mmsfile, 
+        self.assertTrue(th.compTables('ms_sorted.ms','mms_sorted.ms', 
                                       ['FLAG_CATEGORY','FLAG','WEIGHT_SPECTRUM','DATA']))
         
-        # TODO: verify why the DATA column differs
         # Compare the DATA column
-#        self.assertTrue(th.compVarColTables(self.msfile,self.mmsfile,'DATA'))
-
-    def test_default(self):
-        '''Partition: create an MMS with default values'''
-        partition(vis=self.msfile, outputvis=self.mmsfile)
-        
-        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
-        
-        # Take the dictionary and compare with original MS
-        thisdict = listpartition(vis=self.mmsfile, createdict=True)
-        
-        # Compare nrows of all scans
-        slist = ph.getMMSScans(thisdict)
-        
-        # CAS-5053 contains a bug when calling ms.getscansummary()
-        # that wrongly calculates the nrows of a scan in a MS
-#         for s in slist:
-#             mmsN = ph.getMMSScanNrows(thisdict, s)
-#             msN = ph.getScanNrows(self.msfile, s)
-#             self.assertEqual(mmsN, msN, 'Nrows in scan=%s differs: mms_nrows=%s <--> ms_nrows=%s'
-#                              %(s, mmsN, msN))
- 
-        # Compare spw IDs
-        for s in slist:
-            mms_spw = ph.getSpwIds(self.mmsfile, s)
-            ms_spw = ph.getSpwIds(self.msfile, s)
-#             self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
-#                              'mms_spw=%s <--> ms_spw=%s' %(s, mmsN, msN))
-            self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '%(s))
-        
-#         TO DO: Compare both table using compTables when sorting in partition is fixed
-        self.assertTrue(th.compTables(self.msfile, self.mmsfile, 
-                                      ['FLAG','FLAG_CATEGORY','TIME_CENTROID',
-                                       'WEIGHT_SPECTRUM','DATA']))
+        self.assertTrue(th.compVarColTables('ms_sorted.ms','mms_sorted.ms','DATA'))
 
 
     def test_default_scan(self):
@@ -143,15 +129,24 @@ class partition_test1(test_base):
             ms_spw = ph.getSpwIds(self.msfile, s)
             self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
                              'mms_spw=%s <--> ms_spw=%s' %(s, mmsN, msN))
+
+        # Sort the output MSs so that they can be compared
+        myms = mstool()
         
-#         TO DO: Compare both table using compTables when sorting in partition is fixed
-        self.assertTrue(th.compTables(self.msfile, self.mmsfile, 
+        myms.open(self.msfile)
+        myms.sort('ms_sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+        
+        myms.open(self.mmsfile)
+        myms.sort('mms_sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+
+        self.assertTrue(th.compTables('ms_sorted.ms', 'mms_sorted.ms', 
                                       ['FLAG','FLAG_CATEGORY','TIME_CENTROID',
                                        'WEIGHT_SPECTRUM','DATA']))
-
+        
         # Compare the DATA column
-#        self.assertTrue(th.compVarColTables(self.msfile,self.mmsfile,'DATA'))
-
+        self.assertTrue(th.compVarColTables('ms_sorted.ms','mms_sorted.ms','DATA'))
 
     def test_scan_selection(self):
         '''Partition: create an MMS using scan selection'''
@@ -250,13 +245,83 @@ class partition_test2(test_base):
         self.setUp_fourants()
 
     def tearDown(self):
-        shutil.rmtree(self.msfile, ignore_errors=True)        
+#        shutil.rmtree(self.msfile, ignore_errors=True)        
         shutil.rmtree(self.mmsfile, ignore_errors=True)        
-        shutil.rmtree(self.msfile+'.flagversions', ignore_errors=True)        
-        shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True)        
+#        shutil.rmtree(self.msfile+'.flagversions', ignore_errors=True)        
+        shutil.rmtree(self.mmsfile+'.flagversions', ignore_errors=True) 
+        os.system("rm -rf split30.ms* *ms_sorted*")       
+
+    def test_default(self):
+        '''Partition: create an MMS with default values in parallel'''
+        
+        # First split off one scan to run the test faster
+        split(vis=self.msfile, outputvis='split30.ms', datacolumn='DATA', scan='30')
+        msfile = 'split30.ms'
+
+        partition(vis=msfile, outputvis=self.mmsfile)
+        
+        self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
+        
+        # Gather several metadata information
+        # for the MS
+        mdlocal1 = msmdtool()
+        mdlocal1.open(msfile)
+        ms_rows = mdlocal1.nrows()
+        ms_nscans = mdlocal1.nscans()
+        ms_nspws = mdlocal1.nspw()
+        ms_scans = mdlocal1.scannumbers()
+        mdlocal1.close()        
+          
+        # for the MMS
+        mdlocal2 = msmdtool()
+        mdlocal2.open(self.mmsfile)
+        mms_rows = mdlocal2.nrows()
+        mms_nscans = mdlocal2.nscans()
+        mms_nspws = mdlocal2.nspw()
+        mms_scans = mdlocal2.scannumbers()
+        mdlocal2.close()        
+          
+        # Compare the number of rows
+        self.assertEqual(ms_rows, mms_rows, 'Compare total number of rows in MS and MMS')
+        self.assertEqual(ms_nscans, mms_nscans, 'Compare number of scans')
+        self.assertEqual(ms_nspws, mms_nspws, 'Compare number of spws')
+          
+        # Compare the scans
+        self.assertEqual(ms_scans.all(), mms_scans.all(), 'Compare all scan IDs')
+  
+        try:
+            mdlocal1.open(msfile)
+            mdlocal2.open(self.mmsfile)
+          
+            # Compare the spws
+            for i in ms_scans:                
+                msi = mdlocal1.spwsforscan(i)
+                mmsi = mdlocal2.spwsforscan(i)
+                self.assertEqual(msi.all(), mmsi.all(), 'Compare spw Ids for a scan')
+        finally:          
+            mdlocal1.close()
+            mdlocal2.close()               
+
+        # Sort the output MSs so that they can be compared
+        myms = mstool()
+        
+        myms.open(msfile)
+        myms.sort('ms_sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+        
+        myms.open(self.mmsfile)
+        myms.sort('mms_sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+        myms.done()
+
+        self.assertTrue(th.compTables('ms_sorted.ms', 'mms_sorted.ms', 
+                                      ['FLAG','FLAG_CATEGORY','TIME_CENTROID',
+                                       'WEIGHT_SPECTRUM','DATA']))
+
+        # Compare the DATA column
+        self.assertTrue(th.compVarColTables('ms_sorted.ms', 'mms_sorted.ms','DATA'))
 
     def test_default_sequential(self):
-        '''Partition: create an MMS with default values'''
+        '''Partition: create an MMS with default values in sequential'''
         partition(vis=self.msfile, outputvis=self.mmsfile, parallel=False)
         
         self.assertTrue(os.path.exists(self.mmsfile), 'MMS was not created for this test')
@@ -279,12 +344,23 @@ class partition_test2(test_base):
             ms_spw = ph.getSpwIds(self.msfile, s)
             self.assertEqual(mms_spw, ms_spw, 'list of spws in scan=%s differs: '\
                              'mms_spw=%s <--> ms_spw=%s' %(s, mmsN, msN))
-        
-#         TO DO: Compare both table using compTables when sorting in partition is fixed
-        self.assertTrue(th.compTables(self.msfile, self.mmsfile, 
-                                      ['FLAG','FLAG_CATEGORY','TIME_CENTROID',
-                                       'WEIGHT_SPECTRUM','MODEL_DATA','DATA',
-                                       'CORRECTED_DATA']))
+
+        # Sort the output MSs so that they can be compared
+#         myms = mstool()
+#         
+#         myms.open(self.msfile)
+#         myms.sort('ms_sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+#         myms.done()
+#         
+#         myms.open(self.mmsfile)
+#         myms.sort('mms_sorted.ms',['OBSERVATION_ID','ARRAY_ID','SCAN_NUMBER','FIELD_ID','DATA_DESC_ID','ANTENNA1','ANTENNA2','TIME'])
+#         myms.done()
+#         
+# #         TO DO: Compare both table using compTables when sorting in partition is fixed
+#         self.assertTrue(th.compTables('ms_sorted.ms', 'mms_sorted.ms', 
+#                                       ['FLAG','FLAG_CATEGORY','TIME_CENTROID',
+#                                        'WEIGHT_SPECTRUM','MODEL_DATA','DATA',
+#                                        'CORRECTED_DATA']))
 
 
     # The following test fails in the OSX platforms if the full MS is used to
@@ -422,7 +498,7 @@ class partition_test2(test_base):
         self.assertTrue(os.path.exists(self.mmsfile+'.flagversions'))
  
          # Check that the number of backups in MMS is correct
-        aflocal = casac.agentflagger()
+        aflocal = aftool()
         aflocal.open(self.mmsfile)
         nv = aflocal.getflagversionlist()
         aflocal.done()
@@ -432,7 +508,7 @@ class partition_test2(test_base):
         flagdata(vis=self.mmsfile, mode='unflag', flagbackup=True)
         
         # Check that the number of backups in MMS is correct
-        aflocal = casac.agentflagger()
+        aflocal = aftool()
         aflocal.open(self.mmsfile)
         nvref = aflocal.getflagversionlist()
         aflocal.done()
@@ -500,9 +576,19 @@ class partition_test2(test_base):
         
         # spw=5 should be spw=1 after consolidation, with 10 channels
         ret = th.verifyMS(self.mmsfile, 7, 10, 1, ignoreflags=True)
+
+# Cleanup class 
+class partition_cleanup(test_base):
+    
+    def tearDown(self):
+        os.system('rm -rf ngc4826.*ms* Four_ants_3C286.*ms*')
+
+    def test_runTest(self):
+        '''partition: Cleanup'''
+        pass
           
 def suite():
-    return [partition_test1, partition_test2]
+    return [partition_test1, partition_test2, partition_cleanup]
 
 
 
