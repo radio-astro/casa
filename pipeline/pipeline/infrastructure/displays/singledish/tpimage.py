@@ -11,62 +11,21 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation
-from .common import DPISummary, DPIDetail, SDImageDisplayInputs, draw_beam
+from .common import DPISummary, DPIDetail, SDImageDisplay, draw_beam
 
 LOG = infrastructure.get_logger(__name__)
 
-class SDChannelAveragedImageDisplay(object):
-    Inputs = SDImageDisplayInputs
+class SDChannelAveragedImageDisplay(SDImageDisplay):
     MATPLOTLIB_FIGURE_ID = 8911
     
-    def __init__(self, inputs):
-        self.inputs = inputs
-        self.context = self.inputs.context
-
     def plot(self):
+        self.init()
+        
         ShowPlot = True
-        qa = casatools.quanta
-        to_deg = lambda q: qa.convert(q,'deg')['value']
-
         stage_dir = self.inputs.stage_dir
-        antenna_names = [st.antenna.name for st in self.context.observing_run]
-        try:
-            idx = antenna_names.index(self.inputs.antenna)
-        except:
-            idx = 0
-        beam_size = self.context.observing_run[idx].beam_size[self.inputs.spw]
-        beamsize = to_deg(beam_size)
-        gridsize = beamsize / 3.0
-        #gridsize = 0.5 * beamsize 
-        with utils.open_image(self.inputs.imagename) as ia:
-            image_shape = ia.shape()
-            coordsys = ia.coordsys()
-            coord_types = coordsys.axiscoordinatetypes()
-            id_direction = coord_types.index('Direction')
-            id_direction = [id_direction, id_direction+1]
-            id_spectral = coord_types.index('Spectral')
-            id_stokes = coord_types.index('Stokes')
-            nx,ny = image_shape[id_direction]
-            nchan = image_shape[id_spectral] # should be 1
-            npol = image_shape[id_stokes]
-            data = ia.getchunk()
-            mask = ia.getchunk(getmask=True)
-            bottom = ia.toworld(numpy.zeros(len(image_shape),dtype=int), 'q')['quantity']
-            top = ia.toworld(image_shape-1, 'q')['quantity']
-            key = lambda x: '*%s'%(x+1)
-            ra_min = bottom[key(id_direction[0])]
-            ra_max = top[key(id_direction[0])]
-            if ra_min > ra_max:
-                ra_min,ra_max = ra_max,ra_min
-            dec_min = bottom[key(id_direction[1])]
-            dec_max = top[key(id_direction[1])]
 
-        RAmax = to_deg(ra_max)
-        RAmin = to_deg(ra_min)
-        DECmax = to_deg(dec_max)
-        DECmin = to_deg(dec_min)
-        Extent = (RAmax+gridsize/2.0, RAmin-gridsize/2.0, DECmin-gridsize/2.0, DECmax+gridsize/2.0)
-        span = max(RAmax - RAmin + gridsize, DECmax - DECmin + gridsize)
+        Extent = (self.ra_max+self.grid_size/2.0, self.ra_min-self.grid_size/2.0, self.dec_min-self.grid_size/2.0, self.dec_max+self.grid_size/2.0)
+        span = max(self.ra_max - self.ra_min + self.grid_size, self.dec_max - self.dec_min + self.grid_size)
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)
 
         # Plotting
@@ -76,7 +35,7 @@ class SDChannelAveragedImageDisplay(object):
         if ShowPlot: PL.ioff()
         # 2008/9/20 Dec Effect has been taken into account
         #Aspect = 1.0 / math.cos(Table[0][5] / 180. * 3.141592653)
-        Aspect = 1.0 / math.cos(0.5 * (DECmax + DECmin) / 180. * 3.141592653)
+        Aspect = 1.0 / math.cos(0.5 * (self.dec_max + self.dec_min) / 180. * 3.141592653)
 
         (x0, x1, y0, y1) = (0.25, 0.5, 0.25, 0.5)
 
@@ -84,8 +43,8 @@ class SDChannelAveragedImageDisplay(object):
 
         plot_list = []
 
-        masked_data = data * mask
-        for pol in xrange(npol):
+        masked_data = self.data * self.mask
+        for pol in xrange(self.npol):
             Total = masked_data[:,:,0,pol]
             Total = numpy.flipud(Total.transpose())
 
@@ -115,7 +74,8 @@ class SDChannelAveragedImageDisplay(object):
             #print "min=%s, max of Total=%s" % (Total.min(),Total.max())
             if not (Total.min() == Total.max()): 
                 #if not ((Ymax == Ymin) and (Xmax == Xmin)): 
-                if not all(image_shape[id_direction] <= 1):
+                #if not all(image_shape[id_direction] <= 1):
+                if self.nx > 1 or self.ny > 1:
                     cb=PL.colorbar(shrink=0.8)
                     for t in cb.ax.get_yticklabels():
                         newfontsize = t.get_fontsize()*0.5
@@ -126,7 +86,7 @@ class SDChannelAveragedImageDisplay(object):
                     lab.set_fontsize(newfontsize)
 
             # draw beam pattern
-            draw_beam(a, 0.5 * beamsize, Aspect, RAmin, DECmin)
+            draw_beam(a, 0.5 * self.beam_size, Aspect, self.ra_min, self.dec_min)
 
             PL.title('Total Power', size=TickSize)
 
