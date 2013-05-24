@@ -101,7 +101,6 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_measures.py
   test_msmoments.py
   test_msmd.py
-  test_mst.py
   test_mstransform.py
   test_mst_cvel.py
   test_mst_cvelB.py
