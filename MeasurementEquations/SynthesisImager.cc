@@ -148,7 +148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String phasecenter =  "19:59:28.500 +40.44.01.50";
     Double cellx=10.0,celly=10.0;
 
-    String imagename(""), modelname("");
+    String imagename("");
     try {
       // TODO : If critical params are unspecified, throw exceptions.
       // TODO : If they're the wrong data type, throw exceptions.
@@ -174,9 +174,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else
 	{throw( AipsError("imsize not specified")); }
 
-	if( impars.isDefined("modelname") )  // A single string
-	  { modelname = impars.asString( RecordFieldId("modelname")); }
-
       // Read and interpret input parameters.
     } catch(AipsError &x)
       {
@@ -193,12 +190,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         IPosition imageshape(4,(uInt)imsize[0],(uInt)imsize[1],npol,nchan);
 	itsCurrentImages = new SIImageStore(imagename, *coordsys, imageshape);
 
-	if( modelname.length()>0 && !itsCurrentImages.null() )
-	  {
-	    os << "Setting " << modelname << " as starting model for prediction " << LogIO::POST;
-	    itsCurrentImages->setModelImage( modelname );
-	  }
-
       }
     catch(AipsError &x)
       {
@@ -211,15 +202,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void  SynthesisImager::setupImaging(Record /*gridpars*/)
+  void  SynthesisImager::setupImaging(Record gridpars)
   {
     LogIO os( LogOrigin("SynthesisImager","setupImaging",WHERE) );
 
+    String ftmname("");
     String modelname("");
-
     try
       {
 	// TODO : Parse FT-machine-related parameters.
+	if( gridpars.isDefined("ftmachine") )  // A single string
+	  { ftmname = gridpars.asString( RecordFieldId("ftmachine")); }
+	
+	if( gridpars.isDefined("modelname") )  // A single string
+	  { modelname = gridpars.asString( RecordFieldId("modelname")); }
+
 
       }
     catch(AipsError &x)
@@ -227,13 +224,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in reading Imaging Parameters : "+x.getMesg()) );
       }
     
-    os << "Set Imaging Options. Construct FTMachine of type XXX" << LogIO::POST;
+    os << "Set Imaging Options. Construct FTMachine of type " << ftmname << LogIO::POST;
     
     try
       {
+	// Set the model image for prediction
+	if( modelname.length()>0 && !itsCurrentImages.null() )
+	  {
+	    os << "Setting " << modelname << " as starting model for prediction " << LogIO::POST;
+	    itsCurrentImages->setModelImage( modelname );
+	  }
 
 	// TODO : Set up the FT-Machine. Send in parameters here...
 	itsCurrentFTMachine = createFTMachine(/* parameters */);
+
+
 
       }
     catch(AipsError &x)
@@ -251,8 +256,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","initMapper", WHERE) );
     os << "Construct mapper " << itsMappers.nMappers() 
-       << " for image : " << itsCurrentImages->getName() << " and ftm : " << "FTMNAME"
-       << LogIO::POST;
+       << " for image : " << itsCurrentImages->getName();
+    os << " and ftm : " << "FTMNAME"; // itsCurrentFTMachine->name() 
+    os << LogIO::POST;
     try
       {
 

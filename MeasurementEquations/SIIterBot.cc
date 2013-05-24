@@ -113,7 +113,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (getNumberOfControllers() == 0) {
 			/* Spawn a Viewer set up for interactive */
 		}
-
+		cout << "UU : setup interaction" << endl;
 		boost::unique_lock<boost::mutex> lock(interactionMutex);
 		if(!interactionPending) {
 			interactionPending = true;
@@ -121,12 +121,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if ( memory::nullptr.check(callback) == false )
 				callback->interactionRequired(interactionPending);
 		}
-
+		cout << "UU : about to wait" << endl;
 		/* Wait on Condition variable */
 		while (interactionPending) {
 			interactionCond.wait(lock);
 		}
 
+		cout << "UU : returned from wait" << endl;
 		if (updateNeeded) {
 			updateNeeded = false;
 			if ( memory::nullptr.check(callback) == false )
@@ -246,6 +247,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 #endif
 
 	void SIIterBot_state::interactionComplete() {
+	  cout << "UU : Interaction completed" << endl;
 		changePauseFlag(false);
 		itsInteractiveIterDone = 0;    
 		{
@@ -434,6 +436,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void SIIterBot_state::changeNiter( Int niter ) {
 		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 		itsNiter = niter;
+		//cout << "UUU : change niter : " << niter << endl;
 	}
 
 	void SIIterBot_state::changeCycleNiter( Int cycleniter ) {
@@ -482,6 +485,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void SIIterBot_state::changePauseFlag( const bool& pauseEnabled ){
 		boost::lock_guard<boost::recursive_mutex> guard(recordMutex);    
 		itsPauseFlag = pauseEnabled;
+		cout << "UUU : changed pause flag to " << pauseEnabled << endl;
 	}
 
 	void SIIterBot_state::changeStopFlag(const bool& stopEnabled){
