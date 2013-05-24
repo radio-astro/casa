@@ -70,10 +70,12 @@ public:
 	// <src>image</src> - the input image in which to fit the models
 	// <src>box</src> - A 2-D rectangular box in direction space in which to use pixels for the fitting, eg box=100,120,200,230
 	// In cases where both box and region are specified, box, not region, is used.
-	// <src>region</src> - Named region to use for fitting
+	// <src>region</src> - Named region to use for fitting. "" => Don't use a named region
+	// <src>regPtr</src> - Pointer to a region record. 0 => don't use a region record.
 	// <src>chans</src> - Zero-based channel range on which to do the fit.
 	// <src>stokes</src> - Stokes plane on which to do the fit. Only a single Stokes parameter can be
 	// specified.
+	// Only a maximum of one of region, regionPtr, or box/stokes/chans should be specified.
 	// <src>mask</src> - Mask (as LEL) to use as a way to specify which pixels to use </src>
 	// <src>axis</src> - axis along which to do the fits. If <0, use spectral axis, and if no spectral
 	// axis, use zeroth axis.
@@ -103,13 +105,7 @@ public:
 
     inline String getClass() const { return _class; };
 
-   	inline CasacRegionManager::StokesControl _getStokesControl() const {
-   		return CasacRegionManager::USE_FIRST_STOKES;
-   	}
 
-    inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
-    	return vector<Coordinate::Type>(0);
-    }
 
     // set the order of a polynomial to be simultaneously fit.
     inline void setPolyOrder(const Int p) { _polyOrder = p;}
@@ -147,10 +143,26 @@ public:
     inline void setIntegralErrName(const String& s) { _integralErrName = s; }
     // </group>
 
+    // set the name of the power logarithmic polynomial image. A separate image
+    // representing each coefficient will be written. The c0 image will have
+    // "_c0" appended to the name. The others will have "_alpha", "_beta", ...
+    // appended to the name.
+    inline void setPLPName(const String& s) { _plpName = s; }
+
+    // set the name of the power logarithmic polynomial image. A separate image
+    // representing each coefficient will be written. The c0 image will have
+    // "_c0" appended to the name. The others will have "_alpha", "_beta", ...
+    // appended to the name.
+    inline void setPLPErrName(const String& s) { _plpErrName = s; }
+
+
+    // set the range over which PFC amplitude solutions are valid
     void setGoodAmpRange(const Double min, const Double max);
 
+    // set the range over which PFC center solutions are valid
     void setGoodCenterRange(const Double min, const Double max);
 
+    // set the range over which PFC FWHM solutions are valid
     void setGoodFWHMRange(const Double min, const Double max);
 
     // <group>
@@ -175,17 +187,38 @@ public:
     Double getWorldValue( double pixelVal, const IPosition& imPos, const String& units,
         bool velocity, bool wavelength) const;
 
-private:
+protected:
 
+    inline CasacRegionManager::StokesControl _getStokesControl() const {
+   		return CasacRegionManager::USE_FIRST_STOKES;
+   	}
+
+    inline vector<Coordinate::Type> _getNecessaryCoordinates() const {
+    	return vector<Coordinate::Type>(0);
+    }
+
+private:
+    enum gaussSols {
+	    AMP, CENTER, FWHM, INTEGRAL, AMPERR, CENTERERR,
+	    FWHMERR, INTEGRALERR, NGSOLMATRICES
+	};
+
+	enum plpSols {
+		PLPSOL, PLPERR, NPLPSOLMATRICES
+	};
+
+	enum axisType {
+		LONGITUDE, LATITUDE, FREQUENCY, POLARIZATION, NAXISTYPES
+	};
 	String _residual, _model, _regionString, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
-		_integralName, _integralErrName, _sigmaName;
+		_integralName, _integralErrName, _plpName, _plpErrName, _sigmaName;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
 		_deleteImageOnDestruct, _logResults;
 	Int _polyOrder, _fitAxis;
 	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
-		_minGoodPoints;
+		_nPLPCoeffs, _minGoodPoints;
 	Array<ImageFit1D<Float> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
@@ -193,6 +226,8 @@ private:
 	Record _results;
 	SpectralList _nonPolyEstimates;
 	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
+	Matrix<String> _worldCoords;
+	vector<axisType> _axisTypes;
 
 	std::auto_ptr<TempImage<Float> > _sigma;
 
@@ -201,12 +236,6 @@ private:
 	const static uInt _nOthers;
 	const static uInt _gsPlane;
 	const static uInt _lsPlane;
-
-
-	enum gaussSols {
-	    AMP, CENTER, FWHM, INTEGRAL, AMPERR, CENTERERR,
-	    FWHMERR, INTEGRALERR, NGSOLMATRICES
-	};
 
     void _getOutputStruct(
         vector<ImageInputProcessor::OutputStruct>& outputs

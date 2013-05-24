@@ -41,8 +41,6 @@
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 #include <imageanalysis/IO/ProfileFitterEstimatesFileParser.h>
 
-#include <memory>
-
 namespace casa {
 
 const String ImageProfileFitter::_class = "ImageProfileFitter";
@@ -65,13 +63,14 @@ ImageProfileFitter::ImageProfileFitter(
 		image, region, regionPtr, box, chans, stokes,
 		mask, "", False
 	),
-	_residual(""), _model(""), _xUnit(""), _centerName(""),
-	_centerErrName(""), _fwhmName(""), _fwhmErrName(""),
-	_ampName(""), _ampErrName(""), _integralName(""),
-	_integralErrName(""), _sigmaName(""),_multiFit(False),
+	_residual(), _model(), _xUnit(), _centerName(),
+	_centerErrName(), _fwhmName(), _fwhmErrName(),
+	_ampName(), _ampErrName(), _integralName(),
+	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),_multiFit(False),
 	_deleteImageOnDestruct(False), _logResults(True), _polyOrder(-1),
 	_fitAxis(axis), _nGaussSinglets(ngauss), _nGaussMultiplets(0),
-	_nLorentzSinglets(0), _minGoodPoints(0), _results(Record()),
+	_nLorentzSinglets(0), _nPLPCoeffs(0),
+	_minGoodPoints(0), _results(Record()),
 	_nonPolyEstimates(SpectralList()), _goodAmpRange(Vector<Double>(0)),
 	_goodCenterRange(Vector<Double>(0)), _goodFWHMRange(Vector<Double>(0)),
 	_sigma(0) {
@@ -88,13 +87,14 @@ ImageProfileFitter::ImageProfileFitter(
     	_nGaussSinglets = _nonPolyEstimates.nelements();
 
     	*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
-    			<<_nGaussSinglets << " in estimates file " << estimatesFilename
-    			<< LogIO::POST;
+    		<<_nGaussSinglets << " in estimates file " << estimatesFilename
+    		<< LogIO::POST;
     }
     else if (spectralList.nelements() > 0) {
     	_nonPolyEstimates = spectralList;
     	_nGaussSinglets = 0;
     	_nGaussMultiplets = 0;
+    	Bool havePLP = False;
     	for (uInt i=0; i<_nonPolyEstimates.nelements(); i++) {
     		SpectralElement::Types myType = _nonPolyEstimates[i]->getType();
 			switch(myType) {
@@ -107,29 +107,47 @@ ImageProfileFitter::ImageProfileFitter(
 			case SpectralElement::LORENTZIAN:
 				_nLorentzSinglets++;
 				break;
+			case SpectralElement::POWERLOGPOLY:
+				if (havePLP) {
+					*_getLog() << "Fitting of multiple power logarithmic polynomials is not supported."
+						<< LogIO::EXCEPTION;
+				}
+				_nPLPCoeffs = _nonPolyEstimates[i]->get().size();
+				havePLP = True;
+				break;
 			default:
 				*_getLog() << "Logic error: Only gaussian singlets, "
-					<< "gaussian multiplets, and lorentzian singlets are "
+					<< "gaussian multiplets, lorentzian singlets, and a single power "
+					<< "logarithmic polynomial are "
 				    << "permitted in the spectralList input parameter"
 				    << LogIO::EXCEPTION;
+				break;
 			}
     	}
 
-    	*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
+    	if (_nGaussSinglets > 0) {
+    		*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
     			<< _nGaussSinglets << " from provided spectral element list"
     			<< LogIO::POST;
-
-    	*_getLog() << LogIO::NORMAL << "Number of gaussian multiplets to fit found to be "
+    	}
+    	if (_nGaussMultiplets > 0) {
+    		*_getLog() << LogIO::NORMAL << "Number of gaussian multiplets to fit found to be "
     			<< _nGaussMultiplets << " from provided spectral element list"
     			<< LogIO::POST;
-
-    	*_getLog() << LogIO::NORMAL << "Number of lorentzian singlets to fit found to be "
+    	}
+    	if (_nLorentzSinglets > 0) {
+    		*_getLog() << LogIO::NORMAL << "Number of lorentzian singlets to fit found to be "
     			<< _nLorentzSinglets << " from provided spectral element list"
     			<< LogIO::POST;
+    	}
+    	if (havePLP) {
+    		*_getLog() << LogIO::NORMAL << "Will fit a single power logarithmic polynomial "
+    			<< " from provided spectral element list" << LogIO::POST;
+    	}
     }
     if (_nonPolyEstimates.nelements() > 0 && ngauss > 0) {
     	*_getLog() << LogIO::WARN << "Estimates specified so ignoring input value of ngauss"
-    			<<LogIO::POST;
+    		<<LogIO::POST;
     }
 
     _construct();
@@ -137,9 +155,6 @@ ImageProfileFitter::ImageProfileFitter(
 }
 
 ImageProfileFitter::~ImageProfileFitter() {}
-
-
-
 
 Record ImageProfileFitter::fit() {
 
@@ -213,8 +228,8 @@ Record ImageProfileFitter::fit() {
 		_fitallprofiles();
 	    *_getLog() << logOrigin;
 	}
-	catch (AipsError exc) {
-		*_getLog() << "Exception during fit: " << exc.getMesg()
+	catch (const AipsError& x) {
+		*_getLog() << "Exception during fit: " << x.getMesg()
 			<< LogIO::EXCEPTION;
 	}
 	_setResults();
@@ -415,18 +430,26 @@ void ImageProfileFitter::_setResults() {
     if (_polyOrder >= 0) {
     	nComps++;
     }
+    if (_nPLPCoeffs > 0) {
+    	nComps++;
+    }
     uInt aSize = _fitters.size();
 	Array<Bool> attemptedArr(IPosition(1, aSize), False);
 	Array<Bool> successArr(IPosition(1, aSize), False);
 	Array<Bool> convergedArr(IPosition(1, aSize), False);
 	Array<Bool> validArr(IPosition(1, aSize), False);
+	_worldCoords = Matrix<String>((Int)NAXISTYPES, aSize, "");
 
 	Array<Int> niterArr(IPosition(1, aSize), -1);
 	vector<vector<Matrix<Double> > > pcfMatrices(
 		NGSOLMATRICES, vector<Matrix<Double> >(_nGaussMultiplets+_nOthers)
 	);
+	Matrix<Double> blank(aSize, _nPLPCoeffs, fNAN);
+
+	vector<Matrix<Double> > plpMatrices(
+		NPLPSOLMATRICES, blank
+	);
 	uInt compCount = 0;
-	Matrix<Double> blank;
 	uInt nSubcomps = 0;
 
 	for (uInt i=0; i<_nGaussMultiplets + _nOthers; i++) {
@@ -464,9 +487,58 @@ void ImageProfileFitter::_setResults() {
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
 	Vector<ImageFit1D<Float> >::const_iterator fitter = _fitters.begin();
 	uInt count = 0;
-	const CoordinateSystem subimCsys = _subImage.coordinates();
 	Vector<Double> world;
 	Double increment = fabs(_fitAxisIncrement());
+	IPosition pixel;
+	const CoordinateSystem& csysSub = _subImage.coordinates();
+	Vector<String> axisNames = csysSub.worldAxisNames();
+	for (uInt i=0; i<axisNames.size(); i++) {
+		axisNames[i].upcase();
+	}
+	const DirectionCoordinate *dcoord = csysSub.hasDirectionCoordinate()
+		? &csysSub.directionCoordinate() : 0;
+	String directionType = dcoord ? MDirection::showType(dcoord->directionType()) : "";
+	const SpectralCoordinate *spcoord = csysSub.hasSpectralAxis()
+			? &csysSub.spectralCoordinate() : 0;
+	const StokesCoordinate *polcoord = csysSub.hasPolarizationCoordinate()
+				? &csysSub.stokesCoordinate() : 0;
+	String emptyUnit = "";
+	_axisTypes = vector<axisType>(axisNames.size(), NAXISTYPES);
+	Bool hasLat = False;
+	Bool hasLong = False;
+	for (uInt i=0; i<axisNames.size(); i++) {
+		if ((Int)i != _fitAxis) {
+			if (
+				dcoord
+				&& (axisNames[i].startsWith("RIG") || axisNames[i].startsWith("LONG"))
+			) {
+				_axisTypes[i] = LONGITUDE;
+				hasLat = True;
+			}
+			else if (
+				dcoord
+				&& (axisNames[i].startsWith("DEC") || axisNames[i].startsWith("LAT"))
+			) {
+				_axisTypes[i] = LATITUDE;
+				hasLong = True;
+			}
+			else if (
+				spcoord
+				&& (axisNames[i].startsWith("FREQ") || axisNames[i].startsWith("VEL"))
+			) {
+				_axisTypes[i] = FREQUENCY;
+			}
+			else if (
+				polcoord
+				&& axisNames[i].startsWith("STO")
+			) {
+				_axisTypes[i] = POLARIZATION;
+			}
+		}
+	}
+	Bool returnDirection = hasLat && hasLong;
+	Vector<String> directionInfo(returnDirection ? aSize : 0);
+	String latitude, longitude;
 	for (
 		inIter.reset();
 		! inIter.atEnd() && fitter != _fitters.end();
@@ -478,6 +550,38 @@ void ImageProfileFitter::_setResults() {
 		convergedArr(idx) = attemptedArr(idx) && successArr(idx)
 			&& fitter->converged();
 		validArr(idx) = convergedArr(idx) && fitter->isValid();
+
+		pixel = inIter.position();
+		if (csysSub.toWorld(world, pixel)) {
+			for (uInt i=0; i<world.size(); i++) {
+				if ((Int)i != _fitAxis) {
+					if (_axisTypes[i] == LONGITUDE) {
+						longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+						_worldCoords(LONGITUDE, count) = longitude;
+					}
+					else if (_axisTypes[i] == LATITUDE) {
+						latitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 1, True, True);
+						_worldCoords(LATITUDE, count) = latitude;
+					}
+					else if (_axisTypes[i] == FREQUENCY) {
+						_worldCoords(FREQUENCY, count) = spcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+					}
+					else if (_axisTypes[i] == POLARIZATION) {
+						_worldCoords(POLARIZATION, count) = polcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+					}
+				}
+			}
+			if (returnDirection) {
+				directionInfo[count] = directionType + " "
+					+ longitude + " "
+					+ latitude;
+
+			}
+		}
+		else {
+			*_getLog() << "Could not convert pixel to world coordinate: "
+				<< csysSub.errorMessage() << LogIO::EXCEPTION;
+		}
 		if (validArr(idx)) {
 			IPosition subimPos = inIter.position();
 			mask(idx) = anyTrue(inIter.getMask());
@@ -532,7 +636,17 @@ void ImageProfileFitter::_setResults() {
 						gmCount++;
 					}
 					break;
+				case SpectralElement::POWERLOGPOLY:
+					{
+						Vector<Double> sols = solutions[i]->get();
+						Vector<Double> errs = solutions[i]->getError();
 
+						for (uInt j=0; j<_nPLPCoeffs; j++) {
+							plpMatrices[PLPSOL](count, j) = sols[j];
+							plpMatrices[PLPERR](count, j) = errs[j];
+						}
+					}
+					break;
 				default:
 					*_getLog() << "Logic Error: Unhandled Spectral Element type"
 						<< LogIO::EXCEPTION;
@@ -582,6 +696,31 @@ void ImageProfileFitter::_setResults() {
 	std::auto_ptr<TempImage<Float> > myTemplate(
 		static_cast<TempImage<Float>* >(collapser.collapse(True))
 	);
+	/*
+	if (myTemplate->coordinates().hasDirectionCoordinate()) {
+		Vector<Int> dirAxes = myTemplate->coordinates().directionAxesNumbers();
+		if (ntrue(dirAxes == _fitAxis) == 0) {
+			IPosition dirShape(2);
+			dirShape[0] = myTemplate->shape()[dirAxes[0]];
+			dirShape[1] = myTemplate->shape()[dirAxes[1]];
+			const DirectionCoordinate dcoord = myTemplate->coordinates().directionCoordinate();
+			Matrix<Double> worldPos;
+			Vector<Double> world(2), pixel(2);
+			String longitude, latitude;
+			String unit = "";
+			for (uInt i=0; i<dirShape[0]; i++) {
+				pixel[0] = i;
+				for (uInt j=0; j<dirShape[1]; j++) {
+					pixel[1] = j;
+					dcoord.toWorld(world, pixel);
+					longitude = dcoord.format(unit, Coordinate::DEFAULT, world[0], 0, True, True);
+					cout << longitude << endl;
+				}
+			}
+
+		}
+	}
+	*/
 	IPosition shape = myTemplate->shape();
 	_results.define("attempted", attemptedArr.reform(shape));
 	_results.define(_SUCCEEDED, successArr.reform(shape));
@@ -589,7 +728,11 @@ void ImageProfileFitter::_setResults() {
 	_results.define(_VALID, validArr.reform(shape));
 	_results.define("niter", niterArr.reform(shape));
 	_results.define("ncomps", nCompArr.reform(shape));
+	if (returnDirection) {
+		_results.define("direction", directionInfo.reform(shape));
+	}
 	_results.define("xUnit", _xUnit);
+
 	const String yUnit = _getImage()->units().getName();
 	_results.define("yUnit", yUnit);
 	IPosition typeShape = shape;
@@ -623,11 +766,21 @@ void ImageProfileFitter::_setResults() {
 		rec.define("description", description);
 		_results.defineRecord(_getTag(i), rec);
 	}
+	if (_nPLPCoeffs > 0) {
+		Record rec;
+		IPosition solArrShape = shape;
+		solArrShape.resize(shape.size()+1, True);
+		solArrShape[solArrShape.size()-1] = _nPLPCoeffs;
+		rec.define("solution", plpMatrices[PLPSOL].reform(solArrShape));
+		rec.define("error", plpMatrices[PLPERR].reform(solArrShape));
+		_results.defineRecord("plp", rec);
+	}
 	Bool writeSolutionImages = (
 		! _centerName.empty() || ! _centerErrName.empty()
 		|| ! _fwhmName.empty() || ! _fwhmErrName.empty()
 		|| ! _ampName.empty() || ! _ampErrName.empty()
 		|| ! _integralName.empty() || ! _integralErrName.empty()
+		|| ! _plpName.empty() || ! _plpErrName.empty()
 	);
 	if (
 		! _multiFit && writeSolutionImages
@@ -639,9 +792,9 @@ void ImageProfileFitter::_setResults() {
 		_multiFit && writeSolutionImages
 	) {
 		if (
-			_nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets == 0
+			_nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets + _nPLPCoeffs == 0
 		) {
-			*_getLog() << LogIO::WARN << "No gaussians or lorentzians were fit "
+			*_getLog() << LogIO::WARN << "No functions for which solution images are supported were fit "
 				<< "so no solution images will be written" << LogIO::POST;
 		}
 		else {
@@ -763,6 +916,49 @@ void ImageProfileFitter::_writeImages(
 			}
 		}
 	}
+	if (_nPLPCoeffs > 0 && (! _plpName.empty() || ! _plpErrName.empty())) {
+		for (uInt i=0; i<_nPLPCoeffs; i++) {
+			String id;
+			switch (i) {
+			case 0: id = "c0"; break;
+			case 1: id = "alpha"; break;
+			case 2: id = "beta"; break;
+			case 3: id = "gamma"; break;
+			case 4: id = "delta"; break;
+			case 5: id = "epsilon"; break;
+			case 6: id = "zeta"; break;
+			default:
+				*_getLog() << LogIO::WARN
+					<< "Writing more than 7 coefficient images for power log polynomials is not supported "
+					<< LogIO::POST;
+				break;
+			}
+			if (i > 6) {
+				break;
+			}
+			IPosition maskShape = _results.asRecord("plp").asArrayDouble("solutions").shape();
+			Array<Bool> fMask(maskShape);
+
+			maskShape[maskShape.size() - 1] = 1;
+			Array<Bool> reshapedMask = mask.reform(maskShape);
+			AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
+			String unit = i == 0 ? yUnit : "";
+			if (! _plpName.empty()) {
+				_makeSolutionImage(
+					_plpName + "_" + id, mycsys,
+					_results.asRecord("plp").asArrayDouble("solution"),
+					unit, fMask
+				);
+			}
+			if (! _plpErrName.empty()) {
+				_makeSolutionImage(
+					_plpErrName + "_" + id, mycsys,
+					_results.asRecord("plp").asArrayDouble("solution"),
+					unit, fMask
+				);
+			}
+		}
+	}
 }
 
 Bool ImageProfileFitter::_inVelocitySpace() const {
@@ -811,7 +1007,7 @@ Double ImageProfileFitter::getWorldValue(
 		spectCoord.setVelocity( units );
 		spectCoord.frequencyToVelocity(convertedVal, world(_fitAxis));
 	}
-	else if ( wavelength  ){
+	else if ( wavelength  ) {
 		spectCoord.setWavelengthUnit( units );
 		Vector<Double> worldVal(1);
 		worldVal[0] = world(_fitAxis);
@@ -926,26 +1122,18 @@ void ImageProfileFitter::_resultsToLog() {
 		}
 	}
 	Vector<ImageFit1D<Float> >::const_iterator fitter = _fitters.begin();
-	Vector<String> axesNames = csysSub.worldAxisNames();
 	Vector<Double> imPix(pixStart.size());
 	Vector<Double> world;
 	IPosition subimPos;
 	SpectralList solutions;
 	String axisUnit = csysIm.worldAxisUnits()[_fitAxis];
 	Int pixPrecision = _multiFit ? 0 : 3;
-
-	for (
-		Vector<String>::iterator iter = axesNames.begin();
-		iter != axesNames.end(); iter++
-	) {
-		iter->upcase();
-	}
 	_pixelPositions.resize( _fitters.size());
 	uint index = 0;
 	for (
 		inIter.reset();
 		! inIter.atEnd() && fitter != _fitters.end();
-		inIter++, fitter++
+		inIter++, fitter++, index++
 	) {
 		summary.str("");
 		Int basePrecision = summary.precision(1);
@@ -955,26 +1143,22 @@ void ImageProfileFitter::_resultsToLog() {
 			summary << "Fit   :" << endl;
 			for (uInt i=0; i<world.size(); i++) {
 				if ((Int)i != _fitAxis) {
-					if (axesNames[i].startsWith("RIG")) {
-						// right ascension
+					if (_axisTypes[i] == LONGITUDE) {
 						summary << "    RA           :   "
-							<< _radToRa(world[i]) << endl;
+							<< _worldCoords(LONGITUDE, index) << endl;
 					}
-					else if (axesNames[i].startsWith("DEC")) {
-						// declination
-						summary << "    Dec          : "
-							<< MVAngle(world[i]).string(MVAngle::ANGLE_CLEAN, 8) << endl;
+					else if (_axisTypes[i] == LATITUDE) {
+						summary << "    Dec          :  "
+							<< _worldCoords(LATITUDE, index) << endl;
 					}
-					else if (axesNames[i].startsWith("FREQ")) {
-						// frequency
+					else if (_axisTypes[i] == FREQUENCY) {
 						summary << "    Freq         : "
-							<< world[i]
-							<< csysSub.spectralCoordinate().formatUnit() << endl;
+							<< _worldCoords(FREQUENCY, index) <<  endl;
 					}
-					else if (axesNames[i].startsWith("STO")) {
+					else if (_axisTypes[i] == POLARIZATION) {
 						// stokes
-						summary << "    Stokes       : "
-							<< Stokes::name(Stokes::type((Int)world[i])) << endl;
+						summary << "    Stokes       : " << _worldCoords(POLARIZATION, index) << endl;
+//							<< Stokes::name(Stokes::type((Int)world[i])) << endl;
 					}
 				}
 			}
@@ -986,7 +1170,6 @@ void ImageProfileFitter::_resultsToLog() {
 			imPix[i] = pixStart[i] + subimPos[i];
 		}
 		_pixelPositions[index] = imPix;
-		index++;
 		summary.setf(ios::fixed);
 		summary << setprecision(pixPrecision) << "    Pixel        : [";
 		for (uInt i=0; i<imPix.size(); i++) {
@@ -1049,6 +1232,7 @@ void ImageProfileFitter::_resultsToLog() {
 						default:
 							*_getLog() << "Logic Error: Unhandled spectral element type"
 							    << LogIO::EXCEPTION;
+							break;
 						}
 					}
 				}
@@ -1404,7 +1588,6 @@ void ImageProfileFitter::_fitProfiles(
 	std::auto_ptr<ImageInterface<Float> >& pResid,
     const Bool showProgress
 ) {
-
 	IPosition inShape = _subImage.shape();
 	if (pFit.get()) {
 		AlwaysAssert(inShape.isEqual(pFit->shape()), AipsError);
@@ -1464,7 +1647,6 @@ void ImageProfileFitter::_fitProfiles(
 	);
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
-
 	if (
 		! ImageFit1D<Float>::setAbcissaState(
 			errMsg, abcissaType, csys, "pix", doppler, _fitAxis
@@ -1592,7 +1774,7 @@ void ImageProfileFitter::_fitProfiles(
 			}
 		}
 		catch (const AipsError& x) {
-			ok = False;                       // Some other error
+			ok = False;
 		}
 		_fitters(curPos) = fitter;
 		// Evaluate and fill
