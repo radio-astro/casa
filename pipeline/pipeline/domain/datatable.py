@@ -441,7 +441,7 @@ class DataTableImpl( object ):
                         tsys_time = times.take(indices)
                         for row in rows:
                             tref = self.tb1.getcell('TIME', row)
-                            itsys = __interpolate(atsys, tsys_time, tref)
+                            itsys = _interpolate(atsys, tsys_time, tref)
                             self.tb1.putcell('TSYS', row, itsys)                
 
 class RODataTableColumn( object ):
@@ -569,7 +569,7 @@ class DataTableColumnMaskList( RWDataTableColumn ):
             self.putcell(i,numpy.array(val[idx]))
             idx += 1
 
-def __interpolate(v, t, tref):
+def _interpolate(v, t, tref):
     n = len(t)
     idx = -1
     for i in xrange(n):
