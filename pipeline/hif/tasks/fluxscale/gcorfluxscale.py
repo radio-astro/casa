@@ -245,23 +245,13 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         will run successfully on it:
           1. Check that the caltable contains results for the reference and
              transfer fields.
-          2. For each spectral window:
-                For each field find the set of antennas for which the 
-                caltable holds  good results. From this derive the
-                set of antennas that have good results for all fields.
-                Edit the caltable to flag as bad rows with results for 
-                antennas outside this set.
         """
         # get the ids of the reference source and phase source(s)
         amp_fieldid = set([field.id for field in ms.fields if
-          field.name==reference])
+          field.name==reference or str(field.id)==reference])
         phase_fieldids = set([field.id for field in ms.fields if
           field.name in transfer])
 
-#        casatools.ca.open(caltable)
-#        spw = ca.spw(name=True)
-#        ca.spw() does not seem to work. For now use direct table access.
-#        fluxscale_spwids = []
         with casatools.TableReader(caltable, nomodify=False) as table:
             spwids = table.getcol('SPECTRAL_WINDOW_ID')
             spwids = set(spwids)
@@ -271,11 +261,10 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
             # check that fieldids contains the amplitude and phase calibrators
             if fieldids.isdisjoint(amp_fieldid):
-                LOG.warning(
-                  '%s contains ambiguous amplitude calibrator field names' % 
+                LOG.error(
+                  '%s contains no results for amplitude calibrator' % 
                   os.path.basename(caltable))
-                #return False
-                return True
+                return False
             if not fieldids.issuperset(phase_fieldids):
                 LOG.error(
                   '%s does not contain results for all phase calibrators' %
