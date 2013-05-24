@@ -39,7 +39,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
         
-    def draw_radec(self, rows, connect=True, circle=[], ObsPattern=False, show_plot=True, plotfile=False):
+    def draw_radec(self, rows, connect=True, circle=[], ObsPattern=False, plotfile=False):
         """
         Draw loci of the telescope pointing
         xaxis: extension header keyword for RA
@@ -48,7 +48,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         """
         datatable = self.datatable
 
-        if show_plot == False and plotfile == False: return
+        if common.ShowPlot == False and plotfile == False: return
 
         ROW = datatable.getcol('ROW')
         tRA = datatable.getcol('RA')
@@ -73,9 +73,10 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         Aspect = 1.0 / math.cos(tDEC[0] / 180.0 * 3.141592653)
 
         # Plotting routine
-        if show_plot: PL.ion()
+        if common.ShowPlot: PL.ion()
+        else: PL.ioff()
         PL.figure(self.MATPLOTLIB_FIGURE_ID)
-        if show_plot: PL.ioff()
+        if common.ShowPlot: PL.ioff()
         if connect is True: Mark = 'g-o'
         else: Mark = 'bo'
         PL.cla()
@@ -119,7 +120,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
                 y.append(DEC[-1])
                 PL.plot(x, y, Mark, markersize=4, markeredgecolor='r', markerfacecolor='r')
         PL.axis([xmin, xmax, ymin, ymax])
-        if show_plot != False: PL.draw()
+        if common.ShowPlot != False: PL.draw()
         if plotfile != False: PL.savefig(plotfile, format='png', dpi=common.DPISummary)
 
         del RA, DEC, x, y

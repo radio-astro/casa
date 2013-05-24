@@ -11,7 +11,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
-from .common import DPISummary, DPIDetail, SDImageDisplay, draw_beam
+from .common import DPISummary, DPIDetail, SDImageDisplay, ShowPlot, draw_beam
 LOG = infrastructure.get_logger(__name__)
 
 NoData = -32767.0
@@ -115,9 +115,9 @@ class SDSpectralImageDisplay(SDImageDisplay):
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)
 
         # How to coordinate the map
-        ShowPlot = True
         TickSize = 6
         if ShowPlot: PL.ion()
+        else: PL.ioff()
         PL.figure(self.MATPLOTLIB_FIGURE_ID)
         if ShowPlot: PL.ioff()
         # 2008/9/20 Dec Effect has been taken into account
@@ -318,12 +318,10 @@ class SDSpectralImageDisplay(SDImageDisplay):
 
                         PL.title(Title[i], size=TickSize)
 
-                if ShowPlot != False: PL.draw()
-                FigFileDir = self.stage_dir
+                if ShowPlot: PL.draw()
                 FigFileRoot = self.inputs.imagename + '.pol%s'%(pol)
-                plotfile = os.path.join(FigFileDir, FigFileRoot+'_ChannelMap_%s.png'%(ValidCluster))
-                if FigFileDir != False:
-                    PL.savefig(plotfile, format='png', dpi=DPIDetail)
+                plotfile = os.path.join(self.stage_dir, FigFileRoot+'_ChannelMap_%s.png'%(ValidCluster))
+                PL.savefig(plotfile, format='png', dpi=DPIDetail)
 
                 parameters = {}
                 parameters['intent'] = 'TARGET'
@@ -388,11 +386,10 @@ class SDSpectralImageDisplay(SDImageDisplay):
 
             PL.title('Baseline RMS Map', size=12)
 
-            if ShowPlot != False: PL.draw()
+            if ShowPlot: PL.draw()
             FigFileRoot = self.inputs.imagename + '.pol%s'%(pol)
-            plotfile = os.path.join(FigFileDir, FigFileRoot+'_rmsmap.png')
-            if FigFileDir != False:
-                PL.savefig(plotfile, format='png', dpi=DPISummary)
+            plotfile = os.path.join(self.stage_dir, FigFileRoot+'_rmsmap.png')
+            PL.savefig(plotfile, format='png', dpi=DPISummary)
 
             parameters = {}
             parameters['intent'] = 'TARGET'
@@ -482,9 +479,9 @@ class SDSpectralImageDisplay(SDImageDisplay):
                     Plot[x][y] = valid_sp.mean(axis=0)
 
             # Plotting routine
-            ShowPlot = True
             Mark = '-b'
             if ShowPlot: PL.ion()
+            else: PL.ioff()
             PL.figure(self.MATPLOTLIB_FIGURE_ID)
             if ShowPlot: PL.ioff()
 
@@ -550,11 +547,9 @@ class SDSpectralImageDisplay(SDImageDisplay):
             PL.text(1, 0.5, 'RA', horizontalalignment='center', verticalalignment='center', size=(TickSize+1))
             if ShowPlot: PL.draw()
 
-            FigFileDir = self.stage_dir
             FigFileRoot = self.inputs.imagename+'.pol%s_Sparse'%(pol)
-            plotfile = os.path.join(FigFileDir, FigFileRoot+'_0.png')
-            if FigFileDir != False:
-                PL.savefig(plotfile, format='png', dpi=DPIDetail)
+            plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
+            PL.savefig(plotfile, format='png', dpi=DPIDetail)
 
             parameters = {}
             parameters['intent'] = 'TARGET'

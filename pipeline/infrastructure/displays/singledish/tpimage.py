@@ -11,7 +11,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation
-from .common import DPISummary, DPIDetail, SDImageDisplay, draw_beam
+from .common import DPISummary, DPIDetail, SDImageDisplay, ShowPlot, draw_beam
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -21,7 +21,6 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
     def plot(self):
         self.init()
         
-        ShowPlot = True
         stage_dir = self.inputs.stage_dir
 
         Extent = (self.ra_max+self.grid_size/2.0, self.ra_min-self.grid_size/2.0, self.dec_min-self.grid_size/2.0, self.dec_max+self.grid_size/2.0)
@@ -31,6 +30,7 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
         # Plotting
         TickSize = 6
         if ShowPlot: PL.ion()
+        else: PL.ioff()
         PL.figure(self.MATPLOTLIB_FIGURE_ID)
         if ShowPlot: PL.ioff()
         # 2008/9/20 Dec Effect has been taken into account
