@@ -2,10 +2,9 @@ from __future__ import absolute_import
 
 import os
 import math
-import pylab as PL
+import pylab as pl
 import numpy
 
-#from matplotlib.ticker import FuncFormatter, MultipleLocator
 from matplotlib.font_manager import FontProperties 
 
 import pipeline.infrastructure.casatools as casatools
@@ -25,7 +24,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         obs_pattern = st.pattern[spwid].values()[0]
         rows = self.datatable.get_row_index(idx, spwid)
         plotfile = os.path.join(stage_dir, 'pointing_%s.png'%(st.basename))
-        self.draw_radec(rows, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern, plotfile=plotfile)
+        self.draw_radec(rows, plotfile, circle=[0.5*beam_size['value']], ObsPattern=obs_pattern)
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spwid
@@ -39,7 +38,7 @@ class SDPointingDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
         
-    def draw_radec(self, rows, connect=True, circle=[], ObsPattern=False, plotfile=False):
+    def draw_radec(self, rows, plotfile, connect=True, circle=[], ObsPattern=False):
         """
         Draw loci of the telescope pointing
         xaxis: extension header keyword for RA
@@ -47,8 +46,6 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         connect: connect points if True
         """
         datatable = self.datatable
-
-        if common.ShowPlot == False and plotfile == False: return
 
         ROW = datatable.getcol('ROW')
         tRA = datatable.getcol('RA')
@@ -73,33 +70,33 @@ class SDPointingDisplay(common.SDInspectionDisplay):
         Aspect = 1.0 / math.cos(tDEC[0] / 180.0 * 3.141592653)
 
         # Plotting routine
-        if common.ShowPlot: PL.ion()
-        else: PL.ioff()
-        PL.figure(self.MATPLOTLIB_FIGURE_ID)
-        if common.ShowPlot: PL.ioff()
+        if common.ShowPlot: pl.ion()
+        else: pl.ioff()
+        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if common.ShowPlot: pl.ioff()
         if connect is True: Mark = 'g-o'
         else: Mark = 'bo'
-        PL.cla()
-        PL.clf()
-        a = PL.axes([0.15, 0.2, 0.7, 0.7])
+        pl.cla()
+        pl.clf()
+        a = pl.axes([0.15, 0.2, 0.7, 0.7])
         # 2008/9/20 DEC Effect
         a.set_aspect(Aspect)
         #a.set_aspect('equal')
-        PL.xlabel('RA')
-        PL.ylabel('Dec')
+        pl.xlabel('RA')
+        pl.ylabel('Dec')
         if ObsPattern == False:
-            PL.title('Telescope Pointing on the Sky')
+            pl.title('Telescope Pointing on the Sky')
         else:
-            PL.title('Telescope Pointing on the Sky\nPointing Pattern = %s' % ObsPattern)
-        PL.plot(RA, DEC, Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
+            pl.title('Telescope Pointing on the Sky\nPointing Pattern = %s' % ObsPattern)
+        pl.plot(RA, DEC, Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
         a.xaxis.set_major_formatter(RAformatter)
         a.yaxis.set_major_formatter(DECformatter)
         a.xaxis.set_major_locator(RAlocator)
         a.yaxis.set_major_locator(DEClocator)
         xlabels = a.get_xticklabels()
-        PL.setp(xlabels, 'rotation', RArotation, fontsize=8)
+        pl.setp(xlabels, 'rotation', RArotation, fontsize=8)
         ylabels = a.get_yticklabels()
-        PL.setp(ylabels, 'rotation', DECrotation, fontsize=8)
+        pl.setp(ylabels, 'rotation', DECrotation, fontsize=8)
         # plot starting position with beam and end position 
         if len(circle) != 0:
             for R in circle:
@@ -111,17 +108,16 @@ class SDPointingDisplay(common.SDInspectionDisplay):
                     x.append(RA[0] + R * math.sin(t * 0.13)  * Aspect)
                     #x.append(RA[0] + R * math.sin(t * 0.13))
                     y.append(DEC[0] + R * math.cos(t * 0.13))
-                PL.plot(x, y, Mark)
+                pl.plot(x, y, Mark)
                 #Mark = 'm-'
                 Mark = 'ro'
                 x = []
                 y = []
                 x.append(RA[-1])
                 y.append(DEC[-1])
-                PL.plot(x, y, Mark, markersize=4, markeredgecolor='r', markerfacecolor='r')
-        PL.axis([xmin, xmax, ymin, ymax])
-        if common.ShowPlot != False: PL.draw()
-        if plotfile != False: PL.savefig(plotfile, format='png', dpi=common.DPISummary)
+                pl.plot(x, y, Mark, markersize=4, markeredgecolor='r', markerfacecolor='r')
+        pl.axis([xmin, xmax, ymin, ymax])
+        if common.ShowPlot != False: pl.draw()
+        pl.savefig(plotfile, format='png', dpi=common.DPISummary)
 
-        del RA, DEC, x, y
         return

@@ -4,7 +4,7 @@ import os
 import abc
 import numpy
 import math
-import pylab as PL
+import pylab as pl
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
@@ -21,18 +21,16 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
     def plot(self):
         self.init()
         
-        stage_dir = self.inputs.stage_dir
-
         Extent = (self.ra_max+self.grid_size/2.0, self.ra_min-self.grid_size/2.0, self.dec_min-self.grid_size/2.0, self.dec_max+self.grid_size/2.0)
         span = max(self.ra_max - self.ra_min + self.grid_size, self.dec_max - self.dec_min + self.grid_size)
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)
 
         # Plotting
         TickSize = 6
-        if ShowPlot: PL.ion()
-        else: PL.ioff()
-        PL.figure(self.MATPLOTLIB_FIGURE_ID)
-        if ShowPlot: PL.ioff()
+        if ShowPlot: pl.ion()
+        else: pl.ioff()
+        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if ShowPlot: pl.ioff()
         # 2008/9/20 Dec Effect has been taken into account
         #Aspect = 1.0 / math.cos(Table[0][5] / 180. * 3.141592653)
         Aspect = 1.0 / math.cos(0.5 * (self.dec_max + self.dec_min) / 180. * 3.141592653)
@@ -48,27 +46,27 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
             Total = masked_data[:,:,0,pol]
             Total = numpy.flipud(Total.transpose())
 
-            PL.cla()
-            PL.clf()
+            pl.cla()
+            pl.clf()
 
-            a = PL.axes([x0, y0, x1, y1])
+            a = pl.axes([x0, y0, x1, y1])
             # 2008/9/20 DEC Effect
-            im = PL.imshow(Total, interpolation='nearest', aspect=Aspect, extent=Extent)
-            #im = PL.imshow(Total, interpolation='nearest', aspect='equal', extent=Extent)
+            im = pl.imshow(Total, interpolation='nearest', aspect=Aspect, extent=Extent)
+            #im = pl.imshow(Total, interpolation='nearest', aspect='equal', extent=Extent)
 
             a.xaxis.set_major_formatter(RAformatter)
             a.yaxis.set_major_formatter(DECformatter)
             a.xaxis.set_major_locator(RAlocator)
             a.yaxis.set_major_locator(DEClocator)
             xlabels = a.get_xticklabels()
-            PL.setp(xlabels, 'rotation', RArotation, fontsize=TickSize)
+            pl.setp(xlabels, 'rotation', RArotation, fontsize=TickSize)
             ylabels = a.get_yticklabels()
-            PL.setp(ylabels, 'rotation', DECrotation, fontsize=TickSize)
+            pl.setp(ylabels, 'rotation', DECrotation, fontsize=TickSize)
 
-            PL.xlabel('RA', size=TickSize)
-            PL.ylabel('DEC', size=TickSize)
-            if colormap == 'gray': PL.gray()
-            else: PL.jet()
+            pl.xlabel('RA', size=TickSize)
+            pl.ylabel('DEC', size=TickSize)
+            if colormap == 'gray': pl.gray()
+            else: pl.jet()
 
             # colorbar
             #print "min=%s, max of Total=%s" % (Total.min(),Total.max())
@@ -76,7 +74,7 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
                 #if not ((Ymax == Ymin) and (Xmax == Xmin)): 
                 #if not all(image_shape[id_direction] <= 1):
                 if self.nx > 1 or self.ny > 1:
-                    cb=PL.colorbar(shrink=0.8)
+                    cb=pl.colorbar(shrink=0.8)
                     for t in cb.ax.get_yticklabels():
                         newfontsize = t.get_fontsize()*0.5
                         t.set_fontsize(newfontsize)
@@ -88,14 +86,12 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
             # draw beam pattern
             draw_beam(a, 0.5 * self.beam_size, Aspect, self.ra_min, self.dec_min)
 
-            PL.title('Total Power', size=TickSize)
+            pl.title('Total Power', size=TickSize)
 
-            if ShowPlot != False: PL.draw()
-            FigFileDir = stage_dir
+            if ShowPlot: pl.draw()
             FigFileRoot = self.inputs.imagename+'.pol%s'%(pol)
-            plotfile = os.path.join(FigFileDir,FigFileRoot+'_TP.png')
-            if FigFileDir != False:
-                PL.savefig(plotfile, format='png', dpi=DPIDetail)
+            plotfile = os.path.join(self.stage_dir,FigFileRoot+'_TP.png')
+            pl.savefig(plotfile, format='png', dpi=DPIDetail)
 
             parameters = {}
             parameters['intent'] = 'TARGET'
