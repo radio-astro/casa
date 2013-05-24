@@ -583,6 +583,7 @@ class specfit_test(unittest.TestCase):
 
             self.assertTrue(res["xUnit"] == "km/s")
             self.assertTrue(res["yUnit"] == "Jy")
+            self.assertTrue(len(res["direction"].ravel()) == 81)
             gs = res["gs"]
             gs["center"][0,0,0,0,0] = nanvalue
             gs["center"][0,0,0,0,1] = nanvalue

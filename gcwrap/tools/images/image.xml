@@ -4405,6 +4405,7 @@ valid: a boolean array indicating which solutions fall within the specified vali
 niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
 ncomps: the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
         &lt;0 if the fit did not converge
+direction: a string array containing the world direction coordinate for each profile
 
 There is a "type" array having number of dimensions equal to the number of dimensions in the above arrays plus one. The shape of
 the first n-1 dimensions is the same as the shape of the above arrays. The length of the last dimension is equal to the number of
