@@ -32,6 +32,7 @@
 #include <components/SpectralComponents/GaussianSpectralElement.h>
 #include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
+#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
 #include <scimath/Fitting/NonLinearFitLM.h>
 #include <scimath/Functionals/CompiledFunction.h>
 #include <scimath/Functionals/CompoundFunction.h>
@@ -39,6 +40,7 @@
 #include <scimath/Functionals/Gaussian1D.h>
 #include <scimath/Functionals/Lorentzian1D.h>
 #include <scimath/Functionals/Polynomial.h>
+#include <scimath/Functionals/PowerLogarithmicPolynomial.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -120,8 +122,21 @@ Bool SpectralFit::fit(const Vector<MT> &sigma,
 			npar += lor.nparameters();
 		}
 		break;
+		case SpectralElement::POWERLOGPOLY: {
+			SpectralElement *x = slist_p[i];
+			Vector<Double> parms = x->get();
+			uInt n = parms.size();
+			PowerLogarithmicPolynomial<AutoDiff<MT> > plp(n);
+			npar += n;
+			for (uInt j=0; j<n; ++j) {
+				plp[j] = AutoDiff<MT>(parms[j], n, j);
+				plp.mask(j) = ! x->fixed()(j);
+			};
+			func.addFunction(plp);
+		}
+		break;
 		default:
-			throw AipsError("Unhandled SpectralElement type");
+			throw AipsError("SpectralFit::fit(): Logic Error: Unhandled SpectralElement type");
 		}
 	}
 	fitter.setFunction(func);
