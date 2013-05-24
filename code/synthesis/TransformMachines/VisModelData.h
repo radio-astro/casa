@@ -89,7 +89,7 @@ class VisModelData {
 		    const Vector<Int>& msIds);
 
   //add componentlists or ftmachines 
-  void addModel(const Record& rec,  const Vector<Int>& msids, const VisBuffer& vb);
+  void addModel(const RecordInterface& rec,  const Vector<Int>& msids, const VisBuffer& vb);
 
   //put the model data for this VisBuffer in the modelVisCube
   Bool getModelVis(VisBuffer& vb);
@@ -102,6 +102,14 @@ class VisModelData {
   static void clearModel(const MeasurementSet& thems);
   // ...with field selection and optionally spw
   static void clearModel(const MeasurementSet& thems, const String field, const String spws=String(""));
+
+  //Functions to see if model is defined in the MS either in the SOURCE table or else in the MAIN
+  static Bool isModelDefined(const Int fieldId, const MeasurementSet& thems, String& key, Int& sourceRow);
+  static Bool isModelDefined(const String& elkey, const MeasurementSet& thems);
+
+  //Get a given model that is defined by key
+  //Forcing user to use a TableRecord rather than Generic RecordInterface ...just so as to avoid a copy.
+  static Bool getModelRecord(const String& theKey, TableRecord& theRec, const MeasurementSet& theMs);
 
   // List the fields
   static void listModel(const MeasurementSet& thems);
@@ -118,11 +126,16 @@ class VisModelData {
   void initializeToVis();
   Vector<CountedPtr<ComponentList> >getCL(const Int msId, const Int fieldId, Int spw);
   Vector<CountedPtr<FTMachine> >getFT(const Int msId, const Int fieldId, Int spw);
-  static Bool addToRec(Record& therec, const Vector<Int>& spws);
+  static Bool addToRec(TableRecord& therec, const Vector<Int>& spws);
   static Bool removeSpwFromMachineRec(RecordInterface& ftclrec, const Vector<Int>& spws);
-  static Bool removeFTFromRec(Record& therec, const String& keyval);
-  static Bool removeSpw(Record& therec, const Vector<Int>& spws);
-
+  static Bool removeFTFromRec(TableRecord& therec, const String& keyval);
+  static Bool removeSpw(TableRecord& therec, const Vector<Int>& spws);
+  static Bool putModelRecord(const Vector<Int>& fieldIds, TableRecord& theRec, MeasurementSet& theMS);
+  //Remove the Record which has the given key...will exterminate it from both the Source table or Main table
+  static void removeRecordByKey(MeasurementSet& theMS, const String& theKey);
+  //put the Record by key if sourcerownum=-1 then it is saved in the main table
+  //this default should only be used  if the optional SOURCE table in non-existant
+  static void putRecordByKey(MeasurementSet& theMS, const String& theKey, const TableRecord& theRec, const Int sourceRowNum=-1);
   Block<Vector<CountedPtr<ComponentList> > > clholder_p;
   Block<Vector<CountedPtr<FTMachine> > > ftholder_p;
   Block<Vector<Double> > flatholder_p;

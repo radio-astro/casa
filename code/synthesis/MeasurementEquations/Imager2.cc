@@ -2169,7 +2169,7 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresidual
 
 
 	    //
-	    // Using minPB_p^2 below to make it consistent with the normalization in SkyEquation.
+	    // Using minPB_p^2 below to make it consistent with the normalization in SkyEquation for ftmachine mosaic as coverimage in that case in square of what it should be
 	    //
 	    Float cutoffval=minPB_p;
 	    if(ft_p->name()=="MosaicFT")	      
@@ -2186,19 +2186,19 @@ Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresidual
 	     
 	      if(scaleType_p=="NONE"){
 		if(dorestore){
-		  LatticeExpr<Float> le(iif(((cover > minPB_p) && ((*diviseur) >0.0)) , 
+		  LatticeExpr<Float> le(iif(((cover > cutoffval) && ((*diviseur) >0.0)) , 
 					    (restored/(*diviseur)), 0.0));
 		  restored.copyData(le);
 		}
-		    LatticeExpr<Float> le1(iif(((cover > minPB_p) && ((*diviseur) >0.0)), 
+		    LatticeExpr<Float> le1(iif(((cover > cutoffval) && ((*diviseur) >0.0)), 
 					       (residIm/(*diviseur)), 0.0));
 		residIm.copyData(le1);
 		
 	      }
 	      
 	      //Setting the bit-mask for mosaic image
-	      LatticeExpr<Bool> lemask(iif((cover < minPB_p) , 
-					   False, True));
+	      LatticeExpr<Bool> lemask(iif((cover > cutoffval) && ((*diviseur) >0.0), 
+					   True, False));
 	      if(dorestore){
 		ImageRegion outreg=restored.makeMask("mask0", False, True);
 		LCRegion& outmask=outreg.asMask();

@@ -208,8 +208,8 @@ struct spwInfo {
 
 	void update()
 	{
-		upperBound = CHAN_FREQ(NUM_CHAN-1)+0.5*CHAN_FREQ(NUM_CHAN-1);
-		lowerBound = CHAN_FREQ(0)-0.5*CHAN_FREQ(0);
+		upperBound = CHAN_FREQ(NUM_CHAN-1)+0.5*CHAN_WIDTH(NUM_CHAN-1);
+		lowerBound = CHAN_FREQ(0)-0.5*CHAN_WIDTH(0);
 		TOTAL_BANDWIDTH = upperBound - lowerBound;
 		REF_FREQUENCY = CHAN_FREQ(0);
 

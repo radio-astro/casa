@@ -1,4 +1,4 @@
-//# SIImageStore.h: Imager functionality sits here; 
+//# SynthesisParSync.h: Gather and Scatter operations for parallel major cycles.
 //# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -24,8 +24,8 @@
 //#
 //# $Id$
 
-#ifndef SYNTHESIS_SIIMAGESTORE_H
-#define SYNTHESIS_SIMAGESTORE_H
+#ifndef SYNTHESIS_SYNTHESISPARSYNC_H
+#define SYNTHESIS_SYNTHESISPARSYNC_H
 
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>
@@ -34,66 +34,58 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-#include <coordinates/Coordinates/CoordinateSystem.h>
-#include <images/Images/PagedImage.h>
-#include <images/Images/TempImage.h>
-#include <images/Images/SubImage.h>
-#include <images/Regions/ImageRegion.h>
+
+#include<synthesis/MeasurementEquations/SDAlgorithmBase.h>
+#include<synthesis/MeasurementEquations/SDAlgorithmHogbomClean.h>
+#include<synthesis/MeasurementEquations/SDMaskHandler.h>
+#include <synthesis/MeasurementEquations/SIMinorCycleController.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-class SIImageStore 
+// Forward declarations
+class MeasurementSet;
+template<class T> class ImageInterface;
+
+// <summary> Class that contains functions needed for imager </summary>
+
+class SynthesisParSync 
 {
  public:
   // Default constructor
 
-  SIImageStore();
-  SIImageStore(String imagename);
-  SIImageStore(String imagename, 
-	       CoordinateSystem &imcoordsys, 
-	       IPosition imshape);
+  SynthesisParSync();
+  ~SynthesisParSync();
 
-  ~SIImageStore();
+  // Copy constructor and assignment operator
 
+  // make all pure-inputs const
+  void setupParSync(Record syncpars);
 
-  IPosition getShape();
-  String getName();
+  // Gather all part images to the 'full' one
+  void gatherResidual();
 
-  CountedPtr<PagedImage<Float> > psf();
-  CountedPtr<PagedImage<Float> > residual();
-  CountedPtr<PagedImage<Float> > weight();
-  CountedPtr<PagedImage<Float> > model();
-  CountedPtr<PagedImage<Float> > image();
-
-  void setModelImage( String modelname );
-
-  Bool hasWeight(){return itsWeightExists;};
-
-  Bool doImagesExist();
-  Bool doesImageExist(String imagename);
-
-  void allocateRestoredImage();
-
-  void resetImages( Bool resetpsf, Bool resetresidual, Bool resetweight );
-  void addImages( CountedPtr<SIImageStore> imagestoadd, 
-		  Bool addpsf, Bool addresidual, Bool addweight );
-
-  void divideResidualByWeight(Float weightlimit);
-  void dividePSFByWeight(Float weightlimit);
-  void divideModelByWeight(Float weightlimit);
-
-  Bool isValid(){return itsValidity;}
+  // Copy out model to all pieces. Currently a No-Op.
+  void scatterModel();
 
 protected:
 
-  ///////////////////// Member Objects
+ // Normalize. This can later change to be more general, i.e. used for PB-correction too...
+  void divideResidualByWeight();
+  void divideModelByWeight();
+ // Check if images exist on disk and are all the same shape
+  Bool setupImagesOnDisk();
+  Bool doImagesExist( String imagename );
+
+  /////////////// Member Objects
+
+  CountedPtr<SIImageStore> itsImages;
+  Vector<CountedPtr<SIImageStore> > itsPartImages;
 
   IPosition itsImageShape;
+  
   String itsImageName;
-  CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
-  Bool itsWeightExists;
-
-  Bool itsValidity;
+  Vector<String> itsPartImageNames;
+  String itsStartingModelName;
 
 };
 
