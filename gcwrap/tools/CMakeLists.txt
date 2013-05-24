@@ -104,6 +104,7 @@ casa_add_library( tools
  synthesis/simulator_cmpt.cc
  synthesis/synthesisimager_cmpt.cc
  synthesis/synthesisdeconvolver_cmpt.cc
+ synthesis/synthesisparsync_cmpt.cc
  synthesis/synthesisiterbot_cmpt.cc
  synthesis/vpmanager_cmpt.cc
  tables/table_cmpt.cc
@@ -164,6 +165,7 @@ casa_add_tools( tools_swig tools_sources tools_py
  synthesis/simulator.xml
  synthesis/synthesisimager.xml
  synthesis/synthesisdeconvolver.xml
+ synthesis/synthesisparsync.xml
  synthesis/synthesisiterbot.xml
  synthesis/vpmanager.xml
  tables/tableindex.xml

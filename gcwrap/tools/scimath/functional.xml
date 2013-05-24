@@ -990,8 +990,8 @@ Create a 1-dimensional power log polynomial function with the specified coeffice
 # get the value and derivatives of 2*x**(1+ln(x))
 plp = fn.powerlogpoly(2,1,1)
 
-# returns array([ 0.125,  2.   ,  0.125])
-vals = gfn.f([0, 1, 2])
+# value at 3
+vals = plp.f(3)
 
 </example>
 </method>

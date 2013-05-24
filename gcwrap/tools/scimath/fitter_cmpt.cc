@@ -15,6 +15,7 @@
 #include <casa/Containers/Record.h>
 #include <casa/Logging/LogIO.h>
 #include <components/SpectralComponents/GaussianSpectralElement.h>
+#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
 #include <components/SpectralComponents/ProfileFit1D.h>
 
 #include <components/SpectralComponents/SpectralListFactory.h>
@@ -31,13 +32,12 @@ fitter::fitter() {}
 
 fitter::~fitter() {}
 
-record* fitter::fit1d(
+record* fitter::gauss1d(
 	const vector<double>& y, const vector<double>& x,
 	const vector<bool>& mask, const variant& pampest,
 	const variant& pcenterest, const variant& pfwhmest
 ) {
 	LogIO log;
-
 	try {
 		vector<double> myampest = toVectorDouble(pampest, "pampest");
 		vector<double> mycenterest = toVectorDouble(pcenterest, "pcenterest");
@@ -88,6 +88,42 @@ record* fitter::fit1d(
 	}
 	return new record();
 }
+
+
+record* fitter::powerlogpoly(
+	const vector<double>& y, const vector<double>& x,
+	const vector<bool>& mask, const vector<double>& estimates
+) {
+	LogIO log;
+	try {
+		ProfileFit1D<Double> fitter;
+		fitter.setData(x, y, mask);
+		SpectralList list;
+		if (estimates.size() == 0) {
+			list.add(PowerLogPolynomialSpectralElement(2));
+		}
+		else {
+			list.add(PowerLogPolynomialSpectralElement(estimates));
+		}
+		fitter.setElements(list);
+		fitter.fit();
+		Record ret;
+		ret.define("niter", fitter.getNumberIterations());
+		vector<Double> model;
+		ret.define("model", fitter.getFit());
+		ret.define("residual", fitter.getResidual());
+		SpectralList solutions = fitter.getList();
+		const PowerLogPolynomialSpectralElement *plp = dynamic_cast<const PowerLogPolynomialSpectralElement*>(solutions[0]);
+		ret.define("solutions", plp->get());
+		ret.define("errors", plp->getError());
+		return fromRecord(ret);
+	}
+	catch (const AipsError& x) {
+		RETHROW(x);
+	}
+	return new record();
+}
+
 
 } // casac namespace
 

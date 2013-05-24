@@ -487,11 +487,9 @@ calibrater::delmod(const bool otf, const ::casac::variant& field,
       *itsLog << "Deleting OTF Visbility Model info." << LogIO::POST;
       //cerr << "field " << toCasaString(field) << " spw " << toCasaString(spw) << endl;
       String fieldStr=toCasaString(field);
-      fieldStr.downcase();
-      if(fieldStr==String("false")) fieldStr=String("");
+      if(casa::fcompare(fieldStr,String("false"))==0) fieldStr=String("");
       String spwStr=toCasaString(spw);
-      spwStr.downcase();
-      if(spwStr==String("false")) spwStr=String("");
+      if(casa::fcompare(spwStr,String("false"))==0) spwStr=String("");
       VisModelData::clearModel(*itsMS, fieldStr, spwStr);
     }
 

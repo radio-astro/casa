@@ -55,7 +55,7 @@ synthesisdeconvolver::~synthesisdeconvolver()
   return rstat;
 }
 
-casac::record* synthesisdeconvolver::normalizeimage()
+casac::record* synthesisdeconvolver::initminorcycle()
 {
   casac::record* rstat(False);
   try {

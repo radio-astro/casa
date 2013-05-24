@@ -61,8 +61,8 @@ import os
 import pickle
 
 # Crate multi-MS at which step?
-usemms_step    = -1 # not at all
-#usemms_step   = 0 # at concat
+#usemms_step    = -1 # not at all
+usemms_step   = 0 # at concat
 #usemms_step   = 1 # before flagging
 #usemms_step   = 2 # before setjy
 #usemms_step   = 3 # before gaincal
@@ -217,24 +217,44 @@ if benchmarking:
 print '--Concat--'
 default('concat')
 
-concat(vis=['ngc4826.tutorial.3c273.5.ms',
-	    'ngc4826.tutorial.3c273.6.ms',
-	    'ngc4826.tutorial.3c273.7.ms',
-	    'ngc4826.tutorial.3c273.8.ms',
-	    'ngc4826.tutorial.1310+323.ll.9.ms',
-	    'ngc4826.tutorial.1310+323.ll.10.ms',
-	    'ngc4826.tutorial.1310+323.ll.11.ms',
-	    'ngc4826.tutorial.1310+323.ll.12.ms',
-	    'ngc4826.tutorial.1310+323.ll.13.ms',
-	    'ngc4826.tutorial.1310+323.ll.14.ms',
-	    'ngc4826.tutorial.1310+323.ll.15.ms',
-	    'ngc4826.tutorial.1310+323.ll.16.ms',
-	    'ngc4826.tutorial.ngc4826.ll.5.ms',
-	    'ngc4826.tutorial.ngc4826.ll.6.ms',
-	    'ngc4826.tutorial.ngc4826.ll.7.ms',
-	    'ngc4826.tutorial.ngc4826.ll.8.ms'],
-       concatvis='ngc4826.tutorial.ms',
-       freqtol="",dirtol="1arcsec",async=False, createmms=(usemms_step==0))
+if(usemms_step !=0):
+    concat(vis=['ngc4826.tutorial.3c273.5.ms',
+                'ngc4826.tutorial.3c273.6.ms',
+                'ngc4826.tutorial.3c273.7.ms',
+                'ngc4826.tutorial.3c273.8.ms',
+                'ngc4826.tutorial.1310+323.ll.9.ms',
+                'ngc4826.tutorial.1310+323.ll.10.ms',
+                'ngc4826.tutorial.1310+323.ll.11.ms',
+                'ngc4826.tutorial.1310+323.ll.12.ms',
+                'ngc4826.tutorial.1310+323.ll.13.ms',
+                'ngc4826.tutorial.1310+323.ll.14.ms',
+                'ngc4826.tutorial.1310+323.ll.15.ms',
+                'ngc4826.tutorial.1310+323.ll.16.ms',
+                'ngc4826.tutorial.ngc4826.ll.5.ms',
+                'ngc4826.tutorial.ngc4826.ll.6.ms',
+                'ngc4826.tutorial.ngc4826.ll.7.ms',
+                'ngc4826.tutorial.ngc4826.ll.8.ms'],
+           concatvis='ngc4826.tutorial.ms',
+           freqtol="",dirtol="1arcsec",async=False)
+else:
+    virtualconcat(vis=['ngc4826.tutorial.3c273.5.ms',
+                       'ngc4826.tutorial.3c273.6.ms',
+                       'ngc4826.tutorial.3c273.7.ms',
+                       'ngc4826.tutorial.3c273.8.ms',
+                       'ngc4826.tutorial.1310+323.ll.9.ms',
+                       'ngc4826.tutorial.1310+323.ll.10.ms',
+                       'ngc4826.tutorial.1310+323.ll.11.ms',
+                       'ngc4826.tutorial.1310+323.ll.12.ms',
+                       'ngc4826.tutorial.1310+323.ll.13.ms',
+                       'ngc4826.tutorial.1310+323.ll.14.ms',
+                       'ngc4826.tutorial.1310+323.ll.15.ms',
+                       'ngc4826.tutorial.1310+323.ll.16.ms',
+                       'ngc4826.tutorial.ngc4826.ll.5.ms',
+                       'ngc4826.tutorial.ngc4826.ll.6.ms',
+                       'ngc4826.tutorial.ngc4826.ll.7.ms',
+                       'ngc4826.tutorial.ngc4826.ll.8.ms'],
+                  concatvis='ngc4826.tutorial.ms',
+                  async=False)
 
 if benchmarking:
     concat2time=time.time()
@@ -1525,8 +1545,8 @@ testvers = 'CASA Version 3.0.2 (build #11306)'
 clean_image_max = 1.615747
 clean_offsrc_rms = 0.058497
 clean_offline_rms = 0.055416
-clean_momentzero_max = 163.726852
-clean_momentzero_rms = 15.206372
+clean_momentzero_max = 159.7
+clean_momentzero_rms = 14.206372
 #
 #  32 bits gets 423.6954 and 64 bits gets 422.142792
 #  diff << 1 chanwidth.
@@ -1535,21 +1555,21 @@ clean_momentone_planezero = 696.702393
 clean_momentone_planelast = 127.786629
 vis_mean_cal = 195.0509
 vis_mean_src = 54.665
-model_sum = 75.7516
-model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
+model_sum = 67.10
+##model_pbcor_sum = 75.92 # was 66.88 Peak hits a channel better?
 
 # RR, 1/19/2011 - The rmses went down, just like in orionmos4sim.  This is
 # good, so I won't complain too loudly.  The moment 1 median and pbcor_sum have
 # jiggled around a fair bit.  The median is _not_ affected by the two spurious
 # blobs at 501.64 km/s, though.  (Verified by doing imstat with a tight polygon
 # region.)
-clean_offsrc_rms = 0.04736
-clean_offline_rms = 0.049904
-clean_momentzero_rms = 13.737679
+clean_offsrc_rms = 0.0604
+clean_offline_rms = 0.0625
+clean_momentzero_rms = 15.08
 # The chanwidth is ~16 km/s.
 clean_momentone_median = 435.368103
 
-model_pbcor_sum = 77.7232
+model_pbcor_sum = 72.72
 
 ## # RR, 3/11/2011 - The rmses went up, but not to their historical maxima.  The
 ## # model_pbcor_sum went down, but not to its historical minimum.  Nobody seems
@@ -1562,7 +1582,7 @@ model_pbcor_sum = 77.7232
 ## RR, 3/25 - 4/3/2011, after clean was changed to used the center of output
 ## channel frequencies, instead of center of the first input channel in each
 ## output channel.
-clean_image_max = 1.4637
+clean_image_max = 1.46
 clean_momentone_median = 424.3254
 clean_momentone_planezero = 690.6068
 clean_momentone_planelast = 121.6911

@@ -141,7 +141,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     weights and sigmas. 
     
     Note: Some of the parameters (byantenna, sepacs, fitcorr, and timebin) 
-          are not fully implemeted for CASA 3.4.
+          are not fully implemented for CASA 3.4.
           
 
         Keyword arguments:
@@ -162,7 +162,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                default: False
 
         byantenna -- Assume that the noise is factorable by antenna (feed).
-                     If false, treat it seperately for each baseline
+                     If false, treat it separately for each baseline
                      (recommended if there is strong signal).
                default: False (*** byantenna=True is not yet implemented)
 

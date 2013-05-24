@@ -5,6 +5,7 @@
 ###############################################
 import time
 import os
+import sys
 
 #Data must be pre-filled
 #n4826_16apr98.ms, n4826_22apr98.ms
@@ -411,47 +412,47 @@ datestring=datetime.datetime.isoformat(datetime.datetime.today())
 outfile='n4826.'+datestring+'.log'
 logfile=open(outfile,'w')
 
-print >>logfile,'********** Regression ***********'
-print >>logfile,'* (Values: got, then expected)  *'
+for x in [sys.stdout, logfile]: print >> x,'********** Regression ***********'
+for x in [sys.stdout, logfile]: print >> x,'* (Values: got, then expected)  *'
 statstrs = {True: 'Passed', False: 'FAILED'}
-print >>logfile, '*', statstrs[diff_cal22apr<0.08], 'cal mean amp (22apr)'
-print >>logfile,'--Cal mean amp (22apr) '+str(thistest_cal_22apr)+', '+str(calmean22)
-print >>logfile, '*', statstrs[diff_src22apr<0.08], 'src mean amp (22apr)'
-print >>logfile,'--Src mean amp (22apr) '+str(thistest_src_22apr)+', '+str(srcmean22)
-print >>logfile, '*', statstrs[diff_calmax22<0.08], 'cal image max (22apr)'
-print >>logfile,'--Image max (cal;22apr) '+str(im_calmax22)+', '+str(calmax22)
-print >>logfile, '*', statstrs[diff_srcmax22<0.08], 'src image max (22apr)'
-print >>logfile,'--Image max (src;22apr): '+str(im_srcmax22)+', '+str(srcmax22)
-print >>logfile, '*', statstrs[diff_cal16apr<0.08], 'cal mean amp (16apr)'
-print >>logfile,'--Cal mean amp (16apr) '+str(thistest_cal_16apr)+', '+str(calmean16)
-print >>logfile, '*', statstrs[diff_src16apr<0.08], 'src mean amp (16apr)'
-print >>logfile,'--Src mean amp (16apr) '+str(thistest_src_16apr)+', '+str(srcmean16)
-print >>logfile, '*', statstrs[diff_calmax16<0.08], 'cal image max (16apr)'
-print >>logfile,'--Image max (cal;16apr): '+str(im_calmax16)+', '+str(calmax16)
-print >>logfile, '*', statstrs[diff_srcmax16<0.08], 'src image max (16apr)'
-print >>logfile,'--Image max (src;16apr): '+str(im_srcmax16)+', '+str(srcmax16)
-print >>logfile, '*', statstrs[diff_src<0.08], 'src mean amplitude test'
-print >>logfile,'--Src mean amp '+str(thistest_src)+', '+str(srcmean)
-print >>logfile, '*', statstrs[diff_immax<0.08], 'image max test'
-print >>logfile,'--Image max '+str(thistest_immax)+', '+str(immax)
-print >>logfile, '*', statstrs[diff_imrms<0.08], 'image rms test'
-print >>logfile,'--Image rms '+str(thistest_imrms)+', '+str(imrms)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_cal22apr<0.08], 'cal mean amp (22apr)'
+for x in [sys.stdout, logfile]: print >> x,'--Cal mean amp (22apr) '+str(thistest_cal_22apr)+', '+str(calmean22)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_src22apr<0.08], 'src mean amp (22apr)'
+for x in [sys.stdout, logfile]: print >> x,'--Src mean amp (22apr) '+str(thistest_src_22apr)+', '+str(srcmean22)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_calmax22<0.08], 'cal image max (22apr)'
+for x in [sys.stdout, logfile]: print >> x,'--Image max (cal;22apr) '+str(im_calmax22)+', '+str(calmax22)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_srcmax22<0.08], 'src image max (22apr)'
+for x in [sys.stdout, logfile]: print >> x,'--Image max (src;22apr): '+str(im_srcmax22)+', '+str(srcmax22)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_cal16apr<0.08], 'cal mean amp (16apr)'
+for x in [sys.stdout, logfile]: print >> x,'--Cal mean amp (16apr) '+str(thistest_cal_16apr)+', '+str(calmean16)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_src16apr<0.08], 'src mean amp (16apr)'
+for x in [sys.stdout, logfile]: print >> x,'--Src mean amp (16apr) '+str(thistest_src_16apr)+', '+str(srcmean16)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_calmax16<0.08], 'cal image max (16apr)'
+for x in [sys.stdout, logfile]: print >> x,'--Image max (cal;16apr): '+str(im_calmax16)+', '+str(calmax16)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_srcmax16<0.08], 'src image max (16apr)'
+for x in [sys.stdout, logfile]: print >> x,'--Image max (src;16apr): '+str(im_srcmax16)+', '+str(srcmax16)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_src<0.08], 'src mean amplitude test'
+for x in [sys.stdout, logfile]: print >> x,'--Src mean amp '+str(thistest_src)+', '+str(srcmean)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_immax<0.08], 'image max test'
+for x in [sys.stdout, logfile]: print >> x,'--Image max '+str(thistest_immax)+', '+str(immax)
+for x in [sys.stdout, logfile]: print >> x, '*', statstrs[diff_imrms<0.08], 'image rms test'
+for x in [sys.stdout, logfile]: print >> x,'--Image rms '+str(thistest_imrms)+', '+str(imrms)
 
 if ((diff_cal22apr<0.08) & (diff_src22apr<0.08) & (diff_cal16apr<0.08) & (diff_src16apr<0.08) &(diff_src<0.08) & (diff_immax<0.08) & (diff_imrms<0.08)):
 	regstate=True
-	print >>logfile,'---'
-	print >>logfile,'Passed Regression test for NGC 4826 Mosaic'
-	print >>logfile,'---'
+	for x in [sys.stdout, logfile]: print >> x,'---'
+	for x in [sys.stdout, logfile]: print >> x,'Passed Regression test for NGC 4826 Mosaic'
+	for x in [sys.stdout, logfile]: print >> x,'---'
 else:
 	regstate=False
-	print >>logfile,'----FAILED Regression test for NGC 4826 Mosaic'
-print >>logfile,'*********************************'
-print >>logfile,''
-print >>logfile,'********* Benchmarking *****************'
-print >>logfile,'*                                      *'
-print >>logfile,'Total wall clock time was: '+str(endTime - startTime)
-print >>logfile,'Total CPU        time was: '+str(endProc - startProc)
-print >>logfile,'Processing rate MB/s  was: '+str(300./(endTime - startTime))
-print >>logfile,'* Breakdown:                           *'
+	for x in [sys.stdout, logfile]: print >> x,'----FAILED Regression test for NGC 4826 Mosaic'
+for x in [sys.stdout, logfile]: print >> x,'*********************************'
+for x in [sys.stdout, logfile]: print >> x,''
+for x in [sys.stdout, logfile]: print >> x,'********* Benchmarking *****************'
+for x in [sys.stdout, logfile]: print >> x,'*                                      *'
+for x in [sys.stdout, logfile]: print >> x,'Total wall clock time was: '+str(endTime - startTime)
+for x in [sys.stdout, logfile]: print >> x,'Total CPU        time was: '+str(endProc - startProc)
+for x in [sys.stdout, logfile]: print >> x,'Processing rate MB/s  was: '+str(300./(endTime - startTime))
+for x in [sys.stdout, logfile]: print >> x,'* Breakdown:                           *'
 
 logfile.close()
