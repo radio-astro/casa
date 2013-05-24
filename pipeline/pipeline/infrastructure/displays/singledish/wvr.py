@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import os
-import pylab as PL
+import pylab as pl
 import numpy
 from matplotlib.font_manager import FontProperties
 
@@ -23,7 +23,7 @@ class SDWvrDisplay(common.SDInspectionDisplay):
         wvr_frequency = self.get_wvr_frequency(st, spws)
         if len(wvr_data) == 0:
             return 
-        self.draw_wvr(wvr_data, wvr_frequency, plotfile=plotfile)
+        self.draw_wvr(wvr_data, wvr_frequency, plotfile)
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spws[0]
@@ -37,16 +37,13 @@ class SDWvrDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
 
-    def draw_wvr(self, wvr_data, wvr_frequency, plotfile=False):
-        
-        if common.ShowPlot == False and plotfile == False: return
-
+    def draw_wvr(self, wvr_data, wvr_frequency, plotfile):
         # Plotting routine
-        if common.ShowPlot: PL.ion()
-        else: PL.ioff()
-        Fig = PL.figure(self.MATPLOTLIB_FIGURE_ID)
-        if common.ShowPlot: PL.ioff()
-        PL.clf()
+        if common.ShowPlot: pl.ion()
+        else: pl.ioff()
+        Fig = pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if common.ShowPlot: pl.ioff()
+        pl.clf()
 
         # Convert MJD sec to MJD date for wvr_data
         wvr_data[0] = wvr_data[0]/3600.0/24.0
@@ -71,8 +68,8 @@ class SDWvrDisplay(common.SDInspectionDisplay):
         Ax1.set_ylabel('WVR reading')
         Ax1.set_title('WVR reading versus MJD')
 
-        if common.ShowPlot != False: PL.draw()
-        if plotfile != False: PL.savefig(plotfile, format='png', dpi=common.DPISummary)
+        if common.ShowPlot != False: pl.draw()
+        pl.savefig(plotfile, format='png', dpi=common.DPISummary)
         return
 
 

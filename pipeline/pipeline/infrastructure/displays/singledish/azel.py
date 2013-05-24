@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import os
-import pylab as PL
+import pylab as pl
 import numpy
 from matplotlib.font_manager import FontProperties 
 
@@ -20,7 +20,7 @@ class SDAzElDisplay(common.SDInspectionDisplay):
         rows = self.datatable.get_row_index(idx, spwid, 0)
         timegap = self.datatable.get_timegap(idx, spwid, 0, asrow=False)
         plotfile = os.path.join(stage_dir, 'azel_%s.png'%(st.basename))
-        self.draw_azel(timegap, rows, plotfile=plotfile)
+        self.draw_azel(timegap, rows, plotfile)
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spwid
@@ -34,7 +34,7 @@ class SDAzElDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
 
-    def draw_azel(self, TimeGapList, rows, plotfile=False):
+    def draw_azel(self, TimeGapList, rows, plotfile):
         """
         Plot Az El v.s. Time
         Table: DataTable
@@ -48,7 +48,6 @@ class SDAzElDisplay(common.SDInspectionDisplay):
 
         # if DoStack is true plot will be stacked with different dates.
         DoStack = True
-        if common.ShowPlot == False and plotfile == False: return
         # Extract Az, El, and MJD
         Az = []
         AzArr = []
@@ -110,12 +109,12 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                     ElArr[ndays-1].append(El[n])
 
         # Plotting routine
-        if common.ShowPlot: PL.ion()
-        else: PL.ioff()
-        PL.figure(self.MATPLOTLIB_FIGURE_ID)
-        if common.ShowPlot: PL.ioff()
-        PL.cla()
-        PL.clf()
+        if common.ShowPlot: pl.ion()
+        else: pl.ioff()
+        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if common.ShowPlot: pl.ioff()
+        pl.cla()
+        pl.clf()
 
         if DoStack:
             markercolorbase = ['b', 'm', 'y', 'k', 'r']
@@ -128,10 +127,10 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                     if len(markers)<len(markercolors): 
                         markers.append(markercolors[i]+mrk)
 
-            PL.axes([0.1, 0.55, 0.8, 0.35])
-            PL.ylabel('Elevation (deg)')
-            PL.title('Elevation Plot v.s. Time (with Detected large Gaps)')
-            PL.xlabel('Time (UT)')
+            pl.axes([0.1, 0.55, 0.8, 0.35])
+            pl.ylabel('Elevation (deg)')
+            pl.title('Elevation Plot v.s. Time (with Detected large Gaps)')
+            pl.xlabel('Time (UT)')
             for nd in range(ndays):
                 UTdata = (numpy.array(MJDArr[nd])-int(MJDArr[nd][0]))*24.0
                 if nd == 0:
@@ -144,59 +143,58 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                 #date = qa.quantity(MJDArr[nd][0],'d')
                 date = qa.quantity(str(MJDArr[nd][0])+'d')
                 (datelab,rest) = qa.time(date,form='dmy')[0].split('/')  
-                #PL.plot(UTdata, ElArr[nd], 'bo', markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                #pl.plot(UTdata, ElArr[nd], 'bo', markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
 
-                PL.plot(UTdata, ElArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
-                PL.legend(prop=FontProperties(size='smaller'),markerscale=1.0,numpoints=1)
+                pl.plot(UTdata, ElArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                pl.legend(prop=FontProperties(size='smaller'),markerscale=1.0,numpoints=1)
                 for Time in TGap:
                     if int(Time) == int(MJDArr[nd][0]):
                         modTime = (Time - int(Time))*24
-                        PL.axvline(x=modTime, linewidth=0.5, color='c',label='_nolegend_')
+                        pl.axvline(x=modTime, linewidth=0.5, color='c',label='_nolegend_')
             Extend = (UTmax - UTmin) * 0.05
             UTmin -= Extend
             UTmax += Extend
-            if ELmin < 0: PL.axis([UTmin, UTmax, -90, 90])
-            else: PL.axis([UTmin, UTmax, 0, 90])
+            if ELmin < 0: pl.axis([UTmin, UTmax, -90, 90])
+            else: pl.axis([UTmin, UTmax, 0, 90])
 
-            PL.axes([0.1, 0.1, 0.8, 0.35])
-            PL.ylabel('Azimuth (deg)')
-            PL.title('Azimuth Plot v.s. Time (with Detected large Gaps)')
-            PL.xlabel('Time (UT)')
+            pl.axes([0.1, 0.1, 0.8, 0.35])
+            pl.ylabel('Azimuth (deg)')
+            pl.title('Azimuth Plot v.s. Time (with Detected large Gaps)')
+            pl.xlabel('Time (UT)')
             for nd in range(ndays):
                 UTdata = (numpy.array(MJDArr[nd])-int(MJDArr[nd][0]))*24.0
                 date = qa.quantity(str(MJDArr[nd][0])+'d')
                 (datelab,rest) = qa.time(date,form='dmy')[0].split('/')  
-                #PL.plot(UTdata, AzArr[nd], 'bo', markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
-                PL.plot(UTdata, AzArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
-                PL.legend(prop=FontProperties(size='smaller'),markerscale=0.8,numpoints=1)
+                #pl.plot(UTdata, AzArr[nd], 'bo', markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                pl.plot(UTdata, AzArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
+                pl.legend(prop=FontProperties(size='smaller'),markerscale=0.8,numpoints=1)
                 for Time in PGap:
                     if int(Time) == int(MJDArr[nd][0]):
                         modTime = (Time - int(Time))*24
-                        PL.axvline(x=modTime, linewidth=0.5, color='g', label='_nolegend_')
+                        pl.axvline(x=modTime, linewidth=0.5, color='g', label='_nolegend_')
 
-            PL.axis([UTmin, UTmax, 0, 360])
+            pl.axis([UTmin, UTmax, 0, 360])
         else:
-            PL.axes([0.1, 0.55, 0.8, 0.35])
-            PL.ylabel('Elevation (deg)')
-            PL.title('Elevation Plot v.s. Time (with Detected large Gaps)')
-            PL.xlabel('MJD (Day)')
+            pl.axes([0.1, 0.55, 0.8, 0.35])
+            pl.ylabel('Elevation (deg)')
+            pl.title('Elevation Plot v.s. Time (with Detected large Gaps)')
+            pl.xlabel('MJD (Day)')
             for Time in TGap:
-                PL.axvline(x=Time, linewidth=0.5, color='c')
-            PL.plot(MJD, El, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
-            if ELmin < 0: PL.axis([MJDmin, MJDmax, -90, 90])
-            else: PL.axis([MJDmin, MJDmax, 0, 90])
+                pl.axvline(x=Time, linewidth=0.5, color='c')
+            pl.plot(MJD, El, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
+            if ELmin < 0: pl.axis([MJDmin, MJDmax, -90, 90])
+            else: pl.axis([MJDmin, MJDmax, 0, 90])
 
-            PL.axes([0.1, 0.1, 0.8, 0.35])
-            PL.ylabel('Azimuth (deg)')
-            PL.title('Azimuth Plot v.s. Time (with Detected large Gaps)')
-            PL.xlabel('MJD (Day)')
+            pl.axes([0.1, 0.1, 0.8, 0.35])
+            pl.ylabel('Azimuth (deg)')
+            pl.title('Azimuth Plot v.s. Time (with Detected large Gaps)')
+            pl.xlabel('MJD (Day)')
             for Time in PGap:
-                PL.axvline(x=Time, linewidth=0.5, color='g')
-            PL.plot(MJD, Az, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
-            PL.axis([MJDmin, MJDmax, 0, 360])
+                pl.axvline(x=Time, linewidth=0.5, color='g')
+            pl.plot(MJD, Az, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
+            pl.axis([MJDmin, MJDmax, 0, 360])
 
-        if common.ShowPlot != False: PL.draw()
-        if plotfile != False: PL.savefig(plotfile, format='png', dpi=common.DPISummary)
+        if common.ShowPlot != False: pl.draw()
+        pl.savefig(plotfile, format='png', dpi=common.DPISummary)
 
-        del MJD, Az, El, TGap, PGap
         return

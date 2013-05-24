@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import os
 
-import pylab as PL
+import pylab as pl
 import numpy
 
 from asap.scantable import is_ms
@@ -23,7 +23,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         rows = self.datatable.get_row_index(idx, spwid, 0)
         plotfile = os.path.join(stage_dir, 'weather_%s.png'%(st.basename))
         weather_dict = self.get_weather(idx)
-        self.draw_weather(weather_dict, rows, idx, plotfile=plotfile)
+        self.draw_weather(weather_dict, rows, idx, plotfile)
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = spwid
@@ -37,21 +37,19 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
 
-    def draw_weather(self, WeatherDic, rows, vAnt, plotfile=False):
+    def draw_weather(self, WeatherDic, rows, vAnt, plotfile):
         """
-        Plot Weather information and Tsys v.s. Time
+        Plot Weather information v.s. Time
         Table: DataTable
         """
         datatable = self.datatable
         
-        if common.ShowPlot == False and plotfile == False: return
-
         # Plotting routine
-        if common.ShowPlot: PL.ion()
-        else: PL.ioff()
-        Fig = PL.figure(self.MATPLOTLIB_FIGURE_ID)
-        if common.ShowPlot: PL.ioff()
-        PL.clf()
+        if common.ShowPlot: pl.ion()
+        else: pl.ioff()
+        Fig = pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if common.ShowPlot: pl.ioff()
+        pl.clf()
 
         # get Weather info from the table
         #print WeatherDic['TIME']
@@ -60,9 +58,8 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         #print WeatherDic['REL_HUMIDITY']
         #print WeatherDic['WIND_SPEED']
 
-        # Extract MJD and Tsys
+        # Extract MJD
         MJD = numpy.take(datatable.getcol('TIME'),rows)
-        #Tsys = numpy.take(datatable.getcol('TSYS'),rows)
 
         # Convert MJD sec to MJD date for WeatherDic
         # K -> degC
@@ -72,13 +69,6 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
 
         MJDmin = numpy.array(MJD).min()
         MJDmax = numpy.array(MJD).max()
-        #Tsysmax = numpy.array(Tsys).max()
-        #if Tsysmax > 0:
-        #    for i in range(len(Tsys)):
-        #        Tsys[i] = Tsys[i] * 100.0 / Tsysmax
-        #else:
-        #    for i in range(len(Tsys)):
-        #        Tsys[i] = 0.0
         Tempmin = WeatherDic['TEMPERATURE'].min() - 3.0
         Tempmax = WeatherDic['TEMPERATURE'].max() + 2.0
         dTemp = Tempmax - Tempmin
@@ -89,23 +79,9 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         dPres = Presmax - Presmin
         Windmin = 0.0
         Windmax = WeatherDic['WIND_SPEED'].max() + 5
-        #dTsys = max(Tsys) - min(Tsys)
-        #if dTsys < 0.1:
-        #    (Tsysmin, Tsysmax) = (min(Tsys) - 1.0, max(Tsys) + 1.0)
-        #else:
-        #    (Tsysmin, Tsysmax) = (min(Tsys) - dTsys*0.1, max(Tsys) + dTsys*0.1)
-        #dTsys = Tsysmax - Tsysmin
-        # Scale Tsys to fit in the Weather plotting window
-        # Overplot on the Temperature plot and Pressure plot
-        #TsysT = Tsys[:]
-        #TsysP = Tsys[:]
-        #for i in range(len(TsysT)):
-        #    TsysT[i] = Tempmin + dTemp * (Tsys[i] - Tsysmin) / dTsys
-        #    TsysP[i] = Presmin + dPres * (Tsys[i] - Tsysmin) / dTsys
         
         # Plot Temperature (degC)
         Ax1 = Fig.add_subplot(211)
-        #Ax1.plot(MJD, TsysT, 'go', markersize=3, markeredgecolor='g', markerfacecolor='g')
         if len(WeatherDic['TIME']) == 1:
             Ax1.axhline(y = WeatherDic['TEMPERATURE'][0])
         else:
@@ -113,7 +89,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         Ax1.axis([MJDmin, MJDmax, Tempmin, Tempmax])
         Ax1.set_xlabel('MJD')
         Ax1.set_ylabel('Temperature (degC)', color='r')
-        Ax1.set_title('Weather (Temperature & Humidity) and Tsys(green) versus MJD')
+        Ax1.set_title('Weather (Temperature & Humidity) versus MJD')
         for tl in Ax1.get_yticklabels():
             tl.set_color('r')
 
@@ -130,7 +106,6 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
 
         # Plot Pressure (hPa)
         Ax1 = Fig.add_subplot(212)
-        #Ax1.plot(MJD, TsysP, 'go', markersize=3, markeredgecolor='g', markerfacecolor='g')
         if len(WeatherDic['TIME']) == 1:
             Ax1.axhline(y = WeatherDic['PRESSURE'][0])
         else:
@@ -138,7 +113,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         Ax1.axis([MJDmin, MJDmax, Presmin, Presmax])
         Ax1.set_xlabel('MJD')
         Ax1.set_ylabel('Pressure (hPa)', color='r')
-        Ax1.set_title('Weather (Pressure & Wind Speed) and Tsys(green) versus MJD')
+        Ax1.set_title('Weather (Pressure & Wind Speed) versus MJD')
         for tl in Ax1.get_yticklabels():
             tl.set_color('r')
 
@@ -153,10 +128,9 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         for tl in Ax2.get_yticklabels():
             tl.set_color('b')
 
-        if common.ShowPlot != False: PL.draw()
-        if plotfile != False: PL.savefig(plotfile, format='png', dpi=common.DPISummary)
+        if common.ShowPlot != False: pl.draw()
+        pl.savefig(plotfile, format='png', dpi=common.DPISummary)
 
-        del MJD
         return
 
     def get_weather(self, idx):
