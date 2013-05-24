@@ -25,7 +25,7 @@ try:
    plots = []
    #for image_item in result.outcome:
    for r in result:
-       image_item = r.outcome
+       image_item = r.outcome['image']
        spwid = image_item.spwlist
        spw_type = pcontext.observing_run[0].spectral_window[spwid].type
        task_cls = displays.SDImageDisplayFactory(spw_type)
