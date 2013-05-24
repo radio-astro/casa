@@ -3,6 +3,8 @@ from __future__ import absolute_import
 import os
 import abc
 import numpy
+import math
+import pylab as pl
 
 import pipeline.infrastructure.utils as utils
 
@@ -133,3 +135,10 @@ def drop_edge(array):
         a = array[echan:-echan,::]
     return a
 
+def draw_beam(axes, r, aspect, x_base, y_base):
+    xy = numpy.array([[r * (math.sin(t * 0.13) + 1.0) * aspect + x_base,
+                       r * (math.cos(t * 0.13) + 1.0) + y_base]
+                      for t in xrange(50)])
+    pl.gcf().sca(axes)
+    pl.plot(xy[:,0], xy[:,1], 'r-')
+    
