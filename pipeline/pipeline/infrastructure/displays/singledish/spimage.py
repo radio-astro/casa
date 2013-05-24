@@ -11,8 +11,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
-from .common import DPISummary, DPIDetail, SDImageDisplayInputs
-
+from .common import DPISummary, DPIDetail, SDImageDisplayInputs, draw_beam
 LOG = infrastructure.get_logger(__name__)
 
 NoData = -32767.0
@@ -290,9 +289,10 @@ class SDSpectralImageDisplay(object):
                 data = self.data[:,:,:,pol]
                 masked_data = data * self.mask[:,:,:,pol]
                 flattened_data = masked_data.reshape((nrow,self.nchan))
+                valid = ValidSp[:,pol]
                 
                 # Integrated Spectrum
-                Sp = numpy.sum(numpy.transpose((ValidSp[:,pol] * numpy.transpose(flattened_data))),axis=0)/numpy.sum(ValidSp[:,pol],axis=0)
+                Sp = numpy.sum(numpy.transpose((valid * numpy.transpose(flattened_data))),axis=0)/numpy.sum(valid,axis=0)
                 (F0, F1) = (min(self.frequency[0], self.frequency[-1]), max(self.frequency[0], self.frequency[-1]))
 
                 Title = []
@@ -340,20 +340,8 @@ class SDSpectralImageDisplay(object):
                        lab.set_fontsize(newfontsize)
 
                 # draw beam pattern
-                if self.beam_radius > 0:
-                    Mark = 'r-'
-                    #R = self.beam_radius / self.grid_size
-                    R = self.beam_radius
-                    x = []
-                    y = []
-                    for t in range(50):
-                        # 2008/9/20 DEC Effect
-                        x.append(R * (math.sin(t * 0.13) + 1.0) * Aspect + self.ra_min)
-                        #x.append(R * (math.sin(t * 0.13) + 1.0) + self.ra_min)
-                        y.append(R * (math.cos(t * 0.13) + 1.0) + self.dec_min)
-                    PL.plot(x, y, Mark)
+                draw_beam(a, self.beam_radius, Aspect, self.ra_min, self.dec_min)
 
-        ##         PL.title('Total Intensity: CenterFreq.= %.3f GHz' % Abcissa[1][ChanC], size=TickSize)
                 PL.title('Total Intensity: CenterFreq.= %.3f GHz' % self.frequency[ChanC], size=TickSize)
 
                 Format = PL.FormatStrFormatter('%.2f')
@@ -361,9 +349,6 @@ class SDSpectralImageDisplay(object):
                 x0 = 1.0 / 3.0 + 0.1 / 3.0
                 a = PL.axes([x0, y0, x1, y1])
                 a.xaxis.set_major_formatter(Format)
-        ##         PL.plot(Abcissa[1], Sp, '-b', markersize=2, markeredgecolor='b', markerfacecolor='b')
-        ##         PL.axvline(x = Abcissa[1][ChanB], linewidth=0.3, color='r')
-        ##         PL.axvline(x = Abcissa[1][ChanB + self.NumChannelMap * ChanW], linewidth=0.3, color='r')
                 PL.plot(self.frequency, Sp, '-b', markersize=2, markeredgecolor='b', markerfacecolor='b')
                 PL.axvline(x = self.frequency[ChanB], linewidth=0.3, color='r')
                 PL.axvline(x = self.frequency[ChanB + self.NumChannelMap * ChanW], linewidth=0.3, color='r')
@@ -409,11 +394,9 @@ class SDSpectralImageDisplay(object):
                     C0 = ChanB + ChanW*ii
                     C1 = C0 + ChanW
                     if C0 < 0 or C1 >= self.nchan - 1: continue
-        ##             V0 = (Abcissa[2][C0] + Abcissa[2][C1-1]) / 2.0 - VelC
-        ##             V1 = abs(Abcissa[2][C0] - Abcissa[2][C1])
-                    V0 = (self.velocity[C0] + self.velocity[C1-1]) / 2.0 - VelC
-                    V1 = abs(self.velocity[C0] - self.velocity[C1])
-                    Title.append('(Vel,Wid) = (%.1f, %.1f) (km/s)' % (V0, V1))
+                    velo = (self.velocity[C0] + self.velocity[C1-1]) / 2.0 - VelC
+                    width = abs(self.velocity[C0] - self.velocity[C1])
+                    Title.append('(Vel,Wid) = (%.1f, %.1f) (km/s)' % (velo, width))
                     NMap += 1
                     tmp = masked_data[:,:,C0:C1].sum(axis=2) * ChanVelWidth
                     Map[i] = numpy.flipud(tmp.transpose())
@@ -522,18 +505,7 @@ class SDSpectralImageDisplay(object):
                    lab = cb.ax.title
 
             # draw beam pattern
-            if self.beam_radius > 0:
-                Mark = 'r-'
-                #R = self.beam_radius / self.grid_size
-                R = self.beam_radius
-                x = []
-                y = []
-                for t in range(50):
-                    # 2008/9/20 DEC Effect
-                    x.append(R * (math.sin(t * 0.13) + 1.0) * Aspect + self.ra_min)
-                    #x.append(R * (math.sin(t * 0.13) + 1.0) + self.ra_min)
-                    y.append(R * (math.cos(t * 0.13) + 1.0) + self.dec_min)
-                PL.plot(x, y, Mark)
+            draw_beam(a, self.beam_radius, Aspect, self.ra_min, self.dec_min)
 
             PL.title('Baseline RMS Map', size=12)
 

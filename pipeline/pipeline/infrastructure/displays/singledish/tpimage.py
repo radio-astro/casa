@@ -11,7 +11,7 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation
-from .common import DPISummary, DPIDetail, SDImageDisplayInputs
+from .common import DPISummary, DPIDetail, SDImageDisplayInputs, draw_beam
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -126,19 +126,7 @@ class SDChannelAveragedImageDisplay(object):
                     lab.set_fontsize(newfontsize)
 
             # draw beam pattern
-            if beamsize > 0:
-                Mark = 'r-'
-                #R = beamsize / gridsize
-                #R = beamsize
-                R = 0.5 * beamsize
-                x = []
-                y = []
-                for t in range(50):
-                    # 2008/9/20 DEC Effect
-                    x.append(R * (math.sin(t * 0.13) + 1.0) * Aspect + RAmin)
-                    #x.append(R * (math.sin(t * 0.13) + 1.0) + RAmin)
-                    y.append(R * (math.cos(t * 0.13) + 1.0) + DECmin)
-                PL.plot(x, y, Mark)
+            draw_beam(a, 0.5 * beamsize, Aspect, RAmin, DECmin)
 
             PL.title('Total Power', size=TickSize)
 
