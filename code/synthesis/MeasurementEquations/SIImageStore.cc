@@ -237,6 +237,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError( "Input model image "+modelname+".model is not the same shape as that defined for output in "+ itsImageName + ".model" ) );
       }
 
+    os << "Setting " << modelname << " as model " << LogIO::POST;
     // Then, add its contents to itsModel.
     //itsModel->put( itsModel->get() + model->get() );
     itsModel->put( model->get() );
@@ -367,7 +368,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	itsResidual->copyData(ratio);
       }
     // createMask
+  }
 
+  void SIImageStore::dividePSFByWeight(Float weightlimit)
+  {
+    LogIO os( LogOrigin("SIImageStore","dividePSFByWeight",WHERE) );
+
+    if( itsWeight.null() )
+      {
+	os << "Weights are 1.0. Not dividing " << itsImageName+String(".psf") << LogIO::POST;
+      }
+    else
+      {
+	os << "Dividing " << itsImageName+String(".psf") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
+	
+	///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
+	
+	LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
+	LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
+	
+	LatticeExpr<Float> ratio( ( (*itsPsf) * mask ) / ( (*itsPsf) + maskinv) );
+	itsPsf->copyData(ratio);
+      }
+    // createMask
   }
 
   void SIImageStore::divideModelByWeight(Float weightlimit)

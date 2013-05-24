@@ -85,12 +85,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			delete dbus_thread;
 			dbus_thread = NULL;
 		}
-		LogIO os( LogOrigin("SynthesisIterBot","updateIterationDetails",WHERE) );
+		LogIO os( LogOrigin("SynthesisIterBot","destructor",WHERE) );
 		os << "SynthesisIterBot destroyed" << LogIO::POST;
 	}
 
 	void SynthesisIterBot::setIterationDetails(Record iterpars) {
-		LogIO os( LogOrigin("SynthesisIterBot","updateIterationDetails",WHERE) );
+		LogIO os( LogOrigin("SynthesisIterBot","setIterationDetails",WHERE) );
 		try {
 			//itsLoopController.reset( new SIIterBot("SynthesisImage_"));
 			if ( itsLoopController ) itsLoopController->setControlsFromRecord(iterpars);

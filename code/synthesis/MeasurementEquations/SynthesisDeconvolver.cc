@@ -61,9 +61,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsDeconvolver(NULL), 
 				       itsMaskHandler(NULL),
 				       itsImages(CountedPtr<SIImageStore>()),
-				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
+				       //				       itsPartImages(Vector<CountedPtr<SIImageStore> >()),
                                        itsImageName(""),
-                                       itsPartImageNames(Vector<String>(0)),
+				       //                                       itsPartImageNames(Vector<String>(0)),
 				       itsDeconvolverId(0),
 				       itsBeam(0.0)
   {
@@ -91,10 +91,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       else
 	{throw( AipsError("imagename not specified")); }
 
+      /*
       if( decpars.isDefined("partimagenames") )  // A vector of strings
 	{ decpars.get( RecordFieldId("partimagenames") , itsPartImageNames ); }
       else
 	{ itsPartImageNames.resize(0); }
+      */
 
       if( decpars.isDefined("id") )
 	{ decpars.get( RecordFieldId("id") , itsDeconvolverId ); }
@@ -102,6 +104,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if( decpars.isDefined("algo") )
 	{ decpars.get( RecordFieldId("algo") , algorithm ); algorithm.downcase(); }
 
+      
+      if( decpars.isDefined("modelname") )  // A single string
+	{ itsStartingModelName = decpars.asString( RecordFieldId("modelname")); }
 
       }
     catch(AipsError &x)
@@ -110,7 +115,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
     os << "Set Deconvolution Options for image [" << itsDeconvolverId << "] :" << itsImageName ;
-    if( itsPartImageNames.nelements()>0 ) os << " constructed from : " << itsPartImageNames;
+    if( itsStartingModelName.length() > 0 ) os << " , starting from model : " << itsStartingModelName;
+    //    if( itsPartImageNames.nelements()>0 ) os << " constructed from : " << itsPartImageNames;
     os << LogIO::POST;
 
     try
@@ -141,8 +147,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	throw( AipsError("Error in constructing a MaskHandler : "+x.getMesg()) );
       }
-    
-    
+
+    // Set flag to add model image
+    itsAddedModel=False;
+      
   }//end of setupDeconvolution
   
 
@@ -153,15 +161,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try {
       // Do the Gather if/when needed and check that images exist on disk. Normalize by Weights too.
-      gatherImages();
+      //gatherImages();
+
+      itsImages = new SIImageStore( itsImageName );
+      // If a starting model exists, this will initialize the ImageStore with it. Will do this only once.
+      setStartingModel();
+ 
+      // Normalize by the weight image.
+      ///divideResidualByWeight();
 
       // Calculate Peak Residual and Max Psf Sidelobe, and fill into SubIterBot.
-      //SISubIterBot loopController(subIterBotRecord);
-      loopController.setPeakResidual( getPeakResidual() );
-      loopController.setMaxPsfSidelobe( getPSFSidelobeLevel() );
-      returnRecord = loopController.getCycleInitializationRecord();
+      //SISubIterBot itsLoopController(subIterBotRecord);
+      itsLoopController.setPeakResidual( getPeakResidual() );
+      itsLoopController.setMaxPsfSidelobe( getPSFSidelobeLevel() );
+      returnRecord = itsLoopController.getCycleInitializationRecord();
     } catch(AipsError &x) {
-      throw( AipsError("Error initializing the Minor Cycle : "+x.getMesg()) );
+      throw( AipsError("Error initializing the Minor Cycle for "  + itsImageName + " : "+x.getMesg()) );
     }
     
     return returnRecord;
@@ -174,11 +189,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Record returnRecord;
 
     try {
-      loopController.setCycleControls(minorCycleControlRec);
-      itsDeconvolver->deconvolve( loopController, itsImages, itsDeconvolverId );
-      returnRecord = loopController.getCycleExecutionRecord();
+      itsLoopController.setCycleControls(minorCycleControlRec);
+      itsDeconvolver->deconvolve( itsLoopController, itsImages, itsDeconvolverId );
+      returnRecord = itsLoopController.getCycleExecutionRecord();
 
-      scatterModel(); // This is a no-op for the single-node case.
+      //scatterModel(); // This is a no-op for the single-node case.
 
     } catch(AipsError &x) {
       throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
@@ -192,188 +207,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  Bool SynthesisDeconvolver::setupImagesOnDisk() 
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver","setupImagesOnDisk",WHERE) );
-
-    Bool needToGatherImages=False;
-
-    // Check if full images exist, and open them if possible.
-    Bool foundFullImage=False;
-    try
-      {
-	itsImages = new SIImageStore( itsImageName );
-	foundFullImage = True;
-      }
-    catch(AipsError &x)
-      {
-	//throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
-	foundFullImage = False;
-      }
-
-
-    // Check if part images exist
-    Bool foundPartImages = itsPartImageNames.nelements()>0 ? True : False ;
-    itsPartImages.resize( itsPartImageNames.nelements() );
-
-    for ( uInt part=0; part < itsPartImageNames.nelements() ; part++ )
-      {
-	try
-	  {
-	    itsPartImages[part] = new SIImageStore( itsPartImageNames[part] );
-	    foundPartImages |= True;
-	  }
-	catch(AipsError &x)
-	  {
-	    //throw( AipsError("Error in constructing a Deconvolver : "+x.getMesg()) );
-	    foundPartImages = False;
-	  }
-      }
-    if( foundPartImages == False) 
-      { 
-	itsPartImages.resize(0); 
-      }
-    else // Check that all have the same shape.
-      {
-	AlwaysAssert( itsPartImages.nelements() > 0 , AipsError );
-	IPosition tempshape = itsPartImages[0]->getShape();
-	for( uInt part=1; part<itsPartImages.nelements(); part++ )
-	  {
-	    if( tempshape != itsPartImages[part]->getShape() )
-	      {
-		throw( AipsError("Shapes of partial images to be combined, do not match") );
-	      }
-	  }
-      }
-
-
-
-    // Make sure all images exist and are consistent with each other. At the end, itsImages should be valid
-    if( foundPartImages == True ) // Partial Images exist. Check that 'full' exists, and do the gather. 
-      {
-	if ( foundFullImage == True ) // Full image exists. Just check that shapes match with parts.
-	  {
-	    os << "Partial and Full images exist. Checking if part images have the same shape as the full image : ";
-	    IPosition fullshape = itsImages->getShape();
-	    
-	    for ( uInt part=0; part < itsPartImages.nelements() ; part++ )
-	      {
-		IPosition partshape = itsPartImages[part]->getShape();
-		if( partshape != fullshape )
-		  {
-		    os << "NO" << LogIO::POST;
-		    throw( AipsError("Shapes of the partial and full images on disk do not match. Cannot gather") );
-		  }
-	      }
-	    os << "Yes" << LogIO::POST;
-
-	  }
-	else // Full image does not exist. Need to make it, using the shape and coords of part[0]
-	  {
-	    os << "Only partial images exist. Need to make full images" << LogIO::POST;
-
-	    AlwaysAssert( itsPartImages.nelements() > 0, AipsError );
-	    PagedImage<Float> temppart( itsPartImageNames[0]+".residual" );
-	    IPosition tempshape = temppart.shape();
-	    CoordinateSystem tempcsys = temppart.coordinates();
-
-	    itsImages = new SIImageStore( itsImageName, tempcsys, tempshape );
-	    foundFullImage = True;
-	  }
-
-	// By now, all partial images and the full images exist on disk, and have the same shape.
-	needToGatherImages=True;
-
-      }
-    else // No partial images supplied. Operating only with full images.
-      {
-	if ( foundFullImage == True ) 
-	  {
-	    os << "Full images exist : " << itsImageName << LogIO::POST;
-	  }
-	else // No full image on disk either. Error.
-	  {
-	    throw( AipsError("No images named " + itsImageName + " found on disk. No partial images found either.") );
-	  }
-      }
-    
-    return needToGatherImages;
-  }// end of setupImagesOnDisk
-
-
-
-  void SynthesisDeconvolver::gatherImages()
-  {
-
-    Bool needToGatherImages = setupImagesOnDisk();
-
-    if( needToGatherImages )
-      {
-	LogIO os( LogOrigin("SynthesisDeconvolver", "gatherImages",WHERE) );
-	
-	os << "Gather residual, psf, weight images : " << itsPartImageNames << " onto :" << itsImageName << LogIO::POST;
-	
-	AlwaysAssert( itsPartImages.nelements()>0 , AipsError );
-	
-	// Add intelligence to modify all only the first time, but later, only residual;
-	itsImages->resetImages( /*psf*/True, /*residual*/True, /*weight*/True ); 
-	
-	for( uInt part=0;part<itsPartImages.nelements();part++)
-	  {
-	    itsImages->addImages( itsPartImages[part], /*psf*/True, /*residual*/True, /*weight*/True );
-	  }
-
-      }// end of image gathering.
-    
-    // Normalize by the weight image.
-    divideResidualByWeight();
-
-  }// end of gatherImages
-
-  void SynthesisDeconvolver::scatterModel()
-  {
-
-    divideModelByWeight(); // This is currently a no-op
-
-    LogIO os( LogOrigin("SynthesisDeconvolver", "scatterModel",WHERE) );
-
-    if( itsPartImages.nelements() > 0 )
-      {
-	os << "Send the model from : " << itsImageName << " to all nodes :" << itsPartImageNames << LogIO::POST;
-	
-	for( uInt part=0;part<itsPartImages.nelements();part++)
-	  {
-	    itsPartImages[part]->setModelImage( itsImages->getName() );
-	  }
-      }
-  }// end of gatherImages
-
-
-  void SynthesisDeconvolver::divideResidualByWeight()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver", "divideResidualByWeight",WHERE) );
-
-    // If Weight image is not specified, treat it as though it were filled with ones. 
-    // ( i.e.  itsWeight = NULL )
-
-    itsImages->divideResidualByWeight( 0.1 );
-
-  }
-
-  void SynthesisDeconvolver::divideModelByWeight()
-  {
-    LogIO os( LogOrigin("SynthesisDeconvolver", "divideModelByWeight",WHERE) );
-
-    // If Weight image is not specified, treat it as though it were filled with ones. 
-    // ( i.e.  itsWeight = NULL )
-
-    /// This is a no-op here.... Need a way to activate this only for A-Projection.
-    ///    itsImages->divideModelByWeight( 0.1 );
-
-  }
-
-
-
 
   // #############################################
   // #############################################
@@ -381,30 +214,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   // #############################################
 
   // Set a starting model.
-  // NOTE : This is to be called only when the deconvolver is being used stand-alone.
-  //  When used with SynthesisImager, the starting model needs to go only into SI, not SD.
-  void SynthesisDeconvolver::setStartingModel(Record modpars)
+  void SynthesisDeconvolver::setStartingModel()
   {
     LogIO os( LogOrigin("SynthesisDeconvolver","setStartingModel",WHERE) );
-    String modelname("");
-    try{
-      
-      if( modpars.isDefined("modelname") )  // A single string
-	{ modelname = modpars.asString( RecordFieldId("modelname")); }
-      }
-    catch(AipsError &x)
-      {
-	throw( AipsError("Error in reading starting model: "+x.getMesg()) );
-      }
+
+    if(itsAddedModel==True) {return;}
     
     try
       {
 	
-	if( modelname.length()>0 && !itsImages.null() )
+	if( itsStartingModelName.length()>0 && !itsImages.null() )
 	  {
-	    os << "Setting " << modelname << " as starting model for deconvolution " << LogIO::POST;
-	    itsImages->setModelImage( modelname );
+	    os << "Setting " << itsStartingModelName << " as starting model for deconvolution " << LogIO::POST;
+	    itsImages->setModelImage( itsStartingModelName );
 	  }
+
+	itsAddedModel=True;
 	
       }
     catch(AipsError &x)

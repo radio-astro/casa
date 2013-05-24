@@ -76,24 +76,21 @@ class SynthesisDeconvolver
   void getCopyOfResidualAndMask( TempImage<Float> &/*residual*/, TempImage<Float>& /*mask*/ );
   void setMask( TempImage<Float> &/*mask*/ );
 
-  void setStartingModel(Record modpars);
+  void setStartingModel();
 
 protected:
 
   // Gather all part images to the 'full' one
-  void gatherImages();
-  void scatterModel();
+  //void gatherImages();
+  //void scatterModel();
 
-  // Normalize. This can later change to be more general, i.e. used for PB-correction too...
-  void divideResidualByWeight();
-  void divideModelByWeight();
 
   // For the deconvolver, decide how many sliced deconvolution calls to make
   //  Vector<Slicer> partitionImages();
 
   // Check if images exist on disk and are all the same shape
-  Bool setupImagesOnDisk();
-  Bool doImagesExist( String imagename );
+  //Bool setupImagesOnDisk();
+  // Bool doImagesExist( String imagename );
 
   /////////////// Member Objects
 
@@ -101,13 +98,14 @@ protected:
   CountedPtr<SDMaskHandler> itsMaskHandler;
 
   CountedPtr<SIImageStore> itsImages;
-  Vector<CountedPtr<SIImageStore> > itsPartImages;
+  //  Vector<CountedPtr<SIImageStore> > itsPartImages;
 
   IPosition itsImageShape;
   
   String itsImageName;
-  Vector<String> itsPartImageNames;
+  //  Vector<String> itsPartImageNames;
   String itsStartingModelName;
+  Bool itsAddedModel;
 
   uInt itsDeconvolverId;
 
@@ -119,7 +117,7 @@ protected:
 
   Float itsBeam;
 
-  SIMinorCycleController loopController;
+  SIMinorCycleController itsLoopController;
 
   /////////////// All input parameters
 
