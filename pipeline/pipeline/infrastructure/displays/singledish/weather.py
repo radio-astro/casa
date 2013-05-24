@@ -37,19 +37,20 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
 
-    def draw_weather(self, WeatherDic, rows, vAnt, show_plot=True, plotfile=False):
+    def draw_weather(self, WeatherDic, rows, vAnt, plotfile=False):
         """
         Plot Weather information and Tsys v.s. Time
         Table: DataTable
         """
         datatable = self.datatable
         
-        if show_plot == False and plotfile == False: return
+        if common.ShowPlot == False and plotfile == False: return
 
         # Plotting routine
-        if show_plot: PL.ion()
+        if common.ShowPlot: PL.ion()
+        else: PL.ioff()
         Fig = PL.figure(self.MATPLOTLIB_FIGURE_ID)
-        if show_plot: PL.ioff()
+        if common.ShowPlot: PL.ioff()
         PL.clf()
 
         # get Weather info from the table
@@ -152,7 +153,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         for tl in Ax2.get_yticklabels():
             tl.set_color('b')
 
-        if show_plot != False: PL.draw()
+        if common.ShowPlot != False: PL.draw()
         if plotfile != False: PL.savefig(plotfile, format='png', dpi=common.DPISummary)
 
         del MJD

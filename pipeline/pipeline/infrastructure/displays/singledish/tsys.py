@@ -63,7 +63,10 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
         base_frame = common.get_base_frame(table)
 
         plots = []
+        if common.ShowPlot: pl.ion()
+        else: pl.ioff()
         pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        
         ylabel = 'Tsys [K]'
         xlabel = '%s Frequency [MHz]'%(base_frame)
         #print xlabel, ylabel
@@ -84,6 +87,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                     time_group.append(row+1)
             time_group.append(nrow)
             for i in xrange(len(time_group)-1):
+                if common.ShowPlot: pl.ioff()
                 pl.clf()
                 start = time_group[i]
                 end = time_group[i+1]
@@ -108,6 +112,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                                    field=parent_ms.fields[0].name,
                                    parameters=parameters)
                 pl.savefig(plotfile)
+                if common.ShowPlot: pl.draw()
                 plots.append(plot)
         return plots 
 
@@ -117,6 +122,8 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
         antenna_name = calto.antenna
         parent_ms = self.inputs.context.observing_run.get_ms(calto.vis)
         plots = []
+        if common.ShowPlot: pl.ion()
+        else: pl.ioff()
         pl.figure(self.MATPLOTLIB_FIGURE_ID)
         ylabel = 'Channel-Averaged Tsys [K]'
         xlabel = 'Elevation [deg]'
@@ -130,6 +137,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
         with utils.open_table(table) as tb:
             spwlist = numpy.unique(tb.getcol('IFNO'))
             pollist = numpy.unique(tb.getcol('POLNO'))
+            if common.ShowPlot: pl.ioff()
             pl.clf()
             title = 'Tsys vs Elevation (Averaged Full Channel)'
             for spw in spwlist:
@@ -145,6 +153,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
             pl.legend(loc='best', numpoints=1, prop={'size':'small'})
             plotfile='tsys_vs_el_%s.png'%(os.path.basename(table))
             plotfile=os.path.join(stage_dir, plotfile)
+            if common.ShowPlot: pl.draw()
             pl.savefig(plotfile)
             parameters = parameters_base.copy()
             parameters['type'] = 'full channel'
@@ -154,6 +163,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                                parameters=parameters)
             plots.append(plot)
 
+            if common.ShowPlot: pl.ioff()
             pl.clf()
             title = 'Tsys vs Elevation (Average Excluding Edge)'
             lines = []
@@ -173,6 +183,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                 pl.legend(loc='best', numpoints=1, prop={'size':'small'})
                 plotfile='tsys_vs_el_%s_noedge.png'%(os.path.basename(table))
                 plotfile=os.path.join(stage_dir, plotfile)
+                if common.ShowPlot: pl.draw()
                 pl.savefig(plotfile)
                 parameters = parameters_base.copy()
                 parameters['type'] = 'without edge'

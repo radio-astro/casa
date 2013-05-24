@@ -12,6 +12,9 @@ import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
+#ShowPlot = True
+ShowPlot = False
+
 DPISummary = 90
 #DPIDetail = 120
 DPIDetail = 130

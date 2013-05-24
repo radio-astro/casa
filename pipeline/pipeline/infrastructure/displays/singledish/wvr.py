@@ -37,14 +37,15 @@ class SDWvrDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
 
-    def draw_wvr(self, wvr_data, wvr_frequency, show_plot=True, plotfile=False):
+    def draw_wvr(self, wvr_data, wvr_frequency, plotfile=False):
         
-        if show_plot == False and plotfile == False: return
+        if common.ShowPlot == False and plotfile == False: return
 
         # Plotting routine
-        if show_plot: PL.ion()
+        if common.ShowPlot: PL.ion()
+        else: PL.ioff()
         Fig = PL.figure(self.MATPLOTLIB_FIGURE_ID)
-        if show_plot: PL.ioff()
+        if common.ShowPlot: PL.ioff()
         PL.clf()
 
         # Convert MJD sec to MJD date for wvr_data
@@ -70,7 +71,7 @@ class SDWvrDisplay(common.SDInspectionDisplay):
         Ax1.set_ylabel('WVR reading')
         Ax1.set_title('WVR reading versus MJD')
 
-        if show_plot != False: PL.draw()
+        if common.ShowPlot != False: PL.draw()
         if plotfile != False: PL.savefig(plotfile, format='png', dpi=common.DPISummary)
         return
 

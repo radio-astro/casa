@@ -34,7 +34,7 @@ class SDAzElDisplay(common.SDInspectionDisplay):
           parameters=parameters)
         return plot
 
-    def draw_azel(self, TimeGapList, rows, show_plot=True, plotfile=False):
+    def draw_azel(self, TimeGapList, rows, plotfile=False):
         """
         Plot Az El v.s. Time
         Table: DataTable
@@ -48,7 +48,7 @@ class SDAzElDisplay(common.SDInspectionDisplay):
 
         # if DoStack is true plot will be stacked with different dates.
         DoStack = True
-        if show_plot == False and plotfile == False: return
+        if common.ShowPlot == False and plotfile == False: return
         # Extract Az, El, and MJD
         Az = []
         AzArr = []
@@ -110,9 +110,10 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                     ElArr[ndays-1].append(El[n])
 
         # Plotting routine
-        if show_plot: PL.ion()
+        if common.ShowPlot: PL.ion()
+        else: PL.ioff()
         PL.figure(self.MATPLOTLIB_FIGURE_ID)
-        if show_plot: PL.ioff()
+        if common.ShowPlot: PL.ioff()
         PL.cla()
         PL.clf()
 
@@ -194,7 +195,7 @@ class SDAzElDisplay(common.SDInspectionDisplay):
             PL.plot(MJD, Az, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
             PL.axis([MJDmin, MJDmax, 0, 360])
 
-        if show_plot != False: PL.draw()
+        if common.ShowPlot != False: PL.draw()
         if plotfile != False: PL.savefig(plotfile, format='png', dpi=common.DPISummary)
 
         del MJD, Az, El, TGap, PGap
