@@ -29,7 +29,9 @@
 
 #include <guitools/Feather/FeatherPlotWidget.ui.h>
 #include <guitools/Feather/FeatherPlot.h>
-#include <guitools/Feather/PreferencesColor.qo.h>
+#include <guitools/Feather/FeatherDataType.h>
+#include <guitools/Feather/FeatherCurveType.h>
+#include <guitools/Feather/CurveDisplay.h>
 #include <casa/Arrays/Vector.h>
 #include <qwt_plot.h>
 #include <qwt_legend.h>
@@ -47,24 +49,31 @@ class FeatherPlotWidget : public QWidget
     Q_OBJECT
 
 public:
+    typedef FeatherDataType::DataType DataType;
+    typedef FeatherCurveType::CurveType CurveType;
+
     FeatherPlotWidget(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent = 0);
 
     //Setting the data into the plots
-    void setSingleDishWeight( const Vector<Float>& xValues, const Vector<Float>& yValues );
-    void setInterferometerWeight( const Vector<Float>& xValues, const Vector<Float>& yValues );
+    /*virtual void setSingleDishWeight( const Vector<Float>& xValues, const Vector<Float>& yValues );
+    virtual void setInterferometerWeight( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void setSingleDishData( const Vector<Float>& xValues, const Vector<Float>& yValues );
     void setInterferometerData( const Vector<Float>& xValues, const Vector<Float>& yValues );
-    void setDirtyData( const Vector<Float>& xValues, const Vector<Float>& yValues );
-    void addScatterData();
-    void addSumData();
+
+    virtual void setSingleDishDataOriginal( const Vector<Float>& xValues, const Vector<Float>& yValues );
+    virtual void setInterferometerDataOriginal( const Vector<Float>& xValues, const Vector<Float>& yValues );
+
+    void setDirtyData( const Vector<Float>& xValues, const Vector<Float>& yValues );*/
+    void setData( const Vector<Float>& xValues, const Vector<Float>& yValues, DataType dType );
+
+    virtual void addSumData();
+
 
     void clearPlot();
     void clearLegend();
 
     //Preferences
-    void setPlotColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
-    		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
-    		const QColor& zoomRectColor, const QColor& sumColor );
+    void setPlotColors( const QMap<CurveType,CurveDisplay>& colorMap);
     void setLineThickness( int thickness );
     void setLegendVisibility( bool v );
     void setDotSize( int size );
@@ -72,15 +81,16 @@ public:
     void refresh();
 
     //Actions
-    void setPermanentScatter( bool permanentScatter );
-    void changePlotType( FeatherPlot::PlotType revertType);
+    //void setPermanentScatter( bool permanentScatter );
+    //void changePlotType( FeatherPlot::PlotType revertType);
 
     //Zooming
     void changeZoom90( bool zoom );
-    void zoomRectangle( double minX, double maxX, double minY, double maxY );
-    void zoomRectangleScatter( double minX, double maxX, double minY, double maxY );
+    void zoomRectangle( double minX, double maxX, double minY, double maxY);
+
     void zoomNeutral();
     void resetZoomRectangleColor();
+    virtual void addZoomNeutralCurves() = 0;
 
     QWidget* getExternalAxisWidget( QwtPlot::Axis position );
 
@@ -102,72 +112,52 @@ signals:
 	void dishDiameterChanged( double newValue);
 	void rectangleZoomed( double minX, double maxX, double minY, double maxY );
 
+protected:
+
+    void resizeEvent( QResizeEvent* event );
+    void resetData( DataType dataType, const Vector<Float>& xValues, const Vector<Float>& yValues );
+    virtual void addSumData( bool logAmplitude);
+    pair<double,double> getMaxMin( QVector<double> values ) const;
+    virtual void zoomRectangleOther( double minX, double maxX, double minY, double maxY )=0;
+    virtual void zoom90Other( double dishPosition, const QVector<double>& singleDishZoomDataX, const QVector<double>& singleDishZoomDataY,
+    		const QVector<double>& interferometerZoomDataX, const QVector<double>& interferometerZoomDataY ) = 0;
+    void addPlotCurve( const QVector<double>& xValues, const QVector<double>& yValues, /*QwtPlot::Axis axis, CurveType index*/DataType dType );
+    void addPlotCurve( const QVector<double>& xValues,
+    		const QVector<double>& yValues, QwtPlot::Axis axis, CurveType curveType );
+    void initializeDomainLimitedData( double minValue, double maxValue,
+           		QVector<double>& xValues, QVector<double>& yValues,
+           		const QVector<double>& originalXValues, const QVector<double>& originalYValues) const;
+    void initializeSumData( const QVector<double>& singleDishX, const QVector<double>& singleDishY,
+    	    		const QVector<double>& interferometerX, const QVector<double>& interferometerY,
+    	    		QVector<double>& sumX, QVector<double>& sumY, bool logScale );
+    void initializeMarkers();
+    virtual void resetColors();
+    FeatherPlot* plot;
+    QwtPlot::Axis sliceAxis;
+    QwtPlot::Axis weightAxis;
+    QwtPlot::Axis scatterAxis;
+    QMap<DataType, std::pair<QVector<double>,QVector<double> > > plotData;
+    QMap<CurveType,CurveDisplay> curvePreferences;
+
 private slots:
 	void zoomRectangleSelected( const QwtDoubleRect& rect );
 	void diameterSelected( const QwtDoublePoint& pos );
 
-protected:
-    void resizeEvent( QResizeEvent* event );
-
-
 private:
-	void resetColors();
-	void addSumData( bool logScale );
+
 	void resetPlot( FeatherPlot::PlotType plotType );
 	void initializeZooming();
 	void initializeDiameterMarker();
 	void initializeDiameterSelector();
-	void initializeMarkers();
+
 	void removeMarkers();
 	void changeLeftMouseMode();
-    void initializeDomainLimitedData( double minValue, double maxValue,
-        		QVector<double>& xValues, QVector<double>& yValues,
-        		const QVector<double>& originalXValues, const QVector<double>& originalYValues) const;
-    void initializeSumData( const QVector<double>& singleDishX, const QVector<double>& singleDishY,
-    		const QVector<double>& interferometerX, const QVector<double>& interferometerY,
-    		QVector<double>& sumX, QVector<double>& sumY, bool logScale );
-    pair<double,double> getMaxMin( QVector<double> values ) const;
-    void zoomRectangleWeight( double minX, double maxX );
-    void addZoomNeutralCurves();
+	QwtPlot::Axis getAxisYForData( DataType dType );
+	CurveType getCurveTypeForData( DataType dType );
 
-
-    FeatherPlot* plot;
-
-    QColor singleDishWeightColor;
-    QColor singleDishDataColor;
-    QColor sumDataColor;
-    QColor interferometerWeightColor;
-    QColor interferometerDataColor;
-    QColor scatterPlotColor;
-    QColor dishDiameterLineColor;
-    QColor zoomRectColor;
-    QColor dirtyColor;
-
-    QVector<double> singleDishWeightXValues;
-    QVector<double> singleDishWeightYValues;
-    QVector<double> interferometerWeightXValues;
-    QVector<double> interferometerWeightYValues;
-    QVector<double> singleDishDataXValues;
-    QVector<double> singleDishDataYValues;
-    QVector<double> interferometerDataXValues;
-    QVector<double> interferometerDataYValues;
-    QVector<double> dirtyDataXValues;
-    QVector<double> dirtyDataYValues;
-
-    QString singleDishFunction;
-    QString interferometerFunction;
-    QString singleDishWeightFunction;
-    QString interferometerWeightFunction;
-    QString sumFunction;
-    QString dirtyFunction;
-
-    bool permanentScatter;
+    //bool permanentScatter;
     QString plotTitle;
     const int MARKER_WIDTH;
-
-    QwtPlot::Axis sliceAxis;
-    QwtPlot::Axis weightAxis;
-    QwtPlot::Axis scatterAxis;
     QwtPlotPicker* zoomer;
     QwtPlotMarker* diameterMarker;
     QwtPlotPicker* diameterSelector;

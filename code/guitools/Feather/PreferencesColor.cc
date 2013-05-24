@@ -26,244 +26,194 @@
 #include <guitools/Feather/Preferences.qo.h>
 #include <guitools/Feather/PreferencesFunction.qo.h>
 #include <QColorDialog>
+#include <QSettings>
 
 namespace casa {
 
-const QString PreferencesColor::FUNCTION_COLOR = "Function Color";
-
 PreferencesColor::PreferencesColor(QWidget *parent)
-    : QDialog(parent), SCATTER_INDEX(-1), SUM_INDEX(-2),
-      DISH_DIAMETER_INDEX(-3), ZOOM_INDEX( -4 ){
+    : QDialog(parent){
 
 	ui.setupUi(this);
-	setWindowTitle( "Feather Plot Color Preferences");
 
-	//Default colors
-
-	zoomRectColor = QColor("#6A5ACD");
-	dishDiameterLineColor = QColor( "#483D8B");
+	setWindowTitle( "Feather Plot Curve Preferences");
+	setModal( false );
 
 	initializeCurvePreferences();
-	initializeUserColors();
-	resetColors();
-
-	connect( ui.zoomRectangleColorButton, SIGNAL(clicked()), this, SLOT(selectZoomRectColor()));
-	//connect( ui.scatterColorButton, SIGNAL(clicked()), this, SLOT(selectScatterPlotColor()));
-	connect( ui.dishDiameterColorButton, SIGNAL(clicked()), this, SLOT( selectDishDiameterLineColor()));
-	//connect( ui.singleDishWeightColorButton, SIGNAL(clicked()), this, SLOT(selectSDWeightColor()));
-	//connect( ui.singleDishSliceColorButton, SIGNAL(clicked()), this, SLOT(selectSDSliceColor()));
-	//connect( ui.interferometerWeightColorButton, SIGNAL(clicked()), this, SLOT(selectINTWeightColor()));
-	//connect( ui.interferometerSliceColorButton, SIGNAL(clicked()), this, SLOT(selectINTSliceColor()));
-	//connect( ui.sumButton, SIGNAL(clicked()), this, SLOT(selectSumColor()));
+	initializeUser();
+	reset();
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(colorsAccepted()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(colorsRejected()));
 }
 
 void PreferencesColor::initializeCurvePreferences(){
-	for ( int i = 0; i < CURVES_END; i++ ){
+	for ( int i = 0; i < FeatherCurveType::CURVES_END; i++ ){
 		PreferencesFunction* functionPreferences = new PreferencesFunction( i, this );
-		curvePreferences.insert( static_cast<CurveTypes>(i), functionPreferences );
+		curvePreferences.insert( static_cast<CurveType>(i), functionPreferences );
 	}
 
 	//Set up the initial (default) colors
-	curvePreferences[WEIGHT_LOW]->setColor( "#8B4513" );
-	curvePreferences[WEIGHT_HIGH]->setColor("#008080" );
-	curvePreferences[SLICE_LOW]->setColor("#DEB887" );
-	curvePreferences[SLICE_HIGH]->setColor( "#4682B4");
-	curvePreferences[SCATTER_HIGH]->setColor( Qt::black );
-	curvePreferences[SCATTER_DIRTY]->setColor( Qt::gray );
-	curvePreferences[SLICE_SUM]->setColor( Qt::blue );
+	setCurveDefaults();
+
+	//Add the curve preferences to the ui.
+	addCurvePreferences();
 }
 
-void PreferencesColor::initializeUserColors(){
+void PreferencesColor::setCurveDefaults(){
+
+	//First the colors
+	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setColor( "#FFD700" );
+	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setColor( "#FF8C00" );
+	curvePreferences[FeatherCurveType::ZOOM]->setColor(Qt::black);
+	curvePreferences[FeatherCurveType::DISH_DIAMETER]->setColor(Qt::black);
+	curvePreferences[FeatherCurveType::X_Y]->setColor( Qt::black);
+	curvePreferences[FeatherCurveType::LOW_ORIGINAL]->setColor( Qt::cyan );
+	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setColor( "#008080");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH]->setColor("#66CDAA");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setColor(Qt::green);
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setColor("#AFEEEE");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setColor( "#5F93A0");
+	curvePreferences[FeatherCurveType::HIGH_ORIGINAL]->setColor( Qt::magenta);
+	curvePreferences[FeatherCurveType::HIGH_WEIGHTED]->setColor("#9370DB");
+	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW]->setColor( "#800080");
+	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW_WEIGHTED]->setColor("#DDA0DD");
+	curvePreferences[FeatherCurveType::DIRTY_ORIGINAL]->setColor( "#BDB76B");
+	curvePreferences[FeatherCurveType::DIRTY_WEIGHTED]->setColor("#DAA520");
+	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW]->setColor( "#A0522D");
+	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED]->setColor("#D2B48C");
+	curvePreferences[FeatherCurveType::SCATTER_LOW_HIGH]->setColor( Qt::blue );
+	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setColor( Qt::blue );
+
+	//Now the names of the curves
+	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setName( "Weight Low" );
+	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setName( "Weight High" );
+	curvePreferences[FeatherCurveType::LOW_ORIGINAL]->setName( "Low" );
+	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setName( "Low, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH]->setName("Low x High");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setName("Low x High, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setName("Low x Dirty");
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setName( "Low x Dirty, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::HIGH_ORIGINAL]->setName( "High");
+	curvePreferences[FeatherCurveType::HIGH_WEIGHTED]->setName("High, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW]->setName( "High x Low");
+	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW_WEIGHTED]->setName("High x Low, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::DIRTY_ORIGINAL]->setName( "Dirty");
+	curvePreferences[FeatherCurveType::DIRTY_WEIGHTED]->setName("Dirty, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW]->setName( "Dirty x Low");
+	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED]->setName("Dirty x Low, Weighted/Scaled");
+	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setName( "Sum" );
+
+	//Which curves should be visible
+	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::SCATTER_LOW_HIGH]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::X_Y]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW_WEIGHTED]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::DISH_DIAMETER]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::ZOOM]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::ZOOM]->setDisplayHidden();
+}
+
+void PreferencesColor::addCurvePreferences(){
+	addCurvePreference( ui.weightLowPreferences, FeatherCurveType::WEIGHT_LOW );
+	addCurvePreference( ui.weightHighPreferences, FeatherCurveType::WEIGHT_HIGH );
+	addCurvePreference( ui.zoomPreferences, FeatherCurveType::ZOOM);
+	addCurvePreference( ui.dishDiameterPreferences, FeatherCurveType::DISH_DIAMETER);
+	addCurvePreference( ui.scatterXYPreferences, FeatherCurveType::X_Y);
+	addCurvePreference( ui.lowOriginalPreferences, FeatherCurveType::LOW_ORIGINAL );
+	addCurvePreference( ui.lowWeightedPreferences, FeatherCurveType::LOW_WEIGHTED );
+	addCurvePreference( ui.lowConvolvedHighPreferences, FeatherCurveType::LOW_CONVOLVED_HIGH );
+	addCurvePreference( ui.lowConvolvedHighWeightedPreferences, FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED );
+	addCurvePreference( ui.lowConvolvedDirtyPreferences, FeatherCurveType::LOW_CONVOLVED_DIRTY );
+	addCurvePreference( ui.lowConvolvedDirtyWeightedPreferences, FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED );
+	addCurvePreference( ui.highOriginalPreferences, FeatherCurveType::HIGH_ORIGINAL );
+	addCurvePreference( ui.highWeightedPreferences, FeatherCurveType::HIGH_WEIGHTED );
+	addCurvePreference( ui.highConvolvedLowPreferences, FeatherCurveType::HIGH_CONVOLVED_LOW );
+	addCurvePreference( ui.highConvolvedLowWeightedPreferences, FeatherCurveType::HIGH_CONVOLVED_LOW_WEIGHTED );
+	addCurvePreference( ui.dirtyOriginalPreferences, FeatherCurveType::DIRTY_ORIGINAL );
+	addCurvePreference( ui.dirtyWeightedPreferences, FeatherCurveType::DIRTY_WEIGHTED );
+	addCurvePreference( ui.dirtyConvolvedLowPreferences, FeatherCurveType::DIRTY_CONVOLVED_LOW );
+	addCurvePreference( ui.dirtyConvolvedLowWeightedPreferences, FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED );
+	addCurvePreference(ui.scatterLowHighPreferences, FeatherCurveType::SCATTER_LOW_HIGH);
+	addCurvePreference( ui.sliceSumPreferences, FeatherCurveType::SUM_LOW_HIGH );
+
+}
+
+void PreferencesColor::addCurvePreference( QWidget* holder, CurveType index ){
+	QLayout* layout = new QHBoxLayout();
+	layout->addWidget( curvePreferences[index]);
+	holder->setLayout( layout );
+}
+
+void PreferencesColor::initializeUser(){
 	//Only use the default values passed in if the user has not indicated
 	//any preferences.
 	QSettings settings( Preferences::ORGANIZATION, Preferences::APPLICATION );
-	/*for ( int i = 0; i < END_COLOR; i++ ){
-		QString colorName = readCustomColor( settings, i );
-		if ( colorName.length() > 0 ){
-			QColor customColor( colorName );
-			colorMap[static_cast<FunctionColor>(i)] = customColor;
-		}
-	}*/
-	QList<CurveTypes> keys = curvePreferences.keys();
-	for ( QList<CurveTypes>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
-		curvePreferences[*iter]->readCustomColor( settings, FUNCTION_COLOR);
+	QList<CurveType> keys = curvePreferences.keys();
+	for ( QList<CurveType>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
+		curvePreferences[*iter]->initialize( settings );
 	}
+}
 
-	/*QString scatterColorName = readCustomColor( settings, SCATTER_INDEX );
-	if ( scatterColorName.length() > 0 ){
-		scatterPlotColor = QColor( scatterColorName );
-	}*/
 
-	QString dishDiameterColorName = readCustomColor( settings, DISH_DIAMETER_INDEX );
-	if ( dishDiameterColorName.length() > 0 ){
-		dishDiameterLineColor = QColor( dishDiameterColorName );
+QMap<PreferencesColor::CurveType,CurveDisplay> PreferencesColor::getFunctionColors( ) const {
+	QMap<PreferencesColor::CurveType, CurveDisplay> curveMap;
+	QList<CurveType> curveID = curvePreferences.keys();
+	for (QList<CurveType>::iterator iter = curveID.begin();
+			iter != curveID.end(); iter++ ){
+		curveMap.insert( (*iter), curvePreferences[*iter]->getFunctionPreferences());
 	}
+	return curveMap;
+}
 
-	QString zoomRectColorName = readCustomColor( settings, ZOOM_INDEX );
-	if ( zoomRectColorName.length() > 0 ){
-		zoomRectColor = QColor( zoomRectColorName );
+void PreferencesColor::setDirtyEnabled( bool enabled ){
+	ui.dirtyGroupBox->setEnabled( enabled );
+	if ( !enabled ){
+		curvePreferences[FeatherCurveType::DIRTY_ORIGINAL]->setDisplayed( false );
+		curvePreferences[FeatherCurveType::DIRTY_WEIGHTED]->setDisplayed( false );
+		curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW]->setDisplayed( false );
+		curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED]->setDisplayed( false );
 	}
-
-	/*QString sumColorName = readCustomColor( settings, SUM_INDEX );
-	if ( sumColorName.length() > 0 ){
-		sumColor = QColor( sumColorName );
-	}*/
 }
 
-QMap<PreferencesColor::FunctionColor,QColor> PreferencesColor::getFunctionColors( ) const {
-	QMap<PreferencesColor::FunctionColor, QColor> colorMap;
-	colorMap.insert( SD_WEIGHT_COLOR, curvePreferences[WEIGHT_LOW]->getColor());
-	colorMap.insert( SD_SLICE_COLOR, curvePreferences[SLICE_LOW]->getColor());
-	colorMap.insert( INT_WEIGHT_COLOR, curvePreferences[WEIGHT_HIGH]->getColor());
-	colorMap.insert( INT_SLICE_COLOR, curvePreferences[SLICE_HIGH]->getColor());
-	return colorMap;
-}
 
-QColor PreferencesColor::getScatterPlotColor() const{
-	return scatterPlotColor;
-}
-
-QColor PreferencesColor::getDishDiameterLineColor() const {
-	return dishDiameterLineColor;
-}
-
-QColor PreferencesColor::getZoomRectColor() const {
-	return zoomRectColor;
-}
-
-QColor PreferencesColor::getSumColor() const {
-	return sumColor;
-}
-
-/*void PreferencesColor::storeCustomColor( QSettings& settings, FunctionColor index ){
-	QString storageKey = FUNCTION_COLOR + QString::number( index );
-	QString colorName = colorMap[index].name();
-	settings.setValue( storageKey, colorName );
-}*/
-
-QString PreferencesColor::readCustomColor( QSettings& settings, int index){
-	QString lookupStr = FUNCTION_COLOR + QString::number(index);
-	QString colorName = settings.value( lookupStr, "" ).toString();
-	return colorName;
-}
-
-/*void PreferencesColor::storeMapColor( QPushButton* button, FunctionColor colorType ){
-	QColor buttonColor = getButtonColor( button );
-	QString buttonColorName = buttonColor.name();
-	colorMap[colorType] = buttonColorName;
-}*/
-
-void PreferencesColor::persistColors(){
+void PreferencesColor::persist(){
 	//Copy the colors from the buttons into the map.
-	QList<CurveTypes> keys = curvePreferences.keys();
-	for ( QList<CurveTypes>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
-		curvePreferences[*iter]->storeColor();
-	}
-
-	dishDiameterLineColor = getButtonColor( ui.dishDiameterColorButton );
-	zoomRectColor = getButtonColor( ui.zoomRectangleColorButton );
-
-	//Save the colors in the map
 	QSettings settings( Preferences::ORGANIZATION, Preferences::APPLICATION );
-	settings.clear();
-	/*for ( int i = 0; i < END_COLOR; i++ ){
-		storeCustomColor( settings, static_cast<FunctionColor>(i) );
-	}*/
-
-	for ( QList<CurveTypes>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
-		curvePreferences[*iter]->storeCustomColor( settings, FUNCTION_COLOR );
+	QList<CurveType> keys = curvePreferences.keys();
+	for ( QList<CurveType>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
+		curvePreferences[*iter]->persist( settings );
 	}
-
-	/*QString scatterKey = FUNCTION_COLOR + QString::number( SCATTER_INDEX );
-	settings.setValue( scatterKey, scatterPlotColor.name() );*/
-
-	QString dishDiameterKey = FUNCTION_COLOR + QString::number( DISH_DIAMETER_INDEX );
-	settings.setValue( dishDiameterKey, dishDiameterLineColor.name());
-
-	QString zoomRectKey = FUNCTION_COLOR + QString::number( ZOOM_INDEX );
-	settings.setValue( zoomRectKey, zoomRectColor.name());
-
-	/*QString sumKey = FUNCTION_COLOR + QString::number( SUM_INDEX );
-	settings.setValue( sumKey, sumColor.name() );*/
 }
+
 
 void PreferencesColor::colorsAccepted(){
-	persistColors();
-	QDialog::close();
+	persist();
 	emit colorsChanged();
 }
 
 void PreferencesColor::colorsRejected(){
-	resetColors();
+	reset();
 	QDialog::close();
 }
 
-void PreferencesColor::resetColors(){
-	QList<CurveTypes> keys = curvePreferences.keys();
-	for ( QList<CurveTypes>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
-		curvePreferences[*iter]->resetColor();
-	}
-	setButtonColor( ui.dishDiameterColorButton, dishDiameterLineColor );
-	setButtonColor( ui.zoomRectangleColorButton, zoomRectColor );
-}
-
-void PreferencesColor::setButtonColor( QPushButton* button, QColor color ){
-	QPalette p = button->palette();
-	p.setBrush(QPalette::Button, color);
-	button->setPalette( p );
-}
-
-QColor PreferencesColor::getButtonColor( QPushButton* button ) const {
-	QPalette p = button->palette();
-	QBrush brush = p.brush(QPalette::Button );
-	QColor backgroundColor = brush.color();
-	return backgroundColor;
-}
-
-void PreferencesColor::showColorDialog( QPushButton* source ){
-	QColor initialColor = getButtonColor( source );
-	QColor selectedColor = QColorDialog::getColor( initialColor, this );
-	if ( selectedColor.isValid() ){
-		setButtonColor( source, selectedColor );
+void PreferencesColor::reset(){
+	QList<CurveType> keys = curvePreferences.keys();
+	for ( QList<CurveType>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
+		curvePreferences[*iter]->reset();
 	}
 }
 
-/*void PreferencesColor::selectSDWeightColor(){
-	showColorDialog( ui.singleDishWeightColorButton );
-}*/
 
-/*void PreferencesColor::selectSDSliceColor(){
-	showColorDialog( ui.singleDishSliceColorButton );
-}*/
-
-/*void PreferencesColor::selectINTWeightColor(){
-	showColorDialog( ui.interferometerWeightColorButton );
-}*/
-
-/*void PreferencesColor::selectINTSliceColor(){
-	showColorDialog( ui.interferometerSliceColorButton );
-}*/
-
-/*void PreferencesColor::selectScatterPlotColor(){
-	showColorDialog( ui.scatterColorButton );
-}*/
-
-void PreferencesColor::selectDishDiameterLineColor(){
-	showColorDialog( ui.dishDiameterColorButton );
-}
-
-void PreferencesColor::selectZoomRectColor(){
-	showColorDialog( ui.zoomRectangleColorButton );
-}
-
-/*void PreferencesColor::selectSumColor(){
-	showColorDialog( ui.sumButton );
-}*/
 
 PreferencesColor::~PreferencesColor(){
+	QList<CurveType> keys = curvePreferences.keys();
+	for ( QList<CurveType>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
+		PreferencesFunction* funct = curvePreferences.take(*iter);
+		delete funct;
+	}
 }
 
 }

@@ -26,18 +26,20 @@
 #include <QGridLayout>
 #include <QDebug>
 #include <QContextMenuEvent>
-#include <guitools/Feather/FeatherPlotWidget.qo.h>
+#include <guitools/Feather/FeatherPlotWidgetSlice.h>
+#include <guitools/Feather/FeatherPlotWidgetScatter.h>
 #include <guitools/Feather/ExternalAxisWidgetLeft.h>
+
 
 namespace casa {
 
 PlotHolder::PlotHolder(QWidget *parent)
     : QWidget(parent),
-      plotTypeAction( "Scatter Plot", this ), zoom90Action( "Auto Zoom", this),
+      /*plotTypeAction( "Scatter Plot", this ),*/ zoom90Action( "Auto Zoom", this),
       zoomNeutralAction( "Zoom Neutral", this ),contextMenu( this ), legendHolder( NULL ),
       legendVisible( false ),
-      displayOutputSlice(false),displayOriginalSlice( false),
-      displayScatter( false ), tempScatterPlot(false),
+      displayOutputSlice(false),
+      displayScatter( false ), /*tempScatterPlot(false),*/
       displayYGraphs( false ), displayXGraphs( true ),
       xAxisUV( true ){
 	ui.setupUi(this);
@@ -48,17 +50,17 @@ PlotHolder::PlotHolder(QWidget *parent)
 
 void PlotHolder::initializeActions(){
 
-	plotTypeAction.setStatusTip( "Toggle between a single-dish/interferometer amplitude scatter plot and function slice cuts.");
+	/*plotTypeAction.setStatusTip( "Toggle between a single-dish/interferometer amplitude scatter plot and function slice cuts.");
 	plotTypeAction.setCheckable( true );
 	connect( &plotTypeAction, SIGNAL(triggered()), this, SLOT(changePlotType()));
-
+*/
 	zoom90Action.setCheckable( true );
 	connect( &zoom90Action, SIGNAL(triggered()), this, SLOT(changeZoom90()));
 
 	zoomNeutralAction.setStatusTip( "Restore the graph back to its original non-zoomed state");
 	connect( &zoomNeutralAction, SIGNAL(triggered()), this, SLOT(zoomNeutral()));
 
-	contextMenu.addAction( &plotTypeAction );
+	//contextMenu.addAction( &plotTypeAction );
 	contextMenu.addAction( &zoom90Action );
 	contextMenu.addAction( &zoomNeutralAction );
 
@@ -68,36 +70,27 @@ void PlotHolder::initializeActions(){
 
 void PlotHolder::initializePlots(){
 	//Add the plots to the array
-	FeatherPlotWidget* origXWidget = new FeatherPlotWidget( "Original Data Slice U", FeatherPlot::ORIGINAL);
-	connect( origXWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
-	connect( origXWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
-	plots.append( origXWidget );
-	FeatherPlotWidget* origYWidget = new FeatherPlotWidget("Original Data Slice V", FeatherPlot::ORIGINAL);
-	connect( origYWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
-	connect( origYWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
-	plots.append( origYWidget );
-	/*FeatherPlotWidget* origDistanceWidget = new FeatherPlotWidget("Original U/V Distance", FeatherPlot::ORIGINAL);
-	connect( origDistanceWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
-	connect( origDistanceWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
-	plots.append( origDistanceWidget );*/
-	FeatherPlotWidget* xWidget = new FeatherPlotWidget( "Feathered Data Slice U", FeatherPlot::SLICE_CUT);
+	FeatherPlotWidget* xWidget = new FeatherPlotWidgetSlice( "Slice U", FeatherPlot::SLICE_CUT);
 	connect( xWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedX(double)));
 	connect( xWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( xWidget );
-	FeatherPlotWidget* yWidget = new FeatherPlotWidget( "Feathered Data Slice V", FeatherPlot::SLICE_CUT);
+	FeatherPlotWidget* yWidget = new FeatherPlotWidgetSlice( "Slice V", FeatherPlot::SLICE_CUT);
 	connect( yWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
 	connect( yWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( yWidget );
-	/*FeatherPlotWidget* distanceWidget = new FeatherPlotWidget( "Feathered Data Slice U/V Distance", FeatherPlot::SLICE_CUT);
+	FeatherPlotWidget* distanceWidget = new FeatherPlotWidgetSlice( "Slice Radial Distance", FeatherPlot::SLICE_CUT);
 	connect( distanceWidget, SIGNAL(dishDiameterChanged(double)), this, SIGNAL(dishDiameterChangedY(double)));
 	connect( distanceWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
-	plots.append( distanceWidget );*/
-	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidget( "Feathered Data Scatter U", FeatherPlot::SCATTER_PLOT);
-	xWidgetScatter->setPermanentScatter( true );
+	plots.append( distanceWidget );
+	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidgetScatter( "Scatter U", FeatherPlot::SCATTER_PLOT);
+	//xWidgetScatter->setPermanentScatter( true );
 	plots.append( xWidgetScatter );
-	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidget( "Feathered Data Scatter V", FeatherPlot::SCATTER_PLOT);
-	yWidgetScatter->setPermanentScatter( true );
+	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidgetScatter( "Scatter V", FeatherPlot::SCATTER_PLOT);
+	//yWidgetScatter->setPermanentScatter( true );
 	plots.append( yWidgetScatter );
+	FeatherPlotWidget* distanceWidgetScatter = new FeatherPlotWidgetScatter( "Scatter Radial Distance", FeatherPlot::SCATTER_PLOT);
+	//distanceWidgetScatter->setPermanentScatter( true );
+	plots.append( distanceWidgetScatter );
 }
 
 
@@ -119,7 +112,7 @@ void PlotHolder::rectangleZoomed( double minX, double maxX, double minY, double 
 }
 
 
-void PlotHolder::changePlotType(){
+/*void PlotHolder::changePlotType(){
 	bool scatterPlot = plotTypeAction.isChecked();
 	zoom90Action.setEnabled( !scatterPlot );
 	FeatherPlot::PlotType plotType = FeatherPlot::NO_TYPE;
@@ -128,15 +121,13 @@ void PlotHolder::changePlotType(){
 		zoom90Action.setChecked( false );
 		plotType = FeatherPlot::SCATTER_PLOT;
 	}
-	for ( int i = 0; i < plots.size(); i++ ){
-		FeatherPlot::PlotType individualType = plotType;
-		if ( plotType == FeatherPlot::NO_TYPE ){
-			int divisor = FeatherPlot::NO_TYPE - 1;
-			individualType = static_cast<FeatherPlot::PlotType>( i / divisor );
-		}
-		plots[i]->changePlotType( individualType );
+	else {
+		plotType = FeatherPlot::SLICE_CUT;
 	}
-}
+	for ( int i = 0; i < plots.size(); i++ ){
+		plots[i]->changePlotType( plotType );
+	}
+}*/
 
 
 void PlotHolder::changeZoom90(){
@@ -194,12 +185,9 @@ void PlotHolder::setDotSize( int dotSize ){
 
 void PlotHolder::setLegendVisibility( bool visible ){
 	legendVisible = visible;
-	plots[SLICE_X_ORIGINAL]->setLegendVisibility( visible );
-	plots[SLICE_Y_ORIGINAL]->setLegendVisibility( visible );
-	//plots[DISTANCE_ORIGINAL]->setLegendVisibility( visible );
-	plots[SLICE_X]->setLegendVisibility( visible );
-	plots[SLICE_Y]->setLegendVisibility( visible );
-	//plots[DISTANCE_SLICE]->setLegendVisibility( visible );
+	for ( int i = 0; i < SCATTER_X; i++ ){
+		plots[i]->setLegendVisibility( visible );
+	}
 }
 
 
@@ -219,12 +207,6 @@ void PlotHolder::setDisplayOutputSlice( bool visible ){
 	displayOutputSlice = visible;
 }
 
-
-void PlotHolder::setDisplayOriginalSlice( bool visible ){
-	displayOriginalSlice = visible;
-}
-
-
 void PlotHolder::setDisplayYGraphs( bool visible ){
 	displayYGraphs = visible;
 }
@@ -238,11 +220,9 @@ void PlotHolder::setXAxisUV( bool xAxisUV ){
 }
 
 
-void PlotHolder::setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
-		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
-		const QColor& zoomRectColor, const QColor& sumColor ){
+void PlotHolder::setColors( const QMap<PreferencesColor::CurveType,CurveDisplay>& colorMap ){
 	for ( int i = 0; i < plots.size(); i++ ){
-		plots[i]->setPlotColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor, sumColor );
+		plots[i]->setPlotColors( colorMap);
 	}
 }
 
@@ -256,26 +236,32 @@ void PlotHolder::setLogScale( bool uvScale, bool logScale ){
 //                          Data
 //------------------------------------------------------------------------
 
-void PlotHolder::setSingleDishWeight( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
-		const Vector<Float>& sDy, const Vector<Float>& sDyAmp ){
-	plots[SLICE_X]->setSingleDishWeight( sDx, sDxAmp );
-	plots[SLICE_Y]->setSingleDishWeight( sDy, sDyAmp );
+bool PlotHolder::isScatterData( DataType dType ){
+	bool scatterData = false;
+	if ( dType == FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED ||
+				dType == FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED ){
+		scatterData = true;
+	}
+	return scatterData;
 }
 
-
-void PlotHolder::setInterferometerWeight( const Vector<Float>& intx, const Vector<Float>& intxAmp,
-		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
-	plots[SLICE_X]->setInterferometerWeight( intx, intxAmp );
-	plots[SLICE_Y]->setInterferometerWeight( inty, intyAmp );
+void PlotHolder::setData( const Vector<Float>& x, const Vector<Float>& xAmp,
+   		const Vector<Float>& y, const Vector<Float>& yAmp,
+   		DataType dType ){
+	plots[SLICE_X]->setData( x, xAmp, dType );
+	plots[SLICE_Y]->setData( y, yAmp, dType );
+	//Scatter plots only contain the low convoluted with the high, weighted & vice versa.
+	if ( isScatterData( dType ) ){
+		plots[SCATTER_X]->setData( x, xAmp, dType );
+		plots[SCATTER_Y]->setData( y, yAmp, dType );
+	}
 }
 
-
-void PlotHolder::setSingleDishData( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
-		const Vector<Float>& sDy, const Vector<Float>& sDyAmp ){
-	plots[SLICE_X]->setSingleDishData( sDx, sDxAmp );
-	plots[SLICE_Y]->setSingleDishData( sDy, sDyAmp );
-	plots[SCATTER_X]->setSingleDishData( sDx, sDxAmp );
-	plots[SCATTER_Y]->setSingleDishData( sDy, sDyAmp );
+void PlotHolder::setData( const Vector<Float>& distance, const Vector<Float>& distanceAmp, DataType dType ){
+	 plots[SLICE_DISTANCE]->setData( distance, distanceAmp, dType );
+	 if ( isScatterData( dType ) ){
+		 plots[SCATTER_DISTANCE]->setData( distance, distanceAmp, dType );
+	 }
 }
 
 void PlotHolder::addSumData(){
@@ -283,53 +269,19 @@ void PlotHolder::addSumData(){
 	plots[SLICE_Y]->addSumData();
 }
 
-
-void PlotHolder::setInterferometerData( const Vector<Float>& intx, const Vector<Float>& intxAmp,
-		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
-	plots[SLICE_X]->setInterferometerData( intx, intxAmp );
-	plots[SLICE_Y]->setInterferometerData( inty, intyAmp );
-	plots[SCATTER_X]->setInterferometerData( intx, intxAmp );
-	plots[SCATTER_Y]->setInterferometerData( inty, intyAmp );
-}
-
-void PlotHolder::setDirtyData( const Vector<Float>& intx, const Vector<Float>& intxAmp,
-       		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
-	plots[SLICE_X]->setDirtyData( intx, intxAmp );
-	plots[SLICE_Y]->setDirtyData( inty, intyAmp );
-	plots[SCATTER_X]->setDirtyData( intx, intxAmp );
-	plots[SCATTER_Y]->setDirtyData( inty, intyAmp );
-}
-
-
-void PlotHolder::setSingleDishDataOriginal( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
-		const Vector<Float>& sDy, const Vector<Float>& sDyAmp ){
-	plots[SLICE_X_ORIGINAL]->setSingleDishData( sDx, sDxAmp );
-	plots[SLICE_Y_ORIGINAL]->setSingleDishData( sDy, sDyAmp );
-}
-
-
-void PlotHolder::setInterferometerDataOriginal( const Vector<Float>& intx, const Vector<Float>& intxAmp,
-		const Vector<Float>& inty, const Vector<Float>& intyAmp ){
-	plots[SLICE_X_ORIGINAL]->setInterferometerData( intx, intxAmp );
-	plots[SLICE_Y_ORIGINAL]->setInterferometerData( inty, intyAmp );
-}
-
-
 void PlotHolder::updateScatterData( ){
-	plots[SCATTER_X]->addScatterData();
-	plots[SCATTER_Y]->addScatterData();
+	plots[SCATTER_X]->addZoomNeutralCurves();
+	plots[SCATTER_Y]->addZoomNeutralCurves();
 }
 
 
 void PlotHolder::dishDiameterXChanged( double value ){
 	plots[SLICE_X]->setDishDiameter( value );
-	plots[SLICE_X_ORIGINAL]->setDishDiameter( value );
 }
 
 
 void PlotHolder::dishDiameterYChanged( double value ){
 	plots[SLICE_Y]->setDishDiameter( value );
-	plots[SLICE_Y_ORIGINAL]->setDishDiameter( value );
 }
 
 //----------------------------------------------------------------------
@@ -384,12 +336,12 @@ void PlotHolder::emptyLayout(QLayout* layout ){
 }
 
 
-void PlotHolder::adjustLayout( bool scatterPlot ){
+/*void PlotHolder::adjustLayout( bool scatterPlot ){
 	if ( scatterPlot != tempScatterPlot ){
-		tempScatterPlot = scatterPlot;
+		//tempScatterPlot = scatterPlot;
 		layoutPlotWidgets();
 	}
-}
+}*/
 
 
 void PlotHolder::layoutPlotWidgets(){
@@ -404,9 +356,87 @@ void PlotHolder::layoutPlotWidgets(){
 	gridLayout->setSpacing( 5 );
 	gridLayout->setContentsMargins( 2, 2, 2, 2 );
 
-	int rowCount = 0;
+	pair<int,int> gridSize(0,0);
+	if ( xAxisUV ){
+		gridSize = addUVPlots( gridLayout );
+	}
+	else {
+		gridSize = addRadialPlots( gridLayout );
+	}
+	int rowCount = gridSize.first;
+	int columnCount = gridSize.second;
+	if ( rowCount > 0 && columnCount > 0 ){
+		//Add the legend/remove legend.  We don't need a legend if all we
+		//are looking at is scatter plots.
+		if ( legendVisible &&/* !tempScatterPlot &&*/ displayOutputSlice ){
+			if ( legendHolder == NULL ){
+				legendHolder = new QWidget( this);
+				legendHolder->setMinimumSize( 800, 50 );
+				legendHolder->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Preferred );
+			}
+			gridLayout->addWidget(legendHolder,rowCount, 0, 1, columnCount, Qt::AlignHCenter);
+			if ( xAxisUV ){
+				plots[SLICE_X]->insertLegend( legendHolder );
+			}
+			else {
+				plots[SLICE_DISTANCE]->insertLegend( legendHolder );
+			}
+		}
+	}
+	setLayout( gridLayout );
+}
+
+
+pair<int,int> PlotHolder::addRadialPlots(QGridLayout*& gridLayout){
+
+	//First get the column count
 	int columnCount = 0;
-	if ( displayOriginalSlice || displayOutputSlice || displayScatter ){
+	if ( displayOutputSlice || displayScatter ){
+		//One graph plus the left axis.
+		columnCount = 2;
+	}
+
+	//Dynamically determine the row count as we add plots and axes.
+	int rowCount = 0;
+	if ( columnCount > 0 ){
+		if ( displayOutputSlice ){
+			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_DISTANCE );
+			gridLayout->addWidget( plots[SLICE_DISTANCE], 0, 1 );
+			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_DISTANCE );
+			rowCount++;
+		}
+
+		//Add the bottom axis. Note the y-axis is in column 0 so we start at 1.
+		if ( rowCount > 0 ){
+			addPlotAxis( rowCount, 1, gridLayout, QwtPlot::xBottom, SLICE_DISTANCE );
+			rowCount++;
+		}
+
+		//The scatter plot cannot share the bottom axis of the other plots so
+		//we have to add the scatter plot after putting in the common y-axis
+		//the other plots share.
+		if ( displayScatter /*&& !tempScatterPlot*/ ){
+			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SCATTER_DISTANCE );
+			gridLayout->addWidget( plots[SCATTER_DISTANCE], rowCount, 1 );
+			rowCount++;
+
+			//Add the bottom axis for the scatter plot
+			addPlotAxis( rowCount, 1, gridLayout, QwtPlot::xBottom, SCATTER_DISTANCE );
+			rowCount++;
+		}
+	}
+	pair<int,int> distanceGridSize( rowCount, columnCount );
+	return distanceGridSize;
+}
+
+
+
+
+pair<int,int> PlotHolder::addUVPlots(QGridLayout*& gridLayout){
+
+	//First get the column count
+	int columnCount = 0;
+	if ( displayOutputSlice || displayScatter ){
 		if ( displayYGraphs && displayXGraphs ){
 			//Two graphs plus the left axis.
 			columnCount = 3;
@@ -417,36 +447,21 @@ void PlotHolder::layoutPlotWidgets(){
 		}
 	}
 
+	//Dynamically determine the row count as we add plots and axes.
+	int rowCount = 0;
 	if ( columnCount > 0 ){
-		if ( displayOriginalSlice ){
-			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_X_ORIGINAL );
-			addPlots( gridLayout, rowCount, SLICE_X_ORIGINAL );
-			if ( tempScatterPlot ){
-				addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_Y_ORIGINAL );
-			}
-			rowCount++;
-		}
-
-		int basePlotIndex = 0;
 		if ( displayOutputSlice ){
 			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_X );
 			addPlots( gridLayout, rowCount, SLICE_X );
 			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_Y );
-
-			//Use the original slice axis for the bottom axis if it is present.
-			//That way when the original data is loaded (with the image files)
-			//the bottom axis will be correct.
-			if ( !displayOriginalSlice ){
-				basePlotIndex = 1;
-			}
 			rowCount++;
 		}
 
-		//Add the common shared bottom axis. Note the y-axis is in column 0 so we
+		//Add the bottom axis. Note the y-axis is in column 0 so we
 		//start the loop at 1.
 		if ( rowCount > 0 ){
 			for ( int i = 1; i < columnCount; i++ ){
-				int plotIndex = 2 * basePlotIndex +(i-1);
+				int plotIndex = i - 1;
 				addPlotAxis( rowCount, i, gridLayout, QwtPlot::xBottom, plotIndex );
 			}
 			rowCount++;
@@ -455,7 +470,7 @@ void PlotHolder::layoutPlotWidgets(){
 		//The scatter plot cannot share the bottom axis of the other plots so
 		//we have to add the scatter plot after putting in the common y-axis
 		//the other plots share.
-		if ( displayScatter && !tempScatterPlot ){
+		if ( displayScatter /*&& !tempScatterPlot*/ ){
 			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SCATTER_X );
 			addPlots( gridLayout, rowCount, SCATTER_X );
 			if ( displayYGraphs ){
@@ -470,26 +485,9 @@ void PlotHolder::layoutPlotWidgets(){
 			}
 			rowCount++;
 		}
-
-		//Add the legend/remove legend.  We don't need a legend if all we
-		//are looking at is scatter plots.
-		if ( legendVisible && !tempScatterPlot && (displayOutputSlice || displayOriginalSlice) ){
-			if ( legendHolder == NULL ){
-				legendHolder = new QWidget( this);
-				legendHolder->setMinimumSize( 800, 50 );
-				legendHolder->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Preferred );
-			}
-			gridLayout->addWidget(legendHolder,rowCount, 0, 1, columnCount, Qt::AlignHCenter);
-			if ( displayOutputSlice ){
-				plots[SLICE_X]->insertLegend( legendHolder );
-			}
-			else if ( displayOriginalSlice ){
-				plots[SLICE_X_ORIGINAL]->insertLegend( legendHolder );
-			}
-		}
 	}
-
-	setLayout( gridLayout );
+	pair<int,int> uvGridSize( rowCount, columnCount );
+	return uvGridSize;
 }
 
 void PlotHolder::clearPlots(){

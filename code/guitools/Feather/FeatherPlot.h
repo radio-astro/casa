@@ -50,7 +50,7 @@ friend class ExternalAxisWidgetLeft;
 
 public:
 	FeatherPlot(QWidget* parent );
-	enum PlotType { ORIGINAL, SLICE_CUT, SCATTER_PLOT, NO_TYPE };
+	enum PlotType { SLICE_CUT, SCATTER_PLOT, NO_TYPE };
 	virtual ~FeatherPlot();
 	void clearCurves();
 	void clearLegend();
@@ -82,7 +82,7 @@ public:
 	bool isEmpty() const;
 	bool isScatterPlot() const;
 	bool isSliceCut() const;
-	bool isSliceCutOriginal() const;
+
 
 	static const QString Y_EQUALS_X;
 

@@ -22,60 +22,33 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef PREFERENCESCOLOR_QO_H
-#define PREFERENCESCOLOR_QO_H
 
-#include <QtGui/QDialog>
-#include <QMap>
-
-#include <guitools/Feather/PreferencesColor.ui.h>
-#include <guitools/Feather/CurveDisplay.h>
-#include <guitools/Feather/FeatherCurveType.h>
+#ifndef FEATHERDATATYPE_H_
+#define FEATHERDATATYPE_H_
 
 namespace casa {
 
-class PreferencesFunction;
-
 /**
- * Manages the display properties of all the curves that can be shown on
- * the plots.
+ * An enumeration of the different kinds of data that can be
+ * graphed on the plot.
  */
 
-class PreferencesColor : public QDialog
-{
-    Q_OBJECT
-
+class FeatherDataType {
 public:
-    PreferencesColor(QWidget *parent = 0);
-    typedef FeatherCurveType::CurveType CurveType;
-
-    QMap<CurveType,CurveDisplay> getFunctionColors() const;
-    void setDirtyEnabled( bool enabled );
-
-    ~PreferencesColor();
-
-signals:
-	void colorsChanged();
-
-private slots:
-	void colorsAccepted();
-	void colorsRejected();
+	typedef enum DataType {WEIGHT_SD,WEIGHT_INT,
+	    	    		LOW, LOW_WEIGHTED,
+	    	    		LOW_CONVOLVED_HIGH, LOW_CONVOLVED_HIGH_WEIGHTED,
+	    	    		LOW_CONVOLVED_DIRTY, LOW_CONVOLVED_DIRTY_WEIGHTED,
+	    	    		HIGH, HIGH_WEIGHTED,
+	    	    		HIGH_CONVOLVED_LOW, HIGH_CONVOLVED_LOW_WEIGHTED,
+	    	    		DIRTY, DIRTY_WEIGHTED,
+	    	    		DIRTY_CONVOLVED_LOW, DIRTY_CONVOLVED_LOW_WEIGHTED,
+	    	    		END_DATA};
 
 private:
-	void initializeUser();
-	void initializeCurvePreferences();
-	void setCurveDefaults();
-	void addCurvePreferences();
-    void reset();
-    void persist();
-
-    Ui::PreferencesColorClass ui;
-
-    void addCurvePreference( QWidget* holder, CurveType index );
-    QMap<CurveType,PreferencesFunction*> curvePreferences;
-
-
+	FeatherDataType();
+	virtual ~FeatherDataType();
 };
-}
 
-#endif // PREFERENCESCOLOR_QO_H
+} /* namespace casa */
+#endif /* FEATHERTYPE_H_ */

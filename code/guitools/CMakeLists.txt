@@ -87,12 +87,15 @@ casa_add_library( guitools
   Feather/PlotHolder.cc
   Feather/FeatherMain.cc
   Feather/FeatherPlotWidget.cc
+  Feather/FeatherPlotWidgetSlice.cc
+  Feather/FeatherPlotWidgetScatter.cc
   Feather/FileLoader.cc
   Feather/Preferences.cc
   Feather/PreferencesFunction.cc
   Feather/PreferencesColor.cc
   Feather/FeatherPlot.cc
   Feather/FeatherCurve.cc
+  Feather/CurveDisplay.cc
   Feather/ExternalAxis.cc
   Feather/ExternalAxisWidget.cc
   Feather/ExternalAxisWidgetLeft.cc

@@ -30,14 +30,13 @@
 #include <qwt_plot.h>
 #include <guitools/Feather/PlotHolder.ui.h>
 #include <guitools/Feather/PreferencesColor.qo.h>
+#include <guitools/Feather/FeatherPlotWidget.qo.h>
 #include <casa/aipstype.h>
 #include <casa/Arrays/Vector.h>
 class QGridLayout;
 
 
 namespace casa {
-
-class FeatherPlotWidget;
 
 class PlotHolder : public QWidget {
     Q_OBJECT
@@ -46,20 +45,10 @@ public:
     PlotHolder(QWidget *parent = 0);
 
     //Data related
-    void setSingleDishWeight( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
-    		const Vector<Float>& sDy, const Vector<Float>& sDyAmp );
-    void setInterferometerWeight( const Vector<Float>& intx, const Vector<Float>& intxAmp,
-    		const Vector<Float>& inty, const Vector<Float>& intyAmp );
-    void setSingleDishData( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
-    		const Vector<Float>& sDy, const Vector<Float>& sDyAmp );
-    void setInterferometerData( const Vector<Float>& intx, const Vector<Float>& intxAmp,
-    		const Vector<Float>& inty, const Vector<Float>& intyAmp );
-    void setSingleDishDataOriginal( const Vector<Float>& sDx, const Vector<Float>& sDxAmp,
-    		const Vector<Float>& sDy, const Vector<Float>& sDyAmp );
-    void setInterferometerDataOriginal( const Vector<Float>& intx, const Vector<Float>& intxAmp,
-    		const Vector<Float>& inty, const Vector<Float>& intyAmp );
-    void setDirtyData( const Vector<Float>& intx, const Vector<Float>& intxAmp,
-        		const Vector<Float>& inty, const Vector<Float>& intyAmp );
+    typedef FeatherPlotWidget::DataType DataType;
+    void setData( const Vector<Float>& x, const Vector<Float>& xAmp,
+    		const Vector<Float>& y, const Vector<Float>& yAmp, DataType dType );
+    void setData( const Vector<Float>& distance, const Vector<Float>& distanceAmp, DataType dType );
     void updateScatterData( );
     void addSumData();
     void clearPlots();
@@ -70,13 +59,10 @@ public:
     void setLegendVisibility( bool visible );
     void setDisplayScatterPlot( bool visible );
     void setDisplayOutputSlice( bool visible );
-    void setDisplayOriginalSlice( bool visible );
     void setDisplayYGraphs( bool visible );
     void setDisplayXGraphs( bool visible );
     void setXAxisUV( bool xAxisUV );
-    void setColors( const QMap<PreferencesColor::FunctionColor,QColor>& colorMap,
-    		const QColor& scatterPlotColor, const QColor& dishDiameterLineColor,
-    		const QColor& zoomRectColor, const QColor& sumColor );
+    void setColors( const QMap<PreferencesColor::CurveType,CurveDisplay>& colorMap);
     void setLogScale( bool uvScale, bool logScale );
     void refreshPlots();
     void layoutPlotWidgets();
@@ -97,24 +83,26 @@ public slots:
  	 void setDiameterSelectorMode();
 
 private slots:
-	void changePlotType();
+	//void changePlotType();
 	void changeZoom90();
 	void zoomNeutral();
 	void showContextMenu( const QPoint& pt );
 	void rectangleZoomed( double minX, double maxX, double minY, double maxY );
 
 private:
-	enum Plots {  SLICE_X_ORIGINAL, SLICE_Y_ORIGINAL, /*DISTANCE_ORIGINAL,*/
-		SLICE_X, SLICE_Y, /*DISTANCE_SLICE,*/ SCATTER_X, SCATTER_Y };
+	enum Plots {  SLICE_X, SLICE_Y, SLICE_DISTANCE, SCATTER_X, SCATTER_Y, SCATTER_DISTANCE };
 	void initializePlots();
 	void initializeActions();
+	bool isScatterData( DataType dType );
 	void emptyLayout(QLayout* layout );
 	void addPlotAxis( int rowIndex, int columnIndex, QGridLayout* layout, QwtPlot::Axis axis, int basePlotIndex );
     void addPlots( QGridLayout*& layout, int rowIndex, int basePlotIndex );
+    std::pair<int,int> addRadialPlots(QGridLayout*& gridLayout);
+    std::pair<int,int> addUVPlots(QGridLayout*& gridLayout );
     void adjustLayout( bool scatterPlot );
 
     QList<FeatherPlotWidget*> plots;
-    QAction plotTypeAction;
+    //QAction plotTypeAction;
     QAction zoom90Action;
     QAction zoomNeutralAction;
     QMenu contextMenu;
@@ -122,7 +110,6 @@ private:
     QWidget* legendHolder;
     bool legendVisible;
     bool displayOutputSlice;
-    bool displayOriginalSlice;
     bool displayScatter;
     bool tempScatterPlot;
     bool displayYGraphs;

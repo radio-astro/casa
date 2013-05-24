@@ -22,60 +22,36 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef PREFERENCESCOLOR_QO_H
-#define PREFERENCESCOLOR_QO_H
 
-#include <QtGui/QDialog>
-#include <QMap>
+#ifndef FEATHERPLOTWIDGETSLICE_H_
+#define FEATHERPLOTWIDGETSLICE_H_
 
-#include <guitools/Feather/PreferencesColor.ui.h>
-#include <guitools/Feather/CurveDisplay.h>
-#include <guitools/Feather/FeatherCurveType.h>
+#include <guitools/Feather/FeatherPlotWidget.qo.h>
 
 namespace casa {
 
-class PreferencesFunction;
-
 /**
- * Manages the display properties of all the curves that can be shown on
- * the plots.
+ * A specialization of FeatherPlotWidget for displaying line plots.
  */
 
-class PreferencesColor : public QDialog
-{
-    Q_OBJECT
-
+class FeatherPlotWidgetSlice : public FeatherPlotWidget {
 public:
-    PreferencesColor(QWidget *parent = 0);
-    typedef FeatherCurveType::CurveType CurveType;
+	typedef FeatherCurveType::CurveType CurveType;
+	typedef FeatherDataType::DataType DataType;
+	FeatherPlotWidgetSlice(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent = 0);
+	virtual ~FeatherPlotWidgetSlice();
+	virtual void addZoomNeutralCurves();
 
-    QMap<CurveType,CurveDisplay> getFunctionColors() const;
-    void setDirtyEnabled( bool enabled );
-
-    ~PreferencesColor();
-
-signals:
-	void colorsChanged();
-
-private slots:
-	void colorsAccepted();
-	void colorsRejected();
+protected:
+	virtual void resetColors();
+	virtual void addSumData();
+	virtual void zoomRectangleOther( double minX, double maxX, double minY, double maxY  );
+	virtual void zoom90Other( double dishPosition, const QVector<double>& singleDishZoomDataX, const QVector<double>& singleDishZoomDataY,
+			const QVector<double>& interferometerZoomDataX, const QVector<double>& interferometerZoomDataY );
 
 private:
-	void initializeUser();
-	void initializeCurvePreferences();
-	void setCurveDefaults();
-	void addCurvePreferences();
-    void reset();
-    void persist();
-
-    Ui::PreferencesColorClass ui;
-
-    void addCurvePreference( QWidget* holder, CurveType index );
-    QMap<CurveType,PreferencesFunction*> curvePreferences;
-
-
+	void addSumData( bool logScale );
 };
-}
 
-#endif // PREFERENCESCOLOR_QO_H
+} /* namespace casa */
+#endif /* FEATHERPLOTWIDGETSLICE_H_ */

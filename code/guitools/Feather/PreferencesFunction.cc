@@ -3,24 +3,76 @@
 
 namespace casa {
 
-PreferencesFunction::PreferencesFunction(int index, QWidget *parent )
-    : QWidget(parent){
+const QString PreferencesFunction::FUNCTION_COLOR = "Function Color";
+
+PreferencesFunction::PreferencesFunction(int index,  QWidget *parent )
+    : QWidget(parent), COLOR_KEY("Color"), VISIBILITY_KEY("Visibility"){
 	ui.setupUi(this);
+
 	id = index;
-	connect( ui.visibleCheckBox, SIGNAL( stateChanged(int)), this, SLOT(visibilityChanged()));
+
+	connect( ui.visibleCheckBox, SIGNAL( clicked()), this, SLOT(visibilityChanged()));
 	connect( ui.colorButton, SIGNAL(clicked()), this, SLOT(showColorDialog()));
 }
 
-QString PreferencesFunction::readCustomColor( QSettings& settings, const QString& baseLookup){
-	QString lookupStr = baseLookup + QString::number(id);
-	QString colorName = settings.value( lookupStr, "" ).toString();
-	return colorName;
+void PreferencesFunction::setColor( QColor baseColor ){
+	curveSettings.setColor( baseColor );
 }
 
-void PreferencesFunction::storeCustomColor( QSettings& settings, const QString& baseLookup ){
-	QString storageKey = baseLookup + QString::number( id );
-	QString colorName = defaultColor.name();
-	settings.setValue( storageKey, colorName );
+void PreferencesFunction::setDisplayed( bool displayed ){
+	curveSettings.setVisibility( displayed );
+}
+
+void PreferencesFunction::setName( const QString& name ){
+	curveSettings.setName( name );
+}
+
+void PreferencesFunction::setDisplayHidden(){
+	ui.visibleCheckBox->hide();
+}
+
+QString PreferencesFunction::getBaseStorageId() const {
+	return FUNCTION_COLOR + QString::number(id);
+}
+
+const CurveDisplay PreferencesFunction::getFunctionPreferences() const {
+	return curveSettings;
+}
+
+void PreferencesFunction::initialize( QSettings& settings){
+	QString lookupStr = getBaseStorageId();
+	QString colorLookupStr = lookupStr+COLOR_KEY;
+	QString defaultColorName = curveSettings.getColor().name();
+	QString colorName = settings.value( colorLookupStr, defaultColorName ).toString();
+	curveSettings.setColor( QColor( colorName ));
+
+	QString visibilityLookupStr = lookupStr+VISIBILITY_KEY;
+	bool defaultVisibility = curveSettings.isDisplayed();
+	QString defaultVisStr = "true";
+	if ( !defaultVisibility ){
+		defaultVisStr = "false";
+	}
+	bool vis = settings.value( visibilityLookupStr,defaultVisStr).toBool();
+	curveSettings.setVisibility( vis );
+	reset();
+}
+
+void PreferencesFunction::persist( QSettings& settings){
+	//Copy the displayed preferences to the default ones.
+	curveSettings.setColor( getButtonColor() );
+	curveSettings.setVisibility(ui.visibleCheckBox->isChecked());
+
+	//Write the settings
+	QString storageKey = getBaseStorageId();
+	QString colorLookupStr = storageKey+COLOR_KEY;
+	QString colorName = curveSettings.getColor().name();
+	settings.setValue( colorLookupStr, colorName );
+	QString visibilityLookupStr = storageKey + VISIBILITY_KEY;
+	QString visStr = "true";
+	if ( !curveSettings.isDisplayed()){
+		visStr = "false";
+	}
+	settings.setValue( visibilityLookupStr, visStr );
 }
 
 void PreferencesFunction::showColorDialog(){
@@ -31,20 +83,10 @@ void PreferencesFunction::showColorDialog(){
 	}
 }
 
-QColor PreferencesFunction::getColor() const {
-	return defaultColor;
-}
 
-void PreferencesFunction::setColor( QColor other ){
-	defaultColor = other;
-}
-
-void PreferencesFunction::storeColor(){
-	defaultColor = getButtonColor();
-}
-
-void PreferencesFunction::resetColor(){
-	setButtonColor( defaultColor );
+void PreferencesFunction::reset(){
+	setButtonColor( curveSettings.getColor() );
+	ui.visibleCheckBox->setChecked( curveSettings.isDisplayed() );
 }
 
 QColor PreferencesFunction::getButtonColor() const {

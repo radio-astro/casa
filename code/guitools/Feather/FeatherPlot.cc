@@ -250,15 +250,6 @@ bool FeatherPlot::isSliceCut() const {
 }
 
 
-bool FeatherPlot::isSliceCutOriginal() const {
-	bool sliceCut = false;
-	if ( plotType == ORIGINAL ){
-		sliceCut = true;
-	}
-	return sliceCut;
-}
-
-
 bool FeatherPlot::isLogUV() const {
 	return scaleLogUV;
 }
