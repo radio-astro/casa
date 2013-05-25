@@ -42,7 +42,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   template <class T> class CountedPtr;
 // <summary>
 // Object to provide MODEL_DATA visibilities on demand
-// 
 // </summary>
 
 // <reviewed reviewer="" date="" tests="" demos="">
@@ -53,22 +52,89 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </prerequisite>
 //
 // <etymology>
-
-
+// Vis for Visibility
+// ModelData is self explanatory
 // </etymology>
 //
 // <synopsis>
+// This Class also offer a lot of helper functions to query add and delete/modify models
+// To be noted the models that are supported are FTMachines and Componentlist
+// A given FIELD_ID  can have multiple models added to the same record 
+// (i.e for e.g multiple spw models or multiple outlier images  or in the 
+// case of componentlist multiple component list models. 
+// A model may be valid for multiple fields e.g a mosaic
+// To save storage in such cases multiple field id will point to the same model
+// Look for the keyword "definedmodel_field_x" in the Source table keywords (or the main 
+// table if source is not present).
+// This will point to another key which is going to point to the model.
+// Thus multiple "definedmodel_field_x"  may point to the same key.
+// If there is no valid SOURCE table the key will hold a Record of the model to use 
+// in the main table 
+// Otherwise in the SOURCE table the key will hold the row of the SOURCE table in whose 
+// SOURCE_MODEL cell the Record of the model to use will be resident.
+// Now a given model Record in a SOURCE_MODEL cell  
+// can hold multiple FTMachine's or Compnentlist (e.g multiple direction images or 
+// spw images  associated with a given field)  
+// and they are all cumulative (while respecting spw selection conditions) 
+// when a request is made for the model visibility
 // </synopsis>
 //
 // <example>
 // <srcblock>
+//  MeasurementSet theMS(.....)
+
+//   VisibilityIterator vi(theMS,sort);
+//   VisBuffer vb(vi);
+//    MDirection myDir=vi.msColumns().field().phaseDirMeas(0);
+//    ComponentList cl;
+//    SkyComponent otherPoint(ComponentType::POINT);
+//    otherPoint.flux() = Flux<Double>(0.00001, 0.0, 0.0, 0.00000);
+//    otherPoint.shape().setRefDirection(myDir);
+//    cl.add(otherPoint);
+//    Record clrec;
+//     clrec.define("type", "componentlist");
+//   ///Define the fields ans spw for which this model is valid
+//    clrec.define("fields", field);
+//   clrec.define("spws", Vector<Int>(1, 0));
+//    clrec.defineRecord("container", container);
+//    Record outRec;
+//    outRec.define("numcl", 1);
+//    outRec.defineRecord("cl_0", clrec);
+
+//     Vector<Int>spws(1,0);
+//     Save model to the MS
+//      VisModelData.putModel(theMS, container, field, spws, Vector<Int>(1,0), Vector<Int>(1,63), Vector<Int>(1,1), True, False);
+//
+//////now example to serve model visibility
+// vi.origin();
+///////////////
+//VisModelData vm;
+////           String modelkey; 
+//            Int snum;
+//   Bool hasmodkey=VisModelData::isModelDefined(vb.fieldId(), vi.ms(), modelkey, snum);
+// Setup vm to serve the model for the fieldid()
+//   if( hasmodkey){
+//                      TableRecord modrec;
+//                       VisModelData::getModelRecord(modelkey, modrec, visIter_p->ms())
+//                       vm.addModel(modrec, Vector<Int>(1, msId()), vb);
+//                      }
+//    for (vi.originChunks();vi.moreChunks(); vi.nextChunk()){
+//      for (vi.origin(); vi.more(); vi++){
+//       This fills the vb.modelVisCube with the appropriate model visibility
+//	  vm.getModelVis(vb);
+//	cerr << "field " << vb.fieldId() << "  spw " << vb.spectralWindow() <<" max " <<  max(amplitude(vb.modelVisCube())) << endl;
+ 
+//      }
+//    }
 // </srcblock>
 // </example>
 //
 // <motivation>
 // </motivation>
 //
-// <todo asof="">
+// <todo asof="2013/05/24">
+// Allow validity of models for a given section of time only
+//
 // </todo>
 
 class VisModelData {
