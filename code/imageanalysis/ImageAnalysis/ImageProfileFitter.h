@@ -253,6 +253,8 @@ private:
 
     String _getTag(const uInt i) const;
 
+    std::auto_ptr<vector<vector<Matrix<Double> > > > _createPCFMatrices() const;
+
     String _elementToString(
     	const Double value, const Double error,
     	const String& unit
@@ -270,10 +272,21 @@ private:
     	const IPosition imPos
     ) const;
 
+    Bool _setAxisTypes();
+
     String _polynomialToString(
     	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
     	const Vector<Double> imPix, const Vector<Double> world
     ) const;
+
+    void _marshalFitResults(
+    	Array<Bool>& attemptedArr, Array<Bool>& successArr,
+    	Array<Bool>& convergedArr, Array<Bool>& validArr,
+    	Matrix<String>& typeMat, Array<Int>& niterArr,
+    	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Matrix<Double> > > >& pcfMatrices,
+    	vector<Matrix<Double> >& plpMatrices, Bool returnDirection,
+        Vector<String>& directionInfo, Array<Bool>& mask
+    );
 
     static void _makeSolutionImage(
     	const String& name, const CoordinateSystem& csys,

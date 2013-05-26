@@ -423,35 +423,18 @@ void ImageProfileFitter::_finishConstruction() {
     this->_setSupportsLogfile(True);
 }
 
-void ImageProfileFitter::_setResults() {
-    LogOrigin logOrigin(_class, __FUNCTION__);
-    Double fNAN = casa::doubleNaN();
-    uInt nComps = _nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets;
-    if (_polyOrder >= 0) {
-    	nComps++;
-    }
-    if (_nPLPCoeffs > 0) {
-    	nComps++;
-    }
-    uInt aSize = _fitters.size();
-	Array<Bool> attemptedArr(IPosition(1, aSize), False);
-	Array<Bool> successArr(IPosition(1, aSize), False);
-	Array<Bool> convergedArr(IPosition(1, aSize), False);
-	Array<Bool> validArr(IPosition(1, aSize), False);
-	_worldCoords = Matrix<String>((Int)NAXISTYPES, aSize, "");
-
-	Array<Int> niterArr(IPosition(1, aSize), -1);
-	vector<vector<Matrix<Double> > > pcfMatrices(
-		NGSOLMATRICES, vector<Matrix<Double> >(_nGaussMultiplets+_nOthers)
+std::auto_ptr<vector<vector<Matrix<Double> > > > ImageProfileFitter::_createPCFMatrices() const {
+	std::auto_ptr<vector<vector<Matrix<Double> > > > pcfMatrices(
+		new vector<vector<Matrix<Double> > >(
+			NGSOLMATRICES, vector<Matrix<Double> >(_nGaussMultiplets+_nOthers)
+		)
 	);
-	Matrix<Double> blank(aSize, _nPLPCoeffs, fNAN);
-
-	vector<Matrix<Double> > plpMatrices(
-		NPLPSOLMATRICES, blank
-	);
-	uInt compCount = 0;
 	uInt nSubcomps = 0;
+	uInt compCount = 0;
+	Double fNAN = casa::doubleNaN();
 
+	Matrix<Double> blank;
+	uInt nFitters = _fitters.size();
 	for (uInt i=0; i<_nGaussMultiplets + _nOthers; i++) {
 		if (i == _gsPlane) {
 			// gaussian singlets go in position 0
@@ -468,44 +451,37 @@ void ImageProfileFitter::_setResults() {
 			) {
 				compCount++;
 			}
-			nSubcomps = dynamic_cast<GaussianMultipletSpectralElement*>(
+			nSubcomps = dynamic_cast<const GaussianMultipletSpectralElement*>(
 					_nonPolyEstimates[compCount]
-				)->getGaussians().size();
+			)->getGaussians().size();
 			compCount++;
 		}
-		blank.resize(aSize, nSubcomps, False);
+		blank.resize(nFitters, nSubcomps, False);
 		blank = fNAN;
 		for (uInt k=0; k<NGSOLMATRICES; k++) {
-			pcfMatrices[k][i] = blank;
+			(*pcfMatrices)[k][i] = blank;
 		}
 	}
-	Matrix<String> typeMat(aSize, nComps, "UNDEF");
-	Array<Bool> mask(IPosition(1, aSize), False);
-	Array<Int> nCompArr(IPosition(1, aSize), -1);
-	IPosition inTileShape = _subImage.niceCursorShape();
-	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
-	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
-	Vector<ImageFit1D<Float> >::const_iterator fitter = _fitters.begin();
-	uInt count = 0;
-	Vector<Double> world;
-	Double increment = fabs(_fitAxisIncrement());
-	IPosition pixel;
+	return pcfMatrices;
+}
+
+Bool ImageProfileFitter::_setAxisTypes() {
 	const CoordinateSystem& csysSub = _subImage.coordinates();
-	Vector<String> axisNames = csysSub.worldAxisNames();
-	for (uInt i=0; i<axisNames.size(); i++) {
-		axisNames[i].upcase();
-	}
+
 	const DirectionCoordinate *dcoord = csysSub.hasDirectionCoordinate()
 		? &csysSub.directionCoordinate() : 0;
 	String directionType = dcoord ? MDirection::showType(dcoord->directionType()) : "";
 	const SpectralCoordinate *spcoord = csysSub.hasSpectralAxis()
-			? &csysSub.spectralCoordinate() : 0;
+		? &csysSub.spectralCoordinate() : 0;
 	const StokesCoordinate *polcoord = csysSub.hasPolarizationCoordinate()
-				? &csysSub.stokesCoordinate() : 0;
-	String emptyUnit = "";
-	_axisTypes = vector<axisType>(axisNames.size(), NAXISTYPES);
+		? &csysSub.stokesCoordinate() : 0;
+	Vector<String> axisNames = csysSub.worldAxisNames();
+	for (uInt i=0; i<axisNames.size(); i++) {
+		axisNames[i].upcase();
+	}
 	Bool hasLat = False;
 	Bool hasLong = False;
+	_axisTypes = vector<axisType>(axisNames.size(), NAXISTYPES);
 	for (uInt i=0; i<axisNames.size(); i++) {
 		if ((Int)i != _fitAxis) {
 			if (
@@ -536,125 +512,196 @@ void ImageProfileFitter::_setResults() {
 			}
 		}
 	}
-	Bool returnDirection = hasLat && hasLong;
-	Vector<String> directionInfo(returnDirection ? aSize : 0);
-	String latitude, longitude;
-	for (
-		inIter.reset();
-		! inIter.atEnd() && fitter != _fitters.end();
-		inIter++, fitter++, count++
-	) {
-		IPosition idx(1, count);
-		attemptedArr(idx) = fitter->getList().nelements() > 0;
-		successArr(idx) = fitter->succeeded();
-		convergedArr(idx) = attemptedArr(idx) && successArr(idx)
-			&& fitter->converged();
-		validArr(idx) = convergedArr(idx) && fitter->isValid();
+	return hasLat && hasLong;
+}
 
-		pixel = inIter.position();
-		if (csysSub.toWorld(world, pixel)) {
-			for (uInt i=0; i<world.size(); i++) {
-				if ((Int)i != _fitAxis) {
-					if (_axisTypes[i] == LONGITUDE) {
-						longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
-						_worldCoords(LONGITUDE, count) = longitude;
-					}
-					else if (_axisTypes[i] == LATITUDE) {
-						latitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 1, True, True);
-						_worldCoords(LATITUDE, count) = latitude;
-					}
-					else if (_axisTypes[i] == FREQUENCY) {
-						_worldCoords(FREQUENCY, count) = spcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
-					}
-					else if (_axisTypes[i] == POLARIZATION) {
-						_worldCoords(POLARIZATION, count) = polcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+void ImageProfileFitter::_marshalFitResults(
+	Array<Bool>& attemptedArr, Array<Bool>& successArr,
+	Array<Bool>& convergedArr, Array<Bool>& validArr,
+	Matrix<String>& typeMat, Array<Int>& niterArr,
+	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Matrix<Double> > > >& pcfMatrices,
+	vector<Matrix<Double> >& plpMatrices, Bool returnDirection,
+    Vector<String>& directionInfo, Array<Bool>& mask
+
+) {
+    IPosition inTileShape = _subImage.niceCursorShape();
+	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
+	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
+	Vector<ImageFit1D<Float> >::const_iterator fitter = _fitters.begin();
+	uInt count = 0;
+	const CoordinateSystem& csysSub = _subImage.coordinates();
+	const DirectionCoordinate *dcoord = csysSub.hasDirectionCoordinate()
+		? &csysSub.directionCoordinate() : 0;
+	String directionType = dcoord ? MDirection::showType(dcoord->directionType()) : "";
+	const SpectralCoordinate *spcoord = csysSub.hasSpectralAxis()
+		? &csysSub.spectralCoordinate() : 0;
+	const StokesCoordinate *polcoord = csysSub.hasPolarizationCoordinate()
+		? &csysSub.stokesCoordinate() : 0;
+	IPosition pixel;
+	Vector<Double> world;
+	String emptyUnit = "";
+
+	directionInfo.resize(returnDirection ? _fitters.size() : 0);
+	String latitude, longitude;
+	Double increment = fabs(_fitAxisIncrement());
+
+	for (
+			inIter.reset();
+			! inIter.atEnd() && fitter != _fitters.end();
+			inIter++, fitter++, count++
+		) {
+			IPosition idx(1, count);
+			attemptedArr(idx) = fitter->getList().nelements() > 0;
+			successArr(idx) = fitter->succeeded();
+			convergedArr(idx) = attemptedArr(idx) && successArr(idx)
+				&& fitter->converged();
+			validArr(idx) = convergedArr(idx) && fitter->isValid();
+
+			pixel = inIter.position();
+			if (csysSub.toWorld(world, pixel)) {
+				for (uInt i=0; i<world.size(); i++) {
+					if ((Int)i != _fitAxis) {
+						if (_axisTypes[i] == LONGITUDE) {
+							longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+							_worldCoords(LONGITUDE, count) = longitude;
+						}
+						else if (_axisTypes[i] == LATITUDE) {
+							latitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 1, True, True);
+							_worldCoords(LATITUDE, count) = latitude;
+						}
+						else if (_axisTypes[i] == FREQUENCY) {
+							_worldCoords(FREQUENCY, count) = spcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+						}
+						else if (_axisTypes[i] == POLARIZATION) {
+							_worldCoords(POLARIZATION, count) = polcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+						}
 					}
 				}
-			}
-			if (returnDirection) {
-				directionInfo[count] = directionType + " "
-					+ longitude + " "
-					+ latitude;
+				if (returnDirection) {
+    directionInfo[count] = directionType + " "
+						+ longitude + " "
+						+ latitude;
 
+				}
 			}
-		}
-		else {
-			*_getLog() << "Could not convert pixel to world coordinate: "
-				<< csysSub.errorMessage() << LogIO::EXCEPTION;
-		}
-		if (validArr(idx)) {
-			IPosition subimPos = inIter.position();
-			mask(idx) = anyTrue(inIter.getMask());
-			niterArr(idx) = (Int)fitter->getNumberIterations();
-			nCompArr(idx) = (Int)fitter->getList().nelements();
-			SpectralList solutions = fitter->getList();
-			uInt gCount = 0;
-			uInt gmCount = 0;
-			uInt lseCount = 0;
-			for (uInt i=0; i<solutions.nelements(); i++) {
-				SpectralElement::Types type = solutions[i]->getType();
-				typeMat(count, i) = SpectralElement::fromType(type);
-				switch (type) {
-				case SpectralElement::POLYNOMIAL:
-					break;
-				case SpectralElement::GAUSSIAN:
-					// allow fall through because gaussians and lorentzians use common code
-				case SpectralElement::LORENTZIAN:
-					{
-						const PCFSpectralElement *pcf = dynamic_cast<
-							const PCFSpectralElement*
-						>(solutions[i]);
-						uInt plane = _lsPlane;
-						uInt col = lseCount;
-						// if block because we allow case fall through
-						if (type == SpectralElement::LORENTZIAN) {
-							lseCount++;
-						}
-						else {
-							plane = _gsPlane;
-							col = gCount;
-							gCount++;
-						}
-						_insertPCF(
-							pcfMatrices, plane, *pcf, count, col,
-							subimPos, increment
-						);
-					}
-					break;
-				case SpectralElement::GMULTIPLET:
-					{
-						const GaussianMultipletSpectralElement *gm = dynamic_cast<
-							const GaussianMultipletSpectralElement*
-						>(solutions[i]);
-						const Vector<GaussianSpectralElement> g = gm->getGaussians();
-						for (uInt k=0; k<g.size(); k++) {
+			else {
+    LogOrigin logOrigin(_class, __FUNCTION__);
+				*_getLog() << "Could not convert pixel to world coordinate: "
+					<< csysSub.errorMessage() << LogIO::EXCEPTION;
+			}
+    if (validArr(idx)) {
+				IPosition subimPos = inIter.position();
+                mask(idx) = anyTrue(inIter.getMask());
+				niterArr(idx) = (Int)fitter->getNumberIterations();
+				nCompArr(idx) = (Int)fitter->getList().nelements();
+				SpectralList solutions = fitter->getList();
+				uInt gCount = 0;
+				uInt gmCount = 0;
+				uInt lseCount = 0;
+				for (uInt i=0; i<solutions.nelements(); i++) {
+					SpectralElement::Types type = solutions[i]->getType();
+					typeMat(count, i) = SpectralElement::fromType(type);
+					switch (type) {
+					case SpectralElement::POLYNOMIAL:
+						break;
+					case SpectralElement::GAUSSIAN:
+						// allow fall through because gaussians and lorentzians use common code
+					case SpectralElement::LORENTZIAN:
+						{
+							const PCFSpectralElement *pcf = dynamic_cast<
+								const PCFSpectralElement*
+							>(solutions[i]);
+							uInt plane = _lsPlane;
+							uInt col = lseCount;
+							// if block because we allow case fall through
+							if (type == SpectralElement::LORENTZIAN) {
+								lseCount++;
+							}
+							else {
+								plane = _gsPlane;
+								col = gCount;
+								gCount++;
+							}
 							_insertPCF(
-								pcfMatrices, gmCount + 2, g[k], count,
-								k, subimPos, increment
+								*pcfMatrices, plane, *pcf, count, col,
+								subimPos, increment
 							);
 						}
-						gmCount++;
-					}
-					break;
-				case SpectralElement::POWERLOGPOLY:
-					{
-						Vector<Double> sols = solutions[i]->get();
-						Vector<Double> errs = solutions[i]->getError();
-
-						for (uInt j=0; j<_nPLPCoeffs; j++) {
-							plpMatrices[PLPSOL](count, j) = sols[j];
-							plpMatrices[PLPERR](count, j) = errs[j];
+						break;
+					case SpectralElement::GMULTIPLET:
+						{
+							const GaussianMultipletSpectralElement *gm = dynamic_cast<
+								const GaussianMultipletSpectralElement*
+							>(solutions[i]);
+							const Vector<GaussianSpectralElement> g = gm->getGaussians();
+							for (uInt k=0; k<g.size(); k++) {
+								_insertPCF(
+									*pcfMatrices, gmCount + 2, g[k], count,
+									k, subimPos, increment
+								);
+							}
+							gmCount++;
 						}
+						break;
+					case SpectralElement::POWERLOGPOLY:
+						{
+							Vector<Double> sols = solutions[i]->get();
+							Vector<Double> errs = solutions[i]->getError();
+
+							for (uInt j=0; j<_nPLPCoeffs; j++) {
+								plpMatrices[PLPSOL](count, j) = sols[j];
+								plpMatrices[PLPERR](count, j) = errs[j];
+							}
+						}
+						break;
+					default:
+    LogOrigin logOrigin(_class, __FUNCTION__);
+						*_getLog() << "Logic Error: Unhandled Spectral Element type"
+							<< LogIO::EXCEPTION;
+						break;
 					}
-					break;
-				default:
-					*_getLog() << "Logic Error: Unhandled Spectral Element type"
-						<< LogIO::EXCEPTION;
-					break;
 				}
 			}
 		}
-	}
+}
+
+void ImageProfileFitter::_setResults() {
+    LogOrigin logOrigin(_class, __FUNCTION__);
+    Double fNAN = casa::doubleNaN();
+    uInt nComps = _nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets;
+    if (_polyOrder >= 0) {
+    	nComps++;
+    }
+    if (_nPLPCoeffs > 0) {
+    	nComps++;
+    }
+    uInt aSize = _fitters.size();
+	Array<Bool> attemptedArr(IPosition(1, aSize), False);
+	Array<Bool> successArr(IPosition(1, aSize), False);
+	Array<Bool> convergedArr(IPosition(1, aSize), False);
+	Array<Bool> validArr(IPosition(1, aSize), False);
+	_worldCoords = Matrix<String>((Int)NAXISTYPES, aSize, "");
+
+	Array<Int> niterArr(IPosition(1, aSize), -1);
+	std::auto_ptr<vector<vector<Matrix<Double> > > > pcfMatrices = _createPCFMatrices();
+	Matrix<Double> blank(aSize, _nPLPCoeffs, fNAN);
+
+	vector<Matrix<Double> > plpMatrices(
+		NPLPSOLMATRICES, blank
+	);
+	Matrix<String> typeMat(aSize, nComps, "UNDEF");
+	Array<Bool> mask(IPosition(1, aSize), False);
+	Array<Int> nCompArr(IPosition(1, aSize), -1);
+	Bool returnDirection = _setAxisTypes();
+	Vector<String> directionInfo;
+    _marshalFitResults(
+		attemptedArr, successArr,
+		convergedArr, validArr,
+		typeMat, niterArr,
+		nCompArr, pcfMatrices, plpMatrices,
+        returnDirection, directionInfo, mask
+
+	);
 	{
 		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		ostringstream oss;
@@ -696,31 +743,6 @@ void ImageProfileFitter::_setResults() {
 	std::auto_ptr<TempImage<Float> > myTemplate(
 		static_cast<TempImage<Float>* >(collapser.collapse(True))
 	);
-	/*
-	if (myTemplate->coordinates().hasDirectionCoordinate()) {
-		Vector<Int> dirAxes = myTemplate->coordinates().directionAxesNumbers();
-		if (ntrue(dirAxes == _fitAxis) == 0) {
-			IPosition dirShape(2);
-			dirShape[0] = myTemplate->shape()[dirAxes[0]];
-			dirShape[1] = myTemplate->shape()[dirAxes[1]];
-			const DirectionCoordinate dcoord = myTemplate->coordinates().directionCoordinate();
-			Matrix<Double> worldPos;
-			Vector<Double> world(2), pixel(2);
-			String longitude, latitude;
-			String unit = "";
-			for (uInt i=0; i<dirShape[0]; i++) {
-				pixel[0] = i;
-				for (uInt j=0; j<dirShape[1]; j++) {
-					pixel[1] = j;
-					dcoord.toWorld(world, pixel);
-					longitude = dcoord.format(unit, Coordinate::DEFAULT, world[0], 0, True, True);
-					cout << longitude << endl;
-				}
-			}
-
-		}
-	}
-	*/
 	IPosition shape = myTemplate->shape();
 	_results.define("attempted", attemptedArr.reform(shape));
 	_results.define(_SUCCEEDED, successArr.reform(shape));
@@ -749,15 +771,15 @@ void ImageProfileFitter::_setResults() {
 		Record rec;
 		IPosition solArrShape = shape;
 		solArrShape.resize(shape.size()+1, True);
-		solArrShape[solArrShape.size()-1] = pcfMatrices[AMP][i].shape()[pcfMatrices[AMP][i].shape().size()-1];
-		rec.define("center", pcfMatrices[CENTER][i].reform(solArrShape));
-		rec.define("fwhm", pcfMatrices[FWHM][i].reform(solArrShape));
-		rec.define("amp", pcfMatrices[AMP][i].reform(solArrShape));
-		rec.define("integral", pcfMatrices[INTEGRAL][i].reform(solArrShape));
-		rec.define("centerErr", pcfMatrices[CENTERERR][i].reform(solArrShape));
-		rec.define("fwhmErr", pcfMatrices[FWHMERR][i].reform(solArrShape));
-		rec.define("ampErr", pcfMatrices[AMPERR][i].reform(solArrShape));
-		rec.define("integralErr", pcfMatrices[INTEGRALERR][i].reform(solArrShape));
+		solArrShape[solArrShape.size()-1] = (*pcfMatrices)[AMP][i].shape()[(*pcfMatrices)[AMP][i].shape().size()-1];
+		rec.define("center", (*pcfMatrices)[CENTER][i].reform(solArrShape));
+		rec.define("fwhm", (*pcfMatrices)[FWHM][i].reform(solArrShape));
+		rec.define("amp", (*pcfMatrices)[AMP][i].reform(solArrShape));
+		rec.define("integral", (*pcfMatrices)[INTEGRAL][i].reform(solArrShape));
+		rec.define("centerErr", (*pcfMatrices)[CENTERERR][i].reform(solArrShape));
+		rec.define("fwhmErr", (*pcfMatrices)[FWHMERR][i].reform(solArrShape));
+		rec.define("ampErr", (*pcfMatrices)[AMPERR][i].reform(solArrShape));
+		rec.define("integralErr", (*pcfMatrices)[INTEGRALERR][i].reform(solArrShape));
 		String description = i == _gsPlane
 			? "Gaussian singlets results"
 			: i == _lsPlane
