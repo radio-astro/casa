@@ -259,7 +259,7 @@ class SimpleGridding(object):
 
         """
         NROW = len(grid_table)
-        LOG.info('grid() start...')
+        LOG.debug('grid() start...')
         LOG.info('Processing %d spectra...' % (NROW))
 
         # any opened table object is needed, so we use the one 
