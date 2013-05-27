@@ -262,7 +262,7 @@ class ValidateLineRaster(object):
         LOG.info('Clustering: Smoothing Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
         LOG.debug('Lines after smoothing: %s'%(Lines))
-        LOG.info('GridCluster after smoothing: %s'%(GridCluster))
+        LOG.debug('GridCluster after smoothing: %s'%(GridCluster))
         
         ######## Clustering: Final Stage ########
         ProcStartTime = time.time()
