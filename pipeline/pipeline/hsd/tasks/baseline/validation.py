@@ -241,7 +241,7 @@ class ValidateLineRaster(object):
         (GridCluster, GridMember, Lines) = self.validation_stage(GridCluster, GridMember, Lines, ITER)
 
         LOG.info('Lines after validation: %s'%(Lines))
-        LOG.info('GridCluster after validation: %s'%(GridCluster))
+        LOG.debug('GridCluster after validation: %s'%(GridCluster))
         
         ProcEndTime = time.time()
         LOG.info('Clustering: Validation Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -261,7 +261,7 @@ class ValidateLineRaster(object):
         ProcEndTime = time.time()
         LOG.info('Clustering: Smoothing Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
-        LOG.info('Lines after smoothing: %s'%(Lines))
+        LOG.debug('Lines after smoothing: %s'%(Lines))
         LOG.info('GridCluster after smoothing: %s'%(GridCluster))
         
         ######## Clustering: Final Stage ########
@@ -273,7 +273,7 @@ class ValidateLineRaster(object):
         ProcEndTime = time.time()
         LOG.info('Clustering: Final Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
-        LOG.info('Lines after final: %s'%(Lines))
+        LOG.debug('Lines after final: %s'%(Lines))
 
         # Merge masks if possible
         ProcStartTime = time.time()
@@ -358,7 +358,7 @@ class ValidateLineRaster(object):
                 # Do iteration until no merging of clusters to be found
                 while(NclusterNew != len(codebook)):
                     category, distance = VQ.vq(Region2, codebook)
-                    LOG.info('Cluster Category&Distance %s, distance = %s' % (category, distance))
+                    LOG.debug('Cluster Category&Distance %s, distance = %s' % (category, distance))
 
                     codebook = codebook.take([x for x in xrange(0,len(codebook)) 
                                               if any(category==x)], axis=0)
@@ -613,10 +613,10 @@ class ValidateLineRaster(object):
         # Clean isolated grids
         for Nc in xrange(Ncluster):
             #print '\nNc=', Nc
-            LOG.info('Lines[%s][2]=%s'%(Nc,Lines[Nc][2]))
+            LOG.debug('Lines[%s][2]=%s'%(Nc,Lines[Nc][2]))
             if Lines[Nc][2] != False:
                 Plane = (GridCluster[Nc] > self.Marginal) * 1
-                LOG.info('Plane = %s'%(Plane))
+                LOG.debug('Plane = %s'%(Plane))
                 if Plane.sum() == 0:
                     Lines[Nc][2] = False
                     #print 'Lines[Nc][2] -> False'
@@ -1001,8 +1001,8 @@ class ValidateLineRaster(object):
                                     else: continue
                     # for Plot
                     if not SingularMatrix: GridCluster[Nc] += BlurPlane
-                LOG.info('GridCluster=%s'%(GridCluster))
-                LOG.info('((GridCluster[%s] > 0.5)*1).sum()=%s'%(Nc,((GridCluster[Nc] > 0.5)*1).sum()))
+                LOG.debug('GridCluster=%s'%(GridCluster))
+                LOG.debug('((GridCluster[%s] > 0.5)*1).sum()=%s'%(Nc,((GridCluster[Nc] > 0.5)*1).sum()))
                 if ((GridCluster[Nc] > 0.5)*1).sum() < self.Questionable: Lines[Nc][2] = False
                 for x in range(nra):
                     for y in range(ndec):

@@ -51,15 +51,15 @@ class SDBaselineWorker(object):
                                      filenames_grd, nplane=3)
         (spectra, grid_table) = simple_grid.execute()
 
-        LOG.info('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(spectra.shape)))
-        LOG.info('grid_table=%s'%(grid_table))
+        LOG.debug('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(spectra.shape)))
+        LOG.debug('grid_table=%s'%(grid_table))
         #LOG.info('spectra=%s'%(spectra.tolist()))
 
         # line finding
         line_finder = DetectLine(datatable)
         detect_signal = line_finder.execute(grid_table, spectra, window, edge, broadline)
 
-        LOG.info('detect_signal=%s'%(detect_signal))
+        LOG.debug('detect_signal=%s'%(detect_signal))
 
         # line validation
         line_validator = ValidateLine(datatable)
@@ -98,7 +98,7 @@ class SDBaselineWorker(object):
                 time_table = datatable.get_timetable(idx, spwid, pol)
                 pol_indices = numpy.where(polnos.take(ant_indices)==pol)[0]
                 pol_indices = ant_indices.take(pol_indices)
-                LOG.info('pol_indices=%s'%(list(pol_indices)))
+                LOG.debug('pol_indices=%s'%(list(pol_indices)))
                 fitter.execute(datatable, filename_in, filename_out, bltable_name, time_table, pol_indices, nchan, edge, fitorder)
 
         
