@@ -190,89 +190,44 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         # this is the table that will be fluxscaled
         caltable = r.final.pop().gaintable
 
-        # To make the following fluxscale reliable the caltable
-        # should contain gains for the the same set of antennas for 
-        # each of the amplitude and phase calibrators - looking
-        # at each spw separately.
-        check_ok = self._check_caltable(caltable=caltable,
-          ms=ms, reference=inputs.reference, transfer=inputs.transfer) 
+        # Schedule a fluxscale job using this caltable. This is the result
+        # that contains the flux measurements for the context.
 
-        if check_ok:
-            # Schedule a fluxscale job using this caltable. This is the result
-            # that contains the flux measurements for the context.
+        # We need to write the fluxscale-derived flux densities to a file,
+        # which can then be used as input for the subsequent setjy task.
+        # This is the name of that file.
+        reffile = os.path.join(inputs.context.output_dir,
+                               'fluxscale_s%s.csv' % inputs.context.stage)
 
-            # We need to write the fluxscale-derived flux densities to a file,
-            # which can then be used as input for the subsequent setjy task.
-            # This is the name of that file.
-            reffile = os.path.join(inputs.context.output_dir,
-                                   'fluxscale_s%s.csv' % inputs.context.stage)
+        try:
+            fluxscale_result = self._do_fluxscale(caltable, 
+                                                  refspwmap=refspwmap)
 
-            try:
-                fluxscale_result = self._do_fluxscale(caltable, 
-                                                      refspwmap=refspwmap)
+            importdata.importdata.export_flux_from_result(fluxscale_result,
+                                                          inputs.context,
+                                                          reffile)
 
-                importdata.importdata.export_flux_from_result(fluxscale_result,
-                                                              inputs.context,
-                                                              reffile)
+            # and finally, do a setjy, add its setjy_settings
+            # to the main result
+            setjy_result = self._do_setjy(reffile=reffile)
+            result.measurements.update(setjy_result.measurements)
 
-                # and finally, do a setjy, add its setjy_settings
-                # to the main result
-                setjy_result = self._do_setjy(reffile=reffile)
-                result.measurements.update(setjy_result.measurements)
-
-            except Exception, e:
-                # something has gone wrong, return an empty result
-                LOG.error('Unable to complete flux scaling operation')
-                LOG.exception(e)
-                return result
-
-            finally:
-                # clean up temporary file
-                if os.path.exists(reffile):
-                    os.remove(reffile)
-
-        else:
+        except Exception, e:
+            # something has gone wrong, return an empty result
             LOG.error('Unable to complete flux scaling operation')
-            return result 
+            LOG.exception(e)
+            return result
+
+        finally:
+            # clean up temporary file
+            if os.path.exists(reffile):
+                os.remove(reffile)
 
         return result
 
     def analyse(self, result):
         return result
 
-    def _check_caltable(self, caltable, ms, reference, transfer):
-        """Check that the give caltable is well-formed so that a 'fluxscale'
-        will run successfully on it:
-          1. Check that the caltable contains results for the reference and
-             transfer fields.
-        """
-        # get the ids of the reference source and phase source(s)
-        amp_fieldid = set([field.id for field in ms.fields if
-          field.name==reference or str(field.id)==reference])
-        phase_fieldids = set([field.id for field in ms.fields if
-          field.name in transfer])
-
-        with casatools.TableReader(caltable, nomodify=False) as table:
-            spwids = table.getcol('SPECTRAL_WINDOW_ID')
-            spwids = set(spwids)
-
-            fieldids = table.getcol('FIELD_ID')
-            fieldids = set(fieldids)
-
-            # check that fieldids contains the amplitude and phase calibrators
-            if fieldids.isdisjoint(amp_fieldid):
-                LOG.error(
-                  '%s contains no results for amplitude calibrator' % 
-                  os.path.basename(caltable))
-                return False
-            if not fieldids.issuperset(phase_fieldids):
-                LOG.error(
-                  '%s does not contain results for all phase calibrators' %
-                  os.path.basename(caltable))
-                return False
-
-        return True
-                                
     def _do_gaincal(self, caltable=None, field=None, intent=None, gaintype='G',
         calmode=None, solint=None, antenna=None, refant=None,
 	minblperant=None, append=None, merge=True):
