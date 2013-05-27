@@ -16,7 +16,7 @@
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <casa/Logging/LogIO.h>
 
-#include <synthesis/MeasurementEquations/SynthesisImager.h>
+#include <synthesis/ImagerObjects/SynthesisImager.h>
 
 #include <synthesisimager_cmpt.h>
 
