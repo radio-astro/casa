@@ -323,19 +323,19 @@ casa_add_library( synthesis
  fortran/fpbmos.f	
  fortran/fpbwproj.f	
  fortran/leakantso.f
- MeasurementEquations/SynthesisImager.cc
- MeasurementEquations/SIImageStore.cc
- MeasurementEquations/SIMapperCollection.cc
- MeasurementEquations/SIMapperBase.cc
- MeasurementEquations/SIMapper.cc
- MeasurementEquations/SynthesisIterBot.cc
- MeasurementEquations/SIMinorCycleController.cc
- MeasurementEquations/SIIterBot.cc
- MeasurementEquations/SynthesisDeconvolver.cc
- MeasurementEquations/SDAlgorithmBase.cc
- MeasurementEquations/SDAlgorithmHogbomClean.cc
- MeasurementEquations/SDMaskHandler.cc
- MeasurementEquations/SynthesisParSync.cc
+ ImagerObjects/SynthesisImager.cc
+ ImagerObjects/SIImageStore.cc
+ ImagerObjects/SIMapperCollection.cc
+ ImagerObjects/SIMapperBase.cc
+ ImagerObjects/SIMapper.cc
+ ImagerObjects/SynthesisIterBot.cc
+ ImagerObjects/SIMinorCycleController.cc
+ ImagerObjects/SIIterBot.cc
+ ImagerObjects/SynthesisDeconvolver.cc
+ ImagerObjects/SDAlgorithmBase.cc
+ ImagerObjects/SDAlgorithmHogbomClean.cc
+ ImagerObjects/SDMaskHandler.cc
+ ImagerObjects/SynthesisParSync.cc
   )
 
 install (FILES
@@ -616,20 +616,23 @@ install (FILES
 	MeasurementEquations/MaskedHogbomCleanModel.tcc
 	MeasurementEquations/ResidualEquation.tcc
 	MeasurementEquations/StokesUtil.tcc
-	MeasurementEquations/SynthesisImager.h
-	MeasurementEquations/SIImageStore.h
-	MeasurementEquations/SIMapperCollection.h
-	MeasurementEquations/SIMapperBase.h
-	MeasurementEquations/SIMapper.h
-	MeasurementEquations/SynthesisIterBot.h
-	MeasurementEquations/SIMinorCycleController.h
-	MeasurementEquations/SIIterBot.h
-	MeasurementEquations/SynthesisDeconvolver.h
-	MeasurementEquations/SDMaskHandler.h
-	MeasurementEquations/SynthesisParSync.h
-	MeasurementEquations/SDAlgorithmBase.h
-	MeasurementEquations/SDAlgorithmHogbomClean.h
 	DESTINATION include/casacode/synthesis/MeasurementEquations
+	)
+install (FILES
+	ImagerObjects/SynthesisImager.h
+	ImagerObjects/SIImageStore.h
+	ImagerObjects/SIMapperCollection.h
+	ImagerObjects/SIMapperBase.h
+	ImagerObjects/SIMapper.h
+	ImagerObjects/SynthesisIterBot.h
+	ImagerObjects/SIMinorCycleController.h
+	ImagerObjects/SIIterBot.h
+	ImagerObjects/SynthesisDeconvolver.h
+	ImagerObjects/SDMaskHandler.h
+	ImagerObjects/SynthesisParSync.h
+	ImagerObjects/SDAlgorithmBase.h
+	ImagerObjects/SDAlgorithmHogbomClean.h
+	DESTINATION include/casacode/synthesis/ImagerObjects
 	)
 install (FILES
 	Parallel/Algorithm.h
