@@ -60,9 +60,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool setEffectiveDishDiam(const Float xdiam, const Float ydiam=-1.0);
     void getEffectiveDishDiam(Float& xdiam, Float& ydiam);
     //Get the 1-D slices of amplitude  along the x and y axis of the FFT of images  
+    //if radial is set to True then the 1D slice is the the circular average rather that X and Y cuts...only the x-values are valid then 
     //Note the SD image is already feathered by its beam..you cannot get unfeathered SD data as it implies deconvolution
-    void getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
-    void getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
+    void getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, const Bool radial=False );
+    void getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
     //Get the 1-D slices of the feathering function that will be applied on SD and INTerf data
     void getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
     void getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
@@ -73,23 +74,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
     //write the feathered image to disk
     Bool saveFeatheredImage(const String& imagename);
+    ///////Helper function to get XY slices and radial cuts for any generic image
+    static void getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
+			 Vector<Float>& uy, Vector<Float>& yamp, 
+			 const ImageInterface<Float>& image);
+    static void getRadialCut(Vector<Float>& radius, Vector<Float>& radialAmp, 
+			  const ImageInterface<Float>& image);
+
 
     ///////////////Old methods left for now till new version is implemented
     static void feather(const String& image, const ImageInterface<Float>& high, const ImageInterface<Float>& low, const Float& sdScale=1.0, const String& lowPSF="", const Bool useDefault=True, const String& vpTable="" , Float effSDDiam=-1.0, const Bool lowpassfiltersd=False);
 
     static Double worldFreq(const CoordinateSystem& cs, Int spectralpix=0);
+
+    
   private:
     void fillXVectors( Vector<Float>& ux, Vector<Float>& uy ) const;
     static void applyDishDiam(ImageInterface<Complex>& image, GaussianBeam& beam, Float effDiam, ImageInterface<Float>& newbeam, Vector<Quantity>& extraconv);
 
-  private:
+
+    
+  
     CountedPtr<ImageInterface<Float> > lowIm_p;
     CountedPtr<ImageInterface<Float> > lowImOrig_p;
     CountedPtr<ImageInterface<Float> > highIm_p;
     CountedPtr<ImageInterface<Complex> > cwImage_p;
     CountedPtr<ImageInterface<Complex> > cwHighIm_p;
-    void getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
+    static void getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
 		  Vector<Float>& uy, Vector<Float>& yamp, ImageInterface<Complex>& ftimage);
+    static void getRadialCut(Vector<Float>& radialAmp, ImageInterface<Complex>& ftimage);
     //calculate the complex weight image to apply on the interf image
     static void getLowBeam(const ImageInterface<Float>& low0, const String& lowPSF, const Bool useDefaultPB, const String& vpTableStr, GaussianBeam& lBeam);
     void calcCWeightImage();

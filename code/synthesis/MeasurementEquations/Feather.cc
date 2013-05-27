@@ -24,6 +24,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 //# $Id$
+#include <boost/math/special_functions/round.hpp>
 #include <synthesis/MeasurementEquations/Feather.h>
 #include <synthesis/TransformMachines/StokesImageUtil.h>
 #include <casa/OS/HostInfo.h>
@@ -226,7 +227,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     sdScale_p=sdscale;
   }
   
-  void Feather::getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+  void Feather::getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, const Bool radial){
+     if(radial){
+      uy.resize();
+      yamp.resize();
+      return getRadialCut(ux, xamp, *lowIm_p);
+    }
     
     TempImage<Complex> cimagelow(lowIm_p->shape(), lowIm_p->coordinates() );
     StokesImageUtil::From(cimagelow, *lowIm_p);
@@ -234,7 +240,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     getCutXY(ux, xamp, uy, yamp, cimagelow);
     
   }
-  void Feather::getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+  void Feather::getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, const Bool radial){
+    if(radial){
+      uy.resize();
+      yamp.resize();
+      return getRadialCut(ux, xamp, *highIm_p);
+    }
     TempImage<Complex> cimagehigh(highIm_p->shape(), highIm_p->coordinates() );
     StokesImageUtil::From(cimagehigh, *highIm_p);
     LatticeFFT::cfft2d( cimagehigh );
@@ -337,7 +348,91 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     cwImage_p->copyData(  (LatticeExpr<Complex>)( 1.0f - (*cwImage_p)/fmax ) );
     cweightCalced_p=True;
   }
-  
+
+  void Feather::getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
+			 Vector<Float>& uy, Vector<Float>& yamp, 
+			 const ImageInterface<Float>& image){
+
+    TempImage<Complex> cimage(image.shape(), image.coordinates() );
+    StokesImageUtil::From(cimage, image);
+    LatticeFFT::cfft2d( cimage );
+    getCutXY(ux, xamp, uy, yamp,  cimage);
+    
+
+  }
+
+  void Feather::getRadialCut(Vector<Float>& radius, Vector<Float>& radialAmp, 
+			     const ImageInterface<Float>& image){
+    
+    TempImage<Complex> cimage(image.shape(), image.coordinates() );
+    StokesImageUtil::From(cimage, image);
+    LatticeFFT::cfft2d( cimage );
+    radialAmp.resize();
+    getRadialCut(radialAmp, cimage);
+
+    ////Get the radial value in uv- units.
+    Double freq=worldFreq(image.coordinates(), 0);
+    Int dirCoordIndex=image.coordinates().findCoordinate(Coordinate::DIRECTION);
+    DirectionCoordinate dc=image.coordinates().directionCoordinate(dirCoordIndex);
+    Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
+    Vector<Int> elshape(2); 
+    Vector<Int> directionIndex=CoordinateUtil::findDirectionAxes(image.coordinates());
+    elshape(0)=image.shape()[directionIndex(0)];
+    elshape(1)=image.shape()[directionIndex(1)];
+    Coordinate* ftdc=dc.makeFourierCoordinate(axes,elshape);	
+    Vector<Double> xpix(radialAmp.nelements());
+    indgen(xpix);
+    xpix +=Double(image.shape()[directionIndex(0)])/2.0;
+    Matrix<Double> pix(2, xpix.nelements());
+    Matrix<Double> world(2, xpix.nelements());
+    Vector<Bool> failures;
+    pix.row(1)=elshape(0)/2;
+    pix.row(0)=xpix;
+    ftdc->toWorldMany(world, pix, failures);
+    xpix=world.row(0);
+    xpix=fabs(xpix)*(C::c)/freq;
+    radius.resize(xpix.nelements());
+    convertArray(radius, xpix);
+
+
+  }
+  void Feather::getRadialCut(Vector<Float>& radialAmp, ImageInterface<Complex>& ftimage) {
+    CoordinateSystem ftCoords(ftimage.coordinates());
+    Vector<Int> directionIndex=CoordinateUtil::findDirectionAxes(ftCoords);
+    Int spectralIndex=CoordinateUtil::findSpectralAxis(ftCoords);
+    IPosition start=ftimage.shape();
+    IPosition shape=ftimage.shape();
+    Int arrLen=min(Int(shape[directionIndex(0)]), Int(shape[directionIndex(1)]));
+    radialAmp.resize(arrLen);
+    radialAmp.set(0.0);
+    Array<Complex> tmpval;
+     
+     for(uInt k=0; k < shape.nelements(); ++k){
+       start[k]=0;
+       ///value for a single pixel in x, y, and pol
+       if((k != uInt(spectralIndex)))
+	 shape[k]=1;
+     }
+     Int counter;
+     Float sumval;
+     for (Int pix =0 ; pix < arrLen; ++pix){
+       sumval=0;
+       counter=0;
+       for (Int xval=0; xval <= pix; ++xval){
+	 Int yval=boost::math::iround(sqrt(Double(pix*pix-xval*xval)));
+	 start[directionIndex[0]]=xval;
+	 start[directionIndex[1]]=yval;
+	 tmpval.resize();
+	 ftimage.getSlice(tmpval, start, shape, True); 
+	 sumval+=fabs(mean(tmpval));
+	 counter+=1;
+       }
+       radialAmp[pix]=sumval/float(counter); 
+     }
+     
+
+  }
+
   void Feather::getCutXY(Vector<Float>& ux, Vector<Float>& xamp, 
 			 Vector<Float>& uy, Vector<Float>& yamp, ImageInterface<Complex>& ftimage){
 
