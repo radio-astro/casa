@@ -11,6 +11,8 @@ import pipeline.infrastructure.casatools as casatools
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from pipeline.domain.datatable import DataTableColumnMaskList as ColMaskList
 
+from ..common import mjd_to_datestring
+
 LOG = infrastructure.get_logger(__name__)
 
 class DataTableReader(object):
@@ -51,6 +53,7 @@ class DataTableReader(object):
         
         with casatools.TableReader(name) as tb:
             Texpt = tb.getcol('INTERVAL')
+            Tmjd = tb.getcol('TIME')
             # ASAP doesn't know the rows for cal are included in s.nrow()
             # nrow = len(Ttime)
             Tscan = tb.getcol('SCANNO')
@@ -98,10 +101,6 @@ class DataTableReader(object):
         # 2011/11/8 get_direction -> get_directionval
         Sdir = s.get_directionval()
         #Sdir = s.get_direction()
-        if ( sd.__version__ == '2.1.1' ):
-            Stim = s.get_time()
-        else:
-            Stim = s.get_time(-1, True)
         Ssrc = s.get_sourcename()
         Saz = s.get_azimuth()
         Sel = s.get_elevation()
@@ -122,6 +121,8 @@ class DataTableReader(object):
         self.datatable.putcol('IF',Tif,startrow=ID)
         self.datatable.putcol('POL',Tpol,startrow=ID)
         self.datatable.putcol('BEAM',Tbeam,startrow=ID)
+        self.datatable.putcol('TIME',Tmjd,startrow=ID)
+        self.datatable.putcol('ELAPSED',(Tmjd-Tmjd[0])*86400.0,startrow=ID)
         self.datatable.putcol('EXPOSURE',Texpt,startrow=ID)
         dirNP = numpy.array(Sdir,dtype=float) * Rad2Deg
         self.datatable.putcol('RA',dirNP[:,0],startrow=ID)
@@ -150,34 +151,13 @@ class DataTableReader(object):
         flags = [1, 1, 1, 1, 1, 1, 1]
         pflags = [1, 1, 1]
         masklist = ColMaskList.NoMask
-        for x in range(nrow):
-            Ttime = Stim[x]
-            sDate = ("%4d-%02d-%02d" % (Ttime.year, Ttime.month, Ttime.day))
-            # Calculate MJD
-            sTime = ("%4d/%02d/%02d/%02d:%02d:%.1f" % (Ttime.year, Ttime.month, Ttime.day, Ttime.hour, Ttime.minute, Ttime.second))
-            qTime = casatools.quanta.quantity(sTime)
-            MJD = qTime['value']
-            if x == 0: MJD0 = MJD
+        for x in xrange(nrow):
+            sDate = mjd_to_datestring(Tmjd[x],unit='day')
             self.datatable.putcell('DATE',ID,sDate)
-            self.datatable.putcell('TIME',ID,MJD)
-            self.datatable.putcell('ELAPSED',ID,(MJD-MJD0)*86400.0)
             self.datatable.putcell('STATISTICS',ID,stats)
             self.datatable.putcell('FLAG',ID,flags)
             self.datatable.putcell('FLAG_PERMANENT',ID,pflags)
             self.datatable.putcell('MASKLIST',ID,masklist)
-##             if Ssrc[x].find('_calon') < 0:
-##                 outfile.write("%d,%d,%d,%d,%d,%d,%s,%.8f,%.3f,%.3f,%.8f,%.8f,%.3f,%.3f,%d,%f,%s,%d\n" % \
-##                          (ID, x, Tscan[x], Tif[x], Tpol[x], Tbeam[x], \
-##                          sDate, MJD, (MJD - MJD0) * 86400., Texpt[x], \
-##                           dirNP[x,0],dirNP[x,1], \
-##                           azNP[x], elNP[x], \
-##                          NchanArray[x], Tsys[x], Ssrc[x], vAnt))
-
-##                 TBL.putcol('Row', int(x), int(x), 1, 1)
-##                 TBL.putcol('Ant', vAnt, int(x), 1, 1)
-##                 ROWs.append(int(x))
-##                 IDs.append(int(ID))
-##                 self.Row2ID[vAnt][int(x)] = int(ID)
             ID += 1
 
         self.vAnt += 1

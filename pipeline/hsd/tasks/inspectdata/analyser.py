@@ -166,8 +166,8 @@ class DataTableAnalyser(object):
         elapsed = self.datatable.getcol('ELAPSED')
         beam = self.datatable.getcol('BEAM')
         self.posgrp = numpy.zeros(len(self.datatable), dtype=int)
-        self.timegrp = [numpy.zeros(len(self.datatable), dtype=int),
-                   numpy.zeros(len(self.datatable), dtype=int)]
+        self.timegrp = [numpy.zeros(len(self.datatable), dtype=int) - 1,
+                        numpy.zeros(len(self.datatable), dtype=int) - 1]
         self.posgrp_rep = {}
         self.posgrp_list = {}
         self.timegrp_list = {}
