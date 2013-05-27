@@ -280,9 +280,9 @@ class SDImportData(basetask.StandardTaskTemplate):
         if len(st_ms_map) > 0:
             st_ms_map.extend([-1]*len(to_import_sd))
 
-        LOG.info('scantable_list=%s'%(scantable_list))
-        LOG.info('to_import=%s'%(to_import))
-        LOG.info('st_ms_map=%s'%(st_ms_map))
+        LOG.debug('scantable_list=%s'%(scantable_list))
+        LOG.debug('to_import=%s'%(to_import))
+        LOG.debug('st_ms_map=%s'%(st_ms_map))
         observing_run_sd = ms_reader.get_observing_run_for_sd(scantable_list,
                                                               to_import,
                                                               st_ms_map)
