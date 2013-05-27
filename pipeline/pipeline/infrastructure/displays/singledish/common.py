@@ -81,9 +81,9 @@ class SDInspectionDisplay(object):
         plots = []
         report_dir = self.context.report_dir
         stage_dir = os.path.join(report_dir, 'stage%d'%(result.stage_number))
-        print report_dir
+        LOG.debug('report_dir=%s'%(report_dir))
         filenames = self.datatable.getkeyword('FILENAMES')
-        print filenames
+        LOG.debug('filenames=%s'%(filenames))
         for idx in xrange(len(filenames)):
             plot = self.doplot(idx, stage_dir)
             if plot is not None:
