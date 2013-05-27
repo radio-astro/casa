@@ -337,7 +337,8 @@ class DataTableAnalyser(object):
                                                dec_sel)
                             last_ra = ra_sel
                             last_dec = dec_sel
-                            LOG.info('nx=%s\nny=%s\ngrid=%s'%(len(grid[0]),len(grid[1]),grid))
+                            LOG.info('(nx,ny)=(%s,%s)'%(len(grid[0]),len(grid[1])))
+                            LOG.debug('grid=%s'%(grid))
                         grid_position[src][spw][pol] = grid
             self.grid_position.append(grid_position)
 
