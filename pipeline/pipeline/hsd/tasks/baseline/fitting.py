@@ -53,8 +53,8 @@ class FittingBase(object):
 
         # dummy scantable for baseline subtraction
         dummy_scan = utils.create_dummy_scan(filename, datatable, index_list)
-        LOG.info('dummy_scan.nrow()=%s'%(dummy_scan.nrow()))
-        LOG.info('nchan for dummy_scan=%s'%(len(dummy_scan._getspectrum())))
+        LOG.debug('dummy_scan.nrow()=%s'%(dummy_scan.nrow()))
+        LOG.debug('nchan for dummy_scan=%s'%(len(dummy_scan._getspectrum())))
 
         # working with spectral data in scantable
         nrow_total = len(index_list)
@@ -69,9 +69,11 @@ class FittingBase(object):
         for y in xrange(len(member_list)):
             rows = member_list[y][0]
             idxs = member_list[y][1]
+            LOG.debug('rows=%s'%(rows))
             with casatools.TableReader(filename) as tb:
                 spectra = numpy.array([tb.getcell('SPECTRA',row)
                                        for row in rows])
+            LOG.debug('spectra.shape=%s'%(list(spectra.shape)))
             masklist = [datatable.tb2.getcell('MASKLIST',idx)
                         for idx in idxs]
 
@@ -79,15 +81,15 @@ class FittingBase(object):
             polyorder = h_polyorder(spectra, masklist, _edge)
             if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
                 polyorder = min(polyorder, self.MaxPolynomialOrder)
-            LOG.info('group %d: order=%s'%(y,polyorder))
+            LOG.info('group %d: fitting order=%s'%(y,polyorder))
 
             # calculate fragmentation
             h_fragmentation = fragmentation.FragmentationHeuristics()
             (fragment, nwindow, win_polyorder) = h_fragmentation(polyorder, nchan, edge)
 
             nrow = len(rows)
-            LOG.info('nrow = %s'%(nrow))
-            LOG.info('len(idxs) = %s'%(len(idxs)))
+            LOG.debug('nrow = %s'%(nrow))
+            LOG.debug('len(idxs) = %s'%(len(idxs)))
             index_list = []
             for i in xrange(nrow):
                 row = rows[i]
@@ -248,7 +250,7 @@ class PolynomialFitting(FittingBase):
             redge = min(redge, nchan - edge[1])
 
             # Calculate positions for combining fragmented spectrum
-            LOG.info('nchan_without_edge=%s, ledge=%s, redge=%s'%(nchan_without_edge, ledge, redge))
+            LOG.debug('nchan_without_edge=%s, ledge=%s, redge=%s'%(nchan_without_edge, ledge, redge))
             win_edge_ignore_l = int(nchan_without_edge / (fragment * win_polyorder))
             win_edge_ignore_r = win_edge_ignore_l
             pos_l0 = int(win * nchan_without_edge / (fragment * 2)) + nchan_without_edge / win_polyorder + ledge
@@ -257,7 +259,6 @@ class PolynomialFitting(FittingBase):
             pos_r1 = int((win + 2) * nchan_without_edge / (fragment * 2)) - 1 - nchan_without_edge / fragment / win_polyorder + ledge
             dl = float(pos_l1 - pos_l0)
             dr = float(pos_r1 - pos_r0)
-            LOG.info('PosL0, PosL1, PosR0, PosR1 = %s, %s, %s, %s' % (pos_l0,pos_l1, pos_r0, pos_r1))
             if win == 0:
                 win_edge_ignore_l = 0
                 pos_l0 = edge[0]
@@ -268,12 +269,11 @@ class PolynomialFitting(FittingBase):
                 pos_r0 = nchan - edge[1]
                 pos_r1 = nchan - edge[1]
                 dr = 1.0
-            LOG.info('PosL0, PosL1, PosR0, PosR1 = %s, %s, %s, %s' % (pos_l0,pos_l1, pos_r0, pos_r1))
 
             nn_mask = float((pos_r1 - pos_l0) - mask[pos_l0:pos_r1].sum())
             dorder = int(max(1, ((pos_r1 - pos_l0 - nn_mask * 0.5) * win_polyorder / (pos_r1 - pos_l0) + 0.5)))
-            LOG.info('Revised edgemask = %s:%s  Adjust polyorder = %s' % (ledge, redge, dorder))
-            LOG.info('Segment %d: Revised edgemask = %s:%s  Adjust polyorder used in individual fit= %s' % (win, ledge, redge, dorder))
+            LOG.debug('Revised edgemask = %s:%s  Adjust polyorder = %s' % (ledge, redge, dorder))
+            LOG.debug('Segment %d: Revised edgemask = %s:%s  Adjust polyorder used in individual fit= %s' % (win, ledge, redge, dorder))
 
             start_time = time.time()
             LOG.debug('Fitting Start')
