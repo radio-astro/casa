@@ -1028,12 +1028,12 @@ class ValidateLineRaster(object):
             # length of nchan+2. It will be faster if nchan is large while 
             # it would be slow when number of lines is (extremely) large.
             nlines *= 2
-            flat_lines = numpy.array(lines).reshape((nelem))
+            flat_lines = numpy.array(lines).reshape((nlines))
             sorted_index = flat_lines.argsort()
             flag = -1
             left_edge = flat_lines[sorted_index[0]]
             nedges=0
-            for i in xrange(1,nelem-2):
+            for i in xrange(1,nlines-2):
                 if sorted_index[i] % 2 == 0:
                     flag -= 1
                 else:
