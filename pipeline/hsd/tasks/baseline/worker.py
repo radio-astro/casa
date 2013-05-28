@@ -22,8 +22,9 @@ LOG = infrastructure.get_logger(__name__)
 class SDBaselineWorker(object):
     def __init__(self, context):
         self.context = context
+        self.cluster_info = {}
 
-    def execute(self, datatable, iteration, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern, detected_lines):
+    def execute(self, datatable, iteration, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern, detected_lines, cluster_info):
 
         # filename for input/output
         filenames_out = [self.context.observing_run[idx].baselined_name
@@ -63,6 +64,8 @@ class SDBaselineWorker(object):
 
         # line validation
         line_validator = ValidateLine(datatable)
+        #validator_class = ValidationFactory(observing_pattern)
+        #line_validator = validator_class(datatable)
         ifnos = numpy.array(datatable.getcol('IF'))
         polnos = numpy.array(datatable.getcol('POL'))
         srctypes = numpy.array(datatable.getcol('SRCTYPE'))
@@ -70,9 +73,12 @@ class SDBaselineWorker(object):
         index_list = numpy.where(numpy.logical_and(ifnos == spwid, srctypes==srctype))[0]
         LOG.debug('index_list=%s'%(list(index_list)))
         LOG.debug('len(index_list)=%s'%(len(index_list)))
-        lines = line_validator.execute(grid_table, detect_signal, spwid, nchan, index_list, window, observing_pattern, grid_size, grid_size, iteration)
+        lines, _cluster_info = line_validator.execute(grid_table, detect_signal, spwid, nchan, index_list, window, observing_pattern, grid_size, grid_size, iteration)
 
         LOG.debug('lines=%s'%(lines))
+        for (k,v) in _cluster_info.items():
+            cluster_info[k] = v
+        LOG.debug('cluster_info=%s'%(cluster_info))
 
         for l in lines:
             detected_lines.append(l)
