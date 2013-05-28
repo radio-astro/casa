@@ -77,7 +77,7 @@ AnnRegion& AnnRegion::operator= (const AnnRegion& other) {
     return *this;
 }
 
-Bool AnnRegion::operator== (const AnnRegion& other) {
+Bool AnnRegion::operator== (const AnnRegion& other) const {
 	return &other == this || (
 		_isAnnotationOnly == other._isAnnotationOnly
 		&& _imageRegion == other._imageRegion

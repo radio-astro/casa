@@ -653,8 +653,8 @@ namespace casa {
 						                   (pos_angle > 225.0 && pos_angle < 315.0));
 
 						Quantity qblcx, qblcy, qtrcx, qtrcy;
-						Quantity major_inc = el->getMajorAxis( ) / 2.0;
-						Quantity minor_inc = el->getMinorAxis( ) / 2.0;
+						Quantity major_inc = el->getSemiMajorAxis( );
+						Quantity minor_inc = el->getSemiMinorAxis( );
 						Quantity centerx = points[0].first;
 						Quantity centery = points[0].second;
 						try {

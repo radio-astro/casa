@@ -441,8 +441,8 @@ namespace casa {
 			MDirection dir_center = MDirection::Convert(ellipse->getCenter( ), cstype)();
 			casa::Vector<double> center = dir_center.getAngle("rad").getValue( );
 			// 90 deg around 0 & 180 deg
-			const double major_radius = ellipse->getMajorAxis().getValue("rad") / 2.0;
-			const double minor_radius = ellipse->getMinorAxis().getValue("rad") / 2.0;
+			const double major_radius = ellipse->getSemiMajorAxis().getValue("rad");
+			const double minor_radius = ellipse->getSemiMinorAxis().getValue("rad");
 			const double pos_angle = ellipse->getPositionAngle( ).getValue("deg");
 			const bool x_is_major = ((pos_angle > 45.0 && pos_angle < 135.0) ||
 			                         (pos_angle > 225.0 && pos_angle < 315.0));

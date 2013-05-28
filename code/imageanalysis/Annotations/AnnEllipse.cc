@@ -14,17 +14,17 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-
 #include <imageanalysis/Annotations/AnnEllipse.h>
 
 #include <images/Regions/WCEllipsoid.h>
+#include <casa/Quanta/QLogical.h>
 
 namespace casa {
 
 AnnEllipse::AnnEllipse(
 	const Quantity& xcenter, const Quantity& ycenter,
-	const Quantity& majorAxis,
-	const Quantity& minorAxis, const Quantity& positionAngle,
+	const Quantity& semiMajorAxis,
+	const Quantity& semiMinorAxis, const Quantity& positionAngle,
 	const String& dirRefFrameString,
 	const CoordinateSystem& csys,
 	const IPosition& imShape,
@@ -39,22 +39,22 @@ AnnEllipse::AnnEllipse(
 		ELLIPSE, dirRefFrameString, csys, imShape, beginFreq,
 		endFreq, freqRefFrameString, dopplerString,
 		restfreq, stokes, annotationOnly
-), _inputCenter(AnnotationBase::Direction(1)), _inputMajorAxis(majorAxis),
-	_inputMinorAxis(minorAxis),
+), _inputCenter(AnnotationBase::Direction(1)), _inputSemiMajorAxis(semiMajorAxis),
+	_inputSemiMinorAxis(semiMinorAxis),
 	_inputPositionAngle(positionAngle) {
 	_init(xcenter, ycenter);
 }
 
 AnnEllipse::AnnEllipse(
 	const Quantity& xcenter, const Quantity& ycenter,
-	const Quantity& majorAxis,
-	const Quantity& minorAxis, const Quantity& positionAngle,
+	const Quantity& semiMajorAxis,
+	const Quantity& semiMinorAxis, const Quantity& positionAngle,
 	const CoordinateSystem& csys,
 	const IPosition& imShape,
 	const Vector<Stokes::StokesTypes>& stokes
 ) : AnnRegion(ELLIPSE, csys, imShape, stokes),
-	_inputCenter(AnnotationBase::Direction(1)), _inputMajorAxis(majorAxis),
-	_inputMinorAxis(minorAxis),
+	_inputCenter(AnnotationBase::Direction(1)), _inputSemiMajorAxis(semiMajorAxis),
+	_inputSemiMinorAxis(semiMinorAxis),
 	_inputPositionAngle(positionAngle) {
 	_init(xcenter, ycenter);
 }
@@ -68,24 +68,39 @@ AnnEllipse& AnnEllipse::operator= (
     AnnRegion::operator=(other);
     _inputCenter.resize(other._inputCenter.nelements());
     _inputCenter = other._inputCenter;
-    _inputMajorAxis = other._inputMajorAxis;
-    _inputMinorAxis = other._inputMinorAxis;
+    _inputSemiMajorAxis = other._inputSemiMajorAxis;
+    _inputSemiMinorAxis = other._inputSemiMinorAxis;
     _inputPositionAngle = other._inputPositionAngle;
-    _convertedMajorAxis = other._convertedMajorAxis;
-    _convertedMinorAxis = other._convertedMinorAxis;
+    _convertedSemiMajorAxis = other._convertedSemiMajorAxis;
+    _convertedSemiMinorAxis = other._convertedSemiMinorAxis;
     return *this;
+}
+
+Bool AnnEllipse::operator== (
+	const AnnEllipse& other
+)const {
+	if (this == &other) {
+		return True;
+	}
+	return AnnRegion::operator==(other)
+		&& allTrue(_inputCenter == other._inputCenter)
+		&& _inputSemiMajorAxis == other._inputSemiMajorAxis
+		&& _inputSemiMinorAxis == other._inputSemiMinorAxis
+		&& _inputPositionAngle == other._inputPositionAngle
+		&& _convertedSemiMajorAxis == other._convertedSemiMajorAxis
+		&& _convertedSemiMinorAxis == other._convertedSemiMinorAxis;
 }
 
 MDirection AnnEllipse::getCenter() const {
 	return _getConvertedDirections()[0];
 }
 
-Quantity AnnEllipse::getMajorAxis() const {
-	return _convertedMajorAxis;
+Quantity AnnEllipse::getSemiMajorAxis() const {
+	return _convertedSemiMajorAxis;
 }
 
-Quantity AnnEllipse::getMinorAxis() const {
-	return _convertedMinorAxis;
+Quantity AnnEllipse::getSemiMinorAxis() const {
+	return _convertedSemiMinorAxis;
 }
 
 Quantity AnnEllipse::getPositionAngle() const {
@@ -96,8 +111,8 @@ ostream& AnnEllipse::print(ostream &os) const {
 	_printPrefix(os);
 	os << "ellipse [["
 		<< _printDirection(_inputCenter[0].first, _inputCenter[0].second)
-		<< "], [" << _toArcsec(_inputMajorAxis)
-		<< ", " << _toArcsec(_inputMinorAxis) << "], "
+		<< "], [" << _toArcsec(_inputSemiMajorAxis)
+		<< ", " << _toArcsec(_inputSemiMinorAxis) << "], "
 		<< _toDeg(_inputPositionAngle) << "]";
 	_printPairs(os);
 	return os;
@@ -106,17 +121,17 @@ ostream& AnnEllipse::print(ostream &os) const {
 void AnnEllipse::_init(
 	const Quantity& xcenter, const Quantity& ycenter
 ) {
-	_convertedMajorAxis = _lengthToAngle(_inputMajorAxis, _getDirectionAxes()[0]);
-	_convertedMinorAxis = _lengthToAngle(_inputMinorAxis, _getDirectionAxes()[0]);
+	_convertedSemiMajorAxis = _lengthToAngle(_inputSemiMajorAxis, _getDirectionAxes()[0]);
+	_convertedSemiMinorAxis = _lengthToAngle(_inputSemiMinorAxis, _getDirectionAxes()[0]);
 	String preamble = String(__FUNCTION__) + ": ";
 	if (
-		_convertedMinorAxis.getValue("rad")
-		> _convertedMajorAxis.getValue("rad")
+		_convertedSemiMinorAxis.getValue("rad")
+		> _convertedSemiMajorAxis.getValue("rad")
 	) {
 		throw AipsError(
 			preamble
-			+ "Major axis must be greater than or "
-			+ "equal to minor axis"
+			+ "Semi-major axis must be greater than or "
+			+ "equal to semi-minor axis"
 		);
 	}
 	if (! _inputPositionAngle.isConform("rad")) {
@@ -142,7 +157,7 @@ void AnnEllipse::_init(
 
 	WCEllipsoid ellipse(
 		qCenter[0], qCenter[1],
-		_convertedMajorAxis, _convertedMinorAxis, relToXAxis,
+		_convertedSemiMajorAxis, _convertedSemiMinorAxis, relToXAxis,
 		_getDirectionAxes()[0], _getDirectionAxes()[1], getCsys()
 	);
 	_setDirectionRegion(ellipse);

@@ -73,7 +73,7 @@ int main () {
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
 					<< LogIO::POST;
@@ -112,7 +112,7 @@ int main () {
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
 					<< LogIO::POST;
@@ -152,7 +152,7 @@ int main () {
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
 					<< LogIO::POST;
@@ -191,7 +191,7 @@ int main () {
 					dopplerString, restfreq, stokes, False
 				);
 				thrown = False;
-			} catch (AipsError x) {
+			} catch (const AipsError& x) {
 				log << LogIO::NORMAL
 					<< "Exception thrown as expected: " << x.getMesg()
 					<< LogIO::POST;
@@ -417,8 +417,8 @@ int main () {
 				dopplerString, restfreq, stokes, False
 			);
 
-			Quantity qma = ellipse.getMajorAxis();
-			Quantity qmi = ellipse.getMinorAxis();
+			Quantity qma = ellipse.getSemiMajorAxis();
+			Quantity qmi = ellipse.getSemiMinorAxis();
 			AlwaysAssert(
 				near(
 					qmi.getValue("deg"),
