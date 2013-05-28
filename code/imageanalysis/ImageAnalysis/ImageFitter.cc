@@ -29,8 +29,8 @@
 
 #include <casa/Containers/HashMap.h>
 #include <casa/Containers/HashMapIter.h>
-#include <casa/IO/FilebufIO.h>
-#include <casa/IO/FiledesIO.h>
+//#include <casa/IO/FilebufIO.h>
+//#include <casa/IO/FiledesIO.h>
 #include <casa/Quanta/Quantum.h>
 #include <casa/Quanta/Unit.h>
 #include <casa/Quanta/UnitMap.h>
@@ -43,6 +43,7 @@
 #include <components/ComponentModels/SpectralModel.h>
 
 #include <imageanalysis/IO/FitterEstimatesFileParser.h>
+#include <imageanalysis/IO/LogFile.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
 #include <imageanalysis/ImageAnalysis/PeakIntensityFluxDensityConverter.h>
@@ -1197,10 +1198,14 @@ void ImageFitter::_writeNewEstimatesFile() const {
 	String output = out.str();
 	File estimates(_newEstimatesFileName);
 	String action = (estimates.getWriteStatus() == File::OVERWRITABLE) ? "Overwrote" : "Created";
+	/*
 	Int fd = FiledesIO::create(_newEstimatesFileName.c_str());
-	FiledesIO fio(fd, _getLogfile().c_str());
+	FiledesIO fio(fd, _newEstimatesFileName.c_str());
 	fio.write(output.length(), output.c_str());
 	FiledesIO::close(fd);
+	*/
+	LogFile newEstimates(_newEstimatesFileName);
+	newEstimates.write(output, True, True);
 	*_getLog() << LogIO::NORMAL << action << " file "
 		<< _newEstimatesFileName << " with new estimates file"
 		<< LogIO::POST;

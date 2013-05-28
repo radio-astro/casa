@@ -36,6 +36,8 @@
 #include <casa/namespace.h>
 
 namespace casa {
+class LogFile;
+
 
 class ImageTask {
     // <summary>
@@ -142,7 +144,9 @@ protected:
 
     inline Bool _getStretch() const {return _stretch;}
 
-    const String& _getLogfile() const;
+    //const String& _getLogfile() const;
+
+    const LogFile* _getLogFile() const;
 
     Bool _writeLogfile(
     	const String& output, const Bool open=True,
@@ -173,11 +177,12 @@ private:
     std::auto_ptr<LogIO> _log;
     const Record *const _regionPtr;
     Record _regionRecord;
-    String _region, _box, _chan, _stokesString, _mask, _outname, _logfile;
+    String _region, _box, _chan, _stokesString, _mask, _outname /*, _logfile */;
     Bool _overwrite, _stretch, _logfileSupport, _logfileAppend;
-    Int _logFD;
+    //Int _logFD;
 	std::auto_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;
+	std::auto_ptr<LogFile> _logfile;
 
 
 

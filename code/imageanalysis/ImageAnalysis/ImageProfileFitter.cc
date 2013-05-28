@@ -234,7 +234,7 @@ Record ImageProfileFitter::fit() {
 	}
 	_setResults();
     *_getLog() << logOrigin;
-    if (_logResults || ! _getLogfile().empty()) {
+    if (_logResults || ! _getLogFile() != 0) {
     	_resultsToLog();
     }
     if (originalSigma.get() && ! _sigmaName.empty()) {
@@ -1121,9 +1121,7 @@ void ImageProfileFitter::_resultsToLog() {
 	if (_logResults) {
 		*_getLog() << LogIO::NORMAL << summary.str() << LogIO::POST;
 	}
-	if (! _getLogfile().empty()) {
-		_writeLogfile(summary.str(), False, False);
-	}
+	_writeLogfile(summary.str(), False, False);
 	IPosition inTileShape = _subImage.niceCursorShape();
 	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
@@ -1263,9 +1261,7 @@ void ImageProfileFitter::_resultsToLog() {
     	if (_logResults) {
     		*_getLog() << LogIO::NORMAL << summary.str() << endl << LogIO::POST;
     	}
-    	if (! _getLogfile().empty()) {
-    		_writeLogfile(summary.str(), False, False);
-    	}
+    	_writeLogfile(summary.str(), False, False);
 	}
 	_closeLogfile();
 }

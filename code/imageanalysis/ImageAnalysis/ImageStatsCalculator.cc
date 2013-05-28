@@ -62,7 +62,7 @@ ImageStatsCalculator::~ImageStatsCalculator() {}
 Record ImageStatsCalculator::calculate() {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	std::auto_ptr<vector<String> > messageStore(
-		_getLogfile().empty() ? 0 : new vector<String>()
+		_getLogFile() == 0 ? 0 : new vector<String>()
 	);
 	Record retval = statistics(messageStore.get());
 	Bool writeFile = _openLogfile();
