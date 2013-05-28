@@ -394,6 +394,7 @@ namespace casa {
 		curveMap.clear();
 		profileFitMarkers.clear();
 		clearMolecularLines( false );
+		this->xRangeIsShown = false;
 		curveCount = 0;
 		curveCountPrimary = 0;
 		curveCountSecondary = 0;
@@ -1135,16 +1136,7 @@ namespace casa {
 		painter->setFont(ft);
 	}
 
-	void QtCanvas::drawxRange(QPainter *painter) {
-		int xStart = getPixelX( xRangeStart );
-		int xEnd = getPixelX( xRangeEnd );
-		xRangeRect.setBottom( MARGIN_TOP );
-		xRangeRect.setTop(height() - MARGIN_BOTTOM-1);
-		xRangeRect.setRight(xStart);
-		xRangeRect.setLeft(xEnd);
-		painter->fillRect(xRangeRect, QColor(100,100,100,100));
-		painter->drawRect(xRangeRect.normalized());
-	}
+
 
 	void QtCanvas::setTraditionalColors( bool traditionalColors ) {
 		this->traditionalColors = traditionalColors;
@@ -1361,6 +1353,7 @@ namespace casa {
 	void QtCanvas::addPolyLine(const Vector<Float> &x,
 	                           const Vector<Float> &y,
 	                           const QString& lb, ColorCategory colorCategory) {
+		try {
 		Int xl, yl;
 		x.shape(xl);
 		y.shape(yl);
@@ -1374,7 +1367,10 @@ namespace casa {
 		setCurveData(j, data, ErrorData(), lb, colorCategory );
 
 		setDataRange();
-		return;
+		}
+		catch( AipsError& error ){
+			qDebug() << "AipsError adding polyline to canvas";
+		}
 	}
 
 	void QtCanvas::plotPolyLines(QString path) {
@@ -1718,6 +1714,7 @@ namespace casa {
 		setYLabel( "("+yUnitDisplay+")");
 		if ( oldDisplayUnits != yUnitDisplay && oldDisplayUnits.length() > 0  ) {
 			//Tell all the curves to convert their yUnits
+			qDebug() << "Set display y units telling all curves to scale";
 			for ( int i = 0; i < static_cast<int>(this->curveMap.size()); i++ ) {
 				curveMap[i].scaleYValues( oldDisplayUnits, yUnitDisplay, getUnits() );
 			}

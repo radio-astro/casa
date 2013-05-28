@@ -276,8 +276,6 @@ namespace casa {
 		void drawLabels(QPainter *painter);
 		void drawWelcome(QPainter *painter);
 		void drawCurves(QPainter *painter);
-		void drawxRange(QPainter *painter);
-
 
 	private slots:
 		void deleteSelectedAnnotation();

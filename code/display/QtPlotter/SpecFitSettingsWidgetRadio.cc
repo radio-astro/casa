@@ -754,13 +754,11 @@ namespace casa {
 			Int startIndex = -1;
 			Int endIndex = -1;
 			int count = getFitCount( startIndex, endIndex );
-			Vector<Float> yCumValues(count, 0);
-
 			for ( int k = 0; k < curveList.size(); k++ ) {
-
 				QList<SpecFit*> curves = curveList[k];
 				if ( curves.size() > 0 ) {
 					Vector<Float> xValues = curves[0]->getXValues();
+					Vector<Float> yCumValues(xValues.size(), 0);
 					bool curveAdded = false;
 					for ( int i = 0; i < curves.size(); i++ ) {
 						if ( !ui.multiFitCheckBox->isChecked() ||
@@ -772,8 +770,8 @@ namespace casa {
 
 							//Send the curve to the canvas for plotting.
 							pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
-							for ( int i = 0; i < count; i++ ) {
-								yCumValues[i] = yCumValues[i]+yValues[i];
+							for ( int j = 0; j < count; j++ ) {
+								yCumValues[j] = yCumValues[j]+yValues[j];
 							}
 							curveAdded = true;
 						}

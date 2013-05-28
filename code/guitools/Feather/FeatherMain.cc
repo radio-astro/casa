@@ -389,7 +389,8 @@ void FeatherMain::addOriginalDataToPlots(){
 	Vector<Float> sDxAmpOrig;
 	Vector<Float> sDyOrig;
 	Vector<Float> sDyAmpOrig;
-	featherWorker.getFTCutSDImage( sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig );
+	bool radialAxis = !preferences.isXAxisUV();
+	featherWorker.getFTCutSDImage( sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig, radialAxis );
 	plotHolder->setData(sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig, FeatherDataType::LOW );
 	//plotHolder->setSingleDishDataOriginal(sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig );
 
@@ -397,7 +398,7 @@ void FeatherMain::addOriginalDataToPlots(){
 	Vector<Float> intxAmpOrig;
 	Vector<Float> intyOrig;
 	Vector<Float> intyAmpOrig;
-	featherWorker.getFTCutIntImage(intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
+	featherWorker.getFTCutIntImage(intxOrig, intxAmpOrig, intyOrig, intyAmpOrig, radialAxis );
 	plotHolder->setData( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig, FeatherDataType::HIGH );
 	//plotHolder->setInterferometerDataOriginal( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
 

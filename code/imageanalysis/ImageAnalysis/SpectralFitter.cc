@@ -450,7 +450,7 @@ String SpectralFitter::_report(LogIO &os, const SpectralList &list, const String
 
 	String spTypeStr;
 	String intUnit(""), slopeUnit(""), xStreamUnit(""), yStreamUnit("");
-	Vector<Double> params, errors;
+	//Vector<Double> params, errors;
 	Double gaussAmpV(0.0), gaussCentV(0.0), gaussSigmaV(0.0), gaussFWHMV(0.0);
 	Double gaussAmpE(0.0), gaussCentE(0.0), gaussSigmaE(0.0), gaussFWHME(0.0);
 	Double gaussAreaV(0.0), gaussAreaE(0.0);
@@ -487,8 +487,9 @@ String SpectralFitter::_report(LogIO &os, const SpectralList &list, const String
 		spTypeStr = list[index]->fromType(spType);
 		//returnMsg += spTypeStr;
 		//os << LogIO::NORMAL << "Element No. " << String::toString(index) << ": " << spTypeStr << LogIO::POST;
-		list[index]->get(params);
-		list[index]->getError(errors);
+		Vector<Double> params = list[index]->get();
+		//list[index]->getError(errors);
+		Vector<Double> errors = list[index]->getError();
 
 		switch (spType){
 
@@ -500,7 +501,6 @@ String SpectralFitter::_report(LogIO &os, const SpectralList &list, const String
 			gaussSigmaV = params(2);
 			gaussFWHMV  = gaussSigmaV * GaussianSpectralElement::SigmaToFWHM;
 			gaussAreaV  = gaussAmpV * gaussSigmaV * sqrt(2.0*C::pi);
-
 			gaussAmpE   = errors(0);
 			gaussCentE  = errors(1);
 			gaussSigmaE = errors(2);
