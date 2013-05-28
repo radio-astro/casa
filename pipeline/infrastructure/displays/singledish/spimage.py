@@ -396,7 +396,6 @@ class SDSpectralImageDisplay(SDImageDisplay):
             parameters['spw'] = self.spw
             parameters['pol'] = pol
             parameters['ant'] = self.antenna
-            parameters['type'] = 'channel_map'
             parameters['file'] = self.inputs.imagename
             parameters['type'] = 'rms_map'
 
