@@ -77,6 +77,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+  Bool SIMapperCollection::releaseImageLocks() 
+  {
+    Bool validflag=True;
+    for(Int mapperid=0;mapperid<nMappers();mapperid++ )
+      {
+	validflag &= itsMappers[mapperid]->releaseImageLocks();
+      }
+    return validflag;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
   
   // Allocate Memory and open images.
   void SIMapperCollection::addMapper( String mappertype,  
@@ -130,7 +143,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     Vector<String> names( nMappers() );
 
-    for(uInt mapperid=0;mapperid<nMappers();mapperid++ )
+    for(Int mapperid=0;mapperid<nMappers();mapperid++ )
       {
 	names[mapperid] = itsMappers[mapperid]->getImageName();
       }

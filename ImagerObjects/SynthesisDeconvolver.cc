@@ -195,6 +195,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       //scatterModel(); // This is a no-op for the single-node case.
 
+      itsImages->releaseLocks();
+
     } catch(AipsError &x) {
       throw( AipsError("Error in running Minor Cycle : "+x.getMesg()) );
     }

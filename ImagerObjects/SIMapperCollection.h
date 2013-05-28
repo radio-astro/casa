@@ -66,6 +66,8 @@ class SIMapperCollection
 
   Record getFTMRecord(Int mapperid);
 
+  Bool releaseImageLocks();
+
 protected:
 
   ///////////////////// Member Objects

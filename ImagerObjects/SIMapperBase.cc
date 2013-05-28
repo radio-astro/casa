@@ -82,6 +82,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIMapperBase","destructor",WHERE) );
   }
   
+  Bool SIMapperBase::releaseImageLocks() 
+  {
+    LogIO os( LogOrigin("SIMapperBase","releaseImageLocks",WHERE) );
+    return itsImages->releaseLocks();
+  }
+
   // Allocate Memory and open images.
   //// TODO : If only the major cycle is called (niter=0), don't allocate Image, Psf, Weight...
   void SIMapperBase::initImages()
