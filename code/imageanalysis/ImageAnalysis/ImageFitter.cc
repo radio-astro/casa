@@ -405,27 +405,27 @@ Double ImageFitter::_getStatistic(const String& type, const uInt index, const Re
 	return statVec[index];
 }
 
-vector<ImageInputProcessor::OutputStruct> ImageFitter::_getOutputs() {
+vector<OutputDestinationChecker::OutputStruct> ImageFitter::_getOutputs() {
 	LogOrigin logOrigin("ImageFitter", __FUNCTION__);
 	*_getLog() << logOrigin;
 
-	ImageInputProcessor::OutputStruct residualIm;
+	OutputDestinationChecker::OutputStruct residualIm;
 	residualIm.label = "residual image";
 	residualIm.outputFile = &_residual;
 	residualIm.required = False;
 	residualIm.replaceable = True;
-	ImageInputProcessor::OutputStruct modelIm;
+	OutputDestinationChecker::OutputStruct modelIm;
 	modelIm.label = "model image";
 	modelIm.outputFile = &_model;
 	modelIm.required = False;
 	modelIm.replaceable = True;
-	ImageInputProcessor::OutputStruct newEstFile;
+	OutputDestinationChecker::OutputStruct newEstFile;
 	newEstFile.label = "new estiamtes file";
 	newEstFile.outputFile = &_newEstimatesFileName;
 	newEstFile.required = False;
 	newEstFile.replaceable = True;
 
-	vector<ImageInputProcessor::OutputStruct> outputs(3);
+	vector<OutputDestinationChecker::OutputStruct> outputs(3);
 	outputs[0] = residualIm;
 	outputs[1] = modelIm;
 	outputs[2] = newEstFile;

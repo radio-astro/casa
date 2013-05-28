@@ -59,7 +59,9 @@ ImageAnalysis/SpectralFitter.cc
 IO/RegionTextParser.cc
 IO/AsciiAnnotationFileLine.cc
 IO/FitterEstimatesFileParser.cc
+IO/OutputDestinationChecker.cc
 IO/ProfileFitterEstimatesFileParser.cc
+#IO/ImageProfileFitterResults.cc
 
 Regions/CasacRegionManager.cc
 )
@@ -85,6 +87,8 @@ install (FILES
 install (FILES
 	IO/AsciiAnnotationFileLine.h
 	IO/FitterEstimatesFileParser.h
+    IO/OutputDestinationChecker.h
+    #IO/ImageProfileFitterResults.h
 	IO/ProfileFitterEstimatesFileParser.h
 	IO/RegionTextParser.h
 	DESTINATION include/casacode/imageanalysis/IO

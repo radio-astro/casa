@@ -238,7 +238,7 @@ private:
 	const static uInt _lsPlane;
 
     void _getOutputStruct(
-        vector<ImageInputProcessor::OutputStruct>& outputs
+        vector<OutputDestinationChecker::OutputStruct>& outputs
     );
 
     void _checkNGaussAndPolyOrder() const;

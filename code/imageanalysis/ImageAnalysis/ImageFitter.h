@@ -171,7 +171,7 @@ private:
 
 	const static String _class;
 
-	vector<ImageInputProcessor::OutputStruct> _getOutputs();
+	vector<OutputDestinationChecker::OutputStruct> _getOutputs();
 
 	vector<Coordinate::Type> _getNecessaryCoordinates() const;
 

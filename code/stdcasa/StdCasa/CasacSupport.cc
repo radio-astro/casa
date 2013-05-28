@@ -988,7 +988,7 @@ Bool MDirection2str(const MDirection& in, std::string& out)
     success = success && ang_as_formatted_str(lat, qlat, "dms", 2);
   }
   else{
-    success = success && ang_as_formatted_str(lon, qlon, "deg", 2);
+    success = ang_as_formatted_str(lon, qlon, "deg", 2);
     success = success && ang_as_formatted_str(lat, qlat, "deg", 2);
   }
 
@@ -1416,5 +1416,26 @@ vector<int> toVectorInt(const ::casac::variant& v, const String& varName) {
 	}
 }
 
+vector<bool> toVectorBool(const ::casac::variant& v, const String& varName) {
+	vector<bool> ret(0);
+	switch (v.type()) {
+	case casac::variant::BOOLVEC:
+		return v.toBoolVec();
+	case casac::variant::BOOL:
+		ret.push_back(v.toBool());
+		return ret;
+	case casac::variant::STRING:
+		if (v.toString().size() > 0) {
+			throw AipsError(varName + " cannot be a non-empty string");
+		}
+		else {
+			return ret;
+		}
+	default:
+		ostringstream os;
+		os << "Illegal type for " << varName << ": " << v.type();
+		throw AipsError(os.str());
+	}
+}
 
 }  // End namespace casa

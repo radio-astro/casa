@@ -364,11 +364,11 @@ Record ImageProfileFitter::getResults() const {
 }
 
 void ImageProfileFitter::_getOutputStruct(
-    vector<ImageInputProcessor::OutputStruct>& outputs
+    vector<OutputDestinationChecker::OutputStruct>& outputs
 ) {
 	outputs.resize(0);
     if (! _model.empty()) {
-    	ImageInputProcessor::OutputStruct modelImage;
+    	OutputDestinationChecker::OutputStruct modelImage;
     	modelImage.label = "model image";
     	modelImage.outputFile = &_model;
     	modelImage.required = True;
@@ -376,7 +376,7 @@ void ImageProfileFitter::_getOutputStruct(
     	outputs.push_back(modelImage);
     }
     if (! _residual.empty()) {
-    	ImageInputProcessor::OutputStruct residImage;
+    	OutputDestinationChecker::OutputStruct residImage;
     	residImage.label = "residual image";
     	residImage.outputFile = &_residual;
     	residImage.required = True;

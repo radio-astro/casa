@@ -28,6 +28,7 @@
 #include <components/SpectralComponents/GaussianSpectralElement.h>
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <components/SpectralComponents/LorentzianSpectralElement.h>
+#include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
 
 #include <stdcasa/StdCasa/CasacSupport.cc>
 
@@ -40,13 +41,16 @@ SpectralList SpectralListFactory::create(
 	const variant& gmampcon, const variant& gmcentercon,
 	const variant& gmfwhmcon, const vector<double>& gmampest,
 	const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
-	const variant& gmfix, const variant& pfunc
+	const variant& gmfix, const variant& pfunc,
+	const variant& plpest, const variant& plpfix
 ) {
 	vector<double> myampest = toVectorDouble(pampest, "pampest");
 	vector<double> mycenterest = toVectorDouble(pcenterest, "pcenterest");
 	vector<double> myfwhmest = toVectorDouble(pfwhmest, "pfwhmest");
 	vector<string> myfix = toVectorString(pfix, "pfix");
 	vector<string> myfunc = toVectorString(pfunc, "pfunc");
+	vector<double> myplpest = toVectorDouble(plpest, "plpest");
+	vector<bool> myplpfix = toVectorBool(plpfix, "plpfix");
 
 	vector<int> mygmncomps = gmncomps.type() == variant::INT
 		&& gmncomps.toInt() == 0
@@ -57,7 +61,7 @@ SpectralList SpectralListFactory::create(
 	vector<double> mygmfwhmcon = toVectorDouble(gmfwhmcon, "gmfwhmcon");
 	vector<string> mygmfix = toVectorString(gmfix, "gmfix");
 	Bool makeSpectralList = (
-		mygmncomps.size() > 0
+		mygmncomps.size() > 0 || myplpest.size() > 0
 		|| ! (
 			myampest.size() == 0
 			&& mycenterest.size() == 0
@@ -93,64 +97,12 @@ SpectralList SpectralListFactory::create(
 			<< LogIO::EXCEPTION;
 	}
 	if (mygmncomps.size() > 0) {
-		uInt sum = 0;
-		for (uInt i=0; i<mygmncomps.size(); i++) {
-			if (mygmncomps <= 0) {
-				log << "All elements of gmncomps must be greater than 0" << LogIO::EXCEPTION;
-			}
-			sum += mygmncomps[i];
-		}
-		if (gmampest.size() != sum) {
-			log << "gmampest must have exactly "
-					<< sum << " elements" << LogIO::EXCEPTION;
-		}
-		if (gmcenterest.size() != sum) {
-			log << "gmcenterest must have exactly "
-				<< sum << " elements" << LogIO::EXCEPTION;
-		}
-		if (gmfwhmest.size() != sum) {
-			log << "gmfwhmest must have exactly "
-				<< sum << " elements" << LogIO::EXCEPTION;
-		}
-		if (mygmfix.size() > 0 && mygmfix.size() != sum) {
-			log << "gmfwhmest must have either zero or " << sum
-				<< " elements, even if some are empty strings."
-				<< LogIO::EXCEPTION;
-		}
-		uInt nConstraints = sum - mygmncomps.size();
-		if (mygmampcon.size() == 0) {
-			mygmampcon = vector<double>(nConstraints, 0);
-		}
-		else if (
-			mygmampcon.size() > 0
-			&& mygmampcon.size() != nConstraints
-		) {
-			log << "If specified, gmampcon must have exactly "
-				<< nConstraints << " elements, even if some are zero"
-				<< LogIO::EXCEPTION;
-		}
-		if (mygmcentercon.size() == 0) {
-			mygmcentercon = vector<double>(nConstraints, 0);
-		}
-		else if (
-			mygmcentercon.size() > 0
-			&& mygmcentercon.size() != nConstraints
-		) {
-			log << "If specified, gmcentercon must have exactly "
-				<< nConstraints << " elements, even if some are zero"
-				<< LogIO::EXCEPTION;
-		}
-		if (mygmfwhmcon.size() == 0) {
-			mygmfwhmcon = vector<double>(nConstraints, 0);
-		}
-		else if (
-			mygmfwhmcon.size() > 0
-			&& mygmfwhmcon.size() != nConstraints
-		) {
-			log << "If specified, gmfwhmcon must have exactly "
-				<< nConstraints << " elements, even if some are zero"
-				<< LogIO::EXCEPTION;
-		}
+		_addGaussianMultiplets(
+			spectralList, log, mygmncomps, mygmampcon,
+			mygmcentercon, mygmfwhmcon,
+			gmampest, gmcenterest, gmfwhmest,
+			mygmfix
+		);
 	}
 	for (uInt i=0; i<mynpcf; i++) {
 		String func(myfunc[i]);
@@ -185,6 +137,86 @@ SpectralList SpectralListFactory::create(
 				<< LogIO::EXCEPTION;
 		}
 	}
+	if (myplpest.size() > 0) {
+		_addPowerLogPolynomial(
+			spectralList,
+			log, myplpest,
+			myplpfix
+		);
+	}
+
+	return spectralList;
+}
+
+void SpectralListFactory::_addGaussianMultiplets(
+		SpectralList& spectralList,
+		LogIO& log,
+		const vector<int>& mygmncomps,
+		vector<double>& mygmampcon,
+		vector<double>& mygmcentercon,
+		vector<double>& mygmfwhmcon,
+		const vector<double>& gmampest,
+		const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
+		const vector<string>& mygmfix
+) {
+	uInt sum = 0;
+	for (uInt i=0; i<mygmncomps.size(); i++) {
+		if (mygmncomps[i] <= 0) {
+			log << "All elements of gmncomps must be greater than 0" << LogIO::EXCEPTION;
+		}
+		sum += mygmncomps[i];
+	}
+	if (gmampest.size() != sum) {
+		log << "gmampest must have exactly "
+			<< sum << " elements" << LogIO::EXCEPTION;
+	}
+	if (gmcenterest.size() != sum) {
+		log << "gmcenterest must have exactly "
+				<< sum << " elements" << LogIO::EXCEPTION;
+	}
+	if (gmfwhmest.size() != sum) {
+		log << "gmfwhmest must have exactly "
+			<< sum << " elements" << LogIO::EXCEPTION;
+	}
+	if (mygmfix.size() > 0 && mygmfix.size() != sum) {
+		log << "gmfwhmest must have either zero or " << sum
+			<< " elements, even if some are empty strings."
+			<< LogIO::EXCEPTION;
+	}
+	uInt nConstraints = sum - mygmncomps.size();
+	if (mygmampcon.size() == 0) {
+		mygmampcon = vector<double>(nConstraints, 0);
+	}
+	else if (
+		mygmampcon.size() > 0
+		&& mygmampcon.size() != nConstraints
+	) {
+		log << "If specified, gmampcon must have exactly "
+			<< nConstraints << " elements, even if some are zero"
+			<< LogIO::EXCEPTION;
+	}
+	if (mygmcentercon.size() == 0) {
+		mygmcentercon = vector<double>(nConstraints, 0);
+	}
+	else if (
+		mygmcentercon.size() > 0
+		&& mygmcentercon.size() != nConstraints
+	) {
+		log << "If specified, gmcentercon must have exactly "
+			<< nConstraints << " elements, even if some are zero"
+			<< LogIO::EXCEPTION;
+	}
+	if (mygmfwhmcon.size() == 0) {
+		mygmfwhmcon = vector<double>(nConstraints, 0);
+	}
+	else if (
+		mygmfwhmcon.size() > 0
+		&& mygmfwhmcon.size() != nConstraints
+	) {
+		log << "If specified, gmfwhmcon must have exactly "
+			<< nConstraints << " elements, even if some are zero"
+			<< LogIO::EXCEPTION;
+	}
 	uInt compNumber = 0;
 	for (uInt i=0; i<mygmncomps.size(); i++) {
 		if (mygmncomps[i] < 0) {
@@ -217,7 +249,30 @@ SpectralList SpectralListFactory::create(
 				<< LogIO::EXCEPTION;
 		}
 	}
-	return spectralList;
+}
+
+void SpectralListFactory::_addPowerLogPolynomial(
+	SpectralList& spectralList,
+	LogIO& log,	vector<double>& myplpest,
+	vector<bool>& myplpfix
+) {
+	uInt nest = myplpest.size();
+	if (nest < 2) {
+		log << "Number of elements in the power log polynomial estimates list must be at least 2"
+			<< LogIO::EXCEPTION;
+	}
+	uInt nfix = myplpfix.size();
+	if (nfix == 0) {
+		myplpfix = vector<bool>(nest, False);
+	}
+	else if (nfix != myplpest.size()) {
+		log << "Number of elements in the power logarithmic polynomial fixed parameter list must "
+			<< "either be 0 or equal to the number of elements in the estimates list"
+			<< LogIO::EXCEPTION;
+	}
+	PowerLogPolynomialSpectralElement plp(myplpest);
+	plp.fix(myplpfix);
+	spectralList.add(plp);
 }
 
 } // end namespace casa

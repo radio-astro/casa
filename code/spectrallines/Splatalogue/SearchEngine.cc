@@ -48,14 +48,14 @@ SearchEngine::SearchEngine(
 ) : _log(new LogIO), _table(table), _logfile(logfile),
 	_list(list), _append(append){
 	if (!logfile.empty()) {
-        ImageInputProcessor::OutputStruct logfile;
+        OutputDestinationChecker::OutputStruct logfile;
         logfile.label = "logfile";
         logfile.outputFile = &_logfile;
         logfile.required = True;
         logfile.replaceable = True;
-        vector<ImageInputProcessor::OutputStruct> output(1);
+        vector<OutputDestinationChecker::OutputStruct> output(1);
         output[0] = logfile;
-        ImageInputProcessor::checkOutputs(&output, *_log);
+        OutputDestinationChecker::checkOutputs(&output, *_log);
 	}
 }
 

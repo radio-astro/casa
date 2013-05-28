@@ -60,11 +60,11 @@ ImageTask::ImageTask(
 
 ImageTask::~ImageTask() {}
 
-vector<ImageInputProcessor::OutputStruct> ImageTask::_getOutputStruct() {
-	vector<ImageInputProcessor::OutputStruct> outputs(0);
+vector<OutputDestinationChecker::OutputStruct> ImageTask::_getOutputStruct() {
+	vector<OutputDestinationChecker::OutputStruct> outputs(0);
     _outname.trim();
     if (! _outname.empty()) {
-        ImageInputProcessor::OutputStruct outputImage;
+        OutputDestinationChecker::OutputStruct outputImage;
         outputImage.label = "output image";
         outputImage.outputFile = &_outname;
         outputImage.required = True;
@@ -76,8 +76,8 @@ vector<ImageInputProcessor::OutputStruct> ImageTask::_getOutputStruct() {
 
 void ImageTask::_construct(Bool verbose) {
 	String diagnostics;
-	vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
-	vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
+	vector<OutputDestinationChecker::OutputStruct> outputs = _getOutputStruct();
+	vector<OutputDestinationChecker::OutputStruct> *outputPtr = outputs.size() > 0
 		? &outputs
 		: 0;
 	vector<Coordinate::Type> necCoords = _getNecessaryCoordinates();
@@ -154,12 +154,12 @@ void ImageTask::setLogfile(const String& lf) {
 		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
 	}
 	String mylf = lf;
-	ImageInputProcessor::OutputStruct logFile;
+	OutputDestinationChecker::OutputStruct logFile;
 	logFile.label = "log file";
 	logFile.outputFile = &mylf;
 	logFile.required = False;
 	logFile.replaceable = True;
-	ImageInputProcessor::checkOutput(logFile, *_log);
+	OutputDestinationChecker::checkOutput(logFile, *_log);
 	_logfile = mylf;
 
 }
@@ -280,9 +280,6 @@ std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 	outImage->put(values == 0 ? subImage->get() : *values);
 	return outImage;
 }
-
-
-
 
 }
 

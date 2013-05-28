@@ -32,8 +32,7 @@
 
 #include <casa/IO/FiledesIO.h>
 
-#include <memory>
-
+#include <imageanalysis/IO/OutputDestinationChecker.h>
 #include <casa/namespace.h>
 
 namespace casa {
@@ -102,7 +101,7 @@ protected:
 
    	virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
 
-    virtual vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
+    virtual vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
     // does the lion's share of constructing the object, ie checks validity of
     // inputs, etc.

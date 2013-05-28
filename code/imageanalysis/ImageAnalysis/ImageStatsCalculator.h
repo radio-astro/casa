@@ -118,8 +118,8 @@ protected:
    		return CasacRegionManager::USE_ALL_STOKES;
    	}
 
-    inline vector<ImageInputProcessor::OutputStruct> _getOutputStruct() {
-    	return vector<ImageInputProcessor::OutputStruct>(0);
+    inline vector<OutputDestinationChecker::OutputStruct> _getOutputStruct() {
+    	return vector<OutputDestinationChecker::OutputStruct>(0);
     }
 
     inline vector<Coordinate::Type> _getNecessaryCoordinates() const {

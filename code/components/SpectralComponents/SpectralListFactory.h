@@ -45,6 +45,9 @@ public:
 	// <src>pcenterest</src> initial center estimates for pfc functions
 	// <src>pfwhmest</src> initial FWHM estimates for pfc functions
 	// <src>pfix</src> fixed parameters for pfc functions. Any combination of "p", "f", and "c"
+	// <src>plpest</src> initial estimates for power log polynomial coefficients
+	// <src>plpfix</src> fixed parameters for power log polynomial coefficients (True means fix the
+	// coefficient during fitting).
 
 	static SpectralList create(
 		LogIO& log, const variant& pampest,
@@ -58,7 +61,28 @@ public:
 		const vector<double>& gmcenterest=vector<double>(0),
 		const vector<double>& gmfwhmest=vector<double>(0),
 		const variant& gmfix=initialize_variant(""),
-		const variant& pfunc=initialize_variant("")
+		const variant& pfunc=initialize_variant(""),
+		const variant& plpest=initialize_variant(""),
+		const variant& plpfix=initialize_variant("")
+	);
+
+private:
+	static void _addGaussianMultiplets(
+		SpectralList& spectralList,
+		LogIO& log,
+		const vector<int>& mygmncomps,
+		vector<double>& mygmampcon,
+		vector<double>& mygmcentercon,
+		vector<double>& mygmfwhmcon,
+		const vector<double>& gmampest,
+		const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
+		const vector<string>& mygmfix
+	);
+
+	static void _addPowerLogPolynomial(
+		SpectralList& spectralList,
+		LogIO& log,	vector<double>& myplpest,
+		vector<bool>& myplpfix
 	);
 
 };
