@@ -16,6 +16,7 @@ class ValidateLineSinglePointing(object):
 
     def __init__(self, datatable):
         self.datatable = datatable
+        self.cluster_info = {}
 
     def execute(self, ResultTable, DetectSignal, vIF, nChan, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
         """
@@ -64,7 +65,7 @@ class ValidateLineSinglePointing(object):
                 else:
                     self.datatable.putcell('MASKLIST',row,DetectSignal[0][2])
                     self.datatable.putcell('NOCHANGE',row,False)
-        return Lines
+        return Lines, {}
 
 class ValidateLineRaster(object):
 
@@ -79,6 +80,7 @@ class ValidateLineRaster(object):
 
     def __init__(self, datatable):
         self.datatable = datatable
+        self.cluster_info = {}
 
     def execute(self, ResultTable, DetectSignal, vIF, nChan, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
         """
@@ -183,6 +185,11 @@ class ValidateLineRaster(object):
         x0 = cra - GridSpaceRA/2.0 - GridSpaceRA*(nra-1)/2.0
         y0 = cdec - GridSpaceDEC/2.0 - GridSpaceDEC*(ndec-1)/2.0
         LOG.debug('Grid = %d x %d\n' % (nra, ndec))
+        self.cluster_info['grid'] = {}
+        self.cluster_info['grid']['ra_min'] = x0
+        self.cluster_info['grid']['dec_min'] = y0
+        self.cluster_info['grid']['grid_ra'] = GridSpaceRA
+        self.cluster_info['grid']['grid_dec'] = GridSpaceDEC
 
         # Create Space for storing the list of spectrum (ID) in the Grid
         # 2013/03/27 TN
@@ -320,7 +327,7 @@ class ValidateLineRaster(object):
         ProcEndTime = time.time()
         LOG.info('Clustering: Merging End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
-        return Lines
+        return Lines, self.cluster_info
 
     def clustering_analysis(self, Region, Region2, Nsigma):
         MedianWidth = numpy.median(Region2[:,0])
@@ -499,6 +506,9 @@ class ValidateLineRaster(object):
         LOG.todo('Plots of clustering analysis should go into display module')
         #SDP.ShowCluster(GridCluster, [1.5, 0.5], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'detection', ShowPlot, FigFileDir, FigFileRoot)
 
+        self.cluster_info['detection'] = GridCluster.copy()
+        self.cluster_info['detection_threshold'] = [1.5,0.5]
+        
         return (GridCluster, GridMember)
 
     def validation_stage(self, GridCluster, GridMember, Lines, ITER):
@@ -535,6 +545,9 @@ class ValidateLineRaster(object):
         LOG.todo('Plots of clustering analysis should go into display module')
         #SDP.ShowCluster(GridCluster, [self.Valid, self.Marginal, self.Questionable], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'validation', ShowPlot, FigFileDir, FigFileRoot)
 
+        self.cluster_info['validation'] = GridCluster.copy()
+        self.cluster_info['validation_threshold'] = [self.Valid, self.Marginal, self.Questionable]
+        
         return (GridCluster, GridMember, Lines)
 
     def smoothing_stage(self, GridCluster, Lines):
@@ -594,6 +607,9 @@ class ValidateLineRaster(object):
         LOG.todo('Plots of clustering analysis should go into display module')
         #SDP.ShowCluster(GridCluster, [self.Valid, self.Marginal, self.Questionable], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'smoothing', ShowPlot, FigFileDir, FigFileRoot)
 
+        self.cluster_info['smoothing'] = GridCluster.copy()
+        self.cluster_info['smoothing_threshold'] = self.cluster_info['validation_threshold']
+        
         return (GridCluster, Lines)
 
     def final_stage(self, GridCluster, GridMember, Region, Region2, Lines, category, GridSpaceRA, GridSpaceDEC, BroadComponent, Xorder, Yorder, x0, y0, Nsigma, nChan, Grid2SpectrumID, idxList, PosList):
@@ -1014,6 +1030,9 @@ class ValidateLineRaster(object):
         LOG.todo('Plots of clustering analysis should go into display module')
         #SDP.ShowCluster(GridCluster, [1.5, 0.5, 0.5, 0.5], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'regions', ShowPlot, FigFileDir, FigFileRoot)
 
+        self.cluster_info['final'] = GridCluster.copy()
+        self.cluster_info['final_threshold'] = [1.5, 0.5, 0.5, 0.5]
+        
         return (RealSignal, Lines)
 
     def __merge_lines(self, lines, nchan):
@@ -1056,6 +1075,14 @@ class ValidateLineRaster(object):
             #return dummy.reshape((len(dummy)/2,2)).tolist()
 
 
+def ValidationFactory(pattern):
+    if pattern == 'RASTER':
+        return ValidateLineRaster
+    elif pattern == 'SINGLE-POINT' or pattern == 'MULTI-POINT':
+        return ValidateLineSinglePointing
+    else:
+        raise ValueError, 'Invalid observing pattern'
+            
 class ValidateLine(object):
     
     Patterns = {'SINGLE-POINT': ValidateLineSinglePointing,
@@ -1064,6 +1091,7 @@ class ValidateLine(object):
 
     def __init__(self, datatable):
         self.datatable = datatable
+        self.cluster_info = {}
 
     def execute(self, ResultTable, DetectSignal, vIF, nChan, idxList, SpWin, Pattern, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False):
         """
@@ -1090,6 +1118,7 @@ class ValidateLine(object):
         worker_cls = self.Patterns[Pattern]
         worker = worker_cls(self.datatable)
         return worker.execute(ResultTable, DetectSignal, vIF, nChan, idxList, GridSpaceRA, GridSpaceDEC, ITER, Nsigma=3.0, Xorder=-1, Yorder=-1, BroadComponent=False, LogLevel=2, LogFile=False, ShowPlot=True, FigFileDir=False, FigFileRoot=False)
+        self.cluster_info = worker.cluster_info
 
 def convolve2d( data, kernel, mode='nearest', cval=0.0 ):
     """

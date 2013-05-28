@@ -52,21 +52,23 @@ class SDBaselineResults(common.SingleDishResults):
         reduction_group = context.observing_run.reduction_group
         for b in self.outcome['baselined']:
             spw = b['spw']
-            antenna = b['index']
+            #antenna = b['index']
             pols = b['pols']
             lines = b['lines']
-            group_id = -1
-            for (idx,desc) in reduction_group.items():
-                if desc[0].spw == spw:
-                    group_id = idx
-                    break
-            if group_id >= 0:
-                reduction_group[group_id].iter_countup(antenna, spw, pols)
-                reduction_group[group_id].add_linelist(lines, antenna, spw, pols)
+            for antenna in b['index']:
+                group_id = -1
+                for (idx,desc) in reduction_group.items():
+                    if desc[0].spw == spw:
+                        group_id = idx
+                        break
+                if group_id >= 0:
+                    reduction_group[group_id].iter_countup(antenna, spw, pols)
+                    reduction_group[group_id].add_linelist(lines, antenna, spw, pols)
 
     def _outcome_name(self):
-        return ['%s: %s (spw=%s, pol=%s)'%(b['index'], b['name'], b['spw'], b['pols'])
-                for b in self.outcome['baselined']]
+        return ['%s: %s (spw=%s, pol=%s)'%(idx, name, b['spw'], b['pols'])
+                for b in self.outcome['baselined']
+                for (idx,name) in zip(b['index'], b['name'])]
 
 class SDBaseline(common.SingleDishTaskTemplate):
     Inputs = SDBaselineInputs
@@ -125,6 +127,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             files = files | _file_index
             pattern = st.pattern[spwid][pols[0]]
             detected_lines = []
+            cluster_info = {}
             parameters = {'datatable': datatable,
                           'iteration': iteration, 
                           'spwid': spwid,
@@ -139,16 +142,23 @@ class SDBaseline(common.SingleDishTaskTemplate):
                           'fitorder': fitorder,
                           'fitfunc': fitfunc,
                           'observing_pattern': pattern,
-                          'detected_lines': detected_lines}
+                          'detected_lines': detected_lines,
+                          'cluster_info': cluster_info}
             job = jobrequest.JobRequest(worker.execute, **parameters)
             self._executor.execute(job)
 
+            validation = worker.cluster_info
             LOG.info('detected_lines=%s'%(detected_lines))
+            LOG.info('cluster_info=%s'%(cluster_info))
 
-            for f in _file_index:
-                name = context.observing_run[f].baselined_name
-                baselined.append({'name': name, 'index': f, 'spw': spwid,
-                                  'pols': pols, 'lines': detected_lines})
+            #for f in _file_index:
+            #    name = context.observing_run[f].baselined_name
+            name_list = [context.observing_run[f].baselined_name
+                         for f in _file_index]
+            baselined.append({'name': name_list, 'index': list(_file_index),
+                              'spw': spwid, 'pols': pols,
+                              'lines': detected_lines,
+                              'clusters': cluster_info})
 
         outcome = {'datatable': datatable,
                    'baselined': baselined}

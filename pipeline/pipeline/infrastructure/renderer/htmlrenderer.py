@@ -1496,6 +1496,7 @@ renderer_map = {
         hsd.tasks.SDInspectData  : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_inspectdata.html'),
         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
         hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html'),
+        hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
         hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html')
     }
 }
