@@ -398,11 +398,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   void Feather::getRadialCut(Vector<Float>& radialAmp, ImageInterface<Complex>& ftimage) {
     CoordinateSystem ftCoords(ftimage.coordinates());
+    //////////////////////
+    /*{
+      PagedImage<Float> thisScreen(ftimage.shape(), ftCoords, "FFTimage");
+      LatticeExpr<Float> le(abs(ftimage));
+      thisScreen.copyData(le);
+      }*/
+   /////////////////////
     Vector<Int> directionIndex=CoordinateUtil::findDirectionAxes(ftCoords);
     Int spectralIndex=CoordinateUtil::findSpectralAxis(ftCoords);
     IPosition start=ftimage.shape();
     IPosition shape=ftimage.shape();
-    Int arrLen=min(Int(shape[directionIndex(0)]), Int(shape[directionIndex(1)]));
+    Int centreX=shape[directionIndex(0)]/2;
+    Int centreY=shape[directionIndex(1)]/2;
+    Int arrLen=min(centreX, centreY);
+    
     radialAmp.resize(arrLen);
     radialAmp.set(0.0);
     Array<Complex> tmpval;
@@ -420,8 +430,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        counter=0;
        for (Int xval=0; xval <= pix; ++xval){
 	 Int yval=boost::math::iround(sqrt(Double(pix*pix-xval*xval)));
-	 start[directionIndex[0]]=xval;
-	 start[directionIndex[1]]=yval;
+	 start[directionIndex[0]]=xval+centreX;
+	 start[directionIndex[1]]=yval+centreY;
 	 tmpval.resize();
 	 ftimage.getSlice(tmpval, start, shape, True); 
 	 sumval+=fabs(mean(tmpval));
