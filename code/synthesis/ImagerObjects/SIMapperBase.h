@@ -71,6 +71,8 @@ class SIMapperBase
 
   String getImageName();
 
+  Bool releaseImageLocks();
+
 protected:
   //////////////////// Member Functions
 

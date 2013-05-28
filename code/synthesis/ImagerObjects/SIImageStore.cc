@@ -217,6 +217,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+  Bool SIImageStore::releaseLocks() 
+  {
+    LogIO os( LogOrigin("SIImageStore","releaseLocks",WHERE) );
+
+    if( ! itsPsf.null() ) itsPsf->unlock();
+    if( ! itsModel.null() ) itsModel->unlock();
+    if( ! itsResidual.null() ) itsResidual->unlock();
+    if( ! itsImage.null() ) itsImage->unlock();
+    if( ! itsWeight.null() ) itsWeight->unlock();
+
+    return True; // do something more intelligent here.
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+
   void SIImageStore::setModelImage( String modelname )
   {
     LogIO os( LogOrigin("SIImageStore","setModelImage",WHERE) );

@@ -286,6 +286,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {    
 	runMajorCycle();
+
+	itsMappers.releaseImageLocks();
+
       }
     catch(AipsError &x)
       {

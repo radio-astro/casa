@@ -84,6 +84,8 @@ class SIImageStore
 
   Bool isValid(){return itsValidity;}
 
+  Bool releaseLocks();
+
 protected:
 
   ///////////////////// Member Objects
