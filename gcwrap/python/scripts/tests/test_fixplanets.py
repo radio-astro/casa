@@ -90,7 +90,7 @@ class fixplanets_test1(unittest.TestCase):
         '''Does a fixplanets with ephemeris work'''
         for myms in [outms,outms2]:
             rval = fixplanets(vis=myms, field='Titan', fixuvw=True,
-                              direction=os.environ.get('CASAPATH').split()[0] + '/data/ephemerides/JPL-Horizons/Titan_55438-56292dUTC.tab')
+                              direction=os.environ.get('CASAPATH').split()[0] + '/data/ephemerides/JPL-Horizons/Titan_55437-56293dUTC.tab')
                 
             self.assertTrue(rval)
             self.assertTrue(os.path.exists(myms+'/FIELD/EPHEM0_Titan.tab'))
