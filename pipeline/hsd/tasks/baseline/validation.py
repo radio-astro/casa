@@ -506,8 +506,28 @@ class ValidateLineRaster(object):
         LOG.todo('Plots of clustering analysis should go into display module')
         #SDP.ShowCluster(GridCluster, [1.5, 0.5], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'detection', ShowPlot, FigFileDir, FigFileRoot)
 
-        self.cluster_info['detection'] = GridCluster.copy()
-        self.cluster_info['detection_threshold'] = [1.5,0.5]
+        # 2013/05/29 TN
+        # cluster_flag is data for plotting clustering analysis results.
+        # It stores GridCluster quantized by given thresholds.
+        # it is defined as integer array and one digit is assigned to
+        # one clustering stage in each integer value:
+        #
+        #     1st digit: detection
+        #     2nd digit: validation
+        #     3rd digit: smoothing
+        #     4th digit: final
+        #
+        # If GridCluster value exceeds any threshold, corresponding
+        # digit is incremented. For example, flag 3210 stands for,
+        # 
+        #     value didn't exceed any thresholds in detection, and 
+        #     exceeded one (out of three) threshold in validation, and
+        #     exceeded two (out of three) thresholds in smoothing, and
+        #     exceeded three (out of four) thresholds in final.
+        #
+        self.cluster_info['cluster_flag'] = numpy.zeros(GridCluster.shape, dtype=int)
+        threshold = [1.5, 0.5]
+        self.__update_cluster_flag('detection', GridCluster, threshold, 1)
         
         return (GridCluster, GridMember)
 
@@ -545,8 +565,8 @@ class ValidateLineRaster(object):
         LOG.todo('Plots of clustering analysis should go into display module')
         #SDP.ShowCluster(GridCluster, [self.Valid, self.Marginal, self.Questionable], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'validation', ShowPlot, FigFileDir, FigFileRoot)
 
-        self.cluster_info['validation'] = GridCluster.copy()
-        self.cluster_info['validation_threshold'] = [self.Valid, self.Marginal, self.Questionable]
+        threshold = [self.Valid, self.Marginal, self.Questionable]
+        self.__update_cluster_flag('validation', GridCluster, threshold, 10)
         
         return (GridCluster, GridMember, Lines)
 
@@ -607,8 +627,8 @@ class ValidateLineRaster(object):
         LOG.todo('Plots of clustering analysis should go into display module')
         #SDP.ShowCluster(GridCluster, [self.Valid, self.Marginal, self.Questionable], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'smoothing', ShowPlot, FigFileDir, FigFileRoot)
 
-        self.cluster_info['smoothing'] = GridCluster.copy()
-        self.cluster_info['smoothing_threshold'] = self.cluster_info['validation_threshold']
+        threshold = [self.Valid, self.Marginal, self.Questionable]
+        self.__update_cluster_flag('smoothing', GridCluster, threshold, 100)
         
         return (GridCluster, Lines)
 
@@ -1030,8 +1050,8 @@ class ValidateLineRaster(object):
         LOG.todo('Plots of clustering analysis should go into display module')
         #SDP.ShowCluster(GridCluster, [1.5, 0.5, 0.5, 0.5], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'regions', ShowPlot, FigFileDir, FigFileRoot)
 
-        self.cluster_info['final'] = GridCluster.copy()
-        self.cluster_info['final_threshold'] = [1.5, 0.5, 0.5, 0.5]
+        threshold = [1.5, 0.5, 0.5, 0.5]
+        self.__update_cluster_flag('final', GridCluster, threshold, 1000)
         
         return (RealSignal, Lines)
 
@@ -1073,6 +1093,14 @@ class ValidateLineRaster(object):
             #    region[chan0 + 1:chan1 + 1] = 0
             #dummy = (region[1:] - region[:-1]).nonzero()[0]
             #return dummy.reshape((len(dummy)/2,2)).tolist()
+
+    def __update_cluster_flag(self, stage, GridCluster, threshold, factor):
+        cluster_flag = self.cluster_info['cluster_flag']
+        for t in threshold:
+            cluster_flag = cluster_flag + factor * (GridCluster > t)
+        self.cluster_info['cluster_flag'] = cluster_flag
+        self.cluster_info['%s_threshold'%(stage)] = threshold
+        
 
 
 def ValidationFactory(pattern):
