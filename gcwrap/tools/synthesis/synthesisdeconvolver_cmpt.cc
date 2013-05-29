@@ -18,7 +18,7 @@
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <casa/Logging/LogIO.h>
 
-#include <synthesis/MeasurementEquations/SynthesisDeconvolver.h>
+#include <synthesis/ImagerObjects/SynthesisDeconvolver.h>
 
 #include <synthesisdeconvolver_cmpt.h>
 

@@ -18,7 +18,7 @@
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <casa/Logging/LogIO.h>
 
-#include <synthesis/MeasurementEquations/SynthesisIterBot.h>
+#include <synthesis/ImagerObjects/SynthesisIterBot.h>
 
 #include <synthesisiterbot_cmpt.h>
 
