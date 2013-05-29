@@ -225,10 +225,11 @@ Bool FluxStdPerleyButler2013::setSourceCoeffs()
       srcEnum == FSS::THREEC123 ||
       srcEnum == FSS::THREEC295 ||
       srcEnum == FSS::THREEC196) {
-    uInt row=0;
-    FluxCalcVQS::setSourceCoeffsfromVec(row);     
-    RigidVector<Vector<Float>, 2> coeffs=FluxCalcVQS::getCurrentCoeffs(); 
-    fill_coeffs(RVF4(coeffs(0)), RVF4(coeffs(1)) );
+    // no need to do this now, will be filled with nepoch=1 in FluxCalcVQS::()
+    //uInt row=0;
+    //FluxCalcVQS::setSourceCoeffsfromVec(row);     
+    //RigidVector<Vector<Float>, 2> coeffs=FluxCalcVQS::getCurrentCoeffs(); 
+    //fill_coeffs(RVF4(coeffs(0)), RVF4(coeffs(1)) );
     timevar=false;
   }
   FCVQS::isTimeVar(timevar);
