@@ -305,7 +305,7 @@ function set_DEBUGGER {
 function set_PGPLOT_DIR {
     # If it is already set, do not change it.
     if [ "x$PGPLOT_DIR" = "x" ]; then
-        echo "TBD: set_PGPLOT_DIR"
+        # echo "TBD: set_PGPLOT_DIR"
         #    local result=""
         #    export readonly PGPLOT_DIR="${CASA_3RD_PARTY_DIRECTORY}/lib"
         #    ensure_directory_exists "$PGPLOT_DIR" "PGPLOT_DIR"
