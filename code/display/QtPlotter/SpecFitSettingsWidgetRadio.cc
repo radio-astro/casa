@@ -38,6 +38,7 @@
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/conversion/ConverterChannel.h>
+#include <display/QtPlotter/conversion/ConverterIntensity.h>
 #include <display/Display/Options.h>
 
 #include <QFileDialog>
@@ -48,7 +49,6 @@
 #include <QThread>
 #include <sys/time.h>
 #include <limits>
-
 
 
 namespace casa {
@@ -865,7 +865,26 @@ namespace casa {
 		//Get the coefficients of the polynomial in pixels
 		Vector<Double> coefficients;
 		poly ->get( coefficients );
-		SpecFit* polyFit = new SpecFitPolynomial( coefficients );
+		int coefficientCount = coefficients.size();
+		Vector<float> coeffs( coefficientCount );
+		for ( int i = 0; i < coefficientCount; i++ ){
+			coeffs[i] = static_cast<float>(coefficients[i]);
+		}
+
+		//The coefficients must be in the same units used by the canvas.
+		QString canvasUnits=this->pixelCanvas->getDisplayYUnits();
+		Unit imageUnit = this->getImage()->units();
+		const String imageUnits = imageUnit.getName();
+		QString imageUnitStr( imageUnits.c_str() );
+		Vector<float> hertzValues(coefficientCount, 0);
+		ConverterIntensity::convert( coeffs, hertzValues, imageUnitStr, canvasUnits, -1, "" );
+		Vector<double> convertedCoeffs( coefficientCount );
+		for ( int i = 0; i < coefficientCount; i++ ){
+			convertedCoeffs[i] = coeffs[i];
+		}
+
+
+		SpecFit* polyFit = new SpecFitPolynomial( convertedCoeffs );
 
 		curves.append( polyFit );
 		return successfulFit;
@@ -900,6 +919,15 @@ namespace casa {
 		getConversion( xAxisUnit.toStdString(), velocityUnits, wavelengthUnits );
 		float centerVal = static_cast<float>(fitter->getWorldValue(centerValPix, imPos, xAxisUnit.toStdString(),velocityUnits, wavelengthUnits));
 		float fwhmValX = static_cast<float>(fitter->getWorldValue(fwhmValPix/2+centerValPix, imPos, xAxisUnit.toStdString(),velocityUnits, wavelengthUnits));
+
+		//Note::This converts to standard units.  In the case of frequency, this is "Hz". May
+		//need to add prefix.
+		if ( !velocityUnits && !wavelengthUnits ){
+			QString oldUnits = "Hz";
+			Converter* converter = Converter::getConverter( oldUnits, xAxisUnit );
+			fwhmValX = converter->convert( fwhmValX );
+			centerVal = converter->convert( centerVal );
+		}
 		float fwhmVal = 2 * abs(fwhmValX - centerVal);
 		if ( isnan( centerVal ) || isnan( fwhmVal) || isinf(fwhmVal) || isinf(centerVal) ) {
 			return false;
@@ -912,10 +940,11 @@ namespace casa {
 		const Unit imageUnit = this->getImage()->units();
 		String imageUnits = imageUnit.getName();
 		QString imageUnitsStr( imageUnits.c_str());
-		if ( imageUnitsStr != imageYUnits ) {
+		QString canvasUnits = pixelCanvas->getDisplayYUnits();
+		if ( imageUnitsStr != canvasUnits ) {
 			QString fitCurveName = ui.curveComboBox->currentText();
 			CanvasCurve fitCurve = pixelCanvas->getCurve( fitCurveName );
-			double convertedPeakVal = fitCurve.convertValue( peakVal, centerVal, imageUnitsStr, imageYUnits, xAxisUnit );
+			double convertedPeakVal = fitCurve.convertValue( peakVal, centerVal, imageUnitsStr, /*imageYUnits*/canvasUnits, xAxisUnit );
 			peakVal = convertedPeakVal;
 		}
 

@@ -397,7 +397,8 @@ namespace casa {
 		void initContextMenu();
 		void addDiamond( int x, int y, int diamondSize, QPainterPath& points ) const;
 		bool storeClickPosition( QMouseEvent* event );
-		int getLastAxis() const;
+		int getIndependentCurveCount();
+		int getLastAxis();
 		void stripCurveTitleNumbers( QString& curveName ) const;
 		bool duplicateCurve( QString& targetLabel );
 		void setYLabel(const QString &text, int fontSize = 10, const QString &font = FONT_NAME);

@@ -971,11 +971,26 @@ namespace casa {
 		return tickLabel;
 	}
 
-	int QtCanvas::getLastAxis() const {
+	int QtCanvas::getIndependentCurveCount() {
+		int count = 0;
+		int masterCount = curveMap.size();
+		for ( int i = 0; i < masterCount; i++ ){
+			QString title = curveMap[i].getLegend();
+			//We don't want to count any fit curves since they are automatically
+			//compatible with the primary curve.
+			int fitIndex = title.indexOf( "FIT");
+			if ( fitIndex < 0 ){
+				count++;
+			}
+		}
+		return count;
+	}
+
+	int QtCanvas::getLastAxis() {
 		int lastAxis = QtPlotSettings::END_AXIS_INDEX;
 		//Don't show the top axis if the user has specified NOT to see it OR
 		//there are multiple curves which are NOT compatible in their top axis units.
-		if ( ! showTopAxis || (!topAxisCompatible && curveMap.size()>1 )) {
+		if ( ! showTopAxis || (!topAxisCompatible && getIndependentCurveCount()>1 )) {
 			lastAxis = QtPlotSettings::xTop;
 		}
 		return lastAxis;
@@ -1353,7 +1368,6 @@ namespace casa {
 	void QtCanvas::addPolyLine(const Vector<Float> &x,
 	                           const Vector<Float> &y,
 	                           const QString& lb, ColorCategory colorCategory) {
-		try {
 		Int xl, yl;
 		x.shape(xl);
 		y.shape(yl);
@@ -1367,10 +1381,7 @@ namespace casa {
 		setCurveData(j, data, ErrorData(), lb, colorCategory );
 
 		setDataRange();
-		}
-		catch( AipsError& error ){
-			qDebug() << "AipsError adding polyline to canvas";
-		}
+
 	}
 
 	void QtCanvas::plotPolyLines(QString path) {
@@ -1714,7 +1725,6 @@ namespace casa {
 		setYLabel( "("+yUnitDisplay+")");
 		if ( oldDisplayUnits != yUnitDisplay && oldDisplayUnits.length() > 0  ) {
 			//Tell all the curves to convert their yUnits
-			qDebug() << "Set display y units telling all curves to scale";
 			for ( int i = 0; i < static_cast<int>(this->curveMap.size()); i++ ) {
 				curveMap[i].scaleYValues( oldDisplayUnits, yUnitDisplay, getUnits() );
 			}
