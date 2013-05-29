@@ -50,9 +50,15 @@ class ClusterDisplay(object):
                 yield group
             
     def __stages(self, clusters):
+        digits = {'detection': 1, 'validation': 10,
+                  'smoothing': 100, 'final': 1000}
         for key in ['detection', 'validation', 'smoothing', 'final']:
-            if clusters.has_key(key):
-                data = clusters[key]
+            if clusters.has_key('cluster_flag'):
+                # Pick up target digit
+                _data = clusters['cluster_flag']
+                _digit = digits[key]
+                data = (_data / _digit) % 10
+                LOG.debug('data=%s'%(data))
                 threshold = clusters[key+'_threshold']
                 desc = self.Description[key]
                 if key == 'validation':
@@ -122,8 +128,8 @@ class ClusterDisplay(object):
             aspect_ratio = 1.0 / math.cos(dec0 / 180.0 * 3.141592653)
 
             # Plotting routine
-            nx = len(cluster['detection'][0])
-            ny = len(cluster['detection'][0][0])
+            nx = len(cluster['cluster_flag'][0])
+            ny = len(cluster['cluster_flag'][0][0])
             xmin = ra0
             xmax = nx * scale_ra + xmin
             ymin = dec0
@@ -168,7 +174,7 @@ class ClusterDisplay(object):
                     for ix in xrange(nx):
                         for iy in xrange(ny):
                             for i in xrange(len(threshold)):
-                                if data[icluster][ix][iy] > threshold[i]:
+                                if data[icluster][ix][iy] == len(threshold) - i:
                                     xdata[i].append(xmin + (0.5 + ix) * scale_ra)
                                     ydata[i].append(ymin + (0.5 + iy) * scale_dec)
                                     break
