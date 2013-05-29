@@ -292,6 +292,8 @@ reduction activities.  The list currently includes:
  
 \item {\bf sdcal} --- select, calibrate, and average SD data
 
+\item {\bf sdcal2} --- generate sky and tsys caltables for SD data, and apply them 
+
 \item {\bf sdsmooth} --- smooth SD spectra
 
 \item {\bf sdbaseline} --- fit/remove spectral baselines from SD data
@@ -662,9 +664,122 @@ when averaging.
 'Chopper-Wheel' calibration and the one adopted in APEX telescope (an advanced version of classical 'Chopper-Wheel' method). 
 \end{itemize}
 
-\medskip
-{\bf R4.0 New Features:}\\
-New calibration modes, 'otf' and 'otfraster', are available.
+\subsubsection{{\tt sdcal2}}
+\label{section:sd.sdtasks.tasks.sdcal2}
+
+\begin{verbatim}
+Keyword arguments:
+infile -- Name of input SD dataset
+calmode -- Calibration mode. If you want to generate calibration 
+           table or apply existing calibration tables, set calmode 
+           to simple string. On the other hand, if you want to 
+           calibrate data on-the-fly, you have to set calmode 
+           to a composite calmode string separated by comma.
+        options: 'ps','otf','otfraster','tsys','apply'
+        default: 'ps'
+        example: Here is an example for composite calmode.
+                 'ps,apply' (do sky cal and apply)
+                 'ps,tsys,apply' (do sky and Tsys cal and apply)
+    >>> calmode expandable parameter
+         fraction -- Edge marking parameter for 'otf' and 
+                     'otfraster'.
+                     specify a number of OFF scans as a fraction of 
+                     total number of data points. 
+                 default: '10%'
+                 options: '20%' in string style or float value less 
+                          than 1.0 (e.g. 0.15).
+                          'auto' is available only for 'otfraster'. 
+         noff -- Edge marking parameter for 'otfraster'.
+                 It is used to specify a number of OFF scans near 
+                 edge directly. Value of noff comes before setting 
+                 by fraction.
+                 default: -1 (use fraction)
+                 options: any positive integer
+         width -- Edge marking parameter for 'otf'.
+                  Pixel width with respect to a median spatial 
+                  separation between neighboring two data in time.
+                  Default will be fine in most cases.
+                 default: 0.5
+                 options: float value
+         elongated -- Edge marking parameter for 'otf'.
+                      Set True only if observed area is elongeted 
+                      in one direction.
+                 default: False
+         tsysiflist -- List of IFNOs for Tsys calibration. It does 
+                       no effect if you don't want to do Tsys 
+                       calibration.
+                 default: []
+         applytable -- List of sky/Tsys calibration tables you want to 
+                       apply.
+                 default: ''
+         interp -- Interpolation method in time and frequency axis. 
+                   Set comma separated method strings if you want 
+                   to use different interpolation in time and 
+                   frequency. 
+                 options: 'linear', 'cspline', 'nearest', 
+                          any numeric string indicating an order 
+                          of polynomial.
+                 default: '' (linear in time and frequency)
+                 example: 'linear,cspline' (linear in time, cubic 
+                                            spline in frequency)
+                          'linear,3' (linear in time, third order 
+                                      polynomial in frequency)
+                          'nearest' (nearest in time and frequency)
+         ifmap -- Dictionary defining transfer of Tsys calibration. 
+                  Key must be IFNO for Tsys and its value must be 
+                  a list of IFNOs for science target.
+                 default: {}
+                 example: {1: [5,6], 3: [7,8]}
+                          Tsys in IFNO1 is transferred to IFNO5, 6 
+                          while Tsys in IFNO3 is to IFNO7, 8.
+scanlist -- list of scan numbers to process
+        default: [] (use all scans)
+        example: [21,22,23,24]
+        this selection is in addition to field, iflist, and pollist
+field -- selection string for selecting scans by name
+        default: '' (no name selection)
+        example: 'FLS3a*'
+        this selection is in addition to scanlist, iflist, and pollist
+iflist -- list of IF id numbers to select
+        default: [] (use all IFs)
+        example: [15]
+        this selection is in addition to scanlist, field, and pollist
+pollist -- list of polarization id numbers to select
+        default: [] (use all polarizations)
+        example: [1]
+        this selection is in addition to scanlist, field, and iflist
+outfile -- Name of output file. If you omit, behavior of the task 
+           depends on calmode. If calmode includes 'apply', then 
+           omitting outfile indicates that infile is overwritten 
+           by the calibrated data. In this case, you have to set 
+           overwrite to True. If calmode doesn't include 'apply', 
+           omitting outfile indicates that the task will use default 
+           outfile name based on infile and predefined suffix 
+           ('_sky' for sky, '_tsys' for Tsys).
+        default: '' (<infile>_<suffix> for calibration 
+                     while overwrite infile for apply mode)
+overwrite -- overwrite the output file if already exists
+        options: (bool) True,False
+        default: False
+
+\end{verbatim}
+
+DESCRIPTION:
+
+Task sdcal2 is an implementation of a calibration scheme like as 
+interferometry, i.e., generate caltables and apply them. Available 
+calibration modes are 'ps', 'otf', 'otfraster', and 'tsys'. Those 
+modes generates caltables for sky or Tsys calibration. Those 
+caltables can be applied to the data by using calmode 'apply'. 
+You can calibrate data on-the-fly like sdcal task by setting 
+calmode to a composite calmode string separated by comma. 
+For example, calmode='ps,apply' means doing sky calibration and 
+apply it on-the-fly. In this case, caltable is generated as a 
+temporary plain table and will be deleted at the end.
+
+There are several control parameters for sky/Tsys calibration and 
+application of caltables. See the above parameter description.
+
 
 \subsubsection{{\tt sdsmooth}}
 \label{section:sd.sdtasks.tasks.sdsmooth}
@@ -993,18 +1108,14 @@ Also, iterative n-$\sigma$ clipping becomes available with cubic spline and sinu
 %\item ...
 %\end{enumerate}
 \medskip
-{\bf R4.0 New Features:}\\
+%{\bf R4.0 New Features:}
+%\begin{itemize}
+%\item Chebyshev polynomials became available for {\tt blfunc}. 
+%\end{itemize}
+{\bf R4.1 New Features:}\\
 \begin{itemize}
-\item Chebyshev polynomials became available for {\tt blfunc}. 
-\item A new parameter {\tt restfreq} is available to set user defined
-  rest frequencies when {\tt specunit = 'km/s'}. The default is to get
-  the values from input data.
-  These rest frequencies are used to calculate velocities when 
-  {\tt masklist} is defined.
-%Flagging according to frequency and/or velocity now works correctly. 
-\item The {\tt verbose} parameter now effective for CASA logger only: 
-{\tt bloutput} can be used to control output to text file. 
-\item You can specify the output format of logger/text file in {\tt blformat}. 
+\item Speed-up: {\tt sdbaseline} gets 2-10 times faster than in CASA 4.0. The degree of speed-up depends on {\tt blfunc}, its parameters and the size of spectra ({\tt nchan}).
+\item Iterative clipping now available for all of {\tt blfunc}. You can specify {\tt clipthresh} and {\tt clipniter} in case {\tt blfunc = 'poly'} also. 
 \end{itemize}
 
 
@@ -1319,20 +1430,20 @@ See \S~\ref{section:io.selection.spw.channel} for details.
 Note, the mask regions should be specified in unit of {\tt specunit} 
 in this task.
 
-\medskip
-{\bf R4.0 New Features:}\\
-\begin{itemize}
-\item Chebyshev polynomials became available for {\tt blfunc}. 
-\item A new parameter {\tt restfreq} is available to set user defined
-  rest frequencies when {\tt specunit = 'km/s'}. The default is to get
-  the values from input data.
-  These rest frequencies are used to calculate velocities when 
-  {\tt masklist} is defined.
-%Flagging according to frequency and/or velocity now works correctly. 
-\item The {\tt verbosebl} parameter now effective for CASA logger only: 
-{\tt bloutput} can be used to control output to text file. 
-\item You can specify the output format of logger/text file in {\tt blformat}. 
-\end{itemize}
+%% \medskip
+%% {\bf R4.0 New Features:}\\
+%% \begin{itemize}
+%% \item Chebyshev polynomials became available for {\tt blfunc}. 
+%% \item A new parameter {\tt restfreq} is available to set user defined
+%%   rest frequencies when {\tt specunit = 'km/s'}. The default is to get
+%%   the values from input data.
+%%   These rest frequencies are used to calculate velocities when 
+%%   {\tt masklist} is defined.
+%% %Flagging according to frequency and/or velocity now works correctly. 
+%% \item The {\tt verbosebl} parameter now effective for CASA logger only: 
+%% {\tt bloutput} can be used to control output to text file. 
+%% \item You can specify the output format of logger/text file in {\tt blformat}. 
+%% \end{itemize}
 
 \subsubsection{{\tt sdcoadd}}
 \label{section:sd.sdtasks.tasks.sdcoadd}
@@ -1588,13 +1699,13 @@ data format of {\tt infile}, the data is overwritten with the new data format
 
 See the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
-\medskip
-{\bf R4.0 New Features:}%\\
-\begin{itemize}
-\item Flagging by frequency and/or velocity now available.
-\item Flagged data can be plotted on interactive flag plotter 
-when {\tt showflagged = True}.
-\end{itemize}
+%% \medskip
+%% {\bf R4.0 New Features:}%\\
+%% \begin{itemize}
+%% \item Flagging by frequency and/or velocity now available.
+%% \item Flagged data can be plotted on interactive flag plotter 
+%% when {\tt showflagged = True}.
+%% \end{itemize}
 
 
 \bigskip
@@ -1910,9 +2021,9 @@ See the {\tt sdcal} description for information on {\tt fluxunit}
 conversion and the {\tt telescopeparm} parameter.
 Also, see the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
-\medskip
-{\bf R4.0 New Features:}\\
-Specifying {\tt maskline} (i.e., fitting range) by frequency and/or velocity now works. 
+%% \medskip
+%% {\bf R4.0 New Features:}\\
+%% Specifying {\tt maskline} (i.e., fitting range) by frequency and/or velocity now works. 
 
 
 \subsubsection{{\tt sdgrid}}
@@ -2014,11 +2125,47 @@ value) is set to $ 4 \, {\rm HWHM} $ to take into account contribution from
 Gaussian tail. Otherwise, {\tt width} is treated as actual width of the 
 convolution function. 
 
+The parameter gridfunction sets gridding function for imaging. 
+Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
+Spheroidal Wave Function), 'GAUSS' (Gaussian), 'GJINC' (Gaussian*
+Jinc), where 
+${\rm Jinc}(x) = {\rm J}_1 \left( \frac{\pi x}{c})/(\frac{\pi x}{c} \right)$ 
+with a first order 
+Bessel function $J_1$, and 'PB' (Primary Beam, not implemented yet). 
+For 'PB', correct antenna informations should be included in input 
+file. 
+
+There are four subparameters for gridfunction: convsupport, truncate, 
+gwidth, and jwidth. The convsupport is an integer specifying cut-off 
+radius for 'SF' in units of pixel. By default (convsupport=-1), 
+the cut-off radius is set to 3 pixels. The truncate is a cut-off 
+radius for 'GAUSS' or 'GJINC'. It accepts integer, float, and 
+string values of numeric plus unit. Allowed units are angular 
+units such as 'deg', 'arcmin', 'arcsec', and 'pixel'. Default unit 
+is 'pixel' so that string without unit or numerical values (integer 
+or float) will be interpreted as radius in pixel. Default value 
+for truncate, which is used when negative radius is set, is 3*HWHM 
+for 'GAUSS' and radius at first null for 'GJINC'. The gwidth is 
+the HWHM of gaussian for 'GAUSS' and 'GJINC'. Default value is 
+$\sqrt{\log 2}$ pixel for 'GAUSS' and $2.52 \sqrt{\log 2}$ pixel for 
+'GJINC'. The jwidth specifies width of the jinc function (parameter 
+'c' in the definition above). Default is 1.55 pixel. Both gwidth 
+jwidth allows integer, float, or string of numeric plus unit. 
+Default values for gwidth and jwidth are taken from Mangum et al. 
+(2007). Formula for 'GAUSS' and 'GJINC' are taken from Table 1 in 
+the paper, and are written as below using gwidth and jwidth: 
+
+   GAUSS: $ \exp \left[ - \left( \frac{|r|}{\rm gwidth} \right)^2 \right] $
+
+   GJINC: $ \frac{ {\rm J}_1 \left( \pi |r| / {\rm jwidth} \right)}{\left( \pi |r| / {\rm jwidth} \right)} \exp \left[ - \left( \frac{|r|}{\rm gwidth} \right)^2 \right] $  
+
+
 Boolean parameter {\tt plot} controls whether gridded result is plotted 
 or not. If {\tt True}, color map of gridded data will be shown. Pixel 
 center and observed position are overlayed as blue dot and red dot, 
 respectively. Currently, channel averaged value will be plotted.
 
+Reference: Mangum, et al. 2007, A\&A, 474, 679-687 
 
 
 \subsubsection{{\tt sdimaging}}
@@ -2053,9 +2200,27 @@ stokes -- select data based on stokes or polarization type
         default: '' (use all polarizations)
         example: 'XX'
 gridfunction -- gridding function for imaging
-        options: 'BOX' (Box-car), 'SF' (Spheroidal), 'PB' (Primary-beam)
+        options: 'BOX' (Box-car), 'SF' (Spheroidal), 
+                 'PB' (Primary-beam), 'GAUSS' (Gaussian),
+                 'GJINC' (Gaussian*Jinc)
         default: 'BOX'
         example: 'SF'
+    >>> gridfunction expandable parameter:
+       convsupport -- convolution support for 'SF' 
+           default: -1 (use default for each gridfunction)
+           example: 3
+       truncate -- truncattion radius of convolution kernel.
+                   effective only for 'GAUSS' and 'GJINC'.
+           default: '-1' (use default for each gridfunction)
+           example: 3, '20arcsec', '3pixel'
+       gwidth -- HWHM for gaussian. Effective only for 
+                 'GAUSS' and 'GJINC'.
+           default: '-1' (use default for each gridfunction)
+           example: 3, '20arcsec', '3pixel'
+       jwidth -- Width of jinc function. Effective only for 
+                 'GJINC'.
+           default: '-1' (use default for each gridfunction)
+           example: 3, '20arcsec', '3pixel'
 outfile -- output image name
         default: none
         example: 'mySDimage.im'
@@ -2117,15 +2282,47 @@ value, {\tt -1}, means
 that the task selects data from all baseline, i.e., data from all antenna when 
 data only contains auto-correlation.
 
-The parameter {\tt gridfunction} sets gridding function for imaging. 
-Currently, the task supports {\tt 'BOX'} (Box-car), {\tt 'SF'} (Prolate Spheroidal 
-Wave Function), and {\tt 'PB'} (Primary Beam). For {\tt 'PB'}, correct antenna 
-information should be included in input file. 
+The parameter gridfunction sets gridding function for imaging. 
+Currently, the task supports 'BOX' (Box-car), 'SF' (Prolate 
+Spheroidal Wave Function), 'GAUSS' (Gaussian), 'GJINC' (Gaussian*
+Jinc), where 
+${\rm Jinc}(x) = {\rm J}_1 \left( \frac{\pi x}{c})/(\frac{\pi x}{c} \right)$ 
+with a first order 
+Bessel function $J_1$, and 'PB' (Primary Beam, not implemented yet). 
+For 'PB', correct antenna informations should be included in input 
+file. 
 
-%\medskip
-%{\bf R3.3 New Feature:}
-%
-%The task now allows to specify all fields and/or all antennas selection.
+There are four subparameters for gridfunction: convsupport, truncate, 
+gwidth, and jwidth. The convsupport is an integer specifying cut-off 
+radius for 'SF' in units of pixel. By default (convsupport=-1), 
+the cut-off radius is set to 3 pixels. The truncate is a cut-off 
+radius for 'GAUSS' or 'GJINC'. It accepts integer, float, and 
+string values of numeric plus unit. Allowed units are angular 
+units such as 'deg', 'arcmin', 'arcsec', and 'pixel'. Default unit 
+is 'pixel' so that string without unit or numerical values (integer 
+or float) will be interpreted as radius in pixel. Default value 
+for truncate, which is used when negative radius is set, is 3*HWHM 
+for 'GAUSS' and radius at first null for 'GJINC'. The gwidth is 
+the HWHM of gaussian for 'GAUSS' and 'GJINC'. Default value is 
+$\sqrt{\log 2}$ pixel for 'GAUSS' and $2.52 \sqrt{\log 2}$ pixel for 
+'GJINC'. The jwidth specifies width of the jinc function (parameter 
+'c' in the definition above). Default is 1.55 pixel. Both gwidth 
+jwidth allows integer, float, or string of numeric plus unit. 
+Default values for gwidth and jwidth are taken from Mangum et al. 
+(2007). Formula for 'GAUSS' and 'GJINC' are taken from Table 1 in 
+the paper, and are written as below using gwidth and jwidth: 
+
+   GAUSS: $ \exp \left[ - \left( \frac{|r|}{\rm gwidth} \right)^2 \right] $
+
+   GJINC: $ \frac{ {\rm J}_1 \left( \pi |r| / {\rm jwidth} \right)}{\left( \pi |r| / {\rm jwidth} \right)} \exp \left[ - \left( \frac{|r|}{\rm gwidth} \right)^2 \right] $  
+
+Reference: Mangum, et al. 2007, A\&A, 474, 679-687 
+
+\medskip
+{\bf R4.1 New Feature:}
+
+When {\tt phasecenter} is empty string, position of the map center 
+will be automatically calculated.
  
 
 \subsubsection{{\tt sdlist}}
@@ -2465,6 +2662,10 @@ plottype -- type of plot
         histogram -- plot histogram
                 options: (bool) True, False
                 default: False
+        scanpattern -- plot additional lines on the plot to indicate scan patterns
+                       when plottype='pointing'
+                options: (bool) True, False
+                default: False
 header -- print header information on the plot
         options: (bool) True, False
         default: True
@@ -2562,13 +2763,20 @@ Also, see the {\tt sdcal} description for note on GBT raw SDFITS format data.
 
 WARNING: be careful plotting otf data with lots of fields!
 
+%% \medskip  
+%% {\bf R4.0 New Features:}
+%% \begin{itemize}
+%% \item A new {\tt plottype = \lq grid\rq} is available to grid and plot spectra based
+%% on their sky position.
+%% \item {\tt sdplot} accepts CASA-type selection syntax in {\tt scanlist}, {\tt iflist},
+%% {\tt pollist}, and {\tt beamlist}.
+%% \end{itemize}
 \medskip  
-{\bf R4.0 New Features:}
+{\bf R4.1 New Features:}\\
+A couple of new capabilities are added to {\tt plottype = \lq pointing\rq}.
 \begin{itemize}
-\item A new {\tt plottype = \lq grid\rq} is available to grid and plot spectra based
-on their sky position.
-\item {\tt sdplot} accepts CASA-type selection syntax in {\tt scanlist}, {\tt iflist},
-{\tt pollist}, and {\tt beamlist}.
+\item color variation of plot symbols by the source type, scan, IF, polarization, or beam IDs.
+\item overplotting scan patterns when {\tt scanpattern = True}.
 \end{itemize}
 
 %Two new parameters are added to the task. 
@@ -2803,12 +3011,11 @@ based selection, since row numbers can be changed easily by
 sorting, prior selection, etc. Therefore, this parameter is expected
 to be used by expert users only . 
 
-%\medskip
-%{\bf R3.3 New Feature:}
+\medskip
+{\bf R4.1 New Feature:}
 
-%A new parameter {\tt getpt} is added to enable the user to select whether 
-%MS POINTING table is imported correctly or not.
-
+When scantable is imported from MS, its frequency reference frame is taken 
+from input MS, while it was forcibly set to LSRK in the previous releases.
 
 
 \subsubsection{{\tt sdscale}}
@@ -3062,7 +3269,8 @@ createimage -- do imaging?
          default: 'direction'
        gridfunction -- gridding function for imaging
          options: 'BOX' (Box-car), 'SF' (Spheroidal), 
-                  'PB' (Primary-beam)
+                  'PB' (Primary-beam), 'GAUSS' (Gaussian),
+                  'GJINC' (Gaussian*Jinc)
          default: 'BOX'
          example: 'SF'
 plotlevel -- control for plotting of results
@@ -3101,16 +3309,27 @@ By setting {\tt flaglist}, one can set flag by scan numbers to be excluded from 
 subtable and they are typically different from SCAN\_NUMBER in MS.)
 By default, baseline subtraction stage overwrites \verb!(FLOAT_)DATA! column of input data. You can 
 keep original data by setting {\tt backup} parameter to True. In this case, the task make a 
-copy of input data specified by infile parameter. Name of backup file is <infile>.sdtpimaging.bak.<timestamp>. 
+copy of input data specified by infile parameter. 
+Name of backup file is \verb|<infile>.sdtpimaging.bak.<timestamp>|. 
 The selection of polarizations can be made by specifying the polarization name in stokes,
 such as 'XX' or 'YY' for linear polarizations. For example, with {\tt createimage=True},
 {\tt stokes='XXYY'} will produces an image cube with each plane contains the image of one of 
 the polarizations while {\tt stokes=''} or {\tt stokes='I'} will produces a 'total intensity' or Stokes I image. 
+
 Among the imaging sub-parameters, {\tt ephemsrcname} is used to set the name of 
 a moving source such as planets to produce a stationary image (can be omitted), and
 {\tt pointingcolumn} is
 used to specify which pointing data column to use for imaging.
-
+Convolution kernel for imaging can be 
+specified by using gridfunction. Available options are 'Box' (Box-car),
+'SF' (Spheroidal), 'PB' (Primary-beam), 'GAUSS' (Gaussian), and 
+'GJINC' (Gaussian*Jinc), where 
+${\rm Jinc}(x) = {\rm J}_1 \left( \frac{\pi x}{c} \right) / \left(\frac{\pi x}{c} \right) $
+with a 
+first order Bessel function ${\rm J}_1$. Sub-parameters for convolution 
+functions cannot be specified in this task. To costomize your 
+convolution function, please do imaging using sdimaging task or 
+imager tool.
 
 \subsubsection{{\tt sdimprocess}}
 \label{section:sd.sdtasks.tasks.sdimprocess}
@@ -4124,7 +4343,7 @@ MOLECULES:
 \subsubsection{General descriptions}
 \label{subsubsection:sd.asap.import.gen}
 
-The following are some cautions when using this import feature.
+The following are some cautions when using import feature.
 
 \begin{itemize}
 
@@ -4171,7 +4390,7 @@ GBT staff.
  the scantable.
 
 \item  Importing of Nobeyama Radio Observatory (NRO) data (in both OTF and NEWSTAR format)
- is now available. However, it is still experimental and only tested to work from toolkit level.
+ is available. However, it is still experimental and only tested to work from toolkit level.
 \end{itemize}
 
 \subsubsection{Handling ALMA data}
@@ -4204,7 +4423,9 @@ from antA and antB, with {\tt outprefix='splitted'}, i.e.,
 {\tt sd.splitant('foo.ms', outprefix='splitted')}, the names of scantables
 are 'splitted.antA' and 'splitted.antB'.  
 The returned value of the method is a list of scantable names. 
-
+\item {\bf From 4.1, frequency reference frame of imported scantables 
+takes from that of MS or ASDM (usually TOPO)}, 
+while it was forcibly set to LSRK in previous release.
 \item It is possible to read the 2-element interferometric
 data taken by the ALMA telescopes 
 as a single dish data to further examine it using ASAP Toolkit and
@@ -4219,8 +4440,8 @@ two-element array.
 
 \item In ALMA, Tsys measurement is done in a specific spectral window
 for calibration so that it is necessary to transfer Tsys to the
-spectral window for target scan. This will be done using {\tt filltsys}
-module. Usage is as follows:
+spectral window for target scan. This can be done using {\tt filltsys}
+module or {\tt sdcal2} task. Usage of {\tt filltsys} is as follows:
 \begin{verbatim}
 import filltsys
 filltsys.fillTsys( filename='mydata.asap', specif=5, tsysif=1, mode='linear' )
@@ -4235,9 +4456,25 @@ frequency axis. Available options are 'linear', 'nearest', 'zero',
 of the spline interpolation.
 Note that {\tt filltsys} will overwrite the data specified by
 {\tt filename}. 
-
+See \S~\ref{section:sd.sdtasks.tasks.sdcal2} if you want to use {\tt sdcal2}.
 \end{itemize}
 
+\subsubsection{Importing NRO data}
+
+Importing NRO data is available. Here are some notes on NRO data import.
+
+\begin{itemize}
+\item Both NEWSTAR and NOSTAR format are supported.
+\item Dual-polarization data is supported.
+\item IFNO is assigned for each array such that you can identify which IFNO corresponds to which array number. If you use A01, A03, and A05, their IFNOs will be 0, 1, and 2, respectively.
+\item Development mainly focuses on recent data, especially for new correlator.
+Although older data (using AOS) can be imported, there may be an inconsistency with original data.
+\item {\tt freqref} parameter controls how frequency reference frame is set. 
+Default is 'rest'. Other option is 'vref'. If {\tt freqref} is 'vref', 
+frequency reference frame takes from VREF field in input NRO data. This 
+parameter is only available for tool level, i.e. {\tt sd.scantable}.
+\item There is a problem on imaging multi-beam data. 
+\end{itemize}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -4781,12 +5018,11 @@ Smoothing on data can be done as follows:
 \subsection{Baseline Fitting}
 \label{subsection:sd.asap.BLfitting}
 
-CASA offers a variety of functions for baseline fitting: Chebyshev 
-polynomials are now available in addition to polynomial, cubic 
-spline and sinusoid. 
+CASA offers a variety of functions for baseline fitting: polynomial, 
+cubic spline, Chebyshev polynomial and sinusoid are available.
 
 The function {\tt sd.scantable.poly\_baseline} carries out a
-baseline fit, given an mask of channels (if desired):
+baseline fit, given a mask of channels (if desired):
 \small
 \begin{verbatim}
   msk=scans.create_mask([100,400],[600,900])
@@ -4803,17 +5039,19 @@ and fits a polynomial baseline to that data. The user can use masks to
 fix the range of channels or velocity range for the fit as well as
 mark the band edge as invalid:
 
-
 \small
 \begin{verbatim}
-  scans.auto_poly_baseline(mask,edge,order,threshold,chan_avg_limit,plot,insitu):
+  scans.auto_poly_baseline(mask,order,insitu,edge,threshold,chan_avg_limit,plot,...):
 
     Parameters:
+        mask:       an optional mask retrieved from scantable
+        order:      the order of the polynomial (default is 0)
         insitu:     if False a new scantable is returned.
                     Otherwise, the scaling is done in-situ
                     The default is taken from .asaprc (False)
-        mask:       an optional mask retrieved from scantable
-        order:      the order of the polynomial (default is 0)
+        clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
+        clipniter:  maximum number of iteration of 'clipthresh'-sigma 
+                    clipping (default is 0: no clipping)
         edge:       an optional number of channel to drop at
                     the edge of spectrum. If only one value is
                     specified, the same number will be dropped from
@@ -4838,11 +5076,22 @@ mark the band edge as invalid:
                     or 'n'
         getresidual:if False, returns best-fit values instead of 
                     residual (default is True)
+        showprogress:
+                    show progress status for large data. 
+                    default is True.
+        minnrow:    minimum number of input spectra to show progress 
+                    status. default is 1000.
         outlog:     Output the coefficients of the best-fit 
                     function to logger (default is False)
         blfile:     Name of a text file in which the best-fit 
                     parameter values to be written 
                     (default is "": no file/logger output)
+        csvformat:  if True blfile is csv-formatted. default is False.
+        bltable:    name of a baseline table where fitting results 
+                    (coefficients, rms, etc.) are to be written. 
+                    if given, fitting results will NOT be output to 
+                    scantable (insitu=True) or None will be returned 
+                    (insitu=False). default is ''. (no bltable output)
 
 
     Example:
@@ -4865,9 +5114,6 @@ The unique paramters for these are as follows:
 \small
 \begin{verbatim}
         npiece:     Number of pieces. (default is 2)
-        clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
-        clipniter:  maximum number of iteration of 'clipthresh'-sigma 
-                    clipping (default is 0: no clipping)
 \end{verbatim}
 \normalsize
 
@@ -4887,20 +5133,25 @@ The unique paramters for these are as follows:
                     (e.g., [0, 1, 2, 15, 16]).
         maxwavelength: the longest sonusoidal wavelength. The 
                     default is 1.0 (unit: spectral range)
-        clipthresh: Clipping threshold. (default is 3.0, unit: sigma)
-        clipniter:  maximum number of iteration of 'clipthresh-sigma 
-                    clipping (default is 0: no clipping)
 \end{verbatim}
 \normalsize
 
-Note that the parameters {\tt clipthresh} and {\tt clipniter} can be used 
-both for cubic spline and sinusoid. For polynomial fitting functions, 
-iterative clipping is yet to be available (though you can do the equivalent 
-operation by using cubic spline fitting function with npiece=1). 
+In CASA 4.1, these tool functions to fit/subtract baseline get 
+significantly (2-10 times) faster compared with CASA 4.0.
 
-Also, for cubic spline and sinusoidal fitting, the parameter {\tt plot} is 
-ignored (always set False) and yet to be available. 
+Note that the parameters {\tt clipthresh} and {\tt clipniter} can now be 
+used for all the available baseline functions. 
 
+Other new features and functionalities in CASA 4.1 include:
+\begin{itemize}
+\item Baseline function type and parameters can be independently specified for each spectrum in a Scantable. A new sd tool function {\tt sd.scantable.sub\_baseline} is offered to do that. 
+\item Baseline fitting results can be stored as a baseline table, a CASA Table containing baseline function type, parameters, fitting results (coefficients, rms, etc.) and so on. Specifying table name in a new parameter {\tt bltable} for {\tt sd.scantable.*\_baseline} enables you to store fitting results in an independent table outside scantable. 
+\item Applying an existing baseline table to fit/subtract baseline is also available via {\tt sd.scantable.apply\_bltable}.
+\item The 'goodness' of baseline fitting can be evaluated. A new sd tool function {\tt sd.scantable.calc\_aic} is available to calculate several values known as model selection criteria for a given spectrum and a baseline function. It can calculate Akaike Information Criterion (AIC), the corrected Akaike Information Criterion (AICc), Bayesian Information Criterion (BIC) and the Generalised Cross Validation (GCV). 
+\end{itemize}
+
+Just as CASA 4.0, The parameter {\tt plot} remains ignored (always 
+set False) for cubic spline and sinusoidal fitting. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Line Fitting}
@@ -5482,3 +5733,4 @@ For {\tt fitmode='list'}, there are no way to give initial guesses for each IFs 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+

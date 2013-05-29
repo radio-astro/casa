@@ -23,6 +23,7 @@
 % JO 2012-05-05 Release 3.4 edits
 % DP 2012-09-27 addition of virtualconcat
 % JO 2012-09-28 Release 4.0.0 edits
+% JO 2013-04-23 Release 4.1.0 edits
 
 \chapter{Visibility Data Import, Export, and Selection}
 \label{chapter:io} 
@@ -52,6 +53,9 @@ to concatenate multiple datasets.  These are:
          (\S~\ref{section:io.import.uvfits.export})
    \item {\tt listobs} --- summarize the contents of a MS 
          (\S~\ref{section:io.list})
+   \item{\tt listpartition} -- List the summary of a multi-MS data set
+     in the logger or in a file
+         ((\S~\ref{section:io.vis.listpartition})
    \item {\tt listvis} --- list the data in a MS 
          (\S~\ref{section:io.vis.listvis})
    \item {\tt vishead} --- list and change the metadata contents of a MS 
@@ -1126,11 +1130,12 @@ get a summary of the MS contents with the {\tt listobs} task.
 The inputs are:
 \small
 \begin{verbatim}
+
+
 #  listobs :: List the summary of a data set in the logger or in a file
-vis                 =         ''        #  Name of input visibility file (MS)
+vis                 = 'day2_TDEM0003_10s_norx' #  Name of input visibility file (MS)
 selectdata          =       True        #  Data selection parameters
-     field          =         ''        #  Field names or field index numbers: ''==>all,
-                                        #   field='0~2,3C286'
+     field          =         ''        #  Field names or field index numbers: ''==>all, field='0~2,3C286'
      spw            =         ''        #  spectral-window/frequency/channel
      antenna        =         ''        #  antenna/baselines: ''==>all, antenna ='3,VA04'
      timerange      =         ''        #  time range: ''==>all,timerange='09:14:0~09:54:0'
@@ -1139,12 +1144,12 @@ selectdata          =       True        #  Data selection parameters
      intent         =         ''        #  Select data based on observation intent: ''==>all
      feed           =         ''        #  multi-feed numbers: Not yet implemented
      array          =         ''        #  (sub)array numbers: ''==>all
-     uvrange        =         ''        #  uv range: ''==>all; uvrange ='0~100klambda', default
-                                        #   units=meters
+     uvrange        =         ''        #  uv range: ''==>all; uvrange ='0~100klambda', default units=meters
      observation    =         ''        #  Select data based on observation ID: ''==>all
 
 verbose             =       True        
 listfile            =         ''        #  Name of disk file to write output: ''==>to terminal
+listunfl            =      False        #  List unflagged row counts? If true, it can have significant negative performance impact.
 async               =      False        #  If true the taskname must be started using listobs(...)
 
 \end{verbatim}
@@ -1160,8 +1165,12 @@ specified in the {\tt listfile} parameter.  For example, \small
 results in the logger messages:
 \small
 \begin{verbatim}
+listobs(vis="day2_TDEM0003_10s_norx",selectdata=True,spw="",field="",
+        antenna="",uvrange="",timerange="",correlation="",scan="",
+        intent="",feed="",array="",observation="",verbose=True,
+        listfile="",listunfl=False)
 ================================================================================
-           MeasurementSet Name:  /Users/jott/casa/data/3.4-scripts/irc/day2_TDEM0003_10s_norx      MS Version 2
+           MeasurementSet Name:  /Users/jott/casa/casatest/casa4.0/irc/day2_TDEM0003_10s_norx      MS Version 2
 ================================================================================
    Observer: Mark J. Mark Claussen     Project: T.B.D.  
 Observation: EVLA
@@ -1169,24 +1178,23 @@ Data records: 290218       Total integration time = 10016 seconds
    Observed from   26-Apr-2010/03:21:56.0   to   26-Apr-2010/06:08:52.0 (UTC)
    
    ObservationID = 0         ArrayID = 0
-  Date        Timerange (UTC)          Scan  FldId FieldName           nRows   Int(s)   SpwIds      ScanIntent
-  26-Apr-2010/03:21:56.0 - 03:23:16.0     5      2 J0954+1743          2720   9.8      [0, 1]                      
-              03:23:44.0 - 03:28:20.0     6      3 IRC+10216           9918   9.64     [0, 1]                      
-              03:28:43.0 - 03:29:49.0     7      2 J0954+1743          2700   8.89     [0, 1]                      
-              03:30:13.0 - 03:34:48.5     8      3 IRC+10216           9918   9.64     [0, 1]                      
-...           
-              06:06:14.0 - 06:08:52.0    59      7 J1331+3030          5814   9.52     [0, 1]                      
+  Date        Timerange (UTC)          Scan  FldId FieldName             nRows     SpwIds   Average Interval(s)    ScanIntent
+  26-Apr-2010/03:21:51.0 - 03:23:21.0     5      2 J0954+1743                2720  [0, 1]  [10, 10] 
+              03:23:39.0 - 03:28:25.0     6      3 IRC+10216                 9918  [0, 1]  [10, 10] 
+              03:28:38.0 - 03:29:54.0     7      2 J0954+1743                2700  [0, 1]  [10, 10] 
+              03:30:08.0 - 03:34:53.5     8      3 IRC+10216                 9918  [0, 1]  [10, 10] 
+...
            (nRows = Total number of rows per scan) 
 Fields: 4
-  ID   Code Name                RA              Decl          Epoch   SrcId nRows  
-  2    D    J0954+1743          09:54:56.82363 +17.43.31.2224 J2000   2     65326  
-  3    NONE IRC+10216           09:47:57.38200 +13.16.40.6600 J2000   3     208242 
-  5    F    J1229+0203          12:29:06.69973 +02.03.08.5982 J2000   5     10836  
-  7    E    J1331+3030          13:31:08.28798 +30.30.32.9589 J2000   7     5814   
+  ID   Code Name                RA               Decl           Epoch   SrcId      nRows
+  2    D    J0954+1743          09:54:56.823626 +17.43.31.22243 J2000   2          65326
+  3    NONE IRC+10216           09:47:57.382000 +13.16.40.65999 J2000   3         208242
+  5    F    J1229+0203          12:29:06.699729 +02.03.08.59820 J2000   5          10836
+  7    E    J1331+3030          13:31:08.287984 +30.30.32.95886 J2000   7           5814
 Spectral Windows:  (2 unique spectral windows and 1 unique polarization setups)
-  SpwID  #Chans Frame Ch1(MHz)    ChanWid(kHz)  TotBW(kHz)  Corrs          
-  0          64 TOPO  36387.2295  125           8000        RR  RL  LR  LL  
-  1          64 TOPO  36304.542   125           8000        RR  RL  LR  LL  
+  SpwID  Name      #Chans   Frame   Ch1(MHz)  ChanWid(kHz)  TotBW(kHz)  Corrs          
+  0      Subband:0     64   TOPO   36387.229       125.000      8000.0  RR  RL  LR  LL
+  1      Subband:0     64   TOPO   36304.542       125.000      8000.0  RR  RL  LR  LL
 Sources: 10
   ID   Name                SpwId RestFreq(MHz)  SysVel(km/s) 
   0    J1008+0730          0     0.03639232     -0.026       
@@ -1200,32 +1208,42 @@ Sources: 10
   7    J1331+3030          0     0.03639232     -0.026       
   7    J1331+3030          1     0.03639232     -0.026       
 Antennas: 19:
-  ID   Name  Station   Diam.    Long.         Lat.         
-  0    ea01  W09       25.0 m   -107.37.25.2  +33.53.51.0  
-  1    ea02  E02       25.0 m   -107.37.04.4  +33.54.01.1  
-  2    ea03  E09       25.0 m   -107.36.45.1  +33.53.53.6  
-  3    ea04  W01       25.0 m   -107.37.05.9  +33.54.00.5  
-  4    ea05  W08       25.0 m   -107.37.21.6  +33.53.53.0  
-  5    ea07  N06       25.0 m   -107.37.06.9  +33.54.10.3  
-  6    ea08  N01       25.0 m   -107.37.06.0  +33.54.01.8  
-  7    ea09  E06       25.0 m   -107.36.55.6  +33.53.57.7  
-  8    ea12  E08       25.0 m   -107.36.48.9  +33.53.55.1  
-  9    ea15  W06       25.0 m   -107.37.15.6  +33.53.56.4  
-  10   ea19  W04       25.0 m   -107.37.10.8  +33.53.59.1  
-  11   ea20  N05       25.0 m   -107.37.06.7  +33.54.08.0  
-  12   ea21  E01       25.0 m   -107.37.05.7  +33.53.59.2  
-  13   ea22  N04       25.0 m   -107.37.06.5  +33.54.06.1  
-  14   ea23  E07       25.0 m   -107.36.52.4  +33.53.56.5  
-  15   ea24  W05       25.0 m   -107.37.13.0  +33.53.57.8  
-  16   ea25  N02       25.0 m   -107.37.06.2  +33.54.03.5  
-  17   ea27  E03       25.0 m   -107.37.02.8  +33.54.00.5  
-  18   ea28  N08       25.0 m   -107.37.07.5  +33.54.15.8  
+  ID   Name  Station   Diam.    Long.         Lat.                Offset from array center (m)                ITRF Geocentric coordinates (m)        
+                                                                     East         North     Elevation               x               y               z
+  0    ea01  W09       25.0 m   -107.37.25.2  +33.53.51.0       -521.9407     -332.7782       -1.1977 -1601710.017000 -5042006.928200  3554602.355600
+  1    ea02  E02       25.0 m   -107.37.04.4  +33.54.01.1          9.8247      -20.4292       -2.7808 -1601150.059500 -5042000.619800  3554860.729400
+  2    ea03  E09       25.0 m   -107.36.45.1  +33.53.53.6        506.0591     -251.8666       -3.5832 -1600715.948000 -5042273.187000  3554668.184500
+  3    ea04  W01       25.0 m   -107.37.05.9  +33.54.00.5        -27.3562      -41.3030       -2.7418 -1601189.030140 -5042000.493300  3554843.425700
+  4    ea05  W08       25.0 m   -107.37.21.6  +33.53.53.0       -432.1158     -272.1493       -1.5032 -1601614.091000 -5042001.655700  3554652.509300
+  5    ea07  N06       25.0 m   -107.37.06.9  +33.54.10.3        -54.0667      263.8720       -4.2292 -1601162.593200 -5041829.000000  3555095.890500
+  6    ea08  N01       25.0 m   -107.37.06.0  +33.54.01.8        -30.8810       -1.4664       -2.8597 -1601185.634945 -5041978.156586  3554876.424700
+  7    ea09  E06       25.0 m   -107.36.55.6  +33.53.57.7        236.9058     -126.3369       -2.4443 -1600951.588000 -5042125.911000  3554773.012300
+  8    ea12  E08       25.0 m   -107.36.48.9  +33.53.55.1        407.8394     -206.0057       -3.2252 -1600801.916000 -5042219.371000  3554706.449900
+  9    ea15  W06       25.0 m   -107.37.15.6  +33.53.56.4       -275.8288     -166.7451       -2.0590 -1601447.198000 -5041992.502500  3554739.687600
+  10   ea19  W04       25.0 m   -107.37.10.8  +33.53.59.1       -152.8599      -83.8054       -2.4614 -1601315.893000 -5041985.320170  3554808.304600
+  11   ea20  N05       25.0 m   -107.37.06.7  +33.54.08.0        -47.8454      192.6015       -3.8723 -1601168.786100 -5041869.054000  3555036.936000
+  12   ea21  E01       25.0 m   -107.37.05.7  +33.53.59.2        -23.8638      -81.1510       -2.5851 -1601192.467800 -5042022.856800  3554810.438800
+  13   ea22  N04       25.0 m   -107.37.06.5  +33.54.06.1        -42.5986      132.8623       -3.5431 -1601173.953700 -5041902.660400  3554987.536500
+  14   ea23  E07       25.0 m   -107.36.52.4  +33.53.56.5        318.0523     -164.1848       -2.6960 -1600880.570000 -5042170.388000  3554741.457400
+  15   ea24  W05       25.0 m   -107.37.13.0  +33.53.57.8       -210.0944     -122.3885       -2.2581 -1601377.008000 -5041988.665500  3554776.393400
+  16   ea25  N02       25.0 m   -107.37.06.2  +33.54.03.5        -35.6245       53.1806       -3.1345 -1601180.861480 -5041947.453400  3554921.628700
+  17   ea27  E03       25.0 m   -107.37.02.8  +33.54.00.5         50.6647      -39.4832       -2.7249 -1601114.365500 -5042023.153700  3554844.945600
+  18   ea28  N08       25.0 m   -107.37.07.5  +33.54.15.8        -68.9057      433.1889       -5.0602 -1601147.940400 -5041733.837000  3555235.956000
+
 
 \end{verbatim}
 \normalsize
 using the (default) {\tt verbose=True} option.
 The most useful extra information that {\tt verbose=True} gives
 is the list of the scans in the dataset.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{MMS summary ({\tt listpartition})}
+\label{section:io.vis.listpartition}
+Similar to {\tt listobs}, {\tt listpartition} shows the summary of a
+multi-measurement set (MMS).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Listing MS data ({\tt listvis})}
@@ -1275,7 +1293,9 @@ Type Q to quit, A to toggle long/short list, or RETURN to continue [continue]:
 \end{verbatim}
 \normalsize
 
-{\bf ALERT:} We are working on improving the format of the {\tt listvis} output.
+{\bf ALERT:} We are working on improving the format of the {\tt
+  listvis} output.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Listing and manipulating MS metadata ({\tt vishead})}

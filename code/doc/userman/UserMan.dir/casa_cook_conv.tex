@@ -381,7 +381,7 @@ UT &   \\
 
 
 
-\section{Coordinate Framess}
+\section{Coordinate Frames}
 \label{section:conv.coordinateframes}
 %me.listcodes(me.frequency())
 
@@ -420,6 +420,12 @@ Name & Description\\
 \end{tabular}
 \end{center}
 \end{table}
+
+Note that TOPO refers to a time stamp at a given observation date. If
+more than one obervation is concatenated this may lead to vastly
+erroneous values. Any conversion from TOPO to other frames such as
+BARY and LSRK should be performed for each individual observation,
+prior to concatenation or simultaneous imaging.
 
 \section{Physical Units}
 

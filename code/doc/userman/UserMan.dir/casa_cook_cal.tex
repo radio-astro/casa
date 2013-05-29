@@ -1,4 +1,4 @@
-,<<<<<<<<<<<<<,<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -42,6 +42,8 @@
 % DP 2012-09-21 edits for improved wvrgcal section
 % JO 2012-10-18 Release 4.0.0 edits
 % GM 2012-10-30 Further r4.0.0 edits, incl lin feed poln
+% JO 2013-01-16 fixed evlagains
+% JO 2013-04-23 Release 4.1.0 edits
 
 \chapter{Synthesis Calibration}
 \label{chapter:cal}
@@ -83,7 +85,15 @@ tables can be converted to the new format using the task {\tt
 tables and cannot be filled into the new tables. When old calibration
 tables were already applied with {\tt applycal}, one can proceed with
 imaging as usual in any version of CASA and no action is needed.
+A second change has made to calibration tables in CASA 4.1,
+introducing obsID. Older calibration tables do not feature this
+keyword and will not support obsId-specific calibration operations.
+If required, these tables should be regenerated in CASA 4.1 or higher
+to access these new features.
 
+{\bf: Alert:} CASA v4.1 is the last version that will support use
+of the {\tt gaincurve} and {\tt opacity} parameters.  These
+calibration types are now supported via the {\tt gencal} task.
 
 
 
@@ -1158,7 +1168,11 @@ Current antenna-based gencal options (caltype) are:
    \item {\tt 'antposvla'} --- old VLA-centric antenna position
      corrections 
    \item {\tt 'tsys'} --- Tsys from the SYSCAL table (ALMA)
-   \item {\tt 'evlagain'} --- EVLA switched-power gains (experimental)
+   \item {\tt 'evlagain'} --- VLA switched-power gains (experimental;
+     equal to 'swpow')
+   \item {\tt 'swpow'} --- VLA switched power (equal to 'evlagain')
+   \item {\tt 'rq'} --- VLA requantizer gains {\it only} 
+   \item {\tt swp/rq} --- VLA switched-power gains divided by requantizer gain
    \item {\tt 'opac'} --- Tropospheric opacity
     \item {\tt 'gc'} --- Gain curve (zenith-angle-dependent gain) (VLA
     only) (auto-lookup only)
@@ -1350,11 +1364,8 @@ steps. This method replaces the older method where 'gaincurve' and
 Noise diodes in the Jansky VLA antennas can be used to pre-calibrate the
 data. The diodes follow an ON-OFF cycle and the power for both states is
 measured and recorded. This is called the 'VLA switched power'
-calibration. To apply the calibration, the switched power data first
-needs to have been
-filled into the measurement set via {\tt importevla} and {\tt switchedpower=True}
-(see Sect.\,\ref{section:io.import.evla}). The second step is to
-create a calibration table vis {\tt gencal} and {\tt
+calibration.  To apply the switched power data, one needs to 
+create a calibration table with {\tt gencal} using {\tt
   caltype='evlagain'}, like 
 
 \small
@@ -1384,32 +1395,27 @@ along all further calibration steps in the {\tt gaintable} parameter.
 
 \small
 \begin{verbatim}
-
 #  wvrgcal :: Generate a gain table based on Water Vapour Radiometer data
 vis                 =         ''        #  Name of input visibility file
 caltable            =         ''        #  Name of output gain calibration table
 toffset             =         -1        #  Time offset (sec) between interferometric and WVR data
 segsource           =       True        #  Do a new coefficient calculation for each source
-     tie            =         []        #  Prioritise tieing the phase of these sources
-                                        #   as well as possible 
-     sourceflag     =         []        #  Flag the WVR data for these source(s) as bad
-                                        #   and do not produce corrections for it
+     tie            =         []        #  Prioritise tieing the phase of these sources as well as possible
+                                        #   (requires segsource=True)
+     sourceflag     =         []        #  Flag the WVR data for these source(s) as bad and do not produce
+                                        #   corrections for it (requires segsource=True)
+
 disperse            =      False        #  Apply correction for dispersion
-wvrflag             =       ['']        #  Flag the WVR data for these antenna(s) as bad
-                                        #   and replace its data with interpolated values
-statfield           =         ''        #  Compute the statistics (Phase RMS, Disc) on
-                                        #   this field only
-statsource          =         ''        #  Compute the statistics (Phase RMS, Disc) on
-                                        #   this source only
-smooth              =          1        #  Smooth WVR data by this many samples before
-                                        #   applying the correction
+wvrflag             =       ['']        #  Flag the WVR data for these antenna(s) as bad and replace its data
+                                        #   with interpolated values
+statfield           =         ''        #  Compute the statistics (Phase RMS, Disc) on this field only
+statsource          =         ''        #  Compute the statistics (Phase RMS, Disc) on this source only
+smooth              =         ''        #  Smooth calibration solution on the given timescale
 scale               =        1.0        #  Scale the entire phase correction by this factor
-reversespw          =         ''        #  Reverse the sign of the correction for the
-                                        #   listed SPWs (only needed for early ALMA data
-                                        #   before Cycle 0)
-cont                =      False        #  Estimate the continuum (e.g., due to clouds)
-                                        #   (experimental)
-async               =      False        #  If true the taskname must be started using
+reversespw          =         ''        #  Reverse the sign of the correction for the listed SPWs (only needed
+                                        #   for early ALMA data before Cycle 0)
+cont                =      False        #  Estimate the continuum (e.g., due to clouds) (experimental)
+async               =      False        #  If true the taskname must be started using wvrgcal(...)
                                         #   wvrgcal(...)
 \end{verbatim}
 \normalsize
@@ -1853,8 +1859,8 @@ The parameters controlling common aspects of the solution are:
 \small
 \begin{verbatim}
 solint              =      'inf'        #  Solution interval: egs. 'inf', '60s' (see help)
-combine             =     'scan'        #  Data axes which to combine for solve (scan, spw,
-                                        #   and/or field)
+combine             =     'scan'        #  Data axes which to combine for solve (obs, scan, 
+                                        #   spw, and/or field)
 preavg              =       -1.0        #  Pre-averaging interval (sec) (rarely needed)
 refant              =         ''        #  Reference antenna name(s)
 minblperant         =          4        #  Minimum baselines _per antenna_ required for solve
@@ -1863,7 +1869,7 @@ minsnr              =        3.0        #  Reject solutions below this SNR
 \normalsize
 
 The time and frequency (if relevant) solution interval is given by {\tt solint}. Optionally a
-frequency interval ofor each solution can be added after a comma,
+frequency interval for each solution can be added after a comma,
 e.g. {\tt solint='60s,300Hz'}. Time units are in seconds unless
 specified differently. Frequency units can be either channels or Hz
 and only make sense for bandpass of frequency dependent polarization
@@ -1877,11 +1883,14 @@ minutes.  The {\tt solint} parameter interacts with {\tt combine} to
 determine whether the solutions cross scan or field boundaries.
 
 The parameter controlling the scope of the solution is {\tt combine}.
-For the default {\tt combine=''} solutions will break at scan, field, and spw
-boundaries.  Specification of any of these in {\tt combine} will
+For the default {\tt combine=''} solutions will break at obsId, scan,
+field, and spw boundaries.  Specification of any of these in {\tt combine} will
 extend the solutions over the boundaries (up to the {\tt solint}). 
 For example, {\tt combine='spw'} will combine spectral windows
-together for solving, while {\tt combine='scan'} will cross scans.  
+together for solving, while {\tt combine='scan'} will cross scans, and
+{\tt combine='obs,scan'} will use data across differet observation
+IDs and scans (usually, obsIds consist of many scans, so it is
+not meaningful to combine obsIds without also combining scans).  
 Thus, to do scan-based solutions (single solution for each scan), set
 \small
 \begin{verbatim}
@@ -2368,7 +2377,9 @@ plotxy('data.ms',xaxis='channel',datacolumn='corrected',subplot=212)
 \end{verbatim}
 \normalsize
 The calibrated data is written to the {\tt CORRECTED\_DATA} column, with 
-{\tt calwt=True} by default.
+{\tt calwt=True} by default. This parameter can also be a list of
+Boolean values for which each entry then controls the calculation of
+weights based on each individual input calibration table. 
 
 {\bf Alert:} {\it Current} (as of June 2010)  VLA data has no weights
 to the data. To avoid trouble, {\tt calwt=False} should be set for
@@ -2995,10 +3006,6 @@ leakages:
 We would then do the {\tt 'X'} calibration as before (but using this
 D-table in {\tt gaintable}).
 
-A full processing example for continuum polarimetry can be found
-in \S~\ref{section:scripts.jupiter}.
-
-
 %%%%%%
 \subsubsection{A Polarization Calibration Example - Linear Feed
   Basis (e.g., ALMA, VLA $\nu<1$ GHz)}
@@ -3420,8 +3427,7 @@ An overhaul is underway, so stay tuned.
 \label{section:cal.tables.plotcal.examples}
 
 For example, to plot amplitude or phase as a function of time for 
-{\tt 'G'} solutions (after rescaling by {\tt fluxscale} for the NGC5921
-``demo'' data (see Appendix~\ref{section:scripts.ngc5921}),
+{\tt 'G'} solutions (after rescaling by {\tt fluxscale} can look like 
 \small
 \begin{verbatim}
 default('plotcal')
@@ -3695,6 +3701,9 @@ smoothtime   =       60.0   #  Smoothing time (sec)
 async        =      False   #  if True run in the background, prompt is freed
 \end{verbatim}
 \normalsize
+
+Note that if no {\tt caltable} is specified as output, {\tt smoothcal}
+will overwrite the input {\tt tablein} calibration table. 
 
 The smoothing will use the {\tt smoothtime} and {\tt smoothtype}
 parameters to determine the new data points which will replace the
@@ -4005,8 +4014,7 @@ of this solution is at least as short as that of the existing solution.
 
 One obvious application is to calibrate the amplitudes and phases
 on different timescales during self-calibration.
-Here is an example, using the Jupiter VLA 6m continuum imaging 
-example (see Appendix~\ref{section:scripts.jupiter}):
+Here is an example:
 \small
 \begin{verbatim}
 # Add clean model 
@@ -4631,26 +4639,43 @@ The inputs to {\tt uvcontsub} are:
 \begin{verbatim}
 #  uvcontsub :: Continuum fitting and subtraction in the uv plane
 vis                 =         ''        #  Name of input MS.  Output goes to vis + ".contsub"
+                                        #   (will be overwritten if already exists)
 field               =         ''        #  Select field(s) using id(s) or name(s)
 fitspw              =         ''        #  Spectral window:channel selection for fitting the
                                         #   continuum
-combine             =     'scan'        #  Data axes to combine for the continuum estimation
-                                        #   (spw, scan, and/or field)
-solint              =      'inf'        #  Continuum fit timescale
+combine             =         ''        #  Data axes to combine for the continuum estimation
+                                        #   (none, or spw and/or scan)
+solint              =      'int'        #  Continuum fit timescale (int recommended!)
 fitorder            =          0        #  Polynomial order for the fits
 spw                 =         ''        #  Spectral window selection for output
 want_cont           =      False        #  Create vis + ".cont" to hold the continuum estimate.
 async               =      False        #  If true the taskname must be started using
                                         #   uvcontsub(...)
 \end{verbatim}
+\normalsize
 
 For each baseline, and over the timescale specified in {\tt solint},
 {\tt uvcontsub} will provide a polynomial fit to the real and
 imaginary parts of the (continuum-only) channels specified in {\tt
 fitspw} (using the standard {\tt spw} selection syntax), 
 and then subtract this model from all channels specified in {\tt spw}, or
-from all channels in spectral windows of {\tt fitspw} if {\tt spw=''}.
-typically, low orders for the polynomial work best, like 0$^{\rm th}$ (a
+from all channels in spectral windows of {\tt fitspw} if {\tt
+  spw=''}. By setting the subparameter {\tt excludechannels=True}, the
+channel selection in {\tt fitspw} will be inverted. In that case one
+can select the line channels themselves and/or corrputed channels that
+are not used in the continuum fit to the data. {\tt fitspw} can also
+take frequency ranges, e.g. 
+
+\small
+\begin{verbatim}
+fitspw='*:113.767~114.528GHz;114.744~115.447GHz'
+\end{verbatim}
+\normalsize
+
+where '*' indicates to go across all spws. 
+
+
+Typically, low orders for the polynomial work best, like 0$^{\rm th}$ (a
 constant), or 1$^{\rm st}$ order (a linear fit). Use higher orders with caution
 and check your results carefully.
 
@@ -4659,7 +4684,8 @@ each integration. However, if the continuum emission comes from a small
 region around the phase center and {\it fitorder = 0}, then you can set solint
 larger (as long as it is shorter than the timescale for changes in the
 visibility function of the continuum).  If your scans are short enough you
-can also use scan averaging, {\it solint='inf'}. Be warned, setting solint too
+can also use scan averaging with {\it combine='scan'} and {\it solint='inf'}. 
+Be warned, setting solint too
 large will introduce ``time smearing'' in the estimated continuum and thus
 not properly subtract emission not at the phase center.  Increasing solint
 speeds up the calculation but it does not improve the overall result
@@ -4754,25 +4780,25 @@ combination of selected {\tt spw} and {\tt mode} will determine the
 output channels and spw(s):
 \small
 \begin{verbatim}
-    spw = '0,1'; mode = 'channel'
-       # will produce a single spw containing all channels in spw 0 and 1
-    spw='0:5~28^2'; mode = 'channel'
-       # will produce a single spw made with channels (5,7,9,...,25,27)
-    spw = '0'; mode = 'channel': nchan=3; start=5; width=4
-       # will produce an spw with 3 output channels
-       # new channel 1 contains data from channels (5+6+7+8)
-       # new channel 2 contains data from channels (9+10+11+12)
-       # new channel 3 contains data from channels (13+14+15+16)
-    spw = '0:0~63^3'; mode='channel'; nchan=21; start = 0; width = 1
-       # will produce an spw with 21 channels
-       # new channel 1 contains data from channel 0
-       # new channel 2 contains data from channel 2
-       # new channel 21 contains data from channel 61
-    spw = '0:0~40^2'; mode = 'channel'; nchan = 3; start = 5; width = 4
-       # will produce an spw with three output channels
-       # new channel 1 contains channels (5,7)
-       # new channel 2 contains channels (13,15)
-       # new channel 3 contains channels (21,23)
+    spw = ’0,1’; mode = ’channel’  
+       # will produce a single spw containing all channels in spw 0 and 1  
+    spw=’0:5~28^2’; mode = ’channel’  
+       # will produce a single spw made with channels (5,7,9,...,25,27)  
+    spw = ’0’; mode = ’channel’: nchan=3; start=5; width=4  
+       # will produce an spw with 3 output channels  
+       # new channel 1 contains data from channels (5+6+7+8)  
+       # new channel 2 contains data from channels (9+10+11+12)  
+       # new channel 3 contains data from channels (13+14+15+16)  
+    spw = ’0:0~63^3’; mode=’channel’; nchan=21; start = 0; width = 1  
+       # will produce an spw with 21 channels  
+       # new channel 1 contains data from channel 0  
+       # new channel 2 contains data from channel 2  
+       # new channel 21 contains data from channel 61  
+    spw = ’0:0~40^2’; mode = ’channel’; nchan = 3; start = 5; width = 4  
+       # will produce an spw with three output channels  
+       # new channel 1 contains channels (5,7)  
+       # new channel 2 contains channels (13,15)  
+       # new channel 3 contains channels (21,23) 
 \end{verbatim}
 \normalsize
 
@@ -5110,16 +5136,10 @@ The task works on all scratch columns.
 \section{Examples of Calibration}
 \label{section:cal.examples}
 
-See the scripts provied in Appendix~\ref{chapter:scripts} for examples of
-calibration.  In particular, we refer
-the interested user to the demonstrations for:
-\begin{itemize}
-\item NGC5921 (VLA HI) --- a quick demo of basic CASA spectral line calibration
-      (\ref{section:scripts.ngc5921})
-\item Jupiter (VLA 6cm continuum polarimetry) --- polarization calibration
-      (\ref{section:scripts.jupiter})
-\end{itemize}
-
+The data reduction tutorials on \url{casaguides.nrao.edu} provide
+walkthroughs for
+high and low frequency, spectral line and polarization calibration
+techniques. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

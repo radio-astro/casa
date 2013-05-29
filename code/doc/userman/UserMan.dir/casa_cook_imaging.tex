@@ -32,7 +32,7 @@
 % JO 2011-10-03 remove autoclean
 % JO 2012-04-19 edits for 3.4.0
 % JO 2012-10-18 edits for 4.0.0
-
+% JO 2013-05-20 edits for 4.1.0
 
 \chapter{Synthesis Imaging}
 \label{chapter:im}
@@ -123,12 +123,6 @@ Information on other useful tasks and parameter setting can be found in:
 We now describe some parameters are are common to the imaging
 tasks.  These should behave the same way in any imaging task
 that they are found in.  These are in alphabetical order.\\[1cm]
-
-{\bf ALERT:} There are still a subset of
-data selection parameters used in the imaging tasks:
-{\tt field}, {\tt spw}, {\tt timerange}.
-In a later patch, we will use 
-the standard data selection set (\S~\ref{section:io.selection}).
 
 
 {\bf ALERT:} {\tt clean} tries to use up to four cores on the computer that
@@ -443,7 +437,12 @@ mode              =  'channel'   #  Spectral image definition(mfs, channel, velo
 \normalsize The default {\tt nchan=-1} will automatically produce a
 cube with the number of channels needed to span the (regridded)
 spectral windows of the MS. If multiple MSs are used, the spectral
-frames of these need to be identical, e.g. LSRK.  {\bf ALERT:} This
+frames of these need to be identical, e.g. LSRK\footnote{Note that
+  when TOPO is used, it refers to a time stamp at a given observation date. If
+more than one obervation in TOPO is specified, this may lead to vastly
+erroneous values. Any conversion from TOPO to other frames such as
+BARY and LSRK should be performed for each individual observation,
+prior to clean or concatenation}.  {\bf ALERT:} This
 often results in extra blank channels at the beginning and end of the
 image cube, so it is usually more precise to specify {\tt nchan} and
 {\tt start} to get what you want. For best results, we also recommend
@@ -474,8 +473,7 @@ Image channels that lie outside the MS frequency range or
 have no data mapped to them will be blank in the output image,
 but will be in the cube.  
 
-See the example in \S~\ref{section:scripts.ngc5921} for using the {\tt 'channel'}
-mode to image a spectral-line cube. In this case, we use:
+Example: 
 \small
 \begin{verbatim}
 mode         = 'channel'       
@@ -1465,17 +1463,9 @@ using Cotton-Schwab (CS) residual visibilities for major cycles
 ({\tt imagermode='csclean'}), or multi-field mosaics using CS
 major cycles ({\tt imagermode='mosaic'}).
 
-In the default mode ({\tt imagermode=''}), the major and minor
-clean cycles work off of the gridded FFT dirty image, with residuals
-updated using the PSF calculation algorithm set by the {\tt psfmode}
-parameter (\S~\ref{section:im.clean.psfmode}).  This method is not
-recommended for high dynamic range or high fidelity imaging 
-applications, but can be significantly faster than CS clean.
-Note that for this option only, if {\tt mask=''} (no mask or box
-set) then it will clean the inner quarter of the image by
-default.
 
-The {\tt csclean} choice specifies the Cotton-Schwab algorithm.  This
+
+The default {\tt imagermode='csclean'} choice specifies the Cotton-Schwab algorithm.  This
 opens up the sub-parameters
 \small
 \begin{verbatim}
@@ -1505,6 +1495,16 @@ behavior when you hit the threshold with a major cycle.  In
 particular, it may be above threshold again at the start of the next
 major cycle.  This is particularly noticeable when cleaning a cube,
 where different channels will hit the threshold at different times.
+
+In the empty mode ({\tt imagermode=''}), the major and minor
+clean cycles work off of the gridded FFT dirty image, with residuals
+updated using the PSF calculation algorithm set by the {\tt psfmode}
+parameter (\S~\ref{section:im.clean.psfmode}).  This method is not
+recommended for high dynamic range or high fidelity imaging 
+applications, but can be significantly faster than CS clean (the default).
+Note that for this option only, if {\tt mask=''} (no mask or box
+set) then it will clean the inner quarter of the image by
+default.
 
 {\bf ALERT:} You will see a warning message in the logger, 
 similar to this:
@@ -1939,7 +1939,7 @@ For example,
 \label{section:im.clean.thresh}
 
 The {\tt threshold} parameter instructs {\tt clean} to terminate when
-the maximum (absolute?) residual reaches this level or below.  Note
+the maximum absolute residual reaches this level or below.  Note
 that it may not reach this residual level due to the value of the
 {\tt niter} parameter which may cause it to terminate early.
 
@@ -1983,20 +1983,53 @@ used.  W-Projection, if used, is done for each facet.
 See \S~\ref{section:im.clean.widefield} below for more on wide-field
 imaging. 
 
-The {\tt gridmode='aprojection'} option enables the gridding-based
-correction for RL beam-squint in off-axis systems (such as the VLA).
-The sub-parameters are:
+%%The {\tt gridmode='aprojection'} option enables the gridding-based
+%%correction for RL beam-squint in off-axis systems (such as the VLA).
+%%The sub-parameters are:
+%%\small
+%%\begin{verbatim}
+%%gridmode    = 'aprojection'  #  Gridding kernel for FFT-based transforms, default='' None
+%%   cfcache  = 'cfcache.dir'  #  Convolution function cache directory
+%%   painc    =      360.0     #  Parallactic angle increment (degrees) for convolution function
+%%\end{verbatim}
+%%\normalsize
+%%Higher dynamic range imaging applications will require a-projection
+%%with correspondingly small (e.g. 10-degree) {\tt painc} at the cost of
+%%speed (see below).  {\bf ALERT:} This option is still under test and development,
+%%so be careful in its use.
+
+
+%\subsubsection{A-Projection}
+{\tt gridmode='aprojection'}: A-Projection is an algorithm to account
+for the effects of the antenna primary beam (PB) during imaging.  The
+time-dependent effects of the PB are projected-out during the imaging
+phase and the PB is included in the prediction phase of the iterative
+image deconvolution (see Bhatnagar, Cornwell, Golap \& Uson 2008,
+A\&A, 487, 419) for more details.  Please also refer to this
+publication in your papers if this algorithm is used for imaging. The
+narrow-band A-Projection can be used by setting the
+{\tt gridmode='aprojection'} in the clean task.  This opens up the following
+new parameters:
+
 \small
 \begin{verbatim}
-gridmode    = 'aprojection'  #  Gridding kernel for FFT-based transforms, default='' None
-   cfcache  = 'cfcache.dir'  #  Convolution function cache directory
-   painc    =      360.0     #  Parallactic angle increment (degrees) for convolution function
+     gridmode    = 'aprojection'  #  Gridding kernel for FFT-based transforms, default='' None
+     cfcache     = 'cfcache.dir'     #  Convolution function cache directory
+     rotpainc    =        5.0        #  Parallactic angle increment (degrees) for OTF A-term rotation
+     painc       =      360.0        #  Parallactic angle increment (degrees) for computing A-term
 \end{verbatim}
 \normalsize
-Higher dynamic range imaging applications will require a-projection
-with correspondingly small (e.g. 10-degree) {\tt painc} at the cost of
-speed.  {\bf ALERT:} This option is still under test and development,
-so be careful in its use.
+
+{\tt cfcache} is used to cache functions required in the A-Projection
+algorithm.  The PB is rotated on-the-fly when a change of greater than
+{\tt rotpainc} is detected.  Alternatively, PB is re-computed if the P.A.
+changes by greater than {\tt painc}.
+
+Note that this code is still in the development and testing stage and
+should be used on shared-risk basis.  Note also that the cost of
+imaging will be higher when using A-Projection.  Therefore make a
+careful evaluation of whether you need to invoke it.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Interactive Cleaning --- Example}
@@ -2085,9 +2118,7 @@ tool to redraw the mask around the emission, and are ready to
 For strangely shaped emission regions, you may find using the polygon
 region marking tool (the second from the right in the button
 assignment toolbar) the most useful.
-
-See the example of cleaning and self-calibrating the Jupiter 6cm continuum
-data given below in Appendix~\ref{section:scripts.jupiter}.  
+  
 The sequence of cleaning starting with the ``raw'' externally
 calibrated data is shown in
 Figures~\ref{fig:clean_inter1} -- \ref{fig:clean_inter3}.
@@ -2241,8 +2272,6 @@ clean(vis='n4826_tboth.ms',
 \end{verbatim}
 \normalsize
 
-Another example of mosaic imaging, this time using 3mm BIMA data,
-is given in Appendix~\ref{section:scripts.ngc4826}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Heterogeneous imaging}
@@ -2304,8 +2333,8 @@ components) each plane sequentially, while {\tt psfmode='clark'}
 
 The interactive {\tt clean} example given above 
 (\S~\ref{section:im.clean.exampleinteractive}) shows
-a case of polarization imaging.  You can also find the script for
-this example in Appendix~\ref{section:scripts.jupiter}.
+a case of polarization imaging. 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Wide-field imaging and deconvolution in {\tt clean}}
@@ -2670,12 +2699,12 @@ The inputs for {\tt feather} are:
 \begin{verbatim}
 #  feather :: Combine two images using their Fourier transforms
 imagename           =         ''        #  Name of output feathered image
-highres             =         ''        #  Name of high resolution (interferometer)
-                                        #   image
+highres             =         ''        #  Name of high resolution (interferometer) image
 lowres              =         ''        #  Name of low resolution (single dish) image
 sdfactor            =        1.0        #  Scale factor to apply to Single Dish image
 effdishdiam         =       -1.0        #  New effective SingleDish diameter to use in m
-showplot            =      False        #  Show plot of feather function
+lowpassfiltersd     =      False        #  Filter out the high spatial frequencies of the SD
+                                        #   image
 async               =      False        #  If true the taskname must be started using
 \end{verbatim}
 \normalsize 
@@ -2690,9 +2719,17 @@ of a baseline level, it might be the one with the most uncertain
 calibration and {\tt sdfactor} will multiply with the single-dish
 image values for any needed correction.
 
-When {\tt showplot=True}, a GUI pops up that displays the single dish
-and interferometric weighting functions in the {\tt uv}-domain as a function
-of {\it uv}-distance.
+
+The weighting functions for the data are usually the Fourier transform
+of the Single Dish beam FFT(PB$_{SD}$) for the Single dish data, and
+the inverse, 1-FFT(PB$_{SD}$) for the interferometric data. It is
+possible, however, to change the weighting functions by pretending
+that the SD is smaller in size via the {\tt effdishdiameter}
+parameter. This tapers the high spatial frequencies of the SD data and
+adds more weight to the interferometric data. The {\tt
+  lowpassfiltersd} can take out artifacts at very high spatial
+frequencies that are often present but non-physical in SD data.
+
 
 Note that the only inputs are for images and {\tt feather} will
 attempt to regrid the images to a common shape, ie. pixel size, pixel
@@ -2717,6 +2754,45 @@ feather(imagename='feather.im',      # Create an image called feather.im
 \end{verbatim}
 \normalsize
 
+\subsection{Visual Interface for {\tt feather} ({\tt casafeather})}
+\label{section:im.casafeather}
+
+CASA also provides a visual interface to the {\tt feather} task. The
+interface is run {\it from a command line outside CASA} by typing {\tt
+  casafeather} in a shell. Fig.\,\ref{fig:casafeather} shows an example. As a
+first step, one needs to specify a high and a low resolution image,
+typically an interferometric and a single dish map. Note
+that the single dish map needs to be in units of Jy beam$^{-1}$. An
+output image is usually specified, too. On the main GUI, press
+``Feather'' to start the feathering process, which includes regridding
+the low resolution image to the high resolution image. 
+
+``casafeather'' has the ability to show two major rows of displays
+(see Fig.\,\ref{fig:casafeather}) that can be turned on or off.  A
+good visualization is usually obtained by making both axes
+logarithmic. This can be specified in the ``Customize menu'', the {\it
+  toothed wheel} symbol at the top of the panel. The two rows of
+displays are: 1) ``Original Data Slice'': Cuts through the u and v
+directions of the Fourier transformed input images. A vertical line
+shows the location of the effective dish diameter(s).  2) ``Feathered
+Data Slice'': The same cuts, but scaled by the ``low resolution scale
+factor'' and weighted by the weighting functions (see
+\S\,\ref{section:im.feather}). In this display, the weighting
+functions themselves are shown, too.
+
+At the top of the display {\tt effdshdiameter} for u and v and {\tt sdfactor} can be
+provided in the ``Effective Dish Diameter'' and ``Low Resolution
+Scale Factor'' input boxes. 
+
+
+\begin{figure}[h!]
+\begin{center}
+\pngname{casafeather}{6}
+\caption{\label{fig:casafeather} Visual ``casafeather'' interface
+to the {\tt feather} task.} 
+\hrulefill
+\end{center}
+\end{figure}
 
 
 
@@ -3055,8 +3131,6 @@ underneath for you!
 For now, we refer the user back to the calibration chapter for
 a reminder on how to run the calibration tasks. 
 
-See the example of cleaning and self-calibrating the Jupiter 6cm continuum
-data given below in Appendix~\ref{section:scripts.jupiter}.  
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Parallel Cleaning ({\tt pclean})}
@@ -3153,19 +3227,9 @@ be put back together to create single image files.
 \section{Examples of Imaging}
 \label{section:im.examples}
 
-See the scripts provided in Appendix~\ref{chapter:scripts} for examples of
-imaging.  In particular, we refer
-the interested user to the demonstrations for:
-\begin{itemize}
-\item NGC5921 (VLA HI) --- a quick demo of basic CASA spectral line
-      cube imaging and analysis
-      (\ref{section:scripts.ngc5921})
-\item Jupiter (VLA 6cm continuum polarimetry) --- polarization imaging
-      and analysis
-      (\ref{section:scripts.jupiter})
-\item NGC4826 (BIMA 3mm CO) --- mosaic imaging of spectral line data
-      (\ref{section:scripts.ngc4826})
-\end{itemize}
+The data reduction tutorials on \url{casaguides.nrao.edu} provide
+walkthroughs for
+high and low frequency, spectral line and polarization imaging techniques. 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
