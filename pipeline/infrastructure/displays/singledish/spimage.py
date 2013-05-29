@@ -101,7 +101,6 @@ class SDSpectralImageDisplay(SDImageDisplay):
         RMSMap = numpy.zeros(((self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
         #Total = numpy.zeros(((self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
         # ValidSp: SQRT of Number of combined spectra for the weight
-        LOG.todo('ValidSp must be transferred from hsd_imaging')
         #ValidSp = numpy.ones(nrow, dtype=numpy.float32)
         ValidSp = self.num_valid_spectrum.reshape((nrow,self.npol))
         #ValidSp = numpy.zeros(nrow, dtype=numpy.float32)
@@ -352,7 +351,6 @@ class SDSpectralImageDisplay(SDImageDisplay):
             RMSMap = self.rms[:,:,pol] * (self.num_valid_spectrum[:,:,pol] > 0)
             RMSMap = numpy.flipud(RMSMap.transpose())
             LOG.debug('RMSMap=%s'%(RMSMap))
-            LOG.todo('RMS must be transferred from imaging results')
             pl.cla()
             pl.clf()
             a = pl.axes([0.25, 0.25, 0.5, 0.5])
