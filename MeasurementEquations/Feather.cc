@@ -252,32 +252,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     getCutXY(ux, xamp, uy, yamp, cimagehigh);
 
   }
-  void Feather::getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+  void Feather::getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial){
 
     calcCWeightImage();
-    getCutXY(ux, xamp, uy, yamp, *cwImage_p);
-    
+    if(radial){
+      uy.resize();
+      yamp.resize();
+      getRadialCut(xamp, *cwImage_p);
+      getRadialUVval(xamp.shape()[0], cwImage_p->shape(), cwImage_p->coordinates(), ux);
+      
+ 
+    }
+    else{
+      getCutXY(ux, xamp, uy, yamp, *cwImage_p);
+    }
   }
-  void Feather::getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+  void Feather::getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial){
     calcCWeightImage();
     Vector<Float> xampInt, yampInt;
-    getCutXY(ux, xampInt, uy, yampInt, *cwImage_p);
-    xamp.resize();
-    xamp=(Float(1.0) - xampInt)*Float(sdScale_p);
-    yamp.resize();
-    yamp=(Float(1.0) - yampInt)*Float(sdScale_p);
+    if(radial){
+      uy.resize();
+      yamp.resize();
+      getRadialCut(xampInt, *cwImage_p);
+      getRadialUVval(xamp.shape()[0], cwImage_p->shape(), cwImage_p->coordinates(), ux);
+	
+    }
+    else{
+      getCutXY(ux, xampInt, uy, yampInt, *cwImage_p);
+      yamp.resize();
+      yamp=(Float(1.0) - yampInt)*Float(sdScale_p);
+    }
+      xamp.resize();
+      xamp=(Float(1.0) - xampInt)*Float(sdScale_p);
+      
 
   }
-  void Feather::getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+  void Feather::getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial){
 
-    getFTCutSDImage(ux, xamp, uy,yamp);
+    getFTCutSDImage(ux, xamp, uy,yamp, radial);
     xamp *=sdScale_p;
-    yamp *=sdScale_p;
+    if(yamp.nelements() >0)
+      yamp *=sdScale_p;
   }
   
-  void Feather::getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp){
+  void Feather::getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial){
     applyFeather();
-    getCutXY(ux, xamp, uy, yamp, *cwHighIm_p);
+    if(radial){
+      uy.resize();
+      yamp.resize();
+      getRadialCut(xamp, *cwHighIm_p);
+      getRadialUVval(xamp.shape()[0], cwHighIm_p->shape(), cwHighIm_p->coordinates(), ux);
+    }
+    else
+      getCutXY(ux, xamp, uy, yamp, *cwHighIm_p);
   }
 
   void Feather::applyFeather(){
@@ -370,8 +397,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     radialAmp.resize();
     getRadialCut(radialAmp, cimage);
 
+    getRadialUVval(radialAmp.shape()[0], cimage.shape(), cimage.coordinates(), radius); 
     ////Get the radial value in uv- units.
-    Double freq=worldFreq(image.coordinates(), 0);
+    /* Double freq=worldFreq(image.coordinates(), 0);
     Int dirCoordIndex=image.coordinates().findCoordinate(Coordinate::DIRECTION);
     DirectionCoordinate dc=image.coordinates().directionCoordinate(dirCoordIndex);
     Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
@@ -386,7 +414,35 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Double> pix(2, xpix.nelements());
     Matrix<Double> world(2, xpix.nelements());
     Vector<Bool> failures;
-    pix.row(1)=elshape(0)/2;
+    pix.row(1)=elshape(1)/2;
+    pix.row(0)=xpix;
+    ftdc->toWorldMany(world, pix, failures);
+    xpix=world.row(0);
+    xpix=fabs(xpix)*(C::c)/freq;
+    radius.resize(xpix.nelements());
+    convertArray(radius, xpix);
+    */
+
+  }
+  void Feather::getRadialUVval(const Int npix, const IPosition& imshape, const CoordinateSystem& csys, Vector<Float>& radius){
+    
+////Get the radial value in uv- units.
+    Double freq=worldFreq(csys, 0);
+    Int dirCoordIndex=csys.findCoordinate(Coordinate::DIRECTION);
+    DirectionCoordinate dc=csys.directionCoordinate(dirCoordIndex);
+    Vector<Bool> axes(2); axes(0)=True;axes(1)=True;
+    Vector<Int> elshape(2); 
+    Vector<Int> directionIndex=CoordinateUtil::findDirectionAxes(csys);
+    elshape(0)=imshape[directionIndex(0)];
+    elshape(1)=imshape[directionIndex(1)];
+    Coordinate* ftdc=dc.makeFourierCoordinate(axes,elshape);	
+    Vector<Double> xpix(npix);
+    indgen(xpix);
+    xpix +=Double(imshape[directionIndex(0)])/2.0;
+    Matrix<Double> pix(2, npix);
+    Matrix<Double> world(2, npix);
+    Vector<Bool> failures;
+    pix.row(1)=elshape(1)/2;
     pix.row(0)=xpix;
     ftdc->toWorldMany(world, pix, failures);
     xpix=world.row(0);
@@ -394,8 +450,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     radius.resize(xpix.nelements());
     convertArray(radius, xpix);
 
-
-  }
+  } 
   void Feather::getRadialCut(Vector<Float>& radialAmp, ImageInterface<Complex>& ftimage) {
     CoordinateSystem ftCoords(ftimage.coordinates());
     //////////////////////

@@ -65,13 +65,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     void getFTCutSDImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, const Bool radial=False );
     void getFTCutIntImage(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
     //Get the 1-D slices of the feathering function that will be applied on SD and INTerf data
-    void getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
-    void getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
+    void getFeatherSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
+    void getFeatherINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
     //Get 1-D slices of the feathered data ...
     //note for SD  this
     //should return the same values as getFTCutSDImage
-    void getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
-    void getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp);
+    void getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
+    void getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
     //write the feathered image to disk
     Bool saveFeatheredImage(const String& imagename);
     ///////Helper function to get XY slices and radial cuts for any generic image
@@ -107,6 +107,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     static void getLowBeam(const ImageInterface<Float>& low0, const String& lowPSF, const Bool useDefaultPB, const String& vpTableStr, GaussianBeam& lBeam);
     void calcCWeightImage();
     void applyFeather();
+    static void getRadialUVval(const Int npix, const IPosition& imshape, const CoordinateSystem& csys, Vector<Float>& radius);
     GaussianBeam hBeam_p;
     GaussianBeam lBeam_p;
     GaussianBeam lBeamOrig_p;
