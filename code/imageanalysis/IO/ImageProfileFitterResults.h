@@ -85,11 +85,6 @@ public:
     inline void setLogResults(const Bool logResults) { _logResults = logResults; }
 
     // <group>
-    // Solution images. Only written if _multifit is True
-    // model image name
-    inline void setModel(const String& model) { _model = model; }
-    // residual image name
-    inline void setResidual(const String& residual) { _residual = residual; }
     // gaussian amplitude image name
     inline void setAmpName(const String& s) { _ampName = s; }
     // gaussian amplitude error image name
@@ -152,13 +147,12 @@ private:
     
     const static String _class;
     Bool _logResults, _multiFit;
-   	String _residual, _model, _regionString, _xUnit,
-		_centerName, _centerErrName, _fwhmName,
+   	String _xUnit, _centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
 		_integralName, _integralErrName, _plpName, _plpErrName, _sigmaName,
 		_summaryHeader;
     uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
-		_nPLPCoeffs;/* _minGoodPoints,*/
+		_nPLPCoeffs;
     const Array<ImageFit1D<Float> > * const  _fitters;
 	SpectralList _nonPolyEstimates;
  // subimage contains the region of the original image
@@ -175,7 +169,6 @@ private:
    	const CoordinateSystem _csysIm;
 
     void _setResults();
-    String _radToRa(const Float ras) const;
 
     void _resultsToLog();
 

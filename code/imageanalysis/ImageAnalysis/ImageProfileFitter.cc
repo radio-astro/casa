@@ -1,5 +1,4 @@
 
-//# tSubImage.cc: Test program for class SubImage
 //# Copyright (C) 1998,1999,2000,2001,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -30,7 +29,7 @@
 
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Quanta/MVTime.h>
-#include <casa/Utilities/Precision.h>
+// #include <casa/Utilities/Precision.h>
 #include <imageanalysis/ImageAnalysis/ImageAnalysis.h>
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/PagedImage.h>
@@ -45,16 +44,6 @@
 namespace casa {
 
 const String ImageProfileFitter::_class = "ImageProfileFitter";
-/*
-const String ImageProfileFitter::_CONVERGED = "converged";
-const String ImageProfileFitter::_SUCCEEDED = "succeeded";
-const String ImageProfileFitter::_VALID = "valid";
-
-
-const uInt ImageProfileFitter::_nOthers = 2;
-const uInt ImageProfileFitter::_gsPlane = 0;
-const uInt ImageProfileFitter::_lsPlane = 1;
-*/
 
 ImageProfileFitter::ImageProfileFitter(
 	const ImageInterface<Float> *const &image, const String& region,
@@ -77,7 +66,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_minGoodPoints(0), _results(Record()),
 	_nonPolyEstimates(SpectralList()), _goodAmpRange(Vector<Double>(0)),
 	_goodCenterRange(Vector<Double>(0)), _goodFWHMRange(Vector<Double>(0)),
-	_sigma(0) {
+	_sigma(0), _abscissaDivisor(1.0) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
     if (! estimatesFilename.empty()) {
     	if (spectralList.nelements() > 0) {
@@ -112,6 +101,10 @@ ImageProfileFitter::ImageProfileFitter(
 				_nLorentzSinglets++;
 				break;
 			case SpectralElement::POWERLOGPOLY:
+				if (_nonPolyEstimates.nelements() > 1 || _polyOrder > 0) {
+					*_getLog() << "A power logarithmic polynomial cannot be fit simultaneously with other functions"
+						<< LogIO::EXCEPTION;
+				}
 				if (havePLP) {
 					*_getLog() << "Fitting of multiple power logarithmic polynomials is not supported."
 						<< LogIO::EXCEPTION;
@@ -153,7 +146,6 @@ ImageProfileFitter::ImageProfileFitter(
     	*_getLog() << LogIO::WARN << "Estimates specified so ignoring input value of ngauss"
     		<<LogIO::POST;
     }
-
     _construct();
     _finishConstruction();
 }
@@ -237,22 +229,13 @@ Record ImageProfileFitter::fit() {
 			<< LogIO::EXCEPTION;
 	}
 
-	/*
-	_setResults();
-    *_getLog() << logOrigin;
-    if (_logResults || ! _getLogFile() != 0) {
-    	_resultsToLog();
-    }
-    */
 	ImageProfileFitterResults resultHandler(
-		_getLog(), _getImage()->coordinates(),
-		&_fitters, _nonPolyEstimates,
-		&_subImage, _polyOrder, _fitAxis, _nGaussSinglets, _nGaussMultiplets,
-		_nLorentzSinglets, _nPLPCoeffs, _logResults, _multiFit, _getLogFile(),
-		_xUnit, _summaryHeader()
+		_getLog(), _getImage()->coordinates(), &_fitters,
+		_nonPolyEstimates, &_subImage, _polyOrder,
+		_fitAxis, _nGaussSinglets, _nGaussMultiplets,
+		_nLorentzSinglets, _nPLPCoeffs, _logResults,
+		_multiFit, _getLogFile(), _xUnit, _summaryHeader()
 	);
-	resultHandler.setModel(_model);
-	resultHandler.setResidual(_residual);
 	resultHandler.setAmpName(_ampName);
 	resultHandler.setAmpErrName(_ampErrName);
 	resultHandler.setCenterName(_centerName);
@@ -392,6 +375,16 @@ Record ImageProfileFitter::getResults() const {
 	return _results;
 }
 
+void ImageProfileFitter::setAbscissaDivisor(Double d) {
+	if (_nPLPCoeffs == 0) {
+		*_getLog() << LogIO::WARN << "This object is not configured to fit a power logarithmic polynomial "
+			<< "and so setting the abscissa divisor will have no effect in the fitting process."
+			<< LogIO::POST;
+	}
+	_abscissaDivisor = d;
+}
+
+
 void ImageProfileFitter::_getOutputStruct(
     vector<OutputDestinationChecker::OutputStruct>& outputs
 ) {
@@ -420,10 +413,10 @@ void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
 		_polyOrder < 0
 		&& (
 			_nGaussSinglets + _nGaussMultiplets
-			+ _nLorentzSinglets
+			+ _nLorentzSinglets + _nPLPCoeffs
 		) == 0
 	) {
-		*_getLog() << "Number of gaussians is 0 and polynomial order is less than zero. "
+		*_getLog() << "Number of non-polynomials is 0 and polynomial order is less than zero. "
 			<< "According to these inputs there is nothing to fit."
 			<< LogIO::EXCEPTION;
 	}
@@ -611,13 +604,17 @@ void ImageProfileFitter::_fitProfiles(
 	);
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
+	String abscissaUnits = _nPLPCoeffs > 0 ? "native" : "pix";
 	if (
 		! ImageFit1D<Float>::setAbcissaState(
-			errMsg, abcissaType, csys, "pix", doppler, _fitAxis
+			errMsg, abcissaType, csys, abscissaUnits, doppler, _fitAxis
 		)
 	) {
 		*_getLog() << errMsg << LogIO::EXCEPTION;
 	}
+
+
+
 	IPosition inTileShape = _subImage.niceCursorShape();
 	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
@@ -634,8 +631,18 @@ void ImageProfileFitter::_fitProfiles(
 	SpectralList newEstimates = _nonPolyEstimates;
 
 	ImageFit1D<Float> fitter = (_sigma.get() == 0)
-				? ImageFit1D<Float>(_subImage, _fitAxis)
-				: ImageFit1D<Float>(_subImage, *_sigma, _fitAxis);
+		? ImageFit1D<Float>(_subImage, _fitAxis)
+		: ImageFit1D<Float>(_subImage, *_sigma, _fitAxis);
+	Double *divisorPtr = _nPLPCoeffs > 0 && _abscissaDivisor != 1 ? &_abscissaDivisor : 0;
+	Bool isSpectral = _fitAxis == csys.spectralAxisNumber();
+
+	// calculate the abscissa values only once if they will not change
+	// with position
+	Vector<Double> abscissaValues = isSpectral
+		? fitter.makeAbscissa(
+			abcissaType, True, divisorPtr
+		) : Vector<Double>(0);
+	Bool abscissaSet = abscissaValues.size() > 0;
 	std::auto_ptr<PolynomialSpectralElement> polyEl(0);
 	if (_polyOrder >= 0) {
 		polyEl.reset(new PolynomialSpectralElement(_polyOrder));
@@ -645,6 +652,7 @@ void ImageProfileFitter::_fitProfiles(
 	}
 	uInt nOrigComps = newEstimates.nelements();
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
+
 
 	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
 		if (count % 1000 == 0 && count > 0) {
@@ -666,8 +674,10 @@ void ImageProfileFitter::_fitProfiles(
 			}
 		}
 		fitter.clearList();
-
-		if (! fitter.setData (curPos, abcissaType, True)) {
+		if (abscissaSet) {
+			fitter.setAbscissa(abscissaValues);
+		}
+		if (! fitter.setData (curPos, abcissaType, True, divisorPtr)) {
 			*_getLog() << "Unable to set data" << LogIO::EXCEPTION;
 		}
 		if (_nonPolyEstimates.nelements() == 0) {

@@ -159,10 +159,14 @@ public:
     // abcissa values is controlled by <src>AbcissaType</src> and
     // <src>doAbs</src> (absolute coordinates).  The CoordinateSystem in
     // the image is used to convert from pixels to world values.
+    // If <src>type</src>=IN_NATIVE and <src>abscissaDivisor</src> is not null,
+    // the native abscissa values will be divided by the value pointed to by
+    // <src>abscissaDivisor</src>. This mitigates having very large or very small
+    // abscissa values when fitting.
     // <group>
     Bool setData (
     	const IPosition& pos, const ImageFit1D<T>::AbcissaType type,
-        const Bool doAbs=True
+        const Bool doAbs=True, const Double * const &abscissaDivisor=0
     );
     Bool setData (
     	const ImageRegion& region, const ImageFit1D<T>::AbcissaType type,
@@ -253,6 +257,20 @@ public:
     // called invalidate()
     Bool isValid() const;
 
+    // Set the abscissa values prior to running setData. If this is done, then
+    // the abscissa values will not be recomputed when setData is called.
+    // This can imporove performance if, for example, you are looping over several fitters for
+    // which you know the abscissa values do not change.
+    void setAbscissa(const Vector<Double>& x) { _x.assign(x); }
+
+    // make the abscissa values, <src>x</src>. If <src>type</src>=IN_NATIVE
+    // and <src>abscissaDivisor is not null, then divide the native values
+    // by the value pointed to by <src>abscissaDivisor</src> in making the abscissa
+    // values.
+    Vector<Double> makeAbscissa (
+		   ImageFit1D<T>::AbcissaType type,
+		   Bool doAbs, const Double * const &abscissaDivisor
+   );
 private:
    std::auto_ptr<ImageInterface<T> > itsImagePtr;
    std::auto_ptr<ImageInterface<T> > itsWeightPtr;
@@ -266,12 +284,13 @@ private:
    CoordinateSystem itsCS;
    mutable String itsError;                // Error message
    Bool _converged, _success, _isValid;
+   Vector<Double> _x;
 // Functions
    
    void check() const;
    void checkType() const;
    void copy (const ImageFit1D<T>& other);
-   Bool makeAbcissa (Vector<Double>& x, ImageFit1D<T>::AbcissaType type, Bool doAbs);
+
    void setWeightsImage (const ImageInterface<T>& im);
 
    // reset the fitter, for example if we've done a fit and want to move

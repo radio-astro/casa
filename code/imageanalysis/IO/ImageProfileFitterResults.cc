@@ -690,23 +690,6 @@ Double ImageProfileFitterResults::_centerWorld(
 	}
 }
 
-String ImageProfileFitterResults::_radToRa(Float ras) const {
-	Int h, m;
-	Float rah = ras * 12 / C::pi;
-	h = (int)floor(rah);
-	Float ram = (rah - h) * 60;
-	m = (int)floor(ram);
-	ras = (ram - m) * 60;
-	ras = (int)(1000 * ras) / 1000.;
-	String raStr = (h < 10) ? "0" : "";
-	raStr.append(String::toString(h)).append(String(":"))
-        .append(String((m < 10) ? "0" : ""))
-        .append(String::toString(m)).append(String(":")) 
-        .append(String((ras < 10) ? "0" : ""))
-        .append(String::toString(ras));
-	return raStr;
-}
-
 void ImageProfileFitterResults::_resultsToLog() {
 	if (! _logResults && _logfile.get() == 0) {
 		return;

@@ -183,6 +183,8 @@ public:
     Double getWorldValue( double pixelVal, const IPosition& imPos, const String& units,
         bool velocity, bool wavelength) const;
 
+    void setAbscissaDivisor(Double d);
+
 protected:
 
     inline CasacRegionManager::StokesControl _getStokesControl() const {
@@ -211,15 +213,17 @@ private:
 	SpectralList _nonPolyEstimates;
 	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
 	Matrix<String> _worldCoords;
-	//vector<axisType> _axisTypes;
 
 	std::auto_ptr<TempImage<Float> > _sigma;
+	Double _abscissaDivisor;
 
 	const static String _class;
 
+	/*
 	const static uInt _nOthers;
 	const static uInt _gsPlane;
 	const static uInt _lsPlane;
+	*/
 
     void _getOutputStruct(
         vector<OutputDestinationChecker::OutputStruct>& outputs
