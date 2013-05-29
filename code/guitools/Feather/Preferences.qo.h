@@ -38,7 +38,6 @@ public:
     const static QString ORGANIZATION;
     const static QString APPLICATION;
     Preferences(QWidget *parent = 0);
-    bool isDisplayOriginalFunctions() const;
     bool isDisplayOutputFunctions() const;
     bool isDisplayLegend() const;
     bool isDisplayOutputScatterPlot() const;
@@ -66,7 +65,6 @@ private:
 	void reset();
 
 	const static QString LINE_THICKNESS;
-	const static QString DISPLAY_ORIGINAL_FUNCTIONS;
 	const static QString DISPLAY_OUTPUT_FUNCTIONS;
 	const static QString DISPLAY_LEGEND;
 	const static QString DISPLAY_OUTPUT_SCATTERPLOT;
@@ -80,7 +78,6 @@ private:
     Ui::PreferencesClass ui;
     int lineThickness;
     int dotSize;
-    bool displayOriginalFunctions;
     bool displayOutputFunctions;
     bool displayOutputScatterPlot;
     bool displayYPlots;
@@ -89,8 +86,6 @@ private:
     bool logAmplitude;
     bool logUV;
     bool xAxisUV;
-    const QString X_AXIS_UV;
-    const QString X_AXIS_RADIAL;
 };
 
 }

@@ -24,6 +24,7 @@
 //#
 #include "FeatherMain.qo.h"
 #include <guitools/Feather/PlotHolder.qo.h>
+#include <guitools/Feather/FeatherDataType.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageUtilities.h>
 #include <casa/Utilities/PtrHolder.h>
@@ -62,6 +63,9 @@ FeatherMain::FeatherMain(QWidget *parent)
       thread(NULL), plotHolder(NULL), progressMeter(this), logger(LogOrigin("CASA", "Feather")){
 
 	ui.setupUi(this);
+	ui.outputLabel->setText("");
+	ui.planeMaxLabel->setText("");
+	ui.planeLineEdit->setText( "0");
 
 	plotHolder = new PlotHolder( this );
 	QHBoxLayout* layout = new QHBoxLayout();
@@ -69,6 +73,23 @@ FeatherMain::FeatherMain(QWidget *parent)
 	ui.plotHolderWidget->setLayout( layout );
 	connect( plotHolder, SIGNAL(dishDiameterChangedX(double)), this, SLOT(dishDiameterXChanged(double)));
 	connect( plotHolder, SIGNAL(dishDiameterChangedY(double)), this, SLOT(dishDiameterYChanged(double)));
+
+	//Band Pass Filter
+	ui.lowBandPassFilterCombo->addItem( "None");
+
+	//Plane initialization
+	QButtonGroup* bGroup = new QButtonGroup( this );
+	bGroup->addButton( ui.singlePlaneRadio );
+	bGroup->addButton( ui.averagedPlaneRadio );
+	ui.singlePlaneRadio->setChecked( true );
+	connect( ui.singlePlaneRadio, SIGNAL(clicked()), this, SLOT(planeModeChanged()) );
+	connect( ui.averagedPlaneRadio, SIGNAL(clicked()), this, SLOT(planeModeChanged()) );
+	planeModeChanged();
+	QIntValidator* planeValidator = new QIntValidator( 0, std::numeric_limits<int>::max(),this );
+	ui.planeLineEdit->setValidator( planeValidator );
+	QPalette palette = ui.planeMaxLabel->palette();
+	palette.setColor(QPalette::Foreground, Qt::red );
+	ui.planeMaxLabel->setPalette( palette );
 
 	progressMeter.setWindowTitle( "Feather");
 	progressMeter.setLabelText( "Feathering Images...");
@@ -157,7 +178,10 @@ void FeatherMain::dishDiameterYChanged( const QString& yDiameter ){
 	plotHolder->dishDiameterYChanged( yDiamVal );
 }
 
-
+void FeatherMain::planeModeChanged(){
+	bool planeMode = ui.singlePlaneRadio->isChecked();
+	ui.planeLineEdit->setEnabled( planeMode );
+}
 
 void FeatherMain::preferencesChanged(){
 
@@ -173,11 +197,22 @@ void FeatherMain::preferencesChanged(){
 	plotHolder->setLegendVisibility( legendVisible );
 
 	plotHolder->setDisplayScatterPlot( preferences.isDisplayOutputScatterPlot());
-	plotHolder->setDisplayOriginalSlice( preferences.isDisplayOriginalFunctions());
 	plotHolder->setDisplayOutputSlice( preferences.isDisplayOutputFunctions());
 	plotHolder->setDisplayYGraphs( preferences.isDisplayY() );
 	plotHolder->setDisplayXGraphs( preferences.isDisplayX() );
-	plotHolder->setXAxisUV( preferences.isXAxisUV());
+
+	//We only need one dish diameter box if we are plotting in
+	//radial distance.
+	bool xAxisUV = preferences.isXAxisUV();
+	if ( xAxisUV ){
+		ui.yGroupBox->show();
+		ui.xGroupBox->setTitle( "U");
+	}
+	else {
+		ui.yGroupBox->hide();
+		ui.xGroupBox->setTitle( "Distance");
+	}
+	plotHolder->setXAxisUV( xAxisUV );
 
 	plotHolder->setLogScale( preferences.isLogUV(), preferences.isLogAmplitude() );
 	plotHolder->refreshPlots();
@@ -186,12 +221,12 @@ void FeatherMain::preferencesChanged(){
 }
 
 void FeatherMain::functionColorsChanged(){
-	QMap<PreferencesColor::FunctionColor,QColor> colorMap = preferencesColor.getFunctionColors();
-	QColor scatterPlotColor = preferencesColor.getScatterPlotColor();
-	QColor dishDiameterLineColor = preferencesColor.getDishDiameterLineColor();
-	QColor zoomRectColor = preferencesColor.getZoomRectColor();
-	QColor sumColor = preferencesColor.getSumColor();
-	plotHolder->setColors( colorMap, scatterPlotColor, dishDiameterLineColor, zoomRectColor, sumColor );
+	QMap<PreferencesColor::CurveType,CurveDisplay> colorMap = preferencesColor.getFunctionColors();
+	plotHolder->setColors( colorMap );
+
+	//Enable/disable the toggle button for the dish diameter
+	bool dishDiameterEnabled = colorMap[FeatherCurveType::DISH_DIAMETER].isDisplayed();
+	ui.actionDiameterSelector->setEnabled( dishDiameterEnabled );
 }
 
 QString FeatherMain::getFileName( QString path ) const {
@@ -201,6 +236,30 @@ QString FeatherMain::getFileName( QString path ) const {
 		fileName = fileName.mid(slashIndex + 1);
 	}
 	return fileName;
+}
+
+int FeatherMain::getPlaneCount() const {
+	int planeCount = 1;
+	if ( highResImage != NULL ){
+		IPosition imgShape = highResImage->shape();
+		CoordinateSystem coordinateSystem = highResImage->coordinates();
+		if ( coordinateSystem.hasSpectralAxis()){
+			int spectralIndex = coordinateSystem.spectralAxisNumber();
+			planeCount = imgShape(spectralIndex);
+		}
+	}
+	return planeCount;
+}
+
+void FeatherMain::updatePlaneInformation(){
+	int planeCount = getPlaneCount();
+	ui.planeMaxLabel->setText( "<"+QString::number( planeCount ) );
+	QString currentPlaneText = ui.planeLineEdit->text();
+	bool valid = false;
+	int currentPlane = currentPlaneText.toInt(&valid);
+	if ( currentPlane >= planeCount || !valid ){
+		ui.planeLineEdit->setText( "0");
+	}
 }
 
 void FeatherMain::imageFilesChanged(){
@@ -215,13 +274,23 @@ void FeatherMain::imageFilesChanged(){
 	ui.lowResolutionLabel->setText( getFileName(lowResImagePath) );
 	ui.highResolutionLabel->setText( getFileName( highResImagePath ));
 	ui.outputLabel->setText( getFileName( outputImagePath ));
+
+	//Dirty image
 	bool imagesOK = loadImages();
-	ui.featherButton->setEnabled( imagesOK );
-	if ( !imagesOK ){
-		QString msg( "Please check the images. They may not be appropriate to use with feather.");
-		QMessageBox::warning( this, "Image Processing Problem", msg );
+	bool dirtyImageLoaded = false;
+	if ( dirtyImage != NULL ){
+		dirtyImageLoaded = true;
 	}
-	else {
+	preferencesColor.setDirtyEnabled( dirtyImageLoaded );
+
+	//Low Band Pass Filter
+	ui.lowBandPassFilterCombo->addItem( "None");
+
+	//Feathering
+	ui.featherButton->setEnabled( imagesOK );
+	if ( imagesOK ){
+		updatePlaneInformation();
+
 		clearPlots();
 
 		//Load the original data into the plot
@@ -271,7 +340,9 @@ void FeatherMain::openPreferences(){
 }
 
 void FeatherMain::openPreferencesColor(){
-	preferencesColor.exec();
+	//We call show rather than exec here so that users can keep this one up
+	//and turn on/off curves
+	preferencesColor.show();
 }
 
 void FeatherMain::clearImage( ImageInterface<Float>*& image ){
@@ -319,14 +390,16 @@ void FeatherMain::addOriginalDataToPlots(){
 	Vector<Float> sDyOrig;
 	Vector<Float> sDyAmpOrig;
 	featherWorker.getFTCutSDImage( sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig );
-	plotHolder->setSingleDishDataOriginal(sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig );
+	plotHolder->setData(sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig, FeatherDataType::LOW );
+	//plotHolder->setSingleDishDataOriginal(sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig );
 
 	Vector<Float> intxOrig;
 	Vector<Float> intxAmpOrig;
 	Vector<Float> intyOrig;
 	Vector<Float> intyAmpOrig;
 	featherWorker.getFTCutIntImage(intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
-	plotHolder->setInterferometerDataOriginal( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
+	plotHolder->setData( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig, FeatherDataType::HIGH );
+	//plotHolder->setInterferometerDataOriginal( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
 
 }
 
@@ -387,13 +460,17 @@ void FeatherMain::featheringDone(){
 
 	//Put the data into the graphs.
 	plotHolder->clearPlots();
-	plotHolder->setSingleDishWeight( thread->sDxWeight, thread->sDxAmpWeight, thread->sDyWeight, thread->sDyAmpWeight );
+	/*plotHolder->setSingleDishWeight( thread->sDxWeight, thread->sDxAmpWeight, thread->sDyWeight, thread->sDyAmpWeight );
 	plotHolder->setInterferometerWeight( thread->intxWeight, thread->intxAmpWeight, thread->intyWeight, thread->intyAmpWeight );
 	plotHolder->setSingleDishData( thread->sDxCut, thread->sDxAmpCut, thread->sDyCut, thread->sDyAmpCut );
-	plotHolder->setInterferometerData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut );
-	if ( dirtyImagePath.trimmed().length() > 0 ){
+	plotHolder->setInterferometerData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut );*/
+	plotHolder->setData( thread->sDxWeight, thread->sDxAmpWeight, thread->sDyWeight, thread->sDyAmpWeight, FeatherDataType::WEIGHT_SD );
+	plotHolder->setData( thread->intxWeight, thread->intxAmpWeight, thread->intyWeight, thread->intyAmpWeight, FeatherDataType::WEIGHT_INT );
+	plotHolder->setData( thread->sDxCut, thread->sDxAmpCut, thread->sDyCut, thread->sDyAmpCut, FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED );
+	plotHolder->setData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut, FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED );
+	/*if ( dirtyImagePath.trimmed().length() > 0 ){
 		plotHolder->setDirtyData( thread->intxDirty, thread->intxAmpDirty, thread->intyDirty, thread->intyAmpDirty );
-	}
+	}*/
 
 	//In case we are zoomed on the original data, this will reload it, unzoomed.
 	addOriginalDataToPlots();
@@ -447,6 +524,7 @@ pair<float,float> FeatherMain::populateDishDiameters( Bool& validDiameters ) {
 bool FeatherMain::generateInputImage( ){
 
 	bool success = true;
+
 	try {
 		logger << LogIO::NORMAL
 				<< "\nFeathering together high and low resolution images.\n"
@@ -470,12 +548,8 @@ bool FeatherMain::generateInputImage( ){
 		}
 
 		//Decide if we are going to be supporting a dirty image or not.
-		bool dirtyImageSupport = false;
-		if ( dirtyImagePath.length() > 0 ){
-			dirtyImageSupport = true;
-		}
-		if ( dirtyImagePath.length() > 0  ){
-			String dirtyImageLocation( dirtyImagePath.trimmed().length() > 0 );
+		if ( dirtyImagePath.length() > 0  && success ){
+			String dirtyImageLocation( dirtyImagePath.trimmed().toStdString() );
 			PagedImage<Float> dirtyImageTemp(dirtyImageLocation);
 			if(dirtyImageTemp.shape().nelements() != lowResImageTemp.shape().nelements()){
 				String msg( "Dirty and low resolution images do not have the same number of axes.");
@@ -484,16 +558,19 @@ bool FeatherMain::generateInputImage( ){
 				success = false;
 			}
 			else {
-				dirtyImage = new PagedImage<Float>(lowResLocation);
+				dirtyImage = new PagedImage<Float>(dirtyImageLocation);
 			}
 		}
-
 	}
 	catch (AipsError& x) {
 		String msg = x.getMesg();
+		QMessageBox::warning( this, "Warning!", "There was a problem loading the image(s).");
 		logger << LogIO::SEVERE << "Caught exception: " << msg<< LogIO::EXCEPTION;
 		success = false;;
 	}
+
+
+
 	return success;
 }
 

@@ -1012,6 +1012,15 @@ public:
     }
     return s;
   }
+
+  unsigned int hash() {
+    string s = str();
+    unsigned int hash = 0;
+    for(size_t i = 0; i < s.size(); ++i) 
+      hash = 65599 * hash + s[i];
+    return hash ^ (hash >> 16);
+  }
+
   /** Methods using bits and associated with enum_map */
   int id(){
     int id;

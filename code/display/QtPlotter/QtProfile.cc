@@ -614,6 +614,13 @@ namespace casa {
 
 		//YUnits
 		yUnit = QString(img->units().getName().chars());
+		//Images created with immoments seem to have units of the form
+		//Jy/beam.km/s (CAS-5216).  We have to strip the ".km/s" in order
+		//to have units recognized by the profiler.
+		int periodIndex = yUnit.indexOf( ".");
+		if ( periodIndex > 0 ){
+			yUnit = yUnit.left( periodIndex);
+		}
 		yUnitPrefix = "";
 		adjustPlotUnits();
 		setPixelCanvasYUnits( yUnitPrefix, yUnit );
@@ -2454,9 +2461,13 @@ namespace casa {
 	void QtProfile::restrictTopAxisOptions( bool restrictOptions, bool allowFrequency, bool allowVelocity ){
 		topAxisCType->clear();
 		for ( int i = 0; i < xUnitsList.size(); i++ ){
+			int frequencyIndex = xUnitsList[i].indexOf( FREQUENCY);
+			int radioVelocityIndex = xUnitsList[i].indexOf( RADIO_VELOCITY);
+			int wavelengthIndex = xUnitsList[i].indexOf( "wavelength");
 			if ( !restrictOptions ||
-				(allowFrequency && xUnitsList[i].indexOf( FREQUENCY) >=0) ||
-				(allowVelocity && xUnitsList[i].indexOf( RADIO_VELOCITY) >= 0 ) ||
+				(allowFrequency &&  frequencyIndex>=0) ||
+				(allowVelocity && radioVelocityIndex >= 0 ) ||
+				(allowFrequency && wavelengthIndex==0) ||
 				xUnitsList[i].indexOf( CHANNEL) >= 0){
 				topAxisCType->addItem( xUnitsList[i]);
 			}

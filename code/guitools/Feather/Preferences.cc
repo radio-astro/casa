@@ -31,7 +31,6 @@ const QString Preferences::ORGANIZATION = "NRAO/CASA";
 const QString Preferences::APPLICATION = "Feather";
 const QString Preferences::LINE_THICKNESS = "Plot Line Thickness";
 const QString Preferences::DOT_SIZE = "Dot Size";
-const QString Preferences::DISPLAY_ORIGINAL_FUNCTIONS = "Display Original Functions";
 const QString Preferences::DISPLAY_LEGEND = "Display Legend";
 const QString Preferences::DISPLAY_OUTPUT_FUNCTIONS = "Display Output Functions";
 const QString Preferences::DISPLAY_OUTPUT_SCATTERPLOT = "Display Output Scatter Plot";
@@ -45,14 +44,14 @@ Preferences::Preferences(QWidget *parent)
     : QDialog(parent),
       lineThickness( 1 ),
       dotSize( 2 ),
-      displayOriginalFunctions(false),
       displayOutputFunctions( true ),
       displayOutputScatterPlot( false ),
       displayYPlots( true ),
       displayXPlots( true ),
       displayLegend(true),
       logAmplitude(true),
-      logUV(false), X_AXIS_UV( "U/V"), X_AXIS_RADIAL( "Azimuthaly Averaged Radial Values"){
+      logUV(false),
+      xAxisUV(true){
 
 	ui.setupUi(this);
 	setWindowTitle( "Feather Plot Display");
@@ -62,21 +61,20 @@ Preferences::Preferences(QWidget *parent)
 	ui.dotSizeSpinBox->setMinimum( 1 );
 	ui.dotSizeSpinBox->setMaximum( 10 );
 
+	//xAxis Units
+	QButtonGroup* xAxisGroup = new QButtonGroup( this );
+	xAxisGroup->addButton( ui.axisUVRadio );
+	xAxisGroup->addButton( ui.axisRadialRadio );
+	connect( ui.axisUVRadio, SIGNAL(clicked()), this, SLOT( xAxisChanged()));
+	connect( ui.axisRadialRadio, SIGNAL(clicked()), this, SLOT( xAxisChanged()));
+
 	initializeCustomSettings();
 	reset();
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(preferencesAccepted()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(preferencesRejected()));
 
-	//xAxis Units
-	ui.xAxisComboBox->addItem( X_AXIS_UV );
-	ui.xAxisComboBox->addItem( X_AXIS_RADIAL );
-	connect( ui.xAxisComboBox, SIGNAL(currentIndexChanged(int)),
-			this, SLOT( xAxisChanged()));
 
-	//ui.outputScatterCheckBox->setVisible( false );
-	//ui.markerLabel->setVisible( false );
-	//ui.dotSizeSpinBox->setVisible( false );
 }
 
 void Preferences::initializeCustomSettings(){
@@ -85,9 +83,7 @@ void Preferences::initializeCustomSettings(){
 	QSettings settings( ORGANIZATION, APPLICATION );
 	lineThickness = settings.value( LINE_THICKNESS, lineThickness).toInt();
 	dotSize = settings.value( DOT_SIZE, dotSize).toInt();
-	displayOriginalFunctions = settings.value( DISPLAY_ORIGINAL_FUNCTIONS, displayOriginalFunctions).toBool();
 	displayLegend = settings.value( DISPLAY_LEGEND, displayLegend ).toBool();
-	displayOutputFunctions = settings.value( DISPLAY_OUTPUT_FUNCTIONS, displayOutputFunctions ).toBool();
 	displayOutputScatterPlot = settings.value( DISPLAY_OUTPUT_SCATTERPLOT, displayOutputScatterPlot).toBool();
 	displayYPlots = settings.value( DISPLAY_Y_PLOTS, displayYPlots ).toBool();
 	displayXPlots = settings.value( DISPLAY_X_PLOTS, displayXPlots ).toBool();
@@ -97,14 +93,14 @@ void Preferences::initializeCustomSettings(){
 }
 
 void Preferences::xAxisChanged(){
-	QString xAxisMode = ui.xAxisComboBox->currentText();
 	bool uvXAxis = false;
-	if ( xAxisMode == X_AXIS_UV ){
+	if ( ui.axisUVRadio->isChecked() ){
 		uvXAxis = true;
 	}
 	ui.xPlotCheckBox->setEnabled(uvXAxis);
 	ui.yPlotCheckBox->setEnabled(uvXAxis);
 }
+
 
 bool Preferences::isLogAmplitude() const {
 	return logAmplitude;
@@ -117,9 +113,7 @@ bool Preferences::isLogUV() const {
 bool Preferences::isDisplayOutputFunctions() const {
 	return displayOutputFunctions;
 }
-bool Preferences::isDisplayOriginalFunctions() const {
-	return displayOriginalFunctions;
-}
+
 
 bool Preferences::isDisplayLegend() const {
 	return displayLegend;
@@ -163,7 +157,6 @@ void Preferences::preferencesRejected(){
 void Preferences::reset(){
 	ui.lineThicknessSpinBox->setValue( lineThickness );
 	ui.dotSizeSpinBox->setValue( dotSize );
-	ui.originalCheckBox->setChecked( displayOriginalFunctions );
 	ui.legendCheckBox->setChecked( displayLegend );
 	ui.outputCheckBox->setChecked( displayOutputFunctions );
 	ui.outputScatterCheckBox->setChecked( displayOutputScatterPlot );
@@ -172,13 +165,13 @@ void Preferences::reset(){
 	ui.logAmplitudeCheckBox->setChecked( logAmplitude );
 	ui.logUVCheckBox->setChecked( logUV );
 	if ( xAxisUV ){
-		int index = ui.xAxisComboBox->findText( X_AXIS_UV );
-		ui.xAxisComboBox->setCurrentIndex( index );
+		ui.axisUVRadio->setChecked(true);
 	}
 	else {
-		int index = ui.xAxisComboBox->findText( X_AXIS_RADIAL );
-		ui.xAxisComboBox->setCurrentIndex( index );
+		ui.axisRadialRadio->setChecked( true );
 	}
+	//Call axis changed to sync up the enable/disable state
+	xAxisChanged();
 }
 
 void Preferences::persist(){
@@ -189,9 +182,6 @@ void Preferences::persist(){
 
 	dotSize = ui.dotSizeSpinBox->value();
 	settings.setValue( DOT_SIZE, dotSize );
-
-	displayOriginalFunctions = ui.originalCheckBox->isChecked();
-	settings.setValue( DISPLAY_ORIGINAL_FUNCTIONS, displayOriginalFunctions );
 
 	displayLegend = ui.legendCheckBox->isChecked();
 	settings.setValue( DISPLAY_LEGEND, displayLegend );
@@ -214,13 +204,8 @@ void Preferences::persist(){
 	logUV = ui.logUVCheckBox->isChecked();
 	settings.setValue( LOG_UV, logUV );
 
-	QString xAxisType = ui.xAxisComboBox->currentText();
-	if ( xAxisType == X_AXIS_UV ){
-		xAxisUV = true;
-	}
-	else {
-		xAxisUV = false;
-	}
+	xAxisUV = ui.axisUVRadio->isChecked();
+	settings.setValue( DISPLAY_X_AXIS_UV, xAxisUV );
 }
 
 Preferences::~Preferences(){

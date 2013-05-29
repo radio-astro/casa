@@ -22,60 +22,43 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef PREFERENCESCOLOR_QO_H
-#define PREFERENCESCOLOR_QO_H
 
-#include <QtGui/QDialog>
-#include <QMap>
-
-#include <guitools/Feather/PreferencesColor.ui.h>
-#include <guitools/Feather/CurveDisplay.h>
-#include <guitools/Feather/FeatherCurveType.h>
+#include "CurveDisplay.h"
 
 namespace casa {
 
-class PreferencesFunction;
-
-/**
- * Manages the display properties of all the curves that can be shown on
- * the plots.
- */
-
-class PreferencesColor : public QDialog
-{
-    Q_OBJECT
-
-public:
-    PreferencesColor(QWidget *parent = 0);
-    typedef FeatherCurveType::CurveType CurveType;
-
-    QMap<CurveType,CurveDisplay> getFunctionColors() const;
-    void setDirtyEnabled( bool enabled );
-
-    ~PreferencesColor();
-
-signals:
-	void colorsChanged();
-
-private slots:
-	void colorsAccepted();
-	void colorsRejected();
-
-private:
-	void initializeUser();
-	void initializeCurvePreferences();
-	void setCurveDefaults();
-	void addCurvePreferences();
-    void reset();
-    void persist();
-
-    Ui::PreferencesColorClass ui;
-
-    void addCurvePreference( QWidget* holder, CurveType index );
-    QMap<CurveType,PreferencesFunction*> curvePreferences;
-
-
-};
+CurveDisplay::CurveDisplay() {
+	color = Qt::black;
+	visible = false;
 }
 
-#endif // PREFERENCESCOLOR_QO_H
+QColor CurveDisplay::getColor() const {
+	return color;
+}
+
+QString CurveDisplay::getName() const {
+	return curveName;
+}
+
+bool CurveDisplay::isDisplayed() const {
+	return visible;
+}
+
+void CurveDisplay::setColor( QColor newColor ){
+	this->color = newColor;
+}
+
+void CurveDisplay::setVisibility( bool visible ){
+	this->visible = visible;
+}
+
+void CurveDisplay::setName( QString name ){
+	curveName = name;
+}
+CurveDisplay::~CurveDisplay(){
+
+}
+
+
+
+} /* namespace casa */

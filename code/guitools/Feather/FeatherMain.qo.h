@@ -127,7 +127,7 @@ private slots:
 	//the text edits with the new values.
 	void dishDiameterXChanged( double value );
 	void dishDiameterYChanged( double value );
-
+	void planeModeChanged();
 	void functionColorsChanged();
 	void imageFilesChanged();
 	void preferencesChanged();
@@ -137,6 +137,7 @@ private:
 	FeatherMain( const FeatherMain& other );
 	FeatherMain operator=( const FeatherMain& other );
 	QString getFileName( QString path ) const;
+	int getPlaneCount() const;
 	void initializeDishDiameterLimit( QLabel* diamLimitLabel );
 	void clearImage( ImageInterface<Float>*& image );
 	void clearPlots();
@@ -145,6 +146,7 @@ private:
 	pair<float,float> populateDishDiameters(Bool& validDiameters);
 	float populateSDFactor() const;
 	bool loadImages();
+	void updatePlaneInformation();
 	void addOriginalDataToPlots();
 	void resetDishDiameters();
 	void resetDishDiameter( QLineEdit* dishEdit, QLabel* diamLimit,

@@ -22,60 +22,29 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#ifndef PREFERENCESCOLOR_QO_H
-#define PREFERENCESCOLOR_QO_H
 
-#include <QtGui/QDialog>
-#include <QMap>
+#ifndef FEATHERPLOTWIDGETSCATTER_H_
+#define FEATHERPLOTWIDGETSCATTER_H_
 
-#include <guitools/Feather/PreferencesColor.ui.h>
-#include <guitools/Feather/CurveDisplay.h>
-#include <guitools/Feather/FeatherCurveType.h>
+#include <guitools/Feather/FeatherPlotWidget.qo.h>
 
 namespace casa {
 
-class PreferencesFunction;
-
 /**
- * Manages the display properties of all the curves that can be shown on
- * the plots.
+ * A specialization of FeatherPlotWidget for scatter plots.
  */
 
-class PreferencesColor : public QDialog
-{
-    Q_OBJECT
-
+class FeatherPlotWidgetScatter : public FeatherPlotWidget {
 public:
-    PreferencesColor(QWidget *parent = 0);
-    typedef FeatherCurveType::CurveType CurveType;
-
-    QMap<CurveType,CurveDisplay> getFunctionColors() const;
-    void setDirtyEnabled( bool enabled );
-
-    ~PreferencesColor();
-
-signals:
-	void colorsChanged();
-
-private slots:
-	void colorsAccepted();
-	void colorsRejected();
-
-private:
-	void initializeUser();
-	void initializeCurvePreferences();
-	void setCurveDefaults();
-	void addCurvePreferences();
-    void reset();
-    void persist();
-
-    Ui::PreferencesColorClass ui;
-
-    void addCurvePreference( QWidget* holder, CurveType index );
-    QMap<CurveType,PreferencesFunction*> curvePreferences;
-
-
+	FeatherPlotWidgetScatter(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent = 0);
+	virtual ~FeatherPlotWidgetScatter();
+protected:
+	virtual void resetColors();
+	virtual void addZoomNeutralCurves();
+	virtual void zoomRectangleOther( double minX, double maxX, double minY, double maxY );
+	virtual void zoom90Other( double dishPosition, const QVector<double>& singleDishZoomDataX, const QVector<double>& singleDishZoomDataY,
+			const QVector<double>& interferometerZoomDataX, const QVector<double>& interferometerZoomDataY );
 };
-}
 
-#endif // PREFERENCESCOLOR_QO_H
+} /* namespace casa */
+#endif /* FEATHERPLOTWIDGETSCATTER_H_ */

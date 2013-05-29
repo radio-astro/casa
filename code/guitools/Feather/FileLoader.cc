@@ -192,6 +192,18 @@ void FileLoader::filesChanged(){
 	saveOutput = ui.saveOutputCheckBox->isChecked();
 	bool validLowRes = validatePath( ui.lowResolutionLineEdit, "Low resolution image file: ", true, lowResolutionImageFile );
 	bool validHighRes = validatePath( ui.highResolutionLineEdit, "High resolution image file: ", true, highResolutionImageFile  );
+	//The dirty image is optional, we only validate it if there is something
+	//there.
+	bool validDirty = true;
+	QString dirtyPath = ui.dirtyImageLineEdit->text().trimmed();
+	if ( dirtyPath.length() > 0 ){
+		validDirty = validatePath( ui.dirtyImageLineEdit, "Dirty image file: ", true, dirtyImageFile );
+	}
+	else {
+		dirtyImageFile="";
+	}
+	//Output image is also optional.  We only validate it if the user has
+	//checked the box for saving output.
 	bool validOutput = true;
 	if ( saveOutput ){
 		validOutput = validatePath( ui.outputImageDirectoryLineEdit, "Output image directory: ", false, outputDirectory );
@@ -217,7 +229,7 @@ void FileLoader::filesChanged(){
 	}
 
 	//Close the dialog if everything is valid and indicate the change.
-	if ( validLowRes && validHighRes && validOutput ){
+	if ( validLowRes && validHighRes && validOutput && validDirty ){
 		emit imageFilesChanged();
 		this->close();
 	}
