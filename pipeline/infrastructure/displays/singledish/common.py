@@ -268,9 +268,9 @@ def drop_edge(array):
         a = array[echan:-echan,::]
     return a
 
-def draw_beam(axes, r, aspect, x_base, y_base):
-    xy = numpy.array([[r * (math.sin(t * 0.13) + 1.0) * aspect + x_base,
-                       r * (math.cos(t * 0.13) + 1.0) + y_base]
+def draw_beam(axes, r, aspect, x_base, y_base, offset=1.0):
+    xy = numpy.array([[r * (math.sin(t * 0.13) + offset) * aspect + x_base,
+                       r * (math.cos(t * 0.13) + offset) + y_base]
                       for t in xrange(50)])
     pl.gcf().sca(axes)
     pl.plot(xy[:,0], xy[:,1], 'r-')
