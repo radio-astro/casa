@@ -174,14 +174,10 @@ public:
     inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
     // </group>
 
-
-    const static String _CONVERGED;
-    const static String _SUCCEEDED;
-    const static String _VALID;
-
     const Array<ImageFit1D<Float> >& getFitters() const;
     // Returns the center, in pixels of the indexth fit.
     const Vector<Double> getPixelCenter( uint index ) const;
+
     //Converts a pixel value into a world value either in velocity, wavelength, or
     //frequency units.
     Double getWorldValue( double pixelVal, const IPosition& imPos, const String& units,
@@ -198,19 +194,7 @@ protected:
     }
 
 private:
-    enum gaussSols {
-	    AMP, CENTER, FWHM, INTEGRAL, AMPERR, CENTERERR,
-	    FWHMERR, INTEGRALERR, NGSOLMATRICES
-	};
-
-	enum plpSols {
-		PLPSOL, PLPERR, NPLPSOLMATRICES
-	};
-
-	enum axisType {
-		LONGITUDE, LATITUDE, FREQUENCY, POLARIZATION, NAXISTYPES
-	};
-	String _residual, _model, _regionString, _xUnit,
+	String _residual, _model, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
 		_integralName, _integralErrName, _plpName, _plpErrName, _sigmaName;
@@ -227,7 +211,7 @@ private:
 	SpectralList _nonPolyEstimates;
 	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
 	Matrix<String> _worldCoords;
-	vector<axisType> _axisTypes;
+	//vector<axisType> _axisTypes;
 
 	std::auto_ptr<TempImage<Float> > _sigma;
 
@@ -244,74 +228,6 @@ private:
     void _checkNGaussAndPolyOrder() const;
 
     void _finishConstruction();
-
-    void _setResults();
-
-    String _radToRa(const Float ras) const;
-
-    void _resultsToLog();
-
-    String _getTag(const uInt i) const;
-
-    std::auto_ptr<vector<vector<Matrix<Double> > > > _createPCFMatrices() const;
-
-    String _elementToString(
-    	const Double value, const Double error,
-    	const String& unit
-    ) const;
-
-    String _pcfToString(
-    	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
-    	const Vector<Double> world, const IPosition imPos, const Bool showTypeString=True,
-    	const String& indent=""
-    ) const;
-
-    String _gaussianMultipletToString(
-    	const GaussianMultipletSpectralElement& gm,
-    	const CoordinateSystem& csys, const Vector<Double> world,
-    	const IPosition imPos
-    ) const;
-
-    Bool _setAxisTypes();
-
-    String _polynomialToString(
-    	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
-    	const Vector<Double> imPix, const Vector<Double> world
-    ) const;
-
-    void _marshalFitResults(
-    	Array<Bool>& attemptedArr, Array<Bool>& successArr,
-    	Array<Bool>& convergedArr, Array<Bool>& validArr,
-    	Matrix<String>& typeMat, Array<Int>& niterArr,
-    	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Matrix<Double> > > >& pcfMatrices,
-    	vector<Matrix<Double> >& plpMatrices, Bool returnDirection,
-        Vector<String>& directionInfo, Array<Bool>& mask
-    );
-
-    static void _makeSolutionImage(
-    	const String& name, const CoordinateSystem& csys,
-    	const Array<Double>& values, const String& unit,
-    	const Array<Bool>& mask
-    );
-
-    void _insertPCF(
-    	vector<vector<Matrix<Double> > >& pcfMatrices, /* Bool& isSolutionSane,*/
-    	const uInt idx, const PCFSpectralElement& pcf,
-    	const uInt row, const uInt col, const IPosition& pos,
-    	const Double increment/*, const uInt npix*/
-    ) const;
-
-    void _writeImages(
-    	const CoordinateSystem& csys,
-    	const Array<Bool>& mask, const String& yUnit
-    ) const;
-
-    /*
-    // moved from ImageAnalysis
-    void _fitProfile(
-        const Bool fitIt=True
-    );
-    */
 
     // moved from ImageAnalysis
     void _fitallprofiles();
@@ -336,12 +252,6 @@ private:
     	std::auto_ptr<ImageInterface<Float> >& pResid,
         const Bool showProgress=False
     );
-
-    Double _fitAxisIncrement() const;
-
-    Double _centerWorld(
-    	const PCFSpectralElement& solution, const IPosition& imPos
-    ) const;
 
     Bool _inVelocitySpace() const;
 

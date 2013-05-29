@@ -24,6 +24,7 @@
 //#
 #include "SpecFitSettingsWidgetRadio.qo.h"
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
+#include <imageanalysis/IO/ImageProfileFitterResults.h>
 #include <imageanalysis/ImageAnalysis/ImageFit1D.h>
 #include <components/SpectralComponents/PCFSpectralElement.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
@@ -622,14 +623,14 @@ namespace casa {
 			const Record& results = specFitThread->getResults();
 
 			//Decide if we got any valid fits
-			Array<Bool> succeeded = results.asArrayBool(ImageProfileFitter::_SUCCEEDED );
-			Array<Bool> valid = results.asArrayBool( ImageProfileFitter::_VALID );
+			Array<Bool> succeeded = results.asArrayBool(ImageProfileFitterResults::_SUCCEEDED );
+			Array<Bool> valid = results.asArrayBool( ImageProfileFitterResults::_VALID );
 			float progressIncrement = 90.0f / ntrue( succeeded );
 			if ( ntrue( succeeded ) > 0 && ntrue( valid ) ) {
 
 				if ( newData ) {
 					//Tell the user basic information about the fit.
-					Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
+					Array<Bool> converged = results.asArrayBool( ImageProfileFitterResults::_CONVERGED );
 					String msg( "Fit(s) succeeded: "+String::toString(ntrue(succeeded))+"   \n");
 					msg.append( "Fit(s) converged: "+String::toString(ntrue(converged))+"   \n");
 					msg.append( "Fit(s) valid: "+String::toString(ntrue(valid))+"   \n");

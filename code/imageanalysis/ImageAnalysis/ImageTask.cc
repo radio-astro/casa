@@ -54,7 +54,7 @@ ImageTask::ImageTask(
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
 	_logfileSupport(False), _logfileAppend(False),/* _logFD(0),*/
-	_verbosity(NORMAL), _logfile(0) {
+	_verbosity(NORMAL), _logfile() {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
 }
@@ -173,11 +173,11 @@ void ImageTask::setLogfile(const String& lf) {
 }
 
 // const String& ImageTask::_getLogfile() const {
-const LogFile* ImageTask::_getLogFile() const {
+const std::tr1::shared_ptr<LogFile> ImageTask::_getLogFile() const {
 	if (! _logfileSupport) {
 		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
 	}
-	return _logfile.get();
+	return _logfile;
 }
 
 Bool ImageTask::_openLogfile() {
