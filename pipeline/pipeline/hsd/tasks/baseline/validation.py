@@ -472,9 +472,13 @@ class ValidateLineRaster(object):
         #Region = BestRegion
         #category = BestCategory[:]
         Lines = [[book[1], book[0], True] for book in BestCodebook[:Ncluster]]
-        #LOG.debug('Final: Ncluster = %s, Score = %s, Category = %s, CodeBook = %s, Lines = %s' % (Ncluster, BestScore, category, BestCodebook, Lines))
+        LOG.debug('Final: Ncluster = %s, Score = %s, Category = %s, CodeBook = %s, Lines = %s' % (Ncluster, BestScore, category, BestCodebook, Lines))
         # 2010/6/15 Plot the score along the number of the clusters
         LOG.todo('All plots should go into dispalys module')
+        self.cluster_info['cluster_score'] = [ListNcluster, ListScore]
+        self.cluster_info['detected_lines'] = Region2
+        self.cluster_info['cluster_property'] = BestLines
+        self.cluster_info['cluster_scale'] = self.CLUSTER_WHITEN
         #SDP.ShowClusterScore(ListNcluster, ListScore, ShowPlot, FigFileDir, FigFileRoot)
         #SDP.ShowClusterInChannelSpace(Region2, BestLines, self.CLUSTER_WHITEN, ShowPlot, FigFileDir, FigFileRoot)
         LOG.info('Final: Ncluster = %s, Score = %s, Lines = %s' % (Ncluster, BestScore, Lines))
@@ -503,8 +507,6 @@ class ValidateLineRaster(object):
                     GridCluster[category[i]][int((Region[i][3] - x0)/GridSpaceRA)][int((Region[i][4] - y0)/GridSpaceDEC)] += 1.0
                 except IndexError:
                     pass
-        LOG.todo('Plots of clustering analysis should go into display module')
-        #SDP.ShowCluster(GridCluster, [1.5, 0.5], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'detection', ShowPlot, FigFileDir, FigFileRoot)
 
         # 2013/05/29 TN
         # cluster_flag is data for plotting clustering analysis results.
@@ -562,8 +564,6 @@ class ValidateLineRaster(object):
 
             if ((GridCluster[Nc] > self.Questionable)*1).sum() == 0: Lines[Nc][2] = False
             LOG.debug('After:  GridCluster[%s] = %s' % (Nc, GridCluster[Nc]))
-        LOG.todo('Plots of clustering analysis should go into display module')
-        #SDP.ShowCluster(GridCluster, [self.Valid, self.Marginal, self.Questionable], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'validation', ShowPlot, FigFileDir, FigFileRoot)
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('validation', GridCluster, threshold, 10)
@@ -624,8 +624,6 @@ class ValidateLineRaster(object):
                 LOG.debug('Rating:  GridScore[%s][1] = %s' % (Nc, GridScore[1]))
                 GridCluster[Nc] = GridScore[0] / GridScore[1]
             if ((GridCluster[Nc] > self.Questionable)*1).sum() < 0.1: Lines[Nc][2] = False
-        LOG.todo('Plots of clustering analysis should go into display module')
-        #SDP.ShowCluster(GridCluster, [self.Valid, self.Marginal, self.Questionable], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'smoothing', ShowPlot, FigFileDir, FigFileRoot)
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('smoothing', GridCluster, threshold, 100)
@@ -1047,8 +1045,6 @@ class ValidateLineRaster(object):
                         if Original[x][y] > self.Valid: GridCluster[Nc][x][y] = 2.0
                         elif GridCluster[Nc][x][y] > 0.5: GridCluster[Nc][x][y] = 1.0
                         
-        LOG.todo('Plots of clustering analysis should go into display module')
-        #SDP.ShowCluster(GridCluster, [1.5, 0.5, 0.5, 0.5], Lines, Abcissa, x0, y0, GridSpaceRA, GridSpaceDEC, 'regions', ShowPlot, FigFileDir, FigFileRoot)
 
         threshold = [1.5, 0.5, 0.5, 0.5]
         self.__update_cluster_flag('final', GridCluster, threshold, 1000)
