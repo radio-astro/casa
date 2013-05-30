@@ -53,7 +53,7 @@ class SDSpectralImageDisplay(SDImageDisplay):
 
         return plot_list
 
-    def __get_lines(self):
+    def __valid_lines(self):
         reduction_group = self.context.observing_run.reduction_group
         ant_index = [i for i in xrange(len(self.context.observing_run))
                      if self.context.observing_run[i].antenna.name == self.antenna]
@@ -68,15 +68,10 @@ class SDSpectralImageDisplay(SDImageDisplay):
             if g.antenna in ant_index:
                 for ll_p in g.linelist:
                     for ll in ll_p:
-                        if not ll in line_list:
+                        if not ll in line_list and ll[2] is True:
                             line_list.append(ll)
         return line_list
-                
-    def __gen_line_list(self, line_list):
-        for line_window in line_list:
-            if line_window[2] is True:
-                yield line_window
-        
+
     def __plot_channel_map(self):
         colormap = 'color'
         scale_max = False
@@ -89,13 +84,12 @@ class SDSpectralImageDisplay(SDImageDisplay):
 
         # retrieve line list from reduction group
         # key is antenna and spw id
-        line_list = self.__get_lines()
+        line_list = self.__valid_lines()
 
-        # Number of the clusters determined in Process4
-        Ncluster = len(line_list)
         # 2010/6/9 in the case of non-detection of the lines
-        if Ncluster == 0: return plot_list
-
+        if len(line_list) == 0:
+            return plot_list
+            
         # Set data
         Map = numpy.zeros((self.NumChannelMap, (self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
         RMSMap = numpy.zeros(((self.y_max - self.y_min + 1), (self.x_max - self.x_min + 1)), dtype=numpy.float32)
@@ -128,7 +122,7 @@ class SDSpectralImageDisplay(SDImageDisplay):
         # loop over detected lines
         ValidCluster = 0
         #for Nc in range(Ncluster):
-        for line_window in self.__gen_line_list(line_list):            
+        for line_window in line_list:            
             ChanC = int(line_window[0] + 0.5)
             if float(ChanC) == line_window[0]:
                 VelC = self.velocity[ChanC]
