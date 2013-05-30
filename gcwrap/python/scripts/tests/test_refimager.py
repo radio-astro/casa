@@ -3,91 +3,81 @@
 #################################
 
 #### Specify parameters.
-def getparams(testnum=1):
-    
-    global NN,NF
+def getparams(testnum=1,parallelrun=False):
 
-    if(testnum==5): ## 2 image-fields, each with multiple channels, and 2 nodes for the major cycle
-        NN=2
-        allselpars=[ {'vis':'twochan.ms', 'field':'3', 'spw':'4', 'usescratch':True} , \
-                         {'vis':'twochan.ms', 'field':'3', 'spw':'5', 'usescratch':True} ]
+     if(testnum==3): ## 2 image fields, each with multiple channels
 
-        NF=2
-        allimpars=[ {'imagename':'mytest0', 'nchan':5,'imsize':[3,3]} ,\
-                    {'imagename':'mytest1', 'nchan':2,'imsize':[1,1] } ]
-        allgridpars=[ {'ftmachine':'ft'}, {'ftmachine':'ft','modelname':'startingmodel1'} ]
-        alldecpars = [ {'id':0, 'algo':'test'}, {'id':1, 'algo':'test','modelname':'startingmodel1'} ]
-
-    if(testnum==4):  ## 1 image-field, one chan.  2 nodes for the major cycle
-        NN=2
-        allselpars=[ {'vis':'twochan.ms', 'field':'3', 'spw':'4', 'usescratch':True} , \
-                         {'vis':'twochan.ms', 'field':'3', 'spw':'5', 'usescratch':True} ]
-        NF=1
-        allimpars=[ {'imagename':'mytest0', 'nchan':1,'imsize':[3,3]}] 
-        allgridpars=[ {'ftmachine':'ft'} ]
-        alldecpars = [ {'id':0, 'algo':'test'} ]
-    
-    if(testnum==3): ## 2 image fields, each with multiple channels
-        NN=1
-        allselpars=[ {'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True} ]
-        NF=2
-        allimpars=[ {'imagename':'mytest0', 'nchan':5,'imsize':[3,3]} ,\
-                        {'imagename':'mytest1', 'nchan':2,'imsize':[1,1] } ]
-        allgridpars=[ {'ftmachine':'ft'}, {'ftmachine':'ft','modelname':'startingmodel1'} ]
-        alldecpars = [ {'id':0, 'algo':'test'}, {'id':1, 'algo':'test','modelname':'startingmodel1'} ]
+        allselpars={'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True} 
+        #NF=2
+        allimpars={ '0' : {'imagename':'mytest0', 'nchan':5,'imsize':[3,3]} ,\
+                           '1' : {'imagename':'mytest1', 'nchan':2,'imsize':[1,1] } }
+        allgridpars={ '0' : {'ftmachine':'ft'},\
+                             '1' : {'ftmachine':'ft','modelname':'startingmodel1'} }
+        alldecpars ={ '0': {'id':0, 'algo':'test'},\
+                             '1':{'id':1, 'algo':'test','modelname':'startingmodel1'} }
 
     if(testnum==2):  ## 2 image-fields, each with one channel
-        NN=1
-        allselpars=[ {'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True} ]
-        NF=2
-        allimpars=[ {'imagename':'mytest0', 'nchan':1,'imsize':[3,3]} ,\
-                        {'imagename':'mytest1', 'nchan':1,'imsize':[1,1]} ]
-        allgridpars=[ {'ftmachine':'ft'}, {'ftmachine':'ft'} ]
-        alldecpars = [ {'id':0, 'algo':'test'}, {'id':1, 'algo':'test'} ]
+
+        allselpars={'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True} 
+        #NF=2
+        allimpars={ '0' : {'imagename':'mytest0', 'nchan':1,'imsize':[3,3]} ,\
+                           '1' : {'imagename':'mytest1', 'nchan':1,'imsize':[1,1]} }
+        allgridpars={ '0': {'ftmachine':'ft'},\
+                             '1':{'ftmachine':'ft'} }
+        alldecpars = { '0': {'id':0, 'algo':'test'},\
+                              '1': {'id':1, 'algo':'test'} }
         
-    if(testnum==1.5):  ## 1 image-field, multiple channels
-        NN=1
-        allselpars=[ {'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True} ]
-        NF=1
-        allimpars=[ {'imagename':'mytest0', 'nchan':5,'imsize':[3,3]} ]
-        allgridpars=[ {'ftmachine':'ft'} ]
-        alldecpars = [ {'id':0, 'algo':'test'} ]
+    if(testnum==2):  ## 1 image-field, multiple channels
+
+        allselpars={'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True}
+        #NF=1
+        allimpars={ '0' : {'imagename':'mytest0', 'nchan':5,'imsize':[3,3]} }
+        allgridpars={ '0': {'ftmachine':'ft'} }
+        alldecpars ={' 0' : {'id':0, 'algo':'test'} }
         
     if(testnum==1):  ## 1 image-field, one chan
-        NN=1
-        allselpars=[ {'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True} ]
-        NF=1
-        allimpars=[ {'imagename':'mytest0', 'nchan':1,'imsize':[3,3]} ]
-        allgridpars=[ {'ftmachine':'ft'} ]
-        alldecpars = [ {'id':0, 'algo':'test'} ]
+
+        allselpars={'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True}
+        #NF=1
+        allimpars= { '0' : {'imagename':'mytest0', 'nchan':1,'imsize':[3,3]} }
+        allgridpars={ '0' : {'ftmachine':'ft'} }
+        alldecpars ={ '0': {'id':0, 'algo':'test'} }
 
     iterpars = {'niter':100, 'cycleniter':100,'threshold':0.001,'loopgain':0.2,'interactive':False}
 
-    return [ allselpars, allimpars, allgridpars, alldecpars, iterpars ]
+    if parallelrun==True:
+        clusterdef = 'cfgfile.txt'
+        defstr = 'vega, 2,'+os.getcwd() +'/aatest'
+        # remove file first
+        if os.path.exists(clusterdef):
+            os.system('rm -f '+ clusterdef)
+        
+        # save to a file    
+        with open(clusterdef, 'w') as f:
+            f.write(defstr)
+        f.close()
+    else:
+        clusterdef=""
 
-###############################################################
+    return [ allselpars, allimpars, allgridpars, alldecpars, iterpars, clusterdef ]
+
+#####################################################
 
 
 #######################################
 ###    Function to run the Imaging.
 #######################################
-def doClean( params = [{},{},{}] , doplot=True ):
+def doClean( params = [{},{},{},{},{},""] , doplot=True ):
 
     os.system('rm -rf mytest*')
 
-    selpars = params[0]
-    impars = params[1]
-    gridpars = params[2]
-    decpars = params[3]
-    iterpars = params[4]
-
-    imager = PySynthesisImager()
+    imager = PySynthesisImager(params[0],params[1],params[2],params[3],params[4],params[5])
 
     ### Set up Imagers, Deconvolvers, IterControl, and ParallelSync.
-    imager.initializeImagers(selpars,impars,gridpars)
-    imager.initializeDeconvolvers(impars,decpars)
-    imager.initializeParallelSync(impars)
-    imager.initializeIterationControl(iterpars)
+    imager.initializeImagers()
+    imager.initializeDeconvolvers()
+    imager.initializeParallelSync()
+    imager.initializeIterationControl()
 
     ### Run it.
     imager.runMajorCycle()
@@ -108,21 +98,15 @@ def doClean( params = [{},{},{}] , doplot=True ):
 ########################################
 #  Run only Major Cycle
 ########################################
-def doMajor( params = [{},{},{}] , doplot=True ):
+def doMajor( params = [{},{},{},{},{},""] , doplot=True ):
 
     os.system('rm -rf mytest*')
 
-    selpars = params[0]
-    impars = params[1]
-    gridpars = params[2]
-    decpars = params[3]
-    iterpars = params[4]
-
-    imager = PySynthesisImager()
+    imager = PySynthesisImager(params[0],params[1],params[2],params[3],params[4],params[5])
 
     ### Set up Imagers and ParallelSync.
-    imager.initializeImagers(selpars,impars,gridpars)
-    imager.initializeParallelSync(impars)
+    imager.initializeImagers()
+    imager.initializeParallelSync()
 
     ### Run it.
     imager.runMajorCycle()
@@ -133,21 +117,15 @@ def doMajor( params = [{},{},{}] , doplot=True ):
 ########################################
 ###   Run only the minor cycle....
 ########################################
-def doMinor( params = [{},{},{}] , doplot=True ):
+def doMinor( params = [{},{},{},{},{},""] , doplot=True ):
 
 ##    os.system('rm -rf mytest*')
 
-    selpars = params[0]
-    impars = params[1]
-    gridpars = params[2]
-    decpars = params[3]
-    iterpars = params[4]
-
-    imager = PySynthesisImager()
+    imager = PySynthesisImager(params[0],params[1],params[2],params[3],params[4],params[5])
 
     ### Set up Deconvolvers and IterControl
-    imager.initializeDeconvolvers(impars,decpars)
-    imager.initializeIterationControl(iterpars)
+    imager.initializeDeconvolvers()
+    imager.initializeIterationControl()
 
     # Run it
     while ( not imager.hasConverged() ):
@@ -166,66 +144,149 @@ def doMinor( params = [{},{},{}] , doplot=True ):
 ###  PySynthesisImager class
 ##########################################
 import copy
+from simple_cluster import simple_cluster
 #############################################
 class PySynthesisImager:
 
-    def __init__(self):
+    def __init__(self,selpars={},allimpars={}, \
+                     allgridpars={},alldecpars={}, \
+                     iterpars={},clusterdef='',):
+        ################ Tools
         self.SItools = []
         self.SDtools=[]
         self.PStools=[]
         self.IBtool=None
-        self.NN=1
-        self.NF=1
+        ############### Cluster Info
+        self.clusterdef=clusterdef
+        self.CL=None
+        self.sc=None
+        ############### Number of nodes to parallelize on
+        if len(self.clusterdef) != 0:
+            self.NN = self.setupCluster()
+            self.allselpars = self.partitionDataSelection(selpars)
+        else:
+            self.NN = 1
+            self.allselpars = [selpars]
+        ############### Number of image fields
+        self.NF = len(allimpars.keys())
+        ############### All input parameters
+        self.allimpars = allimpars
+        self.allgridpars = allgridpars
+        self.alldecpars = alldecpars
+        self.iterpars = iterpars
 
 #############################################
 
-    def initializeImagers(self,allselpars, allimpars, allgridpars):
-        for node in range(0,NN):
-            toolsi = casac.synthesisimager()
-            selpars=allselpars[node]
-            toolsi.selectdata(selpars=selpars)
-            for immod in range(0,NF):
-                impars=copy.deepcopy(allimpars[immod])
-                if(NN>1):
-                    impars['imagename'] = impars['imagename']+'.n'+str(node)
-                toolsi.defineimage(impars=impars)
-                toolsi.setupimaging(gridpars=allgridpars[immod])
-                toolsi.initmapper()
-            self.SItools.append(toolsi)
+    def partitionDataSelection(self,selpars={}):
+        allselpars = []
+        for node in range(0,self.NN):
+            allselpars.append( copy.deepcopy(selpars) )
+            ### Temp modification. Put actual split-chan-range info here.
+            if not allselpars[node].has_key('spw'):
+                allselpars[node]['spw']=str(node)
+            else:
+                allselpars[node]['spw'] = allselpars[node]['spw'] + ':' + str(node)
+        print 'Selection : ', allselpars
+        return allselpars
+
 
 #############################################
 
-    def initializeDeconvolvers(self,allimpars, alldecpars):
-        for immod in range(0,NF):
+    def setupCluster(self):
+        # Initialize cluster
+        if((self.clusterdef != '') and os.path.exists(self.clusterdef)):
+            self.sc=simple_cluster()
+            if(self.sc.get_status()==None):
+                self.sc.init_cluster(self.clusterdef,'aatest')
+                
+        self.CL=simple_cluster.getCluster()._cluster
+        numproc=len(self.CL.get_engines())
+        numprocperhost=len(self.CL.get_engines())/len(self.CL.get_nodes()) if (len(self.CL.get_nodes()) >0 ) else 1
+
+        owd=os.getcwd()
+        self.CL.pgc('import os')
+        self.CL.pgc('os.chdir("'+owd+'")')
+        os.chdir(owd)
+        print "Setting up ", numproc, " engines."
+        return numproc
+
+#############################################
+    def takedownCluster(self):
+        # Check that all nodes have returned, before stopping the cluster
+        if self.clusterdef != "":
+            self.checkJobs()
+            print 'Stopping cluster'
+            self.sc.stop_cluster()
+
+#############################################
+    # This is a blocking call that will wait until jobs are done.
+    def checkJobs(self):
+        numcpu = len(self.CL.get_engines())
+        out = range(numcpu)
+        for k in range(numcpu):
+            out[k] = self.CL.odo('casalog.post("node '+str(k)+' has completed its job")', k)
+        
+        over=False
+        while(not over):
+            overone=True
+            time.sleep(1)
+            for k in range(len(self.CL.get_engines())):
+                overone =  self.CL.check_job(out[k],False) and overone
+            over = overone
+
+#############################################
+#############################################
+    def initializeImagers(self):
+
+        for node in range(0,self.NN):
+            nimpars = copy.deepcopy(self.allimpars)
+            if self.NN>1:
+                for ff  in range(0,self.NF):
+                    nimpars[str(ff)]['imagename'] = nimpars[str(ff)]['imagename']+'.n'+str(node)
+
+            if self.clusterdef == "":
+                toolsi = casac.synthesisimager()
+                toolsi.initializemajorcycle(self.allselpars[node], nimpars, self.allgridpars)
+                self.SItools.append(toolsi)
+            else:
+            ## Later, move out common commands into self.CL.pgc
+                self.CL.odo("toolsi = casac.synthesisimager()", node)
+                self.CL.odo("toolsi.initializemajorcycle("+str(self.allselpars[node])+","+str(nimpars)+","+str(self.allgridpars)+")", node)
+                self.checkJobs()
+
+
+#############################################
+
+    def initializeDeconvolvers(self):
+        for immod in range(0,self.NF):
             self.SDtools.append(casac.synthesisdeconvolver())
-            decpars = alldecpars[immod]
-            decpars['imagename'] = allimpars[immod]['imagename']
+            decpars = self.alldecpars[str(immod)]
+            decpars['imagename'] = self.allimpars[str(immod)]['imagename']
             self.SDtools[immod].setupdeconvolution(decpars=decpars)
 
 #############################################
 
-    def initializeParallelSync(self,allimpars):
-        print 'init par sync'
-        for immod in range(0,NF):
+    def initializeParallelSync(self):
+        for immod in range(0,self.NF):
             self.PStools.append(casac.synthesisparsync())
-            syncpars = {'imagename':allimpars[immod]['imagename']}
+            syncpars = {'imagename':self.allimpars[str(immod)]['imagename']}
             partnames = []
-            if(NN>1):
-                for node in range(0,NN):
-                    partnames.append( allimpars[immod]['imagename']+'.n'+str(node)  )
+            if(self.NN>1):
+                for node in range(0,self.NN):
+                    partnames.append( self.allimpars[str(immod)]['imagename']+'.n'+str(node)  )
                 syncpars['partimagenames'] = partnames
             self.PStools[immod].setupparsync(syncpars=syncpars)
 
 #############################################
 
-    def initializeIterationControl(self,iterpars):
+    def initializeIterationControl(self):
         self.IBtool = casac.synthesisiterbot()
-        itbot = self.IBtool.setupiteration(iterpars=iterpars)
+        itbot = self.IBtool.setupiteration(iterpars=self.iterpars)
 
 #############################################
 
     def restoreImages(self):
-        for immod in range(0,NF):
+        for immod in range(0,self.NF):
             self.SDtools[immod].restore()
 
 #############################################
@@ -237,15 +298,24 @@ class PySynthesisImager:
 #############################################
 
     def deleteTools(self):
+        # Delete Imagers
+        if self.clusterdef=="":
+            for node in range(0,len(self.SItools)):
+                self.SItools[node].done()
+        else:
+            self.CL.pgc("toolsi.done()")
+            self.takedownCluster()
+
+        # Delete Deconvolvers
         for immod in range(0,len(self.SDtools)):
             self.SDtools[immod].done()
+        # Delete ParSyncs
         for immod in range(0,len(self.PStools)):
             self.PStools[immod].done()
-        for node in range(0,len(self.SItools)):
-            self.SItools[node].done()
+        # Delete IterBot
         if self.IBtool != None:
             self.IBtool.done()
-    # Reset globals/members
+        # Reset globals/members
         self.NN=1
         self.NF=1
         self.SItools=[]
@@ -257,7 +327,7 @@ class PySynthesisImager:
 
     def hasConverged(self):
         # Merge peak-res info from all fields to decide iteration parameters
-        for immod in range(0,NF):
+        for immod in range(0,self.NF):
             initrec =  self.SDtools[immod].initminorcycle() 
             self.IBtool.mergeinitrecord( initrec );
             print "Peak res of field ",immod, " : " ,initrec['peakresidual']
@@ -269,16 +339,25 @@ class PySynthesisImager:
 #############################################
 
     def runMajorCycle(self):
-        for immod in range(0,NF):
+        for immod in range(0,self.NF):
             self.PStools[immod].scattermodel() 
         ### Run major cycle
-        for node in range(0,NN):
-            self.SItools[node].executemajorcycle(controls={})
+
+        if self.clusterdef=="":
+            for node in range(0,self.NN):
+                self.SItools[node].executemajorcycle(controls={})
+        else:
+            for node in range(0,self.NN):
+                self.CL.odo("toolsi.executemajorcycle(controls={})",node)
+            self.checkJobs() # this call blocks until all are done.
+
         if self.IBtool != None:
             self.IBtool.endmajorcycle()
         ### Gather residuals (if needed) and normalize by weight
-        for immod in range(0,NF):
+        for immod in range(0,self.NF):
             self.PStools[immod].gatherresidual() 
+
+#############################################
 
 #############################################
 
@@ -286,7 +365,7 @@ class PySynthesisImager:
         # Get iteration control parameters
         iterbotrec = self.IBtool.getminorcyclecontrols()
         # Run minor cycle
-        for immod in range(0,NF):
+        for immod in range(0,self.NF):
             exrec = self.SDtools[immod].executeminorcycle( iterbotrecord = iterbotrec )
             self.IBtool.mergeexecrecord( exrec )
 
@@ -312,6 +391,8 @@ def summplot1( summ={} ):
     # 3 : cyclethreshold
     # 4 : deconvolver id
     # 5 : subimage id (channel, stokes..)
+
+    pl.ioff()
 
     pl.figure(1)
     pl.clf();
@@ -342,6 +423,9 @@ def summplot1( summ={} ):
     pl.ylabel( 'Peak Residual' )
 
     pl.legend()
+
+    pl.savefig('summaryplot.png')
+    pl.ion()
 
     return summ;
 
