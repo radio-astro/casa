@@ -304,7 +304,9 @@ function set_DEBUGGER {
 
 function set_PGPLOT_DIR {
     # If it is already set, do not change it.
-    if [ "x$PGPLOT_DIR" = "x" ]; then
+    # if [ "x$PGPLOT_DIR" = "x" ]; then
+        : # This function is a place holder in case we need to add logic to set PGPLOT_DIR later.
+          # This has not been required for the last two releases.
         # echo "TBD: set_PGPLOT_DIR"
         #    local result=""
         #    export readonly PGPLOT_DIR="${CASA_3RD_PARTY_DIRECTORY}/lib"
@@ -327,7 +329,7 @@ function set_PGPLOT_DIR {
         #        echo
         #        echo
         #    fi
-    fi
+    # fi
 }
 
 function set_PYTHON_EXECUTABLE {
