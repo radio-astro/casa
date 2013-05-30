@@ -68,7 +68,7 @@ class GriddingBase(object):
         end = time.time()
         LOG.info('execute: elapsed time %s sec'%(end-start))
         return spstorage, grid_table2
-
+        
     #def make_grid_table(self):
     def GroupForGrid(self, CombineRadius, Allowance, GridSpacing, ObsPattern):
         """
@@ -118,13 +118,11 @@ class GriddingBase(object):
         
         GridTable = self._group(index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection)
 
-        index_list = index_list.reshape((len(self.antenna),index_list.size/len(self.antenna)))
-
         end = time.time()
         LOG.info('GroupForGrid: elapsed time %s sec (except table access %s sec)'%(end-start,end-start1))
         return index_list, GridTable
 
-    def Process8(self, DataIn, IDX, NCHAN, GridTable, CombineRadius, GridRule, LogLevel=2):
+    def Process8(self, DataIn, index_list, NCHAN, GridTable, CombineRadius, GridRule, LogLevel=2):
         """
         The process does re-map and combine spectrum for each position
         GridTable format:
@@ -149,10 +147,10 @@ class GriddingBase(object):
         start = time.time()
         
         # create storage
-        # 2011/11/12 DataIn and rowsSel are [list]
-        NSpIn = len(IDX[0])
-        for i in range(len(IDX)-1): NSpIn += len(IDX[i+1])
-        SpStorage = numpy.zeros((NSpIn, NCHAN), dtype=numpy.float32)
+        num_spectra = len(index_list)
+        num_data = len(DataIn)
+        num_spectra_per_data = num_spectra / num_data
+        SpStorage = numpy.zeros((num_spectra, NCHAN), dtype=numpy.float32)
 
         if NCHAN != 1:
             clip = GridRule['Clipping']
@@ -177,14 +175,20 @@ class GriddingBase(object):
         tTSYS = self.datatable.getcol('TSYS')
         tEXPT = self.datatable.getcol('EXPOSURE')
 
+        rows = numpy.take(tROW, index_list)
+        net_flag = numpy.take(tSFLAG, index_list)
+        tsys = numpy.take(tTSYS, index_list)
+        exposure = numpy.take(tEXPT, index_list)
+
         # 2011/11/12 DataIn and rowsSel are [list]
         IDX2StorageID = {}
         StorageID = 0
         for i in xrange(len(DataIn)):
             # read data to SpStorage
             with casatools.TableReader(DataIn[i]) as tb:
-                for x in IDX[i]:
-                    SpStorage[StorageID] = tb.getcell('SPECTRA', tROW[x])
+                for j in xrange(num_spectra_per_data):
+                    x = index_list[StorageID]
+                    SpStorage[StorageID] = tb.getcell('SPECTRA', rows[StorageID])
                     IDX2StorageID[x] = StorageID
                     StorageID += 1
                 LOG.debug('Data Stored in SpStorage')
@@ -199,34 +203,36 @@ class GriddingBase(object):
             flagged = 0
             for [row, delta, rms, index, ant] in RowDelta:
                 # Check Summary Flag
-                if tSFLAG[int(index)] == 1:
+                _index = IDX2StorageID[int(index)]
+                if net_flag[_index] == 1:
                     rowlist.append(int(row))
-                    indexlist.append(IDX2StorageID[int(index)])
+                    indexlist.append(_index)
                     deltalist.append(delta)
                     rmslist.append(rms)
                 else: flagged += 1
-            if len(rowlist) == 0:
+            num_valid_row = len(rowlist)
+            if num_valid_row == 0:
                 # No valid Spectra at the position
                 RMS = 0.0
                 pass
-            elif len(rowlist) == 1:
+            elif num_valid_row == 1:
                 # One valid Spectrum at the position
-                StorageOut[ID] = SpStorage[rowlist[0]]
+                StorageOut[ID] = SpStorage[0]
                 RMS = rmslist[0]
             else:
                 # More than one valid Spectra at the position
                 data = SpStorage[indexlist]
                 w = numpy.ones(numpy.shape(data), numpy.float32)
-                weightlist = numpy.ones(len(rowlist), numpy.float32)
+                weightlist = numpy.ones(num_valid_row, numpy.float32)
                 # Clipping
-                if clip.upper() == 'MINMAXREJECT' and len(rowlist) > 2:
+                if clip.upper() == 'MINMAXREJECT' and num_valid_row > 2:
                     w[numpy.argmin(data, axis=0), range(len(data[0]))] = 0.0
                     w[numpy.argmax(data, axis=0), range(len(data[0]))] = 0.0
                 # Weight by RMS
                 # Weight = 1/(RMS**2)
                 weight_factor = 0.0
                 if rms_weight == True:
-                    for m in xrange(len(rowlist)):
+                    for m in xrange(num_valid_row):
                         if rmslist[m] != 0.0:
                             weight_factor = rmslist[m] * rmslist[m]
                             w[m] /= weight_factor
@@ -238,10 +244,16 @@ class GriddingBase(object):
                 # RMS = n * Tsys/math.sqrt(Exptime)
                 # Weight = 1/(RMS**2) = (Exptime/(Tsys**2))
                 if tsys_weight == True:
-                    for m in xrange(len(rowlist)):
+                    for m in xrange(num_valid_row):
                         # 2008/9/21 Bug fix
-                        if tTSYS[rowlist[m]] > 0.5:
-                            weight_factor = (tEXPT[rowlist[m]]/(tTSYS[rowlist[m]]*tTSYS[rowlist[m]])) 
+                        # 2013/05/30 TN Bug fix
+                        # using rowlist as index is invalid
+                        if tsys[indexlist[m]] > 0.5:
+                        #if tTSYS[rowlist[m]] > 0.5:
+                            #weight_factor = (tEXPT[rowlist[m]]/(tTSYS[rowlist[m]]*tTSYS[rowlist[m]]))
+                            weight_factor = (exposure[indexlist[m]]/(tsys[indexlist[m]]*tsys[indexlist[m]]))
+                            LOG.debug('tEXPT[rowlist[m]]=%s, tTSYS[rowlist[m]]=%s'%(tEXPT[rowlist[m]], tTSYS[rowlist[m]]))
+                            LOG.debug('exposure[indexlist[m]]=%s, tsys[indexlist[m]]=%s'%(exposure[indexlist[m]], tsys[indexlist[m]]))
                             w[m] *= weight_factor
                             weightlist[m] *= weight_factor
                             #if self.datatable[m][DT_TSYS] > 0.5:
@@ -253,13 +265,13 @@ class GriddingBase(object):
                 # Weight by radius
                 if weight.upper() == 'GAUSS':
                     # weight = exp(-ln2*((r/hwhm)**2))
-                    for m in xrange(len(rowlist)):
+                    for m in xrange(num_valid_row):
                         weight_factor = (math.exp(-0.69314718055994529*((deltalist[m]*deltalist[m]/(CombineRadius*CombineRadius)))))
                         w[m] *= weight_factor
                         weightlist[m] *= weight_factor
                 elif weight.upper() == 'LINEAR':
                     # weight = 0.5 + (hwhm - r)/2/hwhm = 1.0 - r/2/hwhm
-                    for m in xrange(len(rowlist)):
+                    for m in xrange(num_valid_row):
                         weight_factor = (1.0 - 0.5*deltalist[m]/CombineRadius)
                         w[m] *= weight_factor
                         weightlist[m] *= weight_factor
@@ -268,14 +280,14 @@ class GriddingBase(object):
                 # Calculate RMS of the spectrum
                 r0 = 0.0
                 r1 = 0.0
-                for m in xrange(len(rowlist)):
+                for m in xrange(num_valid_row):
                     r0 += (rmslist[m] * weightlist[m]) * (rmslist[m] * weightlist[m])
                     r1 += weightlist[m]
                 RMS = math.sqrt(r0) / r1
 
-            OutputTable.append([IF, POL, X, Y, RAcent, DECcent, len(rowlist), flagged, RMS])
+            OutputTable.append([IF, POL, X, Y, RAcent, DECcent, num_valid_row, flagged, RMS])
             ID += 1
-            del rowlist, indexlist, deltalist, rmslist
+            del indexlist, deltalist, rmslist
 
             # Countup progress timer
             Timer.count()
@@ -347,7 +359,7 @@ class RasterGridding(GriddingBase):
                 else:
                     line = [self.spw, self.pol, x, y, RA, DEC, []]
                 GridTable.append(line)
-                LOG.debug("GridTable: %s" % line)
+                #LOG.debug("GridTable: %s" % line)
 
         LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
 
@@ -355,7 +367,76 @@ class RasterGridding(GriddingBase):
         LOG.info('test: accumulated elapsed time %s sec vs. %s sec'%(tot,tot2))
         LOG.info('_group: elapsed time %s sec'%(end-start))
         return GridTable
+
+    def _grid_table(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
+        """
+        Gridding by RA/DEC position
+        """
+        start = time.time()
+
+        GridTable = []
+        NROW = len(index_list)
+
+        ThresholdR = CombineRadius * CombineRadius
+        MinRA = ras.min()
+        MaxRA = ras.max()
+        MinDEC = decs.min()
+        MaxDEC = decs.max()
+        # Check if the distribution crosses over the RA=0
+        if MinRA < 10 and MaxRA > 350:
+            ras = ras + numpy.less_equal(ras, 180) * 360.0
+            MinRA = ras.min()
+            MaxRA = ras.max()
+        # (RAcenter, DECcenter) to be the center of the grid
+        NGridRA = int((MaxRA - MinRA) / (GridSpacing * DecCorrection)) + 1
+        NGridDEC = int((MaxDEC - MinDEC) / GridSpacing) + 1
+
+        LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
         
+        MinRA = (MinRA + MaxRA) / 2.0 - (NGridRA - 1) / 2.0 * GridSpacing * DecCorrection
+        MinDEC = (MinDEC + MaxDEC) / 2.0 - (NGridDEC - 1) / 2.0 * GridSpacing
+
+        tot = 0.0
+        tot2 = 0.0
+        for y in xrange(NGridDEC):
+            if NROW > 10000: print 'Progress:', y, '/', NGridDEC, '(', NGridRA, ')', ' : ', time.ctime()
+            DEC = MinDEC + GridSpacing * y
+            DeltaDEC = decs - DEC
+            SelectD = numpy.where(numpy.logical_and(DeltaDEC < CombineRadius, DeltaDEC > -CombineRadius))[0]
+            #SelectD = numpy.nonzero(numpy.less_equal(DeltaDEC, CombineRadius) * numpy.greater_equal(DeltaDEC, -CombineRadius))[0]
+            sDeltaDEC = numpy.take(DeltaDEC, SelectD)
+            sRA = numpy.take(ras, SelectD)
+            sROW = numpy.take(rows, SelectD)
+            sIDX = numpy.take(index_list, SelectD)
+            sRMS = numpy.take(stats, SelectD)
+            sANT = numpy.take(ants, SelectD)
+            #LOG.debug('Combine Spectra: %s' % len(sRMS))
+            LOG.debug('Combine Spectra: %s' % len(sRA))
+            for x in xrange(NGridRA):
+                RA = MinRA + GridSpacing * DecCorrection * x
+                sDeltaRA = (sRA - RA) / DecCorrection
+                Delta = sDeltaDEC * sDeltaDEC + sDeltaRA * sDeltaRA
+                #Select = numpy.less_equal(Delta, ThresholdR)
+                #SelectR = numpy.nonzero(numpy.less_equal(Delta, ThresholdR))[0]
+                SelectR = numpy.where(Delta < ThresholdR)[0]
+                if len(SelectR > 0):
+                    ssROW = numpy.take(sROW, SelectR)
+                    ssRMS = numpy.take(sRMS, SelectR)
+                    ssIDX = numpy.take(sIDX, SelectR)
+                    ssANT = numpy.take(sANT, SelectR)
+                    ssDelta = numpy.sqrt(numpy.take(Delta, SelectR))
+                    line = [self.spw, self.pol, x, y, RA, DEC, numpy.transpose([ssROW, ssDelta, ssRMS, ssIDX, ssANT])]
+                else:
+                    line = [self.spw, self.pol, x, y, RA, DEC, []]
+                #GridTable.append(line)
+                yield line
+                #LOG.debug("GridTable: %s" % line)
+
+        end = time.time()
+        LOG.info('test: accumulated elapsed time %s sec vs. %s sec'%(tot,tot2))
+        LOG.info('_group: elapsed time %s sec'%(end-start))
+        #return GridTable
+
 class SinglePointGridding(GriddingBase):
     def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
 
@@ -380,14 +461,41 @@ class SinglePointGridding(GriddingBase):
             if Delta <= Allowance:
                 line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
         GridTable.append(line)
-        LOG.debug("GridTable: %s" % line)
+        #LOG.debug("GridTable: %s" % line)
         end = time.time()
 
         LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
 
         LOG.info('_group: elapsed time %s sec'%(end-start))
         return GridTable
-        
+
+    def _grid_table(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
+        """
+        Gridding by RA/DEC position
+        """
+        start = time.time()
+
+        GridTable = []
+        NROW = len(index_list)
+
+        NGridRA = 1
+        NGridDEC = 1
+        LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
+        CenterRA = ras.mean()
+        CenterDEC = decs.mean()
+        line = [self.spw, self.pol, 0, 0, CenterRA, CenterDEC, []]
+        for x in range(len(index_list)):
+            Delta = math.sqrt((ras[x] - CenterRA) ** 2.0 + (decs[x] - CenterDEC) ** 2.0)
+            if Delta <= Allowance:
+                line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
+        #GridTable.append(line)
+        yield line
+        #LOG.debug("GridTable: %s" % line)
+        end = time.time()
+
+        LOG.info('_group: elapsed time %s sec'%(end-start))
+        #return GridTable
+
 class MultiPointGridding(GriddingBase):
     def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
 
@@ -429,7 +537,7 @@ class MultiPointGridding(GriddingBase):
                                 line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
                                 Flag[x] = 0
                     GridTable.append(line)
-                    LOG.debug("GridTable: %s" % line)
+                    #LOG.debug("GridTable: %s" % line)
         del Flag
 
         LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
@@ -437,4 +545,50 @@ class MultiPointGridding(GriddingBase):
         end = time.time()
         LOG.info('_group: elapsed time %s sec'%(end-start))
         return GridTable
+        
+    def _grid_table(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
+        """
+        Gridding by RA/DEC position
+        """
+        start = time.time()
+
+        GridTable = []
+        NROW = len(index_list)
+
+        NGridRA = 0
+        NGridDEC = 1
+        Flag = numpy.ones(len(index_list))
+        while Flag.sum() > 0:
+            for x in range(len(index_list)):
+                if Flag[x] == 1:
+                    RA = ras[x]
+                    DEC = decs[x]
+                    RAtmp = [RA]
+                    DECtmp = [DEC]
+                    for y in range(x + 1, len(index_list)):
+                        if Flag[y] == 1:
+                            Delta = math.sqrt((RA - ras[y]) ** 2.0 + (DEC - decs[y]) ** 2.0)
+                            if Delta <= Allowance:
+                                RAtmp.append(ras[y])
+                                DECtmp.append(decs[y])
+                    CenterRA = (numpy.array(RAtmp)).mean()
+                    CenterDEC = (numpy.array(DECtmp)).mean()
+                    line = [self.spw, self.pol, 0, NGridRA, CenterRA, CenterDEC, []]
+                    NGridRA += 1
+                    for x in range(len(index_list)):
+                        if Flag[x] == 1:
+                            Delta = math.sqrt((ras[x] - CenterRA) ** 2.0 + (decs[x] - CenterDEC) ** 2.0)
+                            if Delta <= Allowance:
+                                line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
+                                Flag[x] = 0
+                    #GridTable.append(line)
+                    yield line
+                    #LOG.debug("GridTable: %s" % line)
+        del Flag
+
+        LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
+
+        end = time.time()
+        LOG.info('_group: elapsed time %s sec'%(end-start))
+        #return GridTable
         
