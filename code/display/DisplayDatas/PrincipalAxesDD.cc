@@ -149,8 +149,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // to be the first 3 display axes.  The others are in any old order.
 
 		if (itsPixelInTmp2.nelements()!=nPixelAxes) itsPixelInTmp2.resize(nPixelAxes);
-		itsPixelInTmp2(0) = lin(0);
-		itsPixelInTmp2(1) = lin(1);
+		Vector<int> shape = dataShape( ).asVector( );
+		itsPixelInTmp2(0) = min(lin(0),(double)(shape(itsDisplayAxes[0])-1));
+		itsPixelInTmp2(1) = min(lin(1),(double)(shape(itsDisplayAxes[1])-1));
 		if (nPixelAxes > 2) {
 			itsPixelInTmp2(2) = activeZIndex_;
 		}
@@ -158,7 +159,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsPixelInTmp2(i) = itsAddPixPos(i);
 		}
 //
-		return itsCoordSys.toWorld(fullWorld, itsPixelInTmp2);
+		bool ok = itsCoordSys.toWorld(fullWorld, itsPixelInTmp2);
+		if ( ! ok ) {
+			cerr << "PrincipalAxesDD::linToFullWorld(...): " << itsCoordSys.errorMessage( ) << endl;
+		}
+		return ok;
 	}
 
 // Convert a 2d or 3d world coordinate to a 2d WorldCanvas linear (data pixel)
