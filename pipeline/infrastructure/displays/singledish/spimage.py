@@ -344,7 +344,7 @@ class SDSpectralImageDisplay(SDImageDisplay):
                 #    RMSMap[self.y_max-1-(Table[row][3]-self.y_min)][self.x_max-1-(Table[row][2]-self.x_min)] = 0.0
             RMSMap = self.rms[:,:,pol] * (self.num_valid_spectrum[:,:,pol] > 0)
             RMSMap = numpy.flipud(RMSMap.transpose())
-            LOG.debug('RMSMap=%s'%(RMSMap))
+            #LOG.debug('RMSMap=%s'%(RMSMap))
             pl.cla()
             pl.clf()
             a = pl.axes([0.25, 0.25, 0.5, 0.5])
