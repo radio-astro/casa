@@ -191,7 +191,7 @@ printMs (MeasurementSet * ms)
 std::pair<Bool,Bool>
 Tester::sweepMs (TestWidget & tester)
 {
-    MeasurementSet * ms;
+    Block<const MeasurementSet *> mss;
     pair<Bool,Bool> result;
     Bool moreSweeps = False;
 
@@ -199,11 +199,24 @@ Tester::sweepMs (TestWidget & tester)
 
         Int nRows;
         Bool writableVi;
-        boost::tie (ms, nRows, writableVi) = tester.createMs ();
+        if (tester.usesMultipleMss()){
+            boost::tie (mss, nRows, writableVi) = tester.createMss ();
+        }
+        else{
+            MeasurementSet * ms;
+            boost::tie (ms, nRows, writableVi) = tester.createMs ();
+            mss = Block<const MeasurementSet *> (1, ms);
+        }
 
         do {
+            VisibilityIterator2 * vi = 0;
 
-            auto_ptr <VisibilityIterator2> vi (new VisibilityIterator2 (* ms, SortColumns (), writableVi));
+            if (tester.usesMultipleMss()){
+                vi = new VisibilityIterator2 (mss, SortColumns (), writableVi);
+            }
+            else {
+                vi = new VisibilityIterator2 (* mss[0], SortColumns (), writableVi);
+            }
 
             VisBuffer2 * vb = vi->getVisBuffer ();
             Int nRowsProcessed = 0;
@@ -253,7 +266,10 @@ Tester::sweepMs (TestWidget & tester)
 
     fflush (stderr); // just in case things are really bad and we croak
 
-    delete ms;
+    for (uInt i = 0; i < mss.size(); i++){
+        delete mss [i];
+    }
+
     return result;
 }
 
@@ -294,6 +310,8 @@ Tester::doTests (int nArgs, char * args [])
     nTestsPassed_p = 0;
 
     try {
+
+        doTest<MultipleMss> ();
 
         doTest<BasicChannelSelection> ();
 
@@ -493,7 +511,6 @@ BasicChannelSelection::checkSigmaWeight (Int nCorrelations, const Matrix<Float> 
         ThrowIf (value != expected,
                  String::format ("Expected %f for %s (%d, %d); got %f",
                                  expected, name, i, rowId, value));
-
     }
 }
 
@@ -1306,6 +1323,97 @@ CopyMs::doit (const String & oldMsName)
     }
 
     newMs.flush();
+}
+
+MultipleMss::MultipleMss () : TestWidget ("MultipleMss"), nMss_p (3) {}
+
+boost::tuple <Block<const MeasurementSet *>, Int, Bool>
+MultipleMss::createMss (){
+
+    Block <const MeasurementSet *> mss (nMss_p, 0);
+    Int nRows = 0;
+
+    for (int i = 0; i < nMss_p; i++){
+
+        String msName = String::format ("MultipleMss%d.ms", i);
+        system (String::format ("rm -r %s", msName.c_str()).c_str());
+        MsFactory * msf = new MsFactory (msName);
+        msf->setIncludeAutocorrelations(True);
+        msf->addSpectralWindow("spw", i+5, 0, 100, "LL RR RL LR");
+
+        pair<MeasurementSet *, Int> p = msf->createMs ();
+
+        nRows += p.second;
+        mss [i] = p.first;
+
+        delete msf;
+    }
+
+    return boost::make_tuple (mss, nRows, False);
+}
+
+void
+MultipleMss::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * vb)
+{
+    // Check out that the subchunk has the appropriate data
+
+    Int spectralWindow = vb->spectralWindows()(0);
+    TestErrorIf (spectralWindow != 0,
+                 String::format ("Bad spectral window id: expected 0, got %d", spectralWindow));
+    //Int nRows = vb->nRows();
+
+    Int msId = vb->msId();
+
+    const Cube<Complex> & visibility = vb->visCube();
+    const Vector<uInt> & rowIds = vb->rowIds ();
+
+
+    TestErrorIf (visibility.shape()[0] != 4,
+                 String::format ("Bad # of polarizations: expected 4, got %d"
+                                 "; at msRow=%d, msId=%d",
+                                 visibility.shape()[0], rowIds[0], msId));
+
+    TestErrorIf (visibility.shape()[1] != 5,
+                 String::format ("Bad # of channels: expected 4, got %d"
+                                 " at msRow=%d, msId=%d",
+                                 visibility.shape()[1], rowIds[0], msId));
+
+    Vector<Int> channels = vb->getChannelNumbers (0);
+
+    for (Int i = 0; i < 5; i++){
+        TestErrorIf (channels[i] != msId + i,
+                     String::format ("Bad channel number: expected %d, got %d"
+                                     " at msRow=%d, msId=%d",
+                                     msId + i, channels[i], rowIds[0], msId));
+    }
+}
+
+
+
+
+void
+MultipleMss::startOfData (VisibilityIterator2 & vi, VisBuffer2 * /*vb*/)
+{
+    // Apply channel selections
+
+    FrequencySelections selections;
+
+    for (int i=0; i < nMss_p; i++){
+
+        FrequencySelectionUsingChannels selection;
+
+        selection.add (0, i, 5);
+
+        selections.add (selection);
+    }
+
+    vi.setFrequencySelection (selections);
+}
+
+
+bool
+MultipleMss::usesMultipleMss () const {
+    return True;
 }
 
 } // end namespace test
