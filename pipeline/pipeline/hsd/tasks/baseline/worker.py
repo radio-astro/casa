@@ -27,17 +27,11 @@ class SDBaselineWorker(object):
     def execute(self, datatable, iteration, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern, detected_lines, cluster_info):
 
         # filename for input/output
-        filenames_out = [self.context.observing_run[idx].baselined_name
-                         for idx in file_index]
-        filenames_in = [self.context.observing_run[idx].name
-                        for idx in file_index]
-        filenames_out = dict(zip(file_index, filenames_out))
-        filenames_in = dict(zip(file_index, filenames_in))
-        filenames_grd = [filenames_out[idx] if os.path.exists(filenames_out[idx])
-                        else filenames_in[idx] for idx in file_index]
-        filenames_grd = dict(zip(file_index, filenames_grd))
+        filenames_work = [self.context.observing_run[idx].work_data
+                          for idx in file_index]
+        files_to_grid = dict(zip(file_index, filenames_work))
 
-        LOG.debug('filenames_grd=%s'%(filenames_grd))
+        LOG.debug('files_to_grid=%s'%(files_to_grid))
         
         # spectral window
         #spw = reference_data.spectral_window[spwid]
@@ -49,7 +43,7 @@ class SDBaselineWorker(object):
 
         # simple gridding
         simple_grid = SimpleGridding(datatable, spwid, srctype, grid_size, 
-                                     filenames_grd, nplane=3)
+                                     files_to_grid, nplane=3)
         (spectra, grid_table) = simple_grid.execute()
 
         LOG.debug('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(spectra.shape)))
@@ -89,8 +83,8 @@ class SDBaselineWorker(object):
         
         # loop over file
         for idx in file_index:
-            filename_in = filenames_in[idx]
-            filename_out = filenames_out[idx]
+            filename_in = self.context.observing_run[idx].name
+            filename_out = self.context.observing_run[idx].baselined_name
             if not os.path.exists(filename_out):
                 with casatools.TableReader(filename_in) as tb:
                     copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
@@ -106,5 +100,3 @@ class SDBaselineWorker(object):
                 pol_indices = ant_indices.take(pol_indices)
                 LOG.debug('pol_indices=%s'%(list(pol_indices)))
                 fitter.execute(datatable, filename_in, filename_out, bltable_name, time_table, pol_indices, nchan, edge, fitorder)
-
-        

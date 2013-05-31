@@ -52,18 +52,20 @@ class SDBaselineResults(common.SingleDishResults):
         reduction_group = context.observing_run.reduction_group
         for b in self.outcome['baselined']:
             spw = b['spw']
-            #antenna = b['index']
+            antenna = b['index']
             pols = b['pols']
             lines = b['lines']
-            for antenna in b['index']:
+            for _ant in antenna:
                 group_id = -1
                 for (idx,desc) in reduction_group.items():
                     if desc[0].spw == spw:
                         group_id = idx
                         break
                 if group_id >= 0:
-                    reduction_group[group_id].iter_countup(antenna, spw, pols)
-                    reduction_group[group_id].add_linelist(lines, antenna, spw, pols)
+                    reduction_group[group_id].iter_countup(_ant, spw, pols)
+                    reduction_group[group_id].add_linelist(lines, _ant, spw, pols)
+                st = context.observing_run[_ant]
+                st.work_data = st.baselined_name
 
     def _outcome_name(self):
         return ['%s: %s (spw=%s, pol=%s)'%(idx, name, b['spw'], b['pols'])

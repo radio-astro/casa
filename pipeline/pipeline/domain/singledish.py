@@ -80,6 +80,7 @@ class ScantableList(observingrun.ObservingRun, list):
             self[idx].calibration_strategy = calibration_strategy[idx]
             self[idx].beam_size = beam_size[idx]
             self[idx].pattern = observing_pattern[idx]
+            self[idx].work_data = self[idx].name
 
     def add_scantable(self, s):
         if s.basename in self.st_names:
@@ -357,6 +358,13 @@ class ReductionGroupDesc(list):
         if not new_member in self:
             self.append(new_member)
 
+    def get_iteration(self, antenna, spw, pol=None):
+        member = self[self.__search_member(antenna, spw)]
+        if pol is None:
+            return max(member.iteration)
+        else:
+            return member.iteration[pols]
+            
     def iter_countup(self, antenna, spw, pols=None):
         member = self[self.__search_member(antenna, spw)]
         member.iter_countup(pols)
