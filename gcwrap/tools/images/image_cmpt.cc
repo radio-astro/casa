@@ -727,10 +727,10 @@ image* image::continuumsub(
 	}
 }
 
-::casac::record* image::convertflux(
+record* image::convertflux(
 	const variant& qvalue, const variant& major,
-	const ::casac::variant& minor,
-	const string& type, const bool toPeak,
+	const variant& minor,
+	const bool toPeak,
 	const int channel, const int polarization
 ) {
 	try {
@@ -1331,8 +1331,11 @@ record* image::fitprofile(const string& box, const variant& region,
     const variant& gmampcon, const variant& gmcentercon,
     const variant& gmfwhmcon, const vector<double>& gmampest,
     const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
-    const variant& gmfix, const string& logfile, const bool append,
-    const variant& pfunc, const vector<double>& goodamprange,
+    const variant& gmfix, const vector<double>& plpcoeffs,
+    const vector<bool>& plpfix, const variant& plpdiv, const string& plpsol,
+    const string& plperr, const string& logfile,
+    const bool append, const variant& pfunc,
+    const vector<double>& goodamprange,
     const vector<double>& goodcenterrange,
     const vector<double>& goodfwhmrange, const variant& sigma,
     const string& outsigma
@@ -1399,7 +1402,7 @@ record* image::fitprofile(const string& box, const variant& region,
 		SpectralList spectralList = SpectralListFactory::create(
 			*_log, pampest, pcenterest, pfwhmest, pfix, gmncomps,
 			gmampcon, gmcentercon, gmfwhmcon, gmampest,
-			gmcenterest, gmfwhmest, gmfix, pfunc
+			gmcenterest, gmfwhmest, gmfix, pfunc, plpcoeffs, plpfix
 		);
 		if (! estimates.empty() && spectralList.nelements() > 0) {
 			*_log << "You cannot specify both an "
@@ -1415,7 +1418,9 @@ record* image::fitprofile(const string& box, const variant& region,
 			ngauss, estimates, spectralList
 		);
 		fitter.setDoMultiFit(multifit);
-		fitter.setPolyOrder(poly);
+		if (poly >= 0) {
+			fitter.setPolyOrder(poly);
+		}
 		fitter.setModel(model);
 		fitter.setResidual(residual);
 		fitter.setAmpName(amp);
@@ -1458,6 +1463,24 @@ record* image::fitprofile(const string& box, const variant& region,
 					<< "or array specified. outsigma will be ignored"
 					<< LogIO::POST;
 			}
+		}
+		if (plpcoeffs.size() > 0) {
+
+			variant::TYPE t = plpdiv.type();
+			if (plpdiv.type() == variant::BOOLVEC) {
+				fitter.setAbscissaDivisor(0);
+			}
+			else if (t == variant::INT || t == variant::DOUBLE) {
+				fitter.setAbscissaDivisor(plpdiv.toDouble());
+			}
+			else if (t == variant::STRING || t == variant::RECORD) {
+				fitter.setAbscissaDivisor(casaQuantity(plpdiv));
+			}
+			else {
+				throw AipsError("Unsupported type " + plpdiv.typeString() + " for plpdiv");
+			}
+			fitter.setPLPName(plpsol);
+			fitter.setPLPErrName(plperr);
 		}
 		return fromRecord(fitter.fit());
 	}

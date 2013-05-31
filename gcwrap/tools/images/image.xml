@@ -2851,7 +2851,7 @@ only Stokes I, even if the original image had other stokes planes.
 
  
    <method type="function" name="convertflux">
-   <shortdescription>Convert flux density between peak and integral</shortdescription>
+   <shortdescription>Convert peak intensity to/from flux density for a 2D Gaussian.</shortdescription>
    
 <input>
   
@@ -2873,11 +2873,6 @@ only Stokes I, even if the original image had other stokes planes.
      <value>1arcsec</value>
      </param>
   
-     <param type="string"  name="type">
-     <description>Type of component.  String from Gaussian, Disk.</description>
-     <value>Gaussian</value>
-     </param>
-  
      <param type="bool"  name="topeak">
      <description>Convert to peak or integral flux desnity</description>
      <value>true</value>
@@ -2896,8 +2891,8 @@ only Stokes I, even if the original image had other stokes planes.
 
 <description> 
 
-This function interconverts between peak and integral flux density for a
-Gaussian or Disk component.  The image must hold a restoring beam. 
+This function interconverts between peak intensity and flux density for a
+Gaussian component.  The image must hold a restoring beam. 
 
 </description>
 
@@ -4147,6 +4142,27 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
             <value type="string"/>
         </param>
+        <param type="doubleArray" name="plpcoeffs">
+            <description>Initial estimates for power logarithmic polynomial.</description>
+            <value/>
+        </param>
+        <param type="boolArray" name="plpfix">
+            <description>Fix the corresponding power logarithmic polynomial parameters during the fit. True=>hold fixed.</description>
+            <value/>
+        </param>
+        <param type="any" name="plpdiv">
+            <any type="variant"/>
+            <description>Divisor (numerical value or quantity) to use in the logarithmic terms of the plp function. 0 => calculate a useful value on the fly.</description>
+            <value>0</value>
+        </param>
+        <param type="string" name="plpsol">
+            <description>Name of the pwoer logarithmic polynomial solution image to write.</description>
+            <value/>
+        </param>
+        <param type="string" name="plperr">
+            <description>Name of the pwoer logarithmic polynomial error image to write.</description>
+            <value/>
+        </param>
         <param type="string"  name="logfile">
             <description>File in which to log results. Default is not to write a logfile.</description>
             <value/>
@@ -4373,6 +4389,35 @@ ranges, the entire solution is considered to be invalid.
 In addition, solutions for which the absolute value of the ratio of the amplitude error to the amplitude exceeds 100 or the
 ratio of the FWHM error to the FWHM exceeds 100 are automatically marked as invalid.
 
+POWER LOGARITHMIC POLYNOMIAL FITTING
+Fitting of a sngle power logarithmic polynomial function is supported. In this case, no other functions can be
+fit simultaneously; if parameters relating to other functions are supplied simultaneously with parameters relating
+to this function, an exception will occur. This function has the form
+
+y = c0*x/D**(c1 + c2*ln(x/D) + c3*ln(x/D)**2 + cn*ln(x/D)**(n - 1))
+
+and is a function commonly used in determining the spectral index of a source (with alpha=c1). The set of c0 ... cn can
+be solved for. Initial estimates for the c values should be supplied via the plpest parameter. The number of values given
+in this array will be the number of coeffecients that are solved for. One may specify which coefficients should be held
+fixed during the fit in the plpfix array. If supplied, this array should have the same number of elements as plpest. A value
+of True means the corresponding coefficient will be held fixed during the fit. An empty array indicates that no
+parameters will be held fixed. This is the default.
+
+D is a normalization constant used so that abscissa values are closer to unity when they are sent to the fitter. This generally
+improves the probability that the fit will converge. This parameter may be specified via the plpdiv parameter. A value of 0
+(the default) indicates that the application should determine a reasonable value for D, which is determined via
+
+D = 10**int(log10(sqrt(min(x)*max(x))))
+
+where min(x) and max(x) are the minimum and maximum abscissa values, respectively.
+
+Note that, as with fitting any function, the likelihood of getting a good solution increases with the number of
+good data points as well as the goodness of the initial estimate. This is especially true in cases of fitting functions
+such as this, which diverge exponentially with x. It is possible that the solution found might not be the best one, and
+so, if a solution is found, it is recommended that the fit be repeated using the solutions of the previous fit as the
+initial estimates for the new fit. When the solutions are the same as the previous fit, that is very likely the best
+solution.
+
 INCLUDING STANDARD DEVIATIONS OF PIXEL VALUES
 If the standard deviations of the pixel values in the input image are known and they vary in the image (eg they are higher for pixels
 near the edge of the band), they can be included in the sigma parameter. This parameter takes either an array or an image name. The
@@ -4430,17 +4475,26 @@ the parameter solution or error for the reference component of the multiplet.
 
 The polynomial coefficient solutions and errors are not returned, although they are logged.
 
+If a power logarithmic polynomial was fit, there will be a subdictionary accessible via the "plp" key which will have
+subkeys "soltuion" and "error" which will each have an array value. Each of these arrays will have one more dimension than the overview arrays
+described above. The shape of the first n-1 dimensions will be the same as the shape of the overview arrays described above, while the
+final dimension will have length equal to the number of parameters that were fit. Along this axis will be the
+corresponding fit result or associated error (depending on the array's associated key) of the fit. In cases where
+the fit was not attempted or did not converge, a value of NAN will be present.
+
 OUTPUT IMAGES
 In addition to the returned dictionary, optionally one or more of any combination of output images can be written.
 The model and residual parameters indicate the names of the model and residual images to be written; blank values inidcate that these images
 should not be written.
 
 One can also write none, any or all of the solution and error images for gaussian singlet, lorentzian singlet,  and gaussian multiplet fits
-via the parameters amp, amperr, center, centererr, fwhm, fwhmerr, integral, and integralerr when doing multi-pixel fits. These images simply
-contain the arrays described for the associated parameter solutions or errors described in previous sections. In the case of lorentzian
-singlets, "_ls" is appended to the image names, in the case of gaussian multiplets, "_gm0", "_gm1", etc are appended to the image names to
-distinguish each multiplet. Pixels for which fits were not attempted or did not converge will be masked as bad. The last axis of these images
-is a linear axis and repesents component number (and is named accordingly).
+via the parameters amp, amperr, center, centererr, fwhm, fwhmerr, integral, integralerr when doing multi-pixel fits. For a power logarithmic
+polynomial fit, plpsol and plperr are the names of the solution and error images to write, respectively.
+
+These images simply contain the arrays described for the associated parameter solutions or errors described in previous sections.
+In the case of lorentzian singlets, "_ls" is appended to the image names, in the case of gaussian multiplets, "_gm0", "_gm1", etc
+are appended to the image names to distinguish each multiplet. Pixels for which fits were not attempted or did not converge will be
+masked as bad. The last axis of these images is a linear axis and repesents component number (and is named accordingly).
 
 Writing analogous images for polynomial coefficients is not supported.
 
