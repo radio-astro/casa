@@ -278,15 +278,15 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
                 msg = description + scale_msg
                 pl.text(0.5, 0.5, msg, horizontalalignment='center', verticalalignment='center', size=8)
 
-                if ShowPlot:
-                    pl.draw()
+            if ShowPlot:
+                pl.draw()
 
-                plotfile = os.path.join(self.stage_dir,
-                                        'cluster_%s_%s.png'%(self.spw,mode))
-                pl.savefig(plotfile, format='png', dpi=DPISummary)
-                plot = self._plot_object(plotfile, 'clustering_%s'%(mode),
-                                         'R.A.', 'Dec.')
-                yield plot
+            plotfile = os.path.join(self.stage_dir,
+                                    'cluster_%s_%s.png'%(self.spw,mode))
+            pl.savefig(plotfile, format='png', dpi=DPISummary)
+            plot = self._plot_object(plotfile, 'clustering_%s'%(mode),
+                                     'R.A.', 'Dec.')
+            yield plot
 
     def __stages(self):
         digits = {'detection': 1, 'validation': 10,
