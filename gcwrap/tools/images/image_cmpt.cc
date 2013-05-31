@@ -1331,7 +1331,7 @@ record* image::fitprofile(const string& box, const variant& region,
     const variant& gmampcon, const variant& gmcentercon,
     const variant& gmfwhmcon, const vector<double>& gmampest,
     const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
-    const variant& gmfix, const vector<double>& plpcoeffs,
+    const variant& gmfix, const vector<double>& plpest,
     const vector<bool>& plpfix, const variant& plpdiv, const string& plpsol,
     const string& plperr, const string& logfile,
     const bool append, const variant& pfunc,
@@ -1402,7 +1402,7 @@ record* image::fitprofile(const string& box, const variant& region,
 		SpectralList spectralList = SpectralListFactory::create(
 			*_log, pampest, pcenterest, pfwhmest, pfix, gmncomps,
 			gmampcon, gmcentercon, gmfwhmcon, gmampest,
-			gmcenterest, gmfwhmest, gmfix, pfunc, plpcoeffs, plpfix
+			gmcenterest, gmfwhmest, gmfix, pfunc, plpest, plpfix
 		);
 		if (! estimates.empty() && spectralList.nelements() > 0) {
 			*_log << "You cannot specify both an "
@@ -1464,7 +1464,7 @@ record* image::fitprofile(const string& box, const variant& region,
 					<< LogIO::POST;
 			}
 		}
-		if (plpcoeffs.size() > 0) {
+		if (plpest.size() > 0) {
 
 			variant::TYPE t = plpdiv.type();
 			if (plpdiv.type() == variant::BOOLVEC) {

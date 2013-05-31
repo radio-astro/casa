@@ -4142,8 +4142,8 @@ We use the Componentlist GUI to look at the strongest component.
             <description>Parameters of individual gaussians in gaussian multiplets to fix during fit.</description>
             <value type="string"/>
         </param>
-        <param type="doubleArray" name="plpcoeffs">
-            <description>Initial estimates for power logarithmic polynomial.</description>
+        <param type="doubleArray" name="plpest">
+            <description>Initial estimates for power logarithmic polynomia coefficients.</description>
             <value/>
         </param>
         <param type="boolArray" name="plpfix">
@@ -4201,7 +4201,7 @@ We use the Componentlist GUI to look at the strongest component.
     <returns type="record"/>
 
     <description>
-This method simultaneously fits one or more gaussian singlets, one or more lorentzian singlets, one or more gaussian multiplets,
+This application simultaneously fits one or more gaussian singlets, one or more lorentzian singlets, one or more gaussian multiplets,
 and/or a polynomial to one dimensional profiles. A gaussian/lorentzian singlet is a gaussian/lorentzian whose parameters (amplitude,
 center position, and width) are all independent from any other feature that may be simultaneously fit. A gaussian multiplet is a set of two or
 more gaussian lines in which at least one (and possibly two or three) parameter of each line is dependent on the parameter of another,

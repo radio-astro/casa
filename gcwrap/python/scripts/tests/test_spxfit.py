@@ -205,55 +205,79 @@ class spxfit_test(unittest.TestCase):
     def test_exceptions(self):
         """spxfit: Test various exception cases"""
         myia.fromshape("", [1,1,10])
-        self.assertRaises(Exception, myia.fitprofile, poly=2, plpcoeffs=[1,2])
+        self.assertRaises(Exception, myia.fitprofile, poly=2, plpest=[1,2])
         
     def test_plpfit(self):
         """ Test fitting a power logarithmic polynomial"""
-        myia.fromshape("",[2, 2, 100])
+        imagename = "spxfit.im"
+        myia.fromshape(imagename,[2, 2, 100])
         csys = myia.coordsys()
         inc = csys.increment()['numeric']
         inc[2] = 1e7
         csys.setincrement(inc)
         myia.setcoordsys(csys.torecord())
         zz = myia.getchunk()
-        plpcoeffs = [0.5, 2]
-        myfn = fn.powerlogpoly(plpcoeffs)
+        plpest = [0.5, 2]
+        myfn = fn.powerlogpoly(plpest)
         for i in range(zz.shape[2]):
             world = myia.toworld([0,0,i])['numeric'][2]
             zz[:,:,i] = myfn.f(world/1e9)
         myia.putchunk(zz)
-        rec = myia.fitprofile(ngauss=0, plpcoeffs=plpcoeffs)
-        sols = rec['plp']['solution'].ravel()
-        self.assertTrue((abs(1 - sols/plpcoeffs) < 0.1e-7).all())
-        rec = myia.fitprofile(ngauss=0, plpcoeffs=[0.4, 3])
-        sols = rec['plp']['solution'].ravel()
-
-        self.assertTrue((abs(1 - sols/plpcoeffs) < 0.1e-7).all())
-        myia.addnoise(pars=[0, 0.001])
-        rec = myia.fitprofile(ngauss=0, plpcoeffs=[0.4, 3])
-        sols = rec['plp']['solution'].ravel()
-        self.assertTrue((abs(1 - sols/plpcoeffs) < 0.1e-1).all())
-        plpsol = "plpsol.im"
-        plperr = "plperr.im"
-        rec = myia.fitprofile(
-            ngauss=0, plpcoeffs=[0.4, 2.2], plpfix=[False, True],
-            multifit=True, plpsol=plpsol, plperr=plperr
-        )
-        sols = rec['plp']['solution']
-        self.assertTrue((sols[:,:,:,1] == 2.2).all())
         
-        myia.open(plpsol)
-        self.assertTrue(
-            (
-                abs(myia.getchunk()/sols - 1) < 1e-7
-            ).all()
-        )
-        myia.open(plperr)
-        self.assertTrue(
-            (
-                abs(myia.getchunk() - rec['plp']['error']) < 1e-8
-            ).all()
-        )
+        for i in [0,1]:
+            if i == 0:
+                rec = myia.fitprofile(ngauss=0, plpest=plpest)
+            if i == 1:
+                rec = spxfit(imagename=imagename, plpest=plpest)
+            sols = rec['plp']['solution'].ravel()
+            self.assertTrue((abs(1 - sols/plpest) < 0.1e-7).all())
+            if i == 1:
+                rec = myia.fitprofile(ngauss=0, plpest=[0.4, 3])
+            if i == 2:
+                rec = spxfit(imagename=imagename, plpest=[0.4, 3])
+            sols = rec['plp']['solution'].ravel()
+            self.assertTrue((abs(1 - sols/plpest) < 0.1e-7).all())
+            
+            
+        myia.addnoise(pars=[0, 0.001])
+        for i in [0, 1]:
+            plpestoff = [0.4, 3]
+            if i == 0:
+                rec = myia.fitprofile(ngauss=0, plpest=plpestoff)
+            if i == 1:
+                rec = spxfit(imagename=imagename, plpest=plpestoff)
+            sols = rec['plp']['solution'].ravel()
+            print "*** i " + str(i)
+            self.assertTrue((abs(1 - sols/plpest) < 0.1e-1).all())
+            plpsol = "plpsol.im"
+            plperr = "plperr.im"
+            plpestoff = [0.4, 2.2]
+            plpfix = [False, True]
+            if i == 0:
+                rec = myia.fitprofile(
+                        ngauss=0, plpest=plpestoff, plpfix=plpfix,
+                        multifit=True, plpsol=plpsol, plperr=plperr
+                )
+            if i == 1:
+                rec = spxfit(
+                    imagename=imagename, plpest=plpestoff, plpfix=plpfix,
+                    multifit=True, plpsol=plpsol, plperr=plperr
+                )
+            sols = rec['plp']['solution']
+            self.assertTrue((sols[:,:,:,1] == 2.2).all())
+            myia.open(plpsol)
+            self.assertTrue(
+                (
+                    abs(myia.getchunk()/sols - 1) < 1e-7
+                ).all()
+            )
+            myia.open(plperr)
+            self.assertTrue(
+                (
+                    abs(myia.getchunk() - rec['plp']['error']) < 1e-8
+                ).all()
+            )
+            myia.done()
 
         
 def suite():
