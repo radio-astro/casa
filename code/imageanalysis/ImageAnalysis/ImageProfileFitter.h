@@ -105,10 +105,8 @@ public:
 
     inline String getClass() const { return _class; };
 
-
-
     // set the order of a polynomial to be simultaneously fit.
-    inline void setPolyOrder(const Int p) { _polyOrder = p;}
+    void setPolyOrder(const Int p);
 
     // set whether to do a pixel by pixel fit.
     inline void setDoMultiFit(const Bool m) { _multiFit = m; }
@@ -185,6 +183,8 @@ public:
 
     void setAbscissaDivisor(Double d);
 
+    void setAbscissaDivisor(const Quantity& q);
+
 protected:
 
     inline CasacRegionManager::StokesControl _getStokesControl() const {
@@ -199,7 +199,8 @@ private:
 	String _residual, _model, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
-		_integralName, _integralErrName, _plpName, _plpErrName, _sigmaName;
+		_integralName, _integralErrName, _plpName, _plpErrName, _sigmaName,
+		_abscissaDivisorForDisplay;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
 		_deleteImageOnDestruct, _logResults;
 	Int _polyOrder, _fitAxis;
@@ -218,12 +219,6 @@ private:
 	Double _abscissaDivisor;
 
 	const static String _class;
-
-	/*
-	const static uInt _nOthers;
-	const static uInt _gsPlane;
-	const static uInt _lsPlane;
-	*/
 
     void _getOutputStruct(
         vector<OutputDestinationChecker::OutputStruct>& outputs
@@ -252,8 +247,8 @@ private:
     // to something astronomer friendly if it so desires.
 
     void _fitProfiles(
-    	std::auto_ptr<ImageInterface<Float> >& pFit,
-    	std::auto_ptr<ImageInterface<Float> >& pResid,
+    	const std::auto_ptr<ImageInterface<Float> >& pFit,
+    	const std::auto_ptr<ImageInterface<Float> >& pResid,
         const Bool showProgress=False
     );
 
@@ -264,6 +259,25 @@ private:
     Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
 
     Vector< Vector<Double> > _pixelPositions;
+
+    void _setAbscissaDivisorIfNecessary(const Vector<Double>& abscissaValues);
+
+    void _setFitterElements(
+    	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
+    	const std::auto_ptr<PolynomialSpectralElement>& polyEl,
+    	const vector<IPosition>& goodPos,
+    	const IPosition& fitterShape, const IPosition& curPos,
+    	uInt nOrigComps
+    ) const;
+
+    void _updateModelAndResidual(
+    	const std::auto_ptr<ImageInterface<Float> >& pFit,
+    	const std::auto_ptr<ImageInterface<Float> >& pResid,
+    	const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
+    	const IPosition& curPos, Lattice<Bool>* const &pFitMask,
+        Lattice<Bool>* const &pResidMask, const Array<Float>& failData,
+        const Array<Bool>& failMask
+    ) const;
 };
 }
 

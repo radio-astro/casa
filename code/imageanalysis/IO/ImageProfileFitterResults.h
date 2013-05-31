@@ -128,8 +128,12 @@ public:
     const Vector<Double> getPixelCenter( uint index ) const;
     //Converts a pixel value into a world value either in velocity, wavelength, or
     //frequency units.
-    Double getWorldValue( double pixelVal, const IPosition& imPos, const String& units,
-        bool velocity, bool wavelength) const;
+    Double getWorldValue(
+    	double pixelVal, const IPosition& imPos, const String& units,
+        bool velocity, bool wavelength
+    ) const;
+
+    void setPLPDivisor(const String& x) { _plpDivisor = x; }
 
 private:
 	enum gaussSols {
@@ -167,6 +171,7 @@ private:
 	std::tr1::shared_ptr<LogIO> _log;
    	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
    	const CoordinateSystem _csysIm;
+   	String _plpDivisor;
 
     void _setResults();
 
@@ -178,7 +183,7 @@ private:
 
     String _elementToString(
     	const Double value, const Double error,
-    	const String& unit
+    	const String& unit, Bool isFixed
     ) const;
 
     String _pcfToString(
@@ -198,6 +203,10 @@ private:
     String _polynomialToString(
     	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
     	const Vector<Double> imPix, const Vector<Double> world
+    ) const;
+
+    String _powerLogPolyToString(
+    	const PowerLogPolynomialSpectralElement& plp
     ) const;
 
     void _marshalFitResults(

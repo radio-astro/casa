@@ -110,7 +110,7 @@ std::auto_ptr<vector<vector<Matrix<Double> > > > ImageProfileFitterResults::_cre
 		blank.resize(nFitters, nSubcomps, False);
 		blank = fNAN;
 		for (uInt k=0; k<NGSOLMATRICES; k++) {
-			(*pcfMatrices)[k][i] = blank;
+			(*pcfMatrices)[k][i] = blank.copy();
 		}
 	}
 	return pcfMatrices;
@@ -196,123 +196,120 @@ void ImageProfileFitterResults::_marshalFitResults(
 	Double increment = fabs(_fitAxisIncrement());
 	Vector<ImageFit1D<Float> >::const_iterator end = _fitters->end();
 	for (
-			inIter.reset();
-			! inIter.atEnd() && fitter != end;
-			inIter++, fitter++, count++
-		) {
-			IPosition idx(1, count);
-			attemptedArr(idx) = fitter->getList().nelements() > 0;
-			successArr(idx) = fitter->succeeded();
-			convergedArr(idx) = attemptedArr(idx) && successArr(idx)
-				&& fitter->converged();
-			validArr(idx) = convergedArr(idx) && fitter->isValid();
+		inIter.reset();
+		! inIter.atEnd() && fitter != end;
+		inIter++, fitter++, count++
+	) {
+		IPosition idx(1, count);
+		attemptedArr(idx) = fitter->getList().nelements() > 0;
+		successArr(idx) = fitter->succeeded();
+		convergedArr(idx) = attemptedArr(idx) && successArr(idx)
+			&& fitter->converged();
+		validArr(idx) = convergedArr(idx) && fitter->isValid();
 
-			pixel = inIter.position();
-			if (csysSub.toWorld(world, pixel)) {
-				for (uInt i=0; i<world.size(); i++) {
-					if ((Int)i != _fitAxis) {
-						if (_axisTypes[i] == LONGITUDE) {
-							longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
-							_worldCoords(LONGITUDE, count) = longitude;
-						}
-						else if (_axisTypes[i] == LATITUDE) {
-							latitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 1, True, True);
-							_worldCoords(LATITUDE, count) = latitude;
-						}
-						else if (_axisTypes[i] == FREQUENCY) {
-							_worldCoords(FREQUENCY, count) = spcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
-						}
-						else if (_axisTypes[i] == POLARIZATION) {
-							_worldCoords(POLARIZATION, count) = polcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
-						}
+		pixel = inIter.position();
+		if (csysSub.toWorld(world, pixel)) {
+			for (uInt i=0; i<world.size(); i++) {
+				if ((Int)i != _fitAxis) {
+					if (_axisTypes[i] == LONGITUDE) {
+						longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+						_worldCoords(LONGITUDE, count) = longitude;
+					}
+					else if (_axisTypes[i] == LATITUDE) {
+						latitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 1, True, True);
+						_worldCoords(LATITUDE, count) = latitude;
+					}
+					else if (_axisTypes[i] == FREQUENCY) {
+						_worldCoords(FREQUENCY, count) = spcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
+					}
+					else if (_axisTypes[i] == POLARIZATION) {
+						_worldCoords(POLARIZATION, count) = polcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);
 					}
 				}
-				if (returnDirection) {
-    directionInfo[count] = directionType + " "
-						+ longitude + " "
-						+ latitude;
-
-				}
 			}
-			else {
-    LogOrigin logOrigin(_class, __FUNCTION__);
-				*_log << "Could not convert pixel to world coordinate: "
-					<< csysSub.errorMessage() << LogIO::EXCEPTION;
+			if (returnDirection) {
+				directionInfo[count] = directionType + " "
+					+ longitude + " " + latitude;
 			}
-    if (validArr(idx)) {
-				IPosition subimPos = inIter.position();
-                mask(idx) = anyTrue(inIter.getMask());
-				niterArr(idx) = (Int)fitter->getNumberIterations();
-				nCompArr(idx) = (Int)fitter->getList().nelements();
-				SpectralList solutions = fitter->getList();
-				uInt gCount = 0;
-				uInt gmCount = 0;
-				uInt lseCount = 0;
-				for (uInt i=0; i<solutions.nelements(); i++) {
-					SpectralElement::Types type = solutions[i]->getType();
-					typeMat(count, i) = SpectralElement::fromType(type);
-					switch (type) {
-					case SpectralElement::POLYNOMIAL:
-						break;
-					case SpectralElement::GAUSSIAN:
-						// allow fall through because gaussians and lorentzians use common code
-					case SpectralElement::LORENTZIAN:
-						{
-							const PCFSpectralElement *pcf = dynamic_cast<
-								const PCFSpectralElement*
-							>(solutions[i]);
-							uInt plane = _lsPlane;
-							uInt col = lseCount;
-							// if block because we allow case fall through
-							if (type == SpectralElement::LORENTZIAN) {
-								lseCount++;
-							}
-							else {
-								plane = _gsPlane;
-								col = gCount;
-								gCount++;
-							}
-							_insertPCF(
-								*pcfMatrices, plane, *pcf, count, col,
-								subimPos, increment
-							);
-						}
-						break;
-					case SpectralElement::GMULTIPLET:
-						{
-							const GaussianMultipletSpectralElement *gm = dynamic_cast<
-								const GaussianMultipletSpectralElement*
-							>(solutions[i]);
-							const Vector<GaussianSpectralElement> g = gm->getGaussians();
-							for (uInt k=0; k<g.size(); k++) {
-								_insertPCF(
-									*pcfMatrices, gmCount + 2, g[k], count,
-									k, subimPos, increment
-								);
-							}
-							gmCount++;
-						}
-						break;
-					case SpectralElement::POWERLOGPOLY:
-						{
-							Vector<Double> sols = solutions[i]->get();
-							Vector<Double> errs = solutions[i]->getError();
-
-							for (uInt j=0; j<_nPLPCoeffs; j++) {
-								plpMatrices[PLPSOL](count, j) = sols[j];
-								plpMatrices[PLPERR](count, j) = errs[j];
-							}
-						}
-						break;
-					default:
-    LogOrigin logOrigin(_class, __FUNCTION__);
-						*_log << "Logic Error: Unhandled Spectral Element type"
-							<< LogIO::EXCEPTION;
-						break;
+		}
+		else {
+			LogOrigin logOrigin(_class, __FUNCTION__);
+			*_log << "Could not convert pixel to world coordinate: "
+				<< csysSub.errorMessage() << LogIO::EXCEPTION;
+			}
+		if (validArr(idx)) {
+			IPosition subimPos = inIter.position();
+			mask(idx) = anyTrue(inIter.getMask());
+			niterArr(idx) = (Int)fitter->getNumberIterations();
+			nCompArr(idx) = (Int)fitter->getList().nelements();
+			SpectralList solutions = fitter->getList();
+			uInt gCount = 0;
+			uInt gmCount = 0;
+			uInt lseCount = 0;
+			for (uInt i=0; i<solutions.nelements(); i++) {
+				SpectralElement::Types type = solutions[i]->getType();
+				typeMat(count, i) = SpectralElement::fromType(type);
+				switch (type) {
+				case SpectralElement::POLYNOMIAL:
+					break;
+				case SpectralElement::GAUSSIAN:
+					// allow fall through because gaussians and lorentzians use common code
+				case SpectralElement::LORENTZIAN:
+				{
+					const PCFSpectralElement *pcf = dynamic_cast<
+						const PCFSpectralElement*
+					>(solutions[i]);
+					uInt plane = _lsPlane;
+					uInt col = lseCount;
+					// if block because we allow case fall through
+					if (type == SpectralElement::LORENTZIAN) {
+						lseCount++;
 					}
+					else {
+						plane = _gsPlane;
+						col = gCount;
+						gCount++;
+					}
+					_insertPCF(
+						*pcfMatrices, plane, *pcf, count, col,
+						subimPos, increment
+					);
+				}
+				break;
+				case SpectralElement::GMULTIPLET:
+				{
+					const GaussianMultipletSpectralElement *gm = dynamic_cast<
+						const GaussianMultipletSpectralElement*
+					>(solutions[i]);
+					const Vector<GaussianSpectralElement> g = gm->getGaussians();
+					for (uInt k=0; k<g.size(); k++) {
+						_insertPCF(
+							*pcfMatrices, gmCount + 2, g[k], count,
+							k, subimPos, increment
+						);
+					}
+					gmCount++;
+				}
+				break;
+				case SpectralElement::POWERLOGPOLY:
+				{
+					Vector<Double> sols = solutions[i]->get();
+					Vector<Double> errs = solutions[i]->getError();
+					for (uInt j=0; j<_nPLPCoeffs; j++) {
+						plpMatrices[PLPSOL](count, j) = sols[j];
+						plpMatrices[PLPERR](count, j) = errs[j];
+					}
+				}
+				break;
+				default:
+					LogOrigin logOrigin(_class, __FUNCTION__);
+					*_log << "Logic Error: Unhandled Spectral Element type"
+						<< LogIO::EXCEPTION;
+					break;
 				}
 			}
 		}
+	}
 }
 
 void ImageProfileFitterResults::_writeLogfile(const String& str, Bool open, Bool close) {
@@ -342,9 +339,11 @@ void ImageProfileFitterResults::_setResults() {
 	std::auto_ptr<vector<vector<Matrix<Double> > > > pcfMatrices = _createPCFMatrices();
 	Matrix<Double> blank(aSize, _nPLPCoeffs, fNAN);
 
-	vector<Matrix<Double> > plpMatrices(
-		NPLPSOLMATRICES, blank
-	);
+	vector<Matrix<Double> > plpMatrices(NPLPSOLMATRICES);
+	for (uInt i=0; i<NPLPSOLMATRICES; i++) {
+		// because assignmet of Arrays is by reference, which is horribly confusing
+		plpMatrices[i] = blank.copy();
+	}
 	Matrix<String> typeMat(aSize, nComps, "UNDEF");
 	Array<Bool> mask(IPosition(1, aSize), False);
 	Array<Int> nCompArr(IPosition(1, aSize), -1);
@@ -596,46 +595,25 @@ void ImageProfileFitterResults::_writeImages(
 		}
 	}
 	if (_nPLPCoeffs > 0 && (! _plpName.empty() || ! _plpErrName.empty())) {
-		for (uInt i=0; i<_nPLPCoeffs; i++) {
-			String id;
-			switch (i) {
-			case 0: id = "c0"; break;
-			case 1: id = "alpha"; break;
-			case 2: id = "beta"; break;
-			case 3: id = "gamma"; break;
-			case 4: id = "delta"; break;
-			case 5: id = "epsilon"; break;
-			case 6: id = "zeta"; break;
-			default:
-				*_log << LogIO::WARN
-					<< "Writing more than 7 coefficient images for power log polynomials is not supported "
-					<< LogIO::POST;
-				break;
-			}
-			if (i > 6) {
-				break;
-			}
-			IPosition maskShape = _results.asRecord("plp").asArrayDouble("solutions").shape();
-			Array<Bool> fMask(maskShape);
+		IPosition maskShape = _results.asRecord("plp").asArrayDouble("solution").shape();
+		Array<Bool> fMask(maskShape);
 
-			maskShape[maskShape.size() - 1] = 1;
-			Array<Bool> reshapedMask = mask.reform(maskShape);
-			AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
-			String unit = i == 0 ? yUnit : "";
-			if (! _plpName.empty()) {
-				_makeSolutionImage(
-					_plpName + "_" + id, mycsys,
-					_results.asRecord("plp").asArrayDouble("solution"),
-					unit, fMask
-				);
-			}
-			if (! _plpErrName.empty()) {
-				_makeSolutionImage(
-					_plpErrName + "_" + id, mycsys,
-					_results.asRecord("plp").asArrayDouble("solution"),
-					unit, fMask
-				);
-			}
+		maskShape[maskShape.size() - 1] = 1;
+		Array<Bool> reshapedMask = mask.reform(maskShape);
+		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
+		if (! _plpName.empty()) {
+			_makeSolutionImage(
+				_plpName, mycsys,
+				_results.asRecord("plp").asArrayDouble("solution"),
+				"", fMask
+			);
+		}
+		if (! _plpErrName.empty()) {
+			_makeSolutionImage(
+				_plpErrName, mycsys,
+				_results.asRecord("plp").asArrayDouble("error"),
+				"", fMask
+			);
 		}
 	}
 }
@@ -697,33 +675,33 @@ void ImageProfileFitterResults::_resultsToLog() {
 	ostringstream summary;
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
 	summary << _summaryHeader;
-
-	if (_goodAmpRange.size() == 2) {
-		summary << "       --- valid amplitude range: " << _goodAmpRange << endl;
-	}
-	if (_goodCenterRange.size() == 2) {
-		summary << "       --- valid center range: " << _goodCenterRange << endl;
-	}
-	if (_goodFWHMRange.size() == 2) {
-		summary << "       --- valid FWHM range: " << _goodFWHMRange << endl;
-	}
-	summary << "       --- number of Gaussian singlets: " << _nGaussSinglets << endl;
-	summary << "       --- number of Gaussian multiplets: " << _nGaussMultiplets << endl;
-	if (_nGaussMultiplets > 0) {
-		for (uInt i=0; i<_nGaussMultiplets; i++) {
-			Array<Double> amp = _results.asRecord("gm" + String::toString(i)).asArrayDouble(AMP);
-			uInt n = amp.shape()[amp.ndim()-1];
-			summary << "           --- number of components in Gaussian multiplet "
-				<< i << ": " << n << endl;
+	if (_nPLPCoeffs == 0) {
+		if (_goodAmpRange.size() == 2) {
+			summary << "       --- valid amplitude range: " << _goodAmpRange << endl;
+		}
+		if (_goodCenterRange.size() == 2) {
+			summary << "       --- valid center range: " << _goodCenterRange << endl;
+		}
+		if (_goodFWHMRange.size() == 2) {
+			summary << "       --- valid FWHM range: " << _goodFWHMRange << endl;
+		}
+		summary << "       --- number of Gaussian singlets: " << _nGaussSinglets << endl;
+		summary << "       --- number of Gaussian multiplets: " << _nGaussMultiplets << endl;
+		if (_nGaussMultiplets > 0) {
+			for (uInt i=0; i<_nGaussMultiplets; i++) {
+				Array<Double> amp = _results.asRecord("gm" + String::toString(i)).asArrayDouble(AMP);
+				uInt n = amp.shape()[amp.ndim()-1];
+				summary << "           --- number of components in Gaussian multiplet "
+					<< i << ": " << n << endl;
+			}
+		}
+		if (_polyOrder >= 0) {
+			summary << "       --- polynomial order:    " << _polyOrder << endl;
+		}
+		else {
+			summary << "       --- no polynomial fit " << endl;
 		}
 	}
-	if (_polyOrder >= 0) {
-		summary << "       --- polynomial order:    " << _polyOrder << endl;
-	}
-	else {
-		summary << "       --- no polynomial fit " << endl;
-	}
-
 	if (_multiFit) {
 		summary << "       --- Multiple profiles fit, one per pixel over selected region" << endl;
 	}
@@ -831,7 +809,9 @@ void ImageProfileFitterResults::_resultsToLog() {
 					solutions = fitter->getList();
 					for (uInt i=0; i<solutions.nelements(); i++) {
 						SpectralElement::Types type = solutions[i]->getType();
-						summary << "    Results for component " << i << ":" << endl;
+						if (solutions.nelements() > 1) {
+							summary << "    Results for component " << i << ":" << endl;
+						}
 						switch(type) {
 						case SpectralElement::GAUSSIAN:
 							// allow fall through; gaussians and lorentzians use the same
@@ -861,6 +841,13 @@ void ImageProfileFitterResults::_resultsToLog() {
 								summary << _polynomialToString(*p, _csysIm, imPix, world);
 							}
 							break;
+						case SpectralElement::POWERLOGPOLY:
+							{
+								const PowerLogPolynomialSpectralElement *p
+									= dynamic_cast<const PowerLogPolynomialSpectralElement*>(solutions[i]);
+								summary << _powerLogPolyToString(*p);
+							}
+							break;
 						default:
 							*_log << "Logic Error: Unhandled spectral element type"
 							    << LogIO::EXCEPTION;
@@ -882,7 +869,7 @@ void ImageProfileFitterResults::_resultsToLog() {
 
 String ImageProfileFitterResults::_elementToString(
 	const Double value, const Double error,
-	const String& unit
+	const String& unit, Bool isFixed
 ) const {
 	Unit myUnit(unit);
 	Vector<String> unitPrefix;
@@ -938,8 +925,14 @@ String ImageProfileFitterResults::_elementToString(
     uInt precision = precisionForValueErrorPairs(valErr, Vector<Double>());
 	ostringstream out;
     out << std::fixed << setprecision(precision);
-    out << qVal.getValue() << " +/- " << qErr.getValue()
-    	<< " " << qVal.getUnit();
+    out << qVal.getValue();
+    if (isFixed && qErr.getValue() == 0) {
+    	out << " (fixed)";
+    }
+    else {
+    	out << " +/- " << qErr.getValue();
+    }
+    out << " " << qVal.getUnit();
     return out.str();
 }
 
@@ -951,13 +944,14 @@ String ImageProfileFitterResults::_pcfToString(
 	Vector<Double> myWorld = world;
     String yUnit = _subImage->units().getName();
 	ostringstream summary;
+	Vector<Bool> fixed = pcf->fixed();
 	if (showTypeString) {
 		summary << indent << "        Type     : "
 			<< SpectralElement::fromType(pcf->getType()) << endl;
 	}
 	summary << indent << "        Peak     : "
 		<< _elementToString(
-			pcf->getAmpl(), pcf->getAmplErr(), yUnit
+			pcf->getAmpl(), pcf->getAmplErr(), yUnit, fixed[0]
 		) << endl;
 	Double center = _centerWorld(
 	    *pcf, imPos
@@ -1011,12 +1005,12 @@ String ImageProfileFitterResults::_pcfToString(
     }
 	summary << indent << "        Center   : "
 		<< _elementToString(
-			center, centerErr, _xUnit
+			center, centerErr, _xUnit, fixed[1]
 		) << endl;
 	if (convertedCenterToPix) {
 		summary << indent << "                   "
 			<< _elementToString(
-				pCenter, pCenterErr, "pixel"
+				pCenter, pCenterErr, "pixel", fixed[1]
 			) << endl;
 	}
 	else {
@@ -1024,12 +1018,12 @@ String ImageProfileFitterResults::_pcfToString(
 	}
 	summary << indent << "        FWHM     : "
 		<< _elementToString(
-			fwhm, fwhmErr, _xUnit
+			fwhm, fwhmErr, _xUnit, fixed[2]
 		)
 		<< endl;
 	if (convertedFWHMToPix) {
 		summary << indent << "                   "
-			<< _elementToString(pFWHM, pFWHMErr, "pixel")
+			<< _elementToString(pFWHM, pFWHMErr, "pixel", fixed[2])
 			<< endl;
 	}
 	else {
@@ -1039,7 +1033,7 @@ String ImageProfileFitterResults::_pcfToString(
 	Double integralErr = pcf->getIntegralErr()*increment;
 	String integUnit = (Quantity(1.0 ,yUnit)*Quantity(1.0, _xUnit)).getUnit();
 	summary << indent << "        Integral : "
-		<< _elementToString(integral, integralErr, integUnit)
+		<< _elementToString(integral, integralErr, integUnit, fixed[0] && fixed[2])
 		<< endl;
 	return summary.str();
 }
@@ -1077,7 +1071,7 @@ String ImageProfileFitterResults::_polynomialToString(
 			unit = unit + "/((pixel)" + String::toString(j) + ")";
 		}
 		summary << "         c" << j << " : "
-            << _elementToString(parms[j], errs[j], unit) << endl;
+            << _elementToString(parms[j], errs[j], unit, False) << endl;
 	}
     // coefficients in pixel coordinates
     Double x0;
@@ -1120,10 +1114,39 @@ String ImageProfileFitterResults::_polynomialToString(
 		if (j > 0 ) {
 			unit = unit + "/" + "((" + _xUnit + ")" + String::toString(j) + ")";
 		}
-        summary << _elementToString(pCoeff[j], pCoeffErr[j], unit) << endl;
+        summary << _elementToString(pCoeff[j], pCoeffErr[j], unit, False) << endl;
     }
 	return summary.str();
 }
+
+
+String ImageProfileFitterResults::_powerLogPolyToString(
+	const PowerLogPolynomialSpectralElement& plp
+) const {
+	ostringstream summary;
+	summary << "    Type         : POWER LOGARITHMIC POLYNOMIAL" << endl;
+	summary << "    Function     : c0*(x/D)**(c1";
+	uInt nElements = plp.get().size();
+	for (uInt i=2; i<nElements; i++) {
+		summary << " + c" << i << "*ln(x/D)";
+		if (i > 2) {
+			summary << "**" << (i - 1);
+		}
+	}
+	summary << ")" << endl;
+	summary << "    D            : " << _plpDivisor << endl;
+	Vector<Double> parms, errs;
+	plp.get(parms);
+	plp.getError(errs);
+	Vector<Bool> fixed = plp.fixed();
+
+	for (uInt j=0; j<parms.size(); j++) {
+		summary << "    c" << j << "           : "
+            << _elementToString(parms[j], errs[j], "", fixed[j]) << endl;
+	}
+	return summary.str();
+}
+
 
 void ImageProfileFitterResults::_makeSolutionImage(
 	const String& name, const CoordinateSystem& csys,

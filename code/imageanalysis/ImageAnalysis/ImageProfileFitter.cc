@@ -59,7 +59,8 @@ ImageProfileFitter::ImageProfileFitter(
 	_residual(), _model(), _xUnit(), _centerName(),
 	_centerErrName(), _fwhmName(), _fwhmErrName(),
 	_ampName(), _ampErrName(), _integralName(),
-	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),_multiFit(False),
+	_integralErrName(), _plpName(), _plpErrName(), _sigmaName(),
+	_abscissaDivisorForDisplay("1"), _multiFit(False),
 	_deleteImageOnDestruct(False), _logResults(True), _polyOrder(-1),
 	_fitAxis(axis), _nGaussSinglets(ngauss), _nGaussMultiplets(0),
 	_nLorentzSinglets(0), _nPLPCoeffs(0),
@@ -84,6 +85,7 @@ ImageProfileFitter::ImageProfileFitter(
     		<< LogIO::POST;
     }
     else if (spectralList.nelements() > 0) {
+
     	_nonPolyEstimates = spectralList;
     	_nGaussSinglets = 0;
     	_nGaussMultiplets = 0;
@@ -120,6 +122,13 @@ ImageProfileFitter::ImageProfileFitter(
 				    << LogIO::EXCEPTION;
 				break;
 			}
+
+    	}
+    	if (ngauss > 0 && ngauss != _nGaussSinglets) {
+    		*_getLog() << LogIO::WARN
+    			<< "Spectral list supplied and ngauss > 0, ngauss will be ignored "
+    			<< "and " << _nGaussSinglets << " Gaussian singlets "
+    			<< " as specified in the spectra list will be fit" << LogIO::POST;
     	}
 
     	if (_nGaussSinglets > 0) {
@@ -236,16 +245,21 @@ Record ImageProfileFitter::fit() {
 		_nLorentzSinglets, _nPLPCoeffs, _logResults,
 		_multiFit, _getLogFile(), _xUnit, _summaryHeader()
 	);
-	resultHandler.setAmpName(_ampName);
-	resultHandler.setAmpErrName(_ampErrName);
-	resultHandler.setCenterName(_centerName);
-	resultHandler.setCenterErrName(_centerErrName);
-	resultHandler.setFWHMName(_fwhmName);
-	resultHandler.setFWHMErrName(_fwhmErrName);
-	resultHandler.setIntegralName(_integralName);
-	resultHandler.setIntegralErrName(_integralErrName);
-	resultHandler.setPLPName(_plpName);
-	resultHandler.setPLPErrName(_plpErrName);
+	if (_nPLPCoeffs == 0) {
+		resultHandler.setAmpName(_ampName);
+		resultHandler.setAmpErrName(_ampErrName);
+		resultHandler.setCenterName(_centerName);
+		resultHandler.setCenterErrName(_centerErrName);
+		resultHandler.setFWHMName(_fwhmName);
+		resultHandler.setFWHMErrName(_fwhmErrName);
+		resultHandler.setIntegralName(_integralName);
+		resultHandler.setIntegralErrName(_integralErrName);
+	}
+	else {
+		resultHandler.setPLPName(_plpName);
+		resultHandler.setPLPErrName(_plpErrName);
+		resultHandler.setPLPDivisor(_abscissaDivisorForDisplay);
+	}
 	resultHandler.setOutputSigmaImage(_sigmaName);
 	resultHandler.createResults();
 	_results = resultHandler.getResults();
@@ -259,6 +273,17 @@ Record ImageProfileFitter::fit() {
     	ImageUtilities::copyMiscellaneous(outputSigma, *originalSigma);
     }
 	return _results;
+}
+
+void ImageProfileFitter::setPolyOrder(const Int p) {
+	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	if (p < 0) {
+		*_getLog() << "A polynomial cannot have a negative order" << LogIO::EXCEPTION;
+	}
+	if (_nPLPCoeffs > 0) {
+		*_getLog() << "Cannot simultaneously fit a polynomial and a power logarithmic polynomial."
+			<< LogIO::EXCEPTION;
+	}
 }
 
 void ImageProfileFitter::setGoodAmpRange(const Double min, const Double max) {
@@ -377,11 +402,30 @@ Record ImageProfileFitter::getResults() const {
 
 void ImageProfileFitter::setAbscissaDivisor(Double d) {
 	if (_nPLPCoeffs == 0) {
+		*_getLog() << LogOrigin(_class, __FUNCTION__);
 		*_getLog() << LogIO::WARN << "This object is not configured to fit a power logarithmic polynomial "
 			<< "and so setting the abscissa divisor will have no effect in the fitting process."
 			<< LogIO::POST;
 	}
 	_abscissaDivisor = d;
+	_abscissaDivisorForDisplay = String::toString(d) + _getImage()->coordinates().worldAxisUnits()[_fitAxis];
+}
+
+void ImageProfileFitter::setAbscissaDivisor(const Quantity& q) {
+	String fitAxisUnit = _getImage()->coordinates().worldAxisUnits()[_fitAxis];
+	if (! q.isConform(fitAxisUnit)) {
+		*_getLog() << LogOrigin(_class, __FUNCTION__);
+		*_getLog() << "Abscissa divisor unit " << q.getUnit() << " is not consistent with fit axis unit."
+			<< LogIO::EXCEPTION;
+	}
+	if (_nPLPCoeffs == 0) {
+		*_getLog() << LogOrigin(_class, __FUNCTION__);
+		*_getLog() << LogIO::WARN << "This object is not configured to fit a power logarithmic polynomial "
+			<< "and so setting the abscissa divisor will have no effect in the fitting process."
+			<< LogIO::POST;
+	}
+	_abscissaDivisor = q.getValue(fitAxisUnit);
+	_abscissaDivisorForDisplay = String::toString(q);
 }
 
 
@@ -541,8 +585,8 @@ void ImageProfileFitter::_fitallprofiles() {
 
 // moved from ImageUtilities
 void ImageProfileFitter::_fitProfiles(
-	std::auto_ptr<ImageInterface<Float> >& pFit,
-	std::auto_ptr<ImageInterface<Float> >& pResid,
+	const std::auto_ptr<ImageInterface<Float> >& pFit,
+	const std::auto_ptr<ImageInterface<Float> >& pResid,
     const Bool showProgress
 ) {
 	IPosition inShape = _subImage.shape();
@@ -590,10 +634,8 @@ void ImageProfileFitter::_fitProfiles(
 	//
 	IPosition sliceShape(nDim, 1);
 	sliceShape(_fitAxis) = inShape(_fitAxis);
-	Array<Float> failData(sliceShape);
-	failData = NAN;
-	Array<Bool> failMask(sliceShape);
-	failMask = False;
+	Array<Float> failData(sliceShape, NAN);
+	Array<Bool> failMask(sliceShape, False);
 	Array<Float> resultData(sliceShape);
 	Array<Bool> resultMask(sliceShape);
 
@@ -613,8 +655,6 @@ void ImageProfileFitter::_fitProfiles(
 		*_getLog() << errMsg << LogIO::EXCEPTION;
 	}
 
-
-
 	IPosition inTileShape = _subImage.niceCursorShape();
 	TiledLineStepper stepper (_subImage.shape(), inTileShape, _fitAxis);
 	RO_MaskedLatticeIterator<Float> inIter(_subImage, stepper);
@@ -633,16 +673,29 @@ void ImageProfileFitter::_fitProfiles(
 	ImageFit1D<Float> fitter = (_sigma.get() == 0)
 		? ImageFit1D<Float>(_subImage, _fitAxis)
 		: ImageFit1D<Float>(_subImage, *_sigma, _fitAxis);
-	Double *divisorPtr = _nPLPCoeffs > 0 && _abscissaDivisor != 1 ? &_abscissaDivisor : 0;
+
 	Bool isSpectral = _fitAxis == csys.spectralAxisNumber();
 
 	// calculate the abscissa values only once if they will not change
 	// with position
-	Vector<Double> abscissaValues = isSpectral
-		? fitter.makeAbscissa(
-			abcissaType, True, divisorPtr
-		) : Vector<Double>(0);
+	Double *divisorPtr = 0;
+
+	Vector<Double> abscissaValues(0);
+	if (isSpectral) {
+		if( _nPLPCoeffs > 0) {
+			abscissaValues = fitter.makeAbscissa(
+				abcissaType, True, 0
+			);
+			_setAbscissaDivisorIfNecessary(abscissaValues);
+			if (_abscissaDivisor != 1) {
+				divisorPtr = &_abscissaDivisor;
+				abscissaValues /= _abscissaDivisor;
+			}
+		}
+
+	}
 	Bool abscissaSet = abscissaValues.size() > 0;
+
 	std::auto_ptr<PolynomialSpectralElement> polyEl(0);
 	if (_polyOrder >= 0) {
 		polyEl.reset(new PolynomialSpectralElement(_polyOrder));
@@ -680,59 +733,11 @@ void ImageProfileFitter::_fitProfiles(
 		if (! fitter.setData (curPos, abcissaType, True, divisorPtr)) {
 			*_getLog() << "Unable to set data" << LogIO::EXCEPTION;
 		}
-		if (_nonPolyEstimates.nelements() == 0) {
-			if (! fitter.setGaussianElements (_nGaussSinglets)) {
-				*_getLog() << "Unable to set gaussian elements"
-					<< LogIO::EXCEPTION;
-			}
-			if (polyEl.get() != 0) {
-				fitter.addElement(*polyEl);
-			}
-		}
-		else {
-			// user supplied initial estimates
-			if (goodPos.size() > 0) {
-				IPosition nearest;
-				Int minDist2 = 0;
-				for (
-					IPosition::const_iterator iter=fitterShape.begin();
-					iter!=fitterShape.end(); iter++
-				) {
-					minDist2 += *iter * *iter;
-				}
-				for (
-					vector<IPosition>::const_reverse_iterator iter=goodPos.rbegin();
-					iter != goodPos.rend(); iter++
-				) {
-					IPosition diff = curPos - *iter;
-					Int dist2 = 0;
-					Bool larger = False;
-					for (
-						IPosition::const_iterator ipositer=diff.begin();
-						ipositer!=diff.end(); ipositer++
-					) {
-						dist2 += *ipositer * *ipositer;
-						if(dist2 >= minDist2) {
-							larger = True;
-							break;
-						}
-					}
-					if (
-						_fitters(*iter).getList().nelements() == nOrigComps
-						&& ! larger
-					) {
-						minDist2 = dist2;
-						nearest = *iter;
-						if (minDist2 == 1) {
-							// can't get any nearer than this
-							break;
-						}
-					}
-				}
-				newEstimates = _fitters(nearest).getList();
-			}
-			fitter.setElements(newEstimates);
-		}
+		_setFitterElements(
+			fitter, newEstimates, polyEl, goodPos,
+			fitterShape, curPos, nOrigComps
+		);
+
 		nFit++;
 		Bool ok = False;
 		try {
@@ -752,39 +757,136 @@ void ImageProfileFitter::_fitProfiles(
 		}
 		_fitters(curPos) = fitter;
 		// Evaluate and fill
-		if (ok) {
-			Array<Bool> resultMask = fitter.getTotalMask().reform(sliceShape);
-			if (pFit.get()) {
-				Array<Float> resultData = fitter.getFit().reform(sliceShape);
-				pFit->putSlice (resultData, curPos);
-				if (pFitMask) {
-					pFitMask->putSlice(resultMask, curPos);
-				}
-			}
-			if (pResid.get()) {
-				Array<Float> resultData = fitter.getResidual().reform(sliceShape);
-				pResid->putSlice (resultData, curPos);
-				if (pResidMask) pResidMask->putSlice(resultMask, curPos);
-			}
+		if (ok && (pFit.get() || pResid.get())) {
+			_updateModelAndResidual(
+				pFit, pResid, fitter, sliceShape, curPos,
+				pFitMask, pResidMask, failData, failMask
+			);
 		}
-		else {
-			if (pFit.get()) {
-				pFit->putSlice (failData, curPos);
-				if (pFitMask) {
-					pFitMask->putSlice(failMask, curPos);
-				}
-			}
-			if (pResid.get()) {
-				pResid->putSlice (failData, curPos);
-				if (pResidMask) {
-					pResidMask->putSlice(failMask, curPos);
-				}
-			}
-		}
+
 		if (showProgress) {
 			pProgressMeter->update(Double(nProfiles));
 		}
 		count++;
+	}
+}
+
+void ImageProfileFitter::_updateModelAndResidual(
+    const std::auto_ptr<ImageInterface<Float> >& pFit,
+    const std::auto_ptr<ImageInterface<Float> >& pResid,
+    const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
+    const IPosition& curPos, Lattice<Bool>* const &pFitMask,
+    Lattice<Bool>* const &pResidMask, const Array<Float>& failData,
+    const Array<Bool>& failMask
+) const {
+	Array<Bool> resultMask = fitter.getTotalMask().reform(sliceShape);
+	if (pFit.get()) {
+		Array<Float> resultData = fitter.getFit().reform(sliceShape);
+		pFit->putSlice (resultData, curPos);
+		if (pFitMask) {
+			pFitMask->putSlice(resultMask, curPos);
+		}
+	}
+	if (pResid.get()) {
+		Array<Float> resultData = fitter.getResidual().reform(sliceShape);
+		pResid->putSlice (resultData, curPos);
+		if (pResidMask) pResidMask->putSlice(resultMask, curPos);
+	}
+	else {
+		if (pFit.get()) {
+			pFit->putSlice (failData, curPos);
+			if (pFitMask) {
+				pFitMask->putSlice(failMask, curPos);
+			}
+		}
+		if (pResid.get()) {
+			pResid->putSlice (failData, curPos);
+			if (pResidMask) {
+				pResidMask->putSlice(failMask, curPos);
+			}
+		}
+	}
+}
+
+void ImageProfileFitter::_setFitterElements(
+	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
+	const std::auto_ptr<PolynomialSpectralElement>& polyEl,
+	const std::vector<IPosition>& goodPos,
+	const IPosition& fitterShape, const IPosition& curPos,
+	uInt nOrigComps
+
+
+) const {
+	if (_nonPolyEstimates.nelements() == 0) {
+		if (! fitter.setGaussianElements (_nGaussSinglets)) {
+			*_getLog() << "Unable to set gaussian elements"
+				<< LogIO::EXCEPTION;
+		}
+		if (polyEl.get() != 0) {
+			fitter.addElement(*polyEl);
+		}
+	}
+	else {
+		// user supplied initial estimates
+		if (goodPos.size() > 0) {
+			IPosition nearest;
+			Int minDist2 = 0;
+			for (
+				IPosition::const_iterator iter=fitterShape.begin();
+				iter!=fitterShape.end(); iter++
+			) {
+				minDist2 += *iter * *iter;
+			}
+			for (
+				vector<IPosition>::const_reverse_iterator iter=goodPos.rbegin();
+				iter != goodPos.rend(); iter++
+			) {
+				IPosition diff = curPos - *iter;
+				Int dist2 = 0;
+				Bool larger = False;
+				for (
+					IPosition::const_iterator ipositer=diff.begin();
+					ipositer!=diff.end(); ipositer++
+				) {
+					dist2 += *ipositer * *ipositer;
+					if(dist2 >= minDist2) {
+						larger = True;
+						break;
+					}
+				}
+				if (
+					_fitters(*iter).getList().nelements() == nOrigComps
+					&& ! larger
+				) {
+					minDist2 = dist2;
+					nearest = *iter;
+					if (minDist2 == 1) {
+						// can't get any nearer than this
+						break;
+					}
+				}
+			}
+			newEstimates = _fitters(nearest).getList();
+		}
+		fitter.setElements(newEstimates);
+	}
+}
+
+void ImageProfileFitter::_setAbscissaDivisorIfNecessary(
+	const Vector<Double>& abscissaValues
+) {
+	if (_abscissaDivisor == 0) {
+		setAbscissaDivisor(1);
+		if (abscissaValues.size() > 0) {
+			Double minAbs = min(abs(abscissaValues));
+			Double maxAbs = max(abs(abscissaValues));
+			Int l = (Int)log10(sqrt(minAbs*maxAbs));
+			setAbscissaDivisor(pow(10, l));
+		}
+	}
+	if (_abscissaDivisor != 1) {
+		*_getLog() << LogIO::NORMAL << "Dividing abscissa values by "
+			<< _abscissaDivisor << " before fitting" << LogIO::POST;
 	}
 }
 

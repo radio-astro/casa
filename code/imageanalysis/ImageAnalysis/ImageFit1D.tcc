@@ -276,6 +276,10 @@ Bool ImageFit1D<T>::setAbcissaState (
     CoordinateSystem& cSys, const String& xUnit,
     const String& doppler, uInt pixelAxis
 ) {
+	if (xUnit == "native") {
+		type = ImageFit1D<T>::IM_NATIVE;
+		return True;
+	}
    if (xUnit.contains(String("pix"))) {
       type = ImageFit1D<T>::PIXEL;
       return True;
