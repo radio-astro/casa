@@ -166,6 +166,7 @@ class GriddingBase(object):
         LOG.info('Accumulate nearby spectrum for each Grid position...')
         LOG.info('Processing %d spectra...' % (NROW))
         OutputTable = []
+        
         # create storage for output
         StorageOut = numpy.ones((NROW, NCHAN), dtype=numpy.float32) * NoData
         ID = 0
@@ -196,7 +197,7 @@ class GriddingBase(object):
         # Create progress timer
         Timer = common.ProgressTimer(80, NROW, LogLevel)
         for [IF, POL, X, Y, RAcent, DECcent, RowDelta] in GridTable:
-            rowlist = []
+            #rowlist = []
             indexlist = []
             deltalist = []
             rmslist = []
@@ -205,12 +206,13 @@ class GriddingBase(object):
                 # Check Summary Flag
                 _index = IDX2StorageID[int(index)]
                 if net_flag[_index] == 1:
-                    rowlist.append(int(row))
+                    #rowlist.append(int(row))
                     indexlist.append(_index)
                     deltalist.append(delta)
                     rmslist.append(rms)
                 else: flagged += 1
-            num_valid_row = len(rowlist)
+            #num_valid_row = len(rowlist)
+            num_valid_row = len(indexlist)
             if num_valid_row == 0:
                 # No valid Spectra at the position
                 RMS = 0.0
@@ -252,8 +254,6 @@ class GriddingBase(object):
                         #if tTSYS[rowlist[m]] > 0.5:
                             #weight_factor = (tEXPT[rowlist[m]]/(tTSYS[rowlist[m]]*tTSYS[rowlist[m]]))
                             weight_factor = (exposure[indexlist[m]]/(tsys[indexlist[m]]*tsys[indexlist[m]]))
-                            LOG.debug('tEXPT[rowlist[m]]=%s, tTSYS[rowlist[m]]=%s'%(tEXPT[rowlist[m]], tTSYS[rowlist[m]]))
-                            LOG.debug('exposure[indexlist[m]]=%s, tsys[indexlist[m]]=%s'%(exposure[indexlist[m]], tsys[indexlist[m]]))
                             w[m] *= weight_factor
                             weightlist[m] *= weight_factor
                             #if self.datatable[m][DT_TSYS] > 0.5:
