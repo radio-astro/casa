@@ -487,8 +487,17 @@ def import_flux(output_dir, observing_run, filename=None):
         for row in reader:
             (ms_name, field_id, spw_id, I, Q, U, V) = row
             spw_id = int(spw_id)
-            #ms = context.observing_run.get_ms(os.path.join(context.output_dir, ms_name))
-            ms = observing_run.get_ms(ms_name)
+            try:
+                ms = observing_run.get_ms(ms_name)
+            except KeyError:
+                # No MS registered by that name. This could be caused by a
+                # flux.csv from a previous run
+                LOG.warning('%s refers to unregistered measurement set \'%s\'. '
+                            'Is %s stale?' % (filename, 
+                                              ms_name, 
+                                              os.path.basename(filename)))
+                continue
+            
             fields = ms.get_fields(field_id)
             spw = ms.get_spectral_window(spw_id)
             measurement = domain.FluxMeasurement(spw, I, Q, U, V)
