@@ -198,9 +198,10 @@ class SDImagingWorker(object):
         #num_validsp_array = []
         #rms_array = []
         for pol in polids:                        
-            worker = gridding_class(datatable, antenna_indices, antenna_files, spwid, pol, srctype, nchan, grid_size)
+            gridder = gridding_class(datatable, antenna_indices, antenna_files, spwid, pol, srctype, nchan, grid_size)
 
-            (spectra,grid_table) = worker.execute()
+            #(spectra,grid_table) = gridder.execute()
+            (spectra, image_property, validsp, rms) = gridder.execute()
             data_array.append(spectra)
             num_validsp_array.append([r[6] for r in grid_table])
             rms_array.append([r[8] for r in grid_table])
@@ -208,16 +209,16 @@ class SDImagingWorker(object):
         # imaging
         LOG.todo('How to set edge parameter? Is it local? or global?')
         edge = []
-        worker = SDImageGenerator(data_array, edge)
+        image_generator = SDImageGenerator(data_array, edge)
         antenna = reference_data.ms.antenna_array.name
         observer = reference_data.observer
         obs_date = reference_data.start_time
-        worker.define_image(grid_table, 
-                            freq_refpix=refpix, freq_refval=refval,
-                            freq_increment=increment,
-                            rest_frequency=rest_freqs,
-                            antenna=antenna, observer=observer, 
-                            obs_date=obs_date)
+        image_generator.define_image(grid_table, 
+                                     freq_refpix=refpix, freq_refval=refval,
+                                     freq_increment=increment,
+                                     rest_frequency=rest_freqs,
+                                     antenna=antenna, observer=observer, 
+                                     obs_date=obs_date)
 
         # create image from gridded data
         LOG.info('create full channel image')
@@ -231,7 +232,7 @@ class SDImagingWorker(object):
             polstr = 'I'
         imagename = '%s.%s.spw%s.%s.image'%(source_name.replace(' ','_'),antenna_name,spwid,polstr)
         kwargs = {'imagename':imagename}
-        worker.full_channel_image(imagename=imagename)
+        image_generator.full_channel_image(imagename=imagename)
 
         
 
