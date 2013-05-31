@@ -1,5 +1,5 @@
 //# Feather.cc: Implementation of Feather.h
-//# Copyright (C) 1997-2012
+//# Copyright (C) 1997-2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This program is free software; you can redistribute it and/or modify it
@@ -141,10 +141,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       lowImOrig_p=new TempImage<Float>(lowIm_p->shape(), lowIm_p->coordinates(),0);
       lowImOrig_p->copyData(*lowIm_p);
       lBeamOrig_p=lBeam_p;
-    }
-
-    
+    }   
   }
+
+  void Feather::convolveINT(const GaussianBeam& newHighBeam){
+    GaussianBeam toBeUsed;
+    try {
+      lBeam_p.deconvolve(toBeUsed, newHighBeam);
+    }
+    catch (const AipsError& x) {
+      throw(AipsError("new Beam may be smaller than the beam of original Interferometer  image"));
+    }
+    try{
+      StokesImageUtil::Convolve(*highIm_p, toBeUsed, True);
+    }
+    catch(const AipsError& x){
+      throw(AipsError("Could not convolve INT image for some reason; try a lower resolution may be"));
+    }
+    hBeam_p=newHighBeam; 
+
+    //need to  redo feather  application
+    cweightApplied_p=False;
+  }
+
   void Feather::setINTImage(const ImageInterface<Float>& INTImage){
     ImageInfo highInfo=INTImage.imageInfo();
     hBeam_p=highInfo.restoringBeam();
