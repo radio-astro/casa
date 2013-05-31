@@ -469,7 +469,7 @@ public:
 
         const ChannelSelector * result = 0;
 
-        if (msId == msId_p || frameOfReference == frameOfReference_p){
+        if (msId == msId_p && frameOfReference == frameOfReference_p){
 
             if (frameOfReference_p == FrequencySelection::ByChannel){
                 time = -1; // channel selection is not function of time
