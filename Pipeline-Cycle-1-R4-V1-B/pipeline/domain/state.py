@@ -3,7 +3,6 @@ import pipeline.infrastructure as infrastructure
 
 LOG = infrastructure.get_logger(__name__)
 
-
 class State(object):
     # Check whether these states co-exist with PHASE
     _PHASE_BYPASS_INTENTS = frozenset(('BANDPASS','AMPLITUDE'))
@@ -50,6 +49,10 @@ class State(object):
         self.id = state_id
         self.obs_mode = obs_mode
         
+        if 'CALIBRATE_FLUX' in obs_mode:
+            LOG.info('Translating %s intent to AMPLITUDE for '
+                     'state #%s' % (obs_mode, state_id))
+        
         if is_cycle0:
             # For Cycle 0, check whether this state has PHASE and another cal
             # intent. If so, the PHASE obsmode will be removed.
@@ -83,10 +86,6 @@ class State(object):
     @property
     def intents(self):
         # return all intents
-        if 'CALIBRATE_FLUX#ON_SOURCE' in self.obs_mode and not hasattr(
-          self, 'fluxreport'):
-            LOG.info('translating CALIBRATE_FLUX intent to AMPLITUDE')
-            self.fluxreport = True 
         return set([intent for mode, intent in self.obs_mode_mapping.iteritems()
                    if self.obs_mode.find(mode) != -1])
 
@@ -123,3 +122,4 @@ class State(object):
 
     def __repr__(self):
         return 'State(id={0}, intents={1})'.format(self.id, self.intents)
+
