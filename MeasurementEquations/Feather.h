@@ -72,6 +72,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     //should return the same values as getFTCutSDImage
     void getFeatheredCutSD(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
     void getFeatheredCutINT(Vector<Float>& ux, Vector<Float>& xamp, Vector<Float>& uy, Vector<Float>& yamp, Bool radial=False);
+    //This function convolves the INT image to the new GaussianBeam
+    //So the INT image stored in this object is going to be replaced by the new convolved image
+    void convolveINT(const GaussianBeam& newHighBeam);
+
     //write the feathered image to disk
     Bool saveFeatheredImage(const String& imagename);
     ///////Helper function to get XY slices and radial cuts for any generic image
