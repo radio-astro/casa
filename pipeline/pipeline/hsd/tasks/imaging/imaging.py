@@ -200,8 +200,8 @@ class SDImagingWorker(object):
         for pol in polids:                        
             gridder = gridding_class(datatable, antenna_indices, antenna_files, spwid, pol, srctype, nchan, grid_size)
 
-            #(spectra,grid_table) = gridder.execute()
-            (spectra, image_property, validsp, rms) = gridder.execute()
+            (spectra,grid_table) = gridder.execute()
+            #(spectra, image_property, validsp, rms) = gridder.execute()
             data_array.append(spectra)
             num_validsp_array.append([r[6] for r in grid_table])
             rms_array.append([r[8] for r in grid_table])
