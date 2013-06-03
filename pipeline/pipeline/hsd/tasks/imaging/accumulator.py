@@ -29,17 +29,18 @@ class LinearKernel(object):
 class Accumulator(object):
     KernelType = {'gauss': GaussianKernel,
                   'linear': LinearKernel}
-    def __init__(self, minmaxclip, weight_rms, weight_tintsys):
+    def __init__(self, minmaxclip, weight_rms, weight_tintsys,
+                 kernel_type, kernel_width):
         self.minmaxclip = minmaxclip
         self.weight_rms = weight_rms
         self.weight_tintsys = weight_tintsys
+        self.kernel = self.KernelType[kernel_type.lower()](kernel_width)
 
-    def init(self, data, kernel_type, kernel_width):
+    def init(self, data):
         self.data = data
         self.data_shape = data.shape
         self.channel_weight = numpy.ones(self.data_shape, dtype=numpy.float32)
         self.row_weight = numpy.ones(self.data_shape[0], dtype=numpy.float32)
-        self.kernel = self.KernelType[kernel_type.lower()](kernel_width)
 
         # make sure that minmaxclip doesn't clip whole data
         self.minmaxclip = self.minmaxclip and self.data_shape[0] > 2

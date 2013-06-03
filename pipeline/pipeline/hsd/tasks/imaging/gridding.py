@@ -124,10 +124,10 @@ class GriddingBase(object):
         # Re-Gridding
         # 2008/09/20 Spacing should be identical between RA and DEC direction
         # Curvature has not been taken account
-        DecCorrection = 1.0 / math.cos(self.datatable.getcell('DEC',0) / 180.0 * 3.141592653)
-        #DecCorrection = 1.0 / math.cos(decs[0] / 180.0 * 3.141592653)
+        dec_corr = 1.0 / math.cos(self.datatable.getcell('DEC',0) / 180.0 * 3.141592653)
+        #dec_corr = 1.0 / math.cos(decs[0] / 180.0 * 3.141592653)
 
-        GridTable = self._group(index_list, rows, ants, ras, decs, stats, combine_radius, allowance_radius, grid_spacing, DecCorrection)
+        GridTable = self._group(index_list, rows, ants, ras, decs, stats, combine_radius, allowance_radius, grid_spacing, dec_corr)
         
         # create storage
         num_spectra = len(index_list)
@@ -138,14 +138,17 @@ class GriddingBase(object):
         LOG.info('Processing %d spectra...' % num_spectra)
         
         if self.nchan != 1:
-            clip = self.Rule['Clipping']
-            rms_weight = self.Rule['WeightRMS']
-            tsys_weight = self.Rule['WeightTsysExptime']
+            accum = Accumulator(minmaxclip=(self.Rule['Clipping'].upper()=='MINMAXREJECT'),
+                                weight_rms=self.Rule['WeightRMS'],
+                                weight_tintsys=self.Rule['WeightTsysExptime'],
+                                kernel_type=self.Rule['WeightDistance'],
+                                kernel_width=kernel_width)
         else:
-            clip = 'none'
-            rms_weight = False
-            tsys_weight = True
-        weight = self.Rule['WeightDistance']
+            accum = Accumulator(minmaxclip=False,
+                                weight_rms=False,
+                                weight_tintsys=True,
+                                kernel_type=self.Rule['WeightDistance'],
+                                kernel_width=kernel_width)
 
         num_grid = len(GridTable)
         LOG.info('Accumulate nearby spectrum for each Grid position...')
@@ -199,10 +202,10 @@ class GriddingBase(object):
                 data = SpStorage[indexlist]
 
                 # Data accumulation by Accumulator
-                accum = Accumulator(clip.upper()=='MINMAXREJECT',
-                                    rms_weight,
-                                    tsys_weight)
-                accum.init(data, weight.lower(), kernel_width)
+                #accum = Accumulator(clip.upper()=='MINMAXREJECT',
+                #                    rms_weight,
+                #                    tsys_weight)
+                accum.init(data)
                 accum.accumulate(indexlist, rmslist, deltalist, tsys, exposure)
                 
                 StorageOut[ID] = accum.accumulated
