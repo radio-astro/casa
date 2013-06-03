@@ -263,6 +263,7 @@ class spxfit_test(unittest.TestCase):
                     imagename=imagename, plpest=plpestoff, plpfix=plpfix,
                     multifit=True, plpsol=plpsol, plperr=plperr
                 )
+            myia.done(remove=True)
             sols = rec['plp']['solution']
             self.assertTrue((sols[:,:,:,1] == 2.2).all())
             myia.open(plpsol)
@@ -271,14 +272,89 @@ class spxfit_test(unittest.TestCase):
                     abs(myia.getchunk()/sols - 1) < 1e-7
                 ).all()
             )
+            myia.done(remove=True)
+
             myia.open(plperr)
             self.assertTrue(
                 (
                     abs(myia.getchunk() - rec['plp']['error']) < 1e-8
                 ).all()
             )
-            myia.done()
+            myia.done(remove=True)
+            
+    def test_multi_image(self):
+        """Test multi image support"""
+        imagename1 = "concat1.im"
+        global myia
+        myia.fromshape(imagename1,[2, 2, 100])
+        csys = myia.coordsys()
+        inc = csys.increment()['numeric']
+        inc[2] = 1e7
+        csys.setincrement(inc)
+        myia.setcoordsys(csys.torecord())
+        
+        imagename2 = "concat2.im"
+        myia.fromshape(imagename2,[2, 2, 100])
+        csys = myia.coordsys()
+        inc = csys.increment()['numeric']
+        inc[2] = 1e7
+        csys.setincrement(inc)
+        inc[2] = 1e7
+        refval = csys.referencevalue()['numeric']
+        refval[2] = 3e9
+        csys.setreferencevalue(refval)
+        myia.setcoordsys(csys.torecord())
+        plpest = [0.5, 2]
+        for imagename in [imagename1, imagename2]:
+            myia.open(imagename)
+            zz = myia.getchunk()
+            myfn = fn.powerlogpoly(plpest)
+            for i in range(zz.shape[2]):
+                world = myia.toworld([0,0,i])['numeric'][2]
+                zz[:,:,i] = myfn.f(world/1e9)
+                myia.putchunk(zz)
+        rec = spxfit(imagename=[imagename1, imagename2], plpest=plpest, model="model.im")
+        sols = rec['plp']['solution'].ravel()
+        self.assertTrue((abs(1 - sols/plpest) < 1e-9).all())
+        rec = spxfit(imagename=[imagename1, imagename2], plpest=[0.4, 3])
+        sols = rec['plp']['solution'].ravel()
+        self.assertTrue((abs(1 - sols/plpest) < 1e-9).all())
+        
+        myia.open(imagename1)
+        myia.addnoise(pars=[0, 0.001])
+        myia.open(imagename2)
+        myia.addnoise(pars=[0, 0.001])
+        
+        plpestoff = [0.4, 3]
+        rec = spxfit(imagename=[imagename1, imagename2], plpest=plpestoff)
+        sols = rec['plp']['solution'].ravel()
+        self.assertTrue((abs(1 - sols/plpest) < 1e-2).all())
+        
+        plpsol = "plpsol.im"
+        plperr = "plperr.im"
+        plpestoff = [0.4, 2.2]
+        plpfix = [False, True]
+        rec = spxfit(
+            imagename=[imagename1, imagename2], plpest=plpestoff, plpfix=plpfix,
+            multifit=True, plpsol=plpsol, plperr=plperr
+        )
+        myia.done(remove=True)
+        sols = rec['plp']['solution']
+        self.assertTrue((sols[:,:,:,1] == 2.2).all())
+        myia.open(plpsol)
+        self.assertTrue(
+            (
+                abs(myia.getchunk()/sols - 1) < 1e-7
+            ).all()
+        )
+        myia.done(remove=True)
 
+        myia.open(plperr)
+        self.assertTrue(
+            (
+                abs(myia.getchunk() - rec['plp']['error']) < 1e-8
+            ).all()
+        )
         
 def suite():
     return [spxfit_test]
