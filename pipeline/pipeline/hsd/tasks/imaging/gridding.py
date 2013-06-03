@@ -15,15 +15,16 @@ LOG = infrastructure.get_logger(__name__)
 
 NoData = common.NoData
 
-def gridding_factory(obs_pattern):
-    if obs_pattern.upper() == 'RASTER':
+def gridding_factory(observing_pattern):
+    LOG.info('ObsPattern = %s' % observing_pattern)
+    if observing_pattern.upper() == 'RASTER':
         return RasterGridding
-    elif obs_pattern.upper() == 'SINGLE-POINT':
+    elif observing_pattern.upper() == 'SINGLE-POINT':
         return SinglePointGridding
-    elif obs_pattern.upper() == 'MULTI-POINT':
+    elif observing_pattern.upper() == 'MULTI-POINT':
         return MultiPointGridding
     else:
-        raise ValueError('obs_pattern \'%s\' is invalid.'%(obs_pattern))
+        raise ValueError('observing_pattern \'%s\' is invalid.'%(observing_pattern))
 
 class GriddingBase(object):
     Rule = {'WeightDistance': 'Gauss', \
@@ -62,17 +63,17 @@ class GriddingBase(object):
         combine_size = self.grid_ra
         allowance = self.grid_ra * 0.1
         spacing = self.grid_ra / 3.0
-        index_list, grid_table = self.GroupForGrid(combine_size, allowance, spacing, 'RASTER')
+        index_list, grid_table = self.group_for_grid(combine_size, allowance, spacing)
         DataIn = self.files
         LOG.info('DataIn=%s'%(DataIn))
         LOG.info('index_list.shape=%s'%(list(index_list.shape)))
-        spstorage, grid_table2 = self.dogrid(DataIn, index_list, self.nchan, grid_table, 0.5 * combine_size)
+        spstorage, grid_table2 = self.dogrid(DataIn, index_list, grid_table, 0.5 * combine_size)
         end = time.time()
         LOG.info('execute: elapsed time %s sec'%(end-start))
         return spstorage, grid_table2
         
     #def make_grid_table(self):
-    def GroupForGrid(self, CombineRadius, Allowance, GridSpacing, ObsPattern):
+    def group_for_grid(self, CombineRadius, Allowance, GridSpacing):
         """
         Gridding by RA/DEC position
         """
@@ -105,26 +106,21 @@ class GriddingBase(object):
         # Re-Gridding
 
         NROW = len(index_list)
-        LOG.info('ObsPattern = %s' % ObsPattern)
         LOG.info('Processing %d spectra...' % NROW)
 
         GridTable = []
         # 2008/09/20 Spacing should be identical between RA and DEC direction
         # Curvature has not been taken account
         DecCorrection = 1.0 / math.cos(self.datatable.getcell('DEC',0) / 180.0 * 3.141592653)
+        #DecCorrection = 1.0 / math.cos(decs[0] / 180.0 * 3.141592653)
 
-        #### GridSpacingRA = GridSpacing * DecCorrection
-        index_listTmp=[]
-        if type(index_list[0]) == list:
-            index_list = [x for y in index_list for x in y]
-        
         GridTable = self._group(index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection)
 
         end = time.time()
-        LOG.info('GroupForGrid: elapsed time %s sec (except table access %s sec)'%(end-start,end-start1))
+        LOG.info('group_for_grid: elapsed time %s sec (except table access %s sec)'%(end-start,end-start1))
         return index_list, GridTable
 
-    def dogrid(self, DataIn, index_list, NCHAN, GridTable, CombineRadius, LogLevel=2):
+    def dogrid(self, DataIn, index_list, GridTable, CombineRadius, LogLevel=2):
         """
         The process does re-map and combine spectrum for each position
         GridTable format:
@@ -152,9 +148,9 @@ class GriddingBase(object):
         num_spectra = len(index_list)
         num_data = len(DataIn)
         num_spectra_per_data = num_spectra / num_data
-        SpStorage = numpy.zeros((num_spectra, NCHAN), dtype=numpy.float32)
+        SpStorage = numpy.zeros((num_spectra, self.nchan), dtype=numpy.float32)
 
-        if NCHAN != 1:
+        if self.nchan != 1:
             clip = self.Rule['Clipping']
             rms_weight = self.Rule['WeightRMS']
             tsys_weight = self.Rule['WeightTsysExptime']
@@ -170,7 +166,7 @@ class GriddingBase(object):
         OutputTable = []
         
         # create storage for output
-        StorageOut = numpy.ones((NROW, NCHAN), dtype=numpy.float32) * NoData
+        StorageOut = numpy.ones((NROW, self.nchan), dtype=numpy.float32) * NoData
         ID = 0
 
         tROW = self.datatable.getcol('ROW')
@@ -199,13 +195,19 @@ class GriddingBase(object):
         # Create progress timer
         Timer = common.ProgressTimer(80, NROW, LogLevel)
         for [IF, POL, X, Y, RAcent, DECcent, RowDelta] in GridTable:
-            # RowDelta is numpy array 
-            indexlist = numpy.array([IDX2StorageID[int(idx)] for idx in RowDelta[:,3]])
-            valid_index = numpy.where(net_flag[indexlist] == 1)[0]
-            #rowlist = numpy.array(RowDelta[:,0].take(valid_index),dtype=int)
-            indexlist = indexlist.take(valid_index)
-            deltalist = RowDelta[:,1].take(valid_index)
-            rmslist = RowDelta[:,2].take(valid_index)
+            # RowDelta is numpy array
+            if len(RowDelta) == 0:
+                #rowlist = []
+                indexlist = []
+                deltalist = []
+                rmslist = []
+            else:
+                indexlist = numpy.array([IDX2StorageID[int(idx)] for idx in RowDelta[:,3]])
+                valid_index = numpy.where(net_flag[indexlist] == 1)[0]
+                #rowlist = numpy.array(RowDelta[:,0].take(valid_index),dtype=int)
+                indexlist = indexlist.take(valid_index)
+                deltalist = RowDelta[:,1].take(valid_index)
+                rmslist = RowDelta[:,2].take(valid_index)
             num_valid = len(indexlist)
             num_flagged = len(RowDelta) - num_valid
             if num_valid == 0:
