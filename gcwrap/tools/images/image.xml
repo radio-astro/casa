@@ -2872,7 +2872,10 @@ only Stokes I, even if the original image had other stokes planes.
      <description>Minor axis of component.  Must be specified.</description>
      <value>1arcsec</value>
      </param>
-  
+     <param type="string"  name="type">
+        <description>Type of component.  String from Gaussian, Disk.</description>
+        <value>Gaussian</value>
+     </param>  
      <param type="bool"  name="topeak">
      <description>Convert to peak or integral flux desnity</description>
      <value>true</value>

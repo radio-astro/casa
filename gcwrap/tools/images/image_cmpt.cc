@@ -729,7 +729,7 @@ image* image::continuumsub(
 
 record* image::convertflux(
 	const variant& qvalue, const variant& major,
-	const variant& minor,
+	const variant& minor,  const string& type,
 	const bool toPeak,
 	const int channel, const int polarization
 ) {
