@@ -60,67 +60,18 @@ class GriddingBase(object):
 
     def execute(self):
         start = time.time()
-        combine_size = self.grid_ra
+        combine_radius = self.grid_ra
+        kernel_width = 0.5 * combine_radius
         allowance = self.grid_ra * 0.1
         spacing = self.grid_ra / 3.0
-        index_list, grid_table = self.group_for_grid(combine_size, allowance, spacing)
         DataIn = self.files
         LOG.info('DataIn=%s'%(DataIn))
-        LOG.info('index_list.shape=%s'%(list(index_list.shape)))
-        spstorage, grid_table2 = self.dogrid(DataIn, index_list, grid_table, 0.5 * combine_size)
+        spstorage, grid_table = self.dogrid(DataIn, kernel_width, combine_radius, allowance, spacing)
         end = time.time()
         LOG.info('execute: elapsed time %s sec'%(end-start))
-        return spstorage, grid_table2
+        return spstorage, grid_table
         
-    #def make_grid_table(self):
-    def group_for_grid(self, CombineRadius, Allowance, GridSpacing):
-        """
-        Gridding by RA/DEC position
-        """
-        start = time.time()
-        
-        # need opened table to call taql, so we use table object that 
-        # datatable holds.
-        table = self.datatable.tb1
-
-        # TaQL command to make a view from DataTable that is physically 
-        # separated to two tables named RO and RW, respectively. 
-        # Note that TaQL accesses DataTable on disk, not on memory. 
-        taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID, RO.ROW, RO.ANTENNA, RO.RA, RO.DEC, RW.STATISTICS[0] AS STAT FROM "%s" RO, "%s" RW WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(self.datatable_name,'RO'),os.path.join(self.datatable_name,'RW'),self.spw,self.pol,list(self.antenna))
-        if self.srctype is not None:
-            taqlstring += ' && SRCTYPE==%s'%(self.srctype)
-
-        LOG.debug('taqlstring="%s"'%(taqlstring))
-        tx = table.taql(taqlstring)
-        index_list = tx.getcol('ID')
-        rows = tx.getcol('ROW')
-        ants = tx.getcol('ANTENNA')
-        ras = tx.getcol('RA')
-        decs = tx.getcol('DEC')
-        stats = tx.getcol('STAT')
-        tx.close()
-        del tx
-
-        start1 = time.time()
-
-        # Re-Gridding
-
-        NROW = len(index_list)
-        LOG.info('Processing %d spectra...' % NROW)
-
-        GridTable = []
-        # 2008/09/20 Spacing should be identical between RA and DEC direction
-        # Curvature has not been taken account
-        DecCorrection = 1.0 / math.cos(self.datatable.getcell('DEC',0) / 180.0 * 3.141592653)
-        #DecCorrection = 1.0 / math.cos(decs[0] / 180.0 * 3.141592653)
-
-        GridTable = self._group(index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection)
-
-        end = time.time()
-        LOG.info('group_for_grid: elapsed time %s sec (except table access %s sec)'%(end-start,end-start1))
-        return index_list, GridTable
-
-    def dogrid(self, DataIn, index_list, GridTable, CombineRadius, LogLevel=2):
+    def dogrid(self, DataIn, kernel_width, combine_radius, allowance_radius, grid_spacing, loglevel=2):
         """
         The process does re-map and combine spectrum for each position
         GridTable format:
@@ -143,6 +94,40 @@ class GriddingBase(object):
         DataOut is not used 2010/10/25 GK
         """
         start = time.time()
+
+        # need opened table to call taql, so we use table object that 
+        # datatable holds.
+        table = self.datatable.tb1
+
+        # TaQL command to make a view from DataTable that is physically 
+        # separated to two tables named RO and RW, respectively. 
+        # Note that TaQL accesses DataTable on disk, not on memory. 
+        #taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID, RO.ROW, RO.ANTENNA, RO.RA, RO.DEC, RO.TSYS, RO.EXPOSURE, RW.STATISTICS[0] AS STAT, RW.FLAG_SUMMARY FROM "%s" RO, "%s" RW WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(self.datatable_name,'RO'),os.path.join(self.datatable_name,'RW'),self.spw,self.pol,list(self.antenna))
+        taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID FROM "%s" WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(self.datatable_name,'RO'),self.spw,self.pol,list(self.antenna))
+        if self.srctype is not None:
+            taqlstring += ' && SRCTYPE==%s'%(self.srctype)
+
+        LOG.debug('taqlstring="%s"'%(taqlstring))
+        tx = table.taql(taqlstring)
+        index_list = tx.getcol('ID')
+        tx.close()
+        del tx
+        rows = table.getcol('ROW').take(index_list)
+        ants = table.getcol('ANTENNA').take(index_list)
+        ras = table.getcol('RA').take(index_list)
+        decs = table.getcol('DEC').take(index_list)
+        stats = self.datatable.tb2.getcol('STATISTICS').take(index_list)
+        tsys = table.getcol('TSYS').take(index_list)
+        exposure = table.getcol('EXPOSURE').take(index_list)
+        net_flag = self.datatable.tb2.getcol('FLAG_SUMMARY').take(index_list)
+
+        # Re-Gridding
+        # 2008/09/20 Spacing should be identical between RA and DEC direction
+        # Curvature has not been taken account
+        DecCorrection = 1.0 / math.cos(self.datatable.getcell('DEC',0) / 180.0 * 3.141592653)
+        #DecCorrection = 1.0 / math.cos(decs[0] / 180.0 * 3.141592653)
+
+        GridTable = self._group(index_list, rows, ants, ras, decs, stats, combine_radius, allowance_radius, grid_spacing, DecCorrection)
         
         # create storage
         num_spectra = len(index_list)
@@ -150,6 +135,8 @@ class GriddingBase(object):
         num_spectra_per_data = num_spectra / num_data
         SpStorage = numpy.zeros((num_spectra, self.nchan), dtype=numpy.float32)
 
+        LOG.info('Processing %d spectra...' % num_spectra)
+        
         if self.nchan != 1:
             clip = self.Rule['Clipping']
             rms_weight = self.Rule['WeightRMS']
@@ -160,25 +147,13 @@ class GriddingBase(object):
             tsys_weight = True
         weight = self.Rule['WeightDistance']
 
-        NROW = len(GridTable)
+        num_grid = len(GridTable)
         LOG.info('Accumulate nearby spectrum for each Grid position...')
-        LOG.info('Processing %d spectra...' % (NROW))
+        LOG.info('Processing %d spectra...' % (num_grid))
         OutputTable = []
         
         # create storage for output
-        StorageOut = numpy.ones((NROW, self.nchan), dtype=numpy.float32) * NoData
-        ID = 0
-
-        tROW = self.datatable.getcol('ROW')
-        tSFLAG = self.datatable.getcol('FLAG_SUMMARY')
-        tTSYS = self.datatable.getcol('TSYS')
-        tEXPT = self.datatable.getcol('EXPOSURE')
-
-        rows = numpy.take(tROW, index_list)
-        net_flag = numpy.take(tSFLAG, index_list)
-        tsys = numpy.take(tTSYS, index_list)
-        exposure = numpy.take(tEXPT, index_list)
-
+        StorageOut = numpy.ones((num_grid, self.nchan), dtype=numpy.float32) * NoData
         # 2011/11/12 DataIn and rowsSel are [list]
         IDX2StorageID = {}
         StorageID = 0
@@ -193,7 +168,8 @@ class GriddingBase(object):
                 LOG.debug('Data Stored in SpStorage')
 
         # Create progress timer
-        Timer = common.ProgressTimer(80, NROW, LogLevel)
+        Timer = common.ProgressTimer(80, num_grid, loglevel)
+        ID = 0
         for [IF, POL, X, Y, RAcent, DECcent, RowDelta] in GridTable:
             # RowDelta is numpy array
             if len(RowDelta) == 0:
@@ -226,7 +202,7 @@ class GriddingBase(object):
                 accum = Accumulator(clip.upper()=='MINMAXREJECT',
                                     rms_weight,
                                     tsys_weight)
-                accum.init(data, weight.lower(), CombineRadius)
+                accum.init(data, weight.lower(), kernel_width)
                 accum.accumulate(indexlist, rmslist, deltalist, tsys, exposure)
                 
                 StorageOut[ID] = accum.accumulated
