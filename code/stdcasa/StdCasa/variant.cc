@@ -1647,9 +1647,10 @@ void variant::resize( int size ) {
     }
 }
 
-variant initialize_variant( const std::string &x ) {
-	    return variant(x);
+variant initialize_variant( const std::string & ) {
+	    return variant();
 }
+
 
 void variant::dump() const {
 	std::cerr << "Variant type: " << typev << std::endl;
