@@ -9,6 +9,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 from .. import common 
 
+from .accumulator import Accumulator
+
 LOG = infrastructure.get_logger(__name__)
 
 NoData = common.NoData
@@ -24,10 +26,10 @@ def gridding_factory(obs_pattern):
         raise ValueError('obs_pattern \'%s\' is invalid.'%(obs_pattern))
 
 class GriddingBase(object):
-    rule = {'WeightDistance': 'Gauss', \
-                'Clipping': 'MinMaxReject', \
-                'WeightRMS': True, \
-                'WeightTsysExptime': False} 
+    Rule = {'WeightDistance': 'Gauss', \
+            'Clipping': 'MinMaxReject', \
+            'WeightRMS': True, \
+            'WeightTsysExptime': False} 
 
     def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
         self.datatable = datatable
@@ -64,7 +66,7 @@ class GriddingBase(object):
         DataIn = self.files
         LOG.info('DataIn=%s'%(DataIn))
         LOG.info('index_list.shape=%s'%(list(index_list.shape)))
-        spstorage, grid_table2 = self.Process8(DataIn, index_list, self.nchan, grid_table, 0.5 * combine_size, self.rule)
+        spstorage, grid_table2 = self.Process8(DataIn, index_list, self.nchan, grid_table, 0.5 * combine_size)
         end = time.time()
         LOG.info('execute: elapsed time %s sec'%(end-start))
         return spstorage, grid_table2
@@ -122,7 +124,7 @@ class GriddingBase(object):
         LOG.info('GroupForGrid: elapsed time %s sec (except table access %s sec)'%(end-start,end-start1))
         return index_list, GridTable
 
-    def Process8(self, DataIn, index_list, NCHAN, GridTable, CombineRadius, GridRule, LogLevel=2):
+    def Process8(self, DataIn, index_list, NCHAN, GridTable, CombineRadius, LogLevel=2):
         """
         The process does re-map and combine spectrum for each position
         GridTable format:
@@ -153,14 +155,14 @@ class GriddingBase(object):
         SpStorage = numpy.zeros((num_spectra, NCHAN), dtype=numpy.float32)
 
         if NCHAN != 1:
-            clip = GridRule['Clipping']
-            rms_weight = GridRule['WeightRMS']
-            tsys_weight = GridRule['WeightTsysExptime']
+            clip = self.Rule['Clipping']
+            rms_weight = self.Rule['WeightRMS']
+            tsys_weight = self.Rule['WeightTsysExptime']
         else:
             clip = 'none'
             rms_weight = False
             tsys_weight = True
-        weight = GridRule['WeightDistance']
+        weight = self.Rule['WeightDistance']
 
         NROW = len(GridTable)
         LOG.info('Accumulate nearby spectrum for each Grid position...')
@@ -211,7 +213,6 @@ class GriddingBase(object):
                     deltalist.append(delta)
                     rmslist.append(rms)
                 else: flagged += 1
-            #num_valid_row = len(rowlist)
             num_valid_row = len(indexlist)
             if num_valid_row == 0:
                 # No valid Spectra at the position
@@ -224,66 +225,16 @@ class GriddingBase(object):
             else:
                 # More than one valid Spectra at the position
                 data = SpStorage[indexlist]
-                w = numpy.ones(numpy.shape(data), numpy.float32)
-                weightlist = numpy.ones(num_valid_row, numpy.float32)
-                # Clipping
-                if clip.upper() == 'MINMAXREJECT' and num_valid_row > 2:
-                    w[numpy.argmin(data, axis=0), range(len(data[0]))] = 0.0
-                    w[numpy.argmax(data, axis=0), range(len(data[0]))] = 0.0
-                # Weight by RMS
-                # Weight = 1/(RMS**2)
-                weight_factor = 0.0
-                if rms_weight == True:
-                    for m in xrange(num_valid_row):
-                        if rmslist[m] != 0.0:
-                            weight_factor = rmslist[m] * rmslist[m]
-                            w[m] /= weight_factor
-                            weightlist[m] /= weight_factor
-                        else:
-                            w[m] = 0.0
-                            weightlist[m] = 0.0
-                # Weight by Exptime & Tsys
-                # RMS = n * Tsys/math.sqrt(Exptime)
-                # Weight = 1/(RMS**2) = (Exptime/(Tsys**2))
-                if tsys_weight == True:
-                    for m in xrange(num_valid_row):
-                        # 2008/9/21 Bug fix
-                        # 2013/05/30 TN Bug fix
-                        # using rowlist as index is invalid
-                        if tsys[indexlist[m]] > 0.5:
-                        #if tTSYS[rowlist[m]] > 0.5:
-                            #weight_factor = (tEXPT[rowlist[m]]/(tTSYS[rowlist[m]]*tTSYS[rowlist[m]]))
-                            weight_factor = (exposure[indexlist[m]]/(tsys[indexlist[m]]*tsys[indexlist[m]]))
-                            w[m] *= weight_factor
-                            weightlist[m] *= weight_factor
-                            #if self.datatable[m][DT_TSYS] > 0.5:
-                            #    w[m] *= (self.datatable[m][DT_EXPT]/(self.datatable[m][DT_TSYS]**2))
-                            #    weightlist[m] *= (self.datatable[m][DT_EXPT]/(self.datatable[m][DT_TSYS]**2))
-                        else:
-                            w[m] = 0.0
-                            weightlist[m] = 0.0
-                # Weight by radius
-                if weight.upper() == 'GAUSS':
-                    # weight = exp(-ln2*((r/hwhm)**2))
-                    for m in xrange(num_valid_row):
-                        weight_factor = (math.exp(-0.69314718055994529*((deltalist[m]*deltalist[m]/(CombineRadius*CombineRadius)))))
-                        w[m] *= weight_factor
-                        weightlist[m] *= weight_factor
-                elif weight.upper() == 'LINEAR':
-                    # weight = 0.5 + (hwhm - r)/2/hwhm = 1.0 - r/2/hwhm
-                    for m in xrange(num_valid_row):
-                        weight_factor = (1.0 - 0.5*deltalist[m]/CombineRadius)
-                        w[m] *= weight_factor
-                        weightlist[m] *= weight_factor
-                # Combine Spectra
-                if w.sum() != 0: StorageOut[ID] = (numpy.sum(data * w, axis=0) / numpy.sum(w,axis=0))
-                # Calculate RMS of the spectrum
-                r0 = 0.0
-                r1 = 0.0
-                for m in xrange(num_valid_row):
-                    r0 += (rmslist[m] * weightlist[m]) * (rmslist[m] * weightlist[m])
-                    r1 += weightlist[m]
-                RMS = math.sqrt(r0) / r1
+
+                # Data accumulation by Accumulator
+                accum = Accumulator(clip.upper()=='MINMAXREJECT',
+                                    rms_weight,
+                                    tsys_weight)
+                accum.init(data, weight.lower(), CombineRadius)
+                accum.accumulate(indexlist, rmslist, deltalist, tsys, exposure)
+                
+                StorageOut[ID] = accum.accumulated
+                RMS = accum.rms
 
             OutputTable.append([IF, POL, X, Y, RAcent, DECcent, num_valid_row, flagged, RMS])
             ID += 1
