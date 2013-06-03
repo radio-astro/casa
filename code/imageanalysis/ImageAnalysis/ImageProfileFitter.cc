@@ -165,7 +165,6 @@ Record ImageProfileFitter::fit() {
 
 	// do this check here rather than at construction because _polyOrder can be set
 	// after construction but before fit() is called
-    cout << "*** poly order " << _polyOrder << endl;
     _checkNGaussAndPolyOrder();
     LogOrigin logOrigin(_class, __FUNCTION__);
     *_getLog() << logOrigin;
