@@ -106,7 +106,7 @@ public:
     inline String getClass() const { return _class; };
 
     // set the order of a polynomial to be simultaneously fit.
-    void setPolyOrder(const Int p);
+    void setPolyOrder(Int p);
 
     // set whether to do a pixel by pixel fit.
     inline void setDoMultiFit(const Bool m) { _multiFit = m; }
@@ -273,6 +273,7 @@ private:
     void _updateModelAndResidual(
     	const std::auto_ptr<ImageInterface<Float> >& pFit,
     	const std::auto_ptr<ImageInterface<Float> >& pResid,
+        Bool fitOK,
     	const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
     	const IPosition& curPos, Lattice<Bool>* const &pFitMask,
         Lattice<Bool>* const &pResidMask, const Array<Float>& failData,

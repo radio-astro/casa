@@ -165,6 +165,7 @@ Record ImageProfileFitter::fit() {
 
 	// do this check here rather than at construction because _polyOrder can be set
 	// after construction but before fit() is called
+    cout << "*** poly order " << _polyOrder << endl;
     _checkNGaussAndPolyOrder();
     LogOrigin logOrigin(_class, __FUNCTION__);
     *_getLog() << logOrigin;
@@ -275,7 +276,7 @@ Record ImageProfileFitter::fit() {
 	return _results;
 }
 
-void ImageProfileFitter::setPolyOrder(const Int p) {
+void ImageProfileFitter::setPolyOrder(Int p) {
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
 	if (p < 0) {
 		*_getLog() << "A polynomial cannot have a negative order" << LogIO::EXCEPTION;
@@ -284,6 +285,7 @@ void ImageProfileFitter::setPolyOrder(const Int p) {
 		*_getLog() << "Cannot simultaneously fit a polynomial and a power logarithmic polynomial."
 			<< LogIO::EXCEPTION;
 	}
+    _polyOrder = p;
 }
 
 void ImageProfileFitter::setGoodAmpRange(const Double min, const Double max) {
@@ -757,9 +759,9 @@ void ImageProfileFitter::_fitProfiles(
 		}
 		_fitters(curPos) = fitter;
 		// Evaluate and fill
-		if (ok && (pFit.get() || pResid.get())) {
+		if (pFit.get() || pResid.get()) {
 			_updateModelAndResidual(
-				pFit, pResid, fitter, sliceShape, curPos,
+				pFit, pResid, ok, fitter, sliceShape, curPos,
 				pFitMask, pResidMask, failData, failMask
 			);
 		}
@@ -774,24 +776,29 @@ void ImageProfileFitter::_fitProfiles(
 void ImageProfileFitter::_updateModelAndResidual(
     const std::auto_ptr<ImageInterface<Float> >& pFit,
     const std::auto_ptr<ImageInterface<Float> >& pResid,
+    Bool fitOK,
     const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
     const IPosition& curPos, Lattice<Bool>* const &pFitMask,
     Lattice<Bool>* const &pResidMask, const Array<Float>& failData,
     const Array<Bool>& failMask
 ) const {
 	Array<Bool> resultMask = fitter.getTotalMask().reform(sliceShape);
-	if (pFit.get()) {
-		Array<Float> resultData = fitter.getFit().reform(sliceShape);
-		pFit->putSlice (resultData, curPos);
-		if (pFitMask) {
-			pFitMask->putSlice(resultMask, curPos);
-		}
-	}
-	if (pResid.get()) {
-		Array<Float> resultData = fitter.getResidual().reform(sliceShape);
-		pResid->putSlice (resultData, curPos);
-		if (pResidMask) pResidMask->putSlice(resultMask, curPos);
-	}
+    if (fitOK) {
+        if (pFit.get()) {
+	    	Array<Float> resultData = fitter.getFit().reform(sliceShape);
+		    pFit->putSlice (resultData, curPos);
+		    if (pFitMask) {
+			    pFitMask->putSlice(resultMask, curPos);
+		    }
+	    }
+	    if (pResid.get()) {
+		    Array<Float> resultData = fitter.getResidual().reform(sliceShape);
+		    pResid->putSlice (resultData, curPos);
+		    if (pResidMask) {
+                pResidMask->putSlice(resultMask, curPos);
+            }
+        }
+    }
 	else {
 		if (pFit.get()) {
 			pFit->putSlice (failData, curPos);
