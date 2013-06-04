@@ -89,6 +89,8 @@ class Accumulator(object):
         # Combine Spectra
         if self.channel_weight.sum() != 0:
             self.accumulated = (numpy.sum(self.data * self.channel_weight, axis=0) / numpy.sum(self.channel_weight, axis=0))
+        else:
+            self.accumulated = numpy.zeros(num_axis1, dtype=numpy.float32)
 
         # Calculate RMS of the spectrum
         r0 = ((rmslist * self.row_weight) * (rmslist * self.row_weight)).sum()
