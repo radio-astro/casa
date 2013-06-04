@@ -70,23 +70,17 @@ def spxfit(
 	plpfix, plpdiv, plpsol, plperr,
 	model, residual, wantreturn,
 	stretch, logresults, logfile, append,
-    sigma=None, outsigma=None
+    sigma, outsigma
 ):
     casalog.origin('spxfit')
     myia = iatool()
     retval = None
     try:
-		if type(imagename) == list:
-			if len(imagename) == 1:
-				imagename = imagename[0]
-			else:
-				myia.open(imagename[0])
-				#try:
-				#	spectral_axis = myia.coordsys().axiscoordinatetypes().index("Spectral")
-				#except:
-				#    raise Exception("At least one image does not have a spectral axis.")
-				myia = myia.imageconcat(outfile="", infiles=imagename, axis=axis, relax=True)
+		if type(imagename) == list and len(imagename) > 1:
+			myia = myia.imageconcat(outfile="", infiles=imagename, axis=axis, relax=True)
 		else:
+			if type(imagename) == list and len(imagename) > 1:
+				imagename = imagename[0]
 			if (not myia.open(imagename)):
 				raise Exception("Cannot create image analysis tool using " + str(imagename))
 		retval = myia.fitprofile(

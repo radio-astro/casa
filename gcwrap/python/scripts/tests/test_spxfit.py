@@ -263,7 +263,7 @@ class spxfit_test(unittest.TestCase):
                     imagename=imagename, plpest=plpestoff, plpfix=plpfix,
                     multifit=True, plpsol=plpsol, plperr=plperr
                 )
-            myia.done(remove=True)
+                myia.done(remove=True)
             sols = rec['plp']['solution']
             self.assertTrue((sols[:,:,:,1] == 2.2).all())
             myia.open(plpsol)
