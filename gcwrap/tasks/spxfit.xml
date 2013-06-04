@@ -158,7 +158,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 This task simultaneously fits one or more gaussian singlets lorentzian singlets, gaussian multiplets, and/or a polynomial to one dimensional profiles.
 
 ARAMETER SUMMARY
-imagename       Name of the input (CASA, FITS, MIRIAD) image
+imagename       Name of the input image(s). More than one image name can be given as an
+                array, in which case the images are concatenated along the specified axis
+                and the resultant image is what is used by the fitter. In this case,
+                all images must have the same dimensions along all axes other than the fit axis.
 box             Direction plane box specification, "blcx, blcy, trcx, trcy". Only one box
                 may be specified. If not specified, region is used if specified. If region
                 is also not specified, entire directional plane unioned with any chans and
