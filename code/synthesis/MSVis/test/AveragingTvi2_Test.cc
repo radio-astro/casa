@@ -1260,7 +1260,7 @@ protected:
             Int nRowsInPartialAverage = (nRowsPerWindow % averagingFactor) / nBaselines_p;
 
             if (nRowsInPartialAverage != 0){
-                lastRow += i;
+                lastRow += i * nBaselines_p;
             }
             // remaining
             endBoundaryConditions.push_back (make_pair (lastRow, nRowsInPartialAverage));
