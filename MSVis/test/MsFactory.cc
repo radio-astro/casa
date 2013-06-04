@@ -383,9 +383,9 @@ MsFactory::fillRows (FillState & fillState)
 
         fillState.antenna1_p = a1;
 
-        Int finalA2 = includeAutocorrelations_p ? a1 : a1 - 1;
+        Int firstA2 = includeAutocorrelations_p ? a1 : a1 + 1;
 
-        for (Int a2 = 0; a2 <= finalA2; a2 ++){
+        for (Int a2 = firstA2; a2 < fillState.nAntennas_p; a2 ++){
 
             fillState.antenna2_p = a2;
 

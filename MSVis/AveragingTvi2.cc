@@ -550,7 +550,7 @@ VbAvg::getBaselineIndex (const VisBuffer2 * vb, Int row) const
 
     ThrowIf (index < 0, String::format ("Unexpected baseline having antenna pair (%d,%d)",
                                          antenna1, antenna2));
-        // We expect antenna1 <= antenna2 in CASA-filled vis data
+        // We expect antenna2 <= antenna1 in CASA-filled vis data
 
     return index;
 }
@@ -789,7 +789,7 @@ VbAvg::setupBaselineIndices(int nAntennas, const VisBuffer2 * vb)
         Int a1 = vb->antenna1()(vbRow);
         Int a2 = vb->antenna2()(vbRow);
 
-        if (a2 <= a1 && baselineIndices_p (a1, a2) < 0){
+        if (a1 <= a2 && baselineIndices_p (a1, a2) < 0){
             baselineIndices_p (a1, a2) = baseline ++;
         }
     }
