@@ -273,5 +273,5 @@ def draw_beam(axes, r, aspect, x_base, y_base, offset=1.0):
                        r * (math.cos(t * 0.13) + offset) + y_base]
                       for t in xrange(50)])
     pl.gcf().sca(axes)
-    pl.plot(xy[:,0], xy[:,1], 'r-')
-    
+    line = pl.plot(xy[:,0], xy[:,1], 'r-')
+    return line[0]
