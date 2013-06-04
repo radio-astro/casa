@@ -149,6 +149,7 @@ void MSTransformDataHandler::initialize()
 	velocityType_p = String("radio");				// When mode is velocity options are: optical, radio
 
 	// Time transformation parameters
+	timeAverage_p = False;
 	timeBin_p = 0.0;
 	timespan_p = String("");
 
@@ -228,6 +229,7 @@ void MSTransformDataHandler::configure(Record &configuration)
 	parseFreqTransParams(configuration);
 	parseChanAvgParams(configuration);
 	parseRefFrameTransParams(configuration);
+	parseTimeAvgParams(configuration);
 
 	return;
 }
@@ -436,7 +438,7 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 	else
 	{
 		logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-				<< "Channel average is activated but no chanbin parameter is provided " << LogIO::POST;
+				<< "Channel average is activated but no chanbin parameter provided " << LogIO::POST;
 		channelAverage_p = False;
 		return;
 	}
@@ -694,6 +696,46 @@ void MSTransformDataHandler::parseFreqSpecParams(Record &configuration)
 		configuration.get (exists, velocityType_p);
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 				<< "Velocity type is " << velocityType_p << LogIO::POST;
+	}
+
+	return;
+}
+
+void MSTransformDataHandler::parseTimeAvgParams(Record &configuration)
+{
+	int exists = 0;
+
+	exists = configuration.fieldNumber ("timeaverage");
+	if (exists >= 0)
+	{
+		configuration.get (exists, timeAverage_p);
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+				<< "Time average is " << timeAverage_p << LogIO::POST;
+	}
+	else
+	{
+		return;
+	}
+
+	if (timeAverage_p)
+	{
+		exists = configuration.fieldNumber ("timebin");
+		if (exists >= 0)
+		{
+			String timebin;
+			configuration.get (exists, timebin);
+			timeBin_p=casaQuantity(timebin).get("s").getValue();
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Time bin is " << timeBin_p << LogIO::POST;
+		}
+		else
+		{
+			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+					<< "Time average is activated but no timebin parameter provided " << LogIO::POST;
+			timeAverage_p = False;
+			return;
+		}
+
 	}
 
 	return;
@@ -2392,8 +2434,19 @@ void MSTransformDataHandler::setIterationApproach()
 // -----------------------------------------------------------------------
 void MSTransformDataHandler::generateIterator()
 {
-	visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns (sortColumns_p,false),
-	                                                   false, NULL,timeBin_p);
+
+	if (timeAverage_p)
+	{
+		vi::AveragingParameters parameters (timeBin_p, timeBin_p, vi::SortColumns (sortColumns_p,false));
+		visibilityIterator_p = new vi::VisibilityIterator2 (vi::AveragingVi2Factory (parameters, selectedInputMs_p));
+		visibilityIterator_p->setWeightScaling (vi::WeightScaling::generateUnityWeightScaling());
+	}
+	else
+	{
+		visibilityIterator_p = new vi::VisibilityIterator2(*selectedInputMs_p,vi::SortColumns (sortColumns_p,false),
+		                                                   false, NULL,timeBin_p);
+	}
+
 	if (channelSelector_p != NULL) visibilityIterator_p->setFrequencySelection(*channelSelector_p);
 	return;
 }
