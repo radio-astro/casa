@@ -128,6 +128,7 @@ int main()
       };
       Vector<Float> res(NPTS);
       res = y;
+      cout << "*** res " << res << endl;
       slist.residual(res);
       cout << "Minimum, Maximum residuals: " << min(res) << ", " <<
 	max(res) << endl;
