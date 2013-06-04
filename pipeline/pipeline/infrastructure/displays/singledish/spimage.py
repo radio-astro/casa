@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import time
 import abc
 import numpy
 import math
@@ -12,12 +13,123 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
 from .common import DPISummary, DPIDetail, SDImageDisplay, ShowPlot, draw_beam
+from . import tpimage
+
 LOG = infrastructure.get_logger(__name__)
 
 NoData = -32767.0
 NoDataThreshold = NoData + 10000.0
 LightSpeed = 29972.458 # km/s
 
+class RmsMapAxesManager(tpimage.ChannelAveragedAxesManager):
+    @property
+    def axes_rmsmap(self):
+        return self.axes_tpmap
+
+class ChannelMapAxesManager(RmsMapAxesManager):
+    def __init__(self, xformatter, yformatter, xlocator, ylocator, xrotation, yrotation, ticksize, colormap, nh, nv):
+        super(ChannelMapAxesManager,self).__init__(xformatter, yformatter,
+                                                   xlocator, ylocator,
+                                                   xrotation, yrotation,
+                                                   ticksize, colormap)
+        self.ticksize = ticksize
+        self.nh = nh
+        self.nv = nv
+        self.nchmap = nh * nv
+        self.left = 2.15 / 3.0
+        self.width = 1.0 / 3.0 * 0.8
+        self.bottom = 2.0 / 3.0 + 0.2 / 3.0
+        self.height = 1.0 / 3.0 * 0.7
+
+        self.numeric_formatter = pl.FormatStrFormatter('%.2f')
+        
+        self._axes_integmap = None
+        self._axes_integsp_full = None
+        self._axes_integsp_zoom = None
+        self._axes_chmap = None
+        
+    @property
+    def axes_integmap(self):
+        if self._axes_integmap is None:
+            axes = pl.axes([self.left, self.bottom, self.width, self.height])
+
+            axes.xaxis.set_major_formatter(self.xformatter)
+            axes.yaxis.set_major_formatter(self.yformatter)
+            axes.xaxis.set_major_locator(self.xlocator)
+            axes.yaxis.set_major_locator(self.ylocator)
+            xlabels = axes.get_xticklabels()
+            pl.setp(xlabels, 'rotation', self.xrotation, fontsize=self.ticksize)
+            ylabels = axes.get_yticklabels()
+            pl.setp(ylabels, 'rotation', self.yrotation, fontsize=self.ticksize)
+            
+            pl.xlabel('RA', size=self.ticksize)
+            pl.ylabel('DEC', size=self.ticksize)
+            if self.isgray:
+                pl.gray()
+            else:
+                pl.jet()
+
+            self._axes_integmap = axes
+            
+        return self._axes_integmap
+
+    @property
+    def axes_integsp_full(self):
+        if self._axes_integsp_full is None:
+            left = 1.0 / 3.0 + 0.1 / 3.0
+            axes = pl.axes([left, self.bottom, self.width, self.height])
+            axes.xaxis.set_major_formatter(self.numeric_formatter)
+            pl.xticks(size=self.ticksize)
+            pl.yticks(size=self.ticksize)
+            pl.xlabel('Frequency (GHz)', size=self.ticksize)
+            pl.ylabel('Intensity (K)', size=self.ticksize)
+            pl.title('Integrated Spectrum', size=self.ticksize)
+
+            self._axes_integsp_full = axes
+
+        return self._axes_integsp_full
+
+    @property
+    def axes_integsp_zoom(self):
+        if self._axes_integsp_zoom is None:
+            left = 0.1 / 3.0
+            axes = pl.axes([left, self.bottom, self.width, self.height])
+            pl.xticks(size=self.ticksize)
+            pl.yticks(size=self.ticksize)
+            pl.xlabel('Relative Velocity w.r.t. Window Center (km/s)', size=self.ticksize)
+            pl.ylabel('Intensity (K)', size=self.ticksize)
+            pl.title('Integrated Spectrum (zoom)', size=self.ticksize)
+
+            self._axes_integsp_zoom = axes
+
+        return self._axes_integsp_zoom
+
+    @property
+    def axes_chmap(self):
+        if self._axes_chmap is None:
+            axes_list = []
+            for i in xrange(self.nchmap):
+                x = i % self.nh
+                y = self.nv - int(i / self.nh) - 1
+                left = 1.0 / float(self.nh) * (x + 0.05)
+                width = 1.0 / float(self.nh) * 0.9
+                bottom = 1.0 / float((self.nv+2)) * (y + 0.05)
+                height = 1.0 / float((self.nv+2)) * 0.85
+                a = pl.axes([left, bottom, width, height])
+                a.set_aspect('equal')
+                a.xaxis.set_major_locator(pl.NullLocator())
+                a.yaxis.set_major_locator(pl.NullLocator())
+                axes_list.append(a)
+                if self.isgray:
+                    pl.gray()
+                else:
+                    pl.jet()
+            
+            self._axes_chmap = axes_list
+
+        return self._axes_chmap
+
+        
 class SDSpectralImageDisplay(SDImageDisplay):
     MATPLOTLIB_FIGURE_ID = 8910
     MaxPanel = 8
@@ -48,8 +160,13 @@ class SDSpectralImageDisplay(SDImageDisplay):
         self.init()
         
         plot_list = []
+        t0 = time.time()
         plot_list.extend(self.__plot_sparse_map())
+        t1 = time.time()
         plot_list.extend(self.__plot_channel_map())
+        t2 = time.time()
+        LOG.debug('__plot_sparse_map: elapsed time %s sec'%(t1-t0))
+        LOG.debug('__plot_channel_map: elapsed time %s sec'%(t2-t1))
 
         return plot_list
 
@@ -118,10 +235,24 @@ class SDSpectralImageDisplay(SDImageDisplay):
 
         # Check the direction of the Velocity axis
         Reverse = (self.velocity[0] < self.velocity[1])
- 
+
+        # Initialize axes
+        pl.clf()
+        axes_manager = ChannelMapAxesManager(RAformatter, DECformatter,
+                                             RAlocator, DEClocator,
+                                             RArotation, DECrotation,
+                                             TickSize, colormap,
+                                             self.NhPanel, self.NvPanel)
+        axes_integmap = axes_manager.axes_integmap
+        integmap_colorbar = None
+        beam_circle = None
+        axes_integsp1 = axes_manager.axes_integsp_full
+        axes_integsp2 = axes_manager.axes_integsp_zoom
+        axes_chmap = axes_manager.axes_chmap
+        chmap_colorbar = [None for v in xrange(self.NvPanel)]
+        
         # loop over detected lines
         ValidCluster = 0
-        #for Nc in range(Ncluster):
         for line_window in line_list:            
             ChanC = int(line_window[0] + 0.5)
             if float(ChanC) == line_window[0]:
@@ -156,110 +287,101 @@ class SDSpectralImageDisplay(SDImageDisplay):
             V1 = max(self.velocity[chan0], self.velocity[chan1]) - VelC
             #print 'chan0, chan1, V0, V1, VelC =', chan0, chan1, V0, V1, VelC
 
+            vertical_lines = []
+            # vertical lines for integrated spectrum #1
+            pl.gcf().sca(axes_integsp1)
+            vertical_lines.append(pl.axvline(x = self.frequency[ChanB], linewidth=0.3, color='r'))
+            vertical_lines.append(pl.axvline(x = self.frequency[ChanB + self.NumChannelMap * ChanW], linewidth=0.3, color='r'))
+
+            # vertical lines for integrated spectrum #2
+            pl.gcf().sca(axes_integsp2)
+            for i in xrange(self.NumChannelMap + 1):
+                ChanL = int(ChanB + i*ChanW)
+                #if 0 <= ChanL and ChanL < nchan:
+                if 0 < ChanL and ChanL < self.nchan:
+                    vertical_lines.append(pl.axvline(x = 0.5*(self.velocity[ChanL]+self.velocity[ChanL-1]) - VelC, linewidth=0.3, color='r'))
+                elif ChanL == 0:
+                    vertical_lines.append(pl.axvline(x = 0.5*(self.velocity[ChanL]-self.velocity[ChanL+1]) - VelC, linewidth=0.3, color='r'))
+                #print 'DEBUG: Vel[ChanL]', i, (self.velocity[ChanL]+self.velocity[ChanL-1])/2.0 - VelC
+            
             # loop over polarizations
             for pol in xrange(self.npol):
+                plotted_objects = []
+                
                 data = self.data[:,:,:,pol]
                 masked_data = data * self.mask[:,:,:,pol]
                 flattened_data = masked_data.reshape((nrow,self.nchan))
                 valid = ValidSp[:,pol]
                 
                 # Integrated Spectrum
-                Sp = numpy.sum(numpy.transpose((valid * numpy.transpose(flattened_data))),axis=0)/numpy.sum(valid,axis=0)
-                (F0, F1) = (min(self.frequency[0], self.frequency[-1]), max(self.frequency[0], self.frequency[-1]))
-
-                Title = []
-                N = 0
+                t0 = time.time()
 
                 # Draw Total Intensity Map
                 Total = masked_data.sum(axis=2) * ChanVelWidth
                 Total = numpy.flipud(Total.transpose())
-                pl.cla()
-                pl.clf()
 
-                x0 = 2.0 / 3.0 + 0.15 / 3.0
-                x1 = 1.0 / 3.0 * 0.8
-                y0 = 2.0 / 3.0 + 0.2 / 3.0
-                y1 = 1.0 / 3.0 * 0.7
-                a = pl.axes([x0, y0, x1, y1])
                 # 2008/9/20 DEC Effect
-                im = pl.imshow(Total, interpolation='nearest', aspect=Aspect, extent=Extent)
+                pl.gcf().sca(axes_integmap)
+                plotted_objects.append(pl.imshow(Total, interpolation='nearest', aspect=Aspect, extent=Extent))
                 #im = pl.imshow(Total, interpolation='nearest', aspect='equal', extent=Extent)
 
-                a.xaxis.set_major_formatter(RAformatter)
-                a.yaxis.set_major_formatter(DECformatter)
-                a.xaxis.set_major_locator(RAlocator)
-                a.yaxis.set_major_locator(DEClocator)
-                xlabels = a.get_xticklabels()
-                pl.setp(xlabels, 'rotation', RArotation, fontsize=TickSize)
-                ylabels = a.get_yticklabels()
-                pl.setp(ylabels, 'rotation', DECrotation, fontsize=TickSize)
-
-                pl.xlabel('RA', size=TickSize)
-                pl.ylabel('DEC', size=TickSize)
-                if colormap == 'gray': pl.gray()
-                else: pl.jet()
-
+                xlim = axes_integmap.get_xlim()
+                ylim = axes_integmap.get_ylim()
+                
                 # colorbar
                 #print "min=%s, max of Total=%s" % (Total.min(),Total.max())
                 if not (Total.min() == Total.max()): 
-                    if not ((self.y_max == self.y_min) and (self.x_max == self.x_min)): 
-                       cb=pl.colorbar(shrink=0.8)
-                       for t in cb.ax.get_yticklabels():
-                           newfontsize = t.get_fontsize()*0.5
-                           t.set_fontsize(newfontsize)
-                       cb.ax.set_title('[K km/s]')
-                       lab = cb.ax.title
-                       lab.set_fontsize(newfontsize)
+                    if not ((self.y_max == self.y_min) and (self.x_max == self.x_min)):
+                        if integmap_colorbar is None:
+                            integmap_colorbar = pl.colorbar(shrink=0.8)
+                            for t in integmap_colorbar.ax.get_yticklabels():
+                                newfontsize = t.get_fontsize()*0.5
+                                t.set_fontsize(newfontsize)
+                            integmap_colorbar.ax.set_title('[K km/s]')
+                            lab = integmap_colorbar.ax.title
+                            lab.set_fontsize(newfontsize)
+                        else:
+                            integmap_colorbar.set_clim((Total.min(),Total.max()))
+                            integmap_colorbar.draw_all()
 
                 # draw beam pattern
-                draw_beam(a, self.beam_radius, Aspect, self.ra_min, self.dec_min)
-
+                if beam_circle is None:
+                    beam_circle = draw_beam(axes_integmap, self.beam_radius, Aspect, self.ra_min, self.dec_min)
+                    
                 pl.title('Total Intensity: CenterFreq.= %.3f GHz' % self.frequency[ChanC], size=TickSize)
+                axes_integmap.set_xlim(xlim)
+                axes_integmap.set_ylim(ylim)
 
-                Format = pl.FormatStrFormatter('%.2f')
+                t1 = time.time()
+
                 # Plot Integrated Spectrum #1
-                x0 = 1.0 / 3.0 + 0.1 / 3.0
-                a = pl.axes([x0, y0, x1, y1])
-                a.xaxis.set_major_formatter(Format)
-                pl.plot(self.frequency, Sp, '-b', markersize=2, markeredgecolor='b', markerfacecolor='b')
-                pl.axvline(x = self.frequency[ChanB], linewidth=0.3, color='r')
-                pl.axvline(x = self.frequency[ChanB + self.NumChannelMap * ChanW], linewidth=0.3, color='r')
+                Sp = numpy.sum(numpy.transpose((valid * numpy.transpose(flattened_data))),axis=0)/numpy.sum(valid,axis=0)
+                #Sp = numpy.sum(flattened_data * valid.reshape((nrow,1)), axis=0)/valid.sum()
+                (F0, F1) = (min(self.frequency[0], self.frequency[-1]), max(self.frequency[0], self.frequency[-1]))
+                spmin = Sp.min()
+                spmax = Sp.max()
+                dsp = spmax - spmin
+                spmin -= dsp * 0.1
+                spmax += dsp * 0.1
+
+                pl.gcf().sca(axes_integsp1)
+                plotted_objects.extend(pl.plot(self.frequency, Sp, '-b', markersize=2, markeredgecolor='b', markerfacecolor='b'))
                 #print 'DEBUG: Freq0, Freq1', self.frequency[ChanB], self.frequency[ChanB + self.NumChannelMap * ChanW]
-                pl.xticks(size=TickSize)
-                pl.yticks(size=TickSize)
-                pl.xlabel('Frequency (GHz)', size=TickSize)
-                pl.ylabel('Intensity (K)', size=TickSize)
-                #pl.setp(xlabels, 'rotation', 45, fontsize=TickSize)
-                Range = pl.axis()
-                pl.axis([F0, F1, Range[2], Range[3]])
-                pl.title('Integrated Spectrum', size=TickSize)
+                pl.axis([F0, F1, spmin, spmax])
 
+                t2 = time.time()
+                
                 # Plot Integrated Spectrum #2
-                x0 = 0.1 / 3.0
-                a = pl.axes([x0, y0, x1, y1])
-                pl.plot(self.velocity[chan0:chan1] - VelC, Sp[chan0:chan1], '-b', markersize=2, markeredgecolor='b', markerfacecolor='b')
-                for i in range(self.NumChannelMap + 1):
-                    ChanL = int(ChanB + i*ChanW)
-                    #if 0 <= ChanL and ChanL < nchan:
-                    #    pl.axvline(x = Abcissa[2][ChanL] - VelC, linewidth=0.3, color='r')
-                    if 0 < ChanL and ChanL < self.nchan:
-        ##                 pl.axvline(x = 0.5*(Abcissa[2][ChanL]+Abcissa[2][ChanL-1]) - VelC, linewidth=0.3, color='r')
-                        pl.axvline(x = 0.5*(self.velocity[ChanL]+self.velocity[ChanL-1]) - VelC, linewidth=0.3, color='r')
-                    elif ChanL == 0:
-        ##                 pl.axvline(x = 0.5*(Abcissa[2][ChanL]-Abcissa[2][ChanL+1]) - VelC, linewidth=0.3, color='r')
-                        pl.axvline(x = 0.5*(self.velocity[ChanL]-self.velocity[ChanL+1]) - VelC, linewidth=0.3, color='r')
-                    #print 'DEBUG: Vel[ChanL]', i, (self.velocity[ChanL]+self.velocity[ChanL-1])/2.0 - VelC
-                pl.xticks(size=TickSize)
-                pl.yticks(size=TickSize)
-                Range = pl.axis()
-                pl.axis([V0, V1, Range[2], Range[3]])
-                pl.xlabel('Relative Velocity w.r.t. Window Center (km/s)', size=TickSize)
-                pl.ylabel('Intensity (K)', size=TickSize)
-                pl.title('Integrated Spectrum (zoom)', size=TickSize)
+                pl.gcf().sca(axes_integsp2)
+                plotted_objects.extend(pl.plot(self.velocity[chan0:chan1] - VelC, Sp[chan0:chan1], '-b', markersize=2, markeredgecolor='b', markerfacecolor='b'))
+                pl.axis([V0, V1, spmin, spmax])
 
+                t3 = time.time()
+                
                 # Draw Channel Map
                 NMap = 0
                 Vmax0 = Vmin0 = 0
+                Title = []
                 for i in range(self.NumChannelMap):
                     if Reverse: ii = i
                     else: ii = self.NumChannelMap - i - 1
@@ -284,38 +406,42 @@ class SDSpectralImageDisplay(SDImageDisplay):
                     return plot_list
 
                 for i in xrange(NMap):
-                    x = i % self.NhPanel
-                    y = self.NvPanel - int(i / self.NhPanel) - 1
-                    x0 = 1.0 / float(self.NhPanel) * (x + 0.05)
-                    x1 = 1.0 / float(self.NhPanel) * 0.9
-                    y0 = 1.0 / float((self.NvPanel+2)) * (y + 0.05)
-                    y1 = 1.0 / float((self.NvPanel+2)) * 0.85
-                    a = pl.axes([x0, y0, x1, y1])
-                    a.set_aspect('equal')
-                    a.xaxis.set_major_locator(pl.NullLocator())
-                    a.yaxis.set_major_locator(pl.NullLocator())
                     #im = pl.imshow(Map[i], vmin=Vmin, vmax=Vmax, interpolation='bilinear', aspect='equal', extent=Extent)
-                    if not (Vmax==Vmin):
-                        im = pl.imshow(Map[i], vmin=Vmin, vmax=Vmax, interpolation='nearest', aspect='equal', extent=ExtentCM)
-                        if colormap == 'gray': pl.gray()
-                        else: pl.jet()
-                        #if x == (self.NhPanel - 1): pl.colorbar()
+                    if Vmax != Vmin:
+                        #im = pl.imshow(Map[i], vmin=Vmin, vmax=Vmax, interpolation='nearest', aspect='equal', extent=ExtentCM)
+                        pl.gcf().sca(axes_chmap[i])
+                        plotted_objects.append(pl.imshow(Map[i], vmin=Vmin, vmax=Vmax, interpolation='nearest', aspect='equal', extent=ExtentCM))
+                        x = i % self.NhPanel
                         if x == (self.NhPanel - 1):
-                            cb=pl.colorbar()
-                            for t in cb.ax.get_yticklabels():
-                                newfontsize = t.get_fontsize()*0.5
-                                t.set_fontsize(newfontsize)
-                            cb.ax.set_title('[K km/s]')
-                            lab=cb.ax.title
-                            lab.set_fontsize(newfontsize)
-
+                            y = int(i / self.NhPanel)
+                            if chmap_colorbar[y] is None:
+                                cb=pl.colorbar()
+                                for t in cb.ax.get_yticklabels():
+                                    newfontsize = t.get_fontsize()*0.5
+                                    t.set_fontsize(newfontsize)
+                                cb.ax.set_title('[K km/s]')
+                                lab=cb.ax.title
+                                lab.set_fontsize(newfontsize)
+                                chmap_colorbar[y] = cb
+                            else:
+                                chmap_colorbar[y].set_clim(Vmin,Vmax)
+                                chmap_colorbar[y].draw_all()
                         pl.title(Title[i], size=TickSize)
+
+                t4 = time.time()
+                LOG.debug('PROFILE: integrated intensity map: %s sec'%(t1-t0))
+                LOG.debug('PROFILE: integrated spectrum #1: %s sec'%(t2-t1))
+                LOG.debug('PROFILE: integrated spectrum #2: %s sec'%(t3-t2))
+                LOG.debug('PROFILE: channel map: %s sec'%(t4-t3))
 
                 if ShowPlot: pl.draw()
                 FigFileRoot = self.inputs.imagename + '.pol%s'%(pol)
                 plotfile = os.path.join(self.stage_dir, FigFileRoot+'_ChannelMap_%s.png'%(ValidCluster))
                 pl.savefig(plotfile, format='png', dpi=DPIDetail)
 
+                for obj in plotted_objects:
+                    obj.remove()
+                
                 parameters = {}
                 parameters['intent'] = 'TARGET'
                 parameters['spw'] = self.spw
@@ -333,8 +459,15 @@ class SDSpectralImageDisplay(SDImageDisplay):
 
             ValidCluster += 1
 
+            for line in vertical_lines:
+                line.remove()
 
         # Draw RMS Map
+        pl.clf()
+        rms_axes = axes_manager.axes_rmsmap
+        rms_colorbar = None
+        beam_circle = None
+
         for pol in xrange(self.npol):
         
             #for row in range(nrow):
@@ -345,43 +478,38 @@ class SDSpectralImageDisplay(SDImageDisplay):
             RMSMap = self.rms[:,:,pol] * (self.num_valid_spectrum[:,:,pol] > 0)
             RMSMap = numpy.flipud(RMSMap.transpose())
             #LOG.debug('RMSMap=%s'%(RMSMap))
-            pl.cla()
-            pl.clf()
-            a = pl.axes([0.25, 0.25, 0.5, 0.5])
             # 2008/9/20 DEC Effect
-            im = pl.imshow(RMSMap, interpolation='nearest', aspect=Aspect, extent=Extent)
-            #im = pl.imshow(RMSMap, interpolation='nearest', aspect='equal', extent=Extent)
-
-            a.xaxis.set_major_formatter(RAformatter)
-            a.yaxis.set_major_formatter(DECformatter)
-            a.xaxis.set_major_locator(RAlocator)
-            a.yaxis.set_major_locator(DEClocator)
-            xlabels = a.get_xticklabels()
-            pl.setp(xlabels, 'rotation', RArotation, fontsize=8)
-            ylabels = a.get_yticklabels()
-            pl.setp(ylabels, 'rotation', DECrotation, fontsize=8)
-
-            pl.xlabel('RA', size=12)
-            pl.ylabel('DEC', size=12)
-            if colormap == 'gray': pl.gray()
-            else: pl.jet()
-
+            image = pl.imshow(RMSMap, interpolation='nearest', aspect=Aspect, extent=Extent)
+            xlim = rms_axes.get_xlim()
+            ylim = rms_axes.get_ylim()
+            
             # colorbar
             if not (RMSMap.min() == RMSMap.max()): 
-                if not ((self.y_max == self.y_min) and (self.x_max == self.x_min)): 
-                   cb=pl.colorbar(shrink=0.8)
-                   cb.ax.set_title('[K]')
-                   lab = cb.ax.title
+                if not ((self.y_max == self.y_min) and (self.x_max == self.x_min)):
+                    if rms_colorbar is None:
+                        rms_colorbar = pl.colorbar(shrink=0.8)
+                        for t in rms_colorbar.ax.get_yticklabels():
+                            newfontsize = t.get_fontsize()*0.5
+                            t.set_fontsize(newfontsize)
+                        rms_colorbar.ax.set_title('[K]')
+                        lab = rms_colorbar.ax.title
+                    else:
+                        rms_colorbar.set_clim((RMSMap.min(),RMSMap.max()))
+                        rms_colorbar.draw_all()
 
             # draw beam pattern
-            draw_beam(a, self.beam_radius, Aspect, self.ra_min, self.dec_min)
+            if beam_circle is None:
+                beam_circle = draw_beam(rms_axes, self.beam_radius, Aspect, self.ra_min, self.dec_min)
 
-            pl.title('Baseline RMS Map', size=12)
+            rms_axes.set_xlim(xlim)
+            rms_axes.set_ylim(ylim)
 
             if ShowPlot: pl.draw()
             FigFileRoot = self.inputs.imagename + '.pol%s'%(pol)
             plotfile = os.path.join(self.stage_dir, FigFileRoot+'_rmsmap.png')
             pl.savefig(plotfile, format='png', dpi=DPISummary)
+
+            image.remove()
 
             parameters = {}
             parameters['intent'] = 'TARGET'
@@ -444,8 +572,8 @@ class SDSpectralImageDisplay(SDImageDisplay):
             y1 = (y + 1) * STEP - 1
             LabelDEC[y][0] = refval + (y0 - refpix) * increment
             LabelDEC[y][1] = refval + (y1 - refpix) * increment
-        LOG.info('LabelDEC=%s'%(LabelDEC))
-        LOG.info('LabelRA=%s'%(LabelRA))
+        LOG.debug('LabelDEC=%s'%(LabelDEC))
+        LOG.debug('LabelRA=%s'%(LabelRA))
 
         # loop over pol
         for pol in xrange(self.npol):

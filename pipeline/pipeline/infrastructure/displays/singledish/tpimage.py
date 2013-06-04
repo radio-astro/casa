@@ -15,6 +15,45 @@ from .common import DPISummary, DPIDetail, SDImageDisplay, ShowPlot, draw_beam
 
 LOG = infrastructure.get_logger(__name__)
 
+class ChannelAveragedAxesManager(object):
+    def __init__(self, xformatter, yformatter, xlocator, ylocator, xrotation, yrotation, ticksize, colormap):
+        self.xformatter = xformatter
+        self.yformatter = yformatter
+        self.xlocator = xlocator
+        self.ylocator = ylocator
+        self.xrotation = xrotation
+        self.yrotation = yrotation
+        self.isgray = (colormap == 'gray')
+        
+        self.ticksize = ticksize
+        
+        self._axes_tpmap = None
+
+    @property
+    def axes_tpmap(self):
+        if self._axes_tpmap is None:
+            axes = pl.axes([0.25,0.25,0.5,0.5])
+            axes.xaxis.set_major_formatter(self.xformatter)
+            axes.yaxis.set_major_formatter(self.yformatter)
+            axes.xaxis.set_major_locator(self.xlocator)
+            axes.yaxis.set_major_locator(self.ylocator)
+            xlabels = axes.get_xticklabels()
+            pl.setp(xlabels, 'rotation', self.xrotation, fontsize=self.ticksize)
+            ylabels = axes.get_yticklabels()
+            pl.setp(ylabels, 'rotation', self.yrotation, fontsize=self.ticksize)
+            pl.title('Baseline RMS Map', size=self.ticksize)
+            pl.xlabel('RA', size=self.ticksize)
+            pl.ylabel('DEC', size=self.ticksize)
+
+            if self.isgray:
+                pl.gray()
+            else:
+                pl.jet()
+
+            self._axes_tpmap = axes
+            
+        return self._axes_tpmap
+
 class SDChannelAveragedImageDisplay(SDImageDisplay):
     MATPLOTLIB_FIGURE_ID = 8911
     
@@ -31,68 +70,94 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
         else: pl.ioff()
         pl.figure(self.MATPLOTLIB_FIGURE_ID)
         if ShowPlot: pl.ioff()
+        pl.clf()
+        
         # 2008/9/20 Dec Effect has been taken into account
         #Aspect = 1.0 / math.cos(Table[0][5] / 180. * 3.141592653)
         Aspect = 1.0 / math.cos(0.5 * (self.dec_max + self.dec_min) / 180. * 3.141592653)
 
-        (x0, x1, y0, y1) = (0.25, 0.5, 0.25, 0.5)
+        #(x0, x1, y0, y1) = (0.25, 0.5, 0.25, 0.5)
 
         colormap = 'color'
 
         plot_list = []
 
+        axes_manager = ChannelAveragedAxesManager(RAformatter, DECformatter,
+                                                  RAlocator, DEClocator,
+                                                  RArotation, DECrotation,
+                                                  TickSize, colormap)
+        axes_tpmap = axes_manager.axes_tpmap
+        tpmap_colorbar = None
+        beam_circle = None
+
+        pl.gcf().sca(axes_tpmap)
+        
         masked_data = self.data * self.mask
         for pol in xrange(self.npol):
             Total = masked_data[:,:,0,pol]
             Total = numpy.flipud(Total.transpose())
+            tmin = Total.min()
+            tmax = Total.max()
 
-            pl.cla()
-            pl.clf()
+            #pl.cla()
+            #pl.clf()
 
-            a = pl.axes([x0, y0, x1, y1])
+            #a = pl.axes([x0, y0, x1, y1])
             # 2008/9/20 DEC Effect
             im = pl.imshow(Total, interpolation='nearest', aspect=Aspect, extent=Extent)
             #im = pl.imshow(Total, interpolation='nearest', aspect='equal', extent=Extent)
 
-            a.xaxis.set_major_formatter(RAformatter)
-            a.yaxis.set_major_formatter(DECformatter)
-            a.xaxis.set_major_locator(RAlocator)
-            a.yaxis.set_major_locator(DEClocator)
-            xlabels = a.get_xticklabels()
-            pl.setp(xlabels, 'rotation', RArotation, fontsize=TickSize)
-            ylabels = a.get_yticklabels()
-            pl.setp(ylabels, 'rotation', DECrotation, fontsize=TickSize)
+            xlim = axes_tpmap.get_xlim()
+            ylim = axes_tpmap.get_ylim()
 
-            pl.xlabel('RA', size=TickSize)
-            pl.ylabel('DEC', size=TickSize)
-            if colormap == 'gray': pl.gray()
-            else: pl.jet()
+            #a.xaxis.set_major_formatter(RAformatter)
+            #a.yaxis.set_major_formatter(DECformatter)
+            #a.xaxis.set_major_locator(RAlocator)
+            #a.yaxis.set_major_locator(DEClocator)
+            #xlabels = a.get_xticklabels()
+            #pl.setp(xlabels, 'rotation', RArotation, fontsize=TickSize)
+            #ylabels = a.get_yticklabels()
+            #pl.setp(ylabels, 'rotation', DECrotation, fontsize=TickSize)
+
+            #pl.xlabel('RA', size=TickSize)
+            #pl.ylabel('DEC', size=TickSize)
+            #if colormap == 'gray': pl.gray()
+            #else: pl.jet()
 
             # colorbar
-            #print "min=%s, max of Total=%s" % (Total.min(),Total.max())
-            if not (Total.min() == Total.max()): 
+            #print "min=%s, max of Total=%s" % (tmin,tmax)
+            if not (tmin == tmax): 
                 #if not ((Ymax == Ymin) and (Xmax == Xmin)): 
                 #if not all(image_shape[id_direction] <= 1):
                 if self.nx > 1 or self.ny > 1:
-                    cb=pl.colorbar(shrink=0.8)
-                    for t in cb.ax.get_yticklabels():
-                        newfontsize = t.get_fontsize()*0.5
-                        t.set_fontsize(newfontsize)
-                    #cb.ax.set_title('[K km/s]')
-                    cb.ax.set_title('[K]')
-                    lab = cb.ax.title
-                    lab.set_fontsize(newfontsize)
-
+                    if tpmap_colorbar is None:
+                        tpmap_colorbar = pl.colorbar(shrink=0.8)
+                        for t in tpmap_colorbar.ax.get_yticklabels():
+                            newfontsize = t.get_fontsize()*0.5
+                            t.set_fontsize(newfontsize)
+                        #tpmap_colorbar.ax.set_title('[K km/s]')
+                        tpmap_colorbar.ax.set_title('[K]')
+                        lab = tpmap_colorbar.ax.title
+                        lab.set_fontsize(newfontsize)
+                    else:
+                        tpmap_colorbar.set_clim((tmin,tmax))
+                        tpmap_colorbar.draw_all()
+                        
             # draw beam pattern
-            draw_beam(a, 0.5 * self.beam_size, Aspect, self.ra_min, self.dec_min)
+            if beam_circle is None:
+                beam_circle = draw_beam(axes_tpmap, 0.5 * self.beam_size, Aspect, self.ra_min, self.dec_min)
 
             pl.title('Total Power', size=TickSize)
+            axes_tpmap.set_xlim(xlim)
+            axes_tpmap.set_ylim(ylim)
 
             if ShowPlot: pl.draw()
             FigFileRoot = self.inputs.imagename+'.pol%s'%(pol)
             plotfile = os.path.join(self.stage_dir,FigFileRoot+'_TP.png')
             pl.savefig(plotfile, format='png', dpi=DPIDetail)
 
+            im.remove()
+            
             parameters = {}
             parameters['intent'] = 'TARGET'
             parameters['spw'] = self.inputs.spw
