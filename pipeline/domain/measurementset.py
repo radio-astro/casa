@@ -126,17 +126,12 @@ def _parse_field(task_arg, fields=[]):
     rangeExpr = number('start') + TILDE + number('end')
     rangeExpr.setParseAction(lambda tokens : range(tokens.start, tokens.end+1))
 
-    # spw and channel components can be any of the above patterns    
     boundary = [c for c in pyparsing.printables if c not in (' ', ',')]
-    numExpr = pyparsing.WordStart(boundary) + (rangeExpr | number) + pyparsing.WordEnd(boundary)
+    field_id = pyparsing.WordStart(boundary) + (rangeExpr | number) + pyparsing.WordEnd(boundary)
     
-    # group the number so it converted to a node, fields in this case
-    field_id_expr = pyparsing.Group(numExpr)
-
     casa_chars = ''.join([c for c in string.printable 
-                          if c not in ',' + string.whitespace]) 
+                          if c not in string.whitespace])
     field_name = pyparsing.Word(casa_chars + ' ')
-#    field_name = pyparsing.Word(string.printable)
 
     def get_ids_for_matching(tokens):
         search_term = tokens[0]
@@ -147,20 +142,14 @@ def _parse_field(task_arg, fields=[]):
         
     field_name.setParseAction(get_ids_for_matching)        
     
-    field_name_expr = pyparsing.Group(field_name)
-
     # the complete expression
-    atomExpr = pyparsing.Group(field_id_expr('fields') | field_name_expr('fields'))
-
-    # and we can have multiple items separated by commas
-    finalExpr = pyparsing.delimitedList(atomExpr('atom'), delim=',')('result')
-
-    parse_result = finalExpr.parseString(str(task_arg))
+    atomExpr = field_id('fields') | field_name('fields')
 
     results = set()
-    for atom in parse_result.result:
-        map(results.add, atom.fields)
-
+    for atom in pyparsing.commaSeparatedList.parseString(str(task_arg)):
+        x = atomExpr.parseString(atom)
+        results.update(x.asList())
+    
     return sorted(list(results))
 
 
