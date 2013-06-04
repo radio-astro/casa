@@ -396,7 +396,7 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 				if l_max <= 0 and r_min >= r_max:
                                     LOG.debug('Skipping edge flagging for FDM spw %s ' % spw.id)
 			            continue
-                                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, rmax)
+                                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
                                 to_flag.append(cmd)
 
 			else:
