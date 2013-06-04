@@ -129,6 +129,60 @@ class ChannelMapAxesManager(RmsMapAxesManager):
 
         return self._axes_chmap
 
+
+class SparseMapAxesManager(object):
+    def __init__(self, nh, nv, ticksize):
+        self.nh = nh
+        self.nv = nv
+        self.ticksize = ticksize
+        self.numeric_formatter = pl.FormatStrFormatter('%.2f')
+        
+        self._axes_integsp = None
+        self._axes_spmap = None
+        
+    @property
+    def axes_integsp(self):
+        if self._axes_integsp is None:
+            axes = pl.subplot((self.nv+3)/2+3, 1, 1)
+            axes.xaxis.set_major_formatter(self.numeric_formatter)
+            pl.xlabel('Frequency(GHz)', size=(self.ticksize+1))
+            pl.ylabel('Intensity(K)', size=(self.ticksize+1))
+            pl.xticks(size=self.ticksize)
+            pl.yticks(size=self.ticksize)
+            pl.title('Spatially Integrated Spectrum', size=(self.ticksize + 1))
+
+            self._axes_integsp = axes
+        return self._axes_integsp
+
+    @property
+    def axes_spmap(self):
+        if self._axes_spmap is None:
+            axes_list = []
+            for x in xrange(self.nh):
+                for y in xrange(self.nv):
+                    axes = pl.subplot(self.nv+3, self.nh+1, (self.nv - 1 - y + 2) * (self.nh + 1) + (self.nh - 1 - x) + 2)
+                    axes.yaxis.set_major_locator(pl.NullLocator())
+                    axes.xaxis.set_major_locator(pl.NullLocator())
+                    axes_list.append(axes)
+            self._axes_spmap = axes_list
+
+        return self._axes_spmap
+
+    def setup_labels(self, label_ra, label_dec):
+        for x in xrange(self.nh):
+            a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 2) * (self.nh + 1) + self.nh - x + 1)
+            a1.set_axis_off()
+            pl.text(0.5, 0.5, HHMMSSss((label_ra[x][0]+label_ra[x][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
+        for y in xrange(self.nv):
+            a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 1 - y) * (self.nh + 1) + 1)
+            a1.set_axis_off()
+            pl.text(0.5, 0.5, DDMMSSs((label_dec[y][0]+label_dec[y][1])/        2.0, 0), horizontalalignment='center', verticalalignment='center', size=self.ticksize)
+        a1 = pl.subplot(self.nv+3, self.nh+1, (self.nv + 2) * (self.nh + 1) + 1)
+        a1.set_axis_off()
+        pl.text(0.5, 1, 'Dec', horizontalalignment='center', verticalalignment='bottom', size=(self.ticksize+1))
+        pl.text(1, 0.5, 'RA', horizontalalignment='center', verticalalignment='center', size=(self.ticksize+1))
+
+        
         
 class SDSpectralImageDisplay(SDImageDisplay):
     MATPLOTLIB_FIGURE_ID = 8910
@@ -382,7 +436,7 @@ class SDSpectralImageDisplay(SDImageDisplay):
                 NMap = 0
                 Vmax0 = Vmin0 = 0
                 Title = []
-                for i in range(self.NumChannelMap):
+                for i in xrange(self.NumChannelMap):
                     if Reverse: ii = i
                     else: ii = self.NumChannelMap - i - 1
                     C0 = ChanB + ChanW*ii
@@ -529,10 +583,16 @@ class SDSpectralImageDisplay(SDImageDisplay):
         return plot_list
         
     def __plot_sparse_map(self):
-        #x_max = self.nx - 1
-        #x_min = 0
-        #y_max = self.ny - 1
-        #y_min = 0
+
+        # Plotting routine
+        Mark = '-b'
+        if ShowPlot: pl.ion()
+        else: pl.ioff()
+        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if ShowPlot: pl.ioff()
+
+        pl.clf()
+        
         num_panel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxPanel)
         STEP = int((max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1) - 1) / num_panel) + 1
         NH = (self.x_max - self.x_min) / STEP + 1
@@ -543,8 +603,6 @@ class SDSpectralImageDisplay(SDImageDisplay):
         chan0 = 0
         chan1 = self.nchan
 
-        #(refpix, refval, increment) = self.image.spectral_axis(unit='GHz')
-        #self.frequency = numpy.array([refval+increment*(i-refpix) for i in xrange(nchan)])
         xmin = min(self.frequency[chan0], self.frequency[chan1-1])
         xmax = max(self.frequency[chan0], self.frequency[chan1-1])
 
@@ -575,8 +633,15 @@ class SDSpectralImageDisplay(SDImageDisplay):
         LOG.debug('LabelDEC=%s'%(LabelDEC))
         LOG.debug('LabelRA=%s'%(LabelRA))
 
+        axes_manager = SparseMapAxesManager(NH, NV, TickSize)
+        axes_manager.setup_labels(LabelRA, LabelDEC)
+        axes_integsp = axes_manager.axes_integsp
+        axes_spmap = axes_manager.axes_spmap
+        
         # loop over pol
         for pol in xrange(self.npol):
+            plotted_objects = []
+            
             masked_data_p = masked_data[:,:,:,pol]
             Plot = numpy.zeros((num_panel, num_panel, (chan1 - chan0)), numpy.float32) + NoData
             TotalSP = masked_data_p.sum(axis=0).sum(axis=0)
@@ -585,6 +650,12 @@ class SDSpectralImageDisplay(SDImageDisplay):
             Nsp = sum(isvalid.flatten())
             LOG.info('Nsp=%s'%(Nsp))
             TotalSP /= Nsp
+            spmin = TotalSP.min()
+            spmax = TotalSP.max()
+            dsp = spmax - spmin
+            spmin -= dsp * 0.1
+            spmax += dsp * 0.1
+            LOG.debug('spmin=%s, spmax=%s'%(spmin,spmax))
 
             for x in xrange(NH):
                 x0 = x * STEP
@@ -597,21 +668,14 @@ class SDSpectralImageDisplay(SDImageDisplay):
                     valid_sp = chunk[valid_index[0],valid_index[1],:]
                     Plot[x][y] = valid_sp.mean(axis=0)
 
-            # Plotting routine
-            Mark = '-b'
-            if ShowPlot: pl.ion()
-            else: pl.ioff()
-            pl.figure(self.MATPLOTLIB_FIGURE_ID)
-            if ShowPlot: pl.ioff()
-
             AutoScale = True
             if AutoScale: 
                 # to eliminate max/min value due to bad pixel or bad fitting,
                 #  1/10-th value from max and min are used instead
                 ListMax = []
                 ListMin = []
-                for x in range(num_panel):
-                    for y in range(num_panel):
+                for x in xrange(num_panel):
+                    for y in xrange(num_panel):
                         if Plot[x][y].min() > NoDataThreshold:
                             ListMax.append(Plot[x][y].max())
                             ListMin.append(Plot[x][y].min())
@@ -627,49 +691,29 @@ class SDSpectralImageDisplay(SDImageDisplay):
 
             LOG.info('ymin=%s, ymax=%s'%(ymin,ymax))
 
-            pl.cla()
-            pl.clf()
-            a0 = pl.subplot((NV+3)/2+3, 1, 1)
-            a0.xaxis.set_major_formatter(Format)
-        ##     pl.plot(Abcissa[1][chan0:chan1], TotalSP, color='b', linestyle='-', linewidth=0.4)
-            pl.plot(self.frequency[chan0:chan1], TotalSP, color='b', linestyle='-', linewidth=0.4)
-            pl.xlabel('Frequency(GHz)', size=(TickSize+1))
-            pl.ylabel('Intensity(K)', size=(TickSize+1))
-            pl.xticks(size=TickSize)
-            pl.yticks(size=TickSize)
-            pl.title('Spatially Integrated Spectrum', size=(TickSize + 1))
+            pl.gcf().sca(axes_integsp)
+            plotted_objects.extend(pl.plot(self.frequency[chan0:chan1], TotalSP, color='b', linestyle='-', linewidth=0.4))
+            (_xmin,_xmax,_ymin,_ymax) = pl.axis()
+            pl.axis((_xmin,_xmax,spmin,spmax))
 
-            for x in range(NH):
-                for y in range(NV):
-                    a1 = pl.subplot(NV+3, NH+1, (NV - 1 - y + 2) * (NH + 1) + (NH - 1 - x) + 2)
+            for x in xrange(NH):
+                for y in xrange(NV):
+                    pl.gcf().sca(axes_spmap[y+x*NV])
                     if Plot[x][y].min() > NoDataThreshold:
-        ##                 pl.plot(Abcissa[1][chan0:chan1], Plot[x][y], color='b', linestyle='-', linewidth=0.2)
-                        pl.plot(self.frequency[chan0:chan1], Plot[x][y], color='b', linestyle='-', linewidth=0.2)
+                        plotted_objects.extend(pl.plot(self.frequency[chan0:chan1], Plot[x][y], color='b', linestyle='-', linewidth=0.2))
                     else:
-                        pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=(TickSize + 1))
-                    a1.yaxis.set_major_locator(pl.NullLocator())
-                    a1.xaxis.set_major_locator(pl.NullLocator())
+                        plotted_objects.extend(pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=(TickSize + 1)))
                     pl.axis([xmin, xmax, ymin, ymax])
-            for x in range(NH):
-                a1 = pl.subplot(NV+3, NH+1, (NV + 2) * (NH + 1) + NH - x + 1)
-                a1.set_axis_off()
-                #pl.text(0.5, 0.5, HHMMSSss((LabelRADEC[x][0][0]+LabelRADEC[x][0][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=TickSize)
-                pl.text(0.5, 0.5, HHMMSSss((LabelRA[x][0]+LabelRA[x][1])/2.0, 0), horizontalalignment='center', verticalalignment='center', size=TickSize)
-            for y in range(NV):
-                a1 = pl.subplot(NV+3, NH+1, (NV + 1 - y) * (NH + 1) + 1)
-                a1.set_axis_off()
-                #pl.text(0.5, 0.5, DDMMSSs((LabelRADEC[y][1][0]+LabelRADEC[y][1][1])/        2.0, 0), horizontalalignment='center', verticalalignment='center', size=TickSize)
-                pl.text(0.5, 0.5, DDMMSSs((LabelDEC[y][0]+LabelDEC[y][1])/        2.0, 0), horizontalalignment='center', verticalalignment='center', size=TickSize)
-            a1 = pl.subplot(NV+3, NH+1, (NV + 2) * (NH + 1) + 1)
-            a1.set_axis_off()
-            pl.text(0.5, 1, 'Dec', horizontalalignment='center', verticalalignment='bottom', size=(TickSize+1))
-            pl.text(1, 0.5, 'RA', horizontalalignment='center', verticalalignment='center', size=(TickSize+1))
+
             if ShowPlot: pl.draw()
 
             FigFileRoot = self.inputs.imagename+'.pol%s_Sparse'%(pol)
             plotfile = os.path.join(self.stage_dir, FigFileRoot+'_0.png')
             pl.savefig(plotfile, format='png', dpi=DPIDetail)
 
+            for obj in plotted_objects:
+                obj.remove()
+            
             parameters = {}
             parameters['intent'] = 'TARGET'
             parameters['spw'] = self.inputs.spw
