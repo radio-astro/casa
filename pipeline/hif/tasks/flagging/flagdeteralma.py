@@ -65,6 +65,9 @@ from __future__ import absolute_import
 #import casac
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
+import pipeline.domain.measures as measures
+
 from . import flagdeterbase 
 
 #import pipeline.tasks.flagging.FlagDeterBase as gronk
@@ -380,19 +383,34 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
                         # Skip if TDM mode where TDM modes are defined to
 			# be modes with <= 256 channels per correlation
 			if (ncorr * spw.num_channels > 256):
-                                LOG.debug('Skipping edge flagging for FDM spw %s ' % spw.id)
-			        continue
+				quanta = casatools.quanta
+				bw_quantity = quanta.convert(quanta.quantity('1875MHz'), 'Hz')   
+				bandwidth = measures.Frequency(quanta.getvalue(bw_quantity)[0],
+				    measures.FrequencyUnits.HERTZ)
+				cen_freq = spw.centre_frequency
+				lo_freq = cen_freq - bandwidth / 2.0
+				hi_freq = cen_freq + bandwidth / 2.0
+				l_max, r_min = spw.channel_range(lo_freq, hi_freq)
+				r_max = spw.num_channels - 1
+				
+				if l_max <= 0 and r_min >= r_max:
+                                    LOG.debug('Skipping edge flagging for FDM spw %s ' % spw.id)
+			            continue
+                                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, rmax)
+                                to_flag.append(cmd)
 
-                        # calculate the channel ranges to flag. No need to calculate the
-                        # left minimum as it is always channel 0.
-                        l_max = frac_chan - 1
-                        r_min = spw.num_channels - frac_chan - 1
-                        r_max = spw.num_channels - 1
+			else:
 
-                        # state the spw and channels to flag in flagdata format, adding
-                        # the statement to the list of flag commands
-                        cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
-                        to_flag.append(cmd)
+                                # calculate the channel ranges to flag. No need to calculate the
+                                # left minimum as it is always channel 0.
+                                l_max = frac_chan - 1
+                                r_min = spw.num_channels - frac_chan - 1
+                                r_max = spw.num_channels - 1
+
+                                # state the spw and channels to flag in flagdata format, adding
+                                # the statement to the list of flag commands
+                                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
+                                to_flag.append(cmd)
 
 		if len(to_flag) <= 0:
 		    return '# No valid edge spw flagging command'
