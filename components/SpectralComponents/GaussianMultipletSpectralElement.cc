@@ -54,7 +54,6 @@ GaussianMultipletSpectralElement::GaussianMultipletSpectralElement(
 		throw AipsError(_ORIGIN +  "constraints does not have 3 columns");
 	}
 	Matrix<Bool> fixed(LogicalArray(constraints != 0.0));
-
 	for (uInt i=1; i<estimates.size(); i++) {
 		if (! estimates[0].fixedAmpl()
 			&& estimates[i].fixedAmpl()
@@ -85,7 +84,6 @@ GaussianMultipletSpectralElement::GaussianMultipletSpectralElement(
 			);
 		}
 	}
-
 	ostringstream myfunc;
 	myfunc << "p0*exp(-0.5 * (x-p1)*(x-p1) / p2/p2)";
 	Vector<Double> parm(3 + nfalse(fixed), 0);
@@ -96,17 +94,14 @@ GaussianMultipletSpectralElement::GaussianMultipletSpectralElement(
 	errs[0] = _gaussians[0].getAmplErr();
 	errs[1] = _gaussians[0].getCenterErr();
 	errs[2] = _gaussians[0].getSigmaErr();
-
 	Vector<Bool> f(parm.size(), True);
 	f[0] = _gaussians[0].fixedAmpl();
 	f[1] = _gaussians[0].fixedCenter();
 	f[2] = _gaussians[0].fixedSigma();
-
 	_paramIndices(0, 0) = 0;
 	_paramIndices(0, 1) = 1;
 	_paramIndices(0, 2) = 2;
 	uInt p = 3;
-
 	for (uInt i=0; i<constraints.nrow(); i++) {
 		String amp;
 		if (constraints(i, 0) != 0) {

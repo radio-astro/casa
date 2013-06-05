@@ -65,13 +65,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 
 
-class PowerLogPolynomialSpectralElement: public CompiledSpectralElement {
+class PowerLogPolynomialSpectralElement: public SpectralElement {
 public:
 
+	/*
 	// Constructor. The n coefficients c_i to be solved for are
 	// c_0 * nu**(c_1 + c_2*log(x) + c_3*log(x)**2 + ... + c_(n-1)*log(x)**(n - 2))
 	explicit PowerLogPolynomialSpectralElement(uInt n);
-
+*/
 	// Construct with the given parameters. See above constructor for order in which the parameters should
 	// be supplied.
 	PowerLogPolynomialSpectralElement(const Vector<Double> &param);
@@ -86,11 +87,14 @@ public:
 	);
 
 	SpectralElement* clone() const;
-
+/*
 private:
 	void _makeFunction();
-
+*/
 };
+
+ostream &operator<<(ostream& os, const PowerLogPolynomialSpectralElement& elem);
+
 
 } //# NAMESPACE CASA - END
 

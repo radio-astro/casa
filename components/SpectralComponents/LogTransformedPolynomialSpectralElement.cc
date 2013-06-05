@@ -48,6 +48,7 @@ LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement
 	const Vector<Double>& param
 ) : CompiledSpectralElement(SpectralElement::LOGTRANSPOLY, param) {
 	_makeFunction();
+	_set(param);
 }
 
 void LogTransformedPolynomialSpectralElement::_makeFunction() {
@@ -62,7 +63,7 @@ void LogTransformedPolynomialSpectralElement::_makeFunction() {
 			function << " + p" << i << "*ln(x)^" << i;
 		}
 	}
-	_setFunction(function.str());
+	CompiledSpectralElement::_setFunction(function.str());
 }
 
 LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement(

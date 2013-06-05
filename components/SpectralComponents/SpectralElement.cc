@@ -33,7 +33,11 @@
 #include <casa/Exceptions/Error.h>
 #include <casa/Utilities/MUString.h>
 #include <scimath/Mathematics/AutoDiffMath.h>
+#include <scimath/Functionals/Function.h>
+
+//debug only
 #include <scimath/Functionals/CompiledFunction.h>
+#include <casa/Arrays/ArrayIO.h>
 
 #include <casa/iostream.h>
 
@@ -46,7 +50,12 @@ SpectralElement::SpectralElement(SpectralElement::Types type, const Vector<Doubl
 
 SpectralElement::SpectralElement(const SpectralElement &other)
 : _type(other._type), _params(other._params.copy()), _errors(other._errors.copy()),
-  _fixed(other._fixed.copy()) {}
+  _fixed(other._fixed.copy()),
+  _function(
+		std::tr1::shared_ptr<Function<Double, Double> >(
+			other._function->clone()
+		)
+	) {}
 
 SpectralElement::~SpectralElement() {}
 
@@ -62,6 +71,9 @@ SpectralElement &SpectralElement::operator=(
 		_errors = other._errors.copy();
 		_fixed.resize(n);
 		_fixed = other._fixed.copy();
+		_function = std::tr1::shared_ptr<Function<Double, Double> >(
+			other._function->clone()
+		);
 	}
 	return *this;
 }
@@ -118,6 +130,9 @@ const String* SpectralElement::allTypes(
 
 void SpectralElement::_set(const Vector<Double>& params) {
 	_params = params.copy();
+	for (uInt i=0; i<params.size(); i++) {
+		(*_function)[i] = params[i];
+	}
 }
 
 void SpectralElement::_setType(const SpectralElement::Types type) {
@@ -146,6 +161,16 @@ Bool SpectralElement::toType(
 	}
 	tp = typ[i];
 	return True;
+}
+
+void SpectralElement::_setFunction(
+	const std::tr1::shared_ptr<Function<Double, Double> >& f
+) {
+	_function = f;
+}
+
+Double SpectralElement::operator()(const Double x) const {
+	return (*_function)(x);
 }
 
 void SpectralElement::get(Vector<Double> &param) const {
@@ -186,6 +211,9 @@ void SpectralElement::fix(const Vector<Bool> &fix) {
 		);
 	}
 	_fixed = fix.copy();
+	for (uInt i=0; i<_fixed.size(); i++) {
+		_function->mask(i) = fix[i];
+	}
 }
 
 const Vector<Bool>& SpectralElement::fixed() const {

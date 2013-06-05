@@ -32,8 +32,11 @@
 #include <casa/aips.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Containers/RecordInterface.h>
+#include <tr1/memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+template <class T, class U> class Function;
 
 // <summary>
 // Describes (a set of related) spectral lines
@@ -101,7 +104,7 @@ public:
 	virtual SpectralElement* clone() const = 0;
 
 	// Evaluate the value of the element at x
-	virtual Double operator()(const Double x) const = 0;
+	virtual Double operator()(const Double x) const;
 
 	virtual Bool operator==(const SpectralElement& other) const;
 
@@ -165,11 +168,15 @@ protected:
 
 	SpectralElement &operator=(const SpectralElement& other);
 
-	// void _construct(const Types type, const Vector<Double>& params);
-
 	void _set(const Vector<Double>& params);
 
 	void _setType(const Types type);
+
+	void _setFunction(const std::tr1::shared_ptr<Function<Double, Double> >& f);
+
+	virtual std::tr1::shared_ptr<Function<Double, Double> > _getFunction() const {
+		return _function;
+	}
 
 private:
 	//#Data
@@ -184,6 +191,8 @@ private:
 	// The indication if the parameter has to be fixed (True) or solved (False).
 	// Solved is the default.
 	Vector<Bool> _fixed;
+
+	std::tr1::shared_ptr<Function<Double, Double> > _function;
 
 };
 
