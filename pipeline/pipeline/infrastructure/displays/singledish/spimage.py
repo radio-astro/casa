@@ -107,27 +107,29 @@ class ChannelMapAxesManager(RmsMapAxesManager):
     @property
     def axes_chmap(self):
         if self._axes_chmap is None:
-            axes_list = []
-            for i in xrange(self.nchmap):
-                x = i % self.nh
-                y = self.nv - int(i / self.nh) - 1
-                left = 1.0 / float(self.nh) * (x + 0.05)
-                width = 1.0 / float(self.nh) * 0.9
-                bottom = 1.0 / float((self.nv+2)) * (y + 0.05)
-                height = 1.0 / float((self.nv+2)) * 0.85
-                a = pl.axes([left, bottom, width, height])
-                a.set_aspect('equal')
-                a.xaxis.set_major_locator(pl.NullLocator())
-                a.yaxis.set_major_locator(pl.NullLocator())
-                axes_list.append(a)
-                if self.isgray:
-                    pl.gray()
-                else:
-                    pl.jet()
-            
-            self._axes_chmap = axes_list
+            self._axes_chmap = list(self.__axes_chmap())
 
         return self._axes_chmap
+
+    def __axes_chmap(self):
+        for i in xrange(self.nchmap):
+            x = i % self.nh
+            y = self.nv - int(i / self.nh) - 1
+            left = 1.0 / float(self.nh) * (x + 0.05)
+            width = 1.0 / float(self.nh) * 0.9
+            bottom = 1.0 / float((self.nv+2)) * (y + 0.05)
+            height = 1.0 / float((self.nv+2)) * 0.85
+            a = pl.axes([left, bottom, width, height])
+            a.set_aspect('equal')
+            a.xaxis.set_major_locator(pl.NullLocator())
+            a.yaxis.set_major_locator(pl.NullLocator())
+            if self.isgray:
+                pl.gray()
+            else:
+                pl.jet()
+
+            yield a
+        
 
 
 class SparseMapAxesManager(object):
@@ -157,16 +159,19 @@ class SparseMapAxesManager(object):
     @property
     def axes_spmap(self):
         if self._axes_spmap is None:
-            axes_list = []
-            for x in xrange(self.nh):
-                for y in xrange(self.nv):
-                    axes = pl.subplot(self.nv+3, self.nh+1, (self.nv - 1 - y + 2) * (self.nh + 1) + (self.nh - 1 - x) + 2)
-                    axes.yaxis.set_major_locator(pl.NullLocator())
-                    axes.xaxis.set_major_locator(pl.NullLocator())
-                    axes_list.append(axes)
-            self._axes_spmap = axes_list
+            self._axes_spmap = list(self.__axes_spmap())
 
         return self._axes_spmap
+
+    def __axes_spmap(self):
+        for x in xrange(self.nh):
+            for y in xrange(self.nv):
+                axes = pl.subplot(self.nv+3, self.nh+1, (self.nv - 1 - y + 2) * (self.nh + 1) + (self.nh - 1 - x) + 2)
+                axes.yaxis.set_major_locator(pl.NullLocator())
+                axes.xaxis.set_major_locator(pl.NullLocator())
+
+                yield axes
+        
 
     def setup_labels(self, label_ra, label_dec):
         for x in xrange(self.nh):
