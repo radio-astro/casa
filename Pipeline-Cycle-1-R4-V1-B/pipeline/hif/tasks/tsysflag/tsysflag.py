@@ -355,6 +355,9 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
             if re.search(pattern=re_intent, string='TARGET'):
                 groupids += [field.id for field in ms.fields if 'TARGET'
                   in field.intents]
+            if re.search(pattern=re_intent, string='ATMOSPHERE'):
+                groupids += [field.id for field in ms.fields if 'ATMOSPHERE'
+                  in field.intents]
 
             intentgroupids[intentgroup] = groupids
 
@@ -494,6 +497,12 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
                               flagstack))
 
                 if spectrumstack is not None:
+                    if np.ndim(spectrumstack) == 1:
+                        # need to reshape to 2d array
+                        dim = np.shape(spectrumstack)[0]
+                        spectrumstack = np.reshape(spectrumstack, (1,dim))
+                        flagstack = np.reshape(flagstack, (1,dim))
+
                     stackmedian = np.zeros(np.shape(spectrumstack)[1])
                     stackmedianflag = np.ones(np.shape(spectrumstack)[1], np.bool)
 
