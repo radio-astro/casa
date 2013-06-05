@@ -188,16 +188,18 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
         else:
             blunit = datablunit
             kl = 1.0
+        pl.ioff()
         #baselines = pl.hypot(baselines[0]/kl, baselines[1]/kl)
         baselines = pl.hypot(baselines[0], baselines[1])
 
-        if not showplot:
-            casalog.post('Sorry, not showing the plot is not yet implemented',
-                         'WARN')
+        #if not showplot:
+        #    casalog.post('Sorry, not showing the plot is not yet implemented',
+        #                 'WARN')
 
-        pl.ion()
+        if showplot: 
+          pl.ion()
         pl.clf()
-        pl.ioff()
+        pl.ioff() 
         nfreqs = len(compdict['freqs (GHz)'])
         for freqnum in xrange(nfreqs):
             freq = compdict['freqs (GHz)'][freqnum]
@@ -227,8 +229,9 @@ def plotcomp(compdict, showplot=True, wantdict=False, symb=',',
         #pl.legend(loc='best', title='($%.0f^\circ$ az, $%.0f^\circ$ el)' % azeldegs)
         y_formatter=matplotlib.ticker.ScalarFormatter(useOffset=False)
         pl.axes().yaxis.set_major_formatter(y_formatter) 
-        pl.ion()
-        pl.draw()
+        if showplot:
+          pl.ion()
+          pl.draw()
         if compdict.get('savedfig'):
             pl.savefig(compdict.get('savedfig'))
             casalog.post("Saved plot to " + str(compdict.get('savedfig')))
