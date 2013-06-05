@@ -93,7 +93,7 @@ public:
 	Double getFWHMErr() const { return getWidthErr(); }
 
 	// Evaluate the value of the profile at x
-	Double operator()(const Double x) const;
+	//Double operator()(const Double x) const;
 
 
 	// get the integral of the function

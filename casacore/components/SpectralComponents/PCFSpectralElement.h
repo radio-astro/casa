@@ -150,6 +150,8 @@ protected:
 private:
 	PCFSpectralElement();
 
+	void _initFunction();
+
 };
 
 } //# NAMESPACE CASA - END

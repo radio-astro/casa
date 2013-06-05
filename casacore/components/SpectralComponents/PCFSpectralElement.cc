@@ -29,7 +29,7 @@
 #include <components/SpectralComponents/PCFSpectralElement.h>
 
 #include <casa/BasicSL/Constants.h>
-
+#include <scimath/Functionals/Gaussian1D.h>
 #include <casa/iostream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
@@ -38,11 +38,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# Constructors
 PCFSpectralElement::PCFSpectralElement()
 : SpectralElement() {
+	_initFunction();
 }
 
 PCFSpectralElement::PCFSpectralElement(
 	SpectralElement::Types type
 ) : SpectralElement(type, Vector<Double>(3, 1)) {
+	_initFunction();
 	setCenter(0);
 }
 
@@ -60,12 +62,15 @@ PCFSpectralElement::PCFSpectralElement(
 			"PCFSpectralElement: PCF amplitude cannot equal 0"
 		);
 	}
+	_initFunction();
+
 }
 
 PCFSpectralElement::PCFSpectralElement(
 	SpectralElement::Types type, Double amp,
 	Double center, Double width
 ) : SpectralElement(type, vector<Double>(3)) {
+	_initFunction();
 	setAmpl(amp);
 	setCenter(center);
 	setWidth(width);
@@ -196,6 +201,17 @@ Double PCFSpectralElement::getIntegralErr() const {
 	Double dwidth = getWidthErr()/getWidth();
 	return sqrt(damp*damp + dwidth*dwidth) * getIntegral();
 }
+
+void PCFSpectralElement::_initFunction() {
+	// Just need something we can instantiate, subclasses should set their
+	// own functions in their constructors
+	_setFunction(
+		std::tr1::shared_ptr<Function<Double> >(
+			new Gaussian1D<Double>()
+		)
+	);
+}
+
 
 
 } //# NAMESPACE CASA - END

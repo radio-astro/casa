@@ -113,7 +113,7 @@ public:
 	// </thrown>
 //	GaussianSpectralElement& operator=(const GaussianSpectralElement &other);
 	// Evaluate the value of the element at x
-	Double operator()(const Double x) const;
+	//Double operator()(const Double x) const;
 
 	Double getSigma() const;
 	Double getFWHM() const;
@@ -142,6 +142,14 @@ public:
 
 	static Double sigmaToFWHM (const Double sigma);
 	// </group>
+
+	void set(const Vector<Double>& v);
+
+private:
+	// need to overrride SpectralElement::_set() because _param[2] is sigma
+	// but the second param of the corresponding Gaussian1D function is the
+	// FWHM :(
+	void _set(const Vector<Double>& v);
 
 };
 

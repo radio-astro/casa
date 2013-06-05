@@ -30,12 +30,19 @@
 
 #include <casa/BasicSL/Constants.h>
 
+#include <scimath/Functionals/Lorentzian1D.h>
+
 #include <casa/iostream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 LorentzianSpectralElement::LorentzianSpectralElement()
 : PCFSpectralElement(SpectralElement::LORENTZIAN, Vector<Double>(3)) {
+	_setFunction(
+		std::tr1::shared_ptr<Lorentzian1D<Double> >(
+			new Lorentzian1D<Double>(1)
+		)
+	);
 	setAmpl(1);
 	setCenter(0);
 	setFWHM(1);
@@ -48,6 +55,11 @@ LorentzianSpectralElement::LorentzianSpectralElement(
 	if (fwhm == 0) {
 		throw AipsError("Lorentzian fwhm cannot equal 0");
 	}
+	_setFunction(
+		std::tr1::shared_ptr<Lorentzian1D<Double> >(
+			new Lorentzian1D<Double>(ampl, center, fwhm)
+		)
+	);
 }
 
 LorentzianSpectralElement::LorentzianSpectralElement(
@@ -56,6 +68,11 @@ LorentzianSpectralElement::LorentzianSpectralElement(
 	if (param[2] == 0) {
 		throw AipsError("Lorentzian fwhm cannot equal 0");
 	}
+	_setFunction(
+		std::tr1::shared_ptr<Lorentzian1D<Double> >(
+			new Lorentzian1D<Double>(param[0], param[1], param[2])
+		)
+	);
 }
 
 LorentzianSpectralElement::LorentzianSpectralElement(
@@ -77,11 +94,13 @@ LorentzianSpectralElement& LorentzianSpectralElement::operator=(
 	return *this;
 }
 
+/*
 Double LorentzianSpectralElement::operator()(const Double x) const {
 	Vector<Double> p = get();
 	Double value = 2*(x - p[1])/p[2];
 	return p[0] / ((1.0) + value*value);
 }
+*/
 
 Double LorentzianSpectralElement::getIntegral() const {
 	return getAmpl()*getFWHM()*C::pi_2;

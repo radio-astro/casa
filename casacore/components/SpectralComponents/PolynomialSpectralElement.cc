@@ -28,20 +28,39 @@
 //# Includes
 #include <components/SpectralComponents/PolynomialSpectralElement.h>
 
+#include <scimath/Functionals/Polynomial.h>
+
 #include <casa/iostream.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 PolynomialSpectralElement::PolynomialSpectralElement()
 : SpectralElement(SpectralElement::POLYNOMIAL, Vector<Double>(0)) {
+	_setFunction(
+		std::tr1::shared_ptr<Polynomial<Double> >(
+			new Polynomial<Double>()
+		)
+	);
 }
 
 PolynomialSpectralElement::PolynomialSpectralElement(const uInt n)
 : SpectralElement(SpectralElement::POLYNOMIAL, Vector<Double>(n+1)) {
+	_setFunction(
+		std::tr1::shared_ptr<Polynomial<Double> >(
+			new Polynomial<Double>(n+1)
+		)
+	);
 }
 
 PolynomialSpectralElement::PolynomialSpectralElement(const Vector<Double>& param)
 : SpectralElement(SpectralElement::POLYNOMIAL, param) {
+	_setFunction(
+		std::tr1::shared_ptr<Polynomial<Double> >(
+			new Polynomial<Double>(param.size())
+		)
+	);
+	_set(param);
+	fix(Vector<Bool>(param.size(), False));
 }
 
 PolynomialSpectralElement::PolynomialSpectralElement(
@@ -54,6 +73,7 @@ SpectralElement* PolynomialSpectralElement::clone() const {
 	return new PolynomialSpectralElement(*this);
 }
 
+/*
 Double PolynomialSpectralElement::operator()(const Double x) const {
 	Double s = 0;
 	Vector<Double> p = get();
@@ -66,6 +86,7 @@ Double PolynomialSpectralElement::operator()(const Double x) const {
     }
     return s;
 }
+*/
 
 uInt PolynomialSpectralElement::getDegree() const {
 	return get().size() - 1;
