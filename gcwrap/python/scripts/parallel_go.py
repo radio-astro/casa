@@ -1661,8 +1661,8 @@ class cluster(object):
             return True
       except:
          # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
-         # traceback.print_tb(sys.exc_info()[2])
-         return False
+         traceback.print_tb(sys.exc_info()[2])
+         raise
 
    def howto(self):
       print """A simple example for use the cluster
