@@ -100,7 +100,7 @@ record* fitter::powerlogpoly(
 		fitter.setData(x, y, mask);
 		SpectralList list;
 		if (estimates.size() == 0) {
-			list.add(PowerLogPolynomialSpectralElement(2));
+			list.add(PowerLogPolynomialSpectralElement(vector<Double>(2, 0.0)));
 		}
 		else {
 			list.add(PowerLogPolynomialSpectralElement(estimates));
