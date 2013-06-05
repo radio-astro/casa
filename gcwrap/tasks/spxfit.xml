@@ -112,8 +112,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         <value>True</value>
     </param>
     <param type="any" direction="in" name="sigma">
-        <any type="variant" limittypes="string doubleArray intArray"/>
-        <description>Standard deviation array or image name.</description>
+        <any type="variant" limittypes="string stringArray doubleArray intArray"/>
+        <description>Standard deviation array or image name(s).</description>
         <value type="string"/>
     </param>
     <param type="string" direction="in" name="outsigma" subparam="true">
@@ -191,7 +191,8 @@ stretch         Stretch the mask if necessary and possible? See help par.stretch
 logresults      Output results to logger?
 logfile         File in which to log results. Default is not to write a logfile.
 append          Append results to logfile? Logfile must be specified. Default is to append. False means overwrite existing file if it exists.
-sigma           Standard deviation array or image name.
+sigma           Standard deviation numerical array, image name (string), or string array of names of images which will be
+                concatenated to create the sigma image that is used by the fitter.
 outsigma        Name of output image used for standard deviation. Ignored if sigma is empty.
 
 This application fits a power log polynomial to one dimensional profiles. This function has the form
