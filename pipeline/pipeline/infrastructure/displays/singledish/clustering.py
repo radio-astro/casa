@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import time
 import abc
 import numpy
 import math
@@ -14,6 +15,80 @@ import pipeline.infrastructure.renderer.logger as logger
 from .utils import RADEClabel, RArotation, DECrotation, DDMMSSs, HHMMSSss
 from .common import DPISummary, DPIDetail, SingleDishDisplayInputs, ShowPlot, draw_beam, LightSpeed
 LOG = infrastructure.get_logger(__name__)
+
+class ClusterValidationAxesManager(object):
+    def __init__(self, ncluster, nh, nv, aspect_ratio,
+                 xformatter, yformatter, xlocator, ylocator,
+                 xrotation, yrotation, ticksize):
+        self.ncluster = ncluster
+        self.nh = nh
+        self.nv = nv
+        self.aspect_ratio = aspect_ratio
+        self.xformatter = xformatter
+        self.yformatter = yformatter
+        self.xlocator = xlocator
+        self.ylocator = ylocator
+        self.xrotation = xrotation
+        self.yrotation = yrotation
+        self.ticksize = ticksize
+
+        self._legend = None
+        self._axes = None
+
+    @property
+    def axes_legend(self):
+        if self._legend is None:
+            self._legend = pl.axes([0.0, 0.85, 1.0, 0.15])
+            self._legend.set_axis_off()
+
+        return self._legend
+
+        
+    @property
+    def axes_list(self):
+        if self._axes is None:
+            self._axes = list(self.__axes_list())
+
+        return self._axes
+
+    def __axes_list(self):
+        for icluster in xrange(self.ncluster):
+            x = icluster % self.nh
+            y = int(icluster / self.nh)
+            x1 = 1.0 / float(self.nh)
+            if x == 0:
+                x0 = x1 * (x + 0.1)
+            else:
+                #x0 = x1 * (x + 0.15)
+                x0 = x1 * (x + 0.1)
+            x1 *= 0.8
+            y1 = 0.8 / float(self.nv)
+            y0 = y1 * (self.nv - y - 1 + 0.3)
+            if self.nv > 2:
+                y1 *= 0.5
+            else:
+                y1 *= 0.6
+
+            axes = pl.axes([x0, y0, x1, y1])
+            # 2008/9/20 DEC Effect
+            axes.set_aspect(self.aspect_ratio)
+            #axes.set_aspect('equal')
+            pl.xlabel('RA', size=self.ticksize)
+            pl.ylabel('Dec', size=self.ticksize)
+            axes.xaxis.set_major_formatter(self.xformatter)
+            axes.yaxis.set_major_formatter(self.yformatter)
+            axes.xaxis.set_major_locator(self.xlocator)
+            axes.yaxis.set_major_locator(self.ylocator)
+            xlabels = axes.get_xticklabels()
+            pl.setp(xlabels, 'rotation', self.xrotation, fontsize=self.ticksize)
+            ylabels = axes.get_yticklabels()
+            pl.setp(ylabels, 'rotation', self.yrotation, fontsize=self.ticksize)
+            pl.xticks(size=self.ticksize)
+            pl.yticks(size=self.ticksize)
+
+            
+            yield axes
+        
 
 class ClusterDisplay(object):
     Inputs = SingleDishDisplayInputs
@@ -35,18 +110,30 @@ class ClusterDisplay(object):
 
         stage_dir = os.path.join(self.context.report_dir,
                                  'stage%d'%(self.inputs.result.stage_number))
+        start_time = time.time()
         for group in self.__baselined():
             cluster = group['clusters']
             spw = group['spw']
+            t0 = time.time()
             plot_score = ClusterScoreDisplay(cluster, spw, stage_dir)
             plot_list.extend(plot_score.plot())
+            t1 = time.time()
             plot_property = ClusterPropertyDisplay(cluster, spw, stage_dir)
             plot_list.extend(plot_property.plot())
             antenna = group['index'][0]
             lines = group['lines']
+            t2 = time.time()
             plot_validation = ClusterValidationDisplay(self.context, cluster, spw, antenna, lines, stage_dir)
             plot_list.extend(plot_validation.plot())
+            t3 = time.time()
 
+            LOG.debug('PROFILE: ClusterScoreDisplay elapsed time is %s sec'%(t1-t0))
+            LOG.debug('PROFILE: ClusterPropertyDisplay elapsed time is %s sec'%(t2-t1))
+            LOG.debug('PROFILE: ClusterValidationDisplay elapsed time is %s sec'%(t3-t2))
+
+        end_time = time.time()
+        LOG.debug('PROFILE: plot elapsed time is %s sec'%(end_time-start_time))
+        
         return plot_list
 
 class ClusterDisplayWorker(object):
@@ -73,7 +160,7 @@ class ClusterDisplayWorker(object):
 
         return list(self._plot())
 
-    def _plot_object(self, plotfile, type, x_axis, y_axis):
+    def _create_plot(self, plotfile, type, x_axis, y_axis):
         parameters = {}
         parameters['intent'] = 'TARGET'
         parameters['spw'] = self.spw
@@ -107,7 +194,7 @@ class ClusterScoreDisplay(ClusterDisplayWorker):
         plotfile = os.path.join(self.stage_dir,
                                 'cluster_score_%s.png'%(self.spw))
         pl.savefig(plotfile, format='png', dpi=DPIDetail)
-        plot = self._plot_object(plotfile, 'cluster_score',
+        plot = self._create_plot(plotfile, 'cluster_score',
                                  'Number of Clusters', 'Score')
         yield plot
         
@@ -143,7 +230,7 @@ class ClusterPropertyDisplay(ClusterDisplayWorker):
         plotfile = os.path.join(self.stage_dir,
                                 'cluster_property_%s.png'%(self.spw))
         pl.savefig(plotfile, format='png', dpi=DPISummary)
-        plot = self._plot_object(plotfile, 'clustering_property',
+        plot = self._create_plot(plotfile, 'clustering_property',
                                  'Line Center', 'Line Width')
         yield plot
         
@@ -162,6 +249,8 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         self.lines = lines
 
     def _plot(self):
+        pl.clf()
+        
         marks = ['gs', 'bs', 'cs', 'ys']
 
         num_cluster = len(self.lines)
@@ -174,6 +263,10 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
 
         # 2008/9/20 DEC Effect
         aspect_ratio = 1.0 / math.cos(dec0 / 180.0 * 3.141592653)
+
+
+        # common message for legends
+        scale_msg = self.__scale_msg(scale_ra, scale_dec, aspect_ratio)
 
         # Plotting routine
         nx = len(self.cluster['cluster_flag'][0])
@@ -189,31 +282,26 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         span = max(xmax - xmin, ymax - ymin)
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)
 
+        axes_manager = ClusterValidationAxesManager(num_cluster,
+                                                    num_panel_h,
+                                                    num_panel_v,
+                                                    aspect_ratio,
+                                                    RAformatter,
+                                                    DECformatter,
+                                                    RAlocator,
+                                                    DEClocator,
+                                                    RArotation,
+                                                    DECrotation,
+                                                    tick_size)
+        axes_list = axes_manager.axes_list
+        axes_legend = axes_manager.axes_legend
+        
         for (mode,data,threshold,description) in self.__stages():
-            pl.cla()
-            pl.clf()
-
+            plot_objects = []
+            
             for icluster in xrange(num_cluster):
-                x = icluster % num_panel_h
-                y = int(icluster / num_panel_h)
-                x1 = 1.0 / float(num_panel_h)
-                if x == 0:
-                    x0 = x1 * (x + 0.1)
-                else:
-                    #x0 = x1 * (x + 0.15)
-                    x0 = x1 * (x + 0.1)
-                x1 *= 0.8
-                y1 = 0.8 / float(num_panel_v)
-                y0 = y1 * (num_panel_v - y - 1 + 0.3)
-                if num_panel_v > 2:
-                    y1 *= 0.5
-                else:
-                    y1 *= 0.6
-
-                a = pl.axes([x0, y0, x1, y1])
-                # 2008/9/20 DEC Effect
-                a.set_aspect(aspect_ratio)
-                #a.set_aspect('equal')
+                pl.gcf().sca(axes_list[icluster])
+                
                 xdata = []
                 ydata = []
                 for i in xrange(len(threshold)):
@@ -231,52 +319,32 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
                 #ichan = self.lines[icluster][0] + 0.5
                 (frequency, width) = self.__line_property(icluster)
                 pl.title('Cluster%s: Center=%.4f GHz Width=%.1f km/s'%(icluster,frequency,width))
-                pl.xlabel('RA', size=tick_size)
-                pl.ylabel('Dec', size=tick_size)
                 if self.lines[icluster][2] != False:
                     for i in xrange(len(threshold)):
-                        pl.plot(xdata[i], ydata[i], marks[4 - len(threshold) + i], markersize=marker_size)
-                a.xaxis.set_major_formatter(RAformatter)
-                a.yaxis.set_major_formatter(DECformatter)
-                a.xaxis.set_major_locator(RAlocator)
-                a.yaxis.set_major_locator(DEClocator)
-                xlabels = a.get_xticklabels()
-                pl.setp(xlabels, 'rotation', RArotation, fontsize=tick_size)
-                ylabels = a.get_yticklabels()
-                pl.setp(ylabels, 'rotation', DECrotation, fontsize=tick_size)
+                        plot_objects.extend(
+                            pl.plot(xdata[i], ydata[i], marks[4 - len(threshold) + i], markersize=marker_size)
+                        )
 
                 if self.lines[icluster][2] != True:
                     if num_panel_h > 2:
                         _tick_size = tick_size
                     else:
                         _tick_size = tick_size + 1
-                    pl.text(0.5 * (xmin + xmax), 0.5 * (ymin + ymax),
-                            'INVALID CLUSTER',
-                            horizontalalignment='center',
-                            verticalalignment='center',
-                            size=_tick_size)
-                pl.xticks(size=tick_size)
-                pl.yticks(size=tick_size)
+                    plot_objects.append(
+                        pl.text(0.5 * (xmin + xmax), 0.5 * (ymin + ymax),
+                                'INVALID CLUSTER',
+                                horizontalalignment='center',
+                                verticalalignment='center',
+                                size=_tick_size)
+                        )
                 pl.axis([xmax, xmin, ymin, ymax])
 
                 # Legends
-                legends = pl.axes([0.0, 0.85, 1.0, 0.15])
-                legends.set_axis_off()
-                if scale_ra >= 1.0:
-                    unit = 'degree'
-                    scale_factor = 1.0
-                elif scale_ra * 60.0 >= 1.0:
-                    unit = 'arcmin'
-                    scale_factor = 60.0
-                else:
-                    unit = 'arcsec'
-                    scale_factor = 3600.0
-                ra_text = scale_ra / aspect_ratio * scale_factor
-                dec_text = scale_dec * scale_factor
-
-                scale_msg = 'Scale of the Square (Grid): %.1f x %.1f (%s)'%(ra_text, dec_text, unit)
+                pl.gcf().sca(axes_legend)
                 msg = description + scale_msg
-                pl.text(0.5, 0.5, msg, horizontalalignment='center', verticalalignment='center', size=8)
+                plot_objects.append(
+                    pl.text(0.5, 0.5, msg, horizontalalignment='center', verticalalignment='center', size=8)
+                    )
 
             if ShowPlot:
                 pl.draw()
@@ -284,7 +352,11 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
             plotfile = os.path.join(self.stage_dir,
                                     'cluster_%s_%s.png'%(self.spw,mode))
             pl.savefig(plotfile, format='png', dpi=DPISummary)
-            plot = self._plot_object(plotfile, 'clustering_%s'%(mode),
+
+            for obj in plot_objects:
+                obj.remove()
+            
+            plot = self._create_plot(plotfile, 'clustering_%s'%(mode),
                                      'R.A.', 'Dec.')
             yield plot
 
@@ -331,4 +403,18 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
         width_in_velocity = width_in_frequency / rest_frequency * LightSpeed
 
         return (center_frequency, width_in_velocity)
-        
+
+    def __scale_msg(self, scale_ra, scale_dec, aspect_ratio):
+        if scale_ra >= 1.0:
+            unit = 'degree'
+            scale_factor = 1.0
+        elif scale_ra * 60.0 >= 1.0:
+            unit = 'arcmin'
+            scale_factor = 60.0
+        else:
+            unit = 'arcsec'
+            scale_factor = 3600.0
+        ra_text = scale_ra / aspect_ratio * scale_factor
+        dec_text = scale_dec * scale_factor
+
+        return 'Scale of the Square (Grid): %.1f x %.1f (%s)'%(ra_text, dec_text, unit)
