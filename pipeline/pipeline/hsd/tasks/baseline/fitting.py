@@ -130,7 +130,7 @@ class FittingBase(object):
                 index_list.append(idx)
 
             # write data
-            with casatools.TableReader(filename, nomodify=False) as tb:
+            with casatools.TableReader(filename_out, nomodify=False) as tb:
                 for i in xrange(nrow):
                     tb.putcell('SPECTRA', rows[i], spectra[i])
 
