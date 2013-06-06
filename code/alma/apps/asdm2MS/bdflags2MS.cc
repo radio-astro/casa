@@ -253,7 +253,7 @@ public:
     for_each(values.begin(), values.end(), bind(&vector<T>::push_back, var(MSFlags_v), _1));
 
     orderedByTimeBALDD_vvv.back().back().push_back(MSFlagCellDescriptor_v.size());
-    MSFlagCellDescriptor_v.push_back(MSFlagCellDescriptor(make_pair<unsigned int, unsigned int>(numChan, numPol),
+    MSFlagCellDescriptor_v.push_back(MSFlagCellDescriptor(make_pair<unsigned int, unsigned int>(numChan, ((numPol==3)? 4:numPol)),
 							  offset));
     LOGEXIT("MSFlagAccumulator::accumulate(unsigned int numChan, unsigned int numPol, T* values)");
   }
@@ -586,7 +586,8 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
       }
     
     if (cellFlagged) numFlaggedRows ++;
-    flag.put((uInt)iRow0, (Array<Bool>)flagCell);
+    
+    flag.put((uInt)iRow0, flagCell);
     flagRow.put((uInt)iRow0, allSet);
     iRow0++;
   }
@@ -1052,5 +1053,7 @@ int main (int argC, char * argV[]) {
       info(infostream.str());
     }
   }
+  mainTable.flush(); 
+
   LOGEXIT("int main (int argC, char * argV[])");
 }
