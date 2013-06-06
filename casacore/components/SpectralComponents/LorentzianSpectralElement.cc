@@ -70,7 +70,7 @@ LorentzianSpectralElement::LorentzianSpectralElement(
 	}
 	_setFunction(
 		std::tr1::shared_ptr<Lorentzian1D<Double> >(
-			new Lorentzian1D<Double>(param[0], param[1], param[2])
+			new Lorentzian1D<Double>(param[AMP], param[CENTER], param[WIDTH])
 		)
 	);
 }
@@ -93,14 +93,6 @@ LorentzianSpectralElement& LorentzianSpectralElement::operator=(
 	}
 	return *this;
 }
-
-/*
-Double LorentzianSpectralElement::operator()(const Double x) const {
-	Vector<Double> p = get();
-	Double value = 2*(x - p[1])/p[2];
-	return p[0] / ((1.0) + value*value);
-}
-*/
 
 Double LorentzianSpectralElement::getIntegral() const {
 	return getAmpl()*getFWHM()*C::pi_2;
