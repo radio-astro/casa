@@ -66,6 +66,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class PCFSpectralElement : public SpectralElement {
 public:
 
+	// to help avoid having to hard code parameter indices
+	enum ParamType {
+		AMP,
+		CENTER,
+		WIDTH
+	};
+
 	//#Destructor
 	// Destructor
 	virtual ~PCFSpectralElement();
@@ -125,9 +132,6 @@ public:
 	Bool fixedWidth() const;
 
 	Bool fixedFWHM() const { return fixedWidth(); }
-
-
-
 
 protected:
 	PCFSpectralElement(
