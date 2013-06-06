@@ -1658,9 +1658,13 @@ class cluster(object):
          else:
             if verbose:
                casalog.post("job '%s' done" % job,"INFO","check_job")
-            return True
+            return True         
+      except client.CompositeError, exception:
+         casalog.post("Error retrieving result of job from engine: %s, backtrace:" % (str(exception)),"SEVERE","check_job")
+         exception.print_tracebacks()
+         raise
       except:
-         # jagonzal (CAS-4106): Properly report all the exceptions and errors in the cluster framework
+         casalog.post("Error retrieving result of job from engine, backtrace:","SEVERE","check_job")
          traceback.print_tb(sys.exc_info()[2])
          raise
 
