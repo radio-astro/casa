@@ -82,13 +82,16 @@ class DataTableAnalyser(object):
                 tsys_strategy = None
 
             # strategy for off-position calibration
-            h = heuristics.CalibrationTypeHeuristics()
-            calmode = h(item.name)
+            h_calmode = heuristics.CalibrationTypeHeuristics()
+            calmode = h_calmode(item.name)
+            h_srctype = heuristics.SrcTypeHeuristics()
+            srctype = h_srctype(calmode)
             
             entry = {
                 'tsys': item.tsys_transfer,
                 'tsys_strategy': tsys_strategy,
-                'calmode': calmode
+                'calmode': calmode,
+                'srctype': srctype
                 }
 
             LOG.info('calibration strategy for %s:\n%s'%(item.basename,entry))
