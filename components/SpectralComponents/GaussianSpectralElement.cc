@@ -63,7 +63,7 @@ GaussianSpectralElement::GaussianSpectralElement(
 	const Vector<Double> &param
 ) : PCFSpectralElement(SpectralElement::GAUSSIAN, param) {
 	std::tr1::shared_ptr<Gaussian1D<Double> >(
-		new Gaussian1D<Double>(param[0], param[1], param[2]*SigmaToFWHM)
+		new Gaussian1D<Double>(param[AMP], param[CENTER], param[WIDTH]*SigmaToFWHM)
 	);
 }
 
@@ -78,48 +78,42 @@ SpectralElement* GaussianSpectralElement::clone() const {
 	return new GaussianSpectralElement(*this);
 }
 
-/*
-Double GaussianSpectralElement::operator()(const Double x) const {
-	Vector<Double> p = get();
-    return p(0)*exp(-0.5 * (x-p(1))*(x-p(1)) / p(2)/p(2));
-}
-*/
 Double GaussianSpectralElement::getSigma() const {
 	return get()[2];
 }
 
 Double GaussianSpectralElement::getFWHM() const {
-	return sigmaToFWHM(get()[2]);
+	return sigmaToFWHM(get()[WIDTH]);
 }
 
 Double GaussianSpectralElement::getSigmaErr() const {
-	return getError()[2];
+	return getError()[WIDTH];
 }
 
 Double GaussianSpectralElement::getFWHMErr() const {
-	return sigmaToFWHM(getError()[2]);
+	return sigmaToFWHM(getError()[WIDTH]);
 }
 
 void GaussianSpectralElement::setSigma(Double sigma) {
 	if (sigma < 0) {
-		sigma = -sigma;
+		sigma *= -1;
 	}
 	Vector<Double> p = get();
-	p[2] = sigma;
+	p[WIDTH] = sigma;
 	_set(p);
 	Vector<Double> err = getError();
-	err(2) = 0;
+	err[WIDTH] = 0;
 	setError(err);
 }
 
 void GaussianSpectralElement::set(const Vector<Double>& v) {
 	PCFSpectralElement::set(v);
-	(*_getFunction())[2] = sigmaToFWHM(v[2]);
+	(*_getFunction())[WIDTH] = sigmaToFWHM(v[WIDTH]);
 }
 
 void GaussianSpectralElement::_set(const Vector<Double>& v) {
 	PCFSpectralElement::_set(v);
-	(*_getFunction())[2] = sigmaToFWHM(v[2]);
+	(*_getFunction())[WIDTH] = sigmaToFWHM(v[WIDTH]);
 }
 
 void GaussianSpectralElement::setFWHM(Double fwhm) {
@@ -128,16 +122,17 @@ void GaussianSpectralElement::setFWHM(Double fwhm) {
 
 void GaussianSpectralElement::fixSigma(const Bool isFixed) {
 	Vector<Bool> myFixed = fixed();
-	myFixed[2] = isFixed;
+	myFixed[WIDTH] = isFixed;
 	fix(myFixed);
 }
 
 Bool GaussianSpectralElement::fixedSigma() const {
-	return fixed()[2];
+	return fixed()[WIDTH];
 }
 
 Double GaussianSpectralElement::getIntegral() const {
-	return sqrt(C::pi_4/C::ln2) * getAmpl() * getFWHM();
+	static const Double c = sqrt(C::pi_4/C::ln2);
+	return c * getAmpl() * getFWHM();
 }
 
 Bool GaussianSpectralElement::toRecord(
