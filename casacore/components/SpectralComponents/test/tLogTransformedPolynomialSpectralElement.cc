@@ -44,12 +44,12 @@ int main() {
 		try {
 			cout << "Test constructor" << endl;
 			Vector<Double> p(3);
-			p[0] = 5.5;
+			p[0] = log(5.5);
 			p[1] = 2.2;
 			p[2] = 3.3;
 			LogTransformedPolynomialSpectralElement ltp(p);
-			cout << "at 2 " << ltp(2) << endl;
-			AlwaysAssert(near(ltp(2), 4.8151668354003698), AipsError);
+			cout << "at 2 " << ltp(log(2)) << endl;
+			AlwaysAssert(near(ltp(log(2)), 4.8151668354003698), AipsError);
 
 			cout << ltp << endl;
 			AlwaysAssert(allTrue(ltp.get() == p), AipsError);
