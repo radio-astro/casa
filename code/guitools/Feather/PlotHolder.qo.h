@@ -30,6 +30,7 @@
 #include <qwt_plot.h>
 #include <guitools/Feather/PlotHolder.ui.h>
 #include <guitools/Feather/PreferencesColor.qo.h>
+#include <guitools/Feather/FeatherCurveType.h>
 #include <guitools/Feather/FeatherPlotWidget.qo.h>
 #include <casa/aipstype.h>
 #include <casa/Arrays/Vector.h>
@@ -48,7 +49,6 @@ public:
     typedef FeatherPlotWidget::DataType DataType;
     void setData( const Vector<Float>& x, const Vector<Float>& xAmp,
     		const Vector<Float>& y, const Vector<Float>& yAmp, DataType dType );
-    void setData( const Vector<Float>& distance, const Vector<Float>& distanceAmp, DataType dType );
     void updateScatterData( );
     void addSumData();
     void clearPlots();
@@ -63,6 +63,7 @@ public:
     void setDisplayXGraphs( bool visible );
     void setXAxisUV( bool xAxisUV );
     void setColors( const QMap<PreferencesColor::CurveType,CurveDisplay>& colorMap);
+    void setScatterCurves( FeatherCurveType::CurveType xScatter, const QList<FeatherCurveType::CurveType>& yScatters );
     void setLogScale( bool uvScale, bool logScale );
     void refreshPlots();
     void layoutPlotWidgets();
@@ -83,7 +84,7 @@ public slots:
  	 void setDiameterSelectorMode();
 
 private slots:
-	//void changePlotType();
+	void changePlotType();
 	void changeZoom90();
 	void zoomNeutral();
 	void showContextMenu( const QPoint& pt );
@@ -93,7 +94,6 @@ private:
 	enum Plots {  SLICE_X, SLICE_Y, SLICE_DISTANCE, SCATTER_X, SCATTER_Y, SCATTER_DISTANCE };
 	void initializePlots();
 	void initializeActions();
-	bool isScatterData( DataType dType );
 	void emptyLayout(QLayout* layout );
 	void addPlotAxis( int rowIndex, int columnIndex, QGridLayout* layout, QwtPlot::Axis axis, int basePlotIndex );
     void addPlots( QGridLayout*& layout, int rowIndex, int basePlotIndex );
@@ -102,7 +102,7 @@ private:
     void adjustLayout( bool scatterPlot );
 
     QList<FeatherPlotWidget*> plots;
-    //QAction plotTypeAction;
+    QAction plotTypeAction;
     QAction zoom90Action;
     QAction zoomNeutralAction;
     QMenu contextMenu;
@@ -117,6 +117,7 @@ private:
     //The x-axis on the slice cuts and original graphs can either be u/v (two graphs)
     //or radial (one graph).
     bool xAxisUV;
+
 };
 }
 

@@ -62,10 +62,18 @@ FileLoader::FileLoader(QWidget *parent)
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(filesChanged()));
 	connect( ui.cancelButton, SIGNAL( clicked()), this, SLOT(filesReset()));
 
-	//Takeout
-	//ui.lowResolutionLineEdit->setText("/home/uniblab/casa/active/test/orion_gbt.im" );
-	//ui.highResolutionLineEdit->setText("/home/uniblab/casa/active/test/orion_vlamem.im");
+	//Basic images for testing
+	/*ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/orion_gbt.im" );
+	ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/orion_vlamem.im");
 	ui.saveOutputCheckBox->setChecked( false );
+	ui.dirtyImageLineEdit->setText("/home/uniblab/casa/trunk/test/orion_vlamem.im2");
+*/
+	//Multiplane images for testing
+	ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/featherMultiPlane/n4826_bima.im" );
+	ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/featherMultiPlane/n4826_t12m_regrid.im");
+	ui.saveOutputCheckBox->setChecked( false );
+
+
 }
 
 void FileLoader::keyPressEvent( QKeyEvent* event ){

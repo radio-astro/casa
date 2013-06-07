@@ -23,40 +23,35 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef FEATHERPLOTWIDGETSLICE_H_
-#define FEATHERPLOTWIDGETSLICE_H_
 
-#include <guitools/Feather/FeatherPlotWidget.qo.h>
+#ifndef FEATHEREDDATA_H_
+#define FEATHEREDDATA_H_
+
+#include <casa/Arrays/Vector.h>
 
 namespace casa {
 
 /**
- * A specialization of FeatherPlotWidget for displaying line plots.
+ * Data structure class to collect related feather data
+ * in one location.
  */
 
-class FeatherPlotWidgetSlice : public FeatherPlotWidget {
+class FeatheredData {
 public:
-	typedef FeatherCurveType::CurveType CurveType;
-	typedef FeatherDataType::DataType DataType;
-	FeatherPlotWidgetSlice(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent = 0);
-	virtual ~FeatherPlotWidgetSlice();
-	virtual void addZoomNeutralCurves();
-
-protected:
-	virtual void resetColors();
-	virtual void addSumData();
-	virtual void zoomRectangleOther( double minX, double maxX, double minY, double maxY  );
-	virtual void zoom90Other( double dishPosition );
-
+	FeatheredData();
+	void setU( const Vector<Float>& xVal, const Vector<Float>& yVal );
+	void setV( const Vector<Float>& xVal, const Vector<Float>& yVal );
+	Vector<Float> getUX() const;
+	Vector<Float> getUY() const;
+	Vector<Float> getVX() const;
+	Vector<Float> getVY() const;
+	virtual ~FeatheredData();
 private:
-	void zoom90( double dishPosition,  CurveType cType, DataType dType );
-	void zoomRect( double minX, double maxX, CurveType cType, DataType dType );
-	void addSumData( bool logScale );
-
-	void addDisplayedPlotCurve( FeatherCurveType::CurveType curveType,
-			FeatherDataType::DataType dataType );
-
+	Vector<Float> ux;
+	Vector<Float> uy;
+	Vector<Float> vx;
+	Vector<Float> vy;
 };
 
 } /* namespace casa */
-#endif /* FEATHERPLOTWIDGETSLICE_H_ */
+#endif /* FEATHEREDDATA_H_ */

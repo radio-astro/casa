@@ -438,6 +438,7 @@ namespace casa {
 				region = crm.fromBCS( diagnostics, channelCount, stokesStr,
 				                      NULL, regionName, channelStr, CasacRegionManager::USE_FIRST_STOKES,
 				                      pixelBox, pos, infile);
+				*valid = true;
 			} catch( AipsError& error ) {
 				QString errorMsg( error.getMesg().c_str());
 				qDebug() << "Error making region: "<<errorMsg;

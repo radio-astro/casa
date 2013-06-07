@@ -40,7 +40,7 @@ class FeatherPlot;
 class FeatherCurve {
 
 public:
-	FeatherCurve( FeatherPlot* plot, QwtPlot::Axis xAxis, QwtPlot::Axis yAxis);
+	FeatherCurve( FeatherPlot* plot, QwtPlot::Axis xAxis, QwtPlot::Axis yAxis, bool sumCurve);
 	void initScatterPlot( int dotSize );
 	void setTitle( const QString& title );
 	void setFunctionColor( const QColor& color, bool diagonalLine );
@@ -67,8 +67,9 @@ private:
 	FeatherCurve operator=( const FeatherCurve& other );
 
 	void setCurvePenColor( const QColor& color );
-	bool isWeightCurve() const;
+
 	bool isSumCurve() const;
+	bool isWeightCurve() const;
 	double logarithm( double value ) const;
 	void doLogs( double* values, int count ) const;
 
@@ -76,6 +77,16 @@ private:
 	bool scatterPlot;
 	bool scaleLogUV;
 	bool scaleLogAmplitude;
+	/**
+	 * This variable was added for scatter plots.  Normally if the FeatherCurveType
+	 * is SUM_LOW_HIGH, it will be a sum curve.  However, scatter plots can have x-values
+	 * which are sums, and y-values which are something else, say a low-weighted curve.
+	 * In this case, the FeatherCurveType will be whatever the y-axis.  Thus, we set
+	 * a boolean variable to indicated if it is a sum curve.  This is imported because
+	 * sums have to be specially calculated in the case of a logarithm scale and cannot
+	 * be done directly by taking log( sum).
+	 */
+	bool sumCurve;
 	double minX;
 	double maxX;
 	double minY;

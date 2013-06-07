@@ -56,7 +56,7 @@ public:
 	void clearLegend();
 
 	void addCurve( QVector<double> xValues, QVector<double> yValues,
-			QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis );
+			QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis, bool sumCurve );
 	void addDiagonal( QVector<double> xValues, QColor lineColor, QwtPlot::Axis yAxis );
 	void initializePlot( const QString& title, PlotType plotType );
 

@@ -39,6 +39,7 @@ set( QT4_LIBRARIES ${QT_LIBRARIES} )
 qt4_wrap_cpp( outfiles_qoh
   Feather/PlotHolder.qo.h
   Feather/FeatherMain.qo.h
+  Feather/FeatherManager.qo.h
   Feather/FileLoader.qo.h
   Feather/FeatherPlotWidget.qo.h
   Feather/PreferencesFunction.qo.h
@@ -101,6 +102,9 @@ casa_add_library( guitools
   Feather/ExternalAxisWidgetLeft.cc
   Feather/ExternalAxisWidgetRight.cc
   Feather/ExternalAxisWidgetBottom.cc
+  Feather/FeatherManager.cc
+  Feather/FeatheredData.cc
+  Feather/FeatherThread.cc
   Histogram/ColorPreferences.cc
   Histogram/HistogramMain.cc
   Histogram/BinPlotWidget.cc

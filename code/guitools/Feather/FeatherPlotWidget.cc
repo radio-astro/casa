@@ -39,7 +39,6 @@ FeatherPlotWidget::FeatherPlotWidget(const QString& title, FeatherPlot::PlotType
       plotTitle(title), MARKER_WIDTH(2){
 
 	ui.setupUi(this);
-	//permanentScatter = false;
 
 	sliceAxis  = QwtPlot::yLeft;
 	weightAxis = QwtPlot::yRight;
@@ -65,16 +64,6 @@ FeatherPlotWidget::~FeatherPlotWidget(){
 	delete diameterSelector;
 	diameterSelector = NULL;
 }
-
-
-/*void FeatherPlotWidget::changePlotType( FeatherPlot::PlotType newPlotType ){
-	//Scatter plots do not change type.
-	removeMarkers();
-	if ( !permanentScatter ){
-		resetPlot( newPlotType );
-		addZoomNeutralCurves();
-	}
-}*/
 
 
 void FeatherPlotWidget::resetPlot( FeatherPlot::PlotType plotType ){
@@ -152,11 +141,6 @@ void FeatherPlotWidget::setLogScale( bool uvScale, bool ampScale ){
 	}
 	plot->replot();
 }
-
-
-/*void FeatherPlotWidget::setPermanentScatter( bool scatter ){
-	permanentScatter = scatter;
-}*/
 
 
 void FeatherPlotWidget::setPlotColors( const QMap<CurveType,CurveDisplay>& colorMap){
@@ -255,7 +239,7 @@ void FeatherPlotWidget::initializeDiameterMarker(){
 		symbol->setStyle( QwtSymbol::VLine );
 		diameterMarker->setSymbol( *symbol );
 		diameterMarker->setXAxis( QwtPlot::xBottom );
-		diameterMarker->setYAxis( QwtPlot::yLeft );
+		diameterMarker->setYAxis( QwtPlot::yRight);
 	}
 }
 
@@ -377,7 +361,9 @@ void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 		//If we are a scatter plot, we don't have to let anyone know about
 		//the zoom, just update our own coordinates.
 		if ( plot->isScatterPlot() ){
+			plot->clearCurves();
 			zoomRectangleOther( minX, maxX, minY, maxY );
+			plot->replot();
 		}
 		//Tell the plot holder about the zoom so all the plots can zoom in sync.
 		else {
@@ -390,40 +376,22 @@ void FeatherPlotWidget::zoomRectangleSelected( const QwtDoubleRect& zoomRect ){
 
 
 void FeatherPlotWidget::zoomRectangle( double minX, double maxX, double minY, double maxY){
-
 	plot->clearCurves();
-
-	QVector<double> singleDishX;
-	QVector<double> singleDishY;
-	DataType dType = FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED;
-	initializeDomainLimitedData( minX, maxX, singleDishX, singleDishY,
-			plotData[dType].first, plotData[dType].second);
-	addPlotCurve( singleDishX, singleDishY, dType );
-
-	QVector<double> interferometerX;
-	QVector<double> interferometerY;
-	dType = FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED;
-	initializeDomainLimitedData( minX, maxX, interferometerX, interferometerY,
-			plotData[dType].first, plotData[dType].second );
-	addPlotCurve( interferometerX, interferometerY, dType );
-
 	zoomRectangleOther( minX, maxX, minY, maxY);
-
-	//Sum curve
-	if ( plot->isSliceCut()){
-		QVector<double> sumX;
-		QVector<double> sumY;
-		initializeSumData( singleDishX, singleDishY, interferometerX, interferometerY, sumX, sumY, plot->isLogAmplitude() );
-		addPlotCurve( sumX, sumY, sliceAxis, FeatherCurveType::SUM_LOW_HIGH );
-	}
+	initializeMarkers();
 	plot->replot();
 }
 
 
-void FeatherPlotWidget::initializeSumData( const QVector<double>& singleDishX, const QVector<double>& singleDishY,
-		const QVector<double>& interferometerX, const QVector<double>& interferometerY,
-		QVector<double>& sumX, QVector<double>& sumY, bool logScale  ){
+void FeatherPlotWidget::initializeSumData( QVector<double>& sumX, QVector<double>& sumY, bool logScale  ){
+	QVector<double> singleDishX = plotData[FeatherDataType::LOW_WEIGHTED].first;
+	QVector<double> singleDishY = plotData[FeatherDataType::LOW_WEIGHTED].second;
+	QVector<double> interferometerX = plotData[FeatherDataType::HIGH_WEIGHTED].first;
+	QVector<double> interferometerY = plotData[FeatherDataType::HIGH_WEIGHTED].second;
 	int countX = qMin( singleDishX.size(), interferometerX.size() );
+	if ( countX == 0 ){
+		return;
+	}
 	sumX.resize( countX );
 	sumY.resize( countX );
 	for ( int i = 0; i < countX; i++ ){
@@ -447,9 +415,28 @@ void FeatherPlotWidget::initializeSumData( const QVector<double>& singleDishX, c
 	}
 }
 
+pair<QVector<double>,QVector<double> > FeatherPlotWidget::limitX( DataType dType, double minValue, double maxValue ){
+	QVector<double> xLimited;
+	QVector<double> yLimited;
+	QVector<double> sourceX = plotData[dType].first;
+	QVector<double> sourceY = plotData[dType].second;
+	for ( int i = 0; i < static_cast<int>(sourceX.size()); i++ ){
+		if ( minValue < sourceX[i] && sourceX[i] < maxValue ){
+			xLimited.append( sourceX[i] );
+			yLimited.append( sourceY[i] );
+		}
+	}
+	return std::pair<QVector<double>, QVector<double> >(xLimited, yLimited );
+}
+
+pair<QVector<double>,QVector<double> > FeatherPlotWidget::limitX( DataType dType, double maxValue){
+	return limitX( dType, -1 * std::numeric_limits<double>::max(), maxValue );
+}
+
 void FeatherPlotWidget::changeZoom90(bool zoom ){
+	plot->clearCurves();
 	if ( zoom ){
-		plot->clearCurves();
+
 
 		//See if we know the dish position.  We want to take the dish position,
 		//plus another 1/3 of it, if it is available.  If it is not, we will just
@@ -458,46 +445,23 @@ void FeatherPlotWidget::changeZoom90(bool zoom ){
 		if ( diameterMarker != NULL ){
 			dishPosition = diameterMarker->xValue();
 			dishPosition = dishPosition + dishPosition / 3;
+			//If we are using a log scale on the x-axis, we need to undo the log.
+			if ( plot->isLogUV() ){
+				dishPosition = qPow( 10, dishPosition );
+			}
 		}
 		if ( dishPosition == 0 ){
-			pair<double,double> minMaxPair = getMaxMin( plotData[FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED].second );
+			pair<double,double> minMaxPair =
+					getMaxMin( plotData[FeatherDataType::LOW_WEIGHTED].second, FeatherCurveType::LOW_WEIGHTED );
 			dishPosition = minMaxPair.second / 3;
 		}
-
-		//If we are using a log scale on the x-axis, we need to undo the log.
-		if ( plot->isLogUV() ){
-			dishPosition = qPow( 10, dishPosition );
-		}
-
-		//Now take all the x,y values where the x values is less than the dish position.
-		QVector<double> singleDishZoomDataX;
-		QVector<double> singleDishZoomDataY;
-		DataType dType = FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED;
-		QVector<double> singleDishDataXValues = plotData[dType].first;
-		QVector<double> singleDishDataYValues = plotData[dType].second;
-		for ( int i = 0; i < static_cast<int>(singleDishDataXValues.size()); i++ ){
-			if ( singleDishDataXValues[i] < dishPosition ){
-				singleDishZoomDataX.append( singleDishDataXValues[i] );
-				singleDishZoomDataY.append( singleDishDataYValues[i] );
-			}
-		}
-		QVector<double> interferometerZoomDataX;
-		QVector<double> interferometerZoomDataY;
-		DataType daType=FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED;
-		QVector<double> interferometerDataXValues = plotData[daType].first;
-		QVector<double> interferometerDataYValues = plotData[daType].second;
-		for ( int i = 0; i < interferometerDataXValues.size(); i++ ){
-			if ( interferometerDataXValues[i] < dishPosition ){
-				interferometerZoomDataX.append( interferometerDataXValues[i] );
-				interferometerZoomDataY.append( interferometerDataYValues[i] );
-			}
-		}
-		zoom90Other( dishPosition, singleDishZoomDataX, singleDishZoomDataY, interferometerZoomDataX, interferometerZoomDataY );
-		plot->replot();
+		zoom90Other( dishPosition );
 	}
 	else {
 		zoomNeutral();
 	}
+	initializeMarkers();
+	plot->replot();
 }
 
 
@@ -506,20 +470,25 @@ void FeatherPlotWidget::zoomNeutral(){
 	FeatherPlot::PlotType originalPlotType = plot->getPlotType();
 	resetPlot( originalPlotType );
 	addZoomNeutralCurves();
+	initializeMarkers();
+	plot->replot();
 }
 
-void FeatherPlotWidget::addPlotCurve( const QVector<double>& xValues, const QVector<double>& yValues, /*QwtPlot::Axis axis, CurveType index*/DataType dType ){
-	QwtPlot::Axis axis = getAxisYForData( dType );
-	CurveType curveType = getCurveTypeForData( dType );
-	addPlotCurve( xValues, yValues, axis, curveType );
+void FeatherPlotWidget::addPlotCurve( const QVector<double>& xValues, const QVector<double>& yValues,
+		DataType dType, bool sumCurve ){
+	if ( xValues.size() > 0 ){
+		QwtPlot::Axis axis = getAxisYForData( dType );
+		CurveType curveType = getCurveTypeForData( dType );
+		addPlotCurve( xValues, yValues, axis, curveType, sumCurve );
+	}
 }
 
 void FeatherPlotWidget::addPlotCurve( const QVector<double>& xValues,
-		const QVector<double>& yValues, QwtPlot::Axis axis, CurveType curveType ){
-	if ( curvePreferences[curveType].isDisplayed()){
+		const QVector<double>& yValues, QwtPlot::Axis axis, CurveType curveType, bool sumCurve ){
+	if ( curvePreferences[curveType].isDisplayed() && xValues.size() > 0 ){
 		QColor curveColor = curvePreferences[curveType].getColor();
 		QString curveName = curvePreferences[curveType].getName();
-		plot->addCurve( xValues, yValues, curveColor, curveName, axis  );
+		plot->addCurve( xValues, yValues, curveColor, curveName, axis, sumCurve  );
 		initializeMarkers();
 	}
 }
@@ -591,6 +560,66 @@ QwtPlot::Axis FeatherPlotWidget::getAxisYForData( DataType dType ){
 	return axis;
 }
 
+FeatherDataType::DataType FeatherPlotWidget::getDataTypeForCurve( CurveType cType ) const {
+
+	DataType dataType = FeatherDataType::END_DATA;
+	switch( cType ){
+	case FeatherCurveType::WEIGHT_LOW:
+		dataType = FeatherDataType::WEIGHT_SD;
+		break;
+	case FeatherCurveType::WEIGHT_HIGH:
+		dataType = FeatherDataType::WEIGHT_INT;
+		break;
+	case FeatherCurveType::LOW_ORIGINAL:
+		dataType = FeatherDataType::LOW;
+		break;
+	case FeatherCurveType::LOW_WEIGHTED:
+		dataType = FeatherDataType::LOW_WEIGHTED;
+		break;
+	case FeatherCurveType::LOW_CONVOLVED_HIGH:
+		dataType = FeatherDataType::LOW_CONVOLVED_HIGH;
+		break;
+	case FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED:
+		dataType = FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED;
+		break;
+	case FeatherCurveType::LOW_CONVOLVED_DIRTY:
+		dataType = FeatherDataType::LOW_CONVOLVED_DIRTY;
+		break;
+	case FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED:
+		dataType = FeatherDataType::LOW_CONVOLVED_DIRTY_WEIGHTED;
+		break;
+	case FeatherCurveType::HIGH_ORIGINAL:
+		dataType = FeatherDataType::HIGH;
+		break;
+	case FeatherCurveType::HIGH_WEIGHTED:
+		dataType = FeatherDataType::HIGH_WEIGHTED;
+		break;
+	case FeatherCurveType::HIGH_CONVOLVED_LOW:
+		dataType = FeatherDataType::HIGH_CONVOLVED_LOW;
+		break;
+	case FeatherCurveType::HIGH_CONVOLVED_LOW_WEIGHTED:
+		dataType = FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED;
+		break;
+	case FeatherCurveType::DIRTY_ORIGINAL:
+		dataType = FeatherDataType::DIRTY;
+		break;
+	case FeatherCurveType::DIRTY_WEIGHTED:
+		dataType = FeatherDataType::DIRTY_WEIGHTED;
+		break;
+	case FeatherCurveType::DIRTY_CONVOLVED_LOW:
+		dataType = FeatherDataType::DIRTY_CONVOLVED_LOW;
+		break;
+	case FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED:
+		dataType = FeatherDataType::DIRTY_CONVOLVED_LOW_WEIGHTED;
+		break;
+	default:
+		//qDebug() << "Unmapped curve type "<<cType;
+		break;
+	}
+	return dataType;
+}
+
+
 FeatherCurveType::CurveType FeatherPlotWidget::getCurveTypeForData( DataType dType ){
 	CurveType curveType = FeatherCurveType::WEIGHT_LOW;
 	switch( dType ){
@@ -653,10 +682,11 @@ FeatherCurveType::CurveType FeatherPlotWidget::getCurveTypeForData( DataType dTy
 void FeatherPlotWidget::setData( const Vector<Float>& xValues, const Vector<Float>& yValues, DataType dType ){
 	resetData( dType, xValues, yValues );
 	CurveType curveType = getCurveTypeForData( dType );
+	bool sumCurve = FeatherCurveType::isSumCurve( curveType );
 	QwtPlot::Axis axis = getAxisYForData( dType );
 	if ( !plot->isScatterPlot() ){
 		addPlotCurve( plotData[dType].first, plotData[dType].second, axis,
-						curveType );
+						curveType, sumCurve );
 		plot->replot();
 	}
 }
@@ -702,9 +732,9 @@ void FeatherPlotWidget::initializeDomainLimitedData( double minValue, double max
 }
 
 
-pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values ) const {
+pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values, FeatherCurveType::CurveType curveType ) const {
 	double minValue = numeric_limits<double>::max();
-	double maxValue = numeric_limits<double>::min();
+	double maxValue = -1 * numeric_limits<double>::max();
 	for ( int i = 0; i < values.size(); i++ ){
 		if ( values[i]< minValue ){
 			minValue = values[i];
@@ -712,6 +742,12 @@ pair<double,double> FeatherPlotWidget::getMaxMin( QVector<double> values ) const
 		if ( values[i] > maxValue ){
 			maxValue = values[i];
 		}
+	}
+
+	//For a sum curve, we need to undo the built in log scale.
+	if ( FeatherCurveType::isSumCurve( curveType) && plot->isLogAmplitude()){
+		minValue = qPow( 10, minValue );
+		maxValue = qPow( 10, maxValue );
 	}
 	pair<double,double> minMaxPair( minValue, maxValue );
 	return minMaxPair;

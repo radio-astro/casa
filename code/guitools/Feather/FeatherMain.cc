@@ -25,7 +25,8 @@
 #include "FeatherMain.qo.h"
 #include <guitools/Feather/PlotHolder.qo.h>
 #include <guitools/Feather/FeatherDataType.h>
-#include <images/Images/PagedImage.h>
+#include <guitools/Feather/FeatherManager.qo.h>
+
 #include <images/Images/ImageUtilities.h>
 #include <casa/Utilities/PtrHolder.h>
 #include <QDebug>
@@ -38,34 +39,18 @@ namespace casa {
 const int FeatherMain::DISH_DIAMETER_DEFAULT = -1;
 const int FeatherMain::SINGLE_DISH_FACTOR_DEFAULT = 1;
 
-void FeatherThread::run(){
-
-	//Initialize the data
-	featherWorker->getFeatherSD( sDxWeight, sDxAmpWeight, sDyWeight, sDyAmpWeight );
-	featherWorker->getFeatherINT( intxWeight, intxAmpWeight, intyWeight, intyAmpWeight );
-
-	featherWorker->getFeatheredCutSD( sDxCut, sDxAmpCut, sDyCut, sDyAmpCut );
-	featherWorker->getFeatheredCutINT( intxCut, intxAmpCut, intyCut, intyAmpCut );
-
-	if ( dirtyImage ){
-		//featherWorker->getFeatheredCutDirty( intxDirty, intxAmpDirty, intyDirty, intyAmpDirty );
-	}
-
-	if ( saveOutput ){
-		fileSaved = featherWorker->saveFeatheredImage( saveFilePath.toStdString() );
-	}
-}
 
 FeatherMain::FeatherMain(QWidget *parent)
     : QMainWindow(parent), fileLoader( this ),
       preferences( this ), preferencesColor( this ),
-      lowResImage( NULL ), highResImage( NULL ), dirtyImage( NULL ),
-      thread(NULL), plotHolder(NULL), progressMeter(this), logger(LogOrigin("CASA", "Feather")){
+      plotHolder(NULL), progressMeter(this), logger(LogOrigin("CASA", "Feather")){
 
 	ui.setupUi(this);
 	ui.outputLabel->setText("");
-	ui.planeMaxLabel->setText("");
-	ui.planeLineEdit->setText( "0");
+
+	dataManager = new FeatherManager();
+	connect( dataManager, SIGNAL(featheringDone()), this, SLOT( featheringDone()));
+
 
 	plotHolder = new PlotHolder( this );
 	QHBoxLayout* layout = new QHBoxLayout();
@@ -73,23 +58,6 @@ FeatherMain::FeatherMain(QWidget *parent)
 	ui.plotHolderWidget->setLayout( layout );
 	connect( plotHolder, SIGNAL(dishDiameterChangedX(double)), this, SLOT(dishDiameterXChanged(double)));
 	connect( plotHolder, SIGNAL(dishDiameterChangedY(double)), this, SLOT(dishDiameterYChanged(double)));
-
-	//Band Pass Filter
-	ui.lowBandPassFilterCombo->addItem( "None");
-
-	//Plane initialization
-	QButtonGroup* bGroup = new QButtonGroup( this );
-	bGroup->addButton( ui.singlePlaneRadio );
-	bGroup->addButton( ui.averagedPlaneRadio );
-	ui.singlePlaneRadio->setChecked( true );
-	connect( ui.singlePlaneRadio, SIGNAL(clicked()), this, SLOT(planeModeChanged()) );
-	connect( ui.averagedPlaneRadio, SIGNAL(clicked()), this, SLOT(planeModeChanged()) );
-	planeModeChanged();
-	QIntValidator* planeValidator = new QIntValidator( 0, std::numeric_limits<int>::max(),this );
-	ui.planeLineEdit->setValidator( planeValidator );
-	QPalette palette = ui.planeMaxLabel->palette();
-	palette.setColor(QPalette::Foreground, Qt::red );
-	ui.planeMaxLabel->setPalette( palette );
 
 	progressMeter.setWindowTitle( "Feather");
 	progressMeter.setLabelText( "Feathering Images...");
@@ -178,10 +146,6 @@ void FeatherMain::dishDiameterYChanged( const QString& yDiameter ){
 	plotHolder->dishDiameterYChanged( yDiamVal );
 }
 
-void FeatherMain::planeModeChanged(){
-	bool planeMode = ui.singlePlaneRadio->isChecked();
-	ui.planeLineEdit->setEnabled( planeMode );
-}
 
 void FeatherMain::preferencesChanged(){
 
@@ -192,35 +156,74 @@ void FeatherMain::preferencesChanged(){
 	int dotSize = preferences.getDotSize();
 	plotHolder->setDotSize( dotSize );
 
-	//Legend visibility
+	//What to view
 	bool legendVisible = preferences.isDisplayLegend();
 	plotHolder->setLegendVisibility( legendVisible );
-
 	plotHolder->setDisplayScatterPlot( preferences.isDisplayOutputScatterPlot());
 	plotHolder->setDisplayOutputSlice( preferences.isDisplayOutputFunctions());
 	plotHolder->setDisplayYGraphs( preferences.isDisplayY() );
 	plotHolder->setDisplayXGraphs( preferences.isDisplayX() );
 
-	//We only need one dish diameter box if we are plotting in
-	//radial distance.
+	//Whether to use a u/v or radial axis
 	bool xAxisUV = preferences.isXAxisUV();
-	if ( xAxisUV ){
-		ui.yGroupBox->show();
-		ui.xGroupBox->setTitle( "U");
+	bool oldAxisUV = !dataManager->isRadial();
+	if ( xAxisUV != oldAxisUV ){
+		//We only need one dish diameter box if we are plotting in
+		//radial distance.
+		if ( xAxisUV ){
+			ui.yGroupBox->show();
+			ui.xGroupBox->setTitle( "U");
+		}
+		else {
+			ui.yGroupBox->hide();
+			ui.xGroupBox->setTitle( "Distance");
+		}
+		plotHolder->setXAxisUV( xAxisUV );
+		preferencesColor.setRadialPlot( !xAxisUV );
+		//We have to reset the data if we are changing from a uv to a
+		//radial plot
+		dataManager->setRadial( !xAxisUV );
+		featherImages();
 	}
-	else {
-		ui.yGroupBox->hide();
-		ui.xGroupBox->setTitle( "Distance");
+
+	//Single channel or averaged plane
+	bool averaged = preferences.isPlaneAveraged();
+	int planeIndex = preferences.getPlaneIndex();
+	bool oldAveraged = dataManager->isChannelsAveraged();
+	int oldPlaneIndex = dataManager->getChannelIndex();
+
+	if ( averaged != oldAveraged ){
+		dataManager->setChannelsAveraged( averaged );
 	}
-	plotHolder->setXAxisUV( xAxisUV );
+	if ( !averaged ){
+		dataManager->setChannelIndex( planeIndex );
+	}
+	if ( (oldAveraged != averaged) ||
+			(!averaged && (oldPlaneIndex != planeIndex)) ){
+		plotHolder->clearPlots();
+		resetData();
+	}
+
 
 	plotHolder->setLogScale( preferences.isLogUV(), preferences.isLogAmplitude() );
 	plotHolder->refreshPlots();
-
 	plotHolder->layoutPlotWidgets();
 }
 
+void FeatherMain::resetData(){
+	if ( dataManager != NULL && dataManager->isReady()){
+		addOriginalDataToPlots();
+		addFeatheredDataToPlots();
+		plotHolder->addSumData();
+		plotHolder->updateScatterData();
+	}
+}
+
 void FeatherMain::functionColorsChanged(){
+	FeatherCurveType::CurveType xScatter = preferencesColor.getScatterXCurve();
+	QList<FeatherCurveType::CurveType> yScatters = preferencesColor.getScatterYCurve();
+	plotHolder->setScatterCurves( xScatter, yScatters );
+
 	QMap<PreferencesColor::CurveType,CurveDisplay> colorMap = preferencesColor.getFunctionColors();
 	plotHolder->setColors( colorMap );
 
@@ -238,28 +241,12 @@ QString FeatherMain::getFileName( QString path ) const {
 	return fileName;
 }
 
-int FeatherMain::getPlaneCount() const {
-	int planeCount = 1;
-	if ( highResImage != NULL ){
-		IPosition imgShape = highResImage->shape();
-		CoordinateSystem coordinateSystem = highResImage->coordinates();
-		if ( coordinateSystem.hasSpectralAxis()){
-			int spectralIndex = coordinateSystem.spectralAxisNumber();
-			planeCount = imgShape(spectralIndex);
-		}
-	}
-	return planeCount;
-}
+
 
 void FeatherMain::updatePlaneInformation(){
-	int planeCount = getPlaneCount();
-	ui.planeMaxLabel->setText( "<"+QString::number( planeCount ) );
-	QString currentPlaneText = ui.planeLineEdit->text();
-	bool valid = false;
-	int currentPlane = currentPlaneText.toInt(&valid);
-	if ( currentPlane >= planeCount || !valid ){
-		ui.planeLineEdit->setText( "0");
-	}
+	int planeCount = dataManager->getPlaneCount();
+	preferences.setPlaneCount( planeCount );
+
 }
 
 void FeatherMain::imageFilesChanged(){
@@ -270,34 +257,33 @@ void FeatherMain::imageFilesChanged(){
 	dirtyImagePath = fileLoader.getFileDirty();
 
 	//Only show the file names on the GUI.
-
 	ui.lowResolutionLabel->setText( getFileName(lowResImagePath) );
 	ui.highResolutionLabel->setText( getFileName( highResImagePath ));
 	ui.outputLabel->setText( getFileName( outputImagePath ));
 
-	//Dirty image
-	bool imagesOK = loadImages();
-	bool dirtyImageLoaded = false;
-	if ( dirtyImage != NULL ){
-		dirtyImageLoaded = true;
-	}
-	preferencesColor.setDirtyEnabled( dirtyImageLoaded );
+	if ( highResImagePath.trimmed().length() > 0 && lowResImagePath.trimmed().length() > 0 ){
 
-	//Low Band Pass Filter
-	ui.lowBandPassFilterCombo->addItem( "None");
+		bool imagesOK = dataManager->loadImages( highResImagePath, lowResImagePath, &logger );
+		bool dirtyImageLoaded = false;
+		if ( imagesOK && dirtyImagePath.trimmed().length() > 0 ){
+			dirtyImageLoaded = dataManager->loadDirtyImage( dirtyImagePath);
+		}
+		preferencesColor.setDirtyEnabled( dirtyImageLoaded );
 
-	//Feathering
-	ui.featherButton->setEnabled( imagesOK );
-	if ( imagesOK ){
-		updatePlaneInformation();
+		//Feathering
+		ui.featherButton->setEnabled( imagesOK );
+		if ( imagesOK ){
+			updatePlaneInformation();
 
-		clearPlots();
+			clearPlots();
 
-		//Load the original data into the plot
-		addOriginalDataToPlots();
-
-		//Reset the dish diameters from the images
-		resetDishDiameters();
+			//Reset the dish diameters from the images
+			resetDishDiameters();
+		}
+		else {
+			QString error = dataManager->getError();
+			QMessageBox::warning( this, "Warning!", error );
+		}
 	}
 }
 
@@ -305,7 +291,7 @@ void FeatherMain::resetDishDiameters(){
 	const int DEFAULT_DISH = -1;
 	Float xDiam = DEFAULT_DISH;
 	Float yDiam = DEFAULT_DISH;
-	featherWorker.getEffectiveDishDiam( xDiam, yDiam );
+	dataManager->getEffectiveDishDiameter( xDiam, yDiam );
 	resetDishDiameter( ui.dishDiameterXLineEdit,
 			ui.dishDiameterXLimitLabel, xDiam, DEFAULT_DISH);
 	resetDishDiameter( ui.dishDiameterYLineEdit,
@@ -336,7 +322,7 @@ void FeatherMain::openFileLoader(){
 }
 
 void FeatherMain::openPreferences(){
-	preferences.exec();
+	preferences.show();
 }
 
 void FeatherMain::openPreferencesColor(){
@@ -345,70 +331,16 @@ void FeatherMain::openPreferencesColor(){
 	preferencesColor.show();
 }
 
-void FeatherMain::clearImage( ImageInterface<Float>*& image ){
-	delete image;
-	image = NULL;
-}
-
-bool FeatherMain::loadImages(){
-	bool imagesGenerated = true;
-	clearImage( lowResImage );
-	clearImage( highResImage );
-	clearImage( dirtyImage );
-
-	try {
-		imagesGenerated = generateInputImage();
-	}
-	catch( AipsError& error ){
-		imagesGenerated = false;
-	}
-
-	if ( imagesGenerated ){
-		//Note:  high resolution image must be defined before low resolution
-		//image or we get an exception.
-		if ( highResImage != NULL && lowResImage != NULL ){
-			featherWorker.setINTImage( *highResImage );
-			featherWorker.setSDImage( *lowResImage );
-			if ( dirtyImage != NULL ){
-				//featherWorker.setDirtyImage( *dirtyImage );
-			}
-			else {
-				//Clear out any left-over dirty image by putting an empty one in.
-				//????????????????????????  Maybe not necessary
-			}
-		}
-		else {
-			imagesGenerated = false;
-		}
-	}
-	return imagesGenerated;
-}
-
-void FeatherMain::addOriginalDataToPlots(){
-	Vector<Float> sDxOrig;
-	Vector<Float> sDxAmpOrig;
-	Vector<Float> sDyOrig;
-	Vector<Float> sDyAmpOrig;
-	bool radialAxis = !preferences.isXAxisUV();
-	featherWorker.getFTCutSDImage( sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig, radialAxis );
-	plotHolder->setData(sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig, FeatherDataType::LOW );
-	//plotHolder->setSingleDishDataOriginal(sDxOrig, sDxAmpOrig, sDyOrig, sDyAmpOrig );
-
-	Vector<Float> intxOrig;
-	Vector<Float> intxAmpOrig;
-	Vector<Float> intyOrig;
-	Vector<Float> intyAmpOrig;
-	featherWorker.getFTCutIntImage(intxOrig, intxAmpOrig, intyOrig, intyAmpOrig, radialAxis );
-	plotHolder->setData( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig, FeatherDataType::HIGH );
-	//plotHolder->setInterferometerDataOriginal( intxOrig, intxAmpOrig, intyOrig, intyAmpOrig );
-
-}
-
 void FeatherMain::clearPlots(){
 	plotHolder->clearPlots();
 }
 
+
 void FeatherMain::featherImages() {
+
+	if ( lowResImagePath.trimmed().length() == 0 ){
+		return;
+	}
 
 	Bool validDishDiameters = true;
 	pair<float,float> dishDiameters = populateDishDiameters( validDishDiameters );
@@ -418,7 +350,7 @@ void FeatherMain::featherImages() {
 			//At the moment, Feather.cc setEffectiveDishDiam always returns true,
 			//and instead throws an exception if something is wrong, but we will
 			//check the return value in case the code changes.
-			validDishDiameters = featherWorker.setEffectiveDishDiam( dishDiameters.first, dishDiameters.second );
+			validDishDiameters = dataManager->setEffectiveDishDiameter( dishDiameters.first, dishDiameters.second );
 		}
 		catch( AipsError& error ){
 			String msg = error.getMesg();
@@ -430,24 +362,9 @@ void FeatherMain::featherImages() {
 	if ( validDishDiameters ){
 
 		float sdFactor = populateSDFactor();
-		featherWorker.setSDScale( sdFactor );
-
-		if ( thread != NULL ){
-			delete thread;
-			thread = NULL;
-		}
-		thread = new FeatherThread();
-		connect( thread, SIGNAL( finished() ), this, SLOT(featheringDone()));
-		thread->setFeatherWorker( &featherWorker );
-		//QString outputImagePath = ui.outputLabel->text();
-		bool dirtyImageProvided = false;
-		if ( this->dirtyImagePath.trimmed().length() > 0 ){
-			dirtyImageProvided = true;
-		}
-		thread->setDirtyImageSupported( dirtyImageProvided );
-		thread->setSaveOutput( fileLoader.isOutputSaved(), outputImagePath );
-		thread->start();
+		dataManager->setSDScale( sdFactor );
 		progressMeter.show();
+		dataManager->applyFeather( fileLoader.isOutputSaved(), outputImagePath );
 	}
 	else {
 		QString msg("Effective dish diameter had a finer resolution than the original data.");
@@ -456,35 +373,93 @@ void FeatherMain::featherImages() {
 
 }
 
+
+
+void FeatherMain::addOriginalDataToPlots(){
+
+	FeatheredData sDOrig = dataManager->getSDOrig();
+	plotHolder->setData(sDOrig.getUX(), sDOrig.getUY(),
+				sDOrig.getVX(), sDOrig.getVY(), FeatherDataType::LOW );
+
+
+	FeatheredData intOrig = dataManager->getIntOrig();
+	plotHolder->setData( intOrig.getUX(), intOrig.getUY(),
+				intOrig.getVX(), intOrig.getVY(), FeatherDataType::HIGH );
+
+	FeatheredData dirtyOrig = dataManager->getDirtyOrig();
+	plotHolder->setData( dirtyOrig.getUX(), dirtyOrig.getUY(),
+		dirtyOrig.getVX(), dirtyOrig.getVY(), FeatherDataType::DIRTY );
+
+
+}
+
+void FeatherMain::addFeatheredDataToPlots( ){
+	//Put the data calculated from feather into the graph.
+	FeatheredData sdWeight = dataManager->getSDWeight();
+	plotHolder->setData( sdWeight.getUX(), sdWeight.getUY(),
+			sdWeight.getVX(), sdWeight.getVY(), FeatherDataType::WEIGHT_SD );
+
+	FeatheredData intWeight = dataManager->getIntWeight();
+	plotHolder->setData( intWeight.getUX(), intWeight.getUY(),
+			intWeight.getVX(), intWeight.getVY(), FeatherDataType::WEIGHT_INT );
+
+	FeatheredData sdCut = dataManager->getSDCut();
+	plotHolder->setData( sdCut.getUX(), sdCut.getUY(), sdCut.getVX(), sdCut.getVY(), FeatherDataType::LOW_WEIGHTED );
+
+	FeatheredData intCut = dataManager->getIntCut();
+	plotHolder->setData( intCut.getUX(), intCut.getUY(), intCut.getVX(), intCut.getVY(), FeatherDataType::HIGH_WEIGHTED );
+
+	FeatheredData dirtyCut = dataManager->getDirtyCut();
+	plotHolder->setData( dirtyCut.getUX(), dirtyCut.getUY(), dirtyCut.getVX(), dirtyCut.getVY(), FeatherDataType::DIRTY_WEIGHTED );
+
+	FeatheredData intConvolvedSD = dataManager->getIntConvolvedSDOrig();
+	plotHolder->setData( intConvolvedSD.getUX(), intConvolvedSD.getUY(),
+		intConvolvedSD.getVX(), intConvolvedSD.getVY(), FeatherDataType::HIGH_CONVOLVED_LOW );
+
+	FeatheredData intConvolvedSDCut = dataManager->getIntConvolvedSDCut();
+	plotHolder->setData( intConvolvedSDCut.getUX(), intConvolvedSDCut.getUY(),
+		intConvolvedSDCut.getVX(), intConvolvedSDCut.getVY(), FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED );
+
+	FeatheredData dirtyConvolvedSD = dataManager->getDirtyConvolvedSDOrig();
+	plotHolder->setData( dirtyConvolvedSD.getUX(), dirtyConvolvedSD.getUY(),
+		dirtyConvolvedSD.getVX(), dirtyConvolvedSD.getVY(), FeatherDataType::DIRTY_CONVOLVED_LOW );
+
+	FeatheredData dirtyConvolvedSDCut = dataManager->getDirtyConvolvedSDCut();
+	plotHolder->setData( dirtyConvolvedSDCut.getUX(), dirtyConvolvedSDCut.getUY(),
+		dirtyConvolvedSDCut.getVX(), dirtyConvolvedSDCut.getVY(), FeatherDataType::DIRTY_CONVOLVED_LOW_WEIGHTED );
+
+	FeatheredData sdConvolvedInt = dataManager->getSDConvolvedIntOrig();
+	plotHolder->setData( sdConvolvedInt.getUX(), sdConvolvedInt.getUY(),
+			sdConvolvedInt.getVX(), sdConvolvedInt.getVY(), FeatherDataType::LOW_CONVOLVED_HIGH );
+
+	FeatheredData sdConvolvedIntCut = dataManager->getSDConvolvedIntCut();
+	plotHolder->setData( sdConvolvedIntCut.getUX(), sdConvolvedIntCut.getUY(),
+			sdConvolvedIntCut.getVX(), sdConvolvedIntCut.getVY(), FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED );
+
+	FeatheredData sdConvolvedDirty = dataManager->getSDConvolvedDirtyOrig();
+	plotHolder->setData( sdConvolvedDirty.getUX(), sdConvolvedDirty.getUY(),
+				sdConvolvedDirty.getVX(), sdConvolvedDirty.getVY(), FeatherDataType::LOW_CONVOLVED_DIRTY );
+
+	FeatheredData sdConvolvedDirtyCut = dataManager->getSDConvolvedDirtyCut();
+	plotHolder->setData( sdConvolvedDirtyCut.getUX(), sdConvolvedDirtyCut.getUY(),
+				sdConvolvedDirtyCut.getVX(), sdConvolvedDirtyCut.getVY(), FeatherDataType::LOW_CONVOLVED_DIRTY_WEIGHTED );
+}
+
+
 void FeatherMain::featheringDone(){
 	emit featherFinished();
 
-	//Put the data into the graphs.
+	//Remove all plots.
 	plotHolder->clearPlots();
-	/*plotHolder->setSingleDishWeight( thread->sDxWeight, thread->sDxAmpWeight, thread->sDyWeight, thread->sDyAmpWeight );
-	plotHolder->setInterferometerWeight( thread->intxWeight, thread->intxAmpWeight, thread->intyWeight, thread->intyAmpWeight );
-	plotHolder->setSingleDishData( thread->sDxCut, thread->sDxAmpCut, thread->sDyCut, thread->sDyAmpCut );
-	plotHolder->setInterferometerData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut );*/
-	plotHolder->setData( thread->sDxWeight, thread->sDxAmpWeight, thread->sDyWeight, thread->sDyAmpWeight, FeatherDataType::WEIGHT_SD );
-	plotHolder->setData( thread->intxWeight, thread->intxAmpWeight, thread->intyWeight, thread->intyAmpWeight, FeatherDataType::WEIGHT_INT );
-	plotHolder->setData( thread->sDxCut, thread->sDxAmpCut, thread->sDyCut, thread->sDyAmpCut, FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED );
-	plotHolder->setData( thread->intxCut, thread->intxAmpCut, thread->intyCut, thread->intyAmpCut, FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED );
-	/*if ( dirtyImagePath.trimmed().length() > 0 ){
-		plotHolder->setDirtyData( thread->intxDirty, thread->intxAmpDirty, thread->intyDirty, thread->intyAmpDirty );
-	}*/
 
-	//In case we are zoomed on the original data, this will reload it, unzoomed.
-	addOriginalDataToPlots();
-
-	plotHolder->addSumData();
-	plotHolder->updateScatterData();
+	resetData();
 
 	plotHolder->layoutPlotWidgets();
 	plotHolder->refreshPlots();
 
 	//Post a message if we could not save the output image.
 	if ( fileLoader.isOutputSaved() ){
-		bool fileSaved = thread->fileSaved;
+		bool fileSaved = dataManager->isFileSaved();
 		if ( !fileSaved ){
 			QString msg( "There was a problem saving the image to "+ui.outputLabel->text());
 			QMessageBox::warning( this, "Save Problem", msg);
@@ -522,65 +497,7 @@ pair<float,float> FeatherMain::populateDishDiameters( Bool& validDiameters ) {
 	return diameters;
 }
 
-bool FeatherMain::generateInputImage( ){
-
-	bool success = true;
-
-	try {
-		logger << LogIO::NORMAL
-				<< "\nFeathering together high and low resolution images.\n"
-				<< LogIO::POST;
-
-		//Get initial images
-		String highResLocation(highResImagePath.toStdString());
-		String lowResLocation(lowResImagePath.toStdString());
-
-		PagedImage<Float> highResImageTemp(highResLocation);
-		PagedImage<Float> lowResImageTemp(lowResLocation);
-		if(highResImageTemp.shape().nelements() != lowResImageTemp.shape().nelements()){
-			String msg( "High and low resolution images do not have the same number of axes.");
-			logger << LogIO::SEVERE  << msg << LogIO::EXCEPTION;
-			QMessageBox::warning( this, "Warning!", msg.c_str());
-			success = false;
-		}
-		else {
-			lowResImage = new PagedImage<Float>(lowResLocation);
-			highResImage = new PagedImage<Float>(highResLocation);
-		}
-
-		//Decide if we are going to be supporting a dirty image or not.
-		if ( dirtyImagePath.length() > 0  && success ){
-			String dirtyImageLocation( dirtyImagePath.trimmed().toStdString() );
-			PagedImage<Float> dirtyImageTemp(dirtyImageLocation);
-			if(dirtyImageTemp.shape().nelements() != lowResImageTemp.shape().nelements()){
-				String msg( "Dirty and low resolution images do not have the same number of axes.");
-				logger << LogIO::SEVERE  << msg << LogIO::EXCEPTION;
-				QMessageBox::warning( this, "Warning!", msg.c_str());
-				success = false;
-			}
-			else {
-				dirtyImage = new PagedImage<Float>(dirtyImageLocation);
-			}
-		}
-	}
-	catch (AipsError& x) {
-		String msg = x.getMesg();
-		QMessageBox::warning( this, "Warning!", "There was a problem loading the image(s).");
-		logger << LogIO::SEVERE << "Caught exception: " << msg<< LogIO::EXCEPTION;
-		success = false;;
-	}
-
-
-
-	return success;
-}
-
-
 FeatherMain::~FeatherMain(){
-
-	delete lowResImage;
-	delete highResImage;
-
-	delete thread;
+	delete dataManager;
 }
 }

@@ -35,11 +35,11 @@ namespace casa {
 
 PlotHolder::PlotHolder(QWidget *parent)
     : QWidget(parent),
-      /*plotTypeAction( "Scatter Plot", this ),*/ zoom90Action( "Auto Zoom", this),
+      plotTypeAction( "Scatter Plot", this ), zoom90Action( "Auto Zoom", this),
       zoomNeutralAction( "Zoom Neutral", this ),contextMenu( this ), legendHolder( NULL ),
       legendVisible( false ),
       displayOutputSlice(false),
-      displayScatter( false ), /*tempScatterPlot(false),*/
+      displayScatter( false ), tempScatterPlot(false),
       displayYGraphs( false ), displayXGraphs( true ),
       xAxisUV( true ){
 	ui.setupUi(this);
@@ -50,17 +50,17 @@ PlotHolder::PlotHolder(QWidget *parent)
 
 void PlotHolder::initializeActions(){
 
-	/*plotTypeAction.setStatusTip( "Toggle between a single-dish/interferometer amplitude scatter plot and function slice cuts.");
+	plotTypeAction.setStatusTip( "Toggle between a slice plot and a scatter plot.");
 	plotTypeAction.setCheckable( true );
 	connect( &plotTypeAction, SIGNAL(triggered()), this, SLOT(changePlotType()));
-*/
+
 	zoom90Action.setCheckable( true );
 	connect( &zoom90Action, SIGNAL(triggered()), this, SLOT(changeZoom90()));
 
 	zoomNeutralAction.setStatusTip( "Restore the graph back to its original non-zoomed state");
 	connect( &zoomNeutralAction, SIGNAL(triggered()), this, SLOT(zoomNeutral()));
 
-	//contextMenu.addAction( &plotTypeAction );
+	contextMenu.addAction( &plotTypeAction );
 	contextMenu.addAction( &zoom90Action );
 	contextMenu.addAction( &zoomNeutralAction );
 
@@ -83,13 +83,10 @@ void PlotHolder::initializePlots(){
 	connect( distanceWidget, SIGNAL(rectangleZoomed(double,double,double,double)), this, SLOT(rectangleZoomed(double,double,double,double)));
 	plots.append( distanceWidget );
 	FeatherPlotWidget* xWidgetScatter = new FeatherPlotWidgetScatter( "Scatter U", FeatherPlot::SCATTER_PLOT);
-	//xWidgetScatter->setPermanentScatter( true );
 	plots.append( xWidgetScatter );
 	FeatherPlotWidget* yWidgetScatter = new FeatherPlotWidgetScatter( "Scatter V", FeatherPlot::SCATTER_PLOT);
-	//yWidgetScatter->setPermanentScatter( true );
 	plots.append( yWidgetScatter );
 	FeatherPlotWidget* distanceWidgetScatter = new FeatherPlotWidgetScatter( "Scatter Radial Distance", FeatherPlot::SCATTER_PLOT);
-	//distanceWidgetScatter->setPermanentScatter( true );
 	plots.append( distanceWidgetScatter );
 }
 
@@ -106,28 +103,23 @@ PlotHolder::~PlotHolder(){
 //------------------------------------------------------------------------
 
 void PlotHolder::rectangleZoomed( double minX, double maxX, double minY, double maxY ){
-	for ( int i = 0; i < SCATTER_X; i++ ){
-		plots[i]->zoomRectangle( minX, maxX, minY, maxY );
-	}
+	plots[SLICE_X]->zoomRectangle( minX, maxX, minY, maxY );
+	plots[SLICE_Y]->zoomRectangle( minX, maxX, minY, maxY );
+	plots[SLICE_DISTANCE]->zoomRectangle( minX, maxX, minY, maxY );
 }
 
 
-/*void PlotHolder::changePlotType(){
+void PlotHolder::changePlotType(){
 	bool scatterPlot = plotTypeAction.isChecked();
 	zoom90Action.setEnabled( !scatterPlot );
-	FeatherPlot::PlotType plotType = FeatherPlot::NO_TYPE;
 	adjustLayout( scatterPlot );
 	if ( scatterPlot ){
 		zoom90Action.setChecked( false );
-		plotType = FeatherPlot::SCATTER_PLOT;
-	}
-	else {
-		plotType = FeatherPlot::SLICE_CUT;
 	}
 	for ( int i = 0; i < plots.size(); i++ ){
-		plots[i]->changePlotType( plotType );
+		plots[i]->refresh();
 	}
-}*/
+}
 
 
 void PlotHolder::changeZoom90(){
@@ -226,6 +218,13 @@ void PlotHolder::setColors( const QMap<PreferencesColor::CurveType,CurveDisplay>
 	}
 }
 
+void PlotHolder::setScatterCurves( FeatherCurveType::CurveType xScatter,
+		const QList<FeatherCurveType::CurveType>& yScatters ){
+	plots[SCATTER_X]->setScatterCurves( xScatter, yScatters );
+	plots[SCATTER_Y]->setScatterCurves( xScatter, yScatters );
+	plots[SCATTER_DISTANCE]->setScatterCurves( xScatter, yScatters );
+}
+
 
 void PlotHolder::setLogScale( bool uvScale, bool logScale ){
 	for ( int i = 0; i < plots.size(); i++ ){
@@ -236,47 +235,34 @@ void PlotHolder::setLogScale( bool uvScale, bool logScale ){
 //                          Data
 //------------------------------------------------------------------------
 
-bool PlotHolder::isScatterData( DataType dType ){
-	bool scatterData = false;
-	if ( dType == FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED ||
-				dType == FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED ){
-		scatterData = true;
-	}
-	return scatterData;
-}
-
 void PlotHolder::setData( const Vector<Float>& x, const Vector<Float>& xAmp,
    		const Vector<Float>& y, const Vector<Float>& yAmp,
    		DataType dType ){
 	plots[SLICE_X]->setData( x, xAmp, dType );
 	plots[SLICE_Y]->setData( y, yAmp, dType );
-	//Scatter plots only contain the low convoluted with the high, weighted & vice versa.
-	if ( isScatterData( dType ) ){
-		plots[SCATTER_X]->setData( x, xAmp, dType );
-		plots[SCATTER_Y]->setData( y, yAmp, dType );
-	}
+	plots[SLICE_DISTANCE]->setData( x, xAmp, dType );
+	plots[SCATTER_X]->setData( x, xAmp, dType );
+	plots[SCATTER_Y]->setData( y, yAmp, dType );
+	plots[SCATTER_DISTANCE]->setData( x, xAmp, dType );
 }
 
-void PlotHolder::setData( const Vector<Float>& distance, const Vector<Float>& distanceAmp, DataType dType ){
-	 plots[SLICE_DISTANCE]->setData( distance, distanceAmp, dType );
-	 if ( isScatterData( dType ) ){
-		 plots[SCATTER_DISTANCE]->setData( distance, distanceAmp, dType );
-	 }
-}
 
 void PlotHolder::addSumData(){
 	plots[SLICE_X]->addSumData();
 	plots[SLICE_Y]->addSumData();
+	plots[SLICE_DISTANCE]->addSumData();
 }
 
 void PlotHolder::updateScatterData( ){
 	plots[SCATTER_X]->addZoomNeutralCurves();
 	plots[SCATTER_Y]->addZoomNeutralCurves();
+	plots[SCATTER_DISTANCE]->addZoomNeutralCurves();
 }
 
 
 void PlotHolder::dishDiameterXChanged( double value ){
 	plots[SLICE_X]->setDishDiameter( value );
+	plots[SLICE_DISTANCE]->setDishDiameter( value );
 }
 
 
@@ -336,12 +322,12 @@ void PlotHolder::emptyLayout(QLayout* layout ){
 }
 
 
-/*void PlotHolder::adjustLayout( bool scatterPlot ){
+void PlotHolder::adjustLayout( bool scatterPlot ){
 	if ( scatterPlot != tempScatterPlot ){
-		//tempScatterPlot = scatterPlot;
+		tempScatterPlot = scatterPlot;
 		layoutPlotWidgets();
 	}
-}*/
+}
 
 
 void PlotHolder::layoutPlotWidgets(){
@@ -366,9 +352,8 @@ void PlotHolder::layoutPlotWidgets(){
 	int rowCount = gridSize.first;
 	int columnCount = gridSize.second;
 	if ( rowCount > 0 && columnCount > 0 ){
-		//Add the legend/remove legend.  We don't need a legend if all we
-		//are looking at is scatter plots.
-		if ( legendVisible &&/* !tempScatterPlot &&*/ displayOutputSlice ){
+		//Add the legend/remove legend.
+		if ( legendVisible ){
 			if ( legendHolder == NULL ){
 				legendHolder = new QWidget( this);
 				legendHolder->setMinimumSize( 800, 50 );
@@ -399,10 +384,11 @@ pair<int,int> PlotHolder::addRadialPlots(QGridLayout*& gridLayout){
 	//Dynamically determine the row count as we add plots and axes.
 	int rowCount = 0;
 	if ( columnCount > 0 ){
-		if ( displayOutputSlice ){
-			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_DISTANCE );
-			gridLayout->addWidget( plots[SLICE_DISTANCE], 0, 1 );
-			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_DISTANCE );
+		if ( displayOutputSlice && !tempScatterPlot){
+			Plots type = SLICE_DISTANCE;
+			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, type );
+			gridLayout->addWidget( plots[type], 0, 1 );
+			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, type );
 			rowCount++;
 		}
 
@@ -415,7 +401,7 @@ pair<int,int> PlotHolder::addRadialPlots(QGridLayout*& gridLayout){
 		//The scatter plot cannot share the bottom axis of the other plots so
 		//we have to add the scatter plot after putting in the common y-axis
 		//the other plots share.
-		if ( displayScatter /*&& !tempScatterPlot*/ ){
+		if ( displayScatter || tempScatterPlot ){
 			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SCATTER_DISTANCE );
 			gridLayout->addWidget( plots[SCATTER_DISTANCE], rowCount, 1 );
 			rowCount++;
@@ -450,7 +436,7 @@ pair<int,int> PlotHolder::addUVPlots(QGridLayout*& gridLayout){
 	//Dynamically determine the row count as we add plots and axes.
 	int rowCount = 0;
 	if ( columnCount > 0 ){
-		if ( displayOutputSlice ){
+		if ( displayOutputSlice  && !tempScatterPlot){
 			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SLICE_X );
 			addPlots( gridLayout, rowCount, SLICE_X );
 			addPlotAxis( rowCount, columnCount, gridLayout, QwtPlot::yRight, SLICE_Y );
@@ -470,7 +456,7 @@ pair<int,int> PlotHolder::addUVPlots(QGridLayout*& gridLayout){
 		//The scatter plot cannot share the bottom axis of the other plots so
 		//we have to add the scatter plot after putting in the common y-axis
 		//the other plots share.
-		if ( displayScatter /*&& !tempScatterPlot*/ ){
+		if ( displayScatter || tempScatterPlot ){
 			addPlotAxis( rowCount, 0, gridLayout, QwtPlot::yLeft, SCATTER_X );
 			addPlots( gridLayout, rowCount, SCATTER_X );
 			if ( displayYGraphs ){

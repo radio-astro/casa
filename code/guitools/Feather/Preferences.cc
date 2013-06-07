@@ -39,6 +39,7 @@ const QString Preferences::DISPLAY_X_PLOTS = "Display X Plots";
 const QString Preferences::DISPLAY_X_AXIS_UV = "Display X Axis U/V";
 const QString Preferences::LOG_AMPLITUDE = "Logarithm of Amplitude";
 const QString Preferences::LOG_UV = "Logarithm of u/v Axis";
+const QString Preferences::PLANE_AVERAGED = "Plane Averaged";
 
 Preferences::Preferences(QWidget *parent)
     : QDialog(parent),
@@ -51,10 +52,27 @@ Preferences::Preferences(QWidget *parent)
       displayLegend(true),
       logAmplitude(true),
       logUV(false),
-      xAxisUV(true){
+      xAxisUV(true),
+      planeAveraged(true),
+      planeIndex(0){
 
 	ui.setupUi(this);
 	setWindowTitle( "Feather Plot Display");
+	setModal( false );
+
+	//Plane initialization
+	ui.planeMaxLabel->setText("");
+	ui.planeLineEdit->setText( "0");
+	QButtonGroup* bGroup = new QButtonGroup( this );
+	bGroup->addButton( ui.singlePlaneRadio );
+	bGroup->addButton( ui.averagedPlaneRadio );
+	connect( ui.singlePlaneRadio, SIGNAL(clicked()), this, SLOT(planeModeChanged()) );
+	connect( ui.averagedPlaneRadio, SIGNAL(clicked()), this, SLOT(planeModeChanged()) );
+	QIntValidator* planeValidator = new QIntValidator( 0, std::numeric_limits<int>::max(),this );
+	ui.planeLineEdit->setValidator( planeValidator );
+	QPalette palette = ui.planeMaxLabel->palette();
+	palette.setColor(QPalette::Foreground, Qt::red );
+	ui.planeMaxLabel->setPalette( palette );
 
 	ui.lineThicknessSpinBox->setMinimum( 1 );
 	ui.lineThicknessSpinBox->setMaximum( 5 );
@@ -90,6 +108,12 @@ void Preferences::initializeCustomSettings(){
 	logAmplitude = settings.value( LOG_AMPLITUDE, logAmplitude ).toBool();
 	logUV = settings.value( LOG_UV, logUV ).toBool();
 	xAxisUV = settings.value( DISPLAY_X_AXIS_UV, xAxisUV ).toBool();
+	planeAveraged = settings.value(PLANE_AVERAGED, planeAveraged ).toBool();
+}
+
+void Preferences::planeModeChanged(){
+	bool planeMode = ui.singlePlaneRadio->isChecked();
+	ui.planeLineEdit->setEnabled( planeMode );
 }
 
 void Preferences::xAxisChanged(){
@@ -101,6 +125,17 @@ void Preferences::xAxisChanged(){
 	ui.yPlotCheckBox->setEnabled(uvXAxis);
 }
 
+void Preferences::setPlaneCount( int planeCount ){
+	ui.planeMaxLabel->setText( "<"+QString::number( planeCount ) );
+	QString currentPlaneText = ui.planeLineEdit->text();
+	bool valid = false;
+	int currentPlane = currentPlaneText.toInt(&valid);
+	if ( currentPlane >= planeCount || !valid ){
+		ui.planeLineEdit->setText( "0");
+	}
+	QIntValidator* planeValidator = new QIntValidator( 0, planeCount - 1, this );
+	ui.planeLineEdit->setValidator( planeValidator );
+}
 
 bool Preferences::isLogAmplitude() const {
 	return logAmplitude;
@@ -135,6 +170,18 @@ bool Preferences::isXAxisUV() const {
 	return xAxisUV;
 }
 
+bool Preferences::isPlaneAveraged() const {
+	bool averaged = true;
+	if ( ui.singlePlaneRadio->isChecked() ){
+		averaged = false;
+	}
+	return averaged;
+}
+
+int Preferences::getPlaneIndex() const {
+	return planeIndex;
+}
+
 int Preferences::getLineThickness() const {
 	return lineThickness;
 }
@@ -146,7 +193,6 @@ int Preferences::getDotSize() const {
 void Preferences::preferencesAccepted(){
 	persist();
 	emit preferencesChanged();
-	this->close();
 }
 
 void Preferences::preferencesRejected(){
@@ -170,8 +216,16 @@ void Preferences::reset(){
 	else {
 		ui.axisRadialRadio->setChecked( true );
 	}
+	if ( planeAveraged ){
+		ui.averagedPlaneRadio->setChecked(true);
+	}
+	else {
+		ui.singlePlaneRadio->setChecked( true );
+	}
+	ui.planeLineEdit->setText( "0");
 	//Call axis changed to sync up the enable/disable state
 	xAxisChanged();
+	planeModeChanged();
 }
 
 void Preferences::persist(){
@@ -206,6 +260,13 @@ void Preferences::persist(){
 
 	xAxisUV = ui.axisUVRadio->isChecked();
 	settings.setValue( DISPLAY_X_AXIS_UV, xAxisUV );
+
+	planeAveraged = ui.averagedPlaneRadio->isChecked();
+	settings.setValue( PLANE_AVERAGED, planeAveraged );
+	if ( !planeAveraged ){
+		QString planeStr = ui.planeLineEdit->text();
+		planeIndex = planeStr.toInt();
+	}
 }
 
 Preferences::~Preferences(){

@@ -34,7 +34,7 @@
 namespace casa {
 
 FeatherCurve::FeatherCurve(FeatherPlot* plot, QwtPlot::Axis xAxis,
-		QwtPlot::Axis yAxis){
+		QwtPlot::Axis yAxis, bool scaledCurve ){
 	plotCurve = new QwtPlotCurve();
 	plotCurve->setAxis( xAxis, yAxis );
 	plotCurve->attach( plot );
@@ -42,6 +42,7 @@ FeatherCurve::FeatherCurve(FeatherPlot* plot, QwtPlot::Axis xAxis,
 	scatterPlot = false;
 	scaleLogUV = false;
 	scaleLogAmplitude = false;
+	sumCurve = scaledCurve;
 }
 
 
@@ -60,14 +61,17 @@ void FeatherCurve::setTitle( const QString& title ){
 }
 
 bool FeatherCurve::isSumCurve() const {
-	bool sumCurve = false;
-	if ( getTitle().indexOf( "Sum") >= 0 ){
-		sumCurve = true;
-	}
 	return sumCurve;
 }
 
-
+bool FeatherCurve::isWeightCurve() const {
+	bool weightCurve = false;
+	QwtPlot::Axis verticalAxis = getVerticalAxis();
+	if ( verticalAxis == QwtPlot::yRight ){
+		weightCurve = true;
+	}
+	return weightCurve;
+}
 void FeatherCurve::setCurveSize( bool scatterPlot, bool diagonalLine,
 		int dotSize, int lineThickness ){
 	this->scatterPlot = scatterPlot;
@@ -102,7 +106,7 @@ std::pair<double,double> FeatherCurve::getBoundsX() const {
 		}
 	}
 	else {
-		if ( scaleLogAmplitude ){
+		if ( scaleLogAmplitude && !isSumCurve()){
 			minValue = logarithm( minValue );
 			maxValue = logarithm( maxValue );
 		}
@@ -129,15 +133,6 @@ QwtPlot::Axis FeatherCurve::getVerticalAxis() const {
 	return verticalAxis;
 }
 
-
-bool FeatherCurve::isWeightCurve() const {
-	bool weightCurve = false;
-	QwtPlot::Axis verticalAxis = getVerticalAxis();
-	if ( verticalAxis == QwtPlot::yRight ){
-		weightCurve = true;
-	}
-	return weightCurve;
-}
 
 QVector<double> FeatherCurve::getXValues() const{
 	return xValues;
@@ -179,9 +174,9 @@ void FeatherCurve::adjustData( bool uvLog, bool ampLog ){
 		if ( scaleLogAmplitude ){
 			if ( !isWeightCurve() && !isSumCurve()){
 				doLogs( scaledYValues, yValues.size() );
-			}
-			if ( scatterPlot ){
-				doLogs( scaledXValues, xValues.size() );
+				if ( scatterPlot ){
+					doLogs( scaledXValues, xValues.size() );
+				}
 			}
 		}
 
@@ -207,7 +202,8 @@ double FeatherCurve::logarithm( double value ) const {
 
 void FeatherCurve::doLogs( double* values, int count ) const {
 	for ( int i = 0; i < count; i++ ){
-		values[i] = logarithm( values[i]);
+		double original = values[i];
+		values[i] = logarithm( original );
 	}
 }
 

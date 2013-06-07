@@ -25,10 +25,11 @@
 //#
 //#
 //# $Id$
-#ifndef SYNTHESIS_STOKESIMAGEUTIL_H
-#define SYNTHESIS_STOKESIMAGEUTIL_H
+#ifndef SYNTHESIS_SPECTRALIMAGEUTIL_H
+#define SYNTHESIS_SPECTRALIMAGEUTIL_H
 
 #include <images/Images/ImageInterface.h>
+#include <images/Images/SubImage.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

@@ -45,16 +45,49 @@ public:
 	//Finally, we list items in the scatter plot
 	typedef enum CurveType {SUM_LOW_HIGH,  WEIGHT_LOW,
 	    	WEIGHT_HIGH, LOW_ORIGINAL, LOW_WEIGHTED, LOW_CONVOLVED_HIGH,
-	    	LOW_CONVOLVED_HIGH_WEIGHTED, LOW_CONVOLVED_DIRTY,
+	    	LOW_CONVOLVED_HIGH_WEIGHTED,LOW_CONVOLVED_DIRTY,
 	    	LOW_CONVOLVED_DIRTY_WEIGHTED, HIGH_ORIGINAL, HIGH_WEIGHTED,
 	    	HIGH_CONVOLVED_LOW, HIGH_CONVOLVED_LOW_WEIGHTED, DIRTY_ORIGINAL,
 	    	DIRTY_WEIGHTED, DIRTY_CONVOLVED_LOW, DIRTY_CONVOLVED_LOW_WEIGHTED,
 	    	//Items in slice plot not appearing in legend
 	    	ZOOM, DISH_DIAMETER,
-	    	//Scatter plot curves should follow SCATTER_LOW_HIGH in the listing
-	    	SCATTER_LOW_HIGH,X_Y,CURVES_END};
+	    	//Scatter plot curves
+	    	X_Y,CURVES_END};
+
+	static bool isSumCurve( CurveType curveType ){
+		bool sumCurve = false;
+		if (curveType == SUM_LOW_HIGH ){
+			sumCurve = true;
+		}
+		return sumCurve;
+	}
+
+	static bool isWeightCurve( CurveType curveType ) {
+		bool weightCurve = false;
+		if ( curveType == WEIGHT_LOW || curveType == WEIGHT_HIGH ){
+			weightCurve = true;
+		}
+		return weightCurve;
+	}
+
+	static bool isSliceCurve( CurveType curveType ){
+		bool sliceCurve = false;
+		if ( curveType == WEIGHT_LOW || curveType == WEIGHT_HIGH ||
+	    	curveType == LOW_ORIGINAL || curveType == LOW_WEIGHTED ||
+	    	curveType == HIGH_ORIGINAL || curveType==HIGH_WEIGHTED ||
+	    	curveType == HIGH_CONVOLVED_LOW || curveType ==HIGH_CONVOLVED_LOW_WEIGHTED ||
+	    	curveType == DIRTY_ORIGINAL || curveType ==DIRTY_WEIGHTED ||
+	    	curveType == DIRTY_CONVOLVED_LOW || curveType == DIRTY_CONVOLVED_LOW_WEIGHTED ||
+	    	curveType ==LOW_CONVOLVED_HIGH ||
+	    	curveType ==LOW_CONVOLVED_HIGH_WEIGHTED || curveType ==LOW_CONVOLVED_DIRTY ||
+	    	curveType ==LOW_CONVOLVED_DIRTY_WEIGHTED){
+			sliceCurve = true;
+		}
+		return sliceCurve;
+	}
 private:
 	FeatherCurveType();
+
 	virtual ~FeatherCurveType();
 };
 

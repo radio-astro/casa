@@ -23,40 +23,60 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef FEATHERPLOTWIDGETSLICE_H_
-#define FEATHERPLOTWIDGETSLICE_H_
 
-#include <guitools/Feather/FeatherPlotWidget.qo.h>
+#include "FeatheredData.h"
 
 namespace casa {
 
-/**
- * A specialization of FeatherPlotWidget for displaying line plots.
- */
+FeatheredData::FeatheredData() {
+	// TODO Auto-generated constructor stub
 
-class FeatherPlotWidgetSlice : public FeatherPlotWidget {
-public:
-	typedef FeatherCurveType::CurveType CurveType;
-	typedef FeatherDataType::DataType DataType;
-	FeatherPlotWidgetSlice(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent = 0);
-	virtual ~FeatherPlotWidgetSlice();
-	virtual void addZoomNeutralCurves();
+}
 
-protected:
-	virtual void resetColors();
-	virtual void addSumData();
-	virtual void zoomRectangleOther( double minX, double maxX, double minY, double maxY  );
-	virtual void zoom90Other( double dishPosition );
+void FeatheredData::setU( const Vector<Float>& xVal, const Vector<Float>& yVal ){
+	int xCount = xVal.size();
+	ux.resize( xCount );
+	for ( int i = 0; i < xCount; i++ ){
+		ux[i] = xVal[i];
+	}
+	int yCount = yVal.size();
+	uy.resize( yCount );
+	for ( int i = 0; i < yCount; i++ ){
+		uy[i] = yVal[i];
+	}
+}
 
-private:
-	void zoom90( double dishPosition,  CurveType cType, DataType dType );
-	void zoomRect( double minX, double maxX, CurveType cType, DataType dType );
-	void addSumData( bool logScale );
+void FeatheredData::setV( const Vector<Float>& xVal, const Vector<Float>& yVal ){
+	int xCount = xVal.size();
+	vx.resize( xCount );
+	for ( int i = 0; i < xCount; i++ ){
+		vx[i] = xVal[i];
+	}
+	int yCount = yVal.size();
+	vy.resize( yCount );
+	for ( int i = 0; i < yCount; i++ ){
+		vy[i] = yVal[i];
+	}
+}
 
-	void addDisplayedPlotCurve( FeatherCurveType::CurveType curveType,
-			FeatherDataType::DataType dataType );
+Vector<Float> FeatheredData::getUX() const {
+	return ux;
+}
 
-};
+Vector<Float> FeatheredData::getUY() const {
+	return uy;
+}
+
+Vector<Float> FeatheredData::getVX() const {
+	return vx;
+}
+
+Vector<Float> FeatheredData::getVY() const {
+	return vy;
+}
+
+FeatheredData::~FeatheredData() {
+	// TODO Auto-generated destructor stub
+}
 
 } /* namespace casa */
-#endif /* FEATHERPLOTWIDGETSLICE_H_ */
