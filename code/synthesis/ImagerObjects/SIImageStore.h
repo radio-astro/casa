@@ -52,18 +52,24 @@ class SIImageStore
   SIImageStore(String imagename, 
 	       CoordinateSystem &imcoordsys, 
 	       IPosition imshape);
+  // Contructor by image objects necessary for facetted imaging (subimages 
+  //can be passed in as residual and model etc). The caller has to make sure the 
+  //images are similar. 
+  SIImageStore(ImageInterface<Float>* modelim, ImageInterface<Float>* residim,
+	       ImageInterface<Float>* psfim, ImageInterface<Float>* weightim, ImageInterface<Float>* restoredim);
+    
 
-  ~SIImageStore();
+  virtual ~SIImageStore();
 
 
   IPosition getShape();
   String getName();
 
-  CountedPtr<PagedImage<Float> > psf();
-  CountedPtr<PagedImage<Float> > residual();
-  CountedPtr<PagedImage<Float> > weight();
-  CountedPtr<PagedImage<Float> > model();
-  CountedPtr<PagedImage<Float> > image();
+  CountedPtr<ImageInterface<Float> > psf();
+  CountedPtr<ImageInterface<Float> > residual();
+  CountedPtr<ImageInterface<Float> > weight();
+  CountedPtr<ImageInterface<Float> > model();
+  CountedPtr<ImageInterface<Float> > image();
 
   void setModelImage( String modelname );
 
@@ -92,7 +98,7 @@ protected:
 
   IPosition itsImageShape;
   String itsImageName;
-  CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
+  CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
   Bool itsWeightExists;
 
   Bool itsValidity;
