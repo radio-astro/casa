@@ -1,5 +1,5 @@
 //# SynthesisImager.h: Imager functionality sits here; 
-//# Copyright (C) 1996,1997,1998,1999,2000,2001,2002,2003
+//# Copyright (C) 2012-2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -34,7 +34,9 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-
+#include <synthesis/MSVis/ViFrequencySelection.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include<synthesis/ImagerObjects/SIMapperCollection.h>
 
 #include <boost/scoped_ptr.hpp>
@@ -54,7 +56,7 @@ class SynthesisImager
   // Default constructor
 
   SynthesisImager();
-  ~SynthesisImager();
+  virtual ~SynthesisImager();
 
   // Copy constructor and assignment operator
   //Imager(const Imager&);
@@ -62,7 +64,24 @@ class SynthesisImager
 
   // make all pure-inputs const
   void selectData(Record selpars);
+  virtual Bool selectData(const String& msname, const String& spw, const String& field, const String& taql,  const String& antenna,  const String& uvdist, const String& scan, const String& obs, const String& timestr, const Bool usescratch=False, const Bool readonly=False);
   void defineImage(Record impars);
+  virtual Bool defineImage(const String& imagename, const Int nx, const Int ny,
+			   const Quantity& cellx, const Quantity& celly,
+			   const String& stokes,
+			   const MDirection& phaseCenter, 
+			   const Int nchan,
+			   const Quantity& freqStart,
+			   const Quantity& freqStep, 
+			   const Vector<Quantity>& restFreq,
+			   const Int facets=1,
+			   const String& ftmachine="GridFT", 
+			   const Projection& projection=Projection::SIN,
+			   const Quantity& distance=Quantity(0,"m"),
+			   const MFrequency::Types& freqFrame=MFrequency::LSRK,
+			   const Bool trackSource=False, const MDirection& 
+			   trackDir=MDirection(Quantity(0.0, "deg"), 
+					       Quantity(90.0, "deg")));
   void setupImaging(Record gridpars);
 
   void initMapper();
@@ -81,15 +100,17 @@ protected:
 							  uInt imx, uInt imy,
 							  uInt npol, uInt nchan);
 
-  CountedPtr<FTMachine> createFTMachine();
-  CountedPtr<VisSet> createVisSet();
+  CoordinateSystem buildCoordSys(const MDirection& phasecenter, const Quantity& cellx, const Quantity& celly, const Int nx, const Int ny, const String& stokes, const Projection& projection, const Int nchan, const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq);
 
+  void createFTMachine(CountedPtr<FTMachine>& theFT, const String& ftname);
+  void createVisSet();
+  
   void runMajorCycle();
-
+  Vector<Int> decideNPolPlanes(const String& stokes);
+  void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine, Quantity distance=Quantity(0.0, "m"), Int facets=1);
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;
-  CountedPtr<VisSet> itsVisSet;
 
   CountedPtr<FTMachine> itsCurrentFTMachine;
   CountedPtr<CoordinateSystem> itsCurrentCoordSys;
@@ -102,9 +123,24 @@ protected:
   // Imaging/Gridding
 
   // Other Options
-  Bool itsUseScratch;
-
- 
+  Bool writeAccess_p;
+  Block<const MeasurementSet *> mss_p;
+  vi::FrequencySelections fselections_p;
+  CountedPtr<vi::VisibilityIterator2>  vi_p;
+  Int nx_p, ny_p, nstokes_p, nchan_p, facets_p;
+  Quantity cellx_p, celly_p, distance_p;
+  String stokes_p;
+  MDirection phasecenter_p;
+  Quantity freqStart_p, freqStep_p;
+  MFrequency::Types freqFrame_p;
+  MPosition mLocation_p;
+  Bool freqFrameValid_p;
+  Int wprojPlanes_p;
+  Bool useAutocorr_p;
+  Bool useDoublePrec_p;
+  Float padding_p;
+  Int cache_p, tile_p;
+  String gridFunction_p;
 };
 
 

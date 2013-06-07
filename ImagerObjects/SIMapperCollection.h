@@ -52,6 +52,7 @@ class SIMapperCollection
 		  CountedPtr<SIImageStore> imagestore,
 		  CountedPtr<FTMachine> ftmachine);
 
+  void addMapper(CountedPtr <SIMapperBase>& map);
   Int nMappers();
   Vector<String> getImageNames();
 

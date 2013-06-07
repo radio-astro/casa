@@ -57,8 +57,8 @@ using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
   
-  SIMapper::SIMapper( CountedPtr<SIImageStore> imagestore, 
-		      CountedPtr<FTMachine> ftmachine, 
+  SIMapper::SIMapper( CountedPtr<SIImageStore>& imagestore, 
+		      CountedPtr<FTMachine>& ftmachine, 
 		      Int mapperid) : SIMapperBase( imagestore, ftmachine, mapperid )
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );

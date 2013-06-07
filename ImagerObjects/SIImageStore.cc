@@ -272,15 +272,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return itsImageName;
   }
 
-  CountedPtr<PagedImage<Float> > SIImageStore::psf()
+  CountedPtr<ImageInterface<Float> > SIImageStore::psf()
   {
     return itsPsf;
   }
-  CountedPtr<PagedImage<Float> > SIImageStore::residual()
+  CountedPtr<ImageInterface<Float> > SIImageStore::residual()
   {
     return itsResidual;
   }
-  CountedPtr<PagedImage<Float> > SIImageStore::weight()
+  CountedPtr<ImageInterface<Float> > SIImageStore::weight()
   {
     if( itsWeight.null() )
       {
@@ -288,11 +288,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     return itsWeight;
   }
-  CountedPtr<PagedImage<Float> > SIImageStore::model()
+  CountedPtr<ImageInterface<Float> > SIImageStore::model()
   {
     return itsModel;
   }
-  CountedPtr<PagedImage<Float> > SIImageStore::image()
+  CountedPtr<ImageInterface<Float> > SIImageStore::image()
   {
     return itsImage;
   }
