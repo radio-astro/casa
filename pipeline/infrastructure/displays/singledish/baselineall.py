@@ -57,6 +57,7 @@ class SDBaselineAxesManager(object):
         else:
             width = 1.0 / float(self.nh) * 0.4
             height = 1.0 / float(self.nv) * 0.8
+            title_yposition = 0.95
             for i in xrange(self.npanel):
                 x = i % self.nh
                 y = self.nv - 1 - int(i / self.nh)
@@ -72,6 +73,11 @@ class SDBaselineAxesManager(object):
                     t.set_fontsize((self.ticksize-1))
                 pl.yticks(size=self.ticksize-1)
                 a0.yaxis.set_label_coords(-0.3,0.5)
+                a0.xaxis.set_label_text('(GHz)', size=(self.ticksize-1))
+                a0.xaxis.set_label_coords(-0.05,-0.07)
+                a0.title.set_y(title_yposition)
+                a0.title.set_size(self.ticksize)
+                
 
                 yield a0
                 
@@ -83,14 +89,10 @@ class SDBaselineAxesManager(object):
                     #newlabs.append(tt)
                     t.set_fontsize((self.ticksize-1))
                 a1.yaxis.set_major_locator(pl.NullLocator())
+                a1.title.set_y(title_yposition)
+                a1.title.set_size(self.ticksize)
 
                 yield a1
-
-                a2 = pl.axes([(x00-width/5.0), y0-0.125/float(self.nv), width/10.0, height/10.0])
-                a2.set_axis_off()
-                pl.text(0,0.5,' (GHz)', size=(self.ticksize-1) ,transform=a2.transAxes)
-
-                yield a2
 
 class SDBaselineAllDisplay(object):
     Inputs = SingleDishDisplayInputs
@@ -137,7 +139,7 @@ class SDBaselineAllDisplay(object):
             spw = b['spw']
             antennas = b['index']
             ### FOR TESTING
-            #antennas = antennas[:1]
+            antennas = antennas[:1]
             for ant in antennas:
                 scantable = self.context.observing_run[ant]
                 pre_baseline = scantable.name
@@ -237,6 +239,7 @@ class SDBaselineAllDisplay(object):
         axes_list = axes_manager.axes_list
 
         bgcolors = ['w' for i in xrange(nh*nv)]
+        title_position = (0.5,0.95)
         
         # Main loop to plot all spectra (raw + reduced)
         counter = 0
@@ -274,7 +277,8 @@ class SDBaselineAllDisplay(object):
     
             if nh == 1 and nv == 1:
                 pl.gcf().sca(axes_list[0])
-                pl.title('%s\nRaw and Fit data : row = %d' % (AddTitle, row), size=10, color=TitleColor)
+                axes_list[0].title.set_text('%s\nRaw and Fit data : row = %d' % (AddTitle, row))
+                axes_list[0].title.set_color(TitleColor)
                 plot_objects.extend(
                     pl.plot(Abcissa, SpIn, color='b', linestyle='-', linewidth=0.2)
                     )
@@ -296,7 +300,8 @@ class SDBaselineAllDisplay(object):
                 #pl.figtext(0.05, 0.015, statistics, size=10)
 
                 pl.gcf().sca(axes_list[1])
-                pl.title('%s\nReduced data : row = %d' % (AddTitle, row), size=10, color=TitleColor)
+                axes_list[1].title.set_text('%s\nReduced data : row = %d' % (AddTitle, row))
+                axes_list[1].title.set_color(TitleColor)
                 plot_objects.extend(
                     pl.plot(Abcissa, SpOut, color='b', linestyle='-', linewidth=0.2)
                     )
@@ -309,22 +314,20 @@ class SDBaselineAllDisplay(object):
                         )
                 pl.axis([Xrange[0], Xrange[1], Yrange[0], Yrange[1]])
             else:
-                pindex = index % NSpFit
-                baseid = 3 * pindex
-
                 # Axes objects
-                a0 = axes_list[baseid]
-                a1 = axes_list[baseid+1]
+                a0 = axes_list[2*counter]
+                a1 = axes_list[2*counter+1]
 
                 # Change background color if necessary
-                if bgcolors[pindex] != BackgroundColor:
+                if bgcolors[counter] != BackgroundColor:
                     a0.set_axis_bgcolor(BackgroundColor)
                     a1.set_axis_bgcolor(BackgroundColor)
-                    bgcolors[pindex] = BackgroundColor
+                    bgcolors[counter] = BackgroundColor
                 
                 # Plot spectrum before baseline fit + fitted result
                 pl.gcf().sca(a0)
-                pl.title('Fit: row = %d' % row, size=TickSize, color=TitleColor)
+                a0.title.set_text('Fit: row = %d' % row)
+                a0.title.set_color(TitleColor)
                 plot_objects.extend(
                     pl.plot(Abcissa, SpIn, color='b', linestyle='-', linewidth=0.2)
                     )
@@ -342,8 +345,11 @@ class SDBaselineAllDisplay(object):
 
                 # Plot spectrum after baseline
                 pl.gcf().sca(a1)
-                if type(NoChange) == int: pl.title(AddTitle, size=TickSize, color=TitleColor)
-                else: pl.title('Reduced: row = %d' % row, size=TickSize, color=TitleColor)
+                if type(NoChange) == int:
+                    a1.title.set_text(AddTitle)
+                else:
+                    a1.title.set_text('Reduced: row = %d' % row)
+                a1.title.set_color(TitleColor)
                 plot_objects.extend(
                     pl.plot(Abcissa, SpOut, color='b', linestyle='-', linewidth=0.2)
                     )
@@ -359,7 +365,7 @@ class SDBaselineAllDisplay(object):
             counter += 1
             if counter == NSpFit or idx == index_list[-1]:
                 if counter < NSpFit:
-                    for ipanel in xrange(counter*3, NSpFit*3):
+                    for ipanel in xrange(counter*2, NSpFit*2):
                         axes_list[ipanel].clear()
                         axes_list[ipanel].set_axis_off()
                 plotfile = os.path.join(self.stage_dir,'baseline_ant%s_spw%s_%s.png'%(ant,spw,Npanel))
@@ -367,12 +373,16 @@ class SDBaselineAllDisplay(object):
 
                 if ShowPlot:
                     pl.draw()
-                    
+
+                # clear plot objects
                 pl.savefig(plotfile, format='png', dpi=DPIDetail)
                 for obj in plot_objects:
                     obj.remove()
                 plot_objects = []
+
+                # increment panel id
                 Npanel += 1
+                
                 parameters = {'intent': 'TARGET',
                               'spw': spw,
                               'pol': [0,1],
