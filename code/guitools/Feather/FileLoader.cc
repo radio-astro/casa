@@ -69,9 +69,9 @@ FileLoader::FileLoader(QWidget *parent)
 	ui.dirtyImageLineEdit->setText("/home/uniblab/casa/trunk/test/orion_vlamem.im2");
 */
 	//Multiplane images for testing
-	ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/featherMultiPlane/n4826_bima.im" );
+	/*ui.lowResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/featherMultiPlane/n4826_bima.im" );
 	ui.highResolutionLineEdit->setText("/home/uniblab/casa/trunk/test/featherMultiPlane/n4826_t12m_regrid.im");
-	ui.saveOutputCheckBox->setChecked( false );
+	ui.saveOutputCheckBox->setChecked( false );*/
 
 
 }
