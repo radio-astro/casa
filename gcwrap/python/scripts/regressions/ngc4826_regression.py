@@ -331,11 +331,11 @@ ms.open('src.split.ms')
 thistest_src_22apr=pl.mean(ms.range(["amplitude"]).get("amplitude"))
 ms.close
 ia.open('tgcal.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 im_calmax22=statistics['max'][0]
 ia.close()
 ia.open('tmosaicb.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 im_srcmax22=statistics['max'][0]
 
 # 16 APR
@@ -346,11 +346,11 @@ ms.open('srca.split.ms')
 thistest_src_16apr=pl.mean(ms.range(["amplitude"]).get("amplitude"))
 ms.close
 ia.open('tgcala.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 ia.close()
 im_calmax16=statistics['max'][0]
 ia.open('tmosaica.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 ia.close()
 im_srcmax16=statistics['max'][0]
 
@@ -359,7 +359,7 @@ ms.open('n4826_tboth.ms')
 thistest_src=pl.mean(ms.range(["amplitude"]).get("amplitude"))
 ms.close()
 ia.open('n4826_tmom0.im')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 ia.close()
 thistest_immax=statistics['max'][0]
 thistest_imrms=statistics['rms'][0]

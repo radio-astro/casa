@@ -1289,7 +1289,7 @@ ms.close()
 print ''
 # Pull the max and rms from the clean image
 ia.open(clnimage)
-on_statistics=ia.statistics()
+on_statistics=ia.statistics(list=True, verbose=True)
 thistest_immax=on_statistics['max'][0]
 oldtest_immax = 1.07732224464
 print ' Clean image ON-SRC max should be ',oldtest_immax
@@ -1300,7 +1300,7 @@ print ' Difference (fractional) = ',diff_immax
 print ''
 # Now do stats in the lower right corner of the image
 box = ia.setboxregion([0.75,0.00],[1.00,0.25],frac=true)
-off_statistics=ia.statistics(region=box)
+off_statistics=ia.statistics(region=box, list=True, verbose=True)
 thistest_imrms=off_statistics['rms'][0]
 oldtest_imrms = 0.0010449
 print ' Clean image OFF-SRC rms should be ',oldtest_imrms

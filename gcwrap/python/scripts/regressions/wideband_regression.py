@@ -150,7 +150,7 @@ else:
    # Residual rms noise and sum-sq (total power)
    if(os.path.exists('reg_3C286.residual.tt0')):
       ia.open('reg_3C286.residual.tt0');
-      stats = ia.statistics();
+      stats = ia.statistics(list=True, verbose=True);
       ia.close();
       diff_sigma = abs( (stats['sigma'][0]) - correct_sigma )/correct_sigma;
       diff_sumsq = abs( (stats['sumsq'][0]) - correct_sumsq )/correct_sumsq;

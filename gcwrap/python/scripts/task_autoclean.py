@@ -163,7 +163,7 @@ def autoclean(vis, imagename, field, spw, selectdata, timerange, uvrange,
             if (eps_maxres) or (allow_maxres_inc >= 0):
                 residualImage = thisImage+'.residual'
                 ia.open(residualImage)
-                stats = ia.statistics(list=False)
+                stats = ia.statistics(list=False, verbose=True)
                 ia.close()
                 if(useabsresid):
                     post_max = max([ stats['max'][0], abs(stats['min'][0]) ])
@@ -215,10 +215,10 @@ def autowindow(imagename='', island_rms=0, gain_threshold=0, peak_rms=0, Nrms=0,
     # what is the rms of the residual image outside the current clean regions?
     # option: could modify this to get rms by iterative sigma clipping
     ia.open(residualImage)
-    rms = ia.statistics(mask=maskImage+'==0',list=False)['rms'][0]
-    max_residual = ia.statistics(list=False)['max'][0]
+    rms = ia.statistics(mask=maskImage+'==0',list=False, verbose=True)['rms'][0]
+    max_residual = ia.statistics(list=False, verbose=True)['max'][0]
     if(useabsresid):
-        min_residual = ia.statistics(list=False)['min'][0]
+        min_residual = ia.statistics(list=False, verbose=True)['min'][0]
         if abs(min_residual) > max_residual:
             max_residual = abs(min_residual)
     ia.close()

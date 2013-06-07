@@ -46,7 +46,7 @@ class simobserve_unittest_base(unittest.TestCase):
     def _get_imstats(self, name):
             self._check_file(name)
             ia.open(name)
-            stats = ia.statistics()
+            stats = ia.statistics(list=True, verbose=True)
             ia.close()
             return stats
 

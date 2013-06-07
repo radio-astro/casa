@@ -131,7 +131,7 @@ class pimager():
             for k in range(1, len(inimages)) :
                 ia.calc('"'+outimage+'" +  "'+inimages[k]+'"*"'+wgtimages[k]+'"')
                 ib.calc('"'+'__sumweight_image' + '" +  "'+wgtimages[k]+'"')
-            maxW=ib.statistics()['max'][0]
+            maxW=ib.statistics(list=True, verbose=True)['max'][0]
             ib.done()
             condition = '"__sumweight_image"' + " > " + str(maxW*pblimit);
             val1 = '"' + outimage + '"/"__sumweight_image"';

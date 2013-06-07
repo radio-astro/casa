@@ -17,7 +17,7 @@ def automask(image='', maskimage='', twopass=True):
     """
 #    print '2pass ', twopass
     iaim.open(image)
-    stat=iaim.statistics()
+    stat=iaim.statistics(list=True, verbose=True)
     csys=iaim.coordsys()
     rb=iaim.restoringbeam()
     numpix=10
@@ -82,7 +82,7 @@ def automask(image='', maskimage='', twopass=True):
 
 def automask2(image='', maskimage=''):
     iaim.open(image)
-    stat=iaim.statistics()
+    stat=iaim.statistics(list=True, verbose=True)
     thresh=stat['rms'][0]*3.0
     fac=stat['max'][0]/thresh
     ret=iaim.decompose(threshold=stat['rms'][0]*4.0, ncontour=3, fit=False)
@@ -105,7 +105,7 @@ def automask2(image='', maskimage=''):
         arr[ret['blc'][j,0]:ret['trc'][j,0], ret['blc'][j,1]:ret['trc'][j,1], 0, cubeblc:cubetrc]=ret['components'][j,0]
     iamask.putchunk(arr)
     ib=iamask.convolve2d(outfile='masky', major='10pix', minor='10pix', overwrite=True)
-    rej=ib.statistics()['max'][0]
+    rej=ib.statistics(list=True, verbose=True)['max'][0]
     rej=rej/fac
     ib.calc(pixels='iif("'+'masky'+'" > '+str(rej)+', 1.0, 0.0)')
     ib.done()

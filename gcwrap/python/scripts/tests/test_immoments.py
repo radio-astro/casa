@@ -958,7 +958,7 @@ class immoment_test2(unittest.TestCase):
         immath( outfile=difference, expr='"' + got + '"-"' + expected + '"' )
         myia = iatool()
         myia.open(difference)
-        stats = myia.statistics()
+        stats = myia.statistics(list=True, verbose=True)
         myia.close()
         casalog.post("moment 1 difference image stats " + str(stats))
         if (stats['sumsq'][0] != 0):
@@ -1074,7 +1074,7 @@ class immoment_test2(unittest.TestCase):
             ia.done()
             ia.fromshape( 'test.image', shape=[800,800,1,18], csys=csys.torecord(), overwrite=True, log=True )
             ia.addnoise()
-            stats=ia.statistics()
+            stats=ia.statistics(list=True, verbose=True)
             ia.done()
             # pick a place that is slightly bigger then the mid value
             # range for doing the mask, just for fun.

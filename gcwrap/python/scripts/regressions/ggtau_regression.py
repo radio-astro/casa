@@ -376,7 +376,7 @@ ms.selectchannel(1,0,240,1);  # average in channel (excluding edge channels)
 thistest_co=max(ms.range(["amplitude"]).get('amplitude'))
 ms.close()
 ia.open(infile='ggtau.3mm.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 thistest_immax=statistics['max'][0]
 thistest_imrms=statistics['rms'][0]
 

@@ -208,7 +208,7 @@ for k, fn in (('Feather 1',           'orion_tfeather.im'),
 	      ('SD Model (MEM)',      'orion_tsdmem.image'),
 	      ('Joint Deconvolution', 'orion_tjoint3.image')):
 	if ia.open(fn):
-		test_results[k] = ia.statistics()
+		test_results[k] = ia.statistics(list=True, verbose=True)
 		ia.close()
 	else:
 		print >>logfile, "Could not open", fn, "for reading!"

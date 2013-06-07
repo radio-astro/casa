@@ -8745,7 +8745,7 @@ ia.close()
   
      <param type="bool"  name="list">
      <description>If True print bounding box and statistics to logger.</description>
-     <value>true</value>
+     <value>false</value>
      </param>
   
      <param type="bool"  name="force">
@@ -8765,7 +8765,7 @@ ia.close()
   
      <param type="bool"  name="verbose">
      <description>If T then log statistics</description>
-     <value>true</value>
+     <value>false</value>
      </param>
   
      <param type="bool"  name="async">

@@ -1016,7 +1016,7 @@ thistest_immax=0.0
 thistest_imrms=0.0
 if doimage:
     ia.open(infile=mom0alloutfile)
-    statistics=ia.statistics()
+    statistics=ia.statistics(list=True, verbose=True)
     thistest_immax=statistics['max'][0]
     thistest_imrms=statistics['rms'][0]
     ia.close()

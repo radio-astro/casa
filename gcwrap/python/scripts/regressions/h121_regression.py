@@ -342,22 +342,22 @@ ms.open('h121b.3mm.split.ms')
 thistest_3mmb=max(ms.range(['amplitude']).get('amplitude'))
 ms.close()
 ia.open('h121.co10.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 co10a=statistics['max'][0]
 co10arms=statistics['rms'][0]
 ia.close()
 ia.open('h121b.co10.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 co10b=statistics['max'][0]
 co10brms=statistics['rms'][0]
 ia.close()
 ia.open('h121c.co10.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 co10c=statistics['max'][0]
 co10crms=statistics['rms'][0]
 ia.close()
 ia.open('h121all.3mm.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 cont3mmmax=statistics['max'][0]
 cont3mmrms=statistics['rms'][0]
 ia.close()

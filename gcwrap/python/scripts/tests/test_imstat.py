@@ -285,13 +285,13 @@ class imstat_test(unittest.TestCase):
             _myia = iatool()
             _myia.open(image)
             stats = _myia.statistics(
-                axes=axes, logfile=logfile, append=append
+                axes=axes, logfile=logfile, append=append, list=True, verbose=True
             )
             _myia.done()
             return stats
         
         def test_imstat(image, axes, logfile, append):
-            return imstat(image, axes=axes, logfile=logfile, append=append)
+            return imstat(image, axes=axes, logfile=logfile, append=append, verbose=True)
             
         logfile = "imstat.log"
         i = 1

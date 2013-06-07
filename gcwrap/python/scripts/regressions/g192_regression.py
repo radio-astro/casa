@@ -111,7 +111,7 @@ print '--Contsub (image plane)--'
 ia.open(infile='g192_a2.image')
 myim=ia.continuumsub(outline='g192.line.im',outcont='g192.cont.im',
 		     channels=range(0,1),fitorder=0)
-x=myim.statistics(list=False)
+x=myim.statistics(list=False, verbose=True)
 thistest_con=x['rms'][0]
 ia.close()
 myim.close()
@@ -137,7 +137,7 @@ ms.close()
 ia.open('g192_a2.image')
 # ia.statistics returns dictionary with 'return','statsout'
 # get the second value in the dictionary (statsout)
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 ia.close()
 # note thistest_immax will be a list with one value 
 thistest_immax=statistics['max']

@@ -99,7 +99,7 @@ prev_max=25.577
 prev_rms=1.0136
 
 ia.open('sdregress_FLS3a_HI.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 maxl = statistics['max'][0]
 rmsl = statistics['rms'][0]
 ia.close()

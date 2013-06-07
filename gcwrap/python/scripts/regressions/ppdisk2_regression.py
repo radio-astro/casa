@@ -93,7 +93,7 @@ endProc = time.clock()
 test_name_ppd = """simdata observation of Wolf & D'Angelo's protoplanetary disk"""
 
 ppdso_im=ia.open(project+"/"+project + '.alma.out20.noisy.image')
-ppdso_stats=ia.statistics()
+ppdso_stats=ia.statistics(list=True, verbose=True)
 ia.close()
 
 refstats = { 'flux': 0.0359,
