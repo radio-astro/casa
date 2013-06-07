@@ -142,7 +142,7 @@ class SDBaselineAllDisplay(object):
             spw = b['spw']
             antennas = b['index']
             ### FOR TESTING
-            antennas = antennas[:1]
+            #antennas = antennas[:1]
             for ant in antennas:
                 scantable = self.context.observing_run[ant]
                 pre_baseline = scantable.name
