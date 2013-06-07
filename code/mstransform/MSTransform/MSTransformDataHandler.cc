@@ -978,6 +978,9 @@ void MSTransformDataHandler::setup()
 		regridSpwSubTable();
 	}
 
+	// Drop channels with non-uniform width when doing channel average
+	if (channelAverage_p) dropNonUniformWidthChannels();
+
 	// Determine weight and sigma factors
 	getOutputNumberOfChannels();
 	calculateWeightAndSigmaFactors();
@@ -1985,6 +1988,73 @@ void MSTransformDataHandler::getInputNumberOfChannels()
 // -----------------------------------------------------------------------
 //
 // -----------------------------------------------------------------------
+void MSTransformDataHandler::dropNonUniformWidthChannels()
+{
+	// Access spectral window sub-table
+	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
+	uInt nInputSpws = spwTable.nrow();
+	MSSpWindowColumns spwCols(spwTable);
+    ArrayColumn<Double> chanFreqCol = spwCols.chanFreq();
+    ArrayColumn<Double> chanWidthCol = spwCols.chanWidth();
+    ArrayColumn<Double> effectiveBWCol = spwCols.effectiveBW();
+    ArrayColumn<Double> resolutionCol = spwCols.resolution();
+    ScalarColumn<Int> numChanCol = spwCols.numChan();
+    ScalarColumn<Double> totalBandwidthCol = spwCols.totalBandwidth();
+
+	uInt nChans;
+	for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
+	{
+		nChans = numChanCol(spw_idx);
+		Vector<Double> widthVector = chanWidthCol(spw_idx);
+
+		if (widthVector(nChans-1) < widthVector(0))
+		{
+			logger_p 	<< LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+						<< "Not enough channels to populate last averaged channel from SPW " << spw_idx
+						<< " with an uniform width of " << widthVector(0) << " Hz" << endl
+						<< "The resulting channel would have width of only " << widthVector(nChans-1) << " Hz." << endl
+						<< "The channel will be dropped in order to have an uniform grid."
+						<< LogIO::POST;
+
+			// Number of channels is reduced in 1
+			numChanCol.put(spw_idx, nChans-1);
+
+			// Total BW has to be reduced to account for the dropped channel
+			totalBandwidthCol.put(spw_idx, totalBandwidthCol(spw_idx)-widthVector(nChans-1));
+
+			// We have to drop the last element from width
+			widthVector.resize(nChans-1,True);
+			chanWidthCol.put(spw_idx, widthVector);
+
+			// We have to drop the last element from effective BW
+			// NOTE: Effective BW is not always equal to width
+			Vector<Double> effectiveBWVector = effectiveBWCol(spw_idx);
+			effectiveBWVector.resize(nChans-1,True);
+			effectiveBWCol.put(spw_idx, effectiveBWVector);
+
+			// We have to drop the last element from resolution
+			// NOTE: Resolution is not always equal to width
+			Vector<Double> resolutionVector = resolutionCol(spw_idx);
+			resolutionVector.resize(nChans-1,True);
+			resolutionCol.put(spw_idx, resolutionVector);
+
+			// We have to drop the last element from channel Frequency
+			Vector<Double> frequencyVector = chanFreqCol(spw_idx);
+			frequencyVector.resize(nChans-1,True);
+			chanFreqCol.put(spw_idx, frequencyVector);
+		}
+	}
+
+	// Flush changes
+	outputMs_p->flush(True);
+
+	return;
+}
+
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
 void MSTransformDataHandler::getOutputNumberOfChannels()
 {
 	if (combinespws_p)
@@ -2437,7 +2507,7 @@ void MSTransformDataHandler::generateIterator()
 
 	if (timeAverage_p)
 	{
-		vi::AveragingParameters parameters (timeBin_p, timeBin_p, vi::SortColumns (sortColumns_p,false));
+		vi::AveragingParameters parameters (timeBin_p, DBL_MAX, vi::SortColumns (sortColumns_p,false));
 		visibilityIterator_p = new vi::VisibilityIterator2 (vi::AveragingVi2Factory (parameters, selectedInputMs_p));
 		visibilityIterator_p->setWeightScaling (vi::WeightScaling::generateUnityWeightScaling());
 	}
@@ -4029,11 +4099,13 @@ template <class T> void MSTransformDataHandler::average(	Int inputSpw,
 		outChanIndex += 1;
 	}
 
+	/*
 	if (tail)
 	{
 		averageKernel(	inputDataStripe,inputFlagsStripe,inputWeightsStripe,
 						outputDataStripe,outputFlagsStripe,startChan,outChanIndex,tail);
 	}
+	*/
 
 	return;
 }

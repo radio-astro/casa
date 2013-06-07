@@ -558,30 +558,25 @@ class split_test_cav5(SplitChecker):
 
     def test_sts(self):
         """Subtables, chan avg. without correlation selection"""
-        self.check_subtables('', [(2, 3)])
+        self.check_subtables('', [(2, 2)])
         #self.__class__.n_tests_passed += 1
 
     def test_sts_ll(self):
         """Subtables, chan avg. LL"""
-        self.check_subtables('ll', [(1, 3)])
+        self.check_subtables('ll', [(1, 2)])
         #self.__class__.n_tests_passed += 1
 
     def test_data(self):
         """DATA[2],   chan avg. without correlation selection"""
         check_eq(self.records['']['data'],
-                 numpy.array([[17.13964462-42.20331192j, 26.04414749-49.97922897j,
-                               20.67210388-52.81464005j],
-                              [ 5.80819368-43.6548233j,   6.72127867-44.33802414j,
-                               10.60328102-11.62711906j]]),
-                 0.0005)
+                 numpy.array([[17.13964462-42.20331192j, 26.04414749-49.97922897j],
+                              [ 5.80819368-43.6548233j,   6.72127867-44.33802414j]]),0.0005)
         #self.__class__.n_tests_passed += 1
         
     def test_data_ll(self):
         """DATA[2],   chan avg. LL"""
         check_eq(self.records['ll']['data'],
-                 numpy.array([[ 5.80819368-43.6548233j,  6.72127867-44.33802414j,
-                               10.60328102-11.62711906j]]),
-                 0.0001)
+                 numpy.array([[ 5.80819368-43.6548233j,  6.72127867-44.33802414j]]),0.0001)
 
     def test_wt(self):
         """WEIGHT[5], chan avg. without correlation selection"""
@@ -600,12 +595,12 @@ class split_test_cav5(SplitChecker):
     def test_sigma(self):
         """SIGMA[7], chan avg. without correlation selection"""
         check_eq(self.records['']['sigma'],
-                 numpy.array([0.5, 0.5]), 0.0001)
+                 numpy.array([0.4082, 0.4082]), 0.0001)
         
     def test_sigma_ll(self):
         """SIGMA[7], chan avg. LL"""
         check_eq(self.records['ll']['sigma'],
-                 numpy.array([0.5]), 0.0001)
+                 numpy.array([0.4082]), 0.0001)
         #self.__class__.n_tests_passed += 1
 
 class split_test_cdsp(SplitChecker):
@@ -1288,7 +1283,7 @@ class split_test_sw_and_fc(SplitChecker):
 
     def test_nchan_wavg(self):
         """# of channels after averaging, but no selection."""
-        check_eq(self.records[('1', '3')]['nchan'], 43)
+        check_eq(self.records[('1', '3')]['nchan'], 42)
 
     def test_rf_wavg(self):
         """REF_FREQUENCY after averaging, but no selection."""
@@ -1312,8 +1307,7 @@ class split_test_sw_and_fc(SplitChecker):
                               39186.1563017,  39186.1563017, 39186.15630552,
                               39186.1563017,  39186.1562979, 39186.15630552,
                               39186.1563017,  39186.1563055, 39186.15629789,
-                              39186.1563017,  39186.1563055, 39186.15629789,
-                              14771.10564634]), 1e-4)
+                              39186.1563017,  39186.1563055, 39186.15629789]), 1e-4)
 
     def test_cf0_wavg(self):
         """CHAN_FREQ[0] after averaging, but no selection."""
@@ -1325,7 +1319,7 @@ class split_test_sw_and_fc(SplitChecker):
 
     def test_cflc_wavg(self):
         """CHAN_FREQ[-1] after averaging, but no selection."""
-        check_eq(self.records[('1', '3')]['cflc'], 22143138996.696575, 1e-4)
+        check_eq(self.records[('1', '3')]['cflc'], 22143114581.64592, 1e-4)
 
     def test_cw_wavg(self):
         """CHAN_WIDTH after averaging, but no selection."""
@@ -1345,8 +1339,7 @@ class split_test_sw_and_fc(SplitChecker):
                               36622.57598292, 36622.57598292, 36622.57598673,
                               36622.57598292, 36622.5759791,  36622.57598673,
                               36622.57598292, 36622.57598673, 36622.5759791,
-                              36622.57598292, 36622.57598673, 36622.5759791,
-                              12207.52532755]), 1e-3)
+                              36622.57598292, 36622.57598673, 36622.5759791]), 1e-3)
 
     def test_eb_wavg(self):
         """EFFECTIVE_BW after averaging, but no selection."""
@@ -1366,13 +1359,12 @@ class split_test_sw_and_fc(SplitChecker):
                               39186.1563017,  39186.1563017,  39186.15630552,
                               39186.1563017,  39186.15629789, 39186.15630552,
                               39186.1563017,  39186.15630552, 39186.15629789,
-                              39186.1563017,  39186.15630552, 39186.15629789,
-                              14771.10564634]), 1e-3)
+                              39186.1563017,  39186.15630552, 39186.15629789]), 1e-3)
 
     def test_tb_wavg(self):
-        """Is TOTAL_BANDWIDTH conserved after averaging, but no selection?"""
+        """Is TOTAL_BANDWIDTH reduced after averaging (last channel dropped), but no selection?"""
         # The expected value comes from spw 1 of inpms.
-        check_eq(self.records[('1', '3')]['tb'], 1550355.7165990437, 0.1)
+        check_eq(self.records[('1', '3')]['tb'], 1538148.1912714909, 0.1)
 
     def test_fc_wavg(self):
         """Updating of FLAG_CMD after averaging, but simple selection."""

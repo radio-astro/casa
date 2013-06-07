@@ -407,7 +407,7 @@ class test_FreqAvg(test_base):
         mstransform(vis=self.vis, outputvis=outputms, spw='2', chanaverage=True, chanbin=20)
                             
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verifyMS(outputms, 1, 7, 0)
+        ret = th.verifyMS(outputms, 1, 6, 0)
         self.assertTrue(ret[0],ret[1])        
         
     def test_freqavg2(self):
@@ -416,7 +416,7 @@ class test_FreqAvg(test_base):
         mstransform(vis=self.vis, outputvis=outputms, spw='2:10~20', chanaverage=True, chanbin=2)
                             
         self.assertTrue(os.path.exists(outputms))
-        ret = th.verifyMS(outputms, 1, 6, 0)
+        ret = th.verifyMS(outputms, 1, 5, 0)
         self.assertTrue(ret[0],ret[1])        
         
     def test_freqavg3(self):
@@ -444,7 +444,7 @@ class test_FreqAvg(test_base):
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 3, 32, 1, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
-        ret = th.verifyMS(outputms, 3, 13, 2, ignoreflags=True)
+        ret = th.verifyMS(outputms, 3, 12, 2, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
 
     def test_freqavg5(self):
@@ -483,7 +483,7 @@ class test_FreqAvg(test_base):
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 3, 32, 1, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
-        ret = th.verifyMS(outputms, 3, 13, 2, ignoreflags=True)
+        ret = th.verifyMS(outputms, 3, 12, 2, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
 
     def test_freqavg8(self):
@@ -503,7 +503,7 @@ class test_FreqAvg(test_base):
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 3, 32, 1, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
-        ret = th.verifyMS(outputms, 3, 13, 2, ignoreflags=True)
+        ret = th.verifyMS(outputms, 3, 12, 2, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
 
     def test_freqavg9(self):

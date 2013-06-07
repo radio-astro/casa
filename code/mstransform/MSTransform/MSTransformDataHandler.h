@@ -286,6 +286,9 @@ protected:
 	void reindexFreqOffsetSubTable();
 	void separateSpwSubtable();
 
+	// Drop channels with non-uniform width when doing channel average
+	void dropNonUniformWidthChannels();
+
 	// From output MS
 	void getOutputNumberOfChannels();
 
