@@ -310,6 +310,7 @@ class ValidateLineRaster(object):
             #LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, RealSignal[row][2]))
             LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, signal))
             if tMASKLIST == signal:
+                #LOG.debug('No update on row %s: iter is %s'%(row,ITER))
                 #if type(tNOCHANGE) != int:
                 if tNOCHANGE < 0:
                     # 2013/05/17 TN
@@ -317,16 +318,21 @@ class ValidateLineRaster(object):
                     # counter is incremented *after* baseline subtraction
                     # in refactorred code.
                     #self.datatable.tb2.putcell('NOCHANGE',row,ITER - 1)
-                    self.datatable.tb2.putcell('NOCHANGE', row, ITER)
+                    #self.datatable.tb2.putcell('NOCHANGE', row, ITER)
+                    self.datatable.putcell('NOCHANGE', row, ITER)
             else:
                 #self.datatable.putcell('NOCHANGE',row,False)
                 #self.datatable.tb2.putcell('MASKLIST',row,numpy.array(RealSignal[row][2]))
-                self.datatable.tb2.putcell('MASKLIST',row,numpy.array(signal))
-                self.datatable.tb2.putcell('NOCHANGE',row,-1)
+                #LOG.debug('Updating row %s: signal=%s (type=%s, %s)'%(row,list(signal),type(signal),type(signal[0])))
+                #self.datatable.tb2.putcell('MASKLIST',row,numpy.array(signal))
+                #self.datatable.tb2.putcell('MASKLIST',row,signal)
+                self.datatable.putcell('MASKLIST',row,signal)
+                #self.datatable.tb2.putcell('NOCHANGE',row,-1)
+                self.datatable.putcell('NOCHANGE',row,-1)
         del GridCluster, RealSignal
         ProcEndTime = time.time()
         LOG.info('Clustering: Merging End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
-
+        
         return Lines, self.cluster_info
 
     def clustering_analysis(self, Region, Region2, Nsigma):
