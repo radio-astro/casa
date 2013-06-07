@@ -38,9 +38,11 @@ class SDBaselineAxesManager(object):
         return self._axes
 
     def _axes_list(self):
+        title_yposition = 0.95
         if self.nv == 1 and self.nh == 1:
             pl.subplots_adjust(hspace=0.3)
             a0 = pl.subplot(121)
+            a0.title.set_y(title_yposition)
             pl.xlabel('Channel', size=10)
             #pl.ylabel('Flux Density', size=10)
             pl.ylabel('Intensity (K)', size=10)
@@ -48,6 +50,7 @@ class SDBaselineAxesManager(object):
             yield a0
 
             a1 = pl.subplot(122)
+            a1.title.set_y(title_yposition)
             pl.xlabel('Channel', size=10)
             #pl.ylabel('Flux Density', size=10)
             pl.ylabel('Intensity (arbitrary)', size=10)
@@ -55,44 +58,44 @@ class SDBaselineAxesManager(object):
             yield a1
 
         else:
+            nhinv = 1.0 / float(self.nh)
+            nvinv = 1.0 / float(self.nv)
             width = 1.0 / float(self.nh) * 0.4
             height = 1.0 / float(self.nv) * 0.8
-            title_yposition = 0.95
-            for i in xrange(self.npanel):
-                x = i % self.nh
-                y = self.nv - 1 - int(i / self.nh)
-                x00 = 1.0 / float(self.nh) * (x + 0.1 + 0.05)
-                x10 = 1.0 / float(self.nh) * (x + 0.5 + 0.05)
-                y0 = 1.0 / float(self.nv) * (y + 0.1)
-                a0 = pl.axes([x00, y0, width, height])
-                pl.ylabel('Intensity (arbitrary)', size=self.ticksize)
-                a0.xaxis.set_major_formatter(self.formatter)
-                a0.xaxis.set_major_locator(self.locator)
-                #pl.xticks(size=self.ticksize)
-                for t in a0.get_xticklabels():
-                    t.set_fontsize((self.ticksize-1))
-                pl.yticks(size=self.ticksize-1)
-                a0.yaxis.set_label_coords(-0.3,0.5)
-                a0.xaxis.set_label_text('(GHz)', size=(self.ticksize-1))
-                a0.xaxis.set_label_coords(-0.05,-0.07)
-                a0.title.set_y(title_yposition)
-                a0.title.set_size(self.ticksize)
-                
+            for y in xrange(self.nv-1,-1,-1):
+                bottom = nvinv * (y + 0.1)
+                for x in xrange(self.nh):
+                    left0 = nhinv * (x + 0.1 + 0.05)
+                    left1 = nhinv * (x + 0.5 + 0.05)
+                    a0 = pl.axes([left0, bottom, width, height])
+                    pl.ylabel('Intensity (arbitrary)', size=self.ticksize)
+                    a0.xaxis.set_major_formatter(self.formatter)
+                    a0.xaxis.set_major_locator(self.locator)
+                    #pl.xticks(size=self.ticksize)
+                    for t in a0.get_xticklabels():
+                        t.set_fontsize((self.ticksize-1))
+                    pl.yticks(size=self.ticksize-1)
+                    a0.yaxis.set_label_coords(-0.3,0.5)
+                    a0.xaxis.set_label_text('(GHz)', size=(self.ticksize-1))
+                    a0.xaxis.set_label_coords(-0.05,-0.07)
+                    a0.title.set_y(title_yposition)
+                    a0.title.set_size(self.ticksize)
 
-                yield a0
-                
-                a1 = pl.axes([x10, y0, width, height])
-                a1.xaxis.set_major_formatter(self.formatter)
-                a1.xaxis.set_major_locator(self.locator)
-                for t in a1.get_xticklabels():
-                    #tt = t.get_text()
-                    #newlabs.append(tt)
-                    t.set_fontsize((self.ticksize-1))
-                a1.yaxis.set_major_locator(pl.NullLocator())
-                a1.title.set_y(title_yposition)
-                a1.title.set_size(self.ticksize)
 
-                yield a1
+                    yield a0
+
+                    a1 = pl.axes([left1, bottom, width, height])
+                    a1.xaxis.set_major_formatter(self.formatter)
+                    a1.xaxis.set_major_locator(self.locator)
+                    for t in a1.get_xticklabels():
+                        #tt = t.get_text()
+                        #newlabs.append(tt)
+                        t.set_fontsize((self.ticksize-1))
+                    a1.yaxis.set_major_locator(pl.NullLocator())
+                    a1.title.set_y(title_yposition)
+                    a1.title.set_size(self.ticksize)
+
+                    yield a1
 
 class SDBaselineAllDisplay(object):
     Inputs = SingleDishDisplayInputs
