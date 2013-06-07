@@ -147,7 +147,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void Feather::convolveINT(const GaussianBeam& newHighBeam){
     GaussianBeam toBeUsed;
     try {
-      lBeam_p.deconvolve(toBeUsed, newHighBeam);
+      newHighBeam.deconvolve(toBeUsed, hBeam_p);
     }
     catch (const AipsError& x) {
       throw(AipsError("new Beam may be smaller than the beam of original Interferometer  image"));
