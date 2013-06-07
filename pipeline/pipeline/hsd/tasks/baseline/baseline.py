@@ -163,7 +163,8 @@ class SDBaseline(common.SingleDishTaskTemplate):
                               'clusters': cluster_info})
 
         outcome = {'datatable': datatable,
-                   'baselined': baselined}
+                   'baselined': baselined,
+                   'edge': edge}
         results = SDBaselineResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
