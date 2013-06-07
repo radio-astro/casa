@@ -55,16 +55,15 @@ class SDBaselineAxesManager(object):
             yield a1
 
         else:
+            width = 1.0 / float(self.nh) * 0.4
+            height = 1.0 / float(self.nv) * 0.8
             for i in xrange(self.npanel):
                 x = i % self.nh
                 y = self.nv - 1 - int(i / self.nh)
                 x00 = 1.0 / float(self.nh) * (x + 0.1 + 0.05)
-                x01 = 1.0 / float(self.nh) * 0.4
                 x10 = 1.0 / float(self.nh) * (x + 0.5 + 0.05)
-                x11 = 1.0 / float(self.nh) * 0.4
                 y0 = 1.0 / float(self.nv) * (y + 0.1)
-                y1 = 1.0 / float(self.nv) * 0.8
-                a0 = pl.axes([x00, y0, x01, y1])
+                a0 = pl.axes([x00, y0, width, height])
                 pl.ylabel('Intensity (arbitrary)', size=self.ticksize)
                 a0.xaxis.set_major_formatter(self.formatter)
                 a0.xaxis.set_major_locator(self.locator)
@@ -76,7 +75,7 @@ class SDBaselineAxesManager(object):
 
                 yield a0
                 
-                a1 = pl.axes([x10, y0, x11, y1])
+                a1 = pl.axes([x10, y0, width, height])
                 a1.xaxis.set_major_formatter(self.formatter)
                 a1.xaxis.set_major_locator(self.locator)
                 for t in a1.get_xticklabels():
@@ -87,10 +86,11 @@ class SDBaselineAxesManager(object):
 
                 yield a1
 
-                a2 = pl.axes([(x00-x01/5.0), y0-0.125/float(self.nv), x01/10.0, y1/10.0])
+                a2 = pl.axes([(x00-width/5.0), y0-0.125/float(self.nv), width/10.0, height/10.0])
                 a2.set_axis_off()
                 pl.text(0,0.5,' (GHz)', size=(self.ticksize-1) ,transform=a2.transAxes)
-    
+
+                yield a2
 
 class SDBaselineAllDisplay(object):
     Inputs = SingleDishDisplayInputs
@@ -136,6 +136,8 @@ class SDBaselineAllDisplay(object):
         for b in baselined:
             spw = b['spw']
             antennas = b['index']
+            ### FOR TESTING
+            #antennas = antennas[:1]
             for ant in antennas:
                 scantable = self.context.observing_run[ant]
                 pre_baseline = scantable.name
@@ -143,6 +145,8 @@ class SDBaselineAllDisplay(object):
                 srctype = scantable.calibration_strategy['srctype']
                 nchan = scantable.spectral_window[spw].nchan
                 index_list = list(self.__index_list(ant, spw, srctype))
+                ### FOR TESTING
+                #index_list = index_list[:122]
                 t0 = time.time()
                 plot_list.append(
                     list(self.doplot(ant,
@@ -306,7 +310,7 @@ class SDBaselineAllDisplay(object):
                 pl.axis([Xrange[0], Xrange[1], Yrange[0], Yrange[1]])
             else:
                 pindex = index % NSpFit
-                baseid = 2 * pindex
+                baseid = 3 * pindex
 
                 # Axes objects
                 a0 = axes_list[baseid]
@@ -353,7 +357,11 @@ class SDBaselineAllDisplay(object):
                 pl.axis([Xrange[0], Xrange[1], Yrange[0], Yrange[1]])
 
             counter += 1
-            if counter % NSpFit == 0 or idx == index_list[-1]:
+            if counter == NSpFit or idx == index_list[-1]:
+                if counter < NSpFit:
+                    for ipanel in xrange(counter*3, NSpFit*3):
+                        axes_list[ipanel].clear()
+                        axes_list[ipanel].set_axis_off()
                 plotfile = os.path.join(self.stage_dir,'baseline_ant%s_spw%s_%s.png'%(ant,spw,Npanel))
                 LOG.debug('plotfile=%s'%(plotfile))
 
@@ -374,5 +382,8 @@ class SDBaselineAllDisplay(object):
                                        y_axis='Intensity',
                                        field='',
                                        parameters=parameters)
+
+                counter = 0
+                
                 yield plot_obj
 
