@@ -453,16 +453,14 @@ def export_flux_from_result(results, context, filename='flux.csv'):
     # if the file exists, read it in
     if os.path.exists(abspath):
         with open(abspath, 'r') as f:
-            existing.extend(f.readlines())        
+            # slurp in all but the header rows
+            existing.extend([l for l in f.readlines()
+                             if not l.startswith(','.join(columns))])        
 
     # so we can write it back out again, with our measurements appended        
     with open(abspath, 'wt') as f:
         writer = csv.writer(f)
-        # if the header is in the existing lines there's no need to write it
-        # again 
-        if ','.join(columns) not in existing:
-            writer.writerow(columns)
-
+        writer.writerow(columns)
         f.writelines(existing)
     
         counter = 0
