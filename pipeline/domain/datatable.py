@@ -543,7 +543,7 @@ class DataTableColumnMaskList( RWDataTableColumn ):
         ret = [[] for i in xrange(startrow,nrow,rowincr)]
         idx=0
         for i in xrange(startrow,nrow,rowincr):
-            tMASKLIST = list(self.getcell(self.name,i))
+            tMASKLIST = list(self.getcell(i))
             if len(tMASKLIST)==1 and tMASKLIST[0][0]==0 and \
                    tMASKLIST[0][1]==0:
                 ret[idx] = tMASKLIST
