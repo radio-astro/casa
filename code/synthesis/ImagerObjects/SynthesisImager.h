@@ -85,6 +85,7 @@ class SynthesisImager
   void setupImaging(Record gridpars);
 
   void initMapper();
+  void resetMapper();
 
   //Record getMajorCycleControls();
   void   executeMajorCycle(Record& controls);
@@ -92,8 +93,10 @@ class SynthesisImager
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 
-protected:
+ 
 
+protected:
+ 
   /////////////// Internal Functions
   CountedPtr<CoordinateSystem> buildImageCoordinateSystem(String phasecenter, 
 							  Double cellx, Double celly, 
@@ -115,6 +118,8 @@ protected:
   CountedPtr<FTMachine> itsCurrentFTMachine;
   CountedPtr<CoordinateSystem> itsCurrentCoordSys;
   CountedPtr<SIImageStore> itsCurrentImages;
+  ///if facetting this storage will keep the unsliced version 
+  CountedPtr<SIImageStore> unFacettedImStore_p;
 
   /////////////// All input parameters
 
