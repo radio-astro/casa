@@ -1,12 +1,13 @@
 from casac import casac
 import os
 import numpy as np
+import pdb
 iaim=casac.image()
 iamask=casac.image()
 qa=casac.quanta()
 rg=casac.regionmanager()
 
-def automask(image='', maskimage='', twopass=True):
+def automask(image='', maskimage='', twopass=False):
     """
     image : dirty image or residual to mask
     maskimage: name of mask to create. If already existant has to be same shape 
@@ -17,7 +18,7 @@ def automask(image='', maskimage='', twopass=True):
     """
 #    print '2pass ', twopass
     iaim.open(image)
-    stat=iaim.statistics(list=True, verbose=True)
+    stat=iaim.statistics(mask='abs("'+image+'") > 0.0')
     csys=iaim.coordsys()
     rb=iaim.restoringbeam()
     numpix=10
@@ -40,10 +41,10 @@ def automask(image='', maskimage='', twopass=True):
     ib.remove(done=True, verbose=False)
     ie=ic.regrid(outfile='__threshreg.image', shape=shp, csys=csys.torecord(), axes=[0,1], overwrite=True)
     ic.remove(done=True, verbose=False)
-    convpix='10pix' if(twopass) else '10pix'
+    convpix=str(numpix/2)+'pix' if(twopass) else str(numpix)+'pix'
     ig=ie.convolve2d(outfile='__newmask2.image', major=convpix, minor=convpix, overwrite=True)
     ie.remove(done=True, verbose=False)
-    ratiostr='3.0' if(twopass) else '3.0' 
+    ratiostr='3.0' if(twopass) else '2.0' 
 #    print 'pixels=', 'iif(__newmask.image > '+str(stat['rms'][0])+'/'+ratiostr+', 1.0, 0.0)'
     ig.done()
     ih=iamask.imagecalc(outfile='__newmask.image', pixels='iif(__newmask2.image > '+str(stat['rms'][0])+'/'+ratiostr+', 1.0, 0.0)')
