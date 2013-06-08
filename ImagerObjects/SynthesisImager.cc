@@ -41,9 +41,17 @@
 
 #include <casa/OS/DirectoryIterator.h>
 #include <casa/OS/File.h>
+#include <casa/OS/HostInfo.h>
 #include <casa/OS/Path.h>
 
-#include <casa/OS/HostInfo.h>
+#include <lattices/Lattices/LCBox.h>
+
+#include <measures/Measures/MeasTable.h>
+
+#include <ms/MeasurementSets/MSHistoryHandler.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <ms/MeasurementSets/MSSelection.h>
+
 
 #include <synthesis/ImagerObjects/SIIterBot.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
@@ -52,11 +60,6 @@
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
 
-#include <measures/Measures/MeasTable.h>
-
-#include <ms/MeasurementSets/MSHistoryHandler.h>
-#include <ms/MeasurementSets/MeasurementSet.h>
-#include <ms/MeasurementSets/MSSelection.h>
 
 #include <casadbus/viewer/ViewerProxy.h>
 #include <casadbus/plotserver/PlotServerProxy.h>
@@ -289,24 +292,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
   }
   void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, String ftmachine,  Quantity distance, Int facets){
+    if(facets <1)
+      facets=1;
     Int nIm=facets*facets;
     facets_p=facets;
+    CountedPtr<SIImageStore> imstor;
+    
+
+
     if (nIm < 2){
-      CountedPtr<SIImageStore> imstor=new SIImageStore(imagename, csys, IPosition(4, nx_p, ny_p, nstokes_p, nchan_p)); 
-      CountedPtr<FTMachine> ftm;
-      createFTMachine(ftm, ftmachine);
-      Int id=itsMappers.nMappers();
-      CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, id);
-      itsMappers.addMapper(thismap);
-      
+      imstor=new SIImageStore(imagename, csys, IPosition(4, nx_p, ny_p, nstokes_p, nchan_p)); 
     }
     else{
-      //create slices of the image and subimage them
-      //Add the sub images toitsMappers
-      
-
-
+      if(!unFacettedImStore_p.null())
+	throw(AipsError("A facetted Image has already been set"));
+      unFacettedImStore_p=new SIImageStore(imagename, csys, IPosition(4, nx_p, ny_p, nstokes_p, nchan_p)); 
     }
+
+     for (Int facet=0; facet< nIm; ++facet){
+       if(nIm > 1)
+	 imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
+       CountedPtr<FTMachine> ftm;
+       createFTMachine(ftm, ftmachine);
+       Int id=itsMappers.nMappers();
+       CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, id);
+       itsMappers.addMapper(thismap);
+     }
+
+   
     
   }
 
@@ -532,8 +545,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }// end of setupImaging
   
 
+  //////////////////////Reset the Mapper
+  ////////////////////
+  void SynthesisImager::resetMapper(){
+    ////reset code
+  }
+
+
+
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   void SynthesisImager::initMapper()
   {

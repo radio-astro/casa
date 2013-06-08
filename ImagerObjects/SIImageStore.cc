@@ -205,6 +205,70 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsValidity=True;
 
   }// End of constructor 2
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////Constructor with pointers already created else where but taken over here
+  SIImageStore::SIImageStore(ImageInterface<Float>* modelim, ImageInterface<Float>* residim,
+			     ImageInterface<Float>* psfim, ImageInterface<Float>* weightim, ImageInterface<Float>* restoredim)
+  {
+    itsPsf=psfim;
+    itsModel=modelim;
+    itsResidual=residim;
+    itsWeight=weightim;
+    itsImage=restoredim;
+			       
+			       
+    itsValidity=((!itsPsf.null()) &&  (!itsModel.null()) &&   (!itsResidual.null()) &&  (!itsWeight.null()) &&
+		 (!itsImage.null()));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////make a facet image store which refers to a sub section of images 
+  ///////////////////////in this storage
+  SIImageStore* SIImageStore::getFacetImageStore(const Int facet, const Int nfacets){
+    SubImage<Float>* facetPSF=makeFacet(facet, nfacets, *itsPsf);
+    SubImage<Float>* facetModel=makeFacet(facet, nfacets, *itsModel);
+    SubImage<Float>* facetResidual=makeFacet(facet, nfacets, *itsResidual);
+    SubImage<Float>* facetWeight=makeFacet(facet, nfacets, *itsWeight);
+    SubImage<Float>* facetImage=makeFacet(facet, nfacets, *itsImage);
+    return new SIImageStore(facetModel, facetResidual, facetPSF, facetWeight, facetImage);
+
+
+
+  }
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  SubImage<Float>* 
+  SIImageStore::makeFacet(const Int facet, const Int nfacets, ImageInterface<Float>& image){
+    //assuming n x n facets
+    Int nx_facets=Int(sqrt(Double(nfacets)));
+    LogIO os( LogOrigin("SynthesisImager","makeFacet") );
+     // Make the output image
+    Slicer imageSlicer;
+    if((facet>(nfacets-1))||(facet<0)) {
+      os << LogIO::SEVERE << "Illegal facet " << facet << LogIO::POST;
+      return NULL;
+    }
+    IPosition imshp=image.shape();
+    IPosition blc(imshp.nelements(), 0);
+    IPosition trc=imshp-1;
+    IPosition inc(imshp.nelements(), 1);
+    Int facetx = facet % nx_facets; 
+    Int facety = (facet - facetx) / nx_facets;
+    Int sizex = imshp(0) / nx_facets;
+    Int sizey = imshp(1) / nx_facets;
+    blc(0) = facetx * sizex; 
+    trc(0) = blc(0) + sizex - 1;
+    blc(1) = facety * sizey; 
+    trc(1) = blc(1) + sizey - 1;
+    LCBox::verify(blc, trc, inc, imshp);
+    Slicer imslice(blc, trc, inc, Slicer::endIsLast);
+    // Now create the facet image
+    SubImage<Float>*  facetImage = new SubImage<Float>(image, imslice, True);
+    facetImage->setMiscInfo(image.miscInfo());
+    facetImage->setUnits(image.units());
+    return facetImage;
+  }
 
   
   //////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -54,7 +54,8 @@ class SIImageStore
 	       IPosition imshape);
   // Contructor by image objects necessary for facetted imaging (subimages 
   //can be passed in as residual and model etc). The caller has to make sure the 
-  //images are similar. 
+  //images are similar.  the Pointers are taken over by CountedPtr...and will be deleted when reference 
+  //count goes to 0
   SIImageStore(ImageInterface<Float>* modelim, ImageInterface<Float>* residim,
 	       ImageInterface<Float>* psfim, ImageInterface<Float>* weightim, ImageInterface<Float>* restoredim);
     
@@ -92,7 +93,15 @@ class SIImageStore
 
   Bool releaseLocks();
 
+  // Get a SIImageStore of a given facet..the caller has to delete it
+  // The images internall will reference back to a given section of the main of this.
+  //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
+  SIImageStore * getFacetImageStore(const Int facet, const Int nfacets);
+
 protected:
+// Can make this a utility function elsewhere...
+//nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
+static SubImage<Float>* makeFacet(const Int facet, const Int nfacets, ImageInterface<Float>& image);
 
   ///////////////////// Member Objects
 
