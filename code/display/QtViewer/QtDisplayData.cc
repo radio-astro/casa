@@ -219,6 +219,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DISPLAY_RASTER("raster"), DISPLAY_CONTOUR("contour"),
 		DISPLAY_VECTOR("vector"), DISPLAY_MARKER( "marker"),
 		TYPE_IMAGE( "image"),
+		SKY_CATALOG( "skycatalog"), MS( "ms"),
 		im_(0),
 		cim_(0),
 		dd_(0),
@@ -266,16 +267,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (and should, if it duplicates another name).
 
 		String stdErrMsg = "Cannot display " + name_ + " as ";
-		if(displayType_=="skycatalog") stdErrMsg += "skycatalog";
+		if( isSkyCatalog()){
+			stdErrMsg += SKY_CATALOG;
+		}
 		else stdErrMsg += displayType_ + " " + dataType_;
 
 		errMsg_ = "";
 
 		try {
-			if (displayType_=="skycatalog") {
+			if ( isSkyCatalog() ) {
 				dd_ = new SkyCatOverlayDD(path);
 				if (dd_==0) throw(AipsError("Couldn't create skycatalog"));
-			} else if(dataType_=="ms" && isRaster() ) {
+			}
+			else if( isMS() && isRaster() ) {
 				dd_ = new MSAsRaster( path_, ddo );
 			} else if(dataType_==TYPE_IMAGE || dataType_=="lel") {
 
@@ -421,7 +425,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	bool QtDisplayData::isSkyCatalog() const {
-		return displayType_=="skycatalog";
+		return displayType_==SKY_CATALOG;
+	}
+
+	bool QtDisplayData::isMS() const {
+		return dataType_==MS;
 	}
 
 	void QtDisplayData::setPlotTitle() {

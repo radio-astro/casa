@@ -1241,10 +1241,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		qdd->setName(name);
 		status( "loaded: " + qdd->path( ) );
-
-		/*ListIter<QtDisplayData* > qdds(qdds_);
-		qdds.toEnd();
-		qdds.addRight(qdd);*/
 		displayDataHolder->addDD( qdd );
 
 		emit ddCreated(qdd, autoRegister);
@@ -1286,31 +1282,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//We should enable the channel animator if there is at least one
 		//image with more than one channel.
 		int maxChannels = qdp_->nZFrames();
+		int actualChannels = maxChannels;
 		if ( maxChannels > 1 ) {
 			//To find the actual number of channels, we rely on the
 			//the image that is currently on target for channeling.
 			QtDisplayData* channelMaster = qdp_->getChannelDD(animationImageIndex);
-			int actualChannels = maxChannels;
 			if ( channelMaster != NULL ){
-				viewer::ImageProperties props = channelMaster->imageProperties();
-				Vector<Int> imgShape = props.shape();
-				if ( props.hasSpectralAxis() ){
-					int spectralIndex = props.spectralAxisNumber();
-					actualChannels = imgShape[spectralIndex];
-				}
-				else {
-					actualChannels = 1;
+				DisplayData* dd = channelMaster->dd();
+				if ( dd != NULL ){
+					actualChannels = dd->nelements();
 				}
 			}
-			//If we are in channel mode we use the actual number of channels.
-			if ( qdp_->modeZ()){
-				animationHolder->setChannelModeEnabled( actualChannels );
-			}
-			//Use the maximum number of channels, but since we aren't in channel
-			//mode, we don't want it to come up selected.
-			else {
-				animationHolder->setChannelModeEnabled( /*maxChannels*/actualChannels, false);
-			}
+		}
+
+		//If we are in channel mode we use the actual number of channels.
+		if ( qdp_->modeZ()){
+			animationHolder->setChannelModeEnabled( actualChannels );
+		}
+		//Use the maximum number of channels, but since we aren't in channel
+		//mode, we don't want it to come up selected.
+		else {
+			animationHolder->setChannelModeEnabled( maxChannels, false);
 		}
 	}
 
@@ -1735,7 +1727,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						setUseRegion(False);
 						break;
 					}
-					if (pdd->dataType() == "ms" || img ==0) {
+					if (pdd->isMS() || img ==0) {
 
 						hideRegionManager();
 						hideAnnotatorPanel();
@@ -2501,7 +2493,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		trkgEdit_->setMinimumWidth(355);
-		trkgEdit_->setFixedHeight( qdd->dataType() == "ms" ? 84 : 47 );
+		trkgEdit_->setFixedHeight( qdd->isMS() ? 84 : 47 );
 		// trkgEdit_->setFixedHeight(81);	// (obs.)
 		//trkgEdit_->setPlainText("\n  ");	// (Doesn't work on init,
 		//setTrackingHeight_();		// for some reason...).

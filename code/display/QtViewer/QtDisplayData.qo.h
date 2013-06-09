@@ -136,6 +136,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Possible valuse: Raster, Vector, Annotation, CanvasAnnotation
 		virtual Display::DisplayDataType ddType();
 		bool isSkyCatalog() const;
+		bool isMS() const;
 
 		// Can the QDD display tracking information?
 		virtual Bool usesTracking() {
@@ -441,6 +442,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void checkGlobalChange( Record& chgdOpts );
 
 		//# data
+
 		QtDisplayPanelGui *panel_;
 		std::string path_, dataType_, displayType_;
 		const std::string DISPLAY_RASTER;
@@ -448,6 +450,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const std::string DISPLAY_VECTOR;
 		const std::string DISPLAY_MARKER;
 		const std::string TYPE_IMAGE;
+		const std::string SKY_CATALOG;
+		const std::string MS;
 		ImageInterface<Float>* im_;
 		ImageInterface<Complex>* cim_;
 		DisplayData* dd_;
