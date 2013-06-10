@@ -42,33 +42,14 @@ if (order == 0) {
 		throw AipsError(_ORIGIN + "order must be greater than zero.");
 	}
 	_setType(SpectralElement::LOGTRANSPOLY);
-	//_makeFunction();
 }
 
 LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement(
 	const Vector<Double>& param
 ) : PolynomialSpectralElement(param) {
 	_setType(SpectralElement::LOGTRANSPOLY);
+}
 
-	//_makeFunction();
-	//_set(param);
-}
-/*
-void LogTransformedPolynomialSpectralElement::_makeFunction() {
-	ostringstream function;
-	function << "ln(p0)";
-	uInt n = get().size();
-	for (uInt i=1; i<n; i++) {
-		if (i == 1) {
-			function << "+ p1*ln(x)";
-		}
-		else {
-			function << " + p" << i << "*ln(x)^" << i;
-		}
-	}
-	CompiledSpectralElement::_setFunction(function.str());
-}
-*/
 LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement(
 	const LogTransformedPolynomialSpectralElement &other
 ) : PolynomialSpectralElement(other) {}
