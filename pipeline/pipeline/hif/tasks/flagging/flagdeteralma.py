@@ -360,12 +360,6 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
                 # returns just the science windows, which is exactly what we want.
                 for spw in inputs.ms.get_spectral_windows():
 
-                        # If the twice the number of flagged channels is greater than the
-                        # number of channels for a given spectral window, skip it.
-                        frac_chan = int(round(inputs.fracspw * spw.num_channels + 0.5))
-                        if 2*frac_chan >= spw.num_channels:
-                                LOG.debug('Too many flagged channels %s for spw %s '% (spw.num_channels, spw.id))
-                                continue
 
 			# Get the data description for this spw
                         dd = inputs.ms.get_data_description(spw=spw)
@@ -401,10 +395,16 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 
 			else:
 
+                                # If the twice the number of flagged channels is greater than the
+                                # number of channels for a given spectral window, skip it.
+                                frac_chan = int(round(inputs.fracspw * spw.num_channels + 0.5))
+                                if 2*frac_chan >= spw.num_channels:
+                                        LOG.debug('Too many flagged channels %s for spw %s '% (spw.num_channels, spw.id))
+                                        continue
+
                                 # calculate the channel ranges to flag. No need to calculate the
                                 # left minimum as it is always channel 0.
                                 l_max = frac_chan - 1
-                                #r_min = spw.num_channels - frac_chan - 1
                                 r_min = spw.num_channels - frac_chan
                                 r_max = spw.num_channels - 1
 
