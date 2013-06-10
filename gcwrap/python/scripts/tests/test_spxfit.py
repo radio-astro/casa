@@ -226,15 +226,15 @@ class spxfit_test(unittest.TestCase):
         
         for i in [0,1]:
             if i == 0:
-                rec = myia.fitprofile(ngauss=0, plpest=plpest)
+                rec = myia.fitprofile(ngauss=0, spxtype="plp", spxest=plpest)
             if i == 1:
-                rec = spxfit(imagename=imagename, plpest=plpest)
+                rec = spxfit(imagename=imagename, spxtype="plp", spxest=plpest)
             sols = rec['plp']['solution'].ravel()
             self.assertTrue((abs(1 - sols/plpest) < 0.1e-7).all())
             if i == 1:
-                rec = myia.fitprofile(ngauss=0, plpest=[0.4, 3])
+                rec = myia.fitprofile(ngauss=0, spxtype="plp", spxest=[0.4, 3])
             if i == 2:
-                rec = spxfit(imagename=imagename, plpest=[0.4, 3])
+                rec = spxfit(imagename=imagename, spxtype="plp", spxest=[0.4, 3])
             sols = rec['plp']['solution'].ravel()
             self.assertTrue((abs(1 - sols/plpest) < 0.1e-7).all())
             
@@ -243,9 +243,9 @@ class spxfit_test(unittest.TestCase):
         for i in [0, 1]:
             plpestoff = [0.4, 3]
             if i == 0:
-                rec = myia.fitprofile(ngauss=0, plpest=plpestoff)
+                rec = myia.fitprofile(ngauss=0, spxtype="plp", spxest=plpestoff)
             if i == 1:
-                rec = spxfit(imagename=imagename, plpest=plpestoff)
+                rec = spxfit(imagename=imagename, spxtype="plp", spxest=plpestoff)
             sols = rec['plp']['solution'].ravel()
             print "*** i " + str(i)
             self.assertTrue((abs(1 - sols/plpest) < 0.1e-1).all())
@@ -255,13 +255,13 @@ class spxfit_test(unittest.TestCase):
             plpfix = [False, True]
             if i == 0:
                 rec = myia.fitprofile(
-                        ngauss=0, plpest=plpestoff, plpfix=plpfix,
-                        multifit=True, plpsol=plpsol, plperr=plperr
+                        ngauss=0, spxtype="plp", spxest=plpestoff, spxfix=plpfix,
+                        multifit=True, spxsol=plpsol, spxerr=plperr
                 )
             if i == 1:
                 rec = spxfit(
-                    imagename=imagename, plpest=plpestoff, plpfix=plpfix,
-                    multifit=True, plpsol=plpsol, plperr=plperr
+                    imagename=imagename, spxtype="plp", spxest=plpestoff, spxfix=plpfix,
+                    multifit=True, spxsol=plpsol, spxerr=plperr
                 )
                 myia.done(remove=True)
             sols = rec['plp']['solution']
@@ -281,6 +281,84 @@ class spxfit_test(unittest.TestCase):
                 ).all()
             )
             myia.done(remove=True)
+            
+    def test_ltpfit(self):
+        """ Test fitting a logarithmic transformed polynomial"""
+        imagename = "ltpfit.im"
+        myia.fromshape(imagename,[2, 2, 100])
+        csys = myia.coordsys()
+        inc = csys.increment()['numeric']
+        inc[2] = 1e7
+        csys.setincrement(inc)
+        myia.setcoordsys(csys.torecord())
+        zz = myia.getchunk()
+        plpest = [0.5, 2]
+        myfn = fn.powerlogpoly(plpest)
+        for i in range(zz.shape[2]):
+            world = myia.toworld([0,0,i])['numeric'][2]
+            zz[:,:,i] = myfn.f(world/1e9)
+        myia.putchunk(zz)
+        ltpest = plpest
+        ltpest[:] = plpest
+        ltpest[0] = log(plpest[0])
+        for i in [0,1]:
+            if i == 0:
+                rec = myia.fitprofile(ngauss=0, spxtype="ltp", spxest=ltpest)
+            if i == 1:
+                rec = spxfit(imagename=imagename, spxtype="ltp", spxest=ltpest)
+            print str(rec)
+            sols = rec['ltp']['solution'].ravel()
+            self.assertTrue((abs(1 - sols/ltpest) < 0.1e-7).all())
+            if i == 1:
+                rec = myia.fitprofile(ngauss=0, spxtype="ltp", spxest=[0.4, 3])
+            if i == 2:
+                rec = spxfit(imagename=imagename, spxtype="ltp", spxest=[0.4, 3])
+            sols = rec['ltp']['solution'].ravel()
+            self.assertTrue((abs(1 - sols/ltpest) < 0.1e-7).all())
+        
+        myia.addnoise(pars=[0, 0.001])
+        for i in [0, 1]:
+            ltpestoff = [0.4, 3]
+            if i == 0:
+                rec = myia.fitprofile(ngauss=0, spxtype="ltp", spxest=ltpestoff)
+            if i == 1:
+                rec = spxfit(imagename=imagename, spxtype="ltp", spxest=ltpestoff)
+            sols = rec['ltp']['solution'].ravel()
+            print "*** i " + str(i)
+            self.assertTrue((abs(1 - sols/ltpest) < 0.1e-1).all())
+            spxsol = "ltpsol.im"
+            spxerr = "ltperr.im"
+            ltpestoff = [0.4, 2.2]
+            ltpfix = [False, True]
+            if i == 0:
+                rec = myia.fitprofile(
+                        ngauss=0,  spxtype="ltp", spxest=ltpestoff, spxfix=ltpfix,
+                        multifit=True, spxsol=spxsol, spxerr=spxerr
+                )
+            if i == 1:
+                rec = spxfit(
+                    imagename=imagename, spxtype="ltp", spxest=ltpestoff, spxfix=ltpfix,
+                    multifit=True, spxsol=spxsol, spxerr=spxerr
+                )
+                myia.done(remove=True)
+            sols = rec['ltp']['solution']
+            self.assertTrue((sols[:,:,:,1] == 2.2).all())
+            myia.open(spxsol)
+            self.assertTrue(
+                (
+                    abs(myia.getchunk()/sols - 1) < 1e-7
+                ).all()
+            )
+            myia.done(remove=True)
+
+            myia.open(spxerr)
+            self.assertTrue(
+                (
+                    abs(myia.getchunk() - rec['ltp']['error']) < 1e-8
+                ).all()
+            )
+            myia.done(remove=True)
+            
             
     def test_multi_image(self):
         """Test multi image support"""
@@ -313,10 +391,10 @@ class spxfit_test(unittest.TestCase):
                 world = myia.toworld([0,0,i])['numeric'][2]
                 zz[:,:,i] = myfn.f(world/1e9)
                 myia.putchunk(zz)
-        rec = spxfit(imagename=[imagename1, imagename2], plpest=plpest, model="model.im")
+        rec = spxfit(imagename=[imagename1, imagename2], spxtype="plp", spxest=plpest, model="model.im")
         sols = rec['plp']['solution'].ravel()
         self.assertTrue((abs(1 - sols/plpest) < 1e-9).all())
-        rec = spxfit(imagename=[imagename1, imagename2], plpest=[0.4, 3])
+        rec = spxfit(imagename=[imagename1, imagename2], spxtype="plp", spxest=[0.4, 3])
         sols = rec['plp']['solution'].ravel()
         self.assertTrue((abs(1 - sols/plpest) < 1e-9).all())
         
@@ -326,7 +404,7 @@ class spxfit_test(unittest.TestCase):
         myia.addnoise(pars=[0, 0.001])
         
         plpestoff = [0.4, 3]
-        rec = spxfit(imagename=[imagename1, imagename2], plpest=plpestoff)
+        rec = spxfit(imagename=[imagename1, imagename2], spxtype="plp", spxest=plpestoff)
         sols = rec['plp']['solution'].ravel()
         self.assertTrue((abs(1 - sols/plpest) < 1e-2).all())
         
@@ -335,8 +413,8 @@ class spxfit_test(unittest.TestCase):
         plpestoff = [0.4, 2.2]
         plpfix = [False, True]
         rec = spxfit(
-            imagename=[imagename1, imagename2], plpest=plpestoff, plpfix=plpfix,
-            multifit=True, plpsol=plpsol, plperr=plperr
+            imagename=[imagename1, imagename2], spxtype="plp", spxest=plpestoff,
+            spxfix=plpfix, multifit=True, spxsol=plpsol, spxerr=plperr
         )
         myia.done(remove=True)
         sols = rec['plp']['solution']

@@ -66,8 +66,8 @@ from taskinit import *
 
 def spxfit(
 	imagename, box, region, chans,
-	stokes, axis, mask, minpts, multifit, plpest,
-	plpfix, plpdiv, plpsol, plperr,
+	stokes, axis, mask, minpts, multifit, spxtype, spxest,
+	spxfix, div, spxsol, spxerr,
 	model, residual, wantreturn,
 	stretch, logresults, logfile, append,
     sigma, outsigma
@@ -93,12 +93,11 @@ def spxfit(
 		retval = myia.fitprofile(
 			box=box, region=region, chans=chans,
 			stokes=stokes, axis=axis, mask=mask,
-			minpts=minpts, ngauss=0,
-			multifit=multifit, plpest=plpest, plpfix=plpfix,
-			plpdiv=plpdiv,  model=model,
-			residual=residual, 
+			minpts=minpts, ngauss=0, multifit=multifit,
+			spxtype=spxtype, spxest=spxest, spxfix=spxfix,
+			div=div,  model=model, residual=residual, 
 			stretch=stretch, logresults=logresults,
-			plpsol=plpsol, plperr=plperr, logfile=logfile,
+			spxsol=spxsol, spxerr=spxerr, logfile=logfile,
 			append=append, 
 			sigma=sigmacopy, outsigma=outsigma
 		)

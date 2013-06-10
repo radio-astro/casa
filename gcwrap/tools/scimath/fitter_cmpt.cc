@@ -89,6 +89,58 @@ record* fitter::gauss1d(
 	return new record();
 }
 
+record* fitter::logtranspoly(
+	const vector<double>& y, const vector<double>& x,
+	const vector<bool>& mask, const vector<double>& estimates
+) {
+	LogIO log;
+	try {
+		ProfileFit1D<Double> fitter;
+		Vector<Double> lnx = casa::log(Vector<Double>(x));
+		Vector<Double> lny = casa::log(Vector<Double>(y));
+		fitter.setData(lnx, lny, mask);
+		SpectralList list;
+		if (estimates.size() == 0) {
+			list.add(LogTransformedPolynomialSpectralElement(vector<Double>(2, 0.0)));
+		}
+		else {
+			list.add(LogTransformedPolynomialSpectralElement(estimates));
+		}
+		fitter.setElements(list);
+		fitter.fit();
+		return fromRecord(_recordForUnbounded(fitter));
+	}
+	catch (const AipsError& x) {
+		RETHROW(x);
+	}
+	return new record();
+}
+
+record* fitter::poly(
+	const vector<double>& y, const vector<double>& x,
+	const vector<bool>& mask, const vector<double>& estimates
+) {
+	LogIO log;
+	try {
+		ProfileFit1D<Double> fitter;
+		fitter.setData(x, y, mask);
+		SpectralList list;
+		if (estimates.size() == 0) {
+			list.add(PolynomialSpectralElement(vector<Double>(2, 0.0)));
+		}
+		else {
+			list.add(PolynomialSpectralElement(estimates));
+		}
+		cout << list[0]->get() << endl;
+		fitter.setElements(list);
+		fitter.fit();
+		return fromRecord(_recordForUnbounded(fitter));
+	}
+	catch (const AipsError& x) {
+		RETHROW(x);
+	}
+	return new record();
+}
 
 record* fitter::powerlogpoly(
 	const vector<double>& y, const vector<double>& x,
@@ -107,22 +159,29 @@ record* fitter::powerlogpoly(
 		}
 		fitter.setElements(list);
 		fitter.fit();
-		Record ret;
-		ret.define("niter", fitter.getNumberIterations());
-		vector<Double> model;
-		ret.define("model", fitter.getFit());
-		ret.define("residual", fitter.getResidual());
-		SpectralList solutions = fitter.getList();
-		const PowerLogPolynomialSpectralElement *plp = dynamic_cast<const PowerLogPolynomialSpectralElement*>(solutions[0]);
-		ret.define("solutions", plp->get());
-		ret.define("errors", plp->getError());
-		return fromRecord(ret);
+		return fromRecord(_recordForUnbounded(fitter));
 	}
 	catch (const AipsError& x) {
 		RETHROW(x);
 	}
 	return new record();
 }
+
+Record fitter::_recordForUnbounded(
+	const ProfileFit1D<Double>& fitter
+) const {
+	Record ret;
+	ret.define("niter", fitter.getNumberIterations());
+	vector<Double> model;
+	ret.define("model", fitter.getFit());
+	ret.define("residual", fitter.getResidual());
+	SpectralList solutions = fitter.getList();
+	const SpectralElement *el = solutions[0];
+	ret.define("solutions", el->get());
+	ret.define("errors", el->getError());
+	return ret;
+}
+
 
 
 } // casac namespace

@@ -1331,9 +1331,9 @@ record* image::fitprofile(const string& box, const variant& region,
     const variant& gmampcon, const variant& gmcentercon,
     const variant& gmfwhmcon, const vector<double>& gmampest,
     const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
-    const variant& gmfix, const vector<double>& plpest,
-    const vector<bool>& plpfix, const variant& plpdiv, const string& plpsol,
-    const string& plperr, const string& logfile,
+    const variant& gmfix, const string& spxtype, const vector<double>& spxest,
+    const vector<bool>& spxfix, const variant& div, const string& spxsol,
+    const string& spxerr, const string& logfile,
     const bool append, const variant& pfunc,
     const vector<double>& goodamprange,
     const vector<double>& goodcenterrange,
@@ -1399,10 +1399,30 @@ record* image::fitprofile(const string& box, const variant& region,
 				<< LogIO::POST;
 			return 0;
 		}
+		String myspxtype;
+		vector<double> plpest, ltpest;
+		vector<bool> plpfix, ltpfix;
+		if (! spxtype.empty()) {
+			myspxtype = String(spxtype);
+			myspxtype.downcase();
+			if (myspxtype == "plp") {
+				plpest = spxest;
+				plpfix = spxfix;
+			}
+			else if (myspxtype == "ltp") {
+				ltpest = spxest;
+				ltpfix = spxfix;
+			}
+			else {
+				throw AipsError("Unsupported value for spxtype");
+			}
+		}
+		cout << "myspxtype " << myspxtype << endl;
 		SpectralList spectralList = SpectralListFactory::create(
 			*_log, pampest, pcenterest, pfwhmest, pfix, gmncomps,
 			gmampcon, gmcentercon, gmfwhmcon, gmampest,
-			gmcenterest, gmfwhmest, gmfix, pfunc, plpest, plpfix
+			gmcenterest, gmfwhmest, gmfix, pfunc, plpest, plpfix,
+			ltpest, ltpfix
 		);
 		if (! estimates.empty() && spectralList.nelements() > 0) {
 			*_log << "You cannot specify both an "
@@ -1464,23 +1484,30 @@ record* image::fitprofile(const string& box, const variant& region,
 					<< LogIO::POST;
 			}
 		}
-		if (plpest.size() > 0) {
-
-			variant::TYPE t = plpdiv.type();
-			if (plpdiv.type() == variant::BOOLVEC) {
+		if (plpest.size() > 0 || ltpest.size() > 0) {
+			variant::TYPE t = div.type();
+			if (div.type() == variant::BOOLVEC) {
 				fitter.setAbscissaDivisor(0);
 			}
 			else if (t == variant::INT || t == variant::DOUBLE) {
-				fitter.setAbscissaDivisor(plpdiv.toDouble());
+				fitter.setAbscissaDivisor(div.toDouble());
 			}
 			else if (t == variant::STRING || t == variant::RECORD) {
-				fitter.setAbscissaDivisor(casaQuantity(plpdiv));
+				fitter.setAbscissaDivisor(casaQuantity(div));
 			}
 			else {
-				throw AipsError("Unsupported type " + plpdiv.typeString() + " for plpdiv");
+				throw AipsError("Unsupported type " + div.typeString() + " for div");
 			}
-			fitter.setPLPName(plpsol);
-			fitter.setPLPErrName(plperr);
+			if (! myspxtype.empty()) {
+				if (myspxtype == "plp") {
+					fitter.setPLPName(spxsol);
+					fitter.setPLPErrName(spxerr);
+				}
+				else if (myspxtype == "ltp") {
+					fitter.setLTPName(spxsol);
+					fitter.setLTPErrName(spxerr);
+				}
+			}
 		}
 		return fromRecord(fitter.fit());
 	}
