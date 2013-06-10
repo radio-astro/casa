@@ -23,8 +23,6 @@ def imsubimage(
         )
         return True
     except Exception, instance:
-        if (outia):
-            outia.done()
         casalog.post( str( '*** Error ***') + str(instance), 'SEVERE')
         raise
     finally:
