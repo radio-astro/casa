@@ -28,6 +28,7 @@ import types
 from ...heuristics import fieldnames
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.utils as utils
 from . import setjy
 
 LOG = infrastructure.get_logger(__name__)
@@ -53,7 +54,7 @@ class SetModelInputs(basetask.StandardInputs):
 
         # run the answer through a set, just in case there are duplicates
         fields = set()
-        fields.update(reference_fields.split(','))
+        fields.update(utils.safe_split(reference_fields))
         
         return ','.join(fields)
 
@@ -83,7 +84,7 @@ class SetModelInputs(basetask.StandardInputs):
 
         # a transfer fields is any field that's not a reference field
         all_fields = set([field.name for field in self.ms.fields])    
-        reference_fields = set([i for i in self.reference.split(',')])                    
+        reference_fields = set([i for i in utils.safe_split(self.reference)])                    
         transfer_fields = all_fields.difference(reference_fields)
 
         return ','.join(set(transfer_fields))

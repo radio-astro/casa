@@ -3,6 +3,7 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.utils as utils
 from . import fluxscale
 from pipeline.hif.tasks.setmodel import setmodel
 from pipeline.hif.tasks.setmodel import setjy
@@ -31,7 +32,7 @@ class FluxcalInputs(basetask.StandardInputs):
 
         # run the answer through a set, just in case there are duplicates
         fields = set()
-        fields.update(reference_fields.split(','))
+        fields.update(utils.safe_split(reference_fields))
         
         return ','.join(fields)
 
@@ -64,8 +65,8 @@ class FluxcalInputs(basetask.StandardInputs):
 
         # remove the reference field should it also have been observed with
         # the transfer intent
-        transfers = set([i for i in transfer_fields.split(',')])
-        references = set([i for i in self.reference.split(',')])            
+        transfers = set([i for i in utils.safe_split(transfer_fields)])
+        references = set([i for i in utils.safe_split(self.reference)])
         return ','.join(transfers.difference(references))
 
     @transfer.setter

@@ -6,6 +6,7 @@ import itertools
 import operator
 import types
 
+import pipeline.extern.pyparsing as pyparsing
 from . import casatools
 from . import logging
 
@@ -91,3 +92,10 @@ def get_epoch_as_datetime(epoch):
     t = datetime.datetime.utcfromtimestamp(qt.getvalue(t))
 
     return t
+
+def safe_split(fields):
+    '''
+    Split a string containing field names into a list, taking account of 
+    field names within quotes.
+    ''' 
+    return pyparsing.commaSeparatedList.parseString(str(fields))
