@@ -1,5 +1,5 @@
 import pipeline.infrastructure.api as api
-
+import pipeline.infrastructure.utils as utils
 
 class Standard(api.Heuristic):
     ephemeris_fields = set(['Mars', 'Jupiter', 'Uranus', 'Neptune', 'Pluto',
@@ -8,7 +8,7 @@ class Standard(api.Heuristic):
                             'Victoria', 'Davida'])
 
     def calculate(self, field):
-        field = set(field.split(','))
+        field = set(utils.safe_split(field))
         if field.issubset(self.ephemeris_fields):
             return 'Butler-JPL-Horizons 2012'
             #return 'Butler-JPL-Horizons 2010'

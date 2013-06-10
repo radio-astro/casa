@@ -10,6 +10,7 @@ from pipeline.hif.heuristics import caltable as fcaltable
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
+import pipeline.infrastructure.utils as utils
 from .. import gaincal
 
 LOG = infrastructure.get_logger(__name__)
@@ -90,7 +91,7 @@ class FluxscaleInputs(basetask.StandardInputs):
 
         # run the answer through a set, just in case there are duplicates
         fields = set()
-        fields.update(reference_fields.split(','))
+        fields.update(utils.safe_split(reference_fields))
         
         return ','.join(fields)
 

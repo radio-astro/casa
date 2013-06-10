@@ -6,6 +6,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.utils as utils
 
 from pipeline.hif.heuristics import fieldnames
 
@@ -96,7 +97,7 @@ class ApplycalInputs(basetask.StandardInputs,
 
         # run the answer through a set, just in case there are duplicates
         fields = set()
-        fields.update(intent_fields.split(','))
+        fields.update(utils.safe_split(intent_fields))
         
         return ','.join(fields)
 
