@@ -6,6 +6,7 @@ import abc
 import numpy
 import math
 import pylab as pl
+from matplotlib.ticker import MultipleLocator
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
@@ -198,6 +199,8 @@ class SDSpectralImageDisplay(SDImageDisplay):
     #NumChannelMap = 12
     #NhPanel = 4
     #NvPanel = 3
+    MaxNhPanel = 5
+    MaxNvPanel = 5
     
     @property
     def num_valid_spectrum(self):
@@ -224,8 +227,11 @@ class SDSpectralImageDisplay(SDImageDisplay):
         t1 = time.time()
         plot_list.extend(self.__plot_channel_map())
         t2 = time.time()
+        plot_list.extend(self.__plot_spectral_map())
+        t3 = time.time()
         LOG.debug('__plot_sparse_map: elapsed time %s sec'%(t1-t0))
         LOG.debug('__plot_channel_map: elapsed time %s sec'%(t2-t1))
+        LOG.debug('__plot_spectral_map: elapsed time %s sec'%(t3-t2))
 
         return plot_list
 
@@ -737,3 +743,186 @@ class SDSpectralImageDisplay(SDImageDisplay):
 
         return plot_list
 
+    def __plot_spectral_map(self):
+        if ShowPlot: pl.ion()
+        else: pl.ioff()
+        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if ShowPlot: pl.ioff()
+
+        pl.clf()
+
+        Pass = False
+        if Pass == True:
+            Npanel = 0
+            pl.cla()
+            pl.clf()
+            Regends = pl.axes([0.1, 0.1, 0.8, 0.8])
+            Regends.set_axis_off()
+            pl.text(0.5, 0.5, "Baseline Fit has already been converged.\n\nPlease see panels in the  previous iteration cycle.", horizontalalignment='center', verticalalignment='center', size=10)
+            if FigFileDir != False:
+                pl.savefig(FigFileDir+FigFileRoot+'_%s.png' % Npanel, format='png', dpi=DPIDetail)
+                if os.access(FigFileDir+'listofplots.txt', os.F_OK):
+                    BrowserFile = open(FigFileDir+'listofplots.txt', 'a')
+                else:
+                    BrowserFile = open(FigFileDir+'listofplots.txt', 'w')
+                    print >> BrowserFile, 'TITLE: MultiSpectra'
+                    print >> BrowserFile, 'FIELDS: Result IF POL Iteration Page'
+                    print >> BrowserFile, 'COMMENT: Combined spectra by spatial Gridding'
+                print >> BrowserFile, FigFileRoot+'_%s.png' % Npanel
+                BrowserFile.close()
+            return
+
+        # read data to storage
+        masked_data = self.data * self.mask
+        (nx, ny, nchan, npol) = self.data.shape
+
+        # Raster Case: re-arrange spectra to match RA-DEC orientation
+        mode = 'raster'
+        if mode.upper() == 'RASTER':
+            NhPanel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxNhPanel)
+            NvPanel = min(max(self.x_max - self.x_min + 1, self.y_max - self.y_min + 1), self.MaxNvPanel)
+            NH = int((self.x_max - self.x_min) / NhPanel + 1)
+            NV = int((self.y_max - self.y_min) / NvPanel + 1)
+            ROWS = numpy.zeros(NH * NV * NhPanel * NvPanel, dtype=numpy.int) - 1
+            # 2010/6/15 GK Change the plotting direction: UpperLeft->UpperRight->OneLineDown repeat...
+            for x in xrange(nx):
+                GlobalPosX = (self.x_max - x) / NhPanel
+                GlobalOfstX = (self.x_max - x) % NhPanel
+                for y in xrange(ny):
+                    GlobalPosY = (self.y_max - y) / NvPanel
+                    GlobalOfstY = NvPanel - 1 - (self.y_max - y) % NvPanel
+                    row = (nx - x - 1) * ny + y
+                    ROWS[(GlobalPosY*NH+GlobalPosX)*NvPanel*NhPanel + GlobalOfstY*NhPanel + GlobalOfstX] = row
+                    row += 1
+        else:
+            ROWS = rows[:]
+            NROW = len(rows)
+            Npanel = (NROW - 1) / (self.MaxNhPanel * self.MaxNvPanel) + 1
+            if Npanel > 1:  (NhPanel, NvPanel) = (self.MaxNhPanel, self.MaxNvPanel)
+            else: (NhPanel, NvPanel) = (int((NROW - 0.1) ** 0.5) + 1, int((NROW - 0.1) ** 0.5) + 1)
+
+        NSpFit = NhPanel * NvPanel
+        NSp = 0
+        Npanel = 0
+        TickSize = 11 - NhPanel
+
+        # Plotting routine
+        connect = True
+        if connect is True: Mark = '-b'
+        else: Mark = 'bo'
+        chan0 = 0
+        chan1 = -1
+        if chan1 == -1:
+            chan0 = 0
+            chan1 = nchan - 1
+        xmin = min(self.frequency[chan0], self.frequency[chan1])
+        xmax = max(self.frequency[chan0], self.frequency[chan1])
+
+
+        NSp = 0
+        xtick = abs(self.frequency[-1] - self.frequency[0]) / 4.0
+        Order = int(math.floor(math.log10(xtick)))
+        NewTick = int(xtick / (10**Order) + 1) * (10**Order)
+        FreqLocator = MultipleLocator(NewTick)
+        if Order < 0: FMT = '%%.%dfG' % (-Order)
+        else: FMT = '%.2fG'
+        Format = pl.FormatStrFormatter(FMT)
+
+
+        (xrp,xrv,xic) = self.image.direction_axis(0)
+        (yrp,yrv,yic) = self.image.direction_axis(1)
+
+        plot_list = []
+        
+        for pol in xrange(self.npol):
+        #for pol in xrange(1):
+            data = masked_data[:,:,:,pol]
+
+            #if FixScale:
+            if True:
+                # to eliminate max/min value due to bad pixel or bad fitting,
+                #  1/10-th value from max and min are used instead
+                ListMax = []
+                ListMin = []
+                for x in xrange(nx):
+                    for y in xrange(ny):
+                        if self.num_valid_spectrum[x][y][pol] > 0:
+                            ListMax.append(data[x][y][chan0:chan1].max())
+                            ListMin.append(data[x][y][chan0:chan1].min())
+                if len(ListMax) == 0: return
+                ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
+                ymin = numpy.sort(ListMin)[len(ListMin)/10]
+                ymax = ymax + (ymax - ymin) * 0.2
+                ymin = ymin - (ymax - ymin) * 0.1
+                del ListMax, ListMin
+            else:
+                ymin = scale_min
+                ymax = scale_max
+
+            for irow in xrange(len(ROWS)):
+                row = ROWS[irow]
+                if NSp == 0:
+                    pl.cla()
+                    pl.clf()
+                    
+                _x = row / ny
+                _y = row % ny
+
+                #if 0 <= row < len(Table):
+                if 0 <= _x < nx and 0 <= _y < ny:
+                    world_x = xrv + (_x - xrp) * xic
+                    world_y = yrv + (_y - yrp) * yic
+                    title = '(IF, POL, X, Y) = (%s, %s, %s, %s)\n%s %s' % (self.spw, pol, _x, _y, HHMMSSss(world_x, 0), DDMMSSs(world_y, 0))
+                    x = NSp % NhPanel
+                    y = int(NSp / NhPanel)
+                    #x0 = 1.0 / float(NhPanel) * (x + 0.1)
+                    x0 = 1.0 / float(NhPanel) * (x + 0.22)
+                    #x1 = 1.0 / float(NhPanel) * 0.8
+                    x1 = 1.0 / float(NhPanel) * 0.75
+                    y0 = 1.0 / float(NvPanel) * (y + 0.15)
+                    #y1 = 1.0 / float(NvPanel) * 0.7
+                    y1 = 1.0 / float(NvPanel) * 0.65
+                    a = pl.axes([x0, y0, x1, y1])
+                    a.xaxis.set_major_formatter(Format)
+                    a.xaxis.set_major_locator(FreqLocator)
+                    a.yaxis.set_label_coords(-0.22,0.5)
+                    a.title.set_y(0.95)
+                    pl.ylabel('Intensity (K)', size=TickSize)
+                    if self.num_valid_spectrum[_x][_y][pol] > 0:
+                        pl.plot(self.frequency, data[_x][_y], Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
+                    else:
+                        pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=TickSize)
+                    pl.title(title, size=TickSize)
+                    pl.xticks(size=TickSize)
+                    pl.yticks(size=TickSize)
+                    pl.axis([xmin, xmax, ymin, ymax])
+                NSp += 1
+                if NSp >= (NhPanel * NvPanel) or (irow == len(ROWS)-1 and mode.upper() != 'RASTER'):
+                    NSp = 0
+                    if ShowPlot:
+                        pl.draw()
+
+                    FigFileRoot = self.inputs.imagename+'.pol%s_Result'%(pol)
+                    plotfile = os.path.join(self.stage_dir, FigFileRoot+'_%s.png'%(Npanel))
+                    pl.savefig(plotfile, format='png', dpi=DPIDetail)
+
+                    parameters = {}
+                    parameters['intent'] = 'TARGET'
+                    parameters['spw'] = self.inputs.spw
+                    parameters['pol'] = pol
+                    parameters['ant'] = self.inputs.antenna
+                    parameters['type'] = 'sd_spectral_map'
+                    parameters['file'] = self.inputs.imagename
+
+                    plot = logger.Plot(plotfile,
+                                       x_axis='Frequency',
+                                       y_axis='Intensity',
+                                       field=self.inputs.source,
+                                       parameters=parameters)
+                    plot_list.append(plot)
+            
+
+                    Npanel += 1
+        del ROWS, data
+        
+        return plot_list
