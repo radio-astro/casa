@@ -91,6 +91,9 @@ two_gauss_multiplane_estimates="estimates_2gauss_multiplane.txt"
 msgs = ''
 twogim = "2g.im"
 twogest = "2g_estimates.txt"
+circular = "circular_gaussian.im"
+
+datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imfit/'
 
 # are the two specified numeric values relatively close to each other? 
 def near (first, second, epsilon):
@@ -127,7 +130,7 @@ def count_matches(filename, match_string):
 class imfit_test(unittest.TestCase):
     
     def setUp(self):
-        datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imfit/'
+        
         for f in [
             noisy_image, noisy_image_xx, expected_model, expected_residual, convolved_model,
             estimates_convolved, two_gaussians_image, two_gaussians_estimates,
@@ -1464,6 +1467,13 @@ class imfit_test(unittest.TestCase):
         self.assertTrue(a['converged'])
         a = myia.fitcomponents(chans="23", residual=residual)
         self.assertTrue(a['converged'])
+        myia.done()
+        
+    def test_circular_gaussian(self):
+        """Test convolved circular gaussian with noise doesn't throw exception (CAS-5211)""" 
+        myia = iatool()
+        myia.open(datapath + "circular_gaussian.im")
+        self.assertTrue(myia.fitcomponents())
         myia.done()
 
 ia.close()
