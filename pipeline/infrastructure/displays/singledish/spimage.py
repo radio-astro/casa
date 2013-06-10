@@ -188,7 +188,48 @@ class SparseMapAxesManager(object):
         pl.text(0.5, 1, 'Dec', horizontalalignment='center', verticalalignment='bottom', size=(self.ticksize+1))
         pl.text(1, 0.5, 'RA', horizontalalignment='center', verticalalignment='center', size=(self.ticksize+1))
 
+
+class SpectralMapAxesManager(object):
+    def __init__(self, nh, nv, formatter, locator, ticksize):
+        self.nh = nh
+        self.nv = nv
+        self.formatter = formatter
+        self.locator = locator
+        self.ticksize = ticksize
+
+        self._axes = None
         
+    @property
+    def axes_list(self):
+        if self._axes is None:
+            self._axes = list(self.__axes_list())
+
+        return self._axes
+
+    def __axes_list(self):
+        npanel = self.nh * self.nv
+        for ipanel in xrange(npanel):
+            x = ipanel % self.nh
+            y = int(ipanel / self.nh)
+            #x0 = 1.0 / float(self.nh) * (x + 0.1)
+            x0 = 1.0 / float(self.nh) * (x + 0.22)
+            #x1 = 1.0 / float(self.nh) * 0.8
+            x1 = 1.0 / float(self.nh) * 0.75
+            y0 = 1.0 / float(self.nv) * (y + 0.15)
+            #y1 = 1.0 / float(self.nv) * 0.7
+            y1 = 1.0 / float(self.nv) * 0.65
+            a = pl.axes([x0, y0, x1, y1])
+            a.xaxis.set_major_formatter(self.formatter)
+            a.xaxis.set_major_locator(self.locator)
+            a.yaxis.set_label_coords(-0.22,0.5)
+            a.title.set_y(0.95)
+            a.title.set_size(self.ticksize)
+            pl.ylabel('Intensity (K)', size=self.ticksize)
+            pl.xticks(size=self.ticksize)
+            pl.yticks(size=self.ticksize)
+
+            yield a
+
         
 class SDSpectralImageDisplay(SDImageDisplay):
     MATPLOTLIB_FIGURE_ID = 8910
@@ -833,9 +874,14 @@ class SDSpectralImageDisplay(SDImageDisplay):
         (yrp,yrv,yic) = self.image.direction_axis(1)
 
         plot_list = []
+
+        axes_manager = SpectralMapAxesManager(NhPanel, NvPanel,
+                                              Format, FreqLocator,
+                                              TickSize)
+        axes_list = axes_manager.axes_list
+        plot_objects = []
         
         for pol in xrange(self.npol):
-        #for pol in xrange(1):
             data = masked_data[:,:,:,pol]
 
             #if FixScale:
@@ -861,41 +907,32 @@ class SDSpectralImageDisplay(SDImageDisplay):
 
             for irow in xrange(len(ROWS)):
                 row = ROWS[irow]
-                if NSp == 0:
-                    pl.cla()
-                    pl.clf()
                     
                 _x = row / ny
                 _y = row % ny
 
-                #if 0 <= row < len(Table):
                 if 0 <= _x < nx and 0 <= _y < ny:
+                    a = axes_list[NSp]
+                    a.set_axis_on()
+                    pl.gcf().sca(a)
                     world_x = xrv + (_x - xrp) * xic
                     world_y = yrv + (_y - yrp) * yic
                     title = '(IF, POL, X, Y) = (%s, %s, %s, %s)\n%s %s' % (self.spw, pol, _x, _y, HHMMSSss(world_x, 0), DDMMSSs(world_y, 0))
-                    x = NSp % NhPanel
-                    y = int(NSp / NhPanel)
-                    #x0 = 1.0 / float(NhPanel) * (x + 0.1)
-                    x0 = 1.0 / float(NhPanel) * (x + 0.22)
-                    #x1 = 1.0 / float(NhPanel) * 0.8
-                    x1 = 1.0 / float(NhPanel) * 0.75
-                    y0 = 1.0 / float(NvPanel) * (y + 0.15)
-                    #y1 = 1.0 / float(NvPanel) * 0.7
-                    y1 = 1.0 / float(NvPanel) * 0.65
-                    a = pl.axes([x0, y0, x1, y1])
-                    a.xaxis.set_major_formatter(Format)
-                    a.xaxis.set_major_locator(FreqLocator)
-                    a.yaxis.set_label_coords(-0.22,0.5)
-                    a.title.set_y(0.95)
-                    pl.ylabel('Intensity (K)', size=TickSize)
                     if self.num_valid_spectrum[_x][_y][pol] > 0:
-                        pl.plot(self.frequency, data[_x][_y], Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
+                        plot_objects.extend(
+                            pl.plot(self.frequency, data[_x][_y], Mark, markersize=2, markeredgecolor='b', markerfacecolor='b')
+                            )
                     else:
-                        pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=TickSize)
-                    pl.title(title, size=TickSize)
-                    pl.xticks(size=TickSize)
-                    pl.yticks(size=TickSize)
+                        plot_objects.append(
+                            pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=TickSize)
+                            )
+                    a.title.set_text(title)
                     pl.axis([xmin, xmax, ymin, ymax])
+                else:
+                    a = axes_list[NSp]
+                    a.set_axis_off()
+                    a.title.set_text('')
+                    
                 NSp += 1
                 if NSp >= (NhPanel * NvPanel) or (irow == len(ROWS)-1 and mode.upper() != 'RASTER'):
                     NSp = 0
@@ -905,6 +942,10 @@ class SDSpectralImageDisplay(SDImageDisplay):
                     FigFileRoot = self.inputs.imagename+'.pol%s_Result'%(pol)
                     plotfile = os.path.join(self.stage_dir, FigFileRoot+'_%s.png'%(Npanel))
                     pl.savefig(plotfile, format='png', dpi=DPIDetail)
+
+                    for obj in plot_objects:
+                        obj.remove()
+                    plot_objects = []
 
                     parameters = {}
                     parameters['intent'] = 'TARGET'
