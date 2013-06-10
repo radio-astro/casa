@@ -869,13 +869,12 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 	size << compShape->sizeToString() << endl;
 	if (hasBeam) {
 		Quantity maj = _majorAxes[compNumber];
-		Quantity min = _minorAxes[compNumber];
+		Quantity minor = _minorAxes[compNumber];
 		Quantity pa = _positionAngles[compNumber];
 		const GaussianShape *gaussShape = static_cast<const GaussianShape *>(compShape);
 		Quantity emaj = gaussShape->majorAxisError();
 		Quantity emin = gaussShape->minorAxisError();
 		Quantity epa  = gaussShape->positionAngleError();
-
 		size << "Clean beam size ---" << endl;
 		// CAS-4577, users want two digits, so just do it explicitly here rather than using
 		// TwoSidedShape::sizeToString
@@ -883,7 +882,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 		size << "       --- minor axis FWHM: " << beam.getMinor() << endl;
 		size << "       --- position angle: " << beam.getPA(True) << endl;
 		Bool fitSuccess = False;
-		Angular2DGaussian bestSol(maj, min, pa);
+		Angular2DGaussian bestSol(maj, minor, pa);
 		Angular2DGaussian bestDecon;
 		Bool isPointSource = True;
 		try {
@@ -900,7 +899,7 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 			if (isPointSource) {
                 Angular2DGaussian largest(
                 	maj + emaj,
-					min + emin,
+					minor + emin,
 					pa - epa
 				);
 				size << "    Component is a point source" << endl;
@@ -957,14 +956,18 @@ String ImageFitter::_sizeToString(const uInt compNumber) const  {
 			else {
 				Vector<Quantity> majRange(2, maj - emaj);
 				majRange[1] = maj + emaj;
-				Vector<Quantity> minRange(2, min - emin);
-				minRange[1] = min + emin;
+				Vector<Quantity> minRange(2, minor - emin);
+				minRange[1] = minor + emin;
 				Vector<Quantity> paRange(2, pa - epa);
 				paRange[1] = pa + epa;
 				Angular2DGaussian sourceIn;
+				Quantity mymajor, myminor;
 				for (uInt i=0; i<2; i++) {
 					for (uInt j=0; j<2; j++) {
-						sourceIn.setMajorMinor(majRange[i], minRange[j]);
+						// have to check in case ranges overlap, CAS-5211
+						mymajor = max(majRange[i], minRange[j]);
+						myminor = min(majRange[i], minRange[j]);
+						sourceIn.setMajorMinor(mymajor, myminor);
 						for (uInt k=0; k<2; k++) {
 							sourceIn.setPA(paRange[k]);
 							decon = Angular2DGaussian();
@@ -1131,35 +1134,6 @@ String ImageFitter::_spectrumToString(uInt compNumber) const {
 }
 
 SubImage<Float> ImageFitter::_createImageTemplate() const {
-	/*
-	IPosition imShape = _getImage()->shape();
-	IPosition startPos(imShape.nelements(), 0);
-	IPosition endPos(imShape - 1);
-	IPosition stride(imShape.nelements(), 1);
-	const CoordinateSystem& imcsys = _getImage()->coordinates();
-	if (imcsys.hasSpectralAxis()) {
-		uInt spectralAxisNumber = imcsys.spectralAxisNumber();
-		startPos[spectralAxisNumber] = _chanVec[0];
-		endPos[spectralAxisNumber] = _chanVec[1];
-	}
-	if (_stokesPixNumber >= 0) {
-		uInt stokesAxisNumber = imcsys.polarizationAxisNumber();
-		startPos[stokesAxisNumber] = _stokesPixNumber;
-		endPos[stokesAxisNumber] = startPos[stokesAxisNumber];
-	}
-	cout << "*** startpos " << startPos << " endPos " << endPos << endl;
-	Slicer slice(startPos, endPos, stride, Slicer::endIsLast);
-	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
-	cout << __FILE__ << " " << __LINE__ << endl;
-
-	SubImage<Float> subImageTmp(*imageClone, slice, False);
-
-	cout << "*** subImageTmp shape " << subImageTmp.shape() << endl;
-	SubImage<Float> x = SubImageFactory<Float>::createSubImage(
-		subImageTmp, *_getRegion(), _getMask(), 0,
-		False, AxesSpecifier(), _getStretch()
-	);
-	*/
 	std::auto_ptr<ImageInterface<Float> > imageClone(_getImage()->cloneII());
 
 	SubImage<Float> x = SubImageFactory<Float>::createSubImage(
