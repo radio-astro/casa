@@ -15,6 +15,7 @@ from pipeline.hif.heuristics import standard as standard
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -110,7 +111,7 @@ class SetjyInputs(basetask.StandardInputs):
         # in order to print flux densities in the same order as the fields, we
         # need to get the flux density for each field in turn 
         field_flux = []
-        for field_arg in self.field.split(','):
+        for field_arg in utils.safe_split(self.field):
             # field names may resolve to multiple field IDs
             fields = self.ms.get_fields(task_arg=field_arg, intent=self.intent)
             field_ids = set([str(field.id) for field in fields])
@@ -225,7 +226,7 @@ class SetjyInputs(basetask.StandardInputs):
         if not callable(self._standard):
             return self._standard
             
-        fields = self.field.split(',')
+        fields = utils.safe_split(self.field)
         standards = [self._standard(field) for field in fields]
         return standards[0] if len(standards) is 1 else standards
 
@@ -287,7 +288,7 @@ class Setjy(basetask.StandardTaskTemplate):
 
         # loop over fields so that we can use Setjy for sources with different
         # standards
-        for field in inputs.field.split(','):
+        for field in utils.safe_split(inputs.field):
             inputs.field = field
             jobs = []
             for spw in spws:

@@ -4,6 +4,7 @@ import types
 import pipeline.domain as domain
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.utils as utils
 from pipeline.hif.heuristics import fieldnames as fieldnames
 
 # create the pipeline logger for this module
@@ -65,7 +66,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
 
         # run the answer through a set, just in case there are duplicates
         fields = set()
-        fields.update(intent_fields.split(','))
+        fields.update(utils.safe_split(intent_fields))
         
         return ','.join(fields)
 
@@ -206,7 +207,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         fields_with_intent = self._to_field(self.ms, self.to_intent)
 
         # run the answer through a set, just in case there are duplicates
-        unique_fields = set(fields_with_intent.split(','))
+        unique_fields = set(utils.safe_split(fields_with_intent))
         
         return ','.join(unique_fields)
 
