@@ -29,6 +29,7 @@
 #include <components/SpectralComponents/GaussianMultipletSpectralElement.h>
 #include <components/SpectralComponents/LorentzianSpectralElement.h>
 #include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
+#include <components/SpectralComponents/LogTransformedPolynomialSpectralElement.h>
 
 #include <stdcasa/StdCasa/CasacSupport.cc>
 
@@ -42,7 +43,8 @@ SpectralList SpectralListFactory::create(
 	const variant& gmfwhmcon, const vector<double>& gmampest,
 	const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
 	const variant& gmfix, const variant& pfunc,
-	const variant& plpest, const variant& plpfix
+	const variant& plpest, const variant& plpfix,
+	const variant& ltpest, const variant& ltpfix
 ) {
 	vector<double> myampest = toVectorDouble(pampest, "pampest");
 	vector<double> mycenterest = toVectorDouble(pcenterest, "pcenterest");
@@ -51,6 +53,8 @@ SpectralList SpectralListFactory::create(
 	vector<string> myfunc = toVectorString(pfunc, "pfunc");
 	vector<double> myplpest = toVectorDouble(plpest, "plpest");
 	vector<bool> myplpfix = toVectorBool(plpfix, "plpfix");
+	vector<double> myltpest = toVectorDouble(ltpest, "ltpest");
+	vector<bool> myltpfix = toVectorBool(ltpfix, "ltpfix");
 
 	vector<int> mygmncomps = gmncomps.type() == variant::INT
 		&& gmncomps.toInt() == 0
@@ -61,7 +65,7 @@ SpectralList SpectralListFactory::create(
 	vector<double> mygmfwhmcon = toVectorDouble(gmfwhmcon, "gmfwhmcon");
 	vector<string> mygmfix = toVectorString(gmfix, "gmfix");
 	Bool makeSpectralList = (
-		mygmncomps.size() > 0 || myplpest.size() > 0
+		mygmncomps.size() + myplpest.size() + myltpest.size() > 0
 		|| ! (
 			myampest.size() == 0
 			&& mycenterest.size() == 0
@@ -139,25 +143,27 @@ SpectralList SpectralListFactory::create(
 	}
 	if (myplpest.size() > 0) {
 		_addPowerLogPolynomial(
-			spectralList,
-			log, myplpest,
-			myplpfix
+			spectralList, log, myplpest, myplpfix
 		);
 	}
-
+	if (myltpest.size() > 0) {
+		_addLogTransformedPolynomial(
+			spectralList, log, myltpest, myltpfix
+		);
+	}
 	return spectralList;
 }
 
 void SpectralListFactory::_addGaussianMultiplets(
-		SpectralList& spectralList,
-		LogIO& log,
-		const vector<int>& mygmncomps,
-		vector<double>& mygmampcon,
-		vector<double>& mygmcentercon,
-		vector<double>& mygmfwhmcon,
-		const vector<double>& gmampest,
-		const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
-		const vector<string>& mygmfix
+	SpectralList& spectralList,
+	LogIO& log,
+	const vector<int>& mygmncomps,
+	vector<double>& mygmampcon,
+	vector<double>& mygmcentercon,
+	vector<double>& mygmfwhmcon,
+	const vector<double>& gmampest,
+	const vector<double>& gmcenterest, const vector<double>& gmfwhmest,
+	const vector<string>& mygmfix
 ) {
 	uInt sum = 0;
 	for (uInt i=0; i<mygmncomps.size(); i++) {
@@ -273,6 +279,30 @@ void SpectralListFactory::_addPowerLogPolynomial(
 	PowerLogPolynomialSpectralElement plp(myplpest);
 	plp.fix(myplpfix);
 	spectralList.add(plp);
+}
+
+void SpectralListFactory::_addLogTransformedPolynomial(
+	SpectralList& spectralList,
+	LogIO& log,	vector<double>& myltpest,
+	vector<bool>& myltpfix
+) {
+	uInt nest = myltpest.size();
+	if (nest < 2) {
+		log << "Number of elements in the log transformed polynomial estimates list must be at least 2"
+			<< LogIO::EXCEPTION;
+	}
+	uInt nfix = myltpfix.size();
+	if (nfix == 0) {
+		myltpfix = vector<bool>(nest, False);
+	}
+	else if (nfix != myltpest.size()) {
+		log << "Number of elements in the logarithmic transformed polynomial fixed parameter list must "
+			<< "either be 0 or equal to the number of elements in the estimates list"
+			<< LogIO::EXCEPTION;
+	}
+	LogTransformedPolynomialSpectralElement ltp(myltpest);
+	ltp.fix(myltpfix);
+	spectralList.add(ltp);
 }
 
 } // end namespace casa

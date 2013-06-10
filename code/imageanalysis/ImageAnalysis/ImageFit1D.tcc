@@ -128,9 +128,10 @@ void ImageFit1D<T>::setImage (const ImageInterface<T>& image,
 template <class T>  Bool ImageFit1D<T>::setData (
 	const IPosition& pos,
 	const ImageFit1D<T>::AbcissaType abcissaType,
-	const Bool doAbs, const Double * const &abscissaDivisor
-)
-{
+	const Bool doAbs, const Double* const &abscissaDivisor,
+    Array<Double> (*xfunc)(const Array<Double>&),
+    Array<FitterType> (*yfunc)(const Array<FitterType>&)
+) {
 	_resetFitter();
 	const uInt nDim = itsImagePtr->ndim();
 	AlwaysAssert (pos.nelements()==nDim, AipsError);
@@ -165,17 +166,23 @@ template <class T>  Bool ImageFit1D<T>::setData (
 		weights = 1.0;
 	}
 
-	// Generate Abcissa
+	// Generate Abscissa
 
 	Vector<Double> x = _x;
 	if (x.size() == 0) {
 		x = makeAbscissa(abcissaType, doAbs, abscissaDivisor);
+		if (xfunc) {
+			x = (*xfunc)(x);
+		}
 	}
 
 	// Set data in fitter; we need to use a Double fitter at present
 
 	Vector<FitterType> y2(y.shape());
 	convertArray(y2, y);
+	if (yfunc) {
+		y2 = (*yfunc)(y2);
+	}
 	Vector<Double> w2(weights.shape());
 	convertArray(w2, weights);
 	if (!itsFitter.setData (x, y2, mask, w2)) {
@@ -310,14 +317,10 @@ Bool ImageFit1D<T>::setAbcissaState (
    return ok;
 }
 
-
-
-// Private functions
-
 template <class T> 
 Vector<Double> ImageFit1D<T>::makeAbscissa (
 	ImageFit1D<T>::AbcissaType type,
-	Bool doAbs, const Double * const &abscissaDivisor
+	Bool doAbs, const Double* const &abscissaDivisor
 ) {
    const uInt n = itsImagePtr->shape()(itsAxis);
    Vector<Double> x(n);

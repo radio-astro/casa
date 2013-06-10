@@ -118,6 +118,8 @@ template <class T> class ImageFit1D
 {
 public:
 
+	typedef typename NumericTraits<T>::PrecisionType FitterType;
+
     enum AbcissaType {
        PIXEL = 0,
        IM_NATIVE = 1,
@@ -154,19 +156,28 @@ public:
     // </group>
 
     // Set the data to be fit.  All non-profile axes data are averaged.
-    // For the profile axis, the full spectrum is taken.  The abcissa
-    // world values are computed when you call these functions.  The domain of the
-    // abcissa values is controlled by <src>AbcissaType</src> and
+    // For the profile axis, the full spectrum is taken.  The abscissa
+    // world values are computed when you call these functions unless they
+    // have been set previously by a call to setAbscissa() in which case
+    // the values that were passed to that method are used..  The domain of the
+    // abscissa values is controlled by <src>AbcissaType</src> and
     // <src>doAbs</src> (absolute coordinates).  The CoordinateSystem in
     // the image is used to convert from pixels to world values.
     // If <src>type</src>=IN_NATIVE and <src>abscissaDivisor</src> is not null,
-    // the native abscissa values will be divided by the value pointed to by
+    // the world abscissa values will be divided by the value pointed to by
     // <src>abscissaDivisor</src>. This mitigates having very large or very small
-    // abscissa values when fitting.
+    // abscissa values when fitting. If xfunc and/or yfunc is not NULL, the x and/or
+    // y values are fed to the specified function and the resultant values are what
+    // are used for the x and/or y values in the fit. If xfunc is not NULL and
+    // setAbscissa values has been called prior, no abscissa value transformation occurs.
+    // Thus if you want to apply a function to the abscissa values, the caller should
+    // pass the result of that function into setAbscissaValues.
     // <group>
     Bool setData (
     	const IPosition& pos, const ImageFit1D<T>::AbcissaType type,
-        const Bool doAbs=True, const Double * const &abscissaDivisor=0
+        const Bool doAbs=True, const Double* const &abscissaDivisor=0,
+        Array<Double> (*xfunc)(const Array<Double>&)=0,
+        Array<FitterType> (*yfunc)(const Array<FitterType>&)=0
     );
     Bool setData (
     	const ImageRegion& region, const ImageFit1D<T>::AbcissaType type,
@@ -269,7 +280,7 @@ public:
     // values.
     Vector<Double> makeAbscissa (
 		   ImageFit1D<T>::AbcissaType type,
-		   Bool doAbs, const Double * const &abscissaDivisor
+		   Bool doAbs, const Double* const &abscissaDivisor
    );
 private:
    std::auto_ptr<ImageInterface<T> > itsImagePtr;
@@ -279,7 +290,6 @@ private:
 // In the future I will be able to template the fitter on T. For now
 // it must be Double.
 
-   typedef typename NumericTraits<T>::PrecisionType FitterType;
    ProfileFit1D<FitterType> itsFitter;
    CoordinateSystem itsCS;
    mutable String itsError;                // Error message

@@ -63,7 +63,7 @@ ImageProfileFitter::ImageProfileFitter(
 	_abscissaDivisorForDisplay("1"), _multiFit(False),
 	_deleteImageOnDestruct(False), _logResults(True), _polyOrder(-1),
 	_fitAxis(axis), _nGaussSinglets(ngauss), _nGaussMultiplets(0),
-	_nLorentzSinglets(0), _nPLPCoeffs(0),
+	_nLorentzSinglets(0), _nPLPCoeffs(0), _nLTPCoeffs(0),
 	_minGoodPoints(0), _results(Record()),
 	_nonPolyEstimates(SpectralList()), _goodAmpRange(Vector<Double>(0)),
 	_goodCenterRange(Vector<Double>(0)), _goodFWHMRange(Vector<Double>(0)),
@@ -89,7 +89,6 @@ ImageProfileFitter::ImageProfileFitter(
     	_nonPolyEstimates = spectralList;
     	_nGaussSinglets = 0;
     	_nGaussMultiplets = 0;
-    	Bool havePLP = False;
     	for (uInt i=0; i<_nonPolyEstimates.nelements(); i++) {
     		SpectralElement::Types myType = _nonPolyEstimates[i]->getType();
 			switch(myType) {
@@ -104,20 +103,22 @@ ImageProfileFitter::ImageProfileFitter(
 				break;
 			case SpectralElement::POWERLOGPOLY:
 				if (_nonPolyEstimates.nelements() > 1 || _polyOrder > 0) {
-					*_getLog() << "A power logarithmic polynomial cannot be fit simultaneously with other functions"
-						<< LogIO::EXCEPTION;
-				}
-				if (havePLP) {
-					*_getLog() << "Fitting of multiple power logarithmic polynomials is not supported."
+					*_getLog() << "Only a single power logarithmic polynomial may be fit and it cannot be fit simultaneously with other functions"
 						<< LogIO::EXCEPTION;
 				}
 				_nPLPCoeffs = _nonPolyEstimates[i]->get().size();
-				havePLP = True;
+				break;
+			case SpectralElement::LOGTRANSPOLY:
+				if (_nonPolyEstimates.nelements() > 1 || _polyOrder > 0) {
+					*_getLog() << "Only a single transformed logarithmic polynomial may be fit and it cannot be fit simultaneously with other functions"
+						<< LogIO::EXCEPTION;
+				}
+				_nLTPCoeffs = _nonPolyEstimates[i]->get().size();
 				break;
 			default:
 				*_getLog() << "Logic error: Only gaussian singlets, "
-					<< "gaussian multiplets, lorentzian singlets, and a single power "
-					<< "logarithmic polynomial are "
+					<< "gaussian multiplets, and lorentzian singlets, or a single power "
+					<< "logarithmic polynomial,  or a single log transformed polynomial are "
 				    << "permitted in the spectralList input parameter"
 				    << LogIO::EXCEPTION;
 				break;
@@ -131,26 +132,33 @@ ImageProfileFitter::ImageProfileFitter(
     			<< " as specified in the spectra list will be fit" << LogIO::POST;
     	}
 
-    	if (_nGaussSinglets > 0) {
-    		*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
-    			<< _nGaussSinglets << " from provided spectral element list"
-    			<< LogIO::POST;
-    	}
-    	if (_nGaussMultiplets > 0) {
-    		*_getLog() << LogIO::NORMAL << "Number of gaussian multiplets to fit found to be "
-    			<< _nGaussMultiplets << " from provided spectral element list"
-    			<< LogIO::POST;
-    	}
-    	if (_nLorentzSinglets > 0) {
-    		*_getLog() << LogIO::NORMAL << "Number of lorentzian singlets to fit found to be "
-    			<< _nLorentzSinglets << " from provided spectral element list"
-    			<< LogIO::POST;
-    	}
-    	if (havePLP) {
+    	if (_nPLPCoeffs  > 0) {
     		*_getLog() << LogIO::NORMAL << "Will fit a single power logarithmic polynomial "
     			<< " from provided spectral element list" << LogIO::POST;
     	}
+    	else if (_nLTPCoeffs  > 0) {
+    		*_getLog() << LogIO::NORMAL << "Will fit a single logarithmic transformed polynomial "
+    			<< " from provided spectral element list" << LogIO::POST;
+    	}
+    	else {
+    		if (_nGaussSinglets > 0) {
+    			*_getLog() << LogIO::NORMAL << "Number of gaussian singlets to fit found to be "
+    				<< _nGaussSinglets << " from provided spectral element list"
+    				<< LogIO::POST;
+    		}
+    		if (_nGaussMultiplets > 0) {
+    			*_getLog() << LogIO::NORMAL << "Number of gaussian multiplets to fit found to be "
+    				<< _nGaussMultiplets << " from provided spectral element list"
+    				<< LogIO::POST;
+    		}
+    		if (_nLorentzSinglets > 0) {
+    			*_getLog() << LogIO::NORMAL << "Number of lorentzian singlets to fit found to be "
+    				<< _nLorentzSinglets << " from provided spectral element list"
+    				<< LogIO::POST;
+    		}
+    	}
     }
+    _isSpectralIndex = _nPLPCoeffs + _nLTPCoeffs > 0;
     if (_nonPolyEstimates.nelements() > 0 && ngauss > 0) {
     	*_getLog() << LogIO::WARN << "Estimates specified so ignoring input value of ngauss"
     		<<LogIO::POST;
@@ -242,10 +250,20 @@ Record ImageProfileFitter::fit() {
 		_getLog(), _getImage()->coordinates(), &_fitters,
 		_nonPolyEstimates, &_subImage, _polyOrder,
 		_fitAxis, _nGaussSinglets, _nGaussMultiplets,
-		_nLorentzSinglets, _nPLPCoeffs, _logResults,
+		_nLorentzSinglets, _nPLPCoeffs, _nLTPCoeffs, _logResults,
 		_multiFit, _getLogFile(), _xUnit, _summaryHeader()
 	);
-	if (_nPLPCoeffs == 0) {
+	if (_nPLPCoeffs > 0) {
+		resultHandler.setPLPName(_plpName);
+		resultHandler.setPLPErrName(_plpErrName);
+		resultHandler.setPLPDivisor(_abscissaDivisorForDisplay);
+	}
+	else if (_nLTPCoeffs > 0) {
+		resultHandler.setLTPName(_ltpName);
+		resultHandler.setLTPErrName(_ltpErrName);
+		resultHandler.setPLPDivisor(_abscissaDivisorForDisplay);
+	}
+	else {
 		resultHandler.setAmpName(_ampName);
 		resultHandler.setAmpErrName(_ampErrName);
 		resultHandler.setCenterName(_centerName);
@@ -254,11 +272,6 @@ Record ImageProfileFitter::fit() {
 		resultHandler.setFWHMErrName(_fwhmErrName);
 		resultHandler.setIntegralName(_integralName);
 		resultHandler.setIntegralErrName(_integralErrName);
-	}
-	else {
-		resultHandler.setPLPName(_plpName);
-		resultHandler.setPLPErrName(_plpErrName);
-		resultHandler.setPLPDivisor(_abscissaDivisorForDisplay);
 	}
 	resultHandler.setOutputSigmaImage(_sigmaName);
 	resultHandler.createResults();
@@ -282,6 +295,10 @@ void ImageProfileFitter::setPolyOrder(Int p) {
 	}
 	if (_nPLPCoeffs > 0) {
 		*_getLog() << "Cannot simultaneously fit a polynomial and a power logarithmic polynomial."
+			<< LogIO::EXCEPTION;
+	}
+	if (_nLTPCoeffs > 0) {
+		*_getLog() << "Cannot simultaneously fit a polynomial and a logarithmic transformed polynomial."
 			<< LogIO::EXCEPTION;
 	}
     _polyOrder = p;
@@ -402,14 +419,15 @@ Record ImageProfileFitter::getResults() const {
 }
 
 void ImageProfileFitter::setAbscissaDivisor(Double d) {
-	if (_nPLPCoeffs == 0) {
+	if (! _isSpectralIndex) {
 		*_getLog() << LogOrigin(_class, __FUNCTION__);
-		*_getLog() << LogIO::WARN << "This object is not configured to fit a power logarithmic polynomial "
-			<< "and so setting the abscissa divisor will have no effect in the fitting process."
-			<< LogIO::POST;
+		*_getLog() << LogIO::WARN << "This object is not configured to fit a "
+			<< "spectral index function, and so setting the abscissa divisor "
+			<< "will have no effect in the fitting process." << LogIO::POST;
 	}
 	_abscissaDivisor = d;
-	_abscissaDivisorForDisplay = String::toString(d) + _getImage()->coordinates().worldAxisUnits()[_fitAxis];
+	_abscissaDivisorForDisplay = String::toString(d)
+		+ _getImage()->coordinates().worldAxisUnits()[_fitAxis];
 }
 
 void ImageProfileFitter::setAbscissaDivisor(const Quantity& q) {
@@ -419,9 +437,9 @@ void ImageProfileFitter::setAbscissaDivisor(const Quantity& q) {
 		*_getLog() << "Abscissa divisor unit " << q.getUnit() << " is not consistent with fit axis unit."
 			<< LogIO::EXCEPTION;
 	}
-	if (_nPLPCoeffs == 0) {
+	if (! _isSpectralIndex) {
 		*_getLog() << LogOrigin(_class, __FUNCTION__);
-		*_getLog() << LogIO::WARN << "This object is not configured to fit a power logarithmic polynomial "
+		*_getLog() << LogIO::WARN << "This object is not configured to fit a spectral index function "
 			<< "and so setting the abscissa divisor will have no effect in the fitting process."
 			<< LogIO::POST;
 	}
@@ -453,15 +471,16 @@ void ImageProfileFitter::_getOutputStruct(
 }
 
 void ImageProfileFitter::_checkNGaussAndPolyOrder() const {
-	LogOrigin logOrigin(_class, __FUNCTION__);
 	if (
 		_polyOrder < 0
 		&& (
 			_nGaussSinglets + _nGaussMultiplets
-			+ _nLorentzSinglets + _nPLPCoeffs
+			+ _nLorentzSinglets
 		) == 0
+		&& ! _isSpectralIndex
 	) {
-		*_getLog() << "Number of non-polynomials is 0 and polynomial order is less than zero. "
+		*_getLog() << LogOrigin(_class, __FUNCTION__)
+			<< "Number of non-polynomials is 0 and polynomial order is less than zero. "
 			<< "According to these inputs there is nothing to fit."
 			<< LogIO::EXCEPTION;
 	}
@@ -647,7 +666,7 @@ void ImageProfileFitter::_fitProfiles(
 	);
 	String errMsg;
 	ImageFit1D<Float>::AbcissaType abcissaType;
-	String abscissaUnits = _nPLPCoeffs > 0 ? "native" : "pix";
+	String abscissaUnits = _isSpectralIndex ? "native" : "pix";
 	if (
 		! ImageFit1D<Float>::setAbcissaState(
 			errMsg, abcissaType, csys, abscissaUnits, doppler, _fitAxis
@@ -683,7 +702,10 @@ void ImageProfileFitter::_fitProfiles(
 
 	Vector<Double> abscissaValues(0);
 	if (isSpectral) {
-		if( _nPLPCoeffs > 0) {
+		abscissaValues = fitter.makeAbscissa(
+			abcissaType, True, 0
+		);
+		if (_isSpectralIndex) {
 			abscissaValues = fitter.makeAbscissa(
 				abcissaType, True, 0
 			);
@@ -691,9 +713,11 @@ void ImageProfileFitter::_fitProfiles(
 			if (_abscissaDivisor != 1) {
 				divisorPtr = &_abscissaDivisor;
 				abscissaValues /= _abscissaDivisor;
+				if (_nLTPCoeffs > 0) {
+					abscissaValues = log(abscissaValues);
+				}
 			}
 		}
-
 	}
 	Bool abscissaSet = abscissaValues.size() > 0;
 
@@ -706,7 +730,6 @@ void ImageProfileFitter::_fitProfiles(
 	}
 	uInt nOrigComps = newEstimates.nelements();
 	*_getLog() << LogOrigin(_class, __FUNCTION__);
-
 
 	for (inIter.reset(); !inIter.atEnd(); inIter++, nProfiles++) {
 		if (count % 1000 == 0 && count > 0) {
@@ -731,7 +754,19 @@ void ImageProfileFitter::_fitProfiles(
 		if (abscissaSet) {
 			fitter.setAbscissa(abscissaValues);
 		}
-		if (! fitter.setData (curPos, abcissaType, True, divisorPtr)) {
+		Array<Double> (*xfunc)(const Array<Double>&) = 0;
+		if (_nLTPCoeffs > 0 && ! abscissaSet) {
+			xfunc = casa::log;
+		}
+		Array<Double> (*yfunc)(const Array<Double>&) = 0;
+		if (_nLTPCoeffs > 0) {
+			yfunc = casa::log;
+		}
+		if (
+			! fitter.setData(
+				curPos, abcissaType, True, divisorPtr, xfunc, yfunc
+			)
+		) {
 			*_getLog() << "Unable to set data" << LogIO::EXCEPTION;
 		}
 		_setFitterElements(

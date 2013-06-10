@@ -64,11 +64,13 @@ class ImageProfileFitterResults {
 public:
 	ImageProfileFitterResults(
 		const std::tr1::shared_ptr<LogIO>& log, const CoordinateSystem& csysIm,
-		const Array<ImageFit1D<Float> > * const &fitters, const SpectralList& nonPolyEstimates,
+		const Array<ImageFit1D<Float> > * const &fitters,
+		const SpectralList& nonPolyEstimates,
 		const SubImage<Float> * const &subImage, Int fitAxis, Int polyOrder,
-		uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets, uInt nPLPCoeffs,
-		Bool logResults, Bool multiFit, const std::tr1::shared_ptr<LogFile>& logfile,
-		const String& xUnit, const String& summaryHeader
+		uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
+		uInt nPLPCoeffs, uInt nLTPCoeffs, Bool logResults, Bool multiFit,
+		const std::tr1::shared_ptr<LogFile>& logfile, const String& xUnit,
+		const String& summaryHeader
 	);
 
 	~ImageProfileFitterResults();
@@ -103,17 +105,18 @@ public:
     inline void setIntegralErrName(const String& s) { _integralErrName = s; }
     // </group>
 
-    // set the name of the power logarithmic polynomial image. A separate image
-    // representing each coefficient will be written. The c0 image will have
-    // "_c0" appended to the name. The others will have "_alpha", "_beta", ...
-    // appended to the name.
+    // set the name of the power logarithmic polynomial image.
     inline void setPLPName(const String& s) { _plpName = s; }
 
-    // set the name of the power logarithmic polynomial image. A separate image
-    // representing each coefficient will be written. The c0 image will have
-    // "_c0" appended to the name. The others will have "_alpha", "_beta", ...
-    // appended to the name.
+    // set the name of the power logarithmic polynomial image.
     inline void setPLPErrName(const String& s) { _plpErrName = s; }
+
+    // set the name of the power logarithmic polynomial image.
+    inline void setLTPName(const String& s) { _ltpName = s; }
+
+    // set the name of the power logarithmic polynomial image.
+    inline void setLTPErrName(const String& s) { _ltpErrName = s; }
+
 
     inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
     // </group>
@@ -141,8 +144,8 @@ private:
 	    FWHMERR, INTEGRALERR, NGSOLMATRICES
 	};
 
-	enum plpSols {
-		PLPSOL, PLPERR, NPLPSOLMATRICES
+	enum spxSols {
+		SPXSOL, SPXERR, NSPXSOLMATRICES
 	};
 
 	enum axisType {
@@ -153,10 +156,10 @@ private:
     Bool _logResults, _multiFit;
    	String _xUnit, _centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
-		_integralName, _integralErrName, _plpName, _plpErrName, _sigmaName,
-		_summaryHeader;
+		_integralName, _integralErrName, _plpName, _plpErrName,
+		_ltpName, _ltpErrName, _sigmaName, _summaryHeader;
     uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
-		_nPLPCoeffs;
+		_nPLPCoeffs, _nLTPCoeffs;
     const Array<ImageFit1D<Float> > * const  _fitters;
 	SpectralList _nonPolyEstimates;
  // subimage contains the region of the original image
@@ -209,12 +212,16 @@ private:
     	const PowerLogPolynomialSpectralElement& plp
     ) const;
 
+    String _logTransPolyToString(
+    	const LogTransformedPolynomialSpectralElement& ltp
+    ) const;
+
     void _marshalFitResults(
     	Array<Bool>& attemptedArr, Array<Bool>& successArr,
     	Array<Bool>& convergedArr, Array<Bool>& validArr,
     	Matrix<String>& typeMat, Array<Int>& niterArr,
     	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Matrix<Double> > > >& pcfMatrices,
-    	vector<Matrix<Double> >& plpMatrices, Bool returnDirection,
+    	vector<Matrix<Double> >& plpMatrices, vector<Matrix<Double> >& ltpMatrices, Bool returnDirection,
         Vector<String>& directionInfo, Array<Bool>& mask
     );
 

@@ -141,18 +141,17 @@ public:
     inline void setIntegralErrName(const String& s) { _integralErrName = s; }
     // </group>
 
-    // set the name of the power logarithmic polynomial image. A separate image
-    // representing each coefficient will be written. The c0 image will have
-    // "_c0" appended to the name. The others will have "_alpha", "_beta", ...
-    // appended to the name.
+    // set the name of the power logarithmic polynomial image.
     inline void setPLPName(const String& s) { _plpName = s; }
 
-    // set the name of the power logarithmic polynomial image. A separate image
-    // representing each coefficient will be written. The c0 image will have
-    // "_c0" appended to the name. The others will have "_alpha", "_beta", ...
-    // appended to the name.
+    // set the name of the power logarithmic polynomial image.
     inline void setPLPErrName(const String& s) { _plpErrName = s; }
 
+    // set the name of the logarithmic transformed polynomial image.
+    inline void setLTPName(const String& s) { _ltpName = s; }
+
+    // set the name of the logarithmic transformed polynomial image.
+    inline void setLTPErrName(const String& s) { _ltpErrName = s; }
 
     // set the range over which PFC amplitude solutions are valid
     void setGoodAmpRange(const Double min, const Double max);
@@ -199,13 +198,14 @@ private:
 	String _residual, _model, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
-		_integralName, _integralErrName, _plpName, _plpErrName, _sigmaName,
-		_abscissaDivisorForDisplay;
+		_integralName, _integralErrName, _plpName, _plpErrName,
+		_ltpName, _ltpErrName, _sigmaName, _abscissaDivisorForDisplay;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
-		_deleteImageOnDestruct, _logResults;
+		_deleteImageOnDestruct, _logResults, _isSpectralIndex;
 	Int _polyOrder, _fitAxis;
 	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
-		_nPLPCoeffs, _minGoodPoints;
+		_nPLPCoeffs, _nLTPCoeffs;
+	uInt _minGoodPoints;
 	Array<ImageFit1D<Float> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.

@@ -63,7 +63,10 @@ public:
 		const variant& gmfix=initialize_variant(""),
 		const variant& pfunc=initialize_variant(""),
 		const variant& plpest=initialize_variant(""),
-		const variant& plpfix=initialize_variant("")
+		const variant& plpfix=initialize_variant(""),
+		const variant& ltpest=initialize_variant(""),
+		const variant& ltpfix=initialize_variant("")
+
 	);
 
 private:
@@ -83,6 +86,12 @@ private:
 		SpectralList& spectralList,
 		LogIO& log,	vector<double>& myplpest,
 		vector<bool>& myplpfix
+	);
+
+	static void _addLogTransformedPolynomial(
+		SpectralList& spectralList,
+		LogIO& log,	vector<double>& myltpest,
+		vector<bool>& myltpfix
 	);
 
 };

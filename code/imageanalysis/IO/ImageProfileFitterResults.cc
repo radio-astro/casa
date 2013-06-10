@@ -54,12 +54,13 @@ ImageProfileFitterResults::ImageProfileFitterResults(
 	const Array<ImageFit1D<Float> >* const &fitters, const SpectralList& nonPolyEstimates,
 	const SubImage<Float>* const &subImage, Int polyOrder, Int fitAxis,
 	uInt nGaussSinglets, uInt nGaussMultiplets, uInt nLorentzSinglets,
-	uInt nPLPCoeffs,
+	uInt nPLPCoeffs, uInt nLTPCoeffs,
 	Bool logResults, Bool multiFit, const std::tr1::shared_ptr<LogFile>& logfile,
 	const String& xUnit, const String& summaryHeader
 ) : _logResults(logResults), _multiFit(multiFit), _xUnit(xUnit), _summaryHeader(summaryHeader),
 	_nGaussSinglets(nGaussSinglets), _nGaussMultiplets(nGaussMultiplets),
-	_nLorentzSinglets(nLorentzSinglets), _nPLPCoeffs(nPLPCoeffs), _fitters(fitters),
+	_nLorentzSinglets(nLorentzSinglets), _nPLPCoeffs(nPLPCoeffs),_nLTPCoeffs(nLTPCoeffs),
+	_fitters(fitters),
 	_nonPolyEstimates(nonPolyEstimates), _subImage(subImage), _polyOrder(polyOrder),
 	_fitAxis(fitAxis), _logfile(logfile), _log(log), _csysIm(csysIm) {}
 
@@ -171,7 +172,7 @@ void ImageProfileFitterResults::_marshalFitResults(
 	Array<Bool>& convergedArr, Array<Bool>& validArr,
 	Matrix<String>& typeMat, Array<Int>& niterArr,
 	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Matrix<Double> > > >& pcfMatrices,
-	vector<Matrix<Double> >& plpMatrices, Bool returnDirection,
+	vector<Matrix<Double> >& plpMatrices, vector<Matrix<Double> >& ltpMatrices, Bool returnDirection,
     Vector<String>& directionInfo, Array<Bool>& mask
 
 ) {
@@ -296,14 +297,25 @@ void ImageProfileFitterResults::_marshalFitResults(
 					Vector<Double> sols = solutions[i]->get();
 					Vector<Double> errs = solutions[i]->getError();
 					for (uInt j=0; j<_nPLPCoeffs; j++) {
-						plpMatrices[PLPSOL](count, j) = sols[j];
-						plpMatrices[PLPERR](count, j) = errs[j];
+						plpMatrices[SPXSOL](count, j) = sols[j];
+						plpMatrices[SPXERR](count, j) = errs[j];
+					}
+				}
+				break;
+				case SpectralElement::LOGTRANSPOLY:
+				{
+					Vector<Double> sols = solutions[i]->get();
+					Vector<Double> errs = solutions[i]->getError();
+					for (uInt j=0; j<_nLTPCoeffs; j++) {
+						ltpMatrices[SPXSOL](count, j) = sols[j];
+						ltpMatrices[SPXERR](count, j) = errs[j];
 					}
 				}
 				break;
 				default:
-					LogOrigin logOrigin(_class, __FUNCTION__);
-					*_log << "Logic Error: Unhandled Spectral Element type"
+
+					*_log << LogOrigin(_class, __FUNCTION__)
+						<< "Logic Error: Unhandled Spectral Element type"
 						<< LogIO::EXCEPTION;
 					break;
 				}
@@ -318,7 +330,6 @@ void ImageProfileFitterResults::_writeLogfile(const String& str, Bool open, Bool
 	}
 }
 
-
 void ImageProfileFitterResults::_setResults() {
     LogOrigin logOrigin(_class, __FUNCTION__);
     Double fNAN = casa::doubleNaN();
@@ -329,6 +340,9 @@ void ImageProfileFitterResults::_setResults() {
     if (_nPLPCoeffs > 0) {
     	nComps++;
     }
+    if (_nLTPCoeffs > 0) {
+    	nComps++;
+    }
     uInt aSize = _fitters->size();
 	Array<Bool> attemptedArr(IPosition(1, aSize), False);
 	Array<Bool> successArr(IPosition(1, aSize), False);
@@ -337,12 +351,18 @@ void ImageProfileFitterResults::_setResults() {
 	_worldCoords = Matrix<String>((Int)NAXISTYPES, aSize, "");
 	Array<Int> niterArr(IPosition(1, aSize), -1);
 	std::auto_ptr<vector<vector<Matrix<Double> > > > pcfMatrices = _createPCFMatrices();
-	Matrix<Double> blank(aSize, _nPLPCoeffs, fNAN);
+	Matrix<Double> blank(aSize, max(_nPLPCoeffs, _nLTPCoeffs), fNAN);
+	vector<Matrix<Double> > plpMatrices(NSPXSOLMATRICES);
+	vector<Matrix<Double> > ltpMatrices(NSPXSOLMATRICES);
 
-	vector<Matrix<Double> > plpMatrices(NPLPSOLMATRICES);
-	for (uInt i=0; i<NPLPSOLMATRICES; i++) {
+	for (uInt i=0; i<NSPXSOLMATRICES; i++) {
 		// because assignmet of Arrays is by reference, which is horribly confusing
-		plpMatrices[i] = blank.copy();
+		if (_nPLPCoeffs > 0) {
+			plpMatrices[i] = blank.copy();
+		}
+		if (_nLTPCoeffs > 0) {
+			ltpMatrices[i] = blank.copy();
+		}
 	}
 	Matrix<String> typeMat(aSize, nComps, "UNDEF");
 	Array<Bool> mask(IPosition(1, aSize), False);
@@ -353,7 +373,7 @@ void ImageProfileFitterResults::_setResults() {
 		attemptedArr, successArr,
 		convergedArr, validArr,
 		typeMat, niterArr,
-		nCompArr, pcfMatrices, plpMatrices,
+		nCompArr, pcfMatrices, plpMatrices, ltpMatrices,
         returnDirection, directionInfo, mask
 
 	);
@@ -449,9 +469,18 @@ void ImageProfileFitterResults::_setResults() {
 		IPosition solArrShape = shape;
 		solArrShape.resize(shape.size()+1, True);
 		solArrShape[solArrShape.size()-1] = _nPLPCoeffs;
-		rec.define("solution", plpMatrices[PLPSOL].reform(solArrShape));
-		rec.define("error", plpMatrices[PLPERR].reform(solArrShape));
+		rec.define("solution", plpMatrices[SPXSOL].reform(solArrShape));
+		rec.define("error", plpMatrices[SPXERR].reform(solArrShape));
 		_results.defineRecord("plp", rec);
+	}
+	if (_nLTPCoeffs > 0) {
+		Record rec;
+		IPosition solArrShape = shape;
+		solArrShape.resize(shape.size()+1, True);
+		solArrShape[solArrShape.size()-1] = _nLTPCoeffs;
+		rec.define("solution", ltpMatrices[SPXSOL].reform(solArrShape));
+		rec.define("error", ltpMatrices[SPXERR].reform(solArrShape));
+		_results.defineRecord("ltp", rec);
 	}
 	Bool writeSolutionImages = (
 		! _centerName.empty() || ! _centerErrName.empty()
@@ -459,6 +488,7 @@ void ImageProfileFitterResults::_setResults() {
 		|| ! _ampName.empty() || ! _ampErrName.empty()
 		|| ! _integralName.empty() || ! _integralErrName.empty()
 		|| ! _plpName.empty() || ! _plpErrName.empty()
+		|| ! _ltpName.empty() || ! _ltpErrName.empty()
 	);
 	if (
 		! _multiFit && writeSolutionImages
@@ -470,7 +500,7 @@ void ImageProfileFitterResults::_setResults() {
 		_multiFit && writeSolutionImages
 	) {
 		if (
-			_nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets + _nPLPCoeffs == 0
+			_nGaussSinglets + _nGaussMultiplets + _nLorentzSinglets + _nPLPCoeffs + _nLTPCoeffs == 0
 		) {
 			*_log << LogIO::WARN << "No functions for which solution images are supported were fit "
 				<< "so no solution images will be written" << LogIO::POST;
@@ -597,7 +627,6 @@ void ImageProfileFitterResults::_writeImages(
 	if (_nPLPCoeffs > 0 && (! _plpName.empty() || ! _plpErrName.empty())) {
 		IPosition maskShape = _results.asRecord("plp").asArrayDouble("solution").shape();
 		Array<Bool> fMask(maskShape);
-
 		maskShape[maskShape.size() - 1] = 1;
 		Array<Bool> reshapedMask = mask.reform(maskShape);
 		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
@@ -612,6 +641,27 @@ void ImageProfileFitterResults::_writeImages(
 			_makeSolutionImage(
 				_plpErrName, mycsys,
 				_results.asRecord("plp").asArrayDouble("error"),
+				"", fMask
+			);
+		}
+	}
+	if (_nLTPCoeffs > 0 && (! _ltpName.empty() || ! _ltpErrName.empty())) {
+		IPosition maskShape = _results.asRecord("ltp").asArrayDouble("solution").shape();
+		Array<Bool> fMask(maskShape);
+		maskShape[maskShape.size() - 1] = 1;
+		Array<Bool> reshapedMask = mask.reform(maskShape);
+		AlwaysAssert(ntrue(mask) == ntrue(reshapedMask), AipsError);
+		if (! _ltpName.empty()) {
+			_makeSolutionImage(
+				_ltpName, mycsys,
+				_results.asRecord("ltp").asArrayDouble("solution"),
+				"", fMask
+			);
+		}
+		if (! _ltpErrName.empty()) {
+			_makeSolutionImage(
+				_ltpErrName, mycsys,
+				_results.asRecord("ltp").asArrayDouble("error"),
 				"", fMask
 			);
 		}
@@ -675,7 +725,7 @@ void ImageProfileFitterResults::_resultsToLog() {
 	ostringstream summary;
 	summary << "****** Fit performed at " << Time().toString() << "******" << endl << endl;
 	summary << _summaryHeader;
-	if (_nPLPCoeffs == 0) {
+	if (_nPLPCoeffs + _nLTPCoeffs == 0) {
 		if (_goodAmpRange.size() == 2) {
 			summary << "       --- valid amplitude range: " << _goodAmpRange << endl;
 		}
@@ -848,8 +898,16 @@ void ImageProfileFitterResults::_resultsToLog() {
 								summary << _powerLogPolyToString(*p);
 							}
 							break;
+						case SpectralElement::LOGTRANSPOLY:
+							{
+								const LogTransformedPolynomialSpectralElement *p
+								= dynamic_cast<const LogTransformedPolynomialSpectralElement*>(solutions[i]);
+								summary << _logTransPolyToString(*p);
+							}
+							break;
 						default:
-							*_log << "Logic Error: Unhandled spectral element type"
+							*_log << LogOrigin(_class, __FUNCTION__)
+								<< "Logic Error: Unhandled spectral element type"
 							    << LogIO::EXCEPTION;
 							break;
 						}
@@ -1135,10 +1193,35 @@ String ImageProfileFitterResults::_powerLogPolyToString(
 	}
 	summary << ")" << endl;
 	summary << "    D            : " << _plpDivisor << endl;
-	Vector<Double> parms, errs;
-	plp.get(parms);
-	plp.getError(errs);
+	Vector<Double> parms = plp.get();
+	Vector<Double> errs = plp.getError();
 	Vector<Bool> fixed = plp.fixed();
+
+	for (uInt j=0; j<parms.size(); j++) {
+		summary << "    c" << j << "           : "
+            << _elementToString(parms[j], errs[j], "", fixed[j]) << endl;
+	}
+	return summary.str();
+}
+
+String ImageProfileFitterResults::_logTransPolyToString(
+	const LogTransformedPolynomialSpectralElement& ltp
+) const {
+	ostringstream summary;
+	summary << "    Type         : LOGARITHMIC TRANSFORMED POLYNOMIAL" << endl;
+	summary << "    Function     : c0 + ";
+	uInt nElements = ltp.get().size();
+	for (uInt i=1; i<nElements; i++) {
+		summary << " + c" << i << "*ln(x/D)";
+		if (i > 2) {
+			summary << "**" << i;
+		}
+	}
+	summary << ")" << endl;
+	summary << "    D            : " << _plpDivisor << endl;
+	Vector<Double> parms = ltp.get();
+	Vector<Double> errs = ltp.getError();
+	Vector<Bool> fixed = ltp.fixed();
 
 	for (uInt j=0; j<parms.size(); j++) {
 		summary << "    c" << j << "           : "
