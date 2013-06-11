@@ -26,7 +26,7 @@
 #
 # inputs = pipeline.tasks.flagging.FlagDeterALMA.Inputs( context, vis=vis,
 #   output_dir='.', autocorr=True, shadow=True, scan=True, scannumber='4,5,8',
-#   intents='*AMPLI*', edgespw=True, fracspw=0.1, fracspwfs=0.1 )
+#   intents='*AMPLI*', edgespw=True, fracspw=0.1, fracspwfps=0.1 )
 #
 # task = pipeline.tasks.flagging.FlagDeterALMA( inputs )
 # jobs = task.analyse()
@@ -177,7 +177,7 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 #                of channels removed from the edge for the ALMA baseline correlator.
 #                In the task interface, it is a subparameter of the edgespw parameter.
 #
-# fracspwfs    - This python float contains the fraction (between 0.0 and 1.0)
+# fracspwfps    - This python float contains the fraction (between 0.0 and 1.0)
 #                of channels removed from the edge for the ACS correlator.  In the
 #                task interface, it it is a subparameter of the edgespw parameter.
 #
@@ -209,11 +209,11 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 # ------------------------------------------------------------------------------
         edgespw  = basetask.property_with_default('edgespw', True)
         fracspw  = basetask.property_with_default('fracspw', 0.0625)
-        fracspwfs  = basetask.property_with_default('fracspwfs', 0.04837)
+        fracspwfps  = basetask.property_with_default('fracspwfps', 0.04837)
 
 	def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
 	    autocorr=None, shadow=None, scan=None, scannumber=None,
-	    intents=None, edgespw=None, fracspw=None, fracspwfs=None, online=None,
+	    intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
 	    fileonline=None, template=None, filetemplate=None ):
 
 		# Initialize the public member variables of the inherited class
@@ -385,7 +385,7 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
                                 # If the twice the number of flagged channels is greater than the
                                 # number of channels for a given spectral window, skip it.
 				if spw.num_channels in set([62, 124, 248]):
-                                    frac_chan = int(round(inputs.fracspwfs * spw.num_channels))
+                                    frac_chan = int(round(inputs.fracspwfps * spw.num_channels))
 				else:
                                     frac_chan = int(round(inputs.fracspw * spw.num_channels))
                                 if 2*frac_chan >= spw.num_channels:
