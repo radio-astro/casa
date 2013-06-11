@@ -36,38 +36,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement(
-	uInt n
-) : CompiledSpectralElement(SpectralElement::LOGTRANSPOLY, n) {
-	if (n == 0) {
-		throw AipsError(_ORIGIN + "n must be greater than zero.");
+	uInt order
+) : PolynomialSpectralElement(order) {
+if (order == 0) {
+		throw AipsError(_ORIGIN + "order must be greater than zero.");
 	}
-	_makeFunction();
+	_setType(SpectralElement::LOGTRANSPOLY);
 }
 
 LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement(
 	const Vector<Double>& param
-) : CompiledSpectralElement(SpectralElement::LOGTRANSPOLY, param) {
-	_makeFunction();
-}
-
-void LogTransformedPolynomialSpectralElement::_makeFunction() {
-	ostringstream function;
-	function << "ln(p0)";
-	uInt n = get().size();
-	for (uInt i=1; i<n; i++) {
-		if (i == 1) {
-			function << "+ p1*ln(x)";
-		}
-		else {
-			function << " + p" << i << "*ln(x)^" << i;
-		}
-	}
-	_setFunction(function.str());
+) : PolynomialSpectralElement(param) {
+	_setType(SpectralElement::LOGTRANSPOLY);
 }
 
 LogTransformedPolynomialSpectralElement::LogTransformedPolynomialSpectralElement(
 	const LogTransformedPolynomialSpectralElement &other
-) : CompiledSpectralElement(other) {}
+) : PolynomialSpectralElement(other) {}
 
 LogTransformedPolynomialSpectralElement::~LogTransformedPolynomialSpectralElement() {}
 
@@ -75,7 +60,7 @@ LogTransformedPolynomialSpectralElement& LogTransformedPolynomialSpectralElement
 	const LogTransformedPolynomialSpectralElement& other
 ) {
 	if (this != &other) {
-		CompiledSpectralElement::operator=(other);
+		PolynomialSpectralElement::operator=(other);
 	}
 	return *this;
 }
@@ -84,5 +69,26 @@ SpectralElement* LogTransformedPolynomialSpectralElement::clone() const {
 	return new LogTransformedPolynomialSpectralElement(*this);
 }
 
+ostream &operator<<(
+	ostream &os, const LogTransformedPolynomialSpectralElement &elem
+) {
+	os << SpectralElement::fromType((elem.getType())) << " element: " << endl;
+	uInt degree = elem.getDegree();
+    os << "  Degree:    " << degree << endl;
+    os << "  Function: ln(y) = ln(c0) ";
+    ostringstream ss;
+    Vector<Double> c = elem.get();
+    ss << "c0: " << exp(c[0]) << endl;
+    for (uInt i=1; i<=degree; i++) {
+    	os << " + c" << i << "*ln(x)";
+    	if (i > 1) {
+    		os << "**" << i;
+    	}
+    	ss << "c" << i << ": " << c[i] << endl;
+    }
+    os << endl;
+    os << ss.str();
+    return os;
+}
 } //# NAMESPACE CASA - END
 

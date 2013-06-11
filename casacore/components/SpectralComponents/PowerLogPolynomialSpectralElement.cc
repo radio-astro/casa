@@ -27,6 +27,8 @@
 
 #include <components/SpectralComponents/PowerLogPolynomialSpectralElement.h>
 
+#include <scimath/Functionals/PowerLogarithmicPolynomial.h>
+
 #include <casa/iostream.h>
 
 #define _ORIGIN  String("PowerLogPolynomialSpectralElement::") + __FUNCTION__ + ":" + String::toString(__LINE__) + ": "
@@ -34,22 +36,33 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-
+/*
 PowerLogPolynomialSpectralElement::PowerLogPolynomialSpectralElement(
 	uInt n
-) : CompiledSpectralElement(SpectralElement::POWERLOGPOLY, n) {
+) : SpectralElement(SpectralElement::POWERLOGPOLY, n) {
 	if (n == 0) {
 		throw AipsError(_ORIGIN + "n must be greater than zero.");
 	}
-	_makeFunction();
+	//_makeFunction();
+	_setFunction(
+		std::tr1::shared_ptr<PowerLogarithmicPolynomial<Double> >(
+			new PowerLogarithmicPolynomial(n)
+		)
+	);
 }
-
+*/
 PowerLogPolynomialSpectralElement::PowerLogPolynomialSpectralElement(
 	const Vector<Double>& param
-) : CompiledSpectralElement(SpectralElement::POWERLOGPOLY, param) {
-	_makeFunction();
+) : SpectralElement(SpectralElement::POWERLOGPOLY, param) {
+	//_makeFunction();
+	_setFunction(
+		std::tr1::shared_ptr<PowerLogarithmicPolynomial<Double> >(
+			new PowerLogarithmicPolynomial<Double>(param.tovector())
+		)
+	);
 }
 
+/*
 void PowerLogPolynomialSpectralElement::_makeFunction() {
 	ostringstream function;
 	function << "p0";
@@ -70,10 +83,11 @@ void PowerLogPolynomialSpectralElement::_makeFunction() {
 	}
 	_setFunction(function.str());
 }
+*/
 
 PowerLogPolynomialSpectralElement::PowerLogPolynomialSpectralElement(
 	const PowerLogPolynomialSpectralElement &other
-) : CompiledSpectralElement(other) {}
+) : SpectralElement(other) {}
 
 PowerLogPolynomialSpectralElement::~PowerLogPolynomialSpectralElement() {}
 
@@ -81,7 +95,7 @@ PowerLogPolynomialSpectralElement& PowerLogPolynomialSpectralElement::operator=(
 	const PowerLogPolynomialSpectralElement& other
 ) {
 	if (this != &other) {
-		CompiledSpectralElement::operator=(other);
+		SpectralElement::operator=(other);
 	}
 	return *this;
 }
@@ -89,6 +103,34 @@ PowerLogPolynomialSpectralElement& PowerLogPolynomialSpectralElement::operator=(
 SpectralElement* PowerLogPolynomialSpectralElement::clone() const {
 	return new PowerLogPolynomialSpectralElement(*this);
 }
+
+ostream &operator<<(ostream& os, const PowerLogPolynomialSpectralElement& elem) {
+	os << SpectralElement::fromType((elem.getType())) << " element: " << endl;
+	ostringstream function;
+	function << "p0";
+	uInt n = elem.get().size();
+	for (uInt i=1; i<n; i++) {
+		if (i == 1) {
+			function << "*(x)^(p1";
+		}
+		else {
+			function << " + p" << i << "*ln(x)";
+			if (i > 2) {
+				function << "^" << (i-1);
+			}
+		}
+		if (i == n-1) {
+			function << ")";
+		}
+	}
+	os << "  Function:    " << function.str() << endl;
+	const Vector<Double> p = elem.get();
+	for (uInt i=0; i<p.size(); i++) {
+		os << "p" << i << ": " << p[i] << endl;
+	}
+	return os;
+}
+
 
 } //# NAMESPACE CASA - END
 

@@ -81,13 +81,15 @@ public:
 		const CompiledSpectralElement& other
 	);
 
+	/*
 	Bool operator==(
 		const CompiledSpectralElement& other
 	) const;
-
+*/
+	/*
 	// Evaluate the value of the element at x
 	virtual Double operator()(const Double x) const;
-
+*/
 
 	// Get the string of a compiled functional
 	const String& getFunction() const;
@@ -111,10 +113,13 @@ protected:
 
 	virtual void _setFunction(const String& function);
 
+	/*
 private:
 	// The string value for compiled functional
 	String _function;
+	*/
 };
+
 
 //# Global functions
 // <summary> Global functions </summary>

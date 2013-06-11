@@ -29,7 +29,7 @@
 #ifndef COMPONENTS_LOGTRANSFORMEDPOLYNOMIALSPECTRALELEMENT_H
 #define COMPONENTS_LOGTRANSFORMEDPOLYNOMIALSPECTRALELEMENT_H
 
-#include <components/SpectralComponents/CompiledSpectralElement.h>
+#include <components/SpectralComponents/PolynomialSpectralElement.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -53,7 +53,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </etymology>
 //
 // <synopsis>
-// Describes a function that can be used to fit for spectral index and higher order terms
+// Describes a function that can be used to fit for spectral index and higher order terms.
+// The implementation simply subclasses PolynomialSpectralElement since that's all this function
+// really is, whicht the exception the the lhs is ln(y) not y. This means it's the fitter
+// configurator's responsibility to pass in the ln of the actual ordinate values and the ln
+// of the abscissa values, not the ordinate and abscissa values themselves. Essentially, this
+// class differs from PolynomialSpectralElement in its type and its stream operator.
 
 // </synopsis>
 //
@@ -65,13 +70,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // </motivation>
 
 
-class LogTransformedPolynomialSpectralElement: public CompiledSpectralElement {
+class LogTransformedPolynomialSpectralElement: public PolynomialSpectralElement {
 public:
 
 	// Constructor. The n coefficients c_i to be solved for are
 	// ln(c_0) + c_1 * ln(x) + c_2 * ln(x)**2 + c_3 * ln(x)**3 + ... c_(n-1)*ln(x)**(n-1)
-	// where x = nu/nu0
-	explicit LogTransformedPolynomialSpectralElement(uInt n);
+	// where x = nu/nu0. <src> order</order> is the polynomial, so the actual
+	// function will have order+1 coefficients
+	explicit LogTransformedPolynomialSpectralElement(uInt order);
 
 	// Construct with the given parameters. See above constructor for order in which the parameters should
 	// be supplied.
@@ -87,11 +93,11 @@ public:
 	);
 
 	SpectralElement* clone() const;
-
-private:
-	void _makeFunction();
-
 };
+ostream &operator<<(
+	ostream &os, const LogTransformedPolynomialSpectralElement &elem
+);
+
 
 } //# NAMESPACE CASA - END
 

@@ -63,6 +63,10 @@ PowerLogPolynomialSpectralElement makePowerLogPoly(
 	Vector<Double>&x, Vector<Double>& y, const Vector<Double>& coeffs
 );
 
+PolynomialSpectralElement makePoly(
+	Vector<Double>&x, Vector<Double>& y, const Vector<Double>& coeffs
+);
+
 int main() {
 
 	try {
@@ -346,6 +350,40 @@ int main() {
 				AipsError
 			);
 		}
+		{
+			cout << "*** Fit a polynomial" << endl;
+			ProfileFit1D<Double> fitter;
+			Vector<Double> x, y;
+			Vector<Bool> mask(x.size(), True);
+			Vector<Double> estimates(3);
+			estimates[0] = 0.5;
+			estimates[1] = 2;
+			estimates[2] = 1;
+			makePoly(x, y, estimates);
+			fitter.setData(x, y, mask);
+			SpectralList list;
+			list.add(PolynomialSpectralElement(estimates));
+			fitter.setElements(list);
+			AlwaysAssert(fitter.fit(), AipsError);
+			Vector<Double> parms = fitter.getList()[0]->get();
+			cout << "parms " << parms << endl;
+			cout << "niter " << fitter.getNumberIterations() << endl;
+			AlwaysAssert(allNear(parms, estimates, 1e-5), AipsError);
+			Vector<Double> bad(3);
+			bad[0] = 2;
+			bad[1] = 5;
+			bad[2] = 3;
+			list.clear();
+			list.add(PolynomialSpectralElement(bad));
+			fitter.clearList();
+			fitter.setElements(list);
+			AlwaysAssert(fitter.fit(), AipsError);
+			parms = fitter.getList()[0]->get();
+			cout << "niter " << fitter.getNumberIterations() << endl;
+			cout << "parms " << parms << endl;
+			AlwaysAssert(allNear(parms, estimates, 1e-5), AipsError);
+
+		}
 		cout << "OK" << endl;
 		return 0;
 	} catch (const AipsError& err) {
@@ -519,6 +557,29 @@ PowerLogPolynomialSpectralElement makePowerLogPoly(
 		y[i] = plp(x[i]);
 	}
 	return plp;
+
+}
+
+PolynomialSpectralElement makePoly(
+	Vector<Double>&x, Vector<Double>& y, const Vector<Double>& coeffs
+) {
+	x.resize(10);
+	x[0] = 1;
+	x[1] = 3;
+	x[2] = 5;
+	x[3] = 6;
+	x[4] = 8;
+	x[5] = 10;
+	x[6] = 12;
+	x[7] = 15;
+	x[8] = 20;
+	x[9] = 25;
+	y.resize(x.size());
+	PolynomialSpectralElement poly(coeffs);
+	for (uInt i=0; i<x.size(); i++) {
+		y[i] = poly(x[i]);
+	}
+	return poly;
 
 }
 
