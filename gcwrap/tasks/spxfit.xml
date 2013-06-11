@@ -281,7 +281,8 @@ axis having length of 1:
 
 attempted: a boolean array indicating which fits were attempted (eg if too few unmasked points, a fit will not be attempted).
 converged: a boolean array indicating which fits converged. False if the fit was not attempted.
-valid: a boolean array indicating which solutions fall within the specified valid ranges of parameter space
+valid: a boolean array indicating which solutions fall within the specified valid ranges of parameter space, not currently used for this task; all
+solutions are considered valid.
 niter: an int array indicating the number of iterations for each profile, &lt;0 if the fit did not converge
 ncomps: the number of components (gaussian singlets + lorentzian singlets + gaussian multiplets + polynomial) fit for the profile,
         &lt;0 if the fit did not converge
