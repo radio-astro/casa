@@ -26,7 +26,7 @@
 #
 # inputs = pipeline.tasks.flagging.FlagDeterALMA.Inputs( context, vis=vis,
 #   output_dir='.', autocorr=True, shadow=True, scan=True, scannumber='4,5,8',
-#   intents='*AMPLI*', edgespw=True, fracspw=0.1 )
+#   intents='*AMPLI*', edgespw=True, fracspw=0.1, fracspwfs=0.1 )
 #
 # task = pipeline.tasks.flagging.FlagDeterALMA( inputs )
 # jobs = task.analyse()
@@ -65,6 +65,7 @@ from __future__ import absolute_import
 #import casac
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
 
@@ -173,8 +174,12 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 # edgespw      - This python boolean determines whether edge channels are
 #                flagged.
 # fracspw      - This python float contains the fraction (between 0.0 and 1.0)
-#                of channels removed from the edge.  In the task interface, it
-#                it is a subparameter of the edgespw parameter.
+#                of channels removed from the edge for the ALMA baseline correlator.
+#                In the task interface, it is a subparameter of the edgespw parameter.
+#
+# fracspwfs    - This python float contains the fraction (between 0.0 and 1.0)
+#                of channels removed from the edge for the ACS correlator.  In the
+#                task interface, it it is a subparameter of the edgespw parameter.
 #
 # online       - This python boolean determines whether the online flags are
 #                applied.
@@ -202,10 +207,13 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 #               Initial version.
 
 # ------------------------------------------------------------------------------
+        edgespw  = basetask.property_with_default('edgespw', True)
+        fracspw  = basetask.property_with_default('fracspw', 0.0625)
+        fracspwfs  = basetask.property_with_default('fracspwfs', 0.04837)
 
 	def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
 	    autocorr=None, shadow=None, scan=None, scannumber=None,
-	    intents=None, edgespw=None, fracspw=None, online=None,
+	    intents=None, edgespw=None, fracspw=None, fracspwfs=None, online=None,
 	    fileonline=None, template=None, filetemplate=None ):
 
 		# Initialize the public member variables of the inherited class
@@ -216,27 +224,6 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
 		    edgespw=edgespw, fracspw=fracspw, online=online,
 		    fileonline=fileonline, template=template, filetemplate=filetemplate )
-
-        # Reset the defaults for these parameters.
-        @property
-        def edgespw(self):
-                return self._edgespw
-
-        @edgespw.setter
-        def edgespw(self, value):
-                if value is None:
-                    value = True
-                self._edgespw = value
-
-        @property
-        def fracspw(self):
-                return self._fracspw
-
-        @fracspw.setter
-        def fracspw(self, value):
-                if value is None:
-                    value = 0.0625
-                self._fracspw = value
 
 
 # ------------------------------------------------------------------------------
@@ -397,7 +384,10 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 
                                 # If the twice the number of flagged channels is greater than the
                                 # number of channels for a given spectral window, skip it.
-                                frac_chan = int(round(inputs.fracspw * spw.num_channels))
+				if spw.num_channels in set([62, 124, 248]):
+                                    frac_chan = int(round(inputs.fracspwfs * spw.num_channels))
+				else:
+                                    frac_chan = int(round(inputs.fracspw * spw.num_channels))
                                 if 2*frac_chan >= spw.num_channels:
                                         LOG.debug('Too many flagged channels %s for spw %s '% (spw.num_channels, spw.id))
                                         continue
