@@ -105,7 +105,7 @@ namespace casa {
 				IPosition shape(cs.nPixelAxes( ));
 				for ( unsigned int i=0; i < shape.size( ); ++i )
 					shape(i) = dd->dataShape( )[axes[i]];
-				ellipse = new AnnEllipse( qx, qy, major, minor, rot, cs, shape, stokes );
+				ellipse = new AnnEllipse( qx, qy, major/2, minor/2, rot, cs, shape, stokes );
 			} catch ( AipsError &e ) {
 				cerr << "Error encountered creating an AnnEllipse:" << endl;
 				cerr << "\t\"" << e.getMesg( ) << "\"" << endl;

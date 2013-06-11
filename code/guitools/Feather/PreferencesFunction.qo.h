@@ -24,8 +24,27 @@ public:
     //Initialization of the default color
     void setColor( QColor color );
     void setDisplayed( bool visible );
+    void setScatterEligible( bool eligible );
     void setDisplayHidden();
     void setName( const QString& name );
+
+
+    //Getters
+    /**
+     * Whether it is displayed from the permanent, persistent
+     * settings.
+     */
+    bool isDisplayed() const;
+    /**
+     * Displayed in the GUI.  The GUI state will not be persisted
+     * until the "Apply" button is pressed.
+     */
+    bool isDisplayedGUI() const;
+    /**
+     * Can this curve be included in the scatter plot
+     */
+    bool isScatterEligible() const;
+    QString getName() const;
 
     //Initializes the defaults from user settings.
     void initialize( QSettings& settings);
@@ -38,11 +57,15 @@ public:
 
     const CurveDisplay getFunctionPreferences() const;
 
+signals:
+	void displayStatusChanged();
+
 private slots:
 	void visibilityChanged();
 	void showColorDialog();
 private:
 	int id;
+	bool scatterEligible;
 	CurveDisplay curveSettings;
 	QString getBaseStorageId() const;
 	void setButtonColor( QColor color );

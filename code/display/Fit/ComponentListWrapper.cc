@@ -392,8 +392,8 @@ namespace casa {
 
 					//The deconvolved fit should be reported in the region file.
 					deconvolve( image, channelIndex, majorAxisValue, minorAxisValue, posValue );
-					AnnEllipse ellipse(xCenter, yCenter, majorAxisValue,
-					                   minorAxisValue, posValue,
+					AnnEllipse ellipse(xCenter, yCenter, majorAxisValue/2,
+					                   minorAxisValue/2, posValue,
 					                   coordSystem, imageShape, stokes);
 					ellipse.print(fileStream);
 					fileStream << "\n";

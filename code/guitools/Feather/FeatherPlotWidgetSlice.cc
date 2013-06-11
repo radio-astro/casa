@@ -26,7 +26,7 @@
 #include "FeatherPlotWidgetSlice.h"
 
 #include <QtCore/qmath.h>
-
+#include <QDebug>
 namespace casa {
 
 FeatherPlotWidgetSlice::FeatherPlotWidgetSlice(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent)
@@ -44,68 +44,76 @@ void FeatherPlotWidgetSlice::resetColors(){
 	FeatherPlotWidget::resetColors();
 }
 
-void FeatherPlotWidgetSlice::zoom90Other( double dishPosition,
-		const QVector<double>& singleDishZoomDataX, const QVector<double>& singleDishZoomDataY,
-		const QVector<double>& interferometerZoomDataX, const QVector<double>& interferometerZoomDataY){
-	//Add in the zoomed weight functions
-	QVector<double> singleDishWeightZoomX;
-	QVector<double> singleDishWeightZoomY;
-	DataType dType = FeatherDataType::WEIGHT_SD;
-	QVector<double> singleDishWeightXValues = plotData[dType].first;
-	QVector<double> singleDishWeightYValues = plotData[dType].second;
-	for ( int i = 0; i < singleDishWeightXValues.size(); i++ ){
-		if ( singleDishWeightXValues[i] < dishPosition ){
-			singleDishWeightZoomX.append( singleDishWeightXValues[i] );
-			singleDishWeightZoomY.append( singleDishWeightYValues[i] );
-		}
-	}
-	QVector<double> interferometerWeightZoomX;
-	QVector<double> interferometerWeightZoomY;
-	dType = FeatherDataType::WEIGHT_INT;
-	QVector<double> interferometerWeightXValues = plotData[dType].first;
-	QVector<double> interferometerWeightYValues = plotData[dType].second;
-	for ( int i = 0; i < interferometerWeightXValues.size(); i++ ){
-		if ( interferometerWeightXValues[i] < dishPosition ){
-			interferometerWeightZoomX.append( interferometerWeightXValues[i] );
-			interferometerWeightZoomY.append( interferometerWeightYValues[i] );
-		}
-	}
-	dType = FeatherDataType::WEIGHT_SD;
-	addPlotCurve( singleDishWeightZoomX, singleDishWeightZoomY, dType );
-	dType = FeatherDataType::WEIGHT_INT;
-	addPlotCurve( interferometerWeightZoomX, interferometerWeightZoomY, dType );
 
-	dType = FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED;
-	addPlotCurve( singleDishZoomDataX, singleDishZoomDataY, dType );
-	dType = FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED;
-	addPlotCurve( interferometerZoomDataX, interferometerZoomDataY, dType  );
+
+void FeatherPlotWidgetSlice::zoom90( double dishPosition,  CurveType cType, DataType dType ){
+	if ( curvePreferences[cType].isDisplayed()){
+		pair<QVector<double>, QVector<double> > result = limitX( dType, dishPosition );
+		bool sumCurve = FeatherCurveType::isSumCurve( cType );
+		addPlotCurve( result.first, result.second, dType, sumCurve );
+	}
+}
+
+void FeatherPlotWidgetSlice::zoom90Other( double dishPosition){
+	int prefCount = curvePreferences.size();
+	for ( int i = 0; i < prefCount; i++  ){
+		FeatherCurveType::CurveType cType = static_cast<FeatherCurveType::CurveType>(i);
+		if ( FeatherCurveType::isSliceCurve( cType ) ){
+			DataType dType = getDataTypeForCurve( cType );
+			zoom90( dishPosition, cType, dType );
+		}
+	}
 
 	//Sum curve
 	QVector<double> sumX;
 	QVector<double> sumY;
-	initializeSumData( singleDishZoomDataX, singleDishZoomDataY,
-							interferometerZoomDataX, interferometerZoomDataY, sumX, sumY, plot->isLogAmplitude() );
-	addPlotCurve( sumX, sumY, sliceAxis, FeatherCurveType::SUM_LOW_HIGH);
+	bool logAmplitude = plot->isLogAmplitude();
+	initializeSumData( sumX, sumY, logAmplitude );
+
+	QVector<double> xLimited;
+	QVector<double> yLimited;
+	QVector<double> xValues = plotData[FeatherDataType::LOW_WEIGHTED].first;
+	for ( int i = 0; i < static_cast<int>(sumX.size()); i++ ){
+		if ( xValues[i] < dishPosition){
+			xLimited.append( sumX[i] );
+			yLimited.append( sumY[i] );
+		}
+	}
+	addPlotCurve( xLimited, yLimited, sliceAxis, FeatherCurveType::SUM_LOW_HIGH, true);
 }
 
-
+void FeatherPlotWidgetSlice::zoomRect( double minX, double maxX, CurveType cType, DataType dType ){
+	if ( curvePreferences[cType].isDisplayed()){
+		pair<QVector<double>, QVector<double> > result = limitX( dType, minX, maxX );
+		bool sumCurve = FeatherCurveType::isSumCurve( cType );
+		addPlotCurve( result.first, result.second, dType, sumCurve );
+	}
+}
 
 void FeatherPlotWidgetSlice::zoomRectangleOther( double minX, double maxX, double /*minY*/, double /*maxY*/  ){
+	int prefCount = curvePreferences.size();
+	for ( int i = 0; i < prefCount; i++  ){
+		FeatherCurveType::CurveType cType = static_cast<FeatherCurveType::CurveType>(i);
+		if ( FeatherCurveType::isSliceCurve( cType ) ){
+			DataType dType = getDataTypeForCurve( cType );
+			zoomRect( minX, maxX, cType, dType );
+		}
+	}
 
-	//Weight curves
-	QVector<double> singleDishWeightX;
-	QVector<double> singleDishWeightY;
-	DataType dType = FeatherDataType::WEIGHT_SD;
-	initializeDomainLimitedData( minX, maxX, singleDishWeightX, singleDishWeightY,
-			plotData[dType].first, plotData[dType].second );
-	addPlotCurve( singleDishWeightX, singleDishWeightY, dType );
-
-	QVector<double> interferometerWeightX;
-	QVector<double> interferometerWeightY;
-	dType = FeatherDataType::WEIGHT_INT;
-	initializeDomainLimitedData( minX, maxX,  interferometerWeightX, interferometerWeightY,
-			plotData[dType].first, plotData[dType].second);
-	addPlotCurve( interferometerWeightX, interferometerWeightY, dType );
+	//Sum curve
+	QVector<double> sumX;
+	QVector<double> sumY;
+	initializeSumData( sumX, sumY, plot->isLogAmplitude() );
+	QVector<double> xLimited;
+	QVector<double> yLimited;
+	QVector<double> xValues = plotData[FeatherDataType::LOW_WEIGHTED].first;
+	for ( int i = 0; i < static_cast<int>(sumX.size()); i++ ){
+		if ( minX < xValues[i] && xValues[i] < maxX){
+			xLimited.append( sumX[i] );
+			yLimited.append( sumY[i] );
+		}
+	}
+	addPlotCurve( xLimited, yLimited, sliceAxis, FeatherCurveType::SUM_LOW_HIGH, true );
 }
 
 
@@ -116,32 +124,36 @@ void FeatherPlotWidgetSlice::addSumData(){
 void FeatherPlotWidgetSlice::addSumData( bool logScale ){
 	QVector<double> sumX;
 	QVector<double> sumY;
-	DataType sdType = FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED;
-	DataType intType = FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED;
-	initializeSumData( plotData[sdType].first, plotData[sdType].second,
-			plotData[intType].first, plotData[intType].second, sumX, sumY, logScale );
+	initializeSumData( sumX, sumY, logScale );
 	if ( sumX.size() > 0 ){
-		addPlotCurve( sumX, sumY, sliceAxis, FeatherCurveType::SUM_LOW_HIGH );
+		addPlotCurve( sumX, sumY, sliceAxis, FeatherCurveType::SUM_LOW_HIGH, true );
 		plot->replot();
 	}
 }
 
+void FeatherPlotWidgetSlice::addDisplayedPlotCurve( FeatherCurveType::CurveType curveType,
+		FeatherDataType::DataType dataType ){
+
+	if ( curvePreferences[curveType].isDisplayed() ){
+		bool sumCurve = FeatherCurveType::isSumCurve( curveType );
+		addPlotCurve( plotData[dataType].first, plotData[dataType].second, dataType, sumCurve );
+	}
+}
+
 void FeatherPlotWidgetSlice::addZoomNeutralCurves(){
-	DataType sdWeightType = FeatherDataType::WEIGHT_SD;
-	DataType intWeightType = FeatherDataType::WEIGHT_INT;
-	addPlotCurve( plotData[sdWeightType].first, plotData[sdWeightType].second, sdWeightType );
-	addPlotCurve( plotData[intWeightType].first, plotData[intWeightType].second, intWeightType );
+	int prefCount = curvePreferences.size();
+	for ( int i = 0; i < prefCount; i++  ){
+		FeatherCurveType::CurveType cType = static_cast<FeatherCurveType::CurveType>(i);
+		if ( FeatherCurveType::isSliceCurve( cType ) ){
+			DataType dType = getDataTypeForCurve( cType );
+			addDisplayedPlotCurve( cType, dType );
+		}
+	}
 
-	DataType sdType = FeatherDataType::LOW_CONVOLVED_HIGH_WEIGHTED;
-	DataType intType = FeatherDataType::HIGH_CONVOLVED_LOW_WEIGHTED;
-	addPlotCurve( plotData[sdType].first, plotData[sdType].second, sdType );
-	addPlotCurve( plotData[intType].first, plotData[intType].second, intType );
-
-	//Sum curve
-	addSumData();
-
-	initializeMarkers();
-	plot->replot();
+	if ( curvePreferences[FeatherCurveType::SUM_LOW_HIGH].isDisplayed() ){
+		//Sum curve
+		addSumData();
+	}
 }
 
 FeatherPlotWidgetSlice::~FeatherPlotWidgetSlice() {

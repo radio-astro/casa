@@ -44,7 +44,15 @@ public:
 
     virtual String name () const = 0;
 
-    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs () = 0;
+    virtual boost::tuple <MeasurementSet *, Int, Bool> createMs (){
+        return boost::make_tuple ((MeasurementSet *) 0, 0, False);
+        // Useless placeholder implementation
+    }
+
+    virtual boost::tuple <Block<const MeasurementSet *>, Int, Bool> createMss (){
+        return boost::make_tuple (Block<const MeasurementSet *> (), 0, False);
+        // Useless placeholder implementation
+    }
 
     virtual void endOfChunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
     virtual void nextChunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
@@ -52,6 +60,7 @@ public:
     virtual Bool noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/)
     { return False;}
     virtual void startOfData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
+    virtual bool usesMultipleMss () const { return False;}
 
 private:
 
@@ -103,6 +112,29 @@ private:
     const Int nFlagCategories_p;
     Int nRowsToProcess_p;
     Int nSweeps_p;
+
+};
+
+class MultipleMss : public TestWidget {
+
+public:
+
+    MultipleMss ();
+
+    virtual boost::tuple <Block<const MeasurementSet *>, Int, Bool> createMss ();
+
+    virtual String name () const { return "MultipleMss";}
+    virtual void endOfChunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
+    virtual void nextChunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/) {}
+    virtual void nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    virtual Bool noMoreData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/, int /*nRows*/)
+    { return False;}
+    virtual void startOfData (VisibilityIterator2 & /*vi*/, VisBuffer2 * /*vb*/);
+    virtual bool usesMultipleMss () const;
+
+private:
+
+    int nMss_p;
 
 };
 

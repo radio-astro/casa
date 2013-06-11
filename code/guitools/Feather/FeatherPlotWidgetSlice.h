@@ -46,11 +46,16 @@ protected:
 	virtual void resetColors();
 	virtual void addSumData();
 	virtual void zoomRectangleOther( double minX, double maxX, double minY, double maxY  );
-	virtual void zoom90Other( double dishPosition, const QVector<double>& singleDishZoomDataX, const QVector<double>& singleDishZoomDataY,
-			const QVector<double>& interferometerZoomDataX, const QVector<double>& interferometerZoomDataY );
+	virtual void zoom90Other( double dishPosition );
 
 private:
+	void zoom90( double dishPosition,  CurveType cType, DataType dType );
+	void zoomRect( double minX, double maxX, CurveType cType, DataType dType );
 	void addSumData( bool logScale );
+
+	void addDisplayedPlotCurve( FeatherCurveType::CurveType curveType,
+			FeatherDataType::DataType dataType );
+
 };
 
 } /* namespace casa */

@@ -40,6 +40,9 @@
 #include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/MSVis/ViFrequencySelection.h>
 
+// TVI framework
+#include <synthesis/MSVis/AveragingVi2Factory.h>
+
 // To get observatory position from observatory name
 #include <measures/Measures/MeasTable.h>
 
@@ -265,6 +268,7 @@ protected:
 	void parseChanAvgParams(Record &configuration);
 	void parseRefFrameTransParams(Record &configuration);
 	void parseFreqSpecParams(Record &configuration);
+	void parseTimeAvgParams(Record &configuration);
 
 	// From input MS
 	void initDataSelectionParams();
@@ -281,6 +285,9 @@ protected:
 	void reindexSysCalSubTable();
 	void reindexFreqOffsetSubTable();
 	void separateSpwSubtable();
+
+	// Drop channels with non-uniform width when doing channel average
+	void dropNonUniformWidthChannels();
 
 	// From output MS
 	void getOutputNumberOfChannels();
@@ -736,6 +743,7 @@ protected:
 	String velocityType_p;
 
 	// Time transformation parameters
+	Bool timeAverage_p;
 	Double timeBin_p;
 	String timespan_p;
 

@@ -118,11 +118,17 @@ void ExternalAxisWidgetRight::drawTicks( QPainter* painter, int tickLength ){
 void ExternalAxisWidgetRight::drawAxisLabel( QPainter* painter ){
 	 QFont font = painter->font();
 
+	 bool logScale = false;
+	 if ( axisLabel.indexOf( "Log") != -1 ){
+		 logScale = true;
+	 }
 	 int unitIndex = axisLabel.indexOf( "(");
-	 QString mainLabel = axisLabel;
-	 QString unitLabel = "";
-	 if ( unitIndex > 0 ){
-		 mainLabel = axisLabel.left( unitIndex ).trimmed();
+	 if ( logScale ){
+	 	 unitIndex = axisLabel.indexOf( ")")+1;
+	 }
+	 QString mainLabel = axisLabel.left( unitIndex ).trimmed();
+	 QString unitLabel;
+	 if ( logScale ){
 		 unitLabel = axisLabel.right( axisLabel.size() - unitIndex );
 	 }
 

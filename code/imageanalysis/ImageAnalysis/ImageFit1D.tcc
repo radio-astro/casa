@@ -49,7 +49,7 @@ ImageFit1D<T>::ImageFit1D()
  : itsImagePtr(0),
    itsWeightPtr(0),
    itsAxis(0),
-   _converged(False), _success(False), _isValid(True)
+   _converged(False), _success(False), _isValid(True), _x(0)
 {
    checkType();
 }
@@ -128,9 +128,10 @@ void ImageFit1D<T>::setImage (const ImageInterface<T>& image,
 template <class T>  Bool ImageFit1D<T>::setData (
 	const IPosition& pos,
 	const ImageFit1D<T>::AbcissaType abcissaType,
-	const Bool doAbs
-)
-{
+	const Bool doAbs, const Double* const &abscissaDivisor,
+    Array<Double> (*xfunc)(const Array<Double>&),
+    Array<FitterType> (*yfunc)(const Array<FitterType>&)
+) {
 	_resetFitter();
 	const uInt nDim = itsImagePtr->ndim();
 	AlwaysAssert (pos.nelements()==nDim, AipsError);
@@ -165,17 +166,23 @@ template <class T>  Bool ImageFit1D<T>::setData (
 		weights = 1.0;
 	}
 
-	// Generate Abcissa
+	// Generate Abscissa
 
-	Vector<Double> x;
-	if (!makeAbcissa(x, abcissaType, doAbs)) {
-		return False;
+	Vector<Double> x = _x;
+	if (x.size() == 0) {
+		x = makeAbscissa(abcissaType, doAbs, abscissaDivisor);
+		if (xfunc) {
+			x = (*xfunc)(x);
+		}
 	}
 
 	// Set data in fitter; we need to use a Double fitter at present
 
 	Vector<FitterType> y2(y.shape());
 	convertArray(y2, y);
+	if (yfunc) {
+		y2 = (*yfunc)(y2);
+	}
 	Vector<Double> w2(weights.shape());
 	convertArray(w2, weights);
 	if (!itsFitter.setData (x, y2, mask, w2)) {
@@ -215,8 +222,10 @@ template <class T> Bool ImageFit1D<T>::setData (
 
 	// Generate Abcissa
 
-	Vector<Double> x;
-	if (!makeAbcissa(x, abcissaType, doAbs)) return False;
+	Vector<Double> x = _x;
+	if (x.size() == 0) {
+		x = makeAbscissa(abcissaType, doAbs, 0);
+	}
 
 	// Set data in fitter; we need to use a Double fitter at present
 
@@ -274,6 +283,10 @@ Bool ImageFit1D<T>::setAbcissaState (
     CoordinateSystem& cSys, const String& xUnit,
     const String& doppler, uInt pixelAxis
 ) {
+	if (xUnit == "native") {
+		type = ImageFit1D<T>::IM_NATIVE;
+		return True;
+	}
    if (xUnit.contains(String("pix"))) {
       type = ImageFit1D<T>::PIXEL;
       return True;
@@ -304,23 +317,21 @@ Bool ImageFit1D<T>::setAbcissaState (
    return ok;
 }
 
-
-
-// Private functions
-
 template <class T> 
-Bool ImageFit1D<T>::makeAbcissa (Vector<Double>& x, 
-                                 ImageFit1D<T>::AbcissaType type, 
-                                 Bool doAbs)
-{
+Vector<Double> ImageFit1D<T>::makeAbscissa (
+	ImageFit1D<T>::AbcissaType type,
+	Bool doAbs, const Double* const &abscissaDivisor
+) {
    const uInt n = itsImagePtr->shape()(itsAxis);
-   x.resize(n);
-//
+   Vector<Double> x(n);
+
    Double refPix = itsCS.referencePixel()(itsAxis);
    if (type==PIXEL) {
       indgen(x);
-      if (!doAbs) x -= refPix;      
-      return True;
+      if (!doAbs) {
+    	  x -= refPix;
+      }
+      return x;
    }
 
 // Find the pixel axis
@@ -334,39 +345,42 @@ Bool ImageFit1D<T>::makeAbcissa (Vector<Double>& x,
       Double world;
       for (uInt i=0; i<n; i++) {
          if (!sCoord.pixelToVelocity (world, Double(i))) {
-            itsError = sCoord.errorMessage();
-            return False;
+            throw AipsError(sCoord.errorMessage());
          } else {
             if (doAbs) {
                x[i] = world;
             } else {
                Double worldRefVal;
                sCoord.pixelToVelocity (worldRefVal, refPix);
-               world -= worldRefVal;
+               x -= worldRefVal;
             }
          }
       }
-   } else if (type==IM_NATIVE) {
+   }
+   else if (type==IM_NATIVE) {
       const Coordinate& gCoord = itsCS.coordinate(coord);      
       Vector<Double> pixel(gCoord.referencePixel().copy());
       Vector<Double> world;
-//
+
       for (uInt i=0; i<n; i++) {
          pixel(axisInCoord) = i;
          if (!gCoord.toWorld(world, pixel)) {
-            itsError = gCoord.errorMessage();
-            return False;
+            throw AipsError(gCoord.errorMessage());
          }
 //
-         if (!doAbs) gCoord.makeWorldRelative(world);
+         if (!doAbs) {
+        	 gCoord.makeWorldRelative(world);
+         }
          x[i] = world(axisInCoord);
       }
+      if (abscissaDivisor) {
+    	  x /= *abscissaDivisor;
+      }
    } else {
-      itsError = String("Unrecognized abcissa type");
-      return False;
+      throw AipsError("Unrecognized abscissa type");
    }
-//
-   return True;
+   return x;
+
 }
 
 

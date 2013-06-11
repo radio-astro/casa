@@ -394,6 +394,7 @@ namespace casa {
 		curveMap.clear();
 		profileFitMarkers.clear();
 		clearMolecularLines( false );
+		this->xRangeIsShown = false;
 		curveCount = 0;
 		curveCountPrimary = 0;
 		curveCountSecondary = 0;
@@ -970,11 +971,26 @@ namespace casa {
 		return tickLabel;
 	}
 
-	int QtCanvas::getLastAxis() const {
+	int QtCanvas::getIndependentCurveCount() {
+		int count = 0;
+		int masterCount = curveMap.size();
+		for ( int i = 0; i < masterCount; i++ ){
+			QString title = curveMap[i].getLegend();
+			//We don't want to count any fit curves since they are automatically
+			//compatible with the primary curve.
+			int fitIndex = title.indexOf( "FIT");
+			if ( fitIndex < 0 ){
+				count++;
+			}
+		}
+		return count;
+	}
+
+	int QtCanvas::getLastAxis() {
 		int lastAxis = QtPlotSettings::END_AXIS_INDEX;
 		//Don't show the top axis if the user has specified NOT to see it OR
 		//there are multiple curves which are NOT compatible in their top axis units.
-		if ( ! showTopAxis || (!topAxisCompatible && curveMap.size()>1 )) {
+		if ( ! showTopAxis || (!topAxisCompatible && getIndependentCurveCount()>1 )) {
 			lastAxis = QtPlotSettings::xTop;
 		}
 		return lastAxis;
@@ -1135,16 +1151,7 @@ namespace casa {
 		painter->setFont(ft);
 	}
 
-	void QtCanvas::drawxRange(QPainter *painter) {
-		int xStart = getPixelX( xRangeStart );
-		int xEnd = getPixelX( xRangeEnd );
-		xRangeRect.setBottom( MARGIN_TOP );
-		xRangeRect.setTop(height() - MARGIN_BOTTOM-1);
-		xRangeRect.setRight(xStart);
-		xRangeRect.setLeft(xEnd);
-		painter->fillRect(xRangeRect, QColor(100,100,100,100));
-		painter->drawRect(xRangeRect.normalized());
-	}
+
 
 	void QtCanvas::setTraditionalColors( bool traditionalColors ) {
 		this->traditionalColors = traditionalColors;
@@ -1374,7 +1381,7 @@ namespace casa {
 		setCurveData(j, data, ErrorData(), lb, colorCategory );
 
 		setDataRange();
-		return;
+
 	}
 
 	void QtCanvas::plotPolyLines(QString path) {

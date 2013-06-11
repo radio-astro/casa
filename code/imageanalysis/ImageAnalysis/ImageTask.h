@@ -32,11 +32,14 @@
 
 #include <casa/IO/FiledesIO.h>
 
-#include <memory>
-
+#include <imageanalysis/IO/OutputDestinationChecker.h>
 #include <casa/namespace.h>
 
+#include <tr1/memory>
+
 namespace casa {
+class LogFile;
+
 
 class ImageTask {
     // <summary>
@@ -102,7 +105,7 @@ protected:
 
    	virtual CasacRegionManager::StokesControl _getStokesControl() const = 0;
 
-    virtual vector<ImageInputProcessor::OutputStruct> _getOutputStruct();
+    virtual vector<OutputDestinationChecker::OutputStruct> _getOutputStruct();
 
     // does the lion's share of constructing the object, ie checks validity of
     // inputs, etc.
@@ -135,7 +138,7 @@ protected:
 
     String _summaryHeader() const;
 
-    inline const std::auto_ptr<LogIO>& _getLog() const {return _log;}
+    inline const std::tr1::shared_ptr<LogIO>& _getLog() const {return _log;}
 
     inline void _setSupportsLogfile(const Bool b) { _logfileSupport=b;}
 
@@ -143,7 +146,9 @@ protected:
 
     inline Bool _getStretch() const {return _stretch;}
 
-    const String& _getLogfile() const;
+    //const String& _getLogfile() const;
+
+    const std::tr1::shared_ptr<LogFile> _getLogFile() const;
 
     Bool _writeLogfile(
     	const String& output, const Bool open=True,
@@ -171,14 +176,15 @@ protected:
 
 private:
     const ImageInterface<Float> *const _image;
-    std::auto_ptr<LogIO> _log;
+    std::tr1::shared_ptr<LogIO> _log;
     const Record *const _regionPtr;
     Record _regionRecord;
-    String _region, _box, _chan, _stokesString, _mask, _outname, _logfile;
+    String _region, _box, _chan, _stokesString, _mask, _outname /*, _logfile */;
     Bool _overwrite, _stretch, _logfileSupport, _logfileAppend;
-    Int _logFD;
+    //Int _logFD;
 	std::auto_ptr<FiledesIO> _logFileIO;
 	Verbosity _verbosity;
+	std::tr1::shared_ptr<LogFile> _logfile;
 
 
 

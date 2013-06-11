@@ -18,6 +18,7 @@
 % JO  2011-10-03  Release 3.3.0 edits 
 % JO  2012-05-06  Release 3.4.0 edits
 % JO  2012-10-18  Release 4.0.0 edits
+% JO  2013-04-23  Release 4.1.0 edits
 
 \chapter{Image Analysis}
 \label{chapter:analysis}
@@ -55,6 +56,8 @@ The image analysis tasks are:
          (\S~\ref{section:analysis.immath})
    \item {\tt immoments} --- compute the moments of an image cube
          (\S~\ref{section:analysis.moments})
+    \item {\tt impv} --- generate a position-velocity diagram along a slit
+         (\S~\ref{section:analysis.pv})
    \item {\tt imstat} --- calculate statistics on an image or part
          of an image
          (\S~\ref{section:analysis.imstat})
@@ -68,6 +71,9 @@ The image analysis tasks are:
    \item {\tt imregrid} --- regrid an image onto the coordinate
          system of another image 
          (\S~\ref{section:analysis.regrid})
+   \item {\tt imreframe} --- change the frame in which the image
+     reports its spectral values
+         (\S~\ref{section:analysis.reframe})
    \item {\tt imsmooth} --- smooth images in the spectral and angular
      directions
          (\S~\ref{section:analysis.imsmooth})
@@ -177,6 +183,28 @@ chans      =      ''   #  Select the channel(spectral) range
 #                   chans="3~20,50,51"
 \end{verbatim}
 \normalsize
+
+{\tt chans} can also be set in the CASA region format to allow
+settings ins frequency and velocity, e.g.
+\small
+\begin{verbatim}
+ chans=("range=[-50km/s,50km/s], restfreq=100GHz, frame=LSRK")
+\end{verbatim}
+\normalsize
+this example would even define a new velocity system independent of
+the one in the image itself. If the rest frequency and velocity fram
+within the image are being used, the latter two entires are not
+needed. The parentheses are needed when the call is in a single
+command. 
+
+A frequency selection looks as follows:
+
+\small
+\begin{verbatim} 
+chans=("range=[100GHz,100.125GHz]")
+\end{verbatim}
+\normalsize
+
 
 The polarization plane(s) of the image is chosen with the {\tt stokes}
 parameter:
@@ -300,7 +328,7 @@ below.
 The {\tt region} parameter points to a CASA region which can be
 directly specified or listed in a ImageRegion file.  An
 ImageRegion file can be created with the CASA {\tt viewer}'s region
-manager (\S~\ref{section:display.image.rgnmgr}). Or directly using the
+manager (\S~\ref{section:display.image.region}). Or directly using the
 CASA region syntax (Chapter\,\ref{chapter:regionformat}.
 Typically ImageRegion files will have the suffix {\tt '.crtf'} for
 CASA Region Text Format.  
@@ -400,10 +428,8 @@ know what you are doing when using this option!
 \subsection{Examples for {\tt imhead}}
 \label{section:analysis.imhead.examples}
 
-The following uses the example images from NGC5921
-(\S~\ref{section:scripts.ngc5921}).
 
-We can print the summary to the logger:
+Here is an example -- we can print the summary to the logger:
 \small
 \begin{verbatim}
 CASA <51>: imhead('ngc5921.demo.cleanimg.image',mode='summary')
@@ -635,10 +661,7 @@ degenerate missing axes to the image.
 \subsection{Examples for {\tt imcontsub})}
 \label{section:analysis.imcontsub.examples}
 
-The following uses the example images from NGC5921
-(\S~\ref{section:scripts.ngc5921}).
-
-First, we make a clean image without the uv-plane continuum
+For example, we first make a clean image without the uv-plane continuum
 subtraction:
 \small
 \begin{verbatim}
@@ -922,8 +945,7 @@ Detailed examples are given below.
 \subsection{Examples for {\tt immath}}
 \label{section:analysis.immath.examples}
 
-The following are examples using {\tt immath} using NGC5921 
-(\S~\ref{section:scripts.ngc5921}).  Note that the image
+In the following, we show a few examples of {\tt immath}. Note that the image
 names in the {\tt expr} are assumed to refer to existing image files
 in the current working directory.
 
@@ -1245,8 +1267,7 @@ method to make virtual images that are then input in the LEL to the
 {\tt ia.imagecalc} method).
 
 For example, lets assume that we have made a single channel image
-using {\tt clean} for the NGC5921 data (see
-Appendix~\ref{section:scripts.ngc5921}).
+using {\tt clean}
 \small
 \begin{verbatim}
   default('clean')
@@ -1478,7 +1499,7 @@ channels with bad data.
 \subsection{Examples using ({\tt immoments})}
 \label{section:analysis.moments.example}
 
-For example, using the NGC5921 example (\S~\ref{section:scripts.ngc5921}):
+Below is an example for {\tt immoments}:
 \small
 \begin{verbatim}
   default('immoments')
@@ -1519,6 +1540,61 @@ NGC4826 BIMA moment one (right) images as shown in the {\tt viewer}.}
 of planes beyond the global cutoffs in {\tt includepix}
 and {\tt excludepix}.
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Generating Position-Velocity Diagrams ({\tt impv})}
+\label{section:analysis.pv}
+CASA can generate position-velocity (pV) diagrams via the task {\tt
+  impv} or directly in the viewer (see
+\S\ref{section:display.image.pvdiagram}). The viewer application calls
+the task: 
+
+\small
+\begin{verbatim}
+#  impv :: Construct a position-velocity image by choosing two points in the direction plane.
+imagename           =         ''        #  Name of the input image
+outfile             =         ''        #  Output image name. If empty, no image
+                                        #   is written.
+start               =         []        #  The starting pixel in the direction
+                                        #   plane (array of two values).
+end                 =         []        #  The ending pixel in the direction
+                                        #   plane (array of two values).
+width               =          1        #  Width in pixels for averaging pixels perpendicular 
+                                        #  to the slice. Must be an odd integer >= 1 (1 means 
+                                        #  only use the pixels along the slice).
+unit                =   'arcsec'        #  Unit for the offset axis in the
+                                        #   resulting image. Must be a unit of
+                                        #   angular measure.
+chans               =         ''        #  Channels to use. See "help par.chans"
+                                        #   for examples. Channels must be
+                                        #   contiguous. Default is to use all
+                                        #   channels.
+     region         =         ''        #  Region selection. Default is entire
+                                        #   image. No selection is permitted in
+                                        #   the direction plane. See help
+                                        #   par.region.
+
+stokes              =         ''        #  Stokes planes to use. Planes must be
+                                        #   contiguous. Default is to use all
+                                        #   stokes.
+mask                =         ''        #  Mask to use. See help par.mask.
+                                        #   Default is none.
+async               =      False        #  If true the taskname must be started
+                                        #   using impv(...)
+\end{verbatim}
+\normalsize
+
+PV diagrams are generated by placing a ``slicing'' a datacube through
+the RA/DEC planes. The ``slit'' can have a width defined by {\tt
+  halfwidth} and the averaged values across the slit are then stored
+in a new image with position and velocity as the two axes. The slit
+podition is specified by a start and end pixel in the RA/DEC
+plane of the data cube. An angular {\tt unit} can be set to define
+what is stored in the resulting pV image.
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Computing image statistics ({\tt imstat})}
@@ -1533,19 +1609,21 @@ The inputs are:
 \begin{verbatim}
 #  imstat :: Displays statistical information from an image or image region
 imagename           =         ''        #  Name of the input image
-axes                =         -1        #  List of axes to evaluate statistics over.
-                                        #   Default is all axes.
+axes                =         -1        #  List of axes to evaluate statistics over. Default is
+                                        #   all axes.
 region              =         ''        #  Image Region or name. Use Viewer
 box                 =         ''        #  Select one or more box regions
-chans               =         ''        #  Select the channel(spectral) range
-stokes              =         ''        #  Stokes params to image (I,IV,IQU,IQUV).
-                                        #   Default "" => include all
+chans               =         ''        #  Select the channel(spectral) range. See "help
+                                        #   par.chans" for examples.
+stokes              =         ''        #  Stokes params to image (I,IV,IQU,IQUV). Default ""
+                                        #   => include all
 listit              =       True        #  Print stats and bounding box to logger?
 verbose             =       True        #  Print additional messages to logger?
-mask                =         ''        #  Mask to use. See help par.mask. Default is
-                                        #   none.
+mask                =         ''        #  Mask to use. See help par.mask. Default is none.
 logfile             =         ''        #  Name of file to write fit results.
 async               =      False        #  If true the taskname must be started using
+                                        #   imstat(...)
+
               
 \end{verbatim}
 \normalsize
@@ -2094,10 +2172,14 @@ The default inputs are:
 \small
 \begin{verbatim}
 #  imregrid :: regrid an image onto a template image
-imagename           =         ''        #  Name of input image
-template            =         ''        #  Name of reference image
-output              =         ''        #  Name of output regridded image
-async               =      False        #  
+imagename           =         ''        #  Name of the source image
+template            =      'get'        #  A dictionary, refcode, or name of an image that
+                                        #   provides the output shape and coordinate system
+output              =         ''        #  Name for the regridded image
+asvelocity          =       True        #  Regrid spectral axis in velocity space rather than
+                                        #   frequency space?
+axes                =       [-1]        #  The pixel axes to regrid. -1 => all.
+async               =      False        #  If true the taskname must be started using
 \end{verbatim}
 \normalsize
 The {\tt output} image will have the data in {\tt imagename} regridded
@@ -2111,7 +2193,7 @@ grid of the output image:
     system as the one in {\tt template}. Values are filled in as
     blanks if they do not exist in the input. Note that the input and
     template images must have the same coordinate structure to begin
-    with (like 3 axes)
+    with (like 3 or 4 axes, with the same ordering)
   \item {\it a coordinate system (reference code)}: to convert from one coordinate
     frame to another one, e.g. from B1950 to J2000, the {\tt template}
     parameter can be used to specify the output coordinate
@@ -2158,7 +2240,33 @@ grid of the output image:
 %       async -- Run task in a separate process (return CASA prompt)
 %               default: False; example: async=True
 %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Regridding an Image ({\tt imreframe})}
+\label{section:analysis.reframe}
 
+{\tt imreframe} can be used to change the velocity system of an
+image. It is not applying a regridding as a change from radio to
+optical conventions would require, but it will change the labels of the
+velocity axes. 
+
+\small
+\begin{verbatim}
+#  imreframe :: Change the frame in which the image reports its spectral values
+imagename           =         ''        #  Name of the input image
+output              =         ''        #  Name of the output image; '' => modify input image
+outframe            =     'lsrk'        #  Spectral frame in which the frequency or velocity
+                                        #   values will be reported by default
+restfreq            =         ''        #  restfrequency to use for velocity values (e.g
+                                        #   "1.420GHz" for the HI line)
+async               =      False        #  If true the taskname must be started using
+                                        #   imreframe(...)
+\end{verbatim}
+\normalsize
+
+{\tt outframe} defines the velocity frame  (LSRK, BARY, etc, see
+\S\,\ref{section:conv.vel}) of the output image and a rest frequency
+should be specified to relabel the spectral axis in new velocity units. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2880,13 +2988,12 @@ ia.decompose                ia.isopen                   ia.rename
 \end{verbatim}
 \normalsize
 
-A common use of the {\tt ia} tool is to do region statistics on
-an image.  The {\tt imhead} task has {\tt mode='stats'} to do
-this quickly over the entire image cube.  The tool can do this
-on specific planes or sub-regions.  For example, in the Jupiter
-6cm example script (\S~\ref{section:scripts.jupiter}), 
-the {\tt ia} tool is used to get on-source and off-source statistics
-for regression:
+A common use of the {\tt ia} tool is to do region statistics on an
+image.  The {\tt imhead} task has {\tt mode='stats'} to do this
+quickly over the entire image cube.  The tool can do this on specific
+planes or sub-regions.  Here is an example on how to use the {\tt ia}
+tool to get on-source and off-source statistics: 
+
 \small
 \begin{verbatim}
 # The variable clnimage points to the clean image name
@@ -2931,15 +3038,11 @@ access the file until the file is properly closed.
 \section{Examples of CASA Image Analysis}
 \label{section:analysis.examples}
 
-See the scripts provided in Appendix~\ref{chapter:scripts} for examples of
-data and image analysis.  In particular, we refer
-the interested user to the demonstrations for:
-\begin{itemize}
-\item NGC5921 (VLA HI) --- a quick demo of basic CASA spectral line analysis
-      (\ref{section:scripts.ngc5921})
-\item Jupiter (VLA 6cm continuum polarimetry) --- polarization image analysis
-      (\ref{section:scripts.jupiter})
-\end{itemize}
+The data reduction tutorials on \url{casaguides.nrao.edu} provide
+walkthroughs for
+high and low frequency, spectral line and polarization analysis
+techniques. 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

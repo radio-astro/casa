@@ -32,6 +32,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <imageanalysis/Annotations/AnnSymbol.h>
 #include <imageanalysis/Annotations/AnnCircle.h>
+#include <imageanalysis/Annotations/AnnEllipse.h>
 
 #include <casa/namespace.h>
 
@@ -112,14 +113,13 @@ int main() {
 			cout << "Test label offset parsing (CAS-4358)" << endl;
 			Quantity x(0, "deg");
 			Quantity y(0, "deg");
-			Char s = 'o';
 
 			String dirTypeString = MDirection::showType(
 				csys.directionCoordinate().directionType(False)
 			);
 			AnnSymbol symbol(
-				x, y, dirTypeString,
-				csys, s
+				x, y, csys,
+			    AnnSymbol::POINT, Vector<Stokes::StokesTypes>(1, Stokes::I)
 			);
 			String label = "mylabel";
 			symbol.setLabel(label);
@@ -164,10 +164,29 @@ int main() {
 			AlwaysAssert(allEQ(got, stokes), AipsError);
 
 		}
-
+        {
+            cout << "*** test writing and reading ellipse gives expected result, CAS-5190" << endl;
+            IPosition shape(4,100,100, 3, 2);
+            Vector<Stokes::StokesTypes> stokes(1, Stokes::I);
+            AnnEllipse ellipse(
+                Quantity(0, "pix"), Quantity(0, "pix"), Quantity(4, "arcsec"), Quantity(2, "arcsec"),
+                Quantity(40, "deg"), csys, shape, stokes
+            );
+            ostringstream oss;
+            oss << ellipse;
+            RegionTextParser parser5(csys, shape, oss.str());
+            Vector<AsciiAnnotationFileLine> lines = parser5.getLines();
+            cout << "nlines " << lines.size() << endl;
+            AlwaysAssert(lines.size() == 1, AipsError);
+            cout << ellipse << endl;
+            const AnnEllipse* got = dynamic_cast<const AnnEllipse *>(
+                lines[0].getAnnotationBase()
+            );
+            AlwaysAssert(*got == ellipse, AipsError);
+        }
 
     }
-    catch (AipsError x) {
+    catch (const AipsError& x) {
         cerr << "Exception caught: " << x.getMesg() << endl;
         return 1;
     }

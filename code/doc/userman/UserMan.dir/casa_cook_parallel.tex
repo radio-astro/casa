@@ -3,13 +3,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DP 2012-09-26  First version
 % DP 2012-10-15  CASA 4.0 version
+% DP 2013-04-26  CASA 4.1 version
 
 \chapter{Parallel Processing in CASA}
 \label{chapter:parallel}
 
-In CASA 4.0.0, a {\it parallelized} execution of a full data analysis from data import
-to imaging is possible for the first time.
-This functionality is still under development and should be regarded as experimental
+Since CASA 4.0.0, a {\it parallelized} execution of a full data analysis from data import
+to imaging is possible.
+This functionality continues to be under development and should still be regarded as experimental
 but users are encouraged to try this feature if they have access to computers with
 a solid state disk (SSD) or RAID arrays with a Lustre file system or other fast
 file systems. On normal SATA disks, there is no benefit from parallelization as
@@ -44,9 +45,9 @@ is started in parallel on the separate subMSs.
 
 The internal structure of an MMS can be inspected using the new task {\tt listpartition}.
 
-\section{Multi-MS-compatible tasks in CASA 4.0}
+\section{Multi-MS-compatible tasks in CASA 4.1}
 
-The following tasks in CASA 4.0 have been tested to work with MMSs as input:
+The following tasks in CASA 4.1 have been tested to work with MMSs as input:
 \begin{itemize}
 \item {\tt applycal}
 \item {\tt bandpass}
@@ -66,7 +67,7 @@ The following tasks in CASA 4.0 have been tested to work with MMSs as input:
 \item {\tt pclean}
 \item {\tt plotms}
 \item {\tt setjy}
-\item {\tt split} (produces MS by default an MMS if parameter keepmms=True)
+\item {\tt split} (produces MS by default, an MMS if parameter keepmms=True)
 \item {\tt uvcontsub} (produces an MMS)
 \item {\tt virtualconcat} (produces an MMS)
 \item {\tt vishead}

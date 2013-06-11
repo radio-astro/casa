@@ -24,6 +24,7 @@
 //#
 #include "SpecFitSettingsWidgetRadio.qo.h"
 #include <imageanalysis/ImageAnalysis/ImageProfileFitter.h>
+#include <imageanalysis/IO/ImageProfileFitterResults.h>
 #include <imageanalysis/ImageAnalysis/ImageFit1D.h>
 #include <components/SpectralComponents/PCFSpectralElement.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
@@ -37,6 +38,7 @@
 #include <display/QtPlotter/ProfileTaskMonitor.h>
 #include <display/QtPlotter/conversion/Converter.h>
 #include <display/QtPlotter/conversion/ConverterChannel.h>
+#include <display/QtPlotter/conversion/ConverterIntensity.h>
 #include <display/Display/Options.h>
 
 #include <QFileDialog>
@@ -47,7 +49,6 @@
 #include <QThread>
 #include <sys/time.h>
 #include <limits>
-
 
 
 namespace casa {
@@ -622,14 +623,14 @@ namespace casa {
 			const Record& results = specFitThread->getResults();
 
 			//Decide if we got any valid fits
-			Array<Bool> succeeded = results.asArrayBool(ImageProfileFitter::_SUCCEEDED );
-			Array<Bool> valid = results.asArrayBool( ImageProfileFitter::_VALID );
+			Array<Bool> succeeded = results.asArrayBool(ImageProfileFitterResults::_SUCCEEDED );
+			Array<Bool> valid = results.asArrayBool( ImageProfileFitterResults::_VALID );
 			float progressIncrement = 90.0f / ntrue( succeeded );
 			if ( ntrue( succeeded ) > 0 && ntrue( valid ) ) {
 
 				if ( newData ) {
 					//Tell the user basic information about the fit.
-					Array<Bool> converged = results.asArrayBool( ImageProfileFitter::_CONVERGED );
+					Array<Bool> converged = results.asArrayBool( ImageProfileFitterResults::_CONVERGED );
 					String msg( "Fit(s) succeeded: "+String::toString(ntrue(succeeded))+"   \n");
 					msg.append( "Fit(s) converged: "+String::toString(ntrue(converged))+"   \n");
 					msg.append( "Fit(s) valid: "+String::toString(ntrue(valid))+"   \n");
@@ -754,13 +755,11 @@ namespace casa {
 			Int startIndex = -1;
 			Int endIndex = -1;
 			int count = getFitCount( startIndex, endIndex );
-			Vector<Float> yCumValues(count, 0);
-
 			for ( int k = 0; k < curveList.size(); k++ ) {
-
 				QList<SpecFit*> curves = curveList[k];
 				if ( curves.size() > 0 ) {
 					Vector<Float> xValues = curves[0]->getXValues();
+					Vector<Float> yCumValues(xValues.size(), 0);
 					bool curveAdded = false;
 					for ( int i = 0; i < curves.size(); i++ ) {
 						if ( !ui.multiFitCheckBox->isChecked() ||
@@ -772,8 +771,8 @@ namespace casa {
 
 							//Send the curve to the canvas for plotting.
 							pixelCanvas->addPolyLine( xValues, yValues, curveName, QtCanvas::CURVE_COLOR_PRIMARY);
-							for ( int i = 0; i < count; i++ ) {
-								yCumValues[i] = yCumValues[i]+yValues[i];
+							for ( int j = 0; j < count; j++ ) {
+								yCumValues[j] = yCumValues[j]+yValues[j];
 							}
 							curveAdded = true;
 						}
@@ -866,7 +865,26 @@ namespace casa {
 		//Get the coefficients of the polynomial in pixels
 		Vector<Double> coefficients;
 		poly ->get( coefficients );
-		SpecFit* polyFit = new SpecFitPolynomial( coefficients );
+		int coefficientCount = coefficients.size();
+		Vector<float> coeffs( coefficientCount );
+		for ( int i = 0; i < coefficientCount; i++ ){
+			coeffs[i] = static_cast<float>(coefficients[i]);
+		}
+
+		//The coefficients must be in the same units used by the canvas.
+		QString canvasUnits=this->pixelCanvas->getDisplayYUnits();
+		Unit imageUnit = this->getImage()->units();
+		const String imageUnits = imageUnit.getName();
+		QString imageUnitStr( imageUnits.c_str() );
+		Vector<float> hertzValues(coefficientCount, 0);
+		ConverterIntensity::convert( coeffs, hertzValues, imageUnitStr, canvasUnits, -1, "" );
+		Vector<double> convertedCoeffs( coefficientCount );
+		for ( int i = 0; i < coefficientCount; i++ ){
+			convertedCoeffs[i] = coeffs[i];
+		}
+
+
+		SpecFit* polyFit = new SpecFitPolynomial( convertedCoeffs );
 
 		curves.append( polyFit );
 		return successfulFit;
@@ -901,6 +919,15 @@ namespace casa {
 		getConversion( xAxisUnit.toStdString(), velocityUnits, wavelengthUnits );
 		float centerVal = static_cast<float>(fitter->getWorldValue(centerValPix, imPos, xAxisUnit.toStdString(),velocityUnits, wavelengthUnits));
 		float fwhmValX = static_cast<float>(fitter->getWorldValue(fwhmValPix/2+centerValPix, imPos, xAxisUnit.toStdString(),velocityUnits, wavelengthUnits));
+
+		//Note::This converts to standard units.  In the case of frequency, this is "Hz". May
+		//need to add prefix.
+		if ( !velocityUnits && !wavelengthUnits ){
+			QString oldUnits = "Hz";
+			Converter* converter = Converter::getConverter( oldUnits, xAxisUnit );
+			fwhmValX = converter->convert( fwhmValX );
+			centerVal = converter->convert( centerVal );
+		}
 		float fwhmVal = 2 * abs(fwhmValX - centerVal);
 		if ( isnan( centerVal ) || isnan( fwhmVal) || isinf(fwhmVal) || isinf(centerVal) ) {
 			return false;
@@ -913,10 +940,11 @@ namespace casa {
 		const Unit imageUnit = this->getImage()->units();
 		String imageUnits = imageUnit.getName();
 		QString imageUnitsStr( imageUnits.c_str());
-		if ( imageUnitsStr != imageYUnits ) {
+		QString canvasUnits = pixelCanvas->getDisplayYUnits();
+		if ( imageUnitsStr != canvasUnits ) {
 			QString fitCurveName = ui.curveComboBox->currentText();
 			CanvasCurve fitCurve = pixelCanvas->getCurve( fitCurveName );
-			double convertedPeakVal = fitCurve.convertValue( peakVal, centerVal, imageUnitsStr, imageYUnits, xAxisUnit );
+			double convertedPeakVal = fitCurve.convertValue( peakVal, centerVal, imageUnitsStr, /*imageYUnits*/canvasUnits, xAxisUnit );
 			peakVal = convertedPeakVal;
 		}
 

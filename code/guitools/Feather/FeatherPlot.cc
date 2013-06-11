@@ -109,13 +109,13 @@ void FeatherPlot::setAxisLabels(){
 	distanceStr = distanceStr + "(m)";
 	const QString Y_UNITS = " (Jansky/Beam)";
 	if ( plotType==SCATTER_PLOT ){
-		axisLabels[QwtPlot::xBottom] = "Low Resolution " + amplitudeStr + Y_UNITS;
-		axisLabels[QwtPlot::yLeft] = "High Resolution " + amplitudeStr + Y_UNITS;
+		axisLabels[QwtPlot::xBottom] = /*"Low Resolution " +*/ amplitudeStr + Y_UNITS;
+		axisLabels[QwtPlot::yLeft] = /*"High Resolution " +*/ amplitudeStr + Y_UNITS;
 		axisLabels[QwtPlot::yRight] = axisLabels[QwtPlot::yLeft];
 	}
 	else {
 		axisLabels[QwtPlot::xBottom] = distanceStr;
-		axisLabels[QwtPlot::yLeft] = "Slice "+amplitudeStr + Y_UNITS;
+		axisLabels[QwtPlot::yLeft] = /*"Slice "+*/amplitudeStr + Y_UNITS;
 		axisLabels[QwtPlot::yRight] = "Weight "+AMPLITUDE;
 	}
 	if ( axisWidgets[QwtPlot::xBottom] != NULL ){
@@ -200,6 +200,10 @@ void FeatherPlot::insertSingleLegend( QWidget* parent ){
 		if ( parentLayout == NULL ){
 			parentLayout = new QHBoxLayout();
 		}
+		parentLayout->setContentsMargins(0,0,0,0);
+		parent->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred );
+		parent->setMinimumSize( 800, 75 );
+		//parent->setMaximumSize( 0, 75 );
 		parentLayout->addWidget( legend );
 		parent->setLayout( parentLayout );
 	}
@@ -362,7 +366,7 @@ void FeatherPlot::addDiagonal( QVector<double> values, QColor lineColor, QwtPlot
 		diagonalLine = curves[curveIndex];
 	}
 	else {
-		diagonalLine = new FeatherCurve(this,QwtPlot::xBottom, axis);
+		diagonalLine = new FeatherCurve(this,QwtPlot::xBottom, axis, false);
 		diagonalLine->setTitle( FeatherPlot::Y_EQUALS_X );
 		diagonalLine->setFunctionColor( lineColor, true );
 		curves.append( diagonalLine );
@@ -401,8 +405,6 @@ void FeatherPlot::adjustPlotBounds( std::pair<double,double> curveBounds, QwtPlo
 }
 
 
-
-
 void FeatherPlot::setCurveData( FeatherCurve* curve, QwtPlot::Axis yAxis ){
 	curve->adjustData( scaleLogUV, scaleLogAmplitude );
 	std::pair<double,double> xBounds = curve->getBoundsX();
@@ -416,14 +418,14 @@ void FeatherPlot::setCurveData( FeatherCurve* curve, QwtPlot::Axis yAxis ){
 
 
 void FeatherPlot::addCurve( QVector<double> xValues, QVector<double> yValues,
-		QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis ){
+		QColor curveColor, const QString& curveTitle, QwtPlot::Axis yAxis, bool sumCurve ){
 
 	//See if we already have the curve
 	int curveIndex = getCurveIndex( curveTitle);
 	FeatherCurve* curve = NULL;
 	//We need to make a new curve
 	if ( curveIndex < 0 ){
-	    curve  = new FeatherCurve( this, QwtPlot::xBottom, yAxis );
+	    curve  = new FeatherCurve( this, QwtPlot::xBottom, yAxis, sumCurve );
 		if ( isScatterPlot() ){
 			if ( axisWidgets[QwtPlot::yRight] != NULL ){
 				ExternalAxisWidgetRight* rightWidget = dynamic_cast<ExternalAxisWidgetRight*>(axisWidgets[QwtPlot::yRight]);

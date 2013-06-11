@@ -216,7 +216,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="dirtyImageLineEdit"/>
+        <widget class="QLineEdit" name="dirtyImageLineEdit">
+         <property name="toolTip">
+          <string>Absolute path to the dirty image.</string>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">

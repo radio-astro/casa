@@ -27,8 +27,13 @@
 #include <guitools/Feather/PreferencesFunction.qo.h>
 #include <QColorDialog>
 #include <QSettings>
+#include <QDebug>
 
 namespace casa {
+
+const QString PreferencesColor::SCATTER_X_CURVE = "Scatter x-axis curve";
+const QString PreferencesColor::SCATTER_Y_CURVES = "Scatter y-axis curves";
+
 
 PreferencesColor::PreferencesColor(QWidget *parent)
     : QDialog(parent){
@@ -37,19 +42,37 @@ PreferencesColor::PreferencesColor(QWidget *parent)
 
 	setWindowTitle( "Feather Plot Curve Preferences");
 	setModal( false );
+	scatterXIndex = FeatherCurveType::LOW_WEIGHTED;
+	scatterYIndices.append( FeatherCurveType::HIGH_WEIGHTED );
 
 	initializeCurvePreferences();
+
+	//Set up the scatter parameters
+	ui.scatterYAxisList->setSelectionMode( QAbstractItemView::ExtendedSelection );
+	connect( ui.scatterXAxisCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(populateScatterAxisY()));
+
+
+	//Read in any persisted user settings.
 	initializeUser();
+	//Fill in the list and combo based on user settings.
+	populateScatterAxes();
+	//Update the UI with user settings.
 	reset();
 
 	connect( ui.okButton, SIGNAL(clicked()), this, SLOT(colorsAccepted()));
 	connect( ui.cancelButton, SIGNAL(clicked()), this, SLOT(colorsRejected()));
 }
 
+void PreferencesColor::populateScatterAxes(){
+	populateScatterAxisX();
+	populateScatterAxisY();
+}
+
 void PreferencesColor::initializeCurvePreferences(){
 	for ( int i = 0; i < FeatherCurveType::CURVES_END; i++ ){
 		PreferencesFunction* functionPreferences = new PreferencesFunction( i, this );
 		curvePreferences.insert( static_cast<CurveType>(i), functionPreferences );
+		connect( functionPreferences, SIGNAL(displayStatusChanged()), this, SLOT(populateScatterAxes()));
 	}
 
 	//Set up the initial (default) colors
@@ -57,6 +80,7 @@ void PreferencesColor::initializeCurvePreferences(){
 
 	//Add the curve preferences to the ui.
 	addCurvePreferences();
+
 }
 
 void PreferencesColor::setCurveDefaults(){
@@ -81,7 +105,6 @@ void PreferencesColor::setCurveDefaults(){
 	curvePreferences[FeatherCurveType::DIRTY_WEIGHTED]->setColor("#DAA520");
 	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW]->setColor( "#A0522D");
 	curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED]->setColor("#D2B48C");
-	curvePreferences[FeatherCurveType::SCATTER_LOW_HIGH]->setColor( Qt::blue );
 	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setColor( Qt::blue );
 
 	//Now the names of the curves
@@ -105,15 +128,28 @@ void PreferencesColor::setCurveDefaults(){
 
 	//Which curves should be visible
 	curvePreferences[FeatherCurveType::SUM_LOW_HIGH]->setDisplayed( true );
-	curvePreferences[FeatherCurveType::SCATTER_LOW_HIGH]->setDisplayed( true );
 	curvePreferences[FeatherCurveType::X_Y]->setDisplayed( true );
-	curvePreferences[FeatherCurveType::LOW_CONVOLVED_HIGH_WEIGHTED]->setDisplayed( true );
-	curvePreferences[FeatherCurveType::HIGH_CONVOLVED_LOW_WEIGHTED]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::LOW_WEIGHTED]->setDisplayed( true );
+	curvePreferences[FeatherCurveType::HIGH_WEIGHTED]->setDisplayed( true );
 	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setDisplayed( true );
 	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setDisplayed( true );
 	curvePreferences[FeatherCurveType::DISH_DIAMETER]->setDisplayed( true );
 	curvePreferences[FeatherCurveType::ZOOM]->setDisplayed( true );
 	curvePreferences[FeatherCurveType::ZOOM]->setDisplayHidden();
+
+	//Which curves are not eligible for the scatter plot
+	curvePreferences[FeatherCurveType::X_Y]->setScatterEligible( false );
+	curvePreferences[FeatherCurveType::ZOOM]->setScatterEligible( false );
+	curvePreferences[FeatherCurveType::DISH_DIAMETER]->setScatterEligible( false );
+	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setScatterEligible( false );
+	curvePreferences[FeatherCurveType::WEIGHT_HIGH]->setScatterEligible( false );
+}
+
+void PreferencesColor::setRadialPlot( bool radial ){
+	curvePreferences[FeatherCurveType::WEIGHT_LOW]->setEnabled( !radial );
+	if (radial ){
+		curvePreferences[FeatherCurveType::WEIGHT_LOW]->setDisplayed( false );
+	}
 }
 
 void PreferencesColor::addCurvePreferences(){
@@ -136,15 +172,95 @@ void PreferencesColor::addCurvePreferences(){
 	addCurvePreference( ui.dirtyWeightedPreferences, FeatherCurveType::DIRTY_WEIGHTED );
 	addCurvePreference( ui.dirtyConvolvedLowPreferences, FeatherCurveType::DIRTY_CONVOLVED_LOW );
 	addCurvePreference( ui.dirtyConvolvedLowWeightedPreferences, FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED );
-	addCurvePreference(ui.scatterLowHighPreferences, FeatherCurveType::SCATTER_LOW_HIGH);
 	addCurvePreference( ui.sliceSumPreferences, FeatherCurveType::SUM_LOW_HIGH );
-
 }
 
 void PreferencesColor::addCurvePreference( QWidget* holder, CurveType index ){
 	QLayout* layout = new QHBoxLayout();
 	layout->addWidget( curvePreferences[index]);
 	holder->setLayout( layout );
+}
+
+QList<QString> PreferencesColor::getCurveNames() {
+	int preferenceCount = curvePreferences.size();
+	QList<QString> curveNames;
+	for ( int i = 0; i < preferenceCount; i++ ){
+		CurveType index = static_cast<CurveType>(i);
+		bool displayed = curvePreferences[index]->isDisplayedGUI();
+		bool scatter = curvePreferences[index]->isScatterEligible();
+		if ( displayed && scatter ){
+			curveNames.append( curvePreferences[index]->getName());
+		}
+	}
+	return curveNames;
+}
+
+void PreferencesColor::populateScatterAxisX(){
+	QList<QString> curveNames = getCurveNames();
+	int selectedIndex = 0;
+	QString defaultCurve = curvePreferences[scatterXIndex]->getName();
+	int defaultIndex = curveNames.indexOf( defaultCurve );
+	if ( defaultIndex >= 0 ){
+		selectedIndex = defaultIndex;
+	}
+
+	//Populate the xAxis combo
+	int nameCount = curveNames.size();
+	ui.scatterXAxisCombo->clear();
+	QString selectedName = ui.scatterXAxisCombo->currentText();
+	for ( int i = 0; i < nameCount; i++ ){
+		ui.scatterXAxisCombo->addItem( curveNames[i] );
+		if ( selectedName == curveNames[i] ){
+			selectedIndex = i;
+		}
+	}
+	ui.scatterXAxisCombo->setCurrentIndex( selectedIndex );
+}
+
+void PreferencesColor::populateScatterAxisY(){
+
+	//Populate the yAxis Combo taking care not to add the one selected on the
+	//xAxis
+	QString xName = ui.scatterXAxisCombo->currentText();
+
+	//Get the ones that were previously selected so we can restore the
+	//user's choices if possible.
+	QList<QListWidgetItem*> yItems = ui.scatterYAxisList->selectedItems();
+	int yNameCount = yItems.size();
+	QList<QString> yNames;
+	for ( int i = 0; i < yNameCount; i++ ){
+		yNames.append( yItems[i]->text() );
+	}
+
+	//Get the list of available curves.
+	QList<QString> curveNames = getCurveNames();
+
+	//If we didn't have any curves that were previously selected, use the
+	//defaults.
+	if ( yNames.size() == 0  && curveNames.size() > 0 ){
+		int yCount = scatterYIndices.size();
+		for ( int i = 0; i < yCount; i++ ){
+			CurveType cType = static_cast<CurveType>(i);
+			yNames.append( curvePreferences[cType]->getName());
+		}
+	}
+
+	//Remove the previous list
+	ui.scatterYAxisList->clear();
+
+	//Add the new list back in, selecting any that were previously selected.
+	int nameCount = curveNames.size();
+	int currentRow = 0;
+	for ( int i = 0; i < nameCount; i++ ){
+		if ( curveNames[i] != xName ){
+			ui.scatterYAxisList->addItem( curveNames[i] );
+			if ( yNames.contains(curveNames[i])){
+				QListWidgetItem* item = ui.scatterYAxisList->item( currentRow );
+				ui.scatterYAxisList->setItemSelected( item, true );
+			}
+			currentRow++;
+		}
+	}
 }
 
 void PreferencesColor::initializeUser(){
@@ -155,6 +271,21 @@ void PreferencesColor::initializeUser(){
 	for ( QList<CurveType>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
 		curvePreferences[*iter]->initialize( settings );
 	}
+	QString scatterXStr = QString::number( scatterXIndex );
+	scatterXIndex = static_cast<CurveType>(settings.value( SCATTER_X_CURVE, scatterXStr).toInt());
+
+	int scatterYCount = settings.value( SCATTER_Y_CURVES, "0").toInt();
+	if ( scatterYCount > 0 ){
+		scatterYIndices.clear();
+		for ( int i = 0; i < scatterYCount; i++ ){
+			QString key = SCATTER_Y_CURVES+QString::number(i);
+			int index = settings.value( key, "-1").toInt();
+			if ( index >= 0 ){
+				scatterYIndices.append( static_cast<CurveType>(index) );
+			}
+		}
+	}
+	reset();
 }
 
 
@@ -168,23 +299,125 @@ QMap<PreferencesColor::CurveType,CurveDisplay> PreferencesColor::getFunctionColo
 	return curveMap;
 }
 
+FeatherCurveType::CurveType PreferencesColor::getType( const QString& title ) const {
+	CurveType curveType = FeatherCurveType::CURVES_END;
+	QList<CurveType> curveIDs = curvePreferences.keys();
+	for (QList<CurveType>::iterator iter = curveIDs.begin();
+					iter != curveIDs.end(); iter++ ){
+		QString curveTitle = curvePreferences[*iter]->getName();
+		if ( curveTitle == title ){
+			curveType = *iter;
+			break;
+		}
+	}
+	return curveType;
+}
+
+FeatherCurveType::CurveType PreferencesColor::getScatterXCurve() const {
+	QString xTitle = ui.scatterXAxisCombo->currentText();
+	CurveType xType = getType( xTitle );
+	return xType;
+}
+
+QList<FeatherCurveType::CurveType> PreferencesColor::getScatterYCurve() const {
+	QList<CurveType> yCurves;
+	QList<QListWidgetItem*> yCurveItems = ui.scatterYAxisList->selectedItems();
+	for ( QList<QListWidgetItem*>::iterator iter = yCurveItems.begin();
+			iter != yCurveItems.end(); iter++ ){
+		QString curveTitle = (*iter)->text();
+		CurveType yType = getType( curveTitle );
+		if ( yType != FeatherCurveType::CURVES_END ){
+			yCurves.append( yType );
+		}
+	}
+	return yCurves;
+}
+
 void PreferencesColor::setDirtyEnabled( bool enabled ){
 	ui.dirtyGroupBox->setEnabled( enabled );
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setEnabled( enabled );
+	curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setEnabled( enabled );
 	if ( !enabled ){
 		curvePreferences[FeatherCurveType::DIRTY_ORIGINAL]->setDisplayed( false );
 		curvePreferences[FeatherCurveType::DIRTY_WEIGHTED]->setDisplayed( false );
 		curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW]->setDisplayed( false );
 		curvePreferences[FeatherCurveType::DIRTY_CONVOLVED_LOW_WEIGHTED]->setDisplayed( false );
+		curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setDisplayed( false );
+		curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setDisplayed( false );
 	}
 }
 
+FeatherCurveType::CurveType PreferencesColor::findCurve( const QString& title ) const {
+	CurveType cType = FeatherCurveType::CURVES_END;
+	int count = curvePreferences.size();
+	for ( int i = 0; i < count; i++ ){
+		CurveType curveType = static_cast<CurveType>(i);
+		QString curveName = curvePreferences[curveType]->getName();
+		if ( curveName == title ){
+			cType = curveType;
+			break;
+		}
+	}
+	return cType;
+}
+
+void PreferencesColor::resetScatterSettings(){
+	QString xCurveName = curvePreferences[scatterXIndex]->getName();
+	int comboIndex = ui.scatterXAxisCombo->findText( xCurveName);
+	if ( comboIndex >= 0 ){
+		ui.scatterXAxisCombo->setCurrentIndex( comboIndex );
+	}
+
+	int count = scatterYIndices.size();
+	for ( int i = 0; i < count; i++ ){
+		QString yCurveName = curvePreferences[scatterYIndices[i]]->getName();
+		QList<QListWidgetItem*> matchingItems =
+				ui.scatterYAxisList->findItems( yCurveName, Qt::MatchFixedString);
+		if ( matchingItems.size() > 0 ){
+			ui.scatterYAxisList->setItemSelected( matchingItems[0], true );
+		}
+		else {
+			QListWidgetItem* firstItem = ui.scatterYAxisList->item( 0 );
+			ui.scatterYAxisList->setItemSelected( firstItem, true );
+		}
+	}
+}
+
+void PreferencesColor::saveScatterSettings(){
+	scatterYIndices.clear();
+	QList<QListWidgetItem*> selectedItems = ui.scatterYAxisList->selectedItems();
+	int count = selectedItems.size();
+	for ( int i = 0; i < count; i++ ){
+		QString curveName = selectedItems[i]->text();
+		CurveType cType = findCurve( curveName );
+		if ( cType != FeatherCurveType::CURVES_END ){
+			scatterYIndices.append( cType );
+		}
+	}
+
+	QString xAxisStr = ui.scatterXAxisCombo->currentText();
+	CurveType cType = findCurve( xAxisStr );
+	if ( cType != FeatherCurveType::CURVES_END ){
+		scatterXIndex = cType;
+	}
+}
 
 void PreferencesColor::persist(){
-	//Copy the colors from the buttons into the map.
+	saveScatterSettings();
+
 	QSettings settings( Preferences::ORGANIZATION, Preferences::APPLICATION );
 	QList<CurveType> keys = curvePreferences.keys();
 	for ( QList<CurveType>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
 		curvePreferences[*iter]->persist( settings );
+	}
+
+	QString scatterXStr = QString::number( scatterXIndex );
+	settings.setValue( SCATTER_X_CURVE, scatterXStr);
+
+	int scatterYCount = scatterYIndices.count();
+	for ( int i = 0; i < scatterYCount; i++ ){
+		QString key = SCATTER_Y_CURVES+QString::number(i);
+		QString valueStr = QString::number(scatterYIndices[i]);
 	}
 }
 
@@ -204,8 +437,8 @@ void PreferencesColor::reset(){
 	for ( QList<CurveType>::iterator iter = keys.begin(); iter != keys.end(); iter++ ){
 		curvePreferences[*iter]->reset();
 	}
+	resetScatterSettings();
 }
-
 
 
 PreferencesColor::~PreferencesColor(){

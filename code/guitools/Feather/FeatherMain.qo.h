@@ -26,8 +26,8 @@
 #define FEATHERMAIN_QO_H
 
 #include <QtGui/QMainWindow>
-#include <QThread>
 #include <QProgressDialog>
+
 #include <guitools/Feather/FeatherMain.ui.h>
 #include <guitools/Feather/FileLoader.qo.h>
 #include <guitools/Feather/Preferences.qo.h>
@@ -35,72 +35,14 @@
 
 #include <casa/BasicSL/String.h>
 #include <casa/aipstype.h>
+#include <casa/Logging/LogIO.h>
 
-#include <synthesis/MeasurementEquations/Feather.h>
 #include <pair.h>
 namespace casa {
 
 class PlotHolder;
-template <class T> class ImageInterface;
+class FeatherManager;
 
-class FeatherThread : public QThread {
-
-friend class FeatherMain;
-
-public:
-	FeatherThread():featherWorker(NULL),
-		saveOutput(false), fileSaved(true), dirtyImage( false ){}
-	void setFeatherWorker( Feather* worker ){
-		featherWorker = worker;
-	}
-	void setSaveOutput( bool save, const QString& outputPath = ""){
-		saveOutput = save;
-		if ( saveOutput ){
-			saveFilePath = outputPath;
-		}
-	}
-	void setDirtyImageSupported ( bool supported ){
-		dirtyImage = supported;
-	}
-
-	void run();
-	~FeatherThread(){}
-
-private:
-
-	Feather* featherWorker;
-
-	Vector<Float> sDxWeight;
-	Vector<Float> sDxAmpWeight;
-	Vector<Float> sDyWeight;
-	Vector<Float> sDyAmpWeight;
-
-	Vector<Float> intxWeight;
-	Vector<Float> intxAmpWeight;
-	Vector<Float> intyWeight;
-	Vector<Float> intyAmpWeight;
-
-	Vector<Float> sDxCut;
-	Vector<Float> sDxAmpCut;
-	Vector<Float> sDyCut;
-	Vector<Float> sDyAmpCut;
-
-	Vector<Float> intxCut;
-	Vector<Float> intxAmpCut;
-	Vector<Float> intyCut;
-	Vector<Float> intyAmpCut;
-
-	Vector<Float> intxDirty;
-	Vector<Float> intxAmpDirty;
-	Vector<Float> intyDirty;
-	Vector<Float> intyAmpDirty;
-
-	bool saveOutput;
-	bool fileSaved;
-	bool dirtyImage;
-	QString saveFilePath;
-
-};
 
 class FeatherMain : public QMainWindow
 {
@@ -127,7 +69,7 @@ private slots:
 	//the text edits with the new values.
 	void dishDiameterXChanged( double value );
 	void dishDiameterYChanged( double value );
-	void planeModeChanged();
+
 	void functionColorsChanged();
 	void imageFilesChanged();
 	void preferencesChanged();
@@ -137,18 +79,20 @@ private:
 	FeatherMain( const FeatherMain& other );
 	FeatherMain operator=( const FeatherMain& other );
 	QString getFileName( QString path ) const;
-	int getPlaneCount() const;
+
 	void initializeDishDiameterLimit( QLabel* diamLimitLabel );
-	void clearImage( ImageInterface<Float>*& image );
+
 	void clearPlots();
 	bool isInputImagesChanged();
-	bool generateInputImage();
+	//bool generateInputImage();
 	pair<float,float> populateDishDiameters(Bool& validDiameters);
 	float populateSDFactor() const;
-	bool loadImages();
+
 	void updatePlaneInformation();
 	void addOriginalDataToPlots();
+	void addFeatheredDataToPlots();
 	void resetDishDiameters();
+	void resetData();
 	void resetDishDiameter( QLineEdit* dishEdit, QLabel* diamLimit,
 			float value, float defaultValue );
 
@@ -160,16 +104,12 @@ private:
     Preferences preferences;
     PreferencesColor preferencesColor;
 
-    ImageInterface<Float>* lowResImage;
-    ImageInterface<Float>* highResImage;
-    ImageInterface<Float>* dirtyImage;
     QString lowResImagePath;
     QString highResImagePath;
     QString outputImagePath;
     QString dirtyImagePath;
 
-    Feather featherWorker;
-    FeatherThread* thread;
+    FeatherManager* dataManager;
     PlotHolder* plotHolder;
     QProgressDialog progressMeter;
     LogIO logger;

@@ -59,11 +59,18 @@
 #include <display/DisplayDatas/PrincipalAxesDM.h>
 #include <display/DisplayCanvas/WCCSNLAxisLabeller.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
+#include <display/functional/elements.h>
 
 #include <iostream>
 using namespace std;
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+	static const Coordinate &axisToCoordinate( CoordinateSystem *csys, int axis ) {
+		int coord, axisInCoord;
+		csys->findPixelAxis(coord, axisInCoord, axis);
+		return csys->coordinate(coord);
+	}
 
 	const String PrincipalAxesDD::HISTOGRAM_RANGE = "minmaxhist";
 // constructor
@@ -149,8 +156,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // to be the first 3 display axes.  The others are in any old order.
 
 		if (itsPixelInTmp2.nelements()!=nPixelAxes) itsPixelInTmp2.resize(nPixelAxes);
-		itsPixelInTmp2(0) = lin(0);
-		itsPixelInTmp2(1) = lin(1);
+
+		viewer::RangeLimiter<double> xLimiter;
+		viewer::RangeLimiter<double> yLimiter;
+		Vector<int> shape = dataShape( ).asVector( );
+		const Coordinate &xcoord = axisToCoordinate(&itsCoordSys,0);
+		if ( xcoord.type( ) == Coordinate::STOKES ) {
+			xLimiter = viewer::RangeLimiter<double>( 0, shape(itsDisplayAxes[0])-1, ::round );
+		}
+		const Coordinate &ycoord = axisToCoordinate(&itsCoordSys,1);
+		if ( ycoord.type( ) == Coordinate::STOKES ) {
+			yLimiter = viewer::RangeLimiter<double>( 0, shape(itsDisplayAxes[1])-1, ::round );
+		}
+		itsPixelInTmp2(0) = xLimiter(lin(0));
+		itsPixelInTmp2(1) = yLimiter(lin(1));
 		if (nPixelAxes > 2) {
 			itsPixelInTmp2(2) = activeZIndex_;
 		}
@@ -158,7 +177,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsPixelInTmp2(i) = itsAddPixPos(i);
 		}
 //
-		return itsCoordSys.toWorld(fullWorld, itsPixelInTmp2);
+		bool ok = itsCoordSys.toWorld(fullWorld, itsPixelInTmp2);
+		// Looking at related problems in WCCSNLAxisLabeller.cc has led me to believe that
+		// sometime the correct behavior depends on coordinate conversion failure...
+		// While this isn't desirable, resolving it may take a careful review of the
+		// way CoordinateSystem is used for display... <drs>
+		// if ( ! ok ) {
+		// 	cerr << "PrincipalAxesDD::linToFullWorld(...): " << itsCoordSys.errorMessage( ) << endl;
+		// }
+		return ok;
 	}
 
 // Convert a 2d or 3d world coordinate to a 2d WorldCanvas linear (data pixel)

@@ -38,6 +38,7 @@ public:
     const static QString ORGANIZATION;
     const static QString APPLICATION;
     Preferences(QWidget *parent = 0);
+    void setPlaneCount( int count );
     bool isDisplayOutputFunctions() const;
     bool isDisplayLegend() const;
     bool isDisplayOutputScatterPlot() const;
@@ -46,6 +47,8 @@ public:
     bool isLogAmplitude() const;
     bool isLogUV() const;
     bool isXAxisUV() const;
+    bool isPlaneAveraged() const;
+    int getPlaneIndex() const;
     int getLineThickness() const;
     int getDotSize() const;
     ~Preferences();
@@ -58,6 +61,7 @@ private slots:
 	void preferencesAccepted();
 	void preferencesRejected();
 	void xAxisChanged();
+	void planeModeChanged();
 
 private:
 	void initializeCustomSettings();
@@ -74,6 +78,7 @@ private:
 	const static QString LOG_AMPLITUDE;
 	const static QString LOG_UV;
 	const static QString DISPLAY_X_AXIS_UV;
+	const static QString PLANE_AVERAGED;
 
     Ui::PreferencesClass ui;
     int lineThickness;
@@ -86,6 +91,8 @@ private:
     bool logAmplitude;
     bool logUV;
     bool xAxisUV;
+    bool planeAveraged;
+    int planeIndex;
 };
 
 }

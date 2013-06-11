@@ -1651,6 +1651,7 @@ variant initialize_variant( const std::string & ) {
 	    return variant();
 }
 
+
 void variant::dump() const {
 	std::cerr << "Variant type: " << typev << std::endl;
 	switch (typev) {

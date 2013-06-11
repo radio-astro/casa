@@ -4340,7 +4340,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 		// data not currently loaded into memory buffer (vis_).
 
-		Float v = vis_(vpos);
+		Float v = NO_DATA;
+		if ( nPAvg_ > 1 && visDev_ == NORMAL ) {
+			IPosition vpos_end(vpos);
+			vpos_end[axisOn_[Z]] = min( (Int) (vpos[axisOn_[Z]] + nPAvg_-1), (Int) (vis_.shape( )(axisOn_(Z))-1) );
+			const Array<Float> avga = vis_(vpos,vpos_end);
+			Bool delstor = False;
+			const Float *stor = avga.getStorage(delstor);
+			int num = 0;
+			Double sum = 0;
+			for ( size_t x=0; x < avga.nelements(); ++x ) {
+				if ( stor[x] != NO_DATA ) {
+					sum += stor[x];
+					++num;
+				}
+			}
+			avga.freeStorage( stor, delstor );
+			v = (num == 0 ? NO_DATA : (Float) (sum / (Double) num));
+		} else {
+			v = vis_(vpos);
+		}
 
 		if(v == NO_DATA) return "No Data ";
 

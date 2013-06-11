@@ -134,7 +134,7 @@ protected:
 	// assignment operator
 	AnnRegion& operator= (const AnnRegion& rhs);
 
-	Bool operator== (const AnnRegion& other);
+	Bool operator== (const AnnRegion& other) const;
 
 
 	// extend the direction plane region over spectral and/or polarization

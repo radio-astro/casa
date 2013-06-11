@@ -38,7 +38,7 @@
    <item>
     <widget class="QCheckBox" name="visibleCheckBox">
      <property name="toolTip">
-      <string>Select to display the curve.</string>
+      <string>Add/remove a curve from the plot.</string>
      </property>
      <property name="text">
       <string/>
@@ -54,7 +54,7 @@
       </sizepolicy>
      </property>
      <property name="toolTip">
-      <string>Click to select a color for the curve.</string>
+      <string>Press to select a color for the curve in the plot.</string>
      </property>
      <property name="text">
       <string/>

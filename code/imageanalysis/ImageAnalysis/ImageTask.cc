@@ -38,6 +38,7 @@
 #include <images/Images/TempImage.h>
 
 #include <imageanalysis/ImageAnalysis/SubImageFactory.h>
+#include <imageanalysis/IO/LogFile.h>
 
 
 namespace casa {
@@ -52,19 +53,19 @@ ImageTask::ImageTask(
 	_region(region), _box(box),
 	_chan(chanInp), _stokesString(stokes), _mask(maskInp),
 	_outname(outname), _overwrite(overwrite), _stretch(False),
-	_logfileSupport(False), _logfileAppend(False), _logFD(0),
-	_verbosity(NORMAL) {
+	_logfileSupport(False), _logfileAppend(False),/* _logFD(0),*/
+	_verbosity(NORMAL), _logfile() {
     FITSImage::registerOpenFunction();
     MIRIADImage::registerOpenFunction();
 }
 
 ImageTask::~ImageTask() {}
 
-vector<ImageInputProcessor::OutputStruct> ImageTask::_getOutputStruct() {
-	vector<ImageInputProcessor::OutputStruct> outputs(0);
+vector<OutputDestinationChecker::OutputStruct> ImageTask::_getOutputStruct() {
+	vector<OutputDestinationChecker::OutputStruct> outputs(0);
     _outname.trim();
     if (! _outname.empty()) {
-        ImageInputProcessor::OutputStruct outputImage;
+        OutputDestinationChecker::OutputStruct outputImage;
         outputImage.label = "output image";
         outputImage.outputFile = &_outname;
         outputImage.required = True;
@@ -76,8 +77,8 @@ vector<ImageInputProcessor::OutputStruct> ImageTask::_getOutputStruct() {
 
 void ImageTask::_construct(Bool verbose) {
 	String diagnostics;
-	vector<ImageInputProcessor::OutputStruct> outputs = _getOutputStruct();
-	vector<ImageInputProcessor::OutputStruct> *outputPtr = outputs.size() > 0
+	vector<OutputDestinationChecker::OutputStruct> outputs = _getOutputStruct();
+	vector<OutputDestinationChecker::OutputStruct> *outputPtr = outputs.size() > 0
 		? &outputs
 		: 0;
 	vector<Coordinate::Type> necCoords = _getNecessaryCoordinates();
@@ -153,18 +154,26 @@ void ImageTask::setLogfile(const String& lf) {
 	if (! _logfileSupport) {
 		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
 	}
+	try {
+		_logfile.reset(new LogFile(lf));
+		_logfile->setAppend(_logfileAppend);
+	}
+	catch (const AipsError& x) {}
+	/*
 	String mylf = lf;
-	ImageInputProcessor::OutputStruct logFile;
+	OutputDestinationChecker::OutputStruct logFile;
 	logFile.label = "log file";
 	logFile.outputFile = &mylf;
 	logFile.required = False;
 	logFile.replaceable = True;
-	ImageInputProcessor::checkOutput(logFile, *_log);
+	OutputDestinationChecker::checkOutput(logFile, *_log);
 	_logfile = mylf;
+	*/
 
 }
 
-const String& ImageTask::_getLogfile() const {
+// const String& ImageTask::_getLogfile() const {
+const std::tr1::shared_ptr<LogFile> ImageTask::_getLogFile() const {
 	if (! _logfileSupport) {
 		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
 	}
@@ -172,13 +181,15 @@ const String& ImageTask::_getLogfile() const {
 }
 
 Bool ImageTask::_openLogfile() {
-	if (_logfile.empty()) {
+	if (_logfile.get() == 0) {
 		return False;
 	}
 	*_log << LogOrigin(getClass(), __FUNCTION__);
 	if (! _logfileSupport) {
 		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
 	}
+	return _logfile->openFile();
+	/*
 	File log(_logfile);
 	switch (File::FileWriteStatus status = log.getWriteStatus()) {
 	case File::OVERWRITABLE:
@@ -202,23 +213,31 @@ Bool ImageTask::_openLogfile() {
 	_logFileIO.reset(new FiledesIO(_logFD, _logfile.c_str()));
 
 	return True;
+	*/
 }
 
 void ImageTask::_closeLogfile() const {
+	/*
 	if (_logFD > 0) {
 		FiledesIO::close(_logFD);
+	}
+	*/
+	if (_logfile.get() != 0) {
+		_logfile->closeFile();
 	}
 }
 
 Bool ImageTask::_writeLogfile(
 	const String& output, const Bool open, const Bool close
 ) {
+	/*
 	if (open) {
 		if (! _openLogfile()) {
 			return False;
 		}
 	}
-	else if (_logfile.empty()) {
+	*/
+	if (_logfile.get() == 0) {
 		return False;
 	}
 	else {
@@ -227,10 +246,13 @@ Bool ImageTask::_writeLogfile(
 			*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
 		}
 	}
+	_logfile->write(output, open, close);
+	/*
 	_logFileIO->write(output.length(), output.c_str());
 	if (close) {
 		_closeLogfile();
 	}
+	*/
 	return True;
 }
 
@@ -239,6 +261,9 @@ void ImageTask::setLogfileAppend(const Bool a) {
 		*_log << "Logic Error: This task does not support writing of a log file" << LogIO::EXCEPTION;
 	}
 	_logfileAppend = a;
+	if (_logfile.get() != 0) {
+		_logfile->setAppend(a);
+	}
 }
 
 std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
@@ -280,9 +305,6 @@ std::auto_ptr<ImageInterface<Float> > ImageTask::_prepareOutputImage(
 	outImage->put(values == 0 ? subImage->get() : *values);
 	return outImage;
 }
-
-
-
 
 }
 

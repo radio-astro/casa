@@ -37,13 +37,27 @@ namespace casa {
 class FeatherPlotWidgetScatter : public FeatherPlotWidget {
 public:
 	FeatherPlotWidgetScatter(const QString& title, FeatherPlot::PlotType plotType, QWidget *parent = 0);
+	  virtual void setScatterCurves( CurveType xScatter, const QList<CurveType>& yScatters );
 	virtual ~FeatherPlotWidgetScatter();
 protected:
 	virtual void resetColors();
 	virtual void addZoomNeutralCurves();
+
 	virtual void zoomRectangleOther( double minX, double maxX, double minY, double maxY );
-	virtual void zoom90Other( double dishPosition, const QVector<double>& singleDishZoomDataX, const QVector<double>& singleDishZoomDataY,
-			const QVector<double>& interferometerZoomDataX, const QVector<double>& interferometerZoomDataY );
+	virtual void zoom90Other( double dishPosition );
+private:
+	CurveType xScatter;
+	QList<CurveType> yScatters;
+	QVector<double> populateVector(FeatherCurveType::CurveType curveType );
+	void addScatterCurve( const QVector<double>& xVals, const QVector<double>& yVals,
+			double dataLimit, FeatherCurveType::CurveType curveType, bool sumCurve );
+	QVector<double> scaleValues( const QVector<double>& values ) const;
+	QVector<double> unscaleValues( const QVector<double>& values ) const;
+	pair<QVector<double>, QVector<double> > restrictData( const QVector<double>& sourceX,
+			const QVector<double>& sourceY, double valueMinX, double valueMaxX );
+	pair<QVector<double>, QVector<double> > restrictData( const QVector<double>& sourceX,
+				const QVector<double>& sourceY, double valueMinX, double valueMaxX,
+				double valueMinY, double valueMaxY);
 };
 
 } /* namespace casa */

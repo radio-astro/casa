@@ -10,9 +10,18 @@ PreferencesFunction::PreferencesFunction(int index,  QWidget *parent )
 	ui.setupUi(this);
 
 	id = index;
+	scatterEligible = true;
 
 	connect( ui.visibleCheckBox, SIGNAL( clicked()), this, SLOT(visibilityChanged()));
 	connect( ui.colorButton, SIGNAL(clicked()), this, SLOT(showColorDialog()));
+}
+
+void PreferencesFunction::setScatterEligible( bool eligible ){
+	scatterEligible = eligible;
+}
+
+bool PreferencesFunction::isScatterEligible() const {
+	return scatterEligible;
 }
 
 void PreferencesFunction::setColor( QColor baseColor ){
@@ -23,8 +32,20 @@ void PreferencesFunction::setDisplayed( bool displayed ){
 	curveSettings.setVisibility( displayed );
 }
 
+bool PreferencesFunction::isDisplayed() const {
+	return curveSettings.isDisplayed();
+}
+
+bool PreferencesFunction::isDisplayedGUI() const {
+	return ui.visibleCheckBox->isChecked();
+}
+
 void PreferencesFunction::setName( const QString& name ){
 	curveSettings.setName( name );
+}
+
+QString PreferencesFunction::getName() const {
+	return curveSettings.getName();
 }
 
 void PreferencesFunction::setDisplayHidden(){
@@ -104,6 +125,7 @@ void PreferencesFunction::setButtonColor( QColor color ){
 
 void PreferencesFunction::visibilityChanged(){
 	ui.colorButton->setEnabled( ui.visibleCheckBox->isChecked());
+	emit displayStatusChanged();
 }
 
 PreferencesFunction::~PreferencesFunction()

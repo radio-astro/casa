@@ -143,6 +143,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			// (WCCSNLAxisLabellerCoordinateSystem != NULL)
 //cout << " in nlfunc, contr: " << *contrl << " opcode: " << *opcode;
 //cout << "pixel in: " << pixel[0] << "," << pixel[1] << " world in: " << world[0] << "," << world[1]<< endl;
+			//
+			// This 'errstr' was added for keeping track of the error that occurs while processing
+			// each invocation. However, the proper behavior (tick-mark labeling) of the case when
+			// Stokes plotted on the X or Y axis requires the failure of many coordinate conversions.
+			// This problem isn't completely resolved, though, because I was unable to get the other
+			// (non-Stokes) axis to be properly labeled with tick-marks and values. I think this may
+			// be an issue in pgsbox or pgplot... <drs>
+			String errstr;
 			int err;
 			err = 0;
 //
@@ -217,6 +225,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 						// Convert absolute velocity to absolute frequency
 						if (!WCCSNLAxisLabellerSpecCoord.velocityToFrequency(frequency, velocity)) {
+							errstr = "velocity to frequency conversion failed: ";
+							errstr = errstr + WCCSNLAxisLabellerSpecCoord.errorMessage( );
 							err = 2;
 							break;
 						} else {
@@ -232,6 +242,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						}
 						// Convert absolute wavelength to absolute frequency
 						if (!WCCSNLAxisLabellerSpecCoord.wavelengthToFrequency(freq, wav)) {
+							errstr = "wavelength to frequency conversion failed: ";
+							errstr = errstr + WCCSNLAxisLabellerSpecCoord.errorMessage( );
 							err = 2;
 							break;
 						} else {
@@ -246,12 +258,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						}
 						// Convert absolute air wavelength to absolute frequency
 						if (!WCCSNLAxisLabellerSpecCoord.airWavelengthToFrequency(freq, wav)) {
+							errstr = "air wavelength to frequency conversion failed: ";
+							errstr = errstr + WCCSNLAxisLabellerSpecCoord.errorMessage( );
 							err = 2;
 							break;
 						} else {
 							vWorldIn[WCCSNLAxisLabellerSpecAxis] = freq(0);
 						}
 					} else {
+						errstr = "unknown spectral type";
 						err = 2;
 						break;
 					}
@@ -282,6 +297,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if (!WCCSNLAxisLabellerCoordinateSystem->toMix(vWorldOut, vPixelOut, vWorldIn, vPixelIn,
 					        WCCSNLAxisLabellerWorldAxes, WCCSNLAxisLabellerPixelAxes,
 					        WCCSNLAxisLabellerWorldMin, WCCSNLAxisLabellerWorldMax)) {
+						errstr = "world/pixel to world/pixel conversion failed: ";
+						errstr = errstr + WCCSNLAxisLabellerCoordinateSystem->errorMessage( );
 						err = 2;
 						break;
 					}
@@ -392,6 +409,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 							// Convert absolute frequency to absolute velocity
 							if (!WCCSNLAxisLabellerSpecCoord.frequencyToVelocity (velocity, frequency)) {
+								errstr = "absolute frequency to absolute velocity failed: ";
+								errstr = errstr + WCCSNLAxisLabellerSpecCoord.errorMessage( );
 								err = 3;
 							} else {
 								world[WCCSNLAxisLabellerSpecAxis] = velocity;
@@ -407,6 +426,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							freq(0) = frequency;
 							// Convert absolute frequency to absolute wavelength
 							if (!WCCSNLAxisLabellerSpecCoord.frequencyToWavelength (wav, freq)) {
+								errstr = "absolute frequency to absolute wavelength conversion failed: ";
+								errstr = errstr + WCCSNLAxisLabellerSpecCoord.errorMessage( );
 								err = 3;
 							} else {
 								world[WCCSNLAxisLabellerSpecAxis] = wav(0);
@@ -422,6 +443,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							freq(0) = frequency;
 							// Convert absolute frequency to absolute air wavelength
 							if (!WCCSNLAxisLabellerSpecCoord.frequencyToAirWavelength (wav, freq)) {
+								errstr = "absolute frequency to absolute air wavelength conversion failed: ";
+								errstr = errstr + WCCSNLAxisLabellerSpecCoord.errorMessage( );
 								err = 3;
 							} else {
 								world[WCCSNLAxisLabellerSpecAxis] = wav(0);
@@ -434,6 +457,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 						}
 					}
 				} else {
+					errstr = "world to pixel conversion failed: ";
+					errstr = errstr + WCCSNLAxisLabellerCoordinateSystem->errorMessage( );
 					err = 3;
 				}//cout << "pixel ou: " << pixel[0] << "," << pixel[1] << " world ou: " << world[0] << "," << world[1]<< endl;
 				break;
@@ -443,6 +468,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 //
 			*ierr = err;
+			// if ( err != 0 ) {
+			// 	cerr << "pgplot:conversions(" << err << "): " << errstr << endl;
+			// }
 			//cout << "pixel ou: " << pixel[0] << "," << pixel[1] << " world ou: " << world[0] << "," << world[1]<< endl;
 		}
 	}	// extern "C"
@@ -1062,4 +1090,3 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 } //# NAMESPACE CASA - END
-

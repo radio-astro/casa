@@ -52,6 +52,7 @@ class SIMapperCollection
 		  CountedPtr<SIImageStore> imagestore,
 		  CountedPtr<FTMachine> ftmachine);
 
+  void addMapper(CountedPtr <SIMapperBase>& map);
   Int nMappers();
   Vector<String> getImageNames();
 
@@ -65,6 +66,8 @@ class SIMapperCollection
   void finalizeDegrid(Int mapperid);
 
   Record getFTMRecord(Int mapperid);
+
+  Bool releaseImageLocks();
 
 protected:
 

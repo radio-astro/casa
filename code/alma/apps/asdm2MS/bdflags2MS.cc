@@ -253,7 +253,7 @@ public:
     for_each(values.begin(), values.end(), bind(&vector<T>::push_back, var(MSFlags_v), _1));
 
     orderedByTimeBALDD_vvv.back().back().push_back(MSFlagCellDescriptor_v.size());
-    MSFlagCellDescriptor_v.push_back(MSFlagCellDescriptor(make_pair<unsigned int, unsigned int>(numChan, numPol),
+    MSFlagCellDescriptor_v.push_back(MSFlagCellDescriptor(make_pair<unsigned int, unsigned int>(numChan, ((numPol==3)? 4:numPol)),
 							  offset));
     LOGEXIT("MSFlagAccumulator::accumulate(unsigned int numChan, unsigned int numPol, T* values)");
   }
@@ -586,7 +586,8 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
       }
     
     if (cellFlagged) numFlaggedRows ++;
-    flag.put((uInt)iRow0, (Array<Bool>)flagCell);
+    
+    flag.put((uInt)iRow0, flagCell);
     flagRow.put((uInt)iRow0, allSet);
     iRow0++;
   }
@@ -965,11 +966,11 @@ int main (int argC, char * argV[]) {
 
     string bdfPath = dsName+"/ASDMBinary/"+replace_all_copy(replace_all_copy(mR->getDataUID().getEntityId().toString(), "/", "_"), ":", "_");
     ProcessorType pt = cfgR->getProcessorType();
+    uInt numFlaggedRows = 0;
     try {
       infostream.str("");
-      infostream << "ASDM Main row #" << iASDMRow++ << " - Considering "<< CProcessorType::toString(pt) << " data contained in " << bdfPath << "." << endl;
-      info(infostream.str());
-      uInt numFlaggedRows = 0;
+      infostream << "ASDM Main row #" << iASDMRow++ << " , "<< CProcessorType::toString(pt) << " data contained in " << bdfPath ;
+
       switch (pt) {
       case ProcessorTypeMod::CORRELATOR :
 	{  
@@ -1032,25 +1033,29 @@ int main (int argC, char * argV[]) {
       default:
 	throw ProcessFlagsException("Unrecognized processor type.");
       }
-      infostream.str("");
-      infostream << numFlaggedRows << " rows are flagged." << endl;
+      infostream << " , " << numFlaggedRows << " flagged rows." << endl;
       info(infostream.str());
     }
     catch (AipsError e) {
+      info(infostream.str());
       infostream.str("");
       infostream << e.getMesg() << endl;
       info(infostream.str());
     }
     catch (ProcessFlagsException e) {
+      info(infostream.str());
       infostream.str("");
       infostream << e.getMessage() << " , bdf path = " << bdfPath << ", processor type = " << CProcessorType::toString(pt) << endl;
       info(infostream.str());
     }
     catch (SDMDataObjectStreamReaderException e) {
+      info(infostream.str());
       infostream.str("");
       infostream << e.getMessage() << endl;
       info(infostream.str());
     }
   }
+  mainTable.flush(); 
+
   LOGEXIT("int main (int argC, char * argV[])");
 }

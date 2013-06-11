@@ -51,7 +51,7 @@ ImageInputProcessor::~ImageInputProcessor() {
 
 void ImageInputProcessor::process(
 	ImageInterface<Float>*& image, Record& regionRecord,
-	String& diagnostics, vector<OutputStruct> *outputStruct,
+	String& diagnostics, vector<OutputDestinationChecker::OutputStruct> *outputStruct,
 	String& stokes, const String& imagename, const Record* regionPtr,
 	const String& regionName, const String& box,
 	const String& chans,
@@ -81,7 +81,7 @@ void ImageInputProcessor::process(
 
 void ImageInputProcessor::process(
 	Record& regionRecord, String& diagnostics,
-	vector<OutputStruct> * const outputStruct, String& stokes,
+	vector<OutputDestinationChecker::OutputStruct> * const outputStruct, String& stokes,
 	const ImageInterface<Float> *const &image,
 	const Record* regionPtr, const String& regionName,
 	const String& box, const String& chans,
@@ -97,7 +97,7 @@ void ImageInputProcessor::process(
 
 void ImageInputProcessor::_process(
     Record& regionRecord,
-    String& diagnostics, vector<OutputStruct> * const outputStruct,
+    String& diagnostics, vector<OutputDestinationChecker::OutputStruct> * const outputStruct,
     String& stokes, const ImageInterface<Float> *const &image,
     const Record *const &regionPtr,
     const String& regionName, const String& box,
@@ -109,7 +109,8 @@ void ImageInputProcessor::_process(
 	LogOrigin origin("ImageInputProcessor", __FUNCTION__);
     *_log << origin;
     if (outputStruct != 0) {
-    	checkOutputs(outputStruct, *_log);
+        OutputDestinationChecker::checkOutputs(outputStruct, *_log);
+
     }
     *_log << origin;
     if (requiredCoordinateTypes) {
@@ -256,98 +257,5 @@ String ImageInputProcessor::_pairsToString(const std::vector<uInt>& pairs) const
 	return os.str();
 }
 
-void ImageInputProcessor::checkOutput(OutputStruct& output, LogIO& log) {
-	String label = output.label;
-	String name = *(output.outputFile);
-	Bool required = output.required;
-	Bool replaceable = output.replaceable;
-	if (name.empty()) {
-		if (required) {
-			log << label << " cannot be blank" << LogIO::EXCEPTION;
-		}
-		return;
-	}
-	LogIO::Command logLevel = required ? LogIO::SEVERE : LogIO::WARN;
-	LogIO::Command logAction = required ? LogIO::EXCEPTION : LogIO::POST;
-	File f(name);
-	switch (f.getWriteStatus()) {
-	case File::NOT_CREATABLE:
-		log << logLevel << "Requested " << label << " " << name
-			<< " cannot be created so will not be written" << logAction;
-		*(output.outputFile) = "";
-		break;
-	case File::NOT_OVERWRITABLE:
-		log << logLevel << "There is already a file or directory named "
-			<< name << " which cannot be overwritten so the " << label
-			<< " will not be written" << logAction;
-		*(output.outputFile) = "";
-		break;
-	case File::OVERWRITABLE:
-		if (! replaceable) {
-			log << logLevel << "Replaceable flag is false and there is "
-				<< "already a file or directory named " << name
-				<< " so the " << label << " will not be written"
-				<< logAction;
-			*(output.outputFile) = "";
-		}
-		break;
-	default:
-		return;
-	}
-}
-
-
-void ImageInputProcessor::checkOutputs(
-	std::vector<OutputStruct> * const output, LogIO& log
-) {
-	for (
-		std::vector<OutputStruct>::iterator iter = output->begin();
-		iter != output->end();
-		iter++
-	) {
-		checkOutput(*iter, log);
-		/*
-		String label = iter->label;
-		String name = *(iter->outputFile);
-		Bool required = iter->required;
-		Bool replaceable = iter->replaceable;
-		if (name.empty()) {
-			if (required) {
-				log << label << " cannot be blank" << LogIO::EXCEPTION;
-			}
-			else {
-				continue;
-			}
-		}
-		LogIO::Command logLevel = required ? LogIO::SEVERE : LogIO::WARN;
-		LogIO::Command logAction = required ? LogIO::EXCEPTION : LogIO::POST;
-		File f(name);
-		switch (f.getWriteStatus()) {
-		case File::NOT_CREATABLE:
-			log << logLevel << "Requested " << label << " " << name
-				<< " cannot be created so will not be written" << logAction;
-			*(iter->outputFile) = "";
-			break;
-		case File::NOT_OVERWRITABLE:
-			log << logLevel << "There is already a file or directory named "
-				<< name << " which cannot be overwritten so the " << label
-				<< " will not be written" << logAction;
-			*(iter->outputFile) = "";
-			break;
-		case File::OVERWRITABLE:
-			if (! replaceable) {
-				log << logLevel << "Replaceable flag is false and there is "
-					<< "already a file or directory named " << name
-					<< " so the " << label << " will not be written"
-					<< logAction;
-				*(iter->outputFile) = "";
-			}
-			break;
-		default:
-			continue;
-		}
-		*/
-	}
-}
 }
  

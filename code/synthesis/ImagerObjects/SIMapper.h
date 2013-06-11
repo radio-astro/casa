@@ -50,8 +50,8 @@ template<class T> class ImageInterface;
  public:
   // Default constructor
 
-  SIMapper( CountedPtr<SIImageStore> imagestore,
-            CountedPtr<FTMachine> ftmachine, 
+  SIMapper( CountedPtr<SIImageStore>& imagestore,
+            CountedPtr<FTMachine>& ftmachine, 
             Int mapperid);
   ~SIMapper();
 

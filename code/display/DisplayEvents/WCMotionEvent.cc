@@ -78,6 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsPixY = other.itsPixY;
 			itsLinX = other.itsLinX;
 			itsLinY = other.itsLinY;
+			itsWorld.resize(other.itsWorld.size( ));
 			itsWorld = other.itsWorld;
 			itsModifiers = other.itsModifiers;
 		}

@@ -28,6 +28,7 @@
 
 #include <images/Images/ImageInterface.h>
 
+#include <imageanalysis/IO/OutputDestinationChecker.h>
 #include <imageanalysis/Regions/CasacRegionManager.h>
 
 #include <casa/namespace.h>
@@ -56,7 +57,8 @@ class ImageInputProcessor {
 public:
 
 	// struct for checking output file writability
-	struct OutputStruct {
+	/*
+    struct OutputStruct {
 		// label used for messages, eg "residual image", "estmates file"
 		String label;
 		// pointer to the output name
@@ -66,7 +68,7 @@ public:
 		// If a file by the same name already exists, will the task allow it to be overwritten?
 		Bool replaceable;
 	};
-
+*/
 	//constructor
 	ImageInputProcessor();
 
@@ -88,7 +90,7 @@ public:
     void process(
     	ImageInterface<Float>*& image, Record& regionRecord,
     	String& diagnostics,
-    	std::vector<OutputStruct> *const outputStruct,
+    	std::vector<OutputDestinationChecker::OutputStruct> *const outputStruct,
     	String& stokes,	const String& imagename,
     	const Record* regionPtr, const String& regionName,
     	const String& box, const String& chans,
@@ -112,7 +114,7 @@ public:
 	// rectangular region.
     void process(
     	Record& regionRecord,
-    	String& diagnostics, std::vector<OutputStruct> *const outputStruct,
+    	String& diagnostics, std::vector<OutputDestinationChecker::OutputStruct> *const outputStruct,
     	String& stokes,
     	const ImageInterface<Float> *const &image,
     	const Record* regionPtr,
@@ -123,10 +125,6 @@ public:
     	const std::vector<Coordinate::Type> *const &requiredCoordinateTypes,
     	Bool verbose=True
     );
-
-    static void checkOutputs(std::vector<OutputStruct> *const output, LogIO& log);
-
-    static void checkOutput(OutputStruct& output, LogIO& log);
 
     // Get the number of channels that have been selected. The process() method must
     // be called prior to calling this method or an exception is thrown.
@@ -139,7 +137,7 @@ private:
 
     void _process(
     	Record& regionRecord, String& diagnostics,
-    	std::vector<OutputStruct>* outputStruct,
+    	std::vector<OutputDestinationChecker::OutputStruct>* outputStruct,
     	String& stokes, const ImageInterface<Float> *const &image,
     	const Record *const &regionPtr,
     	const String& regionName, const String& box,

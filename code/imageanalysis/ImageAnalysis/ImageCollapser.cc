@@ -151,7 +151,7 @@ ImageInterface<Float>* ImageCollapser::collapse(const Bool wantReturn) const {
 	else {
 		if (subImage.getMask().size() > 0 && ! allTrue(subImage.getMask())) {
 			// mask with one or more False values, must use lower performance methods
-			LatticeStatsBase::StatisticsTypes lattStatType;
+			LatticeStatsBase::StatisticsTypes lattStatType = LatticeStatsBase::NACCUM;
 			switch(_aggType) {
 			case MAX:
 				lattStatType = LatticeStatsBase::MAX;

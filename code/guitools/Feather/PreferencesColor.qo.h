@@ -50,8 +50,11 @@ public:
     typedef FeatherCurveType::CurveType CurveType;
 
     QMap<CurveType,CurveDisplay> getFunctionColors() const;
-    void setDirtyEnabled( bool enabled );
+    CurveType getScatterXCurve() const;
+    QList<CurveType> getScatterYCurve() const;
 
+    void setDirtyEnabled( bool enabled );
+    void setRadialPlot( bool radial );
     ~PreferencesColor();
 
 signals:
@@ -60,10 +63,18 @@ signals:
 private slots:
 	void colorsAccepted();
 	void colorsRejected();
+	void populateScatterAxes();
+	void populateScatterAxisY();
 
 private:
 	void initializeUser();
 	void initializeCurvePreferences();
+	void saveScatterSettings();
+	void resetScatterSettings();
+	void populateScatterAxisX();
+	QList<QString> getCurveNames();
+	CurveType getType( const QString& title ) const;
+	CurveType findCurve( const QString& title ) const;
 	void setCurveDefaults();
 	void addCurvePreferences();
     void reset();
@@ -73,7 +84,10 @@ private:
 
     void addCurvePreference( QWidget* holder, CurveType index );
     QMap<CurveType,PreferencesFunction*> curvePreferences;
-
+    CurveType scatterXIndex;
+    QList<CurveType> scatterYIndices;
+    static const QString SCATTER_X_CURVE;
+    static const QString SCATTER_Y_CURVES;
 
 };
 }

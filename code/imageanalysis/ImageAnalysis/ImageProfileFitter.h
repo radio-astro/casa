@@ -105,10 +105,8 @@ public:
 
     inline String getClass() const { return _class; };
 
-
-
     // set the order of a polynomial to be simultaneously fit.
-    inline void setPolyOrder(const Int p) { _polyOrder = p;}
+    void setPolyOrder(Int p);
 
     // set whether to do a pixel by pixel fit.
     inline void setDoMultiFit(const Bool m) { _multiFit = m; }
@@ -143,18 +141,17 @@ public:
     inline void setIntegralErrName(const String& s) { _integralErrName = s; }
     // </group>
 
-    // set the name of the power logarithmic polynomial image. A separate image
-    // representing each coefficient will be written. The c0 image will have
-    // "_c0" appended to the name. The others will have "_alpha", "_beta", ...
-    // appended to the name.
+    // set the name of the power logarithmic polynomial image.
     inline void setPLPName(const String& s) { _plpName = s; }
 
-    // set the name of the power logarithmic polynomial image. A separate image
-    // representing each coefficient will be written. The c0 image will have
-    // "_c0" appended to the name. The others will have "_alpha", "_beta", ...
-    // appended to the name.
+    // set the name of the power logarithmic polynomial image.
     inline void setPLPErrName(const String& s) { _plpErrName = s; }
 
+    // set the name of the logarithmic transformed polynomial image.
+    inline void setLTPName(const String& s) { _ltpName = s; }
+
+    // set the name of the logarithmic transformed polynomial image.
+    inline void setLTPErrName(const String& s) { _ltpErrName = s; }
 
     // set the range over which PFC amplitude solutions are valid
     void setGoodAmpRange(const Double min, const Double max);
@@ -174,18 +171,18 @@ public:
     inline void setOutputSigmaImage(const String& s) { _sigmaName = s; }
     // </group>
 
-
-    const static String _CONVERGED;
-    const static String _SUCCEEDED;
-    const static String _VALID;
-
     const Array<ImageFit1D<Float> >& getFitters() const;
     // Returns the center, in pixels of the indexth fit.
     const Vector<Double> getPixelCenter( uint index ) const;
+
     //Converts a pixel value into a world value either in velocity, wavelength, or
     //frequency units.
     Double getWorldValue( double pixelVal, const IPosition& imPos, const String& units,
         bool velocity, bool wavelength) const;
+
+    void setAbscissaDivisor(Double d);
+
+    void setAbscissaDivisor(const Quantity& q);
 
 protected:
 
@@ -198,27 +195,17 @@ protected:
     }
 
 private:
-    enum gaussSols {
-	    AMP, CENTER, FWHM, INTEGRAL, AMPERR, CENTERERR,
-	    FWHMERR, INTEGRALERR, NGSOLMATRICES
-	};
-
-	enum plpSols {
-		PLPSOL, PLPERR, NPLPSOLMATRICES
-	};
-
-	enum axisType {
-		LONGITUDE, LATITUDE, FREQUENCY, POLARIZATION, NAXISTYPES
-	};
-	String _residual, _model, _regionString, _xUnit,
+	String _residual, _model, _xUnit,
 		_centerName, _centerErrName, _fwhmName,
 		_fwhmErrName, _ampName, _ampErrName,
-		_integralName, _integralErrName, _plpName, _plpErrName, _sigmaName;
+		_integralName, _integralErrName, _plpName, _plpErrName,
+		_ltpName, _ltpErrName, _sigmaName, _abscissaDivisorForDisplay;
 	Bool _logfileAppend, _fitConverged, _fitDone, _multiFit,
-		_deleteImageOnDestruct, _logResults;
+		_deleteImageOnDestruct, _logResults, _isSpectralIndex;
 	Int _polyOrder, _fitAxis;
 	uInt _nGaussSinglets, _nGaussMultiplets, _nLorentzSinglets,
-		_nPLPCoeffs, _minGoodPoints;
+		_nPLPCoeffs, _nLTPCoeffs;
+	uInt _minGoodPoints;
 	Array<ImageFit1D<Float> > _fitters;
     // subimage contains the region of the original image
 	// on which the fit is performed.
@@ -227,91 +214,19 @@ private:
 	SpectralList _nonPolyEstimates;
 	Vector<Double> _goodAmpRange, _goodCenterRange, _goodFWHMRange;
 	Matrix<String> _worldCoords;
-	vector<axisType> _axisTypes;
 
 	std::auto_ptr<TempImage<Float> > _sigma;
+	Double _abscissaDivisor;
 
 	const static String _class;
 
-	const static uInt _nOthers;
-	const static uInt _gsPlane;
-	const static uInt _lsPlane;
-
     void _getOutputStruct(
-        vector<ImageInputProcessor::OutputStruct>& outputs
+        vector<OutputDestinationChecker::OutputStruct>& outputs
     );
 
     void _checkNGaussAndPolyOrder() const;
 
     void _finishConstruction();
-
-    void _setResults();
-
-    String _radToRa(const Float ras) const;
-
-    void _resultsToLog();
-
-    String _getTag(const uInt i) const;
-
-    std::auto_ptr<vector<vector<Matrix<Double> > > > _createPCFMatrices() const;
-
-    String _elementToString(
-    	const Double value, const Double error,
-    	const String& unit
-    ) const;
-
-    String _pcfToString(
-    	const PCFSpectralElement *const &pcf, const CoordinateSystem& csys,
-    	const Vector<Double> world, const IPosition imPos, const Bool showTypeString=True,
-    	const String& indent=""
-    ) const;
-
-    String _gaussianMultipletToString(
-    	const GaussianMultipletSpectralElement& gm,
-    	const CoordinateSystem& csys, const Vector<Double> world,
-    	const IPosition imPos
-    ) const;
-
-    Bool _setAxisTypes();
-
-    String _polynomialToString(
-    	const PolynomialSpectralElement& poly, const CoordinateSystem& csys,
-    	const Vector<Double> imPix, const Vector<Double> world
-    ) const;
-
-    void _marshalFitResults(
-    	Array<Bool>& attemptedArr, Array<Bool>& successArr,
-    	Array<Bool>& convergedArr, Array<Bool>& validArr,
-    	Matrix<String>& typeMat, Array<Int>& niterArr,
-    	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Matrix<Double> > > >& pcfMatrices,
-    	vector<Matrix<Double> >& plpMatrices, Bool returnDirection,
-        Vector<String>& directionInfo, Array<Bool>& mask
-    );
-
-    static void _makeSolutionImage(
-    	const String& name, const CoordinateSystem& csys,
-    	const Array<Double>& values, const String& unit,
-    	const Array<Bool>& mask
-    );
-
-    void _insertPCF(
-    	vector<vector<Matrix<Double> > >& pcfMatrices, /* Bool& isSolutionSane,*/
-    	const uInt idx, const PCFSpectralElement& pcf,
-    	const uInt row, const uInt col, const IPosition& pos,
-    	const Double increment/*, const uInt npix*/
-    ) const;
-
-    void _writeImages(
-    	const CoordinateSystem& csys,
-    	const Array<Bool>& mask, const String& yUnit
-    ) const;
-
-    /*
-    // moved from ImageAnalysis
-    void _fitProfile(
-        const Bool fitIt=True
-    );
-    */
 
     // moved from ImageAnalysis
     void _fitallprofiles();
@@ -332,16 +247,10 @@ private:
     // to something astronomer friendly if it so desires.
 
     void _fitProfiles(
-    	std::auto_ptr<ImageInterface<Float> >& pFit,
-    	std::auto_ptr<ImageInterface<Float> >& pResid,
+    	const std::auto_ptr<ImageInterface<Float> >& pFit,
+    	const std::auto_ptr<ImageInterface<Float> >& pResid,
         const Bool showProgress=False
     );
-
-    Double _fitAxisIncrement() const;
-
-    Double _centerWorld(
-    	const PCFSpectralElement& solution, const IPosition& imPos
-    ) const;
 
     Bool _inVelocitySpace() const;
 
@@ -350,6 +259,26 @@ private:
     Bool _isPCFSolutionOK(const PCFSpectralElement *const &pcf) const;
 
     Vector< Vector<Double> > _pixelPositions;
+
+    void _setAbscissaDivisorIfNecessary(const Vector<Double>& abscissaValues);
+
+    void _setFitterElements(
+    	ImageFit1D<Float>& fitter, SpectralList& newEstimates,
+    	const std::auto_ptr<PolynomialSpectralElement>& polyEl,
+    	const vector<IPosition>& goodPos,
+    	const IPosition& fitterShape, const IPosition& curPos,
+    	uInt nOrigComps
+    ) const;
+
+    void _updateModelAndResidual(
+    	const std::auto_ptr<ImageInterface<Float> >& pFit,
+    	const std::auto_ptr<ImageInterface<Float> >& pResid,
+        Bool fitOK,
+    	const ImageFit1D<Float>& fitter, const IPosition& sliceShape,
+    	const IPosition& curPos, Lattice<Bool>* const &pFitMask,
+        Lattice<Bool>* const &pResidMask, const Array<Float>& failData,
+        const Array<Bool>& failMask
+    ) const;
 };
 }
 

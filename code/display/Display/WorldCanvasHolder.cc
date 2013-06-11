@@ -426,6 +426,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
+		//iteration zero - do controlling dd;
+		/*if ( controllingDD != NULL && conforms[dd]){
+			if (controllingDD->isDisplayable() ){
+				controllingDD->refreshEH(ev);
+			}
+		}*/
+
 		// iteration one - do rasters:
 		dd = 0;
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
@@ -501,56 +508,43 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (10/07 dk: imperfect attempts have been made to correct the above.  Image
 		// DDs now use WC CS for labelling, though still (wastefully) using a
 		// private CS as well sometimes....
-		dd = 0;
-		//Normal mode
-		if ( !blinkMode ) {
-			for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
-			        iter != itsDisplayList.rend(); ++iter, ++dd ) {
-				if ( conforms[dd] && (*iter)->isDisplayable( )) {
-					if ((*iter)->labelAxes(ev) ) {
-						break;
-					}
+		int displayCount = 0;
+
+		//First try to label the axes using the controllingDD.
+		if ( controllingDD != NULL ) {
+			if ( controllingDD->isDisplayable()) {
+				if ( controllingDD->labelAxes(ev)) {
+					displayCount = 1;
 				}
 			}
 		}
-		//blink mode
-		else {
-			int displayCount = 0;
 
-			//First try to label the axes using the controllingDD.
-			if ( controllingDD != NULL ) {
-				if ( controllingDD->isDisplayable()) {
-					if ( controllingDD->labelAxes(ev)) {
-						displayCount = 1;
+
+		if ( displayCount == 0 ){
+			dd = 0;
+			//Normal mode
+			if ( !blinkMode ) {
+				for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
+			        iter != itsDisplayList.rend(); ++iter, ++dd ) {
+					if ( conforms[dd] && (*iter)->isDisplayable( )) {
+						if ((*iter)->labelAxes(ev) ) {
+							break;
+						}
 					}
 				}
 			}
+			//blink mode
+			else {
 
-
-			if ( displayCount == 0 ) {
-
-				//The order is different depending on whether we are in channel mode
-				//or image(blink mode).
-				if ( !blinkMode ) {
-					for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
-					        iter != itsDisplayList.rend(); ++iter, ++dd ) {
-						if ( conforms[dd] && (*iter)->isDisplayable( )) {
-							if ((*iter)->labelAxes(ev) ) {
-								break;
-							}
-						}
-					}
-				} else {
-					//If we did not have a preset controllingDD, go through and try to label
-					//the axes using the first rasterDD we can find.
-					for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+				//If we did not have a preset controllingDD, go through and try to label
+				//the axes using the first rasterDD we can find.
+				for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 					        iter != itsDisplayList.end(); ++iter, ++dd ) {
-						if ( conforms[dd] && (*iter)->isDisplayable( )) {
-							if ( (*iter)->classType() == Display::Raster ) {
-								if ( (*iter)->labelAxes(ev)) {
-									displayCount = 1;
+					if ( conforms[dd] && (*iter)->isDisplayable( )) {
+						if ( (*iter)->classType() == Display::Raster ) {
+							if ( (*iter)->labelAxes(ev)) {
+								displayCount = 1;
 									break;
-								}
 							}
 						}
 					}
@@ -575,8 +569,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					}
 				}
 			}
-
-
 		}
 
 		wc->releasePGPLOTdevice();
