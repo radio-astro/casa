@@ -106,10 +106,14 @@ class SDImageGenerator(object):
         self.ny = len(grid_table) / self.nx
         x = grid_table[0][4] - grid_table[1][4]
         #self.cellx = casatools.quanta.quantity(x,'deg')
-        self.cellx = '%sdeg'%(x)
+        #self.cellx = '%sdeg'%(x)
         y = grid_table[self.nx][5] - grid_table[0][5]
         #self.celly = casatools.quanta.quantity(y,'deg')
         self.celly = '%sdeg'%(y)
+        # 2013/06/11 TN
+        # cellx and celly (CDELT for direction axes) should
+        # be a physical size (no DEC correction on R.A.).
+        self.cellx = self.celly
         x = 0.5 * (grid_table[0][4] + grid_table[-1][4])
         y = 0.5 * (grid_table[0][5] + grid_table[-1][5])
         #self.center = [casatools.quanta.quantity(x,'deg'),
