@@ -176,7 +176,7 @@ class SDApplyCal(common.SingleDishTaskTemplate):
             args['iflist'] = calapp.iflist
             args['scanlist'] = calapp.scanlist
             args['pollist'] = calapp.pollist
-            args['field'] = calapp.field.strip('"')
+            #args['field'] = calapp.field.strip('"')
             args['applytable'] = [calfrom.gaintable for calfrom in calfroms]
 
             # create job
