@@ -52,6 +52,7 @@ namespace casa {
 
 		setAcceptDrops( true );
 		imageColorsEnabled = false;
+		dropIndex = -1;
 	}
 
 	void ImageScroll::setImageHolder( DisplayDataHolder* holder ) {
@@ -179,7 +180,7 @@ namespace casa {
 		//Since some images may be open others not so we don't have
 		//a uniform width.  Have to go through and ask each one what their
 		//size is.
-		int dropIndex = -1;
+		dropIndex = -1;
 		int height = LAYOUT_MARGIN;
 		int i = 0;
 		QList<ImageView*>::iterator iter = images.begin();
@@ -207,12 +208,9 @@ namespace casa {
 				if ( droppedImageIndex < dropIndex && dropIndex != 0 ) {
 					dropIndex = dropIndex - 1;
 				}
-				QLayout* scrollLayout = layout();
-				scrollLayout->removeWidget( droppedView );
-				QBoxLayout* boxLayout = dynamic_cast<QBoxLayout*>(scrollLayout);
-				boxLayout->insertWidget(dropIndex, droppedView );
 
-				//Update the order of the data list.
+				//Update the order of the data list which will then update the
+				//order in the layout through calls to remove/addImage.
 				QtDisplayData* displayData = droppedView->getData();
 				managedImages->discardDD( displayData, false );
 				managedImages->insertDD( displayData, dropIndex );
@@ -275,10 +273,18 @@ namespace casa {
 		         this, SIGNAL(displayTypeChanged(ImageView*)));
 		connect( viewerImage, SIGNAL( displayColorsChanged( ImageView*)),
 		         this, SIGNAL(displayColorsChanged(ImageView*)));
+
 		QLayout* scrollLayout = layout();
 		scrollLayout->removeItem( spacer );
-		scrollLayout->addWidget( viewerImage );
+		if ( dropIndex == -1 ){
+			scrollLayout->addWidget( viewerImage );
+		}
+		else {
+			QVBoxLayout* boxLayout = dynamic_cast<QVBoxLayout*>(scrollLayout);
+			boxLayout->insertWidget( dropIndex, viewerImage );
+		}
 		scrollLayout->addItem( spacer );
+		dropIndex = -1;
 	}
 
 

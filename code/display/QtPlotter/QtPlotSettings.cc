@@ -45,6 +45,7 @@ namespace casa {
 		numYTicks = TICK_COUNT;
 	}
 
+
 	void QtPlotSettings::scroll(int dx, int dy) {
 		for ( int i = 0; i < QtPlotSettings::END_AXIS_INDEX; i++ ) {
 			AxisIndex axisIndex = static_cast<AxisIndex>(i);
@@ -100,6 +101,8 @@ namespace casa {
 			adjustAxis( minY, maxY, numYTicks );
 		}
 	}
+
+
 
 	void QtPlotSettings::zoomIn( double zoomFactor, const QString& topUnits,
 	                             const QString& bottomUnits, bool autoScaleX, bool autoScaleY ) {
@@ -159,30 +162,29 @@ namespace casa {
 
 	void QtPlotSettings::adjustAxisTop(double &min, double &max,
 	                                   const QString& topUnits, const QString& bottomUnits) {
-		Converter* converter = Converter::getConverter( bottomUnits, topUnits);
+
 		//Top axis is not channels
 		if ( topUnits != "" ) {
+			Converter* converter = Converter::getConverter( bottomUnits, topUnits);
 			min = converter->convert( minX[QtPlotSettings::xBottom] );
 			max = converter->convert( maxX[QtPlotSettings::xBottom] );
+			delete converter;
 		}
 		//Top axis is channels, but bottom axis is not
 		else if ( topUnits == "" && bottomUnits != "" ) {
-			//Run fake values through adjust so we have accurate percentages
-			double fakeMin = originalMinX;
-			double fakeMax = originalMaxX;
-			int fakeTicks = 0;
-			adjustAxis( fakeMin, fakeMax, fakeTicks );
-			double newMin = min - minPercentage * (max - min);
-			double newMax = max + maxPercentage * (max - min);
-			min = newMin;
-			max = newMax;
+			Converter* channelConverter = Converter::getConverter(bottomUnits,topUnits);
+			double startChannel = channelConverter->toPixel( minX[QtPlotSettings::xBottom]);
+			double endChannel = channelConverter->toPixel( maxX[QtPlotSettings::xBottom]);
+			delete channelConverter;
+			min = startChannel;
+			max = endChannel;
 		}
 		//Both axis are using channels
 		else {
 			min = minX[QtPlotSettings::xBottom];
 			max = maxX[QtPlotSettings::xBottom];
 		}
-		delete converter;
+
 		if ( bottomUnits == "") {
 			minPercentage = 0;
 			maxPercentage = 0;
