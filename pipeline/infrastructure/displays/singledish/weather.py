@@ -10,9 +10,79 @@ import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
 
+class WeatherAxesManager(object):
+    def __init__(self):
+        self._temp = None
+        self._humi = None
+        self._pres = None
+        self._wind = None
+
+    @property
+    def axes_temperature(self):
+        if self._temp is None:
+            self._temp = self.__temp()
+        return self._temp
+
+    @property
+    def axes_humidity(self):
+        if self._humi is None:
+            self._humi = self.__humi()
+        return self._humi
+
+    @property
+    def axes_pressure(self):
+        if self._pres is None:
+            self._pres = self.__pres()
+        return self._pres
+
+    @property
+    def axes_wind(self):
+        if self._wind is None:
+            self._wind = self.__wind()
+        return self._wind
+
+    def __temp(self):
+        a = pl.subplot(211)
+        a.set_xlabel('MJD')
+        a.set_ylabel('Temperature (degC)', color='r')
+        a.set_title('Weather (Temperature & Humidity) versus MJD')
+        for tl in a.get_yticklabels():
+            tl.set_color('r')
+        return a
+
+    def __humi(self):
+        if self._temp is None:
+            self._temp = self.__temp()
+
+        a = self._temp.twinx()
+        a.set_ylabel('Humidity (%)', color='b')
+        for tl in a.get_yticklabels():
+            tl.set_color('b')
+        return a
+
+    def __pres(self):
+        a = pl.subplot(212)
+        a.set_xlabel('MJD')
+        a.set_ylabel('Pressure (hPa)', color='r')
+        a.set_title('Weather (Pressure & Wind Speed) versus MJD')
+        for tl in a.get_yticklabels():
+            tl.set_color('r')
+        return a
+
+    def __wind(self):
+        if self._pres is None:
+            self._pres = self.__pres()
+
+        a = self._pres.twinx()
+        a.set_ylabel('Wind Speed (m/s)', color='b')
+        for tl in a.get_yticklabels():
+            tl.set_color('b')
+        return a
+        
 
 class SDWeatherDisplay(common.SDInspectionDisplay):
     MATPLOTLIB_FIGURE_ID = 8907
+    AxesManager = WeatherAxesManager
     WEATHER_KEYS = ['TEMPERATURE', 'PRESSURE', 'REL_HUMIDITY', 'WIND_SPEED']
         
     def doplot(self, idx, stage_dir):
@@ -45,11 +115,12 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         datatable = self.datatable
         
         # Plotting routine
-        if common.ShowPlot: pl.ion()
-        else: pl.ioff()
-        Fig = pl.figure(self.MATPLOTLIB_FIGURE_ID)
-        if common.ShowPlot: pl.ioff()
-        pl.clf()
+        #if common.ShowPlot: pl.ion()
+        #else: pl.ioff()
+        #Fig = pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        #if common.ShowPlot: pl.ioff()
+        #pl.clf()
+        Fig = pl.gcf()
 
         # get Weather info from the table
         #print WeatherDic['TIME']
@@ -79,58 +150,63 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         dPres = Presmax - Presmin
         Windmin = 0.0
         Windmax = WeatherDic['WIND_SPEED'].max() + 5
+
+        plot_objects = []
         
         # Plot Temperature (degC)
-        Ax1 = Fig.add_subplot(211)
+        Ax1 = self.axes_manager.axes_temperature
         if len(WeatherDic['TIME']) == 1:
-            Ax1.axhline(y = WeatherDic['TEMPERATURE'][0])
+            plot_objects.append(
+                Ax1.axhline(y = WeatherDic['TEMPERATURE'][0])
+                )
         else:
-            Ax1.plot(WeatherDic['TIME'], WeatherDic['TEMPERATURE'], 'r-')
+            plot_objects.extend(
+                Ax1.plot(WeatherDic['TIME'], WeatherDic['TEMPERATURE'], 'r-')
+                )
         Ax1.axis([MJDmin, MJDmax, Tempmin, Tempmax])
-        Ax1.set_xlabel('MJD')
-        Ax1.set_ylabel('Temperature (degC)', color='r')
-        Ax1.set_title('Weather (Temperature & Humidity) versus MJD')
-        for tl in Ax1.get_yticklabels():
-            tl.set_color('r')
 
         # Plot Humidity (%)
-        Ax2 = Ax1.twinx()
+        Ax2 = self.axes_manager.axes_humidity
         if len(WeatherDic['TIME']) == 1:
-            Ax2.axhline(y = WeatherDic['REL_HUMIDITY'][0])
+            plot_objects.append(
+                Ax2.axhline(y = WeatherDic['REL_HUMIDITY'][0])
+                )
         else:
-            Ax2.plot(WeatherDic['TIME'], WeatherDic['REL_HUMIDITY'], 'b-')
+            plot_objects.extend(
+                Ax2.plot(WeatherDic['TIME'], WeatherDic['REL_HUMIDITY'], 'b-')
+                )
         Ax2.axis([MJDmin, MJDmax, Humimin, Humimax])
-        Ax2.set_ylabel('Humidity (%)', color='b')
-        for tl in Ax2.get_yticklabels():
-            tl.set_color('b')
 
         # Plot Pressure (hPa)
-        Ax1 = Fig.add_subplot(212)
+        Ax1 = self.axes_manager.axes_pressure
         if len(WeatherDic['TIME']) == 1:
-            Ax1.axhline(y = WeatherDic['PRESSURE'][0])
+            plot_objects.append(
+                Ax1.axhline(y = WeatherDic['PRESSURE'][0])
+                )
         else:
-            Ax1.plot(WeatherDic['TIME'], WeatherDic['PRESSURE'], 'r-')
+            plot_objects.extend(
+                Ax1.plot(WeatherDic['TIME'], WeatherDic['PRESSURE'], 'r-')
+                )
         Ax1.axis([MJDmin, MJDmax, Presmin, Presmax])
-        Ax1.set_xlabel('MJD')
-        Ax1.set_ylabel('Pressure (hPa)', color='r')
-        Ax1.set_title('Weather (Pressure & Wind Speed) versus MJD')
-        for tl in Ax1.get_yticklabels():
-            tl.set_color('r')
 
         # Plot Wind speed (m/s)
-        Ax2 = Ax1.twinx()
+        Ax2 = self.axes_manager.axes_wind
         if len(WeatherDic['TIME']) == 1:
-            Ax2.axhline(y = WeatherDic['WIND_SPEED'][0])
+            plot_objects.append(
+                Ax2.axhline(y = WeatherDic['WIND_SPEED'][0])
+                )
         else:
-            Ax2.plot(WeatherDic['TIME'], WeatherDic['WIND_SPEED'], 'b-')
+            plot_objects.extend(
+                Ax2.plot(WeatherDic['TIME'], WeatherDic['WIND_SPEED'], 'b-')
+                )
         Ax2.axis([MJDmin, MJDmax, Windmin, Windmax])
-        Ax2.set_ylabel('Wind Speed (m/s)', color='b')
-        for tl in Ax2.get_yticklabels():
-            tl.set_color('b')
 
-        if common.ShowPlot != False: pl.draw()
+        if common.ShowPlot: pl.draw()
         pl.savefig(plotfile, format='png', dpi=common.DPISummary)
 
+        for obj in plot_objects:
+            obj.remove()
+            
         return
 
     def get_weather(self, idx):

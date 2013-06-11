@@ -3,16 +3,42 @@ from __future__ import absolute_import
 import os
 import pylab as pl
 import numpy
-from matplotlib.font_manager import FontProperties
 
 from asap.scantable import is_ms
 
+import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
 
+LOG = infrastructure.get_logger(__name__)
+
+class WvrAxesManager(object):
+    def __init__(self):
+        self._axes = None
+
+    @property
+    def axes(self):
+        if self._axes is None:
+            self._axes = self.__axes()
+        return self._axes
+
+    def __axes(self):
+        a = pl.subplot(111)
+        a.set_xlabel('MJD')
+        a.set_ylabel('WVR reading')
+        a.set_title('WVR reading versus MJD')
+        # draw dummy lines
+        colors = ['r', 'g', 'b', 'c']
+        for i in xrange(4):
+            a.plot(0, 0, '%so'%(colors[i]),
+                   markersize=3, markeredgecolor=colors[i],
+                   markerfacecolor=colors[i]) 
+        return a
+        
 class SDWvrDisplay(common.SDInspectionDisplay):
     MATPLOTLIB_FIGURE_ID = 8907
+    AxesManager = WvrAxesManager
 
     def doplot(self, idx, stage_dir):
         st = self.context.observing_run[idx]
@@ -39,37 +65,52 @@ class SDWvrDisplay(common.SDInspectionDisplay):
 
     def draw_wvr(self, wvr_data, wvr_frequency, plotfile):
         # Plotting routine
-        if common.ShowPlot: pl.ion()
-        else: pl.ioff()
-        Fig = pl.figure(self.MATPLOTLIB_FIGURE_ID)
-        if common.ShowPlot: pl.ioff()
-        pl.clf()
+        #if common.ShowPlot: pl.ion()
+        #else: pl.ioff()
+        #Fig = pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        #if common.ShowPlot: pl.ioff()
+        #pl.clf()
+        Fig = pl.gcf()
 
         # Convert MJD sec to MJD date for wvr_data
-        wvr_data[0] = wvr_data[0]/3600.0/24.0
+        mjd = wvr_data[0]/3600.0/24.0
 
         # Convert wvr_frequency in Hz to GHz
-        wvr_frequency = wvr_frequency / 1.0e9
+        wvr_frequency = wvr_frequency * 1.0e-9
 
-        # Plot WVR data
-        Ax1 = Fig.add_subplot(111)
-        if len(wvr_data[0]) == 1:
-            Ax1.axhline(y = wvr_data[1][0], color='r', label='%.2fGHz'%wvr_frequency[0])
-            Ax1.axhline(y = wvr_data[2][0], color='g', label='%.2fGHz'%wvr_frequency[1])
-            Ax1.axhline(y = wvr_data[3][0], color='b', label='%.2fGHz'%wvr_frequency[2])
-            Ax1.axhline(y = wvr_data[4][0], color='c', label='%.2fGHz'%wvr_frequency[3])
+        wvr = wvr_data[1:,:]
+
+        xmin = mjd.min()
+        xmax = mjd.max()
+        dx = (xmax - xmin) * 0.1
+        xmin -= dx
+        xmax += dx
+        ymin = wvr.min()
+        ymax = wvr.max()
+        if ymin == ymax:
+            dy = 0.06
         else:
-            Ax1.plot(wvr_data[0], wvr_data[1], 'ro', markersize=3, markeredgecolor='r', markerfacecolor='r', label='%.2fGHz'%wvr_frequency[0])
-            Ax1.plot(wvr_data[0], wvr_data[2], 'go', markersize=3, markeredgecolor='g', markerfacecolor='g', label='%.2fGHz'%wvr_frequency[1])
-            Ax1.plot(wvr_data[0], wvr_data[3], 'bo', markersize=3, markeredgecolor='b', markerfacecolor='b', label='%.2fGHz'%wvr_frequency[2])
-            Ax1.plot(wvr_data[0], wvr_data[4], 'co', markersize=3, markeredgecolor='c', markerfacecolor='c', label='%.2fGHz'%wvr_frequency[3])
-        Ax1.legend(loc=0,numpoints=1,prop=FontProperties(size='smaller'))
-        Ax1.set_xlabel('MJD')
-        Ax1.set_ylabel('WVR reading')
-        Ax1.set_title('WVR reading versus MJD')
+            dy = 0.1 * (ymax - ymin)
+        ymin -= dy
+        ymax += dy
+        
+        # Plot WVR data
+        Ax1 = self.axes_manager.axes
+        lines = Ax1.get_lines()
+        if len(wvr_data[0]) == 1:
+            for i in xrange(4):
+                lines[i].set_data([xmin,xmax],[wvr[i][0],wvr[i][0]])
+        else:
+            for i in xrange(4):
+                lines[i].set_data(mjd,wvr[i])                
+        Ax1.legend(['%.2fGHz'%(f) for f in wvr_frequency],
+                   loc=0, numpoints=1, prop={'size': 'smaller'})
+        Ax1.set_xlim(xmin, xmax)
+        Ax1.set_ylim(ymin, ymax)
 
         if common.ShowPlot != False: pl.draw()
         pl.savefig(plotfile, format='png', dpi=common.DPISummary)
+
         return
 
 

@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import os
+import time
 import abc
 import numpy
 import math
@@ -161,6 +162,8 @@ class SDImageDisplayInputs(SingleDishDisplayInputs):
 class SDInspectionDisplay(object):
     __metaclass__ = abc.ABCMeta
     Inputs = SingleDishDisplayInputs
+    MATPLOTLIB_FIGURE_ID = -1
+    AxesManager = None
     
     def __init__(self, inputs):
         self.inputs = inputs
@@ -176,6 +179,14 @@ class SDInspectionDisplay(object):
             # result object seems to be empty, return empty list
             return []
 
+        if ShowPlot: pl.ion()
+        else: pl.ioff()
+        pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if ShowPlot: pl.ioff()
+        pl.clf()
+
+        self.axes_manager = self.AxesManager()
+        
         plots = []
         report_dir = self.context.report_dir
         stage_dir = os.path.join(report_dir, 'stage%d'%(result.stage_number))
@@ -183,7 +194,10 @@ class SDInspectionDisplay(object):
         filenames = self.datatable.getkeyword('FILENAMES')
         LOG.debug('filenames=%s'%(filenames))
         for idx in xrange(len(filenames)):
+            t0 = time.time()
             plot = self.doplot(idx, stage_dir)
+            t1 = time.time()
+            LOG.trace('PROFILE: %s.doplot elapsed time %s sec'%(self.__class__.__name__,t1-t0))
             if plot is not None:
                 plots.append(plot)
         return [plots]
