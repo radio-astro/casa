@@ -45,8 +45,13 @@
 	</param>
 
 	<param type="double" name="fracspw" subparam="true">
-	    <description>Fraction of edge channels to be flagged</description>
+	    <description>Fraction of baseline correlator edge channels to be flagged</description>
 	    <value>0.0625</value>
+	</param>
+
+	<param type="double" name="fracspwfs" subparam="true">
+	    <description>Fraction of ACS correlator edge channels to be flagged</description>
+	    <value>0.048387</value>
 	</param>
 
 	<param type="bool" name="online">
@@ -122,6 +127,7 @@
 	    <when param="edgespw">
 	        <equals type="bool" value="True">
 		    <default param="fracspw"><value type="double">0.0625</value></default>
+		    <default param="fracspwfs"><value type="double">0.048387</value></default>
 	        </equals>
 	        <equals type="bool" value="False">
 		</equals>
@@ -194,8 +200,11 @@ intents -- A string containing a comma delimited list of intents against
 edgespw -- Flag the edge spectral window channels.
     default: True
 
-fracspw -- Fraction of the edge channels to be flagged.
+fracspw -- Fraction of the baseline correlator TDM edge channels to be flagged.
     default: 0.0625
+
+fracspwfs -- Fraction of the ACS correlator TDM edge channels to be flagged.
+    default: 0.48387
 
 online -- Apply the online flags.
    default: True

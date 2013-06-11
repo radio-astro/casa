@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 def hif_flagdata(vis=None, autocorr=None, shadow=None, scan=None,
                  scannumber=None, intents=None, edgespw=None, fracspw=None,
-                 online=None, fileonline=None, template=None,
+                 fracspwfs=None, online=None, fileonline=None, template=None,
                  filetemplate=None, pipelinemode=None, flagbackup=None, 
                  dryrun=None, acceptresults=None):
 
