@@ -221,7 +221,11 @@ class SDCalibrationDisplay(object):
         plots = []
         for result in results:
             #table = result.outcome.applytable
-            plot = self.doplot(result, stage_dir)
+            if result is None or result.outcome is None:
+                plot = None
+            else:
+                plot = self.doplot(result, stage_dir)
+                
             if plot is not None:
                 plots.append(plot)
         return plots
