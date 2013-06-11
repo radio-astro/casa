@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.16 2013/05/02 13:59:12 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.17 2013/05/31 11:48:00 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -1194,7 +1194,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
             if (debug): print "time = %s" % (str(mytimestamp))
             msAnt = mymsmd.antennanames(range(mymsmd.nantennas()))
             if (debug): print "msAnt = %s" % (str(msAnt))
-#            msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+#            msFields = mymsmd.namesforfields(range(mymsmd.nfields())) # bombs if split has been run on subset of fields
             msFields = mymsmd.namesforfields()
             casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
         except:
@@ -1213,7 +1213,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 if (debug): print "%.1f sec elapsed" % (donetime-mytimestamp)
                 mytimestamp = timeUtilities.time()
                 msAnt = mymsmd.antennanames(range(mymsmd.nantennas()))
-#                msFields = mymsmd.namesforfields(range(mymsmd.nfields()))
+#                msFields = mymsmd.namesforfields(range(mymsmd.nfields())) # bombs if split has been run on subset of fields
                 msFields = mymsmd.namesforfields()
                 casalogPost(debug,"Available antennas = %s" % (str(msAnt)))
             except:
@@ -2440,7 +2440,8 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                (overlayTimes==False and computedAtmTime!=mytime))):
             # The following 'if' is used to avoid wasting time since atm is not shown for
             # overlay='antenna,time'.
-            if (overlayTimes==False or overlayAntennas==False):
+            if (overlayTimes==False or overlayAntennas==False or True):  # support showatm for overlay='antenna,time'
+#            if (overlayTimes==False or overlayAntennas==False):
 # #            print "CAF, CAS, CAT = ", computedAtmField, computedAtmSpw, computedAtmTime
               computedAtmField = fieldIndex
               computedAtmSpw = ispw
@@ -3313,7 +3314,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               if ((overlayAntennas==False and overlayTimes==False) or
                   (overlayAntennas==True and overlayTimes==False and xant==antennasToPlot[-1]) or
                   (overlayTimes==True and overlayAntennas==False and doneOverlayTime) or
-                  (xant==antennasToPlot[-1] and doneOverlayTime)
+                  (xant==antennasToPlot[-1] and doneOverlayTime) # support showatm with overlay='antenna,time'
                   ):
                   if ((showatm or showtsky) and len(atmString) > 0): 
                       DrawAtmosphere(showatm, showtsky, subplotRows, atmString,
@@ -3362,7 +3363,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                   # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time'
                   (xframe == lastFrame and overlayTimes and overlayAntennas and
                    xctr+1==len(antennasToPlot) and
-                   mytime+1==len(uniqueTimes) and spwctr+1<len(spwsToPlot))):
+#                   mytime+1==len(uniqueTimes) and  # this worked for nspw <= 4
+                   mytime==uniqueTimes.index(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]) and
+                   spwctr+1<len(spwsToPlot))):
                        if (debug):
                            print "xframe=%d  ==  lastFrame=%d,  amplitudeWithPhase=%s" % (xframe, lastFrame, str(amplitudeWithPhase))
                            print "xctr+1=%d == len(antennasToPlot)=%d"  % (xctr+1,len(antennasToPlot))
@@ -4088,7 +4091,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time'
                 or (xframe == lastFrame and overlayTimes and overlayAntennas and
                    xctr+1==len(antennasToPlot) and
-                   mytime+1==len(uniqueTimes) and spwctr+1<len(spwsToPlot))
+#                   mytime+1==len(uniqueTimes) and  # this worked for nspw <= 4
+                   mytime==uniqueTimes.index(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]) and
+                    spwctr+1<len(spwsToPlot))
                 or (doneOverlayTime and overlayTimes==True
                     and overlayAntennas==False 
                     )):
@@ -4402,11 +4407,11 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
     if (('elevation' in conditions.keys()) == False):
         # Someone cleared the POINTING table, so calculate elevation from Ra/Dec/MJD
 #        myfieldId =  mymsmd.fieldsforname(mymsmd.fieldsforscan(bestscan))
-        myfieldId =  mymsmd.fieldsforscan(bestscan)
-        print "myfieldId = %s" % (str(myfieldId))
+        myfieldId =  mymsmd.fieldsforscan(bestscan)[0]
         myscantime = np.mean(mymsmd.timesforscan(bestscan))
         mydirection = getRADecForField(vis, myfieldId, verbose)
         if (verbose):
+            print "myfieldId = %s" % (str(myfieldId))
             print "mydirection = %s" % (str(mydirection))
             print "Scan =  %d, time = %.1f,  Field = %d, direction = %s" % (bestscan, myscantime, myfieldId, str(mydirection))
         telescopeName = mymsmd.observatorynames()[0]

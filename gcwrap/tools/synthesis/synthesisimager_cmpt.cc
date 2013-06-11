@@ -120,6 +120,44 @@ bool synthesisimager::initmapper()
   return rstat;
 }
 
+bool synthesisimager::initializemajorcycle(const casac::record& selpars, const casac::record& allimpars,const casac::record& allgridpars )
+{
+  Bool rstat(False);
+
+  try 
+    {
+
+      casa::Record selrec = *toRecord( selpars );
+      casa::Record allimrec = *toRecord( allimpars );
+      casa::Record allgridrec = *toRecord( allgridpars );
+      Int nfields = allimrec.nfields();
+      if(nfields != allgridrec.nfields())
+	{
+	  throw(AipsError("image and grid parameters must represent the same number of fields"));
+	}
+
+      if( ! itsImager ) itsImager = new SynthesisImager();
+
+      itsImager->selectData( selrec );
+
+      for( Int fd=0; fd<nfields; fd++ )
+	{
+	  itsImager->defineImage( allimrec.asRecord( RecordFieldId(String::toString(fd)) ) );
+	  itsImager->setupImaging( allgridrec.asRecord( RecordFieldId(String::toString(fd)) ) );
+	  itsImager->initMapper();
+	}
+      
+    } 
+  catch  (AipsError x) 
+    {
+      RETHROW(x);
+    }
+  
+  return rstat;
+}
+
+
+
 bool synthesisimager::executemajorcycle(const casac::record& controls)
 {
   Bool rstat(False);

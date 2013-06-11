@@ -118,6 +118,36 @@ Define the image coordinate systems, image shapes and the number of images (mult
 </method>
 
 <!-- ===================================== -->
+   <method type="function" name="initializemajorcycle">
+   <shortdescription>Set parameters to control gridding and imaging for all fields.</shortdescription>
+
+<description>
+This function is a combination of .selectdata, .defineimage, setupimaging, and initmapper.
+Image and imaging(gridding) parameters should be a list, one element per field/chunk.
+</description>
+<input>
+
+     <param type="record" name="selpars">
+     <description>All parameters for data selections</description>
+     <value type="record"></value>
+     </param>
+ 
+     <param type="record" name="allimpars">
+     <description>All parameters for image coordinate system</description>
+     <value type="record"></value>
+     </param>
+
+     <param type="record" name="allgridpars">
+     <description>All parameters for imaging/gridding</description>
+     <value type="record"></value>
+     </param>
+
+</input>
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
 
    <method type="function" name="executemajorcycle">
    <shortdescription>Run a major cycle</shortdescription>

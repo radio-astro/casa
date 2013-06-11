@@ -112,8 +112,14 @@ class __imview_class(object):
 			raise Exception, "failed to find a viewertool..."
 
 		self.__pushd( vwr, os.path.abspath(os.curdir) )
-		panel = self.__load_files( "raster", vwr, None, raster )
-		panel = self.__load_files( "contour", vwr, panel, contour )
+
+		if (raster is None or len(raster) == 0) and \
+		   (contour is None or len(contour) == 0) :
+			panel = self.__panel(vwr)
+		else:
+			panel = self.__load_files( "raster", vwr, None, raster )
+			panel = self.__load_files( "contour", vwr, panel, contour )
+			
 		self.__set_axes( vwr, panel, axes )
 		self.__zoom( vwr, panel, zoom )
 		vwr.unfreeze( panel )
