@@ -65,7 +65,6 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
         (RAlocator, DEClocator, RAformatter, DECformatter) = RADEClabel(span)
 
         # Plotting
-        TickSize = 6
         if ShowPlot: pl.ion()
         else: pl.ioff()
         pl.figure(self.MATPLOTLIB_FIGURE_ID)
@@ -73,14 +72,10 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
         pl.clf()
         
         # 2008/9/20 Dec Effect has been taken into account
-        #Aspect = 1.0 / math.cos(Table[0][5] / 180. * 3.141592653)
-        Aspect = 1.0 / math.cos(0.5 * (self.dec_max + self.dec_min) / 180. * 3.141592653)
-
-        #(x0, x1, y0, y1) = (0.25, 0.5, 0.25, 0.5)
+        #Aspect = 1.0 / math.cos(0.5 * (self.dec_max + self.dec_min) / 180. * 3.141592653)
 
         colormap = 'color'
-
-        plot_list = []
+        TickSize = 6
 
         axes_manager = ChannelAveragedAxesManager(RAformatter, DECformatter,
                                                   RAlocator, DEClocator,
@@ -91,6 +86,9 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
         beam_circle = None
 
         pl.gcf().sca(axes_tpmap)
+
+        
+        plot_list = []
         
         masked_data = self.data * self.mask
         for pol in xrange(self.npol):
@@ -99,30 +97,12 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
             tmin = Total.min()
             tmax = Total.max()
 
-            #pl.cla()
-            #pl.clf()
-
-            #a = pl.axes([x0, y0, x1, y1])
             # 2008/9/20 DEC Effect
-            im = pl.imshow(Total, interpolation='nearest', aspect=Aspect, extent=Extent)
+            im = pl.imshow(Total, interpolation='nearest', aspect=self.aspect, extent=Extent)
             #im = pl.imshow(Total, interpolation='nearest', aspect='equal', extent=Extent)
 
             xlim = axes_tpmap.get_xlim()
             ylim = axes_tpmap.get_ylim()
-
-            #a.xaxis.set_major_formatter(RAformatter)
-            #a.yaxis.set_major_formatter(DECformatter)
-            #a.xaxis.set_major_locator(RAlocator)
-            #a.yaxis.set_major_locator(DEClocator)
-            #xlabels = a.get_xticklabels()
-            #pl.setp(xlabels, 'rotation', RArotation, fontsize=TickSize)
-            #ylabels = a.get_yticklabels()
-            #pl.setp(ylabels, 'rotation', DECrotation, fontsize=TickSize)
-
-            #pl.xlabel('RA', size=TickSize)
-            #pl.ylabel('DEC', size=TickSize)
-            #if colormap == 'gray': pl.gray()
-            #else: pl.jet()
 
             # colorbar
             #print "min=%s, max of Total=%s" % (tmin,tmax)
@@ -145,7 +125,7 @@ class SDChannelAveragedImageDisplay(SDImageDisplay):
                         
             # draw beam pattern
             if beam_circle is None:
-                beam_circle = draw_beam(axes_tpmap, 0.5 * self.beam_size, Aspect, self.ra_min, self.dec_min)
+                beam_circle = draw_beam(axes_tpmap, 0.5 * self.beam_size, self.aspect, self.ra_min, self.dec_min)
 
             pl.title('Total Power', size=TickSize)
             axes_tpmap.set_xlim(xlim)
