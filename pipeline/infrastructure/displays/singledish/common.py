@@ -25,99 +25,6 @@ class SingleDishDisplayInputs(object):
         self.context = context
         self.result = result
 
-class SDImageDisplayInputs(SingleDishDisplayInputs):
-    @property
-    def imagename(self):
-        return self.result.outcome['image'].imagename
-
-    @property
-    def spw(self):
-        return self.result.outcome['image'].spwlist
-
-    @property
-    def antenna(self):
-        return self.result.outcome['image'].antenna
-
-    @property
-    def stage_number(self):
-        return self.result.stage_number
-
-    @property
-    def stage_dir(self):
-        return os.path.join(self.context.report_dir,
-                            'stage%d'%(self.stage_number))
-
-    @property
-    def source(self):
-        return self.result.outcome['image'].sourcename
-
-    @property
-    def num_valid_spectrum(self):
-        return self.result.outcome['validsp']
-
-    @property
-    def rms(self):
-        return self.result.outcome['rms']
-
-
-class SDInspectionDisplay(object):
-    __metaclass__ = abc.ABCMeta
-    Inputs = SingleDishDisplayInputs
-    
-    def __init__(self, inputs):
-        self.inputs = inputs
-        self.context = self.inputs.context
-        self.result = self.inputs.result
-        self.datatable = self.result.outcome['instance']
-
-    def plot(self):
-        inputs = self.inputs
-        result = inputs.result
-        
-        if result.outcome is None or result.success is None or result.success is False:
-            # result object seems to be empty, return empty list
-            return []
-
-        plots = []
-        report_dir = self.context.report_dir
-        stage_dir = os.path.join(report_dir, 'stage%d'%(result.stage_number))
-        LOG.debug('report_dir=%s'%(report_dir))
-        filenames = self.datatable.getkeyword('FILENAMES')
-        LOG.debug('filenames=%s'%(filenames))
-        for idx in xrange(len(filenames)):
-            plot = self.doplot(idx, stage_dir)
-            if plot is not None:
-                plots.append(plot)
-        return [plots]
-
-    @abc.abstractmethod
-    def doplot(self, idx, stage_dir):
-        raise NotImplementedError()
-
-
-class SDCalibrationDisplay(object):
-    __metaclass__ = abc.ABCMeta
-    Inputs = SingleDishDisplayInputs
-
-    def __init__(self, inputs):
-        self.inputs = inputs
-
-    def plot(self):
-        results = self.inputs.result
-        report_dir = self.inputs.context.report_dir
-        stage_dir = os.path.join(report_dir, 'stage%d'%(results.stage_number))
-        plots = []
-        for result in results:
-            #table = result.outcome.applytable
-            plot = self.doplot(result, stage_dir)
-            if plot is not None:
-                plots.append(plot)
-        return plots
-
-    @abc.abstractmethod
-    def doplot(self, result, stage_dir):
-        raise NotImplementedError()
-
 class SpectralImage(object):
     def __init__(self, imagename):
         # read data to storage
@@ -189,6 +96,125 @@ class SpectralImage(object):
             increment = qa.convert(qa.quantity(increment,_unit),unit)['value']
         #return numpy.array([refval+increment*(i-refpix) for i in xrange(self.nchan)])
         return (refpix, refval, increment)
+        
+
+class SDImageDisplayInputs(SingleDishDisplayInputs):
+    def __init__(self, context, result):
+        super(SDImageDisplayInputs,self).__init__(context, result)
+        self.image = SpectralImage(self.imagename)
+        
+    @property
+    def imagename(self):
+        return self.result.outcome['image'].imagename
+
+    @property
+    def spw(self):
+        return self.result.outcome['image'].spwlist
+
+    @property
+    def antenna(self):
+        return self.result.outcome['image'].antenna
+
+    @property
+    def stage_number(self):
+        return self.result.stage_number
+
+    @property
+    def stage_dir(self):
+        return os.path.join(self.context.report_dir,
+                            'stage%d'%(self.stage_number))
+
+    @property
+    def source(self):
+        return self.result.outcome['image'].sourcename
+
+    @property
+    def nx(self):
+        return self.image.nx
+
+    @property
+    def ny(self):
+        return self.image.ny
+
+    @property
+    def nchan(self):
+        return self.image.nchan
+
+    @property
+    def npol(self):
+        return self.image.npol
+
+    @property
+    def num_valid_spectrum(self):
+        return self.__reshape2d(self.result.outcome['validsp'])
+
+    @property
+    def rms(self):
+        return self.__reshape2d(self.result.outcome['rms'])
+
+    def __reshape2d(self, array2d):
+        array3d = array2d.reshape((self.npol,self.ny,self.nx)).transpose()
+        return numpy.flipud(array3d)
+
+
+
+class SDInspectionDisplay(object):
+    __metaclass__ = abc.ABCMeta
+    Inputs = SingleDishDisplayInputs
+    
+    def __init__(self, inputs):
+        self.inputs = inputs
+        self.context = self.inputs.context
+        self.result = self.inputs.result
+        self.datatable = self.result.outcome['instance']
+
+    def plot(self):
+        inputs = self.inputs
+        result = inputs.result
+        
+        if result.outcome is None or result.success is None or result.success is False:
+            # result object seems to be empty, return empty list
+            return []
+
+        plots = []
+        report_dir = self.context.report_dir
+        stage_dir = os.path.join(report_dir, 'stage%d'%(result.stage_number))
+        LOG.debug('report_dir=%s'%(report_dir))
+        filenames = self.datatable.getkeyword('FILENAMES')
+        LOG.debug('filenames=%s'%(filenames))
+        for idx in xrange(len(filenames)):
+            plot = self.doplot(idx, stage_dir)
+            if plot is not None:
+                plots.append(plot)
+        return [plots]
+
+    @abc.abstractmethod
+    def doplot(self, idx, stage_dir):
+        raise NotImplementedError()
+
+
+class SDCalibrationDisplay(object):
+    __metaclass__ = abc.ABCMeta
+    Inputs = SingleDishDisplayInputs
+
+    def __init__(self, inputs):
+        self.inputs = inputs
+
+    def plot(self):
+        results = self.inputs.result
+        report_dir = self.inputs.context.report_dir
+        stage_dir = os.path.join(report_dir, 'stage%d'%(results.stage_number))
+        plots = []
+        for result in results:
+            #table = result.outcome.applytable
+            plot = self.doplot(result, stage_dir)
+            if plot is not None:
+                plots.append(plot)
+        return plots
+
+    @abc.abstractmethod
+    def doplot(self, result, stage_dir):
+        raise NotImplementedError()
 
         
 class SDImageDisplay(object):
@@ -200,7 +226,7 @@ class SDImageDisplay(object):
 
         self.context = self.inputs.context
         self.stage_dir = self.inputs.stage_dir
-        self.image = SpectralImage(self.inputs.imagename)
+        self.image = self.inputs.image
         self.spw = self.inputs.spw
         self.antenna = self.inputs.antenna
 
@@ -240,6 +266,10 @@ class SDImageDisplay(object):
         self.grid_size = self.beam_size / 3.0
         LOG.debug('beam_radius=%s'%(self.beam_radius))
         LOG.debug('grid_size=%s'%(self.grid_size))
+
+        # 2008/9/20 Dec Effect has been taken into account
+        self.aspect = 1.0 / math.cos(0.5 * (self.dec_min + self.dec_max) / 180.0 * 3.141592653)
+
 
 
 
