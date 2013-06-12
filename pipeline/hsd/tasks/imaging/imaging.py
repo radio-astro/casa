@@ -191,8 +191,7 @@ class SDImagingWorker(object):
         gridding_class = gridding_factory(observing_pattern)
 
         # assume all members have same calmode
-        calmode = reference_data.calibration_strategy['calmode']
-        srctype = common.SrcTypeMap(calmode)
+        srctype = reference_data.calibration_strategy['srctype']
         
         data_array = []
         #num_validsp_array = []

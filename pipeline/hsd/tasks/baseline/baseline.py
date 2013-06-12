@@ -122,8 +122,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 continue
 
             beam_size = st.beam_size[spwid]
-            calmode = st.calibration_strategy['calmode']
-            srctype = common.SrcTypeMap(calmode)
+            srctype = st.calibration_strategy['srctype']
             worker = SDBaselineWorker(context)
             _file_index = set(file_index) & set([m.antenna for m in group_desc])
             files = files | _file_index
