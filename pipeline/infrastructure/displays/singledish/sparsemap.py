@@ -179,14 +179,13 @@ class SDSparseMapDisplay(SDImageDisplay):
             if AutoScale: 
                 # to eliminate max/min value due to bad pixel or bad fitting,
                 #  1/10-th value from max and min are used instead
-                ListMax = []
-                ListMin = []
-                for x in xrange(num_panel):
-                    for y in xrange(num_panel):
-                        if Plot[x][y].min() > NoDataThreshold:
-                            ListMax.append(Plot[x][y].max())
-                            ListMin.append(Plot[x][y].min())
+                valid_index = numpy.where(Plot.min(axis=2) > NoDataThreshold)
+                valid_data = Plot[valid_index[0],valid_index[1],:]
+                ListMax = valid_data.max(axis=1)
+                ListMin = valid_data.min(axis=1)
                 if len(ListMax) == 0: return
+                LOG.debug('ListMax=%s'%(list(ListMax)))
+                LOG.debug('ListMin=%s'%(list(ListMin)))
                 ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
                 ymin = numpy.sort(ListMin)[len(ListMin)/10]
                 ymax = ymax + (ymax - ymin) * 0.2
@@ -209,7 +208,7 @@ class SDSparseMapDisplay(SDImageDisplay):
                     if Plot[x][y].min() > NoDataThreshold:
                         plotted_objects.extend(pl.plot(self.frequency[chan0:chan1], Plot[x][y], color='b', linestyle='-', linewidth=0.2))
                     else:
-                        plotted_objects.extend(pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=(TickSize + 1)))
+                        plotted_objects.append(pl.text((xmin+xmax)/2.0, (ymin+ymax)/2.0, 'NO DATA', horizontalalignment='center', verticalalignment='center', size=(TickSize + 1)))
                     pl.axis([xmin, xmax, ymin, ymax])
 
             if ShowPlot: pl.draw()
