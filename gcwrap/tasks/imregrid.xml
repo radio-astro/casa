@@ -37,7 +37,7 @@ template images must have the same coordinate structure.
          <value>-1</value>
      </param>
      <param type="intArray" name="shape" subparam="true">
-        <description>Shape of the output image. Only used if template is an image. If not specified (-1), the output image shape is set equal to the input image shape.</description>
+        <description>Shape of the output image. Only used if template is an image. If not specified (-1), the output image shape will be the same as the template image shape along the axes that are regridded and the same as input image shape along the axes which are not regridded.</description>
         <value>-1</value>
      </param>
      <param type="string"  name="interpolation">
@@ -70,8 +70,9 @@ template        Dictionary, directional reference code, or imagename defining th
                 default: 'get'; example: template='orion_j2000.im' (for a template image),
                 template='J2000' (to regrid the input image to J2000 coordinates).
 shape           Shape of the output image. Only used if template is an image.
-                If not specified (-1), the output image shape is set equal to
-                the input image shape. Ignored if template is set equal to a
+                If not specified (-1), the output image will be the same as the template image
+                shape along the axes which are regridded and the same as the input image shpae
+                along the axes which are not regridded. Ignored if template is set equal to a
                 reference code. If template is a dictionary, the output shape is
                 retrieved from the dictionary so the shape input parameter is ignored.
 output          Name for the regridded image.  Must be specified.
@@ -162,20 +163,19 @@ parameter (see the following example), imregrid will also attempt to regrid
 degenerate axes (i.e. image axes of length one pixel). Stokes axes are never
 regridded.
 
-In light of the current default behavior, whenever a template image is used
-directly in imregrid, it is *strongly* recommended that the shape parameter is
-used to explicitly specify the desired shape of the output dataset (usually
-likely to be the shape of the template image), and that the axes parameter is explicitly
-set to specify the axes are to be regridded. The default behavior will be
-modified to be more intuitive in a future release.
-
+In the case where template is an image name and the default value of shape is specified,
+the output image's shape will be the same as the template image's shape along the axes which
+are regridded and the same as the input image's shape along the axes which are not regridded.
+So for example, if the input image has a shape of [20, 30, 40] and the template image has a shape
+of [10, 40, 70] and only axes=[0, 1], the output image will have a shape of [10, 40, 40]. If axes=[2],
+the output image will have a shape of [20, 30, 70].
 
 # Regrid input.image by directly using target.image as a template
 
    imregrid(imagename="input.image", output="output.image", template="target.image", shape=[500,500,40,1])
 
 In this example, it is assumed that the axis order of the input image is of the
-form (position_x, position_y, spectral, Stokes), where 'position_x' and 'position_y'
+form (direction_x, direction_y, spectral, Stokes), where 'direction_x' and 'direction_y'
 are the directional coordinates on the sky (in some reference frame),
 'spectral' is a velocity/frequency axis, and 'Stokes' contains polarization
 information.  In this example, input.image might typically be a data cube of
@@ -190,9 +190,10 @@ and then correct with imtrans if necessary.
 
    imregrid(imagename="input.image", output="output.image", template="target.image", axes=[0,1])
 
-The above command should regrid only the first two axes (normally the directional axes)  of input.image and
-leave all other axes unchanged. The output image will have the shape of the input image since the shape
-parameter was not explicitly specified.
+The above command will regrid only the first two axes (normally the directional axes)  of input.image and
+leave all other axes unchanged. The output image will have the shape of the template image along the regridded
+axes [0, 1] and the shape of the  input image along the other axes since the shape parameter was not
+explicitly specified.
 
 
 # Regrid the third axis, considering velocity rather than frequency units
@@ -200,9 +201,8 @@ parameter was not explicitly specified.
    imregrid(imagename="input.image", output="output.image", template="target.image", axes=[2], asvelocity=True)
 
 This example regrids the spectral axis (zero-based axis number 2)  with respect to velocity because the asvelocity parameter
-has been set to True (rather than its default value of False). This is useful when eg, regridding
-a cube containing one spectral line to match the velocity coordinate of another cube containing a different
-spectral line.
+has been set to True. This is useful when eg, regridding a cube containing one spectral line to match the velocity coordinate
+of another cube containing a different spectral line.
 
 
 # Regrid the third axis, considering velocity rather than frequency units but first set the rest frequency
