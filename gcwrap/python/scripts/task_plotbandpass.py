@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.17 2013/05/31 11:48:00 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.18 2013/06/11 14:04:26 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -206,18 +206,18 @@ def makeplot(figfile,msFound,msAnt,overlayAntennas,pages,pagectr,density,
     figfile = figfile.split('.png')[0]
     if (msFound):
         if (overlayAntennas):
-            plotfilename = figfile+'.spw'+str(ispw)+'.t'+str(t)
+            plotfilename = figfile+'.spw%02d'%(ispw)+'.t'+str(t)
         elif (overlayTimes):
-            plotfilename = figfile+'.'+antstring+'.spw'+str(ispw)
+            plotfilename = figfile+'.'+antstring+'.spw%02d'%(ispw)
         else:
-            plotfilename = figfile+'.'+antstring+'.spw'+str(ispw)+'.t'+str(t)
+            plotfilename = figfile+'.'+antstring+'.spw%02d'%(ispw)+'.t'+str(t)
     else:
         if (overlayAntennas):
-            plotfilename = figfile+'.spw'+str(ispw)+'.t'+str(t)
+            plotfilename = figfile+'.spw%02d'%(ispw)+'.t'+str(t)
         elif (overlayTimes):
-            plotfilename = figfile+'.ant'+antstring+'.spw'+str(ispw)
+            plotfilename = figfile+'.ant'+antstring+'.spw%02d'%(ispw)
         else:
-            plotfilename = figfile+'.ant'+antstring+'.spw'+str(ispw)+'.t'+str(t)
+            plotfilename = figfile+'.ant'+antstring+'.spw%02d'%(ispw)+'.t'+str(t)
     plotfilename += '.png'
     if (interactive == False or True):
         casalogPost(debug,"Building %s" % (plotfilename))

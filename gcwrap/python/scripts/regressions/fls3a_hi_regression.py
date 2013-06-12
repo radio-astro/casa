@@ -122,7 +122,7 @@ endTime = imagetime
 #
 # Regression
 ia.open('FLS3a_HI.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 thistest_immax=statistics['max'][0]
 thistest_imrms=statistics['rms'][0]
 ia.close()

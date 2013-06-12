@@ -194,6 +194,14 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                    to simple string. On the other hand, if you want to 
                    calibrate data on-the-fly, you have to set calmode 
                    to a composite calmode string separated by comma.
+                   So far, sky calibration has three types, 'ps', 'otf',
+                   and 'otfraster'. If observation is configured to 
+                   observe reference position, calmode must be 'ps'. 
+                   Otherwise, 'otf' or 'otfraster' shoule be used
+                   depending on observing pattern. If observing pattern
+                   is raster scan, calmode must be 'otfraster' while 
+                   'otf' must be used when observing pattern is non-
+                   raster (e.g., Lissajous).
                 options: 'ps','otf','otfraster','tsys','apply'
                 default: 'ps'
                 example: Here is an example for composite calmode.

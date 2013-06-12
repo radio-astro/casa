@@ -677,22 +677,22 @@ ms.open('l02d.c34s.split.ms')
 thistest_c34s=max(ms.range(['amplitude']).get('amplitude'))
 ms.close()
 ia.open('l02d.3mmcont.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 cont3mmmax=statistics['max'][0]
 cont3mmrms=statistics['rms'][0]
 ia.close()
 ia.open('l02d.1mmcont.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 cont1mmmax=statistics['max'][0]
 cont1mmrms=statistics['rms'][0]
 ia.close()
 ia.open('l02d.c34s.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 c34smax=statistics['max'][0]
 c34srms=statistics['rms'][0]
 ia.close()
 ia.open('l02d.ch3oh.image')
-statistics=ia.statistics()
+statistics=ia.statistics(list=True, verbose=True)
 ch3ohmax=statistics['max'][0]
 ch3ohrms=statistics['rms'][0]
 ia.close()

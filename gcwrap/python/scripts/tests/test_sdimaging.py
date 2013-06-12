@@ -98,7 +98,7 @@ class sdimaging_unittest_base:
     def _checkstats(self,name,ref):
         self._checkfile(name)
         ia.open(name)
-        stats=ia.statistics()
+        stats=ia.statistics(list=True, verbose=True)
         ia.close()
         #for key in stats.keys():
         for key in self.keys:

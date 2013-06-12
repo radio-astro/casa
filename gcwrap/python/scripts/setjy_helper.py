@@ -18,12 +18,12 @@ class ss_setjy_helper:
 	"""
 	Set flux density of a solar system object using Bryan Butler's new
 	python model calculation code.
-        A single time stamp (frist time stamp of MS after selections are applied) is
+        A single time stamp (first time stamp of MS after selections are applied) is
         currently used per execution. For flux observation done in a long time span
         may need to run multiple setjy with selections by time range (or scans). 
 	"""
 	retval = True 
-	cleanupcomps = True # leave genenerated cl files 
+	cleanupcomps = True # leave generated cl files 
 
         #from taskinit import * 
         from taskinit import gentools 
@@ -196,7 +196,7 @@ class ss_setjy_helper:
               nf = len(inparams[src]['freqlist'][ispw])
               maxnf = max(nf,maxnf)
             if maxnf >= 3840 and src.upper()!="MARS": # mars shoulde be ok
-              self._casalog.post("Processing %s spw(s) with at least some of them are a few 1000 channels or more. This may takes \
+              self._casalog.post("Processing %s spw(s) and at least some of them are a few 1000 channels or more. This may take \
                             many minutes (>3min per spw for 3840 channels) in some cases. Please be patient." % nspwused,"WARN")
               
 	  for i in range(nspwused): # corresponds to n spw
@@ -238,7 +238,7 @@ class ss_setjy_helper:
 	  clrecs=odict.odict()
 	  labels = []
 	  # loop for over for multiple directions (=multiple  MJDs) for a given src
-	  for i in range(len(dirs)):  # this is currently only length of 1 since no mutliple timpstamps were used
+	  for i in range(len(dirs)):  # this is currently only length of 1 since no multiple timestamps were used
 	    # check errcode - error code would be there per flux per time (dir)  
 	    reterr=testerrs(errcodes[i],src) 
 	    if reterr == 2: 
@@ -432,7 +432,7 @@ def testerrs(errcode,srcname):
       if ec == 1:
          casalog.post("The model for %s is not supported" % srcname, 'WARN')
       elif ec == 2:
-         casalog.post("Unsupported freuquency range",'WARN')
+         casalog.post("Unsupported frequency range",'WARN')
       elif ec == 3:
          casalog.post("Tb model not found",'WARN')
       elif ec == 4:

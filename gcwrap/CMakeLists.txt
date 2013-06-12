@@ -27,7 +27,7 @@ include( target )
 include( CASA )
 
 set( CASA_MAJOR_VERSION 4 )
-set( CASA_MINOR_VERSION 1 )
+set( CASA_MINOR_VERSION 2 )
 set( CASA_PATCH_VERSION 0 )
 set( CASA_API_VERSION "${CASA_MAJOR_VERSION}.${CASA_MINOR_VERSION}.${CASA_PATCH_VERSION}" )
 
@@ -575,7 +575,7 @@ else()
 endif()
 
 casa_find( CASACORE
-           VERSION 1.0.201
+           VERSION 1.0.207
            PREFIX_HINTS ${CASACORE_ROOT_DIR}
            INCLUDES casa/aips.h
                     casa/version.h

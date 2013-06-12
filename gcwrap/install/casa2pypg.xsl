@@ -169,8 +169,12 @@ class </xsl:text><xsl:value-of select="@name"/><xsl:text>_pg_:</xsl:text>
 #
 #
 	except Exception, instance:
-	  #print '**** Error **** ',instance
-          pass
+	  if(myf.has_key('__rethrow_casa_exceptions') and myf['__rethrow_casa_exceptions']) :
+	     raise
+	  else:
+	     tname = </xsl:text>'<xsl:value-of select="$taskname"/>'<xsl:text disable-output-escaping="yes">
+	     casalog.post('An error occurred running task '+tname+'.', 'ERROR')
+	     pass
 </xsl:text>
 <xsl:for-each select="aps:output">
    <xsl:call-template name="checkoutput"/>

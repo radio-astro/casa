@@ -145,8 +145,8 @@ def stats():
         ibox=ia.setboxregion(blc=[0,0,0,0],trc=[2048,2048,0,0]);
         vbox=ia.setboxregion(blc=[0,0,1,0],trc=[2048,2048,1,0]);
     
-        istats=ia.statistics(region=ibox);
-        vstats=ia.statistics(region=vbox);
+        istats=ia.statistics(region=ibox, list=True, verbose=True);
+        vstats=ia.statistics(region=vbox, list=True, verbose=True);
 
         ia.done();
         #

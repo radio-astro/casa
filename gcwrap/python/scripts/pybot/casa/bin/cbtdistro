@@ -101,6 +101,9 @@ $dumpdir = "$cbt_output" unless $dumpdir;
                             "ncurses-devel",
                             "almawvr",
                             "pgplot",
+			    "libxml2",
+			    "libgsl",
+			    "libgslcblas",
 			    ]
  );
 
@@ -117,7 +120,7 @@ $dumpdir = "$cbt_output" unless $dumpdir;
 			'libcasadbus.so', 'libcasaqt.so', 'libcomponents.so', 'libdish.so', 'libdisplay.so', 'libflagging.so',
 			'libgraphics.so', 'libguitools.so', 'libimageanalysis.so', 'libmiriad.so', 'libmstransform.so',
 			'libnrao.so', 'libplotms.so', 'libpyrap.so', 'libspectrallines.so', 'libstdcasa.so', 'libsynthesis.so',
-			'libtools.so', 'libtransformvis.so' ],
+			'libtools.so', 'libtransformvis.so', 'libxml2' ],
 	   );
 
 %extra_script = ( );
@@ -144,7 +147,7 @@ $dumpdir = "$cbt_output" unless $dumpdir;
 			 "lib$lib/exec/ipcontroller" => "lib$lib/casapy/bin/ipcontroller",
 			 'casapy' => "lib$lib/python$pyversion{$rhver}/casapy.py",
 			 'casa' => "lib$lib/python$pyversion{$rhver}/casapy.py" );
-@wrappers = ( 'casalogger', 'casaviewer', 'casabrowser', 'asdm2MS', 'casaplotms' );
+@wrappers = ( 'asdm2MS', 'bdflags2MS', 'casabrowser', 'casafeather', 'casalogger', 'casaplotms', 'casaviewer' );
 
 $rhver = "";
 

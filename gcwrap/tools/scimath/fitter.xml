@@ -78,6 +78,74 @@ does not "attach" to anything like the image analysis or ms tools do.
         </example>
     </method>
 
+    <method type="function" name="logtranspoly">
+        <shortdescription>A logarithmic transformed polynomial, ln(y) = c_0 + c_1*ln(x) + c_2*ln(x)**2 + ... + c_n*ln(x)**(n)</shortdescription>   
+        <input>
+            <param type="doubleArray" direction="in" name="y">
+                <description>The array of y values, which will be converted to ln(y) before fitting.</description>
+                <value/>
+            </param>
+            <param type="doubleArray" direction="in" name="x">
+                <description>
+                    The array of x values. If specified, must have the same length as y. If not specified, integral values from 0 to len(y)-1 are generated.
+                </description>
+                <value/>
+            </param>
+            <param type="boolArray" direction="in" name="mask">
+                <description>
+                    Mask array. Values are masked where this array is False. If specified, must have the same length as y. If not specified, all values are assumed True (no mask)..
+                </description>
+                <value/>
+            </param>
+            <param type="doubleArray"  name="estimates">
+                <description>Initial estimate of parameters.</description>
+                <value type="string"/>
+            </param>
+        </input>
+        <returns type="record"/>
+        <description>
+
+        </description>
+
+        <example>
+
+        </example>
+    </method>
+    
+    <method type="function" name="poly">
+        <shortdescription>A polynomial, c_0 + c_1*x + c_2*x**2 + ... + c_n*x**n</shortdescription>   
+        <input>
+            <param type="doubleArray" direction="in" name="y">
+                <description>The array of y values.</description>
+                <value/>
+            </param>
+            <param type="doubleArray" direction="in" name="x">
+                <description>
+                    The array of x values. If specified, must have the same length as y. If not specified, integral values from 0 to len(y)-1 are generated.
+                </description>
+                <value/>
+            </param>
+            <param type="boolArray" direction="in" name="mask">
+                <description>
+                    Mask array. Values are masked where this array is False. If specified, must have the same length as y. If not specified, all values are assumed True (no mask)..
+                </description>
+                <value/>
+            </param>
+            <param type="doubleArray"  name="estimates">
+                <description>Initial estimate of parameters.</description>
+                <value type="string"/>
+            </param>
+        </input>
+        <returns type="record"/>
+        <description>
+
+        </description>
+
+        <example>
+
+        </example>
+    </method>
+
     <method type="function" name="powerlogpoly">
         <shortdescription>A power logarithmic polynomial, c_0*x**(c_1 + c_2*ln(x) + c_3*ln(x)**2 + ... + c_n*ln(x)**(n-1)</shortdescription>   
         <input>

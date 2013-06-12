@@ -1290,8 +1290,12 @@ class simple_cluster:
             time.sleep(5)
             done=True
             for i in sl._jobs.keys():
-                if not self._cluster.check_job(i):
-                    done=False
+                try:
+                    if not self._cluster.check_job(i):
+                        done=False
+                except:
+                    traceback.print_tb(sys.exc_info()[2])
+                    raise
     
     def check_status(self, notify=False):
         """Check the execution status of submitted no-block jobs

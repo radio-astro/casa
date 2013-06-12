@@ -1031,10 +1031,11 @@ def mstransform(
             
         if timeaverage:
             casalog.post('Time averaging is not yet implemented', 'WARN')
-#            config['timebin'] = timebin
-#            config['timespan'] = timespan
-#            config['quantize_c'] = quantize_c
-#            config['minbaselines'] = minbaselines
+            config['timeaverage'] = True
+            config['timebin'] = timebin
+            config['timespan'] = timespan
+            config['quantize_c'] = quantize_c
+            config['minbaselines'] = minbaselines
         
         # Configure the tool and all the parameters
         

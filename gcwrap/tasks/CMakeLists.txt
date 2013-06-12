@@ -111,6 +111,7 @@ smoothcal.xml
 specfit.xml
 splattotable.xml
 split.xml
+spxfit.xml
 statwt.xml
 tclean.xml
 testconcat.xml

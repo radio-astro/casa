@@ -105,6 +105,21 @@ casa = { 'build': {
 #        map(lambda x: sys.path.append(x),__ld_library_path__)
 #        break
 
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+## ensure default initialization occurs before this point...
+##
+##      prelude.py  =>  setup/modification of casa settings
+##      init.py     =>  user setup (with task access)
+##
+## ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
+if os.path.exists( casa['dirs']['rc'] + '/prelude.py' ) :
+    try:
+        execfile ( casa['dirs']['rc'] + '/prelude.py' )
+    except:
+        print str(sys.exc_info()[0]) + ": " + str(sys.exc_info()[1])
+        print 'Could not execute initialization file: ' + casa['dirs']['rc'] + '/prelude.py'
+        sys.exit(1)
+
 #
 #from taskinit import *
 # cannot do this because taskinit contain

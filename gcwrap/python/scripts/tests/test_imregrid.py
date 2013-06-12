@@ -508,7 +508,41 @@ class imregrid_test(unittest.TestCase):
                 output="blah3", interpolation="cubic"
             )
         )
-            
+        
+    def test_default_shape(self):
+        """ Verify default shape is what users have requested, CAS-4959"""
+        myia = self._myia
+        imagename = "myim.im"
+        myia.fromshape(imagename,[20,20,20])
+        template = "mytemp.im"
+        myia.fromshape(template,[10,10,10])
+        csys = myia.coordsys()
+        csys.setreferencepixel([5,5,5])
+        myia.setcoordsys(csys.torecord())
+        myia.done()
+        output = "cas_4959_0"
+        imregrid(
+            imagename=imagename, template=template,
+            output=output
+        )
+        myia.open(output)
+        self.assertTrue((myia.shape() == [10, 10, 10]).all())
+        output = "CAS_4959_1"
+        imregrid(
+            imagename=imagename, template=template,
+            output=output, axes=[0,1]
+        )
+        myia.open(output)
+        self.assertTrue((myia.shape() == [10, 10, 20]).all())
+        output = "CAS_4959_2"
+        imregrid(
+            imagename=imagename, template=template,
+            output=output, axes=[2]
+        )
+        myia.open(output)
+        self.assertTrue((myia.shape() == [20, 20, 10]).all())
+        
+        
 def suite():
     return [imregrid_test]
     

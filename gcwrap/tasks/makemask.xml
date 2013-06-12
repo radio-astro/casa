@@ -221,7 +221,7 @@ output : Name of output image.
         clean's input mask defines the region to be used as a clean box/region.     
         In the makemask task, since the most common use case of output image mask is to use as
         an input mask in clean, when it converts an internal mask to the image mask,
-        the 'masked' region (where the pixels are masked and have the Boolean values 'Flase') 
+        the 'masked' region (where the pixels are masked and have the Boolean values 'False') 
         of the internal mask is translated to the pixels with value of 1(=True) in output image mask.  
 
 overwrite : overwrite the mask specified in output? (see also the output rules above)
@@ -251,7 +251,7 @@ Usage examples :
      it prints out a list of the internal mask(s) exist in mymask.im to the log 
 
 (2) (copy mode):
-     Regrid a boolean mask from one coordinate system to another and save as boolean mask 
+     Regrid a Boolean mask from one coordinate system to another and save as Boolean mask 
      in the output image.   
 
      makemask(mode='copy', inpimage='oldmask.im', inpmask='oldmask.im:mask0', output='newmask.im:mask0')
@@ -266,13 +266,13 @@ Usage examples :
        the output image, newmask.im.
 
 (4) (copy mode):
-     Convert a boolean(true/false) mask to integer(one/zero) mask in the same image
+     Convert a Boolean(true/false) mask to integer(one/zero) mask in the same image
      
      makemask(mode='copy', inpimage='oldmask.im', inpmask='oldmask.im:mask0', output='', overwrite=True)
 
 
 (5) (copy mode):
-     Convert an integer (one/zero) mask to boolean(true/false) mask in the same image
+     Convert an integer (one/zero) mask to Boolean(true/false) mask in the same image
      
      makemask(mode='copy', inpimage='oldmask.im', inpmask='oldmask.im', output='oldmask.im:mask0')
 
@@ -310,7 +310,7 @@ Usage examples :
               outfreqs=[4,5,6,7], output='spec.clean.mask')
 
 (8) (expand mode):
-     Expand a boolean mask from one range of channels to another range 
+     Expand a Boolean mask from one range of channels to another range 
      in the same image.
 
      makemask(mode='expand', inpimage='oldmask.im', inpmask='oldmask.im:mask0', inpfreqs=[5,6], outfreqs=[4,5,6,7],
@@ -318,7 +318,7 @@ Usage examples :
 
 
 (9) (expand mode):
-     Expand a boolean mask from a range of channels in the input image to another range
+     Expand a Boolean mask from a range of channels in the input image to another range
      of channels in a different image with a different spectral-coordinate system.
      Save the mask as ones/zeros so that it can be used as an input mask in the clean task. 
      As the inpimage is used as a template for the CoordinateSystem of the output cube, it is

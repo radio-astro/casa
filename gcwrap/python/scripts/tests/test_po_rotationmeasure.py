@@ -108,7 +108,7 @@ class po_rotationmeasure_test(unittest.TestCase):
         self.assertTrue(rmfit(imagename=outfile, rm=myrm))
         myia.open(myrm)
         self.assertTrue((myia.shape() == [20, 20]).all())
-        got1 = myia.statistics()['sumsq']
+        got1 = myia.statistics(list=True, verbose=True)['sumsq']
         myia.done()
         
         # test concatenation of images
@@ -126,7 +126,7 @@ class po_rotationmeasure_test(unittest.TestCase):
         self.assertTrue(rmfit(imagename=images, rm=myrm))
         myia.open(myrm)
         self.assertTrue((myia.shape() == [20, 20]).all())
-        got2 = myia.statistics()['sumsq']
+        got2 = myia.statistics(list=True, verbose=True)['sumsq']
         myia.done()
         self.assertTrue(abs(got1 - got2) > 0.1)
 
@@ -167,12 +167,12 @@ class po_rotationmeasure_test(unittest.TestCase):
             else:
                 rmfit(imagename=imagename, rm=rmim, pa0=pa0im, sigma=sigma)
             myia.open(rmim)
-            stats = myia.statistics()
+            stats = myia.statistics(list=True, verbose=True)
             self.assertTrue((abs(stats['min'][0] - RM)) < 1e-4)
             self.assertTrue((abs(stats['max'][0] - RM)) < 1e-4)
             myia.done(remove=True)
             myia.open(pa0im)
-            stats = myia.statistics()
+            stats = myia.statistics(list=True, verbose=True)
             self.assertTrue((abs(stats['min'][0] - pa0deg)) < 1e-4)
             self.assertTrue((abs(stats['max'][0] - pa0deg)) < 1e-4)
             myia.done(remove=True)

@@ -241,7 +241,7 @@ class csvclean_test1(unittest.TestCase):
         self.res = csvclean(vis=self.msfile,imagename=self.img,field='2',imsize=[500,500],
                             niter=10, restoringbeam=['0.5arcsec'],cell='0.35arcsec',phasecenter=0)
         ia.open(self.img+'.image')
-        stats = ia.statistics()
+        stats = ia.statistics(list=True, verbose=True)
         ia.close()
         print stats
         retValue = self.verify_stats(stats)
