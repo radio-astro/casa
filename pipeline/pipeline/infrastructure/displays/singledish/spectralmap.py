@@ -173,6 +173,10 @@ class SDSpectralMapDisplay(SDImageDisplay):
                                               TickSize)
         axes_list = axes_manager.axes_list
         plot_objects = []
+
+        antennas = [st.antenna.name for st in self.context.observing_run]
+        reference_scantable = self.context.observing_run[antennas.index(self.antenna)]
+        is_baselined = reference_scantable.work_data != reference_scantable.name
         
         for pol in xrange(self.npol):
             data = masked_data[:,:,:,pol]
@@ -180,18 +184,20 @@ class SDSpectralMapDisplay(SDImageDisplay):
 
             # to eliminate max/min value due to bad pixel or bad fitting,
             #  1/10-th value from max and min are used instead
-            ListMax = []
-            ListMin = []
-            for x in xrange(nx):
-                for y in xrange(ny):
-                    if self.num_valid_spectrum[x][y][pol] > 0:
-                        ListMax.append(data[x][y][chan0:chan1].max())
-                        ListMin.append(data[x][y][chan0:chan1].min())
+            valid_index = numpy.where(self.num_valid_spectrum[:,:,pol] > 0)
+            valid_data = data[valid_index[0],valid_index[1],chan0:chan1]
+            ListMax = valid_data.max(axis=1)
+            ListMin = valid_data.min(axis=1)
             if len(ListMax) == 0: return
-            ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
-            ymin = numpy.sort(ListMin)[len(ListMin)/10]
+            if is_baselined:
+                ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
+                ymin = numpy.sort(ListMin)[len(ListMin)/10]
+            else:
+                ymax = numpy.sort(ListMax)[-1]
+                ymin = numpy.sort(ListMin)[1]
             ymax = ymax + (ymax - ymin) * 0.2
             ymin = ymin - (ymax - ymin) * 0.1
+            LOG.debug('ymin=%s, ymax=%s'%(ymin,ymax))
             del ListMax, ListMin
 
             for irow in xrange(len(ROWS)):
