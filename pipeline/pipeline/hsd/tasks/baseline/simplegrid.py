@@ -76,8 +76,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
             # assume all members have same calmode
             ant = group_desc[0].antenna
             st = context.observing_run[ant]
-            calmode = st.calibration_strategy['calmode']
-            srctype = common.SrcTypeMap(calmode)
+            srctype = st.calibration_strategy['srctype']
             
             # beam size
             grid_size = qa.convert(st.beam_size[spw], 'deg')['value']
