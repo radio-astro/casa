@@ -16,7 +16,9 @@ class PhcorBandpassInputs(bandpassmode.BandpassModeInputs):
     phaseup       = basetask.property_with_default('phaseup', True)
     phaseupbw     = basetask.property_with_default('phaseupbw', '500MHz')
     phaseupsolint = basetask.property_with_default('phaseupsolint', 'int')
-    solint        = basetask.property_with_default('solint', 'inf,7.8125MHz')
+    #solint        = basetask.property_with_default('solint', 'inf,7.8125MHz')
+    solint        = basetask.property_with_default('solint', 'inf')
+    maxchannels   = basetask.property_with_default('maxchannels', 240)
     
     def __init__(self,
                  # parameters for BandpassModeInputs:
@@ -24,12 +26,12 @@ class PhcorBandpassInputs(bandpassmode.BandpassModeInputs):
                  # parameters specific to this task:
                  phaseup=None, phaseupbw=None, phaseupsolint=None,
                  # parameters overridden by this task:
-                 solint=None,
+                 solint=None, maxchannels=None,
                  # other parameters to be passed to child bandpass task
                  **parameters):
         super(PhcorBandpassInputs, self).__init__(context, mode=mode,
             phaseup=phaseup, phaseupbw=phaseupbw, phaseupsolint=phaseupsolint,
-            solint=solint, **parameters)
+            solint=solint, maxchannels=maxchannels, **parameters)
 
 
 class PhcorBandpass(bandpassworker.BandpassWorker):
@@ -45,7 +47,10 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
             phaseup_result = self._do_phaseup()
 
         # Now perform the bandpass
-        result = self._do_bandpass()
+	if inputs.maxchannels <= 0:
+            result = self._do_bandpass()
+	else:
+            result = self._do_smoothed_bandpass()
         
         # Attach the preparatory result to the final result so we have a
         # complete log of all the executed tasks. 
@@ -80,6 +85,64 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
             return self._executor.execute(bandpass_task)
         finally:
             self.inputs.run_qa2 = orig_run_qa2
+
+    def _do_smoothed_bandpass(self):
+
+	# Store original values of some parameters.
+        orig_spw = self.inputs.spw
+        orig_run_qa2 = self.inputs.run_qa2
+	orig_solint = self.inputs.solint
+	orig_append = self.inputs.append
+
+        try:
+	    # initialize the caltable and list of spws
+	    self.inputs.caltable = self.inputs.caltable
+	    spwlist = self.inputs.ms.get_spectral_windows(orig_spw)
+            self.inputs.run_qa2 = False
+
+	    # Loop through the spw appending the results of each spw
+	    # to the results of the previous one.
+	    for spw in spwlist:
+
+		# TDM or FDM
+                dd = self.inputs.ms.get_data_description(spw=spw)
+                if dd is None:
+                    LOG.debug('Missing data description for spw %s ' % spw.id)
+                    continue
+                ncorr = len(dd.corr_axis)
+                if ncorr not in set([1,2,4]):
+                    LOG.debug('Wrong number of correlations %s for spw %s ' % (ncorr, spw.id))
+                    continue
+
+		# Smooth if FDM and if it makes sense
+                if (ncorr * spw.num_channels > 256):
+		    if (spw.num_channels / self.inputs.maxchannels) < 1:
+		        self.inputs.solint = orig_solint
+		    else:
+		        bandwidth = spw.bandwidth.to_units( \
+		            otherUnits=measures.FrequencyUnits.MEGAHERTZ)
+		        self.inputs.solint=orig_solint + ',' + \
+		            str(bandwidth / self.inputs.maxchannels) + 'MHz'
+                else:
+		    self.inputs.solint=orig_solint
+
+		# Compute and append bandpass solution
+		self.inputs.spw=spw.id
+                bandpass_task = bandpassmode.BandpassMode(self.inputs)
+                result = self._executor.execute(bandpass_task)
+		self.inputs.append=True
+		self.inputs.caltable=result.final[-1].gaintable
+
+	    # Reset the calto spw list
+	    result.pool[0].calto.spw = orig_spw
+	    result.final[0].calto.spw = orig_spw
+	    return result
+
+        finally:
+            self.inputs.spw = orig_spw
+            self.inputs.run_qa2 = orig_run_qa2
+            self.inputs.solint = orig_solint
+            self.inputs.append = orig_append
 
     def _get_phaseup_spw(self):
         '''
