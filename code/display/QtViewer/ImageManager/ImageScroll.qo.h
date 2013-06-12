@@ -92,6 +92,7 @@ namespace casa {
 		QList<ImageView*> images;
 		DisplayDataHolder* managedImages;
 		bool imageColorsEnabled;
+		int dropIndex;
 	};
 
 }
