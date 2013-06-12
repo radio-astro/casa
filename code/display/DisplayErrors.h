@@ -25,7 +25,6 @@
 //#
 //# $Id$
 
-
 #ifndef DISPLAY_ERRORS_H_
 #define DISPLAY_ERRORS_H_
 
