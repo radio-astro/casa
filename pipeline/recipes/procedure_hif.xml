@@ -73,8 +73,7 @@
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">intentgroups</Keyword>
-                <Value xmlns="">['*AMPLITUDE*+*BANDPASS*+*PHASE*+*TARGET*']</Val
-ue>
+                <Value xmlns="">['*AMPLITUDE*+*BANDPASS*+*PHASE*+*TARGET*']</Value>
             </Parameter>
             <Parameter>
                 <Keyword xmlns="">flag_maxabs</Keyword>
