@@ -54,7 +54,7 @@ def usage():
     print '   --all             run the script for all tasks in TASKLIST.'
     print '   --ignore          do no create MMS for the given <tasks>.'
     print '   --list            print the list of tasks from TASKLIST and exit.'
-    print '   --parallel        create MMSs in parallel using simple_cluster. This '
+    print '   --parallel        create MMSs in parallel using simple_cluster.'
     print 'NOTE: it will look for MS data in the data repository under unittest.\r'
     print '=========================================================================='
 
