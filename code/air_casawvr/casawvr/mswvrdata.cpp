@@ -134,6 +134,23 @@ namespace LibAIR {
     return res;
   }
 
+  void WVRAddFlaggedAnts(const casa::MeasurementSet &ms,
+			 std::set<int> &flaggedAnts)
+  {
+        // add the antennas flagged in the ANTENNA table to the set
+    casa::ROScalarColumn<casa::Bool> antflagrow(ms.antenna(),
+						casa::MSAntenna::columnName(casa::MSAntenna::FLAG_ROW));
+    const size_t nants=ms.antenna().nrow();
+    for(size_t i=0; i<nants; i++)
+    {
+      if(antflagrow(i)==casa::True) // i.e. flagged
+      {
+	flaggedAnts.insert(i);
+      }
+    }
+  }
+
+
   void WVRTimeStatePoints(const casa::MeasurementSet &ms,
 			  std::vector<double> &times,
 			  std::vector<size_t> &states,
