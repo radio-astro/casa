@@ -192,15 +192,6 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 			if hfound:
 				if "Expected performance" in ll:
 					hend = True
-				elif "Reiterating" in ll: # there was a second iteration
-					hfound = False
-					hend = False
-					namel = []
-					wvrl = []
-					flagl = []
-					rmsl = []
-					discl = []
-					parsingok = True
 				elif not hend:
 					vals = ll.split()
 					wvrv = False
