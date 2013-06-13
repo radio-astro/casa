@@ -7,7 +7,10 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	    wvrflag=None, statfield=None, statsource=None, smooth=None,
 	    scale=None, reversespw=None,  cont=None):
 	"""
-	Generate a gain table based on Water Vapour Radiometer data
+	Generate a gain table based on Water Vapour Radiometer data.
+	Returns a dictionary containing the RMS of the path length variation
+	with time towards that antenna (RMS) and the discrepency between the RMS
+	path length calculated separately for different WVR channels (Disc.).
 
         															
 	  vis -- Name of input visibility file											
@@ -173,9 +176,79 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		fp = file(templogfile)
 		loglines = fp.readlines()
 		fp.close()
+
+		# prepare variables for parsing log lines to extract info table
+		hfound = False
+		hend = False
+		namel = []
+		wvrl = []
+		flagl = []
+		rmsl = []
+		discl = []
+		parsingok = True
+		
 		for ll in loglines:
 			casalog.post(ll.expandtabs())
+			if hfound:
+				if "Expected performance" in ll:
+					hend = True
+				elif not hend:
+					vals = ll.split()
+					wvrv = False
+					flagv = False
+					rmsv = 0.
+					discv = 0.
+					if(len(vals)!=6):
+						casalog.post('Error parsing wvrgcal info table.line: '+ll,'WARN')
+						parsingok=False
+					else:
+						if vals[2]=='Yes':
+							wvrv=True
+						else:
+							wvrv=False
+						if vals[3]=='Yes':
+							flagv=True
+						else:
+							flagv=False
+					try:
+						rmsv = float(vals[4])
+					except:
+						casalog.post('Error parsing RMS value in info table line: '+ll,'WARN')
+						rmsv = -1.
+						parsingok=False
+					try:
+						discv = float(vals[5])
+					except:
+						casalog.post('Error parsing Disc. value in info table line: '+ll,'WARN')
+						discv = -1.
+						parsingok=False
+
+					namel.append(vals[1])
+					wvrl.append(wvrv)
+					flagl.append(flagv)
+					rmsl.append(rmsv)
+					discl.append(discv)
+
+					
+			elif (rval==0) and (not hend) and ("Disc (um)" in ll):
+				hfound = True
+
+		# end for ll
+
 		os.system('rm -rf '+templogfile)
+
+
+		taskrval = { 'Name': namel,
+			     'WVR': wvrl,
+			     'Flag': flagl,
+			     'RMS_um': rmsl,
+			     'Disc_um': discl,
+			     'rval': rval,
+			     'success': False}
+
+		if (rval==0) and parsingok:
+			taskrval['success'] = True
+		
 
 		if(rval == 0):
 			if (smoothing>0):
@@ -184,16 +257,16 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 				mycb.smooth(tablein=caltable+'_unsmoothed', tableout=caltable,
 					    smoothtype='mean', smoothtime=smoothing)
 				mycb.close()
-			return True
+			return taskrval
 		else:
 			if(rval == 32512):
 				raise Exception, "wvrgcal executable not available."
 			elif(rval == 65280):
 				casalog.post(theexecutable+' terminated with exit code '+str(rval),'SEVERE')
-				return False
+				return taskrval
 			else:
 				casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
-				return False
+				return taskrval
 	
 	except Exception, instance:
 		print '*** Error *** ',instance

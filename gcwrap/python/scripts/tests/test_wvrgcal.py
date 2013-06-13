@@ -79,6 +79,7 @@ class wvrgcal_test(unittest.TestCase):
     def test1(self):
         '''Test 1: Testing default'''
         self.rval = wvrgcal()
+        print self.rval
         print "Expected error ..."
         self.assertFalse(self.rval)
 
@@ -87,7 +88,11 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_f
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, wvrflag=['0', '1'], toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, wvrflag=['0', '1'], toffset=0.)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
 
         if(self.rval):
             if os.path.exists(self.out+'/CAL_DESC'):
@@ -118,7 +123,12 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, segsource=False)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, segsource=False)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
         if(self.rval):
             self.rval = th.compTables(self.ref[3], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
@@ -128,7 +138,13 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, reversespw='1', segsource=False, toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, reversespw='1', segsource=False, toffset=0.)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
+
         if(self.rval):
             self.rval = th.compTables(self.ref[8], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
@@ -139,7 +155,12 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, smooth='3s', segsource=False, toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, smooth='3s', segsource=False, toffset=0.)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
         self.assertTrue(os.path.exists(self.out))
         self.assertTrue(os.path.exists(self.out+'_unsmoothed'))
         smoothcal(vis = "myinput.ms",
@@ -157,7 +178,12 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, scale=0.8, segsource=False, toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, scale=0.8, segsource=False, toffset=0.)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
         if(self.rval):
             self.rval = th.compTables(self.ref[10], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
@@ -167,7 +193,12 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms", caltable=self.out, tie=['0,1,2'], toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, tie=['0,1,2'], toffset=0.)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
         if(self.rval):
             self.rval = th.compTables(self.ref[11], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
@@ -177,7 +208,12 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms", caltable=self.out, tie=['0,3', '1,2'], toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, tie=['0,3', '1,2'], toffset=0.)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
         if(self.rval):
             self.rval = th.compTables(self.ref[12], self.out, ['WEIGHT'], 0.01) # ignore WEIGHT because it is empty,
                                                                                   # increase tolerance to 1 % to temporarily
@@ -189,7 +225,12 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms", caltable=self.out, sourceflag=['0455-462','0132-169'], toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, sourceflag=['0455-462','0132-169'], toffset=0.)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
         if(self.rval):
             self.rval = th.compTables(self.ref[14], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
@@ -199,7 +240,12 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms", caltable=self.out, segsource=False, statsource='0455-462', toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, segsource=False, statsource='0455-462', toffset=0.)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
         if(self.rval):
             self.rval = th.compTables(self.ref[15], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
@@ -209,7 +255,12 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms", caltable=self.out, segsource=False, nsol=5, toffset=0.)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, segsource=False, nsol=5, toffset=0.)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
         if(self.rval):
             self.rval = th.compTables(self.ref[16], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
@@ -219,7 +270,12 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        self.rval = wvrgcal(vis="myinput.ms",caltable=self.out, disperse=True)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, disperse=True)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
         if(self.rval):
             self.rval = th.compTables(self.ref[17], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)

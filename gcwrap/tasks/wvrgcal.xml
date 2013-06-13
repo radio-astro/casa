@@ -104,12 +104,13 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     </input>
 
-    <returns type="bool"/>
+    <returns type="variant" limittypes="void record"/>
 
-    <example>
+    <description>
 
-Information about the observation and the performance of WVRGCAL is written to the CASA logger; 
-see the CASA cookbook for a more detailed description of these parameters.
+Information about the observation and the performance of WVRGCAL is written to the CASA logger
+and also returned in a dictionary; see the CASA cookbook for a more detailed description of these parameters.
+The dictionary element 'success' is True if no errors occured.
 
 Of particular note is the discrepancy parameter (Disc): high values (> a few hundred microns) 
 may indicate some levels of cloud contamination and the effect of applying the WVRGCAL correction 
@@ -167,6 +168,13 @@ WVRGCAL correction should not be used.
 
   cont -- Estimate the continuum (e.g., due to clouds)
              default: False
+
+  </description>
+
+  <example>
+
+   wvrgcal(vis='uid___A002_X1d54a1_X5.ms', caltable='cal-wvr-uid___A002_X1d54a1_X5.W',
+           toffset=-1, segsource=True, tie=['Titan,1037-295,NGC3256'], statsource='1037-295')
 
   </example>
 
