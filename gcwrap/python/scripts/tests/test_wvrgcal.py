@@ -322,6 +322,34 @@ class wvrgcal_test(unittest.TestCase):
                
         self.assertTrue(self.rval)
 
+
+    def test15(self):
+        '''Test 15:  wvrgcal4quasar_10s.ms, one antenna flagged'''
+        myvis = self.vis_g
+        os.system('rm -rf myinput2.ms comp.W')
+        os.system('cp -R ' + myvis + ' myinput.ms')
+
+        os.system('rm -rf '+self.out)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, wvrflag='DA41')
+
+        tb.open('myinput.ms/ANTENNA', nomodify=False)
+        fr = tb.getcol('FLAG_ROW')
+        fr[2] = True
+        tb.putcol('FLAG_ROW', fr)
+        tb.close()
+        
+        rvaldict2 = wvrgcal(vis="myinput.ms", caltable='comp.W')
+
+        print rvaldict
+        print rvaldict2
+
+        self.rval = rvaldict['success']
+
+        if(self.rval and rvaldict2['success']):
+            self.rval = (rvaldict==rvaldict2)
+               
+        self.assertTrue(self.rval)
+
 def suite():
     return [wvrgcal_test]
 
