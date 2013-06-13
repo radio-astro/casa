@@ -698,6 +698,14 @@ class test_msselection(test_base):
         self.assertEqual(s['baseline']['VA09&&VA09']['flagged'], 3780)
         self.assertEqual(s['flagged'], 190386)
                         
+    def test_invalid_antenna(self):
+        '''flagdata: CAS-3712, handle good and bad antenna names in MS selection'''
+        self.setUp_data4tfcrop()
+        
+        flagdata(vis=self.vis, antenna='ea01,ea93', mode='manual', flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary', antenna='ea01', basecnt=True)
+        self.assertEqual(res['flagged'], 2199552)
+        self.assertEqual(res['total'], 2199552)
 
 class test_statistics_queries(test_base):
 
@@ -970,7 +978,6 @@ class test_selections(test_base):
         flagdata(vis=self.vis, correlation='LL,RR,RL', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
         
-
 class test_selections_alma(test_base):
     # Test various selections for alma data 
 
