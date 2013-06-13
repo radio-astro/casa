@@ -280,6 +280,47 @@ class wvrgcal_test(unittest.TestCase):
             self.rval = th.compTables(self.ref[17], self.out, ['WEIGHT']) # ignore WEIGHT because it is empty
         self.assertTrue(self.rval)
 
+    def test13(self):
+        '''Test 13:  wvrgcal4quasar_10s.ms,  totally flagged main table'''
+        myvis = self.vis_g
+        os.system('cp -R ' + myvis + ' myinput.ms')
+
+        flagdata(vis="myinput.ms", spw='0', mode='manual')
+        
+        os.system('rm -rf '+self.out)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, disperse=True)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
+        print "Expected error ..."
+
+        self.assertFalse(self.rval)
+
+
+    def test14(self):
+        '''Test 14:  wvrgcal4quasar_10s.ms, two sources flagged with sourceflag, scan 1 flagged'''
+        myvis = self.vis_g
+        os.system('rm -rf myinput2.ms comp.W')
+        os.system('cp -R ' + myvis + ' myinput.ms')
+
+        flagdata(vis="myinput.ms", scan='1', mode='manual')
+        split(vis='myinput.ms', outputvis='myinput2.ms', datacolumn='data', keepflags=False)
+        
+        os.system('rm -rf '+self.out)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, sourceflag=['0455-462','0132-169'], toffset=0.)
+        rvaldict2 = wvrgcal(vis="myinput2.ms", caltable='comp.W', sourceflag=['0455-462','0132-169'], toffset=0.)
+
+        print rvaldict
+        print rvaldict2
+
+        self.rval = rvaldict['success']
+
+        if(self.rval and rvaldict2['success']):
+            self.rval = (rvaldict==rvaldict2)
+               
+        self.assertTrue(self.rval)
 
 def suite():
     return [wvrgcal_test]

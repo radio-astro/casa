@@ -192,6 +192,15 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 			if hfound:
 				if "Expected performance" in ll:
 					hend = True
+				elif "Reiterating" in ll: # there was a second iteration
+					hfound = False
+					hend = False
+					namel = []
+					wvrl = []
+					flagl = []
+					rmsl = []
+					discl = []
+					parsingok = True
 				elif not hend:
 					vals = ll.split()
 					wvrv = False
@@ -263,6 +272,10 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 				raise Exception, "wvrgcal executable not available."
 			elif(rval == 65280):
 				casalog.post(theexecutable+' terminated with exit code '+str(rval),'SEVERE')
+				return taskrval
+			elif(rval == 34304):
+				casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
+				casalog.post("No useful input data.",'SEVERE')
 				return taskrval
 			else:
 				casalog.post(theexecutable+' terminated with exit code '+str(rval),'WARN')
