@@ -1,6 +1,13 @@
 from __future__ import absolute_import
 
+import numpy
+import time
+import datetime
+
+from matplotlib.dates import date2num, DateFormatter, MinuteLocator
 from matplotlib.ticker import FuncFormatter, MultipleLocator
+
+import pipeline.infrastructure.casatools as casatools
 
 dsyb = '$^\circ$'
 hsyb = ':'
@@ -123,3 +130,40 @@ def RADEClabel(span):
         DECformatter=FuncFormatter(DDMM)
 
     return (RAlocator, DEClocator, RAformatter, DECformatter)
+
+def mjd_to_datedict(val, unit='d'):
+    mjd = casatools.quanta.quantity(val,unit)
+    return casatools.quanta.splitdate(mjd)
+
+def mjd_to_datetime(val):
+    mjd = mjd_to_datedict(val, unit='d')
+    date_time = datetime.datetime(mjd['year'], mjd['month'],
+                                  mjd['monthday'], mjd['hour'],
+                                  mjd['min'], mjd['sec'])
+    return date_time
+
+# vectorized version
+mjd_to_datetime_vectorized = numpy.vectorize(mjd_to_datetime)
+
+def mjd_to_plotval(mjd_list):
+    datetime_list = mjd_to_datetime_vectorized(mjd_list)
+    return date2num(datetime_list)
+    
+class CustomDateFormatter(DateFormatter):
+    """
+    Customized date formatter that puts YYYY/MM/DD under usual
+    tick labels at the beginning of tick and when date is changed.
+    """
+    def __call__(self, x, pos=0):
+        fmt_saved = self.fmt
+        if pos == 0 or x % 1.0 == 0.0:
+            self.fmt = '%H:%M\n%Y/%m/%d'
+        tick = DateFormatter.__call__(self, x, pos)
+        self.fmt = fmt_saved
+        return tick
+            
+def utc_formatter(fmt='%H:%M'):
+    return CustomDateFormatter(fmt)
+
+def utc_locator():
+    return MinuteLocator()
