@@ -5,6 +5,24 @@ import numpy as np
 
 import pipeline.infrastructure.casatools as casatools
 
+def channel_ranges(channels):
+    """
+    Given a list of channels will return a list of 
+    contiguous ranges that describe them.
+    """
+    channels.sort()
+
+    range = [channels[0], channels[0]]
+
+    for i,chan in enumerate(channels):
+        if chan <= range[1] + 1:
+            range[1] = chan
+        else:
+            return [range] + channel_ranges(channels[i:])
+
+    # get here if last channel reached
+    return [range]        
+
 def median_and_mad(data):
     """
     Return the median and MAD of the numpy data array.
@@ -23,13 +41,15 @@ class FlagCmd(object):
         Added detailed docs here.
     """
     def __init__(self, filename, rulename, spw, axisnames,
-      flagcoords, cell_index=None, ruleaxis=None, flagchannels=None,
-      reason=None):
-#        print 'FlagCmd spw%s axisnames%s flagcoords%s cell_index%s flagchannels%s reason%s' % (
-#          spw, axisnames, flagcoords, cell_index, flagchannels, reason)
+      flagcoords, intent=None, cell_index=None, ruleaxis=None,
+      flagchannels=None, channel_axis=None, reason=None):
+#        print 'FlagCmd intent %s spw%s axisnames%s flagcoords%s cell_index%s flagchannels%s reason%s' % (
+#          intent, spw, axisnames, flagcoords, cell_index, flagchannels,
+#          reason)
 
         self.filename = filename
         self.rulename = rulename
+        self.intent = intent
         self.spw = spw
         self.cell_index = cell_index
         self.ruleaxis = ruleaxis
@@ -54,12 +74,33 @@ class FlagCmd(object):
         # construct the corresponding flag command
         flagcmd = ""
 
+        if intent is not None:
+            flagcmd += " intent='%s'" % intent
+
         if spw is not None:
             flagcmd += " spw='%s'" % spw
 
         if flagchannels is not None:
-            flagcmd = flagcmd[:-1] + ":%s'" % ';'.join(map(str,
-              flagchannels))
+            ranges = channel_ranges(flagchannels)
+
+            if channel_axis is None:
+                # just set the ranges of channels directly
+                rangestrs = []
+                for trange in ranges:
+                    rangestrs.append('%s~%s' % (trange[0], trange[1]))
+            else:
+                # convert the channel ranges to use the axis values
+                # and units
+                rangestrs = []
+                channel_width = channel_axis.channel_width
+                for trange in ranges:
+                    axrange = [
+                      channel_axis.data[trange[0]]-channel_width/2,
+                      channel_axis.data[trange[1]]+channel_width/2]
+                    rangestrs.append('%s~%s%s' % (axrange[0],
+                      axrange[1], channel_axis.units))
+
+            flagcmd = flagcmd[:-1] + ":%s'" % ';'.join(rangestrs)
 
         if cell_index == 0:
             flagcmd += " correlation='XX'"
@@ -78,6 +119,7 @@ class FlagCmd(object):
             end = casatools.quanta.time(end, form=['ymd'])
             flagcmd += " timerange='%s~%s'" % (start[0], end[0])
 
+        flagcmd = flagcmd.strip()
         self.flagcmd = flagcmd
 #        print 'flagcmd', flagcmd
 

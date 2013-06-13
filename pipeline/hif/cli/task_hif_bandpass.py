@@ -6,11 +6,10 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_bandpass(vis=None, caltable=None, field=None, spw=None, antenna=None,
-                 intent=None,
-		 phaseup=None, phaseupsolint=None, phaseupbw=None,
-                 hm_bandtype=None, solint=None, combine=None, refant=None,
-                 solnorm=None, minblperant=None, minsnr=None, degamp=None,
-                 degphase=None, pipelinemode=None, dryrun=None, 
+                 intent=None, phaseup=None, phaseupsolint=None, phaseupbw=None,
+                 hm_bandtype=None, solint=None, maxchannels=None, combine=None,
+		 refant=None, solnorm=None, minblperant=None, minsnr=None,
+		 degamp=None, degphase=None, pipelinemode=None, dryrun=None, 
                  acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

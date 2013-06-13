@@ -57,3 +57,26 @@ def parseEdge(edge):
     else:
         (EdgeL, EdgeR) = edge[:2]
     return(EdgeL, EdgeR)
+
+def mjd_to_datestring( t, unit='sec' ):
+    """
+    MJD ---> date string
+
+    t: MJD
+    unit: sec or day
+    """
+    if unit == 'sec':
+        mjd = t
+    elif unit == 'day':
+        mjd = t * 86400.0
+    else:
+        mjd = 0.0
+    import time
+    import datetime
+    mjdzero=datetime.datetime(1858,11,17,0,0,0)
+    zt=time.gmtime(0.0)
+    timezero=datetime.datetime(zt.tm_year,zt.tm_mon,zt.tm_mday,zt.tm_hour,zt.tm_min,zt.tm_sec)
+    dtd = timezero-mjdzero
+    dtsec=mjd-(float(dtd.days)*86400.0+float(dtd.seconds)+float(dtd.microseconds)*1.0e-6)
+    mjdstr=time.asctime(time.gmtime(dtsec))+' UTC'
+    return mjdstr 

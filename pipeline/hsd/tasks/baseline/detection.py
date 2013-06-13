@@ -7,37 +7,29 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.jobrequest as jobrequest
-#import pipeline.infrastructure.logging as logging
 import pipeline.h.heuristics as heuristics
 from .. import common
 from . import rules
 
 LOG = infrastructure.get_logger(__name__)
-#LogLevel='trace'
-LogLevel='info'
-#logging.set_logging_level(LogLevel)
 
 class DetectLine(object):
-    LineFinder = 'HEURISTICS' #'ASAP'
+    #LineFinder = heuristics.AsapLineFinder
+    LineFinder = heuristics.HeuristicsLineFinder
     ThresholdFactor = 3.0
 
     def __init__(self, datatable):
         self.datatable = datatable
-        self.lf = self._init_linefinder()
+        self.lf = self.LineFinder()
 
-    def _init_linefinder(self):
-        if self.LineFinder == 'ASAP':
-            return heuristics.AsapLineFinder()
-        elif self.LineFinder == 'HEURISTICS':
-            return heuristics.HeuristicsLineFinder()
-
-    def execute(self, grid_table, spectra, window=[], edge=(0, 0), broadline=True):
+    def execute(self, grid_table, spectra, window=[], edge=(0, 0), broadline=True, LogLevel='info'):
         """
         The process finds emission lines and determines protection regions for baselinefit
         """
         detect_signal = {}
 
-        (nchan,nrow) = spectra.shape
+        #(nchan,nrow) = spectra.shape
+        (nrow,nchan) = spectra.shape
 
         # Pre-Defined Spectrum Window
         if len(window) != 0:
@@ -73,13 +65,13 @@ class DetectLine(object):
 
         # 2011/05/17 TN
         # Switch to use either ASAP linefinder or John's linefinder
-        if self.LineFinder == 'ASAP':
+        if self.lf.__class__.__name__ == 'AsapLineFinder':
             #LF = heuristics.AsapLineFinder()
             ### 2011/05/23 for linefinder2
             Thre = [Threshold, Threshold * sqrt(2)]
             if broadline: (Start, Binning) = (0, 1)
             else: (Start, Binning) = (1, 1)
-        elif self.LineFinder == 'HEURISTICS':
+        elif self.lf.__class__.__name__ == 'HeuristicsLineFinder':
             #LF = heuristics.HeuristicsLineFinder()
             ### 2011/05/23 for linefinder2
             #Thre = [Threshold * self.ThresholdFactor, Threshold * math.sqrt(2) * self.ThresholdFactor]
@@ -115,7 +107,7 @@ class DetectLine(object):
                 ProcStartTime = time.time()
                 LOG.debug('Start Row %d' % (row))
 
-                protected = self._detect(spectrum = spectra[:,row], 
+                protected = self._detect(spectrum = spectra[row],#spectrum = spectra[:,row], 
                                          start=Start,
                                          end=len(Thre),
                                          binning=Binning,

@@ -3,12 +3,10 @@ from __future__ import absolute_import
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
-#import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure import casa_tasks
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
 
 import os
 import asap as sd
@@ -99,9 +97,25 @@ class SDApplyCalResults(common.SingleDishResults):
     def merge_with_context(self, context):
         super(SDApplyCalResults,self).merge_with_context(context)
         calapp = self.outcome
+
+        # merge with datatable, and export it
+        filename = os.path.join(context.output_dir, calapp.infile)
+        for _calfrom in calapp.calfrom:
+            if _calfrom.caltype == 'tsys':
+                tsystable = _calfrom.gaintable
+                spwmap = _calfrom.spwmap
+                datatable = context.observing_run.datatable_instance
+                datatable._update_tsys(filename, tsystable, spwmap)
+
+                # here, full export is necessary
+                datatable.exportdata(minimal=False)
+                break
+                
+        # applied caltables are marked as applied
         if calapp is not None:
             LOG.trace('Marking %s as applied' % calapp.as_applycal())
             context.callibrary.mark_as_applied(calapp.calto, calapp.calfrom)
+
         
     def _outcome_name(self):
         # usually, outcome is a name of the file
@@ -162,7 +176,7 @@ class SDApplyCal(common.SingleDishTaskTemplate):
             args['iflist'] = calapp.iflist
             args['scanlist'] = calapp.scanlist
             args['pollist'] = calapp.pollist
-            args['field'] = calapp.field.strip('"')
+            #args['field'] = calapp.field.strip('"')
             args['applytable'] = [calfrom.gaintable for calfrom in calfroms]
 
             # create job

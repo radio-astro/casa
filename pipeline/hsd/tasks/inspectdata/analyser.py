@@ -6,12 +6,11 @@ import numpy
 from asap import srctype as st
 
 import pipeline.infrastructure as infrastructure
-#import pipeline.infrastructure.logging as logging
 import pipeline.infrastructure.casatools as casatools
+import pipeline.domain.singledish as singledish
 from ... import heuristics
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
 
 class DataTableAnalyser(object):
     def __init__(self, scantablelist, datatable):
@@ -51,8 +50,8 @@ class DataTableAnalyser(object):
                 pols = pol_properties[spw_property.pol_association[0]].polno
                 match = False
                 for (k,v) in self.reduction_group.items():
-                    group_range = v['freq_range']
-                    group_nchan = v['nchan']
+                    group_range = v.frequency_range#v['freq_range']
+                    group_nchan = v.nchan#v['nchan']
                     overlap = max( 0.0, min(group_range[1],freq_range[1]) \
                                    - max(group_range[0],freq_range[0]))
                     width = max(group_range[1],freq_range[1]) \
@@ -64,13 +63,11 @@ class DataTableAnalyser(object):
                 if match is False:
                     # add new group
                     key = len(self.reduction_group)
-                    self.reduction_group[key] = {
-                        'freq_range': freq_range,
-                        'nchan': nchan,
-                        'member': [[idx,spw,pols]]
-                        }
+                    newgroup = singledish.ReductionGroupDesc(freq_range, nchan)
+                    newgroup.add_member(idx, spw, pols)
+                    self.reduction_group[key] = newgroup
                 else:
-                    self.reduction_group[match]['member'].append([idx,spw,pols])
+                    self.reduction_group[match].add_member(idx, spw, pols)
 
         LOG.debug('reduction_group:\n%s'%(self.reduction_group))
 
@@ -85,13 +82,16 @@ class DataTableAnalyser(object):
                 tsys_strategy = None
 
             # strategy for off-position calibration
-            h = heuristics.CalibrationTypeHeuristics()
-            calmode = h(item.name)
+            h_calmode = heuristics.CalibrationTypeHeuristics()
+            calmode = h_calmode(item.name)
+            h_srctype = heuristics.SrcTypeHeuristics()
+            srctype = h_srctype(calmode)
             
             entry = {
                 'tsys': item.tsys_transfer,
                 'tsys_strategy': tsys_strategy,
-                'calmode': calmode
+                'calmode': calmode,
+                'srctype': srctype
                 }
 
             LOG.info('calibration strategy for %s:\n%s'%(item.basename,entry))
@@ -169,8 +169,8 @@ class DataTableAnalyser(object):
         elapsed = self.datatable.getcol('ELAPSED')
         beam = self.datatable.getcol('BEAM')
         self.posgrp = numpy.zeros(len(self.datatable), dtype=int)
-        self.timegrp = [numpy.zeros(len(self.datatable), dtype=int),
-                   numpy.zeros(len(self.datatable), dtype=int)]
+        self.timegrp = [numpy.zeros(len(self.datatable), dtype=int) - 1,
+                        numpy.zeros(len(self.datatable), dtype=int) - 1]
         self.posgrp_rep = {}
         self.posgrp_list = {}
         self.timegrp_list = {}
@@ -340,7 +340,8 @@ class DataTableAnalyser(object):
                                                dec_sel)
                             last_ra = ra_sel
                             last_dec = dec_sel
-                            LOG.info('nx=%s\nny=%s\ngrid=%s'%(len(grid[0]),len(grid[1]),grid))
+                            LOG.info('(nx,ny)=(%s,%s)'%(len(grid[0]),len(grid[1])))
+                            LOG.debug('grid=%s'%(grid))
                         grid_position[src][spw][pol] = grid
             self.grid_position.append(grid_position)
 

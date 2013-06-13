@@ -6,6 +6,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.callibrary as callibrary
+import pipeline.infrastructure.utils as utils
 
 from pipeline.hif.heuristics import fieldnames
 
@@ -43,6 +44,17 @@ class ApplycalInputs(basetask.StandardInputs,
         if value is None:
             value = ''
         self._antenna = value
+
+    @property
+    def calstate(self):
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('calstate')
+        
+        # The default calstate property implementation merges states that are 
+        # identical apart from calwt. As applycal is a task that can handle
+        # calwt, request that jobs not be merged when calwt differs by supplying
+        # a null 'ignore' argument - or as in this case - omitting it.   
+        return self.context.callibrary.get_calstate(self.calto)
 
     @property
     def flagbackup(self):
@@ -85,7 +97,7 @@ class ApplycalInputs(basetask.StandardInputs,
 
         # run the answer through a set, just in case there are duplicates
         fields = set()
-        fields.update(intent_fields.split(','))
+        fields.update(utils.safe_split(intent_fields))
         
         return ','.join(fields)
 
@@ -173,23 +185,26 @@ class ApplycalResults(basetask.Results):
 class Applycal(basetask.StandardTaskTemplate):
     """
     Applycal executes CASA applycal tasks for the current context state,
-    applying calibrations held in the pipeline context to the target
+    applying calibrations registered with the pipeline context to the target
     measurement set.
     
     Applying the results from this task to the context marks the referred
-    tables as applied, and they will not be included in future on-the-fly
-    calibration arguments.
+    tables as applied. As a result, they will not be included in future
+    on-the-fly calibration arguments.
     """
     Inputs = ApplycalInputs
     
     def prepare(self):
         inputs = self.inputs
-        calstate = inputs.calstate
+
+        # Get the calibration state for the user's target data selection. This
+        # dictionary of CalTo:CalFroms gives us which calibrations should be
+        # applied and how.
+        merged = inputs.calstate.merged()
         
-        merged = calstate.merged()
         jobs = []
         for calto, calfroms in merged.items():
-            # arrange a calibration job for the data selection
+            # arrange a calibration job for the unique data selection
             inputs.spw = calto.spw
             inputs.field = calto.field
             inputs.intent = calto.intent
@@ -198,12 +213,13 @@ class Applycal(basetask.StandardTaskTemplate):
 
             args = inputs.to_casa_args()
 
-            # set the on-the-fly calibration state for the data selection 
+            # set the on-the-fly calibration state for the data selection.  
             calapp = callibrary.CalApplication(calto, calfroms)
             args['gaintable'] = calapp.gaintable
             args['gainfield'] = calapp.gainfield
             args['spwmap']    = calapp.spwmap
             args['interp']    = calapp.interp
+            args['calwt']     = calapp.calwt
             
             jobs.append(casa_tasks.applycal(**args))
 

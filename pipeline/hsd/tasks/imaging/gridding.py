@@ -2,45 +2,44 @@ from __future__ import absolute_import
 
 import os
 import math
-#from math import cos, sqrt, exp
 import numpy
 import time
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.logging as logging
-#from ..baseline import utils
 from .. import common 
 
+from .accumulator import Accumulator
+
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
-#logging.set_logging_level('info')
 
 NoData = common.NoData
 
-def gridding_factory(obs_pattern):
-    if obs_pattern.upper() == 'RASTER':
+def gridding_factory(observing_pattern):
+    LOG.info('ObsPattern = %s' % observing_pattern)
+    if observing_pattern.upper() == 'RASTER':
         return RasterGridding
-    elif obs_pattern.upper() == 'SINGLE-POINT':
+    elif observing_pattern.upper() == 'SINGLE-POINT':
         return SinglePointGridding
-    elif obs_pattern.upper() == 'MULTI-POINT':
+    elif observing_pattern.upper() == 'MULTI-POINT':
         return MultiPointGridding
     else:
-        raise ValueError('obs_pattern \'%s\' is invalid.'%(obs_pattern))
+        raise ValueError('observing_pattern \'%s\' is invalid.'%(observing_pattern))
 
 class GriddingBase(object):
-    rule = {'WeightDistance': 'Gauss', \
-                'Clipping': 'MinMaxReject', \
-                'WeightRMS': True, \
-                'WeightTsysExptime': False} 
+    Rule = {'WeightDistance': 'Gauss', \
+            'Clipping': 'MinMaxReject', \
+            'WeightRMS': True, \
+            'WeightTsysExptime': False} 
 
-    def __init__(self, datatable, antenna, spw, pol, srctype, nchan, grid_size):
+    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
         self.datatable = datatable
         self.datatable_name = self.datatable.plaintable
         if type(antenna) == int:
             self.antenna = [antenna]
         else:
             self.antenna = antenna
+        self.files = files
         self.spw = spw
         self.pol = pol
         self.nchan = nchan
@@ -61,96 +60,18 @@ class GriddingBase(object):
 
     def execute(self):
         start = time.time()
-        combine_size = self.grid_ra
+        combine_radius = self.grid_ra
+        kernel_width = 0.5 * combine_radius
         allowance = self.grid_ra * 0.1
         spacing = self.grid_ra / 3.0
-        index_list, grid_table = self.GroupForGrid(combine_size, allowance, spacing, 'RASTER')
-        #return index_list, grid_table
-        work_dir = os.path.join('/',*(self.datatable.plaintable.split('/')[:-2]))
-        filenames = [os.path.join(work_dir,f) for f in self.datatable.getkeyword('FILENAMES')]
-        #DataIn = filenames[self.antenna]
-        DataIn = [filenames[i] for i in self.antenna]
-        ### FOR TESTING ###
-        #DataIn = ['uid___A002_X316307_X6f.CM02.asap_work/',
-        #          'uid___A002_X3178c7_X31.CM02.asap_work/']
-        ###################
+        DataIn = self.files
         LOG.info('DataIn=%s'%(DataIn))
-        LOG.info('index_list.shape=%s'%(list(index_list.shape)))
-        spstorage, grid_table2 = self.Process8(DataIn, index_list, self.nchan, grid_table, 0.5 * combine_size, self.rule)
+        spstorage, grid_table = self.dogrid(DataIn, kernel_width, combine_radius, allowance, spacing)
         end = time.time()
         LOG.info('execute: elapsed time %s sec'%(end-start))
-        return spstorage, grid_table2
-
-    #def make_grid_table(self):
-    def GroupForGrid(self, CombineRadius, Allowance, GridSpacing, ObsPattern):
-        """
-        Gridding by RA/DEC position
-        """
-        start = time.time()
+        return spstorage, grid_table
         
-        # need opened table to call taql, so we use table object that 
-        # datatable holds.
-        table = self.datatable.tb1
-
-        # TaQL command to make a view from DataTable that is physically 
-        # separated to two tables named RO and RW, respectively. 
-        # Note that TaQL accesses DataTable on disk, not on memory. 
-        taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID, RO.ROW, RO.ANTENNA, RO.RA, RO.DEC, RW.STATISTICS[0] AS STAT FROM "%s" RO, "%s" RW WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(self.datatable_name,'RO'),os.path.join(self.datatable_name,'RW'),self.spw,self.pol,list(self.antenna))
-        if self.srctype is not None:
-            taqlstring += ' && SRCTYPE==%s'%(self.srctype)
-
-        ### FOR TESTING ###
-        #taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID, RO.ROW, RO.ANTENNA, RO.RA, RO.DEC, RW.STATISTICS[0] AS STAT FROM "%s" RO, "%s" RW WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join('ThisIsExportedDataTable.tbl/RO'),os.path.join('ThisIsExportedDataTable.tbl/RW'),self.spw,self.pol,list(self.antenna))        
-        ###################
-            
-        LOG.debug('taqlstring="%s"'%(taqlstring))
-        #NpRAs = numpy.take(self.datatable.getcol('RA'),Idx)
-        #NpDECs = numpy.take(self.datatable.getcol('DEC'),Idx)
-        #NpRMSs = numpy.take(self.datatable.getcol('STATISTICS'),Idx,axis=1)[1,:]
-        #NpROWs = numpy.take(self.datatable.getcol('ROW'),Idx)
-        #NpIDXs = numpy.array(index_list)
-        #NpANTs = numpy.take(self.datatable.getcol('ANTENNA'),index_list)
-        tx = table.taql(taqlstring)
-        index_list = tx.getcol('ID')
-        rows = tx.getcol('ROW')
-        ants = tx.getcol('ANTENNA')
-        ras = tx.getcol('RA')
-        decs = tx.getcol('DEC')
-        stats = tx.getcol('STAT')
-        tx.close()
-        del tx
-
-        start1 = time.time()
-
-        # Re-Gridding
-
-        NROW = len(index_list)
-        LOG.info('ObsPattern = %s' % ObsPattern)
-        LOG.info('Processing %d spectra...' % NROW)
-
-        GridTable = []
-        # 2008/09/20 Spacing should be identical between RA and DEC direction
-        # Curvature has not been taken account
-        DecCorrection = 1.0 / math.cos(self.datatable.getcell('DEC',0) / 180.0 * 3.141592653)
-
-        #### GridSpacingRA = GridSpacing * DecCorrection
-        index_listTmp=[]
-        if type(index_list[0]) == list:
-            #index_listTmp = index_list[0][:]
-            #for i in range(len(index_list)-1):
-            #    index_listTmp += index_list[i+1]
-            #index_list = index_listTmp
-            index_list = [x for y in index_list for x in y]
-        
-        GridTable = self._group(index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection)
-
-        index_list = index_list.reshape((len(self.antenna),index_list.size/len(self.antenna)))
-
-        end = time.time()
-        LOG.info('GroupForGrid: elapsed time %s sec (except table access %s sec)'%(end-start,end-start1))
-        return index_list, GridTable
-
-    def Process8(self, DataIn, IDX, NCHAN, GridTable, CombineRadius, GridRule, LogLevel=2):
+    def dogrid(self, DataIn, kernel_width, combine_radius, allowance_radius, grid_spacing, loglevel=2):
         """
         The process does re-map and combine spectrum for each position
         GridTable format:
@@ -173,167 +94,138 @@ class GriddingBase(object):
         DataOut is not used 2010/10/25 GK
         """
         start = time.time()
+
+        # need opened table to call taql, so we use table object that 
+        # datatable holds.
+        table = self.datatable.tb1
+
+        # TaQL command to make a view from DataTable that is physically 
+        # separated to two tables named RO and RW, respectively. 
+        # Note that TaQL accesses DataTable on disk, not on memory. 
+        #taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID, RO.ROW, RO.ANTENNA, RO.RA, RO.DEC, RO.TSYS, RO.EXPOSURE, RW.STATISTICS[0] AS STAT, RW.FLAG_SUMMARY FROM "%s" RO, "%s" RW WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(self.datatable_name,'RO'),os.path.join(self.datatable_name,'RW'),self.spw,self.pol,list(self.antenna))
+        taqlstring = 'USING STYLE PYTHON SELECT ROWNUMBER() AS ID FROM "%s" WHERE IF==%s && POL == %s && ANTENNA IN %s'%(os.path.join(self.datatable_name,'RO'),self.spw,self.pol,list(self.antenna))
+        if self.srctype is not None:
+            taqlstring += ' && SRCTYPE==%s'%(self.srctype)
+
+        LOG.debug('taqlstring="%s"'%(taqlstring))
+        tx = table.taql(taqlstring)
+        index_list = tx.getcol('ID')
+        tx.close()
+        del tx
+        rows = table.getcol('ROW').take(index_list)
+        ants = table.getcol('ANTENNA').take(index_list)
+        ras = table.getcol('RA').take(index_list)
+        decs = table.getcol('DEC').take(index_list)
+        stats = self.datatable.tb2.getcol('STATISTICS').take(index_list)
+        tsys = table.getcol('TSYS').take(index_list)
+        exposure = table.getcol('EXPOSURE').take(index_list)
+        net_flag = self.datatable.tb2.getcol('FLAG_SUMMARY').take(index_list)
+
+        # Re-Gridding
+        # 2008/09/20 Spacing should be identical between RA and DEC direction
+        # Curvature has not been taken account
+        dec_corr = 1.0 / math.cos(self.datatable.getcell('DEC',0) / 180.0 * 3.141592653)
+        #dec_corr = 1.0 / math.cos(decs[0] / 180.0 * 3.141592653)
+
+        GridTable = self._group(index_list, rows, ants, ras, decs, stats, combine_radius, allowance_radius, grid_spacing, dec_corr)
         
         # create storage
-        # 2011/11/12 DataIn and rowsSel are [list]
-        NSpIn = len(IDX[0])
-        for i in range(len(IDX)-1): NSpIn += len(IDX[i+1])
-        #SpStorage = {}
-        SpStorage = numpy.zeros((NSpIn, NCHAN), dtype=numpy.float32)
-        #SpStorage = numpy.zeros((len(IDX), NCHAN), dtype=numpy.float32)
+        num_spectra = len(index_list)
+        num_data = len(DataIn)
+        num_spectra_per_data = num_spectra / num_data
+        SpStorage = numpy.zeros((num_spectra, self.nchan), dtype=numpy.float32)
 
-        if NCHAN != 1:
-            clip = GridRule['Clipping']
-            rms_weight = GridRule['WeightRMS']
-            tsys_weight = GridRule['WeightTsysExptime']
+        LOG.info('Processing %d spectra...' % num_spectra)
+        
+        if self.nchan != 1:
+            accum = Accumulator(minmaxclip=(self.Rule['Clipping'].upper()=='MINMAXREJECT'),
+                                weight_rms=self.Rule['WeightRMS'],
+                                weight_tintsys=self.Rule['WeightTsysExptime'],
+                                kernel_type=self.Rule['WeightDistance'],
+                                kernel_width=kernel_width)
         else:
-            clip = 'none'
-            rms_weight = False
-            tsys_weight = True
-        weight = GridRule['WeightDistance']
+            accum = Accumulator(minmaxclip=False,
+                                weight_rms=False,
+                                weight_tintsys=True,
+                                kernel_type=self.Rule['WeightDistance'],
+                                kernel_width=kernel_width)
 
-        NROW = len(GridTable)
+        num_grid = len(GridTable)
         LOG.info('Accumulate nearby spectrum for each Grid position...')
-        LOG.info('Processing %d spectra...' % (NROW))
+        LOG.info('Processing %d spectra...' % (num_grid))
         OutputTable = []
+        
         # create storage for output
-        StorageOut = numpy.ones((NROW, NCHAN), dtype=numpy.float32) * NoData
-        ID = 0
-
-        tROW = self.datatable.getcol('ROW')
-        tSFLAG = self.datatable.getcol('FLAG_SUMMARY')
-        tTSYS = self.datatable.getcol('TSYS')
-        tEXPT = self.datatable.getcol('EXPOSURE')
-        ### FOR TESTING ###
-        #with casatools.TableReader('ThisIsExportedDataTable.tbl/RO') as tb:
-        #    tROW = tb.getcol('ROW')
-        #    tTSYS = tb.getcol('TSYS')
-        #    tEXPT = tb.getcol('EXPOSURE')
-        #with casatools.TableReader('ThisIsExportedDataTable.tbl/RW') as tb:
-        #    tSFLAG = tb.getcol('FLAG_SUMMARY')
-        ###################
-
+        StorageOut = numpy.ones((num_grid, self.nchan), dtype=numpy.float32) * NoData
         # 2011/11/12 DataIn and rowsSel are [list]
         IDX2StorageID = {}
         StorageID = 0
         for i in xrange(len(DataIn)):
             # read data to SpStorage
             with casatools.TableReader(DataIn[i]) as tb:
-                for x in IDX[i]:
-                    SpStorage[StorageID] = tb.getcell('SPECTRA', tROW[x])
+                for j in xrange(num_spectra_per_data):
+                    x = index_list[StorageID]
+                    SpStorage[StorageID] = tb.getcell('SPECTRA', rows[StorageID])
                     IDX2StorageID[x] = StorageID
                     StorageID += 1
-                    #SpStorage[x] = tb.getcell('SPECTRA', tROW[x])
                 LOG.debug('Data Stored in SpStorage')
 
         # Create progress timer
-        Timer = common.ProgressTimer(80, NROW, LogLevel)
+        Timer = common.ProgressTimer(80, num_grid, loglevel)
+        ID = 0
         for [IF, POL, X, Y, RAcent, DECcent, RowDelta] in GridTable:
-            rowlist = []
-            indexlist = []
-            deltalist = []
-            rmslist = []
-            flagged = 0
-            for [row, delta, rms, index, ant] in RowDelta:
-                # Check Summary Flag
-                if tSFLAG[int(index)] == 1:
-                    #if self.datatable[row][DT_SFLAG] == 1:
-                    rowlist.append(int(row))
-                    indexlist.append(IDX2StorageID[int(index)])
-                    #indexlist.append(int(index))
-                    deltalist.append(delta)
-                    rmslist.append(rms)
-                else: flagged += 1
-            if len(rowlist) == 0:
+            # RowDelta is numpy array
+            if len(RowDelta) == 0:
+                #rowlist = []
+                indexlist = []
+                deltalist = []
+                rmslist = []
+            else:
+                indexlist = numpy.array([IDX2StorageID[int(idx)] for idx in RowDelta[:,3]])
+                valid_index = numpy.where(net_flag[indexlist] == 1)[0]
+                #rowlist = numpy.array(RowDelta[:,0].take(valid_index),dtype=int)
+                indexlist = indexlist.take(valid_index)
+                deltalist = RowDelta[:,1].take(valid_index)
+                rmslist = RowDelta[:,2].take(valid_index)
+            num_valid = len(indexlist)
+            num_flagged = len(RowDelta) - num_valid
+            if num_valid == 0:
                 # No valid Spectra at the position
                 RMS = 0.0
                 pass
-            elif len(rowlist) == 1:
+            elif num_valid == 1:
                 # One valid Spectrum at the position
-                StorageOut[ID] = SpStorage[rowlist[0]]
-                #StorageOut[ID] = SpStorage[indexlist[0]]
+                StorageOut[ID] = SpStorage[0]
                 RMS = rmslist[0]
             else:
                 # More than one valid Spectra at the position
-                #data = SpStorage[rowlist].copy()
-                #data = SpStorage[indexlist].copy()
                 data = SpStorage[indexlist]
-                #data = numpy.array([SpStorage[i] for i in indexlist])
-                #print data
-                #w = numpy.ones(numpy.shape(data), numpy.float64)
-                #weightlist = numpy.ones(len(rowlist), numpy.float64)
-                w = numpy.ones(numpy.shape(data), numpy.float32)
-                weightlist = numpy.ones(len(rowlist), numpy.float32)
-                # Clipping
-                if clip.upper() == 'MINMAXREJECT' and len(rowlist) > 2:
-                    w[numpy.argmin(data, axis=0), range(len(data[0]))] = 0.0
-                    w[numpy.argmax(data, axis=0), range(len(data[0]))] = 0.0
-                # Weight by RMS
-                # Weight = 1/(RMS**2)
-                weight_factor = 0.0
-                if rms_weight == True:
-                    for m in xrange(len(rowlist)):
-                        if rmslist[m] != 0.0:
-                            weight_factor = rmslist[m] * rmslist[m]
-                            w[m] /= weight_factor
-                            weightlist[m] /= weight_factor
-                        else:
-                            w[m] = 0.0
-                            weightlist[m] = 0.0
-                # Weight by Exptime & Tsys
-                # RMS = n * Tsys/math.sqrt(Exptime)
-                # Weight = 1/(RMS**2) = (Exptime/(Tsys**2))
-                if tsys_weight == True:
-                    for m in xrange(len(rowlist)):
-                        # 2008/9/21 Bug fix
-                        if tTSYS[rowlist[m]] > 0.5:
-                            weight_factor = (tEXPT[rowlist[m]]/(tTSYS[rowlist[m]]*tTSYS[rowlist[m]])) 
-                            w[m] *= weight_factor
-                            weightlist[m] *= weight_factor
-                            #if self.datatable[m][DT_TSYS] > 0.5:
-                            #    w[m] *= (self.datatable[m][DT_EXPT]/(self.datatable[m][DT_TSYS]**2))
-                            #    weightlist[m] *= (self.datatable[m][DT_EXPT]/(self.datatable[m][DT_TSYS]**2))
-                        else:
-                            w[m] = 0.0
-                            weightlist[m] = 0.0
-                # Weight by radius
-                if weight.upper() == 'GAUSS':
-                    # weight = exp(-ln2*((r/hwhm)**2))
-                    for m in xrange(len(rowlist)):
-                        weight_factor = (math.exp(-0.69314718055994529*((deltalist[m]*deltalist[m]/(CombineRadius*CombineRadius)))))
-                        w[m] *= weight_factor
-                        weightlist[m] *= weight_factor
-                elif weight.upper() == 'LINEAR':
-                    # weight = 0.5 + (hwhm - r)/2/hwhm = 1.0 - r/2/hwhm
-                    for m in xrange(len(rowlist)):
-                        weight_factor = (1.0 - 0.5*deltalist[m]/CombineRadius)
-                        w[m] *= weight_factor
-                        weightlist[m] *= weight_factor
-                # Combine Spectra
-                if w.sum() != 0: StorageOut[ID] = (numpy.sum(data * w, axis=0) / numpy.sum(w,axis=0))
-                # Calculate RMS of the spectrum
-                r0 = 0.0
-                r1 = 0.0
-                for m in xrange(len(rowlist)):
-                    r0 += (rmslist[m] * weightlist[m]) * (rmslist[m] * weightlist[m])
-                    r1 += weightlist[m]
-                RMS = math.sqrt(r0) / r1
 
-            OutputTable.append([IF, POL, X, Y, RAcent, DECcent, len(rowlist), flagged, RMS])
+                # Data accumulation by Accumulator
+                #accum = Accumulator(clip.upper()=='MINMAXREJECT',
+                #                    rms_weight,
+                #                    tsys_weight)
+                accum.init(data)
+                accum.accumulate(indexlist, rmslist, deltalist, tsys, exposure)
+                
+                StorageOut[ID] = accum.accumulated
+                RMS = accum.rms
+
+            OutputTable.append([IF, POL, X, Y, RAcent, DECcent, num_valid, num_flagged, RMS])
             ID += 1
-            del rowlist, indexlist, deltalist, rmslist
+            del indexlist, deltalist, rmslist
 
             # Countup progress timer
             Timer.count()
 
         end = time.time()
-        LOG.info('Process8: elapsed time %s sec'%(end-start))
+        LOG.info('dogrid: elapsed time %s sec'%(end-start))
         return (StorageOut, OutputTable)
 
 class RasterGridding(GriddingBase):
-    def __init__(self, datatable, antenna, spw, pol, srctype, nchan, grid_size):
+    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
 
-        super(RasterGridding, self).__init__(datatable, antenna, spw, pol, srctype, nchan, grid_size)
+        super(RasterGridding, self).__init__(datatable, antenna, files, spw, pol, srctype, nchan, grid_size)
 
     def _group(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """
@@ -354,16 +246,12 @@ class RasterGridding(GriddingBase):
             ras = ras + numpy.less_equal(ras, 180) * 360.0
             MinRA = ras.min()
             MaxRA = ras.max()
-        #NGridRA = int((max(RAs) - MinRA) / (GridSpacing * DecCorrection)) + 1
-        #NGridDEC = int((max(DECs) - MinDEC) / GridSpacing) + 1
         # (RAcenter, DECcenter) to be the center of the grid
         NGridRA = int((MaxRA - MinRA) / (GridSpacing * DecCorrection)) + 1
         NGridDEC = int((MaxDEC - MinDEC) / GridSpacing) + 1
         MinRA = (MinRA + MaxRA) / 2.0 - (NGridRA - 1) / 2.0 * GridSpacing * DecCorrection
         MinDEC = (MinDEC + MaxDEC) / 2.0 - (NGridDEC - 1) / 2.0 * GridSpacing
 
-        tot = 0.0
-        tot2 = 0.0
         for y in xrange(NGridDEC):
             if NROW > 10000: print 'Progress:', y, '/', NGridDEC, '(', NGridRA, ')', ' : ', time.ctime()
             DEC = MinDEC + GridSpacing * y
@@ -395,20 +283,18 @@ class RasterGridding(GriddingBase):
                 else:
                     line = [self.spw, self.pol, x, y, RA, DEC, []]
                 GridTable.append(line)
-                LOG.debug("GridTable: %s" % line)
-        #del DEC, DeltaDEC, SelectD, sDeltaDEC, sRA, sROW, sIDX, sRMS, sANT, sDeltaRA, RA, Delta, line
+                #LOG.debug("GridTable: %s" % line)
 
         LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
 
         end = time.time()
-        LOG.info('test: accumulated elapsed time %s sec vs. %s sec'%(tot,tot2))
         LOG.info('_group: elapsed time %s sec'%(end-start))
         return GridTable
-        
-class SinglePointGridding(GriddingBase):
-    def __init__(self, datatable, antenna, spw, pol, srctype, nchan, grid_size):
 
-        super(SinglePointGridding, self).__init__(datatable, antenna, spw, pol, srctype, nchan, grid_size)
+class SinglePointGridding(GriddingBase):
+    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
+
+        super(SinglePointGridding, self).__init__(datatable, antenna, files, spw, pol, srctype, nchan, grid_size)
 
     def _group(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """
@@ -423,28 +309,26 @@ class SinglePointGridding(GriddingBase):
         NGridDEC = 1
         CenterRA = ras.mean()
         CenterDEC = decs.mean()
-        #CenterRA = (numpy.array(RAs)).mean()
-        #CenterDEC = (numpy.array(DECs)).mean()
         line = [self.spw, self.pol, 0, 0, CenterRA, CenterDEC, []]
         for x in range(len(index_list)):
             Delta = math.sqrt((ras[x] - CenterRA) ** 2.0 + (decs[x] - CenterDEC) ** 2.0)
-            #Delta = math.math.sqrt((RAs[x] - CenterRA) ** 2.0 + (DECs[x] - CenterDEC) ** 2.0)
             if Delta <= Allowance:
                 line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
-                #line[6].append([rows[x], Delta, RMSs[x], IDXs[x]])
+        line[6] = numpy.array(line[6], dtype=float)
         GridTable.append(line)
-        LOG.debug("GridTable: %s" % line)
+        #LOG.debug("GridTable: %s" % line)
         end = time.time()
 
         LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))
 
         LOG.info('_group: elapsed time %s sec'%(end-start))
         return GridTable
-        
-class MultiPointGridding(GriddingBase):
-    def __init__(self, datatable, antenna, spw, pol, srctype, nchan, grid_size):
 
-        super(MultiPointGridding, self).__init__(datatable, antenna, spw, pol, srctype, nchan, grid_size)
+
+class MultiPointGridding(GriddingBase):
+    def __init__(self, datatable, antenna, files, spw, pol, srctype, nchan, grid_size):
+
+        super(MultiPointGridding, self).__init__(datatable, antenna, files, spw, pol, srctype, nchan, grid_size)
 
     def _group(self, index_list, rows, ants, ras, decs, stats, CombineRadius, Allowance, GridSpacing, DecCorrection):
         """
@@ -463,19 +347,14 @@ class MultiPointGridding(GriddingBase):
                 if Flag[x] == 1:
                     RA = ras[x]
                     DEC = decs[x]
-                    #RA = RAs[x]
-                    #DEC = DECs[x]
                     RAtmp = [RA]
                     DECtmp = [DEC]
                     for y in range(x + 1, len(index_list)):
                         if Flag[y] == 1:
                             Delta = math.sqrt((RA - ras[y]) ** 2.0 + (DEC - decs[y]) ** 2.0)
-                            #Delta = math.math.sqrt((RA - RAs[y]) ** 2.0 + (DEC - DECs[y]) ** 2.0)
                             if Delta <= Allowance:
                                 RAtmp.append(ras[y])
                                 DECtmp.append(decs[y])
-                                #RAtmp.append(RAs[y])
-                                #DECtmp.append(DECs[y])
                     CenterRA = (numpy.array(RAtmp)).mean()
                     CenterDEC = (numpy.array(DECtmp)).mean()
                     line = [self.spw, self.pol, 0, NGridRA, CenterRA, CenterDEC, []]
@@ -483,13 +362,12 @@ class MultiPointGridding(GriddingBase):
                     for x in range(len(index_list)):
                         if Flag[x] == 1:
                             Delta = math.sqrt((ras[x] - CenterRA) ** 2.0 + (decs[x] - CenterDEC) ** 2.0)
-                            #Delta = math.math.sqrt((RAs[x] - CenterRA) ** 2.0 + (DECs[x] - CenterDEC) ** 2.0)
                             if Delta <= Allowance:
                                 line[6].append([index_list[x], Delta, stats[x], index_list[x], ants[x]])
-                                #line[6].append([rows[x], Delta, RMSs[x], IDXs[x]])
                                 Flag[x] = 0
+                    line[6] = numpy.array(line[6])
                     GridTable.append(line)
-                    LOG.debug("GridTable: %s" % line)
+                    #LOG.debug("GridTable: %s" % line)
         del Flag
 
         LOG.info('NGridRA = %s  NGridDEC = %s' % (NGridRA, NGridDEC))

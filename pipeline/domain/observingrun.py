@@ -5,6 +5,7 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -60,7 +61,7 @@ class ObservingRun(object):
 
         if fields is not None:
             if type(fields) is types.StringType:
-                fields = fields.split(',')
+                fields = utils.safe_split(fields)
             fields = set(fields)                
             ms_with_field = []
             for ms in match:
@@ -81,7 +82,7 @@ class ObservingRun(object):
         
         if names is not None:
             if type(names) is types.StringType:
-                names = names.split(',')
+                names = utils.safe_split(names)
             names = set(names)
             match = [f for f in match if f.name in names] 
 

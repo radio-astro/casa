@@ -7,16 +7,11 @@ import numpy
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-#import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure import JobRequest
 from .. import common
 
 LOG = infrastructure.get_logger(__name__)
-#LogLevel='trace'
-LogLevel='info'
-#logging.set_logging_level(LogLevel)
 
-subsqr = lambda x, y: (x - y) * (x - y)
 NoData = common.NoData
 
 class SDSimpleGridInputs(common.SingleDishInputs):
@@ -57,9 +52,6 @@ class SDSimpleGridResults(common.SingleDishResults):
 
 class SDSimpleGrid(common.SingleDishTaskTemplate):
     Inputs = SDSimpleGridInputs
-    SRCTYPE = {'ps': 0,
-               'otf': 0,
-               'otfraster': 0}
 
     def prepare(self):
         context = self.inputs.context
@@ -73,7 +65,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
         file_index = [st_names.index(infile) for infile in infiles]
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw
-            spw = group_desc['member'][0][1]
+            spw = group_desc.menber_list[0].spw
             LOG.debug('spw=%s'%(spw))
 
             # skip spw that is not included in iflist
@@ -82,10 +74,9 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
                 continue
 
             # assume all members have same calmode
-            ant = group_desc['member'][0][0]
+            ant = group_desc[0].antenna
             st = context.observing_run[ant]
-            calmode = st.calibration_strategy['calmode']
-            srctype = self.SRCTYPE[calmode] if self.SRCTYPE.has_key(calmode) else None
+            srctype = st.calibration_strategy['srctype']
             
             # beam size
             grid_size = qa.convert(st.beam_size[spw], 'deg')['value']
@@ -111,7 +102,7 @@ class SDSimpleGrid(common.SingleDishTaskTemplate):
         return result
 
 class SimpleGridding(object):
-    def __init__(self, datatable, spw, srctype, grid_size, file_index=None, nplane=3):
+    def __init__(self, datatable, spw, srctype, grid_size, data_in, nplane=3):
         self.datatable = datatable
         self.datatable_name = self.datatable.plaintable
         self.spw = spw
@@ -130,24 +121,16 @@ class SimpleGridding(object):
             self.grid_ra = grid_size
             self.grid_dec = grid_size
         self.nplane = nplane
-        self.file_index = file_index
+        self.data_in = data_in
 
     def execute(self):
         grid_table = self.make_grid_table()
         work_dir = os.path.join('/',*(self.datatable.plaintable.split('/')[:-2]))
         #LOG.debug('work_dir=%s'%(work_dir))
         filenames = [os.path.join(work_dir,f) for f in self.datatable.getkeyword('FILENAMES')]
-        if self.file_index is None:
-            data_in = dict(zip(range(len(filenames)), filenames))
-        else:
-            data_in = {}
-            for index in self.file_index:
-                data_in[index] = filenames[index]
-        #for (k,v) in data_in.items():
-        #    LOG.debug('data[%s]=%s'%(k,v))
         import time
         start = time.time()
-        retval = self.grid(data_in=data_in, grid_table=grid_table)
+        retval = self.grid(grid_table=grid_table)
         end = time.time()
         LOG.debug('Elapsed time: %s sec'%(end-start))
         return retval
@@ -244,8 +227,9 @@ class SimpleGridding(object):
                         # Also, x * x is ~30% faster than x ** 2.0.
                         #Delta = (((ras[index] - RA) * dec_corr) ** 2.0 + \
                         #         (decs[index] - DEC) ** 2.0) ** 0.5
-                        Delta = sqrt(subsqr(ras[index], RA) * dec_corr * dec_corr 
-                                     + subsqr(decs[index], DEC))
+                        Delta = sqrt((ras[index] - RA) * (ras[index] - RA)
+                                     * dec_corr * dec_corr 
+                                     + (decs[index] - DEC) * (decs[index] - DEC))
                         line[6].append([rows[index], Delta, stats[index], index_list[index], ants[index]])
                     grid_table.append(line)
                     #LOG.info("grid_table: %s" % line)
@@ -255,7 +239,7 @@ class SimpleGridding(object):
         return grid_table
 
 
-    def grid(self, data_in, grid_table, LogLevel=2):
+    def grid(self, grid_table, LogLevel='info'):
         """
         The process does re-map and combine spectrum for each position
         grid_table format:
@@ -274,13 +258,13 @@ class SimpleGridding(object):
 
         """
         NROW = len(grid_table)
-        LOG.info('grid() start...')
+        LOG.debug('grid() start...')
         LOG.info('Processing %d spectra...' % (NROW))
 
         # any opened table object is needed, so we use the one 
         # that datatable holds.
         tb = self.datatable.tb1
-        tx = tb.taql('SELECT NELEMENTS(FLAGTRA) AS NCHAN FROM "%s" WHERE IFNO==%s LIMIT 1'%(data_in.values()[0], self.spw))
+        tx = tb.taql('SELECT NELEMENTS(FLAGTRA) AS NCHAN FROM "%s" WHERE IFNO==%s LIMIT 1'%(self.data_in.values()[0], self.spw))
         NCHAN = tx.getcell('NCHAN',0)
         tx.close()
         del tx
@@ -300,7 +284,7 @@ class SimpleGridding(object):
             
         # loop for all ROWs in grid_table to make dictionary that 
         # associates spectra in data_in and weights with grids.
-        bind_to_grid = dict([(k,[]) for k in data_in.keys()])
+        bind_to_grid = dict([(k,[]) for k in self.data_in.keys()])
         for ROW in xrange(NROW):
             [IF, POL, X, Y, RAcent, DECcent, RowDelta] = grid_table[ROW]
             for [row, delta, rms, index, ant] in RowDelta:
@@ -313,8 +297,8 @@ class SimpleGridding(object):
         Timer = common.ProgressTimer(80, sum(map(len,bind_to_grid.values())), LogLevel)
 
         # loop for antennas
-        for AntID in data_in.keys():
-            with casatools.TableReader(data_in[AntID]) as tb:
+        for AntID in self.data_in.keys():
+            with casatools.TableReader(self.data_in[AntID]) as tb:
                 for entry in bind_to_grid[AntID]:
                     [tROW, ROW, Weight, tSFLAG] = entry
                     if tSFLAG == 1:

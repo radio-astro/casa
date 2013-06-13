@@ -13,14 +13,11 @@ import flagmanager_cli
 import fluxscale_cli
 import gaincal_cli
 import gencal_cli
-import hanningsmooth_cli
 import importasdm_cli
-import importevla_cli
 import setjy_cli
 import plotants_cli
 import plotcal_cli
 import plotms_cli
-import plotweather_cli
 import plotxy_cli
 import flagdata_cli
 import wvrgcal_cli
@@ -34,7 +31,10 @@ from . import logging
 
 LOG = logging.get_logger(__name__)
 
-
+# functions to be executed just prior to and immediately after execution of the
+# CASA task, providing a way to collect metrics on task execution.
+PREHOOKS = []
+POSTHOOKS = []
 
 class JobRequest(object):
     def __init__(self, fn, *args, **kw):
@@ -96,8 +96,14 @@ class JobRequest(object):
         if dry_run:
             sys.stdout.write('Dry run: %s\n' % msg)                                
         else:
-            LOG.info('Executing %s' % msg)            
-            return self.fn(*self.args, **self.kw)
+            for hook in PREHOOKS:
+                hook(self)
+            LOG.info('Executing %s' % msg)
+            try:
+                return self.fn(*self.args, **self.kw)
+            finally:
+                for hook in POSTHOOKS:
+                    hook(self)
 
     def _recur_map(self, f, data):
         return [type(x) is types.StringType and f(x) or self._recur_map(f, x) for x in data]
@@ -274,15 +280,9 @@ class CASATaskJobGenerator(object):
 
     def gencal(self, *v, **k):
         return self._get_job(gencal_cli.gencal_cli, *v, **k)
-    
-    def hanningsmooth(self, *v, **k):
-        return self._get_job(hanningsmooth_cli.hanningsmooth_cli, *v, **k)
 
     def importasdm(self, *v, **k):
         return self._get_job(importasdm_cli.importasdm_cli, *v, **k)
-
-    def importevla(self, *v, **k):
-        return self._get_job(importevla_cli.importevla_cli, *v, **k)
 
     def plotants(self, *v, **k):
         return self._get_job(plotants_cli.plotants_cli, *v, **k)
@@ -292,9 +292,6 @@ class CASATaskJobGenerator(object):
 
     def plotms(self, *v, **k):
         return self._get_job(plotms_cli.plotms_cli, *v, **k)
-
-    def plotweather(self, *v, **k):
-        return self._get_job(plotweather_cli.plotweather_cli, *v, **k)
 
     def plotxy(self, *v, **k):
         return self._get_job(plotxy_cli.plotxy_cli, *v, **k)

@@ -143,7 +143,7 @@ class GroupByTime2(api.Heuristic):
         Grouping by time sequence
             timebase: base list of time stamps for threshold estimation
             time_diff: difference from the previous time stamp
-                time_diff is generateg from timebase in most of the cases
+                time_diff is generated from timebase in most of the cases
                 timebase contains all time stamps and time_diff is created
                 from selected time stamps in other case
         Return (TimeTable, TimeGap)

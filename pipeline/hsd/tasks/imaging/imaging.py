@@ -11,14 +11,11 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.basetask as basetask
-#import pipeline.infrastructure.logging as logging
 from .. import common
 from .gridding import gridding_factory
 from .imagegenerator import SDImageGenerator
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
-#logging.set_logging_level('info')
 
 NoData = common.NoData
 
@@ -48,7 +45,7 @@ class SDImagingResults(common.SingleDishResults):
 
     def _outcome_name(self):
         #return [image.imagename for image in self.outcome]
-        return self.outcome.imagename
+        return self.outcome['image'].imagename
 
 class SDImaging(common.SingleDishTaskTemplate):
     Inputs = SDImagingInputs
@@ -70,9 +67,10 @@ class SDImaging(common.SingleDishTaskTemplate):
         # loop over reduction group
         for (group_id,group_desc) in reduction_group.items():
             # assume all members have same spw and pollist
-            spwid = group_desc['member'][0][1]
+            first_member = group_desc[0]
+            spwid = first_member.spw
             LOG.debug('spwid=%s'%(spwid))
-            pols = group_desc['member'][0][2]
+            pols = first_member.pols
             if pollist is not None:
                 pols = list(set(pollist).intersection(pols))
 
@@ -83,12 +81,12 @@ class SDImaging(common.SingleDishTaskTemplate):
 
             # image is created per antenna
             antenna_group = {}
-            for m in group_desc['member']:
-                antenna = context.observing_run[m[0]].antenna.name
+            for m in group_desc:
+                antenna = context.observing_run[m.antenna].antenna.name
                 if antenna in antenna_group.keys():
-                    antenna_group[antenna].append(m[0])
+                    antenna_group[antenna].append(m.antenna)
                 else:
-                    antenna_group[antenna] = [m[0]]
+                    antenna_group[antenna] = [m.antenna]
 
             # loop over antennas
             for (name,indices) in antenna_group.items():
@@ -104,14 +102,26 @@ class SDImaging(common.SingleDishTaskTemplate):
                 # source name
                 source_name = st.source[0].name.replace(' ','_')
 
+                # filenames for gridding
+                data_name = lambda x: x.baselined_name \
+                            if os.path.exists(x.baselined_name) else x.name
+                filenames = [data_name(context.observing_run[i]) for i in indices]
+
+                LOG.debug('filenames=%s'%(filenames))
+                
                 worker = SDImagingWorker()
+                validsps = []
+                rmss = []
                 parameters = {'datatable': datatable,
                               'reference_data': st,
                               'source_name': source_name,
                               'antenna_name': name,
                               'antenna_indices': indices,
+                              'antenna_files': filenames,
                               'spwid': spwid,
-                              'polids': pols}
+                              'polids': pols,
+                              'num_validsp_array': validsps,
+                              'rms_array': rmss}
 
                 # create job for imaging
                 job = jobrequest.JobRequest(worker.execute, **parameters)
@@ -138,18 +148,21 @@ class SDImaging(common.SingleDishTaskTemplate):
                                                         spwlist=spwid,
                                                         sourcetype='TARGET')
                     image_item.antenna = name
-
+                    outcome = {}
+                    outcome['image'] = image_item
+                    outcome['validsp'] = numpy.array(validsps)
+                    outcome['rms'] = numpy.array(rmss)
                     result = SDImagingResults(task = self.__class__,
                                               success = True, 
-                                              outcome = image_item)
+                                              outcome = outcome)
                     result.task = self.__class__
-                    results.append(result)
 
                     if self.inputs.context.subtask_counter is 0: 
                         result.stage_number = self.inputs.context.task_counter - 1
                     else:
                         result.stage_number = self.inputs.context.task_counter 
 
+                    results.append(result)
         return results
 
     def analyse(self, result):
@@ -157,14 +170,11 @@ class SDImaging(common.SingleDishTaskTemplate):
 
 
 class SDImagingWorker(object):
-    SRCTYPE = {'ps': 0,
-               'otf': 0,
-               'otfraster': 0}
 
     def __init__(self):
         pass
 
-    def execute(self, datatable, reference_data, source_name, antenna_name, antenna_indices, spwid, polids):
+    def execute(self, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids, num_validsp_array, rms_array):
         # spectral window
         spw = reference_data.spectral_window[spwid]
         refpix = spw.refpix
@@ -181,30 +191,33 @@ class SDImagingWorker(object):
         gridding_class = gridding_factory(observing_pattern)
 
         # assume all members have same calmode
-        calmode = reference_data.calibration_strategy['calmode']
-        srctype = self.SRCTYPE[calmode] if self.SRCTYPE.has_key(calmode) else None
+        srctype = reference_data.calibration_strategy['srctype']
         
         data_array = []
+        #num_validsp_array = []
+        #rms_array = []
         for pol in polids:                        
-            worker = gridding_class(datatable, antenna_indices, spwid, pol, srctype, nchan, grid_size)
+            gridder = gridding_class(datatable, antenna_indices, antenna_files, spwid, pol, srctype, nchan, grid_size)
 
-            (spectra,grid_table) = worker.execute()
-
+            (spectra,grid_table) = gridder.execute()
+            #(spectra, image_property, validsp, rms) = gridder.execute()
             data_array.append(spectra)
+            num_validsp_array.append([r[6] for r in grid_table])
+            rms_array.append([r[8] for r in grid_table])
 
         # imaging
         LOG.todo('How to set edge parameter? Is it local? or global?')
         edge = []
-        worker = SDImageGenerator(data_array, edge)
+        image_generator = SDImageGenerator(data_array, edge)
         antenna = reference_data.ms.antenna_array.name
         observer = reference_data.observer
         obs_date = reference_data.start_time
-        worker.define_image(grid_table, 
-                            freq_refpix=refpix, freq_refval=refval,
-                            freq_increment=increment,
-                            rest_frequency=rest_freqs,
-                            antenna=antenna, observer=observer, 
-                            obs_date=obs_date)
+        image_generator.define_image(grid_table, 
+                                     freq_refpix=refpix, freq_refval=refval,
+                                     freq_increment=increment,
+                                     rest_frequency=rest_freqs,
+                                     antenna=antenna, observer=observer, 
+                                     obs_date=obs_date)
 
         # create image from gridded data
         LOG.info('create full channel image')
@@ -218,7 +231,7 @@ class SDImagingWorker(object):
             polstr = 'I'
         imagename = '%s.%s.spw%s.%s.image'%(source_name.replace(' ','_'),antenna_name,spwid,polstr)
         kwargs = {'imagename':imagename}
-        worker.full_channel_image(imagename=imagename)
+        image_generator.full_channel_image(imagename=imagename)
 
         
 

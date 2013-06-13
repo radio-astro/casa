@@ -4,9 +4,10 @@ import numpy as np
 import os.path
 import re
 
-import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -47,7 +48,7 @@ class MakeCleanListHeuristics(object):
 
     def field_intent_list(self, intent, field):
         intent_list = intent.split(',')
-        field_list = field.split(',')
+        field_list = utils.safe_split(field)
 
         field_intent_result = set()
 

@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import re
 
 import pipeline.infrastructure as infrastructure
-#import pipeline.infrastructure.logging as logging
 from pipeline.infrastructure import JobRequest
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
@@ -11,7 +10,6 @@ from . import reader
 from . import analyser
 
 LOG = infrastructure.get_logger(__name__)
-#logging.set_logging_level('trace')
 
 import os
 import asap as sd
@@ -59,6 +57,8 @@ class SDInspectDataResults(common.SingleDishResults):
         datatable.putcol('TIMEGRP_L', time_group[1])
         datatable.putkeyword('TIMEGAP_S', time_gap[0])
         datatable.putkeyword('TIMEGAP_L', time_gap[1])
+
+        # export datatable (both RO and RW)
         datatable.exportdata(minimal=False)
 
         # merge
@@ -91,7 +91,7 @@ class SDInspectData(common.SingleDishTaskTemplate):
 
         # create DataTableReader instance
         worker = reader.DataTableReader(table_name=table_name)
-        LOG.info('table_name=%s'%(table_name))
+        LOG.debug('table_name=%s'%(table_name))
 
 
         # loop over infiles
@@ -103,9 +103,6 @@ class SDInspectData(common.SingleDishTaskTemplate):
         else:
             job = JobRequest(worker.execute, name=infiles)
             self._executor.execute(job)
-
-        # finally, export DataTable
-        worker.export_datatable(minimal=False)
 
         # done, restore scantable.storage
         sd.rcParams['scantable.storage'] = storage_save

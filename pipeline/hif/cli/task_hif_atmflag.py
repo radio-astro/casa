@@ -2,18 +2,20 @@ import sys
 
 from taskinit import casalog
 
-import pipeline.cli.utils as utils
+import pipeline.h.cli.utils as utils
 
 
-def vla_importdata(vis=None, session=None, pipelinemode=None, overwrite=None,
-    dryrun=None, acceptresults=None):
+def hif_atmflag(vis=None, intent=None,
+  flag_minabs=None, fmin_limit=None,
+  flag_nmedian=None, fnm_limit=None,
+  pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'VLAImportData'
-    
+    task_name = 'Atmflag'
+
     ##########################################################################
     #                                                                        #
     #  CASA task interface boilerplate code starts here. No edits should be  #

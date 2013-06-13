@@ -70,7 +70,12 @@ window in each measurement set.
   <param type="any" name="solint">
     <description>Solution intervals</description>
     <any type="variant"/>
-    <value type="string">inf,7.8125MHz</value>
+    <value type="string">inf</value>
+  </param>
+
+  <param type="int" name="maxchannels" subparam="true">
+    <description>The smoothing factor in channels</description>
+    <value>240</value>
   </param>
 
   <param type="string" name="combine">
@@ -90,7 +95,7 @@ window in each measurement set.
 
   <param type="int" name="minblperant" subparam="true">
     <description>Minimum baselines per antenna required for solve</description>
-    <value>2</value>
+    <value>4</value>
   </param>
 
   <param type="double" name="minsnr" subparam="true">
@@ -142,7 +147,7 @@ window in each measurement set.
 
     <when param="hm_bandtype">
       <equals type="string" value="channel">
-        <default param="minblperant"><value type="int">2</value></default>
+        <default param="minblperant"><value type="int">4</value></default>
         <default param="minsnr"><value type="double">3.0</value></default>
       </equals>
       <equals type="string" value="polynomial">
@@ -228,6 +233,12 @@ solint --  Time and channel solution intervals in CASA syntax.
     default: 'inf,7.8125MHz'
     example: 'inf,10ch', 'inf'
 
+maxchannels --  The bandpass solution smoothing factor in channels. The
+    solution interval is bandwidth / 240. Set to 0 for no smoothing.
+    default: 240
+    example: 0
+
+
 combine -- Data axes to combine for solving. Axes are '', 'scan','spw','field'
     or any comma-separated combination.
     default; 'scan'
@@ -236,7 +247,7 @@ combine -- Data axes to combine for solving. Axes are '', 'scan','spw','field'
 minblperant -- Minimum number of baselines required per antenna for each solve
     Antennas with fewer baselines are excluded from solutions. Used for
     hm_bandtype='channel' only.
-    default: 2
+    default: 4
 
 minsnr -- Solutions below this SNR are rejected. Used for hm_bandtype=
     'channel' only

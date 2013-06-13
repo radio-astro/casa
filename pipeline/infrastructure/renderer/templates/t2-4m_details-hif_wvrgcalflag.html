@@ -23,7 +23,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 % for r in result:
 		<tr>
 			<td>${r.vis}</td>
-		  	<td>${', '.join(r.wvrflag)}</td>
+		  	<td>'${', '.join(r.wvrflag)}'</td>
 		</tr>
 % endfor		
 	</tbody>

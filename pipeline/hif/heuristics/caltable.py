@@ -52,29 +52,6 @@ class GaincalCaltable(api.Heuristic):
             namer.stage(stage)
 
         return namer.get_filename(True)
-        
-        
-class GainCurvestable(api.Heuristic):
-    def calculate(self, output_dir='', stage=None, **task_args):
-        namer = filenamer.GainCurvesCalibrationTable()
-        namer.output_dir(output_dir)
-        namer.asdm(task_args['vis'])
-
-        if stage:
-            namer.stage(stage)
-
-        return namer.get_filename(True)
-
-class OpCaltable(api.Heuristic):
-    def calculate(self, output_dir='', stage=None, **task_args):
-        namer = filenamer.OpCalibrationTable()
-        namer.output_dir(output_dir)
-        namer.asdm(task_args['vis'])
-
-        if stage:
-            namer.stage(stage)
-
-        return namer.get_filename(True)
 
 
 class FluxCaltable(api.Heuristic):

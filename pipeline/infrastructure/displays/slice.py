@@ -28,14 +28,15 @@ def sanitize(text):
     filename = ''.join(_char_replacer(c) for c in text)
     return filename
 
-flag_color = {'outlier': 'red',
+flag_color = {'edges':'lightblue',
               'high outlier':'orange',
               'low outlier':'yellow',
-              'edges':'lightblue',
-              'sharps':'green',
-              'sharps2':'green',
               'max abs':'pink',
-              'min abs':'darkpink'}
+              'min abs':'darkcyan',
+              'nmedian':'darkred',
+              'outlier': 'red',
+              'sharps':'green',
+              'sharps2':'green'}
 
 class SliceDisplay(object):
 
@@ -112,19 +113,19 @@ class SliceDisplay(object):
                 # overplot key
                 overplot_datatype = overplot_spectrum.datatype
 
-                plt.plot([xoff], [yoff], marker='o',
+                plt.plot([xoff], [yoff], marker='o', markersize=10,
                   markerfacecolor='lightblue', markeredgecolor='lightblue')
                 yoff = self.plottext(xoff+0.05, yoff, overplot_datatype, 35,
                   ny_subplot=nsubplots, mult=1.6)
 
             # flagging
             plt.plot([xoff], [yoff], marker='o', markerfacecolor='indigo',
-              markeredgecolor='indigo', clip_on=False)
+              markeredgecolor='indigo', markersize=10, clip_on=False)
             yoff = self.plottext(xoff+0.05, yoff, 'no data', 35,
               ny_subplot=nsubplots, mult=1.6)
 
             plt.plot([xoff], [yoff], marker='o', markerfacecolor='blue',
-              markeredgecolor='blue', clip_on=False)
+              markeredgecolor='blue', markersize=10, clip_on=False)
             yoff = self.plottext(xoff+0.05, yoff, 'already flagged', 35,
               ny_subplot=nsubplots, mult=1.6)
 
@@ -141,7 +142,7 @@ class SliceDisplay(object):
                       flag_color[flagcmd.rulename]) not in rulesplotted:
 
                         plt.plot([xoff], [yoff], linestyle='None', marker='o',
-                          markersize=5,
+                          markersize=10,
                           markerfacecolor=flag_color[flagcmd.rulename],
                           markeredgecolor=flag_color[flagcmd.rulename],
                           clip_on=False)
@@ -218,6 +219,7 @@ class SliceDisplay(object):
         nodata = spectrum.nodata
         noisy = spectrum.noisychannels
         xtitle = spectrum.axis.name
+        xunits = spectrum.axis.units
         x = spectrum.axis.data
         dataunits = spectrum.units
         datatype = spectrum.datatype
@@ -290,13 +292,16 @@ class SliceDisplay(object):
             plt.errorbar(good_x, good_data, good_data_mad, linestyle='None',
               marker='o', markersize=5, color='black') 
 
-        plt.title(subtitle, fontsize='medium')
-        plt.xlabel(xtitle)
+        plt.title(subtitle, fontsize=10)
+        if xunits is None:
+            plt.xlabel(xtitle, fontsize=10)
+        else:
+            plt.xlabel('%s (%s)' % (xtitle, xunits), fontsize=10)
         if plotnumber == 1:
             if dataunits != None:
-                plt.ylabel('%s (%s)' % (datatype, dataunits))
+                plt.ylabel('%s (%s)' % (datatype, dataunits), fontsize=10)
             else:
-                plt.ylabel(datatype)
+                plt.ylabel(datatype, fontsize=10)
 
         # plot points not valid in blue. Often these will be zero having
         # simply not been calculated because the underlying data are bad; this

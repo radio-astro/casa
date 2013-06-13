@@ -26,7 +26,10 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
         antenna_name = calto.antenna
         parent_ms = self.inputs.context.observing_run.get_ms(calto.vis)
         plots = []
+        if common.ShowPlot: pl.ion()
+        else: pl.ioff()
         pl.figure(self.MATPLOTLIB_FIGURE_ID)
+        if common.ShowPlot: pl.ioff()
         ylabel1 = 'Relative Sky Level'
         ylabel2 = 'Relative Sky Standard Deviation'
         xlabel = 'Elevation [deg]'
@@ -56,6 +59,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                         title = 'Sky Level vs Elevation'
                         sky_level = sky[0,:]
                         sky_variance = None
+                    if common.ShowPlot: pl.ioff()
                     pl.clf()
                     sky_level /= sky_level[0]
                     pl.plot(el, sky_level, '.-', label='spw=%s, pol=%s'%(spw,pol))
@@ -66,6 +70,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                     pl.legend(loc='best', numpoints=1, prop={'size':'small'})
                     plotfile='skylevel_vs_el_%s_spw%s_pol%s.png'%(os.path.basename(table),spw,pol)
                     plotfile=os.path.join(stage_dir, plotfile)
+                    if common.ShowPlot: pl.draw()
                     pl.savefig(plotfile)
                     parameters = parameters_base.copy()
                     parameters['spw'] = spw
@@ -77,6 +82,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                     plots.append(plot)
 
                     if sky_variance is not None:
+                        if common.ShowPlot: pl.ioff()
                         pl.clf()
                         title = 'Sky Standard Deviation vs Elevation'
                         sky_variance /= sky_variance[0]
@@ -87,6 +93,7 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                         pl.legend(loc='best', numpoints=1, prop={'size': 'small'})
                         plotfile='skystd_vs_el_%s_spw%s_pol%s.png'%(os.path.basename(table),spw,pol)
                         plotfile=os.path.join(stage_dir, plotfile)
+                        if common.ShowPlot: pl.draw()
                         pl.savefig(plotfile)
                         plot = logger.Plot(plotfile,
                                            x_axis='Elevation', y_axis='Sky Standard Deviation',

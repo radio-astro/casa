@@ -1,4 +1,4 @@
 from __future__ import absolute_import
 
 from .tsysflag import Tsysflag
-from .tsysflagchannels import Tsysflagchans
+from .tsysflagchans import Tsysflagchans

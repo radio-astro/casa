@@ -24,11 +24,12 @@ LOG = infrastructure.get_logger(__name__)
 
 class ImportDataInputs(basetask.StandardInputs):
     def __init__(self, context=None, vis=None, output_dir=None,
-                 session=None, overwrite=None, save_flagonline=None):
+                 asis=None, session=None, overwrite=None, save_flagonline=None):
         self._init_properties(vars())
 
     overwrite = basetask.property_with_default('overwrite', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
+    asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
 
     @property
     def session(self):
@@ -219,15 +220,15 @@ class ImportData(basetask.StandardTaskTemplate):
                                                         ms.basename))
             ms.session = inputs.session
 
-        setjy_results = get_setjy_results(observing_run.measurement_sets)
+        # get the flux measurements from Source.xml for each MS
+        xml_results = get_setjy_results(observing_run.measurement_sets)
+        # write/append them to flux.csv
+        export_flux_from_result(xml_results, inputs.context)
+        # re-read from flux.csv, which will include any user-coded values
+        combined_results = import_flux(inputs.context.output_dir, observing_run)
 
         results = ImportDataResults(observing_run.measurement_sets, 
-                                    setjy_results)
-    
-        # write flux results to a CSV. I'm not sure what these values will be
-        # used for now as we can import all flux values into the context with
-        # no ill effects.
-        export_flux_from_result(results, inputs.context)
+                                    combined_results) 
 
         return results
     
@@ -273,6 +274,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      savecmds=inputs.save_flagonline,
                                      outfile=outfile,
                                      process_caldevice=False,
+                                     asis=inputs.asis,
                                      overwrite=inputs.overwrite)
         
         self._executor.execute(task)
@@ -297,7 +299,7 @@ def get_setjy_results(mses):
             
             # import flux values for all fields and intents so that we can 
             # compare them to the fluxscale-derived values later in the run
-#        for field in [f for f in source.fields if 'AMPLITUDE' in f.intents]:
+#            for field in [f for f in source.fields if 'AMPLITUDE' in f.intents]:
             for field in source.fields:
                 result.measurements[field.id].extend(m)
         
@@ -437,39 +439,62 @@ def export_flux_from_context(context, filename=None):
 
         LOG.info('Exported %s flux measurements to %s' % (counter, filename))
 
-def export_flux_from_result(results, context):
+def export_flux_from_result(results, context, filename='flux.csv'):
     '''
     Export flux densities from a set of results to a CSV file.
     '''
     if type(results) is not types.ListType:
         results = [results,]        
-    filename = os.path.join(context.output_dir, 'flux.csv')
-        
-    with open(filename, 'wt') as f:
+    abspath = os.path.join(context.output_dir, filename)
+
+    columns = ['ms', 'field', 'spw', 'I', 'Q', 'U', 'V']
+    existing = []
+
+    # if the file exists, read it in
+    if os.path.exists(abspath):
+        with open(abspath, 'r') as f:
+            # slurp in all but the header rows
+            existing.extend([l for l in f.readlines()
+                             if not l.startswith(','.join(columns))])        
+
+    # so we can write it back out again, with our measurements appended        
+    with open(abspath, 'wt') as f:
         writer = csv.writer(f)
-        writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V'))
+        writer.writerow(columns)
+        f.writelines(existing)
     
         counter = 0
-        for importdata_result in results:
-            for setjy_result in importdata_result.setjy_results:
-                ms_name = setjy_result.vis
-                ms_basename = os.path.basename(ms_name)
-                for field_id, measurements in setjy_result.measurements.items():
-                    for m in measurements:
+        for setjy_result in results:
+            ms_name = setjy_result.vis
+            ms_basename = os.path.basename(ms_name)            
+            for field_id, measurements in setjy_result.measurements.items():
+                for m in measurements:
+
+                    prefix = '%s,%s,%s' % (ms_basename, field_id, m.spw.id)
+                    exists = False
+                    for row in existing:
+                        if row.startswith(prefix):
+                            LOG.info('Not overwriting flux data for %s field %s '
+                                     'spw %s in %s' % (ms_basename, field_id, 
+                                                       m.spw.id, 
+                                                       os.path.basename(abspath)))
+                            exists = True
+
+                    if not exists:                    
                         (I, Q, U, V) = m.casa_flux_density
                         writer.writerow((ms_basename, field_id, m.spw.id, 
                                          I, Q, U, V))
                         counter += 1
 
-        LOG.info('Exported %s flux measurements to %s' % (counter, filename))
+        LOG.info('Exported %s flux measurements to %s' % (counter, abspath))
 
 
-def import_flux(context, filename=None):
+def import_flux(output_dir, observing_run, filename=None):
     '''
     Read flux densities from a CSV file and import them into the context.
     ''' 
     if not filename:
-        filename = os.path.join(context.output_dir, 'flux.csv')
+        filename = os.path.join(output_dir, 'flux.csv')
 
     with open(filename, 'rt') as f:
         reader = csv.reader(f)
@@ -479,24 +504,52 @@ def import_flux(context, filename=None):
 
         counter = 0
         for row in reader:
-            (ms_name, field_id, spw_id, I, Q, U, V) = row
-            spw_id = int(spw_id)
-            ms = context.observing_run.get_ms(ms_name)
-            fields = ms.get_fields(field_id)
-            spw = ms.get_spectral_window(spw_id)
-            measurement = domain.FluxMeasurement(spw, I, Q, U, V)
-
-            # A single field identifier could map to multiple field objects,
-            # but the flux should be the same for all, so we iterate..
-            for field in fields:
-                # .. removing any existing measurements in these spws from
-                # these fields..
-                map(field.flux_densities.remove,
-                    [m for m in field.flux_densities if m.spw.id is spw_id])    
-                 
-                # .. and then updating with our new values
-                LOG.trace('Adding %s to %s' % (measurement, spw))
-                field.flux_densities.add(measurement)
-                counter += 1
+            try:
+                (ms_name, field_id, spw_id, I, Q, U, V) = row
+                spw_id = int(spw_id)
+                try:
+                    ms = observing_run.get_ms(ms_name)
+                except KeyError:
+                    # No MS registered by that name. This could be caused by a
+                    # flux.csv from a previous run
+                    LOG.warning('%s refers to unregistered measurement set \'%s\'. '
+                                'Is %s stale?' % (filename, 
+                                                  ms_name, 
+                                                  os.path.basename(filename)))
+                    continue
+                
+                fields = ms.get_fields(field_id)
+                spw = ms.get_spectral_window(spw_id)
+                measurement = domain.FluxMeasurement(spw, I, Q, U, V)
+    
+                # A single field identifier could map to multiple field objects,
+                # but the flux should be the same for all, so we iterate..
+                for field in fields:
+                    # .. removing any existing measurements in these spws from
+                    # these fields..
+                    map(field.flux_densities.remove,
+                        [m for m in field.flux_densities if m.spw.id is spw_id])    
+                     
+                    # .. and then updating with our new values
+                    LOG.trace('Adding %s to %s' % (measurement, spw))
+                    field.flux_densities.add(measurement)
+                    counter += 1
+            except:
+                LOG.warning('Problem importing \'%s\' as a flux statement' % row)
                 
         LOG.info('Imported %s flux measurements from %s' % (counter, filename))
+
+        # Convert into a set of results for the web log
+        results = []
+        for ms in observing_run.measurement_sets:
+            science_spw_ids = [spw.id for spw in ms.get_spectral_windows(science_windows_only=True)]
+            result = commonfluxresults.FluxCalibrationResults(ms.name)
+            for field in ms.get_fields():
+                if field.flux_densities is None:
+                    continue
+                for flux in field.flux_densities:
+                    if flux.spw.id not in science_spw_ids:
+                        continue
+                    result.measurements[field.name].append(flux)
+            results.append(result)
+        return results

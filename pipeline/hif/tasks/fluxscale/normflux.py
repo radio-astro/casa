@@ -7,6 +7,7 @@ import pipeline.domain as domain
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.utils as utils
 from ..common import commonfluxresults
 
 from pipeline.hif.heuristics import fieldnames as fieldnames
@@ -33,7 +34,7 @@ class NormaliseFluxInputs(basetask.StandardInputs):
                 # first call the heuristic to get the reference fields as a
                 # string
                 reference_fields = self._reference(ms, self.refintent)
-                fields.update(reference_fields.split(','))
+                fields.update(utils.safe_split(reference_fields))
             return ','.join(fields)
 
         return self._reference
@@ -67,8 +68,8 @@ class NormaliseFluxInputs(basetask.StandardInputs):
                 # however, we should remove the reference field should the
                 # reference field also have been observed with the transfer 
                 # intent
-                transfers = set([i for i in transfer_fields.split(',')])
-                references = set([i for i in self.reference.split(',')])
+                transfers = set([i for i in utils.safe_split(transfer_fields)])
+                references = set([i for i in utils.safe_split(self.reference)])
                 
                 fields.update(transfers.difference(references))
 

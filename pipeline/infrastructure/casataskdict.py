@@ -1,5 +1,6 @@
 CasaTaskDict = {
                    'hif_antpos'       : 'Antpos',
+                   'hif_atmflag'      : 'Atmflag',
                    'hif_applycal'     : 'Applycal',
                    'hif_bandpass'     : 'Bandpass',
 		   'hif_cleanlist'    : 'CleanList', 
@@ -16,7 +17,7 @@ CasaTaskDict = {
                    'hif_setjy'        : 'Setjy',
                    'hif_tsyscal'      : 'Tsyscal',
                    'hif_tsysflag'     : 'Tsysflag',
-                   'hif_tsysflagchannels': 'Tsysflagchans',
+                   'hif_tsysflagchans': 'Tsysflagchans',
                    'hif_wvrgcal'      : 'Wvrgcal',
                    'hif_wvrgcalflag'  : 'Wvrgcalflag',
                    'hsd_calsky'       : 'SDCalSky',
@@ -26,5 +27,6 @@ CasaTaskDict = {
                    'hsd_importdata'   : 'SDImportData',
                    'hsd_inspectdata'  : 'SDInspectData',
                    'hsd_imaging'      : 'SDImaging',
+                   'hsd_baseline'     : 'SDBaseline',
                    'hsd_reduce'       : 'SDReduction'
                }

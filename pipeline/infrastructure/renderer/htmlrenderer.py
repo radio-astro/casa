@@ -55,6 +55,9 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.Applycal:
         return 'Apply calibrations from context'
 
+    if task_cls is hif.tasks.Atmflag:
+        return 'Flag on atmospheric transmission'
+
     if task_cls is hif.tasks.FlagDeterALMA:
         return 'ALMA deterministic flagging'
 
@@ -128,6 +131,9 @@ def get_task_description(result_obj):
 
     if task_cls is hsd.tasks.SDImaging:
         return 'Image single dish data'
+
+    if task_cls is hsd.tasks.SDBaseline:
+        return 'Subtract spectral baseline'
 
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
@@ -827,6 +833,9 @@ class T2_3MDetailsBandpassRenderer(T2_3MDetailsDefaultRenderer):
         flagged = []
         num_flagged_feeds = 0
         for result in results:
+            # return early if there are no QA2 results
+            if not result.qa2:
+                return ctx
             adapter = qa2adapter.QA2BandpassAdapter(context, result)
             plots.append(adapter.amplitude_plots)
             plots.append(adapter.phase_plots)
@@ -1466,9 +1475,10 @@ class LogCopier(object):
 renderer_map = {
     T2_3MDetailsRenderer : {
         hif.tasks.Wvrgcalflag    : T2_3MDetailsWvrgcalflagRenderer( ),
-        hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
+#        hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
     },
     T2_4MDetailsRenderer : {
+        hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_cleanlist.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
@@ -1479,13 +1489,14 @@ renderer_map = {
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
         hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html'),
         hif.tasks.Tsysflag       : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflag.html'),
-        hif.tasks.Tsysflagchans  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflagchannels.html'),
+        hif.tasks.Tsysflagchans  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflagchans.html'),
         hif.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hif.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),
         hsd.tasks.SDReduction    : T2_4MDetailsDefaultRenderer('t2-4-singledish.html'),
         hsd.tasks.SDInspectData  : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_inspectdata.html'),
         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
         hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html'),
+        hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
         hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html')
     }
 }

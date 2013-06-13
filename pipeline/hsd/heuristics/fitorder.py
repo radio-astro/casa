@@ -69,12 +69,13 @@ class FitOrderHeuristics(api.Heuristic):
         elif max_power < 10.0: poly_order = 2.0
         else:
             flag = False
-            for i in xrange(N, -1, -1):
+            for i in xrange(max_freq, -1, -1):
                 if power2[i] > 10.0: break
                 if power2[i] > 5.0: flag = True
             if flag == True: poly_order = float(max(2.0, i)) + 0.5
             else: poly_order = float(max(2.0, i))
 
+        # Finally, convert to polynomial order
         #poly_order = int(poly_order * 3.0)
         #poly_order = int(poly_order + 1) * 2.0 + 0.5)
         poly_order = int(poly_order * 2.0 + 1.5)

@@ -3,5 +3,3 @@ from __future__ import absolute_import
 from .flagdeterbase import FlagDeterBase
 from .flagdeteralma import FlagDeterALMA
 from .flagdatasetter import FlagdataSetter
-from .flagdetervla import FlagDeterVLA
-from .flagdetercheckflag import FlagDeterCheckflag

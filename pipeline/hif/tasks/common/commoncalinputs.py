@@ -4,6 +4,7 @@ import types
 import pipeline.domain as domain
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.utils as utils
 from pipeline.hif.heuristics import fieldnames as fieldnames
 
 # create the pipeline logger for this module
@@ -65,7 +66,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
 
         # run the answer through a set, just in case there are duplicates
         fields = set()
-        fields.update(intent_fields.split(','))
+        fields.update(utils.safe_split(intent_fields))
         
         return ','.join(fields)
 
@@ -80,10 +81,31 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         """
         Get the value of minblperant.
         
-        Unless minblperant has been manually set, the pipeline default value
-        is returned.
         """
-        return self._minblperant
+
+        # if minblperant was overridden, return the manually specified value
+	if self._minblperant is not None:
+            return self._minblperant
+
+        # minblperant is ms-dependent, so if this inputs is handling multiple
+        # measurement sets, return minblperant instead.
+        if type(self.vis) is types.ListType:
+            return self._handle_multiple_vis('minblperant')
+
+        # if we cannot find the context value without the measurement set
+	# set value to 4, otherwise use number of antennas to determine value
+        if not self.ms:
+            minlperant = 4
+	else:
+	    nant = len(self.ms.antennas)
+	    if nant < 5:
+	        minblperant = max (2, nant - 1)
+	    else:
+                minblperant = 4
+
+        # otherwise return whatever we found. We assume the calling function
+        # knows how to handle an object of this type.
+        return minblperant
 
     @minblperant.setter
     def minblperant(self, value):
@@ -92,8 +114,6 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         
         Setting the value to None restores the default pipeline value.
         """
-        if value is None:
-            value = 2
         self._minblperant = value
 
     @property
@@ -187,7 +207,7 @@ class CommonCalibrationInputs(basetask.StandardInputs,
         fields_with_intent = self._to_field(self.ms, self.to_intent)
 
         # run the answer through a set, just in case there are duplicates
-        unique_fields = set(fields_with_intent.split(','))
+        unique_fields = set(utils.safe_split(fields_with_intent))
         
         return ','.join(unique_fields)
 

@@ -26,7 +26,7 @@
 #
 # inputs = pipeline.tasks.flagging.FlagDeterALMA.Inputs( context, vis=vis,
 #   output_dir='.', autocorr=True, shadow=True, scan=True, scannumber='4,5,8',
-#   intents='*AMPLI*', edgespw=True, fracspw=0.1 )
+#   intents='*AMPLI*', edgespw=True, fracspw=0.1, fracspwfps=0.1 )
 #
 # task = pipeline.tasks.flagging.FlagDeterALMA( inputs )
 # jobs = task.analyse()
@@ -65,6 +65,10 @@ from __future__ import absolute_import
 #import casac
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.domain.measures as measures
+
 from . import flagdeterbase 
 
 #import pipeline.tasks.flagging.FlagDeterBase as gronk
@@ -170,8 +174,12 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 # edgespw      - This python boolean determines whether edge channels are
 #                flagged.
 # fracspw      - This python float contains the fraction (between 0.0 and 1.0)
-#                of channels removed from the edge.  In the task interface, it
-#                it is a subparameter of the edgespw parameter.
+#                of channels removed from the edge for the ALMA baseline correlator.
+#                In the task interface, it is a subparameter of the edgespw parameter.
+#
+# fracspwfps    - This python float contains the fraction (between 0.0 and 1.0)
+#                of channels removed from the edge for the ACS correlator.  In the
+#                task interface, it it is a subparameter of the edgespw parameter.
 #
 # online       - This python boolean determines whether the online flags are
 #                applied.
@@ -199,10 +207,13 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 #               Initial version.
 
 # ------------------------------------------------------------------------------
+        edgespw  = basetask.property_with_default('edgespw', True)
+        fracspw  = basetask.property_with_default('fracspw', 0.0625)
+        fracspwfps  = basetask.property_with_default('fracspwfps', 0.04837)
 
 	def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
 	    autocorr=None, shadow=None, scan=None, scannumber=None,
-	    intents=None, edgespw=None, fracspw=None, online=None,
+	    intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
 	    fileonline=None, template=None, filetemplate=None ):
 
 		# Initialize the public member variables of the inherited class
@@ -213,27 +224,6 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
 		    edgespw=edgespw, fracspw=fracspw, online=online,
 		    fileonline=fileonline, template=template, filetemplate=filetemplate )
-
-        # Reset the defaults for these parameters.
-        @property
-        def edgespw(self):
-                return self._edgespw
-
-        @edgespw.setter
-        def edgespw(self, value):
-                if value is None:
-                    value = True
-                self._edgespw = value
-
-        @property
-        def fracspw(self):
-                return self._fracspw
-
-        @fracspw.setter
-        def fracspw(self, value):
-                if value is None:
-                    value = 0.0625
-                self._fracspw = value
 
 
 # ------------------------------------------------------------------------------
@@ -357,12 +347,6 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
                 # returns just the science windows, which is exactly what we want.
                 for spw in inputs.ms.get_spectral_windows():
 
-                        # If the twice the number of flagged channels is greater than the
-                        # number of channels for a given spectral window, skip it.
-                        frac_chan = int(round(inputs.fracspw * spw.num_channels + 0.5))
-                        if 2*frac_chan >= spw.num_channels:
-                                LOG.debug('Too many flagged channels %s for spw %s '% (spw.num_channels, spw.id))
-                                continue
 
 			# Get the data description for this spw
                         dd = inputs.ms.get_data_description(spw=spw)
@@ -380,19 +364,44 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
                         # Skip if TDM mode where TDM modes are defined to
 			# be modes with <= 256 channels per correlation
 			if (ncorr * spw.num_channels > 256):
-                                LOG.debug('Skipping edge flagging for FDM spw %s ' % spw.id)
-			        continue
+				quanta = casatools.quanta
+				bw_quantity = quanta.convert(quanta.quantity('1875MHz'), 'Hz')   
+				bandwidth = measures.Frequency(quanta.getvalue(bw_quantity)[0],
+				    measures.FrequencyUnits.HERTZ)
+				cen_freq = spw.centre_frequency
+				lo_freq = cen_freq - bandwidth / 2.0
+				hi_freq = cen_freq + bandwidth / 2.0
+				l_max, r_min = spw.channel_range(lo_freq, hi_freq)
+				r_max = spw.num_channels - 1
+				
+				if l_max <= 0 and r_min >= r_max:
+                                    LOG.debug('Skipping edge flagging for FDM spw %s ' % spw.id)
+			            continue
+                                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
+                                to_flag.append(cmd)
 
-                        # calculate the channel ranges to flag. No need to calculate the
-                        # left minimum as it is always channel 0.
-                        l_max = frac_chan - 1
-                        r_min = spw.num_channels - frac_chan - 1
-                        r_max = spw.num_channels - 1
+			else:
 
-                        # state the spw and channels to flag in flagdata format, adding
-                        # the statement to the list of flag commands
-                        cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
-                        to_flag.append(cmd)
+                                # If the twice the number of flagged channels is greater than the
+                                # number of channels for a given spectral window, skip it.
+				if spw.num_channels in set([62, 124, 248]):
+                                    frac_chan = int(round(inputs.fracspwfps * spw.num_channels))
+				else:
+                                    frac_chan = int(round(inputs.fracspw * spw.num_channels))
+                                if 2*frac_chan >= spw.num_channels:
+                                        LOG.debug('Too many flagged channels %s for spw %s '% (spw.num_channels, spw.id))
+                                        continue
+
+                                # calculate the channel ranges to flag. No need to calculate the
+                                # left minimum as it is always channel 0.
+                                l_max = frac_chan - 1
+                                r_min = spw.num_channels - frac_chan
+                                r_max = spw.num_channels - 1
+
+                                # state the spw and channels to flag in flagdata format, adding
+                                # the statement to the list of flag commands
+                                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
+                                to_flag.append(cmd)
 
 		if len(to_flag) <= 0:
 		    return '# No valid edge spw flagging command'

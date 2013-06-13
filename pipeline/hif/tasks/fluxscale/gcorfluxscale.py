@@ -1,11 +1,12 @@
 from __future__ import absolute_import
-
+import os
 import os.path
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 
+from .. import importdata
 from .. import gaincal
 from ... import heuristics
 from ..common import commonfluxresults
@@ -110,7 +111,7 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
     def prepare(self, **parameters):
         inputs = self.inputs
         ms = inputs.ms
-	result = commonfluxresults.FluxCalibrationResults(inputs.vis)
+        result = commonfluxresults.FluxCalibrationResults(inputs.vis)
 
         # check that the measurement set does have an amplitude calibrator.
         if inputs.reference == '':
@@ -126,54 +127,67 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
             # list of antenna names. Choose the first one.
             refant = ms.reference_antenna
             if refant is None:
-                msg = ('No reference antenna specified and none found in context '
-                   'for %s' % ms.basename)
+                msg = ('No reference antenna specified and none found in '
+                       'context for %s' % ms.basename)
                 LOG.error(msg)
                 raise Exception(msg)
             refant = refant.split(',')
             refant = refant[0]
-        LOG.info('refant:%s' % refant)
+        LOG.trace('refant:%s' % refant)
 
-	refspwmap = inputs.refspwmap
-	if not refspwmap:
+        refspwmap = inputs.refspwmap
+        if not refspwmap:
             refspwmap = ms.reference_spwmap
-	    if not refspwmap:
-	        refspwmap = [-1]
-
+            if not refspwmap:
+                refspwmap = [-1]
+                   
         hm_resolvedcals = inputs.hm_resolvedcals
-	allantenna = inputs.antenna
+        allantenna = inputs.antenna
+        nant = len(ms.antennas)
         if hm_resolvedcals == 'automatic':
             # get the antennas to be used in the gaincals, limiting
             # the range if the reference calibrator is resolved.
             resantenna = heuristics.fluxscale.antenna(ms=ms,
               refsource=inputs.reference, refant=refant,
               peak_frac=inputs.peak_fraction)
-	else:
+            # Fiddle with this number whe hear back from Todd
+            if resantenna == '':
+                minblperant = None
+            else:
+                nresant = len(resantenna.split(',')) 
+                if nresant < nant:
+                    minblperant = 2
+                else:
+                    minblperant = None
+        else:
             resantenna = allantenna
+            minblperant = None
 
         # do a phase-only gaincal on the flux calibrator using a restricted
-	# set of antennas
+        # set of antennas
         r = self._do_gaincal(field=inputs.reference, intent=inputs.refintent,
 	    gaintype='G', calmode='p', solint=inputs.phaseupsolint,
-	    antenna=resantenna, refant=refant, append=False, merge=False)
+	    antenna=resantenna, refant=refant, minblperant=minblperant,
+	    append=False, merge=False)
         caltable = r.final.pop().gaintable
 
         # do a phase-only gaincal on the remaining calibrators using the full
-	# set of antennas
-        r = self._do_gaincal(caltable=caltable, field=inputs.transfer,
-	  intent=inputs.transintent, gaintype='G', calmode='p',
-	  solint=inputs.phaseupsolint, antenna=allantenna, refant=refant,
-	  append=True, merge=True)
+        # set of antennas
+        self._do_gaincal(caltable=caltable, field=inputs.transfer,
+                         intent=inputs.transintent, gaintype='G', calmode='p', 
+                         solint=inputs.phaseupsolint, antenna=allantenna, 
+                         minblperant=None, refant=refant, append=True, merge=True)
 
         # now do the amplitude-only gaincal. This will produce the caltable
         # that fluxscale will analyse
         r = self._do_gaincal(field=inputs.transfer + ',' + inputs.reference,
-	    intent=inputs.transintent + ',' + inputs.refintent, gaintype='T',
-	    calmode='a', solint=inputs.solint, antenna=allantenna,
-	    refant=refant, append=False, merge=True)
+                             intent=inputs.transintent + ',' + inputs.refintent,
+                             gaintype='T', calmode='a', solint=inputs.solint, 
+                             antenna=allantenna, refant=refant,
+			     minblperant=minblperant, append=False, merge=True)
 
         # get the gaincal caltable from the results
-	# this is the table that will be fluxscaled
+        # this is the table that will be fluxscaled
         caltable = r.final.pop().gaintable
 
         # To make the following fluxscale reliable the caltable
@@ -186,21 +200,39 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         if check_ok:
             # Schedule a fluxscale job using this caltable. This is the result
             # that contains the flux measurements for the context.
+
+            # We need to write the fluxscale-derived flux densities to a file,
+            # which can then be used as input for the subsequent setjy task.
+            # This is the name of that file.
+            reffile = os.path.join(inputs.context.output_dir,
+                                   'fluxscale_s%s.csv' % inputs.context.stage)
+
             try:
-                self._do_fluxscale(caltable, refspwmap=refspwmap)
+                fluxscale_result = self._do_fluxscale(caltable, 
+                                                      refspwmap=refspwmap)
+
+                importdata.importdata.export_flux_from_result(fluxscale_result,
+                                                              inputs.context,
+                                                              reffile)
 
                 # and finally, do a setjy, add its setjy_settings
                 # to the main result
-                setjy_result = self._do_setjy()
+                setjy_result = self._do_setjy(reffile=reffile)
                 result.measurements.update(setjy_result.measurements)
 
-            except:
+            except Exception, e:
                 # something has gone wrong, return an empty result
-	        LOG.error ('Unable to complete flux scaling operation')
+                LOG.error('Unable to complete flux scaling operation')
+                LOG.exception(e)
                 return result
 
+            finally:
+                # clean up temporary file
+                if os.path.exists(reffile):
+                    os.remove(reffile)
+
         else:
-	    LOG.error ('Unable to complete flux scaling operation')
+            LOG.error('Unable to complete flux scaling operation')
             return result 
 
         return result
@@ -239,10 +271,11 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
 
             # check that fieldids contains the amplitude and phase calibrators
             if fieldids.isdisjoint(amp_fieldid):
-                LOG.error(
-                  '%s contains no results for amplitude calibrator' % 
+                LOG.warning(
+                  '%s contains ambiguous amplitude calibrator field names' % 
                   os.path.basename(caltable))
-                return False
+                #return False
+                return True
             if not fieldids.issuperset(phase_fieldids):
                 LOG.error(
                   '%s does not contain results for all phase calibrators' %
@@ -252,33 +285,30 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         return True
                                 
     def _do_gaincal(self, caltable=None, field=None, intent=None, gaintype='G',
-        calmode=None, solint=None, antenna=None, refant=None, append=None,
-	merge=True):
+        calmode=None, solint=None, antenna=None, refant=None,
+	minblperant=None, append=None, merge=True):
 
         inputs = self.inputs
 
-        task_args = {
-          'output_dir'  : inputs.output_dir,
-          'vis'         : inputs.vis,
-	  'caltable'    : caltable,
-	  'field'       : field,
-	  'intent'      : intent,
-          'solint'      : solint,
-	  'gaintype'    : gaintype,
-          'calmode'     : calmode,
-          'minsnr'      : inputs.minsnr,
-          'combine'     : '',
-          'refant'      : refant,
-          'antenna'     : antenna,
-          'minblperant' : 2,
-          'solnorm'     : False,
-	  'append'      : append,
-        }
+        task_args = {'output_dir'  : inputs.output_dir,
+                     'vis'         : inputs.vis,
+                     'caltable'    : caltable,
+                     'field'       : field,
+                     'intent'      : intent,
+                     'solint'      : solint,
+                     'gaintype'    : gaintype,
+                     'calmode'     : calmode,
+                     'minsnr'      : inputs.minsnr,
+                     'combine'     : '',
+                     'refant'      : refant,
+                     'antenna'     : antenna,
+                     'minblperant' : minblperant,
+                     'solnorm'     : False,
+                     'append'      : append}
 
-	# Note that field and antenna taske there defaut values for the
-	# purpose of setting up the calto object.
+        # Note that field and antenna task there default values for the
+        # purpose of setting up the calto object.
         task_inputs = gaincal.GTypeGaincal.Inputs(inputs.context, **task_args)
-
         task = gaincal.GTypeGaincal(task_inputs)
 
         return self._executor.execute(task, merge=merge)
@@ -287,29 +317,27 @@ class GcorFluxscale(basetask.StandardTaskTemplate):
         inputs = self.inputs
         
         task_args = {'output_dir' : inputs.output_dir,
-          'vis'        : inputs.vis,
-          'caltable'   : caltable,
-          'reference'  : inputs.reference,
-          'transfer'   : inputs.transfer,
-          'refspwmap'  : refspwmap  }
+                     'vis'        : inputs.vis,
+                     'caltable'   : caltable,
+                     'reference'  : inputs.reference,
+                     'transfer'   : inputs.transfer,
+                     'refspwmap'  : refspwmap}
         
         task_inputs = fluxscale.Fluxscale.Inputs(inputs.context, **task_args)
         task = fluxscale.Fluxscale(task_inputs)
         
         return self._executor.execute(task, merge=True)
 
-    def _do_setjy(self):
+    def _do_setjy(self, reffile):
         inputs = self.inputs
         
-        task_args = {
-          'output_dir' : inputs.output_dir,
-          'vis'        : inputs.vis,
-          'field'      : inputs.transfer,
-          'intent'     : inputs.transintent,
-        }
+        task_args = {'output_dir' : inputs.output_dir,
+                     'vis'        : inputs.vis,
+                     'field'      : inputs.transfer,
+                     'intent'     : inputs.transintent,
+                     'reffile'    : reffile}
 
         task_inputs = setjy.Setjy.Inputs(inputs.context, **task_args)
         task = setjy.Setjy(task_inputs)
         
         return self._executor.execute(task, merge=True)
-        

@@ -61,9 +61,9 @@ TD_DESC_RO = [
     __coldesc('integer', 0, 0, -1, 'Pol number'),
     __coldesc('integer', 0, 0, -1, 'Beam number'),
     __coldesc('string',  0, 0, -1, 'Date'),
-    __coldesc('double',  0, 0, -1, 'Time in MJD', 'sec'),
-    __coldesc('double',  0, 0, -1, 'Elapsed time since first scan' 'sec'),
-    __coldesc('double',  0, 0, -1, 'Exposure time', 'sec'),
+    __coldesc('double',  0, 0, -1, 'Time in MJD', 's'),
+    __coldesc('double',  0, 0, -1, 'Elapsed time since first scan' 's'),
+    __coldesc('double',  0, 0, -1, 'Exposure time', 's'),
     __coldesc('double',  0, 0, -1, 'Right Ascension', 'deg'),
     __coldesc('double',  0, 0, -1, 'Declination', 'deg'),
     __coldesc('double',  0, 0, -1, 'Azimuth', 'deg'),
@@ -148,6 +148,10 @@ class DataTableImpl( object ):
             return self.tb1.nrows()
         else:
             return 0
+
+    @property
+    def name(self):
+        return self.plaintable
 
     def get_row_index_simple(self, col, val):
         vals = self.getcol(col)
@@ -437,7 +441,7 @@ class DataTableImpl( object ):
                         tsys_time = times.take(indices)
                         for row in rows:
                             tref = self.tb1.getcell('TIME', row)
-                            itsys = __interpolate(atsys, tsys_time, tref)
+                            itsys = _interpolate(atsys, tsys_time, tref)
                             self.tb1.putcell('TSYS', row, itsys)                
 
 class RODataTableColumn( object ):
@@ -526,7 +530,7 @@ class DataTableColumnMaskList( RWDataTableColumn ):
         if sum(v[0]) < 0:
             return []
         else:
-            return list(v)
+            return v.tolist() 
 
     def getcol( self, startrow=0, nrow=-1, rowincr=1 ):
         """
@@ -539,7 +543,7 @@ class DataTableColumnMaskList( RWDataTableColumn ):
         ret = [[] for i in xrange(startrow,nrow,rowincr)]
         idx=0
         for i in xrange(startrow,nrow,rowincr):
-            tMASKLIST = list(self.getcell(self.name,i))
+            tMASKLIST = list(self.getcell(i))
             if len(tMASKLIST)==1 and tMASKLIST[0][0]==0 and \
                    tMASKLIST[0][1]==0:
                 ret[idx] = tMASKLIST
@@ -565,7 +569,7 @@ class DataTableColumnMaskList( RWDataTableColumn ):
             self.putcell(i,numpy.array(val[idx]))
             idx += 1
 
-def __interpolate(v, t, tref):
+def _interpolate(v, t, tref):
     n = len(t)
     idx = -1
     for i in xrange(n):

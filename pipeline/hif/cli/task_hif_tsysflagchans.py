@@ -2,18 +2,22 @@ import sys
 
 from taskinit import casalog
 
-import pipeline.cli.utils as utils
+import pipeline.h.cli.utils as utils
 
 
-def vla_opcal(vis=None, session=None, pipelinemode=None, overwrite=None,
-    dryrun=None, acceptresults=None):
+def hif_tsysflagchans(caltable=None, metric=None,
+  intentgroups=None,
+  flag_edges=None, edge_limit=None,
+  flag_sharps=None, sharps_limit=None,
+  flag_sharps2=None, sharps2_limit=None,
+  pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'Opcal'
-    
+    task_name = 'Tsysflagchans'
+
     ##########################################################################
     #                                                                        #
     #  CASA task interface boilerplate code starts here. No edits should be  #

@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from .antpos import Antpos
 from .applycal import Applycal
+from .atmflag import Atmflag
 from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
 from .clean import Clean
 from .cleanlist import CleanList
@@ -23,9 +24,6 @@ from .tsyscal import Tsyscal
 from .tsysflag import Tsysflag, Tsysflagchans
 from .wvrgcal import Wvrgcal
 from .wvrgcal import Wvrgcalflag
-from .vla import VLAImportData
-from .vla import GainCurves
-from .vla import Opcal
 
 # set default tasks for tasks with several implementations to our desired
 # specific implementation

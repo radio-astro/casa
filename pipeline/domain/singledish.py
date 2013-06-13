@@ -80,6 +80,7 @@ class ScantableList(observingrun.ObservingRun, list):
             self[idx].calibration_strategy = calibration_strategy[idx]
             self[idx].beam_size = beam_size[idx]
             self[idx].pattern = observing_pattern[idx]
+            self[idx].work_data = self[idx].name
 
     def add_scantable(self, s):
         if s.basename in self.st_names:
@@ -150,10 +151,8 @@ class ScantableRep(SingleDishBase):
     tolerance = 1.0e-3
 
     def __init__(self, name, ms=None, session=None):
-        self.basename = os.path.basename(name.rstrip('/'))
-        self.name = name
+        self.name = name.rstrip('/')
         self.ms = ms
-        self.ms_name = ms.basename if ms is not None else None
         self.session = session
 
         # observation property
@@ -176,7 +175,24 @@ class ScantableRep(SingleDishBase):
 
         # antenna property
         self.antenna = None
-        
+
+    @property
+    def basename(self):
+        return os.path.basename(self.name)
+
+    @property
+    def ms_name(self):
+        if self.ms is not None:
+            return self.ms.basename
+        else:
+            return None
+            
+    @property
+    def baselined_name(self):
+        return self.name + '_work'
+
+    def __repr__(self):
+        return 'Scantable(%s)'%(self.name)
 
 class Polarization(SingleDishBase):
     to_polid = {'XX': 0, 'YY': 1, 'XY': 2, 'YX': 3, 
@@ -291,3 +307,78 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
     @property
     def is_atmcal(self):
         return (self.type == 'SP' and self.intent.find('ATMOSPHERE') != -1)
+
+
+class ReductionGroupMember(object):
+    def __init__(self, antenna, spw, pols):
+        self.antenna = antenna
+        self.spw = spw
+        self.pols = pols
+        self.iteration = [0 for p in xrange(self.npol)]
+        self.linelist = [[] for p in xrange(self.npol)]
+
+    @property
+    def npol(self):
+        return len(self.pols)
+
+    def iter_countup(self, pols=None):
+        for i in self.__gen_pols(pols):
+            self.iteration[i] += 1
+
+    def iter_reset(self):
+        self.iteration = [0 for p in self.pols]
+
+    def add_linelist(self, linelist, pols=None):
+        for i in self.__gen_pols(pols):
+            self.linelist[i] = linelist
+
+    def __gen_pols(self, pols):
+        if pols is None:
+            for i in xrange(self.npol):
+                yield i
+        elif isinstance(pols, int):
+            yield pols
+        else:
+            for i in pols:
+                yield self.pols.index(i)
+
+    def __repr__(self):
+        return 'ReductionGroupMember(antenna=%s, spw=%s, pols=%s)'%(self.antenna, self.spw, self.pols)
+
+    def __eq__(self, other):
+        return other.antenna == self.antenna and other.spw == self.spw and other.pols == self.pols 
+        
+class ReductionGroupDesc(list):
+    def __init__(self, frequency_range=None, nchan=None):
+        self.frequency_range = frequency_range
+        self.nchan = nchan
+
+    def add_member(self, antenna, spw, pols):
+        new_member = ReductionGroupMember(antenna, spw, pols)
+        if not new_member in self:
+            self.append(new_member)
+
+    def get_iteration(self, antenna, spw, pol=None):
+        member = self[self.__search_member(antenna, spw)]
+        if pol is None:
+            return max(member.iteration)
+        else:
+            return member.iteration[pols]
+            
+    def iter_countup(self, antenna, spw, pols=None):
+        member = self[self.__search_member(antenna, spw)]
+        member.iter_countup(pols)
+
+    def add_linelist(self, linelist, antenna, spw, pols=None):
+        member = self[self.__search_member(antenna, spw)]
+        member.add_linelist(linelist, pols)
+
+    def __search_member(self, antenna, spw):
+        for indx in xrange(len(self)):
+            member = self[indx]
+            if member.antenna == antenna and member.spw == spw:
+                return indx
+                break
+
+    def __repr__(self):
+        return 'ReductionGroupDesc(frequency_range=%s, nchan=%s, member=%s)'%(self.frequency_range, self.nchan, self[:])

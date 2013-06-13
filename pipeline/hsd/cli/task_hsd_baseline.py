@@ -1,18 +1,17 @@
 import sys
 
-from taskinit import casalog
+import pipeline.h.cli.utils as utils
 
-import pipeline.cli.utils as utils
-
-
-def vla_gaincurves(vis=None, session=None, pipelinemode=None, overwrite=None,
-    dryrun=None, acceptresults=None):
+def hsd_baseline(fitfunc=None, fitorder=None,
+                 pipelinemode=None, infiles=None, iflist=None, pollist=None,
+                 linewindow=None, edge=None, broadline=None, 
+                 dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
     all_inputs = vars()
 
-    task_name = 'GainCurves'
+    task_name = 'SDBaseline'
     
     ##########################################################################
     #                                                                        #
