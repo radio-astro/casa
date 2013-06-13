@@ -305,7 +305,8 @@ class Wvrgcal(basetask.StandardTaskTemplate):
             bandpassinputs = bandpass.PhcorBandpass.Inputs(
               context=inputs.context, output_dir=inputs.output_dir,
               vis=inputs.vis, mode='channel', intent=inputs.qa2_bandpass_intent,
-              solint='inf,7.8125MHz', qa2_intent='', run_qa2=False)
+              solint='inf,7.8125MHz', maxchannels=0,
+	      qa2_intent='', run_qa2=False)
             bandpasstask = bandpass.PhcorBandpass(bandpassinputs)
             self.bp_results = self._executor.execute(bandpasstask, merge=True)
 
