@@ -156,6 +156,9 @@ namespace LibAIR {
     casa::ROScalarColumn<casa::Int> a1(ms,
 				       casa::MS::columnName(casa::MS::ANTENNA1));
 
+    casa::ROArrayColumn<casa::Bool> c_flags(ms,
+					    casa::MS::columnName(casa::MS::FLAG));
+
     std::map<size_t, size_t> srcmap=getFieldSrcMap(ms);
 
     times.resize(0);
@@ -168,7 +171,9 @@ namespace LibAIR {
       size_t i = sortedI[ii];
 
       if (a1(i)==0 and 
-	  c_desc_id(i)== (int)dsc_id)
+	  c_desc_id(i)== (int)dsc_id and
+	  casa::allEQ(casa::False, c_flags(i)) // True means not flagged
+	  )
       {
 	times.push_back(c_times(i));
 	states.push_back(c_states(i));
@@ -275,10 +280,10 @@ namespace LibAIR {
 		       states,
 		       fields,
 		       source,
-		       sortedI);
+		       sortedI); // this function ignores all main table entries which are partially or totally flagged
 
     if (times.size() == 0)
-      throw LibAIR::MSInputDataError("Didn't find any WVR data points");
+      throw LibAIR::MSInputDataError("Didn't find any (unflagged) WVR data points");
     
     WVRNearestPointing(ms, times, az, el);
       
@@ -305,24 +310,34 @@ namespace LibAIR {
     casa::ROScalarColumn<casa::Int> a2(ms,
 				       casa::MS::columnName(casa::MS::ANTENNA2));
 
+    casa::ROArrayColumn<casa::Bool> inflags(ms,
+					    casa::MS::columnName(casa::MS::FLAG));
 
     for(size_t ii=0; ii<nrows; ++ii)
     {
       size_t i = sortedI[ii];
 
-      if (a1(i)== a2(i) and 
+      if (a1(i) == a2(i) and 
 	  dsc_ids.count(indsc_id(i)) > 0)
       {
-	casa::Array<std::complex<float> > a;
-	indata.get(i,a, casa::True);
-	for(size_t k=0; k<4; ++k)
+	casa::Array<casa::Bool> fl;
+	inflags.get(i, fl, ::casa::True);
+ 
+	if(casa::allEQ(casa::False, inflags(i))) // i.e. not flagged at all
 	{
-	  res->set(curr_time[a1(i)],
-		   a1(i),
-		   k,
-		   a(casa::IPosition(2,k,0)).real());
+	  casa::Array<std::complex<float> > a;
+	  indata.get(i,a, casa::True);
+	  for(size_t k=0; k<4; ++k)
+	  {
+	    res->set(curr_time[a1(i)],
+		     a1(i),
+		     k,
+		     a(casa::IPosition(2,k,0)).real());
+	  }
+	  curr_time[a1(i)]++;
 	}
-	curr_time[a1(i)]++;
+
+
 	/*
 	std::cerr<<i<<","
 		 <<curr_time[a1(i)]<<","
@@ -331,8 +346,6 @@ namespace LibAIR {
 		  
       }
     }
-
-
 
     return res.release();
     
