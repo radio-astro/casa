@@ -940,6 +940,7 @@ protected:
   int prev_mask_id_p;
   //numthreads
   Int numthreads_p;
+  Bool avoidTempLatt_p;
 };
 
 

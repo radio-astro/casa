@@ -73,7 +73,7 @@ ImageSkyModel::ImageSkyModel(const Int maxNumModels) :
   donePSF_p(False),
   modified_p(True),
   dataPolRep_p(StokesImageUtil::CIRCULAR),
-  workDirOnNFS_p(False)
+  workDirOnNFS_p(False), useMem_p(False), tileVol_p(1000000)
  {
    
  }
@@ -390,10 +390,9 @@ ImageInterface<Complex>& ImageSkyModel::cImage(Int model)
     //of original model image
 
       TempImage<Complex>* cimagePtr = 
-      new TempImage<Complex> (TiledShape(cimageShape, 
-					 image_p[model]->niceCursorShape()),
+	new TempImage<Complex> (TiledShape(cimageShape, tileShape(model)),
 			      //IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
-			      cimageCoord, workDirOnNFS_p ? memoryMB : 0);
+			      cimageCoord, (workDirOnNFS_p|| useMem_p) ? memoryMB : 0);
       cimagePtr->set(0.0);
       cimagePtr->setMaximumCacheSize(min(cimagePtr->shape().product()/10, 1000000));
     // cimagePtr->setMaximumCacheSize(cacheSize(model));
@@ -479,11 +478,9 @@ ImageInterface<Float>& ImageSkyModel::PSF(Int model)
   Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
   if(psf_p[model]==0) {
         TempImage<Float>* psfPtr = 
-      new TempImage<Float> (TiledShape(image_p[model]->shape(), 
-				       image_p[model]->niceCursorShape()),
-			    //IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+	  new TempImage<Float> (TiledShape(image_p[model]->shape(), tileShape(model)), 
 			    image_p[model]->coordinates(),
-			    workDirOnNFS_p ? memoryMB : 0);
+				(workDirOnNFS_p || useMem_p) ? memoryMB : 0);
     
     AlwaysAssert(psfPtr, AipsError);
     psfPtr->set(0.0);
@@ -538,10 +535,8 @@ ImageInterface<Float>& ImageSkyModel::gS(Int model)
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
     
       TempImage<Float>* gSPtr = 
-      new TempImage<Float> (TiledShape(image_p[model]->shape(), 
-				          image_p[model]->niceCursorShape()),
-			    //IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
-			     image_p[model]->coordinates(), workDirOnNFS_p ? memoryMB : 0);
+	new TempImage<Float> (TiledShape(image_p[model]->shape(), tileShape(model)), 
+			      image_p[model]->coordinates(), (workDirOnNFS_p || useMem_p) ? memoryMB : 0);
     
       //gSPtr->setMaximumCacheSize(gSPtr->shape().product()/10);
       gSPtr->setMaximumCacheSize(cacheSize(model));
@@ -562,11 +557,9 @@ ImageInterface<Float>& ImageSkyModel::ggS(Int model)
   if(ggS_p[model]==0) {
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
     TempImage<Float>* ggSPtr = 
-      new TempImage<Float> (TiledShape(image_p[model]->shape(), 
-				          image_p[model]->niceCursorShape()),
-			    //IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+      new TempImage<Float> (TiledShape(image_p[model]->shape(), tileShape(model)),
 			    image_p[model]->coordinates(),
-			    workDirOnNFS_p ? memoryMB : 0);
+			    (workDirOnNFS_p || useMem_p) ? memoryMB : 0);
     
     AlwaysAssert(ggSPtr, AipsError);
     //ggSPtr->setMaximumCacheSize(ggSPtr->shape().product()/10);
@@ -589,11 +582,9 @@ ImageInterface<Float>& ImageSkyModel::fluxScale(Int model)
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
     
       TempImage<Float>* fluxScalePtr = 
-      new TempImage<Float> (TiledShape(image_p[model]->shape(), 
-				       image_p[model]->niceCursorShape()),
-			    //IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)),        
+	new TempImage<Float> (TiledShape(image_p[model]->shape(), tileShape(model)),       
 			    image_p[model]->coordinates(),
-			   workDirOnNFS_p ? memoryMB : 0);
+			      (workDirOnNFS_p || useMem_p) ? memoryMB : 0);
     
     AlwaysAssert(fluxScalePtr, AipsError);
     //fluxScalePtr->setMaximumCacheSize(fluxScalePtr->shape().product()/10);
@@ -623,11 +614,9 @@ ImageInterface<Float>& ImageSkyModel::work(Int model)
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
     
     TempImage<Float>* workPtr = 
-      new TempImage<Float> (TiledShape(image_p[model]->shape(),
-				       image_p[model]->niceCursorShape()),
-			    //IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+      new TempImage<Float> (TiledShape(image_p[model]->shape(),tileShape(model)),
 			    image_p[model]->coordinates(),
-			    workDirOnNFS_p ? memoryMB : 0);
+			    (workDirOnNFS_p || useMem_p) ? memoryMB : 0);
     
     AlwaysAssert(workPtr, AipsError);
     //workPtr->setMaximumCacheSize(workPtr->shape().product()/10);
@@ -649,11 +638,9 @@ ImageInterface<Float>& ImageSkyModel::deltaImage(Int model)
   if(deltaimage_p[model]==0) {
     Double memoryMB=HostInfo::memoryTotal(True)/1024/(MEMFACTOR*maxnmodels_p);
         TempImage<Float>* deltaimagePtr = 
-      new TempImage<Float> (TiledShape(image_p[model]->shape(),
-				        image_p[model]->niceCursorShape()),
-			    //IPosition(4, min(image_p[model]->shape()(0), 1000), min(image_p[model]->shape()(1), 1000), 1, 1)), 
+	  new TempImage<Float> (TiledShape(image_p[model]->shape(),tileShape(model)), 
 			    image_p[model]->coordinates(),
-			    workDirOnNFS_p ? memoryMB : 0);
+				(workDirOnNFS_p || useMem_p) ? memoryMB : 0);
     
     AlwaysAssert(deltaimagePtr, AipsError);
     //deltaimagePtr->setMaximumCacheSize(deltaimagePtr->shape().product()/10);
@@ -752,6 +739,20 @@ Long ImageSkyModel::cacheSize(Int model){
   return cachesize;
 }
 
+IPosition ImageSkyModel::tileShape(Int model){
+  AlwaysAssert((model>-1)&&(model<nmodels_p), AipsError);
+  Int x=Int(sqrt(Double(tileVol_p)));
+  IPosition shp(4, min(image_p[model]->shape()(0), x), min(image_p[model]->shape()(1), x), 1, 1);
+  
+  return shp;
+}
+
+void ImageSkyModel::setMemoryUse(Bool useMem){
+  useMem_p=useMem;
+}
+void ImageSkyModel::setTileVol(Int  tileVol){
+  tileVol_p=tileVol;
+}
 
 } //# NAMESPACE CASA - END
 

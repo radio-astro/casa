@@ -303,6 +303,7 @@ traceEvent(1,"Entering imager::defaults",25);
   flatnoise_p=True;
   freqrange_p.resize();
   numthreads_p=-1;
+  avoidTempLatt_p=False;
   mssFreqSel_p.resize();
   mssChanSel_p.resize();
 #ifdef PABLO_IO
@@ -1889,7 +1890,12 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   wbAWP_p=wbawp;
   conjBeams_p=conjBeams;
   freqInterpMethod_p=interpMeth;
+  if(imageTileVol_p <= 0){
+    avoidTempLatt_p=True;
+    imageTileVol_p=-1*imageTileVol_p;
+  }
   imageTileVol_p=imageTileVol;
+  
   singlePrec_p=singprec;
 
   if(cache>0) cache_p=cache;
@@ -4833,6 +4839,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           String fldidstr = String::toString(fldid); 
           // use field id due to possible MSSelection bug for handing field name with blanks
           //VisModelData::clearModel(*mssel_p, fieldName, spwstring);
+	  cerr << "field " << fldidstr << "  spw " << spwstring << endl;
           VisModelData::clearModel(*mssel_p, fldidstr, spwstring);
         }
         sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw],

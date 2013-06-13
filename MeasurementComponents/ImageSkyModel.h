@@ -256,6 +256,11 @@ public:
   
   virtual Int getModelIndex(uInt field, uInt /*taylor*/){return field;};
 
+  //try to make templattices use memory if possible
+  //if set to false then always use disk
+  void setMemoryUse(Bool useMem=False);
+  //Set templattice tile vol  in pixels
+  void setTileVol(const Int tileVol=1000000);
 protected:
 
   // Make Newton Raphson step internally. This is really an implementation
@@ -311,6 +316,7 @@ protected:
   LogSink& logSink() {return logSink_p;};
   
   Long cacheSize(Int model);
+  IPosition tileShape(Int model);
 
   PGPlotter *pgplotter_p;
   Bool displayProgress_p;
@@ -332,6 +338,8 @@ protected:
   // Required by cImage() to decide shapes.
   StokesImageUtil::PolRep dataPolRep_p;
   Bool workDirOnNFS_p;
+  Bool useMem_p;
+  Int tileVol_p;
 };
 
 

@@ -2462,18 +2462,7 @@ Bool Imager::createFTMachine()
   // This next line is only a guess
   Int numberAnt=((MeasurementSet&)*ms_p).antenna().nrow();
   
-  Int imageVolume=imageshape().product()/square(facets_p);
-  if(imageVolume) {
-    //    Int minimumCachesize=
-    //      tile_p*tile_p*npol_p*imageNchan_p*numberAnt*(numberAnt-1)/2;
-    if(imageVolume>cache_p/2) {
-      os<<"Cache too small to fit entire image, will use tiled gridding"
-	<< endl;  
-      os<<"MS has at most "<<numberAnt<<" antennas"<<endl;
-      os<<"Optimum cache size to do all baselines is "<< imageVolume
-	<< " (complex words)" << LogIO::POST;
-    }
-  }
+  
   
 
   Float padding;
@@ -3128,6 +3117,10 @@ Bool Imager::createSkyEquation(const Vector<String>& image,
     }
   }
   AlwaysAssert(sm_p, AipsError);
+  //Now lets tell it how to use memory and templattices
+  sm_p->setMemoryUse(avoidTempLatt_p);
+  if(imageTileVol_p > 1000)
+    sm_p->setTileVol(imageTileVol_p);
 
   // Read data pol rep from the MS. This is also done in imagecoordinates().
   // This code segment is repeated here because imagecoordinates
