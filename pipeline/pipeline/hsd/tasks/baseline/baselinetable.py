@@ -72,14 +72,6 @@ class BaselineTableGenerator(object):
                 
                 # update line
                 line = f.readline()
-        #self.scan = numpy.array(self.scan)
-        #self.beam = numpy.array(self.beam)
-        #self.ifno = numpy.array(self.ifno)
-        #self.pol = numpy.array(self.pol)
-        #self.cycle = numpy.array(self.cycle)
-        #self.rms = numpy.array(self.rms)
-        self.segments = numpy.array(self.segments)
-        self.coefficients = numpy.array(self.coefficients)
 
 class SplineBaselineTableGenerator(BaselineTableGenerator):
     fitfunc = 'spline'
@@ -103,8 +95,8 @@ class SplineBaselineTableGenerator(BaselineTableGenerator):
         for iseg in xrange(7, len(data)-7, 6):
             _seg.append(numpy.array(data[iseg:iseg+2],dtype=int))
             _prm.append(data[iseg+2:iseg+6])
-        self.segments.append(_seg)
-        self.coefficients.append(_prm)
+        self.segments.append(numpy.array(_seg))
+        self.coefficients.append(numpy.array(_prm))
         
     
     

@@ -62,9 +62,13 @@ class FittingBase(object):
         # Create progress timer
         Timer = common.ProgressTimer(80, nrow_total, LogLevel)
 
-        nwin = []
+        #nwin = []
         LOG.info('Baseline Fit: background subtraction...')
         LOG.info('Processing %d spectra...'%(nrow_total))
+
+        mask_array = numpy.ones(nchan, dtype=int)
+        mask_array[:_edge[0]] = 0
+        mask_array[nchan-_edge[1]:] = 0
 
         for y in xrange(len(member_list)):
             rows = member_list[y][0]
@@ -73,6 +77,8 @@ class FittingBase(object):
             with casatools.TableReader(filename) as tb:
                 spectra = numpy.array([tb.getcell('SPECTRA',row)
                                        for row in rows])
+            spectra[:,:_edge[0]] = 0.0
+            spectra[:,nchan-_edge[1]:] = 0.0 
             LOG.debug('spectra.shape=%s'%(list(spectra.shape)))
             masklist = [datatable.tb2.getcell('MASKLIST',idx)
                         for idx in idxs]
@@ -107,25 +113,27 @@ class FittingBase(object):
 
                 # mask lines
                 maxwidth = 1
-                masklist = datatable.getcell('MASKLIST',idx)
-                for [chan0, chan1] in masklist:
+                #masklist = datatable.getcell('MASKLIST',idx)
+                _masklist = masklist[i] 
+                for [chan0, chan1] in _masklist:
                     if chan1 - chan0 >= maxwidth:
                         maxwidth = int((chan1 - chan0 + 1) / 1.4)
                         # allowance in Process3 is 1/5:
                         #    (1 + 1/5 + 1/5)^(-1) = (5/7)^(-1)
                         #                         = 7/5 = 1.4
                 max_polyorder = int((nchan - sum(_edge)) / maxwidth + 1)
-                LOG.debug('Masked Region from previous processes = %s'%(masklist))
+                LOG.debug('Masked Region from previous processes = %s'%(_masklist))
                 LOG.debug('edge parameters= (%s,%s)'%(_edge))
                 LOG.debug('Polynomial order = %d  Max Polynomial order = %d'%(polyorder, max_polyorder))
 
                 # fitting
                 polyorder = min(polyorder, max_polyorder)
                 start_time = time.time()
-                (result, nmask) = self._calc_baseline_fit(dummy_scan, sp, polyorder, nchan, 0, _edge, masklist, blfile, win_polyorder, fragment, nwindow)
+                mask_array[_edge[0]:nchan-_edge[1]] = 1
+                (result, nmask) = self._calc_baseline_fit(dummy_scan, sp, polyorder, nchan, 0, _edge, _masklist, blfile, win_polyorder, fragment, nwindow, mask_array)
                 end_time = time.time()
                 LOG.info('fitting: elapsed time=%s'%(end_time-start_time))
-                nwin.append(nwindow)
+                #nwin.append(nwindow)
                 spectra[i] = result
                 index_list.append(idx)
 
@@ -140,17 +148,17 @@ class FittingBase(object):
             # cleanup blfile
             os.system('rm -rf %s'%(blfile))
                         
-    def _calc_baseline_fit(self, scan, data, polyorder, nchan, modification, edge, masklist, blfile, win_polyorder, fragment, nwindow):
+    def _calc_baseline_fit(self, scan, data, polyorder, nchan, modification, edge, masklist, blfile, win_polyorder, fragment, nwindow, mask):
         LOG.debug('masklist=%s'%(masklist))
 
         # set edge mask
-        data[:edge[0]] = 0.0
-        data[nchan-edge[1]:] = 0.0
+        #data[:edge[0]] = 0.0
+        #data[nchan-edge[1]:] = 0.0
         
         # Create mask for line protection
         nchan_without_edge = nchan - sum(edge)
-        mask = numpy.ones(nchan, dtype=int)
-        if type(masklist) == list:
+        #mask = numpy.ones(nchan, dtype=int)
+        if type(masklist) == list or type(masklist) == numpy.ndarray:
             for [m0, m1] in masklist:
                 mask[m0:m1] = 0
         else:
@@ -160,9 +168,10 @@ class FittingBase(object):
         #else:
         #    nmask = int(nchan_without_edge - numpy.sum(mask[edge[0]:] * 1.0))
         num_mask = int(nchan_without_edge - numpy.sum(mask[edge[0]:nchan-edge[1]] * 1.0))
-        num_nomask = nchan_without_edge - num_mask
+        #num_nomask = nchan_without_edge - num_mask
 
-        LOG.debug('nchan_without_edge, num_mask, diff=%s, %s, %s'%(nchan_without_edge, num_mask, num_nomask))
+        #LOG.debug('nchan_without_edge, num_mask, diff=%s, %s, %s'%(nchan_without_edge, num_mask, num_nomask))
+        LOG.debug('nchan_without_edge, num_mask, diff=%s, %s'%(nchan_without_edge, num_mask))
 
         outdata = self._fit(data, scan, polyorder, nchan, mask, edge, nchan_without_edge, num_mask, fragment, nwindow, win_polyorder, masklist, blfile)
         outdata[:edge[0]] = 0.0
@@ -173,8 +182,8 @@ class FittingBase(object):
 
 class CubicSplineFitting(FittingBase):
     def _fit(self, data, scan, polyorder, nchan, mask, edge, nchan_without_edge, nchan_masked, fragment, nwindow, win_polyorder, masklist, blfile):
-        mask[:edge[0]] = 0
-        mask[nchan-edge[1]:] = 0
+        #mask[:edge[0]] = 0
+        #mask[nchan-edge[1]:] = 0
         num_nomask = nchan_without_edge - nchan_masked
         num_pieces = max(int(min(polyorder * num_nomask / float(nchan_without_edge) + 0.5, 0.1 * num_nomask)), 1)
         LOG.info('Cubic Spline Fit: Number of Sections = %d' % num_pieces)
