@@ -8,7 +8,13 @@ class State(object):
     _PHASE_BYPASS_INTENTS = frozenset(('BANDPASS','AMPLITUDE'))
 
     __slots__ = ('id', 'obs_mode')
-    
+
+    def __getstate__(self):
+        return self.id, self.obs_mode
+
+    def __setstate__(self, state):
+        self.id, self.obs_mode = state
+        
     # dictionary to map from STATE table obs_mode to pipeline intent
     obs_mode_mapping = {
         'CALIBRATE_BANDPASS#ON_SOURCE'       : 'BANDPASS',
