@@ -630,10 +630,10 @@ class test_Columns(test_base):
         os.system('rm -rf col*.*ms')
         
     def test_col1(self):
-        '''mstransform: add a non-existing MODEL column'''
+        '''mstransform: try to make real a non-existing virtual MODEL column'''
         self.setUp_ngc5921()
         outputms = "col1.ms"
-        mstransform(vis=self.vis, outputvis=outputms, datacolumn='DATA', realmodelcol=True)
+        mstransform(vis=self.vis, outputvis=outputms, datacolumn='all', realmodelcol=True)
                             
         self.assertTrue(os.path.exists(outputms))
         mcol = th.getColDesc(outputms, 'MODEL_DATA')
@@ -642,14 +642,28 @@ class test_Columns(test_base):
 
     # This should change. It should not add a real model column, only a virtual one.        
     def test_col2(self):
-        '''mstransform: add a real MODEL column '''
+        '''mstransform: make real a virtual MODEL column '''
+        self.setUp_ngc5921()
         outputms = "col2.ms"
-        mstransform(vis=self.vis, outputvis=outputms, realmodelcol=True)
+        inpms = 'ngc5921Jy.ms'
+        shutil.copytree(self.vis, inpms)
+        
+        # First, run setjy to create a virtual MODEl column (SOURCE_MODEL)
+        setjy(vis=inpms,field='1331+305*',modimage='',standard='Perley-Taylor 99',
+              scalebychan=False, usescratch=False)
+        
+        # Verify that the virtual column exists
+        mcol = th.getColDesc(inpms+'/SOURCE', 'SOURCE_MODEL')
+        mkeys = mcol.keys()
+        self.assertTrue(mkeys.__len__() > 0, 'Should have a SOURCE_MODEL column')
+        
+        # Make the virtual column a real MODEL_DATA column
+        mstransform(vis=inpms, outputvis=outputms, datacolumn='all', realmodelcol=True)
                             
         self.assertTrue(os.path.exists(outputms))
         mcol = th.getColDesc(outputms, 'MODEL_DATA')
         mkeys = mcol.keys()
-        self.assertTrue(mkeys.__len__() > 0, 'Should add MODEL_DATA column')
+        self.assertTrue(mkeys.__len__() > 0, 'Should have a MODEL_DATA column')
         
 
     def test_col3(self):

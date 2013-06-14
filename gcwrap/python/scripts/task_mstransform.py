@@ -133,7 +133,20 @@ class MSTHelper(ParallelTaskHelper):
                 self.__selpars[k] = v
         
         return self.__selpars
+    
+    @dump_args
+    def validateModelCol(self):
+        '''Add the realmodelcol parameter to the configuration
+           only for some values of datacolumn'''
+        
+        ret = False
+        
+        dc = self.__args['datacolumn'].upper()
+        if dc=='MODEL' or dc=='ALL' or dc=='DATA,MODEL,CORRECTED':
+            ret = True
 
+        return ret
+    
 #    @dump_args
     def initialize(self):
         """Add the full path for the input and output MS.
@@ -973,9 +986,9 @@ def mstransform(
         config['ddistart'] = ddistart
         
         config['datacolumn'] = datacolumn
-        
-        # Add a virtual MODEL column to the output MS
-        config['realmodelcol'] = realmodelcol
+        if mth.validateModelCol():        
+            # Make real a virtual MODEL column in the output MS
+            config['realmodelcol'] = realmodelcol
         
         # Add the tile shape parameter
         if tileshape.__len__() == 1:
