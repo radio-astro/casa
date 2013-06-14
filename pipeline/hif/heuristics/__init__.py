@@ -10,6 +10,7 @@ from .caltable import BandpassCaltable
 from .caltable import GaincalCaltable
 from .caltable import FluxCaltable
 from .caltable import TsysCaltable
+from .caltable import OpCaltable
 from .caltable import AntposCaltable
 from .caltable import WvrgCaltable
 from .clean import CleanHeuristics

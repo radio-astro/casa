@@ -20,6 +20,7 @@ import setjy_cli
 import plotants_cli
 import plotcal_cli
 import plotms_cli
+import plotweather_cli
 import plotxy_cli
 import flagdata_cli
 import wvrgcal_cli
@@ -300,6 +301,9 @@ class CASATaskJobGenerator(object):
 
     def plotms(self, *v, **k):
         return self._get_job(plotms_cli.plotms_cli, *v, **k)
+
+    def plotweather(self, *v, **k):
+        return self._get_job(plotweather_cli.plotweather_cli, *v, **k)
 
     def plotxy(self, *v, **k):
         return self._get_job(plotxy_cli.plotxy_cli, *v, **k)
