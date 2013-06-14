@@ -623,9 +623,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		  stateObsModeIDs_p.resize(0);
 		  if(stateExpr_p != "" &&
 		     msStateGramParseCommand(ms, stateExpr_p,stateObsModeIDs_p) == 0)
-		    node = *(msStateGramParseNode());
-		  if (stateObsModeIDs_p.nelements()==0)
-		    throw(MSSelectionStateError(String("No match found for state expression: ")+stateExpr_p));
+		    {
+		      node = *(msStateGramParseNode());
+		      if (stateObsModeIDs_p.nelements()==0)
+			throw(MSSelectionStateError(String("No match found for state expression: ")+stateExpr_p));
+		    }
 		  break;
 		}
 	      case NO_EXPR:break;
