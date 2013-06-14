@@ -4,11 +4,14 @@ import os
 import pylab as pl
 import numpy
 
+from matplotlib.ticker import NullFormatter
+
 from asap.scantable import is_ms
 
-import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
+from . import utils
 
 class WeatherAxesManager(object):
     def __init__(self):
@@ -43,11 +46,25 @@ class WeatherAxesManager(object):
 
     def __temp(self):
         a = pl.subplot(211)
-        a.set_xlabel('MJD')
+        #a.set_xlabel('MJD')
+        #a.set_xlabel('Time (UT)')
         a.set_ylabel('Temperature (degC)', color='r')
-        a.set_title('Weather (Temperature & Humidity) versus MJD')
+        #a.set_title('Weather (Temperature & Humidity) versus MJD')
+        #a.set_title('Weather (Temperature & Humidity) versus Time (UT)')
+        a.set_title('Weather versus Time\nTop: Temperature & Humidity\nBottom: Pressure & Wind Speed')
+        a.xaxis.set_major_locator(utils.utc_locator())
+        #a.xaxis.set_major_formatter(utils.utc_formatter())
+        a.xaxis.set_major_formatter(NullFormatter())
         for tl in a.get_yticklabels():
             tl.set_color('r')
+
+        pos = a.get_position()
+        left = pos.x0
+        bottom = pos.y0 - 0.05
+        width = pos.x1 - pos.x0
+        height = pos.y1 - pos.y0
+        a.set_position([left, bottom, width, height])
+
         return a
 
     def __humi(self):
@@ -56,17 +73,32 @@ class WeatherAxesManager(object):
 
         a = self._temp.twinx()
         a.set_ylabel('Humidity (%)', color='b')
+        a.xaxis.set_major_locator(utils.utc_locator())
+        #a.xaxis.set_major_formatter(utils.utc_formatter())
+        a.xaxis.set_major_formatter(NullFormatter())
         for tl in a.get_yticklabels():
             tl.set_color('b')
         return a
 
     def __pres(self):
         a = pl.subplot(212)
-        a.set_xlabel('MJD')
+        #a.set_xlabel('MJD')
+        a.set_xlabel('Time (UT)')
         a.set_ylabel('Pressure (hPa)', color='r')
-        a.set_title('Weather (Pressure & Wind Speed) versus MJD')
+        #a.set_title('Weather (Pressure & Wind Speed) versus MJD')
+        #a.set_title('Weather (Pressure & Wind Speed) versus Time (UT)')
+        a.xaxis.set_major_locator(utils.utc_locator())
+        a.xaxis.set_major_formatter(utils.utc_formatter())
         for tl in a.get_yticklabels():
             tl.set_color('r')
+
+        pos = a.get_position()
+        left = pos.x0
+        bottom = pos.y0 + 0.025
+        width = pos.x1 - pos.x0
+        height = pos.y1 - pos.y0
+        a.set_position([left, bottom, width, height])
+
         return a
 
     def __wind(self):
@@ -75,6 +107,8 @@ class WeatherAxesManager(object):
 
         a = self._pres.twinx()
         a.set_ylabel('Wind Speed (m/s)', color='b')
+        a.xaxis.set_major_locator(utils.utc_locator())
+        a.xaxis.set_major_formatter(utils.utc_formatter())
         for tl in a.get_yticklabels():
             tl.set_color('b')
         return a
@@ -115,11 +149,6 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         datatable = self.datatable
         
         # Plotting routine
-        #if common.ShowPlot: pl.ion()
-        #else: pl.ioff()
-        #Fig = pl.figure(self.MATPLOTLIB_FIGURE_ID)
-        #if common.ShowPlot: pl.ioff()
-        #pl.clf()
         Fig = pl.gcf()
 
         # get Weather info from the table
@@ -129,17 +158,17 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         #print WeatherDic['REL_HUMIDITY']
         #print WeatherDic['WIND_SPEED']
 
-        # Extract MJD
-        MJD = numpy.take(datatable.getcol('TIME'),rows)
-
         # Convert MJD sec to MJD date for WeatherDic
         # K -> degC
         for i in range(len(WeatherDic['TIME'])):
             WeatherDic['TIME'][i] = WeatherDic['TIME'][i]/3600./24.
             WeatherDic['TEMPERATURE'][i] = WeatherDic['TEMPERATURE'][i] - 273.16
 
-        MJDmin = numpy.array(MJD).min()
-        MJDmax = numpy.array(MJD).max()
+        MJD = WeatherDic['TIME']
+        time_for_plot = utils.mjd_to_plotval(MJD)
+
+        MJDmin = time_for_plot.min()
+        MJDmax = time_for_plot.max()
         Tempmin = WeatherDic['TEMPERATURE'].min() - 3.0
         Tempmax = WeatherDic['TEMPERATURE'].max() + 2.0
         dTemp = Tempmax - Tempmin
@@ -161,7 +190,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
                 )
         else:
             plot_objects.extend(
-                Ax1.plot(WeatherDic['TIME'], WeatherDic['TEMPERATURE'], 'r-')
+                Ax1.plot(time_for_plot, WeatherDic['TEMPERATURE'], 'r-')
                 )
         Ax1.axis([MJDmin, MJDmax, Tempmin, Tempmax])
 
@@ -173,7 +202,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
                 )
         else:
             plot_objects.extend(
-                Ax2.plot(WeatherDic['TIME'], WeatherDic['REL_HUMIDITY'], 'b-')
+                Ax2.plot(time_for_plot, WeatherDic['REL_HUMIDITY'], 'b-')
                 )
         Ax2.axis([MJDmin, MJDmax, Humimin, Humimax])
 
@@ -185,7 +214,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
                 )
         else:
             plot_objects.extend(
-                Ax1.plot(WeatherDic['TIME'], WeatherDic['PRESSURE'], 'r-')
+                Ax1.plot(time_for_plot, WeatherDic['PRESSURE'], 'r-')
                 )
         Ax1.axis([MJDmin, MJDmax, Presmin, Presmax])
 
@@ -197,7 +226,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
                 )
         else:
             plot_objects.extend(
-                Ax2.plot(WeatherDic['TIME'], WeatherDic['WIND_SPEED'], 'b-')
+                Ax2.plot(time_for_plot, WeatherDic['WIND_SPEED'], 'b-')
                 )
         Ax2.axis([MJDmin, MJDmax, Windmin, Windmax])
 
@@ -252,12 +281,12 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         colnames = [col.upper() for col in weather]
 
         # get antenna position
-        with utils.open_table(atable) as tb:
+        with casatools.TableReader(atable) as tb:
             antennaId = tb.getcol('NAME').tolist().index(antenna)
             antpos = tb.getcell( 'POSITION', antennaId )
 
         # get weather
-        with utils.open_table(wtable) as tb:
+        with casatools.TableReader(wtable) as tb:
             antid = tb.getcol( 'ANTENNA_ID' )
             if antennaId in antid:
                 # get rows with ANTENNA_ID == self.iterAnt
@@ -315,7 +344,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
                 colnames.append( col.upper() )
 
         # first read WEATHER subtable
-        with utils.open_table(wtable) as tb:
+        with casatools.TableReader(wtable) as tb:
             tmpwed = {}
             wkeys = tb.getcol( 'ID' )
             for col in colnames:
@@ -325,7 +354,7 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
                     tmpwed[col][wkeys[k]] = wed[k]
 
         # then match up with MAIN rows
-        with utils.open_table(filename) as tb:
+        with casatools.TableReader(filename) as tb:
             # should be converted to 'sec' since TIME is stored as 'day' 
             winfo['TIME'] = tb.getcol( 'TIME' ) * 86400.0
             wid = tb.getcol( 'WEATHER_ID' )
