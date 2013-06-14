@@ -132,7 +132,7 @@ int main() {
 // test if the standard table exist
     cout << "AIPSROOT: " << Aipsrc::aipsRoot() << endl;
     String horpath;
-    Bool foundStd = Aipsrc::findDir(horpath, "data/nrao/VLA/standards/Perley-Butler2013");
+    Bool foundStd = Aipsrc::findDir(horpath, "data/nrao/VLA/standards/PerleyButler2013Coeffs");
     if(foundStd){
       cout << "Aipsrc found an ephemeris directory: " << horpath << endl;
     }
