@@ -399,6 +399,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
     void setErrorHandler(const MSExprType type, MSSelectionErrorHandler* mssEH,
 			 const Bool overRide=False);
+    
+    void initErrorHandler(const MSExprType tye=NO_EXPR);
 
     void runErrorHandler();
     const MeasurementSet* getMS(MSSelectableTable* msLike);
