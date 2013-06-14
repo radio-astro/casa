@@ -13,6 +13,7 @@ from . import h
 from . import hco
 from . import hif
 from . import hsd
+from . import vla
 
 from .infrastructure import Pipeline, Context
 
