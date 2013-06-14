@@ -2,9 +2,10 @@ import os
 import numpy
 import pylab as pl
 
-import pipeline.infrastructure.utils as utils
+import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 from . import common
+from . import utils
 
 def get_ylim(tsys):
     tshape = tsys.shape
@@ -49,10 +50,10 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
         parent_ms = self.inputs.context.observing_run.get_ms(calto.vis)
         # here, assumed that all rows have same FREQ_ID, which 
         # is true in almost case, at least for ALMA.
-        with utils.open_table(table) as tb:
+        with casatools.TableReader(table) as tb:
             freq_ids = numpy.unique(tb.getcol('FREQ_ID'))
         nchans = {}
-        with utils.open_table(table) as tb:
+        with casatools.TableReader(table) as tb:
             for freq_id in freq_ids:
                 tsel = tb.query('FREQ_ID == %s'%(freq_id))
                 nchans[freq_id] = len(tsel.getcell('TSYS',0))
@@ -77,7 +78,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
         parameters['ant'] = antenna_name
         parameters['type'] = 'sd'
         parameters['file'] = os.path.basename(table)
-        with utils.open_table(table) as tb:
+        with casatools.TableReader(table) as tb:
             tsel = tb.query('',sortlist='TIME')
             nrow = tsel.nrows()
             timestamps = tsel.getcol('TIME')
@@ -91,7 +92,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                 pl.clf()
                 start = time_group[i]
                 end = time_group[i+1]
-                title = 'Tsys vs Frequency (MJD=%.1fsec)'%(timestamps[start]*86400.0)
+                title = 'Tsys vs Frequency (%s)'%(utils.mjd_to_datestring(timestamps[start],fmt='%b %d %H:%M:%S %Y UT'))
                 #print title
                 #print 'range=',range(start,end)
                 for row in xrange(start,end):
@@ -134,7 +135,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
         parameters_base['pol'] = ''
         parameters_base['ant'] = antenna_name
         parameters_base['file'] = os.path.basename(table)
-        with utils.open_table(table) as tb:
+        with casatools.TableReader(table) as tb:
             spwlist = numpy.unique(tb.getcol('IFNO'))
             pollist = numpy.unique(tb.getcol('POLNO'))
             if common.ShowPlot: pl.ioff()

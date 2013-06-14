@@ -47,7 +47,6 @@ class AzElAxesManager(object):
         a.xaxis.set_major_locator(utils.utc_locator())
         #a.xaxis.set_major_formatter(utils.utc_formatter())
         a.xaxis.set_major_formatter(NullFormatter())
-        a.yaxis.set_major_locator(MultipleLocator(10))
         return a
             
         
@@ -113,8 +112,10 @@ class SDAzElDisplay(common.SDInspectionDisplay):
             if gap > rows[-1]: break
             if gap == 0: continue
             PGap.append((tTIME[gap - 1] + tTIME[gap]) / 2.)
-        TGapTmp = utils.mjd_to_plotval(numpy.array(TGap))
-        PGapTmp = utils.mjd_to_plotval(numpy.array(PGap))
+        TGapTmp = utils.mjd_to_plotval(numpy.array(TGap)) if len(TGap) > 0 \
+                  else []
+        PGapTmp = utils.mjd_to_plotval(numpy.array(PGap)) if len(PGap) > 0 \
+                  else []
         Az = numpy.array([tAZ[row] for row in rows])
         El = numpy.array([tEL[row] for row in rows])
         MJD = numpy.array([tTIME[row] for row in rows])
@@ -156,13 +157,6 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                     TmpArr[ndays-1].append(time_for_plot[n])
 
         # Plotting routine
-        #if common.ShowPlot: pl.ion()
-        #else: pl.ioff()
-        #pl.figure(self.MATPLOTLIB_FIGURE_ID)
-        #if common.ShowPlot: pl.ioff()
-        #pl.cla()
-        #pl.clf()
-
         if DoStack:
             markercolorbase = ['b', 'm', 'y', 'k', 'r']
             m=numpy.ceil(ndays*1.0/len(markercolorbase))
@@ -176,7 +170,6 @@ class SDAzElDisplay(common.SDInspectionDisplay):
 
             pl.gcf().sca(self.axes_manager.elevation_axes)
             for nd in range(ndays):
-                #UTdata = (numpy.array(MJDArr[nd])-int(MJDArr[nd][0]))*24.0
                 UTdata = TmpArr[nd]
                 if nd == 0:
                     UTmin = min(UTdata)
@@ -188,7 +181,6 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                 #date = qa.quantity(MJDArr[nd][0],'d')
                 date = qa.quantity(str(MJDArr[nd][0])+'d')
                 (datelab,rest) = qa.time(date,form='dmy')[0].split('/')  
-                #pl.plot(UTdata, ElArr[nd], 'bo', markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
 
                 plot_objects.extend(
                     pl.plot(UTdata, ElArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
@@ -208,11 +200,9 @@ class SDAzElDisplay(common.SDInspectionDisplay):
 
             pl.gcf().sca(self.axes_manager.azimuth_axes)
             for nd in range(ndays):
-                #UTdata = (numpy.array(MJDArr[nd])-int(MJDArr[nd][0]))*24.0
                 UTdata = TmpArr[nd]
                 date = qa.quantity(str(MJDArr[nd][0])+'d')
                 (datelab,rest) = qa.time(date,form='dmy')[0].split('/')  
-                #pl.plot(UTdata, AzArr[nd], 'bo', markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
                 plot_objects.extend(
                     pl.plot(UTdata, AzArr[nd], markers[nd], markersize=2, markeredgecolor=markercolors[nd], markerfacecolor=markercolors[nd],label=datelab)
                     )
@@ -225,16 +215,13 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                         )
             pl.axis([UTmin, UTmax, 0, 360])
         else:
-            #UTdata = utils.mjd_to_plotval(MJD)
             UTdata = time_for_plot
             pl.gcf().sca(self.axes_manager.elevation_axes)
-            #for Time in TGap:
             for Time in TGapTmp:
                 plot_objects.append(
                     pl.axvline(x=Time, linewidth=0.5, color='c')
                     )
             plot_objects.extend(
-                #pl.plot(MJD, El, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
                 pl.plot(UTdata, El, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
                 )
             UTmin = UTdata.min()
@@ -248,13 +235,11 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                 pl.axis([UTmin, UTmax, 0, 90])
 
             pl.gcf().sca(self.axes_manager.azimuth_axes)
-            #for Time in PGap:
             for Time in PGapTmp:
                 plot_objects.append(
                     pl.axvline(x=Time, linewidth=0.5, color='g')
                     )
             plot_objects.extend(
-                #pl.plot(MJD, Az, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
                 pl.plot(UTdata, Az, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
                 )
             pl.axis([UTmin, UTmax, 0, 380])

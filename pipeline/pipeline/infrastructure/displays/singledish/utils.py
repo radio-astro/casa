@@ -142,6 +142,10 @@ def mjd_to_datetime(val):
                                   mjd['min'], mjd['sec'])
     return date_time
 
+def mjd_to_datestring(val, fmt='%Y/%m/%d'):
+    date_time = mjd_to_datetime(val)
+    return date_time.strftime(fmt)
+
 # vectorized version
 mjd_to_datetime_vectorized = numpy.vectorize(mjd_to_datetime)
 
