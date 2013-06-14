@@ -5,7 +5,7 @@ import unittest
 import testhelper as th
 import partitionhelper as ph
 from tasks import *
-from taskinit import msmdtool, mstool, aftool
+from taskinit import msmdtool, mstool, aftool, tbtool
 from __main__ import default
 from parallel.parallel_task_helper import ParallelTaskHelper
 
@@ -237,6 +237,47 @@ class partition_test1(test_base):
         for s in slist:
             mms_spw = ph.getSpwIds(self.mmsfile, s)
             self.assertEqual(mms_spw, indexed_ids, 'spw IDs were not properly re-indexed')
+
+    def test_model_keys(self):
+        '''partition: CAS-4398, handle the MODEL keywords correctly'''
+        
+        print '*** Check that MODEL_DATA is not present in MS first'
+        mytb = tbtool()
+        try:
+            mytb.open(self.msfile+'/MODEL_DATA')
+        except Exception, instance:
+            print '*** Expected exception. \"%s\"'%instance
+            mytb.close()
+        
+        inpms = 'ngc4826Jy.ms'
+        shutil.copytree(self.msfile, inpms)
+        
+        # First, run setjy to create the SOURCE_MODEL column
+        setjy(vis=inpms,field='0',fluxdensity=[23.0,0.,0.,0.],scalebychan=False)
+        
+        # Now create an MMS from it. The SOURCE_MODEL column should be there too
+        partition(vis=inpms,outputvis=self.mmsfile, observation='1',spw='1',
+                  scan='1,2,3', parallel=False, flagbackup=False)  
+
+        print 'Check the SOURCE_MODEL columns....'
+        mytb = tbtool()
+        mytb.open(inpms+'/SOURCE')
+        msdict = mytb.getcell('SOURCE_MODEL', 0)
+        mytb.close()
+        
+        mytb.open(self.mmsfile+'/SOURCE')
+        mmsdict = mytb.getcell('SOURCE_MODEL', 0)
+        mytb.close()
+
+        self.assertEqual(set(msdict['cl_0'].keys()),set(mmsdict['cl_0'].keys()))
+        
+        # Check that the real MODEL_DATA column is not created in MMS
+        try:
+            mytb.open(self.mmsfile+'/MODEL_DATA')
+        except Exception, instance:
+            print '*** Expected exception. \"%s\"'%instance
+            mytb.close()
+        
 
     
 class partition_test2(test_base):
@@ -581,11 +622,11 @@ class partition_test2(test_base):
 class partition_cleanup(test_base):
     
     def tearDown(self):
-        os.system('rm -rf ngc4826.*ms* Four_ants_3C286.*ms*')
+        os.system('rm -rf ngc4826*.*ms* Four_ants_3C286.*ms*')
 
     def test_runTest(self):
         '''partition: Cleanup'''
-        pass
+        print 'Cleaning up after test_partition'
           
 def suite():
     return [partition_test1, partition_test2, partition_cleanup]
