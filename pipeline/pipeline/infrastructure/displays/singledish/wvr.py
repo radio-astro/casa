@@ -74,11 +74,6 @@ class SDWvrDisplay(common.SDInspectionDisplay):
 
     def draw_wvr(self, wvr_data, wvr_frequency, plotfile):
         # Plotting routine
-        #if common.ShowPlot: pl.ion()
-        #else: pl.ioff()
-        #Fig = pl.figure(self.MATPLOTLIB_FIGURE_ID)
-        #if common.ShowPlot: pl.ioff()
-        #pl.clf()
         Fig = pl.gcf()
 
         # Convert MJD sec to MJD date for wvr_data
