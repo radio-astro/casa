@@ -11,20 +11,26 @@ import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.renderer.logger as logger
 
 from . import utils
+from . import common
 
 LOG = infrastructure.get_logger(__name__)
 
-class AzElAxesManager(object):
+class AzElAxesManager(common.TimeAxesManager):
     def __init__(self):
-        self._az = self.__az()
-        self._el = self.__el()
+        super(AzElAxesManager,self).__init__()
+        self._az = None
+        self._el = None
         
     @property
     def elevation_axes(self):
+        if self._el is None:
+            self._el = self.__el()
         return self._el
 
     @property
     def azimuth_axes(self):
+        if self._az is None:
+            self._az = self.__az()
         return self._az
 
     def __az(self):
@@ -33,7 +39,7 @@ class AzElAxesManager(object):
         pl.ylabel('Azimuth (deg)')
         #pl.title('Azimuth Plot v.s. Time (with Detected large Gaps)')
         pl.xlabel('Time (UT)')
-        a.xaxis.set_major_locator(utils.utc_locator())
+        a.xaxis.set_major_locator(self.locator)
         a.xaxis.set_major_formatter(utils.utc_formatter())
         return a
 
@@ -44,7 +50,7 @@ class AzElAxesManager(object):
         #pl.title('Elevation Plot v.s. Time (with Detected large Gaps)')
         pl.title('Elevation/Azimuth Plot v.s. Time (with Detected large Gaps)')
         #pl.xlabel('Time (UT)')
-        a.xaxis.set_major_locator(utils.utc_locator())
+        a.xaxis.set_major_locator(self.locator)
         #a.xaxis.set_major_formatter(utils.utc_formatter())
         a.xaxis.set_major_formatter(NullFormatter())
         return a
@@ -157,6 +163,14 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                     TmpArr[ndays-1].append(time_for_plot[n])
 
         # Plotting routine
+        UTmin = time_for_plot.min()
+        UTmax = time_for_plot.max()
+        Extend = (UTmax - UTmin) * 0.05
+        UTmin -= Extend
+        UTmax += Extend
+        
+        self.axes_manager.init(UTmin, UTmax)
+
         if DoStack:
             markercolorbase = ['b', 'm', 'y', 'k', 'r']
             m=numpy.ceil(ndays*1.0/len(markercolorbase))
@@ -171,12 +185,6 @@ class SDAzElDisplay(common.SDInspectionDisplay):
             pl.gcf().sca(self.axes_manager.elevation_axes)
             for nd in range(ndays):
                 UTdata = TmpArr[nd]
-                if nd == 0:
-                    UTmin = min(UTdata)
-                    UTmax = max(UTdata)
-                else:
-                    if min(UTdata) < UTmin: UTmin = min(UTdata)
-                    if max(UTdata) > UTmax: UTmax = max(UTdata)
 
                 #date = qa.quantity(MJDArr[nd][0],'d')
                 date = qa.quantity(str(MJDArr[nd][0])+'d')
@@ -192,9 +200,6 @@ class SDAzElDisplay(common.SDInspectionDisplay):
                         plot_objects.append(
                             pl.axvline(x=modTime, linewidth=0.5, color='c',label='_nolegend_')
                             )
-            Extend = (UTmax - UTmin) * 0.05
-            UTmin -= Extend
-            UTmax += Extend
             if ELmin < 0: pl.axis([UTmin, UTmax, -90, 90])
             else: pl.axis([UTmin, UTmax, 0, 90])
 
@@ -216,6 +221,7 @@ class SDAzElDisplay(common.SDInspectionDisplay):
             pl.axis([UTmin, UTmax, 0, 360])
         else:
             UTdata = time_for_plot
+            self.axes_manager.init(UTmin, UTmax)
             pl.gcf().sca(self.axes_manager.elevation_axes)
             for Time in TGapTmp:
                 plot_objects.append(
@@ -224,11 +230,6 @@ class SDAzElDisplay(common.SDInspectionDisplay):
             plot_objects.extend(
                 pl.plot(UTdata, El, 'bo', markersize=2, markeredgecolor='b', markerfacecolor='b')
                 )
-            UTmin = UTdata.min()
-            UTmax = UTdata.max()
-            Extend = (UTmax - UTmin) * 0.05
-            UTmin -= Extend
-            UTmax += Extend
             if ELmin < 0:
                 pl.axis([UTmin, UTmax, -90, 90])
             else:

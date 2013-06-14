@@ -11,6 +11,8 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
 import pipeline.infrastructure.casatools as casatools
 
+from .utils import utc_locator
+
 LOG = infrastructure.get_logger(__name__)
 
 #ShowPlot = True
@@ -323,3 +325,11 @@ def draw_beam(axes, r, aspect, x_base, y_base, offset=1.0):
     pl.gcf().sca(axes)
     line = pl.plot(xy[:,0], xy[:,1], 'r-')
     return line[0]
+
+
+class TimeAxesManager(object):
+    def __init__(self):
+        self.locator = utc_locator()
+        
+    def init(self, start_time=None, end_time=None):
+        self.locator = utc_locator(start_time, end_time)

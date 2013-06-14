@@ -169,5 +169,12 @@ class CustomDateFormatter(DateFormatter):
 def utc_formatter(fmt='%H:%M'):
     return CustomDateFormatter(fmt)
 
-def utc_locator():
-    return MinuteLocator()
+def utc_locator(start_time=None, end_time=None):
+    if start_time is None or end_time is None:
+        return MinuteLocator()
+    else:
+        dt = abs(end_time - start_time) * 1440.0 # day -> minutes
+        #print dt
+        tick_interval = int(dt/10) + 1
+        #print tick_interval
+        return MinuteLocator(byminute=range(0,60,tick_interval))

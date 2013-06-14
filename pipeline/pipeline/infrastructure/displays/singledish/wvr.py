@@ -14,10 +14,11 @@ from . import utils as utils
 
 LOG = infrastructure.get_logger(__name__)
 
-class WvrAxesManager(object):
+class WvrAxesManager(common.TimeAxesManager):
     Colors = ['r', 'g', 'b', 'c']
     
     def __init__(self):
+        super(WvrAxesManager,self).__init__()
         self._axes = None
         self._xlabel = None
 
@@ -32,7 +33,7 @@ class WvrAxesManager(object):
         a.set_xlabel('Time (UT)')
         a.set_ylabel('WVR reading')
         a.set_title('WVR reading versus UTC')
-        a.xaxis.set_major_locator(utils.utc_locator())
+        a.xaxis.set_major_locator(self.locator)
         a.xaxis.set_major_formatter(utils.utc_formatter())
 
         # shift axes upward
@@ -103,6 +104,7 @@ class SDWvrDisplay(common.SDInspectionDisplay):
         
         # Plot WVR data
         plot_objects = []
+        self.axes_manager.init(xmin, xmax)
         Ax1 = self.axes_manager.axes
         colors = self.axes_manager.Colors
         lines = Ax1.get_lines()

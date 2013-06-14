@@ -13,8 +13,9 @@ import pipeline.infrastructure.renderer.logger as logger
 from . import common
 from . import utils
 
-class WeatherAxesManager(object):
+class WeatherAxesManager(common.TimeAxesManager):
     def __init__(self):
+        super(WeatherAxesManager,self).__init__()
         self._temp = None
         self._humi = None
         self._pres = None
@@ -52,7 +53,7 @@ class WeatherAxesManager(object):
         #a.set_title('Weather (Temperature & Humidity) versus MJD')
         #a.set_title('Weather (Temperature & Humidity) versus Time (UT)')
         a.set_title('Weather versus Time\nTop: Temperature & Humidity\nBottom: Pressure & Wind Speed')
-        a.xaxis.set_major_locator(utils.utc_locator())
+        a.xaxis.set_major_locator(self.locator)
         #a.xaxis.set_major_formatter(utils.utc_formatter())
         a.xaxis.set_major_formatter(NullFormatter())
         for tl in a.get_yticklabels():
@@ -73,7 +74,7 @@ class WeatherAxesManager(object):
 
         a = self._temp.twinx()
         a.set_ylabel('Humidity (%)', color='b')
-        a.xaxis.set_major_locator(utils.utc_locator())
+        a.xaxis.set_major_locator(self.locator)
         #a.xaxis.set_major_formatter(utils.utc_formatter())
         a.xaxis.set_major_formatter(NullFormatter())
         for tl in a.get_yticklabels():
@@ -87,7 +88,7 @@ class WeatherAxesManager(object):
         a.set_ylabel('Pressure (hPa)', color='r')
         #a.set_title('Weather (Pressure & Wind Speed) versus MJD')
         #a.set_title('Weather (Pressure & Wind Speed) versus Time (UT)')
-        a.xaxis.set_major_locator(utils.utc_locator())
+        a.xaxis.set_major_locator(self.locator)
         a.xaxis.set_major_formatter(utils.utc_formatter())
         for tl in a.get_yticklabels():
             tl.set_color('r')
@@ -107,7 +108,7 @@ class WeatherAxesManager(object):
 
         a = self._pres.twinx()
         a.set_ylabel('Wind Speed (m/s)', color='b')
-        a.xaxis.set_major_locator(utils.utc_locator())
+        a.xaxis.set_major_locator(self.locator)
         a.xaxis.set_major_formatter(utils.utc_formatter())
         for tl in a.get_yticklabels():
             tl.set_color('b')
@@ -181,6 +182,8 @@ class SDWeatherDisplay(common.SDInspectionDisplay):
         Windmax = WeatherDic['WIND_SPEED'].max() + 5
 
         plot_objects = []
+
+        self.axes_manager.init(MJDmin, MJDmax)
         
         # Plot Temperature (degC)
         Ax1 = self.axes_manager.axes_temperature
