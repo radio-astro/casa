@@ -46,7 +46,9 @@ namespace MSTransformations
 	    // cubic
 	    cubic,
 	    // cubic spline
-	    spline
+	    spline,
+	    // fft shift
+	    fftshift
 	  };
 }
 
@@ -140,6 +142,8 @@ void MSTransformDataHandler::initialize()
 	userPhaseCenter_p = False;
 	restFrequency_p = String("");
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
+	fftShift_p = 0;
+	fftShiftEnabled_p = False;
 
 	// Frequency specification parameters
 	mode_p = String("channel"); 					// Options are: channel, frequency, velocity
@@ -600,6 +604,11 @@ void MSTransformDataHandler::parseRefFrameTransParams(Record &configuration)
 		{
 			interpolationMethod_p = MSTransformations::spline;
 		}
+		else if (interpolationMethodPar_p.contains("fftshift"))
+		{
+			fftShiftEnabled_p = True;
+			interpolationMethod_p = MSTransformations::linear;
+		}
 		else
 		{
 			logger_p << LogIO::SEVERE << LogOrigin("MSTransformDataHandler", __FUNCTION__)
@@ -956,6 +965,26 @@ void MSTransformDataHandler::setup()
 			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 			<< "Requested column for weighted channel average WEIGHT_SPECTRUM not present in input MS" << LogIO::POST;
 		}
+	}
+
+	// Set Regridding kernel
+	if (fftShiftEnabled_p)
+	{
+		if (combinespws_p)
+		{
+			regridCoreComplex_p = &MSTransformDataHandler::interpol1Dfftshift;
+			regridCoreFloat_p = &MSTransformDataHandler::interpol1Dfftshift;
+		}
+		else
+		{
+			regridCoreComplex_p = &MSTransformDataHandler::fftshift;
+			regridCoreFloat_p = &MSTransformDataHandler::fftshift;
+		}
+	}
+	else
+	{
+		regridCoreComplex_p = &MSTransformDataHandler::interpol1D;
+		regridCoreFloat_p = &MSTransformDataHandler::interpol1D;
 	}
 
 	//// Determine the frequency transformation methods to use ////
@@ -2628,11 +2657,36 @@ void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 		}
 	}
 
-    for(uInt chan_idx=0; chan_idx<inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ.size(); chan_idx++)
-    {
-    	inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[chan_idx] =
-    	freqTransEngine_p(inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[chan_idx]).get(MSTransformations::Hz).getValue();
-    }
+	if (combinespws_p or !fftShiftEnabled_p)
+	{
+	    for(uInt chan_idx=0; chan_idx<inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ.size(); chan_idx++)
+	    {
+	    	inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[chan_idx] =
+	    	freqTransEngine_p(inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[chan_idx]).get(MSTransformations::Hz).getValue();
+	    }
+	}
+
+	if (fftShiftEnabled_p)
+	{
+		uInt centralChan = inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ.size()/2;
+		Double oldCentralFrequency = inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[centralChan];
+		Double newCentralFrequency = freqTransEngine_p(oldCentralFrequency).get(MSTransformations::Hz).getValue();
+		Double absoluteShift = newCentralFrequency - inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[centralChan];
+		fftShift_p = - absoluteShift / inputOutputSpwMap_p[spwIndex].second.TOTAL_BANDWIDTH;
+
+		/*
+		ostringstream oss;
+		oss.precision(20);
+		oss <<  "centralChan=" << centralChan << endl;
+		oss <<  "oldCentralFrequency=" << oldCentralFrequency << endl;
+		oss <<  "newCentralFrequency=" << newCentralFrequency << endl;
+		oss <<  "outputCentralFrequency=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[centralChan] << endl;
+		oss <<  "absoluteShift=" << absoluteShift << endl;
+		oss <<  "bandwidth=" << inputOutputSpwMap_p[spwIndex].second.TOTAL_BANDWIDTH << endl;
+		oss <<  "fftShift_p=" << fftShift_p << endl;
+		logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
+		*/
+	}
 
 	return;
 }
@@ -4311,16 +4365,13 @@ template <class T> void MSTransformDataHandler::regrid(	Int inputSpw,
 														Vector<T> &outputDataStripe,
 														Vector<Bool> &outputFlagsStripe)
 {
-    InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
-    											outputFlagsStripe, // Output flags
-    											inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Out chan freq
-    											inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // In chan freq
-    											inputDataStripe, // Input data
-    											inputFlagsStripe, // Input Flags
-    											interpolationMethod_p, // Interpolation method
-    											False, // A good data point has its flag set to False
-    											False // If False extrapolated data points are set flagged
-						    					);
+
+	regridCore(	inputSpw,
+				inputDataStripe,
+				inputFlagsStripe,
+				inputWeightsStripe,
+				outputDataStripe,
+				outputFlagsStripe);
 
     /*
 	ostringstream oss;
@@ -4333,6 +4384,129 @@ template <class T> void MSTransformDataHandler::regrid(	Int inputSpw,
 	oss << "outputFlagsStripe= " << outputFlagsStripe << endl;
 	logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
 	*/
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::regridCore(	Int inputSpw,
+											Vector<Complex> &inputDataStripe,
+											Vector<Bool> &inputFlagsStripe,
+											Vector<Float> &inputWeightsStripe,
+											Vector<Complex> &outputDataStripe,
+											Vector<Bool> &outputFlagsStripe)
+{
+
+	(*this.*regridCoreComplex_p)(	inputSpw,
+									inputDataStripe,
+									inputFlagsStripe,
+									inputWeightsStripe,
+									outputDataStripe,
+									outputFlagsStripe);
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::regridCore(	Int inputSpw,
+											Vector<Float> &inputDataStripe,
+											Vector<Bool> &inputFlagsStripe,
+											Vector<Float> &inputWeightsStripe,
+											Vector<Float> &outputDataStripe,
+											Vector<Bool> &outputFlagsStripe)
+{
+	(*this.*regridCoreFloat_p)(	inputSpw,
+								inputDataStripe,
+								inputFlagsStripe,
+								inputWeightsStripe,
+								outputDataStripe,
+								outputFlagsStripe);
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::fftshift(	Int inputSpw,
+										Vector<Complex> &inputDataStripe,
+										Vector<Bool> &inputFlagsStripe,
+										Vector<Float> &inputWeightsStripe,
+										Vector<Complex> &outputDataStripe,
+										Vector<Bool> &outputFlagsStripe)
+{
+	fFFTServer_p.fftshift(outputDataStripe,
+    					outputFlagsStripe,
+    					(const Vector<Complex>)inputDataStripe,
+    					(const Vector<Bool>)inputFlagsStripe,
+    					(const uInt)0, // In vectors axis 0 is the only dimension
+    					(const Double)fftShift_p,
+    					MSTransformations::False, // A good data point has its flag set to False
+    					MSTransformations::False);
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::fftshift(	Int inputSpw,
+										Vector<Float> &inputDataStripe,
+										Vector<Bool> &inputFlagsStripe,
+										Vector<Float> &inputWeightsStripe,
+										Vector<Float> &outputDataStripe,
+										Vector<Bool> &outputFlagsStripe)
+{
+    fFFTServer_p.fftshift(outputDataStripe,
+    					outputFlagsStripe,
+    					(const Vector<Float>)inputDataStripe,
+    					(const Vector<Bool>)inputFlagsStripe,
+    					(const uInt)1, // Axis 1 of the array is the polarization axis
+    					(const Double)fftShift_p,
+    					MSTransformations::False); // A good data point has its flag set to False
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::interpol1D(	Int inputSpw,
+															Vector<T> &inputDataStripe,
+															Vector<Bool> &inputFlagsStripe,
+															Vector<Float> &inputWeightsStripe,
+															Vector<T> &outputDataStripe,
+															Vector<Bool> &outputFlagsStripe)
+{
+	InterpolateArray1D<Double,T>::interpolate(	outputDataStripe, // Output data
+	    										outputFlagsStripe, // Output flags
+	    										inputOutputSpwMap_p[inputSpw].second.CHAN_FREQ, // Out chan freq
+	    										inputOutputSpwMap_p[inputSpw].first.CHAN_FREQ_aux, // In chan freq
+	    										inputDataStripe, // Input data
+	    										inputFlagsStripe, // Input Flags
+	    										interpolationMethod_p, // Interpolation method
+	    										False, // A good data point has its flag set to False
+	    										False // If False extrapolated data points are set flagged
+							    				);
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+template <class T> void MSTransformDataHandler::interpol1Dfftshift(	Int inputSpw,
+																	Vector<T> &inputDataStripe,
+																	Vector<Bool> &inputFlagsStripe,
+																	Vector<Float> &inputWeightsStripe,
+																	Vector<T> &outputDataStripe,
+																	Vector<Bool> &outputFlagsStripe)
+{
+	Vector<T> regriddedDataStripe(inputDataStripe.shape(),T());
+	Vector<Bool> regriddedFlagsStripe(inputFlagsStripe.shape(),MSTransformations::False);
+
+	interpol1D(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,regriddedDataStripe,regriddedFlagsStripe);
+
+	fftshift(inputSpw,regriddedDataStripe,regriddedFlagsStripe,inputWeightsStripe,outputDataStripe,outputFlagsStripe);
 
 	return;
 }

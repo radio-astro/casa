@@ -52,6 +52,9 @@
 // To apply hanning smooth
 #include <scimath/Mathematics/Smooth.h>
 
+// To apply fft shift
+#include <scimath/Mathematics/FFTServer.h>
+
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // MS Transform Framework utilities
@@ -662,12 +665,67 @@ protected:
 									Vector<Float> &inputWeightsStripe,
 									Vector<T> &outputDataStripe,
 									Vector<Bool> &outputFlagsStripe);
+
 	template <class T> void regrid(	Int inputSpw,
 									Vector<T> &inputDataStripe,
 									Vector<Bool> &inputFlagsStripe,
 									Vector<Float> &inputWeightsStripe,
 									Vector<T> &outputDataStripe,
 									Vector<Bool> &outputFlagsStripe);
+
+	void regridCore(	Int inputSpw,
+						Vector<Complex> &inputDataStripe,
+						Vector<Bool> &inputFlagsStripe,
+						Vector<Float> &inputWeightsStripe,
+						Vector<Complex> &outputDataStripe,
+						Vector<Bool> &outputFlagsStripe);
+	void regridCore(	Int inputSpw,
+						Vector<Float> &inputDataStripe,
+						Vector<Bool> &inputFlagsStripe,
+						Vector<Float> &inputWeightsStripe,
+						Vector<Float> &outputDataStripe,
+						Vector<Bool> &outputFlagsStripe);
+
+	void (casa::MSTransformDataHandler::*regridCoreComplex_p)(		Int inputSpw,
+																	Vector<Complex> &inputDataStripe,
+																	Vector<Bool> &inputFlagsStripe,
+																	Vector<Float> &inputWeightsStripe,
+																	Vector<Complex> &outputDataStripe,
+																	Vector<Bool> &outputFlagsStripe);
+	void (casa::MSTransformDataHandler::*regridCoreFloat_p)(	Int inputSpw,
+																Vector<Float> &inputDataStripe,
+																Vector<Bool> &inputFlagsStripe,
+																Vector<Float> &inputWeightsStripe,
+																Vector<Float> &outputDataStripe,
+																Vector<Bool> &outputFlagsStripe);
+
+	void fftshift(	Int inputSpw,
+					Vector<Complex> &inputDataStripe,
+					Vector<Bool> &inputFlagsStripe,
+					Vector<Float> &inputWeightsStripe,
+					Vector<Complex> &outputDataStripe,
+					Vector<Bool> &outputFlagsStripe);
+	void fftshift(	Int inputSpw,
+					Vector<Float> &inputDataStripe,
+					Vector<Bool> &inputFlagsStripe,
+					Vector<Float> &inputWeightsStripe,
+					Vector<Float> &outputDataStripe,
+					Vector<Bool> &outputFlagsStripe);
+
+	template <class T> void interpol1D(	Int inputSpw,
+										Vector<T> &inputDataStripe,
+										Vector<Bool> &inputFlagsStripe,
+										Vector<Float> &inputWeightsStripe,
+										Vector<T> &outputDataStripe,
+										Vector<Bool> &outputFlagsStripe);
+
+	template <class T> void interpol1Dfftshift(	Int inputSpw,
+												Vector<T> &inputDataStripe,
+												Vector<Bool> &inputFlagsStripe,
+												Vector<Float> &inputWeightsStripe,
+												Vector<T> &outputDataStripe,
+												Vector<Bool> &outputFlagsStripe);
+
 	template <class T> void averageSmooth(	Int inputSpw,
 											Vector<T> &inputDataStripe,
 											Vector<Bool> &inputFlagsStripe,
@@ -793,7 +851,9 @@ protected:
 	MDirection phaseCenter_p;
 	Bool userPhaseCenter_p;
 	MFrequency::Convert freqTransEngine_p;
-
+    FFTServer<Float, Complex> fFFTServer_p;
+    Bool fftShiftEnabled_p;
+	Double fftShift_p;
 	ROScalarMeasColumn<MEpoch> timeMeas_p;
 
 	// Logging
