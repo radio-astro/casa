@@ -209,7 +209,6 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 # ------------------------------------------------------------------------------
         edgespw  = basetask.property_with_default('edgespw', True)
         fracspw  = basetask.property_with_default('fracspw', 0.0625)
-        fracspwfps  = basetask.property_with_default('fracspwfps', 0.04837)
 
 	def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
 	    autocorr=None, shadow=None, scan=None, scannumber=None,
@@ -225,10 +224,22 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 		    edgespw=edgespw, fracspw=fracspw, online=online,
 		    fileonline=fileonline, template=template, filetemplate=filetemplate )
 
+                self.fracspwfps  = fracspwfps
 
-# ------------------------------------------------------------------------------
+        @property
+        def fracspwfps(self):
+                return self._fracspwfps
 
-# FlagDeterALMAInputs::to_casa_args
+        @fracspwfps.setter
+        def fracspwfps(self, value):
+                if value is None:
+                     value = 0.048387
+                self._fracspwfps = value
+
+
+# -----------------------------------------------------------------------------
+
+# ::to_casa_args
 
 # Description:
 # ------------
