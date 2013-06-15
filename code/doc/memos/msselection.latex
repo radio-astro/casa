@@ -7,6 +7,8 @@
 \usepackage{palatino}
 \usepackage{natbib}     % Package used for bib. citation
 \usepackage{txfonts}
+%\usepackage{MnSymbol,wasysym}
+\usepackage{marvosym}
 
 %\setlength{\textheight}{23.0cm}
 \setlength{\textwidth}{15.00cm}
@@ -27,7 +29,7 @@
 \begin{document}
 \title{MeasurementSet Selection Syntax}
 \author{S. Bhatnagar\\ NRAO, Socorro}
-\date{June 15, 2007\\{\small (Updated: Nov. 29, 2011)}}
+\date{June 15, 2007\\{\small (Updated: June 14, 2013)}}
 \maketitle
 \normalsize
 \markboth{MeasurementSet Selection Syntax}{S. Bhatnagar}
@@ -522,8 +524,8 @@ Since none of the following characters are used as part of the FIELD
 selection expressions, they can also be used as part of field names:
 ";", "\$", "\%", "!", "@", and "\#"\footnote{In case users loose their
   patience with the NRAO Observataion Prepration Tool (NRAO OPT) and
-  start giving field names like "@\#!\$\%;", to them we can say "...we
-  understand."}.
+  start giving field names like ``{\tt @\#!\$\%;}'', to them we can say ``...we
+  understand.'' {\bf \Smiley{}}}.
 
 Fields for which the entry in the NAME column of the the FIELD
 sub-table match the literal field name/regular expression/pattern are
@@ -1029,6 +1031,34 @@ and the possible location in the string of the erroneous
 character.  E.g.
 
  Spw Expression: No match found for "LBAN" (near char. 4 in string "LBAN")
+
+\subsection{Error Handlers}
+
+The normal (default) behavior of the parsers is to throw an exception
+when an error is encountered during parsing cycle or in the
+rule-resolution code.  However there are cases where instead of the
+throwing an exception, the errors must be collected as they occur and
+resolution of the error done at the end of the parsing cycle.  In the
+MSSelection module, this is achieved by handling the errors using an
+object of type {\tt MSSelectionErrorHanlder}\footnote{This is also the
+  base-class from which all specializations of the error handlers must
+  be derived.}.  The default error
+handler that comes pre-installed in the modules simply throws an
+exception of the appropriate kind when an error is encountered.
+
+To collect errors (and the error messages generated in the process) as
+they occur for later resolution, the client-side code can install a
+specialization of the error handler of type {\tt MSSelectionLogError},
+a derivative of the {\tt MSSelectionErrorHandler}, using the {\tt
+  MSSelection::setErrorHanlder()} method.  At the appropriate place in
+the code, a call to {\tt MSSelectionErrorHandler::reportError()} can be
+called to display the collected error messages as warning
+messages. This behavior can be changed in a specialization of the {\tt
+  MSSelectionErrorHandler} class by overloading the {\tt reportError}
+method.
+
+This mechanism of error handling is currently available for ANTENNA
+and STATE (a.k.a. ``intent selection'') selection expressions only.
 
 \newpage
 \section{Appendix: Examples}
