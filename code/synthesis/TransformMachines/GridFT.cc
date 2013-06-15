@@ -772,7 +772,6 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
 #ifdef HAS_OMP
   if(numthreads_p >0){
     nth=min(numthreads_p, omp_get_max_threads());
-    cerr << "numthreads_p " << numthreads_p << " " << omp_get_max_threads() << endl;
   }
   else{   
     nth= omp_get_max_threads();
@@ -780,7 +779,6 @@ void GridFT::put(const VisBuffer& vb, Int row, Bool dopsf,
   nth=min(4,nth);
 #endif
   
-  cerr << "nth " << nth << endl;
 
 #pragma omp parallel default(none) private(irow) firstprivate(visfreqstor, nvchan, scalestor, offsetstor, csamp, phasorstor, uvstor, locstor, offstor, dpstor, cinv, dow) shared(startRow, endRow) num_threads(nth)
   {
