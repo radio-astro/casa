@@ -33,7 +33,7 @@ LOG = logging.get_logger(__name__)
 
 # control generation of the weblog
 DISABLE_WEBLOG = False
-
+VISLIST_RESET_KEY = '_do_not_reset_vislist'
 
 def timestamp(method):
     def timed(self, *args, **kw):
@@ -142,10 +142,10 @@ class MandatoryInputsMixin(object):
             # get_ms throws a KeyError if the ms is not in the context 
             self.context.observing_run.get_ms(name=vis)
 
-        # _do_not_reset_vislist is present when vis is set by handle_multivis.
+        # VISLIST_RESET_KEY is present when vis is set by handle_multivis.
         # In this case we do not want to reset my_vislist, as handle_multivis is
         # setting vis to the individual measurement sets
-        if not hasattr(self, '_do_not_reset_vislist'):
+        if not hasattr(self, VISLIST_RESET_KEY):
             LOG.trace('Setting Inputs._my_vislist to %s' % vislist)
             self._my_vislist = vislist
         else:
@@ -304,7 +304,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         original = self.vis
         # tell vis not to reset my_vislist when setting vis to the individual
         # measurement sets
-        setattr(self, '_do_not_reset_vislist', True)
+        setattr(self, VISLIST_RESET_KEY, True)
         try:
             result = []
             for vis in original: 
@@ -313,7 +313,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
             return result
         finally:
             self.vis = original
-            delattr(self, '_do_not_reset_vislist')
+            delattr(self, VISLIST_RESET_KEY)
     
     def to_casa_args(self):
         """
@@ -370,7 +370,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         # property.   
         properties = {}
         for k, v in self.__dict__.items():
-            if k in ('_context', '_my_vislist'):
+            if k in ('_context', '_my_vislist', VISLIST_RESET_KEY):
                 continue
             v = getattr(self, k[1:]) if k[0] is '_' else v
             k = k[1:] if k[0] is '_' else k
@@ -850,7 +850,7 @@ class StandardTaskTemplate(api.Task):
             # function to invoke the task once per ms.
             if (self.is_multi_vis_task() is False 
                 and type(self.inputs.vis) is types.ListType):
-                return self._handle_multiple_vis(dry_run, **parameters)                
+                return self._handle_multiple_vis(dry_run, **parameters)
                 
             # We should not pass unused parameters to prepare(), so first
             # inspect the signature to find the names the arguments and then
@@ -920,11 +920,15 @@ class StandardTaskTemplate(api.Task):
                 refant_tail = self.inputs.refant[1:]
                 self.inputs.refant = refant_head
 
-        self.inputs.vis = head
-        results = ResultsList()
-        results.append(self.execute(dry_run=dry_run, **parameters))
-                
-        self.inputs.vis = tail
+        try:
+            setattr(self.inputs, VISLIST_RESET_KEY, True)
+            self.inputs.vis = head
+            results = ResultsList()
+            results.append(self.execute(dry_run=dry_run, **parameters))
+                    
+            self.inputs.vis = tail
+        finally:
+            delattr(self.inputs, VISLIST_RESET_KEY)
 
         for name, ht in split_properties.items():
             setattr(self.inputs, name, ht.tail)
