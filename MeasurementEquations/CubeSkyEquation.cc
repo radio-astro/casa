@@ -1091,6 +1091,8 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb, Bool dopsf,
   newFTM = isNewFTM(&(*ftm_p[0]));
   if (newFTM) newInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
   else        oldInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
+  
+  // newInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
 }
 
 
@@ -1272,11 +1274,13 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
       
   if (newFTM) newFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
   else        oldFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
+  
+  //newFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
   // if (!newFTM)
   //   tmpWBNormalizeImage(dopsf);
 }
 
-void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
+void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
 					  Int cubeSlice, Int nCubeSlice) 
 {
   //============================================================================
@@ -1317,7 +1321,8 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
 	  // Call finalizeToSky for this field.
 	  // -- calls getImage, getWeightImage, does Stokes conversion, and gS/ggS normalization
 	  //U// cout << "CubeSkyEqn :: calling new finalizeToSky with dopsf " << dopsf << endl;
-	  iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec );
+	  iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec, vb );
+	  
 	  // Clean up temporary reference images      
 	  for (Int taylor=0; taylor < ntaylors; ++taylor)
 	    {
@@ -1330,7 +1335,7 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
 	}// end of field
 
       //	  storeImg(String("stokesNormed1.im"), *(gSSliceVec[0]));
-      tmpWBNormalizeImage(dopsf,ft_->getPBLimit());
+      //tmpWBNormalizeImage(dopsf,ft_->getPBLimit());
       //	  storeImg(String("stokesNormed2.im"), *(gSSliceVec[0]));
       
       ft_=&(*ftm_p[0]);
@@ -1376,7 +1381,7 @@ void CubeSkyEquation::oldFinalizePutSlice(const VisBuffer& vb,  Bool /*dopsf*/,
 			    *ggSSlice);
   
 	(imPutSlice_p[model])->clearCache();
-	//imPutSlice_p[model]->tempClose();
+	//imPutSlice_p[model]->clearCache();
 	delete workSlice;
 	delete gSSlice;
 	delete ggSSlice;
@@ -1410,9 +1415,10 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 
        newFTM = isNewFTM(&(*ftm_p[0]));
       
-       if (newFTM) newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+       /*if (newFTM) newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
        else        oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
-
+       */
+       newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
   // if (!newFTM)
   //   tmpWBNormalizeImage(dopsf);
 }
@@ -1537,8 +1543,9 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
     /*slice=new TempImage<Complex> (TiledShape(sliceIm->shape(), 
       IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),sliceIm->shape()(2) , 1)), sliceIm->coordinates(), 0);
     */
-    slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), 0);
-    
+    slice=new PagedImage<Complex> (TiledShape(sliceIm->shape(), 
+					      IPosition(4, min(sliceIm->shape()(0), 1000), min(sliceIm->shape()(1), 1000), 1, 1)), sliceIm->coordinates(), File::newUniqueName(".", "Temp").absoluteName());
+    static_cast<PagedImage<Complex> &>((*slice)).table().markForDelete();
     /*
       slice= new PagedImage<Complex> (TiledShape(sliceIm->shape(), 
       IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),(sliceIm->shape()(2) , 1)), sliceIm->coordinates(), File::newUniqueName(".", "Temp").absoluteName());
@@ -1656,8 +1663,8 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
 void
 CubeSkyEquation::finalizeGetSlice(){
   //// place-holders.... there is nothing to do after degridding
-  //      for (Int model=0; model < sm_->numberOfModels(); ++model)
-  //        ftm_p[model]->finalizeToVis();
+        for (Int model=0; model < sm_->numberOfModels(); ++model)
+          ftm_p[model]->finalizeToVis();
 }
 
 Bool
