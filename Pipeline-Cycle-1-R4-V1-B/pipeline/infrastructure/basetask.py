@@ -131,14 +131,21 @@ class MandatoryInputsMixin(object):
 
     @vis.setter    
     def vis(self, value):
-        vislist = value if type(value) is types.ListType else [value,]
-        
+        if value is None:
+            vislist = [ms.name 
+                       for ms in self.context.observing_run.measurement_sets]
+        else:
+            vislist = value if type(value) is types.ListType else [value,]
+
         # check that the context holds each vis specified by the user
         for vis in vislist:
             # get_ms throws a KeyError if the ms is not in the context 
             self.context.observing_run.get_ms(name=vis)
 
-        if type(value) in (types.ListType, types.NoneType) or not hasattr(self, '_my_vislist'):
+        # _do_not_reset_vislist is present when vis is set by handle_multivis.
+        # In this case we do not want to reset my_vislist, as handle_multivis is
+        # setting vis to the individual measurement sets
+        if not hasattr(self, '_do_not_reset_vislist'):
             LOG.trace('Setting Inputs._my_vislist to %s' % vislist)
             self._my_vislist = vislist
         else:
@@ -295,6 +302,9 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         measurement set specified in the inputs.
         """
         original = self.vis
+        # tell vis not to reset my_vislist when setting vis to the individual
+        # measurement sets
+        setattr(self, '_do_not_reset_vislist', True)
         try:
             result = []
             for vis in original: 
@@ -303,6 +313,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
             return result
         finally:
             self.vis = original
+            delattr(self, '_do_not_reset_vislist')
     
     def to_casa_args(self):
         """
