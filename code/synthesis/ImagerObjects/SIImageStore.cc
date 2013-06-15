@@ -215,7 +215,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsResidual=residim;
     itsWeight=weightim;
     itsImage=restoredim;
-			       
+	itsImageShape=modelim->shape();
 			       
     itsValidity=((!itsPsf.null()) &&  (!itsModel.null()) &&   (!itsResidual.null()) &&  (!itsWeight.null()) &&
 		 (!itsImage.null()));
@@ -359,6 +359,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   CountedPtr<ImageInterface<Float> > SIImageStore::image()
   {
     return itsImage;
+  }
+  CountedPtr<ImageInterface<Complex> > SIImageStore::forwardGrid(){
+	  if(!itsForwardGrid.null() && (itsForwardGrid->shape() == itsModel->shape()))
+		  return itsForwardGrid;
+	  itsForwardGrid=new TempImage<Complex>(TiledShape(itsModel->shape(), tileShape()), itsModel->coordinates(), memoryBeforeLattice());
+	  return itsForwardGrid;
+  }
+  CountedPtr<ImageInterface<Complex> > SIImageStore::backwardGrid(){
+  	  if(!itsBackwardGrid.null() && (itsBackwardGrid->shape() == itsModel->shape()))
+  		  return itsBackwardGrid;
+  	  itsBackwardGrid=new TempImage<Complex>(TiledShape(itsModel->shape(), tileShape()), itsModel->coordinates(), memoryBeforeLattice());
+  	  return itsBackwardGrid;
+    }
+  Double SIImageStore::memoryBeforeLattice(){
+	  //Calculate how much memory to use per temporary images before disking
+	  return 1000.0;
+  }
+  IPosition SIImageStore::tileShape(){
+	  //Need to have settable stuff here or algorith to determine this
+	  return IPosition(4, 1000, 1000, 1, 1);
   }
 
   // TODO : Move to an image-wrapper class ? Same function exists in SynthesisDeconvolver.

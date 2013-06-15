@@ -64,9 +64,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapperBase","Construct a mapper",WHERE) );
 
-    itsFTMachine = ftmachine;
-    itsInverseFTMachine = ftmachine; // This should be a clone.
-
+    ft_p = ftmachine;
+    ift_p = ftmachine; // This should be a clone.
+    cft_p=NULL;
     itsImages = imagestore;
     itsImageShape = itsImages->getShape();
 

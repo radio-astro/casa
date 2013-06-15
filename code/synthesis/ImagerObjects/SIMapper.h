@@ -35,12 +35,15 @@
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
 
+#include <synthesis/MSVis/VisBufferImpl2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/ImagerObjects/SIMapperBase.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Forward declarations
+  class ComponentFTMachine;
+  class SkyJones;
 template<class T> class ImageInterface;
 
 // <summary> Class that contains functions needed for imager </summary>
@@ -51,16 +54,17 @@ template<class T> class ImageInterface;
   // Default constructor
 
   SIMapper( CountedPtr<SIImageStore>& imagestore,
-            CountedPtr<FTMachine>& ftmachine, 
+            CountedPtr<FTMachine>& ftm, CountedPtr<FTMachine>& iftm,
             Int mapperid);
-  ~SIMapper();
+  SIMapper(const ComponentList& cl, String& whichMachine, Int mapperid);
+  virtual ~SIMapper();
 
   ///// Major Cycle Functions
 
   // For KG : Need to add 'vb' coming into these functions.
-  void initializeGrid();
-  void grid();
-  void finalizeGrid();
+  void initializeGrid(const vi::VisBuffer2& vb);
+  void grid(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col);
+  void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
 
   void initializeDegrid();
   void degrid();
@@ -69,8 +73,11 @@ template<class T> class ImageInterface;
   Record getFTMRecord();
 
 protected:
-
-
+  Bool changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
+  CountedPtr<ComponentFTMachine> cft_p;
+  ComponentList cl_p;
+  SkyJones  *ejgrid_p, *ejdegrid_p;
+  vi::VisBufferImpl2 vb_p;
 
 };
 

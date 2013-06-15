@@ -71,6 +71,8 @@ class SIImageStore
   CountedPtr<ImageInterface<Float> > weight();
   CountedPtr<ImageInterface<Float> > model();
   CountedPtr<ImageInterface<Float> > image();
+  CountedPtr<ImageInterface<Complex> > forwardGrid();
+  CountedPtr<ImageInterface<Complex> > backwardGrid();
 
   void setModelImage( String modelname );
 
@@ -102,12 +104,14 @@ protected:
 // Can make this a utility function elsewhere...
 //nfacets = nx_facets*ny_facets...assumption has been made  nx_facets==ny_facets
 static SubImage<Float>* makeFacet(const Int facet, const Int nfacets, ImageInterface<Float>& image);
-
+Double memoryBeforeLattice();
+IPosition tileShape();
   ///////////////////// Member Objects
 
   IPosition itsImageShape;
   String itsImageName;
   CountedPtr<ImageInterface<Float> > itsPsf, itsModel, itsResidual, itsWeight, itsImage;
+  CountedPtr<ImageInterface<Complex> > itsForwardGrid, itsBackwardGrid;
   Bool itsWeightExists;
 
   Bool itsValidity;

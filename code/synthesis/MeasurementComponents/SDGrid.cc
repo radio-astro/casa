@@ -236,6 +236,8 @@ void SDGrid::init() {
   convType=downcase(convType);
   logIO() << "Convolution function : " << convType << LogIO::DEBUG1 << LogIO::POST;
   if(convType=="pb") {
+    //cerr << "CNVFunc " << convFunc << endl;
+
   }
   else if(convType=="box") {
     convSupport=(userSetSupport_p >= 0) ? userSetSupport_p : 0;
@@ -394,6 +396,7 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
   // Set up the convolution function: make the buffer plenty
   // big so that we can trim it back
   convSupport=max(128, sj_p->support(vb, coords));
+
   convSampling=100;
   convSize=convSampling*convSupport;
   
@@ -499,6 +502,7 @@ void SDGrid::findPBAsConvFunction(const ImageInterface<Complex>& image,
   convFunc.resize(convSize);
   convFunc=0.0;
   convFunc(Slice(0,cfLen-1,1))=trimConvFunc(Slice(0,cfLen-1,1));
+
 
 }
 
@@ -781,7 +785,8 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   const Matrix<Float> *imagingweight;
   imagingweight=&(vb.imagingWeight());
 
-
+  if(type==FTMachine::PSF || type==FTMachine::COVERAGE)
+    dopsf=True;
   if(dopsf) type=FTMachine::PSF;
 
   Cube<Complex> data;
@@ -789,12 +794,9 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
   Cube<Int> flags;
   Matrix<Float> elWeight;
   interpolateFrequencyTogrid(vb, *imagingweight,data, flags, elWeight, type);
-
-
   Bool iswgtCopy;
   const Float *wgtStorage;
   wgtStorage=elWeight.getStorage(iswgtCopy);
-
   Bool isCopy;
   const Complex *datStorage=0;
   if(!dopsf)
@@ -843,7 +845,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
 	{
 	  Bool del;
 	  //	  IPosition s(data.shape());
-	  const IPosition& fs=data.shape();
+	  const IPosition& fs=flags.shape();
 	  std::vector<Int> s(fs.begin(), fs.end());
 
 	  ggridsd(actualPos.getStorage(del),
@@ -884,7 +886,7 @@ void SDGrid::put(const VisBuffer& vb, Int row, Bool dopsf,
     {
       Bool del;
       //      IPosition s(data.shape());
-      const IPosition& fs=data.shape();
+      const IPosition& fs=flags.shape();
       std::vector<Int> s(fs.begin(), fs.end());
 
       ggridsd(xyPositions.getStorage(del),
@@ -1074,6 +1076,16 @@ ImageInterface<Complex>& SDGrid::getImage(Matrix<Float>& weights,
 
   // If the weights are all zero then we cannot normalize
   // otherwise we don't care.
+  ///////////////////////
+  /*{
+  PagedImage<Float> thisScreen(lattice->shape(), image->coordinates(), "TheData");
+  LatticeExpr<Float> le(abs(*lattice));
+  thisScreen.copyData(le);
+  PagedImage<Float> thisScreen2(lattice->shape(), image->coordinates(), "TheWeight");
+  LatticeExpr<Float> le2(abs(*wLattice));
+  thisScreen2.copyData(le2);
+  }*/
+  /////////////////////
   if(normalize) {
     if(max(weights)==0.0) {
       logIO() << LogIO::SEVERE << "No useful data in SDGrid: weights all zero"

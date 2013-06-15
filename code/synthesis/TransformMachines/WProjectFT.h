@@ -161,6 +161,8 @@ public:
 
   ~WProjectFT();
 
+  //clone to FTMachine pointer
+  virtual FTMachine* cloneFTM();
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
   void initializeToVis(ImageInterface<Complex>& image,
