@@ -194,6 +194,10 @@ WProjectFT& WProjectFT::operator=(const WProjectFT& other)
   operator=(other);
 }
 
+FTMachine* WProjectFT::cloneFTM(){
+  return new WProjectFT(*this);
+}
+
 //----------------------------------------------------------------------
 void WProjectFT::init() {
   /*  if((padding_p*padding_p*image->shape().product())>cachesize) {

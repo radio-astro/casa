@@ -71,7 +71,7 @@ class SIMapperBase
 
   String getImageName();
 
-  Bool releaseImageLocks();
+  virtual Bool releaseImageLocks();
 
 protected:
   //////////////////// Member Functions
@@ -80,13 +80,15 @@ protected:
   
   ///////////////////// Member Objects
 
-  CountedPtr<FTMachine> itsFTMachine, itsInverseFTMachine; 
+  CountedPtr<FTMachine> ft_p, ift_p; 
 
   CountedPtr<CoordinateSystem> itsCoordSys;
   IPosition itsImageShape;
 
   CountedPtr<SIImageStore> itsImages;
 
+  CountedPtr<ComponentFTMachine> cft_p;
+  ComponentList cl_p;
   /*
   String itsImageName;
   CountedPtr<PagedImage<Float> > itsPsf, itsModel, itsResidual, itsWeight;

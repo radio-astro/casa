@@ -85,7 +85,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			   freqInterpMethod_p(InterpolateArray1D<Double,Complex>::nearestNeighbour), 
 			   pointingDirCol_p("DIRECTION"),
 			   cfStokes_p(), cfCache_p(), cfs_p(), cfwts_p(), canComputeResiduals_p(False), 
-                           numthreads_p(-1), pbLimit_p(0.05),cmplxImage_p(NULL)
+                           numthreads_p(-1), pbLimit_p(0.05),sj_p(0), cmplxImage_p(NULL)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -104,7 +104,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     pointingDirCol_p("DIRECTION"),
     cfStokes_p(), cfCache_p(cfcache), cfs_p(), cfwts_p(),
     convFuncCtor_p(cf),canComputeResiduals_p(False), toVis_p(True), numthreads_p(-1), 
-    pbLimit_p(0.05),cmplxImage_p(NULL)
+    pbLimit_p(0.05),sj_p(0), cmplxImage_p(NULL)
   {
     spectralCoord_p=SpectralCoordinate();
     isIOnly=False;
@@ -190,6 +190,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       cmplxImage_p=other.cmplxImage_p;
       numthreads_p=other.numthreads_p;
       pbLimit_p=other.pbLimit_p;
+      sj_p.resize();
+      sj_p=other.sj_p;
     };
     return *this;
   };
@@ -1014,6 +1016,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     outRecord.define("tovis", toVis_p);
     outRecord.define("sumweight", sumWeight);
     outRecord.define("numthreads", numthreads_p);
+    //Need to serialized sj_p...the user has to set the sj_p after recovering from record
     return True;
   };
   
@@ -1158,6 +1161,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Bool useCorrected= !(vi.msColumns().correctedData().isNull());
     if((type==FTMachine::CORRECTED) && (!useCorrected))
       type=FTMachine::OBSERVED;
+    cerr << "Type0 " << type << endl;
     // Loop over the visibilities, putting VisBuffers
     for (vi.originChunks();vi.moreChunks();vi.nextChunk()) {
       for (vi.origin(); vi.more(); vi++) {
@@ -1176,15 +1180,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  break;
 	case FTMachine::PSF:
 	  vb.visCube()=Complex(1.0,0.0);
-	  put(vb, -1, True);
+	  put(vb, -1, True, FTMachine::PSF);
 	  break;
 	case FTMachine::COVERAGE:
 	  vb.visCube()=Complex(1.0);
-	  put(vb, -1, True);
+	  put(vb, -1, True, FTMachine::COVERAGE);
 	  break;
 	case FTMachine::OBSERVED:
 	default:
-	  put(vb, -1, False);
+	  put(vb, -1, False, FTMachine::OBSERVED);
 	  break;
 	}
       }
@@ -1615,7 +1619,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Convert from Stokes planes to Correlation planes
     stokesToCorrelation(*(modelImageVec[0]), *(compImageVec[0]));
-
+    if(sj_p.nelements() >0 ){
+      for (uInt k=0; k < sj_p.nelements(); ++k){
+	(sj_p(k))->apply(*(compImageVec[0]), *(compImageVec[0]), vb, 0, True);
+      }
+    }
     // Call initializeToVis
     initializeToVis(*(compImageVec[0]), vb); // Pure virtual
     
@@ -1627,12 +1635,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   void FTMachine::initializeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,
 				  Block<Matrix<Float> >& weightsVec, 
 				  const VisBuffer& vb, 
-				  const Bool dopsf)
+				  const Bool /*dopsf*/)
     
   {
     AlwaysAssert(compImageVec.nelements()==1, AipsError);
     AlwaysAssert(weightsVec.nelements()==1, AipsError);
-    (void)dopsf;
+    
     initializeToSky(*(compImageVec[0]) , weightsVec[0] , vb);
   };
   
@@ -1642,7 +1650,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				PtrBlock<SubImage<Float> *>& weightImageVec, 
 				PtrBlock<SubImage<Float> *>& fluxScaleVec, 
 				Bool dopsf, 
-				Block<Matrix<Float> >& weightsVec)
+				Block<Matrix<Float> >& weightsVec, const VisBuffer& vb)
   {
     // Call default finalizeToSky
     finalizeToSky();  // Pure virtual
@@ -1656,12 +1664,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     // Get the gridded image
     (*(compImageVec[0])).copyData(getImage(weightsVec[0],False)); // getImage is Pure virtual
+    Bool doSky=(sj_p.nelements()>0) && (!dopsf);
+    TempImage<Float> work;
     // Convert from correlation (complex) to Stokes (float)
-    correlationToStokes(*(compImageVec[0]), *(resImageVec[0]), dopsf);
+    if (doSky){
+      work=TempImage<Float>((compImageVec[0])->shape(), (compImageVec[0])->coordinates());
+      work.set(0);
+      for (uInt k=0; k < sj_p.nelements(); ++k){
+	(sj_p(k))->apply(*(compImageVec[0]), *(compImageVec[0]), vb, 0, False);
+      }
+      correlationToStokes(*(compImageVec[0]), work , dopsf);
+      LatticeExpr<Float> le((*(resImageVec[0]))+work);
+      (resImageVec[0])->copyData(le);
+      getWeightImage(work , weightsVec[0]);
+      for (uInt k=0; k < sj_p.nelements(); ++k){
+	(sj_p(k))->applySquare(work, work, vb, 0);
+      }
+      (weightImageVec[0])->copyData((LatticeExpr<Float>)((*(weightImageVec[0]))+work)) ;	
+    }
+    else{
+      correlationToStokes(*(compImageVec[0]), *(resImageVec[0]), dopsf);
+      getWeightImage((*(weightImageVec[0])), weightsVec[0]); // Pure virtual
+    }
     
-    // Get the sum of weights and sensitivity Image
-    getWeightImage(*(weightImageVec[0]), weightsVec[0]); // Pure virtual
-
     // ForSB // 
     // For FTM, normalizeImage should get called with normtype=0 (only sumwt normalization)
     // For AWP, call getWeightImage, and then normalizeImage with normtype=2 (sumwt and pb)
@@ -1672,10 +1697,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // storeImg(String("wt.im"),*(weightImageVec[0]));
     // storeImg(String("stokes.im"),*(resImageVec[0]));
 
+    cerr << "pblimit " << pbLimit_p << endl;
     normalizeImage( *(resImageVec[0]) , weightsVec[0], *(weightImageVec[0]) , dopsf, 
     		    //		    (Float)1e-03,
     		    (Float)pbLimit_p,
-    		    (Int)0); // Normalize by sum-of-wts.
+    		    doSky? (Int)6 : (Int)0); // Normalize by sum-of-wts.
 		    // (Int)2); // Normalize by (sum-of-wts*avgPB)
 
 
@@ -1684,6 +1710,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return;
   };
   
+  void FTMachine::setSkyJones(Vector<SkyJones *>& sj){
+    sj_p.resize();
+    sj_p=sj;
+  }
   // Convert complex correlation planes to float Stokes planes
   void FTMachine::correlationToStokes(ImageInterface<Complex>& compImage, 
 				      ImageInterface<Float>& resImage, 
@@ -1806,7 +1836,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   	    case 5: // MULTIPLY by sqrt of sensitivityImage 
 	      subOutput.copyData( (LatticeExpr<Float>) (subSkyImage * sqrt(subSensitivityImage)) );
 	      break;
-	      
+
+	    case 6: // divide by non normalized sensitivity image
+	      {
+		Float elpblimit=max( subSensitivityImage).getFloat() * pblimit;
+		subOutput.copyData( (LatticeExpr<Float>) 
+				    (iif(subSensitivityImage > (elpblimit), 
+					 ((dopsf?1.0:-1.0)*subSkyImage/(subSensitivityImage)),
+					 0.0)));
+	      }
+	      break;
 	    default:
 	      throw(AipsError("Unrecognized norm-type in FTM::normalizeImage : "+String::toString(normtype)));
 	    }

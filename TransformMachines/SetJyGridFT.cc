@@ -155,6 +155,9 @@ SetJyGridFT& SetJyGridFT::operator=(const SetJyGridFT& other)
   return *this;
 }
 
+FTMachine* SetJyGridFT::cloneFTM(){
+    return new SetJyGridFT(*this);
+}
 void SetJyGridFT::setScale(const Vector<Double>& freq, const Vector<Double>& scale){
   freqscale_p.resize();
   freqscale_p=freq;

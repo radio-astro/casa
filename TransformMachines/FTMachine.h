@@ -61,6 +61,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class ROVisibilityIterator;
   class UVWMachine;
   class VisModelData;
+  class SkyJones;
 
 // <summary> defines interface for the Fourier Transform Machine </summary>
 
@@ -138,6 +139,10 @@ public:
 
   virtual ~FTMachine();
   
+
+  //clone copy
+  //should make it pure virtual forcing every ftm to have a cloner
+  virtual FTMachine* cloneFTM(){return NULL;};
   // Initialize transform to Visibility plane
   virtual void initializeToVis(ImageInterface<Complex>& image, const VisBuffer& vb) = 0;
 
@@ -165,7 +170,7 @@ public:
   virtual void initializeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec,
 			       Block<Matrix<Float> >& weightsVec, 
 			       const VisBuffer& vb, 
-			       const Bool dopsf);
+			       const Bool dopsf=False);
 
   //-------------------------------------------------------------------------------------
   // Finalize transform to Sky plane
@@ -179,7 +184,7 @@ public:
 			     PtrBlock<SubImage<Float> *>& weightImageVec, 
 			     PtrBlock<SubImage<Float> *>& fluxScaleVec, 
 			     Bool dopsf, 
-			     Block<Matrix<Float> >& weightsVec);
+			     Block<Matrix<Float> >& weightsVec, const VisBuffer& vb);
 
   //-------------------------------------------------------------------------------------
 
@@ -246,6 +251,11 @@ public:
 			 ImageInterface<Complex>& image,
 			 Matrix<Float>& weight);
 
+  // Set SkyJones if image domain corrections /applycation are needed
+  // To reset the the FTMachine for stopping image based correction/applycation
+  // set in a Vector of size 0.
+  // The pointers have to be handled by the caller ..no delete happening here
+  virtual void setSkyJones(Vector<SkyJones *>& sj);
   //-------------------------------------------------------------------------------------
 
   // Rotate the uvw from the observed phase center to the
@@ -453,6 +463,7 @@ protected:
   Int numthreads_p;
 
   Float pbLimit_p;
+  Vector<SkyJones *> sj_p;
 
  private:
   //Some temporary wasteful function for swapping axes because we don't 
