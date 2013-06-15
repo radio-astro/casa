@@ -193,19 +193,16 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
     def filetemplate(self):
         if type(self.vis) is types.ListType:
             return self._handle_multiple_vis('filetemplate')
-
+        
         if not self._filetemplate:
             vis_root = os.path.splitext(self.vis)[0]
             return vis_root + '_flagtemplate.txt'
 
-        if not isinstance(self.vis, list):
-	    if not hasattr (self, '_my_vislist'):
-	        idx = 0
-	    else:
-                idx = self._my_vislist.index(self.vis)
+        if type(self._filetemplate) is types.ListType:
+            idx = self._my_vislist.index(self.vis)
             return self._filetemplate[idx]
-        
-        return self._filetemplate[0]
+
+        return self._filetemplate
 
     #Force filetemplate to be a list.
     @filetemplate.setter
