@@ -397,26 +397,34 @@ class FluxcalFlag(basetask.StandardTaskTemplate):
         flagcmds = []; flagcmd = ''
 	prev_fieldname = None; prev_spwid = None
 	for line in fluxcal_lines:
+
+	    # Field or spw has changed so start a new command
 	    if line.fieldname != prev_fieldname or line.spwid != prev_spwid:
+
+		# Write out the previous command
 		if flagcmd != '':
 		    flagcmds.append(flagcmd +
 		        ' reason="Flux_calibrator_atmospheric_line"')
-		    flagcmd = ''
+
+		# Initialize the command
+		flagcmd = ''
 		if flagall and flagstats[line.fieldname][line.spwid] > threshold:
 		    pass
-	            #flagcmd = 'mode=manual field=%s intent=%s spw=%d' % \
-	                #(line.fieldname, ','.join(obsmodes), line.spwid)
 		else:
 	            flagcmd = 'mode=manual field=%s intent=%s spw=%d:%d~%d' % \
 	                (line.fieldname, ','.join(obsmodes), line.spwid,
 		        line.chanrange[0], line.chanrange[1])
+
+	    # Append a new channel range if appropriate.
+	    elif flagall and flagstats[line.fieldname][line.spwid] > threshold:
+	        pass
 	    else:
 	        flagcmd = flagcmd + ';' + '%d~%d' % \
 		    (line.chanrange[0], line.chanrange[1])
 	    prev_fieldname = line.fieldname
 	    prev_spwid = line.spwid
 
-	# Add last command
+	# Finish off last command
         if flagcmd != '':
 	    flagcmds.append(flagcmd + ' reason="Flux_calibrator_atmospheric_line"')
 		    
