@@ -109,6 +109,8 @@
 <xsl:apply-templates select="aps:inout"/>
 <xsl:apply-templates select="aps:input"/>
 <xsl:apply-templates select="aps:returns"/>
+<xsl:apply-templates select="aps:description"/>
+<xsl:apply-templates select="aps:example"/>
 </xsl:element>
 <xsl:text>
 </xsl:text>
@@ -125,6 +127,22 @@
 <xsl:template match="aps:inout">
 <xsl:element name="inout">
 <xsl:call-template name="doparam"><xsl:with-param name="prefix"></xsl:with-param></xsl:call-template>
+</xsl:element>
+<xsl:text>
+</xsl:text>
+</xsl:template>
+
+<xsl:template match="aps:description">
+<xsl:element name="description">
+	<xsl:value-of select="."/>
+</xsl:element>
+<xsl:text>
+</xsl:text>
+</xsl:template>
+
+<xsl:template match="aps:example">
+<xsl:element name="example">
+	<xsl:value-of select="."/>
 </xsl:element>
 <xsl:text>
 </xsl:text>

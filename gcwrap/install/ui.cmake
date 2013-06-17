@@ -120,7 +120,7 @@ macro( casa_add_tasks module _target )
 
   install( 
     FILES ${_xmls}
-    DESTINATION ${casaroot}/share/xml
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/xml
     )
 
   install( 
@@ -214,7 +214,8 @@ macro( casa_add_tools out_swig out_sources out_py )
       )
     add_custom_command(
       OUTPUT ${_swigi}
-      COMMAND ${SAXON} ${_out_xml} ${_xsl3} > ${_swigi}_tmp2
+      COMMAND sed -e \"s/\\\\\\\\r/r/g\" ${_out_xml} > ${_swigi}_tmp
+      COMMAND ${SAXON} ${_swigi}_tmp ${_xsl3} > ${_swigi}_tmp2
       COMMAND sed -e \"s/<?xml version=.*//\" ${_swigi}_tmp2 > ${_swigi}
       DEPENDS ${_xml} ${_swigh} ${_out_xml} ${_xsl3}
       )
