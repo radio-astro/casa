@@ -101,7 +101,7 @@ except:
 import utility.logs as logs
 
 def rms(data):
-    return numpy.sqrt(numpy.sum(data**2 / len(data)))
+    return numpy.sqrt(numpy.sum(data**2) / len(data))
 
 # ------------------------------------------------------------------------------
 # Subsystem user function and ICD
