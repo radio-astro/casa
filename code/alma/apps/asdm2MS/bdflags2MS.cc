@@ -572,14 +572,15 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
     bool cellFlagged = false;
     bool flagged = false;
 
-
-
     const char* p = values_p;
     Matrix<Bool> flagCell(IPosition(2, numCorr, numChan));
+    flag.get((uInt)iRow0, flagCell);
+    
     bool allSet = true;
     for (uInt i = 0;  i < numChan; i++)
       for (uInt j = 0; j < numCorr; j++) {
-	flagCell(j, i) = flagged = *p != 0;
+	flagged = (*p & 0x0000FFFF) != 0;
+	flagCell(j, i) = flagCell(j, i) || flagged;    // Let's OR the content of flag with what's found in the BDF flags.
 	cellFlagged = cellFlagged || flagged;
 	allSet = allSet && flagged;
 	p++;
@@ -588,7 +589,7 @@ pair<uInt, uInt> put(MSFlagAccumulator<char>& accumulator,
     if (cellFlagged) numFlaggedRows ++;
     
     flag.put((uInt)iRow0, flagCell);
-    flagRow.put((uInt)iRow0, allSet);
+    flagRow.put((uInt)iRow0, flagRow.get((uInt)iRow0) || allSet);  // Let's OR the content of flagRow with what's found in the BDF flags.
     iRow0++;
   }
 
@@ -664,7 +665,7 @@ int main (int argC, char * argV[]) {
   po::variables_map vm;
 
   try {
-    string flagcondDoc = "specifies the list of flagging conditions to consider. The list must be a comma separated list of valid flagging conditions names. Note that the flag names can be shortened as long as there is no ambiguity (i.e. \"FFT, SI\" is valid and will be interpreted as \"FFT_OVERFLOW , SIGMA_OVERFLOW\"). If no flagging condition is provided the application exits immediately. A flag is set at the appropriate location in the MS Main row whenever at least one of the flagging conditions present in the option --flagcond is read at the relevant location in the relevant BDF file. The flagging conditions are :\n" + abbrevList + "\n";
+    string flagcondDoc = "specifies the list of flagging conditions to consider. The list must be a white space separated list of valid flagging conditions names. Note that the flag names can be shortened as long as there is no ambiguity (i.e. \"FFT, SI\" is valid and will be interpreted as \"FFT_OVERFLOW , SIGMA_OVERFLOW\"). If no flagging condition is provided the application exits immediately. A flag is set at the appropriate location in the MS Main row whenever at least one of the flagging conditions present in the option --flagcond is read at the relevant location in the relevant BDF file. The flagging conditions are :\n" + abbrevList + "\n\n. Note that the special value \"ALL\" to set all the flagging conditions.";
     po::options_description generic("Generates MS Flag information from the flagging conditions contained in the BDF files of an ASDM dataset.\n\n"
 				    "Usage : \n" + appName + "[options] asdm-directory ms-directory \n\n"
 				    "Command parameters : \n"
@@ -898,6 +899,7 @@ int main (int argC, char * argV[]) {
     selected_eb_scan_m = all_eb_scan_m;
     scansOptionInfo = "All scans of all exec blocks will be processed \n";
   }
+  infostream.str("");
   infostream << scansOptionInfo;
   info(infostream.str());
 
