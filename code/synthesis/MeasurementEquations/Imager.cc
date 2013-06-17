@@ -1890,11 +1890,12 @@ Bool Imager::setoptions(const String& ftmachine, const Long cache, const Int til
   wbAWP_p=wbawp;
   conjBeams_p=conjBeams;
   freqInterpMethod_p=interpMeth;
+  imageTileVol_p=imageTileVol;
   if(imageTileVol_p <= 0){
     avoidTempLatt_p=True;
     imageTileVol_p=-1*imageTileVol_p;
   }
-  imageTileVol_p=imageTileVol;
+ 
   
   singlePrec_p=singprec;
 
@@ -4838,8 +4839,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 
           String fldidstr = String::toString(fldid); 
           // use field id due to possible MSSelection bug for handing field name with blanks
-          //VisModelData::clearModel(*mssel_p, fieldName, spwstring);
-	  cerr << "field " << fldidstr << "  spw " << spwstring << endl;
+          //VisModelData::clearModel(*mssel_p, fieldName, spwstring)
           VisModelData::clearModel(*mssel_p, fldidstr, spwstring);
         }
         sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw],

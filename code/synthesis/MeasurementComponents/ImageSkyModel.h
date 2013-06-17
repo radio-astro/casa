@@ -258,7 +258,8 @@ public:
 
   //try to make templattices use memory if possible
   //if set to false then always use disk
-  void setMemoryUse(Bool useMem=False);
+  virtual void setMemoryUse(Bool useMem=False);
+  virtual Bool getMemoryUse(){return useMem_p;};
   //Set templattice tile vol  in pixels
   void setTileVol(const Int tileVol=1000000);
 protected:

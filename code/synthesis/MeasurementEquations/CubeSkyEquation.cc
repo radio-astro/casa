@@ -1335,7 +1335,7 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
 	}// end of field
 
       //	  storeImg(String("stokesNormed1.im"), *(gSSliceVec[0]));
-      //tmpWBNormalizeImage(dopsf,ft_->getPBLimit());
+      tmpWBNormalizeImage(dopsf,ft_->getPBLimit());
       //	  storeImg(String("stokesNormed2.im"), *(gSSliceVec[0]));
       
       ft_=&(*ftm_p[0]);
@@ -1415,10 +1415,10 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
 
        newFTM = isNewFTM(&(*ftm_p[0]));
       
-       /*if (newFTM) newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+       if (newFTM) newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
        else        oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
-       */
-       newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
+       
+       //newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
   // if (!newFTM)
   //   tmpWBNormalizeImage(dopsf);
 }
@@ -1539,17 +1539,12 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   //  cerr << "SliceCube: " << beginChannel << " " << endChannel << endl;
   if(typeOfSlice==0){    
     
-    //UNUSED: Double memoryMB=HostInfo::memoryFree()/1024.0/(5.0*(sm_->numberOfModels()));
-    /*slice=new TempImage<Complex> (TiledShape(sliceIm->shape(), 
-      IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),sliceIm->shape()(2) , 1)), sliceIm->coordinates(), 0);
-    */
-    slice=new PagedImage<Complex> (TiledShape(sliceIm->shape(), 
-					      IPosition(4, min(sliceIm->shape()(0), 1000), min(sliceIm->shape()(1), 1000), 1, 1)), sliceIm->coordinates(), File::newUniqueName(".", "Temp").absoluteName());
-    static_cast<PagedImage<Complex> &>((*slice)).table().markForDelete();
-    /*
-      slice= new PagedImage<Complex> (TiledShape(sliceIm->shape(), 
-      IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),(sliceIm->shape()(2) , 1)), sliceIm->coordinates(), File::newUniqueName(".", "Temp").absoluteName());
-    */
+    Double memoryMB=HostInfo::memoryFree()/1024.0/(5.0*(sm_->numberOfModels()));
+    cerr << "CS: Memory MB " << memoryMB << endl;
+    slice=new TempImage<Complex> (TiledShape(sliceIm->shape(), 
+					     IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),sliceIm->shape()(2) , 1)), sliceIm->coordinates(), sm_->getMemoryUse() ? memoryMB: 0);
+    
+ 
     //slice->setMaximumCacheSize((sliceIm->shape()[0])*(sliceIm->shape()[1])/4);
     slice->setMaximumCacheSize(sliceIm->shape().product());
     //slice.copyData(sliceIm);
