@@ -108,6 +108,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return "label";
 		}
 
+		std::string errorMessage( ) const { return ""; }
+
 	protected:
 
 		// (Required) copy constructor.

@@ -154,6 +154,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		const static String WEDGE_PREFIX;
 
+		std::string errorMessage( ) const { return ""; }
+
 	protected:
 
 

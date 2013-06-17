@@ -32,6 +32,7 @@ namespace casa {
 	namespace viewer {
 		struct internal_error : public std::exception {
 			internal_error( const char *err="internal viewer inconsistency" ) : str(err) { }
+			internal_error( const std::string &err ) : str(err) { }
 			~internal_error( ) throw( ) { }
 			const char* what() const throw() {
 				return str.c_str( );

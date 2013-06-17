@@ -329,6 +329,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Bool worldToLin(Vector<Double>& lin,
 		                        const Vector<Double>& world) = 0;
 
+		virtual std::string errorMessage( ) const = 0;
+
 		// Format a string containing coordinate information at
 		// the given world coordinate
 		virtual String showPosition(const Vector<Double> &world,

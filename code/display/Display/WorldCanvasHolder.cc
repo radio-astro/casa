@@ -606,15 +606,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 // this should be handled by the WC's own CS.  Now done exclusively by
 // the CS master DD, which should be equivalent in most cases).
 
-	Bool WorldCanvasHolder::linToWorld(Vector<Double> &world,
-	                                   const Vector<Double> &lin) {
-		return (worldCanvas()->csMaster()  != 0) ?  worldCanvas()->csMaster()->linToWorld(world, lin) : False;
+	Bool WorldCanvasHolder::linToWorld(Vector<Double> &world, const Vector<Double> &lin) {
+		if ( worldCanvas( )->csMaster( )  != 0 ) {
+			Bool result = worldCanvas( )->csMaster( )->linToWorld(world, lin);
+			if ( result == False ) {
+				error_string = worldCanvas( )->csMaster( )->errorMessage( );
+			}
+			return result;
+		} else
+			error_string = "no coordinate system";
+
+		return False;
 	}
 
 
-	Bool WorldCanvasHolder::worldToLin(Vector<Double> &lin,
-	                                   const Vector<Double> &world) {
-		return (worldCanvas()->csMaster() != 0) ? worldCanvas()->csMaster()->worldToLin(lin, world) : False;
+	Bool WorldCanvasHolder::worldToLin(Vector<Double> &lin, const Vector<Double> &world) {
+		if ( worldCanvas( )->csMaster( ) != 0 ) {
+			Bool result = worldCanvas( )->csMaster( )->worldToLin(lin, world);
+			if ( result == False ) {
+				error_string = worldCanvas( )->csMaster( )->errorMessage( );
+			}
+			return result;
+		} else
+			error_string = "no coordinate system";
+
+		return False;
 	}
 
 

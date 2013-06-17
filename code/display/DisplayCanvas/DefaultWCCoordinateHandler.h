@@ -95,6 +95,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual Vector<String> worldAxisUnits() const;
 		// </group>
 
+		std::string errorMessage( ) const { return ""; }
+
 		// Destructor
 		virtual ~DefaultWCCoordinateHandler();
 

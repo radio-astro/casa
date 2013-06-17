@@ -119,6 +119,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                        Vector<Bool> & failures,
 		                        const Matrix<Double> & world);
 
+		virtual std::string errorMessage( ) const = 0;
+
 		// Return the number of axes in the world coordinates
 		virtual uInt nWorldAxes() const = 0;
 

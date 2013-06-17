@@ -604,7 +604,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 	Bool WorldCanvas::worldToLin(Vector<Double> &lin,
 	                             const Vector<Double> &world) {
-		return itsCoordinateHandler->worldToLin(lin, world);
+		error_string = "";
+		Bool result = itsCoordinateHandler->worldToLin(lin, world);
+		if ( result == False ) {
+			error_string = itsCoordinateHandler->errorMessage( );
+		}
+		return result;
 	}
 	Bool WorldCanvas::worldToLin(Matrix<Double> &lin, Vector<Bool> &failures,
 	                             const Matrix<Double> &world) {

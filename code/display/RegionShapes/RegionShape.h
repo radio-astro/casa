@@ -275,6 +275,8 @@ namespace casa {
 		    POSITION, SIZE, ANGLE, PIXEL
 		};
 
+		std::string errorMessage( ) const { return ""; }
+
 		// Different types for options.
 		enum OptionType {
 		    STRING, STRINGCHOICE, STRINGARRAY, STRINGCHOICEARRAY, DOUBLE, BOOL

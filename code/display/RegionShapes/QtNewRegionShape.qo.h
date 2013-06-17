@@ -64,6 +64,7 @@ namespace casa {
 
 		// Non-Static Members //
 
+		std::string errorMessage( ) const { return ""; }
 		// Constructor that takes parent.
 		QtNewRegionShape(QtRegionShapeManager* manager,
 		                 bool includeComposite = true, bool deleteOnClose = true);
