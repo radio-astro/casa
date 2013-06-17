@@ -225,8 +225,8 @@ if not os.environ.has_key('CASA_ENGINE'):
 		print "Unable to start viewer, maybe no dbus available?"
 
 defaultsdir = {}
-defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/almadefaults.xml'
-defaultsdir['evla'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/share/xml/evladefaults.xml'
+defaultsdir['alma'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/almadefaults.xml'
+defaultsdir['evla'] = 'file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/evladefaults.xml'
 
 
 def selectfield(vis,minstring):
