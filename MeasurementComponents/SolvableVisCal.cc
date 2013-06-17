@@ -3070,13 +3070,14 @@ void SolvableVisCal::storeNCT() {
   if (calTableName().empty())
     throw(AipsError("Empty string provided for caltable name; this is not allowed."));
 
+  // Flag spws that didn't occur (should do for other meta-info!)
+  ct_->flagAbsentSpws();
+
   // If append=T and the specified table exists...
   if (append() && Table::isReadable(calTableName())) {
 
     // Verify the same type
     verifyCalTable(calTableName());
-    
-    cout << "append=T does not yet verify spw consistency...." << endl;
     
     logSink() << "Appending solutions to table: " << calTableName()
 	      << LogIO::POST;
@@ -3084,19 +3085,35 @@ void SolvableVisCal::storeNCT() {
     // Keep the new in-memory caltable locally
     NewCalTable *newct=ct_;
     ct_=NULL;
-    
+
     // Load the existing table (ct_)
     loadMemCalTable(calTableName());
+    
+    // Verify that both caltables come from the same MS
+    try {
+      String msn0=ct_->keywordSet().asString("MSName");
+      String msn1=newct->keywordSet().asString("MSName");
+      AlwaysAssert( msn0==msn1, AipsError);
+    }
+    catch ( AipsError err ) {
+      delete newct;  // ct_ will be deleted in dtor
+      throw(AipsError("Cannot append solutions from different MS."));
+    }
 
-    //    cout << ct_->nrow() << "+" << newct->nrow();
+    // Merge spw info (carefully) from newct to ct_
+    try {
+      ct_->mergeSpwMetaInfo(*newct);
+    }
+    catch ( AipsError err ) {
+      logSink() << err.getMesg() << LogIO::SEVERE;
+      throw(AipsError("Error attempting append=T"));
+    }
     
     // copy the new onto the existing...
     TableCopy::copyRows(*ct_,*newct,ct_->nrow(),0,newct->nrow());
     
-    //    cout << " = " << ct_->nrow() << endl;
-
     // Delete the local pointer to the new solutions
-    //  NB: ct_ will be deleted by dtor
+    //  NB: ct_ will be deleted by dtor (after writeToDisk below)
     delete newct;
    
     // At this point, ct_ contains old and new solutions in memory
@@ -3106,10 +3123,6 @@ void SolvableVisCal::storeNCT() {
     logSink() << "Writing solutions to table: " << calTableName()
 	      << LogIO::POST;
   
-
-
-
-
   // Write out the table to disk (regardless of what happened above)
   //  (this will sort)
   ct_->writeToDisk(calTableName());

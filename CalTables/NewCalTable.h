@@ -240,6 +240,12 @@ class NewCalTable : public Table
    void setSpwFreqs(Int spw, const Vector<Double>& freq, 
 		    const Vector<Double>& chanwidth=Vector<Double>());
 
+   // Set FLAG_ROW in SPECTRAL_WINDOW subtable for spws absent in MAIN
+   void flagAbsentSpws();
+
+   // Merge SPW subtable rows from another NewCalTable
+   void mergeSpwMetaInfo(const NewCalTable& other);
+
    // Add a line to the HISTORY table
    void addHistoryMessage(String app="",String message="none");
 
