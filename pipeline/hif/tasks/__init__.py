@@ -13,7 +13,7 @@ from .fluxscale import Fluxcal
 from .fluxscale import Fluxscale
 from .fluxscale import GcorFluxscale
 from .fluxscale import NormaliseFlux
-from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal, NewGaincal
+from .gaincal import GaincalMode, GTypeGaincal, GSplineGaincal, NewGaincal, KTypeGaincal
 from .importdata import ImportData
 from .makecleanlist import MakeCleanList
 from .refant import RefAnt
