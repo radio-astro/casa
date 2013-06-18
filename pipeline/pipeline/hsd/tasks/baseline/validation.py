@@ -163,7 +163,7 @@ class ValidateLineRaster(object):
         LOG.debug('Npos = %s' % Npos)
         ###LOG.debug('MedianWidth = %s' % MedianWidth)
         # 2010/6/9 for non-detection
-        if Npos == 0: return Lines
+        if Npos == 0: return Lines, {}
 
         # 2008/9/20 Dec Effect was corrected
         PosList = numpy.array([numpy.take(self.datatable.getcol('RA'),idxList),
@@ -1088,8 +1088,7 @@ class ValidateLineRaster(object):
             sorted_index[nedges] = left_edge
             sorted_index[nedges+1] = flat_lines[sorted_index[-1]]
             nedges += 2
-            return sorted_index[:nedges].reshape((nedges/2,2))            
-
+            return sorted_index[:nedges].reshape((nedges/2,2)).tolist()
             #region = numpy.ones(nchan + 2, dtype=int)
             #for [chan0, chan1] in lines:
             #    region[chan0 + 1:chan1 + 1] = 0
@@ -1142,7 +1141,7 @@ class ValidateLine(object):
         # for Pre-Defined Spectrum Window
         if len(SpWin) != 0:
             LOG.info('Skip clustering analysis since predefined line window is set.')
-            return SpWin
+            return SpWin, {}
 
         # generate worker instance depending on observing pattern
         worker_cls = self.Patterns[Pattern]
