@@ -113,6 +113,9 @@ class ClusterDisplay(object):
         start_time = time.time()
         for group in self.__baselined():
             cluster = group['clusters']
+            if not cluster.has_key('cluster_score'):
+                # it should be empty cluster (no detection) so skip this cycle
+                continue
             spw = group['spw']
             t0 = time.time()
             plot_score = ClusterScoreDisplay(cluster, spw, stage_dir)
@@ -187,7 +190,7 @@ class ClusterScoreDisplay(ClusterDisplayWorker):
         pl.ylabel('Score (Lower is better)', fontsize=11)
         pl.title('Score are plotted versus number of the cluster', fontsize=11)
         pl.axis([0, xmax+1, ymin, ymax])
-            
+        
         if ShowPlot:
             pl.draw()
 
