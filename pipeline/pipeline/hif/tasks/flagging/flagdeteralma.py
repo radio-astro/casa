@@ -339,7 +339,16 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 	Inputs = FlagDeterALMAInputs
 
         def _get_autocorr_cmd (self):
-            return 'mode=manual antenna=*&&& spw=>0'
+                inputs = self.inputs
+	        spwlist = inputs.ms.get_spectral_windows(science_windows_only=False)
+                spwids = []
+	        for spw in spwlist:
+		    if spw.num_channels == 4:
+	                spwids.append(spw.id)
+	        if not spwids:
+                    return 'mode=manual antenna=*&&&'
+	        else:
+                    return 'mode=manual antenna=*&&& spw=>0'
 
         def _get_edgespw_cmds(self):
                 """
