@@ -533,7 +533,7 @@ class ValidateLineRaster(object):
         #     exceeded two (out of three) thresholds in smoothing, and
         #     exceeded three (out of four) thresholds in final.
         #
-        self.cluster_info['cluster_flag'] = numpy.zeros(GridCluster.shape, dtype=int)
+        self.cluster_info['cluster_flag'] = numpy.zeros(GridCluster.shape, dtype=numpy.uint16)
         threshold = [1.5, 0.5]
         self.__update_cluster_flag('detection', GridCluster, threshold, 1)
         
