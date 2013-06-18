@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.24 2013/06/18 13:24:10 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.25 2013/06/18 13:52:13 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -599,7 +599,10 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
                 subplotCols, LO1, xframe, firstFrame, showatmPoints, channels=channels)
     # The following case is needed for the case that overlay='antenna,time' and
     # the final timerange is flagged on the final antenna.
-    if (overlayTimes==False or overlayAntennas==False or xant==antennasToPlot[-1]):
+#    if (overlayTimes==False or overlayAntennas==False or xant==antennasToPlot[-1]):
+    # Because this function is now only called from one place, setting this to
+    # True is what we want. - 18-Jun-2013
+    if (True):
         if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
             if (tableFormat == 33):
                 showFDM(originalSpw_casa33, chanFreqGHz_casa33)
