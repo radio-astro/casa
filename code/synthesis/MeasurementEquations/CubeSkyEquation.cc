@@ -1540,7 +1540,6 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   if(typeOfSlice==0){    
     
     Double memoryMB=HostInfo::memoryFree()/1024.0/(5.0*(sm_->numberOfModels()));
-    cerr << "CS: Memory MB " << memoryMB << endl;
     slice=new TempImage<Complex> (TiledShape(sliceIm->shape(), 
 					     IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),sliceIm->shape()(2) , 1)), sliceIm->coordinates(), sm_->getMemoryUse() ? memoryMB: 0);
     
