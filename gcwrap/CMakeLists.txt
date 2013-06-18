@@ -1112,7 +1112,7 @@ install( FILES
          install/casa2tlatex.xsl
          install/casa2tsum.xsl
          install/casatlist.xsl
-         DESTINATION ${CMAKE_INSTALL_PREFIX}/../share/xml )
+         DESTINATION ${CMAKE_INSTALL_PREFIX}/xml )
 
 install( FILES install/saxon8.jar DESTINATION lib )
 

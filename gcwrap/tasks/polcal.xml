@@ -342,7 +342,11 @@ calibrations can be applied on the fly.
                             baselines are included in the solve
       minsnr -- Reject solutions below this SNR
               default: 3.0
-      append -- Append solutions to the (existing) table
+      append -- Append solutions to the (existing) table.  Appended solutions
+                  must be derived from the same MS as the existing
+                  caltable, and solution spws must have the same
+                   meta-info (according to spw selection and solint)
+                   or be non-overlapping.
               default: False; overwrite existing table or make new table
 
       --- Other calibrations to apply on the fly before determining gaincal solution

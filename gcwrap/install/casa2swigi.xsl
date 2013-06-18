@@ -32,6 +32,7 @@
       <xsl:if test="count(aps:output/aps:param)">
          <xsl:call-template name="oparaminfo"/>
       </xsl:if>
+      <xsl:apply-templates select="aps:example"/>
       <xsl:text>
 --------------------------------------------------------------------------------
 	      ") </xsl:text><xsl:value-of select="@name"/>;
@@ -72,6 +73,12 @@ Description
 
 <xsl:template match="aps:output">  
 	  <xsl:call-template name="dooutargs"/>
+</xsl:template>
+
+<xsl:template match="aps:example">
+	<xsl:text>
+Example:
+	</xsl:text> <xsl:value-of disable-output-escaping="yes" select="replace(., '&quot;', $singlequote)"/>
 </xsl:template>
 
 <xsl:template name="iparaminfo">

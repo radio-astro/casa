@@ -362,8 +362,12 @@ is recommended in most applications.
                default: 0; example: maskcenter=5 (BPOLY only)
        maskedge -- Fraction of channels to avoid at each band edge (in %)
                default: 5; example: maskedge=3 (BPOLY only)
-       append -- Append solutions to the (existing) table
-               default: False; example: append=True
+       append -- Append solutions to the (existing) table.  Appended solutions
+                  must be derived from the same MS as the existing
+                  caltable, and solution spws must have the same
+                  meta-info (according to spw selection and solint)
+                  or be non-overlapping.
+               default: False; overwrite existing table or make new table
 
       --- Other calibrations to apply on the fly before determining bandpass solution
 

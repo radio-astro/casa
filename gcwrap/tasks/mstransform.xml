@@ -141,7 +141,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         </allowed>
     </param>
 
-        <param type="bool" name="realmodelcol">
+        <param type="bool" name="realmodelcol" subparam="true">
             <description>Make real a virtual MODEL column.</description>
             <value>False</value>
         </param>
@@ -306,6 +306,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
           <when param="datacolumn">
             <equals type="string" value="corrected"></equals>
             <equals type="string" value="model">
+             	  <default param="realmodelcol"><value type="bool">False</value></default>           
+            </equals>         
+            <equals type="string" value="all">
+             	  <default param="realmodelcol"><value type="bool">False</value></default>           
+            </equals>         
+            <equals type="string" value="data,model,corrected">
              	  <default param="realmodelcol"><value type="bool">False</value></default>           
             </equals>         
           </when>
@@ -498,16 +504,21 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 
     datacolumn -- Which data column to use for processing (case-insensitive).
-        default='corrected'; example: datacolumn='data'
+        default: 'corrected'; example: datacolumn='data'
         options: 'data', 'model', 'corrected', 'all','float_data', 'lag_data', 
                  'float_data,data', 'lag_data,data'.
 
             N.B.: 'all' = whichever of the above that are present.
             Otherwise the selected column will go to DATA in the output.
 
-    realmodelcol -- Make real a virtual MODEL column. If set to True, virtual MODEL_DATA 
-                    column will be added to the output MS if it exists.
-        default: False
+            When datacolumn is set to either one of the values 'model','all',
+            'data,model,corrected', a sub-parameter realmodelcol will be enabled.
+            See description below.
+
+        realmodelcol -- Make real a virtual MODEL column. If set to True, a real MODEL_DATA 
+                        column will be added to the output MS based on the existing SOURCE_MODEL
+                        column.
+            default: False
 
 --- SPW combination parameters ---
     combinespws -- Combine the input spws into a new output spw.

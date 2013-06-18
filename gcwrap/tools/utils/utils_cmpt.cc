@@ -126,7 +126,7 @@ utils::verifyparam(const ::casac::record& param)
 		 << "parameter not set, unable to verify parameter" << LogIO::POST;
 	 }else{
             *itsLog << LogOrigin("utils", "verifyparam") << LogIO::WARN
-		 << "Contraints record not set, unable to verify parameter" << LogIO::POST;
+		 << "Constraints record not set, unable to verify parameter" << LogIO::POST;
 	 }
    }
    return rstat;
@@ -150,7 +150,7 @@ utils::expandparam(const std::string& name , const ::casac::variant& value )
    } else {
        rstat = new variant(casac::initialize_variant(""));;
        *itsLog << LogOrigin("utils", "expandparam") << LogIO::WARN
-		 << "Contraints record not set, unable to expand parameter" << LogIO::POST;
+		 << "Constraints record not set, unable to expand parameter" << LogIO::POST;
    }
    return rstat;
 }

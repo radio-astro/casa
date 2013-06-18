@@ -9,5 +9,5 @@ if [ ! -e ${SAXONJAR} ]; then
       SAXONJAR=${CASAROOT}/lib/saxon8.jar
    fi
 fi
-java -jar $SAXONJAR $1.xml  $CASAROOT/share/xml/casa2pycli.xsl > $1_cli.py
-java -jar $SAXONJAR $1.xml  $CASAROOT/share/xml/casa2pyimp.xsl > $1.py
+java -jar $SAXONJAR $1.xml  $CASAARCH/xml/casa2pycli.xsl > $1_cli.py
+java -jar $SAXONJAR $1.xml  $CASAARCH/xml/casa2pyimp.xsl > $1.py

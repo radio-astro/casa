@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.18 2013/06/11 14:04:26 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.20 2013/06/13 21:10:16 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -664,7 +664,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                  interactive=True, showpoints='auto', showlines='auto',
                  subplot='22', zoom='', poln='', showatm=False, pwv='auto',
                  gs='gs', convert='convert', chanrange='',
-                 solutionTimeThresholdSeconds=60.0, debug=False,
+                 solutionTimeThresholdSeconds=30.0, debug=False,
                  phase='',  vis='', showtsky=False, showfdm=False,showatmfield='',
                  lo1='', showimage=False, showatmPoints=False, parentms='', 
                  pdftk='pdftk', channeldiff=False, edge=8):
@@ -689,7 +689,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         print "   markersize=3, density=108, interactive=True, showpoints='auto',"
         print "   showlines='auto', subplot='22', zoom='', poln='', showatm=False, pwv='auto',"
         print "   gs='gs', convert='convert', chanrange='', debug=False,"
-        print "   solutionTimeThresholdSeconds=60.0, phase='', vis='', showtsky=False,"
+        print "   solutionTimeThresholdSeconds=30.0, phase='', vis='', showtsky=False,"
         print "   showfdm=False, showatmfield='', lo1='', showimage=False,"
         print "   showatmPoints=False, parentms='', pdftk='pdftk')"
         print " antenna: must be either an ID (int or string or list), or a single antenna name or list"
@@ -725,7 +725,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         print " showtsky: compute and overlay the sky temperature curve instead of transmission"
         print " showlines: draw lines connecting the data (default=T for amp, F for phase)"
         print " showpoints: draw points for the data (default=F for amp, T for phase)"
-        print " solutionTimeThresholdSeconds: consider 2 solutions simultaneous if within this interval (default=60)"
+        print " solutionTimeThresholdSeconds: consider 2 solutions simultaneous if within this interval (default=30)"
         print " spw: must be single ID or list or range (e.g. 0~4, not the original ID)"
         print " subplot: 11,22,32 or 42 for RowsxColumns (default=22), any 3rd digit is ignored"
         print " timeranges: show only these timeranges, the first timerange being 0"
@@ -3359,12 +3359,18 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                                             color=p3color[p], size=mysize,transform=pb.gca().transAxes)
                   
 # #            if (xframe == 111 and amplitudeWithPhase):
+              myIndexTime = uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]
+              matched,mymatch = sloppyMatch(myIndexTime,uniqueTimes,solutionTimeThresholdSeconds,whichone=True)
+              if (matched == False):
+                  print "---------- 1) Did not find %f in %s" % (myIndexTime,str(uniqueTimes))
+                  print "Try re-running with a smaller solutionTimeThresholdSeconds (currently %f)" % (solutionTimeThresholdSeconds)
+                  return
               if ((xframe == 111 and amplitudeWithPhase) or
                   # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time'
                   (xframe == lastFrame and overlayTimes and overlayAntennas and
                    xctr+1==len(antennasToPlot) and
 #                   mytime+1==len(uniqueTimes) and  # this worked for nspw <= 4
-                   mytime==uniqueTimes.index(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]) and
+                   mytime==mymatch and
                    spwctr+1<len(spwsToPlot))):
                        if (debug):
                            print "xframe=%d  ==  lastFrame=%d,  amplitudeWithPhase=%s" % (xframe, lastFrame, str(amplitudeWithPhase))
@@ -4084,6 +4090,12 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 print "*** mytime+1=%d,  nUniqueTimes=%d, timerangeList[-1]=%d, doneOverlayTime=%s" % (mytime+1, nUniqueTimes,timerangeList[-1],doneOverlayTime)
                 print "*** xant=%d, antennasToPlot[-1]=%d, overlayAntennas=%s, overlayTimes=%s" % (xant,antennasToPlot[-1],overlayAntennas,overlayTimes)
                 print "*** xframe=%d, lastFrame=%d, xctr=%d, spwctr=%d, len(antennasToPlot)=%d, len(spwsToPlot)=%d" % (xframe,lastFrame,xctr,spwctr,len(antennasToPlot), len(spwsToPlot))
+            myIndexTime = uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]
+            matched,mymatch = sloppyMatch(myIndexTime,uniqueTimes,solutionTimeThresholdSeconds,whichone=True)
+            if (matched==False):
+                print "---------- 2) Did not find %f within %.1f seconds of anything in %s" % (myIndexTime,solutionTimeThresholdSeconds,str(uniqueTimes))
+                print "Try re-running with a smaller solutionTimeThresholdSeconds (currently %f)" % (solutionTimeThresholdSeconds)
+                return
             if ((overlayAntennas==False and overlayTimes==False)
                 # either it is the last time of any, or the last time in the list of times to plot
                 or (overlayAntennas==False and (mytime+1==nUniqueTimes or mytime == timerangeList[-1])) 
@@ -4092,7 +4104,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 or (xframe == lastFrame and overlayTimes and overlayAntennas and
                    xctr+1==len(antennasToPlot) and
 #                   mytime+1==len(uniqueTimes) and  # this worked for nspw <= 4
-                   mytime==uniqueTimes.index(uniqueTimesPerFieldPerSpw[ispwInCalTable][fieldIndex][-1]) and
+                   mytime==mymatch and
                     spwctr+1<len(spwsToPlot))
                 or (doneOverlayTime and overlayTimes==True
                     and overlayAntennas==False 

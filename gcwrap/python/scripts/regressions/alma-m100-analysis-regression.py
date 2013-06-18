@@ -226,10 +226,11 @@ if(mystep in thesteps):
 
     # Create flagcmd input list
     flagcmd = ["mode='manual' antenna='CM01'",
-              "mode='manual' intent='*POINTING*'",
-              "mode='manual' intent='*ATMOSPHERE*'",
-              "mode='shadow'",
-              "mode='manual' autocorr=True"]
+               "mode='manual' intent='*POINTING*'",
+               "mode='manual' intent='*ATMOSPHERE*'",
+               "mode='shadow'",
+               "mode='manual' autocorr=True spw='>0'" # do not flag the WVR data
+               ]
                   
     for name in basename:
 
