@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.23 2013/06/18 12:19:07 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.24 2013/06/18 13:24:10 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -2249,6 +2249,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
   
     TDMisSecond = False
     pagectr = 0
+    drewAtmosphereOnFlaggedAntenna = True  # may not be necessary, but just to be safe
     newpage = 1
     pages =  []
     xctr = 0
@@ -2635,12 +2636,15 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               print "###### set doneOverlayTime = %s" % (str(doneOverlayTime))
   
                           # draw labels
-                          drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
-                             fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,timerangeListTimes,
-                             solutionTimeThresholdSeconds,debugSloppyMatch,ystartOverlayLegend,debug,mysize,
-                             fieldsToPlot,myUniqueColor,timeHorizontalSpacing,fieldIndex,overlayColors,
-                             antennaVerticalSpacing, overlayAntennas, timerangeList, caltableTitle)
-                          drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,TebbSky,TebbSkyImage,
+                          # try adding the following 'if' statement on Jun 18, 2013; it works.
+                          if (drewAtmosphereOnFlaggedAntenna==False or overlayAntennas==False):
+                              drewAtmosphereOnFlaggedAntenna = True
+                              drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
+                                  fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,timerangeListTimes,
+                                  solutionTimeThresholdSeconds,debugSloppyMatch,ystartOverlayLegend,debug,mysize,
+                                  fieldsToPlot,myUniqueColor,timeHorizontalSpacing,fieldIndex,overlayColors,
+                                  antennaVerticalSpacing, overlayAntennas, timerangeList, caltableTitle)
+                              drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,TebbSky,TebbSkyImage,
                                                plotrange, xaxis,atmchan,atmfreq,transmission,subplotCols,
                                                showatmPoints,xframe, channels,LO1,atmchanImage,atmfreqImage,
                                                transmissionImage, firstFrame,showfdm,nChannels,tableFormat,
@@ -2720,6 +2724,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                   print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot amp on xframe %d" % (xframe)
 # #            print ",,,,,,,,,,,,,,,, Starting with newylimits = ", newylimits
               adesc = pb.subplot(xframe)
+              drewAtmosphereOnFlaggedAntenna = False
               pb.hold(overlayAntennas or overlayTimes)
               gampx = np.abs(gplotx)
               if (nPolarizations == 2):
@@ -3471,6 +3476,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               if (debug):
                   print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot phase on xframe %d" % (xframe)
               adesc = pb.subplot(xframe)
+              drewAtmosphereOnFlaggedAntenna = False
               pb.hold(overlayAntennas or overlayTimes)
               gphsx = np.arctan2(np.imag(gplotx),np.real(gplotx))*180.0/math.pi
               if (nPolarizations == 2):
