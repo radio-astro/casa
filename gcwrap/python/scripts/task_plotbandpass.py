@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.21 2013/06/18 11:22:35 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.22 2013/06/18 11:26:13 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -4357,11 +4357,12 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
         defaultPWV = 5.0  
     if (type(pwv) == str):
       if (pwv.find('auto')>=0):
-        if (os.path.exists(vis+'/ASDM_CALWVR') or os.path.exists('CalWVR.xml')):
+        if (os.path.exists(vis+'/ASDM_CALWVR') or os.path.exists(vis+'/ASDM_CALATMOSPHERE') or
+            os.path.exists('CalWVR.xml')):
               if (verbose):
                   print "*** Computing atmospheric transmission using measured PWV, field %d, time %d (%f). ***" % (field,mytime,timestamp)
               timerange = [timestamp-interval/2, timestamp+interval/2]
-              if (os.path.exists(vis+'/ASDM_CALWVR')):
+              if (os.path.exists(vis+'/ASDM_CALWVR') or os.path.exists(vis+'/ASDM_CALATMOSPHERE')):
                   [pwvmean, pwvstd]  = getMedianPWV(vis,timerange,asdm,verbose=False)
               else:
                   [pwvmean, pwvstd]  = getMedianPWV('.',timerange,asdm='',verbose=False)
@@ -4375,7 +4376,7 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
               if (missingCalWVRErrorPrinted == False):
                   missingCalWVRErrorPrinted = True
                   if (telescopeName.find('ALMA')>=0):
-                      print "No ASDM_CALWVR or CalWVR.xml table found.  Using PWV %.1fmm." % pwvmean
+                      print "No ASDM_CALWVR, ASDM_CALATMOSPHERE, or CalWVR.xml table found.  Using PWV %.1fmm." % pwvmean
                   else:
                       print "This telescope has no WVR to provide a PWV measurement. Using PWV %.1fmm." % pwvmean
       else:
@@ -5129,6 +5130,19 @@ def getLOs(inputMs, verbose=True):
     mytb.close()
     return([freqLO,band,spws,names,sidebands,receiverIds,spwNames])
     
+def readPWVFromASDM_CALATMOSPHERE(vis):
+    """
+    Reads the PWV via the water column of the ASDM_CALATMOSPHERE table.
+    - Todd Hunter
+    """
+    mytb = createCasaTool(tbtool)
+    mytb.open("%s/ASDM_CALATMOSPHERE" % vis)
+    pwvtime = mytb.getcol('startValidTime')  # mjdsec
+    antenna = mytb.getcol('antennaName')
+    pwv = mytb.getcol('water')[0]  # There seem to be 2 identical entries per row, so take first one.
+    mytb.close()
+    return(pwvtime, antenna, pwv)
+    
 def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
     """
     Extracts the PWV measurements from the WVR on all antennas for the
@@ -5161,8 +5175,18 @@ def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
               return(0,-1)
           if (verbose):
               print "Opened ASDM_CALWVR table, len(pwvtime)=%s" % (str(len(pwvtime)))
-      elif (verbose):
-          print "Did not find ASDM_CALWVR table in the ms"
+      else:
+          if (verbose):
+              print "Did not find ASDM_CALWVR table in the ms. Will look for ASDM_CALATMOSPHERE next."
+          if (os.path.exists("%s/ASDM_CALATMOSPHERE" % vis)):
+              pwvtime, antenna, pwv = readPWVFromASDM_CALATMOSPHERE(vis)
+              success = True
+              if (len(pwv) < 1):
+                  print "Found no data in ASDM_CALATMOSPHERE table"
+                  return(0,-1)
+          else:
+              if (verbose):
+                  print "Did not find ASDM_CALATMOSPHERE in the ms"
     except:
         if (verbose):
             print "Could not open ASDM_CALWVR table in the ms"
