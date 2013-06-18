@@ -252,7 +252,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				qint64 lineLength = file.readLine(buf, sizeof(buf));
 				if (lineLength > 0) {
 					QString line(buf);
-					if ( line.startsWith("#CRTFv") ) {
+					if ( line.startsWith("#CRTF") ) {
 						return "CASA Region File";
 					}
 					if ( line.startsWith("# Region file format: DS9") ) {

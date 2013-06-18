@@ -101,7 +101,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     CountedPtr<SIMapperBase> localMapper=NULL;
     Int nMappers = itsMappers.nelements();
-
     // Check 'mappertype' for valid types....
     if( mappertype == "basetype" )
       {
@@ -109,7 +108,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     else if( mappertype == "default" )
       {
-	localMapper = new SIMapper( imagestore, ftmachine, nMappers );
+	CountedPtr<FTMachine> iftm=ftmachine->cloneFTM();
+	localMapper = new SIMapper( imagestore, ftmachine, iftm, nMappers );
       }
     /*
     else if( mappertype == "multiterm" )

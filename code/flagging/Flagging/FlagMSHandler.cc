@@ -243,7 +243,17 @@ FlagMSHandler::selectData()
 
 	// Create Measurement Selection object
 	const String dummyExpr = String("");
-	if (measurementSetSelection_p) delete measurementSetSelection_p;
+	if (measurementSetSelection_p) {
+		delete measurementSetSelection_p;
+		measurementSetSelection_p = NULL;
+	}
+
+	// Set the MS Selection error handler to catch antenna names that are
+    // not present in the MS in an expression that contains valid antenna names.
+	// This will issue a WARNING and not fail.
+    MSSelectionLogError mssLE;
+    measurementSetSelection_p->setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLE);
+
 	measurementSetSelection_p = new MSSelection(
 			*originalMeasurementSet_p,
 			MSSelection::PARSE_NOW,

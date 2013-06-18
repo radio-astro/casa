@@ -261,6 +261,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		const static String BLINK_MODE;
 
+		std::string errorMessage( ) const { return error_string; }
+
 	private:
 		//True if the viewer is in blink mode.
 		bool blinkMode;
@@ -282,6 +284,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// time it is used).
 		void* itsLastCSmaster;
 		Float drawUnit;
+		std::string error_string;
 
 	};
 

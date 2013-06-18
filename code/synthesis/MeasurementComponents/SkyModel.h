@@ -233,6 +233,10 @@ public:
 
   void setImageNormalization(Bool val) {isImageNormalized_p = val;};
   Bool isImageNormalized() {return isImageNormalized_p;};
+
+  //set and get memory usage model
+  virtual void setMemoryUse(Bool memuse)=0;
+  virtual Bool getMemoryUse()=0;
   
 protected:
   String itsAlgorithm;

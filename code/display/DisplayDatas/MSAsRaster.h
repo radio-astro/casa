@@ -293,6 +293,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// added to allow flagging control from mouse tools... <drs>
 		bool flag( WorldCanvas *wc, double blc_x, double blc_y, double trc_x, double trc_y );
 
+		std::string errorMessage( ) const { return ""; }
+
 	protected:
 
 		// This routine is called to inform the DD of the current canvas's

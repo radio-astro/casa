@@ -155,6 +155,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// This DD requires direction coordinates in both X and Y axis codes.
 		virtual Bool conformsToCS(const WorldCanvas& wch);
 
+		std::string errorMessage( ) const { return ""; }
+
 	protected:
 
 		// (Required) default constructor.

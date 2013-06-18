@@ -223,8 +223,8 @@ namespace casa {
 
 		void QtRegionDock::selectRegion(QtRegionState *state, bool scroll ) {
 			if ( scroll ) region_stack->setCurrentWidget(state);
-			state->nowVisible( );
 			if ( state != NULL ) {
+				state->nowVisible( );
 				Region* region = state->region();
 				if ( region != NULL ) {
 					try {

@@ -1071,6 +1071,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static const String BOTTOM_MARGIN_SPACE_PG;
 		static const String TOP_MARGIN_SPACE_PG;
 
+		std::string errorMessage( ) const { return error_string; }
+
 	private:
 
 
@@ -1390,6 +1392,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// refresh call is exiting
 		uInt itsRef;
 
+		std::string error_string;
 	};
 
 

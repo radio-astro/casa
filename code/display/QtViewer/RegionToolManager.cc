@@ -30,6 +30,7 @@
 #include <display/QtViewer/RegionToolManager.qo.h>
 #include <display/QtPlotter/QtMWCTools.qo.h>
 #include <display/QtViewer/QtMouseToolState.qo.h>
+#include <display/DisplayErrors.h>
 
 #include <imageanalysis/Annotations/RegionTextList.h>
 #include <imageanalysis/Annotations/AnnEllipse.h>
@@ -512,13 +513,21 @@ namespace casa {
 					switch ( ann->getType( ) ) {
 					case AnnotationBase::SYMBOL: {
 						if ( points.size( ) != 1 ) {
-							fprintf( stderr, "QtDisplayPanel::loadRegions(symbol): wrong number of points returned...\n" );
+							panel->logIO( ) << LogIO::WARN
+											<< "symbol region has wrong number of points returned..."
+											<< LogIO::POST;
 							continue;
 						}
 
 						double lcx, lcy;
 						try {
 							viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]), lcx, lcy );
+						} catch( casa::viewer::internal_error err ) {
+							panel->logIO( ) << LogIO::WARN
+											<< "symbol region "
+											<< err.what( )
+											<< LogIO::POST;
+							continue;
 						} catch(...) {
 							continue;
 						}
@@ -526,6 +535,12 @@ namespace casa {
 						double px, py;
 						try {
 							viewer::linear_to_pixel( wc, lcx, lcy, px, py );
+						} catch( casa::viewer::internal_error err ) {
+							panel->logIO( ) << LogIO::WARN
+											<< "symbol region "
+											<< err.what( )
+											<< LogIO::POST;
+							continue;
 						} catch(...) {
 							continue;
 						}
@@ -533,6 +548,9 @@ namespace casa {
 						// region is outside of our pixel canvas area
 						if ( (int) px < 0 || (int) px > shape[0] ||
 						        (int) py < 0 || (int) py > shape[1] ) {
+							panel->logIO( ) << LogIO::WARN
+											<< "symbol region is outside of display area"
+											<< LogIO::POST;
 							continue;
 						}
 
@@ -581,7 +599,9 @@ namespace casa {
 					break;
 					case AnnotationBase::RECT_BOX: {
 						if ( points.size( ) != 2 ) {
-							fprintf( stderr, "QtDisplayPanel::loadRegions(rect_box): wrong number of points returned...\n" );
+							panel->logIO( ) << LogIO::WARN
+											<< "box region has wrong number of points returned..."
+											<< LogIO::POST;
 							continue;
 						}
 
@@ -590,6 +610,12 @@ namespace casa {
 							viewer::world_to_linear( wc, points[0].first.getValue(units[0]), points[0].second.getValue(units[1]),
 							                         points[1].first.getValue(units[0]), points[1].second.getValue(units[1]),
 							                         lblcx, lblcy, ltrcx, ltrcy );
+						} catch( casa::viewer::internal_error err ) {
+							panel->logIO( ) << LogIO::WARN
+											<< "box region "
+											<< err.what( )
+											<< LogIO::POST;
+							continue;
 						} catch(...) {
 							continue;
 						}
@@ -597,6 +623,12 @@ namespace casa {
 						double pblcx, pblcy, ptrcx, ptrcy;
 						try {
 							viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
+						} catch( casa::viewer::internal_error err ) {
+							panel->logIO( ) << LogIO::WARN
+											<< "box region "
+											<< err.what( )
+											<< LogIO::POST;
+							continue;
 						} catch (...) {
 							continue;
 						}
@@ -606,6 +638,9 @@ namespace casa {
 						        (int) pblcy < 0 || (int) pblcy > shape[1] ||
 						        (int) ptrcx < 0 || (int) ptrcx > shape[0] ||
 						        (int) ptrcy < 0 || (int) ptrcy > shape[1] ) {
+							panel->logIO( ) << LogIO::WARN
+											<< "box region is outside of display area"
+											<< LogIO::POST;
 							continue;
 						}
 
@@ -637,7 +672,9 @@ namespace casa {
 					break;
 					case AnnotationBase::ELLIPSE: {
 						if ( points.size( ) != 1 ) {
-							fprintf( stderr, "QtDisplayPanel::loadRegions(ellipse): wrong number of points returned...\n" );
+							panel->logIO( ) << LogIO::WARN
+											<< "ellipse region has wrong number of points returned..."
+											<< LogIO::POST;
 							continue;
 						}
 
@@ -682,6 +719,12 @@ namespace casa {
 							viewer::world_to_linear( wc, qblcx.getValue(units[0]), qblcy.getValue(units[1]),
 							                         qtrcx.getValue(units[0]), qtrcy.getValue(units[1]),
 							                         lblcx, lblcy, ltrcx, ltrcy );
+						} catch( casa::viewer::internal_error err ) {
+							panel->logIO( ) << LogIO::WARN
+											<< "ellipse region "
+											<< err.what( )
+											<< LogIO::POST;
+							continue;
 						} catch(...) {
 							continue;
 						}
@@ -689,6 +732,12 @@ namespace casa {
 						double pblcx, pblcy, ptrcx, ptrcy;
 						try {
 							viewer::linear_to_pixel( wc, lblcx, lblcy, ltrcx, ltrcy, pblcx, pblcy, ptrcx, ptrcy );
+						} catch( casa::viewer::internal_error err ) {
+							panel->logIO( ) << LogIO::WARN
+											<< "ellipse region "
+											<< err.what( )
+											<< LogIO::POST;
+							continue;
 						} catch(...) {
 							continue;
 						}
@@ -698,6 +747,9 @@ namespace casa {
 						        (int) pblcy < 0 || (int) pblcy > shape[1] ||
 						        (int) ptrcx < 0 || (int) ptrcx > shape[0] ||
 						        (int) ptrcy < 0 || (int) ptrcy > shape[1] ) {
+							panel->logIO( ) << LogIO::WARN
+											<< "ellipse region is outside of display area"
+											<< LogIO::POST;
 							continue;
 						}
 
@@ -728,39 +780,61 @@ namespace casa {
 					break;
 					case AnnotationBase::POLYGON: {
 						if ( points.size( ) <= 2 ) {
-							fprintf( stderr, "QtDisplayPanel::loadRegions(polygon): wrong number of points returned...\n" );
+							panel->logIO( ) << LogIO::WARN
+											<< "polygon region has wrong number of points returned..."
+											<< LogIO::POST;
 							continue;
 						}
 
 						std::vector<std::pair<double,double> > linear_pts(points.size( ));
 
 						bool error = false;
-						for ( unsigned int i = 0; i < points.size( ); ++i ) {
-							double lx, ly;
-							try {
-								viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
-							} catch(...) {
-								continue;
-							}
+						try {
+							for ( unsigned int i = 0; i < points.size( ); ++i ) {
+								double lx, ly;
+								try {
+									viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
+								} catch( casa::viewer::internal_error err ) {
+									panel->logIO( ) << LogIO::WARN
+													<< "polygon region "
+													<< err.what( )
+													<< LogIO::POST;
+									throw;
+								} catch(...) {
+									throw;
+								}
 
-							double px, py;
-							try {
-								viewer::linear_to_pixel( wc, lx, ly, px, py );
-							} catch (...) {
-								continue;
-							}
+								double px, py;
+								try {
+									viewer::linear_to_pixel( wc, lx, ly, px, py );
+								} catch( casa::viewer::internal_error err ) {
+									panel->logIO( ) << LogIO::WARN
+													<< "polygon region "
+													<< err.what( )
+													<< LogIO::POST;
+									throw;
+								} catch (...) {
+									throw;
+								}
 
-							// region is outside of our pixel canvas area
-							if ( (int) px < 0 || (int) px > shape[0] ||
-							        (int) py < 0 || (int) py > shape[1] ) {
-								error = false;
-								break;
-							}
+								// region is outside of our pixel canvas area
+								if ( (int) px < 0 || (int) px > shape[0] ||
+									 (int) py < 0 || (int) py > shape[1] ) {
+									error = false;
+									panel->logIO( ) << LogIO::WARN
+													<< "polygon region is outside of display area"
+													<< LogIO::POST;
+									throw viewer::internal_error("poly point outside of canvas");
+								}
 
-							linear_pts[i].first = lx;
-							linear_pts[i].second = ly;
+								linear_pts[i].first = lx;
+								linear_pts[i].second = ly;
+							}
+						} catch (...) {
+							// here we are catching the rethrows from above... to 'continue' with
+							// the outer loop above...
+							continue;
 						}
-
 						AnnotationBase::LineStyle ls = ann->getLineStyle( );
 						AnnotationBase::FontStyle fs = ann->getFontStyle( );
 
@@ -768,55 +842,77 @@ namespace casa {
 						if ( plyit == tools.end( ) ) continue;
 						String pos = ann->getLabelPosition( );
 						(*plyit).second->create( region::PolyRegion, wc, linear_pts,
-						                         ann->getLabel( ), ( pos == "left" ? region::LeftText :
-						                                 pos == "right" ? region::RightText :
-						                                 pos == "bottom" ? region::BottomText : region::TopText ),
-						                         ann->getLabelOffset( ),
-						                         ann->getFont( ), ann->getFontSize( ),
-						                         (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
-						                         (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
-						                         (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
-						                         ann->getLabelColorString( ), ann->getColorString( ),
-						                         ( ls == AnnotationBase::DASHED ? region::DashLine :
-						                           ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
-						                         ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
+												 ann->getLabel( ), ( pos == "left" ? region::LeftText :
+																	 pos == "right" ? region::RightText :
+																	 pos == "bottom" ? region::BottomText : region::TopText ),
+												 ann->getLabelOffset( ),
+												 ann->getFont( ), ann->getFontSize( ),
+												 (fs == AnnotationBase::BOLD ? region::BoldText : 0) |
+												 (fs == AnnotationBase::ITALIC ? region::ItalicText : 0) |
+												 (fs == AnnotationBase::ITALIC_BOLD ? (region::BoldText | region::ItalicText) : 0 ),
+												 ann->getLabelColorString( ), ann->getColorString( ),
+												 ( ls == AnnotationBase::DASHED ? region::DashLine :
+												   ls == AnnotationBase::DOTTED ? region::DotLine : region::SolidLine ),
+												 ann->getLineWidth( ), (reg == 0 || reg->isAnnotationOnly( )), 0 );
 					}
 					break;
 					case AnnotationBase::POLYLINE: {
 						if ( points.size( ) <= 1 ) {
-							fprintf( stderr, "QtDisplayPanel::loadRegions(polyline): wrong number of points returned...\n" );
+							panel->logIO( ) << LogIO::WARN
+											<< "polyline region has wrong number of points returned..."
+											<< LogIO::POST;
 							continue;
 						}
 
 						std::vector<std::pair<double,double> > linear_pts(points.size( ));
 
 						bool error = false;
-						for ( unsigned int i = 0; i < points.size( ); ++i ) {
-							double lx, ly;
-							try {
-								viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
-							} catch(...) {
-								continue;
+						try {
+							for ( unsigned int i = 0; i < points.size( ); ++i ) {
+								double lx, ly;
+								try {
+									viewer::world_to_linear( wc, points[i].first.getValue(units[0]), points[i].second.getValue(units[1]), lx, ly );
+								} catch( casa::viewer::internal_error err ) {
+									panel->logIO( ) << LogIO::WARN
+													<< "polyline region "
+													<< err.what( )
+													<< LogIO::POST;
+									throw;
+								} catch(...) {
+									throw;
+								}
+
+								double px, py;
+								try {
+									viewer::linear_to_pixel( wc, lx, ly, px, py );
+								} catch( casa::viewer::internal_error err ) {
+									panel->logIO( ) << LogIO::WARN
+													<< "polyline region "
+													<< err.what( )
+													<< LogIO::POST;
+									throw;
+								} catch (...) {
+									throw;
+								}
+
+								// region is outside of our pixel canvas area
+								if ( (int) px < 0 || (int) px > shape[0] ||
+									 (int) py < 0 || (int) py > shape[1] ) {
+									error = false;
+									panel->logIO( ) << LogIO::WARN
+													<< "polyline region is outside of display area"
+													<< LogIO::POST;
+									throw viewer::internal_error("poly point outside of canvas");
+								}
+
+								linear_pts[i].first = lx;
+								linear_pts[i].second = ly;
 							}
-
-							double px, py;
-							try {
-								viewer::linear_to_pixel( wc, lx, ly, px, py );
-							} catch (...) {
-								continue;
-							}
-
-							// region is outside of our pixel canvas area
-							if ( (int) px < 0 || (int) px > shape[0] ||
-							        (int) py < 0 || (int) py > shape[1] ) {
-								error = false;
-								break;
-							}
-
-							linear_pts[i].first = lx;
-							linear_pts[i].second = ly;
-						}
-
+						} catch (...) {
+							// here we are catching the rethrows from above... to 'continue' with
+							// the outer loop above...
+							continue;
+						} 
 						AnnotationBase::LineStyle ls = ann->getLineStyle( );
 						AnnotationBase::FontStyle fs = ann->getFontStyle( );
 

@@ -105,11 +105,15 @@ protected:
 
   CoordinateSystem buildCoordSys(const MDirection& phasecenter, const Quantity& cellx, const Quantity& celly, const Int nx, const Int ny, const String& stokes, const Projection& projection, const Int nchan, const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq);
 
-  void createFTMachine(CountedPtr<FTMachine>& theFT, const String& ftname);
+  void createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT,  const String& ftname);
   void createVisSet();
   
   void runMajorCycle();
   Vector<Int> decideNPolPlanes(const String& stokes);
+  /////This function should be called at every define image
+  /////It associated the ftmachine with a given field
+  ////For facetted image distinct  ft machines will associated with each facets and 
+  //// Only one facetted image allowed
   void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine, Quantity distance=Quantity(0.0, "m"), Int facets=1);
   /////////////// Member Objects
 

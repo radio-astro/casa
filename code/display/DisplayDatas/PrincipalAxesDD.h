@@ -271,6 +271,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return has_nonsingleton_nondegenerate_nondisplayed_axis( *this );
 		}
 
+		std::string errorMessage( ) const { return error_string; }
+
 	protected:
 
 		// Set internal index (activeZIndex_) into the list of DMs (which cache
@@ -366,6 +368,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			return 0;
 		}
 
+		std::string error_string;
 
 	private:
 

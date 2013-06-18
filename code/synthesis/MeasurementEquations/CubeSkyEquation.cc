@@ -1091,6 +1091,8 @@ void CubeSkyEquation::initializePutSlice(const VisBuffer& vb, Bool dopsf,
   newFTM = isNewFTM(&(*ftm_p[0]));
   if (newFTM) newInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
   else        oldInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
+  
+  // newInitializePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
 }
 
 
@@ -1272,11 +1274,13 @@ void CubeSkyEquation::finalizePutSlice(const VisBuffer& vb,  Bool dopsf,
       
   if (newFTM) newFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
   else        oldFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
+  
+  //newFinalizePutSlice(vb, dopsf, cubeSlice, nCubeSlice);
   // if (!newFTM)
   //   tmpWBNormalizeImage(dopsf);
 }
 
-void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
+void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& vb,  Bool dopsf,
 					  Int cubeSlice, Int nCubeSlice) 
 {
   //============================================================================
@@ -1317,7 +1321,8 @@ void CubeSkyEquation::newFinalizePutSlice(const VisBuffer& /*vb*/,  Bool dopsf,
 	  // Call finalizeToSky for this field.
 	  // -- calls getImage, getWeightImage, does Stokes conversion, and gS/ggS normalization
 	  //U// cout << "CubeSkyEqn :: calling new finalizeToSky with dopsf " << dopsf << endl;
-	  iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec );
+	  iftm_p[field]->finalizeToSky( imPutSliceVec , gSSliceVec , ggSSliceVec , fluxScaleVec, dopsf , weightSliceVec, vb );
+	  
 	  // Clean up temporary reference images      
 	  for (Int taylor=0; taylor < ntaylors; ++taylor)
 	    {
@@ -1376,7 +1381,7 @@ void CubeSkyEquation::oldFinalizePutSlice(const VisBuffer& vb,  Bool /*dopsf*/,
 			    *ggSSlice);
   
 	(imPutSlice_p[model])->clearCache();
-	//imPutSlice_p[model]->tempClose();
+	//imPutSlice_p[model]->clearCache();
 	delete workSlice;
 	delete gSSlice;
 	delete ggSSlice;
@@ -1412,7 +1417,8 @@ void CubeSkyEquation::initializeGetSlice(const VisBuffer& vb,
       
        if (newFTM) newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
        else        oldInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
-
+       
+       //newInitializeGetSlice(vb, row, incremental,cubeSlice, nCubeSlice);
   // if (!newFTM)
   //   tmpWBNormalizeImage(dopsf);
 }
@@ -1533,16 +1539,11 @@ void CubeSkyEquation::sliceCube(CountedPtr<ImageInterface<Complex> >& slice,Int 
   //  cerr << "SliceCube: " << beginChannel << " " << endChannel << endl;
   if(typeOfSlice==0){    
     
-    //UNUSED: Double memoryMB=HostInfo::memoryFree()/1024.0/(5.0*(sm_->numberOfModels()));
-    /*slice=new TempImage<Complex> (TiledShape(sliceIm->shape(), 
-      IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),sliceIm->shape()(2) , 1)), sliceIm->coordinates(), 0);
-    */
-    slice=new TempImage<Complex> (sliceIm->shape(), sliceIm->coordinates(), 0);
+    Double memoryMB=HostInfo::memoryFree()/1024.0/(5.0*(sm_->numberOfModels()));
+    slice=new TempImage<Complex> (TiledShape(sliceIm->shape(), 
+					     IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),sliceIm->shape()(2) , 1)), sliceIm->coordinates(), sm_->getMemoryUse() ? memoryMB: 0);
     
-    /*
-      slice= new PagedImage<Complex> (TiledShape(sliceIm->shape(), 
-      IPosition(4, min(sliceIm->shape()(0)/4, 1000), min(sliceIm->shape()(1)/4, 1000),(sliceIm->shape()(2) , 1)), sliceIm->coordinates(), File::newUniqueName(".", "Temp").absoluteName());
-    */
+ 
     //slice->setMaximumCacheSize((sliceIm->shape()[0])*(sliceIm->shape()[1])/4);
     slice->setMaximumCacheSize(sliceIm->shape().product());
     //slice.copyData(sliceIm);
@@ -1656,8 +1657,8 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
 void
 CubeSkyEquation::finalizeGetSlice(){
   //// place-holders.... there is nothing to do after degridding
-  //      for (Int model=0; model < sm_->numberOfModels(); ++model)
-  //        ftm_p[model]->finalizeToVis();
+        for (Int model=0; model < sm_->numberOfModels(); ++model)
+          ftm_p[model]->finalizeToVis();
 }
 
 Bool

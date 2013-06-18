@@ -158,6 +158,8 @@ public:
 
   virtual ~GridFT();
 
+  virtual FTMachine* cloneFTM();
+
   // Initialize transform to Visibility plane using the image
   // as a template. The image is loaded and Fourier transformed.
   virtual void initializeToVis(ImageInterface<Complex>& image,
@@ -288,7 +290,7 @@ protected:
   //machine name
   String machineName_p;
 
-  Double timemass_p, timegrid_p;
+  Double timemass_p, timegrid_p, timedegrid_p;
   //  casa::async::SynthesisAsyncPeek *peek;
 };
 

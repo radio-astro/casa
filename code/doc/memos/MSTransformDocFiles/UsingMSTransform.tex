@@ -15,6 +15,11 @@ Task mstransform behaves like split in all cases that concern sub-table re-index
 and selection. It does not support multiple channel selections, which are separated by
 a semi-colon. If there is an spw selection, it will re-index the spws starting from 0.
 
+A datacolumn specifies which column will be used for the transformations. It is
+possible to make real a virtual MODEL column, by setting the parameter
+datacolumn to any of the values 'model', 'all' or 'data,model,corrected' and
+then setting the sub-parameter realmodelcol to True.
+
 \subsection{Partition and Multi-MS support}
 From CASA 4.1.0 onwards, task partition uses the MSTransform framework.
 Task mstransform can partition an MS to create an MMS using different separation
@@ -75,7 +80,7 @@ is controlled by the independent parameter {\it combinespws}.
 Apart from these features, mstransform can also separate the spectral
 windows into a regular grid specified by the user using the parameter
 {\it nspw}. This is a new feature in CASA
-4.1 and can be applied in many use-cases. %(Expand and list some use-cases)
+4.1.0 and can be applied in many use-cases. %(Expand and list some use-cases)
 
 If {\it nspw} is greater than 1, the input spws will be separated into the given
 number. If {\it nchan} is set, it will refer to the number of channels to have in each
@@ -156,7 +161,7 @@ mstransform(vis='inp.ms', outputvis='out.ms', spw='0', regridms=True, nchan=10, 
 \section{Frequently Asked Questions}\label{Sec:FAQ}
 \begin{description}
   \item[Q1: How to run mstransform to mimic cvel?] \hfill 
-  Set the parameter {\it regridms}I to True. If there is more than one spw in the
+  Set the parameter {\it regridms} to True. If there is more than one spw in the
 selection, set also {\it combinespws} to True because cvel always combines the selected
 spws.
 

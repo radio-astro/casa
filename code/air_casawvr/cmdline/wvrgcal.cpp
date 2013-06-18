@@ -192,6 +192,8 @@ std::set<int> getAntPars(const std::string &s,
 
     }
   }
+
+
   return res;
 }
 
@@ -662,6 +664,9 @@ int main(int argc,  char* argv[])
   {
      wvrflag=getAntPars("wvrflag", vm, ms);    
   }
+
+  LibAIR::WVRAddFlaggedAnts(ms, wvrflag);
+
   LibAIR::aname_t anames=LibAIR::getAName(ms);
   std::set<int> nowvr=NoWVRAnts(anames);
   

@@ -27,6 +27,7 @@
 //----------------------------------------------------------------------------
 
 #include <synthesis/CalTables/NewCalTable.h>
+#include <synthesis/CalTables/CTColumns.h>
 #include <synthesis/CalTables/CTMainColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -886,6 +887,118 @@ void NewCalTable::setSpwFreqs(Int spw, const Vector<Double>& freq,
 
 
 }
+
+// Set FLAG_ROW in SPECTRAL_WINDOW subtable for spws absent in MAIN
+//  (this enables append to permit revision when appropriate)
+void NewCalTable::flagAbsentSpws() {
+
+  CTColumns ctcol(*this);
+
+  // Extract unique spws in MAIN
+  Vector<Int> spwids;
+  ctcol.spwId().getColumn(spwids);
+  Int nspw=genSort(spwids,(Sort::QuickSort | Sort::NoDuplicates));
+  spwids.resize(nspw,True);
+
+  // Revise SPW FLAG_ROW
+  Vector<Bool> spwfr;
+  ctcol.spectralWindow().flagRow().getColumn(spwfr);
+  spwfr.set(True);
+  for (Int ispw=0;ispw<nspw;++ispw) {
+    uInt thisspw=spwids(ispw);
+    if (thisspw<spwfr.nelements()) 
+      spwfr(thisspw)=False;  // unflagged
+    else
+      throw(AipsError("NewCalTable::flagAbsentSpws: Main table contains spwids not in SpW subtable"));
+  }
+
+  // Put FLAG_ROW back
+  ctcol.spectralWindow().flagRow().putColumn(spwfr);
+
+}
+// Merge SPW subtable rows from another NewCalTable
+void NewCalTable::mergeSpwMetaInfo(const NewCalTable& other) {
+
+  // Access this' SPW subtable
+  CTSpWindowColumns spwcols(this->spectralWindow());
+
+  // Access other's SPW subtable
+  ROCTSpWindowColumns ospwcols(other.spectralWindow());
+
+  // Just make sure that they have the same number of rows:
+  //  (should be guaranteed by having been derived from the same MS)
+  if (spwcols.nrow()!=ospwcols.nrow())
+    throw(AipsError("NewCalTable::mergeSpwMetaInfo: Attempt to merge unrelated SPW subtables."));
+
+  // Loop over other's spws
+  uInt onspw=ospwcols.nrow();
+  for (uInt ispw=0;ispw<onspw;++ispw) {
+
+    // Only if other's ispw is not flagged...
+    if (!ospwcols.flagRow()(ispw)) {
+
+      try {
+
+	// Certain meta info must already be equivalent
+	AlwaysAssert( spwcols.name()(ispw)==ospwcols.name()(ispw), AipsError);
+	AlwaysAssert( spwcols.measFreqRef()(ispw)==ospwcols.measFreqRef()(ispw), AipsError);
+	AlwaysAssert( spwcols.netSideband()(ispw)==ospwcols.netSideband()(ispw), AipsError);
+	AlwaysAssert( spwcols.ifConvChain()(ispw)==ospwcols.ifConvChain()(ispw), AipsError);
+	AlwaysAssert( spwcols.freqGroup()(ispw)==ospwcols.freqGroup()(ispw), AipsError);
+	AlwaysAssert( spwcols.freqGroupName()(ispw)==ospwcols.freqGroupName()(ispw), AipsError);
+      }
+      catch ( AipsError x ) {
+	throw(AipsError("Spw meta information incongruent; cannot merge it for append."));
+      }
+
+      // ...and this' ispw _is_ flagged
+      if (spwcols.flagRow()(ispw)) {
+
+	// Copy from other to this:
+	Int nchan=ospwcols.numChan()(ispw);
+	IPosition sh(1,nchan);
+
+	spwcols.numChan().put(ispw,nchan);
+	spwcols.chanFreq().setShape(ispw,sh);
+	spwcols.chanFreq().put(ispw,ospwcols.chanFreq()(ispw));
+	spwcols.chanWidth().setShape(ispw,sh);
+	spwcols.chanWidth().put(ispw,ospwcols.chanWidth()(ispw));
+	spwcols.resolution().setShape(ispw,sh);
+	spwcols.resolution().put(ispw,ospwcols.resolution()(ispw));
+	spwcols.effectiveBW().setShape(ispw,sh);
+	spwcols.effectiveBW().put(ispw,ospwcols.effectiveBW()(ispw));
+
+	spwcols.refFrequency().put(ispw,ospwcols.refFrequency()(ispw));
+	spwcols.totalBandwidth().put(ispw,ospwcols.totalBandwidth()(ispw));
+
+	// this' row now unflagged
+	spwcols.flagRow().put(ispw,False);
+
+      }
+      else {
+
+	try {
+	
+	  // Assert equivalence in all meaningful rows
+	  AlwaysAssert( spwcols.numChan()(ispw)==ospwcols.numChan()(ispw), AipsError);
+	  AlwaysAssert( allEQ(spwcols.chanFreq()(ispw),ospwcols.chanFreq()(ispw)), AipsError);
+	  AlwaysAssert( allEQ(spwcols.chanWidth()(ispw),ospwcols.chanWidth()(ispw)), AipsError);
+	  AlwaysAssert( allEQ(spwcols.resolution()(ispw),ospwcols.resolution()(ispw)), AipsError);
+	  AlwaysAssert( allEQ(spwcols.effectiveBW()(ispw),ospwcols.effectiveBW()(ispw)), AipsError);
+	  AlwaysAssert( spwcols.refFrequency()(ispw)==ospwcols.refFrequency()(ispw), AipsError);
+	  AlwaysAssert( spwcols.totalBandwidth()(ispw)==ospwcols.totalBandwidth()(ispw), AipsError);
+	}
+	catch ( AipsError err ) {
+	  throw(AipsError("Error merging spw="+String::toString(ispw)+"'s meta info"));
+	}
+      }
+    } 
+
+  } // ispw
+
+
+}
+
 
 
 

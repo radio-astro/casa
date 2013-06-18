@@ -195,8 +195,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	                                 const Vector<Double> &world) {
 
 // sanity checks
-
+		error_string = "";
 		if (iAmRubbish) {
+			error_string = "inconsistent PrincipalAxesDD state";
 			return False;
 		}
 
@@ -274,6 +275,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			lin(1) = itsPixelOutTmp3(1);
 			return True;
 		} else {
+			error_string = itsCoordSys.errorMessage( );
 			return False;
 		}
 	}

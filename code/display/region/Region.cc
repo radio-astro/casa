@@ -1594,7 +1594,7 @@ namespace casa {
 			linearv(0) = lin_x1;
 			linearv(1) = lin_y1;
 			if ( ! wc->linToPix( pixelv, linearv ) )
-				throw internal_error( "linear to screen conversion failed" );
+				throw internal_error( "linear to screen conversion failed: " + wc->errorMessage( ) );
 			scr_x1 = static_cast<int>(pixelv(0));
 			scr_y1 = static_cast<int>(pixelv(1));
 			// END - critical section
@@ -1613,14 +1613,14 @@ namespace casa {
 			linearv(0) = lin_x1;
 			linearv(1) = lin_y1;
 			if ( ! wc->linToPix( pixelv, linearv ) )
-				throw internal_error( "linear to screen conversion failed" );
+				throw internal_error( "linear to screen conversion failed: " + wc->errorMessage( ) );
 			scr_x1 = static_cast<int>(pixelv(0));
 			scr_y1 = static_cast<int>(pixelv(1));
 
 			linearv(0) = lin_x2;
 			linearv(1) = lin_y2;
 			if ( ! wc->linToPix( pixelv, linearv ) )
-				throw internal_error( "linear to screen conversion failed" );
+				throw internal_error( "linear to screen conversion failed: " + wc->errorMessage( ) );
 			scr_x2 = static_cast<int>(pixelv(0));
 			scr_y2 = static_cast<int>(pixelv(1));
 			// END - critical section
@@ -1657,7 +1657,7 @@ namespace casa {
 			worldv(1) = world_y1;
 
 			if ( ! cs.toPixel( pixelv, worldv ) )
-				throw internal_error( "linear to pixel conversion failed" );
+				throw internal_error( "linear to pixel conversion failed: " + cs.errorMessage( ) );
 
 			pix_x1 = pixelv(0);
 			pix_y1 = pixelv(1);
@@ -1695,7 +1695,7 @@ namespace casa {
 			worldv(1) = world_y1;
 
 			if ( ! cs.toPixel( pixelv, worldv ) )
-				throw internal_error( "linear to pixel conversion failed" );
+				throw internal_error( "linear to pixel conversion failed: " + cs.errorMessage( ) );
 
 			pix_x1 = pixelv(0);
 			pix_y1 = pixelv(1);
@@ -1703,7 +1703,7 @@ namespace casa {
 			worldv(0) = world_x2;
 			worldv(1) = world_y2;
 			if ( ! cs.toPixel( pixelv, worldv ) )
-				throw internal_error( "linear to pixel conversion failed" );
+				throw internal_error( "linear to pixel conversion failed: " + cs.errorMessage( ) );
 
 			pix_x2 = pixelv(0);
 			pix_y2 = pixelv(1);
@@ -1721,7 +1721,7 @@ namespace casa {
 			pixelv(0) = scr_x;
 			pixelv(1) = scr_y;
 			if ( ! wc->pixToLin( linearv, pixelv ) )
-				throw internal_error( "pixel to linear conversion failed" );
+				throw internal_error( "pixel to linear conversion failed: " + wc->errorMessage( ) );
 			lin_x = linearv(0);
 			lin_y = linearv(1);
 			// END - critical section
@@ -1740,7 +1740,7 @@ namespace casa {
 			pixelv(0) = scr_x1;
 			pixelv(1) = scr_y1;
 			if ( ! wc->pixToLin( linearv, pixelv ) )
-				throw internal_error( "pixel to linear conversion failed" );
+				throw internal_error( "pixel to linear conversion failed: " + wc->errorMessage( ) );
 
 			lin_x1 = linearv(0);
 			lin_y1 = linearv(1);
@@ -1748,7 +1748,7 @@ namespace casa {
 			pixelv(0) = scr_x2;
 			pixelv(1) = scr_y2;
 			if ( ! wc->pixToLin( linearv, pixelv ) )
-				throw internal_error( "pixel to linear conversion failed" );
+				throw internal_error( "pixel to linear conversion failed: " + wc->errorMessage( ) );
 			lin_x2 = linearv(0);
 			lin_y2 = linearv(1);
 			// END - critical section
@@ -1869,7 +1869,7 @@ namespace casa {
 			linearv(0) = lin_x;
 			linearv(1) = lin_y;
 			if ( ! wc->linToWorld( worldv, linearv ) )
-				throw internal_error( "linear to world conversion failed" );
+				throw internal_error( "linear to world conversion failed: " + wc->errorMessage( ) );
 			world_x = worldv(0);
 			world_y = worldv(1);
 			// END - critical section
@@ -1888,7 +1888,7 @@ namespace casa {
 			linearv(0) = lin_x1;
 			linearv(1) = lin_y1;
 			if ( ! wc->linToWorld( worldv, linearv ) )
-				throw internal_error( "linear to world conversion failed" );
+				throw internal_error( "linear to world conversion failed: " + wc->errorMessage( ) );
 
 			world_x1 = worldv(0);
 			world_y1 = worldv(1);
@@ -1896,7 +1896,7 @@ namespace casa {
 			linearv(0) = lin_x2;
 			linearv(1) = lin_y2;
 			if ( ! wc->linToWorld( worldv, linearv ) )
-				throw internal_error( "linear to world conversion failed" );
+				throw internal_error( "linear to world conversion failed: " + wc->errorMessage( ) );
 			world_x2 = worldv(0);
 			world_y2 = worldv(1);
 			// END - critical section
@@ -1921,7 +1921,7 @@ namespace casa {
 			worldv(1) = world_y;
 
 			if ( ! wc->worldToLin( linearv, worldv ) )
-				throw internal_error( "world to linear conversion failed" );
+				throw internal_error( "world to linear conversion failed: " + wc->errorMessage( ) );
 			lin_x = linearv(0);
 			lin_y = linearv(1);
 
@@ -1940,14 +1940,14 @@ namespace casa {
 			worldv(0) = world_x1;
 			worldv(1) = world_y1;
 			if ( ! wc->worldToLin( linearv, worldv ) )
-				throw internal_error( "world to linear conversion failed" );
+				throw internal_error( std::string("world to linear conversion failed: ") + wc->errorMessage( ) );
 			lin_x1 = linearv(0);
 			lin_y1 = linearv(1);
 
 			worldv(0) = world_x2;
 			worldv(1) = world_y2;
 			if ( ! wc->worldToLin( linearv, worldv ) )
-				throw internal_error( "world to linear conversion failed" );
+				throw internal_error( "world to linear conversion failed: " + wc->errorMessage( ) );
 			lin_x2 = linearv(0);
 			lin_y2 = linearv(1);
 			// END - critical section
@@ -1978,7 +1978,7 @@ namespace casa {
 			pixelv(1) = pix_y1;
 
 			if ( ! cs.toWorld( worldv, pixelv ) )
-				throw internal_error( "pixel to world conversion failed" );
+				throw internal_error( "pixel to world conversion failed: " + cs.errorMessage( ) );
 
 			world_x1 = worldv(0);
 			world_y1 = worldv(1);
@@ -2011,7 +2011,7 @@ namespace casa {
 			pixelv(1) = pix_y1;
 
 			if ( ! cs.toWorld( worldv, pixelv ) )
-				throw internal_error( "pixel to world conversion failed" );
+				throw internal_error( "pixel to world conversion failed: " + cs.errorMessage( ) );
 
 			world_x1 = worldv(0);
 			world_y1 = worldv(1);
@@ -2021,7 +2021,7 @@ namespace casa {
 			pixelv(1) = pix_y2;
 
 			if ( ! cs.toWorld( worldv, pixelv ) )
-				throw internal_error( "pixel to world conversion failed" );
+				throw internal_error( "pixel to world conversion failed: " + cs.errorMessage( ) );
 
 			world_x2 = worldv(0);
 			world_y2 = worldv(1);

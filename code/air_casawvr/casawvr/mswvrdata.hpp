@@ -68,6 +68,11 @@ namespace LibAIR {
   AntSet
   WVRAntennasMainTab(const casa::MeasurementSet &ms);
 
+  /** Add the antennas flagged in the ANTENNA table to the set
+   */
+  void WVRAddFlaggedAnts(const casa::MeasurementSet &ms,
+			 std::set<int> &flaggedAnts);
+
   /** Time points, states, and field IDs at which WVR data have been
       recorded
 

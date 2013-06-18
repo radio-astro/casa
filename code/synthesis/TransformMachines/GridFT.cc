@@ -196,6 +196,11 @@ GridFT::GridFT(const GridFT& other) : FTMachine(), machineName_p("GridFT")
   operator=(other);
 }
 
+//-----------------------------------------------------------------------
+  FTMachine* GridFT::cloneFTM(){
+    return new GridFT(*this);
+  }
+
 //----------------------------------------------------------------------
 void GridFT::init() {
 
