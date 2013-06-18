@@ -437,6 +437,11 @@ class CalibrationTable(NamingTemplate):
         '''Set the filename extension as appropriate for a gc calibration.
         '''
         return self.extension('gc')
+    
+    def rq_cal(self):
+        '''Set the filename extension as appropriate for a rq calibration.
+        '''
+        return self.extension('rq')
 
     def wvrg_cal(self):
         '''Set the filename extension as appropriate for a wvr calibration.
@@ -640,6 +645,11 @@ class GainCurvesCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(GainCurvesCalibrationTable, self).__init__(other)
         self.gc_cal()
+        
+class RqCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(RqCalibrationTable, self).__init__(other)
+        self.rq_cal()
 
 class WvrgCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
