@@ -145,7 +145,6 @@ class SingleDishBase(object):
     def _init_properties(self, properties={}, kw_ignore=['self']):
         for (k,v) in properties.items():
             if k not in kw_ignore:
-                LOG.debug('key=%s, value=%s'%(k,v))
                 setattr(self, k, v)
 
 class ScantableRep(SingleDishBase):
