@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.22 2013/06/18 11:26:13 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.23 2013/06/18 12:19:07 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -1181,7 +1181,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         return
     mymsmd = createCasaTool(msmdtool)
     if (debug): print  "msName = %s." % (msName)
-    if (os.path.exists(msName)):
+    if (os.path.exists(msName) or os.path.exists(os.path.dirname(caltable)+'/'+msName)):
+        if (os.path.exists(msName) == False):
+            msName = os.path.dirname(caltable)+'/'+msName
+            if (debug): print  "found msName = %s." % (msName)
         if (casadef.casa_version < '4.1.0'):
             print "This version of casa is too old to use the msmd tool.  Use au.plotbandpass instead."
             return
