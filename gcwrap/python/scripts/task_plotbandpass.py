@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.20 2013/06/13 21:10:16 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.21 2013/06/18 11:22:35 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -1637,6 +1637,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
        antennasToPlot = np.intersect1d(uniqueAntennaIds,antlist)
     else:
        antennasToPlot = uniqueAntennaIds
+    if (len(antennasToPlot) < 2 and overlayAntennas):
+        print "More than 1 antenna is required for overlay='antenna'."
+        return()
     casalogPost(debug,"antennasToPlot = %s" % (str(antennasToPlot)))
   
     # Parse the field string to emulate plotms
@@ -2296,6 +2299,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                             madstats[madstats.keys()[i]][spwsToPlot[j]][k][l] = {'amp': None}
 # #      print "madstats = ", madstats
     myinput = ''
+    atmEverBeenShown = False
     while (xctr < len(antennasToPlot)):
       xant = antennasToPlot[xctr]
       spwctr = 0
@@ -2434,10 +2438,19 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           pchannels = [xchannels,ychannels]
           pfrequencies = [xfrequencies,yfrequencies]
           gplot = [gplotx,gploty]
+          # We only need to compute the atmospheric transmission if:
+          #   * we have been asked to show it,
+          #   * there is a non-trivial number of channels, 
+          #   * the current field is the one for which we should calculate it (if times are being overlaied)
+          #       But this will cause no atmcurve to appear if that field is flagged on the first
+          #       antenna; so, I added the atmEverBeenShown flag to deal with this.
+          #   * the previous calculation is not identical to what this one will be
+          #
           if ((showatm or showtsky) and (len(xchannels)>1 or len(ychannels)>1) and
-              (uniqueFields[fieldIndex]==showatmfield or overlayTimes==False) and
+              (uniqueFields[fieldIndex]==showatmfield or overlayTimes==False or atmEverBeenShown==False) and
               ((overlayTimes==False and computedAtmField!=fieldIndex) or (computedAtmSpw!=ispw) or
                (overlayTimes==False and computedAtmTime!=mytime))):
+            atmEverBeenShown = True
             # The following 'if' is used to avoid wasting time since atm is not shown for
             # overlay='antenna,time'.
             if (overlayTimes==False or overlayAntennas==False or True):  # support showatm for overlay='antenna,time'
