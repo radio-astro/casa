@@ -44,7 +44,7 @@ def _get_unified_task_module(packages):
             module.__dict__[k] = v
     return module
 
-tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks])
+tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks, vla.tasks])
 
 
 def show_weblog(context):
