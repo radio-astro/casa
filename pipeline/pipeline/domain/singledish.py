@@ -145,6 +145,7 @@ class SingleDishBase(object):
     def _init_properties(self, properties={}, kw_ignore=['self']):
         for (k,v) in properties.items():
             if k not in kw_ignore:
+                LOG.debug('key=%s, value=%s'%(k,v))
                 setattr(self, k, v)
 
 class ScantableRep(SingleDishBase):
@@ -237,6 +238,12 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
                   6: 'GALACTO',
                   7: 'LGROUP',
                   8: 'CMB' }
+
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, d):
+        self.__dict__ = d
     
     @staticmethod
     def from_spectral_window(spw):
