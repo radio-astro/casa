@@ -338,6 +338,9 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 
 	Inputs = FlagDeterALMAInputs
 
+        def _get_autocorr_cmd (self):
+            return 'mode=manual antenna=*&&& spw=>0'
+
         def _get_edgespw_cmds(self):
                 """
                 Return a flagdata flagging command that will flag the edge channels

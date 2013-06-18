@@ -438,7 +438,8 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
 
         # Flag autocorrelations?
         if inputs.autocorr:
-            flag_cmds.append('mode=manual antenna=*&&&')
+            #flag_cmds.append('mode=manual antenna=*&&&')
+            flag_cmds.append(self._get_autocorr_cmd())
     
         # Flag shadowed antennas?
         if inputs.shadow:
@@ -460,17 +461,11 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         if inputs.edgespw: 
             flag_cmds.append(self._get_edgespw_cmds())
 
-        # Apply the online flags? 
-	#    Keep in separate file
-        #if inputs.online:
-            #flag_cmds.append(self._add_file(inputs.fileonline))
-
-        # Apply flags from a template (RFI, birdies, telluric lines, etc.)?
-	#    Keep in separate file
-        #if inputs.template:
-            #flag_cmds.append(self._add_file(inputs.filetemplate))
 
         return '\n'.join(flag_cmds)
+
+    def _get_autocorr_cmd (self):
+        return 'mode=manual antenna=*&&&'
 
     def _get_edgespw_cmds(self):
         """
