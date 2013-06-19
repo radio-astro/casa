@@ -42,7 +42,8 @@ class FlagCmd(object):
     """
     def __init__(self, filename, rulename, spw, axisnames,
       flagcoords, intent=None, cell_index=None, ruleaxis=None,
-      flagchannels=None, channel_axis=None, reason=None):
+      flagchannels=None, channel_axis=None, reason=None,
+      extendfields=None):
 #        print 'FlagCmd intent %s spw%s axisnames%s flagcoords%s cell_index%s flagchannels%s reason%s' % (
 #          intent, spw, axisnames, flagcoords, cell_index, flagchannels,
 #          reason)
@@ -55,7 +56,6 @@ class FlagCmd(object):
         self.ruleaxis = ruleaxis
         self.flagchannels = flagchannels
         self.axisnames = axisnames
-#        self.axisnames = str(axisnames).upper()
         self.flagcoords = flagcoords
         self.reason = reason
 
@@ -120,6 +120,18 @@ class FlagCmd(object):
             flagcmd += " timerange='%s~%s'" % (start[0], end[0])
 
         flagcmd = flagcmd.strip()
+
+        # lastly, remove any 'extend' fields requested, done to extend the effect
+        # of the flagcmd beyond the detected data
+        if extendfields:
+            specifiers = flagcmd.split(' ')
+            for specifier in specifiers:
+                for extendfield in extendfields:
+                    if extendfield in specifier:
+                        specifiers.remove(specifier)
+                        break
+            flagcmd = ' '. join(specifiers)
+
         self.flagcmd = flagcmd
 #        print 'flagcmd', flagcmd
 
