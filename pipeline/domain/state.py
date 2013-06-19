@@ -43,7 +43,13 @@ class State(object):
         'OBSERVE_TARGET_ON_SOURCE'           : 'TARGET',
         'OBSERVE_TARGET#OFF_SOURCE'          : 'REFERENCE',
         'OBSERVE_TARGET.OFF_SOURCE'          : 'REFERENCE',
-        'OBSERVE_TARGET_OFF_SOURCE'          : 'REFERENCE'     }
+        'OBSERVE_TARGET_OFF_SOURCE'          : 'REFERENCE',
+        'CALIBRATE_FLUX#UNSPECIFIED'         : 'AMPLITUDE',
+        'CALIBRATE_BANDPASS#UNSPECIFIED'     : 'BANDPASS',    
+        'CALIBRATE_FLUX#UNSPECIFIED'         : 'AMPLITUDE',
+        'CALIBRATE_PHASE#UNSPECIFIED'        : 'PHASE',
+        'CALIBRATE_AMPLI#UNSPECIFIED'        : 'AMPLITUDE',
+        'UNSPECIFIED#UNSPECIFIED'            : 'AMPLITUDE'     }
     
     def __init__(self, state_id, obs_mode, is_cycle0=False):
         self.id = state_id

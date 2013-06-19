@@ -266,7 +266,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
     def _do_importevla(self, asdm):
         vis = self._asdm_to_vis_filename(asdm)
         outfile = os.path.join(self.inputs.output_dir,
-                               os.path.basename(asdm)+"_flagcmds.txt")
+                               os.path.basename(asdm)+"_flagonline.txt")
 
         task = casa_tasks.importevla(asdm=asdm, 
                                      vis=vis, 
