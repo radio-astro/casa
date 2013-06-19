@@ -30,7 +30,8 @@ myf['__rethrow_casa_exceptions'] = True
 # Setup path
 sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
-def executeppr (pprXmlFile, dry_run=False, loglevel='info', interactive=True):
+def executeppr (pprXmlFile, importonly=False, dry_run=False, loglevel='info',
+    interactive=True):
 
     # Useful mode parameters
     echo_to_screen = interactive
@@ -205,6 +206,12 @@ def executeppr (pprXmlFile, dry_run=False, loglevel='info', interactive=True):
 		    "Failed to update context for " + taskname,
 		    echo_to_screen=echo_to_screen)
 		raise
+
+            if taskname == 'ImportData' and importonly: 
+		casatools.post_to_log(
+		    "Terminating execution after running " + taskname,
+		    echo_to_screen=echo_to_screen)
+	        break
 
 	except Exception, e:
 	    #traceback.print_exc(file=sys.stdout)
