@@ -446,7 +446,7 @@ class ModeInputs(api.Inputs):
         # If the property we're trying to set is one of this base class's
         # private variables, add it to our __dict__ using the standard
         # __setattr__ method
-        if name in ('_active', '_delegates'):
+        if name in ('_active', '_delegates', VISLIST_RESET_KEY):
             LOG.trace('Setting \'{0}\' attribute to \'{1}\' on \'{2}'
                       '\' object'.format(name, val, self.__class__.__name__))
             return super(ModeInputs, self).__setattr__(name, val)
