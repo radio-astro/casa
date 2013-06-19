@@ -76,13 +76,12 @@ class SDNamingTemplate(object):
     def get_filename(self, delete=False):
         '''Assembles and returns the final filename.
         ''' 
-        filename_components = self._associations.build()
-        filename = '.'.join([filename_components])
-    
+        filename = self._associations.build()
+         
         if delete and not SDNamingTemplate.dry_run:
             # .. and remove any old table with this name
             shutil.rmtree(filename, ignore_errors=True)
-
+        
         return filename
 
     def output_dir(self, output_dir):
