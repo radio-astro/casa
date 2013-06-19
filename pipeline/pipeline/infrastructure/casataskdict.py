@@ -10,6 +10,7 @@ CasaTaskDict = {
                    'hif_gaincal'      : 'Gaincal',
                    'hif_newgaincal'   : 'NewGaincal',
                    'hif_gfluxscale'   : 'GcorFluxscale',
+                   'hif_lowgainflag'  : 'Lowgainflag',
                    'hif_importdata'   : 'ImportData',
 		   'hif_makecleanlist': 'MakeCleanList', 
                    'hif_refant'       : 'RefAnt',
