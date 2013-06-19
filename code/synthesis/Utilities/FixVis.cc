@@ -372,7 +372,7 @@ void FixVis::rotateUVW(const MDirection &indir, const MDirection::Ref& newref)
 
   uInt nRows = UVWcol.nrow();
   for(uInt row = 0; row < nRows; ++row){
-    UVWcol(row) = (rm * MVuvw(UVWcol(row))).getVector();
+    UVWcol.put(row, (rm * MVuvw(UVWcol(row))).getVector());
   }
   return;
 }
@@ -649,7 +649,7 @@ void FixVis::processSelected(uInt numInSel)
       // write changed UVWs
       Vector <uInt> origRows = vb.rowIds();
       for(uInt row = 0; row < numRows; row++){
-	UVWcol(origRows(row)) = uvw.column(row);
+	UVWcol.put(origRows(row), uvw.column(row));
       }
 
       // write changed visibilities
