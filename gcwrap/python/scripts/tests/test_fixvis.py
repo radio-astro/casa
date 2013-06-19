@@ -318,6 +318,33 @@ class fixvis_test1(unittest.TestCase):
                         (mystats1['maxpos']==[34,64,0,0]).all())
 
 
+    def test13(self):
+        '''Test13: Apply large (10 arcmin) phase center shift followed by shift back to original'''
+        refcode = 'J2000'
+        shutil.rmtree(outms2, ignore_errors=True)
+        outms3 = 'outms3.ms'
+        shutil.rmtree(outms3, ignore_errors=True)
+
+        mystats = ''
+        try:
+            self.res = fixvis(inpms2, outms3, field='0', refcode=refcode,
+                              phasecenter='J2000 18h00m02.3092s -29d49m29.9987s') # 10 arcmin off
+            self.assertTrue(self.res)
+            
+            self.res = fixvis(outms3, outms2, field='0', refcode=refcode,
+                              phasecenter='J2000 18h00m02.3092s -29d59m29.9987s') # == original pos.
+            self.assertTrue(self.res)
+            
+            mystats = self._get_stats(0, 'testy')
+            shutil.rmtree(outms3, ignore_errors=True)
+        except:
+            print "*** Unexpected error ***"
+
+        mystats = self._fixvis_and_get_stats('J2000 18h00m02.3092s -29d59m29.9987s')
+
+        self.assertTrue(mystats['maxposf'] == '18:00:02.309, -29.59.29.999, I, 2.26e+11Hz' and
+                        (mystats['maxpos'] == [64, 64, 0, 0]).all())
+
 
 
     ## def test_obs_pc(self):
