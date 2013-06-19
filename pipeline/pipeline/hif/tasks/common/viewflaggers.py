@@ -12,7 +12,7 @@ LOG = infrastructure.get_logger(__name__)
 class MatrixFlaggerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, datatask=None,
-        flagsettertask=None, rules=None, niter=None):
+        flagsettertask=None, rules=None, niter=None, extendfields=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -37,6 +37,10 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
         rules = inputs.rules
         flagsettertask = self.flagsettertask
         niter = inputs.niter
+
+        if inputs.extendfields:
+            LOG.info('flagcmds will be extended by removing selection in following fields: %s'
+              % inputs.extendfields)
 
         iter = 1
         flags = []
@@ -74,7 +78,9 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
             # result with latest flags incorporated.
             result = self._executor.execute(datatask)
 
-        # add a record of flags set to the results object
+        # remove duplicate flags, add a record of flags set to the 
+        # results object
+        flags = list(set(flags))
         result.addflags(flags)
         result.table = flagsettertask.inputs.table
         result.flagcmdfile = flagsettertask.inputs.inpfile
@@ -418,10 +424,16 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
 
                         # Check limits.
                         limit = rule['limit']
-                        i2flag = i[np.logical_and(data > limit * data_median,
-                          np.logical_not(flag))]
-                        j2flag = j[np.logical_and(data > limit * data_median,
-                          np.logical_not(flag))]
+                        if limit < 1:
+                            i2flag = i[np.logical_and(data < limit * data_median,
+                              np.logical_not(flag))]
+                            j2flag = j[np.logical_and(data < limit * data_median,
+                              np.logical_not(flag))]
+                        else:
+                            i2flag = i[np.logical_and(data > limit * data_median,
+                              np.logical_not(flag))]
+                            j2flag = j[np.logical_and(data > limit * data_median,
+                              np.logical_not(flag))]
 
                         # No flags
                         if len(i2flag) <= 0:
@@ -436,7 +448,8 @@ class MatrixFlagger(basetask.StandardTaskTemplate):
                               filename=table, rulename=rulename,
                               spw=spw, axisnames=[xtitle, ytitle],
                               flagcoords=flagcoord,
-                              cell_index=cell_index))
+                              cell_index=cell_index,
+                              extendfields=self.inputs.extendfields))
 
                         # Flag the view.
                         flag[i2flag, j2flag] = True
