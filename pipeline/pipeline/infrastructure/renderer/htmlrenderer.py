@@ -73,6 +73,9 @@ def get_task_description(result_obj):
             names.extend([ms.basename for ms in result.mses])
         return 'Register %s with pipeline' % utils.commafy(names)
 
+    if task_cls is hif.tasks.Lowgainflag:
+        return 'Flag antennas with low gain'
+
     if task_cls is hif.tasks.MakeCleanList:
         return 'Compile a list of cleaned images to be calculated'
 
@@ -1484,6 +1487,7 @@ renderer_map = {
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
+        hif.tasks.Lowgainflag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_lowgainflag.html'),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
