@@ -84,11 +84,6 @@ class Lowgainflag(basetask.StandardTaskTemplate):
 
         # Construct the task that will read the data and create the
         # view of the data that is the basis for flagging.
-        print inputs.vis
-        print inputs.intent
-        print inputs.spw
-        print inputs.refant
-        print inputs.niter
         datainputs = LowgainflagWorkerInputs(context=inputs.context,
           output_dir=inputs.output_dir, vis=inputs.vis, intent=inputs.intent,
           spw=inputs.spw, refant=inputs.refant)
@@ -117,7 +112,8 @@ class Lowgainflag(basetask.StandardTaskTemplate):
         matrixflaggerinputs = viewflaggers.MatrixFlaggerInputs(
           context=inputs.context, output_dir=inputs.output_dir,
           vis=inputs.vis, datatask=datatask, flagsettertask=flagsettertask,
-          rules=rules, niter=inputs.niter)
+          rules=rules, niter=inputs.niter,
+          extendfields=['field', 'timerange'])
         flaggertask = viewflaggers.MatrixFlagger(matrixflaggerinputs)
 
 	# Execute it to flag the data view
@@ -154,7 +150,6 @@ class LowgainflagWorker(basetask.StandardTaskTemplate):
         self.result.vis = inputs.vis
 
     def prepare(self):
-        print 'worker prepare'
         inputs = self.inputs
 
         # Calculate a phased-up bpcal
