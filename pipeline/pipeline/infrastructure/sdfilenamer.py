@@ -5,23 +5,6 @@ import string
 import pipeline.infrastructure.filenamer as filenamer
 
 _valid_chars = "_.%s%s" % (string.ascii_letters, string.digits)    
-def _char_replacer(s):
-    '''A small utility function that echoes the argument or returns '_' if the 
-    argument is in a list of forbidden characters.
-    '''
-    if s not in _valid_chars:
-        return '_'
-    return s
-
-
-def sanitize(text):
-    filename = ''.join(_char_replacer(c) for c in text)
-    return filename 
-
-_known_intents = {'BANDPASS'  : 'bp',
-                  'AMPLITUDE' : 'flux',
-                  'PHASE'     : 'ph',
-                  'TARGET'    : 'sci'  }
 
 class SDFileNameComponentBuilder(filenamer.FileNameComponentBuilder):
     def __init__(self):
@@ -35,9 +18,7 @@ class SDFileNameComponentBuilder(filenamer.FileNameComponentBuilder):
     def build(self):
         # The file names will be assembled using the order of the attributes 
         # given here
-        attributes = (#os.path.basename(self._asdm),
-                      self._asdm,
-                      #'_'.join([x for x in (self._source) if x is not None]), 
+        attributes = (self._asdm,
                       self._source,
                       self._antenna_name,
                       self._product,
@@ -45,7 +26,7 @@ class SDFileNameComponentBuilder(filenamer.FileNameComponentBuilder):
                       self._polarization,
                       self._sd,
                       self._format)
-        basename = '.'.join([sanitize(x) for x in attributes 
+        basename = '.'.join([filenamer.sanitize(x) for x in attributes 
                          if x not in ('', None)])
 
         if self._output_dir is not None:
@@ -112,50 +93,8 @@ class SDNamingTemplate(object):
     
     def __repr__(self):
         return self.get_filename()
-
-class ASDM(filenamer.ASDM):
-    '''Defines the ASDM naming scheme. ASDM file names have the syntax
-    <project code>.<ASDM UID>.asdm, eg. pcode.uid___X02_X3d737_X1.asdm
-    '''
     
-    def __init__(self, other=None):
-        super(ASDM, self).__init__()
-        
-
-class MeasurementSet(filenamer.MeasurementSet):
-    '''Defines the measurement set naming scheme. File names have the syntax
-    <project code>.<ASDM UID>.ms.tbl, eg. pcode.uid___X02_X3d737_X1.ms.tbl
-    '''
-    
-    def __init__(self, other=None):
-        super(MeasurementSet, self).__init__()
-        self._associations.format('ms')
-    
-    
-class Scantable(SDNamingTemplate):
-    
-    def __init__(self, other=None):
-        '''Creates a new Scantable naming template. If another naming 
-        template is given as a constructor argument, the new Scantable
-        template will be initialized using applicable filename components copied
-        from the given constructor argument.
-        '''
-        super(Scantable, self).__init__()
-        self._associations.format('asap')
-        if other is not None:
-            self.asdm(other._associations._asdm)
-    
-    def asdm(self, uid):
-        '''Set the ASDM UID for this template, eg. uid://X03/XA83C/X02
-        '''
-        self._associations.asdm(uid)
-        return self
-    
-
 class CalibrationTable(SDNamingTemplate):
-    
-    #_extensions = ['gridded']
-    #_type = ['channel', 'poly', 'spline', 'tseries']
 
     def __init__(self, other=None):
         super(CalibrationTable, self).__init__()
@@ -234,9 +173,6 @@ class Image(SDNamingTemplate):
     
     def polarization(self, polarization):
         self._associations.polarization(polarization)
-        return self
-    
-    def sd(self):
         self._associations.sd('sd')
         return self
         
