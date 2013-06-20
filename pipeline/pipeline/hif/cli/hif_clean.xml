@@ -271,7 +271,7 @@ field -- Select fields to image or mosaic. Use field id(s) or name(s).
     default: '' (No data selected)
 
 intent -- An intent against which the selected fields are matched.
-    example: '', '*TARGET*'
+    example: '', 'TARGET'
     default: '' (Select all data from fields specified by 'field' parameter)
 
 spw -- Select spectral window/channels.
