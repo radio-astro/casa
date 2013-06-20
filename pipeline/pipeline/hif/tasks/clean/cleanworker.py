@@ -10,7 +10,6 @@ from .boxworker import BoxWorker
 from .resultobjects import CleanResult
 import pipeline.infrastructure.renderer as renderer
 
-#import pipeline.hif.heuristics as heuristics
 from pipeline.hif.heuristics import cleanbox
 
 LOG = infrastructure.get_logger(__name__)
@@ -45,7 +44,8 @@ class CleanWorkerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir, vis, mode, imagermode, imagename,
       intent, field_id, field, scan, spw, phasecenter, cell, imsize, outframe,
-      restfreq, nchan, start, width, weighting, robust, noise):
+      restfreq, nchan, start, width, weighting, robust, noise, npixels,
+      restoringbeam, nterms, uvrange, maxthreshiter, mask_method):
 
         self._init_properties(vars())
 
@@ -96,7 +96,9 @@ class CleanWorker(basetask.StandardTaskTemplate):
           start=inputs.start, width=inputs.width, imsize=inputs.imsize,
           cell=inputs.cell, phasecenter=inputs.phasecenter,
           weighting=inputs.weighting, robust=inputs.robust,
-          noise=inputs.noise, mask=cleanmask)
+          noise=inputs.noise, npixels=inputs.npixels, 
+          restoringbeam=inputs.restoringbeam, nterms=inputs.nterms,
+          uvrange=inputs.uvrange, mask=cleanmask)
 
         self._executor.execute(job)
 
@@ -140,16 +142,21 @@ class CleanWorker(basetask.StandardTaskTemplate):
               output_dir=inputs.output_dir, vis=None, psf=self.result.psf,
               model=self.result.model, restored=self.result.image, 
               residual=self.result.residual, fluxscale=self.result.flux,
-              old_cleanmask=old_cleanmask, new_cleanmask=cleanmask)
+              old_cleanmask=old_cleanmask, new_cleanmask=cleanmask,
+              mask_method=inputs.mask_method)
             boxtask = BoxWorker(boxinputs)
             box_result = self._executor.execute(boxtask)
 
-            # decide whether to clean further
             iterating = self.heuristics.clean_more(loop=iter,
               new_threshold=box_result.threshold,
               sum=model_sum, residual_max=residual_max,
               residual_min=residual_min, non_cleaned_rms=non_clean_rms,
               island_peaks=box_result.island_peaks)
+
+            if iterating and iter > inputs.maxthreshiter:
+                LOG.warning('terminate clean; threshiter (%s) >= %s' % ( 
+                  iter, inputs.maxthreshiter))
+                iterating = False
 
             if iterating:
                 iter += 1
@@ -182,7 +189,9 @@ class CleanWorker(basetask.StandardTaskTemplate):
                   imsize=inputs.imsize, cell=inputs.cell,
                   phasecenter=inputs.phasecenter,
                   weighting=inputs.weighting, robust=inputs.robust,
-                  noise=inputs.noise, mask=box_result.cleanmask)
+                  noise=inputs.noise, npixels=inputs.npixels,
+                  restoringbeam=inputs.restoringbeam, nterms=inputs.nterms,
+                  uvrange=inputs.uvrange, mask=box_result.cleanmask)
 
                 self._executor.execute(job)
 
