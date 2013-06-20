@@ -18,7 +18,7 @@ Create a a list of images to be cleaned.
 
   <param type="string" name="intent" subparam="true">
     <description>Set of data selection intents</description>
-    <value>*TARGET*</value>
+    <value>TARGET</value>
   </param>
 
   <param type="string" name="field" subparam="true">
@@ -79,6 +79,76 @@ Create a a list of images to be cleaned.
     <value type="string"></value>
   </param>
 
+  <param type="any" name="start" subparam="true">
+    <description>Channel start</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="any" name="width" subparam="true">
+    <description>Channel width</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="any" name="nchan" subparam="true">
+    <description>Number of channels</description>
+    <any type="variant"/>
+    <value type="string">default</value>
+  </param>
+
+  <param type="any" name="restfreq" subparam="true">
+    <description>Rest frequency</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="string" name="weighting" subparam="true">
+    <description>Weighting</description>
+    <value type="string">default</value>
+  </param>
+
+  <param type="any" name="robust" subparam="true">
+    <description>Briggs robust parameter</description>
+    <any type="variant"/>
+    <value type="string">default</value>
+  </param>
+
+  <param type="any" name="noise" subparam="true">
+    <description>Weighting noise</description>
+    <any type="variant"/>
+    <value type="string">default</value>
+  </param>
+
+  <param type="any" name="npixels" subparam="true">
+    <description>Weighting npixels</description>
+    <any type="variant"/>
+    <value type="string">default</value>
+  </param>
+
+  <param type="any" name="restoringbeam" subparam="true">
+    <description>Output Gaussian restoring beam for CLEAN image</description>
+    <any type="variant"/>
+    <value type="string">default</value>
+  </param>
+
+  <param type="any" name="nterms" subparam="true">
+    <description>Number of terms in Taylor expansion for mfs clean</description>
+    <any type="variant"/>
+    <value type="string">default</value>
+  </param>
+
+  <param type="string" name="uvrange" subparam="true">
+    <description>Select data within uvrange</description>
+    <value>default</value>
+  </param>
+
+  <param type="any" name="maxthreshiter" subparam="true">
+    <description>Maximum number of cleanbox/threshold iterations</description>
+    <any type="variant"/>
+    <value type="string">default</value>
+  </param>
+
   <param type="string" name="pipelinemode">
     <description>The pipeline operating mode</description>
     <value>automatic</value>
@@ -112,6 +182,18 @@ Create a a list of images to be cleaned.
         <default param="spw"><value type="string"></value></default>
         <default param="imagename"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
+        <default param="start"><value type="string"></value></default>
+        <default param="width"><value type="string"></value></default>
+        <default param="nchan"><value type="string">default</value></default>
+        <default param="restfreq"><value type="string"></value></default>
+        <default param="weighting"><value type="string">default</value></default>
+        <default param="robust"><value type="string">default</value></default>
+        <default param="noise"><value type="string">default</value></default>
+        <default param="npixels"><value type="string">default</value></default>
+        <default param="restoringbeam"><value type="string">default</value></default>
+        <default param="nterms"><value type="string">default</value></default>
+        <default param="uvrange"><value type="string">default</value></default>
+        <default param="maxthreshiter"><value type="string">default</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
@@ -122,6 +204,18 @@ Create a a list of images to be cleaned.
         <default param="spw"><value type="string"></value></default>
         <default param="imagename"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
+        <default param="start"><value type="string"></value></default>
+        <default param="width"><value type="string"></value></default>
+        <default param="nchan"><value type="string">default</value></default>
+        <default param="restfreq"><value type="string"></value></default>
+        <default param="weighting"><value type="string">default</value></default>
+        <default param="robust"><value type="string">default</value></default>
+        <default param="noise"><value type="string">default</value></default>
+        <default param="npixels"><value type="string">default</value></default>
+        <default param="restoringbeam"><value type="string">default</value></default>
+        <default param="nterms"><value type="string">default</value></default>
+        <default param="uvrange"><value type="string">default</value></default>
+        <default param="maxthreshiter"><value type="string">default</value></default>
       </equals>
     </when>
 
@@ -200,8 +294,8 @@ vis -- The list of input measurement sets. Defaults to the list of measurement
              vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 
 intent -- Select intents for which associated fields will be imaged.
-    default: '*TARGET*'
-    example: '*TARGET*', '*PHASE*,*BANDPASS*'
+    default: 'TARGET'
+    example: 'TARGET', 'PHASE,BANDPASS'
 
 field -- Select fields to image. Use field name(s) NOT id(s). Mosaics
     are assumed to have common field names.  If intent is specified then
@@ -258,12 +352,12 @@ intent in all of the science spectral windows.
 2. Make a list of clean task commands to image all fields with PHASE and TARGET
 intent in all of the science spectral windows.
 
-    hif_makecleanlist(intent='*PHASE*,*TARGET*')
+    hif_makecleanlist(intent='PHASE,TARGET')
 
 3. Make a list of clean task commands to image all fields with PHASE intent 
 n a single spectral window.
 
-    hif_makecleanlist(intent='*PHASE*',spw='1')
+    hif_makecleanlist(intent='PHASE',spw='1')
 
 </example>
 
