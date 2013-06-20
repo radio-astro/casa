@@ -21,7 +21,7 @@ class CleanListResult(basetask.Results):
     def merge_with_context(self, context):
         # add the cleaned targets to the context
         for result in self.results:
-#            try:
+            try:
                 imageitem = imagelibrary.ImageItem(
                   imagename=result.image, sourcename=result.sourcename,
                   spwlist=result.spw, sourcetype=result.intent,
@@ -30,8 +30,8 @@ class CleanListResult(basetask.Results):
                     context.sciimlist.add_item(imageitem)
                 else:
                     context.calimlist.add_item(imageitem)
-#            except:
-#                pass
+            except:
+                pass
 
 #        for item in context.sciimlist.get_imlist():
 #            print 'science'
