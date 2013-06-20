@@ -91,7 +91,7 @@ public:
   // Called at the end of gridding : subftm->finalizeToSky()
   void finalizeToSky(){throw(AipsError("NewMultiTermFT::finalizeToSky() called without arguments!"));};
 
-  void finalizeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& weightImageVec, PtrBlock<SubImage<Float> *>& fluxScaleVec, Bool dopsf, Block<Matrix<Float> >& weightsVec);
+  void finalizeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& weightImageVec, PtrBlock<SubImage<Float> *>& fluxScaleVec, Bool dopsf, Block<Matrix<Float> >& weightsVec, const VisBuffer& vb);
 
   //  void normalizeToSky(ImageInterface<Complex>& compImage, ImageInterface<Float>& resImage, ImageInterface<Float>& weightImage, Bool dopsf, Matrix<Float>& weights)
   // {throw(AipsError("NewMultiTermFT::normalizeToSky should not get called !"));};
