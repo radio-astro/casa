@@ -14,7 +14,7 @@ class CleanBoxHeuristics(object):
 
     def __init__(self):
         # list of cleaned fluxes for successive cleaning loops
-        self.sum_list = []
+        self.flux_list = []
 
         # max and min peaks in residual
         self.max_peak = None
@@ -24,81 +24,115 @@ class CleanBoxHeuristics(object):
         self.threshold = None
 
     def clean_more(self, loop, new_threshold, sum, residual_max, residual_min,
-      non_cleaned_rms, island_peaks):
+      non_cleaned_rms, island_peaks,
+      flux_change_enable=True, flux_change_limit=0.03,
+      low_threshold_enable=True, low_threshold_limit=1.5,
+      noisepeaks1_enable=True,
+      noisepeaks2_enable=True):
         """Do we need to clean more deeply?
         """
-        clean_more = True
 
-        # not if the cleaned flux increased by less than 3%
-        self.sum_list.append(sum)
-        sum_array = np.array(self.sum_list)
-        LOG.debug('model sums so far: %s' % sum_array)
-        if clean_more and len(sum_array) > 6 and loop > 0:
-            sum_change = (sum_array[-5:] - sum_array[-6:-1]) / sum_array[-1]
-            LOG.debug('sum change: %s' % sum_change)
-            mean_sum_change = np.mean(sum_change)
+        # clean diverging?
+        old_threshold = self.threshold
+        self.threshold = new_threshold
+        if loop > 0:
+            diverging_halt = new_threshold > old_threshold
+            LOG.info('diverging     : halt=%s enabled=True threshold(old,new)=(%.3g, %.3g)' % (
+              diverging_halt, old_threshold, new_threshold)) 
+            LOG.info('                halt = new threshold > old')
+        else:
+            diverging_halt = False
+            LOG.info('diverging     : halt=%s enabled=True not enough iterations' % (
+              diverging_halt)) 
 
-            if mean_sum_change < 0.03:
-                LOG.info(
-                  'terminate clean; cleaned flux increased by less than 3%')
-                clean_more = False
+        # is the flux increase for last threshold iteration below the limit set?
+        self.flux_list.append(sum)
+        flux_array = np.array(self.flux_list)
+        if loop > 0:
+            flux_change = (flux_array[-1] - flux_array[-2])
+            flux = flux_array[-1]
+            flux_change_halt = (flux_change / flux) < flux_change_limit
+            LOG.info('flux change   : halt=%s enabled=%s change=%.3g flux=%.3g' % (
+              flux_change_halt, flux_change_enable, flux_change, flux)) 
+            LOG.info('                halt = (cleaned flux change / cleaned flux) > %.3g' %
+              flux_change_limit)
+        else:
+            flux_change_halt = False
+            LOG.info('flux change   : halt=%s enabled=%s not enough iterations' % (
+              flux_change_halt, flux_change_enable)) 
 
-        # not if the threshold is lower than the 1.5 *
-        # residual rms - except for the first loop
-        if clean_more and \
-          abs(residual_max) < 1.3 * abs(residual_min) and \
-          new_threshold < 1.5 * non_cleaned_rms and loop > 0:
-            LOG.info(
-              'terminate clean; next threshold (%s) < 1.5 * rms (%s)' % (
-              new_threshold, non_cleaned_rms))
-            clean_more = False
+        # is the threshold lower than the 1.5 * uncleaned residual rms for any other
+        # than the first loop
+#        if clean_more and \
+#          abs(residual_max) < 1.3 * abs(residual_min) and \
+        if loop > 0:
+            if non_cleaned_rms is not None:
+                low_threshold_halt = new_threshold < low_threshold_limit * non_cleaned_rms
+                LOG.info('threshold~rms : halt=%s enabled=%s threshold=%.3g rms=%.3g' % (
+                  low_threshold_halt, low_threshold_enable, new_threshold, non_cleaned_rms))
+                LOG.info('                halt = new threshold < %.3g * rms' % 
+                  low_threshold_limit)
+            else: 
+                low_threshold_halt = False
+                LOG.info('threshold~rms : halt=False enabled=%s no measure of non-cleaned rms' %
+                  low_threshold_enable)
+        else:
+            low_threshold_halt = False
+            LOG.info('threshold~rms : halt=%s enabled=%s not enough iterations' % (
+              low_threshold_halt, low_threshold_enable))
 
-        # are the new islands the tops of noise peaks? Two ways of assessing
-        # this.
+        # are the new islands the tops of noise peaks?                      
         previous_max_peak = self.max_peak
         previous_min_peak = self.min_peak
         peaks = np.array(island_peaks.values())
         self.max_peak = max(peaks)
         self.min_peak = min(peaks)
 
-        # first way, are there lots of peaks with similar peak values?
-        if clean_more and loop > 0:
-            try:
-                if len(peaks) == 30 and self.max_peak < 1.2 * self.min_peak:
-                    LOG.info('terminate clean; finding noise peaks (method 1)')
-                    clean_more = False
-            except:
-                pass
+        # method 1, are there lots of peaks with similar peak values?
+        if loop > 0:
+            noisepeaks1_halt = (len(peaks) == 30 and self.max_peak < 1.2 * self.min_peak)
+            LOG.info('noise peaks 1 : halt=%s enabled=%s npeaks=%s peak(min,max)=(%.3g, %.3g)' % (
+              noisepeaks1_halt, noisepeaks1_enable, len(peaks), self.min_peak,
+                self.max_peak))
+            LOG.info('                halt = 30 peaks and max peak < 1.2 * min peak')
+        else:
+            noisepeaks1_halt = False
+            LOG.info('noise peaks 1 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) not enough iterations' % (
+              noisepeaks1_halt, noisepeaks1_enable, self.min_peak, self.max_peak))
 
-        # second way, is there a big overlap between the range of peak values
+        # method2, is there a big overlap between the range of peak values
         # from this loop and the last one?
-        if clean_more and loop > 0:
+        if loop > 0:
             overlap_max = min(self.max_peak, previous_max_peak)
             overlap_min = max(self.min_peak, previous_min_peak)
+            overlap = max(0, overlap_max-overlap_min)
             overall_max = max(self.max_peak, previous_max_peak)
             overall_min = min(self.min_peak, previous_min_peak)
-            LOG.debug('overlap max:%s min:%s' % (overlap_max, overlap_min))
-            LOG.debug('overall max:%s min:%s' % (overall_max, overall_min))
 
-            if (self.max_peak < 2 * self.min_peak) and \
-              ((overlap_max - overlap_min) / (overall_max - overall_min) >0.3):
-                LOG.info('terminate clean; finding noise peaks (method 2)')
-                clean_more = False
+            noisepeaks2_halt = (self.max_peak < 2 * self.min_peak) and \
+              (overlap / (overall_max - overall_min) > 0.3)
+            LOG.info(
+              'noise peaks 2 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) overlap=%.3g overall range=(%.3g)' % (
+              noisepeaks2_halt, noisepeaks2_enable, self.min_peak, self.max_peak, 
+              overlap, overall_max-overall_min))
+            LOG.info(
+              '                halt = max peak < 2 * min peak and (overlap / overall range) > 0.3') 
+        else:
+            noisepeaks2_halt = False
+            LOG.info(
+              'noise peaks 2 : halt=%s enabled=%s not enough iterations' % (
+              noisepeaks2_halt, noisepeaks2_enable))
 
-        # not so good if we've run out of iterations.
-        if clean_more and loop > 10:
-            LOG.warning('terminate clean; nloop > 10')
-            clean_more = False
-
-        # clean diverging?
-        old_threshold = self.threshold
-        self.threshold = new_threshold
-        if clean_more and loop > 0 and new_threshold > old_threshold:
-            LOG.warning('terminate clean; diverging')
-            clean_more = False
-
+        # clean further unless any enabled rules are True
+        clean_more = not(diverging_halt) and \
+          not(flux_change_enable and flux_change_halt) and \
+          not(low_threshold_enable and low_threshold_halt) and \
+          not(noisepeaks1_enable and noisepeaks1_halt) and \
+          not(noisepeaks2_enable and noisepeaks2_halt)
         if clean_more:
-            LOG.debug('continue cleaning; new threshold %sJy' % new_threshold)
+            LOG.info('continue cleaning!')
+        else:
+            LOG.info('stop cleaning!')
 
         return clean_more
 
@@ -205,7 +239,7 @@ def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1):
     return sidelobe_ratio
 
 def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
- npeak=30, fluxscale=None):
+ npeak=30, fluxscale=None, mask_method=None):
     """Adapted from an algorithm by Amy Kimball, NRAO.
 
     Starting with peak in image, find islands; contiguous pixels above
@@ -224,12 +258,15 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
     sidelobe_ratio   -- ratio of peak to first sidelobe in psf.
     fluxscale        -- Fluxscale map from mosaic clean. If set, used to locate
                         edges of map where spikes may occur.
+    mask_method      -- 'automatic', 'nomask', or name of clean mask
+                        specified by user.
     """
 	
     # Get a searchmask to be used in masking image during processing.
     # An explicitly separate mask is used so as not to risk messing
     # up any mask that arrives with the residual.
     # Set all its values to 1 (=True=good).
+    print 'residual', residual
     searchmask = casatools.image.newimagefromimage(infile=residual,
       outfile='searchmask', overwrite=True)
     searchmask.calc('1') 
@@ -387,29 +424,35 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
                 nm = image.newimagefromimage(infile=old_mask,
                   outfile=new_mask, overwrite=True)
 
-            # add new islands cumulatively - Kumar says this is best as it
-            # allows clean to correct mistakes in previous iterations
-            for plane in range(shape[3]):
-                maskpix = nm.getchunk(blc=[0,0,0,plane],
-                  trc=[-1,-1,-1,plane])
-                if old_mask is None:
-                    maskpix[:] = 0.0
+            if mask_method == 'automatic':
+                print 'automatic'
+                # add new islands cumulatively - Kumar says this is best as it
+                # allows clean to correct mistakes in previous iterations
+                for plane in range(shape[3]):
+                    maskpix = nm.getchunk(blc=[0,0,0,plane],
+                      trc=[-1,-1,-1,plane])
+                    if old_mask is None:
+                        maskpix[:] = 0.0
 
-                for island_tree in island_trees.values():
-                    plane_nodes = [k for k in island_tree.keys() if k[0]==plane] 
-                    for node in plane_nodes:
-                        for pix in island_pix[node[0]][node[1]]:
-                            maskpix[pix] = 1.0
-                        # remove the node from the tree as it will not be
-                        # needed further
-                        ignore = island_tree.pop(node, None)
+                    for island_tree in island_trees.values():
+                        plane_nodes = [k for k in island_tree.keys() if k[0]==plane] 
+                        for node in plane_nodes:
+                            for pix in island_pix[node[0]][node[1]]:
+                                maskpix[pix] = 1.0
+                            # remove the node from the tree as it will not be
+                            # needed further
+                            ignore = island_tree.pop(node, None)
 
-                maskpix = nm.putchunk(blc=[0,0,0,plane], pixels=maskpix)
+                    maskpix = nm.putchunk(blc=[0,0,0,plane], pixels=maskpix)
 
-#            uncomment following if want next mask to have only one island
-#            added
-#            for pix in island_pix[0]:
-#                maskpix[pix] = 1.0
+#                uncomment following if want next mask to have only one island
+#                added
+#                for pix in island_pix[0]:
+#                    maskpix[pix] = 1.0
+
+            elif mask_method == 'nomask':
+                print 'full image mask'
+                nm.calc('1')
 
             nm.close()
             nm.done()
