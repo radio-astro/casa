@@ -36,7 +36,7 @@ Compute a clean map.
      <value></value>
   </param>
 
-  <param type="string" name="mode">
+  <param type="string" name="mode" subparam="true">
      <description>Spectral gridding type (mfs, channel, velocity, frequency)</description>
      <value>mfs</value>
        <allowed kind="enum">
@@ -90,13 +90,13 @@ Compute a clean map.
     <value type="string"></value>
   </param>
 
-  <param type="intArray" name="imsize">
-    <description>x and y image size in pixels. Single value same: same for both. Heuristic default</description>
+  <param type="intArray" name="imsize" subparam="true">
+    <description>x and y image size in pixels. Single value same: same for both.</description>
     <value></value>
   </param>
 
-  <param type="stringArray" name="cell">
-    <description>x and y cell size(s). Single value:same for both. Heuristic default</description>
+  <param type="stringArray" name="cell" subparam="true">
+    <description>x and y cell size(s). Single value:same for both.</description>
     <value>1.0arcsec</value>
   </param>
 
@@ -107,12 +107,12 @@ Compute a clean map.
   </param>
 
   <param type="string" name="restfreq" subparam="true">>
-    <description>Rest frequency to assign to image</description>
+    <description>CASA clean restfreq parameter</description>
     <value></value>
   </param>
 
-  <param type="string" name="weighting">
-     <description>Weighting of uv (natural, uniform, briggs, ...)</description>
+  <param type="string" name="weighting" subparam="true">
+     <description>CASA clean weighting parameter</description>
      <value>natural</value>
        <allowed kind="enum">
          <value>natural</value>
@@ -125,23 +125,35 @@ Compute a clean map.
   </param>
 
   <param type="double" name="robust" subparam="true">
-     <description>Briggs robustness parameter</description>
+     <description>CASA clean robust parameter</description>
      <value>0.0</value>
   </param>
 
   <param type="any" name="noise" subparam="true">
-    <description>Noise parameter for briggsabs mode weighting</description>
+    <description>CASA clean noise parameter</description>
     <any type="variant"/>
     <value type="string">1.0Jy</value>
   </param>
 
-  <param type="string" name="report" subparam="true">
-    <description>Report type</description>
-    <value>standard</value>
-    <allowed kind="enum">
-      <value>noreport</value>
-      <value>standard</value>
-    </allowed>
+  <param type="int" name="npixels" subparam="true">
+    <description>CASA clean npixels parameter</description>
+    <value type="int">1</value>
+  </param>
+
+  <param type="any" name="uvrange" subparam="true">
+    <description>CASA clean uvrange parameter</description>
+    <any type="variant" limittypes="string stringArray"/>
+    <value type="string"></value>
+  </param>
+
+  <param type="string" name="mask_method" subparam="true">
+     <description>Clean mask generation; automatic, nomask or mask name</description>
+     <value>automatic</value>
+  </param>
+
+  <param type="int" name="maxthreshiter" subparam="true">
+    <description>Maximum number of cleanbox/threshold iterations</description>
+    <value>10</value>
   </param>
 
   <param type="string" name="pipelinemode">
@@ -176,9 +188,17 @@ Compute a clean map.
         <default param="spw"><value type="string"></value></default>
         <default param="imagename"><value type="string"></value></default>
         <default param="outframe"><value type="string"></value></default>
+        <default param="imsize"><value type="intArray"></value></default>
+        <default param="cell"><value type="stringArray"></value></default>
         <default param="restfreq"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
-        <default param="report"><value type="string"></value>standard</default>
+        <default param="weighting"><value type="string">natural</value></default>
+        <default param="robust"><value type="double">0.0</value></default>
+        <default param="noise"><value type="string">1.0Jy</value></default>
+        <default param="npixels"><value type="int">1</value></default>
+        <default param="uvrange"><value type="string"></value></default>
+        <default param="mask_method"><value type="string">automatic</value></default>
+        <default param="maxthreshiter"><value>10</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
@@ -189,38 +209,17 @@ Compute a clean map.
         <default param="spw"><value type="string"></value></default>
         <default param="imagename"><value type="string"></value></default>
         <default param="outframe"><value type="string"></value></default>
+        <default param="imsize"><value type="intArray"></value></default>
+        <default param="cell"><value type="stringArray"></value></default>
         <default param="restfreq"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
-        <default param="report"><value type="string"></value>standard</default>
-      </equals>
-    </when>
-
-    <when param="mode">
-      <equals type="string" value="mfs"/>
-      <equals type="string" value="channel">
-        <default param="nchan"><value>-1</value></default>
-        <default param="start"><value type="string"></value></default>
-        <default param="width"><value type="string"></value></default>
-      </equals>
-      <equals type="string" value="frequency">
-        <default param="nchan"><value>-1</value></default>
-        <default param="start"><value type="string"></value></default>
-        <default param="width"><value type="string"></value></default>
-      </equals>
-      <equals type="string" value="velocity">
-        <default param="nchan"><value>-1</value></default>
-        <default param="start"><value type="string"></value></default>
-        <default param="width"><value type="string"></value></default>
-      </equals>
-    </when>
-
-    <when param="weighting">
-      <equals type="string" value="briggs">
-        <default param="robust"><value>0.0</value></default>
-      </equals>
-      <equals type="string" value="briggsabs">
-        <default param="robust"><value>0.0</value></default>
-        <default param="noise"><value type="string">1.0mJy</value></default>
+        <default param="weighting"><value type="string">natural</value></default>
+        <default param="robust"><value type="double">0.0</value></default>
+        <default param="noise"><value type="string">1.0Jy</value></default>
+        <default param="npixels"><value type="int">1</value></default>
+        <default param="uvrange"><value type="string"></value></default>
+        <default param="mask_method"><value type="string">automatic</value></default>
+        <default param="maxthreshiter"><value>10</value></default>
       </equals>
     </when>
 
