@@ -50,7 +50,8 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
 	if inputs.maxchannels <= 0:
             result = self._do_bandpass()
 	else:
-            result = self._do_smoothed_bandpass()
+            result = self._do_fixed_bandpass()
+            #result = self._do_smoothed_bandpass()
         
         # Attach the preparatory result to the final result so we have a
         # complete log of all the executed tasks. 
@@ -84,6 +85,43 @@ class PhcorBandpass(bandpassworker.BandpassWorker):
             bandpass_task = bandpassmode.BandpassMode(self.inputs)
             return self._executor.execute(bandpass_task)
         finally:
+            self.inputs.run_qa2 = orig_run_qa2
+
+    def _do_fixed_bandpass(self):
+	orig_solint = self.inputs.solint
+        orig_run_qa2 = self.inputs.run_qa2
+        try:
+	    # Determine the minimum resolution required to get at
+	    # least 240 channels for all spws
+	    spwlist = self.inputs.ms.get_spectral_windows(self.inputs.spw)
+	    chanreslist = []
+	    for spw in spwlist:
+		# TDM or FDM
+                dd = self.inputs.ms.get_data_description(spw=spw)
+                if dd is None:
+                    LOG.debug('Missing data description for spw %s ' % spw.id)
+                    continue
+                ncorr = len(dd.corr_axis)
+                if ncorr not in set([1,2,4]):
+                    LOG.debug('Wrong number of correlations %s for spw %s ' % (ncorr, spw.id))
+                    continue
+		bandwidth = spw.bandwidth.to_units( \
+		    otherUnits=measures.FrequencyUnits.MEGAHERTZ)
+                if (ncorr * spw.num_channels > 256):
+		    chanres = bandwidth / self.inputs.maxchannels
+		else:
+		    chanres = bandwidth / spw.num_channels
+		chanreslist.append(chanres)
+	    min_chanres = min(chanreslist)
+
+	    # Run bandpass with that value.
+            self.inputs.run_qa2 = False
+	    self.inputs.solint=orig_solint + ',' + str(min_chanres) + 'MHz'
+            bandpass_task = bandpassmode.BandpassMode(self.inputs)
+            return self._executor.execute(bandpass_task)
+
+        finally:
+	    self.inputs.solint = orig_solint
             self.inputs.run_qa2 = orig_run_qa2
 
     def _do_smoothed_bandpass(self):
