@@ -19,20 +19,23 @@ class CleanHeuristics(object):
 
     def __init__(self, context, vislist, spw):
         self.context = context
-        self.vislist = vislist
+        if type(vislist) is types.ListType:
+            self.vislist = vislist
+        else:
+            self.vislist = [vislist]
         self.namer = filenamer.Image()
 
         self.beam_radius = {}
 
         # base heuristics on first spw in list from first vis set, assume all
         # other vis sets same for now
-        ms = self.context.observing_run.get_ms(name=vislist[0])
+        ms = self.context.observing_run.get_ms(name=self.vislist[0])
         spwid = int(spw.split(',')[0])
         spw = ms.get_spectral_window(spwid)
 
         # get the diameter of the smallest antenna used among all vis sets
         diameters = []
-        for vis in vislist:
+        for vis in self.vislist:
             ms = self.context.observing_run.get_ms(name=vis)
             antennas = ms.antennas
             for antenna in antennas:
@@ -194,8 +197,10 @@ class CleanHeuristics(object):
         if not self._mosaic:
             for mdirection in mdirections:
                 if mdirection != mdirections[0]:
-                    raise Exception, \
-                      'non-identical field centers in single field image' 
+                    LOG.warning('separation between field centres: %s' % (
+                      casatools.measures.separation(mdirection, mdirections[0])))
+#                    raise Exception, \
+#                      'non-identical field centers in single field image' 
             mdirections = [mdirections[0]]
 
         # it should be easy to calculate some 'average' direction
