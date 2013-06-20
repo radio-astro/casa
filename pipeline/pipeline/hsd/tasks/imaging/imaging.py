@@ -7,6 +7,7 @@ import numpy
 import time
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.imagelibrary as imagelibrary
@@ -109,10 +110,31 @@ class SDImaging(common.SingleDishTaskTemplate):
 
                 LOG.debug('filenames=%s'%(filenames))
                 
+                # create job for full channel image
+                LOG.info('create full channel image')
+
+                # image name
+                namer = filenamer.Image()
+                namer.casa_image()
+                namer.source(source_name)
+                namer.antenna_name(name)
+                namer.spectral_window(spwid)
+                if pols == [0,1]:
+                    polstr = 'XXYY'
+                elif pols == [0] or pols == 0:
+                    polstr = 'XX'
+                elif pols == [1] or pols == 1:
+                    polstr = 'YY'
+                else:
+                    polstr = 'I'
+                namer.polarization(polstr)
+                imagename = namer.get_filename()
+                
                 worker = SDImagingWorker()
                 validsps = []
                 rmss = []
-                parameters = {'datatable': datatable,
+                parameters = {'imagename': imagename,
+                              'datatable': datatable,
                               'reference_data': st,
                               'source_name': source_name,
                               'antenna_name': name,
@@ -126,19 +148,6 @@ class SDImaging(common.SingleDishTaskTemplate):
                 # create job for imaging
                 job = jobrequest.JobRequest(worker.execute, **parameters)
                 
-                # create job for full channel image
-                LOG.info('create full channel image')
-                if pols == [0,1]:
-                    polstr = 'XXYY'
-                elif pols == [0] or pols == 0:
-                    polstr = 'XX'
-                elif pols == [1] or pols == 1:
-                    polstr = 'YY'
-                else:
-                    polstr = 'I'
-                imagename = '%s.%s.spw%s.%s.image'%(source_name,name,spwid,polstr)
-                kwargs = {'imagename':imagename}
-
                 # execute job
                 self._executor.execute(job)
                 
@@ -174,7 +183,7 @@ class SDImagingWorker(object):
     def __init__(self):
         pass
 
-    def execute(self, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids, num_validsp_array, rms_array):
+    def execute(self, imagename, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids, num_validsp_array, rms_array):
         # spectral window
         spw = reference_data.spectral_window[spwid]
         refpix = spw.refpix
@@ -220,17 +229,6 @@ class SDImagingWorker(object):
                                      obs_date=obs_date)
 
         # create image from gridded data
-        LOG.info('create full channel image')
-        if polids == [0,1]:
-            polstr = 'XXYY'
-        elif polids == [0] or polids == 0:
-            polstr = 'XX'
-        elif polids == [1] or polids == 1:
-            polstr = 'YY'
-        else:
-            polstr = 'I'
-        imagename = '%s.%s.spw%s.%s.image'%(source_name.replace(' ','_'),antenna_name,spwid,polstr)
-        kwargs = {'imagename':imagename}
         image_generator.full_channel_image(imagename=imagename)
 
         
