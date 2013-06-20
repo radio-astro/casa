@@ -111,11 +111,11 @@ class CalibrationTable(SDNamingTemplate):
         return self
     
     def sky_cal(self):
-        self._associations.caltype('sky')
+        self._associations.caltype('skycal')
         return self
         
     def tsys_cal(self):
-        self._associations.caltype('tsys')
+        self._associations.caltype('tsyscal')
         return self
 
     def bl_cal(self):
