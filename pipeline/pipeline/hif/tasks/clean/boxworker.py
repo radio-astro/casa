@@ -12,7 +12,7 @@ LOG = infrastructure.get_logger(__name__)
 class BoxWorkerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir, vis, psf, model, restored,
-      residual, fluxscale, old_cleanmask, new_cleanmask):
+      residual, fluxscale, old_cleanmask, new_cleanmask, mask_method):
         self._init_properties(vars())
 
 
@@ -39,7 +39,7 @@ class BoxWorker(basetask.StandardTaskTemplate):
         threshold, island_peaks = cleanbox.threshold_and_mask(
           residual=inputs.residual, old_mask=inputs.old_cleanmask,
           new_mask=inputs.new_cleanmask, sidelobe_ratio=sidelobe_ratio,
-          fluxscale=inputs.fluxscale)
+          fluxscale=inputs.fluxscale, mask_method=inputs.mask_method)
 
         self.result.threshold = threshold
         self.result.cleanmask = inputs.new_cleanmask
