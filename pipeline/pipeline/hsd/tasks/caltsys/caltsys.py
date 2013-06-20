@@ -51,9 +51,7 @@ class SDCalTsysInputs(common.SingleDishInputs):
         if args['outfile'] is None or len(args['outfile']) == 0:
             namer = filenamer.TsysCalibrationTable()
             st = self.context.observing_run.get_scantable(args['infile'])
-            basename = st.ms.basename
-            index = basename.rfind('.')
-            asdm = basename[:index] if index > 0 else basename
+            asdm = common.asdm_name(st)
             namer.asdm(asdm)
             namer.antenna_name(st.antenna.name)
             args['outfile'] = namer.get_filename()

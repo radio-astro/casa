@@ -10,6 +10,21 @@ LogLevelMap = {'critical': 0,
                'todo': 4,
                'trace': 4}
 
+def asdm_name(scantable_object):
+    """
+    Return ASDM name that target scantable belongs to.
+    Assumptions are:
+       - scantable is generated from MS
+       - MS is generated from ASDM
+       - MS name is <uid>.ms
+    """
+    ms_basename = scantable_object.ms.basename
+    index_for_suffix = ms_basename.rfind('.')
+    asdm = ms_basename[:index_for_suffix] if index_for_suffix > 0 \
+           else ms_basename
+    return asdm
+    
+
 ####
 # ProgressTimer
 #

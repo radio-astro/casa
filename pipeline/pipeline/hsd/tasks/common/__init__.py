@@ -8,6 +8,7 @@ from .common import SingleDishTaskTemplate
 from .utils import ProgressTimer
 from .utils import parseEdge
 from .utils import mjd_to_datestring
+from .utils import asdm_name
 
 # constants 
 NoData = -32767.0
