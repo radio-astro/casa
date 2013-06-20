@@ -58,6 +58,9 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.Atmflag:
         return 'Flag on atmospheric transmission'
 
+    if task_cls is hif.tasks.Clean:
+        return 'Produce a cleaned image'
+
     if task_cls is hif.tasks.FlagDeterALMA:
         return 'ALMA deterministic flagging'
 
@@ -1483,6 +1486,7 @@ renderer_map = {
     T2_4MDetailsRenderer : {
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
+        hif.tasks.Clean          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_clean.html'),
         hif.tasks.CleanList      : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_cleanlist.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
