@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.callibrary as callibrary
 import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
@@ -40,8 +41,14 @@ class SDCalSkyInputs(common.SingleDishInputs):
 
         # output file
         if args['outfile'] is None or len(args['outfile']) == 0:
-            suffix = '_sky'
-            args['outfile'] = args['infile'].rstrip('/') + suffix
+            namer = filenamer.SkyCalibrationTable()
+            st = self.context.observing_run.get_scantable(args['infile'])
+            basename = st.ms.basename
+            index = basename.rfind('.')
+            asdm = basename[:index] if index > 0 else basename
+            namer.asdm(asdm)
+            namer.antenna_name(st.antenna.name)
+            args['outfile'] = namer.get_filename()
 
         return args
 
