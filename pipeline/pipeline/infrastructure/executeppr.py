@@ -321,7 +321,7 @@ def _getProjectSummary(pprObject):
     #    ppr_summary.ProposalTitle.getValue())))
     #summaryList.append (('piname', ('Principal investigator: ',
     #    ppr_summary.PIName.getValue())))
-    summaryList.append (('observatory', ('Oservatory: ',
+    summaryList.append (('observatory', ('Observatory: ',
         ppr_summary.Observatory.getValue())))
     summaryList.append (('telescope', ('Telescope: ',
         ppr_summary.Telescope.getValue())))
