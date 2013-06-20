@@ -6,6 +6,7 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from .cleanworker import CleanWorker
 from pipeline.hif.heuristics import clean
+from pipeline.hif.heuristics import makecleanlist
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -16,15 +17,18 @@ class CleanInputs(basetask.StandardInputs):
       intent=None, field=None, imagename=None, mode=None, imagermode=None,
       outframe=None, nchan=None, start=None, width=None, imsize=None,
       cell=None, phasecenter=None, restfreq=None, weighting=None,
-      weighting_rmode=None, robust=None, noise=None):
+      weighting_rmode=None, robust=None, noise=None, npixels=None,
+      restoringbeam=None, nterms=None, uvrange=None, mask_method=None,
+      maxthreshiter=None):
         self._init_properties(vars())
-        self.heuristics = clean.CleanHeuristics(
+
+        # instantiate the heuristics classes needed, some sorting out needed
+        # here to remove duplicated code
+        self.heuristics = makecleanlist.MakeCleanListHeuristics(
           context=context, vislist=self.vis, spw=self.spw)
 
     @property
     def cell(self):
-        if self._cell is None:
-            return self._context.observing_run.cellsize
         return self._cell
 
     @cell.setter
@@ -43,7 +47,7 @@ class CleanInputs(basetask.StandardInputs):
 
     @property
     def field_id(self):
-        return self.heuristics.field(self._intent, self._field)
+        return self.heuristics.field(self.intent, self.field)
 
     @field_id.setter
     def field_id(self, value):
@@ -61,9 +65,6 @@ class CleanInputs(basetask.StandardInputs):
 
     @property
     def imsize(self):
-        if self._imsize is None:
-            return self.heuristics.imsize(fields=self.field_id, cell=self.cell,
-              spw=self.spw)
         return self._imsize
 
     @imsize.setter
@@ -74,7 +75,7 @@ class CleanInputs(basetask.StandardInputs):
     def imagename(self):
         if self._imagename is None:
             return self.heuristics.imagename(intent=self.intent,
-              field=self.field, spw=self.spw)
+              field=self.field, spwspec=self.spw)
         return self._imagename
 
     @imagename.setter
@@ -198,6 +199,46 @@ class CleanInputs(basetask.StandardInputs):
         self._noise = value
 
     @property
+    def npixels(self):
+        if self._npixels is None:
+            return 0
+        return self._npixels
+
+    @npixels.setter
+    def npixels(self, value):
+        self._npixels = value
+
+    @property
+    def restoringbeam(self):
+        if self._restoringbeam is None:
+            return ''
+        return self._restoringbeam
+
+    @restoringbeam.setter
+    def restoringbeam(self, value):
+        self._restoringbeam = value
+
+    @property
+    def nterms(self):
+        if self._nterms is None:
+            return 1
+        return self._nterms
+
+    @nterms.setter
+    def nterms(self, value):
+        self._nterms = value
+
+    @property
+    def uvrange(self):
+        if self._uvrange is None:
+            return ''
+        return self._uvrange
+
+    @uvrange.setter
+    def uvrange(self, value):
+        self._uvrange = value
+
+    @property
     def width(self):
         if self._width is None:
             return ''
@@ -206,6 +247,26 @@ class CleanInputs(basetask.StandardInputs):
     @width.setter
     def width(self, value):
          self._width = value
+
+    @property
+    def mask_method(self):
+        if self._mask_method is None:
+            return 'automatic'
+        return self._mask_method
+
+    @mask_method.setter
+    def mask_method(self, value):
+         self._mask_method = value
+
+    @property
+    def maxthreshiter(self):
+        if self._maxthreshiter is None:
+            return 10
+        return self._maxthreshiter
+
+    @maxthreshiter.setter
+    def maxthreshiter(self, value):
+         self._maxthreshiter = value
 
 
 class Clean(basetask.StandardTaskTemplate):
@@ -229,6 +290,7 @@ class Clean(basetask.StandardTaskTemplate):
         intent = inputs.intent
         field = inputs.field
         spw = inputs.spw
+
 	if inputs.width == '':
 	    if inputs.mode != 'mfs':
                 width = inputs.heuristics.width(int(spw))
@@ -268,7 +330,13 @@ class Clean(basetask.StandardTaskTemplate):
           nchan=inputs.nchan, start=inputs.start, width=width,
           weighting=inputs.weighting,
           robust=inputs.robust,
-          noise=inputs.noise)
+          noise=inputs.noise,
+          npixels=inputs.npixels,
+          restoringbeam=inputs.restoringbeam,
+          nterms=inputs.nterms,
+          uvrange=inputs.uvrange,
+          mask_method=inputs.mask_method,
+          maxthreshiter=inputs.maxthreshiter)
         datatask = CleanWorker(datainputs)
 
         try:
