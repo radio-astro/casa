@@ -515,7 +515,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }// end of put
   
   //----------------------------------------------------------------------
-  void NewMultiTermFT::finalizeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& weightImageVec, PtrBlock<SubImage<Float> *>& fluxScaleVec, Bool dopsf, Block<Matrix<Float> >& weightsVec)
+  void NewMultiTermFT::finalizeToSky(Block<CountedPtr<ImageInterface<Complex> > > & compImageVec, PtrBlock<SubImage<Float> *> & resImageVec, PtrBlock<SubImage<Float> *>& weightImageVec, PtrBlock<SubImage<Float> *>& fluxScaleVec, Bool dopsf, Block<Matrix<Float> >& weightsVec, const VisBuffer& /*vb*/)
   {
     uInt gridnterms=nterms_p;
     if(dopsf==True) { gridnterms=2*nterms_p-1; }
