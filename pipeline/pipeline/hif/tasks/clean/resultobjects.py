@@ -52,7 +52,10 @@ class CleanResult(basetask.Results):
     def cleanmask(self, iter, image):
         iters = self.iterations.keys()
         iters.sort()
-        return self.iterations[iters[-1]]['cleanmask']
+        if len(iters) > 0:
+            return self.iterations[iters[-1]]['cleanmask']
+        else:
+            return None
 
     def set_cleanmask(self, iter, image):
         self.iterations[iter]['cleanmask'] = image
@@ -61,7 +64,10 @@ class CleanResult(basetask.Results):
     def image(self):
         iters = self.iterations.keys()
         iters.sort()
-        return self.iterations[iters[-1]]['image']
+        if len(iters) > 0:
+            return self.iterations[iters[-1]]['image']
+        else:
+            return None
 
     def set_image(self, iter, image):
         self.iterations[iter]['image'] = image
@@ -70,16 +76,22 @@ class CleanResult(basetask.Results):
     def imageplot(self):
         iters = self.iterations.keys()
         iters.sort()
-        image = self.iterations[iters[-1]]['image']
-        imageplot = displays.sky.plotfilename(image=image,
-          reportdir=self.plotdir)
-        return imageplot
+        if len(iters) > 0:
+            image = self.iterations[iters[-1]]['image']
+            imageplot = displays.sky.plotfilename(image=image,
+              reportdir=self.plotdir)
+            return imageplot
+        else:
+            return None
 
     @property
     def model(self):
         iters = self.iterations.keys()
         iters.sort()
-        return self.iterations[iters[-1]]['model']
+        if len(iters) > 0:
+            return self.iterations[iters[-1]]['model']
+        else:
+            return None
 
     def set_model(self, iter, image):
         self.iterations[iter]['model'] = image
@@ -95,7 +107,10 @@ class CleanResult(basetask.Results):
     def residual(self):
         iters = self.iterations.keys()
         iters.sort()
-        return self.iterations[iters[-1]]['residual']
+        if len(iters) > 0:
+            return self.iterations[iters[-1]]['residual']
+        else:
+            return None
 
     def set_residual(self, iter, image):
         self.iterations[iter]['residual'] = image
