@@ -617,13 +617,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
                         # find left edge
                         left_edge = VectorFlagger._find_small_diff(rdata,
-                          rflag, limit)
+                          rflag, limit, vector.description)
 
                         # and right edge
                         reverse_data = rdata[-1::-1]
                         reverse_flag = rflag[-1::-1]
                         right_edge = VectorFlagger._find_small_diff(
-                          reverse_data, reverse_flag, limit)
+                          reverse_data, reverse_flag, limit, vector.description)
 
                         # flag the 'view'
                         rflag[:left_edge] = True
@@ -832,7 +832,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         return noise_edge
 
     @staticmethod
-    def _find_small_diff(data, flag, limit=2.0):
+    def _find_small_diff(data, flag, limit=2.0, description='unknown'):
         """Return the index in the first quarter of the data array where the
         point to point difference first falls below twice the median value.
 
@@ -845,7 +845,6 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         The index of the first point where the point to point difference
         first falls below 'limit' times the median value.
         """
-
         result = None
 
         nchan = len(data)
@@ -858,6 +857,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
             if diff[i] < limit * median_diff:
                 result = i
                 break
+
+        if result is None:
+            LOG.warning('edge finder failed for:%s' % description)
+            # flag one edge channel - sole purpose of this is to ensure
+            # that a plot is made in the weblog so that the problem
+            # can be understood
+            result = 1
 
         return result
 
