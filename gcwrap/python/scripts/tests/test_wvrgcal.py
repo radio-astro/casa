@@ -95,13 +95,7 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval):
-            if os.path.exists(self.out+'/CAL_DESC'):
-                self.rval = th.compTables(self.ref[0], self.out,
-                                            ['REF_ANT', 'REF_FEED', 'REF_RECEPTOR', 'REF_FREQUENCY',
-                                             'REF_DIRECTION'] # ignore these columns because they are empty
-                                            )
-            else:
-                self.rval = th.compTables(self.ref[1], self.out, ['WEIGHT'] # ignore WEIGHT because it is empty
+            self.rval = th.compTables(self.ref[1], self.out, ['WEIGHT'] # ignore WEIGHT because it is empty
 ##                                             ['TIME',
 ##                                              'FIELD_ID',
 ##                                              'SPECTRAL_WINDOW_ID',
@@ -346,9 +340,41 @@ class wvrgcal_test(unittest.TestCase):
         self.rval = rvaldict['success']
 
         if(self.rval and rvaldict2['success']):
+            rvaldict2['Disc_um'][2]=49.100000000000001 # The value for antenna2 is the only one expected to be different
+                                                       # as it was flagged. Replace by value for the unflagged case
+                                                       # to make following test pass if all else agrees.
             self.rval = (rvaldict==rvaldict2)
                
         self.assertTrue(self.rval)
+
+    def test16(self):
+        '''Test 16: Test the maxdistm and minnumants parameters'''
+        myvis = self.vis_f
+        os.system('cp -R ' + myvis + ' myinput.ms')
+        os.system('rm -rf '+self.out)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, wvrflag=['0', '1'], toffset=0., maxdistm=40., minnumants=2)
+
+        print rvaldict
+
+        self.rval = rvaldict['success']
+
+        if(self.rval):
+            self.rval = th.compTables(self.ref[1], self.out, ['WEIGHT', 'CPARAM'] # ignore WEIGHT because it is empty
+                                      )
+            if(self.rval):
+                tb.open(self.out)
+                a = tb.getcol('ANTENNA1')
+                c = tb.getcol('CPARAM')[0][0]
+                tb.close()
+                i = 1
+                for i in range(len(a)):
+                    if (a[i]==1 and not (c[i]==(1+0j))):
+                        self.rval=False
+                        print "CPARAM for antenna 1 has value ", c[i], " expected (1+0j)."
+                        break
+            
+        self.assertTrue(self.rval)
+
 
 def suite():
     return [wvrgcal_test]
