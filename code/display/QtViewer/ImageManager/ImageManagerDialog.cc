@@ -38,8 +38,10 @@ namespace casa {
 		: QDialog(parent), openHolder( NULL ), allImages( NULL ),
 		  SINGLE_COLOR_MAP( "Color Saturation Map"),
 		  MASTER_COLOR_MAP( "Master Color Saturation Map") {
+
 		ui.setupUi(this);
 		setWindowTitle( "Manage Images");
+		setModal( false );
 
 		//Scroll areas containing open and registered images.
 		initializeScrollArea( ui.openHolder, openScroll );
@@ -48,6 +50,8 @@ namespace casa {
 		         this, SLOT( unDisplayImage( QtDisplayData*)));
 		connect( displayedScroll, SIGNAL(displayDataAdded( QtDisplayData*)),
 		         this, SLOT( displayImage( QtDisplayData*)));
+		connect( displayedScroll, SIGNAL(imageOrderingChanged()),
+				this, SLOT( resetMasterImage()));
 
 		//Master image
 		connect( ui.masterImageComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(masterImageChanged(const QString&)));
@@ -72,18 +76,22 @@ namespace casa {
 //----------------------------------------------------------------
 //                 Master Image
 //----------------------------------------------------------------
+	void ImageManagerDialog::resetMasterImage(){
+		QString masterImageName = ui.masterImageComboBox->currentText();
+		masterImageChanged( masterImageName );
+	}
 
 	void ImageManagerDialog::masterImageChanged(const QString& imageName) {
-		QtDisplayData* newMaster = allImages->getDD( imageName.toStdString());
-		if ( newMaster != NULL && allImages != NULL ) {
+		if ( allImages != NULL ){
+			QtDisplayData* newMaster = allImages->getDD( imageName.toStdString());
+			if ( newMaster != NULL  ) {
+				//qDebug() << "ImageManageDialog setting csmaster="<<imageName<<" ddname="<<newMaster->name().c_str();
+				//So the QtDisplayPanelGui is updated.
+				allImages->setDDControlling( newMaster );
 
-			//So the QtDisplayPanelGui is updated.
-			allImages->setDDControlling( newMaster );
-
-			//So the QtDisplayPanel gets notified (does the real work)
-			displayedScroll->setControllingDD( newMaster );
-
-
+				//So the QtDisplayPanel gets notified (does the real work)
+				displayedScroll->setControllingDD( newMaster );
+			}
 		}
 	}
 
@@ -395,18 +403,29 @@ namespace casa {
 		QList<ImageView*> movedImages = openScroll->getSelectedViews();
 		openScroll->removeImageViews( movedImages );
 		displayedScroll->addImageViews( movedImages );
+		resetMasterImage();
 	}
 
 	void ImageManagerDialog::displayedToOpen() {
 		QList<ImageView*> movedImages = displayedScroll->getSelectedViews();
 		displayedScroll->removeImageViews( movedImages );
 		openScroll->addImageViews( movedImages );
+		resetMasterImage();
 	}
 
 
 	void ImageManagerDialog::closeImage() {
-		openScroll->closeImages();
-		displayedScroll->closeImages();
+		QList<QtDisplayData*> removedOpens = openScroll->closeImages();
+		for ( QList<QtDisplayData*>::iterator iter = removedOpens.begin();
+				iter != removedOpens.end(); iter++ ){
+			allImages->discardDD( (*iter), false);
+		}
+		QList<QtDisplayData*> removedDisplayed = displayedScroll->closeImages();
+		for ( QList<QtDisplayData*>::iterator iter = removedDisplayed.begin();
+						iter != removedDisplayed.end(); iter++ ){
+			allImages->discardDD( (*iter), false );
+		}
+		resetImageLists();
 	}
 
 //-----------------------------------------------------------------
@@ -428,21 +447,23 @@ namespace casa {
 //              Image Tracker Interface
 //-------------------------------------------------------------------
 
-	void ImageManagerDialog::imageAdded( QtDisplayData* image ) {
-		bool displayedImage = openScroll->isManaged( image );
-		if ( !displayedImage ) {
-			openHolder->addDD( image );
-		}
+	void ImageManagerDialog::resetImageLists(){
 		updateMasterList();
 		updateColorList();
 		updateSaturationList();
 	}
 
+	void ImageManagerDialog::imageAdded( QtDisplayData* image ) {
+		bool displayedImage = openScroll->isManaged( image );
+		if ( !displayedImage ) {
+			openHolder->addDD( image );
+		}
+		resetImageLists();
+	}
+
 	void ImageManagerDialog::imageRemoved( QtDisplayData* image ) {
 		openHolder->removeDD( image );
-		updateMasterList();
-		updateColorList();
-		updateSaturationList();
+		resetImageLists();
 	}
 
 	void ImageManagerDialog::masterImageSelected( QtDisplayData* image ) {

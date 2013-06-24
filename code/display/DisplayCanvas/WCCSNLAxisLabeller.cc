@@ -506,7 +506,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if (dolist) {
 
 			// figure out if we can draw the cached list
-
 			Double linMinX = wc->linXMin();
 			Double linMaxX = wc->linXMax();
 			Double linMinY = wc->linYMin();
@@ -550,10 +549,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if (itsValid && itsLastWorldCanvas->validList(itsDrawListNumber)) {
 
 				if(itsLastWorldCanvas==wc &&
-				        itsDrawStateBuffer.matches(worldCanvasState)) {
+				        itsDrawStateBuffer.matches(worldCanvasState) &&
+				        !titleChanged ) {
 
 					// reuse applicable drawlist.
-
 					wc->drawList(itsDrawListNumber);
 					return True;
 				}
@@ -574,7 +573,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		try {
 
 			// Get a copy of the CS
-
 			CoordinateSystem cSys;
 
 			if(useWCCS && wc->hasCS()) {
@@ -852,10 +850,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			for (ididx = yAxTxt.length(); ididx < nl; ididx++) {
 				idents[nl + ididx] = 32;
 			}
-			strncpy(idents + 2*nl, titleText().chars(), nl);
-			for (ididx = titleText().length(); ididx < nl; ididx++) {
+			String titleText = displayedTitleText();
+			strncpy(idents + 2*nl, /*titleText().chars()*/titleText.chars(), nl);
+			for (ididx = /*titleText().length()*/titleText.length(); ididx < nl; ididx++) {
 				idents[2*nl + ididx] = 32;
 			}
+			titleChanged = false;
 //
 			cpgsch(charSize());
 			stemp = charFont();

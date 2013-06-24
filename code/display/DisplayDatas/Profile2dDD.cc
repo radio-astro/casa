@@ -400,6 +400,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		delete itsParamRegionYRadius;
 	}
 
+	Bool Profile2dDD::canLabelAxes() const {
+		bool axisLabelling = false;
+		if (itsAxisLabeller.axisLabelSwitch()) {
+			axisLabelling = true;
+		}
+		return axisLabelling;
+	}
+
 	Bool Profile2dDD::labelAxes(const WCRefreshEvent &ev) {
 		if (!itsAxisLabeller.axisLabelSwitch()) {
 			return False;

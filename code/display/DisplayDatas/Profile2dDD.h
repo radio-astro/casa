@@ -189,6 +189,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Draws and labels the axes based on the refresh event
 		virtual Bool labelAxes(const WCRefreshEvent &ev);
+		virtual Bool canLabelAxes() const;
 
 		// <group>
 		// Install the default options for this DisplayData.

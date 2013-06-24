@@ -118,6 +118,7 @@ private:
 	string numToString( double number ) const;
 	string getBetweenClause( const string& columnName, double low, double high) const;
 	string getInClause( const string& columnName, const vector<string>& values ) const;
+	string getLikeClause( const string& columnName, const vector<string>& values ) const;
 
 	//Set-up
 	sqlite3* db;
@@ -191,6 +192,8 @@ private:
 	const static std::string PERIOD;
 	const static std::string EQUALS;
 	const static std::string IN;
+	const static std::string LIKE;
+	const static std::string OR;
 
 	const static int DEFAULT_VALUE;
 

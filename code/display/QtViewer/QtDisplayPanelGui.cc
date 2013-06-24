@@ -919,6 +919,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if ( sliceTool != NULL ) {
 				sliceTool->setImage( img );
 			}
+
 			if ( histogrammer != NULL ) {
 				histogrammer->setImage( img );
 				const viewer::ImageProperties & imgProperties = /*pdd*/controllingDD->imageProperties( );
@@ -936,6 +937,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if ( histogrammer != NULL ) {
 				histogrammer->setImage( NULL );
 			}
+
 		}
 	}
 
@@ -1031,6 +1033,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			if ( controllingDD != NULL ) {
 				ImageInterface<float>* img = controllingDD->imageInterface();
 				fitTool->setImage( img );
+			}
+			else {
+				fitTool->setImage( NULL );
 			}
 		}
 	}
@@ -1240,6 +1245,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			name=qdd->name() + " <" + viewer::to_string( i ) + ">";
 		}
 		qdd->setName(name);
+		qdd->setPlotTitle();
 		status( "loaded: " + qdd->path( ) );
 		displayDataHolder->addDD( qdd );
 
@@ -2142,7 +2148,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for ( DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
 				iter != qdp_->endRegistered(); iter++ ){
 			QtDisplayData* pdd = (*iter);
-			if(pdd != 0 && pdd->dataType() == "image") {
+			if(pdd != 0 && pdd->isImage()) {
 
 				ImageInterface<float>* img = pdd->imageInterface();
 				PanelDisplay* ppd = qdp_->panelDisplay();
@@ -2151,7 +2157,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					if (ppd->isCSmaster(pdd->dd())) {
 
 						// pdd is a suitable QDD for profiling.
-
 						if (!profile_) {
 							// Set up profiler for first time.
 
@@ -2163,7 +2168,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 							         profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 							connect( pdd, SIGNAL(spectrumChanged(String, String, String )),
 							         profile_, SLOT(changeSpectrum(String, String, String )));
-
 							connect(profile_, SIGNAL(showCollapsedImg(String, String, String, Bool, Bool, ImageInterface<Float>*)),
 							        this, SLOT(addDD(String, String, String, Bool, Bool, ImageInterface<Float>*)));
 							connect(profile_, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
@@ -2175,14 +2179,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 								// [Re-]orient pre-existing profiler to pdd
 								profile_->resetProfile(img, pdd->name().c_str());
 								disconnect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-								            profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+													profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 								disconnect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-								            profile_, SLOT(changeSpectrum(String, String, String )));
+																		            profile_, SLOT(changeSpectrum(String, String, String )));
 								profileDD_ = pdd;
 								connect( profileDD_, SIGNAL(axisChangedProfile(String, String, String, std::vector<int> )),
-								         profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
+																		         profile_, SLOT(changeAxis(String, String, String, std::vector<int> )));
 								connect( profileDD_, SIGNAL(spectrumChanged(String, String, String )),
-								         profile_, SLOT(changeSpectrum(String, String, String )));
+																		         profile_, SLOT(changeSpectrum(String, String, String )));
 							} else {
 								pdd->checkAxis();
 							}
@@ -2226,6 +2230,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			profile_->frameChanged( frameIndex );
 		}
 	}
+
 
 	void QtDisplayPanelGui::connectRegionSignals(PanelDisplay* ppd ) {
 		std::tr1::shared_ptr<QtCrossTool> pos = std::tr1::dynamic_pointer_cast<QtCrossTool>(ppd->getTool(QtMouseToolNames::POINT));
@@ -3134,6 +3139,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//Officially replaces one controlling DD with another.
 		if ( controlDD != NULL ) {
 			QtDisplayData* oldController = displayDataHolder->getDDControlling();
+
 			replaceControllingDD( oldController, controlDD );
 		}
 	}
@@ -3147,7 +3153,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 
 			//Set the new controlling DD in the layers below this one.
-			//qdp_->setControllingDD( newControllingDD );
+
+			qdp_->setControllingDD( newControllingDD );
 
 
 			emit axisToolUpdate( newControllingDD );
@@ -3169,6 +3176,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//See if there is a new controllingDD.
 		QtDisplayData* newControllingDD = lookForExistingController();
+
 
 		//Replace the controllingDD officially
 		replaceControllingDD( oldControllingDD, newControllingDD );

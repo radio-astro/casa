@@ -54,7 +54,7 @@ namespace casa {
 		void setDisplayedColor( QColor imageColor );
 		void emitDisplayColorsChanged();
 		QColor getDisplayedColor() const;
-		void makeDrag();
+		static const QString DROP_ID;
 		~ImageView();
 
 	signals:
@@ -64,6 +64,7 @@ namespace casa {
 
 	protected:
 		virtual void mouseMoveEvent( QMouseEvent* event );
+		virtual void mousePressEvent( QMouseEvent* event );
 
 	private slots:
 		void openCloseDisplay();
@@ -78,7 +79,10 @@ namespace casa {
 		void minimizeDisplay();
 		void maximizeDisplay();
 		void initDisplayType();
+		void clearDrag();
+		QImage* makeDragImage();
 
+		void makeDrag( QMouseEvent* event );
 		void setButtonColor( QColor color );
 		QColor getButtonColor() const;
 
@@ -90,8 +94,11 @@ namespace casa {
 		QColor selectedColor;
 		QColor normalColor;
 
+
 		QtDisplayData* imageData;
 		QButtonGroup* displayGroup;
+		QDrag* drag;
+
 		Ui::ImageViewClass ui;
 	};
 

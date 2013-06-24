@@ -225,6 +225,7 @@ namespace casa {
 			//We need to convert a value in doppler text field to the new units.
 			//Make sure there is a value to convert:
 			QString valStr = ui.dopplerLineEdit->text();
+
 			if ( valStr.length() > 0 ) {
 				QString unitStr = ui.dopplerUnitsComboBox->currentText();
 				String unitString = unitStr.toStdString();
@@ -243,8 +244,8 @@ namespace casa {
 					val = velQuantity.getValue();
 				} else {
 					//From velocity to doppler
-					MDoppler doppler = MDoppler::Convert ( MRadialVelocity( Quantity(val, unitString),
-					                                       referenceType).toDoppler(),dopplerType)();
+					MDoppler dop = MRadialVelocity( Quantity(val, unitString), referenceType).toDoppler();
+					MDoppler doppler = MDoppler::Convert ( dop, dopplerType)();
 					val = doppler.getValue ();
 					if ( isnan( val )) {
 						valid = false;

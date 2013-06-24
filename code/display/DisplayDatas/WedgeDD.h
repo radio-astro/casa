@@ -95,7 +95,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Axis labeller, 5th step in the WCHolder refresh cycle
 		virtual Bool labelAxes(const WCRefreshEvent &ev);
-
+		virtual Bool canLabelAxes() const;
 		bool isDisplayable( ) const;
 
 		// Return the data unit.

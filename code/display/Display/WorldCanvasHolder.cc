@@ -45,7 +45,7 @@
 #include <display/Display/AttValBase.h>
 #include <display/Display/PixelCanvas.h>
 #include <display/Display/WorldCanvasHolder.h>
-
+#include <display/DisplayCanvas/WCAxisLabeller.h>
 
 #include <cpgplot.h>
 
@@ -89,7 +89,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Adding, removing and querying DisplayDatas
-	void WorldCanvasHolder::addDisplayData(DisplayData *dData) {
+	void WorldCanvasHolder::addDisplayData(DisplayData *dData, int position ) {
 		if (dData == 0) {
 			throw (AipsError("WorldCanvasHolder::addDisplayData - "
 			                 "null pointer passed"));
@@ -98,8 +98,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Notify DisplayData
 		dData->notifyRegister(this);
 
-		// and add the new displayData
-		itsDisplayList.push_back(dData);
+		if ( position == -1 ){
+			// and add the new displayData
+			itsDisplayList.push_back(dData);
+		}
+		else {
+			int i = 0;
+			std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
+			while ( i < position && iter != itsDisplayList.end()){
+				iter++;
+				i++;
+			}
+			itsDisplayList.insert(iter,dData);
+		}
 
 		if(worldCanvas()->csMaster()==0) {
 			executeSizeControl(worldCanvas());
@@ -118,6 +129,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			itsDisplayList.erase(pos);
 			// Notify DisplayData
 			dData.notifyUnregister(*this, ignoreRefresh);
+		}
+		if ( itsDisplayList.size() == 0 ){
+			controllingDD = NULL;
 		}
 
 		if(csMaster()==0) executeSizeControl(worldCanvas());
@@ -236,7 +250,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		drawArea.set("canvasDrawYOffset", uInt(dOffset));
 		drawArea.set("canvasDrawYSize", uInt(dSize));
 
-
 		wCanvas->setAttributes(drawArea);
 
 
@@ -267,12 +280,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Give current CS master (if any) the chance to remain master
 		// (it will probably do so).
-		Bool masterFound = worldCanvas()->csMaster() !=0 &&
-		                   worldCanvas()->csMaster()->sizeControl(*this, sizeControlAtts);
+		DisplayData* csMasterDD = worldCanvas()->csMaster();
+		Bool masterFound = csMasterDD !=0 &&
+		                   csMasterDD->sizeControl(*this, sizeControlAtts);
+
 		// Even if master role is already taken, all sizeControl routines are still
 		// executed, to give give the DDs a chance to do minor adjustments (to
 		// maximum zoom extents, for example).  (At present (6/04), no non-master
 		// DD is making any such adjustments, however).
+
 		for ( std::list<DisplayData*>::iterator iter = itsDisplayList.begin();
 		        iter != itsDisplayList.end(); ++iter ) {
 			if ( ! (*iter)->isDisplayable( ) ) {
@@ -287,37 +303,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				// at this stage.  But setting itsCSmaster here also puts the
 				// dd in charge, at least temporarily, of any WC coordinate
 				// conversions it needs to do during sizeControl execution).
-
 			}
-			if ( (*iter)->sizeControl(*this, sizeControlAtts)) {
+			bool ddSizeControl=(*iter)->sizeControl(*this, sizeControlAtts);
+			if ( ddSizeControl ) {
 				masterFound=True;
 			}
 			// CS master confirmed.
 		}
 
-		if (masterFound) wCanvas->setAttributes(sizeControlAtts);
+		if (masterFound){
+			wCanvas->setAttributes(sizeControlAtts);
+		}
+
 		// Store the WC state attributes produced by sizeControl[s].
 		else {
-
-			// Noone assumed CS master role (canvas may be empty).  Remove
-			// any old axis codes; next master will set them to suit itself.
-			// Assure that the zoom window is reset when a DD _does_ accept CS master.
-
-			worldCanvas()->csMaster() = 0;
-
-			String xAxis = "xaxiscode (required match)",
-			       yAxis = "yaxiscode (required match)";
-			wCanvas->removeAttribute(xAxis);
-			wCanvas->removeAttribute(yAxis);
-
-			Attribute unZoom("resetCoordinates", True);
-			itsWorldCanvas->setAttribute(unZoom);	// "zoom-to-extent" order.
-
-			String zoomB = "manualZoomBlc", zoomT = "manualZoomTrc";
-			itsWorldCanvas->removeAttribute(zoomB);	  // These will not be
-			itsWorldCanvas->removeAttribute(zoomT);
-		}	  // meaningful anymore.
-
+			clearCSMasterSettings( wCanvas );
+		}
 
 		itsLastCSmaster = worldCanvas()->csMaster( );
 		// (Used during the next call to this routine, when the _next_
@@ -325,6 +326,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (or anyone) wasCSmaster()).
 
 		return masterFound;
+	}
+
+	void WorldCanvasHolder::clearCSMasterSettings( WorldCanvas* wCanvas ){
+		// None assumed CS master role (canvas may be empty).  Remove
+		// any old axis codes; next master will set them to suit itself.
+		// Assure that the zoom window is reset when a DD _does_ accept CS master.
+
+		worldCanvas()->csMaster() = 0;
+
+		String xAxis = "xaxiscode (required match)",
+					       yAxis = "yaxiscode (required match)";
+		wCanvas->removeAttribute(xAxis);
+		wCanvas->removeAttribute(yAxis);
+
+		Attribute unZoom("resetCoordinates", True);
+		itsWorldCanvas->setAttribute(unZoom);	// "zoom-to-extent" order.
+
+		String zoomB = "manualZoomBlc", zoomT = "manualZoomTrc";
+		itsWorldCanvas->removeAttribute(zoomB);	  // These will not be
+		itsWorldCanvas->removeAttribute(zoomT);
 	}
 
 	bool WorldCanvasHolder::setCSMaster( DisplayData* dd ) {
@@ -341,10 +362,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				//Make it the cs master
 				worldCanvas()->csMaster() = dd;
 				controllingDD = dd;
+
 				//Store the old one
 				itsLastCSmaster = currentCSMaster;
+
+				//Tell everything to clean up cached drawings.  The
+				//drawing box will change will this new CS Master.
+				for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+						        iter != itsDisplayList.end(); ++iter ) {
+					(*iter)->cleanup();
+				}
+
 				//Execute size control
+				worldCanvas()->hold();
 				acceptedPosition = executeSizeControl( worldCanvas());
+				worldCanvas()->release();
 			}
 		}
 		return acceptedPosition;
@@ -381,6 +413,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		pc->disable(Display::ClipWindow);
 		wc->setDrawBuffer(Display::BackBuffer);
+
+		//executeSizeControl( wc );
 
 		// set clip window to entire WorldCanvas, and clear.
 		pc->setClipWindow(wc->canvasXOffset(), wc->canvasYOffset(),
@@ -426,24 +460,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		//iteration zero - do controlling dd;
-		/*if ( controllingDD != NULL && conforms[dd]){
-			if (controllingDD->isDisplayable() ){
-				controllingDD->refreshEH(ev);
-			}
-		}*/
+		clearSubstituteTitles();
+		setControllingTitle( conforms );
 
-		// iteration one - do rasters:
+		// iteration one - do  rasters:
 		dd = 0;
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-		        iter != itsDisplayList.end(); ++iter, ++dd ) {
+		        iter != itsDisplayList.end(); iter++, ++dd ) {
 			if ( conforms[dd] ) {
-				if ( ! (*iter)->isDisplayable( ) ) continue;	// not displayable
 				if ( (*iter)->classType( ) == Display::Raster ) {
 					(*iter)->refreshEH(ev);
 				}
 			}
 		}
+
 		wc->flushComponentImages();
 
 
@@ -508,6 +538,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (10/07 dk: imperfect attempts have been made to correct the above.  Image
 		// DDs now use WC CS for labelling, though still (wastefully) using a
 		// private CS as well sometimes....
+		labelAxes( conforms, ev );
+
+		wc->releasePGPLOTdevice();
+		// disable the clip window
+		pc->disable(Display::ClipWindow);
+
+	}
+
+	void WorldCanvasHolder::labelAxes( const Vector<Bool>& conforms, const WCRefreshEvent &ev ){
 		int displayCount = 0;
 
 		//First try to label the axes using the controllingDD.
@@ -519,62 +558,106 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-
 		if ( displayCount == 0 ){
-			dd = 0;
-			//Normal mode
-			if ( !blinkMode ) {
-				for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
-			        iter != itsDisplayList.rend(); ++iter, ++dd ) {
-					if ( conforms[dd] && (*iter)->isDisplayable( )) {
-						if ((*iter)->labelAxes(ev) ) {
+			int dd = 0;
+			for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+							        iter != itsDisplayList.end(); ++iter, ++dd ) {
+				if ( conforms[dd] ) {
+					if ( (*iter)->classType() == Display::Raster ) {
+						if ( (*iter)->labelAxes(ev)) {
+							displayCount = 1;
 							break;
 						}
 					}
 				}
 			}
-			//blink mode
-			else {
 
-				//If we did not have a preset controllingDD, go through and try to label
-				//the axes using the first rasterDD we can find.
+			//We could not find a raster to label the axes so we just take the first one
+			//that works.
+			if ( displayCount == 0 ) {
+				dd = 0;
 				for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-					        iter != itsDisplayList.end(); ++iter, ++dd ) {
-					if ( conforms[dd] && (*iter)->isDisplayable( )) {
-						if ( (*iter)->classType() == Display::Raster ) {
+							        iter != itsDisplayList.end(); ++iter, ++dd ) {
+					if ( conforms[dd] ) {
+						String className = (*iter)->className();
+						//In blink mode, we don't show contours, vectors, or markers
+						//separately unless they are the only ones.
+						if ( className.find("Raster")==String::npos ) {
 							if ( (*iter)->labelAxes(ev)) {
-								displayCount = 1;
-									break;
-							}
-						}
-					}
-				}
-
-				//We could not find a raster to label the axes so we just take the first one
-				//that works.
-				if ( displayCount == 0 ) {
-					dd = 0;
-					for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-					        iter != itsDisplayList.end(); ++iter, ++dd ) {
-						if ( conforms[dd] && (*iter)->isDisplayable( )) {
-							String className = (*iter)->className();
-							//In blink mode, we don't show contours, vectors, or markers
-							//separately unless they are the only ones.
-							if ( className.find("Raster")==String::npos ) {
-								if ( (*iter)->labelAxes(ev)) {
-									break;
-								}
+								break;
 							}
 						}
 					}
 				}
 			}
 		}
+	}
 
-		wc->releasePGPLOTdevice();
-		// disable the clip window
-		pc->disable(Display::ClipWindow);
+	void WorldCanvasHolder::setControllingTitle( const Vector<Bool>& conforms ){
+		if ( controllingDD != NULL ) {
+			if ( controllingDD->isDisplayable()) {
+				String titleDDName = getTitleDDName( conforms );
+				controllingDD->setSubstituteTitleText( titleDDName );
+			}
+		}
+	}
 
+	void WorldCanvasHolder::clearSubstituteTitles( ){
+		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+								iter != itsDisplayList.end(); ++iter) {
+			(*iter)->setSubstituteTitleText("");
+		}
+	}
+
+
+	String WorldCanvasHolder::getTitleDDName( const Vector<Bool>& conforms ) const {
+		DisplayData* titleDD = NULL;
+		int dd = 0;
+		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+				iter != itsDisplayList.end(); ++iter, ++dd ) {
+			if ( conforms[dd] ) {
+				if ( (*iter)->classType() == Display::Raster ) {
+					if ( (*iter)->canLabelAxes()) {
+						titleDD = (*iter);
+						break;
+					}
+				}
+			}
+		}
+
+		//We could not find a raster to label the axes so we just take the first one
+		//that works.
+		if ( titleDD == NULL ) {
+			for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+									        iter != itsDisplayList.end(); ++iter, ++dd ) {
+				if ( conforms[dd] && (*iter)->isDisplayable( )) {
+					String className = (*iter)->className();
+					//In blink mode, we don't show contours, vectors, or markers
+					//separately unless they are the only ones.
+					if ( className.find("Raster")==String::npos ) {
+						if ( (*iter)->canLabelAxes()) {
+							titleDD= (*iter );
+							break;
+						}
+					}
+				}
+			}
+		}
+		String titleDDName;
+		if ( titleDD != NULL ){
+			titleDDName = getTitle( titleDD );
+		}
+		return titleDDName;
+	}
+
+	String WorldCanvasHolder::getTitle( DisplayData* dd ) const {
+		Record record = dd->getOptions(  );
+		String title;
+		if ( record.isDefined(  WCAxisLabeller::PLOT_TITLE)){
+			Record rangeRecord = record.subRecord( WCAxisLabeller::PLOT_TITLE );
+			title = rangeRecord.asString( "value");
+		}
+		return title;
 	}
 
 // Distribute a WCPositionEvent over the DisplayDatas

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>252</width>
-    <height>195</height>
+    <width>258</width>
+    <height>162</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,16 @@
   <property name="frameShadow">
    <enum>QFrame::Raised</enum>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout_2">
+   <property name="spacing">
+    <number>1</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="bottomMargin">
+    <number>2</number>
+   </property>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
@@ -97,6 +106,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="colorButton">
+       <property name="toolTip">
+        <string>Assign a color that will be used when the image is drawn with saturation reflecting image intensity.</string>
+       </property>
        <property name="text">
         <string/>
        </property>
@@ -126,8 +138,20 @@
       <set>Qt::AlignCenter</set>
      </property>
      <layout class="QGridLayout" name="gridLayout">
+      <property name="topMargin">
+       <number>1</number>
+      </property>
+      <property name="bottomMargin">
+       <number>1</number>
+      </property>
+      <property name="verticalSpacing">
+       <number>1</number>
+      </property>
       <item row="0" column="0">
        <widget class="QRadioButton" name="rasterRadio">
+        <property name="toolTip">
+         <string>Display as a &quot;raster&quot;.</string>
+        </property>
         <property name="text">
          <string>Raster</string>
         </property>
@@ -135,6 +159,9 @@
       </item>
       <item row="0" column="1">
        <widget class="QRadioButton" name="contourRadio">
+        <property name="toolTip">
+         <string>Display as a &quot;contour&quot;.</string>
+        </property>
         <property name="text">
          <string>Contour</string>
         </property>
@@ -142,6 +169,9 @@
       </item>
       <item row="1" column="0">
        <widget class="QRadioButton" name="vectorRadio">
+        <property name="toolTip">
+         <string>Display as a &quot;vector&quot;.</string>
+        </property>
         <property name="text">
          <string>Vector</string>
         </property>
@@ -149,6 +179,9 @@
       </item>
       <item row="1" column="1">
        <widget class="QRadioButton" name="markerRadio">
+        <property name="toolTip">
+         <string>Display as a &quot;marker&quot;.</string>
+        </property>
         <property name="text">
          <string>Marker</string>
         </property>

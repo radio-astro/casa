@@ -125,7 +125,7 @@ namespace casa {
 	}
 
 	bool MomentCollapseThreadRadio::getOutputFileName( String& outName,
-	        int moment, const String& channelStr ) const {
+	        int /*moment*/, const String& channelStr ) const {
 
 		bool tmpFile = true;
 		//Use a default base name
@@ -139,7 +139,7 @@ namespace casa {
 		}
 
 		//Append the channel and moment used to make it descriptive.
-		outName = outName + "_" + String(momentNames[moment].toStdString());
+		//outName = outName + "_" + String(momentNames[moment].toStdString());
 		if ( channelStr != "") {
 			outName = outName + "_"+channelStr;
 		}

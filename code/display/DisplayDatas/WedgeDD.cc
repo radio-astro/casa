@@ -179,28 +179,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return idstate == DisplayData::DISPLAYED ? true : false;
 	}
 
-
-	Bool WedgeDD::labelAxes(const WCRefreshEvent &ev) {
-
+	Bool WedgeDD::canLabelAxes(  ) const {
+		bool canLabel = false;
 		DisplayData::DisplayState idstate = ihandle_->getDisplayState();
-
-		if ( idstate != DisplayData::DISPLAYED )
-			return False;
-
-		if (itsMin == itsMax) {
-			return False;
-		}
-		if (!itsAxisLabeller.axisLabelSwitch()) {
-			return False;
-		}
-		try {
-			itsAxisLabeller.draw(ev);
-		} catch (const AipsError &x) {
-			if (&x) { // use x to avoid compiler warning
-				return False;
+		if ( idstate == DisplayData::DISPLAYED ){
+			if (itsMin != itsMax) {
+				if (itsAxisLabeller.axisLabelSwitch()) {
+					canLabel = true;
+				}
 			}
 		}
-		return True;
+		return canLabel;
+	}
+
+	Bool WedgeDD::labelAxes(const WCRefreshEvent &ev) {
+		bool axesLabelled = canLabelAxes();
+		if ( axesLabelled ){
+			try {
+				itsAxisLabeller.draw(ev);
+			}
+			catch (const AipsError &x) {
+				if (&x) { // use x to avoid compiler warning
+					axesLabelled = false;
+				}
+			}
+		}
+		return axesLabelled;
 	}
 
 	const Unit WedgeDD::dataUnit() const {

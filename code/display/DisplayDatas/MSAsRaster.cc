@@ -5173,7 +5173,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return doLabelling;
 	}
 
-
+	Bool MSAsRaster::canLabelAxes() const {
+		Bool doLabelling = (msselValid_ && itsAxisLabelling->value() == "Yes");
+		return doLabelling;
+	}
 
 	void MSAsRaster::a1a2_(Double& a1, Double& a2,  Double bsl, Int abase) const {
 		// A inverse corresponding to bsln_(a1,a2), returns a1 and a2, given

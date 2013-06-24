@@ -600,6 +600,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// an explicit request to draw the axes and/or labels.  Returns
 		// True if axes were drawn, otherwise False;
 		virtual Bool labelAxes(const WCRefreshEvent &ev);
+		virtual Bool canLabelAxes() const{
+			return false;
+		}
 
 		// Return the class name of this DisplayData; useful mostly for
 		// debugging purposes, and perhaps future use in the glish widget
@@ -631,6 +634,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Returns a pointer that should *not* be deleted...
 		virtual ImageInterface<Float> *imageinterface( ) {
 			return 0;
+		}
+
+		virtual void setSubstituteTitleText( const String /*title*/ ){
+
 		}
 
 		// Identify the WorldCanvasHolder for the given WorldCanvas.  Return

@@ -115,23 +115,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 		localDDLI.addRight(&displaydata);
-		addToAllWorldCanvasHolders(displaydata);
+		addToAllWorldCanvasHolders(displaydata, position);
 
-		DisplayData* dd = &displaydata;	// (need pointer version below)
-		if(isBlinkDD(dd)) {
-
-			// add a 'bIndex' restriction to newly-added DD.  It can be used to
-			// alternate display of the various DDs by placing a similar restriction
-			// on the WCHs.  The index is its order in itsBlinkDDs (which may change,
-			// if DDs before it are removed).
-
-			Int ddsBIndex = itsBLength++;
-			itsBlinkDDs.resize(itsBLength, True);
-			itsBlinkDDs[ddsBIndex]=dd;
-			Attribute bIndexAtt(itsBIndexName, ddsBIndex);
-			dd->setRestriction(bIndexAtt);
+		// Add a 'bIndex' restriction to newly-added DD.  It can be used to
+		// alternate display of the various DDs by placing a similar restriction
+		// on the WCHs.  The index should reflect its order in the list.
+		if ( isBlinkDD(&displaydata) ){
+			int index = 0;
+			++itsBLength;
+			itsBlinkDDs.resize( itsBLength, True );
+			ListIter<DisplayData *> iter(itsDDList);
+			iter.toStart();
+			while (!iter.atEnd()) {
+				DisplayData* dd = iter.getRight();
+				if ( dd ) {
+					itsBlinkDDs[index] = dd;
+					Attribute bIndexAtt(itsBIndexName, index );
+					dd->setRestriction( bIndexAtt );
+					index++;
+				}
+				iter++;
+			}
 		}
-
 		refresh();
 		release();
 	}
@@ -371,7 +376,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ListIter<DisplayData *> localDDLI(itsDDList);
 		localDDLI.toStart();
 		while (!localDDLI.atEnd()) {
-			holder.addDisplayData(localDDLI.getRight());
+			holder.addDisplayData(localDDLI.getRight(), -1);
 			localDDLI++;
 		}
 	}
@@ -386,11 +391,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 // Add/remove a DisplayData to/from all WorldCanvasHolders.
-	void MultiWCHolder::addToAllWorldCanvasHolders(DisplayData &displaydata) {
+	void MultiWCHolder::addToAllWorldCanvasHolders(DisplayData &displaydata, int position) {
 		ListIter<WorldCanvasHolder *> localWCHLI(itsWCHList);
 		localWCHLI.toStart();
 		while (!localWCHLI.atEnd()) {
-			localWCHLI.getRight()->addDisplayData(&displaydata);
+			localWCHLI.getRight()->addDisplayData(&displaydata, position);
 			localWCHLI++;
 		}
 	}

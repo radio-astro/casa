@@ -857,7 +857,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// there (but 'reset' would override that).
 
 		Bool unzoom = reset;
-
 		if (!reset && !zoom && wCanvas->existsAttribute(unZoom)) {
 
 			wCanvas->getAttributeValue(unZoom, unzoom);
@@ -942,16 +941,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		holderBuf.add("linYMinLimit", minY);
 		holderBuf.add("linYMaxLimit", maxY);
 
-
-
 		// Adjust draw area for desired data pixel aspect.
-
 		uInt canvasDrawXSize = wCanvas->canvasDrawXSize();
 		uInt canvasDrawYSize = wCanvas->canvasDrawYSize();
 
 		Int imageXSize = Int(linXMax - linXMin);
 		Int imageYSize = Int(linYMax - linYMin);
-
 		Double drawXSize = Double(canvasDrawXSize)/Double(imageXSize);
 		Double drawYSize = Double(canvasDrawYSize)/Double(imageYSize);
 
@@ -1091,7 +1086,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			wCanvas->setColormap( (Colormap *)
 			                      (wCanvas->pixelCanvas()->pcctbl()->colormapManager().getMap(0)) );
 		// (shouldn't happen)
-
 
 		theImage->draw(ev.reason(), *wcHolder);
 
@@ -1676,6 +1670,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		return conformed();
 	}
+	Bool PrincipalAxesDD::canLabelAxes() const {
+		bool ableToLabelAxis = false;
+		if ( itsUsesAxisLabels ){
+			if( csConformed_ && activeZIndex_>=0 &&
+					        uInt(activeZIndex_) < itsAxisLabellers.nelements() ) {
+				if (((WCAxisLabeller *)(itsAxisLabellers[activeZIndex_]))->
+						        axisLabelSwitch()) {
+					ableToLabelAxis = true;
+				}
+			}
+		}
+		return ableToLabelAxis;
+	}
 
 	Bool PrincipalAxesDD::labelAxes(const WCRefreshEvent &ev) {
 		if (iAmRubbish) {
@@ -1711,8 +1718,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			WCCSNLAxisLabeller *theLabeller;
 			theLabeller = (WCCSNLAxisLabeller *)itsAxisLabellers[activeZIndex_];
 			theLabeller->setUIBase(uiBase());	// propagate DD setting to labeller;
+
 			// determines whether to number from 0 or 1 when labelling in
 			// 'Absolute Pixel' mode -- see uiBase() for details.
+			theLabeller->setSubstituteTitleText(titleText );
 			theLabeller->draw(ev);
 		} catch (const AipsError &x) {
 			if (&x) { // use x to avoid compiler warning
@@ -1720,6 +1729,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 		return True;
+	}
+	void PrincipalAxesDD::setSubstituteTitleText( const String text ){
+		titleText = text;
+		for (uInt i = 1; i < itsNumImages; i++) {
+			WCCSNLAxisLabeller* tLab = static_cast<WCCSNLAxisLabeller*>(itsAxisLabellers[i]);
+			tLab->setSubstituteTitleText( text );
+		}
 	}
 
 	void PrincipalAxesDD::cleanup() {

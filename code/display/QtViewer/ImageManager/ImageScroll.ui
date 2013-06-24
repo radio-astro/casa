@@ -1,19 +1,20 @@
-<ui version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>ImageScrollClass</class>
- <widget class="QWidget" name="ImageScrollClass" >
-  <property name="geometry" >
+ <widget class="QWidget" name="ImageScrollClass">
+  <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>402</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>ImageScrollers</string>
   </property>
  </widget>
- <layoutdefault spacing="6" margin="11" />
+ <layoutdefault spacing="6" margin="11"/>
  <resources/>
  <connections/>
 </ui>

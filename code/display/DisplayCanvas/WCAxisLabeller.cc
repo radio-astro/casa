@@ -55,6 +55,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		AipsrcValue<Float>::find(itsDefaultCharSize,"display.axislabels.charsize",
 		                         1.2f);
+		titleChanged = false;
 	}
 
 	WCAxisLabeller::~WCAxisLabeller()
@@ -394,10 +395,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return ret;
 	}
 
-	Bool WCAxisLabeller::setTitleText(const String text) {
+	/*Bool WCAxisLabeller::setTitleText(const String text) {
 		Bool ret = (itsOptionsTitleText != text);
 		itsOptionsTitleText = text;
 		return ret;
+	}*/
+	void WCAxisLabeller::setSubstituteTitleText( const String substituteImageName){
+		if ( substituteTitleText != substituteImageName ){
+			substituteTitleText = substituteImageName;
+			titleChanged = true;
+		}
 	}
 
 	Bool WCAxisLabeller::setTitleTextColor(const String color) {
