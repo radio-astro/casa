@@ -14,8 +14,6 @@
    
 */
 
-// Control formation of NewCalTable (if 0, make the old caltable)
-#define NEWCALTABLE 1
 
 #include <iostream>
 
@@ -111,9 +109,16 @@ bool checkPars(const boost::program_options::variables_map &vm)
   }
   return false;
 
-  if (vm.count("smooth") and vm["smooth"].as<int>() < 1)
+  if (vm.count("smooth") and vm["smooth"].as<double>() < 1)
   {
     warnMsg("Smooth parameter must be 1 or greater");
+    return true;
+  }
+  return false;
+
+  if (vm.count("maxdistm") and vm["maxdistm"].as<int>() < 1)
+  {
+    warnMsg("maxdistm parameter must be 0. or greater");
     return true;
   }
   return false;
@@ -215,12 +220,55 @@ static std::string buildCmdLine(int argc,
   return cmdline;
 }
 
+
+/* Determine the nearest n antennas not accepting ones which
+   are flagged or have a distance > maxdist_m
+*/
+ 
+LibAIR::AntSetWeight limitedNearestAnt(const LibAIR::antpos_t &pos,
+				       size_t i,
+				       const LibAIR::AntSet &flag,
+				       size_t n,
+				       double maxdist_m)
+{
+  LibAIR::AntSetD dist=LibAIR::antsDist(pos, i, flag);
+  LibAIR::AntSetWeight res;
+    
+  double total=0;
+  size_t limitedn=0;
+  LibAIR::AntSetD::const_iterator s=dist.begin();
+  for (size_t j=0; j<n; ++j)
+  {
+    if(s->first <= maxdist_m)
+    {
+      total+=s->first;
+      ++s;
+      ++limitedn;
+    }
+  }
+
+  s=dist.begin();
+  for (size_t j=0; j<limitedn; ++j)
+  {
+    res.insert(std::make_pair<double, size_t>(s->first/total, s->second));
+    ++s;
+  }
+
+  return res;
+
+}
+
+
 /** \brief Flag and interpolate WVR data
  */
 void flagInterp(const casa::MeasurementSet &ms,
 		const std::set<int> &wvrflag,
-		LibAIR::InterpArrayData &d)
+		LibAIR::InterpArrayData &d,
+		const double maxdist_m,
+		const int minnumants,
+		std::set<int> &interpImpossibleAnts)
 {
+
   LibAIR::antpos_t apos;
   LibAIR::getAntPos(ms, apos);
   LibAIR::AntSet wvrflag_s(wvrflag.begin(), 
@@ -230,16 +278,43 @@ void flagInterp(const casa::MeasurementSet &ms,
       i!=wvrflag.end(); 
       ++i)
   {
-    LibAIR::AntSetWeight near=LibAIR::linNearestAnt(apos, 
-						    *i, 
-						    wvrflag_s, 
-						    3);
-    LibAIR::interpBadAntW(d, 
-			  *i, 
-			  near);
+//     LibAIR::AntSetWeight near=LibAIR::linNearestAnt(apos, 
+// 						    *i, 
+// 						    wvrflag_s, 
+// 						    3);
+    LibAIR::AntSetWeight near=limitedNearestAnt(apos, 
+						*i, 
+						wvrflag_s, 
+						3,
+						maxdist_m);
+    if(near.size()>=minnumants){
+      LibAIR::interpBadAntW(d, 
+			    *i, 
+			    near);
+    }
+    else
+    { 
+      std::ostringstream oss;
+      oss << "Antenna " << *i 
+	  << " has bad or no WVR and only " << near.size() << " near antennas ("
+	  << maxdist_m << " m max. distance) to interpolate from. Required are " 
+	  << minnumants << "." << std::endl;
+      std::cout << std::endl << "*** " << oss.str();
+      std::cerr << oss.str();
+      for(size_t j=0; j<d.g_time().size(); ++j)
+      {
+        for(size_t k=0; k < 4; ++k)
+        {
+          d.set(j, *i, k, 2.7); // set all WVR data of this antenna to a minimum temperature
+        }
+      }
+      interpImpossibleAnts.insert(*i);
+    }
   }
   
 }
+
+
 
 /// Work out which spectral windows might need to be reversed
 std::set<size_t> reversedSPWs(const LibAIR::MSSpec &sp,
@@ -589,12 +664,10 @@ static void defineOptions(boost::program_options::options_description &desc,
      "Flag the WVR data for this source and do not produce any phase corrections on it")
     ("statfield",
      value< std::vector<std::string> >(),
-     "Compute the statistics (Phase RMS, Disc) on this field only"
-     )
+     "Compute the statistics (Phase RMS, Disc) on this field only")
     ("statsource",
      value< std::vector<std::string> >(),
-     "Compute the statistics (Phase RMS, Disc) on this source only"
-     )
+     "Compute the statistics (Phase RMS, Disc) on this source only")
     ("tie",
      value< std::vector<std::string> >(),
      "Prioritise tieing the phase of these sources as well as possible")
@@ -604,6 +677,12 @@ static void defineOptions(boost::program_options::options_description &desc,
     ("scale",
      value<double>()->default_value(1.0),
      "Scale the entire phase correction by this factor")
+    ("maxdistm",
+     value<double>()->default_value(500.0),
+     "maximum distance (m) an antenna may have to be considered for being part of the <=3 antenna set for interpolation of a solution for a flagged antenna")
+    ("minnumants",
+     value<int>()->default_value(2),
+     "minimum number of near antennas (up to 3) required for interpolation")
     ;
   p.add("ms", -1);
 }
@@ -665,15 +744,18 @@ int main(int argc,  char* argv[])
      wvrflag=getAntPars("wvrflag", vm, ms);    
   }
 
-  LibAIR::WVRAddFlaggedAnts(ms, wvrflag);
-
   LibAIR::aname_t anames=LibAIR::getAName(ms);
   std::set<int> nowvr=NoWVRAnts(anames);
   
-  std::set<int> interpwvrs(wvrflag);
+  std::set<int> interpwvrs(wvrflag); // the antennas to interpolate solutions for
   interpwvrs.insert(nowvr.begin(), nowvr.end());
 
-  if(interpwvrs.size()==ms.antenna().nrow()){
+  std::set<int> flaggedants; // the antennas flagged in the ANTENNA table are not to be interpolated
+  LibAIR::WVRAddFlaggedAnts(ms, flaggedants);
+
+  wvrflag.insert(flaggedants.begin(),flaggedants.end());
+
+  if(interpwvrs.size()+flaggedants.size()==ms.antenna().nrow()){
     std::cout << "No good antennas with WVR data found." << std::endl;
     std::cerr << "No good antennas with WVR data found." << std::endl;
     return -1;
@@ -698,10 +780,15 @@ int main(int argc,  char* argv[])
      
      d.reset(LibAIR::filterState(*d, useID));
 
+     std::set<int> interpImpossibleAnts;
+
      // Flag and interpolate
      flagInterp(ms,
 		interpwvrs,
-		*d);
+		*d,
+		vm["maxdistm"].as<double>(),
+		vm["minnumants"].as<int>(),
+		interpImpossibleAnts);
      
      LibAIR::ArrayGains g(d->g_time(), 
 			  d->g_el(),
@@ -900,7 +987,8 @@ int main(int argc,  char* argv[])
 				  wvrflag,
 				  nowvr,
 				  pathRMS,
-				  pathDisc);
+				  pathDisc,
+				  interpImpossibleAnts);
      
      printExpectedPerf(g, 
 		       *coeffs,
@@ -915,33 +1003,16 @@ int main(int argc,  char* argv[])
      loadSpec(ms, sp);
      std::set<size_t> reverse=reversedSPWs(sp, vm);  
      
-     if (NEWCALTABLE)
-     {
-	// Write new table, including history
-	LibAIR::writeNewGainTbl(g,
-				fnameout.c_str(),
-				sp,
-				reverse,
-				vm.count("disperse")>0,
-				msname,
-				buildCmdLine(argc,
-					     argv));
-     }
-     else
-     {
-	// Write old table...
-	LibAIR::writeGainTbl(g,
+     // Write new table, including history
+     LibAIR::writeNewGainTbl(g,
 			     fnameout.c_str(),
 			     sp,
 			     reverse,
 			     vm.count("disperse")>0,
-			     msname
-	   );
-	// ...and history
-	LibAIR::addCalHistory(fnameout.c_str(),
-			      buildCmdLine(argc,
-					   argv));
-     }
+			     msname,
+			     buildCmdLine(argc,
+					  argv),
+			     interpImpossibleAnts);
 
 #ifdef BUILD_HD5
      LibAIR::writeAntPath(g,

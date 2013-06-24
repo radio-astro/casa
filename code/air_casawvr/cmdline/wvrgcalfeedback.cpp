@@ -100,7 +100,8 @@ namespace LibAIR {
 		       const std::set<int> &flag,
                        const std::set<int> &nowvr,                       
 		       const std::vector<double> &rms,
-		       const std::vector<double> &disc)
+		       const std::vector<double> &disc,
+		       const std::set<int> &interpolImpossibleAnts)
   {
     for(aname_t::const_iterator i=names.begin(); i !=names.end(); ++i)
     {
@@ -111,6 +112,11 @@ namespace LibAIR {
       x.flag=flag.count(x.no);
       x.pathRMS=rms[x.no];
       x.pathDisc=disc[x.no];
+      if((x.flag>0) && (interpolImpossibleAnts.count(x.no)>0))
+      {
+	x.pathRMS = 0.;
+	x.pathDisc = 0.;
+      }
       push_back(x);
     }
   }
@@ -119,7 +125,7 @@ namespace LibAIR {
   {
     os<<"     Antenna/WVR information:                     "<<std::endl
       <<"-----------------------------------------------------------------------"<<std::endl;
-    os<<"#"<<"\t"<<"Name"<<"\t"<<"WVR?"<<"\t"<<"Flag?"<<"\t"<<"RMS (um)" << "\t"<<"Disc (um)"
+    os<<"#"<<"\t"<<"Name"<<"\t"<<"WVR?"<<"\t"<<"Flag?"<<"\t"<<"RMS (um)" << "\t"<<"Disc (um)" 
       <<std::endl;
     BOOST_FOREACH(const AntennaInfo &x, at)
       os<<x<<std::endl;
