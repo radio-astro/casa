@@ -93,7 +93,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      freqStep_p=Quantity(1, "Hz");
      freqFrame_p=MFrequency::LSRK;
      freqFrameValid_p=False;
-     mLocation_p=MPosition(Quantity(0., "deg"), Quantity(0, "deg"), Quantity(0.0,"m"));
+     //mLocation_p=MPosition(Quantity(0., "deg"), Quantity(0, "deg"), Quantity(0.0,"m"));
+     mLocation_p=MPosition();
      wprojPlanes_p=1;
      useAutocorr_p=False;
   }
