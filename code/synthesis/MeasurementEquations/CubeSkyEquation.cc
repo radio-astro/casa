@@ -1657,8 +1657,8 @@ VisBuffer& CubeSkyEquation::getSlice(VisBuffer& result,
 void
 CubeSkyEquation::finalizeGetSlice(){
   //// place-holders.... there is nothing to do after degridding
-        for (Int model=0; model < sm_->numberOfModels(); ++model)
-          ftm_p[model]->finalizeToVis();
+  //for (Int model=0; model < sm_->numberOfModels(); ++model)
+  //        ftm_p[model]->finalizeToVis();
 }
 
 Bool
