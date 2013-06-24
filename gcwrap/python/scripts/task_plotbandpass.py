@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.20 2013/06/13 21:10:16 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.25 2013/06/18 13:52:13 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -599,7 +599,10 @@ def drawAtmosphereAndFDM(showatm, showtsky, atmString, subplotRows, mysize, Tebb
                 subplotCols, LO1, xframe, firstFrame, showatmPoints, channels=channels)
     # The following case is needed for the case that overlay='antenna,time' and
     # the final timerange is flagged on the final antenna.
-    if (overlayTimes==False or overlayAntennas==False or xant==antennasToPlot[-1]):
+#    if (overlayTimes==False or overlayAntennas==False or xant==antennasToPlot[-1]):
+    # Because this function is now only called from one place, setting this to
+    # True is what we want. - 18-Jun-2013
+    if (True):
         if (xaxis.find('freq')>=0 and showfdm and nChannels <= 256):
             if (tableFormat == 33):
                 showFDM(originalSpw_casa33, chanFreqGHz_casa33)
@@ -1181,7 +1184,10 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
         return
     mymsmd = createCasaTool(msmdtool)
     if (debug): print  "msName = %s." % (msName)
-    if (os.path.exists(msName)):
+    if (os.path.exists(msName) or os.path.exists(os.path.dirname(caltable)+'/'+msName)):
+        if (os.path.exists(msName) == False):
+            msName = os.path.dirname(caltable)+'/'+msName
+            if (debug): print  "found msName = %s." % (msName)
         if (casadef.casa_version < '4.1.0'):
             print "This version of casa is too old to use the msmd tool.  Use au.plotbandpass instead."
             return
@@ -1637,6 +1643,9 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
        antennasToPlot = np.intersect1d(uniqueAntennaIds,antlist)
     else:
        antennasToPlot = uniqueAntennaIds
+    if (len(antennasToPlot) < 2 and overlayAntennas):
+        print "More than 1 antenna is required for overlay='antenna'."
+        return()
     casalogPost(debug,"antennasToPlot = %s" % (str(antennasToPlot)))
   
     # Parse the field string to emulate plotms
@@ -2243,6 +2252,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
   
     TDMisSecond = False
     pagectr = 0
+    drewAtmosphereOnFlaggedAntenna = True  # may not be necessary, but just to be safe
     newpage = 1
     pages =  []
     xctr = 0
@@ -2296,6 +2306,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                             madstats[madstats.keys()[i]][spwsToPlot[j]][k][l] = {'amp': None}
 # #      print "madstats = ", madstats
     myinput = ''
+    atmEverBeenShown = False
     while (xctr < len(antennasToPlot)):
       xant = antennasToPlot[xctr]
       spwctr = 0
@@ -2434,10 +2445,19 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
           pchannels = [xchannels,ychannels]
           pfrequencies = [xfrequencies,yfrequencies]
           gplot = [gplotx,gploty]
+          # We only need to compute the atmospheric transmission if:
+          #   * we have been asked to show it,
+          #   * there is a non-trivial number of channels, 
+          #   * the current field is the one for which we should calculate it (if times are being overlaied)
+          #       But this will cause no atmcurve to appear if that field is flagged on the first
+          #       antenna; so, I added the atmEverBeenShown flag to deal with this.
+          #   * the previous calculation is not identical to what this one will be
+          #
           if ((showatm or showtsky) and (len(xchannels)>1 or len(ychannels)>1) and
-              (uniqueFields[fieldIndex]==showatmfield or overlayTimes==False) and
+              (uniqueFields[fieldIndex]==showatmfield or overlayTimes==False or atmEverBeenShown==False) and
               ((overlayTimes==False and computedAtmField!=fieldIndex) or (computedAtmSpw!=ispw) or
                (overlayTimes==False and computedAtmTime!=mytime))):
+            atmEverBeenShown = True
             # The following 'if' is used to avoid wasting time since atm is not shown for
             # overlay='antenna,time'.
             if (overlayTimes==False or overlayAntennas==False or True):  # support showatm for overlay='antenna,time'
@@ -2619,12 +2639,15 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                               print "###### set doneOverlayTime = %s" % (str(doneOverlayTime))
   
                           # draw labels
-                          drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
-                             fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,timerangeListTimes,
-                             solutionTimeThresholdSeconds,debugSloppyMatch,ystartOverlayLegend,debug,mysize,
-                             fieldsToPlot,myUniqueColor,timeHorizontalSpacing,fieldIndex,overlayColors,
-                             antennaVerticalSpacing, overlayAntennas, timerangeList, caltableTitle)
-                          drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,TebbSky,TebbSkyImage,
+                          # try adding the following 'if' statement on Jun 18, 2013; it works.
+                          if (drewAtmosphereOnFlaggedAntenna==False or overlayAntennas==False):
+                              drewAtmosphereOnFlaggedAntenna = True
+                              drawOverlayTimeLegends(xframe,firstFrame,xstartTitle,ystartTitle,caltable,titlesize,
+                                  fieldIndicesToPlot,ispwInCalTable,uniqueTimesPerFieldPerSpw,timerangeListTimes,
+                                  solutionTimeThresholdSeconds,debugSloppyMatch,ystartOverlayLegend,debug,mysize,
+                                  fieldsToPlot,myUniqueColor,timeHorizontalSpacing,fieldIndex,overlayColors,
+                                  antennaVerticalSpacing, overlayAntennas, timerangeList, caltableTitle)
+                              drawAtmosphereAndFDM(showatm,showtsky,atmString,subplotRows,mysize,TebbSky,TebbSkyImage,
                                                plotrange, xaxis,atmchan,atmfreq,transmission,subplotCols,
                                                showatmPoints,xframe, channels,LO1,atmchanImage,atmfreqImage,
                                                transmissionImage, firstFrame,showfdm,nChannels,tableFormat,
@@ -2704,6 +2727,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                   print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot amp on xframe %d" % (xframe)
 # #            print ",,,,,,,,,,,,,,,, Starting with newylimits = ", newylimits
               adesc = pb.subplot(xframe)
+              drewAtmosphereOnFlaggedAntenna = False
               pb.hold(overlayAntennas or overlayTimes)
               gampx = np.abs(gplotx)
               if (nPolarizations == 2):
@@ -3455,6 +3479,7 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
               if (debug):
                   print "$$$$$$$$$$$$$$$$$$$$$$$  ready to plot phase on xframe %d" % (xframe)
               adesc = pb.subplot(xframe)
+              drewAtmosphereOnFlaggedAntenna = False
               pb.hold(overlayAntennas or overlayTimes)
               gphsx = np.arctan2(np.imag(gplotx),np.real(gplotx))*180.0/math.pi
               if (nPolarizations == 2):
@@ -4344,11 +4369,12 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
         defaultPWV = 5.0  
     if (type(pwv) == str):
       if (pwv.find('auto')>=0):
-        if (os.path.exists(vis+'/ASDM_CALWVR') or os.path.exists('CalWVR.xml')):
+        if (os.path.exists(vis+'/ASDM_CALWVR') or os.path.exists(vis+'/ASDM_CALATMOSPHERE') or
+            os.path.exists('CalWVR.xml')):
               if (verbose):
                   print "*** Computing atmospheric transmission using measured PWV, field %d, time %d (%f). ***" % (field,mytime,timestamp)
               timerange = [timestamp-interval/2, timestamp+interval/2]
-              if (os.path.exists(vis+'/ASDM_CALWVR')):
+              if (os.path.exists(vis+'/ASDM_CALWVR') or os.path.exists(vis+'/ASDM_CALATMOSPHERE')):
                   [pwvmean, pwvstd]  = getMedianPWV(vis,timerange,asdm,verbose=False)
               else:
                   [pwvmean, pwvstd]  = getMedianPWV('.',timerange,asdm='',verbose=False)
@@ -4362,7 +4388,7 @@ def CalcAtmTransmission(chans,freqs,xaxis,pwv,vm, mymsmd,vis,asdm,antenna,timest
               if (missingCalWVRErrorPrinted == False):
                   missingCalWVRErrorPrinted = True
                   if (telescopeName.find('ALMA')>=0):
-                      print "No ASDM_CALWVR or CalWVR.xml table found.  Using PWV %.1fmm." % pwvmean
+                      print "No ASDM_CALWVR, ASDM_CALATMOSPHERE, or CalWVR.xml table found.  Using PWV %.1fmm." % pwvmean
                   else:
                       print "This telescope has no WVR to provide a PWV measurement. Using PWV %.1fmm." % pwvmean
       else:
@@ -5116,6 +5142,19 @@ def getLOs(inputMs, verbose=True):
     mytb.close()
     return([freqLO,band,spws,names,sidebands,receiverIds,spwNames])
     
+def readPWVFromASDM_CALATMOSPHERE(vis):
+    """
+    Reads the PWV via the water column of the ASDM_CALATMOSPHERE table.
+    - Todd Hunter
+    """
+    mytb = createCasaTool(tbtool)
+    mytb.open("%s/ASDM_CALATMOSPHERE" % vis)
+    pwvtime = mytb.getcol('startValidTime')  # mjdsec
+    antenna = mytb.getcol('antennaName')
+    pwv = mytb.getcol('water')[0]  # There seem to be 2 identical entries per row, so take first one.
+    mytb.close()
+    return(pwvtime, antenna, pwv)
+    
 def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
     """
     Extracts the PWV measurements from the WVR on all antennas for the
@@ -5148,8 +5187,18 @@ def getMedianPWV(vis='.', myTimes=[0,999999999999], asdm='', verbose=False):
               return(0,-1)
           if (verbose):
               print "Opened ASDM_CALWVR table, len(pwvtime)=%s" % (str(len(pwvtime)))
-      elif (verbose):
-          print "Did not find ASDM_CALWVR table in the ms"
+      else:
+          if (verbose):
+              print "Did not find ASDM_CALWVR table in the ms. Will look for ASDM_CALATMOSPHERE next."
+          if (os.path.exists("%s/ASDM_CALATMOSPHERE" % vis)):
+              pwvtime, antenna, pwv = readPWVFromASDM_CALATMOSPHERE(vis)
+              success = True
+              if (len(pwv) < 1):
+                  print "Found no data in ASDM_CALATMOSPHERE table"
+                  return(0,-1)
+          else:
+              if (verbose):
+                  print "Did not find ASDM_CALATMOSPHERE in the ms"
     except:
         if (verbose):
             print "Could not open ASDM_CALWVR table in the ms"

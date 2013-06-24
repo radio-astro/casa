@@ -148,11 +148,18 @@ def fixvis(vis, outputvis='',field='', refcode='', reuse=True, phasecenter='', d
                 casalog.post("Will only modify the visibilities in the columns "+datacolumn.upper(), 'NORMAL')
 
             for fld in fields:
+                allselected = True
+                for i in xrange(numfields):
+                    if not (i in fields):
+                        allselected = False
+                        break
+
                 commonoldrefstr = modify_fld_vis(fld, outputvis, tbt, myim,
                                                  commonoldrefstr, phasecenter,
                                                  therefcode, reuse, numfields,
                                                  ckwdict, theoldref, theoldrefstr,
-                                                 isvarref, flddict, datacolumn)
+                                                 isvarref, flddict, datacolumn,
+                                                 allselected)
                 if commonoldrefstr == False:
                     return False
         #endif change phasecenter
@@ -226,7 +233,7 @@ def get_oldref(outputvis, tbt):
 
 def modify_fld_vis(fld, outputvis, tbt, myim, commonoldrefstr, phasecenter,
                    therefcode, reuse, numfields, ckwdict, theoldref,
-                   theoldrefstr, isvarref, flddict, datacol):
+                   theoldrefstr, isvarref, flddict, datacol, allselected):
     """Modify the UVW and visibilities of field fld."""
     viaoffset = False
     thenewra_rad = 0.
@@ -291,11 +298,6 @@ def modify_fld_vis(fld, outputvis, tbt, myim, commonoldrefstr, phasecenter,
             casalog.post('Invalid refcode ' + dirstr[0], 'SEVERE')
             return False
         if(dirstr[0] != ckwdict['Ref']):
-            allselected = True
-            for i in xrange(numfields):
-                if not (i in fields):
-                    allselected = False
-                    break
             if numfields > 1 and not allselected:
                         casalog.post("You have not selected all " + str(numfields)
                       + " fields and PHASE_DIR is not a variable reference column.\n"
