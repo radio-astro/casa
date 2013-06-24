@@ -8,6 +8,7 @@ from .applycal import SDApplyCal
 from .inspectdata import SDInspectData
 from .imaging import SDImaging
 from .baseline import SDBaseline
+from .flagdata import SDFlagData
 
 from .reduce import SDReduction
 
