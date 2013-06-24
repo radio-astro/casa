@@ -561,13 +561,12 @@ namespace casa {
 	}
 
 	QString QtCanvas::findCoords( double x, double y ) const {
-		const double X_ERROR = .05;
-		const double Y_ERROR = .05;
+		//Error should be relative to the current zoom.
 		QString coordStr;
 		std::map<int, CanvasCurve>::const_iterator it = curveMap.begin();
 		while (it != curveMap.end()) {
 			const CanvasCurve & canvasCurve = (*it).second;
-			QString toolTipStr = canvasCurve.getToolTip( x, y , X_ERROR, Y_ERROR, toolTipXUnit, yUnitDisplay );
+			QString toolTipStr = canvasCurve.getToolTip( x, y , toolTipXUnit, yUnitDisplay );
 			if ( !toolTipStr.isEmpty() ) {
 				coordStr = toolTipStr;
 				break;

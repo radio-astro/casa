@@ -56,8 +56,7 @@ namespace casa {
 		Vector<float> getYValues() const;
 		CurveData getErrorData();
 
-		QString getToolTip( double x, double y , const double X_ERROR,
-		                    const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const;
+		QString getToolTip( double x, double y , const QString& xUnit, const QString& yUnit ) const;
 		void getMinMax(Double& xmin, Double& xmax, Double& ymin,
 		               Double& ymax, bool plotError ) const;
 		std::pair<double,double> getRangeFor(double xMin, double xMax, Bool& exists );
@@ -72,7 +71,8 @@ namespace casa {
 		void storeData( const QString& oldUnits );
 		void setYValues( const Vector<float>& yValues );
 		void setErrorValues( const Vector<float>& errorValues );
-
+		double calculateRelativeError( double minValue, double maxValue ) const ;
+		void calculateRelativeErrors( double& errorX, double& errorY ) const;
 		QColor curveColor;
 		QString legend;
 		CurveData curveData;
