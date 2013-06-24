@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.25 2013/06/18 13:52:13 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.26 2013/06/24 09:43:46 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -4121,16 +4121,17 @@ def plotbandpass(caltable='', antenna='', field='', spw='', yaxis='amp',
                 print "---------- 2) Did not find %f within %.1f seconds of anything in %s" % (myIndexTime,solutionTimeThresholdSeconds,str(uniqueTimes))
                 print "Try re-running with a smaller solutionTimeThresholdSeconds (currently %f)" % (solutionTimeThresholdSeconds)
                 return
+            else:
+                mytimeTest = mytime==mymatch
             if ((overlayAntennas==False and overlayTimes==False)
                 # either it is the last time of any, or the last time in the list of times to plot
-                or (overlayAntennas==False and (mytime+1==nUniqueTimes or mytime == timerangeList[-1])) 
+                or (overlayAntennas==False and (mytime+1==nUniqueTimes or mytime == timerangeList[-1] or mytimeTest)) 
                 or (xant==antennasToPlot[-1] and overlayAntennas==True and overlayTimes==False)  
                 # Following case is needed to make subplot=11 to work for: try to support overlay='antenna,time'
                 or (xframe == lastFrame and overlayTimes and overlayAntennas and
                    xctr+1==len(antennasToPlot) and
-#                   mytime+1==len(uniqueTimes) and  # this worked for nspw <= 4
-                   mytime==mymatch and
-                    spwctr+1<len(spwsToPlot))
+                   mytimeTest and
+                   spwctr+1<len(spwsToPlot))
                 or (doneOverlayTime and overlayTimes==True
                     and overlayAntennas==False 
                     )):
