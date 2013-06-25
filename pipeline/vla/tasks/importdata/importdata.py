@@ -270,9 +270,11 @@ class VLAImportData(basetask.StandardTaskTemplate):
 
         task = casa_tasks.importevla(asdm=asdm, 
                                      vis=vis, 
-                                     savecmds=True,
+                                     savecmds=inputs.save_flagonline,
                                      outfile=outfile,
-                                     overwrite=self.inputs.overwrite)        
+                                     process_caldevice=False,
+                                     asis=inputs.asis,
+                                     overwrite=inputs.overwrite)        
         
         self._executor.execute(task)
         
