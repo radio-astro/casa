@@ -107,6 +107,8 @@ int main() {
 
 				// get the element type, parameters and errors
 				SpectralElement::Types spType = spcList[index]->getType();
+                params.resize(spcList[index]->getOrder());
+                errors.resize(spcList[index]->getOrder());
 				spcList[index]->get(params);
 				spcList[index]->getError(errors);
 
@@ -116,8 +118,6 @@ int main() {
 					refErr(0)=22.5129;  refErr(1)=0.00982114; refErr(2)=0.010977;
 					AlwaysAssert(allNear(params, refPar), AipsError);
 					AlwaysAssert(allNear(errors, refErr), AipsError);
-					//cout << "params1: " << params << endl;
-					//cout << "errors1: " << errors << endl;
 				}
 				else if (spType == SpectralElement::POLYNOMIAL){
 					Vector<Double> refPar(2), refErr(2);
@@ -125,11 +125,7 @@ int main() {
 					refErr(0)=1211.75;  refErr(1)=2.15471;
 					AlwaysAssert(allNear(params, refPar), AipsError);
 					AlwaysAssert(allNear(errors, refErr), AipsError);
-					//cout << "params2: " << params << endl;
-					//cout << "errors2: " << errors << endl;
 				}
-				//cout << "params: " << params << endl;
-				//cout << "errors: " << errors << endl;
 			}
 			//specFit->report();
 			delete specFit;
@@ -177,6 +173,8 @@ int main() {
 
 				// get the element type, parameters and errors
 				SpectralElement::Types spType = spcList[index]->getType();
+                params.resize(spcList[index]->getOrder());
+                errors.resize(spcList[index]->getOrder());
 				spcList[index]->get(params);
 				spcList[index]->getError(errors);
 
@@ -186,8 +184,6 @@ int main() {
 					refErr(0)=21.2636;  refErr(1)=0.00955648; refErr(2)=0.0110905;
 					AlwaysAssert(allNear(params, refPar), AipsError);
 					AlwaysAssert(allNear(errors, refErr), AipsError);
-					//cout << "params1: " << params << endl;
-					//cout << "errors1: " << errors << endl;
 
 				}
 				else if (spType == SpectralElement::POLYNOMIAL){
@@ -196,8 +192,6 @@ int main() {
 					refErr(0)=1341.81;  refErr(1)=2.38598;
 					AlwaysAssert(allNear(params, refPar), AipsError);
 					AlwaysAssert(allNear(errors, refErr), AipsError);
-					//cout << "params2: " << params << endl;
-					//cout << "errors2: " << errors << endl;
 				}
 			}
 			//specFit->report();
@@ -228,7 +222,7 @@ int main() {
 			AlwaysAssert(specFit->getStatus()==SpectralFitter::SUCCESS, AipsError);
 
 			// check the number of iterations
-			AlwaysAssert(near(specFit->getNumberIterations(), Double(20)), AipsError);
+            AlwaysAssert(specFit->getNumberIterations() == 18, AipsError);
 
 			// check the chi-square
 			AlwaysAssert(near(Double(specFit->getChiSquared()), Double(1.33195e+12),1.0e-05), AipsError);
@@ -246,6 +240,8 @@ int main() {
 
 				// get the element type, parameters and errors
 				SpectralElement::Types spType = spcList[index]->getType();
+                errors.resize(spcList[index]->getOrder());
+                params.resize(spcList[index]->getOrder());
 				spcList[index]->get(params);
 				spcList[index]->getError(errors);
 
@@ -255,8 +251,6 @@ int main() {
 					refErr(0)=18.4522;  refErr(1)=87067.4; refErr(2)=93652.3;
 					AlwaysAssert(allNear(params, refPar), AipsError);
 					AlwaysAssert(allNear(errors, refErr), AipsError);
-					//cout << "params1: " << params << endl;
-					//cout << "errors1: " << errors << endl;
 				}
 				else if (spType == SpectralElement::POLYNOMIAL){
 					Vector<Double> refPar(2), refErr(2);
@@ -264,8 +258,6 @@ int main() {
 					refErr(0)=132.992;  refErr(1)=1.976e-07;
 					AlwaysAssert(allNear(params, refPar), AipsError);
 					AlwaysAssert(allNear(errors, refErr), AipsError);
-					//cout << "params2: " << params << endl;
-					//cout << "errors2: " << errors << endl;
 				}
 			}
 			//specFit->report();
@@ -275,12 +267,12 @@ int main() {
 
 		delete analysis;
 		delete goodQualImage;
+        cout << "OK" << endl;
 	}
 	catch (AipsError x) {
-		cerr << "Exception caught: " << x.getMesg() << endl;
+		cerr << "FAIL: " << x.getMesg() << endl;
 		retVal = 1;
 	}
-
 	return retVal;
 }
 
