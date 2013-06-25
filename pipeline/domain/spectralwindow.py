@@ -42,6 +42,14 @@ class SpectralWindow(object):
     
     __slots__ = ('id', 'band', 'bandwidth', 'channels', 'group', 'intents',
                  'ref_frequency')
+
+    def __getstate__(self):
+        return (self.id, self.band, self.bandwidth, self.channels, self.group,
+            self.intents, self.ref_frequency)
+
+    def __setstate__(self, state):
+        (self.id, self.band, self.bandwidth, self.channels, self.group,
+            self.intents, self.ref_frequency) = state
     
     def __init__(self, spw_id, bandwidth, ref_frequency, chan_widths, 
                  chan_freqs, group=None, band='Unknown'):

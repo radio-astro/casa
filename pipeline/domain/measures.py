@@ -92,6 +92,12 @@ class LinearVelocityUnits(object):
 class ComparableUnit(object):
     __slots__ = ('value', 'units')
 
+    def __getstate__(self):
+        return self.value, self.units
+
+    def __setstate__(self, state):
+        self.value, self.units = state
+
     def __init__(self):
         raise Exception, 'Must override __init__ of ComparableUnit'
     
@@ -463,6 +469,12 @@ class Frequency(ComparableUnit):
 class FrequencyRange(object):
     __slots__ = ('low', 'high')
     
+    def __getstate__(self):
+        return self.low, self.high
+
+    def __setstate__(self, state):
+        self.low, self.high = state    
+        
     def __init__(self, frequency1=None, frequency2=None):
         """Creates a new instance with the given endpoints.
 
@@ -965,6 +977,12 @@ class TemporalCollection(object):
 
 class TimeInterval(object):
     __slots__ = ('start', 'end')
+
+    def __getstate__(self):
+        return self.start, self.end
+
+    def __setstate__(self, state):
+        self.start, self.end = state
 
     def __init__(self, start=None, end=None):
         self.start = start
