@@ -176,6 +176,9 @@ namespace LibAIR {
     casa::ROArrayColumn<casa::Bool> c_flags(ms,
 					    casa::MS::columnName(casa::MS::FLAG));
 
+    casa::ROScalarColumn<casa::Bool> c_flagrow(ms,
+					       casa::MS::columnName(casa::MS::FLAG_ROW));
+
     std::map<size_t, size_t> srcmap=getFieldSrcMap(ms);
 
     times.resize(0);
@@ -189,7 +192,8 @@ namespace LibAIR {
 
       if (a1(i)==0 and 
 	  c_desc_id(i)== (int)dsc_id and
-	  casa::allEQ(casa::False, c_flags(i)) // True means not flagged
+	  casa::allEQ(casa::False, c_flags(i)) and
+	  !c_flagrow(i)          // False means not flagged
 	  )
       {
 	times.push_back(c_times(i));
@@ -330,6 +334,9 @@ namespace LibAIR {
     casa::ROArrayColumn<casa::Bool> inflags(ms,
 					    casa::MS::columnName(casa::MS::FLAG));
 
+    casa::ROScalarColumn<casa::Bool> inflagrow(ms,
+					       casa::MS::columnName(casa::MS::FLAG_ROW));
+
     for(size_t ii=0; ii<nrows; ++ii)
     {
       size_t i = sortedI[ii];
@@ -340,7 +347,8 @@ namespace LibAIR {
 	casa::Array<casa::Bool> fl;
 	inflags.get(i, fl, ::casa::True);
  
-	if(casa::allEQ(casa::False, inflags(i))) // i.e. not flagged at all
+	if(casa::allEQ(casa::False, inflags(i)) and
+	   !inflagrow(i)) // i.e. not flagged at all
 	{
 	  casa::Array<std::complex<float> > a;
 	  indata.get(i,a, casa::True);
