@@ -66,8 +66,8 @@ template<class T> class ImageInterface;
   void grid(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col);
   void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf);
 
-  void initializeDegrid();
-  void degrid();
+  void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1);
+  void degrid(vi::VisBuffer2& vb);
   void finalizeDegrid();
 
   Record getFTMRecord();
@@ -75,7 +75,7 @@ template<class T> class ImageInterface;
 protected:
   Bool changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
   CountedPtr<ComponentFTMachine> cft_p;
-  ComponentList cl_p;
+  ComponentList cl_p, clCorrupted_p;
   SkyJones  *ejgrid_p, *ejdegrid_p;
   vi::VisBufferImpl2 vb_p;
 
