@@ -200,7 +200,7 @@ class VLAImportData(basetask.StandardTaskTemplate):
         # launch an import job for each ASDM we need to convert 
         for asdm in to_convert:
             self._do_importevla(asdm)
-            self._do_hanningsmooth(asdm)
+            #self._do_hanningsmooth(asdm)
         # calculate the filenames of the resultant measurement sets
         asdms = [os.path.join(inputs.output_dir, f) for f in to_convert]
 
