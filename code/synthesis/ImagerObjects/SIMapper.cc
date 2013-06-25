@@ -90,6 +90,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       //SD style component gridding
       cft_p=new SimpleComponentGridMachine();
     cl_p=cl;
+    clCorrupted_p=cl;
       
   }
   
@@ -114,7 +115,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIMapper","initializeGrid",WHERE) );
     // itsFTM->initializeToSky( itsResidual, vb )
     //Componentlist FTM has nothing to do
-    if(ift_p.null() && !cft_p.null())
+    if(ift_p.null())
     	return;
     Bool dirDep= (ejgrid_p != NULL);
     //The Matrix Weight is not needed or is needed when we do not need the weight Image full
@@ -136,60 +137,62 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SIMapper","grid",WHERE) );
     //Componentlist FTM has no gridding to do
-    if(ift_p.null() && !cft_p.null())
-        	return;
+    if(ift_p.null())
+    	return;
     Int nRow=vb.nRows();
     const vi::VisBuffer2Adapter vba(&vb);
     Bool internalChanges=False;  // Does this VB change inside itself?
     Bool firstOneChanges=False;  // Has this VB changed from the previous one?
     if((ift_p->name() != "MosaicFT")    && (ift_p->name() != "PBWProjectFT") &&
-           (ift_p->name() != "AWProjectFT") && (ift_p->name() != "AWProjectWBFT")) {
+           (ift_p->name() != "AWProjectFT") && (ift_p->name() != "AWProjectWBFT"))
+    {
             changedSkyJonesLogic(vb, firstOneChanges, internalChanges, True);
-        }
-        //First ft machine change should be indicative
-        //anyways right now we are allowing only 1 ftmachine for GridBoth
-        Bool IFTChanged=ift_p->changed(vba);
+    }
+    //First ft machine change should be indicative
+    //anyways right now we are allowing only 1 ftmachine for GridBoth
+    Bool IFTChanged=ift_p->changed(vba);
 
 
-        // we might need to recompute the "sky" for every single row, but we
-        // avoid this if possible.
+    // we might need to recompute the "sky" for every single row, but we
+    // avoid this if possible.
 
 
-        if(internalChanges) {
-            // Yes there are changes: go row by row.
+    if(internalChanges) {
+    	// Yes there are changes: go row by row.
 
-        	for (Int row=0; row<nRow; row++) {
-                if(IFTChanged||ejgrid_p->changed(vba,row)) {
-                	// Need to apply the SkyJones from the previous row
-                    // and finish off before starting with this row
-                	finalizeGrid(vb_p, dopsf);
-                	initializeGrid(vb);
-                }
-
-
-                ift_p->put(vba, row, dopsf, col);
-
-            }
-        }
-        else if (IFTChanged || firstOneChanges) {
+    	for (Int row=0; row<nRow; row++) {
+    		if(IFTChanged||ejgrid_p->changed(vba,row))
+    		{
+    			// Need to apply the SkyJones from the previous row
+    			// and finish off before starting with this row
+    			finalizeGrid(vb_p, dopsf);
+    			initializeGrid(vb);
+    		}
 
 
-            //if(!isBeginingOfSkyJonesCache_p){
-    	      //finalizePutSlice(*vb_p, dopsf, cubeSlice, nCubeSlice);
-           // }
-        	//IMPORTANT:We need to finalize here by checking that we are not at the begining of the iteration
-        	//finalizeGrid(vb_p, dopsf);
-            initializeGrid(vb);
+    		ift_p->put(vba, row, dopsf, col);
 
-            ift_p->put(vba, -1, dopsf, col);
+    	}
+    }
+    else if (IFTChanged || firstOneChanges) {
 
-        }
-        else {
-             ift_p->put(vba, -1, dopsf, col);
 
-        }
+    	//if(!isBeginingOfSkyJonesCache_p){
+    	//finalizePutSlice(*vb_p, dopsf, cubeSlice, nCubeSlice);
+    	// }
+    	//IMPORTANT:We need to finalize here by checking that we are not at the begining of the iteration
+    	//finalizeGrid(vb_p, dopsf);
+    	initializeGrid(vb);
 
-        //isBeginingOfSkyJonesCache_p=False;
+    	ift_p->put(vba, -1, dopsf, col);
+
+    }
+    else {
+    	ift_p->put(vba, -1, dopsf, col);
+
+    }
+
+    //isBeginingOfSkyJonesCache_p=False;
 
   }
 
@@ -202,8 +205,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Do not normalize the residual by the weight. 
     //   -- Normalization happens later, via 'divideResidualImageByWeight' called from SI.divideImageByWeight()
     //   -- This will ensure that normalizations are identical for the single-node and parallel major cycles. 
-    if(ift_p.null() && !cft_p.null())
-            	return;
+    if(ift_p.null())
+    	return;
     // Actually do the transform. Update weights as we do so.
     ift_p->finalizeToSky();
     // 1. Now get the (unnormalized) image and add the
@@ -217,7 +220,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	ift_p->correlationToStokes(*(itsImages->backwardGrid()), *(itsImages->psf()), True);
     else{
     	if(ejgrid_p != NULL){
-    		ejgrid_p->apply(*(itsImages->backwardGrid()),*(itsImages->backwardGrid()), vi::VisBuffer2Adapter(&vb), -1, False);
+    		// Note we apply the state of the previously saved visbuffer vb_p
+    		// We might have to carry over the row for internal changes
+    		ejgrid_p->apply(*(itsImages->backwardGrid()),*(itsImages->backwardGrid()), vi::VisBuffer2Adapter(&vb_p), -1, False);
     		TempImage<Float> temp((itsImages->residual())->shape(), (itsImages->residual())->coordinates());
     		ift_p->correlationToStokes(*(itsImages->backwardGrid()), temp, False);
     		LatticeExpr<Float> addToRes( *(itsImages->residual()) + temp );
@@ -243,17 +248,107 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
-  void SIMapper::initializeDegrid()
+  void SIMapper::initializeDegrid(const vi::VisBuffer2& vb, const Int row)
   {
     LogIO os( LogOrigin("SIMapper", "initializeDegrid",WHERE) );
+    if(ft_p.null() && cft_p.null())
+    	return;
 
-    ////  only if model exists...
+    if(!ft_p.null()) {
+    	ft_p->stokesToCorrelation(*(itsImages->model()), *(itsImages->forwardGrid()));
+    	if(ejdegrid_p != NULL)
+    		ejgrid_p->apply(*(itsImages->forwardGrid()),*(itsImages->forwardGrid()), vi::VisBuffer2Adapter(&vb), row, True);
+    	// Change the model polarization frame
+    	if(vb.polarizationFrame()==MSIter::Linear) {
+    		StokesImageUtil::changeCStokesRep(*(itsImages->forwardGrid()),
+    						  StokesImageUtil::LINEAR);
+    	}
+    	else {
+    		StokesImageUtil::changeCStokesRep(*(itsImages->forwardGrid()),
+    						  StokesImageUtil::CIRCULAR);
+    	}
+    	ft_p->initializeToVis(*(itsImages->forwardGrid()), vi::VisBuffer2Adapter(&vb));
+      }
+      else if(!cft_p.null()) {
+    	if(ejdegrid_p != NULL){
+    		clCorrupted_p=ComponentList();
+    		for (uInt k=0; k < cl_p.nelements(); ++k){
+    			SkyComponent comp=cl_p.component(k).copy();
+    			if(vb.polarizationFrame()==MSIter::Linear) {
+    			    if(comp.flux().pol()==ComponentType::STOKES) {
+    			      comp.flux().convertPol(ComponentType::LINEAR);
+    			    }
+    			  }
+    			  else {
+    			    if(comp.flux().pol()==ComponentType::STOKES) {
+    			      comp.flux().convertPol(ComponentType::CIRCULAR);
+    			    }
+    			  }
+    			////We might have to deal with the right row here if the visbuffer is has changed internally
+    			ejdegrid_p->apply(comp, comp, vi::VisBuffer2Adapter(&vb),row, True);
+    			clCorrupted_p.add(comp);
+    		}
+    	}
+  }
+
+
     
   }
 
-  void SIMapper::degrid()
+  void SIMapper::degrid(vi::VisBuffer2& vb)
   {
     LogIO os( LogOrigin("SIMapper","degrid",WHERE) );
+    ///This should not be called even but heck let's ignore
+    if(ft_p.null() and cft_p.null())
+    	return;
+    Int nRow=vb.nRows();
+    Cube<Complex> origCube;
+    origCube.assign(vb.visCubeModel());
+    vi::VisBuffer2Adapter vba(&vb);
+    Bool internalChanges=False;  // Does this VB change inside itself?
+    Bool firstOneChanges=False;  // Has this VB changed from the previous one?
+
+    	if((!ft_p.null() && (ft_p->name() != "MosaicFT")    && (ft_p->name() != "PBWProjectFT") &&
+    		(ft_p->name() != "AWProjectFT") && (ft_p->name() != "AWProjectWBFT")) || (!cft_p.null())) {
+    		changedSkyJonesLogic(vb, firstOneChanges, internalChanges, False);
+    	}
+    	//anyways right now we are allowing only 1 ftmachine for GridBoth
+    	Bool FTChanged=ft_p->changed(vba);
+
+    	if(internalChanges)
+    	{
+    		// Yes there are changes within this buffer: go row by row.
+    		// This will automatically catch a change in the FTMachine so
+    		// we don't have to check for that.
+    		for (Int row=0; row<nRow; row++)
+    		{
+    			if(FTChanged||ejdegrid_p->changed(vba,row))
+    			{
+    				// Need to apply the SkyJones from the previous row
+    				// and finish off before starting with this row
+    				finalizeDegrid();
+    				initializeDegrid(vb, row);
+    			}
+    			ft_p.null() ? cft_p->get(vba, clCorrupted_p, row) : ft_p->get(vba, row);
+
+    		}
+
+    	}
+    	else if (FTChanged||firstOneChanges) {
+    		// This buffer has changed wrt the previous buffer, but
+    		// this buffer has no changes within it. Again we don't need to
+    		// check for the FTMachine changing.
+    		finalizeDegrid();
+    		initializeDegrid(vb, 0);
+    		ft_p.null() ? cft_p->get(vba, clCorrupted_p) : ft_p->get(vba);
+    	}
+    	else {
+    		ft_p.null() ? cft_p->get(vba, clCorrupted_p) : ft_p->get(vba);
+    	}
+
+
+     vba.modelVisCube()+=origCube;
+
   }
 
   void SIMapper::finalizeDegrid()
@@ -273,6 +368,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       firstRow=False;
       internalRow=False;
       SkyJones* ej= grid ? ejgrid_p : ejdegrid_p;
+      if(ej ==NULL)
+    	  return False;
 	  if(ej->changed(vi::VisBuffer2Adapter(&vb),0))
 		  firstRow=True;
 	  Int row2temp=0;

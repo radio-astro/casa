@@ -82,6 +82,10 @@ class SynthesisImager
 			   const Bool trackSource=False, const MDirection& 
 			   trackDir=MDirection(Quantity(0.0, "deg"), 
 					       Quantity(90.0, "deg")));
+  //Defining componentlist to use while degriding
+  //This should be called once...if multiple lists are used..they can be merged in one
+  //if sdgrid=True then image plane degridding is done
+  virtual void setComponentList(const ComponentList& cl, Bool sdgrid=False);
   void setupImaging(Record gridpars);
 
   void initMapper();
