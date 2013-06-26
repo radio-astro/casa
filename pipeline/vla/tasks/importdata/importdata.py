@@ -84,7 +84,7 @@ class VLAImportDataResults(basetask.Results):
             if ms.antenna_array.name == 'EVLA':
                 m = context.observing_run.measurement_sets[0]
                 context.evla = collections.defaultdict(dict)
-                msinfo = self._do_msinfo_heuristics()
+                msinfo = self._do_msinfo_heuristics(context)
                 context.evla['msinfo'] = { m.name : msinfo }
             
 
@@ -92,10 +92,10 @@ class VLAImportDataResults(basetask.Results):
             for result in self.setjy_results:
                 result.merge_with_context(context)
     
-    def _do_msinfo_heuristics(self):
+    def _do_msinfo_heuristics(self, context):
         """Temporarily gets heuristics for VLA via msinfo script
         """
-        vlainputs = VLAUtils.Inputs(self.inputs.context)
+        vlainputs = VLAUtils.Inputs(context)
         msinfo = VLAUtils(vlainputs)
         msinfo.identifyspw()
         msinfo.initialgainspw()
