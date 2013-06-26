@@ -87,11 +87,20 @@ class MeasurementSetReader(object):
                 data_descriptions = [ms.get_data_description(id=i) 
                                      for i in scan_data_desc_id]
 
-                raw_midpoints = list(set(time_col[scan_mask]))
-                exposures = exposure_col[scan_mask]
+                raw_midpoints = list(time_col[scan_mask])
+                unique_midpoints = set(raw_midpoints)
+                exposures = list(exposure_col[scan_mask])
 
+                # get the exposure times that correspond to the unique midpoint
+                # times that we just found 
+                exposure_for_midpoints = []
+                for midpoint in unique_midpoints:
+                    idx = raw_midpoints.index(midpoint)
+                    exposure_for_midpoints.append(exposures[idx])
+                    
                 scan_times = []
-                for raw_midpoint, exposure in zip(raw_midpoints, exposures):
+                for raw_midpoint, exposure in zip(unique_midpoints, 
+                                                  exposure_for_midpoints):
                     # measurement set spec states that exposure is recorded in 
                     # seconds
                     exposure = qt.quantity(exposure, 's')
