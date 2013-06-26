@@ -158,7 +158,7 @@ void StokesImageUtil::Convolve(ImageInterface<Float>& image,
   Int freqAx=CoordinateUtil::findSpectralAxis(image.coordinates());
   Int nchan=image.shape()(freqAx);
   if((nchan != nbeams) || (nchan==1)){
-    GaussianBeam elbeam=beams(IPosition(2,0,0));
+    GaussianBeam elbeam=beams(0, 0);
     Convolve(image, elbeam, normalizeVolume);     
   }
   else{
@@ -170,7 +170,7 @@ void StokesImageUtil::Convolve(ImageInterface<Float>& image,
       trc[freqAx]=k;
       Slicer slc(blc, trc, Slicer::endIsLast);
       SubImage<Float> subim(image, slc, True);
-      GaussianBeam elbeam=beams(IPosition(2,k,0));
+      GaussianBeam elbeam=beams(k,0);
       Convolve(subim, elbeam, normalizeVolume);
 
     }
@@ -422,14 +422,11 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
   Vector<Stokes::StokesTypes> whichPols;
   Int polAx=CoordinateUtil::findStokesAxis(whichPols, psf.coordinates());
   Int nchan=psf.shape()(freqAx);
-  Vector<ImageBeamSet::AxisType> types(2);
-  types[0] = ImageBeamSet::SPECTRAL;
-  types[1] = ImageBeamSet::POLARIZATION;
   IPosition blc=psf.shape();
   blc=0;
   IPosition trc=psf.shape()-1;
   trc[polAx]=0;
-  elbeam=ImageBeamSet(IPosition(2, nchan, 1), types);
+  elbeam=ImageBeamSet(nchan, 1);
   IPosition ipos(2,0,0);
   Matrix<GaussianBeam> tempBeam(nchan,1);
   Vector<Bool> fitted(nchan, False);
@@ -495,7 +492,7 @@ Bool StokesImageUtil::FitGaussianPSF(ImageInterface<Float>& psf, ImageBeamSet& e
        }
      }
   }
-  elbeam=ImageBeamSet(tempBeam.shape(), types);
+  elbeam=ImageBeamSet(tempBeam.shape());
   elbeam.setBeams(tempBeam);
   
   return retval;

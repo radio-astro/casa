@@ -85,10 +85,7 @@ int main () {
 		TempImage<Float> i10(TiledShape(shape), csys);
 		TempImage<Float> io10(TiledShape(shape), csys);
 
-		ImageBeamSet beamSet(
-			IPosition(1, 3), Vector<ImageBeamSet::AxisType>(1, ImageBeamSet::SPECTRAL)
-		);
-
+		ImageBeamSet beamSet(3, 0);
 		for (uInt i=0; i<3; i++) {
 			fwhm.setValue(6 + i*2);
 			p(0) = fwhm;
@@ -120,7 +117,7 @@ int main () {
 					IPosition(2, 0, 1), p, True, -1.0
 				);
 			}
-			beamSet.setBeam(GaussianBeam(p), IPosition(1, i));
+			beamSet.setBeam(i, -1, GaussianBeam(p));
 
 		}
 		multi.putSlice(io6.get(), IPosition(3, 0, 0, 0));
@@ -129,9 +126,7 @@ int main () {
 		ImageInfo info = multi.imageInfo();
 		info.setBeams(beamSet);
 		multi.setUnits("Jy/beam");
-
 		multi.setImageInfo(info);
-
 		ImageMoments<Float> gotMom(multi, log, True, False);
 		if (!gotMom.setMoments(whichMoments)) {
 			throw AipsError("Cannot set moments");
@@ -176,7 +171,7 @@ int main () {
 
 	}
 	catch (const AipsError& x) {
-		cerr << "aipserror: error " << x.getMesg() << endl;
+		cerr << "FAIL: " << x.getMesg() << endl;
 		return 1;
 	}
 	cout << "OK" << endl;

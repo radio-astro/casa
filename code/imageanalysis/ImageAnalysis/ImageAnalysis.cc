@@ -2779,14 +2779,12 @@ ImageInterface<Float> * ImageAnalysis::moments(
 	// as either vectors of strings or one string with separators.
 	// Hence the code below that deals with it.   Also in image.g we therefore
 	// give the default value as a blank string rather than a null vector.
-
 	String tmpImageName;
 	Record r;
 	std::auto_ptr<ImageInterface<Float> > pIm;
 	try {
 		std::auto_ptr<ImageInterface<Float> > x;
 		if (_image->imageType() != PagedImage<Float>::className()) {
-            
             Path tmpImage = File::newUniqueName (".", "moments.scratch.image");
             tmpImageName = tmpImage.baseName();
 			*_log << LogIO::NORMAL << "Calculating moments of non-paged images can be notoriously slow, "
@@ -2801,10 +2799,10 @@ ImageInterface<Float> * ImageAnalysis::moments(
 		}
 		else {
 			x.reset(
-					SubImageFactory<Float>::createSubImage(
-							*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
-							mask, _log.get(), False, AxesSpecifier(), stretchMask
-					).cloneII()
+				SubImageFactory<Float>::createSubImage(
+					*_image, *(ImageRegion::tweakedRegionRecord(&Region)),
+					mask, _log.get(), False, AxesSpecifier(), stretchMask
+				).cloneII()
 			);
 		}
 		// Create ImageMoments object
@@ -2824,8 +2822,8 @@ ImageInterface<Float> * ImageAnalysis::moments(
 			const CoordinateSystem& csys = x->coordinates();
 			if (csys.hasSpectralAxis() && axis == csys.spectralAxisNumber()) {
 				*_log << LogIO::WARN << "This image has multiple beams and you determining "
-						<< " moments along the spectral axis. Interpret your results carefully"
-						<< LogIO::POST;
+					<< " moments along the spectral axis. Interpret your results carefully"
+					<< LogIO::POST;
 			}
 			else if (csys.hasPolarizationCoordinate() && axis == csys.polarizationAxisNumber()) {
 				*_log << LogIO::WARN << "This image has multiple beams and you determining "
@@ -2933,7 +2931,6 @@ ImageInterface<Float> * ImageAnalysis::moments(
 			dir.removeRecursive(False);
 		}
 	}
-
 	return pIm.release();
 }
 

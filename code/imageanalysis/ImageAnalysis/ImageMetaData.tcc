@@ -97,11 +97,12 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
 			_REFFREQTYPE , MFrequency::showType(sc.frequencySystem())
 		);
 	}
-
+/*
 	if (info.hasBeam()) {
 		Record beam = info.getBeamSet().toRecord(True);
 		_header.merge(beam);
 	}
+	*/
 	if (info.hasSingleBeam()) {
 		GaussianBeam beam = info.restoringBeam(-1, -1);
 		_header.defineRecord(
@@ -118,7 +119,12 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
 		);
 	}
 	else if (info.hasMultipleBeams()) {
-		_header.defineRecord("perplanebeams", info.getBeamSet().toRecord(True));
+		String error;
+		Record rec;
+		info.toRecord(error, rec);
+		_header.defineRecord(
+			"perplanebeams", rec.asRecord("perplanebeams")
+		);
 	}
  	Vector<Double> cdelt = summary.axisIncrements(True);
 	Vector<String> units = summary.axisUnits(True);
