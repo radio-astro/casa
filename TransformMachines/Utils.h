@@ -108,6 +108,12 @@ namespace casa
     {return sqrt(2*refFreq*refFreq - freq*freq);};
 
     Double nearestValue(const Vector<Double>& list, const Double& val, Int& index);
+
+    CoordinateSystem makeUVCoords(CoordinateSystem& imageCoordSys,
+				  IPosition& shape);
+
+    Vector<Int> mapSpwIDToDDID(const VisBuffer& vb, const Int& spwID);
+    Vector<Int> mapSpwIDToPolID(const VisBuffer& vb, const Int& spwID);
   }
 
   void getHADec(MeasurementSet& ms, const VisBuffer& vb, Double &HA, Double& RA, Double& Dec);
