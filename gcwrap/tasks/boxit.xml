@@ -77,12 +77,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
   <example>
 
+
        This tool finds all 2-dimensional (RA/dec) regions in the given
-       image which are contiguous sets of pixels (islands) above the given ]
+       4D (only!) image which are contiguous sets of pixels (islands) above the given ]
        threshold.  It creates a box for each island, a rectangular "cutout".
        The boxes are stored as regions in the output regionfile.  Works on
        multi-plane images, but only boxes 2-D regions in each plane.
        (Doesn't create cubes/3D boxes.)
+       
+       NOTE: THIS TASK WILL NOT WORK ON IMAGES THAT DO NOT HAVE 4 DIMENSIONS WHICH INCLUDE
+       A DIRECTION COORDINATE, A SPECTRAL COORDINATE, AND A STOKES COORDINATE. If your image
+       has, eg just a direction coordinate, you can add the required axes using ia.adddegaxes()
+       and remove them post-run with imsubimage with dropdeg=T.
  
        imagename -- Name of input images:
                default: none; example: imagename='myimage.image'
