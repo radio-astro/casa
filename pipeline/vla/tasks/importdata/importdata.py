@@ -288,28 +288,25 @@ class VLAImportData(basetask.StandardTaskTemplate):
             shutil.copy(asdm_source, vis_source)
     
     def _do_msinfo_heuristics(self, asdm):
-        
         if self.inputs.ms.antenna_array.name == 'EVLA':
-            
             m = self.inputs.context.observing_run.measurement_sets[0]
-        
             self.inputs.context.evla = collections.defaultdict(dict())
+            
+            vlainputs = VLAUtils.Inputs(self.inputs.context)
+            msinfo = VLAUtils(vlainputs)
+            msinfo.identifyspw()
+            msinfo.initialgainspw()
+            msinfo.getFields()
+            msinfo.integrationTime()
+            msinfo.quackingScans()
+            msinfo.basebandspws()
+            msinfo.calibratorIntents()
+            msinfo.corrStrings()
+            msinfo.getAntennas()
+            msinfo.determine3C84()
+            msinfo.identifySubbands()
 
-			vlainputs = VLAUtils.Inputs(self.inputs.context)
-			msinfo = VLAUtils(vlainputs)
-			msinfo.identifyspw()
-			msinfo.initialgainspw()
-			msinfo.getFields()
-			msinfo.integrationTime()
-			msinfo.quackingScans()
-			msinfo.basebandspws()
-			msinfo.calibratorIntents()
-			msinfo.corrStrings()
-			msinfo.getAntennas()
-			msinfo.determine3C84()
-			msinfo.identifySubbands()
-
-		    self.inputs.context.evla['msinfo'] = { m.name : msinfo }
+            self.inputs.context.evla['msinfo'] = { m.name : msinfo }
 
             #context.evla['msinfo'][m.name]
 
