@@ -18,6 +18,7 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.tablereader as tablereader
 from pipeline.hif.tasks.common import commonfluxresults
+from pipeline.vla.tasks.vlautils import VLAUtils, VLAUtilsInputs, buildscans
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -285,6 +286,39 @@ class VLAImportData(basetask.StandardTaskTemplate):
             LOG.trace('Copying Source.xml: %s to %s' % (asdm_source,
                                                         vis_source))
             shutil.copy(asdm_source, vis_source)
+    
+    def _do_msinfo_heuristics(self, asdm):
+        
+        if self.inputs.ms.antenna_array.name == 'EVLA':
+            context = self.inputs.context
+            m = context.observing_run.measurement_sets[0]
+        
+            context.evla=collections.defaultdict(dict())
+
+			vlainputs = VLAUtils.Inputs(context)
+			msinfo = VLAUtils(vlainputs)
+			msinfo.identifyspw()
+			msinfo.initialgainspw()
+			msinfo.getFields()
+			msinfo.integrationTime()
+			msinfo.quackingScans()
+			msinfo.basebandspws()
+			msinfo.calibratorIntents()
+			msinfo.corrStrings()
+			msinfo.getAntennas()
+			msinfo.determine3C84()
+			msinfo.identifySubbands()
+
+		    context.evla['msinfo'] = { m.name : msinfo }
+
+            #context.evla['msinfo'][m.name]
+
+            #context.evla['msinfo'][m.name].intents
+
+            #context.evla['msinfo'][m.name].quack_scan_string
+            
+            
+        
             
     def _do_hanningsmooth(self, asdm):
         vis = self._asdm_to_vis_filename(asdm)
