@@ -1417,7 +1417,6 @@ record* image::fitprofile(const string& box, const variant& region,
 				throw AipsError("Unsupported value for spxtype");
 			}
 		}
-		cout << "myspxtype " << myspxtype << endl;
 		SpectralList spectralList = SpectralListFactory::create(
 			*_log, pampest, pcenterest, pfwhmest, pfix, gmncomps,
 			gmampcon, gmcentercon, gmfwhmcon, gmampest,
@@ -2249,7 +2248,6 @@ image::moments(
 		if (detached()) {
 			return 0;
 		}
-
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
 		Vector<Int> whichmoments(moments);
 		std::auto_ptr<Record> Region(toRecord(region));
@@ -2294,7 +2292,6 @@ image::moments(
 			for (int i = 0; i < num; i++)
 				excludepix[i] = d_excludepix[i];
 		}
-
 		std::auto_ptr<ImageInterface<Float> > outIm(
 			_image->moments(
 				whichmoments, axis,
@@ -2304,7 +2301,6 @@ image::moments(
 				overwrite, removeAxis, stretch
 			)
 		);
-
 		return new ::casac::image(outIm.get());
 	}
 	catch (AipsError x) {
@@ -3054,7 +3050,8 @@ bool image::setrestoringbeam(
 			return True;
 		}
 		throw AipsError("Error setting restoring beam.");
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);

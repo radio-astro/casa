@@ -1193,7 +1193,9 @@ class immoment_test2(unittest.TestCase):
             myia.putchunk(pixels=aa, blc=[0, 0, i])
             f = str(fwhm) + "arcmin"
             myia.setrestoringbeam(major=f, minor=f, pa="0deg", channel=i)
+        print "*** ac"
         ret = myia.moments(moments=moments, axis=2)
+        print "*** ca"
         ret.done()
         myia.done()
         got = iatool()

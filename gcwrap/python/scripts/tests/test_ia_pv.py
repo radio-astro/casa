@@ -219,6 +219,7 @@ class ia_pv_test(unittest.TestCase):
         # the only tests necessary here are to ensure ia.pv() runs 
         # successfully for the provided inputs
         # calculate stats to make sure region determination code doesn't segfault (CAS-4881)
+        print "*** aa"
         myia = self.ia
         myia.open(datapath + "pv1.im")
         xx = myia.pv(start = [30, 30], end = [250, 250])
@@ -229,7 +230,8 @@ class ia_pv_test(unittest.TestCase):
         xx.statistics()
         xx = myia.pv(start = [250, 30], end = [30, 250])
         xx.statistics()
-  
+        print "*** ab"
+
         myia.open(datapath + "pv2.im")
         x1 = 264.865854
         x2 = 166.329268
@@ -249,6 +251,8 @@ class ia_pv_test(unittest.TestCase):
         # test units from task level
         outfile = "unittest.im"
         unit="arcmin"
+        print "*** ac"
+
         impv(
              imagename=datapath + "pv1.im", unit=unit,
              outfile="unittest.im", start=[3,3], end=[6,6]

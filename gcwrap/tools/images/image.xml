@@ -8559,50 +8559,7 @@ ia.close()
         </param>
             
     </input>
-<!--
-=======
-   <method type="function" name="setrestoringbeam">
-   <shortdescription>Set the restoringbeam</shortdescription>
-   
-<input>
-  
-     <param type="any"  name="major">
-     <any type="variant"/>
-     <description>Major axis FWHM, Quantity or float (e.g., 1arcsec).  Default is unset.</description>
-     <value>1arcsec</value>
-     </param>
-  
-     <param type="any"  name="minor">
-     <any type="variant"/>
-     <description>Minor axis FWHM, Quantity or float (e.g., 1arcsec).
-      Default is unset.</description>
-     <value>1arcsec</value>
-     </param>
-  
-     <param type="any"  name="pa">
-     <any type="variant"/>
-     <description>Position angle, Quantity or float (e.g., '5deg').
-      Default is unset.</description>
-     <value>0deg</value>
-     </param>
-  
-     <param type="record"  name="beam">
-     <description>The complete restoring beam (output of restoringbeam()).  Default is unset.</description>
-     <value></value>
-     </param>
-  
-     <param type="bool"  name="remove">
-     <description>Delete the restoring beam?</description>
-     <value>false</value>
-     </param>
-  
-     <param type="bool"  name="log">
-     <description>Write new beam values to the logger?</description>
-     <value>true</value>
-     </param>
-</input>
->>>>>>> .r20204
--->
+
     <returns type="bool">T or fail</returns>
     <description>
 
@@ -8631,20 +8588,16 @@ An image must have exactly one of the following states:
 to every channel and polarization in the image.
 
 2. If an image has more than one spectral channel or more than one polarization,
-it can have a set of "per plane" beams. In this case, the image must have
-exactly one beam per spectral channel and polarization combination in the image. So,
-an image with 32 channels and 4 polarizations must have 128 per plane beams if it
-has a per-plane beam set. An image with 32 channels and no polarizations must have
-32 per-plane beams, and an image with 4 polarizations and no spectral channels must
-have 4 per-plane beams if it has a set of per-plane beams.
+it can have a set of beams. In this case, each channel and/or polarization will have
+its own beam.
 
-3. An image can have neither a traditional beam nor a per-plane beam set.
+3. An image can have neither a traditional beam nor a beam set.
 
 It is never permissible for an image to have both a traditional (global) beam and
 a set of per-plane beams. Task and method behavior is undefined in that case and
 any resulting products are considered corrupt.
 
-These are the rules for setting and modifying beams.
+RULES FOR BEAM MODIFICATION
 
 If an image has no beams, a traditional (global) beam can be added by setting
 both channel and polarization to negative values.
@@ -8656,18 +8609,23 @@ the same with parameters equal to those specified by either the beam or major/mi
 parameters.
 
 If an image has a traditional beam, it can be modified by setting both channel and
-polarization to negative values. If one or both is not set to a negative value, a warning
-is emitted, false is returned, and nothing is modified.
+polarization to negative values. If one or both is not set to a negative value, an
+exception is thrown, and nothing is modified.
 
 If an image has a set of per plane beams, one at a time of these can be modified by 
 setting the appropriate channel number and/or polarization number. All the per-plane
 beams can be modified to the same values in one go by setting both channel and
-polarization to negative values.
+polarization to negative values. Also, in the case where an image has multiple channels,
+the beams associated with all channels for a given polarization can be modified to the same
+beam by setting polarization equal to the desired polarization plane number and by setting
+channel to a negative value. Similarly, in the case where an image has multiple polarizations,
+the beams associated with all polarizations for a given spectral channel can be modified to the same
+beam by setting channel equal to the desired spectral channel number and by setting
+polarization to a negative value.
 
-You may also delete the the traditional beam or all per-plane beams
-by setting {\stfaf delete=T}. If set
-to true, all other parameters are then ignored; any and all existing beams
-will be deleted.
+The traditional beam or a set of multiple beams can be deleted from an image by setting {\stfaf delete=T}. If set
+to true, all other parameters are then ignored; all existing beams
+will be irrevocably deleted.
 
 </description>
 

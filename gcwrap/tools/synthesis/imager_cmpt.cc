@@ -440,7 +440,7 @@ imager::fitpsf( const std::string& psf, const bool async,
 	   rstat = itsImager->fitpsf(psf, elbeam);
 	   IPosition ipos=elbeam.shape();
 	   ipos=0;
-	   GaussianBeam beam=elbeam(ipos);
+	   GaussianBeam beam=elbeam(0,0);
 	   bpa   = *recordFromQuantity(beam.getPA());
 	   bmaj  = *recordFromQuantity(beam.getMajor());
 	   bmin  = *recordFromQuantity(beam.getMinor());
