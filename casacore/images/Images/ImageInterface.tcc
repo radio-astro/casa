@@ -269,150 +269,24 @@ String ImageInterface<T>::makeUniqueRegionName (const String& rootName,
   return regHandPtr_p->makeUniqueRegionName (rootName, startNumber);
 }
 
-template<class T> Bool ImageInterface<T>::setImageInfo(
-	const ImageInfo& info
-) {
-	// Derived classes like PagedImage have to put this in the
-	// permanent table keywordSet
-	if (info.hasMultipleBeams()) {
-		logSink() << LogOrigin("ImageInterface", __FUNCTION__);
-		ImageInfo cinfo = info;
-		if (! coords_p.hasDirectionCoordinate()) {
-			logSink()
-				<< "This image has no direction coordinate so cannot "
-				<< "have per plane beams." << LogIO::EXCEPTION;
-		}
-		uInt beamChannels = cinfo.nChannels();
-		const Array<GaussianBeam>& beams = cinfo.getBeamSet().getBeams();
-		if (beamChannels == 0) {
-			if (coords_p.hasSpectralAxis()) {
-				Int specAxisNum = coords_p.spectralAxisNumber();
-				if (shape()[specAxisNum] == 1) {
-					// allow silent reforming of the array in the case of a degenerate
-					// spectral axis
+template<class T>
+void ImageInterface<T>::setImageInfoMember(const ImageInfo& info)
+{
+  imageInfo_p = info;
+  imageInfo_p.checkBeamSet (coords_p, shape(), name(), logSink());
+}
 
-					Vector<ImageBeamSet::AxisType> axisTypes(2);
-					axisTypes[0] = ImageBeamSet::SPECTRAL;
-					axisTypes[1] = ImageBeamSet::POLARIZATION;
-					ImageBeamSet newBeamSet(IPosition(2, 1, beams.size()), axisTypes);
-					Array<GaussianBeam> newBeams = newBeamSet.getBeams();
-					Array<GaussianBeam>::const_iterator citer = beams.begin();
-					for (
-						Array<GaussianBeam>::iterator iter=newBeams.begin();
-						iter!=newBeams.end(); iter++, citer++
-					) {
-						*iter = *citer;
-					}
-					newBeamSet.setBeams(newBeams);
-					cinfo.setBeams(newBeamSet);
-				}
-				else {
-					logSink() << "The per plane beams array does not "
-						<< "define a spectral axis but this image has "
-						<< "a spectral axis" << LogIO::EXCEPTION;
-				}
-			}
-		}
-		else if (! coords_p.hasSpectralAxis()) {
-			if (beamChannels == 1) {
-				// silently allow reforming of the array in case it has a degenerate spectral/temporal axis
-				Vector<ImageBeamSet::AxisType> axisTypes(1);
-				axisTypes[0] = ImageBeamSet::POLARIZATION;
-				ImageBeamSet newBeamSet(IPosition(1, beams.size()), axisTypes);
-				Array<GaussianBeam> newBeams = newBeamSet.getBeams();
-				Array<GaussianBeam>::const_iterator citer = beams.begin();
-				for (
-					Array<GaussianBeam>::iterator iter=newBeams.begin();
-					iter!=newBeams.end(); iter++, citer++
-				) {
-					*iter = *citer;
-				}
-				newBeamSet.setBeams(newBeams);
-				cinfo.setBeams(newBeamSet);
-			}
-			else {
-				logSink() << "The per plane beams array defines a spectral axis but "
-					<< this->name() << " does not have a spectral axis" << LogIO::EXCEPTION;
-			}
-		}
-		else if (coords_p.hasSpectralAxis() && beamChannels != shape()[coords_p.spectralAxisNumber()]) {
-			logSink() << "The number of channels defined in the per plane beams array ("
-				<< beamChannels << ") is "
-				<< "different from the number of image spectral channels("
-				<< shape()[coords_p.spectralAxisNumber()] << ")" << LogIO::EXCEPTION;
-		}
-		uInt beamStokes = info.nStokes();
-		if (beamStokes == 0) {
-			if (coords_p.hasPolarizationCoordinate()) {
-				Int polAxisNum = coords_p.polarizationAxisNumber();
-				if (shape()[polAxisNum] == 1) {
-					// allow silent reforming of the array in the case of a degenerate
-					// polarization axis
-					Vector<ImageBeamSet::AxisType> axisTypes(2);
-					axisTypes[0] = ImageBeamSet::SPECTRAL;
-					axisTypes[1] = ImageBeamSet::POLARIZATION;
-					ImageBeamSet newBeamSet(IPosition(2, beams.size(), 1), axisTypes);
-					Array<GaussianBeam> newBeams = newBeamSet.getBeams();
-					Array<GaussianBeam>::const_iterator citer = beams.begin();
-					for (
-						Array<GaussianBeam>::iterator iter=newBeams.begin();
-						iter!=newBeams.end(); iter++, citer++
-					) {
-						*iter = *citer;
-					}
-					newBeamSet.setBeams(newBeams);
-					cinfo.setBeams(newBeamSet);
-				}
-				else {
-					logSink() << "The per hyper-beams array does not define a polarization "
-						<< "axis but this image has a polarization axis" << LogIO::EXCEPTION;
-				}
-			}
-		}
-		else if (! coords_p.hasPolarizationCoordinate()) {
-			if (beamStokes == 1) {
-				// silently allow reforming of an array with a degenerate polarization axis
-				Vector<ImageBeamSet::AxisType> axisTypes(1);
-				axisTypes[0] = ImageBeamSet::SPECTRAL;
-				ImageBeamSet newBeamSet(IPosition(1, beams.size()), axisTypes);
-				Array<GaussianBeam> newBeams = newBeamSet.getBeams();
-				Array<GaussianBeam>::const_iterator citer = beams.begin();
-				for (
-					Array<GaussianBeam>::iterator iter=newBeams.begin();
-					iter!=newBeams.end(); iter++, citer++
-				) {
-					*iter = *citer;
-				}
-				newBeamSet.setBeams(newBeams);
-				cinfo.setBeams(newBeamSet);
-			}
-			else {
-				logSink() << "ImageInterface::setImageInfo(): The per plane "
-					<< "beams array defines a polarization axis but this image "
-					<< "does not have a polarization axis" << LogIO::EXCEPTION;
-			}
-		}
-		else if (beamStokes != shape()[coords_p.polarizationAxisNumber()]) {
-			logSink() << "The number of polarizations defined in the per "
-				"plane beam array is different from the number of image polarizations"
-				<< LogIO::EXCEPTION;
-		}
-		for (
-			Array<GaussianBeam>::const_iterator iter=beams.begin();
-			iter!=beams.end(); iter++
-		) {
-			if (iter->isNull()) {
-				logSink() << "At least one of the beams in the beam set of "
-					<< name() << " is null and thus invalid" << LogIO::EXCEPTION;
-			}
-		}
-		imageInfo_p = cinfo;
-	}
-	else {
-		imageInfo_p = info;
-	}
-	return True;
-}    
+template<class T>
+Bool ImageInterface<T>::setImageInfo(const ImageInfo& info)
+//
+// Derived classes like PagedImage have to put this in the
+// permanent table keywordSet
+//
+{
+  setImageInfoMember (info);
+  return True;
+}
+
    
 template<class T>
 Bool ImageInterface<T>::setMiscInfo(const RecordInterface& miscInfo)
