@@ -938,6 +938,12 @@ class StandardTaskTemplate(api.Task):
             
         results.extend(self.execute(dry_run=dry_run, **parameters))
 
+        # Delete the capture log for subtasks as the log will be attached to the
+        # outer ResultList.
+        for r in results:
+            if hasattr(r, 'casalog'):
+                del r.casalog
+
         return results
 
     def _get_handled_headtails(self, names=[]):
