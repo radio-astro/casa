@@ -80,14 +80,41 @@ class VLAImportDataResults(basetask.Results):
         for ms in self.mses:
             LOG.info('Adding {0} to context'.format(ms.name))
             target.add_measurement_set(ms)
+            
+            if self.inputs.ms.antenna_array.name == 'EVLA':
+                m = context.observing_run.measurement_sets[0]
+                context.evla = collections.defaultdict(dict())
+                msinfo = self._do_msinfo_heuristics()
+                context.evla['msinfo'] = { m.name : msinfo }
+            
 
         if self.setjy_results:
             for result in self.setjy_results:
                 result.merge_with_context(context)
+    
+    def _do_msinfo_heuristics(self):
+        """Temporarily gets heuristics for VLA via msinfo script
+        """
+        vlainputs = VLAUtils.Inputs(self.inputs.context)
+        msinfo = VLAUtils(vlainputs)
+        msinfo.identifyspw()
+        msinfo.initialgainspw()
+        msinfo.getFields()
+        msinfo.integrationTime()
+        msinfo.quackingScans()
+        msinfo.basebandspws()
+        msinfo.calibratorIntents()
+        msinfo.corrStrings()
+        msinfo.getAntennas()
+        msinfo.determine3C84()
+        msinfo.identifySubbands()
+            
+        return msinfo
             
     def __repr__(self):
         return 'VLAImportDataResults:\n\t{0}'.format(
                 '\n\t'.join([ms.name for ms in self.mses]))
+            
 
 
 class VLAImportData(basetask.StandardTaskTemplate):
@@ -201,7 +228,6 @@ class VLAImportData(basetask.StandardTaskTemplate):
         # launch an import job for each ASDM we need to convert 
         for asdm in to_convert:
             self._do_importevla(asdm)
-            self._do_msinfo_heuristic(asdm)
             #self._do_hanningsmooth(asdm)
         # calculate the filenames of the resultant measurement sets
         asdms = [os.path.join(inputs.output_dir, f) for f in to_convert]
@@ -288,32 +314,8 @@ class VLAImportData(basetask.StandardTaskTemplate):
                                                         vis_source))
             shutil.copy(asdm_source, vis_source)
     
-    def _do_msinfo_heuristics(self, asdm):
-        if self.inputs.ms.antenna_array.name == 'EVLA':
-            m = self.inputs.context.observing_run.measurement_sets[0]
-            self.inputs.context.evla = collections.defaultdict(dict())
+    
             
-            vlainputs = VLAUtils.Inputs(self.inputs.context)
-            msinfo = VLAUtils(vlainputs)
-            msinfo.identifyspw()
-            msinfo.initialgainspw()
-            msinfo.getFields()
-            msinfo.integrationTime()
-            msinfo.quackingScans()
-            msinfo.basebandspws()
-            msinfo.calibratorIntents()
-            msinfo.corrStrings()
-            msinfo.getAntennas()
-            msinfo.determine3C84()
-            msinfo.identifySubbands()
-
-            self.inputs.context.evla['msinfo'] = { m.name : msinfo }
-
-            #context.evla['msinfo'][m.name]
-
-            #context.evla['msinfo'][m.name].intents
-
-            #context.evla['msinfo'][m.name].quack_scan_string
         
             
     def _do_hanningsmooth(self, asdm):
