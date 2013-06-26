@@ -290,12 +290,12 @@ class VLAImportData(basetask.StandardTaskTemplate):
     def _do_msinfo_heuristics(self, asdm):
         
         if self.inputs.ms.antenna_array.name == 'EVLA':
-            context = self.inputs.context
-            m = context.observing_run.measurement_sets[0]
+            
+            m = self.inputs.context.observing_run.measurement_sets[0]
         
-            context.evla=collections.defaultdict(dict())
+            self.inputs.context.evla = collections.defaultdict(dict())
 
-			vlainputs = VLAUtils.Inputs(context)
+			vlainputs = VLAUtils.Inputs(self.inputs.context)
 			msinfo = VLAUtils(vlainputs)
 			msinfo.identifyspw()
 			msinfo.initialgainspw()
@@ -309,15 +309,13 @@ class VLAImportData(basetask.StandardTaskTemplate):
 			msinfo.determine3C84()
 			msinfo.identifySubbands()
 
-		    context.evla['msinfo'] = { m.name : msinfo }
+		    self.inputs.context.evla['msinfo'] = { m.name : msinfo }
 
             #context.evla['msinfo'][m.name]
 
             #context.evla['msinfo'][m.name].intents
 
             #context.evla['msinfo'][m.name].quack_scan_string
-            
-            
         
             
     def _do_hanningsmooth(self, asdm):
