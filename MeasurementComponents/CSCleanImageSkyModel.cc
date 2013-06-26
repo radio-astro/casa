@@ -153,7 +153,7 @@ Bool CSCleanImageSkyModel::solve(SkyEquation& se) {
       // inner part of the PSF matter, find the PSF outer
       // min/max. using only the inner quater of the PSF.
       //
-      GaussianBeam elbeam0=beam(0)(IPosition(2,0,0));
+      GaussianBeam elbeam0=beam(0)(0,0);
       Int mainLobeSizeInPixels = (Int)(max(elbeam0.getMajor("arcsec")/incr[0],elbeam0.getMinor("arcsec")/incr[1]));
       Vector<Float> psfOuterMinMax(2);
       psfOuterMinMax = outerMinMax(subPSF, mainLobeSizeInPixels);
