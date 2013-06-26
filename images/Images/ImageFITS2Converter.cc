@@ -1405,57 +1405,55 @@ Bool ImageFITSConverter::ImageToFITSOut(
 	return True;
 }
 
+
 void ImageFITSConverter::_writeBeamsTable(
-	FitsOutput *const &outfile, const ImageInfo& info
+        FitsOutput *const &outfile, const ImageInfo& info
 ) {
-	// write multiple beams to a table
-	RecordDesc desc;
-	Record stringLengths; // no strings
-	Record units;
-	GaussianBeam beam = *info.getBeamSet().getBeams().begin();
-	desc.addField("BMAJ", TpFloat);
-	units.define("BMAJ", beam.getMajor().getUnit());
-	desc.addField("BMIN", TpFloat);
-	units.define("BMIN", beam.getMinor().getUnit());
-	desc.addField("BPA", TpFloat);
-	units.define("BPA", beam.getPA(True).getUnit());
-	desc.addField("CHAN", TpInt);
-	desc.addField("POL", TpInt);
-	Record extraKeywords;
-	extraKeywords.define("EXTNAME", "BEAMS");
-	extraKeywords.define("EXTVER", 1);
-	extraKeywords.define("XTENSION", "BINTABLE");
-	extraKeywords.setComment("XTENSION", "Binary extension");
-	extraKeywords.define("NCHAN", (Int)info.nChannels());
-	extraKeywords.define("NPOL", (Int)info.nStokes());
-	FITSTableWriter writer(
-		outfile, desc, stringLengths, info.getBeamSet().nelements(),
-		extraKeywords, units, False
-	);
-	RecordFieldPtr<Float> bmaj(writer.row(), "BMAJ");
-	RecordFieldPtr<Float> bmin(writer.row(), "BMIN");
-	RecordFieldPtr<Float> bpa(writer.row(), "BPA");
-	RecordFieldPtr<Int> chan(writer.row(), "CHAN");
-	RecordFieldPtr<Int> pol(writer.row(), "POL");
-	const ImageBeamSet beamSet = info.getBeamSet();
-	Int specAxis = beamSet.getAxis(ImageBeamSet::SPECTRAL);
-	Int polAxis = beamSet.getAxis(ImageBeamSet::POLARIZATION);
-	Bool hasSpectral = specAxis >= 0;
-	Bool hasStokes = polAxis >= 0;
-	IPosition axisPath = IPosition::makeAxisPath(beamSet.ndim());
-    ArrayPositionIterator iter(beamSet.shape(), axisPath, False);
-    while (! iter.pastEnd()) {
-        const IPosition pos = iter.pos();
-		GaussianBeam beam = beamSet(pos);
-		*chan = hasSpectral ? pos[specAxis] : -1;
-		*pol = hasStokes ? pos[polAxis] : -1;
-		*bmaj = beam.getMajor().getValue();
-		*bmin = beam.getMinor().getValue();
-		*bpa = beam.getPA("deg", True);
-		writer.write();
-        iter.next();
-	}
+    // write multiple beams to a table
+    RecordDesc desc;
+    Record stringLengths; // no strings
+    Record units;
+    GaussianBeam beam = *info.getBeamSet().getBeams().begin();
+    desc.addField("BMAJ", TpFloat);
+    units.define("BMAJ", beam.getMajor().getUnit());
+    desc.addField("BMIN", TpFloat);
+    units.define("BMIN", beam.getMinor().getUnit());
+    desc.addField("BPA", TpFloat);
+    units.define("BPA", beam.getPA(True).getUnit());
+    desc.addField("CHAN", TpInt);
+    desc.addField("POL", TpInt);
+    Record extraKeywords;
+    extraKeywords.define("EXTNAME", "BEAMS");
+    extraKeywords.define("EXTVER", 1);
+    extraKeywords.define("XTENSION", "BINTABLE");
+    extraKeywords.setComment("XTENSION", "Binary extension");
+    extraKeywords.define("NCHAN", (Int)info.getBeamSet().nchan());
+    extraKeywords.define("NPOL", (Int)info.getBeamSet().nstokes());
+    FITSTableWriter writer(
+        outfile, desc, stringLengths, info.getBeamSet().nelements(),
+        extraKeywords, units, False
+    );
+    RecordFieldPtr<Float> bmaj(writer.row(), "BMAJ");
+    RecordFieldPtr<Float> bmin(writer.row(), "BMIN");
+    RecordFieldPtr<Float> bpa(writer.row(), "BPA");
+    RecordFieldPtr<Int> chan(writer.row(), "CHAN");
+    RecordFieldPtr<Int> pol(writer.row(), "POL");
+    const ImageBeamSet& beamSet = info.getBeamSet();
+    IPosition axisPath(2, 0, 1);
+        ArrayPositionIterator iter(beamSet.shape(), axisPath, False);
+        while (! iter.pastEnd()) {
+          const IPosition& pos = iter.pos();
+          GaussianBeam beam = beamSet(pos[0], pos[1]);
+          *chan = pos[0];
+          *pol = pos[1];
+          *bmaj = beam.getMajor().getValue();
+          *bmin = beam.getMinor().getValue();
+          *bpa = beam.getPA("deg", True);
+          writer.write();
+          iter.next();
+    }
 }
+
 
 Bool ImageFITSConverter::QualImgToFITSOut(String &error,
 		LogIO &os,

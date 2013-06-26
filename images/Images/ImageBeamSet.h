@@ -27,11 +27,14 @@
 #define IMAGES_IMAGEBEAMSET_H
 
 #include <casa/aips.h>
+#include <casa/Arrays/Matrix.h>
 #include <components/ComponentModels/GaussianBeam.h>
-#include <measures/Measures/Stokes.h>
-#include <map>
+//#include <measures/Measures/Stokes.h>
+//#include <map>
 
 namespace casa {
+
+class CoordinateSystem;
 
 // <summary>
 // Represents a set of restoring beams associated with an image.
@@ -51,7 +54,20 @@ namespace casa {
 
 // <synopsis>
 // This class represents a set of restoring beams associated with
-// a deconvolved image.
+// a deconvolved image. Internally, the beams are stored in a Matrix in
+// which the first dimension represents the spectral axis and the second
+// dimension represents the polarization axis. Methods which take the number
+// of channels and stokes as the input parameters will accept 0 for either of
+// these, in the cases where the corresponding axis is absent, but internally,
+// the associated axis of the storage Matrix will be set to one since a Matrix
+// with one dimension of length 0 must be empty. If one (or both) of the axes is
+// of length 1, the beam associated with that position is valid for all channels or
+// stokes at the position. For example, if one has an image with 10 spectral channels
+// and 4 stokes, and one has a beam set of dimensions (1, 4) associated with that image,
+// all channels for a given stokes will have the same beam. Similarly, if the beam set
+// is of shape (10, 1) in this case, all stokes will have the same beam for a given channel.
+// If the axis lengths of the beam set are greater than one, they must be exactly
+// the same length of the corresponding axes in the associated image.
 // </synopsis>
 //
 // <example>
@@ -69,156 +85,162 @@ namespace casa {
 class ImageBeamSet {
 public:
 
-	enum AxisType {
-		SPECTRAL,
-		POLARIZATION
-	};
-
 	// Construct an empty beam set.
 	ImageBeamSet();
 
-	// Construct a beam set from an array of beams with the
-	// representing the specified image axes. The number of
-	// dimensions in the <src>beams</src> Array must match
-	// the number of elements in the <src>axes</src> Vector.
+    // Construct a beam set from an 2-D array of beams representing
+    // the frequency and stokes axis.
+    // Axis length 1 means it is valid for all channels cq. stokes.
+	// If the image has 0 spectral channels or stokes, the corresponding
+	// length of the axis in the provided matrix should be 1.
 	ImageBeamSet(
-		const Array<GaussianBeam>& beams,
-		const Vector<AxisType>& axes
+		const Matrix<GaussianBeam>& beams
 	);
 
-	// construct an ImageBeamSet representing a single beam
+	// construct an ImageBeamSet representing a single beam which is valid for
+	// all channels and stokes
 	ImageBeamSet(const GaussianBeam& beam);
 
-	//create an ImageBeamSet of the specified shape with all
-	// GaussianBeams initialized to null beams.
-	ImageBeamSet(const IPosition& shape, const Vector<AxisType>& axes);
+    // Create an ImageBeamSet of the specified shape with all
+    // GaussianBeams initialized to <src>beam</src>.
+    ImageBeamSet(uInt nchan, uInt nstokes, const GaussianBeam& beam=GaussianBeam::NULL_BEAM);
 
-	//create an ImageBeamSet of the specified shape with all
-	// GaussianBeams initialized to <src>beam</src>.
-	ImageBeamSet(
-		const GaussianBeam& beam, const IPosition& shape,
-		const Vector<AxisType>& axes
-	);
-
-	ImageBeamSet(const ImageBeamSet& other);
+    // The copy constructor (reference semantics).
+    ImageBeamSet(const ImageBeamSet& other);
 
 	~ImageBeamSet();
 
+    // Assignment can change the shape (copy semantics).
 	ImageBeamSet& operator=(const ImageBeamSet& other);
 
-	const GaussianBeam &operator()(const IPosition &) const;
-
-    Array<GaussianBeam> operator[] (uInt i) const;
-
-    const Array<GaussianBeam>& operator() (
-    	const IPosition &start,
-    	const IPosition &end
-    ) const;
-
+    // Beam sets are equal if the shapes and all corresponding beams are equal.
     Bool operator== (const ImageBeamSet& other) const;
-
     Bool operator!= (const ImageBeamSet& other) const;
 
-    // get the axis types associated with the beam array.
-	const Vector<AxisType>& getAxes() const;
+    // Beam sets are equivalent if both have no beams or if the
+    // expanded sets are equal. Expanded means that an axis can have
+    // length 0 or 1 and is (virtually) expanded to the length of the matching
+    // axis in the other beam set.
+    Bool equivalent (const ImageBeamSet& that) const;
 
-	// get the single global beam. If there are multiple beams,
-	// an exception is thrown.
-	const GaussianBeam& getBeam() const;
+    // Get the number of elements in the beam array.
+    // <group>
+    uInt nelements() const
+      { return _beams.size(); }
+    uInt size() const
+      { return _beams.size(); }
+    // </group>
 
-	// get the beam at the specified location
-	const GaussianBeam& getBeam(
-		const IPosition& position,
-		const Vector<AxisType>& axes=Vector<AxisType>(0)
-	) const;
+    Bool hasSingleBeam() const
+      { return _beams.size() == 1; }
 
-	// set the beam at a given location. Optionally, the axis types can
-	// be supplied so one can specify the position using a different axis
-	// ordering than the current object has. If specified, <src>axes</src>
-	// must have the same number of elements as the dimensionality of the
-	// current beam set and all axes of the current beam set must be
-	// elements.
-	void setBeam(
-		const GaussianBeam& beam, const IPosition& position
-	);
+    // Does this beam set contain multiple beams?
+    Bool hasMultiBeam() const {
+    	return _beams.size() > 1;
+    }
 
-	// set the beams from the specified beginning to specified ending positions.
-	void setBeams(
-		const IPosition& begin, const IPosition& end,
-		const Array<GaussianBeam>& beams
-	);
+    // Is the beam set empty?
+    Bool empty() const
+      { return _beams.empty(); }
 
-	// does this beam set contain only a single beam?
-	Bool hasSingleBeam() const;
+    // Get the shape of the beam array. The minimum value for
+    // a component of the returned IPosition is always 1.
+    const IPosition& shape() const
+      { return _beams.shape(); }
 
-	// does this beam set contain multiple beams?
-	Bool hasMultiBeam() const;
+    // Get the number of channels in the beam array. NOte that this will
+    // always return a minimum of 1, even if nchan was specified as 0 on construction.
+    uInt nchan() const
+      { return _beams.shape()[0]; }
 
-	static const String& className();
+    // Get the number of stokes in the beam array. Note that this will always
+    // return a minimum of 1, even if nstokes was specified as 0 on construction.
+    uInt nstokes() const
+      { return _beams.shape()[1]; }
 
-	// return the size of the beam array.
-	size_t size() const;
+    // Get the single global beam. If there are multiple beams,
+    // an exception is thrown.
+    const GaussianBeam& getBeam() const;
 
-	// resize the beam array. If pos has a different dimensionality than
-	// the current beam array, an exception is thrown.
-	void resize(const IPosition& pos);
+    // Get the beam at the specified location.
+    // Note that a single channel or stokes in the beam set is valid for
+    // all channels cq. stokes.
+    // <group>
+    const GaussianBeam& getBeam(Int chan, Int stokes) const;
+    const GaussianBeam &operator()(Int chan, Int stokes) const
+      { return getBeam (chan, stokes); }
+    // </group>
 
-	// get the beam array
-	const Array<GaussianBeam>& getBeams() const;
+    // Get a beam at the given 2-dim IPosition. It should match exactly,
+    // thus a single channel or stokes in the beam set is not valid for all.
+   // const GaussianBeam& getBeam(const IPosition& pos) const
+    //  { return _beams(pos); }
 
-	// set the beam array.
-	void setBeams(const Array<GaussianBeam>& beams);
+    // Set the beam at the given location.
+    // The location must be within the beam set shape.
+    // If <src>chan</src> or <src>stokes</src> is negative, then the beam applies
+    // to all channels or stokes, respectively. If both are negative, the specified
+    // beam becomes the global beam and the beam set is resized to (1, 1).
+    void setBeam(Int chan, Int stokes, const GaussianBeam& beam);
 
-	// get the number of elements in the beam array
-	size_t nelements() const;
+    // Resize the beam array. <src>nchan</src>=0 or <src>nstokes</src>=0
+    // is silently changed to 1.
+    void resize(uInt nchan, uInt nstokes);
 
-	// is the beam array empty?
-	Bool empty() const;
+    // Return a subset of the beam array.
+    // The slicer is usually the slicer used for a subimage.
+    // The slicer can contain multiple stokes or channels, even if the
+    // beam set has only one.
+    ImageBeamSet subset (const Slicer& imageSlicer,
+                         const CoordinateSystem& csys) const;
 
-	// get the shape of the beam array
-	IPosition shape() const;
+    // Get the beam array.
+    const Matrix<GaussianBeam>& getBeams() const
+      { return _beams; }
 
-	// get the number of dimensions in the beam array
-	size_t ndim() const;
+    // Set the beams in this beam set.
+    // The shape of the given array must match the beam set.
+    // It also matches if an axis in array or beam set has length 1, which
+    // means that it expands to the other length.
+    void setBeams(const Matrix<GaussianBeam>& beams);
 
-	// set all beams to the same value
-	void set(const GaussianBeam& beam);
+    // Set all beams to the same value.
+    void set(const GaussianBeam& beam);
 
-	// get the beam in the set which has the smallest area
-	GaussianBeam getMinAreaBeam() const;
+    // Get the beam in the set which has the smallest area.
+    GaussianBeam getMinAreaBeam() const
+      { return _minBeam; }
 
-	// get the beam in the set which has the largest area
-	GaussianBeam getMaxAreaBeam() const;
+    // Get the beam in the set which has the largest area.
+    GaussianBeam getMaxAreaBeam() const
+      { return _maxBeam; }
 
-	// get the position of the beam with the maximum area
-	IPosition getMaxAreaBeamPosition() const;
+    // Get the position of the beam with the minimum area.
+    IPosition getMinAreaBeamPosition() const
+      { return _minBeamPos; }
 
-	// get the position of the beam with the minimum area
-	IPosition getMinAreaBeamPosition() const;
+    // Get the position of the beam with the maximum area.
+    IPosition getMaxAreaBeamPosition() const
+      { return _maxBeamPos; }
 
-	// get maximal area beam and its position in the _beams array for
-	// the given polarization. Use polarization=-1 if the image has no
-	// polarization axis to do stats over all the beams.
-	GaussianBeam getMaxAreaBeamForPol(
-		IPosition& pos, const Int polarization
-	) const;
+    //<group>
+    // Get the minimal, maximal, and median area beams and positions in the beam set matrix for
+    // the given stokes. If the stokes axis has length 1 in the beam matrix,
+    // it is valid for all stokes and no checking is done that <src>stokes</src> is valid;
+    // the requested beam for the entire beam set is simply returned in this case. If the
+    // number of stokes in the beam matrix is >1, checking is done that the specified value
+    // of <src>stokes</src> is valid and if not, an exception is thrown.
+    const GaussianBeam& getMinAreaBeamForPol(IPosition& pos,
+                                             uInt stokes) const;
 
-	// get minimal area beam and its position in the _beams array for
-	// the given polarization. Use polarization=-1 if the image has no
-	// polarization axis to do stats over all the beams.
-	GaussianBeam getMinAreaBeamForPol(
-		IPosition& pos, const Int polarization
-	) const;
+    const GaussianBeam& getMaxAreaBeamForPol(IPosition& pos,
+                                             uInt stokes) const;
 
-	// get median area beam and its position in the _beams array for
-	// the given polarization. Use polarization=-1 if the image has no
-	// polarization axis to do stats over all the beams.
-	GaussianBeam getMedianAreaBeamForPol(
-		IPosition& pos, const Int polarization
-	) const;
+    const GaussianBeam& getMedianAreaBeamForPol(IPosition& pos,
+                                                uInt stokes) const;
+    // </group>
 
-	// get the axis number for the specified type. Return -1 if there is no such axis
-	Int getAxis(const AxisType type) const;
+    static const String& className();
 
 	// Get a beam to which all other beams in the set can be convolved.
 	// If all other beams can be convolved to the maximum area beam in the set, that beam will be returned.
@@ -228,59 +250,17 @@ public:
 	// can be convolved.
 	GaussianBeam getCommonBeam() const;
 
-    // convert to a record. If <src>exceptionIfNull</src>, an excption will be raised
-	// if any beam in the set is the null beam.
-    Record toRecord(Bool exceptionIfNull) const;
-
-    // if <src>exceptIfNull</src>, throw an exception if any beam in the record
-    // is null
-    static ImageBeamSet fromRecord(const Record& rec, Bool exceptIfNull);
-
 private:
 
-	typedef std::map<AxisType, uInt> AxesMap;
 	static const String _DEFAULT_AREA_UNIT;
 
-	Array<GaussianBeam> _beams;
-	Vector<AxisType> _axes;
-	Array<Double> _areas;
+	Matrix<GaussianBeam> _beams;
+	Matrix<Double> _areas;
 	String _areaUnit;
 	GaussianBeam _minBeam, _maxBeam;
 	IPosition _minBeamPos, _maxBeamPos;
-	vector<IPosition> _maxStokesMap, _minStokesMap,
-		_medianStokesMap;
-	AxesMap _axesMap;
-
-	IPosition _truePosition(
-		const IPosition& position,
-		const Vector<AxisType>& axes
-	) const;
-
-	static void _checkForDups(const Vector<AxisType>& axes);
-
-	void _checkAxisTypeSize(
-		const Vector<AxisType>& axes
-	) const;
-
-	void _makeStokesMaps(
-		const Bool beamsAreIdentical,
-		const Int affectedStokes=-1
-	);
-
-	uInt _nStokes() const;
-
-	uInt _nChannels() const;
-
-	static std::map<AxisType, uInt> _setAxesMap(
-		const Vector<AxisType>& axisTypes
-	);
 
 	void _calculateAreas();
-
-	GaussianBeam _getBeamForPol(
-		IPosition& pos, const vector<IPosition>& map,
-		const Int polarization
-	) const;
 
 	static void _transformEllipseByScaling(
 		Double& transformedMajor, Double& transformedMinor,

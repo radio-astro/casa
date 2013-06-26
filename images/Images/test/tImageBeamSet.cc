@@ -38,63 +38,74 @@
 int main() {
 	try {
 		{
-			cout << "*** Test constructors, = operator" << endl;
+			cout << "*** Test constructors, operator=" << endl;
 			// empty beam set
 			ImageBeamSet x;
 			AlwaysAssert(x.empty(), AipsError);
 			AlwaysAssert(x.size() == 0, AipsError);
 			AlwaysAssert(x.nelements() == 0, AipsError);
-			AlwaysAssert(x.getAxes().size() == 0, AipsError);
+			AlwaysAssert(!x.hasSingleBeam(), AipsError);
+			AlwaysAssert(!x.hasMultiBeam(), AipsError);
+
+			// A beam.
 			GaussianBeam beam(
 					Quantity(4, "arcsec"), Quantity(3, "arcsec"),
 					Quantity(40, "deg")
 			);
-			Vector<ImageBeamSet::AxisType> types(2);
-			types[0] = ImageBeamSet::SPECTRAL;
-			types[1] = ImageBeamSet::POLARIZATION;
-			ImageBeamSet b(IPosition(2, 20, 4), types);
+
+
+			ImageBeamSet b(20, 4);
+			AlwaysAssert(!b.hasSingleBeam(), AipsError);
+			AlwaysAssert(b.hasMultiBeam(), AipsError);
 			b.set(beam);
+			AlwaysAssert(b.getBeam(2,2) == beam, AipsError);
+
+			// check operator=
 			ImageBeamSet c = b;
+			AlwaysAssert(c.size() == 20*4, AipsError);
 			AlwaysAssert(b == b, AipsError);
 			AlwaysAssert(c == b, AipsError);
+
+			// check copy constructor
 			ImageBeamSet d(b);
 			AlwaysAssert(d == b, AipsError);
 			c = x;
+			AlwaysAssert(c.empty(), AipsError);
 			x = b;
+		    AlwaysAssert(x.size() == 20*4, AipsError);
+		    AlwaysAssert(c != b, AipsError);
 			AlwaysAssert(x == b, AipsError);
-			AlwaysAssert(
-				ImageBeamSet::fromRecord(b.toRecord(False), False) == b,
-				AipsError
-			);
+
+			// check a single beam
 			ImageBeamSet k(beam);
-			Vector<ImageBeamSet::AxisType> ytypes(1);
-			ytypes[0] = ImageBeamSet::POLARIZATION;
-			ImageBeamSet y(IPosition(1, 4), ytypes);
-			AlwaysAssert(
-				ImageBeamSet::fromRecord(y.toRecord(False), False) == y,
-				AipsError
-			);
-			// test different shapes
+			AlwaysAssert (k.shape() == IPosition(2,1,1), AipsError);
+			AlwaysAssert (k.getBeam(2,2) == beam, AipsError);   // valid for all
+
+			ImageBeamSet y(IPosition(2, 1, 4));
+			y.set(beam);
+			AlwaysAssert (y(2,3) == beam, AipsError);
+
+			// Check assignment a bit more.
 			y = b;
 			AlwaysAssert(y == b, AipsError);
+			y = ImageBeamSet();
+			AlwaysAssert(y.empty(), AipsError);
 		}
 		{
 			cout << "*** test setBeam()" << endl;
 			GaussianBeam beam0(Quantity(4, "arcsec"), Quantity(3, "arcsec"), Quantity(20, "deg"));
-			IPosition shape(2, 3, 4);
-			Vector<ImageBeamSet::AxisType> types(2);
-			types[0] = ImageBeamSet::SPECTRAL;
-			types[1] = ImageBeamSet::POLARIZATION;
-			ImageBeamSet x(beam0, shape, types);
+			ImageBeamSet x(3, 4, beam0);
+			AlwaysAssert (x.nchan() == 3, AipsError);
+			AlwaysAssert (x.nstokes() == 4, AipsError);
+
 			GaussianBeam beam1(Quantity(5, "arcsec"), Quantity(4, "arcsec"), Quantity(20, "deg"));
-			IPosition pos2(2, 1, 2);
-			x.setBeam(beam1, pos2);
-			IPosition axisPath = IPosition::makeAxisPath(shape.size());
-            ArrayPositionIterator iter(shape, axisPath, False);
+			x.setBeam(1, 2, beam1);
+			IPosition axisPath = IPosition::makeAxisPath(x.shape().size());
+            ArrayPositionIterator iter(x.shape(), axisPath, False);
             while (! iter.pastEnd()) {
                 const IPosition pos = iter.pos();
-				GaussianBeam beam = x.getBeam(pos);
-				if (pos == pos2) {
+				GaussianBeam beam = x.getBeam(pos[0], pos[1]);
+				if (pos == IPosition(2, 1,2)) {
 					AlwaysAssert(beam == beam1, AipsError);
 				}
 				else {
@@ -102,17 +113,66 @@ int main() {
 				}
                 iter.next();
 			}
+            {
+            	cout << "*** test setBeams()" << endl;
+            	GaussianBeam beam0(Quantity(4, "arcsec"), Quantity(3, "arcsec"),
+            			Quantity(20, "deg"));
+            	GaussianBeam beam1(Quantity(8, "arcsec"), Quantity(6, "arcsec"),
+            			Quantity(10, "deg"));
+            	GaussianBeam beam2(Quantity(5, "arcsec"), Quantity(4, "arcsec"),
+            			Quantity(20, "deg"));
+            	ImageBeamSet x00;
+            	ImageBeamSet x34(3, 4, beam0); x34.setBeam(1,2,beam2);
+            	ImageBeamSet x14(1, 4, beam0); x14.setBeam(0,1,beam2);
+            	ImageBeamSet x31(3, 1, beam0); x31.setBeam(1,0,beam2);
+            	ImageBeamSet x11(1, 1, beam0);
+            	ImageBeamSet b;
+            	b.setBeams (x00.getBeams());
+            	AlwaysAssert (b==x00, AipsError);
+            	b.setBeams (x34.getBeams());
+            	AlwaysAssert (b==x34, AipsError);
+            	b.setBeams (x14.getBeams());
+            	{ ImageBeamSet t(3,4,beam0);
+            	t.setBeam(0,1,beam2); t.setBeam(1,1,beam2); t.setBeam(2,1,beam2);
+            	AlwaysAssert (b==t, AipsError); }
+            	b.setBeams (x31.getBeams());
+            	{ ImageBeamSet t(3,4,beam0);
+            	t.setBeam(1,0,beam2); t.setBeam(1,1,beam2); t.setBeam(1,2,beam2);
+            	t.setBeam(1,3,beam2);
+            	AlwaysAssert (b==t, AipsError); }
+            	b.setBeams (x11.getBeams());
+            	{ ImageBeamSet t(3,4,beam0);
+            	AlwaysAssert (b==t, AipsError); }
+            	{ ImageBeamSet y(x11);
+            	y.setBeams (x34.getBeams());
+            	AlwaysAssert (y==x34, AipsError); }
+            	{ ImageBeamSet y(x11);
+            	y.setBeams (x31.getBeams());
+            	AlwaysAssert (y==x31, AipsError); }
+            	{ ImageBeamSet y(x31);
+            	y.setBeams (x34.getBeams());
+            	AlwaysAssert (y==x34, AipsError); }
+            	{ ImageBeamSet y(x31);
+            	y.setBeams (x14.getBeams());
+            	ImageBeamSet t(3,4,beam0);
+            	t.setBeam(0,1,beam2); t.setBeam(1,1,beam2); t.setBeam(2,1,beam2);
+            	AlwaysAssert (y==t, AipsError); }
+            	{ ImageBeamSet y(x14);
+            	y.setBeams (x31.getBeams());
+            	ImageBeamSet t(3,4,beam0);
+            	t.setBeam(1,0,beam2); t.setBeam(1,1,beam2); t.setBeam(1,2,beam2);
+            	t.setBeam(1,3,beam2);
+            	AlwaysAssert (y==t, AipsError); }
+            }
+
+
 			{
 				cout << "*** test getting max and min area beams" << endl;
 				GaussianBeam init(
 					Quantity(4, "arcsec"), Quantity(2, "arcsec"),
 					Quantity(0, "deg")
 				);
-				IPosition shape(2, 3, 4);
-				Vector<ImageBeamSet::AxisType> types(2);
-				types[0] = ImageBeamSet::SPECTRAL;
-				types[1] = ImageBeamSet::POLARIZATION;
-				ImageBeamSet x(init, shape, types);
+				ImageBeamSet x(3, 4, init);
 				AlwaysAssert(x.getMaxAreaBeam() == init, AipsError);
 				AlwaysAssert(x.getMinAreaBeam() == init, AipsError);
 				GaussianBeam maxBeam(
@@ -125,36 +185,13 @@ int main() {
 				);
 				IPosition maxBeamPos(2, 2, 1);
 				IPosition minBeamPos(2, 2, 3);
-				x.setBeam(maxBeam, maxBeamPos);
-				x.setBeam(minBeam, minBeamPos);
+				x.setBeam(maxBeamPos[0], maxBeamPos[1], maxBeam);
+				x.setBeam(minBeamPos[0], minBeamPos[1], minBeam);
+
 				AlwaysAssert(x.getMaxAreaBeam() == maxBeam, AipsError);
 				AlwaysAssert(x.getMinAreaBeam() == minBeam, AipsError);
 				AlwaysAssert(x.getMaxAreaBeamPosition() == maxBeamPos, AipsError);
 				AlwaysAssert(x.getMinAreaBeamPosition() == minBeamPos, AipsError);
-				init = GaussianBeam(
-					Quantity(6, "arcsec"), Quantity(6, "arcsec"),
-					Quantity(0, "deg")
-				);
-				shape.resize(1);
-				shape = IPosition(1, 3);
-				types.resize(1);
-				types[0] = ImageBeamSet::SPECTRAL;
-				x = ImageBeamSet(init, shape, types);
-				GaussianBeam beam8 = GaussianBeam(
-					Quantity(8, "arcsec"), Quantity(8, "arcsec"),
-					Quantity(0, "deg")
-				);
-				x.setBeam(beam8, IPosition(1,1));
-				GaussianBeam beam10 = GaussianBeam(
-					Quantity(10, "arcsec"), Quantity(10, "arcsec"),
-					Quantity(0, "deg")
-				);
-				x.setBeam(beam10, IPosition(1,2));
-				AlwaysAssert(x.getMaxAreaBeam() == beam10, AipsError);
-				AlwaysAssert(
-					x.getMaxAreaBeamPosition() == IPosition(1, 2),
-					AipsError
-				);
 			}
 			{
 				cout << "*** test setBeams()" << endl;
@@ -162,10 +199,8 @@ int main() {
 					Quantity(4, "arcsec"), Quantity(2, "arcsec"),
 					Quantity(0, "deg")
 				);
-				IPosition shape(1, 3);
-				Vector<ImageBeamSet::AxisType> types(1);
-				types[0] = ImageBeamSet::SPECTRAL;
-				ImageBeamSet x(init, shape, types);
+
+				ImageBeamSet x(1, 5, init);
 				GaussianBeam beam2(
 					Quantity(10, "arcsec"), Quantity(5, "arcsec"),
 					Quantity(70, "deg")
@@ -174,10 +209,10 @@ int main() {
 					Quantity(11, "arcsec"), Quantity(5, "arcsec"),
 					Quantity(70, "deg")
 				);
-				Array<GaussianBeam> beams(IPosition(1, 5), beam2);
-				beams(IPosition(1, 3)) = beam3;
+				Matrix<GaussianBeam> beams(1, 5, beam2);
+				beams(0, 3) = beam3;
 				x.setBeams(beams);
-				AlwaysAssert(x.getBeams().shape() == IPosition(1, 5), AipsError);
+				AlwaysAssert(x.getBeams().shape() == IPosition(2, 1, 5), AipsError);
 				AlwaysAssert(x.getMaxAreaBeam() == beam3, AipsError);
 			}
 		}
@@ -187,29 +222,93 @@ int main() {
             	Quantity(4, "arcsec"), Quantity(3, "arcsec"),
             	Quantity(20, "deg")
             );
-            IPosition shape(2, 3, 4); 
-            Vector<ImageBeamSet::AxisType> types(2);
-            types[0] = ImageBeamSet::SPECTRAL;
-            types[1] = ImageBeamSet::POLARIZATION;
-            ImageBeamSet x(beam0, shape, types);
+            ImageBeamSet x(3, 4, beam0);
             GaussianBeam beam1(
             	Quantity(5, "arcsec"), Quantity(4, "arcsec"),
             	Quantity(20, "deg")
             );
-            IPosition pos2(2, 1, 2); 
-            x.setBeam(beam1, pos2);
-            IPosition axisPath = IPosition::makeAxisPath(shape.size());
-            ArrayPositionIterator iter(shape, axisPath, False);
+            x.setBeam(1, 2, beam1);
+            IPosition axisPath = IPosition::makeAxisPath(x.shape().size());
+            ArrayPositionIterator iter(x.shape(), axisPath, False);
             while (! iter.pastEnd()) {
-                const IPosition pos = iter.pos();
-                GaussianBeam beam = x.getBeam(pos);
-                if (pos == pos2) {
-                    AlwaysAssert(beam == beam1, AipsError);
-                }
-                else {
-                    AlwaysAssert(beam == beam0, AipsError);
-                }
-                iter.next();
+            	const IPosition pos = iter.pos();
+            	GaussianBeam beam = x(pos[0], pos[1]);
+            	if (pos == IPosition(2, 1, 2)) {
+            		AlwaysAssert(beam == beam1, AipsError);
+            	}
+            	else {
+            		AlwaysAssert(beam == beam0, AipsError);
+            	}
+            	iter.next();
+            }
+            {
+            	cout << "*** Test setBeam(), both chan and stokes < 0" << endl;
+            	GaussianBeam beam0(
+            		Quantity(4, "arcsec"), Quantity(3, "arcsec"),
+            		Quantity(20, "deg")
+            	);
+            	ImageBeamSet x(3, 4, beam0);
+            	GaussianBeam beam1(
+            		Quantity(5, "arcsec"), Quantity(4, "arcsec"),
+            		Quantity(20, "deg")
+            	);
+            	x.setBeam(-1, -1, beam1);
+            	AlwaysAssert(x.getBeams().size() == 1, AipsError);
+            	AlwaysAssert(x.getBeam() == beam1, AipsError);
+            }
+            {
+            	cout << "*** Test setBeam(), chan  < 0 && stokes >= 0" << endl;
+            	GaussianBeam beam0(
+            		Quantity(4, "arcsec"), Quantity(3, "arcsec"),
+            		Quantity(20, "deg")
+            	);
+            	ImageBeamSet x(3, 4, beam0);
+            	GaussianBeam beam1(
+            		Quantity(5, "arcsec"), Quantity(4, "arcsec"),
+            		Quantity(20, "deg")
+            	);
+            	x.setBeam(-1, 2, beam1);
+            	AlwaysAssert(x.getBeams().size() == 12, AipsError);
+            	IPosition axisPath = IPosition::makeAxisPath(x.shape().size());
+            	ArrayPositionIterator iter(x.shape(), axisPath, False);
+            	while (! iter.pastEnd()) {
+            		const IPosition pos = iter.pos();
+            		GaussianBeam beam = x(pos[0], pos[1]);
+            		if (pos[1] == 2) {
+            			AlwaysAssert(beam == beam1, AipsError);
+            		}
+            		else {
+            			AlwaysAssert(beam == beam0, AipsError);
+            		}
+            		iter.next();
+            	}
+            }
+            {
+            	cout << "*** Test setBeam(), stokes  < 0 && chan >= 0" << endl;
+            	GaussianBeam beam0(
+            		Quantity(4, "arcsec"), Quantity(3, "arcsec"),
+            		Quantity(20, "deg")
+            	);
+            	ImageBeamSet x(3, 4, beam0);
+            	GaussianBeam beam1(
+            		Quantity(5, "arcsec"), Quantity(4, "arcsec"),
+            		Quantity(20, "deg")
+            	);
+            	x.setBeam(2, -1, beam1);
+            	AlwaysAssert(x.getBeams().size() == 12, AipsError);
+            	IPosition axisPath = IPosition::makeAxisPath(x.shape().size());
+            	ArrayPositionIterator iter(x.shape(), axisPath, False);
+            	while (! iter.pastEnd()) {
+            		const IPosition pos = iter.pos();
+            		GaussianBeam beam = x(pos[0], pos[1]);
+            		if (pos[0] == 2) {
+            			AlwaysAssert(beam == beam1, AipsError);
+            		}
+            		else {
+            			AlwaysAssert(beam == beam0, AipsError);
+            		}
+            		iter.next();
+            	}
             }
             {
                 cout << "*** test setBeams()" << endl;
@@ -217,11 +316,8 @@ int main() {
                     Quantity(4, "arcsec"), Quantity(2, "arcsec"),
                     Quantity(0, "deg")
                 );
-                IPosition shape(1, 3); 
-                Vector<ImageBeamSet::AxisType> types(1);
-                types[0] = ImageBeamSet::SPECTRAL;
-                ImageBeamSet x(init, shape, types);
-                Array<GaussianBeam> beams(IPosition(1, 5));
+                ImageBeamSet x(1, 5, init);
+                Matrix<GaussianBeam> beams(1, 5);
                 x.setBeams(beams);
             }
         }
@@ -229,34 +325,21 @@ int main() {
         	cout << "Test get max, min, median for polarizations" << endl;
         	ImageBeamSet beamSet;
         	IPosition pos;
-        	Bool thrown = False;
-        	try {
-        		beamSet.getMaxAreaBeamForPol(pos, 0);
-        	}
-        	catch (const AipsError x) {
-        		cout << "Caught expected exception: " << x.getMesg() << endl;
-        		thrown = True;
-        	}
-        	AlwaysAssert(thrown, AipsError);
+        	AlwaysAssert(
+        		beamSet.getMaxAreaBeamForPol(pos, 1) == GaussianBeam::NULL_BEAM,
+        		AipsError
+        	);
+        	AlwaysAssert(pos == IPosition(2, 0, 0), AipsError);
 
         	GaussianBeam beam0(
         		Quantity(4, "arcsec"), Quantity(3, "arcsec"),
         		Quantity(20, "deg")
         	);
         	beamSet = ImageBeamSet(beam0);
-        	thrown = False;
-        	try {
-        		beamSet.getMaxAreaBeamForPol(pos, 0);
-        	}
-        	catch (const AipsError x) {
-        		cout << "Caught expected exception: " << x.getMesg() << endl;
-        		thrown = True;
-        	}
-        	AlwaysAssert(thrown, AipsError);
-        	Vector<ImageBeamSet::AxisType> axisTypes(2);
-        	axisTypes[0] = ImageBeamSet::SPECTRAL;
-        	axisTypes[1] = ImageBeamSet::POLARIZATION;
-        	beamSet = ImageBeamSet(beam0, IPosition(2, 3, 4), axisTypes);
+        	beamSet.getMaxAreaBeamForPol(pos, 1);
+        	AlwaysAssert(pos==IPosition(2,0,0), AipsError);
+
+        	beamSet = ImageBeamSet(3,4, beam0);
         	IPosition gotPos;
         	for (uInt i=0; i<4; i++) {
         		GaussianBeam gotBeam = beamSet.getMaxAreaBeamForPol(gotPos, i);
@@ -267,18 +350,18 @@ int main() {
         		AlwaysAssert(gotPos == IPosition(2, 0, i), AipsError);
         		gotBeam = beamSet.getMedianAreaBeamForPol(gotPos, i);
         		AlwaysAssert(gotBeam == beam0, AipsError);
-        		AlwaysAssert(gotPos == IPosition(2, 0, i), AipsError);
+        		AlwaysAssert(gotPos == IPosition(2, 1, i), AipsError);
         	}
         	GaussianBeam beam1(
         		Quantity(5, "arcsec"), Quantity(3, "arcsec"),
         		Quantity(20, "deg")
         	);
-        	beamSet.setBeam(beam1, IPosition(2, 2, 1));
+        	beamSet.setBeam(2, 1, beam1);
         	GaussianBeam beam2(
         		Quantity(3, "arcsec"), Quantity(2, "arcsec"),
         		Quantity(20, "deg")
         	);
-        	beamSet.setBeam(beam2, IPosition(2, 1, 1));
+        	 beamSet.setBeam(1, 1, beam2);
         	for (uInt i=0; i<4; i++) {
         		GaussianBeam gotBeam = beamSet.getMaxAreaBeamForPol(gotPos, i);
         		if (i == 1) {
@@ -300,12 +383,16 @@ int main() {
         		}
         		gotBeam = beamSet.getMedianAreaBeamForPol(gotPos, i);
         		AlwaysAssert(gotBeam == beam0, AipsError);
-        		if (i != 1) {
+        		if (i == 1) {
         			AlwaysAssert(gotPos == IPosition(2, 0, i), AipsError);
+
+        		}
+        		else {
+        			AlwaysAssert(gotPos == IPosition(2, 1, i), AipsError);
         		}
         	}
 
-        	beamSet = ImageBeamSet(beam0, IPosition(2, 4, 4), axisTypes);
+        	beamSet = ImageBeamSet(4, 4, beam0);
         	for (uInt i=0; i<4; i++) {
         		GaussianBeam gotBeam = beamSet.getMaxAreaBeamForPol(gotPos, i);
         		AlwaysAssert(gotBeam == beam0, AipsError);
@@ -315,15 +402,15 @@ int main() {
         		AlwaysAssert(gotPos == IPosition(2, 0, i), AipsError);
         		gotBeam = beamSet.getMedianAreaBeamForPol(gotPos, i);
         		AlwaysAssert(gotBeam == beam0, AipsError);
-        		AlwaysAssert(gotPos == IPosition(2, 0, i), AipsError);
+        		AlwaysAssert(gotPos == IPosition(2, 2, i), AipsError);
         	}
-        	beamSet.setBeam(beam1, IPosition(2, 2, 1));
-        	beamSet.setBeam(beam2, IPosition(2, 1, 1));
+        	beamSet.setBeam(2, 1, beam1);
+        	beamSet.setBeam(1, 1, beam2);
         	GaussianBeam beam3(
         		Quantity(4.5, "arcsec"), Quantity(3, "arcsec"),
         		Quantity(20, "deg")
         	);
-        	beamSet.setBeam(beam3, IPosition(2, 0, 1));
+        	beamSet.setBeam(0, 1, beam3);
         	for (uInt i=0; i<4; i++) {
         		GaussianBeam gotBeam = beamSet.getMaxAreaBeamForPol(gotPos, i);
         		if (i == 1) {
@@ -344,12 +431,13 @@ int main() {
         			AlwaysAssert(gotPos == IPosition(2, 0, i), AipsError);
         		}
         		gotBeam = beamSet.getMedianAreaBeamForPol(gotPos, i);
-        		AlwaysAssert(gotBeam == beam0, AipsError);
         		if (i == 1) {
-        			AlwaysAssert(gotPos == IPosition(2, 3, i), AipsError);
+        			AlwaysAssert(gotBeam == beam3, AipsError);
+        			AlwaysAssert(gotPos == IPosition(2, 0, i), AipsError);
         		}
         		else {
-        			AlwaysAssert(gotPos == IPosition(2, 0, i), AipsError);
+        			AlwaysAssert(gotBeam == beam0, AipsError);
+        			AlwaysAssert(gotPos == IPosition(2, 2, i), AipsError);
         		}
         	}
         }
@@ -366,16 +454,80 @@ int main() {
         	);
         	beams(0, 0) = beam1;
         	beams(0, 1) = beam2;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	AlwaysAssert(abs(myBeam.getPA("deg", True) - 30) < 1e-7, AipsError);
         	AlwaysAssert(myBeam.getMajor("arcsec") < 4.486, AipsError);
         	AlwaysAssert(myBeam.getMinor("arcsec") < 3.292, AipsError);
         }
+        {
+          cout << "*** test equivalent()" << endl;
+          GaussianBeam beam(Quantity(4, "arcsec"), Quantity(3, "arcsec"),
+                            Quantity(40, "deg"));
+          GaussianBeam beam2(Quantity(4, "arcsec"), Quantity(3, "arcsec"),
+                             Quantity(40, "deg"));
+          GaussianBeam beam3(Quantity(5, "arcsec"), Quantity(3, "arcsec"),
+                             Quantity(40, "deg"));
+          {
+            ImageBeamSet set1;
+            ImageBeamSet set2;
+            AlwaysAssert(set1.equivalent(set2), AipsError);
+            AlwaysAssert(set2.equivalent(set1), AipsError);
+          }
+          {
+            ImageBeamSet set1;
+            ImageBeamSet set2(1,1,beam);
+            AlwaysAssert(! set1.equivalent(set2), AipsError);
+            AlwaysAssert(! set2.equivalent(set1), AipsError);
+          }
+          {
+            ImageBeamSet set1(4,3,beam);
+            ImageBeamSet set2(3,4,beam);
+            AlwaysAssert(! set1.equivalent(set2), AipsError);
+            AlwaysAssert(! set2.equivalent(set1), AipsError);
+          }
+          {
+            ImageBeamSet set1(1,3,beam);
+            ImageBeamSet set2(3,1,beam);
+            AlwaysAssert(set1.equivalent(set2), AipsError);
+            AlwaysAssert(set2.equivalent(set1), AipsError);
+          }
+          {
+            ImageBeamSet set1(1,3,beam);
+            ImageBeamSet set2(3,1,beam);
+            AlwaysAssert(set1.equivalent(set2), AipsError);
+            AlwaysAssert(set2.equivalent(set1), AipsError);
+          }
+          {
+            ImageBeamSet set1(1,1,beam);
+            ImageBeamSet set2(3,1,beam);
+            AlwaysAssert(set1.equivalent(set2), AipsError);
+            AlwaysAssert(set2.equivalent(set1), AipsError);
+          }
+          {
+            ImageBeamSet set1(1,1,beam);
+            ImageBeamSet set2(3,4,beam);
+            AlwaysAssert(set1.equivalent(set2), AipsError);
+            AlwaysAssert(set2.equivalent(set1), AipsError);
+          }
+          {
+            ImageBeamSet set1(1,4,beam);
+            ImageBeamSet set2(3,4,beam);
+            AlwaysAssert(set1.equivalent(set2), AipsError);
+            AlwaysAssert(set2.equivalent(set1), AipsError);
+          }
+          {
+            ImageBeamSet set1(3,1,beam);
+            ImageBeamSet set2(3,4,beam2);
+            AlwaysAssert(set1.equivalent(set2), AipsError);
+            AlwaysAssert(set2.equivalent(set1), AipsError);
+            set2.setBeam (2,3,beam3);
+            AlwaysAssert(! set1.equivalent(set2), AipsError);
+            AlwaysAssert(! set2.equivalent(set1), AipsError);
+          }
+        }
+
         {
         	cout << "*** test getCommonBeam 2" << endl;
         	Matrix<GaussianBeam> beams(1, 2);
@@ -389,10 +541,7 @@ int main() {
         	);
         	beams(0, 0) = beam1;
         	beams(0, 1) = beam2;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	AlwaysAssert(abs(myBeam.getPA("deg", True) - 50) < 1e-7, AipsError);
@@ -412,10 +561,7 @@ int main() {
         	);
         	beams(0, 0) = beam1;
         	beams(0, 1) = beam2;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	AlwaysAssert(abs(myBeam.getPA("deg", True) - 45) < 1e-7, AipsError);
@@ -435,10 +581,7 @@ int main() {
         	);
         	beams(0, 0) = beam1;
         	beams(0, 1) = beam2;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	//AlwaysAssert(abs(myBeam.getPA("deg", True) - 45) < 1e-7, AipsError);
@@ -459,10 +602,7 @@ int main() {
         	);
         	beams(0, 0) = beam1;
         	beams(0, 1) = beam2;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	AlwaysAssert(myBeam.getPA("deg", True) == 0, AipsError);
@@ -482,10 +622,7 @@ int main() {
         	);
         	beams(0, 0) = beam1;
         	beams(0, 1) = beam2;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	AlwaysAssert(abs(myBeam.getPA("deg", True) - 2.76795337) < 1e-5, AipsError);
@@ -505,10 +642,7 @@ int main() {
         	);
         	beams(0, 0) = beam1;
         	beams(0, 1) = beam2;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	AlwaysAssert(abs(myBeam.getPA("deg", True) - 17.232049) < 1e-5, AipsError);
@@ -538,10 +672,7 @@ int main() {
         	beams(0, 1) = beam2;
         	beams(0, 2) = beam3;
         	beams(0, 3) = beam4;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	/*
@@ -573,10 +704,7 @@ int main() {
         	beams(0, 1) = beam2;
         	beams(0, 2) = beam3;
         	beams(0, 3) = beam4;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	/*
@@ -598,10 +726,7 @@ int main() {
             );
         	beams(0, 0) = beam1;
         	beams(0, 1) = beam2;
-        	Vector<ImageBeamSet::AxisType> types(2);
-        	types[0] = ImageBeamSet::SPECTRAL;
-        	types[1] = ImageBeamSet::POLARIZATION;
-        	ImageBeamSet beamSet(beams, types);
+        	ImageBeamSet beamSet(beams);
         	GaussianBeam myBeam = beamSet.getCommonBeam();
         	cout << "Minimum area enclosing beam " << myBeam << endl;
         	AlwaysAssert(myBeam.getPA("deg", True) == 0, AipsError);

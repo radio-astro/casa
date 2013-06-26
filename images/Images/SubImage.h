@@ -102,7 +102,7 @@ public:
   // the order of the coordinates will be preserved, but not necessarily
   // the axes.
   // <group>
-  SubImage (ImageInterface<T>& image, AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
+  SubImage (const ImageInterface<T>& image, AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
   SubImage (ImageInterface<T>& image, Bool writableIfPossible,
 	    AxesSpecifier=AxesSpecifier(), Bool preserveAxesOrder=False);
   // </group>
@@ -250,7 +250,11 @@ private:
   void setCoords (const CoordinateSystem& coords, Bool preserveAxesOrder);
 
   // Set the other members in the parent.
-  void setMembers(const ImageBeamSet& hpBeams);
+  // void setMembers(const ImageBeamSet& hpBeams);
+  void setMembers();
+
+  // Set the members to the subset (in particular, the beamset).
+  void setMembers (const Slicer& slicer);
 
   // Helper
    void convertIPosition(Vector<Float>& x, const IPosition& pos) const;
@@ -260,6 +264,7 @@ private:
   std::auto_ptr<SubLattice<T> >    itsSubLatPtr;
 
 
+  /*
   // Given an original image shape and coordinate system and a subimage shape and
   // coordinate system, get the corresponding per plane beam array. The subimage
   // coordinate system must have been made with origCoords.subimage() and both must
@@ -270,6 +275,7 @@ private:
   	const IPosition& subShape,
   	const CoordinateSystem& subCoords
   );
+  */
 
 
   //# Make members of parent class known.
