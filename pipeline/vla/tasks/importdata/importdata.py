@@ -81,7 +81,7 @@ class VLAImportDataResults(basetask.Results):
             LOG.info('Adding {0} to context'.format(ms.name))
             target.add_measurement_set(ms)
             
-            if self.inputs.ms.antenna_array.name == 'EVLA':
+            if ms.antenna_array.name == 'EVLA':
                 m = context.observing_run.measurement_sets[0]
                 context.evla = collections.defaultdict(dict())
                 msinfo = self._do_msinfo_heuristics()
