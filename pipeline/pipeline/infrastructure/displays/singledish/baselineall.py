@@ -189,7 +189,7 @@ class SDBaselineAllDisplay(object):
     def doplot(self, ant, spw, pre_baseline, post_baseline, index_list, nchan, edge):
         pl.clf()
         
-        LOG.info('index_list=%s'%(index_list))
+        #LOG.info('index_list=%s'%(index_list))
         nrow = len(index_list)
         # Variables for Panel
         TickSizeList = [12, 12, 10, 8, 6, 5, 5, 5, 5, 5, 5]
@@ -219,7 +219,8 @@ class SDBaselineAllDisplay(object):
         startval = (spwobj.refval - spwobj.refpix * spwobj.increment) * 1.0e-9
         increment = spwobj.increment * 1.0e-9
         endval = startval + increment * spwobj.nchan
-        Abcissa = numpy.arange(startval,endval,increment,dtype=numpy.float64)
+        #Abcissa = numpy.arange(startval,endval,increment,dtype=numpy.float64)
+        Abcissa = numpy.array([startval + i * increment for i in xrange(spwobj.nchan)], dtype=numpy.float64)
         LOG.debug('startval=%s, endval=%s, increment=%s'%(startval,endval,increment))
         pre_sp = self.__spectra(pre_baseline, rows)
         post_sp = self.__spectra(post_baseline, rows)
