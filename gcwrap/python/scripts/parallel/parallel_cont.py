@@ -132,7 +132,7 @@ class imagecont():
         if(self.imperms.has_key(msname) and (not self.novaliddata[msname])):
             self.imperms[msname].getweightgrid(type='ftweight', wgtimages=wgtimage)
 #### 
-    def imagecont(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[-1], spw='', field=0, freq='1.20GHz', band='200MHz', imname='newmodel', nterms=1, scales=[0]):
+    def imagecont(self, msname='spw00_4chan351rowTile.ms', start=[0], numchan=[-1], spw='', field=0, freq='1.20GHz', band='200MHz', imname='newmodel', nterms=1, scales=[0],timerange=''):
         #casalog.post('KEYS '+str(self.imperms.keys()))
         if(not self.imperms.has_key(msname)):
             self.imageparamset=False
@@ -155,7 +155,7 @@ class imagecont():
             self.origms=msname
             try:
                 im.selectvis(vis=msname, field=field, spw=spw, nchan=numchan, start=start, step=1, datainmemory=self.visInMem, 
-                             time=self.timerange, uvrange=self.uvrange, baseline=self.baselines, scan=self.scan, 
+                             time=timerange, uvrange=self.uvrange, baseline=self.baselines, scan=self.scan, 
                              observation=self.observation, writeaccess=False)
                 if(self.uvtaper):
                     im.filter(type='gaussian', bmaj=self.outertaper[0],

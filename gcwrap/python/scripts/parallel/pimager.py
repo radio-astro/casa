@@ -338,6 +338,27 @@ class pimager():
         return spwsel, startsel, retchan
 
     @staticmethod
+    def findtimerange(msname='',spwids=[], field='', numpartition=1, begintime=0.0, endtime=1e12,continuum=True):
+	numproc=numpartition
+	timesel=[]
+	for k in range(numproc):
+		timesel.append([])
+	ms.open(msname)
+	staql = {'field':field,'time':''}
+	ms.msselect(staql)
+	tt = ms.getdata('time')
+	time_step = (tt['time'].max() - tt['time'].min())/numproc
+	for k in xrange(0,numproc):
+		time0 = qa.time(qa.quantity(tt['time'].min()+k*time_step,'s'),form="ymd")
+		time1 = qa.time(qa.quantity(tt['time'].min()+(k+1)*time_step,'s'),form="ymd")
+		time0=str(time0).split('\'')[1]
+    		time1=str(time1).split('\'')[1]
+		timesel[k] = '"'+time0+'~'+time1+'"'	
+	return timesel
+
+	
+	
+    @staticmethod	
     def findchanselold(msname='', spwids=[], numpartition=1, beginfreq=0.0, endfreq=1e12, continuum=True):
         numproc=numpartition
         spwsel=[]
@@ -585,7 +606,7 @@ class pimager():
                 contclean=False, visinmem=False, interactive=False, maskimage='lala.mask',
                 numthreads=1, savemodel=False, nterms=2,
                 painc=360.0, pblimit=0.1, dopbcorr=True, applyoffsets=False, cfcache='cfcache.dir',
-                epjtablename='',mterm=True,wbawp=True,aterm=True,psterm=True,conjbeams=True):
+                epjtablename='',mterm=True,wbawp=True,aterm=True,psterm=True,conjbeams=True, ptime=False):
         if(nterms==1):
             self.pcont(msname=msname, imagename=imagename, imsize=imsize, 
                        pixsize=pixsize, phasecenter=phasecenter, field=field, spw=spw, stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, facets=facets,  
@@ -598,8 +619,19 @@ class pimager():
                        numthreads=numthreads, savemodel=savemodel,
                        painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename,
                        mterm=mterm,wbawp=wbawp,aterm=aterm,psterm=psterm,conjbeams=conjbeams);
-        else:
+        elif(nterms==2 and ptime==False):
             self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
+                                   stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
+                                   facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
+                                   robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
+                                   outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
+                                   baselines=baselines, scan=scan, observation=observation, 
+                                   visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, numthreads=numthreads, 
+                                   cyclefactor=cyclefactor,
+                                   painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename,
+                                   mterm=mterm,wbawp=wbawp,aterm=aterm,psterm=psterm,conjbeams=conjbeams);
+	else:
+	    self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
                                    stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
                                    facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
                                    robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
@@ -663,7 +695,10 @@ class pimager():
             spwsel=self.findchansel(msname, spw, field, numcpu, freqrange=freqrange)
             minfreq=freqrange[0]
             maxfreq=freqrange[1]
-
+	    
+	    if(ptime==True):
+		timerange = self.findtimerange(msname, spw, field, numcpu)
+		print timerange
             out=range(numcpu) 
         
             c=self.c
@@ -726,8 +761,10 @@ class pimager():
                     c.odo('a.psterm='+str(psterm),k);
                     c.odo('a.wbawp='+str(wbawp),k);
                     c.odo('a.conjbeams='+str(conjbeams),k);
-
-                    runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spwsel[k])+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+')';
+		    if(ptime==False):
+                    	runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spwsel[k])+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+')';
+		    else:
+			runcomm='a.imagecont(msname='+'"'+msname+'", field="'+str(field)+'", spw="'+str(spw)+'", freq='+freq+', band='+band+', imname='+imnam+', nterms='+str(nterms)+',timerange='+timerange[k]+')';
 
 
                     print 'command is ', runcomm
