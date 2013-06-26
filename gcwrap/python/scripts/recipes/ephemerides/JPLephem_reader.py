@@ -123,7 +123,7 @@ cols = {
             'pat': r'(?P<L_s>[-+0-9.]+)'}
     }
 
-def readJPLephem(fmfile):
+def readJPLephem(fmfile,version=''):
     """
     Reads a JPL Horizons text file (see
     http://ssd.jpl.nasa.gov/horizons.cgi#top ) for a solar system object and
@@ -221,9 +221,11 @@ def readJPLephem(fmfile):
             # extract coordinate ref info
 
             m=re.match(r'(^\s*)(\S+)(\s+)('+cols['RA']['header']+')', line)
+            print m.group(4)
             coordref=m.group(4).split('(')[-1]
             cols['RA']['comment']+='('+coordref+')'
             cols['DEC']['comment']+='('+coordref+')'
+            print "cols['RA']['comment']=",  cols['RA']['comment']
             # Chomp trailing whitespace.
             myline = re.sub(r'\s*$', '', line)
             titleline = myline
@@ -416,7 +418,10 @@ def readJPLephem(fmfile):
 
     # To be eventually usable as a MeasComet table, a few more keywords are needed.
     retdict['VS_TYPE'] = 'Table of comet/planetary positions'
-    retdict['VS_VERSION'] = '0003.0001'
+    if version=='':
+        version='0003.0001'
+    #retdict['VS_VERSION'] = '0003.0001'
+    retdict['VS_VERSION'] = version 
     if retdict.has_key('VS_CREATE'):
         dt = time.strptime(retdict['VS_CREATE'], "%b %d %H:%M:%S %Y")
     else:
@@ -433,6 +438,12 @@ def readJPLephem(fmfile):
     else:
         print "The table will not be usable with me.framecomet because it lacks MJD."
 
+    # adding posrefsys keyword
+    if cols['RA']['comment'].count('J2000'):
+        retdict['posrefsys']='ICRF/J2000.0'
+    if cols['RA']['comment'].count('B1950'):
+        retdict['posrefsys']='FK4/B1950.0'
+      
     return retdict
 
 def convert_radec(radec_col):
@@ -629,10 +640,22 @@ def ephem_dict_to_table(fmdict, tablepath='', prefix=''):
         raise Exception, "Invalid tablepath: "+tablepath
     retval = True
     # keepcolorder=T preserves column ordering in collist below
-    keepcolorder=False
+    #keepcolorder=False
+    keepcolorder=True
     try:
         outdict = fmdict.copy() # Yes, I want a shallow copy.
-        kws = fmdict.keys()
+        #kws = fmdict.keys()
+        # reorder the keywords
+        okws=['VS_CREATE','VS_DATE','VS_TYPE', 'VS_VERSION', 'NAME', 'MJD0', 'dMJD', 
+              'GeoDist', 'GeoLat', 'GeoLong', 'obsloc', 'posrefsys','earliest','latest',
+              'radii','meanrad','orb_per','data']
+        oldkws = fmdict.keys()
+        kws=[]
+        for ik in okws:
+            if oldkws.count(ik):
+              kws.append(ik)
+              oldkws.remove(ik)
+        kws+=oldkws 
         kws.remove('data')
         collist = outdict['data'].keys()
 
