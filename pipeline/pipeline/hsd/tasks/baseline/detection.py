@@ -99,12 +99,12 @@ class DetectLine(object):
             # Countup progress timer
             Timer.count()
 
+            ProcStartTime = time.time()
             if grid_table[row][6] == 0:
                 LOG.debug('Row %d: No spectrum' % row)
                 # No spectrum
                 protected = [[-1, -1]]
             else:
-                ProcStartTime = time.time()
                 LOG.debug('Start Row %d' % (row))
 
                 protected = self._detect(spectrum = spectra[row],#spectrum = spectra[:,row], 
