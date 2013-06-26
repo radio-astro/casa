@@ -18,7 +18,7 @@ import pipeline.infrastructure.basetask as basetask
 from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.tablereader as tablereader
 from pipeline.hif.tasks.common import commonfluxresults
-from pipeline.vla.tasks.vlautils import VLAUtils, buildscans
+from pipeline.vla.tasks.vlautils import VLAUtils
 
 LOG = infrastructure.get_logger(__name__)
 
