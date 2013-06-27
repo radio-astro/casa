@@ -3046,6 +3046,7 @@ bool image::setrestoringbeam(
 				log, channel, polarization
 			)
 		) {
+			*_log << LogOrigin("image", __FUNCTION__);
 			_stats.reset(0);
 			return True;
 		}
@@ -3781,7 +3782,7 @@ image::recordFromQuantity(const Quantum<Vector<Double> >& q) {
 casa::Quantity image::casaQuantityFromVar(const ::casac::variant& theVar) {
 	casa::Quantity retval;
 	try {
-		*_log << LogOrigin("image", "casaQuantityFromVar");
+		*_log << LogOrigin("image", __FUNCTION__);
 		casa::QuantumHolder qh;
 		String error;
 		if (theVar.type() == ::casac::variant::STRING || theVar.type()
@@ -3804,6 +3805,7 @@ casa::Quantity image::casaQuantityFromVar(const ::casac::variant& theVar) {
 			retval = qh.asQuantity();
 		}
 	} catch (const AipsError& x) {
+		*_log << LogOrigin("image", __FUNCTION__);
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);

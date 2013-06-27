@@ -74,6 +74,8 @@ from __main__ import *
 import unittest
 
 
+datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imsubimage/'
+
 class ia_subimage_test(unittest.TestCase):
     
     def setUp(self):
@@ -173,6 +175,21 @@ class ia_subimage_test(unittest.TestCase):
             )
         subim.done()
         myia.done()
+        
+        # CAS-5282
+        
+        imagename = datapath + "50beams.im"
+        outfile = "test_beams1.im"
+        imsubimage(
+            imagename=imagename, outfile=outfile, box="",
+            region="", chans="18~29",stokes="I",mask="",
+            dropdeg=False,overwrite=None, verbose=True,
+            stretch=False
+        )
+        myia.open(outfile)
+        beams = myia.restoringbeam()
+        self.assertTrue(len(beams['beams']) == 12)
+        
 
 
 def suite():
