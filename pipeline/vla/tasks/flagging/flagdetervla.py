@@ -203,7 +203,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 # ------------------------------------------------------------------------------
 
 	def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
-	    autocorr=None, shadow=None, scan=None, scannumber=None,
+	    autocorr=None, shadow=None, scan=None, scannumber=None, quack=None, quackscan=None,
 	    intents=None, edgespw=None, fracspw=None, online=None,
 	    fileonline=None, template=None, filetemplate=None ):
 
@@ -236,6 +236,29 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
                 if value is None:
                     value = 0.05
                 self._fracspw = value
+
+	    @property
+        def quack(self):
+                return self._quack
+
+        @quack.setter
+        def quack(self, value):
+                if value is None:
+                    value = True
+                self._quack = value
+		#Call quacking code from the setter
+
+	    @property
+        def quackscan(self):
+                return self._quackscan
+
+        @quack.setter
+        def quackscan(self, value):
+                if value is None:
+		            #This needs to be the function call to the heuristics
+                    value = '1'
+                self._quackscan = value
+		#Call quacking code from the setter
 
 
 # ------------------------------------------------------------------------------
@@ -401,5 +424,30 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 		else:
                     return 'mode=manual spw={0}'.format(','.join(to_flag))
 
+        def _get_quack_cmds(self):
+                """
+                Return a flagdata flagging command that will quack, ie
+                    flagdata_list.append("mode='quack' scan=" + quack_scan_string +
+                    " quackinterval=" + str(1.5*int_time) + " quackmode='beg' " +
+                    "quackincrement=False")
 
 
+
+                :rtype: a string
+                """
+                inputs = self.inputs
+
+                # to_flag is the list to which flagging commands will be appended
+                to_flag = []
+
+                #get heuristics from the context
+                context = inputs.context
+
+                m = context.observing_run.measurement_sets[0]
+                quack_scan_string = context.evla['msinfo'][m.name].quack_scan_string
+                int_time = context.evla['msinfo'][m.name].int_time
+
+                quack_mode_cmd = 'mode=quack scan=' + quack_scan_string + ' quackinterval=' + 
+                                  str(1.5*int_time) + ' quackmode=beg quackincrement=False'
+                
+                return quack_mode_cmd
