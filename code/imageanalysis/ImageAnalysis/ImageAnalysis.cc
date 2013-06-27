@@ -4419,7 +4419,7 @@ Bool ImageAnalysis::setrestoringbeam(
 			ImageMetaData<Float> md(_image.get());
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
-				GaussianBeam(major, minor, pa)
+				GaussianBeam(bmajor, bminor, bpa)
 			);
 		}
 		else {
@@ -4437,7 +4437,7 @@ Bool ImageAnalysis::setrestoringbeam(
 			ImageMetaData<Float> md(_image.get());
 			ii.setAllBeams(
 				md.nChannels(), md.nStokes(),
-				GaussianBeam(major, minor, pa)
+				GaussianBeam(bmajor, bminor, bpa)
 			);
 		}
 		else {
