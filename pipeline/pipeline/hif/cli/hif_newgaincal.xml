@@ -23,13 +23,18 @@ Previous calibrations are applied on the fly.
 	<value></value>
    </param>
 
-   <param type="stringArray" name="phasecaltable" subparam="true">
+   <param type="stringArray" name="calphasetable" subparam="true">
 	<description>List of output phase caltables for calibrator targets</description>
 	<value type="string"></value>
    </param>
 
    <param type="stringArray" name="targetphasetable" subparam="true">
 	<description>List of output phase caltables for science targets</description>
+	<value type="string"></value>
+   </param>
+
+   <param type="stringArray" name="amptable" subparam="true">
+	<description>List of output amp caltables for science targets</description>
 	<value type="string"></value>
    </param>
 
@@ -126,8 +131,8 @@ Previous calibrations are applied on the fly.
 	    <equals type="string" value="interactive">
 	        <default param="vis"><value type="stringArray"></value></default>
 	        <default param="calphasetable"><value type="stringArray"></value></default>
-	        <default param="amptable"><value type="stringArray"></value></default>
 	        <default param="targetphasetable"><value type="stringArray"></value></default>
+	        <default param="amptable"><value type="stringArray"></value></default>
 	        <default param="field"><value type="string"></value></default>
 	        <default param="intent"><value type="string"></value></default>
 	        <default param="spw"><value type="string"></value></default>
