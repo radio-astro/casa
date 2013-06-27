@@ -45,11 +45,22 @@ class Scan(object):
     @property
     def time_on_source(self):
         qt = casatools.quanta
-        total_exposure = qt.quantity('0s')
-        for (_, _, exposure) in self.scan_times:
-            total_exposure = qt.add(total_exposure, exposure)
-        return total_exposure
+        return reduce(qt.add, [s[2] for s in self.scan_times])
 
+    @property
+    def mean_exposure(self):
+        qt = casatools.quanta
+        return qt.div(self.time_on_source, len(self.scan_times))
+
+    @property
+    def max_exposure(self):
+        qt = casatools.quanta
+        max_exposure = self.scan_times[0][2]
+        for exposure in [s[2] for s in self.scan_times]:
+            if qt.gt(exposure, max_exposure):
+                max_exposure = exposure
+        return max_exposure
+        
     @property
     def spws(self):
         return set([dd.spw for dd in self.data_descriptions])
