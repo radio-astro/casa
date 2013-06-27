@@ -385,9 +385,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
         (2007). Formula for 'GAUSS' and 'GJINC' are taken from Table 1 in 
         the paper, and are written as below using gwidth and jwidth: 
 
-           GAUSS: exp[-(|r|/gwidth)**2]
+           GAUSS: exp[-log(2)*(|r|/gwidth)**2]
 
-           GJINC: J_1(pi*|r|/jwidth)/(pi*|r|/jwidth) * exp[-(|r|/gwidth)^2]  
+           GJINC: J_1(pi*|r|/jwidth)/(pi*|r|/jwidth)
+                     * exp[-log(2)*(|r|/gwidth)^2]  
 
 
         Reference: Mangum, et al. 2007, A&amp;A, 474, 679-687 
