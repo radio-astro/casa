@@ -152,6 +152,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <value>1</value>
     </param>
 
+    <param type="string" name="outframe" ignorecase="true">
+            <description>velocity frame of output image </description>
+            <value></value>
+            <allowed kind="enum">
+                    <value>lsrk</value>
+                    <value>lsrd</value>
+                    <value>bary</value>
+                    <value>geo</value>
+                    <value>topo</value>
+                    <value>galacto</value>
+                    <value>lgroup</value>
+                    <value>cmb</value>
+                    <value></value>
+           </allowed>
+    </param>
+
+
     <param type="any" name="phasecenter">
             <description>Image phase center: position or field index</description>
             <any type="variant"/>
@@ -296,6 +313,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                step -- width of each spectral channel for created image
                    default: 1 (width of 1 channel if specunit='channel')
                    example: 100
+        outframe -- Velocity reference frame of output image
+                Options: '','LSRK','LSRD','BARY','GEO','TOPO','GALACTO',
+                         'LGROUP','CMB'
+                default: ''; same as input data
+                example: frame='bary' for Barycentric frame 
         phasecenter -- image phase center: direction measure or fieldid 
                 default: 0
                 example: 'J2000 13h44m00 -17d02m00', 'AZEL -123d48m29 15d41m41'

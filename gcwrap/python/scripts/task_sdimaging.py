@@ -7,7 +7,7 @@ from taskinit import *
 import sdutil
 
 @sdutil.sdtask_decorator
-def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, phasecenter, ephemsrcname, pointingcolumn):
+def sdimaging(infile, specunit, restfreq, scanlist, field, spw, antenna, stokes, gridfunction, convsupport, truncate, gwidth, jwidth, outfile, overwrite, imsize, cell, dochannelmap, nchan, start, step, outframe, phasecenter, ephemsrcname, pointingcolumn):
     with sdutil.sdtask_manager(sdimaging_worker, locals()) as worker:
         worker.initialize()
         worker.execute()
@@ -79,7 +79,8 @@ class sdimaging_worker(sdutil.sdtask_template_imaging):
         self.imager_param['restfreq'] = self.restfreq
         
         # outframe (force using the current frame)
-        self.imager_param['outframe'] = ''
+        #self.imager_param['outframe'] = ''
+        self.imager_param['outframe'] = self.outframe
         
         # 
         # spw
