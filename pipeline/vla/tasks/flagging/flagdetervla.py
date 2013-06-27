@@ -212,7 +212,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
 		super( FlagDeterVLAInputs, self ).__init__( context, vis=vis,
 		    output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr,
-		    shadow=shadow, scan=scan, scannumber=scannumber, quack=None, quackscan=None, intents=intents,
+		    shadow=shadow, scan=scan, scannumber=scannumber, quack=quack, quackscan=quackscan, intents=intents,
 		    edgespw=edgespw, fracspw=fracspw, online=online,
 		    fileonline=fileonline, template=template, filetemplate=filetemplate )
 
