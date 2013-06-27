@@ -47,18 +47,17 @@ class SDFlagData(common.SingleDishTaskTemplate):
     Inputs = SDFlagDataInputs
 
     def prepare(self):
-        raise NotImplementedError
-        ## inputs
-        #inputs = self.inputs
-        #context = inputs.context
-        #datatable = context.observing_run.datatable_instance
-        #reduction_group = context.observing_run.reduction_group
-        #infiles = inputs.infiles
-        #iflist = inputs.iflist
-        #antennalist = inputs.antennalist
-        #scanlist = inputs.scanlist
-        #st_names = context.observing_run.st_names
-        #file_index = [st_names.index(infile) for infile in infiles]
+        # inputs
+        inputs = self.inputs
+        context = inputs.context
+        datatable = context.observing_run.datatable_instance
+        reduction_group = context.observing_run.reduction_group
+        infiles = inputs.infiles
+        iflist = inputs.iflist
+        antennalist = inputs.antennalist
+        scanlist = inputs.scanlist
+        st_names = context.observing_run.st_names
+        file_index = [st_names.index(infile) for infile in infiles]
 
 
     def analyse(self, result):

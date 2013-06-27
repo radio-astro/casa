@@ -177,7 +177,8 @@ class SDPipelineStagesInterface( SDLogger ):
         self.colormap='color'       
 
         ### Default Flag rule
-        import SDFlagRule
+        #import SDFlagRule
+        from pipeline.hsd.tasks.flagdata import SDFlagRule
         reload(SDFlagRule)
         self.FlagRuleDictionary = SDFlagRule.SDFlagRule
 
@@ -585,7 +586,8 @@ class SDPipelineStagesInterface( SDLogger ):
         return self.POL
 
     def setFlagRules(self):
-        import SDFlagRule
+        #import SDFlagRule
+        from pipeline.hsd.tasks.flagdata import SDFlagRule
         reload(SDFlagRule)
         self.FlagRuleDictionary = SDFlagRule.SDFlagRule
 
