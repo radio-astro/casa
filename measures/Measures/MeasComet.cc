@@ -273,10 +273,6 @@ Bool MeasComet::initMeas(const String &which, const Table *tabin) {
 	     << kws.asString("posrefsys") << " - possible are J2000, B1950, APP, ICRS, TOPO" << LogIO::POST;
 	}
       }
-      else if(kws.isDefined("obsloc") && kws.asString("obsloc").contains("GEOCENTRIC")){
-	// when obsloc is defined as GEOCENTRIC, assume J2000 if not given
-	mtype_p = MDirection::J2000;
-      }
       else if (kws.asDouble("GeoDist") != 0.0){
 	mtype_p = MDirection::TOPO;
       }
