@@ -1312,16 +1312,23 @@ class WebLogGenerator(object):
         # copy CSS, javascript etc. to weblog directory
         WebLogGenerator.copy_resources(context)
 
-        # divide casalog into stages, copying into directories as needed
-        LogCopier.write_stage_logs(context)
+        # We could seriously optimise the rendering process by only unpickling
+        # those objects that we need to render.  
+        LOG.todo('Add results argument to renderer interfaces!')
+        proxies = context.results
+        
+        try:
+            # unpickle the results objects ready for rendering
+            context.results = [proxy.read() for proxy in context.results]
 
-        for renderer in WebLogGenerator.renderers:
-            try:
-                LOG.trace('%s rendering...' % renderer.__name__)
-                renderer.render(context, hardcopy)
-            except Exception as e:
-                LOG.exception('Error generating weblog: %s', e)
-
+            for renderer in WebLogGenerator.renderers:
+                try:
+                    LOG.trace('%s rendering...' % renderer.__name__)
+                    renderer.render(context, hardcopy)
+                except Exception as e:
+                    LOG.exception('Error generating weblog: %s', e)
+        finally:
+            context.results = proxies
 
 class LogCopier(object):
     """
@@ -1369,36 +1376,36 @@ class LogCopier(object):
                              if entry not in existing_entries]
             weblog.writelines(to_append)
 
-    @staticmethod    
-    def write_stage_logs(context):
-        """
-        Take the CASA log snippets attached to each result and write them to
-        the appropriate weblog directory. The log snippet is deleted from the
-        result after a successful write to keep the pickle size down. 
-        """
-        for result in context.results:
-            if not hasattr(result, 'casalog'):
-                continue
-
-            stage_dir = os.path.join(context.report_dir,
-                                     'stage%s' % result.stage_number)
-            if not os.path.exists(stage_dir):                
-                os.makedirs(stage_dir)
-
-            stagelog_entries = result.casalog
-            start = result.timestamps.start
-            end = result.timestamps.end
-
-            stagelog_path = os.path.join(stage_dir, 'casapy.log')
-            with open(stagelog_path, 'w') as stagelog:
-                LOG.debug('Writing CASA log entries for stage %s (%s -> %s)' %
-                          (result.stage_number, start, end))                          
-                stagelog.write(stagelog_entries)
-                
-            # having written the log entries, the CASA log entries have no 
-            # further use. Remove them to keep the size of the pickle small
-            delattr(result, 'casalog')
-
+#     @staticmethod    
+#     def write_stage_logs(context):
+#         """
+#         Take the CASA log snippets attached to each result and write them to
+#         the appropriate weblog directory. The log snippet is deleted from the
+#         result after a successful write to keep the pickle size down. 
+#         """
+#         for result in context.results:
+#             if not hasattr(result, 'casalog'):
+#                 continue
+# 
+#             stage_dir = os.path.join(context.report_dir,
+#                                      'stage%s' % result.stage_number)
+#             if not os.path.exists(stage_dir):                
+#                 os.makedirs(stage_dir)
+# 
+#             stagelog_entries = result.casalog
+#             start = result.timestamps.start
+#             end = result.timestamps.end
+# 
+#             stagelog_path = os.path.join(stage_dir, 'casapy.log')
+#             with open(stagelog_path, 'w') as stagelog:
+#                 LOG.debug('Writing CASA log entries for stage %s (%s -> %s)' %
+#                           (result.stage_number, start, end))                          
+#                 stagelog.write(stagelog_entries)
+#                 
+#             # having written the log entries, the CASA log entries have no 
+#             # further use. Remove them to keep the size of the pickle small
+#             delattr(result, 'casalog')
+#
 #    @staticmethod    
 #    def write_stage_logs(context):
 #        casalog = os.path.join(context.report_dir, 'casapy.log')

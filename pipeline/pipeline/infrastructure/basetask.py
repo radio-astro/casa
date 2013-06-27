@@ -651,9 +651,15 @@ class Results(api.Results):
         # execute our template function
         self.merge_with_context(context, **other_parameters)
 
+        # Create a proxy for this result, pickling the result to the appropriate
+        # weblog stage directory. We write the result to disk rather than attach
+        # it to the proxy to keep the context size at a minimum.
+        proxy = ResultsProxy(context)
+        proxy.write(self)
+
         # with no exceptions thrown by this point, we can safely add this 
         # results object to the results list
-        context.results.append(self)
+        context.results.append(proxy)
 
         if context.subtask_counter is 0 and not DISABLE_WEBLOG:
             # cannot import at initial import time due to cyclic dependency
@@ -686,6 +692,64 @@ class Results(api.Results):
             return True
         
         return False
+
+
+class ResultsProxy(object):
+    def __init__(self, context):
+        self._output_dir = os.path.join(context.output_dir, context.name)
+        self._report_dir = context.report_dir
+
+    def write(self, result):
+        '''
+        Write the pickled result to disk.
+        '''
+        pickle_name = 'result-stage%s.pickle' % result.stage_number
+        path = os.path.join(self._output_dir, pickle_name)
+        self._path = path
+        
+        # adopt the result's UUID protecting against repeated addition to the
+        # context
+        self.uuid = result.uuid
+        
+        self._write_stage_logs(result)
+        
+        with open(path, 'wb') as outfile:
+            pickle.dump(result, outfile, -1)
+
+    def read(self):
+        '''
+        Read the pickle from disk, returning the unpickled object.
+        '''
+        with open(self._path) as infile:
+            return pickle.load(infile)
+
+    def _write_stage_logs(self, result):
+        """
+        Take the CASA log snippets attached to each result and write them to
+        the appropriate weblog directory. The log snippet is deleted from the
+        result after a successful write to keep the pickle size down. 
+        """
+        if not hasattr(result, 'casalog'):
+            return
+
+        stage_dir = os.path.join(self._report_dir,
+                                 'stage%s' % result.stage_number)
+        if not os.path.exists(stage_dir):                
+            os.makedirs(stage_dir)
+
+        stagelog_entries = result.casalog
+        start = result.timestamps.start
+        end = result.timestamps.end
+
+        stagelog_path = os.path.join(stage_dir, 'casapy.log')
+        with open(stagelog_path, 'w') as stagelog:
+            LOG.debug('Writing CASA log entries for stage %s (%s -> %s)' %
+                      (result.stage_number, start, end))                          
+            stagelog.write(stagelog_entries)
+                
+        # having written the log entries, the CASA log entries have no 
+        # further use. Remove them to keep the size of the pickle small
+        delattr(result, 'casalog')
 
 
 class ResultsList(Results, list):
