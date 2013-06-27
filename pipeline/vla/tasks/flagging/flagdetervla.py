@@ -237,7 +237,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
                     value = 0.05
                 self._fracspw = value
 
-	    @property
+	@property
         def quack(self):
                 return self._quack
 
@@ -248,7 +248,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
                 self._quack = value
 		#Call quacking code from the setter
 
-	    @property
+	@property
         def quackscan(self):
                 return self._quackscan
 
@@ -360,7 +360,7 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
 	# Make the member functions of the FlagDeterVLAInputs() class member
 	# functions of this class
 
-        Inputs = FlagDeterVLAInputs
+	Inputs = FlagDeterVLAInputs
 
         def _get_edgespw_cmds(self):
                 """
@@ -425,7 +425,16 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
                     return 'mode=manual spw={0}'.format(','.join(to_flag))
 
         def _get_quack_cmds(self):
+                """
+                Return a flagdata flagging command that will quack, ie
+                    flagdata_list.append("mode='quack' scan=" + quack_scan_string +
+                    " quackinterval=" + str(1.5*int_time) + " quackmode='beg' " +
+                    "quackincrement=False")
 
+
+
+                :rtype: a string
+                """
                 inputs = self.inputs
 
                 # to_flag is the list to which flagging commands will be appended
