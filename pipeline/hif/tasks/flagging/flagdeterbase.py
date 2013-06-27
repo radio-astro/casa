@@ -455,6 +455,10 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         if inputs.edgespw: 
             flag_cmds.append(self._get_edgespw_cmds())
 
+        #Flag quack commands for VLA
+        if inputs.quack:
+            flag_cmds.append(self._get_quack_cmds())
+
         # Apply the online flags? 
 	#    Keep in separate file
         #if inputs.online:
