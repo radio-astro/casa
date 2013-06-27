@@ -212,7 +212,7 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 
 		super( FlagDeterVLAInputs, self ).__init__( context, vis=vis,
 		    output_dir=output_dir, flagbackup=flagbackup, autocorr=autocorr,
-		    shadow=shadow, scan=scan, scannumber=scannumber, quack=quack, quackscan=quackscan, intents=intents,
+		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
 		    edgespw=edgespw, fracspw=fracspw, online=online,
 		    fileonline=fileonline, template=template, filetemplate=filetemplate )
 
@@ -430,8 +430,6 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
                     flagdata_list.append("mode='quack' scan=" + quack_scan_string +
                     " quackinterval=" + str(1.5*int_time) + " quackmode='beg' " +
                     "quackincrement=False")
-
-
 
                 :rtype: a string
                 """

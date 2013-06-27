@@ -85,7 +85,7 @@ class GainCurves(basetask.StandardTaskTemplate):
         gencal_job = casa_tasks.gencal(**gencal_args)
         self._executor.execute(gencal_job)
 
-        result = GainCurvesResults()
+        
         LOG.warning('TODO: gaincurves spwmap heuristic re-reads measurement set!')
         LOG.warning("TODO: gaincurves spwmap heuristic won't handle missing file")
         #spwmap = heuristics.tsysspwmap(vis=inputs.vis,

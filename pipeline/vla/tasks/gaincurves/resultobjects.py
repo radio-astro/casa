@@ -9,6 +9,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class GainCurvesResults(basetask.Results):
     def __init__(self, final=[], pool=[], preceding=[]):
+        super(GainCurvesResults, self).__init__()
         
         self.vis = None
         self.pool = pool[:]

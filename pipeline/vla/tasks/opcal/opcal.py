@@ -9,6 +9,9 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 from . import resultobjects
+import pipeline.infrastructure.casatools as casatools
+from bisect import bisect_left
+import numpy
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -22,13 +25,12 @@ def find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9,
 def find_spw(vis):
     """Identify spw information
     """
-    
-    casatools.table.open(vis+'/SPECTRAL_WINDOW')
-    channels = casatools.table.getcol('NUM_CHAN')
-    originalBBClist = casatools.table.getcol('BBC_NO')
-    spw_bandwidths=casatools.table.getcol('TOTAL_BANDWIDTH')
-    reference_frequencies = casatools.table.getcol('REF_FREQUENCY')
-    casatools.table.close()
+
+    with casatools.TableReader(vis+'/SPECTRAL_WINDOW') as table:
+        channels = table.getcol('NUM_CHAN')
+        originalBBClist = table.getcol('BBC_NO')
+        spw_bandwidths = table.getcol('TOTAL_BANDWIDTH')
+        reference_frequencies = table.getcol('REF_FREQUENCY')
     
     center_frequencies = map(lambda rf, spwbw: rf + spwbw/2,reference_frequencies, spw_bandwidths)
     
@@ -48,7 +50,7 @@ def find_spw(vis):
 
 
 class OpcalInputs(basetask.StandardInputs):
-    def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=None, tau=None, spw=None):
+    def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=None, spw=None):
 	# set the properties to the values given as input arguments
         self._init_properties(vars())
 	setattr(self, 'caltype', 'opac')
@@ -75,14 +77,14 @@ class OpcalInputs(basetask.StandardInputs):
         self._caltable = value
     
     @property
-    def tau(self):
-        return self._tau
+    def parameter(self):
+        return self._parameter
 
-    @tau.setter
-    def tau(self, value):
+    @parameter.setter
+    def parameter(self, value):
         if value is None:
             value = []
-        self._tau = value
+        self._parameter = value
     
     @property
     def spw(self):
@@ -102,13 +104,11 @@ class OpcalInputs(basetask.StandardInputs):
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
         
-        #self.tau = casa_tasks.plotweather(vis=self.vis, seasonal_weight=1.0)
-        
 	return {'vis': self.vis,
 	        'caltable': self.caltable,
-		'caltype': self.caltype,
-                'parameter': self.tau,
-                'spw': self.spw}
+		    'caltype': self.caltype,
+            'parameter': self.parameter,
+            'spw': self.spw}
 
 
 class Opcal(basetask.StandardTaskTemplate):
@@ -122,7 +122,7 @@ class Opcal(basetask.StandardTaskTemplate):
         plotweather_job = casa_tasks.plotweather(**plotweather_args)
         output = self._executor.execute(plotweather_job)
  
-        inputs.tau = output
+        inputs.parameter = output
         
         inputs.spw = find_spw(inputs.vis)
 
@@ -130,7 +130,7 @@ class Opcal(basetask.StandardTaskTemplate):
         gencal_job = casa_tasks.gencal(**gencal_args)
         self._executor.execute(gencal_job)
 
-        result = OpcalResults()
+        
         LOG.warning('TODO: opspwmap heuristic re-reads measurement set!')
         LOG.warning("TODO: opspwmap heuristic won't handle missing file")
         #spwmap = heuristics.tsysspwmap(vis=inputs.vis,
