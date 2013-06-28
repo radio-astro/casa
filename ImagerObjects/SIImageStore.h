@@ -25,7 +25,7 @@
 //# $Id$
 
 #ifndef SYNTHESIS_SIIMAGESTORE_H
-#define SYNTHESIS_SIMAGESTORE_H
+#define SYNTHESIS_SIIMAGESTORE_H
 
 #include <casa/aips.h>
 #include <casa/OS/Timer.h>

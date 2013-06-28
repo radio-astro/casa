@@ -31,6 +31,7 @@
 #include <casa/aips.h>
 #include <casa/BasicSL/Complex.h>
 #include <casa/Quanta/Quantum.h>
+#include <synthesis/MSVis/VisibilityIterator2.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 //#forward
@@ -78,6 +79,14 @@ template<class T> class Vector;
                                const Double robust, const Int nx, const Int ny,
                                const Quantity& cellx, const Quantity& celly,
 		      const Int uBox, const Int vBox, const Bool multiField=False);
+     //VisibilityIterator2 version of the above....
+     // Note the VisibilityIterator can be readonly...thus recommended if you can
+     // as that will prevent unnecessary locks
+     VisImagingWeight(vi::VisibilityIterator2& vi, const String& rmode, const Quantity& noise,
+                               const Double robust, const Int nx, const Int ny,
+                               const Quantity& cellx, const Quantity& celly,
+		      const Int uBox, const Int vBox, const Bool multiField=False);
+
      virtual ~VisImagingWeight();
 
 
@@ -125,7 +134,7 @@ template<class T> class Vector;
      virtual void setWeightDensity(const Block<Matrix<Float> >& density);
 
     private:
-
+     void cube2Matrix(const Cube<Bool>& fcube, Matrix<Bool>& fMat);
      SimpleOrderedMap <String, Int> multiFieldMap_p;
      Block<Matrix<Float> > gwt_p;
      String wgtType_p;

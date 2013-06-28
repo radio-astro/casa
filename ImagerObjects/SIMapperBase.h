@@ -34,7 +34,8 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-
+#include <synthesis/MSVis/VisibilityIterator2.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/ImagerObjects/SIImageStore.h>
 
@@ -64,12 +65,19 @@ class SIMapperBase
   virtual void finalizeGrid();
 
   virtual void initializeDegrid();
-  virtual void degrid();
+  virtual void degrid();\
   virtual void finalizeDegrid();
+  virtual void initializeGrid(const vi::VisBuffer2& vb){throw(AipsError("Not implemented"));};
+  virtual void grid(const vi::VisBuffer2& vb, Bool dopsf, FTMachine::Type col){throw(AipsError("Not implemented"));};
+  virtual void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf){throw(AipsError("Not implemented"));};
+
+  virtual void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1){throw(AipsError("Not implemented"));};
+  virtual void degrid(vi::VisBuffer2& vb){throw(AipsError("Not implemented"));};
 
   virtual Record getFTMRecord();
 
   String getImageName();
+  CountedPtr<SIImageStore> imageStore(){return itsImages;};
 
   virtual Bool releaseImageLocks();
 
