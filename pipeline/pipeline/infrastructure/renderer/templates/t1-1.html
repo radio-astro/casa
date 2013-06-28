@@ -18,20 +18,26 @@ navbar_active='Home'
 			<tbody>
 		% if project_id is not None:
 				<tr>
-					<th>Project ID</th>
-					<td>${project_ids}</td>
+					<th>Project UID</th>
+					<td>${project_uids}</td>
+				</tr>
+		% endif
+		% if ous_uid != 'unknown':
+				<tr>
+					<th>OUS UID</th>
+					<td>${oud_uid}</td>
 				</tr>
 		% endif
 		% if schedblock_id is not None:
 				<tr>
-					<th>SchedBlock ID</th>
-					<td>${schedblock_ids}</td>
+					<th>SchedBlock UID</th>
+					<td>${schedblock_uids}</td>
 				</tr>
 		% endif
 		% if execblock_id is not None:
 				<tr>
-					<th>ExecBlock ID</th>
-					<td>${execblock_ids}</td>
+					<th>ExecBlock UID</th>
+					<td>${execblock_uids}</td>
 				</tr>
 		% endif
 		% if observer is not None:
@@ -88,17 +94,15 @@ navbar_active='Home'
 				</tr>
 			</thead>
 			<tbody>
+		% if ppr_uid is not None:
 				<tr>
 					<th>PPR ID</th>
 					<td></td>					
 				</tr>
-				<tr>
-					<th>OUS ID</th>
-					<td></td>
-				</tr>
+		% endif
 				<tr>
 					<th>Pipeline Version</th>
-          <td>${pipeline_revision}</td>					
+					<td>${pipeline_revision}</td>					
 				</tr>
 				<tr>
 					<th>CASA Version</th>

@@ -275,9 +275,9 @@ class T1_1Renderer(RendererBase):
         obs_start = context.observing_run.start_datetime
         obs_end = context.observing_run.end_datetime
 
-        project_ids = ', '.join(context.observing_run.project_ids)
-        schedblock_ids = ', '.join(context.observing_run.schedblock_ids)
-        execblock_ids = ', '.join(context.observing_run.execblock_ids)
+        project_uids = ', '.join(context.observing_run.project_ids)
+        schedblock_uids = ', '.join(context.observing_run.schedblock_ids)
+        execblock_uids = ', '.join(context.observing_run.execblock_ids)
         observers = ', '.join(context.observing_run.observers)
 
         array_names = set([ms.antenna_array.name
@@ -303,9 +303,11 @@ class T1_1Renderer(RendererBase):
                 'exec_start'        : exec_start.strftime(out_fmt),
                 'exec_end'          : exec_end.strftime(out_fmt),
                 'exec_duration'     : str(exec_duration),
-                'project_ids'       : project_ids,
-                'schedblock_ids'    : schedblock_ids,
-                'execblock_ids'     : execblock_ids,
+                'project_uids'      : project_uids,
+                'schedblock_uids'   : schedblock_uids,
+                'execblock_uids'    : execblock_uids,
+                'ous_uid'           : context.project_structure.ous_entity_id,
+                'ppr_uid'           : None,
                 'observers'         : observers,
                 'qa2adapter'        : qa2results}
 
