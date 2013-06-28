@@ -44,7 +44,7 @@ except Exception, e:
 		<ul>
 			% for plot_group in plot_groups:
 				<li>
-					<a href=${plot_group.filename}>${plot_group.title}</a>
+					<a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
 				</li>
 			% endfor
 		</ul>
