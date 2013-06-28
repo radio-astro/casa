@@ -200,7 +200,24 @@ class Polarization(SingleDishBase):
                 'I' : 0,  'Q': 1, 'U' : 2, 'V' : 3} 
     to_polenum = {'XX':  9, 'YY': 12, 'XY': 10, 'YX': 11, 
                   'RR':  5, 'LL':  8, 'RL':  6, 'LR':  7,
-                  'I' :  1,  'Q':  2, 'U' :  3, 'V' :  4} 
+                  'I' :  1,  'Q':  2, 'U' :  3, 'V' :  4}
+    polarization_map = { 'linear': { 0: ['XX',  9],
+                                     1: ['YY', 12],
+                                     2: ['XY', 10],
+                                     3: ['YX', 11] },
+                         'circular': { 0: ['RR', 5],
+                                       1: ['LL', 8],
+                                       2: ['RL', 6],
+                                       3: ['LR', 7] },
+                         'stokes': { 0: ['I', 1],
+                                     1: ['Q', 2],
+                                     2: ['U', 3],
+                                     3: ['V', 4] },
+                         'linpol': { 0: ['Ptotal',   28],
+                                     1: ['Plinear',  29],
+                                     2: ['PFtotal',  30],
+                                     3: ['PFlinear', 31],
+                                     4: ['Pangle',   32] } }
     @staticmethod
     def from_data_desc(datadesc):
         npol = datadesc.num_polarizations
@@ -261,10 +278,13 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
                             refval=refval,
                             increment=increment,
                             freq_min=to_numeric_freq(spw.min_frequency),
-                            freq_max=to_numeric_freq(spw.max_frequency))
+                            freq_max=to_numeric_freq(spw.max_frequency),
+                            name=spw.name,
+                            sideband=spw.sideband,
+                            baseband=spw.baseband)
         return entry
         
-    def __init__(self, id=None, type=None, frame=None, nchan=None, refpix=None, refval=None, increment=None, bandwidth=None, intent=None, freq_min=None, freq_max=None, pol_association=None, rest_frequencies=None):
+    def __init__(self, id=None, type=None, frame=None, nchan=None, refpix=None, refval=None, increment=None, bandwidth=None, intent=None, freq_min=None, freq_max=None, pol_association=None, rest_frequencies=None,name=None,sideband=None,baseband=None):
         if increment is not None and nchan is not None:
             chan_widths = [[increment]] * nchan
         else:
@@ -273,7 +293,7 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
             chan_freqs = [[refval + refpix * increment * ichan] for ichan in xrange(nchan)]
         else:
             chan_freqs = None
-        super(Frequencies,self).__init__(id, bandwidth, freq_min, chan_widths, chan_freqs)
+        super(Frequencies,self).__init__(id, bandwidth, freq_min, chan_widths, chan_freqs, name, sideband, baseband)
         self._init_properties(vars(),kw_ignore=['self','bandwidth'])
         intents = self.intent.split(':')
         for intent in intents:
