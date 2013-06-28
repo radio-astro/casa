@@ -19,7 +19,7 @@ from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.utils as utils
 
 LOG = infrastructure.get_logger(__name__)
-
+DISABLE_PLOTMS = True
 
 
 class SummaryDisplayInputs(basetask.StandardInputs):
@@ -115,6 +115,10 @@ class AzElChart(object):
         self.figfile = self._get_figfile()
 
     def plot(self):
+        if DISABLE_PLOTMS:
+            LOG.info('Disabling AzEl plot due to problems with plotms')
+            return None
+
         if os.path.exists(self.figfile):
             return self._get_plot_object()
 
@@ -180,6 +184,10 @@ class ElVsTimeChart(object):
         self.figfile = self._get_figfile()
 
     def plot(self):
+        if DISABLE_PLOTMS:
+            LOG.info('Disabling ElVsTime plot due to problems with plotms')
+            return None
+    
         if os.path.exists(self.figfile):
             return self._get_plot_object()
 
