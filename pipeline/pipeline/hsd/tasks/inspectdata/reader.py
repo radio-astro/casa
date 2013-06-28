@@ -24,7 +24,15 @@ class DataTableReader(object):
     def get_datatable(self):
         return self.datatable
 
-    def execute(self, name):
+    def set_name(self, name):
+        self.name = name
+        
+    def execute(self, dry_run=True):
+        if dry_run:
+            return
+        
+        name = self.name
+        
         Rad2Deg = 180. / 3.141592653
         
         LOG.info('name=%s'%(name))

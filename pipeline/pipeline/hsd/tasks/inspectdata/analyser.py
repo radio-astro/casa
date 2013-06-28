@@ -17,7 +17,10 @@ class DataTableAnalyser(object):
         self.scantablelist = scantablelist
         self.datatable = datatable
 
-    def execute(self):
+    def execute(self, dry_run=True):
+        if dry_run:
+            return
+        
         self.analyse_reduction_group()
         self.analyse_calibration()
         self.analyse_beam_size()

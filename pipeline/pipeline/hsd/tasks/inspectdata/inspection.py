@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import re
 
 import pipeline.infrastructure as infrastructure
-from pipeline.infrastructure import JobRequest
 from pipeline.domain.datatable import DataTableImpl as DataTable
 from .. import common
 from . import reader
@@ -98,11 +97,11 @@ class SDInspectData(common.SingleDishTaskTemplate):
         infiles = inputs.infiles
         if isinstance(infiles, list):
             for f in infiles:
-                job = JobRequest(worker.execute, name=f)
-                self._executor.execute(job)
+                worker.set_name(f)
+                self._executor.execute(worker, merge=False)
         else:
-            job = JobRequest(worker.execute, name=infiles)
-            self._executor.execute(job)
+            worker.set_name(infiles)
+            self._executor.execute(worker, merge=False)
 
         # done, restore scantable.storage
         sd.rcParams['scantable.storage'] = storage_save
@@ -131,8 +130,7 @@ class SDInspectData(common.SingleDishTaskTemplate):
                                             datatable)
 
         # analyse datatable with observing_run
-        job = JobRequest(worker.execute)
-        self._executor.execute(job)
+        self._executor.execute(worker, merge=False)
 
         # update result
         result.outcome['position_group'] = worker.posgrp
