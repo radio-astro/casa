@@ -651,15 +651,20 @@ class Results(api.Results):
         # execute our template function
         self.merge_with_context(context, **other_parameters)
 
-        # Create a proxy for this result, pickling the result to the appropriate
-        # weblog stage directory. We write the result to disk rather than attach
-        # it to the proxy to keep the context size at a minimum.
-        proxy = ResultsProxy(context)
-        proxy.write(self)
-
+        if context.subtask_counter is 0:
+            # If accept() is called at the end of a task as signified by the
+            # subtask counter, we should create a proxy for this result and
+            # pickle it to the appropriate weblog stage directory. This keeps
+            # the context size at a minimum.
+            proxy = ResultsProxy(context)
+            proxy.write(self)
+            result = proxy
+        else:
+            result = self
+    
         # with no exceptions thrown by this point, we can safely add this 
         # results object to the results list
-        context.results.append(proxy)
+        context.results.append(result)
 
         if context.subtask_counter is 0 and not DISABLE_WEBLOG:
             # cannot import at initial import time due to cyclic dependency
