@@ -693,7 +693,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
       trc1 = psf2DShape(1)/2 + supportSize;
 
 
-    os << "####### " << blc0 << " " << blc1 << " " << trc0 << " " << trc1 << endl;
+    //    os << "####### " << blc0 << " " << blc1 << " " << trc0 << " " << trc1 << endl;
     for (Int i=blc0; i < trc0; i++)
       for (Int j=blc1 ; j < trc1; j++)
 	if ((maxAbs = abs(lattice(i,j))) > maxVal)
@@ -701,7 +701,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
 	    maxVal = maxAbs;
 	    posMaxAbs(0)=i; posMaxAbs(1)=j;
 	  }
-    os << "######## " << posMaxAbs << " " << maxVal << endl;
+    //    os << "######## " << posMaxAbs << " " << maxVal << endl;
     return True;
   }
 
