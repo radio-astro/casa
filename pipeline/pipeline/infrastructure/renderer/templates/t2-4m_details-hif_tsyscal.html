@@ -1,0 +1,30 @@
+<%!
+import os
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+%>
+<%inherit file="t2-4m_details-base.html"/>
+
+<%block name="title">T<sub>sys</sub> Calibration</%block>
+
+	<h2>Plots</h2>
+% for ms in summary_plots:
+	<h4><a class="replace" href="${os.path.relpath(os.path.join(dirname, 'tsys_%s.html' % ms), pcontext.report_dir)}">${ms}</a></h4>
+	<ul class="thumbnails">
+	% for plot in summary_plots[ms]:
+		<li class="span3">
+		  	<div class="thumbnail">
+				<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}">
+					<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+						 title="Time-averaged Tsys for Spectral Window ${plot.parameters['spw']}"
+						 alt="Time-averaged Tsys for Spectral Window ${plot.parameters['spw']}" />
+			    </a>
+			    <div class="caption">
+					<h4>Spectral Window ${plot.parameters['spw']}</h4>
+					<p>Plot of time-averaged T<sub>sys</sub> for ${ms} spectral
+					window ${plot.parameters['spw']}, coloured by antenna.</p>
+				</div>
+			</div>
+		</li>
+	% endfor
+	</ul>
+%endfor

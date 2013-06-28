@@ -43,7 +43,7 @@ class FluxCalibrationResults(basetask.Results):
             measurements = self._adopt_measurements(ms, foreign_field)
 
             # TODO this prints twice - fix it
-            LOG.info('Setting flux density measurements for {field} '
+            LOG.info('Recording flux density measurements for {field} '
                      'in {vis}:\n\t{measurements}'.format(
                 field=','.join([f.identifier for f in fields]),
                 vis=ms.basename,

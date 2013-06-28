@@ -289,6 +289,12 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         d = {}
         for key in kw_names:
             d[key] = getattr(self, key)
+
+#         # add any read-only properties too
+#         predicate = lambda m : m.__class__.__name__ == 'property' and type(m.fset) is types.NoneType
+#         ro = [(n, p) for (n, p) in inspect.getmembers(self._active, 
+#                                                       predicate)]  
+        
         return d
 
     def _handle_multiple_vis(self, property_name):
@@ -304,6 +310,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
         original = self.vis
         # tell vis not to reset my_vislist when setting vis to the individual
         # measurement sets
+        LOG.trace('setting VISLIST_RESET_KEY for _handle_multiple_vis(' + property_name + ')')
         setattr(self, VISLIST_RESET_KEY, True)
         try:
             result = []
@@ -313,6 +320,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
             return result
         finally:
             self.vis = original
+            LOG.trace('Deleting VISLIST_RESET_KEY after _handle_multiple_vis(' + property_name + ')')
             delattr(self, VISLIST_RESET_KEY)
     
     def to_casa_args(self):
@@ -773,7 +781,7 @@ class StandardTaskTemplate(api.Task):
     """
     StandardTaskTemplate is a template class for pipeline reduction tasks whose 
     execution can be described by a common four-step process:
-    
+
     #. prepare(): examine the measurement set and prepare a list of\
         intermediate job requests to be executed.
     #. execute the jobs
@@ -782,19 +790,19 @@ class StandardTaskTemplate(api.Task):
         return these results.
     #. return a final list of jobs to be executed using these best-fit\
         parameters.
-    
+
     Simpletask implements the :class:`Task` interface and steps 2 and 4 in the
     above process, leaving subclasses to implement
     :func:`~SimpleTask.prepare` and :func:`~SimpleTask.analyse`.    
 
-    
+
     A Task and its :class:`Inputs` are closely aligned. It is anticipated that 
     the Inputs for a Task will be created using the :attr:`Task.Inputs`
     reference rather than locating and instantiating the partner class
     directly, eg.::
-        
+
         i = ImplementingTask.Inputs.create_from_context(context)
-    
+
 
     """
     __metaclass__ = abc.ABCMeta
@@ -813,7 +821,7 @@ class StandardTaskTemplate(api.Task):
     def prepare(self, **parameters):
         """
         Prepare job requests for execution.
-        
+
         :param parameters: the parameters to pass through to the subclass.
             Refer to the implementing subclass for specific information on
             what these parameters are.            
@@ -834,7 +842,7 @@ class StandardTaskTemplate(api.Task):
             :class:`~pipeline.api.Result`
         """
         raise NotImplementedError
-    
+
     def _copy(self, original):
         LOG.trace('Cloning {0} for {1} task'.format(
             original.__class__.__name__, self.__class__.__name__))
@@ -850,13 +858,13 @@ class StandardTaskTemplate(api.Task):
         """
         Merge jobs that are identical apart from the arguments named in
         ignore. These jobs will be recreated with  
-        
+
         Identical tasks are identified by creating a hash of the dictionary
         of task keyword arguments, ignoring keywords specified in the 
         'ignore' argument. Jobs with the same hash can be merged; this is done
         by appending the spw argument of job X to the spw argument of memoed
         job Y, whereafter job X can be discarded.  
-        
+
         :param jobs: the job requests to merge
         :type jobs: a list of\ 
             :class:`~pipeline.infrastructure.jobrequest.JobRequest`
@@ -867,12 +875,12 @@ class StandardTaskTemplate(api.Task):
         :type ignore: an iterable containing strings
 
         :rtype: a list of \
-            :class:`~pipeline.infrastructure.jobrequest.JobRequest`        
-        """        
+            :class:`~pipeline.infrastructure.jobrequest.JobRequest`
+        """
         # union stores the property names that to ignore while calculating the
         # job hash
         union = frozenset(itertools.chain.from_iterable((merge, ignore)))
-        
+
         hashes = ordereddict.OrderedDict()
         for job in jobs:
             job_hash = job.hash_code(ignore=union)
@@ -888,7 +896,7 @@ class StandardTaskTemplate(api.Task):
                     hashes[job_hash] = task(**new_job_args)
 
         return hashes.values()
-    
+
     @timestamp
     @capture_log
     def execute(self, dry_run=True, **parameters):
@@ -899,20 +907,30 @@ class StandardTaskTemplate(api.Task):
         filenamer.NamingTemplate.dry_run = dry_run
 
         # knowing when to increment the stage counter becomes interesting when
-        # the task spawns sub-tasks. In these circumstances, we don't want to 
-        # increment the stage number, but instead want to increment the 
+        # the task spawns sub-tasks. In these circumstances, we don't want to
+        # increment the stage number, but instead want to increment the
         # sub-stage number.
         self.inputs.context.subtask_counter += 1
+
+        # Set the task name, but only if this is a top-level task. This name
+        # will be prepended to every data product name as a sign of their
+        # origin
+        if self.inputs.context.subtask_counter is 1:
+            filenamer.NamingTemplate.task = self.__class__.__name__
 
         # Create a copy of the inputs - including the context - and attach
         # this copy to the Inputs. Tasks can then merge results with this
         # duplicate context at will, as we'll later restore the originals.
         original_inputs = self.inputs
-        self.inputs = self._copy(original_inputs)        
- 
+        self.inputs = self._copy(original_inputs)
+
         # create a job executor that tasks can use to execute subtasks
         self._executor = Executor(self.inputs.context, dry_run)
-        
+
+        # create a new log handler that will capture all messages above
+        # WARNING level.
+        handler = logging.CapturingHandler(logging.WARNING)
+
         try:
             # if this task does not handle multiple input mses but was 
             # invoked with multiple mses in its inputs, call our utility
@@ -920,7 +938,7 @@ class StandardTaskTemplate(api.Task):
             if (self.is_multi_vis_task() is False 
                 and type(self.inputs.vis) is types.ListType):
                 return self._handle_multiple_vis(dry_run, **parameters)
-                
+
             # We should not pass unused parameters to prepare(), so first
             # inspect the signature to find the names the arguments and then
             # create a dictionary containing only those parameters
@@ -929,39 +947,56 @@ class StandardTaskTemplate(api.Task):
             for arg in parameters:
                 if arg not in prepare_args:
                     del prepare_parameters[arg]
-            
+
+            # register the capturing log handler, buffering all messages so that
+            # we can add them to the result - and subsequently, the weblog
+            logging.add_handler(handler)
+
             # get our result
             result = self.prepare(**prepare_parameters)
 
-            # tag the result with the class of the originating task            
+            # tag the result with the class of the originating task
             result.task = self.__class__
 
             # analyse them..
             result = self.analyse(result)
-    
+
+            # add the log records to the result
+            result.logrecords = handler.buffer[:]
+
             return result
 
         finally:
             # restore the context to the original context
             self.inputs = original_inputs
-            
+
             # now the task has completed, we tell the namer not to delete again
             filenamer.NamingTemplate.dry_run = True
-            
+
             # decrement the task counter
             self.inputs.context.subtask_counter -= 1
+
+            # delete the task name once the top-level task is complete
+            if self.inputs.context.subtask_counter is 0:
+                filenamer.NamingTemplate.task = None
+
+            # now that the WARNING and above messages have been attached to the
+            # result, remove the capturing logging handler from all loggers
+            if handler:
+                logging.remove_handler(handler)
+
 
     def _handle_multiple_vis(self, dry_run, **parameters):
         """
         Handle a single task invoked for multiple measurement sets.
-        
+
         This function handles the case when the vis parameter on the Inputs
         specifies multiple measurement sets. In this situation, we want to 
         invoke the task for each individual MS. We could do this by having
         each task iterate over the measurement sets involved, but in order to
         keep the task implementations as simple as possible, that complexity
         (unless overridden) is handled by the template task instead.
-            
+
         If the task wants to handle the multiple measurement sets
         itself it should override is_multi_vis_task().
         """
@@ -990,13 +1025,15 @@ class StandardTaskTemplate(api.Task):
                 self.inputs.refant = refant_head
 
         try:
+            LOG.trace('Setting VISLIST_RESET_KEY prior to task execution')
             setattr(self.inputs, VISLIST_RESET_KEY, True)
             self.inputs.vis = head
             results = ResultsList()
             results.append(self.execute(dry_run=dry_run, **parameters))
-                    
+
             self.inputs.vis = tail
         finally:
+            LOG.trace('Deleting VISLIST_RESET_KEY after task execution')
             delattr(self.inputs, VISLIST_RESET_KEY)
 
         for name, ht in split_properties.items():
@@ -1054,7 +1091,7 @@ class Executor(object):
                 cmdfile.write('%s\n' % job)
 
         # execute the job, capturing its results object                
-        result = job.execute(dry_run=self._dry_run)        
+        result = job.execute(dry_run=self._dry_run)
         
         # if requested, merge the result with the context. No type checking
         # here.

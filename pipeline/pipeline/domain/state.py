@@ -3,6 +3,7 @@ import pipeline.infrastructure as infrastructure
 
 LOG = infrastructure.get_logger(__name__)
 
+
 class State(object):
     # Check whether these states co-exist with PHASE
     _PHASE_BYPASS_INTENTS = frozenset(('BANDPASS','AMPLITUDE'))
@@ -14,7 +15,7 @@ class State(object):
 
     def __setstate__(self, state):
         self.id, self.obs_mode = state
-        
+    
     # dictionary to map from STATE table obs_mode to pipeline intent
     obs_mode_mapping = {
         'CALIBRATE_BANDPASS#ON_SOURCE'       : 'BANDPASS',
@@ -53,7 +54,9 @@ class State(object):
     
     def __init__(self, state_id, obs_mode, is_cycle0=False):
         self.id = state_id
-        self.obs_mode = obs_mode
+        # work around NumPy bug with empty strings
+        # http://projects.scipy.org/numpy/ticket/1239
+        self.obs_mode = str(obs_mode)
         
         if 'CALIBRATE_FLUX' in obs_mode:
             LOG.info('Translating %s intent to AMPLITUDE for '
@@ -128,4 +131,3 @@ class State(object):
 
     def __repr__(self):
         return 'State(id={0}, intents={1})'.format(self.id, self.intents)
-

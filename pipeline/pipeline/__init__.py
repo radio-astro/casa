@@ -2,12 +2,12 @@ from __future__ import absolute_import
 import inspect
 import imp
 import os
+import string
+import subprocess
 import sys
-import types
 import webbrowser
 
 from . import infrastructure
-from . import domain
 
 from . import h
 from . import hco
@@ -27,7 +27,7 @@ def _all_subclasses(cls):
     '''
     return cls.__subclasses__() + [g for s in cls.__subclasses__()
                                     for g in _all_subclasses(s)]
-    
+
 def _get_unified_task_module(packages):
     '''
     Create a new module containing all tasks in the given packages.
@@ -35,7 +35,7 @@ def _get_unified_task_module(packages):
     module = imp.new_module('pipeline.tasks')
 
     task_classes = _all_subclasses(infrastructure.api.Task)
-    for pkg in packages:            
+    for pkg in packages:
         tasks = dict((k, v) for k, v in pkg.__dict__.items()
                      if v in task_classes)
         for k, v in tasks.items():
@@ -49,9 +49,10 @@ tasks = _get_unified_task_module([h.tasks, hif.tasks, hco.tasks, hsd.tasks])
 def show_weblog(context):
     if context is None:
         return
-    
+
     index_html = os.path.join(context.report_dir, 't1-1.html')
     webbrowser.open(index_html)
+
 
 def initcli() :
     print "Initializing cli..."
@@ -64,3 +65,21 @@ def initcli() :
     execfile(hpath, myglobals)
     execfile(hifpath, myglobals)
     execfile(hsdpath, myglobals)
+
+
+# find pipeline revision using svnversion
+def _get_revision():
+    try:
+        args = ['svnversion', os.path.dirname(__file__)]
+        p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, shell=True)
+        (stdout, _) = p.communicate()
+        if p.returncode is 0:
+            return string.strip(stdout)
+        else:
+            return 'Unknown'
+    except:
+        return 'Unknown'
+
+
+revision = _get_revision()

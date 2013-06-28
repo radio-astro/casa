@@ -25,6 +25,7 @@ _known_intents = {'BANDPASS'  : 'bp',
 class FileNameComponentBuilder(object):
     def __init__(self):
         self._asdm = None
+        self._task = None
         self._extension = None
         self._format = None
         self._intent = None
@@ -49,6 +50,8 @@ class FileNameComponentBuilder(object):
         # The file names will be assembled using the order of the attributes 
         # given here
         attributes = (os.path.basename(self._asdm),
+                      self._task,
+                      self._stage,
                       '_'.join([x for x in (self._source, self._intent) if x is not None]),
                       self._spectral_window,
                       self._spectral_window_nochan,
@@ -58,10 +61,9 @@ class FileNameComponentBuilder(object):
                       self._method,
                       self._solint,
                       self._smooth,
-                      self._extension,                
+                      self._extension,
                       self._iteration,
                       self._flag_marks,
-                      self._stage,
                       self._format)
         basename = '.'.join([sanitize(x) for x in attributes 
                          if x not in ('', None)])
@@ -70,9 +72,13 @@ class FileNameComponentBuilder(object):
             return os.path.join(self._output_dir, basename)
         else:
             return basename
- 
+
     def asdm(self, uid):
         self._asdm = uid
+        return self
+
+    def task(self, task):
+        self._task = task
         return self
 
     def output_dir(self, output_dir):
@@ -82,14 +88,14 @@ class FileNameComponentBuilder(object):
     def extension(self, extension):
         self._extension = extension
         return self
-    
+
     def flag_marks(self, flag_marks):
         if flag_marks is None or flag_marks == '':
             self._flag_marks = None
         else:
             self._flag_marks = 'fm' + str(flag_marks)
         return self
-        
+
     def format(self, format):
         self._format = format
         return self
@@ -113,7 +119,7 @@ class FileNameComponentBuilder(object):
         else:
             self._method = None
         return self
-        
+
     def polarization(self, polarization):
         self._polarization = polarization 
         return self
@@ -140,11 +146,11 @@ class FileNameComponentBuilder(object):
 
     def spectral_window_nochan(self, window):
         if window not in [None, 'None', '']:
-	    spw_inlist = window.split(',')
-	    spw_outlist = []
-	    for spw in spw_inlist:
-	        item = spw.split(':')[0]
-		spw_outlist.append(item)
+            spw_inlist = window.split(',')
+            spw_outlist = []
+            for spw in spw_inlist:
+                item = spw.split(':')[0]
+                spw_outlist.append(item)
             self._spectral_window = 'spw' + ','.join(spw_outlist)
         else:
             self._spectral_window = None
@@ -163,26 +169,28 @@ class FileNameComponentBuilder(object):
         else:
             self._stage = None
         return self
-    
+
     def type(self, type):
         self._type = type
         return self
-    
+
 
 class NamingTemplate(object):
     '''Base class used for all naming templates.
     '''
     dry_run = True
-    
+    task = None
+
     def __init__(self):
         self._associations = FileNameComponentBuilder()
-    
+
     def get_filename(self, delete=False):
-        '''Assembles and returns the final filename.
-        ''' 
+        '''
+        Assembles and returns the final filename.
+        '''
         filename_components = self._associations.build()
         filename = '.'.join([filename_components])
-    
+
         if delete and not NamingTemplate.dry_run:
             # .. and remove any old table with this name
             shutil.rmtree(filename, ignore_errors=True)
@@ -194,7 +202,7 @@ class NamingTemplate(object):
         '''
         self._associations.output_dir(output_dir)
         return self
-    
+
     def __repr__(self):
         return self.get_filename()
 
@@ -203,7 +211,7 @@ class ASDM(NamingTemplate):
     '''Defines the ASDM naming scheme. ASDM file names have the syntax
     <project code>.<ASDM UID>.asdm, eg. pcode.uid___X02_X3d737_X1.asdm
     '''
-    
+
     def __init__(self, other=None):
         '''Creates a new ASDM naming template. If another naming template is 
         given as a constructor argument, the new ASDM template will be 
@@ -226,7 +234,7 @@ class MeasurementSet(NamingTemplate):
     '''Defines the measurement set naming scheme. File names have the syntax
     <project code>.<ASDM UID>.ms.tbl, eg. pcode.uid___X02_X3d737_X1.ms.tbl
     '''
-    
+
     def __init__(self, other=None):
         '''Creates a new measurement set naming template. If another naming 
         template is given as a constructor argument, the new measurement set 
@@ -250,7 +258,7 @@ class FlaggingTable(NamingTemplate):
     '''Defines the flagging table naming scheme. File names have the syntax
     <ASDM UID>.flags.tbl, eg. uid___X02_X3d737_X1.flags.tbl
     '''
-    
+
     def __init__(self, other=None):
         '''Creates a new measurement set naming template. If another naming 
         template is given as a constructor argument, the new measurement set 
@@ -258,6 +266,7 @@ class FlaggingTable(NamingTemplate):
         from the given constructor argument.
         '''
         super(FlaggingTable, self).__init__()
+        self._associations.task(self.task)
         self._associations.extension('flags')
         self._associations.format('tbl')
         if other is not None:
@@ -268,7 +277,7 @@ class FlaggingTable(NamingTemplate):
         '''
         self._associations.asdm(uid)
         return self
-    
+
 
 class CalibrationTable(NamingTemplate):
     '''Defines the calibration table naming scheme. File names have the syntax
@@ -281,6 +290,7 @@ class CalibrationTable(NamingTemplate):
 
     def __init__(self, other=None):
         super(CalibrationTable, self).__init__()
+        self._associations.task(CalibrationTable.task)
         self._associations.format('tbl')
 
         # if we've been given another namer to base ourselves on, we copy only
@@ -293,7 +303,7 @@ class CalibrationTable(NamingTemplate):
             self.polarization(other._associations._polarization)
             if other._associations._extension in self._extensions:
                 self.extension(other._associations._extension)
-        
+
         # should we also copy flag_marks, method etc.?
 
     def asdm(self, uid):
@@ -304,7 +314,7 @@ class CalibrationTable(NamingTemplate):
 
     def extension(self, extension):
         '''Set the extension for this calibration table. 
-        
+
         The extension is not validated against the known set of calibration
         table extensions, so where possible it is preferable that you use one
         of the calibration type convenience methods: bandpass_cal(), 
@@ -315,7 +325,7 @@ class CalibrationTable(NamingTemplate):
 
     def flag_marks(self, flag_marks):
         '''Set the flag marks tag for this calibration table.
-        
+
         The flag marks tag is a free parameter, and is not currently part of
         the file naming scheme proposal.
         '''
@@ -324,7 +334,7 @@ class CalibrationTable(NamingTemplate):
 
     def method(self, method):
         '''Set the calibration method for this calibration table. 
-        
+
         The method argument is a free parameter, and is not currently part of
         the file naming scheme proposal. It is used to show how a particular
         calibration was calculated - in addition to the 'type' parameter that
@@ -341,7 +351,7 @@ class CalibrationTable(NamingTemplate):
 
     def solint(self, solint):
         '''Set the solution interval tag for this calibration table.
-        
+
         The solution interval tag is a free parameter, and is not currently
         part of the file naming scheme proposal.
         '''
@@ -350,13 +360,13 @@ class CalibrationTable(NamingTemplate):
 
     def smooth(self, smooth):
         '''Set the smoothing width for this calibration table.
-        
+
         The smoothing width is a free parameter, and is not currently
         part of the file naming scheme proposal.
         '''
         self._associations.smooth(smooth)
         return self
-    
+
     def spectral_window(self, window):
         self._associations.spectral_window(window)
         return self
@@ -368,7 +378,7 @@ class CalibrationTable(NamingTemplate):
     def stage(self, stage):
         self._associations.stage(stage)
         return self
-    
+
     def type(self, type):
         '''Set the type component for this calibration table. The type is not
         validated, so where possible it is preferable that you use one of the
@@ -470,7 +480,7 @@ class Image(NamingTemplate):
 
     def flag_marks(self, flag_marks):
         '''Set the flag marks tag for this image.
-        
+
         The flag marks tag is a free parameter, and is not currently part of
         the file naming scheme proposal.
         '''
@@ -575,16 +585,18 @@ class Image(NamingTemplate):
     def science(self):
         return self.intent('sci')
 
+
 class MosaicImage(Image):
 
     def flag_marks(self, flag_marks):
         '''Set the flag marks tag for this image.
-        
+
         The flag marks tag is a free parameter, and is not currently part of
         the file naming scheme proposal.
         '''
 #        self._associations.flag_marks(flag_marks)
         return self
+
 
 class BandpassCalibrationTable(CalibrationTable):
     def __init__(self, other=None):

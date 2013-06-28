@@ -1,17 +1,10 @@
 <%!
-rsc_path = "../"
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
-<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
-<ul>
-	<li>Initial display: most important details</li>
-	<ul>
-		<li>Heuristics parameters</li>
-		<li>Plots</li>
-		<li>Images</li>
-		<li>Tables</li>
-	</ul>
-	<li>Display maximum detail in this panel, similar to previous incarnation of pipeline; use different background colour; back button will go back to initial display</li>
-</ul>
+<%block name="header" />
+
+<%block name="title">${hr.get_task_description(result)}</%block>
+
+Sorry, this task does not have a results template.

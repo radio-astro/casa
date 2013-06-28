@@ -1,5 +1,5 @@
 <%!
-rsc_path = "../"
+rsc_path = ""
 
 import os.path
 import pydoc
@@ -17,11 +17,8 @@ import pipeline.infrastructure.renderer.rendererutils as hrutils
 LOG = infrastructure.get_logger(__name__)
 %>
 <%inherit file="t2-4m_details-base.html"/>
-<%block name="header" />
 
-<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
-
-<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+<%block name="title">Flag antennas with low gain</%block>
 
 ## generate the plots
 <%
@@ -73,7 +70,7 @@ except Exception, e:
 <ul>
         % for plot_group in plot_groups:
 	        % if plot_group.title == 'Time vs Antenna1':
-		   <li><a href=${plot_group.filename}>${plot_group.title}</a>
+		   <li><a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
                    shows the images used for flagging.</li>
                 % endif
         % endfor
@@ -82,15 +79,19 @@ except Exception, e:
 
 % if htmlreports:
 <h2>Flags</h2>
-<table border="1">
-    <tr>
-        <td>Flagcmds</td>
-    </tr>
-    % for file,report in htmlreports.items():
-    <tr>
-        <td><a href=${report}>${file}</a></td>
-    </tr>
-    % endfor
+<table class="table table-bordered">
+	<thead>
+	    <tr>
+    	    <th>Flagcmds</th>
+    	</tr>
+    </thead>
+    <tbody>
+	    % for file,report in htmlreports.items():
+	    <tr>
+	        <td><a class="replace" href=${report}>${file}</a></td>
+	    </tr>
+	    % endfor
+	</tbody>
 </table>
 % endif
 

@@ -73,6 +73,34 @@ class SliceDisplay(object):
             if not plot_result:
                 continue
 
+
+            # bug here somewhere - pol has 3 possible values for Tsyscal;
+            # None, Pol1 or Pol2 but only None and Pol1 get displayed as
+            # buttons.
+            # Not fixed as reporting is to be rewritten.
+            # save the image (remove odd characters from filename to cut
+            # down length)
+            xtitle = results.first(description).axis.name
+            ytitle = results.first(description).datatype
+            plotfile = '%s_%s_v_%s_%s.png' % (
+              results.first(description).datatype, ytitle, xtitle,
+              description)
+            plotfile = sanitize(plotfile)
+            plotfile = os.path.join(reportdir, plotfile)
+
+            plot = logger.Plot(plotfile, x_axis=xtitle, y_axis=ytitle,
+              field=results.first(description).fieldname,
+              parameters={ 'spw': results.first(description).spw,
+              'pol': results.first(description).pol,
+              'ant': results.first(description).ant[1],
+              'type': results.first(description).datatype,
+              'file': os.path.basename(results.first(description).filename)})
+            plots.append(plot)
+
+            if os.path.exists(plotfile):
+                LOG.trace('Not overwriting existing image at %s' % plotfile)
+                continue
+
             # do the plot
             if results.flagging:
                 nsubplots = 3
@@ -164,32 +192,10 @@ class SliceDisplay(object):
             plt.axis([0, 1, 0, 1])
             plt.axis('off')
 
-            # save the image (remove odd characters from filename to cut
-            # down length)
-            xtitle = results.first(description).axis.name
-            ytitle = results.first(description).datatype
-            plotfile = '%s_%s_v_%s_%s.png' % (
-              results.first(description).datatype, ytitle, xtitle,
-              description)
-            plotfile = sanitize(plotfile)
-            plotfile = os.path.join(reportdir, plotfile)
             plt.savefig(plotfile)
 
             plt.clf()
             plt.close(1)
-
-            # bug here somewhere - pol has 3 possible values for Tsyscal;
-            # None, Pol1 or Pol2 but only None and Pol1 get displayed as
-            # buttons.
-            # Not fixed as reporting is to be rewritten.
-            plot = logger.Plot(plotfile, x_axis=xtitle, y_axis=ytitle,
-              field=results.first(description).fieldname,
-              parameters={ 'spw': results.first(description).spw,
-              'pol': results.first(description).pol,
-              'ant': results.first(description).ant,
-              'type': results.first(description).datatype,
-              'file': os.path.basename(results.first(description).filename)})
-            plots.append(plot)
 
         return plots
 

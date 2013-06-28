@@ -205,3 +205,57 @@ def set_logging_level(level='info'):
         
     casa_level = CASALogHandler.get_casa_priority(level_no)
     casatools.log.filter(casa_level)
+    
+
+def add_handler(handler):
+    '''
+    Add given handler to all registered loggers.
+    '''
+    for l in _loggers:
+        l.addHandler(handler)
+
+        
+def remove_handler(handler):
+    '''
+    Remove specified handler from all registered loggers. 
+    '''
+    for l in _loggers:
+        l.removeHandler(handler)
+       
+       
+class CapturingHandler(logging.Handler):
+    '''
+    A handler class which buffers logging records above a certain threshold
+    in memory.
+    '''
+    def __init__(self, level=WARNING):
+        '''
+        Initialize the handler.
+        '''
+        logging.Handler.__init__(self, level)
+        self.buffer = []
+
+    def emit(self, record):
+        '''
+        Emit a record.
+
+        Append the record to the buffer.
+        '''
+        self.buffer.append(record)
+
+    def flush(self):
+        '''
+        Override to implement custom flushing behaviour.
+
+        This version just zaps the buffer to empty.
+        '''
+        self.buffer = []
+
+    def close(self):
+        '''
+        Close the handler.
+
+        This version just flushes and chains to the parent class' close().
+        '''
+        self.flush()
+        logging.Handler.close(self)

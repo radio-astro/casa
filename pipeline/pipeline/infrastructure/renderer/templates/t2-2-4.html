@@ -1,57 +1,45 @@
-<%inherit file="base.html"/>
-
-<%block name="title">Sky Setup Details</%block>
-
-<script>
-$(document).ready(function(){
-	$("a.grouped_elements").fancybox();
-});
-</script>
-
-<h1>Sky Setup Details</h1>
-
-<h2>Az/El Tracks</h2>
-% if azel_plots:
-<div class="gallery">
-	<ul>
-		% for (ms, plot) in azel_plots:
-		<li>
-		<a class="grouped_elements" rel="azel" href="session${ms.session}/${ms.basename}/azel.png">
-			<img src="session${ms.session}/${ms.basename}/azel.png"
-				 title="Elevation vs. Azimuth for ${ms.basename}"
-				 alt="Elevation vs. Azimuth for ${ms.basename}" />
-			<p>${ms.basename}</p>
-		</a>
-		</li>
-		% endfor
-	</ul>
+<%!
+import os
+%>
+<div class="page-header">
+	<h1>Sky Setup Details</h1>
 </div>
-% else:
-<p>No plots available.</p>
-% endif
 
-<h2>Elevation vs. Time</h2>
-% if ev_vs_time_plots:
-<div class="gallery">
-	<ul>
-		% for (ms, plot) in el_vs_time_plots:
-		<li>
-		<a class="grouped_elements" rel="el_vs_time" href="session${ms.session}/${ms.basename}/el_vs_time.png">
-			<img src="session${ms.session}/${ms.basename}/el_vs_time.png"
-				 title="Elevation vs. Time for ${ms.basename}"
-				 alt="Elevation vs. Time for ${ms.basename}" />
-			<p>${ms.basename}</p>
-		</a>
-		</li>
-		% endfor
-	</ul>
-</div>
-% else:
-<p>No plots available.</p>
+<ul class="thumbnails">
+% if azel_plot:
+	<li class="span3">
+	  	<div class="thumbnail">
+			<a href="${os.path.join(dirname, azel_plot.basename)}" 
+			   class="fancybox">
+				<img src="${os.path.join(dirname, azel_plot.thumbnail)}"
+					 title="Elevation vs. Azimuth for ${ms.basename}"
+					 alt="Elevation vs. Azimuth for ${ms.basename}" />
+		    </a>
+		    <div class="caption">
+				<h4>Az/El</h4>
+				<p>Elevation vs. azimuth for ${ms.basename}.</p>
+			</div>
+		</div>
+	</li>
+% endif	
+% if el_vs_time_plot:
+	<li class="span3">
+	  	<div class="thumbnail">
+			<a href="${os.path.join(dirname, el_vs_time_plot.basename)}" 
+			   class="fancybox">
+				<img src="${os.path.join(dirname, el_vs_time_plot.thumbnail)}"
+					 title="Elevation vs. Time for ${ms.basename}"
+					 alt="Elevation vs. Time for ${ms.basename}" />
+		    </a>
+		    <div class="caption">
+				<h4>Elevation/Time</h4>
+				<p>Elevation vs. time for ${ms.basename}.</p>
+			</div>
+		</div>
+	</li>
 % endif
-
-<ul>
-<li>El histogram (number vs. el.bins) global and per ASDM</li>
 </ul>
 
-<%block name="footer"><a href="t1-2.html">Back to Observation Summary</a></%block>
+<ul>
+<li class="muted">TODO: El histogram (number vs. el.bins) global and per ASDM</li>
+</ul>

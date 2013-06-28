@@ -1,17 +1,15 @@
 <%!
-rsc_path = "../"
+rsc_path = ""
+import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="t2-4m_details-base.html"/>
 <%block name="header" />
 
-<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
-
-<h1>Stage ${hr.get_stage_number(result)}: WVR Calibration and Flagging</h1>
+<%block name="title">WVR Calibration and Flagging</%block>
 
 <h2>Flagging results</h2>
-
-<table class="minimalist" summary="Flagging Results">
+<table class="table table-bordered" summary="Flagging Results">
 	<caption>Flagging Results</caption>
     <thead>
         <tr>
@@ -32,8 +30,8 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 % if plot_groups:
 <h2>Flag Plots</h2>
 <ul>
-% for plot_group in plot_groups: 
-	<li><a href=${plot_group.filename}>${plot_group.title}</a></li>
+% for plot_group in plot_groups:
+	<li><a class="replace" href="${os.path.join(dirname, plot_group.filename)}"}>${plot_group.title}</a></li>
 % endfor
 </ul>
 % endif

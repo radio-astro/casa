@@ -7,6 +7,7 @@ import numpy
 import simutil
 
 import pipeline.infrastructure.casatools as casatools
+from . import measures
     
 Baseline = collections.namedtuple('Baseline', 'antenna1 antenna2 length')
 
@@ -90,10 +91,12 @@ class AntennaArray(object):
         
         baselines = []
         for (ant1, ant2) in itertools.combinations(self.antennas, 2):
-            length = math.sqrt(diff(ant1, ant2, 'm0')**2 + 
-                               diff(ant1, ant2, 'm1')**2 + 
-                               diff(ant1, ant2, 'm2')**2)
-            baselines.append(Baseline(ant1, ant2, length))
+            raw_length = math.sqrt(diff(ant1, ant2, 'm0')**2 + 
+                                   diff(ant1, ant2, 'm1')**2 + 
+                                   diff(ant1, ant2, 'm2')**2)
+            domain_length = measures.Distance(raw_length, 
+                                              measures.DistanceUnits.METRE)
+            baselines.append(Baseline(ant1, ant2, domain_length))
 
         if len(baselines) == 0:
             baselines.append(Baseline(self.antennas[0], self.antennas[0], 0.0))
@@ -123,7 +126,11 @@ class AntennaArray(object):
         ant_z = qa.getvalue(antenna.position['m2'])[0]
 
         xs, ys = s.itrf2loc((ant_x,), (ant_y,), (ant_z,), cx, cy, cz)
-        return (xs[0], ys[0])
+
+        x_offset = measures.Distance(xs[0], measures.DistanceUnits.METRE)
+        y_offset = measures.Distance(ys[0], measures.DistanceUnits.METRE)
+
+        return (x_offset, y_offset)
     
     def add_antenna(self, antenna):
         self.antennas.append(antenna)

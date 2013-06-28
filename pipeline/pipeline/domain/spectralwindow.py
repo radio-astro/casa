@@ -41,18 +41,21 @@ class SpectralWindow(object):
     """
     
     __slots__ = ('id', 'band', 'bandwidth', 'channels', 'group', 'intents',
-                 'ref_frequency')
+                 'ref_frequency', 'name', 'baseband', 'sideband')
 
     def __getstate__(self):
         return (self.id, self.band, self.bandwidth, self.channels, self.group,
-            self.intents, self.ref_frequency)
+            self.intents, self.ref_frequency, self.name, self.baseband, 
+            self.sideband)
 
     def __setstate__(self, state):
         (self.id, self.band, self.bandwidth, self.channels, self.group,
-            self.intents, self.ref_frequency) = state
+            self.intents, self.ref_frequency, self.name, self.baseband, 
+            self.sideband) = state
     
     def __init__(self, spw_id, bandwidth, ref_frequency, chan_widths, 
-                 chan_freqs, group=None, band='Unknown'):
+                 chan_freqs, name, sideband, baseband, group=None, 
+                 band='Unknown'):
         self.id = spw_id
         self.bandwidth = measures.Frequency(bandwidth,
                                             measures.FrequencyUnits.HERTZ)
@@ -61,6 +64,12 @@ class SpectralWindow(object):
         self.group = group
         self.intents = set()
         self.band = band
+
+        # work around NumPy bug with empty strings
+        # http://projects.scipy.org/numpy/ticket/1239
+        self.name = str(name)
+        self.sideband = str(sideband)
+        self.baseband = str(baseband)
         
         channels = []
         for (centre, width) in zip(chan_freqs, chan_widths):

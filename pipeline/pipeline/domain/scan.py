@@ -25,14 +25,13 @@ class Scan(object):
 
     def __repr__(self):
         mt = casatools.measures
-        qt = casatools.quanta
         return ('<Scan #{id}: intents=\'{intents}\' start=\'{start}\' '
                 'end=\'{end}\' duration=\'{duration}\'>'.format(
                     id=self.id,
                     intents=','.join(self.intents),
                     start=mt.show(self.start_time), 
                     end=mt.show(self.end_time), 
-                    duration=qt.tos(self.time_on_source)))
+                    duration=str(self.time_on_source)))
 
     @property
     def start_time(self):
@@ -44,8 +43,12 @@ class Scan(object):
 
     @property
     def time_on_source(self):
-        qt = casatools.quanta
-        return reduce(qt.add, [s[2] for s in self.scan_times])
+        # adding up the scan exposures does not give us the total time on 
+        # source. Instead we should simply subtract the scan end time from the 
+        # scan start time to calculate the total time
+        start = utils.get_epoch_as_datetime(self.start_time)
+        end = utils.get_epoch_as_datetime(self.end_time)
+        return end - start
 
     @property
     def mean_exposure(self):

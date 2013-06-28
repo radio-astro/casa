@@ -1,5 +1,5 @@
 <%!
-rsc_path = "../"
+rsc_path = ""
 import operator
 import os
 
@@ -8,17 +8,14 @@ import pipeline.infrastructure.utils as utils
 %>
 <%inherit file="t2-4m_details-base.html"/>
 
-<%block name="header" />
+<%block name="title">Phase-up bandpass calibration</%block>
 
-<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
-
-<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
 % if plot_groups:
-<li>Plots</li>
+<h2>Plots</h2>
 <ul>
 	% for plot_group in plot_groups:
 		<li>
-			<a href=${plot_group.filename}>${plot_group.title}</a>
+			<a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
 		</li>
 	% endfor
 </ul>

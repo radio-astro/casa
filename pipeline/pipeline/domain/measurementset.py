@@ -10,6 +10,7 @@ import types
 import numpy
 
 from . import spectralwindow
+from . import measures
 import pipeline.extern.pyparsing as pyparsing
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.utils as utils
@@ -216,6 +217,20 @@ class MeasurementSet(object):
         self.reference_spwmap= None
         self.flagcmds = []
         self.session = session
+        self.filesize = self._calc_filesize() 
+
+    def _calc_filesize(self):
+        '''
+        Calculate the disk usage of this measurement set.
+        '''
+        total_bytes = 0
+        for dirpath, _, filenames in os.walk(self.name):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                total_bytes += os.path.getsize(fp)
+    
+        return measures.FileSize(total_bytes, 
+                                 measures.FileSizeUnits.BYTES)
     
     def __repr__(self):
         return 'MeasurementSet({0})'.format(self.name)

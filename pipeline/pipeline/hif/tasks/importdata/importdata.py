@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import collections
 import contextlib
 import csv
+import datetime
 import itertools
 import operator
 import os
@@ -15,8 +16,9 @@ import pipeline.domain as domain
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
-from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.tablereader as tablereader
+import pipeline.infrastructure.utils as utils
+from pipeline.infrastructure import casa_tasks, casatools
 from ..common import commonfluxresults
 
 LOG = infrastructure.get_logger(__name__)
@@ -27,9 +29,9 @@ class ImportDataInputs(basetask.StandardInputs):
                  asis=None, session=None, overwrite=None, save_flagonline=None):
         self._init_properties(vars())
 
+    asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
     overwrite = basetask.property_with_default('overwrite', False)
     save_flagonline = basetask.property_with_default('save_flagonline', True)
-    asis = basetask.property_with_default('asis', 'Receiver CalAtmosphere')
 
     @property
     def session(self):
@@ -54,8 +56,8 @@ class ImportDataInputs(basetask.StandardInputs):
         raise NotImplementedError
 
     # MandatoryPipelineInputs raises an exception if vis has not been
-    # registered with the context. For an import task, the vis is never
-    # registered; to avoid the exception, we override the vis getter and 
+    # registered with the context. For an import task however, the vis is never
+    # registered. To avoid the exception, we override the vis getter and 
     # setter.
     @property
     def vis(self):
@@ -69,10 +71,17 @@ class ImportDataInputs(basetask.StandardInputs):
 
 
 class ImportDataResults(basetask.Results):
-    def __init__(self, mses=[], setjy_results=None):
+    '''
+    ImportDataResults holds the results of the ImportData task. It contains
+    the resulting MeasurementSet domain objects and optionally the additional 
+    SetJy results generated from flux entries in Source.xml.
+    '''
+    
+    def __init__(self, mses=None, setjy_results=None):
         super(ImportDataResults, self).__init__()
-        self.mses = mses
+        self.mses = [] if mses is None else mses
         self.setjy_results = setjy_results
+        self.origin = {}
         
     def merge_with_context(self, context):
         target = context.observing_run
@@ -93,11 +102,11 @@ class ImportData(basetask.StandardTaskTemplate):
     Inputs = ImportDataInputs
 
     def _ms_directories(self, names):
-        """
+        '''
         Inspect a list of file entries, finding the root directory of any
-        measurement sets present via a set of identifying files and
+        measurement sets present via a set of characteristic files and
         directories.
-        """
+        '''
         identifiers = ('SOURCE', 'FIELD', 'ANTENNA', 'DATA_DESCRIPTION')
         
         matching = [os.path.dirname(n) for n in names 
@@ -107,10 +116,10 @@ class ImportData(basetask.StandardTaskTemplate):
                     if matching.count(m) == len(identifiers)])
 
     def _asdm_directories(self, members):
-        """
+        '''
         Inspect a list of file entries, finding the root directory of any
-        ASDMs present via a set of identifying files and directories .
-        """
+        ASDMs present via a set of characteristic files and directories.
+        '''
         identifiers = ('ASDMBinary', 'Main.xml', 'ASDM.xml', 'Antenna.xml')
         
         matching = [os.path.dirname(m) for m in members 
@@ -132,7 +141,8 @@ class ImportData(basetask.StandardTaskTemplate):
             msg = 'Input data set \'{0}\' not found'.format(vis)
             LOG.error(msg)
             raise IOError, msg
-        
+
+        results = ImportDataResults()
         to_import = set()
         to_convert = set()
         to_clearcal = set()
@@ -203,9 +213,14 @@ class ImportData(basetask.StandardTaskTemplate):
         # calculate the filenames of the resultant measurement sets
         asdms = [os.path.join(inputs.output_dir, f) for f in to_convert]
 
-        # Now everything is in MS format, create a list of the MSes to import 
-        to_import.extend([self._asdm_to_vis_filename(asdm) for asdm in asdms])
-        
+        # Now everything is in MS format, create a list of the MSes to import
+        converted_asdms = [self._asdm_to_vis_filename(asdm) for asdm in asdms]
+        to_import.extend(converted_asdms)
+
+        # get the path to the MS for the converted ASDMs, which we'll later
+        # compare to ms.name in order to calculate the origin of each MS   
+        converted_asdm_abspaths = [os.path.abspath(f) for f in converted_asdms]
+
         LOG.info('Creating pipeline objects for measurement set(s) {0}'
                   ''.format(', '.join(to_import)))
         if self._executor._dry_run:
@@ -219,6 +234,9 @@ class ImportData(basetask.StandardTaskTemplate):
             LOG.debug('Setting session to %s for %s' % (inputs.session,
                                                         ms.basename))
             ms.session = inputs.session
+            
+            ms_origin = 'ASDM' if ms.name in converted_asdm_abspaths else 'MS'
+            results.origin[ms.basename] = ms_origin
 
         # get the flux measurements from Source.xml for each MS
         xml_results = get_setjy_results(observing_run.measurement_sets)
@@ -227,13 +245,167 @@ class ImportData(basetask.StandardTaskTemplate):
         # re-read from flux.csv, which will include any user-coded values
         combined_results = import_flux(inputs.context.output_dir, observing_run)
 
-        results = ImportDataResults(observing_run.measurement_sets, 
-                                    combined_results) 
-
+        results.mses.extend(observing_run.measurement_sets)
+        results.setjy_results = combined_results
+        
         return results
     
     def analyse(self, results):
+        self._check_intents(results.mses)
+        self._check_flagged_calibrator_data(results.mses)
+        self._check_model_data_column(results.mses)
+        self._check_history_column(results.mses)
+        
+        # I'm keeping _check_contiguous as a module-level function as we may
+        # need to use it when considering cross-task imports
+        LOG.todo('How long can MSes be separated and still be considered ' 
+                 'contiguous?')
+        _check_contiguous(results.mses, datetime.timedelta(hours=1))
+
+        LOG.todo('ImportData QA2: missing source.xml and calibrator unknown to ' 
+                 'CASA')
+        LOG.todo('ImportData QA2: missing BDFs')
+
         return results
+
+    def _check_model_data_column(self, mses):
+        '''
+        Check whether any of the measurement sets contain a MODEL_DATA column,
+        complaining if it is present.
+        '''
+        bad_mses = []
+
+        for ms in mses:
+            with casatools.TableReader(ms.name) as table:
+                if 'MODEL_DATA' in table.colnames():
+                    bad_mses.append(ms)
+
+        if bad_mses:
+            # log a message like 'No model columns found in a.ms, b.ms or c.ms'
+            basenames = [ms.basename for ms in bad_mses]
+            s = utils.commafy(basenames)
+            LOG.warning('Model data column found in %s' % s)
+        else:
+            # log a message like 'Model data column was found in a.ms and b.ms'
+            basenames = [ms.basename for ms in mses]
+            s = utils.commafy(basenames).replace(' and ', ' or ')
+            LOG.info('No model data column found in %s' % s)            
+
+    def _check_history_column(self, mses):
+        '''
+        Check whether any of the measurement sets has entries in the history
+        column, potentially signifying a non-pristine data set.
+        '''
+        bad_mses = []
+
+        for ms in mses:
+            history_table = os.path.join(ms.name, 'HISTORY')
+            with casatools.TableReader(history_table) as table:
+                if table.nrows() != 0:
+                    bad_mses.append(ms)
+
+        if bad_mses:
+            # log a message like 'Entries were found in the HISTORY table for 
+            # a.ms and b.ms'
+            basenames = utils.commafy([ms.basename for ms in bad_mses])
+            if len(bad_mses) is 1:
+                LOG.warning('Entries were found in the HISTORY table of %s. '
+                            'This measurement set may already be processed.'
+                            '' % basenames)
+            else:
+                LOG.warning('Entries were found in the HISTORY tables of %s. '
+                            'These measurement sets may already be processed.'
+                            '' % basenames)                
+        else:
+            # log a message like 'No history entries were found in a.ms or b.ms'
+            basenames = [ms.basename for ms in mses]
+            s = utils.commafy(basenames).replace(' and ', ' or ')
+            LOG.info('No HISTORY entries found in %s' % s)            
+
+    def _check_flagged_calibrator_data(self, mses):
+        '''
+        Check how much calibrator data has been flagged in the given measurement
+        sets, complaining if the fraction of flagged data exceeds a threshold. 
+        '''
+        LOG.todo('What fraction of flagged calibrator data should result in a '
+                 'warning?')
+        threshold = 0.10
+
+        # which intents should be checked for flagged data
+        calibrator_intents = set(['AMPLITUDE', 'BANDPASS', 'PHASE'])
+        
+        # flag for whether to print 'all scans ok' message at end
+        all_ok = True
+        
+        for ms in mses:
+            bad_scans = collections.defaultdict(list)
+            
+            # inspect each MS with flagdata, capturing the dictionary 
+            # describing the number of flagged rows 
+            flagdata_task = casa_tasks.flagdata(vis=ms.name, mode='summary')
+            flagdata_result = self._executor.execute(flagdata_task)
+
+            if not flagdata_result:
+                # no dictionary returned when operating in dry-run mode
+                continue
+
+            for intent in calibrator_intents:
+                # collect scans with the calibrator intent
+                calscans = [scan for scan in ms.scans if intent in scan.intents]
+                for scan in calscans:
+                    scan_id = str(scan.id)
+                    # read the number of flagged/total integrations from the
+                    # flagdata results dictionary
+                    flagged = flagdata_result['scan'][scan_id]['flagged']
+                    total = flagdata_result['scan'][scan_id]['total']
+                    if flagged / total >= threshold:
+                        bad_scans[intent].append(scan)
+                        all_ok = False
+
+            for intent in bad_scans:
+                scan_ids = [scan.id for scan in bad_scans[intent]]
+                multi = False if len(scan_ids) is 1 else True
+                # log something like 'More than 12% of PHASE scans 1, 2, and 7 
+                # in vla.ms are flagged'
+                LOG.warning('More than %s%% of %s scan%s %s in %s %s flagged'
+                            '' % (threshold * 100.0,
+                                  intent,
+                                  's' if multi else '',
+                                  utils.commafy(scan_ids, quotes=False),
+                                  ms.basename,
+                                  'are' if multi else 'is'))
+
+        if all_ok:
+            LOG.info('All %s scans in %s have less than %s%% flagged '
+                     'data' % (utils.commafy(calibrator_intents, False),
+                               utils.commafy([ms.basename for ms in mses]),
+                               threshold * 100.0))
+
+    def _check_intents(self, mses):
+        '''
+        Check each measurement set in the list for a set of required intents.
+        
+        TODO Should we terminate execution on missing intents?        
+        '''
+        # Required calibration intents. Warnings will be raised for any 
+        # measurement sets missing these intents 
+        required = set(['AMPLITUDE', 'BANDPASS', 'PHASE'])
+
+        all_ok = True
+
+        # analyse each MS
+        for ms in mses:
+            # do we have the necessary calibrators?
+            if not required.issubset(ms.intents):
+                missing = required.difference(ms.intents)
+                LOG.warning('%s is missing calibration intents %s'
+                            '' % (ms.basename, utils.commafy(missing)))
+                all_ok = False
+                
+        if all_ok:
+            LOG.info('All required calibration intents found in '
+                     '%s' % utils.commafy([ms.basename for ms in mses]))
+        
 
     def _analyse_filenames(self, filenames, vis):
         to_import = set()
@@ -268,7 +440,7 @@ class ImportData(basetask.StandardTaskTemplate):
         vis = self._asdm_to_vis_filename(asdm)
         outfile = os.path.join(inputs.output_dir,
                                os.path.basename(asdm) + "_flagonline.txt")
-        
+
         task = casa_tasks.importasdm(asdm=asdm,
                                      vis=vis,
                                      savecmds=inputs.save_flagonline,
@@ -276,7 +448,7 @@ class ImportData(basetask.StandardTaskTemplate):
                                      process_caldevice=False,
                                      asis=inputs.asis,
                                      overwrite=inputs.overwrite)
-        
+
         self._executor.execute(task)
 
         asdm_source = os.path.join(asdm, 'Source.xml')
@@ -293,23 +465,24 @@ def get_setjy_results(mses):
     for ms in mses:
         result = commonfluxresults.FluxCalibrationResults(ms.name)
         science_spws = ms.get_spectral_windows(science_windows_only=True)
-        
+
         for source, measurements in read_fluxes(ms).items():
             m = [m for m in measurements if m.spw in science_spws]
-            
+
             # import flux values for all fields and intents so that we can 
             # compare them to the fluxscale-derived values later in the run
 #            for field in [f for f in source.fields if 'AMPLITUDE' in f.intents]:
             for field in source.fields:
                 result.measurements[field.id].extend(m)
-        
+
         results.append(result)
-        
+
     return results
+
 
 def read_fluxes(ms):
     result = collections.defaultdict(list)
-        
+
     source_table = os.path.join(ms.name, 'Source.xml')
     if not os.path.exists(source_table):
         LOG.info('No Source XML found at %s. No flux import performed.'
@@ -331,7 +504,7 @@ def read_fluxes(ms):
         # all elements must contain data to proceed
         if None in (flux_text, frequency_text, source_id, spw_id):
             continue
-        
+
         # spws can overlap, so rather than looking up spw by frequency,
         # extract the spw id from the element text. I assume the format uses
         # underscores, eg. 'SpectralWindow_13'
@@ -348,12 +521,14 @@ def read_fluxes(ms):
 
     return result
 
+
 def get_flux_density(frequency_text, flux_text):
     frequencies = to_hertz(frequency_text)
     fluxes = to_jansky(flux_text)
 
     for freq, flux in zip(frequencies, fluxes):
         yield (freq, flux)
+
 
 def to_jansky(flux_text):
     '''
@@ -364,6 +539,7 @@ def to_jansky(flux_text):
                                               measures.FluxDensityUnits.JANSKY)
     return get_atoms(flux_text, flux_fn)
 
+
 def to_hertz(flux_text):
     '''
     Convert a string extracted from an ASDM XML element to Frequency domain 
@@ -372,6 +548,7 @@ def to_hertz(flux_text):
     freq_fn = lambda f : measures.Frequency(float(f), 
                                             measures.FrequencyUnits.HERTZ)
     return get_atoms(flux_text, freq_fn)
+
 
 def get_atoms(text, conv_fn=lambda x: x):
     '''
@@ -417,17 +594,18 @@ def grouper(n, iterable, fillvalue=None):
     args = [iter(iterable)] * n
     return itertools.izip_longest(fillvalue=fillvalue, *args)
 
+
 def export_flux_from_context(context, filename=None):
     '''
     Export flux densities stored in the given context to a CSV file.
     '''
     if not filename:
         filename = os.path.join(context.output_dir, 'flux.csv')
-        
+
     with open(filename, 'wt') as f:
         writer = csv.writer(f)
         writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V'))
-    
+
         counter = 0
         for ms in context.observing_run.measurement_sets:
             for field in ms.fields:
@@ -438,6 +616,7 @@ def export_flux_from_context(context, filename=None):
                     counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, filename))
+
 
 def export_flux_from_result(results, context, filename='flux.csv'):
     '''
@@ -462,7 +641,7 @@ def export_flux_from_result(results, context, filename='flux.csv'):
         writer = csv.writer(f)
         writer.writerow(columns)
         f.writelines(existing)
-    
+
         counter = 0
         for setjy_result in results:
             ms_name = setjy_result.vis
@@ -517,11 +696,11 @@ def import_flux(output_dir, observing_run, filename=None):
                                                   ms_name, 
                                                   os.path.basename(filename)))
                     continue
-                
+
                 fields = ms.get_fields(field_id)
                 spw = ms.get_spectral_window(spw_id)
                 measurement = domain.FluxMeasurement(spw, I, Q, U, V)
-    
+
                 # A single field identifier could map to multiple field objects,
                 # but the flux should be the same for all, so we iterate..
                 for field in fields:
@@ -529,14 +708,14 @@ def import_flux(output_dir, observing_run, filename=None):
                     # these fields..
                     map(field.flux_densities.remove,
                         [m for m in field.flux_densities if m.spw.id is spw_id])    
-                     
+
                     # .. and then updating with our new values
                     LOG.trace('Adding %s to %s' % (measurement, spw))
                     field.flux_densities.add(measurement)
                     counter += 1
             except:
                 LOG.warning('Problem importing \'%s\' as a flux statement' % row)
-                
+
         LOG.info('Imported %s flux measurements from %s' % (counter, filename))
 
         # Convert into a set of results for the web log
@@ -553,3 +732,40 @@ def import_flux(output_dir, observing_run, filename=None):
                     result.measurements[field.name].append(flux)
             results.append(result)
         return results
+
+
+def _check_contiguous(mses, tolerance=datetime.timedelta(hours=1)):
+    '''
+    Check whether observations are contiguous. 
+    '''
+    # only need to check when given multiple measurement sets
+    if len(mses) < 2:
+        return
+
+    # reorder MSes by start time
+    by_start = sorted(mses, 
+                      key=lambda m : utils.get_epoch_as_datetime(m.start_time)) 
+
+    # create an interval for each one, including our tolerance    
+    intervals = []    
+    for ms in by_start:
+        start = utils.get_epoch_as_datetime(ms.start_time)
+        end = utils.get_epoch_as_datetime(ms.end_time)
+        interval = measures.TimeInterval(start - tolerance, end + tolerance)
+        intervals.append(interval)
+
+    # check whether the intervals overlap
+    bad_mses = []
+    for i, (interval1, interval2) in enumerate(zip(intervals[0:-1], 
+                                                   intervals[1:])):
+        if not interval1.overlaps(interval2):
+            bad_mses.append(utils.commafy([by_start[i].basename,
+                                           by_start[i+1].basename]))
+
+    if bad_mses:
+        basenames = utils.commafy(bad_mses, False)
+        LOG.warning('Measurement sets %s are not contiguous. They may be '
+                    'miscalibrated as a result.' % basenames)
+    else:
+        basenames = utils.commafy([ms.basename for ms in mses])
+        LOG.info('Measurement sets %s are contiguous.' % basenames)

@@ -171,3 +171,38 @@ $(document).ready(function(){
 	    .call(xAxis);
 
 });
+
+
+/*
+ * TODO: make magnify-on-hover use something similar to the code below, removing
+ * hard-coded sizes
+ * 
+	$('ul.thumb li').hover(
+	    function() {
+	        var img = $(this).find('img'),
+	            w = img.data('width'),
+	            h = img.data('height'),
+	            position = img.data('position');
+	        img.addClass('hover').stop()
+	            .animate({
+	                opacity: '1',
+	                width: 2*w,
+	                height: 2*h,
+	                top: position.top - 0.5*h,
+	                left: position.left - 0.5*w, 
+	            }, 200);
+	    }, function() {
+	        var img = $(this).find('img'),
+	            w = img.data('width'),
+	            h = img.data('height'),
+	            position = img.data('position');
+	        img.removeClass('hover').stop()
+	            .animate({
+	                opacity: '0',
+	                width: w,
+	                height: h,
+	                top: position.top,
+	                left: position.left,
+	            }, 400);
+	    });
+*/

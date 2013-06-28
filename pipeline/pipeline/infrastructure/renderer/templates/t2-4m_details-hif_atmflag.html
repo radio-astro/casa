@@ -1,5 +1,5 @@
 <%!
-rsc_path = "../"
+rsc_path = ""
 
 import os.path
 import pydoc
@@ -16,11 +16,8 @@ import pipeline.infrastructure.renderer.rendererutils as hrutils
 LOG = infrastructure.get_logger(__name__)
 %>
 <%inherit file="t2-4m_details-base.html"/>
-<%block name="header" />
 
-<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
-
-<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+<%block name="title">Flag on atmospheric transmission</%block>
 
 ## generate the plots
 <%
@@ -69,7 +66,7 @@ except Exception, e:
 <h2>Plots</h2>
 <ul>
     % for plot_group in plot_groups:
-        <li><a href=${plot_group.filename}>${plot_group.title}</a>
+        <li><a class="replace" href="${os.path.join(dirname, plot_group.filename)}">${plot_group.title}</a>
         shows the Tsys spectra flagged in each image.</li>
     % endfor
 </ul>
@@ -77,13 +74,13 @@ except Exception, e:
 
 % if htmlreports:
 <h2>Flags</h2>
-<table border="1">
+<table class="table table-bordered">
     <tr>
         <td>Flagcmds</td>
     </tr>
     % for file,report in htmlreports.items():
     <tr>
-        <td><a href=${report}>${file}</a></td>
+        <td><a class="replace" href="${os.path.join(dirname, report)}">${file}</a></td>
     </tr>
     % endfor
 </table>

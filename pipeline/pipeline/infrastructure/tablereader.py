@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import datetime
 import itertools
 import os
+import re
 import string
 
 import numpy
@@ -129,6 +130,18 @@ class MeasurementSetReader(object):
     @staticmethod
     def add_band_to_spws(ms):
         for spw in ms.spectral_windows:
+            if 'WVR' in spw.name:
+                spw.band = 'WVR'
+                continue
+        
+            # Expected format is something like ALMA_RB_03#BB_1#SW-01#FULL_RES
+            m = re.match(r'ALMA_RB_(?P<band>\d+)', spw.name)
+            if m:
+                band_str = m.groupdict()['band']
+                band_num = int(band_str)
+                spw.band = 'ALMA Band %s' % band_num
+                continue
+            
             spw.band = BandDescriber.get_description(spw.ref_frequency, 
                     observatory=ms.antenna_array.name)
             if spw.num_channels == 4 and ms.antenna_array.name == 'ALMA':
@@ -273,7 +286,8 @@ class SpectralWindowTable(object):
     
     @staticmethod
     def _add_spectral_window(groups, spw_id, group_id, group_name, bandwidth,
-                             ref_freq, chan_width, chan_freqs):
+                             ref_freq, chan_width, chan_freqs, name, sideband,
+                             baseband):
         # ensure that group names are Python str strings, other string 
         # flavours such as numpy can cause trouble with pickling. Also
         # construct names if none set, otherwise all SpW get lumped into a
@@ -288,7 +302,7 @@ class SpectralWindowTable(object):
 
         # create and add a new SpectralWindow to the frequency group
         spw = domain.SpectralWindow(spw_id, bandwidth, ref_freq, chan_width,
-                                    chan_freqs)
+                                    chan_freqs, name, sideband, baseband)
         group.add_spw(spw)
         
         return spw
@@ -302,13 +316,20 @@ class SpectralWindowTable(object):
         spectral_window_table = os.path.join(ms, 'SPECTRAL_WINDOW')        
         with utils.open_table(spectral_window_table) as table:
             group_ids = table.getcol('FREQ_GROUP')
-            names = table.getcol('FREQ_GROUP_NAME')
+            group_names = table.getcol('FREQ_GROUP_NAME')
             bandwidths = table.getcol('TOTAL_BANDWIDTH')
             ref_frequency = table.getcol('REF_FREQUENCY')
             vchan_widths = table.getvarcol('CHAN_WIDTH')
             vchan_freqs = table.getvarcol('CHAN_FREQ')
             spw_ids = range(len(group_ids))
+            names = table.getcol('NAME')
+            sidebands = table.getcol('NET_SIDEBAND')
 
+            if 'BBC_NO' in table.colnames():
+                basebands = table.getcol('BBC_NO')
+            else:
+                basebands = [None] * table.ncols()
+             
             chan_widths = []
             chan_freqs = []
             for i in spw_ids:
@@ -318,8 +339,8 @@ class SpectralWindowTable(object):
             chan_widths = itertools.chain(chan_widths)
             chan_freqs = itertools.chain(chan_freqs)
 
-            rows = zip(spw_ids, group_ids, names, bandwidths, ref_frequency,
-                       chan_widths, chan_freqs)
+            rows = zip(spw_ids, group_ids, group_names, bandwidths, ref_frequency,
+                       chan_widths, chan_freqs, names, sidebands, basebands)
             return rows
 
 

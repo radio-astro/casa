@@ -15,13 +15,12 @@
 # For more information about each function type
 #
 # help tsysspwmap
-
 import numpy
-import taskinit
-import os
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.utils as utils
+
 LOG = infrastructure.get_logger(__name__)
 
 class SpwMap:
@@ -43,7 +42,7 @@ class SpwInfo:
         self.setSpwId(mstable, spwId)
 
     def setTable(self,mstable) :
-	self.parameters = mstable.colnames()
+        self.parameters = mstable.colnames()
         
     def setSpwId(self,mstable,spwId) :
         self.values = {}
@@ -68,10 +67,8 @@ def areIdentical(spwInfo1,spwInfo2) :
 
 def trimSpwmap(spwMap) :
     compare = range(len(spwMap))
-    evenPoint = compare[-1]
     for i in compare :
         if compare[i:] == spwMap[i:] :
-            evenPoint = i
             break
     return spwMap[:i]
         
@@ -163,7 +160,8 @@ def tsysspwmap(vis,tsystable,trim=True,relax=False, tsysChanTol=1):
             applyCalSpwMap.append(int(useSpw))        
 
         if len(spwWithoutMatch) != 0:
-            LOG.warning('Found no match for following spw ids: '+str(spwWithoutMatch))
+            no_match = utils.commafy(spwWithoutMatch, False)
+            LOG.warning('No Tsys match found for spws %s.' % no_match) 
     if trim :
         LOG.info('Computed tsysspwmap is: '+str(trimSpwmap(applyCalSpwMap)))
         return trimSpwmap(applyCalSpwMap)

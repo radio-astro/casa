@@ -1,12 +1,16 @@
 from __future__ import absolute_import
 import collections
 import contextlib
+import copy
 import datetime
+import decimal
 import itertools
+import math
 import operator
 import types
 
 import pipeline.extern.pyparsing as pyparsing
+
 from . import casatools
 from . import logging
 
@@ -41,7 +45,7 @@ open_image = context_manager_factory(casatools.image)
 open_ms = context_manager_factory(casatools.ms)
 
 
-def commafy(l):
+def commafy(l, quotes=True):
     '''
     Return the textual description of the given list.
     
@@ -54,11 +58,20 @@ def commafy(l):
     if length is 0:
         return ''
     if length is 1:
-        return '\'%s\'' % l[0]
+        if quotes:
+            return '\'%s\'' % l[0] 
+        else:
+            return '%s' % l[0]
     if length is 2:
-        return '\'%s\' and \'%s\'' % (l[0], l[1])
+        if quotes:
+            return '\'%s\' and \'%s\'' % (l[0], l[1])
+        else:
+            return '%s and %s' % (l[0], l[1])
     else:
-        return '\'%s\', %s' % (l[0], commafy(l[1:])) 
+        if quotes:
+            return '\'%s\', %s' % (l[0], commafy(l[1:], quotes))
+        else: 
+            return '%s, %s' % (l[0], commafy(l[1:], quotes))
 
 def find_ranges(data):
     try:
@@ -80,18 +93,73 @@ def get_epoch_as_datetime(epoch):
     mt = casatools.measures
     qt = casatools.quanta
 
-    time_ref = mt.getref(epoch)
-    datetime_base = mt.epoch(time_ref, '40587.0d')
+    # calculate UTC standard offset
+    datetime_base = mt.epoch('UTC', '40587.0d')
     base_time = mt.getvalue(datetime_base)['m0']
     base_time = qt.convert(base_time, 'd')
     base_time = qt.floor(base_time)
-    
-    t = mt.getvalue(epoch)['m0']
+
+    # subtract offset from UTC equivalent time
+    epoch_utc = mt.measure(epoch, 'UTC')
+    t = mt.getvalue(epoch_utc)['m0']
     t = qt.sub(t, base_time)  
     t = qt.convert(t, 's')
     t = datetime.datetime.utcfromtimestamp(qt.getvalue(t))
 
     return t
+
+def total_time_on_source(scans):
+    '''
+    Return the total time on source for the given Scans.
+    
+    scans -- a collection of Scan domain objects
+    return -- a datetime.timedelta object set to the total time on source
+    '''
+    times_on_source = [scan.time_on_source for scan in scans]
+    return reduce(operator.add, times_on_source)
+
+def format_datetime(dt):
+    '''
+    Return a formatted string representation for the given datetime
+    '''
+    # Ignore microseconds
+    return dt.strftime('%d/%m/%Y %H:%M:%S')
+
+def format_timedelta(td, dp=0):
+    '''
+    Return a formatted string representation for the given timedelta
+    '''
+    # 
+    secs = decimal.Decimal(td.seconds) 
+    microsecs = decimal.Decimal(td.microseconds) / decimal.Decimal('1e6')
+    rounded_secs = (secs + microsecs).quantize(decimal.Decimal(10) ** -dp)
+    rounded = datetime.timedelta(days=td.days, 
+                                 seconds=math.floor(rounded_secs))
+    # get rounded number of microseconds as an integer
+    rounded_microsecs = int((rounded_secs % 1).shift(6))
+    # .. which we can pad with zeroes..
+    str_microsecs = '{0:06d}'.format(rounded_microsecs)
+    # .. which we can append onto the end of the default timedelta string
+    # representation
+    if dp:
+        fraction = str_microsecs[0:dp]
+        return str(rounded) + '.' + str(fraction)
+    else:
+        return str(rounded)
+
+def dict_merge(a, b):
+    '''
+    Recursively merge dictionaries.
+    '''
+    if not isinstance(b, dict):
+        return b
+    result = copy.deepcopy(a)
+    for k, v in b.iteritems():
+        if k in result and isinstance(result[k], dict):
+                result[k] = dict_merge(result[k], v)
+        else:
+            result[k] = copy.deepcopy(v)
+    return result
 
 def safe_split(fields):
     '''

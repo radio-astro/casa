@@ -162,14 +162,112 @@ def get_url(result):
     return None
 
 
-#QA2Score = collections.namedtuple('QA2Score', 
-#                                  'spw antenna polarization score')
-
 QA2Score = collections.namedtuple('Score', 'phase amplitude total')
 PhaseScore = collections.namedtuple('PhaseScore', 'delay rms flag total')
-AmplitudeScore = collections.namedtuple('AmplitudeScore', 'rms total sn flag') 
-                                    
+AmplitudeScore = collections.namedtuple('AmplitudeScore', 'rms total sn flag')                                     
 FlaggedFeed = collections.namedtuple('FlaggedFeed', 'antenna polarization')
+
+
+class QA2BaseAdapter(object):
+    def __init__(self, context, result):
+        if not getattr(result, 'qa2', None):
+            return
+
+        self._context = context
+        self._result = result
+        self._qa2 = result.qa2
+
+        vis = self._result.inputs['vis']
+        self._ms = self._context.observing_run.get_ms(vis)
+        self._write_json(context, result)
+
+    def _write_json(self, context, result):
+        json_file = os.path.join(context.report_dir, 
+                                 'stage%s' % result.stage_number, 
+                                 'qa2.json')
+        
+        LOG.trace('Writing QA2 data to %s' % json_file)
+        with open(json_file, 'w') as fp:
+            json.dump(self.scores, fp)
+
+ 
+class QA2FlaggingAdapter(QA2BaseAdapter):
+    Axes = collections.namedtuple('Axes', "x y")
+    
+    def __init__(self, context, result):
+        super(QA2FlaggingAdapter, self).__init__(context, result)
+        self.scores = {}
+        
+        self.unscored_plots = self._get_unscored_plots()
+
+    def _get_unscored_plots(self):
+        # initially the dictionary values are the names of the x axis, which
+        # will be replaced by the Plot objects
+        unscored_plots = {
+            'ANTENNA_PLOT'  : 'Antenna ID',
+            'BASELINE_PLOT' : 'Baseline Length', 
+            'FIELD_PLOT'    : 'Field ID',
+            'SCAN_PLOT'     : 'Scan ID',
+            'SPW_PLOT'      : 'Spectral Window ID',
+        }
+
+        for key, x_axis in unscored_plots.values():
+            filename = self._qa2['QA2PLOTS'][key]
+            plot = logger.Plot(filename,
+                               x_axis=x_axis,
+                               y_axis='Fraction of Flagged Data')
+            unscored_plots[key] = plot
+
+        return unscored_plots
+
+        
+    def _get_plots(self, y_axis):
+        # bail out early if no QA2 analysis has been performed.
+        if 'QA2PLOTS' not in self._qa2:
+            return []
+
+        y_axis = 'amp' if y_axis == 'amp' else 'phase'
+        plot_key = 'AMPLITUDE_PLOT' if y_axis == 'amp' else 'PHASE_PLOT'
+
+        plots = []
+        for spw_id, spw_plots in self._qa2['QA2PLOTS'][plot_key].items():
+            spw = self._ms.get_spectral_window(spw_id)
+            dd = self._ms.get_data_description(spw=spw)
+
+            # Some windows, such as ALMA window averages, do not have a data
+            # description              
+            if dd is None:
+                continue
+            
+            for k, filename in spw_plots.items():
+                # QA2 dictionary keys are peculiar, in that their index is a
+                # function of both antenna and feed.
+                ant_id = int(k) / dd.num_polarizations
+                feed_id = int(k) % dd.num_polarizations
+                
+                polarization = dd.polarizations[feed_id]
+                antenna = self._ms.get_antenna(ant_id)[0]
+
+                # while we have the spw index and qa2 feed idx at hand,
+                # populate the scores for this plot
+                score = self._get_score(spw_id, k, y_axis)
+                self.scores[os.path.basename(filename)] = score
+                
+                plot = logger.Plot(filename,
+                                   x_axis='freq',
+                                   y_axis=y_axis,
+                                   field=self._result.inputs['field'],
+                                   qa2_score=score,
+                                   parameters={'ant' : antenna.identifier,
+                                               'spw' : spw.id,
+                                               'pol' : polarization})
+                plots.append(plot)
+
+        return plots
+
+    
+
+    
  
 class QA2BandpassAdapter(object):
     TableEntry = collections.namedtuple('TableEntry', 

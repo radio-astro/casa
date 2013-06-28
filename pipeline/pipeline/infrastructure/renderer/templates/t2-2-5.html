@@ -1,33 +1,27 @@
-<%inherit file="base.html"/>
-
-<%block name="title">Weather Details</%block>
-
-<script>
-$(document).ready(function(){
-	$("a.grouped_elements").fancybox();
-});
-</script>
-
-<h1>Weather Details</h1>
-
-<h2>Weather</h2>
-% if weather_plots:
-<div class="gallery">
-	<ul>
-		% for (ms, plot) in weather_plots:
-		<li>
-		<a class="grouped_elements" rel="weather" href="session${ms.session}/${ms.basename}/weather.png">
-			<img src="session${ms.session}/${ms.basename}/weather.png"
-				 title="Weather Details for ${ms.basename}"
-				 alt="Weather Details for ${ms.basename}" />
-			<p>${ms.basename}</p>
-		</a>
-		</li>
-		% endfor
-	</ul>
+<%!
+import os
+%>
+<div class="page-header">
+	<h1>Weather Details</h1>
 </div>
-% else:
-<p>No plots available.</p>
-% endif
 
-<%block name="footer"><a href="t1-2.html">Back to Observation Summary</a></%block>
+% if os.path.exists(weather_plot.abspath):
+<ul class="thumbnails">
+	<li class="span3">
+	  	<div class="thumbnail">
+			<a href="${os.path.join(dirname, weather_plot.basename)}" 
+			   class="fancybox">
+				<img src="${os.path.join(dirname, weather_plot.thumbnail)}"
+					 title="Weather Details for ${ms.basename}"
+					 alt="Weather Details for ${ms.basename}" />
+		    </a>
+		    <div class="caption">
+				<h4>Weather</h4>
+				<p>Weather during execution of ${ms.basename}.</p>
+			</div>
+		</div>
+	</li>
+</ul>
+% else:
+<p class="alert alert-error">No weather plot available.</p>
+% endif

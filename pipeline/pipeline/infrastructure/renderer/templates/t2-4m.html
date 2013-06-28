@@ -1,43 +1,79 @@
 <%!
+navbar_active='By Task'
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 import pipeline.infrastructure.renderer.qa2adapter as qa2
 %>
 <%inherit file="base.html"/>
 
-<%block name="title">Task Details</%block>
-
-<script src="${self.attr.rsc_path}resources/base.js"></script>
-
 <script>
 $(document).ready(function(){
+	var fakeframe = $('div#fakeframe');
+	
+	var loadFakeframe = function(href) {
+		fakeframe.load(href, function(response, status, xhr) {
+			if (status == "error") {
+				var msg = "Sorry but there was an error: ";
+				fakeframe.html(msg + xhr.status + " " + xhr.statusText);
+			};
+			if (status == "success") {
+				// add click listener to all the new replace anchors we just
+				// loaded into the document
+				$("a.replace").click(function(evt) {
+					evt.preventDefault();
+					var href = evt.target.href;
+					loadFakeframe(href)
+				});
+			};
+ 		});
+	};
+
 	// Load stage details into panel is 'stage=x' given in URL 
-	var stageNum = $.url().fparam('stage');
-	var stageDetailsUrl = $('a#link_stage' + stageNum).attr('href');
-	if (typeof stageDetailsUrl != 'undefined')
-		$('iframe[name="details"]').attr({ src : stageDetailsUrl });
+ 	var stageNum = $.url().param('stage');
+	var stageDetailsUrl = $('a#link_stage' + stageNum).data('fakeframehref');
+	if (typeof stageDetailsUrl != 'undefined') {
+		loadFakeframe(stageDetailsUrl);
+		$('a#link_stage' + stageNum).parent().addClass("active");
+	};
+	
+	$('#nav').affix({
+		offset: $('nav').position()
+	});
+	
+//	$('#nav-wrapper').height($("#nav").height());
 });
 </script>
  
-<h1>Task Details</h1>
-
-<div class="colmask leftmenu">
-	<div class="colleft">
-		<div class="col1">
-			<iframe src="stage${results[0].stage_number}/t2-4m_details.html" name="details"></iframe>
-		</div>
-		<div class="col2">
-			<ul>
+<%block name="title">Task Details</%block>
+ 
+<div class="row-fluid"> 
+	<div class="span3">
+		<div class="well sidebar-nav-fixed"  data-spy="affix">
+			<ul class="nav nav-list">
+				<li class="nav-header">Tasks in execution order</li>
 			% for result in results:
-				<li>Stage ${hr.get_stage_number(result)}: ${hr.get_task_name(result)}</li>
-				<ul>
-					<li><a id="link_stage${result.stage_number}" href="stage${result.stage_number}/t2-4m_details.html" target="details">Task details</a></li>
-					<% qa2_url = qa2.get_url(result) %>
-					% if qa2_url:
-						<li><a href="${qa2_url}#stage=${result.stage_number}">QA2 details</a></li>
-					% endif
-				</ul>
+				<li>
+					<a id="link_stage${result.stage_number}"
+					   data-fakeframehref="stage${result.stage_number}/t2-4m_details.html"
+					   href="t2-4m.html?stage=${result.stage_number}">
+						${hr.get_task_name(result)}
+						<% qa2_url = qa2.get_url(result) %>
+						% if qa2_url:
+						<ul>
+							<li>
+								<a href="${qa2_url}#stage=${result.stage_number}">QA2</a>
+							</li>
+						</ul>
+						% endif
+					</a>
+				</li>
 			% endfor
 			</ul>
+		</div><!-- /.well -->
+	</div><!-- /span3 -->
+	
+	<div class="span9 span-fixed-sidebar">
+		<div id="fakeframe">
+			Javascript must be enabled to view task details
 		</div>
 	</div>
 </div>

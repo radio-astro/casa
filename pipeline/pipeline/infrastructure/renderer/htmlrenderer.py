@@ -1,8 +1,9 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 import atexit
 import collections
 import contextlib
 import datetime
+import math
 import operator
 import os
 import pydoc
@@ -11,20 +12,24 @@ import shutil
 import StringIO
 import sys
 import tempfile
-import types
 import zipfile
 
 import casadef
 import mako
 import mako.lookup as lookup
 
+import pipeline as pipeline
+import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.displays.bandpass as bandpass
+import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
+import pipeline.infrastructure.displays.tsys as tsys
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
+import pipeline.infrastructure.renderer.rendererutils as rendererutils
 from pipeline.infrastructure.renderer import templates
 from pipeline.infrastructure.renderer.templates import resources
 from . import logger
@@ -38,19 +43,22 @@ LOG = infrastructure.get_logger(__name__)
 
 def get_task_description(result_obj):
     if not isinstance(result_obj, collections.Iterable):
-        return get_task_description([result_obj,])
-    
+        return get_task_description([result_obj, ])
+
     if len(result_obj) is 0:
         msg = 'Cannot get description for zero-length results list'
         LOG.error(msg)
         return msg
-    
+
     task_cls = result_obj[0].task
-    if type(task_cls) is types.NoneType:
+    if task_cls is None:
         results_cls = result_obj[0].__class__.__name__
         msg = 'No task registered on results of type %s' % results_cls
         LOG.warning(msg)
         return msg
+
+    if task_cls is hif.tasks.AgentFlagger:
+        return 'Deterministic Flagging'
 
     if task_cls is hif.tasks.Applycal:
         return 'Apply calibrations from context'
@@ -69,7 +77,7 @@ def get_task_description(result_obj):
 
     if task_cls is hif.tasks.GTypeGaincal:
         return 'G-type gain calibration'
-    
+
     if task_cls is hif.tasks.ImportData:
         names = []
         for result in result_obj:
@@ -102,7 +110,7 @@ def get_task_description(result_obj):
 
     if task_cls is hsd.tasks.SDReduction:
         return 'Single-dish end-to-end reduction'
-   
+
     if task_cls is hsd.tasks.SDExportData:
         return 'Single-dish SDExportData'
 
@@ -111,7 +119,7 @@ def get_task_description(result_obj):
 
     if task_cls is hif.tasks.Tsysflag:
         return 'Flag Tsys calibration'
-    
+
     if task_cls is hif.tasks.Tsysflagchans:
         return 'Flag channels of Tsys calibration'
 
@@ -124,7 +132,7 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDInspectData:
         datatable = result_obj[0].outcome['instance']
         names = datatable.getkeyword('FILENAMES')
-        return 'Inspect %s'%(utils.commafy(names))
+        return 'Inspect %s' % (utils.commafy(names))
 
     if task_cls is hsd.tasks.SDCalTsys:
         return 'Generage Tsys calibration table'
@@ -145,37 +153,40 @@ def get_task_description(result_obj):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
         return ('\'%s\' (developers should add a task description)'
                 '' % task_cls.__name__)
-    
+
     return ('\'%s\'' % task_cls.__name__)
+
 
 def get_task_name(result_obj):
     if not isinstance(result_obj, collections.Iterable):
-        return get_task_name([result_obj,])
-    
+        return get_task_name([result_obj, ])
+
     if len(result_obj) is 0:
         msg = 'Cannot get task name for zero-length results list'
         LOG.error(msg)
         return msg
-    
+
     task_cls = result_obj[0].task
-    if type(task_cls) is types.NoneType:
+    if task_cls is None:
         results_cls = result_obj[0].__class__.__name__
         msg = 'No task registered on results of type %s' % results_cls
         LOG.warning(msg)
         return msg
-    
+
     return task_cls.__name__
+
 
 def get_stage_number(result_obj):
     if not isinstance(result_obj, collections.Iterable):
-        return get_stage_number([result_obj,])
-    
+        return get_stage_number([result_obj, ])
+
     if len(result_obj) is 0:
         msg = 'Cannot get stage number for zero-length results list'
         LOG.error(msg)
         return msg
-    
+
     return result_obj[0].stage_number
+
 
 def get_plot_dir(context, stage_number):
     stage_dir = os.path.join(context.report_dir, 'stage%d' % stage_number)
@@ -193,14 +204,14 @@ class Session(object):
     def __init__(self, mses=[], name='Unnamed Session'):
         self.mses = mses
         self.name = name
-    
+
     @staticmethod
     def get_sessions(context):
         d = collections.defaultdict(list)
         for ms in context.observing_run.measurement_sets:
             d[ms.session].append(ms)
 
-        return [Session(v, k) for k,v in d.items()]
+        return [Session(v, k) for k, v in d.items()]
 
 
 class RendererBase(object):
@@ -209,12 +220,13 @@ class RendererBase(object):
     """
     @classmethod
     def rerender(cls, context):
+        LOG.todo('RendererBase: I think I\'m rerendering all pages!')
         return True
-    
+
     @classmethod
     def get_path(cls, context):
         return os.path.join(context.report_dir, cls.output_file)
-    
+
     @classmethod
     def get_file(cls, context, hardcopy):
         path = cls.get_path(context)
@@ -240,10 +252,10 @@ class TemplateFinder(object):
     _templates_dir = os.path.dirname(templates.__file__)
     _tmp_directory = tempfile.mkdtemp()
     LOG.trace('Mako working directory: %s' % _tmp_directory)
-    # Remove temporary Mako codegen directory on termination of Python process 
+    # Remove temporary Mako codegen directory on termination of Python process
     atexit.register(lambda: shutil.rmtree(TemplateFinder._tmp_directory,
                                           ignore_errors=True))
-    _lookup = lookup.TemplateLookup(directories=[_templates_dir], 
+    _lookup = lookup.TemplateLookup(directories=[_templates_dir],
                                     module_directory=_tmp_directory)
 
     @staticmethod
@@ -263,12 +275,12 @@ class T1_1Renderer(RendererBase):
         obs_start = context.observing_run.start_datetime
         obs_end = context.observing_run.end_datetime
 
-        project_ids = ', '.join(context.observing_run.project_ids)        
+        project_ids = ', '.join(context.observing_run.project_ids)
         schedblock_ids = ', '.join(context.observing_run.schedblock_ids)
         execblock_ids = ', '.join(context.observing_run.execblock_ids)
         observers = ', '.join(context.observing_run.observers)
-        
-        array_names = set([ms.antenna_array.name 
+
+        array_names = set([ms.antenna_array.name
                            for ms in context.observing_run.measurement_sets])
 
         # pipeline execution start, end and duration
@@ -278,20 +290,24 @@ class T1_1Renderer(RendererBase):
         dt = exec_end - exec_start
         exec_duration = datetime.timedelta(days=dt.days, seconds=dt.seconds)
 
-        out_fmt = '%Y-%m-%d %H:%M:%S'        
-        return {'pcontext'       : context,
-                'casa_version'   : casadef.casa_version,
-                'casa_revision'  : casadef.subversion_revision,
-                'obs_start'      : obs_start.strftime(out_fmt),
-                'obs_end'        : obs_end.strftime(out_fmt),
-                'array_names'    : utils.commafy(array_names),
-                'exec_start'     : exec_start.strftime(out_fmt),
-                'exec_end'       : exec_end.strftime(out_fmt),
-                'exec_duration'  : str(exec_duration),
-                'project_ids'    : project_ids,
-                'schedblock_ids' : schedblock_ids,
-                'execblock_ids'  : execblock_ids,
-                'observers'      : observers}
+        qa2results = qa2adapter.ResultsToQA2Adapter(context.results)
+
+        out_fmt = '%Y-%m-%d %H:%M:%S'
+        return {'pcontext'          : context,
+                'casa_version'      : casadef.casa_version,
+                'casa_revision'     : casadef.subversion_revision,
+                'pipeline_revision' : pipeline.revision,
+                'obs_start'         : obs_start.strftime(out_fmt),
+                'obs_end'           : obs_end.strftime(out_fmt),
+                'array_names'       : utils.commafy(array_names),
+                'exec_start'        : exec_start.strftime(out_fmt),
+                'exec_end'          : exec_end.strftime(out_fmt),
+                'exec_duration'     : str(exec_duration),
+                'project_ids'       : project_ids,
+                'schedblock_ids'    : schedblock_ids,
+                'execblock_ids'     : execblock_ids,
+                'observers'         : observers,
+                'qa2adapter'        : qa2results}
 
 
 class T1_2Renderer(RendererBase):
@@ -301,42 +317,66 @@ class T1_2Renderer(RendererBase):
     output_file = 't1-2.html'
     template = 't1-2.html'
 
+    # named tuple holding values for each row in the main summary table
+    TableRow = collections.namedtuple(
+                'Tablerow', 
+                'ms href filesize ' 
+                'receivers '
+                'num_antennas beamsize_min beamsize_max '
+                'time_start time_end time_on_source '
+                'baseline_min baseline_max baseline_rms')
+
     @staticmethod
     def get_display_context(context):
-        bands = set()
-        science_freqs = []
+        ms_summary_rows = []
         for ms in context.observing_run.measurement_sets:
+            href = os.path.join('t2-1.html?ms=%s' % ms.basename)
+
+            num_antennas = len(ms.antennas)
+            # times should be passed as Python datetimes
+            time_start = utils.get_epoch_as_datetime(ms.start_time)
+            time_start = utils.format_datetime(time_start)
+            time_end = utils.get_epoch_as_datetime(ms.end_time)
+            time_end = utils.format_datetime(time_end)
+
+            target_scans = [s for s in ms.scans if 'TARGET' in s.intents]
+            time_on_source = utils.total_time_on_source(target_scans)
+            time_on_source = utils.format_timedelta(time_on_source)
+           
+            baseline_min = ms.antenna_array.min_baseline.length
+            baseline_max = ms.antenna_array.max_baseline.length
+            
+            # compile a list of primitive numbers representing the baseline 
+            # lengths in metres..
+            bls = [bl.length.to_units(measures.DistanceUnits.METRE)
+                   for bl in ms.antenna_array.baselines]
+            # .. so that we can calculate the RMS baseline length with 
+            # consistent units
+            baseline_rms = math.sqrt(sum(bl**2 for bl in bls)/len(bls))
+            baseline_rms = measures.Distance(baseline_rms,
+                                             units=measures.DistanceUnits.METRE)
+ 
             science_spws = ms.get_spectral_windows(science_windows_only=True)
-            science_freqs.extend([spw.ref_frequency for spw in science_spws])
-            bands.update([spw.band for spw in science_spws])
-        bands = sorted(bands)
+            receivers = sorted(set(spw.band for spw in science_spws))
+
+            row = T1_2Renderer.TableRow(ms=ms.basename,
+                                        href=href,
+                                        filesize=ms.filesize,
+                                        receivers=receivers,                           
+                                        num_antennas=num_antennas,
+                                        beamsize_min='TODO',
+                                        beamsize_max='TODO',
+                                        time_start=time_start,
+                                        time_end=time_end,
+                                        time_on_source=time_on_source,
+                                        baseline_min=baseline_min,
+                                        baseline_max=baseline_max,
+                                        baseline_rms=baseline_rms)
         
-        science_sources = set()
-        for ms in context.observing_run.measurement_sets:
-            science_sources.update([s.name for s in ms.sources 
-                                    if 'TARGET' in s.intents])
-        science_sources = sorted(science_sources)
-
-        calibrators = set()
-        for ms in context.observing_run.measurement_sets:
-            calibrators.update([s.name for s in ms.sources 
-                                if 'TARGET' not in s.intents])
-        calibrators = sorted(calibrators)
-
-        min_baseline = min((ms.antenna_array.min_baseline 
-                            for ms in context.observing_run.measurement_sets),
-                           key=lambda b : b.length)
-        max_baseline = max((ms.antenna_array.max_baseline 
-                            for ms in context.observing_run.measurement_sets),
-                            key=lambda b : b.length)
+            ms_summary_rows.append(row)
         
         return {'pcontext'        : context,
-                'mses'            : context.observing_run.measurement_sets,
-                'science_sources' : utils.commafy(science_sources),
-                'calibrators'     : utils.commafy(calibrators),
-                'science_bands'   : utils.commafy(bands),
-                'min_baseline'    : min_baseline,
-                'max_baseline'    : max_baseline}
+                'ms_summary_rows' : ms_summary_rows}
 
 
 class T1_3MRenderer(RendererBase):
@@ -400,7 +440,22 @@ class T2_1DetailsRenderer(object):
         return contextlib.closing(file_obj)
 
     @staticmethod
+    def write_listobs(context, ms):
+        listfile = os.path.join(context.report_dir, 
+                                'session%s' % ms.session,
+                                ms.basename,
+                                'listobs.txt')
+
+        if not os.path.exists(listfile):
+            LOG.debug('Writing listobs output to %s' % listfile)
+            task = infrastructure.casa_tasks.listobs(vis=ms.name,
+                                                     listfile=listfile)
+            task.execute(dry_run=False)
+
+    @staticmethod
     def get_display_context(context, ms):
+        T2_1DetailsRenderer.write_listobs(context, ms)
+        
         inputs = summary.IntentVsTimeChart.Inputs(context, vis=ms.basename)
         task = summary.IntentVsTimeChart(inputs)
         intent_vs_time = task.plot()
@@ -408,11 +463,50 @@ class T2_1DetailsRenderer(object):
         inputs = summary.FieldVsTimeChart.Inputs(context, vis=ms.basename)
         task = summary.FieldVsTimeChart(inputs)
         field_vs_time = task.plot()
+
+        science_spws = ms.get_spectral_windows(science_windows_only=True)
+        all_bands = sorted(set([spw.band for spw in ms.spectral_windows]))
+        science_bands = sorted(set([spw.band for spw in science_spws]))
         
-        return {'pcontext'       : context,
-                'ms'             : ms,
-                'intent_vs_time' : intent_vs_time,
-                'field_vs_time'  : field_vs_time  }
+        science_sources = sorted(set([source.name for source in ms.sources 
+                                      if 'TARGET' in source.intents]))
+
+        calibrators = sorted(set([source.name for source in ms.sources 
+                                  if 'TARGET' not in source.intents]))
+
+        baseline_min = ms.antenna_array.min_baseline.length
+        baseline_max = ms.antenna_array.max_baseline.length
+
+        time_start = utils.get_epoch_as_datetime(ms.start_time)
+        time_end = utils.get_epoch_as_datetime(ms.end_time)
+
+        time_on_source = utils.total_time_on_source(ms.scans) 
+        science_scans = [scan for scan in ms.scans if 'TARGET' in scan.intents]
+        time_on_science = utils.total_time_on_source(science_scans)
+        
+#         dirname = os.path.join(context.report_dir, 
+#                                'session%s' % ms.session,
+#                                ms.basename)
+        dirname = os.path.join('session%s' % ms.session,
+                               ms.basename)
+        
+        return {
+            'pcontext'        : context,
+            'ms'              : ms,
+            'science_sources' : utils.commafy(science_sources),
+            'calibrators'     : utils.commafy(calibrators),
+            'all_bands'       : utils.commafy(all_bands),
+            'science_bands'   : utils.commafy(science_bands),
+            'baseline_min'    : baseline_min,
+            'baseline_max'    : baseline_max,
+            'time_start'      : utils.format_datetime(time_start),
+            'time_end'        : utils.format_datetime(time_end),
+            'time_on_source'  : utils.format_timedelta(time_on_source),
+            'time_on_science' : utils.format_timedelta(time_on_science),
+            'intent_vs_time'  : intent_vs_time,
+            'field_vs_time'   : field_vs_time,
+            'dirname'         : dirname
+        }
 
     @classmethod
     def render(cls, context, hardcopy=False):
@@ -434,30 +528,53 @@ class MetadataRendererBase(RendererBase):
         return False
 
 
-class T2_2_1Renderer(MetadataRendererBase):
+class T2_2_XRendererBase(object):
     """
-    T2-2-1 renderer
+    Base renderer for T2-2-X series of pages.
+    """
+    @classmethod
+    def get_file(cls, context, ms, hardcopy):
+        ms_dir = os.path.join(context.report_dir, 
+                              'session%s' % ms.session,
+                              ms.basename)
+        if hardcopy and not os.path.exists(ms_dir):
+            os.makedirs(ms_dir)
+        filename = os.path.join(ms_dir, cls.output_file)
+        file_obj = open(filename, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+
+    @classmethod
+    def render(cls, context, hardcopy=False):
+        for ms in context.observing_run.measurement_sets:
+            with cls.get_file(context, ms, hardcopy) as fileobj:
+                template = TemplateFinder.get_template(cls.template)
+                display_context = cls.get_display_context(context, ms)
+                fileobj.write(template.render(**display_context))
+
+
+class T2_2_1Renderer(T2_2_XRendererBase):
+    """
+    T2-2-1 renderer - spatial setup
     """
     output_file = 't2-2-1.html'
     template = 't2-2-1.html'
 
     @staticmethod
-    def get_display_context(context):
+    def get_display_context(context, ms):
         mosaics = []
-        for ms in context.observing_run.measurement_sets:
-            for source in ms.sources:
-                num_pointings = len([f for f in ms.fields 
-                                     if f.source_id == source.id])
-                if num_pointings > 1:
-                    task = summary.MosaicChart(context, ms, source)
-                    mosaics.append((ms, source, task.plot()))
+        for source in ms.sources:
+            num_pointings = len([f for f in ms.fields 
+                                 if f.source_id == source.id])
+            if num_pointings > 1:
+                task = summary.MosaicChart(context, ms, source)
+                mosaics.append((source, task.plot()))
 
         return {'pcontext' : context,
-                'mses'     : context.observing_run.measurement_sets,
+                'ms'       : ms,
                 'mosaics'  : mosaics}
 
 
-class T2_2_2Renderer(MetadataRendererBase):
+class T2_2_2Renderer(T2_2_XRendererBase):
     """
     T2-2-2 renderer
     """
@@ -465,12 +582,12 @@ class T2_2_2Renderer(MetadataRendererBase):
     template = 't2-2-2.html'
 
     @staticmethod
-    def get_display_context(context):
+    def get_display_context(context, ms):
         return {'pcontext' : context,
-                'mses'     : context.observing_run.measurement_sets}
+                'ms'       : ms}
 
 
-class T2_2_3Renderer(MetadataRendererBase):
+class T2_2_3Renderer(T2_2_XRendererBase):
     """
     T2-2-3 renderer
     """
@@ -478,18 +595,20 @@ class T2_2_3Renderer(MetadataRendererBase):
     template = 't2-2-3.html'
 
     @staticmethod
-    def get_display_context(context):
-        plot_ants = []
-        for ms in context.observing_run.measurement_sets:
-            task = summary.PlotAntsChart2(context, ms)
-            plot_ants.append((ms, task.plot()))
+    def get_display_context(context, ms):
+        task = summary.PlotAntsChart2(context, ms)
+        plot_ants = task.plot()
+
+        dirname = os.path.join('session%s' % ms.session,
+                               ms.basename)
         
         return {'pcontext'  : context,
                 'plot_ants' : plot_ants,
-                'mses'      : context.observing_run.measurement_sets}
+                'ms'        : ms,
+                'dirname'   : dirname}
 
 
-class T2_2_4Renderer(MetadataRendererBase):
+class T2_2_4Renderer(T2_2_XRendererBase):
     """
     T2-2-4 renderer
     """
@@ -497,38 +616,86 @@ class T2_2_4Renderer(MetadataRendererBase):
     template = 't2-2-4.html'
 
     @staticmethod
-    def get_display_context(context):
-        azel_plots = []
-#        for ms in context.observing_run.measurement_sets:
-#            task = summary.AzElChart(context, ms)
-#            azel_plots.append((ms, task.plot()))
+    def get_display_context(context, ms):
+        task = summary.AzElChart(context, ms)
+        azel_plot = task.plot()
 
-        el_vs_time_plots = []
-#        for ms in context.observing_run.measurement_sets:
-#            task = summary.ElVsTimeChart(context, ms)
-#            el_vs_time_plots.append((ms, task.plot()))
+        task = summary.ElVsTimeChart(context, ms)
+        el_vs_time_plot = task.plot()
 
-        return {'pcontext'         : context,
-                'azel_plots'       : azel_plots,
-                'el_vs_time_plots' : el_vs_time_plots}
+        dirname = os.path.join('session%s' % ms.session,
+                               ms.basename)
+
+        return {'pcontext'        : context,
+                'ms'              : ms,
+                'azel_plot'       : azel_plot,
+                'el_vs_time_plot' : el_vs_time_plot,
+                'dirname'         : dirname}
 
 
-class T2_2_5Renderer(MetadataRendererBase):
+class T2_2_5Renderer(T2_2_XRendererBase):
     """
-    T2-2-5 renderer
+    T2-2-5 renderer - weather page
     """
     output_file = 't2-2-5.html'
     template = 't2-2-5.html'
 
     @staticmethod
-    def get_display_context(context):
-        weather_plots = []
-        for ms in context.observing_run.measurement_sets:
-            task = summary.WeatherChart(context, ms)
-            weather_plots.append((ms, task.plot()))
+    def get_display_context(context, ms):
+        task = summary.WeatherChart(context, ms)
+        weather_plot = task.plot()
+        dirname = os.path.join('session%s' % ms.session,
+                               ms.basename)
 
-        return {'pcontext'         : context,
-                'weather_plots'    : weather_plots}
+        return {'pcontext'     : context,
+                'ms'           : ms,
+                'weather_plot' : weather_plot,
+                'dirname'      : dirname}
+
+
+class T2_2_6Renderer(T2_2_XRendererBase):
+    """
+    T2-2-6 renderer - scans page
+    """
+    output_file = 't2-2-6.html'
+    template = 't2-2-6.html'
+
+    TableRow = collections.namedtuple(
+        'TableRow', 
+        'id time_start time_end duration intents fields spws'
+    )
+
+    @staticmethod
+    def get_display_context(context, ms):
+        tablerows = []
+        for scan in ms.scans:
+            scan_id = scan.id
+            epoch_start = utils.get_epoch_as_datetime(scan.start_time)
+            time_start = utils.format_datetime(epoch_start)
+            epoch_end = utils.get_epoch_as_datetime(scan.end_time)
+            time_end = utils.format_datetime(epoch_end)
+            duration = utils.format_timedelta(scan.time_on_source)
+            intents = sorted(scan.intents)
+            fields = utils.commafy(sorted([f.name for f in scan.fields]))
+            
+            spw_ids = sorted([spw.id for spw in scan.spws])
+            spws = ', '.join([str(spw_id) for spw_id in spw_ids])
+
+            row = T2_2_6Renderer.TableRow(
+                id=scan_id,
+                time_start=time_start,
+                time_end=time_end,
+                duration=duration,
+                intents=intents,
+                fields=fields,
+                spws=spws
+            )
+
+            tablerows.append(row)
+            
+        return {'pcontext'     : context,
+                'ms'           : ms,
+                'tablerows'    : tablerows}
 
 
 class T2_3_1MRenderer(RendererBase):
@@ -890,12 +1057,13 @@ class T2_4MDetailsDefaultRenderer(object):
                  always_rerender=False):
         self.template = template
         self.always_rerender = always_rerender
-        
+
     def get_display_context(self, context, result):
         return {'pcontext' : context,
                 'result'   : result,
                 'stagelog' : self._get_stagelog(context, result),
-                'taskhelp' : self._get_help(context, result)}
+                'taskhelp' : self._get_help(context, result),
+                'dirname'  : 'stage%s' % result.stage_number}
 
     def render(self, context, result):
         display_context = self.get_display_context(context, result)
@@ -1119,7 +1287,7 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
 
 class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hif_importdata.html', 
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsImportDataRenderer, self).__init__(template,
                                                              always_rerender)
         
@@ -1142,6 +1310,279 @@ class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
                     'num_mses'      : num_mses})
 
         return ctx
+
+
+class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):
+    '''
+    Renders detailed HTML output for the Tsysflag task.
+    '''
+    def __init__(self, template='t2-4m_details-hif_tsysflag.html',
+            always_rerender=False):
+        super(T2_4MDetailsTsyscalFlagRenderer, self).__init__(template,
+                always_rerender)
+
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsTsyscalFlagRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        htmlreports = self.get_htmlreports(context, results)
+        
+        ctx.update({'htmlreports' : htmlreports})
+        return ctx
+
+    def get_htmlreports(self, context, results):
+        report_dir = context.report_dir
+        weblog_dir = os.path.join(report_dir,
+                                  'stage%s' % results.stage_number)
+
+        htmlreports = {}
+        for result in results:
+            if not hasattr(result, 'flagcmdfile'):
+                continue
+
+            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
+            report_abspath = self.write_report_to_disk(weblog_dir, result)
+
+            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
+            report_relpath = os.path.relpath(report_abspath, report_dir)
+
+            table_basename = os.path.basename(result.table)
+            htmlreports[table_basename] = (flagcmd_relpath, report_relpath)
+
+        return htmlreports
+
+    def write_flagcmd_to_disk(self, weblog_dir, result):
+        tablename = os.path.basename(result.table)
+        filename = os.path.join(weblog_dir, '%s.html' % tablename)
+        if os.path.exists(filename):
+            return filename
+
+        reason = result.reason
+        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        return filename
+
+    def write_report_to_disk(self, weblog_dir, result):
+        # now write printTsysFlags output to a report file
+        tablename = os.path.basename(result.table)
+        filename = os.path.join(weblog_dir, '%s.report.html' % tablename)
+        if os.path.exists(filename):
+            return filename
+        
+        rendererutils.printTsysFlags(result.table, filename)
+        return filename
+
+
+class T2_4MDetailsTsyscalRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hif_tsyscal.html', 
+                 always_rerender=True):
+        super(T2_4MDetailsTsyscalRenderer, self).__init__(template,
+                                                          always_rerender)
+
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsTsyscalRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
+
+        summary_plots = {}
+        for result in results:
+            plotter = tsys.TsysSummaryChart(context, result)
+            plots = plotter.plot()
+            ms = os.path.basename(result.inputs['vis'])
+            summary_plots[ms] = plots
+
+            # generate the per-antenna charts and JSON file
+            plotter = tsys.ScoringTsysPerAntennaChart(context, result)
+            plots = plotter.plot()
+            json_path = plotter.json_filename
+
+            # write the html for each MS to disk
+            renderer = TsyscalPlotRenderer(context, result, plots, json_path)
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+
+        ctx.update({'summary_plots' : summary_plots,
+                    'dirname'       : weblog_dir})
+
+        return ctx
+
+
+class TsyscalPlotRenderer(object):
+    template = 'tsyscal_plots.html'
+
+    def __init__(self, context, result, plots, json_path):
+        self.context = context
+        self.result = result
+        self.plots = plots
+        self.ms = os.path.basename(self.result.inputs['vis'])
+
+        if os.path.exists(json_path):
+            with open(json_path, 'r') as json_file:
+                self.json = json_file.readlines()[0]
+        else:
+            self.json = '{}'
+         
+    def _get_display_context(self):
+        return {'pcontext'   : self.context,
+                'result'     : self.result,
+                'plots'      : self.plots,
+                'dirname'    : self.dirname,
+                'json'       : self.json}
+
+    @property
+    def dirname(self):
+        stage = 'stage%s' % self.result.stage_number
+        return os.path.join(self.context.report_dir, stage)
+    
+    @property
+    def filename(self):        
+        filename = filenamer.sanitize('tsys-%s.html' % self.ms)
+        return filename
+    
+    @property
+    def path(self):
+        return os.path.join(self.dirname, self.filename)
+    
+    def get_file(self, hardcopy=True):
+        if hardcopy and not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+            
+        file_obj = open(self.path, 'w') if hardcopy else StdOutFile()
+        return contextlib.closing(file_obj)
+    
+    def render(self):
+        display_context = self._get_display_context()
+        t = TemplateFinder.get_template(self.template)
+        return t.render(**display_context)
+
+
+
+class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
+    FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
+
+    def __init__(self, template='t2-4m_details-hif_flagdeteralma.html', 
+                 always_rerender=True):
+        super(T2_4MDetailsAgentFlaggerRenderer, self).__init__(template,
+                                                                always_rerender)
+
+    def get_display_context(self, context, result):
+        super_cls = super(T2_4MDetailsAgentFlaggerRenderer, self)
+        ctx = super_cls.get_display_context(context, result)
+
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % result.stage_number)
+
+        flag_totals = {}
+        for r in result:
+            flag_totals = utils.dict_merge(flag_totals, 
+                                           self.flags_for_result(r, context))
+
+            # copy template files across to weblog directory
+            toggle_to_filenames = {'online'   : 'fileonline',
+                                   'template' : 'filetemplate'}
+            inputs = r.inputs
+            for toggle, filenames in toggle_to_filenames.items():
+                src = inputs[filenames]
+                if inputs[toggle] and os.path.exists(src):
+                    LOG.trace('Copying %s to %s' % (src, weblog_dir))
+                    shutil.copy(src, weblog_dir)
+
+        # collect the agent names
+        agent_names = set()
+        for r in result:
+            agent_names.update([s['name'] for s in r.summaries])
+
+        # get agent names in execution order
+        order = ['before', 'online', 'template', 'autocorr', 'shadow', 
+                 'intents', 'edgespw']
+        agents = [s for s in order if s in agent_names]
+
+        flagplots = [self.flagplot(r, context) for r in result]
+        # plot object may be None if plot failed to generate
+        flagplots = [f for f in flagplots if f is not None]
+
+        ctx.update({'flags'     : flag_totals,
+                    'agents'    : agents,
+                    'dirname'   : weblog_dir,
+                    'flagplots' : flagplots})
+
+        return ctx
+
+    def flagplot(self, result, context):
+        plotter = flagging.PlotAntsChart(context, result)
+        return plotter.plot()
+
+    def flags_for_result(self, result, context):
+        ms = context.observing_run.get_ms(result.inputs['vis'])
+        summaries = result.summaries
+
+        by_intent = self.flags_by_intent(ms, summaries)
+        by_spw = self.flags_by_science_spws(ms, summaries)
+
+        return {ms.basename : utils.dict_merge(by_intent, by_spw)}
+
+    def flags_by_intent(self, ms, summaries):
+        # create a dictionary of scans per observing intent, eg. 'PHASE':[1,2,7]
+        intent_scans = {}
+        for intent in ('BANDPASS', 'PHASE', 'AMPLITUDE', 'TARGET'):
+            # convert IDs to strings as they're used as summary dictionary keys
+            intent_scans[intent] = [str(s.id) for s in ms.scans
+                                    if intent in s.intents]
+
+        # while we're looping, get the total flagged by looking in all scans 
+        intent_scans['TOTAL'] = [str(s.id) for s in ms.scans]
+
+        total = collections.defaultdict(dict)
+
+        previous_summary = None
+        for summary in summaries:
+
+            for intent, scan_ids in intent_scans.items():
+                flagcount = 0
+                totalcount = 0
+    
+                for i in scan_ids:
+                    flagcount += int(summary['scan'][i]['flagged'])
+                    totalcount += int(summary['scan'][i]['total'])
+        
+                    if previous_summary:
+                        flagcount -= int(previous_summary['scan'][i]['flagged'])
+    
+                ft = T2_4MDetailsAgentFlaggerRenderer.FlagTotal(flagcount, 
+                                                                totalcount)
+                total[summary['name']][intent] = ft
+                
+            previous_summary = summary
+                
+        return total 
+    
+    def flags_by_science_spws(self, ms, summaries):
+        science_spws = ms.get_spectral_windows(science_windows_only=True)
+    
+        total = collections.defaultdict(dict)
+    
+        previous_summary = None
+        for summary in summaries:
+    
+            flagcount = 0
+            totalcount = 0
+    
+            for spw in science_spws:
+                spw_id = str(spw.id)
+                flagcount += int(summary['spw'][spw_id]['flagged'])
+                totalcount += int(summary['spw'][spw_id]['total'])
+        
+                if previous_summary:
+                    flagcount -= int(previous_summary['spw'][spw_id]['flagged'])
+
+            ft = T2_4MDetailsAgentFlaggerRenderer.FlagTotal(flagcount, 
+                                                            totalcount)
+            total[summary['name']]['SCIENCE SPWS'] = ft
+                
+            previous_summary = summary
+                
+        return total 
 
 
 class T2_4MDetailsRenderer(object):
@@ -1277,6 +1718,7 @@ class WebLogGenerator(object):
                  T2_2_3Renderer,       # antenna setup
                  T2_2_4Renderer,       # sky setup
                  T2_2_5Renderer,       # weather
+                 T2_2_6Renderer,       # scans
                  T2_3_1MRenderer,      # QA2 calibration
                  T2_3_2MRenderer,      # QA2 line finding
                  T2_3_3MRenderer,      # QA2 flagging
@@ -1487,23 +1929,24 @@ class LogCopier(object):
 # each task type.
 renderer_map = {
     T2_3MDetailsRenderer : {
-        hif.tasks.Wvrgcalflag    : T2_3MDetailsWvrgcalflagRenderer( ),
-#        hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
+        hif.tasks.Wvrgcalflag    : T2_3MDetailsWvrgcalflagRenderer(),
+        hif.tasks.Bandpass       : T2_3MDetailsBandpassRenderer(),
     },
     T2_4MDetailsRenderer : {
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
-        hif.tasks.Clean          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_clean.html'),
         hif.tasks.CleanList      : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_cleanlist.html'),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
+        hif.tasks.AgentFlagger   : T2_4MDetailsAgentFlaggerRenderer(),
         hif.tasks.Lowgainflag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_lowgainflag.html'),
         hif.tasks.MakeCleanList  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_makecleanlist.html'),
         hif.tasks.NormaliseFlux  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_normflux.html'),
         hif.tasks.RefAnt         : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_refant.html'),
         hif.tasks.Setjy          : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_setjy.html'),
-        hif.tasks.Tsysflag       : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflag.html'),
+        hif.tasks.Tsyscal        : T2_4MDetailsTsyscalRenderer(),
+        hif.tasks.Tsysflag       : T2_4MDetailsTsyscalFlagRenderer(),
         hif.tasks.Tsysflagchans  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_tsysflagchans.html'),
         hif.tasks.Wvrgcal        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_wvrgcal.html'),
         hif.tasks.Wvrgcalflag    : T2_4MDetailsWvrgcalflagRenderer(),

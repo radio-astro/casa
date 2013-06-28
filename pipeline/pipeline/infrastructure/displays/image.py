@@ -55,18 +55,40 @@ class ImageDisplay(object):
         descriptionlist.sort()
 
         for description in descriptionlist:
+            xtitle = results.first(description).axes[0].name
+            ytitle = results.first(description).axes[1].name
+            plotfile = '%s_%s_%s_v_%s_%s.png' % (prefix,
+              results.first(description).datatype, ytitle, xtitle, description)
+            plotfile = sanitize(plotfile)
+            plotfile = os.path.join(reportdir, plotfile)
+
+            plot = logger.Plot(plotfile,
+              x_axis=xtitle, y_axis=ytitle,
+              field=results.first(description).fieldname,
+              parameters={'intent': results.first(description).intent,
+              'spw': results.first(description).spw,
+              'pol': results.first(description).pol,
+              'ant': results.first(description).ant,
+              'type': results.first(description).datatype,
+              'file': os.path.basename(results.first(description).filename)})
+            plots.append(plot)
+            
+            if os.path.exists(plotfile):
+                LOG.trace('Not overwriting existing image at %s' % plotfile)
+                continue
+            
             if len(flagcmds) > 0:
                 nsubplots = 3
-                ignore = self._plot_panel(nsubplots, 1,
+                _ = self._plot_panel(nsubplots, 1,
                   description, results.first(description),
                   'Before %s' % change, stagenumber)
 
-                flagsSet = self._plot_panel(nsubplots, 2,
+                _ = self._plot_panel(nsubplots, 2,
                   description, results.last(description),
                   'After', stagenumber, flagcmds)
             else:
                 nsubplots = 2
-                ignore = self._plot_panel(nsubplots, 1,
+                _ = self._plot_panel(nsubplots, 1,
                   description, results.first(description),
                   '', stagenumber)
 
@@ -136,27 +158,9 @@ class ImageDisplay(object):
 
             # save the image (remove odd characters from filename to cut
             # down length)
-            xtitle = results.first(description).axes[0].name
-            ytitle = results.first(description).axes[1].name
-            plotfile = '%s_%s_%s_v_%s_%s.png' % (prefix,
-              results.first(description).datatype, ytitle, xtitle, description)
-            plotfile = sanitize(plotfile)
-            plotfile = os.path.join(reportdir, plotfile)
             plt.savefig(plotfile)
-
             plt.clf()
             plt.close(1)
-
-            plot = logger.Plot(plotfile,
-              x_axis=xtitle, y_axis=ytitle,
-              field=results.first(description).fieldname,
-              parameters={'intent': results.first(description).intent,
-              'spw': results.first(description).spw,
-              'pol': results.first(description).pol,
-              'ant': results.first(description).ant,
-              'type': results.first(description).datatype,
-              'file': os.path.basename(results.first(description).filename)})
-            plots.append(plot)
 
         return plots
 

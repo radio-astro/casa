@@ -9,17 +9,20 @@ import bandpass_cli
 import clean_cli
 import clearcal_cli
 import exportfits_cli
+import flagcmd_cli
+import flagdata_cli
 import flagmanager_cli
 import fluxscale_cli
 import gaincal_cli
 import gencal_cli
 import importasdm_cli
-import setjy_cli
+import listobs_cli
 import plotants_cli
+import plotbandpass_cli
 import plotcal_cli
 import plotms_cli
 import plotxy_cli
-import flagdata_cli
+import setjy_cli
 import wvrgcal_cli
 try:
     import sdcal2_cli
@@ -269,8 +272,11 @@ class CASATaskJobGenerator(object):
     def gaincal(self, *v, **k):
         return self._get_job(gaincal_cli.gaincal_cli, *v, **k)
 
-    #def flagautocorr(self, *v, **k):
-        #return self._get_job(flagautocorr_cli.flagautocorr_cli, *v, **k)
+    def flagcmd(self, *v, **k):
+        return self._get_job(flagcmd_cli.flagcmd_cli, *v, **k)
+
+    def flagdata(self, *v, **k):
+        return self._get_job(flagdata_cli.flagdata_cli, *v, **k)
 
     def flagmanager(self, *v, **k):
         return self._get_job(flagmanager_cli.flagmanager_cli, *v, **k)
@@ -284,8 +290,14 @@ class CASATaskJobGenerator(object):
     def importasdm(self, *v, **k):
         return self._get_job(importasdm_cli.importasdm_cli, *v, **k)
 
+    def listobs(self, *v, **k):
+        return self._get_job(listobs_cli.listobs_cli, *v, **k)
+
     def plotants(self, *v, **k):
         return self._get_job(plotants_cli.plotants_cli, *v, **k)
+
+    def plotbandpass(self, *v, **k):
+        return self._get_job(plotbandpass_cli.plotbandpass_cli, *v, **k)
 
     def plotcal(self, *v, **k):
         return self._get_job(plotcal_cli.plotcal_cli, *v, **k)
@@ -298,9 +310,6 @@ class CASATaskJobGenerator(object):
 
     def setjy(self, *v, **k):
         return self._get_job(setjy_cli.setjy_cli, *v, **k)
-
-    def flagdata(self, *v, **k):
-        return self._get_job(flagdata_cli.flagdata_cli, *v, **k)
 
     def wvrgcal(self, *v, **k):
         return self._get_job(wvrgcal_cli.wvrgcal_cli, *v, **k)

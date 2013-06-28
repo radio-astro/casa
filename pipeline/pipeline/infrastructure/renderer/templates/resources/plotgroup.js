@@ -1,105 +1,137 @@
 $(document).ready(function(){
-	//Larger thumbnail preview  
-	$("ul.thumb li").hover(function() {
-	    $(this).css({'z-index' : '10'});
-	    $(this).find('img').addClass("hover").stop()
-	        .animate({
-	            marginTop: '-104px', 
-	            marginLeft: '-135px', 
-	            top: '50%', 
-	            left: '50%', 
-	            width: '250px', /* max = 280 cover */ 
-	            height: '188px',
-	            padding: '5px' 
-	        }, 200);
-	    
-	    } , function() {
-	    $(this).css({'z-index' : '0'});
-	    $(this).find('img').removeClass("hover").stop()
-	        .animate({
-	            marginTop: '0', /* Set alignment back to default */
-	            marginLeft: '0',
-	            top: '0', 
-	            left: '0', 
-	            width: '100px', /* Set width back to default */
-	            height: '75px',  /* Set height back to default */
-	            padding: '5px'
-	        }, 400);
-	});
- 
-    //Swap Image on Click
-    $("ul.thumb li a").click(function() {        
-        var mainImage = $(this).attr("href"); //Find Image Name
-        $("#main_view img").attr({ src: mainImage });
-        $("#main_view a").attr({ href: mainImage });
-        return false;        
-    });
-
-    // Show/hide images depending on selected spectral window
-    $("#filter_selector .selector li").click(function() {
-        // get the identifier of the button that the user clicked on
-        var selected = $(this).attr("id");
-
-        // toggle the state of that button
-        $("#filter_selector ul.selector li#" + selected + " a").toggleClass("black")
-
-        // show all thumbnails so that..
-        $("ul.thumb li").show()
-        $("ul.thumb li").children().attr({ "rel" : "fancybox-thumb" });
-
-        // .. for each filter..
-        $("#filter_selector ul.selector").each(function() {
-            // .. we can get the ids of all enabled selectors..
-            var selectedIds = $(this).find("li:has(a.black)").map(function() {
-                var x = this.id;
-                return "." + this.id;
+    /**
+     * Adds 0 left margin to the first thumbnail on each row that don't get it via CSS rules.
+     * Recall the function when the floating of the elements changed.
+     */
+    function fixThumbnailMargins() {
+        $('ul.thumbnails').each(function() {
+            var allThumbnails = $(this).children(),
+            	visibleThumbnails = $(allThumbnails).filter(":visible"),
+                previousOffsetLeft;
+            
+            if (visibleThumbnails.length === 0) {
+        	return;
+            }            
+            previousOffsetLength = $(visibleThumbnails).first().offset().left;
+            
+            $(allThumbnails).removeClass('first-in-row');
+            $(visibleThumbnails).first().addClass('first-in-row');
+            visibleThumbnails.each(function() {
+                var thumbnail = $(this),
+                    offsetLeft = $(thumbnail).offset().left;
+                if (offsetLeft < previousOffsetLeft) {
+                    thumbnail.addClass('first-in-row');
+                }
+                previousOffsetLeft = offsetLeft;
             });
-            var ids = selectedIds.toArray().join(",");
-
-           if (ids !== "") {
-                $("ul.thumb li:not(" + ids + ")").hide();
-                $("ul.thumb li:not(" + ids + ")").children().attr({ "rel" : "" });
-            };
         });
+    }
 
-        return false;
+    
+    // Show/hide images depending on selected spectral window
+    $(".plotfilter button").click(function() {
+	var toFilter = [],
+	    index;
+	
+	$(".plotfilter button.active").each(function() {
+	    var filterClass = $(this).data("value");
+	    toFilter.push(filterClass);
+	});
+
+	// active class is added or removed *after* this event handler, so we
+	// need to add this button if it's not already active.
+	if ($(this).hasClass("active")) {	    
+	    index = toFilter.indexOf($(this).data("value"));
+	    toFilter.splice(index, 1)
+	} else {
+	    toFilter.push($(this).data("value"));
+	}
+
+	for (index=0; index<toFilter.length; index += 1) {
+	    toFilter[index] = toFilter[index].toLowerCase();
+	}
+
+	function disjoin(a, b) {
+	    return $.grep(a, function($e) { return $.inArray($e, b) == -1; });
+	};
+	
+	$("ul.thumbnails li").each(function() {
+	    var imgAttrs = $(this).data("value").toLowerCase().split(" "),
+	    	i;
+	    // get the intersection of the image attributes and active selectors
+	    // lists
+	    var disjoint = disjoin(toFilter, imgAttrs);
+	    
+	    if (disjoint.length === 0) {
+		$(this).show();
+	    } else {
+		if (toFilter.length === 0) {
+		    $(this).show();
+		} else {
+		    $(this).hide();
+		}
+	    }
+	});
+	
+	fixThumbnailMargins();	
     });
 
     $("#clearbutton").click(function() {
         // clear the state of all toggle buttons
-		$("#filter_selector ul.selector li a").removeClass("black")
-
-		// show all thumbnails and link them together
-		$("ul.thumb li").show()
-		$("ul.thumb li").children().attr({ "rel" : "fancybox-thumb" });
+	$(".plotfilter button.active").each(function() {
+	    $(this).click();
 	});
+    });
+
+    $("ul.thumbnails li div a").click(function(evt) {
+	evt.preventDefault();
+	var target = this.href;
+	launchFancyboxInParent(target);
+	return false;
+    });
 
     function launchFancyboxInParent(target){
-    	var basedir = $.url().segment(-2);
-    	var thumbs = new Array();
-    	var index = 0;
-        $("ul.thumb li:visible a").each(function() {        
-        	var mainImage = $(this).attr("href"); //Find Image href
-            var title = $(this).attr("title"); //Find Image title
-            if (mainImage == target) {
-            	index = thumbs.length;
-            } 
-            thumbs.push({
-            	href  : basedir + '/' + mainImage,
-            	title : title                     
-            });
-        });
-        parent.postMessage({'command' : 'fancybox',
-        					'thumbs'  : thumbs,
-        					'index'   : index      }, '*');
-        return false;
+	var fullsize = [];
+	var thumbnail;
+	var thumbnailImg;
+	var fullsizeToThumbs = {};
+	var index = 0;
+	
+
+	$("ul.thumbnails li:visible div a").each(function() {        
+	    var mainImage = this.href; // Find Image href
+	    var title = this.title; // Find Image title
+	    if (mainImage == target) {
+        	index = fullsize.length;
+	    }
+	    fullsize.push({
+        	href  : mainImage,
+        	title : title                     
+	    });
+	    thumbnailImg = $(this).children("img:first")[0].src;
+	    fullsizeToThumbs[mainImage] = thumbnailImg;
+	});
+
+	$.fancybox(fullsize, {
+	    type    : 'image',
+	    index   : index,
+	    prevEffect : 'none',
+	    nextEffect : 'none',
+	    helpers	: {
+		title	: {
+		    type: 'outside'
+		},
+		thumbs	: {
+		    width	: 50,
+		    height	: 50,
+		    source  : function(current) {
+			var href = current.href;
+			return fullsizeToThumbs[href];
+	            }
+		}
+	    }
+	});
     }
     
-	$("ul.thumb li a[rel=fancybox-thumb]").click(function(evt) {
-		evt.preventDefault();
-		var href = evt.target.parentElement.href;
-		var target = $.url(href).segment(-1);
-		launchFancyboxInParent(target);
-        return false;
-	});
+    fixThumbnailMargins();
 });

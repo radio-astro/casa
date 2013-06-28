@@ -335,3 +335,8 @@ pre {
 #taskdetails {
 	margin: 10px;
 }
+
+.warning li {
+   background: url('warning.gif') 50% 50% no-repeat no-repeat;
+   padding-left: 5px;
+}

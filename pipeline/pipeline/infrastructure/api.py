@@ -91,9 +91,9 @@ class Heuristic(object):
     
 
 class Inputs(object):
-    """Inputs defines a common interface that can be used to create the
-    constructor constructor argument for a :class:`Task`.
-    
+    """
+    Inputs defines the interface used to create a constructor argument for a
+    :class:`Task`.    
     """
     __metaclass__ = abc.ABCMeta
 
