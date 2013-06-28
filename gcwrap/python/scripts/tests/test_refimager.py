@@ -7,7 +7,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
 
      if(testnum==4): ## 2 image fields, each with multiple channels
 
-         allselpars={'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True} 
+         allselpars={'vis':'point_twospws.ms', 'field':'0', 'spw':'0,1', 'usescratch':True} 
         #NF=2
          allimpars={ '0' : {'imagename':'mytest0', 'nchan':5,'imsize':[3,3]} ,\
                          '1' : {'imagename':'mytest1', 'nchan':2,'imsize':[1,1] } }
@@ -18,7 +18,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
 
      if(testnum==3):  ## 2 image-fields, each with one channel
 
-         allselpars={'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True} 
+         allselpars={'vis':'point_twospws.ms', 'field':'0', 'spw':'0,1', 'usescratch':True} 
         #NF=2
          allimpars={ '0' : {'imagename':'mytest0', 'nchan':1,'imsize':[3,3]} ,\
                          '1' : {'imagename':'mytest1', 'nchan':1,'imsize':[1,1]} }
@@ -29,7 +29,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
         
      if(testnum==2):  ## 1 image-field, multiple channels
 
-         allselpars={'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True}
+         allselpars={'vis':'point_twospws.ms', 'field':'0', 'spw':'0,1', 'usescratch':True}
         #NF=1
          allimpars={ '0' : {'imagename':'mytest0', 'nchan':5,'imsize':[3,3]} }
          allgridpars={ '0': {'ftmachine':'ft'} }
@@ -37,7 +37,7 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
          
      if(testnum==1):  ## 1 image-field, one chan
 
-         allselpars={'vis':'twochan.ms', 'field':'3', 'spw':'4,5', 'usescratch':True}
+         allselpars={'vis':'point_twospws.ms', 'field':'0', 'spw':'0,1', 'usescratch':True}
         #NF=1
          allimpars= { '0' : {'imagename':'mytest0', 'nchan':1,'imsize':[3,3]} }
          allgridpars={ '0' : {'ftmachine':'ft'} }
