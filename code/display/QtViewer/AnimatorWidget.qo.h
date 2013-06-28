@@ -35,7 +35,7 @@ namespace casa {
 	 * this class may animate frames withen an image or they may animate
 	 * between loaded images.
 	 */
-	class AnimatorWidget : public QWidget {
+    class AnimatorWidget : public QWidget, protected Ui::AnimatorWidget {
 		Q_OBJECT
 
 	public:
@@ -53,6 +53,10 @@ namespace casa {
 		int getFrameEnd() const;
 		int getStepSize() const;
 		~AnimatorWidget();
+
+        static int heightOpen( ) { return 107; }
+        static int heightClosed( ) { return 25; }
+        static int heightHeader( ) { return 27; }
 
 	signals:
 		void goTo(int frame);
@@ -92,7 +96,6 @@ namespace casa {
 		void blockSignals( bool block );
 		int frameCount;
 		int play;
-		Ui::AnimatorWidget ui;
 		bool rateNotSet;
 	};
 }

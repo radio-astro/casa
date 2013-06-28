@@ -49,6 +49,7 @@
 #include <display/QtViewer/QtDataOptionsPanel.qo.h>
 #include <display/RegionShapes/QtRegionShapeManager.qo.h>
 #include <display/QtViewer/AnimatorHolder.qo.h>
+#include <display/QtViewer/CursorTrackingHolder.qo.h>
 #include <display/QtViewer/QtWCBox.h>
 #include <display/QtViewer/Preferences.qo.h>
 #include <display/QtViewer/ColorHistogram.qo.h>
@@ -409,9 +410,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		customToolBar2->toggleViewAction()->setVisible(False);
 
 		//Animation
-		animDockWidget_  = new QDockWidget();
-		animDockWidget_->setObjectName("Animator");
-		animDockWidget_->setWindowTitle("Animator");
 		initAnimationHolder();
 		string animloc = addAnimationDockWidget();
 
@@ -419,32 +417,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
 		std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
-		trkgDockWidget_  = new QDockWidget();
-		trkgDockWidget_->setObjectName("Position Tracking");
-		trkgDockWidget_->setWindowTitle("Position Tracking");
+		trkgDockWidget_  = new CursorTrackingHolder( qdp_ );
 		addDockWidget( trackloc == "right" ? Qt::RightDockWidgetArea :
 		               trackloc == "left" ? Qt::LeftDockWidgetArea :
 		               trackloc == "top" ? Qt::TopDockWidgetArea :
 		               Qt::BottomDockWidgetArea, trkgDockWidget_, Qt::Vertical );
-
-		trkgWidget_      = new QWidget;
-		trkgDockWidget_->setWidget(trkgWidget_);
-		// trkgDockWidget_->layout()->addWidget(trkgWidget_);  // <-- no!
-		// QDockWidgets create their own layout, and setWidget(trkgWidget_)
-		// automatically puts trkgWidget_ into it...
-
-		// ..._but_: _must_ create layout for trkgWidget_:...
-		new QVBoxLayout(trkgWidget_);
-		// ..._and_ explicitly add trkgWidget_'s children to it as needed.
-		// Note that parenting a TrackBox with trkgWidget_ does _not_
-		// automatically do this....  For generic widgets (which don't have
-		// methods like 'setWidget()' above, whose layout you create yourself)
-		// doing genericWidget->layout()->addWidget(childWidget) automatically
-		// makes genericWidget the parent of childWidget, but _not_ vice
-		// versa.  Also note: technically, the _layout_ is not the child
-		// widget's 'parent'.
-
-
 
 		//  ------------------------------------------------------------------------------------------
 		if ( regionDock_ ) {
@@ -458,13 +435,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 #if 0
 		if ( trackloc == "right" && animloc == "right" && rc.get("viewer." + rcid() + ".rightdock") == "tabbed" ) {
-			tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
+			tabifyDockWidget( animationHolder, trkgDockWidget_ );
 		} else if ( trackloc == "left" && animloc == "left" && rc.get("viewer." + rcid() + ".leftdock") == "tabbed" ) {
-			tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
+			tabifyDockWidget( animationHolder, trkgDockWidget_ );
 		} else if ( trackloc == "top" && animloc == "top" && rc.get("viewer." + rcid() + ".topdock") == "tabbed" ) {
-			tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
+			tabifyDockWidget( animationHolder, trkgDockWidget_ );
 		} else if ( trackloc == "bottom" && animloc == "bottom" && rc.get("viewer." + rcid() + ".bottomdock") == "tabbed" ) {
-			tabifyDockWidget( animDockWidget_, trkgDockWidget_ );
+			tabifyDockWidget( animationHolder, trkgDockWidget_ );
 		}
 #endif
 
@@ -522,36 +499,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			vwMenu_->hide();
 
 
-		//######################################
-		//## Cursor Position Tracking
-		//######################################
-
-		trkgDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea |
-		                                 Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea ));
-
-		//  trkgDockWidget_->setFeatures( QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
-		// Prevents closing.  (Now that there's a 'View' menu making
-		// it obvious how to get it back, this is no longer needed).
-
-		//  trkgDockWidget_->setWindowTitle("Position Tracking");
-		trkgDockWidget_->toggleViewAction()->setText("Position Tracking");
-		// Identifies this widget in the 'View' menu.
-		// Preferred to previous line, which also displays the title
-		// on the widget itself (not needed).
-		trkgDockWidget_->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum);
-		trkgWidget_->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
-		trkgWidget_->layout()->setMargin(0);
-
 		// Setup display of linked cursor tracking (from other QtDisplayPanelGui)...
 		linkedCursorHandler = new LinkedCursorEH(this);
 
 		//######################################
 		//## Animation
 		//######################################
-		animDockWidget_->setAllowedAreas((Qt::DockWidgetAreas)( Qt::BottomDockWidgetArea | Qt::RightDockWidgetArea |
-		                                 Qt::TopDockWidgetArea | Qt::LeftDockWidgetArea ));
-		animDockWidget_->toggleViewAction()->setText("Animator");
-		animationHolder->setSizePolicy( QSizePolicy::Minimum, QSizePolicy::Minimum );
 
 		// menus / toolbars
 
@@ -654,7 +607,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//## docking changes
 		connect( trkgDockWidget_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(trackingMoved(Qt::DockWidgetArea)) );
-		connect( animDockWidget_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(animatorMoved(Qt::DockWidgetArea)) );
+		connect( animationHolder, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(animatorMoved(Qt::DockWidgetArea)) );
+
 		if ( regionDock_ ) connect( regionDock_, SIGNAL(dockLocationChanged(Qt::DockWidgetArea)), SLOT(regionMoved(Qt::DockWidgetArea)) );
 #if QT_VERSION >= 0x040600
 		connect( mouseToolBar_, SIGNAL(topLevelChanged(bool)), SLOT(mousetoolbarMoved(bool)) );
@@ -780,8 +734,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		addDockWidget( animloc == "right" ? Qt::RightDockWidgetArea :
 		               animloc == "left" ? Qt::LeftDockWidgetArea :
 		               animloc == "top" ? Qt::TopDockWidgetArea :
-		               Qt::BottomDockWidgetArea, animDockWidget_, Qt::Vertical );
-		animDockWidget_->setWidget(animationHolder);
+		               Qt::BottomDockWidgetArea, animationHolder, Qt::Vertical );
+        
 		return animloc;
 	}
 
@@ -790,21 +744,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtDisplayPanelGui::initAnimationHolder() {
 		if ( animationHolder == NULL ) {
 			animationImageIndex = -1;
-			animationHolder = new AnimatorHolder( this );
-			connect(animationHolder, SIGNAL(lowerBoundAnimatorChannelChanged(int)), qdp_, SLOT(lowerBoundAnimatorChannelChanged(int)));
-			connect(animationHolder, SIGNAL(upperBoundAnimatorChannelChanged(int)), qdp_, SLOT(upperBoundAnimatorChannelChanged(int)));
-			connect(animationHolder, SIGNAL(lowerBoundAnimatorImageChanged(int)), qdp_, SLOT(lowerBoundAnimatorImageChanged(int)));
-			connect(animationHolder, SIGNAL(upperBoundAnimatorImageChanged(int)), qdp_, SLOT(upperBoundAnimatorImageChanged(int)));
-			connect(animationHolder, SIGNAL(goTo(int)), qdp_, SLOT(goTo(int)));
-			connect(animationHolder, SIGNAL(frameNumberEdited(int)), qdp_, SLOT(goTo(int)));
-			connect(animationHolder,  SIGNAL(setRate(int)), qdp_, SLOT(setRate(int)));
-			connect(animationHolder, SIGNAL(toStart()), qdp_, SLOT(toStart()));
-			connect(animationHolder, SIGNAL(revStep()), qdp_, SLOT(revStep()));
+
+			animationHolder = new AnimatorHolder( qdp_, this );
 			connect(animationHolder, SIGNAL(revPlay()), SLOT(revPlay_()));
-			connect(animationHolder, SIGNAL(stop()), qdp_, SLOT(stop()));
-			connect(animationHolder, SIGNAL(fwdPlay()),SLOT(fwdPlay_()));
-			connect(animationHolder, SIGNAL(fwdStep()), qdp_, SLOT(fwdStep()));
-			connect(animationHolder, SIGNAL(toEnd()), qdp_, SLOT(toEnd()));
+            connect(animationHolder, SIGNAL(fwdPlay()), SLOT(fwdPlay_()));
 			connect(animationHolder, SIGNAL(setMode(bool)), this, SLOT(animationModeChanged(bool)));
 			connect(animationHolder, SIGNAL(channelSelect(int)), this, SLOT(doSelectChannel(int)));
 			connect(animationHolder, SIGNAL(movieChannels(int,bool,int,int,int)), this, SLOT(movieChannels(int,bool,int,int,int)));
@@ -1546,26 +1489,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( x.isConform(units(0)) == false || y.isConform(units(1)) == false )
 			return;
 
-		Vector<Double> wpt(2);
-		wpt(0) = x.getValue(units(0));
-		wpt(1) = y.getValue(units(1));
+        std::vector<double> wpt(2);
+		wpt[0] = x.getValue(units(0));
+		wpt[1] = y.getValue(units(1));
 
-		stringstream ss;
 		for ( DisplayDataHolder::DisplayDataIterator iter = beginDD( ); iter != endDD( ); ++iter ) {
-			PrincipalAxesDD *dd = dynamic_cast<PrincipalAxesDD*>((*iter)->dd( ));
-			if ( dd ) {
-				ss.str("");
-				ss.clear( );
-				ss << dd->showValue(wpt);
-				// if the first string is shorter than a typical value, add spaces...
-				if(ss.tellp() < 23) while(ss.tellp() < 23) ss << ' ';
-				// ...otherwise add a tab
-				else ss << '\t';
-				// add position information...
-				ss << dd->showPosition( wpt );
-				TrackBox *track = trkBox_(*iter);
-				if ( track ) track->setText(ss.str( ));
-			}
+             trkgDockWidget_->cursorUpdate( wpt, *iter );
 		}
 	}
 
@@ -2379,194 +2308,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void QtDisplayPanelGui::arrangeTrackBoxes_() {
-		// Reacts to QDP registration change signal.  If necessary, changes
-		// the set of cursor position tracking boxes being displayed in
-		// trkgWidget_ (creating new TrackBoxes as necessary).  A TrackBox
-		// will be shown for each qdd in qdp_->registeredDDs() where
-		// qdd->usesTracking() (in the same order).
-
-		// Hide track boxes whose dd has been unregistered and remove them
-		// from the trkgWidget_'s layout.  (They remain parented to trkgWidget_
-		// until deleted, though).
-		QList<TrackBox*> trkBoxes = trkgWidget_->findChildren<TrackBox*>();
-		for(Int i=0; i<trkBoxes.size(); i++) {
-			TrackBox* trkBox = trkBoxes[i];
-			if( trkBox->isVisibleTo(trkgWidget_) &&
-			        !qdp_->isRegistered(trkBox->dd()) ) {
-				trkgWidget_->layout()->removeWidget(trkBox);
-				trkBox->hide();
-			}
-		}
-
-		// Assure that all applicable registered QDDs are showing track boxes.
-		/*List<QtDisplayData*> rDDs = qdp_->registeredDDs();
-		for(ListIter<QtDisplayData*> rdds(&rDDs); !rdds.atEnd(); rdds++) {
-			showTrackBox_(rdds.getRight());
-		} */
-		DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
-		while ( iter != qdp_->endRegistered()) {
-			showTrackBox_(*iter);
-			iter++;
-		}
+         trkgDockWidget_->arrangeTrackBoxes( );
 	}
-
-
-
-	TrackBox* QtDisplayPanelGui::showTrackBox_(QtDisplayData* qdd) {
-		// If qdd->usesTracking(), this method assures that a TrackBox for qdd
-		// is visible in the trkgWidget_'s layout (creating the TrackBox if it
-		// didn't exist).  Used by arrangeTrackBoxes_() above.  Returns the
-		// TrackBox (or 0 if none, i.e., if !qdd->usesTracking()).
-
-		if(!qdd->usesTracking()) return 0;	// (track boxes N/A to qdd)
-
-		TrackBox* trkBox = trkBox_(qdd);
-		Bool notShown = trkBox==0 || trkBox->isHidden();
-
-		if(trkBox==0) trkBox = new TrackBox(qdd);
-		else if(notShown) trkBox->clear();	// (Clear old, hidden trackbox).
-
-		if(notShown) {
-			trkgWidget_->layout()->addWidget(trkBox);
-			trkBox->show();
-		}
-		// (trkBox will be added to the _bottom_ of trkgWidget_, assuring
-		// that track boxes are displayed in registration order).
-
-		return trkBox;
-	}
-
-
 
 
 	void QtDisplayPanelGui::deleteTrackBox_(QtDisplayData* qdd) {
-		// Deletes the TrackBox for the given QDD if it exists.  Deletion
-		// automatically removes it from the gui (trkgWidget_ and its layout).
-		// Connected to the ddRemoved() signal of QtViewerBase.
-		if(hasTrackBox_(qdd)) delete trkBox_(qdd);
+         trkgDockWidget_->removeTrackBox(qdd);
 	}
 
 
 
 
 	void QtDisplayPanelGui::displayTrackingData_(Record trackingRec) {
-		// Display tracking data gathered by underlying panel.
-		for(uInt i=0; i<trackingRec.nfields(); i++) {
-			TrackBox* trkBox = trkBox_(trackingRec.name(i));
-			if(trkBox!=0) {
-				trkBox->setText(trackingRec.asString(i));
-			}
-		}
+        trkgDockWidget_->display( trackingRec );
 	}
-
-	TrackBox* QtDisplayPanelGui::trkBox_(QtDisplayData* qdd) {
-		return trkBox_(qdd->name());
-	}
-
-	TrackBox* QtDisplayPanelGui::trkBox_(String ddname) {
-		return trkgWidget_->findChild<TrackBox*>(ddname.chars());
-	}
-
-
-
-	TrackBox::TrackBox(QtDisplayData* qdd, QWidget* parent) :
-		QGroupBox(parent), qdd_(qdd) {
-
-		trkgEdit_ = new QTextEdit;
-
-		new QVBoxLayout(this);
-		layout()->addWidget(trkgEdit_);
-		layout()->setMargin(1);
-
-		connect( this, SIGNAL(toggled(bool)),  trkgEdit_, SLOT(setVisible(bool)) );
-		// (User can hide edit area with a checkbox by the track box title).
-
-
-		setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
-
-		// (TrackBox as QroupBox)
-		setFlat(True);
-		setObjectName(qdd_->name().c_str());
-		setTitle(objectName());
-		setCheckable(True);
-		setChecked(True);
-		// setAlignment(Qt::AlignHCenter);
-		// setAlignment(Qt::AlignRight);
-		String tltp="Uncheck if you do not need to see position tracking data for\n"
-		            + name() + "  (it will remain registered).";
-		setToolTip(tltp.chars());
-
-
-		trkgEdit_->setMinimumWidth(355);
-		trkgEdit_->setFixedHeight( qdd->isMS() ? 84 : 47 );
-		// trkgEdit_->setFixedHeight(81);	// (obs.)
-		//trkgEdit_->setPlainText("\n  ");	// (Doesn't work on init,
-		//setTrackingHeight_();		// for some reason...).
-
-		QFont trkgFont;
-		trkgFont.setFamily(QString::fromUtf8("Courier"));
-		trkgFont.setBold(True);
-		trkgEdit_->setFont(trkgFont);
-
-		trkgEdit_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-		trkgEdit_->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-		trkgEdit_->setLineWrapMode(QTextEdit::NoWrap);
-		trkgEdit_->setReadOnly(True);
-		trkgEdit_->setAcceptRichText(True);
-	}
-
-
-
-	void TrackBox::setText(String trkgString) {
-		trkgEdit_->setPlainText(trkgString.chars());
-		setTrackingHeight_();
-	}
-
-
-
-	void TrackBox::setTrackingHeight_() {
-		// Set tracking edit height according to contents.
-		// Note: setting a 'fixed' height is necessary to cause Dock Area
-		// to return unneeded space.  'Fixed' size policy alone is _not_
-		// adequate, apparently because [min.] size hints cannot be relied
-		// upon to be recalculated correctly (or at least in a way that
-		// makes sense to me...).  Issues outstanding with Trolltech (Qt).
-		//
-		// (Even the working behavior was broken again in Qt-4.2.0;  awaiting
-		// further fixes before upgrading beyond 4.1.3).
-		//
-		// (Broken even in 4.1.3 is ability to use this routine to set the
-		// initial trackbox height, before the widget is ever shown...).
-		//
-		// I don't understand all these issues.  As usual with Qt sizing,
-		// this kludgy routine was arrived at by laborious trial-and-error....
-		// (dk  11/06)
-
-		trkgEdit_->setUpdatesEnabled(False);
-		// temporarily disables widget painting, avoiding flicker
-		// from next statement.
-
-		trkgEdit_->setFixedHeight(1000);	// (More than is ever needed.
-		// Necessary so that the cursorRect() call below will return the
-		// proper height needed for the text, without truncating to the
-		// widget's current height...).
-
-		QTextCursor c = trkgEdit_->textCursor();
-		c.movePosition(QTextCursor::End);
-		trkgEdit_->setTextCursor(c);
-
-		trkgEdit_->setFixedHeight(trkgEdit_->cursorRect().bottom()+10);
-
-		c.movePosition(QTextCursor::Start);
-		trkgEdit_->setTextCursor(c);		// (assures left edge is visible
-		trkgEdit_->ensureCursorVisible();	//  when tracking is updated).
-
-		trkgEdit_->setUpdatesEnabled(True);
-	}
-
-
-
-
 
 
 // Etc.
@@ -3036,24 +2791,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-		if ( trkgDockWidget_->isVisible( ) && animDockWidget_->isVisible( ) &&
-		        tabbeddocks.indexOf(trkgDockWidget_) < 0 && tabbeddocks.indexOf(animDockWidget_) < 0 ) {
+		if ( trkgDockWidget_->isVisible( ) && animationHolder->isVisible( ) &&
+		        tabbeddocks.indexOf(trkgDockWidget_) < 0 && tabbeddocks.indexOf(animationHolder) < 0 ) {
 			// ... both right/bottom dock widgets are available & untabbed
 			// ... if they are both on the same dock location it means that location is untabbed
 			if ( dockWidgetArea(trkgDockWidget_) == Qt::RightDockWidgetArea &&
-			        dockWidgetArea(animDockWidget_) == Qt::RightDockWidgetArea ) {
+			        dockWidgetArea(animationHolder) == Qt::RightDockWidgetArea ) {
 				rc.put( "viewer." + rcid() + ".rightdock", "untabbed" );
 			}
 			if ( dockWidgetArea(trkgDockWidget_) == Qt::BottomDockWidgetArea &&
-			        dockWidgetArea(animDockWidget_) == Qt::BottomDockWidgetArea ) {
+			        dockWidgetArea(animationHolder) == Qt::BottomDockWidgetArea ) {
 				rc.put( "viewer." + rcid() + ".bottomdock", "untabbed" );
 			}
 			if ( dockWidgetArea(trkgDockWidget_) == Qt::LeftDockWidgetArea &&
-			        dockWidgetArea(animDockWidget_) == Qt::LeftDockWidgetArea ) {
+			        dockWidgetArea(animationHolder) == Qt::LeftDockWidgetArea ) {
 				rc.put( "viewer." + rcid() + ".leftdock", "untabbed" );
 			}
 			if ( dockWidgetArea(trkgDockWidget_) == Qt::TopDockWidgetArea &&
-			        dockWidgetArea(animDockWidget_) == Qt::TopDockWidgetArea ) {
+			        dockWidgetArea(animationHolder) == Qt::TopDockWidgetArea ) {
 				rc.put( "viewer." + rcid() + ".topdock", "untabbed" );
 			}
 		}

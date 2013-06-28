@@ -72,6 +72,8 @@ qt4_wrap_cpp( outfiles_qoh
   QtPlotter/annotations/AnnotationEditorText.qo.h
   QtViewer/AnimatorWidget.qo.h
   QtViewer/AnimatorHolder.qo.h
+  QtViewer/CursorTrackingHolder.qo.h
+  QtViewer/TrackBox.qo.h
   QtViewer/ColorHistogram.qo.h
   QtViewer/FileBox.qo.h
   QtViewer/MakeMask.qo.h
@@ -146,6 +148,7 @@ casa_qt4_wrap_ui( outfiles_ui
   QtAutoGui/sliderLabelItem.ui
   QtViewer/AnimatorWidget.ui
   QtViewer/AnimatorHolder.ui
+  QtViewer/CursorTrackingHolder.ui
   QtViewer/ColorHistogram.ui
   QtViewer/printControl.ui
   QtViewer/QtAnnotatorGui.ui
@@ -502,6 +505,8 @@ casa_add_library( display
   QtPlotter/canvasMode/CanvasModeFactory.cc
   QtViewer/AnimatorWidget.cc
   QtViewer/AnimatorHolder.cc
+  QtViewer/CursorTrackingHolder.cc
+  QtViewer/TrackBox.cc
   QtViewer/QtOptions.cc
   QtViewer/ColorHistogram.cc
   QtViewer/ColorHistogramScale.cc

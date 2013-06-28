@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2005,2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -30,17 +30,18 @@
 #include <display/QtViewer/AnimatorWidget.qo.h>
 namespace casa {
 
+    class QtDisplayPanel;
 	/**
 	 * Manages the Animator display on the viewer that allows users to scroll through
 	 * either the channels withen an image or between loaded images.
 	 */
-	class AnimatorHolder : public QWidget {
+    class AnimatorHolder : public QDockWidget, protected Ui::AnimatorHolder {
 		Q_OBJECT
 
 	public:
 		const static bool BLINK_MODE;
 		const static bool NORMAL_MODE;
-		AnimatorHolder(QWidget *parent = 0);
+		AnimatorHolder( QtDisplayPanel *qdp, QWidget *parent = 0 );
 		void setFrameInformation( bool mode, int frm, int len );
 		void setRateInformation( bool mode, int minr, int maxr, int rate );
 		void setModeEnabled( int count );
@@ -102,16 +103,20 @@ namespace casa {
 		void stepSizeChangedImage(int);
 		void modeChange();
 
+        void visibility_event( bool visible );
+
 	private:
 		void initChannel();
 		void initImage();
 		bool addChannelGroupBox();
 		void addImageGroupBox();
+        void sizeGroupBox( QGroupBox* );
 		void removeChannelGroupBox();
 		bool removeImageGroupBox();
 		void setHeightFixed();
 		int getAnimationCount() const;
 		void addRemoveChannelAnimatorBasedOnFrameCount();
+        int find_height( ) const;
 
 		enum Mode {CHANNEL_MODE, IMAGE_MODE, CHANNEL_IMAGES_MODE, END_MODE };
 		void modeChanged(Mode mode );
@@ -126,11 +131,12 @@ namespace casa {
 		void stopChannelPlay();
 
 		Mode previousMode;
-		Ui::AnimatorHolder ui;
 		AnimatorWidget* animatorChannel;
 		AnimatorWidget* animatorImage;
 		QColor selectedColor;
 		QColor backgroundColor;
+
+        QtDisplayPanel *panel_;
 
 	};
 }
