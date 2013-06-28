@@ -16,13 +16,13 @@ import numpy
 LOG = infrastructure.get_logger(__name__)
 
 
-def find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9, 56.0e9], BBAND='?4PLSCXUKAQ?'):
+def _find_EVLA_band(frequency, bandlimits=[0.0e6, 150.0e6, 700.0e6, 2.0e9, 4.0e9, 8.0e9, 12.0e9, 18.0e9, 26.5e9, 40.0e9, 56.0e9], BBAND='?4PLSCXUKAQ?'):
     i = bisect_left(bandlimits, frequency)
     return BBAND[i]
 
 
 
-def find_spw(vis):
+def _find_spw(vis):
     """Identify spw information
     """
 
@@ -34,7 +34,7 @@ def find_spw(vis):
     
     center_frequencies = map(lambda rf, spwbw: rf + spwbw/2,reference_frequencies, spw_bandwidths)
     
-    bands = map(find_EVLA_band,center_frequencies)
+    bands = map(_find_EVLA_band,center_frequencies)
     
     unique_bands = list(numpy.unique(bands))
     
@@ -99,12 +99,12 @@ class OpcalInputs(basetask.StandardInputs):
     # Avoids circular dependency on caltable.
     # NOT SURE WHY THIS IS NECCESARY.
     def _get_partial_task_args(self):
-	return {'vis': self.vis, 'caltype': self.caltype}
+        return {'vis': self.vis, 'caltype': self.caltype}
 
     # Convert to CASA gencal task arguments.
     def to_casa_args(self):
         
-	return {'vis': self.vis,
+	    return {'vis': self.vis,
 	        'caltable': self.caltable,
 		    'caltype': self.caltype,
             'parameter': self.parameter,
@@ -124,17 +124,11 @@ class Opcal(basetask.StandardTaskTemplate):
  
         inputs.parameter = output
         
-        inputs.spw = find_spw(inputs.vis)
+        inputs.spw = _find_spw(inputs.vis)
 
         gencal_args = inputs.to_casa_args()
         gencal_job = casa_tasks.gencal(**gencal_args)
         self._executor.execute(gencal_job)
-
-        
-        LOG.warning('TODO: opspwmap heuristic re-reads measurement set!')
-        LOG.warning("TODO: opspwmap heuristic won't handle missing file")
-        #spwmap = heuristics.tsysspwmap(vis=inputs.vis,
-	#    tsystable=gencal_args['caltable'])
 
 
         callist = []

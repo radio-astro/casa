@@ -5,9 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def vla_gaincurves(vis=None, caltable=None, caltype=None, parameter=[], 
-    pipelinemode=None, overwrite=None,
-    dryrun=None, acceptresults=None):
+def vla_gaincurves(vis=None, caltable=None, pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor

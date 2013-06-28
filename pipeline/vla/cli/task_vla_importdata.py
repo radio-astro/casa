@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def vla_importdata(vis=None, session=None, pipelinemode=None, asis=None,
-    overwrite=None, dryrun=None, acceptresults=None:
+    overwrite=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
