@@ -661,7 +661,7 @@ Subchunk::noMoreData ()
 String
 Subchunk::toString () const
 {
-    return utilj::format ("(%d,%d)", first, second);
+    return String::format ("(%d,%d)", first, second);
 }
 
 template <typename T>
@@ -1773,7 +1773,7 @@ VisibilityIteratorImpl2::findChannelsInRange (Double lowerFrequency, Double uppe
                                                   const vi::SpectralWindowChannels & spectralWindowChannels)
 {
     ThrowIf (spectralWindowChannels.empty(),
-             utilj::format ("No spectral window channel info for window=%d, ms=%d",
+             String::format ("No spectral window channel info for window=%d, ms=%d",
                             spectralWindow(), msId ()));
 
     typedef SpectralWindowChannels::const_iterator Iterator;
@@ -2138,6 +2138,8 @@ void
 VisibilityIteratorImpl2::attachColumns (const Table & t)
 {
     columns_p.attachColumns (t);
+
+    floatDataFound_p = columns_p.isFloatDataPresent();
 }
 
 MEpoch
@@ -2651,7 +2653,7 @@ void
 VisibilityIteratorImpl2::setReportingFrameOfReference (Int frame)
 {
     ThrowIf (frame < 0 || frame >= MFrequency::N_Types,
-             utilj::format ("Unknown frame: id=%d", frame));
+             String::format ("Unknown frame: id=%d", frame));
 
     reportingFrame_p = frame;
 }
@@ -2862,12 +2864,16 @@ VisibilityIteratorImpl2::jonesC(Vector<SquareMatrix<complex<float>, 2> >& cjones
 void
 VisibilityIteratorImpl2::writeFlag (const Cube<Bool> & flags)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     putColumnRows (columns_p.flag_p, flags);
 }
 
 void
 VisibilityIteratorImpl2::writeFlagCategory(const Array<Bool>& flagCategory)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     // Flag categories are [nC, nF, nCategories] and therefore must use a
     // different slicer which also prevents use of more usual putColumn method.
 
@@ -2882,24 +2888,32 @@ VisibilityIteratorImpl2::writeFlagCategory(const Array<Bool>& flagCategory)
 void
 VisibilityIteratorImpl2::writeFlagRow (const Vector<Bool> & rowflags)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     putColumnRows (columns_p.flagRow_p, rowflags);
 }
 
 void
 VisibilityIteratorImpl2::writeVisCorrected (const Cube<Complex> & vis)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     putColumnRows (columns_p.corrVis_p, vis);
 }
 
 void
 VisibilityIteratorImpl2::writeVisModel (const Cube<Complex> & vis)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     putColumnRows (columns_p.modelVis_p, vis);
 }
 
 void
 VisibilityIteratorImpl2::writeVisObserved (const Cube<Complex> & vis)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     if (floatDataFound_p) {
 
         // This MS has float data; convert the cube to float
@@ -2918,12 +2932,16 @@ VisibilityIteratorImpl2::writeVisObserved (const Cube<Complex> & vis)
 void
 VisibilityIteratorImpl2::writeWeight (const Matrix<Float> & weight)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     putColumnRows (columns_p.weight_p, weight);
 }
 
 void
 VisibilityIteratorImpl2::writeWeightSpectrum (const Cube<Float> & weightSpectrum)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     if (! columns_p.weightSpectrum_p.isNull ()) {
         putColumnRows (columns_p.weightSpectrum_p, weightSpectrum);
     }
@@ -2932,12 +2950,16 @@ VisibilityIteratorImpl2::writeWeightSpectrum (const Cube<Float> & weightSpectrum
 void
 VisibilityIteratorImpl2::writeSigma (const Matrix<Float> & sigma)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     putColumnRows (columns_p.sigma_p, sigma);
 }
 
 void
 VisibilityIteratorImpl2::writeModel(const RecordInterface& /*rec*/, Bool /*iscomponentlist*/, Bool /*incremental*/)
 {
+
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
 
 #warning "--> Reimplement putModel(const RecordInterface& rec, Bool iscomponentlist, Bool incremental)"
 
@@ -2966,6 +2988,8 @@ VisibilityIteratorImpl2::writeModel(const RecordInterface& /*rec*/, Bool /*iscom
 void
 VisibilityIteratorImpl2::writeBackChanges (VisBuffer2 * vb)
 {
+    ThrowIf (! isWritable (), "This visibility iterator is not writable");
+
     if (backWriters_p.empty ()) {
         initializeBackWriters ();
     }
@@ -2977,13 +3001,13 @@ VisibilityIteratorImpl2::writeBackChanges (VisBuffer2 * vb)
          dirtyComponent ++) {
 
         ThrowIf (backWriters_p.find (* dirtyComponent) == backWriters_p.end (),
-                 utilj::format ("No writer defined for VisBuffer component %d", * dirtyComponent));
+                 String::format ("No writer defined for VisBuffer component %d", * dirtyComponent));
         BackWriter * backWriter = backWriters_p [ * dirtyComponent];
 
         try {
             (* backWriter) (this, vb);
         } catch (AipsError & e) {
-            Rethrow (e, utilj::format ("Error while writing back VisBuffer component %d", * dirtyComponent));
+            Rethrow (e, String::format ("Error while writing back VisBuffer component %d", * dirtyComponent));
         }
     }
 }
