@@ -57,6 +57,7 @@
 #include <synthesis/ImagerObjects/SynthesisImager.h>
 #include <synthesis/ImagerObjects/SIMapper.h>
 #include <synthesis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisImagingWeight.h>
 #include <synthesis/TransformMachines/GridFT.h>
 #include <synthesis/TransformMachines/WPConvFunc.h>
 #include <synthesis/TransformMachines/WProjectFT.h>
@@ -81,22 +82,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       itsCurrentImages(NULL),
 				       writeAccess_p(True), mss_p(0), vi_p(0)
   {
-     nx_p=1000;
-     ny_p=1000;
-     cellx_p=Quantity(1, "arcsec");
-     celly_p=Quantity(1,"arcsec");
-     distance_p=Quantity(0, "m");
-     stokes_p="I";
-     phasecenter_p=MDirection(Quantity(0.0, "deg"),Quantity(0.0, "deg")) ;
-     nchan_p=1;
-     freqStart_p=Quantity(0, "Hz");
-     freqStep_p=Quantity(1, "Hz");
-     freqFrame_p=MFrequency::LSRK;
-     freqFrameValid_p=False;
-     //mLocation_p=MPosition(Quantity(0., "deg"), Quantity(0, "deg"), Quantity(0.0,"m"));
-     mLocation_p=MPosition();
-     wprojPlanes_p=1;
-     useAutocorr_p=False;
+
+
+     facetsStore_p=-1;
+     imwgt_p=VisImagingWeight("natural");
+     imageDefined_p=False;
   }
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,6 +189,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     }
     writeAccess_p=writeAccess_p && !readonly;
+    createVisSet();
     return True;
 
   }
@@ -277,20 +268,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
     if(mss_p.nelements() ==0)
       throw(AipsError("SelectData has to be run before defineImage"));
-    nx_p=nx;
-    ny_p=ny;
-    cellx_p=cellx;
-    celly_p=celly;
-    distance_p=distance;
-    stokes_p=stokes;
-    nchan_p=nchan;
-    freqStart_p=freqStart;
-    freqStep_p=freqStep;
-    freqFrame_p=freqFrame;
-    phasecenter_p=phaseCenter;
-    CoordinateSystem csys=buildCoordSys(phaseCenter, cellx, celly, nx, ny, stokes, projection, nchan, freqStart, freqStep, restFreq);
+
+    CoordinateSystem csys=buildCoordSys(phaseCenter, cellx, celly, nx, ny, stokes, projection, nchan,
+    		freqStart, freqStep, restFreq, freqFrame);
     appendToMapperList(imagename,  csys,  ftmachine, distance, facets); 
-    
+    imageDefined_p=True;
     return True;
   }
  
@@ -355,7 +337,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	throw( AipsError("Error in constructing image coordinate system and allocating memory : "+x.getMesg()) );
       }
     
-    
+    imageDefined_p=True;
   }// end of defineImage
   ///////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////////
@@ -422,8 +404,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   ////////////////////
   void SynthesisImager::resetMapper(){
     ////reset code
+	itsMappers=SIMapperCollection();
+	unFacettedImStore_p=NULL;
   }
-
+//////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////
+  CountedPtr<SIImageStore> SynthesisImager::imageStore(const Int id)
+  {
+	  if(facetsStore_p >1)
+	  {
+		  if(id==0)
+			  return unFacettedImStore_p;
+		  else
+		  {
+			  return itsMappers.imageStore(facetsStore_p*facetsStore_p+id-1);
+		  }
+	  }
+	  return itsMappers.imageStore(id);
+  }
 
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -475,6 +473,117 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
 
   }// end of runMajorCycle
+  //////////////////////////////////////////////
+  /////////////////////////////////////////////
+
+  Bool SynthesisImager::weight(const String& type, const String& rmode,
+                   const Quantity& noise, const Double robust,
+                   const Quantity& fieldofview,
+  		    const Int npixels, const Bool multiField)
+  {
+    LogIO os(LogOrigin("SynthesisImager", "weight()", WHERE));
+
+    try {
+    	Int nx=itsCurrentShape[0];
+    	Int ny=itsCurrentShape[1];
+    	Quantity cellx=Quantity(itsCurrentCoordSys.increment()[0], itsCurrentCoordSys.worldAxisUnits()[0]);
+    	Quantity celly=Quantity(itsCurrentCoordSys.increment()[1], itsCurrentCoordSys.worldAxisUnits()[1]);
+      os << LogIO::NORMAL // Loglevel INFO
+         << "Weighting MS: Imaging weights will be changed" << LogIO::POST;
+
+      if (type=="natural") {
+        os << LogIO::NORMAL // Loglevel INFO
+           << "Natural weighting" << LogIO::POST;
+        imwgt_p=VisImagingWeight("natural");
+      }
+      else if(type=="superuniform"){
+        if(!imageDefined_p) throw(AipsError("Please define image first"));
+        Int actualNpix=npixels;
+        if(actualNpix <=0)
+        	actualNpix=3;
+        os << LogIO::NORMAL // Loglevel INFO
+           << "SuperUniform weighting over a square cell spanning ["
+  	 << -actualNpix
+  	 << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
+        imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust, nx,
+                                 ny, cellx, celly, actualNpix,
+                                 actualNpix, multiField);
+      }
+      else if ((type=="robust")||(type=="uniform")||(type=="briggs")) {
+        if(!imageDefined_p) throw(AipsError("Please define image first"));
+        Quantity actualFieldOfView(fieldofview);
+        Int actualNPixels(npixels);
+        String wtype;
+        if(type=="briggs") {
+          wtype = "Briggs";
+        }
+        else {
+          wtype = "Uniform";
+        }
+        if(actualFieldOfView.get().getValue()==0.0&&actualNPixels==0) {
+          actualNPixels=nx;
+          actualFieldOfView=Quantity(actualNPixels*cellx.get("rad").getValue(),
+  								   "rad");
+          os << LogIO::NORMAL // Loglevel INFO
+             << wtype
+             << " weighting: sidelobes will be suppressed over full image"
+             << LogIO::POST;
+        }
+        else if(actualFieldOfView.get().getValue()>0.0&&actualNPixels==0) {
+          actualNPixels=nx;
+          os << LogIO::NORMAL // Loglevel INFO
+             << wtype
+             << " weighting: sidelobes will be suppressed over specified field of view: "
+             << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
+        }
+        else if(actualFieldOfView.get().getValue()==0.0&&actualNPixels>0) {
+          actualFieldOfView=Quantity(actualNPixels*cellx.get("rad").getValue(),
+  								   "rad");
+          os << LogIO::NORMAL // Loglevel INFO
+             << wtype
+             << " weighting: sidelobes will be suppressed over full image field of view: "
+             << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
+        }
+        else {
+          os << LogIO::NORMAL // Loglevel INFO
+             << wtype
+             << " weighting: sidelobes will be suppressed over specified field of view: "
+             << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
+        }
+        os << LogIO::DEBUG1
+           << "Weighting used " << actualNPixels << " uv pixels."
+           << LogIO::POST;
+        Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
+
+        imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust,
+                                 actualNPixels, actualNPixels, actualCellSize,
+                                 actualCellSize, 0, 0, multiField);
+
+      }
+      else if (type=="radial") {
+        os << "Radial weighting" << LogIO::POST;
+        imwgt_p=VisImagingWeight("radial");
+      }
+      else {
+        //this->unlock();
+        os << LogIO::SEVERE << "Unknown weighting " << type
+           << LogIO::EXCEPTION;
+        return False;
+      }
+
+        vi_p->useImagingWeight(imwgt_p);
+
+      // Beam is no longer valid
+      return True;
+    } catch (AipsError x) {
+
+      os << LogIO::SEVERE << "Caught exception: " << x.getMesg()
+         << LogIO::EXCEPTION;
+      return False;
+    }
+
+    return True;
+  }
   
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -482,30 +591,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////
   ////////////This should be called  at each defineimage
-    void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, String ftmachine,  Quantity distance, Int facets){
-    if(facets <1)
-      facets=1;
-    Int nIm=facets*facets;
-    facets_p=facets;
+    void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, String ftmachine,  Quantity distance, Int facets)
+    {
+    	if(facets > 1 && itsMappers.nMappers() > 0)
+    		throw(AipsError("Facetted image has to be first of multifields"));
+    	if(facets <1)
+    		facets=1;
+    	Int nIm=facets*facets;
+
     CountedPtr<SIImageStore> imstor;
     
 
-
     if (nIm < 2){
-      imstor=new SIImageStore(imagename, csys, IPosition(4, nx_p, ny_p, nstokes_p, nchan_p)); 
+      imstor=new SIImageStore(imagename, csys, itsCurrentShape);
     }
     else{
       if(!unFacettedImStore_p.null())
-	throw(AipsError("A facetted Image has already been set"));
-      unFacettedImStore_p=new SIImageStore(imagename, csys, IPosition(4, nx_p, ny_p, nstokes_p, nchan_p)); 
+    	  throw(AipsError("A facetted Image has already been set"));
+      unFacettedImStore_p=new SIImageStore(imagename, csys, itsCurrentShape);
+      facetsStore_p=facets;
     }
 
      for (Int facet=0; facet< nIm; ++facet){
        if(nIm > 1)
-	 imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
+    	   imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
        CountedPtr<FTMachine> ftm, iftm;
-       createFTMachine(ftm, iftm, ftmachine);
+       ////////////these has to be defined by setupImaging it seems and passed here
+       Int wprojplane=1;
+       Float padding=1.0;
+       Bool useAutocorr=False;
+       Bool useDoublePrec=True;
+       String gridFunc="SF";
+       //////////////////////////////////////////////
+       createFTMachine(ftm, iftm, ftmachine, wprojplane,  padding, useAutocorr, useDoublePrec, facets,
+    			  gridFunc);
        Int id=itsMappers.nMappers();
+       // Fill in miscellaneous information needed by FITS
+         ROMSColumns msc(*mss_p[0]);
+         Record info;
+         String objectName=msc.field().name()(msc.fieldId()(0));
+         ImageInfo iinfo=(imstor->model())->imageInfo();
+         iinfo.setObjectName(objectName);
+         (imstor->model())->setImageInfo(iinfo);
+         String telescop=msc.observation().telescopeName()(0);
+         info.define("OBJECT", objectName);
+         info.define("TELESCOP", telescop);
+         info.define("INSTRUME", telescop);
+         info.define("distance", distance.get("m").getValue());
+         (imstor->model())->setMiscInfo(info);
+         //((imstor->model())->table()).tableInfo().setSubType("GENERIC");
+         (imstor->model())->setUnits(Unit("Jy/pixel"));
+         (imstor->image())->setUnits(Unit("Jy/Beam"));
        CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
        itsMappers.addMapper(thismap);
      }
@@ -516,14 +652,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   /////////////////////////
   ////////////////////////
-  CoordinateSystem SynthesisImager::buildCoordSys(const MDirection& phasecenter, const Quantity& cellx, const Quantity& celly, const Int nx, const Int ny, const String& stokes, const Projection& projection, const Int nchan, const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq){
+  CoordinateSystem SynthesisImager::buildCoordSys(const MDirection& phasecenter, const Quantity& cellx,
+		  const Quantity& celly, const Int nx, const Int ny,
+		  const String& stokes, const Projection& projection, const Int nchan,
+		  const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq, const MFrequency::Types freqFrame){
     LogIO os( LogOrigin("SynthesisImager","build",WHERE) );
     // At this stage one ms at least should have been assigned
     ROMSColumns msc(*mss_p[0]);
+    phaseCenter_p=phasecenter;
     MVDirection mvPhaseCenter(phasecenter.getAngle());
     // Normalize correctly
     MVAngle ra=mvPhaseCenter.get()(0);
     ra(0.0);
+    itsCurrentShape=IPosition(4, nx, ny, 0, nchan);
     MVAngle dec=mvPhaseCenter.get()(1);
     Vector<Double> refCoord(2);
     refCoord(0)=ra.get().getValue();    
@@ -535,6 +676,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     String telescop = msc.observation().telescopeName()(0);
     MEpoch obsEpoch = msc.timeMeas()(0);
     MPosition obsPosition;
+    Bool freqFrameValid=False;
     if(!(MeasTable::Observatory(obsPosition, telescop))){
       os << LogIO::WARN << "Did not get the position of " << telescop 
 	 << " from data repository" << LogIO::POST;
@@ -542,35 +684,36 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	 << "Please contact CASA to add it to the repository."
 	 << LogIO::POST;
       os << LogIO::WARN << "Frequency conversion will not work " << LogIO::POST;
-      freqFrameValid_p = False;
+
     }
     else{
-      mLocation_p = obsPosition;
-      freqFrameValid_p = True;
+    	mLocation_p=obsPosition;
+    	freqFrameValid = True;
     }
      //Make sure frame conversion is switched off for REST frame data.
-    freqFrameValid_p=freqFrameValid_p && (freqFrame_p != MFrequency::REST);
+    freqFrameValid=freqFrameValid && (freqFrame != MFrequency::REST);
     Vector<Double> deltas(2);
-    deltas(0)=-cellx_p.get("rad").getValue();
-    deltas(1)=celly_p.get("rad").getValue();
+    deltas(0)=-cellx.get("rad").getValue();
+    deltas(1)=celly.get("rad").getValue();
     Matrix<Double> xform(2,2);
     xform=0.0;xform.diagonal()=1.0;
     DirectionCoordinate
-      myRaDec(MDirection::Types(phasecenter_p.getRefPtr()->getType()),
+      myRaDec(MDirection::Types(phasecenter.getRefPtr()->getType()),
 	      projection,
 	      refCoord(0), refCoord(1),
 	      deltas(0), deltas(1),
 	      xform,
 	      refPixel(0), refPixel(1));
 
-    SpectralCoordinate mySpectral(freqFrameValid_p ? MFrequency::LSRK : freqFrame_p, freqStart, freqStep, 0, restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
+    SpectralCoordinate mySpectral(freqFrameValid ? MFrequency::LSRK : freqFrame, freqStart, freqStep, 0, restFreq.nelements() >0 ? restFreq[0]: Quantity(0.0, "Hz"));
     for (uInt k=1 ; k < restFreq.nelements(); ++k)
       mySpectral.setRestFrequency(restFreq[k].getValue("Hz"));
     
     Vector<Int> whichStokes = decideNPolPlanes(stokes);
     if(whichStokes.nelements()==0)
       throw(AipsError("Stokes selection of " +stokes+ " is invalid"));
-    nstokes_p=whichStokes.nelements();
+    Int nstokes=whichStokes.nelements();
+    itsCurrentShape(2)=nstokes;
     StokesCoordinate myStokes(whichStokes);
     //Set Observatory info
     ObsInfo myobsinfo;
@@ -584,6 +727,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     csys.addCoordinate(myStokes);
     csys.addCoordinate(mySpectral);
     csys.setObsInfo(myobsinfo);
+    itsCurrentCoordSys=csys;
     return csys;
   }
 
@@ -716,25 +860,29 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
   // Make the FT-Machine and related objects (cfcache, etc.)
-  void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, const String& ftname)
+  void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, const String& ftname,
+		  const Int wprojplane,  const Float padding,  const Bool useAutocorr, const Bool useDoublePrec, const Int facets,
+		  const String& gridFunction)
   {
+	Int cache=1000000000;
+	Int tile=16;
     LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE));
     if(ftname=="GridFT"){
-      if(facets_p >1){
-	theFT=new GridFT(cache_p, tile_p, gridFunction_p, mLocation_p, phasecenter_p, padding_p, useAutocorr_p, useDoublePrec_p);
-	theIFT=new GridFT(cache_p, tile_p, gridFunction_p, mLocation_p, phasecenter_p, padding_p, useAutocorr_p, useDoublePrec_p);
+      if(facets >1){
+    	  theFT=new GridFT(cache, tile, gridFunction, mLocation_p, phaseCenter_p, padding, useAutocorr, useDoublePrec);
+    	  theIFT=new GridFT(cache, tile, gridFunction, mLocation_p, phaseCenter_p, padding, useAutocorr, useDoublePrec);
 
       }
       else{
-	theFT=new GridFT(cache_p, tile_p, gridFunction_p, mLocation_p, padding_p, useAutocorr_p, useDoublePrec_p);
-      theIFT=new GridFT(cache_p, tile_p, gridFunction_p, mLocation_p, padding_p, useAutocorr_p, useDoublePrec_p);
+    	  theFT=new GridFT(cache, tile, gridFunction, mLocation_p, padding, useAutocorr, useDoublePrec);
+    	  theIFT=new GridFT(cache, tile, gridFunction, mLocation_p, padding, useAutocorr, useDoublePrec);
       }
     }
     else if(ftname== "WProjectFT"){
-      theFT=new WProjectFT(wprojPlanes_p,  mLocation_p,
-			   cache_p/2, tile_p, useAutocorr_p, padding_p, useDoublePrec_p);
-      theIFT=new WProjectFT(wprojPlanes_p,  mLocation_p,
-			   cache_p/2, tile_p, useAutocorr_p, padding_p, useDoublePrec_p);
+      theFT=new WProjectFT(wprojplane,  mLocation_p,
+			   cache/2, tile, useAutocorr, padding, useDoublePrec);
+      theIFT=new WProjectFT(wprojplane,  mLocation_p,
+			   cache/2, tile, useAutocorr, padding, useDoublePrec);
       CountedPtr<WPConvFunc> sharedconvFunc= new WPConvFunc();
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
       static_cast<WProjectFT &>(*theFT).setConvFunc(sharedconvFunc);
@@ -772,6 +920,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
+    vi_p->originChunks();
+    vi_p->origin();
+    vi::VisBuffer2* vb=vi_p->getVisBuffer();
+    itsMappers.initializeDegrid(*vb);
+    itsMappers.initializeGrid(*vb);
+    for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
+    {
+
+    	for (vi_p->origin(); vi_p->more();vi_p->next())
+    	{
+    		itsMappers.degrid(*vb);
+    		itsMappers.grid(*vb);
+    	}
+    }
+    itsMappers.finalizeDegrid(*vb);
+    itsMappers.finalizeGrid(*vb);
+
+/*
     Int nmappers = itsMappers.nMappers();
     
     os << "Run major cycle for " << nmappers << " image(s) : " 
@@ -791,32 +957,32 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       {
 	//for( vi.origin(); vi.more(); vi++ )
 	  {
-	    for(Int mp=0;mp<nmappers;mp++)
-	      {
-		itsMappers.degrid(mp /* ,vb */);
+//	    for(Int mp=0;mp<nmappers;mp++)
+//	      {
+		// itsMappers.degrid(mp /* ,vb );
 		// resultvb.modelVisCube += vb.modelVisCube()
-	      }
+//	      }
 	    
 	    // resultvb.visCube -= resultvb.modelvisCube()
 	    
 	    // save model either in the column, or in the record. 
 	    // Access the FTM record as    rec=mappers[mp]->getFTMRecord();
 	    
-	    for(Int mp=0;mp<nmappers;mp++)
-	      {
-		itsMappers.grid(mp /* ,vb */);
-	      }
-	  }// end of for vb.
-      }// end of vi.chunk iterations
+//	    for(Int mp=0;mp<nmappers;mp++)
+//	      {
+//		itsMappers.grid(mp /* ,vb );
+//	      }
+//	  }// end of for vb.
+ //     }// end of vi.chunk iterations
       
 
       /////////// (3) Finalize Mappers.
-      for(Int mp=0;mp<nmappers;mp++)
-	{
-	  itsMappers.finalizeDegrid(mp);
-	  itsMappers.finalizeGrid(mp);
-	}
-      
+//      for(Int mp=0;mp<nmappers;mp++)
+//	{
+//	  itsMappers.finalizeDegrid(mp);
+//	  itsMappers.finalizeGrid(mp);
+//	}
+*/
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

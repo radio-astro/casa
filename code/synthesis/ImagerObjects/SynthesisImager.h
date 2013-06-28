@@ -47,6 +47,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 class MeasurementSet;
 template<class T> class ImageInterface;
  class SIIterBot;
+ class VisImagingWeight;
 
 // <summary> Class that contains functions needed for imager </summary>
 
@@ -66,6 +67,8 @@ class SynthesisImager
   void selectData(Record selpars);
   virtual Bool selectData(const String& msname, const String& spw, const String& field, const String& taql,  const String& antenna,  const String& uvdist, const String& scan, const String& obs, const String& timestr, const Bool usescratch=False, const Bool readonly=False);
   void defineImage(Record impars);
+  //When having a facetted image ...call with (facets > 1)  first and  once only ..
+  //Easier to keep track of the imstores that way
   virtual Bool defineImage(const String& imagename, const Int nx, const Int ny,
 			   const Quantity& cellx, const Quantity& celly,
 			   const String& stokes,
@@ -87,9 +90,14 @@ class SynthesisImager
   //if sdgrid=True then image plane degridding is done
   virtual void setComponentList(const ComponentList& cl, Bool sdgrid=False);
   void setupImaging(Record gridpars);
-
+  Bool weight(const String& type="natural", const String& rmode="norm",
+                     const Quantity& noise=Quantity(0.0, "Jy"), const Double robust=0.0,
+                     const Quantity& fieldofview=Quantity(0.0, "arcsec"),
+    		    const Int npixels=0, const Bool multiField=False);
   void initMapper();
   void resetMapper();
+
+  CountedPtr<SIImageStore> imageStore(const Int id=0);
 
   //Record getMajorCycleControls();
   void   executeMajorCycle(Record& controls);
@@ -107,9 +115,13 @@ protected:
 							  uInt imx, uInt imy,
 							  uInt npol, uInt nchan);
 
-  CoordinateSystem buildCoordSys(const MDirection& phasecenter, const Quantity& cellx, const Quantity& celly, const Int nx, const Int ny, const String& stokes, const Projection& projection, const Int nchan, const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq);
+  CoordinateSystem buildCoordSys(const MDirection& phasecenter, const Quantity& cellx, const Quantity& celly,
+		  const Int nx, const Int ny, const String& stokes, const Projection& projection, const Int nchan,
+		  const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq, const MFrequency::Types freqFrame);
 
-  void createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT,  const String& ftname);
+  void createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT,  const String& ftname,
+		  const Int wprojplane=1,  const Float padding=1.0, const Bool useAutocorr=False, const Bool useDoublePrec=True,
+		  const Int facets=1, const String& gridfunction="SF");
   void createVisSet();
   
   void runMajorCycle();
@@ -124,7 +136,8 @@ protected:
   SIMapperCollection itsMappers;
 
   CountedPtr<FTMachine> itsCurrentFTMachine;
-  CountedPtr<CoordinateSystem> itsCurrentCoordSys;
+  CoordinateSystem itsCurrentCoordSys;
+  IPosition itsCurrentShape;
   CountedPtr<SIImageStore> itsCurrentImages;
   ///if facetting this storage will keep the unsliced version 
   CountedPtr<SIImageStore> unFacettedImStore_p;
@@ -140,20 +153,19 @@ protected:
   Block<const MeasurementSet *> mss_p;
   vi::FrequencySelections fselections_p;
   CountedPtr<vi::VisibilityIterator2>  vi_p;
-  Int nx_p, ny_p, nstokes_p, nchan_p, facets_p;
-  Quantity cellx_p, celly_p, distance_p;
-  String stokes_p;
-  MDirection phasecenter_p;
-  Quantity freqStart_p, freqStep_p;
-  MFrequency::Types freqFrame_p;
+  ////////////////////////////////////Till VisibilityIterator2 works as advertised
+  CountedPtr<VisibilityIterator> wvi_p;
+  CountedPtr<ROVisibilityIterator> rvi_p;
+  Block<Vector<Int> > blockNChan_p;
+  Block<Vector<Int> > blockStart_p;
+  Block<Vector<Int> > blockStep_p;
+  Block<Vector<Int> > blockSpw_p;
+  /////////////////////////////////////////////////////////////////////////////////
   MPosition mLocation_p;
-  Bool freqFrameValid_p;
-  Int wprojPlanes_p;
-  Bool useAutocorr_p;
-  Bool useDoublePrec_p;
-  Float padding_p;
-  Int cache_p, tile_p;
-  String gridFunction_p;
+  MDirection phaseCenter_p;
+  Int facetsStore_p;
+  VisImagingWeight imwgt_p;
+  Bool imageDefined_p;
 };
 
 

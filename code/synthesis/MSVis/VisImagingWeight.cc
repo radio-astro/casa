@@ -27,6 +27,7 @@
 //# $Id$
 #include <synthesis/MSVis/VisibilityIterator.h>
 #include <synthesis/MSVis/VisBuffer.h>
+#include <synthesis/MSVis/VisBuffer2.h>
 #include <synthesis/MSVis/VisImagingWeight.h>
 #include <casa/Quanta/MVAngle.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -155,7 +156,139 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       //Float f2, d2;
       for(fid=0; fid < Int(gwt_p.nelements()); ++fid){
-          if (rmode=="norm") {
+	if (rmode=="norm") {
+              os << "Normal robustness, robust = " << robust << LogIO::POST;
+              Double sumlocwt = 0.;
+              for(Int vgrid=0;vgrid<ny;vgrid++) {
+                  for(Int ugrid=0;ugrid<nx;ugrid++) {
+                      if(gwt_p[fid](ugrid, vgrid)>0.0) sumlocwt+=square(gwt_p[fid](ugrid,vgrid));
+                  }
+              }
+              f2_p[fid] = square(5.0*pow(10.0,Double(-robust))) / (sumlocwt / sumwt[fid]);
+              d2_p[fid] = 1.0;
+
+          }
+          else if (rmode=="abs") {
+              os << "Absolute robustness, robust = " << robust << ", noise = "
+                      << noise.get("Jy").getValue() << "Jy" << LogIO::POST;
+              f2_p[fid] = square(robust);
+              d2_p[fid] = 2.0 * square(noise.get("Jy").getValue());
+
+          }
+          else {
+              f2_p[fid] = 1.0;
+              d2_p[fid] = 0.0;
+          }
+      }
+  }
+
+  VisImagingWeight::VisImagingWeight(vi::VisibilityIterator2& visIter,
+				     const String& rmode, const Quantity& noise,
+                                     const Double robust, const Int nx, const Int ny,
+                                     const Quantity& cellx, const Quantity& celly,
+                                     const Int uBox, const Int vBox, const Bool multiField) : multiFieldMap_p(-1), doFilter_p(False), robust_p(robust), rmode_p(rmode), noise_p(noise) {
+
+      LogIO os(LogOrigin("VisSetUtil", "VisImagingWeight()", WHERE));
+
+
+
+      vi::VisBuffer2* vb=(visIter.getVisBuffer());
+      wgtType_p="uniform";
+      // Float uscale, vscale;
+      //Int uorigin, vorigin;
+      Vector<Double> deltas;
+      uscale_p=(nx*cellx.get("rad").getValue());
+      vscale_p=(ny*celly.get("rad").getValue());
+      uorigin_p=nx/2;
+      vorigin_p=ny/2;
+      nx_p=nx;
+      ny_p=ny;
+      // Simply declare a big matrix
+      //Matrix<Float> gwt(nx,ny);
+      gwt_p.resize(1);
+      multiFieldMap_p.clear();
+      visIter.originChunks();
+      visIter.origin();
+      String mapid=String::toString(vb->msId())+String("_")+String::toString(vb->fieldId()[0]);
+      multiFieldMap_p.define(mapid, 0);
+      gwt_p[0].resize(nx, ny);
+      gwt_p[0].set(0.0);
+
+      Int fields=0;
+      for (visIter.originChunks();visIter.moreChunks();visIter.nextChunk()) {
+          for (visIter.origin();visIter.more();visIter.next()) {
+              if(vb->isNewFieldId()){
+                  mapid=String::toString(vb->msId())+String("_")+String::toString(vb->fieldId()[0]);
+                  if(multiField){
+                      if(!multiFieldMap_p.isDefined(mapid)){
+                          fields+=1;
+                          gwt_p.resize(fields+1);
+                          gwt_p[fields].resize(nx,ny);
+                          gwt_p[fields].set(0.0);
+                      }
+                  }
+                  if(!multiFieldMap_p.isDefined(mapid))
+                      multiFieldMap_p.define(mapid, fields);
+              }
+          }
+      }
+
+      Float u, v;
+      Vector<Double> sumwt(fields+1,0.0);
+      f2_p.resize(fields+1);
+      d2_p.resize(fields+1);
+      Int fid=0;
+      for (visIter.originChunks();visIter.moreChunks();visIter.nextChunk()) {
+          for (visIter.origin();visIter.more();visIter.next()) {
+              if(vb->isNewFieldId())
+                  mapid=String::toString(vb->msId())+String("_")+String::toString(vb->fieldId()[0]);
+              fid=multiFieldMap_p(mapid);
+              Int nRow=vb->nRows();
+              Int nChan=vb->nChannels();
+              for (Int row=0; row<nRow; row++) {
+                  for (Int chn=0; chn<nChan; chn++) {
+                	  //Oww !!! temporary implementation of old vb.flag just to see if things work
+                	  Matrix<Bool> flag;
+                	  cube2Matrix(vb->flagCube(), flag);
+                      if(!flag(chn,row)) {
+                          Float f=vb->getFrequency(row, chn)/C::c;
+                          u=vb->uvw()(0,row)*f;
+                          v=vb->uvw()(1,row)*f;
+                          Int ucell=Int(uscale_p*u+uorigin_p);
+                          Int vcell=Int(vscale_p*v+vorigin_p);
+                          if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
+                              for (Int iv=-vBox;iv<=vBox;iv++) {
+                                  for (Int iu=-uBox;iu<=uBox;iu++) {
+                                      gwt_p[fid](ucell+iu,vcell+iv)+=vb->weight()(0,row);
+                                      sumwt[fid]+=vb->weight()(0,row);
+                                  }
+                              }
+                          }
+                          ucell=Int(-uscale_p*u+uorigin_p);
+                          vcell=Int(-vscale_p*v+vorigin_p);
+                          if(((ucell-uBox)>0)&&((ucell+uBox)<nx)&&((vcell-vBox)>0)&&((vcell+vBox)<ny)) {
+                              for (Int iv=-vBox;iv<=vBox;iv++) {
+                                  for (Int iu=-uBox;iu<=uBox;iu++) {
+                                      gwt_p[fid](ucell+iu,vcell+iv)+=vb->weight()(0,row);
+                                      sumwt[fid]+=vb->weight()(0,row);
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+      }
+
+      // We use the approximation that all statistical weights are equal to
+      // calculate the average summed weights (over visibilities, not bins!)
+      // This is simply to try an ensure that the normalization of the robustness
+      // parameter is similar to that of the ungridded case, but it doesn't have
+      // to be exact, since any given case will require some experimentation.
+
+      //Float f2, d2;
+      for(fid=0; fid < Int(gwt_p.nelements()); ++fid){
+	if (rmode=="norm") {
               os << "Normal robustness, robust = " << robust << LogIO::POST;
               Double sumlocwt = 0.;
               for(Int vgrid=0;vgrid<ny;vgrid++) {
@@ -447,7 +580,25 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     
   }
-
+  void VisImagingWeight::cube2Matrix(const Cube<Bool>& fcube, Matrix<Bool>& fMat)
+  {
+	  fMat.resize(fcube.shape()[1], fcube.shape()[2]);
+	  Bool deleteIt1;
+	  Bool deleteIt2;
+	  const Bool * pcube = fcube.getStorage (deleteIt1);
+	  Bool * pflags = fMat.getStorage (deleteIt2);
+	  for (uInt row = 0; row < fcube.shape()[2]; row++) {
+		  for (Int chn = 0; chn < fcube.shape()[1]; chn++) {
+			  *pflags = *pcube++;
+			  for (Int pol = 1; pol < fcube.shape()[0]; pol++, pcube++) {
+				  *pflags = *pcube ? *pcube : *pflags;
+			  }
+			  pflags++;
+		  }
+	  }
+	  fcube.freeStorage (pcube, deleteIt1);
+	  fMat.putStorage (pflags, deleteIt2);
+  }
 
 }//# NAMESPACE CASA - END
 

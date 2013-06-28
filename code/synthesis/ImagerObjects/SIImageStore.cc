@@ -378,7 +378,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   IPosition SIImageStore::tileShape(){
 	  //Need to have settable stuff here or algorith to determine this
-	  return IPosition(4, 1000, 1000, 1, 1);
+	  return IPosition(4, min(itsModel->shape()[0],1000), min(itsModel->shape()[1],1000), 1, 1);
   }
 
   // TODO : Move to an image-wrapper class ? Same function exists in SynthesisDeconvolver.

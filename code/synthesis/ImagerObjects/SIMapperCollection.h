@@ -64,9 +64,18 @@ class SIMapperCollection
   void initializeDegrid(Int mapperid);
   void degrid(Int mapperid);
   void finalizeDegrid(Int mapperid);
+////////////The following will loop over the SIMappers internally
+  void initializeGrid(const vi::VisBuffer2& vb);
+  void grid(const vi::VisBuffer2& vb, const Bool dopsf=False, const FTMachine::Type col=FTMachine::CORRECTED);
+  void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf=False);
+  void initializeDegrid(const vi::VisBuffer2& vb);
+  void degrid(vi::VisBuffer2& vb);
+  void finalizeDegrid(const vi::VisBuffer2& vb);
+
 
   Record getFTMRecord(Int mapperid);
 
+  CountedPtr<SIImageStore> imageStore(const Int id=0);
   Bool releaseImageLocks();
 
 protected:
