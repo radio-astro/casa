@@ -917,30 +917,36 @@ class RefAntFlagging:
 
 		# Create the local version of the flag tool and open the MS
 
-		#fgLoc = casa.__flaggerhome__.create()
-		fgLoc = casac.flagger()
-#		fgLoc.open( self.vis[0] ) # Take zeroth element
+		#fgLoc = casac.flagger()
+		fgLoc = casac.agentflagger()
 		fgLoc.open( self.vis )
 
 
 		# Get the flag statistics from the MS
 
-		fgLoc.setdata( field=self.field, spw=self.spw,
+		#fgLoc.setdata( field=self.field, spw=self.spw,
+		    #intent=self.intent )
+		fgLoc.selectdata( field=self.field, spw=self.spw,
 		    intent=self.intent )
-		fgLoc.setflagsummary()
 
+		agents = {}
+		agents['mode'] = 'summary'
+		fgLoc.parseagentparameters(agents)
+		#fgLoc.setflagsummary()
+
+		fgLoc.init()
 		d = fgLoc.run()
+		fgLoc.done()
 
 
 		# Delete the local version of the flag tool
 
 		del fgLoc
 
-
 		# Calculate the number of good data for each antenna and return
 		# them
 
-		antenna = d['antenna']
+		antenna = d['report0']['antenna']
 		good = dict()
 
 		for a in antenna.keys():
