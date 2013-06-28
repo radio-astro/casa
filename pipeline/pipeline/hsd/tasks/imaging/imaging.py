@@ -130,26 +130,15 @@ class SDImaging(common.SingleDishTaskTemplate):
                 namer.polarization(polstr)
                 imagename = namer.get_filename()
                 
-                worker = SDImagingWorker()
                 validsps = []
                 rmss = []
-                parameters = {'imagename': imagename,
-                              'datatable': datatable,
-                              'reference_data': st,
-                              'source_name': source_name,
-                              'antenna_name': name,
-                              'antenna_indices': indices,
-                              'antenna_files': filenames,
-                              'spwid': spwid,
-                              'polids': pols,
-                              'num_validsp_array': validsps,
-                              'rms_array': rmss}
 
-                # create job for imaging
-                job = jobrequest.JobRequest(worker.execute, **parameters)
+                # do imaging
+                self._do_imaging(imagename, datatable, st, source_name,
+                                 name, indices, filenames, spwid, pols,
+                                 validsps, rmss)
+
                 
-                # execute job
-                self._executor.execute(job)
                 
                 if imagename is not None:
                     image_item = imagelibrary.ImageItem(imagename=imagename,
@@ -172,18 +161,14 @@ class SDImaging(common.SingleDishTaskTemplate):
                         result.stage_number = self.inputs.context.task_counter 
 
                     results.append(result)
+
+        LOG.todo('logrecords for SDImagingResults must be handled properly')
+        for r in results:
+            r.logrecords = []
+
         return results
 
-    def analyse(self, result):
-        return result
-
-
-class SDImagingWorker(object):
-
-    def __init__(self):
-        pass
-
-    def execute(self, imagename, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids, num_validsp_array, rms_array):
+    def _do_imaging(self, imagename, datatable, reference_data, source_name, antenna_name, antenna_indices, antenna_files, spwid, polids, num_validsp_array, rms_array):
         # spectral window
         spw = reference_data.spectral_window[spwid]
         refpix = spw.refpix
@@ -208,8 +193,7 @@ class SDImagingWorker(object):
         for pol in polids:                        
             gridder = gridding_class(datatable, antenna_indices, antenna_files, spwid, pol, srctype, nchan, grid_size)
 
-            (spectra,grid_table) = gridder.execute()
-            #(spectra, image_property, validsp, rms) = gridder.execute()
+            (spectra,grid_table) = self._executor.execute(gridder, merge=False)
             data_array.append(spectra)
             num_validsp_array.append([r[6] for r in grid_table])
             rms_array.append([r[8] for r in grid_table])
@@ -227,9 +211,13 @@ class SDImagingWorker(object):
                                      rest_frequency=rest_freqs,
                                      antenna=antenna, observer=observer, 
                                      obs_date=obs_date)
+        image_generator.imagename = imagename
 
         # create image from gridded data
-        image_generator.full_channel_image(imagename=imagename)
+        self._executor.execute(image_generator, merge=False)
 
-        
+
+    def analyse(self, result):
+        return result
+
 

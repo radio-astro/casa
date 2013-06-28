@@ -58,7 +58,9 @@ class GriddingBase(object):
             self.grid_ra = grid_size
             self.grid_dec = grid_size
 
-    def execute(self):
+    def execute(self, dry_run=True):
+        if dry_run:
+            return [], []
         start = time.time()
         combine_radius = self.grid_ra
         kernel_width = 0.5 * combine_radius

@@ -41,11 +41,36 @@ class SDImageGenerator(object):
 
     def __init__(self, spectral_data, edge=[]):
         self.data = numpy.array(spectral_data) #(npol,nrow,nchan)
-        self.nchan = self.data.shape[-1]
-        # Check if channel averaged data
-        self.isaveraged = (self.nchan == 1)
-        
+        self._imagename = None
         self.edge = list(common.parseEdge(edge))
+
+    @property
+    def nchan(self):
+        return self.data.shape[-1]
+
+    @property
+    def isaveraged(self):
+        return (self.nchan == 1)
+
+    @property
+    def imagename(self):
+        return self._imagename
+
+    @imagename.setter
+    def imagename(self, value):
+        self._imagename = value
+        
+    def execute(self, dry_run=True):
+        if self.imagename is None:
+            imagename = 'temporary_image'
+        else:
+            imagename = self.imagename
+
+        if dry_run:
+            return imagename
+        else:
+            self.full_channel_image(imagename=imagename)
+            return imagename
         
     def full_channel_image(self, imagename=None):
         # reshape data from (npol,nrow,nchan) to (nx,ny,nchan,npol)
