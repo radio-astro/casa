@@ -81,6 +81,11 @@ class SDCalSky(common.SingleDishTaskTemplate):
                 result.append(self.prepare())
             # do I need to restore self.inputs.infiles?
             inputs.infiles = infiles[:]
+
+            LOG.todo('logrecords for SDCalSKyResults must be handled properly')
+            for r in result:
+                r.logrecords = []
+            
             return result
 
         # In the following, inputs.infiles should be a string,
