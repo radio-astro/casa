@@ -151,16 +151,19 @@ Bool MultiTermMatrixCleaner::initialise(Int nx, Int ny)
   //// N times the size of the main lobe of the PSF at the max scale size
   Float psfbeam = 4.0;
   Float nbeams = 20.0;
-  Int psupport = (Int) ( sqrt( psfbeam*psfbeam + maxscalesize*maxscalesize ) * nbeams  );
+  Int psupport = findBeamPatch(maxscalesize, nx_p, ny_p, psfbeam, nbeams);
+  // //----------------------Encapsulated in the findBeamPatch() method from here...-----------
+  // Int psupport = (Int) ( sqrt( psfbeam*psfbeam + maxscalesize*maxscalesize ) * nbeams  );
 
-  // At least this big...
-  if(psupport < psfbeam*nbeams ) psupport = static_cast<Int>(psfbeam*nbeams);
+  // // At least this big...
+  // if(psupport < psfbeam*nbeams ) psupport = static_cast<Int>(psfbeam*nbeams);
 
-  // Not too big...
-  if(psupport > nx_p || psupport > ny_p)   psupport = MIN(nx_p,ny_p);
+  // // Not too big...
+  // if(psupport > nx_p || psupport > ny_p)   psupport = MIN(nx_p,ny_p);
 
-  // Make it even.
-  if (psupport%2 != 0) psupport -= 1;
+  // // Make it even.
+  // if (psupport%2 != 0) psupport -= 1;
+  // //----------------------...till here------------------------------------
 
 
   // Full image
