@@ -67,7 +67,10 @@ Bool MatrixCleaner::validatePsf(const Matrix<Float> & psf)
   AlwaysAssert(psf.shape().product() != 0, AipsError);
   Float maxPsf=0;
   itsPositionPeakPsf=IPosition(psf.shape().nelements(), 0);
-  findMaxAbs(psf, maxPsf, itsPositionPeakPsf);
+  //findMaxAbs(psf, maxPsf, itsPositionPeakPsf);
+  Int psfSupport = findBeamPatch(0.0, psf.shape()(0), psf.shape()(1), 
+				 4.0, 20.0);
+  findPSFMaxAbs(psf, maxPsf, itsPositionPeakPsf, psfSupport);
   os << "Peak of PSF = " << maxPsf << " at " << itsPositionPeakPsf
      << LogIO::POST;
   return True;
@@ -673,7 +676,34 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
   return converged;
 }
 
+  Bool MatrixCleaner::findPSFMaxAbs(const Matrix<Float>& lattice,
+				    Float& maxAbs,
+				    IPosition& posMaxAbs,
+				    const Int& supportSize)
+  {
+    LogIO os(LogOrigin("MatrixCleaner", "findPSFMaxAbs()", WHERE));
+    posMaxAbs = IPosition(lattice.shape().nelements(), 0);
+    maxAbs=0.0;
 
+    Float maxVal=0.0;
+    IPosition psf2DShape(lattice.shape());
+    Int blc0 = psf2DShape(0)/2 - supportSize,
+      blc1 = psf2DShape(1)/2 - supportSize,
+      trc0 = psf2DShape(0)/2 + supportSize,
+      trc1 = psf2DShape(1)/2 + supportSize;
+
+
+    os << "####### " << blc0 << " " << blc1 << " " << trc0 << " " << trc1 << endl;
+    for (Int i=blc0; i < trc0; i++)
+      for (Int j=blc1 ; j < trc1; j++)
+	if ((maxAbs = abs(lattice(i,j))) > maxVal)
+	  {
+	    maxVal = maxAbs;
+	    posMaxAbs(0)=i; posMaxAbs(1)=j;
+	  }
+    os << "######## " << posMaxAbs << " " << maxVal << endl;
+    return True;
+  }
 
 Bool MatrixCleaner::findMaxAbs(const Matrix<Float>& lattice,
 					  Float& maxAbs,
@@ -1213,6 +1243,23 @@ void MatrixCleaner::makeBoxesSameSize(IPosition& blc1, IPosition& trc1,
        blc2[i] += increment2/2;
        trc2[i] -= increment2/2 + (increment2 % 2 != 0 ? 1 : 0);
   }
+}
+
+Int MatrixCleaner::findBeamPatch(const Float maxScaleSize, const Int& nx, const Int& ny,
+				 const Float psfBeam, const Float nBeams)
+{
+  Int psupport = (Int) ( sqrt( psfBeam*psfBeam + maxScaleSize*maxScaleSize ) * nBeams  );
+
+  // At least this big...
+  if(psupport < psfBeam*nBeams ) psupport = static_cast<Int>(psfBeam*nBeams);
+
+  // Not too big...
+  if(psupport > nx || psupport > ny)   psupport = std::min(nx,ny);
+
+  // Make it even.
+  if (psupport%2 != 0) psupport -= 1;
+
+  return psupport;
 }
 
 
