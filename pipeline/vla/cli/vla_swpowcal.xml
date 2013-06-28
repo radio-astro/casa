@@ -4,8 +4,8 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
-<task type="function" name="vla_gaincurves" category="pipeline">
-<shortdescription>Runs gencal in gc mode</shortdescription>
+<task type="function" name="vla_swpowcal" category="pipeline">
+<shortdescription>Runs gencal in swpow mode</shortdescription>
 <description>
 </description>
 <input>
@@ -69,7 +69,7 @@
 
 
 <example>
-The vla_gaincurves task runs gencal in gc mode
+The vla_swpowcal task runs gencal in swpow mode for Switched Power
 
 Keyword arguments:
 
@@ -117,7 +117,7 @@ Examples
 
 1. Load an ASDM list in the ../rawdata subdirectory into the context.
 
-   vla_gaincurves()
+   vla_swpowcal()
 
 
 </example>

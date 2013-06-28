@@ -6,3 +6,4 @@ from .gaincurves import GainCurves
 from .vlautils import VLAUtils
 from .flagging import FlagDeterVLA
 from .rqcal import Rqcal
+from .swpowcal import Swpowcal

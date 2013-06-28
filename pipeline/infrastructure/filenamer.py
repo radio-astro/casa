@@ -443,6 +443,11 @@ class CalibrationTable(NamingTemplate):
         '''
         return self.extension('rq')
 
+    def swpow_cal(self):
+        '''Set the filename extension as appropriate for a swpow calibration.
+        '''
+        return self.extension('swpow')
+
     def wvrg_cal(self):
         '''Set the filename extension as appropriate for a wvr calibration.
         ''' 
@@ -650,6 +655,11 @@ class RqCalibrationTable(CalibrationTable):
     def __init__(self, other=None):
         super(RqCalibrationTable, self).__init__(other)
         self.rq_cal()
+
+class SwpowCalibrationTable(CalibrationTable):
+    def __init__(self, other=None):
+        super(SwpowCalibrationTable, self).__init__(other)
+        self.swpow_cal()
 
 class WvrgCalibrationTable(CalibrationTable):
     def __init__(self, other=None):

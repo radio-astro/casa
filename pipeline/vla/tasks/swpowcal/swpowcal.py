@@ -9,16 +9,17 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 from . import resultobjects
+import pipeline.infrastructure.casatools as casatools
 
 LOG = infrastructure.get_logger(__name__)
 
 
 
-class RqcalInputs(basetask.StandardInputs):
+class SwpowcalInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=[]):
 	# set the properties to the values given as input arguments
         self._init_properties(vars())
-	setattr(self, 'caltype', 'rq')
+	setattr(self, 'caltype', 'swpow')
 
     @property
     def caltable(self):
@@ -38,7 +39,7 @@ class RqcalInputs(basetask.StandardInputs):
     @caltable.setter
     def caltable(self, value):
         if value is None:
-            value = caltable_heuristic.RqCaltable()
+            value = caltable_heuristic.SwpowCaltable()
         self._caltable = value
     
     @property
@@ -71,12 +72,12 @@ class RqcalInputs(basetask.StandardInputs):
         
 	return {'vis': self.vis,
 	        'caltable': self.caltable,
-		'caltype': self.caltype,
-                'parameter': self.parameter}
+		    'caltype': self.caltype,
+            'parameter': self.parameter}
 
 
-class Rqcal(basetask.StandardTaskTemplate):
-    Inputs = RqcalInputs    
+class Swpowcal(basetask.StandardTaskTemplate):
+    Inputs = SwpowcalInputs    
 
     def prepare(self):
         inputs = self.inputs
@@ -86,10 +87,11 @@ class Rqcal(basetask.StandardTaskTemplate):
 
         startdate = ms_summary['BeginTime']
 
-        #Note from original scripted pipeline:
-        # Apply switched power calibration (when commissioned); for now, just
-        # requantizer gains (needs casa4.1!), and only for data with
-        # sensible switched power tables (Feb 24, 2011)
+        #Note from the original scripted pipeline:
+        # Lastly, make switched power table.  This is not used in the
+        # pipeline, but may be used for QA and for flagging, especially at
+        # S-band for fields near the geostationary satellite belt.  Only
+        # relevant for data taken on 24-Feb-2011 or later.
         if startdate >= 55616.6:
             gencal_args = inputs.to_casa_args()
             gencal_job = casa_tasks.gencal(**gencal_args)
@@ -97,11 +99,11 @@ class Rqcal(basetask.StandardTaskTemplate):
 
             callist = []
             calto = callibrary.CalTo(vis=inputs.vis)
-            calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='rq')
+            calfrom = callibrary.CalFrom(gencal_args['caltable'], caltype='swpow')
             calapp = callibrary.CalApplication(calto, calfrom)
             callist.append(calapp)
 
-        return resultobjects.RqcalResults(pool=callist)
+        return resultobjects.SwpowcalResults(pool=callist)
 
 
     def analyse(self, result):

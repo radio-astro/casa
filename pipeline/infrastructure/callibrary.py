@@ -220,7 +220,8 @@ class CalFrom(object):
         'antpos'       : 6,
         'gc'           : 7,
         'opac'         : 8,
-        'rq'           : 9,  
+        'rq'           : 9,
+        'swpow'        : 10,
     }
 
     CALTYPE_TO_VISCAL = {
