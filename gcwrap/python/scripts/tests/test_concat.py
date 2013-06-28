@@ -138,15 +138,17 @@ class test_concat(unittest.TestCase):
 
             ms.open('xy1.ms', nomodify=False)
             ms.addephemeris(0,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Uranus_54708-55437dUTC.tab',
-                            'Uranus_54708-55437dUTC', 13) 
+                            'Uranus_54708-55437dUTC', '1908-201')  # this field is not really Uranus but for a test this doesn't matter
             ms.addephemeris(1,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Jupiter_54708-55437dUTC.tab',
                             'Jupiter_54708-55437dUTC', 0)
             ms.close()
 
         if not 'xy2.ms' in filespresent:
-            split(vis='part1.ms', outputvis='xy2.ms', scan="31~65", datacolumn='data')
+            split(vis='part1.ms', outputvis='xy2.ms', scan="58~65", datacolumn='data')
+
             tb.open('xy2.ms', nomodify=False)
             a = tb.getcol('TIME')
+            delta = (54719.*86400-a[0]) # ten days later than xy1.ms !
             a = a + delta
             tb.putcol('TIME', a)
             a = tb.getcol('TIME_CENTROID')
@@ -166,11 +168,39 @@ class test_concat(unittest.TestCase):
 
             ms.open('xy2.ms', nomodify=False)
             ms.addephemeris(0,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Uranus_54708-55437dUTC.tab',
-                            'Uranus_54708-55437dUTC', 13)
+                            'Uranus_54708-55437dUTC', '1908-201')
+            ms.close()
+
+        if not 'xy2late.ms' in filespresent:
+            split(vis='part1.ms', outputvis='xy2late.ms', scan="58~65", datacolumn='data')
+
+            tb.open('xy2late.ms', nomodify=False)
+            a = tb.getcol('TIME')
+            delta = (55438.*86400-a[0]) # much later than xy1.ms, beyond the end of Uranus_54708-55437dUTC.tab !
+            a = a + delta
+            tb.putcol('TIME', a)
+            a = tb.getcol('TIME_CENTROID')
+            a = a + delta
+            tb.putcol('TIME_CENTROID', a)
+            tb.close()
+            tb.open('xy2late.ms/FIELD', nomodify=False)
+            a = tb.getcol('TIME')
+            a = a + delta
+            tb.putcol('TIME', a)
+            tb.close()
+            tb.open('xy2late.ms/OBSERVATION', nomodify=False)
+            a = tb.getcol('TIME_RANGE')
+            a = a + delta
+            tb.putcol('TIME_RANGE', a)
+            tb.close()
+
+            ms.open('xy2late.ms', nomodify=False)
+            ms.addephemeris(0,os.environ.get('CASAPATH').split()[0]+'/data/ephemerides/JPL-Horizons/Uranus_55437-56293dUTC.tab',
+                            'Uranus_55437-56293dUTC', '1908-201')
             ms.close()
 
         if not 'xy2-jup-ur.ms' in filespresent:
-            split(vis='xy2.ms', outputvis='xy2-jup-ur.ms', field = 'jupiter, uranus', datacolumn='data')
+            split(vis='xy2.ms', outputvis='xy2-jup-ur.ms', field = 'jupiter, 1908-201', datacolumn='data')
 
         if not 'xya.ms' in filespresent:
             split(vis='xy1.ms', outputvis='xya.ms', spw='0:0~63', datacolumn='data')
@@ -1236,8 +1266,20 @@ class test_concat(unittest.TestCase):
             if 'test11.ms' in glob.glob("*.ms"):
                 shutil.rmtree('test11.ms',ignore_errors=True)
             shutil.copytree(msname,'test11.ms')
-            #print myname, ": OK. Checking tables in detail ..."
+            print myname, ": OK. Checking tables in detail ..."
+            tb.open('test11.ms/FIELD')
+            a = list(tb.getcol('NAME'))
+            tb.close()
+            tb.open('xy1.ms/FIELD')
+            compa = list(tb.getcol('NAME'))
+            compa.append('jupiter') # jupiter should occur a second time because in xy1.ms it is an ephemeris object, in xy2 it is not
+            tb.close()
             retValue['success']=True
+            if not (len(a)==len(compa) and a==compa):
+                print "FIELD table of test11.ms has unexpected NAME column:"
+                print "           ", a
+                print " expected: ", compa
+                retValue['success']=False
 
         self.assertTrue(retValue['success'])
 
@@ -1416,6 +1458,7 @@ class test_concat(unittest.TestCase):
             print myname, ": OK. Checking tables in detail ..."
             tb.open('test14.ms/FIELD')
             a = tb.getcol('EPHEMERIS_ID')
+            tb.close()
             retValue['success']=True
             for i in range(0,15):
                 if(a[i]!=-1 and i!=1):
@@ -1424,6 +1467,90 @@ class test_concat(unittest.TestCase):
 
         self.assertTrue(retValue['success'])
 
+    def test15(self):
+        '''Concat 15: 2 parts of same MS split in time,  use of ephemerides, first ephemeris does not cover both MS time ranges'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }
+        
+        self.res = concat(vis=['xy1.ms','xy2late.ms'],concatvis=msname, copypointing=False)
+        self.assertEqual(self.res,True)
+        
+        print myname, ": Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f1",
+                            "table.f2",
+                            "table.f3",
+                            "table.f4",
+                            "table.f5",
+                            "table.f6",
+                            "table.f7",
+                            "table.f8",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FIELD/EPHEM0_Uranus_54708-55437dUTC.tab",
+                            "FIELD/EPHEM1_Jupiter_54708-55437dUTC.tab",
+                            "FIELD/EPHEM2_Uranus_55437-56293dUTC.tab",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test15.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test15.ms',ignore_errors=True)
+            shutil.copytree(msname,'test15.ms')
+            print myname, ": OK. Checking tables in detail ..."
+            tb.open('test15.ms/FIELD')
+            a = list(tb.getcol('NAME'))
+            tb.close()
+            tb.open('xy1.ms/FIELD')
+            compa = list(tb.getcol('NAME'))
+            compa.append('jupiter') # jupiter should occur a second time because in xy1.ms it is an ephemeris object, in xy2late it is not
+            compa.append('1908-201') # 1908-201 should occur a second time because the ephemeris in xy1.ms does not cover the time range of xy2late 
+            tb.close()
+            retValue['success']=True
+            if not (len(a)==len(compa) and a==compa):
+                print "FIELD table of test15.ms has unexpected NAME column:"
+                print "           ", a
+                print " expected: ", compa
+                retValue['success']=False
+
+        self.assertTrue(retValue['success'])
 
 class concat_cleanup(unittest.TestCase):           
     def setUp(self):
