@@ -454,6 +454,12 @@ class VirtualMeasurementSetFiller(object):
         ms.fields = VirtualMeasurementSetFiller.get_field(st)
         ms.scans = VirtualMeasurementSetFiller.get_scan(st, ms)
         ms.data_descriptions = VirtualMeasurementSetFiller.get_data_description(st)
+
+        ms.observer = st[0].observer
+        ms.project_id = 'DUMMY_PROJECT_ID'
+        ms.schedblock_id = 'DUMMY_SCHEDBLOCK_ID'
+        ms.execblock_id = 'DUMMY_EXECBLOCK_ID'
+
         return ms
 
     @staticmethod
@@ -547,12 +553,16 @@ class VirtualMeasurementSetFiller(object):
             for s in scannos:
                 tsel = tb.query('SCANNO==%s'%(s))
                 ifnos = numpy.unique(tsel.getcol('IFNO'))
-                times = tsel.getcol('TIME')
-                intervals = tsel.getcol('INTERVAL')
+                times = tsel.getcol('TIME').tolist()
+                unique_times = set(times)
+                intervals = tsel.getcol('INTERVAL').tolist()
+                unique_intervals = [intervals[times.index(t)] for t in unique_times]
                 scan_times = []
                 field_names = numpy.unique(tsel.getcol('FIELDNAME'))
                 field_names = [v.split('__')[0].replace(' ','_') for v in field_names]
-                for (t,i) in zip(times,intervals):
+                tsel.close()
+                
+                for (t,i) in zip(unique_times,unique_intervals):
                     interval = qa.quantity(i,'s')
                     half_interval = qa.div(interval, 2)
                     center_time = qa.quantity(t,'d')
@@ -562,7 +572,6 @@ class VirtualMeasurementSetFiller(object):
                     end = me.epoch('UTC', end_time)
                     scan_times.append((start,end,interval))
                     
-                tsel.close()
                 intents = set()
                 fields = []
                 for f in ms.fields:
