@@ -179,7 +179,7 @@ def buildscans(msfile, scd):
         print "ERROR: failed to open ms tool on file "+msfile
         exit(1)
 
-    print 'Getting scansummary from MS'
+    ####print 'Getting scansummary from MS'
     # get the scan summary using ms.getscansummary method
     #mysc = ms.getscansummary()
     
@@ -199,7 +199,7 @@ def buildscans(msfile, scd):
     ddspwlist = ddspwarr.tolist()
     ddpollist = ddpolarr.tolist()
     ndd = len(ddspwlist)
-    print 'Found '+str(ndd)+' DataDescription IDs'
+    ####print 'Found '+str(ndd)+' DataDescription IDs'
     #
     # The SPECTRAL_WINDOW table
     tb.open(msfile+"/SPECTRAL_WINDOW")
@@ -214,7 +214,7 @@ def buildscans(msfile, scd):
         spwlookup[isp]['nchan'] = nchanarr[isp]
         spwlookup[isp]['name'] = str( spwnamearr[isp] )
         spwlookup[isp]['reffreq'] = reffreqarr[isp]
-    print 'Extracted information for '+str(nspw)+' SpectralWindows'
+    ####print 'Extracted information for '+str(nspw)+' SpectralWindows'
     #
     # Now the polarizations (number of correlations in each pol id
     tb.open(msfile+"/POLARIZATION")
@@ -240,7 +240,7 @@ def buildscans(msfile, scd):
     # for alma this would be 9,10,11,12 for XX,XY,YX,YY respectively
     # cordesc are the strings associated with the types (enum for casa)
     tb.close()
-    print 'Extracted information for '+str(npols)+' Polarization Setups'
+    ####print 'Extracted information for '+str(npols)+' Polarization Setups'
     #
     # Build the DD index
     #
@@ -268,7 +268,7 @@ def buildscans(msfile, scd):
     intentlist = intentarr.tolist()
     subscanlist = subscanarr.tolist()
     nstates = intentlist.__len__()
-    print 'Found '+str(nstates)+' StateIds'
+    ####print 'Found '+str(nstates)+' StateIds'
     #
     # Now get FIELD table directions
     tb.open(msfile+"/FIELD")
@@ -327,7 +327,7 @@ def buildscans(msfile, scd):
                 ddscantimes[isc][idd] = [tim]
         
     #
-    print 'Found total '+str(ntottimes)+' times'
+    ####print 'Found total '+str(ntottimes)+' times'
 
     ms.close()
 
@@ -345,7 +345,7 @@ def buildscans(msfile, scd):
     scanlist.sort()
 
     nscans = len(scanlist)
-    print 'Found '+str(nscans)+' scans min='+str(min(scanlist))+' max='+str(max(scanlist))
+    ####print 'Found '+str(nscans)+' scans min='+str(min(scanlist))+' max='+str(max(scanlist))
 
     scantimes = []
     scandict = {}
@@ -420,7 +420,7 @@ def buildscans(msfile, scd):
             scandict['Scans'][isc]['times'][idd] = ddscantimes[isc][idd]
         
     mysize = scandict.__sizeof__()
-    print 'Size of scandict in memory is '+str(mysize)+' bytes'
+    ####print 'Size of scandict in memory is '+str(mysize)+' bytes'
     
     return scandict
 

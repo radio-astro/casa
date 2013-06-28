@@ -3,13 +3,13 @@
 
 # flagdetervla.py
 
-# NB: THESE FlagDeterVLA*() CLASSES INHERIT FlagDeterBase*() CLASSES.  AT
+# NB: THESE FlagDeteVLA*() CLASSES INHERIT FlagDeterBase*() CLASSES.  AT
 # PRESENT THE FlagDeterVLA*() CLASSES HAVE NO ADDITIONAL INPUT PARAMETERS, SO
 # THEY ACT IN EXACTLY THE SAME MANNER AS THE FlagDeterBase*() CLASSES.
 
 # Description:
 # ------------
-# This file contains the classes to perform ALMA deterministic flagging.
+# This file contains the classes to perform VLA deterministic flagging.
 
 # In a nutshell:
 # --------------
@@ -26,7 +26,7 @@
 #
 # inputs = pipeline.tasks.flagging.FlagDeterVLA.Inputs( context, vis=vis,
 #   output_dir='.', autocorr=True, shadow=True, scan=True, scannumber='4,5,8',
-#   intents='*AMPLI*', edgespw=True, fracspw=0.1 )
+#   intents='*AMPLI*', edgespw=True, fracspw=0.1, fracspwfps=0.1 )
 #
 # task = pipeline.tasks.flagging.FlagDeterVLA( inputs )
 # jobs = task.analyse()
@@ -43,9 +43,9 @@
 # --------
 # FlagDeterVLA        - This class represents the pipeline interface to the
 #                        CASA task tflagdata.
-# FlagDeterVLAInputs  - This class manages the inputs for the FlagDeterALMA()
+# FlagDeterVLAInputs  - This class manages the inputs for the FlagDeterVLA()
 #                        class.
-# FlagDeterVLAResults - This class manages the results from the FlagDeterALMA()
+# FlagDeterVLAResults - This class manages the results from the FlagDeterVLA()
 #                        class.
 
 # Modification history:
@@ -54,8 +54,8 @@
 #               Initial version, identical behavior to FlagDeterBase.py.
 # 2012 May 16 - Lindsey Davis, NRAO
 #               Changed file name from FlagDeterALMA.py to flagdeteralma.py.
-# 2013 May 28 - Brian Kent, NRAO
-#               Added new file for VLA
+# 2013 May - Brian Kent, NRAO
+#             New Deterministic flagging for the VLA
 
 # ------------------------------------------------------------------------------
 
@@ -67,6 +67,10 @@ from __future__ import absolute_import
 #import casac
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.basetask as basetask
+import pipeline.infrastructure.casatools as casatools
+import pipeline.domain.measures as measures
+
 from pipeline.hif.tasks.flagging import flagdeterbase 
 
 #import pipeline.tasks.flagging.FlagDeterBase as gronk
@@ -86,7 +90,7 @@ LOG = infrastructure.get_logger(__name__)
 
 # Description:
 # ------------
-# This class manages the inputs for the FlagDeterALMA() class.
+# This class manages the inputs for the FlagDeterVLA() class.
 
 # Inherited classes:
 # ------------------
@@ -172,8 +176,12 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 # edgespw      - This python boolean determines whether edge channels are
 #                flagged.
 # fracspw      - This python float contains the fraction (between 0.0 and 1.0)
-#                of channels removed from the edge.  In the task interface, it
-#                it is a subparameter of the edgespw parameter.
+#                of channels removed from the edge for the ALMA baseline correlator.
+#                In the task interface, it is a subparameter of the edgespw parameter.
+#
+# fracspwfps    - This python float contains the fraction (between 0.0 and 1.0)
+#                of channels removed from the edge for the ACS correlator.  In the
+#                task interface, it it is a subparameter of the edgespw parameter.
 #
 # online       - This python boolean determines whether the online flags are
 #                applied.
@@ -201,10 +209,13 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 #               Initial version.
 
 # ------------------------------------------------------------------------------
+        edgespw  = basetask.property_with_default('edgespw', True)
+        fracspw  = basetask.property_with_default('fracspw', 0.0625)
+        fracspwfps  = basetask.property_with_default('fracspwfps', 0.04837)
 
 	def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
-	    autocorr=None, shadow=None, scan=None, scannumber=None, quack=None, quackscan=None,
-	    intents=None, edgespw=None, fracspw=None, online=None,
+	    autocorr=None, shadow=None, scan=None, scannumber=None,
+	    intents=None, edgespw=None, fracspw=None, fracspwfps=None, online=None,
 	    fileonline=None, template=None, filetemplate=None ):
 
 		# Initialize the public member variables of the inherited class
@@ -215,50 +226,6 @@ class FlagDeterVLAInputs( flagdeterbase.FlagDeterBaseInputs ):
 		    shadow=shadow, scan=scan, scannumber=scannumber, intents=intents,
 		    edgespw=edgespw, fracspw=fracspw, online=online,
 		    fileonline=fileonline, template=template, filetemplate=filetemplate )
-
-        # Reset the defaults for these parameters.
-        @property
-        def edgespw(self):
-                return self._edgespw
-
-        @edgespw.setter
-        def edgespw(self, value):
-                if value is None:
-                    value = True
-                self._edgespw = value
-
-        @property
-        def fracspw(self):
-                return self._fracspw
-
-        @fracspw.setter
-        def fracspw(self, value):
-                if value is None:
-                    value = 0.05
-                self._fracspw = value
-
-	@property
-        def quack(self):
-                return self._quack
-
-        @quack.setter
-        def quack(self, value):
-                if value is None:
-                    value = True
-                self._quack = value
-		#Call quacking code from the setter
-
-	@property
-        def quackscan(self):
-                return self._quackscan
-
-        @quack.setter
-        def quackscan(self, value):
-                if value is None:
-		            #This needs to be the function call to the heuristics
-                    value = '1'
-                self._quackscan = value
-		#Call quacking code from the setter
 
 
 # ------------------------------------------------------------------------------
@@ -335,12 +302,12 @@ class FlagDeterVLAResults( flagdeterbase.FlagDeterBaseResults ):
 
 # Description:
 # ------------
-# This class represents the pipeline interface to the CASA task tflagdata.
+# This class represents the pipeline interface to the CASA task flagdata.
 
 # Inherited classes:
 # ------------------
 # FlagDeterBase - This class represents the pipeline interface to the CASA task
-#                 tflagdata.
+#                 flagdata.
 
 # Public member functions:
 # ------------------------
@@ -382,12 +349,6 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
                 # returns just the science windows, which is exactly what we want.
                 for spw in inputs.ms.get_spectral_windows():
 
-                        # If the twice the number of flagged channels is greater than the
-                        # number of channels for a given spectral window, skip it.
-                        frac_chan = int(round(inputs.fracspw * spw.num_channels + 0.5))
-                        if 2*frac_chan >= spw.num_channels:
-                                LOG.debug('Too many flagged channels %s for spw %s '% (spw.num_channels, spw.id))
-                                continue
 
 			# Get the data description for this spw
                         dd = inputs.ms.get_data_description(spw=spw)
@@ -405,46 +366,48 @@ class FlagDeterVLA( flagdeterbase.FlagDeterBase ):
                         # Skip if TDM mode where TDM modes are defined to
 			# be modes with <= 256 channels per correlation
 			if (ncorr * spw.num_channels > 256):
-                                LOG.debug('Skipping edge flagging for FDM spw %s ' % spw.id)
-			        continue
+				quanta = casatools.quanta
+				bw_quantity = quanta.convert(quanta.quantity('1875MHz'), 'Hz')   
+				bandwidth = measures.Frequency(quanta.getvalue(bw_quantity)[0],
+				    measures.FrequencyUnits.HERTZ)
+				cen_freq = spw.centre_frequency
+				lo_freq = cen_freq - bandwidth / 2.0
+				hi_freq = cen_freq + bandwidth / 2.0
+				l_max, r_min = spw.channel_range(lo_freq, hi_freq)
+				r_max = spw.num_channels - 1
+				
+				if l_max <= 0 and r_min >= r_max:
+                                    LOG.debug('Skipping edge flagging for FDM spw %s ' % spw.id)
+			            continue
+                                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
+                                to_flag.append(cmd)
 
-                        # calculate the channel ranges to flag. No need to calculate the
-                        # left minimum as it is always channel 0.
-                        l_max = frac_chan - 1
-                        r_min = spw.num_channels - frac_chan - 1
-                        r_max = spw.num_channels - 1
+			else:
 
-                        # state the spw and channels to flag in flagdata format, adding
-                        # the statement to the list of flag commands
-                        cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
-                        to_flag.append(cmd)
+                                # If the twice the number of flagged channels is greater than the
+                                # number of channels for a given spectral window, skip it.
+				if spw.num_channels in set([62, 124, 248]):
+                                    frac_chan = int(round(inputs.fracspwfps * spw.num_channels))
+				else:
+                                    frac_chan = int(round(inputs.fracspw * spw.num_channels))
+                                if 2*frac_chan >= spw.num_channels:
+                                        LOG.debug('Too many flagged channels %s for spw %s '% (spw.num_channels, spw.id))
+                                        continue
+
+                                # calculate the channel ranges to flag. No need to calculate the
+                                # left minimum as it is always channel 0.
+                                l_max = frac_chan - 1
+                                r_min = spw.num_channels - frac_chan
+                                r_max = spw.num_channels - 1
+
+                                # state the spw and channels to flag in flagdata format, adding
+                                # the statement to the list of flag commands
+                                cmd = '{0}:0~{1};{2}~{3}'.format(spw.id, l_max, r_min, r_max)
+                                to_flag.append(cmd)
 
 		if len(to_flag) <= 0:
 		    return '# No valid edge spw flagging command'
 		else:
                     return 'mode=manual spw={0}'.format(','.join(to_flag))
 
-        def _get_quack_cmds(self):
-                """
-                Return a flagdata flagging command that will quack, ie
-                    flagdata_list.append("mode='quack' scan=" + quack_scan_string +
-                    " quackinterval=" + str(1.5*int_time) + " quackmode='beg' " +
-                    "quackincrement=False")
 
-                :rtype: a string
-                """
-                inputs = self.inputs
-
-                # to_flag is the list to which flagging commands will be appended
-                to_flag = []
-
-                #get heuristics from the context
-                context = inputs.context
-
-                m = context.observing_run.measurement_sets[0]
-                quack_scan_string = context.evla['msinfo'][m.name].quack_scan_string
-                int_time = context.evla['msinfo'][m.name].int_time
-
-                quack_mode_cmd = 'mode=quack scan=' + quack_scan_string + ' quackinterval=' + str(1.5*int_time) + ' quackmode=beg quackincrement=False'
-                
-                return quack_mode_cmd
