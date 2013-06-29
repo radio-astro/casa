@@ -79,11 +79,14 @@ class SkyDisplay(object):
           x_axis=coord_names[0], y_axis=coord_names[1], field=field,
           parameters=parameters)
 
-        return [plot]
+        return plot
 
     def _plot_panel(self, reportdir, result, vmin=None, vmax=None,
      channelMap=False):
         """Method to plot a map."""
+        plotfile = plotfilename(image=os.path.basename(result),
+          reportdir=reportdir)
+
         with casatools.ImageReader(result) as image:
             collapsed = image.collapse(function='mean', axes=[2,3])
             name = image.name(strippath=True)
@@ -96,6 +99,12 @@ class SkyDisplay(object):
             brightness_unit = collapsed.brightnessunit()
             miscinfo = collapsed.miscinfo()
 
+            # don't replot if a file of the required name already exists
+            if os.path.exists(plotfile):
+                LOG.info('plotfile already exists: %s', plotfile) 
+                return plotfile, coord_names, miscinfo.get('field')
+
+            # otherwise do the plot
             data = collapsed.getchunk() 
             shape = np.shape(data)
             data = data.reshape(shape[0], shape[1])
@@ -210,18 +219,16 @@ class SkyDisplay(object):
               'field', 'spw', 'pol', 'iter'] if miscinfo.get(key) is not None)
             plt.figtext(0.1, 0.95, label, ha='left')
 
-        # make axis fit snugly around image
-        plt.axis([lims[0], lims[1], lims[2], lims[3]])
+            # make axis fit snugly around image
+            plt.axis([lims[0], lims[1], lims[2], lims[3]])
 
-        # save the image
-        plotfile = plotfilename(image=os.path.basename(result),
-          reportdir=reportdir)
-        plt.savefig(plotfile)
+            # save the image
+            plt.savefig(plotfile)
 
-        plt.clf()
-        plt.close(1)
+            plt.clf()
+            plt.close(1)
 
-        return plotfile, coord_names, miscinfo.get('field')
+            return plotfile, coord_names, miscinfo.get('field')
 
     def plottext(self, xoff, yoff, text, maxchars, ny_subplot=1, mult=1):
         """Utility method to plot text and put line breaks in to keep the
