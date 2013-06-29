@@ -36,31 +36,31 @@ class CleanSummary(object):
             if not os.path.exists(figfile):
                 LOG.trace('psf plot %s not found. Creating new '
                   'plot.' % os.path.basename(figfile))
-                plot = displays.SkyDisplay().plot(self.context, r.psf,
-                  reportdir=stage_dir)
-                wrapper = logger.Plot(figfile,
-                                      x_axis='Right Ascension',
-                                      y_axis='Declination',
-                                      parameters={'spw'   : r.spw,
-                                                  'intent': r.intent,
-                                                  'type'  : 'psf'})
-                plot_wrappers.append(wrapper)
+                plot_wrappers.append(displays.SkyDisplay().plot(self.context, r.psf,
+                  reportdir=stage_dir))
+#                wrapper = logger.Plot(figfile,
+#                                      x_axis='Right Ascension',
+#                                      y_axis='Declination',
+#                                      parameters={'spw'   : r.spw,
+#                                                  'intent': r.intent,
+#                                                  'type'  : 'psf'})
+#                plot_wrappers.append(wrapper)
 
             # flux map
             figfile = displays.sky.plotfilename(r.flux, stage_dir) 
             if not os.path.exists(figfile):
                 LOG.trace('flux plot %s not found. Creating new '
                   'plot.' % os.path.basename(figfile))
-                plot = displays.SkyDisplay().plot(self.context, r.flux,
-                  reportdir=stage_dir)
+                plot_wrappers.append(displays.SkyDisplay().plot(self.context,
+                  r.flux, reportdir=stage_dir))
 
-                wrapper = logger.Plot(figfile,
-                                      x_axis='Right Ascension',
-                                      y_axis='Declination',
-                                      parameters={'spw'   : r.spw,
-                                                  'intent': r.intent,
-                                                  'type'  : 'flux'})
-                plot_wrappers.append(wrapper)
+#                wrapper = logger.Plot(figfile,
+#                                      x_axis='Right Ascension',
+#                                      y_axis='Declination',
+#                                      parameters={'spw'   : r.spw,
+#                                                  'intent': r.intent,
+#                                                  'type'  : 'flux'})
+#                plot_wrappers.append(wrapper)
 
             # image iterations
             iterations = r.iterations.keys()
@@ -72,16 +72,16 @@ class CleanSummary(object):
                 if not os.path.exists(figfile):
                     LOG.trace('image plot %s not found. Creating new '
                       'plot.' % os.path.basename(figfile))
-                    plot = displays.SkyDisplay().plot(self.context,
-                      r.iterations[iter]['image'], reportdir=stage_dir)
+                    plot_wrappers.append(displays.SkyDisplay().plot(self.context,
+                      r.iterations[iter]['image'], reportdir=stage_dir))
 
-                    wrapper = logger.Plot(figfile,
-                                          x_axis='Right Ascension',
-                                          y_axis='Declination',
-                                          parameters={'spw'   : r.spw,
-                                                      'intent': r.intent,
-                                                      'iter'  : iter,
-                                                      'type'  : 'image'})
-                plot_wrappers.append(wrapper)
+#                    wrapper = logger.Plot(figfile,
+#                                          x_axis='Right Ascension',
+#                                          y_axis='Declination',
+#                                          parameters={'spw'   : r.spw,
+#                                                      'intent': r.intent,
+#                                                      'iter'  : iter,
+#                                                      'type'  : 'image'})
+#                plot_wrappers.append(wrapper)
 
         return [p for p in plot_wrappers if p is not None]
