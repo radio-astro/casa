@@ -17,6 +17,7 @@ import casadef
 from . import callibrary
 from . import imagelibrary
 from . import logging
+from . import project
 
 LOG = logging.get_logger(__name__)
 
@@ -108,8 +109,8 @@ class Context(object):
         self.callibrary = callibrary.CalLibrary(self)
         self.calimlist = imagelibrary.ImageLibrary()
         self.sciimlist = imagelibrary.ImageLibrary()
-        self.project_summary = None
-        self.project_structure = None        
+        self.project_summary = project.ProjectSummary()
+        self.project_structure = project.ProjectStructure()
         self.output_dir = output_dir 
         self.products_dir = None
         self.task_counter = 0
