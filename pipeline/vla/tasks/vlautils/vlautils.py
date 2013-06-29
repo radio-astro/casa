@@ -566,7 +566,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
         casatools.ms.open(self.inputs.vis)
         self.scan_summary = casatools.ms.getscansummary()
         self.ms_summary = casatools.ms.summary()
-        casatools.table.close()
+        casatools.ms.close()
         self.startdate=float(self.ms_summary['BeginTime'])
     
         integ_scan_list = []

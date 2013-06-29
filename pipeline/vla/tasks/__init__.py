@@ -7,3 +7,4 @@ from .vlautils import VLAUtils
 from .flagging import FlagDeterVLA
 from .rqcal import Rqcal
 from .swpowcal import Swpowcal
+from .setmodel import SetModel, Setjy
