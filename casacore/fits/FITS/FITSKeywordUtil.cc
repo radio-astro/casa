@@ -821,7 +821,7 @@ Bool FITSKeywordUtil::getKeywords(RecordInterface &out,
 		os << LogIO::SEVERE << "Unknown type for keyword '" 
 		   << fullName << "'. Continuing." << LogIO::POST;
 	    }
-	} else if (fullName.contains(kw2D) || fullName.contains(kw2Dmodern) && !fullName.contains(cd)) {
+	} else if (fullName.contains(kw2D) || (fullName.contains(kw2Dmodern) && !fullName.contains(cd))) {
 	    Int thisRow, thisCol;
 	    String base;
 	    splitKW2D(base, thisRow, thisCol, fullName);
