@@ -18,6 +18,7 @@ CasaTaskDict = {
                    'hif_refant'       : 'RefAnt',
 		   'hif_restoredata'  : 'RestoreData',
                    'hif_setjy'        : 'Setjy',
+                   'hif_timegaincal'  : 'TimeGaincal',
                    'hif_tsyscal'      : 'Tsyscal',
                    'hif_tsysflag'     : 'Tsysflag',
                    'hif_tsysflagchans': 'Tsysflagchans',
@@ -56,11 +57,11 @@ ClassDict = {
     hif_tasks.RefAnt : 'hif_refant',
     hif_tasks.RestoreData : 'hif_restoredata',
     hif_tasks.Setjy : 'hif_setjy',
+    hif_tasks.TimeGaincal : 'hif_timegaincal',
     hif_tasks.Tsyscal : 'hif_tsyscal',
     hif_tasks.Tsysflag : 'hif_tsysflag',
     hif_tasks.Tsysflagchans : 'hif_tsysflagchans',
-    hif_tasks.Wvrgcal : 'hif_wvrgcal'
-    hif_tasks.Wvrgcalflag
-
-    hif_tasks.AgentFlagger : 'hif_flagdata',
+    hif_tasks.Wvrgcal : 'hif_wvrgcal',
+    hif_tasks.Wvrgcalflag : 'hif_wvrgcalflag',
+    hif_tasks.AgentFlagger : 'hif_flagdata'
 }
