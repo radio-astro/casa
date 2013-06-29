@@ -22,6 +22,7 @@ import pipeline as pipeline
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
+import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.bandpass as bandpass
 import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.displays.image as image
@@ -172,8 +173,8 @@ def get_task_name(result_obj):
         msg = 'No task registered on results of type %s' % results_cls
         LOG.warning(msg)
         return msg
-
-    return task_cls.__name__
+    
+    return casataskdict.classToCASATask.get(task_cls, task_cls.__name__)
 
 
 def get_stage_number(result_obj):

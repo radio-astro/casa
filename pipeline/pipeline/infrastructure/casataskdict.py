@@ -37,8 +37,9 @@ CasaTaskDict = {
 
 
 
-ClassDict = {
+classToCASATask = {
     hif_tasks.Antpos : 'hif_antpos',
+    hif_tasks.AgentFlagger : 'hif_flagdata',
     hif_tasks.Applycal : 'hif_applycal',    
     hif_tasks.Atmflag : 'hif_atmflag',
     hif_tasks.Bandpass : 'hif_bandpass',
@@ -63,5 +64,4 @@ ClassDict = {
     hif_tasks.Tsysflagchans : 'hif_tsysflagchans',
     hif_tasks.Wvrgcal : 'hif_wvrgcal',
     hif_tasks.Wvrgcalflag : 'hif_wvrgcalflag',
-    hif_tasks.AgentFlagger : 'hif_flagdata'
 }
