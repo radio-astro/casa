@@ -294,6 +294,8 @@ class Setjy(basetask.StandardTaskTemplate):
             jobs = []
             for spw in spws:
                 inputs.spw = spw.id
+
+                #inputs.fluxdensity=-1  #Force to use -1
                 task_args = inputs.to_casa_args()
                 jobs.append(casa_tasks.setjy(**task_args))
                 
@@ -317,6 +319,7 @@ class Setjy(basetask.StandardTaskTemplate):
             jobs = self._merge_jobs(jobs, casa_tasks.setjy, merge=('spw',))
             for job in jobs:
                 self._executor.execute(job)
+            
 
         # higher-level tasks may run multiple Setjy tasks before running
         # analyse, so we also tag the end of our jobs so we can identify the

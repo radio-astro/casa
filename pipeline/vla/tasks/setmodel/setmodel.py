@@ -1,10 +1,7 @@
 """
-Example task class session:
+B. Kent, NRAO, June 2013
 
-sys.path.insert(0, '/home/sjw/local/eclipse/plugins/org.python.pydev.debug_2.5.0.2012040618/pysrc')
-sys.path.insert(0, '/home/sjw/alma/cvs/PipelineRefactoring-2012-01-B/PIPELINE/Heuristics/src')
-execfile('/home/sjw/alma/cvs/PipelineRefactoring-2012-01-B/PIPELINE/Heuristics/src/pipeline/cli/mytasks.py')
-__rethrow_casa_exceptions=False
+Example task class session:
 
 import pipeline
 
@@ -12,13 +9,13 @@ files=['vla_m81.avg.raw']
 dry_run=False
 
 context = pipeline.Pipeline().context
-inputs = pipeline.tasks.ImportData.Inputs(context, files=files)
-task = pipeline.tasks.ImportData(inputs)
+inputs = pipeline.vla.tasks.VLAImportData.Inputs(context, files=files)
+task = pipeline.vla.tasks.VLAImportData(inputs)
 results = task.execute(dry_run=dry_run)
 results.accept(context)
 
-inputs = pipeline.tasks.SetModel.Inputs(context)
-# inputs.refintent='BANDPASS'
+inputs = pipeline.vla.tasks.SetModel.Inputs(context)
+
 task = pipeline.tasks.SetModel(inputs)
 results = task.execute(dry_run=dry_run)
 """
@@ -34,6 +31,7 @@ from pipeline.hif.heuristics import fieldnames
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.utils as utils
+from pipeline.hif.tasks.common import commonfluxresults
 from . import setjy
 
 from pipeline.vla.tasks.vlautils import VLAUtils
@@ -179,6 +177,8 @@ class SetModel(basetask.StandardTaskTemplate):
     def prepare(self, **parameters):
         standard_source_names, standard_source_fields = _standard_sources(self.inputs.vis)
 
+        result = commonfluxresults.FluxCalibrationResults(self.inputs.vis)
+        
         context = self.inputs.context
         m = context.observing_run.measurement_sets[0]
         field_spws = context.evla['msinfo'][m.name].field_spws
@@ -198,6 +198,7 @@ class SetModel(basetask.StandardTaskTemplate):
         for i, fields in enumerate(standard_source_fields):
             for myfield in fields:
                 spws = field_spws[myfield]
+                spws = [1,2,3]
                 for myspw in spws:
                     reference_frequency = center_frequencies[myspw]
                     EVLA_band = vlautils.find_EVLA_band(reference_frequency)
@@ -205,10 +206,16 @@ class SetModel(basetask.StandardTaskTemplate):
 
                     #Double check, but the fluxdensity=-1 should not matter since
                     #  the model image take precedence
-                    self._do_setjy(str(myfield), str(myspw), model_image, -1)
-                    
+                    try:
+                        setjy_result = self._do_setjy(str(myfield), str(myspw), model_image, -1)
+                        result.measurements.update(setjy_result.measurements)
+                    except Exception, e:
+                        # something has gone wrong, return an empty result
+                        LOG.error('Unable to complete flux scaling operation')
+                        LOG.exception(e)
+                        return result
        
-        return None
+        return result
 
     def analyse(self, result):
         return result

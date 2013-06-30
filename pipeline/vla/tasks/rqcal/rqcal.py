@@ -10,6 +10,9 @@ import pipeline.infrastructure.callibrary as callibrary
 from pipeline.infrastructure import casa_tasks
 from . import resultobjects
 
+import pipeline.infrastructure.casatools as casatools
+import numpy
+
 LOG = infrastructure.get_logger(__name__)
 
 
