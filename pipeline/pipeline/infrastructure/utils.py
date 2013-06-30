@@ -7,6 +7,7 @@ import decimal
 import itertools
 import math
 import operator
+import re
 import types
 
 import pipeline.extern.pyparsing as pyparsing
@@ -167,3 +168,17 @@ def safe_split(fields):
     field names within quotes.
     ''' 
     return pyparsing.commaSeparatedList.parseString(str(fields))
+
+def to_CASA_intent(ms, intents):
+    '''
+    Convert pipeline intents back to obs modes, and then to an intent CASA will
+    understand.
+    '''
+    obs_modes = ms.get_original_intent(intents)
+    if obs_modes:
+        r = re.compile('\W*_([a-zA-Z]*)[#\._]\W*')
+        intents = [r.findall(obs_mode) for obs_mode in obs_modes]
+        # convert the list of lists back to a 1-D list
+        intents = set(itertools.chain(*intents))
+        # replace the CASA arg with *INTENT1*,*INTENT2*, etc.
+        return ','.join(['*{0}*'.format(intent) for intent in intents])

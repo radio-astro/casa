@@ -26,6 +26,7 @@ from . import filenamer
 from . import jobrequest
 from . import launcher
 from . import logging
+from . import utils
 import pipeline.extern.ordereddict as ordereddict
 
 LOG = logging.get_logger(__name__)
@@ -345,17 +346,7 @@ class StandardInputs(api.Inputs, MandatoryInputsMixin):
             args['intent'] = None
 
         if args.get('intent', None) != None:
-            # we need to convert our pipeline intents back to obs modes, and
-            # then back to an intent CASA will understand
-            obs_modes = ms.get_original_intent(args['intent'])
-            if obs_modes:
-                r = re.compile('\W*_([a-zA-Z]*)[#\._]\W*')
-                intents = [r.findall(obs_mode) for obs_mode in obs_modes]
-                # convert the list of lists back to a 1-D list
-                intents = set(itertools.chain(*intents))
-                # replace the CASA arg with *INTENT1*,*INTENT2*, etc.
-                args['intent'] = ','.join(['*{0}*'.format(intent) 
-                                           for intent in intents])
+            args['intent'] = utils.to_CASA_intent(ms, args['intent'])
 
         for unwanted in ('to_intent', 'to_field'):
             if unwanted in args:
