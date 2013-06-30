@@ -16,6 +16,11 @@ Compute a clean map.
     <value></value>
   </param>
 
+  <param type="string" name="imagename" subparam="true">
+     <description>Prefix for image filenames</description>
+     <value></value>
+  </param>
+
   <param type="string" name="intent" subparam="true">
     <description>Set of data selection intents</description>
     <value></value>
@@ -31,24 +36,24 @@ Compute a clean map.
     <value></value>
   </param>
 
-  <param type="string" name="imagename" subparam="true">
-     <description>Prefix for image filenames</description>
-     <value></value>
+  <param type="any" name="uvrange" subparam="true">
+    <description>Set of uv ranges</description>
+    <any type="variant" limittypes="string stringArray"/>
+    <value type="string"></value>
   </param>
 
+
   <param type="string" name="mode" subparam="true">
-     <description>Spectral gridding type (mfs, channel, velocity, frequency)</description>
+     <description>Spectral gridding type (mfs, frequency)</description>
      <value>mfs</value>
        <allowed kind="enum">
          <value>mfs</value>
-         <value>channel</value>
-         <value>velocity</value>
          <value>frequency</value>
        </allowed>
   </param>
 
   <param type="string" name="imagermode" subparam="true">
-     <description>NOT EXPOSED. Options `csclean` or `mosaic`, default chosen by heuristic</description>
+     <description>Imaging mode ('' for default, csclean, mosaic)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
@@ -63,18 +68,11 @@ Compute a clean map.
        <allowed kind="enum">
          <value></value>
          <value>LSRK</value>
-         <value>LSRD</value>
-         <value>BARY</value>
-         <value>GEO</value>
-         <value>TOPO</value>
-         <value>GALACTO</value>
-         <value>LGROUP</value>
-         <value>CMB</value>
        </allowed>
   </param>
 
   <param type="int" name="nchan" subparam="true">
-    <description>Number of channels (planes) in output image; -1 = all</description>
+    <description>Number of channels (planes) in output image, -1 = all</description>
     <value>-1</value>
   </param>
 
@@ -91,28 +89,28 @@ Compute a clean map.
   </param>
 
   <param type="intArray" name="imsize" subparam="true">
-    <description>x and y image size in pixels. Single value same: same for both.</description>
+    <description>x and y image size in pixels, single value same for both.</description>
     <value></value>
   </param>
 
   <param type="stringArray" name="cell" subparam="true">
-    <description>x and y cell size(s). Single value:same for both.</description>
+    <description>x and y cell size(s), single value same for both.</description>
     <value>1.0arcsec</value>
   </param>
 
   <param type="any" name="phasecenter" subparam="true">
-    <description>Image center: direction or field index. Heuristic default</description>
+    <description>Image center ('' for default, direction or field index)</description>
     <any type="variant"/>
     <value type="string"></value>
   </param>
 
   <param type="string" name="restfreq" subparam="true">>
-    <description>CASA clean restfreq parameter</description>
+    <description>The rest frequency</description>
     <value></value>
   </param>
 
   <param type="string" name="weighting" subparam="true">
-     <description>CASA clean weighting parameter</description>
+     <description>Type of weighting</description>
      <value>natural</value>
        <allowed kind="enum">
          <value>natural</value>
@@ -120,39 +118,46 @@ Compute a clean map.
          <value>briggs</value>
          <value>superuniform</value>
          <value>briggsabs</value>
-         <value>radial</value>
        </allowed>
   </param>
 
   <param type="double" name="robust" subparam="true">
-     <description>CASA clean robust parameter</description>
+     <description>Briggs weighting robustness parameter</description>
      <value>0.0</value>
   </param>
 
   <param type="any" name="noise" subparam="true">
-    <description>CASA clean noise parameter</description>
+    <description>Briggs weighting noise parameter</description>
     <any type="variant"/>
     <value type="string">1.0Jy</value>
   </param>
 
   <param type="int" name="npixels" subparam="true">
-    <description>CASA clean npixels parameter</description>
+    <description>Weighting algorithm parameter</description>
     <value type="int">1</value>
   </param>
 
-  <param type="any" name="uvrange" subparam="true">
-    <description>CASA clean uvrange parameter</description>
-    <any type="variant" limittypes="string stringArray"/>
-    <value type="string"></value>
+  <param type="string" name="hm_clean" subparam="true">
+     <description>pipeline cleaning mode (autobox manual) </description>
+       <value>autoboxc</value>
+       <allowed kind="enum">
+         <value>autoboxc</value>
+         <value>manual</value>
+       </allowed>
   </param>
 
-  <param type="string" name="mask_method" subparam="true">
-     <description>Clean mask generation; automatic, nomask or mask name</description>
+  <param type="string" name="mask" subparam="true">
+     <description>Clean  mask </description>
      <value>automatic</value>
   </param>
 
+  <param type="double" name="threshold" units="mJy" subparam="true">
+     <description>clean threshold</description>
+     <value>0.0</value>
+  </param>
+
   <param type="int" name="maxthreshiter" subparam="true">
-    <description>Maximum number of cleanbox/threshold iterations</description>
+    <description>Maximum number of autobox threshold iterations</description>
     <value>10</value>
   </param>
 
@@ -179,6 +184,47 @@ Compute a clean map.
 
   <constraints>
 
+     <when param="mode">
+          <equals value="mfs">
+            <default param="nterms"><value>1</value></default>
+            <default param="reffreq"><value type="string"></value></default>
+          </equals>
+          <equals value="frequency">
+            <default param="nchan"><value>-1</value></default>
+            <default param="start"><value type="string"></value></default>
+            <default param="width"><value type="string"></value> </default>
+            <default param="outframe"><value type="string"></value></default>
+          </equals>
+    </when>
+
+  <when param="weighting">
+       <equals value="natural"/>
+       <equals value="uniform"/>
+       <equals value="briggs">
+            <default param="robust"><value>0.0</value></default>
+            <default param="npixels"><value>0</value></default>
+       </equals>
+      <equals value="briggsabs">
+            <default param="robust"><value>0.0</value></default>
+            <default param="noise"><value type="string">1.0Jy</value></default>
+            <default param="npixels"><value>0</value></default>
+      </equals>
+      <equals value="superuniform">
+            <default param="npixels"><value>0</value></default>
+      </equals>
+    </when>
+
+     <when param="hm_clean">
+       <equals value="autobox">
+            <default param="mask"><value>sidelobe</value></default>
+            <default param="maxthreshiter"><value type="int" >10</value></default>
+       </equals>
+       <equals value="manual">
+            <default param="mask"><value></value></default>
+            <default param="threshold"><value type="double" units="mJy">0.0</value></default>
+       </equals>
+     </when>
+
     <when param="pipelinemode">
       <equals type="string" value="automatic"/>
       <equals type="string" value="interactive">
@@ -186,6 +232,7 @@ Compute a clean map.
         <default param="field"><value type="string"></value></default>
         <default param="intent"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
+        <default param="uvrange"><value type="string"></value></default>
         <default param="imagename"><value type="string"></value></default>
         <default param="outframe"><value type="string"></value></default>
         <default param="imsize"><value type="intArray"></value></default>
@@ -196,9 +243,7 @@ Compute a clean map.
         <default param="robust"><value type="double">0.0</value></default>
         <default param="noise"><value type="string">1.0Jy</value></default>
         <default param="npixels"><value type="int">1</value></default>
-        <default param="uvrange"><value type="string"></value></default>
-        <default param="mask_method"><value type="string">automatic</value></default>
-        <default param="maxthreshiter"><value>10</value></default>
+        <default param="hm_clean"><value type="string">automatic</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
@@ -207,6 +252,7 @@ Compute a clean map.
         <default param="field"><value type="string"></value></default>
         <default param="intent"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
+        <default param="uvrange"><value type="string"></value></default>
         <default param="imagename"><value type="string"></value></default>
         <default param="outframe"><value type="string"></value></default>
         <default param="imsize"><value type="intArray"></value></default>
@@ -217,9 +263,7 @@ Compute a clean map.
         <default param="robust"><value type="double">0.0</value></default>
         <default param="noise"><value type="string">1.0Jy</value></default>
         <default param="npixels"><value type="int">1</value></default>
-        <default param="uvrange"><value type="string"></value></default>
-        <default param="mask_method"><value type="string">automatic</value></default>
-        <default param="maxthreshiter"><value>10</value></default>
+        <default param="hm_clean"><value type="string">automatic</value></default>
       </equals>
     </when>
 

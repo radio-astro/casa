@@ -5,13 +5,12 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_clean(vis=None, intent=None, field=None, spw=None,
-              imagename=None, mode=None, imagermode=None,
-              outframe=None, 
+def hif_clean(vis=None, imagenmae=None, intent=None, field=None, spw=None,
+              uvrange=None, mode=None, imagermode=None, outframe=None, 
               nchan=None, start=None, width=None, imsize=None, cell=None,
               phasecenter=None, restfreq=None, weighting=None,
-              robust=None, noise=None, npixels=None, uvrange=None,
-              mask_method=None, maxthreshiter=None,
+              robust=None, noise=None, npixels=None, 
+              hm_clean=None, mask=None, threshold=None, maxthreshiter=None,
               pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
