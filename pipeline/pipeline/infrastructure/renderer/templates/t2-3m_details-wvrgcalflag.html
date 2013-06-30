@@ -34,7 +34,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <h2>Plots</h2>
 <ul>
 % for plot_group in plot_groups: 
-	<li><a href=${plot_group.filename}>${plot_group.title}</a></li>
+	<li><a class="replace" href="stage${r.stage_number}/${plot_group.filename}">${plot_group.title}</a></li>
 % endfor
 </ul>
 % endif
