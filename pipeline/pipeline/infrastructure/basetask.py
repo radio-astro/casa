@@ -20,6 +20,7 @@ import uuid
 
 from . import api
 from . import adapters
+from . import casataskdict
 from . import casatools
 from . import callibrary
 from . import filenamer
@@ -916,7 +917,9 @@ class StandardTaskTemplate(api.Task):
         # will be prepended to every data product name as a sign of their
         # origin
         if self.inputs.context.subtask_counter is 1:
-            filenamer.NamingTemplate.task = self.__class__.__name__
+            name = casataskdict.classToCASATask.get(self.__class__,
+                                                    self.__class__.__name__)
+            filenamer.NamingTemplate.task = name
 
         # Create a copy of the inputs - including the context - and attach
         # this copy to the Inputs. Tasks can then merge results with this

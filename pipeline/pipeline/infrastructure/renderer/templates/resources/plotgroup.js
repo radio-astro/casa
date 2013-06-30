@@ -113,6 +113,7 @@ $(document).ready(function(){
 	});
 
 	$.fancybox(fullsize, {
+	    loop : false,
 	    type    : 'image',
 	    index   : index,
 	    prevEffect : 'none',

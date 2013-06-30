@@ -397,6 +397,7 @@ $(document).ready(function() {
 	    index   : index,
 	    prevEffect : 'none',
 	    nextEffect : 'none',
+	    loop : false,
 	    helpers	: {
 		title	: {
 		    type: 'outside'

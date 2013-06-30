@@ -24,6 +24,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.casataskdict as casataskdict
 import pipeline.infrastructure.displays.bandpass as bandpass
+import pipeline.infrastructure.displays.clean as clean
 import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
@@ -1460,12 +1461,65 @@ class TsyscalPlotRenderer(object):
         return t.render(**display_context)
 
 
+class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
+    def __init__(self, template='t2-4m_details-hif_cleanlist.html',
+                 always_rerender=True):
+        super(T2_4MDetailsCleanRenderer, self).__init__(template,
+                                                        always_rerender)
+
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsCleanRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        weblog_dir = os.path.join(context.report_dir,
+                                  'stage%s' % results.stage_number)
+
+        # There is only ever one CleanListResult in the ResultsList as it
+        # operates over multiple measurement sets, so we can set the result to
+        # the first item in the list
+        plotter = clean.CleanSummary(context, results[0])
+        plots = plotter.plot()
+
+        fields = sorted(set([p.parameters['field'] for p in plots]))
+        spws = sorted(set([p.parameters['spw'] for p in plots]))
+        iterations = sorted(set([p.parameters['iter'] for p in plots]))
+        types = sorted(set([p.parameters['type'] for p in plots]))
+        
+        iteration_dim = lambda : collections.defaultdict(dict)
+        spw_dim = lambda : collections.defaultdict(iteration_dim)
+        plots_dict = collections.defaultdict(spw_dim)
+        for field in fields:
+            for spw in spws:
+                for iteration in iterations:
+                    for t in types:
+                        matching = [p for p in plots
+                                    if p.parameters['field'] == field
+                                    and p.parameters['spw'] == spw
+                                    and p.parameters['iter'] == iteration
+                                    and p.parameters['type'] == t]
+                        if matching:
+                            plots_dict[field][spw][iteration][t] = matching[0]
+                    
+        ctx.update({'fields'     : fields,
+                    'spws'       : spws,
+                    'iterations' : iterations,
+                    'plots'      : plots,
+                    'plots_dict' : plots_dict,
+                    'dirname'    : weblog_dir})
+
+#         import pprint
+#         d = {}
+#         d.update(plots_dict)
+#         pprint.pprint(d)
+
+        return ctx
+
 
 class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
     FlagTotal = collections.namedtuple('FlagSummary', 'flagged total')
 
     def __init__(self, template='t2-4m_details-hif_flagdeteralma.html', 
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsAgentFlaggerRenderer, self).__init__(template,
                                                                 always_rerender)
 
@@ -1938,7 +1992,7 @@ renderer_map = {
     T2_4MDetailsRenderer : {
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
-        hif.tasks.CleanList      : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_cleanlist.html'),
+        hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
         hif.tasks.Fluxscale      : T2_4MDetailsDefaultRenderer('t2-4m_details-fluxscale.html'),
         hif.tasks.GcorFluxscale  : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_gfluxscale.html'),
         hif.tasks.ImportData     : T2_4MDetailsImportDataRenderer(),
