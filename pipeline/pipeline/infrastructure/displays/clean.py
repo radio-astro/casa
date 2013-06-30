@@ -51,4 +51,28 @@ class CleanSummary(object):
                 plot_wrappers.append(displays.SkyDisplay().plot(self.context,
                   r.iterations[iter]['image'], reportdir=stage_dir))
 
+                # residual for this iteration
+                figfile = displays.sky.plotfilename(
+                  r.iterations[iter]['residual'], stage_dir) 
+                plot_wrappers.append(displays.SkyDisplay().plot(self.context,
+                  r.iterations[iter]['residual'], reportdir=stage_dir))
+
+                # model for this iteration (currently only last but
+                # allow for others in future)
+                if r.iterations[iter].has_key('model'):
+                    figfile = displays.sky.plotfilename(
+                      r.iterations[iter]['model'], stage_dir) 
+                    if os.path.exists(figfile):
+                        plot_wrappers.append(displays.SkyDisplay().plot(
+                          self.context, r.iterations[iter]['model'],
+                          reportdir=stage_dir))
+
+                # cleanmask for this iteration - not for iter 0
+                if iter > 0:
+                    figfile = displays.sky.plotfilename(
+                      r.iterations[iter]['cleanmask'], stage_dir) 
+                    plot_wrappers.append(displays.SkyDisplay().plot(
+                      self.context, r.iterations[iter]['cleanmask'],
+                      reportdir=stage_dir))
+
         return [p for p in plot_wrappers if p is not None]
