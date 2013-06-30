@@ -44,7 +44,7 @@ Compute a clean map.
 
 
   <param type="string" name="mode">
-     <description>Spectral gridding type (mfs, frequency, '' for default)</description>
+     <description>Spectral gridding type (mfs, frequency, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
@@ -54,7 +54,7 @@ Compute a clean map.
   </param>
 
   <param type="string" name="imagermode" subparam="true">
-     <description>Imaging mode ('' for default, csclean, mosaic)</description>
+     <description>Imaging mode (csclean, mosaic, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
@@ -64,7 +64,7 @@ Compute a clean map.
   </param>
 
   <param type="string" name="outframe" subparam="true">
-     <description>velocity frame of output image (LSRK, '' for default)</description>
+     <description>velocity frame of output image (LSRK, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
@@ -80,7 +80,7 @@ Compute a clean map.
   <param type="any" name="start" subparam="true">
     <description>Start of output spectral dimension</description>
     <any type="variant"/>
-    <value type="string">0</value>
+    <value type="string"></value>
   </param>
 
   <param type="any" name="width" subparam="true">
@@ -90,17 +90,17 @@ Compute a clean map.
   </param>
 
   <param type="intArray" name="imsize" subparam="true">
-    <description>x and y image size in pixels, '' for default. Single value same for both.</description>
+    <description>x and y image size in pixels, \'\' for default. Single value same for both.</description>
     <value></value>
   </param>
 
   <param type="stringArray" name="cell" subparam="true">
-    <description>x and y cell size(s), single value same for both.</description>
+    <description>Cell x and y size(s). Single value same for both.</description>
     <value>1.0arcsec</value>
   </param>
 
   <param type="any" name="phasecenter" subparam="true">
-    <description>Image center (direction or field index, '' for default)</description>
+    <description>Image center (direction or field index, \'\' for default)</description>
     <any type="variant"/>
     <value type="string"></value>
   </param>
@@ -191,7 +191,7 @@ Compute a clean map.
         <default param="imagename"><value type="string"></value></default>
         <default param="outframe"><value type="string"></value></default>
         <default param="imsize"><value type="intArray"></value></default>
-        <default param="cell"><value type="stringArray"></value></default>
+        <default param="cell"><value type="string">1.0arcsec</value></default>
         <default param="phasecenter"><value type="string"></value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
@@ -205,7 +205,7 @@ Compute a clean map.
         <default param="imagename"><value type="string"></value></default>
         <default param="outframe"><value type="string"></value></default>
         <default param="imsize"><value type="intArray"></value></default>
-        <default param="cell"><value type="stringArray"></value></default>
+        <default param="cell"><value type="string">1.0arcsec</value></default>
         <default param="phasecenter"><value type="string"></value></default>
       </equals>
     </when>
