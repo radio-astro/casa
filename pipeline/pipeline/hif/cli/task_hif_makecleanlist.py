@@ -5,15 +5,10 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 
-def hif_makecleanlist(vis=None, intent=None, field=None, spw=None,
-              imagename=None, mode=None, outframe=None, 
-              imsize=None, cell=None, phasecenter=None, 
-              start=None, width=None, nchan=None, restfreq=None,
-              weighting=None, robust=None, noise=None, npixels=None,
-              restoringbeam=None, nterms=None, uvrange=None,
-              maxthreshiter=None,
-              pipelinemode=None,
-              dryrun=None, acceptresults=None):
+def hif_makecleanlist(vis=None, imagename=None, intent=None, field=None,
+              spw=None, uvrane=None, mode=None, imsize=None, cell=None,
+	      phasecenter=None, start=None, width=None, nchan=None,
+              pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
