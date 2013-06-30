@@ -17,30 +17,52 @@ def calculate_qa2_numbers(result):
     
     result -- The Qa2Result object containing the Qa2 views.
     """
-    # configure numpy to ignore floating point errors in the divide that
-    # follows.
-    old_settings = np.seterr(divide='ignore', invalid='ignore')
-
     qa2_per_view = {}
 
     for description in result.descriptions():
-        before = result.first(description)
-        after = result.last(description)
+        qa2_result = result.last(description)
 
-        qa2_data = before.data / after.data 
-        qa2_flag = np.logical_or(before.flag, after.flag)
-        qa2_flag[np.isinf(qa2_data)] = True
-        qa2_flag[np.isnan(qa2_data)] = True
+        qa2_data = qa2_result.data
+        qa2_flag = qa2_result.flag
 
-        qa2_per_view[description] = np.median(qa2_data[qa2_flag==False])
-    
-    # restore normal numpy handling of division errors 
-    ignore = np.seterr(**old_settings)
+        # qa2 score is no-wvr rms / with-wvr rms
+        qa2_per_view[description] = 1.0 / np.median(qa2_data[qa2_flag==False])
 
     result.view_score = qa2_per_view
     result.overall_score = np.median(qa2_per_view.values())
 
-def calculate_view(context, gaintable, result):
+def calculate_view(context, nowvrtable, withwvrtable, result):
+
+    # get phase rms results for no-wvr case and with-wvr case
+    nowvr_results = calculate_phase_rms(context, nowvrtable)
+    wvr_results = calculate_phase_rms(context, withwvrtable)
+
+    for k, v in wvr_results.items():
+        result.vis = v.filename
+
+        # the ratio withwvr/nowvr is the view we want
+        nowvr_data = nowvr_results[k].data
+        nowvr_flag = nowvr_results[k].flag
+        wvr_data = wvr_results[k].data
+        wvr_flag = wvr_results[k].flag
+
+        oldseterr = np.seterr(divide='ignore', invalid='ignore') 
+        data = wvr_data / nowvr_data
+        data_flag = (nowvr_flag | wvr_flag | (nowvr_data==0))
+        data_flag[np.isinf(data)] = True
+        data_flag[np.isnan(data)] = True
+        np.seterr(**oldseterr) 
+
+        axes = v.axes
+        improvement_result = commonresultobjects.ImageResult(
+          v.filename, data=data,
+          datatype='with-wvr phase rms / no-wvr phase rms',
+          axes=axes, flag=data_flag, field_id=v.field_id, 
+          field_name = v._field_name, spw=v.spw)
+
+        result.addview(improvement_result.description, improvement_result)
+
+def calculate_phase_rms(context, gaintable):
     """
     tsystable -- CalibrationTableData object giving access to the wvrg
                  caltable.
@@ -48,11 +70,12 @@ def calculate_view(context, gaintable, result):
     # raise an exception when np encounters any error
     np.seterr(all='raise')
 
+    phase_rms_results = {}
     with casatools.TableReader(gaintable) as table:
-        result.vis = table.getkeyword('MSName')
+        vis = table.getkeyword('MSName')
 
         # access field names via domain object
-        ms = context.observing_run.get_ms(name=result.vis)
+        ms = context.observing_run.get_ms(name=vis)
         fields = ms.fields
 
         fieldidcol = table.getcol('FIELD_ID')
@@ -211,14 +234,16 @@ def calculate_view(context, gaintable, result):
                   data=chunk_base_times)]
 
                 phase_rms_result = commonresultobjects.ImageResult(
-                  filename=result.vis, data=data, datatype='r.m.s. phase',
+                  filename=vis, data=data, datatype='r.m.s. phase',
                   axes=axes, flag=data_flag, field_id=fieldid, 
                   field_name = fieldname, spw=spwid, units='degrees')
-
-                result.addview(phase_rms_result.description, phase_rms_result)
+                phase_rms_results[phase_rms_result.description] = \
+                  phase_rms_result
 
             # free sub table and its resources
             sb.done()
+
+        return phase_rms_results
 
 def findchunks(times, gap_time):
     """Return a list of arrays, each containing the indices of a chunk
