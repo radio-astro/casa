@@ -93,7 +93,7 @@
 #  cd /lustre/naasc/thunter/evla/AB1346/g19.36
 #  au.plotbandpass('bandpass.bcal',caltable2='bandpass_bpoly.bcal',yaxis='both',xaxis='freq')
 #
-PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.26 2013/06/24 09:43:46 thunter Exp $" 
+PLOTBANDPASS_REVISION_STRING = "$Id: task_plotbandpass.py,v 1.27 2013/06/30 17:14:54 thunter Exp $" 
 import pylab as pb
 import math, os, sys, re
 import time as timeUtilities
@@ -5423,6 +5423,7 @@ def getWeather(vis='', scan='', antenna='0',verbose=False, mymsmd=None):
     elsun = np.mean([el,el2])
     direction = subtable.getcol("DIRECTION")
     azeltime = subtable.getcol("TIME")
+    subtable.close()
     telescopeName = mymsmd.observatorynames()[0]
     if (len(direction) > 0 and telescopeName.find('VLA') < 0):
       azimuth = direction[0][0]*180.0/math.pi
