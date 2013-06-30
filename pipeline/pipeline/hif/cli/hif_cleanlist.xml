@@ -22,6 +22,17 @@ Compute clean results from a list of specified targets.
     <value>{}</value>
   </param>
 
+  <param type="string" name="imagermode" subparam="true">
+     <description>Imaging mode (csclean, mosaic, \'\' for default)</description>
+     <value></value>
+       <allowed kind="enum">
+         <value></value>
+         <value>csclean</value>
+         <value>mosaic</value>
+       </allowed>
+  </param>
+
+
   <param type="string" name="pipelinemode">
     <description>The pipeline operating mode</description>
     <value>automatic</value>
@@ -42,6 +53,59 @@ Compute clean results from a list of specified targets.
    <value>True</value>
   </param>
 
+  <param type="string" name="weighting">
+     <description>Type of weighting</description>
+     <value>natural</value>
+       <allowed kind="enum">
+         <value>natural</value>
+         <value>uniform</value>
+         <value>briggs</value>
+         <value>superuniform</value>
+         <value>briggsabs</value>
+       </allowed>
+  </param>
+
+  <param type="double" name="robust" subparam="true">
+     <description>Briggs weighting robustness parameter</description>
+     <value>0.0</value>
+  </param>
+
+  <param type="any" name="noise" subparam="true">
+    <description>Briggs weighting noise parameter</description>
+    <any type="variant"/>
+    <value type="string">1.0Jy</value>
+  </param>
+
+  <param type="int" name="npixels" subparam="true">
+    <description>Weighting algorithm parameter</description>
+    <value type="int">1</value>
+  </param>
+
+
+  <param type="string" name="hm_clean">
+     <description>Pipeline cleaning mode (autobox, manual) </description>
+       <value>autobox</value>
+       <allowed kind="enum">
+         <value>autobox</value>
+         <value>manual</value>
+       </allowed>
+  </param>
+
+  <param type="string" name="mask" subparam="true">
+     <description>Clean  mask</description>
+     <value></value>
+  </param>
+
+  <param type="double" name="threshold" units="mJy" subparam="true">
+     <description>Clean threshold</description>
+     <value>0.0</value>
+  </param>
+
+  <param type="int" name="maxthreshiter" subparam="true">
+    <description>Maximum number of autobox threshold iterations</description>
+    <value>10</value>
+  </param>
+
 
   <constraints>
 
@@ -58,6 +122,34 @@ Compute clean results from a list of specified targets.
         <default param="target_list"><value>{}</value></default>
       </equals>
     </when>
+
+    <when param="hm_clean">
+      <equals value="autobox">
+        <default param="maxthreshiter"><value type="int" >10</value></default>
+      </equals>
+      <equals value="manual">
+        <default param="mask"><value type="string"></value></default>
+        <default param="threshold"><value type="double" units="mJy">0.0</value></default>
+      </equals>
+    </when>
+
+    <when param="weighting">
+      <equals value="natural"/>
+      <equals value="uniform"/>
+      <equals value="briggs">
+         <default param="robust"><value>0.0</value></default>
+         <default param="npixels"><value>0</value></default>
+      </equals>
+      <equals value="briggsabs">
+        <default param="robust"><value>0.0</value></default>
+        <default param="noise"><value type="string">1.0Jy</value></default>
+        <default param="npixels"><value>0</value></default>
+      </equals>
+      <equals value="superuniform">
+        <default param="npixels"><value>0</value></default>
+      </equals>
+    </when>
+
   </constraints>
 
 </input>
