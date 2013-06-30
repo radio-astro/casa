@@ -160,7 +160,7 @@ class WvrgcalflagInputs(basetask.StandardInputs):
     @property
     def flag_intent(self):
         if self._flag_intent is None:
-            return '*BANDPASS*'
+            return 'BANDPASS'
         return self._flag_intent
 
     @flag_intent.setter
@@ -170,7 +170,7 @@ class WvrgcalflagInputs(basetask.StandardInputs):
 
     def qa2_intent(self):
         if self._qa2_intent is None:
-            value = '*PHASE*,*BANDPASS*'
+            value = 'PHASE,BANDPASS'
         else:
             value = self._qa2_intent
         # ensure that qa2_intent includes flag_intent otherwise 
@@ -188,7 +188,7 @@ class WvrgcalflagInputs(basetask.StandardInputs):
     @property
     def qa2_bandpass_intent(self):
         if self._qa2_bandpass_intent is None:
-            return '*BANDPASS*'
+            return 'BANDPASS'
         return self._qa2_bandpass_intent
 
     @qa2_bandpass_intent.setter
@@ -233,6 +233,9 @@ class Wvrgcalflag(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
         jobs = []
+        # scratch area where hif_wvrgcal can store its B calibration 
+        # result
+        inputs.context.scratch = {}
 
         # Construct the task that will read the data and create the
         # view of the data that is the basis for flagging.
@@ -302,7 +305,10 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
         super(WvrgcalflagWorker, self).__init__(inputs)
         # we need a persistent result object when flagging as it will contain
         # results at each flagging iteration
-        self.result = resultobjects.WvrgcalflagResult()
+        self.result = resultobjects.WvrgcalflagResult(
+          vis=inputs.vis)
+        self.result.bandpass_result = None
+        self.result.nowvr_result = None
     
     def prepare(self):
         inputs = self.inputs
@@ -317,9 +323,14 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
           disperse=inputs.disperse, wvrflag=inputs.wvrflag,
           hm_smooth=inputs.hm_smooth, smooth=inputs.smooth, scale=inputs.scale,
           qa2_intent=inputs.qa2_intent,
-          qa2_bandpass_intent=inputs.qa2_bandpass_intent)
+          qa2_bandpass_intent=inputs.qa2_bandpass_intent,
+          bandpass_result=self.result.bandpass_result,
+          nowvr_result=self.result.nowvr_result)
         wvrgcaltask = wvrgcal.Wvrgcal(wvrgcalinputs)
         result = self._executor.execute(wvrgcaltask, merge=True)
+
+        self.result.bandpass_result = result.bandpass_result
+        self.result.nowvr_result = result.nowvr_result
 
         return result
 
