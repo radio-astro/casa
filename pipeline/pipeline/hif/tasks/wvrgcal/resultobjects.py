@@ -10,14 +10,16 @@ from pipeline.hif.tasks.common import commonresultobjects
 LOG = infrastructure.get_logger(__name__)
 
 
-class WvrgcalflagResult(basetask.Results):
+class WvrgcalResult(basetask.Results):
 
-    def __init__(self, final=[], pool=[], preceding=[], wvrflag=[]):
+    def __init__(self, vis, final=[], pool=[], preceding=[],
+      wvrflag=[]):
         """
         Construct and return a new WvrgcalflagResult.
         """
-        super(WvrgcalflagResult, self).__init__()
+        super(WvrgcalResult, self).__init__()
 
+        self.vis = vis
         self.pool = pool[:]
         self.final = final[:]
         self.preceding = preceding[:]
@@ -41,6 +43,44 @@ class WvrgcalflagResult(basetask.Results):
               '%s\n%s' % (calapp.calto, calapp.calfrom))
             context.callibrary.add(calapp.calto, calapp.calfrom)
 
+    def __repr__(self):
+
+        # Format the Wvrgcal results.
+        s = 'WvrgcalResult:\n'
+        for calapplication in self.final:
+            s += '\tBest caltable for spw #{spw} field {field} in {vis} is {name}\n'.format(
+              spw=calapplication.spw, field=calapplication.field,
+              vis=os.path.basename(calapplication.vis),
+              name=calapplication.gaintable)
+        s += '\twvrflag is {wvrflag}'.format(wvrflag=self.wvrflag)
+
+        return s
+
+
+class WvrgcalflagResult(WvrgcalResult):
+
+    def merge_with_context(self, context):
+        if not self.final:
+            LOG.warning('No results to merge')
+            return
+
+        for calapp in self.final:
+            LOG.debug('Adding calibration to callibrary:\n'
+              '%s\n%s' % (calapp.calto, calapp.calfrom))
+            context.callibrary.add(calapp.calto, calapp.calfrom)
+
+        if self.wvrflag:
+            ms = context.observing_run.get_ms(name=self.vis)
+            if hasattr(ms, 'reference_antenna'):
+                refant = ms.reference_antenna.split(',')
+                bad_antennas = set(self.wvrflag).intersection(refant)
+                if bad_antennas:
+                    LOG.warning('%s antennas with bad wvr removed from refant list: %s' %
+                      (os.path.basename(self.vis), list(bad_antennas)))
+                    for antenna in list(bad_antennas):
+                        refant.remove(antenna)
+                    ms.reference_antenna = ','.join(refant)
+
     def addflags(self, flags):
         self.flagging += flags
 
@@ -58,19 +98,4 @@ class WvrgcalflagResult(basetask.Results):
 
     def last(self, description):
         return copy.deepcopy(self.view[description][-1])
-
-    def __repr__(self):
-
-        # Format the Wvrgcal results.
-        s = 'WvrgcalResult:\n'
-        for calapplication in self.final:
-            s += '\tBest caltable for spw #{spw} field {field} in {vis} is {name}\n'.format(
-              spw=calapplication.spw, field=calapplication.field,
-              vis=os.path.basename(calapplication.vis),
-              name=calapplication.gaintable)
-        s += '\twvrflag is {wvrflag}'.format(wvrflag=self.wvrflag)
-
-        return s
-
-
 
