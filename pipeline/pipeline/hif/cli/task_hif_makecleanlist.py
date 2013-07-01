@@ -6,9 +6,10 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_makecleanlist(vis=None, imagename=None, intent=None, field=None,
-              spw=None, uvrane=None, mode=None, imsize=None, cell=None,
-	      phasecenter=None, start=None, width=None, nchan=None,
-              pipelinemode=None, dryrun=None, acceptresults=None):
+              spw=None, uvrange=None, mode=None, outframe=None,
+              imsize=None, cell=None, phasecenter=None, nchan=None, 
+              start=None, width=None, pipelinemode=None, dryrun=None,
+              acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
     # constructor
