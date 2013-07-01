@@ -9,7 +9,6 @@ import time
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.imagelibrary as imagelibrary
 import pipeline.infrastructure.basetask as basetask
 from .simplegrid import SimpleGridding
@@ -22,14 +21,42 @@ from .. import common
 LOG = infrastructure.get_logger(__name__)
 
 class SDBaselineWorker(object):
-    def __init__(self, context):
+    def __init__(self, context, datatable, iteration, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern):
         self.context = context
-        self.cluster_info = {}
+        self.datatable = self.context.observing_run.datatable_instance
+        self.iteration = iteration
+        self.spwid = spwid
+        self.nchan = nchan
+        self.beam_size = beam_size
+        self.pollist = pollist
+        self.srctype = srctype
+        self.file_index = file_index
+        self.window = window
+        self.edge = edge
+        self.broadline = broadline
+        self.fitorder = fitorder
+        self.fitfunc = fitfunc
+        self.observing_pattern = observing_pattern
 
-    def execute(self, datatable, iteration, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern, detected_lines, cluster_info):
+    def execute(self, dry_run=True):
 
         start_time = time.time()
 
+        datatable = self.datatable
+        iteration = self.iteration
+        spwid = self.spwid
+        nchan = self.nchan
+        beam_size = self.beam_size
+        pollist = self.pollist
+        srctype = self.srctype
+        file_index = self.file_index
+        window = self.window
+        edge = self.edge
+        broadline = self.broadline
+        fitorder = self.fitorder
+        fitfunc = self.fitfunc
+        observing_pattern = self.observing_pattern
+        
         # filename for input/output
         filenames_work = [self.context.observing_run[idx].work_data
                           for idx in file_index]
@@ -78,18 +105,18 @@ class SDBaselineWorker(object):
         index_list = numpy.where(numpy.logical_and(ifnos == spwid, srctypes==srctype))[0]
         LOG.debug('index_list=%s'%(list(index_list)))
         LOG.debug('len(index_list)=%s'%(len(index_list)))
-        lines, _cluster_info = line_validator.execute(grid_table, detect_signal, spwid, nchan, index_list, window, observing_pattern, grid_size, grid_size, iteration)
+        lines, cluster_info = line_validator.execute(grid_table, detect_signal, spwid, nchan, index_list, window, observing_pattern, grid_size, grid_size, iteration)
         t1 = time.time()
 
         LOG.debug('lines=%s'%(lines))
         LOG.debug('PROFILE validation: elapsed time is %s sec'%(t1-t0))
         
-        for (k,v) in _cluster_info.items():
-            cluster_info[k] = v
+        #for (k,v) in _cluster_info.items():
+        #    cluster_info[k] = v
         LOG.debug('cluster_info=%s'%(cluster_info))
 
-        for l in lines:
-            detected_lines.append(l)
+        #for l in lines:
+        #    detected_lines.append(l)
 
         # fit order determination and fitting
         fitter_cls = FittingFactory.get_fitting_class(fitfunc)
@@ -129,4 +156,6 @@ class SDBaselineWorker(object):
 
         end_time = time.time()
         LOG.debug('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
+
+        return lines, cluster_info
 

@@ -8,9 +8,6 @@ import time
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.casatools as casatools
-import pipeline.infrastructure.jobrequest as jobrequest
-import pipeline.infrastructure.imagelibrary as imagelibrary
-import pipeline.infrastructure.basetask as basetask
 from .. import common
 from .worker import SDBaselineWorker
 
@@ -123,32 +120,12 @@ class SDBaseline(common.SingleDishTaskTemplate):
 
             beam_size = st.beam_size[spwid]
             srctype = st.calibration_strategy['srctype']
-            worker = SDBaselineWorker(context)
             _file_index = set(file_index) & set([m.antenna for m in group_desc])
             files = files | _file_index
             pattern = st.pattern[spwid][pols[0]]
-            detected_lines = []
-            cluster_info = {}
-            parameters = {'datatable': datatable,
-                          'iteration': iteration, 
-                          'spwid': spwid,
-                          'nchan': nchan,
-                          'beam_size': beam_size,
-                          'pollist': pols,
-                          'srctype': srctype,
-                          'file_index': list(_file_index),
-                          'window': window,
-                          'edge': edge,
-                          'broadline': broadline,
-                          'fitorder': fitorder,
-                          'fitfunc': fitfunc,
-                          'observing_pattern': pattern,
-                          'detected_lines': detected_lines,
-                          'cluster_info': cluster_info}
-            job = jobrequest.JobRequest(worker.execute, **parameters)
-            self._executor.execute(job)
+            worker = SDBaselineWorker(context, datatable, iteration, spwid, nchan, beam_size, pols, srctype, list(_file_index), window, edge, broadline, fitorder, fitfunc, pattern)
+            (detected_lines, cluster_info) = self._executor.execute(worker, merge=False)
 
-            validation = worker.cluster_info
             LOG.info('detected_lines=%s'%(detected_lines))
             LOG.info('cluster_info=%s'%(cluster_info))
 

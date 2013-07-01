@@ -6,7 +6,6 @@ from math import sqrt
 import numpy
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.h.heuristics as heuristics
 from .. import common
 from . import rules
