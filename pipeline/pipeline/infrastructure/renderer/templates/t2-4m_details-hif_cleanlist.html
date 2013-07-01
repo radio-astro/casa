@@ -1,6 +1,7 @@
 <%!
 import os.path
 import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.utils as utils
 
 columns = {'cleanmask' : 'Clean Mask',
 		   'flux' : 'Flux',
@@ -51,14 +52,14 @@ def is_pane_active(idx):
 
 			<h4>Frequency Selection:</h4>
 			<ul class="nav nav-pills">
-				% for spw_idx, spw in enumerate(plots_dict[field].keys()):
+				% for spw_idx, spw in enumerate(utils.numericSort(plots_dict[field].keys())):
 				<li ${is_active(spw_idx)}>
 					<a href="#spw-${spw_idx}" data-toggle="tab">${spw}</a>
 				</li>
 				% endfor
 			</ul>
 			<div class="tab-content">
-				% for spw_idx, spw in enumerate(plots_dict[field].keys()):
+				% for spw_idx, spw in enumerate(utils.numericSort(plots_dict[field].keys())):
 				<div class="tab-pane${is_pane_active(spw_idx)}" id="spw-${spw_idx}">
 
 					<!-- column headings -->
@@ -90,7 +91,6 @@ def is_pane_active(idx):
 							<div class="span4">
 							<!-- add plots for all spectral windows, relying on javascript
 								 to hide those not selected by the radio button -->
-								% for spw in spws:
 								<% plot = get_plot(plots_dict, field, spw, i, colname) %>
 								<!-- use bootstrap markup for thumbnails -->
 								<ul class="thumbnails">
@@ -115,18 +115,16 @@ def is_pane_active(idx):
 										% endif
 									</li>
 								</ul>
-								% endfor <!-- /spw loop -->				
 							</div>					
 							% endfor <!-- /colname loop-->
 						</div>
 					</div><!-- /div row-fluid -->			
-					% endfor
+					% endfor <!-- /iteration loop -->
 	
 					<div class="row-fluid">
 						<div class="span10 offset2">
 							% for colname in ['flux', 'psf']:
 							<div class="span4">
-								% for spw in spws:
 								<!-- flux and PSF plots are associated with iteration 0 -->
 								<% plot = get_plot(plots_dict, field, spw, 0, colname) %>
 								<ul class="thumbnails">
@@ -149,7 +147,6 @@ def is_pane_active(idx):
 										% endif
 									</li>
 								</ul>
-								% endfor <!-- /spw loop -->
 							</div><!-- /div span3 -->
 							% endfor <!-- /colname loop -->
 						</div>
