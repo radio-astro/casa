@@ -182,3 +182,16 @@ def to_CASA_intent(ms, intents):
         intents = set(itertools.chain(*intents))
         # replace the CASA arg with *INTENT1*,*INTENT2*, etc.
         return ','.join(['*{0}*'.format(intent) for intent in intents])
+
+def stringSplitByNumbers(x):
+    r = re.compile('(\d+)')
+    l = r.split(x)
+    return [int(y) if y.isdigit() else y for y in l]
+
+def numericSort(l):
+    """
+    Sort a list numerically, eg. 
+    
+    ['9,11,13,15', '11,13', '9'] -> ['9', '9,11,13,15', '11,13']
+    """    
+    return sorted(l, key = stringSplitByNumbers)
