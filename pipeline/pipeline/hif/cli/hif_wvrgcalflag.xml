@@ -98,17 +98,17 @@ Generate a gain table based on Water Vapour Radiometer data and flag bad antenna
 
     <param type="string" name="flag_intent">
         <description>Data intents to use in detecting and flagging bad wvr antennas</description>
-        <value>*BANDPASS*</value>
+        <value>BANDPASS</value>
     </param>
 
     <param type="string" name="qa2_intent">
         <description>Data intents to use in estimating the effectiveness of the wvr correction</description>
-        <value>*PHASE*,*BANDPASS*</value>
+        <value>PHASE,BANDPASS</value>
     </param>
 
     <param type="string" name="qa2_bandpass_intent">
         <description>Data intent to use for the bandpass calibration in the qa2 calculation</description>
-        <value>*BANDPASS*</value>
+        <value>BANDPASS</value>
     </param>
 
     <param type="bool" name="flag_hi">
@@ -319,7 +319,7 @@ flag_intent -- The data intents on whose wvr correction results the search
     ['ANTENNA', 'TIME'], showing the phase noise after the wvr
     correction has been applied.
 
-    default '*BANDPASS*'
+    default 'BANDPASS'
 
 qa2_intent -- The list of data intents on which the wvr correction is to be
     tried as a means of estimating its effectiveness.
@@ -341,8 +341,8 @@ qa2_intent -- The list of data intents on which the wvr correction is to be
     file is not made available for merging into the context for use in the
     subsequent reduction.
 
-    default: '*PHASE*'
-    example: '*BANDPASS*,*AMPLITUDE*'
+    default: 'PHASE'
+    example: 'BANDPASS,AMPLITUDE'
 
 qa2_bandpass_intent -- The data intent to use for the bandpass calibration
     in the qa2 calculation.
