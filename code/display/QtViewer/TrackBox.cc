@@ -57,16 +57,16 @@ namespace casa {
 		            + name() + "  (it will remain registered).";
 		setToolTip(tltp.chars());
 
-
-		trkgEdit_->setMinimumWidth(355);
+		trkgEdit_->setMinimumWidth(495);
 		trkgEdit_->setFixedHeight( qdd_->isMS() ? 84 : 47 );
 		// trkgEdit_->setFixedHeight(81);	// (obs.)
 		//trkgEdit_->setPlainText("\n  ");	// (Doesn't work on init,
 		//setTrackingHeight_();		// for some reason...).
 
-		QFont trkgFont;
-		trkgFont.setFamily(QString::fromUtf8("Courier"));
-		trkgFont.setBold(True);
+		QFont trkgFont("Monospace");
+		trkgFont.setStyleHint(QFont::TypeWriter);
+		// trkgFont.setBold(True);
+		trkgFont.setPixelSize(11);
 		trkgEdit_->setFont(trkgFont);
 
 		trkgEdit_->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);

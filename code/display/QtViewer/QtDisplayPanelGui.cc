@@ -251,7 +251,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			connect( regionDock_, SIGNAL(regionChange(viewer::Region*,std::string)), SIGNAL(regionChange(viewer::Region*,std::string)));
 			connect( regionDock_, SIGNAL(loadRegions(const QString&, const QString &)), SLOT(loadRegions(const QString&, const QString &)) );
 			connect( this, SIGNAL(axisToolUpdate(QtDisplayData*)), regionDock_, SLOT(updateRegionState(QtDisplayData*)) );
-			std::string shown = getrc("visible.regiondock");
+			std::string shown = getrc("visible.regions");
 			std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
 			if ( shown == "false" ) regionDock_->dismiss( );
 		}
@@ -412,16 +412,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//Animation
 		initAnimationHolder();
 		string animloc = addAnimationDockWidget();
+		
+		std::string shown = getrc("visible.animator");
+		std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
+		if ( shown == "false" ) animationHolder->dismiss( );
 
 		initFit2DTool();
 
 		std::string trackloc = rc.get("viewer." + rcid() + ".position.cursor_tracking");
 		std::transform(trackloc.begin(), trackloc.end(), trackloc.begin(), ::tolower);
-		trkgDockWidget_  = new CursorTrackingHolder( qdp_ );
+		trkgDockWidget_  = new CursorTrackingHolder( this );
 		addDockWidget( trackloc == "right" ? Qt::RightDockWidgetArea :
 		               trackloc == "left" ? Qt::LeftDockWidgetArea :
 		               trackloc == "top" ? Qt::TopDockWidgetArea :
 		               Qt::BottomDockWidgetArea, trkgDockWidget_, Qt::Vertical );
+		shown = getrc("visible.cursor_tracking");
+		std::transform(shown.begin(), shown.end(), shown.begin(), ::tolower);
+		if ( shown == "false" ) trkgDockWidget_->dismiss( );
 
 		//  ------------------------------------------------------------------------------------------
 		if ( regionDock_ ) {
@@ -745,7 +752,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if ( animationHolder == NULL ) {
 			animationImageIndex = -1;
 
-			animationHolder = new AnimatorHolder( qdp_, this );
+			animationHolder = new AnimatorHolder( this, this );
 			connect(animationHolder, SIGNAL(revPlay()), SLOT(revPlay_()));
             connect(animationHolder, SIGNAL(fwdPlay()), SLOT(fwdPlay_()));
 			connect(animationHolder, SIGNAL(setMode(bool)), this, SLOT(animationModeChanged(bool)));

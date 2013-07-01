@@ -497,7 +497,7 @@ namespace casa {
 		void QtRegionDock::handle_visibility( bool visible ) {
 			if ( visible && dismissed ) {
 				dismissed = false;
-				dpg->putrc( "visible.regiondock", "true" );
+				dpg->putrc( "visible.regions", "true" );
 			}
 		}
 
@@ -508,7 +508,7 @@ namespace casa {
 		void QtRegionDock::closeEvent ( QCloseEvent * event ) {
 			dismissed = true;
 			QDockWidget::closeEvent(event);
-			dpg->putrc( "visible.regiondock", "false" );
+			dpg->putrc( "visible.regions", "false" );
 		}
 
 		void QtRegionDock::update_region_statistics( ) {

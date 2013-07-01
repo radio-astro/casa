@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include <display/QtViewer/AnimatorHolder.qo.h>
-#include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <QDebug>
 
 namespace casa {
@@ -31,10 +31,10 @@ namespace casa {
 	const bool AnimatorHolder::BLINK_MODE = false;
 	const bool AnimatorHolder::NORMAL_MODE = true;
 
-	AnimatorHolder::AnimatorHolder( QtDisplayPanel *qdp, QWidget *parent )
+	AnimatorHolder::AnimatorHolder( QtDisplayPanelGui *qdp, QWidget *parent )
          : QDockWidget(parent), Ui::AnimatorHolder( ),
 		  animatorChannel( NULL ), animatorImage( NULL ),
-		  selectedColor( Qt::white), panel_(qdp) {
+		  selectedColor( Qt::white), panel_(qdp), dismissed(false) {
 
 		setupUi(this);
         int height = find_height( );
@@ -57,21 +57,23 @@ namespace casa {
 
 		previousMode = CHANNEL_MODE;
 
-        connect( this, SIGNAL(lowerBoundAnimatorChannelChanged(int)), qdp, SLOT(lowerBoundAnimatorChannelChanged(int)));
-        connect( this, SIGNAL(upperBoundAnimatorChannelChanged(int)), qdp, SLOT(upperBoundAnimatorChannelChanged(int)));
-        connect( this, SIGNAL(lowerBoundAnimatorImageChanged(int)), qdp, SLOT(lowerBoundAnimatorImageChanged(int)));
-        connect( this, SIGNAL(upperBoundAnimatorImageChanged(int)), qdp, SLOT(upperBoundAnimatorImageChanged(int)));
-        connect( this, SIGNAL(goTo(int)), qdp, SLOT(goTo(int)));
-        connect( this, SIGNAL(frameNumberEdited(int)), qdp, SLOT(goTo(int)));
-        connect( this,  SIGNAL(setRate(int)), qdp, SLOT(setRate(int)));
-        connect( this, SIGNAL(toStart()), qdp, SLOT(toStart()));
-        connect( this, SIGNAL(revStep()), qdp, SLOT(revStep()));
-        connect( this, SIGNAL(stop()), qdp, SLOT(stop()));
-        connect( this, SIGNAL(fwdStep()), qdp, SLOT(fwdStep()));
-        connect( this, SIGNAL(toEnd()), qdp, SLOT(toEnd()));
+        connect( this, SIGNAL(lowerBoundAnimatorChannelChanged(int)), panel_->displayPanel( ), SLOT(lowerBoundAnimatorChannelChanged(int)));
+        connect( this, SIGNAL(upperBoundAnimatorChannelChanged(int)), panel_->displayPanel( ), SLOT(upperBoundAnimatorChannelChanged(int)));
+        connect( this, SIGNAL(lowerBoundAnimatorImageChanged(int)), panel_->displayPanel( ), SLOT(lowerBoundAnimatorImageChanged(int)));
+        connect( this, SIGNAL(upperBoundAnimatorImageChanged(int)), panel_->displayPanel( ), SLOT(upperBoundAnimatorImageChanged(int)));
+        connect( this, SIGNAL(goTo(int)), panel_->displayPanel( ), SLOT(goTo(int)));
+        connect( this, SIGNAL(frameNumberEdited(int)), panel_->displayPanel( ), SLOT(goTo(int)));
+        connect( this,  SIGNAL(setRate(int)), panel_->displayPanel( ), SLOT(setRate(int)));
+        connect( this, SIGNAL(toStart()), panel_->displayPanel( ), SLOT(toStart()));
+        connect( this, SIGNAL(revStep()), panel_->displayPanel( ), SLOT(revStep()));
+        connect( this, SIGNAL(stop()), panel_->displayPanel( ), SLOT(stop()));
+        connect( this, SIGNAL(fwdStep()), panel_->displayPanel( ), SLOT(fwdStep()));
+        connect( this, SIGNAL(toEnd()), panel_->displayPanel( ), SLOT(toEnd()));
 
-        connect( channelGroupBox, SIGNAL(toggled(bool)), SLOT(visibility_event(bool)) );
-        connect( imageGroupBox, SIGNAL(toggled(bool)), SLOT(visibility_event(bool)) );
+		connect( this, SIGNAL(visibilityChanged(bool)), SLOT(handle_visibility(bool)) );
+
+        connect( channelGroupBox, SIGNAL(toggled(bool)), SLOT(handle_folding(bool)) );
+        connect( imageGroupBox, SIGNAL(toggled(bool)), SLOT(handle_folding(bool)) );
 
 	}
 
@@ -649,6 +651,17 @@ namespace casa {
 
 	AnimatorHolder::~AnimatorHolder() { }
 
+	void AnimatorHolder::dismiss( ) {
+		hide( );
+		dismissed = true;
+	}
+
+	void AnimatorHolder::closeEvent ( QCloseEvent * event ) {
+		dismissed = true;
+		QDockWidget::closeEvent(event);
+		panel_->putrc( "visible.animator", "false" );
+	}
+
     int AnimatorHolder::find_height( ) const {
         int result = AnimatorWidget::heightHeader( );
 
@@ -678,7 +691,7 @@ namespace casa {
 
     }
 
-    void AnimatorHolder::visibility_event( bool visible ) {
+    void AnimatorHolder::handle_folding( bool visible ) {
         QObject *obj = sender( );
         QGroupBox *gb = dynamic_cast<QGroupBox*>(obj);
 		QList <AnimatorWidget*> animators = gb->findChildren<AnimatorWidget*>( );
@@ -692,5 +705,12 @@ namespace casa {
             updateGeometry( );
         }
     }
+
+	void AnimatorHolder::handle_visibility( bool visible ) {
+		if ( visible && dismissed ) {
+			dismissed = false;
+			panel_->putrc( "visible.animator", "true" );
+		}
+	}
 
 }

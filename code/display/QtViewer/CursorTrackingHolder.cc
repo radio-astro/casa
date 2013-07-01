@@ -23,7 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include <display/QtViewer/QtDisplayData.qo.h>
-#include <display/QtViewer/QtDisplayPanel.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <display/QtViewer/CursorTrackingHolder.qo.h>
 #include <display/QtViewer/TrackBox.qo.h>
 #include <display/DisplayDatas/PrincipalAxesDD.h>
@@ -31,10 +31,10 @@
 
 namespace casa {
 
-    CursorTrackingHolder::CursorTrackingHolder( QtDisplayPanel *panel, QWidget *parent )
-         : QDockWidget(parent), Ui::CursorTrackingHolder( ), panel_(panel) {
+    CursorTrackingHolder::CursorTrackingHolder( QtDisplayPanelGui *panel, QWidget *parent )
+         : QDockWidget(parent), Ui::CursorTrackingHolder( ), panel_(panel), dismissed(false) {
 		setupUi(this);
-        // connect( this, SIGNAL(visibilityChanged(bool)), SIGNAL(geometryChange( )) );
+		connect( this, SIGNAL(visibilityChanged(bool)), SLOT(handle_visibility(bool)) );
 	}
 
 	CursorTrackingHolder::~CursorTrackingHolder( ) {
@@ -45,7 +45,7 @@ namespace casa {
 		// Reacts to QDP registration change signal.  If necessary, changes
 		// the set of cursor position tracking boxes being displayed in
 		// container (creating new TrackBoxes as necessary).  A TrackBox
-		// will be shown for each qdd in panel_->registeredDDs() where
+		// will be shown for each qdd in panel_->displayPanel( )->registeredDDs() where
 		// qdd->usesTracking() (in the same order).
 
 		// Hide track boxes whose dd has been unregistered and remove them
@@ -55,19 +55,19 @@ namespace casa {
 		for ( int i=0; i<trkBoxes.size(); i++ ) {
 			TrackBox* trkBox = trkBoxes[i];
 			if( trkBox->isVisibleTo(container) &&
-			        !panel_->isRegistered(trkBox->dd()) ) {
+			        !panel_->displayPanel( )->isRegistered(trkBox->dd()) ) {
 				container->layout()->removeWidget(trkBox);
 				trkBox->hide();
 			}
 		}
 
 		// Assure that all applicable registered QDDs are showing track boxes.
-		/*List<QtDisplayData*> rDDs = panel_->registeredDDs();
+		/*List<QtDisplayData*> rDDs = panel_->displayPanel( )->registeredDDs();
 		for(ListIter<QtDisplayData*> rdds(&rDDs); !rdds.atEnd(); rdds++) {
 			showTrackBox_(rdds.getRight());
 		} */
-		DisplayDataHolder::DisplayDataIterator iter = panel_->beginRegistered();
-		while ( iter != panel_->endRegistered()) {
+		DisplayDataHolder::DisplayDataIterator iter = panel_->displayPanel( )->beginRegistered();
+		while ( iter != panel_->displayPanel( )->endRegistered()) {
             addTrackBox(*iter);
 			iter++;
 		}
@@ -86,7 +86,7 @@ namespace casa {
 
 		if ( trkBox == 0 ) {
             trkBox = new TrackBox( qdd );
-            connect( trkBox, SIGNAL(visibilityChange(bool,QtDisplayData*)), SLOT(trackbox_visibility_change(bool, QtDisplayData*)));
+            connect( trkBox, SIGNAL(visibilityChange(bool,QtDisplayData*)), SLOT(handle_folding(bool, QtDisplayData*)));
         } else if ( notShown ) {
             trkBox->clear( );	// (Clear old, hidden trackbox).
         }
@@ -135,7 +135,25 @@ namespace casa {
         }
     }
 
-    void CursorTrackingHolder::trackbox_visibility_change( bool /*visible*/, QtDisplayData */*dd*/ ) { update_size( ); }
+	void CursorTrackingHolder::dismiss( ) {
+        hide( );
+		dismissed = true;
+	}
+
+	void CursorTrackingHolder::closeEvent ( QCloseEvent * event ) {
+		dismissed = true;
+		QDockWidget::closeEvent(event);
+		panel_->putrc( "visible.cursor_tracking", "false" );
+	}
+
+    void CursorTrackingHolder::handle_folding( bool /*visible*/, QtDisplayData */*dd*/ ) { update_size( ); }
+
+	void CursorTrackingHolder::handle_visibility( bool visible ) {
+		if ( visible && dismissed ) {
+			dismissed = false;
+			panel_->putrc( "visible.cursor_tracking", "true" );
+		}
+	}
 
     QSize CursorTrackingHolder::find_size( ) const {
         QSize result(size( ));

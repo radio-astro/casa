@@ -31,7 +31,7 @@
 
 namespace casa {
 
-    class QtDisplayPanel;
+    class QtDisplayPanelGui;
     class QtDisplayData;
     class PrincipalAxesDD;
     class Record;
@@ -44,7 +44,7 @@ namespace casa {
 		Q_OBJECT
 
 	public:
-		CursorTrackingHolder( QtDisplayPanel *panel, QWidget *parent = 0);
+		CursorTrackingHolder( QtDisplayPanelGui *panel, QWidget *parent = 0);
 		~CursorTrackingHolder( );
 
         void arrangeTrackBoxes( );
@@ -56,14 +56,21 @@ namespace casa {
         QSize sizeHint( ) const { return find_size( ); }
         QSize minimumSizeHint( ) const { return find_size( ); }
 
+		void dismiss( );
+
+	protected:
+		void closeEvent ( QCloseEvent * event );
+
     private slots:
-        void trackbox_visibility_change( bool, QtDisplayData * );
+        void handle_folding( bool, QtDisplayData * );
+		void handle_visibility(bool);
 
     private:
         QSize find_size( ) const;
         void update_size( );
-        QtDisplayPanel *panel_;
+        QtDisplayPanelGui *panel_;
 
+		bool dismissed;
 	};
 }
 #endif

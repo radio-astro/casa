@@ -30,7 +30,7 @@
 #include <display/QtViewer/AnimatorWidget.qo.h>
 namespace casa {
 
-    class QtDisplayPanel;
+    class QtDisplayPanelGui;
 	/**
 	 * Manages the Animator display on the viewer that allows users to scroll through
 	 * either the channels withen an image or between loaded images.
@@ -41,7 +41,7 @@ namespace casa {
 	public:
 		const static bool BLINK_MODE;
 		const static bool NORMAL_MODE;
-		AnimatorHolder( QtDisplayPanel *qdp, QWidget *parent = 0 );
+		AnimatorHolder( QtDisplayPanelGui *qdp, QWidget *parent = 0 );
 		void setFrameInformation( bool mode, int frm, int len );
 		void setRateInformation( bool mode, int minr, int maxr, int rate );
 		void setModeEnabled( int count );
@@ -50,6 +50,11 @@ namespace casa {
 		int getLowerBoundChannel() const;
 		int getUpperBoundChannel() const;
 		~AnimatorHolder();
+
+		void dismiss( );
+
+	protected:
+		void closeEvent ( QCloseEvent * event );
 
 	signals:
 		void goTo(int frame);
@@ -103,7 +108,8 @@ namespace casa {
 		void stepSizeChangedImage(int);
 		void modeChange();
 
-        void visibility_event( bool visible );
+        void handle_folding( bool visible );
+		void handle_visibility(bool);
 
 	private:
 		void initChannel();
@@ -136,8 +142,9 @@ namespace casa {
 		QColor selectedColor;
 		QColor backgroundColor;
 
-        QtDisplayPanel *panel_;
+        QtDisplayPanelGui *panel_;
 
+		bool dismissed;
 	};
 }
 #endif // ANIMATORHOLDER_QO_H
