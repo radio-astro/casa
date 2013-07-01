@@ -761,7 +761,12 @@ def simobserve(
             if hourangle=="transit":
                 haoffset=0.0
             else:
-                haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
+                # is this a time quantity?
+                if qa.compare(hourangle,"s"):
+                    haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
+                else:
+                    msg("You desire an hour angle of "+haoffset+" hours",origin="simobserve")
+                    haoffset=qa.convert(qa.quantity(hourangle+"h"),'s')['value']
 
             refdate=refdate+"/00:00:00"
             usehourangle=True
