@@ -13,12 +13,11 @@ LOG = infrastructure.get_logger(__name__)
 
 class MakeCleanListInputs(basetask.StandardInputs):
 
-    def __init__(self, context, output_dir=None, vis=None, spw=None,
-      intent=None, field=None, imagename=None, mode=None, outframe=None,
-      imsize=None, cell=None, phasecenter=None, start=None, width=None,
-      nchan=None, restfreq=None, weighting=None, robust=None, noise=None,
-      npixels=None, restoringbeam=None, nterms=None, uvrange=None,
-      maxthreshiter=None):
+    def __init__(self, context, output_dir=None, vis=None, 
+      imagename=None, intent=None, field=None, spw=None, 
+      uvrange=None, mode=None, outframe=None,
+      imsize=None, cell=None, phasecenter=None, nchan=None, start=None,
+      width=None):
 
         self._init_properties(vars())
 
@@ -121,6 +120,16 @@ class MakeCleanListInputs(basetask.StandardInputs):
     # optional added parameters start here
 
     @property
+    def nchan(self):
+        if self._nchan is None:
+            return 'default'
+        return self._nchan
+
+    @nchan.setter
+    def nchan(self, value):
+        self._nchan = value
+
+    @property
     def start(self):
         if self._start is None:
             return 'default'
@@ -141,86 +150,6 @@ class MakeCleanListInputs(basetask.StandardInputs):
         self._width = value
 
     @property
-    def nchan(self):
-        if self._nchan is None:
-            return 'default'
-        return self._nchan
-
-    @nchan.setter
-    def nchan(self, value):
-        self._nchan = value
-
-    @property
-    def restfreq(self):
-        if self._restfreq is None:
-            return 'default'
-        return self._restfreq
-
-    @restfreq.setter
-    def restfreq(self, value):
-        self._restfreq = value
-
-    @property
-    def weighting(self):
-        if self._weighting is None:
-            return 'default'
-        return self._weighting
-
-    @weighting.setter
-    def weighting(self, value):
-        self._weighting = value
-
-    @property
-    def robust(self):
-        if self._robust is None:
-            return 'default'
-        return self._robust
-
-    @robust.setter
-    def robust(self, value):
-        self._robust = value
-
-    @property
-    def noise(self):
-        if self._noise is None:
-            return 'default'
-        return self._noise
-
-    @noise.setter
-    def noise(self, value):
-        self._noise = value
-
-    @property
-    def npixels(self):
-        if self._npixels is None:
-            return 'default'
-        return self._npixels
-
-    @npixels.setter
-    def npixels(self, value):
-        self._npixels = value
-
-    @property
-    def restoringbeam(self):
-        if self._restoringbeam is None:
-            return 'default'
-        return self._restoringbeam
-
-    @restoringbeam.setter
-    def restoringbeam(self, value):
-        self._restoringbeam = value
-
-    @property
-    def nterms(self):
-        if self._nterms is None:
-            return 'default'
-        return self._nterms
-
-    @nterms.setter
-    def nterms(self, value):
-        self._nterms = value
-
-    @property
     def uvrange(self):
         if self._uvrange is None:
             return 'default'
@@ -229,16 +158,6 @@ class MakeCleanListInputs(basetask.StandardInputs):
     @uvrange.setter
     def uvrange(self, value):
         self._uvrange = value
-
-    @property
-    def maxthreshiter(self):
-        if self._maxthreshiter is None:
-            return 'default'
-        return self._maxthreshiter
-
-    @maxthreshiter.setter
-    def maxthreshiter(self, value):
-        self._maxthreshiter = value
 
 
 class MakeCleanList(basetask.StandardTaskTemplate):
@@ -263,14 +182,9 @@ class MakeCleanList(basetask.StandardTaskTemplate):
         if spw == '':
             ms = inputs.context.observing_run.get_ms(name=inputs.vis[0])
             spws = ms.get_spectral_windows(science_windows_only=True)
-            if inputs.mode == 'mfs':
-                spwids = [spw.id for spw in spws]
-                spw = ','.join(str(spwid) for spwid in spwids)
-                spw = "['%s']" % spw
-            else:
-                spwids = [spw.id for spw in spws]
-                spw = ','.join("'%s'" % (spwid) for spwid in spwids)
-                spw = '[%s]' % spw
+            spwids = [spw.id for spw in spws]
+            spw = ','.join("'%s'" % (spwid) for spwid in spwids)
+            spw = '[%s]' % spw
         #print 'after', spw, inputs.spw
 
         spwlist = spw.replace('[','').replace(']','')
@@ -285,11 +199,6 @@ class MakeCleanList(basetask.StandardTaskTemplate):
         # get list of field_ids/intents to be cleaned
         field_intent_list = self.heuristics.field_intent_list(
           intent=inputs.intent, field=inputs.field)
-
-#        self.clean_heuristics = {}
-#        for spwid in spwids:
-#            self.clean_heuristics[spwid] = clean.CleanHeuristics(
-#              context=inputs.context, vislist=inputs.vis, spw=str(spwid))
 
         # cell is a list of form [cellx, celly]. If the list has form [cell]
         # then that means the cell is the same size in x and y. If cell is
@@ -393,24 +302,8 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                         target['width'] = inputs.width
                     if inputs.nchan != 'default':
                         target['nchan'] = inputs.nchan
-                    if inputs.restfreq != 'default':
-                        target['restfreq'] = inputs.restfreq
-                    if inputs.weighting != 'default':
-                        target['weighting'] = inputs.weighting
-                    if inputs.robust != 'default':
-                        target['robust'] = inputs.robust
-                    if inputs.noise != 'default':
-                        target['noise'] = inputs.noise
-                    if inputs.npixels != 'default':
-                        target['npixels'] = inputs.npixels
-                    if inputs.restoringbeam != 'default':
-                        target['restoringbeam'] = inputs.restoringbeam
-                    if inputs.nterms != 'default':
-                        target['nterms'] = inputs.nterms
                     if inputs.uvrange != 'default':
                         target['uvrange'] = inputs.uvrange
-                    if inputs.maxthreshiter != 'default':
-                        target['maxthreshiter'] = inputs.maxthreshiter
 
                     #print target
                     result.add_target(target)
