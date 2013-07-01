@@ -6,9 +6,9 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from pipeline.infrastructure import casa_tasks
-from .boxworker import BoxWorker
+#from .boxworker import BoxWorker
 from .resultobjects import CleanResult
-import pipeline.infrastructure.renderer as renderer
+#import pipeline.infrastructure.renderer as renderer
 
 from pipeline.hif.heuristics import cleanbox
 
@@ -44,8 +44,8 @@ class CleanWorkerInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir, vis, mode, imagermode, imagename,
       intent, field_id, field, scan, spw, phasecenter, cell, imsize, outframe,
-      restfreq, nchan, start, width, weighting, robust, noise, npixels,
-      restoringbeam, nterms, uvrange, maxthreshiter, mask_method):
+      nchan, start, width, weighting, robust, noise, npixels,
+      restoringbeam, uvrange, maxthreshiter, cleanboxtask):
 
         self._init_properties(vars())
 
@@ -59,11 +59,7 @@ class CleanWorker(basetask.StandardTaskTemplate):
     def __init__(self, inputs):
         self.inputs = inputs
         self.result = CleanResult(sourcename=inputs.field,
-          intent=inputs.intent, spw=inputs.spw,
-          plotdir=renderer.htmlrenderer.get_plot_dir(context=inputs.context,
-          stage_number=inputs.context.task_counter))
-
-        self.heuristics = cleanbox.CleanBoxHeuristics()
+          intent=inputs.intent, spw=inputs.spw)
 
     def prepare(self):
         inputs = self.inputs
@@ -85,20 +81,21 @@ class CleanWorker(basetask.StandardTaskTemplate):
         os.system('rm -rf %s.iter*' % inputs.imagename)
 
         # iteration 0, the dirty image, no cleanmask
-        cleanmask = None
+        threshold = None
+        flux_list = []
         job = casa_tasks.clean(vis=inputs.vis,
           imagename='%s.iter%s' % (inputs.imagename, iter),
           field=inputs.field, spw=inputs.spw, 
           selectdata=True, scan=inputs.scan, mode=inputs.mode,
           niter=0, threshold='0Jy', imagermode=inputs.imagermode,
           interactive=False, outframe=inputs.outframe, 
-          restfreq=inputs.restfreq, nchan=inputs.nchan,
+          nchan=inputs.nchan,
           start=inputs.start, width=inputs.width, imsize=inputs.imsize,
           cell=inputs.cell, phasecenter=inputs.phasecenter,
           weighting=inputs.weighting, robust=inputs.robust,
           noise=inputs.noise, npixels=inputs.npixels, 
-          restoringbeam=inputs.restoringbeam, nterms=inputs.nterms,
-          uvrange=inputs.uvrange, mask=cleanmask)
+          restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
+          mask=None)
 
         self._executor.execute(job)
 
@@ -124,35 +121,23 @@ class CleanWorker(basetask.StandardTaskTemplate):
           type='flux', iter=iter)
         self.result.set_flux(image=flux_name)
 
-        iterating = True
-        cleanmask = None
-        while iterating:
-            # get some information on the residual
-            model_sum, clean_rms, non_clean_rms, residual_max, residual_min,\
-              rms2d, image_max = cleanbox.analyse_clean_result(
-              self.result.model, self.result.image, self.result.residual,
-              self.result.flux, cleanmask)
+        # give the boxing task the dirty image result to start its record
+        # of image statistics
+        inputs.cleanboxtask.iteration_result(iter=iter, psf=self.result.psf,
+          model=self.result.model, restored=self.result.image,
+          residual=self.result.residual, fluxscale=self.result.flux,
+          cleanmask=None, threshold=None)
 
-            old_cleanmask = cleanmask
-            cleanmask = purge('%s.iter%s.cleanmask' % (inputs.imagename,
+        iterating = True
+        while iterating:
+            new_cleanmask = purge('%s.iter%s.cleanmask' % (inputs.imagename,
               iter+1))
+            inputs.cleanboxtask.new_cleanmask(new_cleanmask)
 
             # determine cleanboxes and threshold for next iteration
-            boxinputs = BoxWorker.Inputs(context=inputs._context, 
-              output_dir=inputs.output_dir, vis=None, psf=self.result.psf,
-              model=self.result.model, restored=self.result.image, 
-              residual=self.result.residual, fluxscale=self.result.flux,
-              old_cleanmask=old_cleanmask, new_cleanmask=cleanmask,
-              mask_method=inputs.mask_method)
-            boxtask = BoxWorker(boxinputs)
-            box_result = self._executor.execute(boxtask)
+            box_result = self._executor.execute(inputs.cleanboxtask)
 
-            iterating = self.heuristics.clean_more(loop=iter,
-              new_threshold=box_result.threshold,
-              sum=model_sum, residual_max=residual_max,
-              residual_min=residual_min, non_cleaned_rms=non_clean_rms,
-              island_peaks=box_result.island_peaks)
-
+            iterating = box_result.iterating
             if iterating and iter > inputs.maxthreshiter:
                 LOG.warning('terminate clean; threshiter (%s) >= %s' % ( 
                   iter, inputs.maxthreshiter))
@@ -183,15 +168,14 @@ class CleanWorker(basetask.StandardTaskTemplate):
                   selectdata=True, scan=inputs.scan, mode=inputs.mode,
                   niter=1000, threshold='%sJy' % box_result.threshold,
                   imagermode=inputs.imagermode, interactive=False,
-                  outframe=inputs.outframe,
-                  restfreq=inputs.restfreq, nchan=inputs.nchan,
+                  outframe=inputs.outframe, nchan=inputs.nchan,
                   start=inputs.start, width=inputs.width,
                   imsize=inputs.imsize, cell=inputs.cell,
                   phasecenter=inputs.phasecenter,
                   weighting=inputs.weighting, robust=inputs.robust,
                   noise=inputs.noise, npixels=inputs.npixels,
-                  restoringbeam=inputs.restoringbeam, nterms=inputs.nterms,
-                  uvrange=inputs.uvrange, mask=box_result.cleanmask)
+                  restoringbeam=inputs.restoringbeam, uvrange=inputs.uvrange,
+                  mask=box_result.cleanmask)
 
                 self._executor.execute(job)
 
@@ -208,9 +192,18 @@ class CleanWorker(basetask.StandardTaskTemplate):
                   field=inputs.field, type='residual', iter=iter)
                 self.result.set_residual(iter=iter, image=residual_name)
 
-                set_miscinfo(name=cleanmask, spw=inputs.spw,
-                  field=inputs.field, type='cleanmask', iter=iter)
-                self.result.set_cleanmask(iter=iter, image=cleanmask)
+                if os.path.exists(box_result.cleanmask):
+                    set_miscinfo(name=box_result.cleanmask, spw=inputs.spw,
+                      field=inputs.field, type='cleanmask', iter=iter)
+                self.result.set_cleanmask(iter=iter,
+                  image=box_result.cleanmask)
+
+                # give the results of this iteration to the cleanboxtask
+                inputs.cleanboxtask.iteration_result(iter=iter,
+                  psf=self.result.psf,
+                  model=self.result.model, restored=self.result.image,
+                  residual=self.result.residual, fluxscale=self.result.flux,
+                  cleanmask=box_result.cleanmask, threshold=threshold)
 
         return self.result
 
