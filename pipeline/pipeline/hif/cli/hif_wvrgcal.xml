@@ -104,7 +104,7 @@ a QA2 score based on its effect on the interferometric data.
 
     <param type="string" name="qa2_bandpass_intent">
         <description>Data intent to use for the bandpass calibration in the qa2 calculation</description>
-        <value>*BANDPASS*</value>
+        <value>BANDPASS</value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -295,12 +295,12 @@ qa2_intent -- The list of data intents on which the wvr correction is to be
     If you do not want any QA2 calculations then set qa2_intent=''.
 
     default: ''
-    example: '*PHASE*'
+    example: 'PHASE'
 
 qa2_bandpass_intent -- The data intent to use for the bandpass calibration
     in the qa2 calculation.
 
-    default: '*BANDPASS*'
+    default: 'BANDPASS'
 
 
 Example
