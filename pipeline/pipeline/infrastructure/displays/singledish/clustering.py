@@ -321,7 +321,7 @@ class ClusterValidationDisplay(ClusterDisplayWorker):
                 # Convert Channel to Frequency and Velocity
                 #ichan = self.lines[icluster][0] + 0.5
                 (frequency, width) = self.__line_property(icluster)
-                pl.title('Cluster%s: Center=%.4f GHz Width=%.1f km/s'%(icluster,frequency,width))
+                pl.title('Cluster%s: Center=%.4f GHz Width=%.1f km/s'%(icluster,frequency,width), fontsize=tick_size+1)
                 if self.lines[icluster][2] != False:
                     for i in xrange(len(threshold)):
                         plot_objects.extend(
