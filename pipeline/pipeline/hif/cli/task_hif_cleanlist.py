@@ -5,7 +5,7 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 def hif_cleanlist(vis=None, target_list=None, weighting=None,
-    robust=None, noise=None, npixels=None, hm_clean=None,
+    robust=None, noise=None, npixels=None, hm_cleanboxing=None,
     mask=None, threshold=None, maxthreshiter=None,
     pipelinemode=None, dryrun=None, acceptresults=None):
 
