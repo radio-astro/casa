@@ -45,6 +45,8 @@ body {
 
 .sidebar-nav-fixed {
     padding: 9px 0;
+	position: fixed;
+	top: 60px;
     left:20px;
     width:250px;
 }
@@ -62,6 +64,14 @@ caption {
 	margin-left: 0 !important;
 }
 
+#nav-wrapper.affix-top {
+	position: absolute;
+}
+
+#nav-wrapper.affix {
+	top: auto;
+	bottom: 0px;
+}
 </style>
 </%block>
 
