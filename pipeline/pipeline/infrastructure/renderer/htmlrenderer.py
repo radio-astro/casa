@@ -1381,7 +1381,7 @@ class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):
 
 class T2_4MDetailsTsyscalRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hif_tsyscal.html', 
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsTsyscalRenderer, self).__init__(template,
                                                           always_rerender)
 
@@ -1466,7 +1466,7 @@ class TsyscalPlotRenderer(object):
 
 class T2_4MDetailsCleanRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hif_cleanlist.html',
-                 always_rerender=True):
+                 always_rerender=False):
         super(T2_4MDetailsCleanRenderer, self).__init__(template,
                                                         always_rerender)
 
