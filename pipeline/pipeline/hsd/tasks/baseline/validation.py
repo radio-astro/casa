@@ -799,8 +799,8 @@ class ValidateLineRaster(object):
                         (Lrow, Lmin, Lmax, LRA, LDEC) = dummy[0]
                         for i in xrange(1,len(dummy)):
                             if Lrow == dummy[i][0]:
-                                Lmin = max(Lmin, dummy[i][1])
-                                Lmax = min(Lmax, dummy[i][2])
+                                Lmin = min(Lmin, dummy[i][1])
+                                Lmax = max(Lmax, dummy[i][2])
                             else:
                                 FitData.append([Lmin, Lmax, LRA, LDEC, 1])
                                 (Lrow, Lmin, Lmax, LRA, LDEC) = dummy[i]
