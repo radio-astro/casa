@@ -22,68 +22,41 @@ Compute clean results from a list of specified targets.
     <value>{}</value>
   </param>
 
-  <param type="string" name="imagermode" subparam="true">
-     <description>Imaging mode (csclean, mosaic, \'\' for default)</description>
-     <value></value>
-       <allowed kind="enum">
-         <value></value>
-         <value>csclean</value>
-         <value>mosaic</value>
-       </allowed>
-  </param>
-
-
-  <param type="string" name="pipelinemode">
-    <description>The pipeline operating mode</description>
-    <value>automatic</value>
+  <param type="string" name="weighting">
+    <description>Weighting of uv (natural, uniform, briggs, ...)</description>
+    <value>natural</value>
     <allowed kind="enum">
-      <value>automatic</value>
-      <value>interactive</value>
-      <value>getinputs</value>
+      <value>natural</value>
+      <value>uniform</value>
+      <value>briggs</value>
+      <value>briggsabs</value>
+      <value>radial</value>
+      <value>superuniform</value>
     </allowed>
   </param>
 
-  <param type="bool" name="dryrun" subparam="true">
-    <description>Run the task (False) or display the command(True)</description>
-    <value>False</value>
-  </param>
-
-  <param type="bool" name="acceptresults" subparam="true">
-    <description>Add the results to the pipeline context</description>
-   <value>True</value>
-  </param>
-
-  <param type="string" name="weighting">
-     <description>Type of weighting</description>
-     <value>natural</value>
-       <allowed kind="enum">
-         <value>natural</value>
-         <value>uniform</value>
-         <value>briggs</value>
-         <value>superuniform</value>
-         <value>briggsabs</value>
-       </allowed>
-  </param>
-
   <param type="double" name="robust" subparam="true">
-     <description>Briggs weighting robustness parameter</description>
-     <value>0.0</value>
+    <description>Briggs robustness parameter</description>
+    <value>0.0</value>
+    <allowed kind="range">
+      <value range="min">-2.0</value>
+      <value range="max">2.0</value>
+    </allowed>
   </param>
 
-  <param type="any" name="noise" subparam="true">
-    <description>Briggs weighting noise parameter</description>
+  <param type="any" name="noise"  subparam="true">
+    <description>noise parameter for briggs abs mode weighting</description>
     <any type="variant"/>
     <value type="string">1.0Jy</value>
   </param>
 
   <param type="int" name="npixels" subparam="true">
-    <description>Weighting algorithm parameter</description>
-    <value type="int">1</value>
+    <description>number of pixels for superuniform or briggs weighting</description>
+    <value>0</value>
   </param>
 
-
-  <param type="string" name="hm_clean">
-     <description>Pipeline cleaning mode (autobox, manual) </description>
+  <param type="string" name="hm_cleanboxing">
+     <description>Pipeline cleanboxing mode (autobox, manual) </description>
        <value>autobox</value>
        <allowed kind="enum">
          <value>autobox</value>
@@ -106,6 +79,26 @@ Compute clean results from a list of specified targets.
     <value>10</value>
   </param>
 
+  <param type="string" name="pipelinemode">
+    <description>The pipeline operating mode</description>
+    <value>automatic</value>
+    <allowed kind="enum">
+      <value>automatic</value>
+      <value>interactive</value>
+      <value>getinputs</value>
+    </allowed>
+  </param>
+
+  <param type="bool" name="dryrun" subparam="true">
+    <description>Run the task (False) or display the command(True)</description>
+    <value>False</value>
+  </param>
+
+  <param type="bool" name="acceptresults" subparam="true">
+    <description>Add the results to the pipeline context</description>
+   <value>True</value>
+  </param>
+
 
   <constraints>
 
@@ -123,7 +116,7 @@ Compute clean results from a list of specified targets.
       </equals>
     </when>
 
-    <when param="hm_clean">
+    <when param="hm_cleanboxing">
       <equals value="autobox">
         <default param="maxthreshiter"><value type="int" >10</value></default>
       </equals>
