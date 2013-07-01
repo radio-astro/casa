@@ -21,24 +21,25 @@ from .. import common
 LOG = infrastructure.get_logger(__name__)
 
 class SDBaselineWorker(object):
-    def __init__(self, context, datatable, iteration, spwid, nchan, beam_size, pollist, srctype, file_index, window, edge, broadline, fitorder, fitfunc, observing_pattern):
+    def __init__(self, context, iteration, spwid, nchan, beam_size, srctype, file_index, index_list, window, edge, broadline, observing_pattern):
         self.context = context
         self.datatable = self.context.observing_run.datatable_instance
         self.iteration = iteration
         self.spwid = spwid
         self.nchan = nchan
         self.beam_size = beam_size
-        self.pollist = pollist
         self.srctype = srctype
         self.file_index = file_index
+        self.index_list = index_list
         self.window = window
         self.edge = edge
         self.broadline = broadline
-        self.fitorder = fitorder
-        self.fitfunc = fitfunc
         self.observing_pattern = observing_pattern
 
     def execute(self, dry_run=True):
+
+        if dry_run:
+            return [], {}
 
         start_time = time.time()
 
@@ -47,14 +48,12 @@ class SDBaselineWorker(object):
         spwid = self.spwid
         nchan = self.nchan
         beam_size = self.beam_size
-        pollist = self.pollist
         srctype = self.srctype
         file_index = self.file_index
+        index_list = self.index_list
         window = self.window
         edge = self.edge
         broadline = self.broadline
-        fitorder = self.fitorder
-        fitfunc = self.fitfunc
         observing_pattern = self.observing_pattern
         
         # filename for input/output
@@ -98,11 +97,6 @@ class SDBaselineWorker(object):
         line_validator = ValidateLine(datatable)
         #validator_class = ValidationFactory(observing_pattern)
         #line_validator = validator_class(datatable)
-        ifnos = numpy.array(datatable.getcol('IF'))
-        polnos = numpy.array(datatable.getcol('POL'))
-        srctypes = numpy.array(datatable.getcol('SRCTYPE'))
-        antennas = numpy.array(datatable.getcol('ANTENNA'))
-        index_list = numpy.where(numpy.logical_and(ifnos == spwid, srctypes==srctype))[0]
         LOG.debug('index_list=%s'%(list(index_list)))
         LOG.debug('len(index_list)=%s'%(len(index_list)))
         lines, cluster_info = line_validator.execute(grid_table, detect_signal, spwid, nchan, index_list, window, observing_pattern, grid_size, grid_size, iteration)
@@ -111,48 +105,7 @@ class SDBaselineWorker(object):
         LOG.debug('lines=%s'%(lines))
         LOG.debug('PROFILE validation: elapsed time is %s sec'%(t1-t0))
         
-        #for (k,v) in _cluster_info.items():
-        #    cluster_info[k] = v
         LOG.debug('cluster_info=%s'%(cluster_info))
-
-        #for l in lines:
-        #    detected_lines.append(l)
-
-        # fit order determination and fitting
-        fitter_cls = FittingFactory.get_fitting_class(fitfunc)
-        fitter = fitter_cls()
-
-        # filenamer
-        namer = filenamer.BaselineSubtractedTable()
-        namer.spectral_window(spwid)
-        
-        # loop over file
-        for idx in file_index:
-            st = self.context.observing_run[idx]
-            filename_in = st.name
-            filename_out = st.baselined_name
-            if not os.path.exists(filename_out):
-                with casatools.TableReader(filename_in) as tb:
-                    copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
-                    copied.close()
-            asdm = common.asdm_name(st)
-            namer.asdm(asdm)
-            namer.antenna_name(st.antenna.name)
-            bltable_name = namer.get_filename()
-            #bltable_name = self.context.observing_run[idx].name.rstrip('/') + '.product.tbl'
-            #if not os.path.exists(bltable_name):
-            utils.createExportTable(bltable_name)
-            ant_indices = numpy.where(antennas.take(index_list)==idx)[0]
-            ant_indices = index_list.take(ant_indices)
-            for pol in pollist:
-                time_table = datatable.get_timetable(idx, spwid, pol)
-                pol_indices = numpy.where(polnos.take(ant_indices)==pol)[0]
-                pol_indices = ant_indices.take(pol_indices)
-                LOG.debug('pol_indices=%s'%(list(pol_indices)))
-                t0 = time.time()
-                fitter.execute(datatable, filename_in, filename_out, bltable_name, time_table, pol_indices, nchan, edge, fitorder)
-                t1 = time.time()
-                LOG.debug('PROFILE baseline ant%s %s %s: elapsed time is %s sec'%(idx,spwid,pol,t1-t0))
 
         end_time = time.time()
         LOG.debug('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))

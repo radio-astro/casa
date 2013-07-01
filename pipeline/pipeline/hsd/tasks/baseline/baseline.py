@@ -7,9 +7,12 @@ import numpy
 import time
 
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.sdfilenamer as filenamer
 import pipeline.infrastructure.casatools as casatools
 from .. import common
 from .worker import SDBaselineWorker
+from .fitting import FittingFactory
+from . import utils
 
 LOG = infrastructure.get_logger(__name__)
 
@@ -92,9 +95,14 @@ class SDBaseline(common.SingleDishTaskTemplate):
         
         baselined = []
 
+        ifnos = numpy.array(datatable.getcol('IF'))
+        polnos = numpy.array(datatable.getcol('POL'))
+        srctypes = numpy.array(datatable.getcol('SRCTYPE'))
+        antennas = numpy.array(datatable.getcol('ANTENNA'))
+
         # loop over reduction group
         files = set()
-        for (group_id,group_desc) in reduction_group.items():
+        for (group_id,group_desc) in reduction_group.items():            
             # assume all members have same spw and pollist
             first_member = group_desc[0]
             spwid = first_member.spw
@@ -108,7 +116,7 @@ class SDBaseline(common.SingleDishTaskTemplate):
             if iflist is not None and spwid not in iflist:
                 LOG.debug('Skip spw %s'%(spwid))
                 continue
-                
+
             # reference data is first scantable 
             st = context.observing_run[first_member.antenna]
 
@@ -118,16 +126,56 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 LOG.info('Skip channel averaged spw %s.'%(spwid))
                 continue
 
+                
             beam_size = st.beam_size[spwid]
             srctype = st.calibration_strategy['srctype']
             _file_index = set(file_index) & set([m.antenna for m in group_desc])
             files = files | _file_index
             pattern = st.pattern[spwid][pols[0]]
-            worker = SDBaselineWorker(context, datatable, iteration, spwid, nchan, beam_size, pols, srctype, list(_file_index), window, edge, broadline, fitorder, fitfunc, pattern)
+            index_list = numpy.where(numpy.logical_and(ifnos == spwid, srctypes==srctype))[0]
+            worker = SDBaselineWorker(context, iteration, spwid, nchan, beam_size, srctype, list(_file_index), index_list, window, edge, broadline, pattern)
             (detected_lines, cluster_info) = self._executor.execute(worker, merge=False)
 
             LOG.info('detected_lines=%s'%(detected_lines))
             LOG.info('cluster_info=%s'%(cluster_info))
+
+            # filenamer
+            namer = filenamer.BaselineSubtractedTable()
+            namer.spectral_window(spwid)
+
+            # fit order determination and fitting
+            fitter_cls = FittingFactory.get_fitting_class(fitfunc)
+            fitter = fitter_cls(datatable)
+
+            # loop over file
+            for idx in _file_index:
+                st = context.observing_run[idx]
+                filename_in = st.name
+                filename_out = st.baselined_name
+                if not os.path.exists(filename_out):
+                    with casatools.TableReader(filename_in) as tb:
+                        copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
+                        copied.close()
+                asdm = common.asdm_name(st)
+                namer.asdm(asdm)
+                namer.antenna_name(st.antenna.name)
+                bltable_name = namer.get_filename()
+                #bltable_name = self.context.observing_run[idx].name.rstrip('/') + '.product.tbl'
+                #if not os.path.exists(bltable_name):
+                utils.createExportTable(bltable_name)
+                ant_indices = numpy.where(antennas.take(index_list)==idx)[0]
+                ant_indices = index_list.take(ant_indices)
+                for pol in pols:
+                    time_table = datatable.get_timetable(idx, spwid, pol)
+                    pol_indices = numpy.where(polnos.take(ant_indices)==pol)[0]
+                    pol_indices = ant_indices.take(pol_indices)
+                    LOG.debug('pol_indices=%s'%(list(pol_indices)))
+                    t0 = time.time()
+                    fitter.setup(filename_in, filename_out, bltable_name, time_table, pol_indices, nchan, edge, fitorder)
+                    self._executor.execute(fitter, merge=False)
+                    t1 = time.time()
+                    LOG.debug('PROFILE baseline ant%s %s %s: elapsed time is %s sec'%(idx,spwid,pol,t1-t0))
+
 
             #for f in _file_index:
             #    name = context.observing_run[f].baselined_name

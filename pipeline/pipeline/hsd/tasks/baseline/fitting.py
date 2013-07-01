@@ -10,7 +10,6 @@ import contextlib
 import asap as sd
 
 import pipeline.infrastructure as infrastructure
-import pipeline.infrastructure.jobrequest as jobrequest
 import pipeline.infrastructure.casatools as casatools
 import pipeline.infrastructure.utils as utils
 from pipeline.hsd.heuristics import fitorder, fragmentation
@@ -27,20 +26,56 @@ class FittingBase(object):
     MaxPolynomialOrder = 'none' # 'none', 0, 1, 2,...
     PolynomialOrder = 'automatic' # 'automatic', 0, 1, 2, ...
     ClipCycle = 1
-    
-    def execute(self, datatable, filename, filename_out, bltable_name, time_table, index_list, nchan, edge, fit_order='automatic', LogLevel='info'):
-        """
-        """
+
+    def __init__(self, datatable):
+        self.datatable = datatable
+
+        self._default_heuristic = lambda *args, **kwargs: self.fit_order
+        self._fitorder_heuristic = fitorder.FitOrderHeuristics()
+
+        self.fitorder_heuristic = None
+        self.fragmentation_heuristic = fragmentation.FragmentationHeuristics()
+
+    def setup(self, filename_in, filename_out, bltable_name, time_table, index_list, nchan, edge, fit_order='automatic', loglevel='info'):
+        self.filename_in = filename_in
+        self.filename_out = filename_out
+        self.bltable_name = bltable_name
+        self.time_table = time_table
+        self.index_list = index_list
+        self.nchan = nchan
+        self.edge = common.parseEdge(edge)
+        self.fit_order = fit_order
+        self.loglevel = loglevel
 
         # fitting order
         if fit_order == 'automatic':
             # fit order heuristics
             LOG.info('Baseline-Fitting order was automatically determined')
-            h_polyorder = fitorder.FitOrderHeuristics()
+            #h_polyorder = fitorder.FitOrderHeuristics()
+            self.fitorder_heuristic = self._fitorder_heuristic
         else:
             LOG.info('Baseline-Fitting order was fixed to be %d'%(fit_order))
-            h_polyorder = lambda *args, **kwargs: fitorder
+            #h_polyorder = lambda *args, **kwargs: fitorder
+            self.fitorder_heuristic = self._default_heuristic
 
+
+    def execute(self, dry_run=True):
+        """
+        """
+        if dry_run:
+            return
+            
+        datatable = self.datatable
+        filename_in = self.filename_in
+        filename_out = self.filename_out
+        bltable_name = self.bltable_name
+        time_table = self.time_table
+        index_list = self.index_list
+        nchan = self.nchan
+        edge = self.edge
+        fit_order = self.fit_order
+        loglevel = self.loglevel
+        
         if self.ApplicableDuration == 'subscan':
             member_list = time_table[1]
         else:
@@ -48,19 +83,17 @@ class FittingBase(object):
 
         _edge = common.parseEdge(edge)
 
-        blfile = filename.rstrip('/')+'.baseline.table'
+        blfile = filename_in.rstrip('/')+'.baseline.table'
         os.system('rm -rf %s'%(blfile))
 
         # dummy scantable for baseline subtraction
-        dummy_scan = utils.create_dummy_scan(filename, datatable, index_list)
-        LOG.debug('dummy_scan.nrow()=%s'%(dummy_scan.nrow()))
-        LOG.debug('nchan for dummy_scan=%s'%(len(dummy_scan._getspectrum())))
+        dummy_scan = utils.create_dummy_scan(filename_in, datatable, index_list)
 
         # working with spectral data in scantable
         nrow_total = len(index_list)
 
         # Create progress timer
-        Timer = common.ProgressTimer(80, nrow_total, LogLevel)
+        Timer = common.ProgressTimer(80, nrow_total, loglevel)
 
         #nwin = []
         LOG.info('Baseline Fit: background subtraction...')
@@ -74,7 +107,7 @@ class FittingBase(object):
             rows = member_list[y][0]
             idxs = member_list[y][1]
             LOG.debug('rows=%s'%(rows))
-            with casatools.TableReader(filename) as tb:
+            with casatools.TableReader(filename_in) as tb:
                 spectra = numpy.array([tb.getcell('SPECTRA',row)
                                        for row in rows])
             spectra[:,:_edge[0]] = 0.0
@@ -84,14 +117,13 @@ class FittingBase(object):
                         for idx in idxs]
 
             # fit order determination
-            polyorder = h_polyorder(spectra, masklist, _edge)
+            polyorder = self.fitorder_heuristic(spectra, masklist, _edge)
             if fit_order == 'automatic' and self.MaxPolynomialOrder != 'none':
                 polyorder = min(polyorder, self.MaxPolynomialOrder)
             LOG.info('group %d: fitting order=%s'%(y,polyorder))
 
             # calculate fragmentation
-            h_fragmentation = fragmentation.FragmentationHeuristics()
-            (fragment, nwindow, win_polyorder) = h_fragmentation(polyorder, nchan, edge)
+            (fragment, nwindow, win_polyorder) = self.fragmentation_heuristic(polyorder, nchan, edge)
 
             nrow = len(rows)
             LOG.debug('nrow = %s'%(nrow))
