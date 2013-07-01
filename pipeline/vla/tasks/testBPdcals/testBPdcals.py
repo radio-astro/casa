@@ -32,12 +32,21 @@ class testBPdcals(basetask.StandardTaskTemplate):
     Inputs = testBPdcalsInputs
 
     def prepare(self):
-        inputs = self.inputs
-
+        
+        
         gtype_delaycal_result = self._do_gtype_delaycal()
 
-        ktype_delaycal_result = self._do_ktype_delaycal()
+        fracFlaggedSolns = 1.0
+        m = self.inputs.context.observing_run.measurement_sets[0]
+        critfrac = self.inputs.context.evla['msinfo'][m.name].critfrac
 
+        #Iterate and check the fraciton of Flagged solutions, each time running gaincal in 'K' mode
+        while (fracFlaggedSolns > critfac):
+            ktype_delaycal_result = self._do_ktype_delaycal()
+            flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
+            fracFlaggedSolns = _check_flagSolns(flaggedSolnResult)
+        
+        
     def _do_gtype_delaycal(self):
         inputs = self.inputs
 
@@ -49,13 +58,14 @@ class testBPdcals(basetask.StandardTaskTemplate):
         minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
         
         #need to add scan?
+        #ref antenna string needs to be lower case for gaincal
         delaycal_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
             vis = inputs.vis,
             caltable = 'testdelayinitialgain.g',
             field    = delay_field_select_string,
             spw      = tst_delay_spw,
             solint   = 'int',
-            refant   = inputs.refant,
+            refant   = inputs.refant.lower(),
             calmode  = 'p',
             minsnr   = 3.0,
             minblperant = minBL_for_cal,
@@ -77,13 +87,14 @@ class testBPdcals(basetask.StandardTaskTemplate):
         minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
 
         #need to add scan?
+        #ref antenna string needs to be lower case for gaincal
         delaycal_inputs = gaincal.KTypeGaincal.Inputs(inputs.context,
             vis = inputs.vis,
             caltable = 'testdelay.k',
             field    = delay_field_select_string,
             spw      = tst_delay_spw,
             solint   = 'inf',
-            refant   = inputs.refant,
+            refant   = inputs.refant.lower(),
             calmode  = 'p',
             minsnr   = 3.0,
             minblperant = minBL_for_cal,
@@ -93,3 +104,26 @@ class testBPdcals(basetask.StandardTaskTemplate):
         delaycal_task = gaincal.KTypeGaincal(delaycal_inputs)
 
         return self._executor.execute(delaycal_task, merge=True)
+
+    def _check_flagSolns(self, flaggedSolnResult):
+
+        context = self.inputs.context
+        
+        if (flaggedSolnResult['all']['total'] > 0):
+            fracFlaggedSolns=flaggedSolnResult['antmedian']['fraction']
+        else:
+            fracFlaggedSolns=1.0
+
+        refant_csvstring = context.observing_run.measurement_sets[0].reference_antenna
+        refantlist = [x for x in refant_csvstring.split(',')]
+
+        m = context.observing_run.measurement_sets[0]
+        critfrac = context.evla['msinfo'][m.name].critfrac
+
+        if (fracFlaggedSolns > critfrac):
+            refantlist.pop(0)
+            self.inputs.context.observing_run.measurement_sets[0].reference_antenna = ','.join(refantlist)
+            LOG.info("Not enough good solutions, trying a different reference antenna.")
+            LOG.info("The pipeline will use antenna "+refantlist[0]+" as the reference.")
+
+        return fracFlaggedSolns

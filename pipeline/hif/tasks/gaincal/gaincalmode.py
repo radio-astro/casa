@@ -10,7 +10,8 @@ LOG = infrastructure.get_logger(__name__)
 
 class GaincalModeInputs(basetask.ModeInputs):
     _modes = {'gtype'   : gtypegaincal.GTypeGaincal,
-              'gspline' : gsplinegaincal.GSplineGaincal}
+              'gspline' : gsplinegaincal.GSplineGaincal,
+              'ktype'   : ktypegaincal.KYtpeGaincal}
 
     def __init__(self, context, mode='gtype', **parameters):        
         super(GaincalModeInputs, self).__init__(context, mode, **parameters)
