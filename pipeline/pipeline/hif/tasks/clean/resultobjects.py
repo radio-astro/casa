@@ -73,18 +73,6 @@ class CleanResult(basetask.Results):
         self.iterations[iter]['image'] = image
 
     @property
-    def imageplot(self):
-        iters = self.iterations.keys()
-        iters.sort()
-        if len(iters) > 0:
-            image = self.iterations[iters[-1]]['image']
-            imageplot = displays.sky.plotfilename(image=image,
-              reportdir=self.plotdir)
-            return imageplot
-        else:
-            return None
-
-    @property
     def model(self):
         iters = self.iterations.keys()
         iters.sort()
