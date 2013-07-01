@@ -10,236 +10,120 @@ import pipeline.infrastructure as infrastructure
 LOG = infrastructure.get_logger(__name__)
 
 
-class CleanBoxHeuristics(object):
-
-    def __init__(self):
-        # list of cleaned fluxes for successive cleaning loops
-        self.flux_list = []
-
-        # max and min peaks in residual
-        self.max_peak = None
-        self.min_peak = None
-
-        # clean threshold
-        self.threshold = None
-
-    def clean_more(self, loop, new_threshold, sum, residual_max, residual_min,
-      non_cleaned_rms, island_peaks,
-      flux_change_enable=True, flux_change_limit=0.03,
-      low_threshold_enable=True, low_threshold_limit=1.5,
-      noisepeaks1_enable=True,
-      noisepeaks2_enable=True):
-        """Do we need to clean more deeply?
-        """
-
-        # clean diverging?
-        old_threshold = self.threshold
-        self.threshold = new_threshold
-        if loop > 0:
-            diverging_halt = new_threshold > old_threshold
-            LOG.info('diverging     : halt=%s enabled=True threshold(old,new)=(%.3g, %.3g)' % (
-              diverging_halt, old_threshold, new_threshold)) 
-            LOG.info('                halt = new threshold > old')
-        else:
-            diverging_halt = False
-            LOG.info('diverging     : halt=%s enabled=True not enough iterations' % (
-              diverging_halt)) 
-
-        # is the flux increase for last threshold iteration below the limit set?
-        self.flux_list.append(sum)
-        flux_array = np.array(self.flux_list)
-        if loop > 0:
-            flux_change = (flux_array[-1] - flux_array[-2])
-            flux = flux_array[-1]
-            flux_change_halt = (flux_change / flux) < flux_change_limit
-            LOG.info('flux change   : halt=%s enabled=%s change=%.3g flux=%.3g' % (
-              flux_change_halt, flux_change_enable, flux_change, flux)) 
-            LOG.info('                halt = (cleaned flux change / cleaned flux) > %.3g' %
-              flux_change_limit)
-        else:
-            flux_change_halt = False
-            LOG.info('flux change   : halt=%s enabled=%s not enough iterations' % (
-              flux_change_halt, flux_change_enable)) 
-
-        # is the threshold lower than the 1.5 * uncleaned residual rms for any other
-        # than the first loop
-#        if clean_more and \
-#          abs(residual_max) < 1.3 * abs(residual_min) and \
-        if loop > 0:
-            if non_cleaned_rms is not None:
-                low_threshold_halt = new_threshold < low_threshold_limit * non_cleaned_rms
-                LOG.info('threshold~rms : halt=%s enabled=%s threshold=%.3g rms=%.3g' % (
-                  low_threshold_halt, low_threshold_enable, new_threshold, non_cleaned_rms))
-                LOG.info('                halt = new threshold < %.3g * rms' % 
-                  low_threshold_limit)
-            else: 
-                low_threshold_halt = False
-                LOG.info('threshold~rms : halt=False enabled=%s no measure of non-cleaned rms' %
-                  low_threshold_enable)
-        else:
-            low_threshold_halt = False
-            LOG.info('threshold~rms : halt=%s enabled=%s not enough iterations' % (
-              low_threshold_halt, low_threshold_enable))
-
-        # are the new islands the tops of noise peaks?                      
-        previous_max_peak = self.max_peak
-        previous_min_peak = self.min_peak
-        peaks = np.array(island_peaks.values())
-        self.max_peak = max(peaks)
-        self.min_peak = min(peaks)
-
-        # method 1, are there lots of peaks with similar peak values?
-        if loop > 0:
-            noisepeaks1_halt = (len(peaks) == 30 and self.max_peak < 1.2 * self.min_peak)
-            LOG.info('noise peaks 1 : halt=%s enabled=%s npeaks=%s peak(min,max)=(%.3g, %.3g)' % (
-              noisepeaks1_halt, noisepeaks1_enable, len(peaks), self.min_peak,
-                self.max_peak))
-            LOG.info('                halt = 30 peaks and max peak < 1.2 * min peak')
-        else:
-            noisepeaks1_halt = False
-            LOG.info('noise peaks 1 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) not enough iterations' % (
-              noisepeaks1_halt, noisepeaks1_enable, self.min_peak, self.max_peak))
-
-        # method2, is there a big overlap between the range of peak values
-        # from this loop and the last one?
-        if loop > 0:
-            overlap_max = min(self.max_peak, previous_max_peak)
-            overlap_min = max(self.min_peak, previous_min_peak)
-            overlap = max(0, overlap_max-overlap_min)
-            overall_max = max(self.max_peak, previous_max_peak)
-            overall_min = min(self.min_peak, previous_min_peak)
-
-            noisepeaks2_halt = (self.max_peak < 2 * self.min_peak) and \
-              (overlap / (overall_max - overall_min) > 0.3)
-            LOG.info(
-              'noise peaks 2 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) overlap=%.3g overall range=(%.3g)' % (
-              noisepeaks2_halt, noisepeaks2_enable, self.min_peak, self.max_peak, 
-              overlap, overall_max-overall_min))
-            LOG.info(
-              '                halt = max peak < 2 * min peak and (overlap / overall range) > 0.3') 
-        else:
-            noisepeaks2_halt = False
-            LOG.info(
-              'noise peaks 2 : halt=%s enabled=%s not enough iterations' % (
-              noisepeaks2_halt, noisepeaks2_enable))
-
-        # clean further unless any enabled rules are True
-        clean_more = not(diverging_halt) and \
-          not(flux_change_enable and flux_change_halt) and \
-          not(low_threshold_enable and low_threshold_halt) and \
-          not(noisepeaks1_enable and noisepeaks1_halt) and \
-          not(noisepeaks2_enable and noisepeaks2_halt)
-        if clean_more:
-            LOG.info('continue cleaning!')
-        else:
-            LOG.info('stop cleaning!')
-
-        return clean_more
-
-def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1):
-    """Adapted from an algorithm by Amy Kimball, NRAO.
+def clean_more(loop, old_threshold, new_threshold, sum, residual_max, residual_min,
+  non_cleaned_rms, island_peaks_list, flux_list,
+  flux_change_enable=True, flux_change_limit=0.03,
+  low_threshold_enable=True, low_threshold_limit=1.5,
+  noisepeaks1_enable=True,
+  noisepeaks2_enable=True):
+    """Do we need to clean more deeply?
     """
-    with casatools.ImageReader(psf) as image:
 
-        # the psf is a cube. For now assume all planes are identical, 
-        # except for the extreme channels which often appear empty.
-        # Look at the middle plane only.
-        nchan = image.shape()[3]
-        target_chan = nchan / 2
+    # clean diverging?
+    if loop > 0:
+        print loop, new_threshold, old_threshold
+        diverging_halt = new_threshold > old_threshold
+        LOG.info('diverging     : halt=%s enabled=True threshold(old,new)=(%.3g, %.3g)' % (
+          diverging_halt, old_threshold, new_threshold)) 
+        LOG.info('                halt = new threshold > old')
+    else:
+        diverging_halt = False
+        LOG.info('diverging     : halt=%s enabled=True not enough iterations' % (
+          diverging_halt)) 
 
-        # searchmask is used to select the part of the image to be 
-        # searched for peaks, initially all pixels above the 
-        # 'island threshold'.
-        # get mask
-        searchmask = image.getregion(mask='%s/"%s" > %s' %
-          (os.path.dirname(psf), os.path.basename(psf), island_threshold),
-          getmask=True)[:,:,0,target_chan]
+    # is the flux increase for last threshold iteration below the limit set?
+    flux_array = np.array(flux_list)
+    if loop > 0:
+        flux_change = (flux_array[-1] - flux_array[-2])
+        flux = flux_array[-1]
+        flux_change_halt = (flux_change / flux) < flux_change_limit
+        LOG.info('flux change   : halt=%s enabled=%s change=%.3g flux=%.3g' % (
+          flux_change_halt, flux_change_enable, flux_change, flux)) 
+        LOG.info('                halt = (cleaned flux change / cleaned flux) > %.3g' %
+          flux_change_limit)
+    else:
+        flux_change_halt = False
+        LOG.info('flux change   : halt=%s enabled=%s not enough iterations' % (
+          flux_change_halt, flux_change_enable)) 
 
-        # get pixels
-        pixels = image.getregion()[:,:,0,target_chan]
-        nx, ny = np.shape(pixels)
+    # is the threshold lower than the 1.5 * uncleaned residual rms for any other
+    # than the first loop
+#    if clean_more and \
+#      abs(residual_max) < 1.3 * abs(residual_min) and \
+    if loop > 0:
+        if non_cleaned_rms is not None:
+            low_threshold_halt = new_threshold < low_threshold_limit * non_cleaned_rms
+            LOG.info('threshold~rms : halt=%s enabled=%s threshold=%.3g rms=%.3g' % (
+              low_threshold_halt, low_threshold_enable, new_threshold, non_cleaned_rms))
+            LOG.info('                halt = new threshold < %.3g * rms' % 
+              low_threshold_limit)
+        else: 
+            low_threshold_halt = False
+            LOG.info('threshold~rms : halt=False enabled=%s no measure of non-cleaned rms' %
+              low_threshold_enable)
+    else:
+        low_threshold_halt = False
+        LOG.info('threshold~rms : halt=%s enabled=%s not enough iterations' % (
+          low_threshold_halt, low_threshold_enable))
 
-        grid = np.indices(np.shape(searchmask))
+    # are the new islands the tops of noise peaks?                      
+    peaks = np.array(island_peaks_list[-1].values())
+    max_peak = max(peaks)
+    min_peak = min(peaks)
 
-        # look for 2 highest islands.
-        nislands = 0
-        islandpix = {}
-        islandpeak = {}
-        while nislands < 2:
+    # method 1, are there lots of peaks with similar peak values?
+    if loop > 0:
+        noisepeaks1_halt = (len(peaks) == 30 and max_peak < 1.2 * min_peak)
+        LOG.info('noise peaks 1 : halt=%s enabled=%s npeaks=%s peak(min,max)=(%.3g, %.3g)' % (
+          noisepeaks1_halt, noisepeaks1_enable, len(peaks), min_peak, max_peak))
+        LOG.info('                halt = 30 peaks and max peak < 1.2 * min peak')
+    else:
+        noisepeaks1_halt = False
+        LOG.info('noise peaks 1 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) not enough iterations' % (
+          noisepeaks1_halt, noisepeaks1_enable, min_peak, max_peak))
 
-            if not(np.any(searchmask)):
-                # no more pixels above island threshold: we're done
-                break
+    # method2, is there a big overlap between the range of peak values
+    # from this loop and the last one?
+    if loop > 0:
+        peaks = np.array(island_peaks_list[-2].values())
+        previous_max_peak = max(peaks)
+        previous_min_peak = min(peaks)
 
-            # find the next peak and its location
-            argpeak = np.argmax(pixels[searchmask > 0])
-            peakpos = (grid[0][searchmask>0][argpeak],
-              grid[1][searchmask>0][argpeak])
-            peak = pixels[peakpos]
+        overlap_max = min(max_peak, previous_max_peak)
+        overlap_min = max(min_peak, previous_min_peak)
+        overlap = max(0, overlap_max-overlap_min)
+        overall_max = max(max_peak, previous_max_peak)
+        overall_min = min(min_peak, previous_min_peak)
 
-            if peak < peak_threshold:
-                # peak is below peak threshold for clean boxing: we're done
-                break
+        noisepeaks2_halt = (max_peak < 2 * min_peak) and \
+          (overlap / (overall_max - overall_min) > 0.3)
+        LOG.info(
+          'noise peaks 2 : halt=%s enabled=%s peak(min,max)=(%.3g, %.3g) overlap=%.3g overall range=(%.3g)' % (
+          noisepeaks2_halt, noisepeaks2_enable, min_peak, max_peak, 
+          overlap, overall_max-overall_min))
+        LOG.info(
+          '                halt = max peak < 2 * min peak and (overlap / overall range) > 0.3') 
+    else:
+        noisepeaks2_halt = False
+        LOG.info(
+          'noise peaks 2 : halt=%s enabled=%s not enough iterations' % (
+          noisepeaks2_halt, noisepeaks2_enable))
 
-            # make this the first pixel of the island, remove it from the mask
-            island_pix = [peakpos]
-            searchmask[peakpos] = False
+    # clean further unless any enabled rules are True
+    clean_more = not(diverging_halt) and \
+      not(flux_change_enable and flux_change_halt) and \
+      not(low_threshold_enable and low_threshold_halt) and \
+      not(noisepeaks1_enable and noisepeaks1_halt) and \
+      not(noisepeaks2_enable and noisepeaks2_halt)
+    if clean_more:
+        LOG.info('continue cleaning!')
+    else:
+        LOG.info('stop cleaning!')
 
-            # find all above-threshold contiguous pixels of this island
-            # python lets us loop over items in a list while appending to
-            # the list!
-            for pixel in island_pix:
-                thisx = pixel[0]
-                thisy = pixel[1]
-
-                # search the pixels surrounding the pixel of interest
-                xlook1 = max(0,thisx-1)      # in case we're at the image edge
-                xlook2 = min(thisx+2,nx-1)   #            |
-                ylook1 = max(0,thisy-1)      #            |
-                ylook2 = min(thisy+2,ny-1)   #            V
-
-                # only look at the four pixels that share an edge with
-                # pixel-of-interest
-                contig_pix = []
-                contig_pix += [(thisx, ylook1)]
-                contig_pix += [(thisx, ylook2-1)]
-                contig_pix += [(xlook1, thisy)]
-                contig_pix += [(xlook2-1, thisy)]
-
-                for pix in contig_pix:
-                    if searchmask[pix]:
-                        island_pix.append(pix)
-                        searchmask[pix] = False
-
-            # reach here after finding all pixels in an island.
-            # ignore the island if it comprises one isolated pixel
-            if len(island_pix) == 1:
-                continue
-
-            # otherwise add the island to those found
-            islandpix[nislands] = island_pix
-            islandpeak[nislands] = peak
-            nislands += 1
- 
-        # reach here after hopefully having 2 islands, the main peak and
-        # first sidelobe
-        if len(islandpeak.keys()) > 1:
-            sidelobe_ratio = islandpeak[1] / islandpeak[0]
-            LOG.info('psf peak:%s first sidelobe:%s sidelobe ratio:%s' % (
-              islandpeak[0], islandpeak[1], sidelobe_ratio))
-            if sidelobe_ratio > 0.7:
-                # too high a value leads to problems with small clean
-                # islands and slow convergence
-                sidelobe_ratio = 0.7
-                LOG.warning('sidelobe ratio too high, reset to 0.7')
-        else:
-            sidelobe_ratio = 0.5
-            LOG.warning('psf analysis failure, sidelobe ratio set to 0.5')
-
-    return sidelobe_ratio
+    return clean_more
 
 def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
- npeak=30, fluxscale=None, mask_method=None):
+  npeak=30, fluxscale=None):
     """Adapted from an algorithm by Amy Kimball, NRAO.
 
     Starting with peak in image, find islands; contiguous pixels above
@@ -258,15 +142,13 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
     sidelobe_ratio   -- ratio of peak to first sidelobe in psf.
     fluxscale        -- Fluxscale map from mosaic clean. If set, used to locate
                         edges of map where spikes may occur.
-    mask_method      -- 'automatic', 'nomask', or name of clean mask
-                        specified by user.
     """
-	
+
+    print 'in threshold_and_mask', residual
     # Get a searchmask to be used in masking image during processing.
     # An explicitly separate mask is used so as not to risk messing
     # up any mask that arrives with the residual.
     # Set all its values to 1 (=True=good).
-    print 'residual', residual
     searchmask = casatools.image.newimagefromimage(infile=residual,
       outfile='searchmask', overwrite=True)
     searchmask.calc('1') 
@@ -275,7 +157,7 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
     # NOTE: logic may appear strange because the LEL 'replace'
     # function replaces masked pixels (i.e. bad pixels) 
     searchmask.calc('replace(searchmask["%s" > 0.1], 0)' % fluxscale)
-
+ 
     # Ignore edges of image in an effort to prevent divergence; spikes
     # sometimes appear there
     shape = searchmask.shape()
@@ -393,8 +275,8 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
                         max_plane_brightest = brightest
 
             if max_plane is None:
-               # no islands left
-               break
+                # no islands left
+                break
 
             # begin island_tree with this island on this plane
             root = (max_plane, max_plane_brightest)
@@ -413,7 +295,7 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
             # will not be counted twice
             for node in island_tree.keys():
                 ignore = island_peaks[node[0]].pop(node[1], None)
-
+ 
         # Create new mask
         if new_mask is not None:
             if old_mask is None:
@@ -424,42 +306,134 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
                 nm = image.newimagefromimage(infile=old_mask,
                   outfile=new_mask, overwrite=True)
 
-            if mask_method == 'automatic':
-                print 'automatic'
-                # add new islands cumulatively - Kumar says this is best as it
-                # allows clean to correct mistakes in previous iterations
-                for plane in range(shape[3]):
-                    maskpix = nm.getchunk(blc=[0,0,0,plane],
-                      trc=[-1,-1,-1,plane])
-                    if old_mask is None:
-                        maskpix[:] = 0.0
+            # add new islands cumulatively - Kumar says this is best as it
+            # allows clean to correct mistakes in previous iterations
+            for plane in range(shape[3]):
+                maskpix = nm.getchunk(blc=[0,0,0,plane],
+                  trc=[-1,-1,-1,plane])
+                if old_mask is None:
+                    maskpix[:] = 0.0
 
-                    for island_tree in island_trees.values():
-                        plane_nodes = [k for k in island_tree.keys() if k[0]==plane] 
-                        for node in plane_nodes:
-                            for pix in island_pix[node[0]][node[1]]:
-                                maskpix[pix] = 1.0
-                            # remove the node from the tree as it will not be
-                            # needed further
-                            ignore = island_tree.pop(node, None)
+                for island_tree in island_trees.values():
+                    plane_nodes = [k for k in island_tree.keys() if k[0]==plane] 
+                    for node in plane_nodes:
+                        for pix in island_pix[node[0]][node[1]]:
+                            maskpix[pix] = 1.0
+                        # remove the node from the tree as it will not be
+                        # needed further
+                        ignore = island_tree.pop(node, None)
 
-                    maskpix = nm.putchunk(blc=[0,0,0,plane], pixels=maskpix)
+                maskpix = nm.putchunk(blc=[0,0,0,plane], pixels=maskpix)
 
-#                uncomment following if want next mask to have only one island
-#                added
-#                for pix in island_pix[0]:
-#                    maskpix[pix] = 1.0
+        nm.close()
+        nm.done()
 
-            elif mask_method == 'nomask':
-                print 'full image mask'
-                nm.calc('1')
+    LOG.debug('new threshold is: %s' % threshold)
+    LOG.debug('%s %s' % (threshold, island_tree_peaks))
+    return threshold, island_tree_peaks
 
-            nm.close()
-            nm.done()
 
-        LOG.debug('new threshold is: %s' % threshold)
-        LOG.debug('%s %s' % (threshold, island_tree_peaks))
-        return threshold, island_tree_peaks
+def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1):
+    """Adapted from an algorithm by Amy Kimball, NRAO.
+    """
+    with casatools.ImageReader(psf) as image:
+
+        # the psf is a cube. For now assume all planes are identical, 
+        # except for the extreme channels which often appear empty.
+        # Look at the middle plane only.
+        nchan = image.shape()[3]
+        target_chan = nchan / 2
+
+        # searchmask is used to select the part of the image to be 
+        # searched for peaks, initially all pixels above the 
+        # 'island threshold'.
+        # get mask
+        searchmask = image.getregion(mask='%s/"%s" > %s' %
+          (os.path.dirname(psf), os.path.basename(psf), island_threshold),
+          getmask=True)[:,:,0,target_chan]
+
+        # get pixels
+        pixels = image.getregion()[:,:,0,target_chan]
+        nx, ny = np.shape(pixels)
+
+        grid = np.indices(np.shape(searchmask))
+
+        # look for 2 highest islands.
+        nislands = 0
+        islandpix = {}
+        islandpeak = {}
+        while nislands < 2:
+
+            if not(np.any(searchmask)):
+                # no more pixels above island threshold: we're done
+                break
+
+            # find the next peak and its location
+            argpeak = np.argmax(pixels[searchmask > 0])
+            peakpos = (grid[0][searchmask>0][argpeak],
+              grid[1][searchmask>0][argpeak])
+            peak = pixels[peakpos]
+
+            if peak < peak_threshold:
+                # peak is below peak threshold for clean boxing: we're done
+                break
+
+            # make this the first pixel of the island, remove it from the mask
+            island_pix = [peakpos]
+            searchmask[peakpos] = False
+
+            # find all above-threshold contiguous pixels of this island
+            # python lets us loop over items in a list while appending to
+            # the list!
+            for pixel in island_pix:
+                thisx = pixel[0]
+                thisy = pixel[1]
+
+                # search the pixels surrounding the pixel of interest
+                xlook1 = max(0,thisx-1)      # in case we're at the image edge
+                xlook2 = min(thisx+2,nx-1)   #            |
+                ylook1 = max(0,thisy-1)      #            |
+                ylook2 = min(thisy+2,ny-1)   #            V
+
+                # only look at the four pixels that share an edge with
+                # pixel-of-interest
+                contig_pix = []
+                contig_pix += [(thisx, ylook1)]
+                contig_pix += [(thisx, ylook2-1)]
+                contig_pix += [(xlook1, thisy)]
+                contig_pix += [(xlook2-1, thisy)]
+
+                for pix in contig_pix:
+                    if searchmask[pix]:
+                        island_pix.append(pix)
+                        searchmask[pix] = False
+
+            # reach here after finding all pixels in an island.
+            # ignore the island if it comprises one isolated pixel
+            if len(island_pix) == 1:
+                continue
+
+            # otherwise add the island to those found
+            islandpix[nislands] = island_pix
+            islandpeak[nislands] = peak
+            nislands += 1
+ 
+        # reach here after hopefully having 2 islands, the main peak and
+        # first sidelobe
+        if len(islandpeak.keys()) > 1:
+            sidelobe_ratio = islandpeak[1] / islandpeak[0]
+            LOG.info('psf peak:%s first sidelobe:%s sidelobe ratio:%s' % (
+              islandpeak[0], islandpeak[1], sidelobe_ratio))
+            if sidelobe_ratio > 0.7:
+                # too high a value leads to problems with small clean
+                # islands and slow convergence
+                sidelobe_ratio = 0.7
+                LOG.warning('sidelobe ratio too high, reset to 0.7')
+        else:
+            sidelobe_ratio = 0.5
+            LOG.warning('psf analysis failure, sidelobe ratio set to 0.5')
+
+    return sidelobe_ratio
 
 def build_island_tree(island_tree, node, island_pix):
     # island is a single island on plane
