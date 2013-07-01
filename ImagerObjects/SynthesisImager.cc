@@ -80,13 +80,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), 
 				       itsCurrentFTMachine(NULL), 
 				       itsCurrentImages(NULL),
-				       writeAccess_p(True), mss_p(0), vi_p(0)
+				        mss_p(0), vi_p(0), writeAccess_p(True)
   {
 
 
      facetsStore_p=-1;
      imwgt_p=VisImagingWeight("natural");
      imageDefined_p=False;
+     wvi_p=0;
+     rvi_p=0;
   }
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +106,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  Bool SynthesisImager::selectData(const String& msname, const String& spw, const String& field, const String& taql,  const String& antenna, const String& uvdist, const String& scan, const String& obs, const String& timestr, const Bool usescratch, const Bool readonly){
+  Bool SynthesisImager::selectData(const String& msname, const String& spw, const String& field, const String& taql,
+		  const String& antenna, const String& uvdist, const String& scan, const String& obs, const String& timestr,
+		  const Bool usescratch, const Bool readonly){
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
     //Respect the readonly flag...necessary for multi-process access
     MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking), 
@@ -172,24 +176,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       uInt nSelections = shape[0];
       Int spw,chanStart,chanEnd,chanStep,nchan;
       vi::FrequencySelectionUsingChannels channelSelector;
+      ///////////////Temporary revert to using Vi/vb
+      Int msin=mss_p.nelements();
+      blockNChan_p.resize(msin, False, True);
+      blockStart_p.resize(msin, False, True);
+      blockStep_p.resize(msin, False, True);
+      blockSpw_p.resize(msin, False, True);
+      msin-=1;
+      blockNChan_p[msin].resize(nSelections);
+      blockStart_p[msin].resize(nSelections);
+      blockStep_p[msin].resize(nSelections);
+      blockSpw_p[msin].resize(nSelections);
+      ///////////////////////
       for(uInt k=0; k < nSelections; ++k)
-	{
+      {
 	  
-	  spw = chanlist(k,0);
+    	  spw = chanlist(k,0);
 	  
-	  // channel selection 
-	  chanStart = chanlist(k,1);
-	  chanEnd = chanlist(k,2);
-	  chanStep = chanlist(k,3);
-	  nchan = chanEnd-chanStart+1;
-	  channelSelector.add (spw, chanStart, nchan,chanStep);
-	}
+    	  // channel selection
+    	  chanStart = chanlist(k,1);
+    	  chanEnd = chanlist(k,2);
+    	  chanStep = chanlist(k,3);
+    	  nchan = chanEnd-chanStart+1;
+    	  channelSelector.add (spw, chanStart, nchan,chanStep);
+    	  ///////////////Temporary revert to using Vi/vb
+    	  blockNChan_p[msin][k]=nchan;
+    	  blockStart_p[msin][k]=chanStart;
+    	  blockStep_p[msin][k]=chanStep;
+    	  blockSpw_p[msin][k]=spw;
+    	  /////////////////////////////////////////
+      }
 
       fselections_p.add(channelSelector);
 
     }
     writeAccess_p=writeAccess_p && !readonly;
-    createVisSet();
+    createVisSet(writeAccess_p);
     return True;
 
   }
@@ -476,6 +498,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////
   /////////////////////////////////////////////
 
+  void SynthesisImager::makePSF()
+    {
+      LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
+
+      os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+
+      try
+      {
+    	  runMajorCycle(True);
+
+    	  itsMappers.releaseImageLocks();
+
+      }
+      catch(AipsError &x)
+      {
+    	  throw( AipsError("Error in making PSF : "+x.getMesg()) );
+      }
+
+      os << "-------------------------------------------------------------------------------------------------------------" << LogIO::POST;
+
+    }
+  //////////////////////
+  //////////////////
+
   Bool SynthesisImager::weight(const String& type, const String& rmode,
                    const Quantity& noise, const Double robust,
                    const Quantity& fieldofview,
@@ -572,6 +618,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
         vi_p->useImagingWeight(imwgt_p);
+        ///////////////revert to vi/vb
+        rvi_p->useImagingWeight(imwgt_p);
+        ///////////////////////////////
 
       // Beam is no longer valid
       return True;
@@ -641,7 +690,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
          (imstor->model())->setMiscInfo(info);
          //((imstor->model())->table()).tableInfo().setSubType("GENERIC");
          (imstor->model())->setUnits(Unit("Jy/pixel"));
-         (imstor->image())->setUnits(Unit("Jy/Beam"));
+         (imstor->image())->setUnits(Unit("Jy/beam"));
        CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
        itsMappers.addMapper(thismap);
      }
@@ -900,26 +949,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // Do MS-Selection and set up vi/vb. 
   // Only this functions needs to know anything about the MS 
-  void SynthesisImager::createVisSet()
+  void SynthesisImager::createVisSet(const Bool writeAccess)
   {
     LogIO os( LogOrigin("SynthesisImager","createVisSet",WHERE) );
     if(mss_p.nelements() != uInt(fselections_p.size()) && (fselections_p.size() !=0)){
       throw(AipsError("Discrepancy between Number of MSs and Frequency selections"));
     }
-    vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), writeAccess_p); 
+    vi_p=new vi::VisibilityIterator2(mss_p, vi::SortColumns(), writeAccess);
     if(fselections_p.size() !=0)
       vi_p->setFrequencySelection (fselections_p);
     //return *vi_p;
+    ////////////Temporary revert to vi/vb
+    Block<Int> sort(0);
+    Block<MeasurementSet> msblock(mss_p.nelements());
+    for (uInt k=0; k< msblock.nelements(); ++k){
+    	msblock[k]=*mss_p[k];
+    }
+
+    //vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
+    if(!writeAccess){
+
+    	rvi_p=new ROVisibilityIterator(msblock, sort);
+
+    }
+    else{
+    	VisibilityIterator *vi=new VisibilityIterator(msblock, sort);
+    	wvi_p=vi;
+    	rvi_p=vi;
+    }
+    Block<Vector<Int> > blockGroup(msblock.nelements());
+    for (uInt k=0; k < msblock.nelements(); ++k){
+    	blockGroup[k].resize(blockSpw_p[k].nelements());
+    	blockGroup[k].set(1);
+    	cerr << "start " << blockStart_p[k] << " nchan " << blockNChan_p[k] << " step " << blockStep_p[k] << " spw "<< blockSpw_p[k] <<endl;
+    }
+
+    rvi_p->selectChannel(blockGroup, blockStart_p, blockNChan_p,
+    			  blockStep_p, blockSpw_p);
+    rvi_p->useImagingWeight(VisImagingWeight("natural"));
+    ////////////////////end of revert vi/vb
+
   }// end of createVisSet
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  void SynthesisImager::runMajorCycle()
+  void SynthesisImager::runMajorCycle(const Bool dopsf)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
+    /*
     vi_p->originChunks();
     vi_p->origin();
     vi::VisBuffer2* vb=vi_p->getVisBuffer();
@@ -936,6 +1016,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
     itsMappers.finalizeDegrid(*vb);
     itsMappers.finalizeGrid(*vb);
+    */
+
+
+    VisBufferAutoPtr vb(rvi_p);
+    rvi_p->originChunks();
+    rvi_p->origin();
+    if(!dopsf)itsMappers.initializeDegrid(*vb);
+    itsMappers.initializeGrid(*vb);
+    for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+    {
+
+    	for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+    	{
+    		cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
+    		if(!dopsf) itsMappers.degrid(*vb);
+    		itsMappers.grid(*vb, dopsf);
+    	}
+    }
+    if(!dopsf) itsMappers.finalizeDegrid(*vb);
+    itsMappers.finalizeGrid(*vb, dopsf);
+
 
 /*
     Int nmappers = itsMappers.nMappers();

@@ -183,7 +183,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsPsf = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".psf"));
     itsWeight = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".weight"));
     itsModel = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".model"));
-
+    itsImage = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".image"));
     itsResidual->set(0.0);
     itsPsf->set(1.0);
     itsWeight->set(1.0);
