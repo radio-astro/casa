@@ -79,7 +79,7 @@ Create a a list of images to be cleaned.
 
   <param type="int" name="nchan" subparam="true">
     <description>Number of channels, -1 = all </description>
-    <value type="string">-1</value>
+    <value>-1</value>
   </param>
 
   <param type="any" name="start" subparam="true">
