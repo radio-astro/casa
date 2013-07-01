@@ -34,7 +34,7 @@
 #include <casa/Arrays/IPosition.h>
 #include <casa/Quanta/Quantum.h>
 #include <measures/Measures/MDirection.h>
-
+#include <synthesis/MSVis/VisBuffer.h>
 #include <synthesis/MSVis/VisBufferImpl2.h>
 #include <synthesis/TransformMachines/FTMachine.h>
 #include <synthesis/ImagerObjects/SIMapperBase.h>
@@ -69,15 +69,26 @@ template<class T> class ImageInterface;
   void initializeDegrid(const vi::VisBuffer2& vb, const Int row=-1);
   void degrid(vi::VisBuffer2& vb);
   void finalizeDegrid();
+  ///////////////////////old VI/VB versions
+  void initializeGrid(const VisBuffer& vb);
+  void grid(const VisBuffer& vb, Bool dopsf, FTMachine::Type col);
+  void finalizeGrid(const VisBuffer& vb, const Bool dopsf);
+
+  void initializeDegrid(const VisBuffer& vb, const Int row=-1);
+  void degrid(VisBuffer& vb);
 
   Record getFTMRecord();
 
 protected:
   Bool changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
+  //////////////OLD vb version
+  Bool changedSkyJonesLogic(const VisBuffer& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
+  ////////////////////////////////////////////
   CountedPtr<ComponentFTMachine> cft_p;
   ComponentList cl_p, clCorrupted_p;
   SkyJones  *ejgrid_p, *ejdegrid_p;
   vi::VisBufferImpl2 vb_p;
+  VisBuffer ovb_p;
 
 };
 

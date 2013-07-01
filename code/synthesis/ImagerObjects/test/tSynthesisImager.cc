@@ -80,6 +80,9 @@ int main(int argc, char **argv)
     Int ndataChan=MSSpWindowColumns(tab.spectralWindow()).numChan()(0);
     Quantity freqWidth=MSSpWindowColumns(tab.spectralWindow()).chanFreqQuant()(0)(IPosition(1,ndataChan-1));
     freqWidth-=freqBeg;
+    ////lets do a cube of ndatachan
+    nchan=ndataChan;
+    freqWidth /= Double(nchan);
     imgr->defineImage(/*imagename*/"test_image", nx, ny, cellx, celly,
 			   stokes,phasecenter, nchan,
 			   freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")));
@@ -100,10 +103,12 @@ int main(int argc, char **argv)
     imgr->weight("natural");
     Record rec;
     imgr->executeMajorCycle(rec);
+    imgr->makePSF();
     CountedPtr<SIImageStore> images=imgr->imageStore(0);
     LatticeExprNode LEN = max( *(images->residual()) );
     cerr << "Max of residual=" << LEN.getFloat() << endl;
-
+    images->dividePSFByWeight(1.e-9);
+    images->divideResidualByWeight(1e-9);
 
 
 

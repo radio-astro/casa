@@ -102,6 +102,8 @@ class SynthesisImager
   //Record getMajorCycleControls();
   void   executeMajorCycle(Record& controls);
 
+  // make the psf images  i.e grid weight rather than data
+  void makePSF();
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 
@@ -122,9 +124,9 @@ protected:
   void createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT,  const String& ftname,
 		  const Int wprojplane=1,  const Float padding=1.0, const Bool useAutocorr=False, const Bool useDoublePrec=True,
 		  const Int facets=1, const String& gridfunction="SF");
-  void createVisSet();
+  void createVisSet(const Bool writeaccess=False);
   
-  void runMajorCycle();
+  void runMajorCycle(const Bool dopsf=False);
   Vector<Int> decideNPolPlanes(const String& stokes);
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field
@@ -149,13 +151,13 @@ protected:
   // Imaging/Gridding
 
   // Other Options
-  Bool writeAccess_p;
   Block<const MeasurementSet *> mss_p;
   vi::FrequencySelections fselections_p;
   CountedPtr<vi::VisibilityIterator2>  vi_p;
+  Bool writeAccess_p;
   ////////////////////////////////////Till VisibilityIterator2 works as advertised
-  CountedPtr<VisibilityIterator> wvi_p;
-  CountedPtr<ROVisibilityIterator> rvi_p;
+  VisibilityIterator* wvi_p;
+  ROVisibilityIterator* rvi_p;
   Block<Vector<Int> > blockNChan_p;
   Block<Vector<Int> > blockStart_p;
   Block<Vector<Int> > blockStep_p;
