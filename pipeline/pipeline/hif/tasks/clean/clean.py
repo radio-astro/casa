@@ -4,6 +4,8 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
+from .boxworker import BoxWorker
+from .manualboxworker import ManualBoxWorker
 from .cleanworker import CleanWorker
 from pipeline.hif.heuristics import clean
 from pipeline.hif.heuristics import makecleanlist
@@ -13,12 +15,12 @@ LOG = infrastructure.get_logger(__name__)
 
 class CleanInputs(basetask.StandardInputs):
 
-    def __init__(self, context, output_dir=None, vis=None, spw=None,
-      intent=None, field=None, imagename=None, mode=None, imagermode=None,
-      outframe=None, nchan=None, start=None, width=None, imsize=None,
-      cell=None, phasecenter=None, restfreq=None, weighting=None,
-      weighting_rmode=None, robust=None, noise=None, npixels=None,
-      restoringbeam=None, nterms=None, uvrange=None, mask_method=None,
+    def __init__(self, context, output_dir=None, vis=None, 
+      imagename=None, intent=None, field=None, spw=None,
+      uvrange=None, mode=None, imagermode=None, outframe=None, nchan=None,
+      start=None, width=None, imsize=None, cell=None, phasecenter=None,
+      weighting=None, robust=None, restoringbeam=None, noise=None,
+      npixels=None, hm_cleanboxing=None, mask=None, threshold=None, 
       maxthreshiter=None):
         self._init_properties(vars())
 
@@ -29,6 +31,8 @@ class CleanInputs(basetask.StandardInputs):
 
     @property
     def cell(self):
+        if self._cell is None:
+            return []
         return self._cell
 
     @cell.setter
@@ -65,6 +69,8 @@ class CleanInputs(basetask.StandardInputs):
 
     @property
     def imsize(self):
+        if self._imsize is None:
+            return []
         return self._imsize
 
     @imsize.setter
@@ -134,16 +140,6 @@ class CleanInputs(basetask.StandardInputs):
     @phasecenter.setter
     def phasecenter(self, value):
         self._phasecenter = value
-
-    @property
-    def restfreq(self):
-        if self._restfreq is None:
-            return ''
-        return self._restfreq
-
-    @restfreq.setter
-    def restfreq(self, value):
-        self._restfreq = value
 
     @property
     def start(self):
@@ -219,16 +215,6 @@ class CleanInputs(basetask.StandardInputs):
         self._restoringbeam = value
 
     @property
-    def nterms(self):
-        if self._nterms is None:
-            return 1
-        return self._nterms
-
-    @nterms.setter
-    def nterms(self, value):
-        self._nterms = value
-
-    @property
     def uvrange(self):
         if self._uvrange is None:
             return ''
@@ -249,14 +235,14 @@ class CleanInputs(basetask.StandardInputs):
          self._width = value
 
     @property
-    def mask_method(self):
-        if self._mask_method is None:
-            return 'automatic'
-        return self._mask_method
+    def hm_cleanboxing(self):
+        if self._hm_cleanboxing is None:
+            return 'autobox'
+        return self._hm_cleanboxing
 
-    @mask_method.setter
-    def mask_method(self, value):
-         self._mask_method = value
+    @hm_cleanboxing.setter
+    def hm_cleanboxing(self, value):
+         self._hm_cleanboxing = value
 
     @property
     def maxthreshiter(self):
@@ -311,6 +297,38 @@ class Clean(basetask.StandardTaskTemplate):
             scanids = scanids.replace(']', '')
             scanidlist.append(scanids)
 
+        # if imsize not set then use heuristic code to calculate the
+        # centers for each field/spwspec
+        imsize = inputs.imsize
+        cell = inputs.cell
+        if imsize == [] or cell ==[]:
+            # the heuristic cell is always the same for x and y as
+            # the value derives from a single value returned by
+            # imager.advise
+            cell, beam = inputs.heuristics.cell(
+              field_intent_list=[(field, intent)], spwspec=spw)
+            if inputs.cell == []:
+                inputs.cell = cell
+                LOG.info('heuristic cell: %s' % cell)
+
+            field_ids = inputs.heuristics.field(intent, field)
+            imsize = inputs.heuristics.imsize(fields=field_ids,
+              cell=inputs.cell, beam=beam)
+            if inputs.imsize == []:
+                inputs.imsize = imsize
+                LOG.info('heuristic imsize: %s', imsize)
+
+        # create the boxing/thresholding object
+        if inputs.hm_cleanboxing == 'autobox':
+            boxinputs = BoxWorker.Inputs(context=inputs._context,
+              output_dir=inputs.output_dir, vis=None)
+            boxtask = BoxWorker(boxinputs)
+        elif inputs.hm_cleanboxing == 'manual':
+            boxinputs = ManualBoxWorker.Inputs(context=inputs._context,
+              output_dir=inputs.output_dir, vis=None, mask=inputs.mask,
+              threshold=inputs.threshold)
+            boxtask = ManualBoxWorker(boxinputs)
+
         LOG.info('#')
         LOG.info("# Reduction for intent '%s', field %s, SpW %s" % (intent,
           field, spw))
@@ -325,7 +343,6 @@ class Clean(basetask.StandardTaskTemplate):
           scan=scanidlist,
           phasecenter=inputs.phasecenter, cell=inputs.cell,
           imsize=inputs.imsize, outframe=inputs.outframe,
-          restfreq=inputs.restfreq,
           #nchan=inputs.nchan, start=inputs.start, width=inputs.width,
           nchan=inputs.nchan, start=inputs.start, width=width,
           weighting=inputs.weighting,
@@ -333,9 +350,8 @@ class Clean(basetask.StandardTaskTemplate):
           noise=inputs.noise,
           npixels=inputs.npixels,
           restoringbeam=inputs.restoringbeam,
-          nterms=inputs.nterms,
           uvrange=inputs.uvrange,
-          mask_method=inputs.mask_method,
+          cleanboxtask=boxtask,
           maxthreshiter=inputs.maxthreshiter)
         datatask = CleanWorker(datainputs)
 
