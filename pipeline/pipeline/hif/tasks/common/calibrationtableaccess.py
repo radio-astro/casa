@@ -32,7 +32,7 @@ class CalibrationTableData(object):
         return copy.deepcopy(self.row)
 
     def __repr__(self):
-        return '<CalibrationTable({name}}>'.format(name=self.name)
+        return '<CalibrationTable({name})>'.format(name=self.name)
 
 
 class CalibrationTableRow(object):
