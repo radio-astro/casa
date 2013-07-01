@@ -22,8 +22,8 @@ class LowgainflagResults(basetask.Results):
         self.children = collections.defaultdict(dict)
 
     def merge_with_context(self, context):
-        # do nothing, the tsys cal files should already be in the context
-        # and we don't want to insert them twice.
+        # do nothing, none of the gain cals used for the flagging
+        # views should be used elsewhere
         pass
 
     def addview(self, description, viewresult):
