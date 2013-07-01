@@ -267,11 +267,14 @@ class RefAntHeuristics( api.Heuristic ):
 
 		# Get the antenna names and capitalize them (unfortunately,
 		# some CASA tools capitalize them and others don't)
+		# This should no longer be necessary. Clean up code
+		# later.
 
 		names = tbLoc.getcol( 'NAME' ).tolist()
 
 		rNames = range( len(names) )
-		for n in rNames: names[n] = names[n].upper()
+		#for n in rNames: names[n] = names[n].upper()
+		for n in rNames: names[n] = names[n]
 
 
 		# Close the local instance of the table tool and delete it
