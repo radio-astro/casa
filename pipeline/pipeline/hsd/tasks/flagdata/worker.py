@@ -83,9 +83,10 @@ class SDFlagDataWorker(object):
                 
                 # Calculate RMS and Diff from running mean
                 t0 = time.time()
-                data = self.calcStatistics(datatable, filename_in, filename_out, rows, nchan, nmean, TimeTable, edge)
+                data = self.calcStatistics(datatable, filename_in, filename_out, pol_indices, nchan, nmean, TimeTable, edge)
                 t1 = time.time()
                 LOG.info('RMS and diff caluculation End: Elapse time = %.1f sec' % (t1 - t0))
+                
                 tmpdata = numpy.transpose(data)
                 flag = self.get_flag_from_stats(tmpdata[1:6], Threshold, iteration)
 
@@ -140,10 +141,6 @@ class SDFlagDataWorker(object):
                 Timer.count()
                 START += 1
                 mask = numpy.ones(NCHAN, numpy.int)
-#                if self.USE_CASA_TABLE:    
-#                    for [m0, m1] in DataTable.getcell('MASKLIST',idx): mask[m0:m1] = 0
-#                else:
-#                    for [m0, m1] in DataTable[idx][DT_MASKLIST]: mask[m0:m1] = 0
                 for [m0, m1] in DataTable.getcell('MASKLIST',idx): mask[m0:m1] = 0
                 mask[:edgeL] = 0
                 if edgeR > 0: mask[-edgeR:] = 0
@@ -156,10 +153,6 @@ class SDFlagDataWorker(object):
                 MeanMasked = MaskedData.mean()
                 OldRMS = math.sqrt(abs(NCHAN * StddevMasked ** 2 / (NCHAN - Nmask) - \
                                 NCHAN * Nmask * MeanMasked ** 2 / ((NCHAN - Nmask) ** 2)))
-#                if self.USE_CASA_TABLE:
-#                    stats = DataTable.getcell('STATISTICS',idx)
-#                else:
-#                    stats = DataTable[idx][DT_STAT]
                 stats = DataTable.getcell('STATISTICS',idx)
                 stats[2] = OldRMS
 
@@ -189,10 +182,6 @@ class SDFlagDataWorker(object):
                             RdataOld0 += SpIn[x]
                             RdataNew0 += SpOut[x]
                             mask0 = numpy.ones(NCHAN, numpy.int)
-#                            if self.USE_CASA_TABLE:
-#                                for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][x]): mask0[m0:m1] = 0
-#                            else:
-#                                for [m0, m1] in DataTable[chunks[0][x]][DT_MASKLIST]: mask0[m0:m1] = 0
                             for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][x]): mask0[m0:m1] = 0
                             Rmask += mask0
                     elif START > (nrow - Nmean):
@@ -204,10 +193,6 @@ class SDFlagDataWorker(object):
                         RdataOld0 -= (SpIn[index] - SpIn[START + Nmean - 1])
                         RdataNew0 -= (SpOut[index] - SpOut[START + Nmean - 1])
                         mask0 = numpy.ones(NCHAN, numpy.int)
-#                        if self.USE_CASA_TABLE:
-#                            for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START + Nmean - 1]): mask0[m0:m1] = 0
-#                        else:
-#                            for [m0, m1] in DataTable[chunks[0][START + Nmean - 1]][DT_MASKLIST]: mask0[m0:m1] = 0
                         for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START + Nmean - 1]): mask0[m0:m1] = 0
                         Rmask += (mask0 - mask)
                     if START == 1:
@@ -220,27 +205,15 @@ class SDFlagDataWorker(object):
                         LdataOld0 += SpIn[START - 2]
                         LdataNew0 += SpOut[START - 2]
                         mask0 = numpy.ones(NCHAN, numpy.int)
-#                        if self.USE_CASA_TABLE:
-#                            for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2]): mask0[m0:m1] = 0
-#                        else:
-#                            for [m0, m1] in DataTable[chunks[0][START - 2]][DT_MASKLIST]: mask0[m0:m1] = 0
                         for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2]): mask0[m0:m1] = 0
                         Lmask += mask0
                     else:
                         LdataOld0 += (SpIn[START - 2] - SpIn[START - 2 - Nmean])
                         LdataNew0 += (SpOut[START - 2] - SpOut[START - 2 - Nmean])
                         mask0 = numpy.ones(NCHAN, numpy.int)
-#                        if self.USE_CASA_TABLE:
-#                            for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2]): mask0[m0:m1] = 0
-#                        else:
-#                            for [m0, m1] in DataTable[chunks[0][START - 2]][DT_MASKLIST]: mask0[m0:m1] = 0
                         for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2]): mask0[m0:m1] = 0
                         Lmask += mask0
                         mask0 = numpy.ones(NCHAN, numpy.int)
-#                        if self.USE_CASA_TABLE:
-#                            for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2 - Nmean]): mask0[m0:m1] = 0
-#                        else:
-#                            for [m0, m1] in DataTable[chunks[0][START - 2 - Nmean]][DT_MASKLIST]: mask0[m0:m1] = 0
                         for [m0, m1] in DataTable.getcell('MASKLIST',chunks[0][START - 2 - Nmean]): mask0[m0:m1] = 0
                         Lmask -= mask0
 
@@ -259,20 +232,11 @@ class SDFlagDataWorker(object):
                     MeanMasked = MaskedData.mean()
                     NewRMSdiff = math.sqrt(abs((NCHAN * StddevMasked ** 2 - Nmask * MeanMasked ** 2 )/ (NCHAN - Nmask)))
                     stats[3] = NewRMSdiff
-#                if self.USE_CASA_TABLE:
-#                    DataTable.putcell('STATISTICS',idx,stats)
-#                    DataTable.putcell('NMASK',idx,Nmask)
-#                else:
-#                    DataTable[idx][DT_STAT] = stats
-#                    DataTable[idx][DT_NMASK] = Nmask
+
                 DataTable.putcell('STATISTICS',idx,stats)
                 DataTable.putcell('NMASK',idx,Nmask)
                 LOG.info('Row=%d, pre-fit RMS= %.2f pre-fit diff RMS= %.2f' % (row, OldRMS, OldRMSdiff))
                 LOG.info('Row=%d, post-fit RMS= %.2f post-fit diff RMS= %.2f' % (row, NewRMS, NewRMSdiff))
-#                if self.USE_CASA_TABLE:
-#                    data.append([row, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable.getcell('TSYS',idx), Nmask])
-#                else:
-#                    data.append([row, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable[idx][DT_TSYS], Nmask])
                 data.append([row, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable.getcell('TSYS',idx), Nmask])
             del SpIn, SpOut
         return data
