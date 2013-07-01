@@ -438,7 +438,7 @@ class VLAUtils(basetask.StandardTaskTemplate):
         return True
     
     def analyse(self, results):
-	return results
+	    return results
 
 
 

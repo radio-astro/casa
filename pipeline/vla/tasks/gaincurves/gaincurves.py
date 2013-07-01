@@ -16,8 +16,9 @@ LOG = infrastructure.get_logger(__name__)
 
 class GainCurvesInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, caltable=None, caltype=None, parameter=[]):
-	# set the properties to the values given as input arguments
+	    # set the properties to the values given as input arguments
         self._init_properties(vars())
+        
 	setattr(self, 'caltype', 'gc')
 
     @property
@@ -71,8 +72,8 @@ class GainCurvesInputs(basetask.StandardInputs):
         
 	return {'vis': self.vis,
 	        'caltable': self.caltable,
-		'caltype': self.caltype,
-                'parameter': self.parameter}
+		    'caltype': self.caltype,
+            'parameter': self.parameter}
 
 
 class GainCurves(basetask.StandardTaskTemplate):

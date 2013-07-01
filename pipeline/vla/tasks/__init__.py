@@ -8,3 +8,4 @@ from .flagging import FlagDeterVLA
 from .rqcal import Rqcal
 from .swpowcal import Swpowcal
 from .setmodel import SetModel, Setjy
+from .priorcals import Priorcals
