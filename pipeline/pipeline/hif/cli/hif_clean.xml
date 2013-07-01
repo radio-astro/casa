@@ -12,12 +12,12 @@ Compute a clean map.
 <input>
 
   <param type="stringArray" name="vis" subparam="true">
-    <description>List of input measurment sets</description>
+    <description>List of input measurment sets, default to context</description>
     <value></value>
   </param>
 
   <param type="string" name="imagename" subparam="true">
-     <description>Prefix for image filenames</description>
+     <description>Prefix for image filenames, heuristic default</description>
      <value></value>
   </param>
 
@@ -42,9 +42,8 @@ Compute a clean map.
     <value type="string"></value>
   </param>
 
-
   <param type="string" name="mode">
-     <description>Spectral gridding type (mfs, frequency, \'\' for default)</description>
+     <description>Spectral gridding type (mfs, frequency, \'\' for heuristic default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
@@ -54,7 +53,7 @@ Compute a clean map.
   </param>
 
   <param type="string" name="imagermode" subparam="true">
-     <description>Imaging mode (csclean, mosaic, \'\' for default)</description>
+     <description>Imaging mode (csclean, mosaic, \'\' for heuristic default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
@@ -80,7 +79,7 @@ Compute a clean map.
   <param type="any" name="start" subparam="true">
     <description>Start of output spectral dimension</description>
     <any type="variant"/>
-    <value type="string"></value>
+    <value type="int">0</value>
   </param>
 
   <param type="any" name="width" subparam="true">
@@ -90,17 +89,17 @@ Compute a clean map.
   </param>
 
   <param type="intArray" name="imsize" subparam="true">
-    <description>x and y image size in pixels, \'\' for default. Single value same for both.</description>
+    <description>x and y image size in pixels, single value same for both, \'\' for heuristic default</description>
     <value></value>
   </param>
 
   <param type="stringArray" name="cell" subparam="true">
-    <description>Cell x and y size(s). Single value same for both.</description>
-    <value>1.0arcsec</value>
+    <description>x and y cell size(s), single value same for both, \'\' for heuristic default</description>
+    <value></value>
   </param>
 
   <param type="any" name="phasecenter" subparam="true">
-    <description>Image center (direction or field index, \'\' for default)</description>
+    <description>Image center (direction or field index), \'\'heuristic default</description>
     <any type="variant"/>
     <value type="string"></value>
   </param>
@@ -122,6 +121,11 @@ Compute a clean map.
      <value>0.0</value>
   </param>
 
+  <param type="stringArray" name="restoringbeam" subparam="true">
+     <description>Output Gaussian restoring beam for CLEAN image</description>
+     <value></value>
+  </param>
+
   <param type="any" name="noise" subparam="true">
     <description>Briggs weighting noise parameter</description>
     <any type="variant"/>
@@ -133,8 +137,8 @@ Compute a clean map.
     <value type="int">1</value>
   </param>
 
-  <param type="string" name="hm_clean">
-     <description>Pipeline cleaning mode (autobox, manual) </description>
+  <param type="string" name="hm_cleanboxing">
+     <description>Pipeline cleanboxing/thresholding mode (autobox, manual) </description>
        <value>autobox</value>
        <allowed kind="enum">
          <value>autobox</value>
@@ -142,14 +146,15 @@ Compute a clean map.
        </allowed>
   </param>
 
-  <param type="string" name="mask" subparam="true">
-     <description>Clean  mask</description>
-     <value></value>
+  <param type="any" name="mask" subparam="true">
+       <description>Cleanbox(es), mask image(s), region(s), or a level</description>
+       <any type="variant"/>
+       <value type="stringArray"></value>
   </param>
 
   <param type="double" name="threshold" units="mJy" subparam="true">
-     <description>Clean threshold</description>
-     <value>0.0</value>
+       <description>Flux level to stop cleaning, must include units: \'1.0mJy\'</description>
+       <value>0.0</value>
   </param>
 
   <param type="int" name="maxthreshiter" subparam="true">
@@ -184,33 +189,47 @@ Compute a clean map.
       <equals type="string" value="automatic"/>
       <equals type="string" value="interactive">
         <default param="vis"><value type="stringArray"></value></default>
-        <default param="field"><value type="string"></value></default>
+        <default param="imagename"><value type="string"></value></default>
         <default param="intent"><value type="string"></value></default>
+        <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
-        <default param="imagename"><value type="string"></value></default>
-        <default param="outframe"><value type="string"></value></default>
-        <default param="imsize"><value type="intArray"></value></default>
+        <default param="imagermode"><value type="string"></value></default>
+        <default param="outframe"><value type="string">LSRK</value></default>
+        <default param="nchan"><value>-1</value></default>
+        <default param="start"><value type="string">0</value></default>
+        <default param="width"><value type="string"></value></default>
+        <default param="imsize"><value type="string"></value></default>
         <default param="cell"><value type="string">1.0arcsec</value></default>
         <default param="phasecenter"><value type="string"></value></default>
+        <default param="restoringbeam"><value type="stringArray"></value></default>
+        <default param="noise"><value type="string">1.0Jy</value></default>
+        <default param="npixels"><value type="int">1</value></default>
         <default param="dryrun"><value type="bool">False</value></default>
         <default param="acceptresults"><value type="bool">True</value></default>
       </equals>
       <equals type="string" value="getinputs">
         <default param="vis"><value type="stringArray"></value></default>
-        <default param="field"><value type="string"></value></default>
+        <default param="imagename"><value type="string"></value></default>
         <default param="intent"><value type="string"></value></default>
+        <default param="field"><value type="string"></value></default>
         <default param="spw"><value type="string"></value></default>
         <default param="uvrange"><value type="string"></value></default>
-        <default param="imagename"><value type="string"></value></default>
-        <default param="outframe"><value type="string"></value></default>
-        <default param="imsize"><value type="intArray"></value></default>
+        <default param="imagermode"><value type="string"></value></default>
+        <default param="outframe"><value type="string">LSRK</value></default>
+        <default param="nchan"><value>-1</value></default>
+        <default param="start"><value type="string">0</value></default>
+        <default param="width"><value type="string"></value></default>
+        <default param="imsize"><value type="string"></value></default>
         <default param="cell"><value type="string">1.0arcsec</value></default>
         <default param="phasecenter"><value type="string"></value></default>
+        <default param="restoringbeam"><value type="stringArray"></value></default>
+        <default param="noise"><value type="string">1.0Jy</value></default>
+        <default param="npixels"><value type="int">1</value></default>
       </equals>
     </when>
 
-    <when param="hm_clean">
+    <when param="hm_cleanboxing">
       <equals value="autobox">
         <default param="maxthreshiter"><value type="int" >10</value></default>
       </equals>
@@ -222,7 +241,6 @@ Compute a clean map.
 
     <when param="mode">
       <equals type="string" value="mfs">
-        <default param="nterms"><value>1</value></default>
       </equals>
       <equals value="frequency">
         <default param="nchan"><value>-1</value></default>
@@ -248,7 +266,6 @@ Compute a clean map.
         <default param="npixels"><value>0</value></default>
       </equals>
     </when>
-
 
   </constraints>
 
