@@ -867,7 +867,7 @@ class cleanhelper:
         self.csysorder=ia.coordsys().coordinatetype()
         ia.close()
 
-#        self.setReferenceFrame( outputmask, 'LSRK' )
+        self.setReferenceFrame( outputmask, 'LSRK' )
                 
 #        mycsys=ia.coordsys()
 #        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
@@ -972,7 +972,7 @@ class cleanhelper:
 
         ## CAS-5227
         ia.open( outputmask )
-        ia.calc('iif('+outputmask+'>0.0,1.0,0.0)')
+        ia.calc('iif("'+outputmask+'">0.0,1.0,0.0)')
         ia.close()
         
         ## CAS-5221
@@ -3156,8 +3156,10 @@ class cleanhelper:
         if os.path.exists( img ):
             ia.open( img )
             mycsys=ia.coordsys()
-            if mycsys.torecord()['spectral2']['conversion']['system']!=frame:
-                mycsys.setreferencecode(frame,'spectral',True)
+#            if mycsys.torecord()['spectral2']['conversion']['system']!=frame:
+#                mycsys.setreferencecode(frame,'spectral',True)
+            mycsys.setreferencecode(frame,'spectral',True)
+            mycsys.setconversiontype(spectral=frame)
             ia.setcoordsys( mycsys.torecord() )
             ia.close()
 
