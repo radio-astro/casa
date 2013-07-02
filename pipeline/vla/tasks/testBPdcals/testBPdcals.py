@@ -4,8 +4,12 @@ import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
+import pipeline.infrastructure.callibrary as callibrary
+
+import itertools
 
 from pipeline.hif.tasks import gaincal
+from pipeline.hif.tasks import bandpass
 from pipeline.vla.heuristics import getCalFlaggedSoln, getBCalStatistics
 
 
@@ -41,84 +45,169 @@ class testBPdcals(basetask.StandardTaskTemplate):
         critfrac = self.inputs.context.evla['msinfo'][m.name].critfrac
 
         #Iterate and check the fraciton of Flagged solutions, each time running gaincal in 'K' mode
-        while (fracFlaggedSolns > critfac):
+        while (fracFlaggedSolns > critfrac):
+            try:
+                calto = callibrary.CalTo(self.inputs.vis)
+                calfrom = callibrary.CalFrom(gaintable='testdelay.k', interp='linear,linear', calwt=True)
+                self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
+            except:
+                LOG.info("testdelay.k does not exist in the context, and does not need to be removed.")
+                
             ktype_delaycal_result = self._do_ktype_delaycal()
             flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
-            fracFlaggedSolns = _check_flagSolns(flaggedSolnResult)
-        
-        
-    def _do_gtype_delaycal(self):
-        inputs = self.inputs
+            fracFlaggedSolns = self._check_flagSolns(flaggedSolnResult)
 
-        context = self.inputs.context
-        m = context.observing_run.measurement_sets[0]
-        delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
-        delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        # Do initial amplitude and phase gain solutions on the BPcalibrator and delay
+        # calibrator; the amplitudes are used for flagging; only phase
+        # calibration is applied in final BP calibration, so that solutions are
+        # not normalized per spw and take out the baseband filter shape
+
+        # Try running with solint of int_time, 3*int_time, and 10*int_time.
+        # If there is still a large fraction of failed solutions with
+        # solint=10*int_time the source may be too weak, and calibration via the 
+        # pipeline has failed; will need to implement a mode to cope with weak 
+        # calibrators (later)
+
+        tablebase = 'testBPdinitialgain'
+        table_suffix = ['.g','3.g','10.g']
+        soltimes = [1.0,3.0,10.0] 
+        soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
+        solints = ['int', '3.0s', '10.0s']
+        soltime = soltimes[0]
+        solint = solints[0]
+
+        
+        gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[0])
+        flaggedSolnResult1 = getCalFlaggedSoln(tablebase + table_suffix[0])
+
+        if (flaggedSolnResult1['all']['total'] > 0):
+            fracFlaggedSolns1=flaggedSolnResult1['antmedian']['fraction']
+        else:
+            fracFlaggedSolns1=1.0
+
+        gain_solint1=solint
+        shortsol1=soltime
+
+        if (fracFlaggedSolns1 > 0.05):
+            soltime = soltimes[1]
+            solint = solints[1]
+
+        gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[1])
+        flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[1])
+
+        if (flaggedSolnResult3['all']['total'] > 0):
+            fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
+        else:
+            fracFlaggedSolns3=1.0
+
+        if (fracFlaggedSolns3 < fracFlaggedSolns1):
+            gain_solint1 = solint
+            shortsol1 = soltime
+            calto = callibrary.CalTo(self.inputs.vis)
+            calfrom = callibrary.CalFrom(gaintable='testBPdinitialgain.g', interp='linear,linear', calwt=True)
+            self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
+
+            if (fracFlaggedSolns3 > 0.05):
+                soltime = soltimes[2]
+                solint = solints[2]
+
+                gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[2])
+                flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
+
+                if (flaggedSolnResult10['all']['total'] > 0):
+                    fracFlaggedSolns10 = flaggedSolnResult10['antmedian']['fraction']
+                else:
+                    fracFlaggedSolns10 = 1.0
+
+                if (fracFlaggedSolns10 < fracFlaggedSolns3):
+                    gain_solint1=solint
+                    shortsol1=soltime
+                    calto = callibrary.CalTo(self.inputs.vis)
+                    calfrom = callibrary.CalFrom(gaintable='testBPdinitialgain3.g', interp='linear,linear', calwt=True)
+                    self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
+
+                    if (fracFlaggedSolns > 0.05):
+                        LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.")
+
+        bandpass_result = self._do_bandpass('testBPcal.b')
+                        
+        print self.inputs.context.callibrary.active
+                        
+        return testBPdcalsResults()                        
+
+    def analyse(self, results):
+	    return results
+    
+    def _do_gtype_delaycal(self):
+        
+        m = self.inputs.context.observing_run.measurement_sets[0]
+        delay_field_select_string = self.inputs.context.evla['msinfo'][m.name].delay_field_select_string
+        tst_delay_spw = self.inputs.context.evla['msinfo'][m.name].tst_delay_spw
+        delay_scan_select_string = self.inputs.context.evla['msinfo'][m.name].delay_scan_select_string
+        minBL_for_cal = self.inputs.context.evla['msinfo'][m.name].minBL_for_cal
         
         #need to add scan?
         #ref antenna string needs to be lower case for gaincal
-        delaycal_inputs = gaincal.GTypeGaincal.Inputs(inputs.context,
-            vis = inputs.vis,
+        delaycal_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context,
+            vis = self.inputs.vis,
             caltable = 'testdelayinitialgain.g',
             field    = delay_field_select_string,
             spw      = tst_delay_spw,
             solint   = 'int',
-            refant   = inputs.refant.lower(),
             calmode  = 'p',
             minsnr   = 3.0,
             minblperant = minBL_for_cal,
             solnorm = False,
-            combine = 'scan')
+            combine = 'scan',
+            intent = '')
+
+        delaycal_inputs.refant = delaycal_inputs.refant.lower()
 
         delaycal_task = gaincal.GTypeGaincal(delaycal_inputs)
 
         return self._executor.execute(delaycal_task, merge=True)
 
     def _do_ktype_delaycal(self):
-        inputs = self.inputs
-
-        context = self.inputs.context
-        m = context.observing_run.measurement_sets[0]
-        delay_field_select_string = context.evla['msinfo'][m.name].delay_field_select_string
-        tst_delay_spw = context.evla['msinfo'][m.name].tst_delay_spw
-        delay_scan_select_string = context.evla['msinfo'][m.name].delay_scan_select_string
-        minBL_for_cal = context.evla['msinfo'][m.name].minBL_for_cal
+        
+        m = self.inputs.context.observing_run.measurement_sets[0]
+        delay_field_select_string = self.inputs.context.evla['msinfo'][m.name].delay_field_select_string
+        tst_delay_spw = self.inputs.context.evla['msinfo'][m.name].tst_delay_spw
+        delay_scan_select_string = self.inputs.context.evla['msinfo'][m.name].delay_scan_select_string
+        minBL_for_cal = self.inputs.context.evla['msinfo'][m.name].minBL_for_cal
 
         #need to add scan?
         #ref antenna string needs to be lower case for gaincal
-        delaycal_inputs = gaincal.KTypeGaincal.Inputs(inputs.context,
-            vis = inputs.vis,
+        delaycal_inputs = gaincal.KTypeGaincal.Inputs(self.inputs.context,
+            vis = self.inputs.vis,
             caltable = 'testdelay.k',
             field    = delay_field_select_string,
             spw      = tst_delay_spw,
             solint   = 'inf',
-            refant   = inputs.refant.lower(),
             calmode  = 'p',
             minsnr   = 3.0,
             minblperant = minBL_for_cal,
             solnorm = False, 
-            combine = 'scan')
+            combine = 'scan',
+            intent = '')
+
+        delaycal_inputs.refant = delaycal_inputs.refant.lower()
 
         delaycal_task = gaincal.KTypeGaincal(delaycal_inputs)
 
         return self._executor.execute(delaycal_task, merge=True)
 
     def _check_flagSolns(self, flaggedSolnResult):
-
-        context = self.inputs.context
         
         if (flaggedSolnResult['all']['total'] > 0):
             fracFlaggedSolns=flaggedSolnResult['antmedian']['fraction']
         else:
             fracFlaggedSolns=1.0
 
-        refant_csvstring = context.observing_run.measurement_sets[0].reference_antenna
+        refant_csvstring = self.inputs.context.observing_run.measurement_sets[0].reference_antenna
         refantlist = [x for x in refant_csvstring.split(',')]
 
-        m = context.observing_run.measurement_sets[0]
-        critfrac = context.evla['msinfo'][m.name].critfrac
+        m = self.inputs.context.observing_run.measurement_sets[0]
+        critfrac = self.inputs.context.evla['msinfo'][m.name].critfrac
 
         if (fracFlaggedSolns > critfrac):
             refantlist.pop(0)
@@ -127,3 +216,71 @@ class testBPdcals(basetask.StandardTaskTemplate):
             LOG.info("The pipeline will use antenna "+refantlist[0]+" as the reference.")
 
         return fracFlaggedSolns
+
+    def _do_gtype_bpdgains(self, caltable):
+
+        m = self.inputs.context.observing_run.measurement_sets[0]
+        delay_field_select_string = self.inputs.context.evla['msinfo'][m.name].delay_field_select_string
+        tst_bpass_spw = self.inputs.context.evla['msinfo'][m.name].tst_bpass_spw
+        delay_scan_select_string = self.inputs.context.evla['msinfo'][m.name].delay_scan_select_string
+        bandpass_scan_select_string = self.inputs.context.evla['msinfo'][m.name].bandpass_scan_select_string
+        minBL_for_cal = self.inputs.context.evla['msinfo'][m.name].minBL_for_cal
+
+        if (delay_scan_select_string == bandpass_scan_select_string):
+            testgainscans=bandpass_scan_select_string
+        else:
+            testgainscans=bandpass_scan_select_string+','+delay_scan_select_string
+        
+        #need to add scan?
+        #ref antenna string needs to be lower case for gaincal
+        bpdgains_inputs = gaincal.GTypeGaincal.Inputs(self.inputs.context,
+            vis = self.inputs.vis,
+            caltable = caltable,
+            field    = '',
+            spw      = tst_bpass_spw,
+            solint   = 'int',
+            calmode  = 'ap',
+            minsnr   = 5.0,
+            minblperant = minBL_for_cal,
+            solnorm = False,
+            combine = 'scan',
+            intent = '')
+
+        bpdgains_inputs.refant = bpdgains_inputs.refant.lower()
+
+        bpdgains_task = gaincal.GTypeGaincal(bpdgains_inputs)
+
+        return self._executor.execute(bpdgains_task, merge=True)
+
+    def _do_bandpass(self, caltable):
+        """Run CASA task bandpass"""
+
+        m = self.inputs.context.observing_run.measurement_sets[0]
+        bandpass_field_select_string = self.inputs.context.evla['msinfo'][m.name].bandpass_field_select_string
+        bandpass_scan_select_string = self.inputs.context.evla['msinfo'][m.name].bandpass_scan_select_string
+        minBL_for_cal = self.inputs.context.evla['msinfo'][m.name].minBL_for_cal
+
+        #bandtype = 'B'
+        bandpass_inputs = bandpass.ChannelBandpass.Inputs(self.inputs.context,
+            vis = self.inputs.vis,
+            caltable = caltable,
+            field = bandpass_field_select_string,
+            spw = '',
+            intent = '',
+            solint = 'inf',
+            combine = 'scan',
+            minblperant = minBL_for_cal,
+            minsnr = 5.0,
+            solnorm = False)
+
+        bandpass_inputs.refant = bandpass_inputs.refant.lower()
+
+        bandpass_task = bandpass.ChannelBandpass(bandpass_inputs)
+
+        return self._executor.execute(bandpass_task, merge=True)
+
+        
+        
+
+
+    

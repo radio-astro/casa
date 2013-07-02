@@ -9,7 +9,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class PriorcalsResults(basetask.Results):
     def __init__(self, final=[], pool=[], preceding=[], gc_result=None, oc_result=None, 
-        rq_result=None, sw_result=None, antpos_result=None):
+        rq_result=None,  antpos_result=None):
 
         super(PriorcalsResults, self).__init__()
         
@@ -22,7 +22,7 @@ class PriorcalsResults(basetask.Results):
         self.gc_result = gc_result
         self.oc_result = oc_result
         self.rq_result = rq_result
-        self.sw_result = sw_result
+        #self.sw_result = sw_result
         self.antpos_result = antpos_result
         
     def merge_with_context(self, context):
@@ -38,9 +38,9 @@ class PriorcalsResults(basetask.Results):
             self.rq_result.merge_with_context(context)
             LOG.info("Priorcals:  Requantizer gains")
             
-        if self.sw_result:
-            self.sw_result.merge_with_context(context)
-            LOG.info("Priorcals:  Switched Power gains")
+        #if self.sw_result:
+        #    self.sw_result.merge_with_context(context)
+        #    LOG.info("Priorcals:  Switched Power gains")
 
         if self.antpos_result:
             try:

@@ -53,7 +53,7 @@ class Priorcals(basetask.StandardTaskTemplate):
         gc_result = self._do_gaincurves()
         oc_result = self._do_opcal()
         rq_result = self._do_rqcal()
-        sw_result = self._do_swpowcal()
+        #sw_result = self._do_swpowcal()
         antpos_result = self._do_antpos()
         
         try:
@@ -63,7 +63,7 @@ class Priorcals(basetask.StandardTaskTemplate):
             
         return resultobjects.PriorcalsResults(pool=callist, gc_result=gc_result,
                                               oc_result=oc_result, rq_result=rq_result,
-                                              sw_result=sw_result, antpos_result=antpos_result)
+                                              antpos_result=antpos_result)
 
     def analyse(self, results):
 	    return results

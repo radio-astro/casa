@@ -9,3 +9,4 @@ from .rqcal import Rqcal
 from .swpowcal import Swpowcal
 from .setmodel import SetModel, Setjy
 from .priorcals import Priorcals
+from .testBPdcals import testBPdcals
