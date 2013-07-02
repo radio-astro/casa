@@ -61,7 +61,11 @@ class SDFlagDataWorker(object):
             stage_number = self.context.task_counter - 1
         else:
             stage_number = self.context.task_counter 
-        FigFileDir = (self.context.report_dir+"/stage%d/" % stage_number)
+        FigFileDir = (self.context.report_dir+"/stage%d" % stage_number)
+        ### WORKAROUND to GENERATE stage# dir manually
+        if not os.path.exists(FigFileDir):
+            os.mkdir(FigFileDir)
+        FigFileDir += "/"
     
         # loop over file
         for idx in file_index:
@@ -665,7 +669,7 @@ class SDFlagDataWorker(object):
         for ID in ids:
             strow = DataTable.getcell('ROW', ID)
             row = st_rows.index(strow)
-            LOG.debug('filling %d-th data to ROW=%d' % (ID, row))
+            #LOG.debug('filling %d-th data to ROW=%d' % (ID, row))
             tflaglist = DataTable.getcell('FLAG',ID)[1:7]
             tpflaglist = DataTable.getcell('FLAG_PERMANENT',ID)[:3]
             tstatisticslist = DataTable.getcell('STATISTICS',ID)[1:7]

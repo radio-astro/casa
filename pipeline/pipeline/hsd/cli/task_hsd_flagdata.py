@@ -17,8 +17,8 @@ def hsd_flagdata(iteration=None, edge=None, flag_tsys=None, tsys_thresh=None,
                  flag_pofrm=None, pofrm_thresh=None, pofrm_nmean=None,
                  flag_user=None, user_thresh=None,
                  plotflag=None,
-                 pipelinemode=None, infiles=None, antennalist=None,
-                 field=None, iflist=None, pollist=None, scanlist=None,
+                 pipelinemode=None, infiles=None, #antennalist=None, field=None,
+                 iflist=None, pollist=None, #scanlist=None,
                  dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

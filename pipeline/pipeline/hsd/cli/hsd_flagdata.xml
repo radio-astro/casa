@@ -128,15 +128,10 @@
 
     <param type="string" name="pipelinemode">
         <description>The pipeline operating  mode</description>
-<!--
         <value>automatic</value>
--->
-        <value>getinputs</value>
         <allowed kind="enum">
-<!--
             <value>automatic</value>
             <value>interactive</value>
--->
             <value>getinputs</value>
         </allowed>
     </param>
@@ -146,16 +141,20 @@
         <value></value>
     </param>
 
+<!--
     <param type="any" name="antennalist" subparam="true">
         <description>List of antennas to be processed (-1 stands for all)</description>
         <any type="variant" limittype="string int stringArray intArray"/>
         <value type="int">-1</value>
     </param>
+-->
 
+<!--
     <param type="string" name="field" subparam="true">
         <description>Field to be calibrated (default all)</description>
         <value></value>
     </param>
+-->
 
     <param type="intArray" name="iflist" subparam="true">
         <description>List of spws to be calibrated (defalt all except wvr)</description>
@@ -167,10 +166,12 @@
         <value></value>
     </param>
 
+<!--
     <param type="intArray" name="scanlist" subparam="true">
         <description>List of scans to be calibrated (defalt all)</description>
         <value></value>
     </param>
+-->
 
     <param type="bool" name="dryrun" subparam="true">
         <description>Run the task (False) or display the task command (True)</description>
@@ -249,27 +250,25 @@
                             </equals>
         </when>
         <when param="pipelinemode">
-<!--
             <equals type="string" value="automatic">
             </equals>
             <equals type="string" value="interactive">
                 <default param="infiles"><value type="stringArray"></value></default>
-                <default param="antennalist"><value type="int">-1</value></default>
-                <default param="field"><value type="string"></value></default>
+<!--                <default param="antennalist"><value type="int">-1</value></default>-->
+<!--                <default param="field"><value type="string"></value></default>-->
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
-                <default param="scanlist"><value type="intArray"></value></default>
+<!--                <default param="scanlist"><value type="intArray"></value></default>-->
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
-                            </equals>
--->
+            </equals>
             <equals type="string" value="getinputs">
                 <default param="infiles"><value type="stringArray"></value></default>
-                <default param="antennalist"><value type="int">-1</value></default>
-                <default param="field"><value type="string"></value></default>
+<!--                <default param="antennalist"><value type="int">-1</value></default>-->
+<!--                <default param="field"><value type="string"></value></default>-->
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
-                <default param="scanlist"><value type="intArray"></value></default>
+<!--                <default param="scanlist"><value type="intArray"></value></default>-->
             </equals>
         </when>
     </constraints>
@@ -399,15 +398,6 @@ infiles -- ASDM or MS files to be processed. This parameter behaves as
        registered to context before you run hsd_reduce.
        default: [] (process all data in context)
 
-antennalist -- List of antenna ids to be processed. Antenna name is also 
-       acceptable. But id (integer) and name (string) must not mixed in 
-       the list.
-       default: -1 (all antennas in the data)
-       example: 0, ['DV01','PM03']
-
-field -- Data selection by field name.
-   default: '' (all fields)
-
 iflist -- Data selection by spectral windows.
        default: [] (all spws)
        example: [0,2]
@@ -415,10 +405,6 @@ iflist -- Data selection by spectral windows.
 pollist -- Data selection by polarizations.
        default: [] (all polarization)
        example: [0]
-
-scanlist -- Data selection by scan numbers.
-       default: [] (all scans)
-       example: [0,1,2]
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but
@@ -463,9 +449,8 @@ Issues
 
 
 Examples
-
-
+                                
 </example>
 </task>
 </casaxml>
-                                
+
