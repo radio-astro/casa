@@ -583,5 +583,5 @@ def _interpolate(v, t, tref):
     else:
         t1 = t[idx+1] - tref
         t0 = tref - t[idx]
-        return (v[idx+1] * t0 - v[idx] * t1) / (t[idx+1] - t[idx]) 
+        return (v[idx+1] * t0 + v[idx] * t1) / (t[idx+1] - t[idx]) 
 
