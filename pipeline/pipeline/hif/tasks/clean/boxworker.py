@@ -20,7 +20,7 @@ class BoxWorker(basetask.StandardTaskTemplate):
     
     def __init__(self, inputs):
         super(BoxWorker, self).__init__(inputs)
-#        self.cleanboxheuristics = cleanbox.CleanBoxHeuristics()
+
         self.sidelobe_ratio = None
         self.psf = None
         self.fluxscale = None
@@ -56,6 +56,7 @@ class BoxWorker(basetask.StandardTaskTemplate):
         self.iters.append(iter)
         self.residuals.append(residual)
         self.cleanmasks.append(cleanmask)
+        self.thresholds.append(threshold)
         self.model_sums.append(model_sum)
         self.residual_maxs.append(residual_max)
         self.residual_mins.append(residual_min)
@@ -79,7 +80,6 @@ class BoxWorker(basetask.StandardTaskTemplate):
           new_mask=self._new_cleanmask, sidelobe_ratio=self.sidelobe_ratio,
           fluxscale=self.fluxscale)
 
-        self.thresholds.append(new_threshold)
         self.island_peaks_list.append(island_peaks)
 
         self.result.threshold = new_threshold
@@ -88,7 +88,7 @@ class BoxWorker(basetask.StandardTaskTemplate):
 
         self.result.iterating = heuristic.clean_more(
           loop=self.iters[-1],
-          old_threshold=self.thresholds[-1],
+          threshold_list=self.thresholds,
           new_threshold=new_threshold,
           sum=self.model_sums[-1], 
           residual_max=self.residual_maxs[-1],
