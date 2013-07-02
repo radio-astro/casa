@@ -10,8 +10,8 @@ import pipeline.infrastructure as infrastructure
 LOG = infrastructure.get_logger(__name__)
 
 
-def clean_more(loop, old_threshold, new_threshold, sum, residual_max, residual_min,
-  non_cleaned_rms, island_peaks_list, flux_list,
+def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
+  residual_min, non_cleaned_rms, island_peaks_list, flux_list,
   flux_change_enable=True, flux_change_limit=0.03,
   low_threshold_enable=True, low_threshold_limit=1.5,
   noisepeaks1_enable=True,
@@ -21,10 +21,9 @@ def clean_more(loop, old_threshold, new_threshold, sum, residual_max, residual_m
 
     # clean diverging?
     if loop > 0:
-        print loop, new_threshold, old_threshold
-        diverging_halt = new_threshold > old_threshold
+        diverging_halt = new_threshold > threshold_list[-1]
         LOG.info('diverging     : halt=%s enabled=True threshold(old,new)=(%.3g, %.3g)' % (
-          diverging_halt, old_threshold, new_threshold)) 
+          diverging_halt, threshold_list[-1], new_threshold)) 
         LOG.info('                halt = new threshold > old')
     else:
         diverging_halt = False
@@ -39,23 +38,24 @@ def clean_more(loop, old_threshold, new_threshold, sum, residual_max, residual_m
         flux_change_halt = (flux_change / flux) < flux_change_limit
         LOG.info('flux change   : halt=%s enabled=%s change=%.3g flux=%.3g' % (
           flux_change_halt, flux_change_enable, flux_change, flux)) 
-        LOG.info('                halt = (cleaned flux change / cleaned flux) > %.3g' %
+        LOG.info('                halt = (cleaned flux change / cleaned flux) < %.3g' %
           flux_change_limit)
     else:
         flux_change_halt = False
         LOG.info('flux change   : halt=%s enabled=%s not enough iterations' % (
           flux_change_halt, flux_change_enable)) 
 
-    # is the threshold lower than the 1.5 * uncleaned residual rms for any other
+    # is the threshold lower than the 1.5 * uncleaned residual rms and
+    # abs(max(residual)) < 1.3 * abs(max(residual)) for any other
     # than the first loop
-#    if clean_more and \
-#      abs(residual_max) < 1.3 * abs(residual_min) and \
     if loop > 0:
         if non_cleaned_rms is not None:
-            low_threshold_halt = new_threshold < low_threshold_limit * non_cleaned_rms
-            LOG.info('threshold~rms : halt=%s enabled=%s threshold=%.3g rms=%.3g' % (
-              low_threshold_halt, low_threshold_enable, new_threshold, non_cleaned_rms))
-            LOG.info('                halt = new threshold < %.3g * rms' % 
+            low_threshold_halt = (new_threshold < low_threshold_limit * non_cleaned_rms) and \
+              (abs(residual_max) < 1.3 * abs(residual_min))              
+            LOG.info('threshold~rms : halt=%s enabled=%s threshold=%.3g rms=%.3g abs(resid.min)=%.3g abs(resid.max)=%.3g' % (
+              low_threshold_halt, low_threshold_enable, new_threshold, non_cleaned_rms,
+              abs(residual_max), abs(residual_min)))
+            LOG.info('                halt = new threshold < %.3g * rms and abs(resid.max) < 1.3 * abs(resid.min)' % 
               low_threshold_limit)
         else: 
             low_threshold_halt = False
@@ -144,7 +144,6 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
                         edges of map where spikes may occur.
     """
 
-    print 'in threshold_and_mask', residual
     # Get a searchmask to be used in masking image during processing.
     # An explicitly separate mask is used so as not to risk messing
     # up any mask that arrives with the residual.
@@ -559,7 +558,7 @@ def analyse_clean_result(model, restored, residual, fluxscale, cleanmask):
         if fluxscale is not None:
             with casatools.ImageReader(fluxscale) as image:
                 image.setcoordsys(csys.torecord())
-        if cleanmask is not None:
+        if cleanmask is not None and os.path.exists(cleanmask):
             with casatools.ImageReader(cleanmask) as image:
                 image.setcoordsys(csys.torecord())
 
@@ -620,7 +619,7 @@ def analyse_clean_result(model, restored, residual, fluxscale, cleanmask):
             except:
                 residual_max = None
                 residual_min = None
-            LOG.debug('residual max:%s min:%s' % (residual_max, residual_min))
+            LOG.info('residual max:%s min:%s' % (residual_max, residual_min))
 
             # get 2d rms of residual
             pixels = image.getregion(axes=[3])
