@@ -58,8 +58,12 @@ class CleanWorker(basetask.StandardTaskTemplate):
     
     def __init__(self, inputs):
         self.inputs = inputs
+        # weblog renderer will plot in the root stage directory, i.e.
+        # stage7 not stage7_2 
+        plot_dir = os.path.join(inputs.context.report_dir,
+          'stage%s' % inputs.context.stage.split('_')[0])
         self.result = CleanResult(sourcename=inputs.field,
-          intent=inputs.intent, spw=inputs.spw)
+          intent=inputs.intent, spw=inputs.spw, plotdir=plot_dir)
 
     def prepare(self):
         inputs = self.inputs
