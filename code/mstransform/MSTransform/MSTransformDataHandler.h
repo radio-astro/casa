@@ -289,6 +289,9 @@ protected:
 	void reindexFreqOffsetSubTable();
 	void separateSpwSubtable();
 
+	// Setter for the weight-based average
+	void setWeightBasedTransformations(uInt mode);
+
 	// Drop channels with non-uniform width when doing channel average
 	void dropNonUniformWidthChannels();
 
@@ -417,6 +420,19 @@ protected:
 																Matrix<Float> &inputWeightsPlane,
 																Double weight);
 
+	void normalizeWeightsPlane(	uInt pol,
+								uInt outputChannel,
+								Matrix<Float> &inputPlaneWeights,
+								Matrix<Double> &normalizingFactorPlane);
+	void dontNormalizeWeightsPlane(	uInt pol,
+									uInt outputChannel,
+									Matrix<Float> &inputPlaneWeights,
+									Matrix<Double> &normalizingFactorPlane) {return;}
+	void (casa::MSTransformDataHandler::*normalizeWeightsPlane_p)(	uInt pol,
+																	uInt outputChannel,
+																	Matrix<Float> &inputPlaneWeights,
+																	Matrix<Double> &normalizingFactorPlane);
+
 	template <class T> void averageCubeOfData(	vi::VisBuffer2 *vb,
 												RefRows &rowRef,
 												const Cube<T> &inputDataCube,
@@ -446,6 +462,8 @@ protected:
 															IPosition &outputPlaneShape,
 															ArrayColumn<T> &outputDataCol,
 															ArrayColumn<Bool> *outputFlagCol);
+
+
 	void setWeightsPlaneByReference(	uInt inputRow,
 										const Cube<Float> &inputWeightsCube,
 										Matrix<Float> &inputWeightsPlane);
@@ -788,6 +806,7 @@ protected:
 	Bool refFrameTransformation_p;
 	Vector<Int> freqbin_p;
 	String useweights_p;
+	uInt weightmode_p;
 	String interpolationMethodPar_p;
 	casac::variant *phaseCenterPar_p;
 	String restFrequency_p;
@@ -847,10 +866,11 @@ protected:
 	MFrequency::Types inputReferenceFrame_p;
 	MFrequency::Types outputReferenceFrame_p;
 	MPosition observatoryPosition_p;
-	MEpoch observationTime_p;
+	MEpoch referenceTime_p;
 	MDirection phaseCenter_p;
 	Bool userPhaseCenter_p;
 	MFrequency::Convert freqTransEngine_p;
+	MFrequency::Convert refTimeFreqTransEngine_p;
     FFTServer<Float, Complex> fFFTServer_p;
     Bool fftShiftEnabled_p;
 	Double fftShift_p;

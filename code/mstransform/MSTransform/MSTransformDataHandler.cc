@@ -50,6 +50,12 @@ namespace MSTransformations
 	    // fft shift
 	    fftshift
 	  };
+
+	enum WeightingSetup {
+		spectrum,
+		flags,
+		flat
+	};
 }
 
 /////////////////////////////////////////////
@@ -137,6 +143,7 @@ void MSTransformDataHandler::initialize()
 	refFrameTransformation_p = False;
 	freqbin_p = Vector<Int>(1,-1);
 	useweights_p = "flags";
+	weightmode_p = MSTransformations::flags;
 	interpolationMethodPar_p = String("linear");	// Options are: nearest, linear, cubic, spline, fftshift
 	phaseCenterPar_p = new casac::variant("");
 	userPhaseCenter_p = False;
@@ -456,16 +463,19 @@ void MSTransformDataHandler::parseChanAvgParams(Record &configuration)
 
 		if (useweights_p == "flags")
 		{
+			weightmode_p = MSTransformations::flags;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 					<< "Using FLAGS as weights for channel average" << LogIO::POST;
 		}
 		else if (useweights_p == "spectrum")
 		{
+			weightmode_p = MSTransformations::spectrum;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 					<< "Using WEIGHT_SPECTRUM as weights for channel average" << LogIO::POST;
 		}
 		else
 		{
+			weightmode_p = MSTransformations::flags;
 			useweights_p = String("flags");
 		}
 	}
@@ -942,28 +952,19 @@ void MSTransformDataHandler::setup()
 	}
 
 	// Averaging kernel
-	if ((useweights_p == "spectrum") and (fillWeightSpectrum_p))
+	if (fillWeightSpectrum_p)
 	{
-		averageKernelComplex_p = &MSTransformDataHandler::weightAverageKernel;
-		averageKernelFloat_p = &MSTransformDataHandler::weightAverageKernel;
-
-		fillWeightsPlane_p = &MSTransformDataHandler::fillWeightsPlane;
-		setWeightsPlaneByReference_p = &MSTransformDataHandler::setWeightsPlaneByReference;
-		setWeightStripeByReference_p = &MSTransformDataHandler::setWeightStripeByReference;
+		setWeightBasedTransformations(weightmode_p);
 	}
 	else
 	{
-		averageKernelComplex_p = &MSTransformDataHandler::flagAverageKernel;
-		averageKernelFloat_p = &MSTransformDataHandler::flagAverageKernel;
-
-		fillWeightsPlane_p = &MSTransformDataHandler::dontfillWeightsPlane;
-		setWeightsPlaneByReference_p = &MSTransformDataHandler::dontsetWeightsPlaneByReference;
-		setWeightStripeByReference_p = &MSTransformDataHandler::dontSetWeightStripeByReference;
+		weightmode_p = MSTransformations::flags;
+		setWeightBasedTransformations(weightmode_p);
 
 		if (useweights_p == "spectrum")
 		{
 			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-			<< "Requested column for weighted channel average WEIGHT_SPECTRUM not present in input MS" << LogIO::POST;
+			<< "Requested column for weighted channel average WEIGHT_SPECTRUM not present in input MS. Will use FLAGS as default" << LogIO::POST;
 		}
 	}
 
@@ -1065,6 +1066,44 @@ void MSTransformDataHandler::setup()
 	// Generate Iterator
 	setIterationApproach();
 	generateIterator();
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::setWeightBasedTransformations(uInt mode)
+{
+
+	if (mode == MSTransformations::spectrum)
+	{
+		averageKernelComplex_p = &MSTransformDataHandler::weightAverageKernel;
+		averageKernelFloat_p = &MSTransformDataHandler::weightAverageKernel;
+
+		fillWeightsPlane_p = &MSTransformDataHandler::fillWeightsPlane;
+		normalizeWeightsPlane_p = &MSTransformDataHandler::normalizeWeightsPlane;
+		setWeightsPlaneByReference_p = &MSTransformDataHandler::setWeightsPlaneByReference;
+		setWeightStripeByReference_p = &MSTransformDataHandler::setWeightStripeByReference;
+	}
+	else
+	{
+		fillWeightsPlane_p = &MSTransformDataHandler::dontfillWeightsPlane;
+		normalizeWeightsPlane_p = &MSTransformDataHandler::dontNormalizeWeightsPlane;
+		setWeightsPlaneByReference_p = &MSTransformDataHandler::dontsetWeightsPlaneByReference;
+		setWeightStripeByReference_p = &MSTransformDataHandler::dontSetWeightStripeByReference;
+
+		if (mode == MSTransformations::flags)
+		{
+			averageKernelComplex_p = &MSTransformDataHandler::flagAverageKernel;
+			averageKernelFloat_p = &MSTransformDataHandler::flagAverageKernel;
+		}
+		else
+		{
+			averageKernelComplex_p = &MSTransformDataHandler::simpleAverageKernel;
+			averageKernelFloat_p = &MSTransformDataHandler::simpleAverageKernel;
+		}
+	}
 
 	return;
 }
@@ -1300,7 +1339,7 @@ void MSTransformDataHandler::initRefFrameTransParams()
     }
 
     // Determine observation time from the first row in the selected MS
-    observationTime_p = selectedInputMsCols_p->timeMeas()(0);
+    referenceTime_p = selectedInputMsCols_p->timeMeas()(0);
 
 	return;
 }
@@ -1393,7 +1432,7 @@ void MSTransformDataHandler::regridSpwSubTable()
     							inputChanWidth,
     							phaseCenter_p,
     							inputReferenceFrame_p,
-    							observationTime_p,
+    							referenceTime_p,
     							observatoryPosition_p,
     							mode_p,
     							nChan_p,
@@ -1432,6 +1471,23 @@ void MSTransformDataHandler::regridSpwSubTable()
 
         // Add input-output SPW pair to map
     	inputOutputSpwMap_p[spwId] = std::make_pair(inputSpw,outputSpw);
+
+    	// Prepare frequency transformation engine for the reference time
+    	if (fftShiftEnabled_p)
+    	{
+    		MFrequency::Ref inputFrameRef(inputReferenceFrame_p,
+    				MeasFrame(phaseCenter_p, observatoryPosition_p, referenceTime_p));
+    		MFrequency::Ref outputFrameRef(outputReferenceFrame_p,
+    				MeasFrame(phaseCenter_p, observatoryPosition_p, referenceTime_p));
+    		refTimeFreqTransEngine_p = MFrequency::Convert(MSTransformations::Hz, inputFrameRef, outputFrameRef);
+
+    	    for(uInt chan_idx=0; chan_idx<inputOutputSpwMap_p[spwId].first.CHAN_FREQ.size(); chan_idx++)
+    	    {
+    	    	inputOutputSpwMap_p[spwId].first.CHAN_FREQ_aux[chan_idx] =
+    	    			refTimeFreqTransEngine_p(inputOutputSpwMap_p[spwId].first.CHAN_FREQ[chan_idx]).
+    	    			get(MSTransformations::Hz).getValue();
+    	    }
+    	}
     }
 
     // Flush changes
@@ -1595,7 +1651,7 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     						combinedCHAN_WIDTH,
     						phaseCenter_p,
     						inputReferenceFrame_p,
-    						observationTime_p,
+    						referenceTime_p,
     						observatoryPosition_p,
     						mode_p,
     						nChan_p,
@@ -1652,6 +1708,23 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 
     /// Add input-output SPW pair to map ///////////////////
 	inputOutputSpwMap_p[0] = std::make_pair(combinedSpw,outputSpw);
+
+	// Prepare frequency transformation engine for the reference time
+	if (fftShiftEnabled_p)
+	{
+		MFrequency::Ref inputFrameRef(inputReferenceFrame_p,
+				MeasFrame(phaseCenter_p, observatoryPosition_p, referenceTime_p));
+		MFrequency::Ref outputFrameRef(outputReferenceFrame_p,
+				MeasFrame(phaseCenter_p, observatoryPosition_p, referenceTime_p));
+		refTimeFreqTransEngine_p = MFrequency::Convert(MSTransformations::Hz, inputFrameRef, outputFrameRef);
+
+	    for(uInt chan_idx=0; chan_idx<inputOutputSpwMap_p[0].first.CHAN_FREQ.size(); chan_idx++)
+	    {
+	    	inputOutputSpwMap_p[0].first.CHAN_FREQ_aux[chan_idx] =
+	    			refTimeFreqTransEngine_p(inputOutputSpwMap_p[0].first.CHAN_FREQ[chan_idx]).
+	    			get(MSTransformations::Hz).getValue();
+	    }
+	}
 
 	return;
 }
@@ -2615,21 +2688,21 @@ void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 	// NOTE (jagonzal): According to dpetry the difference between times is negligible but he recommends to use TIME
 	//                  However it does not cross-validate unless we use timeMeas from the MS columns
 	ScalarMeasColumn<MEpoch> mainTimeMeasCol = selectedInputMsCols_p->timeMeas();
-	observationTime_p = mainTimeMeasCol(vb->rowIds()(0));
+	MEpoch currentRowTime = mainTimeMeasCol(vb->rowIds()(0));
 
 	MFrequency::Ref inputFrameRef = MFrequency::Ref(inputReferenceFrame_p,
-													MeasFrame(vb->phaseCenter(), observatoryPosition_p, observationTime_p));
+													MeasFrame(vb->phaseCenter(), observatoryPosition_p, currentRowTime));
 
 	MFrequency::Ref outputFrameRef;
 	if (userPhaseCenter_p)
 	{
 		outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
-				MeasFrame(phaseCenter_p, observatoryPosition_p, observationTime_p));
+				MeasFrame(phaseCenter_p, observatoryPosition_p, currentRowTime));
 	}
 	else
 	{
 		outputFrameRef = MFrequency::Ref(outputReferenceFrame_p,
-				MeasFrame(vb->phaseCenter(), observatoryPosition_p, observationTime_p));
+				MeasFrame(vb->phaseCenter(), observatoryPosition_p, currentRowTime));
 	}
 
 	/*
@@ -2657,35 +2730,49 @@ void MSTransformDataHandler::initFrequencyTransGrid(vi::VisBuffer2 *vb)
 		}
 	}
 
-	if (combinespws_p or !fftShiftEnabled_p)
+	if (fftShiftEnabled_p)
+	{
+		uInt centralChan = inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ.size()/2;
+
+		Double oldCentralFrequencyBeforeRegridding = inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[centralChan];
+		Double newCentralFrequencyBeforeRegriddingAtCurrentTime =
+				freqTransEngine_p(oldCentralFrequencyBeforeRegridding).get(MSTransformations::Hz).getValue();
+		Double newCentralFrequencyBeforeRegriddingAtReferenceTime = inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[centralChan];
+		Double absoluteShift = newCentralFrequencyBeforeRegriddingAtCurrentTime - newCentralFrequencyBeforeRegriddingAtReferenceTime;
+
+		Double chanWidth = inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[1] - inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[0];
+		Double bandwidth = inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[inputOutputSpwMap_p[spwIndex].second.NUM_CHAN-1] - inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[0];
+		bandwidth += chanWidth;
+
+		fftShift_p = - absoluteShift / bandwidth;
+
+		/*
+		ostringstream oss;
+		oss.precision(20);
+		oss <<  "centralChan=" << centralChan << endl;
+		oss <<  "oldCentralFrequencyBeforeRegridding=" << oldCentralFrequencyBeforeRegridding << endl;
+		oss <<  "newCentralFrequencyBeforeRegriddingAtCurrentTime=" << newCentralFrequencyBeforeRegriddingAtCurrentTime << endl;
+		oss <<  "newCentralFrequencyBeforeRegriddingAtReferenceTime=" << newCentralFrequencyBeforeRegriddingAtReferenceTime << endl;
+		oss <<  "absoluteShift=" << absoluteShift << endl;
+		oss <<  "xout[iDone][0]=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[0] << endl;
+		oss <<  "xout[iDone][1]=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[1] << endl;
+		oss <<  "chanWidth=" << chanWidth<< endl;
+		oss <<  "xout[iDone][endChan]=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[inputOutputSpwMap_p[spwIndex].second.NUM_CHAN-1] << endl;
+		oss <<  "bandwidth (xout[iDone][endChan] - xout[iDone][0] + chanWidth)" << bandwidth << endl;
+		oss <<  "chanwidth-spwInfo " << inputOutputSpwMap_p[spwIndex].second.CHAN_WIDTH[0] << endl;
+		oss <<  "bandwidth-spwInfo " << inputOutputSpwMap_p[spwIndex].second.TOTAL_BANDWIDTH << endl;
+		oss <<  "fftShift_p=" << fftShift_p << endl;
+		logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
+		*/
+
+	}
+	else
 	{
 	    for(uInt chan_idx=0; chan_idx<inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ.size(); chan_idx++)
 	    {
 	    	inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ_aux[chan_idx] =
 	    	freqTransEngine_p(inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[chan_idx]).get(MSTransformations::Hz).getValue();
 	    }
-	}
-
-	if (fftShiftEnabled_p)
-	{
-		uInt centralChan = inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ.size()/2;
-		Double oldCentralFrequency = inputOutputSpwMap_p[spwIndex].first.CHAN_FREQ[centralChan];
-		Double newCentralFrequency = freqTransEngine_p(oldCentralFrequency).get(MSTransformations::Hz).getValue();
-		Double absoluteShift = newCentralFrequency - inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[centralChan];
-		fftShift_p = - absoluteShift / inputOutputSpwMap_p[spwIndex].second.TOTAL_BANDWIDTH;
-
-		/*
-		ostringstream oss;
-		oss.precision(20);
-		oss <<  "centralChan=" << centralChan << endl;
-		oss <<  "oldCentralFrequency=" << oldCentralFrequency << endl;
-		oss <<  "newCentralFrequency=" << newCentralFrequency << endl;
-		oss <<  "outputCentralFrequency=" << inputOutputSpwMap_p[spwIndex].second.CHAN_FREQ[centralChan] << endl;
-		oss <<  "absoluteShift=" << absoluteShift << endl;
-		oss <<  "bandwidth=" << inputOutputSpwMap_p[spwIndex].second.TOTAL_BANDWIDTH << endl;
-		oss <<  "fftShift_p=" << fftShift_p << endl;
-		logger_p << LogIO::NORMAL << oss.str() << LogIO::POST;
-		*/
 	}
 
 	return;
@@ -3188,6 +3275,19 @@ template <class T> void MSTransformDataHandler::mapScaleAndAverageMatrix(	const 
 // ----------------------------------------------------------------------------------------
 void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 {
+	// First of all we fill WEIGHT_SPECTRUM because it might be needed by channel average
+    if (fillWeightSpectrum_p)
+    {
+    	// Unset all the weights-based operations
+    	setWeightBasedTransformations(MSTransformations::flat);
+
+		// Transform weights
+    	transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL);
+
+    	// Reset all the weights-based operations
+    	setWeightBasedTransformations(weightmode_p);
+    }
+
 	ArrayColumn<Bool> *outputFlagCol=NULL;
 	for (dataColMap::iterator iter = dataColMap_p.begin();iter != dataColMap_p.end();iter++)
 	{
@@ -3279,21 +3379,6 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			}
 		}
 	}
-
-
-    if (fillWeightSpectrum_p)
-    {
-    	averageKernelFloat_p = &MSTransformDataHandler::simpleAverageKernel;
-    	transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL);
-    	if (useweights_p == "spectrum")
-    	{
-    		averageKernelFloat_p = &MSTransformDataHandler::weightAverageKernel;
-    	}
-    	else
-    	{
-    		averageKernelFloat_p = &MSTransformDataHandler::flagAverageKernel;
-    	}
-    }
 
     // Special case for flag category
     if (fillFlagCategory_p)
@@ -3654,7 +3739,7 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 					inputPlaneData(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
 
 					// Normalize weights plane
-					//inputPlaneWeights(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
+					(*this.*normalizeWeightsPlane_p)(pol,outputChannel,inputPlaneWeights,normalizingFactorPlane);
 				}
 				else if (normalizingFactor > 0)
 				{
@@ -3694,6 +3779,19 @@ void MSTransformDataHandler::fillWeightsPlane(	uInt pol,
 												Double factor)
 {
 	inputWeightsPlane(pol,outputChannel) += factor*inputWeightsCube(pol,inputChannel,inputRow);
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::normalizeWeightsPlane(	uInt pol,
+													uInt outputChannel,
+													Matrix<Float> &inputPlaneWeights,
+													Matrix<Double> &normalizingFactorPlane)
+{
+	inputPlaneWeights(pol,outputChannel) /= normalizingFactorPlane(pol,outputChannel);
 
 	return;
 }
@@ -4504,8 +4602,10 @@ template <class T> void MSTransformDataHandler::interpol1Dfftshift(	Int inputSpw
 	Vector<T> regriddedDataStripe(inputDataStripe.shape(),T());
 	Vector<Bool> regriddedFlagsStripe(inputFlagsStripe.shape(),MSTransformations::False);
 
+	// This linear interpolation provides an uniform grid (pre-condition to apply fftshift)
 	interpol1D(inputSpw,inputDataStripe,inputFlagsStripe,inputWeightsStripe,regriddedDataStripe,regriddedFlagsStripe);
 
+	// fftshift takes care of time
 	fftshift(inputSpw,regriddedDataStripe,regriddedFlagsStripe,inputWeightsStripe,outputDataStripe,outputFlagsStripe);
 
 	return;
