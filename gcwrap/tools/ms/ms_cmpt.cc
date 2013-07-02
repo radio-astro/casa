@@ -29,6 +29,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <casa/iostream.h>
 #include <sstream>
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
@@ -93,6 +94,8 @@ ms::ms()
      itsLog = new LogIO();
      itsFlag = new MSFlagger();
      itsMSS = new MSSelection();
+     itsVI = new VisibilityIterator();
+     itsVB = new VisBuffer();
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -109,6 +112,8 @@ ms::~ms()
     if(itsFlag)         {delete itsFlag; itsFlag=NULL;}
     if(itsLog)          {delete itsLog; itsLog=NULL;}
     if(itsMSS)          {delete itsMSS; itsMSS=NULL;}
+    if (itsVI)          {delete itsVI; itsVI=NULL;}
+    if (itsVB)          {delete itsVB; itsVB=NULL;}
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -420,6 +425,8 @@ ms::close()
       itsSel->setMS(*itsMS);
       itsFlag->setMSSelector(*itsSel);
       if (itsMSS) {delete itsMSS;  itsMSS = new MSSelection();};
+      if (itsVI) {delete itsVI; itsVI = new VisibilityIterator();};
+      if (itsVB) {delete itsVB; itsVB = new VisBuffer();};
       rstat = True;
     }
   } catch (AipsError x) {
@@ -3644,6 +3651,116 @@ ms::addephemcol(const casa::MeasurementSet& appendedMS)
       open(thisMSName, False, False);
     }
   }
+}
+
+bool
+ms::niterinit(const std::vector<std::string>& columns, const double interval,
+             const int maxrows, const bool adddefaultsortcolumns)
+{
+   Bool rstat(False);
+   Block<Int> sort(0);
+   try
+     {
+       *itsVI = VisibilityIterator(*itsMS, sort,interval);
+       *itsVB = VisBuffer(*itsVI);
+       rstat=True;
+     }
+   catch (AipsError x)
+     {
+       RETHROW(x);
+     }
+  
+   return rstat;
+}
+
+bool
+ms::niterorigin()
+{
+   Bool rstat(False);
+   if (!detached())
+     {
+       try
+	 {
+	   if (itsVI) 
+	     {
+	       itsVI->originChunks();
+	       rstat=True;
+	     }
+	   else
+	     *itsLog << "ms::niterorigin:  Please call niterinit() first." << LogIO::EXCEPTION;
+	 }
+       catch (AipsError x)
+	 {
+	   RETHROW(x);
+	 }
+     }
+   return rstat;
+}
+
+bool
+ms::niterend()
+{
+  Bool rstat(False);
+  if (!detached())
+    {
+      try
+	{
+	  rstat = itsVI->moreChunks();
+	}
+      catch (AipsError x)
+	{
+	  RETHROW(x);
+	}
+    }   
+  return rstat;
+}
+
+bool
+ms::niternext()
+{
+  Bool rstat(False);
+  if (!detached())
+    {
+      try
+	{
+	  itsVI->nextChunk();
+	  rstat=True;
+	}
+      catch (AipsError x)
+	{
+	  RETHROW(x);
+	}
+    }
+  
+  return rstat;
+}
+
+::casac::record*
+ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const int ifraxisgap, const int increment, const bool average)
+{
+  ::casac::record *retval(0);
+  casa::Record rec;
+  Int nItems = items.size();
+  for (Int i=0; i<nItems; i++) 
+    {
+      String item(items[i]);
+      item.downcase();
+      MSS::Field fld=MSS::field(item);
+      switch (fld) 
+	{
+	case MSS::DATA:
+	  {
+	    rec.define(item,itsVB->visCube());
+	    break;
+	  }
+	default:
+	  {
+	    *itsLog  << "ngetdata: Unsupported item requrested (" << items[i] << ")" <<LogIO::EXCEPTION;
+	  }
+	}
+    }
+
+  return fromRecord(rec);
 }
 
 

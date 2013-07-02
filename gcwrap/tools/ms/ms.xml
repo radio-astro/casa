@@ -4770,7 +4770,159 @@ in spectral window 1.
   </example>
 </method>
 
-
-</tool>
-
-</casaxml>
+   <!-- ====================================================== -->
+   <method type="function" name="ngetdata">
+     <shortdescription>Read values from the measurement set.</shortdescription>
+   
+     <keyword>getdata</keyword>
+     <input>
+       <param type="stringArray" direction="in" name="items">
+	 <description>Item names</description>
+	 <value></value>
+       </param>
+    
+       <param type="bool" direction="in" name="ifraxis">
+	 <description>Create interferometer axis if True</description>
+	 <value>false</value>
+       </param>
+    
+       <param type="int" direction="in" name="ifraxisgap">
+	 <description>Gap size on ifr axis when antenna1 changes</description>
+	 <value>0</value>
+       </param>
+    
+       <param type="int" direction="in" name="increment">
+	 <description>Row increment for data access</description>
+	 <value>1</value>
+       </param>
+    
+       <param type="bool" direction="in" name="average">
+	 <description>Average the data in time or over rows</description>
+	 <value>false</value>
+       </param>
+     </input>
+     <returns type="record">
+       <shortdescription>record with fields containing arrays of data</shortdescription>
+     </returns>
+     
+     <description>
+     </description>
+   </method>
+   <!-- ====================================================== -->
+   <method type="function" name="niterinit">
+     <shortdescription>Initialize for iteration over an ms</shortdescription>
+     
+     <keyword>iterinit</keyword>
+     <input>
+       
+       <param type="stringArray" direction="in" name="columns">
+	 <description>Vector of column names (case sensitive).</description>
+	 <value></value>
+       </param>
+       
+       <param type="double" direction="in" name="interval">
+	 <description>Time interval in seconds (greater than 0), to group together in iteration</description>
+	 <value>0.0</value>
+       </param>
+       
+       <param type="int" direction="in" name="maxrows">
+	 <description>Max number of rows (greater than 0) to return in iteration</description>
+	 <value>0</value>
+       </param>
+       
+       <param type="bool" direction="in" name="adddefaultsortcolumns">
+	 <description>Add the default sort columns</description>
+	 <value>true</value>
+       </param>
+     </input>
+     <returns type="bool"/>
+     
+     <description>
+     </description>
+   </method>
+   <!-- ====================================================== -->
+   <method type="function" name="niterorigin">
+     <shortdescription>Set the iterator to the start of the data.</shortdescription>
+     
+     <keyword>iteriorigin</keyword>
+     <returns type="bool"/>
+     
+     <description>
+       Set or reset the iterator to the start of the currently specified
+       iteration. You need to call this before attempting to retrieve
+       data with getdata. You can set the iteration back to the start
+       before you reach the end of the data.  You need to call iterinit
+       before calling this.  See the example below.
+     </description>
+     <example>
+       See the example for the <link anchor="ms:ms.iterend.function">iterend</link> function.
+     </example>
+   </method>
+   
+   <!-- ====================================================== -->
+   
+   <method type="function" name="niternext">
+     <shortdescription>Advance the iterator to the next lot of data</shortdescription>
+     
+     <keyword>iternext</keyword>
+     <returns type="bool">
+       <shortdescription>Bool, True if there was more data, False if we've reached the end
+       </shortdescription>
+     </returns>
+     
+     <description>
+       This sets the currently selected table (as accessed with getdata)
+       to the next iteration. If there is no more data, the function
+       returns False and the selection is reset to that before the
+       iteration started.  You need to call iterinit and iterorigin
+       before calling this.  See the example below.
+     </description>
+     <example>
+       See the example for the <link anchor="ms:ms.iterend.function">iterend</link> function.
+     </example>
+   </method>
+   
+   <!-- ====================================================== -->
+   
+   <method type="function" name="niterend">
+     <shortdescription>End the iteration and reset the selected table</shortdescription>
+     
+     <keyword>iterend</keyword>
+     <returns type="bool">
+       <shortdescription>Bool, True if iteration was in progress, False if not
+       </shortdescription>
+     </returns>
+     
+     <description>
+       This sets the currently selected table (as accessed with
+       <link anchor="ms:ms.getdata.function">getdata</link>) to the table that was selected
+       before iteration started.  Use this to end the iteration
+       prematurely.  There is no need to call this if you continue
+       iterating until <link anchor="ms:ms.iternext.function">iternext</link> returns False.
+       
+       See the example below.
+     </description>
+     <example>
+       
+       
+       ms.open("3C273XC1.MS")
+       ms.selectinit(datadescid=0)
+       ms.iterinit(["ANTENNA1","ANTENNA2","TIME"],60.0)
+       ms.iterorigin()
+       rec=ms.getdata(["u","v","data"])
+       ms.iternext()
+       ms.iterend()
+       
+       We open the MS, select an array and spectral window and then
+       specify an iteration over interferometer and time, with a 60s time
+       interval.  We then set the iterator to the start of the data and
+       get out some data. Finally we advance the iterator to the next lot
+       of data and then end the iteration.
+     </example>
+   </method>
+   <!-- ====================================================== -->
+   
+   
+  </tool>
+  
+  </casaxml>
