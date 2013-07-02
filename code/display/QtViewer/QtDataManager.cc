@@ -1910,6 +1910,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			newPagedImage.setImageInfo(img->imageInfo());
 			newPagedImage.setMiscInfo(img->miscInfo());
 
+			//Added for CAS-5216.  When the units are from a collapsed image and
+			//are nonstandard, such as 'Jy/beam.km/sec' they were not getting saved
+			//through normal means.
+			Unit imageUnits = img->units();
+			newPagedImage.setUnits( imageUnits );
+
 			img_output_error->setStyleSheet("color: blue");
 			img_output_error->setText("success...");
 			img_do_save->setEnabled(false);
