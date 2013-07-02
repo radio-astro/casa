@@ -183,9 +183,9 @@ class SDSparseMapDisplay(SDImageDisplay):
                 valid_data = Plot[valid_index[0],valid_index[1],:]
                 ListMax = valid_data.max(axis=1)
                 ListMin = valid_data.min(axis=1)
-                if len(ListMax) == 0: return
-                #LOG.debug('ListMax=%s'%(list(ListMax)))
-                #LOG.debug('ListMin=%s'%(list(ListMin)))
+                LOG.debug('ListMax=%s'%(list(ListMax)))
+                LOG.debug('ListMin=%s'%(list(ListMin)))
+                if len(ListMax) == 0: return plot_list
                 ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
                 ymin = numpy.sort(ListMin)[len(ListMin)/10]
                 ymax = ymax + (ymax - ymin) * 0.2
