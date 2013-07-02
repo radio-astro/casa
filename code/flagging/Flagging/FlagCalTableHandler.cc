@@ -42,7 +42,6 @@ FlagCalTableHandler::FlagCalTableHandler(string tablename, uShort iterationAppro
 	tableTye_p = CALIBRATION_TABLE;
 }
 
-
 // -----------------------------------------------------------------------
 // Default destructor
 // -----------------------------------------------------------------------

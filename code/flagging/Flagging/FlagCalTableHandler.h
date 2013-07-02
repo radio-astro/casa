@@ -38,6 +38,7 @@ class WeightScaling;
 
 }
 
+
 class DummyBufferImpl: public vi::VisBuffer2
 {
 public:
