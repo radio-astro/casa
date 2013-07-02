@@ -122,7 +122,7 @@ class MakeCleanListInputs(basetask.StandardInputs):
     @property
     def nchan(self):
         if self._nchan is None:
-            return 'default'
+            return -1
         return self._nchan
 
     @nchan.setter
@@ -132,7 +132,7 @@ class MakeCleanListInputs(basetask.StandardInputs):
     @property
     def start(self):
         if self._start is None:
-            return 'default'
+            return ''
         return self._start
 
     @start.setter
@@ -142,7 +142,7 @@ class MakeCleanListInputs(basetask.StandardInputs):
     @property
     def width(self):
         if self._width is None:
-            return 'default'
+            return ''
         return self._width
 
     @width.setter
@@ -152,7 +152,7 @@ class MakeCleanListInputs(basetask.StandardInputs):
     @property
     def uvrange(self):
         if self._uvrange is None:
-            return 'default'
+            return ''
         return self._uvrange
 
     @uvrange.setter
@@ -292,18 +292,11 @@ class MakeCleanList(basetask.StandardTaskTemplate):
                               'imsize':imsizes[(field_intent[0],spwspec)],
                               'phasecenter':phasecenters[field_intent[0]],
                               'mode':inputs.mode,
-                              'imagename':imagenames[(field_intent,spwspec)]}
-
-                    # optional parameters that will override the defaults of
-                    # the clean task if set
-                    if inputs.start != 'default':
-                        target['start'] = inputs.start
-                    if inputs.width != 'default':
-                        target['width'] = inputs.width
-                    if inputs.nchan != 'default':
-                        target['nchan'] = inputs.nchan
-                    if inputs.uvrange != 'default':
-                        target['uvrange'] = inputs.uvrange
+                              'imagename':imagenames[(field_intent,spwspec)],
+                              'start':inputs.start,
+                              'width':inputs.width,
+                              'nchan':inputs.nchan,
+                              'uvrange':inputs.uvrange}
 
                     #print target
                     result.add_target(target)
