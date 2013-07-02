@@ -3705,7 +3705,7 @@ ms::niterend()
     {
       try
 	{
-	  rstat = itsVI->moreChunks();
+	  rstat = !itsVI->moreChunks();
 	}
       catch (AipsError x)
 	{
@@ -3750,9 +3750,64 @@ ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const in
 	{
 	case MSS::DATA:
 	  {
-	    rec.define(item,itsVB->visCube());
+	    Cube<Complex> vis;
+	    itsVI->visibility(vis,VisibilityIterator::Observed);
+	    rec.define(item,vis);
 	    break;
 	  }
+	case MSS::MODEL_DATA:
+	  {
+	    Cube<Complex> vis;
+	    itsVI->visibility(vis,VisibilityIterator::Model);
+	    rec.define(item,vis);
+	    break;
+	  }
+	case MSS::CORRECTED_DATA:
+	  {
+	    Cube<Complex> vis;
+	    itsVI->visibility(vis,VisibilityIterator::Corrected);
+	    rec.define(item,vis);
+	    break;
+	  }
+	case MSS::ANTENNA1:
+	  {
+	    Vector<Int> a1;
+	    a1 = itsVI->antenna1(a1);
+	    rec.define(item,a1);
+	    break;
+	  }
+	case MSS::ANTENNA2:
+	  {
+	    Vector<Int> a;
+	    a = itsVI->antenna1(a);
+	    rec.define(item,a);
+	    break;
+	  }
+	case MSS::FLAG:
+	  {
+	    Cube<Bool> flag;
+	    flag = itsVI->flag(flag);
+	    rec.define(item,flag);
+	    break;
+	  }
+	case MSS::TIME:
+	  {
+	    Vector<Double> time;
+	    time = itsVI->time(time);
+	    rec.define(item,time);
+	    break;
+	  }
+	case MSS::ROWS:
+	  {
+	    Vector<uInt> rowIds;
+	    rowIds = itsVI->rowIds(rowIds);
+	    Vector<Int> tmp(rowIds.shape());
+	    for (Int ii=0;ii<tmp.nelements(); ii++)
+	      tmp(ii)=rowIds(ii);
+	    rec.define(item,tmp);
+	    break;
+	  }
+
 	default:
 	  {
 	    *itsLog  << "ngetdata: Unsupported item requrested (" << items[i] << ")" <<LogIO::EXCEPTION;
