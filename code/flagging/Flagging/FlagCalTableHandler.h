@@ -47,8 +47,10 @@ public:
 	virtual void copy (const VisBuffer2 & other, Bool fetchIfNeeded) {}
     virtual void copyComponents (const VisBuffer2 & other,
 				 const VisBufferComponents2 & components,
+				 Bool allowShapeChange = False,
 				 Bool fetchIfNeeded = True) {}
     virtual void copyCoordinateInfo(const VisBuffer2 * other, Bool includeDirections,
+   				    Bool allowShapeChange = False,
                                     Bool fetchIfNeeded = True) {}
 
     virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool) {}
@@ -335,7 +337,7 @@ public:
         Cube<complex<float> >& visCubeCorrectedRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
         Cube<complex<float> >& visCubeModelRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
         Cube<float >& weightSpectrumRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
-
+        IPosition getShape () const;
 
 private:
 
