@@ -835,7 +835,7 @@ void
 VisibilityIterator2::setFrequencySelection (const FrequencySelections & selections)
 {
     ThrowIf (selections.size () != impl_p->getNMs (),
-             utilj::format ("Frequency selection size, %d, does not VisibilityIterator # of MSs, %d.",
+             String::format ("Frequency selection size, %d, does not VisibilityIterator # of MSs, %d.",
                      impl_p->getNMs (), selections.size()));
 
     CheckImplementationPointerR ();

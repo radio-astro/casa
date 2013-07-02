@@ -993,12 +993,12 @@ VisBufferImpl2::construct (VisibilityIterator2 * vi, VisBufferOptions options)
     state_p->isWritable_p = False;
     state_p->isRekeyable_p = False;
 
-    if (options | VbRekeyable){
+    if (options & VbRekeyable){
 
         state_p->isWritable_p = True; // rekeyable implies writable
         state_p->isRekeyable_p = True;
     }
-    else if (options | VbWritable){
+    else if (options & VbWritable){
         state_p->isWritable_p = True;
     }
 
@@ -1009,12 +1009,13 @@ VisBufferImpl2::construct (VisibilityIterator2 * vi, VisBufferOptions options)
 void
 VisBufferImpl2::copy (const VisBuffer2 & otherRaw, Bool fetchIfNeeded)
 {
-    copyComponents (otherRaw, VisBufferComponents2::all(), fetchIfNeeded);
+    copyComponents (otherRaw, VisBufferComponents2::all(), True, fetchIfNeeded);
 }
 
 void
 VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
                                 const VisBufferComponents2 & components,
+                                Bool allowShapeChange,
                                 Bool fetchIfNeeded)
 {
     const VisBufferImpl2 * other = dynamic_cast<const VisBufferImpl2 *> (& otherRaw);
@@ -1022,6 +1023,17 @@ VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
     ThrowIf (other == 0,
              String::format ("Copy between %s and VisBufferImpl2 not implemented.",
                              typeid (otherRaw).name()));
+
+    if (! hasShape()){
+
+        // If this VB is shapeless, then assume the shape of the source VB.
+
+        setShape (otherRaw.nCorrelations(), otherRaw.nChannels(), otherRaw.nRows(), True);
+    }
+    else if (allowShapeChange && getShape() != otherRaw.getShape()){
+
+        setShape (otherRaw.nCorrelations(), otherRaw.nChannels(), otherRaw.nRows(), True);
+    }
 
     Bool wasFillable = isFillable();
     setFillable (True);
@@ -1033,7 +1045,16 @@ VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
 
         if (components.contains ((* src)->getComponent())){
 
-            (* dst)->copy (* src, fetchIfNeeded);
+            try {
+
+                (* dst)->copy (* src, fetchIfNeeded);
+            }
+            catch (AipsError & e){
+
+                String m =  String::format ("While copying %s",
+                                            VisBufferComponents2::name ((* src)->getComponent()).c_str());
+                Rethrow (e, m);
+            }
         }
     }
 
@@ -1042,7 +1063,7 @@ VisBufferImpl2::copyComponents (const VisBuffer2 & otherRaw,
 
 void
 VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
-                                    Bool fetchIfNeeded)
+                                    Bool allowShapeChange, Bool fetchIfNeeded)
 {
 
     VisBufferComponents2 components =
@@ -1050,7 +1071,7 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
                                      FieldId, SpectralWindows, casa::vi::Time,
                                      NRows, Feed1, Feed2, Unknown);
 
-    copyComponents (* vb, components, fetchIfNeeded);
+    copyComponents (* vb, components, allowShapeChange, fetchIfNeeded);
 
     setIterationInfo (vb->msId(),
                       vb->msName (),
@@ -1067,7 +1088,7 @@ VisBufferImpl2::copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
         VisBufferComponents2 components =
                 VisBufferComponents2::these (Direction1, Direction2, FeedPa1, FeedPa2, Unknown);
 
-        copyComponents (* vb, components, fetchIfNeeded);
+        copyComponents (* vb, components, allowShapeChange, fetchIfNeeded);
     }
 }
 
@@ -1375,6 +1396,33 @@ VisBufferImpl2::getVisModelData () const
     return state_p->visModelData_p;
 }
 
+IPosition
+VisBufferImpl2::getShape () const
+{
+    IPosition shape;
+
+    if (hasShape()){
+        shape = IPosition (3, cache_p->nCorrelations_p.get(), cache_p->nChannels_p.get(),
+                           cache_p->nRows_p.get());
+    }
+    else{
+        shape = IPosition ();
+    }
+
+    return shape;
+}
+
+
+Bool
+VisBufferImpl2::hasShape () const
+{
+    Bool hasShape = cache_p->nCorrelations_p.isPresent() && cache_p->nCorrelations_p.get() > 0;
+    hasShape = hasShape && cache_p->nChannels_p.isPresent() && cache_p->nChannels_p.get() > 0;
+    hasShape = hasShape && cache_p->nRows_p.isPresent() && cache_p->nRows_p.get() > 0;
+
+    return hasShape;
+}
+
 void
 VisBufferImpl2::invalidate ()
 {
@@ -1639,7 +1687,8 @@ void
 VisBufferImpl2::setShape (Int nCorrelations, Int nChannels, Int nRows,
                           Bool clearTheCache)
 {
-    ThrowIf (! isRekeyable(), "Operation setShape is illegal on nonrekeyable VisBuffer");
+    ThrowIf (hasShape() && ! isRekeyable(),
+             "Operation setShape is illegal on nonrekeyable VisBuffer");
 
     if (clearTheCache){
         cacheClear (False); // leave values alone so that array could be reused

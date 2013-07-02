@@ -311,13 +311,13 @@ Tester::doTests (int nArgs, char * args [])
 
     try {
 
-        doTest<MultipleMss> ();
-
         doTest<BasicChannelSelection> ();
 
         doTest<BasicMutation> ();
 
         doTest<FrequencyChannelSelection> ();
+
+        doTest<MultipleMss> ();
 
 #if 0
         int tests = PerformanceComparator::Both;
@@ -453,10 +453,10 @@ BasicChannelSelection::checkRowScalars (VisBuffer2 * vb)
 
         expectedAntenna2 ++;
 
-        if (expectedAntenna2 > expectedAntenna1){
+        if (expectedAntenna2 == nAntennas_p){
 
             expectedAntenna1 ++;
-            expectedAntenna2 = 0;
+            expectedAntenna2 = expectedAntenna1;
             newTimeExpected = True;
         }
 
@@ -569,6 +569,10 @@ BasicChannelSelection::nextSubchunk (VisibilityIterator2 & /*vi*/, VisBuffer2 * 
 
     Int spectralWindow = vb->spectralWindows()(0);
     Int nRows = vb->nRows();
+
+    VisBuffer2 * vb2 = VisBuffer2::factory (VbPlain, VbRekeyable);
+    vb2->copyCoordinateInfo(vb, false, true);
+    delete vb2;
 
     // The expected channels are 0..4 for spw 1, 6..10 for spw 2 and 3..8 for spw 3
 

@@ -29,7 +29,7 @@ VisBuffer2::factory (VisibilityIterator2 * vi, VisBufferType t, VisBufferOptions
         result = new VisBufferImpl2 (vi, options);
     }
     else{
-        ThrowIf (true, utilj::format ("Unknown or unsupported VisBuffer2 type: id=%d", t));
+        ThrowIf (true, String::format ("Unknown or unsupported VisBuffer2 type: id=%d", t));
     }
 
     return result;

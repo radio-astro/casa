@@ -908,6 +908,7 @@ protected:
     VisBuffer2 *                  vb_p;  // [own] VisBuffer attached to this VI
     VisibilityIterator2 *         vi_p; // [use] Containing VI
     CountedPtr<WeightScaling>     weightScaling_p;
+    Bool                          writable_p;
 };
 
 } // end namespace vi

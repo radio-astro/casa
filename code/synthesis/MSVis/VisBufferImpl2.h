@@ -124,15 +124,6 @@ class VisBufferImpl2 : public VisBuffer2 {
 
 public:
 
-    // Create empty VisBufferImpl2 you can assign to or attach.
-    VisBufferImpl2();
-    // Construct VisBufferImpl2 for a particular VisibilityIterator2
-    // The buffer will remain synchronized with the iterator.
-
-    // Copy construct, looses synchronization with iterator: only use buffer for
-    // current iteration (or reattach).
-
-    VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions options);
 
     // Destructor (detaches from VisIter)
 
@@ -150,9 +141,11 @@ public:
 
     virtual void copyComponents (const VisBuffer2 & other,
 				 const VisBufferComponents2 & components,
+                                 Bool allowShapeChange = False,
 				 Bool fetchIfNeeded = True);
 
-    virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent, Bool fetchIfNeeded = True);
+    virtual void copyCoordinateInfo (const VisBuffer2 * vb, Bool dirDependent,
+                                     Bool allowShapeChange = False, Bool fetchIfNeeded = True);
 
     virtual Vector<Int> getCorrelationNumbers () const;
     virtual String getFillErrorMessage () const;
@@ -170,7 +163,6 @@ public:
     virtual Bool isFillable () const;
     virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool clearTheCache = True);
     virtual void validateShapes () const;
-
 
     virtual void writeChangesBack ();
 
@@ -224,6 +216,7 @@ public:
     virtual Bool isNewSpectralWindow () const;
     virtual Bool isRekeyable () const;
     virtual Bool isWritable () const;
+    virtual IPosition getShape () const;
     virtual Int msId() const;
     virtual String msName (Bool stripPath = False) const;
     virtual Subchunk getSubchunk () const;
@@ -331,6 +324,15 @@ public:
 
 protected:
 
+    // Create empty VisBufferImpl2 you can assign to or attach.
+    VisBufferImpl2();
+    // Construct VisBufferImpl2 for a particular VisibilityIterator2
+    // The buffer will remain synchronized with the iterator.
+
+    // Copy construct, looses synchronization with iterator: only use buffer for
+    // current iteration (or reattach).
+
+    VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions options);
 
     // Attach to a VisIter. Detaches itself first if already attached
     // to a VisIter. Will remain synchronized with iterator.
@@ -378,6 +380,7 @@ protected:
     virtual VisBufferComponents2 dirtyComponentsGet () const;
     virtual void dirtyComponentsSet (const VisBufferComponents2 & dirtyComponents);
     virtual void dirtyComponentsSet (VisBufferComponent2 component);
+    virtual Bool hasShape () const;
     void normalizeRow (Int row, Int nCorrelations, const Cube<Bool> & flagged,
                        Cube<Complex> & visCube, Cube<Complex> & modelCube,
                         Matrix<Float> & weightMat);
