@@ -87,7 +87,7 @@ protected:
   CountedPtr<ComponentFTMachine> cft_p;
   ComponentList cl_p, clCorrupted_p;
   SkyJones  *ejgrid_p, *ejdegrid_p;
-  vi::VisBufferImpl2 vb_p;
+  vi::VisBuffer2 * vb_p;
   VisBuffer ovb_p;
 
 };

@@ -65,7 +65,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SIMapper::SIMapper( CountedPtr<SIImageStore>& imagestore, 
 		      CountedPtr<FTMachine>& ftm, CountedPtr<FTMachine>& iftm,
-		      Int mapperid) : SIMapperBase( imagestore, ftm, mapperid )
+		      Int mapperid)
+  : SIMapperBase( imagestore, ftm, mapperid ),
+    vb_p (vi::VisBuffer2::factory (vi::VbPlain, vi::VbRekeyable))
   {
     LogIO os( LogOrigin("SIMapper","Construct a mapper",WHERE) );
     ft_p=ftm;
@@ -76,8 +78,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsMapperId=mapperid;
   }
   
-  SIMapper::SIMapper(const ComponentList& cl, String& whichMachine, Int mapperid):
-    SIMapperBase(NULL, NULL, mapperid){
+  SIMapper::SIMapper(const ComponentList& cl, String& whichMachine, Int mapperid)
+  : SIMapperBase(NULL, NULL, mapperid),
+    vb_p (vi::VisBuffer2::factory (vi::VbPlain, vi::VbRekeyable))
+  {
     ft_p=NULL;
     ift_p=NULL;
     itsImages=NULL;
@@ -96,8 +100,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   
   SIMapper::~SIMapper() 
   {
-	  if(ejgrid_p) delete ejgrid_p;
-	  if(ejdegrid_p) delete ejdegrid_p;
+      delete ejgrid_p;
+      delete ejdegrid_p;
+      delete vb_p;
   }
   
   // #############################################
@@ -129,7 +134,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       // assertSkyJones(vb, -1);
       //vb_p is used to finalize things if vb has changed propoerties
       //vb_p->assign(vb, False);
-      vb_p.copyCoordinateInfo(&vb, dirDep);
+      vb_p->copyCoordinateInfo(& vb, dirDep);
 
 
     }
@@ -191,7 +196,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		{
     			// Need to apply the SkyJones from the previous row
     			// and finish off before starting with this row
-    			finalizeGrid(vb_p, dopsf);
+    			finalizeGrid(* vb_p, dopsf);
     			initializeGrid(vb);
     		}
 
@@ -254,7 +259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      		{
      			// Need to apply the SkyJones from the previous row
      			// and finish off before starting with this row
-     			finalizeGrid(vb_p, dopsf);
+     			finalizeGrid(* vb_p, dopsf);
      			initializeGrid(vb);
      		}
 
@@ -312,7 +317,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     	if(ejgrid_p != NULL){
     		// Note we apply the state of the previously saved visbuffer vb_p
     		// We might have to carry over the row for internal changes
-    		ejgrid_p->apply(*(itsImages->backwardGrid()),*(itsImages->backwardGrid()), vi::VisBuffer2Adapter(&vb_p), -1, False);
+    		ejgrid_p->apply(*(itsImages->backwardGrid()),*(itsImages->backwardGrid()),
+    		                vi::VisBuffer2Adapter(vb_p), -1, False);
     		TempImage<Float> temp((itsImages->residual())->shape(), (itsImages->residual())->coordinates());
     		ift_p->correlationToStokes(*(itsImages->backwardGrid()), temp, False);
     		LatticeExpr<Float> addToRes( *(itsImages->residual()) + temp );
