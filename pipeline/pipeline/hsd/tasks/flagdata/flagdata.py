@@ -97,6 +97,12 @@ class SDFlagDataResults(common.SingleDishResults):
     def merge_with_context(self, context):
         super(SDFlagDataResults, self).merge_with_context(context)
 
+        # replace and export datatable to merge updated data with context
+        datatable = self.outcome.pop('datatable')
+        datatable.exportdata(minimal=True)
+
+        context.observing_run.datatable_instance = datatable
+        
 #    def _outcome_name(self): pass
 
 class SDFlagData(common.SingleDishTaskTemplate):
@@ -130,7 +136,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
             # accumulate files IDs processed
             files = files | _file_index
 
-             # assume all members have same spw and pollist
+            # assume all members have same spw and pollist
             first_member = group_desc[0]
             spwid = first_member.spw
             LOG.debug('spwid=%s'%(spwid))
@@ -178,7 +184,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
             # Validation
 
 
-        outcome = {}#{'datatable': datatable}
+        outcome = {'datatable': datatable}
         results = SDFlagDataResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)
