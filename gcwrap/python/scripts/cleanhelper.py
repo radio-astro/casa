@@ -598,7 +598,7 @@ class cleanhelper:
 
                 ia.done(verbose=False)
 
-                self.setReferenceFrame(img =self.maskimages[self.imagelist[k]] ,frame='LSRK')
+                self.setReferenceFrameLSRK(img =self.maskimages[self.imagelist[k]])
 
         # take out extra []'s
         maskobject=self.flatten(maskobject)
@@ -867,7 +867,7 @@ class cleanhelper:
         self.csysorder=ia.coordsys().coordinatetype()
         ia.close()
 
-        self.setReferenceFrame( outputmask, 'LSRK' )
+        self.setReferenceFrameLSRK( outputmask )
                 
 #        mycsys=ia.coordsys()
 #        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
@@ -976,7 +976,7 @@ class cleanhelper:
         ia.close()
         
         ## CAS-5221
-        self.setReferenceFrame( outputmask, 'LSRK' )
+        self.setReferenceFrameLSRK( outputmask )
         #Done with making masks
 
     def datselweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
@@ -3132,6 +3132,9 @@ class cleanhelper:
               ia.close()
 
     def setFrameConversionForMasks(self):
+        ''' To be called at the end of clean, so that the output csys can be
+            read and set for the mask. This will have the users desired 
+            conversion layer '''
         if self.usespecframe=='':
             useframe=self.dataspecframe
         else: 
@@ -3141,25 +3144,36 @@ class cleanhelper:
         #print 'imagelist : ', self.imagelist
 
         for key in self.imagelist.keys():
-              img = self.imagelist[key]+'.mask'
-              #print 'Converting frame for ', img
-              if os.path.exists(img):
+             imgmask = self.imagelist[key]+'.mask'
+             img = self.imagelist[key]+'.image'
+             if not os.path.exists(img):
+                 img = img+'.tt0'
+#             print 'Converting frame for ', imgmask, ' to ', useframe
+             if os.path.exists(imgmask) and os.path.exists(img):
                   ia.open(img)
-                  csys=ia.coordsys()
-                  #print "Changed from ", csys.torecord()['spectral2']
-                  csys.setconversiontype(spectral=useframe)
-                  #print " to : csys.torecord spectral2=", csys.torecord()['spectral2']
-                  ia.setcoordsys(csys.torecord())
+                  imcsys = ia.coordsys()
                   ia.close()
+                  ia.open(imgmask)
+#                  csys=ia.coordsys()
+#                  csys.setreferencecode('LSRK','spectral',True)
+#                  val = csys.setconversiontype(spectral=useframe)
+#                  print 'Ret val : ', val, csys.getconversiontype('spectral')
+#                  ia.setcoordsys(csys.torecord())
+##                  print 'conv type : ', imcsys.getconversiontype('spectral')
+                  ia.setcoordsys( imcsys.torecord() )
+                  ia.close()
+             else:
+                 casalog.post('Not converting spectral reference frame for mask image','WARN')
 
-    def setReferenceFrame(self, img = '',frame='LSRK'):
+
+    def setReferenceFrameLSRK(self, img = ''):
+        ''' To be called to reset reference code and conversion layer to LSRK '''
         if os.path.exists( img ):
             ia.open( img )
             mycsys=ia.coordsys()
-#            if mycsys.torecord()['spectral2']['conversion']['system']!=frame:
-#                mycsys.setreferencecode(frame,'spectral',True)
-            mycsys.setreferencecode(frame,'spectral',True)
-            mycsys.setconversiontype(spectral=frame)
+            if mycsys.torecord()['spectral2']['conversion']['system']!='LSRK':
+                mycsys.setreferencecode('LSRK','spectral',True)
+            mycsys.setconversiontype(spectral='LSRK')
             ia.setcoordsys( mycsys.torecord() )
             ia.close()
 
