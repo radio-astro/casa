@@ -45,6 +45,18 @@ class CleanResult(basetask.Results):
     def flux(self):
         return self._flux
 
+    # this is used to generate a pipeline product, not used by weblog
+    @property
+    def imageplot(self):
+        iters = self.iterations.keys()
+        iters.sort()
+        image = self.iterations[iters[-1]]['image']
+        print 'imageplot image', image
+        print 'plotdir', self.plotdir
+        imageplot = displays.sky.plotfilename(image=image,
+          reportdir=self.plotdir)
+        return imageplot
+
     def set_flux(self, image):
         self._flux = image
 
