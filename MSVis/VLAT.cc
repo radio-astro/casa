@@ -189,7 +189,7 @@ void
 VLAT::checkFiller (VisBufferComponents::EnumType fillerId)
 {
     ThrowIf (! visibilityIterator_p -> existsColumn (fillerId),
-             utilj::format ("VLAT: Column to be prefetched, %s, does not exist!",
+             String::format ("VLAT: Column to be prefetched, %s, does not exist!",
                             PrefetchColumns::columnName (fillerId).c_str()));
 }
 

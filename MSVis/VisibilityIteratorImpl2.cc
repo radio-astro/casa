@@ -738,7 +738,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
                                                   const SortColumns & sortColumns,
                                                   Double timeInterval,
                                                   VisBufferType vbType,
-                                                  Bool isWritable)
+                                                  Bool writable)
 : ViImplementation2 (),
   channelSelector_p (0),
   channelSelectorCache_p (new ChannelSelectorCache ()),
@@ -759,7 +759,8 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
   timeInterval_p (timeInterval),
   vb_p (0),
   vi_p (0),
-  weightScaling_p (0)
+  weightScaling_p (0),
+  writable_p (writable)
 {
     // Make sure the pointer to the containing ROVI (vi_p) is NULL when calling initialize
     // otherwise the call back to the VI can result in it trying to use an uninitialized pointer
@@ -769,7 +770,7 @@ VisibilityIteratorImpl2::VisibilityIteratorImpl2 (VisibilityIterator2 * vi,
 
     vi_p = vi;
 
-    VisBufferOptions options = isWritable ? VbWritable : VbNoOptions;
+    VisBufferOptions options = isWritable () ? VbWritable : VbNoOptions;
 
     vb_p = VisBuffer2::factory (vi, vbType, options);
 }
@@ -1446,7 +1447,7 @@ VisibilityIteratorImpl2::isInASelectedSpectralWindow () const
 Bool
 VisibilityIteratorImpl2::isWritable () const
 {
-    return False;
+    return writable_p;
 }
 
 void

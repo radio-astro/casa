@@ -106,7 +106,7 @@ SplitterVp::validateImpl ()
 {
     throwIfAnyInputsUnconnected ();
     ThrowIf (getOutputs (True).empty(),
-             utilj::format ("SplitterVp %s has no outputs connected.", getFullName().c_str()));
+             String::format ("SplitterVp %s has no outputs connected.", getFullName().c_str()));
 }
 
 
@@ -562,7 +562,7 @@ void
 VpContainer::add (VisibilityProcessor * vp)
 {
     ThrowIf (contains (vp),
-             utilj::format ("Visibility processor %s already in container %s",
+             String::format ("Visibility processor %s already in container %s",
                             vp->getName().c_str(), getName().c_str()));
 
     vp->setContainer (this);
@@ -1245,7 +1245,7 @@ VpEngine::process (VisibilityProcessor & processor,
                    const String & inputPortName)
 {
     ThrowIf (! processor.getInputs ().contains (inputPortName),
-             utilj::format ("VisibilityProcessor %s does not have an input port '%s'",
+             String::format ("VisibilityProcessor %s does not have an input port '%s'",
                             processor.getName().c_str(), inputPortName.c_str()));
 
     process (processor, vi, processor.getInput (inputPortName));
