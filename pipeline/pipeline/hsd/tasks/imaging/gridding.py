@@ -134,7 +134,19 @@ class GriddingBase(object):
         # create storage
         num_spectra = len(index_list)
         num_data = len(DataIn)
-        num_spectra_per_data = num_spectra / num_data
+        #num_spectra_per_data = num_spectra / num_data
+        _counter = 0
+        _index = ants[0]
+        num_spectra_per_data = []
+        for i in xrange(num_spectra):
+            if _index == ants[i]:
+                _counter += 1
+            else:
+                num_spectra_per_data.append(_counter)
+                _counter = 1
+                _index = ants[i]
+        num_spectra_per_data.append(num_spectra - sum(num_spectra_per_data))
+        LOG.debug('num_spectra_per_data=%s'%(num_spectra_per_data))
         SpStorage = numpy.zeros((num_spectra, self.nchan), dtype=numpy.float32)
 
         LOG.info('Processing %d spectra...' % num_spectra)
@@ -165,7 +177,8 @@ class GriddingBase(object):
         for i in xrange(len(DataIn)):
             # read data to SpStorage
             with casatools.TableReader(DataIn[i]) as tb:
-                for j in xrange(num_spectra_per_data):
+                #for j in xrange(num_spectra_per_data):
+                for j in xrange(num_spectra_per_data[i]):
                     x = index_list[StorageID]
                     SpStorage[StorageID] = tb.getcell('SPECTRA', rows[StorageID])
                     IDX2StorageID[x] = StorageID
