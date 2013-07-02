@@ -81,7 +81,6 @@ class CleanWorker(basetask.StandardTaskTemplate):
         os.system('rm -rf %s.iter*' % inputs.imagename)
 
         # iteration 0, the dirty image, no cleanmask
-        threshold = None
         flux_list = []
         job = casa_tasks.clean(vis=inputs.vis,
           imagename='%s.iter%s' % (inputs.imagename, iter),
@@ -203,7 +202,8 @@ class CleanWorker(basetask.StandardTaskTemplate):
                   psf=self.result.psf,
                   model=self.result.model, restored=self.result.image,
                   residual=self.result.residual, fluxscale=self.result.flux,
-                  cleanmask=box_result.cleanmask, threshold=threshold)
+                  cleanmask=box_result.cleanmask,
+                  threshold=box_result.threshold)
 
         return self.result
 
