@@ -85,8 +85,8 @@ int main(int argc, char **argv)
     freqWidth /= Double(nchan);
     imgr->defineImage(/*imagename*/"test_image", nx, ny, cellx, celly,
 			   stokes,phasecenter, nchan,
-			   freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")));
-			   /*const Int facets=1,
+			   freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 2);
+    /*
 			   const String& ftmachine="GridFT",
 			   const Projection& projection=Projection::SIN,
 			   const Quantity& distance=Quantity(0,"m"),
@@ -107,8 +107,11 @@ int main(int argc, char **argv)
     CountedPtr<SIImageStore> images=imgr->imageStore(0);
     LatticeExprNode LEN = max( *(images->residual()) );
     cerr << "Max of residual=" << LEN.getFloat() << endl;
-    images->dividePSFByWeight(1.e-9);
-    images->divideResidualByWeight(1e-9);
+    LatticeExprNode psfmax = max( *(images->psf()) );
+    LatticeExprNode psfmin = min( *(images->psf()) );
+    cerr <<"Min max of psf "<< psfmin.getFloat() << " " << psfmax.getFloat() << endl;
+    images->dividePSFByWeight();
+    images->divideResidualByWeight();
 
 
 
