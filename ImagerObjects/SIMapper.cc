@@ -259,7 +259,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      		{
      			// Need to apply the SkyJones from the previous row
      			// and finish off before starting with this row
-     			finalizeGrid(* vb_p, dopsf);
+     			finalizeGrid(ovb_p, dopsf);
      			initializeGrid(vb);
      		}
 
