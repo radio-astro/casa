@@ -6,9 +6,14 @@ Created on 2013/06/30
 from __future__ import absolute_import
 
 import os
-#import math
+import math
 import numpy
 import time
+
+import asap as sd
+from taskinit import gentools
+
+#from SDTool import ProgressTimer
 
 import pipeline.infrastructure as infrastructure
 #import pipeline.infrastructure.sdfilenamer as filenamer
@@ -30,15 +35,12 @@ class SDFlagDataWorker(object):
         '''
         self.context = context
     
-    def execute(self, datatable, iteration, spwid, nchan, pollist, file_index, flagRule):
+    def execute(self, datatable, iteration, spwid, nchan, pollist, file_index, flagRule, userFlag=[], edge=(0,0)):
         
         start_time = time.time()
 
         # TODO: make sure baseline subtraction is already done
         # filename for before/after baseline
-        filenames_work = [self.context.observing_run[idx].work_data
-                          for idx in file_index]
-
         ThreNewRMS = flagRule['RmsPostFitFlag']['Threshold']
         ThreOldRMS = flagRule['RmsPreFitFlag']['Threshold']
         ThreNewDiff = flagRule['RunMeanPostFitFlag']['Threshold']
@@ -49,26 +51,19 @@ class SDFlagDataWorker(object):
         #ThreExpectedRMSPostFit = flagRule['RmsExpectedPostFitFlag']['Threshold']
         # WARN: ignoring the value set as flagRule['RunMeanPostFitFlag']['Nmean']
         nmean = flagRule['RunMeanPreFitFlag']['Nmean']
-
-        ifnos = numpy.array(datatable.getcol('IF'))
-        polnos = numpy.array(datatable.getcol('POL'))
-        antennas = numpy.array(datatable.getcol('ANTENNA'))
-        index_list = numpy.where(ifnos == spwid)[0]
-        LOG.debug('index_list=%s'%(list(index_list)))
-        LOG.debug('len(index_list)=%s'%(len(index_list)))
     
         # loop over file
         for idx in file_index:
             st = self.context.observing_run[idx]
             filename_in = st.name
             filename_out = st.baselined_name
+            # Baseline is not yet done
             if not os.path.exists(filename_out):
                 with casatools.TableReader(filename_in) as tb:
                     copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
                     copied.close()
-            ant_indices = numpy.where(antennas.take(index_list)==idx)[0]
-            ant_indices = index_list.take(ant_indices)
             for pol in pollist:
+                # time_table should only list on scans
                 time_table = datatable.get_timetable(idx, spwid, pol)
                 # Select time gap list: 'subscan': large gap; 'raster': small gap
                 if flagRule['Flagging']['ApplicableDuration'] == "subscan":
@@ -76,28 +71,43 @@ class SDFlagDataWorker(object):
                 else:
                     TimeTable = time_table[0]
                 LOG.info('Applied time bin for the running mean calculation: %s' % flagRule['Flagging']['ApplicableDuration'])
-
-                pol_indices = numpy.where(polnos.take(ant_indices)==pol)[0]
-                pol_indices = ant_indices.take(pol_indices)
-                LOG.debug('pol_indices=%s'%(list(pol_indices)))
                 
                 # Calculate RMS and Diff from running mean
                 t0 = time.time()
-                data = self.calcStatistics(datatable, filename_in, filename_out, pol_indices, nchan, nmean, TimeTable, edge)
+                data = self.calcStatistics(datatable, filename_in, filename_out, nchan, nmean, TimeTable, edge)
                 t1 = time.time()
                 LOG.info('RMS and diff caluculation End: Elapse time = %.1f sec' % (t1 - t0))
                 
+                t0 = time.time()
                 tmpdata = numpy.transpose(data)
-                flag = self.get_flag_from_stats(tmpdata[1:6], Threshold, iteration)
+                dt_idx = numpy.array(tmpdata[0], numpy.int)
+                stat_flag = self._get_flag_from_stats(tmpdata[1:6], Threshold, iteration)
+                self._apply_stat_flag(datatable, dt_idx, stat_flag)
+
+                # flag by Expected RMS
+                self.flagExpectedRMS(datatable, spwid, dt_idx, idx, FlagRule=flagRule, rawFileIdx=idx)
+  
+                # flag by scantable row ID defined by user
+                self.flagUser(datatable, dt_idx, UserFlag=userFlag)
+                # Check every flags to create summary flag
+                self.flagSummary(datatable, dt_idx, flagRule) 
+                t1 = time.time()
+                LOG.info('Apply flags End: Elapse time = %.1f sec' % (t1 - t0))
 
         end_time = time.time()
         LOG.info('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
 
-    def calcStatistics(self, DataTable, DataIn, DataOut, rows, NCHAN, Nmean, TimeTable, edge):
+
+    def calcStatistics(self, DataTable, DataIn, DataOut, NCHAN, Nmean, TimeTable, edge):
 
         # Calculate RMS and Diff from running mean
-        NROW = len(rows)
-        (edgeL, edgeR) = parseEdge(edge)
+        NROW = len(numpy.array(TimeTable).flatten())/2
+        # parse edge
+        if len(edge) == 2:
+            (edgeL, edgeR) = edge
+        else:
+            edgeL = edge[0]
+            edgeR = edge[0]
 
         LOG.info('Calculate RMS and Diff from running mean for Pre/Post fit...')
         LOG.info('Processing %d spectra...' % NROW)
@@ -108,12 +118,12 @@ class SDFlagDataWorker(object):
 
         LOG.info('RMS and diff caluculation Start')
 
-        tbIn,tbOut = gentools(['tb','tb'])
+        tbIn, tbOut = gentools(['tb','tb'])
         tbIn.open(DataIn)
         tbOut.open(DataOut)
 
         # Create progress timer
-        Timer = ProgressTimer(80, NROW, LogLevel)
+        #Timer = ProgressTimer(80, NROW, LogLevel)
         for chunks in TimeTable:
             # chunks[0]: row, chunks[1]: index
             chunk = chunks[0]
@@ -138,7 +148,7 @@ class SDFlagDataWorker(object):
                 row = chunks[0][index]
                 idx = chunks[1][index]
                 # Countup progress timer
-                Timer.count()
+                #Timer.count()
                 START += 1
                 mask = numpy.ones(NCHAN, numpy.int)
                 for [m0, m1] in DataTable.getcell('MASKLIST',idx): mask[m0:m1] = 0
@@ -237,14 +247,14 @@ class SDFlagDataWorker(object):
                 DataTable.putcell('NMASK',idx,Nmask)
                 LOG.info('Row=%d, pre-fit RMS= %.2f pre-fit diff RMS= %.2f' % (row, OldRMS, OldRMSdiff))
                 LOG.info('Row=%d, post-fit RMS= %.2f post-fit diff RMS= %.2f' % (row, NewRMS, NewRMSdiff))
-                data.append([row, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable.getcell('TSYS',idx), Nmask])
+                data.append([idx, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable.getcell('TSYS',idx), Nmask])
             del SpIn, SpOut
         return data
 
     def _get_flag_from_stats(self, stat, Threshold, iteration):
         Ndata = len(stat[0])
         Nflag = len(stat)
-        mask = numpy.ones(Nflag, Ndata, numpy.int)
+        mask = numpy.ones((Nflag, Ndata), numpy.int)
         for cycle in range(iteration + 1):
             threshold = []
             for x in range(Nflag):
@@ -266,4 +276,160 @@ class SDFlagDataWorker(object):
                     if ThreM < stat[x][y] <= ThreP: mask[x][y] = 1
                     else: mask[x][y] = 0
         return mask
-    
+    def _apply_stat_flag(self, DataTable, ids, stat_flag):
+        N = 0
+        for ID in ids:
+            flags = DataTable.getcell('FLAG', ID)
+            pflags = DataTable.getcell('FLAG_PERMANENT', ID)
+            flags[1] = stat_flag[0][N]
+            flags[2] = stat_flag[1][N]
+            flags[3] = stat_flag[2][N]
+            flags[4] = stat_flag[3][N]
+            pflags[1] = stat_flag[4][N]
+            DataTable.putcell('FLAG', ID, flags)
+            DataTable.putcell('FLAG_PERMANENT', ID, pflags)
+            N += 1
+
+    def flagExpectedRMS(self, DataTable, vIF, ids, vAnt, FlagRule=None, rawFileIdx=0):
+        # FLagging based on expected RMS
+        # TODO: Include in normal flags scheme
+
+        # The expected RMS according to the radiometer formula sometimes needs
+        # special scaling factors to account for meta data conventions (e.g.
+        # whether Tsys is given for DSB or SSB mode) and for backend specific
+        # setups (e.g. correlator, AOS, etc. noise scaling). These factors are
+        # not saved in the data sets' meta data. Thus we have to read them from
+        # a special file. TODO: This needs to be changed for ALMA later on.
+
+        try:
+            fd = open('%s.exp_rms_factors' % (DataTable.getkeyword['FILENAMES'][rawFileIdx]), 'r')
+            sc_fact_list = fd.readlines()
+            fd.close()
+            sc_fact_dict = {}
+            for sc_fact in sc_fact_list:
+                sc_fact_key, sc_fact_value = sc_fact.replace('\n','').split()
+                sc_fact_dict[sc_fact_key] = float(sc_fact_value)
+            tsys_fact = sc_fact_dict['tsys_fact']
+            nebw_fact = sc_fact_dict['nebw_fact']
+            integ_time_fact = sc_fact_dict['integ_time_fact']
+            LOG.info("Using scaling factors tsys_fact=%f, nebw_fact=%f and integ_time_fact=%f for flagging based on expected RMS." % (tsys_fact, nebw_fact, integ_time_fact))
+        except:
+            LOG.warn("Cannot read scaling factors for flagging based on expected RMS. Using 1.0.")
+            tsys_fact = 1.0
+            nebw_fact = 1.0
+            integ_time_fact = 1.0
+
+        # TODO: Make threshold a parameter
+        # This needs to be quite strict to catch the ripples in the bad Orion
+        # data. Maybe this is due to underestimating the total integration time.
+        # Check again later.
+        # 2008/10/31 divided the category into two
+        ThreExpectedRMSPreFit = FlagRule['RmsExpectedPreFitFlag']['Threshold']
+        ThreExpectedRMSPostFit = FlagRule['RmsExpectedPostFitFlag']['Threshold']
+
+        # The noise equivalent bandwidth is proportional to the channel width
+        # but may need a scaling factor. This factor was read above.
+        st_name = DataTable.getkeyword('FILENAMES')[vAnt]
+        s = sd.scantable(st_name, average=False)
+        s.set_selection(ifs=[vIF])
+        s.set_unit('GHz')
+        Abcissa = s.get_abcissa()[0]
+        noiseEquivBW = abs(Abcissa[1]-Abcissa[0]) * 1e9 * nebw_fact
+
+#        tEXPT = None
+#        tTSYS = None
+        tEXPT = DataTable.getcol('EXPOSURE')
+        tTSYS = DataTable.getcol('TSYS')
+
+        for ID in ids:
+            row = DataTable.getcell('ROW',ID)
+            # The HHT and APEX test data show the "on" time only in the CLASS
+            # header. To get the total time, at least a factor of 2 is needed,
+            # for OTFs and rasters with several on per off even higher, but this
+            # cannot be automatically determined due to lacking meta data. We
+            # thus use a manually supplied scaling factor.
+            integTimeSec = tEXPT[ID] * integ_time_fact
+            # The Tsys value can be saved for DSB or SSB mode. A scaling factor
+            # may be needed. This factor was read above.
+            currentTsys = tTSYS[ID] * tsys_fact
+            if ((noiseEquivBW * integTimeSec) > 0.0):
+                expectedRMS = currentTsys / math.sqrt(noiseEquivBW * integTimeSec)
+                # 2008/10/31
+                # Comparison with both pre- and post-BaselineFit RMS
+                stats = DataTable.getcell('STATISTICS',ID)
+                PostFitRMS = stats[1]
+                PreFitRMS = stats[2]
+                LOG.debug('DEBUG_DM: Row: %d Expected RMS: %f PostFit RMS: %f PreFit RMS: %f' % (row, expectedRMS, PostFitRMS, PreFitRMS))
+                stats[5] = expectedRMS * ThreExpectedRMSPostFit
+                stats[6] = expectedRMS * ThreExpectedRMSPreFit
+                DataTable.putcell('STATISTICS',ID,stats)
+                flags = DataTable.getcell('FLAG',ID)
+                if (PostFitRMS > ThreExpectedRMSPostFit * expectedRMS):
+                    flags[5] = 0
+                else:
+                    flags[5] = 1
+                if (PreFitRMS > ThreExpectedRMSPreFit * expectedRMS):
+                    flags[6] = 0
+                else:
+                    flags[6] = 1
+                DataTable.putcell('FLAG',ID,flags)
+
+
+    def flagUser(self, DataTable, ids, UserFlag=[]):
+        # flag by scantable row ID.
+        for ID in ids:
+            row = DataTable.getcell('ROW', ID)
+            # Update User Flag 2008/6/4
+            try:
+                Index = UserFlag.index(row)
+                tPFLAG = DataTable.getcell('FLAG_PERMANENT', ID)
+                tPFLAG[2] = 0
+                DataTable.putcell('FLAG_PERMANENT', ID, tPFLAG)
+            except ValueError:
+                tPFLAG = DataTable.getcell('FLAG_PERMANENT', ID)
+                tPFLAG[2] = 1
+                DataTable.putcell('FLAG_PERMANENT', ID, tPFLAG)
+
+
+    def flagSummary(self, DataTable, ids, FlagRule):
+        for ID in ids:
+            # Check every flags to create summary flag
+            tFLAG = DataTable.getcell('FLAG', ID)
+            tPFLAG = DataTable.getcell('FLAG_PERMANENT', ID)
+            Flag = 1
+            pflag = self._get_parmanent_flag_summary(tPFLAG, FlagRule)
+            sflag = self._get_stat_flag_summary(tFLAG, FlagRule)
+            Flag = pflag*sflag
+            DataTable.putcell('FLAG_SUMMARY', ID, Flag)
+
+    def _get_parmanent_flag_summary(self, pflag, FlagRule):
+        # FLAG_PERMANENT[0] --- 'WeatherFlag'
+        # FLAG_PERMANENT[1] --- 'TsysFlag'
+        # FLAG_PERMANENT[2] --- 'UserFlag'
+        types = ['WeatherFlag', 'TsysFlag', 'UserFlag']
+        mask = 1
+        for idx in range(len(types)):
+            if FlagRule[types[idx]]['isActive'] and pflag[idx] == 0:
+                mask = 0
+                break
+        return mask
+
+    def _get_stat_flag_summary(self, tflag, FlagRule):
+        # FLAG[0] --- 'LowFrRMSFlag' (OBSOLETE)
+        # FLAG[1] --- 'RmsPostFitFlag'
+        # FLAG[2] --- 'RmsPreFitFlag'
+        # FLAG[3] --- 'RunMeanPostFitFlag'
+        # FLAG[4] --- 'RunMeanPreFitFlag'
+        # FLAG[5] --- 'RmsExpectedPostFitFlag'
+        # FLAG[6] --- 'RmsExpectedPreFitFlag'
+        types = ['RmsPostFitFlag', 'RmsPreFitFlag', 'RunMeanPostFitFlag', 'RunMeanPreFitFlag',
+                 'RmsExpectedPostFitFlag', 'RmsExpectedPreFitFlag']
+        mask = 1
+        for idx in range(len(types)):
+            if FlagRule[types[idx]]['isActive'] and tflag[idx+1] == 0:
+                mask = 0
+                break
+        return mask
+        
+
+

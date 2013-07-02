@@ -159,6 +159,9 @@ class SDFlagData(common.SingleDishTaskTemplate):
             #LOG.debug("       field: %s" % field)
 
             nchan = group_desc.nchan
+            if nchan ==1:
+                LOG.info('flagData was skipped because it is a TP data')
+                continue
             worker = SDFlagDataWorker(context)
             parameters = {'datatable': datatable,
                           'iteration': iteration, 
