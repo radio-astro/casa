@@ -970,25 +970,58 @@ class pimager():
 
         self.normalizeresiduals_mt(nterms, combresiduals, combwts, dopbcorr,pblimit);
 
+        # The following will only accumlate the node-PSFs (which are
+        # normalized to peak of 1.0) and also normalized the
+        # accumulated PSF to peak 1.0.
+        #
         for tt in range(0,2*nterms-1):  
             combpsfs.append(outputrootname+'.psf.tt'+str(tt));
             if not os.path.exists( combpsfs[tt] ):
                 self.copyimage(inimage=rootnames[0]+'.psf.tt'+ str(tt), outimage=combpsfs[tt], init=True)
             self.resetimage( combpsfs[tt] )
             ## Add together all chan-chunk images.
+            nPSFs=0;
+
             for chunk in range(0,ncpu):
                 chunkpsf=rootnames[chunk]+'.psf.tt'+str(tt)
                 ia.open(combpsfs[tt])
-                ia.calc( '"'+combpsfs[tt] + '"+"' + chunkpsf + '"*"' + rootnames[chunk]+'.sumwt.tt0"' )
+                ia.calc( '"'+combpsfs[tt] + '"+"' + chunkpsf + '"');
                 ia.close()
+                nPSFs=nPSFs+1;
             ## Normalize PSFs 
             ia.open( combpsfs[tt] )
             condition = '"' + combwts[0] + '"' + " > " + str(pblimit);
-            val1 = '"' + combpsfs[tt] + '"/"' + combwts[0] + '"';
-            val2 = str(0.0);
-            cmd = "iif("+condition+","+val1+","+val2+")";
+            # val1 = '"' + combpsfs[tt] + '"/"' + combwts[0] + '"';
+            # val2 = str(0.0);
+            # cmd = "iif("+condition+","+val1+","+val2+")";
+            cmd = '"' + combpsfs[tt] + '"' + "/" + str(nPSFs);
             ia.calc(cmd)
             ia.done()
+        casalog.filter("INFO")
+
+        # The following will multiply the node-PSFs by node-sumwt,
+        # accumulate the result and divide the result by the
+        # accoumulated sumwt.
+        #
+        # for tt in range(0,2*nterms-1):  
+        #     combpsfs.append(outputrootname+'.psf.tt'+str(tt));
+        #     if not os.path.exists( combpsfs[tt] ):
+        #         self.copyimage(inimage=rootnames[0]+'.psf.tt'+ str(tt), outimage=combpsfs[tt], init=True)
+        #     self.resetimage( combpsfs[tt] )
+        #     ## Add together all chan-chunk images.
+        #     for chunk in range(0,ncpu):
+        #         chunkpsf=rootnames[chunk]+'.psf.tt'+str(tt)
+        #         ia.open(combpsfs[tt])
+        #         ia.calc( '"'+combpsfs[tt] + '"+"' + chunkpsf + '"*"' + rootnames[chunk]+'.sumwt.tt0"' )
+        #         ia.close()
+        #     ## Normalize PSFs 
+        #     ia.open( combpsfs[tt] )
+        #     condition = '"' + combwts[0] + '"' + " > " + str(pblimit);
+        #     val1 = '"' + combpsfs[tt] + '"/"' + combwts[0] + '"';
+        #     val2 = str(0.0);
+        #     cmd = "iif("+condition+","+val1+","+val2+")";
+        #     ia.calc(cmd)
+        #     ia.done()
         casalog.filter("INFO")
         #done
     
