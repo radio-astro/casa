@@ -301,7 +301,7 @@ class test_tfcrop(test_base):
     def test_tfcrop_extendflags(self):
         '''flagdata: mode tfcrop with extendflags=True'''
         # First, extend the flags manually
-        flagdata(vis=self.vis, mode='tfcrop', spw='0', extendflags=False, flagbackup=False)
+        flagdata(vis=self.vis, mode='tfcrop', extendflags=False, flagbackup=False)
         flagdata(vis=self.vis, mode='extend', flagbackup=False,
                  extendpols=True, growtime=50.0, growfreq=80.0)        
         pre = flagdata(vis=self.vis, mode='summary', spw='0')
@@ -698,15 +698,6 @@ class test_msselection(test_base):
         self.assertEqual(s['baseline']['VA09&&VA09']['flagged'], 3780)
         self.assertEqual(s['flagged'], 190386)
                         
-    def test_invalid_antenna(self):
-        '''flagdata: CAS-3712, handle good and bad antenna names in MS selection'''
-        self.setUp_data4tfcrop()
-        
-        flagdata(vis=self.vis, antenna='ea01,ea93', mode='manual', flagbackup=False)
-        res = flagdata(vis=self.vis, mode='summary', antenna='ea01', basecnt=True)
-        self.assertEqual(res['flagged'], 2199552)
-        self.assertEqual(res['total'], 2199552)
-
 class test_statistics_queries(test_base):
 
     def setUp(self):
@@ -1064,41 +1055,28 @@ class test_selections_alma(test_base):
                  "intent='*DELAY*'"] # non-existing
        
         flagdata(vis=self.vis, mode='list', inpfile=myinput, flagbackup=False)
-        res = flagdata(vis=self.vis, mode='summary')
-        self.assertEqual(res['scan']['1']['flagged'], 80184)
-        self.assertEqual(res['scan']['2']['flagged'], 96216)
+        res = flagdata(vis=self.vis, mode='summary',scan='1,2')
         self.assertEqual(res['flagged'], 80184+96216)
- 
-#    def test_null_intent_selection2(self):
-#        '''flagdata: do not handle unknown scan intent in list mode'''
-#        
-#        myinput = ["intent='FOCUS",   # non-existing intent
-#                 "intent='CALIBRATE_POINTING_ON_SOURCE'", # scan=1
-#                 "intent='CALIBRATE_AMPLI_ON_SOURCE", # scan=2
-#                 "intent='CALIBRATE_AMPLI_ON_SOURC",
-#                 "intent='*DELAY*'"] # non-existing
-#       
-#        flagdata(vis=self.vis, mode='list', inpfile=myinput, handleMSexception=False)
-#        res = flagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['scan']['1']['flagged'], 0)
-#        self.assertEqual(res['flagged'], 0)
+        self.assertEqual(res['total'], 80184+96216)
 
-#    def test_null_selections1(self):
-#        '''flagdata: handle NULL MS selections in list mode'''
-#        
-#        myinput = ["intent='FOCUS",   # non-existing intent
-#                 "scan='1'", # scan=1
-#                 "field='J1037-295,ngc3256,Titan'", # field Titan doesn't exist
-#                 "intent='CALIBRATE_AMPLI_ON_SOURCE'"] # scan=2
-#               
-##        flagdata(vis=self.vis, mode='list', inpfile=myinput, handleMSexception=True)
-#        flagdata(vis=self.vis, mode='list', inpfile=myinput)
-#        res = flagdata(vis=self.vis, mode='summary')
-#        self.assertEqual(res['scan']['1']['flagged'], 80184)
-#        self.assertEqual(res['scan']['2']['flagged'], 96216)
-#        self.assertEqual(res['field']['J1037-295']['flagged'], 256560)
-#        self.assertEqual(res['field']['ngc3256']['flagged'], 721632)
-#        self.assertEqual(res['flagged'], 80184+256560+721632)
+    def test_invalid_antenna(self):
+        '''flagdata: CAS-3712, handle good and bad antenna names in MS selection'''
+        self.setUp_data4tfcrop()
+        
+        flagdata(vis=self.vis, antenna='ea01,ea93', mode='manual', flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary', antenna='ea01', basecnt=True)
+        self.assertEqual(res['flagged'], 2199552)
+        self.assertEqual(res['total'], 2199552)
+        
+    def test_unknown_intent(self):
+        '''flagdata: CAS-3712, handle unknown value in intent expression'''
+        flagdata(vis=self.vis,intent='*POINTING*,*ATM*',flagbackup=False)
+        
+        # Only POINTING scan exists. *ATM* should not raise a NULL MS selection
+        res = flagdata(vis=self.vis, mode='summary', scan='1')
+        self.assertEqual(res['flagged'], 80184)
+        self.assertEqual(res['total'], 80184)
+        
 
 class test_selections2(test_base):
     '''Test other selections'''
