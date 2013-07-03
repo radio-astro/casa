@@ -33,7 +33,7 @@ class SDFlagDataInputs(common.SingleDishInputs):
                  flag_user=None, user_thresh=None,
                  plotflag=None,
                  infiles=None, #field=None,
-                 iflist=None, pollist=None, scanlist=None):
+                 iflist=None, pollist=None):#, scanlist=None):
         self._init_properties(vars())
         ### Default Flag rule
         #import SDFlagRule
