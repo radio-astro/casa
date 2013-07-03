@@ -4560,7 +4560,7 @@ void MSTransformDataHandler::fftshift(	Int inputSpw,
     					outputFlagsStripe,
     					(const Vector<Float>)inputDataStripe,
     					(const Vector<Bool>)inputFlagsStripe,
-    					(const uInt)1, // Axis 1 of the array is the polarization axis
+    					(const uInt)0, // In vectors axis 0 is the only dimension
     					(const Double)fftShift_p,
     					MSTransformations::False); // A good data point has its flag set to False
 	return;
