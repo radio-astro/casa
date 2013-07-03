@@ -120,7 +120,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
         #field = inputs.field        
         iflist = inputs.iflist
         pollist = inputs.pollist
-        scanlist = inputs.scanlist
+        #scanlist = inputs.scanlist
         st_names = context.observing_run.st_names
         file_index = [st_names.index(infile) for infile in infiles]
         flag_rule = inputs.FlagRuleDictionary

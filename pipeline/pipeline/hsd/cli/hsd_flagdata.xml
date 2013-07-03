@@ -254,21 +254,21 @@
             </equals>
             <equals type="string" value="interactive">
                 <default param="infiles"><value type="stringArray"></value></default>
-<!--                <default param="antennalist"><value type="int">-1</value></default>-->
-<!--                <default param="field"><value type="string"></value></default>-->
+<!--                <default param="antennalist"><value type="int">-1</value></default> -->
+<!--                <default param="field"><value type="string"></value></default> -->
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
-<!--                <default param="scanlist"><value type="intArray"></value></default>-->
+<!--                <default param="scanlist"><value type="intArray"></value></default> -->
                 <default param="dryrun"><value type="bool">False</value></default>
                 <default param="acceptresults"><value type="bool">True</value></default>
             </equals>
             <equals type="string" value="getinputs">
                 <default param="infiles"><value type="stringArray"></value></default>
-<!--                <default param="antennalist"><value type="int">-1</value></default>-->
-<!--                <default param="field"><value type="string"></value></default>-->
+<!--                <default param="antennalist"><value type="int">-1</value></default> -->
+<!--                <default param="field"><value type="string"></value></default> -->
                 <default param="iflist"><value type="intArray"></value></default>
                 <default param="pollist"><value type="intArray"></value></default>
-<!--                <default param="scanlist"><value type="intArray"></value></default>-->
+<!--                <default param="scanlist"><value type="intArray"></value></default> -->
             </equals>
         </when>
     </constraints>
