@@ -5,15 +5,19 @@ import shutil
 from setjy_helper import * 
 from taskinit import *
 from parallel.parallel_task_helper import ParallelTaskHelper
+import pdb
 
 def setjy(vis=None, field=None, spw=None,
-          selectdata=None, timerange=None, scan=None, observation=None,
-          modimage=None, listmodels=None,
-          scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
-          standard=None, useephemdir=None, interpolation=None, usescratch=None):
+          selectdata=None, timerange=None, scan=None, observation=None, intent=None,
+          scalebychan=None, standard=None, model=None, modimage=None, 
+          listmodels=None, fluxdensity=None, spix=None, reffreq=None, 
+        #  commented out until polarization fraction/angle handling in place
+        #  polindex=None, polangle=None, rm=None,
+          useephemdir=None, interpolation=None, usescratch=None):
   """Fills the model column for flux density calibrators."""
 
   casalog.origin('setjy')
+  casalog.post("standard="+standard)
   # Take care of the trivial parallelization
   if ( not listmodels and ParallelTaskHelper.isParallelMS(vis)):
     # jagonzal: We actually operate in parallel when usescratch=True because only
@@ -57,22 +61,29 @@ def setjy(vis=None, field=None, spw=None,
       #        mytb.putkeyword(key,keywords_MMS[key])
       #    mytb.close()
       retval = setjy_core(vis, field, spw, selectdata, timerange, 
-                        scan, observation, modimage, listmodels, scalebychan, 
-                        fluxdensity, spix, reffreq, standard, useephemdir, usescratch, interpolation)   
+                        scan, observation, intent, scalebychan, standard, 
+                        modimage, listmodels, fluxdensity, spix, reffreq,
+                        # polindex, polangle, rm, 
+                        useephemdir, interpolation, usescratch)   
           
   else:
     retval = setjy_core(vis, field, spw, selectdata, timerange, 
-                        scan, observation, modimage, listmodels, scalebychan, 
-                        fluxdensity, spix, reffreq, standard, useephemdir, usescratch, interpolation)
+                        scan, observation, intent, scalebychan, standard, model, 
+                        modimage, listmodels, fluxdensity, spix, reffreq, 
+                        # polindex, polangle, rm, 
+                         useephemdir, interpolation, usescratch)
 
+  #pdb.set_trace()
   return retval
 
 
 def setjy_core(vis=None, field=None, spw=None,
-               selectdata=None, timerange=None, scan=None, observation=None,
-               modimage=None, listmodels=None,
-               scalebychan=None, fluxdensity=None, spix=None, reffreq=None,
-               standard=None, useephemdir=None, usescratch=None, interpolation=None):
+               selectdata=None, timerange=None, scan=None, observation=None, intent=None,
+               scalebychan=None, standard=None, model=None, modimage=None, listmodels=None,
+               fluxdensity=None, spix=None, reffreq=None,
+                # polarization handling...
+                # polindex=None, polangle=None, rm=None,
+               useephemdir=None, interpolation=None, usescratch=None):
   """Fills the model column for flux density calibrators."""
 
   retval = True
@@ -139,6 +150,11 @@ def setjy_core(vis=None, field=None, spw=None,
       else:
         raise Exception, 'Visibility data set not found - please verify the name'
 
+      # 
+      if model:
+         modimage=model
+      elif not model and modimage:
+        casalog.post("The modimage parameter is deprecated please use model instead", "WARNING")
       # If modimage is not an absolute path, see if we can find exactly 1 match in the likely places.
       if modimage and modimage[0] != '/':
         cwd = os.path.abspath('.')
@@ -181,6 +197,8 @@ def setjy_core(vis=None, field=None, spw=None,
       # To maintain the behavior of SetJy such that if a flux density is specified
       # we use it rather than the model, we need to check the state of the 
       # input fluxdensity  JSK 10/25/2012
+      # TT comment 07/01/2013: some what redundant as fluxdensity is moved to 
+      # a subparameter but leave fluxdensity=-1 for backward compatibility
       userFluxDensity = fluxdensity is not None
       if userFluxDensity and isinstance(fluxdensity, list):
         userFluxDensity = fluxdensity[0] > 0.0
@@ -201,6 +219,9 @@ def setjy_core(vis=None, field=None, spw=None,
                          useephemdir=useephemdir,usescratch=usescratch)
         clnamelist=setjyutil.getclnamelist()
       else:
+        if type(spix)==[]:
+            spix=0.0
+        # need to modify imager to accept dobule array for spix
         myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
                  standard=standard, scalebychan=scalebychan, time=timerange,
@@ -218,7 +239,6 @@ def setjy_core(vis=None, field=None, spw=None,
         for cln in clnamelist:
             if os.path.isdir(cln):
                 shutil.rmtree(cln) 
-
 
   return retval
 
@@ -278,7 +298,7 @@ def findCalModels(target='CalModels',
   return retset             
 
 
-def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
+def nselrows(vis, field='', spw='', obs='', timerange='', scan='', intent=''):
 
   retval = 0
   myms = mstool()
@@ -294,7 +314,7 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
     msselargs['time'] = timerange
   if scan:
     msselargs['scan'] = scan
-      
+
   # ms.msseltoindex only goes by the subtables - it does NOT check
   # whether the main table has any rows matching the selection.
   try:
@@ -316,6 +336,10 @@ def nselrows(vis, field='', spw='', obs='', timerange='', scan=''):
   if scan:
     query.append("SCAN_NUMBER in " + str(selindices['scan'].tolist()))
 
+  # for intent (OBS_MODE in STATE subtable), need a subquery part...
+  if intent:
+    query.append("STATE_ID in [select from ::STATE where OBS_MODE==pattern(\""+\
+                  intent+"\") giving [ROWID()]]")
   mytb = tbtool()
   mytb.open(vis)
 

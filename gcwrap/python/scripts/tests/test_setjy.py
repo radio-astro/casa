@@ -160,7 +160,7 @@ class test_SingleObservation(SetjyUnitTestBase):
                 record['med4'] = tblocal.getcell('MODEL_DATA', 4)
                 record['long4'] = tblocal.getcell('MODEL_DATA', 3)
                 tblocal.close()
-                record['history'] = self.get_last_history_line(self.inpms, hint='Uranus')
+                record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint='Uranus')
                 self.result = record
         except AssertionError, e:
             print "\nError accesing MODEL_DATA"
@@ -218,7 +218,7 @@ class test_SingleObservation(SetjyUnitTestBase):
                 record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
                 record['long4'] = tblocal.getcell('MODEL_DATA', 3)
                 tblocal.close()
-                record['history'] = self.get_last_history_line(self.inpms, hint="V=0] Jy")
+                record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint="V=0] Jy")
                 self.result = record
         except AssertionError, e:
             print "\nError accesing MODEL_DATA"
@@ -511,7 +511,8 @@ class test_ModImage(SetjyUnitTestBase):
                                            async=False)
             else:
                 record['setjyran'] = setjy(vis=self.inpms, field=self.field,
-                                           modimage=self.modelim,
+                                           #modimage=self.modelim,
+                                           model=self.modelim,
                                            scalebychan=False,
                                            fluxdensity=fluxdens,
                                            spix=spix, reffreq=reffreq,
