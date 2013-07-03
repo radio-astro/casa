@@ -43,9 +43,13 @@ class Antenna(object):
     def __init__(self, antenna_id, name, m_position, rad_position, diameter,
                 station):
         self.id = antenna_id
-        self.name = name
+
+        # work around NumPy bug with empty strings
+        # http://projects.scipy.org/numpy/ticket/1239
+        self.name = str(name)
+        self.station = str(station)
+
         self.diameter = diameter
-        self.station = station
         self.position = m_position
 
         # The longitude, latitude and height of a CASA position are given in
@@ -70,4 +74,4 @@ class Antenna(object):
         A human-readable identifier for this Antenna.
         '''
         return self.name if self.name else '#{0}'.format(self.id)
-    
+

@@ -251,8 +251,12 @@ class MeasurementSetReader(object):
         MeasurementSetReader.add_band_to_spws(ms)
 
         (observer, project_id, schedblock_id, execblock_id) = ObservationTable.get_project_info(ms)
-        ms.observer = observer
-        ms.project_id = project_id
+
+        # work around NumPy bug with empty strings
+        # http://projects.scipy.org/numpy/ticket/1239
+        ms.observer = str(observer)
+        ms.project_id = str(project_id)
+
         ms.schedblock_id = schedblock_id
         ms.execblock_id = execblock_id
         
