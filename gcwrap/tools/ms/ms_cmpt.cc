@@ -3662,7 +3662,9 @@ ms::niterinit(const std::vector<std::string>& columns, const double interval,
    try
      {
        *itsVI = VisibilityIterator(*itsMS, sort,interval);
-       *itsVB = VisBuffer(*itsVI);
+       if (interval <= 0)
+	 itsVI->setRowBlocking(itsMS->nrow());
+       //       *itsVB = VisBuffer(*itsVI);
        rstat=True;
      }
    catch (AipsError x)
