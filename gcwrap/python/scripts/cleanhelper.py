@@ -3163,7 +3163,7 @@ class cleanhelper:
                   ia.setcoordsys( imcsys.torecord() )
                   ia.close()
              else:
-                 casalog.post('Not converting spectral reference frame for mask image','WARN')
+                 self._casalog.post('Not converting spectral reference frame for mask image','DEBUG1')
 
 
     def setReferenceFrameLSRK(self, img = ''):
