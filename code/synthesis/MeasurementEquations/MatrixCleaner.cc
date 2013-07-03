@@ -218,6 +218,13 @@ void MatrixCleaner::makeDirtyScales(){
 
   if( (psfShape_p) != (itsDirty->shape()))
     throw(AipsError("PSF and Dirty array are not of the same shape"));
+  //No need of convolving for hogbom
+  if(itsCleanType==CleanEnums::HOGBOM){
+    itsDirtyConvScales.resize(1, True);
+    itsDirtyConvScales[0]=Matrix<Float>(itsDirty->shape());
+    itsDirtyConvScales[0]=*itsDirty;
+    return;
+  }
   Matrix<Complex> dirtyFT;
   FFTServer<Float,Complex> fft(itsDirty->shape());
   fft.fft0(dirtyFT, *itsDirty);
@@ -265,8 +272,8 @@ void MatrixCleaner::setMask(Matrix<Float> & mask, const Float& maskThreshold)
   // This is not needed after the first steps
   itsMask = new Matrix<Float>(mask.shape());
   itsMask->assign(mask);
-  if(max(*itsMask) < itsMaskThreshold)
-    noClean_p=True;
+  noClean_p=(max(*itsMask) < itsMaskThreshold) ? True : False;
+
 
 
   if (itsScalesValid) {
@@ -427,6 +434,8 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
       yend=min(yend,ybeg+ny/2-1);
     }
 
+    //blcDirty(0)=xbeg> 0 ? xbeg-1 : 0;
+    //blcDirty(1)=ybeg > 0 ? ybeg-1 : 0;
     blcDirty(0)=xbeg;
     blcDirty(1)=ybeg;
     trcDirty(0)=xend;
@@ -687,21 +696,24 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
 
     Float maxVal=0.0;
     IPosition psf2DShape(lattice.shape());
-    Int blc0 = psf2DShape(0)/2 - supportSize,
-      blc1 = psf2DShape(1)/2 - supportSize,
-      trc0 = psf2DShape(0)/2 + supportSize,
-      trc1 = psf2DShape(1)/2 + supportSize;
+    Int blc0 = (psf2DShape(0) > supportSize) ? psf2DShape(0)/2 - supportSize/2 : 0;
+    Int   blc1 = (psf2DShape(1) > supportSize) ? psf2DShape(1)/2 - supportSize/2 : 0;
+    Int trc0 = (psf2DShape(0) > supportSize) ? psf2DShape(0)/2 + supportSize/2 : psf2DShape(0)-1;
+
+    Int trc1 = (psf2DShape(1) > supportSize) ? (psf2DShape(1)/2 + supportSize/2) : (psf2DShape(1)-1) ;
 
 
-    //    os << "####### " << blc0 << " " << blc1 << " " << trc0 << " " << trc1 << endl;
-    for (Int i=blc0; i < trc0; i++)
-      for (Int j=blc1 ; j < trc1; j++)
+    //       cerr  << "####### " << blc0 << " " << blc1 << " " << trc0 << " " << trc1 << endl;
+    // cerr << "Max of lattice " << max(lattice) << " min " << min(lattice) << endl; 
+    for (Int j=blc1; j < trc1; ++j)
+      for (Int i=blc0 ; i < trc0; ++i)
 	if ((maxAbs = abs(lattice(i,j))) > maxVal)
 	  {
 	    maxVal = maxAbs;
 	    posMaxAbs(0)=i; posMaxAbs(1)=j;
 	  }
-    //    os << "######## " << posMaxAbs << " " << maxVal << endl;
+    maxAbs=maxVal;
+    //cerr << "######## " << posMaxAbs << " " << maxVal << endl;
     return True;
   }
 
