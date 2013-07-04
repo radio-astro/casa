@@ -338,7 +338,8 @@ private:
 
   // Embed a mask into an image. A convenience function.
   Bool createMask(LatticeExpr<Bool> &lemask, ImageInterface<Float> &outimage);
-
+  //Put a unit peak gaussian at centre
+  Bool putGaussian(ImageInterface<Float>& im, const GaussianBeam& beam);
   PagedImage<Float>* dirty_p;
   PagedImage<Float>* psf_p;
 

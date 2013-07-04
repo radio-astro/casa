@@ -55,6 +55,8 @@
 #include <casa/Quanta/UnitMap.h>
 #include <casa/Quanta/UnitVal.h>
 #include <casa/Quanta/MVAngle.h>
+#include <components/ComponentModels/ComponentList.h>
+#include <components/ComponentModels/GaussianShape.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 #include <casa/Quanta/MVEpoch.h>
@@ -74,7 +76,7 @@
 #include <lattices/Lattices/LCBox.h>
 #include <lattices/Lattices/LCSlicer.h>
 
-
+#include <images/Images/ComponentImager.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageSummary.h>
@@ -538,19 +540,19 @@ Bool Deconvolver::restore(const String& model, const String& image,
 				 image);
 
     TempImage<Float> dirtyModelImage(modelImage_p->shape(),modelImage_p->coordinates());
-    imageImage.copyData(*modelImage_p);
+    //imageImage.copyData(*modelImage_p);
     if(! mbeam.isNull()) {
       os << "  Using specified beam: " << mbeam.getMajor("arcsec") << " by "
 	 << mbeam.getMinor("arcsec") << " (arcsec) at pa "
 	 << mbeam.getPA(Unit("deg")) << " (deg) " << endl;
-      StokesImageUtil::Convolve(imageImage, mbeam, False);
+      //StokesImageUtil::Convolve(imageImage, mbeam, False);
     }
     else {
       if(! beam_p.isNull()) {
 	os << "  Using fitted beam: " << beam_p.getMajor("arcsec") << " by "
 	   << beam_p.getMinor("arcsec") << " (arcsec) at pa "
 	   << beam_p.getPA(Unit("deg")) << " (deg) " << endl;
-	StokesImageUtil::Convolve(imageImage, beam_p, False);
+	//StokesImageUtil::Convolve(imageImage, beam_p, False);
 	mbeam = beam_p;
       }
       else {
@@ -558,7 +560,25 @@ Bool Deconvolver::restore(const String& model, const String& image,
 	return False;
       }
     }
-    
+    //Model * restoring beam 
+    {
+      IPosition convshp=modelImage_p->shape();
+      convshp[0]=nx_p; convshp[1]=ny_p;
+      for (uInt k=2; k< convshp.nelements(); ++k) convshp[k]=1;
+      TempImage<Float> gaussim(convshp, modelImage_p->coordinates());
+      gaussim.set(0.0);
+      ImageInfo ii = gaussim.imageInfo();
+      ii.setRestoringBeam(mbeam);
+      gaussim.setImageInfo(ii);
+      gaussim.setUnits(Unit("Jy/beam"));    
+      putGaussian(gaussim, mbeam);
+      //////////////////////
+      //PagedImage<Float>xx(gaussim.shape(), gaussim.coordinates(), "tempGauss");
+      //xx.copyData(gaussim);
+      //////////////////
+      LatticeConvolver<Float> lc(gaussim);
+      lc.linear(imageImage, *modelImage_p);
+    }
     // PSF * Model    
     convolver_p->circular(dirtyModelImage, *modelImage_p);
 
@@ -1927,6 +1947,12 @@ Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, 
 			     dirty_p->coordinates(),
 			     gaussianName);
   gaussian.set(0.0);
+  gaussian.setUnits(Unit("Jy/pixel"));
+  putGaussian(gaussian, mbeam);
+  if(!normalizeVolume){
+    Float maxpsf=max(gaussian).getFloat();
+    gaussian.copyData((LatticeExpr<Float>)(gaussian/maxpsf));
+  }
   uInt naxis=gaussian.shape().nelements();
   // StokesImageUnil::Convolve requires an image with four axes
   /* 
@@ -1942,7 +1968,7 @@ Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, 
     }
   }
   */
-  if(naxis<4){
+  /*  if(naxis<4){
     os << LogIO::SEVERE << "Input dirty image: naxis=" <<naxis
        << ". Four axes are required."<< LogIO::POST;
     return False;
@@ -1962,10 +1988,28 @@ Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, 
 
   }
   StokesImageUtil::Convolve(gaussian, mbeam, normalizeVolume);
+  */
   return True;
 };
 
+Bool Deconvolver::putGaussian(ImageInterface<Float>& im, const GaussianBeam& beam){
+  CoordinateSystem cs=im.coordinates();
+  Vector<Int> dirAxes=CoordinateUtil::findDirectionAxes(cs);
+  DirectionCoordinate dirCoord=cs.directionCoordinate(cs.findCoordinate(Coordinate::DIRECTION));
+  Vector<Double> cenpix(2, Double(nx_p)/2.0);
+  cenpix(1)=Double(ny_p)/2.0;
+  MDirection centre;
+  dirCoord.toWorld(centre, cenpix);
+  GaussianShape gshp(centre,  beam.getMajor(), beam.getMinor(), beam.getPA());
+  SkyComponent gcomp(Flux<Double>(1.0, 0,0,0), gshp, ConstantSpectrum());
+  ComponentList cl;
+  cl.add(gcomp);
+  ComponentImager::project(im, cl);
+  return True;
+  
 
+
+}
 
 
 Bool Deconvolver::detached() const
