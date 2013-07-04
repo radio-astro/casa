@@ -301,7 +301,7 @@ class Wvrgcal(basetask.StandardTaskTemplate):
         result.final[:] = on_disk
 
         # calculate the qa2 results if required
-        if inputs.qa2_intent.replace(' ','') != '':
+        if inputs.qa2_intent.strip() != '':
 
             if not len(result.final):
                 LOG.warning(
