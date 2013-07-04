@@ -76,7 +76,7 @@
 #include <lattices/Lattices/LCBox.h>
 #include <lattices/Lattices/LCSlicer.h>
 
-#include <images/Images/ComponentImager.h>
+#include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageSummary.h>
@@ -1953,7 +1953,7 @@ Bool Deconvolver::makegaussian(const String& gaussianName, GaussianBeam& mbeam, 
     Float maxpsf=max(gaussian).getFloat();
     gaussian.copyData((LatticeExpr<Float>)(gaussian/maxpsf));
   }
-  uInt naxis=gaussian.shape().nelements();
+  //uInt naxis=gaussian.shape().nelements();
   // StokesImageUnil::Convolve requires an image with four axes
   /* 
   if(naxis==2){
