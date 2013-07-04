@@ -3805,7 +3805,8 @@ ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const in
 	case MSS::ROWS:
 	  {
 	    Vector<uInt> rowIds;
-	    rowIds = itsVI->rowIds(rowIds);
+	    //    rowIds = itsVI->rowIds(rowIds);
+	    rowIds = itsMS->rowNumbers();
 	    Vector<Int> tmp(rowIds.shape());
 	    for (Int ii=0;ii<tmp.nelements(); ii++)
 	      tmp(ii)=rowIds(ii);
