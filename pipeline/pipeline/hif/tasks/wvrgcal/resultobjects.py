@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import collections
 import copy
 import os
+import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
@@ -27,6 +28,10 @@ class WvrgcalResult(basetask.Results):
 
         # section for qa2 results
         self.qa2 = commonresultobjects.Qa2Result()
+
+        # results used to calculate the qa2 results
+        self.bandpass_result = None
+        self.nowvr_result = None
 
         # views and flag operations
         self.flagging = []
@@ -71,7 +76,8 @@ class WvrgcalflagResult(WvrgcalResult):
 
         if self.wvrflag:
             ms = context.observing_run.get_ms(name=self.vis)
-            if hasattr(ms, 'reference_antenna'):
+            if hasattr(ms, 'reference_antenna') and \
+              type(ms.reference_antenna) == types.StringType:
                 refant = ms.reference_antenna.split(',')
                 bad_antennas = set(self.wvrflag).intersection(refant)
                 if bad_antennas:
