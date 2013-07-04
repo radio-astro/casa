@@ -3658,13 +3658,16 @@ ms::niterinit(const std::vector<std::string>& columns, const double interval,
              const int maxrows, const bool adddefaultsortcolumns)
 {
    Bool rstat(False);
-   Block<Int> sort(0);
+   Block<Int> sortcolumns(0);
    try
      {
-       *itsVI = VisibilityIterator(*itsMS, sort,interval);
-       if (interval <= 0)
-	 itsVI->setRowBlocking(itsMS->nrow());
+       if (itsVI) delete itsVI; 
+       itsVI = new VisibilityIterator(*itsMS, sortcolumns,False,interval);
        //       *itsVB = VisBuffer(*itsVI);
+       if (interval==0.0) 
+	 {
+	   itsVI->setRowBlocking(itsMS->nrow());
+	 }
        rstat=True;
      }
    catch (AipsError x)
