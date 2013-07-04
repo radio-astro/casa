@@ -1066,7 +1066,7 @@ class MSPlotConvertArrayPositions : public TPConvertBase
        Double obsLatitude       = angles[1];
        Double obsCosLongitude   = cos( obsLongitude );
        Double obsSinLongitude   = sin( obsLongitude );
-       //Double obsCosLatitude    = cos( obsLatitude );
+       Double obsCosLatitude    = cos( obsLatitude );
        Double obsSinLatitude    = sin( obsLatitude );
 
        //       cout << endl << "observatory: " << observatory << endl << 
@@ -1097,7 +1097,7 @@ class MSPlotConvertArrayPositions : public TPConvertBase
           + ( obsCosLongitude * yTrans[i] );
       itsYValues[i] = ( -obsSinLatitude * obsCosLongitude * xTrans[i] )
           - ( obsSinLatitude * obsSinLongitude * yTrans[i] )
-          + zTrans[i];
+          + obsCosLatitude * zTrans[i];
        }
 
        if ( numPlotted % CASA_MPC_DBG_FREQ == 0 ) 

@@ -1889,7 +1889,7 @@ class simutil:
 
         f=1./rf
         esq=2*f-f**2    
-        nu=er/(1.-esq*(pl.sin(lat))**2)
+        nu=er/pl.sqrt(1.-esq*(pl.sin(lat))**2)
         
         x=(nu+elevation)*pl.cos(lat)*pl.cos(long) +dx
         y=(nu+elevation)*pl.cos(lat)*pl.sin(long) +dy
@@ -1983,15 +1983,22 @@ class simutil:
 
     def itrf2loc(self, x,y,z, cx,cy,cz):
         """
-        itrf xyz and COFA cx,cy,cz -> latlon WGS84
+        itrf xyz and COFA cx,cy,cz -> lat lon el WGS84
         """
         clon,clat = self.xyz2long(cx,cy,cz,'WGS84')
         ccoslon=pl.cos(clon)
         csinlon=pl.sin(clon)        
         csinlat=pl.sin(clat)
+        ccoslat=pl.cos(clat)
+        import types
+        if isinstance(x,types.FloatType): # weak
+            x=[x]
+            y=[y]
+            z=[z]
         n=x.__len__()
         lat=pl.zeros(n)
         lon=pl.zeros(n)
+        el=pl.zeros(n)
 
         # do like MsPlotConvert
         for i in range(n):
@@ -2001,10 +2008,23 @@ class simutil:
             ztrans=z[i]-cz
             # rotate
             lat[i] = (-csinlon*xtrans) + (ccoslon*ytrans)
-            lon[i] = (-csinlat*ccoslon*xtrans) - (csinlat*csinlon*ytrans) + ztrans
+            lon[i] = (-csinlat*ccoslon*xtrans) - (csinlat*csinlon*ytrans) + ccoslat*ztrans
+            el[i] = (-ccoslat*ccoslon*xtrans) - (ccoslat*csinlon*ytrans) + csinlat*ztrans
                 
-        return lat,lon
+        return lat,lon,el
 
+
+
+
+
+    def xyz2loc(self, x,y,z, obsname):
+        """
+        itrf xyz and array name -> lat lon el WGS84
+        """
+        cofa=me.measure(me.observatory(obsname),'WGS84')
+        cx,cy,cz=self.long2xyz(cofa['m0']['value'],cofa['m1']['value'],cofa['m2']['value'],cofa['refer'])
+
+        return self.itrf2loc(x,y,z,cx,cy,cz)
 
 
 
