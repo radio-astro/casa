@@ -362,9 +362,9 @@ class WvrgcalflagWorker(basetask.StandardTaskTemplate):
                 if add:
                     self.result.addview(description, result.qa2.last(description))
  
-        # copy over other info from wvrgcal result
+        # populate other parts of result
         self.result.final = result.final 
-        self.result.vis = result.qa2.vis
+        self.result.vis = inputs.vis
         self.result.qa2 = result.qa2
         self.result.wvrflag = result.wvrflag
 
