@@ -13,9 +13,41 @@ from parallel.parallel_task_helper import ParallelTaskHelper
 # Define the root for the data files
 datapath = os.environ.get('CASAPATH').split()[0] + "/data/regression/unittest/mstransform/"
 
+def check_eq(val, expval, tol=None):
+    """Checks that val matches expval within tol."""
+#    print val
+    if type(val) == dict:
+        for k in val:
+            check_eq(val[k], expval[k], tol)
+    else:
+        try:
+            if tol and hasattr(val, '__rsub__'):
+                are_eq = abs(val - expval) < tol
+            else:
+                are_eq = val == expval
+            if hasattr(are_eq, 'all'):
+                are_eq = are_eq.all()
+            if not are_eq:
+                raise ValueError, '!='
+        except ValueError:
+            errmsg = "%r != %r" % (val, expval)
+            if (len(errmsg) > 66): # 66 = 78 - len('ValueError: ')
+                errmsg = "\n%r\n!=\n%r" % (val, expval)
+            raise ValueError, errmsg
+        except Exception, e:
+            print "Error comparing", val, "to", expval
+            raise e
+
 # Base class which defines setUp functions
 # for importing different data sets
 class test_base(unittest.TestCase):
+    
+    def copyfile(self,file):
+
+        if os.path.exists(file):
+           os.system('rm -rf '+ file)
+            
+        os.system('cp -RL '+datapath + file +' '+ file)
     
     def setUp_ngc5921(self):
         # data set with spw=0, 63 channels in LSRK
@@ -62,7 +94,7 @@ class test_base(unittest.TestCase):
            self.cleanup()
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
-        default(mstransform)        
+        default(mstransform)                    
         
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
@@ -890,6 +922,130 @@ class test_state(test_base):
         
         ''' this should not crash '''
         listobs(outputms)
+        
+class test_WeightSpectrum(test_base):
+    '''Test usage of WEIGHT_SPECTRUM to channel average and combine SPWs with different exposure'''
+    
+    def setUp(self):
+        default(mstransform)
+        
+    def tearDown(self):
+        os.system('rm -rf patata')
+        #os.system('rm -rf '+ self.vis)
+        #os.system('rm -rf '+ self.outvis)
+        
+    def test_combineSPWDiffExpWithWeightSpectrum(self):
+        '''mstransform: Combine SPWs with different exposure using WEIGHT_SPECTRUM'''
+        
+        self.vis = 'combine-1-timestamp-2-SPW-with-WEIGHT_SPECTRUM-Different-Exposure.ms'
+        self.outvis = 'combineSPWDiffExpWithWeightSpectrum.ms'
+        self.copyfile(self.vis)
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
+                    mode="frequency",nchan=50,start="2.20804e+10Hz",width="1.950702e+05Hz",nspw=1,
+                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
+                    outframe="CMB",veltype="radio")
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        data = mytb.getcol('DATA')  
+        exposure = mytb.getcol('EXPOSURE')    
+        nchan = data.size   
+        check_eq(nchan, 50)
+        check_eq(data[0][0][0].real, 0.0950, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, 0.0610, 0.0001)
+        check_eq(exposure[0], 7.5, 0.0001)
+        mytb.close() 
+        
+        
+    def test_combineSPWDiffExpWithWeightSpectrumFilledFromWeight(self):
+        '''mstransform: Combine SPWs with different exposure using WEIGHT_SPECTRUM filled from WEIGHT'''
+        
+        self.vis = 'combine-1-timestamp-2-SPW-no-WEIGHT_SPECTRUM-Different-Exposure.ms'
+        self.outvis = 'combineSPWDiffExpWithWeightSpectrumFilledFromWeight.ms'
+        self.copyfile(self.vis)                   
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
+                    mode="frequency",nchan=50,start="2.20804e+10Hz",width="1.950702e+05Hz",nspw=1,
+                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
+                    outframe="CMB",veltype="radio")        
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        data = mytb.getcol('DATA')   
+        exposure = mytb.getcol('EXPOSURE')       
+        nchan = data.size   
+        check_eq(nchan, 50)
+        check_eq(data[0][0][0].real, 0.0950, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, 0.0610, 0.0001)
+        check_eq(exposure[0], 7.5, 0.0001)
+        mytb.close()        
+        
+        
+    def test_fillWeightSpectrumFromWeight(self):
+        '''mstransform: Fill output WEIGHT_SPECTRUM using WEIGHTS'''
+        
+        self.vis = 'combine-1-timestamp-2-SPW-no-WEIGHT_SPECTRUM-Same-Exposure.ms'
+        self.outvis = 'fillWeightSpectrumFromWeight.ms'
+        self.copyfile(self.vis)
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
+                    mode="frequency",nchan=50,start="2.20804e+10Hz",width="1.950702e+05Hz",nspw=1,
+                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
+                    outframe="CMB",veltype="radio")  
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        weightSpectrum = mytb.getcol('WEIGHT_SPECTRUM')      
+        nchan = weightSpectrum.size  
+        check_eq(nchan, 50)   
+        check_eq(weightSpectrum[0][0][0], 58.9232, 0.0001)
+        check_eq(weightSpectrum[0][nchan-1][0], 31.4836, 0.0001)
+        mytb.close()
+        
+        
+    def test_combineSPWAndChanAvgWithWeightSpectrum(self):
+        '''mstransform: Combine SPWs and channel average using WEIGHT_SPECTRUM'''
+        
+        self.vis = 'combine-1-timestamp-2-SPW-with-WEIGHT_SPECTRUM-Same-Exposure.ms'
+        self.outvis = 'test_combineSPWAndChanAvgWithWeightSpectrum.ms'
+        self.copyfile(self.vis)   
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
+                    mode="frequency",nchan=12,start="2.20804e+10Hz",width="7.802808e+05Hz",nspw=1,
+                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
+                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4,useweights='spectrum')
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        data = mytb.getcol('DATA')      
+        nchan = data.size   
+        check_eq(nchan, 12)
+        check_eq(data[0][0][0].real, 0.0628, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
+        mytb.close()  
+        
+        
+    def test_combineSPWDiffExpAndChanAvgWithWeightSpectrum(self):
+        '''mstransform: Combine SPWs with different exposure and channel average using WEIGHT_SPECTRUM'''
+        
+        self.vis = 'combine-1-timestamp-2-SPW-with-WEIGHT_SPECTRUM-Different-Exposure.ms'
+        self.outvis = 'test_combineSPWDiffExpAndChanAvgWithWeightSpectrum.ms'
+        self.copyfile(self.vis)
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,datacolumn="DATA",combinespws=True,regridms=True,
+                    mode="frequency",nchan=12,start="2.20804e+10Hz",width="7.802808e+05Hz",nspw=1,
+                    interpolation="fftshift",phasecenter="J2000 12h01m53.13s -18d53m09.8s",
+                    outframe="CMB",veltype="radio",chanaverage=True,chanbin=4,useweights='spectrum')
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        data = mytb.getcol('DATA')      
+        nchan = data.size   
+        check_eq(nchan, 12)
+        check_eq(data[0][0][0].real, 0.0628, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
+        mytb.close()  
  
 # Cleanup class 
 class Cleanup(test_base):
@@ -918,4 +1074,5 @@ def suite():
             test_MMS,
             test_Parallel,
             test_state,
+            test_WeightSpectrum,
             Cleanup]
