@@ -160,7 +160,7 @@ template <typename F, typename S>
 FirstFunctor<F,S> firstFunctor () { return FirstFunctor<F,S> ();}
 
 
-DEPRECATED (String format (const char * formatString, ...) /* "Use String::format"*/);
+//DEPRECATED (String format (const char * formatString, ...) /* "Use String::format"*/);
 String formatV (const String & formatString, va_list vaList);
 
 template<typename T>

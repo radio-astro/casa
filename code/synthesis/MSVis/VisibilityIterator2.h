@@ -629,6 +629,12 @@ public:
   virtual void setWeightScaling (CountedPtr<WeightScaling> weightscaling);
   virtual Bool hasWeightScaling () const;
 
+  // Return number of spws, polids, ddids
+
+  Int nSpectralWindows () const;
+  Int nPolarizations () const;
+  Int nDataDescriptionIds () const;
+
   //reference to actual ms in interator
 
   const MeasurementSet& ms() const;
@@ -800,11 +806,6 @@ protected:
 
   Int nRowsViWillSweep () const;
 
-  // Return number of spws, polids, ddids
-
-  Int nSpectralWindows () const;
-  Int nPolarizations () const;
-  Int nDataDescriptionIds () const;
 
   // Return the number of rows in the current iteration
 

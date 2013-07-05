@@ -474,7 +474,7 @@ Rovia_Test::compareTimesAsyncToSync (const String & msName)
         Double aT=0, sT=0;
 
         if (aIter != asyncBuffers.end()){
-            aText = format ("(%4d,%4d, %15.3f)", aIter->chunk_p, aIter->subchunk_p, aIter->time_p);
+            aText = String::format ("(%4d,%4d, %15.3f)", aIter->chunk_p, aIter->subchunk_p, aIter->time_p);
             aT = aIter->time_p;
             aIter++;
         }
@@ -483,7 +483,7 @@ Rovia_Test::compareTimesAsyncToSync (const String & msName)
         }
 
         if (sIter != syncBuffers.end()){
-            sText = format ("(%4d,%4d, %15.3f)", sIter->chunk_p, sIter->subchunk_p, sIter->time_p);
+            sText = String::format ("(%4d,%4d, %15.3f)", sIter->chunk_p, sIter->subchunk_p, sIter->time_p);
             sT = sIter->time_p;
             sIter++;
         }
@@ -521,7 +521,7 @@ Rovia_Test::compareTimesAsyncToSync (const String & msName)
     Int n = asyncBuffers.size();
     Double avg = sumDt / n;
     Double stdDev = sqrt (sumDtSq / n - avg * avg) * (n / (n - 1.0));
-    cout << format ("max(dt)=%f; avg(dt)=%f; stdev(dt)=%f (%f %%)", maxDt, avg, stdDev, stdDev / avg * 100) << endl;
+    cout << String::format ("max(dt)=%f; avg(dt)=%f; stdev(dt)=%f (%f %%)", maxDt, avg, stdDev, stdDev / avg * 100) << endl;
 
     return result;
 
@@ -716,20 +716,20 @@ Rovia_Test::compareImagingWeights (int chunkNumber, int subchunkNumber, Rovia_Te
 
     Bool ok = allNearAbs (iwSync, iwAsync, syncMax * 1e-6);
 
-    String message = ok ? "" : utilj::format ("Imaging weight comparison failure at subchunk (%d,%d)",
+    String message = ok ? "" : String::format ("Imaging weight comparison failure at subchunk (%d,%d)",
                                               chunkNumber, subchunkNumber);
 
     if (! ok){
 
         if (iwSync.nrow() != iwAsync.nrow() || iwSync.ncolumn() != iwAsync.ncolumn()){
-            message += utilj::format ("\nDimension mismatch: sync (%d,%d) != async (%d,%d)",
+            message += String::format ("\nDimension mismatch: sync (%d,%d) != async (%d,%d)",
                                       iwSync.nrow(), iwSync.ncolumn(), iwAsync.nrow() , iwAsync.ncolumn());
         }
 
         for (int i = 0; i < (int) iwSync.nrow(); i++){
             for (int j = 0; j < (int) iwSync.ncolumn(); j++){
                 if (abs(iwSync(i,j) - iwAsync(i,j)) > 1e-6){
-                    message += utilj::format ("\nValue mismatch at (%d,%d): sync=%f, async=%f",
+                    message += String::format ("\nValue mismatch at (%d,%d): sync=%f, async=%f",
                                               i, j, iwSync(i,j), iwAsync(i,j));
                 }
             }

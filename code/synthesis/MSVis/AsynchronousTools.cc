@@ -159,7 +159,7 @@ Condition::wait (Mutex & mutex, int milliseconds)
         gotWait = false;
     }
     else{
-        ThrowIfError (code, format ("Condition::wait (%d)", milliseconds));
+        ThrowIfError (code, String::format ("Condition::wait (%d)", milliseconds));
     }
 
     return gotWait;
@@ -247,7 +247,7 @@ void
 Logger::log (const char * format, ...)
 {
     va_list vaList;
-    va_start (vaList, format);
+    va_start (vaList, String::format);
 
     char buffer[4096];
 
@@ -268,7 +268,7 @@ Logger::log (const char * format, ...)
             threadNameText = String (" [") + (threadName->second) + "] : ";
         }
         else{
-            threadNameText = utilj::format (" [0x%08x] : ", tid);
+            threadNameText = String::format (" [0x%08x] : ", tid);
         }
     }
 
@@ -499,7 +499,7 @@ Mutex::lock (Int milliseconds)
         gotLock = false;
     }
     else{
-        ThrowIfError (code, format ("Mutex::lock (%d)", milliseconds));
+        ThrowIfError (code, String::format ("Mutex::lock (%d)", milliseconds));
     }
 
     return gotLock;
@@ -571,7 +571,7 @@ Semaphore::Semaphore (int initialValue)
 
         ++ i;
 
-        name_p = utilj::format ("/CasaAsync_%03d", i);
+        name_p = String::format ("/CasaAsync_%03d", i);
         impl_p->semaphore_p = sem_open (name_p.c_str(), O_CREAT | O_EXCL, 0700, initialValue);//new sem_t;
         code = (impl_p->semaphore_p == SEM_FAILED) ? errno : 0;
 
@@ -664,7 +664,7 @@ Semaphore::wait (int milliseconds)
     } else if (errno == ETIMEDOUT){
         gotSemaphore = False;
     } else {
-        ThrowIfError (errno, format ("Mutex::lock (%d)", milliseconds));
+        ThrowIfError (errno, String::format ("Mutex::lock (%d)", milliseconds));
     }
 
     return gotSemaphore;

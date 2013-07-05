@@ -68,7 +68,7 @@ SubChunkPair::noMoreData ()
 String
 SubChunkPair::toString () const
 {
-    return utilj::format ("(%d,%d)", first, second);
+    return String::format ("(%d,%d)", first, second);
 }
 
 VisibilityIteratorReadImpl::VisibilityIteratorReadImpl ()
@@ -3328,13 +3328,13 @@ VisibilityIteratorWriteImpl::writeBack (VisBuffer * vb)
          dirtyComponent ++) {
 
         ThrowIf (backWriters_p.find (* dirtyComponent) == backWriters_p.end (),
-                 utilj::format ("No writer defined for VisBuffer component %d", * dirtyComponent));
+                 String::format ("No writer defined for VisBuffer component %d", * dirtyComponent));
         BackWriter * backWriter = backWriters_p [ * dirtyComponent];
 
         try {
             (* backWriter) (this, vb);
         } catch (AipsError & e) {
-            Rethrow (e, utilj::format ("Error while writing back VisBuffer component %d", * dirtyComponent));
+            Rethrow (e, String::format ("Error while writing back VisBuffer component %d", * dirtyComponent));
         }
     }
 }
