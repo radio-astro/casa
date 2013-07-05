@@ -5,6 +5,7 @@ import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
 from .boxworker import BoxWorker
+from .calibratorboxworker import CalibratorBoxWorker
 from .manualboxworker import ManualBoxWorker
 from .cleanworker import CleanWorker
 from pipeline.hif.heuristics import clean
@@ -323,6 +324,10 @@ class Clean(basetask.StandardTaskTemplate):
             boxinputs = BoxWorker.Inputs(context=inputs._context,
               output_dir=inputs.output_dir, vis=None)
             boxtask = BoxWorker(boxinputs)
+        elif inputs.hm_cleanboxing == 'calibrator':
+            boxinputs = CalibratorBoxWorker.Inputs(context=inputs._context,
+              output_dir=inputs.output_dir, vis=None)
+            boxtask = CalibratorBoxWorker(boxinputs)
         elif inputs.hm_cleanboxing == 'manual':
             boxinputs = ManualBoxWorker.Inputs(context=inputs._context,
               output_dir=inputs.output_dir, vis=None, mask=inputs.mask,
@@ -382,9 +387,10 @@ class Clean(basetask.StandardTaskTemplate):
               '%s/POINTING' % vis, nomodify=False) as table:
                 # make a copy of the table
                 LOG.debug('making copy of POINTING table')
-                table.copy('%s/POINTING_COPY' % vis, valuecopy=True)
+                copy = table.copy('%s/POINTING_COPY' % vis, valuecopy=True)
                 LOG.debug('removing all POINTING table rows')
                 table.removerows(range(table.nrows()))
+                copy.done()    
 
     def _restore_pointing_table(self):
         for vis in self.inputs.vis:
@@ -392,4 +398,5 @@ class Clean(basetask.StandardTaskTemplate):
             with casatools.TableReader(
               '%s/POINTING_COPY' % vis, nomodify=False) as table:
                 LOG.debug('copying back into POINTING table')
-                table.copy('%s/POINTING' % vis, valuecopy=True)
+                original = table.copy('%s/POINTING' % vis, valuecopy=True)
+                original.done()
