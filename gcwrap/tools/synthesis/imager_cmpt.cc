@@ -1328,21 +1328,24 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 	 casa::String fieldnames="";
 	 casa::Vector<Int> fieldIndex;
 	 fieldnames=toCasaString(field);
-	 if(fieldnames.contains(String("-"), -1)){
+	 //if(fieldnames.contains(String("-"), -1)){
+	 if(fieldnames==String("-1")){
 	     fieldnames="";
 	     fieldIndex=Vector<Int>();
 	 }
 	 casa::String antennanames="";
 	 Vector<Int> antIndex;
 	 antennanames=toCasaString(baseline);
-	 if(antennanames.contains(String("-"), -1)){
+	 //if(antennanames.contains(String("-"), -1)){
+	 if(antennanames==String("-1")){
 	   antennanames="";
 	   antIndex=Vector<Int>();
 	 }
 	 casa::String spwstring="";
 	 casa::Vector<Int> spwid;
 	 spwstring=toCasaString(spw);
-	 if(spwstring.contains(String("-"), -1)){
+	 //if(spwstring.contains(String("-"), -1)){
+	 if(spwstring==String("-1")){
 	   spwstring="";
 	   spwid=Vector<Int>();
 	 }
@@ -1550,14 +1553,16 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
       casa::String fieldnames="";
       casa::Vector<Int> fieldIndex;
       fieldnames=toCasaString(field);
-      if(fieldnames.contains(String("-"), -1)){
+      // if(fieldnames.contains(String("-"), -1)){
+      if(fieldnames==String("-1")){
         fieldnames="";
         fieldIndex=Vector<Int>(1,-1);
       }
       casa::String spwstring="";
       casa::Vector<Int> spwid;
       spwstring=toCasaString(spw);
-      if(spwstring.contains(String("-"), -1)){
+      //if(spwstring.contains(String("-"), -1)){
+      if(spwstring==String("-1")){
         spwstring="";
         spwid=Vector<Int>(1,-1);
       }
