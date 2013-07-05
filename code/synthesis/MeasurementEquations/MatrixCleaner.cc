@@ -56,6 +56,9 @@
 
 #include <synthesis/MeasurementEquations/MatrixCleaner.h>
 #include <coordinates/Coordinates/TabularCoordinate.h>
+#ifdef HAS_OMP
+#include <omp.h>
+#endif
 namespace casa { //# NAMESPACE CASA - BEGIN
 
  
@@ -354,11 +357,17 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
   }
 
   AlwaysAssert(itsScalesValid, AipsError);
-
+  ////no need to use all cores if possible
+  Int nth=nScalesToClean;
+#ifdef HAS_OMP
+  
+    nth=min(nth, omp_get_max_threads());
+ 
+ #endif 
   // Find the peaks of the convolved Psfs
   Vector<Float> maxPsfConvScales(nScalesToClean);
   Int naxes=model.shape().nelements();
-  #pragma omp parallel default(shared) private(scale)
+#pragma omp parallel default(shared) private(scale) num_threads(nth)
   { 
     #pragma omp for 
     for (scale=0;scale<nScalesToClean;scale++) {
@@ -484,7 +493,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
     itsStrengthOptimum = 0.0;
     optimumScale = 0;
 
-    #pragma omp parallel default(shared) private(scale)
+    #pragma omp parallel default(shared) private(scale) num_threads(nth)
     {
       #pragma omp  for 
       for (scale=0; scale<nScalesToClean; ++scale) {
@@ -648,7 +657,7 @@ Int MatrixCleaner::clean(Matrix<Float>& model,
     // Now do the addition of this scale to the model image....
     modelSub += scaleFactor*scaleSub;
 
-    #pragma omp parallel default(shared) private(scale)
+    #pragma omp parallel default(shared) private(scale) num_threads(nth)
     {
       #pragma omp  for 			
       for (scale=0;scale<nScalesToClean; ++scale) {
