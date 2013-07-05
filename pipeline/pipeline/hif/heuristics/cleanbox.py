@@ -122,6 +122,131 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
 
     return clean_more
 
+def niters_and_mask(psf, residual, new_mask):
+    """Method for calibrators reported bY Erci Villard.
+
+    Starting with peak in image, find islands; contiguous pixels above
+    threshold. If peak bright enough to cleanbox then adds chosen region
+    shape to mask. Continues with next peak pixel until Npeak peaks have
+    been found.
+
+    # Won't always add Npeak new islands if current islands still
+    # contain peaks.  Isolated bright pixels (<2.5*peak_threshold) are
+    #ignored.
+
+    Keyword arguments:
+    residual         -- Name of file containing residual map.
+    old_mask         -- Name of file to contain mask.
+    peak_threshold   -- threshold for island peaks.
+    sidelobe_ratio   -- ratio of peak to first sidelobe in psf.
+    fluxscale        -- Fluxscale map from mosaic clean. If set, used to locate
+                        edges of map where spikes may occur.
+    """
+
+    sidelobe_ratio =  psf_sidelobe_ratio(psf=psf, island_threshold=0.01)
+
+    with casatools.ImageReader(residual) as image:
+        # collapse the residual along the frequency axis
+        collapsed = image.collapse(function='mean', axes=[2,3])
+
+        # Get a searchmask to be used in masking image during processing.
+        # An explicitly separate mask is used so as not to risk messing
+        # up any mask that arrives with the residual.
+        # Set all its values to 1 (=True=good).
+        searchmask = casatools.image.newimagefromimage(infile=collapsed,
+          outfile='searchmask', overwrite=True)
+        searchmask.calc('1') 
+
+        # find the max pixel value and derive the threshold for the clean mask
+        # 'islands' that lie half way between the peak and the first sidelobe.
+        statistics = collapsed.statistics(mask='searchmask>0.5', robust=False)
+        maxpix = statistics['max'][0]
+        island_threshold = 2.0 * sidelobe_ratio * maxpix
+
+        # Update the mask to show only pixels above the threshold for island
+        # membership
+        searchmask.calc('replace(searchmask["%s" > %s], 0)' % (residual,
+          island_threshold))
+
+        island_pix = {}
+        island_peaks = {}
+        islandx = {}
+        islandy = {}
+        plane_threshold = {}
+
+        plane_grid = np.indices([shape[0], shape[1], 1, 1])
+
+        # Look for islands in each plane of the image/cube.
+        searchmask_max = searchmask.statistics(axes=[0,1,2])['max']
+        for plane in range(shape[3]):
+            n_plane_islands = 0
+            island_pix[plane] = {}
+            island_peaks[plane] = {}
+            islandx[plane] = {}
+            islandy[plane] = {}
+
+            # are there any island pixels in this plane?
+            if searchmask_max[plane] < 0.5:
+                continue
+
+            plane_pixels = image.getchunk(blc=[0,0,0,plane],
+              trc=[-1,-1,-1,plane])
+            plane_searchmask = searchmask.getchunk(blc=[0,0,0,plane],
+              trc=[-1,-1,-1,plane])
+            # convert to bool
+            plane_searchmask = plane_searchmask > 0.5
+
+            # Look for islands in this plane
+            while n_plane_islands < 30:
+                if not(np.any(plane_searchmask)):
+                    # no more pixels above island threshold: we're done
+                    break
+
+                # find the next island
+                new_island_peak, new_peak_x, new_peak_y, new_island_pix = \
+                  find_island(plane_searchmask, plane_pixels, plane_grid)
+
+                # add island to list unless it is an isolated pixel
+                if len(new_island_pix) > 1:
+                    island_pix[plane][n_plane_islands] = new_island_pix
+                    island_peaks[plane][n_plane_islands] = new_island_peak
+                    islandx[plane][n_plane_islands] = new_peak_x
+                    islandy[plane][n_plane_islands] = new_peak_y
+                    n_plane_islands += 1
+
+        # reach this point after all islands have been found in the 
+        # planes. 
+        # There should be 1 plane with 1 island in it.
+        if len(island_pix) != 1:
+            raise Exception, 'mask has more than 1 plane'
+        if len(island_pix[0]) != 1:
+            raise Exception, 'mask has more than 1 island'
+
+        # According to Eric Villard's recipe niter = 4 * number of pixels in
+        # island
+        niter = 4 * len(island_pix[0][0])
+
+        # free the searchmask and collapsed image
+        searchmask.done(remove=True)
+        collapsed.done(remove=True)
+
+        # Create mask
+        nm = image.newimagefromimage(infile=residual,
+          outfile=cleanmask, overwrite=True)
+
+        maskpix = nm.getchunk(blc=[0,0,0,0], trc=[-1,-1,-1,-1])
+        maskpix[:] = 0.0
+
+        for pix in island_pix[0][0]:
+            maskpix[pix] = 1.0
+        maskpix = nm.putchunk(blc=[0,0,0,plane], pixels=maskpix)
+
+        nm.close()
+        nm.done()
+
+    LOG.debug('niters: %s' % niters)
+    return niters
+
 def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
   npeak=30, fluxscale=None):
     """Adapted from an algorithm by Amy Kimball, NRAO.
@@ -169,7 +294,7 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
         # find the max pixel value and derive the threshold for the clean mask
         # 'islands'.
 
-        statistics = image.statistics(mask=searchmask, robust=False)
+        statistics = image.statistics(mask='searchmask>0.5', robust=False)
         maxpix = statistics['max'][0]
         island_threshold = sidelobe_ratio * maxpix
 
@@ -330,7 +455,6 @@ def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
     LOG.debug('new threshold is: %s' % threshold)
     LOG.debug('%s %s' % (threshold, island_tree_peaks))
     return threshold, island_tree_peaks
-
 
 def psf_sidelobe_ratio(psf, island_threshold=0.1, peak_threshold=0.1):
     """Adapted from an algorithm by Amy Kimball, NRAO.
