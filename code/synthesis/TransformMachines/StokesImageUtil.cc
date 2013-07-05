@@ -682,6 +682,7 @@ try{
      beam(2)=solution(5)/C::degree;
    }
    
+   beam(2)=fmod(beam(2), Float(360.0));
    while (abs(beam(2)/180.0)> 1) {
      if (beam(2) > 180.0) beam(2)-=360.0;
      else beam(2)+=360.0;
