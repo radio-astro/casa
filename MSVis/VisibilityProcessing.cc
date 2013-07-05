@@ -1,4 +1,4 @@
-/*
+ /*
  * VisibilityProcessing.cc
  *
  *  Created on: Apr 20, 2011
@@ -144,7 +144,7 @@ SubchunkIndex::getSubchunkNumber () const
 String
 SubchunkIndex::toString() const
 {
-    return format ("(%d,%d,%d)", chunkNumber_p, subChunkNumber_p, iteration_p);
+    return String::format ("(%d,%d,%d)", chunkNumber_p, subChunkNumber_p, iteration_p);
 }
 
 VisibilityProcessorStub::ProcessingResult
@@ -212,7 +212,7 @@ VisibilityProcessor::throwIfAnyInputsUnconnected (const vector<String> & exceptT
     VpPorts unconnectedPorts = portsUnconnected (inputs, & VpPort::isConnectedInput, exceptThese);
 
     ThrowIf (! unconnectedPorts.empty(),
-             format ("Vp '%s' has unconnected inputs: %s",
+             String::format ("Vp '%s' has unconnected inputs: %s",
                      getName().c_str(),
                      unconnectedPorts.toString().c_str()));
 }
@@ -232,7 +232,7 @@ VisibilityProcessor::throwIfAnyOutputsUnconnected (const vector<String> & except
     VpPorts unconnectedPorts = portsUnconnected (outputs, & VpPort::isConnectedOutput, exceptThese);
 
     ThrowIf (! unconnectedPorts.empty(),
-             format ("Vp '%s' has unconnected outputs: %s",
+             String::format ("Vp '%s' has unconnected outputs: %s",
                      getName().c_str(),
                      unconnectedPorts.toString().c_str()));
 }
@@ -257,26 +257,26 @@ VisibilityProcessor::throwIfAnyPortsUnconnected () const
 
     if (! unconnectedInputs.empty () || ! unconnectedOutputs.empty()){
 
-        String message = format ("Vp '%s' has");
+        String message = String::format ("Vp '%s' has");
 
 
         if (! unconnectedInputs.empty()){
 
-            // Format up the inputs portion of the message, if applicable
+            // String::format up the inputs portion of the message, if applicable
 
-            message += format (" unconnected inputs: %s",
+            message += String::format (" unconnected inputs: %s",
                                 unconnectedInputs.toString().c_str());
         }
 
         if (! unconnectedInputs.empty()){
 
-            // Format up the inputs portion of the message, if applicable.
+            // String::format up the inputs portion of the message, if applicable.
             // Determine the appropriate text to join up the previous text.
 
             string conjunction = (unconnectedInputs.empty()) ? ""
                                                              : "\n and";
 
-             message += format ("%s has unconnected outputs: %s",
+             message += String::format ("%s has unconnected outputs: %s",
                                 conjunction.c_str (),
                                 unconnectedOutputs.toString().c_str());
         }
@@ -332,7 +332,7 @@ VisibilityProcessor::definePorts (const vector<String> & portNames, VpPort::Type
          portName ++){
 
         ThrowIf (vpPorts.contains (* portName),
-                 format ("VisibilityProcessor %s already has an %s port '%s'",
+                 String::format ("VisibilityProcessor %s already has an %s port '%s'",
                          getName().c_str(), typeName.c_str(), portName->c_str()));
 
         vpPorts.push_back (VpPort (this, * portName, type));
@@ -368,14 +368,14 @@ VisibilityProcessor::doProcessing (ProcessingType processingType,
 
         vpEngine_p = 0;
 
-        Rethrow (e, format ("Error in doProcessing of VP '%s': %s on %s", getName().c_str(),
+        Rethrow (e, String::format ("Error in doProcessing of VP '%s': %s on %s", getName().c_str(),
                             toString (processingType).c_str(), subchunkIndex.toString().c_str()));
     }
 
     pair<Int,Int> currentViPosition = getVi()->getSubchunkId ();
 
     ThrowIf (currentViPosition != originalViPosition,
-             format ("VisibilityIterator moved during processing in VP '%s'", getName().c_str()));
+             String::format ("VisibilityIterator moved during processing in VP '%s'", getName().c_str()));
 
     vpEngine_p = 0;
 
@@ -428,7 +428,7 @@ VpPort
 VisibilityProcessor::getInput (const String & name) const
 {
     ThrowIf (! vpInputs_p.contains (name),
-             format ("Vp '%s' has no input port '%s'", getName().c_str(), name.c_str()));
+             String::format ("Vp '%s' has no input port '%s'", getName().c_str(), name.c_str()));
 
     return vpInputs_p.get (name);
 }
@@ -437,7 +437,7 @@ VpPort &
 VisibilityProcessor::getInputRef (const String & name)
 {
     ThrowIf (! vpInputs_p.contains (name),
-             format ("Vp '%s' has no input port '%s'", getName().c_str(), name.c_str()));
+             String::format ("Vp '%s' has no input port '%s'", getName().c_str(), name.c_str()));
 
     return vpInputs_p.getRef (name);
 }
@@ -465,7 +465,7 @@ VpPort
 VisibilityProcessor::getOutput (const String & name) const
 {
     ThrowIf (! vpOutputs_p.contains (name),
-             format ("Vp '%s' has no output port '%s'", getName().c_str(), name.c_str()));
+             String::format ("Vp '%s' has no output port '%s'", getName().c_str(), name.c_str()));
 
     return vpOutputs_p.get (name);
 }
@@ -474,7 +474,7 @@ VpPort &
 VisibilityProcessor::getOutputRef (const String & name)
 {
     ThrowIf (! vpOutputs_p.contains (name),
-             format ("Vp '%s' has no output port '%s'", getName().c_str(), name.c_str()));
+             String::format ("Vp '%s' has no output port '%s'", getName().c_str(), name.c_str()));
 
     return vpOutputs_p.getRef (name);
 }
@@ -534,7 +534,7 @@ VisibilityProcessor::setContainer (const VpContainer * container)
     assert (container != NULL);
 
     ThrowIf (container_p != NULL,
-             format ("Attempting to add VisibiltyProcessor '%s' into '%s'; previously added to '%s'",
+             String::format ("Attempting to add VisibiltyProcessor '%s' into '%s'; previously added to '%s'",
                      getName().c_str(), container->getFullName().c_str(), container_p->getFullName().c_str()));
 
     container_p = container;
@@ -579,7 +579,7 @@ VpContainer::chunkStart (const SubchunkIndex & sci)
         }
     }
     catch (AipsError & e){
-        Rethrow (e, format ("Error during chunkStart for container '%s' VP '%s'",
+        Rethrow (e, String::format ("Error during chunkStart for container '%s' VP '%s'",
                             getName().c_str(), i->getName().c_str()));
     }
 }
@@ -607,22 +607,22 @@ VpContainer::validateConnectionPorts (VisibilityProcessor * sourceVp,
     // Does the owning VP really support these ports?
 
     ThrowIf (sourceVp != this && ! sourceVp->getOutputs ().contains (sourcePortName),
-             format ("Visibility processor %s in %s does not have output %s",
+             String::format ("Visibility processor %s in %s does not have output %s",
                      sourceVp->getName().c_str(), getName().c_str(),
                      sourcePortName.c_str()));
 
     ThrowIf (sourceVp == this && ! getInputs().contains (sourcePortName),
-             format ("Visibility processor container %s in %s does not have input %s",
+             String::format ("Visibility processor container %s in %s does not have input %s",
                      sourceVp->getName().c_str(), getName().c_str(),
                      sourcePortName.c_str()));
 
     ThrowIf (sinkVp != this && ! sinkVp->getInputs ().contains (sinkPortName),
-             format ("Visibility processor %s in %s does not have input %s",
+             String::format ("Visibility processor %s in %s does not have input %s",
                      sinkVp->getName().c_str(), getName().c_str(),
                      sinkPortName.c_str()));
 
     ThrowIf (sinkVp == this && ! getOutputs().contains (sinkPortName),
-             format ("Visibility processor container %s in %s does not have output %s",
+             String::format ("Visibility processor container %s in %s does not have output %s",
                      sinkVp->getName().c_str(), getName().c_str(),
                      sinkPortName.c_str()));
 
@@ -634,11 +634,11 @@ VpContainer::validateConnectionPorts (VisibilityProcessor * sourceVp,
                                        : sourceVp->getOutput (sourcePortName);
 
     ThrowIf (utilj::containsKey (source, network_p),
-             format ("Output %s already in use for visibility processor %s in %s",
+             String::format ("Output %s already in use for visibility processor %s in %s",
                      source.getName().c_str(), sourceVp->getName().c_str(), getName().c_str()));
 
     ThrowIf (utilj::containsKey (sink, networkReverse_p),
-             format ("Input %s already in use for visibility processor %s in %s",
+             String::format ("Input %s already in use for visibility processor %s in %s",
                      sink.getName().c_str(), sinkVp->getName().c_str(), getName().c_str()));
 
     return make_pair (source, sink);
@@ -654,10 +654,10 @@ VpContainer::connect (VisibilityProcessor * sourceVp, const String &  sourcePort
     // Do they refer to a VP in this container?
 
     ThrowIf (! contains (sourceVp) && sourceVp != this,
-             format ("No such visibility processor %s in %s.",
+             String::format ("No such visibility processor %s in %s.",
                      sourceVp->getName().c_str(), getName().c_str()));
     ThrowIf (! contains (sinkVp) && sinkVp != this,
-             format ("No such visibility processor %s in %s.",
+             String::format ("No such visibility processor %s in %s.",
                      sinkVp->getName().c_str(), getName().c_str()));
 
     VpPort sink, source;
@@ -675,7 +675,7 @@ VpContainer::connect (VisibilityProcessor * sourceVp, const String &  sourcePort
     Bool selfConnect = sourceVp == sinkVp; // detects loop back
 
     ThrowIf (! (normalConnect ||  containerConnect) || selfConnect,
-             format ("Cannot connect %s:%s to %s:%s in %s", sourceVp->getName ().c_str(),
+             String::format ("Cannot connect %s:%s to %s:%s in %s", sourceVp->getName ().c_str(),
                      source.getName ().c_str (), sinkVp->getName().c_str (),
                      sink.getName ().c_str (), getName().c_str()));
 
@@ -790,7 +790,7 @@ VpContainer::doProcessingImpl (ProcessingType processingType, VpData & data, con
 
     }
     catch (AipsError & e){
-        Rethrow (e, format ("Error while container '%s' processing VP '%s'",
+        Rethrow (e, String::format ("Error while container '%s' processing VP '%s'",
                             getName().c_str(), (vp != NULL) ? vp->getName().c_str() : "NULL"));
     }
 
@@ -827,7 +827,7 @@ void
 VpContainer::fillWithSequence (VisibilityProcessor * first, ...)
 {
     ThrowIf (! vps_p.empty (),
-             format ("fillWithSequence performed on non-empty container %s", getName().c_str()));
+             String::format ("fillWithSequence performed on non-empty container %s", getName().c_str()));
 
 	va_list vaList;
 
@@ -854,9 +854,9 @@ VpContainer::fillWithSequence (VisibilityProcessor * first, ...)
 	    }
 
 	    ThrowIf ((* vp)->getOutputs().empty(),
-	             format ("Visibility processor %s has no outputs.", (* vp)->getName().c_str()));
+	             String::format ("Visibility processor %s has no outputs.", (* vp)->getName().c_str()));
 	    ThrowIf ((* vp2)->getInputs().empty(),
-	             format ("Visibility processor %s has no inputs.", (* vp2)->getName().c_str()));
+	             String::format ("Visibility processor %s has no inputs.", (* vp2)->getName().c_str()));
 
 	    connect (* vp, (* vp)->getOutputs().front().getName(),
 	             * vp2, (* vp2)->getInputs().front().getName());
@@ -866,7 +866,7 @@ VpContainer::fillWithSequence (VisibilityProcessor * first, ...)
 	// Connect up containers input to the input of the first VP
 
 	ThrowIf (vps_p.front()->getInputs().empty(),
-	         format ("First node in sequence, %s, has no inputs",
+	         String::format ("First node in sequence, %s, has no inputs",
 	                 vps_p.front()->getName().c_str()));
 
 	connect (getInputs().front().getName(),
@@ -1042,7 +1042,7 @@ VpContainer::orderContents ()
         // If no nodes were found then there must be a cycle and the loop will never
         // terminate!
 
-        ThrowIf (nextClass.size() == 0, format ("VpContainer %s contains a cycle", getName().c_str()));
+        ThrowIf (nextClass.size() == 0, String::format ("VpContainer %s contains a cycle", getName().c_str()));
 
     }
 
@@ -1059,7 +1059,7 @@ VpContainer::processingStartImpl ()
         }
     }
     catch (AipsError & e){
-        Rethrow (e, format ("Error during processingStart for container '%s' VP '%s'",
+        Rethrow (e, String::format ("Error during processingStart for container '%s' VP '%s'",
                             getName().c_str(), i->getName().c_str()));
     }
 }
@@ -1087,7 +1087,7 @@ VpContainer::remapPorts (VpData & data, const VisibilityProcessor * vp)
         }
         else{
             ThrowIf (true,
-                     format ("Vp '%s' produced unused output '%s'",
+                     String::format ("Vp '%s' produced unused output '%s'",
                              vp->getFullName().c_str(), oldPort->getName().c_str()));
         }
     }
@@ -1111,7 +1111,7 @@ VpContainer::validateImpl()
         }
     }
     catch (AipsError & e){
-        Rethrow (e, format ("Error during validate for container '%s' VP '%s'",
+        Rethrow (e, String::format ("Error during validate for container '%s' VP '%s'",
                             getName().c_str(), i->getName().c_str()));
     }
 
@@ -1138,7 +1138,7 @@ void
 VpData::add (const VpPort & port, VbPtr vb)
 {
     ThrowIf (utilj::containsKey (port, * this),
-            format ("VpData::add: data already present for port %s.", port.getFullName ().c_str()));
+            String::format ("VpData::add: data already present for port %s.", port.getFullName ().c_str()));
 
     (* this) [port] = vb;
 }
@@ -1270,7 +1270,7 @@ VpEngine::process (VisibilityProcessor & processor,
         VpPorts inputs = processor.getInputs ();
 
         ThrowIf (inputs.size() != 1,
-                 format ("Vp '%s' must have exactly one input or an input must be specified explicitly",
+                 String::format ("Vp '%s' must have exactly one input or an input must be specified explicitly",
                          processor.getName().c_str()));
 
         inputPort = inputs.front();
@@ -1396,7 +1396,7 @@ VpPort::getFullName () const
         vpName = getVp()->getFullName();
     }
 
-    return format ("%s:%s", vpName.c_str(), getName().c_str());
+    return String::format ("%s:%s", vpName.c_str(), getName().c_str());
 }
 
 String
@@ -1514,7 +1514,7 @@ WriterVp::WriterVp (const String & name,
   vi_p (vi)
 {
     ThrowIf (advanceVi_p && vi == NULL,
-             format ("Parameter advanceVi can only be True if a VI is provided for WriterVp '%s',",
+             String::format ("Parameter advanceVi can only be True if a VI is provided for WriterVp '%s',",
                      name.c_str()));
 }
 
@@ -1530,7 +1530,7 @@ WriterVp::doProcessingImpl (ProcessingType /*processingType*/,
     VpPort inputPort = getInputs () [0];
 
     ThrowIf (! utilj::containsKey (inputPort, inputData),
-             format ("Input data not found for port '%s' in VP '%s'",
+             String::format ("Input data not found for port '%s' in VP '%s'",
                      inputPort.getName().c_str(),
                      getName().c_str()));
 
@@ -1546,7 +1546,7 @@ WriterVp::doProcessingImpl (ProcessingType /*processingType*/,
     }
 
 
-    ThrowIf (vi == NULL, format ("No writable VI found in VP '%s'", getName().c_str()));
+    ThrowIf (vi == NULL, String::format ("No writable VI found in VP '%s'", getName().c_str()));
 
     // Write out the data to the VI
 
@@ -1572,7 +1572,7 @@ WriterVp::doProcessingImpl (ProcessingType /*processingType*/,
         }
     }
     catch (AipsError & e){
-        Rethrow (e, format ("While '%s' writing VB to disk", getName().c_str()));
+        Rethrow (e, String::format ("While '%s' writing VB to disk", getName().c_str()));
     }
 
     inputData [inputPort] -> dirtyComponentsClear();

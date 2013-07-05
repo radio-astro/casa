@@ -1068,7 +1068,7 @@ VisibilityIteratorImplAsync2::findChannelsInRange (Double lowerFrequency, Double
                                                   const vi::SpectralWindowChannels & spectralWindowChannels)
 {
     ThrowIf (spectralWindowChannels.empty(),
-             utilj::format ("No spectral window channel info for window=%d, ms=%d",
+             String::format ("No spectral window channel info for window=%d, ms=%d",
                             spectralWindow(), msId ()));
 
     typedef SpectralWindowChannels::const_iterator Iterator;
@@ -1911,7 +1911,7 @@ void
 VisibilityIteratorImplAsync2::setReportingFrameOfReference (Int frame)
 {
     ThrowIf (frame < 0 || frame >= MFrequency::N_Types,
-             utilj::format ("Unknown frame: id=%d", frame));
+             String::format ("Unknown frame: id=%d", frame));
 
     reportingFrame_p = frame;
 }
@@ -2375,13 +2375,13 @@ VisibilityIteratorImplAsync2::writeBackChanges (VisBuffer2 * vb)
          dirtyComponent ++) {
 
         ThrowIf (backWriters_p.find (* dirtyComponent) == backWriters_p.end (),
-                 utilj::format ("No writer defined for VisBuffer component %d", * dirtyComponent));
+                 String::format ("No writer defined for VisBuffer component %d", * dirtyComponent));
         BackWriter * backWriter = backWriters_p [ * dirtyComponent];
 
         try {
             (* backWriter) (this, vb);
         } catch (AipsError & e) {
-            Rethrow (e, utilj::format ("Error while writing back VisBuffer component %d", * dirtyComponent));
+            Rethrow (e, String::format ("Error while writing back VisBuffer component %d", * dirtyComponent));
         }
     }
 }

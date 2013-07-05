@@ -86,6 +86,156 @@ Flag - Each averaged flag (correlation, channel) is the logical "and"
 */
 
 
+class BaselineIndex : private boost::noncopyable {
+
+public:
+
+    BaselineIndex ();
+    ~BaselineIndex ();
+
+    Int operator () (Int antenna1, Int antenna2, Int spectralWindow);
+    void configure (Int nAntennas, Int nSpw, const VisBuffer2 * vb);
+
+
+private:
+
+    enum {Empty = -1};
+
+    class SpwIndex : public Matrix<Int>{
+
+    public:
+
+        SpwIndex (Int n) : Matrix<Int> (n, n, Empty), nBaselines_p (0) {}
+
+        Int
+        getBaselineNumber (Int antenna1, Int antenna2)
+        {
+            Int i = (* this) (antenna1, antenna2);
+
+            if (i == Empty){
+
+                i = nBaselines_p ++;
+                (* this) (antenna1, antenna2) = i;
+            }
+
+            return i;
+        }
+
+    private:
+
+        Int nBaselines_p;
+    };
+
+    typedef vector<SpwIndex *> Index;
+
+    SpwIndex * addSpwIndex (Int spw);
+    Matrix<Int> * createMatrix ();
+    void destroy();
+    SpwIndex * getSpwIndex (Int spw);
+
+    Index index_p;
+    Int nAntennas_p;
+    Int nSpw_p;
+
+};
+
+BaselineIndex::BaselineIndex ()
+: nAntennas_p (0),
+  nSpw_p (0)
+{}
+
+BaselineIndex::~BaselineIndex ()
+{
+    destroy();
+}
+
+Int
+BaselineIndex::operator () (Int antenna1, Int antenna2, Int spectralWindow)
+{
+    SpwIndex * spwIndex = getSpwIndex (spectralWindow);
+
+    Int i = spwIndex->getBaselineNumber (antenna1, antenna2);
+
+    return i;
+}
+
+
+
+BaselineIndex::SpwIndex *
+BaselineIndex::addSpwIndex (Int i)
+{
+    // Delete an existing SpwIndex so that we start fresh
+
+    if (index_p [i] != 0){
+        delete index_p [i];
+        index_p [i] = 0;
+    }
+
+    // Create a new SpwIndex and insert it into the main index.
+
+    index_p [i] = new SpwIndex (nAntennas_p);
+
+    return index_p [i];
+}
+
+void
+BaselineIndex::configure (Int nAntennas, Int nSpw, const VisBuffer2 * vb)
+{
+    // Capture the shape parameters
+
+    nAntennas_p = nAntennas;
+    nSpw_p = nSpw;
+
+    // Get rid of the existing index
+
+    destroy ();
+    index_p = Index (nSpw_p, (SpwIndex *) 0);
+
+    // Fill out the index based on the contents of the first VB.
+    // Usually this will determine the pattern for all of the VBs to be
+    // averaged together so that is the ordering the index should
+    // capture.
+
+    for (Int i = 0; i < vb->nRows(); i++){
+
+        // Eagerly flesh out the Spw's index
+
+        Int spw = vb->spectralWindows() (i);
+        Int antenna1 = vb->antenna1()(i);
+        Int antenna2 = vb->antenna2()(i);
+
+        (* this) (antenna1, antenna2, spw);
+    }
+}
+
+
+void
+BaselineIndex::destroy ()
+{
+    // Delete all the dynaically allocated spectral window indices.
+    // The vector destructor will take care of index_p itself.
+
+    for (Index::iterator i = index_p.begin();
+         i != index_p.end();
+         i++){
+
+        delete (* i);
+    }
+}
+
+BaselineIndex::SpwIndex *
+BaselineIndex::getSpwIndex (Int spw)
+{
+    SpwIndex * spwIndex = index_p [spw];
+
+    if (spwIndex == 0){
+        spwIndex = addSpwIndex (spw);
+    }
+
+    return spwIndex;
+}
+
+
 
 
 class VbAvg : public VisBufferImpl2 {
@@ -149,7 +299,7 @@ protected:
 private:
 
     Double averagingInterval_p;
-    Matrix<Int> baselineIndices_p; // map of antenna1,antenna2 to row number in this VB.
+    mutable BaselineIndex baselineIndex_p; // map of antenna1,antenna2 to row number in this VB.
     Bool complete_p; // average is complete
     Cube<Int> counts_p; // number of items summed together for each correlation, channel, baseline item.
     Vector<Int> countsBaseline_p; // number of items summed together for each baseline.
@@ -203,7 +353,8 @@ private:
 
 VbAvg::VbAvg (Double averagingInterval, Bool doingCorrectedData,
               Bool doingModelData, Bool doingWeightSpectrum)
-: averagingInterval_p (averagingInterval),
+: VisBufferImpl2 (VbRekeyable),
+  averagingInterval_p (averagingInterval),
   complete_p (False),
   doingCorrectedData_p (doingCorrectedData),
   doingModelData_p (doingModelData),
@@ -545,12 +696,9 @@ VbAvg::getBaselineIndex (const VisBuffer2 * vb, Int row) const
 
     Int antenna1 = vb->antenna1 () (row);
     Int antenna2 = vb->antenna2 () (row);
+    Int spw = vb->spectralWindows () (row);
 
-    Int index = baselineIndices_p (antenna1, antenna2);
-
-    ThrowIf (index < 0, String::format ("Unexpected baseline having antenna pair (%d,%d)",
-                                         antenna1, antenna2));
-        // We expect antenna2 <= antenna1 in CASA-filled vis data
+    Int index = baselineIndex_p (antenna1, antenna2, spw);
 
     return index;
 }
@@ -669,7 +817,8 @@ VbAvg::prepareForFirstData (const VisBuffer2 * vb, const Subchunk & subchunk)
     sampleInterval_p = vb->timeInterval() (0);
 
     Int nAntennas = vb->nAntennas();
-    Int nBaselines = (nAntennas * (nAntennas + 1)) / 2;
+    Int nSpw = vb->getVi()->nSpectralWindows();
+    Int nBaselines = ((nAntennas * (nAntennas + 1)) / 2) * nSpw;
 
     // Size and zero out the counters
 
@@ -677,7 +826,7 @@ VbAvg::prepareForFirstData (const VisBuffer2 * vb, const Subchunk & subchunk)
     counts_p = Cube<Int> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
     weightSum_p = Cube<Float> (vb->nCorrelations(), vb->nChannels(), nBaselines, 0);
 
-    setupBaselineIndices (nAntennas, vb);
+    baselineIndex_p.configure (nAntennas, nSpw, vb);
 
     // Reshape the inherited members from VisBuffer2
 
@@ -759,55 +908,57 @@ VbAvg::removeMissingBaselines ()
 }
 
 
-void
-VbAvg::setupBaselineIndices(int nAntennas, const VisBuffer2 * vb)
-{
-    // Create a square matrix to hold the mappings between pairs of
-    // antennas to the baseline number.  This includes autocorrelations.
-    // Only the lower left half of the matrix holds valid baseline indices;
-    // the upper right matrix will hold -1s.
-    //
-    // The decoding routine, getBaselineIndex will throw an exception if
-    // an antenna1,antenna2 pair maps would return a -1.
-
-    baselineIndices_p.resize (nAntennas, nAntennas, False);
-    baselineIndices_p = -1;
-    Int baseline = 0;
-
-    // Use the baseline order of this VisBuffer2 to set up the default mapping
-    // from VB baselines to averaged baselines; unless this is a partial VB
-    // then this should be optimum and if not, it only applies for the current
-    // average.  If the first vb is normal then it should eliminate the need to
-    // copy-down the rows of the VisBuffer for baselines that are possible but
-    // not present.
-    //
-    // Also be sure that multiple occurrences of the same baseline do not fould
-    // things up.
-
-    for (Int vbRow = 0; vbRow < vb->nRows(); vbRow ++){
-
-        Int a1 = vb->antenna1()(vbRow);
-        Int a2 = vb->antenna2()(vbRow);
-
-        if (a1 <= a2 && baselineIndices_p (a1, a2) < 0){
-            baselineIndices_p (a1, a2) = baseline ++;
-        }
-    }
-
-    // Now put a mapping in for any baselines that weren't in the current VB
-    // just in case they appear later.  These will be at the end so won't
-    // require shifting data down if they are not present.
-
-    for (Int row = 0; row < nAntennas; row ++){
-
-        for (Int column = 0; column <= row; column ++){
-
-            if (baselineIndices_p (row, column) < 0){
-                baselineIndices_p (row, column) = baseline ++;
-            }
-        }
-    }
-}
+//void
+//VbAvg::setupBaselineIndices(int nAntennas, const VisBuffer2 * vb)
+//{
+//    // Create a square matrix to hold the mappings between pairs of
+//    // antennas to the baseline number.  This includes autocorrelations.
+//    // Only the lower left half of the matrix holds valid baseline indices;
+//    // the upper right matrix will hold -1s.
+//    //
+//    // The decoding routine, getBaselineIndex will throw an exception if
+//    // an antenna1,antenna2 pair maps would return a -1.
+//
+//    baselineIndex_p->configure (nAntennas,
+//
+//    baselineIndex_p.resize (nAntennas, nAntennas, False);
+//    baselineIndex_p = -1;
+//    Int baseline = 0;
+//
+//    // Use the baseline order of this VisBuffer2 to set up the default mapping
+//    // from VB baselines to averaged baselines; unless this is a partial VB
+//    // then this should be optimum and if not, it only applies for the current
+//    // average.  If the first vb is normal then it should eliminate the need to
+//    // copy-down the rows of the VisBuffer for baselines that are possible but
+//    // not present.
+//    //
+//    // Also be sure that multiple occurrences of the same baseline do not fould
+//    // things up.
+//
+//    for (Int vbRow = 0; vbRow < vb->nRows(); vbRow ++){
+//
+//        Int a1 = vb->antenna1()(vbRow);
+//        Int a2 = vb->antenna2()(vbRow);
+//
+//        if (a1 <= a2 && baselineIndex_p (a1, a2) < 0){
+//            baselineIndex_p (a1, a2) = baseline ++;
+//        }
+//    }
+//
+//    // Now put a mapping in for any baselines that weren't in the current VB
+//    // just in case they appear later.  These will be at the end so won't
+//    // require shifting data down if they are not present.
+//
+//    for (Int row = 0; row < nAntennas; row ++){
+//
+//        for (Int column = 0; column <= row; column ++){
+//
+//            if (baselineIndex_p (row, column) < 0){
+//                baselineIndex_p (row, column) = baseline ++;
+//            }
+//        }
+//    }
+//}
 
 void
 VbAvg::transferAverage (VisBuffer2 * vb2)
@@ -822,7 +973,12 @@ VbAvg::transferAverage (VisBuffer2 * vb2)
 
     if (changeShape){
 
+        Bool wasRekeyable = vb->isRekeyable ();
+        vb->setRekeyable(True);
+
         vb->setShape (nCorrelations(), nChannels(), nRows(), True);
+
+        vb->setRekeyable (wasRekeyable);
     }
 
     vb->setIterationInfo (msId(),

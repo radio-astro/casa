@@ -522,7 +522,7 @@ VisBufferImpl::averageFlagInfoChannels (const Matrix<Int> & averagingBounds,
     categoriesShape (1) = nChannelsOut; // make it match the new # of channels
 
     ThrowIf (nChannelsIn < nChannelsOut,
-             utilj::format ("Can't average %d channels to yield %d channels.",
+             String::format ("Can't average %d channels to yield %d channels.",
                             nChannelsIn, nChannelsOut));
 
     Cube<Bool> & flagCube = cache_p->flagCube_p.getRef();
@@ -604,7 +604,7 @@ VisBufferImpl::averageVisCubeChannels (T & dataCache, Int nChannelsOut,
     Int nChannelsIn = csh(1);
 
     ThrowIf (nChannelsIn < nChannelsOut,
-             utilj::format ("Can't average %d channels to %d channels!\n"
+             String::format ("Can't average %d channels to %d channels!\n"
                             "Data already averaged?",
                             nChannelsIn, nChannelsOut));
 

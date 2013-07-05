@@ -868,10 +868,10 @@ using namespace vi;
 //
 // Other sections contain the accessor and filler methods
 
-VisBufferImpl2::VisBufferImpl2 ()
+VisBufferImpl2::VisBufferImpl2 (VisBufferOptions options)
 : cache_p (0), state_p (0)
 {
-    construct (0, VbNoOptions);
+    construct (0, options);
 }
 
 VisBufferImpl2::VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions options)
