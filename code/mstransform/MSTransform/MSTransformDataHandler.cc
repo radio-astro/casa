@@ -151,6 +151,7 @@ void MSTransformDataHandler::initialize()
 	outputReferenceFramePar_p = String("");			// Options are: LSRK, LSRD, BARY, GALACTO, LGROUP, CMB, GEO, or TOPO
 	fftShift_p = 0;
 	fftShiftEnabled_p = False;
+	combinationOfSPWsWithDifferentExposure_p = False;
 
 	// Frequency specification parameters
 	mode_p = String("channel"); 					// Options are: channel, frequency, velocity
@@ -186,7 +187,7 @@ void MSTransformDataHandler::initialize()
 
 	// Output MS structure related members
 	fillFlagCategory_p = False;
-	fillWeightSpectrum_p = False;
+	inputWeightSpectrumAvailable_p = False;
 	correctedToData_p = False;
 	dataColMap_p.clear();
 	mainColumn_p = MS::CORRECTED_DATA;
@@ -952,7 +953,7 @@ void MSTransformDataHandler::setup()
 	}
 
 	// Averaging kernel
-	if (fillWeightSpectrum_p)
+	if (inputWeightSpectrumAvailable_p)
 	{
 		setWeightBasedTransformations(weightmode_p);
 	}
@@ -1415,6 +1416,9 @@ void MSTransformDataHandler::regridSpwSubTable()
             		<< std::setprecision(9) << std::setw(14) << std::scientific
             		<< intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
             logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
+
+            inputChanFreq.reference(intermediateChanFreq);
+            inputChanWidth.reference(intermediateChanWidth);
     	}
     	else
     	{
@@ -1629,6 +1633,9 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
         		<< intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
         logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
         		<< oss.str() << LogIO::POST;
+
+        combinedCHAN_FREQ.reference(intermediateChanFreq);
+        combinedCHAN_WIDTH.reference(intermediateChanWidth);
 	}
 	else
 	{
@@ -1837,6 +1844,11 @@ void MSTransformDataHandler::calculateIntermediateFrequencies(	Int spwId,
 	intermediateChanWidth.resize(mumOfInterChan,False);
 	simpleAverage(freqbinMap_p[spwId], inputChanFreq, intermediateChanFreq);
 	simpleAverage(freqbinMap_p[spwId], inputChanWidth, intermediateChanWidth);
+
+	for (uInt chanIdx=0;chanIdx<intermediateChanWidth.size();chanIdx++)
+	{
+		intermediateChanWidth[chanIdx] *= freqbinMap_p[spwId];
+	}
 
     return;
 }
@@ -2244,12 +2256,18 @@ void MSTransformDataHandler::checkFillFlagCategory()
 // -----------------------------------------------------------------------
 void MSTransformDataHandler::checkFillWeightSpectrum()
 {
-	fillWeightSpectrum_p = False;
+	inputWeightSpectrumAvailable_p = False;
 	if (!selectedInputMsCols_p->weightSpectrum().isNull() && selectedInputMsCols_p->weightSpectrum().isDefined(0))
 	{
-		fillWeightSpectrum_p = True;
+		inputWeightSpectrumAvailable_p = True;
 		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
 				<< "Optional column WEIGHT_SPECTRUM found in input MS will be written to output MS" << LogIO::POST;
+	}
+	else
+	{
+    	logger_p 	<< LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    				<< "WEIGHT_SPECTRUM column not present." << endl
+    				<< " Will fill output WEIGHT_SPECTRUM column using input WEIGHT column" << LogIO::POST;
 	}
 
 	return;
@@ -2673,8 +2691,8 @@ void MSTransformDataHandler::fillOutputMs(vi::VisBuffer2 *vb)
 	// NOTE: Don't spend time initializing because we are going to re-write everything
 	outputMs_p->addRow(rowRef.nrows()*nspws_p,False);
 
-	fillIdCols(vb,rowRef);
     fillDataCols(vb,rowRef);
+	fillIdCols(vb,rowRef);
 
     return;
 
@@ -2836,8 +2854,6 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 		writeVector(tmpVectorDouble,outputMsCols_p->timeCentroid(),rowRef,nspws_p);
 		mapVector(vb->timeInterval(),tmpVectorDouble);
 		writeVector(tmpVectorDouble,outputMsCols_p->interval(),rowRef,nspws_p);
-		mapVector(vb->exposure(),tmpVectorDouble);
-		writeVector(tmpVectorDouble,outputMsCols_p->exposure(),rowRef,nspws_p);
 
 		// Non re-indexable matrix columns
 		Matrix<Double> tmpUvw(IPosition(2,3,rowRef.nrow()),0.0);
@@ -2846,9 +2862,19 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 
 		// Averaged vector columns
 		mapAndAverageVector(vb->flagRow(),tmpVectorBool);
-		outputMsCols_p->flagRow().putColumnCells(rowRef,tmpVectorBool);
 		writeVector(tmpVectorBool,outputMsCols_p->flagRow(),rowRef,nspws_p);
 
+		if (combinationOfSPWsWithDifferentExposure_p)
+		{
+			tmpVectorDouble = 0;
+			mapAndAverageVector(vb->exposure(),tmpVectorDouble);
+			writeVector(tmpVectorDouble,outputMsCols_p->exposure(),rowRef,nspws_p);
+		}
+		else
+		{
+			mapVector(vb->exposure(),tmpVectorDouble);
+			writeVector(tmpVectorDouble,outputMsCols_p->exposure(),rowRef,nspws_p);
+		}
 		// Averaged matrix columns
 		// mapScaleAndAverageMatrix(vb->weight(),tmpMatrixFloat,weightFactorMap_p,vb->spectralWindows());
 		// writeMatrix(tmpMatrixFloat,outputMsCols_p->weight(),rowRef,nspws_p);
@@ -3123,17 +3149,22 @@ template <class T> void MSTransformDataHandler::mapAndAverageVector(const Vector
 	uInt row;
 	uInt baseline_index = 0;
 	vector<uInt> baselineRows;
+	uInt counts = 0;
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
 	{
 		// Get baseline rows vector
 		baselineRows = iter->second;
 
 		// Compute combined value from each SPW
+		counts = 0;
 		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
 		{
 			row = *iter;
 			outputVector(baseline_index) += inputVector(row);
+			counts += 1;
 		}
+
+		if (counts) outputVector(baseline_index) /= counts;
 
 		baseline_index += 1;
 	}
@@ -3276,13 +3307,37 @@ template <class T> void MSTransformDataHandler::mapScaleAndAverageMatrix(	const 
 void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 {
 	// First of all we fill WEIGHT_SPECTRUM because it might be needed by channel average
-    if (fillWeightSpectrum_p)
+    if (inputWeightSpectrumAvailable_p)
     {
     	// Unset all the weights-based operations
     	setWeightBasedTransformations(MSTransformations::flat);
 
 		// Transform weights
     	transformCubeOfData(vb,rowRef,vb->weightSpectrum(),outputMsCols_p->weightSpectrum(),NULL);
+
+    	// Reset all the weights-based operations
+    	setWeightBasedTransformations(weightmode_p);
+    }
+    else
+    {
+    	// Fill WEIGHT_SPECTRUM with WEIGHTS
+		Matrix<Float> inputWeightPlane = vb->weight();
+		IPosition PolChanRow = vb->flagCube().shape();
+		weightSpectrumCube_p.resize(PolChanRow,False);
+		for (uInt row=0; row < PolChanRow(2); row++)
+		{
+			Matrix<Float> inputWeightSpectrumPlane = weightSpectrumCube_p.xyPlane(row);
+			for (uInt pol = 0; pol < PolChanRow(0); pol++)
+			{
+				inputWeightSpectrumPlane.row(pol) = inputWeightPlane(pol,row);
+			}
+		}
+
+    	// Unset all the weights-based operations
+    	setWeightBasedTransformations(MSTransformations::flat);
+
+		// Transform weights
+    	combineCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
 
     	// Reset all the weights-based operations
     	setWeightBasedTransformations(weightmode_p);
@@ -3586,10 +3641,23 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 
 	// Get input flag and weight cubes
 	const Cube<Bool> inputFlagCube = vb->flagCube();
-	const Cube<Float> inputWeightsCube = vb->weightSpectrum();
+	Cube<Float> inputWeightsCubeLocal;
+	if (inputWeightSpectrumAvailable_p)
+	{
+		inputWeightsCubeLocal = Cube<Float>(	vb->weightSpectrum().shape(),
+												const_cast<Float*>(vb->weightSpectrum().getStorage(MSTransformations::False)),
+												SHARE);
+	}
+	else
+	{
+		inputWeightsCubeLocal = Cube<Float>(	weightSpectrumCube_p.shape(),
+												const_cast<Float*>(weightSpectrumCube_p.getStorage(MSTransformations::False)),
+												SHARE);
+	}
 
-	// Get input SPWs
+	// Get input SPWs and exposures
 	Vector<Int> spws = vb->spectralWindows();
+	Vector<Double> exposures = vb->exposure();
 
 	// Get input cube shape
 	IPosition inputCubeShape = inputDataCube.shape();
@@ -3623,6 +3691,9 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 	vector< channelContribution >::iterator contributionsIter;
 	map < Int , map < uInt, Bool > > removeContributionsMap;
 
+	Bool combinationOfSPWsWithDifferentExposure = False;
+	Double exposure = 0;
+
 	for (baselineMap::iterator iter = baselineMap_p.begin(); iter != baselineMap_p.end(); iter++)
 	{
 		// Initialize input plane
@@ -3637,13 +3708,58 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 		// Fill input plane to benefit from contiguous access to the input cube
 		baselineRows = iter->second;
 
-		// Create spw-row map for this baseline
+		// Create spw-row map for this baseline and initialize detection of SPWs with different exposure
 		spwRowMap.clear();
-		for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+		if (combinationOfSPWsWithDifferentExposure_p)
 		{
-			row = *iter;
-			spw = spws(row);
-			spwRowMap[spw]=row;
+			combinationOfSPWsWithDifferentExposure = True;
+			addWeightSpectrumContribution_p = &MSTransformDataHandler::addWeightSpectrumContribution;
+			for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+			{
+				row = *iter;
+				spw = spws(row);
+				spwRowMap[spw]=row;
+			}
+		}
+		else
+		{
+			exposure = exposures(*baselineRows.begin());
+			combinationOfSPWsWithDifferentExposure = False;
+			for (vector<uInt>::iterator iter = baselineRows.begin();iter != baselineRows.end(); iter++)
+			{
+				row = *iter;
+				spw = spws(row);
+				spwRowMap[spw]=row;
+
+				if (abs(exposure - exposures(row)) > FLT_EPSILON)
+				{
+					combinationOfSPWsWithDifferentExposure = True;
+				}
+			}
+
+			if (combinationOfSPWsWithDifferentExposure)
+			{
+				combinationOfSPWsWithDifferentExposure_p = True;
+				addWeightSpectrumContribution_p = &MSTransformDataHandler::addWeightSpectrumContribution;
+				if (inputWeightSpectrumAvailable_p)
+				{
+					logger_p 	<< LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+								<< "Detected combination of SPWs with different EXPOSURE "<< endl
+								<< "Will use WEIGHT_SPECTRUM to combine them "<< endl
+								<< LogIO::POST;
+				}
+				else
+				{
+					logger_p 	<< LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+								<< "Detected combination of SPWs with different EXPOSURE "<< endl
+								<< "Will use WEIGHT to combine them (WEIGHT_SPECTRUM not available)"<< endl
+								<< LogIO::POST;
+				}
+			}
+			else
+			{
+				addWeightSpectrumContribution_p = &MSTransformDataHandler::dontAddWeightSpectrumContribution;
+			}
 		}
 
 		for (uInt outputChannel = 0; outputChannel < numOfCombInputChanMap_p[0]; outputChannel++)
@@ -3660,6 +3776,9 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 				{
 					inputChannel = contributionsIter->inpChannel;
 					weight = contributionsIter->weight;
+
+					// Add WEIGHT_SPECTRUM to the contribution
+					(*this.*addWeightSpectrumContribution_p)(weight,pol,inputChannel,row,inputWeightsCubeLocal);
 
 					// Find row for this input channel
 					spw = contributionsIter->inpSpw;
@@ -3708,7 +3827,7 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 						{
 							inputPlaneData(pol,outputChannel) += weight*inputDataCube(pol,inputChannel,row);
 							normalizingFactorPlane(pol,outputChannel) += weight;
-							(*this.*fillWeightsPlane_p)(pol,inputChannel,outputChannel,row,inputWeightsCube,inputPlaneWeights,weight);
+							(*this.*fillWeightsPlane_p)(pol,inputChannel,outputChannel,row,inputWeightsCubeLocal,inputPlaneWeights,weight);
 
 							/*
 							cout 	<< "outChan=" << outputChannel
@@ -3764,6 +3883,32 @@ template <class T> void MSTransformDataHandler::combineCubeOfData(	vi::VisBuffer
 		baseline_index += 1;
 	}
 
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::addWeightSpectrumContribution(	Double &weight,
+															uInt &pol,
+															uInt &inputChannel,
+															uInt &row,
+															Cube<Float> &inputWeightsCube)
+{
+	weight *= inputWeightsCube(pol,inputChannel,row);
+
+	return;
+}
+
+// -----------------------------------------------------------------------
+//
+// -----------------------------------------------------------------------
+void MSTransformDataHandler::dontAddWeightSpectrumContribution(	Double &weight,
+																uInt &pol,
+																uInt &inputChannel,
+																uInt &row,
+																Cube<Float> &inputWeightsCube)
+{
 	return;
 }
 

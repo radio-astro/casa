@@ -398,6 +398,24 @@ protected:
 												const Cube<T> &inputDataCube,
 												ArrayColumn<T> &outputDataCol,
 												ArrayColumn<Bool> *outputFlagCol);
+
+	void addWeightSpectrumContribution(	Double &weight,
+										uInt &pol,
+										uInt &inputChannel,
+										uInt &row,
+										Cube<Float> &inputWeightsCube);
+	void dontAddWeightSpectrumContribution(	Double &weight,
+											uInt &pol,
+											uInt &inputChannel,
+											uInt &row,
+											Cube<Float> &inputWeightsCube);
+	void (casa::MSTransformDataHandler::*addWeightSpectrumContribution_p)(	Double &weight,
+																			uInt &pol,
+																			uInt &inputChannel,
+																			uInt &row,
+																			Cube<Float> &inputWeightsCube);
+
+
 	void fillWeightsPlane(	uInt pol,
 							uInt inputChannel,
 							uInt outputChannel,
@@ -839,7 +857,6 @@ protected:
 
 	// Output MS structure related members
 	Bool fillFlagCategory_p;
-	Bool fillWeightSpectrum_p;
 	Bool correctedToData_p;
 	dataColMap dataColMap_p;
 	MSMainEnums::PredefinedColumns mainColumn_p;
@@ -875,6 +892,11 @@ protected:
     Bool fftShiftEnabled_p;
 	Double fftShift_p;
 	ROScalarMeasColumn<MEpoch> timeMeas_p;
+
+	// Weight Spectrum handling members
+	Bool inputWeightSpectrumAvailable_p;
+	Bool combinationOfSPWsWithDifferentExposure_p;
+	Cube<Float> weightSpectrumCube_p;
 
 	// Logging
 	LogIO logger_p;
