@@ -972,7 +972,7 @@ def mstransform(
     mtlocal = casac.mstransformer()
     mslocal = mstool()
         
-    try:
+    if 1==1:
                     
         # Gather all the parameters in a dictionary.
         
@@ -1063,11 +1063,13 @@ def mstransform(
         mtlocal.run()        
             
         mtlocal.done()
-                    
-    except Exception, instance:
-        mtlocal.done()
-        casalog.post('%s'%instance,'ERROR')
-        return False
+          
+    else:
+        print "Hello"          
+    #except Exception, instance:
+    #    mtlocal.done()
+    #    casalog.post('%s'%instance,'ERROR')
+    #    return False
 
 
     # Update the FLAG_CMD sub-table to reflect any spw/channels selection
