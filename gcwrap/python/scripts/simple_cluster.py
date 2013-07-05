@@ -49,7 +49,7 @@ class simple_cluster:
       If and only if the host is not localhost, ssh is used."""
 
       if self.uniqueIP(hostname) == self.uniqueIP("localhost"):
-         return "eval "
+         return "eval 2>/dev/null "
       else:
          # f: Requests ssh to go to background just before command execution.
          # q: Quiet mode.  Causes all warning and diagnostic messages to be suppressed.
