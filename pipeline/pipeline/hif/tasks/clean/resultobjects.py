@@ -51,8 +51,6 @@ class CleanResult(basetask.Results):
         iters = self.iterations.keys()
         iters.sort()
         image = self.iterations[iters[-1]]['image']
-        print 'imageplot image', image
-        print 'plotdir', self.plotdir
         imageplot = displays.sky.plotfilename(image=image,
           reportdir=self.plotdir)
         return imageplot
