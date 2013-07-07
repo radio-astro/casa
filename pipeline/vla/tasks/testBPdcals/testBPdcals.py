@@ -46,16 +46,18 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         #Iterate and check the fraciton of Flagged solutions, each time running gaincal in 'K' mode
         while (fracFlaggedSolns > critfrac):
+            
+                
+            ktype_delaycal_result = self._do_ktype_delaycal()
+            flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
+            fracFlaggedSolns = self._check_flagSolns(flaggedSolnResult)
+
             try:
                 calto = callibrary.CalTo(self.inputs.vis)
                 calfrom = callibrary.CalFrom(gaintable='testdelay.k', interp='linear,linear', calwt=True)
                 self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
             except:
                 LOG.info("testdelay.k does not exist in the context, and does not need to be removed.")
-                
-            ktype_delaycal_result = self._do_ktype_delaycal()
-            flaggedSolnResult = getCalFlaggedSoln(ktype_delaycal_result.__dict__['inputs']['caltable'])
-            fracFlaggedSolns = self._check_flagSolns(flaggedSolnResult)
 
         # Do initial amplitude and phase gain solutions on the BPcalibrator and delay
         # calibrator; the amplitudes are used for flagging; only phase
@@ -76,9 +78,13 @@ class testBPdcals(basetask.StandardTaskTemplate):
         soltime = soltimes[0]
         solint = solints[0]
 
+        bpdgain_touse = 'testBPdinitialgain.g'
         
         gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[0])
         flaggedSolnResult1 = getCalFlaggedSoln(tablebase + table_suffix[0])
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(gaintable='testBPdinitialgain.g', interp='linear,linear', calwt=True)
+        self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
 
         if (flaggedSolnResult1['all']['total'] > 0):
             fracFlaggedSolns1=flaggedSolnResult1['antmedian']['fraction']
@@ -94,6 +100,9 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[1])
         flaggedSolnResult3 = getCalFlaggedSoln(tablebase + table_suffix[1])
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(gaintable='testBPdinitialgain3.g', interp='linear,linear', calwt=True)
+        self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
 
         if (flaggedSolnResult3['all']['total'] > 0):
             fracFlaggedSolns3=flaggedSolnResult3['antmedian']['fraction']
@@ -103,16 +112,19 @@ class testBPdcals(basetask.StandardTaskTemplate):
         if (fracFlaggedSolns3 < fracFlaggedSolns1):
             gain_solint1 = solint
             shortsol1 = soltime
-            calto = callibrary.CalTo(self.inputs.vis)
-            calfrom = callibrary.CalFrom(gaintable='testBPdinitialgain.g', interp='linear,linear', calwt=True)
-            self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
-
+            
+            bpdgain_touse = 'testBPdinitialgain3.g'
+            
             if (fracFlaggedSolns3 > 0.05):
                 soltime = soltimes[2]
                 solint = solints[2]
 
                 gtype_gaincal_result = self._do_gtype_bpdgains(tablebase + table_suffix[2])
                 flaggedSolnResult10 = getCalFlaggedSoln(tablebase + table_suffix[2])
+                calto = callibrary.CalTo(self.inputs.vis)
+                calfrom = callibrary.CalFrom(gaintable='testBPdinitialgain10.g', interp='linear,linear', calwt=True)
+                self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
+                
 
                 if (flaggedSolnResult10['all']['total'] > 0):
                     fracFlaggedSolns10 = flaggedSolnResult10['antmedian']['fraction']
@@ -122,13 +134,21 @@ class testBPdcals(basetask.StandardTaskTemplate):
                 if (fracFlaggedSolns10 < fracFlaggedSolns3):
                     gain_solint1=solint
                     shortsol1=soltime
-                    calto = callibrary.CalTo(self.inputs.vis)
-                    calfrom = callibrary.CalFrom(gaintable='testBPdinitialgain3.g', interp='linear,linear', calwt=True)
-                    self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
+                    bpdgain_touse = 'testBPdinitialgain10.g'
 
                     if (fracFlaggedSolns > 0.05):
                         LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.")
 
+        #Add appropriate temporary tables to the callibrary
+        calto = cl.CalTo(self.inputs.vis)
+        calfrom = cl.CalFrom(gaintable='testdelay.k', interp='linear,linear', calwt=True)
+        context.callibrary.add(calto, calfrom)
+        
+        calto = cl.CalTo(self.inputs.vis)
+        calfrom = cl.CalFrom(gaintable=bpdgain_touse, interp='linear,linear', calwt=True)
+        context.callibrary.add(calto, calfrom)
+        
+        
         bandpass_result = self._do_bandpass('testBPcal.b')
                         
         print self.inputs.context.callibrary.active
