@@ -4816,22 +4816,35 @@ in spectral window 1.
      <input>
        
        <param type="stringArray" direction="in" name="columns">
-	 <description>Vector of column names (case sensitive).</description>
+	 <description>
+	   Vector of column names (case sensitive).  This parameter is
+	   not used and is here only for backwards compatibility with
+	   the iterinit() method.
+
+	   The iterator is initialized to be at the origin of the iterations.
+	 </description>
 	 <value></value>
        </param>
        
        <param type="double" direction="in" name="interval">
-	 <description>Time interval in seconds (greater than 0), to group together in iteration</description>
+	 <description>
+	   Time interval in seconds (greater than 0), to group
+	   together in iteration
+	 </description>
 	 <value>0.0</value>
        </param>
        
        <param type="int" direction="in" name="maxrows">
-	 <description>Max number of rows (greater than 0) to return in iteration</description>
+	 <description>
+	   Max number of rows (greater than 0) to return in iteration.
+	 </description>
 	 <value>0</value>
        </param>
        
        <param type="bool" direction="in" name="adddefaultsortcolumns">
-	 <description>Add the default sort columns</description>
+	 <description>
+	   Add the default sort columns
+	 </description>
 	 <value>true</value>
        </param>
      </input>
@@ -4855,7 +4868,7 @@ in spectral window 1.
        before calling this.  See the example below.
      </description>
      <example>
-       See the example for the <link anchor="ms:ms.iterend.function">iterend</link> function.
+       See the example for the <link anchor="ms:ms.niterend.function">niterend</link> function.
      </example>
    </method>
    
@@ -4878,46 +4891,55 @@ in spectral window 1.
        before calling this.  See the example below.
      </description>
      <example>
-       See the example for the <link anchor="ms:ms.iterend.function">iterend</link> function.
+       See the example for the <link anchor="ms:ms.niterend.function">niterend</link> function.
      </example>
    </method>
    
    <!-- ====================================================== -->
    
    <method type="function" name="niterend">
-     <shortdescription>End the iteration and reset the selected table</shortdescription>
+     <shortdescription>Query if there are more iterations left in the iterator.</shortdescription>
      
      <keyword>iterend</keyword>
      <returns type="bool">
-       <shortdescription>Bool, True if iteration was in progress, False if not
+       <shortdescription>
+	 Bool, True if iterations have ended.  False otherwise.
        </shortdescription>
      </returns>
      
      <description>
-       This sets the currently selected table (as accessed with
-       <link anchor="ms:ms.getdata.function">getdata</link>) to the table that was selected
-       before iteration started.  Use this to end the iteration
-       prematurely.  There is no need to call this if you continue
-       iterating until <link anchor="ms:ms.iternext.function">iternext</link> returns False.
+       The serves redundant purpose and is here only for backward
+       compatibility.
        
+       This method returns True if there are no more iterations left.
+       I.e., the iterations have ended.  This same information is also
+       returned by niternext().
+
+       With the use of the VisibilityIterator in the niterinit(),
+       niterorigin(), niternext() methods, the iterator is set to the
+       original state by calling niterinit() again. 
+
        See the example below.
      </description>
      <example>
        
        
        ms.open("3C273XC1.MS")
-       ms.selectinit(datadescid=0)
-       ms.iterinit(["ANTENNA1","ANTENNA2","TIME"],60.0)
-       ms.iterorigin()
-       rec=ms.getdata(["u","v","data"])
-       ms.iternext()
-       ms.iterend()
+       staql={'baseline':'1&2'};
+       ms.msselect(staql);
+       ms.niterinit([" "],60.0)
+       ms.niterorigin()
+       while (!ms.niterend()):
+          rec=ms.ngetdata(["u","v","data"])
+          ms.niternext()
+       ms.close()
        
-       We open the MS, select an array and spectral window and then
-       specify an iteration over interferometer and time, with a 60s time
-       interval.  We then set the iterator to the start of the data and
-       get out some data. Finally we advance the iterator to the next lot
-       of data and then end the iteration.
+       We open the MS, select a baseline and then specify an iteration
+       over time, with a 60s time interval.  We then set the iterator
+       to the start of the data and get out some data.  We advance the
+       iterator to the next lot of data and continue till the end of
+       iterations is indicated.  Finally, we close the ms tool which
+       restores the tool to its original state.
      </example>
    </method>
    <!-- ====================================================== -->
