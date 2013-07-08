@@ -13,6 +13,7 @@ from matplotlib.font_manager import FontProperties
 ## 0:DebugPlot 1:TPlotRADEC 2:TPlotAzEl 3:TPlotCluster 4:TplotFit 5:TPlotMultiSP 6:TPlotSparseSP 7:TPlotChannelMap 8:TPlotFlag 9:TPlotIntermediate
 MATPLOTLIB_FIGURE_ID = [8904, 8905, 8906, 8907, 8908, 8909, 8910, 8911, 8912, 8913]
 DPIDetail = 130
+FIGSIZE_INCHES = (7.0, 2.8)
     
 def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
     # PlotData = {
@@ -48,17 +49,21 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
 
     PL.cla()
     PL.clf()
-    PL.subplot(211)
-    PL.subplots_adjust(hspace=0.3)
+    figsize_org = PL.gcf().get_size_inches()
+    PL.gcf().set_size_inches(FIGSIZE_INCHES)
+    #PL.subplot(211)
+    PL.subplot(111)
+    #PL.subplots_adjust(hspace=0.3)
+    PL.subplots_adjust(top=0.88, left=0.1, right=0.98)
     PL.title(PlotData['title'], size=7)
     PL.xlabel(PlotData['xlabel'], size=6)
     PL.ylabel(PlotData['ylabel'], size=7)
     PL.xticks(size=6)
     PL.yticks(size=6)
     if PlotData['isActive']:
-        PL.figtext(0.05, 0.95, "ACTIVE", horizontalalignment='left', verticalalignment='top', color='green', size=18, style='italic', weight='bold')
+        PL.figtext(0.01, 0.98, "ACTIVE", horizontalalignment='left', verticalalignment='top', color='green', size=18, style='italic', weight='bold')
     else:
-        PL.figtext(0.05, 0.95, "INACTIVE", horizontalalignment='left', verticalalignment='top', color='red', size=18, style='italic', weight='bold')
+        PL.figtext(0.01, 0.98, "INACTIVE", horizontalalignment='left', verticalalignment='top', color='red', size=18, style='italic', weight='bold')
 
     if len(PlotData['thre']) > 1: LowRange = True
     else:
@@ -141,7 +146,8 @@ def StatisticsPlot(PlotData, FigFileDir=False, FigFileRoot=False):
         OldPlot = FigFileDir+FigFileRoot+'.png'
         NewPlot = FigFileDir+FigFileRoot+'_trim.png'
         PL.savefig(OldPlot, format='png', dpi=DPIDetail)
-        os.system('convert %s -trim %s' % (OldPlot, NewPlot))
+        #os.system('convert %s -trim %s' % (OldPlot, NewPlot))
+    PL.gcf().set_size_inches(figsize_org)
 
     del data, ScaleOut
     return

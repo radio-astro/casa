@@ -486,7 +486,8 @@ class SDFlagDataWorker(object):
             PermanentFlag.append(Flag)
             # FLAG_SUMMARY
             Flag *= self._get_stat_flag_summary(tFLAG, FlagRule)
-            FlaggedRows.append( row )
+            if Flag == 0:
+                FlaggedRows.append( row )
            # Tsys flag
             NPpdata[0][N] = tTSYS
             NPpflag[0][N] = tPFLAG[1]
@@ -553,9 +554,7 @@ class SDFlagDataWorker(object):
                     'isActive': FlagRule['TsysFlag']['isActive'], \
                     'threType': "line"}
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_0')
-        if os.path.exists(FigFileDir+'/'+FigFileRoot+'_0_trim.png'): name = FigFileRoot+'_0_trim.png'
-        else: name = FigFileRoot+'_0.png'
-        plots.append(name)
+        plots.append(FigFileRoot+'_0.png')
 
         # RMS flag before baseline fit
         PlotData['row'] = NPprows[1]
@@ -566,9 +565,7 @@ class SDFlagDataWorker(object):
         PlotData['ylabel'] = "Baseline RMS (K)"
         PlotData['isActive'] = FlagRule['RmsPreFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_1')
-        if os.path.exists(FigFileDir+'/'+FigFileRoot+'_1_trim.png'): name = FigFileRoot+'_1_trim.png'
-        else: name = FigFileRoot+'_1.png'        
-        plots.append(name)
+        plots.append(FigFileRoot+'_1.png')
 
         # RMS flag after baseline fit
         PlotData['data'] = NPpdata[2]
@@ -577,9 +574,7 @@ class SDFlagDataWorker(object):
         PlotData['title'] = "Baseline RMS (K) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule['RmsPostFitFlag']['Threshold']
         PlotData['isActive'] = FlagRule['RmsPostFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_2')
-        if os.path.exists(FigFileDir+'/'+FigFileRoot+'_2_trim.png'): name = FigFileRoot+'_2_trim.png'
-        else: name = FigFileRoot+'_2.png'        
-        plots.append(name)
+        plots.append(FigFileRoot+'_2.png')
 
         # Running mean flag before baseline fit
         PlotData['data'] = NPpdata[3]
@@ -588,9 +583,7 @@ class SDFlagDataWorker(object):
         PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule['RunMeanPreFitFlag']['Nmean'], FlagRule['RunMeanPreFitFlag']['Threshold'])
         PlotData['isActive'] = FlagRule['RunMeanPreFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_3')
-        if os.path.exists(FigFileDir+'/'+FigFileRoot+'_3_trim.png'): name = FigFileRoot+'_3_trim.png'
-        else: name = FigFileRoot+'_3.png'        
-        plots.append(name)
+        plots.append(FigFileRoot+'_3.png')
 
         # Running mean flag after baseline fit
         PlotData['data'] = NPpdata[4]
@@ -599,9 +592,7 @@ class SDFlagDataWorker(object):
         PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule['RunMeanPostFitFlag']['Nmean'], FlagRule['RunMeanPostFitFlag']['Threshold'])
         PlotData['isActive'] = FlagRule['RunMeanPostFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_4')
-        if os.path.exists(FigFileDir+'/'+FigFileRoot+'_4_trim.png'): name = FigFileRoot+'_4_trim.png'
-        else: name = FigFileRoot+'_4.png'        
-        plots.append(name)
+        plots.append(FigFileRoot+'_4.png')
 
         # Expected RMS flag before baseline fit
         PlotData['data'] = NPpdata[1]
@@ -611,9 +602,7 @@ class SDFlagDataWorker(object):
         PlotData['isActive'] = FlagRule['RmsExpectedPreFitFlag']['isActive']
         PlotData['threType'] = "plot"
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_5')
-        if os.path.exists(FigFileDir+'/'+FigFileRoot+'_5_trim.png'): name = FigFileRoot+'_5_trim.png'
-        else: name = FigFileRoot+'_5.png'        
-        plots.append(name)
+        plots.append(FigFileRoot+'_5.png')
 
         # Expected RMS flag after baseline fit
         PlotData['data'] = NPpdata[2]
@@ -623,9 +612,7 @@ class SDFlagDataWorker(object):
         PlotData['isActive'] = FlagRule['RmsExpectedPostFitFlag']['isActive']
         PlotData['threType'] = "plot"
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_6')
-        if os.path.exists(FigFileDir+'/'+FigFileRoot+'_6_trim.png'): name = FigFileRoot+'_6_trim.png'
-        else: name = FigFileRoot+'_6.png'        
-        plots.append(name)
+        plots.append(FigFileRoot+'_6.png')
 
         # Create Flagging Summary Page
         if FigFileDir != False:
