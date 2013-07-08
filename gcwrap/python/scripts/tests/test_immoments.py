@@ -177,6 +177,9 @@ def _momentTest_debug_msg( msgNum=0 ):
     print str(msgNum)+":  "+debug_msgs[idx]
     return
 
+datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/immoment/'
+
+
 # input files
 list1=['n1333_both.image','n1333_both.image.rgn']
 list2=['n1333_both.image','n1333_both.src.tmom0.all','n1333_both.image.rgn', 
@@ -220,8 +223,6 @@ class immoment_test1(unittest.TestCase):
             for file in list1:
                 os.system('rm -rf ' +file)
         
-#        datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/ngc1333/reference/ngc1333_regression/'
-        datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/immoment/'
         for file in list1:
             os.system('cp -RL ' +datapath + file +' ' + file)
 
@@ -837,9 +838,6 @@ class immoment_test2(unittest.TestCase):
         if(os.path.exists(list2[1])):
             for file in list2:
                 os.system('rm -rf ' +file)
-        
-#        datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/ngc1333/reference/ngc1333_regression/'
-        datapath = os.environ.get('CASAPATH').split()[0]+'/data/regression/immoment/'
         for file in list2:
             os.system('cp -RL ' +datapath + file +' ' + file)
 
@@ -1259,6 +1257,17 @@ class immoment_test2(unittest.TestCase):
         self.assertTrue(myia.moments(moments=[0]))
         self.assertTrue(len(tb.showcache()) == 0)
 
+    def test_CAS5287(self):
+        """ Verify fix of CAS-5287"""
+        outfile = "cas5287.im"
+        immoments(
+            imagename=datapath + "38chans.im",moments=[8],axis="spectral",
+            outfile=outfile
+        )
+        myia = iatool()
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == [1,1,1,1]).all())
+        myia.done()
         
             
 def suite():
