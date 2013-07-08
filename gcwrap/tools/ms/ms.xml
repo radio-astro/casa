@@ -4917,7 +4917,7 @@ in spectral window 1.
 
        With the use of the VisibilityIterator in the niterinit(),
        niterorigin(), niternext() methods, the iterator is set to the
-       original state by calling niterinit() again. 
+       original state by calling niterinit() at any time.
 
        See the example below.
      </description>
@@ -4925,7 +4925,7 @@ in spectral window 1.
        
        
        ms.open("3C273XC1.MS")
-       staql={'baseline':'1&2'};
+       staql={'baseline':'1 &amp; 2'};
        ms.msselect(staql);
        ms.niterinit([" "],60.0)
        ms.niterorigin()
