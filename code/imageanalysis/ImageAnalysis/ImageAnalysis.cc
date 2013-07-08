@@ -2820,12 +2820,7 @@ ImageInterface<Float> * ImageAnalysis::moments(
 		}
 		if (x->imageInfo().hasMultipleBeams()) {
 			const CoordinateSystem& csys = x->coordinates();
-			if (csys.hasSpectralAxis() && axis == csys.spectralAxisNumber()) {
-				*_log << LogIO::WARN << "This image has multiple beams and you determining "
-					<< " moments along the spectral axis. Interpret your results carefully"
-					<< LogIO::POST;
-			}
-			else if (csys.hasPolarizationCoordinate() && axis == csys.polarizationAxisNumber()) {
+			if (csys.hasPolarizationCoordinate() && axis == csys.polarizationAxisNumber()) {
 				*_log << LogIO::WARN << "This image has multiple beams and you determining "
 						<< " moments along the polarization axis. Interpret your results carefully"
 						<< LogIO::POST;
