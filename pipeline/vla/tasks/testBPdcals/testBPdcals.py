@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 import pipeline.infrastructure.basetask as basetask
+from pipeline.infrastructure import casa_tasks
 import pipeline.infrastructure.casatools as casatools
 import pipeline.domain.measures as measures
 import pipeline.infrastructure as infrastructure
@@ -10,6 +11,7 @@ import itertools
 
 from pipeline.hif.tasks import gaincal
 from pipeline.hif.tasks import bandpass
+from pipeline.hif.tasks import applycal
 from pipeline.vla.heuristics import getCalFlaggedSoln, getBCalStatistics
 
 
@@ -39,6 +41,10 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         
         gtype_delaycal_result = self._do_gtype_delaycal()
+        
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(gaintable='testdelayinitialgain.g', interp='linear,linear', calwt=True)
+        self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
 
         fracFlaggedSolns = 1.0
         m = self.inputs.context.observing_run.measurement_sets[0]
@@ -140,23 +146,27 @@ class testBPdcals(basetask.StandardTaskTemplate):
                         LOG.warn("There is a large fraction of flagged solutions, there might be something wrong with your data.")
 
         #Add appropriate temporary tables to the callibrary
-        calto = cl.CalTo(self.inputs.vis)
-        calfrom = cl.CalFrom(gaintable='testdelay.k', interp='linear,linear', calwt=True)
-        context.callibrary.add(calto, calfrom)
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(gaintable='testdelay.k', interp='linear,linear', calwt=True)
+        self.inputs.context.callibrary.add(calto, calfrom)
         
-        calto = cl.CalTo(self.inputs.vis)
-        calfrom = cl.CalFrom(gaintable=bpdgain_touse, interp='linear,linear', calwt=True)
-        context.callibrary.add(calto, calfrom)
+        calto = callibrary.CalTo(self.inputs.vis)
+        calfrom = callibrary.CalFrom(gaintable=bpdgain_touse, interp='linear,linear', calwt=True)
+        self.inputs.context.callibrary.add(calto, calfrom)
         
         
         bandpass_result = self._do_bandpass('testBPcal.b')
+        
+        applycal_result = self._do_applycal()
+        
+        
                         
         print self.inputs.context.callibrary.active
                         
         return testBPdcalsResults()                        
 
     def analyse(self, results):
-	    return results
+	return results
     
     def _do_gtype_delaycal(self):
         
@@ -185,7 +195,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         delaycal_task = gaincal.GTypeGaincal(delaycal_inputs)
 
-        return self._executor.execute(delaycal_task, merge=True)
+        return self._executor.execute(delaycal_task)
 
     def _do_ktype_delaycal(self):
         
@@ -214,7 +224,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         delaycal_task = gaincal.KTypeGaincal(delaycal_inputs)
 
-        return self._executor.execute(delaycal_task, merge=True)
+        return self._executor.execute(delaycal_task)
 
     def _check_flagSolns(self, flaggedSolnResult):
         
@@ -270,7 +280,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
 
         bpdgains_task = gaincal.GTypeGaincal(bpdgains_inputs)
 
-        return self._executor.execute(bpdgains_task, merge=True)
+        return self._executor.execute(bpdgains_task)
 
     def _do_bandpass(self, caltable):
         """Run CASA task bandpass"""
@@ -300,7 +310,25 @@ class testBPdcals(basetask.StandardTaskTemplate):
         return self._executor.execute(bandpass_task, merge=True)
 
         
+    def _do_applycal(self):
+        """Run CASA task applycal"""
         
+        applycal_inputs = applycal.Applycal.Inputs(self.inputs.context,
+            vis = self.inputs.vis,
+            field = '',
+            spw = '',
+            intent = '',
+            flagbackup = False,
+            calwt = False,
+            gaincurve = False)
+        
+        applycal_task = applycal.Applycal(applycal_inputs)
+        
+        return self._executor.execute(applycal_task)
+            
 
 
-    
+        
+        
+        
+        
