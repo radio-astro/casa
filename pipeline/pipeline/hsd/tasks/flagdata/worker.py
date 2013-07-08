@@ -541,6 +541,7 @@ class SDFlagDataWorker(object):
 
         ThreExpectedRMSPreFit = FlagRule['RmsExpectedPreFitFlag']['Threshold']
         ThreExpectedRMSPostFit = FlagRule['RmsExpectedPostFitFlag']['Threshold']
+        plots = []
         # Tsys flag
         PlotData = {'row': NPprows[0], 'data': NPpdata[0], 'flag': NPpflag[0], \
                     'thre': [threshold[4][1], 0.0], \
@@ -552,6 +553,7 @@ class SDFlagDataWorker(object):
                     'isActive': FlagRule['TsysFlag']['isActive'], \
                     'threType': "line"}
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_0')
+        plots.append(FigFileRoot+'_0.png')
 
         # RMS flag before baseline fit
         PlotData['row'] = NPprows[1]
@@ -562,6 +564,7 @@ class SDFlagDataWorker(object):
         PlotData['ylabel'] = "Baseline RMS (K)"
         PlotData['isActive'] = FlagRule['RmsPreFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_1')
+        plots.append(FigFileRoot+'_1.png')
 
         # RMS flag after baseline fit
         PlotData['data'] = NPpdata[2]
@@ -570,6 +573,7 @@ class SDFlagDataWorker(object):
         PlotData['title'] = "Baseline RMS (K) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % FlagRule['RmsPostFitFlag']['Threshold']
         PlotData['isActive'] = FlagRule['RmsPostFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_2')
+        plots.append(FigFileRoot+'_2.png')
 
         # Running mean flag before baseline fit
         PlotData['data'] = NPpdata[3]
@@ -578,6 +582,7 @@ class SDFlagDataWorker(object):
         PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) before baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule['RunMeanPreFitFlag']['Nmean'], FlagRule['RunMeanPreFitFlag']['Threshold'])
         PlotData['isActive'] = FlagRule['RunMeanPreFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_3')
+        plots.append(FigFileRoot+'_3.png')
 
         # Running mean flag after baseline fit
         PlotData['data'] = NPpdata[4]
@@ -586,6 +591,7 @@ class SDFlagDataWorker(object):
         PlotData['title'] = "RMS (K) for Baseline Deviation from the running mean (Nmean=%d) after baseline subtraction\nBlue dots: data points, Red dots: deviator, Cyan H-line: %.1f sigma threshold, Red H-line(s): out of vertical scale limit(s)" % (FlagRule['RunMeanPostFitFlag']['Nmean'], FlagRule['RunMeanPostFitFlag']['Threshold'])
         PlotData['isActive'] = FlagRule['RunMeanPostFitFlag']['isActive']
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_4')
+        plots.append(FigFileRoot+'_4.png')
 
         # Expected RMS flag before baseline fit
         PlotData['data'] = NPpdata[1]
@@ -595,6 +601,7 @@ class SDFlagDataWorker(object):
         PlotData['isActive'] = FlagRule['RmsExpectedPreFitFlag']['isActive']
         PlotData['threType'] = "plot"
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_5')
+        plots.append(FigFileRoot+'_5.png')
 
         # Expected RMS flag after baseline fit
         PlotData['data'] = NPpdata[2]
@@ -604,6 +611,7 @@ class SDFlagDataWorker(object):
         PlotData['isActive'] = FlagRule['RmsExpectedPostFitFlag']['isActive']
         PlotData['threType'] = "plot"
         SDP.StatisticsPlot(PlotData, FigFileDir, FigFileRoot+'_6')
+        plots.append(FigFileRoot+'_6.png')
 
         # Create Flagging Summary Page
         if FigFileDir != False:
@@ -617,6 +625,7 @@ class SDFlagDataWorker(object):
             print >> Out, '.stc{font-size:16px;font-weight:normal;}'
             print >> Out, '</style>\n</head>\n<body>'
             print >> Out, '<p class="ttl">Flagging Status</p>'
+            # A table of flag statistics summary
             print >> Out, '<table border="1">'
             print >> Out, '<tr align="center" class="stt"><th>&nbsp</th><th>isActive?</th><th>SigmaThreshold<th>Flagged spectra</th><th>Flagged ratio(%)</th></tr>'
             print >> Out, '<tr align="center" class="stp"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('User', FlagRule['UserFlag']['isActive'], FlagRule['UserFlag']['Threshold'], len(FlaggedRowsCategory[2]), len(FlaggedRowsCategory[2])*100.0/NROW)
@@ -630,7 +639,13 @@ class SDFlagDataWorker(object):
             print >> Out, '<tr align="center" class="stc"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Expected RMS (post-fit)', FlagRule['RmsExpectedPostFitFlag']['isActive'], FlagRule['RmsExpectedPostFitFlag']['Threshold'], len(FlaggedRowsCategory[7]), len(FlaggedRowsCategory[7])*100.0/NROW)
             print >> Out, '<tr align="center" class="stt"><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%.1f</th></tr>' % ('Total Flagged', '-', '-', len(FlaggedRows), len(FlaggedRows)*100.0/NROW)
             print >> Out, '<tr><td colspan=4>%s</td></tr>' % ("Note: flags in grey background are permanent, <br> which are not reverted or changed during the iteration cycles.") 
-            print >> Out, '</table>\n</body>\n</html>'
+            #print >> Out, '</table>\n</body>\n</html>'
+            print >> Out, '</table>\n'
+            # Plot figures
+            print >> Out, '<HR>\nNote to all the plots below: short green vertical lines indicate position gaps; short cyan vertical lines indicate time gaps\n<HR>'
+            for name in plots:
+                print >> Out, '<img src="%s">\n<HR>' % name
+            print >> Out, '</body>\n</html>'
             Out.close()
 
 
