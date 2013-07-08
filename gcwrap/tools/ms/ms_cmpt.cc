@@ -3673,17 +3673,12 @@ ms::niterinit(const std::vector<std::string>& columns, const double interval,
    try
      {
        if (itsVI == NULL)
-	 itsVI = new VisibilityIterator(*itsMS, sort,False,interval);
-       //	 *itsVI = VisibilityIterator(*itsMS, sort,interval);
-       if (interval <= 0)
-	 itsVI->setRowBlocking(itsMS->nrow());
-       if (maxrows > 0)
-	 itsVI->setRowBlocking(maxrows);
+	 itsVI = new VisibilityIterator(*itsMS, sort, adddefaultsortcolumns, interval);
+       else
+	 *itsVI = VisibilityIterator(*itsMS, sort, adddefaultsortcolumns, interval);
+       if (interval <= 0) itsVI->setRowBlocking(itsMS->nrow());
+       if (maxrows > 0) itsVI->setRowBlocking(maxrows);
        //       *itsVB = VisBuffer(*itsVI);
-       if (interval==0.0) 
-	 {
-	   itsVI->setRowBlocking(itsMS->nrow());
-	 }
        rstat=True;
      }
    catch (AipsError x)
@@ -3767,7 +3762,7 @@ ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const in
   try
     {
       if (itsVI == NULL) 
-	  niterinit(items); 
+	niterinit(items,0.0,0,False); 
       // if (doingIterations_p == False) 
       // 	niterorigin();
 
