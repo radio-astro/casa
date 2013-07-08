@@ -70,7 +70,7 @@ if [ $isapple = 'T' ]; then
     export PYTHONEXECUTABLE=${p_root}/Resources/Python.app/Contents/MacOS/Python
     export TERMINFO="${casa3party}/lib/terminfo"
     unset  LD_LIBRARY_PATH
-    export LC_CTYPE=sv_US.UTF-8
+    export LC_CTYPE=en_US.UTF-8
     export DYLD_FRAMEWORK_PATH="${casa3party}/Library/Frameworks"
     p_path=${p_bind}:${p_libd}:${p_libd}/plat-mac:${p_libd}/plat-darwin:${p_bind}/lib-scriptpackages:${p_libd}/lib-tk:${p_libd}/lib-dynload:${p_libd}/site-packages:${p_libd}/site-packages/Numeric:${p_libd}/site-packages/PyObjC
 else
