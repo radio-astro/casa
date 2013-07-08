@@ -70,9 +70,10 @@ def initcli() :
 # find pipeline revision using svnversion
 def _get_revision():
     try:
-        args = ['svnversion', os.path.dirname(__file__)]
+        args = ['svnversion', '.']
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE, shell=True)
+                stderr=subprocess.PIPE, shell=True,
+                cwd=os.path.dirname(__file__))
         (stdout, _) = p.communicate()
         if p.returncode is 0:
             return string.strip(stdout)
