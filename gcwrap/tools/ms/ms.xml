@@ -4772,56 +4772,87 @@ in spectral window 1.
 
    <!-- ====================================================== -->
    <method type="function" name="ngetdata">
-     <shortdescription>Read values from the measurement set.</shortdescription>
+     <shortdescription>
+       Read values from the measurement set.  Use this method instead of
+       the older getdata() method which is marked for deprecation.
+     </shortdescription>
    
      <keyword>getdata</keyword>
      <input>
        <param type="stringArray" direction="in" name="items">
-	 <description>Item names</description>
+	 <description>
+	   Item names (NOT USED)
+	 </description>
+
 	 <value></value>
        </param>
     
        <param type="bool" direction="in" name="ifraxis">
-	 <description>Create interferometer axis if True</description>
+	 <description>
+	   Create interferometer axis if True (NOT USED)
+	 </description>
+
 	 <value>false</value>
        </param>
     
        <param type="int" direction="in" name="ifraxisgap">
-	 <description>Gap size on ifr axis when antenna1 changes</description>
+	 <description>
+	   Gap size on ifr axis when antenna1 changes (NOT USED)
+	 </description>
+
 	 <value>0</value>
        </param>
     
        <param type="int" direction="in" name="increment">
-	 <description>Row increment for data access</description>
+	 <description>
+	   Row increment for data access (NOT USED)
+	 </description>
+
 	 <value>1</value>
        </param>
     
        <param type="bool" direction="in" name="average">
-	 <description>Average the data in time or over rows</description>
+	 <description>
+	   Average the data in time or over rows (NOT USED)
+	 </description>
+
 	 <value>false</value>
        </param>
      </input>
      <returns type="record">
-       <shortdescription>record with fields containing arrays of data</shortdescription>
+       <shortdescription>
+	 Record with fields containing arrays of data.  Each array is
+	 keyed with the elements of the item-list.
+       </shortdescription>
      </returns>
      
      <description>
+       This method extracs the data as specified in the items
+       parameter.  The data is returned as a record with each item
+       as a separate key in the record (all in lower case).
+
+       Unless the iterator was initialized with a niterinit(), this
+       method initializes the iterator
+       as <link anchor="ms:ms.niteinit.function">niterinit([".."],0.0,0,False)</link>. 
      </description>
+
    </method>
    <!-- ====================================================== -->
    <method type="function" name="niterinit">
-     <shortdescription>Initialize for iteration over an ms</shortdescription>
+     <shortdescription>
+       Initialize for iteration over an ms.  Use
+       this method instead of the older iterinit() method which is
+       marked for deprecation.
+     </shortdescription>
      
      <keyword>iterinit</keyword>
      <input>
-       
+
        <param type="stringArray" direction="in" name="columns">
 	 <description>
 	   Vector of column names (case sensitive).  This parameter is
 	   not used and is here only for backwards compatibility with
 	   the iterinit() method.
-
-	   The iterator is initialized to be at the origin of the iterations.
 	 </description>
 	 <value></value>
        </param>
@@ -4855,18 +4886,24 @@ in spectral window 1.
    </method>
    <!-- ====================================================== -->
    <method type="function" name="niterorigin">
-     <shortdescription>Set the iterator to the start of the data.</shortdescription>
+     <shortdescription>
+       Set the iterator to the start of the data.  Use this method
+       instead of the older iterorigin() method which is marked for
+       deprecation.
+     </shortdescription>
      
      <keyword>iteriorigin</keyword>
      <returns type="bool"/>
      
      <description>
-       Set or reset the iterator to the start of the currently specified
-       iteration. You need to call this before attempting to retrieve
-       data with getdata. You can set the iteration back to the start
-       before you reach the end of the data.  You need to call iterinit
-       before calling this.  See the example below.
+       Set or reset the iterator to the start of the currently
+       specified iteration. You need to call this before attempting to
+       iteratively retrieve data with ngetdata. You can set the
+       iteration back to the start before you reach the end of the
+       data.  You need to call iterinit before calling this.  See the
+       example below.
      </description>
+
      <example>
        See the example for the <link anchor="ms:ms.niterend.function">niterend</link> function.
      </example>
@@ -4875,21 +4912,26 @@ in spectral window 1.
    <!-- ====================================================== -->
    
    <method type="function" name="niternext">
-     <shortdescription>Advance the iterator to the next lot of data</shortdescription>
+     <shortdescription>
+       Advance the iterator to the next lot of data.  Use
+       this method instead of the older iternext() method which is
+       marked for deprecation.
+     </shortdescription>
      
      <keyword>iternext</keyword>
      <returns type="bool">
-       <shortdescription>Bool, True if there was more data, False if we've reached the end
+       <shortdescription>
+	 Bool, True if there was more data, False if we've reached the end
        </shortdescription>
      </returns>
      
      <description>
-       This sets the currently selected table (as accessed with getdata)
-       to the next iteration. If there is no more data, the function
-       returns False and the selection is reset to that before the
-       iteration started.  You need to call iterinit and iterorigin
-       before calling this.  See the example below.
+       This sets the currently selected table (as accessed with
+       ngetdata) to the next iteration. If there is no more data, the
+       function returns False.  You need to call iterinit and
+       iterorigin before calling this.  See the example below.
      </description>
+
      <example>
        See the example for the <link anchor="ms:ms.niterend.function">niterend</link> function.
      </example>
@@ -4898,7 +4940,11 @@ in spectral window 1.
    <!-- ====================================================== -->
    
    <method type="function" name="niterend">
-     <shortdescription>Query if there are more iterations left in the iterator.</shortdescription>
+     <shortdescription>
+       Query if there are more iterations left in the iterator.  Use
+       this method instead of the older iterend() method which is marked
+       for deprecation.
+     </shortdescription>
      
      <keyword>iterend</keyword>
      <returns type="bool">
@@ -4921,9 +4967,8 @@ in spectral window 1.
 
        See the example below.
      </description>
+
      <example>
-       
-       
        ms.open("3C273XC1.MS")
        staql={'baseline':'1 &amp; 2'};
        ms.msselect(staql);
@@ -4943,7 +4988,6 @@ in spectral window 1.
      </example>
    </method>
    <!-- ====================================================== -->
-   
    
   </tool>
   
