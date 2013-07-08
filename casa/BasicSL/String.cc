@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: String.cc 21285 2012-11-14 15:36:59Z gervandiepen $
+//# $Id: String.cc 21359 2013-06-14 12:55:29Z gervandiepen $
 
 #include <casa/BasicSL/String.h>
 
@@ -32,7 +32,7 @@
 #include <casa/string.h>
 #include <casa/sstream.h>
 #include <stdio.h>		// for vsnprintf( )
-#include <stdarg.h>
+#include <cstdarg>              // for va_start/end
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -102,7 +102,7 @@ Int String::toInt(const String& string) {
     // Initialize in case the string is empty or non-numeric.
     instr >> var;
     if (instr.fail()) {
-      var = 0;
+      var = 0.0;
     }
     return var;
 }
@@ -188,15 +188,15 @@ SubString String::before(size_type pos) {
   return _substr(0, pos);
 }
 
-SubString String::before(const string &str, Int startpos) {
+SubString String::before(const string &str, size_type startpos) {
   return _substr(0, index(str, startpos));
 }
 
-SubString String::before(const Char *s, Int startpos) {
+SubString String::before(const Char *s, size_type startpos) {
   return _substr(0, index(s, startpos));
 }
 
-SubString String::before(Char c, Int startpos) {
+SubString String::before(Char c, size_type startpos) {
   return _substr(0, index(c, startpos));
 }
 
@@ -204,19 +204,19 @@ SubString String::through(size_type pos) {
   return _substr(0, pos+1);
 }
 
-SubString String::through(const string &str, Int startpos) {
+SubString String::through(const string &str, size_type startpos) {
   size_type last(index(str, startpos));
   if (last != npos) last += str.length();
   return _substr(0, last);
 }
 
-SubString String::through(const Char *s, Int startpos) {
+SubString String::through(const Char *s, size_type startpos) {
   size_type last(index(s, startpos));
   if (last != npos) last +=  traits_type::length(s);
   return _substr(0, last);
 }
 
-SubString String::through(Char c, Int startpos) {
+SubString String::through(Char c, size_type startpos) {
   size_type last(index(c, startpos));
   if (last != npos) last += 1;
   return _substr(0, last);
@@ -226,17 +226,17 @@ SubString String::from(size_type pos) {
   return _substr(pos, length()-pos);
 }
 
-SubString String::from(const string &str, Int startpos) {
+SubString String::from(const string &str, size_type startpos) {
   size_type first(index(str, startpos));
   return _substr(first, length()-first);
 }
 
-SubString String::from(const Char *s, Int startpos) {
+SubString String::from(const Char *s, size_type startpos) {
   size_type first(index(s, startpos));
   return _substr(first, length()-first);
 }
 
-SubString String::from(Char c, Int startpos) {
+SubString String::from(Char c, size_type startpos) {
   size_type first(index(c, startpos));
   return _substr(first, length()-first);
 }
@@ -245,19 +245,19 @@ SubString String::after(size_type pos) {
   return _substr(pos+1, length()-(pos+1));
 }
 
-SubString String::after(const string &str, Int startpos) {
+SubString String::after(const string &str, size_type startpos) {
   size_type first(index(str, startpos));
   if (first != npos) first += str.length();
   return _substr(first, length()-first);
 }
 
-SubString String::after(const Char *s, Int startpos) {
+SubString String::after(const Char *s, size_type startpos) {
   size_type first(index(s, startpos));
   if (first != npos) first += traits_type::length(s);
   return _substr(first, length()-first);
 }
 
-SubString String::after(Char c, Int startpos) {
+SubString String::after(Char c, size_type startpos) {
   size_type first(index(c, startpos));
   if (first != npos) first += 1;
   return _substr(first, length()-first);
@@ -407,26 +407,26 @@ SubString String::at(const RegexBase &r, Int startpos) {
   return _substr(first, mlen);
 }
 
-SubString String::before(const RegexBase &r, Int startpos) {
+SubString String::before(const RegexBase &r, size_type startpos) {
   Int mlen;
   size_type first = r.search(c_str(), length(), mlen, startpos);
   return _substr(0, first);
 }
 
-SubString String::through(const RegexBase &r, Int startpos) {
+SubString String::through(const RegexBase &r, size_type startpos) {
   Int mlen;
   size_type first = r.search(c_str(), length(), mlen, startpos);
   if (first != npos) first += mlen;
   return _substr(0, first);
 }
 
-SubString String::from(const RegexBase &r, Int startpos) {
+SubString String::from(const RegexBase &r, size_type startpos) {
   Int mlen;
   size_type first = r.search(c_str(), length(), mlen, startpos);
   return _substr(first, length()-first);
 }
 
-SubString String::after(const RegexBase &r, Int startpos) {
+SubString String::after(const RegexBase &r, size_type startpos) {
   Int mlen;
   size_type first = r.search(c_str(), length(), mlen, startpos);
   if (first != npos) first += mlen;
@@ -467,24 +467,34 @@ Int String::gsub(const RegexBase &pat, const string &repl) {
 }
 
 // Global functions
-String reverse(string str) {
-  std::reverse(str.begin(), str.end());
-  return str;
+String reverse(const string& str) {
+  String s(str);
+  std::reverse(s.begin(), s.end());
+  return s;
 }
 
-String upcase(string str) {
-  std::transform(str.begin(), str.end(), str.begin(), ToUpper);
-  return str;
+String upcase(const string& str) {
+  String s(str);
+  std::transform(s.begin(), s.end(), s.begin(), ToUpper);
+  return s;
 }
 
-String downcase(string str) {
-  std::transform(str.begin(), str.end(), str.begin(), ToLower);
-  return str;
+String downcase(const string& str) {
+  String s(str);
+  std::transform(s.begin(), s.end(), s.begin(), ToLower);
+  return s;
 }
 
-String capitalize(string str) {
-  static_cast<String>(str).capitalize();
-  return str;
+String capitalize(const string& str) {
+  String s(str);
+  s.capitalize();
+  return s;
+}
+
+String trim(const string& str) {
+  String s(str);
+  s.trim();
+  return s;
 }
 
 String replicate(Char c, String::size_type n) {
@@ -565,10 +575,30 @@ String join(string src[], Int n, const string& sep) {
   return x;
 }
 
-Int fcompare(String x, String y) {
-  x.downcase();
-  y.downcase();
-  return x.compare(y);
+Int fcompare(const String& x, const String& y) {
+  // Determine minimum size and result in case characters compare equal.
+  Int res = 0;
+  string::size_type sz = x.size();
+  if (x.size() < y.size()) {
+    res = -1;
+  } else if (x.size() > y.size()) {
+    res = 1;
+    sz  = y.size();
+  }
+  for (string::size_type i=0; i<sz; ++i) {
+    // Maybe it makes no sense to first test x[i] != y[i].
+    char xc = tolower(x[i]);
+    char yc = tolower(y[i]);
+    if (xc < yc) {
+      return -1;
+    } else if (xc > yc) {
+      return 1;
+    }
+  }
+  return res;
+  ///  x.downcase();
+  ///  y.downcase();
+  ///  return x.compare(y);
 }
 
 // SubString
