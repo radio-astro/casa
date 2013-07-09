@@ -1,6 +1,13 @@
 <%!
+import os
 import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
+<script>
+$(document).ready(function() {
+	$(".fancybox").fancybox();
+});
+</script>
+
 <div class="page-header">
 	<h1>Spatial Setup Details</h1>
 </div>
@@ -61,7 +68,7 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
         </tr>
     </thead>
 	<tbody>
-		% for field in ms.fields:
+	% for field in ms.fields:
 		<% sources = [s for s in ms.sources if s.id == field.source_id] %>
 		<tr>
 		  <td>${field.id}</td>		
@@ -69,30 +76,34 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 		  <td>${field.ra}</td>
 		  <td>${field.dec}</td>
 		  <td>${', '.join(sorted([i for i in field.intents]))}</td>
-		% if len(sources) > 0:
-		  <td>${source.name} (#${field.source_id})</td>
+		% if len(sources) == 1:
+		  <td>${sources[0].name} (#${field.source_id})</td>
 		% else:
 		  <td>N/A (#${field.source_id})</td>
 		% endif		
 		</tr>
-		% endfor
+	% endfor
 	</tbody>
 </table>
 
 % if mosaics:
 <h2>Mosaic Pointings</h2>	
-<div class="gallery">
-	<ul>
-		% for (source, plot) in mosaics:
-		<li>
-		<a class="grouped_elements" rel="mosaic" href="mosaic_source${source.id}.png">
-			<img src="mosaic_source${source.id}.png"
-				 title="Mosaic Pointings for ${source.name} in ${ms.basename}"
-				 alt="Mosaic Pointings for ${source.name} in ${ms.basename}" />
-			<p>${ms.basename}: ${source.name}</p>
-		</a>
-		</li>
-		% endfor
-	</ul>
-</div>
+<ul class="thumbnails">
+	% for (source, plot) in mosaics:
+	<li>
+		<div class="thumbnail">
+			<a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
+			   class="fancybox">
+				<img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
+					 title="Mosaic Pointings for ${source.name} in ${ms.basename}"
+					 alt="Mosaic Pointings for ${source.name} in ${ms.basename}" />
+			</a>
+			<div class="caption">
+				<h4>${source.name}</h4>
+				<p>Mosaic pointings for Source #${source.id}: ${source.name}.</p>
+			</div>				
+		</div>
+	</li>
+	% endfor
+</ul>
 % endif

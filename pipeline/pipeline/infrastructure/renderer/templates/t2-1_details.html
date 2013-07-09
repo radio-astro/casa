@@ -6,38 +6,7 @@ import os
 
 <script>
 $(document).ready(function(){
-	$(document).ready(function() {
-		$(".fancybox").fancybox();
-	});
-/*     function launchFancyboxInParent(target){
-    	var basedir = $.url().segment(-3) + '/' + $.url().segment(-2);
-    	var thumbs = new Array();
-    	var index = 0;
-        $("div.gallery ul li a").each(function() {        
-        	var mainImage = $(this).attr("href"); // Find Image href
-            var title = $(this).attr("title"); // Find Image title
-            if (mainImage == target) {
-            	index = thumbs.length;
-            }
-            thumbs.push({
-            	href  : basedir + '/' + mainImage,
-            	title : title                     
-            });
-        });
-        parent.postMessage({'command' : 'fancybox',
-        					'thumbs'  : thumbs,
-        					'index'   : index      }, '*');
-        return false;
-    }
-    
-	$("div.gallery ul li a").click(function(evt) {
-		evt.preventDefault();
-		var href = evt.target.parentElement.href;
-		var target = $.url(href).segment(-1);
-		launchFancyboxInParent(target);
-        return false;
-	});
- */
+	$(".fancybox").fancybox();
 });
 </script>
 
