@@ -121,9 +121,10 @@ def create_dummy_scan(name, datatable, index_list):
     with temporary_filename() as temporary_name:
         for index in index_list:
             try:
+                param_org = sd.rcParams['scantable.storage']
+                sd.rcParams['scantable.storage'] = 'disk'
                 s = sd.scantable(name, average=False).get_row(datatable.getcell('ROW',index),insitu=False)
                 s.save(temporary_name, overwrite=True)
-                param_org = sd.rcParams['scantable.storage'] 
                 sd.rcParams['scantable.storage'] = 'memory'
                 dummy_scan = sd.scantable(temporary_name, average=False)
                 sd.rcParams['scantable.storage'] = param_org
