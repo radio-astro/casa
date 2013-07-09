@@ -21,8 +21,8 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
 
     # clean diverging?
     if loop > 0:
-        diverging_halt = new_threshold > threshold_list[-1]
-        LOG.info('diverging     : halt=%s enabled=True threshold(old,new)=(%.3g, %.3g)' % (
+        diverging_halt = casatools.quanta.gt(new_threshold, threshold_list[-1])
+        LOG.info('diverging     : halt=%s enabled=True threshold(old,new)=(%s, %s)' % (
           diverging_halt, threshold_list[-1], new_threshold)) 
         LOG.info('                halt = new threshold > old')
     else:
@@ -50,9 +50,12 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
     # than the first loop
     if loop > 0:
         if non_cleaned_rms is not None:
-            low_threshold_halt = (new_threshold < low_threshold_limit * non_cleaned_rms) and \
+            new_threshold_q = casatools.quanta.quantity(new_threshold)
+            new_threshold_v = new_threshold_q['value']
+
+            low_threshold_halt = (new_threshold_v < low_threshold_limit * non_cleaned_rms) and \
               (abs(residual_max) < 1.3 * abs(residual_min))              
-            LOG.info('threshold~rms : halt=%s enabled=%s threshold=%.3g rms=%.3g abs(resid.min)=%.3g abs(resid.max)=%.3g' % (
+            LOG.info('threshold~rms : halt=%s enabled=%s threshold=%s rms=%.3g abs(resid.min)=%.3g abs(resid.max)=%.3g' % (
               low_threshold_halt, low_threshold_enable, new_threshold, non_cleaned_rms,
               abs(residual_max), abs(residual_min)))
             LOG.info('                halt = new threshold < %.3g * rms and abs(resid.max) < 1.3 * abs(resid.min)' % 
@@ -122,7 +125,7 @@ def clean_more(loop, threshold_list, new_threshold, sum, residual_max,
 
     return clean_more
 
-def niters_and_mask(psf, residual, new_mask):
+def niter_and_mask(psf, residual, new_mask):
     """Method for calibrators reported bY Erci Villard.
 
     Starting with peak in image, find islands; contiguous pixels above
@@ -147,13 +150,14 @@ def niters_and_mask(psf, residual, new_mask):
 
     with casatools.ImageReader(residual) as image:
         # collapse the residual along the frequency axis
-        collapsed = image.collapse(function='mean', axes=[2,3])
+        collapsed = image.collapse(function='mean', axes=[2,3],
+          outfile='collapsed', overwrite=True)
 
         # Get a searchmask to be used in masking image during processing.
         # An explicitly separate mask is used so as not to risk messing
         # up any mask that arrives with the residual.
         # Set all its values to 1 (=True=good).
-        searchmask = casatools.image.newimagefromimage(infile=collapsed,
+        searchmask = casatools.image.newimagefromimage(infile='collapsed',
           outfile='searchmask', overwrite=True)
         searchmask.calc('1') 
 
@@ -174,6 +178,7 @@ def niters_and_mask(psf, residual, new_mask):
         islandy = {}
         plane_threshold = {}
 
+        shape = searchmask.shape()
         plane_grid = np.indices([shape[0], shape[1], 1, 1])
 
         # Look for islands in each plane of the image/cube.
@@ -232,7 +237,7 @@ def niters_and_mask(psf, residual, new_mask):
 
         # Create mask
         nm = image.newimagefromimage(infile=residual,
-          outfile=cleanmask, overwrite=True)
+          outfile=new_mask, overwrite=True)
 
         maskpix = nm.getchunk(blc=[0,0,0,0], trc=[-1,-1,-1,-1])
         maskpix[:] = 0.0
@@ -244,8 +249,8 @@ def niters_and_mask(psf, residual, new_mask):
         nm.close()
         nm.done()
 
-    LOG.debug('niters: %s' % niters)
-    return niters
+    LOG.debug('niter: %s' % niter)
+    return niter
 
 def threshold_and_mask(residual, old_mask, new_mask, sidelobe_ratio,
   npeak=30, fluxscale=None):
