@@ -72,7 +72,7 @@ class CleanListInputs(basetask.StandardInputs):
     @property
     def hm_cleanboxing(self):
         if self._hm_cleanboxing is None:
-            return 'autobox'
+            return 'automatic'
         return self._hm_cleanboxing
 
     @hm_cleanboxing.setter
@@ -154,8 +154,15 @@ class CleanList(basetask.StandardTaskTemplate):
             elif inputs.weighting == 'superuniform':
                 full_image_target['npixels'] = inputs.npixels
 
-            full_image_target['hm_cleanboxing'] = inputs.hm_cleanboxing
-            if inputs.hm_cleanboxing == 'autobox':
+            if inputs.hm_cleanboxing == 'automatic':
+                if full_image_target['intent'] == 'TARGET':
+                    full_image_target['hm_cleanboxing'] = 'iterative'
+                else:
+                    full_image_target['hm_cleanboxing'] = 'calibrator'
+            else:
+                full_image_target['hm_cleanboxing'] = inputs.hm_cleanboxing
+
+            if inputs.hm_cleanboxing == 'iterative':
                 full_image_target['maxthreshiter'] = inputs.maxthreshiter
             elif inputs.hm_cleanboxing == 'manual':
                 full_image_target['mask'] = inputs.mask
