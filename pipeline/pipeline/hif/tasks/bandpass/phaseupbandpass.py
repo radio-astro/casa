@@ -31,7 +31,7 @@ class PhaseUpBandpassInputs(channelbandpass.ChannelBandpassInputs):
                  solint=None, combine=None, refant=None, minblperant=None,
                  minsnr=None, solnorm=None, fillgaps=None, append=None,
                  # preapply calibrations
-                 gaincurve=None, opacity=None, parang=None):
+                 opacity=None, parang=None):
         super(PhaseUpBandpassInputs, self).__init__(context,
             output_dir=output_dir,
             vis=vis, caltable=caltable,
@@ -42,7 +42,7 @@ class PhaseUpBandpassInputs(channelbandpass.ChannelBandpassInputs):
             minblperant=minblperant, minsnr=minsnr, solnorm=solnorm,
             fillgaps=fillgaps, append=append,
             # preapply calibrations
-            gaincurve=gaincurve, opacity=opacity, parang=parang)
+            opacity=opacity, parang=parang)
 
     def _copy_to_clone(self, clone):
         super(PhaseUpBandpassInputs, self)._copy_to_clone(clone)
