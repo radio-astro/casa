@@ -137,7 +137,7 @@ class CleanWorker(basetask.StandardTaskTemplate):
               iter+1))
             inputs.cleanboxtask.new_cleanmask(new_cleanmask)
 
-            # determine cleanboxes and threshold for next iteration
+            # determine cleanboxes, threshold, niter for next iteration
             box_result = self._executor.execute(inputs.cleanboxtask)
 
             iterating = box_result.iterating
@@ -148,8 +148,8 @@ class CleanWorker(basetask.StandardTaskTemplate):
 
             if iterating:
                 iter += 1
-                LOG.info('iter %s threshold %sJy' % (iter,
-                  box_result.threshold))
+                LOG.info('iter %s threshold %s' % (iter, box_result.threshold))
+                LOG.info('iter %s niter %s' % (iter, box_result.niter))
 
                 # derive names of clean products for this iteration, remove
                 # old files
@@ -169,7 +169,8 @@ class CleanWorker(basetask.StandardTaskTemplate):
                   imagename='%s.iter%s' % (inputs.imagename, iter),
                   field=inputs.field, spw=inputs.spw,
                   selectdata=True, scan=inputs.scan, mode=inputs.mode,
-                  niter=1000, threshold='%sJy' % box_result.threshold,
+                  niter=box_result.niter,
+                  threshold=box_result.threshold,
                   imagermode=inputs.imagermode, interactive=False,
                   outframe=inputs.outframe, nchan=inputs.nchan,
                   start=inputs.start, width=inputs.width,
@@ -183,6 +184,10 @@ class CleanWorker(basetask.StandardTaskTemplate):
                 self._executor.execute(job)
 
                 # store the results for this iteration
+                set_miscinfo(name=model_name, spw=inputs.spw,
+                  field=inputs.field, type='model', iter=iter)
+                self.result.set_model(iter=iter, image=model_name)
+
                 set_miscinfo(name=image_name, spw=inputs.spw,
                   field=inputs.field, type='model', iter=iter)
                 self.result.set_model(iter=iter, image=model_name)
