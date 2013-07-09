@@ -234,6 +234,16 @@ public:
     {
         if (uvw_p.empty()){
 
+            dynamic_cast<const VisBuffer2Adapter *> (this)->uvw();
+        }
+
+        return uvw_p;
+    }
+
+    virtual const Vector<RigidVector<Double, 3> >& uvw() const
+    {
+        if (uvw_p.empty()){
+
             const Matrix<Double> & u = vb2_p->uvw();
 
             Int nRows = u.shape()(1);
@@ -250,8 +260,6 @@ public:
 
         return uvw_p;
     }
-
-    virtual const Vector<RigidVector<Double, 3> >& uvw() const { IllegalOperation(); }
 
     virtual Matrix<Double>& uvwMat() { IllegalOperation (); }
     virtual const Matrix<Double>& uvwMat() const { return vb2_p-> uvw(); }
@@ -467,7 +475,7 @@ private:
     Int nRows_p;
     Int spectralWindow_p;
     Vector<Int> spectralWindows_p;
-    Vector<RigidVector<Double, 3> > uvw_p;
+    mutable Vector<RigidVector<Double, 3> > uvw_p;
     const vi::VisBuffer2 * vb2_p; // [use]
     vi::VisBuffer2 * vb2Rw_p; // [use]
 
