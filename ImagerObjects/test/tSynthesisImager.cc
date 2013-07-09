@@ -45,6 +45,7 @@
 #include <lattices/Lattices/LatticeConcat.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/ImageConcat.h>
+#include <images/Images/SubImage.h>
 #include <casa/namespace.h>
 #include <images/Images/TempImage.h>
 #include <coordinates/Coordinates/CoordinateUtil.h>
@@ -58,35 +59,45 @@ int main(int argc, char **argv)
 
 
 
-    String msname=String(argv[1]);
+	  if (argc<2) {
+		  cout <<"Usage: tSynthesisImager ms-table-name  [continuum, cube, cubeslice, widefield, facet]"<<endl;
+		  exit(1);
+	  }
+	  String msname=String(argv[1]);
+	  String imtype=String("continuum");
+	  if(argc>2)
+		  imtype=String(argv[2]);
 
-    //MeasurementSet ms( "/home/rrusk/testing/3C273XC1.ms", Table::Update );
-    cout << "--MeasurementSet created." << endl;
-
-    SynthesisImager* imgr = new SynthesisImager();
-    imgr->selectData(msname, /*spw=*/"0", /*field=*/"0", /*taql=*/"", /*antenna=*/"",  /*uvdist*/"", /*scan*/"", /*obs*/"",
+	  SynthesisImager* imgr = new SynthesisImager();
+	  imgr->selectData(msname, /*spw=*/"0", /*field=*/"0", /*taql=*/"", /*antenna=*/"",  /*uvdist*/"", /*scan*/"", /*obs*/"",
     		/*timestr*/"", /*usescratch*/False, /*readonly*/False);
-    cout <<"--Imager created for MeasurementSet object. " << endl;
-    MeasurementSet tab(msname);
-    int nx = 100;
-    int ny = 100;
-    Quantity cellx( 30, "arcsec" );
-    Quantity celly( 30, "arcsec" );
-    Vector<Int> spwids(2);
-    String stokes="I";
-    Int nchan=1;
-    MDirection phasecenter=MSFieldColumns(tab.field()).phaseDirMeas(0,0.0);
-    Quantity freqBeg=MSSpWindowColumns(tab.spectralWindow()).chanFreqQuant()(0)(IPosition(1,0));
-    Int ndataChan=MSSpWindowColumns(tab.spectralWindow()).numChan()(0);
-    Quantity freqWidth=MSSpWindowColumns(tab.spectralWindow()).chanFreqQuant()(0)(IPosition(1,ndataChan-1));
-    freqWidth-=freqBeg;
-    ////lets do a cube of ndatachan
-    nchan=ndataChan;
-    freqWidth /= Double(nchan);
-    imgr->defineImage(/*imagename*/"test_image", nx, ny, cellx, celly,
+	  cout <<"--Imager created for MeasurementSet object. " << endl;
+	  MeasurementSet tab(msname);
+	  MDirection phasecenter=MSFieldColumns(tab.field()).phaseDirMeas(0,0.0);
+	  Quantity freqBeg=MSSpWindowColumns(tab.spectralWindow()).chanFreqQuant()(0)(IPosition(1,0));
+	  Int ndataChan=MSSpWindowColumns(tab.spectralWindow()).numChan()(0);
+	  Quantity freqWidth=MSSpWindowColumns(tab.spectralWindow()).chanFreqQuant()(0)(IPosition(1,ndataChan-1));
+	  freqWidth-=freqBeg;
+	  if(imtype==String("continuum")){
+		  int nx = 100;
+		  int ny = 100;
+		  Quantity cellx( 30, "arcsec" );
+		  Quantity celly( 30, "arcsec" );
+		  Vector<Int> spwids(2);
+		  String stokes="I";
+		  Int nchan=1;
+		  cerr << "nx=" << nx << " ny=" << ny
+		  				  << " cellx='" << cellx.getValue() << cellx.getUnit()
+		  				  << "' celly='" << celly.getValue() << celly.getUnit()
+		  				  << "' spwids=" << 0
+		  				  << " field=" <<   0 << endl;
+		  ////lets do a cube of ndatachan
+		  //nchan=ndataChan;
+		  freqWidth /= Double(nchan);
+		  imgr->defineImage(/*imagename*/"test_cont_image", nx, ny, cellx, celly,
 			   stokes,phasecenter, nchan,
-			   freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 2);
-    /*
+			   freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
+		  /*
 			   const String& ftmachine="GridFT",
 			   const Projection& projection=Projection::SIN,
 			   const Quantity& distance=Quantity(0,"m"),
@@ -94,24 +105,141 @@ int main(int argc, char **argv)
 			   const Bool trackSource=False, const MDirection&
 			   trackDir=MDirection(Quantity(0.0, "deg"),
 					       Quantity(90.0, "deg")))
-    */
-    cerr << "nx=" << nx << " ny=" << ny
-       << " cellx='" << cellx.getValue() << cellx.getUnit()
-       << "' celly='" << celly.getValue() << celly.getUnit()
-       << "' spwids=" << 0
-       << " field=" <<   0 << endl;
-    imgr->weight("natural");
-    Record rec;
-    imgr->executeMajorCycle(rec);
-    imgr->makePSF();
-    CountedPtr<SIImageStore> images=imgr->imageStore(0);
-    LatticeExprNode LEN = max( *(images->residual()) );
-    cerr << "Max of residual=" << LEN.getFloat() << endl;
-    LatticeExprNode psfmax = max( *(images->psf()) );
-    LatticeExprNode psfmin = min( *(images->psf()) );
-    cerr <<"Min max of psf "<< psfmin.getFloat() << " " << psfmax.getFloat() << endl;
-    images->dividePSFByWeight();
-    images->divideResidualByWeight();
+		   */
+	  }
+	  else if(imtype==String("cube")){
+		  int nx = 100;
+		  int ny = 100;
+		  Quantity cellx( 30, "arcsec" );
+		  Quantity celly( 30, "arcsec" );
+		  Vector<Int> spwids(2);
+		  String stokes="I";
+		  Int nchan=1;
+		  cerr << "nx=" << nx << " ny=" << ny
+				  << " cellx='" << cellx.getValue() << cellx.getUnit()
+				  << "' celly='" << celly.getValue() << celly.getUnit()
+				  << "' spwids=" << 0
+				  << " field=" <<   0 << endl;
+		  ////lets do a cube of ndatachan
+		  nchan=ndataChan;
+		  freqWidth /= Double(nchan);
+		  imgr->defineImage(/*imagename*/"test_cube_image", nx, ny, cellx, celly,
+				  stokes,phasecenter, nchan,
+				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
+
+	  }
+	  else if(imtype==String("widefield")){
+		  int nx = 300;
+		  int ny = 300;
+		  Quantity cellx( 30, "arcsec" );
+		  Quantity celly( 30, "arcsec" );
+		  Vector<Int> spwids(2);
+		  String stokes="I";
+		  Int nchan=1;
+		  cerr << "nx=" << nx << " ny=" << ny
+				  << " cellx='" << cellx.getValue() << cellx.getUnit()
+				  << "' celly='" << celly.getValue() << celly.getUnit()
+				  << "' spwids=" << 0
+				  << " field=" <<   0 << endl;
+
+		  freqWidth /= Double(nchan);
+		  ///64 projplanes
+		  imgr->setupImaging(1.0, False, True, 64, "SF");
+		  imgr->defineImage(/*imagename*/"test_widefield_image", nx, ny, cellx, celly,
+				  stokes,phasecenter, nchan,
+				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1, "WProjectFT");
+	  }
+	  else if(imtype==String("facet")){
+	  		  int nx = 300;
+	  		  int ny = 300;
+	  		  Quantity cellx( 30, "arcsec" );
+	  		  Quantity celly( 30, "arcsec" );
+	  		  Vector<Int> spwids(2);
+	  		  String stokes="I";
+	  		  Int nchan=1;
+	  		  cerr << "nx=" << nx << " ny=" << ny
+	  				  << " cellx='" << cellx.getValue() << cellx.getUnit()
+	  				  << "' celly='" << celly.getValue() << celly.getUnit()
+	  				  << "' spwids=" << 0
+	  				  << " field=" <<   0 << endl;
+
+	  		  freqWidth /= Double(nchan);
+	  		  imgr->defineImage(/*imagename*/"test_facet_image", nx, ny, cellx, celly,
+	  				  stokes,phasecenter, nchan,
+	  				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 2);
+	  }
+	  else if(imtype==String("cubeslice")){
+	  		  int nx = 100;
+	  		  int ny = 100;
+	  		  Quantity cellx( 30, "arcsec" );
+	  		  Quantity celly( 30, "arcsec" );
+	  		  Vector<Int> spwids(2);
+	  		  String stokes="I";
+	  		  Int nchan=1;
+	  		  cerr << "nx=" << nx << " ny=" << ny
+	  				  << " cellx='" << cellx.getValue() << cellx.getUnit()
+	  				  << "' celly='" << celly.getValue() << celly.getUnit()
+	  				  << "' spwids=" << 0
+	  				  << " field=" <<   0 << endl;
+	  		  ////lets do a cube of ndatachan
+	  		  nchan=ndataChan;
+	  		  freqWidth /= Double(nchan);
+	  		  imgr->defineImage(/*imagename*/"test_cubesliced_image", nx, ny, cellx, celly,
+	  				  stokes,phasecenter, nchan,
+	  				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 1);
+	  		  CountedPtr<SIImageStore> si=imgr->imageStore(0);
+	  		  CountedPtr<ImageInterface<Float> > resid=si->residual();
+	  		  CountedPtr<ImageInterface<Float> > psf=si->psf();
+	  		  CountedPtr<ImageInterface<Float> > wgt=si->weight();
+	  		  CountedPtr<ImageInterface<Float> > mod=si->model();
+	  		  CountedPtr<ImageInterface<Float> > restor=si->image();
+	  		  IPosition blc(4,0,0,0,0);
+	  		  IPosition trc(4,99,99,0,0);
+	  		  for (Int k=0; k < nchan; ++k){
+	  			  blc[3]=k;
+	  			  trc[3]=k;
+	  			  Slicer sl(blc, trc, Slicer::endIsLast);
+	  			  SubImage<Float> *subresid= new SubImage<Float>(*resid, sl, True);
+	  			  SubImage<Float> *subpsf= new SubImage<Float>(*psf, sl, True);
+	  			  SubImage<Float>* subwgt= new SubImage<Float>(*wgt, sl, True);
+	  			  SubImage<Float>* submod= new SubImage<Float>(*mod, sl, True);
+	  			  SubImage<Float>* subrestor= new SubImage<Float>(*restor, sl, True);
+	  			  CountedPtr<SIImageStore> subImStor=new SIImageStore(submod, subresid, subpsf, subwgt, subrestor);
+	  			  SynthesisImager subImgr;
+	  			  //can select the right channel to match subimage
+	  			  subImgr.selectData(msname, /*spw=*/"0", /*field=*/"0", /*taql=*/"", /*antenna=*/"",  /*uvdist*/"", /*scan*/"", /*obs*/"",
+	  			    		/*timestr*/"", /*usescratch*/False, /*readonly*/False);
+	  			  subImgr.defineImage(subImStor, "GridFT");
+	  			  subImgr.weight("natural");
+	  			  Record rec;
+	  			  subImgr.executeMajorCycle(rec);
+	  			  subImgr.makePSF();
+	  		  }
+	  		  //We can do the division at the end
+	  		  si->dividePSFByWeight();
+	  		  si->divideResidualByWeight();
+	  		  LatticeExprNode LEN = max( *(si->residual()) );
+	  		  cerr << "Max of whole residual image " << LEN.getFloat() << endl;
+	  		  LatticeExprNode psfmax = max( *(si->psf()) );
+	  		  LatticeExprNode psfmin = min( *(si->psf()) );
+	  		  cerr <<"Min max of whole psf "<< psfmin.getFloat() << " " << psfmax.getFloat() << endl;
+              return 0;
+	  	  }
+	  else{
+		  throw(AipsError("Don't know what you are talking about"));
+	  }
+	  imgr->weight("natural");
+	  Record rec;
+	  imgr->executeMajorCycle(rec);
+	  imgr->makePSF();
+	  CountedPtr<SIImageStore> images=imgr->imageStore(0);
+	  LatticeExprNode LEN = max( *(images->residual()) );
+	  cerr << "Max of residual=" << LEN.getFloat() << endl;
+	  LatticeExprNode psfmax = max( *(images->psf()) );
+	  LatticeExprNode psfmin = min( *(images->psf()) );
+	  cerr <<"Min max of psf "<< psfmin.getFloat() << " " << psfmax.getFloat() << endl;
+	  images->dividePSFByWeight();
+	  images->divideResidualByWeight();
 
 
 
@@ -119,4 +247,5 @@ int main(int argc, char **argv)
     cout << "Exception ocurred." << endl;
     cout << e.getMesg() << endl;
   }
+  return 0;
 };

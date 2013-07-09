@@ -89,6 +89,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
      imageDefined_p=False;
      wvi_p=0;
      rvi_p=0;
+
+     ftmParams_p.define("wprojplanes", Int(1));
+     ftmParams_p.define("padding", Float(1.0));
+     ftmParams_p.define("useautocorr", False);
+     ftmParams_p.define("usedoubleprec", True);
+     ftmParams_p.define("gridfunc", String("SF"));
+
   }
   
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -298,6 +305,27 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     return True;
   }
  
+  Bool SynthesisImager::defineImage(CountedPtr<SIImageStore> imstor, const String& ftmachine){
+
+
+	  CountedPtr<FTMachine> ftm;
+	  CountedPtr<FTMachine> iftm;
+	  createFTMachine(ftm, iftm, ftmachine);
+	  Int id=itsMappers.nMappers();
+	  itsCurrentCoordSys=imstor->residual()->coordinates();
+	  itsCurrentShape=imstor->residual()->shape();
+	  Int nx=itsCurrentShape[0]; Int ny=itsCurrentShape[1];
+	  if( (id==0) || (nx*ny > itsMaxShape[0]*itsMaxShape[1]))
+	  {
+		  itsMaxShape=itsCurrentShape;
+		  itsMaxCoordSys=itsCurrentCoordSys;
+	  }
+
+	  CountedPtr<SIMapperBase> thismap=new SIMapper(imstor, ftm, iftm, id);
+	  itsMappers.addMapper(thismap);
+
+	 return True;
+  }
 
   // Construct Image Coordinates
   void  SynthesisImager::defineImage(Record impars)
@@ -420,11 +448,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
     
   }// end of setupImaging
-  
+  ///////////////////////////////////
+  /////////////////////////////////
+  void SynthesisImager::setupImaging(const Float padding, const Bool useAutocorr, const Bool useDoublePrec, const Int wprojplanes, const String convFunc){
+	  ftmParams_p.define("wprojplanes", wprojplanes);
+	  ftmParams_p.define("padding", padding );
+	  ftmParams_p.define("useautocorr", useAutocorr);
+	  ftmParams_p.define("usedoubleprec", useDoublePrec);
+	  ftmParams_p.define("gridfunc", convFunc);
+
+
+  }
+  ///////////////////////////////
+  ///////////////////////////////
 
   //////////////////////Reset the Mapper
   ////////////////////
-  void SynthesisImager::resetMapper(){
+  void SynthesisImager::resetMappers(){
     ////reset code
 	itsMappers=SIMapperCollection();
 	unFacettedImStore_p=NULL;
@@ -507,6 +547,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       try
       {
     	  runMajorCycle(True);
+    	  if(facetsStore_p >1){
+    		  //Facetted image should
+    		  IPosition shape=(unFacettedImStore_p->psf())->shape();
+    		  IPosition blc(4, 0, 0, 0, 0);
+    		  IPosition trc=shape-1;
+    		  TempImage<Float> onepsf((itsMappers.imageStore(0)->psf())->shape(), (itsMappers.imageStore(0)->psf())->coordinates());
+    		  onepsf.copyData(*(itsMappers.imageStore(0)->psf()));
+    		  //now set the original to 0 as we have a copy of one facet psf
+    		  (unFacettedImStore_p->psf())->set(0.0);
+    		  blc[0]=(shape[0]-(onepsf.shape()[0]))/2;
+    		  trc[0]=onepsf.shape()[0]+blc[0]-1;
+    		  blc[1]=(shape[1]-(onepsf.shape()[1]))/2;
+    		  trc[1]=onepsf.shape()[1]+blc[1]-1;
+    		  Slicer sl(blc, trc, Slicer::endIsLast);
+    		  SubImage<Float> sub(*(unFacettedImStore_p->psf()), sl, True);
+    		  sub.copyData(onepsf);
+    	  }
 
     	  itsMappers.releaseImageLocks();
 
@@ -530,10 +587,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os(LogOrigin("SynthesisImager", "weight()", WHERE));
 
     try {
-    	Int nx=itsCurrentShape[0];
-    	Int ny=itsCurrentShape[1];
-    	Quantity cellx=Quantity(itsCurrentCoordSys.increment()[0], itsCurrentCoordSys.worldAxisUnits()[0]);
-    	Quantity celly=Quantity(itsCurrentCoordSys.increment()[1], itsCurrentCoordSys.worldAxisUnits()[1]);
+    	//Int nx=itsMaxShape[0];
+    	//Int ny=itsMaxShape[1];
+    	Quantity cellx=Quantity(itsMaxCoordSys.increment()[0], itsMaxCoordSys.worldAxisUnits()[0]);
+    	Quantity celly=Quantity(itsMaxCoordSys.increment()[1], itsMaxCoordSys.worldAxisUnits()[1]);
       os << LogIO::NORMAL // Loglevel INFO
          << "Weighting MS: Imaging weights will be changed" << LogIO::POST;
 
@@ -542,87 +599,95 @@ namespace casa { //# NAMESPACE CASA - BEGIN
            << "Natural weighting" << LogIO::POST;
         imwgt_p=VisImagingWeight("natural");
       }
-      else if(type=="superuniform"){
-        if(!imageDefined_p) throw(AipsError("Please define image first"));
-        Int actualNpix=npixels;
-        if(actualNpix <=0)
-        	actualNpix=3;
-        os << LogIO::NORMAL // Loglevel INFO
-           << "SuperUniform weighting over a square cell spanning ["
-  	 << -actualNpix
-  	 << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
-        imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust, nx,
-                                 ny, cellx, celly, actualNpix,
-                                 actualNpix, multiField);
+      else if (type=="radial") {
+    	  os << "Radial weighting" << LogIO::POST;
+    	  imwgt_p=VisImagingWeight("radial");
       }
-      else if ((type=="robust")||(type=="uniform")||(type=="briggs")) {
-        if(!imageDefined_p) throw(AipsError("Please define image first"));
-        Quantity actualFieldOfView(fieldofview);
-        Int actualNPixels(npixels);
-        String wtype;
-        if(type=="briggs") {
-          wtype = "Briggs";
-        }
-        else {
-          wtype = "Uniform";
-        }
-        if(actualFieldOfView.get().getValue()==0.0&&actualNPixels==0) {
-          actualNPixels=nx;
-          actualFieldOfView=Quantity(actualNPixels*cellx.get("rad").getValue(),
-  								   "rad");
-          os << LogIO::NORMAL // Loglevel INFO
-             << wtype
-             << " weighting: sidelobes will be suppressed over full image"
-             << LogIO::POST;
-        }
-        else if(actualFieldOfView.get().getValue()>0.0&&actualNPixels==0) {
-          actualNPixels=nx;
-          os << LogIO::NORMAL // Loglevel INFO
-             << wtype
-             << " weighting: sidelobes will be suppressed over specified field of view: "
-             << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
-        }
-        else if(actualFieldOfView.get().getValue()==0.0&&actualNPixels>0) {
-          actualFieldOfView=Quantity(actualNPixels*cellx.get("rad").getValue(),
-  								   "rad");
-          os << LogIO::NORMAL // Loglevel INFO
-             << wtype
-             << " weighting: sidelobes will be suppressed over full image field of view: "
-             << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
-        }
-        else {
-          os << LogIO::NORMAL // Loglevel INFO
-             << wtype
-             << " weighting: sidelobes will be suppressed over specified field of view: "
-             << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
-        }
-        os << LogIO::DEBUG1
-           << "Weighting used " << actualNPixels << " uv pixels."
-           << LogIO::POST;
-        Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
+      else{
+    	  if(!imageDefined_p)
+    		  throw(AipsError("Need to define image"));
+    	  Int nx=itsMaxShape[0];
+    	  Int ny=itsMaxShape[1];
+    	  Quantity cellx=Quantity(itsMaxCoordSys.increment()[0], itsMaxCoordSys.worldAxisUnits()[0]);
+    	  Quantity celly=Quantity(itsMaxCoordSys.increment()[1], itsMaxCoordSys.worldAxisUnits()[1]);
+    	  if(type=="superuniform"){
+    		  if(!imageDefined_p) throw(AipsError("Please define image first"));
+    		  Int actualNpix=npixels;
+    		  if(actualNpix <=0)
+    			  actualNpix=3;
+    		  os << LogIO::NORMAL // Loglevel INFO
+    				  << "SuperUniform weighting over a square cell spanning ["
+    				  << -actualNpix
+    				  << ", " << actualNpix << "] in the uv plane" << LogIO::POST;
+    		  imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust, nx,
+    				  ny, cellx, celly, actualNpix,
+    				  actualNpix, multiField);
+    	  }
+    	  else if ((type=="robust")||(type=="uniform")||(type=="briggs")) {
+    		  if(!imageDefined_p) throw(AipsError("Please define image first"));
+    		  Quantity actualFieldOfView(fieldofview);
+    		  Int actualNPixels(npixels);
+    		  String wtype;
+    		  if(type=="briggs") {
+    			  wtype = "Briggs";
+    		  }
+    		  else {
+    			  wtype = "Uniform";
+    		  }
+    		  if(actualFieldOfView.get().getValue()==0.0&&actualNPixels==0) {
+    			  actualNPixels=nx;
+    			  actualFieldOfView=Quantity(actualNPixels*cellx.get("rad").getValue(),
+    					  "rad");
+    			  os << LogIO::NORMAL // Loglevel INFO
+    					  << wtype
+    					  << " weighting: sidelobes will be suppressed over full image"
+    					  << LogIO::POST;
+    		  }
+    		  else if(actualFieldOfView.get().getValue()>0.0&&actualNPixels==0) {
+    			  actualNPixels=nx;
+    			  os << LogIO::NORMAL // Loglevel INFO
+    					  << wtype
+    					  << " weighting: sidelobes will be suppressed over specified field of view: "
+    					  << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
+    		  }
+    		  else if(actualFieldOfView.get().getValue()==0.0&&actualNPixels>0) {
+    			  actualFieldOfView=Quantity(actualNPixels*cellx.get("rad").getValue(),
+    					  "rad");
+    			  os << LogIO::NORMAL // Loglevel INFO
+    					  << wtype
+    					  << " weighting: sidelobes will be suppressed over full image field of view: "
+    					  << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
+    		  }
+    		  else {
+    			  os << LogIO::NORMAL // Loglevel INFO
+    					  << wtype
+    					  << " weighting: sidelobes will be suppressed over specified field of view: "
+    					  << actualFieldOfView.get("arcsec").getValue() << " arcsec" << LogIO::POST;
+    		  }
+    		  os << LogIO::DEBUG1
+    				  << "Weighting used " << actualNPixels << " uv pixels."
+    				  << LogIO::POST;
+    		  Quantity actualCellSize(actualFieldOfView.get("rad").getValue()/actualNPixels, "rad");
 
-        imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust,
+    		  imwgt_p=VisImagingWeight(*vi_p, rmode, noise, robust,
                                  actualNPixels, actualNPixels, actualCellSize,
                                  actualCellSize, 0, 0, multiField);
 
-      }
-      else if (type=="radial") {
-        os << "Radial weighting" << LogIO::POST;
-        imwgt_p=VisImagingWeight("radial");
-      }
-      else {
-        //this->unlock();
-        os << LogIO::SEVERE << "Unknown weighting " << type
-           << LogIO::EXCEPTION;
-        return False;
+    	  }
+    	  else {
+    		  //this->unlock();
+    		  os << LogIO::SEVERE << "Unknown weighting " << type
+    				  << LogIO::EXCEPTION;
+    		  return False;
+    	  }
       }
 
-        vi_p->useImagingWeight(imwgt_p);
-        ///////////////revert to vi/vb
-        rvi_p->useImagingWeight(imwgt_p);
-        ///////////////////////////////
+      vi_p->useImagingWeight(imwgt_p);
+      ///////////////revert to vi/vb
+      rvi_p->useImagingWeight(imwgt_p);
+      ///////////////////////////////
 
-      // Beam is no longer valid
+
       return True;
     } catch (AipsError x) {
 
@@ -665,15 +730,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
        if(nIm > 1)
     	   imstor=unFacettedImStore_p->getFacetImageStore(facet, nIm);
        CountedPtr<FTMachine> ftm, iftm;
-       ////////////these has to be defined by setupImaging it seems and passed here
-       Int wprojplane=1;
-       Float padding=1.0;
-       Bool useAutocorr=False;
-       Bool useDoublePrec=True;
-       String gridFunc="SF";
-       //////////////////////////////////////////////
-       createFTMachine(ftm, iftm, ftmachine, wprojplane,  padding, useAutocorr, useDoublePrec, facets,
-    			  gridFunc);
+
+       createFTMachine(ftm, iftm, ftmachine, facets);
        Int id=itsMappers.nMappers();
        // Fill in miscellaneous information needed by FITS
          ROMSColumns msc(*mss_p[0]);
@@ -714,6 +772,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     MVAngle ra=mvPhaseCenter.get()(0);
     ra(0.0);
     itsCurrentShape=IPosition(4, nx, ny, 0, nchan);
+
     MVAngle dec=mvPhaseCenter.get()(1);
     Vector<Double> refCoord(2);
     refCoord(0)=ra.get().getValue();    
@@ -777,6 +836,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     csys.addCoordinate(mySpectral);
     csys.setObsInfo(myobsinfo);
     itsCurrentCoordSys=csys;
+    if( (itsMappers.nMappers()==0) || (nx*ny > itsMaxShape[0]*itsMaxShape[1]))
+    {
+    	itsMaxShape=itsCurrentShape;
+    	itsMaxCoordSys=itsCurrentCoordSys;
+    }
+
     return csys;
   }
 
@@ -910,12 +975,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   // Make the FT-Machine and related objects (cfcache, etc.)
   void SynthesisImager::createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT, const String& ftname,
-		  const Int wprojplane,  const Float padding,  const Bool useAutocorr, const Bool useDoublePrec, const Int facets,
-		  const String& gridFunction)
+		  const Int facets)
   {
+
+
+
 	Int cache=1000000000;
 	Int tile=16;
     LogIO os( LogOrigin("SynthesisImager","createFTMachine",WHERE));
+    ////////////these has to be defined by setupImaging it seems and passed here
+
+    Int wprojplane=ftmParams_p.asInt("wprojplanes");
+    Float padding=ftmParams_p.asFloat("padding");
+    Bool useAutocorr=ftmParams_p.asBool("useautocorr");
+    Bool useDoublePrec=ftmParams_p.asBool("usedoubleprec");
+    String gridFunction=ftmParams_p.asString("gridfunc");
+           //////////////////////////////////////////////
     if(ftname=="GridFT"){
       if(facets >1){
     	  theFT=new GridFT(cache, tile, gridFunction, mLocation_p, phaseCenter_p, padding, useAutocorr, useDoublePrec);
