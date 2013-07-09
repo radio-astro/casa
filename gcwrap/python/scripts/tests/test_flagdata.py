@@ -968,6 +968,21 @@ class test_selections(test_base):
         flagdata(vis=self.vis, correlation='LL,RR,RL', savepars=False, flagbackup=False)
         test_eq(flagdata(vis=self.vis, mode='summary', antenna='2'), 196434, 196434)
         
+    def test_multi_timerange(self):
+        '''flagdata: CAS-5300, in list mode, flag multiple timerange intervals'''
+        inpcmd = ["timerange='09:26:00~09:30:00,10:33:00~10:50:00'"]
+        inpcmd = ["timerange='09:26:00~09:30:00,09:42:00~09:43:00,10:33:00~10:50:00'"]
+        flagdata(vis=self.vis, mode='list', inpfile=inpcmd, flagbackup=False)
+        
+        # Should flag scan=2, scan=3 and scan=6,7
+        res = flagdata(vis=self.vis, mode='summary', scan='2,3,6,7')
+        self.assertEqual(res['scan']['2']['flagged'], 238140)
+        self.assertEqual(res['scan']['3']['flagged'], 47628)
+        self.assertEqual(res['scan']['6']['flagged'], 476280)
+        self.assertEqual(res['scan']['7']['flagged'], 190512)
+        self.assertEqual(res['flagged'], 238140+47628+476280+190512)
+
+        
 class test_selections_alma(test_base):
     # Test various selections for alma data 
 

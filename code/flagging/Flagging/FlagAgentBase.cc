@@ -1868,7 +1868,13 @@ FlagAgentBase::find(Vector<Int> &validRange, Int element)
 bool
 FlagAgentBase::find(Matrix<Double> &validRange, Double element)
 {
-	if (element>=validRange(0,0) and element<=validRange(1,0)) return true;
+	IPosition size = validRange.shape();
+
+	for (uInt timeSel_i=0;timeSel_i<size(1);timeSel_i++)
+	{
+		if (element>=validRange(0,timeSel_i) and element<=validRange(1,timeSel_i)) return true;
+	}
+
 	return false;
 }
 
@@ -1900,7 +1906,7 @@ FlagAgentBase::find(Block<int> &columns, int col)
 bool
 FlagAgentBase::checkIfProcessBuffer()
 {
-	// array,filed and spw are common and unique in a given vis buffer,
+	// array,field and spw are common and unique in a given vis buffer,
 	// so we can use them to discard all the rows in a vis buffer.
 
 	if (arrayList_p.size())
