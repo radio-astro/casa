@@ -39,6 +39,7 @@ FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double 
 	originalMeasurementSet_p = NULL;
 	visibilityIterator_p = NULL;
 	tableTye_p = MEASUREMENT_SET;
+	processorTableExist_p = true;
 }
 
 
@@ -459,6 +460,10 @@ FlagMSHandler::generateIterator()
 		// Get Visibility Buffer reference from VisibilityIterator
 		visibilityBuffer_p = visibilityIterator_p->getVisBuffer();
 
+		// Get the TYPE column of the PROCESSOR sub-table
+		if (flagAutoCorrelations_p)
+			processorTable();
+
 		iteratorGenerated_p = true;
 		chunksInitialized_p = false;
 		buffersInitialized_p = false;
@@ -574,12 +579,12 @@ FlagMSHandler::nextBuffer()
 		{
 			visibilityIterator_p->origin();
 			buffersInitialized_p = true;
-
 			if (!asyncio_enabled_p) preFetchColumns();
 			if (mapAntennaPairs_p) generateAntennaPairMap();
 			if (mapSubIntegrations_p) generateSubIntegrationMap();
 			if (mapPolarizations_p) generatePolarizationsMap();
 			if (mapAntennaPointing_p) generateAntennaPointingMap();
+
 			moreBuffers = true;
 			flushFlags_p = false;
 			flushFlagRow_p = false;
@@ -838,6 +843,29 @@ FlagMSHandler::summarySignal()
 		printChunkSummary_p = false;
 		return false;
 	}
+}
+
+// -----------------------------------------------------------------------
+// Get the PROCESSOR sub-table
+// -----------------------------------------------------------------------
+bool
+FlagMSHandler::processorTable()
+{
+	MSProcessor msSubtable = selectedMeasurementSet_p->processor();
+
+	if (msSubtable.nrow() == 0){
+		*logger_p << LogIO::WARN << "PROCESSOR sub-table is empty. Assuming CORRELATOR type."
+					<< LogIO::POST;
+		processorTableExist_p = false;
+	}
+	else {
+		MSProcessorColumns tableCols(msSubtable);
+		typeCol_p = tableCols.type();
+		processorTableExist_p = true;
+	}
+
+	return true;
+
 }
 
 

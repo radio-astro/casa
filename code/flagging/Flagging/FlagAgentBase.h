@@ -360,7 +360,6 @@ private:
 	bool filterRows_p;
 	bool filterPols_p;
 	bool filterChannels_p;
-	Bool flagAutoCorrelations_p;
 	Bool antennaNegation_p;
 
 	// Own data selection indexes
@@ -400,12 +399,13 @@ private:
 	Bool writePrivateFlagCube_p;
 
 protected:
-	// Lists of elements to be process
+	// Lists of elements to process
 	// jagonzal (CAS-4312): We need channelIndex_p available for the Rflag agent,
 	// in order to take into account channel selection for the frequency mapping
 	vector<uInt> rowsIndex_p;
 	vector<uInt> channelIndex_p;
 	vector<uInt> polarizationIndex_p;
+
 };
 
 class FlagAgentList

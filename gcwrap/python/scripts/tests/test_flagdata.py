@@ -1048,6 +1048,15 @@ class test_selections_alma(test_base):
         self.assertEqual(res['flagged'], 80184)
         self.assertEqual(res['total'], 80184)
         
+    def test_autocorr_wvr(self):
+        '''flagdata: CAS-5286, do not flag auto-correlations in WVR data'''
+        flagdata(vis=self.vis,autocorr=True,flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary', spw='0,4')
+        
+        # spw='4' contains the WVR data
+        self.assertEqual(res['spw']['4']['flagged'], 0)
+        self.assertEqual(res['spw']['0']['flagged'], 276480)
+
 
 class test_selections2(test_base):
     '''Test other selections'''

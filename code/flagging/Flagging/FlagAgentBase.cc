@@ -155,7 +155,6 @@ FlagAgentBase::initialize()
    filterChannels_p = false;
    filterRows_p = false;
    filterPols_p = false;
-   flagAutoCorrelations_p = false;
    uvwUnits_p = true; // Meters
 
 	// Initialize state
@@ -1391,15 +1390,19 @@ FlagAgentBase::setAgentParameters(Record config)
 		flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
 		flagDataHandler_p->preLoadColumn(vi::CorrType);
 
-
 	}
 
 	exists = config.fieldNumber ("autocorr");
 	if (exists >= 0)
 	{
-		flagAutoCorrelations_p = config.asBool("autocorr");
-		if (flagAutoCorrelations_p) filterRows_p=true;
-		*logger_p << logLevel_p << " autocorr is " << flagAutoCorrelations_p << LogIO::POST;
+		flagDataHandler_p->flagAutoCorrelations_p = config.asBool("autocorr");
+		*logger_p << logLevel_p << "autocorr is " << flagDataHandler_p->flagAutoCorrelations_p
+				<< LogIO::POST;
+		if (flagDataHandler_p->flagAutoCorrelations_p) {
+			filterRows_p=true;
+			*logger_p << logLevel_p << "Will only flag auto-correlations from non-radiometer data"
+					<< LogIO::POST;
+		}
 	}
 
 	return;
@@ -1484,15 +1487,32 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 				if (!find(uvwList_p,uvDistance)) continue;
 			}
 
-			// Check autocorrelations
-			if (flagAutoCorrelations_p)
+			// Check auto-correlations
+			if (flagDataHandler_p->flagAutoCorrelations_p)
 			{
-				if (visibilityBuffer_p->antenna1()[row_i] != visibilityBuffer_p->antenna2()[row_i]) continue;
+				// if not an auto-corr, do not add row to the vector
+				if (visibilityBuffer_p->antenna1()[row_i] != visibilityBuffer_p->antenna2()[row_i]) {
+					continue;
+				}
+				// Only for MSs, not for cal tables
+				if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET){
+
+					// CAS-5286: do not flag auto-corrs when processor TYPE is RADIOMETER
+					int proc_id = visibilityBuffer_p->processorId()[row_i];
+					if (proc_id >= 0 and flagDataHandler_p->processorTableExist_p == true){
+
+						String proc_type = flagDataHandler_p->typeCol_p.asString(proc_id);
+						if (proc_type.compare("RADIOMETER") == 0) continue;
+
+					}
+				}
+
 			}
 
 			// If all the filters passed, add the row to the list
 			rowsIndex_p.push_back(row_i);
 		}
+
 	}
 	else
 	{
@@ -2394,10 +2414,8 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 	leftVisCubeView = new CubeView<Complex>(leftVisCube,rows,&channelIndex_p);
 	if (rightVisCube != NULL) rightVisCubeView = new CubeView<Complex>(rightVisCube,rows,&channelIndex_p);
 
-
 	// Third step: Set CubeViews in mapper
 	visMap->setParentCubes(leftVisCubeView,rightVisCubeView);
-
 	return;
 }
 

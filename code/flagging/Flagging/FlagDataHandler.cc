@@ -152,10 +152,12 @@ FlagDataHandler::FlagDataHandler(string tablename, uShort iterationApproach, Dou
 
 	// Initialize table characteristics
 	tableTye_p = MEASUREMENT_SET;
+	processorTableExist_p = true;
 
 	// Initialize FlagDataHanler-FlagAgents state
 	flushFlags_p = false;
 	flushFlagRow_p = false;
+	flagAutoCorrelations_p = false;
 
 	return;
 }

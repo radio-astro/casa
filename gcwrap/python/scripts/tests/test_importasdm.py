@@ -592,6 +592,21 @@ class asdm_import4(test_base):
         self.assertEqual(res['baseline']['DA44&&DA44']['flagged'], 76)
         self.assertEqual(res['baseline']['PM03&&PM03']['flagged'], 16)
 
+    # CAS-5286
+    def test_flagautocorr3(self):
+        '''importasdm: apply auto-correlations using autocorr=true in flagdata''' 
+        outputms = 'autocorr.ms'       
+        importasdm(asdm=self.asdm, vis=outputms, scans='3', process_flags=False,
+                   flagbackup=False)
+        
+        # Applys with flagdata. Because all the data has PROCESSOR TYPE RADIOMETER
+        # none of the auto-correlations should be flagged
+        flagdata(vis=outputms, mode='manual', autocorr=True, flagbackup=False)
+        res = flagdata(vis=outputms, mode='summary', basecnt=True)
+        self.assertEqual(res['flagged'], 0)
+        self.assertEqual(res['baseline']['DA44&&DA44']['flagged'], 0)
+        self.assertEqual(res['baseline']['PM03&&PM03']['flagged'], 0)
+
     def test_flagbackup(self):
         '''importasdm: Create a flagbackup by default''' 
         outputms = 'fbackup1.ms'

@@ -45,7 +45,7 @@
 
             <!-- MANUAL parameters -->
             <param type="bool" name="autocorr" subparam="true">
-                 <description>Flag auto-correlations</description>
+                 <description>Flag only the auto-correlations</description>
                   <value type="bool">False</value>
             </param>
 
@@ -788,7 +788,11 @@ The task will flag a subset of data based on the following modes of operation:
                   
                 autocorr -- Flag only the auto-correlations. Note that this parameter is only
                             active when set to True. If set to False it does NOT mean "do not
-                            flag auto-correlations".
+                            flag auto-correlations". When set to True, it will NOT flag
+                            data from a processor of type RADIOMETER. In order to force the
+                            task to flag auto-correlations also from a RADIOMETER type processor,
+                            use the antenna selection syntax (ant1&amp;&amp;ant2) instead of
+                            this parameter.
                     default: False
                     options: True,False
                   

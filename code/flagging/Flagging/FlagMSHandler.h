@@ -74,6 +74,10 @@ public:
 	// Signal true when a progress summary has to be printed
 	bool summarySignal();
 
+	// Get the MS PROCESSOR sub-table
+	bool processorTable();
+
+
 private:
 
 	// Mapping functions
@@ -85,6 +89,7 @@ private:
 	// Apply channel selection for asyn or normal iterator
 	// NOTE: We always have to do this, even if there is no SPW:channel selection
 	void applyChannelSelection(vi::VisibilityIterator2 *visIter);
+
 
 	// Measurement set section
 	MeasurementSet *selectedMeasurementSet_p;

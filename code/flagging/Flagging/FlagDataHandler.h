@@ -30,6 +30,7 @@
 #include <ms/MeasurementSets/MSFieldColumns.h>
 #include <ms/MeasurementSets/MSPolColumns.h>
 #include <ms/MeasurementSets/MSSpWindowColumns.h>
+#include <ms/MeasurementSets/MSProcessorColumns.h>
 
 // VI/VB infrastructure
 #include <synthesis/MSVis/StokesVector.h>
@@ -357,6 +358,7 @@ public:
 	// Direct access to the complex correlation product
 	Complex correlationProduct(uInt pol, uInt chan, uInt row);
 
+    // NOTE: reducedLength_p is defined as [chan,row,pol]
     const IPosition &shape() const
     {
     	return reducedLength_p;
@@ -508,7 +510,6 @@ protected:
 	void applyCommonFlagRow(uInt row);
 	// Apply flags to common and private flag rows
 	void applyPrivateFlagRow(uInt row);
-
 
 private:
 
@@ -920,6 +921,12 @@ public:
 	uShort summaryThreshold_p;
 	bool printChunkSummary_p;
 	uShort tableTye_p;
+	Bool flagAutoCorrelations_p;
+
+	// TYPE column in PROCESSOR sub-table
+	ScalarColumn<String> typeCol_p;
+	bool processorTableExist_p;
+
 
 	// Visibility Buffer
 	// WARNING: The attach mechanism only works with pointers or
