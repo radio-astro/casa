@@ -59,10 +59,19 @@
 #include <casa/BasicMath/Random.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <casa/Arrays/ArrayAccessor.h>
+#include <cstdarg>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-
+     IPosition ipos( int num, ... ) {
+          std::vector<int> pos(num);
+          va_list vl;
+          va_start(vl,num);
+          for ( int i=0; i < num; ++i )
+               pos[i] = va_arg(vl,int);
+          va_end(vl);
+          return IPosition(pos);
+     }
 
 //---------------------------------------------------------------------
 	MSAsRaster::MSAsRaster( const String msname, const viewer::DisplayDataOptions &ddo ):
@@ -79,6 +88,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		itsDataMin(0), itsDataMax(0),
 		// itsAlign(0),
 		itsAxisLabelling(0),
+        itsParamSpectralUnit(0),
 		// itsSelections(0),
 		itsVisType(0), itsVisComp(0),
 		itsNAvg(0),
@@ -230,12 +240,57 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(nSpwIds_<=0) throw AipsError(chanerr);
 		spwIds_.resize(nSpwIds_);
 		indgen(spwIds_);
+
 		nChan_ = msCols_->spectralWindow().numChan().getColumn();
 		if ( Int(nChan_.nelements()) < nSpwIds_ )
 			throw AipsError(chanerr);
 		if ( Int(nChan_.nelements()) > nSpwIds_ )
 			nChan_.resize(nSpwIds_, True);
 
+        chanFreq_ = msCols_->spectralWindow( ).chanFreq( ).getColumn( );
+        if ( chanFreq_.shape( ).size( ) != 2 )
+             throw AipsError( "frequency matrix conformance error" );
+        if ( chanFreq_.shape( )(0) != max(nChan_) )
+             throw AipsError( "channel frequency mismatch" );
+        if ( (size_t) chanFreq_.shape( )(1) < nChan_.size( ) )
+             throw AipsError( "frequency spectral window mismatch" );
+        if ( (size_t) chanFreq_.shape( )(1) > nChan_.size( ) )
+             chanFreq_.resize(IPosition(chanFreq_.shape( )(0),nChan_.size( )),True);
+
+        // at some point we may need the rest refrequencies for the
+        // misc sources...
+        //
+        //ROMSSourceColumns src(itsMS->source( ));
+        //cout << "#######>>>> source ids:\n" << src.sourceId( ).getColumn( ) << endl;
+        //cout << "#######>>>> rest frequencies per id for each spectral window:\n" << src.restFrequency( ).getColumn( ) << endl;
+        //
+        //... which produces output like:
+        //
+        //   #######>>>> source ids:
+        //   [0, 1, 2, 3, 4, 5]
+        //   #######>>>> rest frequencies per id for each spectral window:
+        //   Axis Lengths: [2, 6]  (NB: Matrix in Row/Column order)
+        //   [ 0, 0, 2.36945e+10, 2.36945e+10, 2.36945e+10, 2.36945e+10
+        //     0, 0, 2.37226e+10, 2.37226e+10, 2.37226e+10, 2.37226e+10 ]
+        //
+        // where each row is the rest frequencies for each spectral window
+        // and each column is the rest frequencies for a particular source
+        // ---------------------------------------------------------------------------------------------
+        // This table is a bit complex...
+        //
+        // The Source table also has a SPECTRAL_WINDOW_ID column (which is a key)
+        // ..so this tells you for which SPW it is valid...a -1 there means it is
+        // valid for all SPW that the source has been observed with
+        //
+        // There may be several rows with the same SOURCE_ID...but then SPW_ID
+        // will have to be different or TIME.
+        //
+        // In your case i assume i guess that
+        // SOURCE 0 and 1  have 2 rest frequencies associated with them and both are 0 Hz
+        //
+        // source 2 to 6 each have 2 specific lines rest frequencies (2.369e10
+        // Hzand 2.372e10 Hz) associated with them
+        // ---------------------------------------------------------------------------------------------
 		const ColumnDescSet& cds = itsMS->tableDesc().columnDescSet();
 		dish_ = (cds.isDefined(MS::columnName(MS::FLOAT_DATA)));
 		// Set the dish_ variable according to whether we have
@@ -951,6 +1006,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                                        "Should axes, axis labels and/or titles be shown?",
 		                                        yesNo, defaultval, defaultval, "axis_drawing_and_labels");
 
+		Vector<String> spectral_options;
+		// spectral preferences
+        spectral_options.resize(4);
+        spectral_options(0) = "channel";
+		spectral_options(1) = "GHz";
+		spectral_options(2) = "MHz";
+		spectral_options(3) = "Hz";
+		itsParamSpectralUnit = new DParameterChoice( "spectralunit", "spectral unit", "", spectral_options,
+                                                     spectral_options(0), spectral_options(0), "axis_units" );
+
+
 		Vector<String> maskClr(2);
 		maskClr(0)="Masked to Background";
 		maskClr(1)="In Color";
@@ -1025,7 +1091,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// pitched, since the resulting labels are generally just confusing
 		// (the tracking display is clearer; it doesn't make use of the CS).
 
-		Axis axX=axisOn_(X), axY=axisOn_(Y);
+        std::vector<Axis> ax(2);
+        ax[0] = axisOn_(X);
+        ax[1] = axisOn_(Y);
 		CoordinateSystem cs;
 
 		Vector<Double> linblc(2), lintrc(2);  // new max zoom extents.
@@ -1036,8 +1104,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// boundary pixels' outer edges, i.e., .5 pixels beyond their centers.
 
 		linblc=-.5;
-		lintrc(X) = msShape_[axX]-1 + .5;
-		lintrc(Y) = msShape_[axY]-1 + .5;
+		lintrc(X) = msShape_[ax[0]]-1 + .5;
+		lintrc(Y) = msShape_[ax[1]]-1 + .5;
 
 		// For now, there is little axis labelling in world terms.
 		// Except for baselines, only the pixel indices of the the data
@@ -1049,7 +1117,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// identified with refvalue (world coordinate value) equal to uiBase(),
 		// in the simple linear coordinates below.
 
-		Int nlc = (nAnt_!=1 && (axX==BASELN || axY==BASELN))? 1:2;
+		Int nlc = ( nAnt_ != 1 && (ax[0] == BASELN || ax[1] == BASELN) || 
+                    freqAxis(ax[0]) || freqAxis(ax[1]) ) ? 1 : 2;
 		// The Linear coordinate will cover just one axis if
 		// a Tabular coordinate (below) is used for baseline numbering
 		// on the other axis; otherwise the Linear Coordinate will
@@ -1060,65 +1129,72 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		refval=Double(uiBase());
 		lc.setReferenceValue(refval);
 
-		if(nAnt_==1) cs.addCoordinate(lc);	// (no baselines, just feeds).
+        
+		if( nAnt_ == 1 )
+            cs.addCoordinate(lc);	// (no baselines, just feeds).
 
 		else {
 
-			if(axX!=BASELN) cs.addCoordinate(lc);
+            for ( int x=0; x < 2; ++x ) {
+                if ( freqAxis(ax[x]) ) {
+                    SpectralCoordinate spec( MFrequency::DEFAULT, Vector<double>(chanFreq_(ipos(2,0,mspos_.spwId),ipos(2,chanFreq_.shape( )(0)-1,mspos_.spwId))) );
+                    cs.addCoordinate(spec);
 
-			if(axX==BASELN || axY==BASELN) {
+                } else if( ax[x] == BASELN ) {
 
-				Vector<Double>pix, wld;
+                    Vector<Double>pix, wld;
 
-				if(antSort_) {
+                    if(antSort_) {
 
-					// Add Tab Coord for baseline-index-to-antenna-number conversion.
-					// There are interpolation points just inside both ends of
-					// the 'shelf' corresponding to each value of ant1. (plus one extra
-					// 'shelf' on the left, for good luck).
+                          // Add Tab Coord for baseline-index-to-antenna-number conversion.
+                          // There are interpolation points just inside both ends of
+                          // the 'shelf' corresponding to each value of ant1. (plus one extra
+                          // 'shelf' on the left, for good luck).
 
-					pix.resize(2*nAnt_ + 3), wld.resize(2*nAnt_ + 2);
-					for(Int a1=-1; a1<nAnt_+1; a1++) pix[2*a1+2] = bsln_(a1,a1)-.5;
-					for(Int a1=-1; a1<nAnt_; a1++)   pix[2*a1+3] = pix[2*a1+4]-.0001;
-					pix.resize(2*nAnt_+2, True);
-					for(Int i=0; i<2*nAnt_+2; i++) wld[i]=a1a2_(pix[i], uiBase());
-				}
-				// (uiBase() indicates whether antenna numbers (in this case),
-				// channels, baseline indices, etc. should be displayed to the
-				// user numbered from 0 or from 1.  They are always numbered
-				// from zero 'internally').
+                          pix.resize(2*nAnt_ + 3), wld.resize(2*nAnt_ + 2);
+                          for(Int a1=-1; a1<nAnt_+1; a1++) pix[2*a1+2] = bsln_(a1,a1)-.5;
+                          for(Int a1=-1; a1<nAnt_; a1++)   pix[2*a1+3] = pix[2*a1+4]-.0001;
+                          pix.resize(2*nAnt_+2, True);
+                          for(Int i=0; i<2*nAnt_+2; i++) wld[i]=a1a2_(pix[i], uiBase());
+                    }
+                    // (uiBase() indicates whether antenna numbers (in this case),
+                    // channels, baseline indices, etc. should be displayed to the
+                    // user numbered from 0 or from 1.  They are always numbered
+                    // from zero 'internally').
 
-				else {
+                    else {
 
-					// This TabularCoordinate will show baseline lengths in meters.
+                        // This TabularCoordinate will show baseline lengths in meters.
 
-					pix.resize(nbsl_), wld.resize(nbsl_);
-					for(Int b=0; b<nbsl_; b++) {
-						pix(b)=b;
-						wld(b) = bLen_(a1_(b), a2_(b));
-						if(b>0 && wld(b)<=wld(b-1)) wld(b) = wld(b-1) + 1.e-6;
-					}
-				}
-				// TabCoords require monotonically increasing[/decreasing]
-				// conversions.  (Unfortunately, it is not possible at present
-				// to produce ideal baseline labelling (for either sort) with
-				// the current labelling and coordinate capabilities).
+                        pix.resize(nbsl_), wld.resize(nbsl_);
+                        for(Int b=0; b<nbsl_; b++) {
+                            pix(b)=b;
+                            wld(b) = bLen_(a1_(b), a2_(b));
+                            if(b>0 && wld(b)<=wld(b-1)) wld(b) = wld(b-1) + 1.e-6;
+                        }
+                    }
+                    // TabCoords require monotonically increasing[/decreasing]
+                    // conversions.  (Unfortunately, it is not possible at present
+                    // to produce ideal baseline labelling (for either sort) with
+                    // the current labelling and coordinate capabilities).
 
+                    TabularCoordinate tc(pix,wld,"","");
+                    cs.addCoordinate(tc);
 
-				TabularCoordinate tc(pix,wld,"","");
-				cs.addCoordinate(tc);
+                } else if ( cs.nWorldAxes( ) < 2 ) {
+                     cs.addCoordinate(lc);
+                }
 
-				if(axY!=BASELN) cs.addCoordinate(lc);
-			}
-		}
+            }
+        }
 
 		Vector<String> daxisnames(2);
-		daxisnames(X) = axisName_(axX);
-		daxisnames(Y) = axisName_(axY);
+		daxisnames(X) = axisName_(ax[0]);
+		daxisnames(Y) = axisName_(ax[1]);
 
 		if(!antSort_) {
-			if(axX==BASELN) daxisnames(X) += " (m)";	  // (Unit is meters
-			if(axY==BASELN) daxisnames(Y) += " (m)";
+			if(ax[0]==BASELN) daxisnames(X) += " (m)";	  // (Unit is meters
+			if(ax[1]==BASELN) daxisnames(Y) += " (m)";
 		}   //  in this case).
 
 		cs.setWorldAxisNames(daxisnames);
@@ -1142,6 +1218,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		restrctns.set("msar xaxisname", axname(X));
 		restrctns.set("msar yaxisname", axname(Y));
 		restrctns.set("msar msname", itsMS->tableName());
+        restrctns.set("msar spectralunit", itsParamSpectralUnit->value( ));
 		itsMS->relinquishAutoLocks(True);	 // (just to be sure).
 		itsAxisLabeller.setRestrictions(restrctns);
 	}
@@ -1337,13 +1414,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		rec.merge(itsAxisLabeller.getOptions(), Record::SkipDuplicates);
 		// SkipDuplicates, to tie AxisLabeller's CDD Params (such as Cache
 		// Size) to those of MSAsRaster (with single gui control for both).
-
 		if(rec.isDefined("spectralunit")) rec.removeField("spectralunit");
+        itsParamSpectralUnit->toRecord(rec);
+
 		if(rec.isDefined("velocitytype")) rec.removeField("velocitytype");
 		// Flexible labelling of frequency axis is not available in
 		// MSAsRaster yet.  Prevent these user options from appearing
 		// in the gui.
-
 		return rec;
 	}
 
@@ -2211,11 +2288,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
-
+        bool spec_change = itsParamSpectralUnit->fromRecord(rec);
+		needsRefresh =  spec_change || needsRefresh;
+        if ( rec.isDefined("spectralunit") ) rec.removeField("spectralunit");
 
 
 		// set OPTIONS ON BASE CLASS levels
 		needsRefresh = ActiveCaching2dDD::setOptions(rec,recOut) || needsRefresh;
+        if ( spec_change ) {
+            recOut.define( "spectralunit", itsParamSpectralUnit->value( ) );
+            if ( axisOn_(X) == CHAN || axisOn_(Y) == CHAN ) {
+                setCS_( );
+                if ( itsParamSpectralUnit->value( ) != "channel" ) {
+                    Record in,out;
+                    in.define("spectralunit",itsParamSpectralUnit->value( ));
+                    itsAxisLabeller.setOptions(in,out);
+                }
+            }
+        }
 
 
 		// set HELPER CLASS OPTIONS
@@ -2223,8 +2313,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		needsRefresh = itsAxisLabelling->fromRecord(rec) || needsRefresh;
 		needsRefresh = itsAxisLabeller.setOptions(rec,recOut) || needsRefresh;
-
-
 
 		// A True return value means caller should call refresh() on this DD,
 		// which eventually leads to a redraw.
@@ -3136,6 +3224,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// like WCDataScaleHandler....
 
 		restrctns.set("msar powerscale", itsPowerScaleHandler.cycles());
+
+        restrctns.set("msar spectralunit", itsParamSpectralUnit->value( ));
 
 		//# investigate colormap restriction handling in LAR.  Colormap state
 		// should enter into these restrictions too--how?
@@ -5542,6 +5632,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 
+    bool MSAsRaster::freqAxis( Axis a ) const {
+        if ( a != CHAN ) return false;
+        if ( itsParamSpectralUnit->value( ) == "channel" ) return false;
+        if ( mspos_.spwId == INVALID && mspos_.spwId >= chanFreq_.shape( )(1) )
+            return false;
+        return true;
+    }
 
 
 
@@ -5947,6 +6044,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		delete itsDataMin;
 		delete itsDataMax;
 		delete itsAxisLabelling;
+        delete itsParamSpectralUnit;
 		delete itsBslnSort;
 		delete itsFlagColor;
 		delete itsUnflag;
@@ -5962,4 +6060,3 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //====================end==================================================
 
 } //# NAMESPACE CASA - END
-

@@ -129,6 +129,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	public:
 
+		typedef Int Axis;
+
 		// constructor
 		// from the filename of an MS
 		MSAsRaster( const String msname, const viewer::DisplayDataOptions &ddo );
@@ -503,6 +505,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void resetMinMax_();
 
 
+        // represent channels with their frequency?
+        bool freqAxis( Axis ) const;
+
 		//#------flagging routines----------------------------------------------
 
 		// Return or set a flag within the bitmapped flags_ vector, as if it were
@@ -592,7 +597,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		static const Int INVALID;	// (==-1)  (fairly general purpose).
 
 		// The visibility hypercube (vis_) has 5 axes, in this order.
-		typedef Int Axis;
 		static const Axis TIME=0, BASELN=1, CHAN=2, POL=3, SP_W=4,
 		                  NAXES=5,  INVALID_AXIS=-1;
 
@@ -713,6 +717,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Axis Labelling? (Yes/No).
 		DParameterChoice *itsAxisLabelling;
+        // Units of display for Channels
+        DParameterChoice *itsParamSpectralUnit;
 
 		// changes to these options require data extraction:
 
@@ -779,6 +785,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Int nFieldIds_;			// Total number of fields, spectral windows,
 		Int nSpwIds_;				// in the (unselected) MS.
 		Vector<Int> nChan_;			// Number of channels, by Spectral window ID.
+        Matrix<Double> chanFreq_;   // frequency mapping of channels, per Spectral window ID
 		Bool dish_;				// true if the MS is 'single-dish' (has FLOAT_DATA,
 		// which will then be used instead of the DATA column).
 
