@@ -91,7 +91,7 @@ class SetjyInputs(basetask.StandardInputs):
                 reader.next()
         
                 for row in reader:
-                    (ms_name, field_id, spw_id, I, Q, U, V) = row
+                    (ms_name, field_id, spw_id, I, Q, U, V, comment) = row
                     if os.path.basename(ms_name) != self.ms.basename:
                         continue
 

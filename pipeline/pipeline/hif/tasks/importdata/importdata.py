@@ -241,7 +241,17 @@ class ImportData(basetask.StandardTaskTemplate):
         # get the flux measurements from Source.xml for each MS
         xml_results = get_setjy_results(observing_run.measurement_sets)
         # write/append them to flux.csv
-        export_flux_from_result(xml_results, inputs.context)
+
+        # Cycle 1 hack for exporting the field intents to the CSV file: 
+        # export_flux_from_result queries the context, so we pseudo-register
+        # the mses with the context by replacing the original observing run
+        orig_observing_run = inputs.context.observing_run
+        inputs.context.observing_run = observing_run
+        try:            
+            export_flux_from_result(xml_results, inputs.context)
+        finally:
+            inputs.context.observing_run = orig_observing_run
+            
         # re-read from flux.csv, which will include any user-coded values
         combined_results = import_flux(inputs.context.output_dir, observing_run)
 
@@ -604,15 +614,16 @@ def export_flux_from_context(context, filename=None):
 
     with open(filename, 'wt') as f:
         writer = csv.writer(f)
-        writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V'))
+        writer.writerow(('ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'comment'))
 
         counter = 0
         for ms in context.observing_run.measurement_sets:
             for field in ms.fields:
                 for flux in field.flux_densities:
                     (I, Q, U, V) = flux.casa_flux_density
+                    comment = 'intent=' + ','.join(sorted(field.intents))
                     writer.writerow((ms.basename, field.id, flux.spw.id, 
-                                     I, Q, U, V))
+                                     I, Q, U, V, comment))
                     counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, filename))
@@ -626,7 +637,7 @@ def export_flux_from_result(results, context, filename='flux.csv'):
         results = [results,]        
     abspath = os.path.join(context.output_dir, filename)
 
-    columns = ['ms', 'field', 'spw', 'I', 'Q', 'U', 'V']
+    columns = ['ms', 'field', 'spw', 'I', 'Q', 'U', 'V', 'comment']
     existing = []
 
     # if the file exists, read it in
@@ -661,8 +672,13 @@ def export_flux_from_result(results, context, filename='flux.csv'):
 
                     if not exists:                    
                         (I, Q, U, V) = m.casa_flux_density
+                        
+                        ms = context.observing_run.get_ms(ms_basename)
+                        field = ms.get_fields(field_id)[0]
+                        comment = 'intent=' + ','.join(sorted(field.intents))
+                        
                         writer.writerow((ms_basename, field_id, m.spw.id, 
-                                         I, Q, U, V))
+                                         I, Q, U, V, comment))
                         counter += 1
 
         LOG.info('Exported %s flux measurements to %s' % (counter, abspath))
@@ -684,7 +700,7 @@ def import_flux(output_dir, observing_run, filename=None):
         counter = 0
         for row in reader:
             try:
-                (ms_name, field_id, spw_id, I, Q, U, V) = row
+                (ms_name, field_id, spw_id, I, Q, U, V, _) = row
                 spw_id = int(spw_id)
                 try:
                     ms = observing_run.get_ms(ms_name)
