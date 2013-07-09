@@ -58,10 +58,11 @@ class ManualBoxWorker(basetask.StandardTaskTemplate):
 
         jobs = []
 
-        self.result.threshold = inputs.threshold
+        self.result.threshold = '%sJy' % inputs.threshold
         self.result.cleanmask = inputs.mask
         self.result.iterating = (self.iters[-1]==0)
- 
+        self.result.niter = 1000 
+
         return self.result
 
     def analyse(self, result):
