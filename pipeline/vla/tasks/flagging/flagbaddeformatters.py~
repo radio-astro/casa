@@ -271,7 +271,7 @@ class FlagBadDeformatters(basetask.StandardTaskTemplate):
                 
                 job = casa_tasks.flagdata(**task_args)
                 
-                self._executor.execute(job)
+                self._executor.execute(delaycal_task)
                 
                 return FlagBadDeformattersResults([job])
                 
