@@ -1,8 +1,3 @@
-'''
-Created on 2013/06/30
-
-@author: kana
-'''
 from __future__ import absolute_import
 
 import os
@@ -27,19 +22,40 @@ LOG = infrastructure.get_logger(__name__)
 
 class SDFlagDataWorker(object):
     '''
-    classdocs
+    The worker class of single dish flagging task.
+    This class defines per antenna, spwid, and polarization flagging operation.
     '''
 
 
-    def __init__(self, context):
+    def __init__(self, context, datatable, iteration, spwid, nchan, pollist, file_index, flagRule, userFlag=[], edge=(0,0)):
         '''
-        Constructor
+        Constructor of worker class
         '''
         self.context = context
+        self.datatable = datatable
+        self.iteration = iteration
+        self.spwid = spwid
+        self.nchan = nchan
+        self.pollist = pollist
+        self.file_index = file_index
+        self.flagRule = flagRule
+        self.userFlag = userFlag
+        self.edge = edge
     
-    def execute(self, datatable, iteration, spwid, nchan, pollist, file_index, flagRule, userFlag=[], edge=(0,0)):
+    def execute(self, dry_run=True):
         
         start_time = time.time()
+
+        datatable = self.datatable
+        iteration = self.iteration
+        spwid = self.spwid
+        nchan = self.nchan
+        pollist = self.pollist
+        file_index = self.file_index
+        flagRule = self.flagRule
+        userFlag = self.userFlag
+        edge = self.edge
+
 
         # TODO: make sure baseline subtraction is already done
         # filename for before/after baseline

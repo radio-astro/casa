@@ -1,8 +1,3 @@
-'''
-Created on 2013/06/23
-
-@author: kana
-'''
 from __future__ import absolute_import
 
 import os
@@ -45,6 +40,7 @@ class SDFlagDataInputs(common.SingleDishInputs):
 
     @property
     def antennalist(self):
+        """A helper function to convert a list of input files to that of antenna names"""
         if type(self.infiles) == list:
             antennas = [self.context.observing_run.get_scantable(f).antenna.name 
                         for f in self.infiles]
@@ -53,6 +49,7 @@ class SDFlagDataInputs(common.SingleDishInputs):
             return [self.context.observing_run.get_scantable(self.infiles).antenna.name]
 
     def __configureFlagRule(self):
+        """A private method to convert input parameters to FlagRuleDictionary"""
         d = { 'TsysFlag': (self.flag_tsys, [self.tsys_thresh]),
               'WeatherFlag': (self.flag_weath, [self.weath_thresh]),
               'UserFlag': (self.flag_user, [self.user_thresh]),
@@ -75,12 +72,14 @@ class SDFlagDataInputs(common.SingleDishInputs):
                 self.deactivateFlagRule( k )
 
     def activateFlagRule(self,key):
+        """Activates a flag type specified by the input parameter in FlagRuleDictionary"""
         if(key in self.FlagRuleDictionary.keys()):
            self.FlagRuleDictionary[key]['isActive'] = True
         else:
             print 'Error not in predefined Flagging Rules'
 
     def deactivateFlagRule(self,key):
+        """Deactivates a flag type specified by the input parameter in FlagRuleDictionary"""
         if(key in self.FlagRuleDictionary.keys()):
            self.FlagRuleDictionary[key]['isActive'] = False
         else:
@@ -89,6 +88,9 @@ class SDFlagDataInputs(common.SingleDishInputs):
         
 
 class SDFlagDataResults(common.SingleDishResults):
+    """
+    The results of SDFalgData
+    """
     def __init__(self, task=None, success=None, outcome=None):
         super(SDFlagDataResults, self).__init__(task, success, outcome)
         ### WORKAROUND
@@ -106,9 +108,15 @@ class SDFlagDataResults(common.SingleDishResults):
 #    def _outcome_name(self): pass
 
 class SDFlagData(common.SingleDishTaskTemplate):
+    """
+    Single dish flagging class
+    """
     Inputs = SDFlagDataInputs
 
     def prepare(self):
+        """
+        Iterates over reduction group and invoke flagdata worker function in each iteration.
+        """
         # self
         inputs = self.inputs
         context = inputs.context
@@ -168,18 +176,9 @@ class SDFlagData(common.SingleDishTaskTemplate):
             if nchan ==1:
                 LOG.info('flagData was skipped because it is a TP data')
                 continue
-            worker = SDFlagDataWorker(context)
-            parameters = {'datatable': datatable,
-                          'iteration': iteration, 
-                          'spwid': spwid,
-                          'nchan': nchan,
-                          'pollist': pols,
-                          #'scanlist': scanlist,
-                          #'field': field,
-                          'file_index': list(_file_index),
-                          'flagRule': flag_rule}            
-            job = jobrequest.JobRequest(worker.execute, **parameters)
-            self._executor.execute(job)
+
+            worker = SDFlagDataWorker(context, datatable, iteration, spwid, nchan, pols, list(_file_index), flag_rule)
+            self._executor.execute(worker, merge=False)
             
             # Validation
 
