@@ -2519,6 +2519,51 @@ Bool ImageAnalysis::makecomplex(const String& outFile, const String& imagFile,
 	return True;
 }
 
+Bool ImageAnalysis::makeFloat(const String& outFile, const String& compFile,
+			      LogIO& os, const String& operation,
+			      const Bool overwrite) {
+
+	os << LogOrigin("ImageAnalysis", "makeFloat");
+
+	String myOp = operation;
+	myOp.downcase();
+
+	// Check output file
+	if (!overwrite && !outFile.empty()) {
+		NewFile validfile;
+		String errmsg;
+		if (!validfile.valueOK(outFile, errmsg)) {
+			os << errmsg << LogIO::EXCEPTION;
+		}
+	}
+
+	// Open image
+	PagedImage<Complex> compImage(compFile);
+	CoordinateSystem cSysComp = compImage.coordinates();
+
+	// LEL node
+	LatticeExprNode node(abs(compImage));
+	if(myOp=="arg"){
+	  node = arg(compImage);
+	}
+	else if(myOp=="real"){
+	  node = real(compImage);
+	}
+	else if(myOp=="imag"){
+	  node = imag(compImage);
+	}
+	else if(myOp=="square"){
+	  node = abs(compImage)^2;
+	}
+
+	LatticeExpr<Float> expr(node);
+	//
+	PagedImage<Float> outImage(compImage.shape(), cSysComp, outFile);
+	outImage.copyData(expr);
+	ImageUtilities::copyMiscellaneous(outImage, compImage);
+	return True;
+}
+
 Vector<String> ImageAnalysis::maskhandler(const String& op,
 		const Vector<String>& namesIn) {
 	*_log << LogOrigin(className(), __FUNCTION__);
