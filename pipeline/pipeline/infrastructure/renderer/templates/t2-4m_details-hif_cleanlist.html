@@ -7,7 +7,7 @@ columns = {'cleanmask' : 'Clean Mask',
 		   'flux' : 'Flux',
 		   'image' : 'Image',
 		   'residual' : 'Residual',
-		   'model' : 'Model Image',
+		   'model' : 'Final Model',
 		   'psf' : 'PSF'}
 
 colorder = ['image', 'residual', 'cleanmask']
@@ -123,10 +123,17 @@ def is_pane_active(idx):
 	
 					<div class="row-fluid">
 						<div class="span10 offset2">
-							% for colname in ['flux', 'psf']:
+							% for colname in ['flux', 'psf', 'model']:
 							<div class="span4">
 								<!-- flux and PSF plots are associated with iteration 0 -->
+								% if colname == 'model':
+                                                                <% 
+                                                                lastiter = sorted(plots_dict[field][spw].keys())[-1]
+								plot = get_plot(plots_dict, field, spw, lastiter, colname)
+                                                                %>
+                                                                % else:
 								<% plot = get_plot(plots_dict, field, spw, 0, colname) %>
+                                                                % endif
 								<ul class="thumbnails">
 									<li class="span12">
 										% if plot is not None:
