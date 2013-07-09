@@ -28,7 +28,7 @@ class GSplineGaincalInputs(common.CommonGaincalInputs):
                  smodel=None, calmode=None,  refant=None, splinetime=None,
                  npointaver=None, append=None, phasewrap=None,
                  # preapply calibrations
-                 gaincurve=None, opacity=None, parang=None,
+                 opacity=None, parang=None,
                  # calibration target
                  to_intent=None, to_field=None):
         self._init_properties(vars())
