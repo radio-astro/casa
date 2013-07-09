@@ -66,6 +66,8 @@ class SynthesisImager
   // make all pure-inputs const
   void selectData(Record selpars);
   virtual Bool selectData(const String& msname, const String& spw, const String& field, const String& taql,  const String& antenna,  const String& uvdist, const String& scan, const String& obs, const String& timestr, const Bool usescratch=False, const Bool readonly=False);
+  void setupImaging(Record gridpars);
+  void setupImaging(const Float padding=1.0, const Bool useAutocorr=False, const bool useDoublePrec=True, const Int wprojplanes=1, const String convFunc="SF");
   void defineImage(Record impars);
   //When having a facetted image ...call with (facets > 1)  first and  once only ..
   //Easier to keep track of the imstores that way
@@ -85,17 +87,19 @@ class SynthesisImager
 			   const Bool trackSource=False, const MDirection& 
 			   trackDir=MDirection(Quantity(0.0, "deg"), 
 					       Quantity(90.0, "deg")));
+  //Define image via a predefine SIImageStore object
+  virtual Bool defineImage(CountedPtr<SIImageStore> imstor, const String& ftmachine);
   //Defining componentlist to use while degriding
   //This should be called once...if multiple lists are used..they can be merged in one
   //if sdgrid=True then image plane degridding is done
   virtual void setComponentList(const ComponentList& cl, Bool sdgrid=False);
-  void setupImaging(Record gridpars);
   Bool weight(const String& type="natural", const String& rmode="norm",
                      const Quantity& noise=Quantity(0.0, "Jy"), const Double robust=0.0,
                      const Quantity& fieldofview=Quantity(0.0, "arcsec"),
     		    const Int npixels=0, const Bool multiField=False);
   void initMapper();
-  void resetMapper();
+  //the following get rid of the mappers in this object
+  void resetMappers();
 
   CountedPtr<SIImageStore> imageStore(const Int id=0);
 
@@ -122,8 +126,7 @@ protected:
 		  const Quantity& freqStart, const Quantity& freqStep, const Vector<Quantity>& restFreq, const MFrequency::Types freqFrame);
 
   void createFTMachine(CountedPtr<FTMachine>& theFT, CountedPtr<FTMachine>& theIFT,  const String& ftname,
-		  const Int wprojplane=1,  const Float padding=1.0, const Bool useAutocorr=False, const Bool useDoublePrec=True,
-		  const Int facets=1, const String& gridfunction="SF");
+		  const Int facets=1);
   void createVisSet(const Bool writeaccess=False);
   
   void runMajorCycle(const Bool dopsf=False);
@@ -138,8 +141,8 @@ protected:
   SIMapperCollection itsMappers;
 
   CountedPtr<FTMachine> itsCurrentFTMachine;
-  CoordinateSystem itsCurrentCoordSys;
-  IPosition itsCurrentShape;
+  CoordinateSystem itsCurrentCoordSys, itsMaxCoordSys;
+  IPosition itsCurrentShape, itsMaxShape;
   CountedPtr<SIImageStore> itsCurrentImages;
   ///if facetting this storage will keep the unsliced version 
   CountedPtr<SIImageStore> unFacettedImStore_p;
@@ -168,6 +171,7 @@ protected:
   Int facetsStore_p;
   VisImagingWeight imwgt_p;
   Bool imageDefined_p;
+  Record ftmParams_p;
 };
 
 
