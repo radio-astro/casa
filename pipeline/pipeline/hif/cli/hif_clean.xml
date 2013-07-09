@@ -138,10 +138,20 @@ Compute a clean map.
   </param>
 
   <param type="string" name="hm_cleanboxing">
-     <description>Pipeline cleanboxing/thresholding mode (autobox, manual) </description>
-       <value>autobox</value>
+     <description>Pipeline cleanboxing/thresholding mode (automatic, manual) </description>
+       <value>automatic</value>
        <allowed kind="enum">
-         <value>autobox</value>
+         <value>automatic</value>
+         <value>manual</value>
+       </allowed>
+  </param>
+
+  <param type="string" name="cleanboxing">
+     <description>Pipeline cleanboxing/thresholding (calibrator, iterative, manual)</description>
+       <value>iterative</value>
+       <allowed kind="enum">
+         <value>calibrator</value>
+         <value>iterative</value>
          <value>manual</value>
        </allowed>
   </param>
@@ -230,8 +240,20 @@ Compute a clean map.
     </when>
 
     <when param="hm_cleanboxing">
-      <equals value="autobox">
+      <equals value="automatic">
         <default param="maxthreshiter"><value type="int" >10</value></default>
+      </equals>
+      <equals value="manual">
+        <default param="mask"><value type="string"></value></default>
+        <default param="threshold"><value type="double" units="mJy">0.0</value></default>
+      </equals>
+    </when>
+
+    <when param="cleanboxing">
+      <equals value="calibrator">
+      </equals>
+      <equals value="iterative">
+        <default param="maxthreshiter"><value type="int">10</value></default>
       </equals>
       <equals value="manual">
         <default param="mask"><value type="string"></value></default>
