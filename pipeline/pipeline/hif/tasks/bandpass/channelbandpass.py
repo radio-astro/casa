@@ -25,7 +25,7 @@ class ChannelBandpassInputs(common.CommonBandpassInputs):
                  solint=None, combine=None, refant=None, minblperant=None,
                  minsnr=None, solnorm=None, fillgaps=None, append=None,
                  # preapply calibrations
-                 gaincurve=None, opacity=None, parang=None,
+                 opacity=None, parang=None,
                  # calibration target
                  to_intent=None, to_field=None):
         self._init_properties(vars())
