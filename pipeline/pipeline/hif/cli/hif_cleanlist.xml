@@ -56,10 +56,10 @@ Compute clean results from a list of specified targets.
   </param>
 
   <param type="string" name="hm_cleanboxing">
-     <description>Pipeline cleanboxing mode (autobox, manual) </description>
-       <value>autobox</value>
+     <description>Pipeline cleanboxing mode (automatic, manual) </description>
+       <value>automatic</value>
        <allowed kind="enum">
-         <value>autobox</value>
+         <value>automatic</value>
          <value>manual</value>
        </allowed>
   </param>
@@ -117,7 +117,7 @@ Compute clean results from a list of specified targets.
     </when>
 
     <when param="hm_cleanboxing">
-      <equals value="autobox">
+      <equals value="automatic">
         <default param="maxthreshiter"><value type="int" >10</value></default>
       </equals>
       <equals value="manual">
