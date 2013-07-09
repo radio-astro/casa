@@ -288,6 +288,8 @@ peak and integral
 
 \item <link anchor="images:image.makecomplex.function">makecomplex</link> - make a complex image from two real images
 
+\item <link anchor="images:image.makefloat.function">makecomplex</link> - make a float image from a complex image with a given operation
+
 \item <link anchor="images:image.miscinfo.function">miscinfo</link> - recover miscellaneous information record
 
 \item <link anchor="images:image.open.function">open</link> - open a new \imagefile\ with this image tool
@@ -5737,8 +5739,6 @@ and acquire a readonly lock.
 </example>
 
 </method>
-
- 
    <method type="function" name="makecomplex">
    <shortdescription>Make a complex image</shortdescription>
    
@@ -5782,13 +5782,68 @@ write it to disk.  The Viewer can view it.
 """
 #
 print "\t----\t makecomplex Ex 1 \t----"
-ia.maketestimage('ia.imag',overwrite=true)  #imaginary image
+ia.maketestimage('imag.im',overwrite=true)  #imaginary image
 ia.close()
-ia.maketestimage('ia.real',overwrite=true)  #assoc. real image
-ia.makecomplex('ia.complex', 'ia.imag', overwrite=true)
-ia.removefile('ia.imag')                    #cleanup
-ia.removefile('ia.complex')
-ia.close(remove=true)
+ia.maketestimage('real.im',overwrite=true)  #assoc. real image
+ia.makecomplex('complex.im', 'imag.im', overwrite=true)
+ia.close()
+#
+"""
+
+</example>
+
+</method>
+
+   <method type="function" name="makefloat">
+   <shortdescription>Make a float image from a complex image with a given operation</shortdescription>
+   
+<input>
+  
+     <param type="string"  name="outfile">
+     <description>Output abs (disk) image file name</description>
+     </param>
+  
+     <param type="string"  name="compfile">
+     <description>(existing) complex image file name</description>
+     </param>
+  
+     <param type="string"  name="op">
+     <description>The operation with which to obtain the float value: abs, arg, real, imag, or square</description>
+     <value>abs</value>
+     <allowed type="enum">
+	     <value>abs</value>
+	     <value>arg</value>
+	     <value>real</value>
+	     <value>imag</value>
+	     <value>square</value>
+     </allowed>
+     </param>
+  
+     <param type="bool"  name="overwrite">
+     <description>Overwrite (unprompted) pre-existing output file?</description>
+     <value>false</value>
+     </param>
+</input>
+<returns type="bool">T or fail</returns>
+
+<description>
+
+Creates a float (real) image from the given Complex image using the given operation.
+The image presently attached to the ia tool is not involved.
+
+</description>
+
+<example>
+
+"""
+#
+print "\t----\t makeamp Ex 1 \t----"
+ia.maketestimage('imag.im',overwrite=true)  #imaginary image
+ia.close()
+ia.maketestimage('real.im',overwrite=true)  #assoc. real image
+ia.makecomplex('complex.im', 'imag.im', overwrite=true)
+ia.close()
+ia.makefloat('abs.im', 'complex.im', 'abs') # creates abs.im
 #
 """
 

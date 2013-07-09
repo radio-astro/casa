@@ -2128,6 +2128,24 @@ bool image::makecomplex(const std::string& outFile,
 	return rstat;
 }
 
+bool image::makefloat(const std::string& outFile,
+		      const std::string& compFile,
+		      const std::string& op,
+		      const bool overwrite) {
+	bool rstat(false);
+	try {
+		*_log << LogOrigin("image", "makefloat");
+
+		rstat = ImageAnalysis::makeFloat(outFile, compFile, *_log, op, overwrite);
+
+	} catch (AipsError x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
+	return rstat;
+}
+
 std::vector<std::string> image::maskhandler(const std::string& op,
 		const std::vector<std::string>& name) {
 	try {
