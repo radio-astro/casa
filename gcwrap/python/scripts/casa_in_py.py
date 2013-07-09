@@ -247,6 +247,7 @@ try:
     from sdcal_pg import sdcal_pg as sdcal
     from sdcoadd_pg import sdcoadd_pg as sdcoadd
     from sdflag_pg import sdflag_pg as sdflag
+    from sdflag2_pg import sdflag2_pg as sdflag2
     from sdflagmanager_pg import sdflagmanager_pg as sdflagmanager
     from sdfit_pg import sdfit_pg as sdfit
     from sdgrid_pg import sdgrid_pg as sdgrid
@@ -272,6 +273,7 @@ except ImportError, e:
     sdstat = None
     sdsave = None
     sdflag = None
+    sdflag2 = None
     sdcal = None
     sdplot = None
     sdsmooth = None
@@ -443,6 +445,7 @@ def go(taskname=None):
 #    from sdstat_pg import sdstat_pg as sdstat
 #    from sdlist_pg import sdlist_pg as sdlist
 #    from sdflag_pg import sdflag_pg as sdflag
+#    from sdflag2_pg import sdflag2_pg as sdflag2
 #    from sdtpimaging_pg import sdtpimaging_pg as sdtpimaging
 #    myf['sd']=sd
 #    myf['sdcal']=sdcal
@@ -457,6 +460,7 @@ def go(taskname=None):
 #    myf['sdstat']=sdstat
 #    myf['sdlist']=sdlist
 #    myf['sdflag']=sdflag
+#    myf['sdflag2']=sdflag2
 #    myf['sdtpimaging']=sdtpimaging
 #
 #

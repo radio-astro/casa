@@ -154,6 +154,7 @@ scripts/task_sdcal2.py
 scripts/task_sdcoadd.py
 scripts/task_sdfit.py
 scripts/task_sdflag.py
+scripts/task_sdflag2.py
 scripts/task_sdflagmanager.py
 scripts/task_sdgrid.py
 scripts/task_sdimaging.py

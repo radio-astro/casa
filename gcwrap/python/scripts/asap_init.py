@@ -26,6 +26,7 @@ def asap_init():
     from sdcoadd_cli import sdcoadd_cli as sdcoadd
     from sdfit_cli import sdfit_cli as sdfit
     from sdflag_cli import sdflag_cli as sdflag
+    from sdflag2_cli import sdflag2_cli as sdflag2
     from sdflagmanager_cli import sdflagmanager_cli as sdflagmanager
     from sdgrid_cli import sdgrid_cli as sdgrid
     from sdimaging_cli import sdimaging_cli as sdimaging
@@ -46,6 +47,7 @@ def asap_init():
     myf['sdcoadd']=sdcoadd
     myf['sdfit']=sdfit
     myf['sdflag']=sdflag
+    myf['sdflag2']=sdflag2
     myf['sdflagmanager']=sdflagmanager
     myf['sdgrid']=sdgrid
     myf['sdimaging']=sdimaging
