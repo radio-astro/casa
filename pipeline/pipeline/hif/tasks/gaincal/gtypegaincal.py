@@ -27,7 +27,7 @@ class GTypeGaincalInputs(common.CommonGaincalInputs):
 		 combine=None, refant=None, minblperant=None, minsnr=None,
 		 solnorm=None, append=None,
                  # preapply calibrations
-                 gaincurve=None, opacity=None, parang=None,
+                 opacity=None, parang=None,
                  # calibration target
                  to_intent=None, to_field=None):
         self._init_properties(vars())
