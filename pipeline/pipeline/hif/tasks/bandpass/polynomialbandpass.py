@@ -26,7 +26,7 @@ class PolynomialBandpassInputs(common.CommonBandpassInputs):
                  solnorm=None, fillgaps=None, degamp=None, degphase=None,
                  visnorm=None, maskcenter=None, maskedge=None, append=None,
                  # preapply calibrations
-                 gaincurve=None, opacity=None, parang=None,
+                 opacity=None, parang=None,
                  # calibration target
                  to_intent=None, to_field=None):
         self._init_properties(vars())
