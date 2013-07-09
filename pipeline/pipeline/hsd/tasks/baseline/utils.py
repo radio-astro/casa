@@ -118,10 +118,10 @@ def temporary_filename(name='_heuristics.temporary.table'):
         os.system('rm -rf %s'%(name))
 
 def create_dummy_scan(name, datatable, index_list):
+    param_org = sd.rcParams['scantable.storage']
     with temporary_filename() as temporary_name:
         for index in index_list:
             try:
-                param_org = sd.rcParams['scantable.storage']
                 sd.rcParams['scantable.storage'] = 'disk'
                 s = sd.scantable(name, average=False)
                 sel = sd.selector()
@@ -131,7 +131,9 @@ def create_dummy_scan(name, datatable, index_list):
                 s.set_selection()
                 sd.rcParams['scantable.storage'] = 'memory'
                 dummy_scan = sd.scantable(temporary_name, average=False)
-                sd.rcParams['scantable.storage'] = param_org
                 return dummy_scan
             except:
                 pass
+            finally:
+                sd.rcParams['scantable.storage'] = param_org
+    raise RuntimeError('Failed to create dummy scantable')
