@@ -4,7 +4,7 @@ import types
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.casatools as casatools
-from .boxworker import BoxWorker
+from .iterativeboxworker import IterativeBoxWorker
 from .calibratorboxworker import CalibratorBoxWorker
 from .manualboxworker import ManualBoxWorker
 from .cleanworker import CleanWorker
@@ -320,10 +320,10 @@ class Clean(basetask.StandardTaskTemplate):
                 LOG.info('heuristic imsize: %s', imsize)
 
         # create the boxing/thresholding object
-        if inputs.hm_cleanboxing == 'autobox':
-            boxinputs = BoxWorker.Inputs(context=inputs._context,
+        if inputs.hm_cleanboxing == 'iterative':
+            boxinputs = IterativeBoxWorker.Inputs(context=inputs._context,
               output_dir=inputs.output_dir, vis=None)
-            boxtask = BoxWorker(boxinputs)
+            boxtask = IterativeBoxWorker(boxinputs)
         elif inputs.hm_cleanboxing == 'calibrator':
             boxinputs = CalibratorBoxWorker.Inputs(context=inputs._context,
               output_dir=inputs.output_dir, vis=None)
@@ -333,6 +333,9 @@ class Clean(basetask.StandardTaskTemplate):
               output_dir=inputs.output_dir, vis=None, mask=inputs.mask,
               threshold=inputs.threshold)
             boxtask = ManualBoxWorker(boxinputs)
+        else:
+            raise Exception, 'bad value for hm_cleanboxing: %s' % \
+              inputs.hm_cleanboxing
 
         LOG.info('#')
         LOG.info("# Reduction for intent '%s', field %s, SpW %s" % (intent,
