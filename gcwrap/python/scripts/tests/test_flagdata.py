@@ -970,7 +970,6 @@ class test_selections(test_base):
         
     def test_multi_timerange(self):
         '''flagdata: CAS-5300, in list mode, flag multiple timerange intervals'''
-        inpcmd = ["timerange='09:26:00~09:30:00,10:33:00~10:50:00'"]
         inpcmd = ["timerange='09:26:00~09:30:00,09:42:00~09:43:00,10:33:00~10:50:00'"]
         flagdata(vis=self.vis, mode='list', inpfile=inpcmd, flagbackup=False)
         
