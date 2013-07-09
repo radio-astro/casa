@@ -71,6 +71,9 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.Clean:
         return 'Produce a cleaned image'
 
+    if task_cls is hif.tasks.CleanList:
+        return 'Calculate clean products'
+
     if task_cls is hif.tasks.FlagDeterALMA:
         return 'ALMA deterministic flagging'
 
