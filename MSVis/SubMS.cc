@@ -546,7 +546,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
                           const String& obs, const String& uvrange, 
                           const String& taql, const Vector<Int>& nchan, 
                           const Vector<Int>& start, const Vector<Int>& step,
-                          const String& subarray)
+                          const String& subarray, const String& intent)
   {
     Vector<Int> inchan(1, -1);
     Vector<Int> istart(1, 0);
@@ -624,6 +624,7 @@ Bool SubMS::getCorrMaps(MSSelection& mssel, const MeasurementSet& ms,
     obsString_p    = obs;
     uvrangeString_p = uvrange;
     taqlString_p    = taql;
+    intentString_p  = intent;
 
     if(subarray != "")
       selectArray(subarray);

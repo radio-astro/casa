@@ -168,7 +168,7 @@ class SubMS
                    const String& obs,        const String& uvrange,
                    const String& taql,       const Vector<Int>& nchan,
                    const Vector<Int>& start, const Vector<Int>& step,
-                   const String& subarray);
+                   const String& subarray, const String& intent="");
 
   // Select source or field
   Bool selectSource(const Vector<Int>& fieldid);
