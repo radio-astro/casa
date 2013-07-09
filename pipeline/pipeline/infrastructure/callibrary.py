@@ -148,6 +148,14 @@ class CalApplication(object):
 
 
 class CalTo(object):
+    __slots__ = ('_antenna', '_intent', '_field', '_spw', '_vis')
+      
+    def __getstate__(self):
+        return self._antenna, self._intent, self._field, self._spw, self._vis
+ 
+    def __setstate__(self, state):
+        self._antenna, self._intent, self._field, self._spw, self._vis = state
+
     def __init__(self, vis=None, field='', spw='', antenna='', intent=''):
         self.vis = vis
         self.field = field
@@ -251,6 +259,17 @@ class CalFrom(object):
         'GSPLINE'       : 'G Jones SPLINE (elec. gain)',
         'KANTPOS JONES' : 'KAntPos Jones (antenna position errors)',
     }
+
+    __slots__ = ('_caltype', '_calwt', '_gainfield', 'gaintable', '_interp', 
+                 '_spwmap')
+      
+    def __getstate__(self):
+        return (self._caltype, self._calwt, self._gainfield, self.gaintable, 
+                self._interp, self._spwmap)
+ 
+    def __setstate__(self, state):
+        (self._caltype, self._calwt, self._gainfield, self.gaintable, 
+         self._interp, self._spwmap) = state
     
     def __init__(self, gaintable, gainfield=None, interp=None, spwmap=None,
                  caltype=None, calwt=None):
