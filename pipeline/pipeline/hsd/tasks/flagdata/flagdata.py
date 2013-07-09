@@ -135,6 +135,7 @@ class SDFlagData(common.SingleDishTaskTemplate):
 
         # loop over reduction group
         files = set()
+        flagResult = []
         for (group_id,group_desc) in reduction_group.items():
             # selection by infiles
             _file_index = set(file_index) & set([m.antenna for m in group_desc])
@@ -178,12 +179,14 @@ class SDFlagData(common.SingleDishTaskTemplate):
                 continue
 
             worker = SDFlagDataWorker(context, datatable, iteration, spwid, nchan, pols, list(_file_index), flag_rule)
-            self._executor.execute(worker, merge=False)
+            result = self._executor.execute(worker, merge=False)
+            flagResult += result
             
             # Validation
 
 
-        outcome = {'datatable': datatable}
+        outcome = {'datatable': datatable,
+                   'summary': flagResult}
         results = SDFlagDataResults(task=self.__class__,
                                     success=True,
                                     outcome=outcome)

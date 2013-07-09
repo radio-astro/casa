@@ -23,7 +23,7 @@ LOG = infrastructure.get_logger(__name__)
 class SDFlagDataWorker(object):
     '''
     The worker class of single dish flagging task.
-    This class defines per antenna, spwid, and polarization flagging operation.
+    This class defines per spwid flagging operation.
     '''
 
 
@@ -43,7 +43,10 @@ class SDFlagDataWorker(object):
         self.edge = edge
     
     def execute(self, dry_run=True):
-        
+        """
+        Invoke single dish flagging based on statistics of spectra.
+        Iterates over antenna and polarization for a certain spw ID
+        """
         start_time = time.time()
 
         datatable = self.datatable
@@ -82,7 +85,8 @@ class SDFlagDataWorker(object):
         if not os.path.exists(FigFileDir):
             os.mkdir(FigFileDir)
         FigFileDir += "/"
-    
+
+        flagSummary = []
         # loop over file
         for idx in file_index:
             st = self.context.observing_run[idx]
@@ -136,13 +140,16 @@ class SDFlagDataWorker(object):
                 time_gap = datatable.get_timegap(idx, spwid, pol)
                 # time_gap[0]: PosGap, time_gap[1]: TimeGap
                 t0 = time.time()
-                self.plot_flag(datatable, dt_idx, time_gap[0], time_gap[1], final_thres, flagRule, FigFileDir, FigFileRoot)
+                htmlName = self.plot_flag(datatable, dt_idx, time_gap[0], time_gap[1], final_thres, flagRule, FigFileDir, FigFileRoot)
                 t1 = time.time()
                 LOG.info('Plot flags End: Elapsed time = %.1f sec' % (t1 - t0) )
                 self.save_outtable(datatable, dt_idx, out_table_name)
+                flagSummary.append({'name': htmlName, 'index': idx, 'spw': spwid, 'pol': pol})
 
         end_time = time.time()
         LOG.info('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
+
+        return flagSummary
 
 
     def calcStatistics(self, DataTable, DataIn, DataOut, NCHAN, Nmean, TimeTable, edge):
@@ -633,14 +640,16 @@ class SDFlagDataWorker(object):
         # Create Flagging Summary Page
         if FigFileDir != False:
             Filename = FigFileDir+FigFileRoot+'.html'
+            relpath = os.path.basename(FigFileDir.rstrip("/")) ### stage#
             if os.access(Filename, os.F_OK): os.remove(Filename)
             Out = open(Filename, 'w')
-            print >> Out, '<html>\n<head>\n<style>'
-            print >> Out, '.ttl{font-size:20px;font-weight:bold;}'
-            print >> Out, '.stt{font-size:18px;font-weight:bold;color:white;background-color:navy;}'
-            print >> Out, '.stp{font-size:18px;font-weight:bold;color:black;background-color:gray;}'
-            print >> Out, '.stc{font-size:16px;font-weight:normal;}'
-            print >> Out, '</style>\n</head>\n<body>'
+            #print >> Out, '<html>\n<head>\n<style>'
+            #print >> Out, '.ttl{font-size:20px;font-weight:bold;}'
+            #print >> Out, '.stt{font-size:18px;font-weight:bold;color:white;background-color:navy;}'
+            #print >> Out, '.stp{font-size:18px;font-weight:bold;color:black;background-color:gray;}'
+            #print >> Out, '.stc{font-size:16px;font-weight:normal;}'
+            #print >> Out, '</style>\n</head>\n<body>'
+            print >> Out, '<body>'
             print >> Out, '<p class="ttl">Flagging Status</p>'
             # A table of flag statistics summary
             print >> Out, '<table border="1">'
@@ -661,8 +670,9 @@ class SDFlagDataWorker(object):
             # Plot figures
             print >> Out, '<HR>\nNote to all the plots below: short green vertical lines indicate position gaps; short cyan vertical lines indicate time gaps\n<HR>'
             for name in plots:
-                print >> Out, '<img src="%s">\n<HR>' % name
-            print >> Out, '</body>\n</html>'
+                print >> Out, '<img src="%s/%s">\n<HR>' % (relpath, name)
+            #print >> Out, '</body>\n</html>'
+            print >> Out, '</body>'
             Out.close()
 
 
@@ -688,6 +698,7 @@ class SDFlagDataWorker(object):
             LOG.info('Final Flagged rows by all active categories =%s ' % FlaggedRows)
 
         del threshold, NPpdata, NPpflag, NPprows, PlotData, FlaggedRows, FlaggedRowsCategory
+        return os.path.basename(Filename)
 
     def save_outtable(self, DataTable, ids, out_table_name):
         # 2012/09/01 for Table Output

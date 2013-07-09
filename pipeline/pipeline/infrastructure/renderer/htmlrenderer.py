@@ -154,6 +154,9 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDBaseline:
         return 'Subtract spectral baseline'
 
+    if task_cls is hsd.tasks.SDFlagData:
+        return 'Flag data by Tsys, weather, and statistics of spectra'
+
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
         return ('\'%s\' (developers should add a task description)'
@@ -2016,6 +2019,7 @@ renderer_map = {
         hsd.tasks.SDCalTsys      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_caltsys.html'),
         hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html'),
         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
+        hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html'),
         hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html')
     }
 }

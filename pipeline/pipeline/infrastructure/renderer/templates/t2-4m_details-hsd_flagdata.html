@@ -1,0 +1,56 @@
+<%!
+rsc_path = "../"
+import os
+
+import itertools
+import pipeline.infrastructure.renderer.htmlrenderer as hr
+import pipeline.infrastructure.renderer.logger as logger
+import pipeline.infrastructure.displays as displays
+%>
+<%inherit file="t2-4m_details-base.html"/>
+
+<%block name="header" />
+
+<%block name="title">Stage ${hr.get_stage_number(result)} Task Details</%block>
+
+<h1>Stage ${hr.get_stage_number(result)}: ${hr.get_task_description(result)}</h1>
+
+<%
+try:
+   stage_number = result.stage_number
+   stage_dir = os.path.join(pcontext.report_dir,'stage%d'%(stage_number))
+   if not os.path.exists(stage_dir):
+       os.mkdir(stage_dir)
+
+   rel_path = os.path.basename(stage_dir)   ### stage#
+
+   html_names = []
+   for r in result:
+       summaries = r.outcome['summary']
+       for summary in summaries:
+           html_names.append(summary['name'])
+
+except Exception, e:
+   print 'hsd_imaging html template exception:', e
+   raise e
+%>
+
+
+<ul>
+	<li>Initial display: most important details</li>
+	<ul>
+		<li>Heuristics parameters</li>
+		% if html_names:
+		<li>Flag Summaries</li>
+		<ul>
+			% for name in html_names:
+				<li>
+					<a class="replace" href="${os.path.join(rel_path, name)}">${name}</a>
+				</li>
+			% endfor
+		</ul>
+                % else:
+                No Images
+		% endif
+	</ul>
+</ul>
