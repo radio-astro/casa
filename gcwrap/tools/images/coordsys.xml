@@ -1995,8 +1995,8 @@ print csys.coordinatetype()
 
     <description>
 
-This method reorders the axes (both world and pixel) in the coordinate system.
-You specify the new order of the coordinates in terms of their old
+This method transposes the axes (both world and pixel) in the coordinate system.
+You specify the new order of the axes in terms of their old
 order, so eg order=[1,0,3,2] means reorder the axes so that the zeroth
 axis becomes the first axis, the first axis becomes the zeroth axis,
 the second axis becomes the third axis, and the third axis becomes the
@@ -2012,7 +2012,7 @@ csys = cstool()
 csys.newcoordsys(direction=T, spectral=T, stokes=["I","Q"])
 
 # transpose the axes so that the order is RA, Dec, Frequency, and Stokes
-csys.transpose
+csys.transpose(order=[0, 1, 3, 2])
 
 </example>
 </method>
