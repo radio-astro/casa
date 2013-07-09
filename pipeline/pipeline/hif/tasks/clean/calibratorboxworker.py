@@ -32,6 +32,7 @@ class CalibratorBoxWorker(basetask.StandardTaskTemplate):
 
         self.psf = psf
         self.residual = residual
+        self.iter = iter
 
         model_sum, clean_rms, non_cleaned_rms, residual_max,\
           residual_min, rms2d, image_max = heuristic.analyse_clean_result(
@@ -43,13 +44,19 @@ class CalibratorBoxWorker(basetask.StandardTaskTemplate):
     def prepare(self):
         inputs = self.inputs
 
-        niters = heuristic.niters_and_mask(psf=self.psf,
-          residual=self.residual, new_mask=self._new_cleanmask)
+        if self.iter==0:
+            niter = heuristic.niter_and_mask(psf=self.psf,
+              residual=self.residual, new_mask=self._new_cleanmask)
 
-        self.result.threshold = 0.0
-        self.result.cleanmask = self._new_cleanmask
-        self.result.niters = niters
-        self.result.iterating = (iter < 2)
+            self.result.threshold = '0.0Jy'
+            self.result.cleanmask = self._new_cleanmask
+            self.result.niter = niter
+            self.result.iterating = True
+        else:
+            self.result.threshold = '0.0Jy'
+            self.result.cleanmask = ''
+            self.result.niter = 0
+            self.result.iterating = False
 
         return self.result
 
