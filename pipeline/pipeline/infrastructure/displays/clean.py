@@ -46,14 +46,11 @@ class CleanSummary(object):
 
                 # model for this iteration (currently only last but
                 # allow for others in future)
-                if r.iterations[i].has_key('model'):
-                    figfile = displays.sky.plotfilename(
-                      r.iterations[i]['model'], stage_dir)
-                    print 'Looking for %s' % figfile
-                    if os.path.exists(figfile):
-                        plot_wrappers.append(displays.SkyDisplay().plot(
-                          self.context, r.iterations[i]['model'],
-                          reportdir=stage_dir))
+                if r.iterations[i].has_key('model') and \
+                  os.path.exists(r.iterations[i]['model']):
+                    plot_wrappers.append(displays.SkyDisplay().plot(
+                      self.context, r.iterations[i]['model'],
+                      reportdir=stage_dir))
 
                 # cleanmask for this iteration - not for iter 0
                 if i > 0:
