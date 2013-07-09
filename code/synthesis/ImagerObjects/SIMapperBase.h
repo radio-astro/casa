@@ -65,20 +65,30 @@ class SIMapperBase
   virtual void finalizeGrid();
 
   virtual void initializeDegrid();
-  virtual void degrid();\
+  virtual void degrid();
   virtual void finalizeDegrid();
-  virtual void initializeGrid(const vi::VisBuffer2& ){throw(AipsError("Not implemented"));};
-  virtual void grid(const vi::VisBuffer2& , Bool , FTMachine::Type ){throw(AipsError("Not implemented"));};
-  virtual void finalizeGrid(const vi::VisBuffer2& , const Bool ){throw(AipsError("Not implemented"));};
+  virtual void initializeGrid(const vi::VisBuffer2& )
+  {cout <<"Calling MapperBase initializeGrid !"<< endl;initializeGrid();};//{throw(AipsError("Not implemented"));};
+  virtual void grid(const vi::VisBuffer2& , Bool , FTMachine::Type )
+  {cout <<"Calling MapperBase grid !"<< endl;grid();};//{throw(AipsError("Not implemented"));};
+  virtual void finalizeGrid(const vi::VisBuffer2& , const Bool )
+  {cout <<"Calling MapperBase finalizeGrid !"<< endl;finalizeGrid();};//{throw(AipsError("Not implemented"));};
 
-  virtual void initializeDegrid(const vi::VisBuffer2& , const Int row=-1 ){throw(AipsError("Not implemented"));};
-  virtual void degrid(vi::VisBuffer2& ){throw(AipsError("Not implemented"));};
+  virtual void initializeDegrid(const vi::VisBuffer2& , const Int row=-1 )
+  {cout <<"Calling MapperBase initializeDegrid !"<< endl;initializeDegrid();};//{throw(AipsError("Not implemented"));};
+  virtual void degrid(vi::VisBuffer2& )
+  {cout <<"Calling MapperBase degrid !"<< endl;degrid();};//{throw(AipsError("Not implemented"));};
   ////////////////OLD VI/VB versions
-  virtual void initializeGrid(const VisBuffer& ){throw(AipsError("Not implemented"));};
-  virtual void grid(const VisBuffer& , Bool , FTMachine::Type ){throw(AipsError("Not implemented"));};
-  virtual void finalizeGrid(const VisBuffer& , const Bool dopsf=False){throw(AipsError("Not implemented"));};
-  virtual void initializeDegrid(const VisBuffer& , const Int row=-1){throw(AipsError("Not implemented"));};
-  virtual void degrid(VisBuffer& ){throw(AipsError("Not implemented"));};
+  virtual void initializeGrid(const VisBuffer& )
+  {cout <<"Calling MapperBase initializeGrid !"<< endl;initializeGrid();};//{throw(AipsError("Not implemented"));};
+  virtual void grid(const VisBuffer& , Bool , FTMachine::Type )
+  {cout <<"Calling MapperBase grid !"<< endl;grid();};//{throw(AipsError("Not implemented"));};
+  virtual void finalizeGrid(const VisBuffer& , const Bool dopsf=False)
+  {cout <<"Calling MapperBase finalizeGrid !"<< endl;finalizeGrid();};//{throw(AipsError("Not implemented"));};
+  virtual void initializeDegrid(const VisBuffer& , const Int row=-1)
+  {cout <<"Calling MapperBase initializeDegrid !"<< endl;initializeDegrid();};//{throw(AipsError("Not implemented"));};
+  virtual void degrid(VisBuffer& )
+  {cout <<"Calling MapperBase degrid !"<< endl;degrid();};//{throw(AipsError("Not implemented"));};
 
   ////////////////////////////////////
   virtual Record getFTMRecord();
