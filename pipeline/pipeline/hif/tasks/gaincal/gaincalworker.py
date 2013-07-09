@@ -23,7 +23,7 @@ class GaincalWorkerInputs(common.CommonGaincalInputs):
                  solnorm=None, append=None, splinetime=None, npointaver=None,
                  phasewrap=None,
                  # preapply calibrations
-                 gaincurve=None, opacity=None, preavg=None,
+                 opacity=None, preavg=None,
                  # calibration target
                  to_intent=None, to_field=None):
         self._init_properties(vars())
