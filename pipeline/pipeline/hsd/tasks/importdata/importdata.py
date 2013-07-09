@@ -147,6 +147,7 @@ class SDImportData(basetask.StandardTaskTemplate):
             LOG.warning(msg)
             raise ValueError, msg
 
+        vis = os.path.abspath(os.path.expanduser(os.path.expandvars(vis)))
         if not os.path.exists(vis):
             msg = 'Input data set \'{0}\' not found'.format(vis)
             LOG.error(msg)
