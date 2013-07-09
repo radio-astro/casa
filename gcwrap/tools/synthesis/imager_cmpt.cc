@@ -1313,7 +1313,7 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
                   const ::casac::variant& spw, const ::casac::variant& field,
                   const ::casac::variant& baseline,
 		  const ::casac::variant& time, const ::casac::variant& scan,
-                  const ::casac::variant& observation,
+                  const std::string& intent, const ::casac::variant& observation,
                   const ::casac::variant& uvrange, const std::string& taql,
                   const bool useScratch, const bool datainmemory, const bool writeaccess)
 {
@@ -1368,7 +1368,7 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 									    String(taql), String(timerange),
 									    fieldnames, antIndex, antennanames, 
 									    spwstring, uvdist,
-                                                                            scanrange, obsrange);
+                                                                            scanrange, String(intent), obsrange);
 	 else
 	   rstat = itsImager->setDataPerMS(vis, mode, Vector<Int>(nchan), 
 					   Vector<Int>(start),
@@ -1376,7 +1376,8 @@ imager::selectvis(const std::string& vis, const std::vector<int>& nchan,
 					   fieldIndex, 
 					   String(taql), String(timerange),
 					   fieldnames, antIndex, antennanames, 
-					   spwstring, uvdist, scanrange, obsrange, useScratch, !writeaccess);
+					   spwstring, uvdist, scanrange, String(intent),
+                                           obsrange, useScratch, !writeaccess);
 	 hasValidMS_p=rstat;
        } catch  (AipsError x) {
           //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
@@ -1404,7 +1405,6 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 		    const ::casac::variant& distance)
 {
   Bool rstat(False);
-
   if(hasValidMS_p){
     try {
       
@@ -1518,7 +1518,6 @@ imager::defineimage(const int nx, const int ny, const ::casac::variant& cellx,
 	domovingSource=True;
       }
 
-
       rstat = itsImager->defineImage(nX, nY, cellX, cellY, stokes, phaseCenter, 
 				     fieldid, lamoda, nchan, startoo, 
 				     stepoo, mfreq, mvel,  qstep, 
@@ -1542,7 +1541,8 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
 	      const std::vector<double>& fluxdensity, const std::string& standard,
               const bool scalebychan, const double spix,
               const ::casac::variant& reffreq, const std::string& time,
-              const std::string& scan, const std::string& observation, 
+              const std::string& scan, const std::string& intent,
+              const std::string& observation,
               const std::string& interpolation)
 {
   Bool rstat = False;
@@ -1580,11 +1580,12 @@ imager::setjy(const ::casac::variant& field, const ::casac::variant& spw,
       casa::String timerange(time);
       casa::String scanstr(scan);
       casa::String obsstr(observation);
+      casa::String intentstr(intent);
       casa::String interpstr(interpolation);
 
       rstat = itsImager->setjy(fieldIndex, spwid, fieldnames, spwstring, 
                                modimage, fluxdensity, standard, scalebychan,
-                               spix, mfreqref, timerange, scanstr, obsstr, interpstr);
+                               spix, mfreqref, timerange, scanstr, intentstr, obsstr, interpstr);
     } 
     catch(AipsError x){
       //*itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;

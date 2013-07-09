@@ -8,7 +8,7 @@ from parallel.parallel_task_helper import ParallelTaskHelper
 import pdb
 
 def setjy(vis=None, field=None, spw=None,
-          selectdata=None, timerange=None, scan=None, observation=None, intent=None,
+          selectdata=None, timerange=None, scan=None, intent=None, observation=None,
           scalebychan=None, standard=None, model=None, modimage=None, 
           listmodels=None, fluxdensity=None, spix=None, reffreq=None, 
         #  commented out until polarization fraction/angle handling in place
@@ -61,14 +61,14 @@ def setjy(vis=None, field=None, spw=None,
       #        mytb.putkeyword(key,keywords_MMS[key])
       #    mytb.close()
       retval = setjy_core(vis, field, spw, selectdata, timerange, 
-                        scan, observation, intent, scalebychan, standard, 
+                        scan, intent, observation, scalebychan, standard, 
                         modimage, listmodels, fluxdensity, spix, reffreq,
                         # polindex, polangle, rm, 
                         useephemdir, interpolation, usescratch)   
           
   else:
     retval = setjy_core(vis, field, spw, selectdata, timerange, 
-                        scan, observation, intent, scalebychan, standard, model, 
+                        scan, intent, observation, scalebychan, standard, model, 
                         modimage, listmodels, fluxdensity, spix, reffreq, 
                         # polindex, polangle, rm, 
                          useephemdir, interpolation, usescratch)
@@ -78,7 +78,7 @@ def setjy(vis=None, field=None, spw=None,
 
 
 def setjy_core(vis=None, field=None, spw=None,
-               selectdata=None, timerange=None, scan=None, observation=None, intent=None,
+               selectdata=None, timerange=None, scan=None, intent=None, observation=None,
                scalebychan=None, standard=None, model=None, modimage=None, listmodels=None,
                fluxdensity=None, spix=None, reffreq=None,
                 # polarization handling...
@@ -128,7 +128,7 @@ def setjy_core(vis=None, field=None, spw=None,
       myim = imtool()
 
       if type(vis) == str and os.path.isdir(vis):
-        n_selected_rows = nselrows(vis, field, spw, observation, timerange, scan)
+        n_selected_rows = nselrows(vis, field, spw, observation, timerange, scan, intent)
         # jagonzal: When  usescratch=True, creating the MODEL column only on a sub-set of
         # Sub-MSs causes problems because ms::open requires all the tables in ConCatTable 
         # to have the same description (MODEL data column must exist in all Sub-MSs)
@@ -140,7 +140,7 @@ def setjy_core(vis=None, field=None, spw=None,
         # Finally, This does not affect the normal MS case because nselrows throws an
         # exception when the user enters an invalid data selection, but it works for the 
         # MMS case because every sub-Ms contains a copy of the entire MMS sub-tables
-        if ((not n_selected_rows) and (not usescratch)):
+        if ((not n_selected_rows) and ((not usescratch) or (standard=="Butler-JPL-Horizons 2012"))) :
           # jagonzal: Turn this SEVERE into WARNING, as explained above
           casalog.post("No rows were selected.", "WARNING")
           return True
@@ -216,7 +216,7 @@ def setjy_core(vis=None, field=None, spw=None,
         setjyutil=ss_setjy_helper(myim,vis,casalog)
         setjyutil.setSolarObjectJy(field=field,spw=spw,scalebychan=scalebychan,
                          timerange=timerange,observation=str(observation), scan=scan, 
-                         useephemdir=useephemdir,usescratch=usescratch)
+                         intent=intent, useephemdir=useephemdir,usescratch=usescratch)
         clnamelist=setjyutil.getclnamelist()
       else:
         if type(spix)==[]:
@@ -225,7 +225,7 @@ def setjy_core(vis=None, field=None, spw=None,
         myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
                  standard=standard, scalebychan=scalebychan, time=timerange,
-                 observation=str(observation), scan=scan, interpolation=interpolation)
+                 observation=str(observation), scan=scan, intent=intent, interpolation=interpolation)
       myim.close()
 
   # This block should catch errors mainly from the actual operation mode 

@@ -93,6 +93,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& spwstring,
 				   const String& uvdist,
 				      const String& scan,
+                                      const String& intent,
                                       const String& obs){
     useModelCol_p=False;
     LogIO os(LogOrigin("imager", "setDataToMemory()"), logSink_p);
@@ -134,6 +135,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& spwstring,
 				   const String& uvdist,
                                    const String& scan,
+                                   const String& intent,
                                    const String& obs,
                                    const Bool useModel, 
 				   const Bool readonly){
@@ -162,7 +164,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
 
       return setDataOnThisMS(thisms, mode, nchan, start, step, spectralwindowids, fieldids, msSelect, timerng, 
-			     fieldnames, antIndex, antnames, spwstring, uvdist, scan, obs);  
+			     fieldnames, antIndex, antnames, spwstring, uvdist, scan, intent, obs);  
       
     }
     
@@ -184,6 +186,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				   const String& spwstring,
 				   const String& uvdist,
                                       const String& scan,
+                                      const String& intent,
                                       const String& obs){
     LogIO os(LogOrigin("imager", "setDataOnThisMS()"), logSink_p);  
 
@@ -295,6 +298,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       if(scan != ""){
 	thisSelection.setScanExpr(scan);
 	os << "Selecting on scan : " << scan << LogIO::POST;	
+      }
+      if(intent != ""){
+	thisSelection.setStateExpr(intent);
+	os << "Selecting on State(scan intent) Expr " << intent << LogIO::POST;	
       }
       if(obs != ""){
 	thisSelection.setObservationExpr(obs);

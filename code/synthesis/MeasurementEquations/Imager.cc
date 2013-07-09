@@ -1276,7 +1276,8 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
 			  const String& antnames,
 			  const String& spwstring,
                           const String& uvdist, const String& scan,
-                          const String& obs, const Bool useModelCol, const Bool /*readonly*/)
+                          const String& intent, const String& obs,
+                          const Bool useModelCol, const Bool /*readonly*/)
 {
   LogIO os(LogOrigin("imager", "setdata()"), logSink_p);
   if(msname != ""){
@@ -1297,7 +1298,7 @@ Bool Imager::setDataPerMS(const String& msname, const String& mode,
   //Calling the old setdata
   return   setdata(mode, nchan, start, step, dummy, dummy, spectralwindowids, 
 		   fieldids, msSelect, timerng, fieldnames, antIndex, 
-                   antnames, spwstring, uvdist, scan, obs, useModelCol);
+                   antnames, spwstring, uvdist, scan, intent, obs, useModelCol);
 
 }
 
@@ -1312,7 +1313,8 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
 		     const String& fieldnames, const Vector<Int>& antIndex,
 		     const String& antnames, const String& spwstring,
                      const String& uvdist, const String& scan,
-                     const String& obs,
+                     const String& intent,
+                     const String& obs, 
                      const Bool /*useModelCol*/,
                      const Bool be_calm)
 {
@@ -1414,6 +1416,11 @@ Bool Imager::setdata(const String& mode, const Vector<Int>& nchan,
       thisSelection.setScanExpr(scan);
 	os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
            << "Selecting on scan : " << scan << LogIO::POST;	
+    }
+    if(intent != "") {
+      thisSelection.setStateExpr(intent);
+	os << (be_calm ? LogIO::NORMAL4 : LogIO::NORMAL)
+           << "Selecting on State Expr : " << intent  << LogIO::POST;	
     }
     if(obs != ""){
       thisSelection.setObservationExpr(obs);
@@ -4560,7 +4567,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
 	setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
 		MRadialVelocity(),
 		selectSpw, selectField, msSelectString, "", "", Vector<Int>(), 
-		"", "", "", "", "", True);
+		"", "", "", "", "", "",True);
 
 	if (!nullSelect_p) {
 
@@ -4609,7 +4616,8 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
                    const String& standard, const Bool chanDep,
                    const Double spix, const MFrequency& reffreq,
                    const String& timerange, const String& scanstr,
-                   const String& obsidstr, const String& interpolation)
+                   const String& intentstr, const String& obsidstr,
+                   const String& interpolation)
 {
   if(!valid())
     return False;
@@ -4730,7 +4738,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
         setdata("none", numDeChan, begin, stepsize, MRadialVelocity(), 
                 MRadialVelocity(),
                 selToRawSpwIds, selectField, msSelectString, timerange, "",
-                Vector<Int>(), "", "", "", scanstr, obsidstr, True, true);
+                Vector<Int>(), "", "", "", scanstr, intentstr, obsidstr, True, true);
         ROMSColumns msselc(*mssel_p);
         if(nullSelect_p || msselc.nrow() < 1){
           os << ((timerange == "" && scanstr == ""
@@ -4792,7 +4800,8 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           fluxval.setValue(fluxUsed);
 	            
           // Create a point component at the field center
-          // with the specified flux density
+          // with the specified flux density 
+          // - obviously this does not correct for solar objects... 
           PointShape point(fieldDir);
           SpectralIndex siModel;
           if(reffreq.getValue().getValue() > 0.0){
@@ -4843,7 +4852,7 @@ Bool Imager::setjy(const Vector<Int>& /*fieldid*/,
           VisModelData::clearModel(*mssel_p, fldidstr, spwstring);
         }
         sjy_make_visibilities(tmodimage, os, rawspwid, fldid, tempCLs[selspw],
-                              timerange, scanstr, obsidstr, freqsOfScale, freqscaling);
+                              timerange, scanstr, intentstr, obsidstr, freqsOfScale, freqscaling);
 	
         if(tmodimage)
           delete tmodimage;
@@ -4976,7 +4985,8 @@ Unit Imager::sjy_setup_arrs(Vector<Vector<Flux<Double> > >& returnFluxes,
 Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
                                    const Int rawspwid, const Int fldid,
                                    const String& clname, const String& timerange,
-                                   const String& scanstr, const String& obsidstr, const Vector<Double>& freqsOfScale, const Vector<Double>& freqscaling)
+                                   const String& scanstr, const String& intentstr, const String& obsidstr,
+                                   const Vector<Double>& freqsOfScale, const Vector<Double>& freqscaling)
 {
   Bool made_visibilities = False;
 
@@ -4996,7 +5006,7 @@ Bool Imager::sjy_make_visibilities(TempImage<Float> *tmodimage, LogIO& os,
     setdata("channel", numDeChan, begin, stepsize, MRadialVelocity(), 
             MRadialVelocity(),
             selectSpw, selectField, msSelectString, timerange, "",
-            Vector<Int>(), "", "", "", scanstr, obsidstr, True, true);
+            Vector<Int>(), "", "", "", scanstr, intentstr, obsidstr, True, true);
 
   if(!nullSelect_p){
     // Use ft to form visibilities

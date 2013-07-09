@@ -328,6 +328,151 @@ class test_SingleObservation(SetjyUnitTestBase):
 
         return sjran
 
+    def test4_SingleObservationSelectByChan(self):
+        """ Test vs an MS with one single observation using the Butler-JPL-Horizons 2010 model with the selection by intent"""
+
+        os.system("mv " + self.inpms + " " + self.inpms + ".test2")
+        self.inpms += ".test2"
+        record = {}
+
+        tblocal = tbtool()
+        tblocal.open(self.inpms)
+        cols = tblocal.colnames()
+        tblocal.close()
+        if 'MODEL_DATA' in cols:
+            raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col" + str(cols)
+
+        try:
+            print "\nRunning setjy(field='Uranus')."
+            sjran = setjy(vis=self.inpms, field='', spw='', modimage='',
+                          selectdata=True, intent="*AMPLI*",
+                          scalebychan=True, fluxdensity=-1,
+                          standard='Butler-JPL-Horizons 2010', usescratch=True)
+        except Exception, e:
+            print "\nError running setjy(field='Uranus')"
+            raise e
+        try:
+            tblocal.open(self.inpms)
+            cols = tblocal.colnames()
+            if 'MODEL_DATA' not in cols:
+                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+            else:
+                record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
+                record['auto1'] = tblocal.getcell('MODEL_DATA', 18)
+                record['long1'] = tblocal.getcell('MODEL_DATA', 19)
+                record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
+                record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                tblocal.close()
+                record['history'] = self.get_last_history_line(self.inpms, origin='imager::setjy()', hint="V=0] Jy")
+                self.result = record
+        except AssertionError, e:
+            print "\nError accesing MODEL_DATA"
+            tblocal.close()
+            raise e
+
+        """Flux density in HISTORY (scalebychan)?"""
+        self.check_history(self.result['history'], ["Uranus", "V=0] Jy"])
+        """WVR spw with scalebychan"""
+        self.check_eq(self.result['wvr'], numpy.array([[25.93320656+0.j,
+                                                        26.88228607+0.j]]),
+                 0.003)
+        """Zero spacing of spw 1 with scalebychan"""
+        # 8 (decreasing freq!) chans, XX & YY.
+        self.check_eq(self.result['auto1'],
+                 numpy.array([[65.49415588+0.j, 65.42105865+0.j,
+                               65.34798431+0.j, 65.27491760+0.j,
+                               65.20187378+0.j, 65.12883759+0.j,
+                               65.05581665+0.j, 64.98281097+0.j],
+                              [65.49415588+0.j, 65.42105865+0.j,
+                               65.34798431+0.j, 65.27491760+0.j,
+                               65.20187378+0.j, 65.12883759+0.j,
+                               65.05581665+0.j, 64.98281097+0.j]]),0.0001)
+        """Long spacing of spw 1 with scalebychan"""
+        self.check_eq(self.result['long1'],
+                 numpy.array([[4.92902184+0.j, 4.96826363+0.j,
+                               5.00747252+0.j, 5.04664850+0.j,
+                               5.08579159+0.j, 5.12490082+0.j,
+                               5.16397619+0.j, 5.20301771+0.j],
+                              [4.92902184+0.j, 4.96826363+0.j,
+                               5.00747252+0.j, 5.04664850+0.j,
+                               5.08579159+0.j, 5.12490082+0.j,
+                               5.16397619+0.j, 5.20301771+0.j]]),0.0001)
+        # spw 4 only has 1 chan, so it should be the same as without scalebychan.
+        """Zero spacing of spw 4 with scalebychan"""
+        self.check_eq(self.result['auto4'], numpy.array([[69.33396912+0.j],[69.33396912+0.j]]),0.0001)
+        """Long spacing of spw 4 with scalebychan"""
+        self.check_eq(self.result['long4'], numpy.array([[2.83933783+0.j],[2.83933783+0.j]]),0.0001)
+
+        return sjran
+
+    def test5_SingleObservationNewModel(self):
+        """ Test vs an MS with one single observation using the Butler-JPL-Horizons 2012 model with the selection by intent"""
+
+        # print out some values for debugging
+        debug=False
+
+        os.system("mv " + self.inpms + " " + self.inpms + ".test3")
+        self.inpms += ".test3"
+        record = {}
+
+        tblocal = tbtool()
+        tblocal.open(self.inpms)
+        cols = tblocal.colnames()
+        tblocal.close()
+        if 'MODEL_DATA' in cols:
+            raise ValueError, "The input MS, " + self.inpms + " already has a MODEL_DATA col" + str(cols)
+
+        try:
+            print "\nRunning setjy(field='Uranus')."
+            sjran = setjy(vis=self.inpms, field='', spw='', modimage='',
+                          selectdata=True, intent="*AMPLI*",
+                          scalebychan=False, fluxdensity=-1,
+                          standard='Butler-JPL-Horizons 2012', usescratch=True)
+        except Exception, e:
+            print "\nError running setjy(field='Uranus')"
+            raise e
+        try:
+            tblocal.open(self.inpms)
+            cols = tblocal.colnames()
+            if 'MODEL_DATA' not in cols:
+                raise AssertionError, "setjy(field='Uranus') did not add a MODEL_DATA column"
+            else:
+                record['wvr'] = tblocal.getcell('MODEL_DATA', 0)
+                record['auto3'] = tblocal.getcell('MODEL_DATA', 10)
+                record['long3'] = tblocal.getcell('MODEL_DATA', 11)
+                record['auto4'] = tblocal.getcell('MODEL_DATA', 2)
+                record['med4'] = tblocal.getcell('MODEL_DATA', 4)
+                record['long4'] = tblocal.getcell('MODEL_DATA', 3)
+                tblocal.close()
+                record['history'] = self.get_last_history_line(self.inpms, origin='setjy', hint='Uranus')
+                self.result = record
+        except AssertionError, e:
+            print "\nError accesing MODEL_DATA"
+            tblocal.close()
+            raise e
+
+        if debug:
+          print "self.result['history']=",self.result['history']
+          print "self.result['wvr']=",self.result['wvr']
+          print "self.result['auto3']=",self.result['auto3']
+          print "self.result['auto4']=",self.result['auto4']
+
+        """Flux density in HISTORY (Uranus)?"""
+        self.check_history(self.result['history'], ["Uranus:", "V=0.0] Jy"])
+        """WVR spw"""
+        #self.check_eq(self.result['wvr'], numpy.array([[ 25.33798409+0.j,25.33798409+0.j]]),0.0001)
+        # new value after code and ephemeris data update 2012-10-03
+        self.check_eq(self.result['wvr'], numpy.array([[ 25.33490372+0.j, 25.33490372+0.j]]),0.0001)
+        """Zero spacing of spw 3"""
+	#self.check_eq(self.result['auto3'], numpy.array([[ 66.72530365+0.j],[ 66.72530365+0.j]]),0.0001)
+        # new value after code and ephemeris data update 2012-10-03
+	self.check_eq(self.result['auto3'], numpy.array([[ 66.71941376+0.j], [ 66.71941376+0.j]]),0.0001)
+        """Zero spacing of spw 4"""
+        #self.check_eq(self.result['auto4'], numpy.array([[ 70.40153503+0.j],[ 70.40153503+0.j]]),0.0001)
+        # new value after code and ephemeris data update 2012-10-03
+        self.check_eq(self.result['auto4'], numpy.array([[ 70.39561462+0.j], [ 70.39561462+0.j]]), 0.0001)
+
+        return sjran
 
 class test_MultipleObservations(SetjyUnitTestBase):
     """Test multiple observation MS (CAS-3320)"""

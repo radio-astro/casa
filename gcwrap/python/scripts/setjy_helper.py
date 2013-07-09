@@ -14,7 +14,7 @@ class ss_setjy_helper:
           casalog = casac.logsink()
         self._casalog = casalog
 
-    def setSolarObjectJy(self,field,spw,scalebychan, timerange,observation, scan, useephemdir, usescratch=False):
+    def setSolarObjectJy(self,field,spw,scalebychan, timerange,observation, scan, intent, useephemdir, usescratch=False):
 	"""
 	Set flux density of a solar system object using Bryan Butler's new
 	python model calculation code.
@@ -43,14 +43,16 @@ class ss_setjy_helper:
 	sel['timerange']=timerange
 	sel['observation']=str(observation)
 	sel['scan']=scan
+        sel['scanintent']=intent
 
 	measframes=['REST','LSRK','LSRD','BARY','GEO','TOPO','GALACTO','LGROUP','CMB']
 	myms.open(self.vis)
 	myms.msselect(sel,False)
 	scansummary=myms.getscansummary()
 	nscan=len(scansummary.keys())
-	fieldids=myms.msselectedindices()['field']
-        obsids=myms.msselectedindices()['observationid']
+        selectedids=myms.msselectedindices()
+	fieldids=selectedids['field']
+        obsids=selectedids['observationid']
 	myms.close()
 	  
         mytb.open(self.vis+'/OBSERVATION')
@@ -327,7 +329,10 @@ class ss_setjy_helper:
                  mycb.close()
 
 	      # finally, put the componentlist as model
-	      self.im.selectvis(spw=spwids[j],field=field,observation=observation,time=timerange)
+              #tqlstr=''
+              #if intent!='':
+              #   tqlstr='any(STATE_ID=='+str(stateids.tolist())+')'
+	      self.im.selectvis(spw=spwids[j],field=field,observation=observation,time=timerange,intent=intent)
 	      self.im.ft(complist=clname)
               #debug: set locally saved 2010-version component list instead
               #cl2010='mod_setjy_spw0_Titan_230.543GHz55674.1d.cl'

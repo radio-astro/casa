@@ -3194,6 +3194,11 @@ im.defineimage(mode='velocity', nchan=200, mstart='20km/s',
      <any type="variant"/>
      <value></value>
      </param>
+
+     <param type="string" name="intent">
+     <description>Limit data selected on observation intent. The syntax is defined in the msselection link</description>
+     <value></value>
+     </param>
      
      <param type="any" name="observation">
      <description>Limit data using observation IDs.  The syntax is defined in the msselection link</description>
@@ -3300,6 +3305,7 @@ one field, and will currently only process Stokes I.
      <value></value>
      </param>
 
+     <!-- change this to model? -->
      <param type="string" name="modimage">
      <description>A model image</description>
      <value></value>
@@ -3355,10 +3361,16 @@ one field, and will currently only process Stokes I.
      <value></value>
      </param>
 
+     <param type="string" name="intent">
+     <description>Observation intent</description>
+     <value></value>
+     </param>
+
      <param type="string" name="observation">
      <description>Observation ID(s) to operate on</description>
      <value></value>
      </param>
+
 
      <param type="string" name="interpolation">
      <description>interpolation method in the case of time variable calibrator</description>
