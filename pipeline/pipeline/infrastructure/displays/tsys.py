@@ -25,8 +25,8 @@ class TsysSummaryChart(object):
         plots = [self.get_plot_wrapper(spw) for spw in science_spws]
         return [p for p in plots if p is not None]
 
-    def create_plot(self, spw):
-        figfile = self.get_figfile(spw)
+    def create_plot(self, tsys_spw):
+        figfile = self.get_figfile()
 
         task_args = {'vis'         : self.ms.name,
                      'caltable'    : self.caltable,
@@ -34,7 +34,7 @@ class TsysSummaryChart(object):
                      'yaxis'       : 'tsys',
                      'overlay'     : 'antenna,time',
                      'interactive' : False,
-                     'spw'         : spw.id,
+                     'spw'         : tsys_spw,
                      'showatm'     : True,
                      'subplot'     : 11,
                      'figfile'     : figfile}
@@ -42,29 +42,33 @@ class TsysSummaryChart(object):
         task = casa_tasks.plotbandpass(**task_args)
         task.execute(dry_run=False)
 
-    def get_figfile(self, spw):
+    def get_figfile(self):
         return os.path.join(self.context.report_dir, 
                             'stage%s' % self.result.stage_number, 
                             'tsys-summary.png')
 
     def get_plot_wrapper(self, spw):
-        figfile = self.get_figfile(spw)
+        # get the Tsys spw for this science spw
+        tsys_spw = self.result.final[0].spwmap[spw.id]
+        
+        figfile = self.get_figfile()
 
         # plotbandpass injects spw ID and t0 into every plot filename
         root, ext = os.path.splitext(figfile)
-        real_figfile = '%s.spw%s.t0%s' % (root, spw.id, ext) 
+        real_figfile = '%s.spw%s.t0%s' % (root, tsys_spw, ext) 
         
         wrapper = logger.Plot(real_figfile,
                               x_axis='freq',
                               y_axis='tsys',
-                              parameters={'vis' : self.ms.basename,
-                                          'spw' : spw.id})
+                              parameters={'vis'      : self.ms.basename,
+                                          'spw'      : spw.id,
+                                          'tsys_spw' : tsys_spw})
 
         if not os.path.exists(real_figfile):
             LOG.trace('Tsys summary plot for spw %s not found. Creating new '
                       'plot.' % spw.id)
             try:
-                self.create_plot(spw)
+                self.create_plot(tsys_spw)
             except Exception as ex:
                 LOG.error('Could not create Tsys summary plot for spw %s'
                           '' % spw.id)
@@ -90,8 +94,8 @@ class TsysPerAntennaChart(object):
 
         return [p for p in plots if p is not None]
 
-    def create_plot(self, spw, antenna):
-        figfile = self.get_figfile(spw, antenna)
+    def create_plot(self, tsys_spw, antenna):
+        figfile = self.get_figfile()
 
         task_args = {'vis'         : self.ms.name,
                      'caltable'    : self.caltable,
@@ -99,7 +103,7 @@ class TsysPerAntennaChart(object):
                      'yaxis'       : 'tsys',
                      'overlay'     : 'time',
                      'interactive' : False,
-                     'spw'         : spw.id,
+                     'spw'         : tsys_spw,
                      'antenna'     : antenna.id,
                      'showatm'     : True,
                      'subplot'     : 11,
@@ -108,17 +112,20 @@ class TsysPerAntennaChart(object):
         task = casa_tasks.plotbandpass(**task_args)
         task.execute(dry_run=False)
 
-    def get_figfile(self, spw, antenna):
+    def get_figfile(self):
         return os.path.join(self.context.report_dir, 
                             'stage%s' % self.result.stage_number, 
                             'tsys.png')
 
     def get_plot_wrapper(self, spw, antenna):
-        figfile = self.get_figfile(spw, antenna)
+        figfile = self.get_figfile()
+
+        # get the Tsys spw for this science spw
+        tsys_spw = self.result.final[0].spwmap[spw.id]
 
         # plotbandpass injects antenna name and spw ID into every plot filename
         root, ext = os.path.splitext(figfile)
-        real_figfile = '%s.%s.spw%s%s' % (root, antenna.name, spw.id, ext) 
+        real_figfile = '%s.%s.spw%s%s' % (root, antenna.name, tsys_spw, ext) 
         
         wrapper = logger.Plot(real_figfile,
                               x_axis='freq',
@@ -131,14 +138,18 @@ class TsysPerAntennaChart(object):
             LOG.trace('Tsys per antenna plot for antenna %s spw %s not found. '
                       'Creating new plot.' % (antenna.name, spw.id))
             try:
-                self.create_plot(spw, antenna)
+                self.create_plot(tsys_spw, antenna)
             except Exception as ex:
                 LOG.error('Could not create Tsys plot for antenna %s spw %s '
                           '' % (antenna.id, spw.id))
                 LOG.exception(ex)
                 return None
-            
-        return wrapper
+
+        # the Tsys plot may not be created if all data for that antenna are
+        # flagged
+        if os.path.exists(real_figfile):
+            return wrapper            
+        return None
 
 
 TsysStat = collections.namedtuple('TsysScore', 'median rms median_max')
@@ -191,8 +202,10 @@ class ScoringTsysPerAntennaChart(object):
             
     def get_stat(self, spw, antenna):    
         caltable = self.result.final[0].gaintable
+        tsys_spw = self.result.final[0].spwmap[spw]
+        
         with casatools.CalAnalysis(caltable) as ca:
-            args = {'spw'     : spw,
+            args = {'spw'     : tsys_spw,
                     'antenna' : antenna,
                     'axis'    : 'TIME',
                     'ap'      : 'AMPLITUDE'}
