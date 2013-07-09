@@ -123,8 +123,12 @@ def create_dummy_scan(name, datatable, index_list):
             try:
                 param_org = sd.rcParams['scantable.storage']
                 sd.rcParams['scantable.storage'] = 'disk'
-                s = sd.scantable(name, average=False).get_row(datatable.getcell('ROW',index),insitu=False)
+                s = sd.scantable(name, average=False)
+                sel = sd.selector()
+                sel.set_rows([datatable.getcell('ROW', index)])
+                s.set_selection(sel)
                 s.save(temporary_name, overwrite=True)
+                s.set_selection()
                 sd.rcParams['scantable.storage'] = 'memory'
                 dummy_scan = sd.scantable(temporary_name, average=False)
                 sd.rcParams['scantable.storage'] = param_org
