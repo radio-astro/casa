@@ -36,7 +36,7 @@ class PhaseUpGaincalInputs(gaincal.GaincalInputs):
                  solnorm=None, append=None, splinetime=None, npointaver=None,
                  phasewrap=None,
                  # preapply calibrations
-                 gaincurve=None, opacity=None, preavg=None,
+                 opacity=None, preavg=None,
                  # ranking heuristic
                  ranker=None):
         super(PhaseUpGaincalInputs, self).__init__(context,
@@ -49,7 +49,7 @@ class PhaseUpGaincalInputs(gaincal.GaincalInputs):
             minblperant=minblperant, minsnr=minsnr, append=append,
             phasewrap=phasewrap,
             # preapply calibrations
-            gaincurve=gaincurve, opacity=opacity, preavg=preavg)
+            opacity=opacity, preavg=preavg)
 
         # set heuristics
         self.solint = solint
