@@ -116,7 +116,7 @@ class AzElChart(object):
 
     def plot(self):
         if DISABLE_PLOTMS:
-            LOG.info('Disabling AzEl plot due to problems with plotms')
+            LOG.debug('Disabling AzEl plot due to problems with plotms')
             return None
 
         if os.path.exists(self.figfile):
@@ -185,7 +185,7 @@ class ElVsTimeChart(object):
 
     def plot(self):
         if DISABLE_PLOTMS:
-            LOG.info('Disabling ElVsTime plot due to problems with plotms')
+            LOG.debug('Disabling ElVsTime plot due to problems with plotms')
             return None
     
         if os.path.exists(self.figfile):
