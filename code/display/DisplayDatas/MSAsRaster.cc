@@ -63,15 +63,15 @@
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
-     IPosition ipos( int num, ... ) {
-          std::vector<int> pos(num);
-          va_list vl;
-          va_start(vl,num);
-          for ( int i=0; i < num; ++i )
-               pos[i] = va_arg(vl,int);
-          va_end(vl);
-          return IPosition(pos);
-     }
+    IPosition ipos( int num, ... ) {
+        std::vector<int> pos(num);
+        va_list vl;
+        va_start(vl,num);
+        for ( int i=0; i < num; ++i )
+            pos[i] = va_arg(vl,int);
+        va_end(vl);
+        return IPosition(pos);
+    }
 
 //---------------------------------------------------------------------
 	MSAsRaster::MSAsRaster( const String msname, const viewer::DisplayDataOptions &ddo ):
@@ -1072,7 +1072,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 //--------------------------------------------------------------------------
-	void MSAsRaster::setCS_() {
+	CoordinateSystem MSAsRaster::setCS_() {
 		// Update/set the (2d--canvas) coordinate system and extents.
 		// This gets set onto the WC before drawing
 		// (via ActiveCaching2dDD::sizeControl) to define the CS of the
@@ -1208,7 +1208,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Attribute zoomToExtent("resetCoordinates", True);
 		setAttributeOnPrimaryWCHs(zoomToExtent);
 
-		if(!msValid_) return;	// In this case, the object is useless.
+		if(!msValid_) return cs;	// In this case, the object is useless.
 		// Protect public methods from crashes.
 
 		// These help ensure that the axis labeller uses only the correct
@@ -1221,6 +1221,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
         restrctns.set("msar spectralunit", itsParamSpectralUnit->value( ));
 		itsMS->relinquishAutoLocks(True);	 // (just to be sure).
 		itsAxisLabeller.setRestrictions(restrctns);
+        return cs;
 	}
 
 
@@ -2381,7 +2382,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool zIndexExists;
 		const AttributeBuffer *wchRestrs = wch.restrictionBuffer();
 		zIndexExists = wchRestrs->getValue("zIndex",zIndex);
-		if(zIndexExists) pos_[axZ] = zIndex;
+        if(zIndexExists) {
+             pos_[axZ] = zIndex;
+             if ( axZ == SP_W ) {
+                  mspos_.sets(pos_[SP_W]);
+                  CoordinateSystem newcs = setCS_( );
+                  wc.setCoordinateSystem(newcs);
+             }
+        }
 		pos_[axZ] = max(0, min(msShape_[axZ]-1,  pos_[axZ]  ));
 		if(zIndexExists && zIndex != pos_[axZ] ) return False;
 		// Do not draw if the animator position value

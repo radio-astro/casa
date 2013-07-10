@@ -380,7 +380,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// update/set the (2d--canvas) coordinate system from the current MS
 		// selection and display axes.
-		void setCS_();
+		CoordinateSystem setCS_();
 
 		// Extract the hypercube buffer of visibilities for the requested
 		// MS selection and axis settings (the most time-consuming operation).
