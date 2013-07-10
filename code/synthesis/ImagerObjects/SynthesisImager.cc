@@ -514,7 +514,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/)
+  void SynthesisImager::executeMajorCycle(Record& /*controlRecord*/, const Bool useViVb2)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
@@ -522,7 +522,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     try
       {    
-	runMajorCycle();
+	runMajorCycle(False, useViVb2);
 
 	itsMappers.releaseImageLocks();
 
@@ -538,7 +538,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////
   /////////////////////////////////////////////
 
-  void SynthesisImager::makePSF()
+  void SynthesisImager::makePSF(const Bool useViVb2)
     {
       LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
@@ -546,7 +546,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
       try
       {
-    	  runMajorCycle(True);
+    	  runMajorCycle(True, useViVb2);
     	  if(facetsStore_p >1){
     		  //Facetted image should
     		  IPosition shape=(unFacettedImStore_p->psf())->shape();
@@ -1070,49 +1070,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-  void SynthesisImager::runMajorCycle(const Bool dopsf)
+  void SynthesisImager::runMajorCycle(const Bool dopsf, const Bool useViVb2)
   {
     LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
-    /*
-    vi_p->originChunks();
-    vi_p->origin();
-    vi::VisBuffer2* vb=vi_p->getVisBuffer();
-    itsMappers.initializeDegrid(*vb);
-    itsMappers.initializeGrid(*vb);
-    for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
-    {
-
-    	for (vi_p->origin(); vi_p->more();vi_p->next())
+    if(useViVb2){
+    	vi_p->originChunks();
+    	vi_p->origin();
+    	vi::VisBuffer2* vb=vi_p->getVisBuffer();
+    	if(!dopsf) itsMappers.initializeDegrid(*vb);
+    	itsMappers.initializeGrid(*vb);
+    	for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
     	{
-    		itsMappers.degrid(*vb);
-    		itsMappers.grid(*vb);
+
+    		for (vi_p->origin(); vi_p->more();vi_p->next())
+    		{
+    			if(!dopsf) itsMappers.degrid(*vb);
+    			itsMappers.grid(*vb, dopsf);
+    		}
     	}
+    	if(!dopsf) itsMappers.finalizeDegrid(*vb);
+    	itsMappers.finalizeGrid(*vb, dopsf);
     }
-    itsMappers.finalizeDegrid(*vb);
-    itsMappers.finalizeGrid(*vb);
-    */
 
-
-    VisBufferAutoPtr vb(rvi_p);
-    rvi_p->originChunks();
-    rvi_p->origin();
-    if(!dopsf)itsMappers.initializeDegrid(*vb);
-    itsMappers.initializeGrid(*vb);
-    for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
-    {
-
-    	for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+    else{
+    	VisBufferAutoPtr vb(rvi_p);
+    	rvi_p->originChunks();
+    	rvi_p->origin();
+    	if(!dopsf)itsMappers.initializeDegrid(*vb);
+    	itsMappers.initializeGrid(*vb);
+    	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
     	{
-    		cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
-    		if(!dopsf) itsMappers.degrid(*vb);
-    		itsMappers.grid(*vb, dopsf);
+
+    		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+    		{
+    			cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
+    			if(!dopsf) itsMappers.degrid(*vb);
+    			itsMappers.grid(*vb, dopsf);
+    		}
     	}
+    	if(!dopsf) itsMappers.finalizeDegrid(*vb);
+    	itsMappers.finalizeGrid(*vb, dopsf);
+
     }
-    if(!dopsf) itsMappers.finalizeDegrid(*vb);
-    itsMappers.finalizeGrid(*vb, dopsf);
-
-
 /*
     Int nmappers = itsMappers.nMappers();
     

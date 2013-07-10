@@ -63,6 +63,7 @@ int main(int argc, char **argv)
 		  cout <<"Usage: tSynthesisImager ms-table-name  [continuum, cube, cubeslice, widefield, facet]"<<endl;
 		  exit(1);
 	  }
+	  Bool useViVb2=False;
 	  String msname=String(argv[1]);
 	  String imtype=String("continuum");
 	  if(argc>2)
@@ -169,6 +170,7 @@ int main(int argc, char **argv)
 	  				  freqBeg, freqWidth, Vector<Quantity>(1,Quantity(1.420, "GHz")), 2);
 	  }
 	  else if(imtype==String("cubeslice")){
+
 	  		  int nx = 100;
 	  		  int ny = 100;
 	  		  Quantity cellx( 30, "arcsec" );
@@ -195,6 +197,14 @@ int main(int argc, char **argv)
 	  		  CountedPtr<ImageInterface<Float> > restor=si->image();
 	  		  IPosition blc(4,0,0,0,0);
 	  		  IPosition trc(4,99,99,0,0);
+	  		  /////Imaging a channel at a time
+	  		  ////you could do a chunk at a time if memory allows
+
+	  		  ///Openmp at this level does not work the MS is unsafe
+//////#pragma omp parallel default(none) firstprivate(blc, trc, nchan, msname) shared(resid, psf, wgt, mod, restor) num_threads(1)
+	  		  {
+//////#pragma omp for
+
 	  		  for (Int k=0; k < nchan; ++k){
 	  			  blc[3]=k;
 	  			  trc[3]=k;
@@ -208,12 +218,14 @@ int main(int argc, char **argv)
 	  			  SynthesisImager subImgr;
 	  			  //can select the right channel to match subimage
 	  			  subImgr.selectData(msname, /*spw=*/"0", /*field=*/"0", /*taql=*/"", /*antenna=*/"",  /*uvdist*/"", /*scan*/"", /*obs*/"",
-	  			    		/*timestr*/"", /*usescratch*/False, /*readonly*/False);
+	  			    		/*timestr*/"", /*usescratch*/False, /*readonly*/True);
 	  			  subImgr.defineImage(subImStor, "GridFT");
 	  			  subImgr.weight("natural");
 	  			  Record rec;
-	  			  subImgr.executeMajorCycle(rec);
-	  			  subImgr.makePSF();
+	  			  subImgr.executeMajorCycle(rec, useViVb2);
+	  			  subImgr.makePSF(useViVb2);
+	  		  }
+
 	  		  }
 	  		  //We can do the division at the end
 	  		  si->dividePSFByWeight();
@@ -230,8 +242,8 @@ int main(int argc, char **argv)
 	  }
 	  imgr->weight("natural");
 	  Record rec;
-	  imgr->executeMajorCycle(rec);
-	  imgr->makePSF();
+	  imgr->executeMajorCycle(rec, useViVb2);
+	  imgr->makePSF(useViVb2);
 	  CountedPtr<SIImageStore> images=imgr->imageStore(0);
 	  LatticeExprNode LEN = max( *(images->residual()) );
 	  cerr << "Max of residual=" << LEN.getFloat() << endl;
