@@ -104,10 +104,10 @@ class SynthesisImager
   CountedPtr<SIImageStore> imageStore(const Int id=0);
 
   //Record getMajorCycleControls();
-  void   executeMajorCycle(Record& controls);
+  void   executeMajorCycle(Record& controls, const Bool useViVB2=False);
 
   // make the psf images  i.e grid weight rather than data
-  void makePSF();
+  void makePSF(const Bool useViVB2=False);
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 
@@ -129,7 +129,7 @@ protected:
 		  const Int facets=1);
   void createVisSet(const Bool writeaccess=False);
   
-  void runMajorCycle(const Bool dopsf=False);
+  void runMajorCycle(const Bool dopsf=False, const Bool useViVb2=False);
   Vector<Int> decideNPolPlanes(const String& stokes);
   /////This function should be called at every define image
   /////It associated the ftmachine with a given field
