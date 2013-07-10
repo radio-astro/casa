@@ -100,7 +100,9 @@ class SDImaging(common.SingleDishTaskTemplate):
                 st = context.observing_run[indices[0]]
 
                 # source name
-                source_name = st.source[0].name.replace(' ','_')
+                target_sources = [v for v in st.source.values() \
+                                  if 'TARGET' in v.intents]
+                source_name = target_sources[0].name.replace(' ','_')
 
                 # filenames for gridding
                 data_name = lambda x: x.baselined_name \
