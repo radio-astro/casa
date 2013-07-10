@@ -109,6 +109,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hif_lowgainflag</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hif_setjy</Command>
         <ParameterSet>
         </ParameterSet>
@@ -128,7 +134,7 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
-        <Command xmlns="">hif_newgaincal</Command>
+        <Command xmlns="">hif_timegaincal</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
@@ -142,10 +148,6 @@
     <ProcessingCommand>
         <Command xmlns="">hif_makecleanlist</Command>
         <ParameterSet>
-            <Parameter>
-                <Keyword xmlns="">mode</Keyword>
-                <Value xmlns="">mfs</Value>
-            </Parameter>
         </ParameterSet>
     </ProcessingCommand>
 
@@ -167,6 +169,12 @@
 
     <ProcessingCommand>
         <Command xmlns="">hif_cleanlist</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hif_exportdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
