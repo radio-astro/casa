@@ -20,9 +20,21 @@ LOG = infrastructure.get_logger(__name__)
 # use rflag mode of flagdata
 
 class CheckflagInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, checkflagmode=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+    
+    @property
+    def checkflagmode(self):
+        return self._checkflagmode
+
+    @checkflagmode.setter
+    def checkflagmode(self, value):
+        if value is None:
+            value = None
+        self._checkflagmode = value
+    
+    
 
 class CheckflagResults(basetask.Results):
     def __init__(self, jobs=[]):
@@ -41,6 +53,7 @@ class Checkflag(basetask.StandardTaskTemplate):
     
     def prepare(self):
         
+        #Default values
         m = self.inputs.context.observing_run.measurement_sets[0]
         checkflagfields = self.inputs.context.evla['msinfo'][m.name].checkflagfields
         corrstring = self.inputs.context.evla['msinfo'][m.name].corrstring
@@ -49,6 +62,14 @@ class Checkflag(basetask.StandardTaskTemplate):
         method_args = {'field'       : checkflagfields,
                        'correlation' : 'ABS_' + corrstring,
                        'scan'        : testgainscans}
+        
+        if (self.inputs.checkflagmode == 'semi'):
+            calibrator_field_select_string = self.inputs.context.evla['msinfo'][m.name].calibrator_field_select_string
+            calibrator_scan_select_string = self.inputs.context.evla['msinfo'][m.name].calibrator_scan_select_string
+        
+            method_args = {'field'       : calibrator_field_select_string,
+                       'correlation' : 'ABS_' + corrstring,
+                       'scan'        : calibrator_scan_select_string}
         
         checkflag_result = self._do_checkflag(**method_args)
         

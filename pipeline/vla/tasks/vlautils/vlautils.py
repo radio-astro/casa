@@ -485,6 +485,8 @@ class VLAUtils(basetask.StandardTaskTemplate):
         
         self.numSpws = numSpws
         
+        
+        
         return True
 
 
@@ -586,6 +588,10 @@ class VLAUtils(basetask.StandardTaskTemplate):
         int_time = maximum_integration_time
         
         self.int_time = int_time
+        
+        #This will be needed later in the pipeline
+        self.gain_solint1 = 'int'
+        self.gain_solint2 = 'int'
         
         return int_time
         

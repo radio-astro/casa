@@ -26,9 +26,32 @@ def uniq(inlist):
 
 
 class UncalspwInputs(basetask.StandardInputs):
-    def __init__(self, context, vis=None):
+    def __init__(self, context, vis=None, 
+                 # table selection arguments
+                 delaycaltable=None, bpcaltable=None):
         # set the properties to the values given as input arguments
         self._init_properties(vars())
+    
+    @property
+    def delaycaltable(self):
+        return self._delaycaltable
+
+    @delaycaltable.setter
+    def delaycaltable(self, value):
+        if value is None:
+            value = None
+        self._delaycaltable = value
+    
+    @property
+    def bpcaltable(self):
+        return self._bpcaltable
+
+    @bpcaltable.setter
+    def bpcaltable(self, value):
+        if value is None:
+            value = None
+        self._bpcaltable = value
+
 
 class UncalspwResults(basetask.Results):
     def __init__(self, jobs=[]):
@@ -47,8 +70,10 @@ class Uncalspw(basetask.StandardTaskTemplate):
     
     def prepare(self):
         
-        method_args = {'delaycaltable' : 'testdelay.k',
-                       'bpcaltable' : 'testBPcal.b'}
+        method_args = {'delaycaltable' : self.inputs.delaycaltable,
+                       'bpcaltable' : self.inputs.bpcaltable}
+        
+        LOG.info("Uncalspw using: " + self.inputs.delaycaltable + " " + self.inputs.bpcaltable)
         
         uncalspw_result = self._do_uncalspw(**method_args)
         
@@ -118,7 +143,6 @@ class Uncalspw(basetask.StandardTaskTemplate):
             LOG.info("No calibration found for spw(s) "+flagspw1+", flagging these spws in the ms")
             
             task_args = {'vis'        : self.inputs.vis,
-                         'mode'       : 'list',
                          'action'     : 'apply',                     
                          'spw'    : flagspw1,
                          'savepars'   : True,
