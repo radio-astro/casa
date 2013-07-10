@@ -14,3 +14,4 @@ from .setmodel import SetModel, Setjy
 from .priorcals import Priorcals
 from .testBPdcals import testBPdcals
 from .semiFinalBPdcals import semiFinalBPdcals
+from .fluxscale import Solint
