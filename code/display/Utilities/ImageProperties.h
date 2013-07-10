@@ -92,11 +92,11 @@ namespace casa {
 			std::vector<double> medianRestoringBeam( ) const;
 			std::vector<std::string> medianRestoringBeamAsStr( ) const;
 			Vector<double> freqRange( const std::string &units="" ) const;
-			const std::string &freqUnits( ) const {
+			const std::string &frequencyUnits( ) const {
 				return freq_units;
 			}
-			Vector<double> veloRange( const std::string &units="" ) const;
-			const std::string &veloUnits( ) const {
+
+			const std::string &velocityUnits( ) const {
 				return velo_units;
 			}
 			const std::string &path( ) const {
@@ -111,6 +111,9 @@ namespace casa {
 				return cs_.spectralAxisNumber( );
 			}
 
+            const std::vector<double> &frequencies( ) const { return frequencies_; }
+            const std::vector<double> &velocities( ) const { return velocities_; }
+
 		private:
 			std::vector<double> beam_as_vector( const GaussianBeam &beam ) const;
 			std::vector<std::string> beam_as_string_vector( const GaussianBeam &beam ) const;
@@ -124,9 +127,9 @@ namespace casa {
 			bool has_direction_axis;
 			std::string direction_type;
 			bool has_spectral_axis;
-			Vector<double> freq_range;
+            std::vector<double> frequencies_;
+            std::vector<double> velocities_;
 			std::string freq_units;
-			Vector<double> velo_range;
 			std::string velo_units;
 			Vector<double> ra_range;
 			std::vector<std::string> ra_range_str;

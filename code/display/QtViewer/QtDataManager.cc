@@ -68,7 +68,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	QtDataManager::QtDataManager(QtDisplayPanelGui* panel, const char *name, QWidget *parent ) :
 		QWidget(parent), parent_(parent), panel_(panel),
-		ms_selection(new Ui::QtDataMgrMsSelect), rc(viewer::getrc()) {
+		ms_selection(new Ui::QtDataMgrMsSelect), rc(viewer::getrc()),
+        slice_available(true), regrid_available(true) {
 
 		setWindowTitle(name);
 
@@ -77,6 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		slice_gen = new viewer::SlicerGen( );
 		slice_gen->initialize(slice_frame);
 		slice_frame->setFrameStyle(QFrame::NoFrame);
+        connect( slice_gen, SIGNAL(stateChange(bool)), SLOT(enable_disable_regrid(bool)) );
 
 		ms_selection->setupUi(ms_selection_scroll_widget);
 		connect(cancelButton_, SIGNAL(clicked( )), SLOT(close( )));
@@ -84,6 +86,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// start out with the regrid combo-box hidden...
 		regrid->hide( );
+        connect( regrid_method, SIGNAL(currentIndexChanged(const QString&)), SLOT(enable_disable_slice(const QString&)) );
 
 		load_ifields.push_back(infofield_list_t::value_type(load_ibox11,load_itext11));
 		load_ifields.push_back(infofield_list_t::value_type(load_ibox12,load_itext12));
@@ -742,6 +745,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	void QtDataManager::changeItemSelection() {
+        regrid_available = slice_available = true;
 		if ( tab_info.size( ) == 0 ) init_tab_info( );
 		tab_state ts = tab_info[tabs->currentIndex( )];
 		ts.notify(this,"selection");
@@ -1158,26 +1162,34 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		const viewer::ImageProperties &cproperties = cdd->imageProperties( );
 		if ( cproperties.ok( ) == false || cproperties.hasSpectralAxis( ) == false ) return;
 
-		Vector<double> controlling_velo_range = cproperties.veloRange( "km/s" );
-		if ( controlling_velo_range.size( ) != 2 ) return;
-
 		// at this point the already-loaded image has a spectral axis...
 		// show the combo-box, but disable it...
 		regrid->show( );
 		regrid_method->setCurrentIndex(0);
 		regrid->setDisabled(true);
 
-		Vector<double> new_velo_range = image_properties.veloRange( "km/s" );
-		if ( new_velo_range.size( ) != 2 ) return;
-
-		GenSort<double>::sort(new_velo_range);
-		GenSort<double>::sort(controlling_velo_range);
-		if ( (new_velo_range[0] <= controlling_velo_range[0] && new_velo_range[1] >= controlling_velo_range[0]) ||
-		        (new_velo_range[0] <= controlling_velo_range[1] && new_velo_range[1] >= controlling_velo_range[1]) ||
-		        (new_velo_range[0] >= controlling_velo_range[0] && new_velo_range[1] <= controlling_velo_range[1]) ) {
-			regrid->setDisabled(false);
-		}
-
+        std::vector<double> controlling_velocities(cproperties.velocities( ));
+        if ( controlling_velocities.size( ) > 0 ) {
+             std::vector<double> new_velocities(image_properties.velocities( ));
+             if ( new_velocities.size( ) > 0 ) {
+                  if ( new_velocities.size( ) <= controlling_velocities.size( ) ) {
+                       bool matched = true;
+                       for ( std::vector<double>::iterator newiter=new_velocities.begin( ), controliter=controlling_velocities.begin( );
+                             newiter != new_velocities.end( ) && controliter != controlling_velocities.end( );
+                             ++newiter, ++controliter ) {
+                            if ( *newiter != *controliter ) {
+                                 matched = false;
+                                 break;
+                            }
+                       }
+                       if ( matched != true ) {
+                            regrid->setDisabled(false);
+                       }
+                  }
+             }
+        }
+        if ( regrid_available == false )
+            regrid->setDisabled(true);
 	}
 
 	void QtDataManager::update_slice_options( int ddtp, const QString & name ) {
@@ -1189,6 +1201,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		} else {
 			slice_gen->disable();
 		}
+        if ( slice_available == false )
+            slice_gen->disable( );
 	}
 
 
@@ -1258,21 +1272,23 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if ( image_properties.hasSpectralAxis( ) ) {
-			if ( image_properties.freqRange().size( ) == 2 ) {
+			if ( image_properties.frequencies( ).size( ) > 0 ) {
 				(*it).first->show( );
 				(*it).first->setTitle("frequency range");
 				buf.str("");
-				buf << image_properties.freqRange()[0] << ", " << image_properties.freqRange()[1] << " " << image_properties.freqUnits( );
+				buf << image_properties.frequencies( ).front( ) << ", " <<
+                     image_properties.frequencies( ).back( ) << " " << image_properties.frequencyUnits( );
 				(*it).second->setText(QString::fromStdString(buf.str( )));
 				(*it).second->setCursorPosition(0);
 				++it;
 			}
 
-			if ( image_properties.veloRange().size( ) == 2 ) {
+			if ( image_properties.velocities( ).size( ) > 0 ) {
 				(*it).first->show( );
 				(*it).first->setTitle("velocity range");
 				buf.str("");
-				buf << image_properties.veloRange()[0] << ", " << image_properties.veloRange()[1] << " km/s" ;
+				buf << image_properties.velocities( ).front( ) << ", " << 
+                     image_properties.velocities( ).back( ) << " km/s" ;
 				(*it).second->setText(QString::fromStdString(buf.str( )));
 				(*it).second->setCursorPosition(0);
 				++it;
@@ -1929,5 +1945,33 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
+    void QtDataManager::enable_disable_slice( const QString &text ) {
+        if ( text != "none" ) {
+            slice_available = false;
+            slice_gen->disable( );
+        } else {
+            bool old_state = slice_available;
+            slice_available = true;
+            if ( old_state == false ) {
+                 tab_state ts = tab_info[tabs->currentIndex( )];
+                 QList<QTreeWidgetItem *> lst = ts.tree( )->selectedItems();
+                 if (!lst.empty()) {
+                      QTreeWidgetItem *item = (QTreeWidgetItem*)(lst.at(0));
+                      update_slice_options(uiDataType_[item->text(1)], item->text(0));
+                 }
+            }
+        }
+    }
+    void QtDataManager::enable_disable_regrid( bool slicing ) {
+        if ( slicing ) {
+            regrid_available = false;
+            regrid->setDisabled(true);
+        } else {
+            bool old_state = regrid_available;
+            regrid_available = true;
+            if ( old_state == false )
+                update_regrid_options( );
+        }
+    }
 
 } //# NAMESPACE CASA - END

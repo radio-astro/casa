@@ -168,6 +168,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void region_item_state_change(QTreeWidgetItem*,int);
 		void region_selection_change( viewer::Region *rgn, bool selected );
 
+    private slots:
+         void enable_disable_slice( const QString & );
+         void enable_disable_regrid( bool );
 	private:
 
 		typedef std::map<QString,QtDisplayData*> display_data_map_t;
@@ -317,6 +320,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		viewer::SlicerGen *slice_gen;
 
+        bool slice_available;
+        bool regrid_available;
 	};
 
 
