@@ -234,7 +234,8 @@ public:
     {
         if (uvw_p.empty()){
 
-            dynamic_cast<const VisBuffer2Adapter *> (this)->uvw();
+            fillUvw ();
+
         }
 
         return uvw_p;
@@ -244,22 +245,30 @@ public:
     {
         if (uvw_p.empty()){
 
-            const Matrix<Double> & u = vb2_p->uvw();
+            fillUvw ();
 
-            Int nRows = u.shape()(1);
-            uvw_p.resize (nRows);
-
-            for (Int i = 0; i < nRows; i++){
-                RigidVector<Double,3> t;
-                for (Int j = 0; j < 3; j++){
-                    t (j) = u (j, i);
-                }
-                uvw_p (i) = t;
-            }
         }
 
         return uvw_p;
     }
+
+    void
+    fillUvw() const {
+
+        const Matrix<Double> & u = vb2_p->uvw();
+
+        Int nRows = u.shape()(1);
+        uvw_p.resize (nRows);
+
+        for (Int i = 0; i < nRows; i++){
+            RigidVector<Double,3> t;
+            for (Int j = 0; j < 3; j++){
+                t (j) = u (j, i);
+            }
+            uvw_p (i) = t;
+        }
+    }
+
 
     virtual Matrix<Double>& uvwMat() { IllegalOperation (); }
     virtual const Matrix<Double>& uvwMat() const { return vb2_p-> uvw(); }
