@@ -190,7 +190,7 @@ namespace casa{
 		aTerm.applySky(ftATerm_l, vb, doSquint, 0);
 		// {
 		//   ostringstream name;
-		//   name << "ftTerm" << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
+		//   name << "ftATerm" << "_" << inu << "_" << muellerElements(imx)(imy) <<".im";
 		//   storeImg(name,ftATerm_l);
 		// }
 		//tt=max(ftATerm_l.get()); ftATerm_l.put(ftATerm_l.get()/tt);
@@ -616,7 +616,7 @@ namespace casa{
 				    const Float pa,
 				    const Float dpa,
 				    const Vector<Double>& uvScale, const Vector<Double>& uvOffset,
-				    const Matrix<Double>& vbFreqSelection,
+				    const Matrix<Double>& ,//vbFreqSelection,
 				    CFStore2& cfs2,
 				    CFStore2& cfwts2)
   {
@@ -1065,7 +1065,8 @@ namespace casa{
       {
 	    R0 = R1; R1 -= Nth;
 
-#pragma omp parallel default(none) firstprivate(R0,R1)  private(R,threadID) shared(PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
+//#pragma omp parallel default(none) firstprivate(R0,R1)  private(R,threadID) shared(origin,threshold,PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
+#pragma omp parallel firstprivate(R0,R1)  private(R,threadID) shared(PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
 	    { 
 #pragma omp for
 	      for(R=R0;R>R1;R--)

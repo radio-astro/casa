@@ -80,7 +80,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for (Int i=0; i<nx;i++)
 	  {
 	    xpart = square(i-convOrig);
-#pragma omp parallel default(none) firstprivate(xpart,convOrig, i) shared(psScale_local,ny,multiply) num_threads(Nth)
+//#pragma omp parallel default(none) firstprivate(xpart,convOrig, i) shared(screen,psScale_local,ny,multiply) num_threads(Nth)
+#pragma omp parallel firstprivate(xpart,convOrig, i) shared(psScale_local,ny,multiply) num_threads(Nth)
    {
 #pragma omp for
 	    for (Int j=0;j<ny;j++)
