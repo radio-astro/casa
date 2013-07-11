@@ -139,7 +139,8 @@ void SimpleComponentFTMachine::get(VisBuffer& vb, SkyComponent& component,
   }
 
   
-#pragma omp parallel default(none)  firstprivate(npart) shared(dVisp, uvwp, compp) num_threads(npart)
+//#pragma omp parallel default(none)  firstprivate(npart) shared(frequency,dVisp, uvwp, compp) num_threads(npart)
+#pragma omp parallel firstprivate(npart) shared(dVisp, uvwp, compp) num_threads(npart)
 {
 
 #pragma omp for
