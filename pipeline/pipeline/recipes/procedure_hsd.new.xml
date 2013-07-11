@@ -37,6 +37,12 @@
     </ProcessingCommand>
 
     <ProcessingCommand>
+        <Command xmlns="">hsd_flagdata</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
         <Command xmlns="">hsd_imaging</Command>
         <ParameterSet>
         </ParameterSet>
@@ -44,6 +50,12 @@
 
     <ProcessingCommand>
         <Command xmlns="">hsd_baseline</Command>
+        <ParameterSet>
+        </ParameterSet>
+    </ProcessingCommand>
+
+    <ProcessingCommand>
+        <Command xmlns="">hsd_flagdata</Command>
         <ParameterSet>
         </ParameterSet>
     </ProcessingCommand>
