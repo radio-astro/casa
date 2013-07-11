@@ -47,7 +47,7 @@ def is_pane_active(idx):
 		% endfor
   	</ul>
 	<div class="tab-content">
-		% for field_idx, field in enumerate(fields):
+		% for field_idx, field in enumerate(plots_dict.keys()):
 		<div class="tab-pane${is_pane_active(field_idx)}" id="field-${field_idx}">
 
 			<h4>Frequency Selection:</h4>
