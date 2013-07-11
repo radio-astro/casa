@@ -9,6 +9,8 @@ import os
 import shutil
 
 os.system('rm -rf orion_t* gbt_gau.im')
+os.system('rm -rf orion.ms')
+os.system('rm -rf orion.t*')
 
 pathname=os.environ.get('CASAPATH')
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/ATST3/Orion/'
