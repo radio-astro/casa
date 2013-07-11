@@ -123,7 +123,7 @@ class MakeCleanListHeuristics(object):
         p=re.compile(r"[ ,]+(\d+)")
         spwids = p.findall(' %s' % spwspec)
         spwids = map(int, spwids)
-        spwids = set(spwids)
+        spwids = list(set(spwids))
 
         # put code in try-block to ensure that imager.done gets
         # called at the end
