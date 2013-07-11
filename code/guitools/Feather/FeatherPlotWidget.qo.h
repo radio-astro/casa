@@ -37,7 +37,6 @@
 #include <qwt_legend.h>
 #include <qwt_polygon.h>
 #include <qwt_double_rect.h>
-#include <pair.h>
 using namespace std;
 
 class QwtPlotPicker;
