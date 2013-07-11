@@ -33,6 +33,7 @@
 #include <QDir>
 #include <QMap>
 #include <QMessageBox>
+#include <limits>
 
 namespace casa {
 

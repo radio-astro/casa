@@ -27,6 +27,7 @@
 #define DISPLAYDATAHOLDER_H_
 
 #include <list>
+#include <string>
 namespace casa {
 
 	class QtDisplayData;

@@ -34,6 +34,7 @@
 //# Includes
 #include <casa/aips.h>
 #include <casa/vector.h>
+#include <ostream>
 
 namespace casa {
 

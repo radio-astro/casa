@@ -34,6 +34,7 @@
 #include <casa/Arrays/Array.h>
 #include <QDoubleValidator>
 #include <synthesis/MSVis/UtilJ.h>
+#include <limits>
 
 namespace casa {
 

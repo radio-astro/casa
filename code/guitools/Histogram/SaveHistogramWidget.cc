@@ -26,6 +26,7 @@
 #include <QFileSystemModel>
 #include <QMessageBox>
 #include <QDebug>
+#include <limits>
 
 namespace casa {
 

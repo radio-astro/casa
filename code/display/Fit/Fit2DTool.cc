@@ -31,6 +31,7 @@
 #include <QMessageBox>
 #include <QDebug>
 #include <QDir>
+#include <limits>
 
 namespace casa {
 

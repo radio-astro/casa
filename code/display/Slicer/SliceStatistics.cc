@@ -28,6 +28,7 @@
 #include <QVector>
 #include <QtCore/qmath.h>
 #include <QDebug>
+#include <limits>
 
 namespace casa {
 

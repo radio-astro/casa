@@ -25,6 +25,7 @@
 
 #include "Fitter.h"
 #include <QDebug>
+#include <limits>
 
 namespace casa {
 

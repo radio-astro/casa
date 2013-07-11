@@ -31,6 +31,7 @@
 #include <qwt_plot_picker.h>
 #include <qwt_plot_marker.h>
 #include <qwt_symbol.h>
+#include <limits>
 
 namespace casa {
 

@@ -24,6 +24,7 @@
 //#
 #include "Preferences.qo.h"
 #include <QSettings>
+#include <limits>
 
 namespace casa {
 

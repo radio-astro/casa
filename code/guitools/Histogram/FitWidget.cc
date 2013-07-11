@@ -28,6 +28,7 @@
 #include <guitools/Histogram/FitterPoisson.h>
 #include <QMessageBox>
 #include <QDebug>
+#include <limits>
 
 namespace casa {
 
