@@ -398,6 +398,8 @@ public:
     virtual const Cube<Float> & weightSpectrum () const = 0; // [nC,nF,nR]
     virtual void setWeightSpectrum (const Cube<Float>& value) = 0; // [nC,nF,nR]
 
+
+
     // --------------------------------------------------------------
     // Visibility data accessors in order of observed, corrected,
     // float, & model
