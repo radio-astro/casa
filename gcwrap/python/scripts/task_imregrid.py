@@ -64,7 +64,6 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
                                 shape[i] = tempshape[csys.findaxisbyname(targetaxesnames[i])]
                                 break
                 _myia.done()
-                
         else:
             csys = cstool()
             csys.fromrecord(template['csys'])
@@ -72,7 +71,6 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
 
         # The actual regridding.
         _myia.open(imagename)
-        print "passing shape " + str(shape)
         _tmp = _myia.regrid(
             outfile=output, shape=shape, csys=csys.torecord(),
             axes=axes, overwrite=True, asvelocity=asvelocity,
