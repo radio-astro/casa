@@ -3502,8 +3502,8 @@ ImageInterface<Float>* ImageAnalysis::_regrid(
 	);
 	// Deal with axes
 	IPosition axes2(inaxes);
-	Vector<Int> shape(tmpShape);
-	IPosition outShape(shape);
+	//Vector<Int> shape(tmpShape);
+	IPosition outShape(tmpShape);
 	// Make CoordinateSystem from user given
 	CoordinateSystem cSysFrom = subImage.coordinates();
 	CoordinateSystem pCSTo(
