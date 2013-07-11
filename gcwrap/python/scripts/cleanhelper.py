@@ -927,6 +927,7 @@ class cleanhelper:
             for textfile in masktext :
                 # Read a box file
                 polydic,listbox=self.readboxfile(textfile);
+
                 masklist.extend(listbox)
                 if(len(polydic) > 0):
                     ia.open(outputmask)
@@ -1365,6 +1366,7 @@ class cleanhelper:
                                 temprec.update({counter:elreg})
                                 
                     elif(line.count('worldbox')==1): 
+                        self._casalog.post('\'worldbox\' is deprecated please use CRTF format','WARN')
                         #ascii box file from viewer or boxit
                         # expected foramt: 'worldbox' pos_ref [lat
                         line=line.replace('[',' ')
@@ -1409,7 +1411,9 @@ class cleanhelper:
                         # frequency
                         freqs=[splitline[7].replace('s-1','Hz'), splitline[9].replace('s-1','Hz')]
                         fframes=[splitline[6],splitline[8]]
-                        imframe = self.csys['spectral2']['system']
+                        #imframe = self.csys['spectral2']['system']
+                        imframe = self.csys['spectral2']['conversion']['system']
+                        #print "imframe=",imframe," system frame =",self.csys['spectral2']['system']," frame in boxfile=", fframes[0]
                         # the worldbox file created viewer's "box in file"
                         # currently says TOPO in frequency axis but seems to
                         # wrong (the freuencies look like in the image's base
@@ -1442,6 +1446,7 @@ class cleanhelper:
                         #wtrc = [ra[1], dec[1], stokes[1], freqs[1]]
                         #wblc = ra[0]+" "+dec[0]
                         #wtrc = ra[1]+" "+dec[1]
+                        #print"wblc=",wblc," wtrc=",wtrc," using system frame=",self.csys['spectral2']['system'], " convertion frame=",self.csys['spectral2']['conversion']['system']
                         wboxreg = rg.wbox(blc=wblc,trc=wtrc,csys=self.csys)
                         temprec.update({counter:wboxreg})
  
