@@ -46,22 +46,6 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
                     axestoregrid = range(len(_myia.shape()))
                 axesnames = _myia.coordsys().names()
                 _myia.open(template)
-                templatenames = _myia.coordsys().names()
-                namestoregrid = []
-                for axis in axestoregrid:
-                    if (
-                        axesnames[axis].upper() != "STOKES"
-                        and axesnames[axis] != templatenames[axis]
-                    ):
-                        raise Exception(
-                            "ERROR: Axis number " + str(axis) + " mismatch between "
-                            + "input (" + axesnames[axis] + ") and template ("
-                            + templatenames[axis] + "). The imregrid task currently "
-                            + "requires that the ordering of the axes for the input "
-                            + "and template images be the same. Please check this "
-                            + "using the imhead task with mode='list', and correct as "
-                            + "necessary using the imtrans task."
-                    )
                 csys = _myia.coordsys()
                 if (len(shape) == 1 and shape[0] == -1):
                     # CAS-4959, output shape should have template shape
@@ -71,12 +55,16 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
                     _myia.open(imagename)
                     imshape = _myia.shape()
                     shape = _myia.shape()
+                    targetaxesnames = _myia.coordsys().names()
                     for i in range(len(imshape)):
                         for j in axestoregrid:
                             if i == j:
-                                shape[i] = tempshape[j]
+                                # axis numbers may not correspond so have to look for the template axis
+                                # location by the axis name, CAS-4960
+                                shape[i] = tempshape[csys.findaxisbyname(targetaxesnames[i])]
                                 break
                 _myia.done()
+                
         else:
             csys = cstool()
             csys.fromrecord(template['csys'])
@@ -84,6 +72,7 @@ def imregrid(imagename, template, output, asvelocity, axes, shape, interpolation
 
         # The actual regridding.
         _myia.open(imagename)
+        print "passing shape " + str(shape)
         _tmp = _myia.regrid(
             outfile=output, shape=shape, csys=csys.torecord(),
             axes=axes, overwrite=True, asvelocity=asvelocity,
