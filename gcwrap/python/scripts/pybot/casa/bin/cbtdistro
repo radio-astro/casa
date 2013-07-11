@@ -380,6 +380,11 @@ sub find_casapy_paths {
     if ( $_ eq "casapy.py" && $File::Find::dir =~ m/linux/ ) {
 	$casapy_script_path="$File::Find::dir";
     }
+    ###
+    ### find xml path...
+    if ( $_ eq "clean.xml" && $File::Find::dir =~ m/linux/ ) {
+	$casapy_xml_path="$File::Find::dir";
+    }
 }
 
 sub move_casapy_files {
@@ -389,7 +394,25 @@ sub move_casapy_files {
     } elsif ( $File::Find::dir eq $casapy_library_path ) {
 	rename $_, "$casapy_library_destination/$_";
     } elsif ( $File::Find::dir eq $casapy_script_path ) {
-	rename $_, "$casapy_script_destination/$_";
+	if ( m|\.py$| ) {
+	    ###
+	    ### original text looks like:
+	    ###
+	    ### pathname='file:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml/'
+	    ###
+	    open( INPY, "< $_" );
+	    open( OUTPY, "> $casapy_script_destination/$_" );
+	    foreach $line ( <INPY> ) {
+		$line =~ s|\Qfile:///'+os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+\E|file:///'+os.environ.get('CASAPATH').split()[0]+|;
+		print OUTPY $line;
+	    }
+	    close(OUTPY);
+	    close(INPY);
+	} elsif ( ! m|\.pyc$| && ! m|\.pyo$| ) {
+	    rename $_, "$casapy_script_destination/$_";
+	}
+    } elsif ( $File::Find::dir eq $casapy_xml_path ) {
+	rename $_, "$casapy_xml_destination/$_";
     }
 }
 
@@ -406,14 +429,16 @@ system( "tar -zxf $cbt_bundle" );
 $casapy_binary_path="";
 $casapy_library_path="";
 $casapy_script_path="";
+$casapy_xml_path="";
 find( { wanted => \&find_casapy_paths }, "." );
 $casapy_binary_destination = getcwd . "/../lib64/casapy/bin";
 mkpath $casapy_binary_destination;
 $casapy_library_destination = getcwd . "/../lib64";
 $casapy_script_destination = getcwd . "/../lib64/python2.6";
 mkpath $casapy_script_destination;
+$casapy_xml_destination = getcwd . "/../xml";
+mkpath $casapy_xml_destination;
 find( { wanted => \&move_casapy_files }, "." );
-rename "workspace/build/share/xml", "../share/xml";
 chdir "$tmp/$id/casapy$tag-$version$bit";
 system("rm -rf casa-distro");
 
