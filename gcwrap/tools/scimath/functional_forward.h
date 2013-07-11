@@ -1,3 +1,4 @@
+#include <memory>
 namespace casa {
 	template <class T, class U> class Function;
 	template <class T> class Gaussian1D;

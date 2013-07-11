@@ -3,6 +3,7 @@
 #include <set>
 #include <vector>
 #include <ms_cmpt.h>
+#include <memory>
 
 
 namespace casa {
