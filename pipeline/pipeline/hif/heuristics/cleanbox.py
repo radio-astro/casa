@@ -165,7 +165,7 @@ def niter_and_mask(psf, residual, new_mask):
         # 'islands' that lie half way between the peak and the first sidelobe.
         statistics = collapsed.statistics(mask='searchmask>0.5', robust=False)
         maxpix = statistics['max'][0]
-        island_threshold = 2.0 * sidelobe_ratio * maxpix
+        island_threshold = maxpix * (1.0 + sidelobe_ratio) / 2.0
 
         # Update the mask to show only pixels above the threshold for island
         # membership
@@ -224,8 +224,8 @@ def niter_and_mask(psf, residual, new_mask):
         # There should be 1 plane with 1 island in it.
         if len(island_pix) != 1:
             raise Exception, 'mask has more than 1 plane'
-        if len(island_pix[0]) != 1:
-            raise Exception, 'mask has more than 1 island'
+        if len(island_pix[0]) > 1:
+            LOG.error('mask has more than 1 island, cleanboxing method is invalid')
 
         # According to Eric Villard's recipe niter = 4 * number of pixels in
         # island
