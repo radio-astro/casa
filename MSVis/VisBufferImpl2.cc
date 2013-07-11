@@ -15,6 +15,7 @@
 #include <casa/OS/Timer.h>
 #include <casa/Utilities.h>
 #include <casa/aipstype.h>
+#include <typeinfo>
 #include <components/ComponentModels/ComponentList.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MSVis/UtilJ.h>

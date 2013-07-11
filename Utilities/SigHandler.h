@@ -27,7 +27,7 @@
 //# $Id$
 
 #include <casa/aips.h>
-#include <iostream.h>
+#include <iostream>
 #include <signal.h>
 
 //<example>
