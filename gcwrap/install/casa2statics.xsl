@@ -19,6 +19,11 @@
 #include &lt;tools/casaswig_types.h&gt;
 #include &lt;</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">_cmpt.h&gt;
 </xsl:text>
+<xsl:for-each select="aps:needs">
+<xsl:text disable-output-escaping="yes">
+	#include &lt;</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">_statics.cc&gt;
+</xsl:text>
+</xsl:for-each>
 <xsl:for-each select="aps:code">
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">

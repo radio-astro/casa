@@ -49,6 +49,11 @@
       }
 }
 %include "</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">_cmpt.h"
+</xsl:text>
+<xsl:for-each select="aps:needs">
+	<xsl:text>%include "</xsl:text><xsl:value-of select="."/><xsl:text>.i"</xsl:text>
+</xsl:for-each>
+<xsl:text disable-output-escaping="yes">
 %{
 #include &lt;exception&gt;
 #include &lt;</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">_cmpt.h&gt;

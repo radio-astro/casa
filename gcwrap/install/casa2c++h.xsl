@@ -490,10 +490,10 @@ static <xsl:value-of select="@xsi:type"/><xsl:text> </xsl:text><xsl:value-of sel
 		  <xsl:otherwise>
 			  <xsl:choose>
 				  <xsl:when test="$defdirection='in'">
-			 <xsl:text> </xsl:text><xsl:value-of select='@xsi:type'/> <xsl:text> const</xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			 <xsl:text> const </xsl:text><xsl:value-of select='@xsi:type'/> <xsl:text> *</xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
 				  </xsl:when>
 				  <xsl:otherwise>
-			 <xsl:text> </xsl:text><xsl:value-of select='@xsi:type'/><xsl:text> </xsl:text> <xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
+			 <xsl:text> </xsl:text><xsl:value-of select='@xsi:type'/><xsl:text> </xsl:text> *<xsl:value-of select="@name"/><xsl:if test="position()&lt;last()">, </xsl:if>
 				  </xsl:otherwise>
 			  </xsl:choose>
 		  </xsl:otherwise>
