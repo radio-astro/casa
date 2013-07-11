@@ -55,8 +55,15 @@ class SetjyInputs(basetask.StandardInputs):
         # otherwise return each field in the current ms that has been observed
         # with the desired intent
         fields = self.ms.get_fields(intent=self.intent)
-        field_names = set([f.name for f in fields])
-        return ','.join(field_names)
+        unique_field_names = set([f.name for f in fields])
+        field_ids = set([f.id for f in fields])
+
+        # fields with different intents may have the same name. Check for this
+        # and return the IDs if necessary
+        if len(unique_field_names) is len(field_ids):
+            return ','.join(unique_field_names)
+        else:
+            return ','.join([str(i) for i in field_ids])
 
     @field.setter
     def field(self, value):
@@ -91,7 +98,13 @@ class SetjyInputs(basetask.StandardInputs):
                 reader.next()
         
                 for row in reader:
-                    (ms_name, field_id, spw_id, I, Q, U, V, comment) = row
+                    try:
+                        (ms_name, field_id, spw_id, I, Q, U, V, comment) = row
+                    except ValueError:
+                        LOG.warning('Invalid flux statement in %s: \'%s'
+                                    '\'' % (self.reffile, row))
+                        continue
+
                     if os.path.basename(ms_name) != self.ms.basename:
                         continue
 
