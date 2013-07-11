@@ -19,53 +19,12 @@ def setjy(vis=None, field=None, spw=None,
   casalog.origin('setjy')
   casalog.post("standard="+standard)
   # Take care of the trivial parallelization
-  if ( not listmodels and ParallelTaskHelper.isParallelMS(vis)):
+  if ( not listmodels and ParallelTaskHelper.isParallelMS(vis) and usescratch):
     # jagonzal: We actually operate in parallel when usescratch=True because only
     # in this case there is a good trade-off between the parallelization overhead
     # and speed up due to the load involved with MODEL_DATA column creation
-    if (usescratch):
-      helper = ParallelTaskHelper('setjy', locals())
-      retval = helper.go()
-    # jagonzal: When usescratch=False, we operate sequentially, but it is necessary
-    # to iterate trough the list of individual sub-MSs, because each one has its own
-    # set of keywords (where the visibility model header is set)
-    else:
-      #myms = mstool()
-      #myms.open(vis)
-      #subMS_list = myms.getreferencedtables()
-      #myms.close()
-      #retval = True
-      #for subMS in subMS_list:
-      #    retval_i = setjy_core(subMS, field, spw, selectdata, timerange, 
-      #                          scan, observation, modimage, listmodels, scalebychan, 
-      #                          fluxdensity, spix, reffreq, standard, useephemdir, usescratch, interpolation)
-      #   if not retval_i:
-      #       retval = False
-      #       casalog.post("setjy failed for sub-MS %s" % (subMS),'WARNING')
-           
-      ## jagonzal: Gather the models from the keywords of each individual sub-MS
-      #mytb = tbtool()
-      #keywords_MMS = {}
-      #for subMS in subMS_list:
-      #    mytb.open(subMS)
-      #    keywords_subMS = mytb.getkeywords()
-      #    for key in keywords_subMS:
-      #       if key.count("model"):
-      #           keywords_MMS[key] = keywords_subMS[key]
-      #    mytb.close()
-          
-      ## jagonzal: Copy the models to the keywords of each individual sub-MS
-      #for subMS in subMS_list:
-      #    mytb.open(subMS,nomodify=False)
-      #    for key in keywords_MMS:
-      #        mytb.putkeyword(key,keywords_MMS[key])
-      #    mytb.close()
-      retval = setjy_core(vis, field, spw, selectdata, timerange, 
-                        scan, intent, observation, scalebychan, standard, 
-                        modimage, listmodels, fluxdensity, spix, reffreq,
-                        # polindex, polangle, rm, 
-                        useephemdir, interpolation, usescratch)   
-          
+    helper = ParallelTaskHelper('setjy', locals())
+    retval = helper.go()           
   else:
     retval = setjy_core(vis, field, spw, selectdata, timerange, 
                         scan, intent, observation, scalebychan, standard, model, 
