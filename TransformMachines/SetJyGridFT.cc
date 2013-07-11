@@ -354,7 +354,7 @@ void SetJyGridFT::get(VisBuffer& vb, Int row){
 	    Int ix=0;
 	#pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(datStorage, flagstor, rowflagstor, convfuncstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, csamp, csupp, nvp, nvc, nvisrow, phasorstor, locstor, offstor, freqscalestor) shared(npart) num_threads(npart)
 	    {
-	#pragma omp for nowait
+	#pragma omp for 
 	      for (ix=0; ix< npart; ++ix){
 		rbeg=ix*(nvisrow/npart)+1;
 		rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)+nvisrow%npart-1) ;

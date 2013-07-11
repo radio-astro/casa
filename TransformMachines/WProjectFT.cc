@@ -901,7 +901,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     Complex *gridstor=griddedData.getStorage(gridcopy);
 #pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
     {
-#pragma omp for nowait     
+#pragma omp for      
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       ix= (icounter+1)-((icounter)/ixsub)*ixsub;
       iy=(icounter)/ixsub+1;
@@ -955,7 +955,7 @@ void WProjectFT::put(const VisBuffer& vb, Int row, Bool dopsf,
     DComplex *gridstor=griddedData2.getStorage(gridcopy);
 #pragma omp parallel default(none) private(icounter,ix,iy,x0,y0,nxsub,nysub, del) firstprivate(idopsf, uvwstor, datStorage, wgtStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, suppstor, nxp, nyp, np, nc,ixsub, iysub, rend, rbeg, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(sumwgt) num_threads(ixsub*iysub)
     {
-#pragma omp for nowait     
+#pragma omp for      
     for(icounter=0; icounter < ixsub*iysub; ++icounter){
       ix= (icounter+1)-((icounter)/ixsub)*ixsub;
       iy=(icounter)/ixsub+1;
@@ -1153,7 +1153,7 @@ void WProjectFT::get(VisBuffer& vb, Int row)
   Int ix=0;
   #pragma omp parallel default(none) private(ix, rbeg, rend) firstprivate(uvwstor, datStorage, flagstor, rowflagstor, convstor, pmapstor, cmapstor, gridstor, nxp, nyp, np, nc, suppstor, csamp, csize, wcsize, nvp, nvc, nvisrow, phasorstor, locstor, offstor) shared(npart) num_threads(npart)
   {
-    #pragma omp for nowait
+    #pragma omp for 
     for (ix=0; ix< npart; ++ix){
       rbeg=ix*(nvisrow/npart)+1;
       rend=(ix != (npart-1)) ? (rbeg+(nvisrow/npart)-1) : (rbeg+(nvisrow/npart)+nvisrow%npart-1) ;
