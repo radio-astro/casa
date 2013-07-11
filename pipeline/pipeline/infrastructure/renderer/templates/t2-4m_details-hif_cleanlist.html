@@ -42,25 +42,25 @@ def is_pane_active(idx):
 	<ul class="nav nav-tabs">
 		% for field_idx, field in enumerate(plots_dict.keys()):
 		<li ${is_active(field_idx)}>
-			<a href="#field-${field_idx}" data-toggle="tab">${field}</a>
+			<a href="#field${field_idx}" data-toggle="tab">${field}</a>
 		</li>
 		% endfor
   	</ul>
 	<div class="tab-content">
 		% for field_idx, field in enumerate(plots_dict.keys()):
-		<div class="tab-pane${is_pane_active(field_idx)}" id="field-${field_idx}">
+		<div class="tab-pane${is_pane_active(field_idx)}" id="field${field_idx}">
 
 			<h4>Frequency Selection:</h4>
 			<ul class="nav nav-pills">
 				% for spw_idx, spw in enumerate(utils.numericSort(plots_dict[field].keys())):
 				<li ${is_active(spw_idx)}>
-					<a href="#spw-${spw_idx}" data-toggle="tab">${spw}</a>
+					<a href="#field${field_idx}-spw${spw_idx}" data-toggle="tab">${spw}</a>
 				</li>
 				% endfor
 			</ul>
 			<div class="tab-content">
 				% for spw_idx, spw in enumerate(utils.numericSort(plots_dict[field].keys())):
-				<div class="tab-pane${is_pane_active(spw_idx)}" id="spw-${spw_idx}">
+				<div class="tab-pane${is_pane_active(spw_idx)}" id="field${field_idx}-spw${spw_idx}">
 
 					<!-- column headings -->
 					<div class="row-fluid">
