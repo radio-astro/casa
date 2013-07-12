@@ -176,7 +176,8 @@ public:
 		FPARAM,
 		CPARAM,
 		PARAMERR,
-		SNR
+		SNR,
+		WEIGHT_SPECTRUM
 	};
 
 	enum iteration {

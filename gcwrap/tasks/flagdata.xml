@@ -125,7 +125,7 @@
                 <value type="doubleArray"></value>
             </param>
             <param type="any" name="datacolumn" subparam="true">
-                <description>Data column on which to operate (data,corrected,model,residual)</description>
+                <description>Data column on which to operate (data,corrected,model,residual,etc.)</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">DATA</value>
             </param>
@@ -815,7 +815,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for clipping.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
                           if that does not exist, it will try to use CPARAM. If none of them exist, it
@@ -929,7 +929,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
                           if that does not exist, it will try to use CPARAM. If none of them exist, it
@@ -1122,7 +1122,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
                           if that does not exist, it will try to use CPARAM. If none of them exist, it

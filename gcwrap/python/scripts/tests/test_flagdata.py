@@ -164,6 +164,22 @@ class test_base(unittest.TestCase):
         default(flagdata)
         flagdata(vis=self.vis, mode='unflag', savepars=False)        
 
+    def setUp_wtspec(self):
+        # Four rows, 2 ants, 1 spw, 31 chans, 2 pols, WEIGHT_SPECTRUM col
+        self.vis = "four_rows_weight_spectrum.ms"
+        if testmms:
+            self.vis = 'four_rows_weight_spectrum.mms'
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        default(flagdata)
+        flagdata(vis=self.vis, mode='unflag', savepars=False)        
+
     def setUp_tsys_case(self):
         self.vis = "X7ef.tsys"
          
@@ -241,7 +257,7 @@ class test_tfcrop(test_base):
         self.assertEqual(res['correlation']['LR']['flagged'], 4931)
         self.assertEqual(res['correlation']['RR']['flagged'], 4483)
 
-    # Remove this test after Jenkins is fixed
+    # Remove this test once Scott fixes Jenkins!!!
     def test2(self):
         '''flagdata:: Test2 of mode = tfcrop ABS_ALL'''
         # Note : With ntime=51.0, 64-bit machines get 18696 flags, and 32-bit gets 18695 flags.
@@ -2382,6 +2398,62 @@ class test_newcal(test_base):
         self.assertEqual(res['scan']['1']['flagged'],108)
         self.assertEqual(res['flagged'],108)
 
+# CAS-5044
+class test_weight_spectrum(test_base):
+    """flagdata:: Test flagging WEIGHT_SPECTRUM"""
+    
+    def setUp(self):
+        self.setUp_wtspec()
+        
+    def tst_clipzeros_weight(self):
+        '''flagdata: datacolumn=WEIGHT_SPECTRUM, clip zeros'''
+        flagdata(vis=self.vis, mode='clip', datacolumn='weight_SPECTRUM', 
+                 clipzeros=True, flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary')
+        # First and last channels have WEIGHT_SPECTRUM zero.
+        # 2chans * 2pols * 4rows = 16 flagged points
+        self.assertEqual(res['flagged'],16)
+        
+    def test_clip_range(self):
+        '''flagdata: datacolumn=WEIGHT_SPECTRUM, flag a range'''
+        flagdata(vis=self.vis, mode='clip', datacolumn='WEIGHT_SPECTRUM', 
+                 clipminmax=[0,2.1], spw='0:1~29', flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary')
+        # Should clip only correlation LL. Excluding zero channels (0 and 30)
+        self.assertEqual(res['flagged'],116)
+        self.assertEqual(res['correlation']['RR']['flagged'],0)
+        self.assertEqual(res['correlation']['LL']['flagged'],116)
+
+    def test_clip_chanavg(self):
+        '''flagdata: datacolumn=WEIGHT_SPECTRUM, channel average'''
+        flagdata(vis=self.vis, mode='clip', spw='0:1~29',datacolumn='WEIGHT_SPECTRUM', 
+                 clipminmax=[0,2.1], channelavg=True, flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary')
+        # Same result as previous test. The values of the weight_spectrum
+        # for each channel are the same, excluding the 2 channels that are
+        # zero in each polarization
+        self.assertEqual(res['flagged'],116)
+        self.assertEqual(res['correlation']['RR']['flagged'],0)
+        self.assertEqual(res['correlation']['LL']['flagged'],116)
+
+    def test_clip_onepol(self):
+        '''flagdata: datacolumn=WEIGHT_SPECTRUM, one polarization'''
+        flagdata(vis=self.vis, mode='clip', datacolumn='WEIGHT_SPECTRUM', 
+                 clipminmax=[0,2.04], correlation='RR', clipzeros=True, flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary')
+
+        self.assertEqual(res['flagged'],95)
+        self.assertEqual(res['correlation']['RR']['flagged'],95)
+        self.assertEqual(res['correlation']['LL']['flagged'],0)
+
+    def test_tfcrop_weight(self):
+        '''flagdata: datacolumn=WEIGHT_SPECTRUM, run tfcrop'''
+        flagdata(vis=self.vis, mode='tfcrop', datacolumn='WEIGHT_SPECTRUM', 
+                 flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary')
+        # Should clip only correlation LL
+        self.assertEqual(res['flagged'],16)
+
 # Cleanup class 
 class cleanup(test_base):
     
@@ -2397,6 +2469,7 @@ class cleanup(test_base):
         os.system('rm -rf cal.fewscans.bpass*')
         os.system('rm -rf X7ef.tsys* ap314.gcal*')
         os.system('rm -rf list*txt')
+        os.system('rm -rf fourrows*')
 
     def test_runTest(self):
         '''flagdata: Cleanup'''
@@ -2422,4 +2495,5 @@ def suite():
             test_tsys,
             test_bandpass,
             test_newcal,
+            test_weight_spectrum,
             cleanup]

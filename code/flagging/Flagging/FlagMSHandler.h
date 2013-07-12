@@ -77,6 +77,10 @@ public:
 	// Get the MS PROCESSOR sub-table
 	bool processorTable();
 
+	// Get a Float visCube and return a Complex one
+	Cube<Complex>& weightVisCube();
+
+	Cube<Complex> weight_spectrum_p;
 
 private:
 

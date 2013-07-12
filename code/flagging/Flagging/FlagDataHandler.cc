@@ -1608,6 +1608,34 @@ FlagDataHandler::setScanStartStopFlaggedMap(bool activated)
 	preLoadColumn(vi::Time);
 }
 
+// -----------------------------------------------------------------------
+// Get the WEIGHT_SPECTRUM visCube as a Complex
+// -----------------------------------------------------------------------
+Cube<Complex>&
+FlagDataHandler::weightVisCube()
+{
+
+	Cube<Float> tmp = visibilityBuffer_p->weightSpectrum();
+
+	// Transform Cube<Float> into Cube<Complex>
+	Cube<Complex> tmpTrans(tmp.shape());
+	tmpTrans(tmp.shape());
+	for (uInt idx1=0;idx1<tmp.shape()[0];idx1++)
+	{
+		for (uInt idx2=0;idx2<tmp.shape()[1];idx2++)
+		{
+			for (uInt idx3=0;idx3<tmp.shape()[2];idx3++)
+			{
+				tmpTrans(idx1,idx2,idx3) = Complex(tmp(idx1,idx2,idx3),0);
+			}
+		}
+	}
+
+	weight_spectrum_p.resize(tmpTrans.shape(),False);
+	weight_spectrum_p = tmpTrans;
+
+	return weight_spectrum_p;
+}
 
 /////////////////////////////////////
 /// VisMapper implementation ////////

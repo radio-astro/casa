@@ -1248,6 +1248,13 @@ FlagAgentBase::setAgentParameters(Record config)
 			// Request to pre-load ModelCube
 			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
 		}
+		else if (dataColumn_p.compare("WEIGHT_SPECTRUM") == 0)
+		{
+			dataReference_p = WEIGHT_SPECTRUM;
+
+			// Request to pre-load WeightSpectrum
+			flagDataHandler_p->preLoadColumn(vi::WeightSpectrum);
+		}
 		else
 		{
 			*logger_p << LogIO::WARN <<
@@ -1289,7 +1296,8 @@ FlagAgentBase::setAgentParameters(Record config)
 		// These are the float columns that do not support complex operators
 		// It should fall back to the default REAL
 		if (	(dataColumn_p.compare("FPARAM") == 0) or
-				(dataColumn_p.compare("SNR") == 0) )
+				(dataColumn_p.compare("SNR") == 0) or
+				(dataColumn_p.compare("WEIGHT_SPECTRUM") == 0))
 		{
 			// Check if expression is one of the supported operators
 			if (	(expression_p.find("IMAG") != string::npos) or
@@ -1300,7 +1308,7 @@ FlagAgentBase::setAgentParameters(Record config)
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported visibility expression: " << expression_p
 							<< "; selecting REAL by default. "
-							<< " Keep in mind that complex operators are not supported for FPARAM/SNR"
+							<< " Complex operators are not supported for FPARAM/SNR/WEIGHT_SPECTRUM"
 							<< LogIO::POST;
 
 				String new_expression;
@@ -2405,6 +2413,12 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 		case SNR:
 		{
 			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCubeModel()));
+			break;
+		}
+		case WEIGHT_SPECTRUM:
+		{
+			// Cast the Cube<Float> to Cube<Complex> in the DataHandler
+			leftVisCube = const_cast<Cube<Complex> *>(&(flagDataHandler_p->weightVisCube()));
 			break;
 		}
 		default:

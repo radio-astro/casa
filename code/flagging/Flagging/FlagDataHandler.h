@@ -891,6 +891,10 @@ public:
 
 	void setProfiling(Bool value) {profiling_p=value;}
 
+	// Get a Float visCube and return a Complex one
+	Cube<Complex>& weightVisCube();
+	Cube<Complex> weight_spectrum_p;
+
 	// Make the logger public to that we can use it from FlagAgentBase::create
 	casa::LogIO *logger_p;
 
