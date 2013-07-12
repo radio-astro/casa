@@ -8,7 +8,6 @@
 <xsl:param name="needscomma"></xsl:param>
 <xsl:template match="*">
 <xsl:apply-templates select="aps:interface"/>
-}
 </xsl:template>
 <xsl:template match="aps:interface">  
 <xsl:text disable-output-escaping="yes">
@@ -18,12 +17,9 @@
 #include &lt;stdcasa/record.h&gt;
 #include &lt;tools/casaswig_types.h&gt;
 #include &lt;</xsl:text><xsl:value-of select="@name"/><xsl:text disable-output-escaping="yes">_cmpt.h&gt;
+#ifndef </xsl:text><xsl:value-of select="@name"/><xsl:text>_STATICS
+#define </xsl:text><xsl:value-of select="@name"/><xsl:text>_STATICS
 </xsl:text>
-<xsl:for-each select="aps:needs">
-<xsl:text disable-output-escaping="yes">
-	#include &lt;</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">_statics.cc&gt;
-</xsl:text>
-</xsl:for-each>
 <xsl:for-each select="aps:code">
 </xsl:for-each>
 <xsl:text disable-output-escaping="yes">
@@ -69,6 +65,12 @@ namespace casac {
 	</xsl:for-each>
 </xsl:for-each>	
 </xsl:for-each>
-
+}
+<xsl:for-each select="aps:needs">
+<xsl:text disable-output-escaping="yes">
+#include &lt;</xsl:text><xsl:value-of select="."/><xsl:text disable-output-escaping="yes">_statics.cc&gt;
+</xsl:text>
+</xsl:for-each>
+#endif
  </xsl:template>
 </xsl:stylesheet>
