@@ -226,7 +226,7 @@ def niter_and_mask(psf, residual, new_mask):
         if len(island_pix) != 1:
             raise Exception, 'mask has more than 1 plane'
         if len(island_pix[0]) > 1:
-            LOG.error('mask has more than 1 island, cleanboxing method is invalid')
+            LOG.warning('calibrator mask has more than 1 island, check result')
 
         # According to Eric Villard's recipe niter = 4 * number of pixels in
         # island
