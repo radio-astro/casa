@@ -41,6 +41,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--                            Image Definition Parameters                                         -->
 <!--============================================== -->
 
+    <param type="string" name="outlierfile">
+      <description>Name of outlier-field image definitions</description>
+      <value type="string"></value>
+    </param>
+
     <param type="any" name="imagename" required="true">
       <description>Pre-name of output images</description>
       <any type="variant" limittypes="string stringArray"/>
@@ -58,15 +63,15 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="intArray">1,1</value>
     </param>
 
-    <param type="string" name="outlierfile">
-      <description>Name of outlier-field image definitions</description>
-      <value type="string"></value>
-    </param>
-
 
 <!--============================================== -->
 <!--                            Imaging/Gridding Parameters                                                      -->
 <!--============================================== -->
+
+    <param type="string" name="ftmachine">
+            <description>Name of FT machine during gridding</description>
+	    <value type="string">ft</value>
+    </param>
 
     <param type="string" name="startmodel">
             <description>Name of starting model image</description>
@@ -77,6 +82,10 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 <!--                            Deconvolution Parameters                                            -->
 <!--============================================== -->
 
+    <param type="string" name="algo">
+            <description>Name of minor cycle algorithm</description>
+	    <value type="string">test</value>
+    </param>
 
 <!--============================================== -->
 <!--                            Iteration Control Parameters                                         -->
@@ -86,17 +95,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="int">500</value>
     </param>
 
-    <param type="double" name="threshold">
-      <description>Stopping threshold (number, in units of Jy)</description>
-      <value type="double">0.0</value>
-    </param>
-
-    <param type="double" name="loopgain">
-      <description>Loop gain</description>
-      <value type="double">0.1</value>
-    </param>
-
-    <param type="int" name="maxcycleniter">
+    <param type="int" name="cycleniter">
       <description>Maximum number of minor-cycle iterations before triggering a major cycle</description>
       <value type="int">-1</value>
     </param>
@@ -116,6 +115,18 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       <value type="double">0.8</value>
     </param>
 
+    <param type="double" name="threshold">
+      <description>Stopping threshold (number, in units of Jy)</description>
+      <value type="double">0.0</value>
+    </param>
+
+    <param type="double" name="loopgain">
+      <description>Loop gain</description>
+      <value type="double">0.1</value>
+    </param>
+
+
+
 <!--============================================== -->
 <!--                            Other Operational Parameters                                       -->
 <!--============================================== -->
@@ -124,8 +135,8 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	    <value type="bool">False</value>
     </param>
 
-    <param type="bool" name="interact">
-	    <description>True if to save model visibilities in MODEL_DATA column</description>
+    <param type="bool" name="interactive">
+	    <description>True to be able to modify masks and parameters at runtime</description>
 	    <value type="bool">False</value>
     </param>
 
@@ -133,11 +144,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <description>Name of a file that contains the cluster definition</description>
 	    <value type="string"></value>
     </param>
+
 <!--=============================================== -->
 <!--===============  Constraints                        ============== -->
 
    <constraints>
-     <when param="maxcycleniter">
+     <when param="cycleniter">
        <notequals type="int" value="-1">
 	 <default param="cyclefactor"><value>1.0</value></default>
 	 <default param="minpsffraction"><value>0.05</value></default>

@@ -12,9 +12,9 @@ def getparams(testnum=1,parallelmajor=False,parallelminor=False):
          allimpars={ '0' : {'imagename':'mytest0', 'nchan':5,'imsize':[3,3]} ,\
                          '1' : {'imagename':'mytest1', 'nchan':2,'imsize':[1,1] } }
          allgridpars={ '0' : {'ftmachine':'ft'},\
-                           '1' : {'ftmachine':'ft','modelname':'startingmodel1'} }
+                           '1' : {'ftmachine':'ft','startmodel':'startingmodel1'} }
          alldecpars ={ '0': {'id':0, 'algo':'test'},\
-                          '1':{'id':1, 'algo':'test','modelname':'startingmodel1'} }
+                          '1':{'id':1, 'algo':'test','startmodel':'startingmodel1'} }
 
      if(testnum==3):  ## 2 image-fields, each with one channel
 
