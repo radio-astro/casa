@@ -20,7 +20,7 @@ class GaincalWorkerInputs(common.CommonGaincalInputs):
                  # solution parameters
                  gaintype=None, smodel=None, calmode=None, solint=None,
                  combine=None, refant=None, minblperant=None, minsnr=None,
-                 solnorm=None, append=None, splinetime=None, npointaver=None,
+                 solnorm=None, append=None, scan=None, splinetime=None, npointaver=None,
                  phasewrap=None,
                  # preapply calibrations
                  gaincurve=None, opacity=None, preavg=None,

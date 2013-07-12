@@ -25,7 +25,7 @@ class GTypeGaincalInputs(common.CommonGaincalInputs):
                  # solution parameters
                  smodel=None, gaintype=None, calmode=None, solint=None,
 		         combine=None, refant=None, minblperant=None, minsnr=None,
-		         solnorm=None, append=None,
+		         solnorm=None, append=None, scan=None,
                  # preapply calibrations
                  gaincurve=None, opacity=None, parang=None,
                  # calibration target

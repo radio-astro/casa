@@ -17,6 +17,7 @@ import hanningsmooth_cli
 import importasdm_cli
 import importevla_cli
 import setjy_cli
+import split_cli
 import plotants_cli
 import plotcal_cli
 import plotms_cli
@@ -310,6 +311,9 @@ class CASATaskJobGenerator(object):
 
     def setjy(self, *v, **k):
         return self._get_job(setjy_cli.setjy_cli, *v, **k)
+    
+    def split(self, *v, **k):
+        return self._get_job(split_cli.split_cli, *v, **k)
 
     def flagdata(self, *v, **k):
         return self._get_job(flagdata_cli.flagdata_cli, *v, **k)

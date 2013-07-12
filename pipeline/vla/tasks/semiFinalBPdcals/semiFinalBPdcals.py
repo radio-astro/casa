@@ -43,6 +43,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         tablebase = 'BPinitialgain'
         table_suffix = ['.g','3.g','10.g']
         soltimes = [1.0,3.0,10.0] 
+        m = self.inputs.context.observing_run.measurement_sets[0]
         soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
         solints = ['int', '3.0s', '10.0s']
         soltime = soltimes[0]
@@ -55,7 +56,7 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
         self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
 
         fracFlaggedSolns = 1.0
-        m = self.inputs.context.observing_run.measurement_sets[0]
+        
         critfrac = self.inputs.context.evla['msinfo'][m.name].critfrac
 
         #Iterate and check the fraciton of Flagged solutions, each time running gaincal in 'K' mode
@@ -115,10 +116,12 @@ class semiFinalBPdcals(basetask.StandardTaskTemplate):
             solint   = 'int',
             calmode  = 'p',
             minsnr   = 3.0,
+            scan = delay_scan_select_string,
             minblperant = minBL_for_cal,
             solnorm = False,
             combine = 'scan',
-            intent = '')
+            intent = '',
+            antenna = '')
 
         delaycal_inputs.refant = delaycal_inputs.refant.lower()
 

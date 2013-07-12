@@ -131,7 +131,7 @@ class SetjyInputs(basetask.StandardInputs):
                     if any('AMPLITUDE' in f.intents for f in fields):
                         flux = [-1]
                     else:
-                        flux = [1]
+                        flux = [-1]  #originally set to [1]
 
                 # if this is a solar system calibrator, ignore any catalogue
                 # flux and request a CASA model lookup

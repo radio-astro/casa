@@ -52,6 +52,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
         tablebase = 'testBPdinitialgain'
         table_suffix = ['.g','3.g','10.g']
         soltimes = [1.0,3.0,10.0] 
+        m = self.inputs.context.observing_run.measurement_sets[0]
         soltimes = [self.inputs.context.evla['msinfo'][m.name].int_time * x for x in soltimes]
         solints = ['int', '3.0s', '10.0s']
         soltime = soltimes[0]
@@ -62,10 +63,12 @@ class testBPdcals(basetask.StandardTaskTemplate):
         
         calto = callibrary.CalTo(self.inputs.vis)
         calfrom = callibrary.CalFrom(gaintable=gtypecaltable, interp='linear,linear', calwt=True)
-        self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary._active)
+        self.inputs.context.callibrary._remove(calto, calfrom, self.inputs.context.callibrary.active)
+        
+        print self.inputs.context.callibrary.active
 
         fracFlaggedSolns = 1.0
-        m = self.inputs.context.observing_run.measurement_sets[0]
+        
         critfrac = self.inputs.context.evla['msinfo'][m.name].critfrac
 
         #Iterate and check the fraciton of Flagged solutions, each time running gaincal in 'K' mode
@@ -197,6 +200,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             solint   = 'int',
             calmode  = 'p',
             minsnr   = 3.0,
+            scan     = delay_scan_select_string,
             minblperant = minBL_for_cal,
             solnorm = False,
             combine = 'scan',
@@ -231,6 +235,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             solint   = 'inf',
             calmode  = 'p',
             minsnr   = 3.0,
+            scan = delay_scan_select_string,
             minblperant = minBL_for_cal,
             solnorm = False, 
             combine = 'scan',
@@ -292,6 +297,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             solint   = solint,
             calmode  = 'ap',
             minsnr   = 5.0,
+            scan     = testgainscans,
             minblperant = minBL_for_cal,
             solnorm = False,
             combine = 'scan',
@@ -320,6 +326,7 @@ class testBPdcals(basetask.StandardTaskTemplate):
             intent = '',
             solint = 'inf',
             combine = 'scan',
+            scan = bandpass_scan_select_string,
             minblperant = minBL_for_cal,
             minsnr = 5.0,
             solnorm = False)
