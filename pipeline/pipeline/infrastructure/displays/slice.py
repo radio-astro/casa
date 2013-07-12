@@ -73,7 +73,6 @@ class SliceDisplay(object):
             if not plot_result:
                 continue
 
-
             # bug here somewhere - pol has 3 possible values for Tsyscal;
             # None, Pol1 or Pol2 but only None and Pol1 get displayed as
             # buttons.
@@ -88,11 +87,15 @@ class SliceDisplay(object):
             plotfile = sanitize(plotfile)
             plotfile = os.path.join(reportdir, plotfile)
 
+            ant = results.first(description).ant
+            if ant is not None:
+                ant = ant[1]
+
             plot = logger.Plot(plotfile, x_axis=xtitle, y_axis=ytitle,
               field=results.first(description).fieldname,
               parameters={ 'spw': results.first(description).spw,
               'pol': results.first(description).pol,
-              'ant': results.first(description).ant[1],
+              'ant': ant,
               'type': results.first(description).datatype,
               'file': os.path.basename(results.first(description).filename)})
             plots.append(plot)
