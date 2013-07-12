@@ -15,6 +15,7 @@ try:
     import cStringIO as StringIO
 except:
     import StringIO
+import textwrap
 import types
 import uuid
 
@@ -1082,7 +1083,26 @@ class Executor(object):
         # if this is a JobRequest, log it to our command log
         if not self._dry_run and isinstance(job, jobrequest.JobRequest):
             with open(self._cmdfile, 'a') as cmdfile:
-                cmdfile.write('%s\n' % job)
+                # CAS-5262: casa_commands.log written by the pipeline should
+                # be formatted to be more easily readable.
+
+                # replace the working directory with ''..
+                job_str = re.sub('%s/' % self._context.output_dir, '',
+                                 str(job))
+
+                # wrap the text at the first open bracket
+                if '(' in job_str:
+                    indent = (1+job_str.index('(')) * ' '
+                else:
+                    indent = 10 * ' '
+
+                wrapped = textwrap.wrap(job_str,
+                                        subsequent_indent=indent,
+                                        width=80,
+                                        break_long_words=False)
+
+                cmdfile.write('%s\n' % '\n'.join(wrapped))
+
 
         # execute the job, capturing its results object                
         result = job.execute(dry_run=self._dry_run)
