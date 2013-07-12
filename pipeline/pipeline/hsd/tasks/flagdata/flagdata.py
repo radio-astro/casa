@@ -106,7 +106,7 @@ class SDFlagDataResults(common.SingleDishResults):
         context.observing_run.datatable_instance = datatable
         
     def _outcome_name(self):
-        return '%s:\n\toutcome is None'%(self.__class__.__name__)
+        return 'none'
 
 class SDFlagData(common.SingleDishTaskTemplate):
     """
