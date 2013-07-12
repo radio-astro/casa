@@ -241,6 +241,21 @@ class test_tfcrop(test_base):
         self.assertEqual(res['correlation']['LR']['flagged'], 4931)
         self.assertEqual(res['correlation']['RR']['flagged'], 4483)
 
+    # Remove this test after Jenkins is fixed
+    def test2(self):
+        '''flagdata:: Test2 of mode = tfcrop ABS_ALL'''
+        # Note : With ntime=51.0, 64-bit machines get 18696 flags, and 32-bit gets 18695 flags.
+        #           As far as we can determine, this is a genuine precision-related difference.
+        #           With ntime=53.0, there happens to be no difference.
+        flagdata(vis=self.vis, mode='tfcrop',ntime=53.0,spw='9', savepars=False,
+                 extendflags=False)
+        res = flagdata(vis=self.vis, mode='summary', spw='9')
+        self.assertEqual(res['flagged'], 18671)
+        self.assertEqual(res['correlation']['LL']['flagged'], 4250)
+        self.assertEqual(res['correlation']['RL']['flagged'], 5007)
+        self.assertEqual(res['correlation']['LR']['flagged'], 4931)
+        self.assertEqual(res['correlation']['RR']['flagged'], 4483)
+
     def test_extendpols(self):
         '''flagdata:: Extend the flags created by clip'''
         flagdata(vis=self.vis, mode='clip', correlation='abs_rr', clipminmax=[0,2])
