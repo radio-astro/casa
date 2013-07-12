@@ -165,7 +165,8 @@ def niter_and_mask(psf, residual, new_mask):
         # 'islands' that lie half way between the peak and the first sidelobe.
         statistics = collapsed.statistics(mask='searchmask>0.5', robust=False)
         maxpix = statistics['max'][0]
-        island_threshold = maxpix * (1.0 + sidelobe_ratio) / 2.0
+#        island_threshold = maxpix * (1.0 + sidelobe_ratio) / 2.0
+        island_threshold = maxpix * 0.5
 
         # Update the mask to show only pixels above the threshold for island
         # membership
