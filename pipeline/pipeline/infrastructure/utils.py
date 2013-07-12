@@ -195,3 +195,22 @@ def numericSort(l):
     ['9,11,13,15', '11,13', '9'] -> ['9', '9,11,13,15', '11,13']
     """    
     return sorted(l, key = stringSplitByNumbers)
+
+def truncate_floats(s, precision=3):
+    """
+    Return a copy of the input string with all floating point numbers
+    truncated to the given precision.
+
+    Example:
+    truncate_float('a,2,123.456789', 3) => 'a,2,123.456'
+
+    :param s: the string to modify
+    :param precision: the maximum floating point precision
+    :return: a string
+    """
+    # we need fixed-width terms to so a positive look-behind search,
+    # so instead of finding the offending digits and removing them,
+    # we have to capture the good digits and cut off the remainder
+    # during replacement.
+    pattern = '(\d+\.\d{%s})\d+' % precision
+    return re.sub(pattern, '\\1', s)
