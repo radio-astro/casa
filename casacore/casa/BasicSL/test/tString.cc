@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: tString.cc 21130 2011-10-18 07:39:05Z gervandiepen $
+//# $Id: tString.cc 21340 2013-04-09 13:57:09Z gervandiepen $
 
 //# Includes
 
@@ -149,6 +149,9 @@ void comparetest() {
   AlwaysAssertExit(common_prefix(x, "Help") == "Hel");
   AlwaysAssertExit(common_suffix(x, "to") == "o");
   
+  AlwaysAssertExit(fcompare(x, "hello") == 0);
+  AlwaysAssertExit(fcompare(x, "hellox") < 0);
+  AlwaysAssertExit(fcompare(x, "hell") > 0);
   AlwaysAssertExit(fcompare(x, "hELlo") == 0);
   AlwaysAssertExit(fcompare(x, "hElp") < 0);
 }
@@ -322,9 +325,9 @@ void identitytest(String a, String b) {
   AlwaysAssertExit((a + b) == y);
   AlwaysAssertExit(x == y);
   AlwaysAssertExit(x.after(a) == b);
-  AlwaysAssertExit(x.before(b, -1) == a);
+  AlwaysAssertExit(x.before(b, 4) == a);
   AlwaysAssertExit(x.from(a) == x);
-  AlwaysAssertExit(x.through(b, -1) == x);
+  AlwaysAssertExit(x.through(b, x.size()) == x);
   AlwaysAssertExit(x.at(a) == a);
   AlwaysAssertExit(x.at(b) == b);
 
@@ -336,7 +339,7 @@ void identitytest(String a, String b) {
   x.del(b);
   AlwaysAssertExit(x == a);
 
-  y.before(b, -1) = b;
+  y.before(b, 2) = b;
   AlwaysAssertExit(y == (b + b));
   y.at(b) = a;
   AlwaysAssertExit(y == (a + b));
