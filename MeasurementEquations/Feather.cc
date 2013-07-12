@@ -145,12 +145,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
 
   void Feather::convolveINT(const GaussianBeam& newHighBeam){
-    GaussianBeam toBeUsed;
+    GaussianBeam toBeUsed(Quantity(0.0, "arcsec"),Quantity(0.0, "arcsec"), Quantity(0.0, "deg")) ;
+    Bool retval=True;
     try {
+      retval=
       newHighBeam.deconvolve(toBeUsed, hBeam_p);
     }
     catch (const AipsError& x) {
-      throw(AipsError("new Beam may be smaller than the beam of original Interferometer  image"));
+      if(retval==False && toBeUsed.getMajor("arcsec")==0.0)
+	throw(AipsError("new Beam may be smaller than the beam of original Interferometer  image"));	
     }
     try{
       StokesImageUtil::Convolve(*highIm_p, toBeUsed, True);
