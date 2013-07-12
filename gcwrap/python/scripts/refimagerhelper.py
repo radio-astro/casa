@@ -600,6 +600,11 @@ class ImagerParameters():
     def getIterPars(self):
         return self.iterpars
 
+    def setSelPars(self,selpars):
+        self.allselpars = selpars
+    def setImagePars(self,impars):
+        self.allimpars = impars
+
     def checkParameters(self):
         self.casalog.origin('tclean.checkParameters')
         self.casalog.post('Verifying Input Parameters')
