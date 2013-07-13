@@ -561,13 +561,12 @@ namespace casa {
 	}
 
 	QString QtCanvas::findCoords( double x, double y ) const {
-		const double X_ERROR = .05;
-		const double Y_ERROR = .05;
+		//Error should be relative to the current zoom.
 		QString coordStr;
 		std::map<int, CanvasCurve>::const_iterator it = curveMap.begin();
 		while (it != curveMap.end()) {
 			const CanvasCurve & canvasCurve = (*it).second;
-			QString toolTipStr = canvasCurve.getToolTip( x, y , X_ERROR, Y_ERROR, toolTipXUnit, yUnitDisplay );
+			QString toolTipStr = canvasCurve.getToolTip( x, y , toolTipXUnit, yUnitDisplay );
 			if ( !toolTipStr.isEmpty() ) {
 				coordStr = toolTipStr;
 				break;
@@ -682,10 +681,7 @@ namespace casa {
 		if ( selectedAnnotation != NULL ) {
 			selectedAnnotation->draw( &painter );
 		}
-		for ( int i = 0; i < static_cast<int>(annotations.size()); i++ ) {
-			annotations[i]->draw( &painter );
-		}
-
+		drawAnnotations( painter );
 		drawMolecularLines( painter );
 
 		if (hasFocus()) {
@@ -923,6 +919,7 @@ namespace casa {
 			drawCurves(&painter);
 			drawFrameMarker(&painter);
 			drawMolecularLines( painter );
+			drawAnnotations( painter );
 		} else {
 			drawTicks( &painter );
 			drawBackBuffer(&painter);
@@ -931,6 +928,13 @@ namespace casa {
 			drawWelcome(&painter);
 		}
 		update();
+	}
+
+	void QtCanvas::drawAnnotations( QPainter& painter ){
+
+		for ( int i = 0; i < static_cast<int>(annotations.size()); i++ ) {
+			annotations[i]->draw( &painter );
+		}
 	}
 
 	void QtCanvas::drawFrameMarker( QPainter* painter ) {
@@ -1543,6 +1547,7 @@ namespace casa {
 		welcome.color = getDiscreteColor(WARNING_COLOR);
 	}
 	QPixmap* QtCanvas::graph() {
+		refreshPixmap();
 		return &pixmap;
 	}
 

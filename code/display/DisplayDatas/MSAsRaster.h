@@ -228,6 +228,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Handle axis labelling.
 		virtual Bool labelAxes(const WCRefreshEvent &ev);
+		virtual Bool canLabelAxes() const;
 
 		// Needed to enable or destroy drawlists and colormaps on corresp. canvas.
 		// (Only to be called by the relevant WCH).

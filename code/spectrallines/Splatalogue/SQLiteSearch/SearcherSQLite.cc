@@ -72,6 +72,8 @@ const std::string SearcherSQLite::IN = " IN ";
 const std::string SearcherSQLite::SELECT = "SELECT ";
 const std::string SearcherSQLite::FROM = " FROM ";
 const std::string SearcherSQLite::BETWEEN = " BETWEEN ";
+const std::string SearcherSQLite::LIKE = " LIKE ";
+const std::string SearcherSQLite::OR = " OR ";
 
 const int SearcherSQLite::DEFAULT_VALUE = -1;
 
@@ -414,7 +416,8 @@ string SearcherSQLite::prepareQuery( bool countOnly, int offset ) const {
 
 	//Species
 	if (speciesNames.size() > 0) {
-		query.append( getInClause( SPECIES_COLUMN, speciesNames ) );
+		//query.append( getInClause( SPECIES_COLUMN, speciesNames ) );
+		query.append( getLikeClause( SPECIES_COLUMN, speciesNames) );
 	}
 
 	//Chemical Names
@@ -473,7 +476,7 @@ string SearcherSQLite::prepareQuery( bool countOnly, int offset ) const {
 			}
 		}
 	}
-	//cout << "Query: "<<query.c_str()<<endl;
+	cout << "Query: "<<query.c_str()<<endl;
 	return query;
 }
 
@@ -539,6 +542,34 @@ string SearcherSQLite::getInClause( const string& columnName, const vector<strin
 	inClause.append( CLOSE_PAREN );
 	inClause.append( CLOSE_PAREN );
 	return inClause;
+}
+
+
+string SearcherSQLite::getLikeClause( const string& columnName, const vector<string>& values ) const {
+	string likeClause;
+	likeClause.append( AND );
+	likeClause.append( OPEN_PAREN );
+
+	//This was written so that for users searching by chemical formula,
+	//they could enter 'CO' and return entries such as 'CO v=0' and
+	//'CO v=1', which are in the species column.
+	int valueCount = values.size();
+	for (int i=0; i<valueCount; i++) {
+		likeClause.append( columnName );
+		likeClause.append( LIKE );
+		likeClause.append( SINGLE_QUOTE );
+		likeClause.append( values[i]);
+		likeClause.append( SINGLE_QUOTE );
+
+		likeClause.append( OR );
+		likeClause.append( columnName );
+		likeClause.append( LIKE );
+		likeClause.append( SINGLE_QUOTE );
+		likeClause.append( values[i] + " %");
+		likeClause.append( SINGLE_QUOTE );
+	}
+	likeClause.append( CLOSE_PAREN );
+	return likeClause;
 }
 
 

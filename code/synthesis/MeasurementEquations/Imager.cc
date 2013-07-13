@@ -3415,7 +3415,7 @@ Bool Imager::approximatepsf(const String& psf)
     StokesImageUtil::FitGaussianPSF(elpsf, mbeam);
     LatticeExprNode sumPSF = sum(elpsf);
     Float volume=sumPSF.getFloat();
-    GaussianBeam elbeam=mbeam.getBeam(IPosition(2,0,0));
+    GaussianBeam elbeam=mbeam(0,0);
     os << LogIO::NORMAL << "Approximate PSF  "  << ": size " // Loglevel INFO
        << elbeam.getMajor("arcsec") << " by "
        << elbeam.getMinor("arcsec") << " (arcsec) at pa "
@@ -5616,7 +5616,7 @@ Bool Imager::fitpsf(const String& psf, ImageBeamSet& mbeam) {
     beam_p = mbeam;
     beamValid_p=True;
     
-    GaussianBeam elbeam=beam_p(IPosition(2,0,0));
+    GaussianBeam elbeam=beam_p(0,0);
     os << LogIO::NORMAL // Loglevel INFO
        << "  Beam fit: " << elbeam.getMajor("arcsec") << " by "
        << elbeam.getMinor("arcsec") << " (arcsec) at pa "

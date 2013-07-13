@@ -32,6 +32,7 @@
 #include <QDragEnterEvent>
 #include <QMimeData>
 #include <QSpacerItem>
+#include <QFrame>
 
 namespace casa {
 
@@ -43,7 +44,13 @@ namespace casa {
 		QVBoxLayout* scrollLayout = new QVBoxLayout();
 		scrollLayout->setSpacing( LAYOUT_SPACING );
 		scrollLayout->setContentsMargins(LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN);
+
 		spacer = new QSpacerItem( 0,900);
+		dropMarker = new QFrame();
+		dropMarker->setFrameShape( QFrame::HLine );
+		dropMarker->setLineWidth( 5 );
+		dropMarker->setStyleSheet("color:blue");
+
 		setLayout( scrollLayout );
 		setAutoFillBackground( true );
 		QPalette pal = palette();
@@ -96,18 +103,22 @@ namespace casa {
 		}
 	}
 
-	void ImageScroll::closeImages() {
+	QList<QtDisplayData*> ImageScroll::closeImages() {
 		QList<ImageView*> closeImages = getSelectedViews();
+		QList<QtDisplayData*> closedData;
 		while ( !closeImages.isEmpty()) {
 			ImageView* imageView = closeImages.takeLast();
+			closedData.append( imageView->getData());
 			closeImage( imageView );
 		}
+		return closedData;
 	}
 
 
 	void ImageScroll::closeImage( ImageView* imageView, bool deleteImage ) {
 		QLayout* scrollLayout = layout();
 		scrollLayout->removeWidget( imageView );
+		imageView->setParent( NULL );
 		images.removeOne( imageView );
 		QtDisplayData* dd = imageView->getData();
 		managedImages->discardDD( dd, false );
@@ -169,6 +180,37 @@ namespace casa {
 //**************************************************************************
 //                Drag and Drop
 //**************************************************************************
+	int ImageScroll::getDropIndex( int dropY  ){
+		//Since some images may be open others not so we don't have
+		//a uniform width.  Have to go through and ask each one what their
+		//size is.
+		int dropIndex = -1;
+		int height = LAYOUT_MARGIN;
+		int i = 0;
+		QList<ImageView*>::iterator iter = images.begin();
+		while ( iter != images.end() ) {
+			QSize imageSize = (*iter)->size();
+			height = height + imageSize.height() + 2*LAYOUT_SPACING;
+			if (dropY < height ) {
+				dropIndex = i;
+				break;
+			}
+
+			iter++;
+			i++;
+		}
+		if ( dropIndex == -1 ) {
+			int imageCount = images.size();
+			if ( dropY < height) {
+				dropIndex = imageCount - 1;
+			}
+			else if ( dropY > height ){
+				dropIndex = imageCount;
+			}
+		}
+		return dropIndex;
+
+	}
 
 	void ImageScroll::dropEvent( QDropEvent* dropEvent ) {
 
@@ -176,44 +218,26 @@ namespace casa {
 		//should be placed.
 		QPoint dropPosition = dropEvent->pos();
 		int dropY = dropPosition.y();
-
-		//Since some images may be open others not so we don't have
-		//a uniform width.  Have to go through and ask each one what their
-		//size is.
-		dropIndex = -1;
-		int height = LAYOUT_MARGIN;
-		int i = 0;
-		QList<ImageView*>::iterator iter = images.begin();
-		while ( iter != images.end() ) {
-			if (dropY < height ) {
-				dropIndex = i;
-				break;
-			}
-			QSize imageSize = (*iter)->size();
-			height = height + imageSize.height() + 2*LAYOUT_SPACING;
-			iter++;
-			i++;
-		}
-		if ( dropIndex == -1 ) {
-			if ( dropY < height) {
-				dropIndex = images.size();
-			}
-		}
+		dropIndex = getDropIndex( dropY );
+		removeDragMarker();
 
 		if ( dropIndex >= 0 ) {
 			const QMimeData* dropData = dropEvent->mimeData();
 			ImageView* droppedView = getMimeImageView( dropData );
 			if ( droppedView != NULL ) {
 				int droppedImageIndex = images.indexOf( droppedView );
-				if ( droppedImageIndex < dropIndex && dropIndex != 0 ) {
+
+				//The image we are moving will be deleted from the list.
+				//The list will be one item shorter when we insert it again.
+				if ( droppedImageIndex < dropIndex && dropIndex != 0 && droppedImageIndex != images.size() -1) {
 					dropIndex = dropIndex - 1;
 				}
 
-				//Update the order of the data list which will then update the
-				//order in the layout through calls to remove/addImage.
+				//Update the order of the data holder list
 				QtDisplayData* displayData = droppedView->getData();
 				managedImages->discardDD( displayData, false );
 				managedImages->insertDD( displayData, dropIndex );
+				emit imageOrderingChanged();
 			}
 		}
 	}
@@ -221,12 +245,50 @@ namespace casa {
 
 	ImageView* ImageScroll::getMimeImageView( const QMimeData* mimeData ) {
 		//Find the image view that was dropped.
-		QString targetName = mimeData->text();
+		//QString targetName = mimeData->text();
+		QByteArray titleBytes = mimeData->data( ImageView::DROP_ID );
+		QString targetName(titleBytes);
 		ImageView* droppedView = findImageView( targetName );
 		return droppedView;
 	}
 
+	void ImageScroll::removeDragMarker(){
+		QLayout* iLayout = layout();
+		if ( iLayout != NULL && iLayout->indexOf( dropMarker) >= 0 ){
+			QVBoxLayout* scrollLayout = dynamic_cast<QVBoxLayout*>(iLayout);
+			scrollLayout->removeWidget( dropMarker );
+			dropMarker->setParent( NULL );
+		}
+	}
+
+	void ImageScroll::insertDragMarker( int position ){
+		QLayout* iLayout = layout();
+		QVBoxLayout* scrollLayout = dynamic_cast<QVBoxLayout*>(iLayout);
+		scrollLayout->insertWidget( position, dropMarker );
+	}
+
+	int ImageScroll::getDragMarkerLayoutIndex() const {
+		QLayout* iLayout = layout();
+		int layoutIndex = -1;
+		if ( iLayout != NULL ){
+			layoutIndex = iLayout->indexOf( dropMarker);
+		}
+		return layoutIndex;
+	}
+
 	void ImageScroll::dragMoveEvent( QDragMoveEvent* dragMoveEvent ) {
+		QPoint dragPoint = dragMoveEvent->pos();
+		int dragY = dragPoint.y();
+		int dropIndex = getDropIndex(dragY);
+		if ( dropIndex >= 0 ){
+			int layoutIndex = getDragMarkerLayoutIndex();
+			if ( dropIndex != layoutIndex ){
+				if ( layoutIndex >= 0  ){
+					removeDragMarker();
+				}
+				insertDragMarker( dropIndex );
+			}
+		}
 		dragMoveEvent->accept();
 	}
 
@@ -268,23 +330,30 @@ namespace casa {
 //-------------------------------------------------------------------------
 
 	void ImageScroll::addImage( ImageView* viewerImage ) {
-		images.append( viewerImage );
-		connect( viewerImage, SIGNAL( displayTypeChanged( ImageView* )),
+		QString newName = viewerImage->getName();
+		ImageView* existingImage = findImageView( newName );
+		if ( existingImage == NULL ){
+
+			connect( viewerImage, SIGNAL( displayTypeChanged( ImageView* )),
 		         this, SIGNAL(displayTypeChanged(ImageView*)));
-		connect( viewerImage, SIGNAL( displayColorsChanged( ImageView*)),
+			connect( viewerImage, SIGNAL( displayColorsChanged( ImageView*)),
 		         this, SIGNAL(displayColorsChanged(ImageView*)));
 
-		QLayout* scrollLayout = layout();
-		scrollLayout->removeItem( spacer );
-		if ( dropIndex == -1 ){
-			scrollLayout->addWidget( viewerImage );
+			QLayout* scrollLayout = layout();
+			scrollLayout->removeItem( spacer );
+
+			if ( dropIndex == -1 ){
+				images.append( viewerImage );
+				scrollLayout->addWidget( viewerImage );
+			}
+			else {
+				QVBoxLayout* boxLayout = dynamic_cast<QVBoxLayout*>(scrollLayout);
+				boxLayout->insertWidget( dropIndex, viewerImage );
+				images.insert( dropIndex, viewerImage );
+			}
+			scrollLayout->addItem( spacer );
+			dropIndex = -1;
 		}
-		else {
-			QVBoxLayout* boxLayout = dynamic_cast<QVBoxLayout*>(scrollLayout);
-			boxLayout->insertWidget( dropIndex, viewerImage );
-		}
-		scrollLayout->addItem( spacer );
-		dropIndex = -1;
 	}
 
 
@@ -310,5 +379,6 @@ namespace casa {
 		}
 		delete managedImages;
 		delete spacer;
+		delete dropMarker;
 	}
 }

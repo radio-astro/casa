@@ -48,21 +48,25 @@ namespace casa {
 		void setControllingDD( QtDisplayData* dd );
 		QList<ImageView*> getSelectedViews();
 		bool isManaged( QtDisplayData* displayData ) const;
-		void closeImages();
+		QList<QtDisplayData*> closeImages();
 		void addImageViews( QList<ImageView*>& views );
 		void removeImageViews( QList<ImageView*>& view );
 		void setImageColorsEnabled( bool enabled );
 		void applyColorChangesIndividually();
 		bool findColor( const QString& lookup, QColor* foundColor );
 		~ImageScrollWidget();
+
 	signals:
 		void displayDataRemoved( QtDisplayData* imageData );
 		void displayDataAdded( QtDisplayData* imageData );
 		void displayTypeChanged( ImageView* imageData );
 		void displayColorsChanged( ImageView* imageData );
+		void imageOrderingChanged();
+
 	private slots:
 		void clearSelections();
 		void selectAll();
+
 	private:
 		ImageScrollWidget( const ImageScrollWidget& other );
 		ImageScrollWidget operator=( const ImageScrollWidget& other );

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1004</width>
-    <height>437</height>
+    <height>570</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -39,7 +39,7 @@
      <item>
       <widget class="QComboBox" name="masterImageComboBox">
        <property name="toolTip">
-        <string>Select the master image used to set the field of view.</string>
+        <string>Select the image used to set the field of view.</string>
        </property>
       </widget>
      </item>
@@ -215,6 +215,43 @@
     </layout>
    </item>
    <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_11">
+     <item>
+      <spacer name="horizontalSpacer_12">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>To reorder images in a list, click an image with the left mouse button and drag.</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_13">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
       <spacer name="horizontalSpacer_3">
@@ -263,10 +300,22 @@
       <set>Qt::AlignCenter</set>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_5">
+      <property name="spacing">
+       <number>1</number>
+      </property>
+      <property name="topMargin">
+       <number>1</number>
+      </property>
+      <property name="bottomMargin">
+       <number>2</number>
+      </property>
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_7">
         <item>
          <widget class="QRadioButton" name="noneRadio">
+          <property name="toolTip">
+           <string>Use default color settings.</string>
+          </property>
           <property name="text">
            <string>None</string>
           </property>
@@ -277,6 +326,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="colorPerImageRadio">
+          <property name="toolTip">
+           <string>Each image should be displayed using its specified color and its saturation reflecting image intensity.</string>
+          </property>
           <property name="text">
            <string>Color/Saturation per Image</string>
           </property>
@@ -284,6 +336,9 @@
         </item>
         <item>
          <widget class="QRadioButton" name="colorMasterImageRadio">
+          <property name="toolTip">
+           <string>Display all images with the color coming from one image and the saturation coming from another image.</string>
+          </property>
           <property name="text">
            <string>Master Color/Saturation:</string>
           </property>
@@ -304,7 +359,11 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="colorImageCombo"/>
+             <widget class="QComboBox" name="colorImageCombo">
+              <property name="toolTip">
+               <string>Select the image that is the color source.</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -321,7 +380,11 @@
              </widget>
             </item>
             <item>
-             <widget class="QComboBox" name="saturationImageCombo"/>
+             <widget class="QComboBox" name="saturationImageCombo">
+              <property name="toolTip">
+               <string>Select the image that is the saturation source.</string>
+              </property>
+             </widget>
             </item>
            </layout>
           </item>
@@ -346,6 +409,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="applyButton">
+          <property name="toolTip">
+           <string>Apply the indicated color restrictions to the viewer display.</string>
+          </property>
           <property name="text">
            <string>Apply</string>
           </property>

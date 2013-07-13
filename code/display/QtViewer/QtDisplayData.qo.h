@@ -307,7 +307,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		virtual void setOptions(Record opts, Bool emitAll=False);
 		void emitOptionsChanged( Record changedOpts );
-
+		void setPlotTitle();
 
 		virtual void done();
 
@@ -526,7 +526,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		DParameterRange<Float>* colorBarCharSizeOpt_;
 
 		viewer::ImageProperties image_properties;
-		void setPlotTitle();
+
 	};
 
 

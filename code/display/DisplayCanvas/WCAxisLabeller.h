@@ -123,9 +123,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// set/return the title text.  If True is returned from the set
 		// function then a refresh is required.
 		// <group>
-		virtual Bool setTitleText(const String text = String(""));
+		//virtual Bool setTitleText(const String text = String(""));
+		virtual void setSubstituteTitleText( const String substituteImageName);
 		virtual String titleText() const {
 			return itsOptionsTitleText;
+		}
+		virtual String displayedTitleText() const {
+			String actualText = substituteTitleText;
+			if ( actualText.length() == 0 ){
+				actualText = itsOptionsTitleText;
+			}
+			return actualText;
 		}
 		// </group>
 
@@ -262,6 +270,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		static const String LABEL_CHAR_SIZE;
 		static const String PLOT_TITLE;
+
+	protected:
+		Bool titleChanged;
+
 	private:
 
 		// global switch on or off
@@ -314,6 +326,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// (from .aipsrc, if they exist there).
 		Bool itsDefaultSwitch;
 		Float itsDefaultCharSize;
+		String substituteTitleText;
 
 	};
 

@@ -234,7 +234,7 @@ namespace casa {
 			ImageInfo ii = image->imageInfo();
 			if ( ii.hasBeam( ) ) {
 				if ( ii.hasMultipleBeams( ) ) {
-					for ( size_t i=0; i < ii.nChannels( ); ++i )
+					for ( size_t i=0; i < ii.getBeamSet().nchan( ); ++i )
 						restoring_beams.push_back( ii.restoringBeam(i,0) );
 				} else {
 					restoring_beams.push_back(ii.restoringBeam());

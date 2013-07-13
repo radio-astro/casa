@@ -173,7 +173,7 @@ template<class T> ImageInterface<Float>* SubImageFactory<T>::createImage(
 	const Bool overwrite, const Bool list, const Bool extendMask
 ) {
 	LogIO log;
-	log << LogOrigin("ubImageFactory", __FUNCTION__);
+	log << LogOrigin("SubImageFactory", __FUNCTION__);
 	// Copy a portion of the image
 	// Verify output file
 	if (!overwrite && !outfile.empty()) {
@@ -193,7 +193,6 @@ template<class T> ImageInterface<Float>* SubImageFactory<T>::createImage(
 			)
 		)
 	);
-
 	if (outfile.empty()) {
 		return subImage.release();
 	}
@@ -208,7 +207,7 @@ template<class T> ImageInterface<Float>* SubImageFactory<T>::createImage(
 			subImage->coordinates(), outfile
 		)
 	);
-	ImageUtilities::copyMiscellaneous(*outImage, image);
+	ImageUtilities::copyMiscellaneous(*outImage, *subImage);
 	// Make output mask if required
 	if (subImage->isMasked()) {
 		String maskName("");

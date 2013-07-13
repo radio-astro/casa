@@ -741,7 +741,7 @@ namespace casa{
   {
     stringstream defaultStr;
     defaultStr << defaultVal;
-    Int val;
+    T val;
     uInt handle = Aipsrc::registerRC(name, defaultStr.str().c_str());    
     String strVal = Aipsrc::get(handle);
     stringstream toT(strVal);
@@ -939,5 +939,48 @@ namespace casa{
     // return ndx;
   }
 
+  CoordinateSystem SynthesisUtils::makeUVCoords(CoordinateSystem& imageCoordSys,
+						IPosition& shape)
+  {
+    CoordinateSystem FTCoords = imageCoordSys;
+    
+    Int dirIndex=FTCoords.findCoordinate(Coordinate::DIRECTION);
+    DirectionCoordinate dc=imageCoordSys.directionCoordinate(dirIndex);
+    Vector<Bool> axes(2); axes=True;
+    Vector<Int> dirShape(2); dirShape(0)=shape(0);dirShape(1)=shape(1);
+    Coordinate* FTdc=dc.makeFourierCoordinate(axes,dirShape);
+    FTCoords.replaceCoordinate(*FTdc,dirIndex);
+    delete FTdc;
+    
+    return FTCoords;
+  }
+
+  Vector<Int> SynthesisUtils::mapSpwIDToDDID(const VisBuffer& vb, const Int& spwID)
+  {
+    Vector<Int> ddidList;
+    Int nDDRows = vb.msColumns().dataDescription().nrow();
+    for (Int i=0; i<nDDRows; i++)
+      {
+	if(vb.msColumns().dataDescription().spectralWindowId().get(i) == spwID)
+	  {
+	    Int n=ddidList.nelements();
+	    ddidList.resize(n+1,True);
+	    ddidList(n) = i;
+	  }
+      }
+    return ddidList;
+  }
+
+  Vector<Int> SynthesisUtils::mapSpwIDToPolID(const VisBuffer& vb, const Int& spwID)
+  {
+    Vector<Int> polIDList, ddIDList;
+    ddIDList = SynthesisUtils::mapSpwIDToDDID(vb, spwID);
+    Int n=ddIDList.nelements();
+    polIDList.resize(n);
+    for (Int i=0; i<n; i++)
+      polIDList(i) = vb.msColumns().dataDescription().polarizationId().get(ddIDList(i));
+      
+    return polIDList;
+  }
 
 } // namespace casa

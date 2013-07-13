@@ -28,6 +28,7 @@
 #include <display/QtPlotter/conversion/ConverterIntensity.h>
 #include <components/ComponentModels/Flux.h>
 #include <QDebug>
+#include <QtCore/qmath.h>
 #include <cmath>
 #include <complex>
 
@@ -243,22 +244,80 @@ namespace casa {
 		maxErrorValue = getMaxError();
 	}
 
+	double CanvasCurve::calculateRelativeError( double minValue, double maxValue ) const {
+		double range = qAbs( maxValue - minValue );
+		double error = 0;
+		if ( ! isnan( range ) ){
+			//Divide by powers of 10 until we get something less than 1.
+			if ( range > 1 ){
+				int i = 0;
+				double powerValue = qPow(10,i);
+				while ( range / powerValue > 1 ){
+					i++;
+					powerValue = qPow(10,i);
+				}
+				error = powerValue;
+			}
+			//Multiply by powers of 10 until we get something larger than 1.
+			else {
+				int i = 0;
+				while ( range * qPow(10,i) < 1 ){
+					i++;
+				}
+				error = 1 / qPow(10,i);
+			}
+		}
+		//Add in arbitrary scaling for more accuracy.
+		error = error * .005;
+		return error;
+	}
 
-	QString CanvasCurve::getToolTip( double x, double y , const double X_ERROR,
-	                                 const double Y_ERROR, const QString& xUnit, const QString& yUnit ) const {
+	void CanvasCurve::calculateRelativeErrors( double& errorX, double& errorY ) const {
+		double dataMinX = std::numeric_limits<double>::max();
+		double dataMaxX = -1 * dataMinX;
+		double dataMinY = std::numeric_limits<double>::max();;
+		double dataMaxY = -1 * dataMinY;
+		getMinMax( dataMinX, dataMaxX, dataMinY, dataMaxY, false );
+		errorX = calculateRelativeError( dataMinX, dataMaxX );
+		errorY = calculateRelativeError( dataMinY, dataMaxY );
+	}
+
+
+	QString CanvasCurve::getToolTip( double x, double y , const QString& xUnit, const QString& yUnit ) const {
 		QString toolTipStr;
 		int maxPoints = curveData.size() / 2;
+
+		//Normalize the error by the size of the data.
+		double targetErrorX = 0;
+		double targetErrorY = 0;
+		calculateRelativeErrors( targetErrorX, targetErrorY );
+
+		//Find the index that yields the smallest error
+		//withen acceptable bounds.
+		int selectedIndex = -1;
+		double minErrorX = std::numeric_limits<double>::max();
 		for ( int i = 0; i < maxPoints; i++ ) {
 			double curveX = curveData[2*i];
 			double curveY = curveData[2*i+1];
-			if ( fabs(curveX - x )< X_ERROR && fabs(curveY-y) < Y_ERROR ) {
-				toolTipStr.append( "(" );
-				toolTipStr.append(QString::number( curveX ));
-				toolTipStr.append( " " +xUnit +", " );
-				toolTipStr.append(QString::number( curveY ));
-				toolTipStr.append( " " + yUnit+ ")");
-				break;
+
+			double errorX = fabs( curveX - x );
+			double errorY = fabs( curveY - y );
+			if ( errorX < targetErrorX && errorY < targetErrorY ) {
+				if ( errorX < minErrorX ){
+					selectedIndex = i;
+					minErrorX = errorX;
+				}
 			}
+		}
+
+		//If we found an index with acceptable bounds, show the point
+		//as a tooltip.
+		if ( selectedIndex >= 0 ){
+			toolTipStr.append( "(" );
+			toolTipStr.append(QString::number( curveData[2*selectedIndex] ));
+			toolTipStr.append( " " +xUnit +", " );
+			toolTipStr.append(QString::number( curveData[2*selectedIndex+1] ));
+			toolTipStr.append( " " + yUnit+ ")");
 		}
 		return toolTipStr;
 	}

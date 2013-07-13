@@ -41,7 +41,7 @@
 #include <casa/BasicSL/String.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/PagedImage.h>
-#include <images/Images/ComponentImager.h>
+#include <imageanalysis/ImageAnalysis/ComponentImager.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <components/ComponentModels/GaussianShape.h>

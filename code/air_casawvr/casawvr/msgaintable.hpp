@@ -39,12 +39,6 @@ namespace LibAIR {
       \param disperse Aplly dispersion correction (currently the
       correction from the default dispersion table will be applied)
    */
-  void writeGainTbl(const ArrayGains &g,
-		    const char *fnameout,
-		    const MSSpec &s,
-		    std::set<size_t> reverse,
-		    bool disperse,
-		    const std::string &msname);
 
   void writeNewGainTbl(const ArrayGains &g,
 		       const char *fnameout,
@@ -52,7 +46,8 @@ namespace LibAIR {
 		       std::set<size_t> reverse,
 		       bool disperse,
 		       const std::string &msname,
-		       const std::string &invocation);
+		       const std::string &invocation,
+		       const std::set<int> &interpolImpossibleAnts);
 
   /** \brief Add "History" information to a calibration table --
       really just version info about us

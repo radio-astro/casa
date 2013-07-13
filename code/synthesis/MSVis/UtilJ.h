@@ -41,7 +41,7 @@
 #define AssertAlways(c) { throwIf (! (c), "Assertion failed: " #c, __FILE__, __LINE__, __PRETTY_FUNCTION__); }
 
 #ifdef __GNUC__
-#define DEPRECATED(func) func __attribute__ ((deprecated)); func
+#define DEPRECATED(func) func __attribute__ ((deprecated))
 #elif defined(_MSC_VER)
 #define DEPRECATED(func) __declspec(deprecated) func
 #else
@@ -160,7 +160,7 @@ template <typename F, typename S>
 FirstFunctor<F,S> firstFunctor () { return FirstFunctor<F,S> ();}
 
 
-String format (const char * formatString, ...);
+DEPRECATED (String format (const char * formatString, ...) /* "Use String::format"*/);
 String formatV (const String & formatString, va_list vaList);
 
 template<typename T>

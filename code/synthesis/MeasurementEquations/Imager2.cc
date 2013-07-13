@@ -1482,9 +1482,9 @@ String Imager::state()
     os << "General: " << endl;
     os << "  MeasurementSet is " << ms_p->tableName() << endl;
     if(beamValid_p) {
-      os << "  Beam fit: " << beam_p(IPosition(2,0,0)).getMajor("arcsec") << " by "
-	 << beam_p(IPosition(2,0,0)).getMinor("arcsec") << " (arcsec) at pa "
-	 << beam_p(IPosition(2,0,0)).getPA(Unit("deg")) << " (deg) " << endl;
+      os << "  Beam fit: " << beam_p(0,0).getMajor("arcsec") << " by "
+	 << beam_p(0,0).getMinor("arcsec") << " (arcsec) at pa "
+	 << beam_p(0,0).getPA(Unit("deg")) << " (deg) " << endl;
     }
     else {
       os << "  Beam fit is not valid" << endl;
@@ -2067,9 +2067,9 @@ void Imager::printbeam(CleanImageSkyModel *sm_p, LogIO &os, const Bool firstrun)
     os << LogIO::NORMAL << "Beam used in restoration: "; // Loglevel INFO
   }
   if(printBeam)
-    os << LogIO::NORMAL << beam_p(IPosition(2,0,0)).getMajor("arcsec") << " by " // Loglevel INFO
-       << beam_p(IPosition(2,0,0)).getMinor("arcsec") << " (arcsec) at pa "
-       << beam_p(IPosition(2,0,0)).getPA(Unit("deg")) << " (deg) " << LogIO::POST;
+    os << LogIO::NORMAL << beam_p(0,0).getMajor("arcsec") << " by " // Loglevel INFO
+       << beam_p(0,0).getMinor("arcsec") << " (arcsec) at pa "
+       << beam_p(0,0).getPA(Unit("deg")) << " (deg) " << LogIO::POST;
 }
 
 Bool Imager::restoreImages(const Vector<String>& restoredNames, Bool modresiduals)

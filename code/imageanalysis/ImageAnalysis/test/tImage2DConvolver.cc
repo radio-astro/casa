@@ -32,8 +32,10 @@
 #include <casa/OS/EnvVar.h>
 #include <casa/Exceptions/Error.h>
 #include <images/Images/FITSImage.h>
+#include <images/Regions/WCBox.h>
 #include <casa/Utilities/Assert.h>
 #include <casa/namespace.h>
+#include <imageanalysis/ImageAnalysis/SubImageFactory.h>
 
 int main() {
 	LogIO log;
@@ -222,7 +224,7 @@ int main() {
 					WCBox box(
 						LCBox(start, end,  tim.shape()), csys
 					);
-					SubImage<Float> inChannelIm = SubImage<Float>::createSubImage(
+					SubImage<Float> inChannelIm = SubImageFactory<Float>::createSubImage(
 						tim, box.toRecord(""), "", &log, True
 					);
 					IPosition inPos = testPos;

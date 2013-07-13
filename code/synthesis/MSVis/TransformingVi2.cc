@@ -240,7 +240,7 @@ TransformingVi2::getInterval ()  const
 Int
 TransformingVi2::getNMs () const
 {
-    Throw ("This VI implementation does count it's MS object");
+    return getVii()->getNMs ();
 }
 
 

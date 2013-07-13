@@ -815,6 +815,10 @@ void CubeSkyEquation::gradientsChiSquared(Bool /*incr*/, Bool commitModel){
                 //	Timers tGetSlice=Timers::getTime();
 
                 //		Timers tgetSlice=Timers::getTime();
+		if( vb->newMS() )
+		  {
+		    useCorrected= !(vb->msColumns().correctedData().isNull());
+		  }
 
 //#pragma omp parallel default(shared)
  {

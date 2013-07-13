@@ -273,9 +273,9 @@ void ImageSkyModel::makeApproxPSFs(SkyEquation& se) {
       if(nmodels_p > 1)
         os  << LogIO::NORMAL << "Model " << thismodel+1 << ": ";  // Loglevel INFO
       os << LogIO::NORMAL                     // Loglevel INFO
-	 << "bmaj: " << abs((beam(thismodel)(IPosition(2,0,0))).getMajor("arcsec"))
-	 << "\", bmin: " << abs((beam(thismodel)(IPosition(2,0,0))).getMinor("arcsec"))
-	 << "\", bpa: " << ((beam(thismodel)(IPosition(2,0,0))).getPA(Unit("deg"))) 
+	 << "bmaj: " << abs((beam(thismodel)(0,0)).getMajor("arcsec"))
+	 << "\", bmin: " << abs((beam(thismodel)(0,0)).getMinor("arcsec"))
+	 << "\", bpa: " << ((beam(thismodel)(0,0)).getPA(Unit("deg")))
 	 << " deg" << LogIO::POST;
     }
   }

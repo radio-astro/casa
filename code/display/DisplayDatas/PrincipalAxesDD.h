@@ -97,7 +97,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		virtual String showPosition(const Vector<Double> &world,
 		                            const Bool &showAbs, const Bool &displayAxesOnly);
 
-
+		virtual void setSubstituteTitleText( const String text );
 		// Is the DD is capable (in its current state) of drawing
 		// in the current CoordinateSystem of the WCH's WorldCanvas?
 		virtual Bool conformsToCS(const WorldCanvas &wc);
@@ -144,6 +144,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// label/draw the axes
 		virtual Bool labelAxes(const WCRefreshEvent &ev);
+		virtual Bool canLabelAxes() const;
 
 		// required function to tidy up our elements, primarily
 		virtual void cleanup();
@@ -464,6 +465,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		                      const IPosition& fixedPosition);
 
 		viewer::StatusSink *ssink;
+		String titleText;
 
 	};
 

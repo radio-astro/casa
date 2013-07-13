@@ -29,13 +29,15 @@
 #include <QUuid>
 #include <QDrag>
 #include <QColorDialog>
+#include <QMouseEvent>
+#include <QPainter>
 
 namespace casa {
-
+	const QString ImageView::DROP_ID = "Image Name";
 	ImageView::ImageView(QtDisplayData* data, QWidget *parent)
 		: QFrame(parent),
 		  selectedColor("#C0C0C0"), normalColor("#D3D3D3"),
-		  imageData( NULL ) {
+		  imageData( NULL ), drag(NULL) {
 
 		ui.setupUi(this);
 
@@ -215,6 +217,7 @@ namespace casa {
 	void ImageView::minimizeDisplay() {
 		QLayout* imageLayout = this->layout();
 		imageLayout->removeWidget( ui.displayGroupBox );
+
 		imageLayout->removeItem( ui.colorLayout);
 
 		ui.colorLayout->removeWidget( ui.colorButton );
@@ -224,12 +227,10 @@ namespace casa {
 		ui.colorLayout->setParent( NULL );
 		ui.colorButton->setParent( NULL );
 		ui.colorLabel->setParent( NULL );
-		//ui.colorSpacer1->setParent( NULL );
-		//ui.colorSpacer2->setParent( NULL );
 		ui.displayGroupBox->setParent( NULL );
 
-		this->setMaximumHeight( 50 );
-		this->setMinimumHeight( 50 );
+		this->setMaximumHeight( 40 );
+		this->setMinimumHeight( 40 );
 		QIcon openIcon( ":/icons/imageMaximize.png");
 		ui.openCloseButton->setIcon( openIcon );
 		minimized = true;
@@ -237,15 +238,16 @@ namespace casa {
 
 	void ImageView::maximizeDisplay() {
 		QLayout* imageLayout = this->layout();
-		imageLayout->addWidget( ui.displayGroupBox );
+
 		ui.colorLayout->addItem( ui.colorSpacer1 );
 		ui.colorLayout->addWidget( ui.colorLabel );
 		ui.colorLayout->addWidget( ui.colorButton );
 		ui.colorLayout->addItem( ui.colorSpacer2 );
 		QVBoxLayout* verticalLayout = dynamic_cast<QVBoxLayout*>(imageLayout);
 		verticalLayout->addLayout( ui.colorLayout );
-		this->setMinimumHeight( 200 );
-		this->setMaximumHeight( 500 );
+		verticalLayout->addWidget( ui.displayGroupBox );
+		this->setMinimumHeight( 150 );
+		this->setMaximumHeight( 200 );
 		QIcon closeIcon( ":/icons/imageMinimize.png");
 		ui.openCloseButton->setIcon( closeIcon );
 		minimized = false;
@@ -255,19 +257,75 @@ namespace casa {
 //                   Drag and Drop
 //**********************************************************************
 
-	void ImageView::makeDrag() {
-		QDrag* drag = new QDrag( this );
-		QMimeData* data = new QMimeData();
-		data->setText(getName());
-		drag->setMimeData( data );
+	QImage* ImageView::makeDragImage(){
+		QSize viewSize = size();
+		QImage* dragImage = new QImage( viewSize.width(), viewSize.height(), QImage::Format_ARGB32_Premultiplied );
+		QColor backgroundColor = normalColor;
+		if ( isImageSelected()){
+			backgroundColor = selectedColor;
+		}
+		int red = backgroundColor.red();
+		int green = backgroundColor.green();
+		int blue = backgroundColor.blue();
+		dragImage->fill(qRgba(red,green,blue,175));
+		QPainter painter;
+		painter.begin(dragImage);
+		QPen pen;
+		pen.setStyle(Qt::DashLine );
+		pen.setWidth( 2 );
+		pen.setColor( Qt::blue );
+		painter.setPen( pen );
+		int width = dragImage->width() - 4;
+		int height = dragImage->height() - 4;
+		painter.drawRoundRect( QRect(1,1, width, height));
+		QFontMetrics metrics = painter.fontMetrics();
+		QString title = getName();
+		int x = ( width - metrics.width( title )) / 2;
+		int y = height / 2 + 5;
+		painter.drawText(x, y, title );
+		painter.end();
+		return dragImage;
+	}
+
+	void ImageView::makeDrag( QMouseEvent* event ) {
+		drag = new QDrag( this );
+		QMimeData* mimeData = new QMimeData();
+		QPoint hotSpot = event->pos();
+		QByteArray itemData;
+		QDataStream dataStream( &itemData, QIODevice::WriteOnly );
+		dataStream << hotSpot;
+		mimeData->setData( "application/manage_images", itemData );
+
+		QByteArray itemId = getName().toAscii();
+		mimeData->setData( DROP_ID, itemId );
+
+		QImage* dragImage = makeDragImage();
+		drag->setPixmap( QPixmap::fromImage(*dragImage));
+		drag->setMimeData( mimeData );
+		drag->setHotSpot( hotSpot );
 		drag->start();
 	}
 
-	void ImageView::mouseMoveEvent( QMouseEvent* /*event*/ ) {
-		makeDrag();
+	void ImageView::clearDrag(){
+		if ( drag != NULL ){
+			delete drag;
+			drag = NULL;
+		}
 	}
 
-	ImageView::~ImageView() {
+	void ImageView::mousePressEvent( QMouseEvent* /*event*/ ){
+		clearDrag();
+	}
 
+	void ImageView::mouseMoveEvent( QMouseEvent* event ) {
+		if ( drag == NULL ){
+			makeDrag( event );
+		}
+	}
+
+
+
+	ImageView::~ImageView() {
+		clearDrag();
 	}
 }

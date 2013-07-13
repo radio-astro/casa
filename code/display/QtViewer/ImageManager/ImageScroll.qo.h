@@ -33,6 +33,7 @@ class QDragEnterEvent;
 class QDropEvent;
 class QMimeData;
 class QSpacerItem;
+class QFrame;
 
 namespace casa {
 
@@ -54,7 +55,7 @@ namespace casa {
 		QList<ImageView*> getSelectedViews();
 
 		bool isManaged( QtDisplayData* displayData ) const;
-		void closeImages();
+		QList<QtDisplayData*> closeImages();
 		void addImageViews( QList<ImageView*>& views );
 		void removeImageViews( QList<ImageView*>& view );
 		void setSelectAll( bool selectAll);
@@ -73,6 +74,7 @@ namespace casa {
 		void displayDataAdded( QtDisplayData* imageData );
 		void displayTypeChanged( ImageView* displayData );
 		void displayColorsChanged( ImageView* displayData );
+		void imageOrderingChanged();
 
 	protected:
 		void dragEnterEvent( QDragEnterEvent* enterEvent );
@@ -83,10 +85,15 @@ namespace casa {
 		ImageScroll( const ImageScroll& other );
 		ImageScroll operator=( const ImageScroll& other );
 		void addImage( ImageView* imageView );
+		int getDropIndex( int dropY );
+		void insertDragMarker( int position );
+		void removeDragMarker();
+		int getDragMarkerLayoutIndex() const;
 		void closeImage( ImageView* imageView, bool deleteImage = true );
 		ImageView* findImageView( const QString& name );
 		ImageView* getMimeImageView( const QMimeData* mimeData );
 		QSpacerItem* spacer;
+		QFrame* dropMarker;
 		const int LAYOUT_SPACING;
 		const int LAYOUT_MARGIN;
 		QList<ImageView*> images;

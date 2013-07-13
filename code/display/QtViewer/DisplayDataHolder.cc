@@ -71,7 +71,9 @@ namespace casa {
 	}
 
 	void DisplayDataHolder::setDDControlling( QtDisplayData* controlDD ) {
-		if ( controlDD != NULL && exists( controlDD ) ) {
+		//The control dd can be just an open image.  It does not even
+		//need to be in the list of registered images.
+		if ( controlDD != NULL /*&& exists( controlDD )*/ ) {
 			if ( controlling_dd != controlDD ) {
 				if ( imageTracker != NULL ) {
 					imageTracker->masterImageSelected( controlDD );
@@ -79,12 +81,9 @@ namespace casa {
 				if ( imageDisplayer != NULL ) {
 					imageDisplayer->setControllingDD( controlDD );
 				}
-				controlling_dd = controlDD;
 			}
-		} else {
-			controlling_dd = NULL;
 		}
-
+		controlling_dd = controlDD;
 	}
 
 	QtDisplayData* DisplayDataHolder::getChannelDD( int index ) const {
@@ -125,16 +124,21 @@ namespace casa {
 	}
 
 	void DisplayDataHolder::addDD( QtDisplayData* dd, int position ) {
+		//qDebug() << "DisplayDataHolder adding dd size="<<dataList.size();
 		if ( ! exists( dd )) {
 			if ( position < 0 ) {
-				dataList.push_back( dd );
+				//qDebug()<< "DisplayDataHolder::Putting dd="<<dd->name().c_str()<<" at the end of the list.";
+				dataList.push_back( dd);
 			} else {
 				DisplayDataList::iterator iter = dataList.begin();
+
 				int i = 0;
 				while ( i < position ) {
+					//qDebug() << "List i="<<i<<" name="<<(*iter)->name().c_str();
 					iter++;
 					i++;
 				}
+				//qDebug() << "DisplayDataHolder::at insert i="<<i<<" position="<<position;
 				dataList.insert( iter, dd );
 			}
 			if ( imageTracker != NULL ) {
@@ -148,9 +152,12 @@ namespace casa {
 		//If a higher level is available, we do it through calls to
 		//the higher layer.  Otherwise, we do it internally.
 		if ( exists( dd )) {
+			//qDebug() << "DD exists";
 			if ( imageDisplayer != NULL ) {
+				//qDebug() << "DisplayDataHolder::discardDD Calling unregister";
 				imageDisplayer->unregisterDD( dd );
 			} else {
+				//qDebug() << "DisplayDataHolder::discardDD calling remove";
 				removeDD(dd, signal);
 			}
 		}
@@ -158,11 +165,13 @@ namespace casa {
 
 	void DisplayDataHolder::insertDD( QtDisplayData* dd, int position ) {
 		if ( ! exists(dd) ) {
-
+			//qDebug() << "DisplayData holder insertDD position="<<position;
 			//Now put it back in at the proper position.
 			if ( imageDisplayer != NULL ) {
+				//qDebug() << "Registering dd";
 				imageDisplayer->registerDD( dd, position );
 			} else {
+				//qDebug() << "Skipping registration.";
 				addDD( dd, position );
 			}
 		}

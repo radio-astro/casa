@@ -43,6 +43,8 @@ namespace casa {
 		         this, SIGNAL(displayTypeChanged(ImageView*)));
 		connect( imageScroll, SIGNAL(displayColorsChanged(ImageView*)),
 		         this, SIGNAL(displayColorsChanged(ImageView*)));
+		connect( imageScroll, SIGNAL(imageOrderingChanged()), this,
+				SIGNAL(imageOrderingChanged()));
 
 		connect( ui.clearAllButton, SIGNAL(clicked()), this, SLOT(clearSelections()));
 		connect( ui.selectAllButton, SIGNAL(clicked()), this, SLOT(selectAll()));
@@ -92,6 +94,8 @@ namespace casa {
 		//resetScroll();
 	}
 
+
+
 	QList<ImageView*> ImageScrollWidget::getSelectedViews() {
 
 		return imageScroll->getSelectedViews();
@@ -100,9 +104,9 @@ namespace casa {
 
 
 
-	void ImageScrollWidget::closeImages() {
+	QList<QtDisplayData*> ImageScrollWidget::closeImages() {
 
-		imageScroll->closeImages();
+		return imageScroll->closeImages();
 
 	}
 

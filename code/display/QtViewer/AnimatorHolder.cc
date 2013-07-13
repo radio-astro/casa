@@ -1,4 +1,4 @@
-//# Copyright (C) 2005
+//# Copyright (C) 2005,2013
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -22,7 +22,8 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-#include "AnimatorHolder.qo.h"
+#include <display/QtViewer/AnimatorHolder.qo.h>
+#include <display/QtViewer/QtDisplayPanelGui.qo.h>
 #include <QDebug>
 
 namespace casa {
@@ -30,11 +31,16 @@ namespace casa {
 	const bool AnimatorHolder::BLINK_MODE = false;
 	const bool AnimatorHolder::NORMAL_MODE = true;
 
-	AnimatorHolder::AnimatorHolder(QWidget *parent)
-		: QWidget(parent),
+	AnimatorHolder::AnimatorHolder( QtDisplayPanelGui *qdp, QWidget *parent )
+         : QDockWidget(parent), Ui::AnimatorHolder( ),
 		  animatorChannel( NULL ), animatorImage( NULL ),
-		  selectedColor( Qt::white) {
-		ui.setupUi(this);
+		  selectedColor( Qt::white), panel_(qdp), dismissed(false) {
+
+		setupUi(this);
+        int height = find_height( );
+        setFixedHeight( height );
+        setMinimumHeight( height );
+        setMaximumHeight( height );
 
 		QPalette pal( palette());
 		backgroundColor = pal.color( QPalette::Background );
@@ -50,13 +56,32 @@ namespace casa {
 		removeChannelGroupBox();
 
 		previousMode = CHANNEL_MODE;
+
+        connect( this, SIGNAL(lowerBoundAnimatorChannelChanged(int)), panel_->displayPanel( ), SLOT(lowerBoundAnimatorChannelChanged(int)));
+        connect( this, SIGNAL(upperBoundAnimatorChannelChanged(int)), panel_->displayPanel( ), SLOT(upperBoundAnimatorChannelChanged(int)));
+        connect( this, SIGNAL(lowerBoundAnimatorImageChanged(int)), panel_->displayPanel( ), SLOT(lowerBoundAnimatorImageChanged(int)));
+        connect( this, SIGNAL(upperBoundAnimatorImageChanged(int)), panel_->displayPanel( ), SLOT(upperBoundAnimatorImageChanged(int)));
+        connect( this, SIGNAL(goTo(int)), panel_->displayPanel( ), SLOT(goTo(int)));
+        connect( this, SIGNAL(frameNumberEdited(int)), panel_->displayPanel( ), SLOT(goTo(int)));
+        connect( this,  SIGNAL(setRate(int)), panel_->displayPanel( ), SLOT(setRate(int)));
+        connect( this, SIGNAL(toStart()), panel_->displayPanel( ), SLOT(toStart()));
+        connect( this, SIGNAL(revStep()), panel_->displayPanel( ), SLOT(revStep()));
+        connect( this, SIGNAL(stop()), panel_->displayPanel( ), SLOT(stop()));
+        connect( this, SIGNAL(fwdStep()), panel_->displayPanel( ), SLOT(fwdStep()));
+        connect( this, SIGNAL(toEnd()), panel_->displayPanel( ), SLOT(toEnd()));
+
+		connect( this, SIGNAL(visibilityChanged(bool)), SLOT(handle_visibility(bool)) );
+
+        connect( channelGroupBox, SIGNAL(toggled(bool)), SLOT(handle_folding(bool)) );
+        connect( imageGroupBox, SIGNAL(toggled(bool)), SLOT(handle_folding(bool)) );
+
 	}
 
 	int AnimatorHolder::getAnimationCount() const {
 		int count = 0;
-		QLayout* layoutBase = this->layout();
-		int channelIndex = layoutBase->indexOf( ui.channelGroupBox );
-		int imageIndex = layoutBase->indexOf( ui.imageGroupBox );
+		QLayout* layoutBase = layout();
+		int channelIndex = layoutBase->indexOf( channelGroupBox );
+		int imageIndex = layoutBase->indexOf( imageGroupBox );
 		if ( channelIndex >= 0 ) {
 			count++;
 		}
@@ -67,25 +92,28 @@ namespace casa {
 	}
 
 	void AnimatorHolder::setHeightFixed() {
+#if 0
 		int boxCount = getAnimationCount();
 		const int BASE_HEIGHT = 83;
 		int height = 20 + BASE_HEIGHT * boxCount;
 		setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
 		setFixedHeight( height );
+#endif
 	}
 
 	bool AnimatorHolder::addChannelGroupBox() {
-		QLayout* layout = this->layout();
-		int channelGroupIndex = layout->indexOf( ui.channelGroupBox );
+#if 0
+		QLayout* layout = container->layout();
+		int channelGroupIndex = layout->indexOf( channelGroupBox );
 		bool channelAdded = false;
 		if ( channelGroupIndex == -1 ) {
-			ui.channelGroupBox->setParent( this );
-			ui.channelGroupBox->setVisible( true );
+			channelGroupBox->setParent( this );
+			// channelGroupBox->setVisible( true );
 			//We want the channel group box to always be first
 			//so we may need to remove the image group box and put it
 			//in later if it is there.
 			bool removedImage = removeImageGroupBox();
-			layout->addWidget( ui.channelGroupBox );
+			layout->addWidget( channelGroupBox );
 			if ( removedImage ) {
 				addImageGroupBox();
 			}
@@ -93,42 +121,53 @@ namespace casa {
 			channelAdded = true;
 		}
 		return channelAdded;
+#else
+        return false;
+#endif
 	}
 
 	void AnimatorHolder::addImageGroupBox() {
-		QLayout* layout = this->layout();
-		int imageGroupIndex = layout->indexOf( ui.imageGroupBox );
+#if 0
+		QLayout* layout = container->layout();
+		int imageGroupIndex = layout->indexOf( imageGroupBox );
 		if ( imageGroupIndex == -1 ) {
-			ui.imageGroupBox->setParent( this );
-			ui.imageGroupBox->setVisible( true );
-			layout->addWidget( ui.imageGroupBox );
+			imageGroupBox->setParent( this );
+			//imageGroupBox->setVisible( true );
+			layout->addWidget( imageGroupBox );
 			setHeightFixed();
 		}
+#endif
 	}
 
 	void AnimatorHolder::removeChannelGroupBox() {
-		QLayout* layout = this->layout();
-		int channelGroupIndex = layout->indexOf( ui.channelGroupBox );
+#if 0
+		QLayout* layout = container->layout();
+		int channelGroupIndex = layout->indexOf( channelGroupBox );
 		if ( channelGroupIndex >= 0 ) {
-			layout->removeWidget( ui.channelGroupBox );
-			ui.channelGroupBox->setVisible( false );
-			ui.channelGroupBox->setParent( NULL );
+			layout->removeWidget( channelGroupBox );
+			//channelGroupBox->setVisible( false );
+			channelGroupBox->setParent( NULL );
 			setHeightFixed();
 		}
+#endif
 	}
 
 	bool AnimatorHolder::removeImageGroupBox() {
-		QLayout* layout = this->layout();
-		int imageGroupIndex = layout->indexOf( ui.imageGroupBox );
+#if 0
+		QLayout* layout = container->layout();
+		int imageGroupIndex = layout->indexOf( imageGroupBox );
 		bool removed = false;
 		if ( imageGroupIndex >= 0 ) {
-			layout->removeWidget( ui.imageGroupBox );
-			ui.imageGroupBox->setParent( NULL );
-			ui.imageGroupBox->setVisible( false );
+			layout->removeWidget( imageGroupBox );
+			imageGroupBox->setParent( NULL );
+			//imageGroupBox->setVisible( false );
 			setHeightFixed();
 			removed = true;
 		}
 		return removed;
+#else
+        return false;
+#endif
 	}
 	int AnimatorHolder::getLowerBoundChannel() const {
 		return animatorChannel->getFrameStart();
@@ -138,17 +177,20 @@ namespace casa {
 	}
 	void AnimatorHolder::initChannel() {
 		if ( animatorChannel == NULL ) {
-			animatorChannel = new AnimatorWidget( ui.channelGroupBox );
-			animatorChannel->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
+			animatorChannel = new AnimatorWidget( channelGroupBox );
+            if ( channelGroupBox->isChecked( ) == false ) {
+                animatorChannel->setVisible(false);
+            }
 			animatorChannel->setModeEnabled( false );
-			QHBoxLayout* layoutChannel = new QHBoxLayout();
-			layoutChannel->setContentsMargins( 1,1,1,1 );
-			layoutChannel->setSpacing( 1 );
-			layoutChannel->addWidget( animatorChannel );
-			ui.channelGroupBox->setLayout( layoutChannel );
-			ui.channelGroupBox->setAutoFillBackground( true );
-			connect( ui.channelGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
 
+            QVBoxLayout *layout = new QVBoxLayout(channelGroupBox);
+            layout->addWidget(animatorChannel);
+            layout->setMargin(1);
+            animatorChannel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+
+            sizeGroupBox(channelGroupBox);
+
+			connect( channelGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
 			connect(animatorChannel, SIGNAL(goTo(int)), this, SLOT(goToChannel(int)));
 			connect(animatorChannel, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedChannel(int)));
 			connect(animatorChannel, SIGNAL(setRate(int)), this, SLOT(setRateChannel(int)));
@@ -164,23 +206,26 @@ namespace casa {
 			connect(animatorChannel, SIGNAL(stepSizeChanged(int)), this, SLOT(stepSizeChangedChannel(int)));
 
 		}
-		ui.channelGroupBox->setVisible( true );
+		// channelGroupBox->setVisible( true );
 	}
 
 	void AnimatorHolder::initImage() {
 		if ( animatorImage == NULL ) {
-			animatorImage = new AnimatorWidget( ui.imageGroupBox );
-			animatorImage->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
+			animatorImage = new AnimatorWidget( imageGroupBox );
+            if ( imageGroupBox->isChecked( ) == false ) {
+                animatorImage->setVisible(false);
+            }
+			// animatorImage->setSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed );
 			animatorImage->setModeEnabled( false );
-			QHBoxLayout* layoutImage = new QHBoxLayout();
-			layoutImage->setContentsMargins( 1,1,1,1 );
-			layoutImage->setSpacing( 1 );
-			layoutImage->addWidget( animatorImage );
-			ui.imageGroupBox->setLayout( layoutImage );
-			ui.imageGroupBox->setAutoFillBackground( true );
 
-			connect( ui.imageGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
+            QVBoxLayout *layout = new QVBoxLayout(imageGroupBox);
+            layout->addWidget(animatorImage);
+            layout->setMargin(1);
+            animatorImage->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
 
+            sizeGroupBox(imageGroupBox);
+
+			connect( imageGroupBox, SIGNAL(clicked()), this, SLOT(modeChange()));
 			connect(animatorImage, SIGNAL(goTo(int)), this, SLOT(goToImage(int)));
 			connect(animatorImage, SIGNAL(frameNumberEdited(int)), this, SLOT(frameNumberEditedImage(int)));
 			connect(animatorImage,  SIGNAL(setRate(int)), this, SLOT(setRateImage(int)));
@@ -195,7 +240,7 @@ namespace casa {
 			connect(animatorImage, SIGNAL(upperBoundChanged(int)), this, SLOT(upperBoundChangedImage(int)));
 			connect(animatorImage, SIGNAL(stepSizeChanged(int)), this, SLOT(stepSizeChangedImage(int)));
 		}
-		ui.imageGroupBox->setVisible( true );
+		// imageGroupBox->setVisible( true );
 	}
 
 
@@ -212,13 +257,13 @@ namespace casa {
 		//animator won't come up because it is stuck in image mode.
 		bool channelAdded=addChannelGroupBox();
 		if ( channelAdded ) {
-			ui.channelGroupBox->setCheckable(true);
+			channelGroupBox->setCheckable(true);
 			animatorChannel->setEnabled(true);
 			if ( frameCount > 1 && select ){
-				ui.channelGroupBox->setChecked( true );
+				channelGroupBox->setChecked( true );
 			}
 			else {
-				ui.channelGroupBox->setChecked( false );
+				channelGroupBox->setChecked( false );
 			}
 		}
 
@@ -240,7 +285,7 @@ namespace casa {
 				animatorChannel->setModeEnabled( false );
 			}
 		} else if ( imageCount == 1 ) {
-			bool imageEnabled = ui.imageGroupBox->isCheckable();
+			bool imageEnabled = imageGroupBox->isCheckable();
 			if ( imageEnabled ) {
 				modeChanged = true;
 				removeImageGroupBox();
@@ -249,25 +294,25 @@ namespace casa {
 			//More than one image
 		} else {
 			addImageGroupBox();
-			bool imageEnabled = ui.imageGroupBox->isCheckable();
+			bool imageEnabled = imageGroupBox->isCheckable();
 			//Image mode is coming up after having been unavailable
 			if ( !imageEnabled ) {
 				modeChanged = true;
 				animatorImage->setModeEnabled( true );
-				ui.imageGroupBox->setCheckable( true );
-				ui.imageGroupBox->setChecked( false );
+				imageGroupBox->setCheckable( true );
+				imageGroupBox->setChecked( false );
 			}
 			addRemoveChannelAnimatorBasedOnFrameCount();
 			int displayCount = getAnimationCount();
-			bool oldImageChecked = ui.imageGroupBox->isChecked();
+			bool oldImageChecked = imageGroupBox->isChecked();
 			if ( displayCount == 1 ) {
-				ui.imageGroupBox->setChecked( true );
+				imageGroupBox->setChecked( true );
 				if ( !oldImageChecked ){
 					modeChanged = true;
 				}
 			}
-			else if ( displayCount == 2 && !ui.channelGroupBox->isChecked()){
-				ui.imageGroupBox->setChecked( true );
+			else if ( displayCount == 2 && !channelGroupBox->isChecked()){
+				imageGroupBox->setChecked( true );
 				if ( !oldImageChecked ){
 					modeChanged = true;
 				}
@@ -283,11 +328,11 @@ namespace casa {
 		if ( animatorChannel->getFrameCount() > 1 ) {
 			addChannelGroupBox();
 			animatorChannel->setModeEnabled( true );
-			if ( !ui.channelGroupBox->isCheckable() ){
-				ui.channelGroupBox->setCheckable( true );
-				ui.channelGroupBox->setChecked( false );
+			if ( !channelGroupBox->isCheckable() ){
+				channelGroupBox->setCheckable( true );
+				channelGroupBox->setChecked( false );
 			}
-			changePalette( ui.channelGroupBox, selectedColor );
+			changePalette( channelGroupBox, selectedColor );
 		} else {
 			removeChannelGroupBox();
 		}
@@ -573,24 +618,24 @@ namespace casa {
 	}
 
 	void AnimatorHolder::modeChange() {
-		bool channelMode = ui.channelGroupBox->isChecked();
-		bool imageMode = ui.imageGroupBox->isChecked();
+		bool channelMode = channelGroupBox->isChecked();
+		bool imageMode = imageGroupBox->isChecked();
 		Mode mode = END_MODE;
 		if ( channelMode && !imageMode ) {
 			mode = CHANNEL_MODE;
-			changePalette( ui.channelGroupBox, selectedColor );
-			changePalette( ui.imageGroupBox, backgroundColor );
+			changePalette( channelGroupBox, selectedColor );
+			changePalette( imageGroupBox, backgroundColor );
 		} else if ( !channelMode && imageMode ) {
 			mode = IMAGE_MODE;
-			changePalette( ui.imageGroupBox, selectedColor );
-			changePalette( ui.channelGroupBox, backgroundColor );
+			changePalette( imageGroupBox, selectedColor );
+			changePalette( channelGroupBox, backgroundColor );
 		} else if ( channelMode && imageMode ) {
 			mode = CHANNEL_IMAGES_MODE;
-			changePalette( ui.channelGroupBox, selectedColor );
-			changePalette( ui.imageGroupBox, selectedColor );
+			changePalette( channelGroupBox, selectedColor );
+			changePalette( imageGroupBox, selectedColor );
 		} else {
-			changePalette( ui.channelGroupBox, backgroundColor );
-			changePalette( ui.imageGroupBox, backgroundColor );
+			changePalette( channelGroupBox, backgroundColor );
+			changePalette( imageGroupBox, backgroundColor );
 		}
 		if ( mode != END_MODE ) {
 			modeChanged( mode );
@@ -604,8 +649,68 @@ namespace casa {
 		box->setPalette( pal );
 	}
 
+	AnimatorHolder::~AnimatorHolder() { }
 
-	AnimatorHolder::~AnimatorHolder() {
-
+	void AnimatorHolder::dismiss( ) {
+		hide( );
+		dismissed = true;
 	}
+
+	void AnimatorHolder::closeEvent ( QCloseEvent * event ) {
+		dismissed = true;
+		QDockWidget::closeEvent(event);
+		panel_->putrc( "visible.animator", "false" );
+	}
+
+    int AnimatorHolder::find_height( ) const {
+        int result = AnimatorWidget::heightHeader( );
+
+        if ( channelGroupBox->isChecked( ) )
+             result += AnimatorWidget::heightOpen( );
+        else
+             result += AnimatorWidget::heightClosed( );
+
+        if ( imageGroupBox->isChecked( ) )
+             result += AnimatorWidget::heightOpen( );
+        else
+             result += AnimatorWidget::heightClosed( );
+        return result;
+    }
+
+    void AnimatorHolder::sizeGroupBox( QGroupBox *gb ) {
+        if ( gb->isChecked( ) ) {
+            gb->setFixedHeight( AnimatorWidget::heightOpen( ) );
+            gb->setMinimumHeight( AnimatorWidget::heightOpen( ) );
+            gb->setMaximumHeight( AnimatorWidget::heightOpen( ) );
+        } else {
+            gb->setFixedHeight( AnimatorWidget::heightClosed( ) );
+            gb->setMinimumHeight( AnimatorWidget::heightClosed( ) );
+            gb->setMaximumHeight( AnimatorWidget::heightClosed( ) );
+        }
+        gb->updateGeometry( );
+
+    }
+
+    void AnimatorHolder::handle_folding( bool visible ) {
+        QObject *obj = sender( );
+        QGroupBox *gb = dynamic_cast<QGroupBox*>(obj);
+		QList <AnimatorWidget*> animators = gb->findChildren<AnimatorWidget*>( );
+        if ( animators.size( ) == 1 ) {
+            animators[0]->setVisible(visible);
+            sizeGroupBox(gb);
+            int height = find_height( );
+            setFixedHeight( height );
+            setMinimumHeight( height );
+            setMaximumHeight( height );
+            updateGeometry( );
+        }
+    }
+
+	void AnimatorHolder::handle_visibility( bool visible ) {
+		if ( visible && dismissed ) {
+			dismissed = false;
+			panel_->putrc( "visible.animator", "true" );
+		}
+	}
+
 }

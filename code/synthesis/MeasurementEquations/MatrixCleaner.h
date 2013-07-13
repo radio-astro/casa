@@ -265,6 +265,15 @@ protected:
   static Bool findMaxAbs(const Matrix<Float>& lattice,
                          Float& maxAbs, IPosition& posMax);
 
+  // This is made static since findMaxAbs is static(!).
+  // Why is findMaxAbs static??? 
+  //                       --SB
+  static Bool findPSFMaxAbs(const Matrix<Float>& lattice,
+			    Float& maxAbs, IPosition& posMax,
+			    const Int& supportSize=100);
+
+  Int findBeamPatch(const Float maxScaleSize, const Int& nx, const Int& ny,
+		    const Float psfBeam=4.0, const Float nBeams=20.0);
   // Find the Peak of the lattice, applying a mask
   Bool findMaxAbsMask(const Matrix<Float>& lattice, const Matrix<Float>& mask,
                              Float& maxAbs, IPosition& posMax);

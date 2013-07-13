@@ -31,6 +31,7 @@
 
 
 #include <casa/Arrays/Vector.h>
+#include <casa/System/Casarc.h>
 #include <images/Images/ImageInterface.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
@@ -111,8 +112,29 @@ namespace casa{
 
     virtual void getPolMap(Vector<Int>& polMap) {polMap.resize(0); polMap = polMap_p_base;};
     virtual Vector<Int> getAntTypeList() {Vector<Int> tt(1);tt(0)=0;return tt;};
-    virtual Int getConvSize() {return CONVSIZE;};
-    virtual Int getOversampling() {return OVERSAMPLING;}
+    virtual Int getConvSize() ;
+    // {
+    //   Int defaultConvSize=CONVSIZE;
+    //   defaultConvSize= SynthesisUtils::getenv("CONVSIZE",CONVSIZE);
+    //   // if (envStr != "")
+    //   // 	{
+    //   // 	  sscanf(envStr.c_str,"%d",&defaultConvSize);
+    //   cerr << "ConvFuncSize set to " << defaultConvSize << endl;
+    //   // 	}
+    //   return defaultConvSize;
+    // };
+
+    virtual Int getOversampling() ;
+    // {
+    //   Int defaultOverSampling=OVERSAMPLING;
+    //   char *envStr;
+    //   if ((envStr = getenv("OVERSAMPLING")) != NULL)
+    // 	{
+    // 	  sscanf(envStr,"%d",&defaultOverSampling);
+    // 	  cerr << "Oversampling set to " << defaultOverSampling << endl;
+    // 	}
+    //   return defaultOverSampling;
+    // }
     virtual Float getConvWeightSizeFactor() {return CONVWTSIZEFACTOR;};
     virtual Float getSupportThreshold() {return THRESHOLD;};
 

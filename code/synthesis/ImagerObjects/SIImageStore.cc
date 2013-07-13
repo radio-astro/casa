@@ -183,7 +183,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     itsPsf = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".psf"));
     itsWeight = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".weight"));
     itsModel = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".model"));
-
+    itsImage = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".image"));
     itsResidual->set(0.0);
     itsPsf->set(1.0);
     itsWeight->set(1.0);
@@ -378,7 +378,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   }
   IPosition SIImageStore::tileShape(){
 	  //Need to have settable stuff here or algorith to determine this
-	  return IPosition(4, 1000, 1000, 1, 1);
+	  return IPosition(4, min(itsModel->shape()[0],1000), min(itsModel->shape()[1],1000), 1, 1);
   }
 
   // TODO : Move to an image-wrapper class ? Same function exists in SynthesisDeconvolver.

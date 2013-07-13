@@ -55,7 +55,7 @@ void _checkCorner(const Record& gotRecord, const Vector<Double>& expected) {
 
 void testException(
 	const String& test,
-	vector<ImageInputProcessor::OutputStruct> *outputStruct,
+	vector<OutputDestinationChecker::OutputStruct> *outputStruct,
 	const String& imagename, const Record *regionPtr,
 	const String& regionName, const String& box,
 	const String& chans, String& stokes,
@@ -88,7 +88,7 @@ void testException(
 
 void testSuccess(
 	const String& test,
-	vector<ImageInputProcessor::OutputStruct> *outputStruct,
+	vector<OutputDestinationChecker::OutputStruct> *outputStruct,
 	const String& imagename, const Record *regionPtr,
 	const String& regionName, const String& box,
 	const String& chans, String& stokes,
@@ -114,7 +114,7 @@ void testSuccess(
 
 void runProcess(
 	const String& test,
-	vector<ImageInputProcessor::OutputStruct> *outputStruct,
+	vector<OutputDestinationChecker::OutputStruct> *outputStruct,
 	const String& imagename, const Record *regionPtr,
 	const String& regionName, const String& box,
 	const String& chans, String& stokes,
@@ -251,13 +251,13 @@ int main() {
         	AlwaysAssert(fail, AipsError);
         }
        	{
-        	ImageInputProcessor::OutputStruct output;
+        	OutputDestinationChecker::OutputStruct output;
         	String out = "/cannot_create";
         	output.label = "file";
         	output.outputFile = &out;
         	output.required = True;
         	output.replaceable = True;
-        	vector<ImageInputProcessor::OutputStruct> outs(1, output);
+        	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	testException(
         		"Non-createable output file throws exception",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
@@ -266,13 +266,13 @@ int main() {
        	}
        	{
         	writeTestString("Non-overwriteable output file throws exception");
-        	ImageInputProcessor::OutputStruct output;
+        	OutputDestinationChecker::OutputStruct output;
         	String out = "/usr";
         	output.label = "file";
         	output.outputFile = &out;
         	output.required = True;
         	output.replaceable = True;
-        	vector<ImageInputProcessor::OutputStruct> outs(1, output);
+        	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	testException(
         		"Non-overwriteable output file throws exception",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
@@ -282,13 +282,13 @@ int main() {
 
        	{
         	writeTestString("Non-replaceable output file throws exception");
-        	ImageInputProcessor::OutputStruct output;
+        	OutputDestinationChecker::OutputStruct output;
         	String out = datadir + "input_image_processor_dont_replace_me";
         	output.label = "file";
         	output.outputFile = &out;
         	output.required = True;
         	output.replaceable = False;
-        	vector<ImageInputProcessor::OutputStruct> outs(1, output);
+        	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	testException(
         		"Non-replaceable output file throws exception",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
@@ -495,13 +495,13 @@ int main() {
         }
        	{
         	writeTestString("Non-required, non-overwriteable output file is set to blank");
-        	ImageInputProcessor::OutputStruct output;
+        	OutputDestinationChecker::OutputStruct output;
         	String out = "/usr";
         	output.label = "file";
         	output.outputFile = &out;
         	output.required = False;
         	output.replaceable = True;
-        	vector<ImageInputProcessor::OutputStruct> outs(1, output);
+        	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	runProcess(
         		"Non-required, non-overwriteable output file is set to blank",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
@@ -510,13 +510,13 @@ int main() {
         	AlwaysAssert(out.empty(), AipsError);
        	}
        	{
-        	ImageInputProcessor::OutputStruct output;
+        	OutputDestinationChecker::OutputStruct output;
         	String out = "/cannot_write_me";
         	output.label = "file";
         	output.outputFile = &out;
         	output.required = False;
         	output.replaceable = True;
-        	vector<ImageInputProcessor::OutputStruct> outs(1, output);
+        	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	runProcess(
         		"Non-required, non-createable output file is set to blank",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
@@ -525,14 +525,14 @@ int main() {
         	AlwaysAssert(out.empty(), AipsError);
        	}
        	{
-        	ImageInputProcessor::OutputStruct output;
+        	OutputDestinationChecker::OutputStruct output;
         	String out = datadir + "input_image_processor_dont_replace_me";
         	output.required = False;
         	output.label = "file";
         	output.outputFile = &out;
         	output.required = False;
         	output.replaceable = False;
-        	vector<ImageInputProcessor::OutputStruct> outs(1, output);
+        	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	runProcess(
         		"Non-required, non-replaceable output file is set to blank",
         		&outs, goodImage, 0, "", "0, 0,  10,10",
@@ -541,14 +541,14 @@ int main() {
         	AlwaysAssert(out.empty(), AipsError);
        	}
        	{
-        	ImageInputProcessor::OutputStruct output;
+        	OutputDestinationChecker::OutputStruct output;
         	output.label = "file";
         	String name = "youcanwritemedddslsl";
         	String save = name;
         	output.outputFile = &name;
         	output.required = True;
         	output.replaceable = False;
-        	vector<ImageInputProcessor::OutputStruct> outs(1, output);
+        	vector<OutputDestinationChecker::OutputStruct> outs(1, output);
         	runProcess(
         		"Writeable file is not reset",
         		&outs, goodImage, 0, "", "0, 0,  10,10",

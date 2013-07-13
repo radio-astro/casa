@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>463</width>
-    <height>269</height>
+    <height>220</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>460</width>
-    <height>260</height>
+    <height>220</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>269</height>
+    <height>260</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -29,6 +29,18 @@
    <string>image name</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>2</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
    <item row="0" column="0">
     <widget class="QGroupBox" name="box11">
      <property name="sizePolicy">
@@ -40,7 +52,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -57,6 +69,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -75,7 +93,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -92,6 +110,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -110,7 +134,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -127,6 +151,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -145,7 +175,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -162,6 +192,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -180,7 +216,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -215,7 +251,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -232,6 +268,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -250,7 +292,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -267,6 +309,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -285,7 +333,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -302,6 +350,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -320,7 +374,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -337,6 +391,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -355,7 +415,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -372,6 +432,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -390,7 +456,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -407,6 +473,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -425,7 +497,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -442,6 +514,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -460,7 +538,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -477,6 +555,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -495,7 +579,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -512,6 +596,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -530,7 +620,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -547,6 +637,12 @@
         <width>105</width>
         <height>20</height>
        </rect>
+      </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
       </property>
       <property name="text">
        <string>TextLabel</string>
@@ -565,7 +661,7 @@
      <property name="minimumSize">
       <size>
        <width>105</width>
-       <height>45</height>
+       <height>0</height>
       </size>
      </property>
      <property name="title">
@@ -583,6 +679,12 @@
         <height>20</height>
        </rect>
       </property>
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
       <property name="text">
        <string>TextLabel</string>
       </property>
@@ -597,7 +699,7 @@
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>31</height>
+       <height>25</height>
       </size>
      </property>
      <property name="text">

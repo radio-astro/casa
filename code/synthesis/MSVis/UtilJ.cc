@@ -297,8 +297,8 @@ throwIfError (int errorCode, const String & prefix, const String & file, Int lin
 	// of the error.
 
 	if (errorCode != 0) {
-		AipsErrorTrace e (format ("%s: %s (errno=%d):%s", func.c_str(), prefix.c_str(),
-		                          errorCode, strerror (errorCode)), file.c_str(), line);
+		AipsErrorTrace e (String::format ("%s: %s (errno=%d):%s", func.c_str(), prefix.c_str(),
+		                                  errorCode, strerror (errorCode)), file.c_str(), line);
 
 #       if defined (NDEBUG)
 	        toStdError (e.what());
@@ -340,14 +340,14 @@ DeltaThreadTimes::formatAverage (const String & floatFormat,
                            Double scale,
                            const String & units) const // to convert to ms
 {
-    String realFormat = casa::utilj::format ("(el=%s,cp=%s,%%4.1f%%%%) %s",
-                                             floatFormat.c_str(), floatFormat.c_str(), units.c_str());
+    String realFormat = String::format ("(el=%s,cp=%s,%%4.1f%%%%) %s",
+                                        floatFormat.c_str(), floatFormat.c_str(), units.c_str());
     Int n = n_p != 0 ? n_p : 1;
     Double c = cpu_p / n * scale;
     Double e = elapsed_p / n * scale;
     Double p = c / e * 100;
 
-    String result = casa::utilj::format (realFormat.c_str(), e, c, p);
+    String result = String::format (realFormat.c_str(), e, c, p);
 
     return result;
 }
@@ -357,16 +357,16 @@ DeltaThreadTimes::formatStats (const String & floatFormat,
                          Double scale,
                          const String & units) const  // to convert to ms
 {
-    String realFormat = casa::utilj::format ("(el=%s {%s-%s,%s}, cp=%s {%s-%s,%s}, %%4.1f%%%%) %s",
-                                             floatFormat.c_str(),
-                                             floatFormat.c_str(),
-                                             floatFormat.c_str(),
-                                             floatFormat.c_str(),
-                                             floatFormat.c_str(),
-                                             floatFormat.c_str(),
-                                             floatFormat.c_str(),
-                                             floatFormat.c_str(),
-                                             units.c_str());
+    String realFormat = String::format ("(el=%s {%s-%s,%s}, cp=%s {%s-%s,%s}, %%4.1f%%%%) %s",
+                                         floatFormat.c_str(),
+                                         floatFormat.c_str(),
+                                         floatFormat.c_str(),
+                                         floatFormat.c_str(),
+                                         floatFormat.c_str(),
+                                         floatFormat.c_str(),
+                                         floatFormat.c_str(),
+                                         floatFormat.c_str(),
+                                         units.c_str());
     Int n = n_p != 0 ? n_p : 1;
     Double c = cpu_p / n * scale;
     Double cS = sqrt (cpuSsq_p / n_p - c * c);
@@ -374,8 +374,8 @@ DeltaThreadTimes::formatStats (const String & floatFormat,
     Double eS = sqrt (elapsedSsq_p / n_p - e * e);
     Double p = c / e * 100;
 
-    String result = casa::utilj::format (realFormat.c_str(), e, elapsedMin_p, elapsedMax_p, eS,
-                                         c, cpuMin_p, cpuMax_p, cS, p);
+    String result = String::format (realFormat.c_str(), e, elapsedMin_p, elapsedMax_p, eS,
+                                    c, cpuMin_p, cpuMax_p, cS, p);
 
     return result;
 }

@@ -50,6 +50,7 @@ template <typename T> class Array;
 class CStokesVector;
 template <typename T> class CountedPtr;
 template <typename T> class Cube;
+class IPosition;
 template <typename T> class Matrix;
 class MDirection;
 template <typename T, Int N> class SquareMatrix;
@@ -159,17 +160,31 @@ public:
 
     virtual void copy (const VisBuffer2 & other, Bool fetchIfNeeded) = 0;
 
-    // Copies the specified components (or just the one in the cache) from
-    // the specified VisBuffer into this one.
+    // Copies the specified components (or just the ones in the cache if
+    // fetchIfNeeded is False) from the specified VisBuffer into this one.
+    // If this VB is not empty it will must have the same shape as the other
+    // VB unless allowShapeChange is True; in that case this VB will change
+    // changes to match the other VB flushing the cached data.
 
     virtual void copyComponents (const VisBuffer2 & other,
 				 const VisBufferComponents2 & components,
+				 Bool allowShapeChange = False,
 				 Bool fetchIfNeeded = True) = 0;
 
-    // Copies the coordinate components from the specified VisBuffer into this one.
-    // Depending on includeDirections the direction related ones are copied or not.
+    // Copies the coordinate components (or just the ones in the cache if
+    // fetchIfNeeded is False) from the specified VisBuffer into this one.
+    // If this VB is not empty it will must have the same shape as the other
+    // VB unless allowShapeChange is True; in that case this VB will change
+    // changes to match the other VB flushing the cached data.
+    // The basic coordinate components are:
+    //  Antenna1, Antenna2, ArrayId, DataDescriptionIds, FieldId, SpectralWindows,
+    //  Time, NRows, Feed1, Feed2
+    // The directional coordinates (copied if includeDirections is true):
+    //   Direction1, Direction2, FeedPa1, FeedPa2
 
-    virtual void copyCoordinateInfo(const VisBuffer2 * other, Bool includeDirections,
+    virtual void copyCoordinateInfo(const VisBuffer2 * other,
+                                    Bool includeDirections,
+                                    Bool allowShapeChange = False,
                                     Bool fetchIfNeeded = True) = 0;
 
     virtual void setShape (Int nCorrelations, Int nChannels, Int nRows, Bool clearCache = False) = 0;
@@ -449,6 +464,8 @@ public:
     // row's Antenna2.
 
     virtual const Vector<Float> & feedPa2 () const = 0; // [nR]
+
+    virtual IPosition getShape () const = 0;
 
     // Returns the hour angle of the array at the specified time.
 

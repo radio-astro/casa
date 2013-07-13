@@ -40,7 +40,7 @@ FrequencySelection::frameName (Int referenceFrame)
     }
     else{
 
-        ThrowIf (True, utilj::format ("Unknown frame of reference: id=%d", referenceFrame));
+        ThrowIf (True, String::format ("Unknown frame of reference: id=%d", referenceFrame));
     }
 
     return result;
@@ -176,13 +176,13 @@ FrequencySelectionUsingChannels::getNChannels (Int spectralWindowId) const
 String
 FrequencySelectionUsingChannels::toString () const
 {
-    String s = utilj::format ("{frame='%s' {", frameName (getFrameOfReference()).c_str());
+    String s = String::format ("{frame='%s' {", frameName (getFrameOfReference()).c_str());
 
     for (Elements::const_iterator e = elements_p.begin();
          e != elements_p.end();
          e ++){
 
-        s += utilj::format ("(spw=%d, 1st=%d, n=%d, inc=%d)",
+        s += String::format ("(spw=%d, 1st=%d, n=%d, inc=%d)",
                             e->spectralWindow_p,
                             e->firstChannel_p,
                             e->nChannels_p,
@@ -278,13 +278,13 @@ FrequencySelectionUsingFrame::Element::getEndFrequency () const
 String
 FrequencySelectionUsingFrame::toString () const
 {
-    String s = utilj::format ("{frame='%s' {", frameName (getFrameOfReference()).c_str());
+    String s = String::format ("{frame='%s' {", frameName (getFrameOfReference()).c_str());
 
     for (Elements::const_iterator e = elements_p.begin();
          e != elements_p.end();
          e ++){
 
-        s += utilj::format ("(spw=%d, 1st=%g, n=%g, inc=%g)",
+        s += String::format ("(spw=%d, 1st=%g, n=%g, inc=%g)",
                             e->spectralWindow_p,
                             e->beginFrequency_p,
                             e->endFrequency_p,
@@ -323,7 +323,7 @@ FrequencySelections::add (const FrequencySelection & selection)
 {
     if (! selections_p.empty()){
         ThrowIf (getFrameOfReference() != selection.getFrameOfReference(),
-                 utilj::format ("Frequency selection #%d has incompatible frame of reference %d:%s "
+                 String::format ("Frequency selection #%d has incompatible frame of reference %d:%s "
                                 "(!= %d:%s)",
                                 selections_p.size() + 1,
                                 selection.getFrameOfReference(),

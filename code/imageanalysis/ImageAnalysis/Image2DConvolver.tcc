@@ -41,6 +41,7 @@
 #include <lattices/LatticeMath/Fit2D.h>
 #include <scimath/Functionals/Gaussian2D.h>
 #include <imageanalysis/ImageAnalysis/ImageConvolver.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 #include <images/Images/PagedImage.h>
 #include <images/Images/TempImage.h>
 #include <images/Images/ImageInterface.h>
@@ -167,15 +168,12 @@ template <class T> void Image2DConvolver<T>::convolve(
 	String brightnessUnitOut;
 	ImageInfo iiOut = imageOut.imageInfo();
 	if (imageInfo.hasMultipleBeams()) {
-		uInt nChan = imageInfo.nChannels();
-		uInt nPol = imageInfo.nStokes();
+		ImageMetaData<T> md(&imageOut);
+		uInt nChan = md.nChannels();
+		uInt nPol = md.nStokes();
 		// initialize all beams to be null
 		iiOut.setAllBeams(nChan, nPol, GaussianBeam());
-		uInt count = (nChan > 0 && nPol > 0)
-			? nChan * nPol
-				: nChan > 0
-				  ? nChan
-				  : nPol;
+
 		Int specAxis = cSys.spectralAxisNumber();
 		Int polAxis = cSys.polarizationAxisNumber();
 		IPosition start(imageIn.ndim(), 0);
@@ -192,6 +190,12 @@ template <class T> void Image2DConvolver<T>::convolve(
 			iiOut.removeRestoringBeam();
 			iiOut.setRestoringBeam(GaussianBeam(parameters));
 		}
+
+		uInt count = (nChan > 0 && nPol > 0)
+		    ? nChan * nPol
+		    : nChan > 0
+		      ? nChan
+		      : nPol;
 		for (uInt i=0; i<count; i++) {
 			if (nChan > 0) {
 				channel = i % nChan;

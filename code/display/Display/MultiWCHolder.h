@@ -280,7 +280,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Add/remove a DisplayData to/from all WorldCanvasHolders.
 		// <group>
-		void addToAllWorldCanvasHolders(DisplayData &displaydata);
+		void addToAllWorldCanvasHolders(DisplayData &displaydata, int position);
 		void removeFromAllWorldCanvasHolders(DisplayData &displaydata);
 		// </group>
 

@@ -98,4 +98,27 @@ namespace casa{
     return NPol;
   }
 
+  Int ATerm::getConvSize() 
+  {
+    Int defaultConvSize=CONVSIZE, userValue;
+    userValue = SynthesisUtils::getenv("ATerm.CONVSIZE",CONVSIZE);
+    if (userValue != defaultConvSize)
+      {
+	defaultConvSize = userValue;
+	cerr << "ConvFuncSize set to " << defaultConvSize << endl;
+      }
+    return defaultConvSize;
+  };
+
+  Int ATerm::getOversampling() 
+  {
+    Int defaultOversampling=OVERSAMPLING, userValue;
+    userValue = SynthesisUtils::getenv("ATerm.OVERSAMPLING",OVERSAMPLING);
+    if (userValue != defaultOversampling)
+      {
+	defaultOversampling = userValue;
+	cerr << "Oversampling set to " << defaultOversampling << endl;
+      }
+    return defaultOversampling;
+  }
 };

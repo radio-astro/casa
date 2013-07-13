@@ -82,6 +82,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	class ColorHistogram;
 	class ImageManagerDialog;
 	class QtDisplayPanelGui;
+    class CursorTrackingHolder;
 
 	template <class T> class ImageInterface;
 
@@ -513,28 +514,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// DataManager window and save-restore dialogs.
 		virtual Bool syncDataDir_(String filename);
 
-		// return the tracking box for a QDD (given pointer or name).  0 if none.
-		//<group>
-		virtual TrackBox* trkBox_(QtDisplayData* qdd);
-		virtual TrackBox* trkBox_(String ddname);
-		//</group>
-
-
-		// Does the display panel have a TrackBox for this panel (yet)?
-		virtual Bool hasTrackBox_(QtDisplayData* qdd) {
-			return trkBox_(qdd)!=0;
-		}
-
-
-		// If qdd->usesTracking(), this method assures that a TrackBox for qdd
-		// is visible in the trkgWidget_'s layout (creating the TrackBox if it
-		// didn't exist).  Used by arrangeTrackBoxes_().  Returns the TrackBox
-		// (or 0 if none, i.e., if !qdd->usesTracking()).
-		virtual TrackBox* showTrackBox_(QtDisplayData* qdd);
-
-
-
-
 		virtual void updateDDMenus_(Bool doCloseMenu = True);
 
 
@@ -645,11 +624,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//Docking/Dock Widgets
 		string addAnimationDockWidget();
-		QDockWidget*  animDockWidget_;
+
 		QDockWidget*  histogramDockWidget_;
 		viewer::QtRegionDock  *regionDock_;
-		QDockWidget*  trkgDockWidget_;
-		QWidget*    trkgWidget_;
+		CursorTrackingHolder *trkgDockWidget_;
 
 		QTimer *status_bar_timer;
 		QString status_bar_state;
@@ -720,57 +698,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// save-restore), to inform QtDisplayPanel of the directory currently
 		// selected for data retrieval, if any ("" if none).
 		String selectedDMDir;
-
-	};
-
-
-
-
-// <summary>
-// Helper class for QtDisplayPanelGui, for display of tracking information.
-// </summary>
-
-// <synopsis>
-// TrackBox is the widget for the position the tracking information of
-// a single QtDisplayData within a QtDisplayPanelGui.  trkgWidget_ will
-// show a TrackBox for each registered QDD capable of displaying tracking
-// information, in registration order.  TrackBox is simply a QGroupBox with
-// a QTextEdit inside it.  The QGroupBox displays the QDD's name and has
-// a checkbox that can be used to hide the tracking text area to save
-// space.  TrackBox is intended to be used exclusively by QtDisplayPanelGui.
-// </synopsis>
-
-	class TrackBox : public QGroupBox {
-
-		Q_OBJECT;
-
-	public:
-
-		TrackBox(QtDisplayData* qdd, QWidget* parent=0);
-
-		void setText(String trkgString);
-		void clear() {
-			trkgEdit_->clear();
-		}
-		QtDisplayData* dd() {
-			return qdd_;
-		}
-		String name() {
-			return objectName().toStdString();
-		}
-
-	protected:
-
-		// Attempts automatic adjustment of tracking display height
-		// according to contents.
-		void setTrackingHeight_();
-
-		QtDisplayData* qdd_;	// (the QDD whose tracking info it displays).
-		QTextEdit*    trkgEdit_;	// (the box's tracking info display area).
-
-	private:
-
-		TrackBox() {  }		// (not intended for use)
 
 	};
 

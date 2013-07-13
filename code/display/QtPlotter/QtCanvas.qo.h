@@ -421,6 +421,7 @@ namespace casa {
 		void endZoomRect( QMouseEvent* event );
 		void resetSelectedAnnotation( QMouseEvent* event );
 		void drawMolecularLines( QPainter& painter );
+		void drawAnnotations( QPainter& painter );
 
 		//Plot Margins
 		const int MARGIN_LEFT;

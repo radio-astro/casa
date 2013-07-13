@@ -99,7 +99,7 @@ try {
       return 0;
  } catch (AipsError err) {
     cerr << err.getMesg() << endl;
-    cout << "Not OK" << endl;
+    cout << "FAIL" << endl;
     return 1;
  }
 }
@@ -133,12 +133,6 @@ void testSpectral (uInt abcType, Bool doVector, Double fac)
       }
       x(i) = world;
    }
-/*
-cerr.setf(ios::fixed, ios::floatfield);
-cerr.precision(6);
-
-cerr << "x = " << x << endl;
-*/
 
 // Gaussian and Polynomial parameters
 
@@ -183,7 +177,6 @@ cerr << "x = " << x << endl;
       makeSpectralData (pPars, gPars, y, doGauss, doPoly, x);
       TempImage<Float>* pIm = 0;
       makeImage(pIm, n, sC, y, doVector);
-//
       check  (pPars, gPars, pIm, abcType, doGauss, doPoly);
       delete pIm;
    }
@@ -260,10 +253,6 @@ void makeSpectralData (Vector<Double>& pPars, Vector<Double>& gPars,
 //
       PolynomialSpectralElement p(pPars.nelements()-1);
       p.set(pPars);
-/*
-cerr << "x[0], x[1] = " << x[0] << ", " << x[n-1] << endl;
-cerr << "Polynomial Parameters = " << pPars << endl;
-*/
 
 // Generate ordinate
 
@@ -271,7 +260,6 @@ cerr << "Polynomial Parameters = " << pPars << endl;
 	y[i] += p(x(i));
       }
    }
-// cerr << "y = " << y << endl << endl;
 }
 
 void makeImage (TempImage<Float>*& pIm, Int n, const Coordinate& c,
@@ -309,103 +297,89 @@ void makeImage (TempImage<Float>*& pIm, Int n, const Coordinate& c,
 }
 
 
-void check  (const Vector<Double>& pPars, const Vector<Double>& gPars, 
-             TempImage<Float>*& pIm,  Int what, Bool doGauss, Bool doPoly)
-{
-   const uInt axis = 0;
-   ImageFit1D<Float> fitter(*pIm, axis);
+void check(
+	const Vector<Double>& pPars, const Vector<Double>& gPars,
+	TempImage<Float>*& pIm,  Int what, Bool doGauss, Bool doPoly
+) {
+	const uInt axis = 0;
+	ImageFit1D<Float> fitter(*pIm, axis);
 
-// Set abcissa state
+	// Set abcissa state
 
-   ImageFit1D<Float>::AbcissaType type = ImageFit1D<Float>::PIXEL;
-   if (what==0) {
-   } else if (what==1) {
-      type = ImageFit1D<Float>::IM_NATIVE; 
-   } else if (what==2) {
-      type = ImageFit1D<Float>::VELOCITY; 
-   }
+	ImageFit1D<Float>::AbcissaType type = ImageFit1D<Float>::PIXEL;
+	if (what==0) {
+	} else if (what==1) {
+		type = ImageFit1D<Float>::IM_NATIVE;
+	} else if (what==2) {
+		type = ImageFit1D<Float>::VELOCITY;
+	}
 
-// Set data
+	// Set data
 
-   const uInt nDim = pIm->ndim();
-   if (nDim==1) {
-      IPosition pos(1,0);
-      AlwaysAssert(fitter.setData(pos, type), AipsError);
-   } else {
-      Slicer sl(IPosition(nDim,0), pIm->shape(), Slicer::endIsLength);
-      LCSlicer sl2(sl);
-      ImageRegion region(sl2);
-      AlwaysAssert(fitter.setData(region, type), AipsError);
-   }
-
-// Make estimate
-
-   if (doGauss) {
-      uInt nGauss = 1;
-      AlwaysAssert(fitter.setGaussianElements(nGauss),AipsError);
-   }
-   if (doPoly) {
-      PolynomialSpectralElement s(pPars.nelements()-1);            // 0 parameters
-      fitter.addElement(s);
-   }
-
-/*
-{
-SpectralList list = fitter.getList(False);
-cerr << "Estimate = " << list << endl;
-}
-*/
-
-// Fit
-
-//   AlwaysAssert(fitter.fit(), AipsError);
-
-   Bool ok = fitter.fit();
-   if (!ok) {
-     cerr << "      Fitter did not converge in " << fitter.getNumberIterations() << " iterations" <<  endl;
-   }
- 
-// Compare
-
-   const SpectralList list = fitter.getList(True);
-   Double tol(1e-2);
-   Vector<Double> p;
-//
-   if (doGauss) {
-      list[0]->get(p);
-      AlwaysAssert(p.nelements()==3,AipsError);
-      cerr << "      Parameters of gaussian model = " << gPars << endl;
-      cerr << "      Parameters of gaussian fit   = " << p << endl;
-      if (!(doGauss&&doPoly)) {
-	AlwaysAssert(near(gPars[0], p[0], tol), AipsError);
-	AlwaysAssert(near(gPars[1], p[1], tol), AipsError); 
-	AlwaysAssert(near(gPars[2], p[2], tol), AipsError);
-      }
-   }
-   if (doPoly) {
-      if (doGauss) {
-         list[1]->get(p);
-         cerr << endl;
-      } else {
-         list[0]->get(p);
-      }
-      cerr << "      Parameters of polynomial model = " << pPars << endl;
-      cerr << "      Parameters of polynomial fit   = " << p << endl;
-/*
-      if (what==1 && doGauss&&doPoly) {
-         cerr << "       Solution known not to work" << endl;
-      }
-*/
-      AlwaysAssert(p.nelements()==2,AipsError);
-      if (!(doGauss&&doPoly)) {
-	if (nearAbs(pPars[0], 0.0, tol)) { 
-	  AlwaysAssert(nearAbs(pPars[0], p[0], tol), AipsError);
+	const uInt nDim = pIm->ndim();
+	if (nDim==1) {
+		IPosition pos(1,0);
+		AlwaysAssert(fitter.setData(pos, type), AipsError);
 	} else {
-	  AlwaysAssert(near(pPars[0], p[0], tol), AipsError);
-	};
-        AlwaysAssert(near(pPars[1], p[1], tol), AipsError);
-      }
-   }      
+		Slicer sl(IPosition(nDim,0), pIm->shape(), Slicer::endIsLength);
+		LCSlicer sl2(sl);
+		ImageRegion region(sl2);
+		AlwaysAssert(fitter.setData(region, type), AipsError);
+	}
+
+	// Make estimate
+
+	if (doGauss) {
+		uInt nGauss = 1;
+		AlwaysAssert(fitter.setGaussianElements(nGauss),AipsError);
+	}
+	if (doPoly) {
+		PolynomialSpectralElement s(pPars.nelements()-1);            // 0 parameters
+		fitter.addElement(s);
+	}
+	Bool ok = fitter.fit();
+	if (!ok) {
+		cerr << "      Fitter did not converge in " << fitter.getNumberIterations() << " iterations" <<  endl;
+	}
+
+	// Compare
+
+	const SpectralList list = fitter.getList(True);
+	Double tol(1e-2);
+	Vector<Double> p;
+	//
+	if (doGauss) {
+		list[0]->get(p);
+		AlwaysAssert(p.nelements()==3,AipsError);
+		cerr << "      Parameters of gaussian model = " << gPars << endl;
+		cerr << "      Parameters of gaussian fit   = " << p << endl;
+		if (!(doGauss&&doPoly)) {
+			AlwaysAssert(near(gPars[0], p[0], tol), AipsError);
+			AlwaysAssert(near(gPars[1], p[1], tol), AipsError);
+			AlwaysAssert(near(gPars[2], p[2], tol), AipsError);
+		}
+	}
+	if (doPoly) {
+		p.resize(pPars.size());
+		if (doGauss) {
+			list[1]->get(p);
+			cerr << endl;
+		} else {
+			list[0]->get(p);
+		}
+		cerr << "      Parameters of polynomial model = " << pPars << endl;
+		cerr << "      Parameters of polynomial fit   = " << p << endl;
+
+		AlwaysAssert(p.nelements()==2,AipsError);
+		if (!(doGauss&&doPoly)) {
+			if (nearAbs(pPars[0], 0.0, tol)) {
+				AlwaysAssert(nearAbs(pPars[0], p[0], tol), AipsError);
+			} else {
+				AlwaysAssert(near(pPars[0], p[0], tol), AipsError);
+			};
+			AlwaysAssert(near(pPars[1], p[1], tol), AipsError);
+		}
+	}
 }
 
 

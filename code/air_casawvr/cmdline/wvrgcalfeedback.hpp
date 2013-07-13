@@ -58,7 +58,8 @@ namespace LibAIR {
 	      const std::set<int> &flag,
 	      const std::set<int> &nowvr,
 	      const std::vector<double> &rms,
-	      const std::vector<double> &disc
+	      const std::vector<double> &disc,
+	      const std::set<int> &interpolImpossibleAnts=std::set<int>()
 	      );
     
   };

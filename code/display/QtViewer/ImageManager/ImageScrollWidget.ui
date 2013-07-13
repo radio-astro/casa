@@ -25,7 +25,7 @@
         <x>0</x>
         <y>0</y>
         <width>209</width>
-        <height>245</height>
+        <height>243</height>
        </rect>
       </property>
      </widget>
@@ -48,6 +48,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="clearAllButton">
+       <property name="toolTip">
+        <string>Unselect all images.</string>
+       </property>
        <property name="text">
         <string>Clear All</string>
        </property>
@@ -55,6 +58,9 @@
      </item>
      <item>
       <widget class="QPushButton" name="selectAllButton">
+       <property name="toolTip">
+        <string>Select all images</string>
+       </property>
        <property name="text">
         <string>Select All</string>
        </property>

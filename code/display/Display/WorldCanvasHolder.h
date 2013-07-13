@@ -98,7 +98,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Add a DisplayData object to the list of DisplayDatas registered
 		// on the held WorldCanvas by this WorldCanvasHolder.
-		virtual void addDisplayData(DisplayData *dData);
+		virtual void addDisplayData(DisplayData *dData, int position);
 
 		// Remove a DisplayData from the list of DisplayDatas which are
 		// registered by this WorldCanvasHolder for display on the held
@@ -232,6 +232,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Bool isCSmaster(const DisplayData *dd) const {
 			return itsWorldCanvas->isCSmaster(dd);
 		}
+		void clearCSMasterSettings( WorldCanvas* wCanvas );
 
 		// Was the passed DD the last CS master (or, if no DD passed, was
 		// there any CS master)?  For convenience of the DDs during the next
@@ -284,8 +285,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// time it is used).
 		void* itsLastCSmaster;
 		Float drawUnit;
-		std::string error_string;
 
+		String getTitleDDName(const Vector<Bool>& conforms) const;
+		String getTitle( DisplayData* dd ) const;
+		void labelAxes( const Vector<Bool>& conforms, const WCRefreshEvent &ev);
+		void setControllingTitle( const Vector<Bool>& conforms );
+		void clearSubstituteTitles( );
+		std::string error_string;
 	};
 
 } //# NAMESPACE CASA - END

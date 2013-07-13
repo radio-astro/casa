@@ -59,6 +59,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			T (*mod_)(T);
 		};
 
+		template<typename T,typename CT=std::vector<T> > class filter {
+		public:
+			enum comparisons { EQUAL, UNEQUAL };
+			filter( T compare_element, comparisons c=UNEQUAL ) {
+				comparitor = compare_element;
+				if ( c == EQUAL ) op = &filter<T,CT>::equality;
+				else op = &filter<T,CT>::inequality;
+			}
+			void operator( )( T ele ) {
+				if ( (this->*op)(ele) ) cache.push_back(ele);
+			}
+			operator CT( ) { return cache; }
+			void clear( ) { cache.clear( ); }
+		private:
+			T comparitor;
+			bool (filter<T,CT>::*op)(T);
+			bool equality( T ele ) { return ele == comparitor; }
+			bool inequality( T ele ) { return ele != comparitor; }
+			CT cache;
+		};
+			
+
 	}
 }
 

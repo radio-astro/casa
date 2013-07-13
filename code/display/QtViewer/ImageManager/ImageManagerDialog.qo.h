@@ -73,10 +73,12 @@ namespace casa {
 		void openToDisplayed();
 		void displayedToOpen();
 		void closeImage();
+		void resetImageLists();
 		void unDisplayImage( QtDisplayData* image );
 		void displayImage( QtDisplayData* image );
 		void colorRestrictionsChanged();
 		void masterImageChanged( const QString& imageName );
+		void resetMasterImage();
 
 	private:
 		ImageManagerDialog( const ImageManagerDialog& other );

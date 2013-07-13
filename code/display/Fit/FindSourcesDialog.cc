@@ -636,13 +636,15 @@ namespace casa {
 	QString FindSourcesDialog::getImagePixelBox() const {
 		//No regions so just use the image as bounds.
 		QString pixelBoxStr;
-		const QString ZERO_STR( "0");
-		const QString COMMA_STR( ",");
-		pixelBoxStr.append( ZERO_STR + COMMA_STR );
-		pixelBoxStr.append( ZERO_STR + COMMA_STR );
-		IPosition imageShape = image->shape();
-		pixelBoxStr.append( QString::number( imageShape(0) - 1) + COMMA_STR);
-		pixelBoxStr.append( QString::number( imageShape(1) - 1));
+		if ( image != NULL ){
+			const QString ZERO_STR( "0");
+			const QString COMMA_STR( ",");
+			pixelBoxStr.append( ZERO_STR + COMMA_STR );
+			pixelBoxStr.append( ZERO_STR + COMMA_STR );
+			IPosition imageShape = image->shape();
+			pixelBoxStr.append( QString::number( imageShape(0) - 1) + COMMA_STR);
+			pixelBoxStr.append( QString::number( imageShape(1) - 1));
+		}
 		return pixelBoxStr;
 	}
 

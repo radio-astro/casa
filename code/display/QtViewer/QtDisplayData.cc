@@ -72,9 +72,20 @@
 #include <images/Images/ImageExprParse.h>
 #include <display/Display/Options.h>
 #include <algorithm>
+#include <display/functional/elements.h>
 
 
 namespace casa { //# NAMESPACE CASA - BEGIN
+
+	static std::string record_to_string( const Record &rec ) {
+		ostringstream os;
+		os << rec;
+		std::string result = os.str( );
+		// std::vector<char> r = std::for_each(result.begin( ),result.end( ),viewer::filter<char>('\n'));
+		// return std::string(r.begin(),r.end());
+		return std::for_each(result.begin( ),result.end( ),viewer::filter<char,std::string>('\n'));
+	}
+
 
 	template <typename T> class anylt {
 	public:
@@ -1114,6 +1125,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	bool QtDisplayData::setColorBarOptions( Record& opts, Record& chgdOpts ) {
+		//fprintf( stderr, "<0x%x>\tQtDisplayData::setColorBarOptions( ", this );
+		//cerr << record_to_string(opts) << ", Record& )\n";
 		Bool cbNeedsRefresh = False;
 		if(usesClrMap_() && clrMapOpt_->fromRecord(opts)) {
 			cbNeedsRefresh = True;
