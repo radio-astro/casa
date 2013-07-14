@@ -128,8 +128,8 @@ class FluxcalFlagResults(basetask.Results):
 	    LOG.error ( ' No results to merge ')
 	    return
 
-	# For now only the refspwmap goes bavk to the context
-	# The other quantities can be merge later
+	# For now only the refspwmap goes back to the context
+	# The other quantities can be merged later
 	ms = context.observing_run.get_ms( name = self._vis)
 	if ms:
 	    #ms.fluxcal_linelist = self._fluxcal_linelist

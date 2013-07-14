@@ -31,6 +31,7 @@ task = pipeline.tasks.exportdata.ExportData (inputs)
 """
 from __future__ import absolute_import
 import os
+import errno
 import tarfile
 import shutil
 import fnmatch
@@ -153,6 +154,14 @@ class ExportDataInputs(basetask.StandardInputs):
 	        self._products_dir = os.path.abspath('./')
 	    else:
 	        self._products_dir = self.context.products_dir
+            try:
+                LOG.trace('Creating products directory \'%s\'' % self._products_dir)
+                os.makedirs(self.products_dir)
+            except OSError as exc:
+                if exc.errno == errno.EEXIST:
+                    pass
+                else: raise
+
             return self._products_dir
         return self._products_dir
 
@@ -693,7 +702,9 @@ class ExportData(basetask.StandardTaskTemplate):
         fits_list = []
 	for image in images_list:
 	    # Need to remove stage / iter information
-	    fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', image)
+	    #fitsname = re.sub('\.s\d+.*\.iter.*\.', '.', image)
+	    fitsname = re.sub('\.s\d+[_]\d+\.', '.', image)
+	    fitsname = re.sub('\.iter\d+\.image', '', fitsname)
 	    fitsfile = os.path.join (products_dir,
 	        os.path.basename(fitsname) + '.fits')
 	    LOG.info('Saving final image %s to FITS file %s' % \

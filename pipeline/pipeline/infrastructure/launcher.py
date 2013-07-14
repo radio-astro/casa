@@ -131,8 +131,8 @@ class Context(object):
             else: raise
 
         try:
-            LOG.trace('Creating products directory \'%s\'' % self.products_dir)
-            os.makedirs(self.products_dir)
+            LOG.trace('Setting products directory to \'%s\'' % self.products_dir)
+            #os.makedirs(self.products_dir)
         except OSError as exc:
             if exc.errno == errno.EEXIST:
                 pass
