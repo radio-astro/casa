@@ -58,7 +58,7 @@ from sbseparator import sbseparator
 from _asap import srctype
 
 __date__ = '$Date: 2011-12-01 04:05:36 -0500 (Thu, 01 Dec 2011) $'.split()[1]
-__version__  = 'trunk'
+__version__  = '4.2.0a'
 __revision__ = get_revision()
 
 def welcome():

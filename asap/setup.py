@@ -3,7 +3,7 @@ from setup_ext import setup
 PKGNAME = "asap"
 
 setup(name = PKGNAME,
-      version = '4.1.0',
+      version = '4.2.0a',
       description = 'ATNF Spectral-line Analysis Package',
       author = 'Malte Marquarding',
       author_email = 'Malte.Marquarding@csiro.au',

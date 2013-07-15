@@ -179,8 +179,9 @@ Scantable::Scantable( const Scantable& other, bool clear )
       if ( clear ) {
         table_ = TableCopy::makeEmptyMemoryTable(newname,
                                                  other.table_, True);
-      } else
+      } else {
         table_ = other.table_.copyToMemoryTable(newname);
+      }
   } else {
       other.table_.deepCopy(newname, Table::New, False,
                             other.table_.endianFormat(),
@@ -190,7 +191,7 @@ Scantable::Scantable( const Scantable& other, bool clear )
   }
   table_.tableInfo().setType( "Scantable" ) ;
   /// @todo reindex SCANNO, recompute nbeam, nif, npol
-  if ( clear ) copySubtables(other);
+  if ( !clear ) copySubtables(other);
   attachSubtables();
   originalTable_ = table_;
   attach();
@@ -449,6 +450,12 @@ void Scantable::setSourceType( int stype )
     throw(AipsError("Illegal sourcetype."));
   TableVector<Int> tabvec(table_, "SRCTYPE");
   tabvec = Int(stype);
+}
+
+void Scantable::setSourceName( const std::string& name )
+{
+  TableVector<String> tabvec(table_, "SRCNAME");
+  tabvec = name;
 }
 
 bool Scantable::conformant( const Scantable& other )

@@ -89,7 +89,8 @@ def average_time(*args, **kwargs):
         del merged
     else:
         #s = scantable(stm._average(alignedlst, mask, weight.upper(), scanav))
-        s = scantable(stm._new_average(alignedlst, compel, mask, weight.upper(), scanav))
+        s = scantable(stm._new_average(alignedlst, compel, mask, 
+                                       weight.upper(), scanav))
     s._add_history("average_time",varlist)
 
     return s

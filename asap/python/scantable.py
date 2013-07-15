@@ -2066,7 +2066,7 @@ class scantable(Scantable):
         s._add_history("shift_refpix", varlist)
 
     @asaplog_post_dec
-    def history(self, filename=None):
+    def history(self, filename=None, nrows=-1, start=0):
         """\
         Print the history. Optionally to a file.
 
@@ -2075,11 +2075,23 @@ class scantable(Scantable):
             filename:    The name of the file to save the history to.
 
         """
-        hist = list(self._gethistory())
+        n = self._historylength()
+        if nrows == -1:
+            nrows = n
+        if start+nrows > n:
+            nrows = nrows-start
+        if n > 1000 and nrows == n:
+            nrows = 1000
+            start = n-1000
+            asaplog.push("Warning: History has {0} entries. Displaying last "
+                         "1000".format(n))
+        hist = list(self._gethistory(nrows, start))
         out = "-"*80
         for h in hist:
-            if h.startswith("---"):
-                out = "\n".join([out, h])
+            if not h.strip():
+                continue
+            if h.find("---") >-1:
+                continue
             else:
                 items = h.split("##")
                 date = items[0]
@@ -2092,11 +2104,10 @@ class scantable(Scantable):
                         continue
                     s = i.split("=")
                     out += "\n   %s = %s" % (s[0], s[1])
-                out = "\n".join([out, "-"*80])
+                out = "\n".join([out, "*"*80])
         if filename is not None:
             if filename is "":
                 filename = 'scantable_history.txt'
-            import os
             filename = os.path.expandvars(os.path.expanduser(filename))
             if not os.path.isdir(filename):
                 data = open(filename, 'w')
@@ -2111,7 +2122,8 @@ class scantable(Scantable):
     # Maths business
     #
     @asaplog_post_dec
-    def average_time(self, mask=None, scanav=False, weight='tint', align=False):
+    def average_time(self, mask=None, scanav=False, weight='tint', align=False,
+                     avmode="NONE"):
         """\
         Return the (time) weighted average of a scan. Scans will be averaged
         only if the source direction (RA/DEC) is within 1' otherwise
@@ -2139,6 +2151,9 @@ class scantable(Scantable):
 
             align:    align the spectra in velocity before averaging. It takes
                       the time of the first spectrum as reference time.
+            avmode:   'SOURCE' - also select by source name -  or 
+                      'NONE' (default). Not applicable for scanav=True or
+                      weight=median
 
         Example::
 
@@ -2149,11 +2164,14 @@ class scantable(Scantable):
         varlist = vars()
         weight = weight or 'TINT'
         mask = mask or ()
-        scanav = (scanav and 'SCAN') or 'NONE'
+        scanav = (scanav and 'SCAN') or avmode.upper()
         scan = (self, )
 
         if align:
             scan = (self.freq_align(insitu=False), )
+            asaplog.push("Note: Alignment is don on a source-by-source basis")
+            asaplog.push("Note: Averaging (by default) is not")
+            # we need to set it to SOURCE averaging here            
         s = None
         if weight.upper() == 'MEDIAN':
             s = scantable(self._math._averagechannel(scan[0], 'MEDIAN',
@@ -4244,6 +4262,12 @@ class scantable(Scantable):
         self.set_selection(sel)
         self._setsourcetype(stype)
         self._add_history("set_sourcetype", varlist)
+
+
+    def set_sourcename(self, name):
+        varlist = vars()
+        self._setsourcename(name)
+        self._add_history("set_sourcename", varlist)
 
     @asaplog_post_dec
     @preserve_selection

@@ -148,6 +148,12 @@ class TestScantable(object):
                          ['Orion_SiO_R', 'Orion_SiO_R',
                           'Orion_SiO', 'Orion_SiO'])
 
+    def test_set_sourcename(self):
+        s = self.st.copy()
+        newname = "TEST"
+        s.set_sourcename(newname)
+        assert_equal(s.get_sourcename(), [newname]*4)
+
     def test_get_azimuth(self):
         assert_almost_equal(self.st.get_azimuth()[0], 5.628767013)
 
@@ -193,6 +199,23 @@ class TestScantable(object):
         assert_almost_equal(q0.stats(stat='max')[0], 95.62171936)
         assert_almost_equal(q1.stats(stat='max')[0], 2.66563416)
 
+
+    def test_average_time_weight(self):
+        weights = {'none': 236.61423,
+                   'var' : 232.98752,
+                   'tsys' : 236.37482,
+                   'tint' : 236.61423,
+                   'tintsys' : 236.37485,
+                   'median' : 236.61423,
+                   }
+
+        for k,v in weights.items():
+            yield self.av_weight, k, v
+
+    def av_weight(self, weight, result):
+        out = self.st.average_time(weight=weight)
+        assert_almost_equals(max(out.get_spectrum(0)), result, 5)
+
     @with_setup(tempdir_setup, tempdir_teardown)
     def test_save(self):
         fname = os.path.join("test_temp", 'scantable_test.%s')
@@ -202,8 +225,8 @@ class TestScantable(object):
                    (fname % 'fits', 'FITS', False),
                    (fname % 'txt', 'ASCII', False),
                    ]
-        for format in formats:
-            yield self.save, format
+        for fmt in formats:
+            yield self.save, fmt
 
     def save(self, args):
         fname = args[0]

@@ -61,9 +61,14 @@ public:
    * Get all rows in the table as a vector
    * @return a vector of strings
    */
-  std::vector<std::string> getHistory( ) const;
+  std::vector<std::string> getHistory(int nrow=-1, int start=0 ) const;
 
   const casa::String& name() const { return name_; }
+
+  int nrow() const { return table_.nrow(); }
+
+
+  void drop();
 
 private:
   void setup();

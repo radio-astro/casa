@@ -1755,13 +1755,14 @@ void MSFiller::fill()
 
   // SUBTABLES: FREQUENCIES
   //string freqFrame = getFrame() ;
-  string freqFrame = "LSRK" ;
-  table_->frequencies().setFrame( freqFrame ) ;
   if ( freqToLsr_ ) {
+    string freqFrame = "LSRK" ;
+    table_->frequencies().setFrame( freqFrame ) ;
     table_->frequencies().setFrame( freqFrame, True ) ;
   }
   else {
     string baseFrame = frameFromSpwTable() ;
+    table_->frequencies().setFrame( baseFrame ) ;
     table_->frequencies().setFrame( baseFrame, True ) ;
   }
 

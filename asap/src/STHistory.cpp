@@ -19,7 +19,7 @@
 
 #include "STDefs.h"
 #include "STHistory.h"
-
+#include "MathUtils.h"
 
 using namespace casa;
 
@@ -80,19 +80,30 @@ void asap::STHistory::getEntry( String& item, uInt id)
 void asap::STHistory::append( const STHistory & other )
 {
   const Table& t = other.table();
-  addEntry(asap::SEPERATOR);
-  TableCopy::copyRows(table_, t, table_.nrow(), 0, t.nrow());
-  addEntry(asap::SEPERATOR);
-
-}
-
-std::vector<std::string> asap::STHistory::getHistory( ) const
-{
-  std::vector<std::string> stlout;
-  for (uInt i=0; i<table_.nrow(); ++i) {
-    stlout.push_back(itemCol_(i));
+  if (other.nrow() > 0) {
+    addEntry(asap::SEPERATOR);
+    TableCopy::copyRows(table_, t, table_.nrow(), 0, t.nrow());
+    addEntry(asap::SEPERATOR);
   }
-  return stlout;
+
 }
+
+std::vector<std::string> asap::STHistory::getHistory( int nrow, 
+						      int start) const
+{
+  if (nrow < 0) {
+    nrow = this->nrow();
+  }
+  AlwaysAssert(nrow <= this->nrow(), AipsError);
+  Vector<String> rows;
+  Slicer slice(IPosition(1, start), IPosition(1, nrow));
+  
+  rows = itemCol_.getColumnRange(slice);
+  return mathutil::tovectorstring(rows);
+}
+
+  void asap::STHistory::drop() {
+    table_.removeRow(table_.rowNumbers());
+  }
 
 }

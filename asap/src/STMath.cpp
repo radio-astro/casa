@@ -2780,7 +2780,7 @@ CountedPtr< Scantable >
   MFrequency::Types system = in->frequencies().getFrame();
   MVTime mvt(refEpoch.getValue());
   String epochout = mvt.string(MVTime::YMD) + String(" (") + refEpoch.getRefString() + String(")");
-  os << "Aligned at reference Epoch " << epochout
+  os << "Aligning at reference Epoch " << epochout
      << " in frame " << MFrequency::showType(system) << LogIO::POST;
   // set up the iterator
   Block<String> cols(4);
@@ -2794,10 +2794,13 @@ CountedPtr< Scantable >
   TableIterator iter(tout, cols);
   while ( !iter.pastEnd() ) {
     Table t = iter.table();
+    ROScalarColumn<String> snCol(t, "SRCNAME");
+    os << "Aligning to position of source '" << snCol(0) << "'" << LogIO::POST;
     MDirection::ROScalarColumn dirCol(t, "DIRECTION");
     TableIterator fiter(t, "FREQ_ID");
     // determine nchan from the first row. This should work as
-    // we are iterating over BEAMNO and IFNO    // we should have constant direction
+    // we are iterating over BEAMNO and IFNO    
+    // we should have constant direction
 
     ROArrayColumn<Float> sCol(t, "SPECTRA");
     const MDirection direction = dirCol(0);
@@ -2812,7 +2815,8 @@ CountedPtr< Scantable >
     // align all frequency ids with respect to the first encountered id
     ScalarColumn<uInt> freqidCol(ftab, "FREQ_ID");
     // get the SpectralCoordinate for the freqid, which we are iterating over
-    SpectralCoordinate sC = in->frequencies().getSpectralCoordinate(freqidCol(0));
+    SpectralCoordinate sC = \
+      in->frequencies().getSpectralCoordinate(freqidCol(0));
     FrequencyAligner<Float> fa( sC, nchan, refEpoch,
                                 direction, refPos, system );
     // realign the SpectralCoordinate and put into the output Scantable
@@ -2825,6 +2829,7 @@ CountedPtr< Scantable >
                                                 sc2.referenceValue()[0],
                                                 sc2.increment()[0]);
     while ( !fiter.pastEnd() ) {
+      
       ftab = fiter.table();
       // spectral coordinate for the current FREQ_ID
       ScalarColumn<uInt> freqidCol2(ftab, "FREQ_ID");

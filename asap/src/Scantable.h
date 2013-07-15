@@ -154,6 +154,12 @@ public:
    */
   void setSourceType(int stype);
 
+  /**
+   *
+   * @param stype The name of the source
+   */
+  void setSourceName(const std::string& name);
+
 
   /**
    * The number of scans in the table
@@ -371,8 +377,13 @@ public:
    */
   void makePersistent(const std::string& filename);
 
-  std::vector<std::string> getHistory() const
-    { return historyTable_.getHistory(); };
+  std::vector<std::string> getHistory(int nrow=-1, int start=0) const
+    { return historyTable_.getHistory(nrow, start); }
+
+  uint historyLength()
+  { return historyTable_.nrow(); }
+  
+  void dropHistory() { historyTable_.drop(); }
 
   void addHistory(const std::string& hist) { historyTable_.addEntry(hist); }
 
@@ -386,7 +397,8 @@ public:
   void oldsummary(const std::string& filename="");
 
   //std::string getTime(int whichrow=-1, bool showdate=true) const;
-  std::string getTime(int whichrow=-1, bool showdate=true, casa::uInt prec=0) const;
+  std::string getTime(int whichrow=-1, bool showdate=true, 
+		      casa::uInt prec=0) const;
   double getIntTime(int whichrow) const { return integrCol_(whichrow); }
 
   // returns unit, conversion frame, doppler, base-frame
@@ -667,7 +679,8 @@ private:
   std::string formatSec(casa::Double x) const;
 
   std::string formatTime(const casa::MEpoch& me, bool showdate)const;
-  std::string formatTime(const casa::MEpoch& me, bool showdate, casa::uInt prec)const;
+  std::string formatTime(const casa::MEpoch& me, bool showdate, 
+			 casa::uInt prec)const;
 
   /**
    *  Turns a casa::MDirection into a nicely formatted string

@@ -316,7 +316,7 @@ std::string STFrequencies::print( int id, Bool strip ) const
   for (uInt i=0; i<t.nrow(); ++i) {
     const TableRecord& rec = row.get(i);
     oss <<  setw(8)
-        << t.keywordSet().asString("FRAME") << setw(16) << setprecision(8)
+        << t.keywordSet().asString("BASEFRAME") << setw(16) << setprecision(8)
         << rec.asDouble("REFVAL") << setw(7)
         << rec.asDouble("REFPIX")
         << setw(15)
