@@ -523,7 +523,9 @@ void FeatherPlotWidget::removeMarkers(){
 	zoomer->setMousePattern( QwtEventPattern::MouseSelect1, Qt::NoButton );
 }
 
-
+void FeatherPlotWidget::clearData(){
+	plotData.clear();
+}
 
 
 void FeatherPlotWidget::resetData( DataType dataType,

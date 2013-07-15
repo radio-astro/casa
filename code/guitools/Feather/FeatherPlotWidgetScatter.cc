@@ -38,12 +38,13 @@ void FeatherPlotWidgetScatter::addZoomNeutralCurves(){
 	QVector<double> xVals = populateVector( xScatter );
 	pair<double,double> xMinMax = getMaxMin( xVals, xScatter );
 	//When we add curves (x, y1), (x, y2), (x,y3), etc.  We need to set the
-	//scatter plot upper bound to min( max(x),max(y1), max(y2), max(y3), etc).
+	//scatter plot upper bound to max( max(x),max(y1), max(y2), max(y3), etc).
 	//To further complicate things, for sum curves, the values may already
 	//be in a log scale and for other curves they will not be.  We compute
 	//the upper bound on a non-logarithm scale, and later take the log of it
 	//if the values we are adding are already scaled.
 	double valueLimit = xMinMax.second;
+	double valueMin = xMinMax.first;
 	bool sumCurveX = FeatherCurveType::isSumCurve( xScatter );
 
 
@@ -57,8 +58,11 @@ void FeatherPlotWidgetScatter::addZoomNeutralCurves(){
 		//because y is a sum curve.
 		pair<double,double> yMinMax = getMaxMin( yVals, yScatters[i] );
 		double maxYValue = yMinMax.second;
-		if ( maxYValue < valueLimit ){
+		if ( maxYValue > valueLimit ){
 			valueLimit = maxYValue;
+		}
+		if ( yMinMax.first < valueMin ){
+			valueMin = yMinMax.first;
 		}
 		yData.insert( i, yVals );
 	}
@@ -100,7 +104,9 @@ void FeatherPlotWidgetScatter::addZoomNeutralCurves(){
 			}
 		}
 		if ( scatterXValues.size() > 0 ){
+			//So that y=x looks like a diagonal line.
 			scatterXValues.append(valueLimit);
+			scatterXValues.append( valueMin );
 			QColor xyColor = curvePreferences[FeatherCurveType::X_Y].getColor();
 			plot->addDiagonal( scatterXValues, xyColor, scatterAxis );
 		}
@@ -257,7 +263,8 @@ void FeatherPlotWidgetScatter::zoom90Other( double dishPosition ){
 				scatterXValues.append( xValue);
 			}
 		}
-		//scatterXValues.append(actualLimit);
+		scatterXValues.append(valueMin);
+		scatterXValues.append( valueMax );
 		QColor xyColor = curvePreferences[FeatherCurveType::X_Y].getColor();
 		plot->addDiagonal( scatterXValues, xyColor, scatterAxis );
 	}
@@ -266,7 +273,7 @@ void FeatherPlotWidgetScatter::zoom90Other( double dishPosition ){
 
 void FeatherPlotWidgetScatter::resetColors(){
 	//plot->setFunctionColor( "", curvePreferences[FeatherCurveType::SCATTER_LOW_HIGH].getColor() );
-	plot->setFunctionColor( FeatherPlot::Y_EQUALS_X, curvePreferences[FeatherCurveType::DISH_DIAMETER].getColor());
+	plot->setFunctionColor( FeatherPlot::Y_EQUALS_X, curvePreferences[FeatherCurveType::X_Y].getColor());
 	FeatherPlotWidget::resetColors();
 }
 
@@ -322,7 +329,11 @@ void FeatherPlotWidgetScatter::zoomRectangleOther( double minX, double maxX, dou
 			}
 
 		}
-		//scatterXValues.append(actualLimit);
+		//So it looks like a diagonal line
+		double minValue = qMin( minX, minY );
+		double maxValue = qMax( maxX, maxY );
+		scatterXValues.append( minValue );
+		scatterXValues.append( maxValue );
 		QColor xyColor = curvePreferences[FeatherCurveType::X_Y].getColor();
 		plot->addDiagonal( scatterXValues, xyColor, scatterAxis );
 	}

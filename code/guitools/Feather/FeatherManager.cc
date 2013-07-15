@@ -46,6 +46,7 @@ FeatherManager::FeatherManager() :
 	radialAxis = false;
 	channelIndex = 0;
 	channelsAveraged = true;
+	featherWorker = NULL;
 }
 
 bool FeatherManager::loadImages( const QString& lowImagePath, const QString& highImagePath, LogIO* logger ){
@@ -57,6 +58,10 @@ bool FeatherManager::loadImages( const QString& lowImagePath, const QString& hig
 	highResImage = NULL;
 	delete dirtyImage;
 	dirtyImage = NULL;
+	if ( featherWorker != NULL ){
+		delete featherWorker;
+	}
+	featherWorker = new Feather();
 
 	try {
 		imagesGenerated = generateInputImage( lowImagePath, highImagePath);
@@ -82,16 +87,16 @@ bool FeatherManager::loadDirtyImage( const QString& dirtyImagePath ){
 bool FeatherManager::setEffectiveDishDiameter( float xDiam, float yDiam ){
 	bool valid = false;
 	if ( lowResImage != NULL ){
-		valid = featherWorker.setEffectiveDishDiam( xDiam, yDiam );
+		valid = featherWorker->setEffectiveDishDiam( xDiam, yDiam );
 	}
 	return valid;
 }
 
 void FeatherManager::getEffectiveDishDiameter( Float& xDiam, Float& yDiam ){
-	featherWorker.getEffectiveDishDiam( xDiam, yDiam );
+	featherWorker->getEffectiveDishDiam( xDiam, yDiam );
 }
 void FeatherManager::setSDScale( float scale ){
-	featherWorker.setSDScale( scale );
+	featherWorker->setSDScale( scale );
 }
 
 void FeatherManager::applyFeather( bool saveOutput, const QString& outputImagePath ){
@@ -102,7 +107,7 @@ void FeatherManager::applyFeather( bool saveOutput, const QString& outputImagePa
 	if ( highResImage != NULL && lowResImage != NULL ){
 		thread = new FeatherThread();
 		thread->setLogger( logger );
-		thread->setFeatherWorker( &featherWorker );
+		thread->setFeatherWorker( featherWorker );
 		thread->setImages( lowResImage, highResImage, dirtyImage );
 		connect( thread, SIGNAL( finished() ), this, SLOT(featherDone()));
 		thread->setSaveOutput( saveOutput, outputImagePath );
@@ -200,8 +205,8 @@ bool FeatherManager::generateInputImage( QString highResImagePath, QString lowRe
 
 			//Even though the thread will reset the images, we put these in initially
 			//so we can get the effective dish diameter.
-			featherWorker.setINTImage( *highResImage );
-			featherWorker.setSDImage( *lowResImage );
+			featherWorker->setINTImage( *highResImage );
+			featherWorker->setSDImage( *lowResImage );
 		}
 	}
 	catch (AipsError& x) {
@@ -465,6 +470,7 @@ FeatherManager::~FeatherManager() {
 	delete lowResImage;
 	delete highResImage;
 	delete thread;
+	delete featherWorker;
 }
 
 } /* namespace casa */

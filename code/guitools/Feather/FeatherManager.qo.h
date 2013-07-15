@@ -129,7 +129,7 @@ private:
 	ImageInterface<Float>* lowResImage;
 	ImageInterface<Float>* highResImage;
 	ImageInterface<Float>* dirtyImage;
-	Feather featherWorker;
+	Feather* featherWorker;
 	FeatherThread* thread;
 	QString errorMessage;
 	LogIO* logger;

@@ -52,6 +52,7 @@ public:
     void updateScatterData( );
     void addSumData();
     void clearPlots();
+    void clearData();
 
     //Preference changes
     void setLineThickness( int thickness );

@@ -187,7 +187,11 @@ void PlotHolder::setDisplayScatterPlot( bool visible ){
 	displayScatter = visible;
 }
 
-
+void PlotHolder::clearData(){
+	for ( int i = 0; i < plots.size(); i++ ){
+		plots[i]->clearData();
+	}
+}
 void PlotHolder::refreshPlots(){
 	for ( int i = 0; i < plots.size(); i++ ){
 		plots[i]->refresh();
