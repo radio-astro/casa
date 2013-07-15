@@ -248,7 +248,8 @@ class AgentFlagger(basetask.StandardTaskTemplate):
 
         # Flag autocorrelations?
         if inputs.autocorr:
-            cmds.append('mode=manual antenna=*&&& reason=autocorr')
+            #cmds.append('mode=manual antenna=*&&& reason=autocorr')
+            cmds.append('mode=manual autocorr=True reason=autocorr')
             cmds.append('mode=summary name=autocorr')
 
         # Flag shadowed antennas?

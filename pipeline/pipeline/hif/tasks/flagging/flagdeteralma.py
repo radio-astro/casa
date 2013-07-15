@@ -346,9 +346,11 @@ class FlagDeterALMA( flagdeterbase.FlagDeterBase ):
 		    if spw.num_channels == 4:
 	                spwids.append(spw.id)
 	        if not spwids:
-                    return 'mode=manual antenna=*&&&'
+                    #return 'mode=manual antenna=*&&&'
+                    return 'mode=manual autocorr=True'
 	        else:
-                    return 'mode=manual antenna=*&&& spw=>0'
+                    #return 'mode=manual antenna=*&&& spw=>0'
+                    return 'mode=manual autocorr=True spw=>0'
 
         def _get_edgespw_cmds(self):
                 """

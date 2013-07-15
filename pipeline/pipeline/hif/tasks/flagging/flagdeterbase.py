@@ -465,7 +465,8 @@ class FlagDeterBase(basetask.StandardTaskTemplate):
         return '\n'.join(flag_cmds)
 
     def _get_autocorr_cmd (self):
-        return 'mode=manual antenna=*&&&'
+        #return 'mode=manual antenna=*&&&'
+        return 'mode=manual autocorr=True'
 
     def _get_edgespw_cmds(self):
         """
