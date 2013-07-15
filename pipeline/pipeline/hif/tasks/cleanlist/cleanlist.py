@@ -154,14 +154,7 @@ class CleanList(basetask.StandardTaskTemplate):
             elif inputs.weighting == 'superuniform':
                 full_image_target['npixels'] = inputs.npixels
 
-            if inputs.hm_cleanboxing == 'automatic':
-                if full_image_target['intent'] == 'TARGET':
-                    full_image_target['hm_cleanboxing'] = 'iterative'
-                else:
-                    full_image_target['hm_cleanboxing'] = 'calibrator'
-            else:
-                full_image_target['hm_cleanboxing'] = inputs.hm_cleanboxing
-
+            full_image_target['hm_cleanboxing'] = inputs.hm_cleanboxing
             if inputs.hm_cleanboxing == 'iterative':
                 full_image_target['maxthreshiter'] = inputs.maxthreshiter
             elif inputs.hm_cleanboxing == 'manual':
