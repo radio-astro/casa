@@ -17,6 +17,7 @@ if glb.has_key('__rethrow_casa_exceptions'):
 else:
     rethrow_org = False
 
+
 #
 # Unit test of simobserve task.
 # 
@@ -34,7 +35,8 @@ class simobserve_unittest_base(unittest.TestCase):
     # (atol=0. means to ignore absolute tolerance)
     rtol = 5.0e-3
     atol = 0.
-    showcomp = False #True
+    showcomp = False
+    teardown = True
 
     # Test methods
     def _check_file(self, name, msg=""):
@@ -226,7 +228,8 @@ class simobserve_sky(simobserve_unittest_base):
         self.refms_int = self.refpref_int+".ms"
 
     def tearDown(self):
-        shutil.rmtree(self.project)
+        if self.teardown:
+            shutil.rmtree(self.project)
         #pass
 
     # Tests of skymodel simulations
@@ -310,6 +313,7 @@ class simobserve_sky(simobserve_unittest_base):
                   self._get_data_prefix(sdantlist,self.project)+".ptg.txt"
         refptg = self.refpref + "square.aca.tp.ptg.txt"
         self._check_ptgfile(currptg, refptg)
+
 
     def testSky_sdObs(self):
         """Test skymodel simulation: only observation (SD)"""
@@ -420,7 +424,7 @@ class simobserve_sky(simobserve_unittest_base):
         self.assertTrue(res)
         # compare outputs
         currpref = self.project + "/" + \
-                 self._get_data_prefix(antennalist,self.project)
+                 self._get_data_prefix(antennalist,self.project)        
         self._check_imstats(currpref+".skymodel", self.refmodel)
         self._check_ptgfile(currpref+".ptg.txt", self.refpref_int+".ptg.txt")
         self._check_msstats(currpref+".ms",self.refms_int)
@@ -466,7 +470,8 @@ class simobserve_comp(simobserve_unittest_base):
         self._copy_input(self.incomp)
 
     def tearDown(self):
-        shutil.rmtree(self.project)
+        if self.teardown:
+            shutil.rmtree(self.project)        
         #pass
 
     # Tests of complist simulations
@@ -704,7 +709,8 @@ class simobserve_skycomp(simobserve_unittest_base):
         self._copy_input([self.incomp, self.inmodel])
 
     def tearDown(self):
-        shutil.rmtree(self.project)
+        if self.teardown:
+            shutil.rmtree(self.project)        
         #pass
 
     # Tests of skymodel + components list simulations
@@ -949,10 +955,11 @@ class simobserve_noise(simobserve_unittest_base):
         default(simobserve)
 
     def tearDown(self):
-        if (os.path.exists(self.inimage)):
-            shutil.rmtree(self.inimage)
-        if os.path.exists(self.project):
-            shutil.rmtree(self.project)
+        if self.teardown:
+            if (os.path.exists(self.inimage)):
+                shutil.rmtree(self.inimage)
+            if os.path.exists(self.project):
+                shutil.rmtree(self.project)
 
     #-----------------------------------------------------------------#
     # thermalnoise = "tsys-manual"
@@ -1472,11 +1479,12 @@ class simobserve_badinputs(simobserve_unittest_base):
 
     def tearDown(self):
         glb['__rethrow_casa_exceptions'] = rethrow_org
-        for data in self.indata:
-            if os.path.exists(data):
-                os.system("rm -rf %s" % data)
-        if (os.path.exists(self.project)):
-            shutil.rmtree(self.project)
+        if self.teardown:
+            for data in self.indata:
+                if os.path.exists(data):
+                    os.system("rm -rf %s" % data)
+                if (os.path.exists(self.project)):
+                    shutil.rmtree(self.project)
 
     # Tests on invalid parameter sets
     def test_default(self):
