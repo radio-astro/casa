@@ -656,6 +656,22 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     PagedImage<Float> featherImage(highIm_p->shape(), highIm_p->coordinates(), imagename );
     StokesImageUtil::To(featherImage, cimagelow);
     ImageUtilities::copyMiscellaneous(featherImage, *highIm_p);
+    String maskofHigh=highIm_p->getDefaultMask();
+    String maskofLow=lowIm_p->getDefaultMask();
+    if(maskofHigh != String("")){
+      ImageUtilities::copyMask(featherImage, *highIm_p, "mask0", maskofHigh, AxesSpecifier());
+      featherImage.setDefaultMask("mask0");
+      if(maskofLow != String("")){
+	featherImage.pixelMask().copyData(LatticeExpr<Bool> (featherImage.pixelMask() && (lowIm_p->pixelMask())));
+	
+      }
+    }
+    else if(maskofLow != String("")){
+      ImageUtilities::copyMask(featherImage, *lowIm_p, "mask0", maskofLow, AxesSpecifier());
+    }
+    if(featherImage.hasRegion("mask0"))
+      featherImage.setDefaultMask("mask0");
+
     return true;
   }
 
