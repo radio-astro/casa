@@ -18,9 +18,18 @@ class CleanSummary(object):
         if not os.path.exists(stage_dir):
             os.mkdir(stage_dir)
 
-        LOG.debug('Plotting clean displays')
+        LOG.info('Plotting')
         plot_wrappers = []
-        for r in self.result.results:
+
+        # this class can handle a list of results from hif_cleanlist, or a single 
+        # result from hif_clean if we make the single result from the latter
+        # the member of a list
+        if hasattr(self.result, 'results'):
+            results = self.result.results
+        else:
+            results = [self.result]
+
+        for r in results:
             if r.empty():
                 continue
 
