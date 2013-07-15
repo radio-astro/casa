@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import re
 import types
 
 import pipeline.infrastructure as infrastructure
@@ -21,8 +22,8 @@ class CleanInputs(basetask.StandardInputs):
       uvrange=None, mode=None, imagermode=None, outframe=None, nchan=None,
       start=None, width=None, imsize=None, cell=None, phasecenter=None,
       weighting=None, robust=None, restoringbeam=None, noise=None,
-      npixels=None, hm_cleanboxing=None, mask=None, threshold=None, 
-      maxthreshiter=None):
+      npixels=None, hm_cleanboxing=None, cleanboxing=None, mask=None,
+      threshold=None, maxthreshiter=None):
         self._init_properties(vars())
 
         # instantiate the heuristics classes needed, some sorting out needed
@@ -238,12 +239,48 @@ class CleanInputs(basetask.StandardInputs):
     @property
     def hm_cleanboxing(self):
         if self._hm_cleanboxing is None:
-            return 'autobox'
+            return 'automatic'
         return self._hm_cleanboxing
 
     @hm_cleanboxing.setter
     def hm_cleanboxing(self, value):
          self._hm_cleanboxing = value
+
+    @property
+    def cleanboxing(self):
+        if self.hm_cleanboxing == 'automatic':
+            if self.intent == 'TARGET':
+                return 'iterative'
+            else:
+                return 'calibrator'
+        else:
+            if self._cleanboxing is None:
+                return 'iterative'
+        return self._cleanboxing
+
+    @cleanboxing.setter
+    def cleanboxing(self, value):
+         self._cleanboxing = value
+
+    @property
+    def mask(self):
+        if self._mask is None:
+            return ''
+        return self._mask
+
+    @mask.setter
+    def mask(self, value):
+         self._mask = value
+
+    @property
+    def threshold(self):
+        if self._threshold is None:
+            return '0.0Jy'
+        return self._threshold
+
+    @threshold.setter
+    def threshold(self, value):
+        self._threshold = value
 
     @property
     def maxthreshiter(self):
@@ -288,11 +325,20 @@ class Clean(basetask.StandardTaskTemplate):
 
         # use scanids to select data with the specified intent
         scanidlist = []
+        # construct regex for string matching - escape likely problem
+        # chars
+        re_field = field.replace('*', '.*')
+        re_field = re_field.replace('[', '\[')
+        re_field = re_field.replace(']', '\]')
+        re_field = re_field.replace('(', '\(')
+        re_field = re_field.replace(')', '\)')
+        re_field = re_field.replace('+', '\+')
+
         for vis in inputs.vis:
             ms = inputs.context.observing_run.get_ms(name=vis)
             scanids = [scan.id for scan in ms.scans if
               intent in scan.intents and
-              field in [fld.name for fld in scan.fields]]
+              re.search(pattern=re_field, string=str(scan.fields))]
             scanids = str(scanids)
             scanids = scanids.replace('[', '')
             scanids = scanids.replace(']', '')
@@ -320,15 +366,17 @@ class Clean(basetask.StandardTaskTemplate):
                 LOG.info('heuristic imsize: %s', imsize)
 
         # create the boxing/thresholding object
-        if inputs.hm_cleanboxing == 'iterative':
+        LOG.info("cleanboxing method is: '%s'" % inputs.cleanboxing)
+        if inputs.cleanboxing == 'iterative':
             boxinputs = IterativeBoxWorker.Inputs(context=inputs._context,
-              output_dir=inputs.output_dir, vis=None)
+              output_dir=inputs.output_dir, vis=None,
+              maxthreshiter=inputs.maxthreshiter)
             boxtask = IterativeBoxWorker(boxinputs)
-        elif inputs.hm_cleanboxing == 'calibrator':
+        elif inputs.cleanboxing == 'calibrator':
             boxinputs = CalibratorBoxWorker.Inputs(context=inputs._context,
               output_dir=inputs.output_dir, vis=None)
             boxtask = CalibratorBoxWorker(boxinputs)
-        elif inputs.hm_cleanboxing == 'manual':
+        elif inputs.cleanboxing == 'user':
             boxinputs = ManualBoxWorker.Inputs(context=inputs._context,
               output_dir=inputs.output_dir, vis=None, mask=inputs.mask,
               threshold=inputs.threshold)
@@ -347,8 +395,8 @@ class Clean(basetask.StandardTaskTemplate):
           mode=inputs.mode, imagermode=inputs.imagermode,
           imagename=inputs.imagename,
           intent=inputs.intent, field_id=inputs.field_id, 
-          field=inputs.field, spw=spw,
-          scan=scanidlist,
+          field=inputs.field,
+          spw=spw, scan=scanidlist,
           phasecenter=inputs.phasecenter, cell=inputs.cell,
           imsize=inputs.imsize, outframe=inputs.outframe,
           #nchan=inputs.nchan, start=inputs.start, width=inputs.width,
@@ -359,8 +407,7 @@ class Clean(basetask.StandardTaskTemplate):
           npixels=inputs.npixels,
           restoringbeam=inputs.restoringbeam,
           uvrange=inputs.uvrange,
-          cleanboxtask=boxtask,
-          maxthreshiter=inputs.maxthreshiter)
+          cleanboxtask=boxtask)
         datatask = CleanWorker(datainputs)
 
         try:
