@@ -148,11 +148,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     GaussianBeam toBeUsed(Quantity(0.0, "arcsec"),Quantity(0.0, "arcsec"), Quantity(0.0, "deg")) ;
     Bool retval=True;
     try {
+      //cerr << "highBeam " << hBeam_p.getMajor() << " " << hBeam_p.getMinor() << " " << hBeam_p.getPA() << endl; 
       retval=
-      newHighBeam.deconvolve(toBeUsed, hBeam_p);
+      hBeam_p.deconvolve(toBeUsed, newHighBeam);
+      //cerr << "beam to be used " << toBeUsed.getMajor() << " " << toBeUsed.getMinor() << "  " << toBeUsed.getPA() << endl;
     }
     catch (const AipsError& x) {
-      if(retval==False && toBeUsed.getMajor("arcsec")==0.0)
+      if(toBeUsed.getMajor("arcsec")==0.0)
 	throw(AipsError("new Beam may be smaller than the beam of original Interferometer  image"));	
     }
     try{
