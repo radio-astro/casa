@@ -287,6 +287,135 @@ class test_unapply(test_base):
         result = flagdata(vis=self.vis,mode='summary',scan='4')
         self.assertEqual(result['flagged'], 0, 'Expected 0 flags, found %s'%result['flagged'])
         self.assertEqual(result['total'], 95256,'Expected total 95256, found %s'%result['total'])
+        
+    def test_unapply_tfcrop_and_unset_flagrow(self):
+        '''flagcmd: Check that FLAG_ROW is unset after un-applying an tfcrop agent'''
+        # Remove any cmd from table
+        flagcmd(vis=self.vis, action='clear', clearall=True)
+
+        # Flag using manual agent
+        myinput = "scan=4"
+        filename = create_input(myinput)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
+        
+        # Check FLAG_ROW is all set to true
+        mytb = tbtool()
+        mytb.open(self.vis)
+        selectedtb = mytb.query('SCAN_NUMBER in [4]')
+        FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
+        mytb.close()        
+        
+        # Flag using tfcrop agent from file
+        myinput = "scan=4 mode=tfcrop correlation='ABS_RR' extendflags=False"
+        filename = create_input(myinput)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
+                flagbackup=False)
+        
+        # Check FLAG_ROW is all set to true
+        mytb = tbtool()
+        mytb.open(self.vis)
+        selectedtb = mytb.query('SCAN_NUMBER in [4]')
+        FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
+        mytb.close()           
+        
+        # Unapply only the tfcrop line
+        flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
+       
+        # Check FLAG_ROW is now all set to false
+        mytb = tbtool()
+        mytb.open(self.vis)
+        selectedtb = mytb.query('SCAN_NUMBER in [4]')
+        FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        self.assertEqual(FLAG_ROW.sum(), 0)
+        mytb.close()      
+        
+    def test_unapply_rflag_and_unset_flagrow(self):
+        '''flagcmd: Check that FLAG_ROW is unset after un-applying an rflag agent'''
+        # Remove any cmd from table
+        flagcmd(vis=self.vis, action='clear', clearall=True)
+
+        # Flag using manual agent
+        myinput = "scan=4"
+        filename = create_input(myinput)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
+        
+        # Check FLAG_ROW is all set to true
+        mytb = tbtool()
+        mytb.open(self.vis)
+        selectedtb = mytb.query('SCAN_NUMBER in [4]')
+        FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
+        mytb.close()        
+        
+        # Flag using tfcrop agent from file
+        myinput = "scan=4 mode=rflag "
+        filename = create_input(myinput)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
+                flagbackup=False)
+        
+        # Check FLAG_ROW is all set to true
+        mytb = tbtool()
+        mytb.open(self.vis)
+        selectedtb = mytb.query('SCAN_NUMBER in [4]')
+        FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
+        mytb.close()           
+        
+        # Unapply only the tfcrop line
+        flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
+       
+        # Check FLAG_ROW is now all set to false
+        mytb = tbtool()
+        mytb.open(self.vis)
+        selectedtb = mytb.query('SCAN_NUMBER in [4]')
+        FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        self.assertEqual(FLAG_ROW.sum(), 0)
+        mytb.close()         
+        
+    def test_unapply_clip_and_unset_flagrow(self):
+        '''flagcmd: Check that FLAG_ROW is unset after un-applying an clip agent'''
+        # Remove any cmd from table
+        flagcmd(vis=self.vis, action='clear', clearall=True)
+
+        # Flag using manual agent
+        myinput = "scan=4"
+        filename = create_input(myinput)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=False)
+        
+        # Check FLAG_ROW is all set to true
+        mytb = tbtool()
+        mytb.open(self.vis)
+        selectedtb = mytb.query('SCAN_NUMBER in [4]')
+        FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
+        mytb.close()        
+        
+        # Flag using tfcrop agent from file
+        myinput = "scan=4 mode=clip "
+        filename = create_input(myinput)
+        flagcmd(vis=self.vis, inpmode='list', inpfile=filename, action='apply', savepars=True,
+                flagbackup=False)
+        
+        # Check FLAG_ROW is all set to true
+        mytb = tbtool()
+        mytb.open(self.vis)
+        selectedtb = mytb.query('SCAN_NUMBER in [4]')
+        FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        self.assertEqual(FLAG_ROW.sum(), FLAG_ROW.size)
+        mytb.close()           
+        
+        # Unapply only the tfcrop line
+        flagcmd(vis=self.vis, action='unapply', useapplied=True, tablerows=0, savepars=False)
+       
+        # Check FLAG_ROW is now all set to false
+        mytb = tbtool()
+        mytb.open(self.vis)
+        selectedtb = mytb.query('SCAN_NUMBER in [4]')
+        FLAG_ROW = selectedtb.getcol('FLAG_ROW')
+        self.assertEqual(FLAG_ROW.sum(), 0)
+        mytb.close()        
 
     def test_uquack(self):
         '''flagcmd: unapply quack agent'''

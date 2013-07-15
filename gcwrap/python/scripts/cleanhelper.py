@@ -588,15 +588,17 @@ class cleanhelper:
                 #ia.setcoordsys(mcsys)
                 #
                 ## This code to set the maskframe is copied from makemaskimages()
-                mycsys=ia.coordsys()
-                if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
-                    mycsys.setreferencecode(maskframe,'spectral',True)
-                self.csys=mycsys.torecord()
-                if self.csys['spectral2']['conversion']['system']!=maskframe:
-                    self.csys['spectral2']['conversion']['system']=maskframe
-                ia.setcoordsys(self.csys)
+#                mycsys=ia.coordsys()
+#                if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
+#                    mycsys.setreferencecode(maskframe,'spectral',True)
+#                self.csys=mycsys.torecord()
+#                if self.csys['spectral2']['conversion']['system']!=maskframe:
+#                    self.csys['spectral2']['conversion']['system']=maskframe
+#                ia.setcoordsys(self.csys)
 
                 ia.done(verbose=False)
+
+                self.setReferenceFrameLSRK(img =self.maskimages[self.imagelist[k]])
 
         # take out extra []'s
         maskobject=self.flatten(maskobject)
@@ -847,11 +849,6 @@ class cleanhelper:
             if len(self.imagelist)>1:
                 raise Exception, "Multifield case - requires initial mask images but undefined."   
 
-        ia.open(outputmask)
-        shp=ia.shape()
-        self.csys=ia.coordsys().torecord()
-        # keep this info for reading worldbox
-        self.csysorder=ia.coordsys().coordinatetype()
         # respect dataframe or outframe
         if self.usespecframe=='': 
             maskframe=self.dataspecframe
@@ -862,17 +859,27 @@ class cleanhelper:
                 # for multi-ms case default output frame is default to LSRK
                 # (set by baseframe in imager_cmt.cc) 
                 maskframe='LSRK'
-        mycsys=ia.coordsys()
-        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
-            mycsys.setreferencecode(maskframe,'spectral',True)
-        self.csys=mycsys.torecord()
-        if self.csys['spectral2']['conversion']['system']!=maskframe:
-            self.csys['spectral2']['conversion']['system']=maskframe
-
-
-        ia.setcoordsys(self.csys)
-        #ia.setcoordsys(mycsys.torecord())
+                
+        ia.open(outputmask)
+        shp=ia.shape()
+        self.csys=ia.coordsys().torecord()
+        # keep this info for reading worldbox
+        self.csysorder=ia.coordsys().coordinatetype()
         ia.close()
+
+        self.setReferenceFrameLSRK( outputmask )
+                
+#        mycsys=ia.coordsys()
+#        if mycsys.torecord()['spectral2']['conversion']['system']!=maskframe:
+#            mycsys.setreferencecode(maskframe,'spectral',True)
+#        self.csys=mycsys.torecord()
+#        if self.csys['spectral2']['conversion']['system']!=maskframe:
+#            self.csys['spectral2']['conversion']['system']=maskframe
+#        ia.setcoordsys(self.csys)
+#        #ia.setcoordsys(mycsys.torecord())
+#        ia.close()
+
+
         if(len(maskimage) > 0):
             for ima in maskimage :
                 if slice>-1:
@@ -920,6 +927,7 @@ class cleanhelper:
             for textfile in masktext :
                 # Read a box file
                 polydic,listbox=self.readboxfile(textfile);
+
                 masklist.extend(listbox)
                 if(len(polydic) > 0):
                     ia.open(outputmask)
@@ -963,6 +971,13 @@ class cleanhelper:
 
         self.outputmask=outputmask
 
+        ## CAS-5227
+        ia.open( outputmask )
+        ia.calc('iif("'+outputmask+'">0.0,1.0,0.0)')
+        ia.close()
+        
+        ## CAS-5221
+        self.setReferenceFrameLSRK( outputmask )
         #Done with making masks
 
     def datselweightfilter(self, field, spw, timerange, uvrange, antenna,scan,
@@ -1351,6 +1366,7 @@ class cleanhelper:
                                 temprec.update({counter:elreg})
                                 
                     elif(line.count('worldbox')==1): 
+                        self._casalog.post('\'worldbox\' is deprecated please use CRTF format','WARN')
                         #ascii box file from viewer or boxit
                         # expected foramt: 'worldbox' pos_ref [lat
                         line=line.replace('[',' ')
@@ -1395,7 +1411,9 @@ class cleanhelper:
                         # frequency
                         freqs=[splitline[7].replace('s-1','Hz'), splitline[9].replace('s-1','Hz')]
                         fframes=[splitline[6],splitline[8]]
-                        imframe = self.csys['spectral2']['system']
+                        #imframe = self.csys['spectral2']['system']
+                        imframe = self.csys['spectral2']['conversion']['system']
+                        #print "imframe=",imframe," system frame =",self.csys['spectral2']['system']," frame in boxfile=", fframes[0]
                         # the worldbox file created viewer's "box in file"
                         # currently says TOPO in frequency axis but seems to
                         # wrong (the freuencies look like in the image's base
@@ -1428,6 +1446,7 @@ class cleanhelper:
                         #wtrc = [ra[1], dec[1], stokes[1], freqs[1]]
                         #wblc = ra[0]+" "+dec[0]
                         #wtrc = ra[1]+" "+dec[1]
+                        #print"wblc=",wblc," wtrc=",wtrc," using system frame=",self.csys['spectral2']['system'], " convertion frame=",self.csys['spectral2']['conversion']['system']
                         wboxreg = rg.wbox(blc=wblc,trc=wtrc,csys=self.csys)
                         temprec.update({counter:wboxreg})
  
@@ -3117,6 +3136,54 @@ class cleanhelper:
               ia.setcoordsys(csys.torecord())
               ia.close()
 
+    def setFrameConversionForMasks(self):
+        ''' To be called at the end of clean, so that the output csys can be
+            read and set for the mask. This will have the users desired 
+            conversion layer '''
+        if self.usespecframe=='':
+            useframe=self.dataspecframe
+        else: 
+            useframe=self.usespecframe
+
+        #print 'maskimages.keys : ', self.maskimages.keys()
+        #print 'imagelist : ', self.imagelist
+
+        for key in self.imagelist.keys():
+             imgmask = self.imagelist[key]+'.mask'
+             img = self.imagelist[key]+'.image'
+             if not os.path.exists(img):
+                 img = img+'.tt0'
+#             print 'Converting frame for ', imgmask, ' to ', useframe
+             if os.path.exists(imgmask) and os.path.exists(img):
+                  ia.open(img)
+                  imcsys = ia.coordsys()
+                  ia.close()
+                  ia.open(imgmask)
+#                  csys=ia.coordsys()
+#                  csys.setreferencecode('LSRK','spectral',True)
+#                  val = csys.setconversiontype(spectral=useframe)
+#                  print 'Ret val : ', val, csys.getconversiontype('spectral')
+#                  ia.setcoordsys(csys.torecord())
+##                  print 'conv type : ', imcsys.getconversiontype('spectral')
+                  ia.setcoordsys( imcsys.torecord() )
+                  ia.close()
+             else:
+                 self._casalog.post('Not converting spectral reference frame for mask image','DEBUG1')
+
+
+    def setReferenceFrameLSRK(self, img = ''):
+        ''' To be called to reset reference code and conversion layer to LSRK '''
+        if os.path.exists( img ):
+            ia.open( img )
+            mycsys=ia.coordsys()
+            if mycsys.torecord()['spectral2']['conversion']['system']!='LSRK':
+                mycsys.setreferencecode('LSRK','spectral',True)
+            mycsys.setconversiontype(spectral='LSRK')
+            ia.setcoordsys( mycsys.torecord() )
+            ia.close()
+
+
+
     @staticmethod
     def getOptimumSize(size):
         '''
@@ -3162,6 +3229,7 @@ class cleanhelper:
             if((numpy.max(prime_factors(k)) < 8)):
                 return k
         return newlarge
+
 
 def getFTMachine(gridmode, imagermode, mode, wprojplanes, userftm):
     """

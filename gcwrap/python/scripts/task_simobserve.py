@@ -354,7 +354,7 @@ def simobserve(
                 cx=pl.mean(stnx)
                 cy=pl.mean(stny)
                 cz=pl.mean(stnz)
-                lat,lon = util.itrf2loc(stnx,stny,stnz,cx,cy,cz)
+                lat,lon,el = util.itrf2loc(stnx,stny,stnz,cx,cy,cz)
                 maxbase=max(lat)-min(lat) # in meters
                 maxbase2=max(lon)-min(lon)
                 if maxbase2>maxbase:
@@ -761,7 +761,12 @@ def simobserve(
             if hourangle=="transit":
                 haoffset=0.0
             else:
-                haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
+                # is this a time quantity?
+                if qa.compare(hourangle,"s"):
+                    haoffset=qa.convert(qa.quantity(hourangle),'s')['value']
+                else:
+                    msg("You desire an hour angle of "+haoffset+" hours",origin="simobserve")
+                    haoffset=qa.convert(qa.quantity(hourangle+"h"),'s')['value']
 
             refdate=refdate+"/00:00:00"
             usehourangle=True

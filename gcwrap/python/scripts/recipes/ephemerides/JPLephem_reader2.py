@@ -1,4 +1,8 @@
 """
+Updated version to support the current JPL-Horizons query results as of 2013 June.
+(when S-T-O is requested the current query result returns phi, PAB-LON, PAB-LAT along
+with S-T-O value).  
+
 casapy functions for converting ASCII ephemerides from JPL-Horizons into
 CASA tables and installing them where casapy can find them.
                     
@@ -106,6 +110,23 @@ cols = {
               'comment': 'phase angle',
               'unit':    'deg',
               'pat':     r'(?P<phang>[0-9.]+)'},
+    # added columns to match current(as of June 2013) query result 
+    'phi': {'header':  'phi',
+	    'comment': 'phase angle',
+	    'unit':    'deg',
+            'pat':     r'(?P<phi>[0-9.]+)',
+            'unwanted': True},
+    'PAB_LON': {'header':  'PAB-LON',
+	    'comment': 'ecliptic longitude',
+	    'unit':    'deg',
+            'pat':     r'(?P<PAB_LON>[0-9.]+)',
+            'unwanted': True},
+    'PAB_LAT': {'header':  'PAB-LAT',
+	    'comment': 'ecliptic latitude',
+	    'unit':    'deg',
+            'pat':     r'(?P<PAB_LAT>[-+0-9.]+)',
+            'unwanted': True},
+    # -----------------------------------------------------------
     'ang_sep': {'header': 'ang-sep/v',
                 'comment': 'Angular separation from primary',
                 'pat': r'(?P<ang_sep>[0-9.]+/.)'},  # arcsec, "visibility code".
@@ -121,6 +142,7 @@ cols = {
             'unit': 'deg',    # says they cannot.  Ask Bryan Butler.
             'comment': 'Season angle',
             'pat': r'(?P<L_s>[-+0-9.]+)'}
+
     }
 
 def readJPLephem(fmfile,version=''):
@@ -202,7 +224,10 @@ def readJPLephem(fmfile,version=''):
                 for col in gdict:
                     if gdict[col]=='n.a.':
                         gdict[col]=invalid
-                    retdict['data'][col]['data'].append(gdict[col])
+                    ##print "cols.key=",cols.keys()
+ 
+                    if not cols[col].get('unwanted'):
+                        retdict['data'][col]['data'].append(gdict[col])
                 if len(gdict) < num_cols:
                     print "Partially mismatching line:"
                     print line
@@ -221,11 +246,10 @@ def readJPLephem(fmfile,version=''):
             # extract coordinate ref info
 
             m=re.match(r'(^\s*)(\S+)(\s+)('+cols['RA']['header']+')', line)
-            print m.group(4)
             coordref=m.group(4).split('(')[-1]
             cols['RA']['comment']+='('+coordref+')'
             cols['DEC']['comment']+='('+coordref+')'
-            print "cols['RA']['comment']=",  cols['RA']['comment']
+            #print "cols['RA']['comment']=",  cols['RA']['comment']
             # Chomp trailing whitespace.
             myline = re.sub(r'\s*$', '', line)
             titleline = myline
@@ -443,7 +467,7 @@ def readJPLephem(fmfile,version=''):
         retdict['posrefsys']='ICRF/J2000.0'
     if cols['RA']['comment'].count('B1950'):
         retdict['posrefsys']='FK4/B1950.0'
-      
+   
     return retdict
 
 def convert_radec(radec_col):

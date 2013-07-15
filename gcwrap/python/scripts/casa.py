@@ -170,6 +170,7 @@ try:
     from sdstat import sdstat
     from sdlist import sdlist
     from sdflag import sdflag
+    from sdflag2 import sdflag2
     from sdtpimaging import sdtpimaging
     from sdmath import sdmath
     from sdimaging import sdimaging
@@ -185,6 +186,7 @@ except ImportError:
     sdstat = None
     sdsave = None
     sdflag = None
+    sdflag2 = None
     sdcal = None
     sdplot = None
     sdsmooth = None

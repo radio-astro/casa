@@ -86,7 +86,23 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 	<description>Estimate the continuum (e.g., due to clouds) (experimental)</description>
 	<value>False</value>
       </param>
+
+      <param type="double" name="maxdistm">
+	<description>maximum distance (m) of an antenna used for interpolation for a flagged antenna</description>
+	<value>500.</value>
+      </param>
       
+      <param type="int" name="minnumants">
+	<description>minimum number of near antennas (up to 3) required for interpolation</description>
+	<value>2</value>
+        <allowed kind="enum">
+            <value>1</value>
+            <value>2</value>
+            <value>3</value>
+        </allowed>
+      </param>
+
+
 
       <!-- ================================================================= -->
     
@@ -168,6 +184,14 @@ WVRGCAL correction should not be used.
 
   cont -- Estimate the continuum (e.g., due to clouds)
              default: False
+
+  maxdistm -- maximum distance (m) an antenna may have to be considered for being part
+              of the antenna set (minnumants to 3 antennas) for the interpolation of a solution 
+              for a flagged antenna
+	      default: 500.
+
+  minnumants -- minimum number of near antennas required for interpolation
+	        default: 2
 
   </description>
 

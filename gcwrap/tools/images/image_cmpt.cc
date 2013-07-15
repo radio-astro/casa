@@ -1417,7 +1417,6 @@ record* image::fitprofile(const string& box, const variant& region,
 				throw AipsError("Unsupported value for spxtype");
 			}
 		}
-		cout << "myspxtype " << myspxtype << endl;
 		SpectralList spectralList = SpectralListFactory::create(
 			*_log, pampest, pcenterest, pfwhmest, pfix, gmncomps,
 			gmampcon, gmcentercon, gmfwhmcon, gmampest,
@@ -2129,6 +2128,24 @@ bool image::makecomplex(const std::string& outFile,
 	return rstat;
 }
 
+bool image::makefloat(const std::string& outFile,
+		      const std::string& compFile,
+		      const std::string& op,
+		      const bool overwrite) {
+	bool rstat(false);
+	try {
+		*_log << LogOrigin("image", "makefloat");
+
+		rstat = ImageAnalysis::makeFloat(outFile, compFile, *_log, op, overwrite);
+
+	} catch (AipsError x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+				<< LogIO::POST;
+		RETHROW(x);
+	}
+	return rstat;
+}
+
 std::vector<std::string> image::maskhandler(const std::string& op,
 		const std::vector<std::string>& name) {
 	try {
@@ -2249,7 +2266,6 @@ image::moments(
 		if (detached()) {
 			return 0;
 		}
-
 		UnitMap::putUser("pix", UnitVal(1.0), "pixel units");
 		Vector<Int> whichmoments(moments);
 		std::auto_ptr<Record> Region(toRecord(region));
@@ -2294,7 +2310,6 @@ image::moments(
 			for (int i = 0; i < num; i++)
 				excludepix[i] = d_excludepix[i];
 		}
-
 		std::auto_ptr<ImageInterface<Float> > outIm(
 			_image->moments(
 				whichmoments, axis,
@@ -2304,7 +2319,6 @@ image::moments(
 				overwrite, removeAxis, stretch
 			)
 		);
-
 		return new ::casac::image(outIm.get());
 	}
 	catch (AipsError x) {
@@ -3050,11 +3064,13 @@ bool image::setrestoringbeam(
 				log, channel, polarization
 			)
 		) {
+			*_log << LogOrigin("image", __FUNCTION__);
 			_stats.reset(0);
 			return True;
 		}
 		throw AipsError("Error setting restoring beam.");
-	} catch (const AipsError& x) {
+	}
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);
@@ -3784,7 +3800,7 @@ image::recordFromQuantity(const Quantum<Vector<Double> >& q) {
 casa::Quantity image::casaQuantityFromVar(const ::casac::variant& theVar) {
 	casa::Quantity retval;
 	try {
-		*_log << LogOrigin("image", "casaQuantityFromVar");
+		*_log << LogOrigin("image", __FUNCTION__);
 		casa::QuantumHolder qh;
 		String error;
 		if (theVar.type() == ::casac::variant::STRING || theVar.type()
@@ -3807,6 +3823,7 @@ casa::Quantity image::casaQuantityFromVar(const ::casac::variant& theVar) {
 			retval = qh.asQuantity();
 		}
 	} catch (const AipsError& x) {
+		*_log << LogOrigin("image", __FUNCTION__);
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 				<< LogIO::POST;
 		RETHROW(x);

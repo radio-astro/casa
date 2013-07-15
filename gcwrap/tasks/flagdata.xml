@@ -45,7 +45,7 @@
 
             <!-- MANUAL parameters -->
             <param type="bool" name="autocorr" subparam="true">
-                 <description>Flag auto-correlations</description>
+                 <description>Flag only the auto-correlations</description>
                   <value type="bool">False</value>
             </param>
 
@@ -125,7 +125,7 @@
                 <value type="doubleArray"></value>
             </param>
             <param type="any" name="datacolumn" subparam="true">
-                <description>Data column on which to operate (data,corrected,model,residual)</description>
+                <description>Data column on which to operate (data,corrected,model,residual,etc.)</description>
                 <any type="variant" limittypes="string stringArray" />
                 <value type="string">DATA</value>
             </param>
@@ -788,7 +788,11 @@ The task will flag a subset of data based on the following modes of operation:
                   
                 autocorr -- Flag only the auto-correlations. Note that this parameter is only
                             active when set to True. If set to False it does NOT mean "do not
-                            flag auto-correlations".
+                            flag auto-correlations". When set to True, it will NOT flag
+                            data from a processor of type RADIOMETER. In order to force the
+                            task to flag auto-correlations also from a RADIOMETER type processor,
+                            use the antenna selection syntax (ant1&amp;&amp;ant2) instead of
+                            this parameter.
                     default: False
                     options: True,False
                   
@@ -811,7 +815,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for clipping.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
                           if that does not exist, it will try to use CPARAM. If none of them exist, it
@@ -925,7 +929,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
                           if that does not exist, it will try to use CPARAM. If none of them exist, it
@@ -1118,7 +1122,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
                           if that does not exist, it will try to use CPARAM. If none of them exist, it

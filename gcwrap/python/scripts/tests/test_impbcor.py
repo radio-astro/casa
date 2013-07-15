@@ -82,7 +82,9 @@ im2 = "pb2_im.fits"
 pb2 = "pb2_pb.fits"  
 co2 = "pb2_co.im"  
 
-data = [im1, pb1, co1_1, co1_2, im2, pb2, co2]
+pb4 = "CAS_5096template.im"
+
+data = [im1, pb1, co1_1, co1_2, im2, pb2, co2, pb4]
 
 datapath=os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imageanalysis/ImageAnalysis/'
 
@@ -347,6 +349,16 @@ class impbcor_test(unittest.TestCase):
                 )
                 self.assertTrue(zz)
         
+    def test_diff_spectral_coordinate(self):
+        """Verify fix that a different spectral coordinates in target and template don't matter, CAS-5096"""
+        imagename = datapath + "CAS_5096target.im"
+        template = pb4
+        outfile = "mypb.im"
+        impbcor(
+            imagename=imagename, pbimage=template,
+            outfile=outfile, mask='"' + template + '">0.21'
+        )
+        self.assertTrue(os.path.exists(outfile))
 
 def suite():
     return [impbcor_test]

@@ -8,7 +8,6 @@
 <xsl:param name="needscomma"></xsl:param>
 <xsl:template match="*">
 <xsl:apply-templates select="aps:interface"/>
-}
 </xsl:template>
 <xsl:template match="aps:interface">  
 <xsl:text disable-output-escaping="yes">
@@ -64,6 +63,6 @@ namespace casac {
 	</xsl:for-each>
 </xsl:for-each>	
 </xsl:for-each>
-
+}
  </xsl:template>
 </xsl:stylesheet>

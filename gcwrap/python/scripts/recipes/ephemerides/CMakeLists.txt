@@ -21,5 +21,6 @@
 casa_add_python( tools tools_ephemerides_python python/${PYTHONV}/recipes/ephemerides
   __init__.py
   JPLephem_reader.py
+  JPLephem_reader2.py
   request.py
 )

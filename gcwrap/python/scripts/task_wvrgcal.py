@@ -5,7 +5,8 @@ from taskinit import *
 def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	    sourceflag=None, tie=None, nsol=None, disperse=None, 
 	    wvrflag=None, statfield=None, statsource=None, smooth=None,
-	    scale=None, reversespw=None,  cont=None):
+	    scale=None, reversespw=None,  cont=None, maxdistm=None,
+	    minnumants=None):
 	"""
 	Generate a gain table based on Water Vapour Radiometer data.
 	Returns a dictionary containing the RMS of the path length variation
@@ -63,6 +64,14 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 																
 	  cont -- Estimate the continuum (e.g., due to clouds)									
                      default: False
+
+          maxdistm -- maximum distance (m) an antenna may have to be considered for being part
+	              of the <=3 antenna set for interpolation of a solution for a flagged antenna
+		      default: 500
+
+          minnumants -- minimum number of near antennas required for interpolation
+	                default: 2
+
         """
 	#Python script
 
@@ -161,6 +170,12 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 		if (scale != 1.):
 			execute_string+= ' --scale ' + str(scale)
 		
+		if (maxdistm>=0.):
+			execute_string+= ' --maxdistm ' + str(maxdistm)
+		
+		if (minnumants>=0):
+			execute_string+= ' --minnumants ' + str(minnumants)
+		
 		theexecutable = 'wvrgcal'
 
 		execute_string = theexecutable+' '+execute_string
@@ -245,6 +260,12 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 			     'Disc_um': discl,
 			     'rval': rval,
 			     'success': False}
+
+		for k in range(len(namel)):
+			if(flagl[k] and rmsl[k]==0. and discl[k]==0.):
+				casalog.post('Solution for flagged antenna '+namel[k]
+					     +' could not be interpolated due to insufficient number of near antennas. Was set to unity.',
+					     'WARN')
 
 		if (rval==0) and parsingok:
 			taskrval['success'] = True

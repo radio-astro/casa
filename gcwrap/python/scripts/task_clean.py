@@ -737,7 +737,12 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             
             if dochaniter and not imset.skipclean :
                 imset.storeCubeImages(finalimagename,imset.imagelist,j,imagermode)
-        
+
+            ## Set frame conversion layer for all masks at the end. This doesn't happen from C++.
+            ## This is because setReferenceFrame is called within makemultifieldmask2 to
+            ## force new masks to LSRK, to enable interactive mask editing. CAS-5221
+            imset.setFrameConversionForMasks()
+
         imCln.close()
         ####################################################################
         if dochaniter:

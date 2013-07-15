@@ -106,6 +106,22 @@ class coordsys_test(unittest.TestCase):
         self.assertTrue(csys.findaxisbyname("ri") == 0)
         self.assertRaises(Exception, csys.findaxisbyname, "ra", False)
         self.assertTrue(csys.findaxisbyname("ra", True) == 0)
+        
+    def test_transpose(self):
+        """Test the transpose() method"""
+        myia = iatool()
+        myia.fromshape("", [4, 4, 4, 4])
+        csys = myia.coordsys()
+        myia.done()
+        
+        orig = csys.names()
+        self.assertTrue(csys.transpose([3,2,1,0]))
+        new = csys.names()
+        self.assertTrue(orig[0] == new[3])
+        self.assertTrue(orig[1] == new[2])
+        self.assertTrue(orig[2] == new[1])
+        self.assertTrue(orig[3] == new[0])
+                
 
 def suite():
     return [coordsys_test]

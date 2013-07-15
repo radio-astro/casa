@@ -6,5 +6,8 @@ casa::MSSelection *itsMSS;
 casa::LogIO *itsLog;
 casa::MSSelector *itsSel;
 casa::MSFlagger *itsFlag;
+casa::VisibilityIterator *itsVI;
+casa::VisBuffer *itsVB;
+casa::Bool doingIterations_p;
 
 void addephemcol(const casa::MeasurementSet& appendedMS);

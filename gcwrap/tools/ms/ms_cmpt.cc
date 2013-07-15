@@ -29,6 +29,7 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
+#include <casa/iostream.h>
 #include <sstream>
 #include <sys/wait.h>
 #include <casa/BasicSL/String.h>
@@ -93,6 +94,9 @@ ms::ms()
      itsLog = new LogIO();
      itsFlag = new MSFlagger();
      itsMSS = new MSSelection();
+     itsVI = NULL;//new VisibilityIterator();
+     itsVB = NULL;//new VisBuffer();
+     doingIterations_p=False;
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -109,6 +113,9 @@ ms::~ms()
     if(itsFlag)         {delete itsFlag; itsFlag=NULL;}
     if(itsLog)          {delete itsLog; itsLog=NULL;}
     if(itsMSS)          {delete itsMSS; itsMSS=NULL;}
+    if (itsVI)          {delete itsVI; itsVI=NULL;}
+    if (itsVB)          {delete itsVB; itsVB=NULL;}
+    doingIterations_p=False;
    } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -314,6 +321,7 @@ ms::open(const std::string& thems, const bool nomodify, const bool lock)
        }
      itsSel->setMS(*itsMS);
      itsFlag->setMSSelector(*itsSel);
+     doingIterations_p=False;
   } catch (AipsError x) {
        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg() << LogIO::POST;
        Table::relinquishAutoLocks(True);
@@ -336,6 +344,7 @@ ms::reset()
                                     itsMSS->resetMS(*itsMS);
     itsSel->setMS(*itsMS);
     itsFlag->setMSSelector(*itsSel);
+    doingIterations_p=False;
   }
   catch (AipsError x) {
     *itsLog << LogIO::SEVERE << "Exception Reported: " 
@@ -420,6 +429,11 @@ ms::close()
       itsSel->setMS(*itsMS);
       itsFlag->setMSSelector(*itsSel);
       if (itsMSS) {delete itsMSS;  itsMSS = new MSSelection();};
+      if (itsVI) {delete itsVI; itsVI=NULL;// itsVI = new VisibilityIterator();
+      };
+      if (itsVB) {delete itsVB; // itsVB = new VisBuffer();
+      };
+      doingIterations_p=False;
       rstat = True;
     }
   } catch (AipsError x) {
@@ -3644,6 +3658,197 @@ ms::addephemcol(const casa::MeasurementSet& appendedMS)
       open(thisMSName, False, False);
     }
   }
+}
+//
+// New iteration control interface.  Uses the VI for iterations and
+// getting the requested data out.
+//
+bool
+ms::niterinit(const std::vector<std::string>& columns, const double interval,
+             const int maxrows, const bool adddefaultsortcolumns)
+{
+   Bool rstat(False);
+   Block<Int> sort(1);
+   sort[0]=MS::TIME;
+   try
+     {
+       if (itsVI == NULL)
+	 itsVI = new VisibilityIterator(*itsMS, sort, adddefaultsortcolumns, interval);
+       else
+	 *itsVI = VisibilityIterator(*itsMS, sort, adddefaultsortcolumns, interval);
+       if (interval <= 0) itsVI->setRowBlocking(itsMS->nrow());
+       if (maxrows > 0) itsVI->setRowBlocking(maxrows);
+       //       *itsVB = VisBuffer(*itsVI);
+       rstat=True;
+     }
+   catch (AipsError x)
+     {
+       RETHROW(x);
+     }
+  
+   niterorigin();
+   doingIterations_p=True;
+   return rstat;
+}
+
+bool
+ms::niterorigin()
+{
+   Bool rstat(False);
+   if (!detached())
+     {
+       try
+	 {
+	   if (itsVI) 
+	     {
+	       itsVI->originChunks();
+	       rstat=True;
+	     }
+	   else
+	     *itsLog << "ms::niterorigin:  Please call niterinit() first." << LogIO::EXCEPTION;
+	 }
+       catch (AipsError x)
+	 {
+	   RETHROW(x);
+	 }
+     }
+   return rstat;
+}
+
+bool
+ms::niterend()
+{
+  Bool rstat(False);
+  if (!detached())
+    {
+      try
+	{
+	  rstat = !itsVI->moreChunks();
+	}
+      catch (AipsError x)
+	{
+	  RETHROW(x);
+	}
+    }   
+  return rstat;
+}
+
+bool
+ms::niternext()
+{
+  Bool rstat(False);
+  if (!detached())
+    {
+      try
+	{
+	  if (!niterend())
+	    {
+	      itsVI->nextChunk();
+	      rstat=True;
+	    }
+	}
+      catch (AipsError x)
+	{
+	  RETHROW(x);
+	}
+    }
+  
+  return rstat;
+}
+
+::casac::record*
+ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const int ifraxisgap, const int increment, const bool average)
+{
+  try
+    {
+      if (itsVI == NULL) 
+	niterinit(items,0.0,0,False); 
+      // if (doingIterations_p == False) 
+      // 	niterorigin();
+
+      
+      ::casac::record *retval(0);
+      casa::Record rec;
+      Int nItems = items.size();
+      for (Int i=0; i<nItems; i++) 
+	{
+	  String item(items[i]);
+	  item.downcase();
+	  MSS::Field fld=MSS::field(item);
+	  switch (fld) 
+	    {
+	    case MSS::DATA:
+	      {
+		Cube<Complex> vis;
+		itsVI->visibility(vis,VisibilityIterator::Observed);
+		rec.define(item,vis);
+		break;
+	      }
+	    case MSS::MODEL_DATA:
+	      {
+		Cube<Complex> vis;
+		itsVI->visibility(vis,VisibilityIterator::Model);
+		rec.define(item,vis);
+		break;
+	      }
+	    case MSS::CORRECTED_DATA:
+	      {
+		Cube<Complex> vis;
+		itsVI->visibility(vis,VisibilityIterator::Corrected);
+		rec.define(item,vis);
+		break;
+	      }
+	    case MSS::ANTENNA1:
+	      {
+		Vector<Int> a1;
+		a1 = itsVI->antenna1(a1);
+		rec.define(item,a1);
+		break;
+	      }
+	    case MSS::ANTENNA2:
+	      {
+		Vector<Int> a;
+		a = itsVI->antenna1(a);
+		rec.define(item,a);
+		break;
+	      }
+	    case MSS::FLAG:
+	      {
+		Cube<Bool> flag;
+		flag = itsVI->flag(flag);
+		rec.define(item,flag);
+		break;
+	      }
+	    case MSS::TIME:
+	      {
+		Vector<Double> time;
+		time = itsVI->time(time);
+		rec.define(item,time);
+		break;
+	      }
+	    case MSS::ROWS:
+	      {
+		Vector<uInt> rowIds;
+		rowIds = itsVI->rowIds(rowIds);
+		Vector<Int> tmp(rowIds.shape());
+		for (Int ii=0;ii<tmp.nelements(); ii++)
+		  tmp(ii)=rowIds(ii);
+		rec.define(item,tmp);
+		break;
+	      }
+	      
+	    default:
+	      {
+		*itsLog  << "ngetdata: Unsupported item requrested (" << items[i] << ")" <<LogIO::EXCEPTION;
+	      }
+	    }
+	}
+      return fromRecord(rec);
+    }
+  catch (AipsError x)
+    {
+      RETHROW(x);
+    }
 }
 
 

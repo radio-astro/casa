@@ -3237,6 +3237,21 @@ record* coordsys::toworldmany(const variant& value) {
 	}
 }
 
+bool coordsys::transpose(const vector<int>& order) {
+	try {
+		itsCoordSys->transpose(
+			Vector<Int>(order),
+			Vector<Int>(order)
+		);
+		return True;
+	}
+    catch (const AipsError& x) {
+        *itsLog << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+                << LogIO::POST;
+        RETHROW(x);
+    }
+}
+
 std::string
 coordsys::type()
 {

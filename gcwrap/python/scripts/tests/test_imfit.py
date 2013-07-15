@@ -1438,30 +1438,14 @@ class imfit_test(unittest.TestCase):
     def test_region_selection(self):
         """Test region selection raised in CAS-5093"""
         # from George's tests
-        imagename = os.environ.get('CASAPATH').split()[0]+'/data/regression/third4826/reference/ngc4826.tutorial.16apr98.src.clean.image'
+        imagename = os.environ.get('CASAPATH').split()[0]+'/data/regression/unittest/imfit/CAS-5093.im'
         myia = iatool()
-
+        residual = 'framework.resid.tmp'
         myia.open(imagename)
         shape=myia.shape()
-
-        #  this region is the first (empty of signal) channel, so
-        #   we're fitting noise, presumably , no convergence
-        plane=0
-        blc = [int(0),int(0),int(plane),int(0)]
-        trc = [int(shape[0]-1), int(shape[1]-1), int(plane), int(0)]
-        reg = rg.box(blc=blc, trc=trc)
-        residual = 'framework.resid.tmp'
-        a = myia.fitcomponents(region=reg, residual=residual)
-        self.assertFalse(a['converged'])
-        a = myia.fitcomponents(chans=0, residual=residual)
-        self.assertFalse(a['converged'])
-        myia.close()
-
-        # let's try a channel with signal
-
-        myia.open(imagename)
-        blc = [int(0),int(0),int(plane),int(23)]
-        trc = [int(shape[0]-1), int(shape[1]-1), int(plane), int(23)]
+        plane = 23
+        blc = [0 , 0 , 0, plane]
+        trc = [shape[0]-1, shape[1]-1, 0, plane]
         reg=rg.box(blc=blc, trc=trc)
         a = myia.fitcomponents(region=reg, residual=residual)
         self.assertTrue(a['converged'])

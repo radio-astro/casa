@@ -542,6 +542,26 @@ class imregrid_test(unittest.TestCase):
         myia.open(output)
         self.assertTrue((myia.shape() == [20, 20, 10]).all())
         
+    def test_axis_recognition(self):
+        """Test that imregrid recognizes axis by type, not position"""
+        myia = self._myia
+        target = "target.im"
+        myia.fromshape(target, [4,4,2,30])
+        print "input axis names " + str(myia.coordsys().names())
+        template = "template.im"
+        myia.fromshape(template, [6, 6, 36, 2])
+        outfile = "myout.im"
+        self.assertTrue(imregrid(imagename=target, template=template, output=outfile))
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == [6, 6, 2, 36]).all())
+        myia.done()
+        outfile = "myout1.im"
+        self.assertTrue(imregrid(imagename=target, template=template, output=outfile, axes=[0, 1]))
+        myia.open(outfile)
+        self.assertTrue((myia.shape() == [6, 6, 2, 30]).all())
+        myia.done()
+
+        
         
 def suite():
     return [imregrid_test]

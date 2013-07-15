@@ -88,6 +88,7 @@ sdcal2.xml
 sdcoadd.xml
 sdfit.xml
 sdflag.xml
+sdflag2.xml
 sdflagmanager.xml
 sdgrid.xml
 sdimaging.xml

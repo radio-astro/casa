@@ -8,6 +8,8 @@ class LogIO;
 class MSSelector;
 class MSFlagger;
 class MSSelection;
+class VisibilityIterator;
+class VisBuffer;
 };
 
 namespace casac {

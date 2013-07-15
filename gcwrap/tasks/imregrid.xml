@@ -72,7 +72,10 @@ template        Dictionary, directional reference code, or imagename defining th
 shape           Shape of the output image. Only used if template is an image.
                 If not specified (-1), the output image will be the same as the template image
                 shape along the axes which are regridded and the same as the input image shpae
-                along the axes which are not regridded. Ignored if template is set equal to a
+                along the axes which are not regridded. If specified and the axis ordering between
+                the input image and the template are not the same, the values in the array correspond
+                to the axis ordering of the input image; the output image will have the same axis
+                ordering as the input image. Ignored if template is set equal to a
                 reference code. If template is a dictionary, the output shape is
                 retrieved from the dictionary so the shape input parameter is ignored.
 output          Name for the regridded image.  Must be specified.

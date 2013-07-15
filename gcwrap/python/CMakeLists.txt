@@ -54,6 +54,7 @@ scripts/predictcomp_helper.py
 scripts/regression.py
 scripts/regressframe.py
 scripts/regression_utility.py
+scripts/refimagerhelper.py
 scripts/run_sdregress_fls3hi.py
 scripts/run_sdregress_irc.py
 scripts/run_sdregress_orions.py
@@ -154,6 +155,7 @@ scripts/task_sdcal2.py
 scripts/task_sdcoadd.py
 scripts/task_sdfit.py
 scripts/task_sdflag.py
+scripts/task_sdflag2.py
 scripts/task_sdflagmanager.py
 scripts/task_sdgrid.py
 scripts/task_sdimaging.py

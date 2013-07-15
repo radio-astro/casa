@@ -456,7 +456,7 @@ mosaic simulation task:
          will be continuum (1 chan)
     refdate -- date of simulated observation eg: '2014/05/21'
     hourangle -- hour angle of observation e.g. '-3h'
-       * note that if you don't add a unit, it will assume seconds
+       * note that if you don't add a unit, it will assume hours
     totaltime --- total time of observation e.g '7200s' or if a number without
          units, interpreted as the number of times to repeat the map
     antennalist -- ascii file containing antenna positions.

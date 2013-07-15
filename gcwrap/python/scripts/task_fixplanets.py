@@ -370,7 +370,7 @@ def fixplanets(vis, field, fixuvw=False, direction='', refant=0, reftime='first'
             newsdec_rad = thenewdec_rad
             if(theephemeris!=''): # get the nominal position from the ephemeris
                 mst.open(vis)
-                trec = mst.getfielddirmeas('PHASE_DIR',1)
+                trec = mst.getfielddirmeas('PHASE_DIR',fld)
                 newsra_rad = trec['m0']['value']
                 newsdec_rad = trec['m1']['value']
                 mst.close()

@@ -1006,7 +1006,7 @@ class simutil:
             obslat=qa.convert(obs['m1'],'deg')['value']
             obslon=qa.convert(obs['m0'],'deg')['value']
             obsalt=qa.convert(obs['m2'],'m')['value']
-            stnx,stny,stnz = self.locxyz2itrf(obslat,obslon,0,0,obsalt)
+            stnx,stny,stnz = self.locxyz2itrf(obslat,obslon,obsalt,0,0,0)
             antnames="A00"
 
         else:
@@ -1475,7 +1475,7 @@ class simutil:
                         self.msg("converting local tangent plane coordinates to ITRF using observatory position = %d %d " % (obslat,obslon))
                         #foo=self.getdatum(datum,verbose=True)
                     for i in range(len(inx)):
-                        x,y,z = self.locxyz2itrf(obslat,obslon,inx[i],iny[i],inz[i]+obsalt)
+                        x,y,z = self.locxyz2itrf(obslat,obslon,obsalt,inx[i],iny[i],inz[i])
                         stnx.append(x)
                         stny.append(y)
                         stnz.append(z)                
@@ -1889,7 +1889,7 @@ class simutil:
 
         f=1./rf
         esq=2*f-f**2    
-        nu=er/(1.-esq*(pl.sin(lat))**2)
+        nu=er/pl.sqrt(1.-esq*(pl.sin(lat))**2)
         
         x=(nu+elevation)*pl.cos(lat)*pl.cos(long) +dx
         y=(nu+elevation)*pl.cos(lat)*pl.sin(long) +dy
@@ -1948,11 +1948,12 @@ class simutil:
 
 
 
-    def locxyz2itrf(self, lat, longitude, locx=0.0, locy=0.0, locz=0.0):
+    def locxyz2itrf(self, lat, longitude, alt, locx=0.0, locy=0.0, locz=0.0):
         """
         Returns the nominal ITRF (X, Y, Z) coordinates (m) for a point at "local"
         (x, y, z) (m) measured at geodetic latitude lat and longitude longitude
-        (degrees).  The ITRF frame used is not the official ITRF, just a right
+        (degrees) and altitude of the reference point of alt.  
+        The ITRF frame used is not the official ITRF, just a right
         handed Cartesian system with X going through 0 latitude and 0 longitude,
         and Z going through the north pole.  The "local" (x, y, z) are measured
         relative to the closest point to (lat, longitude) on the WGS84 reference
@@ -1967,14 +1968,14 @@ class simutil:
         N = a / pl.sqrt(1.0 - (pl.sin(ae) * sphi)**2)
     
         # Now you see the connection between the Old Ones and Antarctica...
-        Nploczcphimlocysphi = (N + locz) * pl.cos(phi) - locy * sphi
+        Nploczcphimlocysphi = (N + locz+alt) * pl.cos(phi) - locy * sphi
     
         clmb = pl.cos(lmbda)
         slmb = pl.sin(lmbda)
     
         x = Nploczcphimlocysphi * clmb - locx * slmb
         y = Nploczcphimlocysphi * slmb + locx * clmb
-        z = (N * (b / a)**2 + locz) * sphi + locy * pl.cos(phi)
+        z = (N * (b / a)**2 + locz+alt) * sphi + locy * pl.cos(phi)
     
         return x, y, z
 
@@ -1983,15 +1984,22 @@ class simutil:
 
     def itrf2loc(self, x,y,z, cx,cy,cz):
         """
-        itrf xyz and COFA cx,cy,cz -> latlon WGS84
+        itrf xyz and COFA cx,cy,cz -> lat lon el WGS84
         """
         clon,clat = self.xyz2long(cx,cy,cz,'WGS84')
         ccoslon=pl.cos(clon)
         csinlon=pl.sin(clon)        
         csinlat=pl.sin(clat)
+        ccoslat=pl.cos(clat)
+        import types
+        if isinstance(x,types.FloatType): # weak
+            x=[x]
+            y=[y]
+            z=[z]
         n=x.__len__()
         lat=pl.zeros(n)
         lon=pl.zeros(n)
+        el=pl.zeros(n)
 
         # do like MsPlotConvert
         for i in range(n):
@@ -2001,10 +2009,23 @@ class simutil:
             ztrans=z[i]-cz
             # rotate
             lat[i] = (-csinlon*xtrans) + (ccoslon*ytrans)
-            lon[i] = (-csinlat*ccoslon*xtrans) - (csinlat*csinlon*ytrans) + ztrans
+            lon[i] = (-csinlat*ccoslon*xtrans) - (csinlat*csinlon*ytrans) + ccoslat*ztrans
+            el[i] = (ccoslat*ccoslon*xtrans) + (ccoslat*csinlon*ytrans) + csinlat*ztrans
                 
-        return lat,lon
+        return lat,lon,el
 
+
+
+
+
+    def xyz2loc(self, x,y,z, obsname):
+        """
+        itrf xyz and array name -> lat lon el WGS84
+        """
+        cofa=me.measure(me.observatory(obsname),'WGS84')
+        cx,cy,cz=self.long2xyz(cofa['m0']['value'],cofa['m1']['value'],cofa['m2']['value'],cofa['refer'])
+
+        return self.itrf2loc(x,y,z,cx,cy,cz)
 
 
 
@@ -2027,7 +2048,7 @@ class simutil:
         cx=pl.mean(x)
         cy=pl.mean(y)
         cz=pl.mean(z)
-        lat,lon = self.itrf2loc(x,y,z,cx,cy,cz)
+        lat,lon,el = self.itrf2loc(x,y,z,cx,cy,cz)
         n=lat.__len__()
         
         dolam=0
