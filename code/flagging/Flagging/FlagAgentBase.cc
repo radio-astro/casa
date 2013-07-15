@@ -274,7 +274,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 		FlagAgentExtension* agent = new FlagAgentExtension(dh,config);
 		return agent;
 	}
-	// Extension
+	// Rflag
 	else if (mode.compare("rflag")==0)
 	{
 		FlagAgentRFlag* agent = new FlagAgentRFlag(dh,config);
@@ -2091,6 +2091,13 @@ FlagAgentBase::iterateInRows()
 		// Compute flags for this row
 		computeInRowFlags(*(flagDataHandler_p->visibilityBuffer_p),visibilitiesMap,flagsMap,*rowIter);
 
+		// jagonzal (CAS-4913, CAS-5344): If we are unflagging FLAG_ROWS must be unset
+		if (not flag_p)
+		{
+			flagsMap.applyFlagRow(rowIdx);
+			flagRow_p = true;
+		}
+
 		// Increment row index
 		rowIdx++;
 	}
@@ -2183,6 +2190,17 @@ FlagAgentBase::iterateAntennaPairs()
 		// Increment antenna pair index
 		antennaPairdIdx++;
 
+		// jagonzal (CAS-4913, CAS-5344): If we are unflagging FLAG_ROWS must be unset
+		if (not flag_p)
+		{
+			for (uInt baselineRowIdx=0;baselineRowIdx<antennaRows->size();baselineRowIdx++)
+			{
+				flagsMap.applyFlagRow(baselineRowIdx);
+			}
+			flagRow_p = true;
+		}
+
+
 		// Delete antenna pair rows
 		delete antennaRows;
 	}
@@ -2274,6 +2292,16 @@ FlagAgentBase::iterateAntennaPairsFlags()
 
 		// Increment antenna pair index
 		antennaPairdIdx++;
+
+		// jagonzal (CAS-4913, CAS-5344): If we are unflagging FLAG_ROWS must be unset
+		if (not flag_p)
+		{
+			for (uInt baselineRowIdx=0;baselineRowIdx<antennaRows->size();baselineRowIdx++)
+			{
+				flagsMap.applyFlagRow(baselineRowIdx);
+			}
+			flagRow_p = true;
+		}
 
 		// Delete antenna pair rows
 		delete antennaRows;

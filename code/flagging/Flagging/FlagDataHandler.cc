@@ -2396,11 +2396,11 @@ FlagMapper::setParentFlagRow(VectorView<Bool> *commonFlagRowView,VectorView<Bool
 	if (privateFlagRowView_p != NULL)
 	{
 		privateFlagRowView_p = privateFlagRowView;
-		applyFlagRow_p = &FlagMapper::applyCommonFlagRow;
+		applyFlagRow_p = &FlagMapper::applyPrivateFlagRow;
 	}
 	else
 	{
-		applyFlagRow_p = &FlagMapper::applyPrivateFlagRow;
+		applyFlagRow_p = &FlagMapper::applyCommonFlagRow;
 	}
 
 	return;
