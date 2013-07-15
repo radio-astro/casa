@@ -338,7 +338,7 @@ public:
         Cube<complex<float> >& visCubeCorrectedRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
         Cube<complex<float> >& visCubeModelRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
         Cube<float >& weightSpectrumRef() {throw AipsError ("Not implemented " , __FILE__, __LINE__);}
-        IPosition getShape () const;
+        IPosition getShape () const { return IPosition ();}
 
 private:
 
