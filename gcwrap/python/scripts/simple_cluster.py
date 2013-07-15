@@ -242,13 +242,13 @@ class simple_cluster:
             # Determine maximum number of engines that can be deployed at target node
             max_engines_user = b
             if (max_engines_user<=0):
-                max_engines = int(self.__default_cpu_fraction*(cpu_available/100.0)*ncores_available)
+                max_engines = int(round(self.__default_cpu_fraction*(cpu_available/100.0)*ncores_available))
                 if (max_engines < 2):
                     casalog.post("CPU free capacity available %s of %s cores would not support cluster mode at node %s, starting only 1 engine" 
                                  %(str(cpu_available),str(ncores_available),hostname),"WARN","config_cluster")
                     max_engines = 1                
             elif (max_engines_user<=1):
-                max_engines = int(max_engines_user*ncores_available)
+                max_engines = int(round(max_engines_user*ncores_available))
             else:
                 max_engines = int(max_engines_user)
             
@@ -277,7 +277,7 @@ class simple_cluster:
                     mem_per_engine = mem_per_engine_user
             
             # Apply heuristics: If memory limits number of engines then we can increase the number of openMP threads
-            nengines=int(max_mem/mem_per_engine)
+            nengines=int(round(float(max_mem)/float(mem_per_engine)))
             if (nengines < 2):
                 casalog.post("Free memory available %sMB would not support cluster mode at node %s, starting only 1 engine"
                              % (str(max_mem),hostname), "WARN","config_cluster")
@@ -755,8 +755,6 @@ class simple_cluster:
          ['casa-dev-10', 4, '/home/casa-dev-10/hye/ptest']]
 
         """
-        if not self._configdone:
-            return
         return self._hosts 
     
     ###########################################################################

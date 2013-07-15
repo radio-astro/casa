@@ -50,7 +50,7 @@ class test_simplecluster(unittest.TestCase):
         if os.path.exists(self.monitorFile):
             os.remove(self.monitorFile)
 
-    def initCluster(self,userMonitorFile="",max_engines=0.,max_memory=0.,memory_per_engine=512.):
+    def initCluster(self,userMonitorFile="",max_engines=2,max_memory=0.,memory_per_engine=512.):
         # First of all clean up files from previous sessions
         self.cleanUp()
         # Create cluster object
@@ -64,6 +64,7 @@ class test_simplecluster(unittest.TestCase):
         self.createClusterFile(max_engines,max_memory,memory_per_engine)
         # Initialize cluster object
         if (self.cluster.init_cluster(self.clusterfile, self.projectname)):
+            self.cluster.check_resource()
             # Wait unit cluster is producing monitoring info
             if (len(userMonitorFile) > 0):
                 self.waitForFile(userMonitorFile, 20)
@@ -72,7 +73,11 @@ class test_simplecluster(unittest.TestCase):
 
     def createClusterFile(self,max_engines=0.,max_memory=0.,memory_per_engine=512.):
             
-        msg=self.host + ', ' + str(max_engines) + ', ' + self.cwd + ', ' + str(max_memory) + ', ' + str(memory_per_engine) 
+        if (max_engines>1):
+            max_memory = 512*max_engines
+            msg=self.host + ', ' + str(max_engines) + ', ' + self.cwd + ', ' + str(max_memory)
+        else:
+            msg=self.host + ', ' + str(max_engines) + ', ' + self.cwd + ', ' + str(max_memory) + ', ' + str(memory_per_engine) 
         f=open(self.clusterfile, 'w')
         f.write(msg)
         f.close()
@@ -105,7 +110,7 @@ class test_simplecluster(unittest.TestCase):
              print "%s file %s is already in the working area, deleting ..." % (type_file,file)
              os.system('rm -rf ' + file)
         print "Copy %s file %s into the working area..." % (type_file,file)
-        os.system('cp -r ' + os.environ.get('CASAPATH').split()[0] +
+        os.system('cp -R ' + os.environ.get('CASAPATH').split()[0] +
                   '/data/regression/unittest/simplecluster/' + file + ' ' + file)
     
     def create_input(self,str_text, filename):
@@ -134,11 +139,10 @@ class test_simplecluster(unittest.TestCase):
         """Test 1: Create a default cluster"""
 
         # Create cluster file
-        self.initCluster()
+        self.initCluster(max_engines=0.)
 
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
-        self.assertTrue(cluster_list[0][1]<=self.ncpu)
         self.assertTrue(cluster_list[0][2]==self.cwd)
 
         self.stopCluster()
@@ -147,11 +151,12 @@ class test_simplecluster(unittest.TestCase):
         """Test 2: Create a custom cluster to use all the available resources"""
 
         # Create cluster file
-        self.initCluster(max_engines=1.,max_memory=1.,memory_per_engine=1024.)
+        max_memory_local = self.ncpu*1024
+        self.initCluster(max_engines=1.,max_memory=max_memory_local,memory_per_engine=1024.)
 
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
-        self.assertTrue(cluster_list[0][1]<=self.ncpu)
+        self.assertTrue(cluster_list[0][1]==self.ncpu)
         self.assertTrue(cluster_list[0][2]==self.cwd)
 
         self.stopCluster()        
@@ -160,11 +165,11 @@ class test_simplecluster(unittest.TestCase):
         """Test 3: Create a custom cluster to use half of available CPU capacity"""
 
         # Create cluster file
-        self.initCluster(max_engines=0.5,max_memory=1.,memory_per_engine=512.)
+        max_memory_local = self.ncpu*512
+        self.initCluster(max_engines=0.5,max_memory=max_memory_local,memory_per_engine=512.)
 
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
-        self.assertTrue(cluster_list[0][1]<=int(0.5*self.ncpu))
         self.assertTrue(cluster_list[0][2]==self.cwd)
 
         self.stopCluster()    
@@ -173,7 +178,7 @@ class test_simplecluster(unittest.TestCase):
         """Test 3: Create a custom cluster to use half of available RAM memory"""
 
         # Create cluster file
-        self.initCluster(max_engines=1.,max_memory=0.5,memory_per_engine=512.)
+        self.initCluster(max_engines=self.ncpu,max_memory=0.5,memory_per_engine=128.)
 
         cluster_list = self.cluster.get_hosts()
         self.assertTrue(cluster_list[0][0]==self.host)
@@ -397,33 +402,27 @@ class test_setjy_mms(test_simplecluster):
         """Test 1: Set vis model header in one single field """
 
         retval = setjy(vis=self.vis, field='1331+305*',fluxdensity=[1331.,0.,0.,0.], scalebychan=False, usescratch=False)
-        self.assertTrue(retval, "setjy run failed")
-        
-        tblocal = tbtool()
-        tblocal.open(self.vis)
-        model_0 = tblocal.getkeyword('model_0')
-        self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)      
+        self.assertTrue(retval, "setjy run failed")    
         
         mslocal = mstool()
         mslocal.open(self.vis)
         listSubMSs = mslocal.getreferencedtables()
         mslocal.close()
+        listSubMSs.append(self.vis)
         for subMS in listSubMSs:
             tblocal = tbtool()
-            tblocal.open(subMS)
-            fieldId = tblocal.getcell('FIELD_ID',1)
-            if (fieldId == 0):
-                model_0 = tblocal.getkeyword('model_0')
-                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
-            elif (fieldId == 1):
-                model_0 = tblocal.getkeyword('model_0')
-                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
-            elif (fieldId == 2):
-                model_0 = tblocal.getkeyword('model_0')
-                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
-            else:
-                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
-                tblocal.close()
+            tblocal.open(subMS + '/SOURCE')
+            nrows = tblocal.nrows()
+            for row_i in range(0,nrows):
+                try:
+                    model_i = tblocal.getcell('SOURCE_MODEL',row_i)
+                    if (row_i == 0):
+                        self.assertEqual(model_i['cl_0']['fields'][0],row_i)
+                        self.assertEqual(model_i['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                    else:
+                        self.assertEqual(len(model_i),0)
+                except:
+                    print "Problem accesing SOURCE_MODEL col from subMS " + subMS 
             tblocal.close()
             
     def test2_setjy_scratchless_mode_multiple_model(self):
@@ -433,40 +432,27 @@ class test_setjy_mms(test_simplecluster):
         self.assertTrue(retval, "setjy run failed")
         retval = setjy(vis=self.vis, field='1445+099*',fluxdensity=[1445.,0.,0.,0.], scalebychan=False, usescratch=False)
         self.assertTrue(retval, "setjy run failed")
-        
-        tblocal = tbtool()
-        tblocal.open(self.vis)
-        model_0 = tblocal.getkeyword('model_0')
-        self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
-        model_1 = tblocal.getkeyword('model_1')
-        self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
-        
+                   
         mslocal = mstool()
         mslocal.open(self.vis)
         listSubMSs = mslocal.getreferencedtables()
         mslocal.close()
+        listSubMSs.append(self.vis)
         for subMS in listSubMSs:
-            tblocal.open(subMS)
-            fieldId = tblocal.getcell('FIELD_ID',1)
-            if (fieldId == 0):
-                model_0 = tblocal.getkeyword('model_0')
-                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
-                model_1 = tblocal.getkeyword('model_1')
-                self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
-            elif (fieldId == 1):
-                model_0 = tblocal.getkeyword('model_0')
-                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
-                model_1 = tblocal.getkeyword('model_1')
-                self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
-            elif (fieldId == 2):
-                model_0 = tblocal.getkeyword('model_0')
-                self.assertEqual(model_0['cl_0']['container']['component0']['flux']['value'][0],1331.)
-                model_1 = tblocal.getkeyword('model_1')
-                self.assertEqual(model_1['cl_0']['container']['component0']['flux']['value'][0],1445.)
-            else:
-                raise AssertionError, "Unrecognized field [%s] found in Sub-MS [%s]" %(str(fieldId),subMS)
-                tblocal.close()
-            tblocal.close()
+            tblocal = tbtool()
+            tblocal.open(subMS + '/SOURCE')
+            nrows = tblocal.nrows()
+            for row_i in range(0,nrows):
+                model_i = tblocal.getcell('SOURCE_MODEL',row_i)
+                if (row_i == 0):
+                    self.assertEqual(model_i['cl_0']['fields'][0],row_i)
+                    self.assertEqual(model_i['cl_0']['container']['component0']['flux']['value'][0],1331.)
+                elif (row_i == 1):
+                    self.assertEqual(model_i['cl_0']['fields'][0],row_i)
+                    self.assertEqual(model_i['cl_0']['container']['component0']['flux']['value'][0],1445.)                    
+                else:
+                    self.assertEqual(len(model_i),0)
+            tblocal.close()            
             
     def test3_setjy_scratch_mode_single_model(self):
         """Test 3: Set MODEL_DATA in one single field"""
