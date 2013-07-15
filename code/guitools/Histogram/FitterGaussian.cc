@@ -26,6 +26,7 @@
 #include "FitterGaussian.h"
 #include <scimath/Fitting/FitGaussian.h>
 #include <QDebug>
+#include <limits>
 
 #include <iostream>
 using namespace std;

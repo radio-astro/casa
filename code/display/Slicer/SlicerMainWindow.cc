@@ -37,6 +37,8 @@
 
 #include <qwt_plot_zoomer.h>
 
+#include <limits>
+
 namespace casa {
 
 	SlicerMainWindow::SlicerMainWindow(QWidget *parent)

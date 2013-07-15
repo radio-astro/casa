@@ -451,13 +451,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		dd = 0;
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-		        iter != itsDisplayList.end(); ++iter,++dd ) {
+			iter != itsDisplayList.end(); ++iter,++dd ) {
 			if ( ! (*iter)->isDisplayable( ) ) {
 				conforms[dd] = False;
-				continue;
 			} else {
-				conforms[dd] = (*iter)->conformsTo(*wc);
+				conforms[dd] = (*iter)->conformsTo( wc );
+
 			}
+
 		}
 
 		clearSubstituteTitles();
@@ -482,8 +483,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 		        iter != itsDisplayList.end(); ++iter, ++dd ) {
 			if ( conforms[dd] ) {
-				if ( (*iter)->classType() == Display::Vector &&
-				        (*iter)->isDisplayable( ) )
+				if ( (*iter)->classType() == Display::Vector )
 					(*iter)->refreshEH(ev);
 			}
 		}
@@ -494,8 +494,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 		        iter != itsDisplayList.end(); ++iter, ++dd ) {
 			if ( conforms[dd] ) {
-				if ( (*iter)->classType() == Display::Annotation &&
-				        (*iter)->isDisplayable( ) )
+				if ( (*iter)->classType() == Display::Annotation )
 					(*iter)->refreshEH(ev);
 			}
 		}
@@ -513,8 +512,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
 		        iter != itsDisplayList.end(); ++iter, ++dd ) {
 			if ( conforms[dd] ) {
-				if ( (*iter)->classType() == Display::CanvasAnnotation &&
-				        (*iter)->isDisplayable( ) )
+				if ( (*iter)->classType() == Display::CanvasAnnotation )
 					(*iter)->refreshEH(ev);
 			}
 		}
@@ -546,7 +544,75 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	}
 
-	void WorldCanvasHolder::labelAxes( const Vector<Bool>& conforms, const WCRefreshEvent &ev ){
+	void WorldCanvasHolder::labelAxesNormal( const Vector<Bool>& conforms,
+				const WCRefreshEvent & ev ){
+		int displayCount = 0;
+		int dd = itsDisplayList.size() - 1;
+		for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
+								iter != itsDisplayList.rend(); ++iter, dd-- ) {
+			if ( conforms[dd] ) {
+				if ( (*iter)->classType() == Display::Raster ) {
+					if ( (*iter)->labelAxes(ev)) {
+						displayCount = 1;
+						break;
+					}
+				}
+			}
+		}
+
+		//We could not find a raster to label the axes so we just take the first one
+		//that works.
+		if ( displayCount == 0 ) {
+			dd = itsDisplayList.size() - 1;
+			for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
+								iter != itsDisplayList.rend(); ++iter, --dd ) {
+				if ( conforms[dd]  ) {
+					if ( (*iter)->classType( ) != Display::Raster ) {
+						if ( (*iter)->labelAxes(ev)) {
+							break;
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	void WorldCanvasHolder::labelAxesBlink( const Vector<Bool>& conforms,
+			const WCRefreshEvent & ev ){
+		int displayCount = 0;
+		int dd = 0;
+		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+								iter != itsDisplayList.end(); ++iter, ++dd ) {
+			if ( conforms[dd] ) {
+				if ( (*iter)->classType() == Display::Raster ) {
+					if ( (*iter)->labelAxes(ev)) {
+						displayCount = 1;
+						break;
+					}
+				}
+			}
+		}
+
+		//We could not find a raster to label the axes so we just take the first one
+		//that works.
+		if ( displayCount == 0 ) {
+			dd = 0;
+			for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
+								iter != itsDisplayList.end(); ++iter, ++dd ) {
+				if ( conforms[dd]  ) {
+					if ( (*iter)->classType( ) != Display::Raster ) {
+						if ( (*iter)->labelAxes(ev)) {
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	void WorldCanvasHolder::labelAxes( const Vector<Bool>& conforms,
+			const WCRefreshEvent &ev ){
 		int displayCount = 0;
 
 		//First try to label the axes using the controllingDD.
@@ -559,39 +625,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 
 		if ( displayCount == 0 ){
-			int dd = 0;
-			for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-							        iter != itsDisplayList.end(); ++iter, ++dd ) {
-				if ( conforms[dd] ) {
-					if ( (*iter)->classType() == Display::Raster ) {
-						if ( (*iter)->labelAxes(ev)) {
-							displayCount = 1;
-							break;
-						}
-					}
-				}
+			if ( blinkMode ){
+				labelAxesBlink( conforms, ev );
 			}
-
-			//We could not find a raster to label the axes so we just take the first one
-			//that works.
-			if ( displayCount == 0 ) {
-				dd = 0;
-				for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-							        iter != itsDisplayList.end(); ++iter, ++dd ) {
-					if ( conforms[dd] ) {
-						String className = (*iter)->className();
-						//In blink mode, we don't show contours, vectors, or markers
-						//separately unless they are the only ones.
-						if ( className.find("Raster")==String::npos ) {
-							if ( (*iter)->labelAxes(ev)) {
-								break;
-							}
-						}
-					}
-				}
+			else {
+				labelAxesNormal( conforms, ev );
 			}
 		}
 	}
+
 
 	void WorldCanvasHolder::setControllingTitle( const Vector<Bool>& conforms ){
 		if ( controllingDD != NULL ) {
@@ -609,8 +651,42 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
+	DisplayData* WorldCanvasHolder::getTitleDDNormal( const Vector<Bool> & conforms ) const {
+		DisplayData* titleDD = NULL;
+		int dd = 0;
+		for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
+				iter != itsDisplayList.rend(); ++iter, ++dd ) {
+			if ( conforms[dd] ) {
+				if ( (*iter)->classType() == Display::Raster ) {
+					if ( (*iter)->canLabelAxes()) {
+						titleDD = (*iter);
+						break;
+					}
+				}
+			}
+		}
 
-	String WorldCanvasHolder::getTitleDDName( const Vector<Bool>& conforms ) const {
+		//We could not find a raster to label the axes so we just take the first one
+		//that works.
+		if ( titleDD == NULL ) {
+			for ( std::list<DisplayData*>::const_reverse_iterator iter = itsDisplayList.rbegin();
+											iter != itsDisplayList.rend(); ++iter, ++dd ) {
+				if ( conforms[dd] ) {
+					if ( (*iter)->classType() != Display::Raster ) {
+					//In blink mode, we don't show contours, vectors, or markers
+					//separately unless they are the only ones.
+						if ( (*iter)->canLabelAxes()) {
+							titleDD= (*iter );
+							break;
+						}
+					}
+				}
+			}
+		}
+		return titleDD;
+	}
+
+	DisplayData* WorldCanvasHolder::getTitleDDBlink( const Vector<Bool> & conforms ) const {
 		DisplayData* titleDD = NULL;
 		int dd = 0;
 		for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
@@ -629,12 +705,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//that works.
 		if ( titleDD == NULL ) {
 			for ( std::list<DisplayData*>::const_iterator iter = itsDisplayList.begin();
-									        iter != itsDisplayList.end(); ++iter, ++dd ) {
-				if ( conforms[dd] && (*iter)->isDisplayable( )) {
-					String className = (*iter)->className();
+											iter != itsDisplayList.end(); ++iter, ++dd ) {
+				if ( conforms[dd] ) {
+					if ( (*iter)->classType() != Display::Raster ) {
 					//In blink mode, we don't show contours, vectors, or markers
 					//separately unless they are the only ones.
-					if ( className.find("Raster")==String::npos ) {
 						if ( (*iter)->canLabelAxes()) {
 							titleDD= (*iter );
 							break;
@@ -642,6 +717,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					}
 				}
 			}
+		}
+		return titleDD;
+	}
+
+	String WorldCanvasHolder::getTitleDDName( const Vector<Bool>& conforms ) const {
+		DisplayData* titleDD = NULL;
+		if ( blinkMode ){
+			titleDD = getTitleDDBlink( conforms );
+		}
+		else {
+			titleDD = getTitleDDNormal( conforms );
 		}
 		String titleDDName;
 		if ( titleDD != NULL ){

@@ -785,7 +785,7 @@ VlaData::makeReport ()
     String report;
 
     DeltaThreadTimes duration = (timing_p.timeStop_p - timing_p.timeStart_p); // seconds
-    report += format ("\nLookahead Stats: nCycles=%d, duration=%.3f sec\n...\n",
+    report += String::format ("\nLookahead Stats: nCycles=%d, duration=%.3f sec\n...\n",
                       timing_p.readWait_p.n(), duration.elapsed());
     report += "...ReadWait:    " + timing_p.readWait_p.formatAverage () + "\n";
     report += "...ReadOperate: " + timing_p.readOperate_p.formatAverage() + "\n";
@@ -797,9 +797,9 @@ VlaData::makeReport ()
 
     Double syncCycle = timing_p.fillOperate_p.elapsedAvg() + timing_p.readOperate_p.elapsedAvg();
     Double asyncCycle = max (timing_p.fillCycle_p.elapsedAvg(), timing_p.readCycle_p.elapsedAvg());
-    report += format ("...Sync cycle would be %6.1f ms\n", syncCycle * 1000);
-    report += format ("...Speedup is %5.1f%%\n", (syncCycle / asyncCycle  - 1) * 100);
-    report += format ("...Total time savings estimate is %7.3f seconds\n",
+    report += String::format ("...Sync cycle would be %6.1f ms\n", syncCycle * 1000);
+    report += String::format ("...Speedup is %5.1f%%\n", (syncCycle / asyncCycle  - 1) * 100);
+    report += String::format ("...Total time savings estimate is %7.3f seconds\n",
                       (syncCycle - asyncCycle) * timing_p.readWait_p.n());
 
     return report;
@@ -844,7 +844,7 @@ VlaData::readStart (SubChunkPair subchunk)
     interface_p->notifyAllInterfaceChanged();
 
     ThrowIf (! datum->isSubChunk (subchunk),
-             utilj::format ("Reader wanted subchunk %s while next subchunk is %s",
+             String::format ("Reader wanted subchunk %s while next subchunk is %s",
                             subchunk.toString().c_str(), datum->getSubChunkPair().toString().c_str()));
 
     Log (2, "VlaData::readStart on %s\n", subchunk.toString().c_str());

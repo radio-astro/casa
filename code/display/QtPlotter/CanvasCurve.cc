@@ -31,6 +31,7 @@
 #include <QtCore/qmath.h>
 #include <cmath>
 #include <complex>
+#include <limits>
 
 namespace casa {
 

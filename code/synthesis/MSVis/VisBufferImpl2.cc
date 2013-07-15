@@ -15,6 +15,7 @@
 #include <casa/OS/Timer.h>
 #include <casa/Utilities.h>
 #include <casa/aipstype.h>
+#include <typeinfo>
 #include <components/ComponentModels/ComponentList.h>
 #include <ms/MeasurementSets/MSColumns.h>
 #include <synthesis/MSVis/UtilJ.h>
@@ -868,10 +869,10 @@ using namespace vi;
 //
 // Other sections contain the accessor and filler methods
 
-VisBufferImpl2::VisBufferImpl2 ()
+VisBufferImpl2::VisBufferImpl2 (VisBufferOptions options)
 : cache_p (0), state_p (0)
 {
-    construct (0, VbNoOptions);
+    construct (0, options);
 }
 
 VisBufferImpl2::VisBufferImpl2(VisibilityIterator2 * iter, VisBufferOptions options)
@@ -2881,6 +2882,12 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
     Matrix<Bool> flagMat = flagCube().yzPlane(0);
     std::logical_and<Bool> andOp;
 
+    Vector<Float> wts (nRows (), 0);
+
+    wts = weight().row(0);
+    wts += weight().row(nCorrelations() - 1);
+    wts *= 0.5f;
+
     for (Int i = 1; i < nCorrelations(); ++ i){
 
         Matrix<Bool> flagPlane = flagCube().yzPlane(i);
@@ -2889,20 +2896,20 @@ VisBufferImpl2::fillImagingWeight (Matrix<Float> & value) const
 
     if (weightGenerator.getType () == "uniform") {
 
-        weightGenerator.weightUniform (value, flagMat, uvw (), getFrequencies (0), weight (), msId (), fieldId ()(0));
+        weightGenerator.weightUniform (value, flagMat, uvw (), getFrequencies (0), wts, msId (), fieldId ()(0));
 
     } else if (weightGenerator.getType () == "radial") {
 
-        weightGenerator.weightRadial (value, flagMat, uvw (), getFrequencies (0), weight ());
+        weightGenerator.weightRadial (value, flagMat, uvw (), getFrequencies (0), wts);
 
     } else {
 
-        weightGenerator.weightNatural (value, flagMat, weight ());
+        weightGenerator.weightNatural (value, flagMat, wts);
     }
 
     if (weightGenerator.doFilter ()) {
 
-        weightGenerator.filter (value, flagMat, uvw (), getFrequencies (0), weight ());
+        weightGenerator.filter (value, flagMat, uvw (), getFrequencies (0), wts);
     }
 }
 

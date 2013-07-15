@@ -45,6 +45,9 @@ namespace casa {
 			bool sliceReady( ) const;
 			std::string getSliceRep( ) const;
 
+        signals:
+            void stateChange(bool);
+
 		private:
 			Vector<int> shape;
 			std::vector<QSpinBox*> startgui;
@@ -53,6 +56,9 @@ namespace casa {
 			void load_sizegui( );
 			typedef std::map<QSpinBox*,int> spin_map_t;
 			spin_map_t axis_map;
+
+            // when setting up slicer don't generate events...
+            bool drop_events;
 
 		private slots:
 			void adjust_position(int);

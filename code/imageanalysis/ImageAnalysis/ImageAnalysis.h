@@ -72,6 +72,11 @@ class ImageMomentsProgressMonitor;
 // One time it should be merged with pyrap's image tool ImageProxy.
 // </synopsis>
 
+// NOTE: NEW METHODS SHOULD NOT BE ADDED TO THIS CLASS. PLEASE USE THE ImageTask.h
+// architecture for adding new functionality for image analysis. If you do not understand,
+// please consult with me, dmehring@nrao.edu. If you add new methods to ImageAnalysis, I will contact
+// you to remove them. Please save us both the annoyance of that.
+
 class ImageAnalysis
 {
   public:
@@ -282,6 +287,11 @@ class ImageAnalysis
 
     Bool makecomplex(const String& outfile, const String& imag, Record& region,
                      const Bool overwrite = False);
+
+    // create a float image from a complex image,
+    // possible operations are "abs", "arg", "real", "imag", "square"
+    static Bool makeFloat(const String& outFile, const String& compFile, LogIO& os,
+			  const String& operation="abs", Bool overwrite = False);
 
     Vector<String> maskhandler(const String& op,const Vector<String>& nam);
 

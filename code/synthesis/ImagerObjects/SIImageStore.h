@@ -39,6 +39,7 @@
 #include <images/Images/TempImage.h>
 #include <images/Images/SubImage.h>
 #include <images/Regions/ImageRegion.h>
+#include <casa/BasicSL/Constants.h>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 
@@ -87,9 +88,9 @@ class SIImageStore
   void addImages( CountedPtr<SIImageStore> imagestoadd, 
 		  Bool addpsf, Bool addresidual, Bool addweight );
 
-  void divideResidualByWeight(Float weightlimit);
-  void dividePSFByWeight(Float weightlimit);
-  void divideModelByWeight(Float weightlimit);
+  void divideResidualByWeight(const Float weightlimit=C::minfloat);
+  void dividePSFByWeight(const Float weightlimit=C::minfloat);
+  void divideModelByWeight(const Float weightlimit=C::minfloat);
 
   Bool isValid(){return itsValidity;}
 

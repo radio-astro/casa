@@ -234,24 +234,41 @@ public:
     {
         if (uvw_p.empty()){
 
-            const Matrix<Double> & u = vb2_p->uvw();
+            fillUvw ();
 
-            Int nRows = u.shape()(1);
-            uvw_p.resize (nRows);
-
-            for (Int i = 0; i < nRows; i++){
-                RigidVector<Double,3> t;
-                for (Int j = 0; j < 3; j++){
-                    t (j) = u (j, i);
-                }
-                uvw_p (i) = t;
-            }
         }
 
         return uvw_p;
     }
 
-    virtual const Vector<RigidVector<Double, 3> >& uvw() const { IllegalOperation(); }
+    virtual const Vector<RigidVector<Double, 3> >& uvw() const
+    {
+        if (uvw_p.empty()){
+
+            fillUvw ();
+
+        }
+
+        return uvw_p;
+    }
+
+    void
+    fillUvw() const {
+
+        const Matrix<Double> & u = vb2_p->uvw();
+
+        Int nRows = u.shape()(1);
+        uvw_p.resize (nRows);
+
+        for (Int i = 0; i < nRows; i++){
+            RigidVector<Double,3> t;
+            for (Int j = 0; j < 3; j++){
+                t (j) = u (j, i);
+            }
+            uvw_p (i) = t;
+        }
+    }
+
 
     virtual Matrix<Double>& uvwMat() { IllegalOperation (); }
     virtual const Matrix<Double>& uvwMat() const { return vb2_p-> uvw(); }
@@ -467,7 +484,7 @@ private:
     Int nRows_p;
     Int spectralWindow_p;
     Vector<Int> spectralWindows_p;
-    Vector<RigidVector<Double, 3> > uvw_p;
+    mutable Vector<RigidVector<Double, 3> > uvw_p;
     const vi::VisBuffer2 * vb2_p; // [use]
     vi::VisBuffer2 * vb2Rw_p; // [use]
 

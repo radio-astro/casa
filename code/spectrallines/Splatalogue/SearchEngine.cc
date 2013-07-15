@@ -36,6 +36,7 @@
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/TableParse.h>
 #include <fcntl.h>
+#include <memory>
 
 #include <iostream>
 using namespace std;

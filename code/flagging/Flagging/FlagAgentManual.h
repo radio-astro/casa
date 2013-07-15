@@ -36,6 +36,8 @@ public:
 
 protected:
 
+	void initialize();
+
 	// Flag entire row
 	bool computeRowFlags(const vi::VisBuffer2 &visBuffer, FlagMapper &flags, uInt row);
 

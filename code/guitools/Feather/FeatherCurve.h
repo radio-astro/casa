@@ -27,6 +27,7 @@
 #define FEATHERCURVE_H_
 
 #include <qwt_plot.h>
+#include <limits>
 class QwtPlotCurve;
 
 namespace casa {

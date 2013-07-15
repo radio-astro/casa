@@ -211,6 +211,7 @@ class Imager
 			     const String& spwstring="",
 			     const String& uvdist="",
                              const String& scan="",
+                             const String& intent="",
                              const String& obs="",
                              const Bool useModelCol=False,
 			     const Bool readonly=False);
@@ -232,6 +233,7 @@ class Imager
 	       const String& spwstring="",
 	       const String& uvdist="",
                const String& scan="",
+               const String& intent="",
                const String& obs="",
                const Bool usemodelCol=False,
                const Bool be_calm=false);
@@ -508,7 +510,8 @@ class Imager
              const MFrequency& reffreq=MFrequency(Quantity(1.0, "GHz"),
                                                   MFrequency::LSRK),
              const String& timerange="", const String& scanstr="",
-             const String& obsidstr="", const String& interpolation="nearest");
+             const String& intentstr="", const String& obsidstr="",
+             const String& interpolation="nearest");
 
   // Make an empty image
   Bool make(const String& model);
@@ -799,7 +802,8 @@ protected:
                              const Int rawspwid, const Int fldid,
                              const String& clname, const String& timerange="",
                              const String& scanstr="", 
-			     const String& obsidstr="", 
+			     const String& obsidstr="",
+                             const String& intentstr="", 
 			    const Vector<Double>& freqofscale=Vector<Double>(0),
 			     const Vector<Double>& scale=Vector<Double>(0) );
   // Returns whether it found a source.

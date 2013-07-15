@@ -1096,7 +1096,8 @@ AgentFlagger::validateDataColumn(String datacol)
 	if (isMS_p) {
 		if (datacol.compare("DATA") == 0 or datacol.compare("CORRECTED") == 0 or
 				datacol.compare("MODEL") == 0 or datacol.compare("RESIDUAL") == 0 or
-				datacol.compare("RESIDUAL_DATA") == 0) {
+				datacol.compare("RESIDUAL_DATA") == 0 or datacol.compare("WEIGHT_SPECTRUM") == 0)
+		{
 
 			ret = datacol;
 		}

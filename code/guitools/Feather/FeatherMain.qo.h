@@ -37,7 +37,8 @@
 #include <casa/aipstype.h>
 #include <casa/Logging/LogIO.h>
 
-#include <pair.h>
+using namespace std;
+
 namespace casa {
 
 class PlotHolder;

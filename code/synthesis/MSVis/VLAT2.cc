@@ -153,8 +153,8 @@ VLAT::alignWriteIterator (SubChunkPair subchunk)
     }
 
     ThrowIf (subchunk != writeSubchunk_p,
-             format ("Failed to advance write iterator to subchunk %s; last subchunk is %s",
-                     subchunk.toString().c_str(), writeSubchunk_p.toString().c_str()));
+             String::format ("Failed to advance write iterator to subchunk %s; last subchunk is %s",
+                             subchunk.toString().c_str(), writeSubchunk_p.toString().c_str()));
 }
 
 void
@@ -189,7 +189,7 @@ void
 VLAT::checkFiller (VisBufferComponents::EnumType fillerId)
 {
     ThrowIf (! visibilityIterator_p -> existsColumn (fillerId),
-             utilj::format ("VLAT: Column to be prefetched, %s, does not exist!",
+             String::format ("VLAT: Column to be prefetched, %s, does not exist!",
                             PrefetchColumns::columnName (fillerId).c_str()));
 }
 
@@ -603,7 +603,8 @@ VLAT::setPrefetchColumns (const ViReadImplAsync::PrefetchColumns & columns)
             c != columns.end();
             c ++){
 
-        ThrowIf (! containsKey (*c, fillerDictionary_p), format ("Unknown prefetch column id (%d)", *c));
+        ThrowIf (! containsKey (*c, fillerDictionary_p),
+                 String::format ("Unknown prefetch column id (%d)", *c));
 
         fillers_p.push_back (fillerDictionary_p [*c]->clone());
     }

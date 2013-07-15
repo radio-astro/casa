@@ -38,6 +38,7 @@
 #include <display/Fit/RegionBox.h>
 #include <display/Fit/ColorComboDelegate.h>
 #include <imageanalysis/ImageAnalysis/ImageStatsCalculator.h>
+#include <limits>
 
 namespace casa {
 

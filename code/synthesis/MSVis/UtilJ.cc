@@ -53,7 +53,7 @@ formatV (const String & formatString, va_list vaList)
 	return buffer;
 }
 
-String
+/*String
 format (const char * formatString, ...)
 {
 
@@ -70,7 +70,7 @@ format (const char * formatString, ...)
 	va_end (vaList);
 
 	return result;
-}
+}*/
 
 
 Bool

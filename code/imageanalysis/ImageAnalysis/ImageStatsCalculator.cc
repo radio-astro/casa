@@ -242,7 +242,8 @@ Record ImageStatsCalculator::statistics(
 	vector<String> *const &messageStore
 ) {
 	String pgdevice("/NULL");
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	LogOrigin myOrigin(_class, __FUNCTION__);
+	*_getLog() << myOrigin;
 	ImageRegion* pRegionRegion = 0;
 	ImageRegion* pMaskRegion = 0;
 	String mtmp = _getMask();
@@ -258,7 +259,7 @@ Record ImageStatsCalculator::statistics(
 			_getStretch()
 	);
 	// Reset who is logging stuff.
-	*_getLog() << LogOrigin(_class, __FUNCTION__);
+	*_getLog() << myOrigin;
 
 	// Find BLC of subimage in pixels and world coords, and output the
 	// information to the logger.
@@ -296,7 +297,7 @@ Record ImageStatsCalculator::statistics(
 	if (_list) {
 		// Only write to the logger if the user wants it displayed.
 		Vector<String> x(5);
-		*_getLog() << LogOrigin("ImageAnalysis", "statistics") << LogIO::NORMAL;
+		*_getLog() << myOrigin << LogIO::NORMAL;
 		ostringstream y;
 		x[0] = "Regions --- ";
 		y << "         -- bottom-left corner (pixel) [blc]:  " << blc;

@@ -72,6 +72,7 @@
 #include <assert.h>
 #include <graphics/X11/X_exit.h>
 #include <QMessageBox>
+#include <limits>
 
 namespace casa {
 

@@ -44,6 +44,7 @@
 #include <algorithm>
 #include <set>
 
+
 namespace casa {
 	namespace viewer {
 
@@ -77,22 +78,6 @@ namespace casa {
 		const ImageProperties &ImageProperties::operator=( const std::string &path ) {
 			reset(path);
 			return *this;
-		}
-
-		Vector<double> ImageProperties::freqRange( const std::string &units ) const {
-			if ( units.size( ) == 0 )
-				return freq_range;
-			Quantum<Vector<double> > range(freq_range,freq_units.c_str( ));
-			range.convert(units.c_str( ));
-			return range.getValue( );
-		}
-
-		Vector<double> ImageProperties::veloRange( const std::string &units ) const {
-			if ( units.size( ) == 0 )
-				return velo_range;
-			Quantum<Vector<double> > range(velo_range,velo_units.c_str( ));
-			range.convert(units.c_str( ));
-			return range.getValue( );
 		}
 
 		std::vector<double> ImageProperties::beam_as_vector( const GaussianBeam &beam ) const {
@@ -154,9 +139,9 @@ namespace casa {
 			has_spectral_axis = false;
 			direction_type = "";
 			shape_.resize(0);
-			freq_range.resize(0);
+			frequencies_.resize(0);
 			freq_units = "";
-			velo_range.resize(0);
+			velocities_.resize(0);
 			velo_units = "";
 			ra_range.resize(0);
 			ra_range_str.resize(0);
@@ -212,23 +197,30 @@ namespace casa {
 				Vector<String> spec_unit_vec = spec.worldAxisUnits( );
 				if ( spec_unit_vec(0) == "Hz" ) spec_unit_vec(0) = "GHz";
 				spec.setWorldAxisUnits(spec_unit_vec);
-				freq_range.resize(2);
-				double last_channel = shape_[cs_.spectralAxisNumber( )]-1;
-				if ( spec.toWorld(freq_range(0),0) == false ||
-				        spec.toWorld(freq_range(1),last_channel) == false ) {
-					has_spectral_axis = false;
-					freq_range.resize(0);
-				} else {
-					freq_units = spec_unit_vec(0);
-					spec.setVelocity( "km/s" );
-					velo_range.resize(2);
-					if ( spec.pixelToVelocity(velo_range(0),0) == false ||
-					        spec.pixelToVelocity(velo_range(1),last_channel) == false ) {
-						velo_range.resize(0);
-					} else {
-						velo_units = "km/s";
-					}
-				}
+
+                frequencies_.resize(shape_[cs_.spectralAxisNumber( )]);
+                velocities_.resize(frequencies_.size( ));
+                freq_units = spec_unit_vec(0);
+                spec.setVelocity( "km/s" );
+                for ( size_t off=0; off < shape_[cs_.spectralAxisNumber( )]; ++off ) {
+                    if ( spec.toWorld(frequencies_[off],off) == false ) {
+                        has_spectral_axis = false;
+                        frequencies_.resize(0);
+                        velocities_.resize(0);
+                        break;
+                    }
+					if ( spec.pixelToVelocity(velocities_[off],off) == false ) {
+                        has_spectral_axis = false;
+                        frequencies_.resize(0);
+                        velocities_.resize(0);
+                        break;
+                    }
+                }
+
+                if ( velocities_.size( ) > 0 ) {
+                    velo_units = "km/s";
+                }
+
 			}
 
 			ImageInfo ii = image->imageInfo();
@@ -312,4 +304,3 @@ namespace casa {
 
 	}
 }
-

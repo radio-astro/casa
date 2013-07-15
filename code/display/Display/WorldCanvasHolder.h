@@ -115,6 +115,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// be allowed to draw themselves.
 		// <group>
 		void setRestriction(const Attribute& restriction) {
+			cout<<"World canvas holder restriction="<<restriction.getName().c_str()<<" value="<<restriction.getType()<<endl;
+
 			itsWorldCanvas->setRestriction(restriction);
 		}
 		void setRestrictions(const AttributeBuffer& resBuff) {
@@ -287,8 +289,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Float drawUnit;
 
 		String getTitleDDName(const Vector<Bool>& conforms) const;
+		DisplayData* getTitleDDBlink( const Vector<Bool> & conforms ) const;
+		DisplayData* getTitleDDNormal( const Vector<Bool> & conforms ) const;
 		String getTitle( DisplayData* dd ) const;
 		void labelAxes( const Vector<Bool>& conforms, const WCRefreshEvent &ev);
+		void labelAxesBlink( const Vector<Bool>& conforms, const WCRefreshEvent & ev );
+		void labelAxesNormal( const Vector<Bool>& conforms, const WCRefreshEvent & ev );
 		void setControllingTitle( const Vector<Bool>& conforms );
 		void clearSubstituteTitles( );
 		std::string error_string;

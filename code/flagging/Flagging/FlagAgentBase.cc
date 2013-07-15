@@ -155,7 +155,6 @@ FlagAgentBase::initialize()
    filterChannels_p = false;
    filterRows_p = false;
    filterPols_p = false;
-   flagAutoCorrelations_p = false;
    uvwUnits_p = true; // Meters
 
 	// Initialize state
@@ -275,7 +274,7 @@ FlagAgentBase::create (FlagDataHandler *dh,Record config)
 		FlagAgentExtension* agent = new FlagAgentExtension(dh,config);
 		return agent;
 	}
-	// Extension
+	// Rflag
 	else if (mode.compare("rflag")==0)
 	{
 		FlagAgentRFlag* agent = new FlagAgentRFlag(dh,config);
@@ -1249,6 +1248,13 @@ FlagAgentBase::setAgentParameters(Record config)
 			// Request to pre-load ModelCube
 			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeModel);
 		}
+		else if (dataColumn_p.compare("WEIGHT_SPECTRUM") == 0)
+		{
+			dataReference_p = WEIGHT_SPECTRUM;
+
+			// Request to pre-load WeightSpectrum
+			flagDataHandler_p->preLoadColumn(vi::WeightSpectrum);
+		}
 		else
 		{
 			*logger_p << LogIO::WARN <<
@@ -1290,7 +1296,8 @@ FlagAgentBase::setAgentParameters(Record config)
 		// These are the float columns that do not support complex operators
 		// It should fall back to the default REAL
 		if (	(dataColumn_p.compare("FPARAM") == 0) or
-				(dataColumn_p.compare("SNR") == 0) )
+				(dataColumn_p.compare("SNR") == 0) or
+				(dataColumn_p.compare("WEIGHT_SPECTRUM") == 0))
 		{
 			// Check if expression is one of the supported operators
 			if (	(expression_p.find("IMAG") != string::npos) or
@@ -1301,7 +1308,7 @@ FlagAgentBase::setAgentParameters(Record config)
 				*logger_p 	<< LogIO::WARN
 							<< " Unsupported visibility expression: " << expression_p
 							<< "; selecting REAL by default. "
-							<< " Keep in mind that complex operators are not supported for FPARAM/SNR"
+							<< " Complex operators are not supported for FPARAM/SNR/WEIGHT_SPECTRUM"
 							<< LogIO::POST;
 
 				String new_expression;
@@ -1391,15 +1398,19 @@ FlagAgentBase::setAgentParameters(Record config)
 		flagDataHandler_p->preLoadColumn(vi::SpectralWindows);
 		flagDataHandler_p->preLoadColumn(vi::CorrType);
 
-
 	}
 
 	exists = config.fieldNumber ("autocorr");
 	if (exists >= 0)
 	{
-		flagAutoCorrelations_p = config.asBool("autocorr");
-		if (flagAutoCorrelations_p) filterRows_p=true;
-		*logger_p << logLevel_p << " autocorr is " << flagAutoCorrelations_p << LogIO::POST;
+		flagDataHandler_p->flagAutoCorrelations_p = config.asBool("autocorr");
+		*logger_p << logLevel_p << "autocorr is " << flagDataHandler_p->flagAutoCorrelations_p
+				<< LogIO::POST;
+		if (flagDataHandler_p->flagAutoCorrelations_p) {
+			filterRows_p=true;
+			*logger_p << logLevel_p << "Will only flag auto-correlations from non-radiometer data"
+					<< LogIO::POST;
+		}
 	}
 
 	return;
@@ -1484,15 +1495,32 @@ FlagAgentBase::generateRowsIndex(uInt nRows)
 				if (!find(uvwList_p,uvDistance)) continue;
 			}
 
-			// Check autocorrelations
-			if (flagAutoCorrelations_p)
+			// Check auto-correlations
+			if (flagDataHandler_p->flagAutoCorrelations_p)
 			{
-				if (visibilityBuffer_p->antenna1()[row_i] != visibilityBuffer_p->antenna2()[row_i]) continue;
+				// if not an auto-corr, do not add row to the vector
+				if (visibilityBuffer_p->antenna1()[row_i] != visibilityBuffer_p->antenna2()[row_i]) {
+					continue;
+				}
+				// Only for MSs, not for cal tables
+				if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET){
+
+					// CAS-5286: do not flag auto-corrs when processor TYPE is RADIOMETER
+					int proc_id = visibilityBuffer_p->processorId()[row_i];
+					if (proc_id >= 0 and flagDataHandler_p->processorTableExist_p == true){
+
+						String proc_type = flagDataHandler_p->typeCol_p.asString(proc_id);
+						if (proc_type.compare("RADIOMETER") == 0) continue;
+
+					}
+				}
+
 			}
 
 			// If all the filters passed, add the row to the list
 			rowsIndex_p.push_back(row_i);
 		}
+
 	}
 	else
 	{
@@ -1848,7 +1876,13 @@ FlagAgentBase::find(Vector<Int> &validRange, Int element)
 bool
 FlagAgentBase::find(Matrix<Double> &validRange, Double element)
 {
-	if (element>=validRange(0,0) and element<=validRange(1,0)) return true;
+	IPosition size = validRange.shape();
+
+	for (uInt timeSel_i=0;timeSel_i<size(1);timeSel_i++)
+	{
+		if (element>=validRange(0,timeSel_i) and element<=validRange(1,timeSel_i)) return true;
+	}
+
 	return false;
 }
 
@@ -1880,7 +1914,7 @@ FlagAgentBase::find(Block<int> &columns, int col)
 bool
 FlagAgentBase::checkIfProcessBuffer()
 {
-	// array,filed and spw are common and unique in a given vis buffer,
+	// array,field and spw are common and unique in a given vis buffer,
 	// so we can use them to discard all the rows in a vis buffer.
 
 	if (arrayList_p.size())
@@ -2057,6 +2091,13 @@ FlagAgentBase::iterateInRows()
 		// Compute flags for this row
 		computeInRowFlags(*(flagDataHandler_p->visibilityBuffer_p),visibilitiesMap,flagsMap,*rowIter);
 
+		// jagonzal (CAS-4913, CAS-5344): If we are unflagging FLAG_ROWS must be unset
+		if (not flag_p)
+		{
+			flagsMap.applyFlagRow(rowIdx);
+			flagRow_p = true;
+		}
+
 		// Increment row index
 		rowIdx++;
 	}
@@ -2149,6 +2190,17 @@ FlagAgentBase::iterateAntennaPairs()
 		// Increment antenna pair index
 		antennaPairdIdx++;
 
+		// jagonzal (CAS-4913, CAS-5344): If we are unflagging FLAG_ROWS must be unset
+		if (not flag_p)
+		{
+			for (uInt baselineRowIdx=0;baselineRowIdx<antennaRows->size();baselineRowIdx++)
+			{
+				flagsMap.applyFlagRow(baselineRowIdx);
+			}
+			flagRow_p = true;
+		}
+
+
 		// Delete antenna pair rows
 		delete antennaRows;
 	}
@@ -2240,6 +2292,16 @@ FlagAgentBase::iterateAntennaPairsFlags()
 
 		// Increment antenna pair index
 		antennaPairdIdx++;
+
+		// jagonzal (CAS-4913, CAS-5344): If we are unflagging FLAG_ROWS must be unset
+		if (not flag_p)
+		{
+			for (uInt baselineRowIdx=0;baselineRowIdx<antennaRows->size();baselineRowIdx++)
+			{
+				flagsMap.applyFlagRow(baselineRowIdx);
+			}
+			flagRow_p = true;
+		}
 
 		// Delete antenna pair rows
 		delete antennaRows;
@@ -2381,6 +2443,12 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCubeModel()));
 			break;
 		}
+		case WEIGHT_SPECTRUM:
+		{
+			// Cast the Cube<Float> to Cube<Complex> in the DataHandler
+			leftVisCube = const_cast<Cube<Complex> *>(&(flagDataHandler_p->weightVisCube()));
+			break;
+		}
 		default:
 		{
 			leftVisCube = const_cast<Cube<Complex> *>(&(visibilityBuffer_p->visCube()));
@@ -2394,10 +2462,8 @@ FlagAgentBase::setVisibilitiesMap(std::vector<uInt> *rows,VisMapper *visMap)
 	leftVisCubeView = new CubeView<Complex>(leftVisCube,rows,&channelIndex_p);
 	if (rightVisCube != NULL) rightVisCubeView = new CubeView<Complex>(rightVisCube,rows,&channelIndex_p);
 
-
 	// Third step: Set CubeViews in mapper
 	visMap->setParentCubes(leftVisCubeView,rightVisCubeView);
-
 	return;
 }
 

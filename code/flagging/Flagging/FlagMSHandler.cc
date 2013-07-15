@@ -39,6 +39,7 @@ FlagMSHandler::FlagMSHandler(string tablename, uShort iterationApproach, Double 
 	originalMeasurementSet_p = NULL;
 	visibilityIterator_p = NULL;
 	tableTye_p = MEASUREMENT_SET;
+	processorTableExist_p = true;
 }
 
 
@@ -250,9 +251,11 @@ FlagMSHandler::selectData()
 
 	// Set the MS Selection error handler to catch antenna names that are
     // not present in the MS in an expression that contains valid antenna names.
+	// Catch also invalid intent values in a valid intent expression.
 	// This will issue a WARNING and not fail.
-    MSSelectionLogError mssLE;
-    measurementSetSelection_p->setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLE);
+    MSSelectionLogError mssLEA,mssLES;
+    measurementSetSelection_p->setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
+    measurementSetSelection_p->setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
 
 	measurementSetSelection_p = new MSSelection(
 			*originalMeasurementSet_p,
@@ -457,6 +460,10 @@ FlagMSHandler::generateIterator()
 		// Get Visibility Buffer reference from VisibilityIterator
 		visibilityBuffer_p = visibilityIterator_p->getVisBuffer();
 
+		// Get the TYPE column of the PROCESSOR sub-table
+		if (flagAutoCorrelations_p)
+			processorTable();
+
 		iteratorGenerated_p = true;
 		chunksInitialized_p = false;
 		buffersInitialized_p = false;
@@ -572,12 +579,12 @@ FlagMSHandler::nextBuffer()
 		{
 			visibilityIterator_p->origin();
 			buffersInitialized_p = true;
-
 			if (!asyncio_enabled_p) preFetchColumns();
 			if (mapAntennaPairs_p) generateAntennaPairMap();
 			if (mapSubIntegrations_p) generateSubIntegrationMap();
 			if (mapPolarizations_p) generatePolarizationsMap();
 			if (mapAntennaPointing_p) generateAntennaPointingMap();
+
 			moreBuffers = true;
 			flushFlags_p = false;
 			flushFlagRow_p = false;
@@ -837,6 +844,60 @@ FlagMSHandler::summarySignal()
 		return false;
 	}
 }
+
+// -----------------------------------------------------------------------
+// Get the PROCESSOR sub-table
+// -----------------------------------------------------------------------
+bool
+FlagMSHandler::processorTable()
+{
+	MSProcessor msSubtable = selectedMeasurementSet_p->processor();
+
+	if (msSubtable.nrow() == 0){
+		*logger_p << LogIO::WARN << "PROCESSOR sub-table is empty. Assuming CORRELATOR type."
+					<< LogIO::POST;
+		processorTableExist_p = false;
+	}
+	else {
+		MSProcessorColumns tableCols(msSubtable);
+		typeCol_p = tableCols.type();
+		processorTableExist_p = true;
+	}
+
+	return true;
+
+}
+
+/*
+// -----------------------------------------------------------------------
+// Get the WEIGHT_SPECTRUM visCube as a Complex
+// -----------------------------------------------------------------------
+Cube<Complex>&
+FlagMSHandler::weightVisCube()
+{
+
+	Cube<Float> tmp = visibilityBuffer_p->weightSpectrum();
+
+	// Transform Cube<Float> into Cube<Complex>
+//	Cube<Complex> tmpTrans(tmp.shape());
+	weight_spectrum_p(tmp.shape());
+	for (uInt idx1=0;idx1<tmp.shape()[0];idx1++)
+	{
+		for (uInt idx2=0;idx2<tmp.shape()[1];idx2++)
+		{
+			for (uInt idx3=0;idx3<tmp.shape()[2];idx3++)
+			{
+				weight_spectrum_p(idx1,idx2,idx3) = Complex(tmp(idx1,idx2,idx3),0);
+			}
+		}
+	}
+
+//	weight_spectrum_p.resize(tmpTrans.shape(),False);
+//	weight_spectrum_p = tmpTrans;
+
+	return weight_spectrum_p;
+}
+*/
 
 
 } //# NAMESPACE CASA - END

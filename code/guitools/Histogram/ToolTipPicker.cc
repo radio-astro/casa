@@ -28,6 +28,7 @@
 #include <QDebug>
 #include <QtCore/qmath.h>
 #include <qwt_plot.h>
+#include <limits>
 
 namespace casa {
 

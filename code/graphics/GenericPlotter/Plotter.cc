@@ -30,6 +30,7 @@
 
 #include <ctype.h>
 #include <iomanip>
+#include <stdint.h>
 
 namespace casa {
 

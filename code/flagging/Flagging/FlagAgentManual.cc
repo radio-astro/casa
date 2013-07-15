@@ -27,12 +27,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 FlagAgentManual::FlagAgentManual(FlagDataHandler *dh, Record config, Bool writePrivateFlagCube, Bool flag):
 		FlagAgentBase(dh,config,ROWS,writePrivateFlagCube,flag)
 {
-
+	initialize();
 }
 
 FlagAgentManual::~FlagAgentManual()
 {
 	// Compiler automagically calls FlagAgentBase::~FlagAgentBase()
+}
+
+void
+FlagAgentManual::initialize()
+{
+	// For the auto-correlation flagging
+	if (flagDataHandler_p->tableTye_p == FlagDataHandler::MEASUREMENT_SET)
+		flagDataHandler_p->preLoadColumn(vi::ProcessorId);
+
 }
 
 bool
@@ -41,6 +50,7 @@ FlagAgentManual::computeRowFlags(const vi::VisBuffer2 &/*visBuffer*/, FlagMapper
 	return true;
 
 }
+
 
 } //# NAMESPACE CASA - END
 

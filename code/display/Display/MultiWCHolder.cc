@@ -119,7 +119,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// Add a 'bIndex' restriction to newly-added DD.  It can be used to
 		// alternate display of the various DDs by placing a similar restriction
-		// on the WCHs.  The index should reflect its order in the list.
+		// on the WCHs.  The index should reflect its order in the list.  However,
+		// contours, vectors, etc are not displayed separately so the index needs
+		//to take that into account.
 		if ( isBlinkDD(&displaydata) ){
 			int index = 0;
 			++itsBLength;
@@ -132,7 +134,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 					itsBlinkDDs[index] = dd;
 					Attribute bIndexAtt(itsBIndexName, index );
 					dd->setRestriction( bIndexAtt );
-					index++;
+					if ( dd->classType() == Display::Raster ) {
+						index++;
+					}
 				}
 				iter++;
 			}

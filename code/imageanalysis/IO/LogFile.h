@@ -30,6 +30,7 @@
 
 #include <casa/IO/FiledesIO.h>
 #include <casa/namespace.h>
+#include <memory>
 
 namespace casa {
 

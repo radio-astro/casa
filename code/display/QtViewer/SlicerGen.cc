@@ -32,7 +32,7 @@
 namespace casa {
 	namespace viewer {
 
-		SlicerGen::SlicerGen( ) { }
+        SlicerGen::SlicerGen( ) : drop_events(false) { }
 
 		void SlicerGen::initialize( QFrame *frame ) {
 			setupUi(frame);
@@ -96,12 +96,15 @@ namespace casa {
 		};
 
 		void SlicerGen::disable( ) {
+            drop_events = true;
 			std::for_each( startgui.begin( ), startgui.end( ), disable_op( ) );
 			std::for_each( sizegui.begin( ), sizegui.end( ), disable_op( ) );
+            drop_events = false;
 		}
 
 
 		void SlicerGen::enable( const std::string &path ) {
+            drop_events = true;
 			ImageProperties info(path);
 			shape = info.shape( );
 			for ( size_t x = 0; x < startgui.size( ); ++x ) {
@@ -120,15 +123,17 @@ namespace casa {
 					sizegui[x]->hide( );
 				}
 			}
+            drop_events = false;
 		}
 
 		void SlicerGen::adjust_position( int value ) {
 			QSpinBox *box = dynamic_cast<QSpinBox*>(QObject::sender( ));
 			int axis = axis_map[box];
 			sizegui[axis]->setMaximum(shape[axis]-value);
+            if ( drop_events == false ) emit stateChange(sliceReady( ));
 		}
 		void SlicerGen::adjust_size(int) {
-
+            if ( drop_events == false ) emit stateChange(sliceReady( ));
 		}
 
 		struct equal_op {
@@ -160,8 +165,9 @@ namespace casa {
 
 		bool SlicerGen::sliceReady( ) const {
 			bool resultA = std::for_each( startgui.begin( ), startgui.end( ), equal_op(0) );
-			bool resultB = std::for_each( sizegui.begin( ), sizegui.end( ), equal_op(&shape) );
-			return ! (resultA && resultB);
+			bool resultB1 = std::for_each( sizegui.begin( ), sizegui.end( ), equal_op(&shape) );
+			bool resultB2 = std::for_each( sizegui.begin( ), sizegui.end( ), equal_op(0) );
+			return ! (resultA && (resultB1 || resultB2));
 		}
 		std::string SlicerGen::getSliceRep( ) const {
 			std::string result("(");

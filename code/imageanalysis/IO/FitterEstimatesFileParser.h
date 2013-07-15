@@ -33,6 +33,7 @@
 #include <casa/OS/RegularFile.h>
 #include <components/ComponentModels/ComponentList.h>
 #include <images/Images/ImageInterface.h>
+#include <memory>
 
 namespace casa { //# NAMESPACE CASA - BEGIN
 

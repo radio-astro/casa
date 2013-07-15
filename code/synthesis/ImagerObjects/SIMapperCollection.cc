@@ -201,6 +201,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   void SIMapperCollection::grid(const vi::VisBuffer2& vb, const Bool dopsf, FTMachine::Type col)
   {
+
+	  if(col==FTMachine::CORRECTED){
+		  if(ROMSColumns((vb.getVi())->ms()).correctedData().isNull())
+			  col=FTMachine::OBSERVED;
+	  }
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
 		  (itsMappers[k])->grid(vb, dopsf, col);

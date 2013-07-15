@@ -195,36 +195,35 @@ FlagAgentClipping::computeInRowFlags(const vi::VisBuffer2 &/*visBuffer*/, VisMap
 		visExpression = 0;
 		nAverage = 0;
 
-		for (uInt chan_i=0;chan_i<(uInt) nChannels;chan_i++)
+		for (uInt pol_i=0;pol_i<(uInt)nPols;pol_i++)
 		{
-			for (uInt pol_i=0;pol_i<(uInt)nPols;pol_i++)
+			for (uInt chan_i=0;chan_i<(uInt) nChannels;chan_i++)
 			{
-				// If none of the correlations involved in the expression
-				// are flagged, then take into account this channel
 				if (!flags.getModifiedFlags(pol_i,chan_i,row))
 				{
 					visExpression += visibilities(pol_i,chan_i,row);
 					nAverage += 1;
 				}
 			}
-		}
 
-		// If visExpression is out of range we flag the entire row
-		if (nAverage > 0)
-		{
-			visExpression /= nAverage;
-			if ((*this.*checkVis_p)(visExpression))
+			// If visExpression is out of range we flag the entire row
+			if (nAverage > 0)
 			{
-				for (uInt chan_i=0;chan_i<(uInt)nChannels;chan_i++)
+				visExpression /= nAverage;
+				if ((*this.*checkVis_p)(visExpression))
 				{
-					for (uInt pol_i=0;pol_i<(uInt) nPols;pol_i++)
+					for (uInt chan_i=0;chan_i<(uInt)nChannels;chan_i++)
 					{
 						flags.applyFlag(pol_i,chan_i,row);
 					}
+					visBufferFlags_p += flags.flagsPerRow();
 				}
-				visBufferFlags_p += flags.flagsPerRow();
 			}
+
+			// calculate the average of next polarization
+			nAverage = 0;
 		}
+
 	}
 	else
 	{
@@ -308,6 +307,8 @@ FlagAgentClipping::checkVisForNaNsAndZeros(Float visExpression)
 {
 	return isNaNOrZero(visExpression);
 }
+
+
 
 } //# NAMESPACE CASA - END
 

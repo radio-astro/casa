@@ -127,13 +127,21 @@ String ImagePrimaryBeamCorrector::getClass() const {
 void ImagePrimaryBeamCorrector::_checkPBSanity() {
 	*_getLog() << LogOrigin(_class, __FUNCTION__, WHERE);
 	if (_getImage()->shape().isEqual(_pbImage->shape())) {
-		if (! _getImage()->coordinates().near(_pbImage->coordinates())) {
-			*_getLog() << "Coordinate systems of image and template are different"
-				<< LogIO::EXCEPTION;
+		const CoordinateSystem csys = _getImage()->coordinates();
+		if (
+			! csys.directionCoordinate().near(
+				_pbImage->coordinates().directionCoordinate()
+			)
+		) {
+			*_getLog() << "Coordinate systems of image and template are different: "
+				<< csys.errorMessage() << LogIO::EXCEPTION;
 		}
 		else {
-			// coordinate systems and shapes are the same
+			// direction coordinates and image shapes are the same
 			// which is sufficient to proceed
+			// but set the coordinate system just in case the non-directional coordinates
+			// differ (CAS-5096)
+			_pbImage->setCoordinateInfo(csys);
 			return;
 		}
 	}
@@ -263,8 +271,6 @@ ImageInterface<Float>* ImagePrimaryBeamCorrector::correct(
 		_removeExistingOutfileIfNecessary();
 		String mask = "";
 	    Record empty;
-
-
 		outImage.reset(
 			SubImageFactory<Float>::createImage(
 				subImage, _getOutname(), empty,

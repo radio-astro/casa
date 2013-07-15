@@ -36,6 +36,7 @@
 #include <guitools/Histogram/ZoomWidget.qo.h>
 #include <casa/Arrays/Vector.h>
 #include <synthesis/MSVis/UtilJ.h>
+#include <limits>
 
 #include <QDebug>
 #include <QMessageBox>

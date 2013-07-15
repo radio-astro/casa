@@ -235,7 +235,7 @@ void ImageMoments<T>::setMomentAxis(const Int momentAxisU) {
 		momentAxis_p == _image->coordinates().spectralAxisNumber()
 		&& _image->imageInfo().hasMultipleBeams()
 	) {
-		GaussianBeam maxBeam = _image->imageInfo().getBeamSet().getMaxAreaBeam();
+		GaussianBeam maxBeam = _image->imageInfo().getBeamSet().getCommonBeam();
 		os_p << LogIO::NORMAL << "The input image has multiple beams so each "
 			<< "plane will be convolved to the largest beam size " << maxBeam
 			<< " prior to calculating moments" << LogIO::POST;
@@ -377,9 +377,12 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 // This function does all the work
                                     //
                                     {
+	LogOrigin myOrigin("ImageMoments", __FUNCTION__);
+	os_p << myOrigin;
 
-	os_p << LogOrigin("ImageMoments", __FUNCTION__);
 	if (!goodParameterStatus_p) {
+		// FIXME goodness, why are we waiting so long to throw an exception if this
+		// is the case?
 		throw AipsError("Internal status of class is bad.  You have ignored errors");
 	}
 	// Find spectral axis
@@ -396,6 +399,8 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 		}
 		worldMomentAxis_p = cSys.pixelAxisToWorldAxis(momentAxis_p);
 	}
+	os_p << myOrigin;
+
 	String momentAxisUnits = cSys.worldAxisUnits()(worldMomentAxis_p);
 	os_p << LogIO::NORMAL << endl << "Moment axis type is "
 			<< cSys.worldAxisNames()(worldMomentAxis_p) << LogIO::POST;
@@ -418,8 +423,6 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
 			throw AipsError("Input image and output image have same name");
 		}
 	}
-
-	// Try and set some useful Booools.
 
 	Bool smoothClipMethod = False;
 	Bool windowMethod = False;
@@ -609,7 +612,6 @@ void ImageMoments<T>::createMoments(PtrBlock<MaskedLattice<T>* >& outPt,
    
 
 // Create appropriate MomentCalculator object 
-
    os_p << LogIO::NORMAL << "Begin computation of moments" << LogIO::POST;
    PtrHolder<MomentCalcBase<T> > pMomentCalculatorHolder;
    try {

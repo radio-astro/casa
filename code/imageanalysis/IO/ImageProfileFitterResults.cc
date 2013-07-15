@@ -174,7 +174,6 @@ void ImageProfileFitterResults::_marshalFitResults(
 	Array<Int>& nCompArr, std::auto_ptr<vector<vector<Matrix<Double> > > >& pcfMatrices,
 	vector<Matrix<Double> >& plpMatrices, vector<Matrix<Double> >& ltpMatrices, Bool returnDirection,
     Vector<String>& directionInfo, Array<Bool>& mask
-
 ) {
     IPosition inTileShape = _subImage->niceCursorShape();
 	TiledLineStepper stepper (_subImage->shape(), inTileShape, _fitAxis);
@@ -191,7 +190,6 @@ void ImageProfileFitterResults::_marshalFitResults(
 		? &csysSub.stokesCoordinate() : 0;
 	IPosition pixel;
 	Vector<Double> world;
-	String emptyUnit = "";
 	directionInfo.resize(returnDirection ? _fitters->size() : 0);
 	String latitude, longitude;
 	Double increment = fabs(_fitAxisIncrement());
@@ -211,6 +209,10 @@ void ImageProfileFitterResults::_marshalFitResults(
 		pixel = inIter.position();
 		if (csysSub.toWorld(world, pixel)) {
 			for (uInt i=0; i<world.size(); i++) {
+				// The Coordinate::format() calls have the potential of modifying the
+				// input unit so this needs to be reset at the beginning of the loop
+				// rather than outside the loop
+				String emptyUnit = "";
 				if ((Int)i != _fitAxis) {
 					if (_axisTypes[i] == LONGITUDE) {
 						longitude = dcoord->format(emptyUnit, Coordinate::DEFAULT, world[i], 0, True, True);

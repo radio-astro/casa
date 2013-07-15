@@ -483,11 +483,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	os << "Dividing " << itsImageName+String(".psf") << " by the weight image " << itsImageName+String(".weight") << LogIO::POST;
 	
 	///cout << " Dividing : " << itsResidual->getAt( IPosition(4,0,0,0,0) ) << " by " << itsWeight->getAt( IPosition(4,0,0,0,0) ) << endl;
-	
+	cerr << "weight limit " <<  weightlimit << endl;
 	LatticeExpr<Float> mask( iif( (*itsWeight) > weightlimit , 1.0, 0.0 ) );
 	LatticeExpr<Float> maskinv( iif( (*itsWeight) > weightlimit , 0.0, 1.0 ) );
 	
-	LatticeExpr<Float> ratio( ( (*itsPsf) * mask ) / ( (*itsPsf) + maskinv) );
+	LatticeExpr<Float> ratio( ( (*itsPsf) * mask ) / ( (*itsWeight) + maskinv) );
 	itsPsf->copyData(ratio);
       }
     // createMask

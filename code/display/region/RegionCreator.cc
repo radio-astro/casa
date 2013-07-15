@@ -27,6 +27,7 @@
 
 #include <display/region/RegionCreator.h>
 #include <display/DisplayErrors.h>
+#include <algorithm>
 
 #define FIND_LIST(VAR,TYPE)									\
 {   creator_map_type::iterator it = creator_map.find(TYPE);					\

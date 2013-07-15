@@ -325,7 +325,7 @@ public:
 protected:
 
     // Create empty VisBufferImpl2 you can assign to or attach.
-    VisBufferImpl2();
+    VisBufferImpl2 (VisBufferOptions options = VbNoOptions);
     // Construct VisBufferImpl2 for a particular VisibilityIterator2
     // The buffer will remain synchronized with the iterator.
 

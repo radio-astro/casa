@@ -3,6 +3,7 @@
 
 #include <string>
 #include <set>
+#include <stdio.h>
 
 namespace casa {
 	namespace viewer {

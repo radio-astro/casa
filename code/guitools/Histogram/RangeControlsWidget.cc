@@ -30,6 +30,7 @@
 #include <QMessageBox>
 #include <QKeyEvent>
 #include <QDebug>
+#include <limits>
 
 namespace casa {
 

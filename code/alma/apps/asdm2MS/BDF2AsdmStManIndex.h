@@ -14,6 +14,7 @@
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/casts.hpp>
+#include <stdint.h>
 
 using namespace boost::lambda;
 /*
