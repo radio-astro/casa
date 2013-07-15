@@ -45,7 +45,7 @@ class CleanWorkerInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir, vis, mode, imagermode, imagename,
       intent, field_id, field, scan, spw, phasecenter, cell, imsize, outframe,
       nchan, start, width, weighting, robust, noise, npixels,
-      restoringbeam, uvrange, maxthreshiter, cleanboxtask):
+      restoringbeam, uvrange, cleanboxtask):
 
         self._init_properties(vars())
 
@@ -87,8 +87,7 @@ class CleanWorker(basetask.StandardTaskTemplate):
         # iteration 0, the dirty image, no cleanmask
         flux_list = []
         job = casa_tasks.clean(vis=inputs.vis,
-          imagename='%s.iter%s' % (inputs.imagename, iter),
-          field=inputs.field, spw=inputs.spw, 
+          imagename='%s.iter%s' % (inputs.imagename, iter), spw=inputs.spw, 
           selectdata=True, scan=inputs.scan, mode=inputs.mode,
           niter=0, threshold='0Jy', imagermode=inputs.imagermode,
           interactive=False, outframe=inputs.outframe, 
@@ -141,10 +140,6 @@ class CleanWorker(basetask.StandardTaskTemplate):
             box_result = self._executor.execute(inputs.cleanboxtask)
 
             iterating = box_result.iterating
-            if iterating and iter > inputs.maxthreshiter:
-                LOG.warning('terminate clean; threshiter (%s) >= %s' % ( 
-                  iter, inputs.maxthreshiter))
-                iterating = False
 
             if iterating:
                 iter += 1
@@ -166,8 +161,7 @@ class CleanWorker(basetask.StandardTaskTemplate):
                 flux_name = purge('%s.iter%s.flux' % (inputs.imagename, iter))
 
                 job = casa_tasks.clean(vis=inputs.vis, 
-                  imagename='%s.iter%s' % (inputs.imagename, iter),
-                  field=inputs.field, spw=inputs.spw,
+                  imagename='%s.iter%s' % (inputs.imagename, iter), spw=inputs.spw,
                   selectdata=True, scan=inputs.scan, mode=inputs.mode,
                   niter=box_result.niter,
                   threshold=box_result.threshold,
