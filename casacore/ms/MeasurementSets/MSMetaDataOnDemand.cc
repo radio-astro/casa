@@ -1808,7 +1808,7 @@ void MSMetaDataOnDemand::_getUnflaggedRowStats(
 	MSMetaData::_getUnflaggedRowStats(
 		nACRows, nXCRows, myFieldNACRows,
 		myFieldNXCRows, myScanNACRows, myScanNXCRows, *ant1,
-		*ant2, _getFlagRows(*_ms), *_getDataDescIDs(),
+		*ant2, /*_getFlagRows(*_ms),*/ *_getDataDescIDs(),
 		_getDataDescIDToSpwMap(),
 		_getSpwInfo(a, b, c, d), *MSMetaData::_getFlags(*_ms), *_getFieldIDs(),
 		*_getScans(), *_getObservationIDs(), *_getArrayIDs()
