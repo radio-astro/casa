@@ -11,7 +11,7 @@ LOG = infrastructure.get_logger(__name__)
 
 class IterativeBoxWorkerInputs(basetask.StandardInputs):
 
-    def __init__(self, context, output_dir, vis):
+    def __init__(self, context, output_dir, vis, maxthreshiter):
         self._init_properties(vars())
 
 
@@ -98,6 +98,12 @@ class IterativeBoxWorker(basetask.StandardTaskTemplate):
           non_cleaned_rms=self.non_cleaned_rms_list[-1],
           island_peaks_list=self.island_peaks_list,
           flux_list=self.model_sums)
+
+        # are we exceeding max number of iterations
+        if self.result.iterating and self.iters[-1] > self.inputs.maxthreshiter:
+            LOG.warning('terminate clean; threshiter (%s) >= %s' % (
+              self.iters[-1], self.inputs.maxthreshiter))
+            self.result.iterating = False
 
         return self.result
 
