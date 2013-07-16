@@ -2283,7 +2283,6 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 	Bool modelDataChecked = False;
 	if (datacolumn_p.contains("ALL"))
 	{
-		modelDataChecked = True;
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			if (!mainColSet)
@@ -2308,16 +2307,26 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 								"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
 		}
 
-		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+		if ((inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
 		{
+			modelDataChecked = True;
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
 				mainColSet = True;
 			}
+
 			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-								"Adding MODEL_DATA column to output MS "<< LogIO::POST;
+			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+									"Adding MODEL_DATA column to output MS "<< LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+							"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
+			}
 		}
 
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
@@ -2487,44 +2496,37 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 			dataColMap_p[MS::CORRECTED_DATA] = MS::DATA;
 			correctedToData_p = True;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-								"Adding DATA column to output MS from input CORRECTED_DATA column"<< LogIO::POST;
+								"Adding DATA column to output MS as DATA from input CORRECTED_DATA column"<< LogIO::POST;
 		}
 		else
 		{
 			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
 					"CORRECTED_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
-
-		if (realmodelcol_p)
-		{
-			modelDataChecked = True;
-			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
-			{
-				dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-							"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
-				datacolumn_p = String("DATA,MODEL");
-			}
-			else
-			{
-				logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-						"MODEL_DATA column requested but not available in input MS "<< LogIO::POST;
-			}
-		}
 	}
 	else if (datacolumn_p.contains("MODEL"))
 	{
-		modelDataChecked = True;
-		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+
+		if ((inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
 		{
+			modelDataChecked = True;
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
 				mainColSet = True;
 			}
+
 			dataColMap_p[MS::MODEL_DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-								"Adding DATA column to output MS from input MODEL_DATA column"<< LogIO::POST;
+			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+									"Adding MODEL_DATA column to output MS as DATA "<< LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+							"Adding MODEL_DATA column to output MS as DATA from input virtual MODEL_DATA column"<< LogIO::POST;
+			}
 		}
 		else
 		{
@@ -2541,18 +2543,10 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 
 	if ((realmodelcol_p) and (!modelDataChecked))
 	{
-		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
-		{
-			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-						"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
-			datacolumn_p += String(",MODEL");
-		}
-		else
-		{
-			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-					"MODEL_DATA column requested but not available in input MS "<< LogIO::POST;
-		}
+		dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+					"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
+		datacolumn_p += String(",MODEL");
 	}
 
 	return;

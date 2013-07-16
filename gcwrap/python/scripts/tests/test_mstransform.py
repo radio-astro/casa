@@ -661,8 +661,10 @@ class test_Columns(test_base):
 #        os.system('rm -rf '+ self.vis)
         os.system('rm -rf col*.*ms')
         
+    # Disabled until CAS-5348 is fixed
+    '''
     def test_col1(self):
-        '''mstransform: try to make real a non-existing virtual MODEL column'''
+        """mstransform: try to make real a non-existing virtual MODEL column"""
         self.setUp_ngc5921()
         outputms = "col1.ms"
         mstransform(vis=self.vis, outputvis=outputms, datacolumn='all', realmodelcol=True)
@@ -671,10 +673,13 @@ class test_Columns(test_base):
         mcol = th.getColDesc(outputms, 'MODEL_DATA')
         mkeys = mcol.keys()
         self.assertTrue(mkeys.__len__()==0, 'Should not add MODEL_DATA column')
+    '''
 
+    # Disabled until CAS-5348 is fixed
+    '''
     # This should change. It should not add a real model column, only a virtual one.        
     def test_col2(self):
-        '''mstransform: make real a virtual MODEL column '''
+        """mstransform: make real a virtual MODEL column """
         self.setUp_ngc5921()
         outputms = "col2.ms"
         inpms = 'ngc5921Jy.ms'
@@ -696,7 +701,7 @@ class test_Columns(test_base):
         mcol = th.getColDesc(outputms, 'MODEL_DATA')
         mkeys = mcol.keys()
         self.assertTrue(mkeys.__len__() > 0, 'Should have a MODEL_DATA column')
-        
+    '''
 
     def test_col3(self):
         '''mstransform: split out the MODEL column'''
