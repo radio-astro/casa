@@ -30,7 +30,7 @@ myf['__rethrow_casa_exceptions'] = True
 # Setup path
 sys.path.insert (0, os.path.expandvars("$SCIPIPE_HEURISTICS"))
 
-def executeppr (pprXmlFile, importonly=False, dry_run=False, loglevel='info',
+def executeppr (pprXmlFile, importonly=True, dry_run=False, loglevel='info',
     interactive=True):
 
     # Useful mode parameters
