@@ -1240,7 +1240,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                units in the image are Jy/beam as in a single-dish
                image, then it will be converted to Jy/pixel as in a
                model image, using the restoring beam in the image
-               header.  
+               header and zeroing negatives.  If the image is in Jy/pixel then it is taken 
+               as is.
+                
 	       When nterms>1, a one-to-one mapping is done between images
 	       in this list and Taylor-coefficients. If more than nterms 
 	       images are  specified, only the first nterms are used.
