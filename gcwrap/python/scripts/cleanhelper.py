@@ -3181,6 +3181,50 @@ class cleanhelper:
             mycsys.setconversiontype(spectral='LSRK')
             ia.setcoordsys( mycsys.torecord() )
             ia.close()
+ 
+    def resmooth(self, model, residual, restored, minOrMax):
+        ia.open(restored)
+        beams=ia.restoringbeam()
+        if(not beams.has_key('beams')):
+           ########already has one beam only
+            ia.done()
+            return
+        minArea=1e37
+        maxArea=-1e37
+        maxchan=-1
+        minchan=-1
+        theArea=numpy.zeros(beams['nChannels'])
+        for k in range(beams['nChannels']):
+           ##it must have been really hard to provide proper indices
+            theArea[k]=qa.convert(beams['beams']['*'+str(k)]['*0']['major'], 'arcsec')['value'] * qa.convert(beams['beams']['*'+str(k)]['*0']['minor'], 'arcsec')['value']
+            if(theArea[k] > maxArea):
+                maxArea=theArea[k]
+                maxchan=k
+            if(theArea[k] < minArea):
+                minArea=theArea[k]
+                minchan=k
+        maxbeam=[beams['beams']['*'+str(maxchan)]['*0']['major'], beams['beams']['*'+str(maxchan)]['*0']['minor'], beams['beams']['*'+str(maxchan)]['*0']['positionangle']]
+        minbeam=[beams['beams']['*'+str(minchan)]['*0']['major'], beams['beams']['*'+str(minchan)]['*0']['minor'], beams['beams']['*'+str(minchan)]['*0']['positionangle']]
+        thebeam=minbeam
+        tobeDiv=theArea[minchan]
+        if(minOrMax=='max'):
+            thebeam=maxbeam
+            tobeDiv=theArea[maxchan]
+        ia.open(residual)
+        shp=ia.shape()
+        for k in range(beams['nChannels']):
+            reg=rg.box(blc=[0,0,0,k], trc=[shp[0]-1, shp[1]-1, shp[2]-1, k])
+            pix=ia.getregion(region=reg)
+            pix=pix*theArea[k]/tobeDiv
+            ia.putregion(pixels=pix, region=reg)
+        ia.done()
+        ia.open(model)
+        ib=ia.convolve2d(outfile=restored, axes=[0,1], major=thebeam[0], minor=thebeam[1], pa=thebeam[2], overwrite=True)
+        ib.calc('"'+restored+'" + '+'"'+residual+'"')
+        ib.done()
+        ia.done()
+           
+       
 
 
 
