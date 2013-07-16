@@ -33,6 +33,7 @@ CasaTaskDict = {
                    'hsd_inspectdata'  : 'SDInspectData',
                    'hsd_imaging'      : 'SDImaging',
                    'hsd_baseline'     : 'SDBaseline',
+                   'hsd_flagdata'     : 'SDFlagData',
                    'hsd_reduce'       : 'SDReduction'
                }
 
