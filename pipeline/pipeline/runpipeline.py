@@ -12,4 +12,4 @@ import sys
 import pipeline.infrastructure.executeppr as eppr
 
 # Execute the request
-eppr.executeppr (sys.argv[sys.argv.index('-c')+2])
+eppr.executeppr (sys.argv[sys.argv.index('-c')+2], importonly=False)
