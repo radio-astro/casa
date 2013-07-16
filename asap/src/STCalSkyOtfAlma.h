@@ -45,6 +45,8 @@ protected:
 
 private:
   bool israster_;
+
+  casa::Vector<casa::uInt> rowNumbers_;
 };
 
 }
