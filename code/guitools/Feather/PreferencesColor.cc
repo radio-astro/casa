@@ -188,7 +188,8 @@ QList<QString> PreferencesColor::getCurveNames() {
 		CurveType index = static_cast<CurveType>(i);
 		bool displayed = curvePreferences[index]->isDisplayedGUI();
 		bool scatter = curvePreferences[index]->isScatterEligible();
-		if ( displayed && scatter ){
+		bool enabled = curvePreferences[index]->isEnabled();
+		if ( displayed && scatter && enabled ){
 			curveNames.append( curvePreferences[index]->getName());
 		}
 	}
@@ -345,6 +346,9 @@ void PreferencesColor::setDirtyEnabled( bool enabled ){
 		curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY]->setDisplayed( false );
 		curvePreferences[FeatherCurveType::LOW_CONVOLVED_DIRTY_WEIGHTED]->setDisplayed( false );
 	}
+	//Reset the curves that can be selected for the scatter
+	//axis based on whether or not there is a dirty image.
+	populateScatterAxes();
 }
 
 FeatherCurveType::CurveType PreferencesColor::findCurve( const QString& title ) const {

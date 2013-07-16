@@ -59,8 +59,8 @@ public:
     void setData( const Vector<Float>& xValues, const Vector<Float>& yValues, DataType dType );
     virtual void addSumData();
 
-
     void clearPlot();
+    void clearData();
     void clearLegend();
 
     //Preferences

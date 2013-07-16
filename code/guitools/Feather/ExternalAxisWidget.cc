@@ -123,8 +123,8 @@ int ExternalAxisWidget::getTickIncrement( int tickCount ) const {
 			increment = increment * 7;
 		}
 		else {
-			//Give up.
-			break;
+			//At least make it into a multiple of 2.
+			dynamicCount = dynamicCount + 1;
 		}
 	}
 	return increment;

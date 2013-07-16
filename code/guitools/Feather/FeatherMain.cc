@@ -52,7 +52,6 @@ FeatherMain::FeatherMain(QWidget *parent)
 	dataManager = new FeatherManager();
 	connect( dataManager, SIGNAL(featheringDone()), this, SLOT( featheringDone()));
 
-
 	plotHolder = new PlotHolder( this );
 	QHBoxLayout* layout = new QHBoxLayout();
 	layout->addWidget( plotHolder );
@@ -264,6 +263,8 @@ void FeatherMain::imageFilesChanged(){
 
 	if ( highResImagePath.trimmed().length() > 0 && lowResImagePath.trimmed().length() > 0 ){
 
+
+
 		bool imagesOK = dataManager->loadImages( highResImagePath, lowResImagePath, &logger );
 		bool dirtyImageLoaded = false;
 		if ( imagesOK && dirtyImagePath.trimmed().length() > 0 ){
@@ -274,6 +275,7 @@ void FeatherMain::imageFilesChanged(){
 		//Feathering
 		ui.featherButton->setEnabled( imagesOK );
 		if ( imagesOK ){
+
 			updatePlaneInformation();
 
 			clearPlots();
@@ -361,7 +363,7 @@ void FeatherMain::featherImages() {
 		}
 	}
 	if ( validDishDiameters ){
-
+		plotHolder->clearData();
 		float sdFactor = populateSDFactor();
 		dataManager->setSDScale( sdFactor );
 		progressMeter.show();
