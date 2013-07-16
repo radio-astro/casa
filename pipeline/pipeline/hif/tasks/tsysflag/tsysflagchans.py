@@ -292,6 +292,9 @@ class TsysflagchansWorker(basetask.StandardTaskTemplate):
             if re.search(pattern=re_intent, string='TARGET'):
                 groupids += [field.id for field in ms.fields if 'TARGET'
                   in field.intents]
+            if re.search(pattern=re_intent, string='ATMOSPHERE'):
+                groupids += [field.id for field in ms.fields if 'ATMOSPHERE'
+                  in field.intents]
 
             intentgroupids[intentgroup] = groupids
 
