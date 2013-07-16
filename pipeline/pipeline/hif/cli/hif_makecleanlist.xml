@@ -17,7 +17,7 @@ Create a a list of images to be cleaned.
   </param>
 
   <param type="string" name="imagename" subparam="true">
-     <description>Prefix for image filenames</description>
+     <description>Prefix for output image names, \'\' for default.</description>
      <value></value>
   </param>
 
@@ -27,17 +27,17 @@ Create a a list of images to be cleaned.
   </param>
 
   <param type="string" name="field" subparam="true">
-    <description>Set of data selection field names or ids</description>
+    <description>Set of data selection field names or ids, \'\' for all</description>
     <value></value>
   </param>
 
   <param type="string" name="spw" subparam="true">
-    <description>Set of data selection spectral window/channels</description>
+    <description>Set of data selection spectral window/channels, \'\' for all</description>
     <value></value>
   </param>
 
   <param type="string" name="uvrange" subparam="true">
-      <description>Set of data selection uv ranges</description>
+      <description>Set of data selection uv ranges, \'\' for all.</description>
       <any type="variant" limittypes="string stringArray"/>
       <value type="string"></value>
   </param>
@@ -62,12 +62,12 @@ Create a a list of images to be cleaned.
   </param>
 
   <param type="intArray" name="imsize">
-    <description>x and y image size in pixels. \'\' for default. Single value same for both.</description>
+    <description>Image X and Y size(s) in pixels, \'\' for default. Single value same for both.</description>
     <value></value>
   </param>
 
   <param type="stringArray" name="cell">
-    <description>Cell x and y size(s), \'\' for default. Single value same for both</description>
+    <description>Image X and Y cell size(s), \'\' for default. Single value same for both</description>
     <value></value>
   </param>
 
@@ -83,13 +83,13 @@ Create a a list of images to be cleaned.
   </param>
 
   <param type="any" name="start" subparam="true">
-    <description>Channel start</description>
+    <description>Channel start, \'\' for default</description>
     <any type="variant"/>
     <value type="string"></value>
   </param>
 
   <param type="any" name="width">
-    <description>Channel width</description>
+    <description>Channel width, \'\' for default.</description>
     <any type="variant"/>
     <value type="string"></value>
   </param>
@@ -196,17 +196,22 @@ mode -- Frequency specification:
 cell -- Cell size (x, y)
     default '' Compute cell size based on the UV coverage of all the fields
     to be imaged.
-    example: cell=['0.5arcsec', '0.5arcsec']
+    example: ['0.5arcsec', '0.5arcsec']
 
-imsize -- Image size in pixels (x, y)
-    (but has to be even and have factors 2,3,5,7 only).
-    default: '' The default is derived as follows:
-         1. Determine 'phasecenter' value and spread of field centres
-            around it. 
-         2. Set size of image to cover spread of field centers plus
-            a border of width 0.75 * beam radius (to first null).
-         3. Divide x and y extents by 'cell' values to arrive at
-            the numbers of pixels required. 
+imsize -- Image X and Y size in pixels. The sizes must be even and divisible
+    by 2,3,5,7 only.
+    default: '' The default values are derived as follows:
+         1. Determine phase center and spread of field centers around it. 
+         2. Set the size of the image to cover the spread of field centers plus
+            a border of width 0.75 * beam radius, to first null.
+         3. Divide X and Y extents by cell size to arrive at the number of
+	    pixels required. 
+    example: [120, 120]
+
+width -- Output channel width.
+    default: '' Difference in frequency between first 2 selected channels.
+        for frequency mode images.
+    example: '24.2kHz'
 
 ---- pipeline context defined parameter arguments which can be set only in
      'interactive mode'
@@ -214,29 +219,41 @@ imsize -- Image size in pixels (x, y)
 vis -- The list of input measurement sets. Defaults to the list of measurement
     sets specified in the h_init or hif_importdata sets.
     default '': use all measurement sets in the context 
-    example: vis='ngc5921.ms'
-             vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
+    example: 'ngc5921.ms', ['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 
 intent -- Select intents for which associated fields will be imaged.
     default: 'TARGET'
-    example: 'TARGET', 'PHASE,BANDPASS'
+    example: 'PHASE,BANDPASS'
 
 field -- Select fields to image. Use field name(s) NOT id(s). Mosaics
-    are assumed to have common field names.  If intent is specified then
+    are assumed to have common source / field names.  If intent is specified
     only fields with data matching the intent will be selected. The fields
     will be selected from measurement sets in 'vis'.
-    default: ''
+    default: '' Fields matching matching intent, one image per target source.
     example: '3C279', 'Centaurus*', '3C279,J1427-421'
 
-spw -- Select spectral window/channels.
-    default: '' Images will be computed for all science spectral windows.
+spw -- Select spectral window/channels to image.
+    default: '' Individual images will be computed for all science spectral
+    windows.
+    example: '9'
 
-phasecenter -- Direction measure or field_id for the mosaic center.
-    default: '' The phasecenter is derived by creating  an array of field
-        center directions of those fields to be imaged together and deriving
-	the mean direction of the array.
-    example: TBD
+uvrange -- Select a set of uv ranges ro image.
+    default: '' All uv data is included
+    example: '0~1000klambda', ['0~100klambda', 100~1000klambda]
 
+phasecenter -- Direction measure or field id of the image center.
+    default: '' The default phase center is set to the mean of the field
+        directions of all fields that are to be image together.
+    example: 0, 'J2000 19h30m00 -40d00m00' 
+
+nchan -- Total number of channels in the output image(s)
+    default: -1 Selects enough channels to cover the data selected by
+        spw consistent with start and width.
+    example: 100
+
+start -- First channel for frequency mode images.
+    default '' Starts at first input channel of the spw.
+    example: '22.3GHz'
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but
@@ -254,32 +271,35 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 Description
 
-Generate a list of images to be cleaned.
+Generate a list of images to be cleaned. By default the list will include
+one image per science target per spw. Calibrator targets can be selected
+by setting appropriate values for itent.
 
-By default the image cellsize is computed by using im.advise to calculate the
-minimum cell size consistent with the UV coverage.
+By default the output image cellsize is set to the minimum cell size
+consistent with the UV coverage.
 
-By default the image size is computed using a heuristic based in the single
-dish beam size.
+By default the image size in pixels is set to values determined by the
+cell size and the single dish beam size.
+
+By default science target images are cubes and calibrator target images
+are single channel. Science target images may be mosaics or single fields.
 
 Issues
 
 TBD
-
 Examples
 
-1. Make a list of clean task commands to image all fields with TARGET
-intent in all of the science spectral windows.
+1. Make a list of science target images to be cleaned, one image per science 
+spw.
 
     hif_makecleanlist()
 
-2. Make a list of clean task commands to image all fields with PHASE and TARGET
-intent in all of the science spectral windows.
+2. Make a list of PHASE and BANDPASS calibrator targets to be imaged,
+one image per science spw.
 
-    hif_makecleanlist(intent='PHASE,TARGET')
+    hif_makecleanlist(intent='PHASE,BANDPASS')
 
-3. Make a list of clean task commands to image all fields with PHASE intent 
-n a single spectral window.
+3. Make a list of PHASE calibrator images observed in spw 1.
 
     hif_makecleanlist(intent='PHASE',spw='1')
 
