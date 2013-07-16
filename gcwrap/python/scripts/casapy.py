@@ -696,7 +696,12 @@ def update_params(func, printtext=True, ipython_globals=None):
 	else :
 	   pathname = os.environ.get('CASAPATH').split()[0]+'/'+os.environ.get('CASAPATH').split()[1]+'/xml'
            if not os.path.exists(pathname) :
-              pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
+               pathname = os.environ.get('CASAPATH').split()[0]+'/xml'
+               if not os.path.exists(pathname) :
+                   pathname = os.environ.get('CASAPATH').split()[0]+'/Resources/xml'
+                   if not os.path.exists(pathname) :
+                       sys.exit("ERROR: casapy.py update_params() can not locate xml file for task %s" % (taskname))
+                       
         xmlfile=pathname+'/'+myf['taskname']+'.xml'
         if(os.path.exists(xmlfile)) :
             cu.setconstraints('file://'+xmlfile);
