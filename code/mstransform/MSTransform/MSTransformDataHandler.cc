@@ -132,6 +132,7 @@ void MSTransformDataHandler::initialize()
 	inputOutputScanIntentIndexMap_p.clear();
 	inputOutputFieldIndexMap_p.clear();
 	inputOutputSPWIndexMap_p.clear();
+	inputOutputAntennaIndexMap_p.clear();
 	outputInputSPWIndexMap_p.clear();
 
 	// Frequency transformation parameters
@@ -834,6 +835,15 @@ void MSTransformDataHandler::open()
 
     	logger_p << LogIO::DEBUG1 << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     			<< "State " << stateRemapperIter->first << " mapped to " << stateRemapperIter->second << LogIO::POST;
+    }
+
+    // jagonzal (CAS-5349): Reindex antenna columns when there is antenna selection
+    if (!baselineSelection_p.empty())
+    {
+    	for (uInt oldIndex=0;oldIndex<splitter_p->antNewIndex_p.size();oldIndex++)
+    	{
+    		inputOutputAntennaIndexMap_p[oldIndex] = splitter_p->antNewIndex_p[oldIndex];
+    	}
     }
 
 
@@ -2975,10 +2985,23 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
 		}
 
+		// Antenna
+		if (inputOutputAntennaIndexMap_p.size())
+		{
+			reindexVector(vb->antenna1(),tmpVectorInt,inputOutputAntennaIndexMap_p,False);
+			writeVector(tmpVectorInt,outputMsCols_p->antenna1(),rowRef,nspws_p);
+			reindexVector(vb->antenna2(),tmpVectorInt,inputOutputAntennaIndexMap_p,False);
+			writeVector(tmpVectorInt,outputMsCols_p->antenna2(),rowRef,nspws_p);
+		}
+		else
+		{
+			writeVector(vb->antenna1(),outputMsCols_p->antenna1(),rowRef,nspws_p);
+			writeVector(vb->antenna2(),outputMsCols_p->antenna2(),rowRef,nspws_p);
+		}
+
 		// Non re-indexable columns
 		writeVector(vb->scan(),outputMsCols_p->scanNumber(),rowRef,nspws_p);
-		writeVector(vb->antenna1(),outputMsCols_p->antenna1(),rowRef,nspws_p);
-		writeVector(vb->antenna2(),outputMsCols_p->antenna2(),rowRef,nspws_p);
+
 		writeVector(vb->feed1(),outputMsCols_p->feed1(),rowRef,nspws_p);
 		writeVector(vb->feed2(),outputMsCols_p->feed2(),rowRef,nspws_p);
 		writeVector(vb->processorId(),outputMsCols_p->processorId(),rowRef,nspws_p);
