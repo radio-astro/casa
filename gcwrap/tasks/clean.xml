@@ -106,7 +106,17 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       </allowed>
     </param>
 
-    <param type="string" name="gridmode">
+    <param type="string" name="resmooth" subparam="true">
+      <description>Re-restore the cube image to the min or max of beams</description>
+      <value></value>
+      <allowed kind="enum">
+	<value></value>
+	<value>max</value>
+	<value>min</value>
+      </allowed>
+    </param>
+ 
+   <param type="string" name="gridmode">
       <description>Gridding kernel for FFT-based transforms, default=\'\' None</description>
       <value></value>
       <allowed kind="enum">
@@ -541,6 +551,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                   <description>Width of output channel relative to MS channel (# to average)</description>
 		</default>
 		<default param="interpolation"><value type="string">linear</value></default>
+		<default param="resmooth"><value type="string"></value></default>
 		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
 		<description>Velocity reference frame of output image; \'\' =input</description>
@@ -554,6 +565,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		  <description>Channel width e.g \'-1.0km/s\' (\'\'=width of first channel in first SpW of MS)</description>
 		</default>
 		<default param="interpolation"><value type="string">linear</value></default>
+		<default param="resmooth"><value type="string"></value></default>
 		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value>
 		  <description>Velocity reference frame of output image; \'\' =input</description>
@@ -571,6 +583,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 		  <description>Channel width: e.g \'1.0kHz\'(\'\'=width of first channel in first SpW of MS)</description>
 		</default>
 		<default param="interpolation"><value type="string">linear</value></default>
+		<default param="resmooth"><value type="string"></value></default>
 		<default param="chaniter"><value type='bool'>False</value></default>
 		<default param="outframe"><value type="string"></value></default>
 		<description>Velocity reference frame of output image; \'\' =input</description>
@@ -916,6 +929,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         flagged data channels.
                  For mode='channel', please use 'nearest'.
 
+	      resmooth -- if the cube has one restoring beam/channel. Restore 
+                                image with one beam either the maximum beam (largest)  
+                                or minimum (smallest beam) or leave as is (default)
+                                options: 'max', 'min' or ''
+                                default = '' 
+  
                chaniter -- specify how spectral CLEAN is performed, 
                  default: chaniter=False;
                  example: chaniter=True; step through channels 

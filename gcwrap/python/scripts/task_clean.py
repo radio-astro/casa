@@ -6,7 +6,7 @@ from cleanhelper import *
 im,cb,ms,tb,fg,me,ia,po,sm,cl,cs,rg,sl,dc,vp,msmd,fi,fn,imd=gentools()
 
 def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
-          uvrange, antenna, scan, observation, mode, gridmode,
+          uvrange, antenna, scan, observation, mode, resmooth, gridmode,
           wprojplanes, facets, cfcache, rotpainc, painc, aterm, psterm, mterm, wbawp, conjbeams,
           epjtable, interpolation,
           niter, gain, threshold, psfmode, imagermode, ftmachine, mosweight,
@@ -742,7 +742,9 @@ def clean(vis, imagename,outlierfile, field, spw, selectdata, timerange,
             ## This is because setReferenceFrame is called within makemultifieldmask2 to
             ## force new masks to LSRK, to enable interactive mask editing. CAS-5221
             imset.setFrameConversionForMasks()
-
+            if(resmooth != ''):
+                for k in range(len(modelimages)):
+                    imset.resmooth(modelimages[k], residualimage[k], restoredimage[k], resmooth)
         imCln.close()
         ####################################################################
         if dochaniter:
