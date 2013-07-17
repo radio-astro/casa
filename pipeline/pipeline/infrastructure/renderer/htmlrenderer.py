@@ -28,6 +28,7 @@ import pipeline.infrastructure.displays.clean as clean
 import pipeline.infrastructure.displays.flagging as flagging
 import pipeline.infrastructure.displays.image as image
 import pipeline.infrastructure.displays.summary as summary
+import pipeline.infrastructure.displays.slice as slicedisplay
 import pipeline.infrastructure.displays.tsys as tsys
 import pipeline.infrastructure.basetask as basetask
 import pipeline.infrastructure.filenamer as filenamer
@@ -546,23 +547,34 @@ class T2_2_XRendererBase(object):
     Base renderer for T2-2-X series of pages.
     """
     @classmethod
-    def get_file(cls, context, ms, hardcopy):
-        ms_dir = os.path.join(context.report_dir, 
-                              'session%s' % ms.session,
-                              ms.basename)
-        if hardcopy and not os.path.exists(ms_dir):
+    def get_file(cls, filename):
+        ms_dir = os.path.dirname(filename)
+
+        if not os.path.exists(ms_dir):
             os.makedirs(ms_dir)
-        filename = os.path.join(ms_dir, cls.output_file)
-        file_obj = open(filename, 'w') if hardcopy else StdOutFile()
+
+        file_obj = open(filename, 'w')
         return contextlib.closing(file_obj)
+
+    @classmethod
+    def get_filename(cls, context, ms):
+        return os.path.join(context.report_dir,
+                            'session%s' % ms.session,
+                            ms.basename,
+                            cls.output_file)
 
     @classmethod
     def render(cls, context, hardcopy=False):
         for ms in context.observing_run.measurement_sets:
-            with cls.get_file(context, ms, hardcopy) as fileobj:
-                template = TemplateFinder.get_template(cls.template)
-                display_context = cls.get_display_context(context, ms)
-                fileobj.write(template.render(**display_context))
+            filename = cls.get_filename(context, ms)
+            # now that the details pages are written per MS rather than having
+            # tabs for each MS, we don't need to write them each time as
+            # importdata will not affect their content.
+            if not os.path.exists(filename):
+                with cls.get_file(filename) as fileobj:
+                    template = TemplateFinder.get_template(cls.template)
+                    display_context = cls.get_display_context(context, ms)
+                    fileobj.write(template.render(**display_context))
 
 
 class T2_2_1Renderer(T2_2_XRendererBase):
@@ -998,20 +1010,20 @@ class T2_3MDetailsBandpassRenderer(T2_3MDetailsDefaultRenderer):
         super(T2_3MDetailsBandpassRenderer, self).__init__(template,
                                                            always_rerender)
 
-    """
-    Get the Mako context appropriate to the results created by a Bandpass
-    task.
-    
-    :param context: the pipeline Context
-    :type context: :class:`~pipeline.infrastructure.launcher.Context`
-    :param results: the bandpass results to describe
-    :type results: 
-        :class:`~pipeline.infrastructure.tasks.bandpass.common.BandpassResults`
-    :rtype a dictionary that can be passed to the matching bandpass Mako 
-        template
-    """
     def get_display_context(self, context, results):
-        # get the standard Mako context from the superclass implementation 
+        """
+        Get the Mako context appropriate to the results created by a Bandpass
+        task.
+
+        :param context: the pipeline Context
+        :type context: :class:`~pipeline.infrastructure.launcher.Context`
+        :param results: the bandpass results to describe
+        :type results:
+            :class:`~pipeline.infrastructure.tasks.bandpass.common.BandpassResults`
+        :rtype a dictionary that can be passed to the matching bandpass Mako
+            template
+        """
+        # get the standard Mako context from the superclass implementation
         super_cls = super(T2_3MDetailsBandpassRenderer, self)
         ctx = super_cls.get_display_context(context, results)
 
@@ -1323,6 +1335,93 @@ class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
                     'num_mses'      : num_mses})
 
         return ctx
+
+
+class T2_4MDetailsTsyscalFlagchansRenderer(T2_4MDetailsDefaultRenderer):
+    '''
+    Renders detailed HTML output for the Tsysflag task.
+    '''
+    def __init__(self, template='t2-4m_details-hif_tsysflagchans.html',
+                 always_rerender=True):
+        super(T2_4MDetailsTsyscalFlagchansRenderer, self).__init__(template,
+                                                                   always_rerender)
+
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsTsyscalFlagchansRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        htmlreports = self.get_html_reports(context, results)
+
+        ctx.update({'htmlreports' : htmlreports})
+        return ctx
+
+    def get_plots(self, context, results):
+        report_dir = context.report_dir
+        weblog_dir = os.path.join(report_dir,
+                                  'stage%s' % results.stage_number)
+
+        plots = []
+        for result in results:
+            if result.view:
+                # display the view first
+                # plot() returns the list of Plots it has generated
+                LOG.info('Plotting')
+
+                plots.append(slicedisplay.SliceDisplay().plot(
+                    context=context, results=result, reportdir=weblog_dir,
+                    plotbad=False, plot_only_flagged=True))
+
+        # Group the Plots by axes and plot types; each logical grouping will
+        # be contained in a PlotGroup
+        plot_groups = logger.PlotGroup.create_plot_groups(plots)
+        # Write the thumbnail pages for each plot grouping to disk
+        for plot_group in plot_groups:
+            renderer = hr.PlotGroupRenderer(context, results, plot_group)
+            plot_group.filename = renderer.filename
+            with renderer.get_file() as fileobj:
+                fileobj.write(renderer.render())
+
+
+    def get_html_reports(self, context, results):
+        report_dir = context.report_dir
+        weblog_dir = os.path.join(report_dir,
+                                  'stage%s' % results.stage_number)
+
+        htmlreports = {}
+        for result in results:
+            if not hasattr(result, 'flagcmdfile'):
+                continue
+
+            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
+            report_abspath = self.write_report_to_disk(weblog_dir, result)
+
+            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
+            report_relpath = os.path.relpath(report_abspath, report_dir)
+
+            table_basename = os.path.basename(result.table)
+            htmlreports[table_basename] = (flagcmd_relpath, report_relpath)
+
+        return htmlreports
+
+    def write_flagcmd_to_disk(self, weblog_dir, result):
+        tablename = os.path.basename(result.table)
+        filename = os.path.join(weblog_dir, '%s.html' % tablename)
+        if os.path.exists(filename):
+            return filename
+
+        reason = result.reason
+        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        return filename
+
+    def write_report_to_disk(self, weblog_dir, result):
+        # now write printTsysFlags output to a report file
+        tablename = os.path.basename(result.table)
+        filename = os.path.join(weblog_dir, '%s.report.html' % tablename)
+        if os.path.exists(filename):
+            return filename
+
+        rendererutils.printTsysFlags(result.table, filename)
+        return filename
 
 
 class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):

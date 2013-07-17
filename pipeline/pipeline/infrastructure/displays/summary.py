@@ -147,7 +147,6 @@ class AzElChart(object):
                            parameters={'vis' : self.ms.basename})
 
 
-
 class WeatherChart(object):
     def __init__(self, context, ms):
         self.context = context
@@ -156,9 +155,11 @@ class WeatherChart(object):
 
     def plot(self):
         if os.path.exists(self.figfile):
+            LOG.debug('Returning existing Weather plot')
             return self._get_plot_object()
 
-        analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name, 
+        LOG.debug('Creating new Weather plot')
+        analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name,
                                                    figfile=self.figfile)
 
         return self._get_plot_object()
@@ -174,7 +175,7 @@ class WeatherChart(object):
         return logger.Plot(self.figfile,
                            x_axis='Time',
                            y_axis='Weather',
-                           parameters={'vis' : self.ms.basename})
+                           parameters={'vis': self.ms.basename})
 
 
 class ElVsTimeChart(object):    
