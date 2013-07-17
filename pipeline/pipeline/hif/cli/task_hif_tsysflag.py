@@ -6,7 +6,7 @@ import pipeline.h.cli.utils as utils
 
 
 def hif_tsysflag(vis=None, caltable=None, metric=None,
-  intentgroups=None,
+  intentgroups=None, refintent=None,
   flag_hi=None, fhi_limit=None, fhi_minsample=None,
   flag_maxabs=None, fmax_limit=None, flag_minabs=None, fmin_limit=None,
   flag_nmedian=None, fnm_limit=None, 
