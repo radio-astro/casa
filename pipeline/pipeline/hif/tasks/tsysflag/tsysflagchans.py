@@ -56,7 +56,8 @@ class TsysflagchansInputs(basetask.StandardInputs):
     @property
     def intentgroups(self):
         if self._intentgroups is None:
-            return ['AMPLITUDE+BANDPASS+PHASE+TARGET']
+            return ['ATMOSPHERE']
+#            return ['AMPLITUDE+BANDPASS+PHASE+TARGET']
         else:
             # intentgroups is set by the user as a single string, needs
             # converting to a list of strings, i.e.
