@@ -175,10 +175,11 @@ class FittingBase(object):
                     tb.putcell('SPECTRA', rows[i], spectra[i])
 
             # update baseline table
-            self._update_bltable(bltable_name, blfile, datatable, index_list, nchan, _edge, nwindow, fragment)
+            if os.path.exists(blfile):
+                self._update_bltable(bltable_name, blfile, datatable, index_list, nchan, _edge, nwindow, fragment)
 
-            # cleanup blfile
-            os.system('rm -rf %s'%(blfile))
+                # cleanup blfile
+                os.system('rm -rf %s'%(blfile))
                         
     def _calc_baseline_fit(self, scan, data, polyorder, nchan, modification, edge, masklist, blfile, win_polyorder, fragment, nwindow, mask):
         LOG.debug('masklist=%s'%(masklist))
