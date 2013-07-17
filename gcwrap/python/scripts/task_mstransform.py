@@ -134,7 +134,7 @@ class MSTHelper(ParallelTaskHelper):
         
         return self.__selpars
     
-    @dump_args
+#    @dump_args
     def validateModelCol(self):
         '''Add the realmodelcol parameter to the configuration
            only for some values of datacolumn'''
@@ -834,11 +834,16 @@ class MSTHelper(ParallelTaskHelper):
             self.__args['width'] = str(self.__args['width'])
             
         elif self.__args['mode'] == 'velocity':
+            restfreq = self.__args['restfreq']
+            if restfreq == "" or restfreq.isspace():
+                raise ValueError, "Parameter restfreq must be set when mode='velocity'"
+            
             if self.__args['start'] == 0:
                 self.__args['start'] = ''
                 
             if self.__args['width'] == 1:
                 self.__args['width'] = ''
+                
 
             # Check if the parameter has valid velocity units
             if not self.__args['start'] == '':
