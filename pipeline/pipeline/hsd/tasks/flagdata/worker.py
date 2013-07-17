@@ -102,7 +102,10 @@ class SDFlagDataWorker(object):
                 #    copied = tb.copy(filename_out, deep=True, valuecopy=True, returnobject=True)
                 #    copied.close()
                 raise Exception, "Flagging should be done after baseline-subtraction."
+            
+            LOG.info("*** Processing table: %s ***" % (os.path.basename(filename_in)))
             for pol in pollist:
+                LOG.info("[ POL=%d ]" % (pol))
                 # time_table should only list on scans
                 time_table = datatable.get_timetable(idx, spwid, pol)               
                 # Select time gap list: 'subscan': large gap; 'raster': small gap
@@ -116,13 +119,16 @@ class SDFlagDataWorker(object):
                 t0 = time.time()
                 data = self.calcStatistics(datatable, filename_in, filename_out, nchan, nmean, TimeTable, edge)
                 t1 = time.time()
-                LOG.info('RMS and diff caluculation End: Elapse time = %.1f sec' % (t1 - t0))
+                LOG.info('RMS and diff calculation End: Elapse time = %.1f sec' % (t1 - t0))
                 
                 t0 = time.time()
                 tmpdata = numpy.transpose(data)
                 dt_idx = numpy.array(tmpdata[0], numpy.int)
+                LOG.info('Calculating the thresholds by RMS and Diff from running mean of Pre/Post fit. (Iterate %d times)' % (iteration))
                 stat_flag, final_thres = self._get_flag_from_stats(tmpdata[1:6], Threshold, iteration)
-                LOG.info('final threshold shape = %d' % len(final_thres))
+                LOG.debug('final threshold shape = %d' % len(final_thres))
+                LOG.info('Final thresholds: RMS (pre-/post-fit) = %.2f / %.2f , Diff RMS (pre-/post-fit) = %.2f / %.2f , Tsys=%.2f' % tuple([final_thres[i][1] for i in (1,0,3,2,4)]))
+                
                 self._apply_stat_flag(datatable, dt_idx, stat_flag)
 
                 # flag by Expected RMS
@@ -170,7 +176,7 @@ class SDFlagDataWorker(object):
 
         ProcStartTime = time.time()
 
-        LOG.info('RMS and diff caluculation Start')
+        LOG.info('RMS and diff calculation Start')
 
         tbIn, tbOut = gentools(['tb','tb'])
         tbIn.open(DataIn)
@@ -299,8 +305,8 @@ class SDFlagDataWorker(object):
 
                 DataTable.putcell('STATISTICS',idx,stats)
                 DataTable.putcell('NMASK',idx,Nmask)
-                LOG.info('Row=%d, pre-fit RMS= %.2f pre-fit diff RMS= %.2f' % (row, OldRMS, OldRMSdiff))
-                LOG.info('Row=%d, post-fit RMS= %.2f post-fit diff RMS= %.2f' % (row, NewRMS, NewRMSdiff))
+                LOG.debug('Row=%d, pre-fit RMS= %.2f pre-fit diff RMS= %.2f' % (row, OldRMS, OldRMSdiff))
+                LOG.debug('Row=%d, post-fit RMS= %.2f post-fit diff RMS= %.2f' % (row, NewRMS, NewRMSdiff))
                 data.append([idx, NewRMS, OldRMS, NewRMSdiff, OldRMSdiff, DataTable.getcell('TSYS',idx), Nmask])
             del SpIn, SpOut
         return data
@@ -332,6 +338,7 @@ class SDFlagDataWorker(object):
         return mask, threshold
 
     def _apply_stat_flag(self, DataTable, ids, stat_flag):
+        LOG.info("Updating flags in data table")
         N = 0
         for ID in ids:
             flags = DataTable.getcell('FLAG', ID)
@@ -356,6 +363,7 @@ class SDFlagDataWorker(object):
         # not saved in the data sets' meta data. Thus we have to read them from
         # a special file. TODO: This needs to be changed for ALMA later on.
 
+        LOG.info("Flagging spectra by Expected RMS")
         try:
             fd = open('%s.exp_rms_factors' % (DataTable.getkeyword['FILENAMES'][rawFileIdx]), 'r')
             sc_fact_list = fd.readlines()
@@ -675,27 +683,46 @@ class SDFlagDataWorker(object):
             print >> Out, '</body>'
             Out.close()
 
-
+        # User flag
+        LOG.info('Number of rows flagged by User = %d /%d' % (len(FlaggedRowsCategory[2]), NROW))
         if len(FlaggedRowsCategory[2]) > 0:
-            LOG.info('Flagged rows by User =%s ' % FlaggedRowsCategory[2])
+            LOG.debug('Flagged rows by User =%s ' % FlaggedRowsCategory[2])
+        # Weather
+        LOG.info('Number of rows flagged by Weather = %d /%d' % (len(FlaggedRowsCategory[1]), NROW))
         if len(FlaggedRowsCategory[1]) > 0:
-            LOG.info('Flagged rows by Weather =%s ' % FlaggedRowsCategory[1])
+            LOG.debug('Flagged rows by Weather =%s ' % FlaggedRowsCategory[1])
+        # Tsys
+        LOG.info('Number of rows flagged by Tsys = %d /%d' % (len(FlaggedRowsCategory[0]), NROW))
         if len(FlaggedRowsCategory[0]) > 0:
-            LOG.info('Flagged rows by Tsys =%s ' % FlaggedRowsCategory[0])
+            LOG.debug('Flagged rows by Tsys =%s ' % FlaggedRowsCategory[0])
+        # Pre-fit RMS
+        LOG.info('Number of rows flagged by the baseline fluctuation (pre-fit) = %d /%d' % (len(FlaggedRowsCategory[4]), NROW))
         if len(FlaggedRowsCategory[4]) > 0:
-            LOG.info('Flagged rows by the baseline fluctuation (pre-fit) =%s ' % FlaggedRowsCategory[4])
+            LOG.debug('Flagged rows by the baseline fluctuation (pre-fit) =%s ' % FlaggedRowsCategory[4])
+        # Post-fit RMS
+        LOG.info('Number of rows flagged by the baseline fluctuation (post-fit) = %d /%d' % (len(FlaggedRowsCategory[3]), NROW))
         if len(FlaggedRowsCategory[3]) > 0:
-            LOG.info('Flagged rows by the baseline fluctuation (post-fit) =%s ' % FlaggedRowsCategory[3])
+            LOG.debug('Flagged rows by the baseline fluctuation (post-fit) =%s ' % FlaggedRowsCategory[3])
+        # Pre-fit running mean
+        LOG.info('Number of rows flagged by the difference from running mean (pre-fit) = %d /%d' % (len(FlaggedRowsCategory[6]), NROW))
         if len(FlaggedRowsCategory[6]) > 0:
-            LOG.info('Flagged rows by the difference from running mean (pre-fit) =%s ' % FlaggedRowsCategory[6])
+            LOG.debug('Flagged rows by the difference from running mean (pre-fit) =%s ' % FlaggedRowsCategory[6])
+        # Post-fit running mean
+        LOG.info('Number of rows flagged by the difference from running mean (post-fit) = %d /%d' % (len(FlaggedRowsCategory[5]), NROW))
         if len(FlaggedRowsCategory[5]) > 0:
-            LOG.info('Flagged rows by the difference from running mean (post-fit) =%s ' % FlaggedRowsCategory[5])
+            LOG.debug('Flagged rows by the difference from running mean (post-fit) =%s ' % FlaggedRowsCategory[5])
+        # Pre-fit expected RMS
+        LOG.info('Number of rows flagged by the expected RMS (pre-fit) = %d /%d' % (len(FlaggedRowsCategory[8]), NROW))
         if len(FlaggedRowsCategory[8]) > 0:
-            LOG.info('Flagged rows by the expected RMS (pre-fit) =%s ' % FlaggedRowsCategory[8])
+            LOG.debug('Flagged rows by the expected RMS (pre-fit) =%s ' % FlaggedRowsCategory[8])
+        # Post-fit expected RMS
+        LOG.info('Number of rows flagged by the expected RMS (post-fit) = %d /%d' % (len(FlaggedRowsCategory[7]), NROW))
         if len(FlaggedRowsCategory[7]) > 0:
-            LOG.info('Flagged rows by the expected RMS (post-fit) =%s ' % FlaggedRowsCategory[7])
+            LOG.debug('Flagged rows by the expected RMS (post-fit) =%s ' % FlaggedRowsCategory[7])
+        # All categories
+        LOG.info('Number of rows flagged by all active categories = %d /%d' % (len(FlaggedRows), NROW))
         if len(FlaggedRows) > 0:
-            LOG.info('Final Flagged rows by all active categories =%s ' % FlaggedRows)
+            LOG.debug('Final Flagged rows by all active categories =%s ' % FlaggedRows)
 
         del threshold, NPpdata, NPpflag, NPprows, PlotData, FlaggedRows, FlaggedRowsCategory
         return os.path.basename(Filename)
@@ -711,7 +738,10 @@ class SDFlagDataWorker(object):
         LOG.debug('Number of rows to be filled = %d' % len(ids))
         for ID in ids:
             strow = DataTable.getcell('ROW', ID)
-            row = st_rows.index(strow)
+            try:
+                row = st_rows.index(strow)
+            except ValueError:
+                raise ValueError, "Index search failed for column Row = %d in BL table, %s (Corresponding DataTable ID=%d)" % (strow, out_table_name, ID)
             #LOG.debug('filling %d-th data to ROW=%d' % (ID, row))
             tflaglist = DataTable.getcell('FLAG',ID)[1:7]
             tpflaglist = DataTable.getcell('FLAG_PERMANENT',ID)[:3]

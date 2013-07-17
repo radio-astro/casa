@@ -145,11 +145,12 @@ class SDFlagData(common.SingleDishTaskTemplate):
                 continue
             # accumulate files IDs processed
             files = files | _file_index
+            
 
             # assume all members have same spw and pollist
             first_member = group_desc[0]
             spwid = first_member.spw
-            LOG.debug('spwid=%s'%(spwid))
+            #LOG.debug('spwid = %s'%(spwid))
             pols = first_member.pols
             iteration = first_member.iteration[0]
             if pollist is not None:
@@ -157,27 +158,29 @@ class SDFlagData(common.SingleDishTaskTemplate):
 
             # skip spw not included in iflist
             if iflist is not None and spwid not in iflist:
-                LOG.debug('Skip spw %s'%(spwid))
+                LOG.info('Skip spw %d (not in iflist)'%(spwid))
                 continue
 
             # skip polarizations not included in pollist
             if pollist is not None and len(pols)==0:
-                LOG.debug('Skip pols %s'%(str(fist_member.pols)))
+                LOG.info('Skip pols %s (not in pollist)'%(str(fist_member.pols)))
                 continue
-
-            LOG.debug("Group ID = %d" % group_id)
-            LOG.debug("- _file_index = %s" % str(_file_index))
-            LOG.debug("- file names = %s" % (", ".join([st_names[id] for id in _file_index])))
-            LOG.debug("- spw: %d" % spwid)
-            LOG.debug("- pols: %s" % str(pols))
-            #LOG.debug("- additional selections:")
-            #LOG.debug("       scanlist: %s" % str(scanlist))
-            #LOG.debug("       field: %s" % field)
 
             nchan = group_desc.nchan
             if nchan ==1:
-                LOG.info('flagData was skipped because it is a TP data')
+                LOG.info('flagData was skipped because spw=%d is a TP data' % (spwid))
                 continue
+
+            LOG.info("*"*60)
+            LOG.info("Start processing reduction group %d" % (group_id))
+            LOG.debug("- file indices = %s" % str(_file_index))
+            LOG.info("- scantable names: %s" % (", ".join([st_names[id] for id in _file_index])))
+            LOG.info("- spw: %d" % spwid)
+            LOG.info("- pols: %s" % str(pols))
+            #LOG.debug("- additional selections:")
+            #LOG.debug("       scanlist: %s" % str(scanlist))
+            #LOG.debug("       field: %s" % field)
+            LOG.info("*"*60)
 
             worker = SDFlagDataWorker(context, datatable, iteration, spwid, nchan, pols, list(_file_index), flag_rule)
             result = self._executor.execute(worker, merge=False)
