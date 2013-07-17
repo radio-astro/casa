@@ -1,6 +1,6 @@
 <%!
 rsc_path = ""
-css_file = "pipeline.css"
+css_file = "css/pipeline.css"
 navbar_active=''
 
 import pipeline.infrastructure.renderer.htmlrenderer as hr
@@ -32,47 +32,6 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
  
 <!--  Add purl-JS URL parsing extension -->
 <script src="${self.attr.rsc_path}resources/purl-2.2.1.js"></script>
-
-<style>
-body { 
-	padding-top: 60px; 
-}
-
-.navbar-fixed-top .navbar-inner {
-	padding-left: 20px;
-	padding-right: 20px;
-}
-
-.sidebar-nav-fixed {
-    padding: 9px 0;
-	position: fixed;
-	top: 60px;
-    left:20px;
-    width:250px;
-}
-
-.row-fluid > .span-fixed-sidebar {
-    margin-left: 280px;
-    margin-top: -30px;
-}
-
-caption {
-	caption-side:bottom;
-}
-
-.first-in-row { 
-	margin-left: 0 !important;
-}
-
-#nav-wrapper.affix-top {
-	position: absolute;
-}
-
-#nav-wrapper.affix {
-	top: auto;
-	bottom: 0px;
-}
-</style>
 </%block>
 
 <title><%block name="title">Untitled Pipeline Weblog Page</%block></title>
