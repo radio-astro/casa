@@ -815,7 +815,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for clipping.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'WEIGHT_SPECTRUM', 'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
                           if that does not exist, it will try to use CPARAM. If none of them exist, it
@@ -929,7 +929,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'WEIGHT_SPECTRUM', 'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
                           if that does not exist, it will try to use CPARAM. If none of them exist, it
@@ -1122,7 +1122,7 @@ The task will flag a subset of data based on the following modes of operation:
                datacolumn -- Column to use for flagging.
                     default: 'DATA'
                     options: 'DATA', 'CORRECTED','MODEL', 'RESIDUAL', 'RESIDUAL_DATA',
-                             'WEIGHT_SPECTRUM', 'FPARAM', 'CPARAM', 'SNR'.
+                             'WEIGHT_SPECTRUM', 'FLOAT_DATA', 'FPARAM', 'CPARAM', 'SNR'.
                              
                     NOTE: by default for calibration tables, the framework will try to use FPARAM; 
                           if that does not exist, it will try to use CPARAM. If none of them exist, it
@@ -1411,7 +1411,7 @@ The task will flag a subset of data based on the following modes of operation:
 
         flagdata('my.ms',mode='clip',clipzeros=True)
         
-    9a) Flag only auto-correlations using the autocorr parameter.
+    9a) Flag only auto-correlations of non-radiometer data using the autocorr parameter.
        
         flagdata('my.ms', autocorr=True)
             

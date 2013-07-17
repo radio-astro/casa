@@ -1096,13 +1096,20 @@ AgentFlagger::validateDataColumn(String datacol)
 	if (isMS_p) {
 		if (datacol.compare("DATA") == 0 or datacol.compare("CORRECTED") == 0 or
 				datacol.compare("MODEL") == 0 or datacol.compare("RESIDUAL") == 0 or
-				datacol.compare("RESIDUAL_DATA") == 0 or datacol.compare("WEIGHT_SPECTRUM") == 0)
+				datacol.compare("RESIDUAL_DATA") == 0 or datacol.compare("WEIGHT_SPECTRUM") == 0 or
+				datacol.compare("FLOAT_DATA") == 0)
 		{
-
-			ret = datacol;
+			checkcol = fdh_p->checkIfColumnExists(datacol);
+		}
+		if (!checkcol){
+			//Assign a default column for single-dish MSs
+			if (fdh_p->checkIfColumnExists("FLOAT_DATA"))
+				ret = "FLOAT_DATA";
+			else
+				ret = "DATA";
 		}
 		else
-			ret = "DATA";
+			ret = datacol;
 	}
 	else {
 		// Input is a calibration table

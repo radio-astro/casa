@@ -180,6 +180,22 @@ class test_base(unittest.TestCase):
         default(flagdata)
         flagdata(vis=self.vis, mode='unflag', savepars=False)        
 
+    def setUp_floatcol(self):
+        # 15 rows, 3 scans, 9 spw, mixed chans, XX,YY, FLOAT_DATA col
+        self.vis = "SDFloatColumn.ms"
+        if testmms:
+            self.vis = 'SDFloatColumn.mms'
+
+        if os.path.exists(self.vis):
+            print "The MS is already around, just unflag"
+        else:
+            print "Moving data..."
+            os.system('cp -r '+datapath + self.vis +' '+ self.vis)
+
+        os.system('rm -rf ' + self.vis + '.flagversions')
+        default(flagdata)
+        flagdata(vis=self.vis, mode='unflag', savepars=False)        
+
     def setUp_tsys_case(self):
         self.vis = "X7ef.tsys"
          
@@ -2400,12 +2416,12 @@ class test_newcal(test_base):
 
 # CAS-5044
 class test_weight_spectrum(test_base):
-    """flagdata:: Test flagging WEIGHT_SPECTRUM"""
+    """flagdata:: Test flagging WEIGHT_SPECTRUM column"""
     
     def setUp(self):
         self.setUp_wtspec()
         
-    def tst_clipzeros_weight(self):
+    def test_clipzeros_weight(self):
         '''flagdata: datacolumn=WEIGHT_SPECTRUM, clip zeros'''
         flagdata(vis=self.vis, mode='clip', datacolumn='weight_SPECTRUM', 
                  clipzeros=True, flagbackup=False)
@@ -2451,8 +2467,57 @@ class test_weight_spectrum(test_base):
         flagdata(vis=self.vis, mode='tfcrop', datacolumn='WEIGHT_SPECTRUM', 
                  flagbackup=False)
         res = flagdata(vis=self.vis, mode='summary')
-        # Should clip only correlation LL
         self.assertEqual(res['flagged'],16)
+
+class test_float_column(test_base):
+    """flagdata:: Test flagging FLOAT_DATA column"""
+    
+    def setUp(self):
+        self.setUp_floatcol()
+                
+    def test_manual_channels(self):
+        '''flagdata: flag meta-data from a single-dish MS'''
+        flagdata(vis=self.vis, spw='1;3;5;7:0~4,1;3:507~511,5:1019~1023,7:2043~2047')
+        res = flagdata(vis=self.vis, mode='summary', spw='1,3,5,7', spwchan=False)
+        self.assertEqual(res['spw']['1']['flagged'],20)
+        self.assertEqual(res['spw']['3']['flagged'],20)
+        self.assertEqual(res['spw']['5']['flagged'],40)
+        self.assertEqual(res['spw']['7']['flagged'],40)
+        self.assertEqual(res['flagged'],120)
+
+    def test_clip_frange(self):
+        '''flagdata: datacolumn=FLOAT_DATA, flag a range'''
+        flagdata(vis=self.vis, spw='0',mode='clip', datacolumn='FLOAT_DATA', 
+                 clipminmax=[0,230.5], flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary', spw='0')
+        self.assertEqual(res['flagged'],3)
+
+    def test_clip_fchanavg(self):
+        '''flagdata: datacolumn=FLOAT_DATA, channel average'''
+        # The task should assign the FLOAT_DATA column by default
+        flagdata(vis=self.vis, mode='clip', spw='2', clipminmax=[0,3.9], 
+                 channelavg=True, flagbackup=False)
+        res = flagdata(vis=self.vis, mode='summary',spw='2')
+        # There is only one channel in each polarization
+        self.assertEqual(res['flagged'],2)
+        self.assertEqual(res['total'],2)
+        
+    def test_clip_fchanavg_onepol(self):
+        '''flagdata: datacolumn=FLOAT_DATA, one pol, channel average'''
+        flagdata(vis=self.vis, mode='clip', spw='2', clipminmax=[0,3.9], 
+                 channelavg=True, correlation='YY', flagbackup=False, datacolumn='float')
+        res = flagdata(vis=self.vis, mode='summary',spw='2')
+        # There is only one channel in each polarization
+        self.assertEqual(res['flagged'],1)
+        self.assertEqual(res['total'],2)
+
+    def test_tfcrop_float(self):
+        '''flagdata: datacolumn=FLOAT_DATA, run tfcrop'''
+        flagdata(vis=self.vis, mode='tfcrop', datacolumn='FLOAT_DATA', 
+                 flagbackup=True)
+        res = flagdata(vis=self.vis, mode='summary')
+        # It only shows that it runs without problems
+        self.assertEqual(res['flagged'],264)
 
 # Cleanup class 
 class cleanup(test_base):
@@ -2470,6 +2535,7 @@ class cleanup(test_base):
         os.system('rm -rf X7ef.tsys* ap314.gcal*')
         os.system('rm -rf list*txt')
         os.system('rm -rf fourrows*')
+        os.system('rm -rf SDtest*')
 
     def test_runTest(self):
         '''flagdata: Cleanup'''
@@ -2496,4 +2562,5 @@ def suite():
             test_bandpass,
             test_newcal,
             test_weight_spectrum,
+            test_float_column,
             cleanup]
