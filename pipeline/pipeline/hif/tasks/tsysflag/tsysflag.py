@@ -17,11 +17,44 @@ from ..common import viewflaggers
 
 LOG = infrastructure.get_logger(__name__)
 
+def intent_ids(intent, ms):
+    """Get the fieldids asociated with the given intents.
+    """  
+    # translate intents to regex form, i.e. '*PHASE*+*TARGET*' or
+    # '*PHASE*,*TARGET*' to '.*PHASE.*|.*TARGET.*'
+    re_intent = intent.replace(' ', '')
+    re_intent = re_intent.replace('*', '.*')
+    re_intent = re_intent.replace('+', '|')
+    re_intent = re_intent.replace(',', '|')
+    re_intent = re_intent.replace("'", "")
+
+    # translate intents to fieldids - have to be careful that
+    # PHASE ids have PHASE intent and no other
+    ids = []
+    if re.search(pattern=re_intent, string='AMPLITUDE'):
+        ids += [field.id for field in ms.fields if 'AMPLITUDE'
+          in field.intents]
+    if re.search(pattern=re_intent, string='BANDPASS'):
+        ids += [field.id for field in ms.fields if 'BANDPASS'
+          in field.intents]
+    if re.search(pattern=re_intent, string='PHASE'):
+        ids += [field.id for field in ms.fields if 
+          'PHASE' in field.intents and
+          'BANDPASS' not in field.intents and
+          'AMPLITUDE' not in field.intents]
+    if re.search(pattern=re_intent, string='TARGET'):
+        ids += [field.id for field in ms.fields if 'TARGET'
+          in field.intents]
+    if re.search(pattern=re_intent, string='ATMOSPHERE'):
+        ids += [field.id for field in ms.fields if 'ATMOSPHERE'
+          in field.intents]
+
+    return ids
 
 class TsysflagInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
-      intentgroups=None, metric=None, flagcmdfile=None,
+      intentgroups=None, refintent=None, metric=None, flagcmdfile=None,
       flag_nmedian=None, fnm_limit=None,
       flag_hi=None, fhi_limit=None, fhi_minsample=None,
       flag_tmf1=None, tmf1_axis=None, tmf1_limit=None,
@@ -58,7 +91,8 @@ class TsysflagInputs(basetask.StandardInputs):
     @property
     def intentgroups(self):
         if self._intentgroups is None:
-            return ['*AMPLITUDE*', '*BANDPASS*', '*PHASE*+*TARGET*']
+            return ['ATMOSPHERE']
+#            return ['AMPLITUDE', 'BANDPASS', 'PHASE+TARGET']
         else:
             # intentgroups is set by the user as a single string, needs
             # converting to a list of strings, i.e.
@@ -78,6 +112,16 @@ class TsysflagInputs(basetask.StandardInputs):
     @intentgroups.setter
     def intentgroups(self, value):
         self._intentgroups = value
+
+    @property
+    def refintent(self):
+        if self._refintent is None:
+            return 'BANDPASS'
+        return self._refintent
+
+    @refintent.setter
+    def refintent(self, value):
+        self._refintent = value
 
     @property
     def metric(self):
@@ -237,7 +281,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
         datainputs = TsysflagWorkerInputs(context=inputs.context,
           output_dir=inputs.output_dir, caltable=inputs.caltable,
           vis=inputs.vis, intentgroups=inputs.intentgroups, 
-          metric=inputs.metric)
+          refintent=inputs.refintent, metric=inputs.metric)
         datatask = TsysflagWorker(datainputs)
 
         # Construct the task that will set any flags raised in the
@@ -288,7 +332,7 @@ class Tsysflag(basetask.StandardTaskTemplate):
 
 class TsysflagWorkerInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, caltable=None,
-      intentgroups=None, metric=None):
+      intentgroups=None, refintent=None, metric=None):
         self._init_properties(vars())
 
 
@@ -331,34 +375,7 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         # Get ids of fields for intent groups of interest
         intentgroupids = {}
         for intentgroup in self.inputs.intentgroups:
-            # translate '*PHASE*+*TARGET*' or '*PHASE*,*TARGET*' to
-            # regexp form '.*PHASE.*|.*TARGET.*'
-            re_intent = intentgroup.replace(' ', '')
-            re_intent = re_intent.replace('*', '.*')
-            re_intent = re_intent.replace('+', '|')
-            re_intent = re_intent.replace(',', '|')
-
-            # translate intents to fieldids - have to be careful that
-            # PHASE ids have PHASE intent and no other
-            groupids = []
-            if re.search(pattern=re_intent, string='AMPLITUDE'):
-                groupids += [field.id for field in ms.fields if 'AMPLITUDE'
-                  in field.intents]
-            if re.search(pattern=re_intent, string='BANDPASS'):
-                groupids += [field.id for field in ms.fields if 'BANDPASS'
-                  in field.intents]
-            if re.search(pattern=re_intent, string='PHASE'):
-                groupids += [field.id for field in ms.fields if 
-                  'PHASE' in field.intents and
-                  'BANDPASS' not in field.intents and
-                  'AMPLITUDE' not in field.intents]
-            if re.search(pattern=re_intent, string='TARGET'):
-                groupids += [field.id for field in ms.fields if 'TARGET'
-                  in field.intents]
-            if re.search(pattern=re_intent, string='ATMOSPHERE'):
-                groupids += [field.id for field in ms.fields if 'ATMOSPHERE'
-                  in field.intents]
-
+            groupids = intent_ids(intentgroup, ms) 
             intentgroupids[intentgroup] = groupids
 
         LOG.info ('Computing flagging metrics for caltable %s ' % (name))
@@ -366,7 +383,8 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
             for intentgroup in self.inputs.intentgroups:
                 # calculate view for each group of fieldids
                 self.calculate_view(tsystable, tsysspwid, intentgroup,
-                  intentgroupids[intentgroup], inputs.metric)
+                  intentgroupids[intentgroup], inputs.metric,
+                  inputs.refintent)
 
         self.result.final = final[:]
 
@@ -375,7 +393,8 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
     def analyse(self, result):
         return result
 
-    def calculate_view(self, tsystable, spwid, intent, fieldids, metric):
+    def calculate_view(self, tsystable, spwid, intent, fieldids, metric,
+      refintent=None):
         """
         tsystable -- CalibrationTableData object giving access to the tsys
                      caltable.
@@ -396,12 +415,15 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
                           the MAD of the channel to channel derivative
                           across the spectrum for that antenna/scan.
                         'median' gives an image where each pixel is the
-                          tsys median for that antenna/scan.  
+                          tsys median for that antenna/scan.
+        refintent -- intent whose data are to be used as 'reference'
+                     for comparison in some views.  
         """
         if metric == 'shape':
             self.calculate_shape_view(tsystable, spwid, intent, fieldids)
         elif metric == 'fieldshape':
-            self.calculate_field_shape_view(tsystable, spwid, intent, fieldids)
+            self.calculate_fieldshape_view(tsystable, spwid, intent, fieldids,
+              refintent)
         elif metric == 'median':
             self.calculate_median_view(tsystable, spwid, intent,
               fieldids)
@@ -409,23 +431,28 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
             self.calculate_derivative_view(tsystable, spwid, intent,
               fieldids)
 
-    def calculate_field_shape_view(self, tsystable, spwid, intent, fieldids):
+    def calculate_fieldshape_view(self, tsystable, spwid, intent, fieldids,
+      refintent):
         """
         tsystable -- CalibrationTableData object giving access to the tsys
                      caltable.
         spwid     -- view will be calculated using data for this spw id.
         fieldids  -- view will be calculated using data for all field_ids in
                      this list.
-
+        refintent -- data with this intent will be used to
+                     calculate the 'reference' Tsys shape to which
+                     other data will be compared.
+ 
         Data of the specified spwid, intent and range of fieldids are
         read from the given tsystable object. Two data 'views' will be
         created, one for each polarization. Each 'view' is a matrix with
         axes antenna_id v time. Each point in the matrix is a measure of
         the difference of the tsys spectrum there from the median of all
-        the tsys spectra for that antenna/spw in the selected fields. The
-        shape metric is calculated using the formula:
+        the tsys spectra for that antenna/spw in the 'reference' fields
+        (those with refintent). The shape metric is calculated
+        using the formula:
 
-        metric = 100 * mean(abs(normalised tsys - median normalised tsys))
+        metric = 100 * mean(abs(normalised tsys - reference normalised tsys))
 
         where a 'normalised' array is defined as:
 
@@ -435,6 +462,7 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
 
         """
 
+        # Get antenna names
         ms = self.inputs.context.observing_run.get_ms(name=self.inputs.vis)
         antenna_ids = [antenna.id for antenna in ms.antennas] 
         antenna_ids.sort()
@@ -442,6 +470,9 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
         for antenna_id in antenna_ids:
             antenna_name[antenna_id] = [antenna.name for antenna in ms.antennas 
               if antenna.id==antenna_id][0]
+
+        # Get ids of fields for reference spectra
+        referencefieldids = intent_ids(refintent, ms)
 
         times = set()
 
@@ -477,16 +508,19 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
                     times.update([row.get('TIME')])
 
         for pol in pols:
-            tsysmedians = TsysflagResults()
+            tsysrefs = TsysflagResults()
 
             for antenna_id in antenna_ids:
-                # get median Tsys for each pol/antenna in this spw 
+                # get reference Tsys for each pol/antenna in this spw
+                # by calculating the median of those belonging to 
+                # referencefieldids 
 
                 spectrumstack = None
                 for description in tsysspectra[pol].descriptions():
                     tsysspectrum = tsysspectra[pol].last(description)
                     if tsysspectrum.pol==pol and \
-                      tsysspectrum.ant[0]==antenna_id:
+                      tsysspectrum.ant[0]==antenna_id and \
+                      tsysspectrum.field_id in referencefieldids:
                         if spectrumstack is None:
                             spectrumstack = tsysspectrum.data
                             flagstack = tsysspectrum.flag
@@ -512,14 +546,14 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
                             stackmedian[j] = np.median(valid_data)
                             stackmedianflag[j] = False
 
-                    tsysmedian = commonresultobjects.SpectrumResult(
+                    tsysref = commonresultobjects.SpectrumResult(
                       data=stackmedian, 
                       datatype='Median Normalised Tsys',
                       filename=tsystable.name, spw=spwid, pol=pol,
                       ant=(antenna_id, antenna_name[antenna_id]),
                       intent=intent)
 
-                    tsysmedians.addview(tsysmedian.description, tsysmedian)
+                    tsysrefs.addview(tsysref.description, tsysref)
 
             # build the view, get values for axes, initialise pixels
             times = np.sort(list(times))
@@ -530,21 +564,18 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
             for description in tsysspectra[pol].descriptions():
                 # tsys spectrum
                 tsysspectrum = tsysspectra[pol].last(description)
-                validdata = tsysspectrum.data\
-                  [np.logical_not(tsysspectrum.flag)]
 
-                # get the 'median' for this antenna
-                for description in tsysmedians.descriptions():
-                    tsysmedian = tsysmedians.last(description)
-                    if tsysmedian.ant[0] != tsysspectrum.ant[0]:
+                # get the 'reference' for this antenna
+                for ref_description in tsysrefs.descriptions():
+                    tsysref = tsysrefs.last(ref_description)
+                    if tsysref.ant[0] != tsysspectrum.ant[0]:
                         continue
 
                     # calculate the metric
-                    validmedian = tsysmedian.data\
-                      [np.logical_not(tsysspectrum.flag)]
-                    if len(validdata) > 0:
-                        metric = abs(validdata - validmedian)
-                        metric = 100.0 * np.mean(metric)
+                    diff = abs(tsysspectrum.data - tsysref.data)
+                    diff_flag = (tsysspectrum.flag | tsysref.flag)
+                    if not np.all(diff_flag):
+                        metric = 100.0 * np.mean(diff[diff_flag==0])
                         metricflag = 0
                     else:
                         metric = 0.0
@@ -565,7 +596,7 @@ class TsysflagWorker(basetask.StandardTaskTemplate):
               flag=flag, axes=axes, datatype='Shape Metric * 100',
               spw=spwid, intent=intent, pol=pol, cell_index=pol)
             # store the spectra contributing to this view as 'children'
-            viewresult.children['tsysmedians'] = tsysmedians
+            viewresult.children['tsysmedians'] = tsysrefs
             viewresult.children['tsysspectra'] = tsysspectra[pol]
 
             # add the view results and their children results to the
