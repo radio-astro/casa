@@ -973,7 +973,7 @@ class cleanhelper:
 
         ## CAS-5227
         ia.open( outputmask )
-        ia.calc('iif("'+outputmask+'">0.0,1.0,0.0)')
+        ia.calc('iif("'+outputmask+'"!=0.0,1.0,0.0)')
         ia.close()
         
         ## CAS-5221
