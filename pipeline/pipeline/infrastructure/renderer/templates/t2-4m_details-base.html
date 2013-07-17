@@ -2,6 +2,21 @@
 import pipeline.domain.measures as measures
 import pipeline.extern.asizeof as asizeof
 import pipeline.infrastructure.logging as logging
+
+def get_logrecords(result, loglevel):
+    """
+    Get the logrecords for the result, removing any duplicates
+
+    :param result: a result containing logrecords
+    :param loglevel: the loglevel to match
+    :return:
+    """
+    lst = [l for l in result.logrecords if l.levelno is loglevel]
+
+    dset = set()
+    # relies on the fact that dset.add() always returns None.
+    return [l for l in lst if
+            l.msg not in dset and not dset.add(l.msg)]
 %>
 
 <div class="page-header">
@@ -10,12 +25,12 @@ import pipeline.infrastructure.logging as logging
 
 <ul class="unstyled">
 % for r in result:
-	% for logrecord in [l for l in r.logrecords if l.levelno is logging.ERROR]:
+	% for logrecord in get_logrecords(r, logging.ERROR):
 	<li class="alert alert-error">
 		<strong>Error!</strong> ${logrecord.msg}
 	</li>
 	% endfor
-	% for logrecord in [l for l in r.logrecords if l.levelno is logging.WARNING]:
+	% for logrecord in get_logrecords(r, logging.WARNING):
 	<li class="alert">
 		<strong>Warning!</strong> ${logrecord.msg}
 	</li>
