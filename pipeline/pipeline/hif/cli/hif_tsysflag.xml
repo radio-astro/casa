@@ -39,7 +39,7 @@ Flag deviant system temperature measurements.
 
     <param type="string" name="refintent">
         <description>Data intent that provides the reference shape for \'fieldshape\' metric</description>
-        <value>"BANDPASS"</value>
+        <value>BANDPASS</value>
     </param>
 
     <param type="bool" name="flag_hi">
