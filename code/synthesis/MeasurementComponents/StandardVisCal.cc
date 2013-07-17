@@ -292,7 +292,7 @@ void TJones::guessPar(VisBuffer& vb) {
     ampave=sqrt(ampave);
     //  solveCPar()*=Complex(ampave);
     solveCPar()/=Complex(ampave);
-    solveCPar()(0,0,guessant)=solveCPar()(1,0,guessant)=Complex(ampave);
+    solveCPar()(0,0,guessant)=Complex(ampave);
     solveCPar()(LogicalArray(amplitude(solveCPar())==0.0f)) = Complex(ampave);
   }
   else
