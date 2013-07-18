@@ -1247,7 +1247,10 @@ imager::sensitivity(const bool async, ::casac::record& pointsource, double& rela
 	Vector<Vector<Double> > sumwtChan, sumwtsqChan, sumInverseVarianceChan;
 	Vector<Vector<Int> >nData;
 	Matrix<Int> mssChanSel;
+	Double effBW, effTInt;
+	Int nBaselines;
         rstat = itsImager->sensitivity(qpointsource, relative, sumweights,
+				       effBW, effTInt, nBaselines,
 				       mssChanSel,
 				       nData,
 				       sumwtChan, sumwtsqChan, sumInverseVarianceChan);
@@ -1257,14 +1260,18 @@ imager::sensitivity(const bool async, ::casac::record& pointsource, double& rela
 	for (Int i=0; i<spwIDs.nelements(); i++)
 	  spwIDs[i]=mssChanSel(i,0);
 	retrec.define("spwid", spwIDs);
-	for (Int i=0;i<sumwtChan.nelements(); i++)
-	  {
-	    ostringstream str;
-	    str << i;
-	    retrec.define("sumwtchan "+ str,sumwtChan[i]);
-	    retrec.define("sumwtsqchan "+ str,sumwtsqChan[i]);
-	    retrec.define("ndata "+str,nData[i]);
-	  }
+	retrec.define("effectivebandwidth", effBW);
+	retrec.define("effectiveintegration", effTInt);
+	retrec.define("nbaselines", nBaselines);
+	retrec.define("sumwt", sumweights);
+	// for (Int i=0;i<sumwtChan.nelements(); i++)
+	//   {
+	//     ostringstream str;
+	//     str << i;
+	//     retrec.define("sumwtchan "+ str,sumwtChan[i]);
+	//     retrec.define("sumwtsqchan "+ str,sumwtsqChan[i]);
+	//     retrec.define("ndata "+str,nData[i]);
+	//   }
 	senrec = *fromRecord(retrec);
         pointsource = *recordFromQuantity(qpointsource);
       }
