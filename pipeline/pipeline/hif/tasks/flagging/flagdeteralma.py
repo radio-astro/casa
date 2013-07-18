@@ -209,6 +209,7 @@ class FlagDeterALMAInputs( flagdeterbase.FlagDeterBaseInputs ):
 # ------------------------------------------------------------------------------
         edgespw  = basetask.property_with_default('edgespw', True)
         fracspw  = basetask.property_with_default('fracspw', 0.0625)
+        template  = basetask.property_with_default('template', True)
 
 	def __init__( self, context, vis=None, output_dir=None, flagbackup=None,
 	    autocorr=None, shadow=None, scan=None, scannumber=None,
