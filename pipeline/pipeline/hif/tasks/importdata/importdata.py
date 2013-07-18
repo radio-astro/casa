@@ -209,7 +209,10 @@ class ImportData(basetask.StandardTaskTemplate):
             
         # launch an import job for each ASDM we need to convert 
         for asdm in to_convert:
+	    if inputs.save_flagonline:
+	        self._make_template_flagfile (asdm)
             self._do_importasdm(asdm)
+
         # calculate the filenames of the resultant measurement sets
         asdms = [os.path.join(inputs.output_dir, f) for f in to_convert]
 
@@ -468,6 +471,15 @@ class ImportData(basetask.StandardTaskTemplate):
             LOG.trace('Copying Source.xml: %s to %s' % (asdm_source,
                                                         vis_source))
             shutil.copy(asdm_source, vis_source)
+
+    def _make_template_flagfile(self, asdm):
+        inputs = self.inputs        
+        vis = self._asdm_to_vis_filename(asdm)
+        outfile = os.path.join(inputs.output_dir,
+                               os.path.basename(asdm) + "_flagtemplate.txt")
+	f = open (outfile, "w")
+	f.writelines(['# User flagging commands file'])
+	f.close()
 
 
 def get_setjy_results(mses):
