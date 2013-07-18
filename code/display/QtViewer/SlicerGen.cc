@@ -103,28 +103,29 @@ namespace casa {
 		}
 
 
-		void SlicerGen::enable( const std::string &path ) {
+        void SlicerGen::enable( const std::string &path ) {
             drop_events = true;
-			ImageProperties info(path);
-			shape = info.shape( );
-			for ( size_t x = 0; x < startgui.size( ); ++x ) {
-				if ( x < shape.size( ) ) {
-					startgui[x]->setEnabled(true);
-					startgui[x]->setMinimum(0);
-					startgui[x]->setMaximum(shape[x]-1);
-					startgui[x]->setValue(0);
-					sizegui[x]->setEnabled(true);
-					sizegui[x]->setMinimum(1);
-					sizegui[x]->setMaximum(shape[x]);
-					sizegui[x]->setValue(shape[x]);
-					sizegui[x]->setEnabled(true);
-				} else {
-					startgui[x]->hide( );
-					sizegui[x]->hide( );
-				}
-			}
+            ImageProperties info(path);
+            shape.resize(info.shape( ).size( ));
+            shape = info.shape( );
+            for ( size_t x = 0; x < startgui.size( ); ++x ) {
+                if ( x < shape.size( ) ) {
+                    startgui[x]->setEnabled(true);
+                    startgui[x]->setMinimum(0);
+                    startgui[x]->setMaximum(shape[x]-1);
+                    startgui[x]->setValue(0);
+                    sizegui[x]->setEnabled(true);
+                    sizegui[x]->setMinimum(1);
+                    sizegui[x]->setMaximum(shape[x]);
+                    sizegui[x]->setValue(shape[x]);
+                    sizegui[x]->setEnabled(true);
+                } else {
+                    startgui[x]->hide( );
+                    sizegui[x]->hide( );
+                }
+            }
             drop_events = false;
-		}
+        }
 
 		void SlicerGen::adjust_position( int value ) {
 			QSpinBox *box = dynamic_cast<QSpinBox*>(QObject::sender( ));
