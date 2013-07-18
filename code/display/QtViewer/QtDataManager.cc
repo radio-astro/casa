@@ -448,7 +448,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		for ( region_map_t::iterator it=region_to_treeitem.begin( ); it != region_to_treeitem.end( ); ++it ) {
-            fprintf( stderr, "\t>>>>>> 0x%x\n", it->first );
+//          fprintf( stderr, "\t>>>>>> 0x%x\n", it->first );
 			disconnect( it->first, 0, this, 0 );
         }
 
