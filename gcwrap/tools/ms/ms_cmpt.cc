@@ -3836,6 +3836,13 @@ ms::ngetdata(const std::vector<std::string>& items, const bool ifraxis, const in
 		rec.define(item,tmp);
 		break;
 	      }
+	    case MSS::WEIGHT:
+	      {
+		Vector<Float> weight;
+		weight = itsVI->weight(weight);
+		rec.define(item,weight);
+		break;
+	      }
 	      
 	    default:
 	      {
