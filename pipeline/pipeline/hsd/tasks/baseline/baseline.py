@@ -160,9 +160,10 @@ class SDBaseline(common.SingleDishTaskTemplate):
                 namer.asdm(asdm)
                 namer.antenna_name(st.antenna.name)
                 bltable_name = namer.get_filename()
-                #bltable_name = self.context.observing_run[idx].name.rstrip('/') + '.product.tbl'
-                #if not os.path.exists(bltable_name):
-                utils.createExportTable(bltable_name)
+                iteration = group_desc.get_iteration(idx, spwid)
+                LOG.debug('iteration (antenna %s, spw %s): %s'%(idx,spwid,iteration))
+                if iteration == 0:
+                    utils.createExportTable(bltable_name)
                 ant_indices = numpy.where(antennas.take(index_list)==idx)[0]
                 ant_indices = index_list.take(ant_indices)
                 for pol in pols:
