@@ -324,10 +324,16 @@ class FlagDeterBaseInputs(basetask.StandardInputs):
 	# Generate file list.
 	filelist = []
 	if self.online:
-	    filelist.append(self.fileonline)
+	    if os.path.isfile(self.fileonline):
+	        filelist.append(self.fileonline)
+	    else:
+	        LOG.warning('Online flags file %s does not exist' % (self.fileonline))
 	filelist.append(self.inpfile)
 	if self.template:
-	    filelist.append(self.filetemplate)
+	    if os.path.isfile(self.filetemplate):
+	        filelist.append(self.filetemplate)
+	    else:
+	        LOG.warning('Template flags file %s does not exist' % (self.filetemplate))
 
         return {'vis'        : self.vis,
                 'mode'       : 'list',
