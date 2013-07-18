@@ -748,6 +748,37 @@ class test_virtualconcat(unittest.TestCase):
                 
         self.assertTrue(retValue['success'])
 
+    def test13(self):
+        '''Virtualconcat 13: 3 parts, SD data, one non-concurrent, two concurrent (CAS-5316)'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+        self.res = virtualconcat(vis=['X39a.pm03.scan3.ms', 'X425.pm03.scan4.ms', 'X425.pm04.scan4.ms'],concatvis=msname)
+        self.assertEqual(self.res, None)
+
+        print myname, ": Now checking output ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test13.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test13.ms',ignore_errors=True)
+            shutil.copytree(msname,'test13.ms')
+            print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
+
+            tb.open('test13.ms')
+            a = tb.getcol('SCAN_NUMBER')
+            tb.close()
+            if not (a[0]==3 and a[59]==3 and a[60]==4 and a[len(a)-1]==4):
+                print "Scan numbers not as expected. Should be == 3 up to index 59, then 4 thereafter."
+                retValue['success']=False
+
+        self.assertTrue(retValue['success'])
+
+
 
 class virtualconcat_cleanup(unittest.TestCase):           
     def setUp(self):
