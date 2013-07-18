@@ -447,8 +447,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		region_list_t regions = panel_->regions( );
 
 
-		for ( region_map_t::iterator it=region_to_treeitem.begin( ); it != region_to_treeitem.end( ); ++it )
+		for ( region_map_t::iterator it=region_to_treeitem.begin( ); it != region_to_treeitem.end( ); ++it ) {
+            fprintf( stderr, "\t>>>>>> 0x%x\n", it->first );
 			disconnect( it->first, 0, this, 0 );
+        }
 
 		treeitem_to_region.clear( );
 		region_to_treeitem.clear( );
