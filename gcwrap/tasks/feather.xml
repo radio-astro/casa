@@ -78,7 +78,7 @@ two images must have the same flux density normalization scale.
                          Basically modifying the flux scale of the SD image
 	 effdishdiam -- New effective SingleDish diameter to use in m. Obviously one can only reduce the dish effective dish diameter in feathering. Default -1.0 means leave as is.
 	 lowpassfiltersd -- If True the high spatial frequency in the SD image is rejected. 
-                                   Anything data outside the maximum uv distance that the SD 
+                                   Any data outside the maximum uv distance that the SD 
                                    has illuminated  is filtered out.
 
 
