@@ -2809,6 +2809,9 @@ Bool Imager::uvrange(const Double& uvmin, const Double& uvmax)
 // Find the sensitivity
 Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
 			 Double& sumwt,
+			 Double& effectiveBandwidth,
+			 Double& effectiveIntegration,
+			 Int& nBaselines,
 			 Matrix<Int>& mssChanSel,
 			 Vector<Vector<Int> >& nData,
 			 Vector<Vector<Double> >& sumwtChan,
@@ -2831,7 +2834,8 @@ Bool Imager::sensitivity(Quantity& pointsourcesens, Double& relativesens,
     mssChanSel.assign(mssChanSel_p);
 
     VisSetUtil::Sensitivity(*rvi_p, mssFreqSel_p, mssChanSel, pointsourcesens, relativesens, sumwt,
-			    nData, sumwtChan, sumwtsqChan, sumInverseVarianceChan);
+			    effectiveBandwidth, effectiveIntegration, nBaselines,nData, sumwtChan, 
+			    sumwtsqChan, sumInverseVarianceChan);
     os << LogIO::NORMAL << "RMS Point source sensitivity  : " // Loglevel INFO
        << pointsourcesens.get("Jy").getValue() << " Jy/beam"
        << LogIO::POST;
