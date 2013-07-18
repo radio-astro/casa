@@ -334,6 +334,7 @@ class Imager
   
   // Sensitivity
   Bool sensitivity(Quantity& pointsourcesens, Double& relativesens, Double& sumwt,
+		   Double& effectiveBandwidth, Double& effectiveIntegration, Int& mBaselines,
 		   Matrix<Int>& mssChanSel,
 		   Vector<Vector<Int> >& nData,
 		   Vector<Vector<Double> >& sumwtChan,
