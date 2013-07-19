@@ -82,6 +82,7 @@ public:
     THREEC295,
     THREEC196,
     THREEC123,
+    THREEC380,
     // The number of standards in this enumerator.
     NUMBER_SOURCES,
     UNKNOWN_SOURCE = NUMBER_SOURCES
