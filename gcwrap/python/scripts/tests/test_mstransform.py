@@ -108,7 +108,7 @@ class test_Combspw1(test_base):
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf combspw*.*ms inpmms*.*ms combcvel*ms')
+        os.system('rm -rf combspw*.*ms inpmms*.*ms combcvel*ms list.obs')
                 
     def test_combspw1_1(self):
         '''mstransform: Combine four spws into one'''
@@ -120,6 +120,9 @@ class test_Combspw1(test_base):
         ret = th.verifyMS(outputms, 1, 256, 0)
         self.assertTrue(ret[0],ret[1])
         
+        listobs(outputms, listfile='list.obs')
+        self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')
+      
     def test_combspw1_2(self):
         '''mstransform: Combine some channels of two spws'''
         
@@ -179,6 +182,17 @@ class test_Combspw1(test_base):
         ret = th.verifyMS('combcvel14.ms', 1, 68, 0)
         self.assertTrue(ret[0],ret[1])
         
+    def test_combspw1_5(self):
+        '''mstransform: Combine four spws into one'''
+        
+        outputms = "combspw15.ms"
+        mstransform(vis=self.vis, outputvis=outputms, combinespws=True, spw='2,5,8')
+        self.assertTrue(os.path.exists(outputms))
+        
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')        
+        self.assertEqual(dd_col.keys().__len__(), 1, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
 
 class test_Regridms1(test_base):
     '''Tests for regridms using Four_ants_3C286.ms'''
@@ -189,7 +203,7 @@ class test_Regridms1(test_base):
     def tearDown(self):
         pass
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf reg*.*ms testmms*ms')
+#        os.system('rm -rf reg*.*ms testmms*ms list.obs')
         
     def test_regrid1_1(self):
         '''mstransform: Default of regridms parameters'''
@@ -202,6 +216,10 @@ class test_Regridms1(test_base):
         for i in range(16):
             ret = th.verifyMS(outputms, 16, 64, i)
             self.assertTrue(ret[0],ret[1])
+
+        listobs(outputms)    
+        listobs(outputms, listfile='list.obs')
+        self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')
             
     def test_regrid1_2(self):
         '''mstransform: Default regridms with spw selection'''
@@ -214,6 +232,16 @@ class test_Regridms1(test_base):
         for i in range(4):
             ret = th.verifyMS(outputms, 4, 64, i)
             self.assertTrue(ret[0],ret[1])
+            
+        listobs(outputms)    
+
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
 
     def test_regrid1_3(self):
         '''mstransform: Default regridms with spw selection using input MMS'''
@@ -232,6 +260,16 @@ class test_Regridms1(test_base):
         for i in range(4):
             ret = th.verifyMS(outputms, 4, 64, i)
             self.assertTrue(ret[0],ret[1])
+            
+        listobs(outputms)    
+
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
 
 
 class test_Regridms3(test_base):
@@ -285,6 +323,11 @@ class test_Regridms3(test_base):
         self.assertTrue(th.compTables('cvel31-sorted.ms/PROCESSOR','reg31-sorted.ms/PROCESSOR', [],0.000001,"absolute"))
         self.assertTrue(th.compTables('cvel31-sorted.ms/SOURCE','reg31-sorted.ms/SOURCE', [],0.000001,"absolute"))  
         self.assertTrue(th.compTables('cvel31-sorted.ms/STATE','reg31-sorted.ms/STATE', [],0.000001,"absolute"))                                
+
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 1, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
 
 # Uncomment after seg fault is fixed
 #    def test_regrid3_2(self):
@@ -349,6 +392,11 @@ class test_Hanning(test_base):
         self.assertTrue(os.path.exists(outputms))
         ret = th.verifyMS(outputms, 1, 1448, 0)
         self.assertTrue(ret[0],ret[1])        
+
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 1, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
             
     def test_hanning3(self):
         '''mstransform: Hanning theoretical and calculated values should be the same'''
@@ -441,6 +489,11 @@ class test_FreqAvg(test_base):
         self.assertTrue(os.path.exists(outputms))
         ret = th.verifyMS(outputms, 1, 6, 0)
         self.assertTrue(ret[0],ret[1])        
+
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 1, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
         
     def test_freqavg2(self):
         '''mstranform: Select a few channels to average from one spw'''
@@ -478,6 +531,13 @@ class test_FreqAvg(test_base):
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 3, 12, 2, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
+
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
 
     def test_freqavg5(self):
         '''mstranform: Different number of spws and chanbin. Expected error'''
@@ -518,6 +578,13 @@ class test_FreqAvg(test_base):
         ret = th.verifyMS(outputms, 3, 12, 2, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
 
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+
     def test_freqavg8(self):
         '''mstranform: Average using different bins for several spws, output MMS'''
         # same as test_freqavg4
@@ -557,6 +624,13 @@ class test_FreqAvg(test_base):
         ret = th.verifyMS(outputms, 3, 2, 2, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
 
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+
     def test_freqavg10(self):
         '''mstranform: Average using different bins, channel selection, both axes, output MMS'''
         outputms = "favg10.ms"
@@ -582,6 +656,13 @@ class test_FreqAvg(test_base):
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 3, 2, 2, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
+
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 3, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
 
 class test_Shape(test_base):
     '''Test the tileshape parameter'''
@@ -724,7 +805,7 @@ class test_SeparateSPWs(test_base):
         
     def tearDown(self):
         os.system('rm -rf '+ self.vis)
-        os.system('rm -rf separate*.*ms')
+        os.system('rm -rf separate*.*ms list.obs')
         
     def test_sep1(self):
         '''mstransform: separate one spw into 4, using default regrid parameters'''
@@ -740,7 +821,15 @@ class test_SeparateSPWs(test_base):
         ret = th.verifyMS(outputms, 4, 16, 2)
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 4, 16, 3)
-        self.assertTrue(ret[0],ret[1])        
+        self.assertTrue(ret[0],ret[1])       
+        
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
         
     def test_sep2(self):
         '''mstransform: separate three spws into 2, using default regrid parameters'''
@@ -753,6 +842,9 @@ class test_SeparateSPWs(test_base):
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 2, 96, 1)
         self.assertTrue(ret[0],ret[1])        
+        
+        listobs(outputms, listfile='list.obs')
+        self.assertTrue(os.path.exists('list.obs'), 'Probable error in sub-table re-indexing')
        
     def test_sep3(self):
         '''mstransform: separate 16 spws into 4 with 10 channels each'''
@@ -766,6 +858,13 @@ class test_SeparateSPWs(test_base):
         ret = th.verifyMS(outputms, 4, 10, 3)
         self.assertTrue(ret[0],ret[1])        
    
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 4, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r3'][0], 2,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r4'][0], 3,'Error re-indexing DATA_DESCRIPTION table')
          
 class test_MMS(test_base):
     '''Several tests that create an MMS'''
@@ -803,6 +902,12 @@ class test_MMS(test_base):
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 2, 4, 1, ignoreflags=True)
         self.assertTrue(ret[0],ret[1])        
+
+        # Verify that some sub-tables are properly re-indexed.
+        dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
+        self.assertEqual(dd_col.keys().__len__(), 2, 'Wrong number of rows in DD table')    
+        self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+        self.assertEqual(dd_col['r2'][0], 1,'Error re-indexing DATA_DESCRIPTION table')
 
     def test_mms3(self):
         '''mstransform: create MMS with scan separation and channel selections'''

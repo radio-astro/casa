@@ -1001,7 +1001,6 @@ void MSTransformDataHandler::setup()
 
 	//// Determine the frequency transformation methods to use ////
 
-
 	// Regrid SPW subtable
 	if (combinespws_p)
 	{
@@ -1063,12 +1062,16 @@ void MSTransformDataHandler::setup()
 		writeOutputPlanesFloat_p = &MSTransformDataHandler::writeOutputPlanesInSlices;
 
 		separateSpwSubtable();
+		// CAS-5404. It seems to me that DD sub-table re-indexing needs
+		// to go here. To be checked!!
+		reindexDDISubTable();
 	}
 	else
 	{
 		writeOutputPlanesComplex_p = &MSTransformDataHandler::writeOutputPlanesInBlock;
 		writeOutputPlanesFloat_p = &MSTransformDataHandler::writeOutputPlanesInBlock;
 	}
+
 
 	// Check what columns have to filled
 	checkFillFlagCategory();
@@ -1907,22 +1910,59 @@ void MSTransformDataHandler::reindexDDISubTable()
 {
     if(Table::isReadable(outputMs_p->dataDescriptionTableName()) and !outputMs_p->dataDescription().isNull())
     {
-    	MSDataDescription msSubtable = outputMs_p->dataDescription();
-    	MSDataDescColumns tableCols(msSubtable);
+    	MSDataDescription ddSubtable = outputMs_p->dataDescription();
+    	uInt nrows = ddSubtable.nrow();
+
+    	//Re-size the DD sub-table
+        // Delete all rows except for the first one
+        uInt rowsToDelete = nrows-1;
+        for(uInt row_idx=rowsToDelete; row_idx>0; row_idx--)
+        {
+        	ddSubtable.removeRow(row_idx);
+        }
+
+    	// Hopefully spw table is already re-indexed
+    	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
+
+    	//get the SPW IDs from the rows
+        uInt nSpws = spwTable.nrow();
+
+        // Add rows to the DD sub-table
+        // TODO: This should be fixed once support for multiple DDI per SPW is introduced!!!
+        // This may also fail when spws have different polarizations. Check this!
+		ddSubtable.addRow(nSpws-1,0);
+
+    	MSDataDescColumns ddCols(ddSubtable);
+    	ScalarColumn<Int> ddSpwCol = ddCols.spectralWindowId();
+    	ScalarColumn<Int> polIdCol = ddCols.polarizationId();
+    	ScalarColumn<Bool> flagRowCol = ddCols.flagRow();
+
+        // Loop through spw table rows
+		for (uInt row_index=0;row_index<nSpws;row_index++)
+		{
+			Int spwId = Int(row_index);
+			ddCols.spectralWindowId().put(row_index,spwId);
+			ddCols.polarizationId().put(row_index,polIdCol(row_index));
+			ddCols.flagRow().put(row_index,flagRowCol(row_index));
+
+	        // Flush changes
+	        outputMs_p->flush(True);
+		}
 
         // Delete all rows except for the first one
-        uInt rowsToDelete = tableCols.nrow()-1;
+//        uInt rowsToDelete = tableCols.nrow()-1;
+/*
         for(uInt row_idx=rowsToDelete; row_idx>0; row_idx--)
         {
         	msSubtable.removeRow(row_idx);
         }
+*/
 
         // Set SPW in the remaining row
-        ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-        spwCol.put(0,0);
+//        ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
+//        spwCol.put(0,0);
 
-        // Flush changes
-        outputMs_p->flush(True);
+
     }
     else
     {
