@@ -68,7 +68,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
             <allowed kind="enum">
             <value>manual</value>
             <value>clip</value>
-<!--            <value>interactive</value> -->
+            <value>interactive</value>
             <value>rowid</value>
             </allowed>
     </param>
@@ -202,7 +202,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                             <default param="clipoutside"><value type="bool">True</value></default>
                             <default param="unflag"><value type="bool">False</value></default>
                     </equals>
-<!--
                     <equals value="interactive">
                             <default param="scans"><value type="intArray"></value></default>
                              <default param="field"><value type="string"></value></default>
@@ -211,7 +210,6 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                              <default param="pols"><value type="intArray"></value></default>
                             <default param="showflagged"><value type="bool">False</value></default>
                     </equals>
--->
                     <equals value="rowid">
                             <default param="rows"><value type="intArray"></value></default>
                             <default param="unflag"><value type="bool">False</value></default>
@@ -339,25 +337,31 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
         DESCRIPTION:
 
-        Task sdflag2 performs both interactive and non-interactive channel/row 
-        based flagging on spectra.
-        Currently, the available ways of non-interactive flagging include: 
-        (1) channel based flagging by specifying a range of spectral values 
-        with clip=True, (2) row based flagging by specifying a list of row 
-        numbers to the flagrow parameter, and (3) channel based flagging by 
-        specifying regions in channel to the maskflag parameter. 
-        These three ways of flagging can not be executed simultaneously. 
-        If more than one parameter above are specified, the task looks for 
-        them in the above order and operates the first specified way of 
-        flagging operation.
+        Task sdflag2 performs either interactive or non-interactive channel/row 
+        based flagging on spectra. 
+        Currently, there are three ways of non-interactive flagging available: 
+        (1) channel or row based flagging by selecting spectra by field,
+        lists of scan numbers, IF numbers, and polarization idices in mode='manual',
+        (2) channel based flagging by specifying a range of spectral values in
+        mode='clip', and 
+        (3) row based flagging by specifying a list of row numbers in mode='rowid'.
 
-        Interactive flagging is available when interactive=True. 
+        In mode='manual', the channel based flagging are invoked when regions
+        in channel, frequency, or velocity are soecufued to maskflag parameter. 
+        Otherwise, the whole channels are flagged for the selected spectra.
+        Note the mode='rowid' is an EXPERT mode since it might not be straight
+        forward for general users to select data by row IDs in scantable.
+
+        Interactive flagging is available when mode='interactive'. 
         The available ways of interactive flagging include: 
         (1) row based flagging by selecting 'panel' and (2) channel
         based flagging by selecting 'region's of channels on Flag plotter. 
-        Note that the Flag plotter is loaded after carrying out the 
-        non-interactive flag operation if any specified. See the cookbook for
-        details of how to select channel regions and spectra on the plotter.
+        See the cookbook for details of how to select channel regions and spectra
+        on the plotter.
+
+        NOTE the task sdflag2 only modifies flag information, FLAGROW and FLAGTRA, 
+        in the input scantable, and does not filter rows in the dataset unlike
+        sdflag task.
 
         If plotlevel&gt;=1, the task asks you if you really apply the 
         flags before it is actually written to the data with a plot 
