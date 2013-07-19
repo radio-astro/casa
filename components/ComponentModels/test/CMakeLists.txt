@@ -10,6 +10,7 @@ tDiskShape
 tFluxStandard
 tFluxStandard2
 tFluxStandard3
+tFluxStandard4
 tGaussianComponent
 tGaussianShape
 tGaussianBeam
