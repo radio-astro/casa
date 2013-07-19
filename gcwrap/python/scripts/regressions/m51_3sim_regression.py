@@ -291,6 +291,13 @@ refstats = { 'max': 0.19002351,
              'rms': 0.02843619,
              'sigma': 0.02089434,
              'sum': 2305.42279108 }
+# 20130719
+refstats = { 'max': 0.19413
+             'min': -0.025759,
+             'rms': 0.02848,
+             'sigma': 0.021183,
+             'sum': 2305.2 }
+
 
 
 # # reference statistic values for diff image
@@ -312,6 +319,12 @@ diffstats = {'max': 0.0287243,
              'rms': 0.02258857,
              'sigma': 0.01913613,
              'sum': -1434.54940508 }
+# 20130719
+diffstats = {'max': 0.036524,
+             'min': -0.16007,
+             'rms': 0.023563,
+             'sigma': 0.02028,
+             'sum': -1433.9 }
 
 # relative tolerances to reference values
 reftol   = {'sum':  1e-2,
@@ -369,9 +382,6 @@ for ke in rskes:
     else:
         print >> logfile, "* FAILED %-5s  diff test, got % -11.5g instead of % -11.5g." % (ke, m51both_diffstats[ke][0], diffstats[ke])
         regstate = False
-
-# this script doesn't have sensible values yet 20100928
-regstate=True        
 
 print >> logfile,'---'
 if regstate:
