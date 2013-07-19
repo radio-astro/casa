@@ -269,7 +269,13 @@ class Frequencies(spectralwindow.SpectralWindow,SingleDishBase):
         channel0 = spw.channels[0]
         refpix = 0
         refval = to_numeric_freq(channel0.getCentreFrequency())
-        increment = to_numeric_freq(channel0.getWidth())
+        if nchan == 1:
+            increment = to_numeric_freq(channel0.getWidth())
+        else:
+            center_freq0 = channel0.getCentreFrequency()
+            center_freq1 = spw.channels[1].getCentreFrequency()
+            increment = to_numeric_freq(center_freq1 - center_freq0)
+
         entry = Frequencies(id=spw.id,
                             type=spw_type,
                             nchan=nchan,

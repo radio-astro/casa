@@ -107,7 +107,7 @@ class SDImageGenerator(object):
             # set brightness unit
             ia.setbrightnessunit('K')
             
-    def define_image(self, grid_table, freq_refpix, freq_refval, freq_increment, rest_frequency=None, antenna='', observer='', obs_date=0.0, stokes='XX YY'):
+    def define_image(self, grid_table, freq_refpix, freq_refval, freq_increment, freq_frame='LSRK', rest_frequency=None, antenna='', observer='', obs_date=0.0, stokes='XX YY'):
         self.nx = 1
         while grid_table[self.nx][5] == grid_table[0][5]:
             self.nx += 1
@@ -127,9 +127,9 @@ class SDImageGenerator(object):
         #self.center = [casatools.quanta.quantity(x,'deg'),
         #               casatools.quanta.quantity(y,'deg')]
         self.center = ['%sdeg'%(x), '%sdeg'%(y)]
-        self.coords_rec = self._configure_coords(self.nx, self.ny, self.cellx, self.celly, self.center, freq_refpix, freq_refval, freq_increment, rest_frequency, antenna, observer, obs_date, stokes)
+        self.coords_rec = self._configure_coords(self.nx, self.ny, self.cellx, self.celly, self.center, freq_refpix, freq_refval, freq_increment, freq_frame, rest_frequency, antenna, observer, obs_date, stokes)
         
-    def _configure_coords(self, nx, ny, cellx, celly, center, freq_refpix, freq_refval, freq_increment, rest_frequency=None, antenna='', observer='', obs_date=0.0, stokes='XX YY'):
+    def _configure_coords(self, nx, ny, cellx, celly, center, freq_refpix, freq_refval, freq_increment, freq_frame='LSRK', rest_frequency=None, antenna='', observer='', obs_date=0.0, stokes='XX YY'):
         """
         Configure coordinate system from filename.
         """
@@ -173,6 +173,7 @@ class SDImageGenerator(object):
         coords.setreferencepixel(value=[freq_refpix],type='spectral')
         coords.setreferencevalue(value='%sHz'%freq_refval,type='spectral')
         coords.setincrement(value='%sHz'%freq_increment,type='spectral')
+        coords.setreferencecode(value=freq_frame, type='spectral', adjust=False)
         
         # to record
         coords_rec=coords.torecord()

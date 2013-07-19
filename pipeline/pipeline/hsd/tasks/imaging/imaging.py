@@ -177,6 +177,7 @@ class SDImaging(common.SingleDishTaskTemplate):
         increment = spw.increment
         rest_freqs = spw.rest_frequencies
         nchan = spw.nchan
+        freq_frame = spw.frame
         
         # beam size
         grid_size = casatools.quanta.convert(reference_data.beam_size[spwid], 'deg')['value']
@@ -209,6 +210,7 @@ class SDImaging(common.SingleDishTaskTemplate):
         image_generator.define_image(grid_table, 
                                      freq_refpix=refpix, freq_refval=refval,
                                      freq_increment=increment,
+                                     freq_frame=freq_frame,
                                      rest_frequency=rest_freqs,
                                      antenna=antenna, observer=observer, 
                                      obs_date=obs_date)
