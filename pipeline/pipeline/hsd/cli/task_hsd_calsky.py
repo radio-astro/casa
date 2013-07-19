@@ -2,7 +2,9 @@ import sys
 
 import pipeline.h.cli.utils as utils
 
-def hsd_calsky(pipelinemode=None, infiles=None, calmode=None, field=None,
+def hsd_calsky(calmode=None, fraction=None, noff=None,
+               width=None, elongated=None,
+               pipelinemode=None, infiles=None, field=None,
                scanlist=None, iflist=None, pollist=None,
                dryrun=None, acceptresults=None):
 

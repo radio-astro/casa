@@ -15,8 +15,9 @@ class SDCalSkyInputs(common.SingleDishInputs):
     """
     Inputs for single dish calibraton
     """
-    def __init__(self, context, output_dir=None,
-                 infiles=None, outfile=None, calmode=None, iflist=None,
+    def __init__(self, context, calmode=None, fraction=None, noff=None,
+                 width=None, elongated=None, output_dir=None,
+                 infiles=None, outfile=None, iflist=None,
                  scanlist=None, pollist=None):
         self._init_properties(vars())            
 
