@@ -57,6 +57,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
             for freq_id in freq_ids:
                 tsel = tb.query('FREQ_ID == %s'%(freq_id))
                 nchans[freq_id] = len(tsel.getcell('TSYS',0))
+                tsel.close()
         base_freqs = {}
         for freq_id in freq_ids:
             base_freqs[freq_id] = common.get_base_frequency(table, freq_id,
@@ -115,6 +116,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                 pl.savefig(plotfile)
                 if common.ShowPlot: pl.draw()
                 plots.append(plot)
+            tsel.close()
         return plots 
 
     def _plot_tsys_vs_el(self, result, stage_dir):
@@ -146,6 +148,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                     tsel = tb.query('IFNO==%s && POLNO==%s'%(spw,pol), sortlist='ELEVATION')
                     tsys = tsel.getcol('TSYS')
                     el = tsel.getcol('ELEVATION') * 180.0 / numpy.pi
+                    tsel.close()
                     atsys = tsys.mean(axis=0)
                     pl.plot(el, atsys, '.-', label='spw=%s, pol=%s'%(spw,pol))
             pl.title(title)
@@ -173,6 +176,7 @@ class SDTsysDisplay(common.SDCalibrationDisplay):
                     tsel = tb.query('IFNO==%s && POLNO==%s'%(spw,pol), sortlist='ELEVATION')
                     tsys = tsel.getcol('TSYS')
                     el = tsel.getcol('ELEVATION') * 180.0 / numpy.pi
+                    tsel.close()
                     etsys = common.drop_edge(tsys)
                     if etsys is not None:
                         atsys = etsys.mean(axis=0)
