@@ -1674,16 +1674,18 @@ class cleanhelper:
             i = 0
             prevstart=initi
             while True:
-                step = nchar*(i+1)
+                #step = nchar*(i+1)
+                step = nchar+1
                 start = prevstart+step
                 nexti = content[start:].find(keywd)
-                #print "look at start=",start, " nexti=",nexti, " step=",step, " prevstart=",prevstart
+                #print "With start=",start, " found next one at(nexti)=",nexti, " step used =",step, " prevstart=",prevstart
 
                 if nexti == -1:
                     pars[i]=content[prevstart:]
                 #    print "range=",prevstart, " to the end"
                     break
                 pars[i]=content[prevstart:prevstart+nexti+step]
+                #print "pars[",i,"]=",pars[i]
                 #print "range=",prevstart, " to", prevstart+nexti+step-1
                 prevstart=prevstart+nexti+step
                 i+=1
