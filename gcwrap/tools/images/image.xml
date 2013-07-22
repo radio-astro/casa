@@ -2127,6 +2127,11 @@ ia.close()             # close to unlock disk image
      <description>Overwrite (unprompted) pre-existing output file?</description>
      <value>false</value>
      </param>
+
+     <param type="bool"  name="silent">
+     <description>Skip silently existing axes?</description>
+     <value>false</value>
+     </param>
 </input>
 <returns type="image"/>
 

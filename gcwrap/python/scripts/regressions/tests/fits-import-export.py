@@ -67,6 +67,14 @@ def data():
     myfiles.append('spec-test-vrad.fits')    
     myfiles.append('spec-test-wave.fits')    
     myfiles.append('spec-test-awav.fits')    
+
+    myfiles.append('dir_and_stokes.fits')    
+    myfiles.append('dir_stokes_and_freq.fits')    
+    myfiles.append('onlydir.fits')    
+    myfiles.append('dir_and_freq.fits')    
+    myfiles.append('dir_freq_and_stokes.fits')    
+    myfiles.append('freq.fits')    
+
     return myfiles
 
 def doCopy():

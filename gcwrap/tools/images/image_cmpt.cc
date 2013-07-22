@@ -506,7 +506,7 @@ bool image::fromshape(
 image::adddegaxes(
 	const std::string& outfile, const bool direction,
 	const bool spectral, const std::string& stokes, const bool linear,
-	const bool tabular, const bool overwrite
+	const bool tabular, const bool overwrite, const bool silent
 ) {
 	try {
 		*_log << _ORIGIN;
@@ -516,7 +516,7 @@ image::adddegaxes(
 		PtrHolder<ImageInterface<Float> > outimage;
 		ImageUtilities::addDegenerateAxes(
 			*_log, outimage, *_image->getImage(), outfile,
-			direction, spectral, stokes, linear, tabular, overwrite
+			direction, spectral, stokes, linear, tabular, overwrite, silent
 		);
 		return new image(outimage.ptr());
 	} catch (AipsError x) {

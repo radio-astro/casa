@@ -16,6 +16,7 @@
 #    4) Is the exported file compatible with the original?                  #
 #    5) Does the bitpix=16 feature work                                     #
 #    6) Is spectral WCS correctly read and written                          #
+#    7) Does the defaultaxes feature work                                   #
 #                                                                           #
 # Input data:                                                               #
 #    28 sample fits files constructed by Mark Calabretta                    #
@@ -386,6 +387,39 @@ else:
     print passedx
     failed_tests.append('spectralwcs')
 print myname, ' ***********************************************************'
+
+print myname, ' ***********************************************************'
+print myname, ' Test of import with use of parameter defaultaxes:'
+passed = True
+for name in ['dir_and_stokes.fits', 'dir_stokes_and_freq.fits', 'onlydir.fits', 'dir_and_freq.fits', 'dir_freq_and_stokes.fits', 'freq.fits']:
+    print name
+    importfits(fitsimage=name, imagename=name+'.im', overwrite=True, defaultaxes=True, defaultaxesvalues=[1.,2.,'6GHz', 'Q'])
+    ia.open(name+'.im')
+    mycs = ia.coordsys()
+    ia.close()
+    if not mycs.axiscoordinatetypes() == ['Direction', 'Direction', 'Spectral', 'Stokes']:
+        passed = False
+    else:
+        mycsr = mycs.torecord()
+        if name in ['dir_and_stokes.fits', 'onlydir.fits']:
+            if not ((mycsr.has_key('spectral1') and mycsr['spectral1']['wcs']['crval'] == 6E9) \
+                   or (mycsr.has_key('spectral2') and mycsr['spectral2']['wcs']['crval'] == 6E9)):
+                print "Error: Spectral axis CRVAL should be 6E9"
+                passed = False
+        if name in ['onlydir.fits', 'dir_and_freq.fits', 'freq.fits']:
+            if not ((mycsr.has_key('stokes1') and mycsr['stokes1']['stokes'][0]=='Q') \
+                    or (mycsr.has_key('stokes2') and mycsr['stokes2']['stokes'][0]=='Q')):
+                print "Error: Stokes axis CRVAL should be Q"
+                passed = False
+
+if passed:
+    print myname, ' tests of import with defaultaxes passed.'
+    passed_tests.append('defaultaxes')
+else:
+    print myname, ' tests of import with defaultaxes failed.'
+    failed_tests.append('defaultaxes')
+print myname, ' ***********************************************************'
+
 
 
 if len(failed_tests)>0:
