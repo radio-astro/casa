@@ -85,8 +85,8 @@ class SimpleGridding(object):
             ras = ras + numpy.less_equal(ras, 180) * 360.0
             min_ra = ras.min()
             max_ra = ras.max()
-        LOG.info(' RA: [%s, %s]'%(min_ra, max_ra))
-        LOG.info('DEC: [%s, %s]'%(min_dec, max_dec))
+        LOG.info(' RA range: [%s, %s]'%(min_ra, max_ra))
+        LOG.info('DEC range: [%s, %s]'%(min_dec, max_dec))
         ngrid_ra = int(int((max_ra - min_ra + grid_ra_corr)  / (2.0 * grid_ra_corr)) * 2 + 1)
         ngrid_dec = int(int((max_dec - min_dec + self.grid_dec) / (2.0 * self.grid_dec)) * 2 + 1)
         min_ra = (min_ra + max_ra - ngrid_ra * grid_ra_corr) / 2.0
@@ -171,8 +171,7 @@ class SimpleGridding(object):
 
         """
         NROW = len(grid_table)
-        LOG.debug('grid() start...')
-        LOG.info('Processing %d spectra...' % (NROW))
+        LOG.info('SimpleGrid: Processing %d spectra...' % (NROW))
 
         # any opened table object is needed, so we use the one 
         # that datatable holds.

@@ -44,7 +44,7 @@ class ValidateLineSinglePointing(object):
             for row in idxList:
                 mask_list = self.datatable.getcell('MASKLIST',row)
                 no_change = self.datatable.getcell('NOCHANGE',row)
-                LOG.debug('DataTable = %s, DetectSignal = %s, OldFlag = %s' % (mask_list, DetectSignal[row][2], no_change))
+                #LOG.debug('DataTable = %s, DetectSignal = %s, OldFlag = %s' % (mask_list, DetectSignal[row][2], no_change))
                 self.datatable.putcell('MASKLIST',row,DetectSignal[row][2])
                 self.datatable.putcell('NOCHANGE',row,False)
 
@@ -53,7 +53,7 @@ class ValidateLineSinglePointing(object):
             for row in idxList:
                 mask_list = self.datatable.getcell('MASKLIST',row)
                 no_change = self.datatable.getcell('NOCHANGE',row)
-                LOG.debug('DataTable = %s, DetectSignal = %s, OldFlag = %s' % (mask_list, DetectSignal[0][2], no_change))
+                #LOG.debug('DataTable = %s, DetectSignal = %s, OldFlag = %s' % (mask_list, DetectSignal[0][2], no_change))
                 if mask_list == DetectSignal[0][2]:
                     if type(no_change) != int:
                         # 2013/05/17 TN
@@ -203,7 +203,6 @@ class ValidateLineRaster(object):
         Grid2SpectrumID = [[[] for y in xrange(ndec)] for x in xrange(nra)]
         for i in range(len(idxList)):
             Grid2SpectrumID[int((PosList[0][i] - x0)/GridSpaceRA)][int((PosList[1][i] - y0)/GridSpaceDEC)].append(i)
-        LOG.debug('Grid2SpectrumID = %s' % Grid2SpectrumID)
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Initialization End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -246,9 +245,6 @@ class ValidateLineRaster(object):
         LOG.info('Clustering: Validation Stage Start')
 
         (GridCluster, GridMember, Lines) = self.validation_stage(GridCluster, GridMember, Lines, ITER)
-
-        LOG.info('Lines after validation: %s'%(Lines))
-        LOG.debug('GridCluster after validation: %s'%(GridCluster))
         
         ProcEndTime = time.time()
         LOG.info('Clustering: Validation Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
@@ -267,9 +263,6 @@ class ValidateLineRaster(object):
 
         ProcEndTime = time.time()
         LOG.info('Clustering: Smoothing Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
-
-        LOG.debug('Lines after smoothing: %s'%(Lines))
-        LOG.debug('GridCluster after smoothing: %s'%(GridCluster))
         
         ######## Clustering: Final Stage ########
         ProcStartTime = time.time()
@@ -280,10 +273,9 @@ class ValidateLineRaster(object):
         ProcEndTime = time.time()
         LOG.info('Clustering: Final Stage End: Elapsed time = %s sec' % (ProcEndTime - ProcStartTime))
 
-        LOG.debug('Lines after final: %s'%(Lines))
-
         # Merge masks if possible
         ProcStartTime = time.time()
+        LOG.info('Clustering: Merging Start')
         # RealSignal should have all row's as its key
         tmp_index = 0
         for row in idxList:
@@ -307,8 +299,7 @@ class ValidateLineRaster(object):
             else:
                 tMASKLIST=tMASKLIST.tolist()#list(tMASKLIST)
             tNOCHANGE = self.datatable.tb2.getcell('NOCHANGE',row)
-            #LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, RealSignal[row][2]))
-            LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, signal))
+            #LOG.debug('DataTable = %s, RealSignal = %s' % (tMASKLIST, signal))
             if tMASKLIST == signal:
                 #LOG.debug('No update on row %s: iter is %s'%(row,ITER))
                 #if type(tNOCHANGE) != int:
@@ -337,7 +328,7 @@ class ValidateLineRaster(object):
 
     def clustering_analysis(self, Region, Region2, Nsigma):
         MedianWidth = numpy.median(Region2[:,0])
-        LOG.debug('MedianWidth = %s' % MedianWidth)
+        LOG.trace('MedianWidth = %s' % MedianWidth)
 
         #MaxCluster = int(min(rules.ClusterRule['MaxCluster'], max(MaxLines + 1, (Npos ** 0.5)/2)))
         MaxCluster = int(rules.ClusterRule['MaxCluster'])
@@ -367,11 +358,11 @@ class ValidateLineRaster(object):
                 #codebook, diff = VQ.kmeans(Region2, Ncluster)
                 codebook, diff = VQ.kmeans(Region2, Ncluster, iter=50)
                 NclusterNew = 0
-                LOG.debug('codebook=%s'%(codebook))
+                LOG.trace('codebook=%s'%(codebook))
                 # Do iteration until no merging of clusters to be found
                 while(NclusterNew != len(codebook)):
                     category, distance = VQ.vq(Region2, codebook)
-                    LOG.debug('Cluster Category&Distance %s, distance = %s' % (category, distance))
+                    LOG.trace('Cluster Category&Distance %s, distance = %s' % (category, distance))
 
                     codebook = codebook.take([x for x in xrange(0,len(codebook)) 
                                               if any(category==x)], axis=0)
@@ -398,7 +389,7 @@ class ValidateLineRaster(object):
                         ### 2011/05/17 Strict the threshold
                         Threshold = ValueList.mean() + Stddev * Nsigma
                         #Threshold = Stddev * Nsigma
-                        LOG.debug('Cluster Clipping Threshold = %s, Stddev = %s' % (Threshold, Stddev))
+                        LOG.trace('Cluster Clipping Threshold = %s, Stddev = %s' % (Threshold, Stddev))
                         ### 2011/05/17 clipping iteration
                         #ValueList = ValueList.take((ValueList < Threshold).nonzero())[0]
                         #Stddev = ValueList.std()
@@ -409,9 +400,9 @@ class ValidateLineRaster(object):
                             Region[i][5] = 0
                             Outlier += 1.0
                         #MaxDistance.append(max(distance * ((distance < Threshold) * (category == Nc))))
-                        LOG.debug('Region = %s' % Region)
+                        LOG.trace('Region = %s' % Region)
                     MemberRate = (len(Region) - Outlier)/float(len(Region))
-                    LOG.debug('MemberRate = %f' % MemberRate)
+                    LOG.trace('MemberRate = %f' % MemberRate)
 
                     # Calculate Cluster Characteristics
                     Lines = []
@@ -433,7 +424,7 @@ class ValidateLineRaster(object):
                         properties = Region2.take(indices, axis=0)
                         median_props = numpy.median(properties, axis=0)
                         Lines.append([median_props[1], median_props[0], True, MaxDistance])
-                    LOG.debug('Lines = %s' % Lines)
+                    LOG.trace('Lines = %s' % Lines)
 
                     # Rating
                     ### 2011/05/16 modified for line-width variation
@@ -466,7 +457,7 @@ class ValidateLineRaster(object):
                 # TmpList is no more used.
                 #TmpList.append([NclusterNew, Score, codebook])
             ListBestScore.append(min(ListScore[index0:]))
-            LOG.info('Ncluster = %d, BestScore = %f' % (NclusterNew, ListBestScore[-1]))
+            LOG.debug('Ncluster = %d, BestScore = %f' % (NclusterNew, ListBestScore[-1]))
             if len(ListBestScore) > 3 and \
                ListBestScore[-4] <= ListBestScore[-3] and \
                ListBestScore[-4] <= ListBestScore[-2] and \
@@ -479,8 +470,6 @@ class ValidateLineRaster(object):
         #category = BestCategory[:]
         Lines = [[book[1], book[0], True] for book in BestCodebook[:Ncluster]]
         LOG.debug('Final: Ncluster = %s, Score = %s, Category = %s, CodeBook = %s, Lines = %s' % (Ncluster, BestScore, category, BestCodebook, Lines))
-        # 2010/6/15 Plot the score along the number of the clusters
-        LOG.todo('All plots should go into dispalys module')
         self.cluster_info['cluster_score'] = [ListNcluster, ListScore]
         self.cluster_info['detected_lines'] = Region2
         self.cluster_info['cluster_property'] = BestLines
@@ -545,7 +534,6 @@ class ValidateLineRaster(object):
         (Ncluster,nra,ndec) = GridCluster.shape
 
         for Nc in range(Ncluster):
-            LOG.debug('Before: GridCluster[%s] = %s' % (Nc, GridCluster[Nc]))
             for x in range(nra):
                 for y in range(ndec):
                     if GridMember[x][y] == 0: GridCluster[Nc][x][y] = 0.0
@@ -569,7 +557,6 @@ class ValidateLineRaster(object):
                     #else: GridCluster[Nc][x][y] /= float(GridMember[x][y])
 
             if ((GridCluster[Nc] > self.Questionable)*1).sum() == 0: Lines[Nc][2] = False
-            LOG.debug('After:  GridCluster[%s] = %s' % (Nc, GridCluster[Nc]))
 
         threshold = [self.Valid, self.Marginal, self.Questionable]
         self.__update_cluster_flag('validation', GridCluster, threshold, 10)
@@ -626,8 +613,8 @@ class ValidateLineRaster(object):
                         #               else: Rating = 1.0 / sqrt(dx*dx + dy*dy)
                         #               GridScore[0][x][y] += Rating * GridCluster[Nc][nx][ny]
                         #               GridScore[1][x][y] += Rating
-                LOG.debug('Score :  GridScore[%s][0] = %s' % (Nc, GridScore[0]))
-                LOG.debug('Rating:  GridScore[%s][1] = %s' % (Nc, GridScore[1]))
+                LOG.trace('Score :  GridScore[%s][0] = %s' % (Nc, GridScore[0]))
+                LOG.trace('Rating:  GridScore[%s][1] = %s' % (Nc, GridScore[1]))
                 GridCluster[Nc] = GridScore[0] / GridScore[1]
             if ((GridCluster[Nc] > self.Questionable)*1).sum() < 0.1: Lines[Nc][2] = False
 
@@ -653,10 +640,8 @@ class ValidateLineRaster(object):
         # Clean isolated grids
         for Nc in xrange(Ncluster):
             #print '\nNc=', Nc
-            LOG.debug('Lines[%s][2]=%s'%(Nc,Lines[Nc][2]))
             if Lines[Nc][2] != False:
                 Plane = (GridCluster[Nc] > self.Marginal) * 1
-                LOG.debug('Plane = %s'%(Plane))
                 if Plane.sum() == 0:
                     Lines[Nc][2] = False
                     #print 'Lines[Nc][2] -> False'
@@ -698,8 +683,6 @@ class ValidateLineRaster(object):
                             Realmember.append(MM)
                             NsubCluster += 1
 
-                LOG.debug('Nmember = %s' % Nmember)
-                LOG.debug('MemberList = %s' % MemberList)
                 # If no members left, skip to next cluster
                 if len(Nmember) == 0: continue
                 # Threshold is set to half the number of the largest cluster in the plane
@@ -720,7 +703,6 @@ class ValidateLineRaster(object):
                             Plane[x][y] == 0
                         del Nmember[n]
                         del MemberList[n]
-                LOG.debug('Cluster Member = %s' % Nmember)
 
                 # Blur each SubCluster with the radius of sqrt(Nmember/Pi) * ratio
                 ratio = rules.ClusterRule['BlurRatio']
@@ -738,7 +720,6 @@ class ValidateLineRaster(object):
                     #BlurF = (Realmember[n] / 3.141592653) ** 0.5 * ratio + 1.5
                     BlurF = sqrt(Realmember[n] / 3.141592653) * ratio + 1.5
                     Blur = int(BlurF)
-                    LOG.debug('Blur = %d' % Blur)
                     # Set-up kernel for convolution
                     # caution: if nra < (Blur*2+1) and ndec < (Blur*2+1)
                     #  => dimension of SPC.convolve2d(Sub,kernel) gets not (nra,ndec) but (Blur*2+1,Blur*2+1)
@@ -752,17 +733,16 @@ class ValidateLineRaster(object):
                                 kernel[x][y] = 1
                     BlurPlane = (convolve2d(SubPlane, kernel) > self.Marginal) * 1
                     ValidPlane = (SubPlane > self.Valid) * 1
-                    LOG.debug('kernel.shape = %s' % list(kernel.shape))
-                    LOG.debug('GridCluster.shape = %s' % list(GridCluster.shape))
-                    LOG.debug('Plane.shape = %s' % list(Plane.shape))
-                    LOG.debug('SubPlane.shape = %s' % list(SubPlane.shape))
-                    LOG.debug('BlurPlane.shape = %s' % list(BlurPlane.shape))
+                    LOG.trace('GridCluster.shape = %s' % list(GridCluster.shape))
+                    LOG.trace('Plane.shape = %s' % list(Plane.shape))
+                    LOG.trace('SubPlane.shape = %s' % list(SubPlane.shape))
+                    LOG.trace('BlurPlane.shape = %s' % list(BlurPlane.shape))
                     for x in xrange(len(Plane)):
-                        LOG.debug(' %d : %s' % (x, list(Plane[x])))
+                        LOG.trace(' %d : %s' % (x, list(Plane[x])))
                     for x in xrange(len(BlurPlane)):
-                        LOG.debug(' %d : %s' % (x, list(BlurPlane[x])))
+                        LOG.trace(' %d : %s' % (x, list(BlurPlane[x])))
                     for x in xrange(len(ValidPlane)):
-                        LOG.debug(' %d : %s' % (x, list(ValidPlane[x])))
+                        LOG.trace(' %d : %s' % (x, list(ValidPlane[x])))
 
                     # 2D fit for each Plane
                     # Use the data for fit if GridCluster[Nc][x][y] > self.Valid
@@ -778,7 +758,7 @@ class ValidateLineRaster(object):
                     if Yorder < 0: Yorder0 = int(min(((numpy.sum(ValidPlane, axis=1) > 0.5)*1).sum()/Bfactor - 1, 5))
                     #if Xorder < 0: Xorder0 = min(max(max(xlist) - min(xlist), 0), 5)
                     #if Yorder < 0: Yorder0 = min(max(max(ylist) - min(ylist), 0), 5)
-                    LOG.debug('(X,Y)order = (%d, %d)' % (Xorder0, Yorder0))
+                    LOG.trace('(X,Y)order = (%d, %d)' % (Xorder0, Yorder0))
 
                     # clear Flag
                     for i in xrange(len(category)): Region[i][5] = 1
@@ -818,7 +798,7 @@ class ValidateLineRaster(object):
                         B1 = numpy.zeros((Xorder0 + 1) * (Yorder0 + 1), dtype=numpy.float64)
                         MM0 = numpy.zeros([(Xorder0 + 1) * (Yorder0 + 1), (Xorder0 + 1) * (Yorder0 + 1)], dtype=numpy.float64)
                         for iteration in xrange(3):
-                            LOG.debug('2D Fit Iteration = %d' % iteration)
+                            LOG.trace('2D Fit Iteration = %d' % iteration)
 
                             ### Commented out three lines 2011/05/15
                             # FitData format: [Width, Center, RA, DEC]
@@ -834,7 +814,7 @@ class ValidateLineRaster(object):
                             #    loop. Exit the loop whenever SingularMatrix 
                             #    is set to False. See code below.
                             #if len(FitData) == 0 or SingularMatrix: break
-                            LOG.debug('FitData = %s' % FitData)
+                            LOG.trace('FitData = %s' % FitData)
 
                             # effective components of FitData
                             effective = [i for i in xrange(len(FitData)) 
@@ -866,7 +846,6 @@ class ValidateLineRaster(object):
                                         xjyk *= x
                                         idx += 1
                                     yk *= y
-                            LOG.debug('M0=%s\nB0=%s\nM1=%s\nB1=%s'%(M0,B0,M0,B1))
 
                             # make Matrix MM0,MM1 and calculate A0,A1
                             for K in xrange((Xorder0 + 1) * (Yorder0 + 1)):
@@ -876,8 +855,6 @@ class ValidateLineRaster(object):
                                     j0 = J % (Xorder0 + 1)
                                     j1 = int(J / (Xorder0 + 1))
                                     MM0[J, K] = M0[j0 + k0 + (j1 + k1) * (Xorder0 * 2 + 1)]
-                            LOG.debug('MM0 = %s' % MM0)
-                            LOG.debug('B0 = %s' % B0)
                             ExceptionLinAlg = False
                             try:
                                 A0 = LA.solve(MM0, B0)
@@ -891,17 +868,12 @@ class ValidateLineRaster(object):
                             except:
                                 if Xorder0 != 0 or Yorder0 != 0:
                                     ExceptionLinAlg = True
-                                    LOG.debug('Xorder0,Yorder0 = %s,%s' % (Xorder0, Yorder0))
+                                    LOG.trace('Xorder0,Yorder0 = %s,%s' % (Xorder0, Yorder0))
                                     Xorder0 = max(Xorder0 - 1, 0)
                                     Yorder0 = max(Yorder0 - 1, 0)
-                                    LOG.debug('Exception Raised: Xorder0,Yorder0 = %s,%s' % (Xorder0, Yorder0))
                                 else:
                                     SingularMatrix = True
-                                    LOG.debug('SingularMatrix = True')
                                 break
-
-                            LOG.debug('A0 = %s' % A0)
-                            LOG.debug('M[0] = %s' % M0[0])
 
                             # Calculate Sigma
                             # Sigma should be calculated in the upper stage
@@ -925,8 +897,8 @@ class ValidateLineRaster(object):
                                 Threshold += sqrt(numpy.square(npdiff - Threshold).mean()) * Nsigma
                             #if len(Diff) > 1: Threshold = numpy.array(Diff).std() * Nsigma
                             else: Threshold *= 2.0
-                            LOG.debug('Diff = %s' % [Diff[i] for i in effective])
-                            LOG.debug('2D Fit Threshold = %s' % Threshold)
+                            LOG.trace('Diff = %s' % [Diff[i] for i in effective])
+                            LOG.trace('2D Fit Threshold = %s' % Threshold)
 
                             # Sigma Clip
                             NFlagged = 0
@@ -940,11 +912,10 @@ class ValidateLineRaster(object):
                                     FitData[i][4] = 0
                                     NFlagged += 1
 
-                            LOG.debug('2D Fit Flagged/All = (%s, %s)' % (NFlagged, Number))
+                            LOG.trace('2D Fit Flagged/All = (%s, %s)' % (NFlagged, Number))
                             #2009/10/15 compare the number of the remainder and fitting order
                             if (Number - NFlagged) <= max(Xorder0, Yorder0) or Number == NFlagged:
                                 SingularMatrix = True
-                                LOG.debug('SingularMatrix = True')
                                 break
                     # Iteration End
                     ### 2011/05/15 Fitting is no longer (Width, Center) but (minChan, maxChan)
@@ -968,7 +939,7 @@ class ValidateLineRaster(object):
                                         (Chan1, Chan0) = _eval_poly(Xorder0+1, Yorder0+1, PosList[0][PID], PosList[1][PID], A0, A1) 
                                         Fit0 = 0.5 * (Chan0 + Chan1)
                                         Fit1 = (Chan1 - Chan0) + 1.0
-                                        LOG.debug('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
+                                        LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
                                         if (Fit1 >= self.MinFWHM) and (Fit1 <= self.MaxFWHM):
                                             # Allowance = Fit1 / 2.0 * 1.3
                                             # To keep broad line region, make allowance larger
@@ -981,7 +952,7 @@ class ValidateLineRaster(object):
                                             Protect = [min(max(int(Fit0 - Allowance), 0), nChan - 1), min(int(Fit0 + Allowance), nChan - 1)]
                                             #Allowance = Fit1 / 2.0 * 1.5
                                             #Protect = [max(int(Fit0 - Allowance - 0.5), 0), min(int(Fit0 + Allowance + 0.5), nChan - 1)]
-                                            LOG.debug('0 Allowance = %s Protect = %s' % (Allowance, Protect))
+                                            LOG.trace('0 Allowance = %s Protect = %s' % (Allowance, Protect))
                                             if RealSignal.has_key(ID):
                                                 RealSignal[ID][2].append(Protect)
                                             else:
@@ -1007,8 +978,8 @@ class ValidateLineRaster(object):
                                     # Setup the position near the border
                                     RA2 = RA1 - (RA1 - RA0) * HalfGrid / sqrt(Dist2)
                                     DEC2 = DEC1 - (DEC1 - DEC0) * HalfGrid / sqrt(Dist2)
-                                    LOG.debug('[X,Y],[XX,YY] = [%d,%d],%s' % (x,y,Nearest))
-                                    LOG.debug('(RA0,DEC0),(RA1,DEC1),(RA2,DEC2) = (%.5f,%.5f),(%.5f,%.5f),(%.5f,%.5f)' % (RA0,DEC0,RA1,DEC1,RA2,DEC2))
+                                    LOG.trace('[X,Y],[XX,YY] = [%d,%d],%s' % (x,y,Nearest))
+                                    LOG.trace('(RA0,DEC0),(RA1,DEC1),(RA2,DEC2) = (%.5f,%.5f),(%.5f,%.5f),(%.5f,%.5f)' % (RA0,DEC0,RA1,DEC1,RA2,DEC2))
                                     # Calculate Fit and apply same value to all the spectra in the Blur Grid
                                     ### 2011/05/15 (Width, Center) -> (minChan, maxChan)
                                     # Border case
@@ -1017,7 +988,7 @@ class ValidateLineRaster(object):
                                     (Chan1, Chan0) = _eval_poly(Xorder0+1, Yorder0+1, RA1, DEC1, A0, A1)
                                     Fit0 = 0.5 * (Chan0 + Chan1)
                                     Fit1 = (Chan1 - Chan0)
-                                    LOG.debug('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
+                                    LOG.trace('Fit0, Fit1 = %s, %s' % (Fit0, Fit1))
                                     if (Fit1 >= self.MinFWHM) and (Fit1 <= self.MaxFWHM):
                                         #Allowance = Fit1 / 2.0 * 1.3
                                         # To keep broad line region, make allowance larger
@@ -1031,7 +1002,7 @@ class ValidateLineRaster(object):
                                         #Allowance = Fit1 / 2.0 * 1.5
                                         #Protect = [max(int(Fit0 - Allowance + 0.5), 0), min(int(Fit0 + Allowance + 0.5), nChan - 1)]
 
-                                        LOG.debug('1 Allowance = %s Protect = %s' % (Allowance, Protect))
+                                        LOG.trace('1 Allowance = %s Protect = %s' % (Allowance, Protect))
                                         for PID in Grid2SpectrumID[x][y]:
                                             ID = idxList[PID]
                                             if RealSignal.has_key(ID):
@@ -1041,8 +1012,6 @@ class ValidateLineRaster(object):
                                     else: continue
                     # for Plot
                     if not SingularMatrix: GridCluster[Nc] += BlurPlane
-                LOG.debug('GridCluster=%s'%(GridCluster))
-                LOG.debug('((GridCluster[%s] > 0.5)*1).sum()=%s'%(Nc,((GridCluster[Nc] > 0.5)*1).sum()))
                 if ((GridCluster[Nc] > 0.5)*1).sum() < self.Questionable: Lines[Nc][2] = False
                 for x in range(nra):
                     for y in range(ndec):

@@ -136,8 +136,8 @@ class SDBaseline(common.SingleDishTaskTemplate):
             worker = SDBaselineWorker(context, iteration, spwid, nchan, beam_size, srctype, list(_file_index), index_list, window, edge, broadline, pattern)
             (detected_lines, cluster_info) = self._executor.execute(worker, merge=False)
 
-            LOG.info('detected_lines=%s'%(detected_lines))
-            LOG.info('cluster_info=%s'%(cluster_info))
+            #LOG.info('detected_lines=%s'%(detected_lines))
+            #LOG.info('cluster_info=%s'%(cluster_info))
 
             # filenamer
             namer = filenamer.BaselineSubtractedTable()
@@ -170,12 +170,15 @@ class SDBaseline(common.SingleDishTaskTemplate):
                     time_table = datatable.get_timetable(idx, spwid, pol)
                     pol_indices = numpy.where(polnos.take(ant_indices)==pol)[0]
                     pol_indices = ant_indices.take(pol_indices)
-                    LOG.debug('pol_indices=%s'%(list(pol_indices)))
+                    #LOG.debug('pol_indices=%s'%(list(pol_indices)))
                     t0 = time.time()
                     fitter.setup(filename_in, filename_out, bltable_name, time_table, pol_indices, nchan, edge, fitorder)
                     self._executor.execute(fitter, merge=False)
                     t1 = time.time()
-                    LOG.debug('PROFILE baseline ant%s %s %s: elapsed time is %s sec'%(idx,spwid,pol,t1-t0))
+                    LOG.debug('PROFILE baseline ant%s spw%s pol%s: elapsed time is %s sec'%(idx,spwid,pol,t1-t0))
+
+                # output summary of baseline fitting
+                BaselineSummary.summary(bltable_name, st.basename, spwid, iteration, edge, datatable, ant_indices, nchan)
 
 
             #for f in _file_index:
@@ -204,4 +207,84 @@ class SDBaseline(common.SingleDishTaskTemplate):
     def analyse(self, result):
         return result
 
+
+class BaselineSummary(object):
+    @staticmethod
+    def summary(tablename, stname, spw, iteration, edge, datatable, index_list, nchan):
+        header = 'Summary of cspline_baseline for %s (spw%s, iter%s)'%(stname, spw, iteration)
+        separator = '=' * len(header)
+        LOG.info(separator)
+        LOG.info(header)
+        LOG.info(separator)
+
+        # edge channels dropped
+        LOG.info('1) Number of edge channels dropped')
+        LOG.info('\t left edge: %s channels'%(edge[0]))
+        LOG.info('\tright edge: %s channels'%(edge[1]))
+        LOG.info('')
+
+        # line masks
+        LOG.info('2) Masked fraction on each channel')
+        histogram = numpy.zeros(nchan, dtype=float)
+        nrow = len(index_list)
+        for idx in index_list:
+            masklist = datatable.getcell('MASKLIST', idx)
+            for mask in masklist:
+                start = mask[0]
+                end = mask[1] + 1
+                for ichan in xrange(start, end):
+                    histogram[ichan] += 1.0
+        nonzero_channels = histogram.nonzero()[0]
+        if len(nonzero_channels) > 0:
+            dnz = nonzero_channels[1:] - nonzero_channels[:-1]
+            mask_edges = numpy.where(dnz > 1)[0]
+            start_chan = nonzero_channels.take([0]+(mask_edges+1).tolist())
+            end_chan = nonzero_channels.take(mask_edges.tolist()+[-1])
+            merged_start_chan = [start_chan[0]]
+            merged_end_chan = []
+            for i in xrange(1, len(start_chan)):
+                if start_chan[i] - end_chan[i-1] > 4:
+                    merged_start_chan.append(start_chan[i])
+                    merged_end_chan.append(end_chan[i-1])
+            merged_end_chan.append(end_chan[-1])
+            LOG.info('channel|fraction')
+            LOG.info('-------|---------')
+            if merged_start_chan[0] > 0:
+                LOG.info('%7d|%9.1f%%'%(0, 0))
+                LOG.info('       ~')
+                LOG.info('       ~')
+            #for ichan in xrange(len(histogram)):
+            for i in xrange(len(merged_start_chan)):
+                for j in xrange(max(0,merged_start_chan[i]-1), min(nchan,merged_end_chan[i]+2)):
+                    LOG.info('%7d|%9.1f%%'%(j, histogram[j]/nrow*100.0))
+                LOG.info('       ~')
+                LOG.info('       ~')
+            if merged_end_chan[-1] < nchan-2:
+                LOG.info('%7d|%9.1f%%'%(nchan-1, 0))
+        else:
+            LOG.info('\tNo line mask')
+        LOG.info('')
+            
+        BaselineSummary.cspline_summary(tablename)
+
+        footer = separator
+        LOG.info(footer)
+
+    @staticmethod
+    def cspline_summary(tablename):
+        # number of segments for cspline_baseline
+        with casatools.TableReader(tablename) as tb:
+            nrow = tb.nrows()
+            num_segments = [tb.getcell('Sections', irow).shape[0] \
+                            for irow in xrange(nrow)]
+        unique_values = numpy.unique(num_segments)
+        max_segments = max(unique_values) + 2
+        LOG.info('3) Frequency distribution for number of segments')
+        LOG.info('# of segments|frequency')
+        LOG.info('-------------|---------')
+        #for val in unique_values:
+        for val in xrange(1, max_segments):
+            count = num_segments.count(val)
+            LOG.info('%13d|%9d'%(val, count))
+        LOG.info('')
 

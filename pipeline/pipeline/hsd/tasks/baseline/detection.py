@@ -42,7 +42,7 @@ class DetectLine(object):
             return detect_signal
 
         LOG.info('Search regions for protection against the background subtraction...')
-        LOG.info('Processing %d spectra...' % nrow)
+        LOG.info('DetectLine: Processing %d spectra...' % nrow)
 
         # Set edge mask region
         (EdgeL, EdgeR) = common.parseEdge(edge)
@@ -125,7 +125,7 @@ class DetectLine(object):
             LOG.debug('End Row %d: Elapsed Time=%.1f sec' % (row, (ProcEndTime - ProcStartTime)) )
         del Timer
 
-        LOG.debug('DetectSignal = %s'%(detect_signal))
+        #LOG.debug('DetectSignal = %s'%(detect_signal))
         return detect_signal
 
     def _detect(self, spectrum, start, end, binning, threshold, box_size, min_nchan, avg_limit, tweak, edge):
@@ -144,8 +144,8 @@ class DetectLine(object):
             ### y=0: Bin=25,  y=1: Bin=5 or 3,  y=2: Bin=1
             Bin = binning ** (2-y)
             if Bin != 1 and nchan/Bin < 50: continue
-            LOG.debug('line detection parameters: ')
-            LOG.debug('threshold (S/N per channel)=%.1f,' % threshold[y] \
+            LOG.trace('line detection parameters: ')
+            LOG.trace('threshold (S/N per channel)=%.1f,' % threshold[y] \
                            + 'min_nchan for detection=%d, running mean box size (in fraction of spectrum)=%s, ' % (min_nchan, box_size[y]) \
                            + 'upper limit for averaging=%s channels, edges to be dropped=[%s, %s]' % (avg_limit[y], EdgeL, EdgeR) )
             line_ranges = self.lf(spectrum=spectrum,

@@ -78,9 +78,8 @@ class SDBaselineWorker(object):
         (spectra, grid_table) = simple_grid.execute()
         t1 = time.time()
 
-        LOG.debug('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(spectra.shape)))
-        LOG.debug('grid_table=%s'%(grid_table))
-        #LOG.info('spectra=%s'%(spectra.tolist()))
+        LOG.trace('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(spectra.shape)))
+        LOG.trace('grid_table=%s'%(grid_table))
         LOG.debug('PROFILE simplegrid: elapsed time is %s sec'%(t1-t0))
 
         # line finding
@@ -89,7 +88,7 @@ class SDBaselineWorker(object):
         detect_signal = line_finder.execute(grid_table, spectra, window, edge, broadline)
         t1 = time.time()
 
-        LOG.debug('detect_signal=%s'%(detect_signal))
+        LOG.trace('detect_signal=%s'%(detect_signal))
         LOG.debug('PROFILE detection: elapsed time is %s sec'%(t1-t0))
 
         # line validation
@@ -97,15 +96,14 @@ class SDBaselineWorker(object):
         line_validator = ValidateLine(datatable)
         #validator_class = ValidationFactory(observing_pattern)
         #line_validator = validator_class(datatable)
-        LOG.debug('index_list=%s'%(list(index_list)))
-        LOG.debug('len(index_list)=%s'%(len(index_list)))
+        LOG.trace('len(index_list)=%s'%(len(index_list)))
         lines, cluster_info = line_validator.execute(grid_table, detect_signal, spwid, nchan, index_list, window, observing_pattern, grid_size, grid_size, iteration)
         t1 = time.time()
 
-        LOG.debug('lines=%s'%(lines))
+        #LOG.debug('lines=%s'%(lines))
         LOG.debug('PROFILE validation: elapsed time is %s sec'%(t1-t0))
         
-        LOG.debug('cluster_info=%s'%(cluster_info))
+        #LOG.debug('cluster_info=%s'%(cluster_info))
 
         end_time = time.time()
         LOG.debug('PROFILE execute: elapsed time is %s sec'%(end_time-start_time))
