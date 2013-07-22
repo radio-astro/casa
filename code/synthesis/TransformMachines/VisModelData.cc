@@ -67,7 +67,7 @@ VisModelData::VisModelData(): clholder_p(0), ftholder_p(0), flatholder_p(0){
 
 void VisModelData::listModel(const MeasurementSet& thems){
  
-  Table newTab(thems);
+  //Table newTab(thems);
 
   ROMSColumns msc(thems);
   Vector<String> fldnames=msc.field().name().getColumn();
@@ -83,14 +83,19 @@ void VisModelData::listModel(const MeasurementSet& thems){
 	  << LogIO::POST;
 
     Int nlis(0);
-    for (Int k=0; k< nfields; ++k){
-      if(newTab.rwKeywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
-	{
-	  String elkey=newTab.rwKeywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
-	  if(newTab.rwKeywordSet().isDefined(elkey))
-	    logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ")" << LogIO::POST;
-	  ++nlis;
-	}
+    for (Int j=0; j< 2; ++j){
+    	const Table* thetab=&thems;
+    	if (j==1)
+    		thetab=&(thems.source());
+    	for (Int k=0; k< nfields; ++k){
+    			if(thetab->keywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+    		{
+    				String elkey=thetab->keywordSet().asString("definedmodel_field_"+String::toString(fields[k]));
+    				if(thetab->keywordSet().isDefined(elkey))
+    					logio << " " << fldnames[fields[k]] << " (id = " << fields[k] << ")" << LogIO::POST;
+    				++nlis;
+    		}
+    	}
     }
     if (nlis==0)
       logio << " None." << LogIO::POST;
@@ -99,6 +104,7 @@ void VisModelData::listModel(const MeasurementSet& thems){
 }
 
 void VisModelData::removeRecordByKey(MeasurementSet& theMS, const String& theKey){
+
 
   if(Table::isReadable(theMS.sourceTableName()) &&theMS.source().nrow() > 0 ){
     if(theMS.source().keywordSet().isDefined(theKey)){
@@ -116,7 +122,6 @@ void VisModelData::removeRecordByKey(MeasurementSet& theMS, const String& theKey
 }
 
 void VisModelData::clearModel(const MeasurementSet& thems){
-  
   //  Table newTab(thems);
   MeasurementSet& newTab=const_cast<MeasurementSet& >(thems);
   if(!newTab.isWritable())
@@ -237,11 +242,14 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 	    TableRecord conteneur;
 	    getModelRecord(elkey, conteneur, newTab); 
 	    //=newTab.rwKeywordSet().asRecord(elkey);
-	    removeSpw(conteneur, spws);
-	    //newTab.rwKeywordSet().removeField(elkey);
-	    //  newTab.rwKeywordSet().defineRecord(elkey, conteneur);
-	    putRecordByKey(newTab, elkey, conteneur, srow);
-  
+	    if(removeSpw(conteneur, spws)){
+	    	putRecordByKey(newTab, elkey, conteneur, srow);
+	    }
+	    else{
+	    	removeRecordByKey(newTab, elkey);
+	    	if(newTab.source().keywordSet().isDefined("definedmodel_field_"+String::toString(fields[k])))
+	    		newTab.source().rwKeywordSet().removeField("definedmodel_field_"+String::toString(fields[k]));
+	    }
 	      /*
 	      Vector<Int> defspws=conteneur.asArrayInt("spws");
 	      Vector<Int> newdefspw(defspws.nelements(), -1);
@@ -280,7 +288,6 @@ void VisModelData::clearModel(const MeasurementSet& thems){
 
   Bool VisModelData::removeSpw(TableRecord& therec, const Vector<Int>& spws){
      Int numft=0;
-     //Int numcl=0;
      Vector<String> numtype(2);
      Vector<String> keyval(2);
      numtype[0]=String("numft");
@@ -289,29 +296,33 @@ void VisModelData::clearModel(const MeasurementSet& thems){
      keyval[1]="cl_";
      
      for (Int j=0; j< 2; ++j){
-       
-       if(therec.isDefined(numtype[j])){
-	 numft=therec.asInt(numtype[j]);
-	 Vector<String> toberemoved(numft);
-	 Int numrem=0;
-	 for (Int k=0; k < numft; ++k){
-	   RecordInterface& ftrec=therec.asrwRecord(keyval[j]+String::toString(k));
-	   if(!removeSpwFromMachineRec(ftrec, spws)){
-	     toberemoved[numrem]=String(keyval[j]+String::toString(k));
-	     ++numrem;
-	   }
-	 }
-	 if(numrem > 0){
-	   for (Int k=0; k < numrem; ++k)
-	     removeFTFromRec(therec, toberemoved[k]);
-	 }
-       }
-
+    	 if(therec.isDefined(numtype[j])){
+    		 numft=therec.asInt(numtype[j]);
+    		 Vector<String> toberemoved(numft);
+    		 Int numrem=0;
+    		 for (Int k=0; k < numft; ++k){
+    			 RecordInterface& ftrec=therec.asrwRecord(keyval[j]+String::toString(k));
+    			 if(!removeSpwFromMachineRec(ftrec, spws)){
+    				 toberemoved[numrem]=String(keyval[j]+String::toString(k));
+    				 ++numrem;
+    			 }
+    		 }
+    		 if(numrem > 0){
+    			 for (Int k=0; k < numrem; ++k)
+    				 removeFTFromRec(therec, toberemoved[k], k==(numrem-1));
+    		 }
+    	 }
      }
+     numft=0; Int numcl=0;
+     if(therec.isDefined("numft")) numft=therec.asInt("numft");
+     if(therec.isDefined("numcl")) numcl=therec.asInt("numcl");
+     if (numft==0 && numcl==0)
+    	 return False;
      return True;
   }
 
-  Bool VisModelData::removeFTFromRec(TableRecord& therec, const String& keyval){
+  Bool VisModelData::removeFTFromRec(TableRecord& therec, const String& keyval, const Bool relabel){
+
 
     String *splitkey=new String[2];
     Int nsep=split(keyval, splitkey, 2, String("_"));
@@ -327,14 +338,17 @@ void VisModelData::clearModel(const MeasurementSet& thems){
       therec.define("numft", numcomp);
     else
       therec.define("numcl", numcomp);
+    if(relabel){
+
     
-    eltype=eltype+String("_");
-    Int id=0;
-    for(uInt k=0; k < therec.nfields(); ++k){
-      if(therec.name(k).contains(eltype)){
-	therec.renameField(eltype+String::toString(id), k);
-	++id;
-      }
+    	eltype=eltype+String("_");
+    	Int id=0;
+    	for(uInt k=0; k < therec.nfields(); ++k){
+    		if(therec.name(k).contains(eltype)){
+    			therec.renameField(eltype+String::toString(id), k);
+    			++id;
+    		}
+    	}
     }
 
     delete [] splitkey;
@@ -523,8 +537,8 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
     if(theParts.nelements() > 1){
       Bool retval=True;
       for (uInt k =0; k < theParts.nelements(); ++k){
-	MeasurementSet subms(theParts[k], theMS.lockOptions(), Table::Update);
-	retval= retval && putModelRecord(fieldIds, theRec, subms);
+    	  MeasurementSet subms(theParts[k], theMS.lockOptions(), Table::Update);
+    	  retval= retval && putModelRecord(fieldIds, theRec, subms);
       }
       return retval;
     }
@@ -551,6 +565,7 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
       for (uInt k=0; k < fieldIds.nelements();  ++k){
 	mss.rwKeywordSet().define("definedmodel_field_"+String::toString(fieldIds[k]), elkey);
       }
+      VisModelData::listModel(theMS);
       return True;
       
     }
@@ -559,6 +574,7 @@ Bool VisModelData::isModelDefined(const Int fieldId, const MeasurementSet& thems
     for (uInt k=0; k < fieldIds.nelements();  ++k){
       theMS.rwKeywordSet().define("definedmodel_field_"+String::toString(fieldIds[k]), elkey);	
     }
+
     return True;
   }
 
@@ -589,7 +605,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
       getModelRecord(elkey, outRec, thems);
       //if incremental no need to check & remove what is in the record
       if(!incremental)
-	addtorec=addToRec(outRec, spws);
+    	  addtorec=addToRec(outRec, spws);
     }
     incremental=incremental || addtorec;
     if(iscomponentlist){
@@ -611,8 +627,7 @@ void VisModelData::putModel(const MeasurementSet& thems, const RecordInterface& 
     // }
     iscomponentlist ? outRec.defineRecord("cl_"+String::toString(counter), modrec):
       outRec.defineRecord("ft_"+String::toString(counter), modrec);
-    //////////////////
-    //cerr << "num keys " << newTab.rwKeywordSet().nfields() << " name of Table " << newTab.tableName() << "  parts " << Vector<String>(newTab.getPartNames(True))  << " antenna table " << newTab.antenna().tableName() << endl;
+    //////////////////;
     //for (uInt k=0; k < newTab.rwKeywordSet().nfields() ; ++k){
     //  cerr << "keys " << k << "  is  " << newTab.rwKeywordSet().name(k) << " type " << newTab.rwKeywordSet().dataType(k) << endl;
     //}

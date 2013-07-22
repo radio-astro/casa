@@ -194,7 +194,7 @@ class VisModelData {
   Vector<CountedPtr<FTMachine> >getFT(const Int msId, const Int fieldId, Int spw);
   static Bool addToRec(TableRecord& therec, const Vector<Int>& spws);
   static Bool removeSpwFromMachineRec(RecordInterface& ftclrec, const Vector<Int>& spws);
-  static Bool removeFTFromRec(TableRecord& therec, const String& keyval);
+  static Bool removeFTFromRec(TableRecord& therec, const String& keyval, const Bool relabel=True);
   static Bool removeSpw(TableRecord& therec, const Vector<Int>& spws);
   static Bool putModelRecord(const Vector<Int>& fieldIds, TableRecord& theRec, MeasurementSet& theMS);
   //Remove the Record which has the given key...will exterminate it from both the Source table or Main table
