@@ -31,7 +31,13 @@
 #include <images/Images/ImageInterface.h>
 #include <casa/aips.h>
 
+namespace casac {
+class variant;
+}
+
 namespace casa {
+
+template <class T> class ImageSummary;
 
 // <summary>
 // A class in which to store and allow read-only access to image metadata.
@@ -118,11 +124,14 @@ public:
 	// convert the header info to a Record and list to logger if verbose=True
 	Record toRecord(Bool verbose);
 
+	// get the value of the datum corresponding to the given FITS keyword.
+	casac::variant getFITSValue(const String& key);
+
 private:
-	const static String _BEAMMAJOR, _BEAMMINOR, _BEAMPA,
-		_BUNIT, _CTYPE, _DATAMAX, _DATAMIN, _EQUINOX, _IMTYPE,
-		_MASKS, _MAXPIXPOS, _MAXPOS, _MINPIXPOS, _MINPOS,
-		_OBJECT, _OBSDATE, _OBSERVER, _PROJECTION,
+	const static String _BEAMMAJOR, _BEAMMINOR, _BEAMPA, _BMAJ, _BMIN, _BPA,
+		_BUNIT, _CDELT, _CRPIX, _CRVAL, _CTYPE, _CUNIT, _DATAMAX, _DATAMIN,
+		_EPOCH, _EQUINOX, _IMTYPE, _MASKS, _MAXPIXPOS, _MAXPOS, _MINPIXPOS,
+		_MINPOS, _OBJECT, _OBSDATE, _OBSERVER, _PROJECTION,
 		_RESTFREQ, _REFFREQTYPE, _SHAPE, _TELESCOPE;
 
 	// I really would like this to be a shared pointer, but that
@@ -131,7 +140,22 @@ private:
 	// of its own that will mitigate some difficulties
 	const ImageInterface<Float> * const _image;
 	std::auto_ptr<LogIO> _log;
+	const ImageInfo _info;
+	const CoordinateSystem _csys;
+	const ImageSummary<T> _summary;
 	Record _header;
+	String _bunit, _imtype, _object, _equinox, _observer, _projection,
+		_reffreqtype, _telescope;
+	MEpoch _obsdate;
+	Quantity _restFreq;
+	GaussianBeam _beam;
+	Vector<String> _masks;
+	IPosition _shape;
+	Vector<String> _axisNames, _axisUnits;
+	Vector<Double> _refPixel;
+	vector<Quantity> _refVal, _increment;
+	Record _stats;
+
 
 	ImageMetaData() : _image(0), _log(0) {}
 
@@ -141,6 +165,44 @@ private:
 	void _fieldToLog(const String& field, Int precision=-1) const;
 
 	String _doStandardFormat(Double value, const String& unit) const;
+
+	Vector<String> _getAxisNames();
+
+	Vector<String> _getAxisUnits();
+
+	GaussianBeam _getBeam();
+
+	String _getBrightnessUnit();
+
+	String _getImType();
+
+	vector<Quantity> _getIncrements();
+
+	Vector<String> _getMasks();
+
+	String _getObject();
+
+	String _getEquinox();
+
+	MEpoch _getObsDate();
+
+	String _getObserver();
+
+	String _getProjection();
+
+	String _getRefFreqType();
+
+	Vector<Double> _getRefPixel();
+
+	Vector<Quantity> _getRefValue();
+
+	Quantity _getRestFrequency();
+
+	IPosition _getShape();
+
+	Record _getStatistics();
+
+	String _getTelescope();
 };
 
 

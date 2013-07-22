@@ -28,22 +28,37 @@
 #include <imageanalysis/ImageAnalysis/ImageMetaData.h>
 
 #include <casa/aips.h>
+
 #include <casa/Quanta/QuantumHolder.h>
 #include <images/Images/ImageSummary.h>
 #include <images/Images/ImageStatistics.h>
+#include <measures/Measures/MeasureHolder.h>
+
+#include <stdcasa/StdCasa/CasacSupport.h>
+#include <stdcasa/variant.h>
 
 #include <iostream>
 #include <iomanip>
+
+#include <boost/regex.hpp>
 
 namespace casa {
 
 template<class T> const String ImageMetaData<T>::_BEAMMAJOR = "beammajor";
 template<class T> const String ImageMetaData<T>::_BEAMMINOR = "beamminor";
 template<class T> const String ImageMetaData<T>::_BEAMPA = "beampa";
+template<class T> const String ImageMetaData<T>::_BMAJ = "bmaj";
+template<class T> const String ImageMetaData<T>::_BMIN = "bmin";
+template<class T> const String ImageMetaData<T>::_BPA = "bpa";
 template<class T> const String ImageMetaData<T>::_BUNIT = "bunit";
+template<class T> const String ImageMetaData<T>::_CDELT = "cdelt";
+template<class T> const String ImageMetaData<T>::_CRPIX = "crpix";
+template<class T> const String ImageMetaData<T>::_CRVAL = "crval";
 template<class T> const String ImageMetaData<T>::_CTYPE = "ctype";
+template<class T> const String ImageMetaData<T>::_CUNIT = "cunit";
 template<class T> const String ImageMetaData<T>::_DATAMAX = "datamax";
 template<class T> const String ImageMetaData<T>::_DATAMIN = "datamin";
+template<class T> const String ImageMetaData<T>::_EPOCH = "epoch";
 template<class T> const String ImageMetaData<T>::_EQUINOX = "equinox";
 template<class T> const String ImageMetaData<T>::_IMTYPE = "imtype";
 template<class T> const String ImageMetaData<T>::_MASKS = "masks";
@@ -60,17 +75,15 @@ template<class T> const String ImageMetaData<T>::_REFFREQTYPE = "reffreqtype";
 template<class T> const String ImageMetaData<T>::_SHAPE = "shape";
 template<class T> const String ImageMetaData<T>::_TELESCOPE = "telescope";
 
+
 template<class T> ImageMetaData<T>::ImageMetaData(
 	const ImageInterface<Float> *const &image
-) : _image(image), _log(new LogIO()) {}
+) : _image(image), _log(new LogIO()), _info(image->imageInfo()),
+	_csys(image->coordinates()), _summary(*_image) {}
 
 template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
-	const ImageInfo& info = _image->imageInfo();
-	_header.define(_IMTYPE, ImageInfo::imageType(info.imageType()));
-
-	ImageSummary<T> summary(*_image);
-
-	_header.define(_OBJECT, info.objectName());
+	_header.define(_IMTYPE, _getImType());
+	_header.define(_OBJECT, _getObject());
 
 	const CoordinateSystem& csys = _image->coordinates();
 
@@ -79,22 +92,21 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
 		String equinox = MDirection::showType(
 			dc.directionType()
 		);
-		_header.define(_EQUINOX, equinox);
-		_header.define(_PROJECTION, dc.projection().name());
+		_header.define(_EQUINOX, _getEquinox());
+		_header.define(_PROJECTION, _getProjection());
 	}
-	MEpoch date;
-	_header.define(_OBSDATE, summary.obsDate(date));
-	_header.define(_MASKS, summary.maskNames());
-	_header.define(_OBSERVER, summary.observer());
-	_header.define(_SHAPE, _image->shape().asVector());
-	_header.define(_TELESCOPE, summary.telescope());
-	_header.define(_BUNIT, summary.units().getName());
+	_header.define(_OBSDATE, getFITSValue(_OBSDATE).asString());
+	_header.define(_MASKS, _getMasks());
+	_header.define(_OBSERVER, _getObserver());
+	_header.define(_SHAPE, _getShape().asVector());
+	_header.define(_TELESCOPE, _getTelescope());
+	_header.define(_BUNIT, _getBrightnessUnit());
 
 	if (csys.hasSpectralAxis()) {
 		const SpectralCoordinate& sc = csys.spectralCoordinate();
 		_header.define(_RESTFREQ, sc.restFrequencies());
 		_header.define(
-			_REFFREQTYPE , MFrequency::showType(sc.frequencySystem())
+			_REFFREQTYPE , _getRefFreqType()
 		);
 	}
 /*
@@ -103,8 +115,8 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
 		_header.merge(beam);
 	}
 	*/
-	if (info.hasSingleBeam()) {
-		GaussianBeam beam = info.restoringBeam(-1, -1);
+	if (_info.hasSingleBeam()) {
+		GaussianBeam beam = _getBeam();
 		_header.defineRecord(
 			_BEAMMAJOR,
 			QuantumHolder(beam.getMajor()).toRecord()
@@ -118,67 +130,31 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
 			QuantumHolder(beam.getPA(True)).toRecord()
 		);
 	}
-	else if (info.hasMultipleBeams()) {
+	else if (_info.hasMultipleBeams()) {
 		String error;
 		Record rec;
-		info.toRecord(error, rec);
+		_info.toRecord(error, rec);
 		_header.defineRecord(
 			"perplanebeams", rec.asRecord("perplanebeams")
 		);
 	}
- 	Vector<Double> cdelt = summary.axisIncrements(True);
-	Vector<String> units = summary.axisUnits(True);
-	Vector<Double> crpix = summary.referencePixels(False);
-	Vector<Double> crval = summary.referenceValues(True);
-	Vector<String> types = summary.axisNames(True);
-	ImageStatistics<T> stats(*_image);
-	Array<Double> min;
-	stats.getStatistic(min, LatticeStatsBase::MIN);
-	_header.define(_DATAMIN, min(IPosition(min.ndim(), 0)));
-	Array<Double> max;
-	stats.getStatistic(max, LatticeStatsBase::MAX);
-	_header.define(_DATAMAX, max(IPosition(max.ndim(), 0)));
-	IPosition minPixPos, maxPixPos;
-	stats.getMinMaxPos(minPixPos, maxPixPos);
-	_header.define(_MINPIXPOS, minPixPos.asVector());
-	_header.define(_MAXPIXPOS, maxPixPos.asVector());
-	Vector<Double> minPos = csys.toWorld(minPixPos);
-	Vector<Double> maxPos = csys.toWorld(maxPixPos);
-	String minFormat, maxFormat;
-	uInt ndim = csys.nPixelAxes();
-	Int spAxis = csys.spectralAxisNumber();
-	for (uInt i=0; i<ndim; i++) {
-		Int worldAxis = csys.pixelAxisToWorldAxis(i);
-		String foundUnit;
-		minFormat += csys.format(
-	    	foundUnit, Coordinate::DEFAULT,
-	    	minPos[i], worldAxis
-	    );
-		maxFormat += csys.format(
-			foundUnit, Coordinate::DEFAULT,
-			maxPos[i], worldAxis
-		);
-		if ((Int)i == spAxis) {
-			minFormat += foundUnit;
-			maxFormat += foundUnit;
-		}
-		if (i != ndim-1) {
-			minFormat += " ";
-			maxFormat += " ";
-		}
-	}
-	_header.define(_MINPOS, minFormat);
-	_header.define(_MAXPOS, maxFormat);
+ 	vector<Quantity> cdelt = _getIncrements();
+	Vector<String> units = _getAxisUnits();
+	Vector<Double> crpix = _getRefPixel();
+	Vector<Quantity> crval = _getRefValue();
+	Vector<String> types = _getAxisNames();
+	_header.merge(_getStatistics());
+
 	for (uInt i=0; i<cdelt.size(); i++) {
 		String iString = String::toString(i + 1);
-		String delt = "cdelt" + iString;
-		_header.define(delt, cdelt[i]);
-		String unit = "cunit" + iString;
+		String delt = _CDELT + iString;
+		_header.define(delt, cdelt[i].getValue());
+		String unit = _CUNIT + iString;
 		_header.define(unit, units[i]);
-		String pix = "crpix" + iString;
+		String pix = _CRPIX + iString;
 		_header.define(pix, crpix[i]);
-		String val = "crval" + iString;
-		_header.define(val, crval[i]);
+		String val = _CRVAL + iString;
+		_header.define(val, crval[i].getValue());
 		String type = _CTYPE + iString;
 		_header.define(type, types[i]);
 	}
@@ -186,6 +162,352 @@ template<class T> Record ImageMetaData<T>::toRecord(Bool verbose) {
 		_toLog();
 	}
 	return _header;
+}
+
+template<class T> casac::variant ImageMetaData<T>::getFITSValue(const String& key) {
+	String c = key;
+	c.downcase();
+	if (c == _BUNIT) {
+		return _getBrightnessUnit();
+	}
+	else if (
+		c.startsWith(_CDELT) || c.startsWith(_CRPIX)
+		|| c.startsWith(_CRVAL) ||  c.startsWith(_CTYPE)
+		||  c.startsWith(_CUNIT)
+	) {
+		String prefix;
+		if (c.startsWith(_CDELT)) {
+			prefix = _CDELT;
+		}
+		else if (c.startsWith(_CRPIX)) {
+			prefix = _CRPIX;
+		}
+		else if (c.startsWith(_CRVAL)) {
+			prefix = _CRVAL;
+		}
+		else if (c.startsWith(_CTYPE)) {
+			prefix = _CTYPE;
+		}
+		else if (c.startsWith(_CUNIT)) {
+			prefix = _CUNIT;
+		}
+		if (key == prefix + "0") {
+			*_log << "FITS convention is that axes are 1-based, so " << key
+				<< " is not a valid axis specification" << LogIO::EXCEPTION;
+		}
+		string sre = prefix + "[0-9]+";
+		boost::regex re;
+		re.assign(sre, boost::regex_constants::icase);
+		if (boost::regex_match(key, re)) {
+			uInt n = String::toInt(key.substr(prefix.length()));
+			uInt naxes = _image->ndim();
+			if (n > naxes) {
+				*_log << "This image only has " << naxes
+					<< " axes." << LogIO::EXCEPTION;
+			}
+			if (prefix == _CDELT) {
+				return casac::variant(
+					fromRecord(
+						QuantumHolder(_getIncrements()[n-1]).toRecord()
+					)
+				);
+			}
+			else if (prefix == _CRPIX) {
+				return _getRefPixel()[n-1];
+			}
+			else if (prefix == _CRVAL) {
+				return casac::variant(
+					fromRecord(
+						QuantumHolder(_getRefValue()[n-1]).toRecord()
+					)
+				);
+			}
+			else if (prefix == _CTYPE) {
+				return _getAxisNames()[n-1];
+			}
+			else if (prefix == _CUNIT) {
+				return _getAxisUnits()[n-1];
+			}
+		}
+	}
+	else if (c == _EQUINOX) {
+		return _getEquinox();
+	}
+	else if (c == _IMTYPE) {
+		return casac::variant(_getImType());
+	}
+	else if (c == _MASKS) {
+		Vector<String>  masks = _getMasks().tovector();
+		vector<string> v(masks.size());
+		for (uInt i=0; i<masks.size(); i++) {
+			v[i] = std::string(masks[i].c_str());
+		}
+		return casac::variant(v);
+	}
+	else if (c == _OBJECT) {
+		return _getObject();
+	}
+	else if (c == _OBSDATE || c == _EPOCH) {
+		return MVTime(_getObsDate().getValue()).string(MVTime::YMD);
+	}
+	else if (c == _OBSERVER || c == _EPOCH) {
+		return _getObserver();
+	}
+	else if (c == _PROJECTION) {
+		return _getProjection();
+	}
+	else if (c == _REFFREQTYPE) {
+		return _getRefFreqType();
+	}
+	else if (c == _RESTFREQ) {
+		QuantumHolder qh(_getRestFrequency());
+		casac::record *rec = fromRecord(qh.toRecord());
+		return casac::variant(rec);
+	}
+	else if (c == _SHAPE) {
+		return casac::variant(_getShape().asVector().tovector());
+	}
+	else if (c == _TELESCOPE) {
+		return _getTelescope();
+	}
+	else if (
+		c == _BEAMMAJOR || c == _BEAMMINOR || c == _BEAMPA
+		|| c == _BMAJ || c == _BMIN || c == _BPA
+	) {
+		GaussianBeam beam = _getBeam();
+		casac::record *rec;
+		if (c == _BEAMMAJOR || c == _BMAJ) {
+			rec = fromRecord(QuantumHolder(beam.getMajor()).toRecord());
+		}
+		else if (c == _BEAMMINOR || c == _BMIN) {
+			rec = fromRecord(QuantumHolder(beam.getMinor()).toRecord());
+		}
+		else {
+			rec = fromRecord(QuantumHolder(beam.getPA()).toRecord());
+		}
+		return casac::variant(rec);
+	}
+	else if (
+		c==_DATAMIN || c == _DATAMAX || c == _MINPIXPOS
+        || c == _MINPOS || c == _MAXPIXPOS || c == _MAXPOS
+    ) {
+		Record x = _getStatistics();
+		if (c == _DATAMIN || c == _DATAMAX) {
+			T val;
+			x.get(c, val);
+			return val;
+		}
+		else if (c == _MINPOS || c == _MAXPOS) {
+			return x.asString(c);
+		}
+		else if (c == _MINPIXPOS || c == _MAXPIXPOS) {
+			return casac::variant(x.asArrayInt(c).tovector());
+		}
+	}
+	else if (_image->miscInfo().isDefined(key)) {
+		return _image->miscInfo().asString(key);
+	}
+	else if (_image->miscInfo().isDefined(c)) {
+		return _image->miscInfo().asString(c);
+	}
+
+	*_log << "Unknown keyword " << c << LogIO::EXCEPTION;
+}
+
+template<class T> Vector<String> ImageMetaData<T>::_getAxisNames() {
+	if (_axisNames.size() == 0) {
+		_axisNames = _summary.axisNames(True);
+	}
+	return _axisNames;
+}
+
+template<class T> Vector<String> ImageMetaData<T>::_getAxisUnits() {
+	if (_axisUnits.size() == 0) {
+		_axisUnits = _csys.worldAxisUnits();
+	}
+	return _axisUnits;
+}
+
+template<class T> GaussianBeam ImageMetaData<T>::_getBeam() {
+	if (_info.hasSingleBeam()) {
+		if (_beam == GaussianBeam::NULL_BEAM) {
+			_beam = _info.restoringBeam(-1, -1);
+		}
+		return _beam;
+	}
+	else if (_info.hasMultipleBeams()) {
+		throw AipsError("This image has multiple beams.");
+	}
+	else {
+		throw AipsError("This image has no beam(s).");
+	}
+}
+
+template<class T> String ImageMetaData<T>::_getBrightnessUnit() {
+	if (_bunit.empty()) {
+		_bunit = _summary.units().getName();
+	}
+	return _bunit;
+}
+
+template<class T> String ImageMetaData<T>::_getEquinox() {
+	if (_equinox.empty()) {
+		if (_csys.hasDirectionCoordinate()) {
+			_equinox = MDirection::showType(
+				_csys.directionCoordinate().directionType()
+			);
+		}
+	}
+	return _equinox;
+}
+
+template<class T> String ImageMetaData<T>::_getImType() {
+	if (_imtype.empty()) {
+		_imtype = ImageInfo::imageType(_info.imageType());
+	}
+	return _imtype;
+}
+
+template<class T> vector<Quantity> ImageMetaData<T>::_getIncrements() {
+	if (_increment.size() == 0) {
+		Vector<Double> incs = _csys.increment();
+		Vector<String> units = _getAxisUnits();
+		for (uInt i=0; i<incs.size(); i++) {
+			_increment.push_back(Quantity(incs[i], units[i]));
+		}
+	}
+	return _increment;
+}
+
+template<class T> String ImageMetaData<T>::_getObject() {
+	if (_object.empty()) {
+		_object = _info.objectName();
+	}
+	return _object;
+}
+
+template<class T> Vector<String> ImageMetaData<T>::_getMasks() {
+	if (_masks.empty()) {
+		_masks = _summary.maskNames();
+	}
+	return _masks;
+}
+
+template<class T> MEpoch ImageMetaData<T>::_getObsDate() {
+	if (_obsdate.get("s") == 0) {
+		_summary.obsDate(_obsdate);
+	}
+	return _obsdate;
+}
+
+template<class T> String ImageMetaData<T>::_getObserver() {
+	if (_observer.empty()) {
+		_observer = _summary.observer();
+	}
+	return _observer;
+}
+
+template<class T> String ImageMetaData<T>::_getProjection() {
+	if (_projection.empty() && _csys.hasDirectionCoordinate()) {
+		_projection = _csys.directionCoordinate().projection().name();
+	}
+	return _projection;
+}
+
+template<class T> Vector<Double> ImageMetaData<T>::_getRefPixel() {
+	if (_refPixel.size() == 0) {
+		_refPixel = _summary.referencePixels(False);
+	}
+	return _refPixel;
+}
+
+template<class T> Vector<Quantity> ImageMetaData<T>::_getRefValue() {
+	if (_refVal.size() == 0) {
+		Vector<Double> vals = _summary.referenceValues(True);
+		Vector<String> units = _getAxisUnits();
+		for (uInt i=0; i<vals.size(); i++) {
+			_refVal.push_back(Quantity(vals[i], units[i]));
+		}
+	}
+	return _refVal;
+}
+
+template<class T> String ImageMetaData<T>::_getRefFreqType() {
+	if (_reffreqtype.empty() && _csys.hasSpectralAxis()) {
+		_reffreqtype = MFrequency::showType(_csys.spectralCoordinate().type());
+	}
+	return _reffreqtype;
+}
+
+template<class T> Quantity ImageMetaData<T>::_getRestFrequency() {
+	if (_restFreq.getValue() == 0 && _csys.hasSpectralAxis()) {
+		_restFreq = Quantity(
+			_csys.spectralCoordinate().restFrequency(),
+			_csys.spectralCoordinate().worldAxisUnits()[0]
+		);
+	}
+	return _restFreq;
+}
+
+template<class T> IPosition ImageMetaData<T>::_getShape() {
+	if (_shape.empty()) {
+		_shape = _image->shape();
+	}
+	return _shape;
+}
+
+template<class T> Record ImageMetaData<T>::_getStatistics() {
+	if (_stats.nfields() == 0) {
+		ImageStatistics<T> stats(*_image);
+		Array<Double> min;
+		stats.getStatistic(min, LatticeStatsBase::MIN);
+		Record x;
+		x.define(_DATAMIN, min(IPosition(min.ndim(), 0)));
+		Array<Double> max;
+		stats.getStatistic(max, LatticeStatsBase::MAX);
+		x.define(_DATAMAX, max(IPosition(max.ndim(), 0)));
+		IPosition minPixPos, maxPixPos;
+		stats.getMinMaxPos(minPixPos, maxPixPos);
+		x.define(_MINPIXPOS, minPixPos.asVector());
+		x.define(_MAXPIXPOS, maxPixPos.asVector());
+		Vector<Double> minPos = _csys.toWorld(minPixPos);
+		Vector<Double> maxPos = _csys.toWorld(maxPixPos);
+		String minFormat, maxFormat;
+		uInt ndim = _csys.nPixelAxes();
+		Int spAxis = _csys.spectralAxisNumber();
+		for (uInt i=0; i<ndim; i++) {
+			Int worldAxis = _csys.pixelAxisToWorldAxis(i);
+			String foundUnit;
+			minFormat += _csys.format(
+		    	foundUnit, Coordinate::DEFAULT,
+		    	minPos[i], worldAxis
+		    );
+			maxFormat += _csys.format(
+				foundUnit, Coordinate::DEFAULT,
+				maxPos[i], worldAxis
+			);
+			if ((Int)i == spAxis) {
+				minFormat += foundUnit;
+				maxFormat += foundUnit;
+			}
+			if (i != ndim-1) {
+				minFormat += " ";
+				maxFormat += " ";
+			}
+		}
+		x.define(_MINPOS, minFormat);
+		x.define(_MAXPOS, maxFormat);
+		_stats = x;
+	}
+	return _stats;
+}
+
+
+template<class T> String ImageMetaData<T>::_getTelescope() {
+	if (_telescope.empty()) {
+		_telescope = _summary.telescope();
+	}
+	return _telescope;
 }
 
 template<class T> void ImageMetaData<T>::_fieldToLog(const String& field, Int precision) const {
@@ -281,14 +603,14 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 		}
 		*_log << "        -- " << key << ": "
 			<< _header.asString(key) << LogIO::POST;
-		String unit = "cunit" + iString;
+		String unit = _CUNIT + iString;
 		i++;
 	}
 	i = 1;
-	*_log << LogIO::NORMAL << "crpix --" << LogIO::POST;
+	*_log << LogIO::NORMAL << _CRPIX << " --" << LogIO::POST;
 	while (True) {
 		String iString = String::toString(i);
-		String key = "crpix" + iString;
+		String key = _CRPIX + iString;
 		if (! _header.isDefined(key)) {
 			break;
 		}
@@ -298,10 +620,10 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 		i++;
 	}
 	i = 1;
-	*_log << LogIO::NORMAL << "crval --" << LogIO::POST;
+	*_log << LogIO::NORMAL << _CRVAL << " --" << LogIO::POST;
 	while (True) {
 		String iString = String::toString(i);
-		String key = "crval" + iString;
+		String key = _CRVAL + iString;
 		if (! _header.isDefined(key)) {
 			break;
 		}
@@ -309,7 +631,7 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 		ostringstream x;
 		Double val = _header.asDouble(key);
 		x << val;
-		String unit = "cunit" + iString;
+		String unit = _CUNIT + iString;
 		if (_header.isDefined(unit)) {
 			x << _header.asString(unit);
 		}
@@ -336,16 +658,16 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 		i++;
 	}
 	i = 1;
-	*_log << LogIO::NORMAL << "cdelt --" << LogIO::POST;
+	*_log << LogIO::NORMAL << _CDELT << " --" << LogIO::POST;
 	while (True) {
 		String iString = String::toString(i);
-		String key = "cdelt" + iString;
+		String key = _CDELT + iString;
 		if (! _header.isDefined(key)) {
 			break;
 		}
 		*_log << "        -- " << key << ": ";
 		Double val = _header.asDouble(key);
-		String unit = "cunit" + iString;
+		String unit = _CUNIT + iString;
 		String myunit;
 		if (_header.isDefined(unit)) {
 			myunit = _header.asString(unit);
@@ -369,13 +691,13 @@ template<class T> void ImageMetaData<T>::_toLog() const {
 	*_log << LogIO::NORMAL << "units --" << LogIO::POST;
 	while (True) {
 		String iString = String::toString(i);
-		String key = "cunit" + iString;
+		String key = _CUNIT + iString;
 		if (! _header.isDefined(key)) {
 			break;
 		}
 		*_log << "        -- " << key << ": "
 			<< _header.asString(key) << LogIO::POST;
-		String unit = "cunit" + iString;
+		String unit = _CUNIT + iString;
 		i++;
 	}
 
