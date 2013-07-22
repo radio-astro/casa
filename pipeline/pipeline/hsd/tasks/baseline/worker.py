@@ -78,6 +78,11 @@ class SDBaselineWorker(object):
         (spectra, grid_table) = simple_grid.execute()
         t1 = time.time()
 
+        # return empty result if grid_table is empty
+        if len(grid_table) == 0:
+            LOG.warn('Line detection/validation will not be done since grid table is empty. Maybe all the data are flagged out in the previous step.')
+            return [], {}
+        
         LOG.trace('len(grid_table)=%s, spectra.shape=%s'%(len(grid_table),list(spectra.shape)))
         LOG.trace('grid_table=%s'%(grid_table))
         LOG.debug('PROFILE simplegrid: elapsed time is %s sec'%(t1-t0))

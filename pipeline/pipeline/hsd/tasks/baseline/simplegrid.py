@@ -205,6 +205,13 @@ class SimpleGridding(object):
                         Weight = tEXPT[index]/(tTSYS[index]**2.0)
                     else: Weight = 1.0
                     bind_to_grid[ant].append([tROW[index], ROW, Weight, tSFLAG[index]])
+
+        # Return empty result if all the spectra are flagged out
+        number_of_spectra = sum(map(len,bind_to_grid.values()))
+        if number_of_spectra == 0:
+            LOG.warn('Empty grid table, maybe all the data are flagged out in the previous step.')
+            return ([], [])
+        
         # Create progress timer
         Timer = common.ProgressTimer(80, sum(map(len,bind_to_grid.values())), LogLevel)
 
