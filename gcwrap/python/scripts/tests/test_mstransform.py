@@ -94,7 +94,16 @@ class test_base(unittest.TestCase):
            self.cleanup()
             
         os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
-        default(mstransform)                    
+        default(mstransform)   
+        
+    def setUp_almasim(self):
+
+        self.vis = 'sim.alma.cycle0.compact.noisy.ms'
+        if os.path.exists(self.vis):
+           self.cleanup()
+            
+        os.system('cp -RL '+datapath + self.vis +' '+ self.vis)
+        default(mstransform)              
         
     def cleanup(self):
         os.system('rm -rf '+ self.vis)
@@ -180,7 +189,7 @@ class test_Combspw1(test_base):
         default(cvel)
         cvel(vis=self.vis, outputvis='combcvel14.ms', spw='0:60~63,1:60~63')
         ret = th.verifyMS('combcvel14.ms', 1, 68, 0)
-        self.assertTrue(ret[0],ret[1])
+        self.assertTrue(ret[0],ret[1])  
         
     def test_combspw1_5(self):
         '''mstransform: Combine four spws into one'''
@@ -193,6 +202,16 @@ class test_Combspw1(test_base):
         dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')        
         self.assertEqual(dd_col.keys().__len__(), 1, 'Wrong number of rows in DD table')    
         self.assertEqual(dd_col['r1'][0], 0,'Error re-indexing DATA_DESCRIPTION table')
+
+        # DDI subtable should have 4 rows with the proper index      
+        mytb = tbtool()
+        mytb.open(outputms + '/DATA_DESCRIPTION')
+        spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')      
+        nspw = spwCol.size  
+        check_eq(nspw, 1)   
+        check_eq(spwCol[0], 0)
+        mytb.close()          
+        
 
 class test_Regridms1(test_base):
     '''Tests for regridms using Four_ants_3C286.ms'''
@@ -857,6 +876,44 @@ class test_SeparateSPWs(test_base):
         self.assertTrue(ret[0],ret[1])        
         ret = th.verifyMS(outputms, 4, 10, 3)
         self.assertTrue(ret[0],ret[1])        
+        
+    def test_CAS_5403_1(self):
+        '''mstransform: separate spw 0 into 4 spws and check that DDI subtable is reindexed properly
+                        and then check that DDI subtable is reindexed properly'''
+        outputms = "test_5403_1.ms"
+        mstransform(vis=self.vis, outputvis=outputms,regridms=True,spw='0',nspw=4)
+        self.assertTrue(os.path.exists(outputms))
+
+        # DDI subtable should have 4 rows with the proper index      
+        mytb = tbtool()
+        mytb.open(outputms + '/DATA_DESCRIPTION')
+        spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')      
+        nspw = spwCol.size  
+        check_eq(nspw, 4)   
+        check_eq(spwCol[0], 0)
+        check_eq(spwCol[1], 1)
+        check_eq(spwCol[2], 2)
+        check_eq(spwCol[3], 3)
+        mytb.close()    
+        
+    def test_CAS_5403_2(self):
+        '''mstransform: combine spw 0,1,2 into one spw and then break it doen in 4 spws. 
+                        and then check that DDI subtable is reindexed properly'''
+        outputms = "test_5403_2.ms"
+        mstransform(vis=self.vis, outputvis=outputms,regridms=True,spw='0,1,2',nspw=4)
+        self.assertTrue(os.path.exists(outputms))
+
+        # DDI subtable should have 4 rows with the proper index      
+        mytb = tbtool()
+        mytb.open(outputms + '/DATA_DESCRIPTION')
+        spwCol = mytb.getcol('SPECTRAL_WINDOW_ID')      
+        nspw = spwCol.size  
+        check_eq(nspw, 4)   
+        check_eq(spwCol[0], 0)
+        check_eq(spwCol[1], 1)
+        check_eq(spwCol[2], 2)
+        check_eq(spwCol[3], 3)
+        mytb.close()            
    
         # Verify that some sub-tables are properly re-indexed.
         dd_col = th.getVarCol(outputms+'/DATA_DESCRIPTION', 'SPECTRAL_WINDOW_ID')            
@@ -1040,9 +1097,8 @@ class test_WeightSpectrum(test_base):
         default(mstransform)
         
     def tearDown(self):
-        os.system('rm -rf patata')
-        #os.system('rm -rf '+ self.vis)
-        #os.system('rm -rf '+ self.outvis)
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
         
     def test_combineSPWDiffExpWithWeightSpectrum(self):
         '''mstransform: Combine SPWs with different exposure using WEIGHT_SPECTRUM'''
@@ -1156,6 +1212,21 @@ class test_WeightSpectrum(test_base):
         check_eq(data[0][0][0].real, 0.0628, 0.0001)
         check_eq(data[0][nchan-1][0].imag, -0.2508, 0.0001)
         mytb.close()  
+        
+class test_channelAverageByDefault(test_base):
+    
+    def setUp(self):
+        self.setUp_almasim()
+        
+    def tearDown(self):
+        os.system('rm -rf '+ self.vis)
+        os.system('rm -rf '+ self.outvis)
+        
+    def test_channelAverageByDefaultInVelocityMode(self):
+        self.outvis = 'test_channelAverageByDefaultInVelocityMode.ms'
+        
+        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,interpolation="linear",
+                    mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz')
  
 # Cleanup class 
 class Cleanup(test_base):
@@ -1185,4 +1256,5 @@ def suite():
             test_Parallel,
             test_state,
             test_WeightSpectrum,
+            test_channelAverageByDefault,
             Cleanup]

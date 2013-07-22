@@ -1062,8 +1062,8 @@ void MSTransformDataHandler::setup()
 		writeOutputPlanesFloat_p = &MSTransformDataHandler::writeOutputPlanesInSlices;
 
 		separateSpwSubtable();
-		// CAS-5404. It seems to me that DD sub-table re-indexing needs
-		// to go here. To be checked!!
+
+		// CAS-5404. DDI sub-table has to be re-indexed after separating SPW sub-table
 		reindexDDISubTable();
 	}
 	else
@@ -1461,6 +1461,30 @@ void MSTransformDataHandler::regridSpwSubTable()
     							False // verbose
             				);
 
+        // Compare input and output width to determine if a pre-averaging step is necessary
+        Double avgCombinedWidth = 0;
+        for (uInt chanIdx=0;chanIdx<inputChanWidth.size();chanIdx++)
+        {
+        	avgCombinedWidth += inputChanWidth(chanIdx);
+        }
+        avgCombinedWidth /= inputChanWidth.size();
+
+        Double avgRegriddedWidth = 0;
+        for (uInt chanIdx=0;chanIdx<regriddedCHAN_WIDTH.size();chanIdx++)
+        {
+        	avgRegriddedWidth += regriddedCHAN_WIDTH(chanIdx);
+        }
+        avgRegriddedWidth /= regriddedCHAN_WIDTH.size();
+
+        Int width =  (Int)floor(avgRegriddedWidth/avgCombinedWidth + 0.5);
+
+        if (width >= 2)
+        {
+        	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+        			<< "Ratio between input and output width for SPW " << spwId << " is " << width
+        			<< ". Activating pre-channel averaging"<< LogIO::POST;
+        }
+
         // Create output SPW structure
         spwInfo outputSpw = spwInfo(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
 
@@ -1682,6 +1706,31 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     						velocityType_p,
     						True // verbose
     					);
+
+    // Compare input and output width to determine if a pre-averaging step is necessary
+    Double avgCombinedWidth = 0;
+    for (uInt chanIdx=0;chanIdx<combinedCHAN_WIDTH.size();chanIdx++)
+    {
+    	avgCombinedWidth += combinedCHAN_WIDTH(chanIdx);
+    }
+    avgCombinedWidth /= combinedCHAN_WIDTH.size();
+
+    Double avgRegriddedWidth = 0;
+    for (uInt chanIdx=0;chanIdx<regriddedCHAN_WIDTH.size();chanIdx++)
+    {
+    	avgRegriddedWidth += regriddedCHAN_WIDTH(chanIdx);
+    }
+    avgRegriddedWidth /= regriddedCHAN_WIDTH.size();
+
+    Int width =  (Int)floor(avgRegriddedWidth/avgCombinedWidth + 0.5);
+
+    if (width >= 2)
+    {
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "Ratio between input and output width is " << width
+    			<< ". Activating pre-channel averaging"<< LogIO::POST;
+    }
+
 
 	// Create output SPW structure
 	spwInfo outputSpw = spwInfo(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
@@ -1910,58 +1959,36 @@ void MSTransformDataHandler::reindexDDISubTable()
 {
     if(Table::isReadable(outputMs_p->dataDescriptionTableName()) and !outputMs_p->dataDescription().isNull())
     {
-    	MSDataDescription ddSubtable = outputMs_p->dataDescription();
-    	uInt nrows = ddSubtable.nrow();
+    	// Access DDI sub-table
+    	MSDataDescription ddiTable = outputMs_p->dataDescription();
+    	MSDataDescColumns ddiCols(ddiTable);
 
-    	//Re-size the DD sub-table
-        // Delete all rows except for the first one
-        uInt rowsToDelete = nrows-1;
-        for(uInt row_idx=rowsToDelete; row_idx>0; row_idx--)
-        {
-        	ddSubtable.removeRow(row_idx);
-        }
+    	// Add a new row for each of the separated SPWs
+    	uInt rowIndex = ddiCols.nrow();
+    	for (uInt spw_i=0; spw_i<nspws_p; spw_i++)
+    	{
+    		// Add row
+    		ddiTable.addRow(1,True);
 
-    	// Hopefully spw table is already re-indexed
-    	MSSpectralWindow spwTable = outputMs_p->spectralWindow();
+    	    // Copy polID and flagRow from the first original SPW
+    		ddiCols.polarizationId().put(rowIndex,ddiCols.polarizationId()(0));
+    		ddiCols.flagRow().put(rowIndex,ddiCols.flagRow()(0));
 
-    	//get the SPW IDs from the rows
-        uInt nSpws = spwTable.nrow();
+    		// Set SPW id separately
+    		ddiCols.spectralWindowId().put(rowIndex,ddiStart_p+spw_i);
 
-        // Add rows to the DD sub-table
-        // TODO: This should be fixed once support for multiple DDI per SPW is introduced!!!
-        // This may also fail when spws have different polarizations. Check this!
-		ddSubtable.addRow(nSpws-1,0);
+    		rowIndex += 1;
+    	}
 
-    	MSDataDescColumns ddCols(ddSubtable);
-    	ScalarColumn<Int> ddSpwCol = ddCols.spectralWindowId();
-    	ScalarColumn<Int> polIdCol = ddCols.polarizationId();
-    	ScalarColumn<Bool> flagRowCol = ddCols.flagRow();
+        // Delete the old rows
+    	uInt rowsToDelete = ddiCols.nrow()-nspws_p;
+    	for(uInt rowsDeleted=0; rowsDeleted<rowsToDelete; rowsDeleted++)
+    	{
+    		ddiTable.removeRow(0);
+    	}
 
-        // Loop through spw table rows
-		for (uInt row_index=0;row_index<nSpws;row_index++)
-		{
-			Int spwId = Int(row_index);
-			ddCols.spectralWindowId().put(row_index,spwId);
-			ddCols.polarizationId().put(row_index,polIdCol(row_index));
-			ddCols.flagRow().put(row_index,flagRowCol(row_index));
-
-	        // Flush changes
-	        outputMs_p->flush(True);
-		}
-
-        // Delete all rows except for the first one
-//        uInt rowsToDelete = tableCols.nrow()-1;
-/*
-        for(uInt row_idx=rowsToDelete; row_idx>0; row_idx--)
-        {
-        	msSubtable.removeRow(row_idx);
-        }
-*/
-
-        // Set SPW in the remaining row
-//        ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-//        spwCol.put(0,0);
-
+        // Flush changes
+        outputMs_p->flush(True);
 
     }
     else
