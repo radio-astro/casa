@@ -24,7 +24,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
       
       <param type="double" name="toffset">
 	<description>Time offset (sec) between interferometric and WVR data</description>
-	<value>-1</value>
+	<value>0</value>
       </param>
       
       <param type="bool" name="segsource">
@@ -141,7 +141,7 @@ WVRGCAL correction should not be used.
               default: none; example: caltable='ngc5921.wvr'
 
   toffset -- Time offset (sec) between interferometric and WVR data
-             default: -1 (ALMA default)
+             default: 0 (ALMA default for cycle 1, for cycle 0, i.e. up to Jan 2013 it was -1)
 
   segsource -- Do a new coefficient calculation for each source
              default: True

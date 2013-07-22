@@ -117,7 +117,7 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, segsource=False)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, segsource=False, toffset=-1.)
 
         print rvaldict
 
@@ -264,7 +264,7 @@ class wvrgcal_test(unittest.TestCase):
         myvis = self.vis_g
         os.system('cp -R ' + myvis + ' myinput.ms')
         os.system('rm -rf '+self.out)
-        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, disperse=True)
+        rvaldict = wvrgcal(vis="myinput.ms",caltable=self.out, disperse=True, toffset=-1.)
 
         print rvaldict
 
@@ -282,7 +282,7 @@ class wvrgcal_test(unittest.TestCase):
         flagdata(vis="myinput.ms", spw='0', mode='manual')
         
         os.system('rm -rf '+self.out)
-        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, disperse=True)
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, disperse=True, toffset=-1.)
 
         print rvaldict
 
@@ -324,7 +324,7 @@ class wvrgcal_test(unittest.TestCase):
         os.system('cp -R ' + myvis + ' myinput.ms')
 
         os.system('rm -rf '+self.out)
-        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, wvrflag='DA41')
+        rvaldict = wvrgcal(vis="myinput.ms", caltable=self.out, wvrflag='DA41', toffset=-1.)
 
         tb.open('myinput.ms/ANTENNA', nomodify=False)
         fr = tb.getcol('FLAG_ROW')
@@ -332,7 +332,7 @@ class wvrgcal_test(unittest.TestCase):
         tb.putcol('FLAG_ROW', fr)
         tb.close()
         
-        rvaldict2 = wvrgcal(vis="myinput.ms", caltable='comp.W')
+        rvaldict2 = wvrgcal(vis="myinput.ms", caltable='comp.W', toffset=-1.)
 
         print rvaldict
         print rvaldict2
