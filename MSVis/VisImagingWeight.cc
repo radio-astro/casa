@@ -454,6 +454,20 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     }
 
+void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
+                                         const Matrix<Float>& weight) const{
+
+      
+
+        Int nRow=imagingWeight.shape()(1);
+        Vector<Float> wgtRow(nRow);
+	
+        for (Int row=0; row<nRow; row++) {
+	  wgtRow(row)=max(weight.column(row));
+        }
+	weightNatural(imagingWeight, flag, wgtRow);
+
+    }
 
     void VisImagingWeight::weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
                                          const Vector<Float>& weight) const{

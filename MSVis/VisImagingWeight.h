@@ -106,6 +106,9 @@ template<class T> class Vector;
      virtual void weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
                                 const Vector<Float>& weight) const;
 
+     //weight as Matrix version
+     virtual void weightNatural(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
+                                const Matrix<Float>& weight) const;
      //Radial weighting
      //imagingWeight should be sized by (nchan, row) already
      virtual void weightRadial(Matrix<Float>& imagingWeight, const Matrix<Bool>& flag,
