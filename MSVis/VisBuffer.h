@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 //#forward
-
+  class SIMapperCollection;
 
 // <summary>
 // VbDirtyComponents allows marking portions of a VisBuffer as
@@ -156,6 +156,7 @@ class VisBuffer {
     friend class VisBufferAsync; // for async i/o
     friend class VisBufferAsyncWrapper; // for async i/o
     friend class ViReadImplAsync; // for async I/O
+    friend class SIMapperCollection; //for SIimager as we need access to MS object
 
 public:
     // Create empty VisBuffer you can assign to or attach.
