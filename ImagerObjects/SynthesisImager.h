@@ -65,12 +65,16 @@ class SynthesisImager
 
   // make all pure-inputs const
   void selectData(Record selpars);
-  virtual Bool selectData(const String& msname, const String& spw, const String& field, const String& taql,  const String& antenna,  const String& uvdist, const String& scan, const String& obs, const String& timestr, const Bool usescratch=False, const Bool readonly=False);
+  virtual Bool selectData(const String& msname, const String& spw="*", const String& freqBeg="", const String& freqEnd="",
+		  const MFrequency::Types freqFrame=MFrequency::LSRK, const String& field="*", const String& taql="",
+		  const String& antenna="",  const String& uvdist="", const String& scan="", const String& obs="",
+		  const String& timestr="", const Bool usescratch=False, const Bool readonly=False, const Bool incrementModel=False);
   void setupImaging(Record gridpars);
   void setupImaging(const Float padding=1.0, const Bool useAutocorr=False, const bool useDoublePrec=True, const Int wprojplanes=1, const String convFunc="SF");
   void defineImage(Record impars);
   //When having a facetted image ...call with (facets > 1)  first and  once only ..
   //Easier to keep track of the imstores that way
+  ////CAREFUL: make sure you donot overwrite if you want to predict the model or subtract it to make residual
   virtual Bool defineImage(const String& imagename, const Int nx, const Int ny,
 			   const Quantity& cellx, const Quantity& celly,
 			   const String& stokes,
@@ -86,7 +90,7 @@ class SynthesisImager
 			   const MFrequency::Types& freqFrame=MFrequency::LSRK,
 			   const Bool trackSource=False, const MDirection& 
 			   trackDir=MDirection(Quantity(0.0, "deg"), 
-					       Quantity(90.0, "deg")));
+					       Quantity(90.0, "deg")), const Bool overwrite=False);
   //Define image via a predefine SIImageStore object
   virtual Bool defineImage(CountedPtr<SIImageStore> imstor, const String& ftmachine);
   //Defining componentlist to use while degriding
@@ -108,6 +112,8 @@ class SynthesisImager
 
   // make the psf images  i.e grid weight rather than data
   void makePSF(const Bool useViVB2=False);
+
+  void predictModel(const Bool useViVb2=False);
   /* Access method to the Loop Controller held in this class */
   //SIIterBot& getLoopControls();
 
@@ -135,7 +141,8 @@ protected:
   /////It associated the ftmachine with a given field
   ////For facetted image distinct  ft machines will associated with each facets and 
   //// Only one facetted image allowed
-  void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine, Quantity distance=Quantity(0.0, "m"), Int facets=1);
+  void appendToMapperList(String imagename, CoordinateSystem& csys, String ftmachine,
+		  	  Quantity distance=Quantity(0.0, "m"), Int facets=1, const Bool overwrite=False);
   /////////////// Member Objects
 
   SIMapperCollection itsMappers;
@@ -159,6 +166,7 @@ protected:
   CountedPtr<vi::VisibilityIterator2>  vi_p;
   Bool writeAccess_p;
   ////////////////////////////////////Till VisibilityIterator2 works as advertised
+  Block<MeasurementSet> mss4vi_p;
   VisibilityIterator* wvi_p;
   ROVisibilityIterator* rvi_p;
   Block<Vector<Int> > blockNChan_p;
@@ -171,6 +179,7 @@ protected:
   Int facetsStore_p;
   VisImagingWeight imwgt_p;
   Bool imageDefined_p;
+  Bool useScratch_p;
   Record ftmParams_p;
 };
 

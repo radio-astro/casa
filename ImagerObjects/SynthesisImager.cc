@@ -56,6 +56,7 @@
 #include <synthesis/ImagerObjects/SIIterBot.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
 #include <synthesis/ImagerObjects/SIMapper.h>
+#include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/MSVis/VisSetUtil.h>
 #include <synthesis/MSVis/VisImagingWeight.h>
 #include <synthesis/TransformMachines/GridFT.h>
@@ -80,13 +81,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   SynthesisImager::SynthesisImager() : itsMappers(SIMapperCollection()), 
 				       itsCurrentFTMachine(NULL), 
 				       itsCurrentImages(NULL),
-				        mss_p(0), vi_p(0), writeAccess_p(True)
+				        mss_p(0),mss4vi_p(0), vi_p(0), writeAccess_p(True)
   {
 
 
      facetsStore_p=-1;
      imwgt_p=VisImagingWeight("natural");
      imageDefined_p=False;
+     useScratch_p=False;
      wvi_p=0;
      rvi_p=0;
 
@@ -108,24 +110,30 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     for (uInt k=0; k < mss_p.nelements(); ++k){
       delete mss_p[k];
     }
+    if(rvi_p) delete rvi_p;
+    cerr << "IN DESTR"<< endl;
+    VisModelData::listModel(mss4vi_p[0]);
   }
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-  Bool SynthesisImager::selectData(const String& msname, const String& spw, const String& field, const String& taql,
+  Bool SynthesisImager::selectData(const String& msname, const String& spw, const String& freqBeg, const String& freqEnd, const MFrequency::Types freqframe, const String& field, const String& taql,
 		  const String& antenna, const String& uvdist, const String& scan, const String& obs, const String& timestr,
-		  const Bool usescratch, const Bool readonly){
+		  const Bool usescratch, const Bool readonly, const Bool incrModel){
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
     //Respect the readonly flag...necessary for multi-process access
-    MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking), 
-			  readonly ? Table::Old : Table::Update);
+    MeasurementSet thisms(msname, TableLock(TableLock::AutoNoReadLocking),
+				readonly ? Table::Old : Table::Update);
     thisms.setMemoryResidentSubtables (MrsEligibility::defaultEligible());
+    useScratch_p=usescratch;
     //if you want to use scratch col...make sure they are there
     if(usescratch && !readonly){
       VisSetUtil::addScrCols(thisms, True, False, True, False);
       VisModelData::clearModel(thisms);
     }
+    if(!incrModel && !usescratch && !readonly)
+    	VisModelData::clearModel(thisms, field, spw);
     //Some MSSelection 
     MSSelection thisSelection;
     if(field != ""){
@@ -167,7 +175,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     TableExprNode exprNode=thisSelection.toTableExprNode(&thisms);
     if(!(exprNode.isNull())){
       mss_p.resize(mss_p.nelements()+1, False, True);
-      mss_p[mss_p.nelements()-1]=new const MeasurementSet(thisms(exprNode));
+      mss4vi_p.resize(mss4vi_p.nelements()+1, False, True);
+      mss_p[mss_p.nelements()-1]=new const  MeasurementSet(thisms(exprNode));
+      mss4vi_p[mss_p.nelements()-1]=MeasurementSet(thisms(exprNode));
     }
     else{
       throw(AipsError("Selection for given MS "+msname+" is invalid"));
@@ -182,7 +192,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       IPosition shape = chanlist.shape();
       uInt nSelections = shape[0];
       Int spw,chanStart,chanEnd,chanStep,nchan;
-      vi::FrequencySelectionUsingChannels channelSelector;
+
       ///////////////Temporary revert to using Vi/vb
       Int msin=mss_p.nelements();
       blockNChan_p.resize(msin, False, True);
@@ -195,26 +205,59 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       blockStep_p[msin].resize(nSelections);
       blockSpw_p[msin].resize(nSelections);
       ///////////////////////
-      for(uInt k=0; k < nSelections; ++k)
-      {
+
+      if(freqBeg==""){
+    	  vi::FrequencySelectionUsingChannels channelSelector;
+    	  //////////This is not implemented
+    	  //channelSelector.add(thisSelection);
+    	  /////So this gymnastic is needed
+    	  for(uInt k=0; k < nSelections; ++k)
+    	  {
 	  
-    	  spw = chanlist(k,0);
+    		  spw = chanlist(k,0);
 	  
-    	  // channel selection
-    	  chanStart = chanlist(k,1);
-    	  chanEnd = chanlist(k,2);
-    	  chanStep = chanlist(k,3);
-    	  nchan = chanEnd-chanStart+1;
-    	  channelSelector.add (spw, chanStart, nchan,chanStep);
-    	  ///////////////Temporary revert to using Vi/vb
-    	  blockNChan_p[msin][k]=nchan;
-    	  blockStart_p[msin][k]=chanStart;
-    	  blockStep_p[msin][k]=chanStep;
-    	  blockSpw_p[msin][k]=spw;
-    	  /////////////////////////////////////////
+    		  // channel selection
+    		  chanStart = chanlist(k,1);
+    		  chanEnd = chanlist(k,2);
+    		  chanStep = chanlist(k,3);
+    		  nchan = chanEnd-chanStart+1;
+    		  channelSelector.add (spw, chanStart, nchan,chanStep);
+    		  ///////////////Temporary revert to using Vi/vb
+    		  blockNChan_p[msin][k]=nchan;
+    		  blockStart_p[msin][k]=chanStart;
+    		  blockStep_p[msin][k]=chanStep;
+    		  blockSpw_p[msin][k]=spw;
+    		  /////////////////////////////////////////
+    		  fselections_p.add(channelSelector);
+    	  }
+      }
+      else{
+    	  vi::FrequencySelectionUsingFrame channelSelector(freqframe);
+    	  Quantity freq;
+    	  Quantity::read(freq, freqBeg);
+    	  Double lowfreq=freq.getValue("Hz");
+    	  Quantity::read(freq, freqEnd);
+    	  Double topfreq=freq.getValue("Hz");
+    	  for(uInt k=0; k < nSelections; ++k)
+    		  channelSelector.add(chanlist(k,0), lowfreq, topfreq);
+    	  fselections_p.add(channelSelector);
+    	  //////////OLD VI/VB
+    	  ImagerMultiMS im;
+    	  Vector<Vector<Int> >elspw, elstart, elnchan;
+    	  Vector<Int>fields=thisSelection.getFieldList(mss_p[mss_p.nelements()-1]);
+    	  Int fieldid=fields.nelements() ==0 ? 0: fields[0];
+    	  im.adviseChanSelex(lowfreq, topfreq, 1.0, freqframe, elspw, elstart, elnchan, msname, fieldid, False);
+    	  blockNChan_p[msin].resize(elspw[0].nelements());
+    	  blockStart_p[msin].resize(elspw[0].nelements());
+    	  blockStep_p[msin].resize(elspw[0].nelements());
+    	  blockSpw_p[msin].resize(elspw[0].nelements());
+    	  blockNChan_p[msin]=elnchan[0];
+    	  blockStart_p[msin]=elstart[0];
+    	  blockStep_p[msin].set(1);
+    	  blockSpw_p[msin]=elspw[0];
+    	  //////////////////////
       }
 
-      fselections_p.add(channelSelector);
 
     }
     writeAccess_p=writeAccess_p && !readonly;
@@ -251,7 +294,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << "MS : " << mslist[sel];
 	    os << "   Selection : spw='" << spwlist[sel] << "'";
 	    os << " field='" << fieldlist[sel] << "'" << LogIO::POST;
-	    selectData(mslist[sel], spwlist[sel], fieldlist[sel],""/*taql*/,  ""/*antenna*/, ""/*uvdist*/, ""/*scan*/, 
+	    selectData(mslist[sel], spwlist[sel], "", "", MFrequency::LSRK, fieldlist[sel],""/*taql*/,  ""/*antenna*/, ""/*uvdist*/, ""/*scan*/,
 		       ""/*obs*/, ""/*timestr*/, useScratch, False);
 	  }
 	
@@ -293,14 +336,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				    const Quantity& distance,
 				    const MFrequency::Types& freqFrame,
 				    const Bool trackSource, const MDirection& 
-				    trackDir){
+				    trackDir, const Bool overwrite){
     LogIO os( LogOrigin("SynthesisImager","selectData",WHERE) );
     if(mss_p.nelements() ==0)
       throw(AipsError("SelectData has to be run before defineImage"));
 
     CoordinateSystem csys=buildCoordSys(phaseCenter, cellx, celly, nx, ny, stokes, projection, nchan,
     		freqStart, freqStep, restFreq, freqFrame);
-    appendToMapperList(imagename,  csys,  ftmachine, distance, facets); 
+    appendToMapperList(imagename,  csys,  ftmachine, distance, facets, overwrite);
     imageDefined_p=True;
     return True;
   }
@@ -578,7 +621,55 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   //////////////////////
   //////////////////
+  void SynthesisImager::predictModel(const Bool useViVb2){
+	  LogIO os( LogOrigin("SynthesisImager","runMajorCycle",WHERE) );
 
+	      if(useViVb2){
+	      	vi_p->originChunks();
+	      	vi_p->origin();
+	      	vi::VisBuffer2* vb=vi_p->getVisBuffer();
+	      	itsMappers.initializeDegrid(*vb);
+	      	for (vi_p->originChunks(); vi_p->moreChunks();vi_p->nextChunk())
+	      	{
+
+	      		for (vi_p->origin(); vi_p->more();vi_p->next())
+	      		{
+
+	      			vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
+	      			itsMappers.degrid(*vb, useScratch_p);
+	      			if(vi_p->isWritable() && useScratch_p)
+	      				vi_p->writeVisModel(vb->visCubeModel());
+	      		}
+	      	}
+	      	itsMappers.finalizeDegrid(*vb);
+	      }
+
+	      else{
+	      	VisBufferAutoPtr vb(rvi_p);
+	      	rvi_p->originChunks();
+	      	rvi_p->origin();
+	      	itsMappers.initializeDegrid(*vb);
+	      	for (rvi_p->originChunks(); rvi_p->moreChunks();rvi_p->nextChunk())
+	      	{
+
+	      		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
+	      		{
+	      			cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
+	      			//if !usescratch ...just save
+	      			vb->setModelVisCube(Complex(0.0, 0.0));
+	      			itsMappers.degrid(*vb, useScratch_p);
+	      			if(writeAccess_p && useScratch_p)
+	      				wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+
+	      		}
+	      	}
+	      	itsMappers.finalizeDegrid(*vb);
+	      }
+
+  }
+
+  //////////////////
+  ////////////////////
   Bool SynthesisImager::weight(const String& type, const String& rmode,
                    const Quantity& noise, const Double robust,
                    const Quantity& fieldofview,
@@ -705,7 +796,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////
   ////////////This should be called  at each defineimage
-    void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, String ftmachine,  Quantity distance, Int facets)
+    void SynthesisImager::appendToMapperList(String imagename,  CoordinateSystem& csys, String ftmachine,
+    		Quantity distance, Int facets, const Bool overwrite)
     {
     	if(facets > 1 && itsMappers.nMappers() > 0)
     		throw(AipsError("Facetted image has to be first of multifields"));
@@ -717,12 +809,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     
 
     if (nIm < 2){
-      imstor=new SIImageStore(imagename, csys, itsCurrentShape);
+      imstor=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
     }
     else{
       if(!unFacettedImStore_p.null())
     	  throw(AipsError("A facetted Image has already been set"));
-      unFacettedImStore_p=new SIImageStore(imagename, csys, itsCurrentShape);
+      unFacettedImStore_p=new SIImageStore(imagename, csys, itsCurrentShape, overwrite);
       facetsStore_p=facets;
     }
 
@@ -1037,20 +1129,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     ////////////Temporary revert to vi/vb
     Block<Int> sort(0);
     Block<MeasurementSet> msblock(mss_p.nelements());
-    for (uInt k=0; k< msblock.nelements(); ++k){
-    	msblock[k]=*mss_p[k];
-    }
+    //for (uInt k=0; k< msblock.nelements(); ++k){
+    //	msblock[k]=*mss_p[k];
+    //}
 
     //vs_p= new VisSet(blockMSSel_p, sort, noChanSel, useModelCol_p);
     if(!writeAccess){
 
-    	rvi_p=new ROVisibilityIterator(msblock, sort);
+    	rvi_p=new ROVisibilityIterator(mss4vi_p, sort);
 
     }
     else{
-    	VisibilityIterator *vi=new VisibilityIterator(msblock, sort);
-    	wvi_p=vi;
-    	rvi_p=vi;
+    	wvi_p=new VisibilityIterator(mss4vi_p, sort);
+    	rvi_p=wvi_p;
     }
     Block<Vector<Int> > blockGroup(msblock.nelements());
     for (uInt k=0; k < msblock.nelements(); ++k){
@@ -1085,7 +1176,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     		for (vi_p->origin(); vi_p->more();vi_p->next())
     		{
-    			if(!dopsf) itsMappers.degrid(*vb);
+    			if(!dopsf){
+    				vb->setVisCubeModel(Cube<Complex>(vb->visCubeModel().shape(), Complex(0.0, 0.0)));
+    				itsMappers.degrid(*vb, useScratch_p);
+    				if(vi_p->isWritable() && useScratch_p)
+    					vi_p->writeVisModel(vb->visCubeModel());
+    			}
     			itsMappers.grid(*vb, dopsf);
     		}
     	}
@@ -1105,10 +1201,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     		for (rvi_p->origin(); rvi_p->more(); (*rvi_p)++)
     		{
     			cerr << "nRows "<< vb->nRow() << "   " << max(vb->visCube()) <<  endl;
-    			if(!dopsf) itsMappers.degrid(*vb);
+    			if(!dopsf) {
+    				vb->setModelVisCube(Complex(0.0, 0.0));
+    				itsMappers.degrid(*vb, useScratch_p);
+    				if(writeAccess_p && useScratch_p)
+    					wvi_p->setVis(vb->modelVisCube(),VisibilityIterator::Model);
+    			}
     			itsMappers.grid(*vb, dopsf);
     		}
     	}
+    	cerr << "IN SYNTHE_IMA" << endl;
+    	VisModelData::listModel(rvi_p->getMeasurementSet());
     	if(!dopsf) itsMappers.finalizeDegrid(*vb);
     	itsMappers.finalizeGrid(*vb, dopsf);
 

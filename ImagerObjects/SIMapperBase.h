@@ -90,8 +90,9 @@ class SIMapperBase
   virtual void degrid(VisBuffer& )
   {cout <<"Calling MapperBase degrid !"<< endl;degrid();};//{throw(AipsError("Not implemented"));};
 
-  ////////////////////////////////////
-  virtual Record getFTMRecord();
+  ////////////////////////////////////Return value is false if no valid ftm or CompList is available
+  virtual Bool getFTMRecord(Record & rec);
+  virtual Bool getCLRecord(Record & rec);
 
   String getImageName();
   CountedPtr<SIImageStore> imageStore(){return itsImages;};

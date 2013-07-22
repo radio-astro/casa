@@ -40,22 +40,31 @@
 
 #include <casa/iostream.h>
 namespace casa {
-  SubImage<Float>* SpectralImageUtil::getChannel(ImageInterface<Float>& theIm, Int channel, Bool writeAccess){
+  SubImage<Float>* SpectralImageUtil::getChannel(ImageInterface<Float>& theIm, Int beginchannel, Int endchannel, Bool writeAccess){
     CoordinateSystem csys=theIm.coordinates();
+    if(endchannel<0 )
+      endchannel=beginchannel;
+    if(beginchannel > endchannel){ 
+      Int temp=endchannel;
+      endchannel=beginchannel;
+      beginchannel=temp;
+    }
     Int spectralIndex=CoordinateUtil::findSpectralAxis(csys);
     IPosition blc(theIm.shape());
     IPosition trc(theIm.shape());
     blc-=blc; //set all values to 0
     trc=theIm.shape();
     trc-=1; // set trc to image size -1
-    if(channel > trc[spectralIndex])
+    if(beginchannel > trc[spectralIndex] || beginchannel <0 || endchannel >  trc[spectralIndex] )
       throw(AipsError("Channel requested does not exist"));
-    blc[spectralIndex]=channel;
-    trc[spectralIndex]=channel;
+    blc[spectralIndex]=beginchannel;
+    trc[spectralIndex]=endchannel;
     Slicer sl(blc, trc, Slicer::endIsLast);
     SubImage<Float> * imageSub=new SubImage<Float>(theIm, sl, writeAccess);
     return imageSub;
   }
+
+
   Double SpectralImageUtil::worldFreq(const CoordinateSystem& cs, Double spectralpix){
     ///freq part
     Int spectralIndex=cs.findCoordinate(Coordinate::SPECTRAL);

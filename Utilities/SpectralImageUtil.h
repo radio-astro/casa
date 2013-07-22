@@ -39,7 +39,7 @@ class SpectralImageUtil {
   //Returns a pointer to a subimage of the requested plane
   //Note caller is responsible for deleting the subimage object
   // If writeaccess is True ...modification on the subimage will get recorded on the original image if it is writeable
-  static SubImage<Float>* getChannel(ImageInterface<Float>& theIm, Int channel=0, Bool writeAccess=False);
+  static SubImage<Float>* getChannel(ImageInterface<Float>& theIm, Int begchannel=0,  Int endchannel=-1, Bool writeAccess=False);
   //Frequency at a given pixel along the spectral axis (value returned is in Hz)
   static Double worldFreq(const CoordinateSystem& cs, Double spectralpix=0.0);
 

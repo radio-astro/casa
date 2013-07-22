@@ -612,14 +612,24 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIMapper","finalizeDegrid",WHERE) );
   }
 
-  Record SIMapper::getFTMRecord()
+  Bool SIMapper::getFTMRecord(Record& rec)
   {
     LogIO os( LogOrigin("SIMapper","getFTMRecord",WHERE) );
-    Record rec;
+    if(ft_p.null())
+    	return False;
+    String err;
+    return ft_p->toRecord(err, rec, True);
     // rec = itsFTM->toRecord();
-    return rec;
-  }
 
+  }
+  Bool SIMapper::getCLRecord(Record& rec)
+  {
+	  if(cft_p.null())
+	      	return False;
+	  String err;
+	  return cl_p.toRecord(err, rec);
+
+  }
   Bool SIMapper::changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid){
       firstRow=False;
       internalRow=False;
