@@ -93,6 +93,13 @@ def doCopy():
     cp.append(0)
     cp.append(0)
     cp.append(0)
+
+    cp.append(0)
+    cp.append(0)
+    cp.append(0)
+    cp.append(0)
+    cp.append(0)
+    cp.append(0)
     return cp
 
 def run( fetch=False ):

@@ -35,7 +35,7 @@ def importfits(fitsimage,imagename,whichrep,whichhdu,zeroblanks,overwrite,defaul
 	adddir = False
 	addstokes = False
 	addfreq=False
-	defaultorder = ['Right Ascension', 'Declination', 'Frequency', 'Stokes']
+	defaultorder = ['Right Ascension', 'Declination', 'Stokes', 'Frequency']
 
 	try:
 

@@ -397,7 +397,7 @@ for name in ['dir_and_stokes.fits', 'dir_stokes_and_freq.fits', 'onlydir.fits', 
     ia.open(name+'.im')
     mycs = ia.coordsys()
     ia.close()
-    if not mycs.axiscoordinatetypes() == ['Direction', 'Direction', 'Spectral', 'Stokes']:
+    if not mycs.axiscoordinatetypes() == ['Direction', 'Direction', 'Stokes', 'Spectral']:
         passed = False
     else:
         mycsr = mycs.torecord()
