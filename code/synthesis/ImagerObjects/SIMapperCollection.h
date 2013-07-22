@@ -66,17 +66,19 @@ class SIMapperCollection
   void finalizeDegrid(Int mapperid);
 ////////////The following will loop over the SIMappers internally
   void initializeGrid(const vi::VisBuffer2& vb);
-  void grid(const vi::VisBuffer2& vb, const Bool dopsf=False, const FTMachine::Type col=FTMachine::CORRECTED);
+  void grid(vi::VisBuffer2& vb, const Bool dopsf=False, const FTMachine::Type col=FTMachine::CORRECTED);
   void finalizeGrid(const vi::VisBuffer2& vb, const Bool dopsf=False);
   void initializeDegrid(const vi::VisBuffer2& vb);
-  void degrid(vi::VisBuffer2& vb);
+  void degrid(vi::VisBuffer2& vb, const Bool useScratch=False);
+  void saveVirtualModel(vi::VisBuffer2& vb);
   void finalizeDegrid(const vi::VisBuffer2& vb);
   ////////////Version that use old vi/vb can be removed the vi2/vb2 works
   void initializeGrid(const VisBuffer& vb);
-  void grid(const VisBuffer& vb, const Bool dopsf=False, const FTMachine::Type col=FTMachine::CORRECTED);
+  void grid(VisBuffer& vb, const Bool dopsf=False, const FTMachine::Type col=FTMachine::CORRECTED);
   void finalizeGrid(const VisBuffer& vb, const Bool dopsf=False);
   void initializeDegrid(const VisBuffer& vb);
-  void degrid(VisBuffer& vb);
+  void degrid(VisBuffer& vb, const Bool useScratch=False);
+  void saveVirtualModel(VisBuffer& vb);
   void finalizeDegrid(const VisBuffer& vb);
   ////////////////////////////////////////////////////
 
@@ -90,6 +92,7 @@ protected:
   ///////////////////// Member Objects
 
   Block<CountedPtr<SIMapperBase> >  itsMappers;
+  Int oldMsId_p;
 
 };
 

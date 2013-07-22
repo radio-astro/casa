@@ -52,7 +52,7 @@ class SIImageStore
   SIImageStore(String imagename);
   SIImageStore(String imagename, 
 	       CoordinateSystem &imcoordsys, 
-	       IPosition imshape);
+	       IPosition imshape, const Bool overwrite=False);
   // Contructor by image objects necessary for facetted imaging (subimages 
   //can be passed in as residual and model etc). The caller has to make sure the 
   //images are similar.  the Pointers are taken over by CountedPtr...and will be deleted when reference 

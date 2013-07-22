@@ -175,14 +175,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIMapperBase","finalizeDegrid",WHERE) );
   }
 
-  Record SIMapperBase::getFTMRecord()
+  Bool SIMapperBase::getFTMRecord(Record& /*rec*/)
   {
     LogIO os( LogOrigin("SIMapperBase","getFTMRecord",WHERE) );
-    Record rec;
     // rec = itsFTM->toRecord();
-    return rec;
+    return True;
   }
-
+  Bool SIMapperBase::getCLRecord(Record& /*rec*/)
+  {
+	  LogIO os( LogOrigin("SIMapperBase","getFTMRecord",WHERE) );
+      // rec = itsFTM->toRecord();
+      return True;
+  }
   String SIMapperBase::getImageName()
   {
     return itsImages->getName();

@@ -33,6 +33,7 @@
 #include <casa/Arrays/ArrayMath.h>
 #include <casa/Arrays/ArrayLogical.h>
 
+#
 #include <casa/Logging.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogMessage.h>
@@ -44,7 +45,8 @@
 #include <casa/OS/Path.h>
 
 #include <casa/OS/HostInfo.h>
-
+#include <images/Images/TempImage.h>
+#include <images/Images/PagedImage.h>
 #include <ms/MeasurementSets/MSHistoryHandler.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 
@@ -163,7 +165,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   SIImageStore::SIImageStore(String imagename, 
 			     CoordinateSystem &imcoordsys, 
-			     IPosition imshape)
+			     IPosition imshape, const Bool overwrite)
   {
     LogIO os( LogOrigin("SIImageStore","Open new Images",WHERE) );
 
@@ -173,22 +175,49 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // Make the Images.
     //     -- Check, and create a new image only if it does not already exist on disk.
     //     -- If it exists on disk, check that it's shape and coordinates 
-
-    if( doImagesExist( ) )
-      {
-	os << "Images already exist. Overwriting them";
-      }
-
-    itsResidual = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".residual"));
-    itsPsf = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".psf"));
-    itsWeight = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".weight"));
-    itsModel = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".model"));
-    itsImage = new PagedImage<Float> (itsImageShape, imcoordsys, itsImageName+String(".image"));
-    itsResidual->set(0.0);
-    itsPsf->set(1.0);
+    Vector<String> lesImages(5);
+    Vector<ImageInterface<Float>* > imPtr(5);
+    String model=itsImageName+String(".model"); lesImages[0]=model;
+    String residual=itsImageName+String(".residual"); lesImages[1]=residual;
+    String weight=itsImageName+ String(".weight"); lesImages[2]=weight;
+    String psf=itsImageName + String(".psf"); lesImages[3]=psf;
+    String image=itsImageName+ String(".image"); lesImages[4]=image;
+    if(!overwrite && Table::isWritable(model)){
+    	itsModel=new PagedImage<Float>(model);
+    	if(((itsModel->coordinates()).near(imcoordsys)) || ((itsModel->shape()) != itsImageShape) )
+    	{
+    		os << LogIO::WARN << "Disk model specified does not match image parameters;\n using disk image parameters  "  << LogIO::POST;
+    		itsImageShape=itsModel->shape();
+    		imcoordsys=itsModel->coordinates();
+    	}
+    }
+    else{
+    	itsModel=new PagedImage<Float>(itsImageShape, imcoordsys, model);
+    }
+    //Doing residual, weight, psf, image
+    for (uInt k=1; k < lesImages.nelements(); ++k)
+    {
+    	if( overwrite || !Table::isWritable(lesImages[k]) )
+    	{
+    		imPtr[k]=new PagedImage<Float> (itsImageShape, imcoordsys,lesImages[k]);
+    	}
+    	else{
+    		if(Table::isWritable(lesImages[k])){
+    			cerr << "Trying to open "<< lesImages[k] << endl;
+    			try{
+    				imPtr[k]=new PagedImage<Float>(lesImages[k]);
+    			}
+    			catch (AipsError &x){
+    				imPtr[k]=new PagedImage<Float> (itsImageShape, imcoordsys,lesImages[k]);
+    			}
+    		}
+    		else
+    			imPtr[k]=new TempImage<Float> (itsImageShape, imcoordsys);
+    	}
+    }
+    itsResidual=imPtr[1]; itsWeight=imPtr[2]; itsPsf=imPtr[3]; itsImage=imPtr[4];
     itsWeight->set(1.0);
-    itsModel->set(0.0);
-
+    itsPsf->set(1.0);
     if( itsImageShape[0]==3 && itsImageShape[1]==3 )
       {
 	// Make a PSF with 1 in the center pixel.

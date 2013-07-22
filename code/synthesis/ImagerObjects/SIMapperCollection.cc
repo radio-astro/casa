@@ -49,7 +49,7 @@
 #include <ms/MeasurementSets/MeasurementSet.h>
 
 #include <synthesis/ImagerObjects/SIMapperCollection.h>
-
+#include <synthesis/MSVis/VisibilityIterator2.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -65,6 +65,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SIMapperCollection","Construct a mapperCollection",WHERE) );
     
     itsMappers.resize(0);
+    oldMsId_p=-1;
 
   }
   
@@ -199,12 +200,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::grid(const vi::VisBuffer2& vb, const Bool dopsf, FTMachine::Type col)
+  void SIMapperCollection::grid(vi::VisBuffer2& vb, const Bool dopsf, FTMachine::Type col)
   {
 
 	  if(col==FTMachine::CORRECTED){
-		  if(ROMSColumns((vb.getVi())->ms()).correctedData().isNull())
+		  if(ROMSColumns((vb.getVi())->ms()).correctedData().isNull()){
 			  col=FTMachine::OBSERVED;
+			  cerr << "Max of visCube" << max(vb.visCube()) << " model " << max(vb.visCubeModel())<< endl;
+			  vb.setVisCube(vb.visCube()- vb.visCubeModel());
+		  }
+		  else{
+			  vb.setVisCubeCorrected(vb.visCubeCorrected()-vb.visCubeModel());
+		  }
 	  }
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
@@ -214,11 +221,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     }
   /////////////////////////////////////////////////////////////////////////////////////////////////
   ///////////////////////////////////////OLD VI/VB ///////////////////////////////////
-  void SIMapperCollection::grid(const VisBuffer& vb, const Bool dopsf, FTMachine::Type col)
+  void SIMapperCollection::grid(VisBuffer& vb, const Bool dopsf, FTMachine::Type col)
   {
 	  if(col==FTMachine::CORRECTED){
-		  if(vb.msColumns().correctedData().isNull())
+		  if(vb.msColumns().correctedData().isNull()){
 			  col=FTMachine::OBSERVED;
+			  cerr << "Max of visCube" << max(vb.visCube()) << " model " << max(vb.modelVisCube())<< endl;
+			  vb.visCube()-=vb.modelVisCube();
+		  }
+		  else{
+			  vb.correctedVisCube()-=vb.modelVisCube();
+		  }
 	  }
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
 	  {
@@ -297,26 +310,107 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(vi::VisBuffer2& vb)
+  void SIMapperCollection::degrid(vi::VisBuffer2& vb, const Bool useScratch)
   {
 	  for (uInt k=0; k < itsMappers.nelements(); ++k)
   	  {
 		  (itsMappers[k])->degrid(vb);
 
   	  }
-  }
+	  if(!useScratch){
+		  if(vb.msId() != oldMsId_p){
+			  oldMsId_p=vb.msId();
+			  for (uInt k=0; k < itsMappers.nelements(); ++k){
+				  Record rec;
+				  Bool iscomp=itsMappers[k]->getCLRecord(rec);
+				  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
+					 if((vb.getVi())->isWritable()){
 
+						 (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, True);
+					 }
+				  }
+			  }
+		  }
+	  }
+  }
+/////////////////
+///////////////////
+  void SIMapperCollection::saveVirtualModel(vi::VisBuffer2& vb){
+	  if(vb.msId() != oldMsId_p){
+		  oldMsId_p=vb.msId();
+		  for (uInt k=0; k < itsMappers.nelements(); ++k){
+			  Record rec;
+			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
+			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
+				  if((vb.getVi())->isWritable()){
+
+					  (const_cast<vi::VisibilityIterator2* >(vb.getVi()))->writeModel(rec, iscomp, True);
+				  }
+			  }
+		  }
+	  }
+  }
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////OLD VI/VB ////////////////////////////////////////////////////
-  void SIMapperCollection::degrid(VisBuffer& vb)
+  void SIMapperCollection::degrid(VisBuffer& vb, const Bool useScratch)
     {
-  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
-    	  {
-  		  (itsMappers[k])->degrid(vb);
+	  	  for (uInt k=0; k < itsMappers.nelements(); ++k)
+	    				(itsMappers[k])->degrid(vb);
 
-    	  }
+  		  if(!useScratch){
+  			  saveVirtualModel(vb);
+  		  }
+
     }
 
+
+  /////
+  /////////////
+  void SIMapperCollection::saveVirtualModel(VisBuffer& vb){
+
+
+
+	  if(vb.msId() != oldMsId_p){
+		  oldMsId_p=vb.msId();
+		  /*Block< Vector<Int> > blockNGroup;
+    				Block< Vector<Int> > blockStart;
+    				Block< Vector<Int> > blockWidth;
+    				Block< Vector<Int> > blockIncr;
+    				Block< Vector<Int> > blockSpw;
+    				vb.getChannelSelection(blockNGroup, blockStart, blockWidth, blockIncr, blockSpw);
+    				Vector<Int> fields = vb.msColumns().fieldId().getColumn();
+    				const Int option = Sort::HeapSort | Sort::NoDuplicates;
+    				const Sort::Order order = Sort::Ascending;
+    				Int nfields = GenSort<Int>::sort (fields, order, option);
+
+    				// Make sure  we have the right size
+
+    				fields.resize(nfields, True);
+		   */
+		  Int msid = vb.msId();
+		  for (uInt k=0; k < itsMappers.nelements(); ++k){
+			  Record rec;
+			  Bool iscomp=itsMappers[k]->getCLRecord(rec);
+			  if(iscomp || itsMappers[k]->getFTMRecord(rec)){
+
+				  //VisModelData::putModel(vb.getVisibilityIterator()->ms(), rec, fields, blockSpw[msid], blockStart[msid],
+				  //		blockWidth[msid], blockIncr[msid],
+				  //                         iscomp, True);
+				  VisibilityIterator * elvi=(dynamic_cast<VisibilityIterator* >(vb.getVisibilityIterator()));
+				  if(elvi)
+					  elvi->putModel(rec, iscomp, True);
+				  VisModelData::listModel(vb.getVisibilityIterator()->ms());
+			  }
+
+		  }
+
+
+
+	  }
+
+
+
+  }
 
   /////////////
   ///////////////
@@ -363,7 +457,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   Record SIMapperCollection::getFTMRecord(Int mapperid)
   {
     AlwaysAssert( mapperid >=0 && mapperid < nMappers() , AipsError );
-    return itsMappers[mapperid]->getFTMRecord();
+    //return itsMappers[mapperid]->getFTMRecord();
+    Record rec;
+    return rec;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
