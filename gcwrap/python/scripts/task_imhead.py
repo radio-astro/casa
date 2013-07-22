@@ -309,7 +309,6 @@ def imhead(
         hd_comments['restfreq'] = ''
     except:
         no_op = 'noop'
-
     try:
         # Expected value is a dictionary with two keys:
         #    parameters: the parameters to the projection
@@ -323,7 +322,6 @@ def imhead(
             hd_comments['projection'] = str(list(tmp['parameters']))
     except:
         no_op = 'noop'
-
     try:
         hd_values['equinox'] = csys.referencecode(type='direction')[0]
         hd_types['equinox'] = 'string'
@@ -331,7 +329,6 @@ def imhead(
         hd_comments['equinox'] = ''
     except:
         no_op = 'noop'
-
     try:
         hd_values['reffreqtype'] = csys.referencecode(type='spectral')
         hd_types['reffreqtype'] = 'string'
@@ -339,7 +336,6 @@ def imhead(
         hd_comments['reffreqtype'] = ''
     except:
         no_op = 'noop'
-
     try:
         tmp = csys.epoch()
         if tmp.has_key('m0') and tmp['m0'].has_key('value') and tmp['m0'
@@ -350,12 +346,6 @@ def imhead(
         hd_comments['date-obs'] = ''
     except:
         no_op = 'noop'
-        
-    # yeah the code sucks this way, but when one is given a pile of
-    # crap to maintain, this is what happens.
-    if mode == "get" and hd_values.has_key(hdkey) and hd_values[hdkey] != not_known:
-        return _doget(hd_values.keys(), hdkey, hd_values, hd_types, hd_units)
-    
     try:
         myia.open(imagename)
         hd_dict = myia.summary(list=False)
@@ -371,7 +361,6 @@ def imhead(
         return False
     # Add the Statistical information as follows:
     #    DATAMIN, DATAMAX, MINPIX, MINPIXPOS, MAXPOS, MAXPIXPOS
-
     # Store the MIN and MAX values.
     if stats.has_key('min'):
         hd_values['datamin'] = stats['min'][0]
@@ -388,7 +377,6 @@ def imhead(
         hd_types['minpixpos'] = 'list'
         hd_units['minpixpos'] = 'pixels'
         hd_comments['minpixpos'] = ''
-
     if stats.has_key('max'):
         hd_values['datamax'] = stats['max'][0]
         hd_types['datamax'] = 'double'
@@ -405,7 +393,6 @@ def imhead(
         hd_units['maxpixpos'] = 'pixels'
         hd_comments['maxpixpos'] = ''
 
-    
     # Set some more of the standard header keys from the
     # header dictionary abtained from ia.summary().  The
     # fiels that will be set are:
@@ -765,7 +752,16 @@ def imhead(
                 return False
 
     if mode == "get":
-        return _doget(key_list, hdkey, hd_values, hd_types, hd_units)
+        myimd = imdtool()
+        try:
+            myimd.open(imagename)
+            return myimd.get(hdkey)
+        except:
+            casalog.post(str('*** Error *** ') + str(instance), 'SEVERE')
+            raise
+        finally:
+            myimd.done()
+            
     # ############################################################
     #                     put MODE
     #
@@ -1267,52 +1263,5 @@ def _imhead_strip_units(input_number, default_value=0.0, default_unit=''
 
     return {'value': value, 'unit': unit}
 
-
-def _doget(key_list, hdkey, hd_values, hd_types, hd_units):
- # ############################################################
-    #                     get MODE
-    #
-    # Just #print out the requested information. Note that we
-    # acquired all of the header details, which is not very
-    # efficient for get, but it does make the code cleaner!
-    # Getting the min/max values can take some time to
-    # calculate, and it might be worthwhile doing this step
-    # only if we are getting them.
-    # ############################################################
-    if key_list.count(hdkey) < 1:
-        # The Keyword is not in the header, nothing to GET!!!
-        casalog.post(hdkey
-                     + str(' is NOT in the header unable to "get" its value.'
-                     ), 'SEVERE')
-        return False
-    if str(hd_values[hdkey]) == not_known:
-        # This is a standard header keyword but we don't have a value
-        # for it so we return "not_known"
-        return {'unit': not_known, 'value': not_known}
-
-    retValue = ''
-
-    msg = ''
-    if len(str(hd_types[hdkey])) < 1 or str(hd_types[hdkey]) \
-        == not_known:
-        retValue = str(hd_values[hdkey])
-    elif str(hd_types[hdkey]) == 'list':
-        retValue = hd_values[hdkey]
-    else:
-
-        keytype = str(hd_types[hdkey])
-        if keytype == 'double':
-            keytype = 'float'
-        if keytype == 'string':
-            keytype = 'str'
-        retValue = eval(keytype + '("' + str(hd_values[hdkey])
-                        + '")')
-    retValue = {'unit': hd_units[hdkey], 'value': retValue}
-    msg = 'Value of Header Key ' + hdkey + ' is:' + str(retValue)
-    if len(hd_units) > 0:
-        msg = msg + ' ' + str(hd_units[hdkey])
-
-    casalog.post(msg, 'NORMAL')
-    return retValue
 
 

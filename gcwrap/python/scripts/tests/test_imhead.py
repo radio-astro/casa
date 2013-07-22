@@ -414,9 +414,9 @@ class imhead_test(unittest.TestCase):
             imhead( input_file, 'put', 'object', testval )
             newval = imhead( input_file, 'get', 'object' )
             got = imhead( input_file, 'get', 'object' )
-            self.assertTrue(got['value'] == testval)
+            self.assertTrue(got == testval)
             if ( val != None ):
-                imhead( input_file, 'put', 'object', val['value'] )
+                imhead( input_file, 'put', 'object', val )
         except:
             self.assertTrue(False)
         else:
@@ -430,25 +430,26 @@ class imhead_test(unittest.TestCase):
             imhead( input_file, 'put', 'imtype', '' )
             newval=imhead( input_file, 'get', 'imtype' )
             if ( val != None ):
-                imhead( input_file, 'put', 'imtype', val['value'] )
+                imhead( input_file, 'put', 'imtype', val )
         except:
             self.assertTrue(False)
         else:        
-            self.assertFalse( val!=None and val == newval )
+            self.assertTrue( val!=None and val == newval )
     
         #######  TELESCOPE  #############
         val   = None
         newval= None
         try:
             val=imhead( input_file, 'get', 'telescope' )
-            imhead( input_file, 'put', 'telescope', 'myTelescope' )
+            telescope = 'myTelescope'
+            imhead( input_file, 'put', 'telescope', telescope )
             newval=imhead( input_file, 'get', 'telescope' )
+            self.assertTrue(newval == telescope)
+
             if ( val != None ):        
-                imhead( input_file, 'put', 'telescope', val['value'] )
+                imhead( input_file, 'put', 'telescope', val )
         except:
             self.assertTrue(False)
-        else:
-            self.assertFalse( val!=None and val == newval )
          
         #######  OBSERVER  #############
         val   = None
@@ -458,7 +459,7 @@ class imhead_test(unittest.TestCase):
             imhead( input_file, 'put', 'observer', 'me' )
             newval=imhead( input_file, 'get', 'observer' )
             if ( val != None ):
-                imhead( input_file, 'put', 'observer', val['value'] )
+                imhead( input_file, 'put', 'observer', val )
         except:
             self.assertTrue(False)
         else:        
@@ -469,28 +470,29 @@ class imhead_test(unittest.TestCase):
         newval= None
         try:
             val=imhead( input_file, 'get', 'date-obs' )
-            imhead( input_file, 'put', 'date-obs', '2007/06/20/00:00:00' )
+            date = '2007/06/20/00:00:00'
+            imhead( input_file, 'put', 'date-obs', date )
             newval=imhead( input_file, 'get', 'date-obs' )
+            self.assertTrue(newval == date)
             if ( val != None ):
-                imhead( input_file, 'put', 'date-obs', str(val['value'])+str(val['unit']) )
+                imhead( input_file, 'put', 'date-obs', val )
         except:
             self.assertTrue(False)
-        else:
-            self.assertFalse( val!=None and val == newval )
               
         #######  EQUINOX  #############
         val   = None
         newval= None
         try:                    
             val=imhead( input_file, 'get', 'equinox' )
-            imhead( input_file, 'put', 'equinox', 'B1950' )
+            equinox = 'B1950'
+            imhead( input_file, 'put', 'equinox', equinox )
             newval=imhead( input_file, 'get', 'equinox' )
+            self.assertTrue(newval == equinox)
             if ( val != None ):
-                imhead( input_file, 'put', 'equinox', val['value'] )
+                imhead( input_file, 'put', 'equinox', val )
         except:
             self.assertTrue(False)
-        else:
-            self.assertFalse(val!=None and val == newval )
+        
         #######  RESTFREQUENCY  #############
         val   = None
         newval= None
@@ -521,10 +523,12 @@ class imhead_test(unittest.TestCase):
         newval= None
         try:                    
             val=imhead( input_file, 'get', 'projection' )
-            imhead( input_file, 'put', 'projection', 'TAN' )
+            proj = 'TAN'
+            imhead( input_file, 'put', 'projection', proj )
             newval=imhead( input_file, 'get', 'projection' )
+            self.assertTrue(newval == proj)
             if ( val != None ):
-                imhead( input_file, 'put', 'projection', val['value'] )            
+                imhead( input_file, 'put', 'projection', val )            
         except:
             self.assertTrue(False)
         else:
@@ -548,22 +552,14 @@ class imhead_test(unittest.TestCase):
         newval= None
         try:                    
             val=imhead( input_file, 'get', 'beamminor' )
-            imhead( input_file, 'put', 'beamminor', '24arcsec' )
+            bmaj = '24arcsec'
+            imhead( input_file, 'put', 'beamminor', bmaj )
             newval=imhead( input_file, 'get', 'beamminor' )
+            self.assertTrue(newval == qa.quantity(bmaj))
             if ( val != None ):
                 imhead( input_file, 'put', 'beamminor', str(val['value'])+str(val['unit']) )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get beam's minor axis failed in image "+input_file
-        else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set beam's minor axis Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: '24arcsec'"
+            self.assertTrue(False)
     
     
         #######  BEAM PA #############
@@ -571,91 +567,56 @@ class imhead_test(unittest.TestCase):
         newval= None
         try:                    
             val=imhead( input_file, 'get', 'beampa' )
-            imhead( input_file, 'put', 'beampa', '0.5deg' )
+            bpa = '0.5deg'
+            imhead( input_file, 'put', 'beampa', bpa )
             newval=imhead( input_file, 'get', 'beampa' )
+            self.assertTrue(newval == qa.quantity(bpa))
             if ( val != None ):        
                 imhead( input_file, 'put', 'beampa', str(val['value'])+str(val['unit']) )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get beam's position angle failed in image "+input_file
-        else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set beam's position angle Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: '0.5deg'"
-    
+            self.assertTrue(False)
            
         #######  BUNIT  #############
         val   = None
         newval= None
         try:                                
             val=imhead( input_file, 'get', 'bunit' )
-            imhead( input_file, 'put', 'bunit', 'kJy/beam' )
+            bunit = 'kJy/beam'
+            imhead( input_file, 'put', 'bunit',  bunit)
             newval=imhead( input_file, 'get', 'bunit' )
+            self.assertTrue(newval == bunit)
             if ( val != None ):
-                imhead( input_file, 'put', 'bunit', str(val['value'])+str(val['unit']) )
+                imhead( input_file, 'put', 'bunit', val )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get beam's unit failed in image "+input_file
-        else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set beam's unit Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: 'kJy/beam'"
-    
+            self.assertTrue(False)
     
         #######  CTYPE3  #############
         val   = None
         newval= None
         try:                                
             val=imhead( input_file, 'get', 'ctype3' )
-            imhead( input_file, 'put', 'ctype3', 'Declination' )
+            dec = 'Declination'
+            imhead( input_file, 'put', 'ctype3',  dec)
             newval=imhead( input_file, 'get', 'ctype3' )
+            self.assertTrue(newval == dec)
             if ( val != None ):
-                imhead( input_file, 'put', 'ctype3', val['value'] )
+                imhead( input_file, 'put', 'ctype3', val )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get ctype3 failed in image "+input_file
-        else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set ctype3 unit Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: 'Declination'"
-        
+            self.assertTrue(False)
     
         #######  CRPIX2  #############
         val   = None
         newval= None
         try:                                
             val=imhead( input_file, 'get', 'crpix2' )
-            imhead( input_file, 'put', 'crpix2', '64.0' )
+            pix = 64.0
+            imhead( input_file, 'put', 'crpix2', pix )
             newval=imhead( input_file, 'get', 'crpix2' )
+            self.assertTrue(newval == pix)
             if ( val != None ):
-                imhead( input_file, 'put', 'crpix2', val['value'] )
+                imhead( input_file, 'put', 'crpix2', val )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get beam's unit failed in image "+input_file
-        else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set beam's unit Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: '64.0'"
+            self.assertTrue(False)
     
     
         #######  CRVAL4  #############
@@ -710,23 +671,14 @@ class imhead_test(unittest.TestCase):
         newval= None
         try:                                
             val=imhead( input_file, 'get', 'cunit1' )
-            imhead( input_file, 'put', 'cunit1', 'deg' )
+            unit = 'deg'
+            imhead( input_file, 'put', 'cunit1', unit )
             newval=imhead( input_file, 'get', 'cunit1' )
+            self.assertTrue(newval == unit)
             if ( val != None ):
-                imhead( input_file, 'put', 'cunit1', val['value'] )
+                imhead( input_file, 'put', 'cunit1', val )
         except:
-            retValue['success']=False
-            retValue['error_msgs']=retValue['error_msgs']\
-              +"\nError: set/get cunit1 failed in image "+input_file
-        else:
-            if ( val!=None and val == newval ) :
-                retValue['success']=False
-                retValue['error_msgs']=retValue['error_msgs']\
-                        +"\nError Get/Set cunit1 Failed"\
-                        +"\n       Original value: "+str(val)\
-                        +"\n       Current value:  "+str(newval)\
-                        +"\n       Expected value: 'deg'"
-    
+           self.assertTrue(False)
     
         ################################################################
         # bad header time
@@ -843,25 +795,6 @@ class imhead_test(unittest.TestCase):
         else:
             self.assertTrue( val != newval )
     
-        #######  IMTYPE  #############
-        val = None
-        newval= None
-        try:                                    
-            val=imhead( input_file, 'get', 'imtype' )
-            imhead( input_file, 'del', 'imtype' )
-            newval=imhead( input_file, 'get', 'imtype' )
-    
-            try:
-                newval=imhead( input_file, 'get', 'imtype' )
-            except:
-                pass
-            if ( val != None ):
-                imhead( input_file, 'add', 'imtype', val['value'] )
-        except:
-            self.assertTrue(False)
-        else:
-            self.assertTrue( val != newval )
-    
         #######  USER DEFINED KEYWORD #############
         ###
         ### Add, get, put, and del a user defined
@@ -874,7 +807,7 @@ class imhead_test(unittest.TestCase):
         except:
             self.assertTrue(False)
         else:
-            self.assertTrue( initVal == val['value'] )
+            self.assertTrue( initVal == val )
                 
         val2='Updated user keyword'
         newval=None
@@ -884,7 +817,7 @@ class imhead_test(unittest.TestCase):
         except:
             self.assertTrue(False)
         else:
-            self.assertTrue( initVal == val['value'] )
+            self.assertTrue( initVal == val )
     
         casalog.post( 'The next operation will cause an exception.', 'WARN' )
         results=None
@@ -1016,14 +949,112 @@ class imhead_test(unittest.TestCase):
         self.assertTrue(type(res2) == dict)
         self.assertTrue(deep_equality(res, res2))
         
+    def test_get(self):
+        """Test the get method"""
+        myia = iatool()
+        imagename = "xx1d.im"
+        shape = [1, 1, 6]
+        myia.fromshape(imagename, shape)
+        major = {'value': 4, 'unit': "arcsec"}
+        minor = {'value': 2, 'unit': "arcsec"}
+        pa = {'value': 30, 'unit': "deg"}
+        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+        bunit = "Jy/beam"
+        myia.setbrightnessunit(bunit)
+        myia.addnoise()
+        myia.calcmask(imagename + "<= 0")
+        stats = myia.statistics()
+        myia.done()
+        got = imhead(imagename=imagename, mode="get", hdkey="imtype")
+        self.assertTrue(got == "Intensity")
+        object = "sgrb2n"
+        mytb = tbtool()
+        mytb.open(imagename, nomodify=False)
+        info = mytb.getkeyword("imageinfo")
+        info['objectname'] = object
+        mytb.putkeyword("imageinfo", info)
+        mytb.done()
+        imhead(imagename=imagename, mode="put", hdkey="object", hdvalue=object)
+        got = imhead(imagename=imagename, mode="get", hdkey="object")
+        self.assertTrue(got == object)
+        got = imhead(imagename=imagename, mode="get", hdkey="equinox")
+        self.assertTrue(got == "J2000")
+        got = imhead(imagename=imagename, mode="get", hdkey="date-obs")
+        self.assertTrue(got == "2000/01/01/00:00:00")
+        got = imhead(imagename=imagename, mode="get", hdkey="epoch")
+        self.assertTrue(got == "2000/01/01/00:00:00")
+        got = imhead(imagename=imagename, mode="get", hdkey="observer")
+        self.assertTrue(got == "Karl Jansky")
+        got = imhead(imagename=imagename, mode="get", hdkey="projection")
+        self.assertTrue(got == "SIN")
+        got = imhead(imagename=imagename, mode="get", hdkey="restfreq")
+        self.assertTrue(abs(got['value']/1420405751.7860003 - 1) < 1e-6)
+        self.assertTrue(got['unit'] == 'Hz')
+        got = imhead(imagename=imagename, mode="get", hdkey="reffreqtype")
+        self.assertTrue(got == "LSRD")
+        got = imhead(imagename=imagename, mode="get", hdkey="telescope")
+        self.assertTrue(got == "ALMA")
+        myia.open("xx1d.im")
+        myia.setrestoringbeam(remove=True)
+        myia.done()
+        self.assertFalse(
+            imhead(imagename=imagename, mode="get", hdkey="beammajor")
+        )
+        myia.open("xx1d.im")
+        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+        myia.done()
+        got = imhead(imagename=imagename, mode="get", hdkey="beammajor")
+        self.assertTrue(got == major)
+        got = imhead(imagename=imagename, mode="get", hdkey="beamminor")
+        self.assertTrue(got == minor)
+        got = imhead(imagename=imagename, mode="get", hdkey="beampa")
+        self.assertTrue(got == pa)
+        got = imhead(imagename=imagename, mode="get", hdkey="bunit")
+        self.assertTrue(got == bunit)
+        got = imhead(imagename=imagename, mode="get", hdkey="masks")
+        self.assertTrue(got == ["mask0"])
+        got = imhead(imagename=imagename, mode="get", hdkey="shape")
+        self.assertTrue((got == shape).all())
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="ctype6"))
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="ctype0"))
+        got = imhead(imagename=imagename, mode="get", hdkey="ctype1")
+        self.assertTrue(got == "Right Ascension")
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crpix6"))
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crpix0"))
+        got = imhead(imagename=imagename, mode="get", hdkey="crpix1")
+        self.assertTrue(got == 0)
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crval6"))
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="crval0"))
+        got = imhead(imagename=imagename, mode="get", hdkey="crval3")
+        self.assertTrue(got == qa.quantity("1.415e9Hz"))
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cdelt6"))
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cdelt0"))
+        got = imhead(imagename=imagename, mode="get", hdkey="cdelt3")
+        self.assertTrue(got == qa.quantity("1000Hz"))
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cunit6"))
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="cunit0"))
+        got = imhead(imagename=imagename, mode="get", hdkey="cunit3")
+        self.assertTrue(got == "Hz")
+        got = imhead(imagename=imagename, mode="get", hdkey="datamin")
+        self.assertTrue(got == stats['min'])
+        got = imhead(imagename=imagename, mode="get", hdkey="datamax")
+        self.assertTrue(got == stats['max'])
+        got = imhead(imagename=imagename, mode="get", hdkey="minpos")
+        self.assertTrue(got == stats['minposf'].translate(None, ","))
+        got = imhead(imagename=imagename, mode="get", hdkey="maxpos")
+        self.assertTrue(got == stats['maxposf'].translate(None, ","))
+        got = imhead(imagename=imagename, mode="get", hdkey="minpixpos")
+        self.assertTrue((got == stats['minpos']).all())
+        got = imhead(imagename=imagename, mode="get", hdkey="maxpixpos")
+        self.assertTrue((got == stats['maxpos']).all())
         
-    def test_shape(self):
-        '''Imhead: CAS-3301: Keyword shape should be included in the output'''
-        shape = imhead(imagename=input_file,mode='get',hdkey='shape')
-        self.assertTrue(shape,'Keyword shape is missing')
-        self.assertTrue(shape['value'].all(), 'Not all values of shape exist.')
-        self.assertEqual(shape['value'][0],256, 'Value of shape[0] should be 256 and it is %s instead.'
-                         %shape['value'][0])
+        value = "fred"   
+        key = "userkey"     
+        imhead(imagename=imagename, mode="put", hdkey=key, hdvalue=value)
+        got = imhead(imagename=imagename, mode="get", hdkey=key)
+        self.assertTrue(got == value)
+
+
         
     def test_CAS4355(self):
         """ verify puthead can take sesigimal values where appropriate (CAS-4355)"""
