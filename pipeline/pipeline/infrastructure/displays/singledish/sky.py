@@ -47,10 +47,12 @@ class SDSkyDisplay(common.SDCalibrationDisplay):
                 for pol in pollist:
                     tsel = tb.query('IFNO==%s && POLNO==%s'%(spw,pol), sortlist='ELEVATION')
                     if tsel.nrows() == 0:
+                        tsel.close()
                         continue
 
                     sky = tsel.getcol('SPECTRA')
                     el = tsel.getcol('ELEVATION') * 180.0 / numpy.pi
+                    tsel.close()
                     if sky.shape[0] > 1:
                         title = 'Sky RMS vs Elevation'
                         sky_level = (sky * sky).mean(axis=0)
