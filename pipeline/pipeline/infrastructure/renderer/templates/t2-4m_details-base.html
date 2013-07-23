@@ -41,7 +41,11 @@ def get_logrecords(result, loglevel):
 ${next.body()}
 
 <div class="accordion" id="details-accordion">
-%if taskhelp: 
+
+<%doc>
+Help disabled until the task descriptions from John's presentation are added
+
+%if taskhelp:
 
 	<div class="accordion-group">
 	    <div class="accordion-heading">
@@ -56,6 +60,7 @@ ${next.body()}
 		</div>
 	</div>
 %endif
+</%doc>
 
 	<div class="accordion-group">
 	    <div class="accordion-heading">
