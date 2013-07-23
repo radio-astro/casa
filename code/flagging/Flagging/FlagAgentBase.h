@@ -177,7 +177,8 @@ public:
 		CPARAM,
 		PARAMERR,
 		SNR,
-		WEIGHT_SPECTRUM
+		WEIGHT_SPECTRUM,
+		FLOAT_DATA
 	};
 
 	enum iteration {

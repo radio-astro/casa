@@ -94,6 +94,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			       Quantity& pointsourcesens, 
 			       Double& relativesens, 
 			       Double& sumwt,
+			       Double& effectiveBandwidth,
+			       Double& effectiveIntegration,
+			       Int& nBaselines,
 			       Vector<Vector<Int> >& nData,
 			       Vector<Vector<Double> >& sumwtChan,
 			       Vector<Vector<Double> >& sumwtsqChan,
@@ -101,7 +104,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 {
   ROVisIter& vi(vs.iter());
   VisSetUtil::Sensitivity(vi, mssFreqSel, mssChanSel, pointsourcesens, relativesens, 
-			  sumwt, nData, sumwtChan, sumwtsqChan, sumInverseVarianceChan);
+			  sumwt, effectiveBandwidth, effectiveIntegration, nBaselines,
+			  nData, sumwtChan, sumwtsqChan, sumInverseVarianceChan);
 
 }
 void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
@@ -109,6 +113,9 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
 			     Quantity& pointsourcesens, 
 			     Double& relativesens, 
 			     Double& sumwt,
+			     Double& effectiveBandwidth,
+			     Double& effectiveIntegration,
+			     Int& nBaselines,
 			     Vector<Vector<Int> >& nData,
 			     Vector<Vector<Double> >& sumwtChan,
 			     Vector<Vector<Double> >& sumwtsqChan,
@@ -117,16 +124,22 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
   LogIO os(LogOrigin("VisSetUtil", "Sensitivity()", WHERE));
   
   sumwt=0.0;
+  Vector<Double> timeInterval, chanWidth;
   Double sumwtsq=0.0;
   Double sumInverseVariance=0.0;
   //  Vector<Vector<Double> > sumwtChan, sumwtsqChan, sumInverseVarianceChan;
   VisBuffer vb(vi);
+  Int nd=0,totalRows=0,spw=0;
+  nBaselines=0;
+  effectiveBandwidth=effectiveIntegration=0.0;
+  Vector<Double> bwList;
+  bwList.resize(mssChanSel.shape()(0)); bwList=0.0;
 
   sumwtChan.resize(mssChanSel.shape()(0));
   sumwtsqChan.resize(mssChanSel.shape()(0));
   sumInverseVarianceChan.resize(mssChanSel.shape()(0));
   nData.resize(mssChanSel.shape()(0));
-  for (Int spw=0; spw<mssChanSel.shape()(0); spw++)
+  for (spw=0; spw<mssChanSel.shape()(0); spw++)
     {
       Int nc=mssChanSel(spw,2)-mssChanSel(spw,1)+1;
       for (int c=0; c<nc; c++)
@@ -142,36 +155,66 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
   // sumInverseVarianceChan=0.0;
 
   // Now iterate through the data
+  Int nant=vi.msColumns().antenna().nrow();
+  Matrix<Int> baselines(nant,nant); baselines=0;
+  Vector<Int> a1,a2;
+  Vector<Double> t0, spwIntegTime;
+  t0.resize(mssChanSel.shape()(0));
+  spwIntegTime.resize(mssChanSel.shape()(0));
+  t0 = spwIntegTime = 0.0;
+
   for (vi.originChunks();vi.moreChunks();vi.nextChunk()) 
     {
       for (vi.origin();vi.more();vi++) 
 	{
 	  Int nRow=vb.nRow();
 	  Int nChan=vb.nChannel();
-	  Int spw=vb.spectralWindow();
+	  Int spwIndex;
+	  spw=vb.spectralWindow();
+	  spwIndex=-1;
+	  for (Int i=0;i<mssChanSel.shape()(0); i++)
+	    if (mssChanSel(i,0) == spw) {spwIndex=i; break;}
+	  if (spwIndex == -1)
+	    os << "Internal error:  Could not locate the SPW index in the list of selected SPWs." 
+	       << LogIO::EXCEPTION;
+
+	  timeInterval.assign(vb.timeInterval());
 	  Vector<Bool> rowFlags=vb.flagRow();
 	  Matrix<Bool> flag = vb.flag();
-	  
+	  //	  cerr << "SPW shape = " << vb.msColumns().spectralWindow().chanWidth().shape(spw) << " ";
+	  chanWidth.assign(vb.msColumns().spectralWindow().chanWidth().get(spw));
+	  a1.assign(vb.antenna1()); a2.assign(vb.antenna2());
+
 	  for (Int row=0; row<nRow; row++) 
 	    {
 	      // TBD: Should probably use weight() here, which updates with calibration
 	      if (!rowFlags(row))
 		{
-		  Double variance=(vb.sigma()(row));
-		  for (Int chn=0; chn<nChan; chn++) 
+		  //		  Double variance=square(vb.sigma()(row));
+		  Double variance=1.0/(vb.weight()(row));
+		  if (abs(vb.time()(row) - t0(spwIndex) > timeInterval(row)))
 		    {
-		      if(!flag(chn,row)&&variance>0.0) 
+		      t0(spwIndex)=vb.time()(row);
+		      spwIntegTime(spwIndex) += timeInterval(row);
+		    }
+		  totalRows++;
+		  baselines(a1(row), a2(row))++;
+		  for (Int chn=mssChanSel(spwIndex,1); chn<mssChanSel(spwIndex,2); chn+=mssChanSel(spwIndex,3)) 
+		    {
+		      if(!flag(chn,row)&&(variance>0.0))
 			{
-			  sumwt+=vb.imagingWeight()(chn,row);
-			  //sumwtsq+=square(vb.imagingWeight()(chn,row))*variance;
-			  sumwtsq+=square(vb.imagingWeight()(chn,row));
+			  sumwt+=vb.imagingWeight()(chn,row)*variance;
+			  sumwtsq+=square(vb.imagingWeight()(chn,row)*variance);
+			  //			  sumwtsq+=square(vb.imagingWeight()(chn,row));
 			  sumInverseVariance+=1.0/variance;
 			  
-			  sumwtChan(spw)(chn) += vb.imagingWeight()(chn,row);
-			  //sumwtsqChan(spw)(chn)+=square(vb.imagingWeight()(chn,row))*variance;
-			  sumwtsqChan(spw)(chn)+=square(vb.imagingWeight()(chn,row));
-			  
-			  (nData(spw)(chn))++;
+			  sumwtChan(spwIndex)(chn) += vb.imagingWeight()(chn,row);
+			  //sumwtsqChan(spwIndex)(chn)+=square(vb.imagingWeight()(chn,row))*variance;
+			  sumwtsqChan(spwIndex)(chn)+=square(vb.imagingWeight()(chn,row));
+
+			  bwList(spwIndex) += abs(chanWidth(chn));
+			  (nData(spwIndex)(chn))++;
+			  nd++;
 			}
 		    }
 		}
@@ -179,12 +222,29 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
 	}
     }
 
-  // for (Int spw=0; spw<mssChanSel.shape()(0); spw++)
-  //   {
-  //     cerr << "Spw: " << spw << " " << sumwtChan(spw)  << " " 
-  // 	   << sumwtsqChan(spw) <<  " "
-  // 	   << sumInverseVarianceChan(spw) << endl;
-  //   }
+  if (totalRows == 0)
+    os << "Cannot calculate sensitivty:  No unflagged rows found" << LogIO::EXCEPTION;
+
+  for (Int spwndx=0; spwndx<bwList.nelements(); spwndx++)
+    {
+      // cerr << spwndx << " " << bwList(spwndx) << " " << nData(spwndx) << endl;
+      // cerr << spwndx << " " << spwIntegTime(spwndx) << " " << endl;
+      spw=mssChanSel(spwndx,0); // Get the SPW ID;
+      chanWidth.assign(vi.msColumns().spectralWindow().chanWidth().get(spw)); // Extract the list of chan widths
+
+      Int nchan=nData(spwndx).nelements();
+      // If a channel from the current SPW was used, uses its width
+      // for effective bandwidth calculation.
+      for (Int j=0; j<nchan; j++)  
+	if (nData(spwndx)(j) > 0)
+	  effectiveBandwidth += abs(chanWidth(j));
+      effectiveIntegration += spwIntegTime(spwndx)/bwList.nelements();
+    }
+
+  for (Int i=0; i<nant; i++)
+    for (Int j=0; j<nant; j++)
+      if (baselines(i,j) > 0)
+	nBaselines++;
 
 
   if(sumwt==0.0) {
@@ -196,9 +256,18 @@ void VisSetUtil::Sensitivity(ROVisIter &vi, Matrix<Double>& mssFreqSel,
        << "Perhaps you need to weight the data" << LogIO::EXCEPTION;
   }
 
+  // Double naturalsens=1.0/sqrt(sumInverseVariance);
+  // pointsourcesens=Quantity(sqrt(sumwtsq)/sumwt, "Jy");
+  // relativesens=sqrt(sumwtsq)/sumwt/naturalsens;
+
+  //  cerr << "sumwt, sumwtsq, nd: " << sumwt << " " << sumwtsq << " " << nd << endl;
+  relativesens=sqrt(nd*sumwtsq)/sumwt;
   Double naturalsens=1.0/sqrt(sumInverseVariance);
-  pointsourcesens=Quantity(sqrt(sumwtsq)/sumwt, "Jy");
-  relativesens=sqrt(sumwtsq)/sumwt/naturalsens;
+  Double KB=1.3806488e-23;
+  pointsourcesens=Quantity((10e26*2*KB*relativesens/sqrt(nBaselines*effectiveIntegration*effectiveBandwidth)), "Jy m^2/K");
+
+  //  cerr << "Pt src. = " << pointsourcesens << " " << integTime << " " << bandWidth/totalRows << endl;
+  //  cerr << baselines << endl;
 }
 void VisSetUtil::HanningSmooth(VisSet &vs, const String& dataCol, const Bool& doFlagAndWeight)
 {

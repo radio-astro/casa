@@ -244,7 +244,7 @@
          <item>
           <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>separation</string>
+            <string>length</string>
            </property>
           </widget>
          </item>

@@ -813,6 +813,7 @@ protected:
 	map<Int,Int> inputOutputScanIntentIndexMap_p;
 	map<Int,Int> inputOutputFieldIndexMap_p;
 	map<Int,Int> inputOutputSPWIndexMap_p;
+	map<Int,Int> inputOutputAntennaIndexMap_p;
 	map<Int,Int> outputInputSPWIndexMap_p;
 
 	// Frequency transformation parameters

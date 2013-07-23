@@ -402,61 +402,51 @@ namespace casa {
 			return result;
 		}
 
-		void PVLine::draw_pv_line( PixelCanvas *pc, bool selected ) {
-			double distance_from_line = ((double)display_width - 1.0) / 2.0;
+        void PVLine::draw_pv_line( PixelCanvas *pc, bool selected ) {
+            double distance_from_line = ((double)display_width - 1.0) / 2.0;
 
-			int x1, y1, x2, y2;
-			if ( selected == false || distance_from_line <= 1 ) {
-				try {
-					linear_to_screen( wc_, pt1_x, pt1_y, pt2_x, pt2_y, x1, y1, x2, y2 );
-					// linear_to_screen( wc_, center_x, center_y, cx, cy );
-				} catch(...) {
-					return;
-				}
+            int x1, y1, x2, y2;
 
-				pushDrawingEnv( region::SolidLine, 2 );
-				pc->drawLine( x1, y1, x2, y2 );
-				popDrawingEnv( );
-			} else {
-				const double small = 0.000001;
-				double rise = (pt2_y-pt1_y);
-				double run = (pt2_x-pt1_x);
+            const double small = 0.000001;
+            double rise = (pt2_y-pt1_y);
+            double run = (pt2_x-pt1_x);
 
-				if ( fabs(run) <= small ) {
+            if ( fabs(run) <= small ) {
 
-					// vertical line...
-					try {
-						linear_to_screen( wc_, pt1_x-distance_from_line, pt1_y, pt2_x-distance_from_line, pt2_y, x1, y1, x2, y2 );
-					} catch(...) { return; }
-					pc->drawLine( x1, y1, x2, y2 );
-					try {
-						linear_to_screen( wc_, pt1_x+distance_from_line, pt1_y, pt2_x+distance_from_line, pt2_y, x1, y1, x2, y2 );
-					} catch(...) { return; }
-					pc->drawLine( x1, y1, x2, y2 );
+                // vertical line...
+                try {
+                    linear_to_screen( wc_, pt1_x-distance_from_line, pt1_y, pt2_x-distance_from_line, pt2_y, x1, y1, x2, y2 );
+                } catch(...) { return; }
+                pc->drawLine( x1, y1, x2, y2 );
+                try {
+                    linear_to_screen( wc_, pt1_x+distance_from_line, pt1_y, pt2_x+distance_from_line, pt2_y, x1, y1, x2, y2 );
+                } catch(...) { return; }
+                pc->drawLine( x1, y1, x2, y2 );
 
-				} else {
 
-					double slope = rise / run;
+            } else {
 
-					std::vector<double> off1 = calculate_offset_points(slope, distance_from_line, pt1_x, pt1_y);
-					std::vector<double> off2 = calculate_offset_points(slope, distance_from_line, pt2_x, pt2_y);
+                double slope = rise / run;
 
-					try {
-						linear_to_screen( wc_, off1[0], off1[1], off2[0], off2[1], x1, y1, x2, y2 );
-					} catch(...) {
-						return;
-					}
-					pc->drawLine( x1, y1, x2, y2 );
-					try {
-						linear_to_screen( wc_, off1[2], off1[3], off2[2], off2[3], x1, y1, x2, y2 );
-					} catch(...) {
-						return;
-					}
-					pc->drawLine( x1, y1, x2, y2 );
+                std::vector<double> off1 = calculate_offset_points(slope, distance_from_line, pt1_x, pt1_y);
+                std::vector<double> off2 = calculate_offset_points(slope, distance_from_line, pt2_x, pt2_y);
 
-				}
-			}
-		}
+                try {
+                    linear_to_screen( wc_, off1[0], off1[1], off2[0], off2[1], x1, y1, x2, y2 );
+                } catch(...) {
+                    return;
+                }
+                pc->drawLine( x1, y1, x2, y2 );
+                try {
+                    linear_to_screen( wc_, off1[2], off1[3], off2[2], off2[3], x1, y1, x2, y2 );
+                } catch(...) {
+                    return;
+                }
+                pc->drawLine( x1, y1, x2, y2 );
+
+            }
+        }
+
 
 		void PVLine::drawRegion( bool selected ) {
 			if ( wc_ == 0 || wc_->csMaster() == 0 ) return;

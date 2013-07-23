@@ -630,8 +630,12 @@ namespace casa {
 		calc.setVerbose(False);
 		calc.setList(False);
 		Record result = calc.calculate();
-		blcVector = result.asArrayInt( "blc");
-		trcVector = result.asArrayInt( "trc");
+		Vector<int> blc(result.asArrayInt( "blc"));
+		blcVector.resize(blc.size( ));
+		blcVector = blc;
+		Vector<int> trc(result.asArrayInt( "trc"));
+		trcVector.resize(trc.size( ));
+		trcVector = trc;
 	}
 
 	QString FindSourcesDialog::getImagePixelBox() const {

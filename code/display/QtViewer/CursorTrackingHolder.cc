@@ -159,13 +159,15 @@ namespace casa {
         QSize result(size( ));
         QList<TrackBox*> trkBoxes = container->findChildren<TrackBox*>();
         if ( trkBoxes.size( ) > 0 ) {
-             result.setHeight( TrackBox::heightHeader( ) );
-             for ( int i=0; i < trkBoxes.size( ); ++i ) {
-                if ( trkBoxes[i]->isChecked( ) )
-                    result.setHeight(result.height( ) + TrackBox::heightOpen( ) );
-                else
-                    result.setHeight(result.height( ) + TrackBox::heightClosed( ) );
-             }
+            result.setHeight( TrackBox::heightHeader( ) );
+            for ( int i=0; i < trkBoxes.size( ); ++i ) {
+                if ( trkBoxes[i]->isVisible( ) ) {
+                    if ( trkBoxes[i]->isChecked( ) )
+                        result.setHeight(result.height( ) + TrackBox::heightOpen( ) );
+                    else
+                        result.setHeight(result.height( ) + TrackBox::heightClosed( ) );
+                }
+            }
         }
         return result;
     }

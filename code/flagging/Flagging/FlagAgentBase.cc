@@ -1255,6 +1255,14 @@ FlagAgentBase::setAgentParameters(Record config)
 			// Request to pre-load WeightSpectrum
 			flagDataHandler_p->preLoadColumn(vi::WeightSpectrum);
 		}
+		else if (dataColumn_p.compare("FLOAT_DATA") == 0)
+
+		{
+			dataReference_p = DATA;
+
+			// Request to pre-load ObservedCube
+			flagDataHandler_p->preLoadColumn(vi::VisibilityCubeObserved);
+		}
 		else
 		{
 			*logger_p << LogIO::WARN <<
@@ -1297,7 +1305,8 @@ FlagAgentBase::setAgentParameters(Record config)
 		// It should fall back to the default REAL
 		if (	(dataColumn_p.compare("FPARAM") == 0) or
 				(dataColumn_p.compare("SNR") == 0) or
-				(dataColumn_p.compare("WEIGHT_SPECTRUM") == 0))
+				(dataColumn_p.compare("WEIGHT_SPECTRUM") == 0) or
+				(dataColumn_p.compare("FLOAT_DATA") == 0))
 		{
 			// Check if expression is one of the supported operators
 			if (	(expression_p.find("IMAG") != string::npos) or

@@ -132,6 +132,7 @@ void MSTransformDataHandler::initialize()
 	inputOutputScanIntentIndexMap_p.clear();
 	inputOutputFieldIndexMap_p.clear();
 	inputOutputSPWIndexMap_p.clear();
+	inputOutputAntennaIndexMap_p.clear();
 	outputInputSPWIndexMap_p.clear();
 
 	// Frequency transformation parameters
@@ -836,6 +837,15 @@ void MSTransformDataHandler::open()
     			<< "State " << stateRemapperIter->first << " mapped to " << stateRemapperIter->second << LogIO::POST;
     }
 
+    // jagonzal (CAS-5349): Reindex antenna columns when there is antenna selection
+    if (!baselineSelection_p.empty())
+    {
+    	for (uInt oldIndex=0;oldIndex<splitter_p->antNewIndex_p.size();oldIndex++)
+    	{
+    		inputOutputAntennaIndexMap_p[oldIndex] = splitter_p->antNewIndex_p[oldIndex];
+    	}
+    }
+
 
 	selectedInputMs_p = &(splitter_p->mssel_p);
 	outputMs_p = &(splitter_p->msOut_p);
@@ -991,7 +1001,6 @@ void MSTransformDataHandler::setup()
 
 	//// Determine the frequency transformation methods to use ////
 
-
 	// Regrid SPW subtable
 	if (combinespws_p)
 	{
@@ -1053,12 +1062,16 @@ void MSTransformDataHandler::setup()
 		writeOutputPlanesFloat_p = &MSTransformDataHandler::writeOutputPlanesInSlices;
 
 		separateSpwSubtable();
+
+		// CAS-5404. DDI sub-table has to be re-indexed after separating SPW sub-table
+		reindexDDISubTable();
 	}
 	else
 	{
 		writeOutputPlanesComplex_p = &MSTransformDataHandler::writeOutputPlanesInBlock;
 		writeOutputPlanesFloat_p = &MSTransformDataHandler::writeOutputPlanesInBlock;
 	}
+
 
 	// Check what columns have to filled
 	checkFillFlagCategory();
@@ -1448,6 +1461,30 @@ void MSTransformDataHandler::regridSpwSubTable()
     							False // verbose
             				);
 
+        // Compare input and output width to determine if a pre-averaging step is necessary
+        Double avgCombinedWidth = 0;
+        for (uInt chanIdx=0;chanIdx<inputChanWidth.size();chanIdx++)
+        {
+        	avgCombinedWidth += inputChanWidth(chanIdx);
+        }
+        avgCombinedWidth /= inputChanWidth.size();
+
+        Double avgRegriddedWidth = 0;
+        for (uInt chanIdx=0;chanIdx<regriddedCHAN_WIDTH.size();chanIdx++)
+        {
+        	avgRegriddedWidth += regriddedCHAN_WIDTH(chanIdx);
+        }
+        avgRegriddedWidth /= regriddedCHAN_WIDTH.size();
+
+        Int width =  (Int)floor(avgRegriddedWidth/avgCombinedWidth + 0.5);
+
+        if (width >= 2)
+        {
+        	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+        			<< "Ratio between input and output width for SPW " << spwId << " is " << width
+        			<< ". Activating pre-channel averaging"<< LogIO::POST;
+        }
+
         // Create output SPW structure
         spwInfo outputSpw = spwInfo(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
 
@@ -1669,6 +1706,31 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     						velocityType_p,
     						True // verbose
     					);
+
+    // Compare input and output width to determine if a pre-averaging step is necessary
+    Double avgCombinedWidth = 0;
+    for (uInt chanIdx=0;chanIdx<combinedCHAN_WIDTH.size();chanIdx++)
+    {
+    	avgCombinedWidth += combinedCHAN_WIDTH(chanIdx);
+    }
+    avgCombinedWidth /= combinedCHAN_WIDTH.size();
+
+    Double avgRegriddedWidth = 0;
+    for (uInt chanIdx=0;chanIdx<regriddedCHAN_WIDTH.size();chanIdx++)
+    {
+    	avgRegriddedWidth += regriddedCHAN_WIDTH(chanIdx);
+    }
+    avgRegriddedWidth /= regriddedCHAN_WIDTH.size();
+
+    Int width =  (Int)floor(avgRegriddedWidth/avgCombinedWidth + 0.5);
+
+    if (width >= 2)
+    {
+    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    			<< "Ratio between input and output width is " << width
+    			<< ". Activating pre-channel averaging"<< LogIO::POST;
+    }
+
 
 	// Create output SPW structure
 	spwInfo outputSpw = spwInfo(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
@@ -1897,22 +1959,37 @@ void MSTransformDataHandler::reindexDDISubTable()
 {
     if(Table::isReadable(outputMs_p->dataDescriptionTableName()) and !outputMs_p->dataDescription().isNull())
     {
-    	MSDataDescription msSubtable = outputMs_p->dataDescription();
-    	MSDataDescColumns tableCols(msSubtable);
+    	// Access DDI sub-table
+    	MSDataDescription ddiTable = outputMs_p->dataDescription();
+    	MSDataDescColumns ddiCols(ddiTable);
 
-        // Delete all rows except for the first one
-        uInt rowsToDelete = tableCols.nrow()-1;
-        for(uInt row_idx=rowsToDelete; row_idx>0; row_idx--)
-        {
-        	msSubtable.removeRow(row_idx);
-        }
+    	// Add a new row for each of the separated SPWs
+    	uInt rowIndex = ddiCols.nrow();
+    	for (uInt spw_i=0; spw_i<nspws_p; spw_i++)
+    	{
+    		// Add row
+    		ddiTable.addRow(1,True);
 
-        // Set SPW in the remaining row
-        ScalarColumn<Int> spwCol = tableCols.spectralWindowId();
-        spwCol.put(0,0);
+    	    // Copy polID and flagRow from the first original SPW
+    		ddiCols.polarizationId().put(rowIndex,ddiCols.polarizationId()(0));
+    		ddiCols.flagRow().put(rowIndex,ddiCols.flagRow()(0));
+
+    		// Set SPW id separately
+    		ddiCols.spectralWindowId().put(rowIndex,ddiStart_p+spw_i);
+
+    		rowIndex += 1;
+    	}
+
+        // Delete the old rows
+    	uInt rowsToDelete = ddiCols.nrow()-nspws_p;
+    	for(uInt rowsDeleted=0; rowsDeleted<rowsToDelete; rowsDeleted++)
+    	{
+    		ddiTable.removeRow(0);
+    	}
 
         // Flush changes
         outputMs_p->flush(True);
+
     }
     else
     {
@@ -2283,7 +2360,6 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 	Bool modelDataChecked = False;
 	if (datacolumn_p.contains("ALL"))
 	{
-		modelDataChecked = True;
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::DATA)))
 		{
 			if (!mainColSet)
@@ -2308,16 +2384,26 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 								"Adding CORRECTED_DATA column to output MS "<< LogIO::POST;
 		}
 
-		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+		if ((inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
 		{
+			modelDataChecked = True;
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
 				mainColSet = True;
 			}
+
 			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-								"Adding MODEL_DATA column to output MS "<< LogIO::POST;
+			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+									"Adding MODEL_DATA column to output MS "<< LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+							"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
+			}
 		}
 
 		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::FLOAT_DATA)))
@@ -2487,44 +2573,37 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 			dataColMap_p[MS::CORRECTED_DATA] = MS::DATA;
 			correctedToData_p = True;
 			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-								"Adding DATA column to output MS from input CORRECTED_DATA column"<< LogIO::POST;
+								"Adding DATA column to output MS as DATA from input CORRECTED_DATA column"<< LogIO::POST;
 		}
 		else
 		{
 			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
 					"CORRECTED_DATA column requested but not available in input MS "<< LogIO::POST;
 		}
-
-		if (realmodelcol_p)
-		{
-			modelDataChecked = True;
-			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
-			{
-				dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-							"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
-				datacolumn_p = String("DATA,MODEL");
-			}
-			else
-			{
-				logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-						"MODEL_DATA column requested but not available in input MS "<< LogIO::POST;
-			}
-		}
 	}
 	else if (datacolumn_p.contains("MODEL"))
 	{
-		modelDataChecked = True;
-		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+
+		if ((inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA))) or realmodelcol_p)
 		{
+			modelDataChecked = True;
 			if (!mainColSet)
 			{
 				mainColumn_p = MS::MODEL_DATA;
 				mainColSet = True;
 			}
+
 			dataColMap_p[MS::MODEL_DATA] = MS::DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-								"Adding DATA column to output MS from input MODEL_DATA column"<< LogIO::POST;
+			if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+									"Adding MODEL_DATA column to output MS as DATA "<< LogIO::POST;
+			}
+			else
+			{
+				logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+							"Adding MODEL_DATA column to output MS as DATA from input virtual MODEL_DATA column"<< LogIO::POST;
+			}
 		}
 		else
 		{
@@ -2541,18 +2620,10 @@ void MSTransformDataHandler::checkDataColumnsToFill()
 
 	if ((realmodelcol_p) and (!modelDataChecked))
 	{
-		if (inputMs_p->tableDesc().isColumn(MS::columnName(MS::MODEL_DATA)))
-		{
-			dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
-			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-						"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
-			datacolumn_p += String(",MODEL");
-		}
-		else
-		{
-			logger_p << LogIO::WARN << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
-					"MODEL_DATA column requested but not available in input MS "<< LogIO::POST;
-		}
+		dataColMap_p[MS::MODEL_DATA] = MS::MODEL_DATA;
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) <<
+					"Adding MODEL_DATA column to output MS from input virtual MODEL_DATA column"<< LogIO::POST;
+		datacolumn_p += String(",MODEL");
 	}
 
 	return;
@@ -2981,10 +3052,23 @@ void MSTransformDataHandler::fillIdCols(vi::VisBuffer2 *vb,RefRows &rowRef)
 			writeRollingVector(tmpVectorInt,outputMsCols_p->dataDescId(),rowRef,nspws_p);
 		}
 
+		// Antenna
+		if (inputOutputAntennaIndexMap_p.size())
+		{
+			reindexVector(vb->antenna1(),tmpVectorInt,inputOutputAntennaIndexMap_p,False);
+			writeVector(tmpVectorInt,outputMsCols_p->antenna1(),rowRef,nspws_p);
+			reindexVector(vb->antenna2(),tmpVectorInt,inputOutputAntennaIndexMap_p,False);
+			writeVector(tmpVectorInt,outputMsCols_p->antenna2(),rowRef,nspws_p);
+		}
+		else
+		{
+			writeVector(vb->antenna1(),outputMsCols_p->antenna1(),rowRef,nspws_p);
+			writeVector(vb->antenna2(),outputMsCols_p->antenna2(),rowRef,nspws_p);
+		}
+
 		// Non re-indexable columns
 		writeVector(vb->scan(),outputMsCols_p->scanNumber(),rowRef,nspws_p);
-		writeVector(vb->antenna1(),outputMsCols_p->antenna1(),rowRef,nspws_p);
-		writeVector(vb->antenna2(),outputMsCols_p->antenna2(),rowRef,nspws_p);
+
 		writeVector(vb->feed1(),outputMsCols_p->feed1(),rowRef,nspws_p);
 		writeVector(vb->feed2(),outputMsCols_p->feed2(),rowRef,nspws_p);
 		writeVector(vb->processorId(),outputMsCols_p->processorId(),rowRef,nspws_p);
