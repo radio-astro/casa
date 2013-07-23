@@ -3185,6 +3185,34 @@ class cleanhelper:
             ia.close()
  
     def resmooth(self, model, residual, restored, minOrMax):
+        if(minOrMax=="common"):
+            ia.open(restored)
+            beam=ia.restoringbeam();
+            if(not beam.has_key('nChannels')):
+                return 
+            combeam=ia.commonbeam()
+            ia.done()
+            ia.fromimage(outfile='__restored-copy', infile=restored, overwrite=True)
+            ia.open('__restored-copy')
+            ib=ia.convolve2d(outfile=restored, major='', minor='', pa='', targetres=True, beam=combeam, overwrite=True)
+            ib.done()
+            ia.remove()
+            ia.done()
+            ia.fromimage(outfile='__residual-copy', infile=residual, overwrite=True)
+            ia.open('__residual-copy')
+            ###need to set a beam first to go around CAS-5433 and then loop
+            ia.setrestoringbeam(major=beam['beams']['*0']['*0']['major'], minor=beam['beams']['*0']['*0']['minor'], pa=beam['beams']['*0']['*0']['positionangle'], channel=0, polarization=0)
+            nchan=beam['nChannels']
+            for k in range(nchan):
+                chstr='*'+str(k)
+                ia.setrestoringbeam(beam=beam['beams'][chstr]['*0'], channel=k, polarization=0)
+            ib=ia.convolve2d(outfile=residual, major='', minor='', pa='', targetres=True, beam=combeam, overwrite=True)
+            ib.done()
+            ia.remove()
+            ia.done()
+            return
+
+        ###############for min or max
         ia.open(restored)
         beams=ia.restoringbeam()
         if(not beams.has_key('beams')):
