@@ -188,7 +188,7 @@ class SDSpectralMapDisplay(SDImageDisplay):
             valid_data = data[valid_index[0],valid_index[1],chan0:chan1]
             ListMax = valid_data.max(axis=1)
             ListMin = valid_data.min(axis=1)
-            if len(ListMax) == 0: return
+            if len(ListMax) == 0: continue 
             if is_baselined:
                 ymax = numpy.sort(ListMax)[len(ListMax) - len(ListMax)/10 - 1]
                 ymin = numpy.sort(ListMin)[len(ListMin)/10]
