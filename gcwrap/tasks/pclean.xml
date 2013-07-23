@@ -472,6 +472,7 @@
         alg -- Deconvolution algorithm
                Options: 'clark', 'hogbom', 'multiscale'
                default: 'clark'
+                Note : For multi-term wideband imaging (nterms>1), please use alg='multiscale'
 
 	 cyclefactor -- Controls the threshhold at which the
                    deconvolution cycle will pause to degrid and subtract the
@@ -517,6 +518,11 @@
                NOTE: mode='velocity' or 'channel' or 'frequency'
                are aliased to mode='cube' for backward compatibility 
 	       and comfort.
+
+  &gt;&gt;&gt; mode='continuum' expandable parameters
+           nterms -- Number of terms in the spectral Taylor polynomial fit.
+              default: 1  ( standard multi-frequency-synthesis )
+              Note : for nterms>1, please use alg='multiscale'
 
   &gt;&gt;&gt; mode='cube' expandable parameters
            nchan -- Total number of channels in the output image.
