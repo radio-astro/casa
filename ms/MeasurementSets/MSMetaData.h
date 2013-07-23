@@ -296,6 +296,8 @@ public:
 
 	virtual vector<uInt> getBBCNos() = 0;
 
+	virtual std::map<uInt, std::set<uInt> > getBBCNosToSpwMap() = 0;
+
 	virtual vector<String> getSpwNames() = 0;
 
 	// the returned map are the average intervals for each spectral window for the
