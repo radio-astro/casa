@@ -69,6 +69,10 @@ FluxStdSrcs::FluxStdSrcs()
                                   "J0437+2940").vector();
   directions_p[FSS::THREEC123] = MDirection(MVDirection(1.2089586878736391, 0.51784800786636209),
 					     MDirection::J2000);
+  names_p[FSS::THREEC380] = RVS4("3C380", "1828+487", "1829+487",
+                                  "J1829+4845").vector();          // Jhhmm+ddm, CAS-2020
+  directions_p[FSS::THREEC380] = MDirection(MVDirection(4.84123669, 0.85078092),
+                                             MDirection::J2000);
   directions_p[FSS::UNKNOWN_SOURCE] = MDirection();	// Default.
 }
 

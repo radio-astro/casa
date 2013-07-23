@@ -128,13 +128,15 @@ public:
 // Add one degenerate axis for each of the specified coordinate types.
 // If the outfile string is given the new image is a PagedImage.
 // If the outfile string is empty, the new image is a TempImage.
+// If silent==True, existing axes are silently ignored.
    static void addDegenerateAxes (
 		   LogIO& os,
 		   PtrHolder<ImageInterface<Float> >& outImage,
 		   const ImageInterface<Float>& inImage,
 		   const String& outFile, Bool direction,
 		   Bool spectral, const String& stokes,
-		   Bool linear, Bool tabular, Bool overwrite
+		   Bool linear, Bool tabular, Bool overwrite,
+		   Bool silent=False
    );
 
 // Function to bin up (average data) one axis of an N-D MaskedArray. The interface
