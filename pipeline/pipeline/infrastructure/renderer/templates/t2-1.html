@@ -5,37 +5,21 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 %>
 <%inherit file="base.html"/>
 
+<!-- include pipeline JS for access to UTILS module -->
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+
 <script>
 $(document).ready(function() {
-	var fakeframe = $('div#fakeframe');
+	// sidebar may need to start/stop scrolling if window is resized
+	$(window).resize(UTILS.calculateAffix);
 
-	var loadFakeframe = function(href) {
-		fakeframe.load(href, function(response, status, xhr) {
-			if (status == "error") {
-				var msg = "Sorry but there was an error: ";
-				fakeframe.html(msg + xhr.status + " " + xhr.statusText);
-			};
-			if (status == "success") {
-				// add click listener to all the new replace anchors we just
-				// loaded into the document
-				$("a.replace").click(function(evt) {
-					evt.preventDefault();
-					var href = evt.target.parentElement.href;
-					loadFakeframe(href)
-				});
-			};
-		});
-	};
-
-//	var src = fakeframe.data('src');
-//	loadFakeframe(src);
-
-	// Load MS details into panel is 'ms=x' given in URL 
+	// Load MS details into panel is 'ms=x' given in URL
  	var msName = $.url().param('ms').replace(/[^a-zA-Z0-9]/gi, '_');
 	var msLink = 'a#link_ms' + msName;
 	var msDetailsUrl = $(msLink).data('fakeframehref');
+	var fakeframe = $('div#fakeframe');
 	if (typeof msDetailsUrl != 'undefined') {
-		loadFakeframe(msDetailsUrl);
+		UTILS.loadFakeframe(fakeframe, msDetailsUrl);
 		$(msLink).parent().addClass("active");
 	};
 	

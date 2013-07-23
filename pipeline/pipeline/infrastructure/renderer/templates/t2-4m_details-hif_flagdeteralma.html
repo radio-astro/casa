@@ -97,7 +97,7 @@ def agent_data(agent, ms):
 		abspath = os.path.join(pcontext.report_dir, relpath)
 		if os.path.exists(abspath):
 			num_lines = sum(1 for line in open(abspath))
-			return ('<td><a class="replace" href="%s">%s</a></td>'
+			return ('<td><a class="replace-pre" href="%s">%s</a></td>'
 					'<td>%s</td>' % (relpath, flagfile, num_lines))
 		else:
 			return '<td>%s</td><td>N/A</td>' % flagfile		

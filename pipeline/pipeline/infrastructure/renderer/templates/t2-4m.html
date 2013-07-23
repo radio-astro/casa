@@ -5,58 +5,20 @@ import pipeline.infrastructure.renderer.qa2adapter as qa2
 %>
 <%inherit file="base.html"/>
 
+<!-- include pipeline JS for access to UTILS module -->
+<script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
+
 <script>
 $(document).ready(function(){
-	var fakeframe = $('div#fakeframe');
-
-	// The sidebar should scroll if the tasks stretch off-screen.
-	var calculateAffix = function() {
-	    if ($(window).height() < ($("#nav-wrapper").height() + 60)) {
-		    // expand the div#content height so that the bottom of the well has
-		    // a margin
-		    $('#content').height(Math.max($("#content").height(), $("#nav-wrapper").height()+40));
-
-		  	$('#nav-wrapper').affix({
-				offset: {
-				    top: function () { 
-					    return Math.abs($("#nav-wrapper").height() - $(window).height() + 100);
-					}
-				}
-			});
-	    } else {
-			$(window).off('.affix');
-			$("#nav-wrapper").removeData('affix').removeClass('affix affix-top affix-bottom');
-	    };
-	};
-
-	// sidebar may need to start/stop scrolling if window is resized 
-	$(window).resize(calculateAffix);
-	
-	var loadFakeframe = function(href) {
-		fakeframe.load(href, function(response, status, xhr) {
-			if (status == "error") {
-				var msg = "Sorry but there was an error: ";
-				fakeframe.html(msg + xhr.status + " " + xhr.statusText);
-			};
-			if (status == "success") {
-				// add click listener to all the new replace anchors we just
-				// loaded into the document
-				$("a.replace").click(function(evt) {
-					evt.preventDefault();
-					var href = evt.target.href;
-					loadFakeframe(href)
-				});
-				
-				calculateAffix();
-			};
- 		});
-	};
+	// sidebar may need to start/stop scrolling if window is resized
+	$(window).resize(UTILS.calculateAffix);
 
 	// Load stage details into panel is 'stage=x' given in URL 
  	var stageNum = $.url().param('stage');
 	var stageDetailsUrl = $('a#link_stage' + stageNum).data('fakeframehref');
+    var fakeframe = $('div#fakeframe');
 	if (typeof stageDetailsUrl != 'undefined') {
-		loadFakeframe(stageDetailsUrl);
+    	UTILS.loadFakeframe(fakeframe, stageDetailsUrl);
 		$('a#link_stage' + stageNum).parent().addClass("active");
 	};	
 });

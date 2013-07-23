@@ -129,8 +129,9 @@ except Exception, e:
 	<tbody>
 	    % for file,reports in htmlreports.items():
 	    <tr>
-	        <td><a class="replace" href="${reports[0]}">${file}</a></td>
-	        <td><a class="replace" href="${reports[1]}">printTsysFlags</a></td>
+	        <td><a class="replace-pre" href="${reports[0]}">${file}</a></td>
+	        <td><a class="replace-pre"
+                   href="${reports[1]}">printTsysFlags</a></td>
 	    </tr>
 	    % endfor
 	</tbody>

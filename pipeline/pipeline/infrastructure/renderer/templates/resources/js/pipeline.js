@@ -71,6 +71,65 @@ UTILS = (function () {
         });
     };
 
+    module.loadFakeframe = function (fakeframe, href, insertPre) {
+        insertPre = insertPre || false;
+
+        $(fakeframe).load(href, function (response, status, xhr) {
+            if (status == "error") {
+                var msg = "Sorry but there was an error: ";
+                $(fakeframe).html(msg + xhr.status + " " + xhr.statusText);
+            }
+
+            if (status == "success") {
+                // add click listener to all the new replace anchors we just
+                // loaded into the document
+                $("a.replace").click(function (evt) {
+                    evt.preventDefault();
+                    var href = evt.target.href;
+                    UTILS.loadFakeframe(fakeframe, href, false);
+                });
+
+                $("a.replace-pre").click(function (evt) {
+                    evt.preventDefault();
+                    var href = evt.target.href;
+                    UTILS.loadFakeframe(fakeframe, href, true);
+                });
+
+                if (insertPre) {
+                    $(fakeframe).wrapInner("<pre />");
+                    $(fakeframe).prepend('<div class="page-header">' +
+                        '<h3>' + $.url(href).attr('file') +
+                        '<button class="btn btn-large pull-right" ' +
+                        'onclick="javascript:location.reload()">Back</button>' +
+                        '</h3>' +
+                        '</div>');
+                }
+            }
+        });
+
+        UTILS.calculateAffix();
+    };
+
+	// The sidebar should scroll if the tasks stretch off-screen.
+	module.calculateAffix = function() {
+	    if ($(window).height() < ($("#nav-wrapper").height() + 60)) {
+		    // expand the div#content height so that the bottom of the well has
+		    // a margin
+		    $('#content').height(Math.max($("#content").height(), $("#nav-wrapper").height()+40));
+
+		  	$('#nav-wrapper').affix({
+				offset: {
+				    top: function () {
+					    return Math.abs($("#nav-wrapper").height() - $(window).height() + 100);
+					}
+				}
+			});
+	    } else {
+			$(window).off('.affix');
+			$("#nav-wrapper").removeData('affix').removeClass('affix affix-top affix-bottom');
+	    };
+	};
+
     module.getData = function(scores_dict, key) {
         var scores = [];
         for (var png in scores_dict) {

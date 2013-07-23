@@ -1429,9 +1429,9 @@ class T2_4MDetailsTsyscalFlagRenderer(T2_4MDetailsDefaultRenderer):
     Renders detailed HTML output for the Tsysflag task.
     '''
     def __init__(self, template='t2-4m_details-hif_tsysflag.html',
-            always_rerender=False):
+                 always_rerender=False):
         super(T2_4MDetailsTsyscalFlagRenderer, self).__init__(template,
-                always_rerender)
+                                                              always_rerender)
 
     def get_display_context(self, context, results):
         super_cls = super(T2_4MDetailsTsyscalFlagRenderer, self)
@@ -1629,7 +1629,7 @@ class T2_4MDetailsAgentFlaggerRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hif_flagdeteralma.html', 
                  always_rerender=False):
         super(T2_4MDetailsAgentFlaggerRenderer, self).__init__(template,
-                                                                always_rerender)
+                                                               always_rerender)
 
     def get_display_context(self, context, result):
         super_cls = super(T2_4MDetailsAgentFlaggerRenderer, self)
@@ -1913,7 +1913,7 @@ class WebLogGenerator(object):
         infile = os.path.join(src, 'fancybox.zip')
         z = zipfile.ZipFile(infile, 'r')        
         z.extractall(outdir)
-    
+
     @staticmethod
     def render(context, hardcopy=True):
         # copy CSS, javascript etc. to weblog directory
