@@ -374,7 +374,8 @@
                      'Perley-Butler 2013',
                      'Scaife-Heald 2012',
                      'Butler-JPL-Horizons 2010', 
-                     'Butler-JPL-Horizons 2012'. 
+                     'Butler-JPL-Horizons 2012', 
+                     'manual'
                      <!-- manual, image to be added -->
             All but the last two are for extragalactic calibrators,
             and the final two are for Solar System objects.  
@@ -525,17 +526,16 @@
        &gt;&gt;&gt; standard="manual" expandable parameters
 	    fluxdensity -- Specified flux density [I,Q,U,V] in Jy
 		default: -1, uses [1,0,0,0] flux density for unrecognized sources,
-		and standard flux densities for ones recognized by 'standard',
-		including 3C286, 3C48, 3C147, and several planets, moons, and
-		asteroids.  setjy will try to use standard if fluxdensity is not
+		and standard flux densities for ones recognized by the default 
+                standard (Perley-Butler 2010).  
+		setjy will try to use the standard if fluxdensity is not
 		positive.
 
 		Only one flux density can be specified at a time.  The phases are
 		set to zero.
-		example   fluxdensity=-1  will use standard for recognized
-		          calibrators (like 3C286, 3C147 and 3C48, depending on
-		          standard) and insert 1.0 for selected fields with
-		          unrecognized sources.
+		example   fluxdensity=-1  will use the default standard for recognized
+		          calibrators (like 3C286, 3C147 and 3C48) and insert 1.0 
+                          for selected fields with unrecognized sources.
 		example   field = '1'; fluxdensity=[3.2,0,0,0] will put in 
 			  a flux density of I=3.2 for field='1'
 

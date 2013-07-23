@@ -659,6 +659,7 @@ class test_ModImage(SetjyUnitTestBase):
                                            #modimage=self.modelim,
                                            model=self.modelim,
                                            scalebychan=False,
+                                           standard='manual',
                                            fluxdensity=fluxdens,
                                            spix=spix, reffreq=reffreq,
                                            usescratch=True,

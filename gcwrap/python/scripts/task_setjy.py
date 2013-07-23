@@ -178,12 +178,16 @@ def setjy_core(vis=None, field=None, spw=None,
                          intent=intent, useephemdir=useephemdir,usescratch=usescratch)
         clnamelist=setjyutil.getclnamelist()
       else:
+        if standard=="manual":
+            instandard="Perley-Butler 2010" # default standard when fluxdensity=-1 or 1
+        else:
+            instandard=standard
         if type(spix)==[]:
             spix=0.0
-        # need to modify imager to accept dobule array for spix
+        # need to modify imager to accept double array for spix
         myim.setjy(field=field, spw=spw, modimage=modimage,
                  fluxdensity=fluxdensity, spix=spix, reffreq=reffreq,
-                 standard=standard, scalebychan=scalebychan, time=timerange,
+                 standard=instandard, scalebychan=scalebychan, time=timerange,
                  observation=str(observation), scan=scan, intent=intent, interpolation=interpolation)
       myim.close()
 
