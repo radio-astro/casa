@@ -619,17 +619,17 @@ class pimager():
                        numthreads=numthreads, savemodel=savemodel,
                        painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename,
                        mterm=mterm,wbawp=wbawp,aterm=aterm,psterm=psterm,conjbeams=conjbeams);
-        elif(nterms==2 and ptime==False):
-            self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
-                                   stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
-                                   facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
-                                   robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
-                                   outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
-                                   baselines=baselines, scan=scan, observation=observation, 
-                                   visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, numthreads=numthreads, 
-                                   cyclefactor=cyclefactor,
-                                   painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename,
-                                   mterm=mterm,wbawp=wbawp,aterm=aterm,psterm=psterm,conjbeams=conjbeams);
+#        elif(nterms==2 and ptime==False):
+#            self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
+#                                   stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
+#                                   facets=facets, imsize=imsize, pixsize=pixsize, weight=weight, 
+#                                   robust=robust, npixels=npixels, gain=gain, uvtaper=uvtaper,
+#                                   outertaper=outertaper, timerange=timerange, uvrange=uvrange, 
+#                                   baselines=baselines, scan=scan, observation=observation, 
+#                                   visinmem=visinmem, pbcorr=pbcorr, minpb=minpb, numthreads=numthreads, 
+#                                   cyclefactor=cyclefactor,
+#                                   painc=painc, pblimit=pblimit, dopbcorr=dopbcorr,applyoffsets=applyoffsets,cfcache=cfcache,epjtablename=epjtablename,
+#                                   mterm=mterm,wbawp=wbawp,aterm=aterm,psterm=psterm,conjbeams=conjbeams);
 	else:
 	    self.setupcommonparams(spw=spw, field=field, phasecenter=phasecenter, 
                                    stokes=stokes, ftmachine=ftmachine, wprojplanes=wprojplanes, 
