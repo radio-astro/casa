@@ -1198,6 +1198,20 @@ vector<uInt> MSMetaDataOnDemand::getBBCNos() {
 	return out;
 }
 
+std::map<uInt, std::set<uInt> > MSMetaDataOnDemand::getBBCNosToSpwMap() {
+	vector<uInt> mymap = getBBCNos();
+	std::map<uInt, std::set<uInt> > out;
+	vector<uInt>::const_iterator end = mymap.end();
+	uInt i = 0;
+	for (
+		vector<uInt>::const_iterator iter=mymap.begin();
+		iter!=end; iter++, i++
+	) {
+		out[*iter].insert(i);
+	}
+	return out;
+}
+
 vector<String> MSMetaDataOnDemand::getSpwNames() {
 	std::set<uInt> avgSpw, tdmSpw, fdmSpw, wvrSpw;
 	vector<MSMetaData::SpwProperties> props = _getSpwInfo(
