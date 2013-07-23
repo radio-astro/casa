@@ -936,6 +936,28 @@ windows in the dataset and close the tool.
     msmd.done()
             </example>
         </method>
+        
+        <method type="function" name="spwsforbaseband">
+            <shortdescription>Get the spws associated with the specified baseband or dictionary that maps baseband to spws.</shortdescription>
+            <input>
+                <param type="int" direction="in" name="baseband">
+                    <description>Baseband number. If &lt;0, return a dictionary mapping basebands to spws.</description>
+                    <value>-1</value>
+                </param>
+            </input>
+            <returns type="variant"/>
+            <description>
+                Get the spws associated with the specified baseband or dictionary that maps baseband to spws.
+            </description>
+            <example>
+    msmd.open("my.ms")
+    # get the spectral window IDs associated with all the basebands in this dataset
+    basebandtospwdict = msmd.spwsforbasebands()
+    # get an array of spws associated with baseband 2.
+    spwsforbb2 = msmd.spwsforbasebands(2)
+    msmd.done()
+            </example>
+        </method>
         <method type="function" name="spwsforfield">
             <shortdescription>Get an array of the unique spectral window IDs for the specified field.</shortdescription>
              <input>
