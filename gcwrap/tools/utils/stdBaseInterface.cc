@@ -872,7 +872,7 @@ bool stdBaseInterface::checkme(const string &param, variant &user, record &const
 		       rstat = false;
                  }
 	         if(!silent && !rstat){
-		      itsLog << casa::LogIO::NORMAL <<  "File existance checking failed for "
+		      itsLog << casa::LogIO::NORMAL <<  "File existence checking failed for "
 			      << param << " " << user.asString() << casa::LogIO::POST;
 		 }
 	      }

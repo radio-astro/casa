@@ -1552,6 +1552,77 @@ class test_concat(unittest.TestCase):
 
         self.assertTrue(retValue['success'])
 
+    def test16(self):
+        '''Concat 16: 3 parts, SD data, one non-concurrent, two concurrent (CAS-5316)'''
+        retValue = {'success': True, 'msgs': "", 'error_msgs': '' }    
+        self.res = concat(vis=['X39a.pm03.scan3.ms', 'X425.pm03.scan4.ms', 'X425.pm04.scan4.ms'],concatvis=msname)
+        self.assertEqual(self.res,True)
+
+        print myname, ": Now checking output ..."
+        mscomponents = set(["table.dat",
+                            "table.f0",
+                            "table.f0i",
+                            "ANTENNA/table.dat",
+                            "DATA_DESCRIPTION/table.dat",
+                            "FEED/table.dat",
+                            "FIELD/table.dat",
+                            "FLAG_CMD/table.dat",
+                            "HISTORY/table.dat",
+                            "OBSERVATION/table.dat",
+                            "POINTING/table.dat",
+                            "POLARIZATION/table.dat",
+                            "PROCESSOR/table.dat",
+                            "SOURCE/table.dat",
+                            "SPECTRAL_WINDOW/table.dat",
+                            "STATE/table.dat",
+                            "ANTENNA/table.f0",
+                            "DATA_DESCRIPTION/table.f0",
+                            "FEED/table.f0",
+                            "FIELD/table.f0",
+                            "FLAG_CMD/table.f0",
+                            "HISTORY/table.f0",
+                            "OBSERVATION/table.f0",
+                            "POINTING/table.f0",
+                            "POLARIZATION/table.f0",
+                            "PROCESSOR/table.f0",
+                            "SOURCE/table.f0",
+                            "SPECTRAL_WINDOW/table.f0",
+                            "STATE/table.f0"
+                            ])
+        for name in mscomponents:
+            if not os.access(msname+"/"+name, os.F_OK):
+                print myname, ": Error  ", msname+"/"+name, "doesn't exist ..."
+                retValue['success']=False
+                retValue['error_msgs']=retValue['error_msgs']+msname+'/'+name+' does not exist'
+            else:
+                print myname, ": ", name, "present."
+        self.assertTrue(retValue['success'])
+        print myname, ": MS exists. All tables present. Try opening as MS ..."
+        try:
+            ms.open(msname)
+        except:
+            print myname, ": Error  Cannot open MS table", tablename
+            retValue['success']=False
+            retValue['error_msgs']=retValue['error_msgs']+'Cannot open MS table '+tablename
+        else:
+            ms.close()
+            if 'test16.ms' in glob.glob("*.ms"):
+                shutil.rmtree('test16.ms',ignore_errors=True)
+            shutil.copytree(msname,'test16.ms')
+            print myname, ": OK. Checking tables in detail ..."
+            retValue['success']=True
+
+            tb.open('test16.ms')
+            a = tb.getcol('SCAN_NUMBER')
+            tb.close()
+            if not (a[0]==3 and a[59]==3 and a[60]==4 and a[len(a)-1]==4):
+                print "Scan numbers not as expected. Should be == 3 up to index 59, then 4 thereafter."
+                retValue['success']=False
+
+        self.assertTrue(retValue['success'])
+
+
+
 class concat_cleanup(unittest.TestCase):           
     def setUp(self):
         pass

@@ -91,17 +91,18 @@ clean(vis='orion.ms',
       field='2~10',
       spw='0,1',
       mode='mfs',
-      niter=10000,
-      gain=0.2,
+      niter=5000,
+      gain=0.4,
       threshold='10.0mJy',
       imagermode='mosaic',
       mosweight=True,
       ftmachine='ft',
       cyclefactor=4,
-      cyclespeedup=-1,
+      cyclespeedup=300,
       multiscale=[0,2,8,16,32,64],
       negcomponent=-1,
-      mask=datapath+'orion.mask6',
+      flatnoise=False,
+      mask='',  #datapath+'orion.mask6',
       modelimage=datapath+'orion.gbt.im',
       imsize=[300,300],
       cell=['2.0arcsec','2.0arcsec'],
@@ -158,7 +159,7 @@ def joint_deconvolve(datapath):
 	#Deconvolve GBT image
 	# Sigh.  dc.open will warn about the lack of a PSF, but I can't seem to
 	# define a PSF before calling dc.open.
-	dc.open('orion_tgbt_regrid.im', psf='')
+	dc.open('orion_tgbt_regrid.im', psf='', warn=False)
 	#make gaussian for PSF (best guess for GBT beam based on beamsize
 	#report in GBT image)
 	dc.makegaussian('gbt_gau.im',bmaj='55arcsec',bmin='55arcsec',
@@ -166,29 +167,29 @@ def joint_deconvolve(datapath):
 	dc.close()
 	os.system("rm -rf orion_tjoint3")
 	dc.open('orion_tgbt_regrid.im',psf='gbt_gau.im')
-	dc.setscales(scalemethod='uservector',uservector=[30.,100.,200.])
-	dc.clean(algorithm='fullmsclean',model='orion_tjoint3',niter=50,
-		 gain=0.3,mask='',threshold='0.5Jy')
+	dc.setscales(scalemethod='uservector',uservector=[30.,50.,100.])
+	dc.clean(algorithm='fullmsclean',model='orion_tjoint3',niter=30,
+		 gain=0.3,mask=datapath+'orion.mask6',threshold='0.5Jy')
 	dc.close()
 	#default('clean')
-	ia.open('orion_tjoint3')
-	ia.calc(pixels='orion_tjoint3*"'+datapath+'orion.mask6"')
-	ia.close()
+	#ia.open('orion_tjoint3')
+	#ia.calc(pixels='orion_tjoint3*"'+datapath+'orion.mask6"')
+	#ia.close()
 
 	im.open('orion.ms')
 	im.selectvis(field=[2,3,4,5,6,7,8,9,10],spw=[0,1])
 	im.defineimage(nx=300,cellx='2arcsec',phasecenter=6,spw=[0,1])
 	im.setvp(dovp=True)
 	#im.setscales(scalemethod='uservector',uservector=[0,3,10,30,100])
-	im.setscales(scalemethod='uservector',uservector=[0,3,10,30])
+	im.setscales(scalemethod='uservector',uservector=[0,3,10,30,100])
 	###if clean component for large scale goes negative continue to use
 	##that scale
-	im.setoptions(ftmachine='ft')
-	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=2.0, cyclespeedup=-1)
+	im.setoptions(ftmachine='ft', padding=1.2)
+	im.setmfcontrol(stoplargenegatives=-1, cyclefactor=5.0, cyclespeedup=500, flatnoise=False)
 	im.weight(type='briggs',rmode='norm',robust=-1,mosaic=True)
 	im.clean(algorithm='mfmultiscale', model='orion_tjoint3',
-		 image='orion_tjoint3.image', gain=0.3, niter=10000,
-		 mask=datapath+'orion.mask6', threshold='4mJy')
+		 image='orion_tjoint3.image', gain=0.3, niter=4000,
+		 mask='', threshold='4mJy')
 	im.close()
 	return time.time()
 
@@ -277,7 +278,7 @@ test_descs = (('Feather 1',           'max',  0.780,  ' '),
 	      ('Feather 2',           'flux', 242.506,  ' '),
 	      ('SD Model (MS)',       'flux', 347, ' ', 'SD Model (MS)', 'SD Model MS'),
 	      ('SD Model (MEM)',      'flux', 286, '', 'SD Model (MEM)', 'Joint Deconvolution'),
-	      ('Joint Deconvolution', 'flux', 226, '', 'Joint Decon2')) # 360.468
+	      ('Joint Deconvolution', 'flux', 259, '', 'Joint Decon2')) # 360.468
 
 def log_test_result(test_results, testdesc, logfile):
 	"""Append testdesc to logfile and return whether or not the test was

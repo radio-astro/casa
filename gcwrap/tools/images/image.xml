@@ -288,7 +288,7 @@ peak and integral
 
 \item <link anchor="images:image.makecomplex.function">makecomplex</link> - make a complex image from two real images
 
-\item <link anchor="images:image.makefloat.function">makecomplex</link> - make a float image from a complex image with a given operation
+%\item <link anchor="images:image.makefloat.function">makecomplex</link> - make a float image from a complex image with a given operation
 
 \item <link anchor="images:image.miscinfo.function">miscinfo</link> - recover miscellaneous information record
 
@@ -2125,6 +2125,11 @@ ia.close()             # close to unlock disk image
   
      <param type="bool"  name="overwrite">
      <description>Overwrite (unprompted) pre-existing output file?</description>
+     <value>false</value>
+     </param>
+
+     <param type="bool"  name="silent">
+     <description>Skip silently existing axes?</description>
      <value>false</value>
      </param>
 </input>
@@ -5794,6 +5799,8 @@ ia.close()
 
 </method>
 
+<!--
+
    <method type="function" name="makefloat">
    <shortdescription>Make a float image from a complex image with a given operation</shortdescription>
    
@@ -5837,7 +5844,6 @@ The image presently attached to the ia tool is not involved.
 
 """
 #
-print "\t----\t makeamp Ex 1 \t----"
 ia.maketestimage('imag.im',overwrite=true)  #imaginary image
 ia.close()
 ia.maketestimage('real.im',overwrite=true)  #assoc. real image
@@ -5851,6 +5857,7 @@ ia.makefloat('abs.im', 'complex.im', 'abs') # creates abs.im
 
 </method>
 
+-->
  
    <method type="function" name="maskhandler">
    <shortdescription>Handle pixel masks</shortdescription>

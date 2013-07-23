@@ -19,6 +19,7 @@ class cleanhelper_test(unittest.TestCase):
     msfile = 'simptsrcs.ms'
     outlierfilename='outlier.txt'
     newoutlierfilename='newoutlier_v0.txt'
+    newoutlierfile2name='newoutlier_manyfields.txt'
     newoutlierreffilename='newoutlier_ref.txt'
     boxfilename='cleanhelpertest-sf.box'
     boxfilename2='boxf.txt'
@@ -41,6 +42,7 @@ class cleanhelper_test(unittest.TestCase):
     datapath = os.environ.get('CASAPATH').split()[0] + '/data/regression/unittest/clean/cleanhelper/'
     outlierfile=datapath+outlierfilename 
     newoutlierfile=datapath+newoutlierfilename 
+    newoutlierfile2=datapath+newoutlierfile2name 
     newoutlierreffile=refpath+newoutlierreffilename 
     boxfile=datapath+boxfilename
     boxfile2=datapath+boxfilename2
@@ -117,7 +119,7 @@ class cleanhelper_test(unittest.TestCase):
           imageids='sf'
         else:
           imsizes, phasecenters, imageids=self.imset.readoutlier(self.outlierfile)
-        print "imsizes,imageids=", imsizes,imageids
+        #print "imsizes,imageids=", imsizes,imageids
         self.imset.definemultiimages(rootname=rootname, imsizes=imsizes,
                             cell=self.cell, stokes=self.stokes, mode=self.mode, 
                             spw=self.spw, nchan=self.nchan, start=self.start,
@@ -144,7 +146,7 @@ class cleanhelper_test(unittest.TestCase):
         self.assertTrue(self.res) 
        
     def testNewreadoutlier(self):
-        """[Cleanhelper newreadoutlier test (reader for new outlier file format)]"""
+        """[Cleanhelper newreadoutlier test (reader for new outlier file format with irregular line breaks)]"""
         imageids, imsizes, phasecenters, masks, models, paramdic, newformat=self.imset.newreadoutlier(self.newoutlierfile)
         # the reference outlier file contains each field's paramaters per line
         print "Using ", self.newoutlierfile
@@ -156,13 +158,26 @@ class cleanhelper_test(unittest.TestCase):
           if len(elm.split())!=0 and elm.split()[0]!='#' :
             cnt +=1
         print "N fields=",cnt
-        print "imsizes=",imsizes," phasecenters=",phasecenters
+        #print "imsizes=",imsizes," phasecenters=",phasecenters
+        print "len(imsizes)=",len(imsizes), " len(imageids)=",len(imageids)
         if len(imsizes) == len(phasecenters) == len(imageids) == len(masks) == len(models) == cnt:
           self.res=True
         else:
           self.res=False
         self.assertTrue(self.res)
 
+    def testNewreadoutlier2(self):
+        """[Cleanhelper newreadoutlier test2 (reader for new outlier file format with a large number (129) of outliers)]"""
+        imageids, imsizes, phasecenters, masks, models, paramdic, newformat=self.imset.newreadoutlier(self.newoutlierfile2)
+        print "Using ", self.newoutlierfile2
+        noutliers=129
+        #print "imsizes=",imsizes," phasecenters=",phasecenters
+        print "len(imsizes)=",len(imsizes), " len(imageids)=",len(imageids)
+        if len(imsizes) == len(phasecenters) == len(imageids) == len(masks) == len(models) == noutliers:
+          self.res=True
+        else:
+          self.res=False
+        self.assertTrue(self.res)
  
     def testMakemultifieldmaskbox(self):
         """[Cleanhelper (new)makemultfieldmask2 test: boxes given in argument]"""

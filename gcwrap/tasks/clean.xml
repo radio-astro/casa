@@ -1360,7 +1360,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                     
                      In this example, the first field 'M1_0' is defined using
                      main task parameters. The next two 'M1_1' and 'M1_2' 
-                     are listed in the file 'newoutlier.txt'.  A mask and modelimage 
+                     are listed in the file 'outlier.txt'.  A mask and modelimage 
                      has been supplied only for the second field (M1_1). Fields
                      with unspecified masks will use the full field for cleaning.
 

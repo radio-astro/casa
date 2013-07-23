@@ -137,6 +137,7 @@ casa_add_python( tools tools_tests_python python/${PYTHONV}/tests
   test_sdcoadd.py
   test_sdfit.py
   test_sdflag.py
+  test_sdflag2.py
   test_sdflagmanager.py
   test_sdgrid.py
   test_sdimaging.py

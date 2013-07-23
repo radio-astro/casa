@@ -86,7 +86,7 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
     <param type="any" name="hdvalue" subparam="yes">
 	<any type="variant"/>
-    	<description>Value of hdkey)</description>
+    	<description>Value of keyword</description>
         <value type="string"></value>
         <example>hdvalue='VLA'</example>
     </param>
@@ -220,7 +220,48 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                       to be 'added'
 	                default: ''; example: hdvalue='VLA'
         hdcomment --- comment to be stored with the keyword for mode='put' or mode='add'
-	Examples: 
+        
+NOTES ON mode='get'
+    
+The data type of the value returned by imhead when mode='get' depends on the keyword. Below
+is a list of keywords on the data type that will be returned when mode='get' for each. A 
+"quantity dictionary" is a dictionary with 'value' and 'unit' keys that can be used as
+input to various methods of the qa tool.
+
+keyword                data type returned when mode='get'
+
+beammajor              quantity dictionary
+beamminor              quantity dictionary
+beampa                 quantity dictionary
+bmaj                   quantity dictionary
+bmin                   quantity dictionary
+bpa                    quantity dictionary
+bunit                  string
+cdelt*                 quantity dictionary
+crpix*                 float
+crval*                 quantity dictionary
+ctype*                 string
+cunit*                 string
+datamax                image pixel data type
+datamin                image pixel data type
+date-obs               string (YYYY/MM/DD/hh:mm:ss format)
+equinox                string
+imtype                 string
+masks                  string array
+maxpos                 string
+maxpixpos              integer array
+minpos                 string
+minpixpos              integer array
+object                 string
+observer               string
+projection             string
+reffreqtype            string
+restfreq               quantity dictionary
+shape                  integer array
+telescope              string
+any user defined key   string
+
+EXAMPLES
 		  hdkey='date-obs';hdvalue='2007/06/20/00:00:00'
 		  hdkey='beammajor';hdvalue='55arcsec'
                   hdkey='beampa'';hdvalue='0deg'
@@ -259,34 +300,12 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                 hdvalue = imhead()
                 print hdvalue   #  to see values
 
-           To then put the clean beam into image2
-                imagename = 'image2.im', mode = 'put'; imhead()
-
-        2)  Most output values are dictionaries:
 
 
-               mode = 'get'; hdkey = 'maxpos'; aa = imhead()
-
-            would give for the command print aa
-                {'value': '03:19:48.160, +41.30.42.103, I, 4.88163e+09Hz', 'unit': ''}
-            print aa['value'] gives 
-                03:19:48.160, +41.30.42.103, I, 4.88163e+09Hz
-            print aa['value'[1][0:12] gives 03:19:48.160
-
-      
-               mode = 'get'; hdkey = 'crpix1'; aa = imhead()
-
-            would give for the command print aa
-                {'value': '128.0', 'unit': ''}
-            print aa['value'] gives 
-                128.0    (a string)
-
-        3)  The use of put is a bit more straight-forward
+        2)  The use of put is a bit more straight-forward
 
                mode = 'put'; hdkey = 'crpix1'; hdvalue = '200'; imhead()
-             then
-               mode = 'get'; hdkey = 'crpix1'; aa = imhead()  would give
-                   {'value': '200.0', 'unit': ''}
+        
 
 
 </example>

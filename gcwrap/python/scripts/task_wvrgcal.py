@@ -21,7 +21,7 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	              default: none; example: caltable='ngc5921.wvr'								
 																
 	  toffset -- Time offset (sec) between interferometric and WVR data							
-	             default: -1 (ALMA default)											
+	             default: 0 (ALMA default for cycle 1, for cycle 0 it was -1)											
 																
 	  segsource -- Do a new coefficient calculation for each source								
 	             default: True												
@@ -53,8 +53,8 @@ def wvrgcal(vis=None, caltable=None, toffset=None, segsource=None,
 	               default: '' (all)             										
 																
 	  smooth -- Smooth the calibration solution on the given timescale 
-	             default: '' (no smoothing), example: '3s' smooth on a timescale of 3 seconds									
-																
+	             default: '' (no smoothing), example: '3s' smooth on a timescale of 3 seconds
+		     
 	  scale -- Scale the entire phase correction by this factor								
 	             default: 1. (no scaling)											
 																

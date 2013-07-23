@@ -93,6 +93,25 @@ imd.done()
     </example>
 </method>
 
+<method type="function" name="get">
+    <shortdescription>Get the value associated with the specified, case-insensitive FITS keyword.</shortdescription>
+    <input>
+        <param type="string" name="key">
+            <description>The name of the FITS keyword.</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="variant"/>
+    <description>
+        Get the value associated with the specified, case-insensitive FITS keyword.
+    </description>
+    <example>
+imd.open("myim.im")
+imtype = imd.get('imtype')
+imd.done()
+    </example>
+</method>
+
 <method type="function" name="list">
     <shortdescription>Get a dictionary of FITS-like header items.</shortdescription>
     <input>
@@ -112,6 +131,7 @@ imd.done()
 crval1 = mylist{"crval1"}
     </example>
 </method>
+
 
 <method type="function" name="open">
     <shortdescription>Open this image metadata tool providing access to an image's metadata.</shortdescription>

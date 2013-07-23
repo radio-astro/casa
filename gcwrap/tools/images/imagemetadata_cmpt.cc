@@ -45,6 +45,18 @@ bool imagemetadata::done() {
 	return close();
 }
 
+variant* imagemetadata::get(const string& key) {
+	try {
+		_exceptIfDetached();
+		return new variant(_header->getFITSValue(key));
+	}
+	catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
 record* imagemetadata::list(bool verbose) {
 	try {
 		_exceptIfDetached();
