@@ -114,7 +114,7 @@ def get_task_description(result_obj):
     if task_cls is hsd.tasks.SDImportData:
         names = []
         for result in result_obj:
-            names.extend([st.basename for st in result.scantables])
+            names.extend([ms.basename for ms in result.mses])
         return 'Register %s with pipeline' % utils.commafy(names)
 
     if task_cls is hsd.tasks.SDReduction:
@@ -139,9 +139,7 @@ def get_task_description(result_obj):
         return 'Calculate and flag wvr calibration'
 
     if task_cls is hsd.tasks.SDInspectData:
-        datatable = result_obj[0].outcome['instance']
-        names = datatable.getkeyword('FILENAMES')
-        return 'Inspect %s' % (utils.commafy(names))
+        return 'Inspect data'
 
     if task_cls is hsd.tasks.SDCalTsys:
         return 'Generate Tsys calibration table'
@@ -160,6 +158,9 @@ def get_task_description(result_obj):
 
     if task_cls is hsd.tasks.SDFlagData:
         return 'Flag data by Tsys, weather, and statistics of spectra'
+
+    if task_cls is hsd.tasks.SDPlotFlagBaseline:
+        return 'Plot whole spectra with baseline fit and flag result'
 
     if LOG.isEnabledFor(LOG.todo):
         LOG.todo('No task description for \'%s\'' % task_cls.__name__)
