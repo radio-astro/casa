@@ -28,15 +28,12 @@ try:
        task = displays.SDBaselineAllDisplay(inputs)
        plots.extend(task.plot())
 
-   print 'plot completed'
    plot_groups = logger.PlotGroup.create_plot_groups(plots)
    for plot_group in plot_groups:
        renderer = hr.PlotGroupRenderer(pcontext, result, plot_group)
        plot_group.filename = renderer.filename
        with renderer.get_file() as fileobj:
            fileobj.write(renderer.render())
-
-   print 'plot_group created'
 
 except Exception, e:
    print 'hsd_plotflagbaseline html template exception:', e
