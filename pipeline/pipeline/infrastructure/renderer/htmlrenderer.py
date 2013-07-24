@@ -144,10 +144,10 @@ def get_task_description(result_obj):
         return 'Inspect %s' % (utils.commafy(names))
 
     if task_cls is hsd.tasks.SDCalTsys:
-        return 'Generage Tsys calibration table'
+        return 'Generate Tsys calibration table'
 
     if task_cls is hsd.tasks.SDCalSky:
-        return 'Generage Sky calibration table'
+        return 'Generate Sky calibration table'
 
     if task_cls is hsd.tasks.SDApplyCal:
         return 'Apply calibration tables'
@@ -2123,7 +2123,8 @@ renderer_map = {
         hsd.tasks.SDCalSky       : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_calsky.html'),
         hsd.tasks.SDBaseline     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_baseline.html'),
         hsd.tasks.SDFlagData     : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_flagdata.html'),
-        hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html')
+        hsd.tasks.SDImaging      : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_imaging.html'),
+        hsd.tasks.SDPlotFlagBaseline : T2_4MDetailsDefaultRenderer('t2-4m_details-hsd_plotflagbaseline.html')
     }
 }
 
