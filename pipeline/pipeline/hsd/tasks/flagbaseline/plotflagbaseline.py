@@ -66,37 +66,76 @@ class SDPlotFlagBaseline(common.SingleDishTaskTemplate):
             if baseline_result_id > 0 and flag_result_id > 0:
                 break
 
+
+        LOG.debug('baseline_result_id=%s'%(baseline_result_id))
+        LOG.debug('flag_result_id=%s'%(flag_result_id))
+        
+        if baseline_result_id < 0:
+            msg = 'No baseline results exist. You have to execute baseline subtraction task first!'
+            LOG.error(msg)
+            raise RuntimeError(msg)
+                
         baseline_result = results[baseline_result_id]
-        flag_result = results[flag_result_id]
 
-        LOG.info('baseline result: from stage %s'%(baseline_result.stage_number))
-        LOG.info('flag result: from stage %s'%(flag_result.stage_number))
-
-        LOG.todo('check that flag is done after baseline')
-
-        flag_processed = [[v['index'], v['spw'], v['pol']] for v in flag_result.outcome['summary']]
         baseline_processed = [[v['index'], v['spw'], v['pols']] for v in baseline_result.outcome['baselined']]
         spwlist_baseline = [entry[1] for entry in baseline_processed]
         net_processed = []
-        for entry in flag_processed:
-            if iflist is not None and entry[1] not in iflist:
-                continue
-            try:
-                index = spwlist_baseline.index(entry[1])
-                baseline_entry = baseline_processed[index]
+
+        if flag_result_id < 0:
+            LOG.warn('No flag results available. Flag status may not be correct.')
+            
+            net_processed = []
+            for (antennas, spw, pols) in baseline_processed:
+                LOG.debug('spw=%s'%(spw))
+                if iflist is not None and spw not in iflist:
+                    continue
                 if index_list is not None:
-                    net_index_list = list(set(index_list) & set(baseline_entry[0]))
+                    net_index_list = list(set(antennas) & set(index_list))
                 else:
-                    net_index_list = baseline_entry[0]
+                    net_index_list = antennas
+                LOG.debug('net_index_list=%s'%(net_index_list))
                 if pollist is not None:
-                    net_pollist = list(set(pollist) & set(baseline_entry[2]))
+                    net_pollist = list(set(pols) & set(pollist))
                 else:
-                    net_pollist = baseline_entry[2]
-                if entry[0] in net_index_list \
-                   and entry[2] in net_pollist:
-                    net_processed.append(entry)
-            except:
-                pass
+                    net_pollist = pols
+                LOG.debug('net_pollist=%s'%(net_pollist))
+                for index in net_index_list:
+                    for pol in net_pollist:
+                        LOG.debug('append [%s, %s, %s]'%(index, spw, pol))
+                        net_processed.append([index, spw, pol])
+
+        else:
+            flag_result = results[flag_result_id]
+
+            LOG.info('baseline result: from stage %s'%(baseline_result.stage_number))
+            LOG.info('flag result: from stage %s'%(flag_result.stage_number))
+
+            if flag_result.stage_number < baseline_result.stage_number:
+                LOG.warn('Flagging has not been done after baseline subtraction. Flag results may not be correct.')
+
+            flag_processed = [[v['index'], v['spw'], v['pol']] for v in flag_result.outcome['summary']]
+            for entry in flag_processed:
+                antenna = entry[0]
+                spw = entry[1]
+                pol = entry[2]
+                if iflist is not None and spw not in iflist:
+                    continue
+                try:
+                    index = spwlist_baseline.index(spw)
+                    baseline_entry = baseline_processed[index]
+                    if index_list is not None:
+                        net_index_list = list(set(index_list) & set(baseline_entry[0]))
+                    else:
+                        net_index_list = baseline_entry[0]
+                    if pollist is not None:
+                        net_pollist = list(set(pollist) & set(baseline_entry[2]))
+                    else:
+                        net_pollist = baseline_entry[2]
+                    if antenna in net_index_list \
+                       and pol in net_pollist:
+                        net_processed.append(entry)
+                except:
+                    pass
 
 
         LOG.info('net_processed=%s'%(net_processed))
