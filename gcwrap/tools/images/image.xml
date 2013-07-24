@@ -8694,8 +8694,7 @@ will be irrevocably deleted.
 <example>
 
 """
-#
-print "\t----\t setrestoringbeam Ex 1 \t----"
+
 ia.maketestimage('hcn',overwrite=true)      
 rb = ia.restoringbeam()        # returns beam in record
 print rb
@@ -8703,12 +8702,17 @@ print rb
 # 'minor': {'unit': 'arcsec', 'value': 34.199998900294304},
 # 'positionangle': {'unit': 'deg', 'value': 6.0}}
 rb['minor']['value'] = 12.5
-ia.setrestoringbeam(beam=rb)   # new beam specified in record
+# new beam specified in record
+# NOTE This will not work for an image with multiple beams
+ia.setrestoringbeam(beam=rb)   
 print ia.restoringbeam()
 #{'major': {'unit': 'arcsec', 'value': 53.500004857778549},
 # 'minor': {'unit': 'arcsec', 'value': 12.5},
 # 'positionangle': {'unit': 'deg', 'value': 6.0}}
-ia.setrestoringbeam(major='36arcsec')  # beam specified using parameter
+
+# beam specified using parameter
+# NOTE This will only work for an image with a traditional beam
+ia.setrestoringbeam(major='36arcsec') 
 print ia.restoringbeam()
 #{'major': {'unit': 'arcsec', 'value': 36.0},
 # 'minor': {'unit': 'arcsec', 'value': 12.5},
@@ -8722,7 +8726,29 @@ print ia.restoringbeam()
 # 'minor': {'unit': 'arcsec', 'value': 34.200000000000003},
 # 'positionangle': {'unit': 'deg', 'value': 6.0}}
 ia.close()
-#
+
+# Copy all beams from an image with multiple beams to another
+# image with the same number of channels and polarizations
+
+ia.open("multibeam.im")
+ib = iatool()
+ib.open("target.im")
+
+# ensure target has no beam(s) at start, not always necessary
+# but it doesn't hurt to do it.
+ib.setrestoringbeam(remove=True)
+# Now copy the beams. This only will work correctly if both images
+# have the same number of channels and polarizations. nchan is set to
+# the number of channels and npol is set to the number of polarizations
+for c in range(nchan):
+    for p in range(npol):
+        beam = ia.restoringbeam(channel=c, polarization=p)
+        ib.setrestoringbeam(beam=beam, channel=c, polarization=p)
+        
+ia.done()
+ib.done()
+    
+
 """
 
 </example>
