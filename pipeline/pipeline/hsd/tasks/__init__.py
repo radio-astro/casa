@@ -9,6 +9,7 @@ from .inspectdata import SDInspectData
 from .imaging import SDImaging
 from .baseline import SDBaseline
 from .flagdata import SDFlagData
+from .flagbaseline import SDPlotFlagBaseline
 
 from .reduce import SDReduction
 
