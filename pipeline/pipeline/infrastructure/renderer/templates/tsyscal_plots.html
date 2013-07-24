@@ -34,12 +34,12 @@ $(document).ready(function () {
 
     // create histograms and histogram filters for the three distributions we want
     // to highlight: RMS, average median, and maximum median reached.
-    var histogramTsysMedianFilter = new ALL_IN_ONE.easyHistogram(scores_dict, "median", "#histogram-tsysmedian");
-    filterPipeline.addFilter(histogramTsysMedianFilter);
-    var histogramTsysMedianMaxFilter = new ALL_IN_ONE.easyHistogram(scores_dict, "median_max", "#histogram-tsysmedianmax");
-    filterPipeline.addFilter(histogramTsysMedianMaxFilter);
-    var histogramTsysRmsFilter = new ALL_IN_ONE.easyHistogram(scores_dict, "rms", "#histogram-tsysrms");
-    filterPipeline.addFilter(histogramTsysRmsFilter);
+    ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict,
+            "median", "#histogram-tsysmedian");
+    ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict,
+            "median_max", "#histogram-tsysmedianmax");
+    ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict,
+            "rms", "#histogram-tsysrms");
 
     // add on-click handler to our thumbnails to launch FancyBox with the
     // relevant thumbnails

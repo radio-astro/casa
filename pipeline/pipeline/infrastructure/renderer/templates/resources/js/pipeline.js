@@ -110,37 +110,35 @@ UTILS = (function () {
         UTILS.calculateAffix();
     };
 
-	// The sidebar should scroll if the tasks stretch off-screen.
-	module.calculateAffix = function() {
-	    if ($(window).height() < ($("#nav-wrapper").height() + 60)) {
-		    // expand the div#content height so that the bottom of the well has
-		    // a margin
-		    $('#content').height(Math.max($("#content").height(), $("#nav-wrapper").height()+40));
+    // The sidebar should scroll if the tasks stretch off-screen.
+    module.calculateAffix = function() {
+        if ($(window).height() < ($("#nav-wrapper").height() + 60)) {
+            // expand the div#content height so that the bottom of the well has
+            // a margin
+            $('#content').height(Math.max($("#content").height(), $("#nav-wrapper").height()+40));
 
-		  	$('#nav-wrapper').affix({
-				offset: {
-				    top: function () {
-					    return Math.abs($("#nav-wrapper").height() - $(window).height() + 100);
-					}
-				}
-			});
-	    } else {
-			$(window).off('.affix');
-			$("#nav-wrapper").removeData('affix').removeClass('affix affix-top affix-bottom');
-	    };
-	};
+            $('#nav-wrapper').affix({
+                offset: {
+                    top: function () {
+                        return Math.abs($("#nav-wrapper").height() - $(window).height() + 100);
+                    }
+                }
+            });
+        } else {
+            $(window).off('.affix');
+            $("#nav-wrapper").removeData('affix').removeClass('affix affix-top affix-bottom');
+        };
+    };
 
-    module.getData = function(scores_dict, key) {
+    module.getData = function(scores_dict, key, filter) {
         var scores = [];
         for (var png in scores_dict) {
-            var ul,
-            	score;
-
-            var ul = $("a[href='" + png + "']").parent().parent();
+            var anchor = $("a[href='" + png + "']"),
+                score;
 
             // Generate a histogram for those plots present in this page by checking
             // whether the image is present before adding the score.
-            if (ul.length > 0) {
+            if ($(anchor).is(filter)) {
                 score = scores_dict[png][key];
                 scores.push(score);
             }
@@ -169,6 +167,7 @@ FILTERS = (function () {
         var filters = [];
         var scores = [];
         var that = this;
+        var refreshFns = [];
 
         this.addFilter = function (filter) {
             filters.push(filter);
@@ -197,14 +196,21 @@ FILTERS = (function () {
             }
         };
 
-        this.refresh = function () {
-            this.filter();
-            UTILS.fixThumbnailMargins();
-//
-//            var debounced_draw = debounce(function() {
-//        	fixThumbnailMargins();
-//            }, 125);
+        this.doRefresh = function() {
+            for (var i=0; i<refreshFns.length; i++) {
+                refreshFns[i]();
+            }
         };
+
+        this.refresh = UTILS.debounce(function () {
+            that.filter();
+            that.doRefresh();
+            UTILS.fixThumbnailMargins();
+        }, 125);
+
+        this.addRefreshFn = function(fn) {
+            refreshFns.push(fn);
+        }
     };
 
 
@@ -296,130 +302,169 @@ FILTERS = (function () {
 PLOTS = function () {
     var module = {};
 
-    module.Histogram = function(reference, data, numBins) {
+    module.Histogram = function(reference, histogramGetter) {
+        // Set the 'constants' for this histogram
+        // A formatter for counts.
+        var formatCount = d3.format(",.0f");
+
+        var color = ["#e5e5e5", "#4086aa"];
+        var getterFns = [histogramGetter.getAllDataHistogram,
+                         histogramGetter.getSelectedDataHistogram];
+        var layerIds = ["allDataLayer", "selectedDataLayer"];
+
+        var allDataHistogram = histogramGetter.getAllDataHistogram();
+        var extent = histogramGetter.getExtent();
+        var yMax = d3.max(allDataHistogram, function(bar) { return bar.y });
+
+        // fieldsets are shrunk by 2.1%, so shrink our width accordingly
+        // to remain within the column
+        var f = (100-2.127659574468085) / 100;
+
         // Define the margin object with properties for the four sides
         // (clockwise from the top, as in CSS), then add a bit more to the
         // bottom margin to account for the x axis label
         var xAxisOffset = 20;
         var margin = {top: 10, right: 10, bottom: 20 + xAxisOffset, left: 10};
+        // We don't want the height to be responsive.
+        var height = 150 - margin.top - margin.bottom;
+        // but the width is, so let it be set in the resize function
+        var width = f * $(reference).empty().width() - margin.left - margin.right;
 
-        // default is twenty uniformly-spaced bins
-        var numBins = numBins || 20;
+        // set X and Y scales. Y scale never changes.
+        var x = d3.scale.linear()
+            .domain(d3.extent(extent))
+            .range([0, width]);
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+        var y = d3.scale.linear()
+            .domain([0, yMax])
+            .range([height, 0]);
 
-        // bin data into n bins
-        var binned = d3.layout.histogram()
-                .bins(numBins)
-                (data);
+        // Lastly, define svg as a G element that translates the origin to the
+        // top-left corner of the chart area.
+        var svg = d3.select(reference).append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom);
 
-        var plot = function() {
-            // Define width and height as the inner dimensions of the chart area.
-            // The drawing code needs to reference a responsive elements dimensions
-            var width = $(reference).empty().width() - margin.left - margin.right;
-            // We don't want the height to be responsive.
-            var height = 150 - margin.top - margin.bottom;
-
-            var x = d3.scale.linear()
-                    .domain(d3.extent(data))
-                    .range([0, width]);
-
-            var y = d3.scale.linear()
-                    .domain([0, d3.max(binned, function(d) {
-                	return d.y;
-                    })])
-                    .range([height, 0]);
-
-            var xAxis = d3.svg.axis()
-                    .scale(x)
-                    .orient("bottom");
-
-            var yAxis = d3.svg.axis()
-                    .scale(y)
-                    .orient("right");
-
-            // A formatter for counts.
-            var formatCount = d3.format(",.0f");
-
-            // Lastly, define svg as a G element that translates the origin to the
-            // top-left corner of the chart area.
-            var svg = d3.select(reference).append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom)
-                    .append("g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-            var bar = svg.selectAll(".bar")
-                    .data(binned)
-                    .enter().append("g")
-                    .attr("class", "bar")
-                    .attr("transform", function(d) {
-                return "translate(0," + y(d.y) + ")";
-            });
-
-            bar.append("rect")
-                    .attr("x", function(d) { return x(d.x); })
-                    .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; })
-                    .attr("height", function(d) { return height - y(d.y); });
-
-            bar.append("text")
-                    .attr("dy", ".75em")
-                    .attr("y", 6)
-                    .attr("x", function(d) {
-                return x(d.x + d.dx / 2);
-            })
-                    .attr("text-anchor", "middle")
-                    .text(function(d) {
-                return formatCount(d.y);
-            });
-
-            svg.append("defs").append("clipPath")
-                    .attr("id", "clip")
-                    .append("rect")
-                    .attr("width", width)
-                    .attr("height", height);
-
-            var context = svg.append("g")
-                    .attr("transform", "translate(0," + margin.top + ")");
-
-            var brush = d3.svg.brush()
-                    .x(x)
-                    .on("brush", brushed);
-
-            function brushed() {
-                var extent = brush.empty() ? x.domain() : brush.extent();
-                that.onBrush(extent[0], extent[1]);
-            }
-
-            context.append("g")
-                    .attr("class", "x brush")
-                    .call(brush)
-                    .selectAll("rect")
-                    .attr("y", -17)
-                    .attr("height", height + 7);
-
-            svg.append("g")
-                    .attr("class", "x axis")
-                    .attr("transform", "translate(0," + height + ")")
-                    .call(xAxis);
-
-            // text label for the x axis
-            svg.append("text")
-                    .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
-                    .style("text-anchor", "middle")
-                    .attr("dy", "-1em")
-                    .append("tspan")
-                    .text("T")
-                    .append("tspan")
-                    .attr("baseline-shift", "sub")
-                    .text("sys");
-        };
-
-        var onBrush = function() {
-            // no-op stub to be replaced by real filter
-        };
+        var gTransform = svg.append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
         var that = {};
-        that.plot = plot;
-        that.onBrush = onBrush;
+
+        that.resize = function() {
+            // Define width and height as the inner dimensions of the chart area.
+            // The drawing code needs to reference a responsive elements dimensions
+
+            // look to the fluid column rather than the div, as the div does not resize smaller than the histogram
+            width = f * $(reference).parent().parent().width() - margin.left - margin.right;
+            svg.attr("width", width + margin.left + margin.right);
+            clipPath.attr("width", width);
+
+            x = x.range([0, width]);
+            rect.attr("x", function(d) { return x(d.x); })
+                .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; });
+            text.attr("x", function(d) { return x(d.x + d.dx / 2); });
+
+            xAxis.scale(x);
+            gTransform.select("#xaxis").call(xAxis);
+            xAxisLabel.attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
+        };
+
+        var layer = gTransform.selectAll("g")
+            .data(getterFns)
+            .enter().append("g")
+            .style("fill", function(d, i) { return color[i]; })
+            .attr("id", function(d, i) { return layerIds[i]; });
+
+        var bar = layer.selectAll(".bar")
+            .data(function(d) { return d(); })
+            .enter().append("g")
+            .attr("class", "bar");
+
+        var rect = bar.append("rect")
+            .attr("x", function(d) { return x(d.x); })
+            .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; })
+            .attr("y", height)
+            .attr("height", 0);
+
+        var text = bar.append("text")
+            .attr("dy", ".75em")
+            .attr("y", function(d) { return y(d.y) + 6 })
+            .attr("x", function(d) { return x(d.x + d.dx / 2); })
+            .attr("text-anchor", "middle")
+            .text(function(d) { return formatCount(d.y) });
+
+        rect.transition()
+            .delay(function(d, i) { return i * 10; })
+            .attr("y", function(d) { return y(d.y); })
+            .attr("height", function(d) { return height - y(d.y); });
+
+        var selectedRect = svg.selectAll("g#selectedDataLayer g rect");
+        var selectedText = svg.selectAll("g#selectedDataLayer g text");
+
+        that.refreshSelectedData = function() {
+            var selectedHistogramData = histogramGetter.getSelectedDataHistogram();
+            selectedRect.data(selectedHistogramData)
+                .transition()
+                .duration(500)
+                .delay(function(d, i) { return i * 10; })
+                .attr("y", function(d) { return y(d.y); })
+                .attr("height", function(d) { return height - y(d.y); });
+
+            selectedText.data(selectedHistogramData)
+                .transition()
+                .duration(500)
+                .delay(function(d, i) { return i * 10; })
+                .attr("y", function(d) { return y(d.y) + 6; })
+                .text(function(d) { return formatCount(d.y) });
+        }
+
+        var clipPath = gTransform.append("defs").append("clipPath")
+            .attr("id", "clip")
+            .append("rect")
+            .attr("width", width)
+            .attr("height", height);
+
+        var context = gTransform.append("g")
+            .attr("transform", "translate(0," + margin.top + ")");
+
+        var brush = d3.svg.brush()
+            .x(x)
+            .on("brush", brushed);
+
+        function brushed() {
+            var e = brush.empty() ? x.domain() : brush.extent();
+            that.onBrush(e[0], e[1]);
+        }
+
+        context.append("g")
+            .attr("class", "x brush")
+            .call(brush)
+            .selectAll("rect")
+            .attr("y", -17)
+            .attr("height", height + 7);
+
+        gTransform.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .attr("id", "xaxis")
+            .call(xAxis);
+
+        // text label for the x axis
+        var xAxisLabel = gTransform.append("text")
+            .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
+            .style("text-anchor", "middle")
+            .attr("dy", "-1em")
+            .append("tspan")
+            .text("T")
+            .append("tspan")
+            .attr("baseline-shift", "sub")
+            .text("sys");
+
+        that.onBrush = function() {
+            // no-op stub to be replaced by real filter
+        };
         return that;
     };
 
@@ -429,23 +474,74 @@ PLOTS = function () {
 ALL_IN_ONE = function() {
     var module = {};
 
-    module.easyHistogram = function (scores, score_key, element_id) {
-        var filter = new FILTERS.HistogramFilter(score_key);
+    var getData = function (scores_dict, key, filter) {
+        var scores = [];
 
-        var data = UTILS.getData(scores, score_key);
-        var histogram = PLOTS.Histogram(element_id, data, 20);
+        for (var png in scores_dict) {
+            var anchor = $("a[href='" + png + "']"),
+                score;
+
+            if (filter === undefined) {
+                score = scores_dict[png][key];
+                scores.push(score);
+            } else if ($(anchor).is(filter)) {
+                score = scores_dict[png][key];
+                scores.push(score);
+            }
+        }
+        return scores;
+    }
+
+    module.histogramGetter = function(scores_dict, key, nBins) {
+        var allScores = getData(scores_dict, key);
+        var extent = d3.extent(allScores);
+        var histogram = d3.layout.histogram().bins(nBins).range(extent);
+        var allDataHistogram = histogram(allScores);
+
+        var that = {};
+
+        that.getSelectedDataHistogram = function() {
+            var visibleScores = getData(scores_dict, key, ":visible");
+            var visibleHistogram = histogram(visibleScores);
+            return visibleHistogram;
+        };
+
+        that.getAllDataHistogram = function() {
+            return allDataHistogram;
+        };
+
+        that.getExtent = function() {
+            return extent;
+        }
+
+        return that;
+    }
+
+    module.easyHistogram = function (pipeline, scores, score_key, element_id) {
+        var histogramGetter = ALL_IN_ONE.histogramGetter(scores, score_key, 20);
+
+        var filter = new FILTERS.HistogramFilter(score_key);
+        pipeline.addFilter(filter);
+
+        var histogram = PLOTS.Histogram(element_id, histogramGetter);
         histogram.onBrush = function (lo, hi) {
             filter.setRange(lo, hi);
         };
-        histogram.plot();
+
+        pipeline.addRefreshFn(function() {
+           histogram.refreshSelectedData();
+        });
 
         // refill the histogram to the size of the parent element when the
         // window, and thus the parent span width, changes.
         $(window).resize(UTILS.debounce(function () {
-            histogram.plot();
+            histogram.resize();
         }, 125));
 
-        return filter;
+        return {
+            "histogram": histogram,
+            "filter": filter
+        };
     }
 
     return module;

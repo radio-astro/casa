@@ -64,7 +64,6 @@ svg {
 }
 
 .bar rect {
-    fill: steelblue;
     shape-rendering: crispEdges;
 }
 
