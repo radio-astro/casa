@@ -90,6 +90,7 @@ bool synthesisdeconvolver::restore()
   return rstat;
 }
 
+  /*
   bool synthesisdeconvolver::testsummary(const casac::image *imt)
 {
   casac::record* rstat(False);
@@ -102,6 +103,8 @@ bool synthesisdeconvolver::restore()
   }
   return rstat;
 }
+  */
+
 
 bool
 synthesisdeconvolver::done()
