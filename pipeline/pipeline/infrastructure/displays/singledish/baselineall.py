@@ -141,17 +141,14 @@ class SDBaselineAllDisplay(object):
         for b in baselined:
             spw = b['spw']
             antennas = b['index']
-            ### FOR TESTING
-            #antennas = antennas[:1]
             for ant in antennas:
                 scantable = self.context.observing_run[ant]
                 pre_baseline = scantable.name
-                post_baseline = b['name'][ant]
+                #post_baseline = b['name'][ant]
+                post_baseline = scantable.baselined_name
                 srctype = scantable.calibration_strategy['srctype']
                 nchan = scantable.spectral_window[spw].nchan
                 index_list = list(self.__index_list(ant, spw, srctype))
-                ### FOR TESTING
-                #index_list = index_list[:122]
                 t0 = time.time()
                 plot_list.append(
                     list(self.doplot(ant,

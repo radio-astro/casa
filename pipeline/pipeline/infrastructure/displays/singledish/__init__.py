@@ -10,3 +10,4 @@ from .clustering import ClusterDisplay
 from .tpimage import SDChannelAveragedImageDisplay
 from .spimage import SDSpectralImageDisplay
 from .imaging import SDImageDisplayFactory
+from .baselineall import SDBaselineAllDisplay
