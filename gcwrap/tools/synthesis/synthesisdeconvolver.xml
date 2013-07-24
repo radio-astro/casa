@@ -8,6 +8,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
  
         <tool name="synthesisdeconvolver" module="synthesisdeconvolver">
+	<needs>image</needs>
         <shortdescription>tool for synthesis imaging</shortdescription>
        
 <description>
@@ -102,6 +103,25 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 <description>
 </description>
 <input>
+</input>
+
+<returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="testsummary">
+   <shortdescription>TEST. Print a summary from an input image tool.</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="image" name="imt">
+     <description> Input image tool object </description>
+     <value></value>
+     </param>
+
 </input>
 
 <returns type="bool"/>

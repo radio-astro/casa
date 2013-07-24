@@ -90,6 +90,19 @@ bool synthesisdeconvolver::restore()
   return rstat;
 }
 
+  bool synthesisdeconvolver::testsummary(const casac::image *imt)
+{
+  casac::record* rstat(False);
+  try {
+
+    const_cast<casac::image *>(imt)->_image->summary();
+
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
 bool
 synthesisdeconvolver::done()
 {

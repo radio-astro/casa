@@ -294,8 +294,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	    os << "MS : " << mslist[sel];
 	    os << "   Selection : spw='" << spwlist[sel] << "'";
 	    os << " field='" << fieldlist[sel] << "'" << LogIO::POST;
-	    selectData(mslist[sel], spwlist[sel], "", "", MFrequency::LSRK, fieldlist[sel],""/*taql*/,  ""/*antenna*/, ""/*uvdist*/, ""/*scan*/,
-		       ""/*obs*/, ""/*timestr*/, useScratch, False);
+	    selectData(mslist[sel], spwlist[sel], "", "", MFrequency::LSRK, fieldlist[sel],""/*taql*/,  ""/*antenna*/, ""/*uvdist*/, ""/*scan*/, ""/*obs*/, ""/*timestr*/, useScratch, False);
 	  }
 	
 	
@@ -451,15 +450,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     LogIO os( LogOrigin("SynthesisImager","setupImaging",WHERE) );
 
     String ftmname("");
-    String modelname("");
+    String startmodel("");
     try
       {
 	// TODO : Parse FT-machine-related parameters.
 	if( gridpars.isDefined("ftmachine") )  // A single string
 	  { ftmname = gridpars.asString( RecordFieldId("ftmachine")); }
 	
-	if( gridpars.isDefined("modelname") )  // A single string
-	  { modelname = gridpars.asString( RecordFieldId("modelname")); }
+	if( gridpars.isDefined("startmodel") )  // A single string
+	  { startmodel = gridpars.asString( RecordFieldId("startmodel")); }
 
 
       }
@@ -473,10 +472,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     try
       {
 	// Set the model image for prediction
-	if( modelname.length()>0 && !itsCurrentImages.null() )
+	if( startmodel.length()>0 && !itsCurrentImages.null() )
 	  {
-	    os << "Setting " << modelname << " as starting model for prediction " << LogIO::POST;
-	    itsCurrentImages->setModelImage( modelname );
+	    os << "Setting " << startmodel << " as starting model for prediction " << LogIO::POST;
+	    itsCurrentImages->setModelImage( startmodel );
 	  }
 
 	// TODO : Set up the FT-Machine. Send in parameters here...

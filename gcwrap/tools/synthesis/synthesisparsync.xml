@@ -6,8 +6,8 @@ xsi:schemaLocation="http://casa.nrao.edu/schema/casa.xsd
 file:///opt/casa/code/tools/xml/casa.xsd">
 
 
- 
         <tool name="synthesisparsync" module="synthesisparsync">
+	<needs>synthesisimstore</needs>
         <shortdescription>tool for synthesis imaging</shortdescription>
        
 <description>
@@ -86,6 +86,37 @@ This is used to construct {\tt synthesisparsync} tool.
 </method>
 
 <!-- ===================================== -->
+
+   <method type="function" name="getimstore">
+   <shortdescription>Get Image store</shortdescription>
+
+<description>
+</description>
+<input/>
+
+<returns type="synthesisimstore"/>
+</method>
+<!-- ===================================== -->
+
+
+   <method type="function" name="setimstore">
+   <shortdescription>Set ImageStore</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="synthesisimstore" name="imstore">
+     <description> Image Store object  </description>
+     <value></value>
+     </param>
+
+</input>
+
+<returns type="bool"/>
+</method>
+
+
 <!-- ===================================== -->
 
    <method type="function" name="done">

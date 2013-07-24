@@ -8,6 +8,7 @@ file:///opt/casa/code/tools/xml/casa.xsd">
 
  
         <tool name="synthesisimager" module="synthesisimager">
+	<needs>synthesisimstore</needs>
         <shortdescription>tool for synthesis imaging</shortdescription>
        
 <description>
@@ -161,6 +162,25 @@ Image and imaging(gridding) parameters should be a list, one element per field/c
      </param>
 </input>
 <returns type="bool"/>
+</method>
+
+<!-- ===================================== -->
+
+   <method type="function" name="getimstore">
+   <shortdescription>Get Image Store</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="int" name="id">
+     <description>Image field id</description>
+     <value type="int">0</value>
+     </param>
+
+</input>
+
+<returns type="synthesisimstore"/>
 </method>
 <!-- ===================================== -->
 

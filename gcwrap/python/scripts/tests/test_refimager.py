@@ -254,3 +254,30 @@ def write_file(filename,str_text):
     return
 
 
+########################################
+
+## Test function for live ImageStore transport between tools.
+def toolTestMajorCycle( testnum=1 ):
+     params = getparams( testnum=testnum )[0]
+
+     SItool = casac.synthesisimager()
+     SItool.initializemajorcycle( params.getSelPars(), params.getImagePars(), params.getGridPars() )
+
+     PStool = casac.synthesisparsync()
+     syncpars = {'imagename':params.getImagePars()['0']['imagename']}
+     PStool.setupparsync( syncpars )
+
+     PStool.scattermodel()
+     SItool.executemajorcycle()
+     istore = SItool.getimstore(0)
+
+     PStool.setimstore(istore)
+     PStool.gatherresidual( )
+
+     SItool.done()
+     PStool.done()
+
+
+###################################################
+
+
