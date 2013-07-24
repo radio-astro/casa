@@ -141,7 +141,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	for( uInt part=0;part<itsPartImages.nelements();part++)
 	  {
 	    itsPartImages[part]->setModelImage( itsImages->getName() );
+	    itsPartImages[part]->releaseLocks();
 	  }
+	itsImages->releaseLocks();
       }
   }// end of gatherImages
 
@@ -171,6 +173,18 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
   }
 
+
+  CountedPtr<SIImageStore> SynthesisParSync::getImageStore()
+  {
+    LogIO os( LogOrigin("SynthesisParSync", "getImageStore", WHERE) );
+    return itsImages;
+  }
+
+  void SynthesisParSync::setImageStore( SIImageStore* imstore )
+  {
+    LogIO os( LogOrigin("SynthesisParSync", "setImageStore", WHERE) );
+    itsImages = imstore;
+  }
 
 
 

@@ -67,6 +67,9 @@ class SynthesisParSync
   // Copy out model to all pieces. Currently a No-Op.
   void scatterModel();
 
+  CountedPtr<SIImageStore> getImageStore();
+  void setImageStore( SIImageStore* imstore );
+
 protected:
 
  // Normalize. This can later change to be more general, i.e. used for PB-correction too...
