@@ -95,14 +95,15 @@ class SingleDishTaskTemplate(basetask.StandardTaskTemplate):
     def _setup_datatable(self):
         context = self.inputs.context
         observing_run = context.observing_run
-        data_table = observing_run.datatable_instance
-        if data_table is None:
-            name = observing_run.datatable_name
-            if name is not None and os.path.exists(name):
-                LOG.warn('Import DataTable from disk')
-                data_table = DataTable(name)
-        self.DataTable = data_table
-        observing_run.datatable_instance = self.DataTable
+        #data_table = observing_run.datatable_instance
+        #if data_table is None:
+        #    name = observing_run.datatable_name
+        #    if name is not None and os.path.exists(name):
+        #        LOG.debug('Import DataTable from disk')
+        #        data_table = DataTable(name)
+        #self.DataTable = data_table
+        #observing_run.datatable_instance = self.DataTable
+        #observing_run.datatable_instance = DataTable(observing_run.datatable_name)
         
     def _inspect_casa_version(self):
         import inspect
