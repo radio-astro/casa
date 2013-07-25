@@ -77,7 +77,9 @@ template<class T> class ImageInterface;
   void initializeDegrid(const VisBuffer& vb, const Int row=-1);
   void degrid(VisBuffer& vb);
 
-  Record getFTMRecord();
+  //////////////the return value is False if no valid record is being returned
+  Bool getCLRecord(Record& rec);
+  Bool getFTMRecord(Record& rec);
 
 protected:
   Bool changedSkyJonesLogic(const vi::VisBuffer2& vb, Bool& firstRow, Bool& internalRow, const Bool grid=True);
