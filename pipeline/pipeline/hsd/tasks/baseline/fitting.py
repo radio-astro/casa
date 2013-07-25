@@ -128,6 +128,7 @@ class FittingBase(object):
             LOG.debug('nrow = %s'%(nrow))
             LOG.debug('len(idxs) = %s'%(len(idxs)))
             index_list = []
+            updated = []
             for i in xrange(nrow):
                 row = rows[i]
                 idx = idxs[i]
@@ -164,10 +165,11 @@ class FittingBase(object):
                 #nwin.append(nwindow)
                 spectra[i] = result
                 index_list.append(idx)
+                updated.append(i)
 
             # write data
             with casatools.TableReader(filename_out, nomodify=False) as tb:
-                for i in xrange(nrow):
+                for i in updated:
                     tb.putcell('SPECTRA', rows[i], spectra[i])
 
             # update baseline table
