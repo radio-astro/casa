@@ -164,29 +164,50 @@ FILTERS = (function () {
     var module = {};
 
     module.FilterPipeline = function() {
-        var filters = [];
-        var scores = [];
-        var that = this;
-        var refreshFns = [];
+        var filters = [], // filters registered with the pipeline
+            scores = {},  // scores dictionary
+            refresh,      // refresh()
+            that = this;  // reference to this for anonymous functions
+
+        // filter PNGs with our list of filter objects, consolidating multiple
+        // refresh request into one event via debounce
+        var refresh = UTILS.debounce(function () {
+            filter();
+            // changing the number of visible PNGs could mess up the margins on
+            // row n > 1, so rejig the thumbnail layout on each refresh.
+            UTILS.fixThumbnailMargins();
+        }, 125);
 
         this.addFilter = function (filter) {
+            // Add filter to our list of filters so we can call it when
+            // evaluating each PNG.
             filters.push(filter);
-            filter.addObserver(that);
+
+            // Subscribe to 'change' events on the filter, refreshing the filter
+            // pipeline state and thus the visibility of each PNG when such an
+            // event is published.
+            $(filter).on("change", function() {
+                refresh();
+            });
         };
 
         this.setScores = function (newScores) {
             scores = newScores;
         };
 
-        this.filter = function () {
+        var filter = function () {
+            // calculate the visibility of each thumbnail by..
             for (var png in scores) {
-                var isVisible = true;
+                // .. getting the score for the thumbnail..
                 var score = scores[png];
-                for (var i in filters) {
-                    var f = filters[i];
-                    isVisible = (isVisible && f.isVisible(score));
-                }
 
+                // .. finding whether it passes each filter..
+                var isVisible = filters.reduce(function (previous, current) {
+                    return previous && current.isVisible(score);
+                }, true);
+
+                // .. and showing/hiding the thumbnail based on the aggregate
+                // filter state.
                 var li = $("a[href='" + png + "']").parent().parent();
                 if (isVisible) {
                     li.show();
@@ -194,71 +215,57 @@ FILTERS = (function () {
                     li.hide();
                 }
             }
+
+            // publish a 'change' event, notifying subscribers that the filters
+            // have changed
+            $(that).trigger("change");
         };
-
-        this.doRefresh = function() {
-            for (var i=0; i<refreshFns.length; i++) {
-                refreshFns[i]();
-            }
-        };
-
-        this.refresh = UTILS.debounce(function () {
-            that.filter();
-            that.doRefresh();
-            UTILS.fixThumbnailMargins();
-        }, 125);
-
-        this.addRefreshFn = function(fn) {
-            refreshFns.push(fn);
-        }
     };
 
 
-    module.HistogramFilter = function(ntype) {
-        var type = ntype || "rms";
-        var min = -1e9;
-        var max = 1e9;
-        var observers = [];
+    module.HistogramFilter = function(scoreType) {
+        var min = -1e9,  // minimum allowed PNG score
+            max = 1e9,   // maximum allowed PNG score
+            that = this; // reference for anonymous functions
 
+        // Set the filter range in response to external input, eg. someone
+        // dragging the filter range in the histogram GUI.
         this.setRange = function (newMin, newMax) {
             min = newMin;
             max = newMax;
-            observers.forEach(function (observer) {
-                observer.refresh();
-            });
+
+            // notify subscribers (ie. the filter pipeline) that the filter
+            // thresholds have changed, and so PNGs should be re-filtered
+            // accordingly.
+            $(that).trigger("change");
         };
 
-        this.isVisible = function (hash) {
-            var score = hash[type];
+        this.isVisible = function (pngScoreDict) {
+            var score = pngScoreDict[scoreType];
             if ((score >= min) && (score <= max)) {
                 return true;
             } else {
                 return false;
             }
         };
-
-        this.addObserver = function (observer) {
-            observers.push(observer);
-        };
     };
 
 
-    module.MatchFilter = function(key) {
-        var matchKey = key;
-        var visibleVals = [];
-        var observers = [];
+    module.MatchFilter = function(scoreType) {
+        var visibleVals = [],
+            that = this;
 
+        // Set the filter passthrough values in response to external input, eg.
+        // a spectral window being selected in the spw text field.
         this.setVisibleVals = function (vals) {
             visibleVals = vals;
-            observers.forEach(function (observer) {
-                observer.refresh();
-            });
+            $(that).trigger("change");
         };
 
-        this.isVisible = function (hash) {
-            var i,
+        this.isVisible = function (pngScoreDict) {
+            var i,                          // loop variable
                 visibleVal,
-                valToTest = hash[matchKey];
+                valToTest = pngScoreDict[scoreType];
 
             if (visibleVals.length === 0) {
                 return true;
@@ -271,10 +278,6 @@ FILTERS = (function () {
                 }
             }
             return false;
-        };
-
-        this.addObserver = function (observer) {
-            observers.push(observer);
         };
     };
 
@@ -302,23 +305,44 @@ FILTERS = (function () {
 PLOTS = function () {
     var module = {};
 
-    module.Histogram = function(reference, histogramGetter) {
+    module.xAxisLabels = {
+        "Tsys": function (xAxisLabel) {
+            xAxisLabel.append("tspan")
+                .text("T")
+                .append("tspan")
+                .attr("baseline-shift", "sub")
+                .text("sys");
+        },
+        "unknown": function (xAxisLabel) {
+            xAxisLabel.text("N/A");
+        }
+    };
+
+    module.Histogram = function(reference, histogramGetter, xAxisLabeller) {
         // Set the 'constants' for this histogram
-        // A formatter for counts.
-        var formatCount = d3.format(",.0f");
 
-        var color = ["#e5e5e5", "#4086aa"];
-        var getterFns = [histogramGetter.getAllDataHistogram,
-                         histogramGetter.getSelectedDataHistogram];
-        var layerIds = ["allDataLayer", "selectedDataLayer"];
+            // A formatter for counts.
+        var formatCount = d3.format(",.0f"),
+            // colors for bars
+            color = ["#e5e5e5", "#4086aa"],
+            // the getters to call to get histograms for all data + selected data
+            getterFns = [histogramGetter.getAllDataHistogram,
+                         histogramGetter.getSelectedDataHistogram],
+            // CSS ids for all data and selected data
+            layerIds = ["allData", "filterData"];
 
+        // histogram of all scores. this never changes so we can generate it at construction time
         var allDataHistogram = histogramGetter.getAllDataHistogram();
+        // get the extent (ie. the range) of scores. We cannot derive this from
+        // the histogram as the x range has been quantised to bar positions
         var extent = histogramGetter.getExtent();
+        // maximum Y value, i.e. the maximum number of counts in any histogram
+        // bar
         var yMax = d3.max(allDataHistogram, function(bar) { return bar.y });
 
         // fieldsets are shrunk by 2.1%, so shrink our width accordingly
         // to remain within the column
-        var f = (100-2.127659574468085) / 100;
+        var shrinkFactor = (100-2.127659574468085) / 100;
 
         // Define the margin object with properties for the four sides
         // (clockwise from the top, as in CSS), then add a bit more to the
@@ -328,18 +352,19 @@ PLOTS = function () {
         // We don't want the height to be responsive.
         var height = 150 - margin.top - margin.bottom;
         // but the width is, so let it be set in the resize function
-        var width = f * $(reference).empty().width() - margin.left - margin.right;
+        var width = shrinkFactor * $(reference).empty().width() - margin.left - margin.right;
 
-        // set X and Y scales. Y scale never changes.
+        // Set X and Y scales. Note that the Y scale never changes on window
+        // resize.
         var x = d3.scale.linear()
             .domain(d3.extent(extent))
             .range([0, width]);
-        var xAxis = d3.svg.axis()
-            .scale(x)
-            .orient("bottom");
         var y = d3.scale.linear()
             .domain([0, yMax])
             .range([height, 0]);
+        var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
 
         // Lastly, define svg as a G element that translates the origin to the
         // top-left corner of the chart area.
@@ -350,32 +375,11 @@ PLOTS = function () {
         var gTransform = svg.append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        var that = {};
-
-        that.resize = function() {
-            // Define width and height as the inner dimensions of the chart area.
-            // The drawing code needs to reference a responsive elements dimensions
-
-            // look to the fluid column rather than the div, as the div does not resize smaller than the histogram
-            width = f * $(reference).parent().parent().width() - margin.left - margin.right;
-            svg.attr("width", width + margin.left + margin.right);
-            clipPath.attr("width", width);
-
-            x = x.range([0, width]);
-            rect.attr("x", function(d) { return x(d.x); })
-                .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; });
-            text.attr("x", function(d) { return x(d.x + d.dx / 2); });
-
-            xAxis.scale(x);
-            gTransform.select("#xaxis").call(xAxis);
-            xAxisLabel.attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
-        };
-
         var layer = gTransform.selectAll("g")
             .data(getterFns)
             .enter().append("g")
             .style("fill", function(d, i) { return color[i]; })
-            .attr("id", function(d, i) { return layerIds[i]; });
+            .attr("class", function(d, i) { return layerIds[i]; });
 
         var bar = layer.selectAll(".bar")
             .data(function(d) { return d(); })
@@ -400,26 +404,6 @@ PLOTS = function () {
             .attr("y", function(d) { return y(d.y); })
             .attr("height", function(d) { return height - y(d.y); });
 
-        var selectedRect = svg.selectAll("g#selectedDataLayer g rect");
-        var selectedText = svg.selectAll("g#selectedDataLayer g text");
-
-        that.refreshSelectedData = function() {
-            var selectedHistogramData = histogramGetter.getSelectedDataHistogram();
-            selectedRect.data(selectedHistogramData)
-                .transition()
-                .duration(500)
-                .delay(function(d, i) { return i * 10; })
-                .attr("y", function(d) { return y(d.y); })
-                .attr("height", function(d) { return height - y(d.y); });
-
-            selectedText.data(selectedHistogramData)
-                .transition()
-                .duration(500)
-                .delay(function(d, i) { return i * 10; })
-                .attr("y", function(d) { return y(d.y) + 6; })
-                .text(function(d) { return formatCount(d.y) });
-        }
-
         var clipPath = gTransform.append("defs").append("clipPath")
             .attr("id", "clip")
             .append("rect")
@@ -432,6 +416,18 @@ PLOTS = function () {
         var brush = d3.svg.brush()
             .x(x)
             .on("brush", brushed);
+
+        // the lightweight object to return, which will hold bare minimum
+        // functions for resizing the plots, refreshing the selected data
+        // histograms and a stub for informing the filter on brush changes.
+        var that = {};
+
+        // stub function that is called whenever the brush is updated, i.e.
+        // whenever a histogram range is selected via the mouse. This provides
+        // a hook for the filters to be updated.
+        that.onBrush = function() {
+            // no-op - to be replaced by real filter
+        };
 
         function brushed() {
             var e = brush.empty() ? x.domain() : brush.extent();
@@ -455,16 +451,63 @@ PLOTS = function () {
         var xAxisLabel = gTransform.append("text")
             .attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
             .style("text-anchor", "middle")
-            .attr("dy", "-1em")
-            .append("tspan")
-            .text("T")
-            .append("tspan")
-            .attr("baseline-shift", "sub")
-            .text("sys");
+            .attr("dy", "-1em");
 
-        that.onBrush = function() {
-            // no-op stub to be replaced by real filter
+        // call our user-provided function to write the X-axis label
+        xAxisLabeller(xAxisLabel);
+
+        // Find and set variables for elements that should be resized. These
+        // elements never change, so they are precalculated and do not need to
+        // be re-found during the resize itself, making it more efficient.
+        var selectedRect = svg.selectAll("g.filterData g rect");
+        var selectedText = svg.selectAll("g.filterData g text");
+
+        // Function to resize the histogram. The Y dimensions never change, so
+        // we just need to alter dimensions in the X axis. Note that we alter
+        // existing elements rather than replotting, i.e., re-writing the DOM,
+        // as DOM rewrites are very expensive.
+        that.resize = function() {
+            // Define width and height as the inner dimensions of the chart area.
+            // The drawing code needs to reference a responsive elements dimensions
+
+            // look to the fluid column rather than the div, as the div does not resize smaller than the histogram
+            width = shrinkFactor * $(reference).parent().parent().width() - margin.left - margin.right;
+            svg.attr("width", width + margin.left + margin.right);
+            clipPath.attr("width", width);
+
+            x.range([0, width]);
+            rect.attr("x", function(d) { return x(d.x); })
+                .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; });
+            text.attr("x", function(d) { return x(d.x + d.dx / 2); });
+
+            xAxis.scale(x);
+            gTransform.select("#xaxis").call(xAxis);
+            xAxisLabel.attr("transform", "translate(" + (width / 2) + " ," + (height + margin.bottom) + ")")
         };
+
+        // Function to refresh the select data histogram. We assume resizing and
+        // refreshing never happen at exactly the same time, which means this
+        // function only has to change the data attached to the selected data
+        // DOM elements and then recalculate the Y positions, heights and scores
+        // accordingly. Again, this saves DOM rewrites and so is the efficient
+        // way to do it.
+        that.refreshSelectedData = function() {
+            var selectedHistogramData = histogramGetter.getSelectedDataHistogram();
+            selectedRect.data(selectedHistogramData)
+                .transition()
+                .duration(500)
+                .delay(function(d, i) { return i * 10; })
+                .attr("y", function(d) { return y(d.y); })
+                .attr("height", function(d) { return height - y(d.y); });
+
+            selectedText.data(selectedHistogramData)
+                .transition()
+                .duration(500)
+                .delay(function(d, i) { return i * 10; })
+                .attr("y", function(d) { return y(d.y) + 6; })
+                .text(function(d) { return formatCount(d.y) });
+        }
+
         return that;
     };
 
@@ -490,9 +533,9 @@ ALL_IN_ONE = function() {
             }
         }
         return scores;
-    }
+    };
 
-    module.histogramGetter = function(scores_dict, key, nBins) {
+    var createHistogramGetter = function(scores_dict, key, nBins) {
         var allScores = getData(scores_dict, key);
         var extent = d3.extent(allScores);
         var histogram = d3.layout.histogram().bins(nBins).range(extent);
@@ -515,20 +558,25 @@ ALL_IN_ONE = function() {
         }
 
         return that;
-    }
+    };
 
-    module.easyHistogram = function (pipeline, scores, score_key, element_id) {
-        var histogramGetter = ALL_IN_ONE.histogramGetter(scores, score_key, 20);
+    module.easyHistogram = function (pipeline, scores, score_key, element_id,
+                                     xAxisLabeller) {
+        xAxisLabeller = xAxisLabeller || PLOTS.xAxisLabels["unknown"];
+        var histogramGetter = createHistogramGetter(scores, score_key, 20);
 
         var filter = new FILTERS.HistogramFilter(score_key);
         pipeline.addFilter(filter);
 
-        var histogram = PLOTS.Histogram(element_id, histogramGetter);
+        var histogram = PLOTS.Histogram(element_id, histogramGetter,
+                                        xAxisLabeller);
         histogram.onBrush = function (lo, hi) {
             filter.setRange(lo, hi);
         };
 
-        pipeline.addRefreshFn(function() {
+        // subscribe to 'change' events from the FilterPipeline, refreshing the
+        // selected data histogram on such an event.
+        $(pipeline).on("change", function() {
            histogram.refreshSelectedData();
         });
 

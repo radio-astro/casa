@@ -32,14 +32,17 @@ $(document).ready(function () {
     filterPipeline.addFilter(FILTERS.createMatchFilter('spw', '#select-spw'));
     filterPipeline.addFilter(FILTERS.createMatchFilter('antenna', '#select-ant'));
 
+    // get the X-axis label for Tsys
+    var xAxis = PLOTS.xAxisLabels["Tsys"];
+
     // create histograms and histogram filters for the three distributions we want
     // to highlight: RMS, average median, and maximum median reached.
     ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict,
-            "median", "#histogram-tsysmedian");
+            "median", "#histogram-tsysmedian", xAxis);
     ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict,
-            "median_max", "#histogram-tsysmedianmax");
+            "median_max", "#histogram-tsysmedianmax", xAxis);
     ALL_IN_ONE.easyHistogram(filterPipeline, scores_dict,
-            "rms", "#histogram-tsysrms");
+            "rms", "#histogram-tsysrms", xAxis);
 
     // add on-click handler to our thumbnails to launch FancyBox with the
     // relevant thumbnails
