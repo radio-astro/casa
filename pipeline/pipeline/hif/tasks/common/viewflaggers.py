@@ -542,7 +542,9 @@ class VectorFlagger(basetask.StandardTaskTemplate):
       flag_minabs=False, fmin_limit=0.0,
       flag_nmedian=False, fnm_limit=0.0,
       flag_sharps=False, sharps_limit=0.05,
-      flag_sharps2=False, sharps2_limit=0.05):
+      flag_sharps2=False, sharps2_limit=0.05,
+      flag_diffmad=False, diffmad_limit=10,
+      flag_tmf=None, tmf_limit=0.1):
 
         """
         Generate a list of flagging rules from a set of flagging parameters.
@@ -561,6 +563,10 @@ class VectorFlagger(basetask.StandardTaskTemplate):
             rules.append({'name':'sharps', 'limit':sharps_limit})
         if flag_sharps2:
             rules.append({'name':'sharps2', 'limit':sharps2_limit})
+        if flag_diffmad:
+            rules.append({'name':'diffmad', 'limit':diffmad_limit})
+        if flag_tmf:
+            rules.append({'name':'tmf', 'limit':tmf_limit})
 
         return rules
 
@@ -583,6 +589,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         spw = vector.spw
         antenna = vector.ant
         if antenna is not None:
+            # deal with antenna id not name
             antenna = antenna[0]
         table = vector.filename
 
@@ -797,6 +804,68 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               spw=spw, axisnames=axisnames,
                               flagcoords=flagcoords, 
                               flagchannels=channels_flagged))
+
+                elif rulename == 'diffmad':
+                    limit = rule['limit']
+                    if len(valid_data):
+                        diff = rdata[1:] - rdata[:-1]
+                        diff_flag = np.logical_or(rflag[1:], rflag[:-1])
+                        median_diff = np.median(diff[diff_flag==0])
+                        mad = np.median(
+                          np.abs(diff[diff_flag==0] - median_diff))
+
+                        # first, flag channels further from the median than
+                        # limit * MAD
+                        newflag = ((diff-median_diff) > limit*mad) & \
+                          (diff_flag==0)
+
+                        # set channels flagged 
+                        flag_chan = np.zeros([len(newflag)+1], np.bool) 
+                        flag_chan[:-1] = newflag
+                        flag_chan[1:] = np.logical_or(flag_chan[1:], newflag)
+
+                        # flag the 'view'
+                        rflag[flag_chan] = True
+
+                        # now compose a description of the flagging required on
+                        # the MS
+                        nchannels = len(rdata)
+                        channels = np.arange(nchannels)
+                        channels_flagged = channels[flag_chan]
+
+                        if len(channels_flagged) > 0:
+                            # Add new flag command to flag data underlying the
+                            # view.
+                            newflags.append(arrayflaggerbase.FlagCmd(
+                              reason='stage%s' % self.inputs.context.stage,
+                              filename=table, rulename=rulename,
+                              spw=spw, antenna=antenna, flagchannels=channels_flagged))
+
+                elif rulename == 'tmf':
+                    limit = rule['limit']
+                    if len(valid_data):
+                        # flag all channels if fraction already flagged 
+                        # is greater than tmf_limit of total
+                        if float(len(rdata[rflag==True])) / len(rdata) > limit:
+                            newflag = (rflag==False)
+
+                            # flag the 'view'
+                            rflag[newflag] = True
+
+                            # now compose a description of the flagging required on
+                            # the MS
+                            nchannels = len(rdata)
+                            channels = np.arange(nchannels)
+                            channels_flagged = channels[newflag]
+
+                            if len(channels_flagged) > 0:
+                                # Add new flag command to flag data underlying the
+                                # view.
+                                newflags.append(arrayflaggerbase.FlagCmd(
+                                  reason='stage%s' % self.inputs.context.stage,
+                                  filename=table, rulename=rulename,
+                                  spw=spw, antenna=antenna,
+                                  flagchannels=channels_flagged))
 
                 else:           
                     raise NameError, 'bad rule: %s' % rule
