@@ -563,6 +563,37 @@ class msmd_test(unittest.TestCase):
         got = self.md.scansfortimes(4.84282937e+09,200)
         self.assertTrue((got == expec).all())
 
+    def test_spwsforbasebands(self):
+        """Test spwsforbasebands()"""
+        got = self.md.spwsforbaseband()
+        self.assertTrue(len(got) == 5)
+        self.assertTrue(
+            (
+                got['0']
+                == [
+                    0, 25, 26, 27, 28, 29,
+                    30, 31, 32, 33, 34, 35,
+                    36, 37, 38, 39
+                ]
+             ).all()
+        )
+        self.assertTrue(
+            (got['1'] == [1, 2, 9, 10, 17, 18]).all()
+        )
+        self.assertTrue(
+            (got['2'] == [3, 4, 11, 12, 19, 20]).all()
+        )
+        self.assertTrue(
+            (got['3'] == [5, 6, 13, 14, 21, 22]).all()
+        )
+        self.assertTrue(
+            (got['4'] == [7, 8, 15, 16, 23, 24]).all()
+        )
+        for i in range(4):
+            self.assertTrue(
+                (got[str(i)] == self.md.spwsforbaseband(i)).all()
+            )
+
     def test_spwsforfield(self):
         """Test spwsforfield()"""
         names = [

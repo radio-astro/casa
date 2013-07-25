@@ -190,7 +190,7 @@ record* msmetadata::antennaposition(const string& name) {
 
 
 int msmetadata::baseband(int spw) {
-	_FUNC2 (
+	_FUNC (
 		if (spw < 0 || spw >= (int)_msmd->nSpw(True)) {
 			*_log << "Spectral window ID out of range" << LogIO::EXCEPTION;
 		}
@@ -612,6 +612,32 @@ int msmetadata::sideband(int spw) {
 		return _msmd->getNetSidebands()[spw];
 	)
 	return 0;
+}
+
+variant* msmetadata::spwsforbaseband(int bb) {
+	_FUNC(
+		map<uInt COMMA set<uInt> > x = _msmd->getBBCNosToSpwMap();
+		if (bb >= 0) {
+			if (x.find(bb) == x.end()) {
+				return new variant(vector<int>(0));
+			}
+			else {
+				return new variant(_setUIntToVectorInt(x[bb]));
+			}
+		}
+		else {
+			record out;
+			std::map<uInt COMMA std::set<uInt> >::const_iterator end = x.end();
+			for (
+				std::map<uInt COMMA std::set<uInt> >::const_iterator iter=x.begin();
+				iter!=end; iter++
+			) {
+				vector<int> v = _setUIntToVectorInt(iter->second);
+				out.insert(String::toString(iter->first), variant(v));
+			}
+			return new variant(out);
+		}
+	)
 }
 
 vector<int> msmetadata::spwsforintent(const string& intent) {
