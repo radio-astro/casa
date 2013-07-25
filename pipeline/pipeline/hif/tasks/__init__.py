@@ -4,6 +4,7 @@ from .antpos import Antpos
 from .applycal import Applycal
 from .atmflag import Atmflag
 from .bandpass import BandpassMode, ChannelBandpass, PhcorBandpass
+from .bpflagchans import Bandpassflagchans
 from .clean import Clean
 from .cleanlist import CleanList
 from .exportdata import ExportData
