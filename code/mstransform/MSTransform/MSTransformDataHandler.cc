@@ -888,6 +888,23 @@ void MSTransformDataHandler::setup()
 		}
 	}
 
+	// Regrid SPW subtable
+	if (combinespws_p)
+	{
+		initRefFrameTransParams();
+		regridAndCombineSpwSubtable();
+		reindexSourceSubTable();
+		reindexDDISubTable();
+		reindexFeedSubTable();
+		reindexSysCalSubTable();
+		reindexFreqOffsetSubTable();
+	}
+	else if (refFrameTransformation_p)
+	{
+		initRefFrameTransParams();
+		regridSpwSubTable();
+	}
+
 	//// Determine the frequency transformation methods to use ////
 
 
@@ -1000,23 +1017,6 @@ void MSTransformDataHandler::setup()
 	}
 
 	//// Determine the frequency transformation methods to use ////
-
-	// Regrid SPW subtable
-	if (combinespws_p)
-	{
-		initRefFrameTransParams();
-		regridAndCombineSpwSubtable();
-		reindexSourceSubTable();
-		reindexDDISubTable();
-		reindexFeedSubTable();
-		reindexSysCalSubTable();
-		reindexFreqOffsetSubTable();
-	}
-	else if (refFrameTransformation_p)
-	{
-		initRefFrameTransParams();
-		regridSpwSubTable();
-	}
 
 	// Drop channels with non-uniform width when doing channel average
 	if (channelAverage_p) dropNonUniformWidthChannels();
@@ -1395,98 +1395,17 @@ void MSTransformDataHandler::regridSpwSubTable()
     			<< "Regridding SPW with Id " <<  spwId << LogIO::POST;
 
     	// Get input frequencies and widths
-    	Vector<Double> inputChanFreq(chanFreqCol(spw_idx));
-    	Vector<Double> inputChanWidth(chanWidthCol(spw_idx));
+    	Vector<Double> originalChanFreq(chanFreqCol(spw_idx));
+    	Vector<Double> originalChanWidth(chanWidthCol(spw_idx));
 
-        // Print characteristics of input SPW
-        ostringstream oss;
-        oss 	<< "Input SPW: " << std::setw(5) << inputChanFreq.size()
-        		<< " channels, first channel = "
-        		<< std::setprecision(9) << std::setw(14) << std::scientific
-        		<< inputChanFreq(0) << " Hz"
-        		<< ", last channel = "
-        		<< std::setprecision(9) << std::setw(14) << std::scientific
-        		<< inputChanFreq(inputChanFreq.size() -1) << " Hz";
-        logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
-
-        // Create input SPW structure
-        spwInfo inputSpw;
-    	if (channelAverage_p)
-    	{
-    		Vector<Double> intermediateChanFreq;
-    		Vector<Double> intermediateChanWidth;
-    		calculateIntermediateFrequencies(	spwId,inputChanFreq,inputChanWidth,
-    											intermediateChanFreq,intermediateChanWidth);
-        	inputSpw = spwInfo(intermediateChanFreq,intermediateChanWidth);
-
-            oss.str("");
-            oss.clear();
-            oss 	<< "Averaged SPW: " << std::setw(5) << intermediateChanWidth.size()
-            		<< " channels, first channel = "
-            		<< std::setprecision(9) << std::setw(14) << std::scientific
-            		<< intermediateChanFreq(0) << " Hz"
-            		<< ", last channel = "
-            		<< std::setprecision(9) << std::setw(14) << std::scientific
-            		<< intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
-            logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
-
-            inputChanFreq.reference(intermediateChanFreq);
-            inputChanWidth.reference(intermediateChanWidth);
-    	}
-    	else
-    	{
-    		numOfCombInputChanMap_p[spwId] = inputChanFreq.size();
-    		inputSpw = spwInfo(inputChanFreq,inputChanWidth);
-    	}
-
-        // Calculate output channels and widths
+    	// Calculate output SPW
         Vector<Double> regriddedCHAN_FREQ;
         Vector<Double> regriddedCHAN_WIDTH;
-    	SubMS::calcChanFreqs(	logger_p,
-    							regriddedCHAN_FREQ,
-    							regriddedCHAN_WIDTH,
-    							inputChanFreq,
-    							inputChanWidth,
-    							phaseCenter_p,
-    							inputReferenceFrame_p,
-    							referenceTime_p,
-    							observatoryPosition_p,
-    							mode_p,
-    							nChan_p,
-    							start_p,
-    							width_p,
-    							restFrequency_p,
-    							outputReferenceFramePar_p,
-    							velocityType_p,
-    							False // verbose
-            				);
-
-        // Compare input and output width to determine if a pre-averaging step is necessary
-        Double avgCombinedWidth = 0;
-        for (uInt chanIdx=0;chanIdx<inputChanWidth.size();chanIdx++)
-        {
-        	avgCombinedWidth += inputChanWidth(chanIdx);
-        }
-        avgCombinedWidth /= inputChanWidth.size();
-
-        Double avgRegriddedWidth = 0;
-        for (uInt chanIdx=0;chanIdx<regriddedCHAN_WIDTH.size();chanIdx++)
-        {
-        	avgRegriddedWidth += regriddedCHAN_WIDTH(chanIdx);
-        }
-        avgRegriddedWidth /= regriddedCHAN_WIDTH.size();
-
-        Int width =  (Int)floor(avgRegriddedWidth/avgCombinedWidth + 0.5);
-
-        if (width >= 2)
-        {
-        	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-        			<< "Ratio between input and output width for SPW " << spwId << " is " << width
-        			<< ". Activating pre-channel averaging"<< LogIO::POST;
-        }
-
-        // Create output SPW structure
-        spwInfo outputSpw = spwInfo(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
+        Vector<Double> inputCHAN_FREQ;
+        Vector<Double> inputCHAN_WIDTH;
+        regridSpwAux(spwId,originalChanFreq,originalChanWidth,inputCHAN_FREQ,inputCHAN_WIDTH,regriddedCHAN_FREQ,regriddedCHAN_WIDTH,string("Input"));
+        spwInfo inputSpw(inputCHAN_FREQ,inputCHAN_WIDTH);
+        spwInfo outputSpw(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
 
         // Set the output SPW characteristics in the SPW sub-table
         numChanCol.put(spw_idx,outputSpw.NUM_CHAN);
@@ -1497,18 +1416,6 @@ void MSTransformDataHandler::regridSpwSubTable()
         refFrequencyCol.put(spw_idx,outputSpw.REF_FREQUENCY);
         totalBandwidthCol.put(spw_idx,outputSpw.TOTAL_BANDWIDTH);
         measFreqRefCol.put(spw_idx,outputReferenceFrame_p);
-
-        // Print characteristics of output SPW
-        oss.str("");
-        oss.clear();
-        oss 	<< "Output SPW: " << std::setw(5) << outputSpw.NUM_CHAN
-        		<< " channels, first channel = "
-        		<< std::setprecision(9) << std::setw(14) << std::scientific
-        		<< outputSpw.CHAN_FREQ(0) << " Hz"
-        		<< ", last channel = "
-        		<< std::setprecision(9) << std::setw(14) << std::scientific
-        		<< outputSpw.CHAN_FREQ(outputSpw.NUM_CHAN -1) << " Hz";
-        logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
 
         // Add input-output SPW pair to map
     	inputOutputSpwMap_p[spwId] = std::make_pair(inputSpw,outputSpw);
@@ -1564,11 +1471,11 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     vector<channelInfo> inputChannels;
     for(uInt spw_idx=0; spw_idx<nInputSpws; spw_idx++)
     {
-    	Vector<Double> inputChanFreq(chanFreqCol(spw_idx));
-    	Vector<Double> inputChanWidth(chanWidthCol(spw_idx));
+    	Vector<Double> originalChanFreq(chanFreqCol(spw_idx));
+    	Vector<Double> originalChanWidth(chanWidthCol(spw_idx));
     	Vector<Double> inputEffectiveBW(effectiveBWCol(spw_idx));
     	Vector<Double> inputResolution(resolutionCol(spw_idx));
-    	uInt nChannels = inputChanFreq.size();
+    	uInt nChannels = originalChanFreq.size();
 
     	for (uInt chan_idx=0;chan_idx<nChannels;chan_idx++)
     	{
@@ -1583,8 +1490,8 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     		}
 
     		channelInfo_idx.inpChannel = chan_idx;
-    		channelInfo_idx.CHAN_FREQ = inputChanFreq(chan_idx);
-    		channelInfo_idx.CHAN_WIDTH = inputChanWidth(chan_idx);
+    		channelInfo_idx.CHAN_FREQ = originalChanFreq(chan_idx);
+    		channelInfo_idx.CHAN_WIDTH = originalChanWidth(chan_idx);
     		channelInfo_idx.EFFECTIVE_BW = inputEffectiveBW(chan_idx);
     		channelInfo_idx.RESOLUTION = inputResolution(chan_idx);
 
@@ -1604,17 +1511,6 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
     Vector<Double> combinedCHAN_FREQ;
     Vector<Double> combinedCHAN_WIDTH;
 	combiner.combineSpws(Vector<Int>(1,-1),True,combinedCHAN_FREQ,combinedCHAN_WIDTH,True);
-
-    // Print characteristics of combined SPW
-    ostringstream oss;
-    oss 	<< "Combined SPW: " << std::setw(5) << combinedCHAN_FREQ.size()
-    		<< " channels, first channel = "
-    		<< std::setprecision(9) << std::setw(14) << std::scientific
-    		<< combinedCHAN_FREQ(0) << " Hz"
-    		<< ", last channel = "
-    		<< std::setprecision(9) << std::setw(14) << std::scientific
-    		<< combinedCHAN_FREQ(combinedCHAN_FREQ.size()-1) << " Hz";
-    logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
 
 	// Create list of combined channels
 	vector<channelInfo> combinedChannels;
@@ -1650,106 +1546,16 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 		}
 	}
 
-    // Create combined SPW structure
-    spwInfo combinedSpw;
-	if (channelAverage_p)
-	{
-		Vector<Double> intermediateChanFreq;
-		Vector<Double> intermediateChanWidth;
-		calculateIntermediateFrequencies(0,combinedCHAN_FREQ,combinedCHAN_WIDTH,intermediateChanFreq,intermediateChanWidth);
-		combinedSpw = spwInfo(intermediateChanFreq,intermediateChanWidth);
-
-        oss.str("");
-        oss.clear();
-        oss 	<< "Combined and averaged SPW: " << std::setw(5) << intermediateChanWidth.size()
-        		<< " channels, first channel = "
-        		<< std::setprecision(9) << std::setw(14) << std::scientific
-        		<< intermediateChanFreq(0) << " Hz"
-        		<< ", last channel = "
-        		<< std::setprecision(9) << std::setw(14) << std::scientific
-        		<< intermediateChanFreq(intermediateChanWidth.size() -1) << " Hz";
-        logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-        		<< oss.str() << LogIO::POST;
-
-        combinedCHAN_FREQ.reference(intermediateChanFreq);
-        combinedCHAN_WIDTH.reference(intermediateChanWidth);
-	}
-	else
-	{
-		numOfCombInputChanMap_p[0] = combinedCHAN_FREQ.size();
-		combinedSpw = spwInfo(combinedCHAN_FREQ,combinedCHAN_WIDTH);
-	}
-
-
-	/// Determine output SPW structure ///////////////////
-
-	// Re-grid the output SPW to be uniform and change reference frame
-	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-			<< "Calculate frequencies in output reference frame " << LogIO::POST;
+	/// Calculate output SPW ///////////////////////////////
     Vector<Double> regriddedCHAN_FREQ;
     Vector<Double> regriddedCHAN_WIDTH;
-    SubMS::calcChanFreqs(	logger_p,
-    						regriddedCHAN_FREQ,
-    						regriddedCHAN_WIDTH,
-    						combinedCHAN_FREQ,
-    						combinedCHAN_WIDTH,
-    						phaseCenter_p,
-    						inputReferenceFrame_p,
-    						referenceTime_p,
-    						observatoryPosition_p,
-    						mode_p,
-    						nChan_p,
-    						start_p,
-    						width_p,
-    						restFrequency_p,
-    						outputReferenceFramePar_p,
-    						velocityType_p,
-    						True // verbose
-    					);
+    Vector<Double> inputCHAN_FREQ;
+    Vector<Double> inputCHAN_WIDTH;
+    regridSpwAux(0,combinedCHAN_FREQ,combinedCHAN_WIDTH,inputCHAN_FREQ,inputCHAN_WIDTH,regriddedCHAN_FREQ,regriddedCHAN_WIDTH,string("Combined"));
+    spwInfo inputSpw(inputCHAN_FREQ,inputCHAN_WIDTH);
+    spwInfo outputSpw(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
 
-    // Compare input and output width to determine if a pre-averaging step is necessary
-    Double avgCombinedWidth = 0;
-    for (uInt chanIdx=0;chanIdx<combinedCHAN_WIDTH.size();chanIdx++)
-    {
-    	avgCombinedWidth += combinedCHAN_WIDTH(chanIdx);
-    }
-    avgCombinedWidth /= combinedCHAN_WIDTH.size();
-
-    Double avgRegriddedWidth = 0;
-    for (uInt chanIdx=0;chanIdx<regriddedCHAN_WIDTH.size();chanIdx++)
-    {
-    	avgRegriddedWidth += regriddedCHAN_WIDTH(chanIdx);
-    }
-    avgRegriddedWidth /= regriddedCHAN_WIDTH.size();
-
-    Int width =  (Int)floor(avgRegriddedWidth/avgCombinedWidth + 0.5);
-
-    if (width >= 2)
-    {
-    	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-    			<< "Ratio between input and output width is " << width
-    			<< ". Activating pre-channel averaging"<< LogIO::POST;
-    }
-
-
-	// Create output SPW structure
-	spwInfo outputSpw = spwInfo(regriddedCHAN_FREQ,regriddedCHAN_WIDTH);
-
-    // Print characteristics of output SPW
-    oss.str("");
-    oss.clear();
-    oss 	<< "Output SPW: " << std::setw(5) << outputSpw.NUM_CHAN
-    		<< " channels, first channel = "
-    		<< std::setprecision(9) << std::setw(14) << std::scientific
-    		<< outputSpw.CHAN_FREQ(0) << " Hz"
-    		<< ", last channel = "
-    		<< std::setprecision(9) << std::setw(14) << std::scientific
-    		<< outputSpw.CHAN_FREQ(outputSpw.NUM_CHAN -1) << " Hz";
-    logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
-    		<< oss.str() << LogIO::POST;
-
-
-    /// Modify SPW subtable ///////////////////
+    /// Modify SPW subtable ////////////////////////////////
 
     logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
     		<< "Write output SPW subtable " << LogIO::POST;
@@ -1776,7 +1582,7 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 
 
     /// Add input-output SPW pair to map ///////////////////
-	inputOutputSpwMap_p[0] = std::make_pair(combinedSpw,outputSpw);
+	inputOutputSpwMap_p[0] = std::make_pair(inputSpw,outputSpw);
 
 	// Prepare frequency transformation engine for the reference time
 	if (fftShiftEnabled_p)
@@ -1794,6 +1600,136 @@ void MSTransformDataHandler::regridAndCombineSpwSubtable()
 	    			get(MSTransformations::Hz).getValue();
 	    }
 	}
+
+	return;
+}
+
+void MSTransformDataHandler::regridSpwAux(	Int spwId,
+											Vector<Double> &originalCHAN_FREQ,
+											Vector<Double> &originalCHAN_WIDTH,
+											Vector<Double> &inputCHAN_FREQ,
+											Vector<Double> &inputCHAN_WIDTH,
+											Vector<Double> &regriddedCHAN_FREQ,
+											Vector<Double> &regriddedCHAN_WIDTH,
+											string msg)
+{
+
+    // Print characteristics of input SPW
+	ostringstream oss;
+	oss << msg;
+    oss 	<< " SPW: " << std::setw(5) << originalCHAN_FREQ.size()
+    		<< " channels, first channel = "
+    		<< std::setprecision(9) << std::setw(14) << std::scientific
+    		<< originalCHAN_FREQ(0) << " Hz"
+    		<< ", last channel = "
+    		<< std::setprecision(9) << std::setw(14) << std::scientific
+    		<< originalCHAN_FREQ(originalCHAN_FREQ.size() -1) << " Hz";
+    logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__) << oss.str() << LogIO::POST;
+
+
+	// Apply channel average if necessary
+	if (channelAverage_p)
+	{
+		calculateIntermediateFrequencies(spwId,originalCHAN_FREQ,originalCHAN_WIDTH,inputCHAN_FREQ,inputCHAN_WIDTH);
+
+		oss.str("");
+		oss.clear();
+		oss 	<< "Averaged SPW: " << std::setw(5) << inputCHAN_WIDTH.size()
+            				<< " channels, first channel = "
+            				<< std::setprecision(9) << std::setw(14) << std::scientific
+            				<< inputCHAN_FREQ(0) << " Hz"
+            				<< ", last channel = "
+            				<< std::setprecision(9) << std::setw(14) << std::scientific
+            				<< inputCHAN_FREQ(inputCHAN_WIDTH.size() -1) << " Hz";
+		logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+            				<< oss.str() << LogIO::POST;
+	}
+	else
+	{
+		numOfCombInputChanMap_p[spwId] = originalCHAN_FREQ.size();
+		inputCHAN_FREQ = originalCHAN_FREQ;
+		inputCHAN_WIDTH = originalCHAN_WIDTH;
+	}
+
+	// Re-grid the output SPW to be uniform and change reference frame
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+    					<< "Calculate frequencies in output reference frame " << LogIO::POST;
+
+	SubMS::calcChanFreqs(	logger_p,
+							regriddedCHAN_FREQ,
+							regriddedCHAN_WIDTH,
+							originalCHAN_FREQ,
+							originalCHAN_WIDTH,
+							phaseCenter_p,
+							inputReferenceFrame_p,
+							referenceTime_p,
+							observatoryPosition_p,
+							mode_p,
+							nChan_p,
+							start_p,
+							width_p,
+							restFrequency_p,
+							outputReferenceFramePar_p,
+							velocityType_p,
+							True // verbose
+						);
+
+	// Check if pre-averaging step is necessary
+	if (not channelAverage_p)
+	{
+		Double avgCombinedWidth = 0;
+		for (uInt chanIdx=0;chanIdx<originalCHAN_WIDTH.size();chanIdx++)
+		{
+			avgCombinedWidth += originalCHAN_WIDTH(chanIdx);
+		}
+		avgCombinedWidth /= originalCHAN_WIDTH.size();
+
+		Double avgRegriddedWidth = 0;
+		for (uInt chanIdx=0;chanIdx<regriddedCHAN_WIDTH.size();chanIdx++)
+		{
+			avgRegriddedWidth += regriddedCHAN_WIDTH(chanIdx);
+		}
+		avgRegriddedWidth /= regriddedCHAN_WIDTH.size();
+
+		Int width =  (Int)floor(abs(avgRegriddedWidth/avgCombinedWidth) + 0.5);
+
+		if ((width >= 2) and  2*width <= originalCHAN_WIDTH.size())
+		{
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	        					<< "Ratio between input and output width is " << width
+	        					<< ". Activating pre-channel averaging"<< LogIO::POST;
+			channelAverage_p = True;
+			freqbinMap_p[spwId] = width;
+
+			// Calculate averaged frequencies
+			calculateIntermediateFrequencies(spwId,originalCHAN_FREQ,originalCHAN_WIDTH,inputCHAN_FREQ,inputCHAN_WIDTH);
+
+			oss.str("");
+			oss.clear();
+			oss 	<< "Averaged SPW: " << std::setw(5) << inputCHAN_WIDTH.size()
+	            				<< " channels, first channel = "
+	            				<< std::setprecision(9) << std::setw(14) << std::scientific
+	            				<< inputCHAN_FREQ(0) << " Hz"
+	            				<< ", last channel = "
+	            				<< std::setprecision(9) << std::setw(14) << std::scientific
+	            				<< inputCHAN_FREQ(inputCHAN_WIDTH.size() -1) << " Hz";
+			logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	            				<< oss.str() << LogIO::POST;
+		}
+	}
+
+	// Print characteristics of output SPW
+	oss.str("");
+	oss.clear();
+	oss 	<< "Output SPW: " << std::setw(5) << regriddedCHAN_FREQ.size()
+			<< " channels, first channel = "
+			<< std::setprecision(9) << std::setw(14) << std::scientific
+			<< regriddedCHAN_FREQ(0) << " Hz"
+			<< ", last channel = "
+			<< std::setprecision(9) << std::setw(14) << std::scientific
+			<< regriddedCHAN_FREQ(regriddedCHAN_FREQ.size()) << " Hz";
+	logger_p << LogIO::NORMAL << LogOrigin("MSTransformDataHandler", __FUNCTION__)
+	    				<< oss.str() << LogIO::POST;
 
 	return;
 }
@@ -1899,7 +1835,7 @@ void MSTransformDataHandler::calculateIntermediateFrequencies(	Int spwId,
 																Vector<Double> &intermediateChanWidth)
 {
 	uInt mumOfInterChan = inputChanFreq.size() / freqbinMap_p[spwId];
-	if (mumOfInterChan % freqbinMap_p[spwId]) mumOfInterChan += 1;
+	if (inputChanFreq.size() % freqbinMap_p[spwId]) mumOfInterChan += 1;
 	numOfCombInputChanMap_p[spwId] = inputChanFreq.size();
 	numOfCombInterChanMap_p[spwId] = mumOfInterChan;
 	intermediateChanFreq.resize(mumOfInterChan,False);
@@ -1907,7 +1843,7 @@ void MSTransformDataHandler::calculateIntermediateFrequencies(	Int spwId,
 	simpleAverage(freqbinMap_p[spwId], inputChanFreq, intermediateChanFreq);
 	simpleAverage(freqbinMap_p[spwId], inputChanWidth, intermediateChanWidth);
 
-	for (uInt chanIdx=0;chanIdx<intermediateChanWidth.size();chanIdx++)
+	for (uInt chanIdx=0;chanIdx<mumOfInterChan;chanIdx++)
 	{
 		intermediateChanWidth[chanIdx] *= freqbinMap_p[spwId];
 	}
@@ -2233,6 +2169,9 @@ void MSTransformDataHandler::dropNonUniformWidthChannels()
 			Vector<Double> frequencyVector = chanFreqCol(spw_idx);
 			frequencyVector.resize(nChans-1,True);
 			chanFreqCol.put(spw_idx, frequencyVector);
+
+			// Update output number of channels
+			inputOutputSpwMap_p[spw_idx].second.NUM_CHAN -= 1;
 		}
 	}
 
@@ -3421,7 +3360,7 @@ void MSTransformDataHandler::fillDataCols(vi::VisBuffer2 *vb,RefRows &rowRef)
     	setWeightBasedTransformations(MSTransformations::flat);
 
 		// Transform weights
-    	combineCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
+    	transformCubeOfData(vb,rowRef,weightSpectrumCube_p,outputMsCols_p->weightSpectrum(),NULL);
 
     	// Reset all the weights-based operations
     	setWeightBasedTransformations(weightmode_p);

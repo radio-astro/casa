@@ -105,12 +105,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	{ decpars.get( RecordFieldId("algo") , algorithm ); algorithm.downcase(); }
 
       
-      if( decpars.isDefined("modelname") )  // A single string
-	{ itsStartingModelName = decpars.asString( RecordFieldId("modelname")); }
+      if( decpars.isDefined("startmodel") )  // A single string
+	{ itsStartingModelName = decpars.asString( RecordFieldId("startmodel")); }
 
       }
     catch(AipsError &x)
       {
+	os << "Error in reading parameters " << LogIO::POST;
 	throw( AipsError("Error in reading deconvolution parameters: "+x.getMesg()) );
       }
     
@@ -175,6 +176,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       itsLoopController.setPeakResidual( getPeakResidual() );
       itsLoopController.setMaxPsfSidelobe( getPSFSidelobeLevel() );
       returnRecord = itsLoopController.getCycleInitializationRecord();
+
+      os << "Initialized minor cycle. Returning returnRec" << LogIO::POST;
+
     } catch(AipsError &x) {
       throw( AipsError("Error initializing the Minor Cycle for "  + itsImageName + " : "+x.getMesg()) );
     }

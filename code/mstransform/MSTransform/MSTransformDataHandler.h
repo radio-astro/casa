@@ -192,6 +192,11 @@ struct spwInfo {
 
 	spwInfo(Vector<Double> &chanFreq,Vector<Double> &chanWidth)
 	{
+		reset(chanFreq,chanWidth);
+	}
+
+	void reset(Vector<Double> &chanFreq,Vector<Double> &chanWidth)
+	{
 		initialize(chanFreq.size());
 		CHAN_FREQ = chanFreq;
 		CHAN_WIDTH = chanWidth;
@@ -201,11 +206,11 @@ struct spwInfo {
 	void initialize(uInt nChannels)
 	{
 		NUM_CHAN = nChannels;
-		CHAN_FREQ.resize(nChannels);
-		CHAN_WIDTH.resize(nChannels);
-		EFFECTIVE_BW.resize(nChannels);
-		RESOLUTION.resize(nChannels);
-		CHAN_FREQ_aux.resize(nChannels);
+		CHAN_FREQ.resize(nChannels,False);
+		CHAN_WIDTH.resize(nChannels,False);
+		EFFECTIVE_BW.resize(nChannels,False);
+		RESOLUTION.resize(nChannels,False);
+		CHAN_FREQ_aux.resize(nChannels,False);
 		TOTAL_BANDWIDTH = 0;
 		REF_FREQUENCY = 0;
 		upperBound = 0;
@@ -281,6 +286,14 @@ protected:
 	void initRefFrameTransParams();
 	void regridSpwSubTable();
 	void regridAndCombineSpwSubtable();
+	void regridSpwAux(	Int spwId,
+						Vector<Double> &inputCHAN_FREQ,
+						Vector<Double> &inputCHAN_WIDTH,
+						Vector<Double> &originalCHAN_FREQ,
+						Vector<Double> &originalCHAN_WIDTH,
+						Vector<Double> &regriddedCHAN_FREQ,
+						Vector<Double> &regriddedCHAN_WIDTH,
+						string msg);
 	void reindexColumn(ScalarColumn<Int> &inputCol, Int value);
 	void reindexSourceSubTable();
 	void reindexDDISubTable();
