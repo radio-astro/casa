@@ -28,7 +28,7 @@ Flag deviant channels in system temperature measurements.
 
     <param type="string" name="intentgroups">
         <description>List of groups of intents for which views are to be created</description>
-        <value>"AMPLITUDE+BANDPASS+PHASE+TARGET"</value>
+        <value>"ATMOSPHERE"</value>
     </param>
 
     <param type="bool" name="flag_edges">
@@ -164,9 +164,9 @@ intentgroups -- How data from various intents are to be combined in
     separate flagging views. Internally the intentgroups are stored in a 
     list of strings but, because of interface limitations, this list 
     must be input as a single string.
-    default: "['AMPLITUDE+BANDPASS+PHASE+TARGET']"
+    default: "['ATMOSPHERE']"
              For each spw the default creates a Tsys median spectrum
-             from spectra belonging to all the intents listed.
+             from all spectra with ATMOSPHERE intent.
 
 flag_edges -- True to flag edges of spectra.
     default True
