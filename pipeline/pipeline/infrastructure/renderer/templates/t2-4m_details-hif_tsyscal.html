@@ -10,18 +10,24 @@ import pipeline.infrastructure.renderer.htmlrenderer as hr
 <script src="${self.attr.rsc_path}resources/js/pipeline.js"></script>
 
 <script>
-$(document).ready(function () {
-    // add on-click handler to our thumbnails to launch FancyBox with the
-    // relevant thumbnails
-    $("ul.thumbnails li div a").click(function (evt) {
-        evt.preventDefault();
-        var target = this.href;
-        UTILS.launchFancybox(target);
-        return false;
+$(document).ready(function() {
+    // return a function that sets the SPW text field to the given spw
+    var createSpwSetter = function(spw) {
+        return function() {
+            // trigger a change event, otherwise the filters are not changed
+            $("#select-spw").select2("val", [spw]).trigger("change");
+        };
+    };
+
+    // create a callback function for each overview plot that will select the
+    // appropriate spw once the page has loaded
+    $(".thumbnail a").each(function (i, v) {
+        var o = $(v);
+        var spw = o.data("spw");
+        o.data("callback", createSpwSetter(spw));
     });
 });
 </script>
-
 <h2>Plots</h2>
 % for ms in summary_plots:
     <h4><a class="replace"
@@ -31,8 +37,9 @@ $(document).ready(function () {
         % for plot in summary_plots[ms]:
             <li class="span3">
                 <div class="thumbnail">
-                    <a href="${os.path.relpath(plot.abspath, pcontext.report_dir)}"
-                        class="fancybox">
+                    <a href="${os.path.relpath(os.path.join(dirname, 'tsys_%s.html' % ms), pcontext.report_dir)}"
+                       class="replace"
+                       data-spw="${plot.parameters['spw']}">
                         <img src="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}"
                              title="Time-averaged Tsys for Spectral Window ${plot.parameters['spw']}"
                              data-thumbnail="${os.path.relpath(plot.thumbnail, pcontext.report_dir)}">

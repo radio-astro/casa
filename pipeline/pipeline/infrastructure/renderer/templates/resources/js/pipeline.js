@@ -71,9 +71,8 @@ UTILS = (function () {
         });
     };
 
-    module.loadFakeframe = function (fakeframe, href, insertPre) {
+    module.loadFakeframe = function (fakeframe, href, insertPre, callback) {
         insertPre = insertPre || false;
-
         $(fakeframe).load(href, function (response, status, xhr) {
             if (status == "error") {
                 var msg = "Sorry but there was an error: ";
@@ -85,14 +84,14 @@ UTILS = (function () {
                 // loaded into the document
                 $("a.replace").click(function (evt) {
                     evt.preventDefault();
-                    var href = evt.target.href;
-                    UTILS.loadFakeframe(fakeframe, href, false);
+                    var callbackFn = $(this).data("callback");
+                    UTILS.loadFakeframe(fakeframe, this.href, false, callbackFn);
                 });
 
                 $("a.replace-pre").click(function (evt) {
                     evt.preventDefault();
-                    var href = evt.target.href;
-                    UTILS.loadFakeframe(fakeframe, href, true);
+                    var callbackFn = $(this).data("callback");
+                    UTILS.loadFakeframe(fakeframe, this.href, true, callbackFn);
                 });
 
                 if (insertPre) {
@@ -103,6 +102,10 @@ UTILS = (function () {
                         'onclick="javascript:location.reload()">Back</button>' +
                         '</h3>' +
                         '</div>');
+                }
+
+                if (callback) {
+                    callback();
                 }
             }
         });
@@ -389,8 +392,8 @@ PLOTS = function () {
         var rect = bar.append("rect")
             .attr("x", function(d) { return x(d.x); })
             .attr("width", function(d) { return x(d.x + d.dx) - x(d.x) - 2; })
-            .attr("y", height)
-            .attr("height", 0);
+            .attr("y", function(d) { return y(d.y); })
+            .attr("height", function(d) { return height - y(d.y); });
 
         var text = bar.append("text")
             .attr("dy", ".75em")
@@ -398,11 +401,6 @@ PLOTS = function () {
             .attr("x", function(d) { return x(d.x + d.dx / 2); })
             .attr("text-anchor", "middle")
             .text(function(d) { return formatCount(d.y) });
-
-        rect.transition()
-            .delay(function(d, i) { return i * 10; })
-            .attr("y", function(d) { return y(d.y); })
-            .attr("height", function(d) { return height - y(d.y); });
 
         var clipPath = gTransform.append("defs").append("clipPath")
             .attr("id", "clip")
