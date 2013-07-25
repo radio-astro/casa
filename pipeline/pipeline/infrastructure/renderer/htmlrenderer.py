@@ -69,6 +69,9 @@ def get_task_description(result_obj):
     if task_cls is hif.tasks.Atmflag:
         return 'Flag on atmospheric transmission'
 
+    if task_cls is hif.tasks.Bandpassflagchans:
+        return 'Flag channels of bandpass calibration'
+
     if task_cls is hif.tasks.Clean:
         return 'Produce a cleaned image'
 
@@ -1311,6 +1314,54 @@ class T2_4MDetailsBandpassRenderer(T2_4MDetailsDefaultRenderer):
         return ctx
 
 
+class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
+    '''
+    Renders detailed HTML output for the Tsysflag task.
+    '''
+    def __init__(self, template='t2-4m_details-hif_bandpassflagchans.html',
+            always_rerender=False):
+        super(T2_4MDetailsBandpassFlagRenderer, self).__init__(template,
+                always_rerender)
+
+    def get_display_context(self, context, results):
+        super_cls = super(T2_4MDetailsBandpassFlagRenderer, self)
+        ctx = super_cls.get_display_context(context, results)
+
+        htmlreports = self.get_htmlreports(context, results)
+        
+        ctx.update({'htmlreports' : htmlreports})
+        return ctx
+
+    def get_htmlreports(self, context, results):
+        report_dir = context.report_dir
+        weblog_dir = os.path.join(report_dir,
+                                  'stage%s' % results.stage_number)
+
+        htmlreports = {}
+        for result in results:
+            if not hasattr(result, 'flagcmdfile'):
+                continue
+
+            flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
+
+            flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
+
+            table_basename = os.path.basename(result.table)
+            htmlreports[table_basename] = (flagcmd_relpath)
+
+        return htmlreports
+
+    def write_flagcmd_to_disk(self, weblog_dir, result):
+        tablename = os.path.basename(result.table)
+        filename = os.path.join(weblog_dir, '%s.html' % tablename)
+        if os.path.exists(filename):
+            return filename
+
+        reason = result.reason
+        rendererutils.renderflagcmds(result.flagcmdfile, filename, reason)
+        return filename
+
+
 class T2_4MDetailsImportDataRenderer(T2_4MDetailsDefaultRenderer):
     def __init__(self, template='t2-4m_details-hif_importdata.html', 
                  always_rerender=False):
@@ -2101,6 +2152,7 @@ renderer_map = {
     T2_4MDetailsRenderer : {
         hif.tasks.Atmflag        : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_atmflag.html'),
         hif.tasks.Bandpass       : T2_4MDetailsBandpassRenderer(),
+        hif.tasks.Bandpassflagchans: T2_4MDetailsBandpassFlagRenderer(),
         hif.tasks.Clean          : T2_4MDetailsCleanRenderer(),
         hif.tasks.CleanList      : T2_4MDetailsCleanRenderer(),
         hif.tasks.FluxcalFlag    : T2_4MDetailsDefaultRenderer('t2-4m_details-hif_fluxcalflag.html'),
