@@ -36,7 +36,9 @@ flag_color = {'edges':'lightblue',
               'nmedian':'darkred',
               'outlier': 'red',
               'sharps':'green',
-              'sharps2':'green'}
+              'sharps2':'green',
+              'diffmad': 'red',
+              'tmf': 'brown'}
 
 class SliceDisplay(object):
 
@@ -287,6 +289,7 @@ class SliceDisplay(object):
         plot_flag = flag[not_noisy]
         plot_axis = xaxis[not_noisy]
 
+        
         good_data = plot_data[np.logical_not(plot_flag)]
         good_data_mad = plot_data_mad[np.logical_not(plot_flag)]
         if len(good_data) > 0:
@@ -400,10 +403,7 @@ class SliceDisplay(object):
         # overplot points flagged in this stage
         pointsflagged = bool(len(flagcmds))
         for flagcmd in flagcmds:
-#            print 'plot flagcmd', flagcmd
-#            print 'description', description
             if flagcmd.match(spectrum):
-#                print 'match'
                 bad_data = data[flagcmd.flagchannels]
                 if len(bad_data) and not plotbad:
                     bad_data[:] = yflag 
