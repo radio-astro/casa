@@ -219,12 +219,14 @@ class BaselineSummary(object):
 
         # edge channels dropped
         LOG.info('1) Number of edge channels dropped')
+        LOG.info('')
         LOG.info('\t left edge: %s channels'%(edge[0]))
         LOG.info('\tright edge: %s channels'%(edge[1]))
         LOG.info('')
 
         # line masks
         LOG.info('2) Masked fraction on each channel')
+        LOG.info('')
         histogram = numpy.zeros(nchan, dtype=float)
         nrow = len(index_list)
         for idx in index_list:
@@ -257,8 +259,9 @@ class BaselineSummary(object):
             for i in xrange(len(merged_start_chan)):
                 for j in xrange(max(0,merged_start_chan[i]-1), min(nchan,merged_end_chan[i]+2)):
                     LOG.info('%7d|%9.1f%%'%(j, histogram[j]/nrow*100.0))
-                LOG.info('       ~')
-                LOG.info('       ~')
+                if merged_end_chan[i] < nchan-2:
+                    LOG.info('       ~')
+                    LOG.info('       ~')
             if merged_end_chan[-1] < nchan-2:
                 LOG.info('%7d|%9.1f%%'%(nchan-1, 0))
         else:
@@ -280,6 +283,7 @@ class BaselineSummary(object):
         unique_values = numpy.unique(num_segments)
         max_segments = max(unique_values) + 2
         LOG.info('3) Frequency distribution for number of segments')
+        LOG.info('')
         LOG.info('# of segments|frequency')
         LOG.info('-------------|---------')
         #for val in unique_values:
