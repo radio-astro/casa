@@ -1223,10 +1223,19 @@ class test_channelAverageByDefault(test_base):
         os.system('rm -rf '+ self.outvis)
         
     def test_channelAverageByDefaultInVelocityMode(self):
-        self.outvis = 'test_channelAverageByDefaultInVelocityMode.ms'
+        self.outvis = 'test_channelAverageByDefaultInVelocityModeNotCombining.ms'
         
-        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,interpolation="linear",
+        mstransform(vis=self.vis,outputvis=self.outvis,regridms=True,combinespws=True,interpolation="linear",
                     mode="velocity",veltype="optical",width='30km/s',restfreq='230GHz')
+        
+        mytb = tbtool()
+        mytb.open(self.outvis)
+        data = mytb.getcol('DATA')      
+        nchan = data.shape[1]
+        check_eq(nchan, 55)
+        check_eq(data[0][0][0].real, 0.0323, 0.0001)
+        check_eq(data[0][nchan-1][0].imag, 0.3296, 0.0001)
+        mytb.close() 
  
 # Cleanup class 
 class Cleanup(test_base):

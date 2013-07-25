@@ -177,10 +177,10 @@ def pclean(vis=None,
                       visinmem=False, maskimage=mask, interactive=interactive, 
                       numthreads=1, pbcorr=pbcor, minpb=minpb, savemodel=True)
         else:
-            if(ftmachine != 'ft'):
+            if(ftmachine != 'ft'): ## and ftmachine != 'wproject'):
                 raise ValueError, "ftmachine %s is not supported yet with multiterm MFS" % ftmachine
             if(alg != 'multiscale'):
-                raise ValueError, "Decolvolution %s is not supported with multiterm MFS; use 'multiscale'" % alg
+                raise ValueError, "Multi-term MFS requires the use of alg='multiscale'; use 'multiscale=[0]' for a point source sky model instead of %s" % alg
             pim.pcontmt(msname=vis, imagename=imagename, 
                       imsize=imsize, pixsize=[cellx, celly], 
                       phasecenter=phasecenter, 

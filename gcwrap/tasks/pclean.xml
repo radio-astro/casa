@@ -97,11 +97,11 @@
 
                 <param type="string" name="alg">
                         <description>Deconvolution algorithm (\'clark\', \'hogbom\', \'multiscale\')</description>
-                        <value type="string">clark</value>
+                        <value type="string">multiscale</value>
                         <allowed kind="enum">
-                            <value>clark</value>
-                            <value>hogbom</value>
                             <value>multiscale</value>
+                            <value>hogbom</value>
+                            <value>clark</value>
                         </allowed>
                 </param>
 
@@ -353,11 +353,11 @@
 		 </when>
 -->
 		 <when param="alg">
+		   <equals type="string" value="multiscale">
+		     <default param="scales"><value type="intArray"><value>0</value></value></default>
+		   </equals>
 		   <equals type="string" value="clark"/>
 		   <equals type="string" value="hogbom"/>
-		   <equals type="string" value="multiscale">
-		     <default param="scales"><value type="intArray"><value>1</value></value></default>
-		   </equals>     
 		 </when>
 		 <when param="weighting">
 		   <equals type="string" value="natural"/>
@@ -471,7 +471,8 @@
  
         alg -- Deconvolution algorithm
                Options: 'clark', 'hogbom', 'multiscale'
-               default: 'clark'
+               default: 'multiscale'
+                Note : For multi-term wideband imaging (nterms>1), please use alg='multiscale'
 
 	 cyclefactor -- Controls the threshhold at which the
                    deconvolution cycle will pause to degrid and subtract the
@@ -517,6 +518,11 @@
                NOTE: mode='velocity' or 'channel' or 'frequency'
                are aliased to mode='cube' for backward compatibility 
 	       and comfort.
+
+  &gt;&gt;&gt; mode='continuum' expandable parameters
+           nterms -- Number of terms in the spectral Taylor polynomial fit.
+              default: 1  ( standard multi-frequency-synthesis )
+              Note : for nterms>1, please use alg='multiscale'
 
   &gt;&gt;&gt; mode='cube' expandable parameters
            nchan -- Total number of channels in the output image.

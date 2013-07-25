@@ -107,7 +107,26 @@ This is used to construct {\tt synthesisdeconvolver} tool.
 <returns type="bool"/>
 </method>
 
-<!-- ===================================== -->
+<!-- ===========================
+
+   <method type="function" name="testsummary">
+   <shortdescription>TEST. Print a summary from an input image tool.</shortdescription>
+
+<description>
+</description>
+<input>
+
+     <param type="image" name="imt">
+     <description> Input image tool object </description>
+     <value></value>
+     </param>
+
+</input>
+
+<returns type="bool"/>
+</method>
+
+============================== -->
 
    <method type="function" name="done">
    <shortdescription>Close the tool</shortdescription>

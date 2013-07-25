@@ -55,6 +55,33 @@ synthesisparsync::~synthesisparsync()
   return rstat;
 }
 
+  bool synthesisparsync::setimstore(const casac::synthesisimstore *imstore)
+{
+  Bool rstat(False);
+  try {
+    itsParSync->setImageStore( const_cast<casac::synthesisimstore *>(imstore)->getImStore() );
+    rstat=True;
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+synthesisimstore* synthesisparsync::getimstore()
+{
+  synthesisimstore *rstat=NULL;
+  try {
+
+    rstat = new synthesisimstore( &*(itsParSync->getImageStore()) );
+
+  } catch  (AipsError x) {
+    RETHROW(x);
+  }
+  return rstat;
+}
+
+
+
 bool synthesisparsync::gatherresidual()
 {
   Bool rstat(False);

@@ -107,12 +107,11 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
     </param>
 
     <param type="string" name="resmooth" subparam="true">
-      <description>Re-restore the cube image to the min or max of beams</description>
+      <description>Re-restore the cube image to a common beam</description>
       <value></value>
       <allowed kind="enum">
 	<value></value>
-	<value>max</value>
-	<value>min</value>
+	<value>common</value>
       </allowed>
     </param>
  
@@ -929,10 +928,9 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
                         flagged data channels.
                  For mode='channel', please use 'nearest'.
 
-	      resmooth -- if the cube has one restoring beam/channel. Restore 
-                                image with one beam either the maximum beam (largest)  
-                                or minimum (smallest beam) or leave as is (default)
-                                options: 'max', 'min' or ''
+	      resmooth -- if the cube has a different restoring beam/channel. Restore 
+                                image to a common beam  or leave as is (default)
+                                options: 'common' or ''
                                 default = '' 
   
                chaniter -- specify how spectral CLEAN is performed, 
