@@ -40,12 +40,12 @@ class FlagCmd(object):
     Create a flagcmd.
         Added detailed docs here.
     """
-    def __init__(self, filename, rulename, spw, axisnames,
-      flagcoords, intent=None, cell_index=None, ruleaxis=None,
+    def __init__(self, filename, rulename, spw, antenna=None, axisnames=None,
+      flagcoords=None, intent=None, cell_index=None, ruleaxis=None,
       flagchannels=None, channel_axis=None, reason=None,
       extendfields=None):
-#        print 'FlagCmd intent %s spw%s axisnames%s flagcoords%s cell_index%s flagchannels%s reason%s' % (
-#          intent, spw, axisnames, flagcoords, cell_index, flagchannels,
+#        print 'FlagCmd intent %s spw%s antenna%s axisnames%s flagcoords%s cell_index%s flagchannels%s reason%s' % (
+#          intent, spw, antenna, axisnames, flagcoords, cell_index, flagchannels,
 #          reason)
 
         self.filename = filename
@@ -70,6 +70,8 @@ class FlagCmd(object):
                     self.antenna = flagcoords[k]
                 elif name.upper()=='TIME':
                     self.flag_time = flagcoords[k]
+        else:
+            self.antenna = antenna
 
         # construct the corresponding flag command
         flagcmd = ""
