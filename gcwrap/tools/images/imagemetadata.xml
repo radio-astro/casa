@@ -97,7 +97,7 @@ imd.done()
     <shortdescription>Get the value associated with the specified, case-insensitive FITS keyword.</shortdescription>
     <input>
         <param type="string" name="key">
-            <description>The name of the FITS keyword.</description>
+            <description>The name of the FITS or other keyword.</description>
             <value/>
         </param>
     </input>
@@ -156,5 +156,32 @@ immd.done()
     </example>
 </method>
 
+<method type="function" name="remove">
+    <shortdescription>Remove or clear the value of a keyword if possible.</shortdescription>
+    <input>
+        <param type="string" name="key">
+            <description>The name of the FITS or other keyword.</description>
+            <value/>
+        </param>
+        <param type="string" name="value">
+            <description>Value to remove if the key is multi-valued. Only used in the case of key="masks".</description>
+            <value/>
+        </param>
+    </input>
+    <returns type="bool"/>
+    <description>
+        Remove or clear the value of a keyword if possible. If key="masks", a value specifying the mask
+        to remove may be specified. If no value is specified, all masks are removed.
+    </description>
+    <example>
+imd.open("myim.im")
+# clear the brightness unit
+if imd.remove("bunit"):
+    print "bunit has been cleared"
+else:
+    print "Unable to clear bunit"
+imd.done()
+    </example>
+</method>
 </tool>
 </casaxml>

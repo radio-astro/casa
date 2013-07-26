@@ -152,77 +152,104 @@ file:///opt/casa/code/xmlcasa/xml/casa.xsd">
 
 <example>
 
-        This task allows the user to manipulate some meta-data parameters in an
-        image.  The mode='list' shows those keywords that are
-        presently implemented, with their values.  The contents associated
-        with the keywords can be obtained (get) and changed (put).
+This task allows the user to manipulate metadata associated with an
+image.  The supported mode values are:
 
-        Additional image parameter listings are available.
+add       Add a new metadata value to the image.
+del       Delete a key or reset its value to a fidicual value if possible.
+          Ignores all but imagename, mode, and hdkey parameters.
+get  -    Return the specified keyword value. Ignores all but imagename, mode, and hdkey parameters.
+history   Log image history. Ignores all but imagename and mode parameters.
+list      Show supported keywords and their values. Ignores all but imagename and mode parameters.
+put       Modify the specified value associated with the keyword.
+summary   Log a summary of the image. 
 
-        [For visibility files, the taskname='vishead' should be used.]
+See below for details about how these modes act for specific keywords.
 
-        The modes that are available are:
+NOTE: Only limited checking is implemented to ensure modifying a specific value
+will leave the image in a consistent state, so, if one is not careful, one could
+end up with an image that has an inconsistent set of metadata and is therefore,
+nonsensical and unusable. That is, PROCEED AT YOUR OWN RISK.
 
-	   list    --- Lists the image header keywords and values.
-                       Use this if 'get' and 'put' are executed.
-           get     --- Get the specified keyword value(s) from the image
-	   put     --- Put the specified keyword value(s) into the image 
+NOTE: For measurement sets, the task vishead should be used.
 
-           history --- Display the history information in hte CASA logger.
-           summary --- Information summarizing the CASA image file.
-           fits    --- Lists the header information in a FITS style (not available)
-	   add     --- Adds a new header key.  Use with caution
-	   del     --- Delete a header key, hdkey.  Use with caution
-	
-        Parameters currently implemented are listed using mode = 'list'
+Supported keywords can be listed using mode = 'list'
 
-           beammaj	   Major axis of the clean beam
-           beammin         Minor axis of the clean beam
-           beampa          Position angle of the clean beam
-           NOTE: If the image contains multiple beams, use mode="summary" to get
-           a listing.
-	   bunit	   Brightness unit (K, Jy/beam, etc)
-	   cdeltn	   Pixel size, nth axis  (max n is 4)
-	   crpixn	   Pixel coordinate of reference point, nth axis
-	   crvaln	   Pixel location of reference point, nth axis
-	   ctypen	   Axis name, nth axis
-	   cunitn	   Pixel units, nth axis
-           datamax         Maximum pixel value in image
-           datamin         Minimum pixel value in image
-	   date-obs	   Date of the observation
-	   equinox         Reference frame for directional coordinates
-           imtype          Image type: intensity, 
-           minpos
-           minpixpos
-           maxpos
-           maxpixpos
-	   object	   Source name
-	   observer	   Observer name
-	   projection	   Image projection ('SIN','TAN', or 'ZEA')
-           reffreqtype     Reference frame for the spectral coordinates
-	   restfreq        Rest Frequency
-           shape           Number of pixels along each axis
-	   telescope	   Telescope name
+beammajor/bmaj	Major axis of the clean beam
+beamminor/bmin  Minor axis of the clean beam
+beampa/bpa      Position angle of the clean beam
+    NOTE: If the image contains multiple beams, use mode="summary" to list them.
+bunit	        Image units (K, Jy/beam, etc)
+cdeltn	        Pixel size, nth axis. n is one-based.
+crpixn	        Reference pixel of nth axis. n is one-based.
+crvaln	        Reference value of nth axis. n is one-based.
+ctypen	        Name of nth axis. n is one-based.
+cunitn	        Units of nth axis. n is one based.
+datamax         Maximum pixel value.
+datamin         Minimum pixel value.
+date-obs	    Date (epoch) of the observation.
+equinox         Direction reference frame.
+imtype          Image type (eg Intensity)
+minpos          World coordinate position of minimum pixel value.
+minpixpos       Pixel coordinate position of minimum pixel value.
+maxpos          World coordinate position of maximum pixel value.
+maxpixpos       Pixel coordinate position of maximum pixel value.
+object	        Source name
+observer	    Observer name
+projection	    Direction coordinate projection (eg 'SIN','TAN', or 'ZEA').
+reffreqtype     Spectral reference frame.
+restfreq        Rest Frequency.
+shape           Number of pixels along each axis.
+telescope	    Telescope name.
 
-        Keyword arguments:
+PARAMETER SUMMARY
 
-        imagename --- Name of input image
-	                default: none; example: imagename='ngc5921_task.image'
-        mode      --- Mode: options: 
-                        default: none; 'list', 'summary', 'fits', 'history',
-                        'get', 'put', 'add', and 'del'
-
-                        NOTE:  'add' and 'del' should be used with caution
-
-        hdkey     --- keyword to use with get, put, add, or del
-	                default: none;  example: hdkey='telescope'
-        hdvalue   --- keyword value that is 'got', or to be 'put' or
-                      to be 'added'
-	                default: ''; example: hdvalue='VLA'
-        hdcomment --- comment to be stored with the keyword for mode='put' or mode='add'
+imagename   Input image name. example: imagename='ngc5921_task.image'
+mode        Mode of operation. Supoorted values: 'list', 'summary', 'history',
+            'get', 'put', 'add',  'del'.
+            NOTE:  'add', 'del', and put should be used with caution.
+hdkey       Keyword to use with get, put, add, or del. example: hdkey='telescope'
+hdvalue     keyword value used for modes "put" and "add". Also used for mode="del" when
+            hdvalue="masks. example: hdvalue='VLA'
+hdcomment   Comment to be stored with the keyword for mode='put' or mode='add'
         
+NOTES on mode="del"
+The behavior of mode="del" depends on the keyword. Below is a summary of the per keyword
+behavior of this mode. In general, the return value will be True if the operation succeeds,
+or False if it fails or is not supported. If unsuccessful or not supported, a warning message
+is normally logged which describes the failure.
+
+Keyword                Behavior for mode="del"
+
+beammajor or bmaj      Deletes all beams. Returns False if the image has no beams.
+beamminor or bmin      Deletes all beams. Returns False if the image has no beams.
+beampa or bpa          Deletes all beams. Returns False if the image has no beams.
+bunit                  Sets the associated value to the empty string.
+cdelt*                 No effect. Deletion of coordinate system parameters is not supported.
+crpix*                 No effect. Deletion of coordinate system parameters is not supported.
+crval*                 No effect. Deletion of coordinate system parameters is not supported.
+ctype*                 No effect. Deletion of coordinate system parameters is not supported.
+cunit*                 No effect. Deletion of coordinate system parameters is not supported.
+datamax                No effect. Deletion of statistical parameters is not supported.
+datamin                No effect. Deletion of statistical parameters is not supported.
+date-obs               No effect.
+equinox                No effect.
+imtype                 No effect.
+masks                  Deletes the single mask specified in hdvalue, or if hdvalue="", deletes all masks.
+maxpos                 No effect. Deletion of statistical parameters is not supported.
+maxpixpos              No effect. Deletion of statistical parameters is not supported.
+minpos                 No effect. Deletion of statistical parameters is not supported.
+minpixpos              No effect. Deletion of statistical parameters is not supported.
+object                 Sets the associated value to the empty string.
+observer               Sets the associated value to the empty string.
+projection             No effect.
+reffreqtype            No effect.
+restfreq               No effect.
+shape                  No effect.
+telescope              Sets the associated value to the empty string.
+any user defined key   Deletes the key-value pair.
+
 NOTES ON mode='get'
-    
 The data type of the value returned by imhead when mode='get' depends on the keyword. Below
 is a list of keywords on the data type that will be returned when mode='get' for each. A 
 "quantity dictionary" is a dictionary with 'value' and 'unit' keys that can be used as

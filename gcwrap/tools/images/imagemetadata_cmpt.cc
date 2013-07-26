@@ -1,6 +1,6 @@
 #include <imagemetadata_cmpt.h>
 
-#include <imageanalysis/ImageAnalysis/ImageMetaData.h>
+#include <imageanalysis/ImageAnalysis/ImageMetaDataRW.h>
 
 #include <stdcasa/version.h>
 
@@ -77,11 +77,28 @@ bool imagemetadata::open(const std::string& infile) {
 		ImageInterface<Float> *x;
 		ImageUtilities::openImage(x, infile, *_log);
 		_image.reset(x);
-		_header.reset(new ImageMetaData<Float>(x));
+		_header.reset(new ImageMetaDataRW<Float>(x));
 		*_log << _ORIGIN;
 		return True;
 
 	} catch (const AipsError& x) {
+		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
+			<< LogIO::POST;
+		RETHROW(x);
+	}
+}
+
+bool imagemetadata::remove(const string& key, const std::string& value) {
+	try {
+		_exceptIfDetached();
+		if (String(key) == ImageMetaData<Float>::MASKS) {
+			return _header->removeMask(value);
+		}
+		else {
+			return _header->remove(key);
+		}
+	}
+	catch (const AipsError& x) {
 		*_log << LogIO::SEVERE << "Exception Reported: " << x.getMesg()
 			<< LogIO::POST;
 		RETHROW(x);

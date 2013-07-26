@@ -1054,7 +1054,83 @@ class imhead_test(unittest.TestCase):
         got = imhead(imagename=imagename, mode="get", hdkey=key)
         self.assertTrue(got == value)
 
+    def test_del(self):
+        """Test deletion/clearing of keys"""
+        myia = iatool()
+        imagename = "xx1d_del.im"
+        shape = [1, 1, 6]
+        myia.fromshape(imagename, shape)
+        major = {'value': 4, 'unit': "arcsec"}
+        minor = {'value': 2, 'unit': "arcsec"}
+        pa = {'value': 30, 'unit': "deg"}
+        myia.setrestoringbeam(major=major, minor=minor, pa=pa)
+        bunit = "Jy/beam"
+        myia.setbrightnessunit(bunit)
+        myia.addnoise()
+        myia.calcmask(imagename + "<= 0")
+        stats = myia.statistics()
+        myia.done()
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bunit"))
+        got = imhead(imagename=imagename, mode="get", hdkey="bunit")
+        self.assertTrue(got == "")
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="cdelt1"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="crpix1"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="crval1"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="cunit1"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="ctype1"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="equinox"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="imtype"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="masks", hdvalue="blue"))
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="masks", hdvalue=""))
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="masks")) == 0)
+        myia.open(imagename)
+        myia.calcmask(imagename + "<= 0")
+        myia.done()
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="masks")) == 1)
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="masks", hdvalue="mask0"))
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="masks")) == 0)
+        
+        mytb = tbtool()
+        mytb.open(imagename, nomodify=False)
+        info = mytb.getkeyword("imageinfo")
+        info['objectname'] = "xyz"
+        mytb.putkeyword("imageinfo", info)
+        mytb.done()
+        
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="object")) > 0)
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="object"))
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="object")) == 0)
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="epoch"))
+        
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="epoch"))
+        
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="observer")) > 0)
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="observer"))
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="observer")) == 0)
 
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="projection"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="reffreqtype"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="restfreq"))
+        self.assertFalse(imhead(imagename=imagename, mode="del", hdkey="shape"))
+
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="telescope")) > 0)
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="telescope"))
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="telescope")) == 0)
+
+        self.assertTrue(len(imhead(imagename=imagename, mode="get", hdkey="bmaj")) > 0)
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="bmaj"))
+        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="bmaj") == None)
+        
+        for x in ['datamin', 'minpos', 'minpixpos', 'datamax', 'maxpos', 'maxpixpos']:
+            self.assertFalse(imhead(imagename=imagename, mode="del", hdkey=x))
+            
+        val = "afdasdf"
+        imhead(imagename=imagename, mode="put", hdkey="jj", hdvalue=val)
+        self.assertTrue(imhead(imagename=imagename, mode="get", hdkey="jj") == val)
+        self.assertTrue(imhead(imagename=imagename, mode="del", hdkey="jj"))
+        self.assertFalse(imhead(imagename=imagename, mode="get", hdkey="jj"))
+
+        
         
     def test_CAS4355(self):
         """ verify puthead can take sesigimal values where appropriate (CAS-4355)"""
