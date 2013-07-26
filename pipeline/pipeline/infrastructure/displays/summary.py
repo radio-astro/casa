@@ -162,6 +162,13 @@ class WeatherChart(object):
         analysis_scripts.analysisUtils.plotWeather(vis=self.ms.name,
                                                    figfile=self.figfile)
 
+        # plot weather does not close the plot! work around that here rather
+        # than editing the code as we might lose the fix (again..)
+        try:
+            pylab.close()
+        except Exception:
+            pass
+
         return self._get_plot_object()
 
     def _get_figfile(self):
@@ -458,6 +465,8 @@ class IntentVsTimeChart(object):
         pyplot.title('Measurement set: '+ ms.basename +' - Start time:'+obs_start.strftime('%Y-%m-%dT%H:%M:%S') + ' End time:'+obs_end.strftime('%Y-%m-%dT%H:%M:%S'), fontsize = 12)
     
         fig.savefig(self.inputs.output)
+        pylab.close()
+
         return self._get_plot_object()
         
     def _in_minutes(self, dt):
