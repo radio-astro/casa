@@ -681,7 +681,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// reacts to similar-named signals from QtViewer
 		// <group>
-		virtual void ddCreated_(QtDisplayData*, Bool autoRegister);
+		virtual void ddCreated_(QtDisplayData*, Bool autoRegister, int position=-1);
 		virtual void ddRemoved_(QtDisplayData*);
 		// </group>
 

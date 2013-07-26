@@ -223,12 +223,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	QtDisplayData::QtDisplayData( QtDisplayPanelGui *panel, String path, String dataType,
 	                              String displayType, const viewer::DisplayDataOptions &ddo,
 	                              const viewer::ImageProperties &props ) :
-		panel_(panel),
+	    DISPLAY_RASTER("raster"), DISPLAY_CONTOUR("contour"),
+	    DISPLAY_VECTOR("vector"), DISPLAY_MARKER( "marker"),
+	    panel_(panel),
 		path_(path),
 		dataType_(dataType),
 		displayType_(displayType),
-		DISPLAY_RASTER("raster"), DISPLAY_CONTOUR("contour"),
-		DISPLAY_VECTOR("vector"), DISPLAY_MARKER( "marker"),
 		TYPE_IMAGE( "image"),
 		SKY_CATALOG( "skycatalog"), MS( "ms"),
 		im_(0),
@@ -697,6 +697,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return it->second->path( );
 	}
 
+	Colormap* QtDisplayData::getColorMap() const {
+		return clrMap_;
+	}
+
 	QtDisplayData::~QtDisplayData() {
 		for (data_to_qtdata_map_type::iterator it = dd_source_map.begin( ); it != dd_source_map.end();) {
 			if ( it->second == this )
@@ -764,12 +768,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		if(usesClrMap_()) {
 			removeColormap_();
-
 			for ( colormapmap::iterator iter = clrMaps_.begin( );
 			        iter != clrMaps_.end( ); ++iter ) {
 				delete iter->second;		// Remove/delete any existing dd colormap[s].
 			}
-
 			delete clrMapOpt_;
 			clrMapOpt_=0;
 		}
@@ -1379,6 +1381,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			//Change the color map we are using in this class.
 			delete clrMapOpt_;
+			clrMapOpt_ = NULL;
 			clrMapOpt_ = new DParameterChoice(COLOR_MAP, "Color Map",
 			                                  "Name of the mapping from data values to color",
 			                                  clrMapNames_, nextColorMapName, nextColorMapName, "");
@@ -1396,6 +1399,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			//Put it into the map, replacing it if it already
 			//exists.
 			String mapName = colorMap->name();
+			if ( mapName.length() == 0 ){
+				return;
+			}
 			std::map<String, Colormap*>::iterator iter = clrMaps_.find( mapName );
 			if ( iter != clrMaps_.end() ) {
 				clrMaps_.erase( iter );
@@ -1403,9 +1409,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 			clrMaps_[mapName] = colorMap;
 			clrMapNames_.insert(colormapnamemap::value_type(mapName,true));
+			//cout << "Color map names "<<clrMapNames_<<endl;
 
 			//Set the color map we are using internally.
 			delete clrMapOpt_;
+			clrMapOpt_ = NULL;
 			clrMapOpt_ = new DParameterChoice(COLOR_MAP, "Color Map",
 			                                  "Name of the mapping from data values to color",
 			                                  clrMapNames_, mapName, mapName, "");
@@ -1456,6 +1464,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		clrMap_->setBrightness(params[0]);
 		clrMap_->setContrast(params[1]);
 		return True;
+	}
+
+	Bool QtDisplayData::setColormapAlpha( uInt alpha ){
+		bool alphaSet = false;
+		if ( hasColormap() ){
+			clrMap_->setAlpha( alpha );
+			alphaSet = true;
+		}
+		return alphaSet;
 	}
 
 	const viewer::ImageProperties &QtDisplayData::imageProperties( ) {

@@ -32,9 +32,10 @@
 
 namespace casa {
 
+	class DisplayOptionsDialog;
 	class QtDisplayData;
 	class ImageView;
-	class ImageScrollWidget;
+	class ImageScroll;
 	class DisplayDataHolder;
 	class ColormapDefinition;
 	class Colormap;
@@ -42,7 +43,7 @@ namespace casa {
 
 	/**
 	 * Allows users to manipulate the images loaded in the viewer.  Includes
-	 * the ability to reorder images, change color display properties, etc.
+	 * the ability to reorder images, change color display properties for multiple images, etc.
 	 * Please see CAS-4081 for details.
 	 */
 	class ImageManagerDialog : public QDialog, public ImageTracker {
@@ -50,64 +51,111 @@ namespace casa {
 
 	public:
 		ImageManagerDialog(QWidget *parent = 0);
+		//Sets the containers which are the sources for display data, both registered and
+		//open.
 		void setImageHolders( DisplayDataHolder* displayed, DisplayDataHolder* allImages );
-		QtDisplayData* getDisplayChangeDD() const;
+
+		//Sets the image that is currently being viewed (on the Animator).  Allows the image
+		//manager to indicate the current image on the display.
+		void setViewedImage( int registrationIndex );
 		~ImageManagerDialog();
 
-		//Image Tracker Interface
+		//-----------------------------------------------------------------------
+		//          Image Tracker Interface
+		//-----------------------------------------------------------------------
+		//Internally, a new master image has been selected.
 		void masterImageSelected( QtDisplayData* image );
-		void imageAdded( QtDisplayData* image );
-		void imageRemoved( QtDisplayData* image );
+		//Adds an image to the manager when a new one is opened.
+		void imageAdded( QtDisplayData* image, int position,
+				bool autoRegister, bool masterCoordinate,
+				bool masterSaturation, bool masterHue );
 
 	signals:
-		void ddClosed( QtDisplayData* dd );
+		void ddClosed( QtDisplayData*& dd );
 		void ddOpened( const String& path, const String& dataType,
-		               const String& displayType/*, const QColor singleColor*/ );
+		               const String& displayType,/*, const QColor singleColor*/
+		               int insertionIndex, bool registered,
+		               bool masterCoordinate, bool masterSaturation,
+		               bool masterHue);
+		void registerAll();
+		void unregisterAll();
+		void registerDD( QtDisplayData* dd, int position );
+		void unregisterDD( QtDisplayData* dd );
+		//Emitted when a new master image for setting the coordinate system has been
+		//selected.
+		void masterCoordinateChanged( QtDisplayData* oldMaster, QtDisplayData* newMaster );
 
 	public slots:
+		//The ImageView has changed types (raster, contour, vector, etc)
 		void displayTypeChanged( ImageView* changedView );
-		void displayColorsChanged(ImageView* changedView );
 
 	private slots:
+		//Opens the display data options panel for the specific display data.
+		void showDataDisplayOptions( QtDisplayData* );
+
+		//Apply the color changes the user has specified.
 		void applyColorChanges();
-		void openToDisplayed();
-		void displayedToOpen();
-		void closeImage();
-		void resetImageLists();
-		void unDisplayImage( QtDisplayData* image );
-		void displayImage( QtDisplayData* image );
+		//User has changed the color method for combining multiple images (RGB,Hue/Saturation,etc)
 		void colorRestrictionsChanged();
-		void masterImageChanged( const QString& imageName );
-		void resetMasterImage();
+
+		//Close/register/unregister
+		void closeAll();
+		void registerImages();
+		void unregisterImages();
+		void registrationChange( ImageView* imageView );
+		void closeImage( QtDisplayData* image, bool coordinateMaster );
+
+		//A new image has been designated as the master image for setting the
+		//coordinate system.
+		void masterImageChanged( QtDisplayData* newMaster );
+
+		//The user has reordered the images in the display.
+		void reorderDisplayImages( QtDisplayData* displayData, int dropIndex, bool registered,
+				bool masterCoordinate, bool masterSaturation, bool masterHue, QColor rgbColor );
+
 
 	private:
 		ImageManagerDialog( const ImageManagerDialog& other );
 		ImageManagerDialog operator=( const ImageManagerDialog& other );
 
-		void updateSelectedMaster( const QString& previousSelection);
-		void updateMasterList();
-		void updateColorList();
-		void updateSaturationList();
-		void applyMasterColorMap();
-		void applyMasterIntensityRange();
-		Colormap* generateColorMap( ImageInterface<float>* img,
-		                            QColor baseColor, bool individualMap );
-		void setComboIndex( QComboBox* combo, int index );
-		void removeImageFromList( QList<ImageView*>& imageList );
-		void initializeScrollArea( QWidget* holder, ImageScrollWidget*& scrollArea );
+		//Initialization
+		void initializeScrollArea();
+
+		//Coloring
+		//Returns the transparency to use when combining images.
+		float getTransparency() const;
+		//Get the min and max intensity of the image.
 		bool getIntensityMinMax( ImageInterface<float>* img,
 		                         double* intensityMin, double* intensityMax );
-		bool isControlEligible( QtDisplayData* qdd ) const;
-		ColormapDefinition* generateSaturationMap( double minIntensity, double maxIntensity,
-		        QColor baseColor );
-		void updateImageList(QComboBox* combo );
-		DisplayDataHolder* openHolder;
+        //Generate a color map based on a single base color (RGB mode).
+		Colormap* generateColorMap( QColor baseColor);
+		//Helper method which generates a color definition based on a single color.
+		ColormapDefinition* generateSaturationMap( QColor baseColor );
+		//Attempts to set a master hue color map into all of the images.  Used in
+		//hue/saturation mode.
+		bool applyMasterColor( QString& errorMessage );
+		//Worker method that remaps a baseMap with a baseIntensityMin and baseIntensityMap
+		//to a new color map definition with intensityMin and intensityMax.  Used in
+		//hue/saturation mode.
+		Colormap* generateMasterDefinition( ColormapDefinition* baseMap,
+			double colorMin, double colorMax, double intensityMin, double intensityMax );
+		float getColorFraction( float value, double minValue, double maxValue );
+
+		//Enable/disable the "all" buttons based on how many images are
+		//registered, unregistered, open.
+		void updateAllButtons();
+
+		//Dialog containing display options for a particular display data.
+		DisplayOptionsDialog* displayOptionsDialog;
+		//Holds the open images
 		DisplayDataHolder* allImages;
+		//Holds the registered images
+		DisplayDataHolder* displayedImages;
 		Ui::ImageManagerDialogClass ui;
-		ImageScrollWidget* openScroll;
-		ImageScrollWidget* displayedScroll;
+		ImageScroll* imageScroll;
 		const String SINGLE_COLOR_MAP;
 		const String MASTER_COLOR_MAP;
+		const int COLOR_MAP_SIZE;
 	};
 
 }

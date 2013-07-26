@@ -23,47 +23,41 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 
-#ifndef IMAGETRACKER_H_
-#define IMAGETRACKER_H_
+#include "DisplayOptionsDialog.h"
+#include <display/QtViewer/QtDisplayDataGui.qo.h>
+#include <display/QtViewer/QtDisplayData.qo.h>
 
 namespace casa {
 
-	class QtDisplayData;
-
-	/**
-	 * Interface class designed to reduce the coupling between the GUI class,
-	 * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
-	 * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
-	 */
-
-	class ImageTracker {
-	public:
-		virtual void imageAdded( QtDisplayData* image, int position,
-				bool autoRegister, bool masterCoordinate,
-				bool masterSaturation, bool masterHue) = 0;
-		virtual void masterImageSelected( QtDisplayData* image ) =0;
-		ImageTracker() {}
-		virtual ~ImageTracker() {}
-
-	};
-
-	/**
-	 * Interface implemented by QtDisplayPanel that can add/remove
-	 * registered DDs and set the controlling QtDisplayData's.
-	 *
-	 * Methods are called by the DisplayDataHolder to make changes through the
-	 * existing infrastructure.
-	 */
-	class ImageDisplayer {
-	public:
-		ImageDisplayer() {}
-		virtual ~ImageDisplayer() {}
-		virtual void setControllingDD( QtDisplayData* controlDD ) = 0;
-		virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
-		virtual void unregisterDD( QtDisplayData* dd ) = 0;
-	};
-
-
-
+DisplayOptionsDialog::DisplayOptionsDialog(QWidget* parent): QDialog(parent),
+		displayedDataOptions( NULL ) {
 }
-#endif /* IMAGETRACKER_H_ */
+
+void DisplayOptionsDialog::showOptions( QtDisplayData* displayData ){
+
+	QLayout* dialogLayout = layout();
+	if ( dialogLayout == NULL ){
+		dialogLayout = new QHBoxLayout();
+	}
+	else {
+		while( !dialogLayout->isEmpty()){
+			dialogLayout->takeAt( 0 );
+		}
+		delete displayedDataOptions;
+		displayedDataOptions = NULL;
+	}
+
+	displayedDataOptions= new QtDisplayDataGui( displayData );
+	QScrollArea* scrollArea = new QScrollArea();
+	scrollArea->setWidget(displayedDataOptions);
+	dialogLayout->addWidget( scrollArea );
+	setLayout( dialogLayout );
+	setWindowTitle( displayData->name().c_str() );
+	resize(485,600);
+}
+
+DisplayOptionsDialog::~DisplayOptionsDialog() {
+	delete displayedDataOptions;
+}
+
+} /* namespace casa */

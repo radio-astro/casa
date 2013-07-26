@@ -48,7 +48,7 @@ namespace casa {
 		~CursorTrackingHolder( );
 
         void arrangeTrackBoxes( );
-        TrackBox *addTrackBox( QtDisplayData * );
+        TrackBox *addTrackBox( QtDisplayData *, int position = -1 );
         void removeTrackBox( QtDisplayData * );
         void display( const Record &trackingRec );
         void cursorUpdate( const std::vector<double> &, QtDisplayData * );

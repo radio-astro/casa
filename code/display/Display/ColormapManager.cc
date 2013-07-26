@@ -258,14 +258,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		Vector<Float> redMap(1u,0.0);
 		Vector<Float> greenMap(1u,0.0);
 		Vector<Float> blueMap(1u,0.0);
+		Vector<Float> alphaMap(1u,0.0);
 
 		for (uInt i = 0; i < itsInfoMap.ndefined(); i++) {
 			ColormapInfo * mi = itsInfoMap.getVal(i);
 			redMap.resize(mi->size());
 			greenMap.resize(mi->size());
 			blueMap.resize(mi->size());
-			mi->colormap()->calcRGBMaps(mi->size(), redMap, greenMap, blueMap);
-			itsPCColorTable->installRGBColors(redMap, greenMap, blueMap, mi->offset());
+			mi->colormap()->calcRGBMaps(mi->size(), redMap, greenMap, blueMap, alphaMap );
+			itsPCColorTable->installRGBColors(redMap, greenMap, blueMap, alphaMap, mi->offset());
 		}
 		itsPCColorTable->doResizeCallbacks(Display::ColormapChange);
 	}

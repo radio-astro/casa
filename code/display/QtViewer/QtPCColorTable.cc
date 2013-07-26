@@ -1,8 +1,9 @@
 #include <display/QtViewer/QtPCColorTable.h>
 #include <casa/namespace.h>
+#include <QDebug>
 
 
-QtPCColorTable::QtPCColorTable(): maps_(MAX_QTPCCT_SIZE, qRgb(0,0,0)),
+QtPCColorTable::QtPCColorTable(): maps_(MAX_QTPCCT_SIZE, qRgba(0,0,0,1)),
 	size_(INITIAL_QTPCCT_SIZE) {
 	resize(size_);
 }
@@ -21,6 +22,7 @@ Bool QtPCColorTable::resize(uInt newSize) {
 Bool QtPCColorTable::installRGBColors(const Vector<Float> & r,
                                       const Vector<Float> & g,
                                       const Vector<Float> & b,
+                                      const Vector<Float> & alpha,
                                       uInt offset) {
 	// Called by corresp. ColormapManager to actually fill color slots
 	// for the Colormaps.  r,g,b should be in range [0,1].
@@ -33,9 +35,8 @@ Bool QtPCColorTable::installRGBColors(const Vector<Float> & r,
 	if ( r.nelements() + offset > nColors() ||
 	        r.nelements() > g.nelements() ||
 	        r.nelements() > b.nelements() ) return False;
-
 	for (uInt i = 0; i < r.nelements(); i++) {
-		maps_[i+offset] = qRgb( clrByte(r(i)), clrByte(g(i)), clrByte(b(i)) );
+		maps_[i+offset] = qRgba( clrByte(r(i)), clrByte(g(i)), clrByte(b(i)), clrByte(alpha(i)) );
 	}
 //QColor qc(maps_[i+offset]);	//#diag
 //cout<<i+offset<<" "<<qc.red()<<" "<<qc.green()<<" "<<qc.blue()<<
@@ -78,12 +79,12 @@ void QtPCColorTable::mapToColor(const Colormap* map, Array<uInt>& outArray,
 			inp++;
 		}
 	}
-
 	else {
-		while(inp < end) *outp++ = (uInt)maps_[offset + *inp++];
+		while(inp < end){
+			int index = offset + *inp++;
+			*outp++ = (uInt)maps_[index];
+		}
 	}
-
-
 	inArray.freeStorage(in, inDel);
 	outArray.putStorage(out, outDel);
 }

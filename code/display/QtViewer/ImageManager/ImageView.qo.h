@@ -27,16 +27,16 @@
 #define IMAGEVIEW_QO_H
 
 #include <QtGui/QFrame>
+#include <casa/BasicSL/String.h>
 #include <display/QtViewer/ImageManager/ImageView.ui.h>
-
-
 
 namespace casa {
 
 	class QtDisplayData;
+	class DisplayLabel;
 
 	/**
-	 * Displays properties of an image for manipulating such as color and
+	 * Displays properties of an image for manipulation such as color and
 	 * display type.
 	 */
 
@@ -45,59 +45,146 @@ namespace casa {
 
 	public:
 		ImageView(QtDisplayData* data, QWidget *parent = 0);
+		typedef enum ColorCombinationMode {NO_COMBINATION, RGB, HUE_SATURATION };
+
+		//Accessors
 		QString getName() const;
 		QtDisplayData* getData() const;
 		QString getDataDisplayTypeName() const;
-		bool isImageSelected() const;
-		void setImageSelected( bool selected );
-		void setImageColorsEnabled( bool enabled );
-		void setDisplayedColor( QColor imageColor );
-		void emitDisplayColorsChanged();
+		bool isRegistered() const;
+		bool isMasterHue() const;
+		bool isMasterSaturation() const;
+		bool isMasterCoordinate() const;
 		QColor getDisplayedColor() const;
+
+		//Setters
+		void setRegistered( bool selected );
+		void setColorCombinationMode( ColorCombinationMode mode );
+		void setMasterCoordinateImage( bool masterImage );
+		void setMasterHueImage( bool masterImage );
+		void setMasterSaturationImage( bool masterImage );
+		//Sets whether or not this is the image currently being viewed
+		//on the animator.
+		void setViewedImage( bool viewed );
+		void setDisplayedColor( QColor color );
+
+		//Returns whether or not the data is eligible to set the
+		//coordinate system for the display.
+		bool isControlEligible() const;
+
+		virtual QSize minimumSizeHint() const;
+
 		static const QString DROP_ID;
 		~ImageView();
 
 	signals:
+		//Register/unregister has changed.
 		void imageSelected(ImageView*);
+		//Raster/Contour/Vector has changed.
 		void displayTypeChanged( ImageView* dd );
-		void displayColorsChanged( ImageView* dd );
+		//User has requested to view the display properties of this data.
+		void showDataDisplayOptions( QtDisplayData* imageData );
+		//Close the image.
+		void close( ImageView* imageToClose );
+		//This imageView has become the master coordinate image.
+		void masterCoordinateImageSelected( ImageView* imageView );
+		//This ImageView has become the master hue image.
+		void masterHueImageSelected( ImageView* imageView );
+		//This ImageView has become the master saturation image.
+		void masterSaturationImageSelected( ImageView* imageView );
+		//There will be no master coordinate image.
+		void masterCoordinateImageClear();
 
 	protected:
+		//Implemented to support drag and drop.
 		virtual void mouseMoveEvent( QMouseEvent* event );
-		virtual void mousePressEvent( QMouseEvent* event );
 
 	private slots:
+		//Minimize/maximize the display
 		void openCloseDisplay();
-		void showColorDialog();
-		void imageSelectionChanged( bool selected );
+		//Display data has changed register/unregister status.
+		void imageRegistrationChanged( bool selected );
+		//User has changed the rest frequency
+		void restFrequencyChanged();
+		//Change to raster/contour/vector/marker
 		void displayTypeChanged();
+		//Color this image will use in RGB mode has changed.
+		void rgbChanged();
+		//User selected color for RGB mode has changed.
+		void otherColorChanged();
+		//Display the context menu.
+		void showContextMenu( const QPoint& location );
+		//Show a color dialog where the user can choose a custom color.
+		void showColorDialog();
+		//Show the display options for this image view.
+		void showDataOptions();
 
 	private:
 		ImageView( const ImageView& other );
 		ImageView operator=( const ImageView& other );
+
+		//Initialization
+		void initDisplayLabels();
+		void initDisplayLabel( QWidget* holder, DisplayLabel* label );
+		void initColorModeSettings();
+		void initRestSettings();
+		void initDisplayType();
+		void setTitle();
+
+		//Background color.  Master image used to set the
+		//coordinate system is a slightly different color
 		void setBackgroundColor( QColor color );
+		QColor getBackgroundColor() const;
+
+		//Opening/closing
 		void minimizeDisplay();
 		void maximizeDisplay();
-		void initDisplayType();
-		void clearDrag();
-		QImage* makeDragImage();
 
+		//Drag and drop
+		QImage* makeDragImage();
 		void makeDrag( QMouseEvent* event );
+
+		//Custom color for RGB image combination
 		void setButtonColor( QColor color );
 		QColor getButtonColor() const;
 
-		enum DisplayType { DISPLAY_RASTER, DISPLAY_CONTOUR, DISPLAY_VECTOR, DISPLAY_MARKER };
-		DisplayType getDataDisplayType() const;
+		enum DisplayType { DISPLAY_RASTER, DISPLAY_CONTOUR, DISPLAY_VECTOR, DISPLAY_MARKER, DISPLAY_NONE };
+		QMap<DisplayType,QString> displayTypeMap;
+		DisplayType storedDisplay;
 
-		bool selected;
-		bool minimized;
-		QColor selectedColor;
+		//Available context menu choices
+		QAction closeAction;
+		QAction masterCoordinateSystemAction;
+		QAction masterCoordinateSystemUndoAction;
+		QAction masterHueAction;
+		QAction masterSaturationAction;
+
+		//Regular background or master coordinate image background
 		QColor normalColor;
-
+		QColor masterCoordinateColor;
 
 		QtDisplayData* imageData;
 		QButtonGroup* displayGroup;
-		QDrag* drag;
+
+		//Indicators of which display properties apply to this image view.
+		DisplayLabel* displayTypeLabel;
+		DisplayLabel* coordinateMasterLabel;
+		DisplayLabel* hueMasterLabel;
+		DisplayLabel* saturationMasterLabel;
+
+		//Method used to combine images using colors.
+		ColorCombinationMode colorMode;
+
+		//Rest frequency
+		QStringList frequencyUnits;
+		QStringList wavelengthUnits;
+		const String REST_FREQUENCY_KEY;
+		const String VALUE_KEY;
+
+		//Opening/closing
+		int minimumSize;
+		const int SIZE_COLLAPSED;
+		const int SIZE_EXPANDED;
 
 		Ui::ImageViewClass ui;
 	};

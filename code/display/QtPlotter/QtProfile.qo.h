@@ -243,7 +243,9 @@ namespace casa {
 		 * vector value; otherwise returns true.
 		 */
 		bool isAxisAscending(const Vector<Float>& axisValues ) const;
-
+		bool isVelocityUnit( const QString& unit ) const;
+		bool isFrequencyUnit( const QString& unit ) const;
+		bool isWavelengthUnit( const QString& unit ) const;
 		void setTitle( const QString& shape );
 		void copyToLastEvent( const String& c, const Vector<Double> &px,
 		                      const Vector<Double> &py,
@@ -297,7 +299,8 @@ namespace casa {
 		bool isVelocityMatch();
 		int getChannelCount( ImageAnalysis* analysis );
 		ImageAnalysis* findImageWithMaximumChannels();
-		void restrictTopAxisOptions( bool restrictOptions, bool allowFrequency = true, bool allowVelocity=true );
+		void restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits, bool allowFrequency = true,
+				bool allowVelocity=true );
 		double getUnitsPerChannel( ImageAnalysis* analysis, bool* ok, const QString& matchUnits );
 
 

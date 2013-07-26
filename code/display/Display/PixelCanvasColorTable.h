@@ -123,7 +123,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// or until the end of the colortable is reached.  This has no effect if
 		// in real/pseudo RGB/HSV modes.  Values are clamped to [0.0,1.0].
 		virtual Bool installRGBColors(const Vector<Float> & r, const Vector<Float> & g,
-		                              const Vector<Float> & b, uInt offset = 0) = 0;
+		                              const Vector<Float> & b, const Vector<Float> & alpha,
+		                              uInt offset = 0) = 0;
 
 		// Return the number of colors used to make the map.
 		virtual uInt nColors() const = 0;

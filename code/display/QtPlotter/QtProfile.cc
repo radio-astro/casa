@@ -262,11 +262,11 @@ namespace casa {
 		   "frequency [Hz]" << "frequency [MHz]" << "frequency [GHz]" <<
 		   "wavelength [mm]" << "wavelength [um]" << "wavelength [nm]" << "wavelength [Angstrom]" <<
 		   "air wavelength [mm]" << "air wavelength [um]" << "air wavelength [nm]"<<"air wavelength [Angstrom]"<<
-		   "channel");
+		   CHANNEL);
 		for ( int i = 0; i < xUnitsList.size(); i++ ){
 			bottomAxisCType->addItem( xUnitsList[i]);
 		}
-		restrictTopAxisOptions( false );
+		restrictTopAxisOptions( false, bottomAxisCType->currentText() );
 	}
 
 	void QtProfile::setUnitsText( String unitStr ) {
@@ -525,6 +525,10 @@ namespace casa {
 		getcoordTypeUnit(ctypeUnit, coordinateType, xaxisUnit);
 
 		setUnitsText( xaxisUnit );
+
+		//In the case of multiple images loaded we want to disable/enable
+		//top axis settings based on whether the images match or not.
+		adjustTopAxisSettings();
 
 		pixelCanvas->setPlotSettings(QtPlotSettings());
 		pixelCanvas -> setToolTipXUnit(xaxisUnit.c_str() );
@@ -1051,6 +1055,7 @@ namespace casa {
 			bool ok=maxChannelAnalysis->getFreqProfile( lastWX, lastWY, xValues, yValues,
 						                             WORLD_COORDINATES, coordinateType, 0, 0, 0, cTypeUnit, spcRefFrame,
 						                             (Int)QtProfile::MEAN, 0, cSysRval);
+			qDebug() << "QtProfile: Change top axis get frequency profile ok="<<ok;
 			if ( ok ){
 				//Check to see if the top axis ordering is ascending in x
 				bool topAxisAscendingX = isAxisAscending(xValues);
@@ -1263,6 +1268,7 @@ namespace casa {
 
 		if (!isVisible()) return;
 		if (!analysis) return;
+		qDebug() << "QtProfile:: Update region type="<<type;
 		if ( type == viewer::region::RegionChangeDelete ) {
 			SpectraInfoMap::iterator it = spectra_info_map.find(id_);
 			if ( it != spectra_info_map.end() ) {
@@ -1288,7 +1294,9 @@ namespace casa {
 
 		else if ( type == viewer::region::RegionChangeFocus ) {
 			return;
-		} else if ( type == viewer::region::RegionChangeNewChannel ) {
+		}
+
+		else if ( type == viewer::region::RegionChangeNewChannel ) {
 			return;						// viewer moving to new channel
 		} else if ( id_ != current_region_id ) {
 			return;						// some other region
@@ -1816,7 +1824,7 @@ namespace casa {
 		else if (ctypeUnitStr.contains("frequency"))
 			cTypeStr = String("frequency");
 		else
-			cTypeStr = String("channel");
+			cTypeStr = String( CHANNEL.toStdString() );
 
 		// determine the unit
 		if (ctypeUnitStr.contains("[Hz]"))
@@ -2011,7 +2019,7 @@ namespace casa {
 		                               xytype, specaxis, whichStokes, whichTabular, whichLinear, xunits, specFrame,
 		                               combineType, whichQuality, restValue,
 		                               beamChannel);
-
+		qDebug() << "QtProfile::getFrequProfile wrapper";
 		if ( itsPlotType == QtProfile::PFLUX ) {
 			//Post a warning that flux was calculated using a given channel
 			//and the resulting calculation was only an approximation.
@@ -2059,6 +2067,7 @@ namespace casa {
 			                             (Int)QtProfile::MEAN, 0, cSysRval);
 			break;
 		}
+		qDebug() << "QtProfile::assignFrequency Profile";
 
 		if (!ok) {
 			// change to notify user of error...
@@ -2141,7 +2150,7 @@ namespace casa {
 				z_eval.resize(0);
 			break;
 		}
-
+		qDebug() << "QtProfile::error plotting";
 		if ( ! ok ) {
 			// change to notify user of error...
 			*itsLog << LogIO::WARN << "Can not generate the frequency error profile!" << LogIO::POST;
@@ -2316,6 +2325,7 @@ namespace casa {
 					break;
 				}
 
+				qDebug() << "QtProfile addImageAnalysis graph";
 				if (ok) {
 					if(ordersOfM!=0) {
 						// correct display y axis values
@@ -2411,6 +2421,7 @@ namespace casa {
 				unitPerChannel = qAbs(xval[0] - xval[1]) / z_xval.size();
 			}
 		}
+		qDebug() << "QtProfile: units per channel";
 		return unitPerChannel;
 	}
 
@@ -2459,27 +2470,75 @@ namespace casa {
 	}
 
 
-	void QtProfile::restrictTopAxisOptions( bool restrictOptions, bool allowFrequency, bool allowVelocity ){
+	void QtProfile::restrictTopAxisOptions( bool restrictOptions, const QString& bottomUnits,
+			bool allowFrequency, bool allowVelocity ){
 		topAxisCType->clear();
+
 		for ( int i = 0; i < xUnitsList.size(); i++ ){
-			int frequencyIndex = xUnitsList[i].indexOf( FREQUENCY);
-			int radioVelocityIndex = xUnitsList[i].indexOf( RADIO_VELOCITY);
-			int wavelengthIndex = xUnitsList[i].indexOf( "wavelength");
+			bool bottomVelocity = isVelocityUnit( bottomUnits );
+			bool bottomWavelength = isWavelengthUnit( bottomUnits );
+			bool bottomFrequency = isFrequencyUnit( bottomUnits );
+
+			//Allow a top axis of frequency if the bottom axis is already displaying
+			//frequency or the images are compatible in channel/frequency.
+			bool freqVisible = isFrequencyUnit( xUnitsList[i])  && (allowFrequency || bottomFrequency);
+			bool waveVisible = isWavelengthUnit(xUnitsList[i])  && (allowFrequency || bottomWavelength);
+			bool velocityVisible = isVelocityUnit( xUnitsList[i]) && (allowVelocity || bottomVelocity );
+
+			//We enable channels if the units on the bottom axis are compatible in
+			//channels.
+			bool channelVisible = false;
+			int channelIndex = xUnitsList[i].indexOf( CHANNEL );
+			if ( channelIndex >= 0 ){
+				if ( bottomVelocity && allowVelocity ){
+					channelVisible = true;
+				}
+				else if ( (bottomWavelength || bottomFrequency ) && allowFrequency ){
+					channelVisible = true;
+				}
+			}
+
 			if ( !restrictOptions ||
-				(allowFrequency &&  frequencyIndex>=0) ||
-				(allowVelocity && radioVelocityIndex >= 0 ) ||
-				(allowFrequency && wavelengthIndex==0) ||
-				xUnitsList[i].indexOf( CHANNEL) >= 0){
+				channelVisible || freqVisible || velocityVisible || waveVisible ){
 				topAxisCType->addItem( xUnitsList[i]);
 			}
 		}
 	}
 
+	bool QtProfile::isFrequencyUnit( const QString& unit ) const {
+		bool frequencyUnit = false;
+		int frequencyIndex = unit.indexOf( FREQUENCY );
+		if ( frequencyIndex >= 0 ){
+			frequencyUnit = true;
+		}
+		return frequencyUnit;
+	}
+
+	bool QtProfile::isVelocityUnit( const QString& unit ) const {
+			bool velocityUnit = false;
+			int velocityIndex = unit.indexOf( RADIO_VELOCITY );
+			if ( velocityIndex >= 0 ){
+				velocityUnit = true;
+			}
+			return velocityUnit;
+		}
+
+	bool QtProfile::isWavelengthUnit( const QString& unit ) const {
+			bool waveUnit = false;
+			int waveIndex = unit.indexOf( "wavelength" );
+			if ( waveIndex == 0 ){
+				waveUnit = true;
+			}
+			return waveUnit;
+		}
+
+
 	void QtProfile::adjustTopAxisSettings() {
 		int mainCurveCount = pixelCanvas->getLineCount();
 		//If the user does not want us to show a top axis
 		//we don't.
-		restrictTopAxisOptions( false );
+		QString bottomAxisUnits = bottomAxisCType->currentText();
+		restrictTopAxisOptions( false, bottomAxisUnits );
 		if ( !pixelCanvas->getShowTopAxis() ){
 			topAxisCType->setEnabled( false );
 		}
@@ -2491,12 +2550,15 @@ namespace casa {
 		//the min/max of a single image.  We also need to check that the
 		//frequency units/channel are the same on all images.
 		else if ( mainCurveCount > 1 ) {
+
+
 			bool frequencyMatch = isFrequencyMatch();
 			bool velocityMatch = isVelocityMatch();
 			bool enableTopAxis = frequencyMatch || velocityMatch;
 			topAxisCType->setEnabled( enableTopAxis );
 			if ( enableTopAxis ){
-				restrictTopAxisOptions( true, frequencyMatch, velocityMatch );
+
+				restrictTopAxisOptions( true, bottomAxisUnits, frequencyMatch, velocityMatch );
 			}
 			pixelCanvas->setTopAxisCompatible( enableTopAxis );
 		//If there is only one curve, we show the top axis assuming

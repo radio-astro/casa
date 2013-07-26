@@ -56,6 +56,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QtDataOptionsPanel(QtDisplayPanelGui* panel=0, QWidget* parent=0 );
 		~QtDataOptionsPanel();
+		void removeDD( QtDisplayData* data ){
+					removeDDTab_( data );
+				}
 
 	signals:
 		void setAutoApply(bool);
@@ -75,7 +78,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// These respond to DD creation/removal signals from viewer_
 		// <group>
-		virtual void createDDTab_(QtDisplayData*);
+		virtual void createDDTab_(QtDisplayData*, Bool autoRegister, int insertPosition);
 		virtual void removeDDTab_(QtDisplayData*);
 		// </group>
 		virtual void auto_apply_state_change(bool);

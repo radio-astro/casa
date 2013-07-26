@@ -191,13 +191,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// register the DD for display.
 		// Check return value for 0, or connect to the createDDFailed()
 		// signal, to handle failure.
-		QtDisplayData* createDD( String path, String dataType, String displayType, Bool autoRegister=True,
-		                         const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions(),
-		                         const viewer::ImageProperties &props=viewer::ImageProperties( ) );
+		QtDisplayData* createDD( String path, String dataType, String displayType,
+				Bool autoRegister=True, int insertPosition = -1,
+				bool masterCoordinate = false, bool masterSaturation = false,
+				bool masterHue = false,
+		        const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions(),
+		        const viewer::ImageProperties &props=viewer::ImageProperties( ));
 
 		// Removes the QDD from the list and deletes it (if it existed --
 		// Return value: whether qdd was in the list in the first place).
-		virtual Bool removeDD(QtDisplayData* qdd);
+		virtual Bool removeDD(QtDisplayData*& qdd);
 
 		// retrieve a copy of the current DD list.
 		//List<QtDisplayData*> dds() { return qdds_;  }
@@ -354,8 +357,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void showMomentsCollapseImageProfile();
 		void showSpecFitImageProfile();
 		void disconnectHistogram();
-		void ddClose( QtDisplayData* removeDD);
-		void ddOpen( const String& path, const String& dataType, const String& displayType );
+		void ddClose( QtDisplayData*& removeDD);
+		void ddOpen( const String& path, const String& dataType,
+				const String& displayType, int insertPosition = -1,
+				bool register = true, bool masterCoordinate = false,
+				bool masterSaturation = false, bool masterHue = false);
 
 		// retrieve the identifier string for this QtDisplayPanelGui...
 		std::string id( ) const {
@@ -385,13 +391,13 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// autoregister tells DPs whether they are to register the DD.
 		// ***** dd is added to the world canvas holder during *****
 		// ***** the processing of this event...               *****
-		void ddCreated(QtDisplayData*, Bool autoRegister);
+		void ddCreated(QtDisplayData*, Bool autoRegister, int insertPosition);
 
 		// The DD is no longer on QtViewerBase's list, but is not
 		// destroyed until after the signal.
 		// ***** dd is removed from the world canvas holder    *****
 		// ***** during the processing of this event...        *****
-		void ddRemoved(QtDisplayData*);
+		//void ddRemoved(QtDisplayData*);
 
 		void closed( const QtDisplayPanelGui * );
 
@@ -430,7 +436,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// Respond to QDP::registrationChange() signal
 		virtual void ddRegChange_() {
 			//hideImageMenus();
-			updateDDMenus_();
+			//updateDDMenus_();
 			arrangeTrackBoxes_();
 			updateFrameInformation();
 		}
@@ -514,7 +520,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		// DataManager window and save-restore dialogs.
 		virtual Bool syncDataDir_(String filename);
 
-		virtual void updateDDMenus_(Bool doCloseMenu = True);
+		//virtual void updateDDMenus_(Bool doCloseMenu = True);
 
 
 		// scripted (via dbus) panels should override the closeEvent( ) and hide the gui
@@ -548,16 +554,16 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//# GUI LAYOUT
 
-		QMenu *dpMenu_, *ddMenu_, *ddRegMenu_, *ddCloseMenu_, *tlMenu_, *vwMenu_;
+		QMenu *dpMenu_, *ddMenu_, /**ddRegMenu_, *ddCloseMenu_,*/ *tlMenu_, *vwMenu_;
 
 		QAction *dpNewAct_, *printAct_, *dpOptsAct_, *dpCloseAct_, *dpQuitAct_,
-		        *ddOpenAct_, *ddSaveAct_, *ddAdjAct_, *ddRegAct_, *ddCloseAct_, *unzoomAct_,
+		        *ddOpenAct_, *ddSaveAct_, *ddAdjAct_,/* *ddRegAct_, *ddCloseAct_,*/ *unzoomAct_,
 		        *zoomInAct_, *zoomOutAct_, *annotAct_, *mkRgnAct_, *fboxAct_, *ddPreferencesAct_,
 		        *profileAct_, *momentsCollapseAct_, *histogramAct_, *fitAct_,
 		        *cleanAct_, *rgnMgrAct_, *shpMgrAct_, *dpSaveAct_, *dpRstrAct_, *manageImagesAct_;
 
 		QToolBar* mainToolBar_;
-		QToolButton *ddRegBtn_, *ddCloseBtn_;
+		QToolButton *ddRegBtn_/*, *ddCloseBtn_*/;
 
 		QtMouseToolBar* mouseToolBar_;
 
@@ -568,7 +574,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 	private:
 		bool use_new_regions;
-		bool manageImages;
 
 		//Animating the channel
 		int movieChannel;
@@ -579,17 +584,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QTimer movieTimer;
 		void setAnimationRate();
 		int getBoundedChannel( int channelNumber ) const;
+		void updateViewedImage();
 		unsigned int showdataoptionspanel_enter_count;
 		QtDisplayPanelGui() : rc(viewer::getrc()), linkedCursorHandler(0) {  }		// (not intended for use)
-		QtDisplayData* processDD( String path, String dataType, String displayType, Bool autoRegister,
-		                          QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
+		QtDisplayData* processDD( String path, String dataType,
+				String displayType, Bool autoRegister, int insertPosition,
+				bool masterCoordinate, bool masterSaturation, bool masterHue,
+		        QtDisplayData* qdd, const viewer::DisplayDataOptions &ddo=viewer::DisplayDataOptions() );
 		void connectRegionSignals(PanelDisplay* ppd);
-
+		void notifyDDRemoval( QtDisplayData* qdd );
 		//Management of the controlling DD
 		QtDisplayData* lookForExistingController();
-		void setControllingDD( QtDisplayData* controlDD );
-		void replaceControllingDD( QtDisplayData* oldControllingDD, QtDisplayData* newControllingDD);
-		// used to manage generation of the updateAxes( ) signal...
+		//void setControllingDD( QtDisplayData* controlDD );
+
 
 		//Methods for letting the animator know whether it should display
 		//the image/channel animator(s) based on the number of images and
@@ -644,7 +651,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		void clear_status_bar( );
 		void reset_status_bar( );
 		void controlling_dd_axis_change(String, String, String, std::vector<int> );
-		void controlling_dd_update(QtDisplayData*);
+		//void controlling_dd_update(QtDisplayData*);
 		void showHistogram();
 		void showSlicer();
 		void resetListenerImage();
@@ -684,6 +691,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		 */
 		void animationModeChanged( bool modeZ);
 		void animationImageChanged( int index );
+
+		void registerDD( QtDisplayData* dd, int position );
+		void unregisterDD( QtDisplayData* dd );
+		// used to manage generation of the updateAxes( ) signal...
+		void replaceControllingDD( QtDisplayData* oldControllingDD, QtDisplayData* newControllingDD);
+
 
 	public:
 

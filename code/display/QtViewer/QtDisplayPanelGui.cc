@@ -211,7 +211,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		animationHolder( NULL ), histogrammer( NULL ), colorHistogram( NULL ),
 		fitTool( NULL ), sliceTool( NULL ), imageManagerDialog(NULL),
 		clean_tool(0), regionDock_(0),
-		status_bar_timer(new QTimer( )), linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(True) {
+		status_bar_timer(new QTimer( )),
+		linkedCursorHandler(0), id_(idGen( )), autoDDOptionsShow(True) {
 
 		// initialize the "pix" unit, et al...
 		QtWCBox::unitInit( );
@@ -272,23 +273,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		qsm_->setVisible(false);
 
 		qdp_->setShapeManager(qsm_);
-		manageImages = true;
-
 
 		// SURROUNDING GUI LAYOUT
 
 		// Create the widgets (plus a little parenting and properties)
 		ddMenu_       = menuBar()->addMenu("&Data");
 		ddOpenAct_    = ddMenu_->addAction("&Open...");
-		ddRegAct_     = ddMenu_->addAction("&Register");
+		/*ddRegAct_     = ddMenu_->addAction("&Register");
 		ddRegMenu_    = new QMenu;
 		ddRegAct_->setMenu(ddRegMenu_);
 		ddCloseAct_   = ddMenu_->addAction("&Close");
 		ddCloseMenu_  = new QMenu;
-		ddCloseAct_->setMenu(ddCloseMenu_);
-		if ( manageImages ) {
-			manageImagesAct_ = ddMenu_->addAction( "&Manage Images...");
-		}
+		ddCloseAct_->setMenu(ddCloseMenu_);*/
+		manageImagesAct_ = ddMenu_->addAction( "&Manage Images...");
 		ddAdjAct_     = ddMenu_->addAction("&Adjust Data Display...");
 		ddSaveAct_    = ddMenu_->addAction("Sa&ve as...");
 		ddMenu_->addSeparator();
@@ -344,10 +341,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		mainToolBar_->addAction(ddAdjAct_);
 		ddRegBtn_     = new QToolButton(mainToolBar_);
 		mainToolBar_->addWidget(ddRegBtn_);
-		ddRegBtn_->setMenu(ddRegMenu_);
-		ddCloseBtn_   = new QToolButton(mainToolBar_);
-		mainToolBar_->addWidget(ddCloseBtn_);
-		ddCloseBtn_->setMenu(ddCloseMenu_);
+		//ddRegBtn_->setMenu(ddRegMenu_);
+		connect( ddRegBtn_, SIGNAL(clicked()), this, SLOT(showImageManager()));
+
+		//ddCloseBtn_   = new QToolButton(mainToolBar_);
+		//mainToolBar_->addWidget(ddCloseBtn_);
+		//ddCloseBtn_->setMenu(ddCloseMenu_);
 		mainToolBar_->addAction(ddSaveAct_);
 		mainToolBar_->addSeparator();
 		mainToolBar_->addAction(dpNewAct_);
@@ -522,10 +521,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		ddOpenAct_ ->setIcon(QIcon(":/icons/File_Open.png"));
 		ddSaveAct_ ->setIcon(QIcon(":/icons/Save_Img.png"));
-		ddRegAct_  ->setIcon(QIcon(":/icons/DD_Register.png"));
+		manageImagesAct_->setIcon(QIcon(":/icons/DD_Register.png"));
+		//ddRegAct_  ->setIcon(QIcon(":/icons/DD_Register.png"));
 		ddRegBtn_  ->setIcon(QIcon(":/icons/DD_Register.png"));
-		ddCloseAct_->setIcon(QIcon(":/icons/File_Close.png"));
-		ddCloseBtn_->setIcon(QIcon(":/icons/File_Close.png"));
+		//ddCloseAct_->setIcon(QIcon(":/icons/File_Close.png"));
+		//ddCloseBtn_->setIcon(QIcon(":/icons/File_Close.png"));
 		ddAdjAct_  ->setIcon(QIcon(":/icons/DD_Adjust.png"));
 		dpNewAct_  ->setIcon(QIcon(":/icons/DP_New.png"));
 		dpOptsAct_ ->setIcon(QIcon(":/icons/DP_Options.png"));
@@ -544,8 +544,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		dpQuitAct_ ->setIcon(QIcon(":/icons/File_Quit.png"));
 
 		ddOpenAct_ ->setToolTip("Open Data...");
-		ddRegBtn_  ->setToolTip("[Un]register Data");
-		ddCloseBtn_->setToolTip("Close Data");
+		ddRegBtn_  ->setToolTip(/*"[Un]register Data"*/"Manage Images");
+		//ddCloseBtn_->setToolTip("Close Data");
 		ddAdjAct_  ->setToolTip("Data Display Options");
 		ddSaveAct_ ->setToolTip("Save as...");
 		dpNewAct_  ->setToolTip("New Display Panel");
@@ -569,9 +569,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		ddRegBtn_  ->setAutoRaise(True);
 		ddRegBtn_  ->setIconSize(QSize(22,22));
 
-		ddCloseBtn_->setPopupMode(QToolButton::InstantPopup);
-		ddCloseBtn_->setAutoRaise(True);
-		ddCloseBtn_->setIconSize(QSize(22,22));
+		//ddCloseBtn_->setPopupMode(QToolButton::InstantPopup);
+		//ddCloseBtn_->setAutoRaise(True);
+		//ddCloseBtn_->setIconSize(QSize(22,22));
 
 		//  bottomToolBar_->setMovable(False);
 		//  bottomToolBar_->hide();
@@ -599,9 +599,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		connect(momentsCollapseAct_, SIGNAL(triggered()), SLOT(showMomentsCollapseImageProfile()));
 		connect(histogramAct_, SIGNAL(triggered()), SLOT(showHistogram()));
 		connect(fitAct_, SIGNAL(triggered()), SLOT(showFitInteractive()));
-		if ( manageImages ) {
-			connect(manageImagesAct_, SIGNAL(triggered()), SLOT(showImageManager()));
-		}
+		connect(manageImagesAct_, SIGNAL(triggered()), SLOT(showImageManager()));
+
 		if ( cleanAct_ ) connect(cleanAct_, SIGNAL(triggered()), SLOT(showCleanTool( )));
 
 		// connect(rgnMgrAct_,  SIGNAL(triggered()),  SLOT(showRegionManager()));
@@ -633,9 +632,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		         SLOT(displayTrackingData_(Record)) );
 		connect( qdp_, SIGNAL(trackingInfo(Record)),
 		         SLOT(updateMultiSpectralFitLocation( Record)));
-		connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
+		/*connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
 		         SLOT(deleteTrackBox_(QtDisplayData*)) );
-
+*/
 
 		// From animator
 
@@ -643,14 +642,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 		// From registration
-
-		connect( qdp_, SIGNAL(registrationChange()),  SLOT(ddRegChange_()), Qt::QueuedConnection );
-		// (Important to queue this one, since the slot alters
-		//  menus that may have triggered the signal).
-
+		connect( qdp_, SIGNAL(registrationChange()),  SLOT(ddRegChange_()) );
 
 		// From save-restore
-
 		connect( qdp_, SIGNAL(creatingRstrDoc(QDomDocument*)),
 		         SLOT(addGuiState_(QDomDocument*)) );
 		// Adds gui state to QDomDocument qdp has created.
@@ -662,10 +656,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		// FINAL INITIALIZATIONS
 
-		connect( qdp_, SIGNAL(newRegisteredDD(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
-		connect( qdp_, SIGNAL(oldDDUnregistered(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
-		connect( qdp_, SIGNAL(oldDDRegistered(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
-		connect( qdp_, SIGNAL(RegisteredDDRemoved(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
+		//connect( qdp_, SIGNAL(newRegisteredDD(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
+		//connect( qdp_, SIGNAL(oldDDUnregistered(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
+		//connect( qdp_, SIGNAL(oldDDRegistered(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
+		//connect( qdp_, SIGNAL(RegisteredDDRemoved(QtDisplayData*)), SLOT(controlling_dd_update(QtDisplayData*)) );
 
 		connect(qdp_,  SIGNAL(registrationChange()),
 		        SLOT(hideImageMenus()));
@@ -676,7 +670,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		connect( qdp_, SIGNAL(cursorPosition(viewer::Position)),
 		         SIGNAL(cursorPosition(viewer::Position)) );
 
-		updateDDMenus_();
+		//updateDDMenus_();
 
 
 		bool dimension_set = false;
@@ -1174,14 +1168,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 //# DisplayData functionality brought down from QtViewerBase
 //# ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ----
 
-	QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType, String displayType,
-	        Bool autoRegister, const viewer::DisplayDataOptions &ddo,
+	QtDisplayData* QtDisplayPanelGui::createDD( String path, String dataType,
+			String displayType, Bool autoRegister, int insertPosition,
+			bool masterCoordinate, bool masterSaturation, bool masterHue,
+			const viewer::DisplayDataOptions &ddo,
 	        const viewer::ImageProperties &props ) {
 		QtDisplayData* qdd = new QtDisplayData( this, path, dataType, displayType, ddo, props );
-		return processDD( path, dataType, displayType, autoRegister, qdd, ddo  );
+		return processDD( path, dataType, displayType, autoRegister,
+				insertPosition, masterCoordinate, masterSaturation, masterHue, qdd, ddo  );
 	}
 	QtDisplayData* QtDisplayPanelGui::processDD( String path, String dataType, String displayType,
-	        Bool autoRegister, QtDisplayData* qdd, const viewer::DisplayDataOptions& /*ddo*/) {
+	        Bool autoRegister, int insertPosition,
+	        bool masterCoordinate, bool masterSaturation, bool masterHue,
+	        QtDisplayData* qdd, const viewer::DisplayDataOptions& /*ddo*/) {
 		if(qdd->isEmpty()) {
 			errMsg_ = qdd->errMsg();
 			status( "display data creation failed: " + errMsg_ );
@@ -1197,9 +1196,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		qdd->setName(name);
 		qdd->setPlotTitle();
 		status( "loaded: " + qdd->path( ) );
-		displayDataHolder->addDD( qdd );
-
-		emit ddCreated(qdd, autoRegister);
+		displayDataHolder->addDD( qdd, insertPosition, autoRegister,
+				masterCoordinate, masterSaturation, masterHue );
+		emit ddCreated(qdd, autoRegister, insertPosition);
 		updateFrameInformation();
 		if ( regionDock_ ) {
 			regionDock_->updateRegionStats( );
@@ -1292,7 +1291,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			dd->setImage( img );
 			dd->initImage();
 			dd->init();
-			dd = processDD( path, dataType, displayType, autoRegister, dd );
+			dd = processDD( path, dataType, displayType, autoRegister,
+					-1, false, false, false, dd );
 		}
 
 		// set flagg if requested
@@ -1409,9 +1409,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		//Clean up for each one.
 		for ( int i = 0; i < removeDDs.size(); i++ ) {
-			emit ddRemoved( removeDDs[i] );
-			removeDDs[i]->done();
-			delete removeDDs[i];
+			//emit ddRemoved( removeDDs[i] );
+			//notifyDDRemoval( removeDDs[i] );
+			//removeDDs[i]->done();
+			///delete removeDDs[i];
+			removeDD( removeDDs[i] );
 			removeDDs[i] = NULL;
 		}
 
@@ -1440,16 +1442,31 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	DisplayDataHolder::DisplayDataIterator QtDisplayPanelGui::endDD() const {
 		return displayDataHolder->endDD();
 	}
+	void QtDisplayPanelGui::notifyDDRemoval( QtDisplayData* qdd ){
+		qdp_->unregisterDD(qdd );
+		//emit ddRemoved(qdd);
+		if ( qdo_ != NULL ){
+			qdo_->removeDD(qdd);
+		}
+		if (trkgDockWidget_ != NULL ){
+			trkgDockWidget_->removeTrackBox( qdd );
+		}
+		if ( regionDock_ ){
+			regionDock_->updateRegionStats( );
+		}
+		if ( qdm_ != NULL ){
+			qdm_->updateDisplayDatas(qdd);
+		}
+	}
 
-	Bool QtDisplayPanelGui::removeDD(QtDisplayData* qdd) {
+
+	Bool QtDisplayPanelGui::removeDD(QtDisplayData*& qdd) {
 		bool removed = displayDataHolder->removeDD( qdd );
 		if ( removed ) {
-			emit ddRemoved(qdd);
-
-			if ( regionDock_ )
-				regionDock_->updateRegionStats( );
+			notifyDDRemoval( qdd );
 			qdd->done();
 			delete qdd;
+			qdd = NULL;
 			updateFrameInformation();
 		}
 		return removed;
@@ -1458,9 +1475,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 	Bool QtDisplayPanelGui::ddExists(QtDisplayData* qdd) {
-		/*for(ListIter<QtDisplayData*> qdds(qdds_); !qdds.atEnd(); qdds++) {
-			if(qdd == qdds.getRight()) return True;  }
-		return False;  }*/
 		return displayDataHolder->exists( qdd );
 	}
 
@@ -1540,7 +1554,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			controlling_dd = lookForExistingController();
 			if ( controlling_dd != 0 ) {
 				emit axisToolUpdate( controlling_dd );
-				displayDataHolder->setDDControlling( controlling_dd );
 				connect( controlling_dd, SIGNAL(axisChanged(String, String, String, std::vector<int>)),
 				         SLOT(controlling_dd_axis_change(String, String, String, std::vector<int> )) );
 			}
@@ -1548,29 +1561,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		return controlling_dd;
 	}
 
-	/*List<QtDisplayData*> QtDisplayPanelGui::registeredDDs() {
-		// return a list of DDs that are registered on some panel.
-		List<QtDisplayData*> rDDs(qdds_);
-	#if 0
-		List<QtDisplayPanelGui*> DPs(viewer()->openDPs());
-
-		for(ListIter<QtDisplayData*> rdds(rDDs); !rdds.atEnd();) {
-			QtDisplayData* dd = rdds.getRight();
-			Bool regd = False;
-
-			for(ListIter<QtDisplayPanel*> dps(DPs); !dps.atEnd(); dps++) {
-				QtDisplayPanel* dp = dps.getRight();
-				if(dp->isRegistered(dd)) { regd = True; break;  }  }
-
-			if(regd) rdds++;
-			else rdds.removeRight();  }
-	#endif
-		return rDDs;  }
-	 */
 
 	List<QtDisplayData*> QtDisplayPanelGui::unregisteredDDs() {
 		// return a list of DDs that exist but are not registered on any panel.
-		//List<QtDisplayData*> uDDs(qdds_);
 		std::list<QtDisplayPanelGui*> dps(viewer( )->openDPs());
 		List<QtDisplayData*> uDDs;
 		ListIter<QtDisplayData*> uDDsIter( uDDs );
@@ -1578,8 +1571,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		while ( iter != displayDataHolder->endDD()) {
 			QtDisplayData* dd = (*iter);
 			iter++;
-			//for(ListIter<QtDisplayData*> udds(uDDs); !udds.atEnd(); ) {
-			//QtDisplayData* dd = udds.getRight();
 			Bool regd = False;
 			for ( std::list<QtDisplayPanelGui*>::iterator iter = dps.begin( ); iter != dps.end( ); ++iter ) {
 				if((*iter)->displayPanel( )->isRegistered(dd)) {
@@ -1588,16 +1579,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				}
 			}
 
-			/*if(regd){
-				//udds.removeRight();
-			}
-			else {*/
 			if ( !regd ) {
-				//udds++;
 				uDDsIter.addRight( dd );
 			}
 		}
-
 		return uDDs;
 	}
 
@@ -1637,14 +1622,28 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			}
 		}
 
+		updateViewedImage();
 	}
+
+
+	void QtDisplayPanelGui::updateViewedImage(){
+		Bool modez = qdp_->modeZ();
+		Int  frm   = qdp_->frame();
+		if ( imageManagerDialog != NULL ){
+			if ( !modez ){
+				imageManagerDialog->setViewedImage( frm );
+			}
+			else {
+				imageManagerDialog->setViewedImage( -1 );
+			}
+		}
+	}
+
 // Public slots: may be safely operated programmatically (i.e.,
 // scripted, when available), or via gui actions.
 
 	void QtDisplayPanelGui::hideImageMenus() {
-		/*List<QtDisplayData*> rdds = qdp_->registeredDDs();
-		for (ListIter<QtDisplayData*> qdds(&rdds); !qdds.atEnd(); qdds++) {
-			QtDisplayData* pdd = qdds.getRight();*/
+
 		DisplayDataHolder::DisplayDataIterator iter = qdp_->beginRegistered();
 		while ( iter != qdp_->endRegistered()) {
 			QtDisplayData* pdd = (*iter);
@@ -1723,8 +1722,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	void QtDisplayPanelGui::showDataManager() {
 		if(qdm_==0) {
 			qdm_ = new QtDataManager(this);
-			connect( this, SIGNAL(ddRemoved(QtDisplayData*)),       qdm_, SLOT(updateDisplayDatas(QtDisplayData*)));
-			connect( this, SIGNAL(ddCreated(QtDisplayData*, Bool)), qdm_, SLOT(updateDisplayDatas(QtDisplayData*, Bool)));
+			/*connect( this, SIGNAL(ddRemoved(QtDisplayData*)),
+					qdm_, SLOT(updateDisplayDatas(QtDisplayData*)));*/
+			connect( this, SIGNAL(ddCreated(QtDisplayData*, Bool, int)),
+					qdm_, SLOT(updateDisplayDatas(QtDisplayData*, Bool)));
 		}
 		qdm_->showNormal();
 		qdm_->raise();
@@ -1771,6 +1772,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//		#1325 0x00e375b9 in casa::QtDataOptionsPanel::QtDataOptionsPanel ()
 		//		#1326 0x00eda8bf in casa::QtDisplayPanelGui::showDataOptionsPanel ()
 		//  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---  ---
+
 		if ( showdataoptionspanel_enter_count == 0 ) {
 			++showdataoptionspanel_enter_count;
 			if(qdo_==0) {
@@ -1784,6 +1786,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			--showdataoptionspanel_enter_count;
 		}
 	}
+
 
 	void QtDisplayPanelGui::hideDataOptionsPanel() {
 		if(qdo_==0) return;
@@ -2618,7 +2621,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 
 
-	void QtDisplayPanelGui::updateDDMenus_(Bool /*doCloseMenu*/) {
+	/*void QtDisplayPanelGui::updateDDMenus_(Bool doCloseMenu) {
 		// Re-populates ddRegMenu_ with actions.  If doCloseMenu is
 		// True (on DD create/close), also recreates ddCloseMenu_.
 		// (For now, both menus are always recreated).
@@ -2629,10 +2632,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//List<QtDisplayData*> regdDDs   = qdp_->registeredDDs();
 		//List<QtDisplayData*> unregdDDs = qdp_->unregisteredDDs();
 
-		Bool anyRdds = /*regdDDs.len()>0u;*/!qdp_->isEmptyRegistered();
-		Bool anyUdds = /*unregdDDs.len()>0u;*/!displayDataHolder->isEmpty();
+		Bool anyRdds = !qdp_->isEmptyRegistered();
+		Bool anyUdds = !displayDataHolder->isEmpty();
 		int count = displayDataHolder->getCount();
-		Bool manydds = /*regdDDs.len() + unregdDDs.len() > 1u;*/false;
+		Bool manydds = false;
 		if ( count > 1 ) {
 			manydds = true;
 		}
@@ -2749,7 +2752,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 			ddCloseMenu_->addAction(action);
 			connect(action, SIGNAL(triggered()), SLOT(removeAllDDs()));
 		}
-	}
+	}*/
 
 	void QtDisplayPanelGui::registerAllDDs() {
 		//qdp_->registerAll();
@@ -2834,11 +2837,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QAction* action = dynamic_cast<QAction*>(sender());
 		if(action==0) return;		// (shouldn't happen).
 		QtDisplayData* dd = action->data().value<QtDisplayData*>();
+		registerDD( dd, -1 );
+	}
 
-		qdp_->registerDD(dd);
+	void QtDisplayPanelGui::registerDD( QtDisplayData* dd, int position ){
+		qdp_->registerDD(dd, position );
 		updateFrameInformation();
-		if ( regionDock_ )
+		if ( regionDock_ ){
 			regionDock_->updateRegionStats( );
+		}
 	}
 
 
@@ -2846,11 +2853,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		QAction* action = dynamic_cast<QAction*>(sender());
 		if(action==0) return;		// (shouldn't happen).
 		QtDisplayData* dd = action->data().value<QtDisplayData*>();
+		unregisterDD( dd );
+	}
 
+	void QtDisplayPanelGui::unregisterDD( QtDisplayData* dd ){
 		qdp_->unregisterDD(dd);
 		updateFrameInformation();
-		if ( regionDock_ )
+		if ( regionDock_ ){
 			regionDock_->updateRegionStats( );
+		}
 	}
 
 	void QtDisplayPanelGui::ddCloseClicked_() {
@@ -2858,17 +2869,21 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		if(action==0) return;		// (shouldn't happen).
 		QtDisplayData* dd = action->data().value<QtDisplayData*>();
 
-		removeDD(dd);
+		ddClose( dd );
 	}
 
-	void QtDisplayPanelGui::ddClose(QtDisplayData* ddRemove ) {
+	void QtDisplayPanelGui::ddClose(QtDisplayData*& ddRemove ) {
 		if ( ddRemove != NULL ) {
 			removeDD(ddRemove);
 		}
 	}
 
-	void QtDisplayPanelGui::ddOpen( const String& path, const String& dataType, const String& displayType ) {
-		createDD( path, dataType, displayType );
+	void QtDisplayPanelGui::ddOpen( const String& path, const String& dataType,
+			const String& displayType, int insertPosition,
+			bool registerImage, bool masterCoordinate, bool masterSaturation,
+			bool masterHue) {
+		createDD( path, dataType, displayType, registerImage, insertPosition,
+				masterCoordinate, masterSaturation, masterHue);
 	}
 
 	void QtDisplayPanelGui::unlinkCursorTracking( QtDisplayPanelGui *other ) {
@@ -2897,14 +2912,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		v_->release();
 	}
 
-	void QtDisplayPanelGui::setControllingDD( QtDisplayData* controlDD ) {
-		//Officially replaces one controlling DD with another.
-		if ( controlDD != NULL ) {
-			QtDisplayData* oldController = displayDataHolder->getDDControlling();
 
-			replaceControllingDD( oldController, controlDD );
-		}
-	}
 
 	void QtDisplayPanelGui::replaceControllingDD( QtDisplayData* oldControllingDD, QtDisplayData* newControllingDD) {
 		if ( newControllingDD != oldControllingDD ) {
@@ -2916,7 +2924,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 			//Set the new controlling DD in the layers below this one.
 
-			qdp_->setControllingDD( newControllingDD );
+			//qdp_->setControllingDD( newControllingDD );
 
 
 			emit axisToolUpdate( newControllingDD );
@@ -2929,20 +2937,6 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		}
 	}
 
-	void QtDisplayPanelGui::controlling_dd_update(QtDisplayData* /*updateDD*/) {
-		// manage controlling_dd so that we can generate updateAxis( ) events
-		// in response to user visible axis changes...
-
-		//Get the previous controllingDD (it may no longer exist if it was removed.
-		QtDisplayData* oldControllingDD = displayDataHolder->getDDControlling();
-
-		//See if there is a new controllingDD.
-		QtDisplayData* newControllingDD = lookForExistingController();
-
-
-		//Replace the controllingDD officially
-		replaceControllingDD( oldControllingDD, newControllingDD );
-	}
 
 	void QtDisplayPanelGui::controlling_dd_axis_change(String, String, String, std::vector<int> ) {
 		QtDisplayData* controlling_dd = dd();
@@ -3094,16 +3088,26 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	}
 
 	void QtDisplayPanelGui::showImageManager() {
-		if ( manageImages ) {
-			if ( imageManagerDialog == NULL ) {
-				imageManagerDialog = new ImageManagerDialog( this );
-				imageManagerDialog->setImageHolders( qdp_->getDataHolder(), displayDataHolder );
-				connect( imageManagerDialog, SIGNAL(ddClosed(QtDisplayData*)), this, SLOT(ddClose(QtDisplayData*)));
-				connect( imageManagerDialog, SIGNAL(ddOpened(const String&, const String&, const String&)),
-				         this, SLOT(ddOpen(const String&, const String&, const String&)));
-			}
-			imageManagerDialog->show();
-		}
-	}
+		if ( imageManagerDialog == NULL ) {
+			imageManagerDialog = new ImageManagerDialog( this );
+			imageManagerDialog->setImageHolders( qdp_->getDataHolder(), displayDataHolder );
+			connect( imageManagerDialog, SIGNAL(ddClosed(QtDisplayData*&)),
+					this, SLOT(ddClose(QtDisplayData*&)));
+			connect( imageManagerDialog, SIGNAL(ddOpened(const String&, const String&, const String&, int, bool, bool, bool, bool)),
+					 this, SLOT(ddOpen(const String&, const String&, const String&, int, bool, bool, bool, bool)));
+			connect( imageManagerDialog, SIGNAL(registerAll()),
+					this, SLOT(registerAllDDs()));
+			connect( imageManagerDialog, SIGNAL(unregisterAll()),
+					this, SLOT(unregisterAllDDs()));
+			connect( imageManagerDialog, SIGNAL(registerDD(QtDisplayData*, int)),
+					this, SLOT(registerDD(QtDisplayData*, int)));
+			connect( imageManagerDialog, SIGNAL(unregisterDD(QtDisplayData*)),
+					this, SLOT(unregisterDD(QtDisplayData*)));
+			connect( imageManagerDialog, SIGNAL(masterCoordinateChanged(QtDisplayData*, QtDisplayData*)),
+					this, SLOT(replaceControllingDD(QtDisplayData*, QtDisplayData*)));
+			updateViewedImage();
 
+		}
+		imageManagerDialog->show();
+	}
 }

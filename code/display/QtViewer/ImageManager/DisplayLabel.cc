@@ -22,48 +22,50 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-
-#ifndef IMAGETRACKER_H_
-#define IMAGETRACKER_H_
+#include "DisplayLabel.qo.h"
+#include <QDebug>
 
 namespace casa {
 
-	class QtDisplayData;
+DisplayLabel::DisplayLabel(int characterCount, QWidget *parent)
+    : QTextEdit(parent), bgColor("#D3D3D3"){
+	setTextInteractionFlags( Qt::TextBrowserInteraction );
+	setFrameStyle( QFrame::Sunken );
+	setVerticalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+	setHorizontalScrollBarPolicy( Qt::ScrollBarAlwaysOff );
+	setContextMenuPolicy( Qt::NoContextMenu );
+	setAutoFillBackground( true );
+	setBackgroundColor();
+	setReadOnly( true );
+	setFixedHeight( 18 );
+	setFixedWidth( 15 );
+	setSizePolicy( QSizePolicy::Fixed, QSizePolicy::Fixed );
+}
 
-	/**
-	 * Interface class designed to reduce the coupling between the GUI class,
-	 * ImageManager and the DisplayDataHolder.  Provides a mechanism for the DisplayDataHolder
-	 * to update the GUI, when its QtDisplayData changes methods invoked by other classes.
-	 */
-
-	class ImageTracker {
-	public:
-		virtual void imageAdded( QtDisplayData* image, int position,
-				bool autoRegister, bool masterCoordinate,
-				bool masterSaturation, bool masterHue) = 0;
-		virtual void masterImageSelected( QtDisplayData* image ) =0;
-		ImageTracker() {}
-		virtual ~ImageTracker() {}
-
-	};
-
-	/**
-	 * Interface implemented by QtDisplayPanel that can add/remove
-	 * registered DDs and set the controlling QtDisplayData's.
-	 *
-	 * Methods are called by the DisplayDataHolder to make changes through the
-	 * existing infrastructure.
-	 */
-	class ImageDisplayer {
-	public:
-		ImageDisplayer() {}
-		virtual ~ImageDisplayer() {}
-		virtual void setControllingDD( QtDisplayData* controlDD ) = 0;
-		virtual void registerDD( QtDisplayData* dd, int position = -1) = 0;
-		virtual void unregisterDD( QtDisplayData* dd ) = 0;
-	};
+void DisplayLabel::setBackgroundColor( ){
+	QPalette pal = palette();
+	pal.setColor( QPalette::Base, bgColor );
+	setPalette( pal );
+}
 
 
+bool DisplayLabel::isEmpty() const {
+	QTextDocument* contentDoc = document();
+	bool emptyDoc = true;
+	if ( contentDoc != NULL ){
+		emptyDoc = contentDoc->isEmpty();
+	}
+	return emptyDoc;
+}
+
+
+void DisplayLabel::setEmptyColor( QColor color ){
+	bgColor = color;
+	setBackgroundColor();
+}
+
+
+DisplayLabel::~DisplayLabel(){
 
 }
-#endif /* IMAGETRACKER_H_ */
+}

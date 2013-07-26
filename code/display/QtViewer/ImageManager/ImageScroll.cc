@@ -23,9 +23,7 @@
 //#                        Charlottesville, VA 22903-2475 USA
 //#
 #include "ImageScroll.qo.h"
-#include <display/QtViewer/ImageManager/ImageView.qo.h>
 #include <display/QtViewer/QtDisplayData.qo.h>
-#include <display/QtViewer/DisplayDataHolder.h>
 
 #include <QDragMoveEvent>
 #include <QDropEvent>
@@ -38,148 +36,323 @@ namespace casa {
 
 	ImageScroll::ImageScroll(QWidget *parent)
 		: QWidget(parent),
-		  LAYOUT_SPACING(5), LAYOUT_MARGIN(5),
-		  managedImages(NULL) {
+		  LAYOUT_SPACING(5),
+		  LAYOUT_MARGIN(5){
 
+		ui.setupUi(this);
+		scrollWidget = new QWidget( ui.scrollArea );
+		ui.scrollArea->setWidget( scrollWidget );
+		ui.scrollArea->setWidgetResizable( true );
 		QVBoxLayout* scrollLayout = new QVBoxLayout();
 		scrollLayout->setSpacing( LAYOUT_SPACING );
 		scrollLayout->setContentsMargins(LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN,LAYOUT_MARGIN);
+		scrollWidget->setLayout( scrollLayout );
 
-		spacer = new QSpacerItem( 0,900);
+		spacer = new QSpacerItem( 0,20, QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
 		dropMarker = new QFrame();
 		dropMarker->setFrameShape( QFrame::HLine );
 		dropMarker->setLineWidth( 5 );
-		dropMarker->setStyleSheet("color:blue");
+		dropMarker->setStyleSheet("color:white");
 
-		setLayout( scrollLayout );
+
 		setAutoFillBackground( true );
 		QPalette pal = palette();
-		pal.setColor( QPalette::Background, Qt::white );
+		QColor bgColor( Qt::black );
+		pal.setColor( QPalette::Background, bgColor );
 		setPalette( pal );
 
 		setAcceptDrops( true );
-		imageColorsEnabled = false;
-		dropIndex = -1;
 	}
 
-	void ImageScroll::setImageHolder( DisplayDataHolder* holder ) {
-		managedImages = holder;
-		managedImages->setImageTracker( this );
-		for ( DisplayDataHolder::DisplayDataIterator iter = managedImages->beginDD();
-		        iter != managedImages->endDD(); iter++ ) {
-			ImageView* view = new ImageView( *iter, this );
-			addImage( view );
-		}
-	}
+	//----------------------------------------------------------------------
+	//                      Accessors
+	//----------------------------------------------------------------------
 
-	void ImageScroll::setControllingDD( QtDisplayData* dd ) {
-		if ( managedImages != NULL ) {
-			managedImages->setDDControlling( dd );
-		}
-	}
-
-//**************************************************************
-//         Gui Methods for manipulating images
-//**************************************************************
-
-	QList<ImageView*> ImageScroll::getSelectedViews() {
-		QList<ImageView*>::iterator iter = images.begin();
-		QList<ImageView*> selectedImages;
-		while ( iter != images.end() ) {
-			if ( (*iter)->isImageSelected()) {
-				selectedImages.append( *iter );
+	QtDisplayData* ImageScroll::getHueMaster() const {
+		QtDisplayData* target = NULL;
+		for ( QList<ImageView*>::const_iterator iter = images.begin();
+			iter != images.end(); iter++ ) {
+			if ( (*iter)->isMasterHue() ){
+				target = (*iter)->getData();
+				break;
 			}
-			iter++;
 		}
-		return selectedImages;
+		return target;
+	}
+	QtDisplayData* ImageScroll::getSaturationMaster() const {
+		QtDisplayData* target = NULL;
+		for ( QList<ImageView*>::const_iterator iter = images.begin();
+			iter != images.end(); iter++ ) {
+			if ( (*iter)->isMasterSaturation() ){
+				target = (*iter)->getData();
+				break;
+			}
+		}
+		return target;
+	}
+
+	QtDisplayData* ImageScroll::getCoordinateMaster() const {
+		QtDisplayData* target = NULL;
+		for ( QList<ImageView*>::const_iterator iter = images.begin();
+			iter != images.end(); iter++ ) {
+			if ( (*iter)->isMasterCoordinate() ){
+				target = (*iter)->getData();
+				break;
+			}
+		}
+		return target;
+	}
+
+	QList<ImageView*> ImageScroll::getViews() {
+		return images;
+	}
+
+	int ImageScroll::getImageCount() const {
+		return images.size();
+	}
+
+	int ImageScroll::getIndex( ImageView* view ) {
+		QString viewName = view->getName();
+		int orderIndex = findImageView( viewName );
+		return orderIndex;
+	}
+
+	int ImageScroll::getRegisteredIndex( int dropIndex )const{
+		int count = 0;
+		int totalCount = 0;
+		for( QList<ImageView*>::const_iterator iter = images.begin();
+							iter != images.end(); iter++ ) {
+			if ( totalCount == dropIndex ){
+				break;
+			}
+			if ( (*iter)->isRegistered() ){
+				count++;
+			}
+			totalCount++;
+		}
+		return count;
 	}
 
 
-	void ImageScroll::removeImageViews( QList<ImageView*>& views ) {
-		QList<ImageView*>::iterator iter = views.begin();
-		while ( iter != views.end()) {
-			closeImage( *iter, false );
-			iter++;
+	int ImageScroll::getRegisteredCount() const {
+		int count = 0;
+		for( QList<ImageView*>::const_iterator iter = images.begin();
+				iter != images.end(); iter++ ) {
+			if ( (*iter)->isRegistered()){
+				count++;
+			}
 		}
+		return count;
 	}
 
-	QList<QtDisplayData*> ImageScroll::closeImages() {
-		QList<ImageView*> closeImages = getSelectedViews();
-		QList<QtDisplayData*> closedData;
-		while ( !closeImages.isEmpty()) {
-			ImageView* imageView = closeImages.takeLast();
-			closedData.append( imageView->getData());
-			closeImage( imageView );
-		}
-		return closedData;
-	}
 
+	//-------------------------------------------------------------
+	//            Opening/Closing/Registering Images
+	//-------------------------------------------------------------
+
+	void ImageScroll::closeImages() {
+		while ( !images.isEmpty()) {
+			int index = images.size() - 1;
+			closeImage( images[index], true );
+		}
+	}
 
 	void ImageScroll::closeImage( ImageView* imageView, bool deleteImage ) {
-		QLayout* scrollLayout = layout();
+		QLayout* scrollLayout = scrollWidget->layout();
 		scrollLayout->removeWidget( imageView );
 		imageView->setParent( NULL );
+		bool masterCoordinate = imageView->isMasterCoordinate();
 		images.removeOne( imageView );
-		QtDisplayData* dd = imageView->getData();
-		managedImages->discardDD( dd, false );
 		disconnect( imageView, SIGNAL(displayTypeChanged(ImageView*)),
-		            this, SLOT(displayTypeChanged(ImageView*)));
+			this, SIGNAL(displayTypeChanged(ImageView*)));
+		disconnect( imageView, SIGNAL( close(ImageView*)),
+			this, SLOT( closeImage(ImageView*)));
+		disconnect( imageView, SIGNAL( masterCoordinateImageSelected( ImageView*)),
+			this, SLOT( coordinateSystemChanged( ImageView*)));
+		disconnect( imageView, SIGNAL( masterCoordinateImageClear()),
+			this, SLOT( masterCoordinateClear()));
+		disconnect( imageView, SIGNAL( masterHueImageSelected( ImageView*)),
+			this, SLOT( hueImageChanged( ImageView*)));
+		disconnect( imageView, SIGNAL( masterSaturationImageSelected( ImageView*)),
+			this, SLOT( saturationImageChanged( ImageView*)));
+		disconnect( imageView, SIGNAL( showDataDisplayOptions( QtDisplayData*)),
+			this, SIGNAL( showDataDisplayOptions( QtDisplayData*)));
+		QtDisplayData* dd = imageView->getData();
+		emit displayDataRemoved( dd, masterCoordinate );
 		if ( deleteImage ) {
 			delete imageView;
 		}
 	}
 
-	void ImageScroll::addImageViews(QList<ImageView*>& imageViews) {
-		QLayout* scrollLayout = layout();
-		scrollLayout->removeItem( spacer );
-		QList<ImageView*>::iterator iter = imageViews.begin();
-		while ( iter != imageViews.end()) {
-			images.append( *iter );
-			scrollLayout->addWidget( *iter);
-			QtDisplayData* dd = (*iter)->getData();
-			managedImages->insertDD( dd, -1 );
-			iter++;
+	void ImageScroll::addImageView( QtDisplayData* data, bool registered,
+				int dropIndex, bool masterCoordinate,
+				bool masterSaturation, bool masterHue, QColor rgbColor ){
+		ImageView* view = NULL;
+		int index = findImageView( data->name().c_str() );
+		if ( index >= 0 ){
+			view = images[index];
 		}
-		scrollLayout->addItem( spacer );
+		if ( view == NULL ){
+			view = new ImageView( data );
+			view->setRegistered( registered );
+			if ( masterCoordinate && view->isControlEligible()){
+				view->setMasterCoordinateImage( true );
+			}
+			if ( masterSaturation ){
+				view->setMasterSaturationImage( true );
+			}
+			if ( masterHue ){
+				view->setMasterHueImage( true );
+			}
+			view->setDisplayedColor( rgbColor );
+			addImage( view, dropIndex );
+		}
 	}
 
-	void ImageScroll::setSelectAll( bool select ) {
+	void ImageScroll::removeImageView( QtDisplayData* displayData ){
+		int index = findImageView( displayData->name().c_str());
+		if ( index >= 0 ){
+			this->closeImage( images[index], true );
+		}
+	}
+
+	void ImageScroll::addImage( ImageView* viewerImage, int dropIndex ) {
+		QString newName = viewerImage->getName();
+		int index = findImageView( newName );
+		if ( index < 0 ){
+
+			//Signal slot
+			connect( viewerImage, SIGNAL( displayTypeChanged( ImageView* )),
+				 this, SIGNAL(displayTypeChanged(ImageView*)));
+			connect( viewerImage, SIGNAL( close(ImageView*)),
+					this, SLOT( closeImage(ImageView*)));
+			connect( viewerImage, SIGNAL( masterCoordinateImageSelected( ImageView*)),
+					this, SLOT( coordinateSystemChanged( ImageView*)));
+			connect( viewerImage, SIGNAL( masterCoordinateImageClear()),
+						this, SLOT( masterCoordinateClear()));
+			connect( viewerImage, SIGNAL( masterHueImageSelected( ImageView*)),
+								this, SLOT( hueImageChanged( ImageView*)));
+			connect( viewerImage, SIGNAL( masterSaturationImageSelected( ImageView*)),
+								this, SLOT( saturationImageChanged( ImageView*)));
+			connect( viewerImage, SIGNAL( showDataDisplayOptions( QtDisplayData*)),
+					this, SIGNAL( showDataDisplayOptions( QtDisplayData*)));
+			connect( viewerImage, SIGNAL( imageSelected(ImageView*)),
+					this, SIGNAL(registrationChange(ImageView*)));
+
+
+
+			//Add to GUI
+			QLayout* scrollLayout = scrollWidget->layout();
+			scrollLayout->removeItem( spacer );
+			if ( dropIndex == -1 ){
+				images.append( viewerImage );
+				scrollLayout->addWidget( viewerImage );
+			}
+			else {
+				QVBoxLayout* boxLayout = dynamic_cast<QVBoxLayout*>(scrollLayout);
+				boxLayout->insertWidget( dropIndex, viewerImage );
+				images.insert( dropIndex, viewerImage );
+			}
+			scrollLayout->addItem( spacer );
+		}
+	}
+
+	void ImageScroll::setRegisterAll( bool select ) {
 		QList<ImageView*>::iterator iter = images.begin();
 		while ( iter != images.end()) {
-			(*iter)->setImageSelected( select );
+			(*iter)->setRegistered( select );
 			iter++;
 		}
 	}
 
-	void ImageScroll::setImageColorsEnabled( bool enabled ) {
-		imageColorsEnabled = enabled;
-		QList<ImageView*>::iterator iter = images.begin();
-		while ( iter != images.end()) {
-			(*iter)->setImageColorsEnabled( enabled );
-			iter++;
-		}
-	}
 
-	bool ImageScroll::findColor( const QString& lookup, QColor* foundColor ) {
-		bool colorLocated = false;
-		for ( QList<ImageView*>::iterator iter = images.begin(); iter != images.end(); iter++ ) {
-			if ( (*iter)->getName() == lookup ) {
-				*foundColor = (*iter)->getDisplayedColor();
-				colorLocated = true;
+	//--------------------------------------------------------------
+	//       Master Images (Coordinate,Hue,Saturation)
+	//--------------------------------------------------------------
+
+	void ImageScroll::resetMasterCoordinate( ImageView* newMaster ){
+		for ( QList<ImageView*>::iterator iter = images.begin();
+					iter != images.end(); iter++ ) {
+			if ( newMaster != (*iter) ){
+				(*iter)->setMasterCoordinateImage( false );
 			}
 		}
-		return colorLocated;
 	}
 
-	void ImageScroll::applyColorChangesIndividually() {
-		for ( QList<ImageView*>::iterator iter = images.begin(); iter != images.end(); iter++ ) {
-			(*iter)->emitDisplayColorsChanged();
+	void ImageScroll::masterCoordinateClear(){
+		emit masterCoordinateImageChanged( NULL );
+	}
+
+	void ImageScroll::coordinateSystemChanged( ImageView* newMaster ){
+		resetMasterCoordinate( newMaster );
+		emit masterCoordinateImageChanged( newMaster->getData());
+	}
+
+	void ImageScroll::hueImageChanged( ImageView* imageData ){
+		for ( QList<ImageView*>::iterator iter = images.begin();
+							iter != images.end(); iter++ ) {
+			if ( imageData != (*iter) ){
+				(*iter)->setMasterHueImage( false );
+			}
 		}
 	}
 
-//**************************************************************************
-//                Drag and Drop
-//**************************************************************************
+	void ImageScroll::saturationImageChanged( ImageView* imageData ){
+		for ( QList<ImageView*>::iterator iter = images.begin();
+									iter != images.end(); iter++ ) {
+			if ( imageData != (*iter) ){
+				(*iter)->setMasterSaturationImage( false );
+			}
+		}
+	}
+
+	void ImageScroll::setMasterCoordinateImage( QString coordinateImageName ){
+		int masterIndex = findImageView( coordinateImageName );
+		if ( masterIndex >= 0 ){
+			images[masterIndex]->setMasterCoordinateImage( true );
+		}
+		resetMasterCoordinate( images[masterIndex] );
+	}
+
+
+	//--------------------------------------------------------------------------------
+	//                      Setters
+	//----------------------------------------------------------------------------------
+
+	void ImageScroll::setColorCombinationMode( ImageView::ColorCombinationMode mode ) {
+		QList<ImageView*>::iterator iter = images.begin();
+		while ( iter != images.end()) {
+			(*iter)->setColorCombinationMode( mode );
+			iter++;
+		}
+	}
+
+
+	void ImageScroll::setViewedImage( int registrationIndex ){
+		int regIndex = 0;
+		//We are in channel mode.  Viewed image will be the
+		//last registered image.
+		if ( registrationIndex < 0 ){
+			int registrationCount = getRegisteredCount();
+			registrationIndex = registrationCount - 1;
+		}
+		for ( QList<ImageView*>::iterator iter = images.begin(); iter != images.end(); iter++ ) {
+			bool currentlyViewed = false;
+			if ( (*iter)->isRegistered() ){
+				if ( regIndex == registrationIndex ){
+					currentlyViewed = true;
+				}
+				regIndex++;
+			}
+			(*iter)->setViewedImage( currentlyViewed );
+		}
+	}
+
+
+	//**************************************************************************
+	//                Drag and Drop
+	//**************************************************************************
+
 	int ImageScroll::getDropIndex( int dropY  ){
 		//Since some images may be open others not so we don't have
 		//a uniform width.  Have to go through and ask each one what their
@@ -212,13 +385,14 @@ namespace casa {
 
 	}
 
-	void ImageScroll::dropEvent( QDropEvent* dropEvent ) {
 
+	void ImageScroll::dropEvent( QDropEvent* dropEvent ) {
 		//Use the position to estimate where int the list the imageView
 		//should be placed.
+
 		QPoint dropPosition = dropEvent->pos();
 		int dropY = dropPosition.y();
-		dropIndex = getDropIndex( dropY );
+		int dropIndex = getDropIndex( dropY );
 		removeDragMarker();
 
 		if ( dropIndex >= 0 ) {
@@ -235,9 +409,13 @@ namespace casa {
 
 				//Update the order of the data holder list
 				QtDisplayData* displayData = droppedView->getData();
-				managedImages->discardDD( displayData, false );
-				managedImages->insertDD( displayData, dropIndex );
-				emit imageOrderingChanged();
+				bool registered = droppedView->isRegistered();
+				bool masterCoordinate = droppedView->isMasterCoordinate();
+				bool masterSaturation = droppedView->isMasterSaturation();
+				bool masterHue = droppedView->isMasterHue();
+				QColor rgbColor = droppedView->getDisplayedColor();
+				emit imageOrderingChanged( displayData, dropIndex, registered,
+						masterCoordinate, masterSaturation, masterHue, rgbColor);
 			}
 		}
 	}
@@ -248,12 +426,16 @@ namespace casa {
 		//QString targetName = mimeData->text();
 		QByteArray titleBytes = mimeData->data( ImageView::DROP_ID );
 		QString targetName(titleBytes);
-		ImageView* droppedView = findImageView( targetName );
+		ImageView* droppedView = NULL;
+		int index = findImageView( targetName );
+		if ( index >= 0 ){
+			droppedView = images[index];
+		}
 		return droppedView;
 	}
 
 	void ImageScroll::removeDragMarker(){
-		QLayout* iLayout = layout();
+		QLayout* iLayout = scrollWidget->layout();
 		if ( iLayout != NULL && iLayout->indexOf( dropMarker) >= 0 ){
 			QVBoxLayout* scrollLayout = dynamic_cast<QVBoxLayout*>(iLayout);
 			scrollLayout->removeWidget( dropMarker );
@@ -262,13 +444,13 @@ namespace casa {
 	}
 
 	void ImageScroll::insertDragMarker( int position ){
-		QLayout* iLayout = layout();
+		QLayout* iLayout = scrollWidget->layout();
 		QVBoxLayout* scrollLayout = dynamic_cast<QVBoxLayout*>(iLayout);
 		scrollLayout->insertWidget( position, dropMarker );
 	}
 
 	int ImageScroll::getDragMarkerLayoutIndex() const {
-		QLayout* iLayout = layout();
+		QLayout* iLayout = scrollWidget->layout();
 		int layoutIndex = -1;
 		if ( iLayout != NULL ){
 			layoutIndex = iLayout->indexOf( dropMarker);
@@ -300,75 +482,28 @@ namespace casa {
 		}
 	}
 
-//---------------------------------------------------------------------
-//                    Image Tracker Interface
-//---------------------------------------------------------------------
-	void ImageScroll::masterImageSelected( QtDisplayData* /*image*/ ) {
-
-	}
-	void ImageScroll::imageAdded( QtDisplayData* image ) {
-		ImageView* view = new ImageView( image, this );
-		view->setImageColorsEnabled( imageColorsEnabled );
-		addImage( view );
-		emit displayDataAdded( image );
-	}
-
-	bool ImageScroll::isManaged( QtDisplayData* displayData ) const {
-		return managedImages->exists( displayData );
-	}
-
-	void ImageScroll::imageRemoved( QtDisplayData* image ) {
-		ImageView* deleteView = findImageView( image->name().c_str() );
-		if ( deleteView != NULL ) {
-			closeImage( deleteView );
-			emit displayDataRemoved( image );
-		}
-	}
-
-//-------------------------------------------------------------------------
-//                  Utility
-//-------------------------------------------------------------------------
-
-	void ImageScroll::addImage( ImageView* viewerImage ) {
-		QString newName = viewerImage->getName();
-		ImageView* existingImage = findImageView( newName );
-		if ( existingImage == NULL ){
-
-			connect( viewerImage, SIGNAL( displayTypeChanged( ImageView* )),
-		         this, SIGNAL(displayTypeChanged(ImageView*)));
-			connect( viewerImage, SIGNAL( displayColorsChanged( ImageView*)),
-		         this, SIGNAL(displayColorsChanged(ImageView*)));
-
-			QLayout* scrollLayout = layout();
-			scrollLayout->removeItem( spacer );
-
-			if ( dropIndex == -1 ){
-				images.append( viewerImage );
-				scrollLayout->addWidget( viewerImage );
-			}
-			else {
-				QVBoxLayout* boxLayout = dynamic_cast<QVBoxLayout*>(scrollLayout);
-				boxLayout->insertWidget( dropIndex, viewerImage );
-				images.insert( dropIndex, viewerImage );
-			}
-			scrollLayout->addItem( spacer );
-			dropIndex = -1;
-		}
+	void ImageScroll::dragLeaveEvent( QDragLeaveEvent* /*leaveEvent*/ ){
+		removeDragMarker();
 	}
 
 
-	ImageView* ImageScroll::findImageView( const QString& targetName ) {
-		ImageView* targetView = NULL;
-		QList<ImageView*>::iterator iter = images.begin();
-		while ( iter != images.end() ) {
+	//-------------------------------------------------------------------------
+	//                  Utility
+	//-------------------------------------------------------------------------
+
+	int ImageScroll::findImageView( QString targetName ) {
+		int index = 0;
+		int targetIndex = -1;
+		for ( QList<ImageView*>::iterator iter =images.begin();
+				iter != images.end(); iter++ ) {
 			QString viewName = (*iter)->getName();
 			if ( viewName == targetName ) {
-				targetView =  *iter;
+				targetIndex = index;
 				break;
 			}
-			iter++;
+			index++;
 		}
-		return targetView;
+		return targetIndex;
 	}
 
 
@@ -377,7 +512,6 @@ namespace casa {
 			ImageView* viewerImage = images.takeLast();
 			delete viewerImage;
 		}
-		delete managedImages;
 		delete spacer;
 		delete dropMarker;
 	}

@@ -43,24 +43,27 @@ namespace casa {
 		DisplayDataHolder();
 
 		//Adds the DisplayData.
-		void addDD( QtDisplayData* dd, int position = -1 );
+		void addDD( QtDisplayData* dd, int position, bool autoRegister,
+				bool masterCoordinate = false, bool masterSaturation= false,
+				bool masterHue=false);
 
 		// Removes the QDD from the list and deletes it (if it existed --
 		// Return value: whether qdd was in the list in the first place).
-		bool removeDD(QtDisplayData* qdd, bool signal = true);
+		bool removeDD(QtDisplayData* qdd);
 		void removeDDAll();
 
 		// Insert and discard to basically the same thing as add/remove
 		// except that they perform the operation through a GUI level
 		// if one is available.
-		void insertDD( QtDisplayData* dd, int position );
-		void discardDD( QtDisplayData* dd, bool signal );
+		void insertDD( QtDisplayData* dd, int position, bool registered );
+		void discardDD( QtDisplayData* dd );
 
 		//Iteration support
 		typedef std::list<QtDisplayData *> DisplayDataList;
 		typedef DisplayDataList::const_iterator DisplayDataIterator;
 		int getCount() const;
 		bool isEmpty() const;
+		bool isCoordinateMaster( QtDisplayData* displayData) const;
 		DisplayDataIterator beginDD () const;
 		DisplayDataIterator endDD () const;
 

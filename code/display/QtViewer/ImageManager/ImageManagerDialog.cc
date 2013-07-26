@@ -26,35 +26,35 @@
 #include <display/QtViewer/QtDisplayData.qo.h>
 #include <display/QtViewer/DisplayDataHolder.h>
 #include <display/QtViewer/ImageManager/ImageView.qo.h>
-#include <display/QtViewer/ImageManager/ImageScrollWidget.qo.h>
+#include <display/QtViewer/ImageManager/ImageScroll.qo.h>
+#include <display/QtViewer/ImageManager/DisplayOptionsDialog.h>
 #include <display/Display/ColormapDefinition.h>
 #include <display/Display/Colormap.h>
 #include <images/Images/ImageStatistics.h>
 #include <QDebug>
+#include <QMessageBox>
 
 namespace casa {
 
 	ImageManagerDialog::ImageManagerDialog(QWidget *parent)
-		: QDialog(parent), openHolder( NULL ), allImages( NULL ),
+		: QDialog(parent),
+		  allImages( NULL ),
 		  SINGLE_COLOR_MAP( "Color Saturation Map"),
-		  MASTER_COLOR_MAP( "Master Color Saturation Map") {
+		  MASTER_COLOR_MAP( "Master Color Saturation Map"),
+		  COLOR_MAP_SIZE(100){
 
 		ui.setupUi(this);
 		setWindowTitle( "Manage Images");
 		setModal( false );
+		displayOptionsDialog = NULL;
 
-		//Scroll areas containing open and registered images.
-		initializeScrollArea( ui.openHolder, openScroll );
-		initializeScrollArea( ui.displayedHolder, displayedScroll );
-		connect( displayedScroll, SIGNAL(displayDataRemoved( QtDisplayData*)),
-		         this, SLOT( unDisplayImage( QtDisplayData*)));
-		connect( displayedScroll, SIGNAL(displayDataAdded( QtDisplayData*)),
-		         this, SLOT( displayImage( QtDisplayData*)));
-		connect( displayedScroll, SIGNAL(imageOrderingChanged()),
-				this, SLOT( resetMasterImage()));
+		//Scroll areas  open and registered images.
+		initializeScrollArea();
 
-		//Master image
-		connect( ui.masterImageComboBox, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(masterImageChanged(const QString&)));
+		//All buttons
+		connect( ui.unregisterButton, SIGNAL(clicked()), this, SLOT(unregisterImages()));
+		connect( ui.registerButton, SIGNAL(clicked()), this, SLOT(registerImages()));
+		connect( ui.closeButton, SIGNAL(clicked()), this, SLOT(closeAll()));
 
 		//Color Restrictions
 		QButtonGroup* colorRestrictionGroup = new QButtonGroup( this );
@@ -65,173 +65,156 @@ namespace casa {
 		connect( ui.noneRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
 		connect( ui.colorPerImageRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
 		connect( ui.colorMasterImageRadio, SIGNAL(clicked()), this, SLOT(colorRestrictionsChanged()));
-
-		connect( ui.openToRegisteredButton, SIGNAL(clicked()), this, SLOT(openToDisplayed()));
-		connect( ui.registerToOpenButton, SIGNAL(clicked()), this, SLOT(displayedToOpen()));
-		connect( ui.closeImageButton, SIGNAL(clicked()), this, SLOT(closeImage()));
-
 		connect( ui.applyButton, SIGNAL(clicked()), this, SLOT(applyColorChanges()));
+
+		connect( ui.closeDialogButton, SIGNAL( clicked()), this, SLOT(accept()));
 	}
 
-//----------------------------------------------------------------
-//                 Master Image
-//----------------------------------------------------------------
-	void ImageManagerDialog::resetMasterImage(){
-		QString masterImageName = ui.masterImageComboBox->currentText();
-		masterImageChanged( masterImageName );
+	void ImageManagerDialog::initializeScrollArea() {
+		imageScroll = new ImageScroll( this );
+		connect( imageScroll, SIGNAL(displayTypeChanged(ImageView*)),
+		         this, SLOT(displayTypeChanged(ImageView*)) );
+		connect( imageScroll, SIGNAL(displayDataRemoved( QtDisplayData*, bool)),
+			     this, SLOT( closeImage( QtDisplayData*, bool)));
+		connect( imageScroll, SIGNAL(imageOrderingChanged( QtDisplayData*, int, bool,bool,bool,bool,QColor)),
+				 this, SLOT( reorderDisplayImages(QtDisplayData*, int, bool,bool,bool,bool,QColor)));
+		connect( imageScroll, SIGNAL(masterCoordinateImageChanged( QtDisplayData*)),
+				 this, SLOT( masterImageChanged(QtDisplayData*)));
+		connect( imageScroll, SIGNAL(showDataDisplayOptions( QtDisplayData*)),
+				 this, SLOT( showDataDisplayOptions( QtDisplayData* )));
+		connect( imageScroll, SIGNAL(registrationChange(ImageView*)),
+				this, SLOT(registrationChange(ImageView*)));
+		QHBoxLayout* holderLayout = new QHBoxLayout();
+		holderLayout->setContentsMargins(0,0,0,0);
+		holderLayout->addWidget( imageScroll );
+		ui.imageHolder->setLayout( holderLayout );
 	}
 
-	void ImageManagerDialog::masterImageChanged(const QString& imageName) {
-		if ( allImages != NULL ){
-			QtDisplayData* newMaster = allImages->getDD( imageName.toStdString());
-			if ( newMaster != NULL  ) {
-				//qDebug() << "ImageManageDialog setting csmaster="<<imageName<<" ddname="<<newMaster->name().c_str();
-				//So the QtDisplayPanelGui is updated.
-				allImages->setDDControlling( newMaster );
-
-				//So the QtDisplayPanel gets notified (does the real work)
-				displayedScroll->setControllingDD( newMaster );
-			}
-		}
-	}
-
-	bool ImageManagerDialog::isControlEligible( QtDisplayData* qdd ) const {
-		bool controlEligible = false;
-		if ( qdd != NULL ) {
-			if ( qdd->isImage() ) {
-				if ( qdd->dd()->isDisplayable() && qdd->imageInterface() != NULL ) {
-					controlEligible = true;
-				}
-			}
-		}
-		return controlEligible;
-	}
-
-	void ImageManagerDialog::updateSelectedMaster( const QString& previousMaster ) {
-		//Now select the one that is the master image.
-		if ( allImages != NULL ) {
-			bool selectionMade = false;
-			//First see if a controlling dd exists
-			QtDisplayData* display = allImages->getDDControlling();
-			if ( display != NULL ) {
-				QString controlName(display->name().c_str());
-				int masterIndex = ui.masterImageComboBox->findText(controlName);
-				if ( masterIndex >= 0 ) {
-					setComboIndex( ui.masterImageComboBox, masterIndex );
-					selectionMade = true;
-				}
-			}
-			//Okay, no controlling DD.  Try to use the previous master if there was one.
-			if ( !selectionMade && previousMaster.length() > 0 ) {
-				int previousMasterIndex = ui.masterImageComboBox->findText( previousMaster );
-				if ( previousMasterIndex >= 0 ) {
-					setComboIndex( ui.masterImageComboBox, previousMasterIndex );
-					selectionMade = true;
-				}
-			}
-
-			//Just use the first one
-			if ( !selectionMade ) {
-				setComboIndex( ui.masterImageComboBox, 0 );
-			}
-		}
-	}
-
-	void ImageManagerDialog::setComboIndex( QComboBox* combo, int index ) {
-		combo->blockSignals( true );
-		combo->setCurrentIndex( index );
-		combo->blockSignals( false );
-	}
-
-	void ImageManagerDialog::updateMasterList() {
-		QString oldMaster = ui.masterImageComboBox->currentText();
-		updateImageList( ui.masterImageComboBox );
-		updateSelectedMaster( oldMaster );
-	}
-
-	void ImageManagerDialog::updateSaturationList() {
-		updateImageList( ui.saturationImageCombo );
-		//updateSelectedMaster();
-	}
-
-	void ImageManagerDialog::updateColorList() {
-		updateImageList( ui.colorImageCombo );
-	}
-
-	void ImageManagerDialog::updateImageList(QComboBox* combo) {
-		combo->clear();
-		for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
-		        iter != allImages->endDD(); iter++ ) {
-			if ( isControlEligible( *iter) ) {
-				QString imageName( (*iter)->name().c_str());
-				combo->addItem( imageName );
-			}
-		}
-	}
-
-
-	void ImageManagerDialog::setImageHolders( DisplayDataHolder* displayedImages,
+	void ImageManagerDialog::setImageHolders( DisplayDataHolder* registeredImages,
 	        DisplayDataHolder* images ) {
 		//Store the list of all images and add them to the
 		//master image combo selection box.
 		allImages = images;
+		displayedImages = registeredImages;
 		allImages->setImageTracker( this );
-		updateMasterList();
-		updateSaturationList();
-		updateColorList();
 
-		//Give the displayed images to the display scroll so it
-		//can create GUI's
-		displayedScroll->setImageHolder( displayedImages );
-
-		//Create a data holder for those images that are open,
-		//but not displayed.  Give this data holder to the openScroll.
-		openHolder = new DisplayDataHolder();
+		//Add the images to the scroll.
 		for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
-		        iter != allImages->endDD(); iter++ ) {
-			if ( ! displayedImages->exists( (*iter)) ) {
-				openHolder->addDD( *iter);
-			}
+				iter != allImages->endDD(); iter++ ){
+			bool registered = displayedImages->exists( *iter );
+			bool coordinateMaster = allImages->isCoordinateMaster( *iter );
+			imageAdded( *iter, -1, registered, coordinateMaster, false, false );
+
 		}
-		openScroll->setImageHolder( openHolder );
 	}
 
-	void ImageManagerDialog::initializeScrollArea( QWidget* holder, ImageScrollWidget*& scrollArea ) {
-		scrollArea = new ImageScrollWidget( this );
-		connect( scrollArea, SIGNAL(displayTypeChanged(ImageView*)),
-		         this, SLOT(displayTypeChanged(ImageView*)) );
-		connect( scrollArea, SIGNAL(displayColorsChanged(ImageView*)),
-		         this, SLOT(displayColorsChanged(ImageView*)));
-		QHBoxLayout* holderLayout = new QHBoxLayout();
-		holderLayout->setContentsMargins(0,0,0,0);
-		holderLayout->addWidget( scrollArea );
-		holder->setLayout( holderLayout );
+	void ImageManagerDialog::setViewedImage( int registrationIndex ){
+		imageScroll->setViewedImage( registrationIndex );
 	}
+
+
+//----------------------------------------------------------------
+//                Reordering Images
+//----------------------------------------------------------------
+	void ImageManagerDialog::reorderDisplayImages( QtDisplayData* displayData,
+			int dropIndex, bool registered, bool masterCoordinate,
+			bool masterSaturation, bool masterHue, QColor rgbColor ){
+		//First remove it from the registered images, it it is preset.
+		if ( registered ){
+			displayedImages->discardDD( displayData );
+		}
+		//Now remove it from all the images.
+		allImages->discardDD( displayData);
+
+		//We handle adding it to the scroll first, because by the time
+		//we get the callbacks, the insert order is lost.
+		imageScroll->removeImageView( displayData );
+		imageScroll->addImageView( displayData, registered, dropIndex,
+				masterCoordinate, masterSaturation, masterHue, rgbColor );
+
+		//Now insert it at the correct position in all the images.
+		allImages->insertDD( displayData, dropIndex, registered );
+
+		//If it was registered, figure out what it's new index is in the
+		//registered images.
+		if ( registered ){
+			int registeredIndex = imageScroll->getRegisteredIndex( dropIndex );
+			displayedImages->insertDD( displayData, registeredIndex,
+					registered );
+		}
+	}
+
+	//-------------------------------------------------------------------------
+	//             Master Coordinate Image
+	//-------------------------------------------------------------------------
+
+	void ImageManagerDialog::masterImageChanged(QtDisplayData* newMaster ) {
+		if ( allImages != NULL ){
+
+			//See if there was an old master
+			QtDisplayData* oldMaster = displayedImages->getDDControlling();
+
+			emit masterCoordinateChanged( oldMaster, newMaster );
+
+			//So the QtDisplayPanelGui is updated.
+			allImages->setDDControlling( newMaster );
+
+			//So the QtDisplayPanel gets notified (does the real work)
+			displayedImages->setDDControlling( newMaster );
+		}
+	}
+
+	//-------------------------------------------------------------------
+	//           Show Data Display Options Dialog
+	//--------------------------------------------------------------------
+	void ImageManagerDialog::showDataDisplayOptions( QtDisplayData* imageData ){
+		if ( displayOptionsDialog == NULL ){
+			displayOptionsDialog = new DisplayOptionsDialog( this );
+		}
+		displayOptionsDialog->showOptions( imageData );
+		displayOptionsDialog->show();
+	}
+
+	//----------------------------------------------------------------------
+	//            Raster, Contour,Vector,Marker,etc
+	//----------------------------------------------------------------------
 
 	void ImageManagerDialog::displayTypeChanged( ImageView* imageView ) {
-		//We are going to be removing this imageView so store what we
-		//are going to need.
-		//Get the single image color
+		//We are going to keep this imageView but replace the data that
+		//is stored inside of it.  So that we can recreate the data with
+		//the correct parameters, we store the information before deleting
+		//the data.
+
 		QColor singleColor = imageView->getDisplayedColor();
+		int dropIndex = imageScroll->getIndex( imageView );
+		bool registered = imageView->isRegistered();
+		bool masterCoordinate = imageView->isMasterCoordinate();
+		bool masterSaturation = imageView->isMasterSaturation();
+		bool masterHue        = imageView->isMasterHue();
 
 		//Get the data type
 		QtDisplayData* imageData = imageView->getData();
-		String ddType(imageData->dataType());
+		if ( imageData != NULL ){
+			String ddType(imageData->dataType());
 
-		//Get the path
-		ImageInterface<float>* image = imageData->imageInterface();
-		if ( image != NULL ) {
-			String path = image->name();
+			//Get the path
+			ImageInterface<float>* image = imageData->imageInterface();
+			if ( image != NULL ) {
+				String path = image->name();
 
-			//Get the display type
-			QString displayTypeName = imageView->getDataDisplayTypeName();
-			String displayType( displayTypeName.toLower().toStdString());
+				//Get the display type
+				QString displayTypeName = imageView->getDataDisplayTypeName();
+				String displayType( displayTypeName.toLower().toStdString());
 
-			//Close the dd
-			emit ddClosed( imageData );
+				//Close the dd
+				imageScroll->removeImageView( imageData );
 
-			//Reopen it with the new specifications
-			emit ddOpened( path, ddType, displayType/*, singleColor*/ );
+				//Reopen it with the new specifications
+				emit ddOpened( path, ddType, displayType,
+						/*, singleColor*/ dropIndex,
+						registered, masterCoordinate, masterSaturation,
+						masterHue );
+			}
 		}
 	}
 
@@ -241,118 +224,194 @@ namespace casa {
 //----------------------------------------------------------------------
 
 	void ImageManagerDialog::applyColorChanges() {
-		if ( ui.colorPerImageRadio->isChecked()) {
-			displayedScroll->applyColorChangesIndividually();
-		} else if ( ui.noneRadio->isChecked()) {
-			//Revert the color changes
-			for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
-			        iter !=allImages->endDD(); iter++ ) {
-				(*iter)->removeColorMap( SINGLE_COLOR_MAP );
-				(*iter)->removeColorMap( MASTER_COLOR_MAP );
-			}
-		} else if ( ui.colorMasterImageRadio->isChecked()) {
-			applyMasterColorMap();
-			applyMasterIntensityRange();
+		//Revert the color changes
+		for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
+			iter !=allImages->endDD(); iter++ ) {
+			(*iter)->removeColorMap( SINGLE_COLOR_MAP );
+			(*iter)->removeColorMap( MASTER_COLOR_MAP );
 		}
-	}
-
-	void ImageManagerDialog::applyMasterIntensityRange() {
-		QString intensityImageName = ui.saturationImageCombo->currentText();
-		QtDisplayData* intensityDD = allImages->getDD( intensityImageName.toStdString() );
-		if ( intensityDD != NULL ) {
-			ImageInterface<float>* img = intensityDD->imageInterface();
-			if ( img != NULL ) {
-				double intensityMin = 0;
-				double intensityMax = 0;
-				bool intensityRangeFound = getIntensityMinMax( img, &intensityMin, & intensityMax );
-				if ( intensityRangeFound ) {
-					for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
-					        iter != allImages->endDD(); iter++ ) {
-						(*iter)->setSaturationRange( intensityMin, intensityMax );
-					}
+		if ( ui.colorPerImageRadio->isChecked()) {
+			QList<ImageView*> views = imageScroll->getViews();
+			int count = views.size();
+			for ( int i = 0; i < count; i++ ) {
+				//Find the min and max intensity
+				ImageView* view = views[i];
+				QtDisplayData* imageData = view->getData();
+				QColor baseColor = view->getDisplayedColor();
+				Colormap* saturationMap = generateColorMap( baseColor );
+				if ( saturationMap != NULL ) {
+					//Add it to the QtDisplayData and tell it to use it.
+					imageData->setColorMap( saturationMap );
 				}
 			}
 		}
+		else if ( ui.noneRadio->isChecked()) {
+
+		} else if ( ui.colorMasterImageRadio->isChecked()) {
+			QString masterColorError;
+			bool colorApplied = applyMasterColor( masterColorError );
+			if ( !colorApplied ){
+				QMessageBox::warning( this, "Master Hue/Saturation Image Problem", masterColorError );
+			}
+		}
 	}
 
-	void ImageManagerDialog::applyMasterColorMap() {
-		QString colorImageName = ui.colorImageCombo->currentText();
-		QtDisplayData* colorDD = allImages->getDD( colorImageName.toStdString());
-		if ( colorDD != NULL ) {
-			QColor masterColor;
-			bool colorFound = displayedScroll->findColor( colorImageName, &masterColor );
-			if ( !colorFound ) {
-				colorFound = openScroll->findColor( colorImageName, &masterColor );
-			}
-			if ( colorFound ) {
-				ImageInterface<float>* colorImage = colorDD->imageInterface();
+	float ImageManagerDialog::getTransparency() const {
+		int alphaInt = ui.transparencySpinBox->value();
+		float alpha = (alphaInt * 1.0f) / ui.transparencySpinBox->maximum();
+		return alpha;
+	}
+
+	bool ImageManagerDialog::applyMasterColor( QString& errorMessage ) {
+		QtDisplayData* colorDD = imageScroll->getHueMaster();
+		QtDisplayData* saturationDD = imageScroll->getSaturationMaster();
+		bool success = true;
+		if ( colorDD != NULL && saturationDD != NULL ) {
+			Colormap* hueMap = colorDD->getColorMap();
+			if ( hueMap != NULL ) {
+				ColormapDefinition* hueDefinition = hueMap->definition();
+				double baseColorMin;
+				double baseColorMax;
+				ImageInterface<float>* hueInterface = colorDD->imageInterface();
+				getIntensityMinMax( hueInterface, &baseColorMin, &baseColorMax );
+
 				for ( DisplayDataHolder::DisplayDataIterator iter = allImages->beginDD();
 				        iter != allImages->endDD(); iter++ ) {
-					Colormap* saturationMap = generateColorMap( colorImage, masterColor,false );
-					if ( saturationMap != NULL ) {
-						(*iter)->setColorMap( saturationMap );
+					Colormap* ddMap = NULL;
+					if ( (*iter) != saturationDD ){
+						double intensityMin;
+						double intensityMax;
+						ImageInterface<float>* ddInterface = (*iter)->imageInterface();
+						getIntensityMinMax( ddInterface, &intensityMin, &intensityMax );
+						ddMap = generateMasterDefinition( hueDefinition,
+								baseColorMin, baseColorMax, intensityMin, intensityMax );
 					}
+					else {
+						//Saturation image will be on a gray scale.
+						ddMap = generateColorMap( QColor("#d3d3d3") );
+					}
+					ddMap->setName( MASTER_COLOR_MAP );
+					ddMap->setAlpha( getTransparency());
+					(*iter)->setColorMap( ddMap );
 				}
 			}
+			else {
+				success = false;
+				errorMessage ="The master hue and/or saturation image is missing a color map.";
+			}
 		}
+		else {
+			success = false;
+			QString missing = "";
+			if ( colorDD == NULL ){
+				missing.append( "hue");
+			}
+			if ( saturationDD == NULL ){
+				if ( missing.length() > 0 ){
+					missing.append( " and ");
+				}
+				missing.append( "saturation" );
+			}
+			errorMessage ="Please specify a master ";
+			errorMessage.append( missing );
+			errorMessage.append(" image by right clicking the mouse on an image.");
+		}
+		return success;
 	}
 
-	Colormap* ImageManagerDialog::generateColorMap( ImageInterface<float>* img, QColor baseColor,
-	        bool individualMap ) {
-		Colormap* saturationMap = NULL;
-		if ( img != NULL ) {
-			double intensityMin = 0;
-			double intensityMax = 0;
-			bool intensityRangeFound = getIntensityMinMax( img, &intensityMin, & intensityMax );
-			if ( intensityRangeFound ) {
-				//Generate a color definition.
-				ColormapDefinition* saturationDefinition = generateSaturationMap( intensityMin, intensityMax, baseColor );
 
-				//Make it into a color map.
-				saturationMap = new Colormap();
-				String title( SINGLE_COLOR_MAP );
-				if ( !individualMap ) {
-					title = MASTER_COLOR_MAP;
-				}
-				saturationMap->setName( title );
-				saturationMap->setColormapDefinition( saturationDefinition );
+	float ImageManagerDialog::getColorFraction( float value, double minValue, double maxValue ){
+		float fraction = 0;
+		if ( value < minValue ){
+			fraction = 0;
+		}
+		else if ( value > maxValue ){
+			fraction = 1;
+		}
+		else {
+			double span = maxValue - minValue;
+			if ( span > 0 ){
+				fraction = ( value - minValue ) / span;
 			}
 		}
+		return fraction;
+	}
+
+
+	Colormap* ImageManagerDialog::generateMasterDefinition( ColormapDefinition* baseMap,
+			double colorMin, double colorMax,
+			double intensityMin, double intensityMax ){
+		Vector<Float> reds(COLOR_MAP_SIZE);
+		Vector<Float> greens(COLOR_MAP_SIZE);
+		Vector<Float> blues(COLOR_MAP_SIZE);
+		float intensity = intensityMin;
+		float intensitySpan = intensityMax - intensityMin;
+		float intensityIncrement = intensitySpan / COLOR_MAP_SIZE;
+		for ( int i = 0; i < COLOR_MAP_SIZE; i++ ) {
+			//First decide on the color.
+			float colorFraction = getColorFraction( intensity, colorMin, colorMax );
+			Float redAmount;
+			Float blueAmount;
+			Float greenAmount;
+			baseMap->getValue( colorFraction, redAmount, greenAmount, blueAmount );
+
+			//Now convert back to rgb for colormap
+			reds[i]   = static_cast<int>(redAmount);
+			greens[i] = static_cast<int>(greenAmount);
+			blues[i]  = static_cast<int>(blueAmount);
+			intensity = intensity + intensityIncrement;
+		}
+		ColormapDefinition* hueRamp = new ColormapDefinition(MASTER_COLOR_MAP, reds, greens, blues);
+		Colormap* hueMap = new Colormap();
+		hueMap->setColormapDefinition( hueRamp );
+		return hueMap;
+	}
+
+	Colormap* ImageManagerDialog::generateColorMap( QColor baseColor ) {
+		Colormap* saturationMap = NULL;
+		ColormapDefinition* saturationDefinition = generateSaturationMap( baseColor );
+		//Make it into a color map.
+		saturationMap = new Colormap();
+		String title( SINGLE_COLOR_MAP );
+		saturationMap->setName( title );
+		saturationMap->setColormapDefinition( saturationDefinition );
+		saturationMap->setAlpha( getTransparency() );
 		return saturationMap;
 	}
 
-	void ImageManagerDialog::displayColorsChanged( ImageView* imageView ) {
-		if ( ui.colorPerImageRadio->isChecked()) {
 
-			//Find the min and max intensity
-			QtDisplayData* imageData = imageView->getData();
-			ImageInterface<float>* img = imageData->imageInterface();
-			QColor baseColor = imageView->getDisplayedColor();
-			Colormap* saturationMap = generateColorMap( img, baseColor, true );
-			if ( saturationMap != NULL ) {
-				//Add it to the QtDisplayData and tell it to use it.
-				imageData->setColorMap( saturationMap );
+
+	ColormapDefinition* ImageManagerDialog::generateSaturationMap( QColor baseColor ) {
+
+		Vector<Float> reds(COLOR_MAP_SIZE);
+		Vector<Float> greens(COLOR_MAP_SIZE);
+		Vector<Float> blues(COLOR_MAP_SIZE);
+
+		int redAmount = baseColor.red();
+		int greenAmount = baseColor.green();
+		int blueAmount = baseColor.blue();
+		//Based on the HSP Color system.
+		double saturation = qSqrt(qPow(redAmount,2) * .299
+				+ qPow(greenAmount,2)*.587 + qPow(blueAmount,2)*.114);
+		if ( saturation == redAmount && saturation == blueAmount && saturation == greenAmount ){
+			//Dealing with a shade of gray.  Just go from medium gray to white
+			float startIncrement = 0.5f;
+			float baseIncrement = (1.0f - startIncrement) / COLOR_MAP_SIZE;
+			for ( int i = 0; i < COLOR_MAP_SIZE; i++ ){
+				reds[i] = baseIncrement * i + startIncrement;
+				greens[i] = baseIncrement * i + startIncrement;
+				blues[i] = baseIncrement * i + startIncrement;
 			}
 		}
-	}
-
-	ColormapDefinition* ImageManagerDialog::generateSaturationMap( double /*minIntensity*/, double /*maxIntensity*/,
-	        QColor baseColor ) {
-		float hue = baseColor.hueF();
-		float value = baseColor.valueF();
-		const int VALUE_COUNT = 40;
-		Vector<Float> reds(VALUE_COUNT);
-		Vector<Float> greens(VALUE_COUNT);
-		Vector<Float> blues(VALUE_COUNT);
-		float saturation = 0;
-		float saturationIncrement = 1.0f / VALUE_COUNT;
-		for ( int i = 0; i < VALUE_COUNT; i++ ) {
-			QColor valueColor;
-			valueColor.setHsvF( hue, saturation, value );
-			reds[i]   = valueColor.redF();
-			greens[i] = valueColor.greenF();
-			blues[i]  = valueColor.blueF();
-			saturation = saturation + saturationIncrement;
+		else {
+			float maxChange = 2.0f;
+			float baseIncrement = maxChange / COLOR_MAP_SIZE;
+			for ( int i = 0; i < COLOR_MAP_SIZE; i++ ) {
+				float change = maxChange - i * baseIncrement;
+				reds[i]   = saturation + (redAmount - saturation) * change;
+				greens[i] = saturation + (greenAmount - saturation) * change;
+				blues[i]  = saturation + (blueAmount - saturation) * change;
+			}
 		}
 		ColormapDefinition* saturationRamp = new ColormapDefinition("saturationRamp", reds, greens, blues);
 		return saturationRamp;
@@ -395,119 +454,140 @@ namespace casa {
 		return success;
 	}
 
+
+	void ImageManagerDialog::colorRestrictionsChanged() {
+		ImageView::ColorCombinationMode mode = ImageView::NO_COMBINATION;
+		if ( ui.colorPerImageRadio->isChecked()){
+			mode = ImageView::RGB;
+			ui.transparencySpinBox->setEnabled( true );
+		}
+		else if ( ui.colorMasterImageRadio->isChecked()){
+			mode = ImageView::HUE_SATURATION;
+			ui.transparencySpinBox->setEnabled( true );
+		}
+		else {
+			ui.transparencySpinBox->setEnabled( false );
+		}
+		imageScroll->setColorCombinationMode( mode );
+	}
+
 //-------------------------------------------------------------------
-//                   Image Changing Locations
+//                   Closing & Registration
 //------------------------------------------------------------------
 
-	void ImageManagerDialog::openToDisplayed() {
-		QList<ImageView*> movedImages = openScroll->getSelectedViews();
-		openScroll->removeImageViews( movedImages );
-		displayedScroll->addImageViews( movedImages );
-		resetMasterImage();
-	}
-
-	void ImageManagerDialog::displayedToOpen() {
-		QList<ImageView*> movedImages = displayedScroll->getSelectedViews();
-		displayedScroll->removeImageViews( movedImages );
-		openScroll->addImageViews( movedImages );
-		resetMasterImage();
-	}
-
-
-	void ImageManagerDialog::closeImage() {
-		QList<QtDisplayData*> removedOpens = openScroll->closeImages();
-		for ( QList<QtDisplayData*>::iterator iter = removedOpens.begin();
-				iter != removedOpens.end(); iter++ ){
-			allImages->discardDD( (*iter), false);
-		}
-		QList<QtDisplayData*> removedDisplayed = displayedScroll->closeImages();
-		for ( QList<QtDisplayData*>::iterator iter = removedDisplayed.begin();
-						iter != removedDisplayed.end(); iter++ ){
-			allImages->discardDD( (*iter), false );
-		}
-		resetImageLists();
-	}
-
-//-----------------------------------------------------------------
-//          Notification from the "Displayed" scroll when an
-//       image is added/removed.  Update the "Open" scroll data holder.
-//-----------------------------------------------------------------
-
-	void ImageManagerDialog::unDisplayImage( QtDisplayData* image ) {
+	void ImageManagerDialog::closeImage( QtDisplayData* image, bool controlling ) {
 		if ( allImages->exists(image)) {
-			openHolder->addDD( image );
+			//If it was the image used to set the master coordinate system,
+			//we notify that the master coordinate system image is NULL
+			if ( controlling ){
+				allImages->setDDControlling( NULL );
+				displayedImages->setDDControlling( NULL );
+			}
+			//Close the dd
+			emit ddClosed( image );
 		}
+		updateAllButtons();
 	}
 
-	void ImageManagerDialog::displayImage( QtDisplayData* image ) {
-		openHolder->removeDD( image );
+
+	void ImageManagerDialog::closeAll() {
+		//Notify that there will be no master image used to set the
+		//coordinate system.
+		allImages->setDDControlling( NULL );
+		displayedImages->setDDControlling( NULL );
+
+		//Close all the images.
+		imageScroll->closeImages();
 	}
+
+	void ImageManagerDialog::updateAllButtons(){
+		int imageCount = imageScroll->getImageCount();
+		int registeredCount = imageScroll->getRegisteredCount();
+
+		bool enableClose = true;
+		bool enableRegister = true;
+		bool enableUnregister = true;
+		if ( imageCount == 0 ){
+			enableClose = false;
+			enableRegister = false;
+			enableUnregister = false;
+		}
+		else {
+			if ( registeredCount == 0 ){
+				enableUnregister = false;
+			}
+			else if ( imageCount == registeredCount ){
+				enableRegister = false;
+			}
+		}
+
+		ui.closeButton->setEnabled( enableClose );
+		ui.registerButton->setEnabled( enableRegister );
+		ui.unregisterButton->setEnabled( enableUnregister );
+	}
+
+	void ImageManagerDialog::registrationChange( ImageView* imageView ){
+		bool registerImage = imageView->isRegistered();
+
+		QtDisplayData* displayData = imageView->getData();
+
+		if ( registerImage ){
+			int overallIndex = imageScroll->getIndex( imageView );
+			int registerPosition = imageScroll->getRegisteredIndex(overallIndex);
+
+			emit registerDD( displayData, registerPosition );
+		}
+		else {
+			emit unregisterDD( displayData );
+		}
+		updateAllButtons();
+	}
+
+	void ImageManagerDialog::registerImages(){
+		imageScroll->setRegisterAll( true );
+		emit registerAll();
+		updateAllButtons();
+	}
+
+	void ImageManagerDialog::unregisterImages(){
+		imageScroll->setRegisterAll( false );
+		emit unregisterAll();
+		updateAllButtons();
+	}
+
 
 //------------------------------------------------------------------
 //              Image Tracker Interface
 //-------------------------------------------------------------------
 
-	void ImageManagerDialog::resetImageLists(){
-		updateMasterList();
-		updateColorList();
-		updateSaturationList();
-	}
 
-	void ImageManagerDialog::imageAdded( QtDisplayData* image ) {
-		bool displayedImage = openScroll->isManaged( image );
-		if ( !displayedImage ) {
-			openHolder->addDD( image );
+	//Called by the display data holder when a new image is opened.
+	void ImageManagerDialog::imageAdded( QtDisplayData* image, int position,
+			bool autoRegister, bool masterCoordinate,
+			bool masterSaturation, bool masterHue ) {
+		imageScroll->addImageView( image, autoRegister, position,
+				masterCoordinate, masterSaturation, masterHue);
+		if ( masterCoordinate ){
+			allImages->setDDControlling( image );
+			displayedImages->setDDControlling( image );
 		}
-		resetImageLists();
+		updateAllButtons();
 	}
 
-	void ImageManagerDialog::imageRemoved( QtDisplayData* image ) {
-		openHolder->removeDD( image );
-		resetImageLists();
-	}
+
 
 	void ImageManagerDialog::masterImageSelected( QtDisplayData* image ) {
 		//Called by the displayDataHolder if we have a new master image.
-		//Update the combo box to display the new master.
+		//Update the view to display the new master image
 		if ( image != NULL ) {
-			QString imageName = image->name().c_str();
-			QString selectedImageName = ui.masterImageComboBox->currentText();
-			if ( imageName != selectedImageName ) {
-				//We are supposed to feed it the previous master, but it should
-				//select the new one from the underlying data.
-				updateSelectedMaster( selectedImageName);
-			}
+			QString imageName( image->name().c_str());
+			imageScroll->setMasterCoordinateImage( imageName );
 		}
 	}
-
-//-----------------------------------------------------------
-//                    Color Restrictions
-//-----------------------------------------------------------
-
-	void ImageManagerDialog::colorRestrictionsChanged() {
-
-		//Enable/Disable the color buttons on individual images
-		bool masterColorEnabled = false;
-		if ( ui.colorPerImageRadio->isChecked() ||
-		        ui.colorMasterImageRadio->isChecked()) {
-			masterColorEnabled = true;
-		}
-		openScroll->setImageColorsEnabled( masterColorEnabled );
-		displayedScroll->setImageColorsEnabled( masterColorEnabled );
-
-		//Enable/Disable the saturation/color image selection
-		//combos.
-		bool masterImages = false;
-		if ( ui.colorMasterImageRadio->isChecked()) {
-			masterImages = true;
-		}
-		ui.colorImageCombo->setEnabled( masterImages );
-		ui.saturationImageCombo->setEnabled( masterImages );
-	}
-
 
 
 	ImageManagerDialog::~ImageManagerDialog() {
 		delete allImages;
+		delete displayedImages;
 	}
 }

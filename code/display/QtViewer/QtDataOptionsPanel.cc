@@ -34,7 +34,8 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
-	QtDataOptionsPanel::QtDataOptionsPanel(QtDisplayPanelGui* panel, QWidget* parent) :
+	QtDataOptionsPanel::QtDataOptionsPanel(QtDisplayPanelGui* panel,
+			QWidget* parent) :
 		QWidget(parent), panel_(panel)  {
 
 		setWindowTitle("Viewer Data Options Panel");
@@ -72,17 +73,17 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		//createDDTab_(qdds.getRight());
 		DisplayDataHolder::DisplayDataIterator iter = panel_->beginDD();
 		while ( iter != panel_->endDD() ) {
-			createDDTab_(*iter);
+			createDDTab_(*iter, false, -1);
 			iter++;
 		}
 		// These are the tabs I _really_ want....
 
 
-		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool)),
-		         SLOT(createDDTab_(QtDisplayData*)) );
+		connect( panel_, SIGNAL(ddCreated(QtDisplayData*, Bool, int)),
+		         SLOT(createDDTab_(QtDisplayData*, Bool, int)) );
 
-		connect( panel_, SIGNAL(ddRemoved(QtDisplayData*)),
-		         SLOT(removeDDTab_(QtDisplayData*)) );
+		/*connect( panel_, SIGNAL(ddRemoved(QtDisplayData*)),
+		         SLOT(removeDDTab_(QtDisplayData*)) );*/
 	}
 
 
@@ -92,7 +93,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 // Slots for QDD creation/destruction.
 
-	void QtDataOptionsPanel::createDDTab_(QtDisplayData* qdd) {
+	void QtDataOptionsPanel::createDDTab_(QtDisplayData* qdd,
+			Bool /*autoregister*/,
+			int insertPosition ) {
 
 		QtDisplayDataGui* qddg = new QtDisplayDataGui(qdd);
 
@@ -105,8 +108,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
 		QScrollArea* sca = new QScrollArea;
 		sca->setWidget(qddg);
-
-		tabs_->addTab(sca, qdd->nameChrs());
+		if ( insertPosition < 0  || insertPosition>=tabs_->count() ){
+			tabs_->addTab(sca, qdd->nameChrs());
+		}
+		else {
+			tabs_->insertTab( insertPosition, sca, qdd->nameChrs());
+		}
 
 		if(tabs_->count()==1 && panel_->autoDDOptionsShow) panel_->showDataOptionsPanel();
 		// Users want to see this window automatically once there

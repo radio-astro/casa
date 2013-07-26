@@ -103,6 +103,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 		for (Int i = 0; i < nFields; i++) {
 			if (rec->type(i) == TpRecord &&
 			        rec->name(i)!="value" && rec->name(i)!="default") {
+				//Axis label rest value has been moved to the image manager.
+				if ( rec->name(i) == "axislabelrestvalue"){
+					continue;
+				}
 				QDomElement subRec = doc.createElement(rec->name(i).chars());
 				//#dk QDomElement subRec = doc.createElement("record");
 				parent->appendChild(subRec);

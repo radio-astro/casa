@@ -62,18 +62,16 @@ namespace casa {
 		}
 
 		// Assure that all applicable registered QDDs are showing track boxes.
-		/*List<QtDisplayData*> rDDs = panel_->displayPanel( )->registeredDDs();
-		for(ListIter<QtDisplayData*> rdds(&rDDs); !rdds.atEnd(); rdds++) {
-			showTrackBox_(rdds.getRight());
-		} */
 		DisplayDataHolder::DisplayDataIterator iter = panel_->displayPanel( )->beginRegistered();
+		int i = 0;
 		while ( iter != panel_->displayPanel( )->endRegistered()) {
-            addTrackBox(*iter);
+            addTrackBox(*iter, i);
 			iter++;
+			i++;
 		}
     }
 
-    TrackBox *CursorTrackingHolder::addTrackBox( QtDisplayData *qdd ) {
+    TrackBox *CursorTrackingHolder::addTrackBox( QtDisplayData *qdd, int position ) {
 		// If qdd->usesTracking(), this method assures that a TrackBox for qdd
 		// is visible in the container's layout (creating the TrackBox if it
 		// didn't exist).  Used by arrangeTrackBoxes_() above.  Returns the
@@ -91,12 +89,20 @@ namespace casa {
             trkBox->clear( );	// (Clear old, hidden trackbox).
         }
 
+
 		if ( notShown ) {
-			container->layout()->addWidget( trkBox );
+			QBoxLayout* containerLayout = dynamic_cast<QBoxLayout*>( container->layout());
+			if ( position < 0 ){
+				containerLayout->addWidget( trkBox );
+			}
+			else {
+				//Keep the order of the track box consistent with the order of
+				//the images in the animator and the image manager.
+				containerLayout->insertWidget( position, trkBox );
+			}
 			trkBox->show( );
 		}
-		// (trkBox will be added to the _bottom_ of container, assuring
-		// that track boxes are displayed in registration order).
+
         update_size( );
 		return trkBox;
     }
