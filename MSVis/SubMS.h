@@ -40,7 +40,7 @@
 #include <vector>
 #include <scimath/Mathematics/InterpolateArray1D.h>
 
-#include <mstransform/MSTransform/MSTransformDataHandler.h>
+#include <mstransform/MSTransform/MSTransformManager.h>
 
 
 #ifndef MSVIS_SUBMS_H
@@ -104,7 +104,7 @@ class SubMS
 {
 
  // jagonzal: Allow TransformVisDataHandler to access protected methods and members of this class
- friend class MSTransformDataHandler;
+ friend class MSTransformManager;
 
  public:
 
