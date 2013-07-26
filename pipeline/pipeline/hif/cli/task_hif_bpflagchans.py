@@ -10,7 +10,7 @@ def hif_bpflagchans(caltable=None,
   flag_sharps=None, sharps_limit=None,
   flag_sharps2=None, sharps2_limit=None,
   flag_diffmad=None, diffmad_limit=None,
-  flag_tmf=None, tmf_limit=None,
+  flag_tmf=None, tmf_frac_limit=None, tmf_nchan_limit=None,
   pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the
