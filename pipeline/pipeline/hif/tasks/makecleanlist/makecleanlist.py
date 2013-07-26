@@ -9,8 +9,6 @@ from pipeline.hif.heuristics import clean
 
 LOG = infrastructure.get_logger(__name__)
 
-
-
 class MakeCleanListInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, 
@@ -25,14 +23,14 @@ class MakeCleanListInputs(basetask.StandardInputs):
     # the base class 
 
     @property
-    def spw(self):
-        if self._spw is None:
+    def imagename(self):
+        if self._imagename is None:
             return ''
-        return self._spw
+        return self._imagename
 
-    @spw.setter
-    def spw(self, value):
-        self._spw = value
+    @imagename.setter
+    def imagename(self, value):
+         self._imagename = value
 
     @property
     def intent(self):
@@ -55,14 +53,24 @@ class MakeCleanListInputs(basetask.StandardInputs):
         self._field = value
 
     @property
-    def imagename(self):
-        if self._imagename is None:
+    def spw(self):
+        if self._spw is None:
             return ''
-        return self._imagename
+        return self._spw
 
-    @imagename.setter
-    def imagename(self, value):
-         self._imagename = value
+    @spw.setter
+    def spw(self, value):
+        self._spw = value
+
+    @property
+    def uvrange(self):
+        if self._uvrange is None:
+            return ''
+        return self._uvrange
+
+    @uvrange.setter
+    def uvrange(self, value):
+        self._uvrange = value
 
     @property
     def mode(self):
@@ -148,16 +156,6 @@ class MakeCleanListInputs(basetask.StandardInputs):
     @width.setter
     def width(self, value):
         self._width = value
-
-    @property
-    def uvrange(self):
-        if self._uvrange is None:
-            return ''
-        return self._uvrange
-
-    @uvrange.setter
-    def uvrange(self, value):
-        self._uvrange = value
 
 
 class MakeCleanList(basetask.StandardTaskTemplate):
