@@ -53,7 +53,7 @@ Flag deviant channels in bandpass calibration.
 
     <param type="double" name="diffmad_limit" subparam="true">
         <description>Flag channels that bracket differences > diffmad_limit * MAD of difference spectrum</description>
-        <value>10</value>
+        <value>7</value>
     </param>
 
     <param type="bool" name="flag_tmf">
@@ -61,9 +61,14 @@ Flag deviant channels in bandpass calibration.
         <value>True</value>
     </param>
 
-    <param type="double" name="tmf_limit" subparam="true">
+    <param type="double" name="tmf_frac_limit" subparam="true">
         <description>Fraction of channels flagged that triggers flagging of all channels</description>
-        <value>0.1</value>
+        <value>0.05</value>
+    </param>
+
+    <param type="double" name="tmf_nchan_limit" subparam="true">
+        <description>Number of channels flagged that triggers flagging of all channels</description>
+        <value>4</value>
     </param>
 
     <param type="string" name="pipelinemode">
@@ -129,7 +134,7 @@ Flag deviant channels in bandpass calibration.
 
         <when param="flag_diffmad">
             <equals type="bool" value="True">
-                <default param="diffmad_limit"><value>10</value></default>
+                <default param="diffmad_limit"><value>7</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -137,7 +142,8 @@ Flag deviant channels in bandpass calibration.
 
         <when param="flag_tmf">
             <equals type="bool" value="True">
-                <default param="tmf_limit"><value>0.1</value></default>
+                <default param="tmf_frac_limit"><value>0.05</value></default>
+                <default param="tmf_nchan_limit"><value>4</value></default>
             </equals>
             <equals type="bool" value="False">
             </equals>
@@ -179,15 +185,21 @@ flag_diffmad -- True to flag channels whose difference is greater than
 diffmad_limit -- If flag_diffmad is True then channel pairs will be
                  flagged whose difference is greater than  
                  diffmad_limit * the MAD of the difference spectrum.
-    default: 10
+    default: 7
 
 flag_tmf -- True to flag all channels if the proportion of channels 
-            already flagged is greater than tmf_limit. 
+            already flagged is greater than tmf_frac_limit or if the
+            number of channels already flagged is greater than tmf_nchan_limit. 
     default: True
 
-tmf_limit -- If flag_tmf is True then all channels will be flagged if
-             more than tmf_limit of them are already flagged.
-    default: 0.1
+tmf_frac_limit -- If flag_tmf is True then all channels will be flagged if
+                  proportionally more than tmf_frac_limit of them are
+                  already flagged.
+    default: 0.05
+
+tmf_nchan_limit -- If flag_tmf is True then all channels will be flagged if
+                   more than tmf_nchan_limit of them are already flagged.
+    default: 0.05
 
 flag_edges -- True to flag edges of spectra.
     default: False
@@ -261,19 +273,19 @@ flanks of the features as well.
 Examples:
 
 1. Flag birdies in the bandpass calibration for each antenna/SpW.
-Flag the entire calibration spectrum if more than 0.1 of channels are
-flagged.
+Flag the entire calibration spectrum if more than 0.05 of channels or
+more than 4 channels in total are flagged.
 
    hif_bpflagchans()
        equivalent to:
-   hif_bpflagchans(flag_diffmad=True, diffmad_limit=10, 
-     flag_tmf=True, tmf_limit=0.1)
+   hif_bpflagchans(flag_diffmad=True, diffmad_limit=7, 
+     flag_tmf=True, tmf_frac_limit=0.05, tmf_nchan_limit=4)
 
 2. Flag birdies in the bandpass calibration for each antenna/SpW.
  
    hif_bpflagchans(flag_tmf=False)
        equivalent to:
-   hif_bpflagchans(flag_diffmad=True, diffmad_limit=10, flag_tmf=False)
+   hif_bpflagchans(flag_diffmad=True, diffmad_limit=7, flag_tmf=False)
 
 </example> 
 
