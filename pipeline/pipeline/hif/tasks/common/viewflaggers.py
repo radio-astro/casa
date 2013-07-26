@@ -544,7 +544,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
       flag_sharps=False, sharps_limit=0.05,
       flag_sharps2=False, sharps2_limit=0.05,
       flag_diffmad=False, diffmad_limit=10,
-      flag_tmf=None, tmf_limit=0.1):
+      flag_tmf=None, tmf_frac_limit=0.1, tmf_nchan_limit=4):
 
         """
         Generate a list of flagging rules from a set of flagging parameters.
@@ -566,7 +566,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         if flag_diffmad:
             rules.append({'name':'diffmad', 'limit':diffmad_limit})
         if flag_tmf:
-            rules.append({'name':'tmf', 'limit':tmf_limit})
+            rules.append({'name':'tmf', 'frac_limit':tmf_frac_limit,
+              'nchan_limit':tmf_nchan_limit})
 
         return rules
 
@@ -816,7 +817,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
                         # first, flag channels further from the median than
                         # limit * MAD
-                        newflag = ((diff-median_diff) > limit*mad) & \
+                        newflag = (abs(diff-median_diff) > limit*mad) & \
                           (diff_flag==0)
 
                         # set channels flagged 
@@ -842,11 +843,13 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                               spw=spw, antenna=antenna, flagchannels=channels_flagged))
 
                 elif rulename == 'tmf':
-                    limit = rule['limit']
+                    frac_limit = rule['frac_limit']
+                    nchan_limit = rule['nchan_limit']
                     if len(valid_data):
                         # flag all channels if fraction already flagged 
                         # is greater than tmf_limit of total
-                        if float(len(rdata[rflag==True])) / len(rdata) > limit:
+                        if (float(len(rdata[rflag==True])) / len(rdata) >= frac_limit) or \
+                          (len(rdata[rflag==True]) >= nchan_limit):
                             newflag = (rflag==False)
 
                             # flag the 'view'
