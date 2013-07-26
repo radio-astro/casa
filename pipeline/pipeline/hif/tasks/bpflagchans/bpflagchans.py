@@ -22,8 +22,8 @@ class BandpassflagchansInputs(basetask.StandardInputs):
     def __init__(self, context, output_dir=None, vis=None, caltable=None, 
       flag_edges=None, edge_limit=None, flag_sharps=None, sharps_limit=None,
       flag_sharps2=None, sharps2_limit=None, flag_diffmad=None,
-      diffmad_limit=None, flag_tmf=None, tmf_frac_limit=None, 
-      tmf_nchan_limit=None, niter=None):
+      diffmad_limit=None, diffmad_nchan_limit=None,
+      flag_tmf=None, tmf_frac_limit=None, tmf_nchan_limit=None, niter=None):
 
         # set the properties to the values given as input arguments
         self._init_properties(vars())
@@ -143,9 +143,19 @@ class BandpassflagchansInputs(basetask.StandardInputs):
         self._diffmad_limit = value
 
     @property
+    def diffmad_nchan_limit(self):
+        if self._diffmad_nchan_limit is None:
+            return 4
+        return self._diffmad_nchan_limit
+
+    @diffmad_nchan_limit.setter
+    def diffmad_nchan_limit(self, value):
+        self._diffmad_nchan_limit = value
+
+    @property
     def flag_tmf(self):
         if self._flag_tmf is None:
-            return True
+            return False
         return self._flag_tmf
 
     @flag_tmf.setter
@@ -210,6 +220,7 @@ class Bandpassflagchans(basetask.StandardTaskTemplate):
           flag_sharps=inputs.flag_sharps, sharps_limit=inputs.sharps_limit,
           flag_sharps2=inputs.flag_sharps2, sharps2_limit=inputs.sharps2_limit,
           flag_diffmad=inputs.flag_diffmad, diffmad_limit=inputs.diffmad_limit,
+          diffmad_nchan_limit=inputs.diffmad_nchan_limit,
           flag_tmf=inputs.flag_tmf, tmf_frac_limit=inputs.tmf_frac_limit,
           tmf_nchan_limit=inputs.tmf_nchan_limit)
         flagger = viewflaggers.VectorFlagger
