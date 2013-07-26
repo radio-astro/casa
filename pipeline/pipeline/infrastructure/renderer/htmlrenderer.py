@@ -1343,11 +1343,9 @@ class T2_4MDetailsBandpassFlagRenderer(T2_4MDetailsDefaultRenderer):
                 continue
 
             flagcmd_abspath = self.write_flagcmd_to_disk(weblog_dir, result)
-
             flagcmd_relpath = os.path.relpath(flagcmd_abspath, report_dir)
-
             table_basename = os.path.basename(result.table)
-            htmlreports[table_basename] = (flagcmd_relpath)
+            htmlreports[table_basename] = (flagcmd_relpath,)
 
         return htmlreports
 
