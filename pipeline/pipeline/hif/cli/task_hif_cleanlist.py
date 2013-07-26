@@ -5,8 +5,9 @@ from taskinit import casalog
 import pipeline.h.cli.utils as utils
 
 def hif_cleanlist(vis=None, target_list=None, weighting=None,
-    robust=None, noise=None, npixels=None, hm_cleanboxing=None,
-    mask=None, threshold=None, maxthreshiter=None,
+    robust=None, noise=None, npixels=None, hm_masking=None,
+    hm_cleaning=None, tlimit=None, masklimit=None,
+    maxncleans=None, 
     pipelinemode=None, dryrun=None, acceptresults=None):
 
     # create a dictionary containing all the arguments given in the

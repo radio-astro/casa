@@ -12,17 +12,17 @@ Compute a clean map.
 <input>
 
   <param type="stringArray" name="vis" subparam="true">
-    <description>List of input measurment sets, default to context</description>
+    <description>List of input measurement sets, \'\' for default</description>
     <value></value>
   </param>
 
   <param type="string" name="imagename" subparam="true">
-     <description>Prefix for image filenames, heuristic default</description>
+     <description>Prefix for image filenames, \'\' for default</description>
      <value></value>
   </param>
 
   <param type="string" name="intent" subparam="true">
-    <description>Set of data selection intents</description>
+    <description>Set of data selection intents, \'\' for all</description>
     <value></value>
   </param>
 
@@ -32,18 +32,18 @@ Compute a clean map.
   </param>
 
   <param type="string" name="spw" subparam="true">
-    <description>Set of data selection spectral window/channels</description>
+    <description>Set of data selection spectral window/channels \'\' for all</description>
     <value></value>
   </param>
 
   <param type="any" name="uvrange" subparam="true">
-    <description>Set of uv ranges</description>
+    <description>Set of uv ranges, \'\' for all</description>
     <any type="variant" limittypes="string stringArray"/>
     <value type="string"></value>
   </param>
 
   <param type="string" name="mode">
-     <description>Spectral gridding type (mfs, frequency, \'\' for heuristic default)</description>
+     <description>Spectral gridding type (mfs, frequency, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
@@ -53,7 +53,7 @@ Compute a clean map.
   </param>
 
   <param type="string" name="imagermode" subparam="true">
-     <description>Imaging mode (csclean, mosaic, \'\' for heuristic default)</description>
+     <description>Imaging mode (csclean, mosaic, \'\' for default)</description>
      <value></value>
        <allowed kind="enum">
          <value></value>
@@ -71,6 +71,22 @@ Compute a clean map.
        </allowed>
   </param>
 
+  <param type="intArray" name="imsize">
+    <description>Y and Y image size in pixels, single value same for both, \'\' for default</description>
+    <value></value>
+  </param>
+
+  <param type="stringArray" name="cell">
+    <description>Y and Y cell size(s), single value same for both, \'\' for default</description>
+    <value></value>
+  </param>
+
+  <param type="any" name="phasecenter" subparam="true">
+    <description>Image center (direction or field index), \'\' for default</description>
+    <any type="variant"/>
+    <value type="string"></value>
+  </param>
+
   <param type="int" name="nchan" subparam="true">
     <description>Number of channels or planes in output image, -1 = all</description>
     <value>-1</value>
@@ -82,24 +98,8 @@ Compute a clean map.
     <value type="int">0</value>
   </param>
 
-  <param type="any" name="width" subparam="true">
-    <description>Width of output spectral channels</description>
-    <any type="variant"/>
-    <value type="string"></value>
-  </param>
-
-  <param type="intArray" name="imsize" subparam="true">
-    <description>x and y image size in pixels, single value same for both, \'\' for heuristic default</description>
-    <value></value>
-  </param>
-
-  <param type="stringArray" name="cell" subparam="true">
-    <description>x and y cell size(s), single value same for both, \'\' for heuristic default</description>
-    <value></value>
-  </param>
-
-  <param type="any" name="phasecenter" subparam="true">
-    <description>Image center (direction or field index), \'\'heuristic default</description>
+  <param type="any" name="width">
+    <description>Width of output spectral channels, \'\' for default</description>
     <any type="variant"/>
     <value type="string"></value>
   </param>
@@ -121,11 +121,6 @@ Compute a clean map.
      <value>0.0</value>
   </param>
 
-  <param type="stringArray" name="restoringbeam" subparam="true">
-     <description>Output Gaussian restoring beam for CLEAN image</description>
-     <value></value>
-  </param>
-
   <param type="any" name="noise" subparam="true">
     <description>Briggs weighting noise parameter</description>
     <any type="variant"/>
@@ -137,29 +132,44 @@ Compute a clean map.
     <value type="int">1</value>
   </param>
 
-  <param type="string" name="hm_cleanboxing">
-     <description>Pipeline cleanboxing/thresholding mode (automatic, manual) </description>
-       <value>automatic</value>
+  <param type="stringArray" name="restoringbeam" subparam="true">
+     <description>Gaussian restoring beam, \'\' for default</description>
+     <value></value>
+  </param>
+
+  <param type="string" name="hm_masking">
+     <description>Pipeline heuristics masking option</description>
+       <value>none</value>
        <allowed kind="enum">
-         <value>automatic</value>
+         <value>none</value>
+         <value>centralquarter</value>
+         <value>psf</value>
+         <value>psfiter</value>
          <value>manual</value>
+         <value></value>
        </allowed>
   </param>
 
-  <param type="string" name="cleanboxing">
-     <description>Pipeline cleanboxing/thresholding (calibrator, iterative, manual)</description>
-       <value>iterative</value>
+  <param type="string" name="hm_cleaning">
+     <description>Pipeline clean control heuristics</description>
+       <value>manual</value>
        <allowed kind="enum">
-         <value>calibrator</value>
-         <value>iterative</value>
          <value>manual</value>
+         <value>sensitivity</value>
+         <value>timesmask</value>
+         <value>rms</value>
        </allowed>
   </param>
 
   <param type="any" name="mask" subparam="true">
-       <description>Cleanbox(es), mask image(s), region(s), or a level</description>
+       <description>User mask, \'\' for whole image</description>
        <any type="variant"/>
        <value type="stringArray"></value>
+  </param>
+
+  <param type="int" name="niter" subparam="true">
+    <description>Maximum number of clean iterations</description>
+    <value>10</value>
   </param>
 
   <param type="double" name="threshold" units="mJy" subparam="true">
@@ -167,9 +177,19 @@ Compute a clean map.
        <value>0.0</value>
   </param>
 
-  <param type="int" name="maxthreshiter" subparam="true">
-    <description>Maximum number of autobox threshold iterations</description>
-    <value>10</value>
+  <param type="double" name="tlimit" subparam="true">
+       <description>Times the sensitivity limit for cleaning</description>
+       <value>2.0</value>
+  </param>
+
+  <param type="int" name="masklimit" subparam="true">
+       <description>Times good mask pixels for cleaning</description>
+       <value>4</value>
+  </param>
+
+  <param type="int" name="maxncleans" subparam="true">
+    <description>Maximum number of clean task calls</description>
+    <value>1</value>
   </param>
 
   <param type="string" name="pipelinemode">
@@ -207,10 +227,7 @@ Compute a clean map.
         <default param="imagermode"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
-        <default param="start"><value type="string">0</value></default>
-        <default param="width"><value type="string"></value></default>
-        <default param="imsize"><value type="string"></value></default>
-        <default param="cell"><value type="string">1.0arcsec</value></default>
+        <default param="start"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
         <default param="restoringbeam"><value type="stringArray"></value></default>
         <default param="noise"><value type="string">1.0Jy</value></default>
@@ -228,35 +245,44 @@ Compute a clean map.
         <default param="imagermode"><value type="string"></value></default>
         <default param="outframe"><value type="string">LSRK</value></default>
         <default param="nchan"><value>-1</value></default>
-        <default param="start"><value type="string">0</value></default>
-        <default param="width"><value type="string"></value></default>
-        <default param="imsize"><value type="string"></value></default>
-        <default param="cell"><value type="string">1.0arcsec</value></default>
+        <default param="start"><value type="string"></value></default>
         <default param="phasecenter"><value type="string"></value></default>
         <default param="restoringbeam"><value type="stringArray"></value></default>
-        <default param="noise"><value type="string">1.0Jy</value></default>
-        <default param="npixels"><value type="int">1</value></default>
       </equals>
     </when>
 
-    <when param="hm_cleanboxing">
-      <equals value="automatic">
-        <default param="maxthreshiter"><value type="int" >10</value></default>
+    <when param="hm_masking">
+      <equals value="none">
+      </equals>
+      <equals value="centralquarter">
+      </equals>
+      <equals value="psf">
+      </equals>
+      <equals value="psfiter">
+        <default param="maxncleans"><value type="int">10</value></default>
       </equals>
       <equals value="manual">
         <default param="mask"><value type="string"></value></default>
+      </equals>
+      <equals value="">
+      </equals>
+    </when>
+
+    <when param="hm_cleaning">
+      <equals value="manual">
+        <default param="niter"><value type="int">1000</value></default>
         <default param="threshold"><value type="double" units="mJy">0.0</value></default>
       </equals>
-    </when>
-
-    <when param="cleanboxing">
-      <equals value="calibrator">
+      <equals value="sensitivity">
+        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="niter"><value type="int">1000</value></default>
       </equals>
-      <equals value="iterative">
-        <default param="maxthreshiter"><value type="int">10</value></default>
+      <equals value="rms">
+        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="niter"><value type="int">1000</value></default>
       </equals>
-      <equals value="manual">
-        <default param="mask"><value type="string"></value></default>
+      <equals value="mask">
+        <default param="masklimit"><value type="int">4</value></default>
         <default param="threshold"><value type="double" units="mJy">0.0</value></default>
       </equals>
     </when>
@@ -267,7 +293,6 @@ Compute a clean map.
       <equals value="frequency">
         <default param="nchan"><value>-1</value></default>
         <default param="start"><value type="string"></value></default>
-        <default param="width"><value type="string"></value> </default>
         <default param="outframe"><value type="string"></value></default>
       </equals>
     </when>
@@ -324,41 +349,16 @@ pipelinemode -- The pipeline operating mode. In 'automatic' mode the pipeline
 ---- pipeline context defined parameter arguments which can be set only in
 'interactive mode'
 
-vis -- The list of input measurement sets. Defaults to the list of measurment
-    sets specified in the h_init or hif_importdata sets.
-    example: vis='ngc5921.ms'
-             vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
-    default: use all measurement sets in the context 
+vis -- The list of input measurement sets. Defaults to the list of measurement
+    sets in the context.
+    default: ''
+    example: vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
 
-field -- Select fields to image or mosaic. Use field id(s) or name(s).
-    The specified fields will be selected in all measurement sets 
-    derived from 'vis'.
-    example: '3C279', 'Centaurus*'
-    default: '' (No data selected)
+imagename -- Prefix of output images. Defaults to one of the following options
+   depending on the availability of project information. 
+   '{ousstatus uid}.{field}.[{intent}.]s{stage number}.spw{spw}'
+   'multivis.{field}.[{intent}.]s{stage number}.spw{spw}'
 
-intent -- An intent against which the selected fields are matched.
-    example: '', 'TARGET'
-    default: '' (Select all data from fields specified by 'field' parameter)
-
-spw -- Select spectral window/channels.
-    default: '' (No data selected)
-
-mode -- Frequency specification:
-        default: 'mfs'
-          mode = 'mfs' means produce one image from all specified data.
-          mode = 'channel'; Use with nchan, start, width to specify output
-                 image cube.
-          mode = 'velocity', channels are specified in velocity.
-          mode = 'frequency', channels are specified in frequency.
-
-imagename -- Pre-name of output images. This can be set by the user as for 
-   the standard CASA clean task. Alternatively, if no value is set then it 
-   will be derived as follows:
-      1. Obtain the 'field', 'intent' and 'spw' parameter values. 
-      2. Obtain the stage number from the context.
-      3. Set the imagename to:-
-         'multivis.{field}.[{intent}.]s{stage number}.spw{spw}'
-   hif_clean proceeds through a number of iterations re-evaluating the
    cleanboxes and thresholds to use as it goes. For each iteration the
    output images are:
       {prename}.iter{n}.image; cleaned and restored image
@@ -369,48 +369,114 @@ imagename -- Pre-name of output images. This can be set by the user as for
       {prename}.iter{n}.model; image of clean components
       {prename}.iter{n}.residual; image of residuals
       {prename}.iter{n}.cleanmask; image of cleanmask used
+   default: ''
+   example: 'test1'
   
-imagermode -- Advanced imaging e.g. mosaic or Cotton-Schwab clean.
-   This can NOT be set by the user as for the standard CASA 
-   clean task. It will be derived as follows:
+intent -- An intent against which the selected fields are matched. Default
+    means select all data from fields specified by 'field' paramete
+    default: ''
+    example: '', 'TARGET'
+
+field -- Fields id(s) or name(s) to image or mosaic. Must be set.
+    default:  
+    example: '3C279', 'Centaurus*'
+
+spw -- Spectral window/channels to image. \'\' for all science data.
+    default: ''
+    example: '9', '9,11'
+
+mode -- Frequency imaging mode, 'mfs', 'frequency'. \'\' defaults to
+    'frequency' if intent parameter includes 'TARGET' otherwise 'mfs'.
+    default: ''
+    example: 'mfs', 'mosaic'
+
+imagermode -- Advanced imaging mode e.g. mosaic or Cotton-Schwab clean.
+   Derived as follows:
       1. The 'field' parameter is converted into a list of field_ids for
          each measurement set in 'vis'.
       2. If there is more than 1 field_id in the list for any measurement 
          set then imagermode is set to 'mosaic', otherwise it will be set
          to 'csclean'. 
+    default: ''
 
-imsize -- Image size in pixels (x, y). DOES NOT HAVE TO BE A POWER OF 2
-          (but has to be even and have factors 2,3,5,7 only).
-          Default is derived as follows:
-             1. Determine 'phasecenter' value and spread of field centres
-                around it. 
-             2. Set size of image to cover spread of field centres plus
-                a border of width 0.75 * beam radius (to first null).
-             3. Divide x and y extents by 'cell' values to arrive at
-                the numbers of pixels required. 
+outframe -- The reference frame of the output image. The only supported option
+    is 'LSRK'
+    default: ''
+    example: 'LSRK'
 
-cell -- Cell size (x, y)
-        default '1.0arcsec'
-        example: cell = ['0.5arcsec', '0.5arcsec']
+imsize -- X and Y image size in pixels).  Must be even and contain factors
+    2,3,5,7 only.
+    Default derived as follows:
+      1. Determine 'phasecenter' value and spread of field centres around it. 
+      2. Set size of image to cover spread of field centres plus a border of
+         width 0.75 * beam radius (to first null).
+      3. Divide x and y extents by 'cell' values to arrive at the numbers of
+         pixels required. 
+    default: ''
+    example: [320,320]
 
-phasecenter -- Direction measure or field_id for the mosaic center.
-        default: The phasecenter  will be derived as follows:
-           1. Make an array containing all the field centres to be imaged together.
-           2. Derive a 'mean' direction from the directions array.
+cell -- X and Y cell size. Derived from maximum UV spacing. Details TBD
+    default ''
+    example: ['0.5arcsec', '0.5arcsec']
 
-weighting -- Weighting to apply to visibilities:
-             default='natural'; example: weighting='uniform';
-             Options: 'natural','uniform','briggs', 
-                'superuniform','briggsabs','radial'
+phasecenter -- Direction measure or field id for the mosaic center.
+   Default derived as follows:
+       1. Make an array containing all the field centers to be imaged together.
+       2. Derive the mean direction from the directions array.
+    default: \'\'
+    example: 2
 
-robust -- For weighting='briggs' and 'briggsabs'
-          default=0.0; example: robust=0.5;
-          Options: -2.0 to 2.0; -2 (uniform)/+2 (natural)
-                 
-noise -- For weighting='briggsabs'
-         noise parameter to use for Briggs "abs" weighting
-         example noise='1.0mJy'
+nchan -- Number of channels or planes in the output image, -1 for all
+    default: -1
+    example: 128
 
+width -- Width of spectral dimension in frequency, \'\' for default.
+    default: \'\'
+    example: '7.8125MHz'
+
+weighting -- Weighting to apply to visibilities. Options are: 'natural',
+    'uniform','briggs', 'superuniform','briggsabs','radial'
+     default='natural'
+     example: weighting='uniform'
+
+robust -- Parameter for  'briggs' and 'briggsabs' weighting. Ranges from -2.0 to
+    2.0. -2 for uniform +2 for natural.
+    default=0.0
+    example: 0.5
+
+noise -- Parameter for 'briggsabs' weighting
+    default: '1.0Jy'
+    example: '0.5Jy'
+
+npixels -- Parameter for 'briggs' and 'briggsabs; weighting
+    default: 1
+    example: 1
+
+restoringbeam -- Gaussina sestoring beam for clean, \'\' for default
+    default: \'\'
+    example:
+
+hm_masking -- Clean masking mode. Options are 'none', 'centralquarter'
+    'psf', 'psfiter' and 'manual'
+    default: 'centralquarter'
+    example: 'manual'
+
+mask -- Image mask for hm_masking manual mode. User responsible for
+    matching image sizes, coordinates, etc.
+    default: \'\'
+    example: 'mymask.mask'
+
+niter -- Maximum number of iterations per clean call
+    default: 1000
+    example: 500
+
+threshold -- Threshold for cleaning
+    default: '0.0'
+    example: '0.05'
+
+maxncleans -- Maximum number of clean calls
+    default: 1
+    example: 10
 
 --- pipeline task execution modes
 dryrun -- Run the commands (True) or generate the commands to be run but
@@ -441,10 +507,6 @@ clean parameters are derived from heuristics.
  
 hif_clean(field='3c279', cell='0.2arcsec', spw='1', mode='frequency',
  outframe='LSRK')
-
-hif_clean(field='3c279', cell='0.2arcsec', spw='1', mode='frequency',
- outframe='LSRK', width_multiplier=8)
-
 
 </example>
 

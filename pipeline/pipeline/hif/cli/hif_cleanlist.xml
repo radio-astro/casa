@@ -29,19 +29,14 @@ Compute clean results from a list of specified targets.
       <value>natural</value>
       <value>uniform</value>
       <value>briggs</value>
-      <value>briggsabs</value>
-      <value>radial</value>
       <value>superuniform</value>
+      <value>briggsabs</value>
     </allowed>
   </param>
 
   <param type="double" name="robust" subparam="true">
     <description>Briggs robustness parameter</description>
     <value>0.0</value>
-    <allowed kind="range">
-      <value range="min">-2.0</value>
-      <value range="max">2.0</value>
-    </allowed>
   </param>
 
   <param type="any" name="noise"  subparam="true">
@@ -52,31 +47,44 @@ Compute clean results from a list of specified targets.
 
   <param type="int" name="npixels" subparam="true">
     <description>number of pixels for superuniform or briggs weighting</description>
-    <value>0</value>
+    <value>1</value>
   </param>
 
-  <param type="string" name="hm_cleanboxing">
-     <description>Pipeline cleanboxing mode (automatic, manual) </description>
-       <value>automatic</value>
+  <param type="string" name="hm_masking">
+     <description>Pipeline heuristics masking option</description>
+       <value>none</value>
        <allowed kind="enum">
-         <value>automatic</value>
-         <value>manual</value>
+         <value>none</value>
+         <value>centralquarter</value>
+         <value>psf</value>
+         <value>psfiter</value>
+         <value></value>
        </allowed>
   </param>
 
-  <param type="string" name="mask" subparam="true">
-     <description>Clean  mask</description>
-     <value></value>
+  <param type="string" name="hm_cleaning">
+     <description>Pipeline cleaning mode </description>
+       <value>automatic</value>
+       <allowed kind="enum">
+         <value>sensitivity</value>
+         <value>timesmask</value>
+         <value>rms</value>
+       </allowed>
   </param>
 
-  <param type="double" name="threshold" units="mJy" subparam="true">
-     <description>Clean threshold</description>
-     <value>0.0</value>
+  <param type="double" name="tlimit" subparam="true">
+       <description>Times the sensitivity limit for cleaning</description>
+       <value>2.0</value>
   </param>
 
-  <param type="int" name="maxthreshiter" subparam="true">
-    <description>Maximum number of autobox threshold iterations</description>
-    <value>10</value>
+  <param type="int" name="masklimit" subparam="true">
+       <description>Times good mask pixels for cleaning</description>
+       <value>4</value>
+  </param>
+
+  <param type="int" name="maxncleans" subparam="true">
+    <description>Maximum number of clean task calls</description>
+    <value>1</value>
   </param>
 
   <param type="string" name="pipelinemode">
@@ -116,12 +124,31 @@ Compute clean results from a list of specified targets.
       </equals>
     </when>
 
-    <when param="hm_cleanboxing">
-      <equals value="automatic">
-        <default param="maxthreshiter"><value type="int" >10</value></default>
+    <when param="hm_masking">
+      <equals value="none">
       </equals>
-      <equals value="manual">
-        <default param="mask"><value type="string"></value></default>
+      <equals value="centralquarter">
+      </equals>
+      <equals value="psf">
+      </equals>
+      <equals value="psfiter">
+        <default param="maxncleans"><value type="int">10</value></default>
+      </equals>
+      <equals value="">
+      </equals>
+    </when>
+
+    <when param="hm_cleaning">
+      <equals value="sensitivity">
+        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="niter"><value type="int">1000</value></default>
+      </equals>
+      <equals value="rms">
+        <default param="tlimit"><value type="double">2.0</value></default>
+        <default param="niter"><value type="int">1000</value></default>
+      </equals>
+      <equals value="mask">
+        <default param="masklimit"><value type="int">4</value></default>
         <default param="threshold"><value type="double" units="mJy">0.0</value></default>
       </equals>
     </when>
@@ -184,75 +211,6 @@ vis -- The list of input measurement sets. Defaults to the list of measurment
              vis=['ngc5921a.ms', ngc5921b.ms', 'ngc5921c.ms']
     default: use all measurement sets in the context 
 
-field -- Select fields to image or mosaic. Use field id(s) or name(s).
-    The specified fields will be selected in all measurement sets 
-    derived from 'vis'.
-    example: '3C279', 'Centaurus*'
-    default: '' (No data selected)
-
-intent -- An intent against which the selected fields are matched.
-    example: '', '*TARGET*'
-    default: '' (Select all data from fields specified by 'field' parameter)
-
-spw -- Select spectral window/channels.
-    default: '' (No data selected)
-
-mode -- Frequency specification:
-        default: 'mfs'
-          mode = 'mfs' means produce one image from all specified data.
-          mode = 'channel'; Use with nchan, start, width to specify output
-                 image cube.
-          mode = 'velocity', channels are specified in velocity.
-          mode = 'frequency', channels are specified in frequency.
-
-imagename -- Pre-name of output images. This can be set by the user as for 
-   the standard CASA clean task. Alternatively, if no value is set then it 
-   will be derived as follows:
-      1. Obtain the 'field', 'intent' and 'spw' parameter values. 
-      2. Obtain the stage number from the context.
-      3. Set the imagename to:-
-         'multivis.{field}.[{intent}.]s{stage number}.spw{spw}'
-   hif_clean proceeds through a number of iterations re-evaluating the
-   cleanboxes and thresholds to use as it goes. For each iteration the
-   output images are:
-      {prename}.iter{n}.image; cleaned and restored image
-      {prename}.iter{n}.psf; point spread function (dirty beam)
-      {prename}.iter{n}.flux; relative sky sensitivity over field
-      {prename}.iter{n}.flux.pbcoverage; relative pb coverage over field
-                                        (only for mosaics)
-      {prename}.iter{n}.model; image of clean components
-      {prename}.iter{n}.residual; image of residuals
-      {prename}.iter{n}.cleanmask; image of cleanmask used
-  
-imagermode -- Advanced imaging e.g. mosaic or Cotton-Schwab clean.
-   This can be set by the user as for the standard CASA 
-   clean task. If no value is set then it will be derived
-   as follows:
-      1. The 'field' parameter is converted into a list of field_ids for
-         each measurement set in 'vis'.
-      2. If there is more than 1 field_id in the list for any measurement 
-         set then imagermode is set to 'mosaic', otherwise it will be set
-         to 'csclean'. 
-
-imsize -- Image size in pixels (x, y). DOES NOT HAVE TO BE A POWER OF 2
-          (but has to be even and have factors 2,3,5,7 only).
-          Default is derived as follows:
-             1. Determine 'phasecenter' value and spread of field centres
-                around it. 
-             2. Set size of image to cover spread of field centres plus
-                a border of width 0.75 * beam radius (to first null).
-             3. Divide x and y extents by 'cell' values to arrive at
-                the numbers of pixels required. 
-
-cell -- Cell size (x, y)
-        default '1.0arcsec'
-        example: cell = ['0.5arcsec', '0.5arcsec']
-
-phasecenter -- Direction measure or field_id for the mosaic center.
-        default: The phasecenter  will be derived as follows:
-           1. Make an array containing all the field centres to be imaged together.
-           2. Derive a 'mean' direction from the directions array.
-
 weighting -- Weighting to apply to visibilities:
              default='natural'; example: weighting='uniform';
              Options: 'natural','uniform','briggs', 
@@ -283,23 +241,6 @@ results -- If pipeline mode is 'getinputs' then None is returned. Otherwise
 
 
 Examples:
-
-Make an 'mfs' image of calibrator 3c279 using data in spectral window 1. 
-The cell size is set to 0.2 arcsec in RA and Dec. Other clean parameters
-are derived from heuristics:
-
-hif_clean(field='3c279', cell='0.2arcsec', spw='1', mode='mfs')
-
-Make a cube of calibrator 3c279 using data in spectral window 1. The
-cube planes will be evenly spaced in frequency in the LSRK frame. Other
-clean parameters are derived from heuristics.
- 
-hif_clean(field='3c279', cell='0.2arcsec', spw='1', mode='frequency',
- outframe='LSRK')
-
-hif_clean(field='3c279', cell='0.2arcsec', spw='1', mode='frequency',
- outframe='LSRK', width_multiplier=8)
-
 
 </example>
 
