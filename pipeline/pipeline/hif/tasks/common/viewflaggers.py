@@ -543,7 +543,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
       flag_nmedian=False, fnm_limit=0.0,
       flag_sharps=False, sharps_limit=0.05,
       flag_sharps2=False, sharps2_limit=0.05,
-      flag_diffmad=False, diffmad_limit=10,
+      flag_diffmad=False, diffmad_limit=10, diffmad_nchan_limit=4,
       flag_tmf=None, tmf_frac_limit=0.1, tmf_nchan_limit=4):
 
         """
@@ -564,7 +564,8 @@ class VectorFlagger(basetask.StandardTaskTemplate):
         if flag_sharps2:
             rules.append({'name':'sharps2', 'limit':sharps2_limit})
         if flag_diffmad:
-            rules.append({'name':'diffmad', 'limit':diffmad_limit})
+            rules.append({'name':'diffmad', 'limit':diffmad_limit,
+              'nchan_limit':diffmad_nchan_limit})
         if flag_tmf:
             rules.append({'name':'tmf', 'frac_limit':tmf_frac_limit,
               'nchan_limit':tmf_nchan_limit})
@@ -808,6 +809,7 @@ class VectorFlagger(basetask.StandardTaskTemplate):
 
                 elif rulename == 'diffmad':
                     limit = rule['limit']
+                    nchan_limit = rule['nchan_limit']
                     if len(valid_data):
                         diff = rdata[1:] - rdata[:-1]
                         diff_flag = np.logical_or(rflag[1:], rflag[:-1])
@@ -819,6 +821,11 @@ class VectorFlagger(basetask.StandardTaskTemplate):
                         # limit * MAD
                         newflag = (abs(diff-median_diff) > limit*mad) & \
                           (diff_flag==0)
+
+                        # second, flag all channels if more than nchan_limit 
+                        # were flagged by the first stage
+                        if len(newflag[newflag==True]) >= nchan_limit:
+                            newflag[newflag==False] = True         
 
                         # set channels flagged 
                         flag_chan = np.zeros([len(newflag)+1], np.bool) 
