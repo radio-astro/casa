@@ -5,6 +5,7 @@ import types
 
 import pipeline.infrastructure as infrastructure
 import pipeline.infrastructure.basetask as basetask
+
 from ..clean import Clean
 from ..clean.resultobjects import CleanResult
 from .resultobjects import CleanListResult
@@ -16,7 +17,8 @@ class CleanListInputs(basetask.StandardInputs):
 
     def __init__(self, context, output_dir=None, vis=None, target_list=None,
       weighting=None, robust=None, noise=None, npixels=None,
-      hm_cleanboxing=None, mask=None, threshold=None, maxthreshiter=None):
+      hm_masking=None, hm_cleaning=None, tlimit=None, masklimit=None,
+      maxncleans=None):
         self._init_properties(vars())
 
     @property
@@ -70,45 +72,54 @@ class CleanListInputs(basetask.StandardInputs):
         self._npixels = value
 
     @property
-    def hm_cleanboxing(self):
-        if self._hm_cleanboxing is None:
-            return 'automatic'
-        return self._hm_cleanboxing
-
-    @hm_cleanboxing.setter
-    def hm_cleanboxing(self, value):
-        self._hm_cleanboxing = value
-
-    @property
-    def mask(self):
-        if self._mask is None:
+    def hm_masking(self):
+        if self._hm_masking is None:
             return ''
-        return self._mask
+        return self._hm_masking
 
-    @mask.setter
-    def mask(self, value):
-        self._mask = value
-
-    @property
-    def threshold(self):
-        if self._target_list is None:
-            return 0.0
-        return self._threshold
-
-    @threshold.setter
-    def threshold(self, value):
-        self._threshold = value
+    @hm_masking.setter
+    def hm_masking(self, value):
+        self._hm_masking = value
 
     @property
-    def maxthreshiter(self):
-        if self._maxthreshiter is None:
+    def hm_cleaning(self):
+        if self._hm_cleaning is None:
+            return ''
+        return self._hm_cleaning
+
+    @hm_cleaning.setter
+    def hm_cleaning(self, value):
+        self._hm_cleaning = value
+
+    @property
+    def tlimit(self):
+        if self._tlimit is None:
+            return 2.0
+        return self._tlimit
+
+    @tlimit.setter
+    def tlimit(self, value):
+         self._tlimit = value
+
+    @property
+    def masklimit(self):
+        if self._masklimit is None:
+            return 2.0
+        return self._masklimit
+
+    @masklimit.setter
+    def masklimit(self, value):
+         self._masklimit = value
+
+    @property
+    def maxncleans(self):
+        if self._maxncleans is None:
             return 10
-        return self._maxthreshiter
+        return self._maxncleans
 
-    @maxthreshiter.setter
-    def maxthreshiter(self, value):
-        self._maxthreshiter = value
-
+    @maxncleans.setter
+    def maxncleans(self, value):
+         self._maxncleans = value
 
 class CleanList(basetask.StandardTaskTemplate):
     Inputs = CleanListInputs
@@ -144,22 +155,29 @@ class CleanList(basetask.StandardTaskTemplate):
             full_image_target['output_dir'] = inputs.output_dir
             full_image_target['vis'] = inputs.vis
 
+	    # set the weighting values.
             full_image_target['weighting'] = inputs.weighting
-            if inputs.weighting == 'briggs':
-                full_image_target['robust'] = inputs.robust
-                full_image_target['npixels'] = inputs.npixels
-            elif inputs.weighting == 'briggsabs':
-                full_image_target['robust'] = inputs.robust
-                full_image_target['noise'] = inputs.noise
-            elif inputs.weighting == 'superuniform':
-                full_image_target['npixels'] = inputs.npixels
+            full_image_target['robust'] = inputs.robust
+            full_image_target['noise'] = inputs.noise
+            full_image_target['npixels'] = inputs.npixels
 
-            full_image_target['hm_cleanboxing'] = inputs.hm_cleanboxing
-            if inputs.hm_cleanboxing == 'iterative':
-                full_image_target['maxthreshiter'] = inputs.maxthreshiter
-            elif inputs.hm_cleanboxing == 'manual':
-                full_image_target['mask'] = inputs.mask
-                full_image_target['threshold'] = inputs.threshold
+	    if inputs.hm_masking == '':
+	        if 'TARGET' in full_image_target['intent']:
+	            full_image_target['hm_masking'] = 'psfiter'
+		else:
+	            full_image_target['hm_masking'] = 'centralquarter'
+	    else:
+	        full_image_target['hm_masking'] = inputs.hm_masking
+	    if inputs.hm_cleaning == '':
+                full_image_target['hm_cleaning'] = 'rms'
+	    else:
+                full_image_target['hm_cleaning'] = inputs.hm_cleaning
+            full_image_target['tlimit'] = inputs.tlimit
+            full_image_target['masklimit'] = inputs.masklimit
+	    if full_image_target['hm_masking'] == 'psfiter':
+                full_image_target['maxncleans'] = inputs.maxncleans
+	    else:
+                full_image_target['maxncleans'] = 1
 
             # build the task to do the cleaning and execute it
             datainputs = Clean.Inputs(context=inputs.context,
