@@ -46,7 +46,7 @@ def gencal(vis=None,caltable=None,caltype=None,
        except UserWarning, instance:
               print '*** Warning ***',instance
               #cb.close()
-              raise Exception, instance
+              #raise Exception, instance
 
        except Exception, instance:
               print '*** Error ***',instance
